@@ -14,13 +14,6 @@
         "version": "v1.8.23"
     },
     {
-        "description": "Blueridge Config",
-        "url": "origin://Blueridge/5834656b-c639-4cb0-b2a6-a6f9765a6bb7",
-        "dest": "common",
-        "name": "blueridge_config",
-        "version": "release_blueridge_config_5.0.0"
-    },
-    {
         "description": "Verification Tools",
         "url": "origin://Base_Verification/5ac83406-f158-474c-81a6-6cf6e5f07514",
         "dest": "common/verif/src",
