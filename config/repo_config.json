@@ -1,0 +1,16 @@
+{
+    "tops": [
+        "src/integration/rtl/integration_top.sv"
+    ],
+    "units" : [
+    ],
+    "lib_elements" : [
+    ],
+    "tools": [
+        {
+            "work_items":   "True",
+            "pins":         "True",
+            "dependencies": "True"
+        }
+    ]
+}

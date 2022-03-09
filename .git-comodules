@@ -1,0 +1,53 @@
+[
+    {
+        "description": "Regression Management",
+        "url": "origin://Ether/b88d745a-744d-4f98-bec7-6c17a06d9b5f",
+        "dest": "common/infra",
+        "name": "regress",
+        "version": "v3.2.37"
+    },
+    {
+        "description": "Sim Tools",
+        "url": "origin://Ether/d261839b-fbfb-4c03-8bc2-8c8215f98b06",
+        "dest": "common/infra",
+        "name": "sim_tools",
+        "version": "v1.8.23"
+    },
+    {
+        "description": "Blueridge Config",
+        "url": "origin://Blueridge/5834656b-c639-4cb0-b2a6-a6f9765a6bb7",
+        "dest": "common",
+        "name": "blueridge_config",
+        "version": "release_blueridge_config_5.0.0"
+    },
+    {
+        "description": "Verification Tools",
+        "url": "origin://Base_Verification/5ac83406-f158-474c-81a6-6cf6e5f07514",
+        "dest": "common/verif/src",
+        "name": "tools",
+        "version": "release_verif_tools_1.15.0",
+        "has_submodules": "True"
+    },
+    {
+        "description": "Verification Frameworks",
+        "url": "origin://Base_Verification/1245dbfc-d547-444f-83cb-feb53b461cdd",
+        "dest": "common/verif/src",
+        "name": "frameworks",
+        "version": "release_frameworks_3.3.1",
+        "has_submodules": "True"
+    },
+    {
+        "description": "Datapath Library",
+        "url": "origin://Base_Design/0b533d83-2cf2-4faa-b925-114f1036efb7",
+        "dest": "common/libs",
+        "name": "datapath",
+        "version": "release_datapath_lib_15.0.0"
+    },
+    {
+        "description": "Common IPXACT and Magillem Library",
+        "url": "origin://Base_Design/57f6cc68-35e8-46ec-9805-0743408e7982",
+        "dest": "common/libs",
+        "name": "ipxact_lib",
+        "version": "release_ipxact_lib_5.1.0"
+    }
+]

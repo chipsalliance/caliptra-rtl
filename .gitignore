@@ -1,0 +1,39 @@
+# This file tells git which files and/or directories to ignore in the repo
+# Read the docs here: https://git-scm.com/docs/gitignore
+
+# File extensions to ignore
+*~
+\#*\#
+.\#*
+*.swp
+*.swo
+*.so
+*.py[cod]
+*.orig
+
+# Directories to ignore
+__pycache__/
+.dvt/
+verdiLog/*
+*.vdb/
+vnc_logs/
+.vs/
+
+# VCS compiled library output
+*/AN.DB/
+*/csrc/
+*/*.daidir/
+
+# Verdi output
+novas.conf
+novas.rc
+
+# regress output
+summary.json
+summary_junit.xml
+
+# Lint output
+verissimo_html_report
+
+# DVT output
+dvt_build.log

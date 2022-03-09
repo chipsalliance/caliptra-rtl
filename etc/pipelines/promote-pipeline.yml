@@ -1,0 +1,50 @@
+# Copyright (C) Microsoft Corporation. All rights reserved.
+
+trigger: none
+
+# Point to another repository for the pipeline template
+resources:
+  repositories:
+  - repository: templates
+    type: git
+    name: Ether/pipelines
+variables:
+- group: Pipelines
+
+stages:
+- template: etc/pipelines/templates/promote-pipeline-template.yml@templates  # Template reference
+  parameters:
+    project: 'Base_IP'
+    repo_url: 'git@ssh.dev.azure.com:v3/ms-tsd/Base_IP/aha_poc'
+    target_branch: 'master'
+
+    build_and_sim_map:
+    - integration_top_vcs:
+      - display_name: 'Build integration_lib with VCS'
+      - enabled: true
+      - configspec_name: 'integration_lib'
+      - dut: 'integration_top'
+      - args: ''
+      - timeout: 10
+    - integration_top_ius:
+      - display_name: 'Build integration_lib with IUS/Xcelium'
+      - enabled: true
+      - configspec_name: 'integration_lib'
+      - dut: 'integration_top'
+      - args: '--tool ius --targets packages rtl elab --options rtl="+define+TSD_DISABLE_ASSERTIONS"'
+      - timeout: 10
+
+    design_lint_map:
+    - integration_top:
+      - enabled: true
+      - configspec_name: 'integration_lib'
+      - dut: 'integration_top'
+      - timeout: 10
+
+    dv_lint_map:
+    - integration_tb:
+      - enabled: true
+      - configspec_name: 'integration_lib'
+      - dut: 'integration_tb'
+      - timeout: 10
+    top_repo: ''

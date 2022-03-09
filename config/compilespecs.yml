@@ -1,0 +1,5 @@
+# Copyright (C) Microsoft Corporation. All rights reserved.
+
+name: integration_lib
+files:
+  - src/integration/config/compile.yml

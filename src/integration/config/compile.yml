@@ -1,0 +1,35 @@
+# Copyright (C) Microsoft Corporation. All rights reserved.
+
+# Go here for details on compile.yml syntax:
+# https://dev.azure.com/ms-tsd/Ether/_git/sim-tools?path=%2FSourceFileSpec.docx&version=GBmaster
+
+---
+provides: [integration_top]
+schema_version: 2.4.0
+requires:
+  - 'datapath::dp_lib_top'
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/integration_top.sv
+    tops: [integration_top]
+  rtl_lint:
+    black_box:
+      - MPS_DP_NAND2
+    waiver_files:
+      - $COMPILE_ROOT/config/design_lint/integration_lint.waivers
+  cdc:
+    tcl_files:
+      - $COMPILE_ROOT/config/cdc/integration_top.constraints.tcl
+      - $COMPILE_ROOT/config/cdc/integration_top.waivers.tcl
+---
+provides: [integration_tb]
+schema_version: 2.4.0
+requires: 
+  - integration_top
+  - 3rd_party_frameworks::uvm
+targets:
+  tb:
+    directories: [$COMPILE_ROOT/verif]
+    files: [$COMPILE_ROOT/tb/integration_tb.sv]

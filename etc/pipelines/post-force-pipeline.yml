@@ -1,0 +1,16 @@
+# Copyright (C) Microsoft Corporation. All rights reserved.
+
+trigger: none
+
+# Point to another repository for the pipeline template
+resources:
+  repositories:
+  - repository: templates
+    type: git
+    name: Ether/pipelines
+variables:
+- group: Pipelines
+jobs:
+- template: etc/pipelines/templates/post-force-template.yml@templates
+  parameters:
+    pipeline_to_force: 'AHA_POC Promote Pipeline'
