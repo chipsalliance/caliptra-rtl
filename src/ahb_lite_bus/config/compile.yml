@@ -1,0 +1,6 @@
+provides: [ahb_node_wrap]
+schema_version: 2.4.0
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    

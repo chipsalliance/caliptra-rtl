@@ -1,6 +1,7 @@
 {
     "tops": [
-        "src/integration/rtl/integration_top.sv"
+        "src/integration/rtl/integration_top.sv",
+	"src/integration/rtl/rust_top.sv"
     ],
     "units" : [
     ],

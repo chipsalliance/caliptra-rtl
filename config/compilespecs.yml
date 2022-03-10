@@ -3,3 +3,4 @@
 name: integration_lib
 files:
   - src/integration/config/compile.yml
+  - src/ip/core/swerv_el2/config/compile.yml
