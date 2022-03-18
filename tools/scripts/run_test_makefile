@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Description:  This script will call various scripts from SVC Dvinfra to create a bifrost test
+# Assumptions:
+#   * This script is being called by playbook sim-tools before the sim executable.
+#   * First attempt to use info from sim_config.cfg, if not,
+#   * sim-tools will set several key environment variables (SIM_COLLATERAL_*), attempt to use those
+#   * The configuration (config) MUST match the provider (tb) name
+
+SCRIPT=`basename "$0"`
+SCRIPT=${SCRIPT^^}
+SCRIPT_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
+
+CONFIG=""
+
+function parse_sim_config {
+  file=$1
+  eval "$(cat $file | python3w $SCRIPT_DIR/sim_config_parse.py)"
+  if [[ ! -z "${other[tb]+x}" ]]; then
+    CONFIG=${other[tb]}
+  fi
+  # Get testname from sim_config
+  if [[ ! -z "${other[testname]}" ]]; then
+    export TESTNAME=${other[testname]}
+  fi
+}
+
+echo
+set -e
+full_pwd=`pwd -P`
+sim_config_file=$full_pwd/sim_config.cfg
+
+if [[ -f "$sim_config_file" ]]; then
+    parse_sim_config $sim_config_file
+fi
+
+echo "[$SCRIPT] Building TEST=$TESTNAME for CONFIG=${CONFIG}"
+
+# These bash functions cause the Makefile to not work, because it resets env vars and it chokes on the bash functions
+unset -f module
+unset -f switchml
+unset -f _module_raw
+
+#cmd="make -f $COMPILE_ROOT/test_suites/$TESTNAME/Makefile program.hex"
+cmd="make -f $SCRIPTS_DIR/Makefile program.hex"
+echo "$cmd"
+$cmd
+

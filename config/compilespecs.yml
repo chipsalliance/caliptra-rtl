@@ -3,4 +3,5 @@
 name: integration_lib
 files:
   - src/integration/config/compile.yml
-  - src/ip/core/swerv_el2/config/compile.yml
+  - src/ahb_lite_bus/config/compile.yml
+  - src/riscv_core/swerv_el2/config/compile.yml
