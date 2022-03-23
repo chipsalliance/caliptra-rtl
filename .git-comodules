@@ -30,13 +30,6 @@
         "has_submodules": "True"
     },
     {
-        "description": "Datapath Library",
-        "url": "origin://Base_Design/0b533d83-2cf2-4faa-b925-114f1036efb7",
-        "dest": "common/libs",
-        "name": "datapath",
-        "version": "release_datapath_lib_15.0.0"
-    },
-    {
         "description": "Common IPXACT and Magillem Library",
         "url": "origin://Base_Design/57f6cc68-35e8-46ec-9805-0743408e7982",
         "dest": "common/libs",
