@@ -28,12 +28,5 @@
         "name": "frameworks",
         "version": "release_frameworks_3.3.1",
         "has_submodules": "True"
-    },
-    {
-        "description": "Common IPXACT and Magillem Library",
-        "url": "origin://Base_Design/57f6cc68-35e8-46ec-9805-0743408e7982",
-        "dest": "common/libs",
-        "name": "ipxact_lib",
-        "version": "release_ipxact_lib_5.1.0"
     }
 ]
