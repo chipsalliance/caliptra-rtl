@@ -12,21 +12,5 @@
         "dest": "common/infra",
         "name": "sim_tools",
         "version": "v1.8.23"
-    },
-    {
-        "description": "Verification Tools",
-        "url": "origin://Base_Verification/5ac83406-f158-474c-81a6-6cf6e5f07514",
-        "dest": "common/verif/src",
-        "name": "tools",
-        "version": "release_verif_tools_1.15.0",
-        "has_submodules": "True"
-    },
-    {
-        "description": "Verification Frameworks",
-        "url": "origin://Base_Verification/1245dbfc-d547-444f-83cb-feb53b461cdd",
-        "dest": "common/verif/src",
-        "name": "frameworks",
-        "version": "release_frameworks_3.3.1",
-        "has_submodules": "True"
     }
 ]
