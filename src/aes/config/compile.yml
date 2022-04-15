@@ -1,0 +1,43 @@
+# Copyright (C) Microsoft Corporation. All rights reserved.
+
+# Go here for details on compile.yml syntax:
+# https://dev.azure.com/ms-tsd/Ether/_git/sim-tools?path=%2FSourceFileSpec.docx&version=GBmaster
+
+---
+provides: [aes]
+schema_version: 2.4.0
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/aes.v
+      - $COMPILE_ROOT/rtl/aes_core.v
+      - $COMPILE_ROOT/rtl/aes_decipher_block.v
+      - $COMPILE_ROOT/rtl/aes_encipher_block.v
+      - $COMPILE_ROOT/rtl/aes_inv_sbox.v
+      - $COMPILE_ROOT/rtl/aes_key_mem.v
+      - $COMPILE_ROOT/rtl/aes_sbox.v
+    tops: [aes]
+---
+provides: [aes_tb]  
+schema_version: 2.4.0
+requires: 
+  - aes
+targets:
+  tb:
+    directories: 
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/tb/aes_tb.v
+    tops: [aes_tb]
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - '-v2k_generate'
+        - '-timescale=1ns/1ps'
+        - '-noinherit_timescale=1ns/1ps'
+        - '-ucli -i dump.ucli'
+      sim:
+        - '-ucli -i dump.ucli'
