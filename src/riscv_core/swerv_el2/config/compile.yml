@@ -4,15 +4,27 @@
 # https://dev.azure.com/ms-tsd/Ether/_git/sim-tools?path=%2FSourceFileSpec.docx&version=GBmaster
 
 ---
-provides: [el2_swerv_wrapper]
+provides: [el2_swerv_pkg]
 schema_version: 2.4.0
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
       - $COMPILE_ROOT/rtl/common_defines.vh
-      - $COMPILE_ROOT/rtl/include/el2_def.sv
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/common_defines.vh
+---
+provides: [el2_swerv_wrapper]
+schema_version: 2.4.0
+requires: [el2_swerv_pkg]
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
       - $COMPILE_ROOT/rtl/el2_pdef.vh
+      - $COMPILE_ROOT/rtl/include/el2_def.sv
       - $COMPILE_ROOT/rtl/el2_mem.sv
       - $COMPILE_ROOT/rtl/el2_dma_ctrl.sv
       - $COMPILE_ROOT/rtl/el2_pic_ctrl.sv
@@ -68,14 +80,13 @@ global:
 provides: [el2_swerv_wrapper_tb]  
 schema_version: 2.4.0
 requires: 
+  - el2_swerv_pkg
   - el2_swerv_wrapper
 targets:
   tb:
     directories: 
-      - $COMPILE_ROOT
       - $COMPILE_ROOT/tb
     files:
-      - $COMPILE_ROOT/rtl/common_defines.vh
       - $COMPILE_ROOT/tb/el2_swerv_wrapper_tb.sv
       - $COMPILE_ROOT/tb/ahb_sif.sv
     tops: [el2_swerv_wrapper_tb]

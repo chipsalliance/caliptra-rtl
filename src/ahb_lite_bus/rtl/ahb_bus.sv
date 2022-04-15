@@ -46,10 +46,9 @@ interface AHB_BUS
           hprot,
           htrans,
           hmastlock,
-          hready,
     output  hresp,
             hrdata,
-            hreadyout
+            hready
   );
 
   // Slave Side - This slave port GOES to a multiple slaves

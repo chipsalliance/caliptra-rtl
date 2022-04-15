@@ -18,12 +18,12 @@ module ahb_node #(
 )
 (
   // to SLAVES PORT
-  output logic [NB_SLAVES-1:0][AHB_ADDR_WIDTH-1:0] hadrr_o,
+  output logic [NB_SLAVES-1:0][AHB_ADDR_WIDTH-1:0] haddr_o,
   output logic [NB_SLAVES-1:0][AHB_DATA_WIDTH-1:0] hwdata_o,
   output logic [NB_SLAVES-1:0] hsel_o,
   output logic [NB_SLAVES-1:0] hwrite_o,
   output logic [NB_SLAVES-1:0] hmastlock_o,
-  output logic [NB_SLAVES-1:0] hready_o,
+  output logic [NB_SLAVES-1:0] hslaveready_o,
   output logic [NB_SLAVES-1:0][1:0] htrans_o,
   output logic [NB_SLAVES-1:0][3:0] hprot_o,
   output logic [NB_SLAVES-1:0][2:0] hburst_o,
@@ -34,19 +34,18 @@ module ahb_node #(
   input logic [NB_SLAVES-1:0][AHB_DATA_WIDTH-1:0] hrdata_i,
 
   // from SINGLE MASTER PORT
-  input logic [AHB_ADDR_WIDTH-1:0] hadrr_i,
+  input logic [AHB_ADDR_WIDTH-1:0] haddr_i,
   input logic [AHB_DATA_WIDTH-1:0] hwdata_i,
   input logic hsel_i,
   input logic hwrite_i,
   input logic hmastlock_i,
-  input logic hready_i,
   input logic [1:0] htrans_i,
   input logic [3:0] hprot_i,
   input logic [2:0] hburst_i,
   input logic [2:0] hsize_i,
 
   output logic hresp_o,
-  output logic hreadyout_o,
+  output logic hmasterready_o,
   output logic [AHB_DATA_WIDTH-1:0] hrdata_o,
 
   // CONFIGURATION ADDRESS PORT
@@ -70,19 +69,19 @@ module ahb_node #(
 
   generate
     for(i=0;i<NB_SLAVES;i++) begin
-      assign hsel_o[i]  = (BYPASS_HSEL === 1 ? hsel_i && (hadrr_i >= START_ADDR_i[i]) && (hadrr_i <= END_ADDR_i[i]) : (hadrr_i >= START_ADDR_i[i]) && (hadrr_i <= END_ADDR_i[i]));
+      assign hsel_o[i]  = (BYPASS_HSEL === 1 ? hsel_i && (haddr_i >= START_ADDR_i[i]) && (haddr_i <= END_ADDR_i[i]) : (haddr_i >= START_ADDR_i[i]) && (haddr_i <= END_ADDR_i[i]));
     end
   endgenerate
 
   // HREADY SLAVE GENERATION
-  // If slave selected, route master HREADY to the SLAVE HREADY input
+  // If slave selected, route slave HREADYOUT to the SLAVE HREADY input
   always_comb begin
     for ( loop_1 = 0; loop_1 < NB_SLAVES; loop_1++ ) begin
       if( hsel_o[loop_1] == 1'b1 ) begin
-        hready_o[loop_1] = hready_i;
+        hslaveready_o[loop_1] = hreadyout_i;
       end
       else  begin
-        hready_o[loop_1] = 1'b1;
+        hslaveready_o[loop_1] = 1'b1;
       end
     end
   end
@@ -170,10 +169,10 @@ module ahb_node #(
   always_comb begin
     for ( loop_8 = 0; loop_8 < NB_SLAVES; loop_8++ ) begin
       if( hsel_o[loop_8] == 1'b1 ) begin
-        hadrr_o[loop_8] = hadrr_i;
+        haddr_o[loop_8] = haddr_i;
       end
       else  begin
-        hadrr_o[loop_8] = {AHB_ADDR_WIDTH{1'b0}};
+        haddr_o[loop_8] = {AHB_ADDR_WIDTH{1'b0}};
       end
     end
   end
@@ -216,13 +215,13 @@ module ahb_node #(
     end
   end
 
-  // HREADYOUT MASTER GENERATION
+  // HREADY MASTER GENERATION
   // If slave selected, route slave HREADYOUT to the MASTER HREADYOUT input
   always_comb begin
-    hreadyout_o = 1'b1;
+    hmasterready_o = 1'b1;
     for ( loop_12 = 0; loop_12 < NB_SLAVES; loop_12++ ) begin
       if( hsel_o[loop_12] == 1'b1 ) begin
-        hreadyout_o = hreadyout_i[loop_12];
+        hmasterready_o = hreadyout_i[loop_12];
       end
     end
   end

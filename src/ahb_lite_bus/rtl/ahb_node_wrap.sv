@@ -71,12 +71,12 @@ module ahb_node_wrap #(
   ) ahb_node_u1
   (
     // to SLAVES PORT
-    .hadrr_o(haddr),
+    .haddr_o(haddr),
     .hwdata_o(hwdata),
     .hsel_o(hsel),
     .hwrite_o(hwrite),
     .hmastlock_o(hmastlock),
-    .hready_o(hready),
+    .hslaveready_o(hready),
     .htrans_o(htrans),
     .hprot_o(hprot),
     .hburst_o(hburst),
@@ -86,18 +86,17 @@ module ahb_node_wrap #(
     .hrdata_i(hrdata),
 
     // from SINGLE MASTER PORT
-    .hadrr_i(ahb_master.haddr),
+    .haddr_i(ahb_master.haddr),
     .hwdata_i(ahb_master.hwdata),
     .hsel_i(ahb_master.hsel),
     .hwrite_i(ahb_master.hwrite),
     .hmastlock_i(ahb_master.hmastlock),
-    .hready_i(ahb_master.hready),
     .htrans_i(ahb_master.htrans),
     .hprot_i(ahb_master.hprot),
     .hburst_i(ahb_master.hburst),
     .hsize_i(ahb_master.hsize),
     .hresp_o(ahb_master.hresp),
-    .hreadyout_o(ahb_master.hreadyout),
+    .hmasterready_o(ahb_master.hready),
     .hrdata_o(ahb_master.hrdata),
 
     // CONFIGURATION PORT

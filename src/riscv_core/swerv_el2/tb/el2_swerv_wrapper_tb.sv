@@ -336,13 +336,13 @@ module el2_swerv_wrapper_tb ( input bit core_clk );
         end
         // End Of test monitor
         if(mailbox_write && WriteData[7:0] == 8'hff) begin
-            $display("TEST_PASSED");
+            $display("TESTCASE PASSED");
             $display("\nFinished : minstret = %0d, mcycle = %0d", `DEC.tlu.minstretl[31:0],`DEC.tlu.mcyclel[31:0]);
             $display("See \"exec.log\" for execution trace with register updates..\n");
             $finish;
         end
         else if(mailbox_write && WriteData[7:0] == 8'h1) begin
-            $display("TEST_FAILED");
+            $display("TESTCASE FAILED");
             $finish;
         end
     end
@@ -498,14 +498,14 @@ el2_swerv_wrapper rvtop (
     //---------------------------------------------------------------
     // DMA Slave
     //---------------------------------------------------------------
-    .dma_haddr              ( '0 ),
-    .dma_hburst             ( '0 ),
-    .dma_hmastlock          ( '0 ),
-    .dma_hprot              ( '0 ),
-    .dma_hsize              ( '0 ),
-    .dma_htrans             ( '0 ),
-    .dma_hwrite             ( '0 ),
-    .dma_hwdata             ( '0 ),
+    .dma_haddr              ( lsu_haddr ),
+    .dma_hburst             ( lsu_hburst ),
+    .dma_hmastlock          ( lsu_hmastlock ),
+    .dma_hprot              ( lsu_hprot ),
+    .dma_hsize              ( lsu_hsize ),
+    .dma_htrans             ( lsu_htrans ),
+    .dma_hwrite             ( lsu_hwrite ),
+    .dma_hwdata             ( lsu_hwdata ),
 
     .dma_hrdata             ( dma_hrdata    ),
     .dma_hresp              ( dma_hresp     ),
@@ -779,7 +779,7 @@ ahb_sif lmem (
      // Inputs
      .HWDATA(lsu_hwdata),
      .HCLK(core_clk),
-     .HSEL(1'b1),
+     .HSEL(1'b0), //disabling Lmem for testing DMA access from LSU
      .HPROT(lsu_hprot),
      .HWRITE(lsu_hwrite),
      .HTRANS(lsu_htrans),
@@ -794,6 +794,7 @@ ahb_sif lmem (
      .HRESP(lsu_hresp),
      .HRDATA(lsu_hrdata[63:0])
 );
+
 
 `endif
 `ifdef RV_BUILD_AXI4
@@ -990,7 +991,9 @@ addresses:
  0xffff_fff8 - DCCM start address to load
  0xffff_fffc - DCCM end address to load
 */
-
+`ifndef VERILATOR
+init_dccm();
+`endif
 addr = 'hffff_fff8;
 saddr = {lmem.mem[addr+3],lmem.mem[addr+2],lmem.mem[addr+1],lmem.mem[addr]};
 if (saddr < `RV_DCCM_SADR || saddr > `RV_DCCM_EADR) return;
@@ -1121,6 +1124,22 @@ task init_iccm;
 `endif
 endtask
 
+task init_dccm;
+`ifdef RV_DCCM_ENABLE
+    `DRAM(0) = '{default:39'h0};
+    `DRAM(1) = '{default:39'h0};
+`ifdef RV_DCCM_NUM_BANKS_4
+    `DRAM(2) = '{default:39'h0};
+    `DRAM(3) = '{default:39'h0};
+`endif
+`ifdef RV_DCCM_NUM_BANKS_8
+    `DRAM(4) = '{default:39'h0};
+    `DRAM(5) = '{default:39'h0};
+    `DRAM(6) = '{default:39'h0};
+    `DRAM(7) = '{default:39'h0};
+`endif
+`endif
+endtask
 
 function[6:0] riscv_ecc32(input[31:0] data);
 reg[6:0] synd;
