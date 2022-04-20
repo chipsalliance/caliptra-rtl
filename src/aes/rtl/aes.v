@@ -49,8 +49,8 @@ module aes(
 
            // Data ports.
            input wire  [7 : 0]  address,
-           input wire  [31 : 0] write_data,
-           output wire [31 : 0] read_data
+           input wire  [63 : 0] write_data,
+           output wire [63 : 0] read_data
           );
 
   //----------------------------------------------------------------
@@ -73,17 +73,17 @@ module aes(
   localparam CTRL_KEYLEN_BIT  = 1;
 
   localparam ADDR_KEY0        = 8'h10;
-  localparam ADDR_KEY7        = 8'h17;
+  localparam ADDR_KEY3        = 8'h13;
 
   localparam ADDR_BLOCK0      = 8'h20;
-  localparam ADDR_BLOCK3      = 8'h23;
+  localparam ADDR_BLOCK1      = 8'h21;
 
   localparam ADDR_RESULT0     = 8'h30;
-  localparam ADDR_RESULT3     = 8'h33;
+  localparam ADDR_RESULT1     = 8'h31;
 
-  localparam CORE_NAME0       = 32'h61657320; // "aes "
-  localparam CORE_NAME1       = 32'h20202020; // "    "
-  localparam CORE_VERSION     = 32'h302e3630; // "0.60"
+  localparam CORE_NAME0       = 64'h0000000061657320; // "aes "
+  localparam CORE_NAME1       = 64'h0000000020202020; // "    "
+  localparam CORE_VERSION     = 64'h00000000302e3630; // "0.60"
 
 
   //----------------------------------------------------------------
@@ -99,10 +99,10 @@ module aes(
   reg keylen_reg;
   reg config_we;
 
-  reg [31 : 0] block_reg [0 : 3];
+  reg [63 : 0] block_reg [0 : 1];
   reg          block_we;
 
-  reg [31 : 0] key_reg [0 : 7];
+  reg [63 : 0] key_reg [0 : 3];
   reg          key_we;
 
   reg [127 : 0] result_reg;
@@ -113,7 +113,7 @@ module aes(
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-  reg [31 : 0]   tmp_read_data;
+  reg [63 : 0]   tmp_read_data;
 
   wire           core_encdec;
   wire           core_init;
@@ -131,11 +131,9 @@ module aes(
   //----------------------------------------------------------------
   assign read_data = tmp_read_data;
 
-  assign core_key = {key_reg[0], key_reg[1], key_reg[2], key_reg[3],
-                     key_reg[4], key_reg[5], key_reg[6], key_reg[7]};
+  assign core_key = {key_reg[0], key_reg[1], key_reg[2], key_reg[3]};
 
-  assign core_block  = {block_reg[0], block_reg[1],
-                        block_reg[2], block_reg[3]};
+  assign core_block  = {block_reg[0], block_reg[1]};
   assign core_init   = init_reg;
   assign core_next   = next_reg;
   assign core_encdec = encdec_reg;
@@ -175,11 +173,11 @@ module aes(
 
       if (!reset_n)
         begin
-          for (i = 0 ; i < 4 ; i = i + 1)
-            block_reg[i] <= 32'h0;
+          for (i = 0 ; i < 2 ; i = i + 1)
+            block_reg[i] <= 64'h0;
 
-          for (i = 0 ; i < 8 ; i = i + 1)
-            key_reg[i] <= 32'h0;
+          for (i = 0 ; i < 4 ; i = i + 1)
+            key_reg[i] <= 64'h0;
 
           init_reg   <= 1'b0;
           next_reg   <= 1'b0;
@@ -205,10 +203,10 @@ module aes(
             end
 
           if (key_we)
-            key_reg[address[2 : 0]] <= write_data;
+            key_reg[address[1 : 0]] <= write_data;
 
           if (block_we)
-            block_reg[address[1 : 0]] <= write_data;
+            block_reg[address[0]] <= write_data;
         end
     end // reg_update
 
@@ -225,7 +223,7 @@ module aes(
       config_we     = 1'b0;
       key_we        = 1'b0;
       block_we      = 1'b0;
-      tmp_read_data = 32'h0;
+      tmp_read_data = 64'h0;
 
       if (cs)
         begin
@@ -240,10 +238,10 @@ module aes(
               if (address == ADDR_CONFIG)
                 config_we = 1'b1;
 
-              if ((address >= ADDR_KEY0) && (address <= ADDR_KEY7))
+              if ((address >= ADDR_KEY0) && (address <= ADDR_KEY3))
                 key_we = 1'b1;
 
-              if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK3))
+              if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK1))
                 block_we = 1'b1;
             end // if (we)
 
@@ -253,16 +251,16 @@ module aes(
                 ADDR_NAME0:   tmp_read_data = CORE_NAME0;
                 ADDR_NAME1:   tmp_read_data = CORE_NAME1;
                 ADDR_VERSION: tmp_read_data = CORE_VERSION;
-                ADDR_CTRL:    tmp_read_data = {28'h0, keylen_reg, encdec_reg, next_reg, init_reg};
-                ADDR_STATUS:  tmp_read_data = {30'h0, valid_reg, ready_reg};
+                ADDR_CTRL:    tmp_read_data = {60'h0, keylen_reg, encdec_reg, next_reg, init_reg};
+                ADDR_STATUS:  tmp_read_data = {62'h0, valid_reg, ready_reg};
 
                 default:
                   begin
                   end
               endcase // case (address)
 
-              if ((address >= ADDR_RESULT0) && (address <= ADDR_RESULT3))
-                tmp_read_data = result_reg[(3 - (address - ADDR_RESULT0)) * 32 +: 32];
+              if ((address >= ADDR_RESULT0) && (address <= ADDR_RESULT1))
+                tmp_read_data = result_reg[(1 - (address - ADDR_RESULT0)) * 64 +: 64];
             end
         end
     end // addr_decoder

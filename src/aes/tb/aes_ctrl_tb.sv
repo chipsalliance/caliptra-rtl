@@ -1,46 +1,16 @@
 //======================================================================
 //
-// aes_tb.v
+// aes_ctrl_tb.sv
 // --------
-// Testbench for the aes top level wrapper.
+// AES testbench for the AES AHb_lite interface controller.
 //
 //
-// Author: Joachim Strombergson
-// Copyright (c) 2014, Secworks Sweden AB
-// All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or
-// without modification, are permitted provided that the following
-// conditions are met:
-//
-// 1. Redistributions of source code must retain the above copyright
-//    notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-//    notice, this list of conditions and the following disclaimer in
-//    the documentation and/or other materials provided with the
-//    distribution.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-// FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-// COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-// STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-// ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+// Author: Mojtaba Bisheh-Niasar
 //======================================================================
 
-`default_nettype none
+module aes_ctrl_tb();
 
-module aes_tb();
-
-  //----------------------------------------------------------------
+//----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
   parameter DEBUG     = 0;
@@ -82,38 +52,69 @@ module aes_tb();
   parameter AES_DECIPHER = 1'b0;
   parameter AES_ENCIPHER = 1'b1;
 
+  parameter AHB_HTRANS_IDLE     = 0;
+  parameter AHB_HTRANS_BUSY     = 1;
+  parameter AHB_HTRANS_NONSEQ   = 2;
+  parameter AHB_HTRANS_SEQ      = 3;
+
+  parameter AHB_ADDR_WIDTH = 8;
+  parameter AHB_DATA_WIDTH = 64;
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
   //----------------------------------------------------------------
-  reg [31 : 0]  cycle_ctr;
-  reg [31 : 0]  error_ctr;
-  reg [31 : 0]  tc_ctr;
+  reg [63 : 0]  cycle_ctr;
+  reg [63 : 0]  error_ctr;
+  reg [63 : 0]  tc_ctr;
+
+  reg           clk_tb;
+  reg           reset_n_tb;
+
+  reg [AHB_ADDR_WIDTH-1:0]  hadrr_i_tb;
+  reg [AHB_DATA_WIDTH-1:0]  hwdata_i_tb;
+  reg           hsel_i_tb;
+  reg           hwrite_i_tb; 
+  reg           hmastlock_i_tb;
+  reg           hready_i_tb;
+  reg [1:0]     htrans_i_tb;
+  reg [3:0]     hprot_i_tb;
+  reg [2:0]     hburst_i_tb;
+  reg [2:0]     hsize_i_tb;
+
+  wire          hresp_o_tb;
+  wire          hreadyout_o_tb;
+  wire [AHB_DATA_WIDTH-1:0] hrdata_o_tb;
 
   reg [63 : 0]  read_data;
   reg [127 : 0] result_data;
 
-  reg           tb_clk;
-  reg           tb_reset_n;
-  reg           tb_cs;
-  reg           tb_we;
-  reg [7  : 0]  tb_address;
-  reg [63 : 0]  tb_write_data;
-  wire [63 : 0] tb_read_data;
-
-
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
-  aes dut(
-           .clk(tb_clk),
-           .reset_n(tb_reset_n),
-           .cs(tb_cs),
-           .we(tb_we),
-           .address(tb_address),
-           .write_data(tb_write_data),
-           .read_data(tb_read_data)
-          );
+  aes_ctrl #(
+             .AHB_DATA_WIDTH(64),
+             .AHB_ADDR_WIDTH(32),
+             .BYPASS_HSEL(0)
+            )
+            dut (
+             .clk(clk_tb),
+             .reset_n(reset_n_tb),
+
+             .hadrr_i(hadrr_i_tb),
+             .hwdata_i(hwdata_i_tb),
+             .hsel_i(hsel_i_tb),
+             .hwrite_i(hwrite_i_tb),
+             .hmastlock_i(hmastlock_i_tb),
+             .hready_i(hready_i_tb),
+             .htrans_i(htrans_i_tb),
+             .hprot_i(hprot_i_tb),
+             .hburst_i(hburst_i_tb),
+             .hsize_i(hsize_i_tb),
+
+             .hresp_o(hresp_o_tb),
+             .hreadyout_o(hreadyout_o_tb),
+             .hrdata_o(hrdata_o_tb)
+            );
 
 
   //----------------------------------------------------------------
@@ -124,7 +125,7 @@ module aes_tb();
   always
     begin : clk_gen
       #CLK_HALF_PERIOD;
-      tb_clk = !tb_clk;
+      clk_tb = !clk_tb;
     end // clk_gen
 
 
@@ -136,37 +137,9 @@ module aes_tb();
   //----------------------------------------------------------------
   always
     begin : sys_monitor
-      cycle_ctr = cycle_ctr + 1;
-
       #(CLK_PERIOD);
-
-      if (DEBUG)
-        begin
-          dump_dut_state();
-        end
+      cycle_ctr = cycle_ctr + 1;
     end
-
-
-  //----------------------------------------------------------------
-  // dump_dut_state()
-  //
-  // Dump the state of the dump when needed.
-  //----------------------------------------------------------------
-  task dump_dut_state;
-    begin
-      $display("cycle: 0x%016x", cycle_ctr);
-      $display("State of DUT");
-      $display("------------");
-      $display("ctrl_reg:   init   = 0x%01x, next   = 0x%01x", dut.init_reg, dut.next_reg);
-      $display("config_reg: encdec = 0x%01x, length = 0x%01x ", dut.encdec_reg, dut.keylen_reg);
-      $display("");
-
-      $display("block: 0x%08x, 0x%08x, 0x%08x, 0x%08x",
-               dut.block_reg[0], dut.block_reg[1], dut.block_reg[2], dut.block_reg[3]);
-      $display("");
-
-    end
-  endtask // dump_dut_state
 
 
   //----------------------------------------------------------------
@@ -177,10 +150,10 @@ module aes_tb();
   task reset_dut;
     begin
       $display("*** Toggle reset.");
-      tb_reset_n = 0;
+      reset_n_tb = 0;
 
       #(2 * CLK_PERIOD);
-      tb_reset_n = 1;
+      reset_n_tb = 1;
       $display("");
     end
   endtask // reset_dut
@@ -206,6 +179,7 @@ module aes_tb();
   endtask // display_test_results
 
 
+
   //----------------------------------------------------------------
   // init_sim()
   //
@@ -218,40 +192,74 @@ module aes_tb();
       error_ctr     = 0;
       tc_ctr        = 0;
 
-      tb_clk        = 0;
-      tb_reset_n    = 1;
+      clk_tb        = 0;
+      reset_n_tb    = 0;
 
-      tb_cs         = 0;
-      tb_we         = 0;
-      tb_address    = 8'h0;
-      tb_write_data = 64'h0;
+      hadrr_i_tb      = 'Z;
+      hwdata_i_tb     = 'Z;
+      hsel_i_tb       = 0;
+      hwrite_i_tb     = 0;
+      hmastlock_i_tb  = 0;
+      hready_i_tb     = 0;
+      htrans_i_tb     = AHB_HTRANS_IDLE;
+      hprot_i_tb      = 0;
+      hburst_i_tb     = 0;
+      hsize_i_tb      = 3'b011;
     end
   endtask // init_sim
 
 
   //----------------------------------------------------------------
-  // write_word()
+  // check_name_version()
+  //
+  // Read the name and version from the DUT.
+  //----------------------------------------------------------------
+  task check_name_version;
+    reg [63 : 0] name0;
+    reg [63 : 0] name1;
+    reg [63 : 0] version;
+    begin
+
+      read_single_word(ADDR_NAME0);
+      name0 = read_data;
+      read_single_word(ADDR_NAME1);
+      name1 = read_data;
+      read_single_word(ADDR_VERSION);
+      version = read_data;
+
+      $display("DUT name: %c%c%c%c%c%c%c%c",
+               name0[31 : 24], name0[23 : 16], name0[15 : 8], name0[7 : 0],
+               name1[31 : 24], name1[23 : 16], name1[15 : 8], name1[7 : 0]);
+      $display("DUT version: %c%c%c%c",
+               version[31 : 24], version[23 : 16], version[15 : 8], version[7 : 0]);
+    end
+  endtask // check_name_version
+
+  //----------------------------------------------------------------
+  // write_single_word()
   //
   // Write the given word to the DUT using the DUT interface.
   //----------------------------------------------------------------
-  task write_word(input [11 : 0] address,
+  task write_single_word(input [7 : 0]  address,
                   input [63 : 0] word);
     begin
-      if (DEBUG)
-        begin
-          $display("*** Writing 0x%08x to 0x%02x.", word, address);
-          $display("");
-        end
+      hsel_i_tb       = 1;
+      hadrr_i_tb      = address;
+      hwrite_i_tb     = 1;
+      hmastlock_i_tb  = 0;
+      hready_i_tb     = 1;
+      htrans_i_tb     = AHB_HTRANS_BUSY;
+      hprot_i_tb      = 0;
+      hburst_i_tb     = 0;
+      hsize_i_tb      = 3'b011;
+      #(CLK_PERIOD);
 
-      tb_address = address;
-      tb_write_data = word;
-      tb_cs = 1;
-      tb_we = 1;
-      #(2 * CLK_PERIOD);
-      tb_cs = 0;
-      tb_we = 0;
+      hadrr_i_tb      = 'Z;
+      hwdata_i_tb     = word;
+      hwrite_i_tb     = 0;
+      htrans_i_tb     = AHB_HTRANS_IDLE;
     end
-  endtask // write_word
+  endtask // write_single_word
 
 
   //----------------------------------------------------------------
@@ -261,8 +269,8 @@ module aes_tb();
   //----------------------------------------------------------------
   task write_block(input [127 : 0] block);
     begin
-      write_word(ADDR_BLOCK0, block[127  :  64]);
-      write_word(ADDR_BLOCK1, block[63   :   0]);
+      write_single_word(ADDR_BLOCK0, block[127  :  64]);
+      write_single_word(ADDR_BLOCK1, block[63   :   0]);
     end
   endtask // write_block
 
@@ -274,22 +282,29 @@ module aes_tb();
   // the word read will be available in the global variable
   // read_data.
   //----------------------------------------------------------------
-  task read_word(input [11 : 0]  address);
+  task read_single_word(input [7 : 0]  address);
     begin
-      tb_address = address;
-      tb_cs = 1;
-      tb_we = 0;
+      hsel_i_tb       = 1;
+      hadrr_i_tb      = address;
+      hwrite_i_tb     = 0;
+      hmastlock_i_tb  = 0;
+      hready_i_tb     = 1;
+      htrans_i_tb     = AHB_HTRANS_BUSY;
+      hprot_i_tb      = 0;
+      hburst_i_tb     = 0;
+      hsize_i_tb      = 3'b011;
       #(CLK_PERIOD);
-      read_data = tb_read_data;
-      tb_cs = 0;
+      
+      hwdata_i_tb     = 0;
+      hadrr_i_tb     = 'Z;
+      htrans_i_tb     = AHB_HTRANS_IDLE;
 
-      if (DEBUG)
-        begin
-          $display("*** Reading 0x%08x from 0x%02x.", read_data, address);
-          $display("");
-        end
+      #(CLK_PERIOD);
+      read_data = hrdata_o_tb;
+      hsel_i_tb       = 0;
     end
   endtask // read_word
+
 
 
   //----------------------------------------------------------------
@@ -299,10 +314,10 @@ module aes_tb();
   //----------------------------------------------------------------
   task read_result;
     begin
-      read_word(ADDR_RESULT0);
-      result_data[127 : 064] = read_data;
-      read_word(ADDR_RESULT1);
-      result_data[063 : 000] = read_data;
+      read_single_word(ADDR_RESULT0);
+      result_data[127 : 64] = read_data;
+      read_single_word(ADDR_RESULT1);
+      result_data[63  :  0] = read_data;
     end
   endtask // read_result
 
@@ -315,31 +330,25 @@ module aes_tb();
   //----------------------------------------------------------------
   task init_key(input [255 : 0] key, input key_length);
     begin
-      if (DEBUG)
-        begin
-          $display("key length: 0x%01x", key_length);
-          $display("Initializing key expansion for key: 0x%016x", key);
-        end
-
-      write_word(ADDR_KEY0, key[255  : 192]);
-      write_word(ADDR_KEY1, key[191  : 128]);
-      write_word(ADDR_KEY2, key[127  :  64]);
-      write_word(ADDR_KEY3, key[63   :   0]);
+      write_single_word(ADDR_KEY0, key[255  : 192]);
+      write_single_word(ADDR_KEY1, key[191  : 128]);
+      write_single_word(ADDR_KEY2, key[127  :  64]);
+      write_single_word(ADDR_KEY3, key[63   :   0]);
 
       if (key_length)
-        begin
-          write_word(ADDR_CONFIG, 8'h02);
-        end
+          write_single_word(ADDR_CONFIG, 8'h02);
       else
-        begin
-          write_word(ADDR_CONFIG, 8'h00);
-        end
+          write_single_word(ADDR_CONFIG, 8'h00);
 
-      write_word(ADDR_CTRL, 8'h01);
+      write_single_word(ADDR_CTRL, 8'h01);
+      
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
 
       #(100 * CLK_PERIOD);
     end
   endtask // init_key
+
 
 
   //----------------------------------------------------------------
@@ -359,11 +368,13 @@ module aes_tb();
 
       init_key(key, key_length);
       write_block(block);
-      dump_dut_state();
 
-      write_word(ADDR_CONFIG, (8'h00 + (key_length << 1)+ encdec));
-      write_word(ADDR_CTRL, 8'h02);
-
+      write_single_word(ADDR_CONFIG, (8'h00 + (key_length << 1)+ encdec));
+      write_single_word(ADDR_CTRL, 8'h02);
+      
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      
       #(100 * CLK_PERIOD);
 
       read_result();
@@ -384,6 +395,7 @@ module aes_tb();
         end
     end
   endtask // ecb_mode_single_block_test
+
 
 
   //----------------------------------------------------------------
@@ -532,20 +544,17 @@ module aes_tb();
       $display("");
 
       init_sim();
-      dump_dut_state();
       reset_dut();
-      dump_dut_state();
+
+      check_name_version();
 
       aes_test();
 
       display_test_results();
-
+      
       $display("");
       $display("*** AES simulation done. ***");
       $finish;
     end // main
-endmodule // aes_tb
 
-//======================================================================
-// EOF aes_tb.v
-//======================================================================
+endmodule // aes_tb

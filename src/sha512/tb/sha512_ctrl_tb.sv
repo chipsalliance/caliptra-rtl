@@ -1,3 +1,12 @@
+//======================================================================
+//
+// sha512_ctrl_tb.sv
+// --------
+// SHA512 testbench for the SHA512 AHb_lite interface controller.
+//
+//
+// Author: Mojtaba Bisheh-Niasar
+//======================================================================
 
 module sha512_ctrl_tb();
 
@@ -7,7 +16,7 @@ module sha512_ctrl_tb();
   parameter DEBUG = 0;
 
   parameter CLK_HALF_PERIOD = 1;
-  parameter CLK_PERIOD      = 2*CLK_HALF_PERIOD;
+  parameter CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
 
   // The address map.
   parameter ADDR_NAME0           = 8'h00;
@@ -177,7 +186,7 @@ module sha512_ctrl_tb();
       error_ctr = 32'h00000000;
       tc_ctr    = 32'h00000000;
 
-      clk_tb        = 1;
+      clk_tb        = 0;
       reset_n_tb    = 0;
 
       hadrr_i_tb      = 0;
@@ -243,9 +252,8 @@ module sha512_ctrl_tb();
   //----------------------------------------------------------------
   task read_single_word(input [7 : 0]  address);
     begin
-      hadrr_i_tb      = address;
-      hwdata_i_tb     = 0;
       hsel_i_tb       = 1;
+      hadrr_i_tb      = address;
       hwrite_i_tb     = 0;
       hmastlock_i_tb  = 0;
       hready_i_tb     = 1;
@@ -253,18 +261,15 @@ module sha512_ctrl_tb();
       hprot_i_tb      = 0;
       hburst_i_tb     = 0;
       hsize_i_tb      = 3'b011;
-      #(2*CLK_PERIOD);
-
-      read_data = hrdata_o_tb;
-      hsel_i_tb = 0;
+      #(CLK_PERIOD);
+      
+      hwdata_i_tb     = 0;
+      hadrr_i_tb     = 'Z;
       htrans_i_tb     = AHB_HTRANS_IDLE;
-      //#(CLK_PERIOD);
 
-      if (DEBUG)
-        begin
-          $display("*** Reading 0x%16x from 0x%02x.", read_data, address);
-          $display("");
-        end
+      #(CLK_PERIOD);
+      read_data = hrdata_o_tb;
+      hsel_i_tb       = 0;
     end
   endtask // read_word
 
@@ -277,15 +282,8 @@ module sha512_ctrl_tb();
   task write_single_word(input [7 : 0]  address,
                   input [63 : 0] word);
     begin
-      if (DEBUG)
-        begin
-          $display("*** Writing 0x%16x to 0x%02x.", word, address);
-          $display("");
-        end
-
-      hadrr_i_tb      = address;
-      hwdata_i_tb     = 0;
       hsel_i_tb       = 1;
+      hadrr_i_tb      = address;
       hwrite_i_tb     = 1;
       hmastlock_i_tb  = 0;
       hready_i_tb     = 1;
@@ -295,13 +293,10 @@ module sha512_ctrl_tb();
       hsize_i_tb      = 3'b011;
       #(CLK_PERIOD);
 
+      hadrr_i_tb      = 'Z;
       hwdata_i_tb     = word;
       hwrite_i_tb     = 0;
-      #(CLK_PERIOD);
-
-      hsel_i_tb       = 0;
       htrans_i_tb     = AHB_HTRANS_IDLE;
-      //#(CLK_PERIOD);
     end
   endtask // write_single_word
 
@@ -313,88 +308,6 @@ module sha512_ctrl_tb();
   //----------------------------------------------------------------
   task write_block(input [1023 : 0] block);
     begin
-      /*
-      hwdata_i_tb     = 0;
-      hsel_i_tb       = 1;
-      hwrite_i_tb     = 1;
-      hmastlock_i_tb  = 0;
-      hready_i_tb     = 1;
-      htrans_i_tb     = AHB_HTRANS_BUSY;
-      hprot_i_tb      = 0;
-      hburst_i_tb     = 0;
-      hsize_i_tb      = 3'b011;
-      hadrr_i_tb      = ADDR_BLOCK0;
-      #(CLK_PERIOD);
-
-      hwdata_i_tb     = block[1023 : 960];
-      hadrr_i_tb      = ADDR_BLOCK1;
-      #(CLK_PERIOD);
-
-      hwdata_i_tb     = block[959  : 896];
-      hadrr_i_tb      = ADDR_BLOCK2;
-      #(CLK_PERIOD);
-
-      hwdata_i_tb     = block[895  : 832];
-      hadrr_i_tb      = ADDR_BLOCK3;
-      #(CLK_PERIOD);
-
-      hwdata_i_tb     = block[831  : 768];
-      hadrr_i_tb      = ADDR_BLOCK4;
-      #(CLK_PERIOD);
-
-      hwdata_i_tb     = block[767  : 704];
-      hadrr_i_tb      = ADDR_BLOCK5;
-      #(CLK_PERIOD);
-
-      hwdata_i_tb     = block[703  : 640];
-      hadrr_i_tb      = ADDR_BLOCK6;
-      #(CLK_PERIOD);
-
-      hwdata_i_tb     = block[639  : 576];
-      hadrr_i_tb      = ADDR_BLOCK7;
-      #(CLK_PERIOD);
-
-      hwdata_i_tb     = block[575  : 512];
-      hadrr_i_tb      = ADDR_BLOCK8;
-      #(CLK_PERIOD);
-
-      hwdata_i_tb     = block[511  : 448];
-      hadrr_i_tb      = ADDR_BLOCK9;
-      #(CLK_PERIOD);
-
-      hwdata_i_tb     = block[447  : 384];
-      hadrr_i_tb      = ADDR_BLOCK10;
-      #(CLK_PERIOD);
-
-      hwdata_i_tb     = block[383  : 320];
-      hadrr_i_tb      = ADDR_BLOCK11;
-      #(CLK_PERIOD);
-
-      hwdata_i_tb     = block[319  : 256];
-      hadrr_i_tb      = ADDR_BLOCK12;
-      #(CLK_PERIOD);
-
-      hwdata_i_tb     = block[255  : 192];
-      hadrr_i_tb      = ADDR_BLOCK13;
-      #(CLK_PERIOD);
-
-      hwdata_i_tb     = block[191  : 128];
-      hadrr_i_tb      = ADDR_BLOCK14;
-      #(CLK_PERIOD);
-
-      hwdata_i_tb     = block[127  :  64];
-      hadrr_i_tb      = ADDR_BLOCK15;
-      #(CLK_PERIOD);
-
-      hwdata_i_tb     = block[63   :   0];
-      hwrite_i_tb     = 0;
-      #(CLK_PERIOD);
-
-      hsel_i_tb       = 0;
-      htrans_i_tb     = AHB_HTRANS_IDLE;
-      */
-
-      
       write_single_word(ADDR_BLOCK0,  block[1023 : 960]);
       write_single_word(ADDR_BLOCK1,  block[959  : 896]);
       write_single_word(ADDR_BLOCK2,  block[895  : 832]);
@@ -411,7 +324,6 @@ module sha512_ctrl_tb();
       write_single_word(ADDR_BLOCK13, block[191  : 128]);
       write_single_word(ADDR_BLOCK14, block[127  :  64]);
       write_single_word(ADDR_BLOCK15, block[63   :   0]);
-      
     end
   endtask // write_block
 
@@ -484,6 +396,10 @@ module sha512_ctrl_tb();
 
       write_block(block);
       write_single_word(ADDR_CTRL, {60'h000000000000000, mode, CTRL_INIT_VALUE});
+      
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+
       #(CLK_PERIOD);
       wait_ready();
       read_digest();
@@ -537,6 +453,9 @@ module sha512_ctrl_tb();
       // First block
       write_block(block0);
       write_single_word(ADDR_CTRL, {60'h000000000000000, mode, CTRL_INIT_VALUE});
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+
       #(CLK_PERIOD);
       wait_ready();
       read_digest();
@@ -556,6 +475,9 @@ module sha512_ctrl_tb();
       // Final block
       write_block(block1);
       write_single_word(ADDR_CTRL, {60'h000000000000000, mode, CTRL_NEXT_VALUE});
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+
       #(CLK_PERIOD);
       wait_ready();
       read_digest();
@@ -599,6 +521,9 @@ module sha512_ctrl_tb();
 
       // Trying to change the work factor number.
       write_single_word(ADDR_WORK_FACTOR_NUM, 64'h0000000000000003);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+
       read_single_word(ADDR_WORK_FACTOR_NUM);
 
       // Set block to all zero
@@ -609,6 +534,9 @@ module sha512_ctrl_tb();
       my_ctrl_cmd = 64'h0000000000000000 + (CTRL_WORK_FACTOR_VALUE << 7) +
                     (MODE_SHA_512 << 2) + CTRL_INIT_VALUE;
       write_single_word(ADDR_CTRL, my_ctrl_cmd);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+
       #(CLK_PERIOD);
       wait_ready();
       read_digest();
@@ -628,64 +556,6 @@ module sha512_ctrl_tb();
   //----------------------------------------------------------------
   task read_digest;
     begin
-      hwdata_i_tb     = 0;
-      hsel_i_tb       = 1;
-      hwrite_i_tb     = 0;
-      hmastlock_i_tb  = 0;
-      hready_i_tb     = 1;
-      htrans_i_tb     = AHB_HTRANS_BUSY;
-      hprot_i_tb      = 0;
-      hburst_i_tb     = 0;
-      hsize_i_tb      = 3'b011;
-      hadrr_i_tb      = ADDR_DIGEST0;
-      #(CLK_PERIOD);
-
-      read_data = hrdata_o_tb;
-      hadrr_i_tb      = ADDR_DIGEST1;
-      #(CLK_PERIOD);
-
-      read_data = hrdata_o_tb;
-      digest_data[511 : 448] = read_data;
-      hadrr_i_tb      = ADDR_DIGEST2;
-      #(CLK_PERIOD);
-
-      read_data = hrdata_o_tb;
-      digest_data[447 : 384] = read_data;
-      hadrr_i_tb      = ADDR_DIGEST3;
-      #(CLK_PERIOD);
-
-      read_data = hrdata_o_tb;
-      digest_data[383 : 320] = read_data;
-      hadrr_i_tb      = ADDR_DIGEST4;
-      #(CLK_PERIOD);
-
-      read_data = hrdata_o_tb;
-      digest_data[319 : 256] = read_data;
-      hadrr_i_tb      = ADDR_DIGEST5;
-      #(CLK_PERIOD);
-
-      read_data = hrdata_o_tb;
-      digest_data[255 : 192] = read_data;
-      hadrr_i_tb      = ADDR_DIGEST6;
-      #(CLK_PERIOD);  
-
-      read_data = hrdata_o_tb;
-      digest_data[191 : 128] = read_data;
-      hadrr_i_tb      = ADDR_DIGEST7;
-      #(CLK_PERIOD); 
-
-      read_data = hrdata_o_tb;
-      digest_data[127 :  64] = read_data;
-      #(CLK_PERIOD); 
-
-      read_data = hrdata_o_tb;
-      digest_data[63  :   0] = read_data;
-      #(CLK_PERIOD); 
-
-      hsel_i_tb = 0;
-      htrans_i_tb     = AHB_HTRANS_IDLE;
-
-      /*
       read_single_word(ADDR_DIGEST0);
       digest_data[511 : 448] = read_data;
       read_single_word(ADDR_DIGEST1);
@@ -702,7 +572,6 @@ module sha512_ctrl_tb();
       digest_data[127 :  64] = read_data;
       read_single_word(ADDR_DIGEST7);
       digest_data[63  :   0] = read_data;
-      */
     end
   endtask // read_digest
 

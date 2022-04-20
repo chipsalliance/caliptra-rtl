@@ -4,12 +4,13 @@
 # https://dev.azure.com/ms-tsd/Ether/_git/sim-tools?path=%2FSourceFileSpec.docx&version=GBmaster
 
 ---
-provides: [aes]
+provides: [aes_ctrl]
 schema_version: 2.4.0
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
+      - $COMPILE_ROOT/rtl/aes_ctrl.sv
       - $COMPILE_ROOT/rtl/aes.v
       - $COMPILE_ROOT/rtl/aes_core.v
       - $COMPILE_ROOT/rtl/aes_decipher_block.v
@@ -17,19 +18,19 @@ targets:
       - $COMPILE_ROOT/rtl/aes_inv_sbox.v
       - $COMPILE_ROOT/rtl/aes_key_mem.v
       - $COMPILE_ROOT/rtl/aes_sbox.v
-    tops: [aes]
+    tops: [aes_ctrl]
 ---
-provides: [aes_tb]  
+provides: [aes_ctrl_tb]  
 schema_version: 2.4.0
 requires: 
-  - aes
+  - aes_ctrl
 targets:
   tb:
     directories: 
       - $COMPILE_ROOT/tb
     files:
-      - $COMPILE_ROOT/tb/aes_tb.v
-    tops: [aes_tb]
+      - $COMPILE_ROOT/tb/aes_ctrl_tb.sv
+    tops: [aes_ctrl_tb]
 global:
   tool:
     vcs:
