@@ -1,0 +1,41 @@
+# Copyright (C) Microsoft Corporation. All rights reserved.
+
+# Go here for details on compile.yml syntax:
+# https://dev.azure.com/ms-tsd/Ether/_git/sim-tools?path=%2FSourceFileSpec.docx&version=GBmaster
+
+---
+provides: [sha256_ctrl]
+schema_version: 2.4.0
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/sha256_ctrl.sv
+      - $COMPILE_ROOT/rtl/sha256.v
+      - $COMPILE_ROOT/rtl/sha256_core.v
+      - $COMPILE_ROOT/rtl/sha256_k_constants.v
+      - $COMPILE_ROOT/rtl/sha256_w_mem.v
+    tops: [sha256]
+---
+provides: [sha256_ctrl_tb]  
+schema_version: 2.4.0
+requires: 
+  - sha256_ctrl
+targets:
+  tb:
+    directories: 
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/tb/sha256_ctrl_tb.sv
+    tops: [sha256_ctrl_tb]
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - '-v2k_generate'
+        - '-timescale=1ns/1ps'
+        - '-noinherit_timescale=1ns/1ps'
+        - '-ucli -i dump.ucli'
+      sim:
+        - '-ucli -i dump.ucli'
