@@ -40,7 +40,7 @@ module sha256_ctrl #(
     //----------------------------------------------------------------
     reg           sha256_cs;
     reg           sha256_we;
-    reg  [7 : 0]  sha256_address;
+    reg  [31 : 0] sha256_address;
     reg  [63 : 0] sha256_write_data;
     reg  [63 : 0] sha256_read_data;
     reg           sha256_error;
@@ -138,7 +138,7 @@ module sha256_ctrl #(
         sha256_cs = cs;
         sha256_we = write;
         sha256_write_data = hwdata;
-        sha256_address = addr[7 : 0];
+        sha256_address = addr;
     end
 
 

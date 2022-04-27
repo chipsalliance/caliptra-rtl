@@ -40,7 +40,7 @@ module sha512_ctrl #(
     //----------------------------------------------------------------
     reg           sha512_cs;
     reg           sha512_we;
-    reg  [7 : 0]  sha512_address;
+    reg  [31 : 0] sha512_address;
     reg  [63 : 0] sha512_write_data;
     reg  [63 : 0] sha512_read_data;
     reg           sha512_error;
@@ -138,7 +138,7 @@ module sha512_ctrl #(
         sha512_cs = cs;
         sha512_we = write;
         sha512_write_data = hwdata;
-        sha512_address = addr[7 : 0];
+        sha512_address = addr;
     end
 
 

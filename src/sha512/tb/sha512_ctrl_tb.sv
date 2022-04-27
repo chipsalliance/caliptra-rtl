@@ -19,48 +19,47 @@ module sha512_ctrl_tb();
   parameter CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
 
   // The address map.
-  parameter ADDR_NAME0           = 8'h00;
-  parameter ADDR_NAME1           = 8'h01;
-  parameter ADDR_VERSION         = 8'h02;
+  parameter ADDR_NAME            = 32'h00000000;
+  parameter ADDR_VERSION         = 32'h00000004;
 
-  parameter ADDR_CTRL            = 8'h08;
+  parameter ADDR_CTRL            = 32'h00000008;
   parameter CTRL_INIT_BIT        = 0;
   parameter CTRL_NEXT_BIT        = 1;
   parameter CTRL_MODE_LOW_BIT    = 2;
   parameter CTRL_MODE_HIGH_BIT   = 3;
   parameter CTRL_WORK_FACTOR_BIT = 7;
 
-  parameter ADDR_STATUS          = 8'h09;
+  parameter ADDR_STATUS          = 32'h0000000c;
   parameter STATUS_READY_BIT     = 0;
   parameter STATUS_VALID_BIT     = 1;
 
-  parameter ADDR_WORK_FACTOR_NUM = 8'h0a;
+  parameter ADDR_WORK_FACTOR_NUM = 32'h00000010;
 
-  parameter ADDR_BLOCK0          = 8'h10;
-  parameter ADDR_BLOCK1          = 8'h11;
-  parameter ADDR_BLOCK2          = 8'h12;
-  parameter ADDR_BLOCK3          = 8'h13;
-  parameter ADDR_BLOCK4          = 8'h14;
-  parameter ADDR_BLOCK5          = 8'h15;
-  parameter ADDR_BLOCK6          = 8'h16;
-  parameter ADDR_BLOCK7          = 8'h17;
-  parameter ADDR_BLOCK8          = 8'h18;
-  parameter ADDR_BLOCK9          = 8'h19;
-  parameter ADDR_BLOCK10         = 8'h1a;
-  parameter ADDR_BLOCK11         = 8'h1b;
-  parameter ADDR_BLOCK12         = 8'h1c;
-  parameter ADDR_BLOCK13         = 8'h1d;
-  parameter ADDR_BLOCK14         = 8'h1e;
-  parameter ADDR_BLOCK15         = 8'h1f;
+  parameter ADDR_BLOCK0          = 32'h00000040;
+  parameter ADDR_BLOCK1          = 32'h00000044;
+  parameter ADDR_BLOCK2          = 32'h00000048;
+  parameter ADDR_BLOCK3          = 32'h0000004c;
+  parameter ADDR_BLOCK4          = 32'h00000050;;
+  parameter ADDR_BLOCK5          = 32'h00000054;;
+  parameter ADDR_BLOCK6          = 32'h00000058;;
+  parameter ADDR_BLOCK7          = 32'h0000005c;;
+  parameter ADDR_BLOCK8          = 32'h00000060;;
+  parameter ADDR_BLOCK9          = 32'h00000064;;
+  parameter ADDR_BLOCK10         = 32'h00000068;;
+  parameter ADDR_BLOCK11         = 32'h0000006c;;
+  parameter ADDR_BLOCK12         = 32'h00000070;;
+  parameter ADDR_BLOCK13         = 32'h00000074;;
+  parameter ADDR_BLOCK14         = 32'h00000078;;
+  parameter ADDR_BLOCK15         = 32'h0000007c;;
 
-  parameter ADDR_DIGEST0         = 8'h40;
-  parameter ADDR_DIGEST1         = 8'h41;
-  parameter ADDR_DIGEST2         = 8'h42;
-  parameter ADDR_DIGEST3         = 8'h43;
-  parameter ADDR_DIGEST4         = 8'h44;
-  parameter ADDR_DIGEST5         = 8'h45;
-  parameter ADDR_DIGEST6         = 8'h46;
-  parameter ADDR_DIGEST7         = 8'h47;
+  parameter ADDR_DIGEST0         = 32'h00000080;
+  parameter ADDR_DIGEST1         = 32'h00000084;
+  parameter ADDR_DIGEST2         = 32'h00000088;
+  parameter ADDR_DIGEST3         = 32'h0000008c;
+  parameter ADDR_DIGEST4         = 32'h00000090;
+  parameter ADDR_DIGEST5         = 32'h00000094;
+  parameter ADDR_DIGEST6         = 32'h00000098;
+  parameter ADDR_DIGEST7         = 32'h0000009c;
 
   parameter MODE_SHA_512_224     = 2'h0;
   parameter MODE_SHA_512_256     = 2'h1;
@@ -76,15 +75,15 @@ module sha512_ctrl_tb();
   parameter AHB_HTRANS_NONSEQ   = 2;
   parameter AHB_HTRANS_SEQ      = 3;
 
-  parameter AHB_ADDR_WIDTH = 8;
+  parameter AHB_ADDR_WIDTH = 32;
   parameter AHB_DATA_WIDTH = 64;
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
   //----------------------------------------------------------------
-  reg [31 : 0]  cycle_ctr;
-  reg [31 : 0]  error_ctr;
-  reg [31 : 0]  tc_ctr;
+  reg [63 : 0]  cycle_ctr;
+  reg [63 : 0]  error_ctr;
+  reg [63 : 0]  tc_ctr;
 
   reg           clk_tb;
   reg           reset_n_tb;
@@ -182,9 +181,9 @@ module sha512_ctrl_tb();
   //----------------------------------------------------------------
   task init_sim;
     begin
-      cycle_ctr = 32'h00000000;
-      error_ctr = 32'h00000000;
-      tc_ctr    = 32'h00000000;
+      cycle_ctr = 64'h00000000;
+      error_ctr = 64'h00000000;
+      tc_ctr    = 64'h00000000;
 
       clk_tb        = 0;
       reset_n_tb    = 0;
@@ -250,7 +249,7 @@ module sha512_ctrl_tb();
   // the word read will be available in the global variable
   // read_data.
   //----------------------------------------------------------------
-  task read_single_word(input [7 : 0]  address);
+  task read_single_word(input [31 : 0]  address);
     begin
       hsel_i_tb       = 1;
       hadrr_i_tb      = address;
@@ -279,7 +278,7 @@ module sha512_ctrl_tb();
   //
   // Write the given word to the DUT using the DUT interface.
   //----------------------------------------------------------------
-  task write_single_word(input [7 : 0]  address,
+  task write_single_word(input [31 : 0]  address,
                   input [63 : 0] word);
     begin
       hsel_i_tb       = 1;
@@ -582,23 +581,25 @@ module sha512_ctrl_tb();
   // Read the name and version from the DUT.
   //----------------------------------------------------------------
   task check_name_version;
-    reg [63 : 0] name0;
-    reg [63 : 0] name1;
+    reg [63 : 0] name;
     reg [63 : 0] version;
     begin
 
-      read_single_word(ADDR_NAME0);
-      name0 = read_data;
-      read_single_word(ADDR_NAME1);
-      name1 = read_data;
+      read_single_word(ADDR_NAME);
+      name = read_data;
       read_single_word(ADDR_VERSION);
       version = read_data;
 
       $display("DUT name: %c%c%c%c%c%c%c%c",
-               name0[31 : 24], name0[23 : 16], name0[15 : 8], name0[7 : 0],
-               name1[31 : 24], name1[23 : 16], name1[15 : 8], name1[7 : 0]);
-      $display("DUT version: %c%c%c%c",
-               version[31 : 24], version[23 : 16], version[15 : 8], version[7 : 0]);
+               name[15 :  8], name[7  :  0],
+               name[31 : 24], name[23 : 16], 
+               name[47 : 40], name[39 : 32],
+               name[63 : 56], name[55 : 48]);
+      $display("DUT version: %c%c%c%c%c%c%c%c",
+               version[15 :  8], version[7  :  0],
+               version[31 : 24], version[23 : 16],
+               version[47 : 40], version[39 : 32],
+               version[63 : 56], version[55 : 48]);
     end
   endtask // check_name_version
 

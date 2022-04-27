@@ -49,7 +49,7 @@ module sha512(
               input wire           we,
 
               // Data ports.
-              input wire  [7 : 0]  address,
+              input wire  [31 : 0] address,
               input wire  [63 : 0] write_data,
               output wire [63 : 0] read_data,
               output wire          error
@@ -58,32 +58,30 @@ module sha512(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter ADDR_NAME0           = 8'h00;
-  parameter ADDR_NAME1           = 8'h01;
-  parameter ADDR_VERSION         = 8'h02;
+  parameter ADDR_NAME            = 32'h00000000;
+  parameter ADDR_VERSION         = 32'h00000004;
 
-  parameter ADDR_CTRL            = 8'h08;
+  parameter ADDR_CTRL            = 32'h00000008;
   parameter CTRL_INIT_BIT        = 0;
   parameter CTRL_NEXT_BIT        = 1;
   parameter CTRL_MODE_LOW_BIT    = 2;
   parameter CTRL_MODE_HIGH_BIT   = 3;
   parameter CTRL_WORK_FACTOR_BIT = 7;
 
-  parameter ADDR_STATUS          = 8'h09;
+  parameter ADDR_STATUS          = 32'h0000000c;
   parameter STATUS_READY_BIT     = 0;
   parameter STATUS_VALID_BIT     = 1;
 
-  parameter ADDR_WORK_FACTOR_NUM = 8'h0a;
+  parameter ADDR_WORK_FACTOR_NUM = 32'h00000010;
 
-  parameter ADDR_BLOCK0          = 8'h10;
-  parameter ADDR_BLOCK15         = 8'h1f;
+  parameter ADDR_BLOCK0          = 32'h00000040;
+  parameter ADDR_BLOCK15         = 32'h0000007c;
 
-  parameter ADDR_DIGEST0         = 8'h40;
-  parameter ADDR_DIGEST7         = 8'h47;
+  parameter ADDR_DIGEST0         = 32'h00000080;
+  parameter ADDR_DIGEST7         = 32'h0000009c;
 
-  parameter CORE_NAME0           = 64'h0000000073686132; // "sha2"
-  parameter CORE_NAME1           = 64'h000000002d353132; // "-512"
-  parameter CORE_VERSION         = 64'h00000000302e3830; // "0.80"
+  parameter CORE_NAME            = 64'h3132_2d35_6132_7368; // "sha2-512"
+  parameter CORE_VERSION         = 64'h0000_0000_3830_302e; // "0.80"
 
   parameter MODE_SHA_512_224     = 2'h0;
   parameter MODE_SHA_512_256     = 2'h1;
@@ -129,7 +127,6 @@ module sha512(
   wire [1023 : 0] core_block;
   wire [511 : 0]  core_digest;
   wire            core_digest_valid;
-  reg [7 : 0]     block_addr;
 
   reg [63 : 0]    tmp_read_data;
   reg             tmp_error;
@@ -215,7 +212,7 @@ module sha512(
             digest_reg <= core_digest;
 
           if (block_we)
-            block_reg[block_addr[3:0]] <= write_data;
+            block_reg[address[5 : 2]] <= write_data;
         end
     end // reg_update
 
@@ -238,8 +235,6 @@ module sha512(
       block_we           = 1'h0;
       tmp_read_data      = 64'h0;
       tmp_error          = 1'h0;
-
-      block_addr = address - ADDR_BLOCK0;
 
       if (cs)
         begin
@@ -270,17 +265,14 @@ module sha512(
           else
             begin
               if ((address >= ADDR_DIGEST0) && (address <= ADDR_DIGEST7))
-                tmp_read_data = digest_reg[(7 - (address - ADDR_DIGEST0)) * 64 +: 64];
+                tmp_read_data = digest_reg[(7 - ((address - ADDR_DIGEST0)>>2)) * 64 +: 64];
 
               if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK15))
-                tmp_read_data = block_reg[address[3 : 0]];
+                tmp_read_data = block_reg[address[5 : 2]];
 
               case (address)
-                ADDR_NAME0:
-                  tmp_read_data = CORE_NAME0;
-
-                ADDR_NAME1:
-                  tmp_read_data = CORE_NAME1;
+                ADDR_NAME:
+                  tmp_read_data = CORE_NAME;
 
                 ADDR_VERSION:
                   tmp_read_data = CORE_VERSION;

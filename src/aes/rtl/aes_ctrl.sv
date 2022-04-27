@@ -41,7 +41,7 @@ module aes_ctrl #(
     //----------------------------------------------------------------
     reg           aes_cs;
     reg           aes_we;
-    reg  [7 : 0]  aes_address;
+    reg  [31 : 0] aes_address;
     reg  [63 : 0] aes_write_data;
     reg  [63 : 0] aes_read_data;
 
@@ -136,7 +136,7 @@ module aes_ctrl #(
         aes_cs = cs;
         aes_we = write;
         aes_write_data = hwdata;
-        aes_address = addr[7 : 0];
+        aes_address = addr;
     end
 
 endmodule

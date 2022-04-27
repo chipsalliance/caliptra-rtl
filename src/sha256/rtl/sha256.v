@@ -49,7 +49,7 @@ module sha256(
               input wire           we,
 
               // Data ports.
-              input wire  [7 : 0]  address,
+              input wire  [31 : 0] address,
               input wire  [63 : 0] write_data,
               output wire [63 : 0] read_data,
               output wire          error
@@ -58,28 +58,26 @@ module sha256(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam ADDR_NAME0       = 8'h00;
-  localparam ADDR_NAME1       = 8'h01;
-  localparam ADDR_VERSION     = 8'h02;
+  localparam ADDR_NAME        = 32'h00000000;
+  localparam ADDR_VERSION     = 32'h00000004;
 
-  localparam ADDR_CTRL        = 8'h08;
+  localparam ADDR_CTRL        = 32'h00000008;
   localparam CTRL_INIT_BIT    = 0;
   localparam CTRL_NEXT_BIT    = 1;
   localparam CTRL_MODE_BIT    = 2;
 
-  localparam ADDR_STATUS      = 8'h09;
+  localparam ADDR_STATUS      = 32'h0000000c;
   localparam STATUS_READY_BIT = 0;
   localparam STATUS_VALID_BIT = 1;
 
-  localparam ADDR_BLOCK0    = 8'h10;
-  localparam ADDR_BLOCK7    = 8'h17;
+  localparam ADDR_BLOCK0    = 32'h00000020;
+  localparam ADDR_BLOCK7    = 32'h0000003c;
 
-  localparam ADDR_DIGEST0   = 8'h20;
-  localparam ADDR_DIGEST3   = 8'h23;
+  localparam ADDR_DIGEST0   = 32'h00000040;
+  localparam ADDR_DIGEST3   = 32'h0000004c;
 
-  localparam CORE_NAME0     = 64'h0000000073686132; // "sha2"
-  localparam CORE_NAME1     = 64'h000000002d323536; // "-256"
-  localparam CORE_VERSION   = 64'h00000000312e3830; // "1.80"
+  localparam CORE_NAME      = 64'h3536_2d32_6132_7368; // "sha2-256"
+  localparam CORE_VERSION   = 64'h0000_0000_3830_312e; // "1.80"
 
   localparam MODE_SHA_224   = 1'h0;
   localparam MODE_SHA_256   = 1'h1;
@@ -187,7 +185,7 @@ module sha256(
             digest_reg <= core_digest;
 
           if (block_we)
-            block_reg[address[2 : 0]] <= write_data;
+            block_reg[address[4 : 2]] <= write_data;
         end
     end // reg_update
 
@@ -227,18 +225,15 @@ module sha256(
           else
             begin
               if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK7))
-                tmp_read_data = block_reg[address[2 : 0]];
+                tmp_read_data = block_reg[address[4 : 2]];
 
               if ((address >= ADDR_DIGEST0) && (address <= ADDR_DIGEST3))
-                tmp_read_data = digest_reg[(3 - (address - ADDR_DIGEST0)) * 64 +: 64];
+                tmp_read_data = digest_reg[(3 - ((address - ADDR_DIGEST0)>>2)) * 64 +: 64];
 
               case (address)
                 // Read operations.
-                ADDR_NAME0:
-                  tmp_read_data = CORE_NAME0;
-
-                ADDR_NAME1:
-                  tmp_read_data = CORE_NAME1;
+                ADDR_NAME:
+                  tmp_read_data = CORE_NAME;
 
                 ADDR_VERSION:
                   tmp_read_data = CORE_VERSION;
