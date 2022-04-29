@@ -49,32 +49,31 @@ module aes_tb();
   parameter CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
 
   // The DUT address map.
-  parameter ADDR_NAME0       = 8'h00;
-  parameter ADDR_NAME1       = 8'h01;
-  parameter ADDR_VERSION     = 8'h02;
+  parameter ADDR_NAME        = 32'h00000000;
+  parameter ADDR_VERSION     = 32'h00000008;
 
-  parameter ADDR_CTRL        = 8'h08;
+  parameter ADDR_CTRL        = 32'h00000010;
   parameter CTRL_INIT_BIT    = 0;
   parameter CTRL_NEXT_BIT    = 1;
   parameter CTRL_ENCDEC_BIT  = 2;
   parameter CTRL_KEYLEN_BIT  = 3;
 
-  parameter ADDR_STATUS      = 8'h09;
+  parameter ADDR_STATUS      = 32'h00000018;
   parameter STATUS_READY_BIT = 0;
   parameter STATUS_VALID_BIT = 1;
 
-  parameter ADDR_CONFIG      = 8'h0a;
+  parameter ADDR_CONFIG      = 32'h00000020;
 
-  parameter ADDR_KEY0        = 8'h10;
-  parameter ADDR_KEY1        = 8'h11;
-  parameter ADDR_KEY2        = 8'h12;
-  parameter ADDR_KEY3        = 8'h13;
+  parameter ADDR_KEY0        = 32'h00000040;
+  parameter ADDR_KEY1        = 32'h00000048;
+  parameter ADDR_KEY2        = 32'h00000050;
+  parameter ADDR_KEY3        = 32'h00000058;
 
-  parameter ADDR_BLOCK0      = 8'h20;
-  parameter ADDR_BLOCK1      = 8'h21;
+  parameter ADDR_BLOCK0      = 32'h00000080;
+  parameter ADDR_BLOCK1      = 32'h00000088;
 
-  parameter ADDR_RESULT0     = 8'h30;
-  parameter ADDR_RESULT1     = 8'h31;
+  parameter ADDR_RESULT0     = 32'h00000100;
+  parameter ADDR_RESULT1     = 32'h00000108;
 
   parameter AES_128_BIT_KEY = 0;
   parameter AES_256_BIT_KEY = 1;
@@ -97,7 +96,7 @@ module aes_tb();
   reg           tb_reset_n;
   reg           tb_cs;
   reg           tb_we;
-  reg [7  : 0]  tb_address;
+  reg [31 : 0]  tb_address;
   reg [63 : 0]  tb_write_data;
   wire [63 : 0] tb_read_data;
 
@@ -161,8 +160,8 @@ module aes_tb();
       $display("config_reg: encdec = 0x%01x, length = 0x%01x ", dut.encdec_reg, dut.keylen_reg);
       $display("");
 
-      $display("block: 0x%08x, 0x%08x, 0x%08x, 0x%08x",
-               dut.block_reg[0], dut.block_reg[1], dut.block_reg[2], dut.block_reg[3]);
+      $display("block: 0x%08x, 0x%08x",
+               dut.block_reg[0], dut.block_reg[1]);
       $display("");
 
     end
@@ -223,7 +222,7 @@ module aes_tb();
 
       tb_cs         = 0;
       tb_we         = 0;
-      tb_address    = 8'h0;
+      tb_address    = 32'h0;
       tb_write_data = 64'h0;
     end
   endtask // init_sim
@@ -234,7 +233,7 @@ module aes_tb();
   //
   // Write the given word to the DUT using the DUT interface.
   //----------------------------------------------------------------
-  task write_word(input [11 : 0] address,
+  task write_word(input [31 : 0] address,
                   input [63 : 0] word);
     begin
       if (DEBUG)
@@ -274,7 +273,7 @@ module aes_tb();
   // the word read will be available in the global variable
   // read_data.
   //----------------------------------------------------------------
-  task read_word(input [11 : 0]  address);
+  task read_word(input [31 : 0]  address);
     begin
       tb_address = address;
       tb_cs = 1;

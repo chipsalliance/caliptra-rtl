@@ -20,30 +20,30 @@ module aes_ctrl_tb();
 
   // The DUT address map.
   parameter ADDR_NAME        = 32'h00000000;
-  parameter ADDR_VERSION     = 32'h00000004;
+  parameter ADDR_VERSION     = 32'h00000008;
 
-  parameter ADDR_CTRL        = 32'h00000008;
+  parameter ADDR_CTRL        = 32'h00000010;
   parameter CTRL_INIT_BIT    = 0;
   parameter CTRL_NEXT_BIT    = 1;
   parameter CTRL_ENCDEC_BIT  = 2;
   parameter CTRL_KEYLEN_BIT  = 3;
 
-  parameter ADDR_STATUS      = 32'h0000000c;
+  parameter ADDR_STATUS      = 32'h00000018;
   parameter STATUS_READY_BIT = 0;
   parameter STATUS_VALID_BIT = 1;
 
-  parameter ADDR_CONFIG      = 32'h00000010;
+  parameter ADDR_CONFIG      = 32'h00000020;
 
-  parameter ADDR_KEY0        = 32'h00000020;
-  parameter ADDR_KEY1        = 32'h00000024;
-  parameter ADDR_KEY2        = 32'h00000028;
-  parameter ADDR_KEY3        = 32'h0000002c;
+  parameter ADDR_KEY0        = 32'h00000040;
+  parameter ADDR_KEY1        = 32'h00000048;
+  parameter ADDR_KEY2        = 32'h00000050;
+  parameter ADDR_KEY3        = 32'h00000058;
 
-  parameter ADDR_BLOCK0      = 32'h00000030;
-  parameter ADDR_BLOCK1      = 32'h00000034;
+  parameter ADDR_BLOCK0      = 32'h00000080;
+  parameter ADDR_BLOCK1      = 32'h00000088;
 
-  parameter ADDR_RESULT0     = 32'h00000040;
-  parameter ADDR_RESULT1     = 32'h00000044;
+  parameter ADDR_RESULT0     = 32'h00000100;
+  parameter ADDR_RESULT1     = 32'h00000108;
 
   parameter AES_128_BIT_KEY = 0;
   parameter AES_256_BIT_KEY = 1;

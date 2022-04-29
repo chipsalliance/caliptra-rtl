@@ -57,28 +57,28 @@ module aes(
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
   localparam ADDR_NAME        = 32'h00000000;
-  localparam ADDR_VERSION     = 32'h00000004;
+  localparam ADDR_VERSION     = 32'h00000008;
 
-  localparam ADDR_CTRL        = 32'h00000008;
+  localparam ADDR_CTRL        = 32'h00000010;
   localparam CTRL_INIT_BIT    = 0;
   localparam CTRL_NEXT_BIT    = 1;
 
-  localparam ADDR_STATUS      = 32'h0000000c;
+  localparam ADDR_STATUS      = 32'h00000018;
   localparam STATUS_READY_BIT = 0;
   localparam STATUS_VALID_BIT = 1;
 
-  localparam ADDR_CONFIG      = 32'h00000010;
+  localparam ADDR_CONFIG      = 32'h00000020;
   localparam CTRL_ENCDEC_BIT  = 0;
   localparam CTRL_KEYLEN_BIT  = 1;
 
-  localparam ADDR_KEY0        = 32'h00000020;
-  localparam ADDR_KEY3        = 32'h0000002c;
+  localparam ADDR_KEY0        = 32'h00000040;
+  localparam ADDR_KEY3        = 32'h00000058;
 
-  localparam ADDR_BLOCK0      = 32'h00000030;
-  localparam ADDR_BLOCK1      = 32'h00000034;
+  localparam ADDR_BLOCK0      = 32'h00000080;
+  localparam ADDR_BLOCK1      = 32'h00000088;
 
-  localparam ADDR_RESULT0     = 32'h00000040;
-  localparam ADDR_RESULT1     = 32'h00000044;
+  localparam ADDR_RESULT0     = 32'h00000100;
+  localparam ADDR_RESULT1     = 32'h00000108;
 
   localparam CORE_NAME        = 64'h2020_2020_7320_6165; // "aes "
   localparam CORE_VERSION     = 64'h0000_0000_3630_302e; // "0.60"
@@ -201,10 +201,10 @@ module aes(
             end
 
           if (key_we)
-            key_reg[address[3 : 2]] <= write_data;
+            key_reg[address[4 : 3]] <= write_data;
 
           if (block_we)
-            block_reg[address[2]] <= write_data;
+            block_reg[address[3]] <= write_data;
         end
     end // reg_update
 
@@ -257,7 +257,7 @@ module aes(
               endcase // case (address)
 
               if ((address >= ADDR_RESULT0) && (address <= ADDR_RESULT1))
-                tmp_read_data = result_reg[(1 - ((address - ADDR_RESULT0)>>2)) * 64 +: 64];
+                tmp_read_data = result_reg[(1 - ((address - ADDR_RESULT0) >> 3)) * 64 +: 64];
             end
         end
     end // addr_decoder
