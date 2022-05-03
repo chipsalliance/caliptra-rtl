@@ -1,0 +1,11 @@
+document:
+  schema: 1.0
+
+contents:
+  - tests:
+      tags: ["L0", "Lop_regression", "top_regression"]
+      paths:
+        - ../test_suites/hello_world/hello_world.yml
+        - ../test_suites/memCpy_ROM_to_dccm/memCpy_ROM_to_dccm.yml
+        - ../test_suites/memCpy_dccm_to_iccm/memCpy_dccm_to_iccm.yml
+        

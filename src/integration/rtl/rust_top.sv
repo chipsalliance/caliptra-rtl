@@ -704,6 +704,28 @@ ahb_sif lmem (
      .HRDATA(s_slave[0].hrdata[63:0])
 );
 
+sha512_ctrl #(
+    .AHB_DATA_WIDTH (64),
+    .AHB_ADDR_WIDTH (32),
+    .BYPASS_SEL     (0)
+) sha512 (
+    .clk            (core_clk),
+    .reset_n        (rst_l),
+    .hadrr_i        (s_slave[2].haddr),
+    .hwdata_i       (s_slave[2].hwdata),
+    .hsel_i         (s_slave[2].hsel),
+    .hwrite_i       (s_slave[2].hwrite),
+    .hmastlock_i    (s_slave[2].hmastlock),
+    .hready_i       (s_slave[2].hready),
+    .htrans_i       (s_slave[2].htrans),
+    .hprot_i        (s_slave[2].hprot),
+    .hburst_i       (s_slave[2].hburst),
+    .hsize_i        (s_slave[2].hsize),
+    .hresp_o        (s_slave[2].hresp),
+    .hreadyout_o    (s_slave[2].hreadyout),
+    .hrdata_o       (s_slave[2].hrdata)
+);
+
 
 `endif
 `ifdef RV_BUILD_AXI4

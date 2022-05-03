@@ -10,6 +10,7 @@ requires:
   - el2_swerv_pkg
   - el2_swerv_wrapper
   - ahb_node_wrap
+  - sha512_ctrl
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]

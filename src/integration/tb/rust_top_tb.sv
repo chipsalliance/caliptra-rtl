@@ -73,6 +73,11 @@ module rust_top_tb (
     parameter MAX_CYCLES = 2_000_000;
 
     integer fd, tp, el, sm, i;
+    integer ifu_p, lsu_p, sl_p[`AHB_SLAVES_NUM];
+
+    integer j;
+
+    string slaveLog_fileName[`AHB_SLAVES_NUM];
 
     always @(negedge core_clk) begin
         cycleCnt <= cycleCnt+1;
@@ -114,17 +119,17 @@ module rust_top_tb (
         wb_valid  <= `DEC.dec_i0_wen_r;
         wb_dest   <= `DEC.dec_i0_waddr_r;
         wb_data   <= `DEC.dec_i0_wdata_r;
-        if (trace_rv_i_valid_ip) begin
-           $fwrite(tp,"%b,%h,%h,%0h,%0h,3,%b,%h,%h,%b\n", trace_rv_i_valid_ip, 0, trace_rv_i_address_ip,
-                  0, trace_rv_i_insn_ip,trace_rv_i_exception_ip,trace_rv_i_ecause_ip,
-                  trace_rv_i_tval_ip,trace_rv_i_interrupt_ip);
+        if (rust_top_dut.trace_rv_i_valid_ip) begin
+           $fwrite(tp,"%b,%h,%h,%0h,%0h,3,%b,%h,%h,%b\n", rust_top_dut.trace_rv_i_valid_ip, 0, rust_top_dut.trace_rv_i_address_ip,
+                  0, rust_top_dut.trace_rv_i_insn_ip,rust_top_dut.trace_rv_i_exception_ip,rust_top_dut.trace_rv_i_ecause_ip,
+                  rust_top_dut.trace_rv_i_tval_ip,rust_top_dut.trace_rv_i_interrupt_ip);
            // Basic trace - no exception register updates
            // #1 0 ee000000 b0201073 c 0b02       00000000
            commit_count++;
            $fwrite (el, "%10d : %8s 0 %h %h%13s ; %s\n", cycleCnt, $sformatf("#%0d",commit_count),
-                        trace_rv_i_address_ip, trace_rv_i_insn_ip,
+                        rust_top_dut.trace_rv_i_address_ip, rust_top_dut.trace_rv_i_insn_ip,
                         (wb_dest !=0 && wb_valid)?  $sformatf("%s=%h", abi_reg[wb_dest], wb_data) : "             ",
-                        dasm(trace_rv_i_insn_ip, trace_rv_i_address_ip, wb_dest & {5{wb_valid}}, wb_data)
+                        dasm(rust_top_dut.trace_rv_i_insn_ip, rust_top_dut.trace_rv_i_address_ip, wb_dest & {5{wb_valid}}, wb_data)
                    );
         end
         if(`DEC.dec_nonblock_load_wen) begin
@@ -137,7 +142,39 @@ module rust_top_tb (
         end
     end
 
+    // IFU Master monitor
+    always @(posedge core_clk) begin
+        $fstrobe(ifu_p, "%10d : 0x%0h %h %b %h %h %h %b 0x%08h_%08h %b %b\n", cycleCnt, 
+                        rust_top_dut.ic_haddr, rust_top_dut.ic_hburst, rust_top_dut.ic_hmastlock, 
+                        rust_top_dut.ic_hprot, rust_top_dut.ic_hsize, rust_top_dut.ic_htrans, 
+                        rust_top_dut.ic_hwrite, rust_top_dut.ic_hrdata[63:32], rust_top_dut.ic_hrdata[31:0], 
+                        rust_top_dut.ic_hready, rust_top_dut.ic_hresp);
+    end
 
+    // LSU Master monitor
+    always @(posedge core_clk) begin
+        $fstrobe(lsu_p, "%10d : 0x%0h %h %b %h %h %h %b 0x%08h_%08h 0x%08h_%08h %b %b\n", cycleCnt, 
+                        rust_top_dut.s_smaster.haddr, rust_top_dut.s_smaster.hburst, rust_top_dut.s_smaster.hmastlock, 
+                        rust_top_dut.s_smaster.hprot, rust_top_dut.s_smaster.hsize, rust_top_dut.s_smaster.htrans, 
+                        rust_top_dut.s_smaster.hwrite, rust_top_dut.s_smaster.hrdata[63:32], rust_top_dut.s_smaster.hrdata[31:0], 
+                        rust_top_dut.s_smaster.hwdata[63:32], rust_top_dut.s_smaster.hwdata[31:0], 
+                        rust_top_dut.s_smaster.hready, rust_top_dut.s_smaster.hresp);
+    end
+
+    // AHB slave interfaces monitor
+    genvar sl_i;
+    generate
+        for (sl_i = 0; sl_i < `AHB_SLAVES_NUM; sl_i = sl_i + 1) begin
+            always @(posedge core_clk) begin
+                $fstrobe(sl_p[sl_i], "%10d : 0x%0h %h %b %h %h %h %b 0x%08h_%08h 0x%08h_%08h %b %b %b %b\n", cycleCnt, 
+                        rust_top_dut.s_slave[sl_i].haddr, rust_top_dut.s_slave[sl_i].hburst, rust_top_dut.s_slave[sl_i].hmastlock, 
+                        rust_top_dut.s_slave[sl_i].hprot, rust_top_dut.s_slave[sl_i].hsize, rust_top_dut.s_slave[sl_i].htrans, 
+                        rust_top_dut.s_slave[sl_i].hwrite, rust_top_dut.s_slave[sl_i].hrdata[63:32], rust_top_dut.s_slave[sl_i].hrdata[31:0], 
+                        rust_top_dut.s_slave[sl_i].hwdata[63:32], rust_top_dut.s_slave[sl_i].hwdata[31:0], 
+                        rust_top_dut.s_slave[sl_i].hready, rust_top_dut.s_slave[sl_i].hreadyout, rust_top_dut.s_slave[sl_i].hresp, rust_top_dut.s_slave[sl_i].hsel);
+            end
+        end
+    endgenerate
 
 
     initial begin
@@ -185,7 +222,18 @@ module rust_top_tb (
         $readmemh("program.hex",  rust_top_dut.imem.mem);
         tp = $fopen("trace_port.csv","w");
         el = $fopen("exec.log","w");
+        ifu_p = $fopen("ifu_master_ahb_trace.log", "w");
+        lsu_p = $fopen("lsu_master_ahb_trace.log", "w");
         $fwrite (el, "//   Cycle : #inst    0    pc    opcode    reg=value   ; mnemonic\n");
+        $fwrite(ifu_p, "//   Cycle: ic_haddr     ic_hburst     ic_hmsatlock     ic_hprot     ic_hsize     ic_htrans     ic_hwrite     ic_hrdata     ic_hwdata     ic_hready     ic_hresp\n");
+        $fwrite(lsu_p, "//   Cycle: lsu_haddr     lsu_hburst     lsu_hmsatlock     lsu_hprot     lsu_hsize     lsu_htrans     lsu_hwrite     lsu_hrdata     lsu_hwdata     lsu_hready     lsu_hresp\n");
+
+        for (j = 0; j < `AHB_SLAVES_NUM; j = j + 1) begin
+            slaveLog_fileName[j] = {$sformatf("slave%0d_ahb_trace.log", j)};
+            sl_p[j] = $fopen(slaveLog_fileName[j], "w");
+            $fwrite(sl_p[j], "//   Cycle: haddr     hburst     hmsatlock     hprot     hsize     htrans     hwrite     hrdata     hwdata     hready     hreadyout     hresp\n");
+        end
+
         fd = $fopen("console.log","w");
         commit_count = 0;
         preload_dccm();
