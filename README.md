@@ -6,13 +6,13 @@
 
 Preferred command for making a workspace with this repo,
 
-`make-workspace --project Base_IP --top <Please_Add_TOP_NAME_Here> --directory integration_lib`
+`make-workspace --project AHA_POC --top <Please_Add_TOP_NAME_Here> --directory integration_lib`
 
 
 or,
 
 
-`make-workspace --url git@ssh.dev.azure.com:v3/ms-tsd/Base_IP/aha_poc --directory integration_lib`
+`make-workspace --url git@ssh.dev.azure.com:v3/ms-tsd/AHA_POC/Caliptra --directory integration_lib`
 
 ### 2. Add comodules and then, recursively pull all comodules into the workspace (as per the tags specified in .git-comodules).
 
