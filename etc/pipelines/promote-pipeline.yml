@@ -14,8 +14,8 @@ variables:
 stages:
 - template: etc/pipelines/templates/promote-pipeline-template.yml@templates  # Template reference
   parameters:
-    project: 'Base_IP'
-    repo_url: 'git@ssh.dev.azure.com:v3/ms-tsd/Base_IP/aha_poc'
+    project: 'AHA_POC'
+    repo_url: 'git@ssh.dev.azure.com:v3/ms-tsd/AHA_POC/Caliptra'
     target_branch: 'master'
 
     build_and_sim_map:
