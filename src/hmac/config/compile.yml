@@ -4,34 +4,32 @@
 # https://dev.azure.com/ms-tsd/Ether/_git/sim-tools?path=%2FSourceFileSpec.docx&version=GBmaster
 
 ---
-provides: [aes_ctrl]
+provides: [hmac_ctrl]
 schema_version: 2.4.0
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/aes_ctrl.sv
-      - $COMPILE_ROOT/rtl/aes.v
-      - $COMPILE_ROOT/rtl/param_aes.sv
-      - $COMPILE_ROOT/rtl/aes_core.v
-      - $COMPILE_ROOT/rtl/aes_decipher_block.v
-      - $COMPILE_ROOT/rtl/aes_encipher_block.v
-      - $COMPILE_ROOT/rtl/aes_inv_sbox.v
-      - $COMPILE_ROOT/rtl/aes_key_mem.v
-      - $COMPILE_ROOT/rtl/aes_sbox.v
-    tops: [aes_ctrl]
+      - $COMPILE_ROOT/rtl/hmac_ctrl.sv
+      - $COMPILE_ROOT/rtl/hmac.v
+      - $COMPILE_ROOT/rtl/param_hmac.sv
+      - $COMPILE_ROOT/rtl/hmac_core.v
+      - $COMPILE_ROOT/rtl/sha256/sha256_core.v
+      - $COMPILE_ROOT/rtl/sha256/sha256_k_constants.v
+      - $COMPILE_ROOT/rtl/sha256/sha256_w_mem.v
+    tops: [hmac_ctrl]
 ---
-provides: [aes_ctrl_tb]  
+provides: [hmac_ctrl_tb]  
 schema_version: 2.4.0
 requires: 
-  - aes_ctrl
+  - hmac_ctrl
 targets:
   tb:
     directories: 
       - $COMPILE_ROOT/tb
     files:
-      - $COMPILE_ROOT/tb/aes_ctrl_tb.sv
-    tops: [aes_ctrl_tb]
+      - $COMPILE_ROOT/tb/hmac_ctrl_tb.sv
+    tops: [hmac_ctrl_tb]
 global:
   tool:
     vcs:

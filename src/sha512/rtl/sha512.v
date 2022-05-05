@@ -58,38 +58,7 @@ module sha512(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter ADDR_NAME            = 32'h40000000;
-  parameter ADDR_VERSION         = 32'h40000008;
-
-  parameter ADDR_CTRL            = 32'h40000010;
-  parameter CTRL_INIT_BIT        = 0;
-  parameter CTRL_NEXT_BIT        = 1;
-  parameter CTRL_MODE_LOW_BIT    = 2;
-  parameter CTRL_MODE_HIGH_BIT   = 3;
-  parameter CTRL_WORK_FACTOR_BIT = 7;
-
-  parameter ADDR_STATUS          = 32'h40000018;
-  parameter STATUS_READY_BIT     = 0;
-  parameter STATUS_VALID_BIT     = 1;
-
-  parameter ADDR_WORK_FACTOR_NUM = 32'h40000020;
-
-  parameter ADDR_BLOCK0          = 32'h40000080;
-  parameter ADDR_BLOCK15         = 32'h400000f8;
-
-  parameter ADDR_DIGEST0         = 32'h40000100;
-  parameter ADDR_DIGEST7         = 32'h40000138;
-
-  parameter CORE_NAME            = 64'h3132_2d35_6132_7368; // "sha2-512"
-  parameter CORE_VERSION         = 64'h0000_0000_3830_302e; // "0.80"
-
-  parameter MODE_SHA_512_224     = 2'h0;
-  parameter MODE_SHA_512_256     = 2'h1;
-  parameter MODE_SHA_384         = 2'h2;
-  parameter MODE_SHA_512         = 2'h3;
-
-  parameter DEFAULT_WORK_FACTOR_NUM = 32'h000f0000;
-
+  `include "param_sha512.sv"
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -212,7 +181,7 @@ module sha512(
             digest_reg <= core_digest;
 
           if (block_we)
-            block_reg[address[6 : 3]] <= write_data;
+            block_reg[address[5 : 2]] <= write_data;
         end
     end // reg_update
 
@@ -265,10 +234,10 @@ module sha512(
           else
             begin
               if ((address >= ADDR_DIGEST0) && (address <= ADDR_DIGEST7))
-                tmp_read_data = digest_reg[(7 - ((address - ADDR_DIGEST0) >> 3)) * 64 +: 64];
+                tmp_read_data = digest_reg[(7 - ((address - ADDR_DIGEST0)>>2)) * 64 +: 64];
 
               if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK15))
-                tmp_read_data = block_reg[address[6 : 3]];
+                tmp_read_data = block_reg[address[5 : 2]];
 
               case (address)
                 ADDR_NAME:

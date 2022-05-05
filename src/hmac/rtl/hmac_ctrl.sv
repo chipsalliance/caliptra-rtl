@@ -1,14 +1,14 @@
 //======================================================================
 //
-// aes_ctrl.sv
+// hmac_ctrl.sv
 // --------
-// AES controller for the AHb_lite interface.
+// HMAC controller for the AHb_lite interface.
 //
 //
 // Author: Mojtaba Bisheh-Niasar
 //======================================================================
 
-module aes_ctrl #(
+module hmac_ctrl #(
     parameter AHB_DATA_WIDTH = 64,
     parameter AHB_ADDR_WIDTH = 32,
     parameter BYPASS_HSEL = 0
@@ -35,25 +35,25 @@ module aes_ctrl #(
     output logic [AHB_DATA_WIDTH-1:0] hrdata_o
 );
 
-
     //----------------------------------------------------------------
-    // aes
+    // hmac
     //----------------------------------------------------------------
-    reg           aes_cs;
-    reg           aes_we;
-    reg  [31 : 0] aes_address;
-    reg  [63 : 0] aes_write_data;
-    reg  [63 : 0] aes_read_data;
+    reg           hmac_cs;
+    reg           hmac_we;
+    reg  [31 : 0] hmac_address;
+    reg  [63 : 0] hmac_write_data;
+    reg  [63 : 0] hmac_read_data;
 
-    aes aes_inst(
+    hmac hmac_inst(
         .clk(clk),
         .reset_n(reset_n),
-        .cs(aes_cs),
-        .we(aes_we),
-        .address(aes_address),
-        .write_data(aes_write_data),
-        .read_data(aes_read_data)
+        .cs(hmac_cs),
+        .we(hmac_we),
+        .address(hmac_address),
+        .write_data(hmac_write_data),
+        .read_data(hmac_read_data)
     );
+
 
     /*
     //----------------------------------------------------------------
@@ -137,7 +137,7 @@ module aes_ctrl #(
                 laddr <= hadrr_i;
                 write <= hwrite_i & |htrans_i;
                 if(|htrans_i & ~hwrite_i)
-                    rdata <= aes_read_data;
+                    rdata <= hmac_read_data;
             end
         end
         if(hready_i & hsel_i & |htrans_i)
@@ -147,10 +147,11 @@ module aes_ctrl #(
     end
 
     always_comb begin
-        aes_cs = cs;
-        aes_we = write;
-        aes_write_data = hwdata;
-        aes_address = addr;
+        hmac_cs = cs;
+        hmac_we = write;
+        hmac_write_data = hwdata;
+        hmac_address = addr;
     end
+
 
 endmodule

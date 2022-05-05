@@ -49,69 +49,71 @@ module aes_tb();
   parameter CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
 
   // The DUT address map.
-  parameter ADDR_NAME        = 32'h00000000;
-  parameter ADDR_VERSION     = 32'h00000008;
+  parameter BASE_ADDR        = 32'h60000000;
 
-  parameter ADDR_CTRL        = 32'h00000010;
+  parameter ADDR_NAME        = BASE_ADDR + 32'h00000000;
+  parameter ADDR_VERSION     = BASE_ADDR + 32'h00000004;
+
+  parameter ADDR_CTRL        = BASE_ADDR + 32'h00000008;
   parameter CTRL_INIT_BIT    = 0;
   parameter CTRL_NEXT_BIT    = 1;
   parameter CTRL_ENCDEC_BIT  = 2;
   parameter CTRL_KEYLEN_BIT  = 3;
 
-  parameter ADDR_STATUS      = 32'h00000018;
+  parameter ADDR_STATUS      = BASE_ADDR + 32'h0000000c;
   parameter STATUS_READY_BIT = 0;
   parameter STATUS_VALID_BIT = 1;
 
-  parameter ADDR_CONFIG      = 32'h00000020;
+  parameter ADDR_CONFIG      = BASE_ADDR + 32'h00000010;
 
-  parameter ADDR_KEY0        = 32'h00000040;
-  parameter ADDR_KEY1        = 32'h00000048;
-  parameter ADDR_KEY2        = 32'h00000050;
-  parameter ADDR_KEY3        = 32'h00000058;
+  parameter ADDR_KEY0        = BASE_ADDR + 32'h00000020;
+  parameter ADDR_KEY1        = BASE_ADDR + 32'h00000024;
+  parameter ADDR_KEY2        = BASE_ADDR + 32'h00000028;
+  parameter ADDR_KEY3        = BASE_ADDR + 32'h0000002c;
 
-  parameter ADDR_BLOCK0      = 32'h00000080;
-  parameter ADDR_BLOCK1      = 32'h00000088;
+  parameter ADDR_BLOCK0      = BASE_ADDR + 32'h00000030;
+  parameter ADDR_BLOCK1      = BASE_ADDR + 32'h00000034;
 
-  parameter ADDR_RESULT0     = 32'h00000100;
-  parameter ADDR_RESULT1     = 32'h00000108;
+  parameter ADDR_RESULT0     = BASE_ADDR + 32'h00000040;
+  parameter ADDR_RESULT1     = BASE_ADDR + 32'h00000044;
 
-  parameter AES_128_BIT_KEY = 0;
-  parameter AES_256_BIT_KEY = 1;
+  parameter AES_128_BIT_KEY  = 0;
+  parameter AES_256_BIT_KEY  = 1;
 
-  parameter AES_DECIPHER = 1'b0;
-  parameter AES_ENCIPHER = 1'b1;
+  parameter AES_DECIPHER     = 1'b0;
+  parameter AES_ENCIPHER     = 1'b1;
 
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
   //----------------------------------------------------------------
-  reg [31 : 0]  cycle_ctr;
-  reg [31 : 0]  error_ctr;
-  reg [31 : 0]  tc_ctr;
+  reg [63 : 0]  cycle_ctr;
+  reg [63 : 0]  error_ctr;
+  reg [63 : 0]  tc_ctr;
 
   reg [63 : 0]  read_data;
   reg [127 : 0] result_data;
 
-  reg           tb_clk;
-  reg           tb_reset_n;
-  reg           tb_cs;
-  reg           tb_we;
-  reg [31 : 0]  tb_address;
-  reg [63 : 0]  tb_write_data;
-  wire [63 : 0] tb_read_data;
+  reg           clk_tb;
+  reg           reset_n_tb;
+  reg           cs_tb;
+  reg           we_tb;
+  reg [31  : 0] address_tb;
+  reg [63 : 0]  write_data_tb;
+  wire [63 : 0] read_data_tb;
 
 
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
   aes dut(
-           .clk(tb_clk),
-           .reset_n(tb_reset_n),
-           .cs(tb_cs),
-           .we(tb_we),
-           .address(tb_address),
-           .write_data(tb_write_data),
-           .read_data(tb_read_data)
+           .clk(clk_tb),
+           .reset_n(reset_n_tb),
+           .cs(cs_tb),
+           .we(we_tb),
+           .address(address_tb),
+           .write_data(write_data_tb),
+           .read_data(read_data_tb)
           );
 
 
@@ -123,7 +125,7 @@ module aes_tb();
   always
     begin : clk_gen
       #CLK_HALF_PERIOD;
-      tb_clk = !tb_clk;
+      clk_tb = !clk_tb;
     end // clk_gen
 
 
@@ -160,8 +162,8 @@ module aes_tb();
       $display("config_reg: encdec = 0x%01x, length = 0x%01x ", dut.encdec_reg, dut.keylen_reg);
       $display("");
 
-      $display("block: 0x%08x, 0x%08x",
-               dut.block_reg[0], dut.block_reg[1]);
+      $display("block: 0x%08x, 0x%08x, 0x%08x, 0x%08x",
+               dut.block_reg[0], dut.block_reg[1], dut.block_reg[2], dut.block_reg[3]);
       $display("");
 
     end
@@ -176,10 +178,10 @@ module aes_tb();
   task reset_dut;
     begin
       $display("*** Toggle reset.");
-      tb_reset_n = 0;
+      reset_n_tb = 0;
 
       #(2 * CLK_PERIOD);
-      tb_reset_n = 1;
+      reset_n_tb = 1;
       $display("");
     end
   endtask // reset_dut
@@ -217,13 +219,13 @@ module aes_tb();
       error_ctr     = 0;
       tc_ctr        = 0;
 
-      tb_clk        = 0;
-      tb_reset_n    = 1;
+      clk_tb        = 0;
+      reset_n_tb    = 1;
 
-      tb_cs         = 0;
-      tb_we         = 0;
-      tb_address    = 32'h0;
-      tb_write_data = 64'h0;
+      cs_tb         = 0;
+      we_tb         = 0;
+      address_tb    = 32'h0;
+      write_data_tb = 64'h0;
     end
   endtask // init_sim
 
@@ -242,13 +244,13 @@ module aes_tb();
           $display("");
         end
 
-      tb_address = address;
-      tb_write_data = word;
-      tb_cs = 1;
-      tb_we = 1;
+      address_tb = address;
+      write_data_tb = word;
+      cs_tb = 1;
+      we_tb = 1;
       #(2 * CLK_PERIOD);
-      tb_cs = 0;
-      tb_we = 0;
+      cs_tb = 0;
+      we_tb = 0;
     end
   endtask // write_word
 
@@ -275,12 +277,12 @@ module aes_tb();
   //----------------------------------------------------------------
   task read_word(input [31 : 0]  address);
     begin
-      tb_address = address;
-      tb_cs = 1;
-      tb_we = 0;
+      address_tb = address;
+      cs_tb = 1;
+      we_tb = 0;
       #(CLK_PERIOD);
-      read_data = tb_read_data;
-      tb_cs = 0;
+      read_data = read_data_tb;
+      cs_tb = 0;
 
       if (DEBUG)
         begin

@@ -12,10 +12,11 @@ targets:
     files:
       - $COMPILE_ROOT/rtl/sha256_ctrl.sv
       - $COMPILE_ROOT/rtl/sha256.v
+      - $COMPILE_ROOT/rtl/param_sha256.sv
       - $COMPILE_ROOT/rtl/sha256_core.v
       - $COMPILE_ROOT/rtl/sha256_k_constants.v
       - $COMPILE_ROOT/rtl/sha256_w_mem.v
-    tops: [sha256]
+    tops: [sha256_ctrl]
 ---
 provides: [sha256_ctrl_tb]  
 schema_version: 2.4.0

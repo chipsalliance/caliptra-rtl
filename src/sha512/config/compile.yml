@@ -12,6 +12,7 @@ targets:
     files:
       - $COMPILE_ROOT/rtl/sha512_ctrl.sv
       - $COMPILE_ROOT/rtl/sha512.v
+      - $COMPILE_ROOT/rtl/param_sha512.sv
       - $COMPILE_ROOT/rtl/sha512_core.v
       - $COMPILE_ROOT/rtl/sha512_h_constants.v
       - $COMPILE_ROOT/rtl/sha512_k_constants.v

@@ -94,6 +94,10 @@ module sha256_ctrl #(
     logic [63:0] hrdata;
     logic [63:0] hwdata;
 
+    bit [7:0] wscnt;
+    int dws = 0;
+    int iws = 0;
+
     always @ (negedge clk) begin
         cs = (hsel_i & hready_i)? 1 : 0;
         hrdata <= rdata;
@@ -112,10 +116,15 @@ module sha256_ctrl #(
         end
         else if(hready_i)
             addr = hadrr_i;
+        if(hready_i & hsel_i & |htrans_i)
+            if(~hprot_i[0])
+                iws = 0;
+            if(hprot_i[0])
+                dws = 0;
     end
 
     assign hrdata_o = hready_i ? hrdata : ~hrdata;
-    assign hreadyout_o = 1;  //wscnt == 0;
+    assign hreadyout_o = wscnt == 0;
     assign hresp_o = 0;
 
     always_ff @(posedge clk or negedge reset_n) begin
@@ -123,6 +132,7 @@ module sha256_ctrl #(
             laddr <= 0;
             write <= 1'b0;
             rdata <= '0;
+            wscnt <= 0;
         end
         else begin
             if(hready_i & hsel_i) begin
@@ -132,6 +142,10 @@ module sha256_ctrl #(
                     rdata <= sha256_read_data;
             end
         end
+        if(hready_i & hsel_i & |htrans_i)
+            wscnt <= hprot_i[0] ? dws[7:0] : iws[7:0];
+        else if(wscnt != 0)
+            wscnt <= wscnt-1;
     end
 
     always_comb begin

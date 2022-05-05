@@ -1,13 +1,13 @@
 //======================================================================
 //
-// sha256.v
-// --------
-// Top level wrapper for the SHA-256 hash function providing
-// a simple memory like interface with 32 bit data access.
+// hmac.v
+// ------
+// Top level wrapper for the HMAC core providing a simple memory
+// like interface with 32 bit data access.
 //
 //
 // Author: Joachim Strombergson
-// Copyright (c) 2013, 201, Secworks Sweden AB
+// Copyright (c) 2018 Assured AB
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or
@@ -37,28 +37,25 @@
 //
 //======================================================================
 
-`default_nettype none
+module hmac(
+            // Clock and reset.
+            input wire           clk,
+            input wire           reset_n,
 
-module sha256(
-              // Clock and reset.
-              input wire           clk,
-              input wire           reset_n,
+            // Control.
+            input wire           cs,
+            input wire           we,
 
-              // Control.
-              input wire           cs,
-              input wire           we,
-
-              // Data ports.
-              input wire  [31 : 0] address,
-              input wire  [63 : 0] write_data,
-              output wire [63 : 0] read_data,
-              output wire          error
-             );
+            // Data ports.
+            input wire  [31 : 0] address,
+            input wire  [63 : 0] write_data,
+            output wire [63 : 0] read_data
+           );
 
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  `include "param_sha256.sv"
+  `include "param_hmac.sv"
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -68,61 +65,58 @@ module sha256(
 
   reg next_reg;
   reg next_new;
-
-  reg mode_reg;
-  reg mode_new;
-  reg mode_we;
-
+  
   reg ready_reg;
+  reg tag_valid_reg;
+
+  reg [63 : 0] key_reg [0 : 3];
+  reg          key_we;
 
   reg [63 : 0] block_reg [0 : 7];
   reg          block_we;
-
-  reg [255 : 0] digest_reg;
-
-  reg digest_valid_reg;
 
 
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-  wire           core_ready;
+  wire [255 : 0] core_key;
   wire [511 : 0] core_block;
-  wire [255 : 0] core_digest;
-  wire           core_digest_valid;
+  wire           core_ready;
+  wire [255 : 0] core_tag;
+  wire           core_tag_valid;
 
-  reg [63 : 0]   tmp_read_data;
-  reg            tmp_error;
-
+  reg [255 : 0]  tag_reg;
+  reg [63  : 0]  tmp_read_data;
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign core_block = {block_reg[0], block_reg[1], block_reg[2], block_reg[3],
-                       block_reg[4], block_reg[5], block_reg[6], block_reg[7]};
+  assign core_block = {block_reg[00], block_reg[01], block_reg[02], block_reg[03],
+                       block_reg[04], block_reg[05], block_reg[06], block_reg[07]};
+
+  assign core_key = {key_reg[00], key_reg[01], key_reg[02], key_reg[03]};
 
   assign read_data = tmp_read_data;
-  assign error     = tmp_error;
 
 
   //----------------------------------------------------------------
   // core instantiation.
   //----------------------------------------------------------------
-  sha256_core core(
-                   .clk(clk),
-                   .reset_n(reset_n),
+  hmac_core core(
+                 .clk(clk),
+                 .reset_n(reset_n),
 
-                   .init(init_reg),
-                   .next(next_reg),
-                   .mode(mode_reg),
+                 .init(init_reg),
+                 .next(next_reg),
 
-                   .block(core_block),
+                 .key(core_key),
 
-                   .ready(core_ready),
+                 .block(core_block),
 
-                   .digest(core_digest),
-                   .digest_valid(core_digest_valid)
-                  );
+                 .ready(core_ready),
+                 .tag(core_tag),
+                 .tag_valid(core_tag_valid)
+                );
 
 
   //----------------------------------------------------------------
@@ -141,28 +135,30 @@ module sha256(
           for (i = 0 ; i < 8 ; i = i + 1)
             block_reg[i] <= 64'h0;
 
-          init_reg         <= 0;
-          next_reg         <= 0;
-          ready_reg        <= 0;
-          mode_reg         <= MODE_SHA_256;
-          digest_reg       <= 256'h0;
-          digest_valid_reg <= 0;
+          for (i = 0 ; i < 4 ; i = i + 1)
+            key_reg[i] <= 64'h0;
+
+          init_reg      <= 1'h0;
+          next_reg      <= 1'h0;
+          tag_reg       <= 256'h0;
+          ready_reg     <= 0;
+          tag_valid_reg <= 0;
         end
       else
         begin
-          ready_reg        <= core_ready;
-          digest_valid_reg <= core_digest_valid;
-          init_reg         <= init_new;
-          next_reg         <= next_new;
+          init_reg      <= init_new;
+          next_reg      <= next_new;
+          ready_reg     <= core_ready;
+          tag_valid_reg <= core_ready;
 
-          if (mode_we)
-            mode_reg <= mode_new;
+          if (core_tag_valid)
+            tag_reg <= core_tag;
 
-          if (core_digest_valid)
-            digest_reg <= core_digest;
+          if (key_we)
+            key_reg[address[4 : 3]] <= write_data;
 
           if (block_we)
-            block_reg[address[4 : 2]] <= write_data;
+            block_reg[address[5 : 3]] <= write_data;
         end
     end // reg_update
 
@@ -177,11 +173,9 @@ module sha256(
     begin : api_logic
       init_new      = 0;
       next_new      = 0;
-      mode_new      = 0;
-      mode_we       = 0;
+      key_we        = 0;
       block_we      = 0;
       tmp_read_data = 64'h0;
-      tmp_error     = 0;
 
       if (cs)
         begin
@@ -189,11 +183,12 @@ module sha256(
             begin
               if (address == ADDR_CTRL)
                 begin
-                  init_new = write_data[CTRL_INIT_BIT];
-                  next_new = write_data[CTRL_NEXT_BIT];
-                  mode_new = write_data[CTRL_MODE_BIT];
-                  mode_we  = 1;
+                  init_new     = write_data[CTRL_INIT_BIT];
+                  next_new     = write_data[CTRL_NEXT_BIT];
                 end
+
+              if ((address >= ADDR_KEY0) && (address <= ADDR_KEY3))
+                key_we = 1;
 
               if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK7))
                 block_we = 1;
@@ -201,11 +196,8 @@ module sha256(
 
           else
             begin
-              if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK7))
-                tmp_read_data = block_reg[address[4 : 2]];
-
-              if ((address >= ADDR_DIGEST0) && (address <= ADDR_DIGEST3))
-                tmp_read_data = digest_reg[(3 - ((address - ADDR_DIGEST0)>>2)) * 64 +: 64];
+              if ((address >= ADDR_TAG0) && (address <= ADDR_TAG3))
+                tmp_read_data = tag_reg[(3 - ((address - ADDR_TAG0) >> 3)) * 64 +: 64];
 
               case (address)
                 // Read operations.
@@ -215,11 +207,8 @@ module sha256(
                 ADDR_VERSION:
                   tmp_read_data = CORE_VERSION;
 
-                ADDR_CTRL:
-                  tmp_read_data = {61'h0, mode_reg, next_reg, init_reg};
-
                 ADDR_STATUS:
-                  tmp_read_data = {62'h0, digest_valid_reg, ready_reg};
+                  tmp_read_data = {62'h0, tag_valid_reg, ready_reg};
 
                 default:
                   begin
@@ -228,8 +217,8 @@ module sha256(
             end
         end
     end // addr_decoder
-endmodule // sha256
+endmodule // hmac
 
 //======================================================================
-// EOF sha256.v
+// EOF hmac.v
 //======================================================================

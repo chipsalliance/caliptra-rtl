@@ -19,47 +19,49 @@ module sha512_ctrl_tb();
   parameter CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
 
   // The address map.
-  parameter ADDR_NAME            = 32'h00000000;
-  parameter ADDR_VERSION         = 32'h00000008;
+  parameter BASE_ADDR            = 32'h40000000;
 
-  parameter ADDR_CTRL            = 32'h00000010;
+  parameter ADDR_NAME            = BASE_ADDR + 32'h00000000;
+  parameter ADDR_VERSION         = BASE_ADDR + 32'h00000004;
+
+  parameter ADDR_CTRL            = BASE_ADDR + 32'h00000008;
   parameter CTRL_INIT_BIT        = 0;
   parameter CTRL_NEXT_BIT        = 1;
   parameter CTRL_MODE_LOW_BIT    = 2;
   parameter CTRL_MODE_HIGH_BIT   = 3;
   parameter CTRL_WORK_FACTOR_BIT = 7;
 
-  parameter ADDR_STATUS          = 32'h00000018;
+  parameter ADDR_STATUS          = BASE_ADDR + 32'h0000000c;
   parameter STATUS_READY_BIT     = 0;
   parameter STATUS_VALID_BIT     = 1;
 
-  parameter ADDR_WORK_FACTOR_NUM = 32'h00000020;
+  parameter ADDR_WORK_FACTOR_NUM = BASE_ADDR + 32'h00000010;
 
-  parameter ADDR_BLOCK0          = 32'h00000080;
-  parameter ADDR_BLOCK1          = 32'h00000088;
-  parameter ADDR_BLOCK2          = 32'h00000090;
-  parameter ADDR_BLOCK3          = 32'h00000098;
-  parameter ADDR_BLOCK4          = 32'h000000a0;
-  parameter ADDR_BLOCK5          = 32'h000000a8;
-  parameter ADDR_BLOCK6          = 32'h000000b0;
-  parameter ADDR_BLOCK7          = 32'h000000b8;
-  parameter ADDR_BLOCK8          = 32'h000000c0;
-  parameter ADDR_BLOCK9          = 32'h000000c8;
-  parameter ADDR_BLOCK10         = 32'h000000d0;
-  parameter ADDR_BLOCK11         = 32'h000000d8;
-  parameter ADDR_BLOCK12         = 32'h000000e0;
-  parameter ADDR_BLOCK13         = 32'h000000e8;
-  parameter ADDR_BLOCK14         = 32'h000000f0;
-  parameter ADDR_BLOCK15         = 32'h000000f8;
+  parameter ADDR_BLOCK0          = BASE_ADDR + 32'h00000040;
+  parameter ADDR_BLOCK1          = BASE_ADDR + 32'h00000044;
+  parameter ADDR_BLOCK2          = BASE_ADDR + 32'h00000048;
+  parameter ADDR_BLOCK3          = BASE_ADDR + 32'h0000004c;
+  parameter ADDR_BLOCK4          = BASE_ADDR + 32'h00000050;;
+  parameter ADDR_BLOCK5          = BASE_ADDR + 32'h00000054;;
+  parameter ADDR_BLOCK6          = BASE_ADDR + 32'h00000058;;
+  parameter ADDR_BLOCK7          = BASE_ADDR + 32'h0000005c;;
+  parameter ADDR_BLOCK8          = BASE_ADDR + 32'h00000060;;
+  parameter ADDR_BLOCK9          = BASE_ADDR + 32'h00000064;;
+  parameter ADDR_BLOCK10         = BASE_ADDR + 32'h00000068;;
+  parameter ADDR_BLOCK11         = BASE_ADDR + 32'h0000006c;;
+  parameter ADDR_BLOCK12         = BASE_ADDR + 32'h00000070;;
+  parameter ADDR_BLOCK13         = BASE_ADDR + 32'h00000074;;
+  parameter ADDR_BLOCK14         = BASE_ADDR + 32'h00000078;;
+  parameter ADDR_BLOCK15         = BASE_ADDR + 32'h0000007c;;
 
-  parameter ADDR_DIGEST0         = 32'h00000100;
-  parameter ADDR_DIGEST1         = 32'h00000108;
-  parameter ADDR_DIGEST2         = 32'h00000110;
-  parameter ADDR_DIGEST3         = 32'h00000118;
-  parameter ADDR_DIGEST4         = 32'h00000120;
-  parameter ADDR_DIGEST5         = 32'h00000128;
-  parameter ADDR_DIGEST6         = 32'h00000130;
-  parameter ADDR_DIGEST7         = 32'h00000138;
+  parameter ADDR_DIGEST0         = BASE_ADDR + 32'h00000080;
+  parameter ADDR_DIGEST1         = BASE_ADDR + 32'h00000084;
+  parameter ADDR_DIGEST2         = BASE_ADDR + 32'h00000088;
+  parameter ADDR_DIGEST3         = BASE_ADDR + 32'h0000008c;
+  parameter ADDR_DIGEST4         = BASE_ADDR + 32'h00000090;
+  parameter ADDR_DIGEST5         = BASE_ADDR + 32'h00000094;
+  parameter ADDR_DIGEST6         = BASE_ADDR + 32'h00000098;
+  parameter ADDR_DIGEST7         = BASE_ADDR + 32'h0000009c;
 
   parameter MODE_SHA_512_224     = 2'h0;
   parameter MODE_SHA_512_256     = 2'h1;
