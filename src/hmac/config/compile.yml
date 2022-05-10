@@ -12,7 +12,7 @@ targets:
     files:
       - $COMPILE_ROOT/rtl/hmac_ctrl.sv
       - $COMPILE_ROOT/rtl/hmac.v
-      - $COMPILE_ROOT/rtl/param_hmac.sv
+      - $COMPILE_ROOT/rtl/hmac_param.sv
       - $COMPILE_ROOT/rtl/hmac_core.v
       - $COMPILE_ROOT/rtl/sha256/sha256_core.v
       - $COMPILE_ROOT/rtl/sha256/sha256_k_constants.v

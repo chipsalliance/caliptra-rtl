@@ -58,7 +58,7 @@ module sha512(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  `include "param_sha512.sv"
+  `include "sha512_param.sv"
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -181,7 +181,7 @@ module sha512(
             digest_reg <= core_digest;
 
           if (block_we)
-            block_reg[address[5 : 2]] <= write_data;
+            block_reg[address[6 : 3]] <= write_data;
         end
     end // reg_update
 
@@ -234,10 +234,10 @@ module sha512(
           else
             begin
               if ((address >= ADDR_DIGEST0) && (address <= ADDR_DIGEST7))
-                tmp_read_data = digest_reg[(7 - ((address - ADDR_DIGEST0)>>2)) * 64 +: 64];
+                tmp_read_data = digest_reg[(7 - ((address - ADDR_DIGEST0) >> 3)) * 64 +: 64];
 
               if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK15))
-                tmp_read_data = block_reg[address[5 : 2]];
+                tmp_read_data = block_reg[address[6 : 3]];
 
               case (address)
                 ADDR_NAME:

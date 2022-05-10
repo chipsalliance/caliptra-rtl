@@ -12,7 +12,7 @@ targets:
     files:
       - $COMPILE_ROOT/rtl/aes_ctrl.sv
       - $COMPILE_ROOT/rtl/aes.v
-      - $COMPILE_ROOT/rtl/param_aes.sv
+      - $COMPILE_ROOT/rtl/aes_param.sv
       - $COMPILE_ROOT/rtl/aes_core.v
       - $COMPILE_ROOT/rtl/aes_decipher_block.v
       - $COMPILE_ROOT/rtl/aes_encipher_block.v

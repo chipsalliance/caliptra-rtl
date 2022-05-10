@@ -56,7 +56,7 @@ module aes(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  `include "param_aes.sv"
+  `include "aes_param.sv"
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -175,10 +175,10 @@ module aes(
             end
 
           if (key_we)
-            key_reg[address[3 : 2]] <= write_data;
+            key_reg[address[4 : 3]] <= write_data;
 
           if (block_we)
-            block_reg[address[2]] <= write_data;
+            block_reg[address[3]] <= write_data;
         end
     end // reg_update
 
@@ -231,7 +231,7 @@ module aes(
               endcase // case (address)
 
               if ((address >= ADDR_RESULT0) && (address <= ADDR_RESULT1))
-                tmp_read_data = result_reg[(1 - ((address - ADDR_RESULT0)>>2)) * 64 +: 64];
+                tmp_read_data = result_reg[(1 - ((address - ADDR_RESULT0) >> 3)) * 64 +: 64];
             end
         end
     end // addr_decoder

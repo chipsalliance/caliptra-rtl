@@ -58,7 +58,7 @@ module sha256(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  `include "param_sha256.sv"
+  `include "sha256_param.sv"
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -162,7 +162,7 @@ module sha256(
             digest_reg <= core_digest;
 
           if (block_we)
-            block_reg[address[4 : 2]] <= write_data;
+            block_reg[address[5 : 3]] <= write_data;
         end
     end // reg_update
 
@@ -202,10 +202,10 @@ module sha256(
           else
             begin
               if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK7))
-                tmp_read_data = block_reg[address[4 : 2]];
+                tmp_read_data = block_reg[address[5 : 3]];
 
               if ((address >= ADDR_DIGEST0) && (address <= ADDR_DIGEST3))
-                tmp_read_data = digest_reg[(3 - ((address - ADDR_DIGEST0)>>2)) * 64 +: 64];
+                tmp_read_data = digest_reg[(3 - ((address - ADDR_DIGEST0) >> 3)) * 64 +: 64];
 
               case (address)
                 // Read operations.

@@ -52,30 +52,30 @@ module sha256_tb();
   parameter BASE_ADDR        = 32'h50000000;
 
   parameter ADDR_NAME        = BASE_ADDR + 32'h00000000;
-  parameter ADDR_VERSION     = BASE_ADDR + 32'h00000004;
+  parameter ADDR_VERSION     = BASE_ADDR + 32'h00000008;
 
-  parameter ADDR_CTRL        = BASE_ADDR + 32'h00000008;
+  parameter ADDR_CTRL        = BASE_ADDR + 32'h00000010;
   parameter CTRL_INIT_VALUE  = 8'h01;
   parameter CTRL_NEXT_VALUE  = 8'h02;
   parameter CTRL_MODE_VALUE  = 8'h04;
 
-  parameter ADDR_STATUS      = BASE_ADDR + 32'h0000000c;
+  parameter ADDR_STATUS      = BASE_ADDR + 32'h00000018;
   parameter STATUS_READY_BIT = 0;
   parameter STATUS_VALID_BIT = 1;
 
-  parameter ADDR_BLOCK0    = BASE_ADDR + 32'h00000020;
-  parameter ADDR_BLOCK1    = BASE_ADDR + 32'h00000024;
-  parameter ADDR_BLOCK2    = BASE_ADDR + 32'h00000028;
-  parameter ADDR_BLOCK3    = BASE_ADDR + 32'h0000002c;
-  parameter ADDR_BLOCK4    = BASE_ADDR + 32'h00000030;
-  parameter ADDR_BLOCK5    = BASE_ADDR + 32'h00000034;
-  parameter ADDR_BLOCK6    = BASE_ADDR + 32'h00000038;
-  parameter ADDR_BLOCK7    = BASE_ADDR + 32'h0000003c;
+  parameter ADDR_BLOCK0    = BASE_ADDR + 32'h00000080;
+  parameter ADDR_BLOCK1    = BASE_ADDR + 32'h00000088;
+  parameter ADDR_BLOCK2    = BASE_ADDR + 32'h00000090;
+  parameter ADDR_BLOCK3    = BASE_ADDR + 32'h00000098;
+  parameter ADDR_BLOCK4    = BASE_ADDR + 32'h000000a0;
+  parameter ADDR_BLOCK5    = BASE_ADDR + 32'h000000a8;
+  parameter ADDR_BLOCK6    = BASE_ADDR + 32'h000000b0;
+  parameter ADDR_BLOCK7    = BASE_ADDR + 32'h000000b8;
 
-  parameter ADDR_DIGEST0   = BASE_ADDR + 32'h00000040;
-  parameter ADDR_DIGEST1   = BASE_ADDR + 32'h00000044;
-  parameter ADDR_DIGEST2   = BASE_ADDR + 32'h00000048;
-  parameter ADDR_DIGEST3   = BASE_ADDR + 32'h0000004c;
+  parameter ADDR_DIGEST0   = BASE_ADDR + 32'h00000100;
+  parameter ADDR_DIGEST1   = BASE_ADDR + 32'h00000108;
+  parameter ADDR_DIGEST2   = BASE_ADDR + 32'h00000110;
+  parameter ADDR_DIGEST3   = BASE_ADDR + 32'h00000118;
 
   parameter SHA224_MODE    = 0;
   parameter SHA256_MODE    = 1;

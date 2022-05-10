@@ -22,46 +22,46 @@ module sha512_ctrl_tb();
   parameter BASE_ADDR            = 32'h40000000;
 
   parameter ADDR_NAME            = BASE_ADDR + 32'h00000000;
-  parameter ADDR_VERSION         = BASE_ADDR + 32'h00000004;
+  parameter ADDR_VERSION         = BASE_ADDR + 32'h00000008;
 
-  parameter ADDR_CTRL            = BASE_ADDR + 32'h00000008;
+  parameter ADDR_CTRL            = BASE_ADDR + 32'h00000010;
   parameter CTRL_INIT_BIT        = 0;
   parameter CTRL_NEXT_BIT        = 1;
   parameter CTRL_MODE_LOW_BIT    = 2;
   parameter CTRL_MODE_HIGH_BIT   = 3;
   parameter CTRL_WORK_FACTOR_BIT = 7;
 
-  parameter ADDR_STATUS          = BASE_ADDR + 32'h0000000c;
+  parameter ADDR_STATUS          = BASE_ADDR + 32'h00000018;
   parameter STATUS_READY_BIT     = 0;
   parameter STATUS_VALID_BIT     = 1;
 
-  parameter ADDR_WORK_FACTOR_NUM = BASE_ADDR + 32'h00000010;
+  parameter ADDR_WORK_FACTOR_NUM = BASE_ADDR + 32'h00000020;
 
-  parameter ADDR_BLOCK0          = BASE_ADDR + 32'h00000040;
-  parameter ADDR_BLOCK1          = BASE_ADDR + 32'h00000044;
-  parameter ADDR_BLOCK2          = BASE_ADDR + 32'h00000048;
-  parameter ADDR_BLOCK3          = BASE_ADDR + 32'h0000004c;
-  parameter ADDR_BLOCK4          = BASE_ADDR + 32'h00000050;;
-  parameter ADDR_BLOCK5          = BASE_ADDR + 32'h00000054;;
-  parameter ADDR_BLOCK6          = BASE_ADDR + 32'h00000058;;
-  parameter ADDR_BLOCK7          = BASE_ADDR + 32'h0000005c;;
-  parameter ADDR_BLOCK8          = BASE_ADDR + 32'h00000060;;
-  parameter ADDR_BLOCK9          = BASE_ADDR + 32'h00000064;;
-  parameter ADDR_BLOCK10         = BASE_ADDR + 32'h00000068;;
-  parameter ADDR_BLOCK11         = BASE_ADDR + 32'h0000006c;;
-  parameter ADDR_BLOCK12         = BASE_ADDR + 32'h00000070;;
-  parameter ADDR_BLOCK13         = BASE_ADDR + 32'h00000074;;
-  parameter ADDR_BLOCK14         = BASE_ADDR + 32'h00000078;;
-  parameter ADDR_BLOCK15         = BASE_ADDR + 32'h0000007c;;
+  parameter ADDR_BLOCK0          = BASE_ADDR + 32'h00000080;
+  parameter ADDR_BLOCK1          = BASE_ADDR + 32'h00000088;
+  parameter ADDR_BLOCK2          = BASE_ADDR + 32'h00000090;
+  parameter ADDR_BLOCK3          = BASE_ADDR + 32'h00000098;
+  parameter ADDR_BLOCK4          = BASE_ADDR + 32'h000000a0;
+  parameter ADDR_BLOCK5          = BASE_ADDR + 32'h000000a8;
+  parameter ADDR_BLOCK6          = BASE_ADDR + 32'h000000b0;
+  parameter ADDR_BLOCK7          = BASE_ADDR + 32'h000000b8;
+  parameter ADDR_BLOCK8          = BASE_ADDR + 32'h000000c0;
+  parameter ADDR_BLOCK9          = BASE_ADDR + 32'h000000c8;
+  parameter ADDR_BLOCK10         = BASE_ADDR + 32'h000000d0;
+  parameter ADDR_BLOCK11         = BASE_ADDR + 32'h000000d8;
+  parameter ADDR_BLOCK12         = BASE_ADDR + 32'h000000e0;
+  parameter ADDR_BLOCK13         = BASE_ADDR + 32'h000000e8;
+  parameter ADDR_BLOCK14         = BASE_ADDR + 32'h000000f0;
+  parameter ADDR_BLOCK15         = BASE_ADDR + 32'h000000f8;
 
-  parameter ADDR_DIGEST0         = BASE_ADDR + 32'h00000080;
-  parameter ADDR_DIGEST1         = BASE_ADDR + 32'h00000084;
-  parameter ADDR_DIGEST2         = BASE_ADDR + 32'h00000088;
-  parameter ADDR_DIGEST3         = BASE_ADDR + 32'h0000008c;
-  parameter ADDR_DIGEST4         = BASE_ADDR + 32'h00000090;
-  parameter ADDR_DIGEST5         = BASE_ADDR + 32'h00000094;
-  parameter ADDR_DIGEST6         = BASE_ADDR + 32'h00000098;
-  parameter ADDR_DIGEST7         = BASE_ADDR + 32'h0000009c;
+  parameter ADDR_DIGEST0         = BASE_ADDR + 32'h00000100;
+  parameter ADDR_DIGEST1         = BASE_ADDR + 32'h00000108;
+  parameter ADDR_DIGEST2         = BASE_ADDR + 32'h00000110;
+  parameter ADDR_DIGEST3         = BASE_ADDR + 32'h00000118;
+  parameter ADDR_DIGEST4         = BASE_ADDR + 32'h00000120;
+  parameter ADDR_DIGEST5         = BASE_ADDR + 32'h00000128;
+  parameter ADDR_DIGEST6         = BASE_ADDR + 32'h00000130;
+  parameter ADDR_DIGEST7         = BASE_ADDR + 32'h00000138;
 
   parameter MODE_SHA_512_224     = 2'h0;
   parameter MODE_SHA_512_256     = 2'h1;
@@ -70,7 +70,6 @@ module sha512_ctrl_tb();
 
   parameter CTRL_INIT_VALUE        = 2'h1;
   parameter CTRL_NEXT_VALUE        = 2'h2;
-  parameter CTRL_WORK_FACTOR_VALUE = 1'h1;
 
   parameter AHB_HTRANS_IDLE     = 0;
   parameter AHB_HTRANS_BUSY     = 1;
@@ -505,51 +504,6 @@ module sha512_ctrl_tb();
 
 
   //----------------------------------------------------------------
-  // work_factor_test()
-  //
-  // Perform test of the work factor function.
-  //----------------------------------------------------------------
-  task work_factor_test;
-    reg [1023 : 0] my_block;
-    reg [511 :  0] my_digest;
-    reg [63 : 0]   my_ctrl_cmd;
-
-    begin
-      $display("*** TC%01d - Work factor test started.", tc_ctr);
-
-      // Read out work factor number.
-      read_single_word(ADDR_WORK_FACTOR_NUM);
-
-      // Trying to change the work factor number.
-      write_single_word(ADDR_WORK_FACTOR_NUM, 64'h0000000000000003);
-      #CLK_PERIOD;
-      hsel_i_tb       = 0;
-
-      read_single_word(ADDR_WORK_FACTOR_NUM);
-
-      // Set block to all zero
-      my_block = {16{64'h0000000000000000}};
-      write_block(my_block);
-
-      // Set init+ work factor. We use SHA-512 mode.
-      my_ctrl_cmd = 64'h0000000000000000 + (CTRL_WORK_FACTOR_VALUE << 7) +
-                    (MODE_SHA_512 << 2) + CTRL_INIT_VALUE;
-      write_single_word(ADDR_CTRL, my_ctrl_cmd);
-      #CLK_PERIOD;
-      hsel_i_tb       = 0;
-
-      #(CLK_PERIOD);
-      wait_ready();
-      read_digest();
-
-      $display("*** TC%01d - Work factor test done.", tc_ctr);
-      tc_ctr = tc_ctr + 1;
-    end
-  endtask // work_factor_test
-
-
-
-  //----------------------------------------------------------------
   // read_digest()
   //
   // Read the digest in the dut. The resulting digest will be
@@ -684,9 +638,6 @@ module sha512_ctrl_tb();
       tc11_expected = 512'h2A7F1D895FD58E0BEAAE96D1A673C741015A2173796C1A88F6352CA156ACAFF7C662113E9EBB4D6417B61A85E2CCF0A937EB9A6660FEB5198F2EBE9A81E6A2C5;
       tc12_expected = {384'h09330C33F71147E83D192FC782CD1B4753111B173B3B05D22FA08086E3B0F712FCC7C71A557E2DB966C3E9FA91746039, {4{32'h00000000}}};
       double_block_test(8'h08, MODE_SHA_384, double_block_one, double_block_two, tc11_expected, tc12_expected);
-
-      // Work factor test.
-      work_factor_test();
 
       display_test_result();
       

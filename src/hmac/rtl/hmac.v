@@ -55,7 +55,7 @@ module hmac(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  `include "param_hmac.sv"
+  `include "hmac_param.sv"
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.

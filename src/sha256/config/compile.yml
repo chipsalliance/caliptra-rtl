@@ -12,7 +12,7 @@ targets:
     files:
       - $COMPILE_ROOT/rtl/sha256_ctrl.sv
       - $COMPILE_ROOT/rtl/sha256.v
-      - $COMPILE_ROOT/rtl/param_sha256.sv
+      - $COMPILE_ROOT/rtl/sha256_param.sv
       - $COMPILE_ROOT/rtl/sha256_core.v
       - $COMPILE_ROOT/rtl/sha256_k_constants.v
       - $COMPILE_ROOT/rtl/sha256_w_mem.v
