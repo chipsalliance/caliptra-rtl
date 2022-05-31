@@ -9,7 +9,7 @@ resources:
     type: git
     name: Ether/pipelines
 variables:
-- group: Pipelines
+- group: AHA_POC_Pipelines
 
 stages:
 - template: etc/pipelines/templates/promote-pipeline-template.yml@templates  # Template reference
