@@ -19,7 +19,7 @@ targets:
       - $COMPILE_ROOT/rtl/sha512_w_mem.v
     tops: [sha512_ctrl]
 ---
-provides: [sha512_ctrl_tb]  
+provides: [sha512_ctrl_32bit_tb]  
 schema_version: 2.4.0
 requires: 
   - sha512_ctrl
@@ -28,8 +28,8 @@ targets:
     directories: 
       - $COMPILE_ROOT/tb
     files:
-      - $COMPILE_ROOT/tb/sha512_ctrl_tb.sv
-    tops: [sha512_ctrl_tb]
+      - $COMPILE_ROOT/tb/sha512_ctrl_32bit_tb.sv
+    tops: [sha512_ctrl_32bit_tb]
 global:
   tool:
     vcs:

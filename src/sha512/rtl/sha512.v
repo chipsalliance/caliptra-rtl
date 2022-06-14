@@ -39,7 +39,10 @@
 
 `default_nettype none
 
-module sha512(
+module sha512 #(
+              parameter ADDR_WIDTH = 32,
+              parameter DATA_WIDTH = 64
+              )(
               // Clock and reset.
               input wire           clk,
               input wire           reset_n,
@@ -49,9 +52,9 @@ module sha512(
               input wire           we,
 
               // Data ports.
-              input wire  [31 : 0] address,
-              input wire  [63 : 0] write_data,
-              output wire [63 : 0] read_data,
+              input wire  [ADDR_WIDTH-1 : 0] address,
+              input wire  [DATA_WIDTH-1 : 0] write_data,
+              output wire [DATA_WIDTH-1 : 0] read_data,
               output wire          error
              );
 
@@ -82,7 +85,8 @@ module sha512(
   reg [31 : 0] work_factor_num_reg;
   reg          work_factor_num_we;
 
-  reg [63 : 0] block_reg [0 : 15];
+  localparam BLOCK_NO = 1024 / DATA_WIDTH;
+  reg [DATA_WIDTH-1 : 0] block_reg [0 : BLOCK_NO-1];
   reg          block_we;
 
   reg [511 : 0] digest_reg;
@@ -97,17 +101,28 @@ module sha512(
   wire [511 : 0]  core_digest;
   wire            core_digest_valid;
 
-  reg [63 : 0]    tmp_read_data;
-  reg             tmp_error;
+  reg [DATA_WIDTH-1 : 0]  tmp_read_data;
+  reg                     tmp_error;
 
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign core_block = {block_reg[00], block_reg[01], block_reg[02], block_reg[03],
-                       block_reg[04], block_reg[05], block_reg[06], block_reg[07],
-                       block_reg[08], block_reg[09], block_reg[10], block_reg[11],
-                       block_reg[12], block_reg[13], block_reg[14], block_reg[15]};
+  `ifdef DATA_BUS_64
+    assign core_block = { block_reg[00], block_reg[01], block_reg[02], block_reg[03],
+                          block_reg[04], block_reg[05], block_reg[06], block_reg[07],
+                          block_reg[08], block_reg[09], block_reg[10], block_reg[11],
+                          block_reg[12], block_reg[13], block_reg[14], block_reg[15]};
+  `else
+    assign core_block = { block_reg[00], block_reg[01], block_reg[02], block_reg[03],
+                          block_reg[04], block_reg[05], block_reg[06], block_reg[07],
+                          block_reg[08], block_reg[09], block_reg[10], block_reg[11],
+                          block_reg[12], block_reg[13], block_reg[14], block_reg[15],
+                          block_reg[16], block_reg[17], block_reg[18], block_reg[19],
+                          block_reg[20], block_reg[21], block_reg[22], block_reg[23],
+                          block_reg[24], block_reg[25], block_reg[26], block_reg[27],
+                          block_reg[28], block_reg[29], block_reg[30], block_reg[31]};
+  `endif
 
   assign read_data = tmp_read_data;
   assign error     = tmp_error;
@@ -149,8 +164,8 @@ module sha512(
 
       if (!reset_n)
         begin
-          for (i = 0 ; i < 16 ; i = i + 1)
-            block_reg[i] <= 64'h0;
+          for (i = 0 ; i < BLOCK_NO ; i = i + 1)
+            block_reg[i] <= 0;
 
           init_reg            <= 1'h0;
           next_reg            <= 1'h0;
@@ -181,7 +196,11 @@ module sha512(
             digest_reg <= core_digest;
 
           if (block_we)
-            block_reg[address[6 : 3]] <= write_data;
+            `ifdef DATA_BUS_64
+              block_reg[address[6 : 3]] <= write_data;
+            `else
+              block_reg[address[6 : 2]] <= write_data;
+            `endif
         end
     end // reg_update
 
@@ -202,14 +221,14 @@ module sha512(
       work_factor_we     = 1'h0;
       work_factor_num_we = 1'h0;
       block_we           = 1'h0;
-      tmp_read_data      = 64'h0;
+      tmp_read_data      = '0;
       tmp_error          = 1'h0;
 
       if (cs)
         begin
           if (we)
             begin
-              if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK15))
+              if ((address >= ADDR_BLOCK_START) && (address <= ADDR_BLOCK_END))
                 block_we = 1'h1;
 
               case (address)
@@ -233,27 +252,42 @@ module sha512(
 
           else
             begin
-              if ((address >= ADDR_DIGEST0) && (address <= ADDR_DIGEST7))
-                tmp_read_data = digest_reg[(7 - ((address - ADDR_DIGEST0) >> 3)) * 64 +: 64];
+              
+              if ((address >= ADDR_DIGEST_START) && (address <= ADDR_DIGEST_END))
+                `ifdef DATA_BUS_64
+                  tmp_read_data = digest_reg[(7 - ((address - ADDR_DIGEST_START) >> 3)) * DATA_WIDTH +: DATA_WIDTH];
+                `else
+                  tmp_read_data = digest_reg[(15 - ((address - ADDR_DIGEST_START) >> 2)) * DATA_WIDTH +: DATA_WIDTH];
+                `endif
 
-              if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK15))
-                tmp_read_data = block_reg[address[6 : 3]];
-
+              if ((address >= ADDR_BLOCK_START) && (address <= ADDR_BLOCK_END))
+                `ifdef DATA_BUS_64
+                  tmp_read_data = block_reg[address[6 : 3]];
+                `else
+                  tmp_read_data = block_reg[address[6 : 2]];
+                `endif
+              
               case (address)
-                ADDR_NAME:
-                  tmp_read_data = CORE_NAME;
+                ADDR_NAME0:
+                  tmp_read_data = {CORE_NAME1, CORE_NAME0};
 
-                ADDR_VERSION:
-                  tmp_read_data = CORE_VERSION;
+                ADDR_NAME1:
+                  tmp_read_data = CORE_NAME1;
+
+                ADDR_VERSION0:
+                  tmp_read_data = {CORE_VERSION1, CORE_VERSION0};
+
+                ADDR_VERSION1:
+                  tmp_read_data = CORE_VERSION1;
 
                 ADDR_CTRL:
-                  tmp_read_data = {56'h0, work_factor_reg, 3'b0, mode_reg, next_reg, init_reg};
+                  tmp_read_data = {work_factor_reg, 3'b0, mode_reg, next_reg, init_reg};
 
                 ADDR_STATUS:
-                  tmp_read_data = {62'h0, digest_valid_reg, ready_reg};
+                  tmp_read_data = {digest_valid_reg, ready_reg};
 
                 ADDR_WORK_FACTOR_NUM:
-                  tmp_read_data = {32'h0, work_factor_num_reg};
+                  tmp_read_data = work_factor_num_reg;
 
                 default:
                   tmp_error = 1'h1;

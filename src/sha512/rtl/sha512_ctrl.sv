@@ -41,11 +41,15 @@ module sha512_ctrl #(
     reg           sha512_cs;
     reg           sha512_we;
     reg  [31 : 0] sha512_address;
-    reg  [63 : 0] sha512_write_data;
-    reg  [63 : 0] sha512_read_data;
+    reg  [31 : 0] sha512_write_data;
+    reg  [31 : 0] sha512_read_data;
     reg           sha512_error;
 
-    sha512 sha512_inst(
+    sha512 #(
+        .ADDR_WIDTH(32),
+        .DATA_WIDTH(32)
+        )
+        sha512_inst(
         .clk(clk),
         .reset_n(reset_n),
         .cs(sha512_cs),
@@ -56,43 +60,15 @@ module sha512_ctrl #(
         .error(sha512_error)
     );
 
-
-    /*
-    //----------------------------------------------------------------
-    // fifo_in
-    //----------------------------------------------------------------
-    reg                     fifo_in_we,
-    reg                     fifo_in_rd,
-    reg                     fifo_in_full,
-    reg                     fifo_in_empty,
-    reg [DATA_WIDTH-1 : 0]  fifo_in_write_data,
-    reg [DATA_WIDTH-1 : 0]  fifo_in_read_data
-
-    fifo  fifo_in #(
-        RAM_ADDR_WIDTH = 5,
-        DATA_WIDTH = 64
-    )
-    (
-        .clk(clk),
-        .reset_n(reset_n),
-        .we(fifo_in_we),
-        .rd(fifo_in_rd),
-        .fifo_full(fifo_in_full),
-        .fifo_empty(fifo_in_empty),
-        .write_data(fifo_in_write_data),
-        .read_data(fifo_in_read_data)
-    );
-    */
-
     //----------------------------------------------------------------
     // AHB Slave node
     //----------------------------------------------------------------
     logic cs;
     logic write;
-    logic [31:0] laddr, addr;
-    logic [63:0] rdata;
-    logic [63:0] hrdata;
-    logic [63:0] hwdata;
+    logic [AHB_ADDR_WIDTH-1 : 0] laddr, addr;
+    logic [AHB_DATA_WIDTH-1 : 0] rdata;
+    logic [AHB_DATA_WIDTH-1 : 0] hrdata;
+    logic [AHB_DATA_WIDTH-1 : 0] hwdata;
 
     bit [7:0] wscnt;
     int dws = 0;
@@ -103,15 +79,16 @@ module sha512_ctrl #(
         hrdata <= rdata;
         if (write & hready_i) begin
             addr = laddr;
+            hwdata = 0;
             case (hsize_i)
                 3'b000: 
-                    hwdata = {56'h00000000000000, hwdata_i[7:0]};
+                    hwdata = hwdata_i[7:0];
                 3'b001: 
-                    hwdata = {48'h000000000000, hwdata_i[15:0]};
+                    hwdata = hwdata_i[15:0];
                 3'b010: 
-                    hwdata = {32'h00000000, hwdata_i[31:0]};
+                    hwdata = laddr[2]? hwdata_i[63:32] : hwdata_i[31:0];
                 default:  // 3'b011: 
-                    hwdata = hwdata_i[63:0];
+                    hwdata = hwdata_i;
             endcase;
         end
         else if(hready_i)

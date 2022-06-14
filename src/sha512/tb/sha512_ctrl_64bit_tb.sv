@@ -1,6 +1,6 @@
 //======================================================================
 //
-// sha512_ctrl_tb.sv
+// sha512_ctrl_64bit_tb.sv
 // --------
 // SHA512 testbench for the SHA512 AHb_lite interface controller.
 //
@@ -8,7 +8,7 @@
 // Author: Mojtaba Bisheh-Niasar
 //======================================================================
 
-module sha512_ctrl_tb();
+module sha512_ctrl_64bit_tb();
 
 //----------------------------------------------------------------
   // Internal constant and parameter definitions.
@@ -212,11 +212,13 @@ module sha512_ctrl_tb();
       if (error_ctr == 0)
         begin
           $display("*** All %02d test cases completed successfully.", tc_ctr);
+          $display("* TESTCASE PASSED");
         end
       else
         begin
           $display("*** %02d test cases completed.", tc_ctr);
           $display("*** %02d errors detected during testing.", error_ctr);
+          $display("* TESTCASE FAILED");
         end
     end
   endtask // display_test_result
@@ -390,19 +392,24 @@ module sha512_ctrl_tb();
 
     reg [511 : 0] mask;
     reg [511 : 0] masked_data;
-
+    reg [63 : 0] start_time;
+    reg [63 : 0] end_time;
     begin
       $display("*** TC%01d - Single block test started.", tc_ctr);
 
+      start_time = cycle_ctr;
       write_block(block);
       write_single_word(ADDR_CTRL, {60'h000000000000000, mode, CTRL_INIT_VALUE});
       
+
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
       #(CLK_PERIOD);
       wait_ready();
       read_digest();
+      end_time = cycle_ctr - start_time;
+      $display("*** Single block test processing time = %01d cycles", end_time);
 
       mask = get_mask(mode);
       masked_data = digest_data & mask;
@@ -445,7 +452,8 @@ module sha512_ctrl_tb();
                         );
     reg [511 : 0] mask;
     reg [511 : 0] masked_data1;
-    //reg [31 :  0] ctrl_cmd;
+    reg [63 : 0] start_time;
+    reg [63 : 0] end_time;
 
     begin
       $display("*** TC%01d - Double block test started.", tc_ctr);
@@ -453,6 +461,7 @@ module sha512_ctrl_tb();
       // First block
       write_block(block0);
       write_single_word(ADDR_CTRL, {60'h000000000000000, mode, CTRL_INIT_VALUE});
+      start_time = cycle_ctr;
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
@@ -471,6 +480,7 @@ module sha512_ctrl_tb();
           $display("TC%01d: Got:      0x%064x", tc_ctr, digest_data);
           error_ctr = error_ctr + 1;
         end
+      
 
       // Final block
       write_block(block1);
@@ -480,6 +490,8 @@ module sha512_ctrl_tb();
 
       #(CLK_PERIOD);
       wait_ready();
+      end_time = cycle_ctr - start_time;
+      $display("*** Double block test processing time = %01d cycles", end_time);
       read_digest();
 
       mask = get_mask(mode);
@@ -503,6 +515,70 @@ module sha512_ctrl_tb();
   endtask // double_block_test
 
 
+//----------------------------------------------------------------
+  // double_block_test()
+  //
+  //
+  // Perform test of a double block digest. Note that we check
+  // the digests for both the first and final block.
+  //----------------------------------------------------------------
+  task double_block_test_pipelined(input [7 : 0]    tc_number,
+                         input [1 : 0]    mode,
+                         input [1023 : 0] block0,
+                         input [1023 : 0] block1,
+                         input [511 : 0]  expected0,
+                         input [511 : 0]  expected1
+                        );
+    reg [511 : 0] mask;
+    reg [511 : 0] masked_data1;
+    reg [63 : 0] start_time;
+    reg [63 : 0] end_time;
+
+    begin
+      $display("*** TC%01d - Double block test pipelined started.", tc_ctr);
+
+      // First block
+      write_block(block0);
+      write_single_word(ADDR_CTRL, {60'h000000000000000, mode, CTRL_INIT_VALUE});
+      start_time = cycle_ctr;
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+
+      #(CLK_PERIOD);
+      write_block(block1);
+      wait_ready();
+
+      // Final block
+      write_single_word(ADDR_CTRL, {60'h000000000000000, mode, CTRL_NEXT_VALUE});
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+
+      #(CLK_PERIOD);
+      wait_ready();
+      end_time = cycle_ctr - start_time;
+      $display("*** Double block test pipelined processing time = %01d cycles", end_time);
+      read_digest();
+
+      mask = get_mask(mode);
+      masked_data1 = digest_data & mask;
+
+      if (masked_data1 == expected1)
+        begin
+          $display("TC%01d final block: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in final digest", tc_ctr);
+          $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected1);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, masked_data1);
+          error_ctr = error_ctr + 1;
+        end
+
+      $display("*** TC%01d - Double block test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask // double_block_test
+  
   //----------------------------------------------------------------
   // read_digest()
   //
@@ -638,6 +714,8 @@ module sha512_ctrl_tb();
       tc11_expected = 512'h2A7F1D895FD58E0BEAAE96D1A673C741015A2173796C1A88F6352CA156ACAFF7C662113E9EBB4D6417B61A85E2CCF0A937EB9A6660FEB5198F2EBE9A81E6A2C5;
       tc12_expected = {384'h09330C33F71147E83D192FC782CD1B4753111B173B3B05D22FA08086E3B0F712FCC7C71A557E2DB966C3E9FA91746039, {4{32'h00000000}}};
       double_block_test(8'h08, MODE_SHA_384, double_block_one, double_block_two, tc11_expected, tc12_expected);
+
+      double_block_test_pipelined(8'h09, MODE_SHA_512, double_block_one, double_block_two, tc5_expected, tc6_expected);
 
       display_test_result();
       

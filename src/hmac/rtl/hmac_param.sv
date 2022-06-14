@@ -9,7 +9,6 @@
   localparam ADDR_CTRL        = BASE_ADDR + 32'h00000010;
   localparam CTRL_INIT_BIT    = 0;
   localparam CTRL_NEXT_BIT    = 1;
-  localparam CTRL_FINAL_BIT   = 2;
 
   localparam ADDR_STATUS      = BASE_ADDR + 32'h00000018;
   localparam STATUS_READY_BIT = 0;
