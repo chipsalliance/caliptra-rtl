@@ -9,8 +9,8 @@ resources:
     type: git
     name: Ether/pipelines
 variables:
-- group: Pipelines
+- group: AHA_POC_Pipelines
 jobs:
 - template: etc/pipelines/templates/post-force-template.yml@templates
   parameters:
-    pipeline_to_force: 'AHA_POC Promote Pipeline'
+    pipeline_to_force: 'Promote Pipeline'
