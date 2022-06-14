@@ -70,7 +70,7 @@ module rust_top_tb (
     assign WriteData = rust_top_dut.lmem.WriteData;
     assign mailbox_data_val = WriteData[7:0] > 8'h5 && WriteData[7:0] < 8'h7f;
 
-    parameter MAX_CYCLES = 2_000_000;
+    parameter MAX_CYCLES = 20_000_000;
 
     integer fd, tp, el, sm, i;
     integer ifu_p, lsu_p, sl_p[`AHB_SLAVES_NUM];
@@ -542,22 +542,32 @@ task dump_memory_contents;
                             `endif
             end
         endcase
-        if ((addr & 'hF) == 'h0)
-            $fwrite(of, "%0x\t", addr);
-        else if ( (addr & 'hF) == 'hF) begin
-            case (mem_type)
-                MEMTYPE_LMEM: $fwrite(of, "%x\n", data);
-                MEMTYPE_DCCM,
-                MEMTYPE_ICCM: $fwrite(of, "%x\n", ecc_data);
-            endcase
-        end
-        else begin
-            case (mem_type)
-                MEMTYPE_LMEM: $fwrite(of, "%x ", data);
-                MEMTYPE_DCCM,
-                MEMTYPE_ICCM: $fwrite(of, "%x ", ecc_data);
-            endcase
-        end
+
+        case (mem_type)
+            MEMTYPE_LMEM: begin 
+                            if ((addr & 'hF) == 0) begin
+                                $fwrite(of, "%0x:\t%x ", addr, data);
+                            end
+                            else if ((addr & 'hF) == 'hF) begin
+                                $fwrite(of, "%x\n", data);
+                            end
+                            else begin
+                                $fwrite(of, "%x ", data);
+                            end
+            end
+            MEMTYPE_DCCM,
+            MEMTYPE_ICCM: begin
+                            if ((addr & 'hF) == 0) begin
+                                $fwrite(of, "%0x:\t%x ", addr, ecc_data);
+                            end
+                            else if ((addr & 'hF) == 'hC) begin
+                                $fwrite(of, "%x\n", ecc_data);
+                            end
+                            else if (((addr & 'hF) == 'h4)|| ((addr & 'hF) == 'h8)) begin
+                                $fwrite(of, "%x ", ecc_data);
+                            end
+            end
+        endcase
     end
 endtask
 
