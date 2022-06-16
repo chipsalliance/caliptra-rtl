@@ -18,13 +18,18 @@
 
 module rust_top ( 
     input bit                   core_clk,
-    input bit                   rst_l,
+
+    input logic                 cptra_pwrgood,
+    input logic                 cptra_rst_b,
     input bit                   porst_l,
     input        [31:0]         reset_vector,
     input        [31:0]         nmi_vector,
     input        [31:0]         jtag_id,
     input                       nmi_int
     );
+
+    //caliptra reset driven by boot fsm in mailbox
+    logic                       cptra_uc_rst_b;
 
     logic        [31:0]         ic_haddr        ;
     logic        [2:0]          ic_hburst       ;
@@ -347,7 +352,7 @@ module rust_top (
    // RTL instance
    //=========================================================================-
 el2_swerv_wrapper rvtop (
-    .rst_l                  ( rst_l         ),
+    .rst_l                  ( cptra_uc_rst_b),
     .dbg_rst_l              ( porst_l       ),
     .clk                    ( core_clk      ),
     .rst_vec                ( reset_vector[31:1]),
@@ -672,7 +677,7 @@ ahb_sif imem (
      .HTRANS(ic_htrans),
      .HSIZE(ic_hsize),
      .HREADY(ic_hready),
-     .HRESETn(rst_l),
+     .HRESETn(cptra_uc_rst_b),
      .HADDR(ic_haddr),
      .HBURST(ic_hburst),
 
@@ -693,7 +698,7 @@ ahb_sif lmem (
      .HTRANS(s_slave[0].htrans),
      .HSIZE(s_slave[0].hsize),
      .HREADY(s_slave[0].hready),
-     .HRESETn(rst_l),
+     .HRESETn(cptra_uc_rst_b),
      .HADDR(s_slave[0].haddr),
      .HBURST(s_slave[0].hburst),
     //.HMASTLOCK(s_slave[0].hmastlock),
@@ -710,7 +715,7 @@ sha512_ctrl #(
     .BYPASS_SEL     (0)
 ) sha512 (
     .clk            (core_clk),
-    .reset_n        (rst_l),
+    .reset_n        (cptra_uc_rst_b),
     .hadrr_i        (s_slave[2].haddr),
     .hwdata_i       (s_slave[2].hwdata),
     .hsel_i         (s_slave[2].hsel),
@@ -731,7 +736,7 @@ sha512_ctrl #(
 `ifdef RV_BUILD_AXI4
 axi_slv #(.TAGW(`RV_IFU_BUS_TAG)) imem(
     .aclk(core_clk),
-    .rst_l(rst_l),
+    .rst_l(cptra_uc_rst_b),
     .arvalid(ifu_axi_arvalid),
     .arready(ifu_axi_arready),
     .araddr(ifu_axi_araddr),
@@ -771,7 +776,7 @@ defparam lmem.TAGW =`RV_LSU_BUS_TAG;
 //axi_slv #(.TAGW(`RV_LSU_BUS_TAG)) lmem(
 axi_slv  lmem(
     .aclk(core_clk),
-    .rst_l(rst_l),
+    .rst_l(cptra_uc_rst_b),
     .arvalid(lmem_axi_arvalid),
     .arready(lmem_axi_arready),
     .araddr(lsu_axi_araddr),
@@ -808,7 +813,7 @@ axi_slv  lmem(
 
 axi_lsu_dma_bridge # (`RV_LSU_BUS_TAG,`RV_LSU_BUS_TAG ) bridge(
     .clk(core_clk),
-    .reset_l(rst_l),
+    .reset_l(cptra_uc_rst_b),
 
     .m_arvalid(lsu_axi_arvalid),
     .m_arid(lsu_axi_arid),
@@ -880,5 +885,25 @@ axi_lsu_dma_bridge # (`RV_LSU_BUS_TAG,`RV_LSU_BUS_TAG ) bridge(
 
 `endif
 
+//Instantiation of mailbox
+mbox mbox1 (
+    .clk            (core_clk),
+    .cptra_pwrgood  (cptra_pwrgood), 
+    .cptra_rst_b    (cptra_rst_b),
+
+    .apb_paddr      ('x), //FIXME TIE-OFF
+    .apb_pprot      ('x), //FIXME TIE-OFF
+    .apb_psel       ('x), //FIXME TIE-OFF
+    .apb_penable    ('x), //FIXME TIE-OFF
+    .apb_pwrite     ('x), //FIXME TIE-OFF
+    .apb_pwdata     ('x), //FIXME TIE-OFF
+    .apb_pstrb      ('x), //FIXME TIE-OFF
+    .apb_pauser     ('x), //FIXME TIE-OFF
+    .apb_pready     ('x), //FIXME TIE-OFF
+    .apb_prdata     ('x), //FIXME TIE-OFF
+    .apb_pslverr    ('x), //FIXME TIE-OFF
+
+    .cptra_uc_rst_b (cptra_uc_rst_b) 
+);
 
 endmodule

@@ -2,10 +2,12 @@
 
 name: integration_lib
 files:
+  - src/libs/config/compile.yml
   - src/ahb_lite_bus/config/compile.yml
   - src/riscv_core/swerv_el2/config/compile.yml
   - src/sha512/config/compile.yml
   - src/sha256/config/compile.yml
   - src/aes/config/compile.yml
   - src/hmac/config/compile.yml
+  - src/mbox/config/compile.yml
   - src/integration/config/compile.yml

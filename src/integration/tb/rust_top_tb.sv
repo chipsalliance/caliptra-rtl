@@ -50,7 +50,9 @@ module rust_top_tb (
     logic                       trace_rv_i_interrupt_ip;
     logic        [31:0]         trace_rv_i_tval_ip;
 
-    logic                       rst_l;
+    logic                       cptra_pwrgood;
+    logic                       cptra_rst_b;
+
     logic                       porst_l;
 
     wire[63:0] WriteData;
@@ -245,17 +247,20 @@ module rust_top_tb (
 `endif
     end
 
+    //temporary boot flow - assert pwrgood followed by rst_b
+    assign cptra_pwrgood = cycleCnt > 5;
+    assign cptra_rst_b   = cycleCnt > 10;
 
-    assign rst_l = cycleCnt > 5;
     assign porst_l = cycleCnt > 2;
 
    //=========================================================================-
    // DUT instance
    //=========================================================================-
 rust_top rust_top_dut (
-    .rst_l                  ( rst_l         ),
-    .porst_l              ( porst_l       ),
-    .core_clk                    ( core_clk      ),
+    .cptra_pwrgood              (cptra_pwrgood),
+    .cptra_rst_b                (cptra_rst_b),
+    .porst_l                    (porst_l),
+    .core_clk                   (core_clk),
     .reset_vector               (reset_vector),
     .nmi_vector                 (nmi_vector),
     .nmi_int                    (nmi_int),
