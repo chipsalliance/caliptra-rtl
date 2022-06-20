@@ -8,8 +8,8 @@
 // Author: Mojtaba Bisheh-Niasar
 //======================================================================
 
-module aes_ctrl #(
-    parameter AHB_DATA_WIDTH = 32,
+module aes_ctrl_64bit #(
+    parameter AHB_DATA_WIDTH = 64,
     parameter AHB_ADDR_WIDTH = 32,
     parameter BYPASS_HSEL = 0
 )
@@ -41,15 +41,11 @@ module aes_ctrl #(
     //----------------------------------------------------------------
     reg           aes_cs;
     reg           aes_we;
-    reg  [AHB_ADDR_WIDTH - 1 : 0] aes_address;
-    reg  [AHB_DATA_WIDTH - 1 : 0] aes_write_data;
-    reg  [AHB_DATA_WIDTH - 1 : 0] aes_read_data;
+    reg  [31 : 0] aes_address;
+    reg  [63 : 0] aes_write_data;
+    reg  [63 : 0] aes_read_data;
 
-    aes #(
-        .ADDR_WIDTH(AHB_ADDR_WIDTH),
-        .DATA_WIDTH(AHB_DATA_WIDTH)
-        )
-        aes_inst(
+    aes aes_inst(
         .clk(clk),
         .reset_n(reset_n),
         .cs(aes_cs),
@@ -91,10 +87,10 @@ module aes_ctrl #(
     //----------------------------------------------------------------
     logic cs;
     logic write;
-    logic [AHB_ADDR_WIDTH - 1:0] laddr, addr;
-    logic [AHB_DATA_WIDTH - 1:0] rdata;
-    logic [AHB_DATA_WIDTH - 1:0] hrdata;
-    logic [AHB_DATA_WIDTH - 1:0] hwdata;
+    logic [31:0] laddr, addr;
+    logic [63:0] rdata;
+    logic [63:0] hrdata;
+    logic [63:0] hwdata;
 
     bit [7:0] wscnt;
     int dws = 0;
@@ -105,28 +101,16 @@ module aes_ctrl #(
         hrdata <= rdata;
         if (write & hready_i) begin
             addr = laddr;
-            if (AHB_DATA_WIDTH == 64) begin
-                case (hsize_i)
-                    3'b000: 
-                        hwdata = {56'h00000000000000, hwdata_i[7:0]};
-                    3'b001: 
-                        hwdata = {48'h000000000000, hwdata_i[15:0]};
-                    3'b010: 
-                        hwdata = {32'h00000000, hwdata_i[31:0]};
-                    default:  // 3'b011: 
-                        hwdata = hwdata_i[63:0];
-                endcase;
-            end
-            else if (AHB_DATA_WIDTH == 32) begin
-                case (hsize_i)
-                    3'b000: 
-                        hwdata = {24'h00000000000000, hwdata_i[7:0]};
-                    3'b001: 
-                        hwdata = {16'h000000000000, hwdata_i[15:0]};
-                    default:  // 3'b011: 
-                        hwdata = hwdata_i[31:0];
-                endcase;
-            end
+            case (hsize_i)
+                3'b000: 
+                    hwdata = {56'h00000000000000, hwdata_i[7:0]};
+                3'b001: 
+                    hwdata = {48'h000000000000, hwdata_i[15:0]};
+                3'b010: 
+                    hwdata = {32'h00000000, hwdata_i[31:0]};
+                default:  // 3'b011: 
+                    hwdata = hwdata_i[63:0];
+            endcase;
         end
         else if(hready_i)
             addr = hadrr_i;

@@ -8,7 +8,7 @@
 // Author: Mojtaba Bisheh-Niasar
 //======================================================================
 
-module aes_ctrl_tb();
+module aes_ctrl_64bit_tb();
 
 //----------------------------------------------------------------
   // Internal constant and parameter definitions.
@@ -21,10 +21,8 @@ module aes_ctrl_tb();
   // The DUT address map.
   parameter BASE_ADDR        = 32'h60000000;
 
-  parameter ADDR_NAME0        = BASE_ADDR + 32'h00000000;
-  parameter ADDR_NAME1        = BASE_ADDR + 32'h00000004;
-  parameter ADDR_VERSION0     = BASE_ADDR + 32'h00000008;
-  parameter ADDR_VERSION1     = BASE_ADDR + 32'h0000000c;
+  parameter ADDR_NAME        = BASE_ADDR + 32'h00000000;
+  parameter ADDR_VERSION     = BASE_ADDR + 32'h00000008;
 
   parameter ADDR_CTRL        = BASE_ADDR + 32'h00000010;
   parameter CTRL_INIT_BIT    = 0;
@@ -39,23 +37,15 @@ module aes_ctrl_tb();
   parameter ADDR_CONFIG      = BASE_ADDR + 32'h00000020;
 
   parameter ADDR_KEY0        = BASE_ADDR + 32'h00000040;
-  parameter ADDR_KEY1        = BASE_ADDR + 32'h00000044;
-  parameter ADDR_KEY2        = BASE_ADDR + 32'h00000048;
-  parameter ADDR_KEY3        = BASE_ADDR + 32'h0000004c;
-  parameter ADDR_KEY4        = BASE_ADDR + 32'h00000050;
-  parameter ADDR_KEY5        = BASE_ADDR + 32'h00000054;
-  parameter ADDR_KEY6        = BASE_ADDR + 32'h00000058;
-  parameter ADDR_KEY7        = BASE_ADDR + 32'h0000005c;
+  parameter ADDR_KEY1        = BASE_ADDR + 32'h00000048;
+  parameter ADDR_KEY2        = BASE_ADDR + 32'h00000050;
+  parameter ADDR_KEY3        = BASE_ADDR + 32'h00000058;
 
   parameter ADDR_BLOCK0      = BASE_ADDR + 32'h00000080;
-  parameter ADDR_BLOCK1      = BASE_ADDR + 32'h00000084;
-  parameter ADDR_BLOCK2      = BASE_ADDR + 32'h00000088;
-  parameter ADDR_BLOCK3      = BASE_ADDR + 32'h0000008c;
+  parameter ADDR_BLOCK1      = BASE_ADDR + 32'h00000088;
 
   parameter ADDR_RESULT0     = BASE_ADDR + 32'h00000100;
-  parameter ADDR_RESULT1     = BASE_ADDR + 32'h00000104;
-  parameter ADDR_RESULT2     = BASE_ADDR + 32'h00000108;
-  parameter ADDR_RESULT3     = BASE_ADDR + 32'h0000010c;
+  parameter ADDR_RESULT1     = BASE_ADDR + 32'h00000108;
 
   parameter AES_128_BIT_KEY = 0;
   parameter AES_256_BIT_KEY = 1;
@@ -69,7 +59,7 @@ module aes_ctrl_tb();
   parameter AHB_HTRANS_SEQ      = 3;
 
   parameter AHB_ADDR_WIDTH = 32;
-  parameter AHB_DATA_WIDTH = 32;
+  parameter AHB_DATA_WIDTH = 64;
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
@@ -96,14 +86,14 @@ module aes_ctrl_tb();
   wire          hreadyout_o_tb;
   wire [AHB_DATA_WIDTH-1:0] hrdata_o_tb;
 
-  reg [31 : 0]  read_data;
+  reg [63 : 0]  read_data;
   reg [127 : 0] result_data;
 
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
   aes_ctrl #(
-             .AHB_DATA_WIDTH(32),
+             .AHB_DATA_WIDTH(64),
              .AHB_ADDR_WIDTH(32),
              .BYPASS_HSEL(0)
             )
@@ -189,6 +179,8 @@ module aes_ctrl_tb();
     end
   endtask // display_test_results
 
+
+
   //----------------------------------------------------------------
   // init_sim()
   //
@@ -228,14 +220,10 @@ module aes_ctrl_tb();
     reg [63 : 0] version;
     begin
 
-      read_single_word(ADDR_NAME0);
-      name[31 : 0] = read_data;
-      read_single_word(ADDR_NAME1);
-      name[63 : 32] = read_data;
-      read_single_word(ADDR_VERSION0);
-      version[31 : 0] = read_data;
-      read_single_word(ADDR_VERSION1);
-      version[63 : 32] = read_data;
+      read_single_word(ADDR_NAME);
+      name = read_data;
+      read_single_word(ADDR_VERSION);
+      version = read_data;
 
       $display("DUT name: %c%c%c%c%c%c%c%c",
                name[15 :  8], name[7  :  0],
@@ -256,7 +244,7 @@ module aes_ctrl_tb();
   // Write the given word to the DUT using the DUT interface.
   //----------------------------------------------------------------
   task write_single_word(input [31 : 0]  address,
-                  input [31 : 0] word);
+                  input [63 : 0] word);
     begin
       hsel_i_tb       = 1;
       hadrr_i_tb      = address;
@@ -284,10 +272,8 @@ module aes_ctrl_tb();
   //----------------------------------------------------------------
   task write_block(input [127 : 0] block);
     begin
-      write_single_word(ADDR_BLOCK0, block[127  :  96]);
-      write_single_word(ADDR_BLOCK1, block[95   :  64]);
-      write_single_word(ADDR_BLOCK2, block[63   :  32]);
-      write_single_word(ADDR_BLOCK3, block[31   :   0]);
+      write_single_word(ADDR_BLOCK0, block[127  :  64]);
+      write_single_word(ADDR_BLOCK1, block[63   :   0]);
     end
   endtask // write_block
 
@@ -322,27 +308,7 @@ module aes_ctrl_tb();
     end
   endtask // read_word
 
-  //----------------------------------------------------------------
-  // wait_ready()
-  //
-  // Wait for the ready flag in the dut to be set.
-  // (Actually we wait for either ready or valid to be set.)
-  //
-  // Note: It is the callers responsibility to call the function
-  // when the dut is actively processing and will in fact at some
-  // point set the flag.
-  //----------------------------------------------------------------
-  task wait_ready;
-    begin
-      read_data = 0;
-      #(CLK_PERIOD);
 
-      while (read_data == 0)
-        begin
-          read_single_word(ADDR_STATUS);
-        end
-    end
-  endtask // wait_ready
 
   //----------------------------------------------------------------
   // read_result()
@@ -352,13 +318,9 @@ module aes_ctrl_tb();
   task read_result;
     begin
       read_single_word(ADDR_RESULT0);
-      result_data[127 : 96] = read_data;
+      result_data[127 : 64] = read_data;
       read_single_word(ADDR_RESULT1);
-      result_data[95  : 64] = read_data;
-      read_single_word(ADDR_RESULT2);
-      result_data[63  : 32] = read_data;
-      read_single_word(ADDR_RESULT3);
-      result_data[31  :  0] = read_data;
+      result_data[63  :  0] = read_data;
     end
   endtask // read_result
 
@@ -371,14 +333,10 @@ module aes_ctrl_tb();
   //----------------------------------------------------------------
   task init_key(input [255 : 0] key, input key_length);
     begin
-      write_single_word(ADDR_KEY0, key[255  : 224]);
-      write_single_word(ADDR_KEY1, key[223  : 192]);
-      write_single_word(ADDR_KEY2, key[191  : 160]);
-      write_single_word(ADDR_KEY3, key[159  : 128]);
-      write_single_word(ADDR_KEY4, key[127  :  96]);
-      write_single_word(ADDR_KEY5, key[95   :  64]);
-      write_single_word(ADDR_KEY6, key[63   :  32]);
-      write_single_word(ADDR_KEY7, key[31   :   0]);
+      write_single_word(ADDR_KEY0, key[255  : 192]);
+      write_single_word(ADDR_KEY1, key[191  : 128]);
+      write_single_word(ADDR_KEY2, key[127  :  64]);
+      write_single_word(ADDR_KEY3, key[63   :   0]);
 
       if (key_length)
           write_single_word(ADDR_CONFIG, 8'h02);
@@ -390,8 +348,7 @@ module aes_ctrl_tb();
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
-      #(100 * CLK_PERIOD);    // steven: what is this for?
-      // wait_ready();
+      #(100 * CLK_PERIOD);
     end
   endtask // init_key
 
@@ -408,14 +365,10 @@ module aes_ctrl_tb();
                                   input           key_length,
                                   input [127 : 0] block,
                                   input [127 : 0] expected);
-    reg [31  : 0] start_time;
-    reg [31 : 0] end_time;
-    
     begin
       $display("*** TC %0d ECB mode test started.", tc_number);
       tc_ctr = tc_ctr + 1;
 
-      start_time = cycle_ctr;
       init_key(key, key_length);
       write_block(block);
 
@@ -425,12 +378,8 @@ module aes_ctrl_tb();
       #CLK_PERIOD;
       hsel_i_tb       = 0;
       
-      // #(100 * CLK_PERIOD);
+      #(100 * CLK_PERIOD);
 
-      #(CLK_PERIOD);
-      wait_ready();
-      end_time = cycle_ctr - start_time;
-      $display("*** Single block test processing time = %01d cycles", end_time);
       read_result();
 
       if (result_data == expected)
@@ -450,92 +399,7 @@ module aes_ctrl_tb();
     end
   endtask // ecb_mode_single_block_test
 
-  //----------------------------------------------------------------
-  // ecb_mode_double_block_test()
-  //
-  // Perform ECB mode encryption or decryption double block test.
-  //----------------------------------------------------------------
-  task ecb_mode_double_block_test(input [7 : 0]   tc_number,
-                                  input           encdec,
-                                  input [255 : 0] key,
-                                  input           key_length,
-                                  input [127 : 0] block1,
-                                  input [127 : 0] block2,
-                                  input [127 : 0] expected1,
-                                  input [127 : 0] expected2
-                                  );
-    reg [31  : 0] start_time;
-    reg [31 : 0] end_time;
-    
-    begin
-      $display("*** TC %0d ECB mode test started.", tc_number);
-      tc_ctr = tc_ctr + 1;
 
-      start_time = cycle_ctr;
-      init_key(key, key_length);
-
-      // first block
-      write_block(block1);
-
-      write_single_word(ADDR_CONFIG, (8'h00 + (key_length << 1)+ encdec));
-      write_single_word(ADDR_CTRL, 8'h02);
-      
-      #CLK_PERIOD;
-      hsel_i_tb       = 0;
-
-      #(CLK_PERIOD);
-      wait_ready();
-      end_time = cycle_ctr - start_time;
-      $display("*** Single block test processing time = %01d cycles", end_time);
-      read_result();
-
-      if (result_data == expected1)
-        begin
-          $display("*** TC %0d first block successful.", tc_number);
-          $display("");
-        end
-      else
-        begin
-          $display("*** ERROR: TC %0d first block NOT successful.", tc_number);
-          $display("Expected: 0x%032x", expected1);
-          $display("Got:      0x%032x", result_data);
-          $display("");
-
-          error_ctr = error_ctr + 1;
-        end
-
-
-      // final block
-      write_block(block2);
-
-      write_single_word(ADDR_CONFIG, (8'h00 + (key_length << 1)+ encdec));
-      write_single_word(ADDR_CTRL, 8'h02);
-      
-      #CLK_PERIOD;
-      hsel_i_tb       = 0;
-
-      #(CLK_PERIOD);
-      wait_ready();
-      end_time = cycle_ctr - start_time;
-      $display("*** Single block test processing time = %01d cycles", end_time);
-      read_result();
-
-      if (result_data == expected2)
-        begin
-          $display("*** TC %0d final block successful.", tc_number);
-          $display("");
-        end
-      else
-        begin
-          $display("*** ERROR: TC %0d final block NOT successful.", tc_number);
-          $display("Expected: 0x%032x", expected2);
-          $display("Got:      0x%032x", result_data);
-          $display("");
-
-          error_ctr = error_ctr + 1;
-        end
-    end
-  endtask // ecb_mode_single_block_test
 
   //----------------------------------------------------------------
   // aes_test()
@@ -598,7 +462,7 @@ module aes_ctrl_tb();
       nist_ecb_256_enc_expected4 = 128'h8ea2b7ca516745bfeafc49904b496089;
 
 
-      $display("ECB 128 bit key single block tests");
+      $display("ECB 128 bit key tests");
       $display("---------------------");
       ecb_mode_single_block_test(8'h01, AES_ENCIPHER, nist_aes128_key1, AES_128_BIT_KEY,
                                  nist_plaintext0, nist_ecb_128_enc_expected0);
@@ -634,7 +498,7 @@ module aes_ctrl_tb();
 
 
       $display("");
-      $display("ECB 256 bit key single block tests");
+      $display("ECB 256 bit key tests");
       $display("---------------------");
       ecb_mode_single_block_test(8'h10, AES_ENCIPHER, nist_aes256_key1, AES_256_BIT_KEY,
                                  nist_plaintext0, nist_ecb_256_enc_expected0);
@@ -667,48 +531,6 @@ module aes_ctrl_tb();
 
       ecb_mode_single_block_test(8'h19, AES_DECIPHER, nist_aes256_key2, AES_256_BIT_KEY,
                                  nist_ecb_256_enc_expected4, nist_plaintext4);
-
-
-      $display("");
-      $display("ECB 128 bit key double block tests");
-      $display("---------------------");
-      ecb_mode_double_block_test(8'h1a, AES_ENCIPHER, nist_aes128_key1, AES_128_BIT_KEY,
-                                 nist_plaintext0, nist_plaintext1, 
-                                 nist_ecb_128_enc_expected0, nist_ecb_128_enc_expected1);
-
-      ecb_mode_double_block_test(8'h1b, AES_ENCIPHER, nist_aes128_key1, AES_128_BIT_KEY,
-                                 nist_plaintext2, nist_plaintext3, 
-                                 nist_ecb_128_enc_expected2, nist_ecb_128_enc_expected3);
-
-
-      ecb_mode_double_block_test(8'h1c, AES_DECIPHER, nist_aes128_key1, AES_128_BIT_KEY,
-                                 nist_ecb_128_enc_expected0, nist_ecb_128_enc_expected1,
-                                 nist_plaintext0, nist_plaintext1);
-
-      ecb_mode_double_block_test(8'h1d, AES_DECIPHER, nist_aes128_key1, AES_128_BIT_KEY,
-                                 nist_ecb_128_enc_expected2, nist_ecb_128_enc_expected3,
-                                 nist_plaintext2, nist_plaintext3);
-
-
-      $display("");
-      $display("ECB 256 bit key double block tests");
-      $display("---------------------");
-      ecb_mode_double_block_test(8'h20, AES_ENCIPHER, nist_aes256_key1, AES_256_BIT_KEY,
-                                 nist_plaintext0, nist_plaintext1, 
-                                 nist_ecb_256_enc_expected0, nist_ecb_256_enc_expected1);
-
-      ecb_mode_double_block_test(8'h21, AES_ENCIPHER, nist_aes256_key1, AES_256_BIT_KEY,
-                                 nist_plaintext2, nist_plaintext3, 
-                                 nist_ecb_256_enc_expected2, nist_ecb_256_enc_expected3);
-
-
-      ecb_mode_double_block_test(8'h22, AES_DECIPHER, nist_aes256_key1, AES_256_BIT_KEY,
-                                 nist_ecb_256_enc_expected0, nist_ecb_256_enc_expected1,
-                                 nist_plaintext0, nist_plaintext1);
-
-      ecb_mode_double_block_test(8'h23, AES_DECIPHER, nist_aes256_key1, AES_256_BIT_KEY,
-                                 nist_ecb_256_enc_expected2, nist_ecb_256_enc_expected3,
-                                 nist_plaintext2, nist_plaintext3);
     end
   endtask // aes_test
 

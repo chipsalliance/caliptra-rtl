@@ -8,7 +8,7 @@
 // Author: Mojtaba Bisheh-Niasar
 //======================================================================
 
-module aes_ctrl_tb();
+module aes_ctrl_32bit_tb();
 
 //----------------------------------------------------------------
   // Internal constant and parameter definitions.
