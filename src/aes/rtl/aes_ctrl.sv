@@ -9,7 +9,7 @@
 //======================================================================
 
 module aes_ctrl #(
-    parameter AHB_DATA_WIDTH = 32,
+    parameter AHB_DATA_WIDTH = 64,
     parameter AHB_ADDR_WIDTH = 32,
     parameter BYPASS_HSEL = 0
 )
@@ -42,12 +42,12 @@ module aes_ctrl #(
     reg           aes_cs;
     reg           aes_we;
     reg  [AHB_ADDR_WIDTH - 1 : 0] aes_address;
-    reg  [AHB_DATA_WIDTH - 1 : 0] aes_write_data;
-    reg  [AHB_DATA_WIDTH - 1 : 0] aes_read_data;
+    reg  [31 : 0] aes_write_data;
+    reg  [31 : 0] aes_read_data;
 
     aes #(
-        .ADDR_WIDTH(AHB_ADDR_WIDTH),
-        .DATA_WIDTH(AHB_DATA_WIDTH)
+        .ADDR_WIDTH(32),
+        .DATA_WIDTH(32)
         )
         aes_inst(
         .clk(clk),
@@ -58,33 +58,6 @@ module aes_ctrl #(
         .write_data(aes_write_data),
         .read_data(aes_read_data)
     );
-
-    /*
-    //----------------------------------------------------------------
-    // fifo_in
-    //----------------------------------------------------------------
-    reg                     fifo_in_we,
-    reg                     fifo_in_rd,
-    reg                     fifo_in_full,
-    reg                     fifo_in_empty,
-    reg [DATA_WIDTH-1 : 0]  fifo_in_write_data,
-    reg [DATA_WIDTH-1 : 0]  fifo_in_read_data
-
-    fifo  fifo_in #(
-        RAM_ADDR_WIDTH = 5,
-        DATA_WIDTH = 64
-    )
-    (
-        .clk(clk),
-        .reset_n(reset_n),
-        .we(fifo_in_we),
-        .rd(fifo_in_rd),
-        .fifo_full(fifo_in_full),
-        .fifo_empty(fifo_in_empty),
-        .write_data(fifo_in_write_data),
-        .read_data(fifo_in_read_data)
-    );
-    */
 
     //----------------------------------------------------------------
     // AHB Slave node
@@ -105,28 +78,39 @@ module aes_ctrl #(
         hrdata <= rdata;
         if (write & hready_i) begin
             addr = laddr;
-            if (AHB_DATA_WIDTH == 64) begin
-                case (hsize_i)
-                    3'b000: 
-                        hwdata = {56'h00000000000000, hwdata_i[7:0]};
-                    3'b001: 
-                        hwdata = {48'h000000000000, hwdata_i[15:0]};
-                    3'b010: 
-                        hwdata = {32'h00000000, hwdata_i[31:0]};
-                    default:  // 3'b011: 
-                        hwdata = hwdata_i[63:0];
-                endcase;
-            end
-            else if (AHB_DATA_WIDTH == 32) begin
-                case (hsize_i)
-                    3'b000: 
-                        hwdata = {24'h00000000000000, hwdata_i[7:0]};
-                    3'b001: 
-                        hwdata = {16'h000000000000, hwdata_i[15:0]};
-                    default:  // 3'b011: 
-                        hwdata = hwdata_i[31:0];
-                endcase;
-            end
+            case (hsize_i)
+                3'b000: 
+                    hwdata = hwdata_i[7:0];
+                3'b001: 
+                    hwdata = hwdata_i[15:0];
+                3'b010: 
+                    // hwdata = {32'h00000000, hwdata_i[31:0]};
+                    hwdata = laddr[2]? hwdata_i[63:32] : hwdata_i[31:0];
+                default:  // 3'b011: 
+                    hwdata = hwdata_i;
+            endcase;
+            // if (AHB_DATA_WIDTH == 64) begin
+            //     case (hsize_i)
+            //         3'b000: 
+            //             hwdata = {56'h00000000000000, hwdata_i[7:0]};
+            //         3'b001: 
+            //             hwdata = {48'h000000000000, hwdata_i[15:0]};
+            //         3'b010: 
+            //             hwdata = {32'h00000000, hwdata_i[31:0]};
+            //         default:  // 3'b011: 
+            //             hwdata = hwdata_i[63:0];
+            //     endcase;
+            // end
+            // else if (AHB_DATA_WIDTH == 32) begin
+            //     case (hsize_i)
+            //         3'b000: 
+            //             hwdata = {24'h00000000000000, hwdata_i[7:0]};
+            //         3'b001: 
+            //             hwdata = {16'h000000000000, hwdata_i[15:0]};
+            //         default:  // 3'b011: 
+            //             hwdata = hwdata_i[31:0];
+            //     endcase;
+            // end
         end
         else if(hready_i)
             addr = hadrr_i;

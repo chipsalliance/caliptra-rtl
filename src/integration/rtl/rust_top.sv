@@ -731,6 +731,28 @@ sha512_ctrl #(
     .hrdata_o       (s_slave[2].hrdata)
 );
 
+aes_ctrl #(
+    .AHB_DATA_WIDTH (64),
+    .AHB_ADDR_WIDTH (32),
+    .BYPASS_SEL     (0)
+) aes (
+    .clk            (core_clk),
+    .reset_n        (cptra_uc_rst_b),
+    .hadrr_i        (s_slave[3].haddr),
+    .hwdata_i       (s_slave[3].hwdata),
+    .hsel_i         (s_slave[3].hsel),
+    .hwrite_i       (s_slave[3].hwrite),
+    .hmastlock_i    (s_slave[3].hmastlock),
+    .hready_i       (s_slave[3].hready),
+    .htrans_i       (s_slave[3].htrans),
+    .hprot_i        (s_slave[3].hprot),
+    .hburst_i       (s_slave[3].hburst),
+    .hsize_i        (s_slave[3].hsize),
+    .hresp_o        (s_slave[3].hresp),
+    .hreadyout_o    (s_slave[3].hreadyout),
+    .hrdata_o       (s_slave[3].hrdata)
+);
+
 
 `endif
 `ifdef RV_BUILD_AXI4

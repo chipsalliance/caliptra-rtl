@@ -77,6 +77,7 @@ module aes_ctrl_tb();
   reg [63 : 0]  cycle_ctr;
   reg [63 : 0]  error_ctr;
   reg [63 : 0]  tc_ctr;
+  reg [63 : 0]  temp_ctr;
 
   reg           clk_tb;
   reg           reset_n_tb;
@@ -200,6 +201,7 @@ module aes_ctrl_tb();
       cycle_ctr     = 0;
       error_ctr     = 0;
       tc_ctr        = 0;
+      temp_ctr      = 0;
 
       clk_tb        = 0;
       reset_n_tb    = 0;
@@ -390,8 +392,16 @@ module aes_ctrl_tb();
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
-      #(100 * CLK_PERIOD);    // steven: what is this for?
-      // wait_ready();
+      #(8 * CLK_PERIOD);
+      wait_ready();
+      
+      // temp_ctr = 0;
+      // while (temp_ctr < 100)
+      //   begin
+      //     #CLK_PERIOD;
+      //     read_single_word(ADDR_STATUS);
+      //     temp_ctr = temp_ctr + 1;
+      //   end
     end
   endtask // init_key
 

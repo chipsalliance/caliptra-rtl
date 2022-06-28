@@ -77,10 +77,10 @@ module aes #(
   localparam BLOCK_NO = 128 / DATA_WIDTH;
   localparam KEY_NO = 256 / DATA_WIDTH;
 
-  reg [DATA_WIDTH - 1 : 0] block_reg [0 : BLOCK_NO];
+  reg [DATA_WIDTH - 1 : 0] block_reg [0 : BLOCK_NO - 1];
   reg          block_we;
 
-  reg [DATA_WIDTH - 1 : 0] key_reg [0 : KEY_NO];
+  reg [DATA_WIDTH - 1 : 0] key_reg [0 : KEY_NO - 1];
   reg          key_we;
 
   reg [127 : 0] result_reg;
@@ -109,7 +109,7 @@ module aes #(
   //----------------------------------------------------------------
   assign read_data = tmp_read_data;
 
-  `ifdef DATA_BUS_64
+  `ifdef AES_DATA_BUS_64
     assign core_key = {key_reg[0], key_reg[1], key_reg[2], key_reg[3]};
     assign core_block  = {block_reg[0], block_reg[1]};
   `else
@@ -181,12 +181,12 @@ module aes #(
 
           if (config_we)
             begin
-              encdec_reg <= write_data[CTRL_ENCDEC_BIT];
-              keylen_reg <= write_data[CTRL_KEYLEN_BIT];
+              encdec_reg <= write_data[AES_CTRL_ENCDEC_BIT];
+              keylen_reg <= write_data[AES_CTRL_KEYLEN_BIT];
             end
 
           if (key_we)
-            `ifdef DATA_BUS_64
+            `ifdef AES_DATA_BUS_64
               key_reg[address[4 : 3]] <= write_data;
             `else
               key_reg[address[4 : 2]] <= write_data;
@@ -194,7 +194,7 @@ module aes #(
 
           if (block_we)
             
-            `ifdef DATA_BUS_64
+            `ifdef AES_DATA_BUS_64
               block_reg[address[3]] <= write_data;
             `else
               block_reg[address[3 : 2]] <= write_data;
@@ -221,37 +221,37 @@ module aes #(
         begin
           if (we)
             begin
-              if (address == ADDR_CTRL)
+              if (address == AES_ADDR_CTRL)
                 begin
-                  init_new = write_data[CTRL_INIT_BIT];
-                  next_new = write_data[CTRL_NEXT_BIT];
+                  init_new = write_data[AES_CTRL_INIT_BIT];
+                  next_new = write_data[AES_CTRL_NEXT_BIT];
                 end
 
-              if (address == ADDR_CONFIG)
+              if (address == AES_ADDR_CONFIG)
                 config_we = 1'b1;
 
-              if ((address >= ADDR_KEY_START) && (address <= ADDR_KEY_END))
+              if ((address >= AES_ADDR_KEY_START) && (address <= AES_ADDR_KEY_END))
                 key_we = 1'b1;
 
-              if ((address >= ADDR_BLOCK_START) && (address <= ADDR_BLOCK_END))
+              if ((address >= AES_ADDR_BLOCK_START) && (address <= AES_ADDR_BLOCK_END))
                 block_we = 1'b1;
             end // if (we)
 
           else
             begin
               case (address)
-                `ifdef DATA_BUS_64
-                  ADDR_NAME0:    tmp_read_data = CORE_NAME;
-                  ADDR_VERSION0: tmp_read_data = CORE_VERSION;
-                  ADDR_CTRL:     tmp_read_data = {60'h0, keylen_reg, encdec_reg, next_reg, init_reg};
-                  ADDR_STATUS:   tmp_read_data = {62'h0, valid_reg, ready_reg};
+                `ifdef AES_DATA_BUS_64
+                  AES_ADDR_NAME0:    tmp_read_data = AES_CORE_NAME;
+                  AES_ADDR_VERSION0: tmp_read_data = AES_CORE_VERSION;
+                  AES_ADDR_CTRL:     tmp_read_data = {60'h0, keylen_reg, encdec_reg, next_reg, init_reg};
+                  AES_ADDR_STATUS:   tmp_read_data = {62'h0, valid_reg, ready_reg};
                 `else
-                  ADDR_NAME0:    tmp_read_data = CORE_NAME[31 : 0];
-                  ADDR_NAME1:    tmp_read_data = CORE_NAME[63 : 32];
-                  ADDR_VERSION0: tmp_read_data = CORE_VERSION[31 : 0];
-                  ADDR_VERSION1: tmp_read_data = CORE_VERSION[63 : 32];
-                  ADDR_CTRL:     tmp_read_data = {28'h0, keylen_reg, encdec_reg, next_reg, init_reg};
-                  ADDR_STATUS:   tmp_read_data = {30'h0, valid_reg, ready_reg};
+                  AES_ADDR_NAME0:    tmp_read_data = AES_CORE_NAME[31 : 0];
+                  AES_ADDR_NAME1:    tmp_read_data = AES_CORE_NAME[63 : 32];
+                  AES_ADDR_VERSION0: tmp_read_data = AES_CORE_VERSION[31 : 0];
+                  AES_ADDR_VERSION1: tmp_read_data = AES_CORE_VERSION[63 : 32];
+                  AES_ADDR_CTRL:     tmp_read_data = {28'h0, keylen_reg, encdec_reg, next_reg, init_reg};
+                  AES_ADDR_STATUS:   tmp_read_data = {30'h0, valid_reg, ready_reg};
                 `endif
 
                 default:
@@ -259,11 +259,11 @@ module aes #(
                   end
               endcase // case (address)
 
-              if ((address >= ADDR_RESULT_START) && (address <= ADDR_RESULT_END))
-                `ifdef DATA_BUS_64
-                  tmp_read_data = result_reg[(1 - ((address - ADDR_RESULT_START) >> 3)) * 64 +: 64];
+              if ((address >= AES_ADDR_RESULT_START) && (address <= AES_ADDR_RESULT_END))
+                `ifdef AES_DATA_BUS_64
+                  tmp_read_data = result_reg[(1 - ((address - AES_ADDR_RESULT_START) >> 3)) * 64 +: 64];
                 `else
-                  tmp_read_data = result_reg[(3 - ((address - ADDR_RESULT_START) >> 2)) * 32 +: 32];
+                  tmp_read_data = result_reg[(3 - ((address - AES_ADDR_RESULT_START) >> 2)) * 32 +: 32];
                 `endif
                 
             end
