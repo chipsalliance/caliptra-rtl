@@ -46,23 +46,17 @@ always_comb begin
             if (arc_BOOT_IDLE_BOOT_FUSE) begin
                 boot_fsm_ns = BOOT_FUSE;
             end
-            else begin
-                boot_fsm_ns = BOOT_IDLE;
-            end
         end
         BOOT_FUSE: begin
             if (arc_BOOT_FUSE_BOOT_DONE) begin
                 boot_fsm_ns = BOOT_DONE;
-            end
-            else begin
-                boot_fsm_ns = BOOT_FUSE;
             end
         end
         BOOT_DONE: begin
             boot_fsm_ns = BOOT_DONE;
         end
         default: begin
-            boot_fsm_ns = BOOT_X;
+            boot_fsm_ns = boot_fsm_ps;
         end
     endcase
 end
@@ -79,5 +73,10 @@ always_comb propagate_reset_en = boot_fsm_ps == BOOT_DONE;
 `CLP_RST_FF(cptra_uc_rst_b, fsm_synch_rst_b, clk, cptra_rst_b)
 
 //TODO assertions
+`ASSERT_KNOWN(ERR_FSM_ARC_X, {arc_BOOT_IDLE_BOOT_FUSE,arc_BOOT_FUSE_BOOT_DONE}, clk, cptra_rst_b)
+`ASSERT_KNOWN(ERR_FSM_STATE_X, boot_fsm_ps, clk, cptra_rst_b)
+`ASSERT_KNOWN(ERR_UC_RST_X, cptra_uc_rst_b, clk, cptra_rst_b)
+`ASSERT_NEVER(ERR_UC_RST_ASSERT_AND_BOOT_NOT_DONE, cptra_uc_rst_b && (boot_fsm_ps != BOOT_DONE), clk, cptra_rst_b)
+`ASSERT(ERR_UC_RST_ASSERT_AND_BOOT_NOT_DONE2, ~cptra_uc_rst_b || (boot_fsm_ps == BOOT_DONE), clk, cptra_rst_b)
 
 endmodule

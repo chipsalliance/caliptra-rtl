@@ -9,7 +9,7 @@
 //======================================================================
 
 module aes_ctrl #(
-    parameter AHB_DATA_WIDTH = 64,
+    parameter AHB_DATA_WIDTH = 32,
     parameter AHB_ADDR_WIDTH = 32,
     parameter BYPASS_HSEL = 0
 )
@@ -19,7 +19,7 @@ module aes_ctrl #(
     input wire           reset_n,
 
     // from SLAVES PORT
-    input logic [AHB_ADDR_WIDTH-1:0] hadrr_i,
+    input logic [AHB_ADDR_WIDTH-1:0] haddr_i,
     input logic [AHB_DATA_WIDTH-1:0] hwdata_i,
     input logic hsel_i,
     input logic hwrite_i,
@@ -35,15 +35,14 @@ module aes_ctrl #(
     output logic [AHB_DATA_WIDTH-1:0] hrdata_o
 );
 
-
     //----------------------------------------------------------------
     // aes
     //----------------------------------------------------------------
-    reg           aes_cs;
-    reg           aes_we;
-    reg  [AHB_ADDR_WIDTH - 1 : 0] aes_address;
-    reg  [31 : 0] aes_write_data;
-    reg  [31 : 0] aes_read_data;
+    logic aes_cs;
+    logic aes_we;
+    logic [AHB_ADDR_WIDTH-1:0] aes_address;
+    logic [31:0] aes_write_data;
+    logic [31:0] aes_read_data;
 
     aes #(
         .ADDR_WIDTH(32),
@@ -59,98 +58,37 @@ module aes_ctrl #(
         .read_data(aes_read_data)
     );
 
-    //----------------------------------------------------------------
-    // AHB Slave node
-    //----------------------------------------------------------------
-    logic cs;
-    logic write;
-    logic [AHB_ADDR_WIDTH - 1:0] laddr, addr;
-    logic [AHB_DATA_WIDTH - 1:0] rdata;
-    logic [AHB_DATA_WIDTH - 1:0] hrdata;
-    logic [AHB_DATA_WIDTH - 1:0] hwdata;
+//instantiate ahb lite module
+ahb_slv_sif #(
+    .ADDR_WIDTH(AHB_ADDR_WIDTH),
+    .AHB_DATA_WIDTH(AHB_DATA_WIDTH),
+    .CLIENT_DATA_WIDTH(32)
+)
+(
+    //AMBA AHB Lite INF
+    .hclk(clk),
+    .hreset_n(reset_n),
+    .haddr_i(haddr_i),
+    .hwdata_i(hwdata_i),
+    .hsel_i(hsel_i),
+    .hwrite_i(hwrite_i),
+    .hready_i(hready_i),
+    .htrans_i(htrans_i),
+    .hsize_i(hsize_i),
 
-    bit [7:0] wscnt;
-    int dws = 0;
-    int iws = 0;
+    .hresp_o(hresp_o),
+    .hreadyout_o(hreadyout_o),
+    .hrdata_o(hrdata_o),
 
-    always @ (negedge clk) begin
-        cs = (hsel_i & hready_i)? 1 : 0;
-        hrdata <= rdata;
-        if (write & hready_i) begin
-            addr = laddr;
-            case (hsize_i)
-                3'b000: 
-                    hwdata = hwdata_i[7:0];
-                3'b001: 
-                    hwdata = hwdata_i[15:0];
-                3'b010: 
-                    // hwdata = {32'h00000000, hwdata_i[31:0]};
-                    hwdata = laddr[2]? hwdata_i[63:32] : hwdata_i[31:0];
-                default:  // 3'b011: 
-                    hwdata = hwdata_i;
-            endcase;
-            // if (AHB_DATA_WIDTH == 64) begin
-            //     case (hsize_i)
-            //         3'b000: 
-            //             hwdata = {56'h00000000000000, hwdata_i[7:0]};
-            //         3'b001: 
-            //             hwdata = {48'h000000000000, hwdata_i[15:0]};
-            //         3'b010: 
-            //             hwdata = {32'h00000000, hwdata_i[31:0]};
-            //         default:  // 3'b011: 
-            //             hwdata = hwdata_i[63:0];
-            //     endcase;
-            // end
-            // else if (AHB_DATA_WIDTH == 32) begin
-            //     case (hsize_i)
-            //         3'b000: 
-            //             hwdata = {24'h00000000000000, hwdata_i[7:0]};
-            //         3'b001: 
-            //             hwdata = {16'h000000000000, hwdata_i[15:0]};
-            //         default:  // 3'b011: 
-            //             hwdata = hwdata_i[31:0];
-            //     endcase;
-            // end
-        end
-        else if(hready_i)
-            addr = hadrr_i;
-        if(hready_i & hsel_i & |htrans_i)
-            if(~hprot_i[0])
-                iws = 0;
-            if(hprot_i[0])
-                dws = 0;
-    end
+    //COMPONENT INF
+    .dv(aes_cs),
+    .hold('0), //no holes from aes
+    .error('0), //no errors from aes
+    .write(aes_we),
+    .wdata(aes_write_data),
+    .addr(aes_address),
 
-    assign hrdata_o = hready_i ? hrdata : ~hrdata;
-    assign hreadyout_o = wscnt == 0;
-    assign hresp_o = 0;
-
-    always_ff @(posedge clk or negedge reset_n) begin
-        if(!reset_n) begin
-            laddr <= 0;
-            write <= 1'b0;
-            rdata <= '0;
-            wscnt <= 0;
-        end
-        else begin
-            if(hready_i & hsel_i) begin
-                laddr <= hadrr_i;
-                write <= hwrite_i & |htrans_i;
-                if(|htrans_i & ~hwrite_i)
-                    rdata <= aes_read_data;
-            end
-        end
-        if(hready_i & hsel_i & |htrans_i)
-            wscnt <= hprot_i[0] ? dws[7:0] : iws[7:0];
-        else if(wscnt != 0)
-            wscnt <= wscnt-1;
-    end
-
-    always_comb begin
-        aes_cs = cs;
-        aes_we = write;
-        aes_write_data = hwdata;
-        aes_address = addr;
-    end
+    .rdata(aes_read_data)
+);
 
 endmodule

@@ -25,7 +25,20 @@ module rust_top (
     input        [31:0]         reset_vector,
     input        [31:0]         nmi_vector,
     input        [31:0]         jtag_id,
-    input                       nmi_int
+    input                       nmi_int,
+
+    //APB Interface
+    input  logic [`APB_ADDR_WIDTH-1:0] PADDR,
+    input  logic                       PSEL,
+    input  logic                       PENABLE,
+    input  logic                       PWRITE,
+    input  logic [`APB_DATA_WIDTH-1:0] PWDATA,
+    input  logic [`APB_USER_WIDTH-1:0] PAUSER,
+
+    output logic                       PREADY,
+    output logic                       PSLVERR,
+    output logic [`APB_DATA_WIDTH-1:0] PRDATA
+
     );
 
     //caliptra reset driven by boot fsm in mailbox
@@ -738,7 +751,7 @@ aes_ctrl #(
 ) aes (
     .clk            (core_clk),
     .reset_n        (cptra_uc_rst_b),
-    .hadrr_i        (s_slave[3].haddr),
+    .haddr_i        (s_slave[3].haddr),
     .hwdata_i       (s_slave[3].hwdata),
     .hsel_i         (s_slave[3].hsel),
     .hwrite_i       (s_slave[3].hwrite),
@@ -908,22 +921,42 @@ axi_lsu_dma_bridge # (`RV_LSU_BUS_TAG,`RV_LSU_BUS_TAG ) bridge(
 `endif
 
 //Instantiation of mailbox
-mbox mbox1 (
-    .clk            (core_clk),
-    .cptra_pwrgood  (cptra_pwrgood), 
-    .cptra_rst_b    (cptra_rst_b),
-
-    .apb_paddr      ('x), //FIXME TIE-OFF
-    .apb_pprot      ('x), //FIXME TIE-OFF
-    .apb_psel       ('x), //FIXME TIE-OFF
-    .apb_penable    ('x), //FIXME TIE-OFF
-    .apb_pwrite     ('x), //FIXME TIE-OFF
-    .apb_pwdata     ('x), //FIXME TIE-OFF
-    .apb_pstrb      ('x), //FIXME TIE-OFF
-    .apb_pauser     ('x), //FIXME TIE-OFF
-    .apb_pready     ('x), //FIXME TIE-OFF
-    .apb_prdata     ('x), //FIXME TIE-OFF
-    .apb_pslverr    ('x), //FIXME TIE-OFF
+mbox_top #(
+    .AHB_ADDR_WIDTH(`AHB_HADDR_SIZE),
+    .AHB_DATA_WIDTH(`AHB_HDATA_SIZE),
+    .APB_ADDR_WIDTH(`APB_ADDR_WIDTH),
+    .APB_DATA_WIDTH(`APB_DATA_WIDTH),
+    .APB_USER_WIDTH(`APB_USER_WIDTH)
+    )
+    mbox_top1 
+    (
+    .clk(core_clk),
+    .cptra_pwrgood(cptra_pwrgood), 
+    .cptra_rst_b(cptra_rst_b),
+    //APB Interface with SoC
+    .paddr_i(PADDR),
+    .psel_i(PSEL),
+    .penable_i(PENABLE),
+    .pwrite_i(PWRITE),
+    .pwdata_i(PWDATA),
+    .pauser_i(PAUSER),
+    .pready_o(PREADY),
+    .prdata_o(PRDATA),
+    .pslverr_o(PSLVERR),
+    //AHB Interface with uC
+    .haddr_i(s_slave[4].haddr), 
+    .hwdata_i(s_slave[4].hwdata), 
+    .hsel_i(s_slave[4].hsel), 
+    .hwrite_i(s_slave[4].hwrite),
+    .hmastlock_i(s_slave[4].hmastlock),
+    .hready_i(s_slave[4].hready),
+    .htrans_i(s_slave[4].htrans),
+    .hprot_i(s_slave[4].hprot),
+    .hburst_i(s_slave[4].hburst),
+    .hsize_i(s_slave[4].hsize),
+    .hresp_o(s_slave[4].hresp),
+    .hreadyout_o(s_slave[4].hreadyout),
+    .hrdata_o(s_slave[4].hrdata),
 
     .cptra_uc_rst_b (cptra_uc_rst_b) 
 );

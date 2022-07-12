@@ -10,11 +10,13 @@ targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
+      - $COMPILE_ROOT/rtl/mbox_top.sv
       - $COMPILE_ROOT/rtl/mbox.sv
       - $COMPILE_ROOT/rtl/mbox_boot_fsm.sv
+      - $COMPILE_ROOT/rtl/mbox_arb.sv
       - $COMPILE_ROOT/rtl/mbox_defines.svh
       - $COMPILE_ROOT/rtl/mbox_params.svh
-    tops: [mailbox]
+    tops: [mbox]
 global:
   tool:
     vcs:

@@ -58,6 +58,19 @@ module rust_top_tb (
     wire[63:0] WriteData;
     string                      abi_reg[32]; // ABI register names
 
+
+    //APB Interface
+    logic [`APB_ADDR_WIDTH-1:0] PADDR;
+    logic                       PSEL;
+    logic                       PENABLE;
+    logic                       PWRITE;
+    logic [`APB_DATA_WIDTH-1:0] PWDATA;
+    logic [`APB_USER_WIDTH-1:0] PAUSER;
+
+    logic                       PREADY;
+    logic                       PSLVERR;
+    logic [`APB_DATA_WIDTH-1:0] PRDATA;
+
 `define DEC rust_top_dut.rvtop.swerv.dec
 
 `define LMEM `RUST_RV_TOP.lmem.mem 
@@ -264,9 +277,18 @@ rust_top rust_top_dut (
     .reset_vector               (reset_vector),
     .nmi_vector                 (nmi_vector),
     .nmi_int                    (nmi_int),
-    .jtag_id                    (jtag_id)
+    .jtag_id                    (jtag_id),
+    .*
 );
 
+//tying off apb interface for now
+//FIXME TIE-OFF
+assign PADDR = '0;
+assign PSEL = '0;
+assign PENABLE = '0;
+assign PWRITE = '0;
+assign PWDATA = '0;
+assign PAUSER = '0;
 
 
 task preload_iccm;

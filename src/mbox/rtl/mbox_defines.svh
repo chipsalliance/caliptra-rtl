@@ -16,14 +16,33 @@
 `define MBOX_DEFINES
 
 `include "caliptra_macros.svh"
-
+`include "caliptra_sva.svh"
+`include "mbox_params.svh"
 
 //BOOT FSM
 typedef enum logic [1:0] {
-    BOOT_IDLE    = 2'b00,
-    BOOT_FUSE    = 2'b01,
-    BOOT_DONE    = 2'b11,
-    BOOT_X       = 'x
+    BOOT_IDLE   = 2'b00,
+    BOOT_FUSE   = 2'b01,
+    BOOT_DONE   = 2'b11
 } boot_fsm_state_e;
+
+//MAILBOX FSM
+typedef enum logic [2:0] {
+    MBOX_IDLE         = 3'b000,
+    MBOX_RDY_FOR_CMD  = 3'b001,
+    MBOX_RDY_FOR_DLEN = 3'b011,
+    MBOX_RDY_FOR_DATA = 3'b010,
+    MBOX_EXECUTE_UC   = 3'b110,
+    MBOX_EXECUTE_SOC  = 3'b100
+} mbox_fsm_state_e;
+
+//MAILBOX REQ
+typedef struct packed {
+    logic   [MBOX_ADDR_W-1:0] addr;
+    logic   [MBOX_DATA_W-1:0] wdata;
+    logic   [MBOX_USER_W-1:0] user;
+    logic                     write;
+    logic                     soc_req;
+} mbox_req_t;
 
 `endif
