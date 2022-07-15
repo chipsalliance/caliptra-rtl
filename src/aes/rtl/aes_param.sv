@@ -29,7 +29,12 @@
   localparam AES_ADDR_RESULT_START= AES_BASE_ADDR + 32'h00000100;
   localparam AES_ADDR_RESULT_END  = AES_BASE_ADDR + 32'h0000010c;
 
+  localparam AES_ADDR_IV_START = AES_BASE_ADDR + 32'h00000110;
+  localparam AES_ADDR_IV_END   = AES_BASE_ADDR + 32'h0000011c;
+
   localparam AES_CORE_NAME        = 64'h20202020_73206165; // "aes "
   localparam AES_CORE_VERSION     = 64'h00000000_3630302e; // "0.60"
 
   // `define AES_DATA_BUS_64
+
+  `define AES_CBC_MODE

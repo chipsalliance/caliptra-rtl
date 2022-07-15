@@ -35,6 +35,11 @@ module aes_ctrl #(
     output logic [AHB_DATA_WIDTH-1:0] hrdata_o
 );
 
+  //----------------------------------------------------------------
+  // Internal constant and parameter definitions.
+  //----------------------------------------------------------------
+  `include "aes_param.sv"
+
     //----------------------------------------------------------------
     // aes
     //----------------------------------------------------------------
@@ -44,7 +49,21 @@ module aes_ctrl #(
     logic [31:0] aes_write_data;
     logic [31:0] aes_read_data;
 
-    aes #(
+    `ifdef AES_CBC_MODE
+        aes_cbc #(
+        .ADDR_WIDTH(32),
+        .DATA_WIDTH(32)
+        ) aes_inst(
+        .clk(clk),
+        .reset_n(reset_n),
+        .cs(aes_cs),
+        .we(aes_we),
+        .address(aes_address),
+        .write_data(aes_write_data),
+        .read_data(aes_read_data)
+        );
+    `else
+        aes #(
         .ADDR_WIDTH(32),
         .DATA_WIDTH(32)
         )
@@ -57,6 +76,7 @@ module aes_ctrl #(
         .write_data(aes_write_data),
         .read_data(aes_read_data)
     );
+    `endif
 
 //instantiate ahb lite module
 ahb_slv_sif #(

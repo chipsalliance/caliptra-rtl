@@ -21,9 +21,11 @@ targets:
       - $COMPILE_ROOT/rtl/aes_inv_sbox.v
       - $COMPILE_ROOT/rtl/aes_key_mem.v
       - $COMPILE_ROOT/rtl/aes_sbox.v
+      - $COMPILE_ROOT/rtl/aes_cbc.v
+      - $COMPILE_ROOT/rtl/aes_core_cbc.v
     tops: [aes_ctrl]
 ---
-provides: [aes_ctrl_tb]  
+provides: [aes_cbc_tb]  
 schema_version: 2.4.0
 requires: 
   - aes_ctrl
@@ -32,8 +34,8 @@ targets:
     directories: 
       - $COMPILE_ROOT/tb
     files:
-      - $COMPILE_ROOT/tb/aes_ctrl_tb.sv
-    tops: [aes_ctrl_tb]
+      - $COMPILE_ROOT/tb/aes_cbc_tb.sv
+    tops: [aes_cbc_tb]
 global:
   tool:
     vcs:
