@@ -83,7 +83,7 @@ ahb_slv_sif #(
     .ADDR_WIDTH(AHB_ADDR_WIDTH),
     .AHB_DATA_WIDTH(AHB_DATA_WIDTH),
     .CLIENT_DATA_WIDTH(32)
-)
+) ahb_slv_sif_uut
 (
     //AMBA AHB Lite INF
     .hclk(clk),

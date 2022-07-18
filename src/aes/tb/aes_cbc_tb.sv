@@ -118,7 +118,7 @@ module aes_cbc_tb();
              .clk(clk_tb),
              .reset_n(reset_n_tb),
 
-             .hadrr_i(hadrr_i_tb),
+             .haddr_i(hadrr_i_tb),
              .hwdata_i(hwdata_i_tb),
              .hsel_i(hsel_i_tb),
              .hwrite_i(hwrite_i_tb),
