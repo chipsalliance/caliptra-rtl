@@ -1,0 +1,9 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.compile
+  - ./AES_out_common.compile
+incdir:
+  - .
+src:
+  - src/AES_out_if.sv
+  - src/AES_out_monitor_bfm.sv
+  - src/AES_out_driver_bfm.sv

@@ -1,0 +1,5 @@
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/AES_in_pkg/AES_in_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/AES_out_pkg/AES_out_pkg.vinfo
++incdir+@vinfodir
+AES_env_pkg.sv

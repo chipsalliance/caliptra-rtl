@@ -1,0 +1,48 @@
+uvmf:
+  interfaces:
+    AES_out:
+      clock: clk
+      reset: rst
+      reset_assertion_level: 'False'
+
+      config_constraints: []
+      config_vars: []
+
+      hdl_typedefs: []
+      hvl_typedefs: []
+
+      parameters:
+      - name: AHB_DATA_WIDTH
+        type: int
+        value: '32'
+      - name: AHB_ADDR_WIDTH
+        type: int
+        value: '32'
+      - name: OUTPUT_TEXT_WIDTH
+        type: int
+        value: '128'
+      - name: BYPASS_HSEL
+        type: bit
+        value: '0'
+ 
+      ports:
+      - name: hresp
+        dir: input
+        width: '1'
+      - name: hreadyout
+        dir: input
+        width: '1'
+      - name: hrdata
+        dir: input
+        width: AHB_DATA_WIDTH
+ 
+      response_info:
+        data: []
+        operation: 1'b0
+ 
+      transaction_constraints: []
+      transaction_vars:
+      - iscompare: 'True'
+        isrand: 'False'
+        name: result
+        type: bit [OUTPUT_TEXT_WIDTH-1:0]

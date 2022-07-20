@@ -1,0 +1,8 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.compile
+  - ../../../../verification_ip/interface_packages/AES_in_pkg/AES_in.compile
+  - ../../../../verification_ip/interface_packages/AES_out_pkg/AES_out.compile
+  - ../../../../verification_ip/environment_packages/AES_env_pkg/AES_env_pkg.compile
+  - ../parameters/AES_parameters_pkg.compile
+src:
+  - AES_sequences_pkg.sv

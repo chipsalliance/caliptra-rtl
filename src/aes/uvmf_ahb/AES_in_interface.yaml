@@ -1,0 +1,88 @@
+uvmf:
+  interfaces:
+    AES_in:
+      clock: clk
+      reset: rst
+      reset_assertion_level: 'False'
+
+      config_constraints: []
+      config_vars: []
+
+      hdl_typedefs:
+      - name: aes_in_op_transactions
+        type: enum bit[1:0] {reset_op = 2'b00, decipher_op = 2'b10, encipher_op = 2'b11}
+      hvl_typedefs: []
+
+      parameters:
+      - name: AHB_DATA_WIDTH
+        type: int
+        value: '32'
+      - name: AHB_ADDR_WIDTH
+        type: int
+        value: '32'
+      - name: BYPASS_HSEL
+        type: bit
+        value: '0'
+
+      ports:
+      - name: aes_rst
+        dir: output
+        width: '1'
+      - name: hadrr
+        dir: output
+        width: AHB_ADDR_WIDTH
+      - name: hwdata
+        dir: output
+        width: AHB_DATA_WIDTH
+      - name: hsel
+        dir: output
+        width: '1'
+      - name: hwrite
+        dir: output
+        width: '1'
+      - name: hmastlock
+        dir: output
+        width: '1'
+      - name: hready
+        dir: output
+        width: '1'
+      - name: htrans
+        dir: output
+        width: '2'
+      - name: hprot
+        dir: output
+        width: '4'
+      - name: hburst
+        dir: output
+        width: '3'
+      - name: hsize
+        dir: output
+        width: '3'
+      - name: transaction_flag_in_monitor
+        dir: output
+        width: '1'
+      - name: op
+        dir: output
+        width: '2'
+      - name: test_case_sel
+        dir: output
+        width: '3'
+
+      response_info:
+        data: []
+        operation: 1'b0
+
+      transaction_constraints:
+      - name: aes_valid_op_constraints
+        value: '{ op inside {decipher_op, encipher_op}; }'
+
+      transaction_vars:
+      - name: op
+        type: aes_in_op_transactions
+        iscompare: 'True'
+        isrand: 'True'
+      - name: test_case_sel
+        type: bit [2:0]
+        iscompare: 'True'
+        isrand: 'True'
+        

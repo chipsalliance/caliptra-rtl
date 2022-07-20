@@ -1,0 +1,6 @@
+
+# pragma uvmf custom dut_compile_info begin
+src:
+  - ./vhdl/vhdl_dut.vhd
+  - ./verilog/verilog_dut.v
+# pragma uvmf custom dut_compile_info end

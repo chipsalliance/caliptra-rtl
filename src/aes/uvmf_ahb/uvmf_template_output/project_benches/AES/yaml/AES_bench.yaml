@@ -1,0 +1,16 @@
+uvmf:
+  benches:
+    AES:
+      active_passive:
+      - bfm_name: AES_in_agent
+        value: ACTIVE
+      - bfm_name: AES_out_agent
+        value: PASSIVE
+      clock_half_period: 5ns
+      clock_phase_offset: 0ns
+      existing_library_component: 'True'
+      interface_params: []
+      reset_assertion_level: 'False'
+      reset_duration: 200ns
+      top_env: AES
+      use_dpi_link: 'False'
