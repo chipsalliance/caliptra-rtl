@@ -273,10 +273,10 @@ module aes_cbc_tb();
       hwrite_i_tb     = 1;
       hmastlock_i_tb  = 0;
       hready_i_tb     = 1;
-      htrans_i_tb     = AHB_HTRANS_BUSY;
+      htrans_i_tb     = AHB_HTRANS_NONSEQ;
       hprot_i_tb      = 0;
       hburst_i_tb     = 0;
-      hsize_i_tb      = 3'b011;
+      hsize_i_tb      = 3'b010;
       #(CLK_PERIOD);
 
       hadrr_i_tb      = 'Z;
@@ -316,19 +316,16 @@ module aes_cbc_tb();
       hwrite_i_tb     = 0;
       hmastlock_i_tb  = 0;
       hready_i_tb     = 1;
-      htrans_i_tb     = AHB_HTRANS_BUSY;
+      htrans_i_tb     = AHB_HTRANS_NONSEQ;
       hprot_i_tb      = 0;
       hburst_i_tb     = 0;
-      hsize_i_tb      = 3'b011;
+      hsize_i_tb      = 3'b010;
       #(CLK_PERIOD);
       
       hwdata_i_tb     = 0;
       hadrr_i_tb     = 'Z;
       htrans_i_tb     = AHB_HTRANS_IDLE;
-
-      #(CLK_PERIOD);
       read_data = hrdata_o_tb;
-      hsel_i_tb       = 0;
     end
   endtask // read_word
 

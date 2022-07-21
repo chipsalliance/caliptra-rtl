@@ -53,21 +53,37 @@ module ahb_slv_sif #(
 //64b ahb, 32b client
 //64b ahb, 64b client
 generate begin: data_muxes
-    if ((AHB_DATA_WIDTH == 64) & (CLIENT_DATA_WIDTH == 32)) begin
+    if ((AHB_DATA_WIDTH == 32) & (CLIENT_DATA_WIDTH == 32)) begin
         always_comb begin
-            case (hsize_i)
+            unique casez (hsize_i)
+                3'b000:  //byte
+                    wdata = {{$bits(wdata)-8{1'b0}},hwdata_i[7:0]};
+                3'b001:  //halfword
+                    wdata = {{$bits(wdata)-16{1'b0}},hwdata_i[15:0]};
+                3'b010:  //word
+                    wdata = hwdata_i[31:0];
+                default: //word
+                wdata = hwdata_i[31:0];
+            endcase;
+        end
+        always_comb hrdata_o = rdata;
+    end else if ((AHB_DATA_WIDTH == 64) & (CLIENT_DATA_WIDTH == 32)) begin
+        always_comb begin
+            unique casez (hsize_i)
                 3'b000:  //byte
                     wdata = {{$bits(wdata)-8{1'b0}},hwdata_i[7:0]};
                 3'b001:  //halfword
                     wdata = {{$bits(wdata)-16{1'b0}},hwdata_i[15:0]};
                 3'b010:  //word
                     wdata = addr[2]? hwdata_i[63:32] : hwdata_i[31:0];
+                default: //word
+                wdata = addr[2]? hwdata_i[63:32] : hwdata_i[31:0];
             endcase;
         end
         always_comb hrdata_o = addr[2] ? {rdata, 32'b0} : {32'b0, rdata};
     end else if ((AHB_DATA_WIDTH == 64) & (CLIENT_DATA_WIDTH == 64)) begin
         always_comb begin
-            case (hsize_i)
+            unique casez (hsize_i)
                 3'b000:  //byte
                     wdata = {{$bits(wdata)-8{1'b0}},hwdata_i[7:0]};
                 3'b001:  //halfword
@@ -75,6 +91,8 @@ generate begin: data_muxes
                 3'b010:  //word
                     wdata = addr[2]? hwdata_i[63:32] : hwdata_i[31:0];
                 3'b011: //dword
+                    wdata = hwdata_i;
+                default: //dword
                     wdata = hwdata_i;
             endcase;
         end
