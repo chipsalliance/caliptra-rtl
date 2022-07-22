@@ -1,10 +1,5 @@
 //======================================================================
 //
-// Updated by: Emre Karabulut
-// I updated the SHA function. The SHA was SHA-256 and now is SHA-384 
-// I forced a parametric SHA-512 to work always as SHA-384, when I 
-// instantiated. Addition to this, I had to update the data paths
-//
 // hmac_core.v
 // -----------
 //
@@ -47,12 +42,12 @@ module hmac_core(
                  input wire            init,
                  input wire            next,
 
-                 input wire [383 : 0]  key,
+                 input wire [255 : 0]  key,
 
-                 input wire [1023 : 0]  block,
+                 input wire [511 : 0]  block,
 
                  output wire           ready,
-                 output wire [383 : 0] tag,
+                 output wire [255 : 0] tag,
                  output wire           tag_valid
                 );
 
@@ -60,10 +55,11 @@ module hmac_core(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam IPAD       = 1024'h3636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636;
-  localparam OPAD       = 1024'h5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c;
-  localparam FINAL_PAD  = 640'h8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000580;
+  localparam IPAD       = 512'h36363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636;
+  localparam OPAD       = 512'h5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c;
+  localparam FINAL_PAD  = 256'h8000000000000000000000000000000000000000000000000000000000000300;
 
+  localparam MODE_SHA_256   = 1'h1;
 
   //localparam STATE_IDLE   = 0;
   //localparam STATE_INIT   = 1;
@@ -93,9 +89,9 @@ module hmac_core(
   reg         digest_valid_new;
   reg         digest_valid_we;
 
-  reg [1023:0] key_opadded;
-  reg [1023:0] key_ipadded;
-  reg [1023:0] HMAC_padded;
+  reg [511:0] key_opadded;
+  reg [511:0] key_ipadded;
+  reg [511:0] HMAC_padded;
 
   reg         first_round; 
   reg         IPAD_ready;
@@ -104,19 +100,19 @@ module hmac_core(
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-  reg             H1_init;
-  reg             H1_next;
-  reg  [1023 : 0] H1_block;
-  wire            H1_ready;
-  wire [383 : 0]  H1_digest;
-  wire            H1_digest_valid;
+  reg            H1_init;
+  reg            H1_next;
+  reg  [511 : 0] H1_block;
+  wire           H1_ready;
+  wire [255 : 0] H1_digest;
+  wire           H1_digest_valid;
 
-  reg             H2_init;
-  reg             H2_next;
-  reg  [1023 : 0] H2_block;
-  wire            H2_ready;
-  wire [383 : 0]  H2_digest;
-  wire            H2_digest_valid;
+  reg            H2_init;
+  reg            H2_next;
+  reg  [511 : 0] H2_block;
+  wire           H2_ready;
+  wire [255 : 0] H2_digest;
+  wire           H2_digest_valid;
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
@@ -127,15 +123,13 @@ module hmac_core(
   //----------------------------------------------------------------
   // core instantiation.
   //----------------------------------------------------------------
-  sha512_core H1(
+  sha256_core H1(
                      .clk(clk),
                      .reset_n(reset_n),
 
                      .init(H1_init),
                      .next(H1_next),
-
-                     .work_factor(0),
-                     .work_factor_num(0),
+                     .mode(MODE_SHA_256),
 
                      .block(H1_block),
 
@@ -144,15 +138,13 @@ module hmac_core(
                      .digest_valid(H1_digest_valid)
                     );
 
-  sha512_core H2(
+  sha256_core H2(
                      .clk(clk),
                      .reset_n(reset_n),
 
                      .init(H2_init),
                      .next(H2_next),
-
-                     .work_factor(0),
-                     .work_factor_num(0),
+                     .mode(MODE_SHA_256),
 
                      .block(H2_block),
 
@@ -201,8 +193,8 @@ module hmac_core(
       OPAD_ready = H1_ready & H2_ready;
       HMAC_ready = H2_ready;
 
-      key_ipadded = {key, 640'b0} ^ IPAD;
-      key_opadded = {key, 640'b0} ^ OPAD;
+      key_ipadded = {key, 256'b0} ^ IPAD;
+      key_opadded = {key, 256'b0} ^ OPAD;
       HMAC_padded = {H1_digest, FINAL_PAD};
       
       H1_block = key_ipadded;

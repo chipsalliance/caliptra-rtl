@@ -6,10 +6,16 @@
 //
 //
 // Author: Mojtaba Bisheh-Niasar
+// Updated by: Emre Karabulut 07/22/2022
+// 
+// I integrated the HMAC unit into the AHB bus port and so all signals go
+// through the AHB bus. I converted the data bus from 64 to a parametric one.
+// 
+// 
 //======================================================================
 
 module hmac_ctrl #(
-    parameter AHB_DATA_WIDTH = 64,
+    parameter AHB_DATA_WIDTH = 32,
     parameter AHB_ADDR_WIDTH = 32,
     parameter BYPASS_HSEL = 0
 )
@@ -40,9 +46,9 @@ module hmac_ctrl #(
     //----------------------------------------------------------------
     reg           hmac_cs;
     reg           hmac_we;
-    reg  [31 : 0] hmac_address;
-    reg  [63 : 0] hmac_write_data;
-    reg  [63 : 0] hmac_read_data;
+    reg  [AHB_ADDR_WIDTH-1 : 0] hmac_address;
+    reg  [AHB_DATA_WIDTH-1 : 0] hmac_write_data;
+    reg  [AHB_DATA_WIDTH-1 : 0] hmac_read_data;
 
     hmac hmac_inst(
         .clk(clk),
@@ -54,104 +60,40 @@ module hmac_ctrl #(
         .read_data(hmac_read_data)
     );
 
+    //instantiate ahb lite module
+ahb_slv_sif #(
+    .ADDR_WIDTH(AHB_ADDR_WIDTH),
+    .AHB_DATA_WIDTH(AHB_DATA_WIDTH),
+    .CLIENT_DATA_WIDTH(32)
+) ahb_slv_sif_uut
+(
+    //AMBA AHB Lite INF
+    .hclk(clk),
+    .hreset_n(reset_n),
+    .haddr_i(hadrr_i),
+    .hwdata_i(hwdata_i),
+    .hsel_i(hsel_i),
+    .hwrite_i(hwrite_i),
+    .hready_i(hready_i),
+    .htrans_i(htrans_i),
+    .hsize_i(hsize_i),
 
-    /*
-    //----------------------------------------------------------------
-    // fifo_in
-    //----------------------------------------------------------------
-    reg                     fifo_in_we,
-    reg                     fifo_in_rd,
-    reg                     fifo_in_full,
-    reg                     fifo_in_empty,
-    reg [DATA_WIDTH-1 : 0]  fifo_in_write_data,
-    reg [DATA_WIDTH-1 : 0]  fifo_in_read_data
+    .hresp_o(hresp_o),
+    .hreadyout_o(hreadyout_o),
+    .hrdata_o(hrdata_o),
 
-    fifo  fifo_in #(
-        RAM_ADDR_WIDTH = 5,
-        DATA_WIDTH = 64
-    )
-    (
-        .clk(clk),
-        .reset_n(reset_n),
-        .we(fifo_in_we),
-        .rd(fifo_in_rd),
-        .fifo_full(fifo_in_full),
-        .fifo_empty(fifo_in_empty),
-        .write_data(fifo_in_write_data),
-        .read_data(fifo_in_read_data)
-    );
-    */
+    //COMPONENT INF
+    .dv(hmac_cs),
+    .hold('0), //no holes from aes
+    .error('0), //no errors from aes
+    .write(hmac_we),
+    .wdata(hmac_write_data),
+    .addr(hmac_address),
 
-    //----------------------------------------------------------------
-    // AHB Slave node
-    //----------------------------------------------------------------
-    logic cs;
-    logic write;
-    logic [31:0] laddr, addr;
-    logic [63:0] rdata;
-    logic [63:0] hrdata;
-    logic [63:0] hwdata;
+    .rdata(hmac_read_data)
+);
 
-    bit [7:0] wscnt;
-    int dws = 0;
-    int iws = 0;
-
-    always @ (negedge clk) begin
-        cs = (hsel_i & hready_i)? 1 : 0;
-        hrdata <= rdata;
-        if (write & hready_i) begin
-            addr = laddr;
-            case (hsize_i)
-                3'b000: 
-                    hwdata = {56'h00000000000000, hwdata_i[7:0]};
-                3'b001: 
-                    hwdata = {48'h000000000000, hwdata_i[15:0]};
-                3'b010: 
-                    hwdata = {32'h00000000, hwdata_i[31:0]};
-                default:  // 3'b011: 
-                    hwdata = hwdata_i[63:0];
-            endcase;
-        end
-        else if(hready_i)
-            addr = hadrr_i;
-        if(hready_i & hsel_i & |htrans_i)
-            if(~hprot_i[0])
-                iws = 0;
-            if(hprot_i[0])
-                dws = 0;
-    end
-
-    assign hrdata_o = hready_i ? hrdata : ~hrdata;
-    assign hreadyout_o = wscnt == 0;
-    assign hresp_o = 0;
-
-    always_ff @(posedge clk or negedge reset_n) begin
-        if(!reset_n) begin
-            laddr <= 0;
-            write <= 1'b0;
-            rdata <= '0;
-            wscnt <= 0;
-        end
-        else begin
-            if(hready_i & hsel_i) begin
-                laddr <= hadrr_i;
-                write <= hwrite_i & |htrans_i;
-                if(|htrans_i & ~hwrite_i)
-                    rdata <= hmac_read_data;
-            end
-        end
-        if(hready_i & hsel_i & |htrans_i)
-            wscnt <= hprot_i[0] ? dws[7:0] : iws[7:0];
-        else if(wscnt != 0)
-            wscnt <= wscnt-1;
-    end
-
-    always_comb begin
-        hmac_cs = cs;
-        hmac_we = write;
-        hmac_write_data = hwdata;
-        hmac_address = addr;
-    end
+    
 
 
 endmodule

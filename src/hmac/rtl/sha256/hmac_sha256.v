@@ -1,10 +1,5 @@
 //======================================================================
 //
-// Updated by: Emre Karabulut
-// I updated the design data path. The addressing and data path were 
-// based on 64-bit. After my update, the bus and addressing is 32-bit
-//
-//
 // hmac.v
 // ------
 // Top level wrapper for the HMAC core providing a simple memory
@@ -53,8 +48,8 @@ module hmac(
 
             // Data ports.
             input wire  [31 : 0] address,
-            input wire  [31 : 0] write_data,
-            output wire [31 : 0] read_data
+            input wire  [63 : 0] write_data,
+            output wire [63 : 0] read_data
            );
 
   //----------------------------------------------------------------
@@ -74,39 +69,32 @@ module hmac(
   reg ready_reg;
   reg tag_valid_reg;
 
-  reg [31 : 0] key_reg [0 : 11];
+  reg [63 : 0] key_reg [0 : 3];
   reg          key_we;
 
-  reg [31 : 0] block_reg [0 : 31];
+  reg [63 : 0] block_reg [0 : 7];
   reg          block_we;
 
 
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-  wire [383 : 0] core_key;
-  wire [1023 : 0] core_block;
+  wire [255 : 0] core_key;
+  wire [511 : 0] core_block;
   wire           core_ready;
-  wire [383 : 0] core_tag;
+  wire [255 : 0] core_tag;
   wire           core_tag_valid;
 
-  reg [383 : 0]  tag_reg;
-  reg [31  : 0]  tmp_read_data;
+  reg [255 : 0]  tag_reg;
+  reg [63  : 0]  tmp_read_data;
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
   assign core_block = {block_reg[00], block_reg[01], block_reg[02], block_reg[03],
-                       block_reg[04], block_reg[05], block_reg[06], block_reg[07],
-                       block_reg[08], block_reg[09], block_reg[10], block_reg[11],
-                       block_reg[12], block_reg[13], block_reg[14], block_reg[15],
-                       block_reg[16], block_reg[17], block_reg[18], block_reg[19],
-                       block_reg[20], block_reg[21], block_reg[22], block_reg[23],
-                       block_reg[24], block_reg[25], block_reg[26], block_reg[27],
-                       block_reg[28], block_reg[29], block_reg[30], block_reg[31]};
+                       block_reg[04], block_reg[05], block_reg[06], block_reg[07]};
 
-  assign core_key = {key_reg[00], key_reg[01], key_reg[02], key_reg[03], key_reg[04], key_reg[05],
-                     key_reg[06], key_reg[07], key_reg[08], key_reg[09], key_reg[10], key_reg[11]};
+  assign core_key = {key_reg[00], key_reg[01], key_reg[02], key_reg[03]};
 
   assign read_data = tmp_read_data;
 
@@ -144,15 +132,15 @@ module hmac(
 
       if (!reset_n)
         begin
-          for (i = 0 ; i < 32 ; i = i + 1)
-            block_reg[i] <= 32'h0;
+          for (i = 0 ; i < 8 ; i = i + 1)
+            block_reg[i] <= 64'h0;
 
-          for (i = 0 ; i < 12 ; i = i + 1)
-            key_reg[i] <= 32'h0;
+          for (i = 0 ; i < 4 ; i = i + 1)
+            key_reg[i] <= 64'h0;
 
           init_reg      <= 1'h0;
           next_reg      <= 1'h0;
-          tag_reg       <= 384'h0;
+          tag_reg       <= 256'h0;
           ready_reg     <= 0;
           tag_valid_reg <= 0;
         end
@@ -167,10 +155,10 @@ module hmac(
             tag_reg <= core_tag;
 
           if (key_we)
-            key_reg[address[5 : 2]] <= write_data;
+            key_reg[address[4 : 3]] <= write_data;
 
           if (block_we)
-            block_reg[address[6 : 2]] <= write_data;
+            block_reg[address[5 : 3]] <= write_data;
         end
     end // reg_update
 
@@ -187,7 +175,7 @@ module hmac(
       next_new      = 0;
       key_we        = 0;
       block_we      = 0;
-      tmp_read_data = 32'h0;
+      tmp_read_data = 64'h0;
 
       if (cs)
         begin
@@ -199,28 +187,28 @@ module hmac(
                   next_new     = write_data[CTRL_NEXT_BIT];
                 end
 
-              if ((address >= ADDR_KEY0) && (address <= ADDR_KEY11))
+              if ((address >= ADDR_KEY0) && (address <= ADDR_KEY3))
                 key_we = 1;
 
-              if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK31))
+              if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK7))
                 block_we = 1;
             end // if (we)
 
           else
             begin
-              if ((address >= ADDR_TAG0) && (address <= ADDR_TAG11))
-                tmp_read_data = tag_reg[(11 - ((address - ADDR_TAG0) >> 2)) * 32 +: 32];
+              if ((address >= ADDR_TAG0) && (address <= ADDR_TAG3))
+                tmp_read_data = tag_reg[(3 - ((address - ADDR_TAG0) >> 3)) * 64 +: 64];
 
               case (address)
                 // Read operations.
-                ADDR_NAME0:
+                ADDR_NAME:
                   tmp_read_data = CORE_NAME;
 
-                ADDR_VERSION0:
+                ADDR_VERSION:
                   tmp_read_data = CORE_VERSION;
 
                 ADDR_STATUS:
-                  tmp_read_data = {30'h0, tag_valid_reg, ready_reg};
+                  tmp_read_data = {62'h0, tag_valid_reg, ready_reg};
 
                 default:
                   begin
