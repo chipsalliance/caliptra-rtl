@@ -37,4 +37,4 @@
 
   // `define AES_DATA_BUS_64
 
-  // `define AES_CBC_MODE
+  `define AES_CBC_MODE

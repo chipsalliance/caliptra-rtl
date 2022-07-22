@@ -1,0 +1,7 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.compile
+  - ./AES_out_common.compile
+incdir:
+  - .
+src:
+  - AES_out_pkg.sv

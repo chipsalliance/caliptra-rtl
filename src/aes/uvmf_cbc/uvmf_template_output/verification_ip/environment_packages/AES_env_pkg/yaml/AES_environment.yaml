@@ -1,0 +1,38 @@
+uvmf:
+  environments:
+    AES:
+      agents:
+      - initiator_responder: INITIATOR
+        name: AES_in_agent
+        type: AES_in
+      - initiator_responder: RESPONDER
+        name: AES_out_agent
+        type: AES_out
+      analysis_components:
+      - name: AES_pred
+        parameters: []
+        type: AES_predictor
+      analysis_exports: []
+      analysis_ports: []
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      hvl_pkg_parameters: []
+      non_uvmf_components: []
+      parameters: []
+      qvip_memory_agents: []
+      scoreboards:
+      - name: AES_sb
+        sb_type: uvmf_in_order_scoreboard
+        trans_type: AES_out_transaction
+      subenvs: []
+      tlm_connections:
+      - driver: AES_in_agent.monitored_ap
+        receiver: AES_pred.AES_in_agent_ae
+        validate: 'True'
+      - driver: AES_pred.AES_sb_ap
+        receiver: AES_sb.expected_analysis_export
+        validate: 'True'
+      - driver: AES_out_agent.monitored_ap
+        receiver: AES_sb.actual_analysis_export
+        validate: 'True'

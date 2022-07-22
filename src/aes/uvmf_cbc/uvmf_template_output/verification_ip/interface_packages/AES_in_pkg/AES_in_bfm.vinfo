@@ -1,0 +1,6 @@
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.vinfo
+@use AES_in_pkg_hdl.vinfo
++incdir+@vinfodir
+src/AES_in_if.sv
+src/AES_in_driver_bfm.sv
+src/AES_in_monitor_bfm.sv

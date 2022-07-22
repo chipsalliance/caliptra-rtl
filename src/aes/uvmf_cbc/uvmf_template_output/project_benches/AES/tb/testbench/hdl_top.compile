@@ -1,0 +1,10 @@
+incdir:
+  - ${uvm_path}/src
+  - .
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.compile
+  - ../parameters/AES_parameters_pkg.compile
+  - ../../../../verification_ip/interface_packages/AES_in_pkg/AES_in_hdl.compile
+  - ../../../../verification_ip/interface_packages/AES_out_pkg/AES_out_hdl.compile
+src:
+  - hdl_top.sv

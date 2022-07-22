@@ -1,0 +1,8 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.compile
+  - ../../interface_packages/AES_in_pkg/AES_in_hvl.compile
+  - ../../interface_packages/AES_out_pkg/AES_out_hvl.compile
+
+src:
+  - AES_env_pkg.sv
+

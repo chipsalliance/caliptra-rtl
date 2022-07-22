@@ -1,0 +1,3 @@
+needs:
+  - AES_out_hvl.compile
+  - AES_out_hdl.compile

@@ -1,0 +1,7 @@
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/AES_in_pkg/AES_in_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/AES_out_pkg/AES_out_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/environment_packages/AES_env_pkg/AES_env_pkg.vinfo
+@use $UVMF_PROJECT_DIR/tb/parameters/AES_parameters_pkg.vinfo
++incdir+@vinfodir
+AES_sequences_pkg.sv
