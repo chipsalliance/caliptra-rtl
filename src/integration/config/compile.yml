@@ -13,6 +13,7 @@ requires:
   - sha512_ctrl
   - aes_ctrl
   - mbox
+  - hmac_ctrl
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]

@@ -127,7 +127,7 @@ module hmac_core(
   //----------------------------------------------------------------
   // core instantiation.
   //----------------------------------------------------------------
-  sha512_core H1(
+  sha384_core H1(
                      .clk(clk),
                      .reset_n(reset_n),
 
@@ -144,7 +144,7 @@ module hmac_core(
                      .digest_valid(H1_digest_valid)
                     );
 
-  sha512_core H2(
+  sha384_core H2(
                      .clk(clk),
                      .reset_n(reset_n),
 

@@ -961,4 +961,28 @@ mbox_top #(
     .cptra_uc_rst_b (cptra_uc_rst_b) 
 );
 
+
+
+hmac_ctrl #(
+     .AHB_DATA_WIDTH(`AHB_HDATA_SIZE),
+     .AHB_ADDR_WIDTH(`AHB_HADDR_SIZE),
+     .BYPASS_HSEL(0)
+)hmac (
+     .clk(core_clk),
+     .reset_n       (cptra_uc_rst_b),
+     .hadrr_i       (s_slave[5].haddr),
+     .hwdata_i      (s_slave[5].hwdata),
+     .hsel_i        (s_slave[5].hsel),
+     .hwrite_i      (s_slave[5].hwrite),
+     .hmastlock_i   (s_slave[5].hmastlock),
+     .hready_i      (s_slave[5].hready),
+     .htrans_i      (s_slave[5].htrans),
+     .hprot_i       (s_slave[5].hprot),
+     .hburst_i      (s_slave[5].hburst),
+     .hsize_i       (s_slave[5].hsize),
+     .hresp_o       (s_slave[5].hresp),
+     .hreadyout_o   (s_slave[5].hreadyout),
+     .hrdata_o      (s_slave[5].hrdata)
+);
+
 endmodule

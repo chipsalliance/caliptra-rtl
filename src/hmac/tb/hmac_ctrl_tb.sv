@@ -590,7 +590,7 @@ module hmac_ctrl_tb();
       reg [1023: 0] data4_1;
       reg [383 : 0] expected4;
 
-      $display("*** Testcases for HMAC-SHA-256-128 functionality started.");
+      $display("*** Testcases for PRF-HMAC-SHA-384 functionality started.");
 
       key0 = 384'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b;
       data0 = 1024'h4869205468657265800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000440;
@@ -617,7 +617,7 @@ module hmac_ctrl_tb();
 
       single_block_test(key3, data3, expected3);
       
-      $display("*** Testcases for HMAC-SHA-256-128 functionality completed.");
+      $display("*** Testcases for PRF-HMAC-SHA-384 functionality completed.");
     end
   endtask // hmac_tests
 
@@ -627,7 +627,7 @@ module hmac_ctrl_tb();
   //----------------------------------------------------------------
   initial
     begin : main
-      $display("   -- Testbench for HMAC-SHA-256-128 started --");
+      $display("   -- Testbench for PRF-HMAC-SHA-384 started --");
 
       init_sim();
       reset_dut();
@@ -637,7 +637,7 @@ module hmac_ctrl_tb();
 
       display_test_result();
 
-      $display("   -- Testbench for HMAC-SHA-256-128 done. --");
+      $display("   -- Testbench for PRF-HMAC-SHA-384 done. --");
       $finish;
     end // main
 endmodule // hmac_ctrl_tb

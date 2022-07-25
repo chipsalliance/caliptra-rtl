@@ -16,10 +16,10 @@ targets:
       - $COMPILE_ROOT/rtl/hmac.v
       - $COMPILE_ROOT/rtl/hmac_param.sv
       - $COMPILE_ROOT/rtl/hmac_core.v
-      - $COMPILE_ROOT/rtl/sha384/sha512_core.v
-      - $COMPILE_ROOT/rtl/sha384/sha512_h_constants.v
-      - $COMPILE_ROOT/rtl/sha384/sha512_k_constants.v
-      - $COMPILE_ROOT/rtl/sha384/sha512_w_mem.v
+      - $COMPILE_ROOT/rtl/sha384/sha384_core.v
+      - $COMPILE_ROOT/rtl/sha384/sha384_h_constants.v
+      - $COMPILE_ROOT/rtl/sha384/sha384_k_constants.v
+      - $COMPILE_ROOT/rtl/sha384/sha384_w_mem.v
     tops: [hmac_ctrl]
 ---
 provides: [hmac_ctrl_tb]  

@@ -1,8 +1,8 @@
 //======================================================================
 //
-// sha512_k_constants.v
+// sha384_k_constants.v
 // --------------------
-// The table K with constants in the SHA-512 hash function.
+// The table K with constants in the SHA-384 hash function.
 //
 //
 // Author: Joachim Strombergson
@@ -38,7 +38,7 @@
 
 `default_nettype none
 
-module sha512_k_constants(
+module sha384_k_constants(
                           input wire  [6 : 0]  addr,
                           output wire [63 : 0] K
                          );
@@ -146,8 +146,8 @@ module sha512_k_constants(
           tmp_K = 64'h0;
       endcase // case (addr)
     end // block: addr_mux
-endmodule // sha512_k_constants
+endmodule // sha384_k_constants
 
 //======================================================================
-// sha512_k_constants.v
+// sha384_k_constants.v
 //======================================================================

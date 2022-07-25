@@ -193,33 +193,33 @@ module hmac(
         begin
           if (we)
             begin
-              if (address == ADDR_CTRL)
+              if (address == HMAC_ADDR_CTRL)
                 begin
-                  init_new     = write_data[CTRL_INIT_BIT];
-                  next_new     = write_data[CTRL_NEXT_BIT];
+                  init_new     = write_data[HMAC_CTRL_INIT_BIT];
+                  next_new     = write_data[HMAC_CTRL_NEXT_BIT];
                 end
 
-              if ((address >= ADDR_KEY0) && (address <= ADDR_KEY11))
+              if ((address >= HMAC_ADDR_KEY0) && (address <= HMAC_ADDR_KEY11))
                 key_we = 1;
 
-              if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK31))
+              if ((address >= HMAC_ADDR_BLOCK0) && (address <= HMAC_ADDR_BLOCK31))
                 block_we = 1;
             end // if (we)
 
           else
             begin
-              if ((address >= ADDR_TAG0) && (address <= ADDR_TAG11))
-                tmp_read_data = tag_reg[(11 - ((address - ADDR_TAG0) >> 2)) * 32 +: 32];
+              if ((address >= HMAC_ADDR_TAG0) && (address <= HMAC_ADDR_TAG11))
+                tmp_read_data = tag_reg[(11 - ((address - HMAC_ADDR_TAG0) >> 2)) * 32 +: 32];
 
               case (address)
                 // Read operations.
-                ADDR_NAME0:
-                  tmp_read_data = CORE_NAME;
+                HMAC_ADDR_NAME0:
+                  tmp_read_data = HMAC_CORE_NAME;
 
-                ADDR_VERSION0:
-                  tmp_read_data = CORE_VERSION;
+                HMAC_ADDR_VERSION0:
+                  tmp_read_data = HMAC_CORE_VERSION;
 
-                ADDR_STATUS:
+                HMAC_ADDR_STATUS:
                   tmp_read_data = {30'h0, tag_valid_reg, ready_reg};
 
                 default:

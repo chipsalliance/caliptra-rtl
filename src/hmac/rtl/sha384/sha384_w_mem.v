@@ -1,8 +1,8 @@
 //======================================================================
 //
-// sha512_w_mem_regs.v
+// sha384_w_mem_regs.v
 // -------------------
-// The W memory for the SHA-512 core. This version uses 16
+// The W memory for the SHA-384 core. This version uses 16
 // 32-bit registers as a sliding window to generate the 64 words.
 //
 //
@@ -39,7 +39,7 @@
 
 `default_nettype none
 
-module sha512_w_mem(
+module sha384_w_mem(
                     input wire            clk,
                     input wire            reset_n,
 
@@ -266,8 +266,8 @@ module sha512_w_mem(
         end
     end // w_ctr
 
-endmodule // sha512_w_mem
+endmodule // sha384_w_mem
 
 //======================================================================
-// sha512_w_mem.v
+// sha384_w_mem.v
 //======================================================================
