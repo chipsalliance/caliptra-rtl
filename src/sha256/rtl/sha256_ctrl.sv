@@ -19,7 +19,7 @@ module sha256_ctrl #(
     input wire           reset_n,
 
     // from SLAVES PORT
-    input logic [AHB_ADDR_WIDTH-1:0] hadrr_i,
+    input logic [AHB_ADDR_WIDTH-1:0] haddr_i,
     input logic [AHB_DATA_WIDTH-1:0] hwdata_i,
     input logic hsel_i,
     input logic hwrite_i,
@@ -115,7 +115,7 @@ module sha256_ctrl #(
             endcase;
         end
         else if(hready_i)
-            addr = hadrr_i;
+            addr = haddr_i;
         if(hready_i & hsel_i & |htrans_i)
             if(~hprot_i[0])
                 iws = 0;
@@ -136,7 +136,7 @@ module sha256_ctrl #(
         end
         else begin
             if(hready_i & hsel_i) begin
-                laddr <= hadrr_i;
+                laddr <= haddr_i;
                 write <= hwrite_i & |htrans_i;
                 if(|htrans_i & ~hwrite_i)
                     rdata <= sha256_read_data;

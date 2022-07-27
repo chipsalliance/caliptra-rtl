@@ -1,14 +1,14 @@
 //======================================================================
 //
-// aes_ctrl.sv
+// sha512_ctrl.sv
 // --------
-// AES controller for the AHb_lite interface.
+// SHA512 controller for the AHb_lite interface.
 //
 //
 // Author: Mojtaba Bisheh-Niasar
 //======================================================================
 
-module aes_ctrl #(
+module sha512_ctrl #(
     parameter AHB_DATA_WIDTH = 64,
     parameter AHB_ADDR_WIDTH = 32,
     parameter BYPASS_HSEL = 0
@@ -35,28 +35,29 @@ module aes_ctrl #(
     output logic [AHB_DATA_WIDTH-1:0] hrdata_o
 );
 
-
     //----------------------------------------------------------------
-    // aes
+    // sha512
     //----------------------------------------------------------------
-    reg           aes_cs;
-    reg           aes_we;
-    reg  [AHB_ADDR_WIDTH - 1 : 0] aes_address;
-    reg  [31 : 0] aes_write_data;
-    reg  [31 : 0] aes_read_data;
+    reg           sha512_cs;
+    reg           sha512_we;
+    reg  [31 : 0] sha512_address;
+    reg  [31 : 0] sha512_write_data;
+    reg  [31 : 0] sha512_read_data;
+    reg           sha512_error;
 
-    aes #(
+    sha512 #(
         .ADDR_WIDTH(32),
         .DATA_WIDTH(32)
         )
-        aes_inst(
+        sha512_inst(
         .clk(clk),
         .reset_n(reset_n),
-        .cs(aes_cs),
-        .we(aes_we),
-        .address(aes_address),
-        .write_data(aes_write_data),
-        .read_data(aes_read_data)
+        .cs(sha512_cs),
+        .we(sha512_we),
+        .address(sha512_address),
+        .write_data(sha512_write_data),
+        .read_data(sha512_read_data),
+        .error(sha512_error)
     );
 
     //----------------------------------------------------------------
@@ -64,10 +65,10 @@ module aes_ctrl #(
     //----------------------------------------------------------------
     logic cs;
     logic write;
-    logic [AHB_ADDR_WIDTH - 1:0] laddr, addr;
-    logic [AHB_DATA_WIDTH - 1:0] rdata;
-    logic [AHB_DATA_WIDTH - 1:0] hrdata;
-    logic [AHB_DATA_WIDTH - 1:0] hwdata;
+    logic [AHB_ADDR_WIDTH-1 : 0] laddr, addr;
+    logic [AHB_DATA_WIDTH-1 : 0] rdata;
+    logic [AHB_DATA_WIDTH-1 : 0] hrdata;
+    logic [AHB_DATA_WIDTH-1 : 0] hwdata;
 
     bit [7:0] wscnt;
     int dws = 0;
@@ -78,6 +79,7 @@ module aes_ctrl #(
         hrdata <= rdata;
         if (write & hready_i) begin
             addr = laddr;
+            hwdata = 0;
             case (hsize_i)
                 3'b000: 
                     hwdata = hwdata_i[7:0];
@@ -114,7 +116,7 @@ module aes_ctrl #(
                 laddr <= haddr_i;
                 write <= hwrite_i & |htrans_i;
                 if(|htrans_i & ~hwrite_i)
-                    rdata <= aes_read_data;
+                    rdata <= sha512_read_data;
             end
         end
         if(hready_i & hsel_i & |htrans_i)
@@ -124,10 +126,11 @@ module aes_ctrl #(
     end
 
     always_comb begin
-        aes_cs = cs;
-        aes_we = write;
-        aes_write_data = hwdata;
-        aes_address = addr;
+        sha512_cs = cs;
+        sha512_we = write;
+        sha512_write_data = hwdata;
+        sha512_address = addr;
     end
+
 
 endmodule

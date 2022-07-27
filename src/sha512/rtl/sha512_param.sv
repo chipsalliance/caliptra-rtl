@@ -39,4 +39,4 @@
 
   localparam DEFAULT_WORK_FACTOR_NUM = 32'h000f0000;
 
-  //`define DATA_BUS_64
+  // `define DATA_BUS_64

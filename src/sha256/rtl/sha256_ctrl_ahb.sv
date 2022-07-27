@@ -1,15 +1,15 @@
 //======================================================================
 //
-// sha512_ctrl.sv
+// sha256_ctrl.sv
 // --------
-// SHA512 controller for the AHb_lite interface.
+// SHA256 controller for the AHb_lite interface.
 //
 //
 // Author: Mojtaba Bisheh-Niasar
 //======================================================================
 
-module sha512_ctrl #(
-    parameter AHB_DATA_WIDTH = 32,
+module sha256_ctrl #(
+    parameter AHB_DATA_WIDTH = 64,
     parameter AHB_ADDR_WIDTH = 32,
     parameter BYPASS_HSEL = 0
 )
@@ -36,30 +36,43 @@ module sha512_ctrl #(
 );
 
     //----------------------------------------------------------------
-    // sha512
+    // sha256
     //----------------------------------------------------------------
-    reg           sha512_cs;
-    reg           sha512_we;
-    reg  [31 : 0] sha512_address;
-    reg  [31 : 0] sha512_write_data;
-    reg  [31 : 0] sha512_read_data;
-    reg           sha512_error;
+    reg           sha256_cs;
+    reg           sha256_we;
+    reg  [31 : 0] sha256_address;
+    reg  [63 : 0] sha256_write_data;
+    reg  [63 : 0] sha256_read_data;
+    reg           sha256_error;
 
-    sha512 #(
-        .ADDR_WIDTH(32),
-        .DATA_WIDTH(32)
-        )
-        sha512_inst(
+    sha256 sha256_inst(
         .clk(clk),
         .reset_n(reset_n),
-        .cs(sha512_cs),
-        .we(sha512_we),
-        .address(sha512_address),
-        .write_data(sha512_write_data),
-        .read_data(sha512_read_data),
-        .error(sha512_error)
+        .cs(sha256_cs),
+        .we(sha256_we),
+        .address(sha256_address),
+        .write_data(sha256_write_data),
+        .read_data(sha256_read_data),
+        .error(sha256_error)
     );
 
+
+    //----------------------------------------------------------------
+    // AHB Slave node
+    //----------------------------------------------------------------
+    // logic cs;
+    // logic write;
+    // logic [31:0] laddr, addr;
+    // logic [63:0] rdata;
+    // logic [63:0] hrdata;
+    // logic [63:0] hwdata;
+
+    // bit [7:0] wscnt;
+    // int dws = 0;
+    // int iws = 0;
+
+
+        
     //instantiate ahb lite module
     ahb_slv_sif #(
         .ADDR_WIDTH(AHB_ADDR_WIDTH),
@@ -83,15 +96,14 @@ module sha512_ctrl #(
         .hrdata_o(hrdata_o),
 
         //COMPONENT INF
-        .dv(sha512_cs),
-        .hold('0), //no holds from sha512
-        .error('0),
-        .write(sha512_we),
-        .wdata(sha512_write_data),
-        .addr(sha512_address),
+        .dv(sha256_cs),
+        .hold('0), //no holds from sha256
+        .error(sha256_error),
+        .write(sha256_we),
+        .wdata(sha256_write_data),
+        .addr(sha256_address),
 
-        .rdata(sha512_read_data)
+        .rdata(sha256_read_data)
     );
-
 
 endmodule

@@ -729,7 +729,7 @@ sha512_ctrl #(
 ) sha512 (
     .clk            (core_clk),
     .reset_n        (cptra_uc_rst_b),
-    .hadrr_i        (s_slave[2].haddr),
+    .haddr_i        (s_slave[2].haddr),
     .hwdata_i       (s_slave[2].hwdata),
     .hsel_i         (s_slave[2].hsel),
     .hwrite_i       (s_slave[2].hwrite),

@@ -115,7 +115,7 @@ module sha512_ctrl_32bit_tb();
   reg           clk_tb;
   reg           reset_n_tb;
 
-  reg [AHB_ADDR_WIDTH-1:0]  hadrr_i_tb;
+  reg [AHB_ADDR_WIDTH-1:0]  haddr_i_tb;
   reg [AHB_DATA_WIDTH-1:0]  hwdata_i_tb;
   reg           hsel_i_tb;
   reg           hwrite_i_tb; 
@@ -145,7 +145,7 @@ module sha512_ctrl_32bit_tb();
              .clk(clk_tb),
              .reset_n(reset_n_tb),
 
-             .hadrr_i(hadrr_i_tb),
+             .haddr_i(haddr_i_tb),
              .hwdata_i(hwdata_i_tb),
              .hsel_i(hsel_i_tb),
              .hwrite_i(hwrite_i_tb),
@@ -215,7 +215,7 @@ module sha512_ctrl_32bit_tb();
       clk_tb        = 0;
       reset_n_tb    = 0;
 
-      hadrr_i_tb      = 0;
+      haddr_i_tb      = 0;
       hwdata_i_tb     = 0;
       hsel_i_tb       = 0;
       hwrite_i_tb     = 0;
@@ -281,23 +281,22 @@ module sha512_ctrl_32bit_tb();
   task read_single_word(input [31 : 0]  address);
     begin
       hsel_i_tb       = 1;
-      hadrr_i_tb      = address;
+      haddr_i_tb      = address;
       hwrite_i_tb     = 0;
       hmastlock_i_tb  = 0;
       hready_i_tb     = 1;
-      htrans_i_tb     = AHB_HTRANS_BUSY;
+      htrans_i_tb     = AHB_HTRANS_NONSEQ;
       hprot_i_tb      = 0;
       hburst_i_tb     = 0;
-      hsize_i_tb      = 3'b011;
+      hsize_i_tb      = 3'b010;
       #(CLK_PERIOD);
       
       hwdata_i_tb     = 0;
-      hadrr_i_tb     = 'Z;
+      haddr_i_tb     = 'Z;
       htrans_i_tb     = AHB_HTRANS_IDLE;
 
-      #(CLK_PERIOD);
       read_data = hrdata_o_tb;
-      hsel_i_tb       = 0;
+
     end
   endtask // read_word
 
@@ -311,17 +310,17 @@ module sha512_ctrl_32bit_tb();
                   input [31 : 0] word);
     begin
       hsel_i_tb       = 1;
-      hadrr_i_tb      = address;
+      haddr_i_tb      = address;
       hwrite_i_tb     = 1;
       hmastlock_i_tb  = 0;
       hready_i_tb     = 1;
-      htrans_i_tb     = AHB_HTRANS_BUSY;
+      htrans_i_tb     = AHB_HTRANS_NONSEQ;
       hprot_i_tb      = 0;
       hburst_i_tb     = 0;
-      hsize_i_tb      = 3'b011;
+      hsize_i_tb      = 3'b010;
       #(CLK_PERIOD);
 
-      hadrr_i_tb      = 'Z;
+      haddr_i_tb      = 'Z;
       hwdata_i_tb     = word;
       hwrite_i_tb     = 0;
       htrans_i_tb     = AHB_HTRANS_IDLE;

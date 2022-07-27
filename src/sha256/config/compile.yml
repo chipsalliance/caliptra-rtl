@@ -6,6 +6,8 @@
 ---
 provides: [sha256_ctrl]
 schema_version: 2.4.0
+requires:
+  - libs
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
