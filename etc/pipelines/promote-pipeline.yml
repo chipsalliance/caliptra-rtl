@@ -23,9 +23,16 @@ stages:
       - display_name: 'Build integration_lib with VCS'
       - enabled: true
       - configspec_name: 'integration_lib'
-      - dut: 'rust_top'
+      - dut: 'rust_top_tb'
       - args: ''
       - timeout: 10
+      - testsuites:
+        - l0_regress:
+          - enabled: true
+          - configspec_name: 'integration_lib'
+          - dut: 'rust_top_tb'
+          - path: 'Caliptra/src/integration/stimulus/L0_regression.yml'
+
     - integration_top_ius:
       - display_name: 'Build integration_lib with IUS/Xcelium'
       - enabled: false

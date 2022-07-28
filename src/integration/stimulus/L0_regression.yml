@@ -8,4 +8,6 @@ contents:
         - ../test_suites/hello_world/hello_world.yml
         - ../test_suites/memCpy_ROM_to_dccm/memCpy_ROM_to_dccm.yml
         - ../test_suites/memCpy_dccm_to_iccm/memCpy_dccm_to_iccm.yml
-        
+        - ../test_suites/hello_world_aes/hello_world_aes.yml
+        - ../test_suites/hello_world_mbox/hello_world_mbox.yml
+        - ../test_suites/hello_world_sha512/hello_world_sha512.yml
