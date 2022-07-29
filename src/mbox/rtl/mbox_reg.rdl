@@ -1,0 +1,43 @@
+addrmap mbox_reg {
+    desc="address maps for mbox arch register and fuse space";
+    default hw = na;
+    signal {activelow; async; cpuif_reset; field_reset;} reset_b;
+    signal {activelow; async;} hard_reset_b;
+    //signal to indicate request is coming from soc side
+    signal {} soc_req;
+
+    //defined fields by access type
+    //first is uc access type, second is soc access type
+    field rw_ro {swwel = soc_req;}; //writes enabled only for uc
+    field ro_rw {swwe  = soc_req;}; //writes enabled only for soc
+    field ro_ro {sw = r;};
+    field rw_rw {};
+
+    //TODO reset domain for fuses
+    field fuse {sw = rw1;};
+    field secret {sw = w1; hw = r; hwclr;};
+
+    reg {rw_ro error_code[32];} HW_ERROR_FATAL;
+    reg {rw_ro error_code[32];} HW_ERROR_NON_FATAL;
+    reg {rw_ro error_code[32];} FW_ERROR_FATAL;
+    reg {rw_ro error_code[32];} FW_ERROR_NON_FATAL;
+    reg {rw_ro error_code[32];} HW_ERROR_ENC;
+    reg {rw_ro error_code[32];} FW_ERROR_ENC;
+    reg {rw_ro error_code[32];} BOOT_STATUS;
+    reg {rw_ro error_code[32];} FLOW_STATUS;
+
+    //fuses
+    reg {secret seed[32];} uds_seed[12];
+    reg {secret seed[32];} field_entropy[32];
+    //TODO review write once and stickiness of fuses
+    reg {fuse hash[32];} key_manifest_pk_hash_0[12];
+    reg {fuse hash[32];} key_manifest_pk_hash_1[12];
+    reg {fuse hash[32];} key_manifest_pk_hash_2[12];
+    reg {fuse hash[32];} key_manifest_pk_hash_3[12];
+    reg {fuse mask[4];} key_manifest_pk_hash_mask;
+    reg {fuse svn[32];} key_manifest_svn;
+    reg {fuse svn[32];} boot_loader_svn;
+    reg {fuse svn[32];} runtime_svn[4];
+    reg {fuse dis[1];} anti_rollback_disable;
+    reg {fuse cert[32];} ieee_idevid_cert_chain;
+};

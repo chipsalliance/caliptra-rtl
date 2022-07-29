@@ -20,8 +20,7 @@ module rust_top_tb;
 `else
 module rust_top_tb ( 
     input bit core_clk,
-    input bit rst_l,
-    input bit porst_l 
+    input bit rst_l
     ); 
 `endif
     
@@ -29,10 +28,6 @@ module rust_top_tb (
     bit                         core_clk;
 `endif
 
-    logic                       nmi_int;
-    logic        [31:0]         reset_vector;
-    logic        [31:0]         nmi_vector;
-    logic        [31:1]         jtag_id;
     int                         cycleCnt;
     logic                       mailbox_write;
     logic                       mailbox_data_val;
@@ -53,14 +48,17 @@ module rust_top_tb (
     logic                       cptra_pwrgood;
     logic                       cptra_rst_b;
 
-    logic                       porst_l;
-
     wire[63:0] WriteData;
     string                      abi_reg[32]; // ABI register names
-
-
+    //jtag interface
+    logic                       jtag_tck;    // JTAG clk
+    logic                       jtag_tms;    // JTAG TMS
+    logic                       jtag_tdi;    // JTAG tdi
+    logic                       jtag_trst_n; // JTAG Reset
+    logic                       jtag_tdo;    // JTAG TDO
     //APB Interface
     logic [`APB_ADDR_WIDTH-1:0] PADDR;
+    logic [3:0]                 PPROT;
     logic                       PSEL;
     logic                       PENABLE;
     logic                       PWRITE;
@@ -225,13 +223,11 @@ module rust_top_tb (
         abi_reg[29] = "t4";
         abi_reg[30] = "t5";
         abi_reg[31] = "t6";
-    // tie offs
-        jtag_id[31:28] = 4'b1;
-        jtag_id[27:12] = '0;
-        jtag_id[11:1]  = 11'h45;
-        reset_vector = `RV_RESET_VEC;
-        nmi_vector   = 32'hee000000;
-        nmi_int   = 0;
+        //tie offs
+        jtag_tck = 1'b0;    // JTAG clk
+        jtag_tms = 1'b0;    // JTAG TMS
+        jtag_tdi = 1'b0;    // JTAG tdi
+        jtag_trst_n = 1'b0; // JTAG Reset
 
         $readmemh("program.hex",  rust_top_dut.lmem.mem);
         $readmemh("program.hex",  rust_top_dut.imem.mem);
@@ -264,21 +260,38 @@ module rust_top_tb (
     assign cptra_pwrgood = cycleCnt > 5;
     assign cptra_rst_b   = cycleCnt > 10;
 
-    assign porst_l = cycleCnt > 2;
-
    //=========================================================================-
    // DUT instance
    //=========================================================================-
 rust_top rust_top_dut (
     .cptra_pwrgood              (cptra_pwrgood),
     .cptra_rst_b                (cptra_rst_b),
-    .porst_l                    (porst_l),
     .core_clk                   (core_clk),
-    .reset_vector               (reset_vector),
-    .nmi_vector                 (nmi_vector),
-    .nmi_int                    (nmi_int),
-    .jtag_id                    (jtag_id),
-    .*
+
+    .jtag_tck(jtag_tck),
+    .jtag_tdi(jtag_tdi),
+    .jtag_tms(jtag_tms),
+    .jtag_trst_n(jtag_trst_n),
+    .jtag_tdo(jtag_tdo),
+    
+    .PADDR(PADDR),
+    .PAUSER(PAUSER),
+    .PENABLE(PENABLE),
+    .PRDATA(),
+    .PREADY(),
+    .PSEL(PSEL),
+    .PSLVERR(),
+    .PWDATA(PWDATA),
+    .PWRITE(PWRITE),
+
+    .mailbox_data_avail(),
+    .mailbox_flow_done(),
+    .BootFSM_BrkPoint('x), //FIXME TIE-OFF
+
+    .generic_input_wires('x), //FIXME TIE-OFF
+    .generic_output_wires(),
+
+    .security_state('x) //FIXME TIE-OFF
 );
 
 //tying off apb interface for now
@@ -289,6 +302,7 @@ assign PENABLE = '0;
 assign PWRITE = '0;
 assign PWDATA = '0;
 assign PAUSER = '0;
+assign PPROT = '0;
 
 
 task preload_iccm;

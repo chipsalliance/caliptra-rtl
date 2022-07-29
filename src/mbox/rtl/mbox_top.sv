@@ -83,6 +83,16 @@ mbox_req_t mbox_req_data;
 logic [MBOX_DATA_W-1:0] mbox_rdata;
 logic mbox_error;
 
+//mbox reg inf
+logic mbox_reg_req_dv;
+logic mbox_reg_req_hold;
+mbox_req_t mbox_reg_req_data;
+logic [MBOX_DATA_W-1:0] mbox_reg_rdata;
+logic mbox_reg_error, mbox_reg_read_error, mbox_reg_write_error;
+
+mbox_reg_pkg::mbox_reg__in_t mbox_reg_hwif_in;
+mbox_reg_pkg::mbox_reg__out_t mbox_reg_hwif_out;
+
 //Boot FSM
 //This module contains the logic required to control the Caliptra Boot Flow
 //Once the SoC has powered on Caliptra and de-asserted RESET, we can request fuses
@@ -182,10 +192,10 @@ mbox_arb mbox_arb1 (
     .clk(clk),
     .rst_b(cptra_uc_rst_b),
     //UC inf
-    .uc_req_dv(uc_req_dv), //FIXME TIE-OFF
-    .uc_req_hold(uc_req_hold), //FIXME DANGLE
-    .uc_req_data(uc_req), //FIXME TIE-OFF
-    .uc_rdata(uc_req_rdata), //FIXME DANGLE
+    .uc_req_dv(uc_req_dv), 
+    .uc_req_hold(uc_req_hold), 
+    .uc_req_data(uc_req), 
+    .uc_rdata(uc_req_rdata), 
     .uc_error(uc_req_error),
     //SOC inf
     .soc_req_dv(soc_req_dv),
@@ -200,38 +210,43 @@ mbox_arb mbox_arb1 (
     .mbox_rdata(mbox_rdata),
     .mbox_error(mbox_error),
     //FUNC reg inf
-    .func_reg_req_dv(), //FIXME DANGLE
-    .func_reg_req_hold('1),//FIXME TIE-OFF
-    .func_reg_req_data(), //FIXME DANGLE
-    .func_reg_rdata('1),//FIXME TIE-OFF
-    .func_reg_error('1),//FIXME TIE-OFF
-    //FUSE reg inf
-    .fuse_reg_req_dv(), //FIXME DANGLE
-    .fuse_reg_req_hold('1),//FIXME TIE-OFF
-    .fuse_reg_req_data(), //FIXME DANGLE
-    .fuse_reg_rdata('1),//FIXME TIE-OFF
-    .fuse_reg_error('1)//FIXME TIE-OFF
+    .mbox_reg_req_dv(mbox_reg_req_dv), 
+    .mbox_reg_req_hold(1'b0),
+    .mbox_reg_req_data(mbox_reg_req_data),
+    .mbox_reg_rdata(mbox_reg_rdata),
+    .mbox_reg_error(mbox_reg_error)
 
 );
 
-//Functional Registers
+//Functional Registers and Fuses
 //This module contains the functional registers maintained by the Caliptra Mailbox
 //These registers are memory mapped per the Caliptra Specification
 //Read and Write permissions are controlled within this block
+always_comb mbox_reg_error = mbox_reg_read_error | mbox_reg_write_error;
 
-//TODO: mbox_func_reg
+mbox_reg mbox_reg1 (
+    .clk(clk),
+    .rst('0),
 
-//Fuses
-//This module contains the fuse registers maintained by the Caliptra Mailbox
-//These fuses are memory mapped per the Caliptra Specification
-//Read and Write permissions are controlled within this block
+    .s_cpuif_req(mbox_reg_req_dv),
+    .s_cpuif_req_is_wr(mbox_reg_req_data.write),
+    .s_cpuif_addr(mbox_reg_req_data.addr),
+    .s_cpuif_wr_data(mbox_reg_req_data.wdata),
+    .s_cpuif_req_stall_wr(),
+    .s_cpuif_req_stall_rd(),
+    .s_cpuif_rd_ack(),
+    .s_cpuif_rd_err(mbox_reg_read_error),
+    .s_cpuif_rd_data(mbox_reg_rdata),
+    .s_cpuif_wr_ack(),
+    .s_cpuif_wr_err(mbox_reg_write_error),
 
-//TODO: mbox_fuse_reg
+    .hwif_in(mbox_reg_hwif_in),
+    .hwif_out(mbox_reg_hwif_out)
+);
 
 //Mailbox
 //This module contains the Caliptra Mailbox and associated control logic
 //The SoC and uC can read and write to the mailbox by following the Caliptra Mailbox Protocol
-
 mbox #(
     .DATA_W(APB_DATA_WIDTH),
     .SIZE_KB(128),
@@ -249,5 +264,6 @@ mbox1 (
 );
 
 `ASSERT_KNOWN(ERR_AHB_INF_X, {hreadyout_o,hresp_o}, clk, cptra_rst_b)
-
+//this generates an NMI in the core, but we don't have a handler so it just hangs
+`ASSERT_NEVER(ERR_MBOX_AHB_ERR, hresp_o, clk, cptra_rst_b)
 endmodule

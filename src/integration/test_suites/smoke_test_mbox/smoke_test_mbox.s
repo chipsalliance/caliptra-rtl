@@ -24,11 +24,12 @@
 #define DCCM_SADR                   0xf0040000
 
 #define MBOX_ADDR_BASE            0x30000000
-#define MBOX_ADDR_LOCK            0x30020000
-#define MBOX_ADDR_CMD             0x30020004
-#define MBOX_ADDR_DLEN            0x30020008
-#define MBOX_ADDR_DATAIN          0x3002000C
-#define MBOX_ADDR_DATAOUT         0x30020010
+#define MBOX_ADDR_LOCK            0x30000000
+#define MBOX_ADDR_CMD             0x30000008
+#define MBOX_ADDR_DLEN            0x3000000C
+#define MBOX_ADDR_DATAIN          0x30000010
+#define MBOX_ADDR_DATAOUT         0x30000014
+#define MBOX_ADDR_EXECUTE         0x30000018
 
 #define MBOX_DLEN_VAL             0x0000001C
 
@@ -79,14 +80,21 @@ _start:
         addi x7, x7, 4
         ble x7, x6, write_mbox_loop
 
-    //read from MBOX_ADDR_BASE
-    //direct read
-    li x3, MBOX_ADDR_BASE
+    //write to MBOX_ADDR_EXECUTE
+    li x3, MBOX_ADDR_EXECUTE
+    li x5, 0x00000001
+    sw x5, 0(x3)
+
+    //read from MBOX_ADDR_DATAOUT
+    li x3, MBOX_ADDR_DATAOUT
     li x6, MBOX_DLEN_VAL
     li x7, 0x00000000
+    la x4, mbox_data
     read_mbox_loop:
         lw x5, 0(x3)
-        addi x3, x3, 4
+        lw x8, 0(x4)
+        bne x5, x8, _finish_fail
+        addi x4, x4, 4
         addi x7, x7, 4
         ble x7, x6, read_mbox_loop
 
@@ -102,12 +110,21 @@ loop:
     addi x4, x4, 1
     bnez x5, loop
 
-// Write 0xff to STDOUT for TB to terminate test.
-_finish:
+    beq x0, x0, _finish_pass
+
+// Write 0x01 to STDOUT for TB to terminate test with fail.
+_finish_fail:
+    li x3, STDOUT
+    addi x5, x0, 0x01
+    sb x5, 0(x3)
+    beq x0, x0, _finish_fail
+
+// Write 0xff to STDOUT for TB to terminate test with pass.
+_finish_pass:
     li x3, STDOUT
     addi x5, x0, 0xff
     sb x5, 0(x3)
-    beq x0, x0, _finish
+    beq x0, x0, _finish_pass
 .rept 99
     nop
 .endr

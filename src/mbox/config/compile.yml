@@ -10,12 +10,16 @@ targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
+      - $COMPILE_ROOT/rtl/mbox_csr_pkg.sv
+      - $COMPILE_ROOT/rtl/mbox_reg_pkg.sv
       - $COMPILE_ROOT/rtl/mbox_top.sv
       - $COMPILE_ROOT/rtl/mbox.sv
       - $COMPILE_ROOT/rtl/mbox_boot_fsm.sv
       - $COMPILE_ROOT/rtl/mbox_arb.sv
       - $COMPILE_ROOT/rtl/mbox_defines.svh
       - $COMPILE_ROOT/rtl/mbox_params.svh
+      - $COMPILE_ROOT/rtl/mbox_csr.sv
+      - $COMPILE_ROOT/rtl/mbox_reg.sv
     tops: [mbox]
 global:
   tool:

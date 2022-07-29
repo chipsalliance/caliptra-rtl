@@ -17,18 +17,21 @@
 `include "cfg.sv"
 
 module rust_top ( 
-    input bit                   core_clk,
+    input bit                          core_clk,
 
-    input logic                 cptra_pwrgood,
-    input logic                 cptra_rst_b,
-    input bit                   porst_l,
-    input        [31:0]         reset_vector,
-    input        [31:0]         nmi_vector,
-    input        [31:0]         jtag_id,
-    input                       nmi_int,
+    input logic                        cptra_pwrgood,
+    input logic                        cptra_rst_b,
+
+    //JTAG Interface
+    input logic                        jtag_tck,    // JTAG clk
+    input logic                        jtag_tms,    // JTAG TMS
+    input logic                        jtag_tdi,    // JTAG tdi
+    input logic                        jtag_trst_n, // JTAG Reset //TODO optional needs review
+    output logic                       jtag_tdo,    // JTAG TDO
 
     //APB Interface
     input  logic [`APB_ADDR_WIDTH-1:0] PADDR,
+    input  logic [2:0]                 PPROT,
     input  logic                       PSEL,
     input  logic                       PENABLE,
     input  logic                       PWRITE,
@@ -37,7 +40,32 @@ module rust_top (
 
     output logic                       PREADY,
     output logic                       PSLVERR,
-    output logic [`APB_DATA_WIDTH-1:0] PRDATA
+    output logic [`APB_DATA_WIDTH-1:0] PRDATA,
+
+    //QSPI Interface
+    output logic                       qspi_clk_o,
+    output logic [`QSPI_CS_WIDTH-1:0]  qspi_cs_no,
+    inout  wire  [`QSPI_IO_WIDTH-1:0]  qspi_d_io,
+
+    //UART Interface
+    //TODO update with UART interface signals
+
+    //I3C Interface
+    //TODO update with I3C interface signals
+    
+    output logic                       ready_for_fuses,
+    output logic                       ready_for_fw_push,
+    output logic                       ready_for_runtime,
+
+    output logic                       mailbox_data_avail,
+    output logic                       mailbox_flow_done,
+    
+    input logic                        BootFSM_BrkPoint,
+
+    input logic  [63:0]                generic_input_wires,
+    output logic [63:0]                generic_output_wires,
+
+    input logic  [`SOC_SEC_STATE_WIDTH-1:0] security_state
 
     );
 
@@ -91,7 +119,6 @@ module rust_top (
     logic                       o_debug_mode_status;
 
 
-    logic                       jtag_tdo;
     logic                       o_cpu_halt_ack;
     logic                       o_cpu_halt_status;
     logic                       o_cpu_run_ack;
@@ -354,8 +381,10 @@ module rust_top (
         .BYPASS           (             0 )
     )
     ahb_node_wrap_i (
+        .hclk             ( core_clk          ),
+        .hreset_n         ( cptra_uc_rst_b    ),
         .ahb_slaves       ( s_slave           ),
-        .ahb_master       ( s_smaster          ),
+        .ahb_master       ( s_smaster         ),
         .start_addr_i     ( `SLAVE_BASE_ADDR  ),
         .end_addr_i       ( `SLAVE_MASK_ADDR  )
     );
@@ -364,9 +393,22 @@ module rust_top (
    //=========================================================================-
    // RTL instance
    //=========================================================================-
+//FIXME TIE OFFS
+logic [31:0] jtag_id;
+logic [31:0] reset_vector;
+logic [31:0] nmi_vector;
+logic nmi_int;
+
+assign jtag_id[31:28] = 4'b1;
+assign jtag_id[27:12] = '0;
+assign jtag_id[11:1]  = 11'h45;
+assign reset_vector = `RV_RESET_VEC;
+assign nmi_vector   = 32'hee000000;
+assign nmi_int   = 0;
+
 el2_swerv_wrapper rvtop (
     .rst_l                  ( cptra_uc_rst_b),
-    .dbg_rst_l              ( porst_l       ),
+    .dbg_rst_l              ( cptra_pwrgood), 
     .clk                    ( core_clk      ),
     .rst_vec                ( reset_vector[31:1]),
     .nmi_int                ( nmi_int       ),
@@ -633,10 +675,10 @@ el2_swerv_wrapper rvtop (
     .trace_rv_i_interrupt_ip(trace_rv_i_interrupt_ip),
     .trace_rv_i_tval_ip     (trace_rv_i_tval_ip),
 
-    .jtag_tck               ( 1'b0  ),
-    .jtag_tms               ( 1'b0  ),
-    .jtag_tdi               ( 1'b0  ),
-    .jtag_trst_n            ( 1'b0  ),
+    .jtag_tck               ( jtag_tck  ),
+    .jtag_tms               ( jtag_tms  ),
+    .jtag_tdi               ( jtag_tdi  ),
+    .jtag_trst_n            ( jtag_trst_n  ),
     .jtag_tdo               ( jtag_tdo ),
 
     .mpc_debug_halt_ack     ( mpc_debug_halt_ack),

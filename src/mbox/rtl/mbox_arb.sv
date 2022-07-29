@@ -36,18 +36,12 @@ module mbox_arb (
     output mbox_req_t mbox_req_data,
     input  logic [MBOX_DATA_W-1:0] mbox_rdata,
     input  logic mbox_error,
-    //FUNC reg inf
-    output logic func_reg_req_dv,
-    input  logic func_reg_req_hold,
-    output mbox_req_t func_reg_req_data,
-    input  logic [MBOX_DATA_W-1:0] func_reg_rdata,
-    input  logic func_reg_error,
-    //FUSE reg inf
-    output logic fuse_reg_req_dv,
-    input  logic fuse_reg_req_hold,
-    output mbox_req_t fuse_reg_req_data,
-    input  logic [MBOX_DATA_W-1:0] fuse_reg_rdata,
-    input  logic fuse_reg_error
+    //mbox reg inf
+    output logic mbox_reg_req_dv,
+    input  logic mbox_reg_req_hold,
+    output mbox_req_t mbox_reg_req_data,
+    input  logic [MBOX_DATA_W-1:0] mbox_reg_rdata,
+    input  logic mbox_reg_error
     
 );
 logic uc_has_priority;
@@ -57,11 +51,9 @@ logic req_collision;
 
 //dv for each req/target
 logic soc_mbox_req;
-logic soc_func_reg_req;
-logic soc_fuse_reg_req;
+logic soc_mbox_reg_req;
 logic uc_mbox_req;
-logic uc_func_reg_req;
-logic uc_fuse_reg_req;
+logic uc_mbox_reg_req;
 
 //simple arbitration scheme, track most recently granted client (SOC or UC)
 //give priority in case of collision to the least recently granted client
@@ -75,55 +67,45 @@ always_comb toggle_priority = req_collision;
 always_comb uc_mbox_req = (uc_req_dv & (uc_req_data.addr inside {[MBOX_MEM_START_ADDR:MBOX_MEM_END_ADDR]}));
 always_comb soc_mbox_req = (soc_req_dv & (soc_req_data.addr inside {[MBOX_MEM_START_ADDR:MBOX_MEM_END_ADDR]}));
 
-always_comb uc_func_reg_req = (uc_req_dv & (uc_req_data.addr inside {[FUNC_REG_MEM_START_ADDR:FUNC_REG_MEM_END_ADDR]}));
-always_comb soc_func_reg_req = (soc_req_dv & (soc_req_data.addr inside {[FUNC_REG_MEM_START_ADDR:FUNC_REG_MEM_END_ADDR]}));
-
-always_comb uc_fuse_reg_req = (uc_req_dv & (uc_req_data.addr inside {[FUSE_REG_MEM_START_ADDR:FUSE_REG_MEM_END_ADDR]}));
-always_comb soc_fuse_reg_req = (soc_req_dv & (soc_req_data.addr inside {[FUSE_REG_MEM_START_ADDR:FUSE_REG_MEM_END_ADDR]}));
+always_comb uc_mbox_reg_req = (uc_req_dv & (uc_req_data.addr inside {[MBOX_REG_MEM_START_ADDR:MBOX_REG_MEM_END_ADDR]}));
+always_comb soc_mbox_reg_req = (soc_req_dv & (soc_req_data.addr inside {[MBOX_REG_MEM_START_ADDR:MBOX_REG_MEM_END_ADDR]}));
 
 //check for collisions
 always_comb req_collision = (uc_mbox_req & soc_mbox_req) |
-                            (uc_func_reg_req & soc_func_reg_req) |
-                            (uc_fuse_reg_req & soc_fuse_reg_req) ;
+                            (uc_mbox_reg_req & soc_mbox_reg_req);
 
 //drive the dv to the appropriate destination if either client is trying to 
 always_comb mbox_req_dv = uc_mbox_req | soc_mbox_req;
-always_comb func_reg_req_dv = uc_func_reg_req | soc_func_reg_req;
-always_comb fuse_reg_req_dv = uc_fuse_reg_req | soc_fuse_reg_req;
+always_comb mbox_reg_req_dv = uc_mbox_reg_req | soc_mbox_reg_req;
 
 //drive the appropriate request to each destination
 always_comb mbox_req_data = (soc_mbox_req & (~req_collision | soc_has_priority)) ? soc_req_data : uc_req_data;
-always_comb func_reg_req_data = (soc_func_reg_req & (~req_collision | soc_has_priority)) ? soc_req_data : uc_req_data;
-always_comb fuse_reg_req_data = (soc_fuse_reg_req & (~req_collision | soc_has_priority)) ? soc_req_data : uc_req_data;
+always_comb mbox_reg_req_data = (soc_mbox_reg_req & (~req_collision | soc_has_priority)) ? soc_req_data : uc_req_data;
 
 //drive the appropriate read data back to uc or soc
 //AND/OR mux here, assert that requests are always mutex
 always_comb uc_rdata = {MBOX_DATA_W{uc_mbox_req}} & mbox_rdata | 
-                       {MBOX_DATA_W{uc_func_reg_req}} & func_reg_rdata | 
-                       {MBOX_DATA_W{uc_fuse_reg_req}} & fuse_reg_rdata;
+                       {MBOX_DATA_W{uc_mbox_reg_req}} & mbox_reg_rdata;
 
 always_comb soc_rdata = {MBOX_DATA_W{soc_mbox_req}} & mbox_rdata | 
-                        {MBOX_DATA_W{soc_func_reg_req}} & func_reg_rdata | 
-                        {MBOX_DATA_W{soc_fuse_reg_req}} & fuse_reg_rdata;
+                        {MBOX_DATA_W{soc_mbox_reg_req}} & mbox_reg_rdata;
 
 //drive the appropraite holds back to uc or soc
 //AND/OR mux here, assert that requests are always mutex
 always_comb uc_req_hold = (req_collision & soc_has_priority) |
                           (uc_mbox_req & mbox_req_hold) |
-                          (uc_func_reg_req & func_reg_req_hold) |
-                          (uc_fuse_reg_req & fuse_reg_req_hold);
+                          (uc_mbox_reg_req & mbox_reg_req_hold);
 
 always_comb soc_req_hold = (req_collision & uc_has_priority) |
                            (soc_mbox_req & mbox_req_hold) |
-                           (soc_func_reg_req & func_reg_req_hold) |
-                           (soc_fuse_reg_req & fuse_reg_req_hold);
+                           (soc_mbox_reg_req & mbox_reg_req_hold);
 
 always_comb uc_error = (uc_mbox_req & mbox_error) |
-                       (uc_func_reg_req & func_reg_error) |
-                       (uc_fuse_reg_req & fuse_reg_error);
+                       (uc_mbox_reg_req & mbox_reg_error) |
+                       (uc_req_dv & ~(uc_mbox_req | uc_mbox_reg_req));
 
 always_comb soc_error = (soc_mbox_req & mbox_error) |
-                        (soc_func_reg_req & func_reg_error) |
-                        (soc_fuse_reg_req & fuse_reg_error);
+                        (soc_mbox_reg_req & mbox_reg_error) |
+                        (soc_req_dv & ~(soc_mbox_req | soc_mbox_reg_req));
 
 endmodule

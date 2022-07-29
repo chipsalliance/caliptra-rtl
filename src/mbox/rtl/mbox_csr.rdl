@@ -1,0 +1,62 @@
+
+
+addrmap mbox_csr {
+    desc="address maps for mbox register space";
+    default hw = na;
+    signal {activelow; async; cpuif_reset; field_reset;} reset_b;
+    signal {activelow; async;} hard_reset_b;
+
+    signal {} lock_set;
+    signal {} valid_user;
+
+    //signal to indicate request is coming from soc side
+    signal {} soc_req;
+
+    //defined fields by access type
+    //first is uc access type, second is soc access type
+    field rw_ro {swwel = soc_req;}; //writes enabled only for uc
+    field ro_rw {swwe  = soc_req;}; //writes enabled only for soc
+    field ro_ro {sw = r;};
+    field rw_rw {};
+
+    // lock register
+    // set on read, indicate to mailbox when modified
+    // clear comes from mailbox control
+    reg {
+        desc="lock register for mailbox access";
+        field {rset; sw=r; hw=r; hwclr=true; swmod=true;} lock=0;
+    } mbox_lock;
+
+    // user register
+    // store user from interface when setting lock
+    reg {
+        desc="store user that locked the mailbox";
+        field {sw=r; hw=rw; we=lock_set;} user[32]=0;
+    } mbox_user;
+
+    reg {
+        desc="command requested for data in mailbox";
+        field {sw=rw; hw=na; swwe=valid_user; swmod=true;} command[32];
+    } mbox_cmd;
+
+    reg {
+        desc="data length for mailbox access";
+        field {sw=rw; hw=na; swwe=valid_user; swmod=true;} length[32];
+    } mbox_dlen;
+
+    reg {
+        desc="data in register, write the next data to mailbox";
+        field {sw=w; hw=r; swwe=valid_user; swmod=true;} datain[32];
+    } mbox_datain;
+
+    reg {
+        desc="data out register, read the next data from mailbox";
+        field {sw=r; hw=w; swacc=true;} dataout[32];
+    } mbox_dataout;
+
+    reg {
+        desc="mailbox execution register";
+        field {sw=rw; hw=r;} execute=0;
+    } mbox_execute;
+
+};

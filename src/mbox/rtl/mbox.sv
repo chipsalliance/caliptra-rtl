@@ -87,52 +87,38 @@ logic rst_mbox_ptr;
 logic [DATA_W-1:0] sram_rdata;
 logic sram_we, sram_rd;
 
-//registers
-logic lock_cr, lock_cr_nxt;
 logic soc_has_lock, soc_has_lock_nxt;
-logic lock_cr_en;
-logic [MBOX_USER_W-1:0] user_cr, user_cr_nxt;
-logic user_cr_en;
-logic [31:0] cmd_cr, cmd_cr_nxt;
-logic cmd_cr_en;
-logic [31:0] dlen_cr, dlen_cr_nxt;
-logic dlen_cr_en;
-logic execute_cr, execute_cr_nxt;
-logic execute_cr_en;
-logic [31:0] status_cr, status_cr_nxt;
-logic status_cr_en;
 
 //controls
-logic valid_read_cycle;
 logic read_error;
-logic valid_write_cycle;
 logic write_error;
+
+mbox_csr_pkg::mbox_csr__in_t hwif_in;
+mbox_csr_pkg::mbox_csr__out_t hwif_out;
 
 assign mbox_error = read_error | write_error;
 
 //move from idle to rdy for command when lock is acquired
 //we have a valid read, to the lock register, and it's not currently locked
-always_comb arc_MBOX_IDLE_MBOX_RDY_FOR_CMD = valid_read_cycle & ~lock_cr & (req_data.addr == MBOX_LOCK_ADDR);
+always_comb arc_MBOX_IDLE_MBOX_RDY_FOR_CMD = ~hwif_out.mbox_lock.lock.value & hwif_out.mbox_lock.lock.swmod;
 //move from rdy for cmd to rdy for dlen when cmd is written
-always_comb arc_MBOX_RDY_FOR_CMD_MBOX_RDY_FOR_DLEN = cmd_cr_en;
+always_comb arc_MBOX_RDY_FOR_CMD_MBOX_RDY_FOR_DLEN = hwif_out.mbox_cmd.command.swmod;
 //move from rdy for dlen to rdy for data when dlen is written
-always_comb arc_MBOX_RDY_FOR_DLEN_MBOX_RDY_FOR_DATA = dlen_cr_en;
+always_comb arc_MBOX_RDY_FOR_DLEN_MBOX_RDY_FOR_DATA = hwif_out.mbox_dlen.length.swmod;
 //move from rdy for data to execute uc when SoC sets execute bit
-always_comb arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC = execute_cr & soc_has_lock;
+always_comb arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC = hwif_out.mbox_execute.execute.value & soc_has_lock;
 //move from rdy for data to execute soc when uc writes to execute
-always_comb arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC = execute_cr & ~soc_has_lock;
+always_comb arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC = hwif_out.mbox_execute.execute.value & ~soc_has_lock;
 //move from rdy to execute to idle when uc resets execute
-always_comb arc_MBOX_EXECUTE_UC_MBOX_IDLE = ~execute_cr;
+always_comb arc_MBOX_EXECUTE_UC_MBOX_IDLE = ~hwif_out.mbox_execute.execute.value;
 //move from rdy to execute to idle when SoC resets execute
-always_comb arc_MBOX_EXECUTE_SOC_MBOX_IDLE = ~execute_cr;
+always_comb arc_MBOX_EXECUTE_SOC_MBOX_IDLE = ~hwif_out.mbox_execute.execute.value;
 
 always_comb begin : mbox_fsm_combo
-    lock_cr_en = 0;
-    user_cr_en = 0;
-    lock_cr_nxt = lock_cr;
-    user_cr_nxt = user_cr;
     soc_has_lock_nxt = 0;
     rst_mbox_ptr = 0;
+    inc_rdptr = 0; inc_wrptr = 0;
+    sram_we = '0;
     uc_mbox_data_avail = 0;
     soc_mbox_data_avail = 0;
     mbox_fsm_ns = mbox_fsm_ps;
@@ -141,10 +127,6 @@ always_comb begin : mbox_fsm_combo
         MBOX_IDLE: begin
             if (arc_MBOX_IDLE_MBOX_RDY_FOR_CMD) begin
                 mbox_fsm_ns = MBOX_RDY_FOR_CMD;
-                lock_cr_en = 1;
-                lock_cr_nxt = 1; //set the lock
-                user_cr_en = 1;
-                user_cr_nxt = req_data.user; //store the user attribute
                 soc_has_lock_nxt = req_data.soc_req; //remember if soc or uc requested the lock
             end
         end
@@ -159,6 +141,10 @@ always_comb begin : mbox_fsm_combo
             end
         end
         MBOX_RDY_FOR_DATA: begin
+            //update the read/write pointers to sram when accessing datain/dataout registers
+            inc_rdptr = hwif_out.mbox_dataout.dataout.swacc;
+            inc_wrptr = hwif_out.mbox_datain.datain.swmod;
+            sram_we = hwif_out.mbox_datain.datain.swmod;
             if (arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC) begin
                 mbox_fsm_ns = MBOX_EXECUTE_UC;
             end
@@ -168,23 +154,17 @@ always_comb begin : mbox_fsm_combo
         end
         MBOX_EXECUTE_UC: begin
             uc_mbox_data_avail = 1;
+            inc_rdptr = hwif_out.mbox_dataout.dataout.swacc;
             if (arc_MBOX_EXECUTE_UC_MBOX_IDLE) begin
                 mbox_fsm_ns = MBOX_IDLE;
-                lock_cr_en = 1;
-                lock_cr_nxt = 0; //reset the lock
-                user_cr_en = 1;
-                user_cr_nxt = '0;
                 rst_mbox_ptr = 1;
             end
         end
         MBOX_EXECUTE_SOC: begin
             soc_mbox_data_avail = 1;
+            inc_rdptr = hwif_out.mbox_dataout.dataout.swacc;
             if (arc_MBOX_EXECUTE_SOC_MBOX_IDLE) begin
                 mbox_fsm_ns = MBOX_IDLE;
-                lock_cr_en = 1;
-                lock_cr_nxt = 0; //reset the lock
-                user_cr_en = 1;
-                user_cr_nxt = '0;
                 rst_mbox_ptr = 1;
             end
         end
@@ -199,31 +179,7 @@ end
 //reset mbox fsm to idle on rst_b
 `CLP_RSTD_FF(mbox_fsm_ps, mbox_fsm_ns, clk, rst_b, MBOX_IDLE)
 
-//LOCK register
-//reading this register and observing an unlocked state will lock the mailbox
-//the mailbox will stay locked until EXECUTE is reset
-`CLP_EN_RST_FF(lock_cr, lock_cr_nxt, clk, lock_cr_en, rst_b)
-`CLP_EN_RST_FF(soc_has_lock, soc_has_lock_nxt, clk, lock_cr_en, rst_b)
-
-//USER register
-//store the user attribute here when locking the mailbox, only grant requests
-//made by the user that has locked the mailbox
-`CLP_EN_RST_FF(user_cr, user_cr_nxt, clk, user_cr_en, rst_b)
-
-//CMD register
-//the user of the mailbox will write command opcodes here for firmware to consume
-`CLP_EN_RST_FF(cmd_cr, cmd_cr_nxt, clk, cmd_cr_en, rst_b)
-
-//DLEN register
-//indicates the intended number of bytes to be written into the mailbox
-`CLP_EN_RST_FF(dlen_cr, dlen_cr_nxt, clk, dlen_cr_en, rst_b)
-
-//EXECUTE register
-//setting this bit indicates that the requester has completed its request and will signal to the receiver
-//receiver is responsible for resetting this bit when it has finished reading the mailbox
-//execute uc is set by SOC and read by UC
-//execute soc is set by UC and read by SOC
-`CLP_EN_RST_FF(execute_cr, execute_cr_nxt, clk, execute_cr_en, rst_b)
+`CLP_EN_RST_FF(soc_has_lock, soc_has_lock_nxt, clk, arc_MBOX_IDLE_MBOX_RDY_FOR_CMD, rst_b)
 
 //SRAM
 //Primary storage for the mailbox, can be accessed by reading DATAOUT or writing DATAIN
@@ -262,136 +218,44 @@ always_comb mbox_rdptr_nxt = rst_mbox_ptr ? '0 :
                                           mbox_rdptr;
 `CLP_EN_RST_FF(mbox_rdptr, mbox_rdptr_nxt, clk, inc_rdptr | rst_mbox_ptr, rst_b)
 
-//determine if this request is a valid read cycle
-//first check if it's a read request
-//next check that the mailbox is either unlocked OR the user_cr matches the request
-//this ensure that we only grant reads to the user that locked the mailbox
-always_comb valid_read_cycle = req_dv & ~req_data.write & (~lock_cr | (user_cr == req_data.user));
+//add support for direct writes/reads from uc
+always_comb sram_rdaddr = mbox_rdptr;
+always_comb sram_waddr = mbox_wrptr;
 
-//final read mux
-//if the request is a read, and requester has necessary permissions
-//populate the read data onto the output
-always_comb begin : mbox_read_mux
-    rdata = 'hDEAD_BEEF; //drive dead beef
-    sram_rdaddr = '0;
-    inc_rdptr = 0;
-    read_error = '0;
+always_comb hwif_in.reset_b = rst_b;
+//always_comb hwif_in.soc_req = req_data.soc_req;
+always_comb hwif_in.mbox_user.user.next = req_data.user;
+//check the requesting user:
+//don't update mailbox data if lock hasn't been acquired
+//if uc has the lock, check that this request if rom uc
+//if soc has the lock, check that this request is from soc and user attribute matters
+always_comb hwif_in.valid_user = hwif_out.mbox_lock.lock.value & ((~soc_has_lock & ~req_data.soc_req) |
+                                                                  (soc_has_lock & req_data.soc_req & (req_data.user == hwif_out.mbox_user.user.value))) ;
+//indicate that requesting user is setting the lock
+always_comb hwif_in.lock_set = arc_MBOX_IDLE_MBOX_RDY_FOR_CMD;
+always_comb hwif_in.mbox_dataout.dataout.next = sram_rdata;
+//clear the lock when moving from execute to idle
+always_comb hwif_in.mbox_lock.lock.hwclr = arc_MBOX_EXECUTE_SOC_MBOX_IDLE | arc_MBOX_EXECUTE_UC_MBOX_IDLE;
 
-    if (valid_read_cycle) begin
-        unique case (req_data.addr) inside
-            [BASE_ADDR : MBOX_CR_BASE - 1]: begin
-                //direct read of sram, uc only
-                if (~req_data.soc_req) begin
-                    sram_rdaddr = req_data.addr[MBOX_ADDR_MSB:MBOX_ADDR_LSB];
-                    rdata = sram_rdata;
-                end
-            end 
-            MBOX_LOCK_ADDR: begin
-                rdata = { {($bits(rdata) - $bits(lock_cr)){1'b0}}, lock_cr };
-            end
-            MBOX_CMD_ADDR: begin
-                rdata = cmd_cr;
-            end
-            MBOX_DLEN_ADDR: begin
-                rdata = dlen_cr;
-            end
-            MBOX_DATAIN_ADDR: begin
-                //Register is WO
-                read_error = 1;
-            end
-            MBOX_DATAOUT_ADDR: begin
-                //drive mailbox output
-                if (((mbox_fsm_ps == MBOX_EXECUTE_UC) & ~req_data.soc_req) | ((mbox_fsm_ps == MBOX_EXECUTE_SOC) & req_data.soc_req)) begin
-                    inc_rdptr = 1;
-                    sram_rdaddr = mbox_rdptr;
-                    rdata = sram_rdata;
-                end else begin
-                    read_error = 1;
-                end
-            end
-            MBOX_EXEC_ADDR: begin
-                rdata = { {($bits(rdata) - $bits(execute_cr)){1'b0}}, execute_cr };
-            end
-            MBOX_STATUS_ADDR: begin
-                rdata = status_cr;
-            end
-            default: begin
-                //drive zero if address doesn't match anything
-                rdata = 'hDEAD_BEEF;
-                //drive read error if address doesn't match anything
-                read_error = 1;
-            end
-        endcase
-    end
-end
+mbox_csr
+mbox_csr1(
+    .clk(clk),
+    .rst('0),
 
-//determine if this request is a valid write cycle
-//must have acquired the lock to the mailbox before writing anything
-//and the user cr has to match the user sending the write
-always_comb valid_write_cycle = req_dv & req_data.write & lock_cr & (user_cr == req_data.user);
+    .s_cpuif_req(req_dv),
+    .s_cpuif_req_is_wr(req_data.write),
+    .s_cpuif_addr(req_data.addr),
+    .s_cpuif_wr_data(req_data.wdata),
+    .s_cpuif_req_stall_wr(),
+    .s_cpuif_req_stall_rd(),
+    .s_cpuif_rd_ack(),
+    .s_cpuif_rd_err(read_error),
+    .s_cpuif_rd_data(rdata),
+    .s_cpuif_wr_ack(),
+    .s_cpuif_wr_err(write_error),
 
-always_comb begin : mbox_write_mux
-    cmd_cr_en = 0;
-    cmd_cr_nxt = '0;
-    dlen_cr_en = 0;
-    dlen_cr_nxt = '0;
-    execute_cr_en = 0;
-    execute_cr_nxt = '0;
-    inc_wrptr = 0;
-    sram_we = 0;
-    sram_waddr = '0;
-    write_error = '0;
-
-    if (valid_write_cycle) begin
-        unique case (req_data.addr) inside
-            [MBOX_CR_BASE-1:BASE_ADDR]: begin
-                //direct write to sram, uc only
-                if (~req_data.soc_req) begin
-                    sram_we = 1;
-                    sram_waddr = req_data.addr[MBOX_ADDR_MSB:MBOX_ADDR_LSB];
-                end
-            end 
-            MBOX_LOCK_ADDR: begin
-                //Register is RO
-                write_error = 1;
-            end
-            MBOX_CMD_ADDR: begin
-                cmd_cr_en = 1;
-                cmd_cr_nxt = req_data.wdata;
-            end
-            MBOX_DLEN_ADDR: begin
-                dlen_cr_en = 1;
-                dlen_cr_nxt = req_data.wdata;
-            end
-            MBOX_DATAIN_ADDR: begin
-                //if FSM is in rdy for data, write to mbox else error
-                if (mbox_fsm_ps == MBOX_RDY_FOR_DATA) begin
-                    inc_wrptr = 1;
-                    sram_we = 1;
-                    sram_waddr = mbox_wrptr;
-                end else begin
-                    write_error = 1;
-                end
-                
-            end
-            MBOX_DATAOUT_ADDR: begin
-                //Register is RO
-                write_error = 1;
-            end
-            MBOX_EXEC_ADDR: begin
-                execute_cr_en = 1;
-                execute_cr_nxt = req_data.wdata[$bits(execute_cr_nxt)-1:0];
-            end
-            MBOX_STATUS_ADDR: begin
-                //Register is RO
-                write_error = 1;
-            end
-            default: begin
-                //drive read error if address doesn't match anything
-                write_error = 1;
-            end
-        endcase
-    end
-end
+    .hwif_in(hwif_in),
+    .hwif_out(hwif_out)
+);
 
 endmodule

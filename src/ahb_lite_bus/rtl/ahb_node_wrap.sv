@@ -18,6 +18,8 @@ module ahb_node_wrap #(
   parameter BYPASS_HSEL = 0
 )
 (
+  input logic hclk,
+  input logic hreset_n,
   // SLAVE PORTS
   AHB_BUS.Slave ahb_slaves[NB_SLAVES-1:0],
   // MASTER PORT
@@ -70,6 +72,8 @@ module ahb_node_wrap #(
     .BYPASS_HSEL(BYPASS_HSEL)
   ) ahb_node_u1
   (
+    .hclk(hclk),
+    .hreset_n(hreset_n),
     // to SLAVES PORT
     .haddr_o(haddr),
     .hwdata_o(hwdata),
