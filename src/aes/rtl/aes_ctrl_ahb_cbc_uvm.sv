@@ -84,33 +84,11 @@ module aes_ctrl #(
                 3'b001: 
                     hwdata = hwdata_i[15:0];
                 3'b010: 
-                    // hwdata = {32'h00000000, hwdata_i[31:0]};
                     hwdata = laddr[2]? hwdata_i[63:32] : hwdata_i[31:0];
                 default:  // 3'b011: 
                     hwdata = hwdata_i;
             endcase;
-            // if (AHB_DATA_WIDTH == 64) begin
-            //     case (hsize_i)
-            //         3'b000: 
-            //             hwdata = {56'h00000000000000, hwdata_i[7:0]};
-            //         3'b001: 
-            //             hwdata = {48'h000000000000, hwdata_i[15:0]};
-            //         3'b010: 
-            //             hwdata = {32'h00000000, hwdata_i[31:0]};
-            //         default:  // 3'b011: 
-            //             hwdata = hwdata_i[63:0];
-            //     endcase;
-            // end
-            // else if (AHB_DATA_WIDTH == 32) begin
-            //     case (hsize_i)
-            //         3'b000: 
-            //             hwdata = {24'h00000000000000, hwdata_i[7:0]};
-            //         3'b001: 
-            //             hwdata = {16'h000000000000, hwdata_i[15:0]};
-            //         default:  // 3'b011: 
-            //             hwdata = hwdata_i[31:0];
-            //     endcase;
-            // end
+            
         end
         else if(hready_i)
             addr = haddr_i;

@@ -40,21 +40,23 @@
 //
 //======================================================================
 
-module hmac_core(
-                 input wire            clk,
-                 input wire            reset_n,
+module hmac_core
+(
+      // Clock and reset.
+      input wire            clk,
+      input wire            reset_n,
+      
+      // Control.
+      input wire            init,
+      input wire            next,
+      output wire           ready,
+      output wire           tag_valid,
 
-                 input wire            init,
-                 input wire            next,
-
-                 input wire [383 : 0]  key,
-
-                 input wire [1023 : 0]  block,
-
-                 output wire           ready,
-                 output wire [383 : 0] tag,
-                 output wire           tag_valid
-                );
+      // Data ports.
+      input wire [383 : 0]  key,
+      input wire [1023 : 0]  block,
+      output wire [383 : 0] tag
+    );
 
 
   //----------------------------------------------------------------

@@ -47,20 +47,21 @@
 `default_nettype none
 
 module aes_core_cbc(
+                // Clock and reset.
                 input wire            clk,
                 input wire            reset_n,
 
+                // Control.
                 input wire            encdec,
                 input wire            init,
                 input wire            next,
                 output wire           ready,
 
+                //Data.
                 input wire [255 : 0]  key,
                 input wire            keylen,
-
                 input wire [127 : 0]  IV,
                 input wire            IV_updated,
-
                 input wire [127 : 0]  block,
                 output wire [127 : 0] result,
                 output wire           result_valid
@@ -189,6 +190,11 @@ module aes_core_cbc(
 
   //----------------------------------------------------------------
   // IV Storage for Encryption and Decryption
+  // FSM design for IV value storage
+  // 
+  // Since the IV is used to encry/decry next block, the IV should 
+  // be preserved and updated after each encry/decry. The following
+  // FSM provides this functionality
   //----------------------------------------------------------------
 
   reg IV_enc_state;
@@ -198,23 +204,20 @@ module aes_core_cbc(
              st_IV_1st_decrypt  = 2;
 
   always @ (posedge clk or negedge reset_n)
-  begin
+  begin:IV_storage_management
       if (!reset_n)
         begin
-          IV_encry      <= 128'h0;
-          IV_decry      <= 128'h0;
-          IV_decry_next <= 128'h0;
-          IV_enc_state  <= st_IV_engine_idle;
-          IV_dec_state  <= st_IV_engine_idle;
-          IV_updated_delayed <= 1'b0;
+          IV_encry            <= 128'h0;
+          IV_decry            <= 128'h0;
+          IV_decry_next       <= 128'h0;
+          IV_enc_state        <= st_IV_engine_idle;
+          IV_dec_state        <= st_IV_engine_idle;
+          IV_updated_delayed  <= 1'b0;
         end
       else
         begin
             IV_updated_delayed <= IV_updated;
-
         // ENCRYPTION IV CONTROLLER
-
-
             if(IV_updated_delayed)
                 IV_encry <= IV;
             else if ((IV_enc_state == st_IV_engine_stars) && enc_ready)
@@ -241,12 +244,9 @@ module aes_core_cbc(
                 end
                 default: 
                     IV_enc_state <= st_IV_engine_idle;  
-            endcase
-
+            endcase //IV_enc_state
 
         // DECRYPTION IV CONTROLLER
-
-
             case (IV_dec_state)
                 st_IV_engine_idle:
                 begin
@@ -290,9 +290,9 @@ module aes_core_cbc(
                     IV_decry_next <= IV;
                     IV_decry      <= IV;
                 end
-            endcase             
+            endcase //IV_dec_state             
         end
-  end
+  end //IV_storage_management
 
 
 

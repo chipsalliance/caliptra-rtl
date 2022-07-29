@@ -20,23 +20,25 @@
 
 `default_nettype none
 
-module aes_cbc #(
-            parameter ADDR_WIDTH = 32,
-            parameter DATA_WIDTH = 32
-            )(
-           // Clock and reset.
-           input wire           clk,
-           input wire           reset_n,
+module aes_cbc 
+ #(
+    parameter ADDR_WIDTH = 32,
+    parameter DATA_WIDTH = 32
+  )
+  (
+   // Clock and reset.
+   input wire           clk,
+   input wire           reset_n,
 
-           // Control.
-           input wire           cs,
-           input wire           we,
-
-           // Data ports.
-           input wire  [ADDR_WIDTH-1 : 0] address,
-           input wire  [DATA_WIDTH-1 : 0] write_data,
-           output wire [DATA_WIDTH-1 : 0] read_data
-          );
+   // Control.
+   input wire           cs,
+   input wire           we,
+   
+   // Data ports.
+   input wire  [ADDR_WIDTH-1 : 0] address,
+   input wire  [DATA_WIDTH-1 : 0] write_data,
+   output wire [DATA_WIDTH-1 : 0] read_data
+  );
 
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.

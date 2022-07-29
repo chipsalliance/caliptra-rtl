@@ -41,15 +41,17 @@
 `default_nettype none
 
 module aes_decipher_block(
+                          //Clock and reset.
                           input wire            clk,
                           input wire            reset_n,
 
+                          //Control
                           input wire            next,
 
+                          //Data
                           input wire            keylen,
                           output wire [3 : 0]   round,
                           input wire [127 : 0]  round_key,
-
                           input wire [127 : 0]  block,
                           output wire [127 : 0] new_block,
                           output wire           ready

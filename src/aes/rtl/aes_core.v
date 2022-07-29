@@ -40,20 +40,22 @@
 `default_nettype none
 
 module aes_core(
+                // Clock and reset.
                 input wire            clk,
                 input wire            reset_n,
 
+                // Control.
                 input wire            encdec,
                 input wire            init,
                 input wire            next,
                 output wire           ready,
+                output wire           result_valid,
 
+                //Data
                 input wire [255 : 0]  key,
                 input wire            keylen,
-
                 input wire [127 : 0]  block,
-                output wire [127 : 0] result,
-                output wire           result_valid
+                output wire [127 : 0] result
                );
 
 
