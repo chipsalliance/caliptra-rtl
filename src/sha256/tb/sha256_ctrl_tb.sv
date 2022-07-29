@@ -242,7 +242,7 @@ module sha256_ctrl_tb();
       htrans_i_tb     = AHB_HTRANS_NONSEQ;
       hprot_i_tb      = 0;
       hburst_i_tb     = 0;
-      hsize_i_tb      = 3'b010;
+      hsize_i_tb      = 3'b011;
       #(CLK_PERIOD);
 
       haddr_i_tb      = 'Z;
@@ -289,7 +289,7 @@ module sha256_ctrl_tb();
       htrans_i_tb     = AHB_HTRANS_NONSEQ;
       hprot_i_tb      = 0;
       hburst_i_tb     = 0;
-      hsize_i_tb      = 3'b010;
+      hsize_i_tb      = 3'b011;
       #(CLK_PERIOD);
       
       hwdata_i_tb     = 0;
