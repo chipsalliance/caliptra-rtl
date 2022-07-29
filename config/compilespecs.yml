@@ -10,4 +10,6 @@ files:
   - src/aes/config/compile.yml
   - src/hmac/config/compile.yml
   - src/mbox/config/compile.yml
+  - src/hmac_drbg/config/compile.yml
+  # Please add your next file/folder above not belove the line
   - src/integration/config/compile.yml

@@ -4,7 +4,7 @@
 # https://dev.azure.com/ms-tsd/Ether/_git/sim-tools?path=%2FSourceFileSpec.docx&version=GBmaster
 
 ---
-provides: [hmac_ctrl]
+provides: [hmac_drbg]
 schema_version: 2.4.0
 requires:
   - libs
@@ -12,27 +12,21 @@ targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/hmac_ctrl.sv
-      - $COMPILE_ROOT/rtl/hmac.v
-      - $COMPILE_ROOT/rtl/hmac_param.sv
-      - $COMPILE_ROOT/rtl/hmac_core.v
-      #- $COMPILE_ROOT/rtl/sha512/sha512_core.v
-      #- $COMPILE_ROOT/rtl/sha512/sha512_h_constants.v
-      #- $COMPILE_ROOT/rtl/sha512/sha512_k_constants.v
-      #- $COMPILE_ROOT/rtl/sha512/sha512_w_mem.v
-    tops: [hmac_ctrl]
+      - $COMPILE_ROOT/rtl/hmac_drbg.v
+      - $COMPILE_ROOT/rtl/hmac_drbg_param.sv
+    tops: [hmac_drbg]
 ---
-provides: [hmac_ctrl_tb]  
+provides: [hmac_drbg_tb]  
 schema_version: 2.4.0
 requires: 
-  - hmac_ctrl
+  - hmac_drbg
 targets:
   tb:
     directories: 
       - $COMPILE_ROOT/tb
     files:
-      - $COMPILE_ROOT/tb/hmac_ctrl_tb.sv
-    tops: [hmac_ctrl_tb]
+      - $COMPILE_ROOT/tb/hmac_drbg_tb.sv
+    tops: [hmac_drbg_tb]
 global:
   tool:
     vcs:

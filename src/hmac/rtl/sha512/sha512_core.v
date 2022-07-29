@@ -1,6 +1,6 @@
 //======================================================================
 //
-// sha384_core.v
+// sha512_core.v
 // -------------
 // Verilog 2001 implementation of the SHA-512 hash function.
 // This is the internal core with wide interfaces.
@@ -39,12 +39,13 @@
 
 `default_nettype none
 
-module sha384_core(
+module sha512_core(
                    input wire            clk,
                    input wire            reset_n,
 
                    input wire            init,
                    input wire            next,
+                   input wire [1 : 0]    mode,
 
                    input wire            work_factor,
                    input wire [31 : 0]   work_factor_num,
@@ -52,7 +53,7 @@ module sha384_core(
                    input wire [1023 : 0] block,
 
                    output wire           ready,
-                   output wire [383 : 0] digest,
+                   output wire [511 : 0] digest,
                    output wire           digest_valid
                   );
 
@@ -60,17 +61,11 @@ module sha384_core(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam SHA384_ROUNDS = 79;
+  localparam SHA512_ROUNDS = 79;
 
   localparam CTRL_IDLE   = 2'h0;
   localparam CTRL_ROUNDS = 2'h1;
   localparam CTRL_DONE   = 2'h2;
-
-  // ---------------------------------------------------------------
-  // I blocked the mode only for 384 bits.
-  //----------------------------------------------------------------
-  wire [1 : 0]    mode;
-  assign mode = 2'h2;
 
 
   //----------------------------------------------------------------
@@ -132,9 +127,9 @@ module sha384_core(
   reg          digest_valid_new;
   reg          digest_valid_we;
 
-  reg [1 : 0]  sha384_ctrl_reg;
-  reg [1 : 0]  sha384_ctrl_new;
-  reg          sha384_ctrl_we;
+  reg [1 : 0]  sha512_ctrl_reg;
+  reg [1 : 0]  sha512_ctrl_new;
+  reg          sha512_ctrl_we;
 
 
   //----------------------------------------------------------------
@@ -170,13 +165,13 @@ module sha384_core(
   //----------------------------------------------------------------
   // Module instantiantions.
   //----------------------------------------------------------------
-  sha384_k_constants k_constants_inst(
+  sha512_k_constants k_constants_inst(
                                       .addr(round_ctr_reg),
                                       .K(k_data)
                                      );
 
 
-  sha384_h_constants h_constants_inst(
+  sha512_h_constants h_constants_inst(
                                       .mode(mode),
 
                                       .H0(H0_0),
@@ -190,7 +185,7 @@ module sha384_core(
                                      );
 
 
-  sha384_w_mem w_mem_inst(
+  sha512_w_mem w_mem_inst(
                           .clk(clk),
                           .reset_n(reset_n),
 
@@ -206,15 +201,9 @@ module sha384_core(
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
   assign ready = ready_reg;
-  
 
-  //----------------------------------------------------------------
-  // I reduced the sha output and fit into the 384 bit mode
-  //assign digest = {H0_reg, H1_reg, H2_reg, H3_reg,
-  //                 H4_reg, H5_reg, H6_reg, H7_reg};
-  //----------------------------------------------------------------
-  
-  assign digest = {H0_reg, H1_reg, H2_reg, H3_reg,H4_reg, H5_reg};
+  assign digest = {H0_reg, H1_reg, H2_reg, H3_reg,
+                   H4_reg, H5_reg, H6_reg, H7_reg};
 
   assign digest_valid = digest_valid_reg;
 
@@ -249,7 +238,7 @@ module sha384_core(
           ready_reg           <= 1'b1;
           digest_valid_reg    <= 1'b0;
           round_ctr_reg       <= 7'h0;
-          sha384_ctrl_reg     <= CTRL_IDLE;
+          sha512_ctrl_reg     <= CTRL_IDLE;
         end
 
       else
@@ -290,8 +279,8 @@ module sha384_core(
           if (digest_valid_we)
             digest_valid_reg <= digest_valid_new;
 
-          if (sha384_ctrl_we)
-            sha384_ctrl_reg <= sha384_ctrl_new;
+          if (sha512_ctrl_we)
+            sha512_ctrl_reg <= sha512_ctrl_new;
         end
     end // reg_update
 
@@ -492,12 +481,12 @@ module sha384_core(
 
 
   //----------------------------------------------------------------
-  // sha384_ctrl_fsm
+  // sha512_ctrl_fsm
   //
   // Logic for the state machine controlling the core behaviour.
   //----------------------------------------------------------------
   always @*
-    begin : sha384_ctrl_fsm
+    begin : sha512_ctrl_fsm
       digest_init         = 1'b0;
       digest_update       = 1'b0;
       state_init          = 1'b0;
@@ -513,10 +502,10 @@ module sha384_core(
       work_factor_ctr_inc = 1'b0;
       ready_new           = 1'b0;
       ready_we            = 1'b0;
-      sha384_ctrl_new     = CTRL_IDLE;
-      sha384_ctrl_we      = 1'b0;
+      sha512_ctrl_new     = CTRL_IDLE;
+      sha512_ctrl_we      = 1'b0;
 
-      case (sha384_ctrl_reg)
+      case (sha512_ctrl_reg)
         CTRL_IDLE:
           begin
             if (init)
@@ -531,8 +520,8 @@ module sha384_core(
                 round_ctr_rst       = 1;
                 digest_valid_new    = 0;
                 digest_valid_we     = 1;
-                sha384_ctrl_new     = CTRL_ROUNDS;
-                sha384_ctrl_we      = 1;
+                sha512_ctrl_new     = CTRL_ROUNDS;
+                sha512_ctrl_we      = 1;
               end
 
             if (next)
@@ -545,8 +534,8 @@ module sha384_core(
                 round_ctr_rst       = 1;
                 digest_valid_new    = 0;
                 digest_valid_we     = 1;
-                sha384_ctrl_new     = CTRL_ROUNDS;
-                sha384_ctrl_we      = 1;
+                sha512_ctrl_new     = CTRL_ROUNDS;
+                sha512_ctrl_we      = 1;
               end
           end
 
@@ -557,11 +546,11 @@ module sha384_core(
             state_update  = 1;
             round_ctr_inc = 1;
 
-            if (round_ctr_reg == SHA384_ROUNDS)
+            if (round_ctr_reg == SHA512_ROUNDS)
               begin
                 work_factor_ctr_inc = 1;
-                sha384_ctrl_new     = CTRL_DONE;
-                sha384_ctrl_we      = 1;
+                sha512_ctrl_new     = CTRL_DONE;
+                sha512_ctrl_we      = 1;
               end
           end
 
@@ -575,8 +564,8 @@ module sha384_core(
                     w_init              = 1'b1;
                     state_init          = 1'b1;
                     round_ctr_rst       = 1'b1;
-                    sha384_ctrl_new     = CTRL_ROUNDS;
-                    sha384_ctrl_we      = 1'b1;
+                    sha512_ctrl_new     = CTRL_ROUNDS;
+                    sha512_ctrl_we      = 1'b1;
                   end
                 else
                   begin
@@ -585,8 +574,8 @@ module sha384_core(
                     digest_update    = 1'b1;
                     digest_valid_new = 1'b1;
                     digest_valid_we  = 1'b1;
-                    sha384_ctrl_new  = CTRL_IDLE;
-                    sha384_ctrl_we   = 1'b1;
+                    sha512_ctrl_new  = CTRL_IDLE;
+                    sha512_ctrl_we   = 1'b1;
                   end
               end
             else
@@ -596,8 +585,8 @@ module sha384_core(
                 digest_update    = 1'b1;
                 digest_valid_new = 1'b1;
                 digest_valid_we  = 1'b1;
-                sha384_ctrl_new  = CTRL_IDLE;
-                sha384_ctrl_we   = 1'b1;
+                sha512_ctrl_new  = CTRL_IDLE;
+                sha512_ctrl_we   = 1'b1;
               end
           end
 
@@ -606,11 +595,11 @@ module sha384_core(
           begin
           end
 
-      endcase // case (sha384_ctrl_reg)
-    end // sha384_ctrl_fsm
+      endcase // case (sha512_ctrl_reg)
+    end // sha512_ctrl_fsm
 
-endmodule // sha384_core
+endmodule // sha512_core
 
 //======================================================================
-// EOF sha384_core.v
+// EOF sha512_core.v
 //======================================================================

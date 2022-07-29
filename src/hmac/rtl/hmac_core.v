@@ -64,12 +64,6 @@ module hmac_core(
   localparam OPAD       = 1024'h5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c;
   localparam FINAL_PAD  = 640'h8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000580;
 
-
-  //localparam STATE_IDLE   = 0;
-  //localparam STATE_INIT   = 1;
-  //localparam STATE_NEXT   = 2;
-  //localparam STATE_FINAL  = 3;
-
   localparam CTRL_IDLE   = 0;
   localparam CTRL_IPAD   = 1;
   localparam CTRL_OPAD   = 2;
@@ -83,10 +77,6 @@ module hmac_core(
   reg [2 : 0] hmac_ctrl_new;
   reg         hmac_ctrl_we;
   reg [2 : 0] hmac_ctrl_last;
-
-  //reg [1 : 0] hmac_state_reg;
-  //reg [1 : 0] hmac_state_new;
-  //reg         hmac_state_we;
 
   reg         ready_flag;
   reg         digest_valid_reg; 
@@ -117,6 +107,7 @@ module hmac_core(
   wire            H2_ready;
   wire [383 : 0]  H2_digest;
   wire            H2_digest_valid;
+  wire [127:0]    garbage_bit_vector1,garbage_bit_vector2;
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
@@ -127,12 +118,13 @@ module hmac_core(
   //----------------------------------------------------------------
   // core instantiation.
   //----------------------------------------------------------------
-  sha384_core H1(
+  sha512_core H1(
                      .clk(clk),
                      .reset_n(reset_n),
 
                      .init(H1_init),
                      .next(H1_next),
+                     .mode(2'h2),
 
                      .work_factor(0),
                      .work_factor_num(0),
@@ -140,16 +132,17 @@ module hmac_core(
                      .block(H1_block),
 
                      .ready(H1_ready),
-                     .digest(H1_digest),
+                     .digest({H1_digest,garbage_bit_vector1}),
                      .digest_valid(H1_digest_valid)
                     );
 
-  sha384_core H2(
+  sha512_core H2(
                      .clk(clk),
                      .reset_n(reset_n),
 
                      .init(H2_init),
                      .next(H2_next),
+                     .mode(2'h2),
 
                      .work_factor(0),
                      .work_factor_num(0),
@@ -157,7 +150,7 @@ module hmac_core(
                      .block(H2_block),
 
                      .ready(H2_ready),
-                     .digest(H2_digest),
+                     .digest({H2_digest,garbage_bit_vector2}),
                      .digest_valid(H2_digest_valid)
                     );
 

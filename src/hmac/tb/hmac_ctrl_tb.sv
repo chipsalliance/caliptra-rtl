@@ -472,11 +472,20 @@ module hmac_ctrl_tb();
                          input [383 : 0] expected
                         );
     begin
+      reg [31  : 0] start_time;
+      reg [31 : 0] end_time;
+      reg [31 : 0] data_in_time;
+
+      start_time = cycle_ctr;
+
       $display("*** TC%01d - Single block test started.", tc_ctr);
 
       write_key(key);
 
       write_block(block);
+
+      data_in_time = cycle_ctr - start_time;
+      $display("***       DATA IN processing time = %01d cycles", data_in_time);
 
       write_single_word(ADDR_CTRL, CTRL_INIT_VALUE);
 
@@ -485,7 +494,12 @@ module hmac_ctrl_tb();
 
       #(CLK_PERIOD);
       wait_ready();
+      end_time = cycle_ctr - start_time;
+      $display("*** Single block test processing time = %01d cycles", end_time);
+      data_in_time = cycle_ctr;
       read_digest();
+      data_in_time = cycle_ctr - data_in_time;
+      $display("***       DATA IN processing time = %01d cycles", data_in_time);
 
       if (digest_data == expected)
         begin
@@ -517,6 +531,10 @@ module hmac_ctrl_tb();
                          input [383 : 0] expected
                         );
     begin
+      reg [31  : 0] start_time;
+      reg [31 : 0] end_time;
+
+      start_time = cycle_ctr;
       $display("*** TC%01d - Double block test started.", tc_ctr);
 
       write_key(key);
@@ -540,6 +558,8 @@ module hmac_ctrl_tb();
 
       #(CLK_PERIOD);
       wait_ready();
+      end_time = cycle_ctr - start_time;
+      $display("*** Single block test processing time = %01d cycles", end_time);
       read_digest();
 
       if (digest_data == expected)
@@ -616,6 +636,8 @@ module hmac_ctrl_tb();
       single_block_test(key2, data2, expected2);
 
       single_block_test(key3, data3, expected3);
+
+      //double_block_test(key3, data1, data3, expected3);
       
       $display("*** Testcases for PRF-HMAC-SHA-384 functionality completed.");
     end

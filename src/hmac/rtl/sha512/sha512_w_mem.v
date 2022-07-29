@@ -1,13 +1,13 @@
 //======================================================================
 //
-// sha256_w_mem_regs.v
+// sha512_w_mem_regs.v
 // -------------------
-// The W memory. This version uses 16 32-bit registers as a sliding
-// window to generate the 64 words.
+// The W memory for the SHA-512 core. This version uses 16
+// 32-bit registers as a sliding window to generate the 64 words.
 //
 //
 // Author: Joachim Strombergson
-// Copyright (c) 2013, Secworks Sweden AB
+// Copyright (c) 2014 Secworks Sweden AB
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or
@@ -39,50 +39,50 @@
 
 `default_nettype none
 
-module sha256_w_mem(
-                    input wire           clk,
-                    input wire           reset_n,
+module sha512_w_mem(
+                    input wire            clk,
+                    input wire            reset_n,
 
-                    input wire [511 : 0] block,
+                    input wire [1023 : 0] block,
 
-                    input wire           init,
-                    input wire           next,
-                    output wire [31 : 0] w
+                    input wire            init,
+                    input wire            next,
+                    output wire [63 : 0]  w
                    );
 
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg [31 : 0] w_mem [0 : 15];
-  reg [31 : 0] w_mem00_new;
-  reg [31 : 0] w_mem01_new;
-  reg [31 : 0] w_mem02_new;
-  reg [31 : 0] w_mem03_new;
-  reg [31 : 0] w_mem04_new;
-  reg [31 : 0] w_mem05_new;
-  reg [31 : 0] w_mem06_new;
-  reg [31 : 0] w_mem07_new;
-  reg [31 : 0] w_mem08_new;
-  reg [31 : 0] w_mem09_new;
-  reg [31 : 0] w_mem10_new;
-  reg [31 : 0] w_mem11_new;
-  reg [31 : 0] w_mem12_new;
-  reg [31 : 0] w_mem13_new;
-  reg [31 : 0] w_mem14_new;
-  reg [31 : 0] w_mem15_new;
+  reg [63 : 0] w_mem [0 : 15];
+  reg [63 : 0] w_mem00_new;
+  reg [63 : 0] w_mem01_new;
+  reg [63 : 0] w_mem02_new;
+  reg [63 : 0] w_mem03_new;
+  reg [63 : 0] w_mem04_new;
+  reg [63 : 0] w_mem05_new;
+  reg [63 : 0] w_mem06_new;
+  reg [63 : 0] w_mem07_new;
+  reg [63 : 0] w_mem08_new;
+  reg [63 : 0] w_mem09_new;
+  reg [63 : 0] w_mem10_new;
+  reg [63 : 0] w_mem11_new;
+  reg [63 : 0] w_mem12_new;
+  reg [63 : 0] w_mem13_new;
+  reg [63 : 0] w_mem14_new;
+  reg [63 : 0] w_mem15_new;
   reg          w_mem_we;
 
-  reg [5 : 0] w_ctr_reg;
-  reg [5 : 0] w_ctr_new;
+  reg [6 : 0] w_ctr_reg;
+  reg [6 : 0] w_ctr_new;
   reg         w_ctr_we;
 
 
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-  reg [31 : 0] w_tmp;
-  reg [31 : 0] w_new;
+  reg [63 : 0] w_tmp;
+  reg [63 : 0] w_new;
 
 
   //----------------------------------------------------------------
@@ -94,7 +94,7 @@ module sha256_w_mem(
   //----------------------------------------------------------------
   // reg_update
   // Update functionality for all registers in the core.
-  // All registers are positive edge triggered with synchronous
+  // All registers are positive edge triggered with asynchronous
   // active low reset. All registers have write enable.
   //----------------------------------------------------------------
   always @ (posedge clk or negedge reset_n)
@@ -103,10 +103,10 @@ module sha256_w_mem(
 
       if (!reset_n)
         begin
-          for (i = 0 ; i < 16 ; i = i + 1)
-            w_mem[i] <= 32'h0;
+          for (i = 0; i < 16; i = i + 1)
+            w_mem[i] <= 64'h0;
 
-          w_ctr_reg <= 6'h0;
+          w_ctr_reg <= 7'h0;
         end
       else
         begin
@@ -131,7 +131,7 @@ module sha256_w_mem(
             end
 
           if (w_ctr_we)
-            w_ctr_reg <= w_ctr_new;
+              w_ctr_reg <= w_ctr_new;
         end
     end // reg_update
 
@@ -159,29 +159,29 @@ module sha256_w_mem(
   //----------------------------------------------------------------
   always @*
     begin : w_mem_update_logic
-      reg [31 : 0] w_0;
-      reg [31 : 0] w_1;
-      reg [31 : 0] w_9;
-      reg [31 : 0] w_14;
-      reg [31 : 0] d0;
-      reg [31 : 0] d1;
+      reg [63 : 0] w_0;
+      reg [63 : 0] w_1;
+      reg [63 : 0] w_9;
+      reg [63 : 0] w_14;
+      reg [63 : 0] d0;
+      reg [63 : 0] d1;
 
-      w_mem00_new = 32'h0;
-      w_mem01_new = 32'h0;
-      w_mem02_new = 32'h0;
-      w_mem03_new = 32'h0;
-      w_mem04_new = 32'h0;
-      w_mem05_new = 32'h0;
-      w_mem06_new = 32'h0;
-      w_mem07_new = 32'h0;
-      w_mem08_new = 32'h0;
-      w_mem09_new = 32'h0;
-      w_mem10_new = 32'h0;
-      w_mem11_new = 32'h0;
-      w_mem12_new = 32'h0;
-      w_mem13_new = 32'h0;
-      w_mem14_new = 32'h0;
-      w_mem15_new = 32'h0;
+      w_mem00_new = 64'h0;
+      w_mem01_new = 64'h0;
+      w_mem02_new = 64'h0;
+      w_mem03_new = 64'h0;
+      w_mem04_new = 64'h0;
+      w_mem05_new = 64'h0;
+      w_mem06_new = 64'h0;
+      w_mem07_new = 64'h0;
+      w_mem08_new = 64'h0;
+      w_mem09_new = 64'h0;
+      w_mem10_new = 64'h0;
+      w_mem11_new = 64'h0;
+      w_mem12_new = 64'h0;
+      w_mem13_new = 64'h0;
+      w_mem14_new = 64'h0;
+      w_mem15_new = 64'h0;
       w_mem_we    = 0;
 
       w_0  = w_mem[0];
@@ -189,34 +189,34 @@ module sha256_w_mem(
       w_9  = w_mem[9];
       w_14 = w_mem[14];
 
-      d0 = {w_1[6  : 0], w_1[31 :  7]} ^
-           {w_1[17 : 0], w_1[31 : 18]} ^
-           {3'b000, w_1[31 : 3]};
+      d0 = {w_1[0],     w_1[63 : 1]} ^ // ROTR1
+           {w_1[7 : 0], w_1[63 : 8]} ^ // ROTR8
+           {7'b0000000, w_1[63 : 7]};  // SHR7
 
-      d1 = {w_14[16 : 0], w_14[31 : 17]} ^
-           {w_14[18 : 0], w_14[31 : 19]} ^
-           {10'b0000000000, w_14[31 : 10]};
+      d1 = {w_14[18 : 0], w_14[63 : 19]} ^ // ROTR19
+           {w_14[60 : 0], w_14[63 : 61]} ^ // ROTR61
+           {6'b000000,    w_14[63 : 6]};   // SHR6
 
-      w_new = d1 + w_9 + d0 + w_0;
+      w_new = w_0 + d0 + w_9 + d1;
 
       if (init)
         begin
-          w_mem00_new = block[511 : 480];
-          w_mem01_new = block[479 : 448];
-          w_mem02_new = block[447 : 416];
-          w_mem03_new = block[415 : 384];
-          w_mem04_new = block[383 : 352];
-          w_mem05_new = block[351 : 320];
-          w_mem06_new = block[319 : 288];
-          w_mem07_new = block[287 : 256];
-          w_mem08_new = block[255 : 224];
-          w_mem09_new = block[223 : 192];
-          w_mem10_new = block[191 : 160];
-          w_mem11_new = block[159 : 128];
-          w_mem12_new = block[127 :  96];
-          w_mem13_new = block[95  :  64];
-          w_mem14_new = block[63  :  32];
-          w_mem15_new = block[31  :   0];
+          w_mem00_new = block[1023 : 960];
+          w_mem01_new = block[959  : 896];
+          w_mem02_new = block[895  : 832];
+          w_mem03_new = block[831  : 768];
+          w_mem04_new = block[767  : 704];
+          w_mem05_new = block[703  : 640];
+          w_mem06_new = block[639  : 576];
+          w_mem07_new = block[575  : 512];
+          w_mem08_new = block[511  : 448];
+          w_mem09_new = block[447  : 384];
+          w_mem10_new = block[383  : 320];
+          w_mem11_new = block[319  : 256];
+          w_mem12_new = block[255  : 192];
+          w_mem13_new = block[191  : 128];
+          w_mem14_new = block[127  :  64];
+          w_mem15_new = block[63   :   0];
           w_mem_we    = 1;
         end
 
@@ -250,23 +250,24 @@ module sha256_w_mem(
   //----------------------------------------------------------------
   always @*
     begin : w_ctr
-      w_ctr_new = 6'h0;
+      w_ctr_new = 7'h0;
       w_ctr_we  = 1'h0;
 
       if (init)
         begin
-          w_ctr_new = 6'h0;
+          w_ctr_new = 7'h00;
           w_ctr_we  = 1'h1;
         end
 
       if (next)
         begin
-          w_ctr_new = w_ctr_reg + 6'h01;
+          w_ctr_new = w_ctr_reg + 7'h01;
           w_ctr_we  = 1'h1;
         end
     end // w_ctr
-endmodule // sha256_w_mem
+
+endmodule // sha512_w_mem
 
 //======================================================================
-// sha256_w_mem.v
+// sha512_w_mem.v
 //======================================================================

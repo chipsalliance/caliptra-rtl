@@ -1,8 +1,8 @@
 //======================================================================
 //
-// sha384_h_constants.v
+// sha512_h_constants.v
 // ---------------------
-// The H initial constants for the different modes in SHA-384.
+// The H initial constants for the different modes in SHA-512.
 //
 //
 // Author: Joachim Strombergson
@@ -38,7 +38,7 @@
 
 `default_nettype none
 
-module sha384_h_constants(
+module sha512_h_constants(
                           input wire  [1 : 0]  mode,
 
                           output wire [63 : 0] H0,
@@ -87,7 +87,7 @@ module sha384_h_constants(
       case(mode)
         0:
           begin
-            // SHA-384/224
+            // SHA-512/224
             tmp_H0 = 64'h8c3d37c819544da2;
             tmp_H1 = 64'h73e1996689dcd4d6;
             tmp_H2 = 64'h1dfab7ae32ff9c82;
@@ -100,7 +100,7 @@ module sha384_h_constants(
 
         1:
           begin
-            // SHA-384/256
+            // SHA-512/256
             tmp_H0 = 64'h22312194fc2bf72c;
             tmp_H1 = 64'h9f555fa3c84c64c2;
             tmp_H2 = 64'h2393b86b6f53b151;
@@ -126,7 +126,7 @@ module sha384_h_constants(
 
         3:
           begin
-            // SHA-384
+            // SHA-512
             tmp_H0 = 64'h6a09e667f3bcc908;
             tmp_H1 = 64'hbb67ae8584caa73b;
             tmp_H2 = 64'h3c6ef372fe94f82b;
@@ -138,8 +138,8 @@ module sha384_h_constants(
           end
       endcase // case (addr)
     end // block: mode_mux
-endmodule // sha384_h_constants
+endmodule // sha512_h_constants
 
 //======================================================================
-// sha384_h_constants.v
+// sha512_h_constants.v
 //======================================================================

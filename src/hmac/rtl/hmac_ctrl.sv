@@ -84,8 +84,8 @@ ahb_slv_sif #(
 
     //COMPONENT INF
     .dv(hmac_cs),
-    .hold('0), //no holes from aes
-    .error('0), //no errors from aes
+    .hold('0), //no holes from hmac
+    .error('0), //no errors from hmac
     .write(hmac_we),
     .wdata(hmac_write_data),
     .addr(hmac_address),

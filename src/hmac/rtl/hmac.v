@@ -215,8 +215,14 @@ module hmac(
                 // Read operations.
                 HMAC_ADDR_NAME0:
                   tmp_read_data = HMAC_CORE_NAME;
+                
+                HMAC_ADDR_NAME1:
+                  tmp_read_data = HMAC_CORE_NAME;
 
                 HMAC_ADDR_VERSION0:
+                  tmp_read_data = HMAC_CORE_VERSION;
+
+                HMAC_ADDR_VERSION1:
                   tmp_read_data = HMAC_CORE_VERSION;
 
                 HMAC_ADDR_STATUS:
