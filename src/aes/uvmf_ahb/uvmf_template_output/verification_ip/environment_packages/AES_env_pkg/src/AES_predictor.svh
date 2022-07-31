@@ -106,17 +106,17 @@ class AES_predictor #(
   
     case (t.op)
       decipher_op: begin
-        AES_sb_ap_output_transaction.result = TEXT_ARRAY[t.test_case_sel];
+        AES_sb_ap_output_transaction.result = TEXT_ARRAY[t.test_case_sel[1:0]];
         `uvm_info("PREDICT",{"AES_OUT: ",AES_sb_ap_output_transaction.convert2string()},UVM_MEDIUM);
       end
       encipher_op: begin
-        AES_sb_ap_output_transaction.result = EXPECTED_ARRAY[t.test_case_sel];
+        AES_sb_ap_output_transaction.result = EXPECTED_ARRAY[t.test_case_sel[1:0]];
         `uvm_info("PREDICT",{"AES_OUT: ",AES_sb_ap_output_transaction.convert2string()},UVM_MEDIUM);
       end
-      default: begin
-        AES_sb_ap_output_transaction.result = TEXT_ARRAY[t.test_case_sel];
-        `uvm_info("PREDICT",{"AES_OUT: ",AES_sb_ap_output_transaction.convert2string()},UVM_MEDIUM);
-      end
+      // default: begin
+      //   AES_sb_ap_output_transaction.result = TEXT_ARRAY[t.test_case_sel[1:0]];
+      //   `uvm_info("PREDICT",{"AES_OUT: ",AES_sb_ap_output_transaction.convert2string()},UVM_MEDIUM);
+      // end
     endcase
     
     // Code for sending output transaction out through AES_sb_ap

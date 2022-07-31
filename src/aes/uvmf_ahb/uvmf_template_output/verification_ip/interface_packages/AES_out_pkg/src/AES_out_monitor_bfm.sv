@@ -195,60 +195,67 @@ end
     // exited with captured values, it is then called again to wait for and observe 
     // the next transfer. One clock cycle is consumed between calls to do_monitor.
     
-    while (rcd_loop_cnt < 5) begin
-      
-      case (rcd_loop_cnt)
-        0: begin
-          if (hrdata_i != 3) @(posedge clk_i);
-          else begin
-            hrdata_rcd = hrdata_i;
-            rcd_loop_cnt = rcd_loop_cnt + 1;
-          end 
-        end
-        1: begin
-          if (hrdata_i == hrdata_rcd) @(posedge clk_i);
-          else begin
-            rcd_loop_cnt = rcd_loop_cnt + 1;
-            hrdata_rcd = hrdata_i;
-            result_temp[127:96] = hrdata_i;
+    if (rst_i == 0) begin
+      while (rst_i == 0) @(posedge clk_i);
+      repeat (5) @(posedge clk_i);
+      AES_out_monitor_struct.result = 0;
+    end
+    else begin
+      while (rcd_loop_cnt < 5) begin
+        
+        case (rcd_loop_cnt)
+          0: begin
+            if (hrdata_i != 3) @(posedge clk_i);
+            else begin
+              hrdata_rcd = hrdata_i;
+              rcd_loop_cnt = rcd_loop_cnt + 1;
+            end 
           end
-        end
-        2: begin
-          if (hrdata_i == hrdata_rcd) @(posedge clk_i);
-          else begin
-            rcd_loop_cnt = rcd_loop_cnt + 1;
-            hrdata_rcd = hrdata_i;
-            result_temp[95:64] = hrdata_i;
+          1: begin
+            if (hrdata_i == hrdata_rcd) @(posedge clk_i);
+            else begin
+              rcd_loop_cnt = rcd_loop_cnt + 1;
+              hrdata_rcd = hrdata_i;
+              result_temp[127:96] = hrdata_i;
+            end
           end
-        end
-        3: begin
-          if (hrdata_i == hrdata_rcd) @(posedge clk_i);
-          else begin
-            rcd_loop_cnt = rcd_loop_cnt + 1;
-            hrdata_rcd = hrdata_i;
-            result_temp[63:32] = hrdata_i;
+          2: begin
+            if (hrdata_i == hrdata_rcd) @(posedge clk_i);
+            else begin
+              rcd_loop_cnt = rcd_loop_cnt + 1;
+              hrdata_rcd = hrdata_i;
+              result_temp[95:64] = hrdata_i;
+            end
           end
-        end
-        4: begin
-          if (hrdata_i == hrdata_rcd) @(posedge clk_i);
-          else begin
-            if (result_temp == 0) rcd_loop_cnt = 0;
-            else rcd_loop_cnt = rcd_loop_cnt + 1;
-            hrdata_rcd = hrdata_i;
-            result_temp[31:0] = hrdata_i;
+          3: begin
+            if (hrdata_i == hrdata_rcd) @(posedge clk_i);
+            else begin
+              rcd_loop_cnt = rcd_loop_cnt + 1;
+              hrdata_rcd = hrdata_i;
+              result_temp[63:32] = hrdata_i;
+            end
           end
-        end
-      endcase
+          4: begin
+            if (hrdata_i == hrdata_rcd) @(posedge clk_i);
+            else begin
+              if (result_temp == 0) rcd_loop_cnt = 0;
+              else rcd_loop_cnt = rcd_loop_cnt + 1;
+              hrdata_rcd = hrdata_i;
+              result_temp[31:0] = hrdata_i;
+            end
+          end
+        endcase
+
+      end
+
+      if (rcd_loop_cnt == 5) begin
+        @(posedge clk_i);
+        rcd_loop_cnt = 0;
+        @(posedge clk_i);
+        AES_out_monitor_struct.result = result_temp;
+      end
 
     end
-
-    if (rcd_loop_cnt == 5) begin
-      @(posedge clk_i);
-      rcd_loop_cnt = 0;
-      @(posedge clk_i);
-      AES_out_monitor_struct.result = result_temp;
-    end
-
     // pragma uvmf custom do_monitor end
   endtask         
   

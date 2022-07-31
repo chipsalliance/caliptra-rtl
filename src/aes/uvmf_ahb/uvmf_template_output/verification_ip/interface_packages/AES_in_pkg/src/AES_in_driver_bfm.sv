@@ -202,20 +202,20 @@ end
      begin
        // RESPONDER mode output signals
        // INITIATOR mode output signals
-       aes_rst_o <= 'bz;
-       hadrr_o <= 'bz;
-       hwdata_o <= 'bz;
-       hsel_o <= 'bz;
-       hwrite_o <= 'bz;
-       hmastlock_o <= 'bz;
-       hready_o <= 'bz;
-       htrans_o <= 'bz;
-       hprot_o <= 'bz;
-       hburst_o <= 'bz;
-       hsize_o <= 'bz;
-       transaction_flag_in_monitor_o <= 'bz;
-       op_o <= 'bz;
-       test_case_sel_o <= 'bz;
+       aes_rst_o <= 'b0;
+       hadrr_o <= 'Z;
+       hwdata_o <= 'Z;
+       hsel_o <= 0;
+       hwrite_o <= 0;
+       hmastlock_o <= 0;
+       hready_o <= 0;
+       htrans_o <= 0;
+       hprot_o <= 0;
+       hburst_o <= 0;
+       hsize_o <= 3'b011;
+       transaction_flag_in_monitor_o <= 0;
+       op_o <= 'Z;
+       test_case_sel_o <= 0;
        // Bi-directional signals
  
      end    
@@ -365,7 +365,7 @@ end
 
   task aes_init(input aes_in_op_transactions op,
                 input bit [2:0] test_case_sel);
-  $display("%d ***************   Starting Reset", $time);
+  // $display("%d ***************   Starting Reset", $time);
     op_o = op;
     test_case_sel_o = test_case_sel;
     aes_rst_o <= 1'b0;
@@ -383,7 +383,7 @@ end
     hprot_o     = 0;
     hburst_o    = 0;
     hsize_o     = 3'b011;
-  $display("%d ***************   Ending Reset", $time);
+  // $display("%d ***************   Ending Reset", $time);
   endtask
 
   // reset other signals
@@ -517,19 +517,16 @@ end
       $display("***************   test_case_sel value is: ", test_case_sel);
       case (op)
         2'b10: begin
-          block = EXPECTED_ARRAY[test_case_sel];
-          expected = TEXT_ARRAY[test_case_sel];
+          block = EXPECTED_ARRAY[test_case_sel[1:0]];
         end
         2'b11:begin
-          block = TEXT_ARRAY[test_case_sel];
-          expected = EXPECTED_ARRAY[test_case_sel];
+          block = TEXT_ARRAY[test_case_sel[1:0]];
         end
       endcase
 
       init_key(key, key_length);
       write_block(block);
 
-      // encdec = op[0];
       write_single_word(ADDR_CONFIG, (8'h00 + (key_length << 1)+ op[0]));
       write_single_word(ADDR_CTRL, 8'h02);
       

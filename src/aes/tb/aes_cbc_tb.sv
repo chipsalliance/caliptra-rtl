@@ -981,6 +981,241 @@ module aes_cbc_tb();
   endtask // cbc_mode_sequential_quadratic_block_test
 
   //----------------------------------------------------------------
+  // cbc_mode_kat_vector_test()
+  //
+  // Perform CBC mode encryption or decryption vector test using the known answer vectors
+  //----------------------------------------------------------------
+
+  task cbc_mode_kat_vector_test(input [7 : 0]   tc_number,
+                                  input           encdec,
+                                  input           key_length,
+                                  input [63  : 0] vector_cnt);
+    reg [31  : 0] start_time;
+    reg [31  : 0] end_time;
+    reg [127 : 0] block;
+    reg [127 : 0] expected;
+    reg [255 : 0] key;
+    reg [127 : 0] IV;
+
+    string        line_read;
+    string        tmp_str1;
+    string        tmp_str2;
+
+    int cyc_cnt;
+    int fd_r;
+
+    begin
+      
+      cyc_cnt = 0;
+      fd_r = $fopen("/home/t-stevenlian/AHA_workspaces/aes_vector/Caliptra/src/aes/tb/CBCVarTxt256_clean.txt","r");
+      if(fd_r) $display("file opened successfully!");
+
+      $display("*** TC %0d CBC mode test started.", tc_number);
+      if (encdec==0)
+        $display("*** DECRYPTION *** ");
+      else
+        $display("*** ENCRYPTION *** ");
+
+      start_time = cycle_ctr;
+
+      while (cyc_cnt < (vector_cnt)) begin
+
+        tc_ctr = tc_ctr + 1;
+
+        // gets key and IV
+        $fgets(line_read,fd_r);
+        $fgets(line_read,fd_r);
+        $sscanf( line_read, "%s %s %h", tmp_str1, tmp_str2, key);
+        $fgets(line_read,fd_r);
+        $sscanf( line_read, "%s %s %h", tmp_str1, tmp_str2, IV);
+        // $display("*** key is: %h", key);
+        // $display("*** IV is: %h", IV);
+
+        // initialize key and IV
+        init_key(key, key_length);
+        write_IV(IV);
+
+        // gets text input and expected output
+        if (encdec==0)
+        begin
+          $fgets(line_read,fd_r);
+          $sscanf( line_read, "%s %s %h", tmp_str1, tmp_str2, expected);
+          $fgets(line_read,fd_r);
+          $sscanf( line_read, "%s %s %h", tmp_str1, tmp_str2, block);
+        end
+        else
+        begin
+          $fgets(line_read,fd_r);
+          $sscanf( line_read, "%s %s %h", tmp_str1, tmp_str2, block);
+          $fgets(line_read,fd_r);
+          $sscanf( line_read, "%s %s %h", tmp_str1, tmp_str2, expected);
+        end
+        // $display("*** block is: %h", block);
+        // $display("*** expected is: %h", expected);
+
+        // write block
+        write_block(block);
+
+        write_single_word(ADDR_CONFIG, (8'h00 + (key_length << 1)+ encdec));
+        write_single_word(ADDR_CTRL, 8'h02);
+        
+        #CLK_PERIOD;
+        hsel_i_tb       = 0;
+
+        #(CLK_PERIOD);
+        wait_ready();
+        read_result();
+
+        if (result_data == expected)
+          begin
+            $display("*** TC %0d cycle %0d successful.", tc_number, cyc_cnt);
+            $display("");
+          end
+        else
+          begin
+            $display("*** ERROR: TC %0d cycle %0d NOT successful.", tc_number, cyc_cnt);
+            $display("Expected: 0x%032x", expected);
+            $display("Got:      0x%032x", result_data);
+            $display("");
+
+            error_ctr = error_ctr + 1;
+          end
+        
+        cyc_cnt = cyc_cnt + 1;
+
+        // skips a line
+        $fgets(line_read,fd_r);
+      end 
+
+      end_time = cycle_ctr - start_time;
+      $display("*** Single block test processing time = %01d cycles", end_time);
+
+      $fclose(fd_r);
+      
+    end
+  endtask // cbc_mode_kat_vector_test
+
+  //----------------------------------------------------------------
+  // cbc_mode_mmt_vector_test()
+  //
+  // Perform CBC mode encryption or decryption test using multiblock message (10) vectors
+  //----------------------------------------------------------------
+
+  task cbc_mode_mmt_vector_test(input [7 : 0]   tc_number,
+                                  input           encdec,
+                                  input           key_length);
+    reg [31  : 0] start_time;
+    reg [31  : 0] end_time;
+    reg [127 : 0] block;
+    reg [127 : 0] expected;
+    reg [1279: 0] block_all;
+    reg [1279: 0] expected_all;
+    reg [255 : 0] key;
+    reg [127 : 0] IV;
+
+    string        line_read;
+    string        tmp_str1;
+    string        tmp_str2;
+
+    int cyc_cnt;
+    int cnt_tmp;
+    int fd_r;
+
+    begin
+      
+      cyc_cnt = 0;
+      // for some reason, $fopen only recognizes the absolute path
+      // change it to your path before running!!
+      fd_r = $fopen("/home/t-stevenlian/AHA_workspaces/aes_vector/Caliptra/src/aes/tb/CBCMMT256_clean.txt","r");
+      if(fd_r) $display("file opened successfully!");
+
+      $display("*** TC %0d CBC mode test started.", tc_number);
+      if (encdec==0) begin
+        $display("*** DECRYPTION *** ");
+        // skips certain number of lines
+        while (cnt_tmp <= 120) begin
+          cnt_tmp = cnt_tmp + 1;
+          $fgets(line_read,fd_r);
+        end
+      end
+      else begin
+        $display("*** ENCRYPTION *** ");
+        while (cnt_tmp <= 58) begin
+          cnt_tmp = cnt_tmp + 1;
+          $fgets(line_read,fd_r);
+        end
+      end 
+      
+      // gets key and IV
+      $sscanf( line_read, "%s %s %h", tmp_str1, tmp_str2, key);
+      $fgets(line_read,fd_r);
+      $sscanf( line_read, "%s %s %h", tmp_str1, tmp_str2, IV);
+      // $display("*** key is: %h", key);
+      // $display("*** IV is: %h", IV);
+
+      // gets text input and expected output
+      $fgets(line_read,fd_r);
+      $sscanf( line_read, "%s %s %h", tmp_str1, tmp_str2, block_all);
+      $fgets(line_read,fd_r);
+      $sscanf( line_read, "%s %s %h", tmp_str1, tmp_str2, expected_all);
+      // $display("*** block_all is: %h", block_all);
+      // $display("*** expected_all is: %h", expected_all);
+
+      start_time = cycle_ctr;
+      // initialize key and IV
+      init_key(key, key_length);
+      write_IV(IV);
+
+      while (cyc_cnt < 9) begin
+
+        tc_ctr = tc_ctr + 1;
+
+        block = block_all[1279:1152];
+        block_all = block_all << 128;
+        expected = expected_all[1279:1152];
+        expected_all = expected_all << 128;
+
+        // write block
+        write_block(block);
+
+        write_single_word(ADDR_CONFIG, (8'h00 + (key_length << 1)+ encdec));
+        write_single_word(ADDR_CTRL, 8'h02);
+        
+        #CLK_PERIOD;
+        hsel_i_tb       = 0;
+
+        #(CLK_PERIOD);
+        wait_ready();
+        read_result();
+
+        if (result_data == expected)
+          begin
+            $display("*** TC %0d cycle %0d successful.", tc_number, cyc_cnt);
+            $display("");
+          end
+        else
+          begin
+            $display("*** ERROR: TC %0d cycle %0d NOT successful.", tc_number, cyc_cnt);
+            $display("Expected: 0x%032x", expected);
+            $display("Got:      0x%032x", result_data);
+            $display("");
+
+            error_ctr = error_ctr + 1;
+          end
+        
+        cyc_cnt = cyc_cnt + 1;
+
+      end 
+
+      end_time = cycle_ctr - start_time;
+      $display("*** Single block test processing time = %01d cycles", end_time);
+
+      $fclose(fd_r);
+      
+    end
+  endtask // cbc_mode_mmt_vector_test
+
+  //----------------------------------------------------------------
   // aes_cbc_test()
   //
   //
@@ -1117,6 +1352,24 @@ module aes_cbc_tb();
       
       cbc_mode_single_block_test(8'h01, AES_ENCIPHER, nist_aes128_key0, AES_256_BIT_KEY, nist_IV0,
                                  nist_plaintext0, nist_ecb_128_enc_expected0);
+
+      $display("---------------------");
+
+      $display("CBC 256 bit key Known Answer Vector 128-block encipher tests");
+      
+      cbc_mode_kat_vector_test(8'h01, AES_ENCIPHER, AES_256_BIT_KEY, 128);
+
+      $display("---------------------");
+
+      $display("CBC 256 bit key Known Answer Vector 128-block decipher tests");
+      
+      cbc_mode_kat_vector_test(8'h01, AES_DECIPHER, AES_256_BIT_KEY, 128);
+
+      $display("---------------------");
+
+      $display("CBC 256 bit key Multiblock Message Vector encipher Test");
+      
+      cbc_mode_mmt_vector_test(8'h01, AES_ENCIPHER, AES_256_BIT_KEY);
 
       $display("---------------------");
 

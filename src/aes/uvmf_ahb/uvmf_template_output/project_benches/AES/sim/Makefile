@@ -125,14 +125,18 @@ $(UVMF_PROJECT_DIR)/tb/tests/AES_tests_pkg.sv
 AES_VERILOG_DUT ?=\
 $(UVMF_PROJECT_DIR)/../../../../rtl/aes_ctrl_ahb_uvm.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/aes.v\
+$(UVMF_PROJECT_DIR)/../../../../rtl/aes_cbc.v\
 $(UVMF_PROJECT_DIR)/../../../../rtl/aes_param.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/aes_core.v\
+$(UVMF_PROJECT_DIR)/../../../../rtl/aes_core_cbc.v\
 $(UVMF_PROJECT_DIR)/../../../../rtl/aes_decipher_block.v\
 $(UVMF_PROJECT_DIR)/../../../../rtl/aes_encipher_block.v\
 $(UVMF_PROJECT_DIR)/../../../../rtl/aes_inv_sbox.v\
 $(UVMF_PROJECT_DIR)/../../../../rtl/aes_key_mem.v\
 $(UVMF_PROJECT_DIR)/../../../../rtl/aes_sbox.v\
-$(UVMF_PROJECT_DIR)/../../../../rtl/aes_cbc.v
+$(UVMF_PROJECT_DIR)/../../../../../libs/rtl/ahb_slv_sif.sv\
+$(UVMF_PROJECT_DIR)/../../../../../libs/rtl/caliptra_macros.svh\
+$(UVMF_PROJECT_DIR)/../../../../../libs/rtl/caliptra_sva.svh
 
 # UVMF_CHANGE_ME : Reference VHDL DUT source.
 AES_VHDL_DUT ?=\
