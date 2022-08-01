@@ -494,12 +494,12 @@ module hmac_ctrl_tb();
 
       #(CLK_PERIOD);
       wait_ready();
-      end_time = cycle_ctr - start_time;
-      $display("*** Single block test processing time = %01d cycles", end_time);
       data_in_time = cycle_ctr;
       read_digest();
       data_in_time = cycle_ctr - data_in_time;
-      $display("***       DATA IN processing time = %01d cycles", data_in_time);
+      $display("***       DATA OUT processing time = %01d cycles", data_in_time);
+      end_time = cycle_ctr - start_time;
+      $display("*** Single block test processing time = %01d cycles", end_time);
 
       if (digest_data == expected)
         begin
@@ -558,9 +558,10 @@ module hmac_ctrl_tb();
 
       #(CLK_PERIOD);
       wait_ready();
+      read_digest();
+
       end_time = cycle_ctr - start_time;
       $display("*** Single block test processing time = %01d cycles", end_time);
-      read_digest();
 
       if (digest_data == expected)
         begin
