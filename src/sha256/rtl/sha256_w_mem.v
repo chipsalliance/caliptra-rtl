@@ -40,11 +40,12 @@
 `default_nettype none
 
 module sha256_w_mem(
+                    // Clock and reset.
                     input wire           clk,
                     input wire           reset_n,
-
+                    // Data port.
                     input wire [511 : 0] block,
-
+                    // Control.
                     input wire           init,
                     input wire           next,
                     output wire [31 : 0] w

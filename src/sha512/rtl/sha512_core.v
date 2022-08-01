@@ -40,16 +40,18 @@
 `default_nettype none
 
 module sha512_core(
+                   // Clock and reset.
                    input wire            clk,
                    input wire            reset_n,
-
+                   // Control.
                    input wire            init,
                    input wire            next,
                    input wire [1 : 0]    mode,
 
                    input wire            work_factor,
                    input wire [31 : 0]   work_factor_num,
-
+                   
+                   // Data port.
                    input wire [1023 : 0] block,
 
                    output wire           ready,
