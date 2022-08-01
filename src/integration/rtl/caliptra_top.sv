@@ -16,7 +16,7 @@
 
 `include "cfg.sv"
 
-module rust_top ( 
+module caliptra_top ( 
     input bit                          core_clk,
 
     input logic                        cptra_pwrgood,

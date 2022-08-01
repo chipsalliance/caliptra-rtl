@@ -16,9 +16,9 @@
 `default_nettype none
 
 `ifndef VERILATOR
-module rust_top_tb;
+module caliptra_top_tb;
 `else
-module rust_top_tb ( 
+module caliptra_top_tb ( 
     input bit core_clk,
     input bit rst_l
     ); 
@@ -69,9 +69,9 @@ module rust_top_tb (
     logic                       PSLVERR;
     logic [`APB_DATA_WIDTH-1:0] PRDATA;
 
-`define DEC rust_top_dut.rvtop.swerv.dec
+`define DEC caliptra_top_dut.rvtop.swerv.dec
 
-`define LMEM `RUST_RV_TOP.lmem.mem 
+`define LMEM `CALIPTRA_RV_TOP.lmem.mem 
 
     parameter MEMTYPE_LMEM = 3'h1;
     parameter MEMTYPE_DCCM = 3'h2;
@@ -79,8 +79,8 @@ module rust_top_tb (
 
     logic [2:0] memtype; 
 
-    assign mailbox_write = rust_top_dut.lmem.mailbox_write;
-    assign WriteData = rust_top_dut.lmem.WriteData;
+    assign mailbox_write = caliptra_top_dut.lmem.mailbox_write;
+    assign WriteData = caliptra_top_dut.lmem.WriteData;
     assign mailbox_data_val = WriteData[7:0] > 8'h5 && WriteData[7:0] < 8'h7f;
 
     parameter MAX_CYCLES = 20_000_000;
@@ -132,46 +132,46 @@ module rust_top_tb (
         wb_valid  <= `DEC.dec_i0_wen_r;
         wb_dest   <= `DEC.dec_i0_waddr_r;
         wb_data   <= `DEC.dec_i0_wdata_r;
-        if (rust_top_dut.trace_rv_i_valid_ip) begin
-           $fwrite(tp,"%b,%h,%h,%0h,%0h,3,%b,%h,%h,%b\n", rust_top_dut.trace_rv_i_valid_ip, 0, rust_top_dut.trace_rv_i_address_ip,
-                  0, rust_top_dut.trace_rv_i_insn_ip,rust_top_dut.trace_rv_i_exception_ip,rust_top_dut.trace_rv_i_ecause_ip,
-                  rust_top_dut.trace_rv_i_tval_ip,rust_top_dut.trace_rv_i_interrupt_ip);
+        if (caliptra_top_dut.trace_rv_i_valid_ip) begin
+           $fwrite(tp,"%b,%h,%h,%0h,%0h,3,%b,%h,%h,%b\n", caliptra_top_dut.trace_rv_i_valid_ip, 0, caliptra_top_dut.trace_rv_i_address_ip,
+                  0, caliptra_top_dut.trace_rv_i_insn_ip,caliptra_top_dut.trace_rv_i_exception_ip,caliptra_top_dut.trace_rv_i_ecause_ip,
+                  caliptra_top_dut.trace_rv_i_tval_ip,caliptra_top_dut.trace_rv_i_interrupt_ip);
            // Basic trace - no exception register updates
            // #1 0 ee000000 b0201073 c 0b02       00000000
            commit_count++;
            $fwrite (el, "%10d : %8s 0 %h %h%13s ; %s\n", cycleCnt, $sformatf("#%0d",commit_count),
-                        rust_top_dut.trace_rv_i_address_ip, rust_top_dut.trace_rv_i_insn_ip,
+                        caliptra_top_dut.trace_rv_i_address_ip, caliptra_top_dut.trace_rv_i_insn_ip,
                         (wb_dest !=0 && wb_valid)?  $sformatf("%s=%h", abi_reg[wb_dest], wb_data) : "             ",
-                        dasm(rust_top_dut.trace_rv_i_insn_ip, rust_top_dut.trace_rv_i_address_ip, wb_dest & {5{wb_valid}}, wb_data)
+                        dasm(caliptra_top_dut.trace_rv_i_insn_ip, caliptra_top_dut.trace_rv_i_address_ip, wb_dest & {5{wb_valid}}, wb_data)
                    );
         end
         if(`DEC.dec_nonblock_load_wen) begin
             $fwrite (el, "%10d : %32s=%h ; nbL\n", cycleCnt, abi_reg[`DEC.dec_nonblock_load_waddr], `DEC.lsu_nonblock_load_data);
-            rust_top_tb.gpr[0][`DEC.dec_nonblock_load_waddr] = `DEC.lsu_nonblock_load_data;
+            caliptra_top_tb.gpr[0][`DEC.dec_nonblock_load_waddr] = `DEC.lsu_nonblock_load_data;
         end
         if(`DEC.exu_div_wren) begin
             $fwrite (el, "%10d : %32s=%h ; nbD\n", cycleCnt, abi_reg[`DEC.div_waddr_wb], `DEC.exu_div_result);
-            rust_top_tb.gpr[0][`DEC.div_waddr_wb] = `DEC.exu_div_result;
+            caliptra_top_tb.gpr[0][`DEC.div_waddr_wb] = `DEC.exu_div_result;
         end
     end
 
     // IFU Master monitor
     always @(posedge core_clk) begin
         $fstrobe(ifu_p, "%10d : 0x%0h %h %b %h %h %h %b 0x%08h_%08h %b %b\n", cycleCnt, 
-                        rust_top_dut.ic_haddr, rust_top_dut.ic_hburst, rust_top_dut.ic_hmastlock, 
-                        rust_top_dut.ic_hprot, rust_top_dut.ic_hsize, rust_top_dut.ic_htrans, 
-                        rust_top_dut.ic_hwrite, rust_top_dut.ic_hrdata[63:32], rust_top_dut.ic_hrdata[31:0], 
-                        rust_top_dut.ic_hready, rust_top_dut.ic_hresp);
+                        caliptra_top_dut.ic_haddr, caliptra_top_dut.ic_hburst, caliptra_top_dut.ic_hmastlock, 
+                        caliptra_top_dut.ic_hprot, caliptra_top_dut.ic_hsize, caliptra_top_dut.ic_htrans, 
+                        caliptra_top_dut.ic_hwrite, caliptra_top_dut.ic_hrdata[63:32], caliptra_top_dut.ic_hrdata[31:0], 
+                        caliptra_top_dut.ic_hready, caliptra_top_dut.ic_hresp);
     end
 
     // LSU Master monitor
     always @(posedge core_clk) begin
         $fstrobe(lsu_p, "%10d : 0x%0h %h %b %h %h %h %b 0x%08h_%08h 0x%08h_%08h %b %b\n", cycleCnt, 
-                        rust_top_dut.s_smaster.haddr, rust_top_dut.s_smaster.hburst, rust_top_dut.s_smaster.hmastlock, 
-                        rust_top_dut.s_smaster.hprot, rust_top_dut.s_smaster.hsize, rust_top_dut.s_smaster.htrans, 
-                        rust_top_dut.s_smaster.hwrite, rust_top_dut.s_smaster.hrdata[63:32], rust_top_dut.s_smaster.hrdata[31:0], 
-                        rust_top_dut.s_smaster.hwdata[63:32], rust_top_dut.s_smaster.hwdata[31:0], 
-                        rust_top_dut.s_smaster.hready, rust_top_dut.s_smaster.hresp);
+                        caliptra_top_dut.s_smaster.haddr, caliptra_top_dut.s_smaster.hburst, caliptra_top_dut.s_smaster.hmastlock, 
+                        caliptra_top_dut.s_smaster.hprot, caliptra_top_dut.s_smaster.hsize, caliptra_top_dut.s_smaster.htrans, 
+                        caliptra_top_dut.s_smaster.hwrite, caliptra_top_dut.s_smaster.hrdata[63:32], caliptra_top_dut.s_smaster.hrdata[31:0], 
+                        caliptra_top_dut.s_smaster.hwdata[63:32], caliptra_top_dut.s_smaster.hwdata[31:0], 
+                        caliptra_top_dut.s_smaster.hready, caliptra_top_dut.s_smaster.hresp);
     end
 
     // AHB slave interfaces monitor
@@ -180,11 +180,11 @@ module rust_top_tb (
         for (sl_i = 0; sl_i < `AHB_SLAVES_NUM; sl_i = sl_i + 1) begin
             always @(posedge core_clk) begin
                 $fstrobe(sl_p[sl_i], "%10d : 0x%0h %h %b %h %h %h %b 0x%08h_%08h 0x%08h_%08h %b %b %b %b\n", cycleCnt, 
-                        rust_top_dut.s_slave[sl_i].haddr, rust_top_dut.s_slave[sl_i].hburst, rust_top_dut.s_slave[sl_i].hmastlock, 
-                        rust_top_dut.s_slave[sl_i].hprot, rust_top_dut.s_slave[sl_i].hsize, rust_top_dut.s_slave[sl_i].htrans, 
-                        rust_top_dut.s_slave[sl_i].hwrite, rust_top_dut.s_slave[sl_i].hrdata[63:32], rust_top_dut.s_slave[sl_i].hrdata[31:0], 
-                        rust_top_dut.s_slave[sl_i].hwdata[63:32], rust_top_dut.s_slave[sl_i].hwdata[31:0], 
-                        rust_top_dut.s_slave[sl_i].hready, rust_top_dut.s_slave[sl_i].hreadyout, rust_top_dut.s_slave[sl_i].hresp, rust_top_dut.s_slave[sl_i].hsel);
+                        caliptra_top_dut.s_slave[sl_i].haddr, caliptra_top_dut.s_slave[sl_i].hburst, caliptra_top_dut.s_slave[sl_i].hmastlock, 
+                        caliptra_top_dut.s_slave[sl_i].hprot, caliptra_top_dut.s_slave[sl_i].hsize, caliptra_top_dut.s_slave[sl_i].htrans, 
+                        caliptra_top_dut.s_slave[sl_i].hwrite, caliptra_top_dut.s_slave[sl_i].hrdata[63:32], caliptra_top_dut.s_slave[sl_i].hrdata[31:0], 
+                        caliptra_top_dut.s_slave[sl_i].hwdata[63:32], caliptra_top_dut.s_slave[sl_i].hwdata[31:0], 
+                        caliptra_top_dut.s_slave[sl_i].hready, caliptra_top_dut.s_slave[sl_i].hreadyout, caliptra_top_dut.s_slave[sl_i].hresp, caliptra_top_dut.s_slave[sl_i].hsel);
             end
         end
     endgenerate
@@ -229,8 +229,8 @@ module rust_top_tb (
         jtag_tdi = 1'b0;    // JTAG tdi
         jtag_trst_n = 1'b0; // JTAG Reset
 
-        $readmemh("program.hex",  rust_top_dut.lmem.mem);
-        $readmemh("program.hex",  rust_top_dut.imem.mem);
+        $readmemh("program.hex",  caliptra_top_dut.lmem.mem);
+        $readmemh("program.hex",  caliptra_top_dut.imem.mem);
         tp = $fopen("trace_port.csv","w");
         el = $fopen("exec.log","w");
         ifu_p = $fopen("ifu_master_ahb_trace.log", "w");
@@ -263,7 +263,7 @@ module rust_top_tb (
    //=========================================================================-
    // DUT instance
    //=========================================================================-
-rust_top rust_top_dut (
+caliptra_top caliptra_top_dut (
     .cptra_pwrgood              (cptra_pwrgood),
     .cptra_rst_b                (cptra_rst_b),
     .core_clk                   (core_clk),
@@ -318,7 +318,7 @@ addresses:
 init_iccm();
 `endif
 addr = 'hffff_fff0;
-saddr = {rust_top_dut.lmem.mem[addr+3],rust_top_dut.lmem.mem[addr+2],rust_top_dut.lmem.mem[addr+1],rust_top_dut.lmem.mem[addr]};
+saddr = {caliptra_top_dut.lmem.mem[addr+3],caliptra_top_dut.lmem.mem[addr+2],caliptra_top_dut.lmem.mem[addr+1],caliptra_top_dut.lmem.mem[addr]};
 if ( (saddr < `RV_ICCM_SADR) || (saddr > `RV_ICCM_EADR)) return;
 `ifndef RV_ICCM_ENABLE
     $display("********************************************************");
@@ -327,11 +327,11 @@ if ( (saddr < `RV_ICCM_SADR) || (saddr > `RV_ICCM_EADR)) return;
     $finish;
 `endif
 addr += 4;
-eaddr = {rust_top_dut.lmem.mem[addr+3],rust_top_dut.lmem.mem[addr+2],rust_top_dut.lmem.mem[addr+1],rust_top_dut.lmem.mem[addr]};
+eaddr = {caliptra_top_dut.lmem.mem[addr+3],caliptra_top_dut.lmem.mem[addr+2],caliptra_top_dut.lmem.mem[addr+1],caliptra_top_dut.lmem.mem[addr]};
 $display("ICCM pre-load from %h to %h", saddr, eaddr);
 
 for(addr= saddr; addr <= eaddr; addr+=4) begin
-    data = {rust_top_dut.imem.mem[addr+3],rust_top_dut.imem.mem[addr+2],rust_top_dut.imem.mem[addr+1],rust_top_dut.imem.mem[addr]};
+    data = {caliptra_top_dut.imem.mem[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
     slam_iccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
 end
 
@@ -351,7 +351,7 @@ addresses:
 init_dccm();
 `endif
 addr = 'hffff_fff8;
-saddr = {rust_top_dut.lmem.mem[addr+3],rust_top_dut.lmem.mem[addr+2],rust_top_dut.lmem.mem[addr+1],rust_top_dut.lmem.mem[addr]};
+saddr = {caliptra_top_dut.lmem.mem[addr+3],caliptra_top_dut.lmem.mem[addr+2],caliptra_top_dut.lmem.mem[addr+1],caliptra_top_dut.lmem.mem[addr]};
 if (saddr < `RV_DCCM_SADR || saddr > `RV_DCCM_EADR) return;
 `ifndef RV_DCCM_ENABLE
     $display("********************************************************");
@@ -360,11 +360,11 @@ if (saddr < `RV_DCCM_SADR || saddr > `RV_DCCM_EADR) return;
     $finish;
 `endif
 addr += 4;
-eaddr = {rust_top_dut.lmem.mem[addr+3],rust_top_dut.lmem.mem[addr+2],rust_top_dut.lmem.mem[addr+1],rust_top_dut.lmem.mem[addr]};
+eaddr = {caliptra_top_dut.lmem.mem[addr+3],caliptra_top_dut.lmem.mem[addr+2],caliptra_top_dut.lmem.mem[addr+1],caliptra_top_dut.lmem.mem[addr]};
 $display("DCCM pre-load from %h to %h", saddr, eaddr);
 
 for(addr=saddr; addr <= eaddr; addr+=4) begin
-    data = {rust_top_dut.lmem.mem[addr+3],rust_top_dut.lmem.mem[addr+2],rust_top_dut.lmem.mem[addr+1],rust_top_dut.lmem.mem[addr]};
+    data = {caliptra_top_dut.lmem.mem[addr+3],caliptra_top_dut.lmem.mem[addr+2],caliptra_top_dut.lmem.mem[addr+1],caliptra_top_dut.lmem.mem[addr]};
     slam_dccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
 end
 
@@ -374,10 +374,10 @@ endtask
 
 `define ICCM_PATH `RV_TOP.mem.iccm.iccm
 `ifdef VERILATOR
-`define DRAM(bk) rust_top_dut.rvtop.mem.Gen_dccm_enable.dccm.mem_bank[bk].ram.ram_core
+`define DRAM(bk) caliptra_top_dut.rvtop.mem.Gen_dccm_enable.dccm.mem_bank[bk].ram.ram_core
 `define IRAM(bk) `ICCM_PATH.mem_bank[bk].iccm_bank.ram_core
 `else
-`define DRAM(bk) rust_top_dut.rvtop.mem.Gen_dccm_enable.dccm.mem_bank[bk].dccm.dccm_bank.ram_core
+`define DRAM(bk) caliptra_top_dut.rvtop.mem.Gen_dccm_enable.dccm.mem_bank[bk].dccm.dccm_bank.ram_core
 `define IRAM(bk) `ICCM_PATH.mem_bank[bk].iccm.iccm_bank.ram_core
 `endif
 

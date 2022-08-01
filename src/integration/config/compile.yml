@@ -1,5 +1,5 @@
 ---
-provides: [rust_top]
+provides: [caliptra_top]
 schema_version: 2.4.0
 requires:
   - el2_swerv_pkg
@@ -13,9 +13,9 @@ targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/rust_top.sv
+      - $COMPILE_ROOT/rtl/caliptra_top.sv
       - $COMPILE_ROOT/rtl/ahb_sif.sv 
-    tops: [rust_top]
+    tops: [caliptra_top]
   rtl_lint:
     waiver_files:
       - $COMPILE_ROOT/config/design_lint/integration_lint.waivers
@@ -30,18 +30,18 @@ global:
         - '-assert svaext'
         - '-v2k_generate'
 ---
-  provides: [rust_top_tb]
+  provides: [caliptra_top_tb]
   schema_version: 2.4.0
   requires:
     - el2_swerv_pkg
-    - rust_top
+    - caliptra_top
   targets:
     tb:
       directories: [$COMPILE_ROOT/tb]
       files:
         - $COMPILE_ROOT/rtl/cfg.sv
-        - $COMPILE_ROOT/tb/rust_top_tb.sv
-      tops: [rust_top_tb]
+        - $COMPILE_ROOT/tb/caliptra_top_tb.sv
+      tops: [caliptra_top_tb]
     sim:
       pre_exec: $TOOLS/scripts/run_test_makefile
   global:

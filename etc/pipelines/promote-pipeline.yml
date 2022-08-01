@@ -23,35 +23,35 @@ stages:
       - display_name: 'Build integration_lib with VCS'
       - enabled: true
       - configspec_name: 'integration_lib'
-      - dut: 'rust_top_tb'
+      - dut: 'caliptra_top_tb'
       - args: ''
       - timeout: 10
       - testsuites:
         - l0_regress:
           - enabled: true
           - configspec_name: 'integration_lib'
-          - dut: 'rust_top_tb'
+          - dut: 'caliptra_top_tb'
           - path: 'Caliptra/src/integration/stimulus/L0_regression.yml'
 
     - integration_top_ius:
       - display_name: 'Build integration_lib with IUS/Xcelium'
       - enabled: false
       - configspec_name: 'integration_lib'
-      - dut: 'rust_top'
+      - dut: 'caliptra_top'
       - args: '--tool ius --targets packages rtl elab --options rtl="+define+TSD_DISABLE_ASSERTIONS"'
       - timeout: 10
 
     design_lint_map:
-    - rust_top:
+    - caliptra_top:
       - enabled: false
       - configspec_name: 'integration_lib'
-      - dut: 'rust_top'
+      - dut: 'caliptra_top'
       - timeout: 10
 
     dv_lint_map:
-    - rust_top_tb:
+    - caliptra_top_tb:
       - enabled: false
       - configspec_name: 'integration_lib'
-      - dut: 'rust_top_tb'
+      - dut: 'caliptra_top_tb'
       - timeout: 10
     top_repo: ''
