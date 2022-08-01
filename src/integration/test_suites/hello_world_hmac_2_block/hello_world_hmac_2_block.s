@@ -93,6 +93,29 @@ _start:
         lw x5, 0(x3)
         bne x5, x1, ready_loop
 
+    // Load 2nd block from hw_data and write to HMAC core
+    li x3, HMAC_ADDR_BLOCK_START
+    li x1, HMAC_ADDR_BLOCK_END
+    la x4, hw_data
+    write_block2_loop:
+        lw x5, 0(x4)
+        sw x5, 0(x3)
+        addi x4, x4, 4
+        addi x3, x3, 4
+        ble x3, x1, write_block2_loop
+
+    // Give the next command to HMAC core
+    li x3, HMAC_ADDR_CNTRL
+    li x4, HMAC_NEXT
+    sw x4, 0(x3)
+
+    // wait for HMAC process
+    li x3, HMAC_ADDR_STATUS
+    li x1, HMAC_VALID
+    ready2_loop:
+        lw x5, 0(x3)
+        bne x5, x1, ready2_loop
+
     // Read the data back from HMAC register
     li x3, HMAC_ADDR_TAG_START
     li x1, HMAC_ADDR_TAG_END

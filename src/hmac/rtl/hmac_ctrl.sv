@@ -47,8 +47,8 @@ module hmac_ctrl #(
     reg           hmac_cs;
     reg           hmac_we;
     reg  [AHB_ADDR_WIDTH-1 : 0] hmac_address;
-    reg  [AHB_DATA_WIDTH-1 : 0] hmac_write_data;
-    reg  [AHB_DATA_WIDTH-1 : 0] hmac_read_data;
+    reg  [31 : 0] hmac_write_data;
+    reg  [31 : 0] hmac_read_data;
 
     hmac hmac_inst(
         .clk(clk),
