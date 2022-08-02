@@ -1006,7 +1006,7 @@ mbox_top #(
 
 
 hmac_ctrl #(
-     .AHB_DATA_WIDTH(32),
+     .AHB_DATA_WIDTH(`AHB_HDATA_SIZE),
      .AHB_ADDR_WIDTH(`AHB_HADDR_SIZE),
      .BYPASS_HSEL(0)
 )hmac (
