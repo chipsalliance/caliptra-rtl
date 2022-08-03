@@ -20,8 +20,6 @@
 
 #include "../includes/defines.h"
 
-#define STDOUT 0xf0040001
-
 
 // Code to execute
 .section .text

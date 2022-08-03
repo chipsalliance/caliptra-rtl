@@ -177,13 +177,13 @@ module mbox_reg (
             struct {
                 logic [31:0] next;
                 logic load_next;
-            } error_code;
+            } status;
         } BOOT_STATUS;
         struct {
             struct {
                 logic [31:0] next;
                 logic load_next;
-            } error_code;
+            } status;
         } FLOW_STATUS;
         struct {
             struct {
@@ -294,12 +294,12 @@ module mbox_reg (
         struct {
             struct {
                 logic [31:0] value;
-            } error_code;
+            } status;
         } BOOT_STATUS;
         struct {
             struct {
                 logic [31:0] value;
-            } error_code;
+            } status;
         } FLOW_STATUS;
         struct {
             struct {
@@ -460,36 +460,36 @@ module mbox_reg (
             field_storage.FW_ERROR_ENC.error_code.value <= field_combo.FW_ERROR_ENC.error_code.next;
         end
     end
-    // Field: mbox_reg.BOOT_STATUS.error_code
+    // Field: mbox_reg.BOOT_STATUS.status
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.BOOT_STATUS.error_code.value;
+        automatic logic [31:0] next_c = field_storage.BOOT_STATUS.status.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.BOOT_STATUS && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = decoded_wr_data[31:0];
             load_next_c = '1;
         end
-        field_combo.BOOT_STATUS.error_code.next = next_c;
-        field_combo.BOOT_STATUS.error_code.load_next = load_next_c;
+        field_combo.BOOT_STATUS.status.next = next_c;
+        field_combo.BOOT_STATUS.status.load_next = load_next_c;
     end
     always_ff @(posedge clk) begin
-        if(field_combo.BOOT_STATUS.error_code.load_next) begin
-            field_storage.BOOT_STATUS.error_code.value <= field_combo.BOOT_STATUS.error_code.next;
+        if(field_combo.BOOT_STATUS.status.load_next) begin
+            field_storage.BOOT_STATUS.status.value <= field_combo.BOOT_STATUS.status.next;
         end
     end
-    // Field: mbox_reg.FLOW_STATUS.error_code
+    // Field: mbox_reg.FLOW_STATUS.status
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.FLOW_STATUS.error_code.value;
+        automatic logic [31:0] next_c = field_storage.FLOW_STATUS.status.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.FLOW_STATUS && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = decoded_wr_data[31:0];
             load_next_c = '1;
         end
-        field_combo.FLOW_STATUS.error_code.next = next_c;
-        field_combo.FLOW_STATUS.error_code.load_next = load_next_c;
+        field_combo.FLOW_STATUS.status.next = next_c;
+        field_combo.FLOW_STATUS.status.load_next = load_next_c;
     end
     always_ff @(posedge clk) begin
-        if(field_combo.FLOW_STATUS.error_code.load_next) begin
-            field_storage.FLOW_STATUS.error_code.value <= field_combo.FLOW_STATUS.error_code.next;
+        if(field_combo.FLOW_STATUS.status.load_next) begin
+            field_storage.FLOW_STATUS.status.value <= field_combo.FLOW_STATUS.status.next;
         end
     end
     for(genvar i0=0; i0<12; i0++) begin
@@ -722,8 +722,8 @@ module mbox_reg (
     assign readback_array[3][31:0] = (decoded_reg_strb.FW_ERROR_NON_FATAL && !decoded_req_is_wr) ? field_storage.FW_ERROR_NON_FATAL.error_code.value : '0;
     assign readback_array[4][31:0] = (decoded_reg_strb.HW_ERROR_ENC && !decoded_req_is_wr) ? field_storage.HW_ERROR_ENC.error_code.value : '0;
     assign readback_array[5][31:0] = (decoded_reg_strb.FW_ERROR_ENC && !decoded_req_is_wr) ? field_storage.FW_ERROR_ENC.error_code.value : '0;
-    assign readback_array[6][31:0] = (decoded_reg_strb.BOOT_STATUS && !decoded_req_is_wr) ? field_storage.BOOT_STATUS.error_code.value : '0;
-    assign readback_array[7][31:0] = (decoded_reg_strb.FLOW_STATUS && !decoded_req_is_wr) ? field_storage.FLOW_STATUS.error_code.value : '0;
+    assign readback_array[6][31:0] = (decoded_reg_strb.BOOT_STATUS && !decoded_req_is_wr) ? field_storage.BOOT_STATUS.status.value : '0;
+    assign readback_array[7][31:0] = (decoded_reg_strb.FLOW_STATUS && !decoded_req_is_wr) ? field_storage.FLOW_STATUS.status.value : '0;
     for(genvar i0=0; i0<12; i0++) begin
         assign readback_array[i0*1 + 8][31:0] = (decoded_reg_strb.key_manifest_pk_hash_0[i0] && !decoded_req_is_wr) ? field_storage.key_manifest_pk_hash_0[i0].hash.value : '0;
     end

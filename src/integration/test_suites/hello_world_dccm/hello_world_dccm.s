@@ -20,8 +20,6 @@
 
 #include "defines.h"
 
-#define STDOUT 0xd0580000
-
 
 // Code to execute
 .section .text

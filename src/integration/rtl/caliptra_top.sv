@@ -463,20 +463,20 @@ el2_swerv_wrapper rvtop (
     //---------------------------------------------------------------
     // DMA Slave
     //---------------------------------------------------------------
-    .dma_haddr              ( s_slave[1].haddr ),
-    .dma_hburst             ( s_slave[1].hburst ),
-    .dma_hmastlock          ( s_slave[1].hmastlock ),
-    .dma_hprot              ( s_slave[1].hprot ),
-    .dma_hsize              ( s_slave[1].hsize ),
-    .dma_htrans             ( s_slave[1].htrans ),
-    .dma_hwrite             ( s_slave[1].hwrite ),
-    .dma_hwdata             ( s_slave[1].hwdata ),
+    .dma_haddr              ( s_slave[`SLAVE_SEL_DMA].haddr ),
+    .dma_hburst             ( s_slave[`SLAVE_SEL_DMA].hburst ),
+    .dma_hmastlock          ( s_slave[`SLAVE_SEL_DMA].hmastlock ),
+    .dma_hprot              ( s_slave[`SLAVE_SEL_DMA].hprot ),
+    .dma_hsize              ( s_slave[`SLAVE_SEL_DMA].hsize ),
+    .dma_htrans             ( s_slave[`SLAVE_SEL_DMA].htrans ),
+    .dma_hwrite             ( s_slave[`SLAVE_SEL_DMA].hwrite ),
+    .dma_hwdata             ( s_slave[`SLAVE_SEL_DMA].hwdata ),
 
-    .dma_hrdata             ( s_slave[1].hrdata    ),
-    .dma_hresp              ( s_slave[1].hresp     ),
-    .dma_hsel               ( s_slave[1].hsel            ),
-    .dma_hreadyin           ( s_slave[1].hreadyout  ),
-    .dma_hreadyout          ( s_slave[1].hreadyout  ),
+    .dma_hrdata             ( s_slave[`SLAVE_SEL_DMA].hrdata    ),
+    .dma_hresp              ( s_slave[`SLAVE_SEL_DMA].hresp     ),
+    .dma_hsel               ( s_slave[`SLAVE_SEL_DMA].hsel      ),
+    .dma_hreadyin           ( s_slave[`SLAVE_SEL_DMA].hreadyout  ),
+    .dma_hreadyout          ( s_slave[`SLAVE_SEL_DMA].hreadyout  ),
 `endif
 `ifdef RV_BUILD_AXI4
     //-------------------------- LSU AXI signals--------------------------
@@ -742,28 +742,6 @@ ahb_sif imem (
      .HRDATA(ic_hrdata[63:0])
 );
 
-
-ahb_sif lmem (
-     // Inputs
-     .HWDATA(s_slave[0].hwdata),
-     .HCLK(core_clk),
-     .HSEL(s_slave[0].hsel), //disabling Lmem for testing DMA access from LSU
-     .HPROT(s_slave[0].hprot),
-     .HWRITE(s_slave[0].hwrite),
-     .HTRANS(s_slave[0].htrans),
-     .HSIZE(s_slave[0].hsize),
-     .HREADY(s_slave[0].hready),
-     .HRESETn(cptra_uc_rst_b),
-     .HADDR(s_slave[0].haddr),
-     .HBURST(s_slave[0].hburst),
-    //.HMASTLOCK(s_slave[0].hmastlock),
-
-     // Outputs
-     .HREADYOUT(s_slave[0].hreadyout),
-     .HRESP(s_slave[0].hresp),
-     .HRDATA(s_slave[0].hrdata[63:0])
-);
-
 sha512_ctrl #(
     .AHB_DATA_WIDTH (64),
     .AHB_ADDR_WIDTH (32),
@@ -771,19 +749,19 @@ sha512_ctrl #(
 ) sha512 (
     .clk            (core_clk),
     .reset_n        (cptra_uc_rst_b),
-    .haddr_i        (s_slave[2].haddr),
-    .hwdata_i       (s_slave[2].hwdata),
-    .hsel_i         (s_slave[2].hsel),
-    .hwrite_i       (s_slave[2].hwrite),
-    .hmastlock_i    (s_slave[2].hmastlock),
-    .hready_i       (s_slave[2].hready),
-    .htrans_i       (s_slave[2].htrans),
-    .hprot_i        (s_slave[2].hprot),
-    .hburst_i       (s_slave[2].hburst),
-    .hsize_i        (s_slave[2].hsize),
-    .hresp_o        (s_slave[2].hresp),
-    .hreadyout_o    (s_slave[2].hreadyout),
-    .hrdata_o       (s_slave[2].hrdata)
+    .haddr_i        (s_slave[`SLAVE_SEL_SHA].haddr),
+    .hwdata_i       (s_slave[`SLAVE_SEL_SHA].hwdata),
+    .hsel_i         (s_slave[`SLAVE_SEL_SHA].hsel),
+    .hwrite_i       (s_slave[`SLAVE_SEL_SHA].hwrite),
+    .hmastlock_i    (s_slave[`SLAVE_SEL_SHA].hmastlock),
+    .hready_i       (s_slave[`SLAVE_SEL_SHA].hready),
+    .htrans_i       (s_slave[`SLAVE_SEL_SHA].htrans),
+    .hprot_i        (s_slave[`SLAVE_SEL_SHA].hprot),
+    .hburst_i       (s_slave[`SLAVE_SEL_SHA].hburst),
+    .hsize_i        (s_slave[`SLAVE_SEL_SHA].hsize),
+    .hresp_o        (s_slave[`SLAVE_SEL_SHA].hresp),
+    .hreadyout_o    (s_slave[`SLAVE_SEL_SHA].hreadyout),
+    .hrdata_o       (s_slave[`SLAVE_SEL_SHA].hrdata)
 );
 
 aes_ctrl #(
@@ -793,19 +771,19 @@ aes_ctrl #(
 ) aes (
     .clk            (core_clk),
     .reset_n        (cptra_uc_rst_b),
-    .haddr_i        (s_slave[3].haddr),
-    .hwdata_i       (s_slave[3].hwdata),
-    .hsel_i         (s_slave[3].hsel),
-    .hwrite_i       (s_slave[3].hwrite),
-    .hmastlock_i    (s_slave[3].hmastlock),
-    .hready_i       (s_slave[3].hready),
-    .htrans_i       (s_slave[3].htrans),
-    .hprot_i        (s_slave[3].hprot),
-    .hburst_i       (s_slave[3].hburst),
-    .hsize_i        (s_slave[3].hsize),
-    .hresp_o        (s_slave[3].hresp),
-    .hreadyout_o    (s_slave[3].hreadyout),
-    .hrdata_o       (s_slave[3].hrdata)
+    .haddr_i        (s_slave[`SLAVE_SEL_AES].haddr),
+    .hwdata_i       (s_slave[`SLAVE_SEL_AES].hwdata),
+    .hsel_i         (s_slave[`SLAVE_SEL_AES].hsel),
+    .hwrite_i       (s_slave[`SLAVE_SEL_AES].hwrite),
+    .hmastlock_i    (s_slave[`SLAVE_SEL_AES].hmastlock),
+    .hready_i       (s_slave[`SLAVE_SEL_AES].hready),
+    .htrans_i       (s_slave[`SLAVE_SEL_AES].htrans),
+    .hprot_i        (s_slave[`SLAVE_SEL_AES].hprot),
+    .hburst_i       (s_slave[`SLAVE_SEL_AES].hburst),
+    .hsize_i        (s_slave[`SLAVE_SEL_AES].hsize),
+    .hresp_o        (s_slave[`SLAVE_SEL_AES].hresp),
+    .hreadyout_o    (s_slave[`SLAVE_SEL_AES].hreadyout),
+    .hrdata_o       (s_slave[`SLAVE_SEL_AES].hrdata)
 );
 
 
@@ -959,7 +937,6 @@ axi_lsu_dma_bridge # (`RV_LSU_BUS_TAG,`RV_LSU_BUS_TAG ) bridge(
     .s1_bready(dma_axi_bready)
 );
 
-
 `endif
 
 //Instantiation of mailbox
@@ -986,24 +963,22 @@ mbox_top #(
     .prdata_o(PRDATA),
     .pslverr_o(PSLVERR),
     //AHB Interface with uC
-    .haddr_i(s_slave[4].haddr), 
-    .hwdata_i(s_slave[4].hwdata), 
-    .hsel_i(s_slave[4].hsel), 
-    .hwrite_i(s_slave[4].hwrite),
-    .hmastlock_i(s_slave[4].hmastlock),
-    .hready_i(s_slave[4].hready),
-    .htrans_i(s_slave[4].htrans),
-    .hprot_i(s_slave[4].hprot),
-    .hburst_i(s_slave[4].hburst),
-    .hsize_i(s_slave[4].hsize),
-    .hresp_o(s_slave[4].hresp),
-    .hreadyout_o(s_slave[4].hreadyout),
-    .hrdata_o(s_slave[4].hrdata),
+    .haddr_i    (s_slave[`SLAVE_SEL_MBOX].haddr), 
+    .hwdata_i   (s_slave[`SLAVE_SEL_MBOX].hwdata), 
+    .hsel_i     (s_slave[`SLAVE_SEL_MBOX].hsel), 
+    .hwrite_i   (s_slave[`SLAVE_SEL_MBOX].hwrite),
+    .hmastlock_i(s_slave[`SLAVE_SEL_MBOX].hmastlock),
+    .hready_i   (s_slave[`SLAVE_SEL_MBOX].hready),
+    .htrans_i   (s_slave[`SLAVE_SEL_MBOX].htrans),
+    .hprot_i    (s_slave[`SLAVE_SEL_MBOX].hprot),
+    .hburst_i   (s_slave[`SLAVE_SEL_MBOX].hburst),
+    .hsize_i    (s_slave[`SLAVE_SEL_MBOX].hsize),
+    .hresp_o    (s_slave[`SLAVE_SEL_MBOX].hresp),
+    .hreadyout_o(s_slave[`SLAVE_SEL_MBOX].hreadyout),
+    .hrdata_o   (s_slave[`SLAVE_SEL_MBOX].hrdata),
 
     .cptra_uc_rst_b (cptra_uc_rst_b) 
 );
-
-
 
 hmac_ctrl #(
      .AHB_DATA_WIDTH(`AHB_HDATA_SIZE),
@@ -1012,20 +987,39 @@ hmac_ctrl #(
 )hmac (
      .clk(core_clk),
      .reset_n       (cptra_uc_rst_b),
-     .hadrr_i       (s_slave[5].haddr),
-     .hwdata_i      (s_slave[5].hwdata),
-     .hsel_i        (s_slave[5].hsel),
-     .hwrite_i      (s_slave[5].hwrite),
-     .hmastlock_i   (s_slave[5].hmastlock),
-     .hready_i      (s_slave[5].hready),
-     .htrans_i      (s_slave[5].htrans),
-     .hprot_i       (s_slave[5].hprot),
-     .hburst_i      (s_slave[5].hburst),
-     .hsize_i       (s_slave[5].hsize),
-     .hresp_o       (s_slave[5].hresp),
-     .hreadyout_o   (s_slave[5].hreadyout),
-     .hrdata_o      (s_slave[5].hrdata)
+     .hadrr_i       (s_slave[`SLAVE_SEL_HMAC].haddr),
+     .hwdata_i      (s_slave[`SLAVE_SEL_HMAC].hwdata),
+     .hsel_i        (s_slave[`SLAVE_SEL_HMAC].hsel),
+     .hwrite_i      (s_slave[`SLAVE_SEL_HMAC].hwrite),
+     .hmastlock_i   (s_slave[`SLAVE_SEL_HMAC].hmastlock),
+     .hready_i      (s_slave[`SLAVE_SEL_HMAC].hready),
+     .htrans_i      (s_slave[`SLAVE_SEL_HMAC].htrans),
+     .hprot_i       (s_slave[`SLAVE_SEL_HMAC].hprot),
+     .hburst_i      (s_slave[`SLAVE_SEL_HMAC].hburst),
+     .hsize_i       (s_slave[`SLAVE_SEL_HMAC].hsize),
+     .hresp_o       (s_slave[`SLAVE_SEL_HMAC].hresp),
+     .hreadyout_o   (s_slave[`SLAVE_SEL_HMAC].hreadyout),
+     .hrdata_o      (s_slave[`SLAVE_SEL_HMAC].hrdata)
 );
+
+//TIE OFF slaves
+always_comb begin: tie_off_slaves
+    s_slave[`SLAVE_SEL_ECC].hresp = '0;
+    s_slave[`SLAVE_SEL_ECC].hreadyout = '0;
+    s_slave[`SLAVE_SEL_ECC].hrdata = '0;
+    s_slave[`SLAVE_SEL_KV].hresp = '0;
+    s_slave[`SLAVE_SEL_KV].hreadyout = '0;
+    s_slave[`SLAVE_SEL_KV].hrdata = '0;
+    s_slave[`SLAVE_SEL_QSPI].hresp = '0;
+    s_slave[`SLAVE_SEL_QSPI].hreadyout = '0;
+    s_slave[`SLAVE_SEL_QSPI].hrdata = '0;
+    s_slave[`SLAVE_SEL_UART].hresp = '0;
+    s_slave[`SLAVE_SEL_UART].hreadyout = '0;
+    s_slave[`SLAVE_SEL_UART].hrdata = '0;
+    s_slave[`SLAVE_SEL_I3C].hresp = '0;
+    s_slave[`SLAVE_SEL_I3C].hreadyout = '0;
+    s_slave[`SLAVE_SEL_I3C].hrdata = '0;
+end 
 
 genvar sva_i;
 generate

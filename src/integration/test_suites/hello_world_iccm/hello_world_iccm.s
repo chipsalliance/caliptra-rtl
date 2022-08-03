@@ -20,8 +20,6 @@
 
 #include "defines.h"
 
-#define STDOUT 0xd0580000
-
     .set    mfdc, 0x7f9
 .extern printf_start, printf_end
 // Code to execute

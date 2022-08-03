@@ -74,6 +74,7 @@ program.hex: $(OFILES) $(LINK)
 	@echo Building $(TESTNAME)
 	$(GCC_PREFIX)-gcc $(ABI) -Wl,-Map=$(TEST).map -lgcc -T$(LINK) -o $(TESTNAME).exe $(OFILES) -nostartfiles  $(TEST_LIBS)
 	$(GCC_PREFIX)-objcopy -O verilog  $(TESTNAME).exe program.hex
+	$(GCC_PREFIX)-objcopy -O verilog -j .data --change-section-address .data=0 --pad-to 0x20000 $(TESTNAME).exe mailbox.hex
 	$(GCC_PREFIX)-objdump -S  $(TESTNAME).exe > $(TESTNAME).dis
 	@echo Completed building $(TESTNAME)
 

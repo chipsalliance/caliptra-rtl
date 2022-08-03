@@ -25,6 +25,7 @@ module mbox #(
 
     //mailbox request
     input logic        req_dv,
+    input logic        dir_req_dv,
     input mbox_req_t   req_data,
     output logic       mbox_error,
 
@@ -37,22 +38,6 @@ module mbox #(
 );
 
 localparam DEPTH = (SIZE_KB * 1024 * 8) / DATA_W;
-//bits of addr used to address the mailbox
-localparam MBOX_ADDR_MSB = $clog2(SIZE_KB*1024)-1;
-localparam MBOX_ADDR_LSB = $clog2(DATA_W/8);
-//ADDRESS MAP
-//DIRECT ADDRESSING from BASE through MBOX size
-//Control registers start after direct address space (base + size in bytes)
-localparam MBOX_CR_BASE = BASE_ADDR + (SIZE_KB * 1024);
-
-//32b Control registers
-localparam MBOX_LOCK_ADDR    = MBOX_CR_BASE + 'h0_0000;
-localparam MBOX_CMD_ADDR     = MBOX_CR_BASE + 'h0_0004;
-localparam MBOX_DLEN_ADDR    = MBOX_CR_BASE + 'h0_0008;
-localparam MBOX_DATAIN_ADDR  = MBOX_CR_BASE + 'h0_000C;
-localparam MBOX_DATAOUT_ADDR = MBOX_CR_BASE + 'h0_0010;
-localparam MBOX_EXEC_ADDR    = MBOX_CR_BASE + 'h0_0014;
-localparam MBOX_STATUS_ADDR  = MBOX_CR_BASE + 'h0_0018;
 
 //this module is used to instantiate a single mailbox instance
 //requests within the address space of this mailbox are routed here from the top level
@@ -85,11 +70,13 @@ logic [$clog2(DEPTH)-1:0] mbox_rdptr, mbox_rdptr_nxt;
 logic inc_rdptr;
 logic rst_mbox_ptr;
 logic [DATA_W-1:0] sram_rdata;
-logic sram_we, sram_rd;
+logic sram_we;
+logic mbox_protocol_sram_we;
 
 logic soc_has_lock, soc_has_lock_nxt;
 
-//controls
+//csr
+logic [DATA_W-1:0] csr_rdata;
 logic read_error;
 logic write_error;
 
@@ -118,7 +105,7 @@ always_comb begin : mbox_fsm_combo
     soc_has_lock_nxt = 0;
     rst_mbox_ptr = 0;
     inc_rdptr = 0; inc_wrptr = 0;
-    sram_we = '0;
+    mbox_protocol_sram_we = '0;
     uc_mbox_data_avail = 0;
     soc_mbox_data_avail = 0;
     mbox_fsm_ns = mbox_fsm_ps;
@@ -144,7 +131,7 @@ always_comb begin : mbox_fsm_combo
             //update the read/write pointers to sram when accessing datain/dataout registers
             inc_rdptr = hwif_out.mbox_dataout.dataout.swacc;
             inc_wrptr = hwif_out.mbox_datain.datain.swmod;
-            sram_we = hwif_out.mbox_datain.datain.swmod;
+            mbox_protocol_sram_we = hwif_out.mbox_datain.datain.swmod;
             if (arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC) begin
                 mbox_fsm_ns = MBOX_EXECUTE_UC;
             end
@@ -181,6 +168,13 @@ end
 
 `CLP_EN_RST_FF(soc_has_lock, soc_has_lock_nxt, clk, arc_MBOX_IDLE_MBOX_RDY_FOR_CMD, rst_b)
 
+always_comb sram_we = (dir_req_dv & req_data.write) | mbox_protocol_sram_we;
+//align the direct address to a word
+always_comb sram_rdaddr = dir_req_dv ? req_data.addr[$clog2(DEPTH)+1:2] : mbox_rdptr;
+always_comb sram_waddr = dir_req_dv ? req_data.addr[$clog2(DEPTH)+1:2] : mbox_wrptr;
+
+always_comb rdata = dir_req_dv ? sram_rdata : csr_rdata;
+
 //SRAM
 //Primary storage for the mailbox, can be accessed by reading DATAOUT or writing DATAIN
 //only accessed by the device that locked the mailbox
@@ -215,12 +209,8 @@ always_comb mbox_wrptr_nxt = rst_mbox_ptr ? '0 :
 //in execute state we increment the pointer each time we write
 always_comb mbox_rdptr_nxt = rst_mbox_ptr ? '0 :
                              inc_rdptr ? mbox_rdptr + 'd1 : 
-                                          mbox_rdptr;
+                                         mbox_rdptr;
 `CLP_EN_RST_FF(mbox_rdptr, mbox_rdptr_nxt, clk, inc_rdptr | rst_mbox_ptr, rst_b)
-
-//add support for direct writes/reads from uc
-always_comb sram_rdaddr = mbox_rdptr;
-always_comb sram_waddr = mbox_wrptr;
 
 always_comb hwif_in.reset_b = rst_b;
 //always_comb hwif_in.soc_req = req_data.soc_req;
@@ -250,7 +240,7 @@ mbox_csr1(
     .s_cpuif_req_stall_rd(),
     .s_cpuif_rd_ack(),
     .s_cpuif_rd_err(read_error),
-    .s_cpuif_rd_data(rdata),
+    .s_cpuif_rd_data(csr_rdata),
     .s_cpuif_wr_ack(),
     .s_cpuif_wr_err(write_error),
 

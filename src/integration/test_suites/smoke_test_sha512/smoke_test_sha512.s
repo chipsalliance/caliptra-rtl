@@ -20,7 +20,6 @@
 
 #include "../includes/defines.h"
 
-#define STDOUT 0xd0580000
 #define SHA512_CNTRL 0x40000010
 #define SHA512_NAME  0x40000000
 #define SHA512_VER   0x40000008

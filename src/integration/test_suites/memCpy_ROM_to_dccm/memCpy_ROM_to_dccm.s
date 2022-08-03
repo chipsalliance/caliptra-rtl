@@ -21,7 +21,6 @@
 #include "defines.h"
 
 #define DCCMOUT 0xf0040000
-#define STDOUT 0xd0580000
 
 
 // Code to execute

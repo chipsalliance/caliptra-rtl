@@ -20,7 +20,6 @@
 
 #include "../includes/defines.h"
 
-#define STDOUT 0xd0580000
 #define DCCM_SADR                   0xf0040000
 
 #define SHA512_ADDR_NAME            0x40000000

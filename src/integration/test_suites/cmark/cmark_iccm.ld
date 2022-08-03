@@ -2,6 +2,8 @@ OUTPUT_ARCH( "riscv" )
 ENTRY(_start)
 
 SECTIONS {
+  . = 0x30000000;
+  .data : { *(.*data) *(.rodata*) *(.sbss) }
   .text   : { crt0.o (.text*) }
  _end = .;
   . = 0xee000000 ;
@@ -9,7 +11,6 @@ SECTIONS {
   . = 0xd0580000;
   .data.io .  : { *(.data.io) }
   . = 0xf0040000;
-  .data  :  { *(.*data) *(.rodata*) *(.sbss) STACK = ALIGN(16) + 0x1000;}
   .bss : { *(.bss) }
   . = 0xfffffff0;
   .iccm.ctl : { LONG(0xee000000); LONG(0xee008000) }

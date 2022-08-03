@@ -27,15 +27,24 @@ module caliptra_sram #(
     input  logic [ADDR_WIDTH-1:0]      rdaddr_i,
     output logic [DATA_WIDTH-1:0]      rdata_o
     );
-    //storage element
-    logic [DATA_WIDTH-1:0] ram [DEPTH];
 
-    always_ff @(posedge clk_i) begin
+    localparam NUM_BYTES = DATA_WIDTH/8;
+
+    //storage element
+    logic [7:0] ram [DEPTH][NUM_BYTES-1:0];
+
+    always @(posedge clk_i) begin
         if (we_i) begin
-            ram[waddr_i] <= wdata_i;
+            for (int i = 0; i < NUM_BYTES; i++) begin
+                ram[waddr_i][i] <= wdata_i[i*8 +: 8];
+            end
         end
     end
 
-    assign rdata_o = ram[rdaddr_i];
+    always_comb begin
+        for (int i = 0; i < NUM_BYTES; i++) begin
+            rdata_o[i*8 +: 8] = ram[rdaddr_i][i];
+        end
+    end
 
 endmodule

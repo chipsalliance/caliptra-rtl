@@ -173,3 +173,4 @@
 #define SDVT_AHB 1
 #define RV_LDERR_ROLLBACK 1
 #define RV_ASSERT_ON 
+#define STDOUT 0x3003001c

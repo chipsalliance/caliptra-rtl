@@ -76,13 +76,13 @@ generate begin: data_muxes
         always_comb begin
             unique casez (hsize_i)
                 3'b000:  //byte
-                    wdata = {{$bits(wdata)-8{1'b0}},hwdata_i[7:0]};
+                    wdata = addr[2] ? {{$bits(wdata)-8{1'b0}},hwdata_i[39:32]} : {{$bits(wdata)-8{1'b0}},hwdata_i[7:0]};
                 3'b001:  //halfword
-                    wdata = {{$bits(wdata)-16{1'b0}},hwdata_i[15:0]};
+                    wdata = addr[2] ? {{$bits(wdata)-16{1'b0}},hwdata_i[47:32]} : {{$bits(wdata)-16{1'b0}},hwdata_i[15:0]};
                 3'b010:  //word
-                    wdata = addr[2]? hwdata_i[63:32] : hwdata_i[31:0];
+                    wdata = addr[2] ? hwdata_i[63:32] : hwdata_i[31:0];
                 default: //word
-                wdata = addr[2]? hwdata_i[63:32] : hwdata_i[31:0];
+                wdata = addr[2] ? hwdata_i[63:32] : hwdata_i[31:0];
             endcase;
         end
         always_comb hrdata_o = addr[2] ? {rdata, 32'b0} : {32'b0, rdata};

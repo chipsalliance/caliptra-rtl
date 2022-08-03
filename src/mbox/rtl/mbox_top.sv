@@ -78,6 +78,7 @@ mbox_req_t uc_req;
 
 //mbox req inf
 logic mbox_req_dv;
+logic mbox_dir_req_dv;
 logic mbox_req_hold;
 mbox_req_t mbox_req_data;
 logic [MBOX_DATA_W-1:0] mbox_rdata;
@@ -205,6 +206,7 @@ mbox_arb mbox_arb1 (
     .soc_error(soc_req_error),
     //MBOX inf
     .mbox_req_dv(mbox_req_dv),
+    .mbox_dir_req_dv(mbox_dir_req_dv),
     .mbox_req_hold(1'b0), //FIXME TIE-OFF
     .mbox_req_data(mbox_req_data),
     .mbox_rdata(mbox_rdata),
@@ -223,6 +225,11 @@ mbox_arb mbox_arb1 (
 //These registers are memory mapped per the Caliptra Specification
 //Read and Write permissions are controlled within this block
 always_comb mbox_reg_error = mbox_reg_read_error | mbox_reg_write_error;
+
+always_comb mbox_reg_hwif_in.reset_b = cptra_uc_rst_b;
+always_comb mbox_reg_hwif_in.soc_req = mbox_reg_req_data.soc_req;
+always_comb mbox_reg_hwif_in.field_entropy[0].seed.hwclr = '1; //fixme hook up hwclr for field entropy
+always_comb mbox_reg_hwif_in.uds_seed[0].seed.hwclr = '1; //fixme hook up hwclr for uds seed
 
 mbox_reg mbox_reg1 (
     .clk(clk),
@@ -256,6 +263,7 @@ mbox1 (
     .clk(clk),
     .rst_b(cptra_uc_rst_b),
     .req_dv(mbox_req_dv), 
+    .dir_req_dv(mbox_dir_req_dv),
     .req_data(mbox_req_data),
     .mbox_error(mbox_error),
     .rdata(mbox_rdata),

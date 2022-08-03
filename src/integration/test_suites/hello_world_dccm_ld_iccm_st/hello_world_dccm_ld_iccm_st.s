@@ -20,7 +20,6 @@
 
 #include "defines.h"
 
-#define STDOUT 0xd0580000
 #define ICCMOUT 0xee000000
 
 

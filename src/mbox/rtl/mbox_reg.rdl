@@ -23,8 +23,8 @@ addrmap mbox_reg {
     reg {rw_ro error_code[32];} FW_ERROR_NON_FATAL;
     reg {rw_ro error_code[32];} HW_ERROR_ENC;
     reg {rw_ro error_code[32];} FW_ERROR_ENC;
-    reg {rw_ro error_code[32];} BOOT_STATUS;
-    reg {rw_ro error_code[32];} FLOW_STATUS;
+    reg {rw_ro status[32];} BOOT_STATUS;
+    reg {rw_ro status[32];} FLOW_STATUS;
 
     //fuses
     reg {secret seed[32];} uds_seed[12];

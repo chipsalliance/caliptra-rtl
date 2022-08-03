@@ -20,16 +20,15 @@
 
 #include "../includes/defines.h"
 
-#define STDOUT 0xd0580000
 #define DCCM_SADR                   0xf0040000
 
-#define MBOX_ADDR_BASE            0x30000000
-#define MBOX_ADDR_LOCK            0x30000000
-#define MBOX_ADDR_CMD             0x30000008
-#define MBOX_ADDR_DLEN            0x3000000C
-#define MBOX_ADDR_DATAIN          0x30000010
-#define MBOX_ADDR_DATAOUT         0x30000014
-#define MBOX_ADDR_EXECUTE         0x30000018
+#define MBOX_ADDR_BASE            0x30020000
+#define MBOX_ADDR_LOCK            0x30020000
+#define MBOX_ADDR_CMD             0x30020008
+#define MBOX_ADDR_DLEN            0x3002000C
+#define MBOX_ADDR_DATAIN          0x30020010
+#define MBOX_ADDR_DATAOUT         0x30020014
+#define MBOX_ADDR_EXECUTE         0x30020018
 
 #define MBOX_DLEN_VAL             0x0000001C
 

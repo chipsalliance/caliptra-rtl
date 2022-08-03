@@ -32,6 +32,7 @@ module mbox_arb (
     output logic soc_error,
     //MBOX inf
     output logic mbox_req_dv,
+    output logic mbox_dir_req_dv,
     input  logic mbox_req_hold,
     output mbox_req_t mbox_req_data,
     input  logic [MBOX_DATA_W-1:0] mbox_rdata,
@@ -54,6 +55,8 @@ logic soc_mbox_req;
 logic soc_mbox_reg_req;
 logic uc_mbox_req;
 logic uc_mbox_reg_req;
+logic uc_mbox_csr_req;
+logic uc_mbox_dir_req;
 
 //simple arbitration scheme, track most recently granted client (SOC or UC)
 //give priority in case of collision to the least recently granted client
@@ -64,7 +67,10 @@ assign uc_has_priority = ~soc_has_priority;
 always_comb toggle_priority = req_collision;
 
 //figure out which client is requesting which block
-always_comb uc_mbox_req = (uc_req_dv & (uc_req_data.addr inside {[MBOX_MEM_START_ADDR:MBOX_MEM_END_ADDR]}));
+always_comb uc_mbox_req = uc_mbox_csr_req | uc_mbox_dir_req;
+always_comb uc_mbox_csr_req = (uc_req_dv & (uc_req_data.addr inside {[MBOX_MEM_START_ADDR:MBOX_MEM_END_ADDR]}));
+always_comb uc_mbox_dir_req = (uc_req_dv & (uc_req_data.addr inside {[MBOX_DIR_START_ADDR:MBOX_DIR_END_ADDR]}));
+
 always_comb soc_mbox_req = (soc_req_dv & (soc_req_data.addr inside {[MBOX_MEM_START_ADDR:MBOX_MEM_END_ADDR]}));
 
 always_comb uc_mbox_reg_req = (uc_req_dv & (uc_req_data.addr inside {[MBOX_REG_MEM_START_ADDR:MBOX_REG_MEM_END_ADDR]}));
@@ -75,7 +81,8 @@ always_comb req_collision = (uc_mbox_req & soc_mbox_req) |
                             (uc_mbox_reg_req & soc_mbox_reg_req);
 
 //drive the dv to the appropriate destination if either client is trying to 
-always_comb mbox_req_dv = uc_mbox_req | soc_mbox_req;
+always_comb mbox_req_dv = uc_mbox_csr_req | soc_mbox_req;
+always_comb mbox_dir_req_dv = uc_mbox_dir_req;
 always_comb mbox_reg_req_dv = uc_mbox_reg_req | soc_mbox_reg_req;
 
 //drive the appropriate request to each destination

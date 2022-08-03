@@ -48,7 +48,7 @@ module caliptra_top_tb (
     logic                       cptra_pwrgood;
     logic                       cptra_rst_b;
 
-    wire[63:0] WriteData;
+    wire[31:0] WriteData;
     string                      abi_reg[32]; // ABI register names
     //jtag interface
     logic                       jtag_tck;    // JTAG clk
@@ -71,7 +71,7 @@ module caliptra_top_tb (
 
 `define DEC caliptra_top_dut.rvtop.swerv.dec
 
-`define LMEM `CALIPTRA_RV_TOP.lmem.mem 
+`define LMEM caliptra_top_dut.mbox_top1.mbox1.mbox_ram1.ram 
 
     parameter MEMTYPE_LMEM = 3'h1;
     parameter MEMTYPE_DCCM = 3'h2;
@@ -79,8 +79,8 @@ module caliptra_top_tb (
 
     logic [2:0] memtype; 
 
-    assign mailbox_write = caliptra_top_dut.lmem.mailbox_write;
-    assign WriteData = caliptra_top_dut.lmem.WriteData;
+    assign mailbox_write = caliptra_top_dut.mbox_top1.mbox_reg1.field_combo.FLOW_STATUS.status.load_next;
+    assign WriteData = caliptra_top_dut.mbox_top1.mbox_reg1.field_combo.FLOW_STATUS.status.next;
     assign mailbox_data_val = WriteData[7:0] > 8'h5 && WriteData[7:0] < 8'h7f;
 
     parameter MAX_CYCLES = 20_000_000;
@@ -112,14 +112,14 @@ module caliptra_top_tb (
             $display("* TESTCASE PASSED");
             $display("\nFinished : minstret = %0d, mcycle = %0d", `DEC.tlu.minstretl[31:0],`DEC.tlu.mcyclel[31:0]);
             $display("See \"exec.log\" for execution trace with register updates..\n");
-            dump_memory_contents(MEMTYPE_LMEM, 32'h8000_0110, 32'h8000_0180);
+            dump_memory_contents(MEMTYPE_LMEM, 32'h0000_0000, 32'h001_FFFF);
             dump_memory_contents(MEMTYPE_DCCM, `RV_DCCM_SADR, `RV_DCCM_EADR);
             dump_memory_contents(MEMTYPE_ICCM, `RV_ICCM_SADR, `RV_ICCM_EADR);
             $finish;
         end
         else if(mailbox_write && WriteData[7:0] == 8'h1) begin
             $display("* TESTCASE FAILED");
-            dump_memory_contents(MEMTYPE_LMEM, 32'h8000_0110, 32'h8000_0180);
+            dump_memory_contents(MEMTYPE_LMEM, 32'h0000_0000, 32'h001_FFFF);
             dump_memory_contents(MEMTYPE_DCCM, `RV_DCCM_SADR, `RV_DCCM_EADR);
             dump_memory_contents(MEMTYPE_ICCM, `RV_ICCM_SADR, `RV_ICCM_EADR);
             $finish;
@@ -229,8 +229,8 @@ module caliptra_top_tb (
         jtag_tdi = 1'b0;    // JTAG tdi
         jtag_trst_n = 1'b0; // JTAG Reset
 
-        $readmemh("program.hex",  caliptra_top_dut.lmem.mem);
         $readmemh("program.hex",  caliptra_top_dut.imem.mem);
+        $readmemh("mailbox.hex",  caliptra_top_dut.mbox_top1.mbox1.mbox_ram1.ram);
         tp = $fopen("trace_port.csv","w");
         el = $fopen("exec.log","w");
         ifu_p = $fopen("ifu_master_ahb_trace.log", "w");
@@ -318,7 +318,7 @@ addresses:
 init_iccm();
 `endif
 addr = 'hffff_fff0;
-saddr = {caliptra_top_dut.lmem.mem[addr+3],caliptra_top_dut.lmem.mem[addr+2],caliptra_top_dut.lmem.mem[addr+1],caliptra_top_dut.lmem.mem[addr]};
+saddr = {caliptra_top_dut.imem.mem[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
 if ( (saddr < `RV_ICCM_SADR) || (saddr > `RV_ICCM_EADR)) return;
 `ifndef RV_ICCM_ENABLE
     $display("********************************************************");
@@ -327,7 +327,7 @@ if ( (saddr < `RV_ICCM_SADR) || (saddr > `RV_ICCM_EADR)) return;
     $finish;
 `endif
 addr += 4;
-eaddr = {caliptra_top_dut.lmem.mem[addr+3],caliptra_top_dut.lmem.mem[addr+2],caliptra_top_dut.lmem.mem[addr+1],caliptra_top_dut.lmem.mem[addr]};
+eaddr = {caliptra_top_dut.imem.mem[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
 $display("ICCM pre-load from %h to %h", saddr, eaddr);
 
 for(addr= saddr; addr <= eaddr; addr+=4) begin
@@ -351,7 +351,7 @@ addresses:
 init_dccm();
 `endif
 addr = 'hffff_fff8;
-saddr = {caliptra_top_dut.lmem.mem[addr+3],caliptra_top_dut.lmem.mem[addr+2],caliptra_top_dut.lmem.mem[addr+1],caliptra_top_dut.lmem.mem[addr]};
+saddr = {caliptra_top_dut.imem.mem[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
 if (saddr < `RV_DCCM_SADR || saddr > `RV_DCCM_EADR) return;
 `ifndef RV_DCCM_ENABLE
     $display("********************************************************");
@@ -360,11 +360,11 @@ if (saddr < `RV_DCCM_SADR || saddr > `RV_DCCM_EADR) return;
     $finish;
 `endif
 addr += 4;
-eaddr = {caliptra_top_dut.lmem.mem[addr+3],caliptra_top_dut.lmem.mem[addr+2],caliptra_top_dut.lmem.mem[addr+1],caliptra_top_dut.lmem.mem[addr]};
+eaddr = {caliptra_top_dut.imem.mem[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
 $display("DCCM pre-load from %h to %h", saddr, eaddr);
 
 for(addr=saddr; addr <= eaddr; addr+=4) begin
-    data = {caliptra_top_dut.lmem.mem[addr+3],caliptra_top_dut.lmem.mem[addr+2],caliptra_top_dut.lmem.mem[addr+1],caliptra_top_dut.lmem.mem[addr]};
+    data = {caliptra_top_dut.imem.mem[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
     slam_dccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
 end
 
@@ -523,7 +523,7 @@ task dump_memory_contents;
     of = $fopen(outfile, "w");
     for (addr = start_addr; addr <= start_addr + 112; addr = addr + 1) begin
         case (mem_type)
-            MEMTYPE_LMEM: data = `LMEM[addr];
+            MEMTYPE_LMEM: data = `LMEM[addr[31:2]][addr[1:0]];
             MEMTYPE_DCCM: begin
                             bank = get_dccm_bank(addr, indx);
                             `ifdef RV_DCCM_ENABLE
