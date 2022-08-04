@@ -19,6 +19,9 @@ module ecc_arith_unit_tb();
   parameter [383 : 0] G_Y_MONT = 384'h5a15c5e9dd8002263969a840c6c3521968f4ffd98bade7562e83b050cd385481a72d556e23043dad1f8af93c2b78abc2;
   parameter [383 : 0] G_Z_MONT = 384'h100000000ffffffffffffffff0000000100000000;
 
+  // q
+  parameter [383 : 0] group_order = 384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973; 
+
   parameter [383 : 0] UOP_OPR_CONST_ZERO        = 8'd00;
   parameter [383 : 0] UOP_OPR_CONST_ONE         = 8'd01;
   parameter [383 : 0] UOP_OPR_CONST_E_a         = 8'd02;
@@ -31,6 +34,9 @@ module ecc_arith_unit_tb();
   parameter [383 : 0] UOP_OPR_R0_X              = 8'd08;  // 8'b0000_1000;
   parameter [383 : 0] UOP_OPR_R0_Y              = 8'd09;  // 8'b0000_1001;
   parameter [383 : 0] UOP_OPR_R0_Z              = 8'd10;  // 8'b0000_1010;
+  
+  parameter [383 : 0] UOP_OPR_CONST_Qx_AFFN     = 8'd16;
+  parameter [383 : 0] UOP_OPR_CONST_Qy_AFFN     = 8'd17;
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
@@ -73,6 +79,7 @@ module ecc_arith_unit_tb();
   logic                 busy_o_tb;
 
   logic [383 : 0]       read_data;
+  reg   [384 : 0]       d_fixed_MSB;
 
   //----------------------------------------------------------------
   // Device Under Test.
@@ -244,6 +251,8 @@ module ecc_arith_unit_tb();
   //----------------------------------------------------------------
   task read_reg(input [7 : 0]  address);
     begin
+      read_single_word(2'b00, address, 0);
+      #(2*CLK_PERIOD);
       for (int i = 0; i < 12; i++) begin
         read_single_word(2'b00, address, i);
         read_data = {data_o_tb, read_data[383 : 32]};
@@ -322,9 +331,9 @@ module ecc_arith_unit_tb();
   //
   // Write the given word to the DUT using the DUT interface.
   //----------------------------------------------------------------
-  task write_scalar(input [383 : 0] word);
+  task write_scalar(input [384 : 0] word);
     begin
-      for (int i = 0; i < 12; i++) begin
+      for (int i = 0; i < 13; i++) begin
         write_single_word(2'b01, 8'h00 , i, word[32*i +: 32]);
       end
       #(CLK_PERIOD);
@@ -342,6 +351,24 @@ module ecc_arith_unit_tb();
     end
   endtask // write_scalar
 
+
+  //----------------------------------------------------------------
+  // fix_MSB()
+  //
+  // Set MSB of scalar to 1.
+  //----------------------------------------------------------------
+  task fix_MSB(input [383 : 0] d);
+    reg [385 : 0] d_q;
+    reg [385 : 0] d_2q;
+    begin
+      d_q = d + group_order;
+      d_2q = d_q + group_order;
+      if ((d_q >> 384) == 1)
+        d_fixed_MSB = d_q[384 : 0];
+      else
+        d_fixed_MSB = d_2q[384 : 0];
+    end
+  endtask // fix_MSB
 
   //----------------------------------------------------------------
   // trig_ECPM()
@@ -372,13 +399,16 @@ module ecc_arith_unit_tb();
   //----------------------------------------------------------------
   task ecc_single_block_test(input [7 : 0]  tc_number,
                             input [383 : 0] P[0 : 2],
-                            input [383 : 0] scalar,
+                            input [384 : 0] scalar,
                             input [383 : 0] expected[0 : 1]);
     reg [383 : 0]   Q [0 : 1];
+    reg [31  : 0]   start_time;
+    reg [31  : 0]   end_time;
     begin
       $display("*** TC %0d ECPM test started.", tc_number);
       tc_ctr = tc_ctr + 1;
     
+      start_time = cycle_ctr;
       write_reg(UOP_OPR_CONST_ZERO, 384'h0);
       write_reg(UOP_OPR_CONST_ONE, 384'h1);
       write_reg(UOP_OPR_CONST_E_a, E_a_MONT);
@@ -394,12 +424,15 @@ module ecc_arith_unit_tb();
 
       wait_ready();
 
-      read_reg(UOP_OPR_R0_X);
+      read_reg(UOP_OPR_CONST_Qx_AFFN);
       Q[0] = read_data;
 
-      read_reg(UOP_OPR_R0_Y);
+      read_reg(UOP_OPR_CONST_Qy_AFFN);
       Q[1] = read_data;
-
+      
+      end_time = cycle_ctr - start_time;
+      $display("*** single block test processing time = %01d cycles.", end_time);
+      
       if (Q == expected)
         begin
           $display("*** TC %0d successful.", tc_number);
@@ -408,8 +441,11 @@ module ecc_arith_unit_tb();
       else
         begin
           $display("*** ERROR: TC %0d NOT successful.", tc_number);
-          //$display("Expected: 0x%032x", expected);
-          //$display("Got:      0x%032x", Q);
+          $display("scalar    : 0x%96x", scalar);
+          $display("Expected_x: 0x%96x", expected[0]);
+          $display("Got:        0x%96x", Q[0]);
+          $display("Expected_y: 0x%96x", expected[1]);
+          $display("Got:        0x%96x", Q[1]);
           $display("");
 
           error_ctr = error_ctr + 1;
@@ -424,37 +460,46 @@ module ecc_arith_unit_tb();
   //
   //----------------------------------------------------------------
   task ecc_test();
-    reg [383 : 0] P_A [0 : 2];
-    reg [383 : 0] SK_A;
-    reg [383 : 0] Q_A [1 : 0];
+    reg [383 : 0] G_MONT [0 : 2];
+    reg [383 : 0] d;
+    reg [383 : 0] Q [0 : 1];
 
-    reg [383 : 0] P_B [0 : 2];
-    reg [383 : 0] SK_B;
-    reg [383 : 0] Q_B [1 : 0];
+    integer               data_file;
+    integer               scan_file;
+    reg     [383:0]       captured_data;
 
+    integer               test_cnt; 
     begin
-      P_A[0] = G_X_MONT;
-      P_A[1] = G_Y_MONT;
-      P_A[2] = G_Z_MONT;
 
-      SK_A   = 384'hD27335EA71664AF244DD14E9FD1260715DFD8A7965571C48D709EE7A7962A156D706A90CBCB5DF2986F05FEADB9376F1;
-      Q_A[0] = 384'h793148F1787634D5DA4C6D9074417D05E057AB62F82054D10EE6B0403D6279547E6A8EA9D1FD77427D016FE27A8B8C66;
-      Q_A[1] = 384'hC6C41294331D23E6F480F4FB4CD40504C947392E94F4C3F06B8F398BB29E42368F7A685923DE3B67BACED214A1A1D128;
-      
-      P_B[0] = G_X_MONT;
-      P_B[1] = G_Y_MONT;
-      P_B[2] = G_Z_MONT;
+      test_cnt = 0;
 
-      SK_B   = 384'h52D1791FDB4B70F89C0F00D456C2F7023B6125262C36A7DF1F80231121CCE3D39BE52E00C194A4132C4A6C768BCD94D2;
-      Q_B[0] = 384'h5CD42AB9C41B5347F74B8D4EFB708B3D5B36DB65915359B44ABC17647B6B9999789D72A84865AE2F223F12B5A1ABC120;
-      Q_B[1] = 384'hE171458FEAA939AAA3A8BFAC46B404BD8F6D5B348C0FA4D80CECA16356CA933240BDE8723415A8ECE035B0EDF36755DE;
-      
+      data_file = $fopen("/home/mojtabab/workspace_aha_poc/ws1/Caliptra/src/ecc/tb/ecc_test_vectors.txt", "r");
+      if (!data_file)
+        $display("data_file handle was NULL");
+
       $display("ECPM 384 bit tests");
       $display("---------------------");
 
-      ecc_single_block_test(8'h01, P_A, SK_A, Q_A);
+      G_MONT[0] = G_X_MONT;
+      G_MONT[1] = G_Y_MONT;
+      G_MONT[2] = G_Z_MONT;
 
-      ecc_single_block_test(8'h02, P_B, SK_B, Q_B);
+      while(!$feof(data_file)) begin
+        for (int i = 0; i < 3; i++) begin
+          scan_file = $fscanf(data_file, "%h\n", captured_data); 
+          case(i)
+            0 : d    = captured_data;
+            1 : Q[0] = captured_data;
+            2 : Q[1] = captured_data;
+            default : begin end
+          endcase
+        end
+
+        fix_MSB(d);
+
+        test_cnt = test_cnt + 1;
+        ecc_single_block_test(test_cnt, G_MONT, d_fixed_MSB, Q);
+      end
     end
   endtask // ecc_test
 

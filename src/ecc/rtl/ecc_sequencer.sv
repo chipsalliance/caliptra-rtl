@@ -33,14 +33,66 @@ module ecc_sequencer #(
         case(addra)
             NOP : douta <= '0;
             1   : douta <= '0;
-            
-            KEYGEN_INIT_S     : douta <= {UOP_DO_ADD,     UOP_OPR_CONST_GX_MONT,       UOP_OPR_CONST_ZERO};
-            KEYGEN_INIT_S+ 1  : douta <= {UOP_ST_ADD,     UOP_OPR_R0_X,                UOP_OPR_DONTCARE};
-            KEYGEN_INIT_S+ 2  : douta <= {UOP_DO_ADD,     UOP_OPR_CONST_GY_MONT,       UOP_OPR_CONST_ZERO};
-            KEYGEN_INIT_S+ 3  : douta <= {UOP_ST_ADD,     UOP_OPR_R0_Y,                UOP_OPR_DONTCARE};
-            KEYGEN_INIT_S+ 4  : douta <= {UOP_DO_ADD,     UOP_OPR_CONST_GZ_MONT,       UOP_OPR_CONST_ZERO};
-            KEYGEN_INIT_S+ 5  : douta <= {UOP_ST_ADD,     UOP_OPR_R0_Z,                UOP_OPR_DONTCARE};
-             
+            //R0
+            PM_INIT_S     : douta <= {UOP_DO_ADD,     UOP_OPR_CONST_GX_MONT,       UOP_OPR_CONST_ZERO};
+            PM_INIT_S+ 1  : douta <= {UOP_ST_ADD,     UOP_OPR_R0_X,                UOP_OPR_DONTCARE};
+            PM_INIT_S+ 2  : douta <= {UOP_DO_ADD,     UOP_OPR_CONST_GY_MONT,       UOP_OPR_CONST_ZERO};
+            PM_INIT_S+ 3  : douta <= {UOP_ST_ADD,     UOP_OPR_R0_Y,                UOP_OPR_DONTCARE};
+            PM_INIT_S+ 4  : douta <= {UOP_DO_ADD,     UOP_OPR_CONST_GZ_MONT,       UOP_OPR_CONST_ZERO};
+            PM_INIT_S+ 5  : douta <= {UOP_ST_ADD,     UOP_OPR_R0_Z,                UOP_OPR_DONTCARE};
+            //R1
+            PM_INIT_S+ 6  : douta <= {UOP_DO_MUL,     UOP_OPR_R0_X,                UOP_OPR_R0_X};  // A = fp_mult(P0.X, P0.X, p)
+            PM_INIT_S+ 7  : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,            UOP_OPR_A};
+            PM_INIT_S+ 8  : douta <= {UOP_DO_MUL,     UOP_OPR_R0_Z,                UOP_OPR_R0_Z};  // B = fp_mult(P0.Z, P0.Z, p)
+            PM_INIT_S+ 9  : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,            UOP_OPR_B};
+            PM_INIT_S+ 10 : douta <= {UOP_DO_MUL,     UOP_OPR_CONST_E_a,           UOP_OPR_B};     // B = fp_mult(E_.a, B, p)
+            PM_INIT_S+ 11 : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,            UOP_OPR_B};
+            PM_INIT_S+ 12 : douta <= {UOP_DO_ADD,     UOP_OPR_A,          UOP_OPR_A};     // C = (A + A) % p
+            PM_INIT_S+ 13 : douta <= {UOP_ST_ADD,     UOP_OPR_C,          UOP_OPR_DONTCARE};
+            PM_INIT_S+ 14 : douta <= {UOP_DO_ADD,     UOP_OPR_C,          UOP_OPR_A};     // C = (C + A) % p
+            PM_INIT_S+ 15 : douta <= {UOP_ST_ADD,     UOP_OPR_C,          UOP_OPR_DONTCARE};
+            PM_INIT_S+ 16 : douta <= {UOP_DO_ADD,     UOP_OPR_B,          UOP_OPR_C};     // D = (B + C) % p
+            PM_INIT_S+ 17 : douta <= {UOP_ST_ADD,     UOP_OPR_D,          UOP_OPR_DONTCARE};
+            PM_INIT_S+ 18 : douta <= {UOP_DO_MUL,     UOP_OPR_R0_Y,       UOP_OPR_R0_Z};  // C = fp_mult(P0.Y, P0.Z, p)
+            PM_INIT_S+ 19 : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_C};
+            PM_INIT_S+ 20 : douta <= {UOP_DO_ADD,     UOP_OPR_C,          UOP_OPR_C};     // C = (C + C) % p
+            PM_INIT_S+ 21 : douta <= {UOP_ST_ADD,     UOP_OPR_C,          UOP_OPR_DONTCARE};
+            PM_INIT_S+ 22 : douta <= {UOP_DO_MUL,     UOP_OPR_C,          UOP_OPR_C};     // F = fp_mult(C, C, p)
+            PM_INIT_S+ 23 : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_F};
+            PM_INIT_S+ 24 : douta <= {UOP_DO_MUL,     UOP_OPR_C,          UOP_OPR_F};     // Z_res = fp_mult(C, F, p)
+            PM_INIT_S+ 25 : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_R1_Z};
+            PM_INIT_S+ 26 : douta <= {UOP_DO_MUL,     UOP_OPR_R0_Y,       UOP_OPR_C};     // F = fp_mult(P0.Y, C, p)
+            PM_INIT_S+ 27 : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_F};
+            PM_INIT_S+ 28 : douta <= {UOP_DO_ADD,     UOP_OPR_R0_X,       UOP_OPR_F};     // B = (P0.X + F) % p
+            PM_INIT_S+ 29 : douta <= {UOP_ST_ADD,     UOP_OPR_B,          UOP_OPR_DONTCARE};
+            PM_INIT_S+ 30 : douta <= {UOP_DO_MUL,     UOP_OPR_B,          UOP_OPR_B};     // B = fp_mult(B, B, p)
+            PM_INIT_S+ 31 : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_B};
+            PM_INIT_S+ 32 : douta <= {UOP_DO_MUL,     UOP_OPR_F,          UOP_OPR_F};     // F = fp_mult(F, F, p)
+            PM_INIT_S+ 33 : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_F};
+            PM_INIT_S+ 34 : douta <= {UOP_DO_ADD,     UOP_OPR_A,          UOP_OPR_F};     // A = (A + F) % p
+            PM_INIT_S+ 35 : douta <= {UOP_ST_ADD,     UOP_OPR_A,          UOP_OPR_DONTCARE};
+            PM_INIT_S+ 36 : douta <= {UOP_DO_SUB,     UOP_OPR_B,          UOP_OPR_A};     // B = (B - A) % p
+            PM_INIT_S+ 37 : douta <= {UOP_ST_ADD,     UOP_OPR_B,          UOP_OPR_DONTCARE};
+            PM_INIT_S+ 38 : douta <= {UOP_DO_ADD,     UOP_OPR_B,          UOP_OPR_B};     // A = (B + B) % p
+            PM_INIT_S+ 39 : douta <= {UOP_ST_ADD,     UOP_OPR_A,          UOP_OPR_DONTCARE};
+            PM_INIT_S+ 40 : douta <= {UOP_DO_MUL,     UOP_OPR_D,          UOP_OPR_D};     // E = fp_mult(D, D, p)
+            PM_INIT_S+ 41 : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_E};
+            PM_INIT_S+ 42 : douta <= {UOP_DO_SUB,     UOP_OPR_E,          UOP_OPR_A};     // E = (E - A) % p
+            PM_INIT_S+ 43 : douta <= {UOP_ST_ADD,     UOP_OPR_E,          UOP_OPR_DONTCARE};
+            PM_INIT_S+ 44 : douta <= {UOP_DO_MUL,     UOP_OPR_E,          UOP_OPR_C};     // X_res = fp_mult(E, C, p)
+            PM_INIT_S+ 45 : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_R1_X};
+            PM_INIT_S+ 46 : douta <= {UOP_DO_ADD,     UOP_OPR_F,          UOP_OPR_F};     // A = (F + F) % p
+            PM_INIT_S+ 47 : douta <= {UOP_ST_ADD,     UOP_OPR_A,          UOP_OPR_DONTCARE};
+            PM_INIT_S+ 48 : douta <= {UOP_DO_SUB,     UOP_OPR_B,          UOP_OPR_E};     // B = (B - E) % p
+            PM_INIT_S+ 49 : douta <= {UOP_ST_ADD,     UOP_OPR_B,          UOP_OPR_DONTCARE};
+            PM_INIT_S+ 50 : douta <= {UOP_DO_MUL,     UOP_OPR_D,          UOP_OPR_B};     // D = fp_mult(D, B, p)
+            PM_INIT_S+ 51 : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_D};
+            PM_INIT_S+ 52 : douta <= {UOP_DO_SUB,     UOP_OPR_D,          UOP_OPR_A};     // Y_res = (D - A) % p
+            PM_INIT_S+ 53 : douta <= {UOP_ST_ADD,     UOP_OPR_R1_Y,       UOP_OPR_DONTCARE};
+            PM_INIT_S+ 54 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+            PM_INIT_S+ 55 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+            PM_INIT_S+ 56 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+            PM_INIT_S+ 57 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE}; 
 
             // PA
             PA_S      : douta <= {UOP_DO_MUL,     UOP_OPR_R0_Y,       UOP_OPR_R1_Z};  // A = fp_mult(P0.Y, P1.Z, p)
@@ -135,22 +187,25 @@ module ecc_sequencer #(
             PD_S+ 45  : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_D};
             PD_S+ 46  : douta <= {UOP_DO_SUB,     UOP_OPR_D,          UOP_OPR_A};     // Y_res = (D - A) % p
             PD_S+ 47  : douta <= {UOP_ST_ADD,     UOP_OPR_R0_Y,       UOP_OPR_DONTCARE};
-
+            PD_S+ 48  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+            PD_S+ 49  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+            PD_S+ 50  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+            PD_S+ 51  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
 
             //INV
-            INV_S       : douta <= {UOP_DO_MUL,     UOP_OPR_Z_INV,      UOP_OPR_INV_PRE0};    // precompute[1] = fp_mult(Z, precompute[0], p)
+            INV_S       : douta <= {UOP_DO_MUL,     UOP_OPR_INV_IN,     UOP_OPR_INV_PRE0};    // precompute[1] = fp_mult(Z, precompute[0], p)
             INV_S+ 1    : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_INV_PRE1};
-            INV_S+ 2    : douta <= {UOP_DO_MUL,     UOP_OPR_Z_INV,      UOP_OPR_INV_PRE1};    // precompute[2] = fp_mult(Z, precompute[1], p)
+            INV_S+ 2    : douta <= {UOP_DO_MUL,     UOP_OPR_INV_IN,     UOP_OPR_INV_PRE1};    // precompute[2] = fp_mult(Z, precompute[1], p)
             INV_S+ 3    : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_INV_PRE2};
-            INV_S+ 4    : douta <= {UOP_DO_MUL,     UOP_OPR_Z_INV,      UOP_OPR_INV_PRE2};    // precompute[3] = fp_mult(Z, precompute[2], p)
+            INV_S+ 4    : douta <= {UOP_DO_MUL,     UOP_OPR_INV_IN,     UOP_OPR_INV_PRE2};    // precompute[3] = fp_mult(Z, precompute[2], p)
             INV_S+ 5    : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_INV_PRE3};
-            INV_S+ 6    : douta <= {UOP_DO_MUL,     UOP_OPR_Z_INV,      UOP_OPR_INV_PRE3};    // precompute[4] = fp_mult(Z, precompute[3], p)
+            INV_S+ 6    : douta <= {UOP_DO_MUL,     UOP_OPR_INV_IN,     UOP_OPR_INV_PRE3};    // precompute[4] = fp_mult(Z, precompute[3], p)
             INV_S+ 7    : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_INV_PRE4};
-            INV_S+ 8    : douta <= {UOP_DO_MUL,     UOP_OPR_Z_INV,      UOP_OPR_INV_PRE4};    // precompute[5] = fp_mult(Z, precompute[4], p)
+            INV_S+ 8    : douta <= {UOP_DO_MUL,     UOP_OPR_INV_IN,     UOP_OPR_INV_PRE4};    // precompute[5] = fp_mult(Z, precompute[4], p)
             INV_S+ 9    : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_INV_PRE5};
-            INV_S+ 10   : douta <= {UOP_DO_MUL,     UOP_OPR_Z_INV,      UOP_OPR_INV_PRE5};    // precompute[6] = fp_mult(Z, precompute[5], p)
+            INV_S+ 10   : douta <= {UOP_DO_MUL,     UOP_OPR_INV_IN,     UOP_OPR_INV_PRE5};    // precompute[6] = fp_mult(Z, precompute[5], p)
             INV_S+ 11   : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_INV_PRE6};
-            INV_S+ 12   : douta <= {UOP_DO_MUL,     UOP_OPR_Z_INV,      UOP_OPR_INV_PRE6};    // precompute[7] = fp_mult(Z, precompute[6], p)
+            INV_S+ 12   : douta <= {UOP_DO_MUL,     UOP_OPR_INV_IN,     UOP_OPR_INV_PRE6};    // precompute[7] = fp_mult(Z, precompute[6], p)
             INV_S+ 13   : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_INV_PRE7};
             INV_S+ 14   : douta <= {UOP_DO_MUL,     UOP_OPR_INV_PRE0,   UOP_OPR_INV_PRE0};    // a_inv = fp_mult(precompute[0], precompute[0], p)
             INV_S+ 15   : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_A_INV};
@@ -1174,8 +1229,21 @@ module ecc_sequencer #(
             INV_S+ 1033 : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_A_INV};
             INV_S+ 1034 : douta <= {UOP_DO_MUL,     UOP_OPR_A_INV,      UOP_OPR_A_INV};       // a_inv = fp_mult(a_inv, a_inv, p)
             INV_S+ 1035 : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_A_INV};
-            INV_S+ 1036 : douta <= {UOP_DO_MUL,     UOP_OPR_A_INV,      UOP_OPR_INV_PRE5};    // a_inv = fp_mult(a_inv, precompute[5], p)
-            INV_S+ 1037 : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_A_INV};
+            INV_S+ 1036 : douta <= {UOP_DO_MUL,     UOP_OPR_A_INV,      UOP_OPR_INV_PRE5};    // Z_inv = fp_mult(a_inv, precompute[5], p)
+            INV_S+ 1037 : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_INV_OUT};
+            
+            CONV_S      : douta <= {UOP_DO_MUL,     UOP_OPR_INV_OUT,    UOP_OPR_R0_Y};           // y_MONT = fp_mult(Z_inv, Y_MONT, p)
+            CONV_S+ 1   : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_CONST_Qy_AFFN};
+            CONV_S+ 2   : douta <= {UOP_DO_MUL,     UOP_OPR_INV_OUT,    UOP_OPR_R0_X};           // x_MONT = fp_mult(Z_inv, X_MONT, p)
+            CONV_S+ 3   : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_CONST_Qx_AFFN};
+            CONV_S+ 4   : douta <= {UOP_DO_MUL,     UOP_OPR_CONST_ONE,  UOP_OPR_CONST_Qy_AFFN};  // y_affine = fp_mult(y_MONT, 1, p)
+            CONV_S+ 5   : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_CONST_Qy_AFFN};
+            CONV_S+ 6   : douta <= {UOP_DO_MUL,     UOP_OPR_CONST_ONE,  UOP_OPR_CONST_Qx_AFFN};  // y_affine = fp_mult(y_MONT, 1, p)
+            CONV_S+ 7   : douta <= {UOP_ST_MUL,     UOP_OPR_DONTCARE,   UOP_OPR_CONST_Qx_AFFN};
+            CONV_S+ 8   : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+            CONV_S+ 9   : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+            CONV_S+ 10  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+            CONV_S+ 11  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
 
             default : douta <= {UOP_NOP,     UOP_OPR_DONTCARE,  UOP_OPR_DONTCARE};
         endcase 

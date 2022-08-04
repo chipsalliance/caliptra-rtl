@@ -37,6 +37,11 @@ module fau #(
     logic [REG_SIZE-1 : 0]  add_res_s;
     logic                   add_ready;
     
+    reg                     mult_start;
+    reg                     mult_start_dly;
+    wire                    mult_start_edge;
+    reg                     sub;
+    reg                     red;
 
     assign mult_opa = opa_i;
     assign mult_opb = opb_i;
@@ -55,7 +60,7 @@ module fau #(
         .clk(clk),
         .reset_n(reset_n),
 
-        .start_i(mult_start_i),
+        .start_i(mult_start_edge),
         .opa_i(mult_opa),
         .opb_i(mult_opb),
         .p_o(mult_res_s),
@@ -76,8 +81,8 @@ module fau #(
         .clk(clk),
         .reset_n(reset_n),
 
-        .red_i(red_i),
-        .sub_i(sub_i),
+        .red_i(red),
+        .sub_i(sub),
         .opa_i(opa_i),
         .opb_i(opb_i),
         .res_o(add_res_s),
@@ -85,6 +90,14 @@ module fau #(
         );
 
 
+    always_ff @(posedge clk or negedge reset_n) begin
+            mult_start <= mult_start_i;
+            mult_start_dly <= mult_start;
+            sub <= sub_i;
+            red <= red_i;
+    end
+    
+    assign mult_start_edge = mult_start & ~mult_start_dly;
     assign mult_res_o = mult_res_s;
     assign add_res_o  = add_res_s;
     assign ready = add_ready & mult_ready;

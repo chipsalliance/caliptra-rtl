@@ -79,19 +79,19 @@ module ecc_arith_unit #(
     assign di_mux = (wr_input_sel_i == 0) ? data_i : d_o;
 
     ram_tdp_file #(
-        .ADDR_WIDTH(5),
+        .ADDR_WIDTH(6),
         .DATA_WIDTH(REG_SIZE)
         )
         i_ram_tdp_file(
         .clk(clk),
         .ena(1'b1),
         .wea(ecc_instr_s[17]),
-        .addra(ecc_instr_s[12 : 8]),
+        .addra(ecc_instr_s[13 : 8]),
         .dina(add_res_s),
         .douta(opa_s),
         .enb(1'b1),
         .web(web_mux_s),
-        .addrb(addrb_mux_s[4 : 0]),
+        .addrb(addrb_mux_s[5 : 0]),
         .dinb(dinb_mux_s),
         .doutb(opb_s)
     );
@@ -131,7 +131,7 @@ module ecc_arith_unit #(
     // Memory mapped register interface
     // 
     //----------------------------------------------------------------
-    reg [REG_SIZE-1 :0]         secret_key; 
+    reg [REG_SIZE   :0]         secret_key; 
 
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
@@ -177,16 +177,17 @@ module ecc_arith_unit #(
                     4'h9 : begin secret_key[319 : 288] <= di_mux; end
                     4'hA : begin secret_key[351 : 320] <= di_mux; end
                     4'hB : begin secret_key[383 : 352] <= di_mux; end
+                    4'hC : begin secret_key[384]       <= di_mux[0]; end
                     default: begin  end
                 endcase
             end
             else if (req_digit) begin
                 //Shift digit
-                secret_key[REG_SIZE-2  : 0] <= secret_key[REG_SIZE-1 : 1];
-                secret_key[REG_SIZE-1]      <= secret_key[0];
+                secret_key[REG_SIZE  : 1] <= secret_key[REG_SIZE-1 : 0];
+                secret_key[0]             <= secret_key[REG_SIZE];
             end
             //Push key bit to ecc control
-            digit_in <= secret_key[0];
+            digit_in <= secret_key[REG_SIZE];
 
             reg_addr_r <= addr_i;
             if (wr_op_sel_i == 2'b00)

@@ -108,13 +108,11 @@ module mm_tb();
       if (error_ctr == 0)
         begin
           $display("*** All %02d test cases completed successfully", tc_ctr);
-          $display("* TESTCASE PASSED");
         end
       else
         begin
           $display("*** %02d tests completed - %02d test cases did not complete successfully.",
                    tc_ctr, error_ctr);
-          $display("* TESTCASE FAILED");
         end
     end
   endtask // display_test_results

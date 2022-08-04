@@ -29,7 +29,7 @@ module ecc_ctrl (
 
     localparam PROG_LENGTH         = 2**PROG_ADDR_W;
 
-    localparam MULT_DELAY          = 34;
+    localparam MULT_DELAY          = 38;
     localparam ADD_DELAY           = 1 -1;
     
     localparam Secp384_MONT_COUNT  = 384;
@@ -38,7 +38,7 @@ module ecc_ctrl (
     // ecc
     //----------------------------------------------------------------
     logic  [PROG_ADDR_W-1  : 0] prog_cntr;
-    logic  [7 : 0]              mont_cntr;
+    logic  [9 : 0]              mont_cntr;
     logic  [7 : 0]              delay_cntr;   
     logic  [7 : 0]              stall_cntr;
     
@@ -55,6 +55,7 @@ module ecc_ctrl (
     logic stalled, stalled_pipe1;
     logic delayed, delayed_pipe1;
     logic delay_op;
+    logic mont_ladder;
 
     // Program Sequencer
     assign prog_addr = prog_cntr;
@@ -79,6 +80,7 @@ module ecc_ctrl (
             stall_cntr  <= 0;
             req_digit_o <= 0;
             first_round <= 0;
+            mont_ladder <= 0;
         end
         else begin
             stalled_pipe1 <= stalled;
@@ -113,7 +115,7 @@ module ecc_ctrl (
                         case (ecc_cmd_i)
                             1 : begin  // keygen
                                 mont_cntr <= Secp384_MONT_COUNT;
-                                prog_cntr <= KEYGEN_INIT_S;
+                                prog_cntr <= PM_INIT_S;
                                 first_round <= 1;
                             end                                   
                             2 : begin 
@@ -126,12 +128,41 @@ module ecc_ctrl (
                         req_digit_o <= 0;
                     end
                     
-                    KEYGEN_INIT_E : begin
-                        prog_cntr <= PD_S;
+                    // Montgoemry Ladder
+                    PM_INIT_E : begin
+                        mont_cntr <= mont_cntr - 1;
+                        req_digit_o <= 1;
+                        prog_cntr <= PA_S;
+                        mont_ladder <= 1;
+                    end
+                                        
+                    PA_S : begin
+                        req_digit_o <= 0;
+                        prog_cntr <= prog_cntr + 1;
                     end
                     
                     PA_E : begin
                         prog_cntr <= PD_S;
+                    end
+                    
+                    PD_E : begin
+                        if (mont_cntr == 0) begin
+                            prog_cntr <= INV_S;
+                            mont_ladder <= 0;
+                        end
+                        else begin
+                            mont_cntr <= mont_cntr - 1;
+                            req_digit_o <= 1;
+                            prog_cntr <= PA_S;
+                        end
+                    end
+                    
+                    INV_E : begin
+                        prog_cntr <= CONV_S;
+                    end
+                    
+                    CONV_E : begin
+                        prog_cntr <= NOP;
                     end
 
                     // DOUBLE POINT MULTIPLICATION
@@ -196,18 +227,30 @@ module ecc_ctrl (
 	        else begin
                 instr_o[23 : 21] <= 0;
                 case (prog_line_pipe2[20 : 18])
-                    3'b000 :  instr_o[20 : 18] <= 2'b000; // NOP
-                    3'b001 :  instr_o[20 : 18] <= 2'b010; // RED
-                    3'b010 :  instr_o[20 : 18] <= 2'b000; // ADD
-                    3'b011 :  instr_o[20 : 18] <= 2'b001; // SUB
-                    3'b100 :  instr_o[20 : 18] <= 2'b100; // MULT
-                    default:  instr_o[20 : 18] <= 2'b000;
+                    3'b000 :  instr_o[20 : 18] <= 3'b000; // NOP
+                    3'b001 :  instr_o[20 : 18] <= 3'b010; // RED
+                    3'b010 :  instr_o[20 : 18] <= 3'b000; // ADD
+                    3'b011 :  instr_o[20 : 18] <= 3'b001; // SUB
+                    3'b100 :  instr_o[20 : 18] <= 3'b100; // MULT
+                    default:  instr_o[20 : 18] <= 3'b000;
                 endcase
 
                 instr_o[17]      <= prog_line_pipe2[17];        //Mem writeA
                 instr_o[16]      <= prog_line_pipe2[16];        //Mem writeB
-                instr_o[15 : 8]  <= prog_line_pipe2[15 : 8];    //Addr A for ADD/SUB result
-                instr_o[7 : 0]   <= prog_line_pipe2[7 : 0];     //Addr B for MULT result
+                if (mont_ladder) begin
+                    if (prog_line_pipe2[15 : 11] == 5'b00001)
+                        instr_o[15 : 8]  <= {prog_line_pipe2[15 : 11], digit_i ^ prog_line_pipe2[10], prog_line_pipe2[9 : 8]};    //Addr A for ADD/SUB result
+                    else
+                        instr_o[15 : 8]  <= prog_line_pipe2[15 : 8];    //Addr A for ADD/SUB result
+                    if (prog_line_pipe2[7  :  3] == 5'b00001)
+                        instr_o[7 : 0]   <= {prog_line_pipe2[7  :  3], digit_i ^ prog_line_pipe2[2], prog_line_pipe2[1  :  0]};    //Addr B for MULT result
+                    else
+                        instr_o[7 : 0]   <= prog_line_pipe2[7 : 0];     //Addr B for MULT result    
+                end
+                else begin
+                    instr_o[15 : 8]  <= prog_line_pipe2[15 : 8];    //Addr A for ADD/SUB result
+                    instr_o[7 : 0]   <= prog_line_pipe2[7 : 0];     //Addr B for MULT result
+                end
                 
             end
 	    end
