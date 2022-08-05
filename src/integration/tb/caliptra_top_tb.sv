@@ -48,6 +48,8 @@ module caliptra_top_tb (
     logic                       cptra_pwrgood;
     logic                       cptra_rst_b;
 
+    logic [255:0]               cptra_obf_key;
+
     wire[31:0] WriteData;
     string                      abi_reg[32]; // ABI register names
     //jtag interface
@@ -229,6 +231,8 @@ module caliptra_top_tb (
         jtag_tdi = 1'b0;    // JTAG tdi
         jtag_trst_n = 1'b0; // JTAG Reset
 
+        cptra_obf_key = '0; //fixme tie-off
+
         $readmemh("program.hex",  caliptra_top_dut.imem.mem);
         $readmemh("mailbox.hex",  caliptra_top_dut.mbox_top1.mbox1.mbox_ram1.ram);
         tp = $fopen("trace_port.csv","w");
@@ -267,6 +271,8 @@ caliptra_top caliptra_top_dut (
     .cptra_pwrgood              (cptra_pwrgood),
     .cptra_rst_b                (cptra_rst_b),
     .core_clk                   (core_clk),
+
+    .cptra_obf_key              (cptra_obf_key),
 
     .jtag_tck(jtag_tck),
     .jtag_tdi(jtag_tdi),

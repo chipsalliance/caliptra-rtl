@@ -22,6 +22,8 @@ module caliptra_top (
     input logic                        cptra_pwrgood,
     input logic                        cptra_rst_b,
 
+    input logic [255:0]                cptra_obf_key,
+
     //JTAG Interface
     input logic                        jtag_tck,    // JTAG clk
     input logic                        jtag_tms,    // JTAG TMS
@@ -52,7 +54,7 @@ module caliptra_top (
 
     //I3C Interface
     //TODO update with I3C interface signals
-    
+
     output logic                       ready_for_fuses,
     output logic                       ready_for_fw_push,
     output logic                       ready_for_runtime,
