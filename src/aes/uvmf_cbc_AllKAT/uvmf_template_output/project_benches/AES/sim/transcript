@@ -1,0 +1,533 @@
+# //  Questa Sim
+# //  Version 2022.2_1 linux May 19 2022
+# //
+# //  Copyright 1991-2022 Mentor Graphics Corporation
+# //  All Rights Reserved.
+# //
+# //  QuestaSim and its associated documentation contain trade
+# //  secrets and commercial or financial information that are the property of
+# //  Mentor Graphics Corporation and are privileged, confidential,
+# //  and exempt from disclosure under the Freedom of Information Act,
+# //  5 U.S.C. Section 552. Furthermore, this information
+# //  is prohibited from disclosure under the Trade Secrets Act,
+# //  18 U.S.C. Section 1905.
+# //
+# vsim -i -sv_seed random "+UVM_TESTNAME=test_top" -permit_unmatched_virtual_intf "+notimingchecks" -suppress 8887 -solvefaildebug -solvefailtestcase -assertdebug -uvmcontrol=all "+uvm_set_config_int=*,enable_transaction_viewing,1" -classdebug -msgmode tran -do " set NoQuitOnFinish 1; run 0; do wave.do " optimized_debug_top_tb 
+# Start time: 10:35:08 on Aug 04,2022
+# Loading sv_std.std
+# Loading work.AES_out_driver_bfm(fast)
+# Loading work.AES_out_monitor_bfm(fast)
+# Loading work.uvmf_base_pkg_hdl(fast)
+# Loading work.AES_out_pkg_hdl(fast)
+# Loading work.AES_in_driver_bfm(fast)
+# Loading work.AES_in_monitor_bfm(fast)
+# Loading mtiUvm.uvm_pkg(fast)
+# Loading work.uvmf_base_pkg(fast)
+# Loading work.AES_out_pkg(fast)
+# Loading work.AES_in_pkg_hdl(fast)
+# Loading work.AES_in_pkg(fast)
+# Loading work.AES_env_pkg(fast)
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$fgets'.
+#    Time: 0 ns  Iteration: 0  Region: /AES_env_pkg::AES_predictor::AES_predictor__1::write_AES_in_agent_ae File: /home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/uvmf_cbc_AllKAT/uvmf_template_output/project_benches/AES/sim/../../../verification_ip/environment_packages/AES_env_pkg/src/AES_predictor.svh Line: 197
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$fgets'.
+#    Time: 0 ns  Iteration: 0  Region: /AES_env_pkg::AES_predictor::AES_predictor__1::write_AES_in_agent_ae File: /home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/uvmf_cbc_AllKAT/uvmf_template_output/project_benches/AES/sim/../../../verification_ip/environment_packages/AES_env_pkg/src/AES_predictor.svh Line: 201
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$sscanf'.
+#    Time: 0 ns  Iteration: 0  Region: /AES_env_pkg::AES_predictor::AES_predictor__1::write_AES_in_agent_ae File: /home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/uvmf_cbc_AllKAT/uvmf_template_output/project_benches/AES/sim/../../../verification_ip/environment_packages/AES_env_pkg/src/AES_predictor.svh Line: 202
+# Loading work.AES_parameters_pkg(fast)
+# Loading work.AES_sequences_pkg(fast)
+# Loading work.AES_tests_pkg(fast)
+# Loading mtiUvm.questa_uvm_pkg(fast)
+# Loading work.hvl_top(fast)
+# Loading work.hdl_top(fast)
+# Loading work.AES_in_if_sv_unit(fast)
+# Loading work.AES_in_if(fast__1)
+# Loading work.AES_out_if_sv_unit(fast)
+# Loading work.AES_out_if(fast__1)
+# Loading work.AES_in_monitor_bfm_sv_unit(fast)
+# Loading work.AES_in_monitor_bfm(fast__1)
+# Loading work.AES_out_monitor_bfm_sv_unit(fast)
+# Loading work.AES_out_monitor_bfm(fast__1)
+# Loading work.AES_in_driver_bfm_sv_unit(fast)
+# Loading work.AES_in_driver_bfm(fast__1)
+# Loading work.aes_ctrl(fast)
+# Loading work.aes_cbc(fast)
+# Loading work.aes_core_cbc(fast)
+# Loading work.aes_encipher_block(fast)
+# Loading work.aes_decipher_block(fast)
+# Loading work.aes_inv_sbox(fast)
+# Loading work.aes_key_mem(fast)
+# Loading work.aes_sbox(fast)
+# Loading work.ahb_slv_sif(fast)
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$fgets'.
+#    Time: 0 ns  Iteration: 0  Region: /hdl_top/AES_in_agent_drv_bfm/cbc_mode_mmt_vector_test File: /home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/uvmf_cbc_AllKAT/uvmf_template_output/project_benches/AES/sim/../../../verification_ip/interface_packages/AES_in_pkg/src/AES_in_driver_bfm.sv Line: 632
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$sscanf'.
+#    Time: 0 ns  Iteration: 0  Region: /hdl_top/AES_in_agent_drv_bfm/cbc_mode_mmt_vector_test File: /home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/uvmf_cbc_AllKAT/uvmf_template_output/project_benches/AES/sim/../../../verification_ip/interface_packages/AES_in_pkg/src/AES_in_driver_bfm.sv Line: 637
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$fgets'.
+#    Time: 0 ns  Iteration: 0  Region: /hdl_top/AES_in_agent_drv_bfm/cbc_mode_mmt_vector_test File: /home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/uvmf_cbc_AllKAT/uvmf_template_output/project_benches/AES/sim/../../../verification_ip/interface_packages/AES_in_pkg/src/AES_in_driver_bfm.sv Line: 638
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$sscanf'.
+#    Time: 0 ns  Iteration: 0  Region: /hdl_top/AES_in_agent_drv_bfm/cbc_mode_mmt_vector_test File: /home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/uvmf_cbc_AllKAT/uvmf_template_output/project_benches/AES/sim/../../../verification_ip/interface_packages/AES_in_pkg/src/AES_in_driver_bfm.sv Line: 639
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$fgets'.
+#    Time: 0 ns  Iteration: 0  Region: /hdl_top/AES_in_agent_drv_bfm/cbc_mode_mmt_vector_test File: /home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/uvmf_cbc_AllKAT/uvmf_template_output/project_benches/AES/sim/../../../verification_ip/interface_packages/AES_in_pkg/src/AES_in_driver_bfm.sv Line: 640
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$sscanf'.
+#    Time: 0 ns  Iteration: 0  Region: /hdl_top/AES_in_agent_drv_bfm/cbc_mode_mmt_vector_test File: /home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/uvmf_cbc_AllKAT/uvmf_template_output/project_benches/AES/sim/../../../verification_ip/interface_packages/AES_in_pkg/src/AES_in_driver_bfm.sv Line: 641
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$fgets'.
+#    Time: 0 ns  Iteration: 0  Region: /hdl_top/AES_in_agent_drv_bfm/cbc_mode_mmt_vector_test File: /home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/uvmf_cbc_AllKAT/uvmf_template_output/project_benches/AES/sim/../../../verification_ip/interface_packages/AES_in_pkg/src/AES_in_driver_bfm.sv Line: 642
+# Loading /home/cad/tools/mentor/questa/2022.2_1/questasim/uvm-1.1d/linux/uvm_dpi.so
+# Sv_Seed = 1132508598
+#  set NoQuitOnFinish 1
+# 1
+#  run 0
+# ----------------------------------------------------------------
+# UVM-1.1d
+# (C) 2007-2013 Mentor Graphics Corporation
+# (C) 2007-2013 Cadence Design Systems, Inc.
+# (C) 2006-2013 Synopsys, Inc.
+# (C) 2011-2013 Cypress Semiconductor Corp.
+# ----------------------------------------------------------------
+# 
+#   ***********       IMPORTANT RELEASE NOTES         ************
+# 
+#   You are using a version of the UVM library that has been compiled
+#   with `UVM_NO_DEPRECATED undefined.
+#   See http://www.eda.org/svdb/view.php?id=3313 for more details.
+# 
+#   You are using a version of the UVM library that has been compiled
+#   with `UVM_OBJECT_MUST_HAVE_CONSTRUCTOR undefined.
+#   See http://www.eda.org/svdb/view.php?id=3770 for more details.
+# 
+#       (Specify +UVM_NO_RELNOTES to turn off this notice)
+# 
+# ----------------------------------------------------------------
+# //  UVM Framework 
+# //  Version 2022.1
+# //  (C) 2013-2022 Siemens Corporation
+# //  Digital Industries Software
+# //  Siemens EDA
+# //  All Rights Reserved.
+# ----------------------------------------------------------------
+# 
+# 
+# UVM_INFO verilog_src/questa_uvm_pkg-1.2/src/questa_uvm_pkg.sv(277) @ 0: reporter [Questa UVM] QUESTA_UVM-1.2.3
+# UVM_INFO verilog_src/questa_uvm_pkg-1.2/src/questa_uvm_pkg.sv(278) @ 0: reporter [Questa UVM]  questa_uvm::init(all)
+# UVM_INFO @ 0.000ns: reporter [RNTST] Running test test_top...
+# UVM_INFO @ 0.000ns: reporter [UVM_CMDLINE_PROC] Applying config setting from the command line: +uvm_set_config_int=*,enable_transaction_viewing,1
+# UVM_WARNING @ 0.000ns: reporter [COVERAGE_MODEL_REVIEW] A covergroup has been constructed which may need review because of either generation or re-generation with merging.  Please note that configuration variables added as a result of re-generation and merging are not automatically added to the covergroup.  Remove this warning after the covergroup has been reviewed.
+# UVM_WARNING @ 0.000ns: uvm_test_top.environment.AES_pred [PREDICTOR_REVIEW] This predictor has been created either through generation or re-generation with merging.  Remove this warning after the predictor has been reviewed.
+#  do wave.do 
+run
+# UVM_INFO @ 210.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 0
+# **AES_predictor** t.test_case_sel =   0
+# **AES_predictor** t.key_len = 0
+# **************************************************************************
+# * Questa UVM Transaction Recording Turned ON.                            *
+# * recording_detail has been set.                                         *
+# *  To turn off, set 'recording_detail' to off:                           *
+# * uvm_config_db#(int)            ::set(null, "", "recording_detail", 0); *
+# * uvm_config_db#(uvm_bitstream_t)::set(null, "", "recording_detail", 0); *
+# **************************************************************************
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 3
+#  **AES_in_driver_bfm** test_case_sel value is: 439
+#  **AES_in_driver_bfm** key_len value is: 1
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 250.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+# UVM_INFO @ 3540.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 3
+# **AES_predictor** t.test_case_sel = 439
+# **AES_predictor** t.key_len = 1
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 3540.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xe0f0a91b2e45f8cc37b7805a3042588d000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 3650.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 2
+#  **AES_in_driver_bfm** test_case_sel value is: 248
+#  **AES_in_driver_bfm** key_len value is: 0
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 3700.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xe0f0a91b2e45f8cc37b7805a3042588d000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0xe0f0a91b2e45f8cc37b7805a3042588d000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+# UVM_INFO @ 6980.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 2
+# **AES_predictor** t.test_case_sel = 248
+# **AES_predictor** t.key_len = 0
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 6980.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xffffffffffffffffffffe00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 7090.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 2
+#  **AES_in_driver_bfm** test_case_sel value is:  48
+#  **AES_in_driver_bfm** key_len value is: 0
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 7140.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xffffffffffffffffffffe00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0xffffffffffffffffffffe00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+# UVM_INFO @ 10420.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 2
+# **AES_predictor** t.test_case_sel =  48
+# **AES_predictor** t.key_len = 0
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 10420.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 10530.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 2
+#  **AES_in_driver_bfm** test_case_sel value is:  23
+#  **AES_in_driver_bfm** key_len value is: 0
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 10580.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+# UVM_INFO @ 13860.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 2
+# **AES_predictor** t.test_case_sel =  23
+# **AES_predictor** t.key_len = 0
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 13860.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 13970.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 3
+#  **AES_in_driver_bfm** test_case_sel value is:  65
+#  **AES_in_driver_bfm** key_len value is: 1
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 14020.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+# UVM_INFO @ 17300.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 3
+# **AES_predictor** t.test_case_sel =  65
+# **AES_predictor** t.key_len = 1
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 17300.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xf85ca05fe528f1ce9b790166e8d551e7000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 17410.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 2
+#  **AES_in_driver_bfm** test_case_sel value is:  24
+#  **AES_in_driver_bfm** key_len value is: 1
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 17460.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xf85ca05fe528f1ce9b790166e8d551e7000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0xf85ca05fe528f1ce9b790166e8d551e7000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+# UVM_INFO @ 27580.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 2
+# **AES_predictor** t.test_case_sel =  24
+# **AES_predictor** t.key_len = 1
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 27580.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0x82fec664466d585023821c2e39a0c43345669a41244d05018a23d7159515f8ff4d88b01cd0eb83070d0077e065d74d7373816b61505718f8d4f270286a59d45e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 27690.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 2
+#  **AES_in_driver_bfm** test_case_sel value is: 390
+#  **AES_in_driver_bfm** key_len value is: 1
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 27740.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x82fec664466d585023821c2e39a0c43345669a41244d05018a23d7159515f8ff4d88b01cd0eb83070d0077e065d74d7373816b61505718f8d4f270286a59d45e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x82fec664466d585023821c2e39a0c43345669a41244d05018a23d7159515f8ff4d88b01cd0eb83070d0077e065d74d7373816b61505718f8d4f270286a59d45e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+# UVM_INFO @ 31020.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 2
+# **AES_predictor** t.test_case_sel = 390
+# **AES_predictor** t.key_len = 1
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 31020.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 31130.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 3
+#  **AES_in_driver_bfm** test_case_sel value is:   6
+#  **AES_in_driver_bfm** key_len value is: 0
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 31180.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0xffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+# UVM_INFO @ 34460.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 3
+# **AES_predictor** t.test_case_sel =   6
+# **AES_predictor** t.key_len = 0
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 34460.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0x08a4e2efec8a8e3312ca7460b9040bbf000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 34570.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 3
+#  **AES_in_driver_bfm** test_case_sel value is: 138
+#  **AES_in_driver_bfm** key_len value is: 1
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 34620.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x08a4e2efec8a8e3312ca7460b9040bbf000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x08a4e2efec8a8e3312ca7460b9040bbf000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+# UVM_INFO @ 37900.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 3
+# **AES_predictor** t.test_case_sel = 138
+# **AES_predictor** t.key_len = 1
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 37900.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0x972bdd2e7c525130fadc8f76fc6f4b3f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 38010.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 3
+#  **AES_in_driver_bfm** test_case_sel value is: 376
+#  **AES_in_driver_bfm** key_len value is: 0
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 38060.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x972bdd2e7c525130fadc8f76fc6f4b3f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x972bdd2e7c525130fadc8f76fc6f4b3f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+# UVM_INFO @ 41340.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 3
+# **AES_predictor** t.test_case_sel = 376
+# **AES_predictor** t.key_len = 0
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 41340.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0x8ebf73aad49c82007f77a5c1ccec6ab4000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 41450.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 3
+#  **AES_in_driver_bfm** test_case_sel value is:   0
+#  **AES_in_driver_bfm** key_len value is: 1
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 41500.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x8ebf73aad49c82007f77a5c1ccec6ab4000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x8ebf73aad49c82007f77a5c1ccec6ab4000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+# UVM_INFO @ 44780.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 3
+# **AES_predictor** t.test_case_sel =   0
+# **AES_predictor** t.key_len = 1
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 44780.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0x5c9d844ed46f9885085e5d6a4f94c7d7000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 44890.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 2
+#  **AES_in_driver_bfm** test_case_sel value is: 320
+#  **AES_in_driver_bfm** key_len value is: 0
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 44940.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x5c9d844ed46f9885085e5d6a4f94c7d7000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x5c9d844ed46f9885085e5d6a4f94c7d7000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+# UVM_INFO @ 48220.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 2
+# **AES_predictor** t.test_case_sel = 320
+# **AES_predictor** t.key_len = 0
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 48220.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 48330.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 3
+#  **AES_in_driver_bfm** test_case_sel value is: 358
+#  **AES_in_driver_bfm** key_len value is: 1
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 48380.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+# UVM_INFO @ 51660.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 3
+# **AES_predictor** t.test_case_sel = 358
+# **AES_predictor** t.key_len = 1
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 51660.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0x76b5614a042707c98e2132e2e805fe63000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 51770.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 2
+#  **AES_in_driver_bfm** test_case_sel value is: 473
+#  **AES_in_driver_bfm** key_len value is: 0
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 51820.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x76b5614a042707c98e2132e2e805fe63000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x76b5614a042707c98e2132e2e805fe63000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+# UVM_INFO @ 55100.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 2
+# **AES_predictor** t.test_case_sel = 473
+# **AES_predictor** t.key_len = 0
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 55100.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xfffc0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 55210.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 3
+#  **AES_in_driver_bfm** test_case_sel value is: 447
+#  **AES_in_driver_bfm** key_len value is: 1
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 55260.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xfffc0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0xfffc0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+# UVM_INFO @ 58540.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 3
+# **AES_predictor** t.test_case_sel = 447
+# **AES_predictor** t.key_len = 1
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 58540.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0x6693dc911662ae473216ba22189a511a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 58650.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 2
+#  **AES_in_driver_bfm** test_case_sel value is: 188
+#  **AES_in_driver_bfm** key_len value is: 0
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 58700.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x6693dc911662ae473216ba22189a511a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x6693dc911662ae473216ba22189a511a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+# UVM_INFO @ 61980.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 2
+# **AES_predictor** t.test_case_sel = 188
+# **AES_predictor** t.key_len = 0
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 61980.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xfffffe00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 62090.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 3
+#  **AES_in_driver_bfm** test_case_sel value is: 388
+#  **AES_in_driver_bfm** key_len value is: 0
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 62140.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xfffffe00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0xfffffe00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+# UVM_INFO @ 65420.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 3
+# **AES_predictor** t.test_case_sel = 388
+# **AES_predictor** t.key_len = 0
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 65420.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0x7470469be9723030fdcc73a8cd4fbb10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 65530.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 3
+#  **AES_in_driver_bfm** test_case_sel value is: 239
+#  **AES_in_driver_bfm** key_len value is: 0
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 65580.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x7470469be9723030fdcc73a8cd4fbb10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x7470469be9723030fdcc73a8cd4fbb10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+# UVM_INFO @ 68860.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 3
+# **AES_predictor** t.test_case_sel = 239
+# **AES_predictor** t.key_len = 0
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 68860.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xeef456431dea8b4acf83bdae3717f75f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 68970.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 3
+#  **AES_in_driver_bfm** test_case_sel value is: 317
+#  **AES_in_driver_bfm** key_len value is: 1
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 69020.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xeef456431dea8b4acf83bdae3717f75f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0xeef456431dea8b4acf83bdae3717f75f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+# UVM_INFO @ 72300.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 3
+# **AES_predictor** t.test_case_sel = 317
+# **AES_predictor** t.key_len = 1
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 72300.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0x8d6a8afe55a6e481badae0d146f436db000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 72410.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 3
+#  **AES_in_driver_bfm** test_case_sel value is: 218
+#  **AES_in_driver_bfm** key_len value is: 0
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 72460.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x8d6a8afe55a6e481badae0d146f436db000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x8d6a8afe55a6e481badae0d146f436db000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+# UVM_INFO @ 75740.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 3
+# **AES_predictor** t.test_case_sel = 218
+# **AES_predictor** t.key_len = 0
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 75740.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xa18e3dbbca577860dab6b80da3139256000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 75850.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 2
+#  **AES_in_driver_bfm** test_case_sel value is: 268
+#  **AES_in_driver_bfm** key_len value is: 0
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 75900.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xa18e3dbbca577860dab6b80da3139256000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0xa18e3dbbca577860dab6b80da3139256000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+# UVM_INFO @ 79180.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 2
+# **AES_predictor** t.test_case_sel = 268
+# **AES_predictor** t.key_len = 0
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 79180.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xfffffffffffffffffffffffffe000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 79290.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 2
+#  **AES_in_driver_bfm** test_case_sel value is: 456
+#  **AES_in_driver_bfm** key_len value is: 1
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 79340.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xfffffffffffffffffffffffffe000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0xfffffffffffffffffffffffffe000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+# UVM_INFO @ 82620.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 2
+# **AES_predictor** t.test_case_sel = 456
+# **AES_predictor** t.key_len = 1
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 82620.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 82730.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 3
+#  **AES_in_driver_bfm** test_case_sel value is: 327
+#  **AES_in_driver_bfm** key_len value is: 0
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 82780.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+# UVM_INFO @ 97460.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 3
+# **AES_predictor** t.test_case_sel = 327
+# **AES_predictor** t.key_len = 0
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 97460.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0x3b8611bfc4973c5cd8e982b073b33184cd26110159172e44988eb5ff5661a1e16fad67258fcbfee55469267a12dc374893b4e3533d36f5634c3095583596f135aa8cd1138dc898bc5651ee35a92ebf89ab6aeb5366653bc60a70e0074fc11efe00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 97570.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 2
+#  **AES_in_driver_bfm** test_case_sel value is: 493
+#  **AES_in_driver_bfm** key_len value is: 0
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 97620.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x3b8611bfc4973c5cd8e982b073b33184cd26110159172e44988eb5ff5661a1e16fad67258fcbfee55469267a12dc374893b4e3533d36f5634c3095583596f135aa8cd1138dc898bc5651ee35a92ebf89ab6aeb5366653bc60a70e0074fc11efe00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x3b8611bfc4973c5cd8e982b073b33184cd26110159172e44988eb5ff5661a1e16fad67258fcbfee55469267a12dc374893b4e3533d36f5634c3095583596f135aa8cd1138dc898bc5651ee35a92ebf89ab6aeb5366653bc60a70e0074fc11efe00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+run
+# UVM_INFO @ 100900.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 2
+# **AES_predictor** t.test_case_sel = 493
+# **AES_predictor** t.key_len = 0
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 100900.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xffffffffc00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 101010.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+#  **AES_in_driver_bfm** op value is: 2
+#  **AES_in_driver_bfm** test_case_sel value is: 275
+#  **AES_in_driver_bfm** key_len value is: 1
+# **AES_in_driver_bfm** file opened successfully!
+# **AES_in_driver_bfm** Getting key
+# UVM_INFO @ 101060.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xffffffffc00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0xffffffffc00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **AES_in_driver_bfm** AES test started
+# UVM_INFO @ 104340.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# **AES_predictor** t.op= 2
+# **AES_predictor** t.test_case_sel = 275
+# **AES_predictor** t.key_len = 1
+# **AES_predictor** file opened successfully!
+# UVM_INFO @ 104340.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 104450.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# UVM_INFO @ 104500.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO verilog_src/uvm-1.1d/src/base/uvm_objection.svh(1267) @ 108450.000ns: reporter [TEST_DONE] 'run' phase is ready to proceed to the 'extract' phase
+# UVM_INFO @ 108450.000ns: uvm_test_top.environment.AES_sb [SCBD] SCOREBOARD_RESULTS:  PREDICTED_TRANSACTIONS=26 MATCHES=26 MISMATCHES=0
+# 
+# --- UVM Report Summary ---
+# 
+# ** Report counts by severity
+# UVM_INFO :  108
+# UVM_WARNING :    2
+# UVM_ERROR :    0
+# UVM_FATAL :    0
+# ** Report counts by id
+# [COVERAGE_MODEL_REVIEW]     1
+# [PRED]    26
+# [PREDICT]    25
+# [PREDICTOR_REVIEW]     1
+# [Questa UVM]     2
+# [RNTST]     1
+# [SCBD]    27
+# [SEQ]    25
+# [TEST_DONE]     1
+# [UVM_CMDLINE_PROC]     1
+# ** Note: $finish    : /home/cad/tools/mentor/questa/2022.2_1/questasim/linux/../verilog_src/uvm-1.1d/src/base/uvm_root.svh(430)
+#    Time: 108450 ns  Iteration: 60  Instance: /hvl_top
+# Break in Task uvm_pkg/uvm_root::run_test at /home/cad/tools/mentor/questa/2022.2_1/questasim/linux/../verilog_src/uvm-1.1d/src/base/uvm_root.svh line 430
+# couldn't load file "/home/cad/tools/mentor/questa/2022.2_1/questasim/linux/ScintillaTk/libScintillaTk1.14.so": libstdc++.so.6: wrong ELF class: ELFCLASS64
+# list element in quotes followed by ":" instead of space
+# End time: 10:36:25 on Aug 04,2022, Elapsed time: 0:01:17
+# Errors: 0, Warnings: 10

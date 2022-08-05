@@ -1,0 +1,464 @@
+# //  Questa Sim
+# //  Version 2022.2_1 linux May 19 2022
+# //
+# //  Copyright 1991-2022 Mentor Graphics Corporation
+# //  All Rights Reserved.
+# //
+# //  QuestaSim and its associated documentation contain trade
+# //  secrets and commercial or financial information that are the property of
+# //  Mentor Graphics Corporation and are privileged, confidential,
+# //  and exempt from disclosure under the Freedom of Information Act,
+# //  5 U.S.C. Section 552. Furthermore, this information
+# //  is prohibited from disclosure under the Trade Secrets Act,
+# //  18 U.S.C. Section 1905.
+# //
+# vsim -i -sv_seed random "+UVM_TESTNAME=test_top" -permit_unmatched_virtual_intf "+notimingchecks" -suppress 8887 -solvefaildebug -solvefailtestcase -assertdebug -uvmcontrol=all "+uvm_set_config_int=*,enable_transaction_viewing,1" -classdebug -msgmode tran -do " set NoQuitOnFinish 1; run 0; do wave.do " optimized_debug_top_tb 
+# Start time: 10:37:26 on Aug 04,2022
+# Loading sv_std.std
+# Loading work.AES_out_driver_bfm(fast)
+# Loading work.AES_out_monitor_bfm(fast)
+# Loading work.uvmf_base_pkg_hdl(fast)
+# Loading work.AES_out_pkg_hdl(fast)
+# Loading work.AES_in_driver_bfm(fast)
+# Loading work.AES_in_monitor_bfm(fast)
+# Loading mtiUvm.uvm_pkg(fast)
+# Loading work.uvmf_base_pkg(fast)
+# Loading work.AES_out_pkg(fast)
+# Loading work.AES_in_pkg_hdl(fast)
+# Loading work.AES_in_pkg(fast)
+# Loading work.AES_env_pkg(fast)
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$fgets'.
+#    Time: 0 ns  Iteration: 0  Region: /AES_env_pkg::AES_predictor::AES_predictor__1::write_AES_in_agent_ae File: /home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/uvmf_cbc_MMTonly/uvmf_template_output/project_benches/AES/sim/../../../verification_ip/environment_packages/AES_env_pkg/src/AES_predictor.svh Line: 122
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$fgets'.
+#    Time: 0 ns  Iteration: 0  Region: /AES_env_pkg::AES_predictor::AES_predictor__1::write_AES_in_agent_ae File: /home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/uvmf_cbc_MMTonly/uvmf_template_output/project_benches/AES/sim/../../../verification_ip/environment_packages/AES_env_pkg/src/AES_predictor.svh Line: 126
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$fgets'.
+#    Time: 0 ns  Iteration: 0  Region: /AES_env_pkg::AES_predictor::AES_predictor__1::write_AES_in_agent_ae File: /home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/uvmf_cbc_MMTonly/uvmf_template_output/project_benches/AES/sim/../../../verification_ip/environment_packages/AES_env_pkg/src/AES_predictor.svh Line: 127
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$fgets'.
+#    Time: 0 ns  Iteration: 0  Region: /AES_env_pkg::AES_predictor::AES_predictor__1::write_AES_in_agent_ae File: /home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/uvmf_cbc_MMTonly/uvmf_template_output/project_benches/AES/sim/../../../verification_ip/environment_packages/AES_env_pkg/src/AES_predictor.svh Line: 128
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$sscanf'.
+#    Time: 0 ns  Iteration: 0  Region: /AES_env_pkg::AES_predictor::AES_predictor__1::write_AES_in_agent_ae File: /home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/uvmf_cbc_MMTonly/uvmf_template_output/project_benches/AES/sim/../../../verification_ip/environment_packages/AES_env_pkg/src/AES_predictor.svh Line: 129
+# Loading work.AES_parameters_pkg(fast)
+# Loading work.AES_sequences_pkg(fast)
+# Loading work.AES_tests_pkg(fast)
+# Loading mtiUvm.questa_uvm_pkg(fast)
+# Loading work.hvl_top(fast)
+# Loading work.hdl_top(fast)
+# Loading work.AES_in_if_sv_unit(fast)
+# Loading work.AES_in_if(fast__1)
+# Loading work.AES_out_if_sv_unit(fast)
+# Loading work.AES_out_if(fast__1)
+# Loading work.AES_in_monitor_bfm_sv_unit(fast)
+# Loading work.AES_in_monitor_bfm(fast__1)
+# Loading work.AES_out_monitor_bfm_sv_unit(fast)
+# Loading work.AES_out_monitor_bfm(fast__1)
+# Loading work.AES_in_driver_bfm_sv_unit(fast)
+# Loading work.AES_in_driver_bfm(fast__1)
+# Loading work.aes_ctrl(fast)
+# Loading work.aes_cbc(fast)
+# Loading work.aes_core_cbc(fast)
+# Loading work.aes_encipher_block(fast)
+# Loading work.aes_decipher_block(fast)
+# Loading work.aes_inv_sbox(fast)
+# Loading work.aes_key_mem(fast)
+# Loading work.aes_sbox(fast)
+# Loading work.ahb_slv_sif(fast)
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$fgets'.
+#    Time: 0 ns  Iteration: 0  Region: /hdl_top/AES_in_agent_drv_bfm/cbc_mode_mmt_vector_test File: /home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/uvmf_cbc_MMTonly/uvmf_template_output/project_benches/AES/sim/../../../verification_ip/interface_packages/AES_in_pkg/src/AES_in_driver_bfm.sv Line: 548
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$sscanf'.
+#    Time: 0 ns  Iteration: 0  Region: /hdl_top/AES_in_agent_drv_bfm/cbc_mode_mmt_vector_test File: /home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/uvmf_cbc_MMTonly/uvmf_template_output/project_benches/AES/sim/../../../verification_ip/interface_packages/AES_in_pkg/src/AES_in_driver_bfm.sv Line: 553
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$fgets'.
+#    Time: 0 ns  Iteration: 0  Region: /hdl_top/AES_in_agent_drv_bfm/cbc_mode_mmt_vector_test File: /home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/uvmf_cbc_MMTonly/uvmf_template_output/project_benches/AES/sim/../../../verification_ip/interface_packages/AES_in_pkg/src/AES_in_driver_bfm.sv Line: 554
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$sscanf'.
+#    Time: 0 ns  Iteration: 0  Region: /hdl_top/AES_in_agent_drv_bfm/cbc_mode_mmt_vector_test File: /home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/uvmf_cbc_MMTonly/uvmf_template_output/project_benches/AES/sim/../../../verification_ip/interface_packages/AES_in_pkg/src/AES_in_driver_bfm.sv Line: 555
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$fgets'.
+#    Time: 0 ns  Iteration: 0  Region: /hdl_top/AES_in_agent_drv_bfm/cbc_mode_mmt_vector_test File: /home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/uvmf_cbc_MMTonly/uvmf_template_output/project_benches/AES/sim/../../../verification_ip/interface_packages/AES_in_pkg/src/AES_in_driver_bfm.sv Line: 556
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$sscanf'.
+#    Time: 0 ns  Iteration: 0  Region: /hdl_top/AES_in_agent_drv_bfm/cbc_mode_mmt_vector_test File: /home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/uvmf_cbc_MMTonly/uvmf_template_output/project_benches/AES/sim/../../../verification_ip/interface_packages/AES_in_pkg/src/AES_in_driver_bfm.sv Line: 557
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$fgets'.
+#    Time: 0 ns  Iteration: 0  Region: /hdl_top/AES_in_agent_drv_bfm/cbc_mode_mmt_vector_test File: /home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/uvmf_cbc_MMTonly/uvmf_template_output/project_benches/AES/sim/../../../verification_ip/interface_packages/AES_in_pkg/src/AES_in_driver_bfm.sv Line: 558
+# Loading /home/cad/tools/mentor/questa/2022.2_1/questasim/uvm-1.1d/linux/uvm_dpi.so
+# Sv_Seed = 1411419614
+#  set NoQuitOnFinish 1
+# 1
+#  run 0
+# ----------------------------------------------------------------
+# UVM-1.1d
+# (C) 2007-2013 Mentor Graphics Corporation
+# (C) 2007-2013 Cadence Design Systems, Inc.
+# (C) 2006-2013 Synopsys, Inc.
+# (C) 2011-2013 Cypress Semiconductor Corp.
+# ----------------------------------------------------------------
+# 
+#   ***********       IMPORTANT RELEASE NOTES         ************
+# 
+#   You are using a version of the UVM library that has been compiled
+#   with `UVM_NO_DEPRECATED undefined.
+#   See http://www.eda.org/svdb/view.php?id=3313 for more details.
+# 
+#   You are using a version of the UVM library that has been compiled
+#   with `UVM_OBJECT_MUST_HAVE_CONSTRUCTOR undefined.
+#   See http://www.eda.org/svdb/view.php?id=3770 for more details.
+# 
+#       (Specify +UVM_NO_RELNOTES to turn off this notice)
+# 
+# ----------------------------------------------------------------
+# //  UVM Framework 
+# //  Version 2022.1
+# //  (C) 2013-2022 Siemens Corporation
+# //  Digital Industries Software
+# //  Siemens EDA
+# //  All Rights Reserved.
+# ----------------------------------------------------------------
+# 
+# 
+# UVM_INFO verilog_src/questa_uvm_pkg-1.2/src/questa_uvm_pkg.sv(277) @ 0: reporter [Questa UVM] QUESTA_UVM-1.2.3
+# UVM_INFO verilog_src/questa_uvm_pkg-1.2/src/questa_uvm_pkg.sv(278) @ 0: reporter [Questa UVM]  questa_uvm::init(all)
+# UVM_INFO @ 0.000ns: reporter [RNTST] Running test test_top...
+# UVM_INFO @ 0.000ns: reporter [UVM_CMDLINE_PROC] Applying config setting from the command line: +uvm_set_config_int=*,enable_transaction_viewing,1
+# UVM_WARNING @ 0.000ns: reporter [COVERAGE_MODEL_REVIEW] A covergroup has been constructed which may need review because of either generation or re-generation with merging.  Please note that configuration variables added as a result of re-generation and merging are not automatically added to the covergroup.  Remove this warning after the covergroup has been reviewed.
+# UVM_WARNING @ 0.000ns: uvm_test_top.environment.AES_pred [PREDICTOR_REVIEW] This predictor has been created either through generation or re-generation with merging.  Remove this warning after the predictor has been reviewed.
+#  do wave.do 
+run
+# UVM_INFO @ 210.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 0
+# t.test_case_sel =  0
+# **************************************************************************
+# * Questa UVM Transaction Recording Turned ON.                            *
+# * recording_detail has been set.                                         *
+# *  To turn off, set 'recording_detail' to off:                           *
+# * uvm_config_db#(int)            ::set(null, "", "recording_detail", 0); *
+# * uvm_config_db#(uvm_bitstream_t)::set(null, "", "recording_detail", 0); *
+# **************************************************************************
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is: 12
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+# UVM_INFO @ 250.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 22680.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 3
+# t.test_case_sel =  9
+# file opened successfully!
+# UVM_INFO @ 22680.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xfc5873e50de8faf4c6b84ba707b0854e9db9ab2e9f7d707fbba338c6843a18fc6facebaf663d26296fb329b4d26f18494c79e09e779647f9bafa87489630d79f4301610c2300c19dbf3148b7cac8c4f4944102754f332e92b6f7c5e75bc6179eb877a078d4719009021744c14f13fd2a55a2b9c44d18000685a845a4f632c7c56a77306efa66a24d05d088dcd7c13fe24fc447275965db9e4d37fbc9304448cd 
+# UVM_INFO @ 22700.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xfc5873e50de8faf4c6b84ba707b0854e9db9ab2e9f7d707fbba338c6843a18fc6facebaf663d26296fb329b4d26f18494c79e09e779647f9bafa87489630d79f4301610c2300c19dbf3148b7cac8c4f4944102754f332e92b6f7c5e75bc6179eb877a078d4719009021744c14f13fd2a55a2b9c44d18000685a845a4f632c7c56a77306efa66a24d05d088dcd7c13fe24fc447275965db9e4d37fbc9304448cd ACTUAL: result:0xfc5873e50de8faf4c6b84ba707b0854e9db9ab2e9f7d707fbba338c6843a18fc6facebaf663d26296fb329b4d26f18494c79e09e779647f9bafa87489630d79f4301610c2300c19dbf3148b7cac8c4f4944102754f332e92b6f7c5e75bc6179eb877a078d4719009021744c14f13fd2a55a2b9c44d18000685a845a4f632c7c56a77306efa66a24d05d088dcd7c13fe24fc447275965db9e4d37fbc9304448cd 
+# UVM_INFO @ 22780.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is:  0
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+# UVM_INFO @ 26080.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 3
+# t.test_case_sel =  0
+# file opened successfully!
+# UVM_INFO @ 26080.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0x6acc04142e100a65f51b97adf5172c41000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 26100.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x6acc04142e100a65f51b97adf5172c41000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x6acc04142e100a65f51b97adf5172c41000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 26180.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is: 12
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+# UVM_INFO @ 48650.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 2
+# t.test_case_sel =  9
+# file opened successfully!
+# UVM_INFO @ 48650.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xbfe5c6354b7a3ff3e192e05775b9b75807de12e38a626b8bf0e12d5fff78e4f1775aa7d792d885162e66d88930f9c3b2cdf8654f56972504803190386270f0aa43645db187af41fcea639b1f8026ccdd0c23e0de37094a8b941ecb7602998a4b2604e69fc04219585d854600e0ad6f99a53b2504043c08b1c3e214d17cde053cbdf91daa999ed5b47c37983ba3ee254bc5c793837daaa8c85cfc12f7f54f699f 
+# UVM_INFO @ 48670.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xbfe5c6354b7a3ff3e192e05775b9b75807de12e38a626b8bf0e12d5fff78e4f1775aa7d792d885162e66d88930f9c3b2cdf8654f56972504803190386270f0aa43645db187af41fcea639b1f8026ccdd0c23e0de37094a8b941ecb7602998a4b2604e69fc04219585d854600e0ad6f99a53b2504043c08b1c3e214d17cde053cbdf91daa999ed5b47c37983ba3ee254bc5c793837daaa8c85cfc12f7f54f699f ACTUAL: result:0xbfe5c6354b7a3ff3e192e05775b9b75807de12e38a626b8bf0e12d5fff78e4f1775aa7d792d885162e66d88930f9c3b2cdf8654f56972504803190386270f0aa43645db187af41fcea639b1f8026ccdd0c23e0de37094a8b941ecb7602998a4b2604e69fc04219585d854600e0ad6f99a53b2504043c08b1c3e214d17cde053cbdf91daa999ed5b47c37983ba3ee254bc5c793837daaa8c85cfc12f7f54f699f 
+# UVM_INFO @ 48750.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is: 10
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+# UVM_INFO @ 71220.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 3
+# t.test_case_sel =  9
+# file opened successfully!
+# UVM_INFO @ 71220.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xfc5873e50de8faf4c6b84ba707b0854e9db9ab2e9f7d707fbba338c6843a18fc6facebaf663d26296fb329b4d26f18494c79e09e779647f9bafa87489630d79f4301610c2300c19dbf3148b7cac8c4f4944102754f332e92b6f7c5e75bc6179eb877a078d4719009021744c14f13fd2a55a2b9c44d18000685a845a4f632c7c56a77306efa66a24d05d088dcd7c13fe24fc447275965db9e4d37fbc9304448cd 
+# UVM_INFO @ 71240.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xfc5873e50de8faf4c6b84ba707b0854e9db9ab2e9f7d707fbba338c6843a18fc6facebaf663d26296fb329b4d26f18494c79e09e779647f9bafa87489630d79f4301610c2300c19dbf3148b7cac8c4f4944102754f332e92b6f7c5e75bc6179eb877a078d4719009021744c14f13fd2a55a2b9c44d18000685a845a4f632c7c56a77306efa66a24d05d088dcd7c13fe24fc447275965db9e4d37fbc9304448cd ACTUAL: result:0xfc5873e50de8faf4c6b84ba707b0854e9db9ab2e9f7d707fbba338c6843a18fc6facebaf663d26296fb329b4d26f18494c79e09e779647f9bafa87489630d79f4301610c2300c19dbf3148b7cac8c4f4944102754f332e92b6f7c5e75bc6179eb877a078d4719009021744c14f13fd2a55a2b9c44d18000685a845a4f632c7c56a77306efa66a24d05d088dcd7c13fe24fc447275965db9e4d37fbc9304448cd 
+# UVM_INFO @ 71320.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is: 13
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+# UVM_INFO @ 93790.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 3
+# t.test_case_sel =  9
+# file opened successfully!
+# UVM_INFO @ 93790.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xfc5873e50de8faf4c6b84ba707b0854e9db9ab2e9f7d707fbba338c6843a18fc6facebaf663d26296fb329b4d26f18494c79e09e779647f9bafa87489630d79f4301610c2300c19dbf3148b7cac8c4f4944102754f332e92b6f7c5e75bc6179eb877a078d4719009021744c14f13fd2a55a2b9c44d18000685a845a4f632c7c56a77306efa66a24d05d088dcd7c13fe24fc447275965db9e4d37fbc9304448cd 
+# UVM_INFO @ 93810.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xfc5873e50de8faf4c6b84ba707b0854e9db9ab2e9f7d707fbba338c6843a18fc6facebaf663d26296fb329b4d26f18494c79e09e779647f9bafa87489630d79f4301610c2300c19dbf3148b7cac8c4f4944102754f332e92b6f7c5e75bc6179eb877a078d4719009021744c14f13fd2a55a2b9c44d18000685a845a4f632c7c56a77306efa66a24d05d088dcd7c13fe24fc447275965db9e4d37fbc9304448cd ACTUAL: result:0xfc5873e50de8faf4c6b84ba707b0854e9db9ab2e9f7d707fbba338c6843a18fc6facebaf663d26296fb329b4d26f18494c79e09e779647f9bafa87489630d79f4301610c2300c19dbf3148b7cac8c4f4944102754f332e92b6f7c5e75bc6179eb877a078d4719009021744c14f13fd2a55a2b9c44d18000685a845a4f632c7c56a77306efa66a24d05d088dcd7c13fe24fc447275965db9e4d37fbc9304448cd 
+# UVM_INFO @ 93890.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is:  3
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+run
+# UVM_INFO @ 103580.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 3
+# t.test_case_sel =  3
+# file opened successfully!
+# UVM_INFO @ 103580.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0x05d5c77729421b08b737e41119fa4438d1f570cc772a4d6c3df7ffeda0384ef84288ce37fc4c4c7d1125a499b051364c389fd639bdda647daa3bdadab2eb5594000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 103600.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x05d5c77729421b08b737e41119fa4438d1f570cc772a4d6c3df7ffeda0384ef84288ce37fc4c4c7d1125a499b051364c389fd639bdda647daa3bdadab2eb5594000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x05d5c77729421b08b737e41119fa4438d1f570cc772a4d6c3df7ffeda0384ef84288ce37fc4c4c7d1125a499b051364c389fd639bdda647daa3bdadab2eb5594000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 103680.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is:  4
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+# UVM_INFO @ 115500.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 3
+# t.test_case_sel =  4
+# file opened successfully!
+# UVM_INFO @ 115500.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0x9c99e68236bb2e929db1089c7750f1b356d39ab9d0c40c3e2f05108ae9d0c30b04832ccdbdc08ebfa426b7f5efde986ed05784ce368193bb3699bc691065ac62e258b9aa4cc557e2b45b49ce05511e650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 115520.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x9c99e68236bb2e929db1089c7750f1b356d39ab9d0c40c3e2f05108ae9d0c30b04832ccdbdc08ebfa426b7f5efde986ed05784ce368193bb3699bc691065ac62e258b9aa4cc557e2b45b49ce05511e650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x9c99e68236bb2e929db1089c7750f1b356d39ab9d0c40c3e2f05108ae9d0c30b04832ccdbdc08ebfa426b7f5efde986ed05784ce368193bb3699bc691065ac62e258b9aa4cc557e2b45b49ce05511e650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 115600.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is: 14
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+# UVM_INFO @ 138070.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 3
+# t.test_case_sel =  9
+# file opened successfully!
+# UVM_INFO @ 138070.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xfc5873e50de8faf4c6b84ba707b0854e9db9ab2e9f7d707fbba338c6843a18fc6facebaf663d26296fb329b4d26f18494c79e09e779647f9bafa87489630d79f4301610c2300c19dbf3148b7cac8c4f4944102754f332e92b6f7c5e75bc6179eb877a078d4719009021744c14f13fd2a55a2b9c44d18000685a845a4f632c7c56a77306efa66a24d05d088dcd7c13fe24fc447275965db9e4d37fbc9304448cd 
+# UVM_INFO @ 138090.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xfc5873e50de8faf4c6b84ba707b0854e9db9ab2e9f7d707fbba338c6843a18fc6facebaf663d26296fb329b4d26f18494c79e09e779647f9bafa87489630d79f4301610c2300c19dbf3148b7cac8c4f4944102754f332e92b6f7c5e75bc6179eb877a078d4719009021744c14f13fd2a55a2b9c44d18000685a845a4f632c7c56a77306efa66a24d05d088dcd7c13fe24fc447275965db9e4d37fbc9304448cd ACTUAL: result:0xfc5873e50de8faf4c6b84ba707b0854e9db9ab2e9f7d707fbba338c6843a18fc6facebaf663d26296fb329b4d26f18494c79e09e779647f9bafa87489630d79f4301610c2300c19dbf3148b7cac8c4f4944102754f332e92b6f7c5e75bc6179eb877a078d4719009021744c14f13fd2a55a2b9c44d18000685a845a4f632c7c56a77306efa66a24d05d088dcd7c13fe24fc447275965db9e4d37fbc9304448cd 
+# UVM_INFO @ 138170.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is:  7
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+# UVM_INFO @ 156380.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 2
+# t.test_case_sel =  7
+# file opened successfully!
+# UVM_INFO @ 156380.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xcfc155a3967de347f58fa2e8bbeb4183d6d32f7427155e6ab39cddf2e627c572acae02f1f243f3b784e73e21e7e520eacd3befafbee814867334c6ee8c2f0ee7376d3c72728cde7813173dbdfe3357deac41d3ae2a04229c0262f2d109d01f5d03e7f848fb50c28849146c02a2f4ebf7d7ffe3c9d40e31970bf151873672ef2b0000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 156400.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xcfc155a3967de347f58fa2e8bbeb4183d6d32f7427155e6ab39cddf2e627c572acae02f1f243f3b784e73e21e7e520eacd3befafbee814867334c6ee8c2f0ee7376d3c72728cde7813173dbdfe3357deac41d3ae2a04229c0262f2d109d01f5d03e7f848fb50c28849146c02a2f4ebf7d7ffe3c9d40e31970bf151873672ef2b0000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0xcfc155a3967de347f58fa2e8bbeb4183d6d32f7427155e6ab39cddf2e627c572acae02f1f243f3b784e73e21e7e520eacd3befafbee814867334c6ee8c2f0ee7376d3c72728cde7813173dbdfe3357deac41d3ae2a04229c0262f2d109d01f5d03e7f848fb50c28849146c02a2f4ebf7d7ffe3c9d40e31970bf151873672ef2b0000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 156480.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is: 14
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+# UVM_INFO @ 178950.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 3
+# t.test_case_sel =  9
+# file opened successfully!
+# UVM_INFO @ 178950.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xfc5873e50de8faf4c6b84ba707b0854e9db9ab2e9f7d707fbba338c6843a18fc6facebaf663d26296fb329b4d26f18494c79e09e779647f9bafa87489630d79f4301610c2300c19dbf3148b7cac8c4f4944102754f332e92b6f7c5e75bc6179eb877a078d4719009021744c14f13fd2a55a2b9c44d18000685a845a4f632c7c56a77306efa66a24d05d088dcd7c13fe24fc447275965db9e4d37fbc9304448cd 
+# UVM_INFO @ 178970.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xfc5873e50de8faf4c6b84ba707b0854e9db9ab2e9f7d707fbba338c6843a18fc6facebaf663d26296fb329b4d26f18494c79e09e779647f9bafa87489630d79f4301610c2300c19dbf3148b7cac8c4f4944102754f332e92b6f7c5e75bc6179eb877a078d4719009021744c14f13fd2a55a2b9c44d18000685a845a4f632c7c56a77306efa66a24d05d088dcd7c13fe24fc447275965db9e4d37fbc9304448cd ACTUAL: result:0xfc5873e50de8faf4c6b84ba707b0854e9db9ab2e9f7d707fbba338c6843a18fc6facebaf663d26296fb329b4d26f18494c79e09e779647f9bafa87489630d79f4301610c2300c19dbf3148b7cac8c4f4944102754f332e92b6f7c5e75bc6179eb877a078d4719009021744c14f13fd2a55a2b9c44d18000685a845a4f632c7c56a77306efa66a24d05d088dcd7c13fe24fc447275965db9e4d37fbc9304448cd 
+# UVM_INFO @ 179050.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is:  4
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+# UVM_INFO @ 190870.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 2
+# t.test_case_sel =  4
+# file opened successfully!
+# UVM_INFO @ 190870.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0x8d22db30c4253c3e3add9685c14d55b05f7cf7626c52cccfcbe9b99fd8913663b8b1f22e277a4cc3d0e7e978a34782eb876867556ad4728486d5e890ea738243e3700a696d6eb58cd81c0e60eb121c500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 190890.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x8d22db30c4253c3e3add9685c14d55b05f7cf7626c52cccfcbe9b99fd8913663b8b1f22e277a4cc3d0e7e978a34782eb876867556ad4728486d5e890ea738243e3700a696d6eb58cd81c0e60eb121c500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x8d22db30c4253c3e3add9685c14d55b05f7cf7626c52cccfcbe9b99fd8913663b8b1f22e277a4cc3d0e7e978a34782eb876867556ad4728486d5e890ea738243e3700a696d6eb58cd81c0e60eb121c500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 190970.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is: 10
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+run
+# UVM_INFO @ 213440.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 3
+# t.test_case_sel =  9
+# file opened successfully!
+# UVM_INFO @ 213440.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xfc5873e50de8faf4c6b84ba707b0854e9db9ab2e9f7d707fbba338c6843a18fc6facebaf663d26296fb329b4d26f18494c79e09e779647f9bafa87489630d79f4301610c2300c19dbf3148b7cac8c4f4944102754f332e92b6f7c5e75bc6179eb877a078d4719009021744c14f13fd2a55a2b9c44d18000685a845a4f632c7c56a77306efa66a24d05d088dcd7c13fe24fc447275965db9e4d37fbc9304448cd 
+# UVM_INFO @ 213460.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xfc5873e50de8faf4c6b84ba707b0854e9db9ab2e9f7d707fbba338c6843a18fc6facebaf663d26296fb329b4d26f18494c79e09e779647f9bafa87489630d79f4301610c2300c19dbf3148b7cac8c4f4944102754f332e92b6f7c5e75bc6179eb877a078d4719009021744c14f13fd2a55a2b9c44d18000685a845a4f632c7c56a77306efa66a24d05d088dcd7c13fe24fc447275965db9e4d37fbc9304448cd ACTUAL: result:0xfc5873e50de8faf4c6b84ba707b0854e9db9ab2e9f7d707fbba338c6843a18fc6facebaf663d26296fb329b4d26f18494c79e09e779647f9bafa87489630d79f4301610c2300c19dbf3148b7cac8c4f4944102754f332e92b6f7c5e75bc6179eb877a078d4719009021744c14f13fd2a55a2b9c44d18000685a845a4f632c7c56a77306efa66a24d05d088dcd7c13fe24fc447275965db9e4d37fbc9304448cd 
+# UVM_INFO @ 213540.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is:  4
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+# UVM_INFO @ 225360.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 2
+# t.test_case_sel =  4
+# file opened successfully!
+# UVM_INFO @ 225360.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0x8d22db30c4253c3e3add9685c14d55b05f7cf7626c52cccfcbe9b99fd8913663b8b1f22e277a4cc3d0e7e978a34782eb876867556ad4728486d5e890ea738243e3700a696d6eb58cd81c0e60eb121c500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 225380.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x8d22db30c4253c3e3add9685c14d55b05f7cf7626c52cccfcbe9b99fd8913663b8b1f22e277a4cc3d0e7e978a34782eb876867556ad4728486d5e890ea738243e3700a696d6eb58cd81c0e60eb121c500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x8d22db30c4253c3e3add9685c14d55b05f7cf7626c52cccfcbe9b99fd8913663b8b1f22e277a4cc3d0e7e978a34782eb876867556ad4728486d5e890ea738243e3700a696d6eb58cd81c0e60eb121c500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 225460.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is: 13
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+# UVM_INFO @ 247930.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 3
+# t.test_case_sel =  9
+# file opened successfully!
+# UVM_INFO @ 247930.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xfc5873e50de8faf4c6b84ba707b0854e9db9ab2e9f7d707fbba338c6843a18fc6facebaf663d26296fb329b4d26f18494c79e09e779647f9bafa87489630d79f4301610c2300c19dbf3148b7cac8c4f4944102754f332e92b6f7c5e75bc6179eb877a078d4719009021744c14f13fd2a55a2b9c44d18000685a845a4f632c7c56a77306efa66a24d05d088dcd7c13fe24fc447275965db9e4d37fbc9304448cd 
+# UVM_INFO @ 247950.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xfc5873e50de8faf4c6b84ba707b0854e9db9ab2e9f7d707fbba338c6843a18fc6facebaf663d26296fb329b4d26f18494c79e09e779647f9bafa87489630d79f4301610c2300c19dbf3148b7cac8c4f4944102754f332e92b6f7c5e75bc6179eb877a078d4719009021744c14f13fd2a55a2b9c44d18000685a845a4f632c7c56a77306efa66a24d05d088dcd7c13fe24fc447275965db9e4d37fbc9304448cd ACTUAL: result:0xfc5873e50de8faf4c6b84ba707b0854e9db9ab2e9f7d707fbba338c6843a18fc6facebaf663d26296fb329b4d26f18494c79e09e779647f9bafa87489630d79f4301610c2300c19dbf3148b7cac8c4f4944102754f332e92b6f7c5e75bc6179eb877a078d4719009021744c14f13fd2a55a2b9c44d18000685a845a4f632c7c56a77306efa66a24d05d088dcd7c13fe24fc447275965db9e4d37fbc9304448cd 
+# UVM_INFO @ 248030.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is: 15
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+# UVM_INFO @ 270500.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 2
+# t.test_case_sel =  9
+# file opened successfully!
+# UVM_INFO @ 270500.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xbfe5c6354b7a3ff3e192e05775b9b75807de12e38a626b8bf0e12d5fff78e4f1775aa7d792d885162e66d88930f9c3b2cdf8654f56972504803190386270f0aa43645db187af41fcea639b1f8026ccdd0c23e0de37094a8b941ecb7602998a4b2604e69fc04219585d854600e0ad6f99a53b2504043c08b1c3e214d17cde053cbdf91daa999ed5b47c37983ba3ee254bc5c793837daaa8c85cfc12f7f54f699f 
+# UVM_INFO @ 270520.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xbfe5c6354b7a3ff3e192e05775b9b75807de12e38a626b8bf0e12d5fff78e4f1775aa7d792d885162e66d88930f9c3b2cdf8654f56972504803190386270f0aa43645db187af41fcea639b1f8026ccdd0c23e0de37094a8b941ecb7602998a4b2604e69fc04219585d854600e0ad6f99a53b2504043c08b1c3e214d17cde053cbdf91daa999ed5b47c37983ba3ee254bc5c793837daaa8c85cfc12f7f54f699f ACTUAL: result:0xbfe5c6354b7a3ff3e192e05775b9b75807de12e38a626b8bf0e12d5fff78e4f1775aa7d792d885162e66d88930f9c3b2cdf8654f56972504803190386270f0aa43645db187af41fcea639b1f8026ccdd0c23e0de37094a8b941ecb7602998a4b2604e69fc04219585d854600e0ad6f99a53b2504043c08b1c3e214d17cde053cbdf91daa999ed5b47c37983ba3ee254bc5c793837daaa8c85cfc12f7f54f699f 
+# UVM_INFO @ 270600.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is:  6
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+# UVM_INFO @ 286680.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 2
+# t.test_case_sel =  6
+# file opened successfully!
+# UVM_INFO @ 286680.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xf7e0f79cfddd15ed3600ab2d29c56ba3c8e96d1a896aff6dec773e6ea4710a77f2f4ec646b76efda6428c175d007c84aa9f4b18c5e1bac5f27f7307b737655eee813f7e1f5880a37ac63ad1666e7883083b648454d45786f53ea3db1b5129291138abe40c79fcb7ab7c6f6b9ea133b5f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 286700.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xf7e0f79cfddd15ed3600ab2d29c56ba3c8e96d1a896aff6dec773e6ea4710a77f2f4ec646b76efda6428c175d007c84aa9f4b18c5e1bac5f27f7307b737655eee813f7e1f5880a37ac63ad1666e7883083b648454d45786f53ea3db1b5129291138abe40c79fcb7ab7c6f6b9ea133b5f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0xf7e0f79cfddd15ed3600ab2d29c56ba3c8e96d1a896aff6dec773e6ea4710a77f2f4ec646b76efda6428c175d007c84aa9f4b18c5e1bac5f27f7307b737655eee813f7e1f5880a37ac63ad1666e7883083b648454d45786f53ea3db1b5129291138abe40c79fcb7ab7c6f6b9ea133b5f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 286780.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is:  5
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+run
+# UVM_INFO @ 300730.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 2
+# t.test_case_sel =  5
+# file opened successfully!
+# UVM_INFO @ 300730.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0x0b6e2a8213169b3b78db6de324e286f0366044e035c6970afbf0a1a5c32a05b24ba706cd9c6609737651a81b2bcf4c681dc0861983a5aec76e6c8b244112d64d489e84328974737394b83a39459011727162652b7aa793bfb1b71488b7dec96b00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 300750.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x0b6e2a8213169b3b78db6de324e286f0366044e035c6970afbf0a1a5c32a05b24ba706cd9c6609737651a81b2bcf4c681dc0861983a5aec76e6c8b244112d64d489e84328974737394b83a39459011727162652b7aa793bfb1b71488b7dec96b00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x0b6e2a8213169b3b78db6de324e286f0366044e035c6970afbf0a1a5c32a05b24ba706cd9c6609737651a81b2bcf4c681dc0861983a5aec76e6c8b244112d64d489e84328974737394b83a39459011727162652b7aa793bfb1b71488b7dec96b00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 300830.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is:  0
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+# UVM_INFO @ 304130.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 2
+# t.test_case_sel =  0
+# file opened successfully!
+# UVM_INFO @ 304130.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0x07270d0e63aa36daed8c6ade13ac1af1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 304150.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x07270d0e63aa36daed8c6ade13ac1af1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x07270d0e63aa36daed8c6ade13ac1af1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 304230.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is: 11
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+# UVM_INFO @ 326700.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 2
+# t.test_case_sel =  9
+# file opened successfully!
+# UVM_INFO @ 326700.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xbfe5c6354b7a3ff3e192e05775b9b75807de12e38a626b8bf0e12d5fff78e4f1775aa7d792d885162e66d88930f9c3b2cdf8654f56972504803190386270f0aa43645db187af41fcea639b1f8026ccdd0c23e0de37094a8b941ecb7602998a4b2604e69fc04219585d854600e0ad6f99a53b2504043c08b1c3e214d17cde053cbdf91daa999ed5b47c37983ba3ee254bc5c793837daaa8c85cfc12f7f54f699f 
+# UVM_INFO @ 326720.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xbfe5c6354b7a3ff3e192e05775b9b75807de12e38a626b8bf0e12d5fff78e4f1775aa7d792d885162e66d88930f9c3b2cdf8654f56972504803190386270f0aa43645db187af41fcea639b1f8026ccdd0c23e0de37094a8b941ecb7602998a4b2604e69fc04219585d854600e0ad6f99a53b2504043c08b1c3e214d17cde053cbdf91daa999ed5b47c37983ba3ee254bc5c793837daaa8c85cfc12f7f54f699f ACTUAL: result:0xbfe5c6354b7a3ff3e192e05775b9b75807de12e38a626b8bf0e12d5fff78e4f1775aa7d792d885162e66d88930f9c3b2cdf8654f56972504803190386270f0aa43645db187af41fcea639b1f8026ccdd0c23e0de37094a8b941ecb7602998a4b2604e69fc04219585d854600e0ad6f99a53b2504043c08b1c3e214d17cde053cbdf91daa999ed5b47c37983ba3ee254bc5c793837daaa8c85cfc12f7f54f699f 
+# UVM_INFO @ 326800.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is: 13
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+# UVM_INFO @ 349270.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 3
+# t.test_case_sel =  9
+# file opened successfully!
+# UVM_INFO @ 349270.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xfc5873e50de8faf4c6b84ba707b0854e9db9ab2e9f7d707fbba338c6843a18fc6facebaf663d26296fb329b4d26f18494c79e09e779647f9bafa87489630d79f4301610c2300c19dbf3148b7cac8c4f4944102754f332e92b6f7c5e75bc6179eb877a078d4719009021744c14f13fd2a55a2b9c44d18000685a845a4f632c7c56a77306efa66a24d05d088dcd7c13fe24fc447275965db9e4d37fbc9304448cd 
+# UVM_INFO @ 349290.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xfc5873e50de8faf4c6b84ba707b0854e9db9ab2e9f7d707fbba338c6843a18fc6facebaf663d26296fb329b4d26f18494c79e09e779647f9bafa87489630d79f4301610c2300c19dbf3148b7cac8c4f4944102754f332e92b6f7c5e75bc6179eb877a078d4719009021744c14f13fd2a55a2b9c44d18000685a845a4f632c7c56a77306efa66a24d05d088dcd7c13fe24fc447275965db9e4d37fbc9304448cd ACTUAL: result:0xfc5873e50de8faf4c6b84ba707b0854e9db9ab2e9f7d707fbba338c6843a18fc6facebaf663d26296fb329b4d26f18494c79e09e779647f9bafa87489630d79f4301610c2300c19dbf3148b7cac8c4f4944102754f332e92b6f7c5e75bc6179eb877a078d4719009021744c14f13fd2a55a2b9c44d18000685a845a4f632c7c56a77306efa66a24d05d088dcd7c13fe24fc447275965db9e4d37fbc9304448cd 
+# UVM_INFO @ 349370.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is:  1
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+# UVM_INFO @ 354800.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 3
+# t.test_case_sel =  1
+# file opened successfully!
+# UVM_INFO @ 354800.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0x2fa0df722a9fd3b64cb18fb2b3db55ff2267422757289413f8f657507412a64c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 354820.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x2fa0df722a9fd3b64cb18fb2b3db55ff2267422757289413f8f657507412a64c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x2fa0df722a9fd3b64cb18fb2b3db55ff2267422757289413f8f657507412a64c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 354900.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is:  8
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+# UVM_INFO @ 375240.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 2
+# t.test_case_sel =  8
+# file opened successfully!
+# UVM_INFO @ 375240.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xa0bb1d2fdeb7e6bf34c690fe7b72a5e9d65796aa57982fe340c286d6923dbddb426566ff58e9c0b3af52e4db446f6cc5daa5bfcf4e3c85db5a5638e670c370cce128db22c97542a64a63846f18a228d3462a11376dcb71f66ec52ebda474f7b6752915b0801797974bc51eb1218127fed60f1009430eb5089fb3ba5f28fad24c518ccddc2501393ceb6dffc46a15942100000000000000000000000000000000 
+# UVM_INFO @ 375260.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xa0bb1d2fdeb7e6bf34c690fe7b72a5e9d65796aa57982fe340c286d6923dbddb426566ff58e9c0b3af52e4db446f6cc5daa5bfcf4e3c85db5a5638e670c370cce128db22c97542a64a63846f18a228d3462a11376dcb71f66ec52ebda474f7b6752915b0801797974bc51eb1218127fed60f1009430eb5089fb3ba5f28fad24c518ccddc2501393ceb6dffc46a15942100000000000000000000000000000000 ACTUAL: result:0xa0bb1d2fdeb7e6bf34c690fe7b72a5e9d65796aa57982fe340c286d6923dbddb426566ff58e9c0b3af52e4db446f6cc5daa5bfcf4e3c85db5a5638e670c370cce128db22c97542a64a63846f18a228d3462a11376dcb71f66ec52ebda474f7b6752915b0801797974bc51eb1218127fed60f1009430eb5089fb3ba5f28fad24c518ccddc2501393ceb6dffc46a15942100000000000000000000000000000000 
+# UVM_INFO @ 375340.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is:  2
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+# UVM_INFO @ 382900.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 2
+# t.test_case_sel =  2
+# file opened successfully!
+# UVM_INFO @ 382900.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0x0faa5d01b9afad3bb519575daaf4c60a5ed4ca2ba20c625bc4f08799addcf89d19796d1eff0bd790c622dc22c1094ec700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 382920.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0x0faa5d01b9afad3bb519575daaf4c60a5ed4ca2ba20c625bc4f08799addcf89d19796d1eff0bd790c622dc22c1094ec700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x0faa5d01b9afad3bb519575daaf4c60a5ed4ca2ba20c625bc4f08799addcf89d19796d1eff0bd790c622dc22c1094ec700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 383000.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is: 15
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+run
+# UVM_INFO @ 405470.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 2
+# t.test_case_sel =  9
+# file opened successfully!
+# UVM_INFO @ 405470.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xbfe5c6354b7a3ff3e192e05775b9b75807de12e38a626b8bf0e12d5fff78e4f1775aa7d792d885162e66d88930f9c3b2cdf8654f56972504803190386270f0aa43645db187af41fcea639b1f8026ccdd0c23e0de37094a8b941ecb7602998a4b2604e69fc04219585d854600e0ad6f99a53b2504043c08b1c3e214d17cde053cbdf91daa999ed5b47c37983ba3ee254bc5c793837daaa8c85cfc12f7f54f699f 
+# UVM_INFO @ 405490.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xbfe5c6354b7a3ff3e192e05775b9b75807de12e38a626b8bf0e12d5fff78e4f1775aa7d792d885162e66d88930f9c3b2cdf8654f56972504803190386270f0aa43645db187af41fcea639b1f8026ccdd0c23e0de37094a8b941ecb7602998a4b2604e69fc04219585d854600e0ad6f99a53b2504043c08b1c3e214d17cde053cbdf91daa999ed5b47c37983ba3ee254bc5c793837daaa8c85cfc12f7f54f699f ACTUAL: result:0xbfe5c6354b7a3ff3e192e05775b9b75807de12e38a626b8bf0e12d5fff78e4f1775aa7d792d885162e66d88930f9c3b2cdf8654f56972504803190386270f0aa43645db187af41fcea639b1f8026ccdd0c23e0de37094a8b941ecb7602998a4b2604e69fc04219585d854600e0ad6f99a53b2504043c08b1c3e214d17cde053cbdf91daa999ed5b47c37983ba3ee254bc5c793837daaa8c85cfc12f7f54f699f 
+# UVM_INFO @ 405570.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# aes_in_driver_bfm : Inside initiate_and_get_response
+# ***************   test_case_sel value is:  5
+# file opened successfully!
+# *** Getting key
+# *** AES test started
+# UVM_INFO @ 419520.000ns: uvm_test_top.environment.AES_pred [PRED] Transaction Received through AES_in_agent_ae
+# t.op = 3
+# t.test_case_sel =  5
+# file opened successfully!
+# UVM_INFO @ 419520.000ns: uvm_test_top.environment.AES_pred [PREDICT] AES_OUT: result:0xac3d6dbafe2e0f740632fd9e820bf6044cd5b1551cbb9cc03c0b25c39ccb7f33b83aacfca40a3265f2bbff879153448acacb88fcfb3bb7b10fe463a68c0109f028382e3e557b1adf02ed648ab6bb895df0205d26ebbfa9a5fd8cebd8e4bee3dc00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 419540.000ns: uvm_test_top.environment.AES_sb [SCBD] MATCH! - EXPECTED: result:0xac3d6dbafe2e0f740632fd9e820bf6044cd5b1551cbb9cc03c0b25c39ccb7f33b83aacfca40a3265f2bbff879153448acacb88fcfb3bb7b10fe463a68c0109f028382e3e557b1adf02ed648ab6bb895df0205d26ebbfa9a5fd8cebd8e4bee3dc00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0xac3d6dbafe2e0f740632fd9e820bf6044cd5b1551cbb9cc03c0b25c39ccb7f33b83aacfca40a3265f2bbff879153448acacb88fcfb3bb7b10fe463a68c0109f028382e3e557b1adf02ed648ab6bb895df0205d26ebbfa9a5fd8cebd8e4bee3dc00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 419620.000ns: uvm_test_top.environment.AES_in_agent.sequencer@@AES_in_agent_random_seq [SEQ] Response:op:0x0 test_case_sel:0x0 
+# UVM_INFO verilog_src/uvm-1.1d/src/base/uvm_objection.svh(1267) @ 423620.000ns: reporter [TEST_DONE] 'run' phase is ready to proceed to the 'extract' phase
+# UVM_INFO @ 423620.000ns: uvm_test_top.environment.AES_sb [SCBD] SCOREBOARD_RESULTS:  PREDICTED_TRANSACTIONS=26 MATCHES=26 MISMATCHES=0
+# 
+# --- UVM Report Summary ---
+# 
+# ** Report counts by severity
+# UVM_INFO :  108
+# UVM_WARNING :    2
+# UVM_ERROR :    0
+# UVM_FATAL :    0
+# ** Report counts by id
+# [COVERAGE_MODEL_REVIEW]     1
+# [PRED]    26
+# [PREDICT]    25
+# [PREDICTOR_REVIEW]     1
+# [Questa UVM]     2
+# [RNTST]     1
+# [SCBD]    27
+# [SEQ]    25
+# [TEST_DONE]     1
+# [UVM_CMDLINE_PROC]     1
+# ** Note: $finish    : /home/cad/tools/mentor/questa/2022.2_1/questasim/linux/../verilog_src/uvm-1.1d/src/base/uvm_root.svh(430)
+#    Time: 423620 ns  Iteration: 60  Instance: /hvl_top
+# Break in Task uvm_pkg/uvm_root::run_test at /home/cad/tools/mentor/questa/2022.2_1/questasim/linux/../verilog_src/uvm-1.1d/src/base/uvm_root.svh line 430
+# couldn't load file "/home/cad/tools/mentor/questa/2022.2_1/questasim/linux/ScintillaTk/libScintillaTk1.14.so": libstdc++.so.6: wrong ELF class: ELFCLASS64
+# list element in quotes followed by ":" instead of space
+# End time: 10:37:51 on Aug 04,2022, Elapsed time: 0:00:25
+# Errors: 0, Warnings: 12
