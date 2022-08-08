@@ -240,7 +240,7 @@ module hmac_drbg_tb();
   //----------------------------------------------------------------
   task sign_sim(input [383 : 0] h1, input [383 : 0] privKey, input  [383 : 0] nonce_expected);
     begin
-        $display("-----------------SIGNING-----------------");
+        //$display("-----------------SIGNING-----------------");
         h1_tb = h1;
         privKey_tb = privKey;
         if (!ready_tb)
@@ -264,7 +264,6 @@ module hmac_drbg_tb();
           begin
             $display("*** TC %0d successful.", tc_number);
             $display("");
-            dump_dut_state();
           end
         else
           begin
@@ -272,7 +271,6 @@ module hmac_drbg_tb();
             $display("Expected: 0x%096x", nonce_expected);
             $display("Got:      0x%096x", nonce_tb);
             $display("");
-            dump_dut_state();
   
             error_ctr = error_ctr + 1;
           end
@@ -327,16 +325,16 @@ module hmac_drbg_tb();
 
         $display("\n\n=================SIGNING TEST STARTS=================\n\n"); 
         
-        nist_privKey  = 384'h096349506f3a7653d54db7ec1d09e93413edd175b6ddbeb00e56752a520ac8ff00000000000000000000000000000000;
-        nist_h1       = 384'hfc7983b918acadaa71a67e1624f1b5020000000000000000000000000000000000000000000000000000000000000000;
-        nist_expected = 384'h622b6ebac986b1a2d420d685dabf0ea169c2e3b75c42fda106d7963ddac536fababe374c1827a078def62e2ca7dc9628;
+        nist_privKey  = 384'h6B9D3DAD2E1B8C1C05B19875B6659F4DE23C3B667BF297BA9AA47740787137D896D5724E4C70A825F872C9EA60D2EDF5;        
+        nist_h1       = 384'h9a9083505bc92276aec4be312696ef7bf3bf603f4bbd381196a029f340585312313bca4a9b5b890efee42c77b1ee25fe;
+        nist_expected = 384'h94ED910D1A099DAD3254E9242AE85ABDE4BA15168EAF0CA87A555FD56D10FBCA2907E3E83BA95368623B8C4686915CF9;
 
         sign_sim(nist_h1,nist_privKey,nist_expected); 
 
 
-        nist_privKey  = 384'haece2087b713992ff49d3bf404dcda18403e015632ac03735fed29102cfea6ec00000000000000000000000000000000;
-        nist_h1       = 384'h1b574952687c9bad0e9aedcfc1da568b0000000000000000000000000000000000000000000000000000000000000000;
-        nist_expected = 384'h325b204735a537f83cf60f2114ce53b02243e33ade8cb2c0a2021caa2b816bf02cbbc9dcc40a3498fb529725b36965d2;
+        nist_privKey  = 384'h6B9D3DAD2E1B8C1C05B19875B6659F4DE23C3B667BF297BA9AA47740787137D896D5724E4C70A825F872C9EA60D2EDF5;
+        nist_h1       = 384'h768412320f7b0aa5812fce428dc4706b3cae50e02a64caa16a782249bfe8efc4b7ef1ccb126255d196047dfedf17a0a9;
+        nist_expected = 384'h015EE46A5BF88773ED9123A5AB0807962D193719503C527B031B4C2D225092ADA71F4A459BC0DA98ADB95837DB8312EA;
 
         sign_sim(nist_h1,nist_privKey,nist_expected); 
 
