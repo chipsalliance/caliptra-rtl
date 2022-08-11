@@ -1,0 +1,2 @@
+@use $UVMF_PROJECT_DIR/tb/tests/SHA512_tests_pkg.vinfo
+hvl_top.sv
