@@ -16,7 +16,7 @@
 
 `include "cfg.sv"
 
-module caliptra_top ( 
+module caliptra_top (
     input bit                          core_clk,
 
     input logic                        cptra_pwrgood,
@@ -69,7 +69,7 @@ module caliptra_top (
 
     input logic  [`SOC_SEC_STATE_WIDTH-1:0] security_state
 
-    );
+);
 
     //caliptra reset driven by boot fsm in mailbox
     logic                       cptra_uc_rst_b;
@@ -380,7 +380,7 @@ module caliptra_top (
         .NB_SLAVES        (`AHB_SLAVES_NUM),
         .AHB_ADDR_WIDTH   (`AHB_HADDR_SIZE),
         .AHB_DATA_WIDTH   (`AHB_HDATA_SIZE),
-        .BYPASS           (             0 )
+        .BYPASS_HSEL      (             0 )
     )
     ahb_node_wrap_i (
         .hclk             ( core_clk          ),
@@ -724,30 +724,38 @@ assign s_smaster.hsel = 1'b1;
    //=========================================================================-
 `ifdef RV_BUILD_AHB_LITE
 
-ahb_sif imem (
-     // Inputs
-     .HWDATA(64'h0),
-     .HCLK(core_clk),
-     .HSEL(1'b1),
-     .HPROT(ic_hprot),
-     .HWRITE(ic_hwrite),
-     .HTRANS(ic_htrans),
-     .HSIZE(ic_hsize),
-     .HREADY(ic_hready),
-     .HRESETn(cptra_uc_rst_b),
-     .HADDR(ic_haddr),
-     .HBURST(ic_hburst),
+caliptra_ahb_srom #(
+    .AHB_DATA_WIDTH(`IMEM_DATA_WIDTH),
+    .AHB_ADDR_WIDTH(`IMEM_ADDR_WIDTH)
 
-     // Outputs
-     .HREADYOUT(ic_hready),
-     .HRESP(ic_hresp),
-     .HRDATA(ic_hrdata[63:0])
+) imem (
+
+    //AMBA AHB Lite INF
+    .hclk       (core_clk                      ),
+    .hreset_n   (cptra_uc_rst_b                ),
+    .haddr_i    (ic_haddr[`IMEM_ADDR_WIDTH-1:0]),
+    .hwdata_i   (`IMEM_DATA_WIDTH'(0)          ),
+    .hsel_i     (1'b1                          ),
+    .hwrite_i   (ic_hwrite                     ),
+
+    .hready_i   (ic_hready                     ),
+    .htrans_i   (ic_htrans                     ),
+    .hsize_i    (ic_hsize                      ),
+    .hburst_i   (ic_hburst                     ), // FIXME
+
+    .hmastlock_i(ic_hmastlock                  ), // FIXME
+    .hprot_i    (ic_hprot                      ), // FIXME
+
+    .hresp_o    (ic_hresp                      ),
+    .hreadyout_o(ic_hready                     ),
+    .hrdata_o   (ic_hrdata[63:0]               )
+
 );
 
 sha512_ctrl #(
     .AHB_DATA_WIDTH (64),
     .AHB_ADDR_WIDTH (32),
-    .BYPASS_SEL     (0)
+    .BYPASS_HSEL    (0)
 ) sha512 (
     .clk            (core_clk),
     .reset_n        (cptra_uc_rst_b),
@@ -769,7 +777,7 @@ sha512_ctrl #(
 aes_ctrl #(
     .AHB_DATA_WIDTH (64),
     .AHB_ADDR_WIDTH (32),
-    .BYPASS_SEL     (0)
+    .BYPASS_HSEL    (0)
 ) aes (
     .clk            (core_clk),
     .reset_n        (cptra_uc_rst_b),

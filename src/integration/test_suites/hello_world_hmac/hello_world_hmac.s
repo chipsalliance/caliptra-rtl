@@ -52,8 +52,7 @@ _start:
 
 
     // Enable Caches in MRAC
-    li x1, 0x5f555555
-    li x1, 0xafaaaaaa
+    li x1, 0xaaaaaaaa
     csrw 0x7c0, x1
 
 

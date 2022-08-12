@@ -108,6 +108,9 @@ module caliptra_top_tb (
         if( mailbox_data_val & mailbox_write) begin
             $fwrite(fd,"%c", WriteData[7:0]);
             $write("%c", WriteData[7:0]);
+            if (WriteData[7:0] inside {8'h0A,8'h0D}) begin // CR/LF
+                $fflush(fd);
+            end
         end
         // End Of test monitor
         if(mailbox_write && WriteData[7:0] == 8'hff) begin
@@ -233,8 +236,8 @@ module caliptra_top_tb (
 
         cptra_obf_key = '0; //fixme tie-off
 
-        $readmemh("program.hex",  caliptra_top_dut.imem.mem);
-        $readmemh("mailbox.hex",  caliptra_top_dut.mbox_top1.mbox1.mbox_ram1.ram);
+        $readmemh("program.hex",  caliptra_top_dut.imem.sram_inst.ram,0,32'h00008000);
+        $readmemh("mailbox.hex",  caliptra_top_dut.mbox_top1.mbox1.mbox_ram1.ram,0,32'h0002_0000);
         tp = $fopen("trace_port.csv","w");
         el = $fopen("exec.log","w");
         ifu_p = $fopen("ifu_master_ahb_trace.log", "w");
@@ -312,67 +315,94 @@ assign PPROT = '0;
 
 
 task preload_iccm;
-bit[31:0] data;
-bit[31:0] addr, eaddr, saddr;
+    bit[31:0] data;
+    bit[31:0] addr, eaddr, saddr;
 
-/*
-addresses:
- 0xfffffff0 - ICCM start address to load
- 0xfffffff4 - ICCM end address to load
-*/
-`ifndef VERILATOR
-init_iccm();
-`endif
-addr = 'hffff_fff0;
-saddr = {caliptra_top_dut.imem.mem[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
-if ( (saddr < `RV_ICCM_SADR) || (saddr > `RV_ICCM_EADR)) return;
-`ifndef RV_ICCM_ENABLE
-    $display("********************************************************");
-    $display("ICCM preload: there is no ICCM in SweRV, terminating !!!");
-    $display("********************************************************");
-    $finish;
-`endif
-addr += 4;
-eaddr = {caliptra_top_dut.imem.mem[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
-$display("ICCM pre-load from %h to %h", saddr, eaddr);
+    /*
+    addresses:
+     0x00007ff0 - ICCM start address to load
+     0x00007ff4 - ICCM end address to load
+    */
+    `ifndef VERILATOR
+    init_iccm();
+    `endif
+    addr = 'h0000_7ff0;
+    // FIXME hardcoded address indices?
+    saddr = {caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h3}],
+             caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h2}],
+             caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h1}],
+             caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h0}]};
+    //saddr = {caliptra_top_dut.imem.sram_inst.ram[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
+    if ( (saddr < `RV_ICCM_SADR) || (saddr > `RV_ICCM_EADR)) return;
+    `ifndef RV_ICCM_ENABLE
+        $display("********************************************************");
+        $display("ICCM preload: there is no ICCM in SweRV, terminating !!!");
+        $display("********************************************************");
+        $finish;
+    `endif
+    addr += 4;
+    eaddr = {caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h3}],
+             caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h2}],
+             caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h1}],
+             caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h0}]};
+    //eaddr = {caliptra_top_dut.imem.mem[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
+    $display("ICCM pre-load from %h to %h", saddr, eaddr);
 
-for(addr= saddr; addr <= eaddr; addr+=4) begin
-    data = {caliptra_top_dut.imem.mem[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
-    slam_iccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
-end
+    for(addr= saddr; addr <= eaddr; addr+=4) begin
+        // FIXME hardcoded address indices?
+        //       trying to read offset ee00_0000 from within mbox, out of bounds - error?
+        data = {caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h3}],
+                caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h2}],
+                caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h1}],
+                caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h0}]};
+        //data = {caliptra_top_dut.imem.mem[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
+        slam_iccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
+    end
+    $display("ICCM pre-load completed");
 
 endtask
 
 
 task preload_dccm;
-bit[31:0] data;
-bit[31:0] addr, saddr, eaddr;
+    bit[31:0] data;
+    bit[31:0] addr, saddr, eaddr;
 
-/*
-addresses:
- 0xffff_fff8 - DCCM start address to load
- 0xffff_fffc - DCCM end address to load
-*/
-`ifndef VERILATOR
-init_dccm();
-`endif
-addr = 'hffff_fff8;
-saddr = {caliptra_top_dut.imem.mem[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
-if (saddr < `RV_DCCM_SADR || saddr > `RV_DCCM_EADR) return;
-`ifndef RV_DCCM_ENABLE
-    $display("********************************************************");
-    $display("DCCM preload: there is no DCCM in SweRV, terminating !!!");
-    $display("********************************************************");
-    $finish;
-`endif
-addr += 4;
-eaddr = {caliptra_top_dut.imem.mem[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
-$display("DCCM pre-load from %h to %h", saddr, eaddr);
+    /*
+    addresses:
+     0x0000_7ff8 - DCCM start address to load
+     0x0000_7ffc - DCCM end address to load
+    */
+    `ifndef VERILATOR
+    init_dccm();
+    `endif
+    addr = 'h0000_7ff8;
+    // FIXME hardcoded address indices?
+    saddr = {caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h3}],
+             caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h2}],
+             caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h1}],
+             caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h0}]};
+    if (saddr < `RV_DCCM_SADR || saddr > `RV_DCCM_EADR) return;
+    `ifndef RV_DCCM_ENABLE
+        $display("********************************************************");
+        $display("DCCM preload: there is no DCCM in SweRV, terminating !!!");
+        $display("********************************************************");
+        $finish;
+    `endif
+    addr += 4;
+    eaddr = {caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h3}],
+             caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h2}],
+             caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h1}],
+             caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h0}]};
+    $display("DCCM pre-load from %h to %h", saddr, eaddr);
 
-for(addr=saddr; addr <= eaddr; addr+=4) begin
-    data = {caliptra_top_dut.imem.mem[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
-    slam_dccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
-end
+    for(addr=saddr; addr <= eaddr; addr+=4) begin
+        // FIXME hardcoded address indices?
+        data = {caliptra_top_dut.mbox_top1.mbox1.mbox_ram1.ram [addr[16:3]] [{addr[2],2'h3}],
+                caliptra_top_dut.mbox_top1.mbox1.mbox_ram1.ram [addr[16:3]] [{addr[2],2'h2}],
+                caliptra_top_dut.mbox_top1.mbox1.mbox_ram1.ram [addr[16:3]] [{addr[2],2'h1}],
+                caliptra_top_dut.mbox_top1.mbox1.mbox_ram1.ram [addr[16:3]] [{addr[2],2'h0}]};
+        slam_dccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
+    end
 
 endtask
 
@@ -389,118 +419,118 @@ endtask
 
 
 task slam_dccm_ram(input [31:0] addr, input[38:0] data);
-int bank, indx;
-bank = get_dccm_bank(addr, indx);
-`ifdef RV_DCCM_ENABLE
-case(bank)
-0: `DRAM(0)[indx] = data;
-1: `DRAM(1)[indx] = data;
-`ifdef RV_DCCM_NUM_BANKS_4
-2: `DRAM(2)[indx] = data;
-3: `DRAM(3)[indx] = data;
-`endif
-`ifdef RV_DCCM_NUM_BANKS_8
-2: `DRAM(2)[indx] = data;
-3: `DRAM(3)[indx] = data;
-4: `DRAM(4)[indx] = data;
-5: `DRAM(5)[indx] = data;
-6: `DRAM(6)[indx] = data;
-7: `DRAM(7)[indx] = data;
-`endif
-endcase
-`endif
-//$display("Writing bank %0d indx=%0d A=%h, D=%h",bank, indx, addr, data);
+    int bank, indx;
+    bank = get_dccm_bank(addr, indx);
+    `ifdef RV_DCCM_ENABLE
+    case(bank)
+    0: `DRAM(0)[indx] = data;
+    1: `DRAM(1)[indx] = data;
+    `ifdef RV_DCCM_NUM_BANKS_4
+    2: `DRAM(2)[indx] = data;
+    3: `DRAM(3)[indx] = data;
+    `endif
+    `ifdef RV_DCCM_NUM_BANKS_8
+    2: `DRAM(2)[indx] = data;
+    3: `DRAM(3)[indx] = data;
+    4: `DRAM(4)[indx] = data;
+    5: `DRAM(5)[indx] = data;
+    6: `DRAM(6)[indx] = data;
+    7: `DRAM(7)[indx] = data;
+    `endif
+    endcase
+    `endif
+    //$display("Writing bank %0d indx=%0d A=%h, D=%h",bank, indx, addr, data);
 endtask
 
 
 task slam_iccm_ram( input[31:0] addr, input[38:0] data);
-int bank, idx;
+    int bank, idx;
 
-bank = get_iccm_bank(addr, idx);
-`ifdef RV_ICCM_ENABLE
-case(bank) // {
-  0: `IRAM(0)[idx] = data;
-  1: `IRAM(1)[idx] = data;
- `ifdef RV_ICCM_NUM_BANKS_4
-  2: `IRAM(2)[idx] = data;
-  3: `IRAM(3)[idx] = data;
- `endif
- `ifdef RV_ICCM_NUM_BANKS_8
-  2: `IRAM(2)[idx] = data;
-  3: `IRAM(3)[idx] = data;
-  4: `IRAM(4)[idx] = data;
-  5: `IRAM(5)[idx] = data;
-  6: `IRAM(6)[idx] = data;
-  7: `IRAM(7)[idx] = data;
- `endif
+    bank = get_iccm_bank(addr, idx);
+    `ifdef RV_ICCM_ENABLE
+    case(bank) // {
+      0: `IRAM(0)[idx] = data;
+      1: `IRAM(1)[idx] = data;
+     `ifdef RV_ICCM_NUM_BANKS_4
+      2: `IRAM(2)[idx] = data;
+      3: `IRAM(3)[idx] = data;
+     `endif
+     `ifdef RV_ICCM_NUM_BANKS_8
+      2: `IRAM(2)[idx] = data;
+      3: `IRAM(3)[idx] = data;
+      4: `IRAM(4)[idx] = data;
+      5: `IRAM(5)[idx] = data;
+      6: `IRAM(6)[idx] = data;
+      7: `IRAM(7)[idx] = data;
+     `endif
 
- `ifdef RV_ICCM_NUM_BANKS_16
-  2: `IRAM(2)[idx] = data;
-  3: `IRAM(3)[idx] = data;
-  4: `IRAM(4)[idx] = data;
-  5: `IRAM(5)[idx] = data;
-  6: `IRAM(6)[idx] = data;
-  7: `IRAM(7)[idx] = data;
-  8: `IRAM(8)[idx] = data;
-  9: `IRAM(9)[idx] = data;
-  10: `IRAM(10)[idx] = data;
-  11: `IRAM(11)[idx] = data;
-  12: `IRAM(12)[idx] = data;
-  13: `IRAM(13)[idx] = data;
-  14: `IRAM(14)[idx] = data;
-  15: `IRAM(15)[idx] = data;
- `endif
-endcase // }
-`endif
+     `ifdef RV_ICCM_NUM_BANKS_16
+      2: `IRAM(2)[idx] = data;
+      3: `IRAM(3)[idx] = data;
+      4: `IRAM(4)[idx] = data;
+      5: `IRAM(5)[idx] = data;
+      6: `IRAM(6)[idx] = data;
+      7: `IRAM(7)[idx] = data;
+      8: `IRAM(8)[idx] = data;
+      9: `IRAM(9)[idx] = data;
+      10: `IRAM(10)[idx] = data;
+      11: `IRAM(11)[idx] = data;
+      12: `IRAM(12)[idx] = data;
+      13: `IRAM(13)[idx] = data;
+      14: `IRAM(14)[idx] = data;
+      15: `IRAM(15)[idx] = data;
+     `endif
+    endcase // }
+    `endif
 endtask
 
 task init_iccm;
-`ifdef RV_ICCM_ENABLE
-    `IRAM(0) = '{default:39'h0};
-    `IRAM(1) = '{default:39'h0};
-`ifdef RV_ICCM_NUM_BANKS_4
-    `IRAM(2) = '{default:39'h0};
-    `IRAM(3) = '{default:39'h0};
-`endif
-`ifdef RV_ICCM_NUM_BANKS_8
-    `IRAM(4) = '{default:39'h0};
-    `IRAM(5) = '{default:39'h0};
-    `IRAM(6) = '{default:39'h0};
-    `IRAM(7) = '{default:39'h0};
-`endif
+    `ifdef RV_ICCM_ENABLE
+        `IRAM(0) = '{default:39'h0};
+        `IRAM(1) = '{default:39'h0};
+    `ifdef RV_ICCM_NUM_BANKS_4
+        `IRAM(2) = '{default:39'h0};
+        `IRAM(3) = '{default:39'h0};
+    `endif
+    `ifdef RV_ICCM_NUM_BANKS_8
+        `IRAM(4) = '{default:39'h0};
+        `IRAM(5) = '{default:39'h0};
+        `IRAM(6) = '{default:39'h0};
+        `IRAM(7) = '{default:39'h0};
+    `endif
 
-`ifdef RV_ICCM_NUM_BANKS_16
-    `IRAM(4) = '{default:39'h0};
-    `IRAM(5) = '{default:39'h0};
-    `IRAM(6) = '{default:39'h0};
-    `IRAM(7) = '{default:39'h0};
-    `IRAM(8) = '{default:39'h0};
-    `IRAM(9) = '{default:39'h0};
-    `IRAM(10) = '{default:39'h0};
-    `IRAM(11) = '{default:39'h0};
-    `IRAM(12) = '{default:39'h0};
-    `IRAM(13) = '{default:39'h0};
-    `IRAM(14) = '{default:39'h0};
-    `IRAM(15) = '{default:39'h0};
- `endif
-`endif
+    `ifdef RV_ICCM_NUM_BANKS_16
+        `IRAM(4) = '{default:39'h0};
+        `IRAM(5) = '{default:39'h0};
+        `IRAM(6) = '{default:39'h0};
+        `IRAM(7) = '{default:39'h0};
+        `IRAM(8) = '{default:39'h0};
+        `IRAM(9) = '{default:39'h0};
+        `IRAM(10) = '{default:39'h0};
+        `IRAM(11) = '{default:39'h0};
+        `IRAM(12) = '{default:39'h0};
+        `IRAM(13) = '{default:39'h0};
+        `IRAM(14) = '{default:39'h0};
+        `IRAM(15) = '{default:39'h0};
+     `endif
+    `endif
 endtask
 
 task init_dccm;
-`ifdef RV_DCCM_ENABLE
-    `DRAM(0) = '{default:39'h0};
-    `DRAM(1) = '{default:39'h0};
-`ifdef RV_DCCM_NUM_BANKS_4
-    `DRAM(2) = '{default:39'h0};
-    `DRAM(3) = '{default:39'h0};
-`endif
-`ifdef RV_DCCM_NUM_BANKS_8
-    `DRAM(4) = '{default:39'h0};
-    `DRAM(5) = '{default:39'h0};
-    `DRAM(6) = '{default:39'h0};
-    `DRAM(7) = '{default:39'h0};
-`endif
-`endif
+    `ifdef RV_DCCM_ENABLE
+        `DRAM(0) = '{default:39'h0};
+        `DRAM(1) = '{default:39'h0};
+    `ifdef RV_DCCM_NUM_BANKS_4
+        `DRAM(2) = '{default:39'h0};
+        `DRAM(3) = '{default:39'h0};
+    `endif
+    `ifdef RV_DCCM_NUM_BANKS_8
+        `DRAM(4) = '{default:39'h0};
+        `DRAM(5) = '{default:39'h0};
+        `DRAM(6) = '{default:39'h0};
+        `DRAM(7) = '{default:39'h0};
+    `endif
+    `endif
 endtask
 
 task dump_memory_contents;
@@ -621,45 +651,45 @@ endtask
 
 
 function[6:0] riscv_ecc32(input[31:0] data);
-reg[6:0] synd;
-synd[0] = ^(data & 32'h56aa_ad5b);
-synd[1] = ^(data & 32'h9b33_366d);
-synd[2] = ^(data & 32'he3c3_c78e);
-synd[3] = ^(data & 32'h03fc_07f0);
-synd[3] = ^(data & 32'h03fc_07f0);
-synd[4] = ^(data & 32'h03ff_f800);
-synd[5] = ^(data & 32'hfc00_0000);
-synd[6] = ^{data, synd[5:0]};
-return synd;
+    reg[6:0] synd;
+    synd[0] = ^(data & 32'h56aa_ad5b);
+    synd[1] = ^(data & 32'h9b33_366d);
+    synd[2] = ^(data & 32'he3c3_c78e);
+    synd[3] = ^(data & 32'h03fc_07f0);
+    synd[3] = ^(data & 32'h03fc_07f0);
+    synd[4] = ^(data & 32'h03ff_f800);
+    synd[5] = ^(data & 32'hfc00_0000);
+    synd[6] = ^{data, synd[5:0]};
+    return synd;
 endfunction
 
 function int get_dccm_bank(input[31:0] addr,  output int bank_idx);
-`ifdef RV_DCCM_NUM_BANKS_2
-    bank_idx = int'(addr[`RV_DCCM_BITS-1:3]);
-    return int'( addr[2]);
-`elsif RV_DCCM_NUM_BANKS_4
-    bank_idx = int'(addr[`RV_DCCM_BITS-1:4]);
-    return int'(addr[3:2]);
-`elsif RV_DCCM_NUM_BANKS_8
-    bank_idx = int'(addr[`RV_DCCM_BITS-1:5]);
-    return int'( addr[4:2]);
-`endif
+    `ifdef RV_DCCM_NUM_BANKS_2
+        bank_idx = int'(addr[`RV_DCCM_BITS-1:3]);
+        return int'( addr[2]);
+    `elsif RV_DCCM_NUM_BANKS_4
+        bank_idx = int'(addr[`RV_DCCM_BITS-1:4]);
+        return int'(addr[3:2]);
+    `elsif RV_DCCM_NUM_BANKS_8
+        bank_idx = int'(addr[`RV_DCCM_BITS-1:5]);
+        return int'( addr[4:2]);
+    `endif
 endfunction
 
 function int get_iccm_bank(input[31:0] addr,  output int bank_idx);
-`ifdef RV_DCCM_NUM_BANKS_2
-    bank_idx = int'(addr[`RV_DCCM_BITS-1:3]);
-    return int'( addr[2]);
-`elsif RV_ICCM_NUM_BANKS_4
-    bank_idx = int'(addr[`RV_ICCM_BITS-1:4]);
-    return int'(addr[3:2]);
-`elsif RV_ICCM_NUM_BANKS_8
-    bank_idx = int'(addr[`RV_ICCM_BITS-1:5]);
-    return int'( addr[4:2]);
-`elsif RV_ICCM_NUM_BANKS_16
-    bank_idx = int'(addr[`RV_ICCM_BITS-1:6]);
-    return int'( addr[5:2]);
-`endif
+    `ifdef RV_DCCM_NUM_BANKS_2
+        bank_idx = int'(addr[`RV_DCCM_BITS-1:3]);
+        return int'( addr[2]);
+    `elsif RV_ICCM_NUM_BANKS_4
+        bank_idx = int'(addr[`RV_ICCM_BITS-1:4]);
+        return int'(addr[3:2]);
+    `elsif RV_ICCM_NUM_BANKS_8
+        bank_idx = int'(addr[`RV_ICCM_BITS-1:5]);
+        return int'( addr[4:2]);
+    `elsif RV_ICCM_NUM_BANKS_16
+        bank_idx = int'(addr[`RV_ICCM_BITS-1:6]);
+        return int'( addr[5:2]);
+    `endif
 endfunction
 
 /* verilator lint_off CASEINCOMPLETE */

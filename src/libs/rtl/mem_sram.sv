@@ -13,17 +13,22 @@ module mem_sram #(
 );
   localparam  BIT_WIDTH_ADDR = $clog2(MEM_DEPTH);
 
-  logic [DATA_WIDTH-1:0]  sram  [MEM_DEPTH-1:0];
+  logic [7:0]  sram  [MEM_DEPTH-1:0] [DATA_WIDTH/8-1:0];
 
-  always @ (*)
-  begin
-    if (read_en) begin
-      read_data = sram[address];
-    end else
-    begin
-      read_data = '0;
-    end
-  end
+  genvar byt;
+  generate
+    for (byt=0;byt<DATA_WIDTH/8;byt++) begin
+      always @ (*)
+      begin
+        if (read_en) begin
+          read_data[8*byt+:byt] = sram[address][byt];
+        end else
+        begin
+          read_data[8*byt+:byt] = '0;
+        end
+      end
+    end // for
+  endgenerate
 
   always @ (posedge clk)
   begin

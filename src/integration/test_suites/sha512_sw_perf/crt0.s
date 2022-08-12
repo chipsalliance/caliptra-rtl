@@ -21,9 +21,21 @@
 .global _start
 _start:
 
+    // Clear minstret
+    csrw minstret, zero
+    csrw minstreth, zero
+
+    // Set up MTVEC - not expecting to use it though
+    li x1, RV_ICCM_SADR
+    csrw mtvec, x1
+
+    // Set all mem-regions as side-effect in MRAC
+    li x1, 0xaaaaaaaa
+    csrw 0x7c0, x1
+
 // enable caching, except region 0xd
-        li t0, 0x59aaaaaa
-        csrw 0x7c0, t0
+        //li t0, 0x59555555
+        //csrw 0x7c0, t0
 
         la sp, STACK
 
@@ -31,16 +43,15 @@ _start:
 
 
 .global _finish
+// Write 0xff to STDOUT for TB to termiate test.
 _finish:
-        la t0, tohost
-        li t1, 0xff
-        sb t1, 0(t0) // DemoTB test termination
-        li t1, 1
-        sw t1, 0(t0) // Whisper test termination
-        beq x0, x0, _finish
-        .rept 10
-        nop
-        .endr
+    li x3, STDOUT
+    addi x5, x0, 0xff
+    sb x5, 0(x3)
+    beq x0, x0, _finish
+.rept 100
+    nop
+.endr
 
 .section .data.io
 .global tohost

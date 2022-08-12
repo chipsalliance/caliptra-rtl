@@ -20,7 +20,7 @@ module ahb_slv_sif #(
    ,parameter CLIENT_DATA_WIDTH = 32
    ,parameter ADDR_WIDTH = 32
 
-   )   
+   )
    (
     //AMBA AHB Lite INF
     input logic hclk,
@@ -33,6 +33,10 @@ module ahb_slv_sif #(
     input logic hready_i,
     input logic [1:0] htrans_i,
     input logic [2:0] hsize_i,
+    input logic [2:0] hburst_i, // FIXME
+
+    input logic       hmastlock_i, // FIXME
+    input logic [2:0] hprot_i, // FIXME
 
     output logic hresp_o,
     output logic hreadyout_o,

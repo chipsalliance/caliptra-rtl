@@ -46,7 +46,7 @@ _start:
     csrw mtvec, x1
 
     // Enable Caches in MRAC
-    li x1, 0x5f5555A5
+    li x1, 0xaaaaaaaa
     csrw 0x7c0, x1
 
     //poll for lock register

@@ -1,6 +1,7 @@
 ---
 provides: [caliptra_top]
 schema_version: 2.4.0
+requires: [libs]
 requires:
   - el2_swerv_pkg
   - el2_swerv_wrapper

@@ -32,7 +32,13 @@ INCLUDES_DIR = ${COMPILE_ROOT}/test_suites/includes
 #  TEST_DIR = $(TBDIR)/tests/$(TEST)
 #endif
 
-OFILES = $(TESTNAME).o
+ifeq (0,$(shell test -e $(TEST_DIR)/crt0.[sS] && echo $$?))
+	OFILES += crt0.o
+endif
+ifeq (0,$(shell test -e $(TEST_DIR)/printf.c && echo $$?))
+	OFILES += printf.o
+endif
+OFILES += $(TESTNAME).o
 
 # provide specific link file
 ifeq (,$(wildcard $(TEST_DIR)/$(TESTNAME).ld))
@@ -59,7 +65,7 @@ clean:
 
 
 ############ TEST build ###############################
-    
+
 ifeq ($(shell which $(GCC_PREFIX)-gcc 2> /dev/null),)
 program.hex: ${BUILD_DIR}/defines.h
 	@echo " !!! No $(GCC_PREFIX)-gcc in path, using canned hex files !!"
@@ -73,9 +79,10 @@ else
 program.hex: $(OFILES) $(LINK)
 	@echo Building $(TESTNAME)
 	$(GCC_PREFIX)-gcc $(ABI) -Wl,-Map=$(TEST).map -lgcc -T$(LINK) -o $(TESTNAME).exe $(OFILES) -nostartfiles  $(TEST_LIBS)
-	$(GCC_PREFIX)-objcopy -O verilog  $(TESTNAME).exe program.hex
+	$(GCC_PREFIX)-objcopy -O verilog --remove-section .data --remove-section .bss               $(TESTNAME).exe program.hex
 	$(GCC_PREFIX)-objcopy -O verilog -j .data --change-section-address .data=0 --pad-to 0x20000 $(TESTNAME).exe mailbox.hex
 	$(GCC_PREFIX)-objdump -S  $(TESTNAME).exe > $(TESTNAME).dis
+	$(GCC_PREFIX)-size        $(TESTNAME).exe | tee $(TESTNAME).size
 	@echo Completed building $(TESTNAME)
 
 

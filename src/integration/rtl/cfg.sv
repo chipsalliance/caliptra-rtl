@@ -23,7 +23,15 @@
   `define SLAVE_SEL_I3C       7
   `define SLAVE_SEL_MBOX      8
   `define SLAVE_SEL_DMA       9
+
+  `define IMEM_BYTE_SIZE  32768
+  `define IMEM_DATA_WIDTH 64
+  `define IMEM_DEPTH      `IMEM_BYTE_SIZE / (`IMEM_DATA_WIDTH/8)
+  `define IMEM_ADDR_WIDTH $clog2(`IMEM_BYTE_SIZE)
+
   `define CALIPTRA_TOP        caliptra_top_tb
   `define CALIPTRA_RV_TOP     `CALIPTRA_TOP.caliptra_top_dut
   `define RV_TOP              `CALIPTRA_RV_TOP.rvtop
+  // Override Risc-V reset vector from common_defines.vh
+  `define RV_RESET_VEC 32'h00000000
 `endif
