@@ -8,5 +8,6 @@ export RISC64_GCC_HOME=/home/fortressver/hardware/cores/antifortress/sifive/risc
 export PATH=${RISC64_GCC_HOME}/bin:${PATH}
 export AHA_POC_REPO=${root}
 export SCRIPTS_DIR=${TOOLS}/scripts
+export UVMF_HOME=/home/cad/tools/mentor/uvmf/UVMF_2022.3
 
 
