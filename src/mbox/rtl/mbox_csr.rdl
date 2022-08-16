@@ -59,4 +59,9 @@ addrmap mbox_csr {
         field {sw=rw; hw=r;} execute=0;
     } mbox_execute;
 
+    reg {
+        desc="mailbox status register";
+        field {sw=rw; hw=na;} status[2]=0;
+    } mbox_status;
+
 };

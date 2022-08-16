@@ -7,7 +7,7 @@ module mbox_csr (
 
         input wire s_cpuif_req,
         input wire s_cpuif_req_is_wr,
-        input wire [4:0] s_cpuif_addr,
+        input wire [5:0] s_cpuif_addr,
         input wire [31:0] s_cpuif_wr_data,
         output wire s_cpuif_req_stall_wr,
         output wire s_cpuif_req_stall_rd,
@@ -26,7 +26,7 @@ module mbox_csr (
     //--------------------------------------------------------------------------
     logic cpuif_req;
     logic cpuif_req_is_wr;
-    logic [4:0] cpuif_addr;
+    logic [5:0] cpuif_addr;
     logic [31:0] cpuif_wr_data;
     logic cpuif_req_stall_wr;
     logic cpuif_req_stall_rd;
@@ -68,6 +68,7 @@ module mbox_csr (
         logic mbox_datain;
         logic mbox_dataout;
         logic mbox_execute;
+        logic mbox_status;
     } decoded_reg_strb_t;
     decoded_reg_strb_t decoded_reg_strb;
     logic decoded_req;
@@ -82,6 +83,7 @@ module mbox_csr (
         decoded_reg_strb.mbox_datain = cpuif_req_masked & (cpuif_addr == 'h10);
         decoded_reg_strb.mbox_dataout = cpuif_req_masked & (cpuif_addr == 'h14);
         decoded_reg_strb.mbox_execute = cpuif_req_masked & (cpuif_addr == 'h18);
+        decoded_reg_strb.mbox_status = cpuif_req_masked & (cpuif_addr == 'h1c);
     end
 
     // Pass down signals to next stage
@@ -133,6 +135,12 @@ module mbox_csr (
                 logic load_next;
             } execute;
         } mbox_execute;
+        struct {
+            struct {
+                logic [1:0] next;
+                logic load_next;
+            } status;
+        } mbox_status;
     } field_combo_t;
     field_combo_t field_combo;
 
@@ -167,6 +175,11 @@ module mbox_csr (
                 logic value;
             } execute;
         } mbox_execute;
+        struct {
+            struct {
+                logic [1:0] value;
+            } status;
+        } mbox_status;
     } field_storage_t;
     field_storage_t field_storage;
 
@@ -284,6 +297,24 @@ module mbox_csr (
         end
     end
     assign hwif_out.mbox_execute.execute.value = field_storage.mbox_execute.execute.value;
+    // Field: mbox_csr.mbox_status.status
+    always_comb begin
+        automatic logic [1:0] next_c = field_storage.mbox_status.status.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.mbox_status && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[1:0];
+            load_next_c = '1;
+        end
+        field_combo.mbox_status.status.next = next_c;
+        field_combo.mbox_status.status.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.mbox_status.status.value <= 'h0;
+        end else if(field_combo.mbox_status.status.load_next) begin
+            field_storage.mbox_status.status.value <= field_combo.mbox_status.status.next;
+        end
+    end
 
     //--------------------------------------------------------------------------
     // Readback
@@ -293,7 +324,7 @@ module mbox_csr (
     logic [31:0] readback_data;
     
     // Assign readback values to a flattened array
-    logic [31:0] readback_array[6];
+    logic [31:0] readback_array[7];
     assign readback_array[0][0:0] = (decoded_reg_strb.mbox_lock && !decoded_req_is_wr) ? field_storage.mbox_lock.lock.value : '0;
     assign readback_array[0][31:1] = '0;
     assign readback_array[1][31:0] = (decoded_reg_strb.mbox_user && !decoded_req_is_wr) ? field_storage.mbox_user.user.value : '0;
@@ -302,6 +333,8 @@ module mbox_csr (
     assign readback_array[4][31:0] = (decoded_reg_strb.mbox_dataout && !decoded_req_is_wr) ? hwif_in.mbox_dataout.dataout.next : '0;
     assign readback_array[5][0:0] = (decoded_reg_strb.mbox_execute && !decoded_req_is_wr) ? field_storage.mbox_execute.execute.value : '0;
     assign readback_array[5][31:1] = '0;
+    assign readback_array[6][1:0] = (decoded_reg_strb.mbox_status && !decoded_req_is_wr) ? field_storage.mbox_status.status.value : '0;
+    assign readback_array[6][31:2] = '0;
 
 
     // Reduce the array
@@ -310,7 +343,7 @@ module mbox_csr (
         readback_done = decoded_req & ~decoded_req_is_wr;
         readback_err = '0;
         readback_data_var = '0;
-        for(int i=0; i<6; i++) readback_data_var |= readback_array[i];
+        for(int i=0; i<7; i++) readback_data_var |= readback_array[i];
         readback_data = readback_data_var;
     end
 
