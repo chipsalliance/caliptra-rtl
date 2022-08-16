@@ -380,7 +380,13 @@ end
     hburst_o    = 0;
     hsize_o     = 3'b011;
 
-    repeat (10) @(posedge clk_i);
+    // indicate that this cycle is done for out monitor bfm
+    repeat(10) @(posedge clk_i);
+    transaction_flag_in_monitor_o = 1'b1;
+    repeat(10) @(posedge clk_i);
+    transaction_flag_in_monitor_o = 1'b0;
+    repeat(10)@(posedge clk_i);
+    
     aes_rst_o <= 1'b1;
     repeat (5) @(posedge clk_i);
 
