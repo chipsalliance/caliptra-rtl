@@ -1,0 +1,4 @@
+needs:
+  - HMAC_out_shared.compile
+  - HMAC_out_hvl.compile
+  - HMAC_out_hdl.compile

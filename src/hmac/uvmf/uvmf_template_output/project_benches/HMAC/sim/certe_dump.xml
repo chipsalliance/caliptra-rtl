@@ -1,0 +1,107 @@
+<certe_dump>
+  <instance type=" HMAC_random_test "> 
+     uvm_test_top 
+  
+     <instance type=" HMAC_environment "> 
+        environment 
+  
+        <instance type=" uvm_agent "> 
+           HMAC_in_agent 
+  
+           <instance type=" uvm_driver #(REQ,RSP) "> 
+              HMAC_in_agent_driver 
+  
+              <port if_type = "uvm_analysis_port" txn_type = "anonymous"> 
+                 rsp_port 
+                 <connection>  uvm_test_top.environment.HMAC_in_agent.sequencer.rsp_export  </connection> 
+              </port> 
+  
+              <port if_type = "uvm_seq_item_pull_port" txn_type = "anonymous"> 
+                 seq_item_port 
+                 <connection>  uvm_test_top.environment.HMAC_in_agent.sequencer.seq_item_export  </connection> 
+              </port> 
+           </instance> 
+  
+  
+           <instance type=" uvm_monitor "> 
+              HMAC_in_agent_monitor 
+  
+              <port if_type = "uvm_analysis_port" txn_type = "anonymous"> 
+                 monitored_ap 
+                 <connection>  uvm_test_top.environment.HMAC_in_agent.monitored_ap  </connection> 
+              </port> 
+           </instance> 
+  
+  
+           <port if_type = "uvm_analysis_port" txn_type = "anonymous"> 
+              monitored_ap 
+              <connection>  uvm_test_top.environment.HMAC_pred.HMAC_in_agent_ae  </connection> 
+           </port> 
+  
+           <instance type=" uvm_sequencer "> 
+              sequencer 
+  
+              <export if_type = "uvm_analysis_export" txn_type = "anonymous"> 
+                 rsp_export 
+                 <connection>  uvm_test_top.environment.HMAC_in_agent.sequencer.sqr_rsp_analysis_fifo.analysis_export  </connection> 
+              </export> 
+  
+              <imp if_type = "uvm_seq_item_pull_imp" txn_type = "anonymous"> 
+                 seq_item_export 
+              </imp> 
+           </instance> 
+  
+        </instance> 
+  
+  
+        <instance type=" uvm_agent "> 
+           HMAC_out_agent 
+  
+           <instance type=" uvm_monitor "> 
+              HMAC_out_agent_monitor 
+  
+              <port if_type = "uvm_analysis_port" txn_type = "anonymous"> 
+                 monitored_ap 
+                 <connection>  uvm_test_top.environment.HMAC_out_agent.monitored_ap  </connection> 
+              </port> 
+           </instance> 
+  
+  
+           <port if_type = "uvm_analysis_port" txn_type = "anonymous"> 
+              monitored_ap 
+              <connection>  uvm_test_top.environment.HMAC_sb.actual_analysis_export  </connection> 
+           </port> 
+        </instance> 
+  
+  
+        <instance type=" uvm_component "> 
+           HMAC_pred 
+  
+           <imp if_type = "uvm_analysis_imp_HMAC_in_agent_ae" txn_type = "anonymous"> 
+              HMAC_in_agent_ae 
+           </imp> 
+  
+           <port if_type = "uvm_analysis_port" txn_type = "anonymous"> 
+              HMAC_sb_ap 
+              <connection>  uvm_test_top.environment.HMAC_sb.expected_analysis_export  </connection> 
+           </port> 
+        </instance> 
+  
+  
+        <instance type=" uvm_scoreboard "> 
+           HMAC_sb 
+  
+           <imp if_type = "uvm_analysis_imp_actual" txn_type = "anonymous"> 
+              actual_analysis_export 
+           </imp> 
+  
+           <imp if_type = "uvm_analysis_imp_expected" txn_type = "anonymous"> 
+              expected_analysis_export 
+           </imp> 
+        </instance> 
+  
+     </instance> 
+  
+  </instance> 
+  
+  </certe_dump>

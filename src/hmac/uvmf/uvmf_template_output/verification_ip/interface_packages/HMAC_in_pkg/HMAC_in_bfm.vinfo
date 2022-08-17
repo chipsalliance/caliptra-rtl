@@ -1,0 +1,6 @@
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.vinfo
+@use HMAC_in_pkg_hdl.vinfo
++incdir+@vinfodir
+src/HMAC_in_if.sv
+src/HMAC_in_driver_bfm.sv
+src/HMAC_in_monitor_bfm.sv

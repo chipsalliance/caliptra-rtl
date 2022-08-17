@@ -1,0 +1,14 @@
+//----------------------------------------------------------------------
+// Created with uvmf_gen version 2022.3
+//----------------------------------------------------------------------
+// pragma uvmf custom header begin
+// pragma uvmf custom header end
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
+//
+
+,
+Interface Description, Interface Type, Interface Transaction, Interface Name,
+HMAC_in_agent, HMAC_in_driver_bfm HMAC_in_monitor_bfm, HMAC_in_transaction, HMAC_in_pkg_HMAC_in_agent_BFM,
+HMAC_out_agent, HMAC_out_driver_bfm HMAC_out_monitor_bfm, HMAC_out_transaction, HMAC_out_pkg_HMAC_out_agent_BFM,
+
