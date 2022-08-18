@@ -29,8 +29,8 @@ module ecc_ctrl (
 
     localparam PROG_LENGTH         = 2**PROG_ADDR_W;
 
-    localparam MULT_DELAY          = 38;
-    localparam ADD_DELAY           = 1 -1;
+    localparam MULT_DELAY          = 39 -1;
+    localparam ADD_DELAY           = 1  -1;
     
     localparam Secp384_MONT_COUNT  = 384;
     
@@ -100,10 +100,13 @@ module ecc_ctrl (
             end
             else if (delay_op & ~delayed & ~delayed_pipe1) begin
                 case (prog_line[16 +: 8])
-                    UOP_DO_ADD :  begin delayed <= 1; delay_cntr <= ADD_DELAY; end // ADD
-                    UOP_DO_SUB :  begin delayed <= 1; delay_cntr <= ADD_DELAY; end // SUB
-                    UOP_DO_MUL :  begin delayed <= 1; delay_cntr <= MULT_DELAY; end // MULT
-                    default    :  begin delayed <= 0; delay_cntr <= 0; end
+                    UOP_DO_ADD_p :  begin delayed <= 1; delay_cntr <= ADD_DELAY; end  // ADD
+                    UOP_DO_SUB_p :  begin delayed <= 1; delay_cntr <= ADD_DELAY; end  // SUB
+                    UOP_DO_MUL_p :  begin delayed <= 1; delay_cntr <= MULT_DELAY; end // MULT
+                    UOP_DO_ADD_q :  begin delayed <= 1; delay_cntr <= ADD_DELAY; end  // ADD
+                    UOP_DO_SUB_q :  begin delayed <= 1; delay_cntr <= ADD_DELAY; end  // SUB
+                    UOP_DO_MUL_q :  begin delayed <= 1; delay_cntr <= MULT_DELAY; end // MULT
+                    default      :  begin delayed <= 0; delay_cntr <= 0; end
                 endcase
             end
             else if ((~delayed | (delayed & ~delay_cntr)) & (~stalled | (stalled & ~stall_cntr))) begin
@@ -116,16 +119,21 @@ module ecc_ctrl (
                             1 : begin  // keygen
                                 mont_cntr <= Secp384_MONT_COUNT;
                                 prog_cntr <= PM_INIT_S;
-                                first_round <= 1;
+                            end   
+
+                            2 : begin  // signing
+                                mont_cntr <= Secp384_MONT_COUNT;
+                                prog_cntr <= PM_INIT_S;
                             end                                   
-                            2 : begin 
-                                prog_cntr <= PD_S; // Point Doubling
-                                first_round <= 1;
+
+                            3 : begin  // verifying
+                                prog_cntr <= NOP;
                             end
                             default : 
                                 prog_cntr <= NOP;
                         endcase
                         req_digit_o <= 0;
+                        first_round <= 0;
                     end
                     
                     // Montgoemry Ladder
@@ -162,6 +170,15 @@ module ecc_ctrl (
                     end
                     
                     CONV_E : begin
+                        case (ecc_cmd_i)
+                            1 :       prog_cntr <= NOP; //keygen done
+                            2 :       prog_cntr <= SIGN_S;
+                            default : prog_cntr <= NOP;
+                        endcase
+                        first_round <= 1;
+                    end
+
+                    SIGN_E : begin
                         prog_cntr <= NOP;
                     end
 
@@ -209,10 +226,13 @@ module ecc_ctrl (
 
     always_comb begin
         case (prog_line[16 +: 8])
-            UOP_DO_ADD :  assign delay_op = 1;
-            UOP_DO_SUB :  assign delay_op = 1;
-            UOP_DO_MUL :  assign delay_op = 1;
-            default    :  assign delay_op = 0;
+            UOP_DO_ADD_p :  assign delay_op = 1;
+            UOP_DO_SUB_p :  assign delay_op = 1;
+            UOP_DO_MUL_p :  assign delay_op = 1;
+            UOP_DO_ADD_q :  assign delay_op = 1;
+            UOP_DO_SUB_q :  assign delay_op = 1;
+            UOP_DO_MUL_q :  assign delay_op = 1;
+            default      :  assign delay_op = 0;
         endcase
     end
      
@@ -225,7 +245,9 @@ module ecc_ctrl (
 	        if (prog_line_pipe2[23])
                 instr_o <= 0;
 	        else begin
-                instr_o[23 : 21] <= 0;
+                instr_o[23 : 22] <= 0;
+                instr_o[21]      <= prog_line_pipe2[21];        //mod_p_q : performing mod_p if (mod_p_q = 0), else mod_q
+
                 case (prog_line_pipe2[20 : 18])
                     3'b000 :  instr_o[20 : 18] <= 3'b000; // NOP
                     3'b001 :  instr_o[20 : 18] <= 3'b010; // RED

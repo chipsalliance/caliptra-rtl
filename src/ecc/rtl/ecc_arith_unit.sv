@@ -10,7 +10,6 @@
 
 module ecc_arith_unit #(
     parameter REG_SIZE      = 384,
-    parameter PRIME         = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff,
     parameter ADD_NUM_ADDS  = 1,
     parameter ADD_BASE_SZ   = 384
     )
@@ -34,6 +33,13 @@ module ecc_arith_unit #(
     output wire                 busy_o
     );
 
+
+    localparam              RADIX           = 32;
+    localparam              p_prime         = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff;
+    localparam              p_mu            = 32'h00000001;
+    localparam              q_grouporder    = 384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973;
+    localparam              q_mu            = 32'he88fdc45;
+    
     //----------------------------------------------------------------
     // 
     // ECC Control Logic
@@ -101,10 +107,18 @@ module ecc_arith_unit #(
     // fau interface
     // 
     //----------------------------------------------------------------
+    
+    logic                       mod_p_q;
+    logic [REG_SIZE-1 : 0]      prime;
+    logic [RADIX-1 : 0]         mult_mu;
+
+    assign mod_p_q = ecc_instr_s[21];  //performing mod_p if (mod_p_q = 0), else mod_q
+    assign prime   = (mod_p_q)? q_grouporder : p_prime;
+    assign mult_mu = (mod_p_q)? q_mu : p_mu;
 
     fau #(
         .REG_SIZE(REG_SIZE),
-        .PRIME(PRIME),
+        .RADIX(RADIX),
         .ADD_NUM_ADDS(ADD_NUM_ADDS),
         .ADD_BASE_SZ(ADD_BASE_SZ)
         )
@@ -118,6 +132,8 @@ module ecc_arith_unit #(
         .sub_i(ecc_instr_s[18]),
         .red_i(ecc_instr_s[19]),
         .mult_start_i(ecc_instr_s[20]),
+        .prime_i(prime),
+        .mult_mu_i(mult_mu),
         .opa_i(opa_s),
         .opb_i(opb_s),
         .add_res_o(add_res_s),
@@ -144,7 +160,7 @@ module ecc_arith_unit #(
         end
         else begin
             // Write new register
-            if (wr_en_i & (wr_op_sel_i == 2'b00)) begin
+            if (wr_en_i) begin
                 case (wr_word_sel_i)
                     4'h0 : begin reg_dinb_r[31  :   0] <= di_mux; end
                     4'h1 : begin reg_dinb_r[63  :  32] <= di_mux; end

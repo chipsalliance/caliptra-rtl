@@ -8,39 +8,77 @@
 // Author: Mojtaba Bisheh-Niasar
 //======================================================================
 
-module ecc_arith_unit_tb();
+module ecc_arith_unit_tb #(
+    parameter   TEST_VECTOR_NUM = 15
+)
+();
 
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
   parameter [383 : 0] E_a_MONT = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffcfffffffbffffffff00000002fffffffdffffffff;
-  parameter [383 : 0] ONE_MONT = 384'h100000000ffffffffffffffff0000000100000000;
+  parameter [383 : 0] ONE_p_MONT = 384'h100000000ffffffffffffffff0000000100000000;
   parameter [383 : 0] G_X_MONT = 384'h299e1513812ff723614ede2b6454868459a30eff879c3afc541b4d6e6e1e26a4ee117bfa3dd07565fc8607664d3aadc2;
   parameter [383 : 0] G_Y_MONT = 384'h5a15c5e9dd8002263969a840c6c3521968f4ffd98bade7562e83b050cd385481a72d556e23043dad1f8af93c2b78abc2;
   parameter [383 : 0] G_Z_MONT = 384'h100000000ffffffffffffffff0000000100000000;
+  //parameter [383 : 0] R2_MONT  = 384'h10000000200000000fffffffe000000000000000200000000fffffffe000000010000000000000000;
 
   // q
   parameter [383 : 0] group_order = 384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973; 
+  parameter [383 : 0] R2_q_MONT  = 384'h3fb05b7a28266895d40d49174aab1cc5bf030606de609f43be80721782118942bfd3ccc974971bd0d8d34124f50ddb2d;
+  parameter [383 : 0] ONE_q_MONT = 384'h389cb27e0bc8d220a7e5f24db74f58851313e695333ad68d00000000;
+
 
   parameter [383 : 0] UOP_OPR_CONST_ZERO        = 8'd00;
   parameter [383 : 0] UOP_OPR_CONST_ONE         = 8'd01;
   parameter [383 : 0] UOP_OPR_CONST_E_a         = 8'd02;
   parameter [383 : 0] UOP_OPR_CONST_ONE_MONT    = 8'd03;
 
-  parameter [383 : 0] UOP_OPR_CONST_GX_MONT     = 8'd04;
-  parameter [383 : 0] UOP_OPR_CONST_GY_MONT     = 8'd05;
-  parameter [383 : 0] UOP_OPR_CONST_GZ_MONT     = 8'd06;
-
-  parameter [383 : 0] UOP_OPR_R0_X              = 8'd08;  // 8'b0000_1000;
-  parameter [383 : 0] UOP_OPR_R0_Y              = 8'd09;  // 8'b0000_1001;
-  parameter [383 : 0] UOP_OPR_R0_Z              = 8'd10;  // 8'b0000_1010;
+  parameter [383 : 0] UOP_OPR_CONST_GX_MONT     = 8'd05;
+  parameter [383 : 0] UOP_OPR_CONST_GY_MONT     = 8'd06;
+  parameter [383 : 0] UOP_OPR_CONST_GZ_MONT     = 8'd07;
   
   parameter [383 : 0] UOP_OPR_CONST_Qx_AFFN     = 8'd16;
   parameter [383 : 0] UOP_OPR_CONST_Qy_AFFN     = 8'd17;
+
+  parameter [383 : 0] UOP_OPR_SIGN_R            = 8'd18;
+  parameter [383 : 0] UOP_OPR_SIGN_S            = 8'd19;
+
+  parameter [383 : 0] UOP_OPR_SCALAR            = 8'd20;
+  parameter [383 : 0] UOP_OPR_PRIVKEY           = 8'd21;
+  parameter [383 : 0] UOP_OPR_HASH_MSG          = 8'd22;
+
+  parameter [383 : 0] UOP_OPR_CONST_ONE_q_MONT  = 8'd28;  // Mont_mult(1, R2) % q
+  parameter [383 : 0] UOP_OPR_CONST_q_R2        = 8'd29;
+
+  parameter           R_WIDTH                   = 384;
+  typedef bit         [R_WIDTH-1:0]             r_t;
+  typedef bit         [383 : 0]                 operand_t;
+  typedef struct packed {
+      operand_t   x;
+      operand_t   y;
+  } affn_point_t;
+
+  typedef struct packed {
+      operand_t   X;
+      operand_t   Y;
+      operand_t   Z;
+  } proj_point_t;
+
+  typedef struct packed {
+      operand_t     hashed_msg;
+      operand_t     privkey;
+      affn_point_t  pubkey;
+      operand_t     k;
+      operand_t     R;
+      operand_t     S;
+  } test_vector_t;
+
+  test_vector_t [TEST_VECTOR_NUM-1:0] test_vectors;
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter DEBUG     = 0;
+  parameter DEBUG           = 0;
 
   parameter CLK_HALF_PERIOD = 1;
   parameter CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
@@ -81,12 +119,13 @@ module ecc_arith_unit_tb();
   logic [383 : 0]       read_data;
   reg   [384 : 0]       d_fixed_MSB;
 
+  int                   test_vector_cnt;
+
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
   ecc_arith_unit #(
         .REG_SIZE(REG_SIZE),
-        .PRIME(PRIME),
         .ADD_NUM_ADDS(ADD_NUM_ADDS),
         .ADD_BASE_SZ(ADD_BASE_SZ)
         )
@@ -393,65 +432,133 @@ module ecc_arith_unit_tb();
 
 
   //----------------------------------------------------------------
-  // ecc_single_block_test()
+  // ecc_keygen_test()
   //
   // Perform a single point multiplication block test.
   //----------------------------------------------------------------
-  task ecc_single_block_test(input [7 : 0]  tc_number,
-                            input [383 : 0] P[0 : 2],
-                            input [384 : 0] scalar,
-                            input [383 : 0] expected[0 : 1]);
-    reg [383 : 0]   Q [0 : 1];
+  task ecc_keygen_test(input [7 : 0]  tc_number,
+                       input test_vector_t test_vector);
     reg [31  : 0]   start_time;
     reg [31  : 0]   end_time;
+    affn_point_t   pubkey;
     begin
-      $display("*** TC %0d ECPM test started.", tc_number);
+      $display("*** TC %0d keygen test started.", tc_number);
       tc_ctr = tc_ctr + 1;
     
       start_time = cycle_ctr;
+      // writing constant values
       write_reg(UOP_OPR_CONST_ZERO, 384'h0);
       write_reg(UOP_OPR_CONST_ONE, 384'h1);
       write_reg(UOP_OPR_CONST_E_a, E_a_MONT);
-      write_reg(UOP_OPR_CONST_ONE_MONT, ONE_MONT);
+      write_reg(UOP_OPR_CONST_ONE_MONT, ONE_p_MONT);
+      write_reg(UOP_OPR_CONST_GX_MONT, G_X_MONT);
+      write_reg(UOP_OPR_CONST_GY_MONT, G_Y_MONT);
+      write_reg(UOP_OPR_CONST_GZ_MONT, G_Z_MONT);
 
-      write_reg(UOP_OPR_CONST_GX_MONT, P[0]);
-      write_reg(UOP_OPR_CONST_GY_MONT, P[1]);
-      write_reg(UOP_OPR_CONST_GZ_MONT, P[2]);
-
-      write_scalar(scalar);
+      fix_MSB(test_vector.privkey);
+      write_scalar(d_fixed_MSB);
 
       trig_ECPM(KEYGEN_CMD);
 
       wait_ready();
 
       read_reg(UOP_OPR_CONST_Qx_AFFN);
-      Q[0] = read_data;
+      pubkey.x = read_data;
 
       read_reg(UOP_OPR_CONST_Qy_AFFN);
-      Q[1] = read_data;
+      pubkey.y = read_data;
       
       end_time = cycle_ctr - start_time;
-      $display("*** single block test processing time = %01d cycles.", end_time);
-      
-      if (Q == expected)
+      $display("*** keygen test processing time = %01d cycles.", end_time);
+      $display("privkey    : 0x%96x", test_vector.privkey);
+
+      if (pubkey == test_vector.pubkey)
         begin
-          $display("*** TC %0d successful.", tc_number);
+          $display("*** TC %0d keygen successful.", tc_number);
           $display("");
         end
       else
         begin
-          $display("*** ERROR: TC %0d NOT successful.", tc_number);
-          $display("scalar    : 0x%96x", scalar);
-          $display("Expected_x: 0x%96x", expected[0]);
-          $display("Got:        0x%96x", Q[0]);
-          $display("Expected_y: 0x%96x", expected[1]);
-          $display("Got:        0x%96x", Q[1]);
+          $display("*** ERROR: TC %0d keygen NOT successful.", tc_number);
+          $display("Expected_x: 0x%96x", test_vector.pubkey.x);
+          $display("Got:        0x%96x", pubkey.x);
+          $display("Expected_y: 0x%96x", test_vector.pubkey.y);
+          $display("Got:        0x%96x", pubkey.y);
           $display("");
 
           error_ctr = error_ctr + 1;
         end
     end
-  endtask // ecc_single_block_test
+  endtask // ecc_keygen_test
+
+
+//----------------------------------------------------------------
+  // ecc_signing_test()
+  //
+  // Perform a single signing operation test.
+  //----------------------------------------------------------------
+  task ecc_signing_test(input [7 : 0]  tc_number,
+                        input test_vector_t test_vector);
+    reg [31  : 0]   start_time;
+    reg [31  : 0]   end_time;
+    reg [383 : 0]   R;
+    reg [383 : 0]   S;
+    
+    begin
+      $display("*** TC %0d signing test started.", tc_number);
+      tc_ctr = tc_ctr + 1;
+
+      start_time = cycle_ctr;
+      write_reg(UOP_OPR_CONST_ZERO, 384'h0);
+      write_reg(UOP_OPR_CONST_ONE, 384'h1);
+      write_reg(UOP_OPR_CONST_E_a, E_a_MONT);
+      write_reg(UOP_OPR_CONST_ONE_MONT, ONE_p_MONT);
+      write_reg(UOP_OPR_CONST_ONE_q_MONT, ONE_q_MONT);
+      write_reg(UOP_OPR_CONST_q_R2, R2_q_MONT);
+
+      write_reg(UOP_OPR_CONST_GX_MONT, G_X_MONT);
+      write_reg(UOP_OPR_CONST_GY_MONT, G_Y_MONT);
+      write_reg(UOP_OPR_CONST_GZ_MONT, G_Z_MONT);
+
+      write_reg(UOP_OPR_HASH_MSG, test_vector.hashed_msg);
+      write_reg(UOP_OPR_PRIVKEY, test_vector.privkey);
+      write_reg(UOP_OPR_SCALAR, test_vector.k);
+
+      fix_MSB(test_vector.k);
+      write_scalar(d_fixed_MSB);
+
+      trig_ECPM(SIGN_CMD);
+
+      wait_ready();
+
+      read_reg(UOP_OPR_SIGN_R);
+      R = read_data;
+
+      read_reg(UOP_OPR_SIGN_S);
+      S = read_data;
+      
+      end_time = cycle_ctr - start_time;
+      $display("*** signing test processing time = %01d cycles.", end_time);
+      $display("privkey    : 0x%96x", test_vector.privkey);
+
+      if (R == test_vector.R & S == test_vector.S)
+        begin
+          $display("*** TC %0d signing successful.", tc_number);
+          $display("");
+        end
+      else
+        begin
+          $display("*** ERROR: TC %0d signing NOT successful.", tc_number);
+          $display("Expected_R: 0x%96x", test_vector.R);
+          $display("Got:        0x%96x", R);
+          $display("Expected_S: 0x%96x", test_vector.S);
+          $display("Got:        0x%96x", S);
+          $display("");
+
+          error_ctr = error_ctr + 1;
+        end
+    end
+  endtask // ecc_signing_test
 
 
 
@@ -460,49 +567,67 @@ module ecc_arith_unit_tb();
   //
   //----------------------------------------------------------------
   task ecc_test();
-    reg [383 : 0] G_MONT [0 : 2];
-    reg [383 : 0] d;
-    reg [383 : 0] Q [0 : 1];
-
-    integer               data_file;
-    integer               scan_file;
-    reg     [383:0]       captured_data;
-
-    integer               test_cnt; 
-    begin
-
-      test_cnt = 0;
-
-      data_file = $fopen("/home/mojtabab/workspace_aha_poc/ws1/Caliptra/src/ecc/tb/ecc_test_vectors.txt", "r");
-      if (!data_file)
-        $display("data_file handle was NULL");
-
-      $display("ECPM 384 bit tests");
+    begin   
+      $display("ECC KEYGEN TEST");
       $display("---------------------");
 
-      G_MONT[0] = G_X_MONT;
-      G_MONT[1] = G_Y_MONT;
-      G_MONT[2] = G_Z_MONT;
-
-      while(!$feof(data_file)) begin
-        for (int i = 0; i < 3; i++) begin
-          scan_file = $fscanf(data_file, "%h\n", captured_data); 
-          case(i)
-            0 : d    = captured_data;
-            1 : Q[0] = captured_data;
-            2 : Q[1] = captured_data;
-            default : begin end
-          endcase
-        end
-
-        fix_MSB(d);
-
-        test_cnt = test_cnt + 1;
-        ecc_single_block_test(test_cnt, G_MONT, d_fixed_MSB, Q);
+      for (int i = 0; i < test_vector_cnt; i++) begin: test_vector_loop
+          ecc_keygen_test(i, test_vectors[i]);
+          ecc_signing_test(i, test_vectors[i]);
       end
+
+      $display("ECC SIGNING TEST");
+      $display("---------------------");
+
     end
   endtask // ecc_test
 
+
+  task read_test_vectors(input string fname);
+      integer values_per_test_vector;
+      integer line_cnt;
+      integer fin;
+      integer rv;
+      r_t val;    // must be the largest width of any possible value
+      test_vector_t test_vector;
+
+      // ATTN: Must match the number of fields generated by gen_mm_test_vectors.py script
+      values_per_test_vector = 8;
+      line_cnt = 0;
+      test_vector_cnt = 0;
+
+      fin = $fopen(fname, "r");
+      if (fin == 0)
+          $error("Can't open file %s", fname);
+      while (!$feof(fin)) begin
+          rv = $fscanf(fin, "%h\n", val);
+          if (rv != 1) begin
+              $error("Failed to read a matching string");
+              $fclose(fin);
+              $finish;
+          end
+          // ATTN: the number of cases must be equal to 'values_per_test_vector'.
+          // ATTN: the order of values must be the same as in gen_mm_test_vectors.py script.
+          case (line_cnt % values_per_test_vector)
+              0: test_vector.hashed_msg  = val;
+              1: test_vector.privkey     = val;
+              2: test_vector.pubkey.x    = val;
+              3: test_vector.pubkey.y    = val;
+              4: test_vector.k           = val;
+              5: test_vector.R           = val;
+              6: begin
+                 test_vector.S           = val;
+                 test_vectors[test_vector_cnt] = test_vector;
+              end
+              7 : test_vector_cnt++;
+          endcase
+          
+          line_cnt++;
+      end
+      $fclose(fin);
+
+      $display("Read %0d test vectors from %s", test_vector_cnt, fname);
+  endtask
 
   //----------------------------------------------------------------
   // main
@@ -511,9 +636,15 @@ module ecc_arith_unit_tb();
   //----------------------------------------------------------------
   initial
     begin : main
+      
+      string fname;
+
       $display("   -= Testbench for ecc started =-");
       $display("    ==============================");
       $display("");
+
+      fname = "/home/mojtabab/workspace_aha_poc/ws1/Caliptra/src/ecc/tb/test_vectors/ecc_test_vectors.hex";
+      read_test_vectors(fname);
 
       init_sim();
       reset_dut();

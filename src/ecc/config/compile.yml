@@ -15,7 +15,7 @@ targets:
       - $COMPILE_ROOT/rtl/ecc_uop.sv
       - $COMPILE_ROOT/rtl/ecc_sequencer.sv
       - $COMPILE_ROOT/rtl/fau.sv
-      - $COMPILE_ROOT/rtl/mm.sv
+      - $COMPILE_ROOT/rtl/MontgomeryMultiplier.sv
       - $COMPILE_ROOT/rtl/PE_first.sv
       - $COMPILE_ROOT/rtl/PE.sv
       - $COMPILE_ROOT/rtl/PE_final.sv

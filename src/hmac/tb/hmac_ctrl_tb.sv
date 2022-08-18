@@ -561,7 +561,7 @@ module hmac_ctrl_tb();
       read_digest();
 
       end_time = cycle_ctr - start_time;
-      $display("*** Single block test processing time = %01d cycles", end_time);
+      $display("*** Double block test processing time = %01d cycles", end_time);
 
       if (digest_data == expected)
         begin
@@ -607,8 +607,8 @@ module hmac_ctrl_tb();
       reg [383 : 0] expected3;
 
       reg [383 : 0] key4;
-      reg [1023: 0] data4_0;
-      reg [1023: 0] data4_1;
+      reg [1023: 0] data40;
+      reg [1023: 0] data41;
       reg [383 : 0] expected4;
 
       $display("*** Testcases for PRF-HMAC-SHA-384 functionality started.");
@@ -638,7 +638,12 @@ module hmac_ctrl_tb();
 
       single_block_test(key3, data3, expected3);
 
-      //double_block_test(key3, data1, data3, expected3);
+      key4   = 384'h1e6a3e8998be7c36c5a511c4f03fcfba543d678f1000e2f6a61c2a95f79bb006fc782a679a0b890e3374b20df710f6c2;
+      data40 = 1024'hdbf031b43f84bcf3cc9339e65c3659151d3061dd2d5fb0b2d37fbe4fca4ea373b567ae3513ea095013efc7b19f6851ad73c26176034964999c2c3cf2fd58561a9f791839a2199f2a9405edd0478ac64a9557aec86940d465d90364489e4d32f168ce2eefec74eb7e653f8da640308f72f0bd7b1a698c683870c7439869b969ae;
+      data41 = 1024'hbea9f4f6bacdc04d4ec4f6bcc17874940336c7899553800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008b0;
+      expected4 = 384'h8aba65c07793e1d8a709fbda35ae71804dc0741166dda5746fb3b1c0e91957bbd0d539a469c2ea3577b75d5c0f150ce7;
+
+      double_block_test(key4, data40, data41, expected4);
       
       $display("*** Testcases for PRF-HMAC-SHA-384 functionality completed.");
     end

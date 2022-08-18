@@ -10,7 +10,7 @@
 
 module fau #(
     parameter REG_SIZE      = 384,
-    parameter PRIME         = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff,
+    parameter RADIX         = 32,
     parameter ADD_NUM_ADDS  = 1,
     parameter ADD_BASE_SZ   = 384
     )
@@ -23,6 +23,8 @@ module fau #(
     input  wire                 sub_i,
     input  wire                 red_i,
     input  wire                 mult_start_i,
+    input  wire [REG_SIZE-1:0]  prime_i,
+    input  wire [RADIX-1 : 0]   mult_mu_i,
     input  wire [REG_SIZE-1:0]  opa_i,
     input  wire [REG_SIZE-1:0]  opb_i,
     output wire [REG_SIZE-1:0]  add_res_o,
@@ -46,26 +48,27 @@ module fau #(
     assign mult_opa = opa_i;
     assign mult_opb = opb_i;
 
-    
     //----------------------------------------------------------------
     // MULTIPILER
     //----------------------------------------------------------------
-    mm #(
+    MontgomeryMultiplier #(
         .REG_SIZE(REG_SIZE),
-        .PE_UNITS(5),
-        .S_NUM(13),
-        .RADIX(32)
+        .RADIX(RADIX)
         )
         i_MULTIPLIER (
+        // Clock and reset.
         .clk(clk),
         .reset_n(reset_n),
 
+        // DATA PORT
         .start_i(mult_start_edge),
         .opa_i(mult_opa),
         .opb_i(mult_opb),
+        .n_i(prime_i),
+        .n_prime_i(mult_mu_i), // only need the last few bits
         .p_o(mult_res_s),
         .ready_o(mult_ready)
-        );
+    );
 
 
     //----------------------------------------------------------------
@@ -73,7 +76,6 @@ module fau #(
     //----------------------------------------------------------------
     add_sub_mod_alter #(
         .REG_SIZE(REG_SIZE),
-        .PRIME(PRIME),
         .NUM_ADDS(ADD_NUM_ADDS),
         .BASE_SZ(ADD_BASE_SZ)
         )
@@ -85,6 +87,7 @@ module fau #(
         .sub_i(sub),
         .opa_i(opa_i),
         .opb_i(opb_i),
+        .prime_i(prime_i),
         .res_o(add_res_s),
         .ready_o(add_ready)
         );

@@ -10,7 +10,6 @@
 
 module add_sub_mod_alter #(
     parameter REG_SIZE      = 384,
-    parameter PRIME         = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff,
     parameter NUM_ADDS      = 1,
     parameter BASE_SZ       = 384
     )
@@ -24,6 +23,7 @@ module add_sub_mod_alter #(
     input  wire                 red_i,
     input  wire  [REG_SIZE-1:0] opa_i,
     input  wire  [REG_SIZE-1:0] opb_i,
+    input  wire  [REG_SIZE-1:0] prime_i,
     output logic [REG_SIZE-1:0] res_o,
     output wire                 ready_o
 );
@@ -40,7 +40,7 @@ module add_sub_mod_alter #(
 
 
     assign opb0 = sub_i ? ~opb_i : opb_i;
-    assign opb1 = sub_i ? PRIME : ~PRIME;
+    assign opb1 = sub_i ? prime_i : ~prime_i;
 
     adder #(
         .N(REG_SIZE)
