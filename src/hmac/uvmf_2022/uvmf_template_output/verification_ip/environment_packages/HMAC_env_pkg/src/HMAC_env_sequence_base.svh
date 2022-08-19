@@ -57,7 +57,7 @@ class HMAC_env_sequence_base #(
   virtual task body();
 
     if ( configuration.HMAC_in_agent_config.sequencer != null )
-       repeat (25) HMAC_in_agent_rand_seq.start(configuration.HMAC_in_agent_config.sequencer);
+       repeat (10) HMAC_in_agent_rand_seq.start(configuration.HMAC_in_agent_config.sequencer);
 
 
   endtask

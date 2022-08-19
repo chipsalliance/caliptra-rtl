@@ -1,2 +1,0 @@
-needs:
-  - ../tb/testbench/hvl_top.compile

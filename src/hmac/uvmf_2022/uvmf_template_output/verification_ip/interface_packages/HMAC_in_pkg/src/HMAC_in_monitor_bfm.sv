@@ -86,7 +86,7 @@ end
   tri [2:0] hburst_i;
   tri [2:0] hsize_i;
   tri  transaction_flag_in_monitor_i;
-  tri  op_i;
+  tri [1:0] op_i;
   tri [8:0] test_case_sel_i;
   tri  key_len_i;
   assign clk_i = bus.clk;

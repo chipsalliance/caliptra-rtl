@@ -98,7 +98,7 @@ rand HMAC_env_sequence_base_t HMAC_env_seq;
     join_none
     // Start INITIATOR sequences here
     fork
-      repeat (25) HMAC_in_agent_random_seq.start(HMAC_in_agent_sequencer);
+      repeat (1) HMAC_in_agent_random_seq.start(HMAC_in_agent_sequencer);
     join
 
 HMAC_env_seq.start(top_configuration.vsqr);

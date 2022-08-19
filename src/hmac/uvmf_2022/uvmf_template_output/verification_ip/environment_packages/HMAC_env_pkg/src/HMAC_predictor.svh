@@ -67,6 +67,7 @@ class HMAC_predictor #(
 
   // pragma uvmf custom class_item_additional begin
   reg [383:0] expected;
+  reg [383:0] tmp;
   reg [8:0] test_case_sel;
 
   int line_skip;
@@ -118,24 +119,39 @@ class HMAC_predictor #(
 
     if (t.op== 2'b00) HMAC_sb_ap_output_transaction.result = 0;
     else begin
+      if (t.op == 2'b01) file_name = "../../../../../tb/hmac_vectors_singleblk.txt";
+      else               file_name = "../../../../../tb/hmac_vectors_multiblk.txt";
 
       cnt_tmp = 0;
 
-      test_case_sel = t.test_case_sel;
+      if (t.op == 2'b01) test_case_sel = t.test_case_sel;
+      else test_case_sel = {8'h00,t.test_case_sel[0]};
 
       cnt_tmp = 0;
-      file_name = "/home/kupadhyayula/caliptra/ws1/Caliptra/src/hmac/tb/hmac_vectors.txt";
-      line_skip = test_case_sel * 5 + 10;
+      //file_name = "/home/kupadhyayula/caliptra/ws1/Caliptra/src/hmac/tb/hmac_vectors.txt";
+      
+      //line_skip = test_case_sel * 5 + 10;
       fd_r = $fopen(file_name, "r");
       if(!fd_r) $display("**HMAC_predictor** Cannot open file %s", file_name);
 
-      while (cnt_tmp < line_skip) begin
-        cnt_tmp = cnt_tmp + 1;
+      //while (cnt_tmp < line_skip) begin
+      //  cnt_tmp = cnt_tmp + 1;
+      //  $fgets(line_read, fd_r);
+      //end
+      $fgets(line_read, fd_r);
+      $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, tmp);
+      while (tmp_str1 != "COUNT" || tmp != test_case_sel) begin
         $fgets(line_read, fd_r);
+        $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, tmp);
       end
 
       //Get tag:
-      $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, expected);
+      $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, tmp);
+      while (tmp_str1 != "TAG") begin
+        $fgets(line_read, fd_r);
+        $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, tmp);
+      end
+      expected = tmp;
 
       HMAC_sb_ap_output_transaction.result = expected;
       `uvm_info("PREDICT",{"HMAC_OUT: ",HMAC_sb_ap_output_transaction.convert2string()},UVM_MEDIUM);

@@ -60,7 +60,7 @@ interface  HMAC_in_if #(
   inout tri [2:0] hburst,
   inout tri [2:0] hsize,
   inout tri  transaction_flag_in_monitor,
-  inout tri  op,
+  inout tri [1:0] op,
   inout tri [8:0] test_case_sel,
   inout tri  key_len
   );
