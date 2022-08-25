@@ -38,6 +38,7 @@ module fau #(
     logic                   mult_ready;
     logic [REG_SIZE-1 : 0]  add_res_s;
     logic                   add_ready;
+    logic		    ready;
     
     reg                     mult_start;
     reg                     mult_start_dly;
@@ -94,10 +95,18 @@ module fau #(
 
 
     always_ff @(posedge clk or negedge reset_n) begin
+	if (!reset_n) begin
+            mult_start <= 1'b0;
+            mult_start_dly <= 1'b0;
+            sub <= 1'b0;
+            red <= 1'b0;
+	end
+	else begin
             mult_start <= mult_start_i;
             mult_start_dly <= mult_start;
             sub <= sub_i;
             red <= red_i;
+	end
     end
     
     assign mult_start_edge = mult_start & ~mult_start_dly;

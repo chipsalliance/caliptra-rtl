@@ -1,0 +1,13 @@
+To run DC on a design module execute the following:
+
+dc_shell -f dc.tcl -x "set design <name of top level block>" -output_log_file <log file name>
+
+Example: dc_shell -f dc.tcl -x "set design hmac_ctrl" -output_log_file syn.log
+
+Outputs will be stored in Caliptra/src/syn/outputs/<design>/ folder. The command currently generates reports for area, timing (first 100 paths), sdc and sdf. Gate level netlist is also written to the output folder
+
+TODO: 
+1. Figure out the correct libraries to use
+2. Some designs have errors that cause compilation to break
+3. Almost all blocks have lint warnings to be resolved (since they're warnings synthesis still completes)
+4. Figure out correct clock/signal constraints (uncertainty, latency, transition times). This is a first pass run so making some assumptions here

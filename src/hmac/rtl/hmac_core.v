@@ -128,7 +128,7 @@ module hmac_core
                      .next(H1_next),
                      .mode(2'h2),
 
-                     .work_factor(0),
+                     .work_factor(1'b0),
                      .work_factor_num(0),
 
                      .block(H1_block),
@@ -146,7 +146,7 @@ module hmac_core
                      .next(H2_next),
                      .mode(2'h2),
 
-                     .work_factor(0),
+                     .work_factor(1'b0),
                      .work_factor_num(0),
 
                      .block(H2_block),

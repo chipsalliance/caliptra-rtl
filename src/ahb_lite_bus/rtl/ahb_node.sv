@@ -61,7 +61,7 @@ module ahb_node #(
 
   generate
     for(i=0;i<NB_SLAVES;i++) begin
-      assign hsel_o[i]  = (BYPASS_HSEL === 1 ? hsel_i && (haddr_i >= START_ADDR_i[i]) && (haddr_i <= END_ADDR_i[i]) : (haddr_i >= START_ADDR_i[i]) && (haddr_i <= END_ADDR_i[i]));
+      assign hsel_o[i]  = (BYPASS_HSEL == 1 ? hsel_i && (haddr_i >= START_ADDR_i[i]) && (haddr_i <= END_ADDR_i[i]) : (haddr_i >= START_ADDR_i[i]) && (haddr_i <= END_ADDR_i[i]));
     end
   endgenerate
 

@@ -226,13 +226,13 @@ module ecc_ctrl (
 
     always_comb begin
         case (prog_line[16 +: 8])
-            UOP_DO_ADD_p :  assign delay_op = 1;
-            UOP_DO_SUB_p :  assign delay_op = 1;
-            UOP_DO_MUL_p :  assign delay_op = 1;
-            UOP_DO_ADD_q :  assign delay_op = 1;
-            UOP_DO_SUB_q :  assign delay_op = 1;
-            UOP_DO_MUL_q :  assign delay_op = 1;
-            default      :  assign delay_op = 0;
+            UOP_DO_ADD_p :  delay_op = 1;
+            UOP_DO_SUB_p :  delay_op = 1;
+            UOP_DO_MUL_p :  delay_op = 1;
+            UOP_DO_ADD_q :  delay_op = 1;
+            UOP_DO_SUB_q :  delay_op = 1;
+            UOP_DO_MUL_q :  delay_op = 1;
+            default      :  delay_op = 0;
         endcase
     end
      

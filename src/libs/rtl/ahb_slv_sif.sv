@@ -61,7 +61,7 @@ logic error_f;
 //support bus widths:
 //64b ahb, 32b client
 //64b ahb, 64b client
-generate begin: data_muxes
+generate 
     if ((AHB_DATA_WIDTH == 32) & (CLIENT_DATA_WIDTH == 32)) begin
         always_comb begin
             unique casez (hsize_i)
@@ -107,7 +107,7 @@ generate begin: data_muxes
         end
         always_comb hrdata_o = rdata;
     end 
-end
+
 endgenerate
 
     always_ff @(posedge hclk or negedge hreset_n) begin
