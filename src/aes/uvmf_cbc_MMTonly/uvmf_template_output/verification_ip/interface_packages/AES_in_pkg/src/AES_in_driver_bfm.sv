@@ -546,7 +546,7 @@ task cbc_mode_mmt_vector_test(input aes_in_op_transactions op,
 
       // for some reason, $fopen only recognizes the absolute path
       // change it to your path before running!!
-      fd_r = $fopen("/home/t-stevenlian/AHA_workspaces/aes_vector/Caliptra/src/aes/tb/CBCMMT256_clean.txt","r");
+      fd_r = $fopen("/home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/tb/vectors/CBCMMT256_clean.txt","r");
       if(fd_r) $display("file opened successfully!");
 
       while (cnt_tmp < line_skip) begin

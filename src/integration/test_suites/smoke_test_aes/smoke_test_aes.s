@@ -19,6 +19,7 @@
 
 
 #include "../includes/defines.h"
+#include "./smoke_test_aes_vectors.s"
 
 #define DCCM_SADR                   0xf0040000
 
@@ -53,21 +54,25 @@ _start:
 
     // Set up MTVEC - not expecting to use it though
     li x1, RV_ICCM_SADR
-    csrw mtvec, x1
-
+    csrw mtvec, x1  
 
     // Enable Caches in MRAC
     li x1, 0xaaaaaaaa
     csrw 0x7c0, x1
 
+    // read info
+    la x4, CBCMMT256
+    // key length and operation mode
+    lw t3, 0(x4)
+    addi x4, x4, 4
+    // message length
+    lw t4, 0(x4)
 
     // Load the key and write to AES core
     li x3, AES_ADDR_KEY_START
     li x1, AES_ADDR_KEY_END
-    la x4, hw_data      // 128bit key
-    //************* uncomment for 256bit key *************//
-    // please add the256bit key after the 128bit key//
-    // addi x4, x4, 32   
+    la x4, CBCMMT256
+    addi x4, x4, 8
     write_key_loop:
         lw x5, 0(x4)
         sw x5, 0(x3)
@@ -80,7 +85,9 @@ _start:
     // 256bit key
     // li x4, 0x02     
     // 128bit key
-    li x4, 0x00     
+    // li x4, 0x00     
+    li x4, 0x02
+    and x4, t3, x4
     li x3, AES_ADDR_CONFIG
     sw x4, 0(x3)
 
@@ -109,8 +116,8 @@ _start:
     // Write IV
     li x3, AES_ADDR_IV_START
     li x1, AES_ADDR_IV_END
-    la x4, hw_data
-    addi x4, x4, 32
+    la x4, CBCMMT256
+    addi x4, x4, 40
     write_IV_loop:
         lw x5, 0(x4)
         sw x5, 0(x3)
@@ -118,223 +125,59 @@ _start:
         addi x3, x3, 4
         ble x3, x1, write_IV_loop
 
-    //************* 1st block *************//
-    // Load block from hw_data and write to AES core
-    li x3, AES_ADDR_BLOCK_START
-    li x1, AES_ADDR_BLOCK_END
-    la x4, hw_data
-    addi x4, x4, 48
-    write_block_loop1:
-        lw x5, 0(x4)
-        sw x5, 0(x3)
-        addi x4, x4, 4
-        addi x3, x3, 4
-        ble x3, x1, write_block_loop1
+    // multi-block message loop
+    li x8, 0
 
-    // configure to encoder
-    li x3, AES_ADDR_CONFIG
-    // 128bit key, encode
-    li x4, 0x01
-    // 256bit key, encode    
-    // li x4, 0x03  
-    // 128bit key, decode     
-    // li x4, 0x00   
-    // 256bit key, decode    
-    // li x4, 0x02       
-    sw x4, 0(x3)
+    multi_block_loop:
+        addi x8, x8, 1
 
-    // Enable AES core
-    li x3, AES_ADDR_CNTRL
-    li x4, 0x02
-    sw x4, 0(x3)
-
-    // wait for AES process
-    li x3, AES_ADDR_STATUS
-    li x1, AES_VALID
-    ready_loop1:
-        lw x5, 0(x3)
-        bne x5, x1, ready_loop1
-
-    // Read the data back from AES register
-    li x3, AES_ADDR_RESULT_START
-    li x1, AES_ADDR_RESULT_END
-    la x4, hw_data
-    addi x4, x4, 112
-    read_result_loop1:
-        lw x5, 0(x3)
-        lw x2, 0(x4)
-        beq x5, x2, equal1
-        li x6, STDOUT
-        li x7, 0x01
-        sb x7, 0(x6)
-        equal1:
-            addi x3, x3, 4
+        // Load message and write to AES core
+        li x3, AES_ADDR_BLOCK_START
+        li x1, AES_ADDR_BLOCK_END
+        la x4, CBCMMT256
+        addi x4, x4, 56
+        write_block_loop1:
+            lw x5, 0(x4)
+            sw x5, 0(x3)
             addi x4, x4, 4
-            ble x3, x1, read_result_loop1
-
-    
-    //************* 2nd block *************//
-    // Load block from hw_data and write to AES core
-    li x3, AES_ADDR_BLOCK_START
-    li x1, AES_ADDR_BLOCK_END
-    la x4, hw_data
-    addi x4, x4, 64
-    write_block_loop2:
-        lw x5, 0(x4)
-        sw x5, 0(x3)
-        addi x4, x4, 4
-        addi x3, x3, 4
-        ble x3, x1, write_block_loop2
-
-    // configure to encoder
-    li x3, AES_ADDR_CONFIG
-    // 128bit key, encode
-    li x4, 0x01
-    // 256bit key, encode    
-    // li x4, 0x03  
-    // 128bit key, decode     
-    // li x4, 0x00   
-    // 256bit key, decode    
-    // li x4, 0x02       
-    sw x4, 0(x3)
-
-    // Enable AES core
-    li x3, AES_ADDR_CNTRL
-    li x4, 0x02
-    sw x4, 0(x3)
-
-    // wait for AES process
-    li x3, AES_ADDR_STATUS
-    li x1, AES_VALID
-    ready_loop2:
-        lw x5, 0(x3)
-        bne x5, x1, ready_loop2
-
-    // Read the data back from AES register
-    li x3, AES_ADDR_RESULT_START
-    li x1, AES_ADDR_RESULT_END
-    la x4, hw_data
-    addi x4, x4, 128
-    read_result_loop2:
-        lw x5, 0(x3)
-        lw x2, 0(x4)
-        beq x5, x2, equal2
-        li x6, STDOUT
-        li x7, 0x01
-        sb x7, 0(x6)
-        equal2:
             addi x3, x3, 4
-            addi x4, x4, 4
-            ble x3, x1, read_result_loop2
+            ble x3, x1, write_block_loop1
 
+        // configure to encoder
+        li x3, AES_ADDR_CONFIG    
+        sw t3, 0(x3)
 
-    //************* 3rd block *************//
-    // Load block from hw_data and write to AES core
-    li x3, AES_ADDR_BLOCK_START
-    li x1, AES_ADDR_BLOCK_END
-    la x4, hw_data
-    addi x4, x4, 80
-    write_block_loop3:
-        lw x5, 0(x4)
-        sw x5, 0(x3)
-        addi x4, x4, 4
-        addi x3, x3, 4
-        ble x3, x1, write_block_loop3
+        // Enable AES core
+        li x3, AES_ADDR_CNTRL
+        li x4, 0x02
+        sw x4, 0(x3)
 
-    // configure to encoder
-    li x3, AES_ADDR_CONFIG
-    // 128bit key, encode
-    li x4, 0x01
-    // 256bit key, encode    
-    // li x4, 0x03  
-    // 128bit key, decode     
-    // li x4, 0x00   
-    // 256bit key, decode    
-    // li x4, 0x02       
-    sw x4, 0(x3)
+        // wait for AES process
+        li x3, AES_ADDR_STATUS
+        li x1, AES_VALID
+        ready_loop1:
+            lw x5, 0(x3)
+            bne x5, x1, ready_loop1
 
-    // Enable AES core
-    li x3, AES_ADDR_CNTRL
-    li x4, 0x02
-    sw x4, 0(x3)
+        // Read the data back from AES register
+        li x3, AES_ADDR_RESULT_START
+        li x1, AES_ADDR_RESULT_END
+        la x4, CBCMMT256
+        addi x4, x4, 72
+        read_result_loop1:
+            lw x5, 0(x3)
+            lw x2, 0(x4)
+            beq x5, x2, equal1
+            li x6, STDOUT
+            li x7, 0x01
+            sb x7, 0(x6)
+            equal1:
+                addi x3, x3, 4
+                addi x4, x4, 4
+                ble x3, x1, read_result_loop1
 
-    // wait for AES process
-    li x3, AES_ADDR_STATUS
-    li x1, AES_VALID
-    ready_loop3:
-        lw x5, 0(x3)
-        bne x5, x1, ready_loop3
-
-    // Read the data back from AES register
-    li x3, AES_ADDR_RESULT_START
-    li x1, AES_ADDR_RESULT_END
-    la x4, hw_data
-    addi x4, x4, 144
-    read_result_loop3:
-        lw x5, 0(x3)
-        lw x2, 0(x4)
-        beq x5, x2, equal3
-        li x6, STDOUT
-        li x7, 0x01
-        sb x7, 0(x6)
-        equal3:
-            addi x3, x3, 4
-            addi x4, x4, 4
-            ble x3, x1, read_result_loop3
-
-    //************* 4th block *************//
-    // Load block from hw_data and write to AES core
-    li x3, AES_ADDR_BLOCK_START
-    li x1, AES_ADDR_BLOCK_END
-    la x4, hw_data
-    addi x4, x4, 96
-    write_block_loop4:
-        lw x5, 0(x4)
-        sw x5, 0(x3)
-        addi x4, x4, 4
-        addi x3, x3, 4
-        ble x3, x1, write_block_loop4
-
-    // configure to encoder
-    li x3, AES_ADDR_CONFIG
-    // 128bit key, encode
-    li x4, 0x01
-    // 256bit key, encode    
-    // li x4, 0x03  
-    // 128bit key, decode     
-    // li x4, 0x00   
-    // 256bit key, decode    
-    // li x4, 0x02       
-    sw x4, 0(x3)
-
-    // Enable AES core
-    li x3, AES_ADDR_CNTRL
-    li x4, 0x02
-    sw x4, 0(x3)
-
-    // wait for AES process
-    li x3, AES_ADDR_STATUS
-    li x1, AES_VALID
-    ready_loop4:
-        lw x5, 0(x3)
-        bne x5, x1, ready_loop4
-
-    // Read the data back from AES register
-    li x3, AES_ADDR_RESULT_START
-    li x1, AES_ADDR_RESULT_END
-    la x4, hw_data
-    addi x4, x4, 160
-    read_result_loop4:
-        lw x5, 0(x3)
-        lw x2, 0(x4)
-        beq x5, x2, equal4
-        li x6, STDOUT
-        li x7, 0x01
-        sb x7, 0(x6)
-        equal4:
-            addi x3, x3, 4
-            addi x4, x4, 4
-            ble x3, x1, read_result_loop4
+        // check if finished
+        bne x8, t4, multi_block_loop
 
 // Write 0xff to STDOUT for TB to termiate test.
 _finish:
@@ -345,72 +188,3 @@ _finish:
 .rept 99
     nop
 .endr
-
-.data
-hw_data:
-// start of 128bit key
-.word 0x56e47a38  
-.word 0xc5598974
-.word 0xbc46903d
-.word 0xba290349
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-// start of IV input
-.word 0x8ce82eef   
-.word 0xbea0da3c
-.word 0x44699ed7
-.word 0xdb51b7d9 
-// start of 1st text
-.word 0xa0a1a2a3   
-.word 0xa4a5a6a7
-.word 0xa8a9aaab
-.word 0xacadaeaf
-// start of 2nd text
-.word 0xb0b1b2b3  
-.word 0xb4b5b6b7
-.word 0xb8b9babb
-.word 0xbcbdbebf 
-// start of 3rd text
-.word 0xc0c1c2c3
-.word 0xc4c5c6c7  
-.word 0xc8c9cacb
-.word 0xcccdcecf 
-// start of 4th text
-.word 0xd0d1d2d3
-.word 0xd4d5d6d7 
-.word 0xd8d9dadb
-.word 0xdcdddedf 
-// start of 1st expected
-.word 0xc30e32ff
-.word 0xedc0774e
-.word 0x6aff6af0
-.word 0x869f71aa
-// start of 2nd expected
-.word 0x0f3af07a
-.word 0x9a31a9c6
-.word 0x84db207e
-.word 0xb0ef8e4e
-// start of 3rd expected
-.word 0x35907aa6
-.word 0x32c3ffdf
-.word 0x868bb7b2
-.word 0x9d3d46ad
-// start of 4th expected
-.word 0x83ce9f9a
-.word 0x102ee99d
-.word 0x49a53e87
-.word 0xf4c3da55
-.ascii "----------------------------------\n"
-.ascii "AES CBC mode Quadratic Blocks Test !!\n"
-.ascii "----------------------------------\n"
-.byte 0
-string1: 
-.ascii "1st block successful"
-string2: 
-.ascii "2nd block successful"
-string3: 
-.ascii "3rd block successful"
-string4: 
-.ascii "4th block successful"

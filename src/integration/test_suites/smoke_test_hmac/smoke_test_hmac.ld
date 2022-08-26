@@ -2,6 +2,15 @@ OUTPUT_ARCH( "riscv" )
 ENTRY(_start)
 
 SECTIONS {
+<<<<<<< HEAD
+  . = 0x30000000;
+  .data : { *(.*data) *(.rodata*) *(.sbss) }
+  . = 0x80000000;
+  .text   : { *(.text*) }
+ _end = .;
+  .bss : { *(.bss) }
+  . = 0x10010008;
+=======
   . = 0x0;
   .text   : { *(.text*) }
   _end = .;
@@ -13,5 +22,6 @@ SECTIONS {
   .data  :  { *(.*data) *(.rodata*) *(.sbss) STACK = ALIGN(16) + 0x1000;}
   .bss : { *(.bss) }
   . = 0x40000008;
+>>>>>>> master
   .data.io .  : { *(.data.io) }
 }

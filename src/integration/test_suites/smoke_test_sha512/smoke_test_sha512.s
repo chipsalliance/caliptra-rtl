@@ -19,6 +19,7 @@
 
 
 #include "../includes/defines.h"
+#include "./smoke_test_sha512_vectors.s"
 
 #define DCCM_SADR                   0xf0040000
 
@@ -53,34 +54,55 @@ _start:
     li x1, 0xaaaaaaaa
     csrw 0x7c0, x1
 
-    // Load block from hw_data and write to SHA512 core
-    li x3, SHA512_ADDR_BLOCK_START
-    li x1, SHA512_ADDR_BLOCK_END
-    la x4, hw_data
-    write_block_loop:
-        lw x5, 0(x4)
-        sw x5, 0(x3)
-        addi x4, x4, 4
-        addi x3, x3, 4
-        ble x3, x1, write_block_loop
+    li t4, 0
+    li t5, 1
 
-    // Enable SHA512 core
-    li x3, SHA512_ADDR_CNTRL
-    li x4, SHA512_INIT
-    sw x4, 0(x3)
+    write_msg_loop:
+        // loop cnt, indicate whether it's the first block
+        addi t4, t4, 1
 
-    // wait for SHA512 process
-    li x3, SHA512_ADDR_STATUS
-    li x1, SHA512_VALID
-    ready_loop:
-        lw x5, 0(x3)
-        bne x5, x1, ready_loop
+        // Load block from hw_data and write to SHA512 core
+        li x3, SHA512_ADDR_BLOCK_START
+        li x1, SHA512_ADDR_BLOCK_END
+        // set t3 to constantly tracking current ptr
+        la t3, SHA512ShortMsg
+        // set x7 as last word check
+        lw x7, 0(t3)
+        addi t3, t3, 4
+        write_block_loop:
+            lw x5, 0(t3) 
+            
+            sw x5, 0(x3)
+            addi t3, t3, 4
+            addi x3, x3, 4
+            ble x3, x1, write_block_loop
+
+        // store the last word for further checking
+        mv x6, x5
+
+        // Enable SHA512 core
+        li x3, SHA512_ADDR_CNTRL
+        li x4, SHA512_NEXT
+        bne t4, t5, indicate_next
+        li x4, SHA512_INIT
+        indicate_next:
+            sw x4, 0(x3)
+
+        // wait for SHA512 process
+        li x3, SHA512_ADDR_STATUS
+        li x1, SHA512_VALID
+        ready_loop:
+            lw x5, 0(x3)
+            bne x5, x1, ready_loop
+
+        // check if reaches the last block of message
+        bne x6, x7, write_msg_loop
 
     // Read the data back from SHA512 register
     li x3, SHA512_ADDR_DIGEST_START
     li x1, SHA512_ADDR_DIGEST_END
-    la x4, hw_data
-    addi x4, x4, 128
+    la x4, SHA512ShortMsg
+    addi x4, x4, 132
     read_result_loop:
         lw x5, 0(x3)
         lw x2, 0(x4)
@@ -103,60 +125,3 @@ _finish:
 .rept 100
     nop
 .endr
-
-.data
-hw_data:
-// start of input message
-.word 0x61626380
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000018
-// expected value
-.word 0xDDAF35A1
-.word 0x93617ABA
-.word 0xCC417349
-.word 0xAE204131
-.word 0x12E6FA4E
-.word 0x89A97EA2
-.word 0x0A9EEEE6
-.word 0x4B55D39A
-.word 0x2192992A
-.word 0x274FC1A8
-.word 0x36BA3C23
-.word 0xA3FEEBBD
-.word 0x454D4423
-.word 0x643CE80E
-.word 0x2A9AC94F
-.word 0xA54CA49F
-.ascii "----------------------------------\n"
-.ascii "SHA512 test !!\n"
-.ascii "----------------------------------\n"
-.byte 0
