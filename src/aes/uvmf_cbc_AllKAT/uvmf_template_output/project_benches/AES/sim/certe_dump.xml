@@ -1,5 +1,5 @@
 <certe_dump>
-  <instance type=" AES_random_test "> 
+  <instance type=" test_top "> 
      uvm_test_top 
   
      <instance type=" AES_environment "> 

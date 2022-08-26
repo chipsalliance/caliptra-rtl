@@ -1,6 +1,8 @@
+---
 provides: [mbox]
 schema_version: 2.4.0
-requires: [libs]
+requires: 
+  - libs
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -16,9 +18,26 @@ targets:
       - $COMPILE_ROOT/rtl/mbox_csr.sv
       - $COMPILE_ROOT/rtl/mbox_reg.sv
     tops: [mbox]
+---
+provides: [mailbox_tb]
+schema_version: 2.4.0
+requires: 
+  - mbox
+targets:
+  tb:
+    directories: 
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/tb/mailbox_tb.sv
+    tops: [mailbox_tb]
 global:
   tool:
     vcs:
       default:
         - '-assert svaext'
         - '-v2k_generate'
+        - '-timescale=1ns/1ps'
+        - '-noinherit_timescale=1ns/1ps'
+        - '-ucli -i dump.ucli'
+      sim:
+        - '-ucli -i dump.ucli'
