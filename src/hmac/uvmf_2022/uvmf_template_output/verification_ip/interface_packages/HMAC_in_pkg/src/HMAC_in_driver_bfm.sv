@@ -303,12 +303,12 @@ end
     // Wait for the responder to complete the transfer then place the responder data into 
     // HMAC_in_responder_struct.
     //responder_struct = HMAC_in_responder_struct;
+    //TODO knupadhy: make op only reset or normal op (single and multi will be processed in same task)
     case (HMAC_in_initiator_struct.op)
 
       reset_op  : hmac_init         (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.test_case_sel, HMAC_in_initiator_struct.key_len);
-      single_op : single_block_test (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.test_case_sel, HMAC_in_initiator_struct.key_len);
-      multi_op  : multi_block_test  (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.test_case_sel, HMAC_in_initiator_struct.key_len);
-	    default   : single_block_test (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.test_case_sel, HMAC_in_initiator_struct.key_len);
+      normal_op : block_test (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.test_case_sel, HMAC_in_initiator_struct.key_len);
+      default   : block_test (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.test_case_sel, HMAC_in_initiator_struct.key_len);
 
     endcase
   
@@ -635,93 +635,11 @@ task write_single_word(input [31 : 0]  address,
   end
   endtask
 
-  //---------------------
-  //Single block test 
-  //---------------------
-  task single_block_test (
-			input hmac_in_op_transactions op,
-			input bit [8:0] test_case_sel,
-			input bit key_len
-			);
-
-	reg [383 :0] key;
-  reg [1023:0] block;
-  reg [383 :0] expected;
   
-  int line_skip;
-  int cnt_tmp;
-  int fd_r;
-  
-  string line_read;
-  string tmp_str1;
-  string tmp_str2;
-  string file_name;
-
-   begin
-	//pass op and selection to monitor
-	transaction_flag_in_monitor_o = 1'b0;
-	op_o = op;
-	test_case_sel_o = test_case_sel;
-	key_len_o = key_len;
-
-	//$display(" **HMAC_in_driver_bfm** op value is: ", op);
-  //    	$display(" **HMAC_in_driver_bfm** test_case_sel value is: ", test_case_sel);
-  //    	$display(" **HMAC_in_driver_bfm** key_len value is: ", key_len);
-        
-  cnt_tmp = 0;
-  //file_name = "/home/kupadhyayula/caliptra/ws1/Caliptra/src/hmac/tb/hmac_vectors.txt";
-  file_name = "../../../../../tb/hmac_vectors_singleblk.txt";
-  line_skip = test_case_sel * 5 + 8;
-  fd_r = $fopen(file_name, "r");
-  if(!fd_r) $display("**HMAC_in_driver_bfm** Cannot open file %s", file_name);
-
-  while (cnt_tmp < line_skip) begin
-    cnt_tmp = cnt_tmp + 1;
-    $fgets(line_read, fd_r);
-  end
-  
-  //Get key, block and tag:
-  $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, key);
-  $fgets(line_read, fd_r);
-  $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, block);
-  $fgets(line_read, fd_r);
-  $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, expected);
-
-  $display("Single blk test:\nkey = %h\nblk=%h\ntag=%h", key, block, expected);
-
-	write_key(key);
-	write_block(block);
-	write_single_word(ADDR_CTRL, CTRL_INIT_VALUE);
-	@(posedge clk_i);
-	hsel_o = 0;
-	@(posedge clk_i);
-	//wait_ready(); --> this looks at hrdata which is part of out interface. Not sure how to bring that signal in here, so jut waiting for 100 clks for now (similar to AES)
-	
-  //---------wait for ready--------
-  //From addr status to ready, DUT takes 2500 ns. The read_single_word_driverbfm has built-in 1 clk wait every time it's called
-  //So, executing this loop for 130 clks to get a total of 130*10*2 = 2600ns (buffer of 100ns)
-	repeat(130) begin //TODO knupadhy: need to figure out how to poll for status in the in driver bfm (needs hrdata_i input which is connected to out agent not the in agent)
-	    @(posedge clk_i);
-	    read_single_word_driverbfm(ADDR_STATUS);
-  end
-	transaction_flag_in_monitor_o = 1'b1;
-	@(posedge clk_i);
-	transaction_flag_in_monitor_o = 1'b0;
-	@(posedge clk_i);
-	//-------------------------------
-
-	read_digest();
-	
-
-   end
-   endtask
-
-//--------------------------
-
 //---------------------
-//Multi block test 
+//Block test 
 //---------------------
-task multi_block_test (
+task block_test (
     input hmac_in_op_transactions op,
     input bit [8:0] test_case_sel,
     input bit key_len
@@ -740,8 +658,11 @@ string line_read;
 string tmp_str1;
 string tmp_str2;
 string file_name;
+int key_disp;
+longint msg_disp;
 
  begin
+ 
 //pass op and selection to monitor
 transaction_flag_in_monitor_o = 1'b0;
 op_o = op;
@@ -749,26 +670,19 @@ test_case_sel_o = test_case_sel;
 key_len_o = key_len;
       
 cnt_tmp = 0;
-file_name = "../../../../../tb/hmac_vectors_multiblk.txt";
-//line_skip = test_case_sel * 5 + 8;
+
+$system("python ../../../../../tb/test_gen.py");
+//file_name = "../../../../../tb/test_vector.txt";
+file_name = "test_vector.txt";
 fd_r = $fopen(file_name, "r");
 if(!fd_r) $display("**HMAC_in_driver_bfm** Cannot open file %s", file_name);
 
-//while (cnt_tmp < line_skip) begin
-//  cnt_tmp = cnt_tmp + 1;
-//  $fgets(line_read, fd_r);
-//end
-$fgets(line_read, fd_r);
-$sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, tmp);
-while (tmp_str1 != "COUNT" || tmp[0] != test_case_sel[0]) begin //Since there are only 2 multi blk test vectors for now
-  $fgets(line_read, fd_r);
-  $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, tmp);
-end
 
 //Get key, block and tag:
 $fgets(line_read, fd_r);
 $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, key);
 write_key(key);
+
 $fgets(line_read, fd_r);
 $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, block);
 write_block(block);
@@ -801,6 +715,7 @@ while (tmp_str1 == "BLOCK") begin
   $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, tmp);
 end
 expected = tmp;
+$fclose(fd_r);
 repeat(130) begin //TODO knupadhy: need to figure out how to poll for status in the in driver bfm (needs hrdata_i input which is connected to out agent not the in agent)
   @(posedge clk_i);
   read_single_word_driverbfm(ADDR_STATUS);

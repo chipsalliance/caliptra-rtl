@@ -9,7 +9,7 @@ uvmf:
       hdl_pkg_parameters: []
       hdl_typedefs:
       - name: hmac_in_op_transactions
-        type: enum bit[1:0] {reset_op = 2'b00, single_op = 2'b01, multi_op = 2'b10}
+        type: enum bit[1:0] {reset_op = 2'b00, normal_op = 2'b01}
       hvl_pkg_parameters: []
       hvl_typedefs: []
       parameters:
@@ -88,7 +88,7 @@ uvmf:
       transaction_constraints:
       - comment: ''
         name: hmac_valid_op_constraints
-        value: '{ op inside {single_op, multi_op};}'
+        value: '{ op inside {normal_op};}'
       transaction_vars:
       - comment: ''
         iscompare: 'True'

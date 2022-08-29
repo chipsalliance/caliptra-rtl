@@ -33,7 +33,7 @@ class HMAC_in_transaction #(
   rand bit [8:0] test_case_sel ;
 
   //Constraints for the transaction variables:
-  constraint hmac_valid_op_constraints { op inside {single_op, multi_op};}
+  constraint hmac_valid_op_constraints { op inside {normal_op};}
   constraint hmac_valid_testcasesel_constraints { 
     test_case_sel >= 0;
     test_case_sel <= 6;
@@ -192,8 +192,7 @@ class HMAC_in_transaction #(
       transaction_view_h = $begin_transaction(transaction_viewing_stream_h,"HMAC_in_transaction",start_time);
     end
     case(op)
-      single_op: $add_color(transaction_view_h,"green");
-      multi_op : $add_color(transaction_view_h,"yellow");
+      normal_op: $add_color(transaction_view_h,"green");
       reset_op : $add_color(transaction_view_h,"orange");
     endcase
     super.add_to_wave(transaction_view_h);
