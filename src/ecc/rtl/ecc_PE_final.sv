@@ -8,7 +8,7 @@
 // Author: Mojtaba Bisheh-Niasar
 //======================================================================
 
-module PE_final #(
+module ecc_PE_final #(
     parameter RADIX = 32
 )
 (
@@ -32,7 +32,7 @@ module PE_final #(
 
 
     //----------------------------------------------------------------
-    // PE
+    // ecc_PE
     //----------------------------------------------------------------
     logic  [2*RADIX-1 : 0]    mult0_out;
     logic  [2*RADIX-1 : 0]    mult1_out;
@@ -44,7 +44,7 @@ module PE_final #(
     logic  [RADIX-1 : 0]      res_LSW;
     logic  [RADIX   : 0]      res_MSW;
 
-    mult_dsp #(
+    ecc_mult_dsp #(
         .RADIX(RADIX)
     ) MULT1 (
         .A(a_in),
@@ -52,7 +52,7 @@ module PE_final #(
         .P(mult0_out)
     );
 
-    mult_dsp #(
+    ecc_mult_dsp #(
         .RADIX(RADIX)
     ) MULT2 (
         .A(p_in),

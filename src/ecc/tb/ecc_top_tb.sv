@@ -8,48 +8,49 @@
 // Author: Mojtaba Bisheh-Niasar
 //======================================================================
 
-module ecc_arith_unit_tb #(
+module ecc_top_tb #(
     parameter   TEST_VECTOR_NUM = 15
 )
 ();
 
-  //----------------------------------------------------------------
-  // Internal constant and parameter definitions.
-  //----------------------------------------------------------------
-  parameter [383 : 0] E_a_MONT = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffcfffffffbffffffff00000002fffffffdffffffff;
-  parameter [383 : 0] ONE_p_MONT = 384'h100000000ffffffffffffffff0000000100000000;
-  parameter [383 : 0] G_X_MONT = 384'h299e1513812ff723614ede2b6454868459a30eff879c3afc541b4d6e6e1e26a4ee117bfa3dd07565fc8607664d3aadc2;
-  parameter [383 : 0] G_Y_MONT = 384'h5a15c5e9dd8002263969a840c6c3521968f4ffd98bade7562e83b050cd385481a72d556e23043dad1f8af93c2b78abc2;
-  parameter [383 : 0] G_Z_MONT = 384'h100000000ffffffffffffffff0000000100000000;
-  //parameter [383 : 0] R2_MONT  = 384'h10000000200000000fffffffe000000000000000200000000fffffffe000000010000000000000000;
+  localparam BASE_ADDR        = 32'h00000000;
 
-  // q
-  parameter [383 : 0] group_order = 384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973; 
-  parameter [383 : 0] R2_q_MONT  = 384'h3fb05b7a28266895d40d49174aab1cc5bf030606de609f43be80721782118942bfd3ccc974971bd0d8d34124f50ddb2d;
-  parameter [383 : 0] ONE_q_MONT = 384'h389cb27e0bc8d220a7e5f24db74f58851313e695333ad68d00000000;
+  localparam ADDR_NAME0       = BASE_ADDR + 32'h00000000;
+  localparam ADDR_NAME1       = BASE_ADDR + 32'h00000004;
+  localparam ADDR_VERSION0    = BASE_ADDR + 32'h00000008;
+  localparam ADDR_VERSION1    = BASE_ADDR + 32'h0000000C;
 
+  localparam ADDR_CTRL        = BASE_ADDR + 32'h00000010;
+  localparam KEYGEN           = 2'b01;
+  localparam SIGN             = 2'b10;
+  localparam VERIFY           = 2'b11;
 
-  parameter [383 : 0] UOP_OPR_CONST_ZERO        = 8'd00;
-  parameter [383 : 0] UOP_OPR_CONST_ONE         = 8'd01;
-  parameter [383 : 0] UOP_OPR_CONST_E_a         = 8'd02;
-  parameter [383 : 0] UOP_OPR_CONST_ONE_MONT    = 8'd03;
+  localparam ADDR_STATUS      = BASE_ADDR + 32'h00000018;
+  localparam STATUS_READY_BIT = 0;
+  localparam STATUS_VALID_BIT = 1;
 
-  parameter [383 : 0] UOP_OPR_CONST_GX_MONT     = 8'd05;
-  parameter [383 : 0] UOP_OPR_CONST_GY_MONT     = 8'd06;
-  parameter [383 : 0] UOP_OPR_CONST_GZ_MONT     = 8'd07;
-  
-  parameter [383 : 0] UOP_OPR_Qx_AFFN           = 8'd16;
-  parameter [383 : 0] UOP_OPR_Qy_AFFN           = 8'd17;
+  localparam ADDR_VERIFY      = BASE_ADDR + 32'h00000020;
 
-  parameter [383 : 0] UOP_OPR_SIGN_R            = 8'd18;
-  parameter [383 : 0] UOP_OPR_SIGN_S            = 8'd19;
+  localparam ADDR_SEED0       = BASE_ADDR + 32'h00000080;
+  localparam ADDR_SEED11      = BASE_ADDR + 32'h000000A8;
 
-  parameter [383 : 0] UOP_OPR_PRIVKEY           = 8'd20;
-  parameter [383 : 0] UOP_OPR_HASH_MSG          = 8'd21;
-  parameter [383 : 0] UOP_OPR_SCALAR_G          = 8'd22;
+  localparam ADDR_MSG0        = BASE_ADDR + 32'h00000100;
+  localparam ADDR_MSG11       = BASE_ADDR + 32'h00000128;
 
-  parameter [383 : 0] UOP_OPR_CONST_ONE_q_MONT  = 8'd28;  // Mont_mult(1, R2) % q
-  parameter [383 : 0] UOP_OPR_CONST_q_R2        = 8'd29;
+  localparam ADDR_PRIVKEY0    = BASE_ADDR + 32'h00000180;
+  localparam ADDR_PRIVKEY11   = BASE_ADDR + 32'h000001A8;
+
+  localparam ADDR_PUBKEYX0    = BASE_ADDR + 32'h00000200;
+  localparam ADDR_PUBKEYX11   = BASE_ADDR + 32'h00000228;
+
+  localparam ADDR_PUBKEYY0    = BASE_ADDR + 32'h00000280;
+  localparam ADDR_PUBKEYY11   = BASE_ADDR + 32'h000002A8;
+
+  localparam ADDR_SIGNR0      = BASE_ADDR + 32'h00000300;
+  localparam ADDR_SIGNR11     = BASE_ADDR + 32'h00000328;
+
+  localparam ADDR_SIGNS0      = BASE_ADDR + 32'h00000380;
+  localparam ADDR_SIGNS11     = BASE_ADDR + 32'h000003A8;
 
   parameter           R_WIDTH                   = 384;
   typedef bit         [R_WIDTH-1:0]             r_t;
@@ -93,58 +94,72 @@ module ecc_arith_unit_tb #(
   localparam KEYGEN_CMD     = 3'b001;
   localparam SIGN_CMD       = 3'b010;
   localparam VERIFY_CMD     = 3'b100;
+
+  parameter AHB_HTRANS_IDLE     = 0;
+  parameter AHB_HTRANS_BUSY     = 1;
+  parameter AHB_HTRANS_NONSEQ   = 2;
+  parameter AHB_HTRANS_SEQ      = 3;
+
+  parameter AHB_ADDR_WIDTH       = 32;
+  parameter AHB_DATA_WIDTH       = 32;
+
   //----------------------------------------------------------------
   // Register and Wire declarations.
   //----------------------------------------------------------------
-  reg [63 : 0]  cycle_ctr;
-  reg [63 : 0]  error_ctr;
-  reg [63 : 0]  tc_ctr;
+  reg [31 : 0]  cycle_ctr;
+  reg [31 : 0]  error_ctr;
+  reg [31 : 0]  tc_ctr;
 
-  reg            clk_tb;
-  reg            reset_n_tb;
+  reg           clk_tb;
+  reg           reset_n_tb;
 
-  logic [2 : 0]         ecc_cmd_i_tb;
-  logic [7 : 0]         addr_i_tb;
-  logic                 wr_input_sel_i_tb;
-  logic [1 : 0]         wr_op_sel_i_tb;
-  logic [3 : 0]         wr_word_sel_i_tb;
-  logic                 wr_en_i_tb;
-  logic                 rd_reg_i_tb;
-  logic [1 : 0]         rd_op_sel_i_tb;
-  logic [3 : 0]         rd_word_sel_i_tb;
-  logic [31: 0]         data_i_tb;
-  logic [31: 0]         data_o_tb;
-  logic                 busy_o_tb;
+  reg [AHB_ADDR_WIDTH-1:0]  haddr_i_tb;
+  reg [AHB_DATA_WIDTH-1:0]  hwdata_i_tb;
+  reg           hsel_i_tb;
+  reg           hwrite_i_tb; 
+  reg           hmastlock_i_tb;
+  reg           hready_i_tb;
+  reg [1:0]     htrans_i_tb;
+  reg [3:0]     hprot_i_tb;
+  reg [2:0]     hburst_i_tb;
+  reg [2:0]     hsize_i_tb;
 
-  logic [383 : 0]       read_data;
-  reg   [384 : 0]       d_fixed_MSB;
+  wire          hresp_o_tb;
+  wire          hreadyout_o_tb;
+  wire [AHB_DATA_WIDTH-1:0] hrdata_o_tb;
+
+  reg [31 : 0]  read_data;
+  reg [383: 0]  reg_read_data;
 
   int                   test_vector_cnt;
 
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
-  ecc_arith_unit #(
-        .REG_SIZE(REG_SIZE),
-        .ADD_NUM_ADDS(ADD_NUM_ADDS),
-        .ADD_BASE_SZ(ADD_BASE_SZ)
-        )
-        dut (
-        .clk(clk_tb),
-        .reset_n(reset_n_tb),
-        .ecc_cmd_i(ecc_cmd_i_tb),
-        .addr_i(addr_i_tb),
-        .wr_input_sel_i(wr_input_sel_i_tb),
-        .wr_op_sel_i(wr_op_sel_i_tb),
-        .wr_word_sel_i(wr_word_sel_i_tb),
-        .wr_en_i(wr_en_i_tb),
-        .rd_reg_i(rd_reg_i_tb),
-        .rd_op_sel_i(rd_op_sel_i_tb),
-        .rd_word_sel_i(rd_word_sel_i_tb),
-        .data_i(data_i_tb),
-        .data_o(data_o_tb),
-        .busy_o(busy_o_tb)
-        );
+  ecc_top #(
+             .AHB_DATA_WIDTH(32),
+             .AHB_ADDR_WIDTH(32),
+             .BYPASS_HSEL(0)
+            )
+            dut (
+             .clk(clk_tb),
+             .reset_n(reset_n_tb),
+
+             .haddr_i(haddr_i_tb),
+             .hwdata_i(hwdata_i_tb),
+             .hsel_i(hsel_i_tb),
+             .hwrite_i(hwrite_i_tb),
+             .hmastlock_i(hmastlock_i_tb),
+             .hready_i(hready_i_tb),
+             .htrans_i(htrans_i_tb),
+             .hprot_i(hprot_i_tb),
+             .hburst_i(hburst_i_tb),
+             .hsize_i(hsize_i_tb),
+
+             .hresp_o(hresp_o_tb),
+             .hreadyout_o(hreadyout_o_tb),
+             .hrdata_o(hrdata_o_tb)
+            );
 
 
   //----------------------------------------------------------------
@@ -184,6 +199,8 @@ module ecc_arith_unit_tb #(
 
       #(2 * CLK_PERIOD);
       reset_n_tb = 1;
+
+      #(2 * CLK_PERIOD);
       $display("");
     end
   endtask // reset_dut
@@ -220,101 +237,49 @@ module ecc_arith_unit_tb #(
   //----------------------------------------------------------------
   task init_sim;
     begin
-      cycle_ctr     = 0;
-      error_ctr     = 0;
-      tc_ctr        = 0;
+      cycle_ctr = 32'h00000000;
+      error_ctr = 32'h00000000;
+      tc_ctr    = 32'h00000000;
 
-      clk_tb        = 1;
+      clk_tb        = 0;
       reset_n_tb    = 0;
 
-      ecc_cmd_i_tb      = NOP_CMD;
-      addr_i_tb         = 0;
-      wr_input_sel_i_tb = 0;
-      wr_op_sel_i_tb    = 0;
-      wr_word_sel_i_tb  = 0;
-      wr_en_i_tb        = 0;
-      rd_reg_i_tb       = 0;
-      rd_op_sel_i_tb    = 0;
-      rd_word_sel_i_tb  = 0;
-      data_i_tb         = 0;
+      haddr_i_tb      = 0;
+      hwdata_i_tb     = 0;
+      hsel_i_tb       = 0;
+      hwrite_i_tb     = 0;
+      hmastlock_i_tb  = 0;
+      hready_i_tb     = 0;
+      htrans_i_tb     = AHB_HTRANS_IDLE;
+      hprot_i_tb      = 0;
+      hburst_i_tb     = 0;
+      hsize_i_tb      = 3'b011;
     end
-  endtask // init_sim
+  endtask // init_dut
 
 
   //----------------------------------------------------------------
   // wait_ready()
   //
-  // Initialize all counters and testbed functionality as well
-  // as setting the DUT inputs to defined values.
+  // Wait for the ready flag in the dut to be set.
+  // (Actually we wait for either ready or valid to be set.)
+  //
+  // Note: It is the callers responsibility to call the function
+  // when the dut is actively processing and will in fact at some
+  // point set the flag.
   //----------------------------------------------------------------
-  task wait_ready();
+  task wait_ready;
     begin
-      while (busy_o_tb == 1)
+      read_data = 0;
+      #(CLK_PERIOD);
+
+      while (read_data == 0)
         begin
-            #CLK_PERIOD;
+          read_single_word(ADDR_STATUS);
         end
     end
-  endtask // init_sim
+  endtask // wait_ready
 
-
-  //----------------------------------------------------------------
-  // read_word()
-  //
-  // Read a data word from the given address in the DUT.
-  // the word read will be available in the global variable
-  // read_data.
-  //----------------------------------------------------------------
-  task read_single_word(input [1 : 0] reg_type, input [7 : 0]  address, input [7 : 0]  word_sel);
-    begin
-      ecc_cmd_i_tb      = NOP_CMD;
-      addr_i_tb         = address;
-      wr_input_sel_i_tb = 0;
-      wr_op_sel_i_tb    = 0;
-      wr_word_sel_i_tb  = 0;
-      wr_en_i_tb        = 0;
-      rd_reg_i_tb       = 1;
-      rd_op_sel_i_tb    = reg_type;
-      rd_word_sel_i_tb  = word_sel;
-      data_i_tb         = 0;
-      #(CLK_PERIOD);
-    end
-  endtask // read_word
-
-
-  //----------------------------------------------------------------
-  // read_reg()
-  //
-  // Read a reg from the given address in the DUT.
-  // the reg will be available in the global variable
-  // read_data.
-  //----------------------------------------------------------------
-  task read_reg(input [7 : 0]  address);
-    begin
-      read_single_word(2'b00, address, 0);
-      #(2*CLK_PERIOD);
-      for (int i = 0; i < 12; i++) begin
-        read_single_word(2'b00, address, i);
-        read_data = {data_o_tb, read_data[383 : 32]};
-      end
-    end
-  endtask // read_reg
-
-
-  //----------------------------------------------------------------
-  // read_scalar()
-  //
-  // Read a reg from the given address in the DUT.
-  // the reg will be available in the global variable
-  // read_data.
-  //----------------------------------------------------------------
-  task read_scalar();
-    begin
-      for (int i = 0; i < 12; i++) begin
-        read_single_word(2'b01, 8'h00, i);
-        read_data = {data_o_tb, read_data[383 : 32]};
-      end
-    end
-  endtask // read_scalar
 
 
   //----------------------------------------------------------------
@@ -322,113 +287,163 @@ module ecc_arith_unit_tb #(
   //
   // Write the given word to the DUT using the DUT interface.
   //----------------------------------------------------------------
-  task write_single_word(input [1 : 0] reg_type, input [7 : 0]  address, input [7 : 0]  word_sel, input [31 : 0] word);
+  task write_single_word(input [31 : 0]  address,
+                  input [31 : 0] word);
     begin
-      ecc_cmd_i_tb      = NOP_CMD;
-      addr_i_tb         = address;
-      wr_input_sel_i_tb = 0;
-      wr_op_sel_i_tb    = reg_type;
-      wr_word_sel_i_tb  = word_sel;
-      wr_en_i_tb        = 1;
-      rd_reg_i_tb       = 0;
-      rd_op_sel_i_tb    = 0;
-      rd_word_sel_i_tb  = 0;
-      data_i_tb         = word;
+      hsel_i_tb       = 1;
+      haddr_i_tb      = address;
+      hwrite_i_tb     = 1;
+      hmastlock_i_tb  = 0;
+      hready_i_tb     = 1;
+      htrans_i_tb     = AHB_HTRANS_NONSEQ;
+      hprot_i_tb      = 0;
+      hburst_i_tb     = 0;
+      hsize_i_tb      = 3'b010;
       #(CLK_PERIOD);
+
+      haddr_i_tb      = 'Z;
+      hwdata_i_tb     = word;
+      hwrite_i_tb     = 0;
+      htrans_i_tb     = AHB_HTRANS_IDLE;
     end
   endtask // write_single_word
 
+  
+  //----------------------------------------------------------------
+  // write_block()
+  //
+  // Write the given block to the dut.
+  //----------------------------------------------------------------
+  task write_block(input [31 : 0] addr, input [383 : 0] block);
+    begin
+      write_single_word(addr+4*11, block[383  : 352]);
+      write_single_word(addr+4*10, block[351  : 320]);
+      write_single_word(addr+4*9,  block[319  : 288]);
+      write_single_word(addr+4*8,  block[287  : 256]);
+      write_single_word(addr+4*7,  block[255  : 224]);
+      write_single_word(addr+4*6,  block[223  : 192]);
+      write_single_word(addr+4*5,  block[191  : 160]);
+      write_single_word(addr+4*4,  block[159  : 128]);
+      write_single_word(addr+4*3,  block[127  :  96]);
+      write_single_word(addr+4*2,  block[95   :  64]);
+      write_single_word(addr+4*1,  block[63   :  32]);
+      write_single_word(addr  ,    block[31   :   0]);
+    end
+  endtask // write_block
+
+
+    //----------------------------------------------------------------
+  // read_word()
+  //
+  // Read a data word from the given address in the DUT.
+  // the word read will be available in the global variable
+  // read_data.
+  //----------------------------------------------------------------
+  task read_single_word(input [31 : 0]  address);
+    begin
+      hsel_i_tb       = 1;
+      haddr_i_tb      = address;
+      hwrite_i_tb     = 0;
+      hmastlock_i_tb  = 0;
+      hready_i_tb     = 1;
+      htrans_i_tb     = AHB_HTRANS_NONSEQ;
+      hprot_i_tb      = 0;
+      hburst_i_tb     = 0;
+      hsize_i_tb      = 3'b010;
+      #(CLK_PERIOD);
+      
+      hwdata_i_tb     = 0;
+      haddr_i_tb     = 'Z;
+      htrans_i_tb     = AHB_HTRANS_IDLE;
+
+      read_data = hrdata_o_tb;
+
+    end
+  endtask // read_word
+
 
   //----------------------------------------------------------------
-  // write_reg()
+  // read_block()
+  //
+  // Read the digest in the dut. The resulting digest will be
+  // available in the global variable digest_data.
+  //----------------------------------------------------------------
+  task read_block(input [31 : 0] addr);
+    begin
+      read_single_word(addr + 4*11);
+      reg_read_data[383 : 352] = read_data;
+      read_single_word(addr + 4*10);
+      reg_read_data[351 : 320] = read_data;
+      read_single_word(addr +  4*9);
+      reg_read_data[319 : 288] = read_data;
+      read_single_word(addr +  4*8);
+      reg_read_data[287 : 256] = read_data;
+      read_single_word(addr +  4*7);
+      reg_read_data[255 : 224] = read_data;
+      read_single_word(addr +  4*6);
+      reg_read_data[223 : 192] = read_data;
+      read_single_word(addr +  4*5);
+      reg_read_data[191 : 160] = read_data;
+      read_single_word(addr +  4*4);
+      reg_read_data[159 : 128] = read_data;
+      read_single_word(addr +  4*3);
+      reg_read_data[127 :  96] = read_data;
+      read_single_word(addr +  4*2);
+      reg_read_data[95  :  64] = read_data;
+      read_single_word(addr +  4*1);
+      reg_read_data[63  :  32] = read_data;
+      read_single_word(addr);
+      reg_read_data[31  :   0] = read_data;
+    end
+  endtask // read_digest
+
+  //----------------------------------------------------------------
+  // check_name_version()
+  //
+  // Read the name and version from the DUT.
+  //----------------------------------------------------------------
+  task check_name_version;
+    reg [31 : 0] name0;
+    reg [31 : 0] name1;
+    reg [31 : 0] version0;
+    reg [31 : 0] version1;
+    begin
+
+      read_single_word(ADDR_NAME0);
+      name0 = read_data;
+      read_single_word(ADDR_NAME1);
+      name1 = read_data;
+      read_single_word(ADDR_VERSION0);
+      version0 = read_data;
+      read_single_word(ADDR_VERSION1);
+      version1 = read_data;
+
+      $display("DUT name: %c%c%c%c%c%c%c%c",
+               name0[15 :  8], name0[7  :  0],
+               name0[31 : 24], name0[23 : 16], 
+               name1[15 :  8], name1[7  :  0],
+               name1[31 : 24], name1[23 : 16]);
+      $display("DUT version: %c%c%c%c%c%c%c%c",
+               version0[15 :  8], version0[7  :  0],
+               version0[31 : 24], version0[23 : 16],
+               version1[15 :  8], version1[7  :  0],
+               version1[31 : 24], version1[23 : 16]);
+    end
+  endtask // check_name_version
+
+
+  //----------------------------------------------------------------
+  // trig_ECC()
   //
   // Write the given word to the DUT using the DUT interface.
   //----------------------------------------------------------------
-  task write_reg(input [7 : 0]  address, input [383 : 0] word);
+  task trig_ECC(input [2 : 0] cmd);
     begin
-      for (int i = 0; i < 12; i++) begin
-        write_single_word(2'b00, address, i, word[32*i +: 32]);
-      end
-      #(CLK_PERIOD);
-      ecc_cmd_i_tb      = NOP_CMD;
-      addr_i_tb         = 0;
-      wr_input_sel_i_tb = 0;
-      wr_op_sel_i_tb    = 0;
-      wr_word_sel_i_tb  = 0;
-      wr_en_i_tb        = 0;
-      rd_reg_i_tb       = 0;
-      rd_op_sel_i_tb    = 0;
-      rd_word_sel_i_tb  = 0;
-      data_i_tb         = 0;
-      #(CLK_PERIOD);
+      write_single_word(ADDR_CTRL  , cmd);
+      #(10*CLK_PERIOD);
+      write_single_word(ADDR_CTRL  , 0);
     end
-  endtask // write_reg
-
-
-  //----------------------------------------------------------------
-  // write_scalar()
-  //
-  // Write the given word to the DUT using the DUT interface.
-  //----------------------------------------------------------------
-  task write_scalar(input [384 : 0] word);
-    begin
-      for (int i = 0; i < 13; i++) begin
-        write_single_word(2'b01, 8'h00 , i, word[32*i +: 32]);
-      end
-      #(CLK_PERIOD);
-      ecc_cmd_i_tb      = NOP_CMD;
-      addr_i_tb         = 0;
-      wr_input_sel_i_tb = 0;
-      wr_op_sel_i_tb    = 0;
-      wr_word_sel_i_tb  = 0;
-      wr_en_i_tb        = 0;
-      rd_reg_i_tb       = 0;
-      rd_op_sel_i_tb    = 0;
-      rd_word_sel_i_tb  = 0;
-      data_i_tb         = 0;
-      #(CLK_PERIOD);
-    end
-  endtask // write_scalar
-
-
-  //----------------------------------------------------------------
-  // fix_MSB()
-  //
-  // Set MSB of scalar to 1.
-  //----------------------------------------------------------------
-  task fix_MSB(input [383 : 0] d);
-    reg [385 : 0] d_q;
-    reg [385 : 0] d_2q;
-    begin
-      d_q = d + group_order;
-      d_2q = d_q + group_order;
-      if ((d_q >> 384) == 1)
-        d_fixed_MSB = d_q[384 : 0];
-      else
-        d_fixed_MSB = d_2q[384 : 0];
-    end
-  endtask // fix_MSB
-
-  //----------------------------------------------------------------
-  // trig_ECPM()
-  //
-  // Write the given word to the DUT using the DUT interface.
-  //----------------------------------------------------------------
-  task trig_ECPM(input [2 : 0] cmd);
-    begin
-      ecc_cmd_i_tb      = cmd;
-      addr_i_tb         = 0;
-      wr_input_sel_i_tb = 0;
-      wr_op_sel_i_tb    = 0;
-      wr_word_sel_i_tb  = 0;
-      wr_en_i_tb        = 0;
-      rd_reg_i_tb       = 0;
-      rd_op_sel_i_tb    = 0;
-      rd_word_sel_i_tb  = 0;
-      data_i_tb         = 0;
-      #(CLK_PERIOD);
-    end
-  endtask // trig_ECPM
+  endtask // trig_ECC
 
 
   //----------------------------------------------------------------
@@ -440,33 +455,30 @@ module ecc_arith_unit_tb #(
                        input test_vector_t test_vector);
     reg [31  : 0]   start_time;
     reg [31  : 0]   end_time;
-    affn_point_t   pubkey;
+    reg [383 : 0]   privkey;
+    affn_point_t    pubkey;
     begin
+      wait_ready();
+
       $display("*** TC %0d keygen test started.", tc_number);
       tc_ctr = tc_ctr + 1;
     
       start_time = cycle_ctr;
-      // writing constant values
-      write_reg(UOP_OPR_CONST_ZERO, 384'h0);
-      write_reg(UOP_OPR_CONST_ONE, 384'h1);
-      write_reg(UOP_OPR_CONST_E_a, E_a_MONT);
-      write_reg(UOP_OPR_CONST_ONE_MONT, ONE_p_MONT);
-      write_reg(UOP_OPR_CONST_GX_MONT, G_X_MONT);
-      write_reg(UOP_OPR_CONST_GY_MONT, G_Y_MONT);
-      write_reg(UOP_OPR_CONST_GZ_MONT, G_Z_MONT);
 
-      fix_MSB(test_vector.privkey);
-      write_scalar(d_fixed_MSB);
+      write_block(ADDR_SEED0, test_vector.privkey);
 
-      trig_ECPM(KEYGEN_CMD);
+      trig_ECC(KEYGEN);
 
       wait_ready();
 
-      read_reg(UOP_OPR_Qx_AFFN);
-      pubkey.x = read_data;
+      //read_block(ADDR_PRIVKEY0);
+      //privkey = reg_read_data;
 
-      read_reg(UOP_OPR_Qy_AFFN);
-      pubkey.y = read_data;
+      read_block(ADDR_PUBKEYX0);
+      pubkey.x = reg_read_data;
+
+      read_block(ADDR_PUBKEYY0);
+      pubkey.y = reg_read_data;
       
       end_time = cycle_ctr - start_time;
       $display("*** keygen test processing time = %01d cycles.", end_time);
@@ -505,37 +517,26 @@ module ecc_arith_unit_tb #(
     reg [383 : 0]   S;
     
     begin
+      wait_ready();
+
       $display("*** TC %0d signing test started.", tc_number);
       tc_ctr = tc_ctr + 1;
 
       start_time = cycle_ctr;
-      write_reg(UOP_OPR_CONST_ZERO, 384'h0);
-      write_reg(UOP_OPR_CONST_ONE, 384'h1);
-      write_reg(UOP_OPR_CONST_E_a, E_a_MONT);
-      write_reg(UOP_OPR_CONST_ONE_MONT, ONE_p_MONT);
-      write_reg(UOP_OPR_CONST_ONE_q_MONT, ONE_q_MONT);
-      write_reg(UOP_OPR_CONST_q_R2, R2_q_MONT);
 
-      write_reg(UOP_OPR_CONST_GX_MONT, G_X_MONT);
-      write_reg(UOP_OPR_CONST_GY_MONT, G_Y_MONT);
-      write_reg(UOP_OPR_CONST_GZ_MONT, G_Z_MONT);
+      write_block(ADDR_MSG0, test_vector.hashed_msg);
+      write_block(ADDR_PRIVKEY0, test_vector.privkey);
+      write_block(ADDR_SEED0, test_vector.k);
 
-      write_reg(UOP_OPR_HASH_MSG, test_vector.hashed_msg);
-      write_reg(UOP_OPR_PRIVKEY, test_vector.privkey);
-      write_reg(UOP_OPR_SCALAR_G, test_vector.k);
-
-      fix_MSB(test_vector.k);
-      write_scalar(d_fixed_MSB);
-
-      trig_ECPM(SIGN_CMD);
+      trig_ECC(SIGN);
 
       wait_ready();
 
-      read_reg(UOP_OPR_SIGN_R);
-      R = read_data;
+      read_block(ADDR_SIGNR0);
+      R = reg_read_data;
 
-      read_reg(UOP_OPR_SIGN_S);
-      S = read_data;
+      read_block(ADDR_SIGNS0);
+      S = reg_read_data;
       
       end_time = cycle_ctr - start_time;
       $display("*** signing test processing time = %01d cycles.", end_time);
@@ -570,7 +571,7 @@ module ecc_arith_unit_tb #(
     begin   
       $display("ECC KEYGEN TEST");
       $display("---------------------");
-
+      
       for (int i = 0; i < test_vector_cnt; i++) begin: test_vector_loop
           ecc_keygen_test(i, test_vectors[i]);
           ecc_signing_test(i, test_vectors[i]);
@@ -648,6 +649,7 @@ module ecc_arith_unit_tb #(
 
       init_sim();
       reset_dut();
+      check_name_version();
 
       ecc_test();
 
@@ -658,4 +660,4 @@ module ecc_arith_unit_tb #(
       $finish;
     end // main
 
-endmodule // ecc_arith_unit_tb
+endmodule // ecc_top_tb

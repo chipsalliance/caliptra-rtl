@@ -8,7 +8,7 @@
 // Author: Mojtaba Bisheh-Niasar
 //======================================================================
 
-module PE_first #(
+module ecc_PE_first #(
     parameter RADIX = 32
 )
 (
@@ -32,16 +32,16 @@ module PE_first #(
 
 
     //----------------------------------------------------------------
-    // PE_first
+    // ecc_PE_first
     //----------------------------------------------------------------
     logic  [RADIX-1:0]        s_reg;
     logic  [RADIX-1:0]        s;
     logic  [RADIX-1:0]        a_reg;
     logic  [RADIX-1:0]        a;
 
-    logic  [2*RADIX-1 : 0]    mult_out;
-    logic  [RADIX-1 : 0]      mult_out_MSW;
-    logic  [RADIX-1 : 0]      mult_out_LSW;
+    logic  [2*RADIX-1 : 0]    mult_out_0;
+    logic  [RADIX-1 : 0]      mult_out_0_MSW;
+    logic  [RADIX-1 : 0]      mult_out_0_LSW;
 
     logic  [RADIX   : 0]      res_0;
     logic  [RADIX-1 : 0]      sum_0;
@@ -69,15 +69,15 @@ module PE_first #(
     logic [RADIX-1:0] m_out_reg;
     logic [RADIX  :0] c_out_reg;
 
-    mult_dsp #(
+    ecc_mult_dsp #(
         .RADIX(RADIX)
     ) MULT0 (
         .A(a),
         .B(b_in),
-        .P(mult_out)
+        .P(mult_out_0)
     );
 
-    mult_dsp #(
+    ecc_mult_dsp #(
         .RADIX(RADIX)
     ) MULT1 (
         .A(n_prime_in),
@@ -85,7 +85,7 @@ module PE_first #(
         .P(mult_out_1)
     );
 
-    mult_dsp #(
+    ecc_mult_dsp #(
         .RADIX(RADIX)
     ) MULT2 (
         .A(m_temp_reg),
@@ -95,8 +95,8 @@ module PE_first #(
 
     assign m_temp = mult_out_1[RADIX-1:0];
 
-    assign mult_out_MSW = mult_out[2*RADIX-1 : RADIX];
-    assign mult_out_LSW = mult_out[RADIX-1 : 0];
+    assign mult_out_0_MSW = mult_out_0[2*RADIX-1 : RADIX];
+    assign mult_out_0_LSW = mult_out_0[RADIX-1 : 0];
     assign mult_out_2_MSW = mult_out_2[2*RADIX-1 : RADIX];
     assign mult_out_2_LSW = mult_out_2[RADIX-1 : 0];
 
@@ -104,7 +104,7 @@ module PE_first #(
     assign a = odd ? a_in : a_reg;
 
     always_comb begin
-        res_0 = {1'b0, s} + {1'b0, mult_out_LSW};
+        res_0 = {1'b0, s} + {1'b0, mult_out_0_LSW};
         sum_0 = res_0[RADIX-1 : 0];
         carry_0 = res_0[RADIX];
     end
@@ -115,7 +115,7 @@ module PE_first #(
     end
 
     always_comb begin
-        c_0 = {1'b0, mult_out_MSW} + carry_0;
+        c_0 = {1'b0, mult_out_0_MSW} + carry_0;
     end
 
     always_comb begin

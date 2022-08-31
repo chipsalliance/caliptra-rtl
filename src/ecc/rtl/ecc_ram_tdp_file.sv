@@ -1,6 +1,6 @@
 //======================================================================
 //
-// ram_tdp_file.sv
+// ecc_ram_tdp_file.sv
 // --------
 // 
 //
@@ -8,7 +8,7 @@
 // Author: Mojtaba Bisheh-Niasar
 //======================================================================
 
-module ram_tdp_file #(
+module ecc_ram_tdp_file #(
     parameter ADDR_WIDTH = 10,
     parameter DATA_WIDTH = 32
     )

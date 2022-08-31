@@ -1,6 +1,6 @@
 //======================================================================
 //
-// PE.sv
+// ecc_PE.sv
 // --------
 // 
 //
@@ -8,7 +8,7 @@
 // Author: Mojtaba Bisheh-Niasar
 //======================================================================
 
-module PE #(
+module ecc_PE #(
     parameter RADIX = 32
 )
 (
@@ -34,7 +34,7 @@ module PE #(
 
 
     //----------------------------------------------------------------
-    // PE
+    // ecc_PE
     //----------------------------------------------------------------
     logic  [2*RADIX-1 : 0]    mult0_out;
     logic  [2*RADIX-1 : 0]    mult1_out;
@@ -46,7 +46,7 @@ module PE #(
     logic  [RADIX-1 : 0]      res_LSW;
     logic  [RADIX   : 0]      res_MSW;
 
-    mult_dsp #(
+    ecc_mult_dsp #(
         .RADIX(RADIX)
     ) MULT1 (
         .A(a_in),
@@ -54,7 +54,7 @@ module PE #(
         .P(mult0_out)
     );
 
-    mult_dsp #(
+    ecc_mult_dsp #(
         .RADIX(RADIX)
     ) MULT2 (
         .A(p_in),

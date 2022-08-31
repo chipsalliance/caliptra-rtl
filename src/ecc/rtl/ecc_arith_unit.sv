@@ -10,6 +10,11 @@
 
 module ecc_arith_unit #(
     parameter REG_SIZE      = 384,
+    parameter RADIX         = 32,
+    parameter p_prime       = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff,
+    parameter p_mu          = 32'h00000001,
+    parameter q_grouporder  = 384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973,
+    parameter q_mu          = 32'he88fdc45,
     parameter ADD_NUM_ADDS  = 1,
     parameter ADD_BASE_SZ   = 384
     )
@@ -21,25 +26,18 @@ module ecc_arith_unit #(
     // DATA PORT
     input  wire [2 : 0]         ecc_cmd_i,
     input  wire [7 : 0]         addr_i,
-    input  wire                 wr_input_sel_i,
-    input  wire [1 : 0]         wr_op_sel_i,
-    input  wire [3 : 0]         wr_word_sel_i,
+    //input  wire                 wr_input_sel_i,
+    input  wire                 wr_op_sel_i,
+    //input  wire [3 : 0]         wr_word_sel_i,
     input  wire                 wr_en_i,
     input  wire                 rd_reg_i,
-    input  wire [1 : 0]         rd_op_sel_i,
-    input  wire [3 : 0]         rd_word_sel_i,
-    input  wire [31: 0]         data_i,
-    output wire [31: 0]         data_o,
+    //input  wire [1 : 0]         rd_op_sel_i,
+    //input  wire [3 : 0]         rd_word_sel_i,
+    input  wire [REG_SIZE: 0]   data_i,
+    output wire [REG_SIZE: 0]   data_o,
     output wire                 busy_o
     );
 
-
-    localparam              RADIX           = 32;
-    localparam              p_prime         = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff;
-    localparam              p_mu            = 32'h00000001;
-    localparam              q_grouporder    = 384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973;
-    localparam              q_mu            = 32'he88fdc45;
-    
     //----------------------------------------------------------------
     // 
     // ECC Control Logic
@@ -56,7 +54,7 @@ module ecc_arith_unit #(
     logic               req_digit;
     logic               ecc_busy_s;
     
-    ecc_ctrl i_ecc_ctrl(
+    ecc_PM_ctrl ecc_PM_ctrl_i(
         .clk(clk),
         .reset_n(reset_n),
         .ecc_cmd_i(ecc_cmd_i),
@@ -79,16 +77,16 @@ module ecc_arith_unit #(
     logic                       reg_web_r;
     logic                       web_mux_s;
 
-    logic [31 : 0]              di_mux;
-    logic [31 : 0]              d_o;
+    logic [REG_SIZE   : 0]      di_mux;
+    logic [REG_SIZE   : 0]      d_o;
 
-    assign di_mux = (wr_input_sel_i == 0) ? data_i : d_o;
+    //assign di_mux = (wr_input_sel_i == 0) ? data_i : d_o;
 
-    ram_tdp_file #(
+    ecc_ram_tdp_file #(
         .ADDR_WIDTH(6),
         .DATA_WIDTH(REG_SIZE)
         )
-        i_ram_tdp_file(
+        ram_tdp_file_i(
         .clk(clk),
         .ena(1'b1),
         .wea(ecc_instr_s[17]),
@@ -109,20 +107,20 @@ module ecc_arith_unit #(
     //----------------------------------------------------------------
     
     logic                       mod_p_q;
-    logic [REG_SIZE-1 : 0]      prime;
+    logic [REG_SIZE-1 : 0]      adder_prime;
     logic [RADIX-1 : 0]         mult_mu;
 
-    assign mod_p_q = ecc_instr_s[21];  //performing mod_p if (mod_p_q = 0), else mod_q
-    assign prime   = (mod_p_q)? q_grouporder : p_prime;
-    assign mult_mu = (mod_p_q)? q_mu : p_mu;
+    assign mod_p_q     = ecc_instr_s[21];  //performing mod_p if (mod_p_q = 0), else mod_q
+    assign adder_prime = (mod_p_q)? q_grouporder : p_prime;
+    assign mult_mu     = (mod_p_q)? q_mu : p_mu;
 
-    fau #(
+    ecc_fau #(
         .REG_SIZE(REG_SIZE),
         .RADIX(RADIX),
         .ADD_NUM_ADDS(ADD_NUM_ADDS),
         .ADD_BASE_SZ(ADD_BASE_SZ)
         )
-        i_fau
+        ecc_fau_i
         (
         // Clock and reset.
         .clk(clk),
@@ -132,7 +130,7 @@ module ecc_arith_unit #(
         .sub_i(ecc_instr_s[18]),
         .red_i(ecc_instr_s[19]),
         .mult_start_i(ecc_instr_s[20]),
-        .prime_i(prime),
+        .prime_i(adder_prime),
         .mult_mu_i(mult_mu),
         .opa_i(opa_s),
         .opb_i(opb_s),
@@ -159,44 +157,13 @@ module ecc_arith_unit #(
             reg_dout_r      <= 0;
         end
         else begin
-            // Write new register
             if (wr_en_i) begin
-                case (wr_word_sel_i)
-                    4'h0 : begin reg_dinb_r[31  :   0] <= di_mux; end
-                    4'h1 : begin reg_dinb_r[63  :  32] <= di_mux; end
-                    4'h2 : begin reg_dinb_r[95  :  64] <= di_mux; end
-                    4'h3 : begin reg_dinb_r[127 :  96] <= di_mux; end
-                    4'h4 : begin reg_dinb_r[159 : 128] <= di_mux; end
-                    4'h5 : begin reg_dinb_r[191 : 160] <= di_mux; end
-                    4'h6 : begin reg_dinb_r[223 : 192] <= di_mux; end
-                    4'h7 : begin reg_dinb_r[255 : 224] <= di_mux; end
-                    4'h8 : begin reg_dinb_r[287 : 256] <= di_mux; end
-                    4'h9 : begin reg_dinb_r[319 : 288] <= di_mux; end
-                    4'hA : begin reg_dinb_r[351 : 320] <= di_mux; end
-                    4'hB : begin reg_dinb_r[383 : 352] <= di_mux; end
-                    default: begin  end
-                endcase
+                if (wr_op_sel_i == 1'b0) // Write new register
+                    reg_dinb_r <= data_i[REG_SIZE-1 : 0];
+                else                    // Write new key
+                    secret_key <= data_i;
             end
 
-            // Write new key
-            if (wr_en_i & (wr_op_sel_i == 2'b01)) begin
-                case (wr_word_sel_i)
-                    4'h0 : begin secret_key[31  :   0] <= di_mux; end
-                    4'h1 : begin secret_key[63  :  32] <= di_mux; end
-                    4'h2 : begin secret_key[95  :  64] <= di_mux; end
-                    4'h3 : begin secret_key[127 :  96] <= di_mux; end
-                    4'h4 : begin secret_key[159 : 128] <= di_mux; end
-                    4'h5 : begin secret_key[191 : 160] <= di_mux; end
-                    4'h6 : begin secret_key[223 : 192] <= di_mux; end
-                    4'h7 : begin secret_key[255 : 224] <= di_mux; end
-                    4'h8 : begin secret_key[287 : 256] <= di_mux; end
-                    4'h9 : begin secret_key[319 : 288] <= di_mux; end
-                    4'hA : begin secret_key[351 : 320] <= di_mux; end
-                    4'hB : begin secret_key[383 : 352] <= di_mux; end
-                    4'hC : begin secret_key[384]       <= di_mux[0]; end
-                    default: begin  end
-                endcase
-            end
             else if (req_digit) begin
                 //Shift digit
                 secret_key[REG_SIZE  : 1] <= secret_key[REG_SIZE-1 : 0];
@@ -206,60 +173,17 @@ module ecc_arith_unit #(
             digit_in <= secret_key[REG_SIZE];
 
             reg_addr_r <= addr_i;
-            if (wr_op_sel_i == 2'b00)
-                reg_web_r <= wr_en_i & wr_word_sel_i[0] & wr_word_sel_i[1] & (~ wr_word_sel_i[2]) & wr_word_sel_i[3]; // Write after the highest 32-bit word has been written
+            if (wr_op_sel_i == 1'b0)
+                reg_web_r <= wr_en_i;
             
             // Read multiplexer    
             if (rd_reg_i)
-                reg_dout_r <= opb_s;
+                d_o <= {1'b0, opb_s};
+            else
+                d_o <= 0;
         end
     end
 
-    // Memory mapped register interface
-    always @* begin
-        case (rd_op_sel_i)
-            2'b00 : begin
-                case (rd_word_sel_i)
-                    4'h0 : begin d_o <= reg_dout_r[31  :   0]; end
-                    4'h1 : begin d_o <= reg_dout_r[63  :  32]; end
-                    4'h2 : begin d_o <= reg_dout_r[95  :  64]; end
-                    4'h3 : begin d_o <= reg_dout_r[127 :  96]; end
-                    4'h4 : begin d_o <= reg_dout_r[159 : 128]; end
-                    4'h5 : begin d_o <= reg_dout_r[191 : 160]; end
-                    4'h6 : begin d_o <= reg_dout_r[223 : 192]; end
-                    4'h7 : begin d_o <= reg_dout_r[255 : 224]; end
-                    4'h8 : begin d_o <= reg_dout_r[287 : 256]; end
-                    4'h9 : begin d_o <= reg_dout_r[319 : 288]; end
-                    4'hA : begin d_o <= reg_dout_r[351 : 320]; end
-                    4'hB : begin d_o <= reg_dout_r[383 : 352]; end
-                    default: begin d_o <= 0; end
-                endcase
-            end
-            
-            2'b1 : begin
-                case (rd_word_sel_i)
-                    4'h0 : begin d_o <= secret_key[31  :   0]; end
-                    4'h1 : begin d_o <= secret_key[63  :  32]; end
-                    4'h2 : begin d_o <= secret_key[95  :  64]; end
-                    4'h3 : begin d_o <= secret_key[127 :  96]; end
-                    4'h4 : begin d_o <= secret_key[159 : 128]; end
-                    4'h5 : begin d_o <= secret_key[191 : 160]; end
-                    4'h6 : begin d_o <= secret_key[223 : 192]; end
-                    4'h7 : begin d_o <= secret_key[255 : 224]; end
-                    4'h8 : begin d_o <= secret_key[287 : 256]; end
-                    4'h9 : begin d_o <= secret_key[319 : 288]; end
-                    4'hA : begin d_o <= secret_key[351 : 320]; end
-                    4'hB : begin d_o <= secret_key[383 : 352]; end
-                    default: begin d_o <= 0; end
-                endcase
-            end
-
-            default : begin
-                d_o <= 0;
-            end
-        endcase
-                    
-    end
             
     assign addrb_mux_s = ecc_busy_s ? ecc_instr_s[7 : 0] : reg_addr_r;
     assign web_mux_s   = ecc_busy_s ? ecc_instr_s[16]    : reg_web_r;

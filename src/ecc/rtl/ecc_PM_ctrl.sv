@@ -1,14 +1,14 @@
 //======================================================================
 //
-// ecc_ctrl.sv
+// ecc_PM_ctrl.sv
 // --------
-// ECC controller for the .
+// ECC point multiplication controller for the .
 //
 //
 // Author: Mojtaba Bisheh-Niasar
 //======================================================================
 
-module ecc_ctrl (
+module ecc_PM_ctrl (
     // Clock and reset.
     input  wire           clk,
     input  wire           reset_n,
@@ -52,6 +52,8 @@ module ecc_ctrl (
     logic start_ecc;
     logic busy_s,busy_r,busy_d1,busy_d2,busy_d3;
 
+    logic [2 : 0]  ecc_cmd_reg;
+
     logic stalled, stalled_pipe1;
     logic delayed, delayed_pipe1;
     logic delay_op;
@@ -60,11 +62,11 @@ module ecc_ctrl (
     // Program Sequencer
     assign prog_addr = prog_cntr;
 
-    ecc_sequencer #(
+    ecc_PM_sequencer #(
         .ADDR_WIDTH(PROG_ADDR_W),
         .DATA_WIDTH(INSTRUCTION_LENGTH)
         )
-        i_ecc_sequencer(
+        i_ecc_PM_sequencer(
         .clka(clk),
         .ena(1'b1),
         .addra(prog_addr),
@@ -81,6 +83,7 @@ module ecc_ctrl (
             req_digit_o <= 0;
             first_round <= 0;
             mont_ladder <= 0;
+            ecc_cmd_reg <= 0;
         end
         else begin
             stalled_pipe1 <= stalled;
@@ -115,6 +118,7 @@ module ecc_ctrl (
                 case (prog_cntr)
 		            // Waiting for new valid command    
                     NOP : begin
+                        ecc_cmd_reg <= ecc_cmd_i;
                         case (ecc_cmd_i)
                             1 : begin  // keygen
                                 mont_cntr <= Secp384_MONT_COUNT;
@@ -127,7 +131,7 @@ module ecc_ctrl (
                             end                                   
 
                             3 : begin  // verifying
-                                prog_cntr <= NOP;
+                                prog_cntr <= VER0_S;
                             end
                             default : 
                                 prog_cntr <= NOP;
@@ -170,29 +174,39 @@ module ecc_ctrl (
                     end
                     
                     CONV_E : begin
-                        case (ecc_cmd_i)
+                        case (ecc_cmd_reg)
                             1 :       prog_cntr <= NOP; //keygen done
-                            2 :       prog_cntr <= SIGN_S;
+                            2 :       prog_cntr <= SIGN0_S;
                             default : prog_cntr <= NOP;
                         endcase
-                        first_round <= 1;
                     end
 
-                    SIGN_E : begin
+                    SIGN0_E : begin
+                        prog_cntr <= INVq_S;
+                    end
+
+                    INVq_E : begin
+                        case (ecc_cmd_reg)
+                            2 :       prog_cntr <= SIGN1_S;
+                            2 :       prog_cntr <= VER1_S;
+                            default : prog_cntr <= NOP;
+                        endcase
+                    end
+
+                    SIGN1_E : begin
                         prog_cntr <= NOP;
                     end
 
-                    // DOUBLE POINT MULTIPLICATION
-                    
-                    PT_LADDER_INIT_E : begin
-                        //mont_count <= mont_count - 1;
-                        req_digit_o <= 1;
-                        case (digit_i)
-                            0 : prog_cntr <= PT_LADDER1_S;
-                            1 : prog_cntr <= PT_LADDER2_S;
-                            default : begin end
-                        endcase
+                    VER0_E : begin
+                        prog_cntr <= INVq_S;
                     end
+
+                    VER1_E : begin
+                        mont_cntr <= Secp384_MONT_COUNT;
+                        prog_cntr <= PM_INIT_S;
+                    end
+
+                    
 
                     default : begin
                         prog_cntr <= prog_cntr + 1;
@@ -226,13 +240,13 @@ module ecc_ctrl (
 
     always_comb begin
         case (prog_line[16 +: 8])
-            UOP_DO_ADD_p :  delay_op = 1;
-            UOP_DO_SUB_p :  delay_op = 1;
-            UOP_DO_MUL_p :  delay_op = 1;
-            UOP_DO_ADD_q :  delay_op = 1;
-            UOP_DO_SUB_q :  delay_op = 1;
-            UOP_DO_MUL_q :  delay_op = 1;
-            default      :  delay_op = 0;
+            UOP_DO_ADD_p :  assign delay_op = 1;
+            UOP_DO_SUB_p :  assign delay_op = 1;
+            UOP_DO_MUL_p :  assign delay_op = 1;
+            UOP_DO_ADD_q :  assign delay_op = 1;
+            UOP_DO_SUB_q :  assign delay_op = 1;
+            UOP_DO_MUL_q :  assign delay_op = 1;
+            default      :  assign delay_op = 0;
         endcase
     end
      

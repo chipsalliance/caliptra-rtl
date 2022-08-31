@@ -1,0 +1,40 @@
+
+
+addrmap ecc_reg {
+    desc="address maps for ecc register space";
+    default hw = na;
+    signal {activelow; async; cpuif_reset; field_reset;} reset_b;
+    signal {activelow; async;} hard_reset_b;
+
+    //signal to indicate request is coming from soc side
+    signal {} soc_req;
+
+    //defined fields by access type
+    //first is uc access type, second is soc access type
+    field rw_ro {swwel = soc_req;}; //writes enabled only for uc
+    field ro_rw {swwe  = soc_req;}; //writes enabled only for soc
+    field ro_ro {sw = r;};
+    field rw_rw {};
+
+    //defined fields by access type
+    field sr_hw {sw = r; hw = rw;};
+    field srw_hr {sw = rw; hw = r;};
+    field sr_hrw {sw = r; hw = rw;};
+    field srw_hrw {sw = rw; hw = rw;};
+    field sna_hrw {sw = w; hw = rw;};
+
+    reg {sr_hw NAME[32];} ecc_NAME[2];
+    reg {sr_hw VERSION[32];} ecc_VERSION[2];
+
+    reg {srw_hr CTRL[32];} ecc_CTRL;
+    reg {sr_hrw STATUS[32];} ecc_STATUS @0x00000018;
+    reg {sr_hrw VERIFY[32];} ecc_VERIFY @0x00000020;
+    reg {srw_hr MSG[32];} ecc_MSG[12] @0x00000100;
+
+    reg {srw_hrw SEED[32];} ecc_SEED[12] @0x00000080;
+    reg {srw_hrw PRIVKEY[32];} ecc_PRIVKEY[12] @0x00000180;
+    reg {srw_hrw PUBKEY_X[32];} ecc_PUBKEY_X[12] @0x00000200;
+    reg {srw_hrw PUBKEY_Y[32];} ecc_PUBKEY_Y[12] @0x00000280;
+    reg {srw_hrw R[32];} ecc_R[12] @0x00000300;
+    reg {srw_hrw S[32];} ecc_S[12] @0x00000380;
+};

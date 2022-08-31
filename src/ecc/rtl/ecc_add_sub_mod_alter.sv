@@ -1,6 +1,6 @@
 //======================================================================
 //
-// add_sub_mod_alter.sv
+// ecc_add_sub_mod_alter.sv
 // --------
 //
 //
@@ -8,7 +8,7 @@
 // Author: Mojtaba Bisheh-Niasar
 //======================================================================
 
-module add_sub_mod_alter #(
+module ecc_add_sub_mod_alter #(
     parameter REG_SIZE      = 384,
     parameter NUM_ADDS      = 1,
     parameter BASE_SZ       = 384
@@ -42,7 +42,7 @@ module add_sub_mod_alter #(
     assign opb0 = sub_i ? ~opb_i : opb_i;
     assign opb1 = sub_i ? prime_i : ~prime_i;
 
-    adder #(
+    ecc_adder #(
         .N(REG_SIZE)
         ) 
         adder_inst_0(
@@ -53,7 +53,7 @@ module add_sub_mod_alter #(
         .cout(carry0)
     );
 
-    adder #(
+    ecc_adder #(
         .N(REG_SIZE)
         ) 
         adder_inst_1(

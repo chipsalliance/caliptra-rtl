@@ -1,6 +1,6 @@
 //======================================================================
 //
-// fau.sv
+// ecc_fau.sv
 // --------
 // 
 //
@@ -8,7 +8,7 @@
 // Author: Mojtaba Bisheh-Niasar
 //======================================================================
 
-module fau #(
+module ecc_fau #(
     parameter REG_SIZE      = 384,
     parameter RADIX         = 32,
     parameter ADD_NUM_ADDS  = 1,
@@ -38,7 +38,6 @@ module fau #(
     logic                   mult_ready;
     logic [REG_SIZE-1 : 0]  add_res_s;
     logic                   add_ready;
-    logic		    ready;
     
     reg                     mult_start;
     reg                     mult_start_dly;
@@ -52,7 +51,7 @@ module fau #(
     //----------------------------------------------------------------
     // MULTIPILER
     //----------------------------------------------------------------
-    MontgomeryMultiplier #(
+    ecc_MontgomeryMultiplier #(
         .REG_SIZE(REG_SIZE),
         .RADIX(RADIX)
         )
@@ -75,7 +74,7 @@ module fau #(
     //----------------------------------------------------------------
     // ADDER/SUBTRACTOR
     //----------------------------------------------------------------
-    add_sub_mod_alter #(
+    ecc_add_sub_mod_alter #(
         .REG_SIZE(REG_SIZE),
         .NUM_ADDS(ADD_NUM_ADDS),
         .BASE_SZ(ADD_BASE_SZ)
@@ -94,19 +93,11 @@ module fau #(
         );
 
 
-    always_ff @(posedge clk or negedge reset_n) begin
-	if (!reset_n) begin
-            mult_start <= 1'b0;
-            mult_start_dly <= 1'b0;
-            sub <= 1'b0;
-            red <= 1'b0;
-	end
-	else begin
+    always_ff @(posedge clk) begin
             mult_start <= mult_start_i;
             mult_start_dly <= mult_start;
             sub <= sub_i;
             red <= red_i;
-	end
     end
     
     assign mult_start_edge = mult_start & ~mult_start_dly;
