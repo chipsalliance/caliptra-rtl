@@ -28,8 +28,10 @@ module mailbox_tb();
   parameter MBOX_ADDR_DATAIN      = MBOX_ADDR_BASE + 32'h00000010;
   parameter MBOX_ADDR_DATAOUT     = MBOX_ADDR_BASE + 32'h00000014;
   parameter MBOX_ADDR_EXECUTE     = MBOX_ADDR_BASE + 32'h00000018;
-  
+
   parameter MBOX_DLEN_VAL         = 32'h0000001C;
+
+  parameter MBOX_FUSE_DONE_ADDR = 32'h3003_0394;
 
   parameter AHB_ADDR_WIDTH = 32;
   parameter AHB_DATA_WIDTH = 32;
@@ -83,7 +85,7 @@ module mailbox_tb();
   wire cptra_uc_rst_b_tb;
 
   reg [127 : 0] result_data;
-
+  logic ready_for_fuses;
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
@@ -124,7 +126,15 @@ module mailbox_tb();
              .hresp_o(hresp_o_tb),
              .hreadyout_o(hreadyout_o_tb),
              .hrdata_o(hrdata_o_tb),
-
+             .cptra_obf_key('0),
+             .cptra_obf_key_reg(),
+            .generic_input_wires('x),
+            .generic_output_wires(),
+            .mailbox_data_avail(),
+            .mailbox_flow_done(),
+            .obf_field_entropy(),
+            .obf_uds_seed(),
+            .ready_for_fuses(ready_for_fuses),
              .cptra_uc_rst_b(cptra_uc_rst_b_tb)
             );
 
@@ -162,10 +172,16 @@ module mailbox_tb();
   task reset_dut;
     begin
       $display("*** Toggle reset.");
+      cptra_pwrgood_tb = '0;
       cptra_rst_b_tb = 0;
 
       #(2 * CLK_PERIOD);
 
+      @(posedge clk_tb);
+      cptra_pwrgood_tb = 1;
+
+      #(2 * CLK_PERIOD);
+      
       @(posedge clk_tb);
       cptra_rst_b_tb = 1;
       $display("");
@@ -208,7 +224,7 @@ module mailbox_tb();
       result_data   = 0;
 
       clk_tb        = 0;
-      cptra_pwrgood_tb = 1;
+      cptra_pwrgood_tb = 0;
       cptra_rst_b_tb    = 0;
 
       haddr_i_tb      = 'Z;
@@ -601,7 +617,8 @@ module mailbox_tb();
       init_sim();
       reset_dut();
 
-      // check_name_version();
+      wait (ready_for_fuses == 1'b1);
+      write_single_word_apb(MBOX_FUSE_DONE_ADDR, 32'h00000001);
 
       mbox_test();
 
