@@ -194,6 +194,7 @@ class HMAC_in_transaction #(
     case(op)
       normal_op: $add_color(transaction_view_h,"green");
       reset_op : $add_color(transaction_view_h,"orange");
+      otf_reset_op: $add_color(transaction_view_h, "blue");
     endcase
     super.add_to_wave(transaction_view_h);
     // pragma uvmf custom add_to_wave begin

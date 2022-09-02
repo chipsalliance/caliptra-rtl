@@ -10,7 +10,7 @@ uvmf:
 
       hdl_typedefs:
       - name: hmac_in_op_transactions
-        type: enum bit[1:0] {reset_op = 2'b00, normal_op = 2'b01}
+        type: enum bit[1:0] {reset_op = 2'b00, normal_op = 2'b01, otf_reset_op = 2'b10}
       hvl_typedefs: []
 
       parameters:

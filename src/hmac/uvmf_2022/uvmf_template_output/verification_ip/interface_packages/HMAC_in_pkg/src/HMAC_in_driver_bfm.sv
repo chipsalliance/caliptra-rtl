@@ -306,9 +306,10 @@ end
     //TODO knupadhy: make op only reset or normal op (single and multi will be processed in same task)
     case (HMAC_in_initiator_struct.op)
 
-      reset_op  : hmac_init         (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.test_case_sel, HMAC_in_initiator_struct.key_len);
-      normal_op : block_test (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.test_case_sel, HMAC_in_initiator_struct.key_len);
-      default   : block_test (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.test_case_sel, HMAC_in_initiator_struct.key_len);
+      reset_op    : hmac_init       (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.test_case_sel, HMAC_in_initiator_struct.key_len);
+      normal_op   : block_test      (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.test_case_sel, HMAC_in_initiator_struct.key_len);
+      otf_reset_op: otf_reset_test  (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.test_case_sel, HMAC_in_initiator_struct.key_len);
+      default     : block_test      (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.test_case_sel, HMAC_in_initiator_struct.key_len);
 
     endcase
   
@@ -738,6 +739,114 @@ read_digest();
 
  end
  endtask
+
+//---------------------
+//Otf reset test 
+//---------------------
+ task otf_reset_test (
+  input hmac_in_op_transactions op,
+  input bit [8:0] test_case_sel,
+  input bit key_len
+);
+
+reg [383 :0] key;
+reg [1023:0] block;
+reg [383 :0] expected;
+reg [1023:0] tmp;
+
+int line_skip;
+int cnt_tmp;
+int fd_r;
+
+string line_read;
+string tmp_str1;
+string tmp_str2;
+string file_name;
+int key_disp;
+longint msg_disp;
+
+begin
+
+//pass op and selection to monitor
+transaction_flag_in_monitor_o = 1'b0;
+op_o = op;
+test_case_sel_o = test_case_sel;
+key_len_o = key_len;
+    
+cnt_tmp = 0;
+
+$system("python ../../../../../tb/test_gen.py");
+//file_name = "../../../../../tb/test_vector.txt";
+file_name = "test_vector.txt";
+fd_r = $fopen(file_name, "r");
+if(!fd_r) $display("**HMAC_in_driver_bfm** Cannot open file %s", file_name);
+
+
+//Get key, block and tag:
+$fgets(line_read, fd_r);
+$sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, key);
+write_key(key);
+
+$fgets(line_read, fd_r);
+$sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, block);
+write_block(block);
+write_single_word(ADDR_CTRL, CTRL_INIT_VALUE);
+@(posedge clk_i);
+hsel_o = 0;
+@(posedge clk_i);
+
+$fgets(line_read, fd_r);
+$sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, tmp);
+
+while (tmp_str1 == "BLOCK") begin
+  //wait for prev block's ready
+  repeat(130) begin //TODO knupadhy: need to figure out how to poll for status in the in driver bfm (needs hrdata_i input which is connected to out agent not the in agent)
+    @(posedge clk_i);
+    read_single_word_driverbfm(ADDR_STATUS);
+  end
+  //write next block
+  block = tmp;
+  write_block(block);
+  write_single_word(ADDR_CTRL, CTRL_NEXT_VALUE);
+  @(posedge clk_i);
+  hsel_o = 0;
+  @(posedge clk_i);
+
+  $fgets(line_read, fd_r);
+  $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, tmp);
+end
+
+  expected = tmp;
+  $fclose(fd_r);
+  /*
+  repeat(130) begin //TODO knupadhy: need to figure out how to poll for status in the in driver bfm (needs hrdata_i input which is connected to out agent not the in agent)
+  @(posedge clk_i);
+  read_single_word_driverbfm(ADDR_STATUS);
+  end
+  */
+  //Toggle OTF reset
+  @(posedge clk_i);
+  hmac_rst_o = 1'b0;
+  repeat (2) @(posedge clk_i);
+  hmac_rst_o = 1'b1;
+
+//wait_ready(); --> this looks at hrdata which is part of out interface. Not sure how to bring that signal in here, so jut waiting for 100 clks for now (similar to AES)
+
+//---------wait for ready--------
+//From addr status to ready, DUT takes 2500 ns. The read_single_word_driverbfm has built-in 1 clk wait every time it's called
+//So, executing this loop for 130 clks to get a total of 130*10*2 = 2600ns (buffer of 100ns)
+
+  transaction_flag_in_monitor_o = 1'b1;
+  @(posedge clk_i);
+  transaction_flag_in_monitor_o = 1'b0;
+  @(posedge clk_i);
+//-------------------------------
+
+  read_digest();
+
+
+end
+endtask
     
 // pragma uvmf custom initiate_and_get_response end
 

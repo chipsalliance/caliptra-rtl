@@ -21,20 +21,29 @@ def generate_test():
 
     #Open file for logging outputs
     f = open("test_vector.txt", "w")
-    g = open("ref_test_vector.txt", "a")
 
     #Generate 384-bit key
     key = subprocess.check_output('openssl rand -hex 48', shell=True)
     key_str = str(key)
-    f.write('KEY = '+key_str[2:-3]+'\n')
-    g.write('KEY = '+key_str[2:-3]+'\n')
+    
+    #Chomp extra chars at beginning and end if python 3.6.8 is loaded
+    if key_str[1] == "'":
+        key_str = key_str[2:-3]
+    else:
+        key_str = key_str.rstrip()
+    f.write('KEY = '+key_str+'\n')
 
     #Generate random length msg (upper limit of length is 512 bytes)
     num_bytes = random.randrange(1,512)
     command = 'openssl rand -hex '+str(num_bytes)
     msg = subprocess.check_output(command, shell=True)
     msg_str = str(msg)
-    msg_str = msg_str[2:-3]
+    
+    #Chomp extra chars at beginning and end if python 3.6.8 is loaded
+    if msg_str[1] == "'":
+        msg_str = msg_str[2:-3]
+    else:
+        msg_str = msg_str.rstrip()
     orig_msg_str = msg_str
 
     #Post process msg to divide into 1024-bit blocks. Last runt msg will get padding + msg length
@@ -55,7 +64,6 @@ def generate_test():
         if num_bits > 1023: #case 1 and 2
             block = msg_str[0:256]
             f.write('BLOCK = '+block+'\n')
-            g.write('BLOCK = '+block+'\n')
             msg_str = msg_str[256:]
             num_bits = num_bits - 1024
 
@@ -75,17 +83,14 @@ def generate_test():
 
             block = msg_str + pad + msg_len
             f.write('BLOCK = '+block+'\n')
-            g.write('BLOCK = '+block+'\n')
 
         else: #case 3 and 4
-            
             #We know here that we don't have space for msg, pad AND msg length, so we just do msg + pad
             pad_chars = calc_pad_chars(num_bits, 1)
 
             pad = one + zero * pad_chars
             block = msg_str + pad
             f.write('BLOCK = '+block+'\n')
-            g.write('BLOCK = '+block+'\n')
             
             pad_chars = calc_pad_chars(128, 0) #No msg in this block. Only msg_len and padding is continued (all 0s in padding)
             pad = zero * pad_chars
@@ -95,22 +100,25 @@ def generate_test():
 
             block = pad + msg_len
             f.write('BLOCK = '+block+'\n')
-            g.write('BLOCK = '+block+'\n')
 
             
     
 
     #Generate digest using OpenSSL HMAC SHA384
-    command = 'echo '+orig_msg_str+' | xxd -r -p | openssl dgst -sha384 -mac hmac -macopt hexkey:'+key_str[2:-3]+' -hex'
+    command = 'echo '+orig_msg_str+' | xxd -r -p | openssl dgst -sha384 -mac hmac -macopt hexkey:'+key_str+' -hex'
     tag = subprocess.check_output(command, shell=True)
     tag_str = str(tag)
-    f.write('TAG = '+tag_str[11:-3]+'\n')
-    g.write('TAG = '+tag_str[11:-3]+'\n')
+
+    #Chomp extra chars at beginning and end if python 3.6.8 is loaded
+    if tag_str[1] == "'":
+        tag_str = tag_str[11:-3]
+    else:
+        tag_str = tag_str.rstrip()
+        tag_str = tag_str[9:]
+    f.write('TAG = '+tag_str+'\n')
 
     #Close file
     f.close()
-    g.write('\n')
-    g.close()
 
 generate_test()
 

@@ -117,7 +117,7 @@ class HMAC_predictor #(
     //$display("**HMAC_predictor** t.test_case_sel = %d",t.test_case_sel);
     //$display("**HMAC_predictor** t.key_len = %d",t.key_len);
 
-    if (t.op== 2'b00) HMAC_sb_ap_output_transaction.result = 0;
+    if (t.op== 2'b00 || t.op == 2'b10) HMAC_sb_ap_output_transaction.result = 0;
     else begin
       file_name = "test_vector.txt";
 

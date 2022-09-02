@@ -37,6 +37,7 @@ package HMAC_sequences_pkg;
   `include "src/register_test_sequence.svh"
   `include "src/example_derived_test_sequence.svh"
   `include "src/HMAC_random_sequence.svh"
+  `include "src/HMAC_otf_reset_sequence.svh"
 
   // pragma uvmf custom package_item_additional begin
   // UVMF_CHANGE_ME : When adding new sequences to the src directory

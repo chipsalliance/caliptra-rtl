@@ -58,6 +58,7 @@ package HMAC_in_pkg;
    `include "src/HMAC_in_sequence_base.svh"
    `include "src/HMAC_in_random_sequence.svh"
    `include "src/HMAC_in_reset_sequence.svh"
+   `include "src/HMAC_in_otf_reset_sequence.svh"
 
    `include "src/HMAC_in_responder_sequence.svh"
    `include "src/HMAC_in2reg_adapter.svh"

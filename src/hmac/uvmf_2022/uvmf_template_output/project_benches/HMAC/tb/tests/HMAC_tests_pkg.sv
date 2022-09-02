@@ -40,6 +40,7 @@ package HMAC_tests_pkg;
    `include "src/register_test.svh"
    `include "src/example_derived_test.svh"
    `include "src/HMAC_random_test.svh"
+   `include "src/HMAC_otf_reset_test.svh"
 
   // pragma uvmf custom package_item_additional begin
   // UVMF_CHANGE_ME : When adding new tests to the src directory
