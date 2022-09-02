@@ -28,6 +28,14 @@ module mbox_top #(
     input logic cptra_pwrgood,
     input logic cptra_rst_b,
 
+    output logic ready_for_fuses,
+
+    output logic mailbox_data_avail,
+    output logic mailbox_flow_done,
+
+    input logic  [63:0] generic_input_wires,
+    output logic [63:0] generic_output_wires,
+
     //SoC APB Interface
     input logic [APB_ADDR_WIDTH-1:0]     paddr_i,
     input logic                          psel_i,
@@ -40,7 +48,6 @@ module mbox_top #(
     output logic                         pslverr_o,
 
     //uC AHB Lite Interface
-    // from SLAVES PORT
     input logic [AHB_ADDR_WIDTH-1:0]  haddr_i,
     input logic [AHB_DATA_WIDTH-1:0]  hwdata_i,
     input logic                       hsel_i,
@@ -59,6 +66,12 @@ module mbox_top #(
     //SoC Interrupts
 
     //uC Interrupts
+
+    //Obfuscated UDS and FE
+    input  logic [7:0][31:0] cptra_obf_key,
+    output logic [7:0][31:0] cptra_obf_key_reg,
+    output logic [31:0][31:0] obf_field_entropy,
+    output logic [11:0][31:0] obf_uds_seed,
 
     //uC reset
     output logic cptra_uc_rst_b
@@ -91,6 +104,8 @@ mbox_req_t mbox_reg_req_data;
 logic [MBOX_DATA_W-1:0] mbox_reg_rdata;
 logic mbox_reg_error, mbox_reg_read_error, mbox_reg_write_error;
 
+logic clear_secrets;
+
 mbox_reg_pkg::mbox_reg__in_t mbox_reg_hwif_in;
 mbox_reg_pkg::mbox_reg__out_t mbox_reg_hwif_out;
 
@@ -103,7 +118,9 @@ mbox_boot_fsm mbox_boot_fsm1 (
     .cptra_pwrgood(cptra_pwrgood),
     .cptra_rst_b (cptra_rst_b),
 
-    .fuse_done('1), //FIXME TIE-OFF
+    .ready_for_fuses(ready_for_fuses),
+
+    .fuse_done(mbox_reg_hwif_out.fuse_done.done.value),
 
     .cptra_uc_rst_b(cptra_uc_rst_b)
 );
@@ -120,7 +137,7 @@ apb_slv_sif #(
 mailbox_apb_slv1 (
     //AMBA APB INF
     .PCLK(clk),
-    .PRESETn(cptra_uc_rst_b),
+    .PRESETn(cptra_rst_b),
     .PADDR(paddr_i),
     .PPROT('x),
     .PSEL(psel_i),
@@ -191,7 +208,7 @@ always_comb uc_req.soc_req = 1'b0;
 
 mbox_arb mbox_arb1 (
     .clk(clk),
-    .rst_b(cptra_uc_rst_b),
+    .rst_b(cptra_rst_b),
     //UC inf
     .uc_req_dv(uc_req_dv), 
     .uc_req_hold(uc_req_hold), 
@@ -226,10 +243,29 @@ mbox_arb mbox_arb1 (
 //Read and Write permissions are controlled within this block
 always_comb mbox_reg_error = mbox_reg_read_error | mbox_reg_write_error;
 
-always_comb mbox_reg_hwif_in.reset_b = cptra_uc_rst_b;
+always_comb mbox_reg_hwif_in.reset_b = cptra_rst_b;
+always_comb mbox_reg_hwif_in.hard_reset_b = cptra_pwrgood;
 always_comb mbox_reg_hwif_in.soc_req = mbox_reg_req_data.soc_req;
-always_comb mbox_reg_hwif_in.field_entropy[0].seed.hwclr = '1; //fixme hook up hwclr for field entropy
-always_comb mbox_reg_hwif_in.uds_seed[0].seed.hwclr = '1; //fixme hook up hwclr for uds seed
+
+always_comb clear_secrets = mbox_reg_hwif_out.CLEAR_SECRETS.clear.value;
+
+always_comb begin
+    for (int i = 0; i < 8; i++) begin
+        mbox_reg_hwif_in.obf_key[i].key.swwe = '0; //sw can't write to obf key
+        mbox_reg_hwif_in.obf_key[i].key.wel = cptra_pwrgood; //capture value during pwrgood de-assertion
+        mbox_reg_hwif_in.obf_key[i].key.next = cptra_obf_key[i];
+        mbox_reg_hwif_in.obf_key[i].key.hwclr = clear_secrets;
+        cptra_obf_key_reg[i] = mbox_reg_hwif_out.obf_key[i].key.value;
+    end
+    for (int i = 0; i < 12; i++) begin
+        mbox_reg_hwif_in.uds_seed[i].seed.hwclr = clear_secrets; 
+        obf_uds_seed[i] = mbox_reg_hwif_out.uds_seed[i].seed.value;
+    end
+    for (int i = 0; i < 32; i++) begin
+        mbox_reg_hwif_in.field_entropy[i].seed.hwclr = clear_secrets;
+        obf_field_entropy[i] = mbox_reg_hwif_out.field_entropy[i].seed.value;
+    end
+end
 
 mbox_reg mbox_reg1 (
     .clk(clk),
@@ -237,7 +273,7 @@ mbox_reg mbox_reg1 (
 
     .s_cpuif_req(mbox_reg_req_dv),
     .s_cpuif_req_is_wr(mbox_reg_req_data.write),
-    .s_cpuif_addr(mbox_reg_req_data.addr),
+    .s_cpuif_addr(mbox_reg_req_data.addr[9:0]),
     .s_cpuif_wr_data(mbox_reg_req_data.wdata),
     .s_cpuif_req_stall_wr(),
     .s_cpuif_req_stall_rd(),
@@ -250,6 +286,7 @@ mbox_reg mbox_reg1 (
     .hwif_in(mbox_reg_hwif_in),
     .hwif_out(mbox_reg_hwif_out)
 );
+
 
 //Mailbox
 //This module contains the Caliptra Mailbox and associated control logic
@@ -267,7 +304,7 @@ mbox1 (
     .req_data(mbox_req_data),
     .mbox_error(mbox_error),
     .rdata(mbox_rdata),
-    .soc_mbox_data_avail(), //FIXME DANGLE
+    .soc_mbox_data_avail(mailbox_data_avail),
     .uc_mbox_data_avail() //FIXME DANGLE
 );
 

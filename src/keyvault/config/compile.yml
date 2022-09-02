@@ -1,0 +1,21 @@
+provides: [keyvault]
+schema_version: 2.4.0
+requires: [libs]
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/kv_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/kv_reg.sv
+      - $COMPILE_ROOT/rtl/kv_defines.svh
+      - $COMPILE_ROOT/rtl/kv.sv
+      - $COMPILE_ROOT/rtl/kv_fsm.sv
+      - $COMPILE_ROOT/rtl/kv_client.sv
+      - $COMPILE_ROOT/rtl/kv_doe.sv
+    tops: [keyvault]
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - '-v2k_generate'

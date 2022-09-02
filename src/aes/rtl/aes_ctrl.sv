@@ -18,6 +18,12 @@ module aes_ctrl #(
     input wire           clk,
     input wire           reset_n,
 
+    input logic [255:0] cptra_obf_key,
+
+    //Obfuscated UDS and FE
+    input logic [31:0][31:0] obf_field_entropy,
+    input logic [11:0][31:0] obf_uds_seed,
+
     // from SLAVES PORT
     input logic [AHB_ADDR_WIDTH-1:0] haddr_i,
     input logic [AHB_DATA_WIDTH-1:0] hwdata_i,
@@ -32,7 +38,8 @@ module aes_ctrl #(
 
     output logic hresp_o,
     output logic hreadyout_o,
-    output logic [AHB_DATA_WIDTH-1:0] hrdata_o
+    output logic [AHB_DATA_WIDTH-1:0] hrdata_o,
+    output kv_write_t kv_write
 );
 
   //----------------------------------------------------------------
@@ -56,11 +63,15 @@ module aes_ctrl #(
         ) aes_inst(
         .clk(clk),
         .reset_n(reset_n),
+        .cptra_obf_key(cptra_obf_key),
+        .obf_uds_seed(obf_uds_seed),
+        .obf_field_entropy(obf_field_entropy),
         .cs(aes_cs),
         .we(aes_we),
         .address(aes_address),
         .write_data(aes_write_data),
-        .read_data(aes_read_data)
+        .read_data(aes_read_data),
+        .kv_write(kv_write)
         );
     `else
         aes #(

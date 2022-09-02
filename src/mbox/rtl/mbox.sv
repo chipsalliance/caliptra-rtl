@@ -234,7 +234,7 @@ mbox_csr1(
 
     .s_cpuif_req(req_dv),
     .s_cpuif_req_is_wr(req_data.write),
-    .s_cpuif_addr(req_data.addr),
+    .s_cpuif_addr(req_data.addr[5:0]),
     .s_cpuif_wr_data(req_data.wdata),
     .s_cpuif_req_stall_wr(),
     .s_cpuif_req_stall_rd(),

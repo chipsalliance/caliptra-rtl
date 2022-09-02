@@ -36,12 +36,12 @@ addrmap mbox_csr {
 
     reg {
         desc="command requested for data in mailbox";
-        field {sw=rw; hw=na; swwe=valid_user; swmod=true;} command[32];
+        field {sw=rw; hw=na; swwe=valid_user; swmod=true;} command[32]=0;
     } mbox_cmd;
 
     reg {
         desc="data length for mailbox access";
-        field {sw=rw; hw=na; swwe=valid_user; swmod=true;} length[32];
+        field {sw=rw; hw=na; swwe=valid_user; swmod=true;} length[32]=0;
     } mbox_dlen;
 
     reg {

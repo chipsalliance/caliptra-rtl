@@ -236,8 +236,10 @@ module mbox_csr (
         field_combo.mbox_cmd.command.next = next_c;
         field_combo.mbox_cmd.command.load_next = load_next_c;
     end
-    always_ff @(posedge clk) begin
-        if(field_combo.mbox_cmd.command.load_next) begin
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.mbox_cmd.command.value <= 'h0;
+        end else if(field_combo.mbox_cmd.command.load_next) begin
             field_storage.mbox_cmd.command.value <= field_combo.mbox_cmd.command.next;
         end
     end
@@ -253,8 +255,10 @@ module mbox_csr (
         field_combo.mbox_dlen.length.next = next_c;
         field_combo.mbox_dlen.length.load_next = load_next_c;
     end
-    always_ff @(posedge clk) begin
-        if(field_combo.mbox_dlen.length.load_next) begin
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.mbox_dlen.length.value <= 'h0;
+        end else if(field_combo.mbox_dlen.length.load_next) begin
             field_storage.mbox_dlen.length.value <= field_combo.mbox_dlen.length.next;
         end
     end

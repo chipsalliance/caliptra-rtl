@@ -25,5 +25,7 @@
   localparam HMAC_ADDR_TAG0        = HMAC_BASE_ADDR + 32'h00000100;
   localparam HMAC_ADDR_TAG11       = HMAC_BASE_ADDR + 32'h0000012C;
 
+  localparam HMAC_KV_CTRL          = HMAC_BASE_ADDR + 32'h00000200;
+
   localparam HMAC_CORE_NAME        = 64'h61327368_6163686d; // "hmacsha2"
   localparam HMAC_CORE_VERSION     = 64'h00000000_3030312e; // "1.00"

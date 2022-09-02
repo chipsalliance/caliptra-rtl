@@ -1,8 +1,8 @@
 //======================================================================
 //
-// aes_ctrl_tb.sv
+// mailbox_tb.sv
 // --------
-// AES testbench for the AES AHb_lite interface controller.
+// mbox testbench for the mbox AHb_lite interface controller.
 //
 //
 // Author: Mojtaba Bisheh-Niasar
@@ -82,7 +82,6 @@ module mailbox_tb();
 
   wire cptra_uc_rst_b_tb;
 
-  reg [31 : 0]  read_data;
   reg [127 : 0] result_data;
 
   //----------------------------------------------------------------
@@ -166,6 +165,8 @@ module mailbox_tb();
       cptra_rst_b_tb = 0;
 
       #(2 * CLK_PERIOD);
+
+      @(posedge clk_tb);
       cptra_rst_b_tb = 1;
       $display("");
       #(10 * CLK_PERIOD);
@@ -237,31 +238,29 @@ module mailbox_tb();
   // Write the given word to the DUT using the AHB-lite interface.
   //----------------------------------------------------------------
   task write_single_word_ahb(input [31 : 0]  address,
-                  input [31 : 0] word);
+                             input [31 : 0] word);
     begin
-      hsel_i_tb       = 1;
-      haddr_i_tb      = address;
-      hwrite_i_tb     = 1;
-      hmastlock_i_tb  = 0;
-      hready_i_tb     = 1;
-      htrans_i_tb     = AHB_HTRANS_NONSEQ;
-      hprot_i_tb      = 0;
-      hburst_i_tb     = 0;
-      hsize_i_tb      = 3'b010;
+      @(posedge clk_tb);
+      hsel_i_tb       <= 1;
+      haddr_i_tb      <= address;
+      hwrite_i_tb     <= 1;
+      hmastlock_i_tb  <= 0;
+      hready_i_tb     <= 1;
+      htrans_i_tb     <= AHB_HTRANS_NONSEQ;
+      hprot_i_tb      <= 0;
+      hburst_i_tb     <= 0;
+      hsize_i_tb      <= 3'b010;
 
-      paddr_i_tb      = 'Z;
-      psel_i_tb       = 0;
-      penable_i_tb    = 0;
-      pwrite_i_tb     = 0;
-      pwdata_i_tb     = 0;
-      pauser_i_tb     = 0;
+      @(posedge clk_tb);
+      haddr_i_tb      <= 'Z;
+      hwdata_i_tb     <= word;
+      hwrite_i_tb     <= 0;
+      htrans_i_tb     <= AHB_HTRANS_IDLE;
+      wait(hreadyout_o_tb == 1'b1);
 
-      #(CLK_PERIOD);
+      @(posedge clk_tb);
+      hsel_i_tb       <= 0;
 
-      haddr_i_tb      = 'Z;
-      hwdata_i_tb     = word;
-      hwrite_i_tb     = 0;
-      htrans_i_tb     = AHB_HTRANS_IDLE;
     end
   endtask // write_single_word_ahb
 
@@ -270,32 +269,25 @@ module mailbox_tb();
   //
   // Write the given word to the DUT using the AHB-lite interface.
   //----------------------------------------------------------------
-  task write_single_word_apb(input [31 : 0]  address,
-                  input [31 : 0] word);
+  task write_single_word_apb(input [31 : 0] address,
+                             input [31 : 0] word);
     begin
-      hsel_i_tb       = 0;
-      haddr_i_tb      = 'Z;
-      hwrite_i_tb     = 0;
-      hmastlock_i_tb  = 0;
-      hready_i_tb     = 1;
-      htrans_i_tb     = AHB_HTRANS_IDLE;
-      hprot_i_tb      = 0;
-      hburst_i_tb     = 0;
-      hsize_i_tb      = 0;
+      @(posedge clk_tb);
+      paddr_i_tb      <= address;
+      psel_i_tb       <= 1;
+      penable_i_tb    <= 0;
+      pwrite_i_tb     <= 1;
+      pwdata_i_tb     <= word;
+      pauser_i_tb     <= 0;
+      wait(pready_o_tb == 1'b1);
+      
+      @(posedge clk_tb);
+      penable_i_tb    <= 1;
+      wait(pready_o_tb == 1'b1);
 
-      paddr_i_tb      = address;
-      psel_i_tb       = 1;
-      penable_i_tb    = 0;
-      pwrite_i_tb     = 1;
-      pwdata_i_tb     = word;
-      pauser_i_tb     = 0;
-
-      #(CLK_PERIOD);
-      penable_i_tb    = 1;
-
-      #(CLK_PERIOD);
-      penable_i_tb    = 0;
-      psel_i_tb       = 0;
+      @(posedge clk_tb);
+      psel_i_tb       <= 0;
+      penable_i_tb    <= 0;
     end
   endtask // write_single_word_apb
 
@@ -339,63 +331,47 @@ module mailbox_tb();
   //----------------------------------------------------------------
   task read_single_word_ahb(input [31 : 0]  address);
     begin
-      hsel_i_tb       = 1;
-      haddr_i_tb      = address;
-      hwrite_i_tb     = 0;
-      hmastlock_i_tb  = 0;
-      hready_i_tb     = 1;
-      htrans_i_tb     = AHB_HTRANS_NONSEQ;
-      hprot_i_tb      = 0;
-      hburst_i_tb     = 0;
-      hsize_i_tb      = 3'b010;
+      @(posedge clk_tb);
+      hsel_i_tb       <= 1;
+      haddr_i_tb      <= address;
+      hwrite_i_tb     <= 0;
+      hmastlock_i_tb  <= 0;
+      hready_i_tb     <= 1;
+      htrans_i_tb     <= AHB_HTRANS_NONSEQ;
+      hprot_i_tb      <= 0;
+      hburst_i_tb     <= 0;
+      hsize_i_tb      <= 3'b010;
 
-      paddr_i_tb      = 'Z;
-      psel_i_tb       = 0;
-      penable_i_tb    = 0;
-      pwrite_i_tb     = 0;
-      pwdata_i_tb     = 0;
-      pauser_i_tb     = 0;
+      @(posedge clk_tb);
+      hwdata_i_tb     <= 0;
+      haddr_i_tb      <= 'Z;
+      htrans_i_tb     <= AHB_HTRANS_IDLE;
+      wait(hreadyout_o_tb == 1'b1);
 
-      #(CLK_PERIOD);
-      
-      hwdata_i_tb     = 0;
-      haddr_i_tb     = 'Z;
-      htrans_i_tb     = AHB_HTRANS_IDLE;
+      @(posedge clk_tb);
+      hsel_i_tb       <= 0;
 
-      // #(CLK_PERIOD);
-      read_data = hrdata_o_tb;
     end
   endtask // read_single_word_ahb
 
-  task read_single_word_apb(input [31 : 0]  address);
+  task read_single_word_apb(input [31 : 0] address);
     begin
-      hsel_i_tb       = 0;
-      haddr_i_tb      = 'Z;
-      hwrite_i_tb     = 0;
-      hmastlock_i_tb  = 0;
-      hready_i_tb     = 1;
-      htrans_i_tb     = AHB_HTRANS_IDLE;
-      hprot_i_tb      = 0;
-      hburst_i_tb     = 0;
-      hsize_i_tb      = 0;
+      @(posedge clk_tb);
+      paddr_i_tb      <= address;
+      psel_i_tb       <= 1;
+      penable_i_tb    <= 0;
+      pwrite_i_tb     <= 0;
+      pwdata_i_tb     <= 0;
+      pauser_i_tb     <= 0;
+      wait(pready_o_tb == 1'b1);
 
-      paddr_i_tb      = address;
-      psel_i_tb       = 1;
-      penable_i_tb    = 0;
-      pwrite_i_tb     = 0;
-      pwdata_i_tb     = 0;
-      pauser_i_tb     = 0;
+      @(posedge clk_tb);
+      penable_i_tb    <= 1;
+      wait(pready_o_tb == 1'b1);
 
-      #(CLK_PERIOD);
-      penable_i_tb    = 1;
-      #(0.5 * CLK_PERIOD);
-      read_data = prdata_o_tb;
-      #(0.5 * CLK_PERIOD);
-
-      #(2 * CLK_PERIOD);
-      psel_i_tb       = 0;
-      penable_i_tb    = 0;
-
+      @(posedge clk_tb);
+      psel_i_tb       <= 0;
+      penable_i_tb    <= 0;
     end
   endtask // read_single_word_ahb
 
@@ -404,16 +380,17 @@ module mailbox_tb();
   //
   // Read the result block in the dut.
   //----------------------------------------------------------------
-  task read_result_ahb;
+  task read_result_ahb(output [127:0]  r_data);
     begin
+      
       read_single_word_ahb(MBOX_ADDR_DATAOUT);
-      result_data[127 : 96] = read_data;
+      r_data[127 : 96] = hrdata_o_tb;
       read_single_word_ahb(MBOX_ADDR_DATAOUT);
-      result_data[95  : 64] = read_data;
+      r_data[95  : 64] = hrdata_o_tb;
       read_single_word_ahb(MBOX_ADDR_DATAOUT);
-      result_data[63  : 32] = read_data;
+      r_data[63  : 32] = hrdata_o_tb;
       read_single_word_ahb(MBOX_ADDR_DATAOUT);
-      result_data[31  :  0] = read_data;
+      r_data[31  :  0] = hrdata_o_tb;
     end
   endtask // read_result_ahb
 
@@ -422,36 +399,50 @@ module mailbox_tb();
   //
   // Read the result block in the dut.
   //----------------------------------------------------------------
-  task read_result_apb;
+  task read_result_apb(output [127:0]  r_data);
     begin
+
       read_single_word_apb(MBOX_ADDR_DATAOUT);
-      result_data[127 : 96] = read_data;
+      r_data[127:96] = prdata_o_tb;
       read_single_word_apb(MBOX_ADDR_DATAOUT);
-      result_data[95  : 64] = read_data;
+      r_data[ 95:64] = prdata_o_tb;
       read_single_word_apb(MBOX_ADDR_DATAOUT);
-      result_data[63  : 32] = read_data;
+      r_data[ 63:32] = prdata_o_tb;
       read_single_word_apb(MBOX_ADDR_DATAOUT);
-      result_data[31  :  0] = read_data;
+      r_data[ 31: 0] = prdata_o_tb;
+  
     end
   endtask // read_result_apb
 
   //----------------------------------------------------------------
-  // wait_unlock()
+  // wait_unlock_ahb()
   //
   // wait for the mailbox to unlock before send in anything
   //----------------------------------------------------------------
-  task wait_unlock;
+  task wait_unlock_ahb;
     begin
-      read_data = 32'h00000001;
-      #(CLK_PERIOD);
-
-      while (read_data != 0)
+      read_single_word_ahb(MBOX_ADDR_LOCK);
+      while (hrdata_o_tb != 0)
         begin
           read_single_word_ahb(MBOX_ADDR_LOCK);
-          read_data = read_data & 32'h00000001;
         end
     end
-  endtask // wait_unlock
+  endtask // wait_unlock_ahb
+
+  //----------------------------------------------------------------
+  // wait_unlock_apb()
+  //
+  // wait for the mailbox to unlock before send in anything
+  //----------------------------------------------------------------
+  task wait_unlock_apb;
+    begin
+      read_single_word_apb(MBOX_ADDR_LOCK);
+      while (prdata_o_tb != 0)
+        begin
+          read_single_word_apb(MBOX_ADDR_LOCK);
+        end
+    end
+  endtask // wait_unlock_apb
 
   //----------------------------------------------------------------
   // mbox_ahb_test()
@@ -470,7 +461,7 @@ module mailbox_tb();
       start_time = cycle_ctr;
 
       // poll for lock register
-      wait_unlock();
+      wait_unlock_ahb();
 
       //write to MBOX_ADDR_CMD
       write_single_word_ahb(MBOX_ADDR_CMD, 32'hDEADBEEF);
@@ -488,7 +479,7 @@ module mailbox_tb();
 
       end_time = cycle_ctr - start_time;
       $display("*** Single block test processing time = %01d cycles", end_time);
-      read_result_ahb();
+      read_result_apb(result_data);
 
       // reset excecute
       write_single_word_apb(MBOX_ADDR_EXECUTE, 32'h00000000);
@@ -527,7 +518,7 @@ module mailbox_tb();
       start_time = cycle_ctr;
 
       // poll for lock register
-      wait_unlock();
+      wait_unlock_apb();
 
       //write to MBOX_ADDR_CMD
       write_single_word_apb(MBOX_ADDR_CMD, 32'hDEADBEEF);
@@ -547,10 +538,10 @@ module mailbox_tb();
 
       end_time = cycle_ctr - start_time;
       $display("*** Single block test processing time = %01d cycles", end_time);
-      read_result_apb();
+      read_result_ahb(result_data);
 
       // reset excecute
-      write_single_word_apb(MBOX_ADDR_EXECUTE, 32'h00000000);
+      write_single_word_ahb(MBOX_ADDR_EXECUTE, 32'h00000000);
 
       if (result_data == block)
         begin
@@ -582,9 +573,9 @@ module mailbox_tb();
       apb_message_1 = 128'h66666666777777778888888899999999;
 
 
-      // $display("mailbox ahb test");
-      // $display("---------------------");
-      // mbox_ahb_test(8'h01, ahb_message_1);
+      $display("mailbox ahb test");
+      $display("---------------------");
+      mbox_ahb_test(8'h01, ahb_message_1);
 
       $display("mailbox apb test");
       $display("---------------------");
@@ -602,7 +593,8 @@ module mailbox_tb();
   //----------------------------------------------------------------
   initial
     begin : main
-      $display("   -= Testbench for AES started =-");
+      $display("    ==============================");
+      $display("   -= Testbench for MBOX started =-");
       $display("    ==============================");
       $display("");
 
@@ -616,8 +608,8 @@ module mailbox_tb();
       display_test_results();
       
       $display("");
-      $display("*** AES simulation done. ***");
+      $display("*** MBOX simulation done. ***");
       $finish;
     end // main
 
-endmodule // aes_tb
+endmodule // mbox_tb

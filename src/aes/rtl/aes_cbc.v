@@ -30,6 +30,12 @@ module aes_cbc
    input wire           clk,
    input wire           reset_n,
 
+   input logic [255:0] cptra_obf_key,
+
+   //Obfuscated UDS and FE
+   input logic [31:0][31:0] obf_field_entropy,
+   input logic [11:0][31:0] obf_uds_seed,
+
    // Control.
    input wire           cs,
    input wire           we,
@@ -37,7 +43,10 @@ module aes_cbc
    // Data ports.
    input wire  [ADDR_WIDTH-1 : 0] address,
    input wire  [DATA_WIDTH-1 : 0] write_data,
-   output wire [DATA_WIDTH-1 : 0] read_data
+   output wire [DATA_WIDTH-1 : 0] read_data,
+
+   //interface with kv
+   output kv_write_t kv_write
   );
 
   //----------------------------------------------------------------
@@ -57,21 +66,23 @@ module aes_cbc
   reg encdec_reg;
   reg keylen_reg;
   reg config_we;
+  reg kv_ctrl_we;
 
   localparam BLOCK_NO = 128 / DATA_WIDTH;
   localparam KEY_NO   = 256 / DATA_WIDTH;
   localparam IV_NO    = 128 / DATA_WIDTH;
 
-  reg [DATA_WIDTH - 1 : 0] block_reg [0 : BLOCK_NO - 1];
+  logic [BLOCK_NO-1:0][DATA_WIDTH-1:0] block_reg ;
   reg          block_we;
 
-  reg [DATA_WIDTH - 1 : 0] key_reg [0 : KEY_NO - 1];
+  logic [KEY_NO-1:0][DATA_WIDTH-1:0] key_reg ;
   reg          key_we;
 
   reg [DATA_WIDTH - 1 : 0] IV_reg [0 : BLOCK_NO - 1];
   reg          IV_we;
 
   reg [127 : 0] result_reg;
+  reg [127 : 0] kv_result_reg;
   reg           valid_reg;
   reg           ready_reg;
 
@@ -93,6 +104,23 @@ module aes_cbc
   wire           core_valid;
 
 
+
+  //client control register
+  kv_doe_reg_t doe_ctrl_reg;
+
+  //interface with client
+  logic doe_key_write_en;
+  logic doe_src_write_en;
+  logic [127:0] doe_src_write_data;
+
+  logic doe_init;
+  logic doe_next;
+
+  logic doe_flow_ip;
+
+  logic flow_done;
+
+
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
@@ -108,10 +136,10 @@ module aes_cbc
     assign core_IV      = {IV_reg[0], IV_reg[1], IV_reg[2], IV_reg[3]};
   `endif
 
-  assign core_init   = init_reg;
-  assign core_next   = next_reg;
-  assign core_encdec = encdec_reg;
-  assign core_keylen = keylen_reg;
+  assign core_init   = init_reg | doe_init;
+  assign core_next   = next_reg | doe_next;
+  assign core_encdec = encdec_reg & ~doe_flow_ip; //force decypher for DOE
+  assign core_keylen = keylen_reg | doe_flow_ip; //force 256b KEY for DOE
 
 
   //----------------------------------------------------------------
@@ -172,7 +200,10 @@ module aes_cbc
         begin
           ready_reg  <= core_ready;
           valid_reg  <= core_valid;
-          result_reg <= core_result;
+          if (~doe_flow_ip)
+            result_reg <= core_result;
+          else if (doe_flow_ip)
+            kv_result_reg <= core_result;
           init_reg   <= init_new;
           next_reg   <= next_new;
 
@@ -188,23 +219,29 @@ module aes_cbc
             `else
               key_reg[address[4 : 2]] <= write_data;
             `endif
-
+          if (doe_key_write_en) 
+            key_reg <= cptra_obf_key;
           if (block_we)
-            
             `ifdef AES_DATA_BUS_64
               block_reg[address[3]] <= write_data;
             `else
               block_reg[address[3 : 2]] <= write_data;
             `endif
-
+          if (doe_src_write_en) 
+            block_reg <= doe_src_write_data;
           if (IV_we)
-            
             `ifdef AES_DATA_BUS_64
               IV_reg[address[3]] <= write_data;
             `else
               IV_reg[address[3 : 2]] <= write_data;
             `endif
-
+          if (kv_ctrl_we)
+            doe_ctrl_reg <= write_data[5:0];
+          if (flow_done) begin
+            doe_ctrl_reg.cmd <= '0;
+            doe_ctrl_reg.dest_sel <= '0;
+            doe_ctrl_reg.flow_done <= 1'b1;
+          end
         end
     end // reg_update
 
@@ -222,6 +259,7 @@ module aes_cbc
       key_we        = 1'b0;
       block_we      = 1'b0;
       IV_we         = 1'b0;
+      kv_ctrl_we    = 1'b0;
       tmp_read_data = 0;
 
       if (cs)
@@ -245,6 +283,8 @@ module aes_cbc
 
               if ((address >= AES_ADDR_IV_START) && (address <= AES_ADDR_IV_END))
                 IV_we = 1'b1;
+              if (address == AES_ADDR_KV_CTRL)
+                kv_ctrl_we = 1'b1;
             end // if (we)
 
           else
@@ -262,6 +302,7 @@ module aes_cbc
                   AES_ADDR_VERSION1: tmp_read_data = AES_CORE_VERSION[63 : 32];
                   AES_ADDR_CTRL:     tmp_read_data = {28'h0, keylen_reg, encdec_reg, next_reg, init_reg};
                   AES_ADDR_STATUS:   tmp_read_data = {30'h0, valid_reg, ready_reg};
+                  AES_ADDR_KV_CTRL:  tmp_read_data = {26'h0, doe_ctrl_reg};
                 `endif
 
                 default:
@@ -279,6 +320,41 @@ module aes_cbc
             end
         end
     end // addr_decoder
+
+
+kv_doe
+kv_doe1 
+(
+  .clk(clk),
+  .rst_b(reset_n),
+
+    //Obfuscated UDS and FE
+  .obf_field_entropy(obf_field_entropy),
+  .obf_uds_seed(obf_uds_seed),
+
+  //client control register
+  .doe_ctrl_reg(doe_ctrl_reg),
+
+  //interface with kv
+  .kv_write(kv_write),
+
+  //interface with client
+  .key_write_en(doe_key_write_en),
+  .src_write_en(doe_src_write_en),
+  .src_write_data(doe_src_write_data),
+
+  .doe_init(doe_init),
+  .doe_next(doe_next),
+
+  .doe_flow_ip(doe_flow_ip),
+  .init_done(core_ready),
+  .dest_data_avail(core_valid),
+  .dest_data(kv_result_reg),
+
+  .flow_done(flow_done)
+
+);
+
 endmodule // aes
 
 //======================================================================

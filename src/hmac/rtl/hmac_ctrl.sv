@@ -38,7 +38,12 @@ module hmac_ctrl #(
 
     output logic hresp_o,
     output logic hreadyout_o,
-    output logic [AHB_DATA_WIDTH-1:0] hrdata_o
+    output logic [AHB_DATA_WIDTH-1:0] hrdata_o,
+
+    // kv interface
+    output kv_read_t kv_read,
+    output kv_write_t kv_write,
+    input kv_resp_t kv_resp
 );
 
     //----------------------------------------------------------------
@@ -57,7 +62,10 @@ module hmac_ctrl #(
         .we(hmac_we),
         .address(hmac_address),
         .write_data(hmac_write_data),
-        .read_data(hmac_read_data)
+        .read_data(hmac_read_data),
+        .kv_read(kv_read),
+        .kv_write(kv_write),
+        .kv_resp(kv_resp)
     );
 
     //instantiate ahb lite module

@@ -11,8 +11,8 @@
   `define QSPI_IO_WIDTH       4
   `define SOC_SEC_STATE_WIDTH 3
   `define SLAVE_NAMES         {"SWERV_DMA"  , "MBOX"       , "I3C"        , "UART"       , "QSPI"       , "SHA"        , "KEYVAULT"   , "HMAC"       , "ECC"        , "AES_CTRL"   } // Array of names for peripherals
-  `define SLAVE_BASE_ADDR     {32'hEE00_0000, 32'h3000_0000, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'h4000_0000, 32'hFFFF_FFFF, 32'h1001_0000, 32'hFFFF_FFFF, 32'h6000_0000} // Array with slave base address
-  `define SLAVE_MASK_ADDR     {32'hEE00_FFFF, 32'h3003_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'h4000_FFFF, 32'hFFFF_FFFF, 32'h1001_0FFF, 32'hFFFF_FFFF, 32'h6000_FFFF} // Array with slave offset address
+  `define SLAVE_BASE_ADDR     {32'hEE00_0000, 32'h3000_0000, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'h4000_0000, 32'h1001_8000, 32'h1001_0000, 32'hFFFF_FFFF, 32'h6000_0000} // Array with slave base address
+  `define SLAVE_MASK_ADDR     {32'hEE00_FFFF, 32'h3003_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'h4000_FFFF, 32'h1001_FFFF, 32'h1001_0FFF, 32'hFFFF_FFFF, 32'h6000_FFFF} // Array with slave offset address
   `define SLAVE_SEL_AES       0
   `define SLAVE_SEL_ECC       1
   `define SLAVE_SEL_HMAC      2
@@ -24,6 +24,9 @@
   `define SLAVE_SEL_MBOX      8
   `define SLAVE_SEL_DMA       9
 
+  `define KV_NUM_READ 1
+  `define KV_NUM_WRITE 2
+
   `define IMEM_BYTE_SIZE  32768
   `define IMEM_DATA_WIDTH 64
   `define IMEM_DEPTH      `IMEM_BYTE_SIZE / (`IMEM_DATA_WIDTH/8)
@@ -31,6 +34,7 @@
 
   `define CALIPTRA_TOP        caliptra_top_tb
   `define CALIPTRA_RV_TOP     `CALIPTRA_TOP.caliptra_top_dut
+
   `define RV_TOP              `CALIPTRA_RV_TOP.rvtop
   // Override Risc-V reset vector from common_defines.vh
   `define RV_RESET_VEC 32'h00000000

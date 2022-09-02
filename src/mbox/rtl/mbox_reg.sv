@@ -7,7 +7,7 @@ module mbox_reg (
 
         input wire s_cpuif_req,
         input wire s_cpuif_req_is_wr,
-        input wire [8:0] s_cpuif_addr,
+        input wire [9:0] s_cpuif_addr,
         input wire [31:0] s_cpuif_wr_data,
         output wire s_cpuif_req_stall_wr,
         output wire s_cpuif_req_stall_rd,
@@ -26,7 +26,7 @@ module mbox_reg (
     //--------------------------------------------------------------------------
     logic cpuif_req;
     logic cpuif_req_is_wr;
-    logic [8:0] cpuif_addr;
+    logic [9:0] cpuif_addr;
     logic [31:0] cpuif_wr_data;
     logic cpuif_req_stall_wr;
     logic cpuif_req_stall_rd;
@@ -69,6 +69,7 @@ module mbox_reg (
         logic FW_ERROR_ENC;
         logic BOOT_STATUS;
         logic FLOW_STATUS;
+        logic CLEAR_SECRETS;
         logic uds_seed[12];
         logic field_entropy[32];
         logic key_manifest_pk_hash_0[12];
@@ -81,6 +82,8 @@ module mbox_reg (
         logic runtime_svn[4];
         logic anti_rollback_disable;
         logic ieee_idevid_cert_chain;
+        logic fuse_done;
+        logic obf_key[8];
     } decoded_reg_strb_t;
     decoded_reg_strb_t decoded_reg_strb;
     logic decoded_req;
@@ -96,32 +99,37 @@ module mbox_reg (
         decoded_reg_strb.FW_ERROR_ENC = cpuif_req_masked & (cpuif_addr == 'h14);
         decoded_reg_strb.BOOT_STATUS = cpuif_req_masked & (cpuif_addr == 'h18);
         decoded_reg_strb.FLOW_STATUS = cpuif_req_masked & (cpuif_addr == 'h1c);
+        decoded_reg_strb.CLEAR_SECRETS = cpuif_req_masked & (cpuif_addr == 'h20);
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.uds_seed[i0] = cpuif_req_masked & (cpuif_addr == 'h20 + i0*'h4);
+            decoded_reg_strb.uds_seed[i0] = cpuif_req_masked & (cpuif_addr == 'h200 + i0*'h4);
         end
         for(int i0=0; i0<32; i0++) begin
-            decoded_reg_strb.field_entropy[i0] = cpuif_req_masked & (cpuif_addr == 'h50 + i0*'h4);
+            decoded_reg_strb.field_entropy[i0] = cpuif_req_masked & (cpuif_addr == 'h230 + i0*'h4);
         end
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.key_manifest_pk_hash_0[i0] = cpuif_req_masked & (cpuif_addr == 'hd0 + i0*'h4);
+            decoded_reg_strb.key_manifest_pk_hash_0[i0] = cpuif_req_masked & (cpuif_addr == 'h2b0 + i0*'h4);
         end
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.key_manifest_pk_hash_1[i0] = cpuif_req_masked & (cpuif_addr == 'h100 + i0*'h4);
+            decoded_reg_strb.key_manifest_pk_hash_1[i0] = cpuif_req_masked & (cpuif_addr == 'h2e0 + i0*'h4);
         end
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.key_manifest_pk_hash_2[i0] = cpuif_req_masked & (cpuif_addr == 'h130 + i0*'h4);
+            decoded_reg_strb.key_manifest_pk_hash_2[i0] = cpuif_req_masked & (cpuif_addr == 'h310 + i0*'h4);
         end
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.key_manifest_pk_hash_3[i0] = cpuif_req_masked & (cpuif_addr == 'h160 + i0*'h4);
+            decoded_reg_strb.key_manifest_pk_hash_3[i0] = cpuif_req_masked & (cpuif_addr == 'h340 + i0*'h4);
         end
-        decoded_reg_strb.key_manifest_pk_hash_mask = cpuif_req_masked & (cpuif_addr == 'h190);
-        decoded_reg_strb.key_manifest_svn = cpuif_req_masked & (cpuif_addr == 'h194);
-        decoded_reg_strb.boot_loader_svn = cpuif_req_masked & (cpuif_addr == 'h198);
+        decoded_reg_strb.key_manifest_pk_hash_mask = cpuif_req_masked & (cpuif_addr == 'h370);
+        decoded_reg_strb.key_manifest_svn = cpuif_req_masked & (cpuif_addr == 'h374);
+        decoded_reg_strb.boot_loader_svn = cpuif_req_masked & (cpuif_addr == 'h378);
         for(int i0=0; i0<4; i0++) begin
-            decoded_reg_strb.runtime_svn[i0] = cpuif_req_masked & (cpuif_addr == 'h19c + i0*'h4);
+            decoded_reg_strb.runtime_svn[i0] = cpuif_req_masked & (cpuif_addr == 'h37c + i0*'h4);
         end
-        decoded_reg_strb.anti_rollback_disable = cpuif_req_masked & (cpuif_addr == 'h1ac);
-        decoded_reg_strb.ieee_idevid_cert_chain = cpuif_req_masked & (cpuif_addr == 'h1b0);
+        decoded_reg_strb.anti_rollback_disable = cpuif_req_masked & (cpuif_addr == 'h38c);
+        decoded_reg_strb.ieee_idevid_cert_chain = cpuif_req_masked & (cpuif_addr == 'h390);
+        decoded_reg_strb.fuse_done = cpuif_req_masked & (cpuif_addr == 'h394);
+        for(int i0=0; i0<8; i0++) begin
+            decoded_reg_strb.obf_key[i0] = cpuif_req_masked & (cpuif_addr == 'h398 + i0*'h4);
+        end
     end
 
     // Pass down signals to next stage
@@ -185,6 +193,12 @@ module mbox_reg (
                 logic load_next;
             } status;
         } FLOW_STATUS;
+        struct {
+            struct {
+                logic next;
+                logic load_next;
+            } clear;
+        } CLEAR_SECRETS;
         struct {
             struct {
                 logic [31:0] next;
@@ -257,6 +271,18 @@ module mbox_reg (
                 logic load_next;
             } cert;
         } ieee_idevid_cert_chain;
+        struct {
+            struct {
+                logic next;
+                logic load_next;
+            } done;
+        } fuse_done;
+        struct {
+            struct {
+                logic [31:0] next;
+                logic load_next;
+            } key;
+        } obf_key[8];
     } field_combo_t;
     field_combo_t field_combo;
 
@@ -301,6 +327,11 @@ module mbox_reg (
                 logic [31:0] value;
             } status;
         } FLOW_STATUS;
+        struct {
+            struct {
+                logic value;
+            } clear;
+        } CLEAR_SECRETS;
         struct {
             struct {
                 logic [31:0] value;
@@ -361,6 +392,16 @@ module mbox_reg (
                 logic [31:0] value;
             } cert;
         } ieee_idevid_cert_chain;
+        struct {
+            struct {
+                logic value;
+            } done;
+        } fuse_done;
+        struct {
+            struct {
+                logic [31:0] value;
+            } key;
+        } obf_key[8];
     } field_storage_t;
     field_storage_t field_storage;
 
@@ -375,8 +416,10 @@ module mbox_reg (
         field_combo.HW_ERROR_FATAL.error_code.next = next_c;
         field_combo.HW_ERROR_FATAL.error_code.load_next = load_next_c;
     end
-    always_ff @(posedge clk) begin
-        if(field_combo.HW_ERROR_FATAL.error_code.load_next) begin
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.HW_ERROR_FATAL.error_code.value <= 'h0;
+        end else if(field_combo.HW_ERROR_FATAL.error_code.load_next) begin
             field_storage.HW_ERROR_FATAL.error_code.value <= field_combo.HW_ERROR_FATAL.error_code.next;
         end
     end
@@ -391,8 +434,10 @@ module mbox_reg (
         field_combo.HW_ERROR_NON_FATAL.error_code.next = next_c;
         field_combo.HW_ERROR_NON_FATAL.error_code.load_next = load_next_c;
     end
-    always_ff @(posedge clk) begin
-        if(field_combo.HW_ERROR_NON_FATAL.error_code.load_next) begin
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.HW_ERROR_NON_FATAL.error_code.value <= 'h0;
+        end else if(field_combo.HW_ERROR_NON_FATAL.error_code.load_next) begin
             field_storage.HW_ERROR_NON_FATAL.error_code.value <= field_combo.HW_ERROR_NON_FATAL.error_code.next;
         end
     end
@@ -407,8 +452,10 @@ module mbox_reg (
         field_combo.FW_ERROR_FATAL.error_code.next = next_c;
         field_combo.FW_ERROR_FATAL.error_code.load_next = load_next_c;
     end
-    always_ff @(posedge clk) begin
-        if(field_combo.FW_ERROR_FATAL.error_code.load_next) begin
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.FW_ERROR_FATAL.error_code.value <= 'h0;
+        end else if(field_combo.FW_ERROR_FATAL.error_code.load_next) begin
             field_storage.FW_ERROR_FATAL.error_code.value <= field_combo.FW_ERROR_FATAL.error_code.next;
         end
     end
@@ -423,8 +470,10 @@ module mbox_reg (
         field_combo.FW_ERROR_NON_FATAL.error_code.next = next_c;
         field_combo.FW_ERROR_NON_FATAL.error_code.load_next = load_next_c;
     end
-    always_ff @(posedge clk) begin
-        if(field_combo.FW_ERROR_NON_FATAL.error_code.load_next) begin
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.FW_ERROR_NON_FATAL.error_code.value <= 'h0;
+        end else if(field_combo.FW_ERROR_NON_FATAL.error_code.load_next) begin
             field_storage.FW_ERROR_NON_FATAL.error_code.value <= field_combo.FW_ERROR_NON_FATAL.error_code.next;
         end
     end
@@ -439,8 +488,10 @@ module mbox_reg (
         field_combo.HW_ERROR_ENC.error_code.next = next_c;
         field_combo.HW_ERROR_ENC.error_code.load_next = load_next_c;
     end
-    always_ff @(posedge clk) begin
-        if(field_combo.HW_ERROR_ENC.error_code.load_next) begin
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.HW_ERROR_ENC.error_code.value <= 'h0;
+        end else if(field_combo.HW_ERROR_ENC.error_code.load_next) begin
             field_storage.HW_ERROR_ENC.error_code.value <= field_combo.HW_ERROR_ENC.error_code.next;
         end
     end
@@ -455,8 +506,10 @@ module mbox_reg (
         field_combo.FW_ERROR_ENC.error_code.next = next_c;
         field_combo.FW_ERROR_ENC.error_code.load_next = load_next_c;
     end
-    always_ff @(posedge clk) begin
-        if(field_combo.FW_ERROR_ENC.error_code.load_next) begin
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.FW_ERROR_ENC.error_code.value <= 'h0;
+        end else if(field_combo.FW_ERROR_ENC.error_code.load_next) begin
             field_storage.FW_ERROR_ENC.error_code.value <= field_combo.FW_ERROR_ENC.error_code.next;
         end
     end
@@ -471,8 +524,10 @@ module mbox_reg (
         field_combo.BOOT_STATUS.status.next = next_c;
         field_combo.BOOT_STATUS.status.load_next = load_next_c;
     end
-    always_ff @(posedge clk) begin
-        if(field_combo.BOOT_STATUS.status.load_next) begin
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.BOOT_STATUS.status.value <= 'h0;
+        end else if(field_combo.BOOT_STATUS.status.load_next) begin
             field_storage.BOOT_STATUS.status.value <= field_combo.BOOT_STATUS.status.next;
         end
     end
@@ -487,11 +542,35 @@ module mbox_reg (
         field_combo.FLOW_STATUS.status.next = next_c;
         field_combo.FLOW_STATUS.status.load_next = load_next_c;
     end
-    always_ff @(posedge clk) begin
-        if(field_combo.FLOW_STATUS.status.load_next) begin
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.FLOW_STATUS.status.value <= 'h0;
+        end else if(field_combo.FLOW_STATUS.status.load_next) begin
             field_storage.FLOW_STATUS.status.value <= field_combo.FLOW_STATUS.status.next;
         end
     end
+    // Field: mbox_reg.CLEAR_SECRETS.clear
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.CLEAR_SECRETS.clear.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.CLEAR_SECRETS && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
+            next_c = decoded_wr_data[0:0];
+            load_next_c = '1;
+        end else if(1) begin // singlepulse clears back to 0
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.CLEAR_SECRETS.clear.next = next_c;
+        field_combo.CLEAR_SECRETS.clear.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.CLEAR_SECRETS.clear.value <= 'h0;
+        end else if(field_combo.CLEAR_SECRETS.clear.load_next) begin
+            field_storage.CLEAR_SECRETS.clear.value <= field_combo.CLEAR_SECRETS.clear.next;
+        end
+    end
+    assign hwif_out.CLEAR_SECRETS.clear.value = field_storage.CLEAR_SECRETS.clear.value;
     for(genvar i0=0; i0<12; i0++) begin
         // Field: mbox_reg.uds_seed[].seed
         always_comb begin
@@ -507,8 +586,10 @@ module mbox_reg (
             field_combo.uds_seed[i0].seed.next = next_c;
             field_combo.uds_seed[i0].seed.load_next = load_next_c;
         end
-        always_ff @(posedge clk) begin
-            if(field_combo.uds_seed[i0].seed.load_next) begin
+        always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+            if(~hwif_in.hard_reset_b) begin
+                field_storage.uds_seed[i0].seed.value <= 'h0;
+            end else if(field_combo.uds_seed[i0].seed.load_next) begin
                 field_storage.uds_seed[i0].seed.value <= field_combo.uds_seed[i0].seed.next;
             end
         end
@@ -529,8 +610,10 @@ module mbox_reg (
             field_combo.field_entropy[i0].seed.next = next_c;
             field_combo.field_entropy[i0].seed.load_next = load_next_c;
         end
-        always_ff @(posedge clk) begin
-            if(field_combo.field_entropy[i0].seed.load_next) begin
+        always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+            if(~hwif_in.hard_reset_b) begin
+                field_storage.field_entropy[i0].seed.value <= 'h0;
+            end else if(field_combo.field_entropy[i0].seed.load_next) begin
                 field_storage.field_entropy[i0].seed.value <= field_combo.field_entropy[i0].seed.next;
             end
         end
@@ -548,11 +631,14 @@ module mbox_reg (
             field_combo.key_manifest_pk_hash_0[i0].hash.next = next_c;
             field_combo.key_manifest_pk_hash_0[i0].hash.load_next = load_next_c;
         end
-        always_ff @(posedge clk) begin
-            if(field_combo.key_manifest_pk_hash_0[i0].hash.load_next) begin
+        always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+            if(~hwif_in.hard_reset_b) begin
+                field_storage.key_manifest_pk_hash_0[i0].hash.value <= 'h0;
+            end else if(field_combo.key_manifest_pk_hash_0[i0].hash.load_next) begin
                 field_storage.key_manifest_pk_hash_0[i0].hash.value <= field_combo.key_manifest_pk_hash_0[i0].hash.next;
             end
         end
+        assign hwif_out.key_manifest_pk_hash_0[i0].hash.value = field_storage.key_manifest_pk_hash_0[i0].hash.value;
     end
     for(genvar i0=0; i0<12; i0++) begin
         // Field: mbox_reg.key_manifest_pk_hash_1[].hash
@@ -566,11 +652,14 @@ module mbox_reg (
             field_combo.key_manifest_pk_hash_1[i0].hash.next = next_c;
             field_combo.key_manifest_pk_hash_1[i0].hash.load_next = load_next_c;
         end
-        always_ff @(posedge clk) begin
-            if(field_combo.key_manifest_pk_hash_1[i0].hash.load_next) begin
+        always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+            if(~hwif_in.hard_reset_b) begin
+                field_storage.key_manifest_pk_hash_1[i0].hash.value <= 'h0;
+            end else if(field_combo.key_manifest_pk_hash_1[i0].hash.load_next) begin
                 field_storage.key_manifest_pk_hash_1[i0].hash.value <= field_combo.key_manifest_pk_hash_1[i0].hash.next;
             end
         end
+        assign hwif_out.key_manifest_pk_hash_1[i0].hash.value = field_storage.key_manifest_pk_hash_1[i0].hash.value;
     end
     for(genvar i0=0; i0<12; i0++) begin
         // Field: mbox_reg.key_manifest_pk_hash_2[].hash
@@ -584,11 +673,14 @@ module mbox_reg (
             field_combo.key_manifest_pk_hash_2[i0].hash.next = next_c;
             field_combo.key_manifest_pk_hash_2[i0].hash.load_next = load_next_c;
         end
-        always_ff @(posedge clk) begin
-            if(field_combo.key_manifest_pk_hash_2[i0].hash.load_next) begin
+        always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+            if(~hwif_in.hard_reset_b) begin
+                field_storage.key_manifest_pk_hash_2[i0].hash.value <= 'h0;
+            end else if(field_combo.key_manifest_pk_hash_2[i0].hash.load_next) begin
                 field_storage.key_manifest_pk_hash_2[i0].hash.value <= field_combo.key_manifest_pk_hash_2[i0].hash.next;
             end
         end
+        assign hwif_out.key_manifest_pk_hash_2[i0].hash.value = field_storage.key_manifest_pk_hash_2[i0].hash.value;
     end
     for(genvar i0=0; i0<12; i0++) begin
         // Field: mbox_reg.key_manifest_pk_hash_3[].hash
@@ -602,11 +694,14 @@ module mbox_reg (
             field_combo.key_manifest_pk_hash_3[i0].hash.next = next_c;
             field_combo.key_manifest_pk_hash_3[i0].hash.load_next = load_next_c;
         end
-        always_ff @(posedge clk) begin
-            if(field_combo.key_manifest_pk_hash_3[i0].hash.load_next) begin
+        always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+            if(~hwif_in.hard_reset_b) begin
+                field_storage.key_manifest_pk_hash_3[i0].hash.value <= 'h0;
+            end else if(field_combo.key_manifest_pk_hash_3[i0].hash.load_next) begin
                 field_storage.key_manifest_pk_hash_3[i0].hash.value <= field_combo.key_manifest_pk_hash_3[i0].hash.next;
             end
         end
+        assign hwif_out.key_manifest_pk_hash_3[i0].hash.value = field_storage.key_manifest_pk_hash_3[i0].hash.value;
     end
     // Field: mbox_reg.key_manifest_pk_hash_mask.mask
     always_comb begin
@@ -619,11 +714,14 @@ module mbox_reg (
         field_combo.key_manifest_pk_hash_mask.mask.next = next_c;
         field_combo.key_manifest_pk_hash_mask.mask.load_next = load_next_c;
     end
-    always_ff @(posedge clk) begin
-        if(field_combo.key_manifest_pk_hash_mask.mask.load_next) begin
+    always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+        if(~hwif_in.hard_reset_b) begin
+            field_storage.key_manifest_pk_hash_mask.mask.value <= 'h0;
+        end else if(field_combo.key_manifest_pk_hash_mask.mask.load_next) begin
             field_storage.key_manifest_pk_hash_mask.mask.value <= field_combo.key_manifest_pk_hash_mask.mask.next;
         end
     end
+    assign hwif_out.key_manifest_pk_hash_mask.mask.value = field_storage.key_manifest_pk_hash_mask.mask.value;
     // Field: mbox_reg.key_manifest_svn.svn
     always_comb begin
         automatic logic [31:0] next_c = field_storage.key_manifest_svn.svn.value;
@@ -635,11 +733,14 @@ module mbox_reg (
         field_combo.key_manifest_svn.svn.next = next_c;
         field_combo.key_manifest_svn.svn.load_next = load_next_c;
     end
-    always_ff @(posedge clk) begin
-        if(field_combo.key_manifest_svn.svn.load_next) begin
+    always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+        if(~hwif_in.hard_reset_b) begin
+            field_storage.key_manifest_svn.svn.value <= 'h0;
+        end else if(field_combo.key_manifest_svn.svn.load_next) begin
             field_storage.key_manifest_svn.svn.value <= field_combo.key_manifest_svn.svn.next;
         end
     end
+    assign hwif_out.key_manifest_svn.svn.value = field_storage.key_manifest_svn.svn.value;
     // Field: mbox_reg.boot_loader_svn.svn
     always_comb begin
         automatic logic [31:0] next_c = field_storage.boot_loader_svn.svn.value;
@@ -651,11 +752,14 @@ module mbox_reg (
         field_combo.boot_loader_svn.svn.next = next_c;
         field_combo.boot_loader_svn.svn.load_next = load_next_c;
     end
-    always_ff @(posedge clk) begin
-        if(field_combo.boot_loader_svn.svn.load_next) begin
+    always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+        if(~hwif_in.hard_reset_b) begin
+            field_storage.boot_loader_svn.svn.value <= 'h0;
+        end else if(field_combo.boot_loader_svn.svn.load_next) begin
             field_storage.boot_loader_svn.svn.value <= field_combo.boot_loader_svn.svn.next;
         end
     end
+    assign hwif_out.boot_loader_svn.svn.value = field_storage.boot_loader_svn.svn.value;
     for(genvar i0=0; i0<4; i0++) begin
         // Field: mbox_reg.runtime_svn[].svn
         always_comb begin
@@ -668,11 +772,14 @@ module mbox_reg (
             field_combo.runtime_svn[i0].svn.next = next_c;
             field_combo.runtime_svn[i0].svn.load_next = load_next_c;
         end
-        always_ff @(posedge clk) begin
-            if(field_combo.runtime_svn[i0].svn.load_next) begin
+        always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+            if(~hwif_in.hard_reset_b) begin
+                field_storage.runtime_svn[i0].svn.value <= 'h0;
+            end else if(field_combo.runtime_svn[i0].svn.load_next) begin
                 field_storage.runtime_svn[i0].svn.value <= field_combo.runtime_svn[i0].svn.next;
             end
         end
+        assign hwif_out.runtime_svn[i0].svn.value = field_storage.runtime_svn[i0].svn.value;
     end
     // Field: mbox_reg.anti_rollback_disable.dis
     always_comb begin
@@ -685,11 +792,14 @@ module mbox_reg (
         field_combo.anti_rollback_disable.dis.next = next_c;
         field_combo.anti_rollback_disable.dis.load_next = load_next_c;
     end
-    always_ff @(posedge clk) begin
-        if(field_combo.anti_rollback_disable.dis.load_next) begin
+    always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+        if(~hwif_in.hard_reset_b) begin
+            field_storage.anti_rollback_disable.dis.value <= 'h0;
+        end else if(field_combo.anti_rollback_disable.dis.load_next) begin
             field_storage.anti_rollback_disable.dis.value <= field_combo.anti_rollback_disable.dis.next;
         end
     end
+    assign hwif_out.anti_rollback_disable.dis.value = field_storage.anti_rollback_disable.dis.value;
     // Field: mbox_reg.ieee_idevid_cert_chain.cert
     always_comb begin
         automatic logic [31:0] next_c = field_storage.ieee_idevid_cert_chain.cert.value;
@@ -701,10 +811,57 @@ module mbox_reg (
         field_combo.ieee_idevid_cert_chain.cert.next = next_c;
         field_combo.ieee_idevid_cert_chain.cert.load_next = load_next_c;
     end
-    always_ff @(posedge clk) begin
-        if(field_combo.ieee_idevid_cert_chain.cert.load_next) begin
+    always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+        if(~hwif_in.hard_reset_b) begin
+            field_storage.ieee_idevid_cert_chain.cert.value <= 'h0;
+        end else if(field_combo.ieee_idevid_cert_chain.cert.load_next) begin
             field_storage.ieee_idevid_cert_chain.cert.value <= field_combo.ieee_idevid_cert_chain.cert.next;
         end
+    end
+    assign hwif_out.ieee_idevid_cert_chain.cert.value = field_storage.ieee_idevid_cert_chain.cert.value;
+    // Field: mbox_reg.fuse_done.done
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.fuse_done.done.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.fuse_done && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[0:0];
+            load_next_c = '1;
+        end
+        field_combo.fuse_done.done.next = next_c;
+        field_combo.fuse_done.done.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+        if(~hwif_in.hard_reset_b) begin
+            field_storage.fuse_done.done.value <= 'h0;
+        end else if(field_combo.fuse_done.done.load_next) begin
+            field_storage.fuse_done.done.value <= field_combo.fuse_done.done.next;
+        end
+    end
+    assign hwif_out.fuse_done.done.value = field_storage.fuse_done.done.value;
+    for(genvar i0=0; i0<8; i0++) begin
+        // Field: mbox_reg.obf_key[].key
+        always_comb begin
+            automatic logic [31:0] next_c = field_storage.obf_key[i0].key.value;
+            automatic logic load_next_c = '0;
+            if(decoded_reg_strb.obf_key[i0] && decoded_req_is_wr && hwif_in.obf_key[i0].key.swwe) begin // SW write
+                next_c = decoded_wr_data[31:0];
+                load_next_c = '1;
+            end else if(!hwif_in.obf_key[i0].key.wel) begin // HW Write - wel
+                next_c = hwif_in.obf_key[i0].key.next;
+                load_next_c = '1;
+            end else if(hwif_in.obf_key[i0].key.hwclr) begin // HW Clear
+                next_c = '0;
+                load_next_c = '1;
+            end
+            field_combo.obf_key[i0].key.next = next_c;
+            field_combo.obf_key[i0].key.load_next = load_next_c;
+        end
+        always_ff @(posedge clk) begin
+            if(field_combo.obf_key[i0].key.load_next) begin
+                field_storage.obf_key[i0].key.value <= field_combo.obf_key[i0].key.next;
+            end
+        end
+        assign hwif_out.obf_key[i0].key.value = field_storage.obf_key[i0].key.value;
     end
 
     //--------------------------------------------------------------------------
@@ -715,7 +872,7 @@ module mbox_reg (
     logic [31:0] readback_data;
     
     // Assign readback values to a flattened array
-    logic [31:0] readback_array[65];
+    logic [31:0] readback_array[66];
     assign readback_array[0][31:0] = (decoded_reg_strb.HW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.HW_ERROR_FATAL.error_code.value : '0;
     assign readback_array[1][31:0] = (decoded_reg_strb.HW_ERROR_NON_FATAL && !decoded_req_is_wr) ? field_storage.HW_ERROR_NON_FATAL.error_code.value : '0;
     assign readback_array[2][31:0] = (decoded_reg_strb.FW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.FW_ERROR_FATAL.error_code.value : '0;
@@ -746,6 +903,8 @@ module mbox_reg (
     assign readback_array[63][0:0] = (decoded_reg_strb.anti_rollback_disable && !decoded_req_is_wr) ? field_storage.anti_rollback_disable.dis.value : '0;
     assign readback_array[63][31:1] = '0;
     assign readback_array[64][31:0] = (decoded_reg_strb.ieee_idevid_cert_chain && !decoded_req_is_wr) ? field_storage.ieee_idevid_cert_chain.cert.value : '0;
+    assign readback_array[65][0:0] = (decoded_reg_strb.fuse_done && !decoded_req_is_wr) ? field_storage.fuse_done.done.value : '0;
+    assign readback_array[65][31:1] = '0;
 
 
     // Reduce the array
@@ -754,7 +913,7 @@ module mbox_reg (
         readback_done = decoded_req & ~decoded_req_is_wr;
         readback_err = '0;
         readback_data_var = '0;
-        for(int i=0; i<65; i++) readback_data_var |= readback_array[i];
+        for(int i=0; i<66; i++) readback_data_var |= readback_array[i];
         readback_data = readback_data_var;
     end
 

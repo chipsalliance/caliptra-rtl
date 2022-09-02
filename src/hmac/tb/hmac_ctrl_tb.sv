@@ -158,7 +158,11 @@ module hmac_ctrl_tb();
 
              .hresp_o(hresp_o_tb),
              .hreadyout_o(hreadyout_o_tb),
-             .hrdata_o(hrdata_o_tb)
+             .hrdata_o(hrdata_o_tb),
+
+             .kv_read(),
+             .kv_write(),
+             .kv_resp('x)
             );
 
 

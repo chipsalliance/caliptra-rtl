@@ -353,6 +353,14 @@ module caliptra_top (
 
 `endif
 
+    logic [7:0][31:0] cptra_obf_key_reg;
+    logic [31:0][31:0] obf_field_entropy;
+    logic [11:0][31:0] obf_uds_seed;
+
+    kv_read_t [`KV_NUM_READ-1:0]  kv_read;
+    kv_write_t [`KV_NUM_WRITE-1:0]  kv_write;
+    kv_resp_t [`KV_NUM_READ-1:0] kv_resp;
+    
     //========================================================================
     // AHB Slave ports. 
     // Slave 0: LMEM
@@ -781,6 +789,9 @@ aes_ctrl #(
 ) aes (
     .clk            (core_clk),
     .reset_n        (cptra_uc_rst_b),
+    .cptra_obf_key  (cptra_obf_key_reg),
+    .obf_uds_seed   (obf_uds_seed),
+    .obf_field_entropy(obf_field_entropy),
     .haddr_i        (s_slave[`SLAVE_SEL_AES].haddr),
     .hwdata_i       (s_slave[`SLAVE_SEL_AES].hwdata),
     .hsel_i         (s_slave[`SLAVE_SEL_AES].hsel),
@@ -793,7 +804,11 @@ aes_ctrl #(
     .hsize_i        (s_slave[`SLAVE_SEL_AES].hsize),
     .hresp_o        (s_slave[`SLAVE_SEL_AES].hresp),
     .hreadyout_o    (s_slave[`SLAVE_SEL_AES].hreadyout),
-    .hrdata_o       (s_slave[`SLAVE_SEL_AES].hrdata)
+    .hrdata_o       (s_slave[`SLAVE_SEL_AES].hrdata),
+
+    .kv_write (kv_write[`KV_NUM_WRITE-1])
+
+    
 );
 
 
@@ -962,6 +977,13 @@ mbox_top #(
     .clk(core_clk),
     .cptra_pwrgood(cptra_pwrgood), 
     .cptra_rst_b(cptra_rst_b),
+    .ready_for_fuses(ready_for_fuses),
+    .mailbox_data_avail(mailbox_data_avail),
+    .mailbox_flow_done(mailbox_flow_done),
+    
+    .generic_input_wires(generic_input_wires),
+    .generic_output_wires(generic_output_wires),
+
     //APB Interface with SoC
     .paddr_i(PADDR),
     .psel_i(PSEL),
@@ -986,7 +1008,10 @@ mbox_top #(
     .hresp_o    (s_slave[`SLAVE_SEL_MBOX].hresp),
     .hreadyout_o(s_slave[`SLAVE_SEL_MBOX].hreadyout),
     .hrdata_o   (s_slave[`SLAVE_SEL_MBOX].hrdata),
-
+    .cptra_obf_key(cptra_obf_key),
+    .cptra_obf_key_reg(cptra_obf_key_reg),
+    .obf_field_entropy(obf_field_entropy),
+    .obf_uds_seed(obf_uds_seed),
     .cptra_uc_rst_b (cptra_uc_rst_b) 
 );
 
@@ -1009,17 +1034,45 @@ hmac_ctrl #(
      .hsize_i       (s_slave[`SLAVE_SEL_HMAC].hsize),
      .hresp_o       (s_slave[`SLAVE_SEL_HMAC].hresp),
      .hreadyout_o   (s_slave[`SLAVE_SEL_HMAC].hreadyout),
-     .hrdata_o      (s_slave[`SLAVE_SEL_HMAC].hrdata)
+     .hrdata_o      (s_slave[`SLAVE_SEL_HMAC].hrdata),
+     .kv_read       (kv_read[0]),
+     .kv_write      (kv_write[0]),
+     .kv_resp       (kv_resp[0])
 );
 
+kv #(
+    .AHB_ADDR_WIDTH(`AHB_HADDR_SIZE),
+    .AHB_DATA_WIDTH(`AHB_HDATA_SIZE),
+    .KV_NUM_READ(`KV_NUM_READ),
+    .KV_NUM_WRITE(`KV_NUM_WRITE)
+)
+key_vault1
+(
+    .clk           (core_clk),
+    .rst_b         (cptra_uc_rst_b),
+    .haddr_i       (s_slave[`SLAVE_SEL_KV].haddr),
+    .hwdata_i      (s_slave[`SLAVE_SEL_KV].hwdata),
+    .hsel_i        (s_slave[`SLAVE_SEL_KV].hsel),
+    .hwrite_i      (s_slave[`SLAVE_SEL_KV].hwrite),
+    .hmastlock_i   (s_slave[`SLAVE_SEL_KV].hmastlock),
+    .hready_i      (s_slave[`SLAVE_SEL_KV].hready),
+    .htrans_i      (s_slave[`SLAVE_SEL_KV].htrans),
+    .hprot_i       (s_slave[`SLAVE_SEL_KV].hprot),
+    .hburst_i      (s_slave[`SLAVE_SEL_KV].hburst),
+    .hsize_i       (s_slave[`SLAVE_SEL_KV].hsize),
+    .hresp_o       (s_slave[`SLAVE_SEL_KV].hresp),
+    .hreadyout_o   (s_slave[`SLAVE_SEL_KV].hreadyout),
+    .hrdata_o      (s_slave[`SLAVE_SEL_KV].hrdata),
+
+    .kv_read       (kv_read),
+    .kv_write      (kv_write),
+    .kv_resp       (kv_resp)
+);
 //TIE OFF slaves
 always_comb begin: tie_off_slaves
     s_slave[`SLAVE_SEL_ECC].hresp = '0;
     s_slave[`SLAVE_SEL_ECC].hreadyout = '0;
     s_slave[`SLAVE_SEL_ECC].hrdata = '0;
-    s_slave[`SLAVE_SEL_KV].hresp = '0;
-    s_slave[`SLAVE_SEL_KV].hreadyout = '0;
-    s_slave[`SLAVE_SEL_KV].hrdata = '0;
     s_slave[`SLAVE_SEL_QSPI].hresp = '0;
     s_slave[`SLAVE_SEL_QSPI].hreadyout = '0;
     s_slave[`SLAVE_SEL_QSPI].hrdata = '0;

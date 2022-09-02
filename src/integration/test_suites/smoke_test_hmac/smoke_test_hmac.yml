@@ -1,7 +1,3 @@
 ---
 seed: 1
-<<<<<<< HEAD
 testname: smoke_test_hmac
-=======
-testname: smoke_test_hmac
->>>>>>> master

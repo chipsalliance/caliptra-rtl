@@ -15,11 +15,32 @@ package mbox_reg_pkg;
     } mbox_reg__field_entropy__in_t;
 
     typedef struct {
+        logic [31:0] next;
+        logic wel;
+        logic swwe;
+        logic hwclr;
+    } mbox_reg__key_w32__in_t;
+
+    typedef struct {
+        mbox_reg__key_w32__in_t key;
+    } mbox_reg__obf_key__in_t;
+
+    typedef struct {
         logic reset_b;
+        logic hard_reset_b;
         logic soc_req;
         mbox_reg__uds_seed__in_t uds_seed[12];
         mbox_reg__field_entropy__in_t field_entropy[32];
+        mbox_reg__obf_key__in_t obf_key[8];
     } mbox_reg__in_t;
+
+    typedef struct {
+        logic value;
+    } mbox_reg__CLEAR_SECRETS__clear__out_t;
+
+    typedef struct {
+        mbox_reg__CLEAR_SECRETS__clear__out_t clear;
+    } mbox_reg__CLEAR_SECRETS__out_t;
 
     typedef struct {
         logic [31:0] value;
@@ -34,7 +55,84 @@ package mbox_reg_pkg;
     } mbox_reg__field_entropy__out_t;
 
     typedef struct {
+        logic [31:0] value;
+    } mbox_reg__fuse_w32__out_t;
+
+    typedef struct {
+        mbox_reg__fuse_w32__out_t hash;
+    } mbox_reg__key_manifest_pk_hash_0__out_t;
+
+    typedef struct {
+        mbox_reg__fuse_w32__out_t hash;
+    } mbox_reg__key_manifest_pk_hash_1__out_t;
+
+    typedef struct {
+        mbox_reg__fuse_w32__out_t hash;
+    } mbox_reg__key_manifest_pk_hash_2__out_t;
+
+    typedef struct {
+        mbox_reg__fuse_w32__out_t hash;
+    } mbox_reg__key_manifest_pk_hash_3__out_t;
+
+    typedef struct {
+        logic [3:0] value;
+    } mbox_reg__fuse_w4__out_t;
+
+    typedef struct {
+        mbox_reg__fuse_w4__out_t mask;
+    } mbox_reg__key_manifest_pk_hash_mask__out_t;
+
+    typedef struct {
+        mbox_reg__fuse_w32__out_t svn;
+    } mbox_reg__key_manifest_svn__out_t;
+
+    typedef struct {
+        mbox_reg__fuse_w32__out_t svn;
+    } mbox_reg__boot_loader_svn__out_t;
+
+    typedef struct {
+        mbox_reg__fuse_w32__out_t svn;
+    } mbox_reg__runtime_svn__out_t;
+
+    typedef struct {
+        logic value;
+    } mbox_reg__fuse__out_t;
+
+    typedef struct {
+        mbox_reg__fuse__out_t dis;
+    } mbox_reg__anti_rollback_disable__out_t;
+
+    typedef struct {
+        mbox_reg__fuse_w32__out_t cert;
+    } mbox_reg__ieee_idevid_cert_chain__out_t;
+
+    typedef struct {
+        mbox_reg__fuse__out_t done;
+    } mbox_reg__fuse_done__out_t;
+
+    typedef struct {
+        logic [31:0] value;
+    } mbox_reg__key_w32__out_t;
+
+    typedef struct {
+        mbox_reg__key_w32__out_t key;
+    } mbox_reg__obf_key__out_t;
+
+    typedef struct {
+        mbox_reg__CLEAR_SECRETS__out_t CLEAR_SECRETS;
         mbox_reg__uds_seed__out_t uds_seed[12];
         mbox_reg__field_entropy__out_t field_entropy[32];
+        mbox_reg__key_manifest_pk_hash_0__out_t key_manifest_pk_hash_0[12];
+        mbox_reg__key_manifest_pk_hash_1__out_t key_manifest_pk_hash_1[12];
+        mbox_reg__key_manifest_pk_hash_2__out_t key_manifest_pk_hash_2[12];
+        mbox_reg__key_manifest_pk_hash_3__out_t key_manifest_pk_hash_3[12];
+        mbox_reg__key_manifest_pk_hash_mask__out_t key_manifest_pk_hash_mask;
+        mbox_reg__key_manifest_svn__out_t key_manifest_svn;
+        mbox_reg__boot_loader_svn__out_t boot_loader_svn;
+        mbox_reg__runtime_svn__out_t runtime_svn[4];
+        mbox_reg__anti_rollback_disable__out_t anti_rollback_disable;
+        mbox_reg__ieee_idevid_cert_chain__out_t ieee_idevid_cert_chain;
+        mbox_reg__fuse_done__out_t fuse_done;
+        mbox_reg__obf_key__out_t obf_key[8];
     } mbox_reg__out_t;
 endpackage

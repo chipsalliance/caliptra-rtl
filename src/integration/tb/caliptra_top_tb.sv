@@ -48,8 +48,11 @@ module caliptra_top_tb (
     logic                       cptra_pwrgood;
     logic                       cptra_rst_b;
 
-    logic [255:0]               cptra_obf_key;
-
+    logic [7:0][31:0]           cptra_obf_key; 
+    logic [0:7][31:0]           cptra_obf_key_uds, cptra_obf_key_fe;
+    
+    logic [0:11][31:0]          cptra_uds_tb;
+    logic [0:31][31:0]          cptra_fe_tb;
     wire[31:0] WriteData;
     string                      abi_reg[32]; // ABI register names
     //jtag interface
@@ -71,6 +74,8 @@ module caliptra_top_tb (
     logic                       PSLVERR;
     logic [`APB_DATA_WIDTH-1:0] PRDATA;
 
+    logic ready_for_fuses;
+
 `define DEC caliptra_top_dut.rvtop.swerv.dec
 
 `define LMEM caliptra_top_dut.mbox_top1.mbox1.mbox_ram1.ram 
@@ -78,6 +83,10 @@ module caliptra_top_tb (
     parameter MEMTYPE_LMEM = 3'h1;
     parameter MEMTYPE_DCCM = 3'h2;
     parameter MEMTYPE_ICCM = 3'h3;
+
+    parameter MBOX_UDS_ADDR = 32'h3003_0200;
+    parameter MBOX_FE_ADDR  = 32'h3003_0230;
+    parameter MBOX_FUSE_DONE_ADDR = 32'h3003_0394;
 
     logic [2:0] memtype; 
 
@@ -94,6 +103,11 @@ module caliptra_top_tb (
 
     string slaveLog_fileName[`AHB_SLAVES_NUM];
 
+    always
+    begin : clk_gen
+      core_clk = #5 ~core_clk;
+    end // clk_gen
+    
     always @(negedge core_clk) begin
         cycleCnt <= cycleCnt+1;
         // Test timeout monitor
@@ -196,6 +210,8 @@ module caliptra_top_tb (
 
 
     initial begin
+        cptra_pwrgood = 1'b0;
+        cptra_rst_b = 1'b0;
         abi_reg[0] = "zero";
         abi_reg[1] = "ra";
         abi_reg[2] = "sp";
@@ -233,8 +249,53 @@ module caliptra_top_tb (
         jtag_tms = 1'b0;    // JTAG TMS
         jtag_tdi = 1'b0;    // JTAG tdi
         jtag_trst_n = 1'b0; // JTAG Reset
+        //TIE-OFF
+        PADDR = '0;
+        PSEL = '0;
+        PENABLE = '0;
+        PWRITE = '0;
+        PWDATA = '0;
+        PAUSER = '0;
+        PPROT = '0;
 
-        cptra_obf_key = '0; //fixme tie-off
+        //Key for UDS 
+        cptra_obf_key_uds = 256'h54682728db5035eb04b79645c64a95606abb6ba392b6633d79173c027c5acf77;
+        cptra_uds_tb = 384'he4046d05385ab789c6a72866e08350f93f583e2a005ca0faecc32b5cfc323d461c76c107307654db5566a5bd693e227c;
+
+        //Key for FE
+        cptra_obf_key_fe = 256'h31358e8af34d6ac31c958bbd5c8fb33c334714bffb41700d28b07f11cfe891e7;
+        cptra_fe_tb = {256'hb32e2b171b63827034ebb0d1909f7ef1d51c5f82c1bb9bc26bc4ac4dccdee835,
+                       256'h7dca6154c2510ae1c87b1b422b02b621bb06cac280023894fcff3406af08ee9b,
+                       256'he1dd72419beccddff77c722d992cdcc87e9c7486f56ab406ea608d8c6aeb060c,
+                       256'h64cf2785ad1a159147567e39e303370da445247526d95942bf4d7e88057178b0};
+
+        //swizzle the key so it matches the endianness of AES block
+        //used for visual inspection of uds/fe flow, manually switching keys and checking both
+        for (int dword = 0; dword < $bits(cptra_obf_key/32); dword++) begin
+            //cptra_obf_key[dword] = cptra_obf_key_uds[dword];
+            cptra_obf_key[dword] = cptra_obf_key_fe[dword];
+        end
+
+        //assert power good
+        repeat (5) @(posedge core_clk);
+        cptra_pwrgood = 1'b1;
+
+        //de-assert reset
+        repeat (5) @(posedge core_clk);
+        cptra_rst_b = 1'b1;
+
+        //wait for fuse indication
+        wait (ready_for_fuses == 1'b1);
+
+        //load fuses
+        for (int i = 0; i < 12; i++)begin
+            write_single_word_apb(MBOX_UDS_ADDR + i*4, cptra_uds_tb[i]);
+        end
+        for (int i = 0; i < 32; i++)begin
+            write_single_word_apb(MBOX_FE_ADDR + i*4, cptra_fe_tb[i]);
+        end
+        //set fuse done
+        write_single_word_apb(MBOX_FUSE_DONE_ADDR, 32'h00000001);  
 
         $readmemh("program.hex",  caliptra_top_dut.imem.sram_inst.ram,0,32'h00008000);
         $readmemh("mailbox.hex",  caliptra_top_dut.mbox_top1.mbox1.mbox_ram1.ram,0,32'h0002_0000);
@@ -259,13 +320,10 @@ module caliptra_top_tb (
 
 `ifndef VERILATOR
         if($test$plusargs("dumpon")) $dumpvars;
-        forever  core_clk = #5 ~core_clk;
-`endif
+`endif  
+
     end
 
-    //temporary boot flow - assert pwrgood followed by rst_b
-    assign cptra_pwrgood = cycleCnt > 5;
-    assign cptra_rst_b   = cycleCnt > 10;
 
    //=========================================================================-
    // DUT instance
@@ -286,12 +344,14 @@ caliptra_top caliptra_top_dut (
     .PADDR(PADDR),
     .PAUSER(PAUSER),
     .PENABLE(PENABLE),
-    .PRDATA(),
-    .PREADY(),
+    .PRDATA(PRDATA),
+    .PREADY(PREADY),
     .PSEL(PSEL),
     .PSLVERR(),
     .PWDATA(PWDATA),
     .PWRITE(PWRITE),
+
+    .ready_for_fuses(ready_for_fuses),
 
     .mailbox_data_avail(),
     .mailbox_flow_done(),
@@ -302,16 +362,6 @@ caliptra_top caliptra_top_dut (
 
     .security_state('x) //FIXME TIE-OFF
 );
-
-//tying off apb interface for now
-//FIXME TIE-OFF
-assign PADDR = '0;
-assign PSEL = '0;
-assign PENABLE = '0;
-assign PWRITE = '0;
-assign PWDATA = '0;
-assign PAUSER = '0;
-assign PPROT = '0;
 
 
 task preload_iccm;
@@ -691,6 +741,54 @@ function int get_iccm_bank(input[31:0] addr,  output int bank_idx);
         return int'( addr[5:2]);
     `endif
 endfunction
+
+//apb interface tasks
+//----------------------------------------------------------------
+// write_single_word_apb()
+//
+// Write the given word to the DUT using the AHB-lite interface.
+//----------------------------------------------------------------
+task write_single_word_apb(input [31 : 0] address, input [31 : 0] word);
+begin
+    @(posedge core_clk);
+    PADDR      <= address;
+    PSEL       <= 1;
+    PENABLE    <= 0;
+    PWRITE     <= 1;
+    PWDATA     <= word;
+    PAUSER     <= 0;
+    wait(PREADY == 1'b1);
+
+    @(posedge core_clk);
+    PENABLE    <= 1;
+    wait(PREADY == 1'b1);
+
+    @(posedge core_clk);
+    PSEL       <= 0;
+    PENABLE    <= 0;
+end
+endtask // write_single_word_apb
+
+task read_single_word_apb(input [31 : 0] address);
+begin
+    @(posedge core_clk);
+    PADDR      <= address;
+    PSEL       <= 1;
+    PENABLE    <= 0;
+    PWRITE     <= 0;
+    PWDATA     <= 0;
+    PAUSER     <= 0;
+    wait(PREADY == 1'b1);
+
+    @(posedge core_clk);
+    PENABLE    <= 1;
+    wait(PREADY == 1'b1);
+
+    @(posedge core_clk);
+    PSEL       <= 0;
+    PENABLE    <= 0;
+end
+endtask // read_single_word_apb
 
 /* verilator lint_off CASEINCOMPLETE */
 `include "dasm.svi"

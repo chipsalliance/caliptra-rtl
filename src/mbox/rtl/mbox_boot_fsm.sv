@@ -19,6 +19,8 @@ module mbox_boot_fsm (
     input logic cptra_pwrgood,
     input logic cptra_rst_b,
 
+    output logic ready_for_fuses,
+
     input logic fuse_done,
 
     output logic cptra_uc_rst_b
@@ -41,6 +43,8 @@ always_comb arc_BOOT_IDLE_BOOT_FUSE = cptra_pwrgood && cptra_rst_b;
 always_comb arc_BOOT_FUSE_BOOT_DONE = fuse_done;
 
 always_comb begin
+    boot_fsm_ns = boot_fsm_ps;
+    ready_for_fuses = '0;
     unique casez (boot_fsm_ps)
         BOOT_IDLE: begin
             if (arc_BOOT_IDLE_BOOT_FUSE) begin
@@ -51,6 +55,7 @@ always_comb begin
             if (arc_BOOT_FUSE_BOOT_DONE) begin
                 boot_fsm_ns = BOOT_DONE;
             end
+            ready_for_fuses = 1'b1;
         end
         BOOT_DONE: begin
             boot_fsm_ns = BOOT_DONE;

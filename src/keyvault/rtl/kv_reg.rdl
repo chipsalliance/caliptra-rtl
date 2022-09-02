@@ -1,0 +1,33 @@
+addrmap kv_reg {
+    desc="address map for keyvault";
+    signal {activelow; async; cpuif_reset; field_reset;} reset_b;
+    signal {activelow; async;} hard_reset_b;
+
+    //keys are not accessible by sw
+    field key {sw=w; swwel=true; hw=rw; we=true; hwclr; resetsignal=hard_reset_b;};
+    //PCR are sw accessible
+    field pcr {sw=rw; swwel=true; hw=rw; we=true; hwclr;  resetsignal=hard_reset_b;};
+
+    reg pcrReg {pcr data[32]=0;}; //generic reg for pcr
+    reg keyReg {key data[32]=0;}; //generic reg for keys
+
+    pcrReg pcr_entry[8][16];
+
+    //controls
+    reg kvCtrl {
+        field {sw=rw; swwel=true; hw=r;} lock_rd=0;
+        field {sw=rw; swwel=true; hw=r;} lock_wr=0;
+        field {sw=rw; swwel=true; hw=r;} lock_use=0;
+        field {sw=rw; hw=r; singlepulse;} clear=0;
+        //field {sw=rw; hw=r; hwclr;} copy;
+        //field {sw=rw; hw=r;} copy_dest[4];
+        field {sw=r; hw=rw; we=true;} dest_valid[9:7]=7;
+        field {sw=rw; hw=na;} rsvd[31:10]=0;
+    };
+
+    kvCtrl key_ctrl[8];
+    kvCtrl pcr_ctrl[8];
+
+    //stick these at the end since sw won't actually address them ever
+    keyReg key_entry[8][16];
+};

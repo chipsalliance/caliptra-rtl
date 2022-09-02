@@ -3,6 +3,7 @@ provides: [hmac_ctrl]
 schema_version: 2.4.0
 requires:
   - libs
+  - keyvault
   - sha512_ctrl
 targets:
   rtl:

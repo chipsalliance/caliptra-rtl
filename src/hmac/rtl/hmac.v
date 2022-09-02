@@ -54,7 +54,12 @@ module hmac(
             // Data ports.
             input wire  [31 : 0] address,
             input wire  [31 : 0] write_data,
-            output wire [31 : 0] read_data
+            output wire [31 : 0] read_data,
+
+            // KV interface
+            output kv_read_t kv_read,
+            output kv_write_t kv_write,
+            input kv_resp_t kv_resp
            );
 
   //----------------------------------------------------------------
@@ -91,7 +96,24 @@ module hmac(
   wire           core_tag_valid;
 
   reg [383 : 0]  tag_reg;
+  reg [383 : 0]  kv_reg;
   reg [31  : 0]  tmp_read_data;
+
+  //interface with client
+  logic kv_key_write_en;
+  logic [3:0] kv_key_write_offset;
+  logic [31:0] kv_key_write_data;
+  logic kv_src_write_en;
+  logic [4:0] kv_src_write_offset;
+  logic [31:0] kv_src_write_data;
+
+  logic kv_key_done;
+  logic kv_src_done;
+  logic kv_dest_done;
+
+  logic dest_keyvault;
+  logic kv_ctrl_we;
+  kv_reg_t kv_ctrl_reg;
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
@@ -153,6 +175,8 @@ module hmac(
           init_reg      <= 1'h0;
           next_reg      <= 1'h0;
           tag_reg       <= 384'h0;
+          kv_reg        <= '0;
+          kv_ctrl_reg   <= '0;
           ready_reg     <= 0;
           tag_valid_reg <= 0;
         end
@@ -163,14 +187,36 @@ module hmac(
           ready_reg     <= core_ready;
           tag_valid_reg <= core_ready;
 
-          if (core_tag_valid)
+          //write to sw register
+          if (core_tag_valid & ~dest_keyvault)
             tag_reg <= core_tag;
-
+          if (core_tag_valid & dest_keyvault)
+            kv_reg <= core_tag;
           if (key_we)
             key_reg[address[5 : 2]] <= write_data;
-
+          if (kv_key_write_en)
+            key_reg[kv_key_write_offset] <= kv_key_write_data;
           if (block_we)
             block_reg[address[6 : 2]] <= write_data;
+          if (kv_src_write_en)
+            block_reg[kv_src_write_offset] <= kv_src_write_data;
+          if (kv_ctrl_we)
+            kv_ctrl_reg <= write_data;
+          //clear key sel and set key done when key has been copied
+          if (kv_key_done) begin
+            kv_ctrl_reg.key_sel_en <= '0;
+            kv_ctrl_reg.key_done <= '1;
+          end
+          //clear src sel and set src done when src has been copied
+          if (kv_src_done) begin
+            kv_ctrl_reg.src_sel_en <= '0;
+            kv_ctrl_reg.src_done <= '1;
+          end
+          //clear dest sel and set dest done when dest has been copied
+          if (kv_dest_done) begin
+            kv_ctrl_reg.dest_sel_en <= '0;
+            kv_ctrl_reg.dest_done <= '1;
+          end
         end
     end // reg_update
 
@@ -187,6 +233,7 @@ module hmac(
       next_new      = 0;
       key_we        = 0;
       block_we      = 0;
+      kv_ctrl_we    = 0;
       tmp_read_data = 32'h0;
 
       if (cs)
@@ -204,6 +251,9 @@ module hmac(
 
               if ((address >= HMAC_ADDR_BLOCK0) && (address <= HMAC_ADDR_BLOCK31))
                 block_we = 1;
+
+              if (address == HMAC_KV_CTRL)
+                kv_ctrl_we = 1;
             end // if (we)
 
           else
@@ -228,6 +278,9 @@ module hmac(
                 HMAC_ADDR_STATUS:
                   tmp_read_data = {30'h0, tag_valid_reg, ready_reg};
 
+                HMAC_KV_CTRL:
+                  tmp_read_data = kv_ctrl_reg;
+
                 default:
                   begin
                   end
@@ -235,6 +288,42 @@ module hmac(
             end
         end
     end // addr_decoder
+
+//keyvault module
+kv_client #(
+    .DEST_WIDTH(384),
+    .KEY_WIDTH(384),
+    .SRC_WIDTH(1024),
+    .HMAC_PAD(1)
+)
+kv_client_hmac
+(
+    .clk(clk),
+    .rst_b(reset_n),
+    //client control register
+    .client_ctrl_reg(kv_ctrl_reg), 
+
+    //interface with kv
+    .kv_read(kv_read),
+    .kv_write(kv_write),
+    .kv_resp(kv_resp),
+
+    //interface with client
+    .key_write_en(kv_key_write_en),
+    .key_write_offset(kv_key_write_offset),
+    .key_write_data(kv_key_write_data),
+    .src_write_en(kv_src_write_en),
+    .src_write_offset(kv_src_write_offset),
+    .src_write_data(kv_src_write_data),
+
+    .dest_keyvault(dest_keyvault),
+    .dest_data_avail(core_tag_valid),
+    .dest_data(kv_reg),
+
+    .key_done(kv_key_done),
+    .src_done(kv_src_done),
+    .dest_done(kv_dest_done)
+);
 endmodule // hmac
 
 //======================================================================
