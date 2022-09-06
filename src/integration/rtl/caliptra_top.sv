@@ -15,6 +15,7 @@
 //
 
 `include "cfg.sv"
+`include "common_defines.vh"
 
 module caliptra_top (
     input bit                          core_clk,
@@ -416,6 +417,27 @@ assign reset_vector = `RV_RESET_VEC;
 assign nmi_vector   = 32'hee000000;
 assign nmi_int   = 0;
 
+import sim_irq_pkg::irq_type_t;
+
+localparam NUM_INTR = `RV_PIC_TOTAL_INT; // 31
+// Default is active-high, level interrupt
+irq_type_t intr_cfg = '{active_high: {{255-`RV_PIC_TOTAL_INT{1'b1}},31'b1111111_11111111_11111111_00001111},
+                        level_assert:{{255-`RV_PIC_TOTAL_INT{1'b1}},31'b0000000_00000000_00000000_01010101}};
+wire [NUM_INTR-1:0] intr;
+
+sim_irq_gen #(
+    .NUM_INTR (NUM_INTR  ), // Number of interrupts per class (SWerV allows up to 255)
+    .INTR_FREQ("LOW" )  // "HIGH" "MEDIUM" "LOW"
+) i_irq_gen (
+    .clk     (core_clk      ),
+    .rst_n   (cptra_uc_rst_b), // NOTE: tb uses force/release to override this
+
+    .intr_cfg(intr_cfg),
+
+    .intr    (intr    ),
+    .intr_clr(NUM_INTR'(0)) // NOTE: overridden by tb through hierarchy
+);
+
 el2_swerv_wrapper rvtop (
     .rst_l                  ( cptra_uc_rst_b),
     .dbg_rst_l              ( cptra_pwrgood), 
@@ -670,7 +692,7 @@ el2_swerv_wrapper rvtop (
     .dma_axi_rlast          (dma_axi_rlast),
 `endif
     .timer_int              ( 1'b0     ),
-    .extintsrc_req          ( '0  ),
+    .extintsrc_req          ( intr     ),
 
     .lsu_bus_clk_en         ( 1'b1  ),// Clock ratio b/w cpu core clk & AHB master interface
     .ifu_bus_clk_en         ( 1'b1  ),// Clock ratio b/w cpu core clk & AHB master interface

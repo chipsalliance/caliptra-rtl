@@ -11,6 +11,7 @@ requires:
   - mbox
   - hmac_ctrl
   - keyvault
+  - sim_irq_gen
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]

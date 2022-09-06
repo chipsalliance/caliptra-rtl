@@ -23,7 +23,14 @@ module caliptra_top_tb (
     input bit rst_l
     ); 
 `endif
-    
+
+    // Time formatting for %t in display tasks
+    // -9 = ns units
+    // 3  = 3 bits of precision (to the ps)
+    // "ns" = nanosecond suffix for output time values
+    // 15 = 15 bits minimum field width
+    initial $timeformat(-9, 3, " ns", 15); // up to 99ms representable in this width
+
 `ifndef VERILATOR
     bit                         core_clk;
 `endif
@@ -48,7 +55,7 @@ module caliptra_top_tb (
     logic                       cptra_pwrgood;
     logic                       cptra_rst_b;
 
-    logic [7:0][31:0]           cptra_obf_key; 
+    logic [7:0][31:0]           cptra_obf_key;
     logic [0:7][31:0]           cptra_obf_key_uds, cptra_obf_key_fe;
     
     logic [0:11][31:0]          cptra_uds_tb;
@@ -90,6 +97,21 @@ module caliptra_top_tb (
 
     logic [2:0] memtype; 
 
+    // NOTE: This aperture into the mailbox is heavily overloaded right now by
+    //       various firmware "STDOUT" use-cases.
+    //       Functionality currently implemented at this offset is as follows
+    //       (relative to the WriteData used to trigger that function):
+    //         8'h0         - Do nothing
+    //         8'h1         - Kill the simulation with a Failed status
+    //         8'h2 : 8'h5  - Do nothing
+    //         8'h6 : 8'h7E - WriteData is an ASCII character - dump to console.log
+    //         8'h7F        - Do nothing
+    //         8'h80: 8'hfa - Clear the interrupt at sim_irq_gen for vector (WriteData-8'h80)
+    //         8'hfb        - Set the isr_active bit
+    //         8'hfc        - Clear the isr_active bit
+    //         8'hfd        - Force reset on sim_irq_gen
+    //         8'hfe        - Release reset on sim_irq_gen
+    //         8'hff        - End the simulation with a Success status
     assign mailbox_write = caliptra_top_dut.mbox_top1.mbox_reg1.field_combo.FLOW_STATUS.status.load_next;
     assign WriteData = caliptra_top_dut.mbox_top1.mbox_reg1.field_combo.FLOW_STATUS.status.next;
     assign mailbox_data_val = WriteData[7:0] > 8'h5 && WriteData[7:0] < 8'h7f;
@@ -103,11 +125,43 @@ module caliptra_top_tb (
 
     string slaveLog_fileName[`AHB_SLAVES_NUM];
 
+`ifndef VERILATOR
     always
     begin : clk_gen
       core_clk = #5 ~core_clk;
     end // clk_gen
+`endif
     
+    logic isr_active;
+    initial begin
+        isr_active = 1'b0;
+        force caliptra_top_dut.i_irq_gen.rst_n = 1'b0;
+        forever begin
+            @(negedge core_clk)
+            if ((WriteData[7:0] == 8'hfe) && mailbox_write) begin
+                release caliptra_top_dut.i_irq_gen.rst_n;
+                $display("releasing irq rst_n");
+                @(negedge core_clk)
+                $display("irq rst_n value: 0x%x", caliptra_top_dut.i_irq_gen.rst_n);
+            end
+            else if ((WriteData[7:0] == 8'hfd) && mailbox_write) begin
+                force caliptra_top_dut.i_irq_gen.rst_n = 1'b0;
+                $display("force assertion of irq rst_n");
+            end
+            else if ((WriteData[7:0] == 8'hfc) && mailbox_write) begin
+                isr_active = 1'b0;
+            end
+            else if ((WriteData[7:0] == 8'hfb) && mailbox_write) begin
+                isr_active = 1'b1;
+            end
+            else if ((WriteData[7:0] inside {[8'h80:8'hfa]}) && mailbox_write) begin
+                force caliptra_top_dut.i_irq_gen.intr_clr = `RV_PIC_TOTAL_INT'(1) << (WriteData[7:0] - 8'h80);
+                @(negedge core_clk)
+                release caliptra_top_dut.i_irq_gen.intr_clr;
+            end
+        end
+    end
+
     always @(negedge core_clk) begin
         cycleCnt <= cycleCnt+1;
         // Test timeout monitor
@@ -299,6 +353,7 @@ module caliptra_top_tb (
 
         $readmemh("program.hex",  caliptra_top_dut.imem.sram_inst.ram,0,32'h00008000);
         $readmemh("mailbox.hex",  caliptra_top_dut.mbox_top1.mbox1.mbox_ram1.ram,0,32'h0002_0000);
+        $readmemh("dccm.hex",     dummy_dccm_preloader.ram,0,32'h0001_0000);
         tp = $fopen("trace_port.csv","w");
         el = $fopen("exec.log","w");
         ifu_p = $fopen("ifu_master_ahb_trace.log", "w");
@@ -320,8 +375,7 @@ module caliptra_top_tb (
 
 `ifndef VERILATOR
         if($test$plusargs("dumpon")) $dumpvars;
-`endif  
-
+`endif
     end
 
 
@@ -361,6 +415,23 @@ caliptra_top caliptra_top_dut (
     .generic_output_wires(),
 
     .security_state('x) //FIXME TIE-OFF
+);
+
+// This is used to load the generated DCCM hexfile prior to
+// running slam_dccm_ram
+caliptra_sram #(
+     .DEPTH     (8192         ), // 64KiB
+     .DATA_WIDTH(64           ),
+     .ADDR_WIDTH($clog2(8192) )
+
+) dummy_dccm_preloader (
+    .clk_i   (core_clk),
+
+    .we_i    (        ),
+    .waddr_i (        ),
+    .wdata_i (        ),
+    .rdaddr_i(        ),
+    .rdata_o (        )
 );
 
 
@@ -447,12 +518,13 @@ task preload_dccm;
 
     for(addr=saddr; addr <= eaddr; addr+=4) begin
         // FIXME hardcoded address indices?
-        data = {caliptra_top_dut.mbox_top1.mbox1.mbox_ram1.ram [addr[16:3]] [{addr[2],2'h3}],
-                caliptra_top_dut.mbox_top1.mbox1.mbox_ram1.ram [addr[16:3]] [{addr[2],2'h2}],
-                caliptra_top_dut.mbox_top1.mbox1.mbox_ram1.ram [addr[16:3]] [{addr[2],2'h1}],
-                caliptra_top_dut.mbox_top1.mbox1.mbox_ram1.ram [addr[16:3]] [{addr[2],2'h0}]};
+        data = {dummy_dccm_preloader.ram [addr[15:3]] [{addr[2],2'h3}],
+                dummy_dccm_preloader.ram [addr[15:3]] [{addr[2],2'h2}],
+                dummy_dccm_preloader.ram [addr[15:3]] [{addr[2],2'h1}],
+                dummy_dccm_preloader.ram [addr[15:3]] [{addr[2],2'h0}]};
         slam_dccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
     end
+    $display("DCCM pre-load completed");
 
 endtask
 

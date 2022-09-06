@@ -508,6 +508,7 @@ assign intpend_reg_extended[INTPEND_SIZE-1:0]  = {{INTPEND_SIZE-pt.PIC_TOTAL_INT
    end
 
 
+ assign mask = 4'b0010; // FIXME cwhitehead
  assign picm_rd_data_in[31:0] = ({32{intpend_reg_read      }} &   intpend_rd_out                                                    ) |
                                 ({32{intpriority_reg_read  }} &  {{32-INTPRIORITY_BITS{1'b0}}, intpriority_rd_out                 } ) |
                                 ({32{intenable_reg_read    }} &  {31'b0 , intenable_rd_out                                        } ) |

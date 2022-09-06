@@ -1,0 +1,41 @@
+---
+provides: [sim_irq_gen]
+schema_version: 2.4.0
+requires:
+  - libs
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/sim_irq_pkg.sv
+      - $COMPILE_ROOT/rtl/sim_irq_gen.sv
+    tops: [sim_irq_gen]
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - '-v2k_generate'
+#---
+#provides: [aes_cbc_tb]
+#schema_version: 2.4.0
+#requires:
+#  - aes_ctrl
+#targets:
+#  tb:
+#    directories:
+#      - $COMPILE_ROOT/tb
+#    files:
+#      - $COMPILE_ROOT/tb/aes_cbc_tb.sv
+#    tops: [aes_cbc_tb]
+#global:
+#  tool:
+#    vcs:
+#      default:
+#        - '-assert svaext'
+#        - '-v2k_generate'
+#        - '-timescale=1ns/1ps'
+#        - '-noinherit_timescale=1ns/1ps'
+#        - '-ucli -i dump.ucli'
+#      sim:
+#        - '-ucli -i dump.ucli'

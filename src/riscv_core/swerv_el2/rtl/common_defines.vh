@@ -105,7 +105,7 @@
 `define RV_DCCM_EADR 32'hf004ffff
 `define RV_DCCM_NUM_BANKS_4 
 `define RV_DCCM_SADR 32'hf0040000
-`define RV_RESET_VEC 'h80000000
+`define RV_RESET_VEC 'h00000000
 `define RV_RET_STACK_SIZE 8
 `define RV_XLEN 32
 `define RV_TARGET default_ahb
