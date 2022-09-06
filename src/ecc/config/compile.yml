@@ -15,29 +15,26 @@ targets:
       - $COMPILE_ROOT/rtl/ecc_reg_pkg.sv
       - $COMPILE_ROOT/rtl/ecc_top.sv
       - $COMPILE_ROOT/rtl/ecc_reg.sv
+      - $COMPILE_ROOT/rtl/ecc_defines.svh
+      - $COMPILE_ROOT/rtl/ecc_params.sv
       - $COMPILE_ROOT/rtl/ecc_dsa_ctrl.sv
       - $COMPILE_ROOT/rtl/ecc_dsa_sequencer.sv
       - $COMPILE_ROOT/rtl/ecc_dsa_uop.sv
       - $COMPILE_ROOT/rtl/ecc_fixed_msb.sv
       - $COMPILE_ROOT/rtl/ecc_arith_unit.sv
-      - $COMPILE_ROOT/rtl/ecc_PM_ctrl.sv
-      - $COMPILE_ROOT/rtl/ecc_uop.sv
-      - $COMPILE_ROOT/rtl/ecc_PM_sequencer.sv
+      - $COMPILE_ROOT/rtl/ecc_pm_ctrl.sv
+      - $COMPILE_ROOT/rtl/ecc_pm_uop.sv
+      - $COMPILE_ROOT/rtl/ecc_pm_sequencer.sv
       - $COMPILE_ROOT/rtl/ecc_ram_tdp_file.sv
       - $COMPILE_ROOT/rtl/ecc_fau.sv
-      - $COMPILE_ROOT/rtl/ecc_MontgomeryMultiplier.sv
-      - $COMPILE_ROOT/rtl/ecc_PE_first.sv
-      - $COMPILE_ROOT/rtl/ecc_PE.sv
-      - $COMPILE_ROOT/rtl/ecc_PE_final.sv
+      - $COMPILE_ROOT/rtl/ecc_montgomerymultiplier.sv
+      - $COMPILE_ROOT/rtl/ecc_pe_first.sv
+      - $COMPILE_ROOT/rtl/ecc_pe.sv
+      - $COMPILE_ROOT/rtl/ecc_pe_final.sv
       - $COMPILE_ROOT/rtl/ecc_mult_dsp.sv
       - $COMPILE_ROOT/rtl/ecc_add_sub_mod_alter.sv
       - $COMPILE_ROOT/rtl/ecc_adder.sv
-      - $COMPILE_ROOT/rtl/ecc_defines.svh
-      - $COMPILE_ROOT/rtl/ecc_params.sv
-      #- $COMPILE_ROOT/rtl/add_sub_mod.sv
-      #- $COMPILE_ROOT/rtl/add_sub_gen.sv
-      #- $COMPILE_ROOT/rtl/expand.sv
-      #- $COMPILE_ROOT/rtl/compact.sv
+      
       
       
     tops: [ecc_top]

@@ -2,7 +2,7 @@
 //
 // ecc_add_sub_mod_alter.sv
 // --------
-//
+// modular addtion/subtraction module to compute opa+-opb % prime
 //
 //
 // Author: Mojtaba Bisheh-Niasar

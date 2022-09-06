@@ -89,12 +89,6 @@ module ecc_top_tb #(
   parameter ADD_NUM_ADDS  = 1;
   parameter ADD_BASE_SZ   = 384;
 
-
-  localparam NOP_CMD        = 3'b000;
-  localparam KEYGEN_CMD     = 3'b001;
-  localparam SIGN_CMD       = 3'b010;
-  localparam VERIFY_CMD     = 3'b100;
-
   parameter AHB_HTRANS_IDLE     = 0;
   parameter AHB_HTRANS_BUSY     = 1;
   parameter AHB_HTRANS_NONSEQ   = 2;
@@ -138,8 +132,7 @@ module ecc_top_tb #(
   //----------------------------------------------------------------
   ecc_top #(
              .AHB_DATA_WIDTH(32),
-             .AHB_ADDR_WIDTH(32),
-             .BYPASS_HSEL(0)
+             .AHB_ADDR_WIDTH(32)
             )
             dut (
              .clk(clk_tb),
@@ -440,8 +433,6 @@ module ecc_top_tb #(
   task trig_ECC(input [2 : 0] cmd);
     begin
       write_single_word(ADDR_CTRL  , cmd);
-      #(10*CLK_PERIOD);
-      write_single_word(ADDR_CTRL  , 0);
     end
   endtask // trig_ECC
 
@@ -468,7 +459,8 @@ module ecc_top_tb #(
       write_block(ADDR_SEED0, test_vector.privkey);
 
       trig_ECC(KEYGEN);
-
+      #(CLK_PERIOD);
+      
       wait_ready();
 
       //read_block(ADDR_PRIVKEY0);
@@ -504,7 +496,7 @@ module ecc_top_tb #(
   endtask // ecc_keygen_test
 
 
-//----------------------------------------------------------------
+  //----------------------------------------------------------------
   // ecc_signing_test()
   //
   // Perform a single signing operation test.
@@ -529,6 +521,7 @@ module ecc_top_tb #(
       write_block(ADDR_SEED0, test_vector.k);
 
       trig_ECC(SIGN);
+      #(CLK_PERIOD);
 
       wait_ready();
 
@@ -562,6 +555,59 @@ module ecc_top_tb #(
   endtask // ecc_signing_test
 
 
+//----------------------------------------------------------------
+  // ecc_verifying_test()
+  //
+  // Perform a single verifying operation test.
+  //----------------------------------------------------------------
+  task ecc_verifying_test(input [7 : 0]  tc_number,
+                        input test_vector_t test_vector);
+    reg [31  : 0]   start_time;
+    reg [31  : 0]   end_time;
+    reg [31 : 0]    verify_result;
+    
+    begin
+      wait_ready();
+
+      $display("*** TC %0d verifying test started.", tc_number);
+      tc_ctr = tc_ctr + 1;
+
+      start_time = cycle_ctr;
+
+      write_block(ADDR_MSG0, test_vector.hashed_msg);
+      write_block(ADDR_PUBKEYX0, test_vector.pubkey.x);
+      write_block(ADDR_PUBKEYY0, test_vector.pubkey.y);
+      write_block(ADDR_SIGNR0, test_vector.R);
+      write_block(ADDR_SIGNS0, test_vector.S);
+
+      trig_ECC(VERIFY);
+      #(CLK_PERIOD);
+
+      wait_ready();
+
+      read_single_word(ADDR_VERIFY);
+      verify_result = read_data;
+      
+      end_time = cycle_ctr - start_time;
+      $display("*** verifying test processing time = %01d cycles.", end_time);
+      $display("privkey    : 0x%96x", test_vector.privkey);
+
+      if (verify_result == 1)
+        begin
+          $display("*** TC %0d verifying successful.", tc_number);
+          $display("");
+        end
+      else
+        begin
+          $display("*** ERROR: TC %0d verifying NOT successful.", tc_number);
+          $display("");
+
+          error_ctr = error_ctr + 1;
+        end
+    end
+  endtask // ecc_verifying_test
+
+
 
   //----------------------------------------------------------------
   // ecc_test()
@@ -569,17 +615,11 @@ module ecc_top_tb #(
   //----------------------------------------------------------------
   task ecc_test();
     begin   
-      $display("ECC KEYGEN TEST");
-      $display("---------------------");
-      
       for (int i = 0; i < test_vector_cnt; i++) begin: test_vector_loop
           ecc_keygen_test(i, test_vectors[i]);
           ecc_signing_test(i, test_vectors[i]);
+          ecc_verifying_test(i, test_vectors[i]);
       end
-
-      $display("ECC SIGNING TEST");
-      $display("---------------------");
-
     end
   endtask // ecc_test
 

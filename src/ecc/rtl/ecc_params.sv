@@ -1,3 +1,13 @@
+//======================================================================
+//
+// ecc_params.sv
+// --------
+// required parameters and register address for ECC Secp384.
+//
+// Author: Mojtaba Bisheh-Niasar
+//======================================================================
+
+
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
@@ -54,6 +64,7 @@
   // prime parameters in Montgomery domain
   parameter [REG_SIZE-1 : 0] E_a_MONT    = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffcfffffffbffffffff00000002fffffffdffffffff;
   parameter [REG_SIZE-1 : 0] ONE_p_MONT  = 384'h100000000ffffffffffffffff0000000100000000;
+  parameter [REG_SIZE-1 : 0] R2_p_MONT   = 384'h10000000200000000fffffffe000000000000000200000000fffffffe000000010000000000000000;
   parameter [REG_SIZE-1 : 0] G_X_MONT    = 384'h299e1513812ff723614ede2b6454868459a30eff879c3afc541b4d6e6e1e26a4ee117bfa3dd07565fc8607664d3aadc2;
   parameter [REG_SIZE-1 : 0] G_Y_MONT    = 384'h5a15c5e9dd8002263969a840c6c3521968f4ffd98bade7562e83b050cd385481a72d556e23043dad1f8af93c2b78abc2;
   parameter [REG_SIZE-1 : 0] G_Z_MONT    = 384'h100000000ffffffffffffffff0000000100000000;

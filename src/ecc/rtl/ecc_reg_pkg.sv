@@ -16,6 +16,14 @@ package ecc_reg_pkg;
 
     typedef struct {
         logic [31:0] next;
+    } ecc_reg__srw_hrw_w32__in_t;
+
+    typedef struct {
+        ecc_reg__srw_hrw_w32__in_t CTRL;
+    } ecc_reg__ecc_CTRL__in_t;
+
+    typedef struct {
+        logic [31:0] next;
     } ecc_reg__sr_hrw_w32__in_t;
 
     typedef struct {
@@ -25,10 +33,6 @@ package ecc_reg_pkg;
     typedef struct {
         ecc_reg__sr_hrw_w32__in_t VERIFY;
     } ecc_reg__ecc_VERIFY__in_t;
-
-    typedef struct {
-        logic [31:0] next;
-    } ecc_reg__srw_hrw_w32__in_t;
 
     typedef struct {
         ecc_reg__srw_hrw_w32__in_t SEED;
@@ -58,6 +62,7 @@ package ecc_reg_pkg;
         logic reset_b;
         ecc_reg__ecc_NAME__in_t ecc_NAME[2];
         ecc_reg__ecc_VERSION__in_t ecc_VERSION[2];
+        ecc_reg__ecc_CTRL__in_t ecc_CTRL;
         ecc_reg__ecc_STATUS__in_t ecc_STATUS;
         ecc_reg__ecc_VERIFY__in_t ecc_VERIFY;
         ecc_reg__ecc_SEED__in_t ecc_SEED[12];
@@ -82,10 +87,10 @@ package ecc_reg_pkg;
 
     typedef struct {
         logic [31:0] value;
-    } ecc_reg__srw_hr_w32__out_t;
+    } ecc_reg__srw_hrw_w32__out_t;
 
     typedef struct {
-        ecc_reg__srw_hr_w32__out_t CTRL;
+        ecc_reg__srw_hrw_w32__out_t CTRL;
     } ecc_reg__ecc_CTRL__out_t;
 
     typedef struct {
@@ -101,12 +106,12 @@ package ecc_reg_pkg;
     } ecc_reg__ecc_VERIFY__out_t;
 
     typedef struct {
-        logic [31:0] value;
-    } ecc_reg__srw_hrw_w32__out_t;
-
-    typedef struct {
         ecc_reg__srw_hrw_w32__out_t SEED;
     } ecc_reg__ecc_SEED__out_t;
+
+    typedef struct {
+        logic [31:0] value;
+    } ecc_reg__srw_hr_w32__out_t;
 
     typedef struct {
         ecc_reg__srw_hr_w32__out_t MSG;

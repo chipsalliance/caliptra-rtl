@@ -2,7 +2,7 @@
 //
 // ecc_mult_dsp.sv
 // --------
-// 
+// General multiplier.
 //
 //
 // Author: Mojtaba Bisheh-Niasar
@@ -15,7 +15,7 @@ module ecc_mult_dsp #(
     // DATA PORT
     input  logic [RADIX-1:0]   A,
     input  logic [RADIX-1:0]   B,
-
+    
     output logic [2*RADIX-1:0] P
 );
 

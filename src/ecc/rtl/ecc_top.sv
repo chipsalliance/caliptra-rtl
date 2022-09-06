@@ -16,8 +16,8 @@
 
 
 module ecc_top #(
-     parameter AHB_ADDR_WIDTH = 32
-    ,parameter AHB_DATA_WIDTH = 32
+    parameter AHB_ADDR_WIDTH = 32,
+    parameter AHB_DATA_WIDTH = 32
     )
     (
     input logic                       clk,

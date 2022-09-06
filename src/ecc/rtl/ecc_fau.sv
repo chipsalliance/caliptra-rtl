@@ -2,7 +2,7 @@
 //
 // ecc_fau.sv
 // --------
-// 
+// ECC Finite field Arithmetic Unit including Montgomery Multiplier and Adder
 //
 //
 // Author: Mojtaba Bisheh-Niasar
@@ -51,7 +51,7 @@ module ecc_fau #(
     //----------------------------------------------------------------
     // MULTIPILER
     //----------------------------------------------------------------
-    ecc_MontgomeryMultiplier #(
+    ecc_montgomerymultiplier #(
         .REG_SIZE(REG_SIZE),
         .RADIX(RADIX)
         )

@@ -309,6 +309,9 @@ module ecc_reg (
         if(decoded_reg_strb.ecc_CTRL && decoded_req_is_wr) begin // SW write
             next_c = decoded_wr_data[31:0];
             load_next_c = '1;
+        end else if(1) begin // HW Write
+            next_c = hwif_in.ecc_CTRL.CTRL.next;
+            load_next_c = '1;
         end
         field_combo.ecc_CTRL.CTRL.next = next_c;
         field_combo.ecc_CTRL.CTRL.load_next = load_next_c;

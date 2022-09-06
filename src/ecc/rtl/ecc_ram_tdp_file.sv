@@ -2,7 +2,7 @@
 //
 // ecc_ram_tdp_file.sv
 // --------
-// 
+// ECC Data Memory.
 //
 //
 // Author: Mojtaba Bisheh-Niasar

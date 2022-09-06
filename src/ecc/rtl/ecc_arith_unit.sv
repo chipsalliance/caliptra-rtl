@@ -2,7 +2,8 @@
 //
 // ecc_arith_unit.sv
 // --------
-// 
+// ECC arithmetic unit to perform point multiplication including 
+// data memory, pm sequencer, and field arithmeric
 //
 //
 // Author: Mojtaba Bisheh-Niasar
@@ -26,13 +27,9 @@ module ecc_arith_unit #(
     // DATA PORT
     input  wire [2 : 0]         ecc_cmd_i,
     input  wire [7 : 0]         addr_i,
-    //input  wire                 wr_input_sel_i,
     input  wire                 wr_op_sel_i,
-    //input  wire [3 : 0]         wr_word_sel_i,
     input  wire                 wr_en_i,
     input  wire                 rd_reg_i,
-    //input  wire [1 : 0]         rd_op_sel_i,
-    //input  wire [3 : 0]         rd_word_sel_i,
     input  wire [REG_SIZE: 0]   data_i,
     output wire [REG_SIZE: 0]   data_o,
     output wire                 busy_o
@@ -54,7 +51,7 @@ module ecc_arith_unit #(
     logic               req_digit;
     logic               ecc_busy_s;
     
-    ecc_PM_ctrl ecc_PM_ctrl_i(
+    ecc_pm_ctrl ecc_pm_ctrl_i(
         .clk(clk),
         .reset_n(reset_n),
         .ecc_cmd_i(ecc_cmd_i),
