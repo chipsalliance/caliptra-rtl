@@ -52,18 +52,26 @@ module ecc_montgomerymultiplier #(
     logic [RADIX   : 0] c_array[0:PE_UNITS+1];
     logic [RADIX-1 : 0] s_array[0:PE_UNITS+1];
     
-    logic   [RADIX-1 : 0] t_reg[0:2*PE_UNITS+1];
+    logic [RADIX-1 : 0] p_neg_array[0:2*(PE_UNITS+1)];
+    logic [RADIX-1 : 0] t_reg[0:2*(PE_UNITS+1)];
+    logic [RADIX-1 : 0] t_subtracted_reg[0:2*(PE_UNITS+1)];
+    logic [RADIX   : 0] sub_res[0:2*(PE_UNITS+1)];
+
+    logic               sub_b_i[0:2*(PE_UNITS+1)];
+    logic               sub_b_o[0:2*(PE_UNITS+1)];
     
     logic   [FULL_REG_SIZE-1 : 0]          a_reg;
     logic   [FULL_REG_SIZE+RADIX-1 : 0]    b_reg;  //extended with zero
     logic   [FULL_REG_SIZE+RADIX-1 : 0]    p_reg;  //extended with zero
+    logic   [FULL_REG_SIZE+RADIX-1 : 0]    p_neg_reg; //extended with one
     logic   [RADIX-1:0]               n_prime_reg;
     logic   [3*S_NUM-1 : 0]           push_reg;
     logic                             push_reg_eq_zero;
     logic                             push_reg_eq_zero_prev;
     logic                             odd;
     logic   [RADIX-1 : 0]             last_s_reg;
-    logic   [FULL_REG_SIZE-1:0]              p_internal;
+    logic   [FULL_REG_SIZE-1:0]       p_internal;
+    logic   [FULL_REG_SIZE-1:0]       p_subtracted_internal;
 
     logic   [1 : 0]                   cnt;
 
@@ -193,36 +201,72 @@ module ecc_montgomerymultiplier #(
         end
     endgenerate
 
+
+    assign p_neg_reg = ~p_reg;
+    
+    genvar i0;
+    generate 
+        for (i0=0; i0 < 2*(PE_UNITS+1)+1; i0++) begin : gen_n_neg_array
+            assign p_neg_array[i0] = p_neg_reg[i0*RADIX +: RADIX];
+        end
+    endgenerate
+
     // Storing the results from the system
+    genvar t0;
+    generate 
+        for (t0=0; t0 < 2*(PE_UNITS+1)+1; t0++) begin : gen_sub_t
+            always_comb begin
+                if (t0 == 0)
+                    sub_b_i[t0] = 1;
+                else
+                    sub_b_i[t0] = sub_b_o[t0 - 1];
+
+                if (~reset_n)
+                    sub_res[t0] = 0;
+                else if (push_reg[2*(PE_UNITS+1) - t0])
+                    sub_res[t0] = {1'b0, s_array[t0 >> 1]} + p_neg_array[t0] + sub_b_i[t0];
+                
+                sub_b_o[t0] = sub_res[t0][RADIX];
+            end
+        end
+    endgenerate
+
     genvar t;
     generate 
-        for (t=0; t < 2*(PE_UNITS+1); t++) begin : gen_t_reg
+        for (t=0; t < 2*(PE_UNITS+1)+1; t++) begin : gen_t_reg
             always_ff @(posedge clk) begin
-                if (~reset_n)
+                if (~reset_n) begin
                     t_reg[t] <= 'b0;
-                else if (push_reg[2*PE_UNITS+1 - t])
+                    t_subtracted_reg[t] <= 'b0;
+                end
+                else if (push_reg[2*(PE_UNITS+1) - t]) begin
                     t_reg[t] <= s_array[t >> 1];
-                else
+                    t_subtracted_reg[t] <= sub_res[t][RADIX-1 : 0];
+                end
+                else begin
                     t_reg[t] <= t_reg[t];
+                    t_subtracted_reg[t] <= t_subtracted_reg[t];
+                end
             end
         end
     endgenerate
     
     genvar k;
     generate 
-        for (k=0; k < 2*(PE_UNITS+1); k++) begin : gen_p_o
-            assign p_internal[(k+1)*RADIX-1 : k*RADIX] = t_reg[k];
+        for (k=0; k < 2*(PE_UNITS+1)+1; k++) begin : gen_p_o
+            assign p_internal[k*RADIX +: RADIX] = t_reg[k];
+            assign p_subtracted_internal[k*RADIX +: RADIX] = t_subtracted_reg[k];
         end
     endgenerate
 
-    assign p_o = p_internal[REG_SIZE-1:0];
+    assign p_o = (sub_b_o[2*(PE_UNITS+1)])? p_subtracted_internal[REG_SIZE-1:0] : p_internal[REG_SIZE-1:0];
 
     // Determines when results are ready based on S_NUM
     always_ff @(posedge clk) begin
         if (!reset_n)
             push_reg <= 'b0;
         else if (start_i)
-            push_reg[3*S_NUM-2] <= 1'b1;
+            push_reg[3*S_NUM-1] <= 1'b1;
         else
             push_reg <= push_reg >> 1;
     end

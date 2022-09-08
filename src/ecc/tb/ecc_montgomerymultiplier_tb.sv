@@ -9,7 +9,7 @@
 //         Alexey Lavrov
 //======================================================================
 
-module MontgomeryMultiplier_tb #(
+module ecc_montgomerymultiplier_tb #(
     parameter   OPERAND_WIDTH = 384,
     parameter   WORD_WIDTH = 32,
     parameter   TEST_VECTOR_NUM = 102
@@ -72,11 +72,11 @@ module MontgomeryMultiplier_tb #(
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
-  MontgomeryMultiplier #(
+  ecc_montgomerymultiplier #(
       .REG_SIZE   (OPERAND_WIDTH),
       .RADIX      (WORD_WIDTH)
   )
-  MontgomeryMultiplier_dut (
+  mm_dut (
       .clk        (clk_tb),
       .reset_n    (reset_n_tb),
 
@@ -88,7 +88,6 @@ module MontgomeryMultiplier_tb #(
       .p_o        (p_o_tb),
       .ready_o    (ready_tb)
   );
-
 
   //----------------------------------------------------------------
   // clk_gen
@@ -306,8 +305,8 @@ module MontgomeryMultiplier_tb #(
       $display("   -= Testbench for mm started =-");
       $display("    ==============================\n");
 
-      //fname = $sformatf("test_vectors/mm_test_vectors_%0d_key_%0d_word_%0d.hex", TEST_VECTOR_NUM, OPERAND_WIDTH, WORD_WIDTH);
-      fname = "/home/mojtabab/workspace_aha_poc/ws1/Caliptra/src/ecc/tb/test_vectors/mm_test_vectors_102_key_384_word_32.hex";
+      fname = $sformatf("/home/mojtabab/workspace_aha_poc/ws1/Caliptra/src/ecc/tb/test_vectors/mm_test_vectors_%0d_key_%0d_word_%0d.hex", TEST_VECTOR_NUM, OPERAND_WIDTH, WORD_WIDTH);
+      //fname = "/home/mojtabab/workspace_aha_poc/ws1/Caliptra/src/ecc/tb/test_vectors/mm_test_vectors_102_key_384_word_32.hex";
       read_test_vectors(fname);
 
       init_sim();
