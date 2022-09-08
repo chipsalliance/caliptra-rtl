@@ -70,6 +70,8 @@ module mbox_reg (
         logic BOOT_STATUS;
         logic FLOW_STATUS;
         logic CLEAR_SECRETS;
+        logic generic_input_wires[2];
+        logic generic_output_wires[2];
         logic uds_seed[12];
         logic field_entropy[32];
         logic key_manifest_pk_hash_0[12];
@@ -100,6 +102,12 @@ module mbox_reg (
         decoded_reg_strb.BOOT_STATUS = cpuif_req_masked & (cpuif_addr == 'h18);
         decoded_reg_strb.FLOW_STATUS = cpuif_req_masked & (cpuif_addr == 'h1c);
         decoded_reg_strb.CLEAR_SECRETS = cpuif_req_masked & (cpuif_addr == 'h20);
+        for(int i0=0; i0<2; i0++) begin
+            decoded_reg_strb.generic_input_wires[i0] = cpuif_req_masked & (cpuif_addr == 'h24 + i0*'h4);
+        end
+        for(int i0=0; i0<2; i0++) begin
+            decoded_reg_strb.generic_output_wires[i0] = cpuif_req_masked & (cpuif_addr == 'h2c + i0*'h4);
+        end
         for(int i0=0; i0<12; i0++) begin
             decoded_reg_strb.uds_seed[i0] = cpuif_req_masked & (cpuif_addr == 'h200 + i0*'h4);
         end
@@ -189,9 +197,17 @@ module mbox_reg (
         } BOOT_STATUS;
         struct {
             struct {
-                logic [31:0] next;
+                logic [29:0] next;
                 logic load_next;
             } status;
+            struct {
+                logic next;
+                logic load_next;
+            } ready_for_fw;
+            struct {
+                logic next;
+                logic load_next;
+            } ready_for_runtime;
         } FLOW_STATUS;
         struct {
             struct {
@@ -199,6 +215,18 @@ module mbox_reg (
                 logic load_next;
             } clear;
         } CLEAR_SECRETS;
+        struct {
+            struct {
+                logic [31:0] next;
+                logic load_next;
+            } generic_wires;
+        } generic_input_wires[2];
+        struct {
+            struct {
+                logic [31:0] next;
+                logic load_next;
+            } generic_wires;
+        } generic_output_wires[2];
         struct {
             struct {
                 logic [31:0] next;
@@ -324,14 +352,30 @@ module mbox_reg (
         } BOOT_STATUS;
         struct {
             struct {
-                logic [31:0] value;
+                logic [29:0] value;
             } status;
+            struct {
+                logic value;
+            } ready_for_fw;
+            struct {
+                logic value;
+            } ready_for_runtime;
         } FLOW_STATUS;
         struct {
             struct {
                 logic value;
             } clear;
         } CLEAR_SECRETS;
+        struct {
+            struct {
+                logic [31:0] value;
+            } generic_wires;
+        } generic_input_wires[2];
+        struct {
+            struct {
+                logic [31:0] value;
+            } generic_wires;
+        } generic_output_wires[2];
         struct {
             struct {
                 logic [31:0] value;
@@ -533,10 +577,10 @@ module mbox_reg (
     end
     // Field: mbox_reg.FLOW_STATUS.status
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.FLOW_STATUS.status.value;
+        automatic logic [29:0] next_c = field_storage.FLOW_STATUS.status.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.FLOW_STATUS && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
-            next_c = decoded_wr_data[31:0];
+            next_c = decoded_wr_data[29:0];
             load_next_c = '1;
         end
         field_combo.FLOW_STATUS.status.next = next_c;
@@ -549,6 +593,44 @@ module mbox_reg (
             field_storage.FLOW_STATUS.status.value <= field_combo.FLOW_STATUS.status.next;
         end
     end
+    // Field: mbox_reg.FLOW_STATUS.ready_for_fw
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.FLOW_STATUS.ready_for_fw.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.FLOW_STATUS && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
+            next_c = decoded_wr_data[30:30];
+            load_next_c = '1;
+        end
+        field_combo.FLOW_STATUS.ready_for_fw.next = next_c;
+        field_combo.FLOW_STATUS.ready_for_fw.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.FLOW_STATUS.ready_for_fw.value <= 'h0;
+        end else if(field_combo.FLOW_STATUS.ready_for_fw.load_next) begin
+            field_storage.FLOW_STATUS.ready_for_fw.value <= field_combo.FLOW_STATUS.ready_for_fw.next;
+        end
+    end
+    assign hwif_out.FLOW_STATUS.ready_for_fw.value = field_storage.FLOW_STATUS.ready_for_fw.value;
+    // Field: mbox_reg.FLOW_STATUS.ready_for_runtime
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.FLOW_STATUS.ready_for_runtime.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.FLOW_STATUS && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
+            next_c = decoded_wr_data[31:31];
+            load_next_c = '1;
+        end
+        field_combo.FLOW_STATUS.ready_for_runtime.next = next_c;
+        field_combo.FLOW_STATUS.ready_for_runtime.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.FLOW_STATUS.ready_for_runtime.value <= 'h0;
+        end else if(field_combo.FLOW_STATUS.ready_for_runtime.load_next) begin
+            field_storage.FLOW_STATUS.ready_for_runtime.value <= field_combo.FLOW_STATUS.ready_for_runtime.next;
+        end
+    end
+    assign hwif_out.FLOW_STATUS.ready_for_runtime.value = field_storage.FLOW_STATUS.ready_for_runtime.value;
     // Field: mbox_reg.CLEAR_SECRETS.clear
     always_comb begin
         automatic logic [0:0] next_c = field_storage.CLEAR_SECRETS.clear.value;
@@ -571,6 +653,46 @@ module mbox_reg (
         end
     end
     assign hwif_out.CLEAR_SECRETS.clear.value = field_storage.CLEAR_SECRETS.clear.value;
+    for(genvar i0=0; i0<2; i0++) begin
+        // Field: mbox_reg.generic_input_wires[].generic_wires
+        always_comb begin
+            automatic logic [31:0] next_c = field_storage.generic_input_wires[i0].generic_wires.value;
+            automatic logic load_next_c = '0;
+            if(decoded_reg_strb.generic_input_wires[i0] && decoded_req_is_wr) begin // SW write
+                next_c = decoded_wr_data[31:0];
+                load_next_c = '1;
+            end else if(1) begin // HW Write
+                next_c = hwif_in.generic_input_wires[i0].generic_wires.next;
+                load_next_c = '1;
+            end
+            field_combo.generic_input_wires[i0].generic_wires.next = next_c;
+            field_combo.generic_input_wires[i0].generic_wires.load_next = load_next_c;
+        end
+        always_ff @(posedge clk) begin
+            if(field_combo.generic_input_wires[i0].generic_wires.load_next) begin
+                field_storage.generic_input_wires[i0].generic_wires.value <= field_combo.generic_input_wires[i0].generic_wires.next;
+            end
+        end
+    end
+    for(genvar i0=0; i0<2; i0++) begin
+        // Field: mbox_reg.generic_output_wires[].generic_wires
+        always_comb begin
+            automatic logic [31:0] next_c = field_storage.generic_output_wires[i0].generic_wires.value;
+            automatic logic load_next_c = '0;
+            if(decoded_reg_strb.generic_output_wires[i0] && decoded_req_is_wr) begin // SW write
+                next_c = decoded_wr_data[31:0];
+                load_next_c = '1;
+            end
+            field_combo.generic_output_wires[i0].generic_wires.next = next_c;
+            field_combo.generic_output_wires[i0].generic_wires.load_next = load_next_c;
+        end
+        always_ff @(posedge clk) begin
+            if(field_combo.generic_output_wires[i0].generic_wires.load_next) begin
+                field_storage.generic_output_wires[i0].generic_wires.value <= field_combo.generic_output_wires[i0].generic_wires.next;
+            end
+        end
+        assign hwif_out.generic_output_wires[i0].generic_wires.value = field_storage.generic_output_wires[i0].generic_wires.value;
+    end
     for(genvar i0=0; i0<12; i0++) begin
         // Field: mbox_reg.uds_seed[].seed
         always_comb begin
@@ -872,7 +994,7 @@ module mbox_reg (
     logic [31:0] readback_data;
     
     // Assign readback values to a flattened array
-    logic [31:0] readback_array[66];
+    logic [31:0] readback_array[70];
     assign readback_array[0][31:0] = (decoded_reg_strb.HW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.HW_ERROR_FATAL.error_code.value : '0;
     assign readback_array[1][31:0] = (decoded_reg_strb.HW_ERROR_NON_FATAL && !decoded_req_is_wr) ? field_storage.HW_ERROR_NON_FATAL.error_code.value : '0;
     assign readback_array[2][31:0] = (decoded_reg_strb.FW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.FW_ERROR_FATAL.error_code.value : '0;
@@ -880,31 +1002,39 @@ module mbox_reg (
     assign readback_array[4][31:0] = (decoded_reg_strb.HW_ERROR_ENC && !decoded_req_is_wr) ? field_storage.HW_ERROR_ENC.error_code.value : '0;
     assign readback_array[5][31:0] = (decoded_reg_strb.FW_ERROR_ENC && !decoded_req_is_wr) ? field_storage.FW_ERROR_ENC.error_code.value : '0;
     assign readback_array[6][31:0] = (decoded_reg_strb.BOOT_STATUS && !decoded_req_is_wr) ? field_storage.BOOT_STATUS.status.value : '0;
-    assign readback_array[7][31:0] = (decoded_reg_strb.FLOW_STATUS && !decoded_req_is_wr) ? field_storage.FLOW_STATUS.status.value : '0;
-    for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 8][31:0] = (decoded_reg_strb.key_manifest_pk_hash_0[i0] && !decoded_req_is_wr) ? field_storage.key_manifest_pk_hash_0[i0].hash.value : '0;
+    assign readback_array[7][29:0] = (decoded_reg_strb.FLOW_STATUS && !decoded_req_is_wr) ? field_storage.FLOW_STATUS.status.value : '0;
+    assign readback_array[7][30:30] = (decoded_reg_strb.FLOW_STATUS && !decoded_req_is_wr) ? field_storage.FLOW_STATUS.ready_for_fw.value : '0;
+    assign readback_array[7][31:31] = (decoded_reg_strb.FLOW_STATUS && !decoded_req_is_wr) ? field_storage.FLOW_STATUS.ready_for_runtime.value : '0;
+    for(genvar i0=0; i0<2; i0++) begin
+        assign readback_array[i0*1 + 8][31:0] = (decoded_reg_strb.generic_input_wires[i0] && !decoded_req_is_wr) ? field_storage.generic_input_wires[i0].generic_wires.value : '0;
+    end
+    for(genvar i0=0; i0<2; i0++) begin
+        assign readback_array[i0*1 + 10][31:0] = (decoded_reg_strb.generic_output_wires[i0] && !decoded_req_is_wr) ? field_storage.generic_output_wires[i0].generic_wires.value : '0;
     end
     for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 20][31:0] = (decoded_reg_strb.key_manifest_pk_hash_1[i0] && !decoded_req_is_wr) ? field_storage.key_manifest_pk_hash_1[i0].hash.value : '0;
+        assign readback_array[i0*1 + 12][31:0] = (decoded_reg_strb.key_manifest_pk_hash_0[i0] && !decoded_req_is_wr) ? field_storage.key_manifest_pk_hash_0[i0].hash.value : '0;
     end
     for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 32][31:0] = (decoded_reg_strb.key_manifest_pk_hash_2[i0] && !decoded_req_is_wr) ? field_storage.key_manifest_pk_hash_2[i0].hash.value : '0;
+        assign readback_array[i0*1 + 24][31:0] = (decoded_reg_strb.key_manifest_pk_hash_1[i0] && !decoded_req_is_wr) ? field_storage.key_manifest_pk_hash_1[i0].hash.value : '0;
     end
     for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 44][31:0] = (decoded_reg_strb.key_manifest_pk_hash_3[i0] && !decoded_req_is_wr) ? field_storage.key_manifest_pk_hash_3[i0].hash.value : '0;
+        assign readback_array[i0*1 + 36][31:0] = (decoded_reg_strb.key_manifest_pk_hash_2[i0] && !decoded_req_is_wr) ? field_storage.key_manifest_pk_hash_2[i0].hash.value : '0;
     end
-    assign readback_array[56][3:0] = (decoded_reg_strb.key_manifest_pk_hash_mask && !decoded_req_is_wr) ? field_storage.key_manifest_pk_hash_mask.mask.value : '0;
-    assign readback_array[56][31:4] = '0;
-    assign readback_array[57][31:0] = (decoded_reg_strb.key_manifest_svn && !decoded_req_is_wr) ? field_storage.key_manifest_svn.svn.value : '0;
-    assign readback_array[58][31:0] = (decoded_reg_strb.boot_loader_svn && !decoded_req_is_wr) ? field_storage.boot_loader_svn.svn.value : '0;
+    for(genvar i0=0; i0<12; i0++) begin
+        assign readback_array[i0*1 + 48][31:0] = (decoded_reg_strb.key_manifest_pk_hash_3[i0] && !decoded_req_is_wr) ? field_storage.key_manifest_pk_hash_3[i0].hash.value : '0;
+    end
+    assign readback_array[60][3:0] = (decoded_reg_strb.key_manifest_pk_hash_mask && !decoded_req_is_wr) ? field_storage.key_manifest_pk_hash_mask.mask.value : '0;
+    assign readback_array[60][31:4] = '0;
+    assign readback_array[61][31:0] = (decoded_reg_strb.key_manifest_svn && !decoded_req_is_wr) ? field_storage.key_manifest_svn.svn.value : '0;
+    assign readback_array[62][31:0] = (decoded_reg_strb.boot_loader_svn && !decoded_req_is_wr) ? field_storage.boot_loader_svn.svn.value : '0;
     for(genvar i0=0; i0<4; i0++) begin
-        assign readback_array[i0*1 + 59][31:0] = (decoded_reg_strb.runtime_svn[i0] && !decoded_req_is_wr) ? field_storage.runtime_svn[i0].svn.value : '0;
+        assign readback_array[i0*1 + 63][31:0] = (decoded_reg_strb.runtime_svn[i0] && !decoded_req_is_wr) ? field_storage.runtime_svn[i0].svn.value : '0;
     end
-    assign readback_array[63][0:0] = (decoded_reg_strb.anti_rollback_disable && !decoded_req_is_wr) ? field_storage.anti_rollback_disable.dis.value : '0;
-    assign readback_array[63][31:1] = '0;
-    assign readback_array[64][31:0] = (decoded_reg_strb.ieee_idevid_cert_chain && !decoded_req_is_wr) ? field_storage.ieee_idevid_cert_chain.cert.value : '0;
-    assign readback_array[65][0:0] = (decoded_reg_strb.fuse_done && !decoded_req_is_wr) ? field_storage.fuse_done.done.value : '0;
-    assign readback_array[65][31:1] = '0;
+    assign readback_array[67][0:0] = (decoded_reg_strb.anti_rollback_disable && !decoded_req_is_wr) ? field_storage.anti_rollback_disable.dis.value : '0;
+    assign readback_array[67][31:1] = '0;
+    assign readback_array[68][31:0] = (decoded_reg_strb.ieee_idevid_cert_chain && !decoded_req_is_wr) ? field_storage.ieee_idevid_cert_chain.cert.value : '0;
+    assign readback_array[69][0:0] = (decoded_reg_strb.fuse_done && !decoded_req_is_wr) ? field_storage.fuse_done.done.value : '0;
+    assign readback_array[69][31:1] = '0;
 
 
     // Reduce the array
@@ -913,7 +1043,7 @@ module mbox_reg (
         readback_done = decoded_req & ~decoded_req_is_wr;
         readback_err = '0;
         readback_data_var = '0;
-        for(int i=0; i<66; i++) readback_data_var |= readback_array[i];
+        for(int i=0; i<70; i++) readback_data_var |= readback_array[i];
         readback_data = readback_data_var;
     end
 

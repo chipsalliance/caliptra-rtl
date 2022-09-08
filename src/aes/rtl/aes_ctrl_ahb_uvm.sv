@@ -8,7 +8,7 @@
 // Author: Mojtaba Bisheh-Niasar
 //======================================================================
 
-module aes_ctrl #(
+module aes_ctrl_ahb_uvm #(
     parameter AHB_DATA_WIDTH = 64,
     parameter AHB_ADDR_WIDTH = 32,
     parameter BYPASS_HSEL = 0

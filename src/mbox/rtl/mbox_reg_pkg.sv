@@ -3,6 +3,14 @@
 
 package mbox_reg_pkg;
     typedef struct {
+        logic [31:0] next;
+    } mbox_reg__generic_input_wires__generic_wires__in_t;
+
+    typedef struct {
+        mbox_reg__generic_input_wires__generic_wires__in_t generic_wires;
+    } mbox_reg__generic_input_wires__in_t;
+
+    typedef struct {
         logic hwclr;
     } mbox_reg__secret_w32__in_t;
 
@@ -29,10 +37,24 @@ package mbox_reg_pkg;
         logic reset_b;
         logic hard_reset_b;
         logic soc_req;
+        mbox_reg__generic_input_wires__in_t generic_input_wires[2];
         mbox_reg__uds_seed__in_t uds_seed[12];
         mbox_reg__field_entropy__in_t field_entropy[32];
         mbox_reg__obf_key__in_t obf_key[8];
     } mbox_reg__in_t;
+
+    typedef struct {
+        logic value;
+    } mbox_reg__FLOW_STATUS__ready_for_fw__out_t;
+
+    typedef struct {
+        logic value;
+    } mbox_reg__FLOW_STATUS__ready_for_runtime__out_t;
+
+    typedef struct {
+        mbox_reg__FLOW_STATUS__ready_for_fw__out_t ready_for_fw;
+        mbox_reg__FLOW_STATUS__ready_for_runtime__out_t ready_for_runtime;
+    } mbox_reg__FLOW_STATUS__out_t;
 
     typedef struct {
         logic value;
@@ -41,6 +63,14 @@ package mbox_reg_pkg;
     typedef struct {
         mbox_reg__CLEAR_SECRETS__clear__out_t clear;
     } mbox_reg__CLEAR_SECRETS__out_t;
+
+    typedef struct {
+        logic [31:0] value;
+    } mbox_reg__generic_output_wires__generic_wires__out_t;
+
+    typedef struct {
+        mbox_reg__generic_output_wires__generic_wires__out_t generic_wires;
+    } mbox_reg__generic_output_wires__out_t;
 
     typedef struct {
         logic [31:0] value;
@@ -119,7 +149,9 @@ package mbox_reg_pkg;
     } mbox_reg__obf_key__out_t;
 
     typedef struct {
+        mbox_reg__FLOW_STATUS__out_t FLOW_STATUS;
         mbox_reg__CLEAR_SECRETS__out_t CLEAR_SECRETS;
+        mbox_reg__generic_output_wires__out_t generic_output_wires[2];
         mbox_reg__uds_seed__out_t uds_seed[12];
         mbox_reg__field_entropy__out_t field_entropy[32];
         mbox_reg__key_manifest_pk_hash_0__out_t key_manifest_pk_hash_0[12];

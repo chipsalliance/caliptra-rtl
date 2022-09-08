@@ -1000,6 +1000,8 @@ mbox_top #(
     .cptra_pwrgood(cptra_pwrgood), 
     .cptra_rst_b(cptra_rst_b),
     .ready_for_fuses(ready_for_fuses),
+    .ready_for_fw_push(ready_for_fw_push),
+    .ready_for_runtime(ready_for_runtime),
     .mailbox_data_avail(mailbox_data_avail),
     .mailbox_flow_done(mailbox_flow_done),
     

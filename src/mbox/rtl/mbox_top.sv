@@ -29,6 +29,8 @@ module mbox_top #(
     input logic cptra_rst_b,
 
     output logic ready_for_fuses,
+    output logic ready_for_fw_push,
+    output logic ready_for_runtime,
 
     output logic mailbox_data_avail,
     output logic mailbox_flow_done,
@@ -265,7 +267,19 @@ always_comb begin
         mbox_reg_hwif_in.field_entropy[i].seed.hwclr = clear_secrets;
         obf_field_entropy[i] = mbox_reg_hwif_out.field_entropy[i].seed.value;
     end
+
+    //flow status
+    ready_for_fw_push = mbox_reg_hwif_out.FLOW_STATUS.ready_for_fw.value;
+    ready_for_runtime = mbox_reg_hwif_out.FLOW_STATUS.ready_for_runtime.value;
+
+    //generic wires
+    for (int i = 0; i < 2; i++) begin
+        generic_output_wires[i*32+:32] = mbox_reg_hwif_out.generic_output_wires[i].generic_wires.value;
+        mbox_reg_hwif_in.generic_input_wires[i].generic_wires.next = generic_input_wires[i*32+:32];
+    end
 end
+
+
 
 mbox_reg mbox_reg1 (
     .clk(clk),

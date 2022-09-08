@@ -25,9 +25,15 @@ addrmap mbox_reg {
     reg {rw_ro error_code[32]=0;} HW_ERROR_ENC;
     reg {rw_ro error_code[32]=0;} FW_ERROR_ENC;
     reg {rw_ro status[32]=0;} BOOT_STATUS;
-    reg {rw_ro status[32]=0;} FLOW_STATUS;
+    reg {rw_ro status[30]=0;
+         field {sw=rw; swwel = soc_req; hw=r;} ready_for_fw[1]=0;
+         field {sw=rw; swwel = soc_req; hw=r;} ready_for_runtime[1]=0;} FLOW_STATUS;
 
     reg {field {sw=w; swwel = soc_req; hw=r; singlepulse;} clear=0;} CLEAR_SECRETS;
+
+    reg {field {sw=rw; hw=w;} generic_wires[32];} generic_input_wires[2];
+    reg {field {sw=rw; hw=r;} generic_wires[32];} generic_output_wires[2];
+
 
     //fuses
     reg {secret seed[32]=0;} uds_seed[12] @0x200;
