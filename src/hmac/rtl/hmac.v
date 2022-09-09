@@ -94,7 +94,6 @@ module hmac(
   wire           core_ready;
   wire [383 : 0] core_tag;
   wire           core_tag_valid;
-
   reg [383 : 0]  tag_reg;
   reg [383 : 0]  kv_reg;
   reg [31  : 0]  tmp_read_data;
@@ -114,7 +113,7 @@ module hmac(
   logic dest_keyvault;
   logic kv_ctrl_we;
   kv_reg_t kv_ctrl_reg;
-
+  logic core_tag_we;
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
@@ -132,6 +131,8 @@ module hmac(
 
   assign read_data = tmp_read_data;
 
+  //rising edge detect on core tag valid
+  assign core_tag_we = core_tag_valid & ~tag_valid_reg;
 
   //----------------------------------------------------------------
   // core instantiation.
@@ -185,12 +186,12 @@ module hmac(
           init_reg      <= init_new;
           next_reg      <= next_new;
           ready_reg     <= core_ready;
-          tag_valid_reg <= core_ready;
+          tag_valid_reg <= core_tag_valid;
 
           //write to sw register
-          if (core_tag_valid & ~dest_keyvault)
+          if (core_tag_we & ~dest_keyvault)
             tag_reg <= core_tag;
-          if (core_tag_valid & dest_keyvault)
+          if (core_tag_we & dest_keyvault)
             kv_reg <= core_tag;
           if (key_we)
             key_reg[address[5 : 2]] <= write_data;
@@ -214,7 +215,6 @@ module hmac(
           end
           //clear dest sel and set dest done when dest has been copied
           if (kv_dest_done) begin
-            kv_ctrl_reg.dest_sel_en <= '0;
             kv_ctrl_reg.dest_done <= '1;
           end
         end
@@ -317,7 +317,7 @@ kv_client_hmac
     .src_write_data(kv_src_write_data),
 
     .dest_keyvault(dest_keyvault),
-    .dest_data_avail(core_tag_valid),
+    .dest_data_avail(core_tag_we),
     .dest_data(kv_reg),
 
     .key_done(kv_key_done),

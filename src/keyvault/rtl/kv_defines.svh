@@ -49,7 +49,7 @@ typedef struct packed {
     logic dest_sel_pcr;
     logic [2:0] dest_sel;
     logic dest_sel_en;
-    logic [2:0] rsvd_src_sel;
+    logic [2:0] src_data_size;
     logic src_sel_pcr;
     logic [2:0] src_sel;
     logic src_sel_en;

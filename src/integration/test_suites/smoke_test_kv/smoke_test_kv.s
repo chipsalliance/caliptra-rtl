@@ -117,6 +117,106 @@ _start:
     li x1, 0x00000001
     sw x1, 0(x3)
 
+    //-------
+    //CDI IDEVID
+    //-------
+
+    // Load key from hw_data and write to PCR
+    li x3, KV_BASE_ADDR
+    li x2, HMAC_KEY_NUM_DWORDS
+    li x1, 0x00000000
+    la x4, hw_data
+    write_key_loop:
+        lw x5, 0(x4)
+        sw x5, 0(x3)
+        addi x4, x4, 4
+        addi x3, x3, 4
+        addi x1, x1, 1
+        bne x2, x1, write_key_loop
+
+    // Program HMAC_ADDR_KV_CTRL
+    li x3, HMAC_ADDR_KV_CTRL
+    li x4, 0x07014111
+    sw x4, 0(x3)
+
+    // Check that HMAC KEY and BLOCK are loaded
+    li x3, HMAC_ADDR_KV_CTRL
+    li x1, 0x60000000
+    key_done_poll_loop:
+        lw x5, 0(x3)
+        and x5, x5, x1
+        bne x5, x1, key_done_poll_loop
+
+    // Enable HMAC core
+    li x3, HMAC_ADDR_CNTRL
+    li x4, HMAC_INIT
+    sw x4, 0(x3)
+
+    // wait for HMAC process - check dest done
+    li x3, HMAC_ADDR_KV_CTRL
+    li x1, 0x80000000
+    dest_done_loop:
+        lw x5, 0(x3)
+        and x5, x5, x1
+        bne x5, x1, dest_done_loop
+
+    //ecc stuff would be here
+
+    //-------
+    //CDI LDEVID
+    //-------
+
+    // Program HMAC_ADDR_KV_CTRL
+    li x3, HMAC_ADDR_KV_CTRL
+    li x4, 0x0701ED01
+    sw x4, 0(x3)
+
+    // Check that HMAC KEY and BLOCK are loaded
+    li x3, HMAC_ADDR_KV_CTRL
+    li x1, 0x60000000
+    key_done2_poll_loop:
+        lw x5, 0(x3)
+        and x5, x5, x1
+        bne x5, x1, key_done2_poll_loop
+
+    // Enable HMAC core
+    li x3, HMAC_ADDR_CNTRL
+    li x4, HMAC_INIT
+    sw x4, 0(x3)
+
+    // wait for HMAC process
+    li x3, HMAC_ADDR_STATUS
+    li x1, HMAC_VALID
+    ready_loop:
+        lw x5, 0(x3)
+        bne x5, x1, ready_loop
+
+    // Write PAD for 1024 size block
+    // FE is 1024 so we did init with the full data
+    // Now we need to do next with a full pad and size 
+    li x3, HMAC_ADDR_BLOCK_START
+    li x1, HMAC_ADDR_BLOCK_END
+    la x4, pad_block
+    write_block_loop:
+        lw x5, 0(x4)
+        sw x5, 0(x3)
+        addi x4, x4, 4
+        addi x3, x3, 4
+        ble x3, x1, write_block_loop
+
+    // Give the next command to HMAC core
+    li x3, HMAC_ADDR_CNTRL
+    li x4, HMAC_NEXT
+    sw x4, 0(x3)
+
+    // wait for HMAC process - check dest done
+    li x3, HMAC_ADDR_KV_CTRL
+    li x1, 0x80000000
+    dest_done2_loop:
+        lw x5, 0(x3)
+        and x5, x5, x1
+        bne x5, x1, dest_done2_loop
+
     //write to PCR
     li x3, KV_BASE_ADDR
     li x6, KV_NUM_PCR
@@ -152,113 +252,16 @@ _start:
         addi x9, x9, 1
         bne x9, x8, read_pcr_dword_loop
         addi x7, x7, 1
-        bne x7, x6, read_pcr_reg_loop
-
-    //lock PCR writes
-    //li x3, KV_PCR_CTRL_ADDR
-    //li x6, KV_NUM_PCR
-    //li x7, 0x00000000
-    //write_pcr_ctrl_loop:
-    //    li x5, 0x00000002
-    //    sw x5, 0(x3)
-    //    addi x3, x3, 4
-    //    addi x7, x7, 1
-    //    bne x7, x6, write_pcr_ctrl_loop
-
-    //try to overwrite PCR
-    //li x3, KV_BASE_ADDR
-    //li x6, KV_NUM_PCR
-    //li x7, 0x00000000
-    //li x8, KV_NUM_DWORDS
-    //write_pcr_reg_loop2:
-    //li x9, 0x00000000
-    //write_pcr_dword_loop2:
-    //    li x5, 0xDEADBEEF
-    //    sw x5, 0(x3)
-    //    addi x3, x3, 4
-    //    addi x9, x9, 1
-    //    bne x9, x8, write_pcr_dword_loop2
-    //    addi x7, x7, 1
-    //    bne x7, x6, write_pcr_reg_loop2
-
-
-    //read back PCR and check
-    //li x3, KV_BASE_ADDR
-    //li x6, KV_NUM_PCR
-    //li x7, 0x00000000
-    //li x8, KV_NUM_DWORDS
-    //read_pcr_reg_loop2:
-    //la x4, kv_data
-    //li x9, 0x00000000
-    //read_pcr_dword_loop2:
-    //    lw x5, 0(x3)
-    //    lw x10, 0(x4)
-    //    bne x5, x10, _finish_fail
-    //    addi x3, x3, 4
-    //    addi x4, x4, 4
-    //    addi x9, x9, 1
-    //    bne x9, x8, read_pcr_dword_loop2
-    //    addi x7, x7, 1
-    //    bne x7, x6, read_pcr_reg_loop2
-
-    // Load key from hw_data and write to PCR
-    li x3, KV_BASE_ADDR
-    li x2, HMAC_KEY_NUM_DWORDS
-    li x1, 0x00000000
-    la x4, hw_data
-    write_key_loop:
-        lw x5, 0(x4)
-        sw x5, 0(x3)
-        addi x4, x4, 4
-        addi x3, x3, 4
-        addi x1, x1, 1
-        bne x2, x1, write_key_loop
-
-    // Load block from hw_data and write to HMAC core
-    li x3, HMAC_ADDR_BLOCK_START
-    li x1, HMAC_ADDR_BLOCK_END
-    la x4, hw_data
-    addi x4, x4, 48
-    write_block_loop:
-        lw x5, 0(x4)
-        sw x5, 0(x3)
-        addi x4, x4, 4
-        addi x3, x3, 4
-        ble x3, x1, write_block_loop
-
-    // Program HMAC_ADDR_KV_CTRL
-    li x3, HMAC_ADDR_KV_CTRL
-    li x4, 0x070F0011
-    sw x4, 0(x3)
-
-    // Check that HMAC KEY is loaded
-    li x3, HMAC_ADDR_KV_CTRL
-    li x1, 0x20000000
-    key_done_poll_loop:
-        lw x5, 0(x3)
-        and x5, x5, x1
-        bne x5, x1, key_done_poll_loop
-
-    // Enable HMAC core
-    li x3, HMAC_ADDR_CNTRL
-    li x4, HMAC_INIT
-    sw x4, 0(x3)
-
-    // wait for HMAC process
-    li x3, HMAC_ADDR_STATUS
-    li x1, HMAC_VALID
-    ready_loop:
-        lw x5, 0(x3)
-        bne x5, x1, ready_loop
-
-    // Read the data back from HMAC register
-    li x3, HMAC_ADDR_TAG_START
-    li x1, HMAC_ADDR_TAG_END
-    read_result_loop:
-        lw x5, 0(x3)
-        addi x3, x3, 4
-        ble x3, x1, read_result_loop
+        bne x7, x6, read_pcr_reg_loop       
         
+    //clear FE 
+    li x3, KV_KEY_CTRL_ADDR
+    addi x3, x3, 24
+    li x5, 0x00000008
+    sw x5, 0(x3)
+    addi x3, x3, 4
+    sw x5, 0(x3)
+
     // Load string from hw_data
     // and write to stdout address
     li x3, STDOUT
@@ -331,9 +334,8 @@ hw_data:
 .word 0x0b0b0b0b
 .word 0x0b0b0b0b
 .word 0x0b0b0b0b
-//this is the block 1024-bit
-.word 0x48692054
-.word 0x68657265
+//this is the pad block 1024-bit
+pad_block:
 .word 0x80000000
 .word 0x00000000
 .word 0x00000000
@@ -363,7 +365,9 @@ hw_data:
 .word 0x00000000
 .word 0x00000000
 .word 0x00000000
-.word 0x00000440
+.word 0x00000000
+.word 0x00000000
+.word 0x00000800
 hello_world:
 .ascii "----------------------------------\n"
 .ascii "Hello World from KeyVault       !!\n"
