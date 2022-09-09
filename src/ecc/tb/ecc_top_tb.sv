@@ -9,7 +9,7 @@
 //======================================================================
 
 module ecc_top_tb #(
-    parameter   TEST_VECTOR_NUM = 15
+    parameter   TEST_VECTOR_NUM = 5
 )
 ();
 
@@ -73,6 +73,7 @@ module ecc_top_tb #(
       operand_t     k;
       operand_t     R;
       operand_t     S;
+      operand_t     seed;
   } test_vector_t;
 
   test_vector_t [TEST_VECTOR_NUM-1:0] test_vectors;
@@ -456,15 +457,15 @@ module ecc_top_tb #(
     
       start_time = cycle_ctr;
 
-      write_block(ADDR_SEED0, test_vector.privkey);
+      write_block(ADDR_SEED0, test_vector.seed);
 
       trig_ECC(KEYGEN);
       #(CLK_PERIOD);
       
       wait_ready();
 
-      //read_block(ADDR_PRIVKEY0);
-      //privkey = reg_read_data;
+      read_block(ADDR_PRIVKEY0);
+      privkey = reg_read_data;
 
       read_block(ADDR_PUBKEYX0);
       pubkey.x = reg_read_data;
@@ -476,7 +477,7 @@ module ecc_top_tb #(
       $display("*** keygen test processing time = %01d cycles.", end_time);
       $display("privkey    : 0x%96x", test_vector.privkey);
 
-      if (pubkey == test_vector.pubkey)
+      if ((privkey == test_vector.privkey) & (pubkey == test_vector.pubkey))
         begin
           $display("*** TC %0d keygen successful.", tc_number);
           $display("");
@@ -518,7 +519,7 @@ module ecc_top_tb #(
 
       write_block(ADDR_MSG0, test_vector.hashed_msg);
       write_block(ADDR_PRIVKEY0, test_vector.privkey);
-      write_block(ADDR_SEED0, test_vector.k);
+      //write_block(ADDR_SEED0, test_vector.k);
 
       trig_ECC(SIGN);
       #(CLK_PERIOD);
@@ -615,8 +616,12 @@ module ecc_top_tb #(
   //----------------------------------------------------------------
   task ecc_test();
     begin   
-      for (int i = 0; i < test_vector_cnt; i++) begin: test_vector_loop
+      //the first 3-set test vectors work for keygen, 
+      // and the last 2-set test vectors work for signing/verifying
+      for (int i = 0; i < 3; i++) begin: test_vector_loop
           ecc_keygen_test(i, test_vectors[i]);
+      end
+      for (int i = 3; i < 5; i++) begin: test_vector_loop
           ecc_signing_test(i, test_vectors[i]);
           ecc_verifying_test(i, test_vectors[i]);
       end
@@ -654,7 +659,7 @@ module ecc_top_tb #(
               1: test_vector.privkey     = val;
               2: test_vector.pubkey.x    = val;
               3: test_vector.pubkey.y    = val;
-              4: test_vector.k           = val;
+              4: test_vector.seed        = val;
               5: test_vector.R           = val;
               6: begin
                  test_vector.S           = val;
@@ -684,7 +689,7 @@ module ecc_top_tb #(
       $display("    ==============================");
       $display("");
 
-      fname = "/home/mojtabab/workspace_aha_poc/ws1/Caliptra/src/ecc/tb/test_vectors/ecc_test_vectors.hex";
+      fname = "/home/mojtabab/workspace_aha_poc/ws1/Caliptra/src/ecc/tb/test_vectors/ecc_drbg.hex";
       read_test_vectors(fname);
 
       init_sim();

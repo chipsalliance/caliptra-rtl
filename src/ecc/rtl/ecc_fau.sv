@@ -103,6 +103,5 @@ module ecc_fau #(
     assign mult_start_edge = mult_start & ~mult_start_dly;
     assign mult_res_o = mult_res_s;
     assign add_res_o  = add_res_s;
-    assign ready = add_ready & mult_ready;
 
 endmodule

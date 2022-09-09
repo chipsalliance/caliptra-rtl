@@ -8,6 +8,7 @@ provides: [ecc_top]
 schema_version: 2.4.0
 requires:
   - libs
+  - hmac_drbg
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -34,9 +35,7 @@ targets:
       - $COMPILE_ROOT/rtl/ecc_mult_dsp.sv
       - $COMPILE_ROOT/rtl/ecc_add_sub_mod_alter.sv
       - $COMPILE_ROOT/rtl/ecc_adder.sv
-      
-      
-      
+
     tops: [ecc_top]
 ---
 provides: [ecc_top_tb]  

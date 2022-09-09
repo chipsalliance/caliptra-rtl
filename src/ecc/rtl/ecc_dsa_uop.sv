@@ -23,6 +23,7 @@ localparam [DSA_UOP_ADDR_WIDTH-1 : 0] DSA_UOP_SIGN                 = 8'b0001_000
 localparam [DSA_UOP_ADDR_WIDTH-1 : 0] DSA_UOP_VERIFY0              = 8'b0010_0000;
 localparam [DSA_UOP_ADDR_WIDTH-1 : 0] DSA_UOP_VERIFY1              = 8'b0010_1000;
 localparam [DSA_UOP_ADDR_WIDTH-1 : 0] DSA_UOP_VERIFY2              = 8'b0011_0000;
+localparam [DSA_UOP_ADDR_WIDTH-1 : 0] DSA_UOP_HMAC_DRBG            = 8'b0100_0000;
 localparam [DSA_UOP_ADDR_WIDTH-1 : 0] DSA_UOP_FIXED_MSB            = 8'b1000_0000;
 
 
@@ -52,8 +53,8 @@ localparam [DSA_OPR_ADDR_WIDTH-1 : 0] R_VERIFY_ID              = 26;
 
 localparam DSA_NOP                      = 12;  
 localparam DSA_KG_S                     = DSA_NOP + 2; 
-localparam DSA_KG_E                     = DSA_KG_S + 6; 
+localparam DSA_KG_E                     = DSA_KG_S + 9; 
 localparam DSA_SGN_S                    = DSA_KG_E + 2; 
-localparam DSA_SGN_E                    = DSA_SGN_S + 9; 
+localparam DSA_SGN_E                    = DSA_SGN_S + 10; 
 localparam DSA_VER_S                    = DSA_SGN_E + 2; 
 localparam DSA_VER_E                    = DSA_VER_S + 18;

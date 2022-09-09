@@ -67,13 +67,11 @@ module ecc_montgomerymultiplier #(
     logic   [RADIX-1:0]               n_prime_reg;
     logic   [3*S_NUM-1 : 0]           push_reg;
     logic                             push_reg_eq_zero;
-    logic                             push_reg_eq_zero_prev;
+    logic                             push_reg_eq_zero_ff;
     logic                             odd;
     logic   [RADIX-1 : 0]             last_s_reg;
     logic   [FULL_REG_SIZE-1:0]       p_internal;
     logic   [FULL_REG_SIZE-1:0]       p_subtracted_internal;
-
-    logic   [1 : 0]                   cnt;
 
     //----------------------------------------------------------------
     // Processing elements (PEs)
@@ -272,10 +270,10 @@ module ecc_montgomerymultiplier #(
     end
     
     always_ff @(posedge clk) begin
-        push_reg_eq_zero_prev <= push_reg_eq_zero;
+        push_reg_eq_zero_ff <= push_reg_eq_zero;
     end
 
     assign push_reg_eq_zero = push_reg == 'b0;
-    assign ready_o = push_reg_eq_zero & ~push_reg_eq_zero_prev;
+    assign ready_o = push_reg_eq_zero & ~push_reg_eq_zero_ff;
 
 endmodule

@@ -62,7 +62,7 @@ module ecc_top #(
     ecc_ahb_slv_i (
         //AMBA AHB Lite INF
         .hclk(clk),
-        .hreset_n(cptra_uc_rst_b),
+        .hreset_n(reset_n),
         .haddr_i(haddr_i),
         .hwdata_i(hwdata_i),
         .hsel_i(hsel_i),

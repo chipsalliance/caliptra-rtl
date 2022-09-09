@@ -11,45 +11,43 @@
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter BASE_ADDR        = 32'h00000000;
+  parameter ECC_BASE_ADDR        = 32'h00000000;
 
-  parameter ADDR_NAME        = BASE_ADDR + 32'h00000000;
-  parameter ADDR_VERSION     = BASE_ADDR + 32'h00000008;
+  parameter ECC_ADDR_NAME        = ECC_BASE_ADDR + 32'h00000000;
+  parameter ECC_ADDR_VERSION     = ECC_BASE_ADDR + 32'h00000008;
 
-  parameter ADDR_CTRL        = BASE_ADDR + 32'h00000010;
-  parameter KEYGEN           = 2'b01;
-  parameter SIGN             = 2'b10;
-  parameter VERIFY           = 2'b11;
+  parameter ECC_ADDR_CTRL        = ECC_BASE_ADDR + 32'h00000010;
+  parameter KEYGEN               = 2'b01;
+  parameter SIGN                 = 2'b10;
+  parameter VERIFY               = 2'b11;
 
-  parameter ADDR_STATUS      = BASE_ADDR + 32'h00000018;
-  parameter STATUS_READY_BIT = 0;
-  parameter STATUS_VALID_BIT = 1;
+  parameter ECC_ADDR_STATUS      = ECC_BASE_ADDR + 32'h00000018;
 
-  parameter ADDR_VERIFY      = BASE_ADDR + 32'h00000020;
+  parameter ECC_ADDR_VERIFY      = ECC_BASE_ADDR + 32'h00000020;
 
-  parameter ADDR_SEED0       = BASE_ADDR + 32'h00000080;
-  parameter ADDR_SEED11      = BASE_ADDR + 32'h000000A8;
+  parameter ECC_ADDR_SEED0       = ECC_BASE_ADDR + 32'h00000080;
+  parameter ECC_ADDR_SEED11      = ECC_BASE_ADDR + 32'h000000A8;
 
-  parameter ADDR_MSG0        = BASE_ADDR + 32'h00000100;
-  parameter ADDR_MSG11       = BASE_ADDR + 32'h00000128;
+  parameter ECC_ADDR_MSG0        = ECC_BASE_ADDR + 32'h00000100;
+  parameter ECC_ADDR_MSG11       = ECC_BASE_ADDR + 32'h00000128;
 
-  parameter ADDR_PRIVKEY0    = BASE_ADDR + 32'h00000180;
-  parameter ADDR_PRIVKEY11   = BASE_ADDR + 32'h000001A8;
+  parameter ECC_ADDR_PRIVKEY0    = ECC_BASE_ADDR + 32'h00000180;
+  parameter ECC_ADDR_PRIVKEY11   = ECC_BASE_ADDR + 32'h000001A8;
 
-  parameter ADDR_PUBKEYX0    = BASE_ADDR + 32'h00000200;
-  parameter ADDR_PUBKEYX11   = BASE_ADDR + 32'h00000228;
+  parameter ECC_ADDR_PUBKEYX0    = ECC_BASE_ADDR + 32'h00000200;
+  parameter ECC_ADDR_PUBKEYX11   = ECC_BASE_ADDR + 32'h00000228;
 
-  parameter ADDR_PUBKEYY0    = BASE_ADDR + 32'h00000280;
-  parameter ADDR_PUBKEYY11   = BASE_ADDR + 32'h000002A8;
+  parameter ECC_ADDR_PUBKEYY0    = ECC_BASE_ADDR + 32'h00000280;
+  parameter AECC_DDR_PUBKEYY11   = ECC_BASE_ADDR + 32'h000002A8;
 
-  parameter ADDR_SIGNR0      = BASE_ADDR + 32'h00000300;
-  parameter ADDR_SIGNR11     = BASE_ADDR + 32'h00000328;
+  parameter ECC_ADDR_SIGNR0      = ECC_BASE_ADDR + 32'h00000300;
+  parameter ECC_ADDR_SIGNR11     = ECC_BASE_ADDR + 32'h00000328;
 
-  parameter ADDR_SIGNS0      = BASE_ADDR + 32'h00000380;
-  parameter ADDR_SIGNS11     = BASE_ADDR + 32'h000003A8;
+  parameter ECC_ADDR_SIGNS0      = ECC_BASE_ADDR + 32'h00000380;
+  parameter ECC_ADDR_SIGNS11     = ECC_BASE_ADDR + 32'h000003A8;
 
-  parameter CORE_NAME        = 64'h38342D33_63707365; // "secp-384"
-  parameter CORE_VERSION     = 64'h00000000_3030312e; // "1.00"
+  parameter ECC_CORE_NAME        = 64'h38342D33_63707365; // "secp-384"
+  parameter ECC_CORE_VERSION     = 64'h00000000_3030312e; // "1.00"
 
   // Implementation parameters for field arithmetic
   parameter REG_SIZE         = 384;

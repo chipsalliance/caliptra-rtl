@@ -63,8 +63,8 @@ module ecc_fixed_msb #(
         .N(REG_SIZE+1)
         ) 
         adder_inst_1(
-        .a({1'b0,data_q_reg}),
-        .b({2'b0,GROUP_ORDER}),
+        .a(data_q_reg),
+        .b({1'b0,GROUP_ORDER}),
         .cin(1'b0),
         .s(data_2q[REG_SIZE : 0]),
         .cout(data_2q[REG_SIZE+1])

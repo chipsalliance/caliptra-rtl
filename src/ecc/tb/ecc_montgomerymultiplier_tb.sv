@@ -306,7 +306,6 @@ module ecc_montgomerymultiplier_tb #(
       $display("    ==============================\n");
 
       fname = $sformatf("/home/mojtabab/workspace_aha_poc/ws1/Caliptra/src/ecc/tb/test_vectors/mm_test_vectors_%0d_key_%0d_word_%0d.hex", TEST_VECTOR_NUM, OPERAND_WIDTH, WORD_WIDTH);
-      //fname = "/home/mojtabab/workspace_aha_poc/ws1/Caliptra/src/ecc/tb/test_vectors/mm_test_vectors_102_key_384_word_32.hex";
       read_test_vectors(fname);
 
       init_sim();

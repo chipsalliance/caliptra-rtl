@@ -8,8 +8,6 @@
 // Author: Mojtaba Bisheh-Niasar
 //======================================================================
 
-//`include "ecc_defines.svh"
-
 module ecc_dsa_ctrl(
     // Clock and reset.
     input wire           clk,
@@ -75,6 +73,13 @@ module ecc_dsa_ctrl(
     logic                   fixed_msb_en;
     logic [2  : 0]          PM_cmd_reg;
 
+    logic                   hmac_mode;
+    logic                   hmac_init;
+    logic                   hmac_ready;
+    logic                   hmac_valid;
+    logic [REG_SIZE-1 : 0]  hmac_nonce;
+    logic                   hmac_busy;
+
     //----------------------------------------------------------------
     // Module instantiantions.
     //----------------------------------------------------------------
@@ -125,6 +130,23 @@ module ecc_dsa_ctrl(
         );
 
 
+    hmac_drbg #(
+        .SEED_LENGTH(REG_SIZE)
+        )    
+        hmac_drbg_i (
+        .clk(clk),
+        .reset_n(reset_n),
+        .KEYGEN_SIGN(hmac_mode),
+        .init(hmac_init),
+        .ready(hmac_ready),
+        .valid(hmac_valid),
+        .seed(seed_reg),
+        .privKey(privkey_reg),
+        .h1(msg_reg),
+        .nonce(hmac_nonce)
+        );
+
+
     //----------------------------------------------------------------
     // ecc_reg_update
     // Update functionality for all interface registers in the core.
@@ -147,10 +169,10 @@ module ecc_dsa_ctrl(
     end // ecc_reg_reading
 
     // write the registers by hw
-    always_comb hwif_out.ecc_NAME[0].NAME.next = CORE_NAME[31 : 0];
-    always_comb hwif_out.ecc_NAME[1].NAME.next = CORE_NAME[63 : 32];
-    always_comb hwif_out.ecc_VERSION[0].VERSION.next = CORE_VERSION[31 : 0];
-    always_comb hwif_out.ecc_VERSION[1].VERSION.next = CORE_VERSION[63 : 32];
+    always_comb hwif_out.ecc_NAME[0].NAME.next = ECC_CORE_NAME[31 : 0];
+    always_comb hwif_out.ecc_NAME[1].NAME.next = ECC_CORE_NAME[63 : 32];
+    always_comb hwif_out.ecc_VERSION[0].VERSION.next = ECC_CORE_VERSION[31 : 0];
+    always_comb hwif_out.ecc_VERSION[1].VERSION.next = ECC_CORE_VERSION[63 : 32];
 
     always_comb hwif_out.ecc_STATUS.STATUS.next = {30'h0, dsa_valid_reg, dsa_ready_reg};
     always_comb hwif_out.ecc_VERIFY.VERIFY.next = {31'h0, verify_reg};
@@ -174,7 +196,7 @@ module ecc_dsa_ctrl(
     // update the internal registers and their wr_en
     //----------------------------------------------------------------
     always_comb begin
-        assign scalar_G_reg = (!scalar_G_sel)? seed_reg : (hw_scalar_G_we)? read_reg : scalar_G_reg;
+        assign scalar_G_reg = (!scalar_G_sel)? hmac_nonce : (hw_scalar_G_we)? read_reg : scalar_G_reg;
         assign scalar_PK_reg = (hw_scalar_PK_we)? read_reg : scalar_PK_reg;
         assign r_verify_reg  = (hw_r_verify_we)? read_reg : r_verify_reg;
     end
@@ -192,7 +214,7 @@ module ecc_dsa_ctrl(
         hw_r_verify_we = 0;
         if (prog_line[23 : 16] == DSA_UOP_RD_CORE)begin
             case (prog_line[15 : 8])
-                SEED_ID         : hw_seed_we = 1;
+                //SEED_ID         : hw_seed_we = 1;
                 PRIVKEY_ID      : hw_privkey_we = 1;
                 PUBKEYX_ID      : hw_pubkeyx_we = 1;
                 PUBKEYY_ID      : hw_pubkeyy_we = 1;
@@ -251,6 +273,9 @@ module ecc_dsa_ctrl(
             assign fixed_msb_en = 0;
     end // fixed_msb_ctrl
     
+
+    assign hmac_busy = ~hmac_ready;
+
     always_ff @(posedge clk) 
     begin : ECDSA_FSM
         if(!reset_n) begin
@@ -259,12 +284,15 @@ module ecc_dsa_ctrl(
             dsa_valid_reg <= 0;
             verify_reg <= 0;
             scalar_G_sel <= 0;
+            hmac_mode <= 0;
+            hmac_init <= 0;
         end
         else begin
-            if (pm_busy_o) begin //Stalled until PM is done
+            if (pm_busy_o | hmac_busy) begin //Stalled until PM is done
                 prog_cntr <= prog_cntr;
                 cycle_cnt <= 3;
                 PM_cmd_reg <= 0;
+                hmac_init <= 0;
             end
             else if (dsa_busy & (cycle_cnt != 3)) begin
                 cycle_cnt <= cycle_cnt + 1;
@@ -280,6 +308,7 @@ module ecc_dsa_ctrl(
                                 dsa_valid_reg <= 0;
                                 verify_reg <= 0;
                                 scalar_G_sel <= 0;
+                                hmac_mode <= 0;
                             end   
 
                             SIGN : begin  // signing
@@ -287,6 +316,7 @@ module ecc_dsa_ctrl(
                                 dsa_valid_reg <= 0;
                                 verify_reg <= 0;
                                 scalar_G_sel <= 0;
+                                hmac_mode <= 1;
                             end                                   
 
                             VERIFY : begin  // verifying
@@ -301,6 +331,7 @@ module ecc_dsa_ctrl(
                             end
                         endcase
                         PM_cmd_reg <= 0;
+                        hmac_init <= 0;
                     end                
 
                     DSA_KG_E : begin // end of keygen
@@ -322,6 +353,7 @@ module ecc_dsa_ctrl(
                     default : begin
                         prog_cntr <= prog_cntr + 1;
                         PM_cmd_reg <= prog_line[21 : 19];
+                        hmac_init  <= prog_line[22];
                     end
                 endcase
             end
