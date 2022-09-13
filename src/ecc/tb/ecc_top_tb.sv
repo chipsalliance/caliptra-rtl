@@ -70,7 +70,6 @@ module ecc_top_tb #(
       operand_t     hashed_msg;
       operand_t     privkey;
       affn_point_t  pubkey;
-      operand_t     k;
       operand_t     R;
       operand_t     S;
       operand_t     seed;
@@ -82,7 +81,7 @@ module ecc_top_tb #(
   //----------------------------------------------------------------
   parameter DEBUG           = 0;
 
-  parameter CLK_HALF_PERIOD = 1;
+  parameter CLK_HALF_PERIOD = 5;
   parameter CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
 
   parameter REG_SIZE      = 384;
@@ -123,7 +122,7 @@ module ecc_top_tb #(
   wire          hreadyout_o_tb;
   wire [AHB_DATA_WIDTH-1:0] hrdata_o_tb;
 
-  reg [31 : 0]  read_data;
+  //reg [31 : 0]  read_data;
   reg [383: 0]  reg_read_data;
 
   int                   test_vector_cnt;
@@ -192,9 +191,13 @@ module ecc_top_tb #(
       reset_n_tb = 0;
 
       #(2 * CLK_PERIOD);
+
+      @(posedge clk_tb);
       reset_n_tb = 1;
 
       #(2 * CLK_PERIOD);
+
+      @(posedge clk_tb);
       $display("");
     end
   endtask // reset_dut
@@ -264,10 +267,8 @@ module ecc_top_tb #(
   //----------------------------------------------------------------
   task wait_ready;
     begin
-      read_data = 0;
-      #(CLK_PERIOD);
-
-      while (read_data == 0)
+      read_single_word(ADDR_STATUS);
+      while (hrdata_o_tb == 0)
         begin
           read_single_word(ADDR_STATUS);
         end
@@ -284,21 +285,25 @@ module ecc_top_tb #(
   task write_single_word(input [31 : 0]  address,
                   input [31 : 0] word);
     begin
-      hsel_i_tb       = 1;
-      haddr_i_tb      = address;
-      hwrite_i_tb     = 1;
-      hmastlock_i_tb  = 0;
-      hready_i_tb     = 1;
-      htrans_i_tb     = AHB_HTRANS_NONSEQ;
-      hprot_i_tb      = 0;
-      hburst_i_tb     = 0;
-      hsize_i_tb      = 3'b010;
-      #(CLK_PERIOD);
+      hsel_i_tb       <= 1;
+      haddr_i_tb      <= address;
+      hwrite_i_tb     <= 1;
+      hmastlock_i_tb  <= 0;
+      hready_i_tb     <= 1;
+      htrans_i_tb     <= AHB_HTRANS_NONSEQ;
+      hprot_i_tb      <= 0;
+      hburst_i_tb     <= 0;
+      hsize_i_tb      <= 3'b010;
+      
+      @(posedge clk_tb);
+      haddr_i_tb      <= 'Z;
+      hwdata_i_tb     <= word;
+      hwrite_i_tb     <= 0;
+      htrans_i_tb     <= AHB_HTRANS_IDLE;
+      wait(hreadyout_o_tb == 1'b1);
 
-      haddr_i_tb      = 'Z;
-      hwdata_i_tb     = word;
-      hwrite_i_tb     = 0;
-      htrans_i_tb     = AHB_HTRANS_IDLE;
+      @(posedge clk_tb);
+      hsel_i_tb       <= 0;
     end
   endtask // write_single_word
 
@@ -335,23 +340,24 @@ module ecc_top_tb #(
   //----------------------------------------------------------------
   task read_single_word(input [31 : 0]  address);
     begin
-      hsel_i_tb       = 1;
-      haddr_i_tb      = address;
-      hwrite_i_tb     = 0;
-      hmastlock_i_tb  = 0;
-      hready_i_tb     = 1;
-      htrans_i_tb     = AHB_HTRANS_NONSEQ;
-      hprot_i_tb      = 0;
-      hburst_i_tb     = 0;
-      hsize_i_tb      = 3'b010;
-      #(CLK_PERIOD);
+      hsel_i_tb       <= 1;
+      haddr_i_tb      <= address;
+      hwrite_i_tb     <= 0;
+      hmastlock_i_tb  <= 0;
+      hready_i_tb     <= 1;
+      htrans_i_tb     <= AHB_HTRANS_NONSEQ;
+      hprot_i_tb      <= 0;
+      hburst_i_tb     <= 0;
+      hsize_i_tb      <= 3'b010;
       
-      hwdata_i_tb     = 0;
-      haddr_i_tb     = 'Z;
-      htrans_i_tb     = AHB_HTRANS_IDLE;
+      @(posedge clk_tb);
+      hwdata_i_tb     <= 0;
+      haddr_i_tb      <= 'Z;
+      htrans_i_tb     <= AHB_HTRANS_IDLE;
+      wait(hreadyout_o_tb == 1'b1);
 
-      read_data = hrdata_o_tb;
-
+      @(posedge clk_tb);
+      hsel_i_tb       <= 0;      
     end
   endtask // read_word
 
@@ -365,29 +371,29 @@ module ecc_top_tb #(
   task read_block(input [31 : 0] addr);
     begin
       read_single_word(addr + 4*11);
-      reg_read_data[383 : 352] = read_data;
+      reg_read_data[383 : 352] = hrdata_o_tb;
       read_single_word(addr + 4*10);
-      reg_read_data[351 : 320] = read_data;
+      reg_read_data[351 : 320] = hrdata_o_tb;
       read_single_word(addr +  4*9);
-      reg_read_data[319 : 288] = read_data;
+      reg_read_data[319 : 288] = hrdata_o_tb;
       read_single_word(addr +  4*8);
-      reg_read_data[287 : 256] = read_data;
+      reg_read_data[287 : 256] = hrdata_o_tb;
       read_single_word(addr +  4*7);
-      reg_read_data[255 : 224] = read_data;
+      reg_read_data[255 : 224] = hrdata_o_tb;
       read_single_word(addr +  4*6);
-      reg_read_data[223 : 192] = read_data;
+      reg_read_data[223 : 192] = hrdata_o_tb;
       read_single_word(addr +  4*5);
-      reg_read_data[191 : 160] = read_data;
+      reg_read_data[191 : 160] = hrdata_o_tb;
       read_single_word(addr +  4*4);
-      reg_read_data[159 : 128] = read_data;
+      reg_read_data[159 : 128] = hrdata_o_tb;
       read_single_word(addr +  4*3);
-      reg_read_data[127 :  96] = read_data;
+      reg_read_data[127 :  96] = hrdata_o_tb;
       read_single_word(addr +  4*2);
-      reg_read_data[95  :  64] = read_data;
+      reg_read_data[95  :  64] = hrdata_o_tb;
       read_single_word(addr +  4*1);
-      reg_read_data[63  :  32] = read_data;
+      reg_read_data[63  :  32] = hrdata_o_tb;
       read_single_word(addr);
-      reg_read_data[31  :   0] = read_data;
+      reg_read_data[31  :   0] = hrdata_o_tb;
     end
   endtask // read_digest
 
@@ -404,13 +410,13 @@ module ecc_top_tb #(
     begin
 
       read_single_word(ADDR_NAME0);
-      name0 = read_data;
+      name0 = hrdata_o_tb;
       read_single_word(ADDR_NAME1);
-      name1 = read_data;
+      name1 = hrdata_o_tb;
       read_single_word(ADDR_VERSION0);
-      version0 = read_data;
+      version0 = hrdata_o_tb;
       read_single_word(ADDR_VERSION1);
-      version1 = read_data;
+      version1 = hrdata_o_tb;
 
       $display("DUT name: %c%c%c%c%c%c%c%c",
                name0[15 :  8], name0[7  :  0],
@@ -587,7 +593,7 @@ module ecc_top_tb #(
       wait_ready();
 
       read_single_word(ADDR_VERIFY);
-      verify_result = read_data;
+      verify_result = hrdata_o_tb;
       
       end_time = cycle_ctr - start_time;
       $display("*** verifying test processing time = %01d cycles.", end_time);
