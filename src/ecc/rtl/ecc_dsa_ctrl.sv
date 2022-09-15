@@ -48,14 +48,13 @@ module ecc_dsa_ctrl(
     logic hw_s_we;
     logic hw_scalar_G_we;
     logic hw_scalar_PK_we;
-    logic hw_r_verify_we;
+    logic hw_verify_r_we;
     logic scalar_G_sel;
 
     logic dsa_valid_reg;
     logic dsa_ready_reg;
 
     logic [1  : 0]          cmd_reg;
-    logic                   verify_reg;
     logic [REG_SIZE-1 : 0]  msg_reg;
     logic [REG_SIZE-1 : 0]  privkey_reg;
     logic [REG_SIZE-1 : 0]  pubkeyx_reg;
@@ -63,8 +62,6 @@ module ecc_dsa_ctrl(
     logic [REG_SIZE-1 : 0]  seed_reg;
     logic [REG_SIZE-1 : 0]  r_reg;
     logic [REG_SIZE-1 : 0]  s_reg;
-
-    logic [REG_SIZE-1 : 0]  r_verify_reg;
 
     logic [REG_SIZE-1 : 0]  scalar_G_reg;
     logic [REG_SIZE-1 : 0]  scalar_PK_reg;
@@ -175,7 +172,6 @@ module ecc_dsa_ctrl(
     always_comb hwif_out.ecc_VERSION[1].VERSION.next = ECC_CORE_VERSION[63 : 32];
 
     always_comb hwif_out.ecc_STATUS.STATUS.next = {30'h0, dsa_valid_reg, dsa_ready_reg};
-    always_comb hwif_out.ecc_VERIFY.VERIFY.next = {31'h0, verify_reg};
 
     always_comb 
     begin : ecc_reg_writing
@@ -187,6 +183,7 @@ module ecc_dsa_ctrl(
             hwif_out.ecc_PUBKEY_Y[i0].PUBKEY_Y.next = hw_pubkeyy_we? read_reg[i0*32 +: 32] : hwif_in.ecc_PUBKEY_Y[i0].PUBKEY_Y.value;
             hwif_out.ecc_R[i0].R.next = hw_r_we? read_reg[i0*32 +: 32] : hwif_in.ecc_R[i0].R.value;
             hwif_out.ecc_S[i0].S.next = hw_s_we? read_reg[i0*32 +: 32] : hwif_in.ecc_S[i0].S.value;
+            hwif_out.ecc_VERIFY_R[i0].VERIFY_R.next = hw_verify_r_we? read_reg[i0*32 +: 32] : hwif_in.ecc_VERIFY_R[i0].VERIFY_R.value;
         end
     end // ecc_reg_writing
 
@@ -198,7 +195,6 @@ module ecc_dsa_ctrl(
     always_comb begin
         assign scalar_G_reg = (!scalar_G_sel)? hmac_nonce : (hw_scalar_G_we)? read_reg : scalar_G_reg;
         assign scalar_PK_reg = (hw_scalar_PK_we)? read_reg : scalar_PK_reg;
-        assign r_verify_reg  = (hw_r_verify_we)? read_reg : r_verify_reg;
     end
 
     always_comb 
@@ -211,7 +207,7 @@ module ecc_dsa_ctrl(
         hw_s_we = 0;
         hw_scalar_G_we = 0;
         hw_scalar_PK_we = 0;
-        hw_r_verify_we = 0;
+        hw_verify_r_we = 0;
         if (prog_line[23 : 16] == DSA_UOP_RD_CORE)begin
             case (prog_line[15 : 8])
                 //SEED_ID         : hw_seed_we = 1;
@@ -222,7 +218,7 @@ module ecc_dsa_ctrl(
                 S_ID            : hw_s_we = 1;
                 SCALAR_G_ID     : hw_scalar_G_we = 1;
                 SCALAR_PK_ID    : hw_scalar_PK_we = 1;
-                R_VERIFY_ID     : hw_r_verify_we = 1;
+                VERIFY_R_ID     : hw_verify_r_we = 1;
                 default         : begin end
             endcase
         end
@@ -244,7 +240,6 @@ module ecc_dsa_ctrl(
                 CONST_G_Z_MONT_ID     : assign write_reg = {1'b0, G_Z_MONT};
                 CONST_R2_q_MONT_ID    : assign write_reg = {1'b0, R2_q_MONT};
                 CONST_ONE_q_MONT_ID   : assign write_reg = {1'b0, ONE_q_MONT};
-                //SEED_ID               : assign write_reg = {1'b0, seed_reg};
                 MSG_ID                : assign write_reg = {1'b0, msg_reg};
                 PRIVKEY_ID            : assign write_reg = {1'b0, privkey_reg};
                 PUBKEYX_ID            : assign write_reg = {1'b0, pubkeyx_reg};
@@ -282,7 +277,6 @@ module ecc_dsa_ctrl(
             prog_cntr <= 0;
             cycle_cnt <= 0;
             dsa_valid_reg <= 0;
-            verify_reg <= 0;
             scalar_G_sel <= 0;
             hmac_mode <= 0;
             hmac_init <= 0;
@@ -306,7 +300,6 @@ module ecc_dsa_ctrl(
                             KEYGEN : begin  // keygen
                                 prog_cntr <= DSA_KG_S;
                                 dsa_valid_reg <= 0;
-                                verify_reg <= 0;
                                 scalar_G_sel <= 0;
                                 hmac_mode <= 0;
                             end   
@@ -314,7 +307,6 @@ module ecc_dsa_ctrl(
                             SIGN : begin  // signing
                                 prog_cntr <= DSA_SGN_S;
                                 dsa_valid_reg <= 0;
-                                verify_reg <= 0;
                                 scalar_G_sel <= 0;
                                 hmac_mode <= 1;
                             end                                   
@@ -322,7 +314,6 @@ module ecc_dsa_ctrl(
                             VERIFY : begin  // verifying
                                 prog_cntr <= DSA_VER_S;
                                 dsa_valid_reg <= 0;
-                                verify_reg <= 0;
                                 scalar_G_sel <= 1;
                             end
                             default : begin
@@ -346,7 +337,6 @@ module ecc_dsa_ctrl(
 
                     DSA_VER_E : begin // end of verifying
                         prog_cntr <= DSA_NOP;
-                        verify_reg <= (r_verify_reg == r_reg);
                         dsa_valid_reg <= 1;
                     end
 

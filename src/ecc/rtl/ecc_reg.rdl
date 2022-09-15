@@ -28,13 +28,15 @@ addrmap ecc_reg {
 
     reg {srw_hrw CTRL[32];} ecc_CTRL;
     reg {sr_hrw STATUS[32];} ecc_STATUS @0x00000018;
-    reg {sr_hrw VERIFY[32];} ecc_VERIFY @0x00000020;
+    
+    reg {srw_hrw SEED[32];} ecc_SEED[12] @0x00000080;
     reg {srw_hr MSG[32];} ecc_MSG[12] @0x00000100;
 
-    reg {srw_hrw SEED[32];} ecc_SEED[12] @0x00000080;
     reg {srw_hrw PRIVKEY[32];} ecc_PRIVKEY[12] @0x00000180;
     reg {srw_hrw PUBKEY_X[32];} ecc_PUBKEY_X[12] @0x00000200;
     reg {srw_hrw PUBKEY_Y[32];} ecc_PUBKEY_Y[12] @0x00000280;
+    
     reg {srw_hrw R[32];} ecc_R[12] @0x00000300;
     reg {srw_hrw S[32];} ecc_S[12] @0x00000380;
+    reg {sr_hrw VERIFY_R[32];} ecc_VERIFY_R[12] @0x00000400;
 };

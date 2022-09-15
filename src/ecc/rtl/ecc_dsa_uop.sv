@@ -49,7 +49,7 @@ localparam [DSA_OPR_ADDR_WIDTH-1 : 0] S_ID                     = 22;
 localparam [DSA_OPR_ADDR_WIDTH-1 : 0] SCALAR_ID                = 23;
 localparam [DSA_OPR_ADDR_WIDTH-1 : 0] SCALAR_G_ID              = 24;
 localparam [DSA_OPR_ADDR_WIDTH-1 : 0] SCALAR_PK_ID             = 25;
-localparam [DSA_OPR_ADDR_WIDTH-1 : 0] R_VERIFY_ID              = 26;
+localparam [DSA_OPR_ADDR_WIDTH-1 : 0] VERIFY_R_ID              = 26;
 
 localparam DSA_NOP                      = 12;  
 localparam DSA_KG_S                     = DSA_NOP + 2; 

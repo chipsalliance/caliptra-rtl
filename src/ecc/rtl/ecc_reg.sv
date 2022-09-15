@@ -7,7 +7,7 @@ module ecc_reg (
 
         input wire s_cpuif_req,
         input wire s_cpuif_req_is_wr,
-        input wire [9:0] s_cpuif_addr,
+        input wire [10:0] s_cpuif_addr,
         input wire [31:0] s_cpuif_wr_data,
         output wire s_cpuif_req_stall_wr,
         output wire s_cpuif_req_stall_rd,
@@ -26,7 +26,7 @@ module ecc_reg (
     //--------------------------------------------------------------------------
     logic cpuif_req;
     logic cpuif_req_is_wr;
-    logic [9:0] cpuif_addr;
+    logic [10:0] cpuif_addr;
     logic [31:0] cpuif_wr_data;
     logic cpuif_req_stall_wr;
     logic cpuif_req_stall_rd;
@@ -65,7 +65,6 @@ module ecc_reg (
         logic ecc_VERSION[2];
         logic ecc_CTRL;
         logic ecc_STATUS;
-        logic ecc_VERIFY;
         logic ecc_SEED[12];
         logic ecc_MSG[12];
         logic ecc_PRIVKEY[12];
@@ -73,6 +72,7 @@ module ecc_reg (
         logic ecc_PUBKEY_Y[12];
         logic ecc_R[12];
         logic ecc_S[12];
+        logic ecc_VERIFY_R[12];
     } decoded_reg_strb_t;
     decoded_reg_strb_t decoded_reg_strb;
     logic decoded_req;
@@ -88,7 +88,6 @@ module ecc_reg (
         end
         decoded_reg_strb.ecc_CTRL = cpuif_req_masked & (cpuif_addr == 'h10);
         decoded_reg_strb.ecc_STATUS = cpuif_req_masked & (cpuif_addr == 'h18);
-        decoded_reg_strb.ecc_VERIFY = cpuif_req_masked & (cpuif_addr == 'h20);
         for(int i0=0; i0<12; i0++) begin
             decoded_reg_strb.ecc_SEED[i0] = cpuif_req_masked & (cpuif_addr == 'h80 + i0*'h4);
         end
@@ -109,6 +108,9 @@ module ecc_reg (
         end
         for(int i0=0; i0<12; i0++) begin
             decoded_reg_strb.ecc_S[i0] = cpuif_req_masked & (cpuif_addr == 'h380 + i0*'h4);
+        end
+        for(int i0=0; i0<12; i0++) begin
+            decoded_reg_strb.ecc_VERIFY_R[i0] = cpuif_req_masked & (cpuif_addr == 'h400 + i0*'h4);
         end
     end
 
@@ -153,12 +155,6 @@ module ecc_reg (
             struct {
                 logic [31:0] next;
                 logic load_next;
-            } VERIFY;
-        } ecc_VERIFY;
-        struct {
-            struct {
-                logic [31:0] next;
-                logic load_next;
             } SEED;
         } ecc_SEED[12];
         struct {
@@ -197,6 +193,12 @@ module ecc_reg (
                 logic load_next;
             } S;
         } ecc_S[12];
+        struct {
+            struct {
+                logic [31:0] next;
+                logic load_next;
+            } VERIFY_R;
+        } ecc_VERIFY_R[12];
     } field_combo_t;
     field_combo_t field_combo;
 
@@ -224,11 +226,6 @@ module ecc_reg (
         struct {
             struct {
                 logic [31:0] value;
-            } VERIFY;
-        } ecc_VERIFY;
-        struct {
-            struct {
-                logic [31:0] value;
             } SEED;
         } ecc_SEED[12];
         struct {
@@ -261,6 +258,11 @@ module ecc_reg (
                 logic [31:0] value;
             } S;
         } ecc_S[12];
+        struct {
+            struct {
+                logic [31:0] value;
+            } VERIFY_R;
+        } ecc_VERIFY_R[12];
     } field_storage_t;
     field_storage_t field_storage;
 
@@ -339,23 +341,6 @@ module ecc_reg (
         end
     end
     assign hwif_out.ecc_STATUS.STATUS.value = field_storage.ecc_STATUS.STATUS.value;
-    // Field: ecc_reg.ecc_VERIFY.VERIFY
-    always_comb begin
-        automatic logic [31:0] next_c = field_storage.ecc_VERIFY.VERIFY.value;
-        automatic logic load_next_c = '0;
-        if(1) begin // HW Write
-            next_c = hwif_in.ecc_VERIFY.VERIFY.next;
-            load_next_c = '1;
-        end
-        field_combo.ecc_VERIFY.VERIFY.next = next_c;
-        field_combo.ecc_VERIFY.VERIFY.load_next = load_next_c;
-    end
-    always_ff @(posedge clk) begin
-        if(field_combo.ecc_VERIFY.VERIFY.load_next) begin
-            field_storage.ecc_VERIFY.VERIFY.value <= field_combo.ecc_VERIFY.VERIFY.next;
-        end
-    end
-    assign hwif_out.ecc_VERIFY.VERIFY.value = field_storage.ecc_VERIFY.VERIFY.value;
     for(genvar i0=0; i0<12; i0++) begin
         // Field: ecc_reg.ecc_SEED[].SEED
         always_comb begin
@@ -507,6 +492,25 @@ module ecc_reg (
         end
         assign hwif_out.ecc_S[i0].S.value = field_storage.ecc_S[i0].S.value;
     end
+    for(genvar i0=0; i0<12; i0++) begin
+        // Field: ecc_reg.ecc_VERIFY_R[].VERIFY_R
+        always_comb begin
+            automatic logic [31:0] next_c = field_storage.ecc_VERIFY_R[i0].VERIFY_R.value;
+            automatic logic load_next_c = '0;
+            if(1) begin // HW Write
+                next_c = hwif_in.ecc_VERIFY_R[i0].VERIFY_R.next;
+                load_next_c = '1;
+            end
+            field_combo.ecc_VERIFY_R[i0].VERIFY_R.next = next_c;
+            field_combo.ecc_VERIFY_R[i0].VERIFY_R.load_next = load_next_c;
+        end
+        always_ff @(posedge clk) begin
+            if(field_combo.ecc_VERIFY_R[i0].VERIFY_R.load_next) begin
+                field_storage.ecc_VERIFY_R[i0].VERIFY_R.value <= field_combo.ecc_VERIFY_R[i0].VERIFY_R.next;
+            end
+        end
+        assign hwif_out.ecc_VERIFY_R[i0].VERIFY_R.value = field_storage.ecc_VERIFY_R[i0].VERIFY_R.value;
+    end
 
     //--------------------------------------------------------------------------
     // Readback
@@ -516,7 +520,7 @@ module ecc_reg (
     logic [31:0] readback_data;
     
     // Assign readback values to a flattened array
-    logic [31:0] readback_array[91];
+    logic [31:0] readback_array[102];
     for(genvar i0=0; i0<2; i0++) begin
         assign readback_array[i0*1 + 0][31:0] = (decoded_reg_strb.ecc_NAME[i0] && !decoded_req_is_wr) ? field_storage.ecc_NAME[i0].NAME.value : '0;
     end
@@ -525,27 +529,29 @@ module ecc_reg (
     end
     assign readback_array[4][31:0] = (decoded_reg_strb.ecc_CTRL && !decoded_req_is_wr) ? field_storage.ecc_CTRL.CTRL.value : '0;
     assign readback_array[5][31:0] = (decoded_reg_strb.ecc_STATUS && !decoded_req_is_wr) ? field_storage.ecc_STATUS.STATUS.value : '0;
-    assign readback_array[6][31:0] = (decoded_reg_strb.ecc_VERIFY && !decoded_req_is_wr) ? field_storage.ecc_VERIFY.VERIFY.value : '0;
     for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 7][31:0] = (decoded_reg_strb.ecc_SEED[i0] && !decoded_req_is_wr) ? field_storage.ecc_SEED[i0].SEED.value : '0;
+        assign readback_array[i0*1 + 6][31:0] = (decoded_reg_strb.ecc_SEED[i0] && !decoded_req_is_wr) ? field_storage.ecc_SEED[i0].SEED.value : '0;
     end
     for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 19][31:0] = (decoded_reg_strb.ecc_MSG[i0] && !decoded_req_is_wr) ? field_storage.ecc_MSG[i0].MSG.value : '0;
+        assign readback_array[i0*1 + 18][31:0] = (decoded_reg_strb.ecc_MSG[i0] && !decoded_req_is_wr) ? field_storage.ecc_MSG[i0].MSG.value : '0;
     end
     for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 31][31:0] = (decoded_reg_strb.ecc_PRIVKEY[i0] && !decoded_req_is_wr) ? field_storage.ecc_PRIVKEY[i0].PRIVKEY.value : '0;
+        assign readback_array[i0*1 + 30][31:0] = (decoded_reg_strb.ecc_PRIVKEY[i0] && !decoded_req_is_wr) ? field_storage.ecc_PRIVKEY[i0].PRIVKEY.value : '0;
     end
     for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 43][31:0] = (decoded_reg_strb.ecc_PUBKEY_X[i0] && !decoded_req_is_wr) ? field_storage.ecc_PUBKEY_X[i0].PUBKEY_X.value : '0;
+        assign readback_array[i0*1 + 42][31:0] = (decoded_reg_strb.ecc_PUBKEY_X[i0] && !decoded_req_is_wr) ? field_storage.ecc_PUBKEY_X[i0].PUBKEY_X.value : '0;
     end
     for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 55][31:0] = (decoded_reg_strb.ecc_PUBKEY_Y[i0] && !decoded_req_is_wr) ? field_storage.ecc_PUBKEY_Y[i0].PUBKEY_Y.value : '0;
+        assign readback_array[i0*1 + 54][31:0] = (decoded_reg_strb.ecc_PUBKEY_Y[i0] && !decoded_req_is_wr) ? field_storage.ecc_PUBKEY_Y[i0].PUBKEY_Y.value : '0;
     end
     for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 67][31:0] = (decoded_reg_strb.ecc_R[i0] && !decoded_req_is_wr) ? field_storage.ecc_R[i0].R.value : '0;
+        assign readback_array[i0*1 + 66][31:0] = (decoded_reg_strb.ecc_R[i0] && !decoded_req_is_wr) ? field_storage.ecc_R[i0].R.value : '0;
     end
     for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 79][31:0] = (decoded_reg_strb.ecc_S[i0] && !decoded_req_is_wr) ? field_storage.ecc_S[i0].S.value : '0;
+        assign readback_array[i0*1 + 78][31:0] = (decoded_reg_strb.ecc_S[i0] && !decoded_req_is_wr) ? field_storage.ecc_S[i0].S.value : '0;
+    end
+    for(genvar i0=0; i0<12; i0++) begin
+        assign readback_array[i0*1 + 90][31:0] = (decoded_reg_strb.ecc_VERIFY_R[i0] && !decoded_req_is_wr) ? field_storage.ecc_VERIFY_R[i0].VERIFY_R.value : '0;
     end
 
 
@@ -555,7 +561,7 @@ module ecc_reg (
         readback_done = decoded_req & ~decoded_req_is_wr;
         readback_err = '0;
         readback_data_var = '0;
-        for(int i=0; i<91; i++) readback_data_var |= readback_array[i];
+        for(int i=0; i<102; i++) readback_data_var |= readback_array[i];
         readback_data = readback_data_var;
     end
 

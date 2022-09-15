@@ -89,7 +89,7 @@ module ecc_dsa_sequencer #(
             DSA_VER_S+ 14 : douta <= {DSA_UOP_WR_SCALAR,  SCALAR_ID,          UOP_OPR_DONTCARE};
             DSA_VER_S+ 15 : douta <= {DSA_UOP_VERIFY2,    NOP_ID,             UOP_OPR_DONTCARE};
             DSA_VER_S+ 16 : douta <= {DSA_UOP_NOP,        NOP_ID,             UOP_OPR_DONTCARE};
-            DSA_VER_S+ 17 : douta <= {DSA_UOP_RD_CORE,    R_VERIFY_ID,        UOP_OPR_Qx_AFFN};
+            DSA_VER_S+ 17 : douta <= {DSA_UOP_RD_CORE,    VERIFY_R_ID,        UOP_OPR_Qx_AFFN};
             DSA_VER_S+ 18 : douta <= {DSA_UOP_NOP,        NOP_ID,             UOP_OPR_DONTCARE};
 
             default : douta <= {DSA_UOP_NOP,     NOP_ID,  UOP_OPR_DONTCARE};

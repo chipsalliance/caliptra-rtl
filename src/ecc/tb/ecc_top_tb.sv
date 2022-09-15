@@ -29,8 +29,6 @@ module ecc_top_tb #(
   localparam STATUS_READY_BIT = 0;
   localparam STATUS_VALID_BIT = 1;
 
-  localparam ADDR_VERIFY      = BASE_ADDR + 32'h00000020;
-
   localparam ADDR_SEED0       = BASE_ADDR + 32'h00000080;
   localparam ADDR_SEED11      = BASE_ADDR + 32'h000000A8;
 
@@ -51,6 +49,9 @@ module ecc_top_tb #(
 
   localparam ADDR_SIGNS0      = BASE_ADDR + 32'h00000380;
   localparam ADDR_SIGNS11     = BASE_ADDR + 32'h000003A8;
+
+  localparam ADDR_VERIFY_R0   = BASE_ADDR + 32'h00000400;
+  localparam ADDR_VERIFY_R11  = BASE_ADDR + 32'h00000428;
 
   parameter           R_WIDTH                   = 384;
   typedef bit         [R_WIDTH-1:0]             r_t;
@@ -571,7 +572,7 @@ module ecc_top_tb #(
                         input test_vector_t test_vector);
     reg [31  : 0]   start_time;
     reg [31  : 0]   end_time;
-    reg [31 : 0]    verify_result;
+    reg [383 : 0]   verify_r;
     
     begin
       wait_ready();
@@ -592,14 +593,14 @@ module ecc_top_tb #(
 
       wait_ready();
 
-      read_single_word(ADDR_VERIFY);
-      verify_result = hrdata_o_tb;
+      read_block(ADDR_VERIFY_R0);
+      verify_r = reg_read_data;
       
       end_time = cycle_ctr - start_time;
       $display("*** verifying test processing time = %01d cycles.", end_time);
       $display("privkey    : 0x%96x", test_vector.privkey);
 
-      if (verify_result == 1)
+      if (verify_r == test_vector.R)
         begin
           $display("*** TC %0d verifying successful.", tc_number);
           $display("");
@@ -607,6 +608,8 @@ module ecc_top_tb #(
       else
         begin
           $display("*** ERROR: TC %0d verifying NOT successful.", tc_number);
+          $display("Expected_R: 0x%96x", test_vector.R);
+          $display("Got:        0x%96x", verify_r);
           $display("");
 
           error_ctr = error_ctr + 1;
