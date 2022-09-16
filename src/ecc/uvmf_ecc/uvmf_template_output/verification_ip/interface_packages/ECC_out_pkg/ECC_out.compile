@@ -1,0 +1,3 @@
+needs:
+  - ECC_out_hvl.compile
+  - ECC_out_hdl.compile

@@ -1,0 +1,73 @@
+uvmf:
+  interfaces:
+    "ECC_out":
+      clock: clk
+      reset: rst_n
+      reset_assertion_level: 'False'
+
+      config_constraints: []
+      config_vars: []
+
+      hdl_typedefs: []
+      hvl_typedefs: []
+      
+      parameters:
+        - name: AHB_ADDR_WIDTH
+          type: int
+          value: '32'
+        - name: AHB_DATA_WIDTH
+          type: int
+          value: '32'
+        - name: OUTPUT_TEXT_WIDTH
+          type: int
+          value: '384'
+
+      ports:
+        - name: hresp
+          dir: input
+          width: '1'
+        - name: hreadyout
+          dir: input
+          width: '1'
+        - name: hrdata
+          dir: input
+          width: AHB_DATA_WIDTH
+        - name: transaction_flag_out_monitor
+          dir: input
+          width: '1'
+        - name: op
+          dir: output
+          width: '2'
+
+      response_info:
+        data: []
+        operation: 1'b0
+
+      transaction_constraints: []
+      transaction_vars: 
+        - iscompare: 'True'
+          isrand: 'False'
+          name: result_privkey
+          type: bit [OUTPUT_TEXT_WIDTH-1:0]
+        - iscompare: 'True'
+          isrand: 'False'
+          name: result_pubkey_x
+          type: bit [OUTPUT_TEXT_WIDTH-1:0]
+        - iscompare: 'True'
+          isrand: 'False'
+          name: result_pubkey_y
+          type: bit [OUTPUT_TEXT_WIDTH-1:0]
+        - iscompare: 'True'
+          isrand: 'False'
+          name: result_R
+          type: bit [OUTPUT_TEXT_WIDTH-1:0]
+        - iscompare: 'True'
+          isrand: 'False'
+          name: result_S
+          type: bit [OUTPUT_TEXT_WIDTH-1:0]
+        - iscompare: 'True'
+          isrand: 'False'
+          name: result_verify_R
+          type: bit [OUTPUT_TEXT_WIDTH-1:0]
+
+        

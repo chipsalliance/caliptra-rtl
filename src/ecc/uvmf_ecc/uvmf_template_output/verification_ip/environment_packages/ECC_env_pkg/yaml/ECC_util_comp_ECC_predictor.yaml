@@ -1,0 +1,11 @@
+uvmf:
+  util_components:
+    ECC_predictor:
+      analysis_exports:
+      - name: ECC_in_agent_ae
+        type: 'ECC_in_transaction #()'
+      analysis_ports:
+      - name: ECC_sb_ap
+        type: 'ECC_out_transaction #()'
+      existing_library_component: 'True'
+      type: predictor

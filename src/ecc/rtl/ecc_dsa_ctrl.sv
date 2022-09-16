@@ -193,8 +193,8 @@ module ecc_dsa_ctrl(
     // update the internal registers and their wr_en
     //----------------------------------------------------------------
     always_comb begin
-        assign scalar_G_reg = (!scalar_G_sel)? hmac_nonce : (hw_scalar_G_we)? read_reg : scalar_G_reg;
-        assign scalar_PK_reg = (hw_scalar_PK_we)? read_reg : scalar_PK_reg;
+        scalar_G_reg = (!scalar_G_sel)? hmac_nonce : (hw_scalar_G_we)? read_reg : scalar_G_reg;
+        scalar_PK_reg = (hw_scalar_PK_we)? read_reg : scalar_PK_reg;
     end
 
     always_comb 
@@ -224,34 +224,33 @@ module ecc_dsa_ctrl(
         end
     end // wr_en_signals
 
-
     always_comb 
     begin : write_to_pm_core
         write_reg = 0;
         if (prog_line[23 : 16] == DSA_UOP_WR_CORE) begin
             case (prog_line[15 : 8])
-                CONST_ZERO_ID         : assign write_reg = 0;
-                CONST_ONE_ID          : assign write_reg = 1;
-                CONST_E_a_MONT_ID     : assign write_reg = {1'b0, E_a_MONT};
-                CONST_ONE_p_MONT_ID   : assign write_reg = {1'b0, ONE_p_MONT};
-                CONST_R2_p_MONT_ID    : assign write_reg = {1'b0, R2_p_MONT};
-                CONST_G_X_MONT_ID     : assign write_reg = {1'b0, G_X_MONT};
-                CONST_G_Y_MONT_ID     : assign write_reg = {1'b0, G_Y_MONT};
-                CONST_G_Z_MONT_ID     : assign write_reg = {1'b0, G_Z_MONT};
-                CONST_R2_q_MONT_ID    : assign write_reg = {1'b0, R2_q_MONT};
-                CONST_ONE_q_MONT_ID   : assign write_reg = {1'b0, ONE_q_MONT};
-                MSG_ID                : assign write_reg = {1'b0, msg_reg};
-                PRIVKEY_ID            : assign write_reg = {1'b0, privkey_reg};
-                PUBKEYX_ID            : assign write_reg = {1'b0, pubkeyx_reg};
-                PUBKEYY_ID            : assign write_reg = {1'b0, pubkeyy_reg};
-                R_ID                  : assign write_reg = {1'b0, r_reg};
-                S_ID                  : assign write_reg = {1'b0, s_reg};
-                SCALAR_G_ID           : assign write_reg = {1'b0, scalar_G_reg};
-                default               : assign write_reg = 0;
+                CONST_ZERO_ID         : write_reg = 0;
+                CONST_ONE_ID          : write_reg = 1;
+                CONST_E_a_MONT_ID     : write_reg = {1'b0, E_a_MONT};
+                CONST_ONE_p_MONT_ID   : write_reg = {1'b0, ONE_p_MONT};
+                CONST_R2_p_MONT_ID    : write_reg = {1'b0, R2_p_MONT};
+                CONST_G_X_MONT_ID     : write_reg = {1'b0, G_X_MONT};
+                CONST_G_Y_MONT_ID     : write_reg = {1'b0, G_Y_MONT};
+                CONST_G_Z_MONT_ID     : write_reg = {1'b0, G_Z_MONT};
+                CONST_R2_q_MONT_ID    : write_reg = {1'b0, R2_q_MONT};
+                CONST_ONE_q_MONT_ID   : write_reg = {1'b0, ONE_q_MONT};
+                MSG_ID                : write_reg = {1'b0, msg_reg};
+                PRIVKEY_ID            : write_reg = {1'b0, privkey_reg};
+                PUBKEYX_ID            : write_reg = {1'b0, pubkeyx_reg};
+                PUBKEYY_ID            : write_reg = {1'b0, pubkeyy_reg};
+                R_ID                  : write_reg = {1'b0, r_reg};
+                S_ID                  : write_reg = {1'b0, s_reg};
+                SCALAR_G_ID           : write_reg = {1'b0, scalar_G_reg};
+                default               : write_reg = 0;
             endcase
         end
         else if (prog_line[23 : 16] == DSA_UOP_WR_SCALAR) begin
-            assign write_reg = scalar_out_reg;
+            write_reg = scalar_out_reg;
         end
     end // write_to_pm_core
 
@@ -259,13 +258,13 @@ module ecc_dsa_ctrl(
     begin : fixed_msb_ctrl
         if (prog_line[23 : 16] == DSA_UOP_FIXED_MSB) begin
             case (prog_line[15 : 8])
-                SCALAR_PK_ID        : assign scalar_in_reg = scalar_PK_reg;
-                default             : assign scalar_in_reg = scalar_G_reg;
+                SCALAR_PK_ID        : scalar_in_reg = scalar_PK_reg;
+                default             : scalar_in_reg = scalar_G_reg;
             endcase
-            assign fixed_msb_en = 1;
+            fixed_msb_en = 1;
         end
         else
-            assign fixed_msb_en = 0;
+            fixed_msb_en = 0;
     end // fixed_msb_ctrl
     
 

@@ -1,0 +1,9 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.compile
+  - ./ECC_out_common.compile
+incdir:
+  - .
+src:
+  - src/ECC_out_if.sv
+  - src/ECC_out_monitor_bfm.sv
+  - src/ECC_out_driver_bfm.sv

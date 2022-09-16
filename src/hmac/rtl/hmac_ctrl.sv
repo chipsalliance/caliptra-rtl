@@ -14,6 +14,8 @@
 // 
 //======================================================================
 
+`include "kv_defines.svh"
+
 module hmac_ctrl #(
     parameter AHB_DATA_WIDTH = 32,
     parameter AHB_ADDR_WIDTH = 32,

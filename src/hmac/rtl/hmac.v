@@ -41,6 +41,7 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //======================================================================
+`include "kv_defines.svh"
 
 module hmac(
             // Clock and reset.
