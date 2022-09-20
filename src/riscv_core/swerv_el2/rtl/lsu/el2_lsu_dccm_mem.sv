@@ -27,15 +27,15 @@
 // //********************************************************************************
 
 
-`define EL2_LOCAL_DCCM_RAM_TEST_PORTS    .TEST1(dccm_ext_in_pkt[i].TEST1),                      \
-                                     .RME(dccm_ext_in_pkt[i].RME),                      \
-                                     .RM(dccm_ext_in_pkt[i].RM),                        \
-                                     .LS(dccm_ext_in_pkt[i].LS),                        \
-                                     .DS(dccm_ext_in_pkt[i].DS),                        \
-                                     .SD(dccm_ext_in_pkt[i].SD),                        \
-                                     .TEST_RNM(dccm_ext_in_pkt[i].TEST_RNM),            \
-                                     .BC1(dccm_ext_in_pkt[i].BC1),                      \
-                                     .BC2(dccm_ext_in_pkt[i].BC2),                      \
+`define EL2_LOCAL_DCCM_RAM_TEST_PORTS    .TEST1(0),                      \
+                                     .RME(1'b0),                      \
+                                     .RM(4'b0000),                        \
+                                     .LS(1'b0),                        \
+                                     .DS(1'b0),                        \
+                                     .SD(1'b0),                        \
+                                     .TEST_RNM(1'b0),            \
+                                     .BC1(1'b0),                      \
+                                     .BC2(1'b0),                      \
 
 
 
@@ -57,7 +57,8 @@ import el2_pkg::*;
    input logic [pt.DCCM_BITS-1:0]  dccm_rd_addr_hi,                     // read address for the upper bank in case of a misaligned access
    input logic [pt.DCCM_FDATA_WIDTH-1:0]  dccm_wr_data_lo,              // write data
    input logic [pt.DCCM_FDATA_WIDTH-1:0]  dccm_wr_data_hi,              // write data
-   input el2_dccm_ext_in_pkt_t  [pt.DCCM_NUM_BANKS-1:0] dccm_ext_in_pkt,    // the dccm packet from the soc
+
+   el2_mem_if.swerv_dccm dccm_mem_export, // RAM repositioned in testbench and connected by this interface
 
    output logic [pt.DCCM_FDATA_WIDTH-1:0] dccm_rd_data_lo,              // read data from the lo bank
    output logic [pt.DCCM_FDATA_WIDTH-1:0] dccm_rd_data_hi,              // read data from the hi bank
@@ -109,175 +110,15 @@ import el2_pkg::*;
       // clock gating section
       assign  dccm_clken[i] = (wren_bank[i] | rden_bank[i] | clk_override) ;
       // end clock gating section
-
-`ifdef VERILATOR
-
-        el2_ram #(DCCM_INDEX_DEPTH,39)  ram (
-                                  // Primary ports
-                                  .ME(dccm_clken[i]),
-                                  .CLK(clk),
-                                  .WE(wren_bank[i]),
-                                  .ADR(addr_bank[i]),
-                                  .D(wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]),
-                                  .Q(dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0]),
-                                  .ROP ( ),
-                                  // These are used by SoC
-                                  `EL2_LOCAL_DCCM_RAM_TEST_PORTS
-                                  .*
-                                  );
-`else
-
-      if (DCCM_INDEX_DEPTH == 32768) begin : dccm
-         ram_32768x39  dccm_bank (
-                                  // Primary ports
-                                  .ME(dccm_clken[i]),
-                                  .CLK(clk),
-                                  .WE(wren_bank[i]),
-                                  .ADR(addr_bank[i]),
-                                  .D(wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]),
-                                  .Q(dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0]),
-                                  .ROP ( ),
-                                  // These are used by SoC
-                                  `EL2_LOCAL_DCCM_RAM_TEST_PORTS
-                                  .*
-                                  );
-      end
-      else if (DCCM_INDEX_DEPTH == 16384) begin : dccm
-         ram_16384x39  dccm_bank (
-                                  // Primary ports
-                                  .ME(dccm_clken[i]),
-                                  .CLK(clk),
-                                  .WE(wren_bank[i]),
-                                  .ADR(addr_bank[i]),
-                                  .D(wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]),
-                                  .Q(dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0]),
-                                  .ROP ( ),
-                                  // These are used by SoC
-                                  `EL2_LOCAL_DCCM_RAM_TEST_PORTS
-                                  .*
-                                  );
-      end
-      else if (DCCM_INDEX_DEPTH == 8192) begin : dccm
-         ram_8192x39  dccm_bank (
-                                 // Primary ports
-                                 .ME(dccm_clken[i]),
-                                 .CLK(clk),
-                                 .WE(wren_bank[i]),
-                                 .ADR(addr_bank[i]),
-                                 .D(wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]),
-                                 .Q(dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0]),
-                                 .ROP ( ),
-                                 // These are used by SoC
-                                 `EL2_LOCAL_DCCM_RAM_TEST_PORTS
-                                 .*
-                                 );
-      end
-      else if (DCCM_INDEX_DEPTH == 4096) begin : dccm
-         ram_4096x39  dccm_bank (
-                                 // Primary ports
-                                 .ME(dccm_clken[i]),
-                                 .CLK(clk),
-                                 .WE(wren_bank[i]),
-                                 .ADR(addr_bank[i]),
-                                 .D(wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]),
-                                 .Q(dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0]),
-                                 .ROP ( ),
-                                 // These are used by SoC
-                                 `EL2_LOCAL_DCCM_RAM_TEST_PORTS
-                                 .*
-                                 );
-      end
-      else if (DCCM_INDEX_DEPTH == 3072) begin : dccm
-         ram_3072x39  dccm_bank (
-                                 // Primary ports
-                                 .ME(dccm_clken[i]),
-                                 .CLK(clk),
-                                 .WE(wren_bank[i]),
-                                 .ADR(addr_bank[i]),
-                                 .D(wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]),
-                                 .Q(dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0]),
-                                 .ROP ( ),
-                                 // These are used by SoC
-                                 `EL2_LOCAL_DCCM_RAM_TEST_PORTS
-                                 .*
-                                 );
-      end
-      else if (DCCM_INDEX_DEPTH == 2048) begin : dccm
-         ram_2048x39  dccm_bank (
-                                 // Primary ports
-                                 .ME(dccm_clken[i]),
-                                 .CLK(clk),
-                                 .WE(wren_bank[i]),
-                                 .ADR(addr_bank[i]),
-                                 .D(wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]),
-                                 .Q(dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0]),
-                                 .ROP ( ),
-                                 // These are used by SoC
-                                 `EL2_LOCAL_DCCM_RAM_TEST_PORTS
-                                 .*
-                                 );
-      end
-      else if (DCCM_INDEX_DEPTH == 1024) begin : dccm
-         ram_1024x39  dccm_bank (
-                                 // Primary ports
-                                 .ME(dccm_clken[i]),
-                                 .CLK(clk),
-                                 .WE(wren_bank[i]),
-                                 .ADR(addr_bank[i]),
-                                 .D(wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]),
-                                 .Q(dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0]),
-                                 .ROP ( ),
-                                 // These are used by SoC
-                                 `EL2_LOCAL_DCCM_RAM_TEST_PORTS
-                                 .*
-                                 );
-      end
-      else if (DCCM_INDEX_DEPTH == 512) begin : dccm
-         ram_512x39  dccm_bank (
-                                // Primary ports
-                                .ME(dccm_clken[i]),
-                                .CLK(clk),
-                                .WE(wren_bank[i]),
-                                .ADR(addr_bank[i]),
-                                .D(wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]),
-                                .Q(dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0]),
-                                .ROP ( ),
-                                // These are used by SoC
-                                `EL2_LOCAL_DCCM_RAM_TEST_PORTS
-                                .*
-                                );
-      end
-      else if (DCCM_INDEX_DEPTH == 256) begin : dccm
-         ram_256x39  dccm_bank (
-                                // Primary ports
-                                .ME(dccm_clken[i]),
-                                .CLK(clk),
-                                .WE(wren_bank[i]),
-                                .ADR(addr_bank[i]),
-                                .D(wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]),
-                                .Q(dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0]),
-                                .ROP ( ),
-                                // These are used by SoC
-                                `EL2_LOCAL_DCCM_RAM_TEST_PORTS
-                                .*
-                                );
-      end
-      else if (DCCM_INDEX_DEPTH == 128) begin : dccm
-         ram_128x39  dccm_bank (
-                                // Primary ports
-                                .ME(dccm_clken[i]),
-                                .CLK(clk),
-                                .WE(wren_bank[i]),
-                                .ADR(addr_bank[i]),
-                                .D(wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]),
-                                .Q(dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0]),
-                                .ROP ( ),
-                                // These are used by SoC
-                                `EL2_LOCAL_DCCM_RAM_TEST_PORTS
-                                .*
-                                );
-      end
-`endif
+        
+        // Connect to exported RAM Banks
+        always_comb begin
+            dccm_mem_export.dccm_clken[i]              = dccm_clken[i];
+            dccm_mem_export.wren_bank[i]               = wren_bank[i];
+            dccm_mem_export.addr_bank[i]               = addr_bank[i];
+            dccm_mem_export.wr_data_bank[i]            = wr_data_bank[i];
+            dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0] = dccm_mem_export.dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0];
+        end
 
    end : mem_bank
 

@@ -18,7 +18,7 @@
 // Not using only ALU ops for creating the string
 
 
-#include "../includes/defines.h"
+#include "../includes/caliptra_defines.h"
 
 
 // Code to execute

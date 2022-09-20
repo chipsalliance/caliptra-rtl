@@ -56,6 +56,9 @@ module caliptra_top (
     //I3C Interface
     //TODO update with I3C interface signals
 
+    // Caliptra Memory Export Interface
+    el2_mem_if                         el2_mem_export,
+
     output logic                       ready_for_fuses,
     output logic                       ready_for_fw_push,
     output logic                       ready_for_runtime,
@@ -732,11 +735,8 @@ el2_swerv_wrapper rvtop (
     .dec_tlu_perfcnt2       (),
     .dec_tlu_perfcnt3       (),
 
-// remove mems DFT pins for opensource
-    .dccm_ext_in_pkt        ('0),
-    .iccm_ext_in_pkt        ('0),
-    .ic_data_ext_in_pkt     ('0),
-    .ic_tag_ext_in_pkt      ('0),
+    // Caliptra Memory Export Interface
+    .el2_mem_export         (el2_mem_export),
 
     .soft_int               ('0),
     .core_id                ('0),
@@ -784,12 +784,12 @@ caliptra_ahb_srom #(
 
 sha512_ctrl #(
     .AHB_DATA_WIDTH (64),
-    .AHB_ADDR_WIDTH (32),
+    .AHB_ADDR_WIDTH (`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SHA)),
     .BYPASS_HSEL    (0)
 ) sha512 (
     .clk            (core_clk),
     .reset_n        (cptra_uc_rst_b),
-    .haddr_i        (s_slave[`SLAVE_SEL_SHA].haddr),
+    .haddr_i        (s_slave[`SLAVE_SEL_SHA].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SHA)-1:0]),
     .hwdata_i       (s_slave[`SLAVE_SEL_SHA].hwdata),
     .hsel_i         (s_slave[`SLAVE_SEL_SHA].hsel),
     .hwrite_i       (s_slave[`SLAVE_SEL_SHA].hwrite),
@@ -806,7 +806,7 @@ sha512_ctrl #(
 
 aes_ctrl #(
     .AHB_DATA_WIDTH (64),
-    .AHB_ADDR_WIDTH (32),
+    .AHB_ADDR_WIDTH (`SLAVE_ADDR_WIDTH(`SLAVE_SEL_AES)),
     .BYPASS_HSEL    (0)
 ) aes (
     .clk            (core_clk),
@@ -814,7 +814,7 @@ aes_ctrl #(
     .cptra_obf_key  (cptra_obf_key_reg),
     .obf_uds_seed   (obf_uds_seed),
     .obf_field_entropy(obf_field_entropy),
-    .haddr_i        (s_slave[`SLAVE_SEL_AES].haddr),
+    .haddr_i        (s_slave[`SLAVE_SEL_AES].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_AES)-1:0]),
     .hwdata_i       (s_slave[`SLAVE_SEL_AES].hwdata),
     .hsel_i         (s_slave[`SLAVE_SEL_AES].hsel),
     .hwrite_i       (s_slave[`SLAVE_SEL_AES].hwrite),
@@ -988,9 +988,9 @@ axi_lsu_dma_bridge # (`RV_LSU_BUS_TAG,`RV_LSU_BUS_TAG ) bridge(
 
 //Instantiation of mailbox
 mbox_top #(
-    .AHB_ADDR_WIDTH(`AHB_HADDR_SIZE),
+    .AHB_ADDR_WIDTH(`SLAVE_ADDR_WIDTH(`SLAVE_SEL_MBOX)),
     .AHB_DATA_WIDTH(`AHB_HDATA_SIZE),
-    .APB_ADDR_WIDTH(`APB_ADDR_WIDTH),
+    .APB_ADDR_WIDTH(`SLAVE_ADDR_WIDTH(`SLAVE_SEL_MBOX)),
     .APB_DATA_WIDTH(`APB_DATA_WIDTH),
     .APB_USER_WIDTH(`APB_USER_WIDTH)
     )
@@ -1009,7 +1009,7 @@ mbox_top #(
     .generic_output_wires(generic_output_wires),
 
     //APB Interface with SoC
-    .paddr_i(PADDR),
+    .paddr_i(PADDR[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_MBOX)-1:0]),
     .psel_i(PSEL),
     .penable_i(PENABLE),
     .pwrite_i(PWRITE),
@@ -1019,7 +1019,7 @@ mbox_top #(
     .prdata_o(PRDATA),
     .pslverr_o(PSLVERR),
     //AHB Interface with uC
-    .haddr_i    (s_slave[`SLAVE_SEL_MBOX].haddr), 
+    .haddr_i    (s_slave[`SLAVE_SEL_MBOX].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_MBOX)-1:0]), 
     .hwdata_i   (s_slave[`SLAVE_SEL_MBOX].hwdata), 
     .hsel_i     (s_slave[`SLAVE_SEL_MBOX].hsel), 
     .hwrite_i   (s_slave[`SLAVE_SEL_MBOX].hwrite),
@@ -1041,12 +1041,12 @@ mbox_top #(
 
 hmac_ctrl #(
      .AHB_DATA_WIDTH(`AHB_HDATA_SIZE),
-     .AHB_ADDR_WIDTH(`AHB_HADDR_SIZE),
+     .AHB_ADDR_WIDTH(`SLAVE_ADDR_WIDTH(`SLAVE_SEL_HMAC)),
      .BYPASS_HSEL(0)
 )hmac (
      .clk(core_clk),
      .reset_n       (cptra_uc_rst_b),
-     .hadrr_i       (s_slave[`SLAVE_SEL_HMAC].haddr),
+     .hadrr_i       (s_slave[`SLAVE_SEL_HMAC].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_MBOX)-1:0]),
      .hwdata_i      (s_slave[`SLAVE_SEL_HMAC].hwdata),
      .hsel_i        (s_slave[`SLAVE_SEL_HMAC].hsel),
      .hwrite_i      (s_slave[`SLAVE_SEL_HMAC].hwrite),
@@ -1065,7 +1065,7 @@ hmac_ctrl #(
 );
 
 kv #(
-    .AHB_ADDR_WIDTH(`AHB_HADDR_SIZE),
+    .AHB_ADDR_WIDTH(`SLAVE_ADDR_WIDTH(`SLAVE_SEL_KV)),
     .AHB_DATA_WIDTH(`AHB_HDATA_SIZE),
     .KV_NUM_READ(`KV_NUM_READ),
     .KV_NUM_WRITE(`KV_NUM_WRITE)
@@ -1074,7 +1074,7 @@ key_vault1
 (
     .clk           (core_clk),
     .rst_b         (cptra_uc_rst_b),
-    .haddr_i       (s_slave[`SLAVE_SEL_KV].haddr),
+    .haddr_i       (s_slave[`SLAVE_SEL_KV].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_KV)-1:0]),
     .hwdata_i      (s_slave[`SLAVE_SEL_KV].hwdata),
     .hsel_i        (s_slave[`SLAVE_SEL_KV].hsel),
     .hwrite_i      (s_slave[`SLAVE_SEL_KV].hwrite),

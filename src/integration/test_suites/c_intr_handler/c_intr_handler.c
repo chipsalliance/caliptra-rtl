@@ -1,4 +1,4 @@
-#include "defines.h"
+#include "caliptra_defines.h"
 #include <string.h>
 #include "riscv-csr.h"
 #include "swerv-csr.h"

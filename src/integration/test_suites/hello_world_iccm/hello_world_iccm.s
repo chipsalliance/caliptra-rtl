@@ -18,7 +18,7 @@
 // Not using only ALU ops for creating the string
 
 
-#include "defines.h"
+#include "caliptra_defines.h"
 
     .set    mfdc, 0x7f9
 .extern printf_start, printf_end

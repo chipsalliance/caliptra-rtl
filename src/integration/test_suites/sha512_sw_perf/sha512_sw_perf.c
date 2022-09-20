@@ -1,4 +1,4 @@
-#include "defines.h"
+#include "caliptra_defines.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>

@@ -87,6 +87,8 @@ module caliptra_top_tb (
 
 `define LMEM caliptra_top_dut.mbox_top1.mbox1.mbox_ram1.ram 
 
+    el2_mem_if el2_mem_export (.rst_b(cptra_rst_b)); // clock is provided inside the SweRV processor
+
     parameter MEMTYPE_LMEM = 3'h1;
     parameter MEMTYPE_DCCM = 3'h2;
     parameter MEMTYPE_ICCM = 3'h3;
@@ -405,6 +407,8 @@ caliptra_top caliptra_top_dut (
     .PWDATA(PWDATA),
     .PWRITE(PWRITE),
 
+    .el2_mem_export(el2_mem_export),
+
     .ready_for_fuses(ready_for_fuses),
 
     .mailbox_data_avail(),
@@ -415,6 +419,10 @@ caliptra_top caliptra_top_dut (
     .generic_output_wires(),
 
     .security_state('x) //FIXME TIE-OFF
+);
+
+caliptra_swerv_sram_export swerv_sram_export_inst (
+    .el2_mem_export(el2_mem_export.top)
 );
 
 // This is used to load the generated DCCM hexfile prior to
@@ -530,13 +538,13 @@ endtask
 
 
 
-`define ICCM_PATH `RV_TOP.mem.iccm.iccm
+`define ICCM_PATH swerv_sram_export_inst.Gen_iccm_enable
 `ifdef VERILATOR
-`define DRAM(bk) caliptra_top_dut.rvtop.mem.Gen_dccm_enable.dccm.mem_bank[bk].ram.ram_core
-`define IRAM(bk) `ICCM_PATH.mem_bank[bk].iccm_bank.ram_core
+`define DRAM(bk) swerv_sram_export_inst.Gen_dccm_enable.dccm_loop[bk].ram.ram_core
+`define IRAM(bk) `ICCM_PATH.iccm_loop[bk].iccm_bank.ram_core
 `else
-`define DRAM(bk) caliptra_top_dut.rvtop.mem.Gen_dccm_enable.dccm.mem_bank[bk].dccm.dccm_bank.ram_core
-`define IRAM(bk) `ICCM_PATH.mem_bank[bk].iccm.iccm_bank.ram_core
+`define DRAM(bk) swerv_sram_export_inst.Gen_dccm_enable.dccm_loop[bk].dccm.dccm_bank.ram_core
+`define IRAM(bk) `ICCM_PATH.iccm_loop[bk].iccm.iccm_bank.ram_core
 `endif
 
 

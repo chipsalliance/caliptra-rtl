@@ -18,29 +18,7 @@
 // Not using only ALU ops for creating the string
 
 
-#include "../includes/defines.h"
-
-#define DCCM_SADR                   0xf0040000
-
-#define AES_ADDR_NAME0            0x60000000
-#define AES_ADDR_NAME1            0x60000004
-#define AES_ADDR_VER0             0x60000008
-#define AES_ADDR_VER1             0x6000000c
-#define AES_ADDR_CNTRL            0x60000010
-#define AES_ADDR_STATUS           0x60000018
-#define AES_ADDR_KEY_START        0x60000040
-#define AES_ADDR_KEY_END          0x6000005f
-#define AES_ADDR_BLOCK_START      0x60000080
-#define AES_ADDR_BLOCK_END        0x6000008f
-#define AES_ADDR_RESULT_START     0x60000100
-#define AES_ADDR_RESULT_END       0x6000010f
-#define AES_ADDR_CONFIG           0x60000020
-#define AES_ADDR_IV_START         0x60000110
-#define AES_ADDR_IV_END           0x6000011f
-
-#define AES_INIT                  0x0000000D
-#define AES_NEXT                  0x0000000E
-#define AES_VALID                 0x00000003
+#include "../includes/caliptra_defines.h"
 
 // Code to execute
 .section .text
@@ -67,7 +45,7 @@ _start:
     la x4, hw_data      // 128bit key
     //************* uncomment for 256bit key *************//
     // please add the256bit key after the 128bit key//
-    // addi x4, x4, 32   
+    // addi x4, x4, 32
     write_key_loop:
         lw x5, 0(x4)
         sw x5, 0(x3)
@@ -78,9 +56,9 @@ _start:
     // indicate key length
     //************* select one for 128/256bit key *************//
     // 256bit key
-    // li x4, 0x02     
+    // li x4, 0x02
     // 128bit key
-    li x4, 0x00     
+    li x4, 0x00
     li x3, AES_ADDR_CONFIG
     sw x4, 0(x3)
 
@@ -135,12 +113,12 @@ _start:
     li x3, AES_ADDR_CONFIG
     // 128bit key, encode
     li x4, 0x01
-    // 256bit key, encode    
-    // li x4, 0x03  
-    // 128bit key, decode     
-    // li x4, 0x00   
-    // 256bit key, decode    
-    // li x4, 0x02       
+    // 256bit key, encode
+    // li x4, 0x03
+    // 128bit key, decode
+    // li x4, 0x00
+    // 256bit key, decode
+    // li x4, 0x02
     sw x4, 0(x3)
 
     // Enable AES core
@@ -172,7 +150,7 @@ _start:
             addi x4, x4, 4
             ble x3, x1, read_result_loop1
 
-    
+
     //************* 2nd block *************//
     // Load block from hw_data and write to AES core
     li x3, AES_ADDR_BLOCK_START
@@ -190,12 +168,12 @@ _start:
     li x3, AES_ADDR_CONFIG
     // 128bit key, encode
     li x4, 0x01
-    // 256bit key, encode    
-    // li x4, 0x03  
-    // 128bit key, decode     
-    // li x4, 0x00   
-    // 256bit key, decode    
-    // li x4, 0x02       
+    // 256bit key, encode
+    // li x4, 0x03
+    // 128bit key, decode
+    // li x4, 0x00
+    // 256bit key, decode
+    // li x4, 0x02
     sw x4, 0(x3)
 
     // Enable AES core
@@ -245,12 +223,12 @@ _start:
     li x3, AES_ADDR_CONFIG
     // 128bit key, encode
     li x4, 0x01
-    // 256bit key, encode    
-    // li x4, 0x03  
-    // 128bit key, decode     
-    // li x4, 0x00   
-    // 256bit key, decode    
-    // li x4, 0x02       
+    // 256bit key, encode
+    // li x4, 0x03
+    // 128bit key, decode
+    // li x4, 0x00
+    // 256bit key, decode
+    // li x4, 0x02
     sw x4, 0(x3)
 
     // Enable AES core
@@ -299,12 +277,12 @@ _start:
     li x3, AES_ADDR_CONFIG
     // 128bit key, encode
     li x4, 0x01
-    // 256bit key, encode    
-    // li x4, 0x03  
-    // 128bit key, decode     
-    // li x4, 0x00   
-    // 256bit key, decode    
-    // li x4, 0x02       
+    // 256bit key, encode
+    // li x4, 0x03
+    // 128bit key, decode
+    // li x4, 0x00
+    // 256bit key, decode
+    // li x4, 0x02
     sw x4, 0(x3)
 
     // Enable AES core

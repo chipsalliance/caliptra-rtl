@@ -18,19 +18,7 @@
 // Not using only ALU ops for creating the string
 
 
-#include "../includes/defines.h"
-
-#define DCCM_SADR                   0xf0040000
-
-#define MBOX_ADDR_BASE            0x30020000
-#define MBOX_ADDR_LOCK            0x30020000
-#define MBOX_ADDR_CMD             0x30020008
-#define MBOX_ADDR_DLEN            0x3002000C
-#define MBOX_ADDR_DATAIN          0x30020010
-#define MBOX_ADDR_DATAOUT         0x30020014
-#define MBOX_ADDR_EXECUTE         0x30020018
-
-#define MBOX_DLEN_VAL             0x0000001C
+#include "../includes/caliptra_defines.h"
 
 // Code to execute
 .section .text

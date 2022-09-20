@@ -15,16 +15,16 @@
 `ifndef MBOX_PARAMS
 `define MBOX_PARAMS
 
-parameter MBOX_ADDR_W = 32;
+parameter MBOX_ADDR_W = 18; // Duplicate from cfg.sv, remove for maintainability?
 parameter MBOX_DATA_W = 32;
 parameter MBOX_USER_W = 32;
 
 //memory map
-parameter MBOX_DIR_START_ADDR = 32'h3000_0000;
-parameter MBOX_DIR_END_ADDR = 32'h3001_FFFF;
-parameter MBOX_MEM_START_ADDR = 32'h3002_0000;
-parameter MBOX_MEM_END_ADDR = 32'h3002_FFFF;
-parameter MBOX_REG_MEM_START_ADDR = 32'h3003_0000;
-parameter MBOX_REG_MEM_END_ADDR = 32'h3003_FFFF;
+parameter MBOX_DIR_START_ADDR     = 18'h0_0000;
+parameter MBOX_DIR_END_ADDR       = 18'h1_FFFF;
+parameter MBOX_MEM_START_ADDR     = 18'h2_0000;
+parameter MBOX_MEM_END_ADDR       = 18'h2_FFFF;
+parameter MBOX_REG_MEM_START_ADDR = 18'h3_0000;
+parameter MBOX_REG_MEM_END_ADDR   = 18'h3_FFFF;
 
 `endif

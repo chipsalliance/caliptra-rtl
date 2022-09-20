@@ -3,7 +3,7 @@
 #ifndef SWERV_CSR_H
 #define SWERV_CSR_H
 
-#include "defines.h"
+#include "caliptra_defines.h"
 
 //////////////////////////////////////////////////////////////////////////////
 // Non-Standard SweRV CSR offset macros

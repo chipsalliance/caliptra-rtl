@@ -87,14 +87,14 @@ program.hex: $(OFILES) $(LINK)
 	@echo Completed building $(TESTNAME)
 
 
-%.o : %.s ${INCLUDES_DIR}/defines.h
-	cp ${INCLUDES_DIR}/defines.h ${BUILD_DIR}
+%.o : %.s ${INCLUDES_DIR}/caliptra_defines.h ${INCLUDES_DIR}/defines.h
+	cp ${INCLUDES_DIR}/caliptra_defines.h ${INCLUDES_DIR}/defines.h ${BUILD_DIR}
 	$(GCC_PREFIX)-cpp -I${TEST_DIR}  $<  > $*.cpp.s
 	$(GCC_PREFIX)-as ${ABI} $*.cpp.s -o $@
 
 
-%.o : %.c ${INCLUDES_DIR}/defines.h
-	cp ${INCLUDES_DIR}/defines.h ${BUILD_DIR}
+%.o : %.c ${INCLUDES_DIR}/caliptra_defines.h ${INCLUDES_DIR}/defines.h
+	cp ${INCLUDES_DIR}/caliptra_defines.h ${INCLUDES_DIR}/defines.h ${BUILD_DIR}
 	cp ${TEST_DIR}/*.h ${BUILD_DIR}
 	$(GCC_PREFIX)-gcc ${includes} ${TEST_CFLAGS} -DCOMPILER_FLAGS="\"${TEST_CFLAGS}\"" ${ABI} -nostdlib -c $< -o $@
 

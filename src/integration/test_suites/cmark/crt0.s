@@ -15,7 +15,7 @@
 #
 // startup code to support HLL programs
 
-#include "../includes/defines.h"
+#include "../includes/caliptra_defines.h"
 
 .section .text.init
 .global _start

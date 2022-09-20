@@ -18,30 +18,8 @@
 // Not using only ALU ops for creating the string
 
 
-#include "../includes/defines.h"
+#include "../includes/caliptra_defines.h"
 #include "./smoke_test_aes_vectors.s"
-
-#define DCCM_SADR                   0xf0040000
-
-#define AES_ADDR_NAME0            0x60000000
-#define AES_ADDR_NAME1            0x60000004
-#define AES_ADDR_VER0             0x60000008
-#define AES_ADDR_VER1             0x6000000c
-#define AES_ADDR_CNTRL            0x60000010
-#define AES_ADDR_STATUS           0x60000018
-#define AES_ADDR_KEY_START        0x60000040
-#define AES_ADDR_KEY_END          0x6000005f
-#define AES_ADDR_BLOCK_START      0x60000080
-#define AES_ADDR_BLOCK_END        0x6000008f
-#define AES_ADDR_RESULT_START     0x60000100
-#define AES_ADDR_RESULT_END       0x6000010f
-#define AES_ADDR_CONFIG           0x60000020
-#define AES_ADDR_IV_START         0x60000110
-#define AES_ADDR_IV_END           0x6000011f
-
-#define AES_INIT                  0x0000000D
-#define AES_NEXT                  0x0000000E
-#define AES_VALID                 0x00000003
 
 // Code to execute
 .section .text

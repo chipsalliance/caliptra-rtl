@@ -41,14 +41,6 @@ import el2_pkg::*;
    output logic [pt.DCCM_FDATA_WIDTH-1:0]  dccm_rd_data_lo,
    output logic [pt.DCCM_FDATA_WIDTH-1:0]  dccm_rd_data_hi,
 
-//`ifdef pt.DCCM_ENABLE
-   input el2_dccm_ext_in_pkt_t  [pt.DCCM_NUM_BANKS-1:0] dccm_ext_in_pkt,
-
-//`endif
-
-   //ICCM ports
-   input el2_ccm_ext_in_pkt_t   [pt.ICCM_NUM_BANKS-1:0]  iccm_ext_in_pkt,
-
    input logic [pt.ICCM_BITS-1:1]  iccm_rw_addr,
    input logic                                        iccm_buf_correct_ecc,                    // ICCM is doing a single bit error correct cycle
    input logic                                        iccm_correction_state,               // ICCM is doing a single bit error correct cycle
@@ -68,8 +60,6 @@ import el2_pkg::*;
    input  logic         ic_rd_en,
    input  logic [63:0] ic_premux_data,      // Premux data to be muxed with each way of the Icache.
    input  logic         ic_sel_premux_data, // Premux data sel
-   input el2_ic_data_ext_in_pkt_t   [pt.ICACHE_NUM_WAYS-1:0][pt.ICACHE_BANKS_WAY-1:0]         ic_data_ext_in_pkt,
-   input el2_ic_tag_ext_in_pkt_t    [pt.ICACHE_NUM_WAYS-1:0]           ic_tag_ext_in_pkt,
 
    input  logic [pt.ICACHE_BANKS_WAY-1:0][70:0]               ic_wr_data,         // Data to fill to the Icache. With ECC
    input  logic [70:0]               ic_debug_wr_data,   // Debug wr cache.
@@ -89,6 +79,8 @@ import el2_pkg::*;
    output logic [pt.ICACHE_NUM_WAYS-1:0]   ic_rd_hit,
    output logic         ic_tag_perr,        // Icache Tag parity error
 
+   el2_mem_if           mem_export,
+
 
    input  logic         scan_mode
 
@@ -101,6 +93,7 @@ import el2_pkg::*;
    if (pt.DCCM_ENABLE == 1) begin: Gen_dccm_enable
       el2_lsu_dccm_mem #(.pt(pt)) dccm (
          .clk_override(dccm_clk_override),
+         .dccm_mem_export(mem_export.swerv_dccm),
          .*
       );
    end else begin: Gen_dccm_disable
@@ -111,6 +104,7 @@ import el2_pkg::*;
 if ( pt.ICACHE_ENABLE ) begin: icache
    el2_ifu_ic_mem #(.pt(pt)) icm  (
       .clk_override(icm_clk_override),
+      .ic_mem_export(mem_export),
       .*
    );
 end
@@ -127,7 +121,8 @@ if (pt.ICCM_ENABLE) begin : iccm
    el2_ifu_iccm_mem  #(.pt(pt)) iccm (.*,
                   .clk_override(icm_clk_override),
                   .iccm_rw_addr(iccm_rw_addr[pt.ICCM_BITS-1:1]),
-                  .iccm_rd_data(iccm_rd_data[63:0])
+                  .iccm_rd_data(iccm_rd_data[63:0]),
+                  .iccm_mem_export(mem_export.swerv_iccm)
                    );
 end
 else  begin

@@ -15,36 +15,7 @@
 //
 
 
-#include "../includes/defines.h"
-
-#define DCCM_SADR                 0xf0040000
-
-#define AES_ADDR_IV_START         0x60000110
-#define AES_ADDR_IV_END           0x6000011f
-
-#define AES_ADDR_KV_CTRL          0x60000200
-
-#define HMAC_ADDR_NAME            0x10010000
-#define HMAC_ADDR_VER             0x10010008
-#define HMAC_ADDR_CNTRL           0x10010010
-#define HMAC_ADDR_STATUS          0x10010018
-#define HMAC_ADDR_KEY_START       0x10010040
-#define HMAC_ADDR_KEY_END         0x1001006c
-#define HMAC_ADDR_BLOCK_START     0x10010080
-#define HMAC_ADDR_BLOCK_END       0x100100fc
-#define HMAC_ADDR_TAG_START       0x10010100
-#define HMAC_ADDR_TAG_END         0x1001012c
-
-#define HMAC_ADDR_KV_CTRL         0x10010200
-
-#define HMAC_INIT                 0x0000000D
-#define HMAC_NEXT                 0x0000000E
-#define HMAC_VALID                0x00000003
-
-#define KV_NUM_PCR                0x00000008
-#define KV_NUM_DWORDS             0x00000010
-
-#define HMAC_KEY_NUM_DWORDS       0x0000000C
+#include "../includes/caliptra_defines.h"
 
 // Code to execute
 .section .text

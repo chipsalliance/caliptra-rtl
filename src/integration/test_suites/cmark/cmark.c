@@ -1,4 +1,4 @@
-#include "defines.h"
+#include "caliptra_defines.h"
 
 #define ITERATIONS 1
 

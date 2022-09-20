@@ -18,23 +18,8 @@
 // Not using only ALU ops for creating the string
 
 
-#include "../includes/defines.h"
+#include "../includes/caliptra_defines.h"
 #include "./smoke_test_sha512_vectors.s"
-
-#define DCCM_SADR                   0xf0040000
-
-#define SHA512_ADDR_NAME            0x40000000
-#define SHA512_ADDR_VER             0x40000008
-#define SHA512_ADDR_CNTRL           0x40000010
-#define SHA512_ADDR_STATUS          0x40000018
-#define SHA512_ADDR_BLOCK_START     0x40000080
-#define SHA512_ADDR_BLOCK_END       0x400000ff
-#define SHA512_ADDR_DIGEST_START    0x40000100
-#define SHA512_ADDR_DIGEST_END      0x4000013f
-
-#define SHA512_INIT                 0x0000000D
-#define SHA512_NEXT                 0x0000000E
-#define SHA512_VALID                0x00000003
 
 // Code to execute
 .section .text

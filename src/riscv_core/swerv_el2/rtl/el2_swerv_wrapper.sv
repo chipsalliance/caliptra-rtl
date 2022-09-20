@@ -290,13 +290,6 @@ import el2_pkg::*;
    input logic                             dbg_bus_clk_en, // Clock ratio b/w cpu core clk & AHB master interface
    input logic                             dma_bus_clk_en, // Clock ratio b/w cpu core clk & AHB slave interface
 
- // all of these test inputs are brought to top-level; must be tied off based on usage by physical design (ie. icache or not, iccm or not, dccm or not)
-
-   input                                   el2_dccm_ext_in_pkt_t  [pt.DCCM_NUM_BANKS-1:0] dccm_ext_in_pkt,
-   input                                   el2_ccm_ext_in_pkt_t  [pt.ICCM_NUM_BANKS-1:0] iccm_ext_in_pkt,
-   input                                   el2_ic_data_ext_in_pkt_t  [pt.ICACHE_NUM_WAYS-1:0][pt.ICACHE_BANKS_WAY-1:0] ic_data_ext_in_pkt,
-   input                                   el2_ic_tag_ext_in_pkt_t  [pt.ICACHE_NUM_WAYS-1:0] ic_tag_ext_in_pkt,
-
    input logic                             timer_int,
    input logic                             soft_int,
    input logic [pt.PIC_TOTAL_INT:1]        extintsrc_req,
@@ -314,6 +307,9 @@ import el2_pkg::*;
    output logic                            jtag_tdo,    // JTAG TDO
 
    input logic [31:4] core_id,
+
+   // Caliptra Memory Export Interface
+   el2_mem_if                              el2_mem_export,
 
    // external MPC halt/run interface
    input logic                             mpc_debug_halt_req, // Async halt request
@@ -694,8 +690,10 @@ import el2_pkg::*;
    el2_mem  #(.pt(pt)) mem (
                              .clk(active_l2clk),
                              .rst_l(core_rst_l),
+                             .mem_export(el2_mem_export),
                              .*
                              );
+   assign el2_mem_export.clk = active_l2clk;
 
 
    //  JTAG/DMI instance

@@ -10,9 +10,11 @@
   `define QSPI_CS_WIDTH       2
   `define QSPI_IO_WIDTH       4
   `define SOC_SEC_STATE_WIDTH 3
-  `define SLAVE_NAMES         {"SWERV_DMA"  , "MBOX"       , "I3C"        , "UART"       , "QSPI"       , "SHA"        , "KEYVAULT"   , "HMAC"       , "ECC"        , "AES_CTRL"   } // Array of names for peripherals
-  `define SLAVE_BASE_ADDR     {32'hEE00_0000, 32'h3000_0000, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'h4000_0000, 32'h1001_8000, 32'h1001_0000, 32'hFFFF_FFFF, 32'h6000_0000} // Array with slave base address
-  `define SLAVE_MASK_ADDR     {32'hEE00_FFFF, 32'h3003_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'h4000_FFFF, 32'h1001_FFFF, 32'h1001_0FFF, 32'hFFFF_FFFF, 32'h6000_FFFF} // Array with slave offset address
+  `define SLAVE_NAMES         {"SWERV_DMA"  , "MBOX"       , "I3C"        , "UART"       , "QSPI"       , "SHA"        , "KEYVAULT"   , "HMAC"       , "ECC"        , "AES_CTRL"   } /* Array of names for peripherals */
+  `define SLAVE_BASE_ADDR     {32'h4000_0000, 32'h3000_0000, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'h1002_0000, 32'h1001_8000, 32'h1001_0000, 32'h1000_8000, 32'h1000_0000} /* Array with slave base address */
+  `define SLAVE_MASK_ADDR     {32'h4007_FFFF, 32'h3003_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'h1002_FFFF, 32'h1001_FFFF, 32'h1001_0FFF, 32'h1000_FFFF, 32'h1000_FFFF} /* Array with slave offset address */
+  `define SLAVE_ADDR_MASK     (`SLAVE_BASE_ADDR ^ `SLAVE_MASK_ADDR) /* Array indicating meaningful address bits for each slave */
+  `define SLAVE_ADDR_WIDTH(n) $clog2((`SLAVE_ADDR_MASK >> (`AHB_HADDR_SIZE*n)) & {`AHB_HADDR_SIZE{1'b1}}) /* Decode address width for each slave from assigned BASE/MASK address */
   `define SLAVE_SEL_AES       0
   `define SLAVE_SEL_ECC       1
   `define SLAVE_SEL_HMAC      2
@@ -36,6 +38,4 @@
   `define CALIPTRA_RV_TOP     `CALIPTRA_TOP.caliptra_top_dut
 
   `define RV_TOP              `CALIPTRA_RV_TOP.rvtop
-  // Override Risc-V reset vector from common_defines.vh
-  `define RV_RESET_VEC 32'h00000000
 `endif

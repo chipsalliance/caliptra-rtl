@@ -7,7 +7,7 @@
 parameter KV_NUM_DWORDS = 16; //number of dwords per key
 parameter KV_NUM_KEYS = 8;
 parameter KV_NUM_PCR = 8;
-parameter KV_ADDR_W = 32;
+parameter KV_ADDR_W = 11;
 parameter KV_DATA_W = 32;
 
 typedef struct packed {

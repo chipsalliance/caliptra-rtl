@@ -40,13 +40,13 @@ module sha512_ctrl #(
     //----------------------------------------------------------------
     reg           sha512_cs;
     reg           sha512_we;
-    reg  [31 : 0] sha512_address;
+    reg  [AHB_ADDR_WIDTH : 0] sha512_address;
     reg  [31 : 0] sha512_write_data;
     reg  [31 : 0] sha512_read_data;
     reg           sha512_error;
 
     sha512 #(
-        .ADDR_WIDTH(32),
+        .ADDR_WIDTH(AHB_ADDR_WIDTH),
         .DATA_WIDTH(32)
         )
         sha512_inst(

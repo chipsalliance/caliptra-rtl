@@ -17,7 +17,6 @@
 module mbox #(
      parameter DATA_W = 32
     ,parameter SIZE_KB = 128
-    ,parameter BASE_ADDR = 0
     )
     (
     input logic        clk,

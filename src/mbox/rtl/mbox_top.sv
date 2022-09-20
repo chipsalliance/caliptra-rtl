@@ -307,8 +307,7 @@ mbox_reg mbox_reg1 (
 //The SoC and uC can read and write to the mailbox by following the Caliptra Mailbox Protocol
 mbox #(
     .DATA_W(APB_DATA_WIDTH),
-    .SIZE_KB(128),
-    .BASE_ADDR(32'h3000_0000)
+    .SIZE_KB(128)
     )
 mbox1 (
     .clk(clk),

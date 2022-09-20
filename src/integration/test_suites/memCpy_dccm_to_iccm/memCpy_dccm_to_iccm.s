@@ -18,7 +18,7 @@
 // Not using only ALU ops for creating the string
 
 
-#include "defines.h"
+#include "caliptra_defines.h"
 
 #define ICCMOUT 0xee000000
 
