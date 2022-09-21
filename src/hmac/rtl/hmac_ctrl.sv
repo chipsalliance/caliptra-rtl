@@ -57,7 +57,10 @@ module hmac_ctrl #(
     reg  [31 : 0] hmac_write_data;
     reg  [31 : 0] hmac_read_data;
 
-    hmac hmac_inst(
+    hmac #(
+        .ADDR_WIDTH (AHB_ADDR_WIDTH)
+        ) hmac_inst
+        (
         .clk(clk),
         .reset_n(reset_n),
         .cs(hmac_cs),
@@ -87,10 +90,14 @@ ahb_slv_sif #(
     .hready_i(hready_i),
     .htrans_i(htrans_i),
     .hsize_i(hsize_i),
+    .hburst_i(hburst_i),
 
     .hresp_o(hresp_o),
     .hreadyout_o(hreadyout_o),
     .hrdata_o(hrdata_o),
+
+    .hmastlock_i(hmastlock_i),
+    .hprot_i(hprot_i),
 
     //COMPONENT INF
     .dv(hmac_cs),

@@ -37,7 +37,7 @@ module kv #(
 
 logic uc_req_dv, uc_req_hold;
 logic uc_req_error;
-logic [AHB_DATA_WIDTH-1:0] uc_req_rdata;
+logic [31:0] uc_req_rdata;
 logic kv_reg_read_error, kv_reg_write_error;
 kv_uc_req_t uc_req;
 
@@ -60,10 +60,14 @@ kv_ahb_slv1 (
     .hready_i(hready_i),
     .htrans_i(htrans_i),
     .hsize_i(hsize_i),
+    .hburst_i(hburst_i),
 
     .hresp_o(hresp_o),
     .hreadyout_o(hreadyout_o),
     .hrdata_o(hrdata_o),
+
+    .hmastlock_i(hmastlock_i),
+    .hprot_i(hprot_i),
 
     //COMPONENT INF
     .dv(uc_req_dv),
@@ -179,7 +183,7 @@ kv_reg kv_reg1 (
 
     .s_cpuif_req(uc_req_dv),
     .s_cpuif_req_is_wr(uc_req.write),
-    .s_cpuif_addr(uc_req.addr),
+    .s_cpuif_addr(uc_req.addr[10:0]),
     .s_cpuif_wr_data(uc_req.wdata),
     .s_cpuif_req_stall_wr(),
     .s_cpuif_req_stall_rd(),

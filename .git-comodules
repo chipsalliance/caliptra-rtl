@@ -11,6 +11,38 @@
         "url": "origin://Ether/d261839b-fbfb-4c03-8bc2-8c8215f98b06",
         "dest": "common/infra",
         "name": "sim_tools",
-        "version": "v1.8.23"
+        "version": "v2.0.5"
+    },
+    {
+        "description": "Verification Tools",
+        "url": "origin://Base_Verification/5ac83406-f158-474c-81a6-6cf6e5f07514",
+        "dest": "common/verif/src",
+        "name": "tools",
+        "version": "promote_verif_tools_196",
+        "has_submodules": "True"
+    },
+    {
+        "description": "Verification Foundationware",
+        "url": "origin://a7961925-9375-4aac-b88b-a0843575b1e4/436b7c4a-1f38-4bd2-9f96-f1eb553d7368",
+        "dest": "common/verif/src",
+        "name": "foundationware",
+        "version": "promote_foundationware_256"
+ 
+    },
+    {
+        "description": "Verification Frameworks",
+        "url": "origin://a7961925-9375-4aac-b88b-a0843575b1e4/1245dbfc-d547-444f-83cb-feb53b461cdd",
+        "dest": "common/verif/src",
+        "name": "frameworks",
+        "version": "release_frameworks_3.3.3",
+        "has_submodules": "True"
+    },
+    {
+        "description": "Test Config",
+        "url": "origin://Base_Tools/17a17100-7fc1-4d21-a3d7-945b645986d5",
+        "dest": "common",
+        "name": "test_config",
+        "version": "promote_test_config_44",
+        "populate": "when_top"
     }
 ]

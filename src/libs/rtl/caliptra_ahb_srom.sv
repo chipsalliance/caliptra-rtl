@@ -91,6 +91,9 @@ ahb_slv_sif #(
     .hreadyout_o(hreadyout_o),
     .hrdata_o   (hrdata_o   ),
 
+    .hmastlock_i(hmastlock_i),
+    .hprot_i    (hprot_i    ),
+
     //COMPONENT INF
     .dv         (sram_dv         ),
     .hold       (sram_hold       ),

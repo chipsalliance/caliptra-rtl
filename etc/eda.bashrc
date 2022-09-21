@@ -32,6 +32,9 @@
 # Make gcc 8.2.0 take priority over 5.2.0 as it's needed by verification client.
 module load tools/gnu/gcc/8.2.0
 
+# VCS Timescale override Repo config
+module prepend-path PB_CMD_CONFIGS "${WORKSPACE}/Caliptra/config/pb_cmd_config_local"
+
 # RTL Lint
 module load tools/realintent/license/2019.01
 module load tools/realintent/versions/2019.A.p15.2020_12_18

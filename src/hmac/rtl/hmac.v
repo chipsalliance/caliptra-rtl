@@ -43,7 +43,9 @@
 //======================================================================
 `include "kv_defines.svh"
 
-module hmac(
+module hmac #(
+            ADDR_WIDTH = 32
+            )(
             // Clock and reset.
             input wire           clk,
             input wire           reset_n,
@@ -53,7 +55,7 @@ module hmac(
             input wire           we,
 
             // Data ports.
-            input wire  [31 : 0] address,
+            input wire  [ADDR_WIDTH - 1 : 0] address,
             input wire  [31 : 0] write_data,
             output wire [31 : 0] read_data,
 

@@ -53,12 +53,12 @@ module aes_ctrl #(
     logic aes_cs;
     logic aes_we;
     logic [AHB_ADDR_WIDTH-1:0] aes_address;
-    logic [31:0] aes_write_data;
-    logic [31:0] aes_read_data;
+    logic [AHB_DATA_WIDTH-1:0] aes_write_data;
+    logic [AHB_DATA_WIDTH-1:0] aes_read_data;
 
     `ifdef AES_CBC_MODE
         aes_cbc #(
-        .ADDR_WIDTH(32),
+        .ADDR_WIDTH(AHB_ADDR_WIDTH),
         .DATA_WIDTH(32)
         ) aes_inst(
         .clk(clk),
@@ -69,8 +69,8 @@ module aes_ctrl #(
         .cs(aes_cs),
         .we(aes_we),
         .address(aes_address),
-        .write_data(aes_write_data),
-        .read_data(aes_read_data),
+        .write_data(aes_write_data[31:0]),
+        .read_data(aes_read_data[31:0]),
         .kv_write(kv_write)
         );
     `else
@@ -106,20 +106,24 @@ ahb_slv_sif #(
     .hready_i(hready_i),
     .htrans_i(htrans_i),
     .hsize_i(hsize_i),
+    .hburst_i(hburst_i),
 
     .hresp_o(hresp_o),
     .hreadyout_o(hreadyout_o),
     .hrdata_o(hrdata_o),
+
+    .hmastlock_i(hmastlock_i),
+    .hprot_i(hprot_i),
 
     //COMPONENT INF
     .dv(aes_cs),
     .hold('0), //no holds from aes
     .error('0), //no errors from aes
     .write(aes_we),
-    .wdata(aes_write_data),
+    .wdata(aes_write_data[31:0]),
     .addr(aes_address),
 
-    .rdata(aes_read_data)
+    .rdata(aes_read_data[31:0])
 );
 
 endmodule

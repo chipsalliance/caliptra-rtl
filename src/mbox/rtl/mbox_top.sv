@@ -88,7 +88,7 @@ mbox_req_t soc_req;
 //gasket to assemble mailbox request
 logic uc_req_dv, uc_req_hold;
 logic uc_req_error;
-logic [AHB_DATA_WIDTH-1:0] uc_req_rdata;
+logic [MBOX_DATA_W-1:0] uc_req_rdata;
 mbox_req_t uc_req;
 
 //mbox req inf
@@ -105,7 +105,6 @@ logic mbox_reg_req_hold;
 mbox_req_t mbox_reg_req_data;
 logic [MBOX_DATA_W-1:0] mbox_reg_rdata;
 logic mbox_reg_error, mbox_reg_read_error, mbox_reg_write_error;
-
 logic clear_secrets;
 
 mbox_reg_pkg::mbox_reg__in_t mbox_reg_hwif_in;
@@ -185,10 +184,14 @@ mailbox_ahb_slv1 (
     .hready_i(hready_i),
     .htrans_i(htrans_i),
     .hsize_i(hsize_i),
+    .hburst_i(hburst_i),
 
     .hresp_o(hresp_o),
     .hreadyout_o(hreadyout_o),
     .hrdata_o(hrdata_o),
+
+    .hmastlock_i(hmastlock_i),
+    .hprot_i(hprot_i),
 
     //COMPONENT INF
     .dv(uc_req_dv),

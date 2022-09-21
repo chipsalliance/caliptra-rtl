@@ -398,6 +398,7 @@ caliptra_top caliptra_top_dut (
     .jtag_tdo(jtag_tdo),
     
     .PADDR(PADDR),
+    .PPROT(),
     .PAUSER(PAUSER),
     .PENABLE(PENABLE),
     .PRDATA(PRDATA),
@@ -407,9 +408,15 @@ caliptra_top caliptra_top_dut (
     .PWDATA(PWDATA),
     .PWRITE(PWRITE),
 
+    .qspi_clk_o(),
+    .qspi_cs_no(),
+    .qspi_d_io(),
+
     .el2_mem_export(el2_mem_export),
 
     .ready_for_fuses(ready_for_fuses),
+    .ready_for_fw_push(),
+    .ready_for_runtime(),
 
     .mailbox_data_avail(),
     .mailbox_flow_done(),

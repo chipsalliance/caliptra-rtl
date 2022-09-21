@@ -40,7 +40,7 @@ module sha512_ctrl #(
     //----------------------------------------------------------------
     reg           sha512_cs;
     reg           sha512_we;
-    reg  [AHB_ADDR_WIDTH : 0] sha512_address;
+    reg  [AHB_ADDR_WIDTH - 1 : 0] sha512_address;
     reg  [31 : 0] sha512_write_data;
     reg  [31 : 0] sha512_read_data;
     reg           sha512_error;
@@ -77,10 +77,14 @@ module sha512_ctrl #(
         .hready_i(hready_i),
         .htrans_i(htrans_i),
         .hsize_i(hsize_i),
+        .hburst_i(hburst_i),
 
         .hresp_o(hresp_o),
         .hreadyout_o(hreadyout_o),
         .hrdata_o(hrdata_o),
+
+        .hmastlock_i(hmastlock_i),
+        .hprot_i(hprot_i),
 
         //COMPONENT INF
         .dv(sha512_cs),

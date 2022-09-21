@@ -18,4 +18,4 @@ global:
     vcs:
       default:
         - '-assert svaext'
-        - '-v2k_generate'
+        #- '-v2k_generate'

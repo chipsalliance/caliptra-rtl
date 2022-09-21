@@ -35,6 +35,6 @@
   localparam AES_CORE_NAME        = 64'h20202020_73206165; // "aes "
   localparam AES_CORE_VERSION     = 64'h00000000_3630302e; // "0.60"
 
-  // `define AES_DATA_BUS_64
+  //`define AES_DATA_BUS_64
 
   `define AES_CBC_MODE

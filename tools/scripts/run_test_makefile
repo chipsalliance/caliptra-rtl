@@ -13,21 +13,24 @@ SCRIPT_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
 CONFIG=""
 
 function parse_sim_config {
+  echo "** IN parse_sim_config **"
   file=$1
-  eval "$(cat $file | python3w $SCRIPT_DIR/sim_config_parse.py)"
+  eval "$(python3w $SCRIPT_DIR/sim_config_parse.py $file)"
   if [[ ! -z "${other[tb]+x}" ]]; then
     CONFIG=${other[tb]}
+    echo "CONFIG=$CONFIG"
   fi
   # Get testname from sim_config
   if [[ ! -z "${other[testname]}" ]]; then
     export TESTNAME=${other[testname]}
+    echo "TESTNAME=$TESTNAME"
   fi
 }
 
 echo
 set -e
 full_pwd=`pwd -P`
-sim_config_file=$full_pwd/sim_config.cfg
+sim_config_file=$full_pwd/sim_config.yml
 
 if [[ -f "$sim_config_file" ]]; then
     parse_sim_config $sim_config_file

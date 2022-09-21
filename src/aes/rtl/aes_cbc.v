@@ -238,7 +238,7 @@ module aes_cbc
           if (kv_ctrl_we)
             doe_ctrl_reg <= write_data[5:0];
           if (flow_done) begin
-            doe_ctrl_reg.cmd <= '0;
+            doe_ctrl_reg.cmd <= DOE_NOP;
             doe_ctrl_reg.dest_sel <= '0;
             doe_ctrl_reg.flow_done <= 1'b1;
           end

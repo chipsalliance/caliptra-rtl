@@ -1046,7 +1046,7 @@ hmac_ctrl #(
 )hmac (
      .clk(core_clk),
      .reset_n       (cptra_uc_rst_b),
-     .hadrr_i       (s_slave[`SLAVE_SEL_HMAC].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_MBOX)-1:0]),
+     .hadrr_i       (s_slave[`SLAVE_SEL_HMAC].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_HMAC)-1:0]),
      .hwdata_i      (s_slave[`SLAVE_SEL_HMAC].hwdata),
      .hsel_i        (s_slave[`SLAVE_SEL_HMAC].hsel),
      .hwrite_i      (s_slave[`SLAVE_SEL_HMAC].hwrite),

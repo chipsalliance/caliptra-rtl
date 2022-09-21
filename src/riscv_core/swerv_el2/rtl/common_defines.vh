@@ -44,7 +44,7 @@
 `define RV_STERR_ROLLBACK 0
 `define RV_LDERR_ROLLBACK 1
 `define CPU_TOP `RV_TOP.swerv
-`define RV_TOP `TOP.rvtop
+//`define RV_TOP `TOP.rvtop
 `define SDVT_AHB 1
 `define TOP tb_top
 `define RV_ASSERT_ON 

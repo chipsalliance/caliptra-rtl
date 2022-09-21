@@ -36,7 +36,7 @@ module ahb_slv_sif #(
     input logic [2:0] hburst_i, // FIXME
 
     input logic       hmastlock_i, // FIXME
-    input logic [2:0] hprot_i, // FIXME
+    input logic [3:0] hprot_i, // FIXME
 
     output logic hresp_o,
     output logic hreadyout_o,

@@ -71,7 +71,7 @@ global:
     vcs:
       default:
         - '-assert svaext'
-        - '-v2k_generate'
+        #- '-v2k_generate'
 ---
 provides: [el2_swerv_wrapper_tb]  
 schema_version: 2.4.0
@@ -93,10 +93,10 @@ global:
     vcs:
       default:
         - '-assert svaext'
-        - '-v2k_generate'
-        - '-timescale=1ns/1ps'
+        #- '-v2k_generate'
+        #- '-timescale=1ns/1ps'
         - '-noinherit_timescale=1ns/1ps'
-        - '-ucli -i dump.ucli'
-      sim:
-        - '-ucli -i dump.ucli'
+        #- '-ucli -i dump.ucli'
+      #sim:
+        #- '-ucli -i dump.ucli'
 

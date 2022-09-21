@@ -1,0 +1,11 @@
+expansion:
+  vcs:
+    description: VCS-only command line expansions
+    condition:
+      after: --tool
+    expand:
+      - TIMESCALE_VCS=1ns/1ps
+    args:
+      - param: vcs
+      - param: --analyze-args=-assert svaext
+    implied: true
