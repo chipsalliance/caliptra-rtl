@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<d:error xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns">
+  <s:exception>Sabre_DAV_Exception_NotFound</s:exception>
+  <s:message>File with name MTM systems product/SAKURA-G/SAKURA_G_QuicStart_Ver1.0/HDL/sakura_g_aes128/sakura_g_aes128/rom_sakura_g_aes128.mcs could not be located</s:message>
+  <s:sabredav-version>1.7.6</s:sabredav-version>
+</d:error>

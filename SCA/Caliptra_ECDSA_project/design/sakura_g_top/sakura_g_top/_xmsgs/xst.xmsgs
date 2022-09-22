@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- IMPORTANT: This is an internal file that has been generated
+     by the Xilinx ISE software.  Any direct editing or
+     changes made to this file may result in unpredictable
+     behavior or data corruption.  It is strongly advised that
+     users do not edit the contents of this file. -->
+<messages>
+<msg type="warning" file="HDLCompiler" num="248" delta="old" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project\design\ecc\rtl\mm.v" Line 68: Block identifier is required on this block
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="248" delta="old" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project\design\ecc\rtl\mm.v" Line 160: Block identifier is required on this block
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="248" delta="old" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project\design\ecc\rtl\mm.v" Line 168: Block identifier is required on this block
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="248" delta="old" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project\design\ecc\rtl\mm.v" Line 182: Block identifier is required on this block
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="413" delta="old" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project\design\ecc\rtl\ecc_ctrl.v" Line 179: Result of <arg fmt="%d" index="1">32</arg>-bit expression is truncated to fit in <arg fmt="%d" index="2">8</arg>-bit target.
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="413" delta="old" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project\design\ecc\rtl\ecc_ctrl.v" Line 188: Result of <arg fmt="%d" index="1">32</arg>-bit expression is truncated to fit in <arg fmt="%d" index="2">8</arg>-bit target.
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="413" delta="old" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project\design\ecc\rtl\ecc_ctrl.v" Line 222: Result of <arg fmt="%d" index="1">32</arg>-bit expression is truncated to fit in <arg fmt="%d" index="2">10</arg>-bit target.
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="413" delta="old" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project\design\ecc\rtl\ecc_ctrl.v" Line 230: Result of <arg fmt="%d" index="1">16</arg>-bit expression is truncated to fit in <arg fmt="%d" index="2">15</arg>-bit target.
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="413" delta="old" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project\design\ecc\rtl\ecc_ctrl.v" Line 243: Result of <arg fmt="%d" index="1">32</arg>-bit expression is truncated to fit in <arg fmt="%d" index="2">10</arg>-bit target.
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="413" delta="old" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project\design\ecc\rtl\ecc_ctrl.v" Line 270: Result of <arg fmt="%d" index="1">16</arg>-bit expression is truncated to fit in <arg fmt="%d" index="2">15</arg>-bit target.
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="1127" delta="old" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project\design\ecc\rtl\ecc_ctrl.v" Line 163: Assignment to <arg fmt="%s" index="1">first_round</arg> ignored, since the identifier is never used
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="1127" delta="old" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project\design\ecc\rtl\ecc_ctrl.v" Line 280: Assignment to <arg fmt="%s" index="1">busy_r</arg> ignored, since the identifier is never used
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="413" delta="old" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project\design\ecc\rtl\mm.v" Line 119: Result of <arg fmt="%d" index="1">33</arg>-bit expression is truncated to fit in <arg fmt="%d" index="2">32</arg>-bit target.
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="1127" delta="old" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project\design\ecc\rtl\add_sub_mod_alter.v" Line 64: Assignment to <arg fmt="%s" index="1">carry1</arg> ignored, since the identifier is never used
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="1127" delta="old" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project\design\ecc\rtl\fau.v" Line 114: Assignment to <arg fmt="%s" index="1">ready</arg> ignored, since the identifier is never used
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="1127" delta="old" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project\design\ecc\rtl\ecc_arith_unit.v" Line 129: Assignment to <arg fmt="%s" index="1">fau_ready</arg> ignored, since the identifier is never used
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="413" delta="old" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project\design\ecc\rtl\ecc_arith_unit.v" Line 195: Result of <arg fmt="%d" index="1">10</arg>-bit expression is truncated to fit in <arg fmt="%d" index="2">9</arg>-bit target.
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="1127" delta="old" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project\design\sakura_g_top\sakura_g_aes128.v" Line 108: Assignment to <arg fmt="%s" index="1">resetn</arg> ignored, since the identifier is never used
+</msg>
+
+<msg type="info" file="Xst" num="3210" delta="old" >&quot;<arg fmt="%s" index="1">C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project\design\sakura_g_top\sakura_g_aes128.v</arg>&quot; line <arg fmt="%s" index="2">106</arg>: Output port &lt;<arg fmt="%s" index="3">RSTOUTn</arg>&gt; of the instance &lt;<arg fmt="%s" index="4">host_if</arg>&gt; is unconnected or connected to loadless signal.
+</msg>
+
+<msg type="info" file="Xst" num="3210" delta="old" >&quot;<arg fmt="%s" index="1">C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project\design\ecc\rtl\ecc_arith_unit.v</arg>&quot; line <arg fmt="%s" index="2">115</arg>: Output port &lt;<arg fmt="%s" index="3">ready_o</arg>&gt; of the instance &lt;<arg fmt="%s" index="4">i_fau</arg>&gt; is unconnected or connected to loadless signal.
+</msg>
+
+<msg type="warning" file="Xst" num="647" delta="old" >Input &lt;<arg fmt="%s" index="1">ena</arg>&gt; is never used. This port will be preserved and left unconnected if it belongs to a top-level block or it belongs to a sub-block and the hierarchy of this sub-block is preserved.
+</msg>
+
+<msg type="info" file="Xst" num="3210" delta="old" >&quot;<arg fmt="%s" index="1">C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project\design\ecc\rtl\fau.v</arg>&quot; line <arg fmt="%s" index="2">59</arg>: Output port &lt;<arg fmt="%s" index="3">ready_o</arg>&gt; of the instance &lt;<arg fmt="%s" index="4">i_MULTIPLIER</arg>&gt; is unconnected or connected to loadless signal.
+</msg>
+
+<msg type="info" file="Xst" num="3210" delta="old" >&quot;<arg fmt="%s" index="1">C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project\design\ecc\rtl\fau.v</arg>&quot; line <arg fmt="%s" index="2">80</arg>: Output port &lt;<arg fmt="%s" index="3">ready_o</arg>&gt; of the instance &lt;<arg fmt="%s" index="4">i_ADDER_SUBTRACTOR</arg>&gt; is unconnected or connected to loadless signal.
+</msg>
+
+<msg type="warning" file="Xst" num="653" delta="old" >Signal &lt;<arg fmt="%s" index="1">ready_o</arg>&gt; is used but never assigned. This sourceless signal will be automatically connected to value <arg fmt="%s" index="2">GND</arg>.
+</msg>
+
+<msg type="warning" file="Xst" num="647" delta="old" >Input &lt;<arg fmt="%s" index="1">clk</arg>&gt; is never used. This port will be preserved and left unconnected if it belongs to a top-level block or it belongs to a sub-block and the hierarchy of this sub-block is preserved.
+</msg>
+
+<msg type="warning" file="Xst" num="647" delta="old" >Input &lt;<arg fmt="%s" index="1">reset_n</arg>&gt; is never used. This port will be preserved and left unconnected if it belongs to a top-level block or it belongs to a sub-block and the hierarchy of this sub-block is preserved.
+</msg>
+
+<msg type="warning" file="Xst" num="647" delta="old" >Input &lt;<arg fmt="%s" index="1">red_i</arg>&gt; is never used. This port will be preserved and left unconnected if it belongs to a top-level block or it belongs to a sub-block and the hierarchy of this sub-block is preserved.
+</msg>
+
+<msg type="info" file="Xst" num="3210" delta="old" >&quot;<arg fmt="%s" index="1">C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project\design\ecc\rtl\add_sub_mod_alter.v</arg>&quot; line <arg fmt="%s" index="2">59</arg>: Output port &lt;<arg fmt="%s" index="3">cout</arg>&gt; of the instance &lt;<arg fmt="%s" index="4">adder_inst_1</arg>&gt; is unconnected or connected to loadless signal.
+</msg>
+
+<msg type="warning" file="Xst" num="653" delta="old" >Signal &lt;<arg fmt="%s" index="1">ready_o</arg>&gt; is used but never assigned. This sourceless signal will be automatically connected to value <arg fmt="%s" index="2">GND</arg>.
+</msg>
+
+<msg type="info" file="Xst" num="2261" delta="old" >The FF/Latch &lt;<arg fmt="%s" index="1">b_reg_384</arg>&gt; in Unit &lt;<arg fmt="%s" index="2">i_MULTIPLIER</arg>&gt; is equivalent to the following <arg fmt="%s" index="3">31 FFs/Latches</arg>, which will be removed : <arg fmt="%s" index="4">&lt;b_reg_385&gt; &lt;b_reg_386&gt; &lt;b_reg_387&gt; &lt;b_reg_388&gt; &lt;b_reg_389&gt; &lt;b_reg_390&gt; &lt;b_reg_391&gt; &lt;b_reg_392&gt; &lt;b_reg_393&gt; &lt;b_reg_394&gt; &lt;b_reg_395&gt; &lt;b_reg_396&gt; &lt;b_reg_397&gt; &lt;b_reg_398&gt; &lt;b_reg_399&gt; &lt;b_reg_400&gt; &lt;b_reg_401&gt; &lt;b_reg_402&gt; &lt;b_reg_403&gt; &lt;b_reg_404&gt; &lt;b_reg_405&gt; &lt;b_reg_406&gt; &lt;b_reg_407&gt; &lt;b_reg_408&gt; &lt;b_reg_409&gt; &lt;b_reg_410&gt; &lt;b_reg_411&gt; &lt;b_reg_412&gt; &lt;b_reg_413&gt; &lt;b_reg_414&gt; &lt;b_reg_415&gt; </arg>
+</msg>
+
+<msg type="warning" file="Xst" num="1710" delta="old" >FF/Latch &lt;<arg fmt="%s" index="1">b_reg_384</arg>&gt; (without init value) has a constant value of <arg fmt="%d" index="2">0</arg> in block &lt;<arg fmt="%s" index="3">i_MULTIPLIER</arg>&gt;. This FF/Latch will be trimmed during the optimization process.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="old" >Node &lt;<arg fmt="%s" index="1">prog_line_pipe1_21</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">i_ecc_ctrl</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="old" >Node &lt;<arg fmt="%s" index="1">prog_line_pipe1_22</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">i_ecc_ctrl</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="old" >Node &lt;<arg fmt="%s" index="1">prog_line_pipe2_21</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">i_ecc_ctrl</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="old" >Node &lt;<arg fmt="%s" index="1">prog_line_pipe2_22</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">i_ecc_ctrl</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="old" >Node &lt;<arg fmt="%s" index="1">instr_o_14</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">i_ecc_ctrl</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="old" >Node &lt;<arg fmt="%s" index="1">instr_o_15</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">i_ecc_ctrl</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="old" >Node &lt;<arg fmt="%s" index="1">instr_o_19</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">i_ecc_ctrl</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="old" >Node &lt;<arg fmt="%s" index="1">instr_o_21</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">i_ecc_ctrl</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="old" >Node &lt;<arg fmt="%s" index="1">instr_o_22</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">i_ecc_ctrl</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="old" >Node &lt;<arg fmt="%s" index="1">instr_o_23</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">i_ecc_ctrl</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2404" delta="old" > FFs/Latches &lt;<arg fmt="%s" index="1">b_reg</arg>&lt;<arg fmt="%d" index="2">415</arg>:<arg fmt="%d" index="3">384</arg>&gt;&gt; (without init value) have a constant value of <arg fmt="%c" index="4">0</arg> in block &lt;<arg fmt="%s" index="5">mm</arg>&gt;.
+</msg>
+
+<msg type="info" file="Xst" num="3217" delta="new" >HDL ADVISOR - Register &lt;<arg fmt="%s" index="1">instr_o</arg>&gt; currently described with an asynchronous reset, could be combined with distributed RAM &lt;<arg fmt="%s" index="2">Mram__n0324[0:2]</arg>&gt; for implementation on block RAM resources if you made this reset synchronous instead.
+</msg>
+
+<msg type="info" file="Xst" num="3226" delta="old" >The RAM &lt;<arg fmt="%s" index="1">Mram__n3619</arg>&gt; will be implemented as a BLOCK RAM, absorbing the following register(s):</msg>
+
+<msg type="info" file="Xst" num="3226" delta="old" >The RAM &lt;<arg fmt="%s" index="1">Mram_mem</arg>&gt; will be implemented as a BLOCK RAM, absorbing the following register(s):</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="old" >Node &lt;<arg fmt="%s" index="1">prog_line_pipe1_21</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">ecc_ctrl</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="old" >Node &lt;<arg fmt="%s" index="1">prog_line_pipe1_22</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">ecc_ctrl</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="old" >Node &lt;<arg fmt="%s" index="1">prog_line_pipe2_21</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">ecc_ctrl</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="old" >Node &lt;<arg fmt="%s" index="1">prog_line_pipe2_22</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">ecc_ctrl</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="1710" delta="old" >FF/Latch &lt;<arg fmt="%s" index="1">ecc_cmd_i_1</arg>&gt; (without init value) has a constant value of <arg fmt="%d" index="2">0</arg> in block &lt;<arg fmt="%s" index="3">host_if</arg>&gt;. This FF/Latch will be trimmed during the optimization process.
+</msg>
+
+<msg type="warning" file="Xst" num="1895" delta="old" >Due to other FF/Latch trimming, FF/Latch &lt;<arg fmt="%s" index="1">ecc_cmd_i_2</arg>&gt; (without init value) has a constant value of <arg fmt="%d" index="2">0</arg> in block &lt;<arg fmt="%s" index="3">host_if</arg>&gt;. This FF/Latch will be trimmed during the optimization process.
+</msg>
+
+<msg type="warning" file="Xst" num="1895" delta="old" >Due to other FF/Latch trimming, FF/Latch &lt;<arg fmt="%s" index="1">wr_op_sel_i_1</arg>&gt; (without init value) has a constant value of <arg fmt="%d" index="2">0</arg> in block &lt;<arg fmt="%s" index="3">host_if</arg>&gt;. This FF/Latch will be trimmed during the optimization process.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="old" >Node &lt;<arg fmt="%s" index="1">reg_addr_r_6</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">ecc_arith_unit</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="old" >Node &lt;<arg fmt="%s" index="1">reg_addr_r_7</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">ecc_arith_unit</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="1710" delta="old" >FF/Latch &lt;<arg fmt="%s" index="1">instr_o_21</arg>&gt; (without init value) has a constant value of <arg fmt="%d" index="2">0</arg> in block &lt;<arg fmt="%s" index="3">ecc_ctrl</arg>&gt;. This FF/Latch will be trimmed during the optimization process.
+</msg>
+
+<msg type="warning" file="Xst" num="1895" delta="old" >Due to other FF/Latch trimming, FF/Latch &lt;<arg fmt="%s" index="1">instr_o_22</arg>&gt; (without init value) has a constant value of <arg fmt="%d" index="2">0</arg> in block &lt;<arg fmt="%s" index="3">ecc_ctrl</arg>&gt;. This FF/Latch will be trimmed during the optimization process.
+</msg>
+
+<msg type="warning" file="Xst" num="1895" delta="old" >Due to other FF/Latch trimming, FF/Latch &lt;<arg fmt="%s" index="1">instr_o_23</arg>&gt; (without init value) has a constant value of <arg fmt="%d" index="2">0</arg> in block &lt;<arg fmt="%s" index="3">ecc_ctrl</arg>&gt;. This FF/Latch will be trimmed during the optimization process.
+</msg>
+
+<msg type="info" file="Xst" num="2261" delta="old" >The FF/Latch &lt;<arg fmt="%s" index="1">data_ena</arg>&gt; in Unit &lt;<arg fmt="%s" index="2">host_if</arg>&gt; is equivalent to the following <arg fmt="%s" index="3">FF/Latch</arg>, which will be removed : <arg fmt="%s" index="4">&lt;ecc_cmd_i_0&gt; </arg>
+</msg>
+
+<msg type="warning" file="Xst" num="1710" delta="old" >FF/Latch &lt;<arg fmt="%s" index="1">host_if/ecdsa_keygen/reg_addr_r_5</arg>&gt; (without init value) has a constant value of <arg fmt="%d" index="2">0</arg> in block &lt;<arg fmt="%s" index="3">sakura_g_aes128</arg>&gt;. This FF/Latch will be trimmed during the optimization process.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="old" >Node &lt;<arg fmt="%s" index="1">host_if/ecdsa_keygen/i_ecc_ctrl/instr_o_19</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="old" >Node &lt;<arg fmt="%s" index="1">host_if/ecdsa_keygen/i_ecc_ctrl/instr_o_15</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="old" >Node &lt;<arg fmt="%s" index="1">host_if/ecdsa_keygen/i_ecc_ctrl/instr_o_14</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="old" >Node &lt;<arg fmt="%s" index="1">host_if/ecdsa_keygen/i_ecc_ctrl/instr_o_7</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="old" >Node &lt;<arg fmt="%s" index="1">host_if/ecdsa_keygen/i_ecc_ctrl/instr_o_6</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="old" >Node &lt;<arg fmt="%s" index="1">host_if/ecdsa_keygen/i_fau/red</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="1710" delta="old" >FF/Latch &lt;<arg fmt="%s" index="1">host_if/ecdsa_keygen/i_ecc_ctrl/delay_cntr_7</arg>&gt; (without init value) has a constant value of <arg fmt="%d" index="2">0</arg> in block &lt;<arg fmt="%s" index="3">sakura_g_aes128</arg>&gt;. This FF/Latch will be trimmed during the optimization process.
+</msg>
+
+<msg type="warning" file="Xst" num="1710" delta="old" >FF/Latch &lt;<arg fmt="%s" index="1">host_if/ecdsa_keygen/i_ecc_ctrl/delay_cntr_6</arg>&gt; (without init value) has a constant value of <arg fmt="%d" index="2">0</arg> in block &lt;<arg fmt="%s" index="3">sakura_g_aes128</arg>&gt;. This FF/Latch will be trimmed during the optimization process.
+</msg>
+
+<msg type="info" file="Xst" num="741" delta="old" >HDL ADVISOR - A <arg fmt="%d" index="1">26</arg>-bit shift register was found for signal &lt;<arg fmt="%s" index="2">host_if/ecdsa_keygen/i_fau/i_MULTIPLIER/push_reg_11</arg>&gt; and currently occupies <arg fmt="%d" index="3">26</arg> logic cells (<arg fmt="%d" index="4">13</arg> slices). Removing the set/reset logic would take advantage of SRL<arg fmt="%d" index="5">32</arg> (and derived) primitives and reduce this to 1 logic cells (1 slices). Evaluate if the set/reset can be removed for this simple shift register. The majority of simple pipeline structures do not need to be set/reset operationally.
+</msg>
+
+</messages>

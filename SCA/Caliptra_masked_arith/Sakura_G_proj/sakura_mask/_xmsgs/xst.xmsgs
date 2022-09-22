@@ -1,0 +1,1485 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- IMPORTANT: This is an internal file that has been generated
+     by the Xilinx ISE software.  Any direct editing or
+     changes made to this file may result in unpredictable
+     behavior or data corruption.  It is strongly advised that
+     users do not edit the contents of this file. -->
+<messages>
+<msg type="warning" file="HDLCompiler" num="189" delta="new" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_masked_arith\Sakura_G_proj\sakura_g_aes128.v" Line 109: Size mismatch in connection of port &lt;<arg fmt="%s" index="3">KVAL</arg>&gt;. Formal port size is <arg fmt="%d" index="2">1</arg>-bit while actual signal size is <arg fmt="%d" index="1">32</arg>-bit.
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="1127" delta="new" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_masked_arith\Sakura_G_proj\sakura_g_aes128.v" Line 110: Assignment to <arg fmt="%s" index="1">key</arg> ignored, since the identifier is never used
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="413" delta="new" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_masked_arith\masked_design\reduction_WDDL.v" Line 40: Result of <arg fmt="%d" index="1">14</arg>-bit expression is truncated to fit in <arg fmt="%d" index="2">13</arg>-bit target.
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="413" delta="new" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_masked_arith\masked_design\reduction_WDDL.v" Line 45: Result of <arg fmt="%d" index="1">14</arg>-bit expression is truncated to fit in <arg fmt="%d" index="2">13</arg>-bit target.
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="189" delta="new" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_masked_arith\Sakura_G_proj\sakura_g_aes128.v" Line 153: Size mismatch in connection of port &lt;<arg fmt="%s" index="3">seed1</arg>&gt;. Formal port size is <arg fmt="%d" index="2">64</arg>-bit while actual signal size is <arg fmt="%d" index="1">32</arg>-bit.
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="189" delta="new" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_masked_arith\Sakura_G_proj\sakura_g_aes128.v" Line 154: Size mismatch in connection of port &lt;<arg fmt="%s" index="3">seed2</arg>&gt;. Formal port size is <arg fmt="%d" index="2">64</arg>-bit while actual signal size is <arg fmt="%d" index="1">32</arg>-bit.
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="413" delta="new" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_masked_arith\Sakura_G_proj\sakura_g_aes128.v" Line 161: Result of <arg fmt="%d" index="1">64</arg>-bit expression is truncated to fit in <arg fmt="%d" index="2">32</arg>-bit target.
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="413" delta="new" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_masked_arith\Sakura_G_proj\sakura_g_aes128.v" Line 162: Result of <arg fmt="%d" index="1">64</arg>-bit expression is truncated to fit in <arg fmt="%d" index="2">25</arg>-bit target.
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="1127" delta="new" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_masked_arith\Sakura_G_proj\sakura_g_aes128.v" Line 172: Assignment to <arg fmt="%s" index="1">PRNG_on</arg> ignored, since the identifier is never used
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="634" delta="new" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_masked_arith\Sakura_G_proj\sakura_g_aes128.v" Line 77: Net &lt;<arg fmt="%s" index="1">key_val</arg>&gt; does not have a driver.
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="634" delta="new" >"C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_masked_arith\Sakura_G_proj\sakura_g_aes128.v" Line 79: Net &lt;<arg fmt="%s" index="1">busy</arg>&gt; does not have a driver.
+</msg>
+
+<msg type="info" file="Xst" num="3210" delta="new" >&quot;<arg fmt="%s" index="1">C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_masked_arith\Sakura_G_proj\sakura_g_aes128.v</arg>&quot; line <arg fmt="%s" index="2">103</arg>: Output port &lt;<arg fmt="%s" index="3">KEY_OUT</arg>&gt; of the instance &lt;<arg fmt="%s" index="4">host_if</arg>&gt; is unconnected or connected to loadless signal.
+</msg>
+
+<msg type="warning" file="Xst" num="653" delta="new" >Signal &lt;<arg fmt="%s" index="1">key_val</arg>&gt; is used but never assigned. This sourceless signal will be automatically connected to value <arg fmt="%s" index="2">GND</arg>.
+</msg>
+
+<msg type="warning" file="Xst" num="653" delta="new" >Signal &lt;<arg fmt="%s" index="1">busy</arg>&gt; is used but never assigned. This sourceless signal will be automatically connected to value <arg fmt="%s" index="2">GND</arg>.
+</msg>
+
+<msg type="info" file="Xst" num="3210" delta="new" >&quot;<arg fmt="%s" index="1">C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_masked_arith\masked_design\reduction_WDDL.v</arg>&quot; line <arg fmt="%s" index="2">53</arg>: Output port &lt;<arg fmt="%s" index="3">C_n</arg>&gt; of the instance &lt;<arg fmt="%s" index="4">add1</arg>&gt; is unconnected or connected to loadless signal.
+</msg>
+
+<msg type="info" file="Xst" num="2774" delta="new" >HDL ADVISOR - <arg fmt="%s" index="1">S</arg> <arg fmt="%s" index="2">property</arg> attached to signal <arg fmt="%s" index="3">C_n&lt;13&gt;</arg> may hinder XST clustering optimizations.
+</msg>
+
+<msg type="info" file="Xst" num="2774" delta="new" >HDL ADVISOR - <arg fmt="%s" index="1">S</arg> <arg fmt="%s" index="2">property</arg> attached to signal <arg fmt="%s" index="3">C_n&lt;9&gt;</arg> may hinder XST clustering optimizations.
+</msg>
+
+<msg type="info" file="Xst" num="2774" delta="new" >HDL ADVISOR - <arg fmt="%s" index="1">S</arg> <arg fmt="%s" index="2">property</arg> attached to signal <arg fmt="%s" index="3">i_bit1_n</arg> may hinder XST clustering optimizations.
+</msg>
+
+<msg type="info" file="Xst" num="2774" delta="new" >HDL ADVISOR - <arg fmt="%s" index="1">S</arg> <arg fmt="%s" index="2">property</arg> attached to signal <arg fmt="%s" index="3">i_bit2_n</arg> may hinder XST clustering optimizations.
+</msg>
+
+<msg type="info" file="Xst" num="2774" delta="new" >HDL ADVISOR - <arg fmt="%s" index="1">S</arg> <arg fmt="%s" index="2">property</arg> attached to signal <arg fmt="%s" index="3">w_WIRE_1_n</arg> may hinder XST clustering optimizations.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">adder_13_bit_WDDL</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">carry_n&lt;12&gt;</arg> and <arg fmt="%s" index="3">C_n&lt;13&gt;1</arg> <arg fmt="%s" index="4">C_n&lt;13&gt;1</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add1/u1</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_3_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/u1</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_3_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[1].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[2].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[3].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[4].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[5].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[6].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[7].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[8].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[9].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[10].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[11].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[12].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add1/u1</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_3_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/u1</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_3_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[1].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[2].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[3].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[4].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[5].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[6].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[7].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[8].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[9].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[10].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[11].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[12].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/u1</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_3_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[1].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[2].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[3].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[4].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[5].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[6].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[7].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[8].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[9].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[10].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[11].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[12].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/u1</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_3_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[1].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[2].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[3].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[4].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[5].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[6].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[7].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[8].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[9].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[10].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[11].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[12].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_0</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_1</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_3</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_4</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_2</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_5</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_6</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_7</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_8</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_9</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_10</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_12</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_13</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_11</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_14</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_15</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_16</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_17</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_18</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_19</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_21</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_22</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_20</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_23</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_24</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_26</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_27</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_25</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_28</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_29</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_31</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_30</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_45</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_46</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_47</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_61</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_62</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_63</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_78</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_79</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_77</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_93</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_94</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_95</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_109</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_110</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_111</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_125</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_126</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/din_reg_127</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_0</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_1</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_2</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_3</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_4</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_6</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_7</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_5</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_8</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_9</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_11</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_12</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_10</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_13</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_14</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_16</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_17</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_15</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_18</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_19</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_20</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_21</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_22</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_23</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_25</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_26</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_24</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_27</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_28</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_29</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_30</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_31</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_32</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_34</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_35</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_33</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_36</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_37</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_38</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_39</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_40</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_41</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_43</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_44</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_42</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_45</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_46</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_48</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_49</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_47</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_50</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_51</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_53</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_54</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_52</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_55</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_56</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_57</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_58</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_59</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_60</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_62</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_63</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_61</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_64</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_65</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_67</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_68</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_66</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_69</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_70</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_72</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_73</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_71</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_74</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_75</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_76</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_77</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_78</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_79</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_81</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_82</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_80</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_83</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_84</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_86</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_87</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_85</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_88</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_89</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_91</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_92</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_90</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_93</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_94</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_95</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_96</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_97</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_98</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_100</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_101</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_99</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_102</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_103</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_105</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_106</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_104</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_107</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_108</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_110</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_111</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_109</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_112</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_113</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_114</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_115</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_116</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_117</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_119</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_120</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_118</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_121</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_122</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_124</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_125</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_123</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_126</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/key_reg_127</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/data_reg_14</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/data_reg_15</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="2677" delta="new" >Node &lt;<arg fmt="%s" index="1">host_if/data_reg_13</arg>&gt; of sequential type is unconnected in block &lt;<arg fmt="%s" index="2">sakura_g_aes128</arg>&gt;.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[12].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[12].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[11].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[11].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[10].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[10].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[9].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[9].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[8].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[8].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[7].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[7].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[6].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[6].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[5].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[5].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[4].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[4].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[3].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[3].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[2].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[2].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[1].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/generate_N_bit_Adder[1].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/u1</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_1_n</arg> and <arg fmt="%s" index="3">o_sum_n</arg> <arg fmt="%s" index="4">o_sum_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add2/u1</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_3_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[12].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[12].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[11].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[11].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[10].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[10].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[9].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[9].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[8].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[8].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[7].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[7].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[6].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[6].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[5].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[5].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[4].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[4].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[3].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[3].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[2].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[2].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[1].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/generate_N_bit_Adder[1].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/u1</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_1_n</arg> and <arg fmt="%s" index="3">o_sum_n</arg> <arg fmt="%s" index="4">o_sum_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red2/add1/u1</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_3_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[12].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[12].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[11].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[11].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[10].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[10].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[9].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[9].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[8].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[8].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[7].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[7].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[6].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[6].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[5].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[5].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[4].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[4].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[3].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[3].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[2].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[2].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[1].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[1].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/u1</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_1_n</arg> and <arg fmt="%s" index="3">o_sum_n</arg> <arg fmt="%s" index="4">o_sum_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add2/u1</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_3_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add1/u1</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_1_n</arg> and <arg fmt="%s" index="3">o_sum_n</arg> <arg fmt="%s" index="4">o_sum_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red3/add1/u1</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_3_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[12].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[12].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[11].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[11].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[10].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[10].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[9].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[9].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[8].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[8].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[7].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[7].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[6].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[6].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[5].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[5].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[4].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[4].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[3].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[3].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[2].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[2].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[1].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">i_bit1_n</arg> and <arg fmt="%s" index="3">w_WIRE_1_n</arg> <arg fmt="%s" index="4">w_WIRE_1_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[1].u2</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_2_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/u1</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_1_n</arg> and <arg fmt="%s" index="3">o_sum_n</arg> <arg fmt="%s" index="4">o_sum_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add2/u1</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_3_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add1/u1</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_1_n</arg> and <arg fmt="%s" index="3">o_sum_n</arg> <arg fmt="%s" index="4">o_sum_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="638" delta="new" >in unit <arg fmt="%s" index="1">dut/red1/add1/u1</arg> Conflict on KEEP property on signal <arg fmt="%s" index="2">w_WIRE_3_n</arg> and <arg fmt="%s" index="3">o_carry_n</arg> <arg fmt="%s" index="4">o_carry_n</arg> signal will be lost.
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[12].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[12].u2/o_sum</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[12].u2/o_sum_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[11].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[11].u2/o_sum</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[11].u2/o_carry_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[11].u2/o_sum_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[10].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[10].u2/o_sum</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[10].u2/o_carry_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[10].u2/o_sum_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[9].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[9].u2/o_sum</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[9].u2/o_carry_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[9].u2/o_sum_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[8].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[8].u2/o_sum</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[8].u2/o_carry_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[7].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[7].u2/o_carry_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[6].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[6].u2/o_carry_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[5].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[5].u2/o_carry_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[4].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[4].u2/o_carry_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[3].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[3].u2/o_carry_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[2].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[2].u2/o_carry_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[1].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/generate_N_bit_Adder[1].u2/o_carry_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/u1/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/u1/o_carry_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add2/u1/i_bit2_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add1/generate_N_bit_Adder[12].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add1/generate_N_bit_Adder[11].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add1/generate_N_bit_Adder[10].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add1/generate_N_bit_Adder[9].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add1/generate_N_bit_Adder[8].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add1/generate_N_bit_Adder[7].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add1/generate_N_bit_Adder[6].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add1/generate_N_bit_Adder[5].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add1/generate_N_bit_Adder[4].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add1/generate_N_bit_Adder[3].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add1/generate_N_bit_Adder[2].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add1/generate_N_bit_Adder[1].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red3/add1/u1/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[12].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[12].u2/o_sum</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[12].u2/o_sum_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[11].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[11].u2/o_sum</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[11].u2/o_carry_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[11].u2/o_sum_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[10].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[10].u2/o_sum</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[10].u2/o_carry_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[10].u2/o_sum_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[9].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[9].u2/o_sum</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[9].u2/o_carry_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[9].u2/o_sum_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[8].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[8].u2/o_sum</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[8].u2/o_carry_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[7].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[7].u2/o_carry_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[6].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[6].u2/o_carry_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[5].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[5].u2/o_carry_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[4].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[4].u2/o_carry_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[3].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[3].u2/o_carry_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[2].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[2].u2/o_carry_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[1].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/generate_N_bit_Adder[1].u2/o_carry_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/u1/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/u1/o_carry_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add2/u1/i_bit2_n</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add1/generate_N_bit_Adder[12].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add1/generate_N_bit_Adder[11].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add1/generate_N_bit_Adder[10].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add1/generate_N_bit_Adder[9].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add1/generate_N_bit_Adder[8].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add1/generate_N_bit_Adder[7].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add1/generate_N_bit_Adder[6].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add1/generate_N_bit_Adder[5].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add1/generate_N_bit_Adder[4].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add1/generate_N_bit_Adder[3].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add1/generate_N_bit_Adder[2].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add1/generate_N_bit_Adder[1].u2/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+<msg type="warning" file="Xst" num="387" delta="new" >The KEEP property attached to the net &lt;<arg fmt="%s" index="1">dut/red1/add1/u1/o_carry</arg>&gt; may hinder timing optimization.
+You may achieve better results by removing this property
+</msg>
+
+</messages>
+

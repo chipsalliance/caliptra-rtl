@@ -1,0 +1,199 @@
+# --------------------------------------------------------------
+# User Constraint File (.ucf)
+#
+# Company         : UEC.
+# File name       : sakura_g_aes128.ucf
+# Create Date     : July/29/2014
+# Target Devices  : xc6slx75-2csg484
+# Last Update     : July/29/2014
+# Version         : 1.0
+# --------------------------------------------------------------
+# Copyright (c) Satoh LaboratoryÅCUEC
+
+
+#NET "CLK_OSC" TNM_NET = "CLK_OSC_GRP" ;
+#TIMESPEC "TS_CLK_OSC" = PERIOD : "CLK_OSC_GRP" : 20.833 ns HIGH 50.0% ;
+
+NET "lbus_clk" TNM_NET = "CLK_OSC_GRP" ;
+TIMESPEC "TS_CLK_OSC" = PERIOD : "CLK_OSC_GRP" : 41.667 ns HIGH 50.0% ;
+
+# ------------
+# Clock, Reset
+# ------------
+#NET "M_CLK_OSC"            LOC="J1"   | IOSTANDARD="LVCMOS25"; # Clock Capable
+#NET "M_CLK_INH_B"          LOC="M1"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_CLK_EXT0_N"         LOC="P3"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ; # Clock Capable
+#NET "M_CLK_EXT0_P"         LOC="N4"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ; # Clock Capable
+#NET "M_RESET_B"            LOC="A2"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+
+# --------
+# User LED
+# --------
+NET "led<0>"             LOC="M2"   | IOSTANDARD="LVCMOS25" | SLEW="SLOW" | DRIVE=4 ;    // "M_LED<0>"
+NET "led<1>"             LOC="N1"   | IOSTANDARD="LVCMOS25" | SLEW="SLOW" | DRIVE=4 ;    // "M_LED<1>"
+NET "led<2>"             LOC="P1"   | IOSTANDARD="LVCMOS25" | SLEW="SLOW" | DRIVE=4 ;    // "M_LED<2>"
+NET "led<3>"             LOC="P2"   | IOSTANDARD="LVCMOS25" | SLEW="SLOW" | DRIVE=4 ;    // "M_LED<3>"
+NET "led<4>"             LOC="R1"   | IOSTANDARD="LVCMOS25" | SLEW="SLOW" | DRIVE=4 ;    // "M_LED<4>"
+NET "led<5>"             LOC="T1"   | IOSTANDARD="LVCMOS25" | SLEW="SLOW" | DRIVE=4 ;    // "M_LED<5>"
+NET "led<6>"             LOC="T2"   | IOSTANDARD="LVCMOS25" | SLEW="SLOW" | DRIVE=4 ;    // "M_LED<6>"
+NET "led<7>"             LOC="U1"   | IOSTANDARD="LVCMOS25" | SLEW="SLOW" | DRIVE=4 ;    // "M_LED<7>"
+NET "led<8>"             LOC="V1"   | IOSTANDARD="LVCMOS25" | SLEW="SLOW" | DRIVE=4 ;    // "M_LED<8>"
+NET "led<9>"             LOC="V2"   | IOSTANDARD="LVCMOS25" | SLEW="SLOW" | DRIVE=4 ;    // "M_LED<9>"
+
+# ----------------
+# User Push Switch
+# ----------------
+#NET "M_PUSHSW<0>"          LOC="D3"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_PUSHSW<1>"          LOC="E3"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+
+# ---------------
+# User DIP Switch
+# ---------------
+#NET "M_DIPSW<0>"           LOC="B2"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_DIPSW<1>"           LOC="B1"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_DIPSW<2>"           LOC="C1"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_DIPSW<3>"           LOC="D2"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_DIPSW<4>"           LOC="D1"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_DIPSW<5>"           LOC="E1"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_DIPSW<6>"           LOC="F2"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_DIPSW<7>"           LOC="F1"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+
+# ---------------
+# User Header Pin
+# ---------------
+NET "M_HEADER<0>"          LOC="A4"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+NET "M_HEADER<1>"          LOC="A5"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+NET "M_HEADER<2>"          LOC="B6"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_HEADER<3>"          LOC="A6"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_HEADER<4>"          LOC="A7"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_HEADER<5>"          LOC="B8"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_HEADER<6>"          LOC="A8"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_HEADER<7>"          LOC="A9"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_HEADER<8>"          LOC="C5"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_HEADER<9>"          LOC="C6"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_HEADER<10>"         LOC="C7"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_HEADER<11>"         LOC="C17"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_HEADER<12>"         LOC="A11"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_HEADER<13>"         LOC="A12"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_HEADER<14>"         LOC="B12"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_HEADER<15>"         LOC="A13"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_HEADER<16>"         LOC="A14"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_HEADER<17>"         LOC="B14"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_HEADER<18>"         LOC="A15"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_HEADER<19>"         LOC="A16"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_HEADER<20>"         LOC="B16"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_HEADER<21>"         LOC="A17"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_HEADER<22>"         LOC="A18"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_HEADER<23>"         LOC="B18"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_HEADER_CLK_N"       LOC="A10"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ; # Clock Capable
+#NET "M_HEADER_CLK_P"       LOC="B10"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ; # Clock Capable
+
+# -----------------
+# USB I/F (FT2232H)
+# -----------------
+NET "FTDI_BCBUS0_RXF_B"    LOC="N20"  | IOSTANDARD="LVCMOS25" | PULLUP;
+NET "FTDI_BCBUS1_TXE_B"    LOC="P20"  | IOSTANDARD="LVCMOS25" | PULLUP;
+NET "FTDI_BCBUS2_RD_B"     LOC="R20"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;
+NET "FTDI_BCBUS3_WR_B"     LOC="U20"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;
+#NET "FTDI_BCBUS4_SIWUB"    LOC="V18"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "FTDI_BCBUS5"          LOC="V20"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "FTDI_BCBUS6"          LOC="V19"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "FTDI_BCBUS7_PWRSAV_B" LOC="W20"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+NET "FTDI_BDBUS_D<0>"      LOC="V21"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;
+NET "FTDI_BDBUS_D<1>"      LOC="V22"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;
+NET "FTDI_BDBUS_D<2>"      LOC="U22"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;
+NET "FTDI_BDBUS_D<3>"      LOC="T22"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;
+NET "FTDI_BDBUS_D<4>"      LOC="R22"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;
+NET "FTDI_BDBUS_D<5>"      LOC="P21"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;
+NET "FTDI_BDBUS_D<6>"      LOC="P22"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;
+NET "FTDI_BDBUS_D<7>"      LOC="N22"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;
+#NET "FTDI_PWREN_B"         LOC="Y20"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "FTDI_SUSPEND_B"       LOC="W22"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_FTDI_RESET_B"       LOC="Y19"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+
+# -----------------
+# FPGA Interconnect
+# -----------------
+NET "lbus_wd<0>"           LOC="W1"   | IOSTANDARD="LVCMOS25" | PULLUP;                 # "MC_IC_D<0>"
+NET "lbus_wd<1>"           LOC="Y1"   | IOSTANDARD="LVCMOS25" | PULLUP;                 # "MC_IC_D<1>"
+NET "lbus_wd<2>"           LOC="Y2"   | IOSTANDARD="LVCMOS25" | PULLUP;                 # "MC_IC_D<2>"
+NET "lbus_wd<3>"           LOC="AA2"  | IOSTANDARD="LVCMOS25" | PULLUP;                 # "MC_IC_D<3>"
+NET "lbus_wd<4>"           LOC="AB2"  | IOSTANDARD="LVCMOS25" | PULLUP;                 # "MC_IC_D<4>"
+NET "lbus_wd<5>"           LOC="AB3"  | IOSTANDARD="LVCMOS25" | PULLUP;                 # "MC_IC_D<5>"
+NET "lbus_wd<6>"           LOC="AA4"  | IOSTANDARD="LVCMOS25" | PULLUP;                 # "MC_IC_D<6>"
+NET "lbus_wd<7>"           LOC="AB4"  | IOSTANDARD="LVCMOS25" | PULLUP;                 # "MC_IC_D<7>"
+NET "lbus_rdy"             LOC="AA6"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ; # "MC_IC_D<8>"
+#NET "MC_IC_D<9>"           LOC="AB6"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ; # "MC_IC_D<9>"
+NET "lbus_rstn"            LOC="AB11" | IOSTANDARD="LVCMOS25" | PULLUP;                 # LBUS_RSTn "MC_IC_D<10>"
+#NET "MC_IC_D<11>"          LOC="AB12" | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ; # "MC_IC_D<11>"
+NET "lbus_clk"             LOC="AA12" | IOSTANDARD="LVCMOS25";                          # LBUS_CLK  "MC_IC_D<12>"
+#NET "MC_IC_D<13>"          LOC="AB13" | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ; # "MC_IC_D<13>"
+NET "lbus_we"              LOC="AB14" | IOSTANDARD="LVCMOS25" | PULLDOWN;               # "MC_IC_D<14>"
+NET "lbus_ful"             LOC="AA14" | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;  # "MC_IC_D<15>"
+NET "lbus_aful"            LOC="AB15" | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;  # "MC_IC_D<16>"
+
+NET "lbus_re"              LOC="AB16" | IOSTANDARD="LVCMOS25" | PULLDOWN;               # "MC_IC_D<17>"
+NET "lbus_emp"             LOC="AA16" | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;  # "MC_IC_D<18>"
+NET "lbus_aemp"            LOC="AB18" | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ; # "MC_IC_D<19>"
+NET "lbus_rd<0>"           LOC="AA18" | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ; # "MC_IC_D<20>"
+NET "lbus_rd<1>"           LOC="AB19" | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ; # "MC_IC_D<21>"
+NET "lbus_rd<2>"           LOC="AB20" | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ; # "MC_IC_D<22>"
+NET "lbus_rd<3>"           LOC="AA20" | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ; # "MC_IC_D<23>"
+NET "lbus_rd<4>"           LOC="AB21" | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ; # "MC_IC_D<24>"
+NET "lbus_rd<5>"           LOC="AA21" | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ; # "MC_IC_D<25>"
+NET "lbus_rd<6>"           LOC="AA22" | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ; # "MC_IC_D<26>"
+NET "lbus_rd<7>"           LOC="Y21"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ; # "MC_IC_D<27>"
+
+NET "TRGOUTn"              LOC="Y22"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;  # "MC_IC_D<28>"
+
+NET "PORT_B_RXF"           LOC="V3"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;  # "MC_IC_D<29>"
+NET "PORT_B_TXE"           LOC="W3"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;  # "MC_IC_D<30>"
+NET "PORT_B_RD"            LOC="Y3"   | IOSTANDARD="LVCMOS25" | PULLUP;                 # "MC_IC_D<31>"
+NET "PORT_B_WR"            LOC="W4"   | IOSTANDARD="LVCMOS25" | PULLUP;                 # "MC_IC_D<32>"
+#NET "MC_IC_D<33>"          LOC="Y4"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;  # "MC_IC_D<33>"
+NET "PORT_B_DIN<0>"        LOC="Y7"   | IOSTANDARD="LVCMOS25" | PULLUP;                 # "MC_IC_D<34>"
+NET "PORT_B_DIN<1>"        LOC="Y8"   | IOSTANDARD="LVCMOS25" | PULLUP;                 # "MC_IC_D<35>"
+NET "PORT_B_DIN<2>"        LOC="W9"   | IOSTANDARD="LVCMOS25" | PULLUP;                 # "MC_IC_D<36>"
+NET "PORT_B_DIN<3>"        LOC="AA10" | IOSTANDARD="LVCMOS25" | PULLUP;                 # "MC_IC_D<37>"
+NET "PORT_B_DIN<4>"        LOC="AB7"  | IOSTANDARD="LVCMOS25" | PULLUP;                 # "MC_IC_D<38>"
+NET "PORT_B_DIN<5>"        LOC="AB10" | IOSTANDARD="LVCMOS25" | PULLUP;                 # "MC_IC_D<39>"
+NET "PORT_B_DIN<6>"        LOC="Y10"  | IOSTANDARD="LVCMOS25" | PULLUP;                 # "MC_IC_D<40>"
+NET "PORT_B_DIN<7>"        LOC="Y11"  | IOSTANDARD="LVCMOS25" | PULLUP;                 # "MC_IC_D<41>"
+NET "PORT_B_OEn"           LOC="W11"  | IOSTANDARD="LVCMOS25" | PULLUP;                 # "MC_IC_D<42>"
+NET "PORT_B_DOUT<0>"       LOC="W12"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;  # "MC_IC_D<43>"
+NET "PORT_B_DOUT<1>"       LOC="Y12"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;  # "MC_IC_D<44>"
+NET "PORT_B_DOUT<2>"       LOC="Y13"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;  # "MC_IC_D<45>"
+NET "PORT_B_DOUT<3>"       LOC="Y14"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;  # "MC_IC_D<46>"
+NET "PORT_B_DOUT<4>"       LOC="W14"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;  # "MC_IC_D<47>"
+NET "PORT_B_DOUT<5>"       LOC="Y15"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;  # "MC_IC_D<48>"
+NET "PORT_B_DOUT<6>"       LOC="W15"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;  # "MC_IC_D<49>"
+NET "PORT_B_DOUT<7>"       LOC="Y16"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4;  # "MC_IC_D<50>"
+
+# -----------------------
+# Main FPGA Configuration
+# -----------------------
+#NET "M_CCLK_R0"            LOC="W17"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_CSO_B"              LOC="AB5"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_D0_DIN_MISO"        LOC="Y17"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_D1"                 LOC="V13"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_D2"                 LOC="W13"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_D3"                 LOC="AA8"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_D4"                 LOC="AB8"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_D5"                 LOC="W6"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_D6"                 LOC="Y6"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_D7"                 LOC="Y9"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_DONE"               LOC="U16"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_DOUT_BUSY"          LOC="T20"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_HSWAPEN"            LOC="B3"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_INIT_B"             LOC="Y5"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_M0"                 LOC="Y18"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_M1"                 LOC="U15"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_MOSI_CSI_B"         LOC="AB17" | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_PROG_B"             LOC="AA1"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+#NET "M_RDWR_B"             LOC="AB9"  | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ;
+
+# ------------
+# Reserved I/O
+# ------------
+#NET "M_RSVIO_0_N"          LOC="H1"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ; # Clock Capable
+#NET "M_RSVIO_0_P"          LOC="H2"   | IOSTANDARD="LVCMOS25" | SLEW="FAST" | DRIVE=4 ; # Clock Capable

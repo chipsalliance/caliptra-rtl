@@ -1,0 +1,7 @@
+verilog work "../../ecc/rtl/ecc_mult_dsp.v"
+verilog work "../../ecc/rtl/ecc_PE_first.v"
+verilog work "../../ecc/rtl/ecc_PE_final.v"
+verilog work "../../ecc/rtl/ecc_PE.v"
+verilog work "../host_if.v"
+verilog work "../../ecc/rtl/ecc_MontgomeryMultiplier.v"
+verilog work "../sakura_g_aes128.v"

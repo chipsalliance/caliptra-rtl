@@ -1,0 +1,252 @@
+//! **************************************************************************
+// Written by: Map P.20131013 on Mon Sep 19 19:36:59 2022
+//! **************************************************************************
+
+SCHEMATIC START;
+COMP "TRGOUTn" LOCATE = SITE "Y22" LEVEL 1;
+COMP "PORT_B_RD" LOCATE = SITE "Y3" LEVEL 1;
+COMP "PORT_B_WR" LOCATE = SITE "W4" LEVEL 1;
+COMP "PORT_B_OEn" LOCATE = SITE "W11" LEVEL 1;
+COMP "PORT_B_RXF" LOCATE = SITE "V3" LEVEL 1;
+COMP "PORT_B_TXE" LOCATE = SITE "W3" LEVEL 1;
+COMP "FTDI_BCBUS0_RXF_B" LOCATE = SITE "N20" LEVEL 1;
+COMP "M_HEADER<0>" LOCATE = SITE "A4" LEVEL 1;
+COMP "M_HEADER<1>" LOCATE = SITE "A5" LEVEL 1;
+COMP "M_HEADER<2>" LOCATE = SITE "B6" LEVEL 1;
+COMP "FTDI_BCBUS1_TXE_B" LOCATE = SITE "P20" LEVEL 1;
+COMP "lbus_re" LOCATE = SITE "AB16" LEVEL 1;
+COMP "lbus_we" LOCATE = SITE "AB14" LEVEL 1;
+COMP "lbus_aemp" LOCATE = SITE "AB18" LEVEL 1;
+COMP "lbus_aful" LOCATE = SITE "AB15" LEVEL 1;
+COMP "lbus_rstn" LOCATE = SITE "AB11" LEVEL 1;
+COMP "led<0>" LOCATE = SITE "M2" LEVEL 1;
+COMP "led<1>" LOCATE = SITE "N1" LEVEL 1;
+COMP "led<2>" LOCATE = SITE "P1" LEVEL 1;
+COMP "led<3>" LOCATE = SITE "P2" LEVEL 1;
+COMP "led<4>" LOCATE = SITE "R1" LEVEL 1;
+COMP "led<5>" LOCATE = SITE "T1" LEVEL 1;
+COMP "led<6>" LOCATE = SITE "T2" LEVEL 1;
+COMP "led<7>" LOCATE = SITE "U1" LEVEL 1;
+COMP "led<8>" LOCATE = SITE "V1" LEVEL 1;
+COMP "led<9>" LOCATE = SITE "V2" LEVEL 1;
+COMP "FTDI_BCBUS2_RD_B" LOCATE = SITE "R20" LEVEL 1;
+COMP "FTDI_BCBUS3_WR_B" LOCATE = SITE "U20" LEVEL 1;
+COMP "lbus_clk" LOCATE = SITE "AA12" LEVEL 1;
+COMP "lbus_emp" LOCATE = SITE "AA16" LEVEL 1;
+COMP "lbus_ful" LOCATE = SITE "AA14" LEVEL 1;
+COMP "lbus_rdy" LOCATE = SITE "AA6" LEVEL 1;
+COMP "lbus_rd<0>" LOCATE = SITE "AA18" LEVEL 1;
+COMP "lbus_rd<1>" LOCATE = SITE "AB19" LEVEL 1;
+COMP "lbus_rd<2>" LOCATE = SITE "AB20" LEVEL 1;
+COMP "lbus_rd<3>" LOCATE = SITE "AA20" LEVEL 1;
+COMP "lbus_rd<4>" LOCATE = SITE "AB21" LEVEL 1;
+COMP "lbus_rd<5>" LOCATE = SITE "AA21" LEVEL 1;
+COMP "lbus_rd<6>" LOCATE = SITE "AA22" LEVEL 1;
+COMP "lbus_rd<7>" LOCATE = SITE "Y21" LEVEL 1;
+COMP "lbus_wd<0>" LOCATE = SITE "W1" LEVEL 1;
+COMP "lbus_wd<1>" LOCATE = SITE "Y1" LEVEL 1;
+COMP "lbus_wd<2>" LOCATE = SITE "Y2" LEVEL 1;
+COMP "lbus_wd<3>" LOCATE = SITE "AA2" LEVEL 1;
+COMP "lbus_wd<4>" LOCATE = SITE "AB2" LEVEL 1;
+COMP "lbus_wd<5>" LOCATE = SITE "AB3" LEVEL 1;
+COMP "lbus_wd<6>" LOCATE = SITE "AA4" LEVEL 1;
+COMP "lbus_wd<7>" LOCATE = SITE "AB4" LEVEL 1;
+COMP "FTDI_BDBUS_D<0>" LOCATE = SITE "V21" LEVEL 1;
+COMP "FTDI_BDBUS_D<1>" LOCATE = SITE "V22" LEVEL 1;
+COMP "FTDI_BDBUS_D<2>" LOCATE = SITE "U22" LEVEL 1;
+COMP "FTDI_BDBUS_D<3>" LOCATE = SITE "T22" LEVEL 1;
+COMP "FTDI_BDBUS_D<4>" LOCATE = SITE "R22" LEVEL 1;
+COMP "FTDI_BDBUS_D<5>" LOCATE = SITE "P21" LEVEL 1;
+COMP "FTDI_BDBUS_D<6>" LOCATE = SITE "P22" LEVEL 1;
+COMP "FTDI_BDBUS_D<7>" LOCATE = SITE "N22" LEVEL 1;
+COMP "PORT_B_DOUT<0>" LOCATE = SITE "W12" LEVEL 1;
+COMP "PORT_B_DOUT<1>" LOCATE = SITE "Y12" LEVEL 1;
+COMP "PORT_B_DOUT<2>" LOCATE = SITE "Y13" LEVEL 1;
+COMP "PORT_B_DOUT<3>" LOCATE = SITE "Y14" LEVEL 1;
+COMP "PORT_B_DOUT<4>" LOCATE = SITE "W14" LEVEL 1;
+COMP "PORT_B_DOUT<5>" LOCATE = SITE "Y15" LEVEL 1;
+COMP "PORT_B_DOUT<6>" LOCATE = SITE "W15" LEVEL 1;
+COMP "PORT_B_DOUT<7>" LOCATE = SITE "Y16" LEVEL 1;
+COMP "PORT_B_DIN<0>" LOCATE = SITE "Y7" LEVEL 1;
+COMP "PORT_B_DIN<1>" LOCATE = SITE "Y8" LEVEL 1;
+COMP "PORT_B_DIN<2>" LOCATE = SITE "W9" LEVEL 1;
+COMP "PORT_B_DIN<3>" LOCATE = SITE "AA10" LEVEL 1;
+COMP "PORT_B_DIN<4>" LOCATE = SITE "AB7" LEVEL 1;
+COMP "PORT_B_DIN<5>" LOCATE = SITE "AB10" LEVEL 1;
+COMP "PORT_B_DIN<6>" LOCATE = SITE "Y10" LEVEL 1;
+COMP "PORT_B_DIN<7>" LOCATE = SITE "Y11" LEVEL 1;
+TIMEGRP CLK_OSC_GRP = BEL "count_0" BEL "count_1" BEL "count_2" BEL "count_3"
+        BEL "count_4" BEL "count_5" BEL "count_6" BEL "count_7" BEL "count_8"
+        BEL "count_9" BEL "count_10" BEL "count_11" BEL "count_12" BEL
+        "count_13" BEL "count_14" BEL "count_15" BEL "count_16" BEL "count_17"
+        BEL "count_18" BEL "count_19" BEL "count_20" BEL "count_21" BEL
+        "host_if/now_if_state_FSM_FFd1" BEL "host_if/now_if_state_FSM_FFd2"
+        BEL "host_if/now_if_state_FSM_FFd4" BEL
+        "host_if/now_if_state_FSM_FFd5" BEL "host_if/now_if_state_FSM_FFd3"
+        BEL "host_if/now_if_state_FSM_FFd7" BEL
+        "host_if/now_if_state_FSM_FFd8" BEL "host_if/now_if_state_FSM_FFd6"
+        BEL "host_if/cnt_4" BEL "host_if/cnt_3" BEL "host_if/cnt_2" BEL
+        "host_if/cnt_1" BEL "host_if/cnt_0" BEL
+        "host_if/now_if_state_FSM_FFd9" BEL "host_if/hdout_reg_7" BEL
+        "host_if/hdout_reg_6" BEL "host_if/hdout_reg_5" BEL
+        "host_if/hdout_reg_4" BEL "host_if/hdout_reg_3" BEL
+        "host_if/hdout_reg_2" BEL "host_if/hdout_reg_1" BEL
+        "host_if/hdout_reg_0" BEL "host_if/din_reg_32" BEL
+        "host_if/din_reg_33" BEL "host_if/din_reg_34" BEL "host_if/din_reg_35"
+        BEL "host_if/din_reg_36" BEL "host_if/din_reg_37" BEL
+        "host_if/din_reg_38" BEL "host_if/din_reg_40" BEL "host_if/din_reg_41"
+        BEL "host_if/din_reg_39" BEL "host_if/din_reg_42" BEL
+        "host_if/din_reg_43" BEL "host_if/din_reg_44" BEL "host_if/din_reg_48"
+        BEL "host_if/din_reg_50" BEL "host_if/din_reg_51" BEL
+        "host_if/din_reg_49" BEL "host_if/din_reg_52" BEL "host_if/din_reg_53"
+        BEL "host_if/din_reg_54" BEL "host_if/din_reg_55" BEL
+        "host_if/din_reg_56" BEL "host_if/din_reg_57" BEL "host_if/din_reg_59"
+        BEL "host_if/din_reg_60" BEL "host_if/din_reg_58" BEL
+        "host_if/din_reg_64" BEL "host_if/din_reg_65" BEL "host_if/din_reg_66"
+        BEL "host_if/din_reg_67" BEL "host_if/din_reg_69" BEL
+        "host_if/din_reg_70" BEL "host_if/din_reg_68" BEL "host_if/din_reg_71"
+        BEL "host_if/din_reg_72" BEL "host_if/din_reg_73" BEL
+        "host_if/din_reg_74" BEL "host_if/din_reg_75" BEL "host_if/din_reg_76"
+        BEL "host_if/din_reg_80" BEL "host_if/din_reg_81" BEL
+        "host_if/din_reg_82" BEL "host_if/din_reg_83" BEL "host_if/din_reg_84"
+        BEL "host_if/din_reg_85" BEL "host_if/din_reg_87" BEL
+        "host_if/din_reg_88" BEL "host_if/din_reg_86" BEL "host_if/din_reg_89"
+        BEL "host_if/din_reg_90" BEL "host_if/din_reg_91" BEL
+        "host_if/din_reg_92" BEL "host_if/din_reg_96" BEL "host_if/din_reg_97"
+        BEL "host_if/din_reg_98" BEL "host_if/din_reg_99" BEL
+        "host_if/din_reg_101" BEL "host_if/din_reg_102" BEL
+        "host_if/din_reg_100" BEL "host_if/din_reg_103" BEL
+        "host_if/din_reg_104" BEL "host_if/din_reg_106" BEL
+        "host_if/din_reg_107" BEL "host_if/din_reg_105" BEL
+        "host_if/din_reg_108" BEL "host_if/din_reg_112" BEL
+        "host_if/din_reg_113" BEL "host_if/din_reg_115" BEL
+        "host_if/din_reg_116" BEL "host_if/din_reg_114" BEL
+        "host_if/din_reg_117" BEL "host_if/din_reg_118" BEL
+        "host_if/din_reg_120" BEL "host_if/din_reg_121" BEL
+        "host_if/din_reg_119" BEL "host_if/din_reg_122" BEL
+        "host_if/din_reg_123" BEL "host_if/din_reg_124" BEL "host_if/enc_dec"
+        BEL "host_if/data_reg_0" BEL "host_if/data_reg_1" BEL
+        "host_if/data_reg_2" BEL "host_if/data_reg_3" BEL "host_if/data_reg_4"
+        BEL "host_if/data_reg_5" BEL "host_if/data_reg_6" BEL
+        "host_if/data_reg_7" BEL "host_if/data_reg_9" BEL
+        "host_if/data_reg_10" BEL "host_if/data_reg_8" BEL
+        "host_if/data_reg_11" BEL "host_if/data_reg_12" BEL "host_if/rrdy_reg"
+        BEL "host_if/addr_reg_0" BEL "host_if/addr_reg_1" BEL
+        "host_if/addr_reg_3" BEL "host_if/addr_reg_4" BEL "host_if/addr_reg_2"
+        BEL "host_if/addr_reg_5" BEL "host_if/addr_reg_6" BEL
+        "host_if/addr_reg_7" BEL "host_if/addr_reg_8" BEL "host_if/addr_reg_9"
+        BEL "host_if/addr_reg_10" BEL "host_if/addr_reg_12" BEL
+        "host_if/addr_reg_13" BEL "host_if/addr_reg_11" BEL
+        "host_if/addr_reg_14" BEL "host_if/addr_reg_15" BEL
+        "host_if/wbusy_reg" BEL "host_if/rst" BEL "host_if/data_ena" BEL
+        "host_if/key_gen" BEL "host_if/lbus_we_reg" BEL
+        "host_if/lbus_din_reg_7" BEL "host_if/lbus_din_reg_6" BEL
+        "host_if/lbus_din_reg_5" BEL "host_if/lbus_din_reg_4" BEL
+        "host_if/lbus_din_reg_3" BEL "host_if/lbus_din_reg_2" BEL
+        "host_if/lbus_din_reg_1" BEL "host_if/lbus_din_reg_0" BEL
+        "host_if/write_ena" BEL "dut/state_FSM_FFd2" BEL "dut/state_FSM_FFd3"
+        BEL "dut/state_FSM_FFd1" BEL "dut/s1_12" BEL "dut/s1_11" BEL
+        "dut/s1_10" BEL "dut/s1_9" BEL "dut/s1_8" BEL "dut/s1_7" BEL
+        "dut/s1_6" BEL "dut/s1_5" BEL "dut/s1_4" BEL "dut/s1_3" BEL "dut/s1_2"
+        BEL "dut/s1_1" BEL "dut/s1_0" BEL "dut/S1_2_reg_n_12" BEL
+        "dut/S1_2_reg_n_11" BEL "dut/S1_2_reg_n_10" BEL "dut/S1_2_reg_n_9" BEL
+        "dut/S1_2_reg_n_8" BEL "dut/S1_2_reg_n_7" BEL "dut/S1_2_reg_n_6" BEL
+        "dut/S1_2_reg_n_5" BEL "dut/S1_2_reg_n_4" BEL "dut/S1_2_reg_n_3" BEL
+        "dut/S1_2_reg_n_2" BEL "dut/S1_2_reg_n_1" BEL "dut/S1_2_reg_n_0" BEL
+        "dut/s2_12" BEL "dut/s2_11" BEL "dut/s2_10" BEL "dut/s2_9" BEL
+        "dut/s2_8" BEL "dut/s2_7" BEL "dut/s2_6" BEL "dut/s2_5" BEL "dut/s2_4"
+        BEL "dut/s2_3" BEL "dut/s2_2" BEL "dut/s2_1" BEL "dut/s2_0" BEL
+        "dut/PRH1_2_reg_n_12" BEL "dut/PRH1_2_reg_n_11" BEL
+        "dut/PRH1_2_reg_n_10" BEL "dut/PRH1_2_reg_n_9" BEL
+        "dut/PRH1_2_reg_n_8" BEL "dut/PRH1_2_reg_n_7" BEL "dut/PRH1_2_reg_n_6"
+        BEL "dut/PRH1_2_reg_n_5" BEL "dut/PRH1_2_reg_n_4" BEL
+        "dut/PRH1_2_reg_n_3" BEL "dut/PRH1_2_reg_n_2" BEL "dut/PRH1_2_reg_n_1"
+        BEL "dut/PRH1_2_reg_n_0" BEL "dut/PRH1_2_reg_12" BEL
+        "dut/PRH1_2_reg_11" BEL "dut/PRH1_2_reg_10" BEL "dut/PRH1_2_reg_9" BEL
+        "dut/PRH1_2_reg_8" BEL "dut/PRH1_2_reg_7" BEL "dut/PRH1_2_reg_6" BEL
+        "dut/PRH1_2_reg_5" BEL "dut/PRH1_2_reg_4" BEL "dut/PRH1_2_reg_3" BEL
+        "dut/PRH1_2_reg_2" BEL "dut/PRH1_2_reg_1" BEL "dut/PRH1_2_reg_0" BEL
+        "dut/PR1_2_reg_12" BEL "dut/PR1_2_reg_11" BEL "dut/PR1_2_reg_10" BEL
+        "dut/PR1_2_reg_9" BEL "dut/PR1_2_reg_8" BEL "dut/PR1_2_reg_7" BEL
+        "dut/PR1_2_reg_6" BEL "dut/PR1_2_reg_5" BEL "dut/PR1_2_reg_4" BEL
+        "dut/PR1_2_reg_3" BEL "dut/PR1_2_reg_2" BEL "dut/PR1_2_reg_1" BEL
+        "dut/PR1_2_reg_0" BEL "dut/PR1_2_reg_n_12" BEL "dut/PR1_2_reg_n_11"
+        BEL "dut/PR1_2_reg_n_10" BEL "dut/PR1_2_reg_n_9" BEL
+        "dut/PR1_2_reg_n_8" BEL "dut/PR1_2_reg_n_7" BEL "dut/PR1_2_reg_n_6"
+        BEL "dut/PR1_2_reg_n_5" BEL "dut/PR1_2_reg_n_4" BEL
+        "dut/PR1_2_reg_n_3" BEL "dut/PR1_2_reg_n_2" BEL "dut/PR1_2_reg_n_1"
+        BEL "dut/PR1_2_reg_n_0" BEL "dut/done" BEL "dut/P1_2_12" BEL
+        "dut/P1_2_11" BEL "dut/P1_2_10" BEL "dut/P1_2_9" BEL "dut/P1_2_8" BEL
+        "dut/P1_2_7" BEL "dut/P1_2_6" BEL "dut/P1_2_5" BEL "dut/P1_2_4" BEL
+        "dut/P1_2_3" BEL "dut/P1_2_2" BEL "dut/P1_2_1" BEL "dut/P1_2_0" BEL
+        "dut/H1_2_12" BEL "dut/H1_2_11" BEL "dut/H1_2_10" BEL "dut/H1_2_9" BEL
+        "dut/H1_2_8" BEL "dut/H1_2_7" BEL "dut/H1_2_6" BEL "dut/H1_2_5" BEL
+        "dut/H1_2_4" BEL "dut/H1_2_3" BEL "dut/H1_2_2" BEL "dut/H1_2_1" BEL
+        "dut/H1_2_0" BEL "dut2/random_number1_63" BEL "dut2/random_number1_62"
+        BEL "dut2/random_number1_61" BEL "dut2/random_number1_60" BEL
+        "dut2/random_number1_59" BEL "dut2/random_number1_58" BEL
+        "dut2/random_number1_57" BEL "dut2/random_number1_56" BEL
+        "dut2/random_number1_55" BEL "dut2/random_number1_54" BEL
+        "dut2/random_number1_53" BEL "dut2/random_number1_52" BEL
+        "dut2/random_number1_51" BEL "dut2/random_number1_50" BEL
+        "dut2/random_number1_49" BEL "dut2/random_number1_48" BEL
+        "dut2/random_number1_47" BEL "dut2/random_number1_46" BEL
+        "dut2/random_number1_45" BEL "dut2/random_number1_44" BEL
+        "dut2/random_number1_43" BEL "dut2/random_number1_42" BEL
+        "dut2/random_number1_41" BEL "dut2/random_number1_40" BEL
+        "dut2/random_number1_39" BEL "dut2/random_number1_38" BEL
+        "dut2/random_number1_37" BEL "dut2/random_number1_36" BEL
+        "dut2/random_number1_35" BEL "dut2/random_number1_34" BEL
+        "dut2/random_number1_33" BEL "dut2/random_number1_32" BEL
+        "dut2/random_number1_31" BEL "dut2/random_number1_30" BEL
+        "dut2/random_number1_29" BEL "dut2/random_number1_28" BEL
+        "dut2/random_number1_27" BEL "dut2/random_number1_26" BEL
+        "dut2/random_number1_25" BEL "dut2/random_number1_24" BEL
+        "dut2/random_number1_23" BEL "dut2/random_number1_22" BEL
+        "dut2/random_number1_21" BEL "dut2/random_number1_20" BEL
+        "dut2/random_number1_19" BEL "dut2/random_number1_18" BEL
+        "dut2/random_number1_17" BEL "dut2/random_number1_16" BEL
+        "dut2/random_number1_15" BEL "dut2/random_number1_14" BEL
+        "dut2/random_number1_13" BEL "dut2/random_number1_12" BEL
+        "dut2/random_number1_11" BEL "dut2/random_number1_10" BEL
+        "dut2/random_number1_9" BEL "dut2/random_number1_8" BEL
+        "dut2/random_number1_7" BEL "dut2/random_number1_6" BEL
+        "dut2/random_number1_5" BEL "dut2/random_number1_4" BEL
+        "dut2/random_number1_3" BEL "dut2/random_number1_2" BEL
+        "dut2/random_number1_1" BEL "dut2/random_number1_0" BEL
+        "dut2/random_number2_63" BEL "dut2/random_number2_62" BEL
+        "dut2/random_number2_61" BEL "dut2/random_number2_60" BEL
+        "dut2/random_number2_59" BEL "dut2/random_number2_58" BEL
+        "dut2/random_number2_57" BEL "dut2/random_number2_56" BEL
+        "dut2/random_number2_55" BEL "dut2/random_number2_54" BEL
+        "dut2/random_number2_53" BEL "dut2/random_number2_52" BEL
+        "dut2/random_number2_51" BEL "dut2/random_number2_50" BEL
+        "dut2/random_number2_49" BEL "dut2/random_number2_48" BEL
+        "dut2/random_number2_47" BEL "dut2/random_number2_46" BEL
+        "dut2/random_number2_45" BEL "dut2/random_number2_44" BEL
+        "dut2/random_number2_43" BEL "dut2/random_number2_42" BEL
+        "dut2/random_number2_41" BEL "dut2/random_number2_40" BEL
+        "dut2/random_number2_39" BEL "dut2/random_number2_38" BEL
+        "dut2/random_number2_37" BEL "dut2/random_number2_36" BEL
+        "dut2/random_number2_35" BEL "dut2/random_number2_34" BEL
+        "dut2/random_number2_33" BEL "dut2/random_number2_32" BEL
+        "dut2/random_number2_31" BEL "dut2/random_number2_30" BEL
+        "dut2/random_number2_29" BEL "dut2/random_number2_28" BEL
+        "dut2/random_number2_27" BEL "dut2/random_number2_26" BEL
+        "dut2/random_number2_25" BEL "dut2/random_number2_24" BEL
+        "dut2/random_number2_23" BEL "dut2/random_number2_22" BEL
+        "dut2/random_number2_21" BEL "dut2/random_number2_20" BEL
+        "dut2/random_number2_19" BEL "dut2/random_number2_18" BEL
+        "dut2/random_number2_17" BEL "dut2/random_number2_16" BEL
+        "dut2/random_number2_15" BEL "dut2/random_number2_14" BEL
+        "dut2/random_number2_13" BEL "dut2/random_number2_12" BEL
+        "dut2/random_number2_11" BEL "dut2/random_number2_10" BEL
+        "dut2/random_number2_9" BEL "dut2/random_number2_8" BEL
+        "dut2/random_number2_7" BEL "dut2/random_number2_6" BEL
+        "dut2/random_number2_5" BEL "dut2/random_number2_4" BEL
+        "dut2/random_number2_3" BEL "dut2/random_number2_2" BEL
+        "dut2/random_number2_1" BEL "dut2/random_number2_0" BEL "dut2/state"
+        BEL "clock_BUFG";
+TS_CLK_OSC = PERIOD TIMEGRP "CLK_OSC_GRP" 41.667 ns HIGH 50%;
+SCHEMATIC END;
+
