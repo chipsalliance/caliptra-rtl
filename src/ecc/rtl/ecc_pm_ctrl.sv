@@ -249,13 +249,13 @@ module ecc_pm_ctrl (
     always_comb 
     begin : delay_flag
         case (prog_line[16 +: 8])
-            UOP_DO_ADD_p :  assign stall_flag = 1;
-            UOP_DO_SUB_p :  assign stall_flag = 1;
-            UOP_DO_MUL_p :  assign stall_flag = 1;
-            UOP_DO_ADD_q :  assign stall_flag = 1;
-            UOP_DO_SUB_q :  assign stall_flag = 1;
-            UOP_DO_MUL_q :  assign stall_flag = 1;
-            default      :  assign stall_flag = 0;
+            UOP_DO_ADD_p :  stall_flag = 1;
+            UOP_DO_SUB_p :  stall_flag = 1;
+            UOP_DO_MUL_p :  stall_flag = 1;
+            UOP_DO_ADD_q :  stall_flag = 1;
+            UOP_DO_SUB_q :  stall_flag = 1;
+            UOP_DO_MUL_q :  stall_flag = 1;
+            default      :  stall_flag = 0;
         endcase
     end // delay_flag
      

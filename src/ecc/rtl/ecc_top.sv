@@ -98,7 +98,7 @@ module ecc_top #(
 
         .s_cpuif_req(ecc_cs),
         .s_cpuif_req_is_wr(uc_req.write),
-        .s_cpuif_addr(uc_req.addr),
+        .s_cpuif_addr(uc_req.addr[10:0]),
         .s_cpuif_wr_data(uc_req.wdata),
         .s_cpuif_req_stall_wr(),
         .s_cpuif_req_stall_rd(),

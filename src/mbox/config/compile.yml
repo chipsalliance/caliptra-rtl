@@ -1,5 +1,5 @@
 ---
-provides: [mbox]
+provides: [mbox_top]
 schema_version: 2.4.0
 requires: 
   - libs
@@ -17,12 +17,12 @@ targets:
       - $COMPILE_ROOT/rtl/mbox_params.svh
       - $COMPILE_ROOT/rtl/mbox_csr.sv
       - $COMPILE_ROOT/rtl/mbox_reg.sv
-    tops: [mbox]
+    tops: [mbox_top]
 ---
 provides: [mailbox_tb]
 schema_version: 2.4.0
 requires: 
-  - mbox
+  - mbox_top
 targets:
   tb:
     directories: 

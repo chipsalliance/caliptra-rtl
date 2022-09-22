@@ -261,7 +261,8 @@ module hmac_core
   always @*
     begin : hmac_ctrl_fsm
       ready_flag       = 0;
-
+      digest_valid_new = 0;
+      digest_valid_we  = 0;
       hmac_ctrl_new    = CTRL_IDLE;
       hmac_ctrl_we     = 0;
 

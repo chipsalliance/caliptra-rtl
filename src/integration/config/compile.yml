@@ -8,7 +8,7 @@ requires:
   - ahb_node_wrap
   - sha512_ctrl
   - aes_ctrl
-  - mbox
+  - mbox_top
   - hmac_ctrl
   - keyvault
   - sim_irq_gen

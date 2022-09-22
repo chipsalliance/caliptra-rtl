@@ -387,7 +387,7 @@ module caliptra_top_tb (
 caliptra_top caliptra_top_dut (
     .cptra_pwrgood              (cptra_pwrgood),
     .cptra_rst_b                (cptra_rst_b),
-    .core_clk                   (core_clk),
+    .clk                        (core_clk),
 
     .cptra_obf_key              (cptra_obf_key),
 

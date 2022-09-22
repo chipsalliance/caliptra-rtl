@@ -18,7 +18,7 @@
 `include "common_defines.vh"
 
 module caliptra_top (
-    input bit                          core_clk,
+    input bit                          clk,
 
     input logic                        cptra_pwrgood,
     input logic                        cptra_rst_b,
@@ -395,7 +395,7 @@ module caliptra_top (
         .BYPASS_HSEL      (             0 )
     )
     ahb_node_wrap_i (
-        .hclk             ( core_clk          ),
+        .hclk             ( clk          ),
         .hreset_n         ( cptra_uc_rst_b    ),
         .ahb_slaves       ( s_slave           ),
         .ahb_master       ( s_smaster         ),
@@ -432,7 +432,7 @@ sim_irq_gen #(
     .NUM_INTR (NUM_INTR  ), // Number of interrupts per class (SWerV allows up to 255)
     .INTR_FREQ("LOW" )  // "HIGH" "MEDIUM" "LOW"
 ) i_irq_gen (
-    .clk     (core_clk      ),
+    .clk     (clk      ),
     .rst_n   (cptra_uc_rst_b), // NOTE: tb uses force/release to override this
 
     .intr_cfg(intr_cfg),
@@ -444,7 +444,7 @@ sim_irq_gen #(
 el2_swerv_wrapper rvtop (
     .rst_l                  ( cptra_uc_rst_b),
     .dbg_rst_l              ( cptra_pwrgood), 
-    .clk                    ( core_clk      ),
+    .clk                    ( clk      ),
     .rst_vec                ( reset_vector[31:1]),
     .nmi_int                ( nmi_int       ),
     .nmi_vec                ( nmi_vector[31:1]),
@@ -761,7 +761,7 @@ caliptra_ahb_srom #(
 ) imem (
 
     //AMBA AHB Lite INF
-    .hclk       (core_clk                      ),
+    .hclk       (clk                      ),
     .hreset_n   (cptra_uc_rst_b                ),
     .haddr_i    (ic_haddr[`IMEM_ADDR_WIDTH-1:0]),
     .hwdata_i   (`IMEM_DATA_WIDTH'(0)          ),
@@ -787,7 +787,7 @@ sha512_ctrl #(
     .AHB_ADDR_WIDTH (`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SHA)),
     .BYPASS_HSEL    (0)
 ) sha512 (
-    .clk            (core_clk),
+    .clk            (clk),
     .reset_n        (cptra_uc_rst_b),
     .haddr_i        (s_slave[`SLAVE_SEL_SHA].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SHA)-1:0]),
     .hwdata_i       (s_slave[`SLAVE_SEL_SHA].hwdata),
@@ -809,7 +809,7 @@ aes_ctrl #(
     .AHB_ADDR_WIDTH (`SLAVE_ADDR_WIDTH(`SLAVE_SEL_AES)),
     .BYPASS_HSEL    (0)
 ) aes (
-    .clk            (core_clk),
+    .clk            (clk),
     .reset_n        (cptra_uc_rst_b),
     .cptra_obf_key  (cptra_obf_key_reg),
     .obf_uds_seed   (obf_uds_seed),
@@ -837,7 +837,7 @@ aes_ctrl #(
 `endif
 `ifdef RV_BUILD_AXI4
 axi_slv #(.TAGW(`RV_IFU_BUS_TAG)) imem(
-    .aclk(core_clk),
+    .aclk(clk),
     .rst_l(cptra_uc_rst_b),
     .arvalid(ifu_axi_arvalid),
     .arready(ifu_axi_arready),
@@ -877,7 +877,7 @@ defparam lmem.TAGW =`RV_LSU_BUS_TAG;
 
 //axi_slv #(.TAGW(`RV_LSU_BUS_TAG)) lmem(
 axi_slv  lmem(
-    .aclk(core_clk),
+    .aclk(clk),
     .rst_l(cptra_uc_rst_b),
     .arvalid(lmem_axi_arvalid),
     .arready(lmem_axi_arready),
@@ -914,7 +914,7 @@ axi_slv  lmem(
 );
 
 axi_lsu_dma_bridge # (`RV_LSU_BUS_TAG,`RV_LSU_BUS_TAG ) bridge(
-    .clk(core_clk),
+    .clk(clk),
     .reset_l(cptra_uc_rst_b),
 
     .m_arvalid(lsu_axi_arvalid),
@@ -996,7 +996,7 @@ mbox_top #(
     )
     mbox_top1 
     (
-    .clk(core_clk),
+    .clk(clk),
     .cptra_pwrgood(cptra_pwrgood), 
     .cptra_rst_b(cptra_rst_b),
     .ready_for_fuses(ready_for_fuses),
@@ -1044,7 +1044,7 @@ hmac_ctrl #(
      .AHB_ADDR_WIDTH(`SLAVE_ADDR_WIDTH(`SLAVE_SEL_HMAC)),
      .BYPASS_HSEL(0)
 )hmac (
-     .clk(core_clk),
+     .clk(clk),
      .reset_n       (cptra_uc_rst_b),
      .hadrr_i       (s_slave[`SLAVE_SEL_HMAC].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_HMAC)-1:0]),
      .hwdata_i      (s_slave[`SLAVE_SEL_HMAC].hwdata),
@@ -1072,8 +1072,9 @@ kv #(
 )
 key_vault1
 (
-    .clk           (core_clk),
+    .clk           (clk),
     .rst_b         (cptra_uc_rst_b),
+    .cptra_pwrgood (cptra_pwrgood),
     .haddr_i       (s_slave[`SLAVE_SEL_KV].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_KV)-1:0]),
     .hwdata_i      (s_slave[`SLAVE_SEL_KV].hwdata),
     .hsel_i        (s_slave[`SLAVE_SEL_KV].hsel),
@@ -1112,33 +1113,33 @@ genvar sva_i;
 generate
   for(sva_i= 0; sva_i<`AHB_SLAVES_NUM; sva_i=sva_i+1)
   begin
-    `ASSERT_KNOWN(AHB_SLAVE_HADDR_X,        s_slave[sva_i].haddr,       core_clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HWDATA_X,       s_slave[sva_i].hwdata,      core_clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HSEL_X,         s_slave[sva_i].hsel,        core_clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HWRITE_X,       s_slave[sva_i].hwrite,      core_clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HLOCK_X,        s_slave[sva_i].hmastlock,   core_clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HREADY_X,       s_slave[sva_i].hready,      core_clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HTRANS_X,       s_slave[sva_i].htrans,      core_clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HPROT_X,        s_slave[sva_i].hprot,       core_clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HBURS_X,        s_slave[sva_i].hburst,      core_clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HSIZE_X,        s_slave[sva_i].hsize,       core_clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HRESP_X,        s_slave[sva_i].hresp,       core_clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HREADYOUT_X,    s_slave[sva_i].hreadyout,   core_clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HRDATA_X,       s_slave[sva_i].hrdata,      core_clk, cptra_uc_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HADDR_X,        s_slave[sva_i].haddr,       clk, cptra_uc_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HWDATA_X,       s_slave[sva_i].hwdata,      clk, cptra_uc_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HSEL_X,         s_slave[sva_i].hsel,        clk, cptra_uc_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HWRITE_X,       s_slave[sva_i].hwrite,      clk, cptra_uc_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HLOCK_X,        s_slave[sva_i].hmastlock,   clk, cptra_uc_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HREADY_X,       s_slave[sva_i].hready,      clk, cptra_uc_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HTRANS_X,       s_slave[sva_i].htrans,      clk, cptra_uc_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HPROT_X,        s_slave[sva_i].hprot,       clk, cptra_uc_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HBURS_X,        s_slave[sva_i].hburst,      clk, cptra_uc_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HSIZE_X,        s_slave[sva_i].hsize,       clk, cptra_uc_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HRESP_X,        s_slave[sva_i].hresp,       clk, cptra_uc_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HREADYOUT_X,    s_slave[sva_i].hreadyout,   clk, cptra_uc_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HRDATA_X,       s_slave[sva_i].hrdata,      clk, cptra_uc_rst_b)
   end
 endgenerate
 
-`ASSERT_KNOWN(AHB_MASTER_HADDR_X,        s_smaster.haddr,       core_clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HWDATA_X,       s_smaster.hwdata,      core_clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HSEL_X,         s_smaster.hsel,        core_clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HWRITE_X,       s_smaster.hwrite,      core_clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HLOCK_X,        s_smaster.hmastlock,   core_clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HREADY_X,       s_smaster.hready,      core_clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HTRANS_X,       s_smaster.htrans,      core_clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HPROT_X,        s_smaster.hprot,       core_clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HBURS_X,        s_smaster.hburst,      core_clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HSIZE_X,        s_smaster.hsize,       core_clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HRESP_X,        s_smaster.hresp,       core_clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HRDATA_X,       s_smaster.hrdata,      core_clk, cptra_uc_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HADDR_X,        s_smaster.haddr,       clk, cptra_uc_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HWDATA_X,       s_smaster.hwdata,      clk, cptra_uc_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HSEL_X,         s_smaster.hsel,        clk, cptra_uc_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HWRITE_X,       s_smaster.hwrite,      clk, cptra_uc_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HLOCK_X,        s_smaster.hmastlock,   clk, cptra_uc_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HREADY_X,       s_smaster.hready,      clk, cptra_uc_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HTRANS_X,       s_smaster.htrans,      clk, cptra_uc_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HPROT_X,        s_smaster.hprot,       clk, cptra_uc_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HBURS_X,        s_smaster.hburst,      clk, cptra_uc_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HSIZE_X,        s_smaster.hsize,       clk, cptra_uc_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HRESP_X,        s_smaster.hresp,       clk, cptra_uc_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HRDATA_X,       s_smaster.hrdata,      clk, cptra_uc_rst_b)
 
 endmodule

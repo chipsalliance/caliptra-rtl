@@ -1,0 +1,17 @@
+To run DC on a design module execute the following:
+
+module load tools/synopsys/dc/2020.09-SP1
+module load tools/python/python3/3.9.2
+
+python tools/scripts/syn/run_syn.py <name of top level block>
+
+Example: python tools/scripts/syn/run_syn.py aes_ctrl
+
+Outputs will be stored in $WORKSPACE/scratch/<user>/syn/<design>/latest/ folder. 
+The command currently generates reports for area, area by hierarchy, timing (first 100 paths), qor, latches, sdc and sdf. Gate level netlist is also written to the output folder
+
+TODO: 
+1. Figure out the correct libraries to use
+2. Some designs have errors that cause compilation to break
+3. Almost all blocks have lint warnings to be resolved (since they're warnings synthesis still completes)
+4. Figure out correct clock/signal constraints (uncertainty, latency, transition times). This is a first pass run so making some assumptions here

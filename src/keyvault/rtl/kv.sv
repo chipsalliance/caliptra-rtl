@@ -11,6 +11,7 @@ module kv #(
     (
     input logic clk,
     input logic rst_b,
+    input logic cptra_pwrgood,
 
     //uC AHB Lite Interface
     //from SLAVES PORT
@@ -176,6 +177,8 @@ always_comb begin : keyvault_readmux
         end
     end
 end
+
+always_comb kv_reg_hwif_in.hard_reset_b = cptra_pwrgood;
 
 kv_reg kv_reg1 (
     .clk(clk),
