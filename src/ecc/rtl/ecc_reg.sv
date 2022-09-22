@@ -73,6 +73,7 @@ module ecc_reg (
         logic ecc_R[12];
         logic ecc_S[12];
         logic ecc_VERIFY_R[12];
+        logic ecc_LAMBDA[12];
     } decoded_reg_strb_t;
     decoded_reg_strb_t decoded_reg_strb;
     logic decoded_req;
@@ -111,6 +112,9 @@ module ecc_reg (
         end
         for(int i0=0; i0<12; i0++) begin
             decoded_reg_strb.ecc_VERIFY_R[i0] = cpuif_req_masked & (cpuif_addr == 'h400 + i0*'h4);
+        end
+        for(int i0=0; i0<12; i0++) begin
+            decoded_reg_strb.ecc_LAMBDA[i0] = cpuif_req_masked & (cpuif_addr == 'h480 + i0*'h4);
         end
     end
 
@@ -199,6 +203,12 @@ module ecc_reg (
                 logic load_next;
             } VERIFY_R;
         } ecc_VERIFY_R[12];
+        struct {
+            struct {
+                logic [31:0] next;
+                logic load_next;
+            } LAMBDA;
+        } ecc_LAMBDA[12];
     } field_combo_t;
     field_combo_t field_combo;
 
@@ -263,6 +273,11 @@ module ecc_reg (
                 logic [31:0] value;
             } VERIFY_R;
         } ecc_VERIFY_R[12];
+        struct {
+            struct {
+                logic [31:0] value;
+            } LAMBDA;
+        } ecc_LAMBDA[12];
     } field_storage_t;
     field_storage_t field_storage;
 
@@ -511,6 +526,25 @@ module ecc_reg (
         end
         assign hwif_out.ecc_VERIFY_R[i0].VERIFY_R.value = field_storage.ecc_VERIFY_R[i0].VERIFY_R.value;
     end
+    for(genvar i0=0; i0<12; i0++) begin
+        // Field: ecc_reg.ecc_LAMBDA[].LAMBDA
+        always_comb begin
+            automatic logic [31:0] next_c = field_storage.ecc_LAMBDA[i0].LAMBDA.value;
+            automatic logic load_next_c = '0;
+            if(decoded_reg_strb.ecc_LAMBDA[i0] && decoded_req_is_wr) begin // SW write
+                next_c = decoded_wr_data[31:0];
+                load_next_c = '1;
+            end
+            field_combo.ecc_LAMBDA[i0].LAMBDA.next = next_c;
+            field_combo.ecc_LAMBDA[i0].LAMBDA.load_next = load_next_c;
+        end
+        always_ff @(posedge clk) begin
+            if(field_combo.ecc_LAMBDA[i0].LAMBDA.load_next) begin
+                field_storage.ecc_LAMBDA[i0].LAMBDA.value <= field_combo.ecc_LAMBDA[i0].LAMBDA.next;
+            end
+        end
+        assign hwif_out.ecc_LAMBDA[i0].LAMBDA.value = field_storage.ecc_LAMBDA[i0].LAMBDA.value;
+    end
 
     //--------------------------------------------------------------------------
     // Readback
@@ -520,7 +554,7 @@ module ecc_reg (
     logic [31:0] readback_data;
     
     // Assign readback values to a flattened array
-    logic [31:0] readback_array[102];
+    logic [31:0] readback_array[114];
     for(genvar i0=0; i0<2; i0++) begin
         assign readback_array[i0*1 + 0][31:0] = (decoded_reg_strb.ecc_NAME[i0] && !decoded_req_is_wr) ? field_storage.ecc_NAME[i0].NAME.value : '0;
     end
@@ -553,6 +587,9 @@ module ecc_reg (
     for(genvar i0=0; i0<12; i0++) begin
         assign readback_array[i0*1 + 90][31:0] = (decoded_reg_strb.ecc_VERIFY_R[i0] && !decoded_req_is_wr) ? field_storage.ecc_VERIFY_R[i0].VERIFY_R.value : '0;
     end
+    for(genvar i0=0; i0<12; i0++) begin
+        assign readback_array[i0*1 + 102][31:0] = (decoded_reg_strb.ecc_LAMBDA[i0] && !decoded_req_is_wr) ? field_storage.ecc_LAMBDA[i0].LAMBDA.value : '0;
+    end
 
 
     // Reduce the array
@@ -561,7 +598,7 @@ module ecc_reg (
         readback_done = decoded_req & ~decoded_req_is_wr;
         readback_err = '0;
         readback_data_var = '0;
-        for(int i=0; i<102; i++) readback_data_var |= readback_array[i];
+        for(int i=0; i<114; i++) readback_data_var |= readback_array[i];
         readback_data = readback_data_var;
     end
 

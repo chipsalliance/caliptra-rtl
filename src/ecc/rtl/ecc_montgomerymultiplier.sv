@@ -219,10 +219,10 @@ module ecc_montgomerymultiplier #(
                 else
                     sub_b_i[t0] = sub_b_o[t0 - 1];
 
-                if (~reset_n)
-                    sub_res[t0] = 0;
-                else if (push_reg[2*(PE_UNITS+1) - t0])
-                    sub_res[t0] = {1'b0, s_array[t0 >> 1]} + p_neg_array[t0] + sub_b_i[t0];
+                //if (~reset_n)
+                //    sub_res[t0] = 0;
+                //else if (push_reg[2*(PE_UNITS+1) - t0])
+                sub_res[t0] = {1'b0, s_array[t0 >> 1]} + p_neg_array[t0] + sub_b_i[t0];
                 
                 sub_b_o[t0] = sub_res[t0][RADIX];
             end

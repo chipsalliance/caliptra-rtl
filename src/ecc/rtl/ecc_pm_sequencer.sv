@@ -1,9 +1,18 @@
 //======================================================================
 //
-// ecc_PM_sequencer.sv
+// ecc_pm_sequencer.sv
 // --------
 // ECC point multiplication sequencer for the Secp384.
-//
+// 1) Point Addition (PA) and Point Doubling (PD) are based on 
+//    "Complete Addition Formulas for Prime Order Elliptic Curves"
+//    by Renes et. al. (Algorithm 1)
+// 2) Modular Inversion (mod p, mod q) is based on "Fermat's little 
+//    theorem (FLT)" implemented by exponentiation by squaring methos 
+//    with window size of 3 bits.
+// 3) All modular operations are performed in Montgomery domain.
+//    mod p are modular operation respect to PRIME of SECP384 curve.
+//    mod q are modular operation respect to GROUP ORDER of SECP384 curve.
+// 
 //
 // Author: Mojtaba Bisheh-Niasar
 //======================================================================
@@ -35,183 +44,211 @@ module ecc_pm_sequencer #(
             NOP : douta <= '0;
             1   : douta <= '0;
             
-            //R0 INIT with G
-            PM_INIT_G_S     : douta <= {UOP_DO_ADD_p,   UOP_OPR_CONST_GX_MONT,       UOP_OPR_CONST_ZERO};
-            PM_INIT_G_S+ 1  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R0_X,                UOP_OPR_DONTCARE};
-            PM_INIT_G_S+ 2  : douta <= {UOP_DO_ADD_p,   UOP_OPR_CONST_GY_MONT,       UOP_OPR_CONST_ZERO};
-            PM_INIT_G_S+ 3  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R0_Y,                UOP_OPR_DONTCARE};
-            PM_INIT_G_S+ 4  : douta <= {UOP_DO_ADD_p,   UOP_OPR_CONST_GZ_MONT,       UOP_OPR_CONST_ZERO};
-            PM_INIT_G_S+ 5  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R0_Z,                UOP_OPR_DONTCARE};
+            //R1 INIT with Randomized G
+            PM_INIT_G_S     : douta <= {UOP_DO_MUL_p,   UOP_OPR_LAMBDA,            UOP_OPR_CONST_R2_p};   // R1_Z = mm(Lambda, R2)
+            PM_INIT_G_S+ 1  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,          UOP_OPR_R1_Z};
+            PM_INIT_G_S+ 2  : douta <= {UOP_DO_MUL_p,   UOP_OPR_CONST_GX_MONT,     UOP_OPR_R1_Z};         // R1_X = mm(GX_MONT, R0_Z)
+            PM_INIT_G_S+ 3  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,          UOP_OPR_R1_X};
+            PM_INIT_G_S+ 4  : douta <= {UOP_DO_MUL_p,   UOP_OPR_CONST_GY_MONT,     UOP_OPR_R1_Z};         // R1_Y = mm(GY_MONT, R0_Z)
+            PM_INIT_G_S+ 5  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,          UOP_OPR_R1_Y};
             
-            //R1 INIT
-            PM_INIT_S     : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_X,                UOP_OPR_R0_X};  // A = fp_mult(P0.X, P0.X, p)
-            PM_INIT_S+ 1  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,            UOP_OPR_A};
-            PM_INIT_S+ 2  : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_Z,                UOP_OPR_R0_Z};  // B = fp_mult(P0.Z, P0.Z, p)
-            PM_INIT_S+ 3  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,            UOP_OPR_B};
-            PM_INIT_S+ 4  : douta <= {UOP_DO_MUL_p,   UOP_OPR_CONST_E_a,           UOP_OPR_B};     // B = fp_mult(E_.a, B, p)
-            PM_INIT_S+ 5  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,            UOP_OPR_B};
-            PM_INIT_S+ 6  : douta <= {UOP_DO_ADD_p,   UOP_OPR_A,          UOP_OPR_A};     // C = (A + A) % p
-            PM_INIT_S+ 7  : douta <= {UOP_ST_ADD_p,   UOP_OPR_C,          UOP_OPR_DONTCARE};
-            PM_INIT_S+ 8  : douta <= {UOP_DO_ADD_p,   UOP_OPR_C,          UOP_OPR_A};     // C = (C + A) % p
-            PM_INIT_S+ 9  : douta <= {UOP_ST_ADD_p,   UOP_OPR_C,          UOP_OPR_DONTCARE};
-            PM_INIT_S+ 10 : douta <= {UOP_DO_ADD_p,   UOP_OPR_B,          UOP_OPR_C};     // D = (B + C) % p
-            PM_INIT_S+ 11 : douta <= {UOP_ST_ADD_p,   UOP_OPR_D,          UOP_OPR_DONTCARE};
-            PM_INIT_S+ 12 : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_Y,       UOP_OPR_R0_Z};  // C = fp_mult(P0.Y, P0.Z, p)
-            PM_INIT_S+ 13 : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_C};
-            PM_INIT_S+ 14 : douta <= {UOP_DO_ADD_p,   UOP_OPR_C,          UOP_OPR_C};     // C = (C + C) % p
-            PM_INIT_S+ 15 : douta <= {UOP_ST_ADD_p,   UOP_OPR_C,          UOP_OPR_DONTCARE};
-            PM_INIT_S+ 16 : douta <= {UOP_DO_MUL_p,   UOP_OPR_C,          UOP_OPR_C};     // F = fp_mult(C, C, p)
-            PM_INIT_S+ 17 : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_F};
-            PM_INIT_S+ 18 : douta <= {UOP_DO_MUL_p,   UOP_OPR_C,          UOP_OPR_F};     // Z_res = fp_mult(C, F, p)
-            PM_INIT_S+ 19 : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_R1_Z};
-            PM_INIT_S+ 20 : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_Y,       UOP_OPR_C};     // F = fp_mult(P0.Y, C, p)
-            PM_INIT_S+ 21 : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_F};
-            PM_INIT_S+ 22 : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_X,       UOP_OPR_F};     // B = (P0.X + F) % p
-            PM_INIT_S+ 23 : douta <= {UOP_ST_ADD_p,   UOP_OPR_B,          UOP_OPR_DONTCARE};
-            PM_INIT_S+ 24 : douta <= {UOP_DO_MUL_p,   UOP_OPR_B,          UOP_OPR_B};     // B = fp_mult(B, B, p)
-            PM_INIT_S+ 25 : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_B};
-            PM_INIT_S+ 26 : douta <= {UOP_DO_MUL_p,   UOP_OPR_F,          UOP_OPR_F};     // F = fp_mult(F, F, p)
-            PM_INIT_S+ 27 : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_F};
-            PM_INIT_S+ 28 : douta <= {UOP_DO_ADD_p,   UOP_OPR_A,          UOP_OPR_F};     // A = (A + F) % p
-            PM_INIT_S+ 29 : douta <= {UOP_ST_ADD_p,   UOP_OPR_A,          UOP_OPR_DONTCARE};
-            PM_INIT_S+ 30 : douta <= {UOP_DO_SUB_p,   UOP_OPR_B,          UOP_OPR_A};     // B = (B - A) % p
-            PM_INIT_S+ 31 : douta <= {UOP_ST_ADD_p,   UOP_OPR_B,          UOP_OPR_DONTCARE};
-            PM_INIT_S+ 32 : douta <= {UOP_DO_ADD_p,   UOP_OPR_B,          UOP_OPR_B};     // A = (B + B) % p
-            PM_INIT_S+ 33 : douta <= {UOP_ST_ADD_p,   UOP_OPR_A,          UOP_OPR_DONTCARE};
-            PM_INIT_S+ 34 : douta <= {UOP_DO_MUL_p,   UOP_OPR_D,          UOP_OPR_D};     // E = fp_mult(D, D, p)
-            PM_INIT_S+ 35 : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_E};
-            PM_INIT_S+ 36 : douta <= {UOP_DO_SUB_p,   UOP_OPR_E,          UOP_OPR_A};     // E = (E - A) % p
-            PM_INIT_S+ 37 : douta <= {UOP_ST_ADD_p,   UOP_OPR_E,          UOP_OPR_DONTCARE};
-            PM_INIT_S+ 38 : douta <= {UOP_DO_MUL_p,   UOP_OPR_E,          UOP_OPR_C};     // X_res = fp_mult(E, C, p)
-            PM_INIT_S+ 39 : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_R1_X};
-            PM_INIT_S+ 40 : douta <= {UOP_DO_ADD_p,   UOP_OPR_F,          UOP_OPR_F};     // A = (F + F) % p
-            PM_INIT_S+ 41 : douta <= {UOP_ST_ADD_p,   UOP_OPR_A,          UOP_OPR_DONTCARE};
-            PM_INIT_S+ 42 : douta <= {UOP_DO_SUB_p,   UOP_OPR_B,          UOP_OPR_E};     // B = (B - E) % p
-            PM_INIT_S+ 43 : douta <= {UOP_ST_ADD_p,   UOP_OPR_B,          UOP_OPR_DONTCARE};
-            PM_INIT_S+ 44 : douta <= {UOP_DO_MUL_p,   UOP_OPR_D,          UOP_OPR_B};     // D = fp_mult(D, B, p)
-            PM_INIT_S+ 45 : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_D};
-            PM_INIT_S+ 46 : douta <= {UOP_DO_SUB_p,   UOP_OPR_D,          UOP_OPR_A};     // Y_res = (D - A) % p
-            PM_INIT_S+ 47 : douta <= {UOP_ST_ADD_p,   UOP_OPR_R1_Y,       UOP_OPR_DONTCARE};
-            PM_INIT_S+ 48 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
-            PM_INIT_S+ 49 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
-            PM_INIT_S+ 50 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
-            PM_INIT_S+ 51 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE}; 
+            //R0 INIT with O
+            PM_INIT_S       : douta <= {UOP_DO_ADD_p,   UOP_OPR_CONST_ZERO,        UOP_OPR_CONST_ZERO};  // R0_X = 0
+            PM_INIT_S+ 1    : douta <= {UOP_ST_ADD_p,   UOP_OPR_R0_X,              UOP_OPR_DONTCARE};
+            PM_INIT_S+ 2    : douta <= {UOP_DO_ADD_p,   UOP_OPR_CONST_ONE_MONT,    UOP_OPR_CONST_ZERO};  // R0_Y = fp_mult(1, R2, p)
+            PM_INIT_S+ 3    : douta <= {UOP_ST_ADD_p,   UOP_OPR_R0_Y,              UOP_OPR_DONTCARE};
+            PM_INIT_S+ 4    : douta <= {UOP_DO_ADD_p,   UOP_OPR_CONST_ZERO,        UOP_OPR_CONST_ZERO};  // R0_Z = 0
+            PM_INIT_S+ 5    : douta <= {UOP_ST_ADD_p,   UOP_OPR_R0_Z,              UOP_OPR_DONTCARE};
+            PM_INIT_S+ 6    : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,          UOP_OPR_DONTCARE};
+            PM_INIT_S+ 7    : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,          UOP_OPR_DONTCARE};
+            PM_INIT_S+ 8    : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,          UOP_OPR_DONTCARE};
+            PM_INIT_S+ 9    : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,          UOP_OPR_DONTCARE}; 
 
-            // PA
-            PA_S      : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_Y,       UOP_OPR_R1_Z};  // A = fp_mult(P0.Y, P1.Z, p)
+            // PA : R1 = PA(R0, R1)
+            PA_S      : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_X,       UOP_OPR_R1_X};  // A = fp_mult(P0.X, P1.X, p)
             PA_S+ 1   : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_A};
-            PA_S+ 2   : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_X,       UOP_OPR_R1_Z};  // B = fp_mult(P0.X, P1.Z, p)
+            PA_S+ 2   : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_Y,       UOP_OPR_R1_Y};  // B = fp_mult(P0.Y, P1.Y, p)
             PA_S+ 3   : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_B};
             PA_S+ 4   : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_Z,       UOP_OPR_R1_Z};  // C = fp_mult(P0.Z, P1.Z, p)
             PA_S+ 5   : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_C};
-            PA_S+ 6   : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_Z,       UOP_OPR_R1_Y};  // D = fp_mult(P0.Z, P1.Y, p)
-            PA_S+ 7   : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_D};
-            PA_S+ 8   : douta <= {UOP_DO_SUB_p,   UOP_OPR_D,          UOP_OPR_A};     // D = (D - A ) % p
-            PA_S+ 9   : douta <= {UOP_ST_ADD_p,   UOP_OPR_D,          UOP_OPR_DONTCARE};
-            PA_S+ 10  : douta <= {UOP_DO_MUL_p,   UOP_OPR_D,          UOP_OPR_D};     // E = fp_mult(D, D, p)
-            PA_S+ 11  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_E};
-            PA_S+ 12  : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_Z,       UOP_OPR_R1_X};  // F = fp_mult(P0.Z, P1.X, p)
-            PA_S+ 13  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_F};
-            PA_S+ 14  : douta <= {UOP_DO_SUB_p,   UOP_OPR_F,          UOP_OPR_B};     // F = (F - B) % p
-            PA_S+ 15  : douta <= {UOP_ST_ADD_p,   UOP_OPR_F,          UOP_OPR_DONTCARE};
-            PA_S+ 16  : douta <= {UOP_DO_MUL_p,   UOP_OPR_F,          UOP_OPR_F};     // G = fp_mult(F, F, p)
-            PA_S+ 17  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_G};
-            PA_S+ 18  : douta <= {UOP_DO_MUL_p,   UOP_OPR_G,          UOP_OPR_B};     // B = fp_mult(G, B, p)
-            PA_S+ 19  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_B};
-            PA_S+ 20  : douta <= {UOP_DO_MUL_p,   UOP_OPR_F,          UOP_OPR_G};     // G = fp_mult(F, G, p)
-            PA_S+ 21  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_G};
-            PA_S+ 22  : douta <= {UOP_DO_MUL_p,   UOP_OPR_G,          UOP_OPR_C};     // Z_res = fp_mult(G, C, p)
-            PA_S+ 23  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_R1_Z};
-            PA_S+ 24  : douta <= {UOP_DO_MUL_p,   UOP_OPR_G,          UOP_OPR_A};     // A = fp_mult(G, A, p)
-            PA_S+ 25  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_A};
-            PA_S+ 26  : douta <= {UOP_DO_MUL_p,   UOP_OPR_E,          UOP_OPR_C};     // E = fp_mult(E, C, p)
-            PA_S+ 27  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_E};
-            PA_S+ 28  : douta <= {UOP_DO_ADD_p,   UOP_OPR_B,          UOP_OPR_B};     // C = (B + B) % p
-            PA_S+ 29  : douta <= {UOP_ST_ADD_p,   UOP_OPR_C,          UOP_OPR_DONTCARE};
-            PA_S+ 30  : douta <= {UOP_DO_SUB_p,   UOP_OPR_E,          UOP_OPR_C};     // C = (E - C) % p
-            PA_S+ 31  : douta <= {UOP_ST_ADD_p,   UOP_OPR_C,          UOP_OPR_DONTCARE};
-            PA_S+ 32  : douta <= {UOP_DO_SUB_p,   UOP_OPR_C,          UOP_OPR_G};     // C = (C - G) % p
-            PA_S+ 33  : douta <= {UOP_ST_ADD_p,   UOP_OPR_C,          UOP_OPR_DONTCARE};
-            PA_S+ 34  : douta <= {UOP_DO_SUB_p,   UOP_OPR_B,          UOP_OPR_C};     // B = (B - C) % p
-            PA_S+ 35  : douta <= {UOP_ST_ADD_p,   UOP_OPR_B,          UOP_OPR_DONTCARE};
-            PA_S+ 36  : douta <= {UOP_DO_MUL_p,   UOP_OPR_D,          UOP_OPR_B};     // B = fp_mult(D, B, p)
-            PA_S+ 37  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_B};
-            PA_S+ 38  : douta <= {UOP_DO_MUL_p,   UOP_OPR_F,          UOP_OPR_C};     // X_res = fp_mult(F, C, p)
+            PA_S+ 6   : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_X,       UOP_OPR_R0_Y};  // D = (P0.X + P0.Y) % p
+            PA_S+ 7   : douta <= {UOP_ST_ADD_p,   UOP_OPR_D,          UOP_OPR_DONTCARE};
+            PA_S+ 8   : douta <= {UOP_DO_ADD_p,   UOP_OPR_R1_X,       UOP_OPR_R1_Y};  // E = (P1.X + P1.Y) % p
+            PA_S+ 9   : douta <= {UOP_ST_ADD_p,   UOP_OPR_E,          UOP_OPR_DONTCARE};
+            PA_S+ 10  : douta <= {UOP_DO_MUL_p,   UOP_OPR_D,          UOP_OPR_E};     // D = fp_mult(D, E, p)
+            PA_S+ 11  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_D};
+            PA_S+ 12  : douta <= {UOP_DO_ADD_p,   UOP_OPR_A,          UOP_OPR_B};     // E = (A + B) % p
+            PA_S+ 13  : douta <= {UOP_ST_ADD_p,   UOP_OPR_E,          UOP_OPR_DONTCARE};
+            PA_S+ 14  : douta <= {UOP_DO_SUB_p,   UOP_OPR_D,          UOP_OPR_E};     // D = (D - E) % p
+            PA_S+ 15  : douta <= {UOP_ST_ADD_p,   UOP_OPR_D,          UOP_OPR_DONTCARE};
+            PA_S+ 16  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_X,       UOP_OPR_R0_Z};  // E = (P0.X + P0.Z) % p
+            PA_S+ 17  : douta <= {UOP_ST_ADD_p,   UOP_OPR_E,          UOP_OPR_DONTCARE};
+            PA_S+ 18  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R1_X,       UOP_OPR_R1_Z};  // F = (P1.X + P1.Z) % p
+            PA_S+ 19  : douta <= {UOP_ST_ADD_p,   UOP_OPR_F,          UOP_OPR_DONTCARE};
+            PA_S+ 20  : douta <= {UOP_DO_MUL_p,   UOP_OPR_E,          UOP_OPR_F};     // E = fp_mult(E, F, p)
+            PA_S+ 21  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_E};
+            PA_S+ 22  : douta <= {UOP_DO_ADD_p,   UOP_OPR_A,          UOP_OPR_C};     // F = (A + C) % p
+            PA_S+ 23  : douta <= {UOP_ST_ADD_p,   UOP_OPR_F,          UOP_OPR_DONTCARE};
+            PA_S+ 24  : douta <= {UOP_DO_SUB_p,   UOP_OPR_E,          UOP_OPR_F};     // E = (E - F) % p
+            PA_S+ 25  : douta <= {UOP_ST_ADD_p,   UOP_OPR_E,          UOP_OPR_DONTCARE};
+            PA_S+ 26  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_Y,       UOP_OPR_R0_Z};  // F = (P0.Y + P0.Z) % p
+            PA_S+ 27  : douta <= {UOP_ST_ADD_p,   UOP_OPR_F,          UOP_OPR_DONTCARE};
+            PA_S+ 28  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R1_Y,       UOP_OPR_R1_Z};  // X3 = (P1.Y + P1.Z) % p
+            PA_S+ 29  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R1_X,       UOP_OPR_DONTCARE};        
+            PA_S+ 30  : douta <= {UOP_DO_MUL_p,   UOP_OPR_F,          UOP_OPR_R1_X};  // F = fp_mult(F, X3, p)
+            PA_S+ 31  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_F};
+            PA_S+ 32  : douta <= {UOP_DO_ADD_p,   UOP_OPR_B,          UOP_OPR_C};     // X3 = (B + C) % p
+            PA_S+ 33  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R1_X,       UOP_OPR_DONTCARE};
+            PA_S+ 34  : douta <= {UOP_DO_SUB_p,   UOP_OPR_F,          UOP_OPR_R1_X};  // F = (F - X3) % p
+            PA_S+ 35  : douta <= {UOP_ST_ADD_p,   UOP_OPR_F,          UOP_OPR_DONTCARE};    
+            PA_S+ 36  : douta <= {UOP_DO_MUL_p,   UOP_OPR_CONST_E_a,  UOP_OPR_E};     // Z3 = fp_mult(ECC.a, E, p)
+            PA_S+ 37  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_R1_Z};
+            PA_S+ 38  : douta <= {UOP_DO_MUL_p,   UOP_OPR_CONST_E_3b, UOP_OPR_C};     // X3 = fp_mult(ECC.3b, C, p)
             PA_S+ 39  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_R1_X};
-            PA_S+ 40  : douta <= {UOP_DO_SUB_p,   UOP_OPR_B,          UOP_OPR_A};     // Y_res = (B - A) % p
-            PA_S+ 41  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R1_Y,       UOP_OPR_DONTCARE};
+            PA_S+ 40  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R1_X,       UOP_OPR_R1_Z};  // Z3 = (X3 + Z3) % p
+            PA_S+ 41  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R1_Z,       UOP_OPR_DONTCARE};
+            PA_S+ 42  : douta <= {UOP_DO_SUB_p,   UOP_OPR_B,          UOP_OPR_R1_Z};  // X3 = (B - Z3) % p
+            PA_S+ 43  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R1_X,       UOP_OPR_DONTCARE};
+            PA_S+ 44  : douta <= {UOP_DO_ADD_p,   UOP_OPR_B,          UOP_OPR_R1_Z};  // Z3 = (B + Z3) % p
+            PA_S+ 45  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R1_Z,       UOP_OPR_DONTCARE};
+            PA_S+ 46  : douta <= {UOP_DO_MUL_p,   UOP_OPR_R1_X,       UOP_OPR_R1_Z};  // Y3 = fp_mult(X3, Z3, p)
+            PA_S+ 47  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_R1_Y};
+            PA_S+ 48  : douta <= {UOP_DO_ADD_p,   UOP_OPR_A,          UOP_OPR_A};     // B = (A + A) % p
+            PA_S+ 49  : douta <= {UOP_ST_ADD_p,   UOP_OPR_B,          UOP_OPR_DONTCARE};
+            PA_S+ 50  : douta <= {UOP_DO_ADD_p,   UOP_OPR_B,          UOP_OPR_A};     // B = (B + A) % p
+            PA_S+ 51  : douta <= {UOP_ST_ADD_p,   UOP_OPR_B,          UOP_OPR_DONTCARE};
+            PA_S+ 52  : douta <= {UOP_DO_MUL_p,   UOP_OPR_CONST_E_a,  UOP_OPR_C};     // C = fp_mult(ECC.a, C, p)
+            PA_S+ 53  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_C};
+            PA_S+ 54  : douta <= {UOP_DO_MUL_p,   UOP_OPR_CONST_E_3b, UOP_OPR_E};     // E = fp_mult(ECC.3b, E, p)
+            PA_S+ 55  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_E};
+            PA_S+ 56  : douta <= {UOP_DO_ADD_p,   UOP_OPR_B,          UOP_OPR_C};     // B = (B + C) % p
+            PA_S+ 57  : douta <= {UOP_ST_ADD_p,   UOP_OPR_B,          UOP_OPR_DONTCARE};
+            PA_S+ 58  : douta <= {UOP_DO_SUB_p,   UOP_OPR_A,          UOP_OPR_C};     // C = (A - C) % p
+            PA_S+ 59  : douta <= {UOP_ST_ADD_p,   UOP_OPR_C,          UOP_OPR_DONTCARE};            
+            PA_S+ 60  : douta <= {UOP_DO_MUL_p,   UOP_OPR_CONST_E_a,  UOP_OPR_C};     // C = fp_mult(ECC.a, C, p)
+            PA_S+ 61  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_C};
+            PA_S+ 62  : douta <= {UOP_DO_ADD_p,   UOP_OPR_E,          UOP_OPR_C};     // E = (E + C) % p
+            PA_S+ 63  : douta <= {UOP_ST_ADD_p,   UOP_OPR_E,          UOP_OPR_DONTCARE};
+            PA_S+ 64  : douta <= {UOP_DO_MUL_p,   UOP_OPR_B,          UOP_OPR_E};     // A = fp_mult(B, E, p)
+            PA_S+ 65  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_A};            
+            PA_S+ 66  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R1_Y,       UOP_OPR_A};     // Y3 = (Y3 + A) % p
+            PA_S+ 67  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R1_Y,       UOP_OPR_DONTCARE};
+            PA_S+ 68  : douta <= {UOP_DO_MUL_p,   UOP_OPR_F,          UOP_OPR_E};     // A = fp_mult(F, E, p)
+            PA_S+ 69  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_A};
+            PA_S+ 70  : douta <= {UOP_DO_MUL_p,   UOP_OPR_D,          UOP_OPR_R1_X};  // X3 = fp_mult(D, X3, p)
+            PA_S+ 71  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_R1_X};            
+            PA_S+ 72  : douta <= {UOP_DO_SUB_p,   UOP_OPR_R1_X,       UOP_OPR_A};     // X3 = (X3 - A) % p
+            PA_S+ 73  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R1_X,       UOP_OPR_DONTCARE};
+            PA_S+ 74  : douta <= {UOP_DO_MUL_p,   UOP_OPR_D,          UOP_OPR_B};     // A = fp_mult(D, B, p)
+            PA_S+ 75  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_A};
+            PA_S+ 76  : douta <= {UOP_DO_MUL_p,   UOP_OPR_F,          UOP_OPR_R1_Z};  // Z3 = fp_mult(F, Z3, p)
+            PA_S+ 77  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_R1_Z};            
+            PA_S+ 78  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R1_Z,       UOP_OPR_A};     // Z3 = (Z3 + A) % p
+            PA_S+ 79  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R1_Z,       UOP_OPR_DONTCARE};
 
-            //PD
+            //PD : R0 = PD(R0)
             PD_S      : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_X,       UOP_OPR_R0_X};  // A = fp_mult(P0.X, P0.X, p)
             PD_S+ 1   : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_A};
-            PD_S+ 2   : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_Z,       UOP_OPR_R0_Z};  // B = fp_mult(P0.Z, P0.Z, p)
+            PD_S+ 2   : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_Y,       UOP_OPR_R0_Y};  // B = fp_mult(P0.Y, P0.Y, p)
             PD_S+ 3   : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_B};
-            PD_S+ 4   : douta <= {UOP_DO_MUL_p,   UOP_OPR_CONST_E_a,  UOP_OPR_B};     // B = fp_mult(E_.a, B, p)
-            PD_S+ 5   : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_B};
-            PD_S+ 6   : douta <= {UOP_DO_ADD_p,   UOP_OPR_A,          UOP_OPR_A};     // C = (A + A) % p
-            PD_S+ 7   : douta <= {UOP_ST_ADD_p,   UOP_OPR_C,          UOP_OPR_DONTCARE};
-            PD_S+ 8   : douta <= {UOP_DO_ADD_p,   UOP_OPR_C,          UOP_OPR_A};     // C = (C + A) % p
-            PD_S+ 9   : douta <= {UOP_ST_ADD_p,   UOP_OPR_C,          UOP_OPR_DONTCARE};
-            PD_S+ 10  : douta <= {UOP_DO_ADD_p,   UOP_OPR_B,          UOP_OPR_C};     // D = (B + C) % p
-            PD_S+ 11  : douta <= {UOP_ST_ADD_p,   UOP_OPR_D,          UOP_OPR_DONTCARE};
-            PD_S+ 12  : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_Y,       UOP_OPR_R0_Z};  // C = fp_mult(P0.Y, P0.Z, p)
-            PD_S+ 13  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_C};
-            PD_S+ 14  : douta <= {UOP_DO_ADD_p,   UOP_OPR_C,          UOP_OPR_C};     // C = (C + C) % p
-            PD_S+ 15  : douta <= {UOP_ST_ADD_p,   UOP_OPR_C,          UOP_OPR_DONTCARE};
-            PD_S+ 16  : douta <= {UOP_DO_MUL_p,   UOP_OPR_C,          UOP_OPR_C};     // F = fp_mult(C, C, p)
-            PD_S+ 17  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_F};
-            PD_S+ 18  : douta <= {UOP_DO_MUL_p,   UOP_OPR_C,          UOP_OPR_F};     // Z_res = fp_mult(C, F, p)
-            PD_S+ 19  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_R0_Z};
-            PD_S+ 20  : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_Y,       UOP_OPR_C};     // F = fp_mult(P0.Y, C, p)
-            PD_S+ 21  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_F};
-            PD_S+ 22  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_X,       UOP_OPR_F};     // B = (P0.X + F) % p
-            PD_S+ 23  : douta <= {UOP_ST_ADD_p,   UOP_OPR_B,          UOP_OPR_DONTCARE};
-            PD_S+ 24  : douta <= {UOP_DO_MUL_p,   UOP_OPR_B,          UOP_OPR_B};     // B = fp_mult(B, B, p)
-            PD_S+ 25  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_B};
-            PD_S+ 26  : douta <= {UOP_DO_MUL_p,   UOP_OPR_F,          UOP_OPR_F};     // F = fp_mult(F, F, p)
-            PD_S+ 27  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_F};
-            PD_S+ 28  : douta <= {UOP_DO_ADD_p,   UOP_OPR_A,          UOP_OPR_F};     // A = (A + F) % p
-            PD_S+ 29  : douta <= {UOP_ST_ADD_p,   UOP_OPR_A,          UOP_OPR_DONTCARE};
-            PD_S+ 30  : douta <= {UOP_DO_SUB_p,   UOP_OPR_B,          UOP_OPR_A};     // B = (B - A) % p
-            PD_S+ 31  : douta <= {UOP_ST_ADD_p,   UOP_OPR_B,          UOP_OPR_DONTCARE};
-            PD_S+ 32  : douta <= {UOP_DO_ADD_p,   UOP_OPR_B,          UOP_OPR_B};     // A = (B + B) % p
-            PD_S+ 33  : douta <= {UOP_ST_ADD_p,   UOP_OPR_A,          UOP_OPR_DONTCARE};
-            PD_S+ 34  : douta <= {UOP_DO_MUL_p,   UOP_OPR_D,          UOP_OPR_D};     // E = fp_mult(D, D, p)
-            PD_S+ 35  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_E};
-            PD_S+ 36  : douta <= {UOP_DO_SUB_p,   UOP_OPR_E,          UOP_OPR_A};     // E = (E - A) % p
-            PD_S+ 37  : douta <= {UOP_ST_ADD_p,   UOP_OPR_E,          UOP_OPR_DONTCARE};
-            PD_S+ 38  : douta <= {UOP_DO_MUL_p,   UOP_OPR_E,          UOP_OPR_C};     // X_res = fp_mult(E, C, p)
+            PD_S+ 4   : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_Z,       UOP_OPR_R0_Z};  // C = fp_mult(P0.Z, P0.Z, p)
+            PD_S+ 5   : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_C};
+            PD_S+ 6   : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_X,       UOP_OPR_R0_Y};  // D = (P0.X + P0.Y) % p
+            PD_S+ 7   : douta <= {UOP_ST_ADD_p,   UOP_OPR_D,          UOP_OPR_DONTCARE};
+            PD_S+ 8   : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_X,       UOP_OPR_R0_Y};  // E = (P0.X + P0.Y) % p
+            PD_S+ 9   : douta <= {UOP_ST_ADD_p,   UOP_OPR_E,          UOP_OPR_DONTCARE};
+            PD_S+ 10  : douta <= {UOP_DO_MUL_p,   UOP_OPR_D,          UOP_OPR_E};     // D = fp_mult(D, E, p)
+            PD_S+ 11  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_D};
+            PD_S+ 12  : douta <= {UOP_DO_ADD_p,   UOP_OPR_A,          UOP_OPR_B};     // E = (A + B) % p
+            PD_S+ 13  : douta <= {UOP_ST_ADD_p,   UOP_OPR_E,          UOP_OPR_DONTCARE};
+            PD_S+ 14  : douta <= {UOP_DO_SUB_p,   UOP_OPR_D,          UOP_OPR_E};     // D = (D - E) % p
+            PD_S+ 15  : douta <= {UOP_ST_ADD_p,   UOP_OPR_D,          UOP_OPR_DONTCARE};
+            PD_S+ 16  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_X,       UOP_OPR_R0_Z};  // E = (P0.X + P0.Z) % p
+            PD_S+ 17  : douta <= {UOP_ST_ADD_p,   UOP_OPR_E,          UOP_OPR_DONTCARE};
+            PD_S+ 18  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_X,       UOP_OPR_R0_Z};  // F = (P0.X + P0.Z) % p
+            PD_S+ 19  : douta <= {UOP_ST_ADD_p,   UOP_OPR_F,          UOP_OPR_DONTCARE};
+            PD_S+ 20  : douta <= {UOP_DO_MUL_p,   UOP_OPR_E,          UOP_OPR_F};     // E = fp_mult(E, F, p)
+            PD_S+ 21  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_E};
+            PD_S+ 22  : douta <= {UOP_DO_ADD_p,   UOP_OPR_A,          UOP_OPR_C};     // F = (A + C) % p
+            PD_S+ 23  : douta <= {UOP_ST_ADD_p,   UOP_OPR_F,          UOP_OPR_DONTCARE};
+            PD_S+ 24  : douta <= {UOP_DO_SUB_p,   UOP_OPR_E,          UOP_OPR_F};     // E = (E - F) % p
+            PD_S+ 25  : douta <= {UOP_ST_ADD_p,   UOP_OPR_E,          UOP_OPR_DONTCARE};
+            PD_S+ 26  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_Y,       UOP_OPR_R0_Z};  // F = (P0.Y + P0.Z) % p
+            PD_S+ 27  : douta <= {UOP_ST_ADD_p,   UOP_OPR_F,          UOP_OPR_DONTCARE};
+            PD_S+ 28  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_Y,       UOP_OPR_R0_Z};  // X3 = (P0.Y + P0.Z) % p
+            PD_S+ 29  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R0_X,       UOP_OPR_DONTCARE};        
+            PD_S+ 30  : douta <= {UOP_DO_MUL_p,   UOP_OPR_F,          UOP_OPR_R0_X};  // F = fp_mult(F, X3, p)
+            PD_S+ 31  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_F};
+            PD_S+ 32  : douta <= {UOP_DO_ADD_p,   UOP_OPR_B,          UOP_OPR_C};     // X3 = (B + C) % p
+            PD_S+ 33  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R0_X,       UOP_OPR_DONTCARE};
+            PD_S+ 34  : douta <= {UOP_DO_SUB_p,   UOP_OPR_F,          UOP_OPR_R0_X};  // F = (F - X3) % p
+            PD_S+ 35  : douta <= {UOP_ST_ADD_p,   UOP_OPR_F,          UOP_OPR_DONTCARE};    
+            PD_S+ 36  : douta <= {UOP_DO_MUL_p,   UOP_OPR_CONST_E_a,  UOP_OPR_E};     // Z3 = fp_mult(ECC.a, E, p)
+            PD_S+ 37  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_R0_Z};
+            PD_S+ 38  : douta <= {UOP_DO_MUL_p,   UOP_OPR_CONST_E_3b, UOP_OPR_C};     // X3 = fp_mult(ECC.3b, C, p)
             PD_S+ 39  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_R0_X};
-            PD_S+ 40  : douta <= {UOP_DO_ADD_p,   UOP_OPR_F,          UOP_OPR_F};     // A = (F + F) % p
-            PD_S+ 41  : douta <= {UOP_ST_ADD_p,   UOP_OPR_A,          UOP_OPR_DONTCARE};
-            PD_S+ 42  : douta <= {UOP_DO_SUB_p,   UOP_OPR_B,          UOP_OPR_E};     // B = (B - E) % p
-            PD_S+ 43  : douta <= {UOP_ST_ADD_p,   UOP_OPR_B,          UOP_OPR_DONTCARE};
-            PD_S+ 44  : douta <= {UOP_DO_MUL_p,   UOP_OPR_D,          UOP_OPR_B};     // D = fp_mult(D, B, p)
-            PD_S+ 45  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_D};
-            PD_S+ 46  : douta <= {UOP_DO_SUB_p,   UOP_OPR_D,          UOP_OPR_A};     // Y_res = (D - A) % p
-            PD_S+ 47  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R0_Y,       UOP_OPR_DONTCARE};
-            PD_S+ 48  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
-            PD_S+ 49  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
-            PD_S+ 50  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
-            PD_S+ 51  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+            PD_S+ 40  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_X,       UOP_OPR_R0_Z};  // Z3 = (X3 + Z3) % p
+            PD_S+ 41  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R0_Z,       UOP_OPR_DONTCARE};
+            PD_S+ 42  : douta <= {UOP_DO_SUB_p,   UOP_OPR_B,          UOP_OPR_R0_Z};  // X3 = (B - Z3) % p
+            PD_S+ 43  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R0_X,       UOP_OPR_DONTCARE};
+            PD_S+ 44  : douta <= {UOP_DO_ADD_p,   UOP_OPR_B,          UOP_OPR_R0_Z};  // Z3 = (B + Z3) % p
+            PD_S+ 45  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R0_Z,       UOP_OPR_DONTCARE};
+            PD_S+ 46  : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_X,       UOP_OPR_R0_Z};  // Y3 = fp_mult(X3, Z3, p)
+            PD_S+ 47  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_R0_Y};
+            PD_S+ 48  : douta <= {UOP_DO_ADD_p,   UOP_OPR_A,          UOP_OPR_A};     // B = (A + A) % p
+            PD_S+ 49  : douta <= {UOP_ST_ADD_p,   UOP_OPR_B,          UOP_OPR_DONTCARE};
+            PD_S+ 50  : douta <= {UOP_DO_ADD_p,   UOP_OPR_B,          UOP_OPR_A};     // B = (B + A) % p
+            PD_S+ 51  : douta <= {UOP_ST_ADD_p,   UOP_OPR_B,          UOP_OPR_DONTCARE};
+            PD_S+ 52  : douta <= {UOP_DO_MUL_p,   UOP_OPR_CONST_E_a,  UOP_OPR_C};     // C = fp_mult(ECC.a, C, p)
+            PD_S+ 53  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_C};
+            PD_S+ 54  : douta <= {UOP_DO_MUL_p,   UOP_OPR_CONST_E_3b, UOP_OPR_E};     // E = fp_mult(ECC.3b, E, p)
+            PD_S+ 55  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_E};
+            PD_S+ 56  : douta <= {UOP_DO_ADD_p,   UOP_OPR_B,          UOP_OPR_C};     // B = (B + C) % p
+            PD_S+ 57  : douta <= {UOP_ST_ADD_p,   UOP_OPR_B,          UOP_OPR_DONTCARE};
+            PD_S+ 58  : douta <= {UOP_DO_SUB_p,   UOP_OPR_A,          UOP_OPR_C};     // C = (A - C) % p
+            PD_S+ 59  : douta <= {UOP_ST_ADD_p,   UOP_OPR_C,          UOP_OPR_DONTCARE};            
+            PD_S+ 60  : douta <= {UOP_DO_MUL_p,   UOP_OPR_CONST_E_a,  UOP_OPR_C};     // C = fp_mult(ECC.a, C, p)
+            PD_S+ 61  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_C};
+            PD_S+ 62  : douta <= {UOP_DO_ADD_p,   UOP_OPR_E,          UOP_OPR_C};     // E = (E + C) % p
+            PD_S+ 63  : douta <= {UOP_ST_ADD_p,   UOP_OPR_E,          UOP_OPR_DONTCARE};
+            PD_S+ 64  : douta <= {UOP_DO_MUL_p,   UOP_OPR_B,          UOP_OPR_E};     // A = fp_mult(B, E, p)
+            PD_S+ 65  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_A};            
+            PD_S+ 66  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_Y,       UOP_OPR_A};     // Y3 = (Y3 + A) % p
+            PD_S+ 67  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R0_Y,       UOP_OPR_DONTCARE};
+            PD_S+ 68  : douta <= {UOP_DO_MUL_p,   UOP_OPR_F,          UOP_OPR_E};     // A = fp_mult(F, E, p)
+            PD_S+ 69  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_A};
+            PD_S+ 70  : douta <= {UOP_DO_MUL_p,   UOP_OPR_D,          UOP_OPR_R0_X};  // X3 = fp_mult(D, X3, p)
+            PD_S+ 71  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_R0_X};            
+            PD_S+ 72  : douta <= {UOP_DO_SUB_p,   UOP_OPR_R0_X,       UOP_OPR_A};     // X3 = (X3 - A) % p
+            PD_S+ 73  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R0_X,       UOP_OPR_DONTCARE};
+            PD_S+ 74  : douta <= {UOP_DO_MUL_p,   UOP_OPR_D,          UOP_OPR_B};     // A = fp_mult(D, B, p)
+            PD_S+ 75  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_A};
+            PD_S+ 76  : douta <= {UOP_DO_MUL_p,   UOP_OPR_F,          UOP_OPR_R0_Z};  // Z3 = fp_mult(F, Z3, p)
+            PD_S+ 77  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_R0_Z};            
+            PD_S+ 78  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_Z,       UOP_OPR_A};     // Z3 = (Z3 + A) % p
+            PD_S+ 79  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R0_Z,       UOP_OPR_DONTCARE};
+            PD_S+ 80  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+            PD_S+ 81  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+            PD_S+ 82  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+            PD_S+ 83  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE}; 
 
             //INV mod p
-            INV_S       : douta <= {UOP_DO_ADD_p,   UOP_OPR_CONST_ZERO, UOP_OPR_CONST_ONE_MONT};    // precompute[0] = UOP_OPR_CONST_ONE_MONT % p
-            INV_S+ 1    : douta <= {UOP_ST_ADD_p,   UOP_OPR_INV_PRE0,   UOP_OPR_DONTCARE};
-            INV_S+ 2    : douta <= {UOP_DO_MUL_p,   UOP_OPR_INV_IN,     UOP_OPR_INV_PRE0};    // precompute[1] = fp_mult(Z, precompute[0], p)
-            INV_S+ 3    : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_INV_PRE1};
-            INV_S+ 4    : douta <= {UOP_DO_MUL_p,   UOP_OPR_INV_IN,     UOP_OPR_INV_PRE1};    // precompute[2] = fp_mult(Z, precompute[1], p)
-            INV_S+ 5    : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_INV_PRE2};
-            INV_S+ 6    : douta <= {UOP_DO_MUL_p,   UOP_OPR_INV_IN,     UOP_OPR_INV_PRE2};    // precompute[3] = fp_mult(Z, precompute[2], p)
-            INV_S+ 7    : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_INV_PRE3};
-            INV_S+ 8    : douta <= {UOP_DO_MUL_p,   UOP_OPR_INV_IN,     UOP_OPR_INV_PRE3};    // precompute[4] = fp_mult(Z, precompute[3], p)
-            INV_S+ 9    : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_INV_PRE4};
-            INV_S+ 10    : douta <= {UOP_DO_MUL_p,   UOP_OPR_INV_IN,     UOP_OPR_INV_PRE4};    // precompute[5] = fp_mult(Z, precompute[4], p)
-            INV_S+ 11    : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_INV_PRE5};
-            INV_S+ 12    : douta <= {UOP_DO_MUL_p,   UOP_OPR_INV_IN,     UOP_OPR_INV_PRE5};    // precompute[6] = fp_mult(Z, precompute[5], p)
-            INV_S+ 13    : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_INV_PRE6};
-            INV_S+ 14    : douta <= {UOP_DO_MUL_p,   UOP_OPR_INV_IN,     UOP_OPR_INV_PRE6};    // precompute[7] = fp_mult(Z, precompute[6], p)
-            INV_S+ 15    : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_INV_PRE7};
+            INV_S      : douta <= {UOP_DO_ADD_p,   UOP_OPR_CONST_ZERO, UOP_OPR_CONST_ONE_MONT};    // precompute[0] = UOP_OPR_CONST_ONE_MONT % p
+            INV_S+ 1   : douta <= {UOP_ST_ADD_p,   UOP_OPR_INV_PRE0,   UOP_OPR_DONTCARE};
+            INV_S+ 2   : douta <= {UOP_DO_MUL_p,   UOP_OPR_INV_IN,     UOP_OPR_INV_PRE0};    // precompute[1] = fp_mult(Z, precompute[0], p)
+            INV_S+ 3   : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_INV_PRE1};
+            INV_S+ 4   : douta <= {UOP_DO_MUL_p,   UOP_OPR_INV_IN,     UOP_OPR_INV_PRE1};    // precompute[2] = fp_mult(Z, precompute[1], p)
+            INV_S+ 5   : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_INV_PRE2};
+            INV_S+ 6   : douta <= {UOP_DO_MUL_p,   UOP_OPR_INV_IN,     UOP_OPR_INV_PRE2};    // precompute[3] = fp_mult(Z, precompute[2], p)
+            INV_S+ 7   : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_INV_PRE3};
+            INV_S+ 8   : douta <= {UOP_DO_MUL_p,   UOP_OPR_INV_IN,     UOP_OPR_INV_PRE3};    // precompute[4] = fp_mult(Z, precompute[3], p)
+            INV_S+ 9   : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_INV_PRE4};
+            INV_S+ 10  : douta <= {UOP_DO_MUL_p,   UOP_OPR_INV_IN,     UOP_OPR_INV_PRE4};    // precompute[5] = fp_mult(Z, precompute[4], p)
+            INV_S+ 11  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_INV_PRE5};
+            INV_S+ 12  : douta <= {UOP_DO_MUL_p,   UOP_OPR_INV_IN,     UOP_OPR_INV_PRE5};    // precompute[6] = fp_mult(Z, precompute[5], p)
+            INV_S+ 13  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_INV_PRE6};
+            INV_S+ 14  : douta <= {UOP_DO_MUL_p,   UOP_OPR_INV_IN,     UOP_OPR_INV_PRE6};    // precompute[7] = fp_mult(Z, precompute[6], p)
+            INV_S+ 15  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_INV_PRE7};
             INV_S+ 16  : douta <= {UOP_DO_MUL_p,   UOP_OPR_INV_PRE0,   UOP_OPR_INV_PRE0};    // a_inv = fp_mult(precompute[0], precompute[0], p)
             INV_S+ 17  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_A_INV};
             INV_S+ 18  : douta <= {UOP_DO_MUL_p,   UOP_OPR_A_INV,      UOP_OPR_A_INV};       // a_inv = fp_mult(a_inv, a_inv, p)
@@ -2361,59 +2398,97 @@ module ecc_pm_sequencer #(
             VER1_ST_S+ 4  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_Z,       UOP_OPR_CONST_ZERO};
             VER1_ST_S+ 5  : douta <= {UOP_ST_ADD_p,   UOP_OPR_P1_Z_MONT,  UOP_OPR_DONTCARE};
 
-            //VER2 R0 INIT with PK
+            //VER2 R1 INIT with PK
             PM_INIT_PK_S    : douta <= {UOP_DO_MUL_p,   UOP_OPR_Qx_AFFN,           UOP_OPR_CONST_R2_p};
-            PM_INIT_PK_S+ 1 : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,          UOP_OPR_R0_X};
+            PM_INIT_PK_S+ 1 : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,          UOP_OPR_R1_X};
             PM_INIT_PK_S+ 2 : douta <= {UOP_DO_MUL_p,   UOP_OPR_Qy_AFFN,           UOP_OPR_CONST_R2_p};
-            PM_INIT_PK_S+ 3 : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,          UOP_OPR_R0_Y};
-            PM_INIT_PK_S+ 4 : douta <= {UOP_DO_MUL_p,   UOP_OPR_CONST_ONE,         UOP_OPR_CONST_R2_p};
-            PM_INIT_PK_S+ 5 : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,          UOP_OPR_R0_Z};
+            PM_INIT_PK_S+ 3 : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,          UOP_OPR_R1_Y};
+            PM_INIT_PK_S+ 4 : douta <= {UOP_DO_ADD_p,   UOP_OPR_CONST_ONE_MONT,    UOP_OPR_CONST_ZERO};
+            PM_INIT_PK_S+ 5 : douta <= {UOP_ST_ADD_p,   UOP_OPR_R1_Z,              UOP_OPR_DONTCARE};
 
             //VER2 point addtion of PA((h*s_inv)*G, (r*s_inv)*PK)
-            VER2_PA_S      : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_Y,       UOP_OPR_P1_Z_MONT};  // A = fp_mult(P0.Y, P1.Z, p)
+            VER2_PA_S      : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_X,       UOP_OPR_P1_X_MONT};  // A = fp_mult(P0.X, P1.X, p)
             VER2_PA_S+ 1   : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_A};
-            VER2_PA_S+ 2   : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_X,       UOP_OPR_P1_Z_MONT};  // B = fp_mult(P0.X, P1.Z, p)
+            VER2_PA_S+ 2   : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_Y,       UOP_OPR_P1_Y_MONT};  // B = fp_mult(P0.Y, P1.Y, p)
             VER2_PA_S+ 3   : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_B};
             VER2_PA_S+ 4   : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_Z,       UOP_OPR_P1_Z_MONT};  // C = fp_mult(P0.Z, P1.Z, p)
             VER2_PA_S+ 5   : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_C};
-            VER2_PA_S+ 6   : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_Z,       UOP_OPR_P1_Y_MONT};  // D = fp_mult(P0.Z, P1.Y, p)
-            VER2_PA_S+ 7   : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_D};
-            VER2_PA_S+ 8   : douta <= {UOP_DO_SUB_p,   UOP_OPR_D,          UOP_OPR_A};     // D = (D - A ) % p
-            VER2_PA_S+ 9   : douta <= {UOP_ST_ADD_p,   UOP_OPR_D,          UOP_OPR_DONTCARE};
-            VER2_PA_S+ 10  : douta <= {UOP_DO_MUL_p,   UOP_OPR_D,          UOP_OPR_D};     // E = fp_mult(D, D, p)
-            VER2_PA_S+ 11  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_E};
-            VER2_PA_S+ 12  : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_Z,       UOP_OPR_P1_X_MONT};  // F = fp_mult(P0.Z, P1.X, p)
-            VER2_PA_S+ 13  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_F};
-            VER2_PA_S+ 14  : douta <= {UOP_DO_SUB_p,   UOP_OPR_F,          UOP_OPR_B};     // F = (F - B) % p
-            VER2_PA_S+ 15  : douta <= {UOP_ST_ADD_p,   UOP_OPR_F,          UOP_OPR_DONTCARE};
-            VER2_PA_S+ 16  : douta <= {UOP_DO_MUL_p,   UOP_OPR_F,          UOP_OPR_F};     // G = fp_mult(F, F, p)
-            VER2_PA_S+ 17  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_G};
-            VER2_PA_S+ 18  : douta <= {UOP_DO_MUL_p,   UOP_OPR_G,          UOP_OPR_B};     // B = fp_mult(G, B, p)
-            VER2_PA_S+ 19  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_B};
-            VER2_PA_S+ 20  : douta <= {UOP_DO_MUL_p,   UOP_OPR_F,          UOP_OPR_G};     // G = fp_mult(F, G, p)
-            VER2_PA_S+ 21  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_G};
-            VER2_PA_S+ 22  : douta <= {UOP_DO_MUL_p,   UOP_OPR_G,          UOP_OPR_C};     // Z_res = fp_mult(G, C, p)
-            VER2_PA_S+ 23  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_R0_Z};
-            VER2_PA_S+ 24  : douta <= {UOP_DO_MUL_p,   UOP_OPR_G,          UOP_OPR_A};     // A = fp_mult(G, A, p)
-            VER2_PA_S+ 25  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_A};
-            VER2_PA_S+ 26  : douta <= {UOP_DO_MUL_p,   UOP_OPR_E,          UOP_OPR_C};     // E = fp_mult(E, C, p)
-            VER2_PA_S+ 27  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_E};
-            VER2_PA_S+ 28  : douta <= {UOP_DO_ADD_p,   UOP_OPR_B,          UOP_OPR_B};     // C = (B + B) % p
-            VER2_PA_S+ 29  : douta <= {UOP_ST_ADD_p,   UOP_OPR_C,          UOP_OPR_DONTCARE};
-            VER2_PA_S+ 30  : douta <= {UOP_DO_SUB_p,   UOP_OPR_E,          UOP_OPR_C};     // C = (E - C) % p
-            VER2_PA_S+ 31  : douta <= {UOP_ST_ADD_p,   UOP_OPR_C,          UOP_OPR_DONTCARE};
-            VER2_PA_S+ 32  : douta <= {UOP_DO_SUB_p,   UOP_OPR_C,          UOP_OPR_G};     // C = (C - G) % p
-            VER2_PA_S+ 33  : douta <= {UOP_ST_ADD_p,   UOP_OPR_C,          UOP_OPR_DONTCARE};
-            VER2_PA_S+ 34  : douta <= {UOP_DO_SUB_p,   UOP_OPR_B,          UOP_OPR_C};     // B = (B - C) % p
-            VER2_PA_S+ 35  : douta <= {UOP_ST_ADD_p,   UOP_OPR_B,          UOP_OPR_DONTCARE};
-            VER2_PA_S+ 36  : douta <= {UOP_DO_MUL_p,   UOP_OPR_D,          UOP_OPR_B};     // B = fp_mult(D, B, p)
-            VER2_PA_S+ 37  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_B};
-            VER2_PA_S+ 38  : douta <= {UOP_DO_MUL_p,   UOP_OPR_F,          UOP_OPR_C};     // X_res = fp_mult(F, C, p)
+            VER2_PA_S+ 6   : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_X,       UOP_OPR_R0_Y};       // D = (P0.X + P0.Y) % p
+            VER2_PA_S+ 7   : douta <= {UOP_ST_ADD_p,   UOP_OPR_D,          UOP_OPR_DONTCARE};
+            VER2_PA_S+ 8   : douta <= {UOP_DO_ADD_p,   UOP_OPR_P1_X_MONT,  UOP_OPR_P1_Y_MONT};  // E = (P1.X + P1.Y) % p
+            VER2_PA_S+ 9   : douta <= {UOP_ST_ADD_p,   UOP_OPR_E,          UOP_OPR_DONTCARE};
+            VER2_PA_S+ 10  : douta <= {UOP_DO_MUL_p,   UOP_OPR_D,          UOP_OPR_E};          // D = fp_mult(D, E, p)
+            VER2_PA_S+ 11  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_D};
+            VER2_PA_S+ 12  : douta <= {UOP_DO_ADD_p,   UOP_OPR_A,          UOP_OPR_B};          // E = (A + B) % p
+            VER2_PA_S+ 13  : douta <= {UOP_ST_ADD_p,   UOP_OPR_E,          UOP_OPR_DONTCARE};
+            VER2_PA_S+ 14  : douta <= {UOP_DO_SUB_p,   UOP_OPR_D,          UOP_OPR_E};          // D = (D - E) % p
+            VER2_PA_S+ 15  : douta <= {UOP_ST_ADD_p,   UOP_OPR_D,          UOP_OPR_DONTCARE};
+            VER2_PA_S+ 16  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_X,       UOP_OPR_R0_Z};       // E = (P0.X + P0.Z) % p
+            VER2_PA_S+ 17  : douta <= {UOP_ST_ADD_p,   UOP_OPR_E,          UOP_OPR_DONTCARE};
+            VER2_PA_S+ 18  : douta <= {UOP_DO_ADD_p,   UOP_OPR_P1_X_MONT,  UOP_OPR_P1_Z_MONT};  // F = (P1.X + P1.Z) % p
+            VER2_PA_S+ 19  : douta <= {UOP_ST_ADD_p,   UOP_OPR_F,          UOP_OPR_DONTCARE};
+            VER2_PA_S+ 20  : douta <= {UOP_DO_MUL_p,   UOP_OPR_E,          UOP_OPR_F};          // E = fp_mult(E, F, p)
+            VER2_PA_S+ 21  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_E};
+            VER2_PA_S+ 22  : douta <= {UOP_DO_ADD_p,   UOP_OPR_A,          UOP_OPR_C};          // F = (A + C) % p
+            VER2_PA_S+ 23  : douta <= {UOP_ST_ADD_p,   UOP_OPR_F,          UOP_OPR_DONTCARE};
+            VER2_PA_S+ 24  : douta <= {UOP_DO_SUB_p,   UOP_OPR_E,          UOP_OPR_F};          // E = (E - F) % p
+            VER2_PA_S+ 25  : douta <= {UOP_ST_ADD_p,   UOP_OPR_E,          UOP_OPR_DONTCARE};
+            VER2_PA_S+ 26  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_Y,       UOP_OPR_R0_Z};       // F = (P0.Y + P0.Z) % p
+            VER2_PA_S+ 27  : douta <= {UOP_ST_ADD_p,   UOP_OPR_F,          UOP_OPR_DONTCARE};
+            VER2_PA_S+ 28  : douta <= {UOP_DO_ADD_p,   UOP_OPR_P1_Y_MONT,  UOP_OPR_P1_Z_MONT};  // X3 = (P1.Y + P1.Z) % p
+            VER2_PA_S+ 29  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R0_X,       UOP_OPR_DONTCARE};        
+            VER2_PA_S+ 30  : douta <= {UOP_DO_MUL_p,   UOP_OPR_F,          UOP_OPR_R0_X};       // F = fp_mult(F, X3, p)
+            VER2_PA_S+ 31  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_F};
+            VER2_PA_S+ 32  : douta <= {UOP_DO_ADD_p,   UOP_OPR_B,          UOP_OPR_C};          // X3 = (B + C) % p
+            VER2_PA_S+ 33  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R0_X,       UOP_OPR_DONTCARE};
+            VER2_PA_S+ 34  : douta <= {UOP_DO_SUB_p,   UOP_OPR_F,          UOP_OPR_R0_X};       // F = (F - X3) % p
+            VER2_PA_S+ 35  : douta <= {UOP_ST_ADD_p,   UOP_OPR_F,          UOP_OPR_DONTCARE};    
+            VER2_PA_S+ 36  : douta <= {UOP_DO_MUL_p,   UOP_OPR_CONST_E_a,  UOP_OPR_E};          // Z3 = fp_mult(ECC.a, E, p)
+            VER2_PA_S+ 37  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_R0_Z};
+            VER2_PA_S+ 38  : douta <= {UOP_DO_MUL_p,   UOP_OPR_CONST_E_3b, UOP_OPR_C};          // X3 = fp_mult(ECC.3b, C, p)
             VER2_PA_S+ 39  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_R0_X};
-            VER2_PA_S+ 40  : douta <= {UOP_DO_SUB_p,   UOP_OPR_B,          UOP_OPR_A};     // Y_res = (B - A) % p
-            VER2_PA_S+ 41  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R0_Y,       UOP_OPR_DONTCARE};
-            VER2_PA_S+ 42  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_Z,       UOP_OPR_CONST_ZERO};   // Zinv_IN = P1_Z
-            VER2_PA_S+ 43  : douta <= {UOP_ST_ADD_p,   UOP_OPR_INV_IN,     UOP_OPR_DONTCARE};
+            VER2_PA_S+ 40  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_X,       UOP_OPR_R0_Z};       // Z3 = (X3 + Z3) % p
+            VER2_PA_S+ 41  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R0_Z,       UOP_OPR_DONTCARE};
+            VER2_PA_S+ 42  : douta <= {UOP_DO_SUB_p,   UOP_OPR_B,          UOP_OPR_R0_Z};       // X3 = (B - Z3) % p
+            VER2_PA_S+ 43  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R0_X,       UOP_OPR_DONTCARE};
+            VER2_PA_S+ 44  : douta <= {UOP_DO_ADD_p,   UOP_OPR_B,          UOP_OPR_R0_Z};       // Z3 = (B + Z3) % p
+            VER2_PA_S+ 45  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R0_Z,       UOP_OPR_DONTCARE};
+            VER2_PA_S+ 46  : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_X,       UOP_OPR_R0_Z};       // Y3 = fp_mult(X3, Z3, p)
+            VER2_PA_S+ 47  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_R0_Y};
+            VER2_PA_S+ 48  : douta <= {UOP_DO_ADD_p,   UOP_OPR_A,          UOP_OPR_A};          // B = (A + A) % p
+            VER2_PA_S+ 49  : douta <= {UOP_ST_ADD_p,   UOP_OPR_B,          UOP_OPR_DONTCARE};
+            VER2_PA_S+ 50  : douta <= {UOP_DO_ADD_p,   UOP_OPR_B,          UOP_OPR_A};          // B = (B + A) % p
+            VER2_PA_S+ 51  : douta <= {UOP_ST_ADD_p,   UOP_OPR_B,          UOP_OPR_DONTCARE};
+            VER2_PA_S+ 52  : douta <= {UOP_DO_MUL_p,   UOP_OPR_CONST_E_a,  UOP_OPR_C};          // C = fp_mult(ECC.a, C, p)
+            VER2_PA_S+ 53  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_C};
+            VER2_PA_S+ 54  : douta <= {UOP_DO_MUL_p,   UOP_OPR_CONST_E_3b, UOP_OPR_E};          // E = fp_mult(ECC.3b, E, p)
+            VER2_PA_S+ 55  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_E};
+            VER2_PA_S+ 56  : douta <= {UOP_DO_ADD_p,   UOP_OPR_B,          UOP_OPR_C};          // B = (B + C) % p
+            VER2_PA_S+ 57  : douta <= {UOP_ST_ADD_p,   UOP_OPR_B,          UOP_OPR_DONTCARE};
+            VER2_PA_S+ 58  : douta <= {UOP_DO_SUB_p,   UOP_OPR_A,          UOP_OPR_C};          // C = (A - C) % p
+            VER2_PA_S+ 59  : douta <= {UOP_ST_ADD_p,   UOP_OPR_C,          UOP_OPR_DONTCARE};            
+            VER2_PA_S+ 60  : douta <= {UOP_DO_MUL_p,   UOP_OPR_CONST_E_a,  UOP_OPR_C};          // C = fp_mult(ECC.a, C, p)
+            VER2_PA_S+ 61  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_C};
+            VER2_PA_S+ 62  : douta <= {UOP_DO_ADD_p,   UOP_OPR_E,          UOP_OPR_C};          // E = (E + C) % p
+            VER2_PA_S+ 63  : douta <= {UOP_ST_ADD_p,   UOP_OPR_E,          UOP_OPR_DONTCARE};
+            VER2_PA_S+ 64  : douta <= {UOP_DO_MUL_p,   UOP_OPR_B,          UOP_OPR_E};          // A = fp_mult(B, E, p)
+            VER2_PA_S+ 65  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_A};            
+            VER2_PA_S+ 66  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_Y,       UOP_OPR_A};          // Y3 = (Y3 + A) % p
+            VER2_PA_S+ 67  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R0_Y,       UOP_OPR_DONTCARE};
+            VER2_PA_S+ 68  : douta <= {UOP_DO_MUL_p,   UOP_OPR_F,          UOP_OPR_E};          // A = fp_mult(F, E, p)
+            VER2_PA_S+ 69  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_A};
+            VER2_PA_S+ 70  : douta <= {UOP_DO_MUL_p,   UOP_OPR_D,          UOP_OPR_R0_X};       // X3 = fp_mult(D, X3, p)
+            VER2_PA_S+ 71  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_R0_X};            
+            VER2_PA_S+ 72  : douta <= {UOP_DO_SUB_p,   UOP_OPR_R0_X,       UOP_OPR_A};          // X3 = (X3 - A) % p
+            VER2_PA_S+ 73  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R0_X,       UOP_OPR_DONTCARE};
+            VER2_PA_S+ 74  : douta <= {UOP_DO_MUL_p,   UOP_OPR_D,          UOP_OPR_B};          // A = fp_mult(D, B, p)
+            VER2_PA_S+ 75  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_A};
+            VER2_PA_S+ 76  : douta <= {UOP_DO_MUL_p,   UOP_OPR_F,          UOP_OPR_R0_Z};       // Z3 = fp_mult(F, Z3, p)
+            VER2_PA_S+ 77  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_R0_Z};            
+            VER2_PA_S+ 78  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_Z,       UOP_OPR_A};          // Z3 = (Z3 + A) % p
+            VER2_PA_S+ 79  : douta <= {UOP_ST_ADD_p,   UOP_OPR_R0_Z,       UOP_OPR_DONTCARE};
+            VER2_PA_S+ 80  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_Z,       UOP_OPR_CONST_ZERO}; // Zinv_IN = P1_Z
+            VER2_PA_S+ 81  : douta <= {UOP_ST_ADD_p,   UOP_OPR_INV_IN,     UOP_OPR_DONTCARE};
 
             default : douta <= {UOP_NOP,     UOP_OPR_DONTCARE,  UOP_OPR_DONTCARE};
         endcase 

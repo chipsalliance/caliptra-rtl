@@ -70,6 +70,6 @@ module ecc_fixed_msb #(
         .cout(data_2q[REG_SIZE+1])
     );
     
-    assign data_o = (data_q_reg[REG_SIZE] == 1'b1)? data_q_reg[REG_SIZE   : 0] : data_2q_reg[REG_SIZE   : 0];
+    assign data_o = {1'b0, data_i}; //(data_q_reg[REG_SIZE] == 1'b1)? data_q_reg[REG_SIZE   : 0] : data_2q_reg[REG_SIZE   : 0];
 
 endmodule

@@ -138,6 +138,10 @@ package ecc_reg_pkg;
     } ecc_reg__ecc_VERIFY_R__out_t;
 
     typedef struct {
+        ecc_reg__srw_hr_w32__out_t LAMBDA;
+    } ecc_reg__ecc_LAMBDA__out_t;
+
+    typedef struct {
         ecc_reg__ecc_NAME__out_t ecc_NAME[2];
         ecc_reg__ecc_VERSION__out_t ecc_VERSION[2];
         ecc_reg__ecc_CTRL__out_t ecc_CTRL;
@@ -150,5 +154,6 @@ package ecc_reg_pkg;
         ecc_reg__ecc_R__out_t ecc_R[12];
         ecc_reg__ecc_S__out_t ecc_S[12];
         ecc_reg__ecc_VERIFY_R__out_t ecc_VERIFY_R[12];
+        ecc_reg__ecc_LAMBDA__out_t ecc_LAMBDA[12];
     } ecc_reg__out_t;
 endpackage

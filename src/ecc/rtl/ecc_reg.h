@@ -104,6 +104,18 @@
 #define ECC_REG_ECC_VERIFY_R_9                              (0x424)
 #define ECC_REG_ECC_VERIFY_R_10                             (0x428)
 #define ECC_REG_ECC_VERIFY_R_11                             (0x42c)
+#define ECC_REG_ECC_LAMBDA_0                                (0x480)
+#define ECC_REG_ECC_LAMBDA_1                                (0x484)
+#define ECC_REG_ECC_LAMBDA_2                                (0x488)
+#define ECC_REG_ECC_LAMBDA_3                                (0x48c)
+#define ECC_REG_ECC_LAMBDA_4                                (0x490)
+#define ECC_REG_ECC_LAMBDA_5                                (0x494)
+#define ECC_REG_ECC_LAMBDA_6                                (0x498)
+#define ECC_REG_ECC_LAMBDA_7                                (0x49c)
+#define ECC_REG_ECC_LAMBDA_8                                (0x4a0)
+#define ECC_REG_ECC_LAMBDA_9                                (0x4a4)
+#define ECC_REG_ECC_LAMBDA_10                               (0x4a8)
+#define ECC_REG_ECC_LAMBDA_11                               (0x4ac)
 
 
 #endif

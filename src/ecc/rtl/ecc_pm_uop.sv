@@ -2,7 +2,7 @@
 //
 // ecc_pm_uop.sv
 // --------
-// ECC instructin for the point multiplication.
+// ECC instructin for the point multiplication (PM).
 //
 //
 // Author: Mojtaba Bisheh-Niasar
@@ -15,7 +15,6 @@ localparam integer UOP_ADDR_WIDTH    = 8;
 localparam integer OPR_ADDR_WIDTH    = 8;
 
 localparam [UOP_ADDR_WIDTH-1 : 0] UOP_NOP                   = 8'b0000_0000;
-//localparam [UOP_ADDR_WIDTH-1 : 0] UOP_CPY_A2B               = 8'b0100_0001;
 
 localparam [UOP_ADDR_WIDTH-1 : 0] UOP_DO_MUL_p              = 8'b0001_0000;
 localparam [UOP_ADDR_WIDTH-1 : 0] UOP_ST_MUL_p              = 8'b0000_0001;
@@ -34,12 +33,12 @@ localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_DONTCARE          = 8'dX;
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_ZERO        = 8'd00;
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_ONE         = 8'd01;
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_E_a         = 8'd02;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_ONE_MONT    = 8'd03;  // Mont_mult(1, R2) % p
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_R2_p        = 8'd04;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_E_3b        = 8'd03;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_ONE_MONT    = 8'd04;  // Mont_mult(1, R2) % p
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_R2_p        = 8'd05;
 
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_GX_MONT     = 8'd05;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_GY_MONT     = 8'd06;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_GZ_MONT     = 8'd07;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_GX_MONT     = 8'd06;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_GY_MONT     = 8'd07;
 
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_R0_X              = 8'd08;  // 8'b0000_1000;
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_R0_Y              = 8'd09;  // 8'b0000_1001;
@@ -59,6 +58,8 @@ localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_PRIVKEY           = 8'd20;
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_HASH_MSG          = 8'd21;
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_SCALAR_G          = 8'd22;
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_SCALAR_PK         = 8'd23;
+
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_LAMBDA            = 8'd24;
 
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_ONE_q_MONT  = 8'd28;  // Mont_mult(1, R2) % q
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_R2_q        = 8'd29;
@@ -101,36 +102,33 @@ localparam [2 : 0] VER_PART2_CMD        = 3'b110;
 
 //PM Subroutine listing
 localparam NOP                  = 0;
-localparam PM_INIT_G_S          = 2;
+localparam PM_INIT_G_S          = 2;               // R1 INIT with G
 localparam PM_INIT_G_E          = PM_INIT_G_S + 5;
-
-localparam PM_INIT_S            = PM_INIT_G_E + 2;
-localparam PM_INIT_E            = PM_INIT_S + 51;
-
-localparam PA_S                 = PM_INIT_E + 2;  // Point Addition
-localparam PA_E                 = PA_S + 41;
-localparam PD_S                 = PA_E + 2;       // Point Doubling
-localparam PD_E                 = PD_S + 51;
-localparam INV_S                = PD_E + 2;       // Inversion mod p
+localparam PM_INIT_S            = PM_INIT_G_E + 2; // R0 INIT with O
+localparam PM_INIT_E            = PM_INIT_S + 9;
+localparam PA_S                 = PM_INIT_E + 2;   // Point Addition
+localparam PA_E                 = PA_S + 79;
+localparam PD_S                 = PA_E + 2;        // Point Doubling
+localparam PD_E                 = PD_S + 83;
+localparam INV_S                = PD_E + 2;        // Inversion mod p
 localparam INV_E                = INV_S + 1039;
-localparam CONV_S               = INV_E + 2;      // PM result conversion from projective Mont (X,Y,Z) to affine normanl (x,y)
+localparam CONV_S               = INV_E + 2;       // PM result conversion from projective Mont (X,Y,Z) to affine normanl (x,y)
 localparam CONV_E               = CONV_S + 11;
+
 localparam SIGN0_S              = CONV_E + 2;     // signing proof r part0
 localparam SIGN0_E              = SIGN0_S + 17;
 localparam INVq_S               = SIGN0_E + 2;    // Inversion mod q
 localparam INVq_E               = INVq_S + 1043;
 localparam SIGN1_S              = INVq_E + 2;     // signing proof r part1
 localparam SIGN1_E              = SIGN1_S + 7;
-localparam VER0_P0_S            = SIGN1_E + 2;    // verifying0 part0
+
+localparam VER0_P0_S            = SIGN1_E + 2;    // verifying0 part0 to convert inputs to Mont domain
 localparam VER0_P0_E            = VER0_P0_S + 9;
-localparam VER0_P1_S            = VER0_P0_E + 2;  // verifying0 part1
+localparam VER0_P1_S            = VER0_P0_E + 2;  // verifying0 part1 to compute (h*s_inv) and (r*s_inv)
 localparam VER0_P1_E            = VER0_P1_S + 11;
-
-localparam VER1_ST_S            = VER0_P1_E + 2;  // verifying0 part1
+localparam VER1_ST_S            = VER0_P1_E + 2;  // verifying1 store ver1 result (h*s_inv)*G
 localparam VER1_ST_E            = VER1_ST_S + 5;
-
-localparam PM_INIT_PK_S         = VER1_ST_E + 2;
+localparam PM_INIT_PK_S         = VER1_ST_E + 2;  // verifying2 R1 INIT with PK
 localparam PM_INIT_PK_E         = PM_INIT_PK_S + 5;
-
-localparam VER2_PA_S            = PM_INIT_PK_E + 2;
-localparam VER2_PA_E            = VER2_PA_S + 43;
+localparam VER2_PA_S            = PM_INIT_PK_E + 2;  // verifying2 point addtion of PA((h*s_inv)*G, (r*s_inv)*PK)
+localparam VER2_PA_E            = VER2_PA_S + 81;

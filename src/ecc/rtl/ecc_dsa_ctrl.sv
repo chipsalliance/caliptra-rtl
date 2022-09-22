@@ -62,6 +62,7 @@ module ecc_dsa_ctrl(
     logic [REG_SIZE-1 : 0]  seed_reg;
     logic [REG_SIZE-1 : 0]  r_reg;
     logic [REG_SIZE-1 : 0]  s_reg;
+    logic [REG_SIZE-1 : 0]  lambda_reg;
 
     logic [REG_SIZE-1 : 0]  scalar_G_reg;
     logic [REG_SIZE-1 : 0]  scalar_PK_reg;
@@ -162,6 +163,7 @@ module ecc_dsa_ctrl(
             pubkeyy_reg[i0*32 +: 32] = hwif_in.ecc_PUBKEY_Y[i0].PUBKEY_Y.value;
             r_reg[i0*32 +: 32]       = hwif_in.ecc_R[i0].R.value;
             s_reg[i0*32 +: 32]       = hwif_in.ecc_S[i0].S.value;
+            lambda_reg[i0*32 +: 32]  = hwif_in.ecc_LAMBDA[i0].LAMBDA.value;
         end
     end // ecc_reg_reading
 
@@ -192,9 +194,21 @@ module ecc_dsa_ctrl(
     //
     // update the internal registers and their wr_en
     //----------------------------------------------------------------
-    always_comb begin
-        scalar_G_reg = (!scalar_G_sel)? hmac_nonce : (hw_scalar_G_we)? read_reg : scalar_G_reg;
-        scalar_PK_reg = (hw_scalar_PK_we)? read_reg : scalar_PK_reg;
+    always_ff @(posedge clk) 
+    begin : SCALAR_REG
+        if(!reset_n) begin
+            scalar_G_reg <= 0;
+            scalar_PK_reg <= 0;
+        end
+        else begin
+            if (!scalar_G_sel)
+                scalar_G_reg <= hmac_nonce;
+            else if (hw_scalar_G_we)
+                scalar_G_reg <= read_reg;
+            
+            if (hw_scalar_PK_we)
+                scalar_PK_reg <= read_reg;
+        end
     end
 
     always_comb 
@@ -224,6 +238,7 @@ module ecc_dsa_ctrl(
         end
     end // wr_en_signals
 
+
     always_comb 
     begin : write_to_pm_core
         write_reg = 0;
@@ -232,11 +247,11 @@ module ecc_dsa_ctrl(
                 CONST_ZERO_ID         : write_reg = 0;
                 CONST_ONE_ID          : write_reg = 1;
                 CONST_E_a_MONT_ID     : write_reg = {1'b0, E_a_MONT};
+                CONST_E_3b_MONT_ID    : write_reg = {1'b0, E_3b_MONT};
                 CONST_ONE_p_MONT_ID   : write_reg = {1'b0, ONE_p_MONT};
                 CONST_R2_p_MONT_ID    : write_reg = {1'b0, R2_p_MONT};
                 CONST_G_X_MONT_ID     : write_reg = {1'b0, G_X_MONT};
                 CONST_G_Y_MONT_ID     : write_reg = {1'b0, G_Y_MONT};
-                CONST_G_Z_MONT_ID     : write_reg = {1'b0, G_Z_MONT};
                 CONST_R2_q_MONT_ID    : write_reg = {1'b0, R2_q_MONT};
                 CONST_ONE_q_MONT_ID   : write_reg = {1'b0, ONE_q_MONT};
                 MSG_ID                : write_reg = {1'b0, msg_reg};
@@ -246,6 +261,7 @@ module ecc_dsa_ctrl(
                 R_ID                  : write_reg = {1'b0, r_reg};
                 S_ID                  : write_reg = {1'b0, s_reg};
                 SCALAR_G_ID           : write_reg = {1'b0, scalar_G_reg};
+                LAMBDA_ID             : write_reg = {1'b0, lambda_reg};
                 default               : write_reg = 0;
             endcase
         end
@@ -254,19 +270,24 @@ module ecc_dsa_ctrl(
         end
     end // write_to_pm_core
 
-    always_comb 
+    always_ff @(posedge clk) 
     begin : fixed_msb_ctrl
-        if (prog_line[23 : 16] == DSA_UOP_FIXED_MSB) begin
-            case (prog_line[15 : 8])
-                SCALAR_PK_ID        : scalar_in_reg = scalar_PK_reg;
-                default             : scalar_in_reg = scalar_G_reg;
-            endcase
-            fixed_msb_en = 1;
+        if(!reset_n) begin
+            scalar_in_reg <= 0;
+            fixed_msb_en <= 0;
         end
-        else
-            fixed_msb_en = 0;
+        else begin
+            if (prog_line[23 : 16] == DSA_UOP_FIXED_MSB) begin
+                case (prog_line[15 : 8])
+                    SCALAR_PK_ID        : scalar_in_reg <= scalar_PK_reg;
+                    default             : scalar_in_reg <= scalar_G_reg;
+                endcase
+                fixed_msb_en <= 1;
+            end
+            else
+                fixed_msb_en <= 0;
+        end
     end // fixed_msb_ctrl
-    
 
     assign hmac_busy = ~hmac_ready;
 

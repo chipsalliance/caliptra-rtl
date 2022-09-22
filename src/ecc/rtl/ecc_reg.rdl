@@ -39,4 +39,6 @@ addrmap ecc_reg {
     reg {srw_hrw R[32];} ecc_R[12] @0x00000300;
     reg {srw_hrw S[32];} ecc_S[12] @0x00000380;
     reg {sr_hrw VERIFY_R[32];} ecc_VERIFY_R[12] @0x00000400;
+    
+    reg {srw_hr LAMBDA[32];} ecc_LAMBDA[12] @0x00000480;
 };
