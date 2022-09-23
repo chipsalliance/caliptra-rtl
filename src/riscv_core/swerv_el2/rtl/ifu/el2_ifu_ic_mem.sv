@@ -254,15 +254,15 @@ import el2_pkg::*;
 
 `define EL2_IC_DATA_SRAM(depth,width)                                                                                   \
         always_comb begin                                                                                               \
-            // Only drive these signals for the first WAY since they are replicated                                     \
-            if (i == 0) begin                                                                                           \
-                ic_data_mem_export.ic_sb_wr_data[k][``width-1:0] = ic_sb_wr_data[k][``width-1:0];                       \
-                ic_data_mem_export.ic_rw_addr_bank_q[k]          = ic_rw_addr_bank_q[k];                                \
-            end                                                                                                         \
-            ic_data_mem_export.ic_bank_way_clken[k][i]       = ic_bank_way_clken_final_up[i][k];                        \
-            ic_data_mem_export.ic_b_sb_wren[k][i]            = ic_b_sb_wren[k][i];                                      \
-            wb_dout_pre_up[i][k]                             = ic_data_mem_export.wb_dout_pre[k][``width * i+:``width]; \
-        end                                                                                                             \
+            // Only drive these signals for the first WAY since they are replicated                                          \
+            if (i == 0) begin                                                                                                \
+                ic_data_mem_export.ic_data_sb_wr_data[k][``width-1:0] = ic_sb_wr_data[k][``width-1:0];                       \
+                ic_data_mem_export.ic_data_addr_bank_q[k]             = ic_rw_addr_bank_q[k];                                \
+            end                                                                                                              \
+            ic_data_mem_export.ic_data_bank_way_clken[k][i]  = ic_bank_way_clken_final_up[i][k];                             \
+            ic_data_mem_export.ic_data_wren[k][i]            = ic_b_sb_wren[k][i];                                           \
+            wb_dout_pre_up[i][k]                             = ic_data_mem_export.ic_data_dout_pre[k][``width * i+:``width]; \
+        end                                                                                                                  \
 if (pt.ICACHE_BYPASS_ENABLE == 1) begin \
                  assign wrptr_in_up[i][k] = (wrptr_up[i][k] == (pt.ICACHE_NUM_BYPASS-1)) ? '0 : (wrptr_up[i][k] + 1'd1);                                    \
                  rvdffs  #(pt.ICACHE_NUM_BYPASS_WIDTH)  wrptr_ff(.*, .clk(active_clk),  .en(|write_bypass_en_up[i][k]), .din (wrptr_in_up[i][k]), .dout(wrptr_up[i][k])) ;     \
@@ -394,14 +394,14 @@ if (pt.ICACHE_BYPASS_ENABLE == 1) begin \
 // SRAM macros
 
 `define EL2_PACKED_IC_DATA_SRAM(depth,width,waywidth)                                                                     \
-        always_comb begin                                                                                                  \
-            ic_data_mem_export.ic_bank_way_clken[k]             = {pt.ICACHE_NUM_WAYS{ic_bank_way_clken_final[k]}};        \
-            ic_data_mem_export.ic_b_sb_wren[k]                  = ic_b_sb_wren[k];                                         \
-            ic_data_mem_export.ic_sb_wr_data[k][``waywidth-1:0] = ic_sb_wr_data[k][``waywidth-1:0];                        \
-            ic_data_mem_export.ic_b_sb_bit_en_vec[k]            = ic_b_sb_bit_en_vec[k];                                   \
-            ic_data_mem_export.ic_rw_addr_bank_q[k]             = ic_rw_addr_bank_q[k];                                    \
-            wb_packeddout_pre[k]                                = ic_data_mem_export.wb_dout_pre[k];                       \
-        end                                                                                                                \
+        always_comb begin                                                                                                       \
+            ic_data_mem_export.ic_data_bank_way_clken[k]             = {pt.ICACHE_NUM_WAYS{ic_bank_way_clken_final[k]}};        \
+            ic_data_mem_export.ic_data_wren[k]                       = ic_b_sb_wren[k];                                         \
+            ic_data_mem_export.ic_data_sb_wr_data[k][``waywidth-1:0] = ic_sb_wr_data[k][``waywidth-1:0];                        \
+            ic_data_mem_export.ic_data_bit_en_vec[k]                 = ic_b_sb_bit_en_vec[k];                                   \
+            ic_data_mem_export.ic_data_addr_bank_q[k]                = ic_rw_addr_bank_q[k];                                    \
+            wb_packeddout_pre[k]                                     = ic_data_mem_export.ic_data_dout_pre[k];                  \
+        end                                                                                                                     \
                                                                                                                                                       \
               if (pt.ICACHE_BYPASS_ENABLE == 1) begin                                                                                                                                                 \
                                                                                                                                                                                                       \
@@ -943,7 +943,7 @@ end // block: OTHERS
           always_comb begin                                                                                                         \
               if (i == 0) begin                                                                                                     \
                   ic_tag_mem_export.ic_tag_wr_data[``width-1:0]   = ic_tag_wr_data[``width-1:0];                                    \
-                  ic_tag_mem_export.ic_rw_addr_q                  = ic_rw_addr_q;                                                   \
+                  ic_tag_mem_export.ic_tag_addr_q                 = ic_rw_addr_q;                                                   \
               end                                                                                                                   \
               ic_tag_mem_export.ic_tag_clken_final[i]         = ic_tag_clken_final[i];                                              \
               ic_tag_mem_export.ic_tag_wren_q[i]              = ic_tag_wren_q[i];                                                   \
@@ -1133,7 +1133,7 @@ end // block: OTHERS
               ic_tag_mem_export.ic_tag_wren_q                                      = ic_tag_wren_q;                                             \
               ic_tag_mem_export.ic_tag_wren_biten_vec                              = ic_tag_wren_biten_vec;                                     \
               ic_tag_mem_export.ic_tag_wr_data[``width/pt.ICACHE_NUM_WAYS-1:0]     = ic_tag_wr_data[``width/pt.ICACHE_NUM_WAYS-1:0];            \
-              ic_tag_mem_export.ic_rw_addr_q                                       = ic_rw_addr_q;                                              \
+              ic_tag_mem_export.ic_tag_addr_q                                      = ic_rw_addr_q;                                              \
               ic_tag_data_raw_packed_pre[``width-1:0]                              = ic_tag_mem_export.ic_tag_data_raw_pre[``width-1:0];        \
           end                                                                                                                                   \
                                                                                                            \

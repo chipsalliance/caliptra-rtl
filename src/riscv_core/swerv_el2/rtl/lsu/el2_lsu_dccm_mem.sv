@@ -114,9 +114,9 @@ import el2_pkg::*;
         // Connect to exported RAM Banks
         always_comb begin
             dccm_mem_export.dccm_clken[i]              = dccm_clken[i];
-            dccm_mem_export.wren_bank[i]               = wren_bank[i];
-            dccm_mem_export.addr_bank[i]               = addr_bank[i];
-            dccm_mem_export.wr_data_bank[i]            = wr_data_bank[i];
+            dccm_mem_export.dccm_wren_bank[i]          = wren_bank[i];
+            dccm_mem_export.dccm_addr_bank[i]          = addr_bank[i];
+            dccm_mem_export.dccm_wr_data_bank[i]       = wr_data_bank[i];
             dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0] = dccm_mem_export.dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0];
         end
 

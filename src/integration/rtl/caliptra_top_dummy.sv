@@ -15,12 +15,12 @@ initial begin
 end
 
 
-bit                          core_clk;
-initial core_clk = 1'b0;
-always #10ns core_clk <= ~core_clk;
+bit                          clk;
+initial clk = 1'b0;
+always #10ns clk <= ~clk;
 
 
-el2_mem_if el2_mem_export (.rst_b(cptra_rst_b)); // clock is provided inside the SweRV processor
+el2_mem_if el2_mem_export (); // clock is provided inside the SweRV processor
 
 logic                        cptra_pwrgood;
 
@@ -78,7 +78,7 @@ logic  [`SOC_SEC_STATE_WIDTH-1:0] security_state;
 
 
 caliptra_top dut (
-    .core_clk(core_clk),
+    .clk(clk),
 
     .cptra_pwrgood(cptra_pwrgood),
     .cptra_rst_b(cptra_rst_b),

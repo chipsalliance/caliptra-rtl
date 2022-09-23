@@ -87,7 +87,7 @@ module caliptra_top_tb (
 
 `define LMEM caliptra_top_dut.mbox_top1.mbox1.mbox_ram1.ram 
 
-    el2_mem_if el2_mem_export (.rst_b(cptra_rst_b)); // clock is provided inside the SweRV processor
+    el2_mem_if el2_mem_export ();
 
     parameter MEMTYPE_LMEM = 3'h1;
     parameter MEMTYPE_DCCM = 3'h2;
