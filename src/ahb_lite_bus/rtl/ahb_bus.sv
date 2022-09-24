@@ -1,3 +1,6 @@
+// Microsoft NOTE:
+// This file is temporarily used to enable Caliptra functionality.
+// This will be replaced by custom RTL before the public release of Caliptra
 // ============================================================================= //
 // Engineer:       Ânderson Ignacio da Silva - anderson@aignacio.com             //
 //                                                                               //
