@@ -65,7 +65,7 @@ addrmap mbox_csr {
 
     reg {
         desc="data out register, read the next data from mailbox";
-        field {sw=r; hw=w; swacc=true;} dataout[32];
+        field {sw=rw; hw=w; we; swwe; swacc=true;} dataout[32];
     } mbox_dataout;
 
     reg {

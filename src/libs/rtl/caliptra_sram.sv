@@ -21,10 +21,10 @@ module caliptra_sram #(
     (
     input  logic                       clk_i,
 
+    input  logic                       cs_i,
     input  logic                       we_i,
-    input  logic [ADDR_WIDTH-1:0]      waddr_i,
+    input  logic [ADDR_WIDTH-1:0]      addr_i,
     input  logic [DATA_WIDTH-1:0]      wdata_i,
-    input  logic [ADDR_WIDTH-1:0]      rdaddr_i,
     output logic [DATA_WIDTH-1:0]      rdata_o
     );
 
@@ -34,16 +34,15 @@ module caliptra_sram #(
     logic [7:0] ram [DEPTH][NUM_BYTES-1:0];
 
     always @(posedge clk_i) begin
-        if (we_i) begin
+        if (cs_i & we_i) begin
             for (int i = 0; i < NUM_BYTES; i++) begin
-                ram[waddr_i][i] <= wdata_i[i*8 +: 8];
+                ram[addr_i][i] <= wdata_i[i*8 +: 8];
             end
         end
-    end
-
-    always_comb begin
-        for (int i = 0; i < NUM_BYTES; i++) begin
-            rdata_o[i*8 +: 8] = ram[rdaddr_i][i];
+        if (cs_i & ~we_i) begin
+            for (int i = 0; i < NUM_BYTES; i++) begin
+                rdata_o[i*8 +: 8] <= ram[addr_i][i];
+            end
         end
     end
 

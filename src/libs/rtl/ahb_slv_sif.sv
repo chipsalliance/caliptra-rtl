@@ -18,14 +18,15 @@
 module ahb_slv_sif #(
     parameter AHB_DATA_WIDTH = 64
    ,parameter CLIENT_DATA_WIDTH = 32
-   ,parameter ADDR_WIDTH = 32
+   ,parameter AHB_ADDR_WIDTH = 32
+   ,parameter CLIENT_ADDR_WIDTH = AHB_ADDR_WIDTH
 
    )
    (
     //AMBA AHB Lite INF
     input logic hclk,
     input logic hreset_n,
-    input logic [ADDR_WIDTH-1:0] haddr_i,
+    input logic [AHB_ADDR_WIDTH-1:0] haddr_i,
     input logic [AHB_DATA_WIDTH-1:0] hwdata_i,
     input logic hsel_i,
     input logic hwrite_i,
@@ -48,7 +49,7 @@ module ahb_slv_sif #(
     input  logic                         error,
     output logic                         write,
     output logic [CLIENT_DATA_WIDTH-1:0] wdata,
-    output logic [ADDR_WIDTH-1:0]        addr,
+    output logic [CLIENT_ADDR_WIDTH-1:0] addr,
 
     input  logic [CLIENT_DATA_WIDTH-1:0] rdata
    );
@@ -123,7 +124,7 @@ endgenerate
                 dv <= hsel_i & htrans_i inside {2'b10, 2'b11};
             end
             if(hready_i & hsel_i) begin
-                addr <= haddr_i;
+                addr <= haddr_i[CLIENT_ADDR_WIDTH-1:0];
                 write <= hwrite_i & |htrans_i;
             end
         end

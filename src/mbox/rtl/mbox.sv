@@ -24,11 +24,16 @@ module mbox #(
 
     //mailbox request
     input logic        req_dv,
+    output logic       req_hold,
     input logic        dir_req_dv,
     input mbox_req_t   req_data,
     output logic       mbox_error,
 
     output logic [DATA_W-1:0] rdata,
+
+    //SRAM interface
+    output mbox_sram_req_t  mbox_sram_req,
+    input  mbox_sram_resp_t mbox_sram_resp,
 
     //interrupts
     output logic       uc_mbox_data_avail,
@@ -66,11 +71,13 @@ logic [$clog2(DEPTH)-1:0] mbox_wrptr, mbox_wrptr_nxt;
 logic inc_wrptr;
 logic [$clog2(DEPTH)-1:0] sram_rdaddr;
 logic [$clog2(DEPTH)-1:0] mbox_rdptr, mbox_rdptr_nxt;
-logic inc_rdptr;
+logic inc_rdptr,inc_rdptr_f,inc_rdptr_ff;
+logic update_dataout;
 logic rst_mbox_ptr;
 logic [DATA_W-1:0] sram_rdata;
 logic sram_we;
 logic mbox_protocol_sram_we;
+logic dir_req_dv_q, dir_req_dv_f;
 
 logic soc_has_lock, soc_has_lock_nxt;
 
@@ -167,32 +174,33 @@ end
 
 `CLP_EN_RST_FF(soc_has_lock, soc_has_lock_nxt, clk, arc_MBOX_IDLE_MBOX_RDY_FOR_CMD, rst_b)
 
-always_comb sram_we = (dir_req_dv & req_data.write) | mbox_protocol_sram_we;
+//need to hold direct read accesses for 1 clock to get response
+//create a qualified direct request signal that is masked during the data phase
+//hold the interface to insert wait state when direct request comes
+`CLP_EN_RST_FF(dir_req_dv_f, dir_req_dv & ~req_data.write, clk, (dir_req_dv & ~req_data.write) | dir_req_dv_f, rst_b)
+always_comb dir_req_dv_q = dir_req_dv & ~dir_req_dv_f;
+always_comb req_hold = dir_req_dv_q & ~req_data.write;
+
+//SRAM interface
+always_comb sram_we = (dir_req_dv_q & req_data.write) | mbox_protocol_sram_we;
 //align the direct address to a word
-always_comb sram_rdaddr = dir_req_dv ? req_data.addr[$clog2(DEPTH)+1:2] : mbox_rdptr;
-always_comb sram_waddr = dir_req_dv ? req_data.addr[$clog2(DEPTH)+1:2] : mbox_wrptr;
+always_comb sram_rdaddr = dir_req_dv_q ? req_data.addr[$clog2(DEPTH)+1:2] : mbox_rdptr;
+always_comb sram_waddr = dir_req_dv_q ? req_data.addr[$clog2(DEPTH)+1:2] : mbox_wrptr;
+//data phase after request for direct access
+always_comb rdata = dir_req_dv_f ? sram_rdata : csr_rdata;
 
-always_comb rdata = dir_req_dv ? sram_rdata : csr_rdata;
+//if we wrote to mbox while rdptr is the same as wrptr we need to refresh the dataout reg
+always_comb update_dataout = hwif_out.mbox_datain.datain.swmod & (mbox_wrptr == mbox_rdptr);
 
-//SRAM
-//Primary storage for the mailbox, can be accessed by reading DATAOUT or writing DATAIN
-//only accessed by the device that locked the mailbox
-caliptra_sram 
-#(
-    .DATA_WIDTH(DATA_W),
-    .DEPTH(DEPTH)
-)
-mbox_ram1
-(
-    .clk_i(clk),
-    
-    .we_i(sram_we),
-    .waddr_i(sram_waddr),
-    .wdata_i(sram_wdata),
-    
-    .rdaddr_i(sram_rdaddr),
-    .rdata_o(sram_rdata)
-);
+always_comb begin: mbox_sram_inf
+    //read live on direct access, or when pointer has been incremented, or if write was made to same address as rdptr
+    mbox_sram_req.cs = dir_req_dv_q | inc_rdptr_f;
+    mbox_sram_req.we = sram_we;
+    mbox_sram_req.addr = sram_we ? sram_waddr : sram_rdaddr;
+    mbox_sram_req.wdata = sram_wdata;
+
+    sram_rdata = mbox_sram_resp.rdata;
+end
 
 //control for sram write and read pointer
 //SoC access is controlled by mailbox, each subsequent read or write increments the pointer
@@ -210,6 +218,8 @@ always_comb mbox_rdptr_nxt = rst_mbox_ptr ? '0 :
                              inc_rdptr ? mbox_rdptr + 'd1 : 
                                          mbox_rdptr;
 `CLP_EN_RST_FF(mbox_rdptr, mbox_rdptr_nxt, clk, inc_rdptr | rst_mbox_ptr, rst_b)
+`CLP_EN_RST_FF(inc_rdptr_f, inc_rdptr, clk, inc_rdptr | inc_rdptr_f, rst_b)
+`CLP_EN_RST_FF(inc_rdptr_ff, inc_rdptr_f, clk, inc_rdptr_f | inc_rdptr_ff, rst_b)
 
 always_comb hwif_in.reset_b = rst_b;
 //always_comb hwif_in.soc_req = req_data.soc_req;
@@ -222,7 +232,13 @@ always_comb hwif_in.valid_user = hwif_out.mbox_lock.lock.value & ((~soc_has_lock
                                                                   (soc_has_lock & req_data.soc_req & (req_data.user == hwif_out.mbox_user.user.value))) ;
 //indicate that requesting user is setting the lock
 always_comb hwif_in.lock_set = arc_MBOX_IDLE_MBOX_RDY_FOR_CMD;
-always_comb hwif_in.mbox_dataout.dataout.next = sram_rdata;
+
+//update dataout
+always_comb hwif_in.mbox_dataout.dataout.swwe = '0; //no sw write enable, but need the storage element
+//update dataout whenever we read from it, or when a write occurs to the same address as the read pointer
+always_comb hwif_in.mbox_dataout.dataout.we = update_dataout | inc_rdptr_ff;
+//when updating the same address read pointer points to, write directly to dataout
+always_comb hwif_in.mbox_dataout.dataout.next = update_dataout ? sram_wdata : sram_rdata;
 //clear the lock when moving from execute to idle
 always_comb hwif_in.mbox_lock.lock.hwclr = arc_MBOX_EXECUTE_SOC_MBOX_IDLE | arc_MBOX_EXECUTE_UC_MBOX_IDLE;
 
@@ -246,5 +262,7 @@ mbox_csr1(
     .hwif_in(hwif_in),
     .hwif_out(hwif_out)
 );
+
+`ASSERT_NEVER(ERR_MBOX_COLLISION, update_dataout & inc_rdptr_ff, clk, rst_b)
 
 endmodule

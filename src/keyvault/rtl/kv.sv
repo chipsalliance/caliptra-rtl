@@ -60,7 +60,7 @@ kv_reg_pkg::kv_reg__in_t kv_reg_hwif_in;
 kv_reg_pkg::kv_reg__out_t kv_reg_hwif_out;
 
 ahb_slv_sif #(
-    .ADDR_WIDTH(AHB_ADDR_WIDTH),
+    .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH),
     .AHB_DATA_WIDTH(AHB_DATA_WIDTH),
     .CLIENT_DATA_WIDTH(32)
 )

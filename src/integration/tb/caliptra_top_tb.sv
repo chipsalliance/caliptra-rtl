@@ -23,7 +23,6 @@ module caliptra_top_tb (
     input bit rst_l
     ); 
 `endif
-
     // Time formatting for %t in display tasks
     // -9 = ns units
     // 3  = 3 bits of precision (to the ps)
@@ -83,9 +82,19 @@ module caliptra_top_tb (
 
     logic ready_for_fuses;
 
+    logic mbox_sram_cs;
+    logic mbox_sram_we;
+    logic [14:0] mbox_sram_addr;
+    logic [31:0] mbox_sram_wdata;
+    logic [31:0] mbox_sram_rdata;
+
+    logic imem_cs;
+    logic [`IMEM_ADDR_WIDTH-1:0] imem_addr;
+    logic [`IMEM_DATA_WIDTH-1:0] imem_rdata;
+
 `define DEC caliptra_top_dut.rvtop.swerv.dec
 
-`define LMEM caliptra_top_dut.mbox_top1.mbox1.mbox_ram1.ram 
+`define LMEM mbox_ram1.ram 
 
     el2_mem_if el2_mem_export ();
 
@@ -118,7 +127,7 @@ module caliptra_top_tb (
     assign WriteData = caliptra_top_dut.mbox_top1.mbox_reg1.field_combo.FLOW_STATUS.status.next;
     assign mailbox_data_val = WriteData[7:0] > 8'h5 && WriteData[7:0] < 8'h7f;
 
-    parameter MAX_CYCLES = 20_000_000;
+    parameter MAX_CYCLES = 200_000;
 
     integer fd, tp, el, sm, i;
     integer ifu_p, lsu_p, sl_p[`AHB_SLAVES_NUM];
@@ -353,8 +362,8 @@ module caliptra_top_tb (
         //set fuse done
         write_single_word_apb(MBOX_FUSE_DONE_ADDR, 32'h00000001);  
 
-        $readmemh("program.hex",  caliptra_top_dut.imem.sram_inst.ram,0,32'h00008000);
-        $readmemh("mailbox.hex",  caliptra_top_dut.mbox_top1.mbox1.mbox_ram1.ram,0,32'h0002_0000);
+        $readmemh("program.hex",  imem_inst1.ram,0,32'h00008000);
+        $readmemh("mailbox.hex",  mbox_ram1.ram,0,32'h0002_0000);
         $readmemh("dccm.hex",     dummy_dccm_preloader.ram,0,32'h0001_0000);
         tp = $fopen("trace_port.csv","w");
         el = $fopen("exec.log","w");
@@ -379,7 +388,6 @@ module caliptra_top_tb (
         if($test$plusargs("dumpon")) $dumpvars;
 `endif
     end
-
 
    //=========================================================================-
    // DUT instance
@@ -418,6 +426,16 @@ caliptra_top caliptra_top_dut (
     .ready_for_fw_push(),
     .ready_for_runtime(),
 
+    .mbox_sram_cs(mbox_sram_cs),
+    .mbox_sram_we(mbox_sram_we),
+    .mbox_sram_addr(mbox_sram_addr),
+    .mbox_sram_wdata(mbox_sram_wdata),
+    .mbox_sram_rdata(mbox_sram_rdata),
+        
+    .imem_cs(imem_cs),
+    .imem_addr(imem_addr),
+    .imem_rdata(imem_rdata),
+
     .mailbox_data_avail(),
     .mailbox_flow_done(),
     .BootFSM_BrkPoint('x), //FIXME TIE-OFF
@@ -432,6 +450,39 @@ caliptra_swerv_sram_export swerv_sram_export_inst (
     .el2_mem_export(el2_mem_export.top)
 );
 
+//SRAM for mbox
+caliptra_sram 
+#(
+    .DATA_WIDTH(32),
+    .DEPTH('h8000)
+)
+mbox_ram1
+(
+    .clk_i(core_clk),
+    
+    .cs_i(mbox_sram_cs),
+    .we_i(mbox_sram_we),
+    .addr_i(mbox_sram_addr),
+    .wdata_i(mbox_sram_wdata),
+    
+    .rdata_o(mbox_sram_rdata)
+);
+
+//SRAM for imem
+caliptra_sram #(
+    .DEPTH     (`IMEM_DEPTH     ), // Depth in WORDS
+    .DATA_WIDTH(`IMEM_DATA_WIDTH),
+    .ADDR_WIDTH(`IMEM_ADDR_WIDTH)
+) imem_inst1 (
+    .clk_i   (core_clk   ),
+
+    .cs_i    (imem_cs),
+    .we_i    (1'b0/*sram_write && sram_dv*/      ),
+    .addr_i  (imem_addr                          ),
+    .wdata_i (`IMEM_DATA_WIDTH'(0)/*sram_wdata   */),
+    .rdata_o (imem_rdata                         )
+);
+
 // This is used to load the generated DCCM hexfile prior to
 // running slam_dccm_ram
 caliptra_sram #(
@@ -442,10 +493,10 @@ caliptra_sram #(
 ) dummy_dccm_preloader (
     .clk_i   (core_clk),
 
+    .cs_i    (        ),
     .we_i    (        ),
-    .waddr_i (        ),
+    .addr_i  (        ),
     .wdata_i (        ),
-    .rdaddr_i(        ),
     .rdata_o (        )
 );
 
@@ -464,11 +515,11 @@ task preload_iccm;
     `endif
     addr = 'h0000_7ff0;
     // FIXME hardcoded address indices?
-    saddr = {caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h3}],
-             caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h2}],
-             caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h1}],
-             caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h0}]};
-    //saddr = {caliptra_top_dut.imem.sram_inst.ram[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
+    saddr = {imem_inst1.ram [addr[14:3]] [{addr[2],2'h3}],
+             imem_inst1.ram [addr[14:3]] [{addr[2],2'h2}],
+             imem_inst1.ram [addr[14:3]] [{addr[2],2'h1}],
+             imem_inst1.ram [addr[14:3]] [{addr[2],2'h0}]};
+    //saddr = {imem_inst1.ram[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
     if ( (saddr < `RV_ICCM_SADR) || (saddr > `RV_ICCM_EADR)) return;
     `ifndef RV_ICCM_ENABLE
         $display("********************************************************");
@@ -477,20 +528,20 @@ task preload_iccm;
         $finish;
     `endif
     addr += 4;
-    eaddr = {caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h3}],
-             caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h2}],
-             caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h1}],
-             caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h0}]};
+    eaddr = {imem_inst1.ram [addr[14:3]] [{addr[2],2'h3}],
+             imem_inst1.ram [addr[14:3]] [{addr[2],2'h2}],
+             imem_inst1.ram [addr[14:3]] [{addr[2],2'h1}],
+             imem_inst1.ram [addr[14:3]] [{addr[2],2'h0}]};
     //eaddr = {caliptra_top_dut.imem.mem[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
     $display("ICCM pre-load from %h to %h", saddr, eaddr);
 
     for(addr= saddr; addr <= eaddr; addr+=4) begin
         // FIXME hardcoded address indices?
         //       trying to read offset ee00_0000 from within mbox, out of bounds - error?
-        data = {caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h3}],
-                caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h2}],
-                caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h1}],
-                caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h0}]};
+        data = {imem_inst1.ram [addr[14:3]] [{addr[2],2'h3}],
+                imem_inst1.ram [addr[14:3]] [{addr[2],2'h2}],
+                imem_inst1.ram [addr[14:3]] [{addr[2],2'h1}],
+                imem_inst1.ram [addr[14:3]] [{addr[2],2'h0}]};
         //data = {caliptra_top_dut.imem.mem[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
         slam_iccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
     end
@@ -513,10 +564,10 @@ task preload_dccm;
     `endif
     addr = 'h0000_7ff8;
     // FIXME hardcoded address indices?
-    saddr = {caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h3}],
-             caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h2}],
-             caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h1}],
-             caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h0}]};
+    saddr = {imem_inst1.ram [addr[14:3]] [{addr[2],2'h3}],
+             imem_inst1.ram [addr[14:3]] [{addr[2],2'h2}],
+             imem_inst1.ram [addr[14:3]] [{addr[2],2'h1}],
+             imem_inst1.ram [addr[14:3]] [{addr[2],2'h0}]};
     if (saddr < `RV_DCCM_SADR || saddr > `RV_DCCM_EADR) return;
     `ifndef RV_DCCM_ENABLE
         $display("********************************************************");
@@ -525,10 +576,10 @@ task preload_dccm;
         $finish;
     `endif
     addr += 4;
-    eaddr = {caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h3}],
-             caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h2}],
-             caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h1}],
-             caliptra_top_dut.imem.sram_inst.ram [addr[14:3]] [{addr[2],2'h0}]};
+    eaddr = {imem_inst1.ram [addr[14:3]] [{addr[2],2'h3}],
+             imem_inst1.ram [addr[14:3]] [{addr[2],2'h2}],
+             imem_inst1.ram [addr[14:3]] [{addr[2],2'h1}],
+             imem_inst1.ram [addr[14:3]] [{addr[2],2'h0}]};
     $display("DCCM pre-load from %h to %h", saddr, eaddr);
 
     for(addr=saddr; addr <= eaddr; addr+=4) begin

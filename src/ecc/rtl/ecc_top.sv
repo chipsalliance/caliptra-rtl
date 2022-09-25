@@ -55,7 +55,7 @@ module ecc_top #(
     //The Caliptra uC sends read and write requests using AHB-Lite Protocol
     //This wrapper decodes that protocol and issues requests to the arbitration block
     ahb_slv_sif #(
-        .ADDR_WIDTH(AHB_ADDR_WIDTH),
+        .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH),
         .AHB_DATA_WIDTH(AHB_DATA_WIDTH),
         .CLIENT_DATA_WIDTH(32)
     )

@@ -69,6 +69,10 @@ module mbox_top #(
 
     //uC Interrupts
 
+    //SRAM interface
+    output mbox_sram_req_t  mbox_sram_req,
+    input  mbox_sram_resp_t mbox_sram_resp,
+
     //Obfuscated UDS and FE
     input  logic [7:0][31:0] cptra_obf_key,
     output logic [7:0][31:0] cptra_obf_key_reg,
@@ -169,7 +173,7 @@ always_comb soc_req.soc_req = 1'b1;
 //The Caliptra uC sends read and write requests using AHB-Lite Protocol
 //This wrapper decodes that protocol and issues requests to the arbitration block
 ahb_slv_sif #(
-    .ADDR_WIDTH(AHB_ADDR_WIDTH),
+    .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH),
     .AHB_DATA_WIDTH(AHB_DATA_WIDTH),
     .CLIENT_DATA_WIDTH(32)
 )
@@ -229,7 +233,7 @@ mbox_arb mbox_arb1 (
     //MBOX inf
     .mbox_req_dv(mbox_req_dv),
     .mbox_dir_req_dv(mbox_dir_req_dv),
-    .mbox_req_hold(1'b0), //FIXME TIE-OFF
+    .mbox_req_hold(mbox_req_hold),
     .mbox_req_data(mbox_req_data),
     .mbox_rdata(mbox_rdata),
     .mbox_error(mbox_error),
@@ -310,16 +314,19 @@ mbox_reg mbox_reg1 (
 //The SoC and uC can read and write to the mailbox by following the Caliptra Mailbox Protocol
 mbox #(
     .DATA_W(APB_DATA_WIDTH),
-    .SIZE_KB(128)
+    .SIZE_KB(MBOX_SIZE_KB)
     )
 mbox1 (
     .clk(clk),
     .rst_b(cptra_uc_rst_b),
     .req_dv(mbox_req_dv), 
+    .req_hold(mbox_req_hold),
     .dir_req_dv(mbox_dir_req_dv),
     .req_data(mbox_req_data),
     .mbox_error(mbox_error),
     .rdata(mbox_rdata),
+    .mbox_sram_req(mbox_sram_req),
+    .mbox_sram_resp(mbox_sram_resp),
     .soc_mbox_data_avail(mailbox_data_avail),
     .uc_mbox_data_avail() //FIXME DANGLE
 );

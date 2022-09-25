@@ -15,9 +15,13 @@
 `ifndef MBOX_PARAMS
 `define MBOX_PARAMS
 
-parameter MBOX_ADDR_W = 18; // Duplicate from cfg.sv, remove for maintainability?
+parameter MBOX_INF_ADDR_W = 18;
 parameter MBOX_DATA_W = 32;
 parameter MBOX_USER_W = 32;
+
+parameter MBOX_SIZE_KB = 128;
+parameter MBOX_DEPTH = (MBOX_SIZE_KB * 1024 * 8) / MBOX_DATA_W;
+parameter MBOX_ADDR_W = $clog2(MBOX_DEPTH);
 
 //memory map
 parameter MBOX_DIR_START_ADDR     = 18'h0_0000;

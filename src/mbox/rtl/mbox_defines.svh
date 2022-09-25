@@ -38,11 +38,22 @@ typedef enum logic [2:0] {
 
 //MAILBOX REQ
 typedef struct packed {
-    logic   [MBOX_ADDR_W-1:0] addr;
-    logic   [MBOX_DATA_W-1:0] wdata;
-    logic   [MBOX_USER_W-1:0] user;
-    logic                     write;
-    logic                     soc_req;
+    logic   [MBOX_INF_ADDR_W-1:0] addr;
+    logic   [MBOX_DATA_W-1:0]     wdata;
+    logic   [MBOX_USER_W-1:0]     user;
+    logic                         write;
+    logic                         soc_req;
 } mbox_req_t;
+
+typedef struct packed {
+    logic cs;
+    logic we;
+    logic [MBOX_ADDR_W-1:0] addr;
+    logic [MBOX_DATA_W-1:0] wdata;
+} mbox_sram_req_t;
+
+typedef struct packed {
+    logic [MBOX_DATA_W-1:0] rdata;
+} mbox_sram_resp_t;
 
 `endif

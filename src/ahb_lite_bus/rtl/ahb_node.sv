@@ -77,7 +77,7 @@ end
   always_comb begin
     for ( int s = 0; s < NB_SLAVES; s++ ) begin
       if( hsel_i == 1'b1 ) begin
-        hslaveready_o[s] = hreadyout_i;
+        hslaveready_o[s] = hmasterready_o;
         hwrite_o[s] = hwrite_i;
         hmastlock_o[s] = hmastlock_i;
         htrans_o[s] = htrans_i;

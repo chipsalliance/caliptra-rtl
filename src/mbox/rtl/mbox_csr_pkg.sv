@@ -20,6 +20,8 @@ package mbox_csr_pkg;
 
     typedef struct {
         logic [31:0] next;
+        logic we;
+        logic swwe;
     } mbox_csr__mbox_dataout__dataout__in_t;
 
     typedef struct {

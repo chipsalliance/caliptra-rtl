@@ -46,10 +46,13 @@
   `define IMEM_BYTE_SIZE  32768
   `define IMEM_DATA_WIDTH 64
   `define IMEM_DEPTH      `IMEM_BYTE_SIZE / (`IMEM_DATA_WIDTH/8)
-  `define IMEM_ADDR_WIDTH $clog2(`IMEM_BYTE_SIZE)
+  `define IMEM_BYTE_ADDR_W $clog2(`IMEM_BYTE_SIZE)
+  `define IMEM_ADDR_WIDTH $clog2(`IMEM_DEPTH)
 
   `define CALIPTRA_TOP        caliptra_top_tb
   `define CALIPTRA_RV_TOP     `CALIPTRA_TOP.caliptra_top_dut
 
   `define RV_TOP              `CALIPTRA_RV_TOP.rvtop
+
+  `define INST_ON
 `endif

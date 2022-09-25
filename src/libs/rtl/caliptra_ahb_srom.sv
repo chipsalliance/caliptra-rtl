@@ -13,9 +13,9 @@
 // limitations under the License.
 
 module caliptra_ahb_srom #(
-    parameter AHB_DATA_WIDTH    = 64 ,
-    parameter AHB_ADDR_WIDTH    = 32
-
+    parameter AHB_DATA_WIDTH    = 64,
+    parameter AHB_ADDR_WIDTH    = 32,
+    parameter CLIENT_ADDR_WIDTH = 32
 )(
 
     //AMBA AHB Lite INF
@@ -34,91 +34,53 @@ module caliptra_ahb_srom #(
     input logic                       hmastlock_i, // FIXME
     input logic [3:0]                 hprot_i, // FIXME
 
+    //response to uC
     output logic                      hresp_o,
     output logic                      hreadyout_o,
-    output logic [AHB_DATA_WIDTH-1:0] hrdata_o
+    output logic [AHB_DATA_WIDTH-1:0] hrdata_o,
+
+    //SROM Inf
+    output logic cs,
+    output logic [CLIENT_ADDR_WIDTH-1:0] addr,
+    input logic [AHB_DATA_WIDTH-1:0] rdata
 
 );
 
-
-/////////////////////////////////
-// Localparams
-localparam SRAM_ADDR_WIDTH = AHB_ADDR_WIDTH-$clog2(AHB_DATA_WIDTH/8);
-localparam SRAM_DEPTH      = 1 << SRAM_ADDR_WIDTH;
-
+`define H_OKAY 1'b0;
+`define H_ERROR 1'b1;
 
 /////////////////////////////////
 // Signals
-wire                       sram_dv;
-wire                       sram_hold;
-wire                       sram_error;
-wire                       sram_write;
-wire [AHB_DATA_WIDTH-1:0]  sram_wdata;
-wire [SRAM_ADDR_WIDTH-1:0] sram_addr;
-wire [AHB_DATA_WIDTH-1:0]  sram_rdata;
-
-wire [AHB_ADDR_WIDTH-1:0]  byte_addr;
-
+logic                       sram_dv;
+logic                       sram_error,sram_error_f;
 
 /////////////////////////////////
 // Assignments/Shim logic
-assign sram_hold = 1'b0;  // TODO
-assign sram_error = sram_dv && sram_write; // FIXME
+assign sram_dv = hready_i & hsel_i & htrans_i inside {2'b10, 2'b11};
+assign cs = sram_dv;
+assign addr = haddr_i >> $clog2(AHB_DATA_WIDTH/8);
 
+assign sram_error = sram_dv && hwrite_i; // Error if trying to write to ROM
 
-/////////////////////////////////
-// Module Instances
-ahb_slv_sif #(
-    .AHB_DATA_WIDTH   (AHB_DATA_WIDTH),
-    .CLIENT_DATA_WIDTH(AHB_DATA_WIDTH),
-    .ADDR_WIDTH       (AHB_ADDR_WIDTH)
+assign hrdata_o = rdata;
 
-) ahb_slv_inst (
-    //AMBA AHB Lite INF
-    .hclk       (hclk       ),
-    .hreset_n   (hreset_n   ),
-    .haddr_i    (haddr_i    ),
-    .hwdata_i   (hwdata_i   ),
-    .hsel_i     (hsel_i     ),
-    .hwrite_i   (hwrite_i   ),
+always_comb begin : response_block
+    hreadyout_o = 1'b1;
+    hresp_o = `H_OKAY;
+    //first error cycle, de-assert ready and drive error
+    if (sram_error) begin
+        hreadyout_o = 1'b0;
+        hresp_o = `H_ERROR;
+    end else if (sram_error_f) begin
+        hreadyout_o = 1'b1;
+        hresp_o = `H_ERROR;
+    end
+end
 
-    .hready_i   (hready_i   ),
-    .htrans_i   (htrans_i   ),
-    .hsize_i    (hsize_i    ),
-    .hburst_i   (hburst_i   ),
-
-    .hresp_o    (hresp_o    ),
-    .hreadyout_o(hreadyout_o),
-    .hrdata_o   (hrdata_o   ),
-
-    .hmastlock_i(hmastlock_i),
-    .hprot_i    (hprot_i    ),
-
-    //COMPONENT INF
-    .dv         (sram_dv         ),
-    .hold       (sram_hold       ),
-    .error      (sram_error      ),
-    .write      (sram_write      ),
-    .wdata      (sram_wdata      ),
-    .addr       (byte_addr       ),
-
-    .rdata      (sram_rdata      )
-);
-
-assign sram_addr = byte_addr >> $clog2(AHB_DATA_WIDTH/8);
-
-caliptra_sram #(
-    .DEPTH     (SRAM_DEPTH     ), // Depth in WORDS
-    .DATA_WIDTH(AHB_DATA_WIDTH ),
-    .ADDR_WIDTH(SRAM_ADDR_WIDTH)
-) sram_inst (
-    .clk_i   (hclk   ),
-
-    .we_i    (1'b0/*sram_write && sram_dv*/      ),
-    .waddr_i (sram_addr                          ),
-    .wdata_i (AHB_DATA_WIDTH'(0)/*sram_wdata   */),
-    .rdaddr_i(sram_addr                          ),
-    .rdata_o (sram_rdata                         )
-);
+//flop error to indicate second cycle of error
+always_ff @(posedge hclk or negedge hreset_n) begin
+    if (~hreset_n) sram_error_f <= '0;
+    else sram_error_f <= sram_error;
+end
 
 endmodule

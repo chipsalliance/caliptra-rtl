@@ -58,6 +58,18 @@ module caliptra_top (
     // Caliptra Memory Export Interface
     el2_mem_if                         el2_mem_export,
 
+    //SRAM interface for mbox
+    output logic mbox_sram_cs,
+    output logic mbox_sram_we,
+    output logic [MBOX_ADDR_W-1:0] mbox_sram_addr,
+    output logic [MBOX_DATA_W-1:0] mbox_sram_wdata,
+    input  logic [MBOX_DATA_W-1:0] mbox_sram_rdata,
+
+    //SRAM interface for imem
+    output logic imem_cs,
+    output logic [`IMEM_ADDR_WIDTH-1:0] imem_addr,
+    input  logic [`IMEM_DATA_WIDTH-1:0] imem_rdata,
+
     output logic                       ready_for_fuses,
     output logic                       ready_for_fw_push,
     output logic                       ready_for_runtime,
@@ -419,13 +431,16 @@ assign reset_vector = `RV_RESET_VEC;
 assign nmi_vector   = 32'hee000000;
 assign nmi_int   = 0;
 
+localparam NUM_INTR = `RV_PIC_TOTAL_INT; // 31
+wire [NUM_INTR-1:0] intr;
+
+`ifdef INST_ON
 import sim_irq_pkg::irq_type_t;
 
-localparam NUM_INTR = `RV_PIC_TOTAL_INT; // 31
 // Default is active-high, level interrupt
 irq_type_t intr_cfg = '{active_high: {{255-`RV_PIC_TOTAL_INT{1'b1}},31'b1111111_11111111_11111111_00001111},
                         level_assert:{{255-`RV_PIC_TOTAL_INT{1'b1}},31'b0000000_00000000_00000000_01010101}};
-wire [NUM_INTR-1:0] intr;
+
 
 sim_irq_gen #(
     .NUM_INTR (NUM_INTR  ), // Number of interrupts per class (SWerV allows up to 255)
@@ -439,6 +454,7 @@ sim_irq_gen #(
     .intr    (intr    ),
     .intr_clr(NUM_INTR'(0)) // NOTE: overridden by tb through hierarchy
 );
+`endif
 
 el2_swerv_wrapper rvtop (
     .rst_l                  ( cptra_uc_rst_b),
@@ -755,29 +771,34 @@ assign s_smaster.hsel = 1'b1;
 
 caliptra_ahb_srom #(
     .AHB_DATA_WIDTH(`IMEM_DATA_WIDTH),
-    .AHB_ADDR_WIDTH(`IMEM_ADDR_WIDTH)
+    .AHB_ADDR_WIDTH(`IMEM_BYTE_ADDR_W),
+    .CLIENT_ADDR_WIDTH(`IMEM_ADDR_WIDTH)
 
 ) imem (
 
     //AMBA AHB Lite INF
-    .hclk       (clk                      ),
-    .hreset_n   (cptra_uc_rst_b                ),
-    .haddr_i    (ic_haddr[`IMEM_ADDR_WIDTH-1:0]),
-    .hwdata_i   (`IMEM_DATA_WIDTH'(0)          ),
-    .hsel_i     (1'b1                          ),
-    .hwrite_i   (ic_hwrite                     ),
+    .hclk       (clk                            ),
+    .hreset_n   (cptra_uc_rst_b                 ),
+    .haddr_i    (ic_haddr[`IMEM_BYTE_ADDR_W-1:0]),
+    .hwdata_i   (`IMEM_DATA_WIDTH'(0)           ),
+    .hsel_i     (1'b1                           ),
+    .hwrite_i   (ic_hwrite                      ),
 
-    .hready_i   (ic_hready                     ),
-    .htrans_i   (ic_htrans                     ),
-    .hsize_i    (ic_hsize                      ),
-    .hburst_i   (ic_hburst                     ), // FIXME
+    .hready_i   (ic_hready                      ),
+    .htrans_i   (ic_htrans                      ),
+    .hsize_i    (ic_hsize                       ),
+    .hburst_i   (ic_hburst                      ), // FIXME
 
-    .hmastlock_i(ic_hmastlock                  ), // FIXME
-    .hprot_i    (ic_hprot                      ), // FIXME
+    .hmastlock_i(ic_hmastlock                   ), // FIXME
+    .hprot_i    (ic_hprot                       ), // FIXME
 
-    .hresp_o    (ic_hresp                      ),
-    .hreadyout_o(ic_hready                     ),
-    .hrdata_o   (ic_hrdata[63:0]               )
+    .hresp_o    (ic_hresp                       ),
+    .hreadyout_o(ic_hready                      ),
+    .hrdata_o   (ic_hrdata[63:0]                ),
+
+    .cs         (imem_cs                        ),
+    .addr       (imem_addr                      ),
+    .rdata      (imem_rdata                     )
 
 );
 
@@ -985,6 +1006,18 @@ axi_lsu_dma_bridge # (`RV_LSU_BUS_TAG,`RV_LSU_BUS_TAG ) bridge(
 
 `endif
 
+//mailbox sram gasket
+mbox_sram_req_t mbox_sram_req;
+mbox_sram_resp_t mbox_sram_resp;
+
+always_comb begin
+    mbox_sram_cs = mbox_sram_req.cs;
+    mbox_sram_we = mbox_sram_req.we;
+    mbox_sram_addr = mbox_sram_req.addr;
+    mbox_sram_wdata = mbox_sram_req.wdata;
+    mbox_sram_resp.rdata = mbox_sram_rdata;
+end
+
 //Instantiation of mailbox
 mbox_top #(
     .AHB_ADDR_WIDTH(`SLAVE_ADDR_WIDTH(`SLAVE_SEL_MBOX)),
@@ -1006,6 +1039,10 @@ mbox_top #(
     
     .generic_input_wires(generic_input_wires),
     .generic_output_wires(generic_output_wires),
+
+    //SRAM interface
+    .mbox_sram_req(mbox_sram_req),
+    .mbox_sram_resp(mbox_sram_resp),
 
     //APB Interface with SoC
     .paddr_i(PADDR[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_MBOX)-1:0]),
@@ -1124,7 +1161,7 @@ generate
     `ASSERT_KNOWN(AHB_SLAVE_HSIZE_X,        s_slave[sva_i].hsize,       clk, cptra_uc_rst_b)
     `ASSERT_KNOWN(AHB_SLAVE_HRESP_X,        s_slave[sva_i].hresp,       clk, cptra_uc_rst_b)
     `ASSERT_KNOWN(AHB_SLAVE_HREADYOUT_X,    s_slave[sva_i].hreadyout,   clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HRDATA_X,       s_slave[sva_i].hrdata,      clk, cptra_uc_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HRDATA_X,       s_slave[sva_i].hreadyout ? s_slave[sva_i].hrdata : '0,      clk, cptra_uc_rst_b)
   end
 endgenerate
 
@@ -1139,6 +1176,6 @@ endgenerate
 `ASSERT_KNOWN(AHB_MASTER_HBURS_X,        s_smaster.hburst,      clk, cptra_uc_rst_b)
 `ASSERT_KNOWN(AHB_MASTER_HSIZE_X,        s_smaster.hsize,       clk, cptra_uc_rst_b)
 `ASSERT_KNOWN(AHB_MASTER_HRESP_X,        s_smaster.hresp,       clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HRDATA_X,       s_smaster.hrdata,      clk, cptra_uc_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HRDATA_X,       s_smaster.hready ? s_smaster.hrdata : '0,      clk, cptra_uc_rst_b)
 
 endmodule

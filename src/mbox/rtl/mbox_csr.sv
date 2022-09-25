@@ -131,6 +131,12 @@ module mbox_csr (
         } mbox_datain;
         struct {
             struct {
+                logic [31:0] next;
+                logic load_next;
+            } dataout;
+        } mbox_dataout;
+        struct {
+            struct {
                 logic next;
                 logic load_next;
             } execute;
@@ -170,6 +176,11 @@ module mbox_csr (
                 logic [31:0] value;
             } datain;
         } mbox_datain;
+        struct {
+            struct {
+                logic [31:0] value;
+            } dataout;
+        } mbox_dataout;
         struct {
             struct {
                 logic value;
@@ -281,6 +292,25 @@ module mbox_csr (
     end
     assign hwif_out.mbox_datain.datain.value = field_storage.mbox_datain.datain.value;
     assign hwif_out.mbox_datain.datain.swmod = decoded_reg_strb.mbox_datain && decoded_req_is_wr;
+    // Field: mbox_csr.mbox_dataout.dataout
+    always_comb begin
+        automatic logic [31:0] next_c = field_storage.mbox_dataout.dataout.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.mbox_dataout && decoded_req_is_wr && hwif_in.mbox_dataout.dataout.swwe) begin // SW write
+            next_c = decoded_wr_data[31:0];
+            load_next_c = '1;
+        end else if(hwif_in.mbox_dataout.dataout.we) begin // HW Write - we
+            next_c = hwif_in.mbox_dataout.dataout.next;
+            load_next_c = '1;
+        end
+        field_combo.mbox_dataout.dataout.next = next_c;
+        field_combo.mbox_dataout.dataout.load_next = load_next_c;
+    end
+    always_ff @(posedge clk) begin
+        if(field_combo.mbox_dataout.dataout.load_next) begin
+            field_storage.mbox_dataout.dataout.value <= field_combo.mbox_dataout.dataout.next;
+        end
+    end
     assign hwif_out.mbox_dataout.dataout.swacc = decoded_reg_strb.mbox_dataout && !decoded_req_is_wr;
     // Field: mbox_csr.mbox_execute.execute
     always_comb begin
@@ -334,7 +364,7 @@ module mbox_csr (
     assign readback_array[1][31:0] = (decoded_reg_strb.mbox_user && !decoded_req_is_wr) ? field_storage.mbox_user.user.value : '0;
     assign readback_array[2][31:0] = (decoded_reg_strb.mbox_cmd && !decoded_req_is_wr) ? field_storage.mbox_cmd.command.value : '0;
     assign readback_array[3][31:0] = (decoded_reg_strb.mbox_dlen && !decoded_req_is_wr) ? field_storage.mbox_dlen.length.value : '0;
-    assign readback_array[4][31:0] = (decoded_reg_strb.mbox_dataout && !decoded_req_is_wr) ? hwif_in.mbox_dataout.dataout.next : '0;
+    assign readback_array[4][31:0] = (decoded_reg_strb.mbox_dataout && !decoded_req_is_wr) ? field_storage.mbox_dataout.dataout.value : '0;
     assign readback_array[5][0:0] = (decoded_reg_strb.mbox_execute && !decoded_req_is_wr) ? field_storage.mbox_execute.execute.value : '0;
     assign readback_array[5][31:1] = '0;
     assign readback_array[6][1:0] = (decoded_reg_strb.mbox_status && !decoded_req_is_wr) ? field_storage.mbox_status.status.value : '0;
