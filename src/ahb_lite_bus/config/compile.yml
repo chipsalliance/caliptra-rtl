@@ -8,4 +8,4 @@ targets:
       - $COMPILE_ROOT/rtl/ahb_bus.sv
       - $COMPILE_ROOT/rtl/ahb_node.sv
       - $COMPILE_ROOT/rtl/ahb_node_wrap.sv
-    tops: [hb_node_wrap]
+    tops: [ahb_node_wrap]

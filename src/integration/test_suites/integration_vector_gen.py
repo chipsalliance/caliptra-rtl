@@ -1,3 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 import numpy
 import argparse
 from textwrap import wrap
@@ -23,13 +37,13 @@ def generate_vector_file_sha512(src_dir, dest_dir, dest_name, arg_f):
         except:
             dest_file = open(dest_dir+dest_name,"w")
             empty_file = True
-            
+
         if empty_file == False:
             for line in dest_lines:
                 if keyword in line:
                     keyword_found = True
 
-        if keyword_found == True: 
+        if keyword_found == True:
             print("vectors already exist: ", keyword)
             continue
 
@@ -37,7 +51,7 @@ def generate_vector_file_sha512(src_dir, dest_dir, dest_name, arg_f):
         if empty_file == True:
             dest_file.write(".data\n")
         dest_file.write(keyword+':\n')
-        
+
         vector_cnt = 0
         for line in src_lines:
             # write length
@@ -48,7 +62,7 @@ def generate_vector_file_sha512(src_dir, dest_dir, dest_name, arg_f):
 
                 msg_len_int = int(line[6:])
                 dest_file.write(".word " + ("0x%08X" % msg_len_int) + "\n")
-            
+
             # write message
             if 'Msg = ' in line:
                 dest_file.write("// input message\n")
@@ -59,15 +73,15 @@ def generate_vector_file_sha512(src_dir, dest_dir, dest_name, arg_f):
                     msg_wrapped[-1] = msg_wrapped[-1] + '8' + (8-len(msg_wrapped[-1])-1)*'0'
                 else:
                     msg_wrapped.append("80000000")
-                
+
                 for word in msg_wrapped:
                     dest_file.write(".word 0x" + word + "\n")
                 remain_word = 32 - len(msg_wrapped) % 32;
                 if remain_word < 4: remain_word = remain_word + 128
-                    
+
                 for i in range(remain_word - 4):
                     dest_file.write(".word 0x00000000\n")
-                
+
                 # append message length info at the back
                 msg_len_append = "0x%032X" % msg_len_int
                 msg_len_append = wrap(msg_len_append[2:], 8)
@@ -89,7 +103,7 @@ def generate_vector_file_sha512(src_dir, dest_dir, dest_name, arg_f):
 
 
 def generate_vector_file_aes(src_dir, dest_dir, dest_name, arg_f):
-    
+
     for src_name in arg_f:
 
         # open source vector file and read in lines
@@ -109,13 +123,13 @@ def generate_vector_file_aes(src_dir, dest_dir, dest_name, arg_f):
         except:
             dest_file = open(dest_dir+dest_name,"w")
             empty_file = True
-            
+
         if empty_file == False:
             for line in dest_lines:
                 if keyword in line:
                     keyword_found = True
 
-        if keyword_found == True: 
+        if keyword_found == True:
             print("vectors already exist: ", keyword)
             continue
 
@@ -123,7 +137,7 @@ def generate_vector_file_aes(src_dir, dest_dir, dest_name, arg_f):
         if empty_file == True:
             dest_file.write(".data\n")
         dest_file.write(keyword+':\n')
-        
+
         vector_cnt = 0
         for line in src_lines:
             # define operation mode:
@@ -131,19 +145,19 @@ def generate_vector_file_aes(src_dir, dest_dir, dest_name, arg_f):
                 op_mode = 1
             elif '[DECRYPT]' in line:
                 op_mode = 0
-            
+
             # get key
             if 'KEY = ' in line:
                 vector_cnt = vector_cnt + 1
                 key = line[6:-1]
                 key_wrapped = wrap(key,8)
-            
+
             # get IV
             if 'IV' in line:
-                
+
                 IV = line[5:]
                 IV_wrapped = wrap(IV,8)
-            
+
             # get message
             if 'PLAINTEXT = ' in line:
                 msg = line[12:]
@@ -220,6 +234,3 @@ if __name__ == '__main__':
         dest_dir = './smoke_test_aes/'
         dest_filename = 'smoke_test_aes_vectors.s'
         generate_vector_file_aes(src_dir, dest_dir, dest_filename, args.f)
-    
-    
-        

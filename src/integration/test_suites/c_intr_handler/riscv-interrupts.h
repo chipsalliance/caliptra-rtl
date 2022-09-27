@@ -1,3 +1,4 @@
+// FIXME replace with open-source variant
 /*
    RISC-V machine interrupts.
    SPDX-License-Identifier: Unlicense
