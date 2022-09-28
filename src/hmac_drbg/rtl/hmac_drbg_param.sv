@@ -12,6 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+//======================================================================
+//
+// hmac_drbg_param.sv
+// --------
+// HMAC384-DRBG parameters
+//
+// 
+// 
+//======================================================================
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------

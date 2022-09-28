@@ -18,10 +18,6 @@
 // --------
 // HMAC controller for the AHb_lite interface.
 //
-//
-// 
-// I integrated the HMAC unit into the AHB bus port and so all signals go
-// through the AHB bus. I converted the data bus from 64 to a parametric one.
 // 
 // 
 //======================================================================

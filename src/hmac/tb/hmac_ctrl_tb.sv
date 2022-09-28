@@ -20,9 +20,6 @@
 //
 //
 // 
-// If you want to check the old version of the test, please see 
-// hmac_ctrl_sha256_tb.sv
-// 
 //======================================================================
 
 module hmac_ctrl_tb();

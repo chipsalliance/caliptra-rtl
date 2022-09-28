@@ -1,5 +1,7 @@
 //======================================================================
 //
+// Updated by Caliptra team to modify data access width
+//
 // aes.v
 // --------
 // Top level wrapper for the AES block cipher core.

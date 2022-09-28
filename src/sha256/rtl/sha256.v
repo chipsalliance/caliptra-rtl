@@ -1,5 +1,7 @@
 //======================================================================
 //
+// Updated by Caliptra team to modify data access width
+//
 // sha256.v
 // --------
 // Top level wrapper for the SHA-256 hash function providing

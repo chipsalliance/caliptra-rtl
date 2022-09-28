@@ -1,7 +1,6 @@
 //======================================================================
 //
-// Updated by: Emre Karabulut
-// Updated locations: 
+// Updated by Caliptra team to work in CBC mode:
 //          Line 57 IV was added in the port list.
 //          Line 139 IV was XORed with plaintext.
 //          Line 193-245 has an always block to store IV values for

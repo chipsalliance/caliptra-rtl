@@ -1,4 +1,5 @@
 //======================================================================
+// Updated by Caliptra team to modify data access width
 //
 // sha512.v
 // --------

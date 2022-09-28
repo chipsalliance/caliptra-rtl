@@ -13,9 +13,10 @@
 // limitations under the License.
 //
 //======================================================================
-// 
-// A module draft for HMAC DRBG design.
 //
+// hmac_drbg.v
+// ------
+// HMAC384-drbg top-level wrapper with 384 bit data access.
 //
 //======================================================================
 
