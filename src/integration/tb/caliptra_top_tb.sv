@@ -59,6 +59,7 @@ module caliptra_top_tb (
     
     logic [0:11][31:0]          cptra_uds_tb;
     logic [0:31][31:0]          cptra_fe_tb;
+
     wire[31:0] WriteData;
     string                      abi_reg[32]; // ABI register names
     //jtag interface
@@ -81,7 +82,7 @@ module caliptra_top_tb (
     logic [`APB_DATA_WIDTH-1:0] PRDATA;
 
     logic ready_for_fuses;
-
+    logic ready_for_fw_push;
     logic mbox_sram_cs;
     logic mbox_sram_we;
     logic [14:0] mbox_sram_addr;
@@ -106,8 +107,18 @@ module caliptra_top_tb (
     parameter MBOX_FE_ADDR  = 32'h3003_0230;
     parameter MBOX_FUSE_DONE_ADDR = 32'h3003_0394;
 
-    logic [2:0] memtype; 
+    parameter MBOX_ADDR_BASE        = 32'h30020000;
+    parameter MBOX_ADDR_LOCK        = MBOX_ADDR_BASE;
+    parameter MBOX_ADDR_CMD         = MBOX_ADDR_BASE + 32'h00000008;
+    parameter MBOX_ADDR_DLEN        = MBOX_ADDR_BASE + 32'h0000000C;
+    parameter MBOX_ADDR_DATAIN      = MBOX_ADDR_BASE + 32'h00000010;
+    parameter MBOX_ADDR_DATAOUT     = MBOX_ADDR_BASE + 32'h00000014;
+    parameter MBOX_ADDR_EXECUTE     = MBOX_ADDR_BASE + 32'h00000018;
+    parameter FW_NUM_DWORDS         = 256;
 
+    logic [FW_NUM_DWORDS-1:0][31:0] fw_blob;
+
+    logic [2:0] memtype; 
     // NOTE: This aperture into the mailbox is heavily overloaded right now by
     //       various firmware "STDOUT" use-cases.
     //       Functionality currently implemented at this offset is as follows
@@ -123,8 +134,8 @@ module caliptra_top_tb (
     //         8'hfd        - Force reset on sim_irq_gen
     //         8'hfe        - Release reset on sim_irq_gen
     //         8'hff        - End the simulation with a Success status
-    assign mailbox_write = caliptra_top_dut.mbox_top1.mbox_reg1.field_combo.FLOW_STATUS.status.load_next;
-    assign WriteData = caliptra_top_dut.mbox_top1.mbox_reg1.field_combo.FLOW_STATUS.status.next;
+    assign mailbox_write = caliptra_top_dut.mbox_top1.mbox_reg1.field_combo.generic_output_wires[0].generic_wires.load_next;
+    assign WriteData = caliptra_top_dut.mbox_top1.mbox_reg1.field_combo.generic_output_wires[0].generic_wires.next;
     assign mailbox_data_val = WriteData[7:0] > 8'h5 && WriteData[7:0] < 8'h7f;
 
     parameter MAX_CYCLES = 200_000;
@@ -387,6 +398,28 @@ module caliptra_top_tb (
 `ifndef VERILATOR
         if($test$plusargs("dumpon")) $dumpvars;
 `endif
+
+        //This is for Caliptra Demo, smoke tests will stop here since they don't set ready for fw
+        //wait for fw req
+        wait (ready_for_fw_push == 1'b1);
+
+        // poll for lock register
+        wait_unlock_apb();
+
+        //write to MBOX_ADDR_CMD
+        write_single_word_apb(MBOX_ADDR_CMD, 32'hDEADBEEF);
+
+        // write to MBOX_ADDR_DLEN
+        write_single_word_apb(MBOX_ADDR_DLEN, FW_NUM_DWORDS*4);
+
+        // write a random block in
+        for (int i = 0; i < FW_NUM_DWORDS; i++) begin
+            fw_blob[i] = $urandom();
+            write_single_word_apb(MBOX_ADDR_DATAIN, fw_blob[i]);
+        end 
+        
+        // execute
+        write_single_word_apb(MBOX_ADDR_EXECUTE, 32'h00000001);
     end
 
    //=========================================================================-
@@ -423,7 +456,7 @@ caliptra_top caliptra_top_dut (
     .el2_mem_export(el2_mem_export),
 
     .ready_for_fuses(ready_for_fuses),
-    .ready_for_fw_push(),
+    .ready_for_fw_push(ready_for_fw_push),
     .ready_for_runtime(),
 
     .mbox_sram_cs(mbox_sram_cs),
@@ -888,19 +921,18 @@ endfunction
 //----------------------------------------------------------------
 task write_single_word_apb(input [31 : 0] address, input [31 : 0] word);
 begin
-    @(posedge core_clk);
     PADDR      <= address;
     PSEL       <= 1;
     PENABLE    <= 0;
     PWRITE     <= 1;
     PWDATA     <= word;
     PAUSER     <= 0;
+    #1
     wait(PREADY == 1'b1);
-
     @(posedge core_clk);
     PENABLE    <= 1;
+    #1
     wait(PREADY == 1'b1);
-
     @(posedge core_clk);
     PSEL       <= 0;
     PENABLE    <= 0;
@@ -909,24 +941,33 @@ endtask // write_single_word_apb
 
 task read_single_word_apb(input [31 : 0] address);
 begin
-    @(posedge core_clk);
     PADDR      <= address;
     PSEL       <= 1;
     PENABLE    <= 0;
     PWRITE     <= 0;
     PWDATA     <= 0;
     PAUSER     <= 0;
+    #1
     wait(PREADY == 1'b1);
-
     @(posedge core_clk);
     PENABLE    <= 1;
+    #1
     wait(PREADY == 1'b1);
-
     @(posedge core_clk);
     PSEL       <= 0;
     PENABLE    <= 0;
 end
 endtask // read_single_word_apb
+
+task wait_unlock_apb;
+    begin
+      read_single_word_apb(MBOX_ADDR_LOCK);
+      while (PRDATA != 0)
+        begin
+          read_single_word_apb(MBOX_ADDR_LOCK);
+        end
+    end
+  endtask // wait_unlock_apb
 
 /* verilator lint_off CASEINCOMPLETE */
 `include "dasm.svi"

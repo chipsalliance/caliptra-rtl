@@ -8,9 +8,10 @@ requires:
   - ahb_node_wrap
   - sha512_ctrl
   - aes_ctrl
-  - mbox_top
   - hmac_ctrl
+  - ecc_top
   - keyvault
+  - mbox_top
   - sim_irq_gen
 targets:
   rtl:

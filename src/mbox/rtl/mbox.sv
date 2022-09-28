@@ -103,9 +103,9 @@ always_comb arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC = hwif_out.mbox_execute.execut
 //move from rdy for data to execute soc when uc writes to execute
 always_comb arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC = hwif_out.mbox_execute.execute.value & ~soc_has_lock;
 //move from rdy to execute to idle when uc resets execute
-always_comb arc_MBOX_EXECUTE_UC_MBOX_IDLE = ~hwif_out.mbox_execute.execute.value;
+always_comb arc_MBOX_EXECUTE_UC_MBOX_IDLE = (mbox_fsm_ps == MBOX_EXECUTE_UC) & ~hwif_out.mbox_execute.execute.value;
 //move from rdy to execute to idle when SoC resets execute
-always_comb arc_MBOX_EXECUTE_SOC_MBOX_IDLE = ~hwif_out.mbox_execute.execute.value;
+always_comb arc_MBOX_EXECUTE_SOC_MBOX_IDLE = (mbox_fsm_ps == MBOX_EXECUTE_SOC) & ~hwif_out.mbox_execute.execute.value;
 
 always_comb begin : mbox_fsm_combo
     soc_has_lock_nxt = 0;
@@ -194,7 +194,7 @@ always_comb update_dataout = hwif_out.mbox_datain.datain.swmod & (mbox_wrptr == 
 
 always_comb begin: mbox_sram_inf
     //read live on direct access, or when pointer has been incremented, or if write was made to same address as rdptr
-    mbox_sram_req.cs = dir_req_dv_q | inc_rdptr_f;
+    mbox_sram_req.cs = dir_req_dv_q | sram_we | inc_rdptr_f;
     mbox_sram_req.we = sram_we;
     mbox_sram_req.addr = sram_we ? sram_waddr : sram_rdaddr;
     mbox_sram_req.wdata = sram_wdata;

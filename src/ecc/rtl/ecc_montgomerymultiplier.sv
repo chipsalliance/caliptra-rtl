@@ -223,12 +223,12 @@ module ecc_montgomerymultiplier #(
     genvar t0;
     generate 
         for (t0=0; t0 < 2*(PE_UNITS+1)+1; t0++) begin : gen_sub_t
+            if (t0 == 0)
+                always_comb sub_b_i[t0] = 1;
+            else
+                always_comb sub_b_i[t0] = sub_b_o[t0 - 1];
+                
             always_comb begin
-                if (t0 == 0)
-                    sub_b_i[t0] = 1;
-                else
-                    sub_b_i[t0] = sub_b_o[t0 - 1];
-
                 //if (~reset_n)
                 //    sub_res[t0] = 0;
                 //else if (push_reg[2*(PE_UNITS+1) - t0])

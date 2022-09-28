@@ -220,6 +220,9 @@ module hmac #(
           if (kv_dest_done) begin
             kv_ctrl_reg.dest_done <= '1;
           end
+          if (next_new) begin
+            kv_ctrl_reg.dest_done <= '0;
+          end
         end
     end // reg_update
 

@@ -91,8 +91,9 @@
 
 
 /* ---- Mailbox ---- */
-#define STDOUT 0x3003001c
-#define MBOX_CLEAR_SECRETS 0x30030020
+#define STDOUT                    0x3003002c
+#define MBOX_FLOW_STATUS          0x3003001c
+#define MBOX_CLEAR_SECRETS        0x30030020
 
 #define MBOX_ADDR_BASE            0x30020000
 #define MBOX_ADDR_LOCK            0x30020000

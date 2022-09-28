@@ -17,7 +17,8 @@
 
 module ecc_top #(
     parameter AHB_ADDR_WIDTH = 32,
-    parameter AHB_DATA_WIDTH = 32
+    parameter AHB_DATA_WIDTH = 32,
+    parameter CLIENT_DATA_WIDTH = 32
     )
     (
     input logic                       clk,
@@ -42,7 +43,7 @@ module ecc_top #(
 
     //gasket to assemble ecc request
     logic ecc_cs;
-    logic [AHB_DATA_WIDTH-1:0] uc_req_rdata;
+    logic [CLIENT_DATA_WIDTH-1:0] uc_req_rdata;
     ecc_req_t uc_req;
 
     logic ecc_reg_error, ecc_reg_read_error, ecc_reg_write_error;
@@ -57,7 +58,7 @@ module ecc_top #(
     ahb_slv_sif #(
         .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH),
         .AHB_DATA_WIDTH(AHB_DATA_WIDTH),
-        .CLIENT_DATA_WIDTH(32)
+        .CLIENT_DATA_WIDTH(CLIENT_DATA_WIDTH)
     )
     ecc_ahb_slv_i (
         //AMBA AHB Lite INF
@@ -70,6 +71,9 @@ module ecc_top #(
         .hready_i(hready_i),
         .htrans_i(htrans_i),
         .hsize_i(hsize_i),
+        .hburst_i(hburst_i),
+        .hmastlock_i(hmastlock_i),
+        .hprot_i(hprot_i),
 
         .hresp_o(hresp_o),
         .hreadyout_o(hreadyout_o),
@@ -81,7 +85,7 @@ module ecc_top #(
         .error(ecc_reg_error),
         .write(uc_req.write),
         .wdata(uc_req.wdata),
-        .addr(uc_req.addr),
+        .addr(uc_req.addr[AHB_ADDR_WIDTH-1:0]),
 
         .rdata(uc_req_rdata)
     );
