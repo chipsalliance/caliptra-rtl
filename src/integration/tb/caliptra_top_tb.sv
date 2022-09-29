@@ -138,7 +138,7 @@ module caliptra_top_tb (
     assign WriteData = caliptra_top_dut.mbox_top1.mbox_reg1.field_combo.generic_output_wires[0].generic_wires.next;
     assign mailbox_data_val = WriteData[7:0] > 8'h5 && WriteData[7:0] < 8'h7f;
 
-    parameter MAX_CYCLES = 200_000;
+    parameter MAX_CYCLES = 20_000_000;
 
     integer fd, tp, el, sm, i;
     integer ifu_p, lsu_p, sl_p[`AHB_SLAVES_NUM];

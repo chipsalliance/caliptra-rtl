@@ -24,9 +24,9 @@
 
 
 /* ---- Key Vault ---- */
-#define KV_BASE_ADDR 0x10018000
-#define KV_KEY_CTRL_ADDR 0x10018200
-#define KV_PCR_CTRL_ADDR 0x10018220
+#define KV_BASE_ADDR              0x10018000
+#define KV_KEY_CTRL_ADDR          0x10018200
+#define KV_PCR_CTRL_ADDR          0x10018220
 
 #define KV_NUM_PCR                0x00000008
 #define KV_NUM_DWORDS             0x00000010
@@ -104,6 +104,41 @@
 #define MBOX_ADDR_EXECUTE         0x30020018
 
 #define MBOX_DLEN_VAL             0x0000001C
+
+/* ---- ECC ----*/
+#define ECC_BASE_ADDR             0x10008000
+#define ECC_ADDR_NAME0            0x10008000
+#define ECC_ADDR_NAME1            0x10008004
+#define ECC_ADDR_VERSION0         0x10008008
+#define ECC_ADDR_VERSION1         0x1000800C
+#define ECC_ADDR_CTRL             0x10008010
+#define ECC_CMD_KEYGEN            0x1
+#define ECC_CMD_KEYSIGN           0x2
+#define ECC_CMD_KEYVERIFY         0x3
+#define ECC_ADDR_STATUS           0x10008018
+#define STATUS_READY_BIT          0x0
+#define STATUS_VALID_BIT          0x1
+#define ECC_ADDR_SEED0            0x10008080
+#define ECC_ADDR_SEED11           0x100080A8
+#define ECC_ADDR_MSG0             0x10008100
+#define ECC_ADDR_MSG11            0x10008128
+#define ECC_ADDR_PRIVKEY0         0x10008180
+#define ECC_ADDR_PRIVKEY11        0x100081A8
+#define ECC_ADDR_PUBKEYX0         0x10008200
+#define ECC_ADDR_PUBKEYX11        0x10008228
+#define ECC_ADDR_PUBKEYY0         0x10008280
+#define AECC_DDR_PUBKEYY11        0x100082A8
+#define ECC_ADDR_SIGNR0           0x10008300
+#define ECC_ADDR_SIGNR11          0x10008328
+#define ECC_ADDR_SIGNS0           0x10008380
+#define ECC_ADDR_SIGNS11          0x100083A8
+#define ECC_ADDR_VERIFYR0         0x10008400
+#define ECC_ADDR_VERIFYR11        0x10008428
+#define ECC_ADDR_LAMBDA0          0x10008480
+#define ECC_ADDR_LAMBDA11         0x100084A8
+
+
+
 
 
 #endif // CALIPTRA_DEFINES_H

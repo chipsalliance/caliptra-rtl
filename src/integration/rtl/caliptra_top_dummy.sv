@@ -131,6 +131,18 @@ caliptra_top dut (
     //I3C Interface
     //TODO update with I3C interface signals
 
+    //SRAM interface for mbox
+    .mbox_sram_cs(),
+    .mbox_sram_we(),
+    .mbox_sram_addr(),
+    .mbox_sram_wdata(),
+    .mbox_sram_rdata(),
+
+    //SRAM interface for imem
+    .imem_cs(),
+    .imem_addr(),
+    .imem_rdata(),
+
     // Caliptra Memory Export Interface
     .el2_mem_export(el2_mem_export),
 
