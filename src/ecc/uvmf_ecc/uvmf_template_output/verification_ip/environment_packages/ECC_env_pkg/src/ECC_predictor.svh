@@ -118,7 +118,7 @@ class ECC_predictor #(
  
     $display("**ECC_predictor** t.op= %d",t.op);
     $display("**ECC_predictor** t.test_case_sel = %d",t.test_case_sel);
-    if (t.op== 2'b00) begin
+    if ((t.op == 3'b000) || (t.op == 3'b100)) begin
       ECC_sb_ap_output_transaction.result_privkey   = 0;
       ECC_sb_ap_output_transaction.result_pubkey_x  = 0;
       ECC_sb_ap_output_transaction.result_pubkey_y  = 0;
@@ -126,7 +126,7 @@ class ECC_predictor #(
       ECC_sb_ap_output_transaction.result_S         = 0; 
       ECC_sb_ap_output_transaction.result_verify_R  = 0;
     end
-    else if (t.op == 2'b01) begin // KEY_GEN
+    else if (t.op == 3'b001) begin // KEY_GEN
       cnt_tmp = 0;
       
       test_case_sel = t.test_case_sel;
@@ -165,7 +165,7 @@ class ECC_predictor #(
 
       `uvm_info("PREDICT",{"ECC_OUT: ",ECC_sb_ap_output_transaction.convert2string()},UVM_MEDIUM);
     end
-    else if (t.op == 2'b10) begin // KEY_SIGN
+    else if (t.op == 3'b010) begin // KEY_SIGN
       cnt_tmp = 0;
       
       test_case_sel = t.test_case_sel;
@@ -200,7 +200,7 @@ class ECC_predictor #(
 
       `uvm_info("PREDICT",{"ECC_OUT: ",ECC_sb_ap_output_transaction.convert2string()},UVM_MEDIUM);
     end
-    else begin // KEY_VERIFY
+    else if (t.op == 3'b011) begin // KEY_VERIFY
       cnt_tmp = 0;
       
       test_case_sel = t.test_case_sel;

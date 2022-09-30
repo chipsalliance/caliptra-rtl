@@ -31,7 +31,7 @@ class ECC_in_transaction #(
 
   //Constraints for the transaction variables:
   constraint ecc_valid_op_constrainsts { op inside {key_sign, key_gen, key_verify }; }
-  constraint ecc_valid_testcasesel_constraints { if (op == key_gen) { test_case_sel >= 0; test_case_sel <= 2; } else if (op == key_sign || op == key_verify) { test_case_sel >= 3; test_case_sel <= 4; } }
+  constraint ecc_valid_testcasesel_constraints { if (op == key_gen) { test_case_sel >= 0; test_case_sel <= 5; } else if (op == key_sign || op == key_verify) { test_case_sel >= 5; test_case_sel <= 9; } }
 
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end
@@ -185,6 +185,7 @@ class ECC_in_transaction #(
         key_gen     : $add_color(transaction_view_h, "blue");
         key_sign    : $add_color(transaction_view_h, "green");
         key_verify  : $add_color(transaction_view_h, "yellow");
+        otf_reset_op: $add_color(transaction_view_h, "cyan");
         default     : $add_color(transaction_view_h,"red");
       endcase
     end

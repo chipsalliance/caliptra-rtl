@@ -305,8 +305,12 @@ end
     $display("** ECC_in_driver_bfm** : Inside initiate_and_get_response");
 
     case (ECC_in_initiator_struct.op)
-      reset_op  : ecc_init(ECC_in_initiator_struct.op, ECC_in_initiator_struct.test_case_sel);
-      default   : ecc_test(ECC_in_initiator_struct.op, ECC_in_initiator_struct.test_case_sel);
+      reset_op      : ecc_init(ECC_in_initiator_struct.op, ECC_in_initiator_struct.test_case_sel);
+      key_gen       : ecc_test(ECC_in_initiator_struct.op, ECC_in_initiator_struct.test_case_sel);
+      key_sign      : ecc_test(ECC_in_initiator_struct.op, ECC_in_initiator_struct.test_case_sel);
+      key_verify    : ecc_test(ECC_in_initiator_struct.op, ECC_in_initiator_struct.test_case_sel);
+      otf_reset_op  : otf_reset_test(ECC_in_initiator_struct.op, ECC_in_initiator_struct.test_case_sel);
+      default       : ecc_test(ECC_in_initiator_struct.op, ECC_in_initiator_struct.test_case_sel);
     endcase
 
   endtask   
@@ -331,9 +335,6 @@ end
   parameter ADDR_STATUS      = BASE_ADDR + 32'h00000018;
   parameter STATUS_READY_BIT = 0;
   parameter STATUS_VALID_BIT = 1;
-
-  parameter ADDR_VERIFY      = BASE_ADDR + 32'h00000020;
-
   parameter ADDR_SEED0       = BASE_ADDR + 32'h00000080;
   parameter ADDR_SEED11      = BASE_ADDR + 32'h000000A8;
 
@@ -357,6 +358,9 @@ end
 
   parameter ADDR_VERIFY_R0   = BASE_ADDR + 32'h00000400;
   parameter ADDR_VERIFY_R11  = BASE_ADDR + 32'h00000428;
+  
+  parameter ADDR_LAMBDA0     = BASE_ADDR + 32'h00000480;
+  parameter ADDR_LAMBDA11    = BASE_ADDR + 32'h000004A8;
 
   parameter REG_SIZE      = 384;
   parameter PRIME         = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff;
@@ -397,6 +401,7 @@ end
       operand_t     R;
       operand_t     S;
       operand_t     seed;
+      operand_t     lambda;
   } test_vector_t;
 
   test_vector_t test_vector;
@@ -604,14 +609,10 @@ end
     input [31 : 0] addr
     );
     begin
-      $display("*[DEBUG]* - %0t Read single word", $time);
       read_single_word(addr + 4*11);
       reg_read_data[383 : 352] = hrdata_i;
-      $display("*[DEBUG]* - %0t Read word = %h", $time, hrdata_i);
-      $display("*[DEBUG]* - %0t Read single word", $time);
       read_single_word(addr + 4*10);
       reg_read_data[351 : 320] = hrdata_i;
-      $display("*[DEBUG]* - %0t Read word = %h", $time, hrdata_i);
       read_single_word(addr +  4*9);
       reg_read_data[319 : 288] = hrdata_i;
       read_single_word(addr +  4*8);
@@ -652,8 +653,9 @@ end
   // Perform a single point multiplication block test.
   //----------------------------------------------------------------
   task ecc_keygen_test (
-    input bit [7:0] test_case_sel, 
-    input test_vector_t test_vector
+    input bit [7:0]     test_case_sel, 
+    input test_vector_t test_vector,
+    input               test_otf_reset
   );
     
     reg [31  : 0]   start_time;
@@ -669,14 +671,20 @@ end
       start_time = cycle_ctr;
 
       write_block(ADDR_SEED0, test_vector.seed);
+      write_block(ADDR_LAMBDA0, test_vector.lambda);
 
       trig_ECC(KEYGEN);
       @(posedge clk_i);
 
-      wait_ready();
-
-      //read_block(ADDR_PRIVKEY0);
-      //privkey = reg_read_data;
+      if (!test_otf_reset) // regular operation
+        wait_ready();
+      else begin
+        //Toggle OTF reset
+        @(posedge clk_i);
+        ecc_rst_n_o = 1'b0;
+        repeat (2) @(posedge clk_i);
+        ecc_rst_n_o = 1'b1;
+      end
 
       transaction_flag_out_monitor_o = 1'b1;
       @(posedge clk_i);
@@ -695,25 +703,23 @@ end
       end_time = cycle_ctr - start_time;
 
       $display("*** keygen test processing time = %01d cycles.", end_time);
-      $display("privkey    : 0x%96x", test_vector.privkey);
+      
+      if (!test_otf_reset) begin 
+        $display("privkey    : 0x%96x", test_vector.privkey);
 
-      if ((privkey == test_vector.privkey) & (pubkey == test_vector.pubkey)) begin
-        $display("*** TC %0d keygen successful.", test_case_sel);
-        $display("");
+        if ((privkey == test_vector.privkey) & (pubkey == test_vector.pubkey)) begin
+          $display("*** TC %0d keygen successful.", test_case_sel);
+          $display("");
+        end
+        else begin
+          $display("*** ERROR: TC %0d keygen NOT successful.", test_case_sel);
+          $display("Expected_x: 0x%96x", test_vector.pubkey.x);
+          $display("Got:        0x%96x", pubkey.x);
+          $display("Expected_y: 0x%96x", test_vector.pubkey.y);
+          $display("Got:        0x%96x", pubkey.y);
+          $display("");
+        end
       end
-      else begin
-        $display("*** ERROR: TC %0d keygen NOT successful.", test_case_sel);
-        $display("Expected_x: 0x%96x", test_vector.pubkey.x);
-        $display("Got:        0x%96x", pubkey.x);
-        $display("Expected_y: 0x%96x", test_vector.pubkey.y);
-        $display("Got:        0x%96x", pubkey.y);
-        $display("");
-      end
-
-
-
-
-
     end
   endtask // ecc_keygen_test
 
@@ -723,8 +729,9 @@ end
   // Perform a single signing operation test.
   //----------------------------------------------------------------
   task ecc_signing_test (
-    input [7:0]  test_case_sel, 
-    input test_vector_t test_vector
+    input [7:0]         test_case_sel, 
+    input test_vector_t test_vector,
+    input               test_otf_reset
   );
 
     reg [31  : 0]   start_time;
@@ -741,12 +748,20 @@ end
 
       write_block(ADDR_MSG0, test_vector.hashed_msg);
       write_block(ADDR_PRIVKEY0, test_vector.privkey);
-      //write_block(ADDR_SEED0, test_vector.k);
+      write_block(ADDR_LAMBDA0, test_vector.lambda);
 
       trig_ECC(SIGN);
       @(posedge clk_i);
 
-      wait_ready();
+      if (!test_otf_reset) // regular operation
+        wait_ready();
+      else begin
+        //Toggle OTF reset
+        @(posedge clk_i);
+        ecc_rst_n_o = 1'b0;
+        repeat (2) @(posedge clk_i);
+        ecc_rst_n_o = 1'b1;
+      end
       
       transaction_flag_out_monitor_o = 1'b1;
       @(posedge clk_i);
@@ -761,21 +776,23 @@ end
 
       end_time = cycle_ctr - start_time;
       $display("*** signing test processing time = %01d cycles.", end_time);
-      $display("privkey    : 0x%96x", test_vector.privkey);
 
-      if (R == test_vector.R & S == test_vector.S) begin
-        $display("*** TC %0d signing successful.", test_case_sel);
-        $display("");
-      end
-      else begin
-        $display("*** ERROR: TC %0d signing NOT successful.", test_case_sel);
-        $display("Expected_R: 0x%96x", test_vector.R);
-        $display("Got:        0x%96x", R);
-        $display("Expected_S: 0x%96x", test_vector.S);
-        $display("Got:        0x%96x", S);
-        $display("");
-      end
+      if (!test_otf_reset) begin
+        $display("privkey    : 0x%96x", test_vector.privkey);
 
+        if (R == test_vector.R & S == test_vector.S) begin
+          $display("*** TC %0d signing successful.", test_case_sel);
+          $display("");
+        end
+        else begin
+          $display("*** ERROR: TC %0d signing NOT successful.", test_case_sel);
+          $display("Expected_R: 0x%96x", test_vector.R);
+          $display("Got:        0x%96x", R);
+          $display("Expected_S: 0x%96x", test_vector.S);
+          $display("Got:        0x%96x", S);
+          $display("");
+        end
+      end
     end
   endtask // ecc_signing_test
 
@@ -785,8 +802,9 @@ end
   // Perform a single verifying operation test.
   //----------------------------------------------------------------
   task ecc_verifying_test (
-    input [7:0]  test_case_sel, 
-    input test_vector_t test_vector
+    input [7:0]         test_case_sel, 
+    input test_vector_t test_vector,
+    input               test_otf_reset
   );
     reg [31  : 0]   start_time;
     reg [31  : 0]   end_time;
@@ -795,7 +813,7 @@ end
     begin
       wait_ready();
 
-      $display("*** TC %0d verifying test started.", test_case_sel);
+      $display("*** ECC TC %0d verifying test started.", test_case_sel);
 
       start_time = cycle_ctr;
 
@@ -804,11 +822,20 @@ end
       write_block(ADDR_PUBKEYY0, test_vector.pubkey.y);
       write_block(ADDR_SIGNR0, test_vector.R);
       write_block(ADDR_SIGNS0, test_vector.S);
+      write_block(ADDR_LAMBDA0, 384'h1);
 
       trig_ECC(VERIFY);
       @(posedge clk_i);
 
-      wait_ready();
+      if (!test_otf_reset) // regular operation
+        wait_ready();
+      else begin
+        //Toggle OTF reset
+        @(posedge clk_i);
+        ecc_rst_n_o = 1'b0;
+        repeat (2) @(posedge clk_i);
+        ecc_rst_n_o = 1'b1;
+      end
 
       transaction_flag_out_monitor_o = 1'b1;
       @(posedge clk_i);
@@ -820,22 +847,23 @@ end
 
       end_time = cycle_ctr - start_time;
       $display("*** verifying test processing time = %01d cycles.", end_time);
-      $display("privkey    : 0x%96x", test_vector.privkey);
 
-      if (verify_r == test_vector.R)
-      begin
-        $display("*** TC %0d verifying successful.", test_case_sel);
-        $display("");
+      if (!test_otf_reset) begin
+        $display("privkey    : 0x%96x", test_vector.privkey);
+
+        if (verify_r == test_vector.R)
+        begin
+          $display("*** TC %0d verifying successful.", test_case_sel);
+          $display("");
+        end
+        else
+        begin
+          $display("*** ERROR: TC %0d verifying NOT successful.", test_case_sel);
+          $display("Expected_R: 0x%96x", test_vector.R);
+          $display("Got:        0x%96x", verify_r);
+          $display("");
+        end
       end
-      else
-      begin
-        $display("*** ERROR: TC %0d verifying NOT successful.", test_case_sel);
-        $display("Expected_R: 0x%96x", test_vector.R);
-        $display("Got:        0x%96x", verify_r);
-        $display("");
-      end
-
-
     end
   endtask // ecc_verifying_test
 
@@ -847,30 +875,32 @@ end
     input ecc_in_op_transactions op,
     input [7:0] test_case_sel
   );
-    string file_name;
+    string  file_name;
+    reg     test_otf_reset;
 
     begin
       // pass op and selection to monitor
       transaction_flag_out_monitor_o = 1'b0;
       op_o = op;
       test_case_sel_o = test_case_sel;
+      test_otf_reset = 0;
       
       file_name = "/home/anjpar/AHA_Workspaces/caliptra_ws2/Caliptra/src/ecc/tb/test_vectors/ecc_drbg.hex";
       read_test_vectors(file_name, test_case_sel);
-      if (op == 2'b01) begin
+      if (op == 3'b001) begin
         $display("ECC KEYGEN TEST");
         $display("---------------------");
-        ecc_keygen_test(test_case_sel, test_vector);
+        ecc_keygen_test(test_case_sel, test_vector, test_otf_reset);
       end
-      else if (op == 2'b10) begin
+      else if (op == 3'b010) begin
         $display("ECC SIGNING TEST");
         $display("---------------------");
-        ecc_signing_test(test_case_sel, test_vector);
+        ecc_signing_test(test_case_sel, test_vector, test_otf_reset);
       end
-      else if (op == 2'b11) begin
+      else if (op == 3'b011) begin
         $display("ECC VERIFYING TEST");
         $display("------------------");
-        ecc_verifying_test(test_case_sel, test_vector);
+        ecc_verifying_test(test_case_sel, test_vector, test_otf_reset);
       end
     end
   endtask // ecc_test
@@ -924,12 +954,43 @@ end
       $sscanf(line_read, "%h", test_vector.R);
       $fgets(line_read, fd_r); 
       $sscanf(line_read, "%h", test_vector.S);
+      $fgets(line_read, fd_r);
+      $sscanf(line_read, "%h", test_vector.lambda);
 
       $fclose(fd_r);
 
       $display("Read test vector # %d from %s", test_case_sel, fname);
     end
-endtask
+  endtask
+
+  // -------------------------------------
+  // Otf Reset Test
+  // -------------------------------------
+  task otf_reset_test (
+    input ecc_in_op_transactions op,
+    input [7:0] test_case_sel
+  );
+    string file_name;
+    reg test_otf_reset;
+
+    // pass op and selection to monitor
+    transaction_flag_out_monitor_o = 1'b0;
+    op_o = op;
+    test_case_sel_o = test_case_sel;
+    test_otf_reset = 1;
+    
+    $display("------------------");
+    $display("ECC OTF RESET TEST");
+    $display("------------------");
+
+    file_name = "/home/anjpar/AHA_Workspaces/caliptra_ws2/Caliptra/src/ecc/tb/test_vectors/ecc_drbg.hex";
+    read_test_vectors(file_name, test_case_sel);
+
+    ecc_keygen_test(test_case_sel, test_vector, test_otf_reset);
+    ecc_signing_test(test_case_sel, test_vector, test_otf_reset);
+    ecc_verifying_test(test_case_sel, test_vector, test_otf_reset);
+    
+  endtask
 
 
 // pragma uvmf custom initiate_and_get_response end

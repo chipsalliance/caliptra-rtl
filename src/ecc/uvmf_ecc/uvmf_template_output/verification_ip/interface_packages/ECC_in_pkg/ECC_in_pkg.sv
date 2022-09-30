@@ -58,6 +58,7 @@ package ECC_in_pkg;
    `include "src/ECC_in_sequence_base.svh"
    `include "src/ECC_in_random_sequence.svh"
    `include "src/ECC_in_reset_sequence.svh"
+   `include "src/ECC_in_otf_reset_sequence.svh"
 
    `include "src/ECC_in_responder_sequence.svh"
    `include "src/ECC_in2reg_adapter.svh"
