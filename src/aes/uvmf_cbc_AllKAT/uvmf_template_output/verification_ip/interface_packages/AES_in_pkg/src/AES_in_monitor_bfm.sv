@@ -79,11 +79,8 @@ end
   tri [AHB_DATA_WIDTH-1:0] hwdata_i;
   tri  hsel_i;
   tri  hwrite_i;
-  tri  hmastlock_i;
   tri  hready_i;
   tri [1:0] htrans_i;
-  tri [3:0] hprot_i;
-  tri [2:0] hburst_i;
   tri [2:0] hsize_i;
   tri  transaction_flag_in_monitor_i;
   tri [1:0] op_i;
@@ -96,11 +93,8 @@ end
   assign hwdata_i = bus.hwdata;
   assign hsel_i = bus.hsel;
   assign hwrite_i = bus.hwrite;
-  assign hmastlock_i = bus.hmastlock;
   assign hready_i = bus.hready;
   assign htrans_i = bus.htrans;
-  assign hprot_i = bus.hprot;
-  assign hburst_i = bus.hburst;
   assign hsize_i = bus.hsize;
   assign transaction_flag_in_monitor_i = bus.transaction_flag_in_monitor;
   assign op_i = bus.op;
@@ -202,11 +196,8 @@ end
     //      AES_in_monitor_struct.xyz = hwdata_i;  //    [AHB_DATA_WIDTH-1:0] 
     //      AES_in_monitor_struct.xyz = hsel_i;  //     
     //      AES_in_monitor_struct.xyz = hwrite_i;  //     
-    //      AES_in_monitor_struct.xyz = hmastlock_i;  //     
     //      AES_in_monitor_struct.xyz = hready_i;  //     
     //      AES_in_monitor_struct.xyz = htrans_i;  //    [1:0] 
-    //      AES_in_monitor_struct.xyz = hprot_i;  //    [3:0] 
-    //      AES_in_monitor_struct.xyz = hburst_i;  //    [2:0] 
     //      AES_in_monitor_struct.xyz = hsize_i;  //    [2:0] 
     //      AES_in_monitor_struct.xyz = transaction_flag_in_monitor_i;  //     
     //      AES_in_monitor_struct.xyz = op_i;  //    [1:0] 

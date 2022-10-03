@@ -122,7 +122,7 @@ kv_dest_write_fsm
 (
     .clk(clk),
     .rst_b(rst_b),
-    .hmac_data_size(),
+    .hmac_data_size('x),
     .start(dest_data_avail & client_ctrl_reg.dest_sel_en),
     .read_offset(dest_read_offset),
     .write_en(dest_write_en),

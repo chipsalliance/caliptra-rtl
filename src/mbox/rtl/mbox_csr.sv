@@ -290,7 +290,6 @@ module mbox_csr (
             field_storage.mbox_datain.datain.value <= field_combo.mbox_datain.datain.next;
         end
     end
-    assign hwif_out.mbox_datain.datain.value = field_storage.mbox_datain.datain.value;
     assign hwif_out.mbox_datain.datain.swmod = decoded_reg_strb.mbox_datain && decoded_req_is_wr;
     // Field: mbox_csr.mbox_dataout.dataout
     always_comb begin
@@ -358,17 +357,18 @@ module mbox_csr (
     logic [31:0] readback_data;
     
     // Assign readback values to a flattened array
-    logic [31:0] readback_array[7];
+    logic [31:0] readback_array[8];
     assign readback_array[0][0:0] = (decoded_reg_strb.mbox_lock && !decoded_req_is_wr) ? field_storage.mbox_lock.lock.value : '0;
     assign readback_array[0][31:1] = '0;
     assign readback_array[1][31:0] = (decoded_reg_strb.mbox_user && !decoded_req_is_wr) ? field_storage.mbox_user.user.value : '0;
     assign readback_array[2][31:0] = (decoded_reg_strb.mbox_cmd && !decoded_req_is_wr) ? field_storage.mbox_cmd.command.value : '0;
     assign readback_array[3][31:0] = (decoded_reg_strb.mbox_dlen && !decoded_req_is_wr) ? field_storage.mbox_dlen.length.value : '0;
-    assign readback_array[4][31:0] = (decoded_reg_strb.mbox_dataout && !decoded_req_is_wr) ? field_storage.mbox_dataout.dataout.value : '0;
-    assign readback_array[5][0:0] = (decoded_reg_strb.mbox_execute && !decoded_req_is_wr) ? field_storage.mbox_execute.execute.value : '0;
-    assign readback_array[5][31:1] = '0;
-    assign readback_array[6][1:0] = (decoded_reg_strb.mbox_status && !decoded_req_is_wr) ? field_storage.mbox_status.status.value : '0;
-    assign readback_array[6][31:2] = '0;
+    assign readback_array[4][31:0] = (decoded_reg_strb.mbox_datain && !decoded_req_is_wr) ? field_storage.mbox_datain.datain.value : '0;
+    assign readback_array[5][31:0] = (decoded_reg_strb.mbox_dataout && !decoded_req_is_wr) ? field_storage.mbox_dataout.dataout.value : '0;
+    assign readback_array[6][0:0] = (decoded_reg_strb.mbox_execute && !decoded_req_is_wr) ? field_storage.mbox_execute.execute.value : '0;
+    assign readback_array[6][31:1] = '0;
+    assign readback_array[7][1:0] = (decoded_reg_strb.mbox_status && !decoded_req_is_wr) ? field_storage.mbox_status.status.value : '0;
+    assign readback_array[7][31:2] = '0;
 
 
     // Reduce the array
@@ -377,7 +377,7 @@ module mbox_csr (
         readback_done = decoded_req & ~decoded_req_is_wr;
         readback_err = '0;
         readback_data_var = '0;
-        for(int i=0; i<7; i++) readback_data_var |= readback_array[i];
+        for(int i=0; i<8; i++) readback_data_var |= readback_array[i];
         readback_data = readback_data_var;
     end
 

@@ -15,10 +15,10 @@
 `include "mbox_defines.svh"
 
 module mbox_top #(
-     parameter APB_ADDR_WIDTH = 32
+     parameter APB_ADDR_WIDTH = 18
     ,parameter APB_DATA_WIDTH = 32
     ,parameter APB_USER_WIDTH = 32
-    ,parameter AHB_ADDR_WIDTH = 32
+    ,parameter AHB_ADDR_WIDTH = 18
     ,parameter AHB_DATA_WIDTH = 32
     )
     (
@@ -54,11 +54,8 @@ module mbox_top #(
     input logic [AHB_DATA_WIDTH-1:0]  hwdata_i,
     input logic                       hsel_i,
     input logic                       hwrite_i,
-    input logic                       hmastlock_i,
     input logic                       hready_i,
     input logic [1:0]                 htrans_i,
-    input logic [3:0]                 hprot_i,
-    input logic [2:0]                 hburst_i,
     input logic [2:0]                 hsize_i,
 
     output logic                      hresp_o,
@@ -108,7 +105,7 @@ logic mbox_error;
 //mbox reg inf
 logic mbox_reg_req_dv;
 logic mbox_reg_req_hold;
-mbox_req_t mbox_reg_req_data;
+mbox_reg_req_t mbox_reg_req_data;
 logic [MBOX_DATA_W-1:0] mbox_reg_rdata;
 logic mbox_reg_error, mbox_reg_read_error, mbox_reg_write_error;
 logic clear_secrets;
@@ -195,14 +192,11 @@ mailbox_ahb_slv1 (
     .hready_i(hready_i),
     .htrans_i(htrans_i),
     .hsize_i(hsize_i),
-    .hburst_i(hburst_i),
 
     .hresp_o(hresp_o),
     .hreadyout_o(hreadyout_o),
     .hrdata_o(hrdata_o),
 
-    .hmastlock_i(hmastlock_i),
-    .hprot_i(hprot_i),
 
     //COMPONENT INF
     .dv(uc_req_dv),
@@ -305,8 +299,8 @@ always_comb mbox_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_avail
 mbox_reg mbox_reg1 (
     .clk(clk),
     .rst('0),
-
-    .s_cpuif_req(mbox_reg_req_dv),
+    //qualify request so no addresses alias
+    .s_cpuif_req(mbox_reg_req_dv & (mbox_reg_req_data.addr[MBOX_INF_ADDR_W-1:mbox_reg_pkg::MBOX_REG_ADDR_WIDTH] == MBOX_REG_MEM_START_ADDR[MBOX_INF_ADDR_W-1:mbox_reg_pkg::MBOX_REG_ADDR_WIDTH])),
     .s_cpuif_req_is_wr(mbox_reg_req_data.write),
     .s_cpuif_addr(mbox_reg_req_data.addr[mbox_reg_pkg::MBOX_REG_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data(mbox_reg_req_data.wdata),
@@ -349,7 +343,15 @@ mbox1 (
 );
 
 // Generate a pulse to set the interrupt bit
-`CLP_RST_FF(uc_mbox_data_avail_d, uc_mbox_data_avail, clk, cptra_uc_rst_b)
+always_ff @(posedge clk or negedge cptra_uc_rst_b) begin
+    if (~cptra_uc_rst_b) begin
+        uc_mbox_data_avail_d <= '0;
+	end
+	else begin
+		uc_mbox_data_avail_d <= uc_mbox_data_avail;
+	end
+end
+
 always_comb uc_cmd_avail_p = uc_mbox_data_avail & !uc_mbox_data_avail_d;
 
 `ASSERT_KNOWN(ERR_AHB_INF_X, {hreadyout_o,hresp_o}, clk, cptra_rst_b)

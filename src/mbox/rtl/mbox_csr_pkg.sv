@@ -71,7 +71,6 @@ package mbox_csr_pkg;
     } mbox_csr__mbox_dlen__out_t;
 
     typedef struct {
-        logic [31:0] value;
         logic swmod;
     } mbox_csr__mbox_datain__datain__out_t;
 

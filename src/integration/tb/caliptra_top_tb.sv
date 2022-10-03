@@ -242,9 +242,8 @@ module caliptra_top_tb (
 
     // LSU Master monitor
     always @(posedge core_clk) begin
-        $fstrobe(lsu_p, "%10d : 0x%0h %h %b %h %h %h %b 0x%08h_%08h 0x%08h_%08h %b %b\n", cycleCnt, 
-                        caliptra_top_dut.s_smaster.haddr, caliptra_top_dut.s_smaster.hburst, caliptra_top_dut.s_smaster.hmastlock, 
-                        caliptra_top_dut.s_smaster.hprot, caliptra_top_dut.s_smaster.hsize, caliptra_top_dut.s_smaster.htrans, 
+        $fstrobe(lsu_p, "%10d : 0x%0h %h %h %b 0x%08h_%08h 0x%08h_%08h %b %b\n", cycleCnt, 
+                        caliptra_top_dut.s_smaster.haddr, caliptra_top_dut.s_smaster.hsize, caliptra_top_dut.s_smaster.htrans, 
                         caliptra_top_dut.s_smaster.hwrite, caliptra_top_dut.s_smaster.hrdata[63:32], caliptra_top_dut.s_smaster.hrdata[31:0], 
                         caliptra_top_dut.s_smaster.hwdata[63:32], caliptra_top_dut.s_smaster.hwdata[31:0], 
                         caliptra_top_dut.s_smaster.hready, caliptra_top_dut.s_smaster.hresp);
@@ -255,9 +254,8 @@ module caliptra_top_tb (
     generate
         for (sl_i = 0; sl_i < `AHB_SLAVES_NUM; sl_i = sl_i + 1) begin
             always @(posedge core_clk) begin
-                $fstrobe(sl_p[sl_i], "%10d : 0x%0h %h %b %h %h %h %b 0x%08h_%08h 0x%08h_%08h %b %b %b %b\n", cycleCnt, 
-                        caliptra_top_dut.s_slave[sl_i].haddr, caliptra_top_dut.s_slave[sl_i].hburst, caliptra_top_dut.s_slave[sl_i].hmastlock, 
-                        caliptra_top_dut.s_slave[sl_i].hprot, caliptra_top_dut.s_slave[sl_i].hsize, caliptra_top_dut.s_slave[sl_i].htrans, 
+                $fstrobe(sl_p[sl_i], "%10d : 0x%0h %h %h %b 0x%08h_%08h 0x%08h_%08h %b %b %b %b\n", cycleCnt, 
+                        caliptra_top_dut.s_slave[sl_i].haddr, caliptra_top_dut.s_slave[sl_i].hsize, caliptra_top_dut.s_slave[sl_i].htrans, 
                         caliptra_top_dut.s_slave[sl_i].hwrite, caliptra_top_dut.s_slave[sl_i].hrdata[63:32], caliptra_top_dut.s_slave[sl_i].hrdata[31:0], 
                         caliptra_top_dut.s_slave[sl_i].hwdata[63:32], caliptra_top_dut.s_slave[sl_i].hwdata[31:0], 
                         caliptra_top_dut.s_slave[sl_i].hready, caliptra_top_dut.s_slave[sl_i].hreadyout, caliptra_top_dut.s_slave[sl_i].hresp, caliptra_top_dut.s_slave[sl_i].hsel);
@@ -362,13 +360,13 @@ module caliptra_top_tb (
         ifu_p = $fopen("ifu_master_ahb_trace.log", "w");
         lsu_p = $fopen("lsu_master_ahb_trace.log", "w");
         $fwrite (el, "//   Cycle : #inst    0    pc    opcode    reg=value   ; mnemonic\n");
-        $fwrite(ifu_p, "//   Cycle: ic_haddr     ic_hburst     ic_hmsatlock     ic_hprot     ic_hsize     ic_htrans     ic_hwrite     ic_hrdata     ic_hwdata     ic_hready     ic_hresp\n");
-        $fwrite(lsu_p, "//   Cycle: lsu_haddr     lsu_hburst     lsu_hmsatlock     lsu_hprot     lsu_hsize     lsu_htrans     lsu_hwrite     lsu_hrdata     lsu_hwdata     lsu_hready     lsu_hresp\n");
+        $fwrite(ifu_p, "//   Cycle: ic_haddr     ic_hburst     ic_hmastlock     ic_hprot     ic_hsize     ic_htrans     ic_hwrite     ic_hrdata     ic_hwdata     ic_hready     ic_hresp\n");
+        $fwrite(lsu_p, "//   Cycle: lsu_haddr     lsu_hsize     lsu_htrans     lsu_hwrite     lsu_hrdata     lsu_hwdata     lsu_hready     lsu_hresp\n");
 
         for (j = 0; j < `AHB_SLAVES_NUM; j = j + 1) begin
             slaveLog_fileName[j] = {$sformatf("slave%0d_ahb_trace.log", j)};
             sl_p[j] = $fopen(slaveLog_fileName[j], "w");
-            $fwrite(sl_p[j], "//   Cycle: haddr     hburst     hmsatlock     hprot     hsize     htrans     hwrite     hrdata     hwdata     hready     hreadyout     hresp\n");
+            $fwrite(sl_p[j], "//   Cycle: haddr     hsize     htrans     hwrite     hrdata     hwdata     hready     hreadyout     hresp\n");
         end
 
         fd = $fopen("console.log","w");

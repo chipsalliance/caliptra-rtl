@@ -28,10 +28,7 @@ interface AHB_BUS
   logic hsel;
   logic hwrite;
   logic [2:0]  hsize;
-  logic [2:0]  hburst;
-  logic [3:0]  hprot;
   logic [1:0]  htrans;
-  logic hmastlock;
   logic hready;
   logic hreadyout;
   logic hresp;
@@ -45,10 +42,7 @@ interface AHB_BUS
           hsel,
           hwrite,
           hsize,
-          hburst,
-          hprot,
           htrans,
-          hmastlock,
     output  hresp,
             hrdata,
             hready
@@ -63,10 +57,7 @@ interface AHB_BUS
             hsel,
             hwrite,
             hsize,
-            hburst,
-            hprot,
             htrans,
-            hmastlock,
             hready,
     input hresp,
           hrdata,

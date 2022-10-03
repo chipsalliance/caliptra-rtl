@@ -60,7 +60,6 @@
 /home/cwhitehead/Projects/ws1/Caliptra/src/ahb_lite_bus/rtl/ahb_bus.sv
 /home/cwhitehead/Projects/ws1/Caliptra/src/ahb_lite_bus/rtl/ahb_node.sv
 /home/cwhitehead/Projects/ws1/Caliptra/src/ahb_lite_bus/rtl/ahb_node_wrap.sv
-/home/cwhitehead/Projects/ws1/Caliptra/src/libs/rtl/caliptra_macros.svh
 /home/cwhitehead/Projects/ws1/Caliptra/src/libs/rtl/caliptra_sva.svh
 /home/cwhitehead/Projects/ws1/Caliptra/src/libs/rtl/caliptra_sram.sv
 /home/cwhitehead/Projects/ws1/Caliptra/src/libs/rtl/caliptra_ahb_srom.sv

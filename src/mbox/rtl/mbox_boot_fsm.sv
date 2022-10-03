@@ -32,6 +32,7 @@ boot_fsm_state_e boot_fsm_ps;
 //arcs between states
 logic arc_BOOT_IDLE_BOOT_FUSE;
 logic arc_BOOT_FUSE_BOOT_DONE;
+logic arc_BOOT_DONE_BOOT_IDLE;
 //reset generation
 logic propagate_reset_en;
 logic fsm_synch_rst_b;
@@ -41,6 +42,9 @@ always_comb arc_BOOT_IDLE_BOOT_FUSE = cptra_pwrgood && cptra_rst_b;
 
 //move from fuse state to done when fuse done register is set
 always_comb arc_BOOT_FUSE_BOOT_DONE = fuse_done;
+
+//dummy arc for terminal state lint check
+always_comb arc_BOOT_DONE_BOOT_IDLE = '0;
 
 always_comb begin
     boot_fsm_ns = boot_fsm_ps;
@@ -58,7 +62,9 @@ always_comb begin
             ready_for_fuses = 1'b1;
         end
         BOOT_DONE: begin
-            boot_fsm_ns = BOOT_DONE;
+            if (arc_BOOT_DONE_BOOT_IDLE) begin
+                boot_fsm_ns = BOOT_IDLE;
+            end
         end
         default: begin
             boot_fsm_ns = boot_fsm_ps;
@@ -66,18 +72,25 @@ always_comb begin
     endcase
 end
 
-//next state -> present state
-//reset boot fsm to idle on cptra_rst_b
-`CLP_RSTD_FF(boot_fsm_ps, boot_fsm_ns, clk, cptra_rst_b, BOOT_IDLE)
-
 //uC reset generation
 //propagate reset de-assertion from synchronizer when boot fsm is in BOOT_DONE state
 always_comb propagate_reset_en = boot_fsm_ps == BOOT_DONE;
 
-`CLP_EN_RST_FF(fsm_synch_rst_b, '1, clk, propagate_reset_en, cptra_rst_b)
-`CLP_RST_FF(cptra_uc_rst_b, fsm_synch_rst_b, clk, cptra_rst_b)
+//next state -> present state
+//reset boot fsm to idle on cptra_rst_b
+always_ff @(posedge clk or negedge cptra_rst_b) begin
+    if (!cptra_rst_b) begin
+        boot_fsm_ps <= BOOT_IDLE;
+        fsm_synch_rst_b <= '0;
+        cptra_uc_rst_b <= '0;
+    end
+    else begin
+        boot_fsm_ps <= boot_fsm_ns;
+        fsm_synch_rst_b <= propagate_reset_en ? '1 : fsm_synch_rst_b;
+        cptra_uc_rst_b <= fsm_synch_rst_b;
+    end 
+end
 
-//TODO assertions
 `ASSERT_KNOWN(ERR_FSM_ARC_X, {arc_BOOT_IDLE_BOOT_FUSE,arc_BOOT_FUSE_BOOT_DONE}, clk, cptra_rst_b)
 `ASSERT_KNOWN(ERR_FSM_STATE_X, boot_fsm_ps, clk, cptra_rst_b)
 `ASSERT_KNOWN(ERR_UC_RST_X, cptra_uc_rst_b, clk, cptra_rst_b)

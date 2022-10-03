@@ -39,12 +39,9 @@ module ahb_node_wrap #(
   logic [NB_SLAVES-1:0] hwrite;
   logic [NB_SLAVES-1:0] hready;
   logic [NB_SLAVES-1:0][1:0] htrans;
-  logic [NB_SLAVES-1:0][3:0] hprot;
-  logic [NB_SLAVES-1:0][2:0] hburst;
   logic [NB_SLAVES-1:0][2:0] hsize;
   logic [NB_SLAVES-1:0] hresp;
   logic [NB_SLAVES-1:0] hreadyout;
-  logic [NB_SLAVES-1:0] hmastlock;
   logic [NB_SLAVES-1:0][AHB_DATA_WIDTH-1:0] hrdata;
 
   // GENERATE SEL SIGNAL FOR SLAVE MATCHING THE ADDRESS
@@ -55,10 +52,7 @@ module ahb_node_wrap #(
       assign ahb_slaves[i].hsel = hsel[i];
       assign ahb_slaves[i].hwrite = hwrite[i];
       assign ahb_slaves[i].hsize = hsize[i];
-      assign ahb_slaves[i].hburst = hburst[i];
-      assign ahb_slaves[i].hprot = hprot[i];
       assign ahb_slaves[i].htrans = htrans[i];
-      assign ahb_slaves[i].hmastlock = hmastlock[i];
       assign ahb_slaves[i].hready = hready[i];
 
       assign hresp[i] = ahb_slaves[i].hresp;
@@ -82,11 +76,8 @@ module ahb_node_wrap #(
     .hwdata_o(hwdata),
     .hsel_o(hsel),
     .hwrite_o(hwrite),
-    .hmastlock_o(hmastlock),
     .hslaveready_o(hready),
     .htrans_o(htrans),
-    .hprot_o(hprot),
-    .hburst_o(hburst),
     .hsize_o(hsize),
     .hresp_i(hresp),
     .hreadyout_i(hreadyout),
@@ -97,10 +88,7 @@ module ahb_node_wrap #(
     .hwdata_i(ahb_master.hwdata),
     .hsel_i(ahb_master.hsel),
     .hwrite_i(ahb_master.hwrite),
-    .hmastlock_i(ahb_master.hmastlock),
     .htrans_i(ahb_master.htrans),
-    .hprot_i(ahb_master.hprot),
-    .hburst_i(ahb_master.hburst),
     .hsize_i(ahb_master.hsize),
     .hresp_o(ahb_master.hresp),
     .hmasterready_o(ahb_master.hready),

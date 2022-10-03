@@ -24,11 +24,8 @@
 // .dut_signal_port(AES_in_bus.hwdata), // Agent output 
 // .dut_signal_port(AES_in_bus.hsel), // Agent output 
 // .dut_signal_port(AES_in_bus.hwrite), // Agent output 
-// .dut_signal_port(AES_in_bus.hmastlock), // Agent output 
 // .dut_signal_port(AES_in_bus.hready), // Agent output 
 // .dut_signal_port(AES_in_bus.htrans), // Agent output 
-// .dut_signal_port(AES_in_bus.hprot), // Agent output 
-// .dut_signal_port(AES_in_bus.hburst), // Agent output 
 // .dut_signal_port(AES_in_bus.hsize), // Agent output 
 // .dut_signal_port(AES_in_bus.transaction_flag_in_monitor), // Agent output 
 // .dut_signal_port(AES_in_bus.op), // Agent output 
@@ -53,11 +50,8 @@ interface  AES_in_if #(
   inout tri [AHB_DATA_WIDTH-1:0] hwdata,
   inout tri  hsel,
   inout tri  hwrite,
-  inout tri  hmastlock,
   inout tri  hready,
   inout tri [1:0] htrans,
-  inout tri [3:0] hprot,
-  inout tri [2:0] hburst,
   inout tri [2:0] hsize,
   inout tri  transaction_flag_in_monitor,
   inout tri [1:0] op,
@@ -74,11 +68,8 @@ modport monitor_port
   input hwdata,
   input hsel,
   input hwrite,
-  input hmastlock,
   input hready,
   input htrans,
-  input hprot,
-  input hburst,
   input hsize,
   input transaction_flag_in_monitor,
   input op,
@@ -95,11 +86,8 @@ modport initiator_port
   output hwdata,
   output hsel,
   output hwrite,
-  output hmastlock,
   output hready,
   output htrans,
-  output hprot,
-  output hburst,
   output hsize,
   output transaction_flag_in_monitor,
   output op,
@@ -116,11 +104,8 @@ modport responder_port
   input hwdata,
   input hsel,
   input hwrite,
-  input hmastlock,
   input hready,
   input htrans,
-  input hprot,
-  input hburst,
   input hsize,
   input transaction_flag_in_monitor,
   input op,

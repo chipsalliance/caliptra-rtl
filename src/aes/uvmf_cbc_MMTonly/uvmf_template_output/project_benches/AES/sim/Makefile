@@ -135,7 +135,6 @@ $(UVMF_PROJECT_DIR)/../../../../rtl/aes_inv_sbox.v\
 $(UVMF_PROJECT_DIR)/../../../../rtl/aes_key_mem.v\
 $(UVMF_PROJECT_DIR)/../../../../rtl/aes_sbox.v\
 $(UVMF_PROJECT_DIR)/../../../../../libs/rtl/ahb_slv_sif.sv\
-$(UVMF_PROJECT_DIR)/../../../../../libs/rtl/caliptra_macros.svh\
 $(UVMF_PROJECT_DIR)/../../../../../libs/rtl/caliptra_sva.svh
 
 

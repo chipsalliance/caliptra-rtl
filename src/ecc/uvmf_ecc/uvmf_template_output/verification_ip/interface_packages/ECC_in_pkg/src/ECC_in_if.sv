@@ -24,11 +24,8 @@
 // .dut_signal_port(ECC_in_bus.hwdata), // Agent output 
 // .dut_signal_port(ECC_in_bus.hsel), // Agent output 
 // .dut_signal_port(ECC_in_bus.hwrite), // Agent output 
-// .dut_signal_port(ECC_in_bus.hmastlock), // Agent output 
 // .dut_signal_port(ECC_in_bus.hready), // Agent output 
 // .dut_signal_port(ECC_in_bus.htrans), // Agent output 
-// .dut_signal_port(ECC_in_bus.hprot), // Agent output 
-// .dut_signal_port(ECC_in_bus.hburst), // Agent output 
 // .dut_signal_port(ECC_in_bus.hsize), // Agent output 
 // .dut_signal_port(ECC_in_bus.hrdata), // Agent input 
 // .dut_signal_port(ECC_in_bus.hreadyout), // Agent input 
@@ -53,11 +50,8 @@ interface  ECC_in_if #(
   inout tri [AHB_DATA_WIDTH-1:0] hwdata,
   inout tri  hsel,
   inout tri  hwrite,
-  inout tri  hmastlock,
   inout tri  hready,
   inout tri [1:0] htrans,
-  inout tri [3:0] hprot,
-  inout tri [2:0] hburst,
   inout tri [2:0] hsize,
   inout tri [AHB_DATA_WIDTH-1:0] hrdata,
   inout tri  hreadyout,
@@ -75,11 +69,8 @@ modport monitor_port
   input hwdata,
   input hsel,
   input hwrite,
-  input hmastlock,
   input hready,
   input htrans,
-  input hprot,
-  input hburst,
   input hsize,
   input hrdata,
   input hreadyout,
@@ -97,11 +88,8 @@ modport initiator_port
   output hwdata,
   output hsel,
   output hwrite,
-  output hmastlock,
   output hready,
   output htrans,
-  output hprot,
-  output hburst,
   output hsize,
   input hrdata,
   input hreadyout,
@@ -119,11 +107,8 @@ modport responder_port
   input hwdata,
   input hsel,
   input hwrite,
-  input hmastlock,
   input hready,
   input htrans,
-  input hprot,
-  input hburst,
   input hsize,
   output hrdata,
   output hreadyout,

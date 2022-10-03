@@ -60,7 +60,7 @@ addrmap mbox_csr {
 
     reg {
         desc="data in register, write the next data to mailbox";
-        field {sw=w; hw=r; swwe=valid_user; swmod=true;} datain[32];
+        field {sw=rw; hw=na; swwe=valid_user; swmod=true;} datain[32];
     } mbox_datain;
 
     reg {

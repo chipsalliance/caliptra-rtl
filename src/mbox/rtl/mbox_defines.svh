@@ -15,7 +15,6 @@
 `ifndef MBOX_DEFINES
 `define MBOX_DEFINES
 
-`include "caliptra_macros.svh"
 `include "caliptra_sva.svh"
 `include "mbox_params.svh"
 
@@ -44,6 +43,13 @@ typedef struct packed {
     logic                         write;
     logic                         soc_req;
 } mbox_req_t;
+
+typedef struct packed {
+    logic   [MBOX_INF_ADDR_W-1:0] addr;
+    logic   [MBOX_DATA_W-1:0]     wdata;
+    logic                         write;
+    logic                         soc_req;
+} mbox_reg_req_t;
 
 typedef struct packed {
     logic cs;

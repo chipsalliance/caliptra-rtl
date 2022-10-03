@@ -342,7 +342,7 @@ package mbox_reg_uvm;
 
         virtual function void build();
             this.done = new("done");
-            this.done.configure(this, 1, 0, "W1", 0, 'h0, 1, 1, 0);
+            this.done.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : mbox_reg__fuse_done
 

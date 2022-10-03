@@ -78,11 +78,8 @@ end
   tri [AHB_DATA_WIDTH-1:0] hwdata_i;
   tri  hsel_i;
   tri  hwrite_i;
-  tri  hmastlock_i;
   tri  hready_i;
   tri [1:0] htrans_i;
-  tri [3:0] hprot_i;
-  tri [2:0] hburst_i;
   tri [2:0] hsize_i;
   tri [AHB_DATA_WIDTH-1:0] hrdata_i;
   tri  hreadyout_i;
@@ -96,11 +93,8 @@ end
   assign hwdata_i = bus.hwdata;
   assign hsel_i = bus.hsel;
   assign hwrite_i = bus.hwrite;
-  assign hmastlock_i = bus.hmastlock;
   assign hready_i = bus.hready;
   assign htrans_i = bus.htrans;
-  assign hprot_i = bus.hprot;
-  assign hburst_i = bus.hburst;
   assign hsize_i = bus.hsize;
   assign hrdata_i = bus.hrdata;
   assign hreadyout_i = bus.hreadyout;
@@ -195,11 +189,8 @@ end
     //      ECC_in_monitor_struct.xyz = hwdata_i;  //    [AHB_DATA_WIDTH-1:0] 
     //      ECC_in_monitor_struct.xyz = hsel_i;  //     
     //      ECC_in_monitor_struct.xyz = hwrite_i;  //     
-    //      ECC_in_monitor_struct.xyz = hmastlock_i;  //     
     //      ECC_in_monitor_struct.xyz = hready_i;  //     
     //      ECC_in_monitor_struct.xyz = htrans_i;  //    [1:0] 
-    //      ECC_in_monitor_struct.xyz = hprot_i;  //    [3:0] 
-    //      ECC_in_monitor_struct.xyz = hburst_i;  //    [2:0] 
     //      ECC_in_monitor_struct.xyz = hsize_i;  //    [2:0] 
     //      ECC_in_monitor_struct.xyz = hrdata_i;  //    [AHB_DATA_WIDTH-1:0] 
     //      ECC_in_monitor_struct.xyz = hreadyout_i;  //     

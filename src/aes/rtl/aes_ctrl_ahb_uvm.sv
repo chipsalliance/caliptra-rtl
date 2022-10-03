@@ -36,11 +36,8 @@ module aes_ctrl_ahb_uvm #(
     input logic [AHB_DATA_WIDTH-1:0] hwdata_i,
     input logic hsel_i,
     input logic hwrite_i,
-    input logic hmastlock_i,
     input logic hready_i,
     input logic [1:0] htrans_i,
-    input logic [3:0] hprot_i,
-    input logic [2:0] hburst_i,
     input logic [2:0] hsize_i,
 
     output logic hresp_o,
@@ -105,9 +102,7 @@ module aes_ctrl_ahb_uvm #(
         else if(hready_i)
             addr = haddr_i;
         if(hready_i & hsel_i & |htrans_i)
-            if(~hprot_i[0])
                 iws = 0;
-            if(hprot_i[0])
                 dws = 0;
     end
 
@@ -131,7 +126,6 @@ module aes_ctrl_ahb_uvm #(
             end
         end
         if(hready_i & hsel_i & |htrans_i)
-            wscnt <= hprot_i[0] ? dws[7:0] : iws[7:0];
         else if(wscnt != 0)
             wscnt <= wscnt-1;
     end

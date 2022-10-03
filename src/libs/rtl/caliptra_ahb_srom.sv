@@ -29,10 +29,7 @@ module caliptra_ahb_srom #(
     input logic                       hready_i,
     input logic [1:0]                 htrans_i,
     input logic [2:0]                 hsize_i,
-    input logic [2:0]                 hburst_i,
 
-    input logic                       hmastlock_i, // FIXME
-    input logic [3:0]                 hprot_i, // FIXME
 
     //response to uC
     output logic                      hresp_o,

@@ -15,7 +15,6 @@
 `ifndef KV_DEFINES
 `define KV_DEFINES
 
-`include "caliptra_macros.svh"
 `include "caliptra_sva.svh"
 
 parameter KV_NUM_DWORDS = 16; //number of dwords per key

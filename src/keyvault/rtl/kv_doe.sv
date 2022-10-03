@@ -177,15 +177,9 @@ always_comb begin : kv_doe_fsm
     endcase
 end
 
-//state flops
-`CLP_RSTD_FF(kv_doe_fsm_ps, kv_doe_fsm_ns, clk, rst_b, DOE_IDLE)
-`CLP_EN_RST_FF(dest_write_offset, dest_write_offset_nxt, clk, dest_write_offset_en, rst_b)
-`CLP_EN_RST_FF(block_offset, block_offset_nxt, clk, block_offset_en, rst_b)
-
 //latch the dest addr when starting, and when we roll over dest offset
 always_comb dest_addr_en = incr_dest_sel | ((kv_doe_fsm_ps == DOE_IDLE) & arc_DOE_IDLE_DOE_KEY);
 always_comb dest_addr_nxt = incr_dest_sel ? doe_ctrl_reg.dest_sel + 'd1 : doe_ctrl_reg.dest_sel;
-`CLP_EN_RST_FF(dest_addr, dest_addr_nxt, clk, dest_addr_en, rst_b)
 
 //drive outputs to kv
 always_comb kv_write.dest_wr_vld = dest_write_en;
@@ -201,5 +195,21 @@ always_comb doe_flow_ip = kv_doe_fsm_ps != DOE_IDLE;
 //pick uds or fe based on command
 always_comb src_write_data = running_uds ? obf_uds_seed[block_offset] : 
                              running_fe  ? obf_field_entropy[block_offset] : 'x;
+
+//state flops
+always_ff @(posedge clk or negedge rst_b) begin
+    if (~rst_b) begin
+        kv_doe_fsm_ps <= DOE_IDLE;
+        dest_write_offset <= '0;
+        block_offset <= '0;
+        dest_addr <= '0;
+    end
+    else begin
+        kv_doe_fsm_ps <= kv_doe_fsm_ns;
+        dest_write_offset <= dest_write_offset_en ? dest_write_offset_nxt : dest_write_offset;
+        block_offset <= block_offset_en ? block_offset_nxt : block_offset;
+        dest_addr <= dest_addr_en ? dest_addr_nxt : dest_addr;
+    end
+end
 
 endmodule

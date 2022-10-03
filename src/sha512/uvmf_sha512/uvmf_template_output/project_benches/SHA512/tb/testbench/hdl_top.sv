@@ -91,11 +91,8 @@ import uvmf_base_pkg_hdl::*;
              .hwdata_i(SHA512_in_agent_bus.hwdata),
              .hsel_i(SHA512_in_agent_bus.hsel),
              .hwrite_i(SHA512_in_agent_bus.hwrite),
-             .hmastlock_i(SHA512_in_agent_bus.hmastlock),
              .hready_i(SHA512_in_agent_bus.hready),
              .htrans_i(SHA512_in_agent_bus.htrans),
-             .hprot_i(SHA512_in_agent_bus.hprot),
-             .hburst_i(SHA512_in_agent_bus.hburst),
              .hsize_i(SHA512_in_agent_bus.hsize),
 
              .hresp_o(SHA512_out_agent_bus.hresp),

@@ -93,11 +93,8 @@ import uvmf_base_pkg_hdl::*;
              .hwdata_i(AES_in_agent_bus.hwdata),
              .hsel_i(AES_in_agent_bus.hsel),
              .hwrite_i(AES_in_agent_bus.hwrite),
-             .hmastlock_i(AES_in_agent_bus.hmastlock),
              .hready_i(AES_in_agent_bus.hready),
              .htrans_i(AES_in_agent_bus.htrans),
-             .hprot_i(AES_in_agent_bus.hprot),
-             .hburst_i(AES_in_agent_bus.hburst),
              .hsize_i(AES_in_agent_bus.hsize),
 
              .hresp_o(AES_out_agent_bus.hresp),

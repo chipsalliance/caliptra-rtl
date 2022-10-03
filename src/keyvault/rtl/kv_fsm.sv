@@ -39,7 +39,7 @@ module kv_fsm #(
 localparam KV_MAX_DWORDS = 1024/32;
 localparam KV_NUM_DWORDS_W = $clog2(KV_MAX_DWORDS);
 
-//hmac data size is encoded as N-1 128B chunks, add 1 and multiply by 4 to get dwords
+//hmac data size is encoded as N-1 128b chunks, add 1 and multiply by 4 to get dwords
 //data width is in bits, divide by 32 to get dwords
 logic [KV_NUM_DWORDS_W:0] num_dwords_data;
 assign num_dwords_data = (HMAC_PAD == 1) ? ((hmac_data_size+1)*4) : DATA_WIDTH/32;
@@ -114,8 +114,16 @@ always_comb begin : kv_fsm
     endcase
 end
 
-`CLP_RSTD_FF(kv_fsm_ps, kv_fsm_ns, clk, rst_b, KV_IDLE)
-`CLP_EN_RST_FF(offset, offset_nxt, clk, offset_en, rst_b)
+always_ff @(posedge clk or negedge rst_b) begin
+    if (!rst_b) begin
+        kv_fsm_ps <= KV_IDLE;
+        offset <= '0;
+    end
+    else begin
+        kv_fsm_ps <= kv_fsm_ns;
+        offset <= offset_en ? offset_nxt : offset;
+    end
+end
 
 always_comb read_offset = offset[OFFSET_W-1:0];
 always_comb write_offset = offset[OFFSET_W-1:0];

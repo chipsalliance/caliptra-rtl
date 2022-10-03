@@ -33,11 +33,8 @@ module kv #(
     input logic [AHB_DATA_WIDTH-1:0]      hwdata_i,
     input logic                           hsel_i,
     input logic                           hwrite_i,
-    input logic                           hmastlock_i,
     input logic                           hready_i,
     input logic [1:0]                     htrans_i,
-    input logic [3:0]                     hprot_i,
-    input logic [2:0]                     hburst_i,
     input logic [2:0]                     hsize_i,
 
     output logic                          hresp_o,
@@ -75,14 +72,11 @@ kv_ahb_slv1 (
     .hready_i(hready_i),
     .htrans_i(htrans_i),
     .hsize_i(hsize_i),
-    .hburst_i(hburst_i),
 
     .hresp_o(hresp_o),
     .hreadyout_o(hreadyout_o),
     .hrdata_o(hrdata_o),
 
-    .hmastlock_i(hmastlock_i),
-    .hprot_i(hprot_i),
 
     //COMPONENT INF
     .dv(uc_req_dv),
@@ -96,7 +90,7 @@ kv_ahb_slv1 (
 );
 
 always_comb uc_req_error = kv_reg_read_error | kv_reg_write_error;
-
+always_comb uc_req_hold = '0;
 always_comb kv_reg_hwif_in.reset_b = rst_b;
 
 always_comb begin : keyvault_ctrl
@@ -197,8 +191,8 @@ always_comb kv_reg_hwif_in.hard_reset_b = cptra_pwrgood;
 kv_reg kv_reg1 (
     .clk(clk),
     .rst('0),
-
-    .s_cpuif_req(uc_req_dv),
+    //qualify request so no addresses alias
+    .s_cpuif_req(uc_req_dv & (uc_req.addr[KV_ADDR_W-1:11] == '0)),
     .s_cpuif_req_is_wr(uc_req.write),
     .s_cpuif_addr(uc_req.addr[10:0]),
     .s_cpuif_wr_data(uc_req.wdata),

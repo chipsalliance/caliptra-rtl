@@ -36,11 +36,8 @@ module sha256_ctrl #(
     input logic [AHB_DATA_WIDTH-1:0] hwdata_i,
     input logic hsel_i,
     input logic hwrite_i,
-    input logic hmastlock_i,
     input logic hready_i,
     input logic [1:0] htrans_i,
-    input logic [3:0] hprot_i,
-    input logic [2:0] hburst_i,
     input logic [2:0] hsize_i,
 
     output logic hresp_o,

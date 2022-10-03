@@ -27,11 +27,8 @@ module ahb_node #(
   output logic [NB_SLAVES-1:0][AHB_DATA_WIDTH-1:0] hwdata_o,
   output logic [NB_SLAVES-1:0] hsel_o,
   output logic [NB_SLAVES-1:0] hwrite_o,
-  output logic [NB_SLAVES-1:0] hmastlock_o,
   output logic [NB_SLAVES-1:0] hslaveready_o,
   output logic [NB_SLAVES-1:0][1:0] htrans_o,
-  output logic [NB_SLAVES-1:0][3:0] hprot_o,
-  output logic [NB_SLAVES-1:0][2:0] hburst_o,
   output logic [NB_SLAVES-1:0][2:0] hsize_o,
 
   input logic [NB_SLAVES-1:0] hresp_i,
@@ -43,10 +40,7 @@ module ahb_node #(
   input logic [AHB_DATA_WIDTH-1:0] hwdata_i,
   input logic hsel_i,
   input logic hwrite_i,
-  input logic hmastlock_i,
   input logic [1:0] htrans_i,
-  input logic [3:0] hprot_i,
-  input logic [2:0] hburst_i,
   input logic [2:0] hsize_i,
 
   output logic hresp_o,
@@ -79,10 +73,7 @@ end
       if( hsel_i == 1'b1 ) begin
         hslaveready_o[s] = hmasterready_o;
         hwrite_o[s] = hwrite_i;
-        hmastlock_o[s] = hmastlock_i;
         htrans_o[s] = htrans_i;
-        hprot_o[s] = hprot_i;
-        hburst_o[s] = hburst_i;
         hsize_o[s] = hsize_i;
         haddr_o[s] = haddr_i;
         hwdata_o[s] = hwdata_i;
@@ -90,10 +81,7 @@ end
       else  begin
         hslaveready_o[s] = 1'b1;
         hwrite_o[s] = 1'b0;
-        hmastlock_o[s] = 1'b0;
         htrans_o[s] =  2'b00;
-        hprot_o[s] = 4'b0000;
-        hburst_o[s] = 3'b000;
         hsize_o[s] = 3'b000;
         haddr_o[s] = {AHB_ADDR_WIDTH{1'b0}};
         hwdata_o[s] = {AHB_DATA_WIDTH{1'b0}};

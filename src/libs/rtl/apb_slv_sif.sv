@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-`include "caliptra_macros.svh"
 `include "caliptra_sva.svh"
 
 module apb_slv_sif #(
@@ -57,13 +56,25 @@ logic access_phase;
 //flop the addr, write, write data and user attribute
 always_comb setup_phase = PSEL & ~PENABLE;
 
-`CLP_EN_FF(addr, PADDR, PCLK, setup_phase)
-`CLP_EN_FF(write, PWRITE, PCLK, setup_phase)
-`CLP_EN_FF(wdata, PWDATA, PCLK, setup_phase & PWRITE)
-`CLP_EN_FF(user, PAUSER, PCLK, setup_phase)
-
-//access phase of apb transaction
-//select and enable
+always_ff @(posedge PCLK or negedge PRESETn) begin
+    if (!PRESETn) begin
+        addr <= '0;
+        write <= '0;
+        wdata <= '0;
+        user <= '0;
+        dv <= '0;
+    end
+    else begin
+        addr <= setup_phase ? PADDR : addr;
+        write <= setup_phase ? PWRITE : write;
+        wdata <= (setup_phase & PWRITE) ? PWDATA : wdata;
+        user <= setup_phase ? PAUSER : user;
+        //drive dv to component during access phase
+        //assume that access will necessarily follow setup phase
+        //setup phase becomes dv, gets cleared after seeing access phase and PREADY
+        dv <= (setup_phase | (access_phase & PREADY)) ? setup_phase : dv;
+    end
+end
 
 always_comb access_phase = PSEL & PENABLE;
 
@@ -75,10 +86,7 @@ always_comb PRDATA = (dv & access_phase) ? rdata : '0;
 always_comb PSLVERR = (dv & access_phase) ? slverr : 
                              access_phase ? '1 : '0;
 
-//drive dv to component during access phase
-//assume that access will necessarily follow setup phase
-//setup phase becomes dv, gets cleared after seeing access phase and PREADY
-`CLP_EN_RST_FF(dv, setup_phase, PCLK, (setup_phase | (access_phase & PREADY)), PRESETn)
+
 
 //TODO ASSERTS
 //assert that PADDR, PWRITE, PWDATA, PAUSER are constant while in access_phase

@@ -808,8 +808,8 @@ module mbox_reg (
         field_combo.HW_ERROR_FATAL.error_code.next = next_c;
         field_combo.HW_ERROR_FATAL.error_code.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
+    always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+        if(~hwif_in.hard_reset_b) begin
             field_storage.HW_ERROR_FATAL.error_code.value <= 'h0;
         end else if(field_combo.HW_ERROR_FATAL.error_code.load_next) begin
             field_storage.HW_ERROR_FATAL.error_code.value <= field_combo.HW_ERROR_FATAL.error_code.next;
@@ -826,8 +826,8 @@ module mbox_reg (
         field_combo.HW_ERROR_NON_FATAL.error_code.next = next_c;
         field_combo.HW_ERROR_NON_FATAL.error_code.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
+    always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+        if(~hwif_in.hard_reset_b) begin
             field_storage.HW_ERROR_NON_FATAL.error_code.value <= 'h0;
         end else if(field_combo.HW_ERROR_NON_FATAL.error_code.load_next) begin
             field_storage.HW_ERROR_NON_FATAL.error_code.value <= field_combo.HW_ERROR_NON_FATAL.error_code.next;
@@ -844,8 +844,8 @@ module mbox_reg (
         field_combo.FW_ERROR_FATAL.error_code.next = next_c;
         field_combo.FW_ERROR_FATAL.error_code.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
+    always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+        if(~hwif_in.hard_reset_b) begin
             field_storage.FW_ERROR_FATAL.error_code.value <= 'h0;
         end else if(field_combo.FW_ERROR_FATAL.error_code.load_next) begin
             field_storage.FW_ERROR_FATAL.error_code.value <= field_combo.FW_ERROR_FATAL.error_code.next;
@@ -862,8 +862,8 @@ module mbox_reg (
         field_combo.FW_ERROR_NON_FATAL.error_code.next = next_c;
         field_combo.FW_ERROR_NON_FATAL.error_code.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
+    always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+        if(~hwif_in.hard_reset_b) begin
             field_storage.FW_ERROR_NON_FATAL.error_code.value <= 'h0;
         end else if(field_combo.FW_ERROR_NON_FATAL.error_code.load_next) begin
             field_storage.FW_ERROR_NON_FATAL.error_code.value <= field_combo.FW_ERROR_NON_FATAL.error_code.next;
@@ -880,8 +880,8 @@ module mbox_reg (
         field_combo.HW_ERROR_ENC.error_code.next = next_c;
         field_combo.HW_ERROR_ENC.error_code.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
+    always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+        if(~hwif_in.hard_reset_b) begin
             field_storage.HW_ERROR_ENC.error_code.value <= 'h0;
         end else if(field_combo.HW_ERROR_ENC.error_code.load_next) begin
             field_storage.HW_ERROR_ENC.error_code.value <= field_combo.HW_ERROR_ENC.error_code.next;
@@ -898,8 +898,8 @@ module mbox_reg (
         field_combo.FW_ERROR_ENC.error_code.next = next_c;
         field_combo.FW_ERROR_ENC.error_code.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
+    always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+        if(~hwif_in.hard_reset_b) begin
             field_storage.FW_ERROR_ENC.error_code.value <= 'h0;
         end else if(field_combo.FW_ERROR_ENC.error_code.load_next) begin
             field_storage.FW_ERROR_ENC.error_code.value <= field_combo.FW_ERROR_ENC.error_code.next;
@@ -1108,7 +1108,6 @@ module mbox_reg (
                 field_storage.key_manifest_pk_hash_0[i0].hash.value <= field_combo.key_manifest_pk_hash_0[i0].hash.next;
             end
         end
-        assign hwif_out.key_manifest_pk_hash_0[i0].hash.value = field_storage.key_manifest_pk_hash_0[i0].hash.value;
     end
     for(genvar i0=0; i0<12; i0++) begin
         // Field: mbox_reg.key_manifest_pk_hash_1[].hash
@@ -1129,7 +1128,6 @@ module mbox_reg (
                 field_storage.key_manifest_pk_hash_1[i0].hash.value <= field_combo.key_manifest_pk_hash_1[i0].hash.next;
             end
         end
-        assign hwif_out.key_manifest_pk_hash_1[i0].hash.value = field_storage.key_manifest_pk_hash_1[i0].hash.value;
     end
     for(genvar i0=0; i0<12; i0++) begin
         // Field: mbox_reg.key_manifest_pk_hash_2[].hash
@@ -1150,7 +1148,6 @@ module mbox_reg (
                 field_storage.key_manifest_pk_hash_2[i0].hash.value <= field_combo.key_manifest_pk_hash_2[i0].hash.next;
             end
         end
-        assign hwif_out.key_manifest_pk_hash_2[i0].hash.value = field_storage.key_manifest_pk_hash_2[i0].hash.value;
     end
     for(genvar i0=0; i0<12; i0++) begin
         // Field: mbox_reg.key_manifest_pk_hash_3[].hash
@@ -1171,7 +1168,6 @@ module mbox_reg (
                 field_storage.key_manifest_pk_hash_3[i0].hash.value <= field_combo.key_manifest_pk_hash_3[i0].hash.next;
             end
         end
-        assign hwif_out.key_manifest_pk_hash_3[i0].hash.value = field_storage.key_manifest_pk_hash_3[i0].hash.value;
     end
     // Field: mbox_reg.key_manifest_pk_hash_mask.mask
     always_comb begin
@@ -1191,7 +1187,6 @@ module mbox_reg (
             field_storage.key_manifest_pk_hash_mask.mask.value <= field_combo.key_manifest_pk_hash_mask.mask.next;
         end
     end
-    assign hwif_out.key_manifest_pk_hash_mask.mask.value = field_storage.key_manifest_pk_hash_mask.mask.value;
     // Field: mbox_reg.key_manifest_svn.svn
     always_comb begin
         automatic logic [31:0] next_c = field_storage.key_manifest_svn.svn.value;
@@ -1210,7 +1205,6 @@ module mbox_reg (
             field_storage.key_manifest_svn.svn.value <= field_combo.key_manifest_svn.svn.next;
         end
     end
-    assign hwif_out.key_manifest_svn.svn.value = field_storage.key_manifest_svn.svn.value;
     // Field: mbox_reg.boot_loader_svn.svn
     always_comb begin
         automatic logic [31:0] next_c = field_storage.boot_loader_svn.svn.value;
@@ -1229,7 +1223,6 @@ module mbox_reg (
             field_storage.boot_loader_svn.svn.value <= field_combo.boot_loader_svn.svn.next;
         end
     end
-    assign hwif_out.boot_loader_svn.svn.value = field_storage.boot_loader_svn.svn.value;
     for(genvar i0=0; i0<4; i0++) begin
         // Field: mbox_reg.runtime_svn[].svn
         always_comb begin
@@ -1249,7 +1242,6 @@ module mbox_reg (
                 field_storage.runtime_svn[i0].svn.value <= field_combo.runtime_svn[i0].svn.next;
             end
         end
-        assign hwif_out.runtime_svn[i0].svn.value = field_storage.runtime_svn[i0].svn.value;
     end
     // Field: mbox_reg.anti_rollback_disable.dis
     always_comb begin
@@ -1269,7 +1261,6 @@ module mbox_reg (
             field_storage.anti_rollback_disable.dis.value <= field_combo.anti_rollback_disable.dis.next;
         end
     end
-    assign hwif_out.anti_rollback_disable.dis.value = field_storage.anti_rollback_disable.dis.value;
     // Field: mbox_reg.ieee_idevid_cert_chain.cert
     always_comb begin
         automatic logic [31:0] next_c = field_storage.ieee_idevid_cert_chain.cert.value;
@@ -1288,7 +1279,6 @@ module mbox_reg (
             field_storage.ieee_idevid_cert_chain.cert.value <= field_combo.ieee_idevid_cert_chain.cert.next;
         end
     end
-    assign hwif_out.ieee_idevid_cert_chain.cert.value = field_storage.ieee_idevid_cert_chain.cert.value;
     // Field: mbox_reg.fuse_done.done
     always_comb begin
         automatic logic [0:0] next_c = field_storage.fuse_done.done.value;
@@ -1300,8 +1290,8 @@ module mbox_reg (
         field_combo.fuse_done.done.next = next_c;
         field_combo.fuse_done.done.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
-        if(~hwif_in.hard_reset_b) begin
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
             field_storage.fuse_done.done.value <= 'h0;
         end else if(field_combo.fuse_done.done.load_next) begin
             field_storage.fuse_done.done.value <= field_combo.fuse_done.done.next;

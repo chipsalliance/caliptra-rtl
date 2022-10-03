@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-`include "caliptra_macros.svh"
 `include "caliptra_sva.svh"
 
 module ahb_slv_sif #(
@@ -34,10 +33,7 @@ module ahb_slv_sif #(
     input logic hready_i,
     input logic [1:0] htrans_i,
     input logic [2:0] hsize_i,
-    input logic [2:0] hburst_i, // FIXME
 
-    input logic       hmastlock_i, // FIXME
-    input logic [3:0] hprot_i, // FIXME
 
     output logic hresp_o,
     output logic hreadyout_o,
@@ -74,7 +70,7 @@ generate
                     wdata = hwdata_i[31:0];
                 default: //word
                 wdata = hwdata_i[31:0];
-            endcase;
+            endcase
         end
         always_comb hrdata_o = rdata;
     end else if ((AHB_DATA_WIDTH == 64) & (CLIENT_DATA_WIDTH == 32)) begin
@@ -88,7 +84,7 @@ generate
                     wdata = addr[2] ? hwdata_i[63:32] : hwdata_i[31:0];
                 default: //word
                 wdata = addr[2] ? hwdata_i[63:32] : hwdata_i[31:0];
-            endcase;
+            endcase
         end
         always_comb hrdata_o = addr[2] ? {rdata, 32'b0} : {32'b0, rdata};
     end else if ((AHB_DATA_WIDTH == 64) & (CLIENT_DATA_WIDTH == 64)) begin
@@ -104,7 +100,7 @@ generate
                     wdata = hwdata_i;
                 default: //dword
                     wdata = hwdata_i;
-            endcase;
+            endcase
         end
         always_comb hrdata_o = rdata;
     end 
@@ -145,5 +141,8 @@ always_comb begin : response_block
         hresp_o = `H_ERROR;
     end
 end
+
+//bypass lint error //FIXME when lint rule is removed
+
 
 endmodule

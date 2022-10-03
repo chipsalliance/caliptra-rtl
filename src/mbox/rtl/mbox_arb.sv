@@ -40,7 +40,7 @@ module mbox_arb (
     //mbox reg inf
     output logic mbox_reg_req_dv,
     input  logic mbox_reg_req_hold,
-    output mbox_req_t mbox_reg_req_data,
+    output mbox_reg_req_t mbox_reg_req_data,
     input  logic [MBOX_DATA_W-1:0] mbox_reg_rdata,
     input  logic mbox_reg_error
     
@@ -60,7 +60,15 @@ logic uc_mbox_dir_req;
 
 //simple arbitration scheme, track most recently granted client (SOC or UC)
 //give priority in case of collision to the least recently granted client
-`CLP_EN_RST_FF(soc_has_priority, ~soc_has_priority, clk, toggle_priority, rst_b)
+always_ff @(posedge clk or negedge rst_b) begin
+    if (!rst_b) begin
+        soc_has_priority <= '0;
+    end
+    else begin
+        soc_has_priority <= toggle_priority ? ~soc_has_priority : soc_has_priority;
+    end
+end
+
 assign uc_has_priority = ~soc_has_priority;
 
 //toggle the priority when collision is detected
@@ -87,7 +95,13 @@ always_comb mbox_reg_req_dv = uc_mbox_reg_req | soc_mbox_reg_req;
 
 //drive the appropriate request to each destination
 always_comb mbox_req_data = (soc_mbox_req & (~req_collision | soc_has_priority)) ? soc_req_data : uc_req_data;
-always_comb mbox_reg_req_data = (soc_mbox_reg_req & (~req_collision | soc_has_priority)) ? soc_req_data : uc_req_data;
+
+always_comb begin
+    mbox_reg_req_data.addr = (soc_mbox_reg_req & (~req_collision | soc_has_priority)) ? soc_req_data.addr : uc_req_data.addr;
+    mbox_reg_req_data.write = (soc_mbox_reg_req & (~req_collision | soc_has_priority)) ? soc_req_data.write : uc_req_data.write;
+    mbox_reg_req_data.wdata = (soc_mbox_reg_req & (~req_collision | soc_has_priority)) ? soc_req_data.wdata : uc_req_data.wdata;
+    mbox_reg_req_data.soc_req = (soc_mbox_reg_req & (~req_collision | soc_has_priority)) ? soc_req_data.soc_req : uc_req_data.soc_req;
+end
 
 //drive the appropriate read data back to uc or soc
 //AND/OR mux here, assert that requests are always mutex

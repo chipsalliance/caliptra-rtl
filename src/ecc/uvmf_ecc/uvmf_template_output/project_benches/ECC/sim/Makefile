@@ -159,7 +159,6 @@ $(UVMF_PROJECT_DIR)/../../../../rtl/ecc_pe_final.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/ecc_mult_dsp.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/ecc_add_sub_mod_alter.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/ecc_adder.sv\
-$(UVMF_PROJECT_DIR)/../../../../../libs/rtl/caliptra_macros.svh\
 $(UVMF_PROJECT_DIR)/../../../../../libs/rtl/caliptra_sva.svh\
 $(UVMF_PROJECT_DIR)/../../../../../libs/rtl/ahb_slv_sif.sv
 

@@ -85,11 +85,8 @@ module sha256_ctrl_tb();
   reg [AHB_DATA_WIDTH-1:0]  hwdata_i_tb;
   reg           hsel_i_tb;
   reg           hwrite_i_tb; 
-  reg           hmastlock_i_tb;
   reg           hready_i_tb;
   reg [1:0]     htrans_i_tb;
-  reg [3:0]     hprot_i_tb;
-  reg [2:0]     hburst_i_tb;
   reg [2:0]     hsize_i_tb;
 
   wire          hresp_o_tb;
@@ -115,11 +112,8 @@ module sha256_ctrl_tb();
              .hwdata_i(hwdata_i_tb),
              .hsel_i(hsel_i_tb),
              .hwrite_i(hwrite_i_tb),
-             .hmastlock_i(hmastlock_i_tb),
              .hready_i(hready_i_tb),
              .htrans_i(htrans_i_tb),
-             .hprot_i(hprot_i_tb),
-             .hburst_i(hburst_i_tb),
              .hsize_i(hsize_i_tb),
 
              .hresp_o(hresp_o_tb),
@@ -186,11 +180,8 @@ module sha256_ctrl_tb();
       hwdata_i_tb     = 0;
       hsel_i_tb       = 0;
       hwrite_i_tb     = 0;
-      hmastlock_i_tb  = 0;
       hready_i_tb     = 0;
       htrans_i_tb     = AHB_HTRANS_IDLE;
-      hprot_i_tb      = 0;
-      hburst_i_tb     = 0;
       hsize_i_tb      = 3'b011;
     end
   endtask // init_dut
@@ -250,11 +241,8 @@ module sha256_ctrl_tb();
       hsel_i_tb       = 1;
       haddr_i_tb      = address;
       hwrite_i_tb     = 1;
-      hmastlock_i_tb  = 0;
       hready_i_tb     = 1;
       htrans_i_tb     = AHB_HTRANS_NONSEQ;
-      hprot_i_tb      = 0;
-      hburst_i_tb     = 0;
       hsize_i_tb      = 3'b011;
       #(CLK_PERIOD);
 
@@ -297,11 +285,8 @@ module sha256_ctrl_tb();
       hsel_i_tb       = 1;
       haddr_i_tb      = address;
       hwrite_i_tb     = 0;
-      hmastlock_i_tb  = 0;
       hready_i_tb     = 1;
       htrans_i_tb     = AHB_HTRANS_NONSEQ;
-      hprot_i_tb      = 0;
-      hburst_i_tb     = 0;
       hsize_i_tb      = 3'b011;
       #(CLK_PERIOD);
       

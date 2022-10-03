@@ -110,16 +110,10 @@ end
   reg  hsel_o = 'bz;
   tri  hwrite_i;
   reg  hwrite_o = 'bz;
-  tri  hmastlock_i;
-  reg  hmastlock_o = 'bz;
   tri  hready_i;
   reg  hready_o = 'bz;
   tri [1:0] htrans_i;
   reg [1:0] htrans_o = 'bz;
-  tri [3:0] hprot_i;
-  reg [3:0] hprot_o = 'bz;
-  tri [2:0] hburst_i;
-  reg [2:0] hburst_o = 'bz;
   tri [2:0] hsize_i;
   reg [2:0] hsize_o = 'bz;
   tri  transaction_flag_out_monitor_i;
@@ -155,16 +149,10 @@ end
   assign hsel_i = bus.hsel;
   assign bus.hwrite = (initiator_responder == INITIATOR) ? hwrite_o : 'bz;
   assign hwrite_i = bus.hwrite;
-  assign bus.hmastlock = (initiator_responder == INITIATOR) ? hmastlock_o : 'bz;
-  assign hmastlock_i = bus.hmastlock;
   assign bus.hready = (initiator_responder == INITIATOR) ? hready_o : 'bz;
   assign hready_i = bus.hready;
   assign bus.htrans = (initiator_responder == INITIATOR) ? htrans_o : 'bz;
   assign htrans_i = bus.htrans;
-  assign bus.hprot = (initiator_responder == INITIATOR) ? hprot_o : 'bz;
-  assign hprot_i = bus.hprot;
-  assign bus.hburst = (initiator_responder == INITIATOR) ? hburst_o : 'bz;
-  assign hburst_i = bus.hburst;
   assign bus.hsize = (initiator_responder == INITIATOR) ? hsize_o : 'bz;
   assign hsize_i = bus.hsize;
   assign bus.transaction_flag_out_monitor = (initiator_responder == INITIATOR) ? transaction_flag_out_monitor_o : 'bz;
@@ -215,11 +203,8 @@ end
        hwdata_o <= 'bz;
        hsel_o <= 0;
        hwrite_o <= 0;
-       hmastlock_o <= 0;
        hready_o <= 0;
        htrans_o <= 0;
-       hprot_o <= 0;
-       hburst_o <= 0;
        hsize_o <= 3'b011;
 
        transaction_flag_out_monitor_o <= '0;
@@ -290,11 +275,8 @@ end
        //      hwdata_o <= ECC_in_initiator_struct.xyz;  //    [AHB_DATA_WIDTH-1:0] 
        //      hsel_o <= ECC_in_initiator_struct.xyz;  //     
        //      hwrite_o <= ECC_in_initiator_struct.xyz;  //     
-       //      hmastlock_o <= ECC_in_initiator_struct.xyz;  //     
        //      hready_o <= ECC_in_initiator_struct.xyz;  //     
        //      htrans_o <= ECC_in_initiator_struct.xyz;  //    [1:0] 
-       //      hprot_o <= ECC_in_initiator_struct.xyz;  //    [3:0] 
-       //      hburst_o <= ECC_in_initiator_struct.xyz;  //    [2:0] 
        //      hsize_o <= ECC_in_initiator_struct.xyz;  //    [2:0] 
        //      transaction_flag_out_monitor_o <= ECC_in_initiator_struct.xyz;  //     
        //      op_o <= ECC_in_initiator_struct.xyz;  //    [1:0] 
@@ -442,11 +424,8 @@ end
     hwdata_o    = 'Z;
     hsel_o      = 0;
     hwrite_o    = 0;
-    hmastlock_o = 0;
     hready_o    = 0;
     htrans_o    = AHB_HTRANS_IDLE;
-    hprot_o     = 0;
-    hburst_o    = 0;
     hsize_o     = 3'b011;
 
     repeat (10) @(posedge clk_i);
@@ -466,11 +445,8 @@ end
     hwdata_o <= 'bz;
     hsel_o <= 'b0;
     hwrite_o <= 'b0;
-    hmastlock_o <= 'b0;
     hready_o <= 'b0;
     htrans_o <= 'b0;
-    hprot_o <= 'b0;
-    hburst_o <= 'b0;
     hsize_o <= 3'b011;
   end
 
@@ -525,11 +501,8 @@ end
       hsel_o      <= 1;
       haddr_o     <= address;
       hwrite_o    <= 1;
-      hmastlock_o <= 0;
       hready_o    <= 1;
       htrans_o    <= AHB_HTRANS_NONSEQ;
-      hprot_o     <= 0;
-      hburst_o    <= 0;
       hsize_o     <= 3'b010;
       
       @(posedge clk_i); 
@@ -581,11 +554,8 @@ end
       hsel_o       <= 1;    
       haddr_o      <= address;
       hwrite_o     <= 0;
-      hmastlock_o  <= 0;
       hready_o     <= 1;
       htrans_o     <= AHB_HTRANS_NONSEQ;
-      hprot_o      <= 0;
-      hburst_o     <= 0;
       hsize_o      <= 3'b010;
       
       @(posedge clk_i);
@@ -1031,11 +1001,8 @@ bit first_transfer=1;
        //      ECC_in_responder_struct.xyz = hwdata_i;  //    [AHB_DATA_WIDTH-1:0] 
        //      ECC_in_responder_struct.xyz = hsel_i;  //     
        //      ECC_in_responder_struct.xyz = hwrite_i;  //     
-       //      ECC_in_responder_struct.xyz = hmastlock_i;  //     
        //      ECC_in_responder_struct.xyz = hready_i;  //     
        //      ECC_in_responder_struct.xyz = htrans_i;  //    [1:0] 
-       //      ECC_in_responder_struct.xyz = hprot_i;  //    [3:0] 
-       //      ECC_in_responder_struct.xyz = hburst_i;  //    [2:0] 
        //      ECC_in_responder_struct.xyz = hsize_i;  //    [2:0] 
        //      ECC_in_responder_struct.xyz = transaction_flag_out_monitor_i;  //     
        //      ECC_in_responder_struct.xyz = op_i;  //    [1:0] 

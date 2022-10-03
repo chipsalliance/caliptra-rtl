@@ -95,9 +95,9 @@ assign mbox_error = read_error | write_error;
 //we have a valid read, to the lock register, and it's not currently locked
 always_comb arc_MBOX_IDLE_MBOX_RDY_FOR_CMD = ~hwif_out.mbox_lock.lock.value & hwif_out.mbox_lock.lock.swmod;
 //move from rdy for cmd to rdy for dlen when cmd is written
-always_comb arc_MBOX_RDY_FOR_CMD_MBOX_RDY_FOR_DLEN = hwif_out.mbox_cmd.command.swmod;
+always_comb arc_MBOX_RDY_FOR_CMD_MBOX_RDY_FOR_DLEN = hwif_out.mbox_cmd.command.swmod & hwif_in.valid_user;
 //move from rdy for dlen to rdy for data when dlen is written
-always_comb arc_MBOX_RDY_FOR_DLEN_MBOX_RDY_FOR_DATA = hwif_out.mbox_dlen.length.swmod;
+always_comb arc_MBOX_RDY_FOR_DLEN_MBOX_RDY_FOR_DATA = hwif_out.mbox_dlen.length.swmod & hwif_in.valid_user;
 //move from rdy for data to execute uc when SoC sets execute bit
 always_comb arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC = hwif_out.mbox_execute.execute.value & soc_has_lock;
 //move from rdy for data to execute soc when uc writes to execute
@@ -135,9 +135,9 @@ always_comb begin : mbox_fsm_combo
         end
         MBOX_RDY_FOR_DATA: begin
             //update the read/write pointers to sram when accessing datain/dataout registers
-            inc_rdptr = hwif_out.mbox_dataout.dataout.swacc;
-            inc_wrptr = hwif_out.mbox_datain.datain.swmod;
-            mbox_protocol_sram_we = hwif_out.mbox_datain.datain.swmod;
+            inc_rdptr = hwif_out.mbox_dataout.dataout.swacc & hwif_in.valid_user;
+            inc_wrptr = hwif_out.mbox_datain.datain.swmod & hwif_in.valid_user;
+            mbox_protocol_sram_we = hwif_out.mbox_datain.datain.swmod & hwif_in.valid_user;
             if (arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC) begin
                 mbox_fsm_ns = MBOX_EXECUTE_UC;
             end
@@ -168,16 +168,31 @@ always_comb begin : mbox_fsm_combo
     endcase
 end
 
-//next state -> present state
-//reset mbox fsm to idle on rst_b
-`CLP_RSTD_FF(mbox_fsm_ps, mbox_fsm_ns, clk, rst_b, MBOX_IDLE)
-
-`CLP_EN_RST_FF(soc_has_lock, soc_has_lock_nxt, clk, arc_MBOX_IDLE_MBOX_RDY_FOR_CMD, rst_b)
+//flops
+always_ff @(posedge clk or negedge rst_b) begin
+    if (!rst_b)begin
+        mbox_fsm_ps <= MBOX_IDLE;
+        soc_has_lock <= '0;
+        dir_req_dv_f <= '0;
+        mbox_wrptr <= '0;
+        mbox_rdptr <= '0;
+        inc_rdptr_f <= '0;
+        inc_rdptr_ff <= '0;
+    end
+    else begin
+        mbox_fsm_ps <= mbox_fsm_ns;
+        soc_has_lock <= arc_MBOX_IDLE_MBOX_RDY_FOR_CMD ? soc_has_lock_nxt : soc_has_lock;
+        dir_req_dv_f <= ((dir_req_dv & ~req_data.write) | dir_req_dv_f) ? (!dir_req_dv_f & dir_req_dv & ~req_data.write) : dir_req_dv_f;
+        mbox_wrptr <= (inc_wrptr | rst_mbox_ptr) ? mbox_wrptr_nxt : mbox_wrptr;
+        mbox_rdptr <= (inc_rdptr | rst_mbox_ptr) ? mbox_rdptr_nxt : mbox_rdptr;
+        inc_rdptr_f <= (inc_rdptr | inc_rdptr_f) ? inc_rdptr : inc_rdptr_f;
+        inc_rdptr_ff <= (inc_rdptr_f | inc_rdptr_ff) ? inc_rdptr_f : inc_rdptr_ff;
+    end
+end
 
 //need to hold direct read accesses for 1 clock to get response
 //create a qualified direct request signal that is masked during the data phase
 //hold the interface to insert wait state when direct request comes
-`CLP_EN_RST_FF(dir_req_dv_f, !dir_req_dv_f & dir_req_dv & ~req_data.write, clk, (dir_req_dv & ~req_data.write) | dir_req_dv_f, rst_b)
 always_comb dir_req_dv_q = dir_req_dv & ~dir_req_dv_f;
 always_comb req_hold = dir_req_dv_q & ~req_data.write;
 
@@ -190,7 +205,7 @@ always_comb sram_waddr = dir_req_dv_q ? req_data.addr[$clog2(DEPTH)+1:2] : mbox_
 always_comb rdata = dir_req_dv_f ? sram_rdata : csr_rdata;
 
 //if we wrote to mbox while rdptr is the same as wrptr we need to refresh the dataout reg
-always_comb update_dataout = hwif_out.mbox_datain.datain.swmod & (mbox_wrptr == mbox_rdptr);
+always_comb update_dataout = hwif_out.mbox_datain.datain.swmod & hwif_in.valid_user & (mbox_wrptr == mbox_rdptr);
 
 always_comb begin: mbox_sram_inf
     //read live on direct access, or when pointer has been incremented, or if write was made to same address as rdptr
@@ -211,15 +226,12 @@ always_comb sram_wdata = req_data.wdata;
 always_comb mbox_wrptr_nxt = rst_mbox_ptr ? '0 :
                              inc_wrptr ? mbox_wrptr + 'd1 : 
                                          mbox_wrptr;
-`CLP_EN_RST_FF(mbox_wrptr, mbox_wrptr_nxt, clk, inc_wrptr | rst_mbox_ptr, rst_b)
+
 
 //in execute state we increment the pointer each time we write
 always_comb mbox_rdptr_nxt = rst_mbox_ptr ? '0 :
                              inc_rdptr ? mbox_rdptr + 'd1 : 
                                          mbox_rdptr;
-`CLP_EN_RST_FF(mbox_rdptr, mbox_rdptr_nxt, clk, inc_rdptr | rst_mbox_ptr, rst_b)
-`CLP_EN_RST_FF(inc_rdptr_f, inc_rdptr, clk, inc_rdptr | inc_rdptr_f, rst_b)
-`CLP_EN_RST_FF(inc_rdptr_ff, inc_rdptr_f, clk, inc_rdptr_f | inc_rdptr_ff, rst_b)
 
 always_comb hwif_in.reset_b = rst_b;
 //always_comb hwif_in.soc_req = req_data.soc_req;
@@ -247,7 +259,7 @@ mbox_csr1(
     .clk(clk),
     .rst('0),
 
-    .s_cpuif_req(req_dv),
+    .s_cpuif_req(req_dv & (req_data.addr[MBOX_INF_ADDR_W-1:10] == MBOX_MEM_START_ADDR[MBOX_INF_ADDR_W-1:10])),
     .s_cpuif_req_is_wr(req_data.write),
     .s_cpuif_addr(req_data.addr[5:0]),
     .s_cpuif_wr_data(req_data.wdata),

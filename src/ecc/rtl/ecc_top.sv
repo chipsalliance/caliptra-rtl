@@ -29,11 +29,8 @@ module ecc_top #(
     input logic [AHB_DATA_WIDTH-1:0]  hwdata_i,
     input logic                       hsel_i,
     input logic                       hwrite_i,
-    input logic                       hmastlock_i,
     input logic                       hready_i,
     input logic [1:0]                 htrans_i,
-    input logic [3:0]                 hprot_i,
-    input logic [2:0]                 hburst_i,
     input logic [2:0]                 hsize_i,
 
     output logic                      hresp_o,
@@ -71,9 +68,6 @@ module ecc_top #(
         .hready_i(hready_i),
         .htrans_i(htrans_i),
         .hsize_i(hsize_i),
-        .hburst_i(hburst_i),
-        .hmastlock_i(hmastlock_i),
-        .hprot_i(hprot_i),
 
         .hresp_o(hresp_o),
         .hreadyout_o(hreadyout_o),
