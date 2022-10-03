@@ -24,6 +24,7 @@
 
 module ecc_arith_unit #(
     parameter REG_SIZE      = 384,
+    parameter RND_SIZE      = 192,
     parameter RADIX         = 32,
     parameter p_prime       = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff,
     parameter p_mu          = 32'h00000001,
@@ -38,14 +39,14 @@ module ecc_arith_unit #(
     input wire           reset_n,
 
     // DATA PORT
-    input  wire [2 : 0]         ecc_cmd_i,
-    input  wire [7 : 0]         addr_i,
-    input  wire                 wr_op_sel_i,
-    input  wire                 wr_en_i,
-    input  wire                 rd_reg_i,
-    input  wire [REG_SIZE: 0]   data_i,
-    output wire [REG_SIZE: 0]   data_o,
-    output wire                 busy_o
+    input  wire [2 : 0]                   ecc_cmd_i,
+    input  wire [7 : 0]                   addr_i,
+    input  wire                           wr_op_sel_i,
+    input  wire                           wr_en_i,
+    input  wire                           rd_reg_i,
+    input  wire [REG_SIZE+RND_SIZE-1 : 0] data_i,
+    output wire [REG_SIZE-1: 0]           data_o,
+    output wire                           busy_o
     );
 
     //----------------------------------------------------------------
@@ -64,7 +65,11 @@ module ecc_arith_unit #(
     logic               req_digit;
     logic               ecc_busy_s;
     
-    ecc_pm_ctrl ecc_pm_ctrl_i(
+    ecc_pm_ctrl #(
+        .REG_SIZE(REG_SIZE),
+        .RND_SIZE(RND_SIZE)
+        )
+        ecc_pm_ctrl_i(
         .clk(clk),
         .reset_n(reset_n),
         .ecc_cmd_i(ecc_cmd_i),
@@ -88,9 +93,7 @@ module ecc_arith_unit #(
     logic                       web_mux_s;
 
     logic [REG_SIZE   : 0]      di_mux;
-    logic [REG_SIZE   : 0]      d_o;
-
-    //assign di_mux = (wr_input_sel_i == 0) ? data_i : d_o;
+    logic [REG_SIZE-1 : 0]      d_o;
 
     ecc_ram_tdp_file #(
         .ADDR_WIDTH(6),
@@ -155,9 +158,9 @@ module ecc_arith_unit #(
     // Memory mapped register interface
     // 
     //----------------------------------------------------------------
-    reg [REG_SIZE   :0]         secret_key; 
+    reg [REG_SIZE+RND_SIZE-1 : 0]         secret_key; 
 
-    always_ff @(posedge clk or negedge reset_n) begin
+    always_ff @(posedge clk) begin
         if (!reset_n) begin
             reg_dinb_r      <= 0;
             reg_addr_r      <= 0;
@@ -176,11 +179,11 @@ module ecc_arith_unit #(
 
             else if (req_digit) begin
                 //Shift digit
-                secret_key[REG_SIZE  : 1] <= secret_key[REG_SIZE-1 : 0];
-                secret_key[0]             <= secret_key[REG_SIZE];
+                secret_key[REG_SIZE+RND_SIZE-1  : 1]  <= secret_key[REG_SIZE+RND_SIZE-2 : 0];
+                secret_key[0]                         <= secret_key[REG_SIZE+RND_SIZE-1];
             end
             //Push key bit to ecc control
-            digit_in <= secret_key[REG_SIZE];
+            digit_in <= secret_key[0];
 
             reg_addr_r <= addr_i;
             if (wr_op_sel_i == 1'b0)
@@ -188,7 +191,7 @@ module ecc_arith_unit #(
             
             // Read multiplexer    
             if (rd_reg_i)
-                d_o <= {1'b0, opb_s};
+                d_o <= opb_s;
             else
                 d_o <= 0;
         end

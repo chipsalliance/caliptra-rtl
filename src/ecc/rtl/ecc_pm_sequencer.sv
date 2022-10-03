@@ -1304,22 +1304,32 @@ module ecc_pm_sequencer #(
             // SIGNATURE R
             SIGN0_S     : douta <= {UOP_DO_ADD_q,   UOP_OPR_CONST_ZERO, UOP_OPR_Qx_AFFN};       // R = Qx_AFFN
             SIGN0_S+ 1  : douta <= {UOP_ST_ADD_q,   UOP_OPR_SIGN_R,     UOP_OPR_DONTCARE};
-            SIGN0_S+ 2  : douta <= {UOP_DO_MUL_q,   UOP_OPR_SIGN_R,     UOP_OPR_CONST_R2_q};    // D = mm(R, R2) % q
-            SIGN0_S+ 3  : douta <= {UOP_ST_MUL_q,   UOP_OPR_DONTCARE,   UOP_OPR_D};
+            SIGN0_S+ 2  : douta <= {UOP_DO_MUL_q,   UOP_OPR_SIGN_R,     UOP_OPR_CONST_R2_q};    // E = mm(R, R2) % q
+            SIGN0_S+ 3  : douta <= {UOP_ST_MUL_q,   UOP_OPR_DONTCARE,   UOP_OPR_E};
             SIGN0_S+ 4  : douta <= {UOP_DO_MUL_q,   UOP_OPR_SCALAR_G,   UOP_OPR_CONST_R2_q};    // k_MONT = mm(k, R2) % q
             SIGN0_S+ 5  : douta <= {UOP_ST_MUL_q,   UOP_OPR_DONTCARE,   UOP_OPR_INV_IN};
             SIGN0_S+ 6  : douta <= {UOP_DO_MUL_q,   UOP_OPR_PRIVKEY,    UOP_OPR_CONST_R2_q};    // A = mm(privKey, R2) % q
             SIGN0_S+ 7  : douta <= {UOP_ST_MUL_q,   UOP_OPR_DONTCARE,   UOP_OPR_A};
             SIGN0_S+ 8  : douta <= {UOP_DO_MUL_q,   UOP_OPR_HASH_MSG,   UOP_OPR_CONST_R2_q};    // B = mm(h, R2) % q
             SIGN0_S+ 9  : douta <= {UOP_ST_MUL_q,   UOP_OPR_DONTCARE,   UOP_OPR_B};
-            SIGN0_S+ 10 : douta <= {UOP_DO_MUL_q,   UOP_OPR_A,          UOP_OPR_D};             // C = mm(A, D) % q
-            SIGN0_S+ 11 : douta <= {UOP_ST_MUL_q,   UOP_OPR_DONTCARE,   UOP_OPR_C};
-            SIGN0_S+ 12 : douta <= {UOP_DO_ADD_q,   UOP_OPR_B,          UOP_OPR_C};             // B = (B + C) % q
-            SIGN0_S+ 13 : douta <= {UOP_ST_ADD_q,   UOP_OPR_B,          UOP_OPR_DONTCARE};
-            SIGN0_S+ 14 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
-            SIGN0_S+ 15 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
-            SIGN0_S+ 16 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
-            SIGN0_S+ 17 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+            SIGN0_S+ 10 : douta <= {UOP_DO_MUL_q,   UOP_OPR_MASKING,    UOP_OPR_CONST_R2_q};    // D = mm(masking_d, R2) % q
+            SIGN0_S+ 11 : douta <= {UOP_ST_MUL_q,   UOP_OPR_DONTCARE,   UOP_OPR_D};
+            SIGN0_S+ 12 : douta <= {UOP_DO_SUB_q,   UOP_OPR_A,          UOP_OPR_D};             // A = (A - D) % q
+            SIGN0_S+ 13 : douta <= {UOP_ST_ADD_q,   UOP_OPR_A,          UOP_OPR_DONTCARE};
+            SIGN0_S+ 14 : douta <= {UOP_DO_SUB_q,   UOP_OPR_B,          UOP_OPR_D};             // B = (B - D) % q
+            SIGN0_S+ 15 : douta <= {UOP_ST_ADD_q,   UOP_OPR_B,          UOP_OPR_DONTCARE};
+            SIGN0_S+ 16 : douta <= {UOP_DO_MUL_q,   UOP_OPR_A,          UOP_OPR_E};             // C = mm(A, E) % q
+            SIGN0_S+ 17 : douta <= {UOP_ST_MUL_q,   UOP_OPR_DONTCARE,   UOP_OPR_C};
+            SIGN0_S+ 18 : douta <= {UOP_DO_MUL_q,   UOP_OPR_D,          UOP_OPR_E};             // F = mm(D, E) % q
+            SIGN0_S+ 19 : douta <= {UOP_ST_MUL_q,   UOP_OPR_DONTCARE,   UOP_OPR_F};
+            SIGN0_S+ 20 : douta <= {UOP_DO_ADD_q,   UOP_OPR_D,          UOP_OPR_C};             // C = (C + D) % q
+            SIGN0_S+ 21 : douta <= {UOP_ST_ADD_q,   UOP_OPR_C,          UOP_OPR_DONTCARE};
+            SIGN0_S+ 22 : douta <= {UOP_DO_ADD_q,   UOP_OPR_B,          UOP_OPR_F};             // D = (B + F) % q
+            SIGN0_S+ 23 : douta <= {UOP_ST_ADD_q,   UOP_OPR_D,          UOP_OPR_DONTCARE};
+            SIGN0_S+ 24 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+            SIGN0_S+ 25 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+            SIGN0_S+ 26 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+            SIGN0_S+ 27 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
 
             //INV MOD q
             INVq_S      : douta <= {UOP_DO_ADD_q,   UOP_OPR_CONST_ZERO, UOP_OPR_CONST_ONE_q_MONT};    // precompute[0] = UOP_OPR_CONST_ONE_q_MONT % q
@@ -2368,14 +2378,18 @@ module ecc_pm_sequencer #(
             INVq_S+ 1043  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
 
             //SIGNING part1
-            SIGN1_S       : douta <= {UOP_DO_MUL_q,   UOP_OPR_INV_OUT,    UOP_OPR_B};           // B = fp_mult(B, k_inv, q)
-            SIGN1_S+ 1    : douta <= {UOP_ST_MUL_q,   UOP_OPR_DONTCARE,   UOP_OPR_B};
-            SIGN1_S+ 2    : douta <= {UOP_DO_MUL_q,   UOP_OPR_CONST_ONE,  UOP_OPR_B};           // B = fp_mult(B, 1, q)
-            SIGN1_S+ 3    : douta <= {UOP_ST_MUL_q,   UOP_OPR_DONTCARE,   UOP_OPR_SIGN_S};
-            SIGN1_S+ 4    : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
-            SIGN1_S+ 5    : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
-            SIGN1_S+ 6    : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
-            SIGN1_S+ 7    : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+            SIGN1_S       : douta <= {UOP_DO_MUL_q,   UOP_OPR_INV_OUT,    UOP_OPR_C};           // C = fp_mult(C, k_inv, q)
+            SIGN1_S+ 1    : douta <= {UOP_ST_MUL_q,   UOP_OPR_DONTCARE,   UOP_OPR_C};
+            SIGN1_S+ 2    : douta <= {UOP_DO_MUL_q,   UOP_OPR_INV_OUT,    UOP_OPR_D};           // D = fp_mult(D, k_inv, q)
+            SIGN1_S+ 3    : douta <= {UOP_ST_MUL_q,   UOP_OPR_DONTCARE,   UOP_OPR_D};
+            SIGN1_S+ 4    : douta <= {UOP_DO_ADD_q,   UOP_OPR_C,          UOP_OPR_D};           // B = C + D % q
+            SIGN1_S+ 5    : douta <= {UOP_ST_ADD_q,   UOP_OPR_B,          UOP_OPR_DONTCARE};
+            SIGN1_S+ 6    : douta <= {UOP_DO_MUL_q,   UOP_OPR_CONST_ONE,  UOP_OPR_B};           // B = fp_mult(B, 1, q)
+            SIGN1_S+ 7    : douta <= {UOP_ST_MUL_q,   UOP_OPR_DONTCARE,   UOP_OPR_SIGN_S};
+            SIGN1_S+ 8    : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+            SIGN1_S+ 9    : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+            SIGN1_S+ 10   : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+            SIGN1_S+ 11   : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
 
             // VERIFY0 SCALAR part0 to convert inputs to Mont domain
             VER0_P0_S     : douta <= {UOP_DO_MUL_q,   UOP_OPR_HASH_MSG,   UOP_OPR_CONST_R2_q};    // A = mm(h, R2) % q

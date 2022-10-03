@@ -21,7 +21,11 @@
 //
 //======================================================================
 
-module ecc_pm_ctrl (
+module ecc_pm_ctrl #(
+    parameter REG_SIZE      = 384,
+    parameter RND_SIZE      = 192
+    )
+    (
     // Clock and reset.
     input  wire           clk,
     input  wire           reset_n,
@@ -45,7 +49,8 @@ module ecc_pm_ctrl (
     localparam MULT_DELAY          = 39 -1;
     localparam ADD_DELAY           = 1  -1;
     
-    localparam Secp384_MONT_COUNT  = 384;
+    localparam Secp384_SCA_MONT_COUNT   = REG_SIZE + RND_SIZE;
+    localparam Secp384_MONT_COUNT       = REG_SIZE;
     
     //----------------------------------------------------------------
     // Registers 
@@ -118,12 +123,12 @@ module ecc_pm_ctrl (
                         ecc_cmd_reg <= ecc_cmd_i;
                         case (ecc_cmd_i)
                             KEYGEN_CMD : begin  // keygen
-                                mont_cntr <= Secp384_MONT_COUNT;
+                                mont_cntr <= Secp384_SCA_MONT_COUNT;
                                 prog_cntr <= PM_INIT_G_S;
                             end   
 
                             SIGN_CMD : begin  // signing
-                                mont_cntr <= Secp384_MONT_COUNT;
+                                mont_cntr <= Secp384_SCA_MONT_COUNT;
                                 prog_cntr <= PM_INIT_G_S;
                             end                                   
 

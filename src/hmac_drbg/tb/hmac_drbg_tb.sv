@@ -28,7 +28,9 @@ module hmac_drbg_tb();
   //----------------------------------------------------------------
   // Local Parameters.
   //----------------------------------------------------------------
-    localparam SEED_LENGTH=384;
+    localparam REG_SIZE  = 384;
+    localparam SEED_SIZE = 384;
+    localparam HMAC_DRBG_PRIME = 384'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC7634D81F4372DDF581A0DB248B0A77AECEC196ACCC52973;
 
     localparam CLK_HALF_PERIOD = 1;
     localparam CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
@@ -39,7 +41,6 @@ module hmac_drbg_tb();
   //----------------------------------------------------------------
   reg [63 : 0]  cycle_ctr;
   reg [63 : 0]  error_ctr;
-  reg [63 : 0]  tc_ctr;
 
   reg [7 : 0]   tc_number;
 
@@ -48,15 +49,16 @@ module hmac_drbg_tb();
   reg                        reset_n_tb;
 
   //Control
-  reg                        KEYGEN_SIGN_tb;
+  reg                        mode_tb;
   reg                        init_tb;
+  reg                        next_tb;
   wire                       ready_tb;
   wire                       valid_tb;
 
   //Data
-  reg   [SEED_LENGTH-1 : 0]  seed_tb;
-  reg   [383 : 0]            privKey_tb;
-  reg   [383 : 0]            h1_tb;
+  reg   [SEED_SIZE-1 : 0]    seed_tb;
+  reg   [383 : 0]            privkey_tb,
+  reg   [383 : 0]            hashed_msg_tb;
   wire  [383 : 0]            nonce_tb;
 
 
@@ -65,18 +67,21 @@ module hmac_drbg_tb();
   //----------------------------------------------------------------
   hmac_drbg 
   #(
-        .SEED_LENGTH(SEED_LENGTH)
+        .REG_SIZE(REG_SIZE),
+        .SEED_SIZE(SEED_SIZE),
+        .HMAC_DRBG_PRIME(HMAC_DRBG_PRIME)
   ) hmac_drbg_dut
   (
         .clk(clk_tb),
         .reset_n(reset_n_tb),
-        .KEYGEN_SIGN(KEYGEN_SIGN_tb),
+        .mode(mode_tb),
         .init(init_tb),
+        .next(next_tb),
         .ready(ready_tb),
         .valid(valid_tb),
         .seed(seed_tb),
-        .privKey(privKey_tb),
-        .h1(h1_tb),
+        .privkey(privkey_tb),
+        .hashed_msg(hashed_msg_tb),
         .nonce(nonce_tb)
     );
 
@@ -122,7 +127,7 @@ module hmac_drbg_tb();
       $display("cycle: 0x%016x", cycle_ctr);
       $display("State of DUT");
       $display("------------");
-      $display("STATE  = 0x%02d", hmac_drbg_dut.nonce_st);
+      $display("STATE  = 0x%02d", hmac_drbg_dut.nonce_st_reg);
       $display("");
       $display("HMAC block: 0x%096x",hmac_drbg_dut.HMAC_block);
       $display("HMAC key: 0x%096x",hmac_drbg_dut.HMAC_key);
@@ -159,13 +164,13 @@ module hmac_drbg_tb();
     begin
       if (error_ctr == 0)
         begin
-          $display("*** All %02d test cases completed successfully", tc_ctr);
+          $display("*** All %02d test cases completed successfully", tc_number);
           $display("* TESTCASE PASSED");
         end
       else
         begin
           $display("*** %02d tests completed - %02d test cases did not complete successfully.",
-                   tc_ctr, error_ctr);
+                   tc_number, error_ctr);
           $display("* TESTCASE FAILED");
         end
     end
@@ -182,19 +187,19 @@ module hmac_drbg_tb();
     begin
       cycle_ctr         = 0;
       error_ctr         = 0;
-      tc_ctr            = 0;
       tc_number         = 0;
 
       clk_tb            = 0;
       reset_n_tb        = 1;
 
-      KEYGEN_SIGN_tb    = 0;
+      mode_tb           = 0;
       init_tb           = 0;
+      next_tb           = 0;
     
       //Data
       seed_tb           = 384'h0;
-      privKey_tb        = 384'h0;
-      h1_tb             = 384'h0;
+      privkey_tb        = 384'h0;
+      hashed_msg_tb     = 384'h0;
     end
   endtask // init_sim
 
@@ -206,13 +211,13 @@ module hmac_drbg_tb();
   //----------------------------------------------------------------
   task keygen_sim(input [383 : 0] seed, input  [383 : 0] nonce_expected);
     begin
-        h1_tb = 384'h0;
-        privKey_tb = 384'h0;
+        hashed_msg_tb = 384'h0;
+        seed_tb = 384'h0;
         if (!ready_tb)
             wait(ready_tb);
             
         $display("The HMAC DRBG core is triggered...");
-        KEYGEN_SIGN_tb = 1'b0;        
+        mode_tb = 1'b0;        
         seed_tb = seed;
         $display("*** The seed : %096x",seed_tb);
 
@@ -240,7 +245,7 @@ module hmac_drbg_tb();
             error_ctr = error_ctr + 1;
           end
 
-          tc_number = tc_number+1;
+        tc_number = tc_number+1;
 
     end
   endtask // keygen_sim
@@ -254,14 +259,14 @@ module hmac_drbg_tb();
   task sign_sim(input [383 : 0] h1, input [383 : 0] privKey, input  [383 : 0] nonce_expected);
     begin
         //$display("-----------------SIGNING-----------------");
-        h1_tb = h1;
-        privKey_tb = privKey;
+        hashed_msg_tb = h1;
+        privkey_tb = privKey;
         if (!ready_tb)
             wait(ready_tb);
             
         $display("The HMAC DRBG core is triggered...");
-        KEYGEN_SIGN_tb = 1'b1;
-        $display("*** The seed : %096x",seed_tb);
+        mode_tb = 1'b1;
+        $display("*** The seed : %096x",privkey_tb);
 
         #(1 * CLK_PERIOD);
         init_tb = 1'b1;        
@@ -288,7 +293,7 @@ module hmac_drbg_tb();
             error_ctr = error_ctr + 1;
           end
 
-          tc_number = tc_number+1;
+        tc_number = tc_number+1;
 
     end
   endtask // sign_sim
@@ -360,10 +365,10 @@ module hmac_drbg_tb();
   //
   // This always block enables to debug the state transactions
   //----------------------------------------------------------------
-  always @(hmac_drbg_dut.nonce_st)
+  always @(hmac_drbg_dut.nonce_st_reg)
   begin
       if (DEBUG)
-        $display("--------------\n state\n %0d --------------", hmac_drbg_dut.nonce_st);
+        $display("--------------\n state\n %0d --------------", hmac_drbg_dut.nonce_st_reg);
   end
 
 
@@ -379,9 +384,9 @@ module hmac_drbg_tb();
       $display("");
 
       init_sim();
-      dump_dut_state();
+      //dump_dut_state();
       reset_dut();
-      dump_dut_state();
+      //dump_dut_state();
 
       hmac_drbg_test();
 

@@ -73,6 +73,7 @@ localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_SCALAR_G          = 8'd22;
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_SCALAR_PK         = 8'd23;
 
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_LAMBDA            = 8'd24;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_MASKING           = 8'd25;
 
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_ONE_q_MONT  = 8'd28;  // Mont_mult(1, R2) % q
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_R2_q        = 8'd29;
@@ -129,11 +130,11 @@ localparam CONV_S               = INV_E + 2;       // PM result conversion from 
 localparam CONV_E               = CONV_S + 11;
 
 localparam SIGN0_S              = CONV_E + 2;     // signing proof r part0
-localparam SIGN0_E              = SIGN0_S + 17;
+localparam SIGN0_E              = SIGN0_S + 27;
 localparam INVq_S               = SIGN0_E + 2;    // Inversion mod q
 localparam INVq_E               = INVq_S + 1043;
 localparam SIGN1_S              = INVq_E + 2;     // signing proof r part1
-localparam SIGN1_E              = SIGN1_S + 7;
+localparam SIGN1_E              = SIGN1_S + 11;
 
 localparam VER0_P0_S            = SIGN1_E + 2;    // verifying0 part0 to convert inputs to Mont domain
 localparam VER0_P0_E            = VER0_P0_S + 9;
