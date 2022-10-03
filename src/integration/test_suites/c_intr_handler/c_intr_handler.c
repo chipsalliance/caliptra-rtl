@@ -17,6 +17,7 @@
 #include "riscv-csr.h"
 #include "swerv-csr.h"
 #include "riscv-interrupts.h"
+#include "mbox_reg.h"
 
 
 //int whisperPrintf(const char* format, ...);
@@ -45,7 +46,7 @@ static void std_rv_isr(void) __attribute__ ((interrupt ("machine"), aligned(4)))
 void std_rv_mtvec_exception(void) __attribute__ ((interrupt ("machine"), aligned(4)));
 
 // Nop handlers for unimplemented events "Software" and "Timer" Interrupts
-// "External Interrupts" are also included here, just because the
+// "External Interrupts" are also included in this unimplemented list, just because the
 // std_rv_isr_vector_table should never reroute to External Interrupts -- Fast
 // Redirect takes care of that separately
 void std_rv_nop_machine(void) __attribute__ ((interrupt ("machine"), aligned(4)));
@@ -58,15 +59,61 @@ void std_rv_mtvec_sti(void) __attribute__ ((interrupt ("machine") , aligned(4) ,
 
 
 // SweRV Per-Source Vectored ISR functions
-static void nonstd_swerv_isr_0 (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_1 (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_2 (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_3 (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_4 (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_5 (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_6 (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_7 (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_8 (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_swerv_isr_aes_error    (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_swerv_isr_aes_notif    (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_swerv_isr_ecc_error    (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_swerv_isr_ecc_notif    (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_swerv_isr_hmac_error   (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_swerv_isr_hmac_notif   (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_swerv_isr_kv_error     (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_swerv_isr_kv_notif     (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_swerv_isr_sha512_error (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_swerv_isr_sha512_notif (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_swerv_isr_sha256_error (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_swerv_isr_sha256_notif (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_swerv_isr_qspi_error   (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_swerv_isr_qspi_notif   (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_swerv_isr_uart_error   (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_swerv_isr_uart_notif   (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_swerv_isr_i3c_error    (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_swerv_isr_i3c_notif    (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_swerv_isr_mbox_error   (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_swerv_isr_mbox_notif   (void) __attribute__ ((interrupt ("machine")));
+
+// Could be much more fancy with C preprocessing to pair up the ISR with Vector
+// numbers as defined in caliptra_defines.h.... TODO
+static void          nonstd_swerv_isr_0   (void) __attribute__ ((interrupt ("machine")));
+static void (* const nonstd_swerv_isr_1 ) (void) = nonstd_swerv_isr_aes_error   ;
+static void (* const nonstd_swerv_isr_2 ) (void) = nonstd_swerv_isr_aes_notif   ;
+static void (* const nonstd_swerv_isr_3 ) (void) = nonstd_swerv_isr_ecc_error   ;
+static void (* const nonstd_swerv_isr_4 ) (void) = nonstd_swerv_isr_ecc_notif   ;
+static void (* const nonstd_swerv_isr_5 ) (void) = nonstd_swerv_isr_hmac_error  ;
+static void (* const nonstd_swerv_isr_6 ) (void) = nonstd_swerv_isr_hmac_notif  ;
+static void (* const nonstd_swerv_isr_7 ) (void) = nonstd_swerv_isr_kv_error    ;
+static void (* const nonstd_swerv_isr_8 ) (void) = nonstd_swerv_isr_kv_notif    ;
+static void (* const nonstd_swerv_isr_9 ) (void) = nonstd_swerv_isr_sha512_error;
+static void (* const nonstd_swerv_isr_10) (void) = nonstd_swerv_isr_sha512_notif;
+static void (* const nonstd_swerv_isr_11) (void) = nonstd_swerv_isr_sha256_error;
+static void (* const nonstd_swerv_isr_12) (void) = nonstd_swerv_isr_sha256_notif;
+static void (* const nonstd_swerv_isr_13) (void) = nonstd_swerv_isr_qspi_error  ;
+static void (* const nonstd_swerv_isr_14) (void) = nonstd_swerv_isr_qspi_notif  ;
+static void (* const nonstd_swerv_isr_15) (void) = nonstd_swerv_isr_uart_error  ;
+static void (* const nonstd_swerv_isr_16) (void) = nonstd_swerv_isr_uart_notif  ;
+static void (* const nonstd_swerv_isr_17) (void) = nonstd_swerv_isr_i3c_error   ;
+static void (* const nonstd_swerv_isr_18) (void) = nonstd_swerv_isr_i3c_notif   ;
+static void (* const nonstd_swerv_isr_19) (void) = nonstd_swerv_isr_mbox_error  ;
+static void (* const nonstd_swerv_isr_20) (void) = nonstd_swerv_isr_mbox_notif  ;
+static void (* const nonstd_swerv_isr_21) (void) = std_rv_nop_machine; // --------.
+static void (* const nonstd_swerv_isr_22) (void) = std_rv_nop_machine; //         |
+static void (* const nonstd_swerv_isr_23) (void) = std_rv_nop_machine; //         |
+static void (* const nonstd_swerv_isr_24) (void) = std_rv_nop_machine; //         |
+static void (* const nonstd_swerv_isr_25) (void) = std_rv_nop_machine; //         |
+static void (* const nonstd_swerv_isr_26) (void) = std_rv_nop_machine; // Unimplemented ISR
+static void (* const nonstd_swerv_isr_27) (void) = std_rv_nop_machine; //         |
+static void (* const nonstd_swerv_isr_28) (void) = std_rv_nop_machine; //         |
+static void (* const nonstd_swerv_isr_29) (void) = std_rv_nop_machine; //         |
+static void (* const nonstd_swerv_isr_30) (void) = std_rv_nop_machine; //         |
+static void (* const nonstd_swerv_isr_31) (void) = std_rv_nop_machine; // --------'
 
 // Table defines the SweRV non-standard vectored entries as an array of
 // function pointers.
@@ -77,7 +124,7 @@ static void nonstd_swerv_isr_8 (void) __attribute__ ((interrupt ("machine")));
 // be 4-byte aligned per the SweRV PRM, and the base address of the table (i.e.
 // the value of meivt) must be 1024-byte aligned, also per the PRM
 // For support of Fast Interrupt Redirect feature, this should be in DCCM
-static void (* __attribute__ ((aligned(4))) nonstd_swerv_isr_vector_table [256]) (void) __attribute__ ((aligned(1024),section (".dccm.nonstd_isr.vec_table"))) = {
+static void (* __attribute__ ((aligned(4))) nonstd_swerv_isr_vector_table [RV_PIC_TOTAL_INT_PLUS1]) (void) __attribute__ ((aligned(1024),section (".dccm.nonstd_isr.vec_table"))) = {
     nonstd_swerv_isr_0,
     nonstd_swerv_isr_1,
     nonstd_swerv_isr_2,
@@ -86,7 +133,30 @@ static void (* __attribute__ ((aligned(4))) nonstd_swerv_isr_vector_table [256])
     nonstd_swerv_isr_5,
     nonstd_swerv_isr_6,
     nonstd_swerv_isr_7,
-    nonstd_swerv_isr_8
+    nonstd_swerv_isr_8,
+    nonstd_swerv_isr_9,
+    nonstd_swerv_isr_10,
+    nonstd_swerv_isr_11,
+    nonstd_swerv_isr_12,
+    nonstd_swerv_isr_13,
+    nonstd_swerv_isr_14,
+    nonstd_swerv_isr_15,
+    nonstd_swerv_isr_16,
+    nonstd_swerv_isr_17,
+    nonstd_swerv_isr_18,
+    nonstd_swerv_isr_19,
+    nonstd_swerv_isr_20,
+    nonstd_swerv_isr_21,
+    nonstd_swerv_isr_22,
+    nonstd_swerv_isr_23,
+    nonstd_swerv_isr_24,
+    nonstd_swerv_isr_25,
+    nonstd_swerv_isr_26,
+    nonstd_swerv_isr_27,
+    nonstd_swerv_isr_28,
+    nonstd_swerv_isr_29,
+    nonstd_swerv_isr_30,
+    nonstd_swerv_isr_31
 };
 
 // Table defines the RV standard vectored entries pointed to by mtvec
@@ -104,6 +174,8 @@ void main(void) {
         volatile char* stdout = (char *)STDOUT;
         char* DCCM = (char *) RV_DCCM_SADR;
         char* ICCM = (char *) RV_ICCM_SADR;
+        uint32_t * mbox_error_trig = (uint32_t *) (MBOX_REG_BASE + MBOX_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R);
+        uint32_t * mbox_notif_trig = (uint32_t *) (MBOX_REG_BASE + MBOX_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
 
         // Hack to force reset on the irq generator
         // (useful for NMI testing when we restart at PC=0)
@@ -123,9 +195,19 @@ void main(void) {
         *stdout = 0xfe;
 
         // Busy loop
-        do {
+        while (intr_count < 64) {
+            // Trigger interrupt manually
+            if (intr_count & 0x4) {
+                *mbox_notif_trig = MBOX_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_AVAIL_TRIG_MASK;
+            } else {
+                *mbox_error_trig = 1 << (intr_count & 0x3);
+            }
             __asm__ volatile ("wfi"); // "Wait for interrupt"
-        } while (intr_count < 64);
+            // Sleep in between triggers to allow ISR to execute and show idle time in sims
+            for (uint16_t slp = 0; slp < 100; slp++) {
+                __asm__ volatile ("nop"); // Sleep loop as "nop"
+            }
+        }
 
         // Disable interrutps and print count at end
         csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
@@ -167,6 +249,7 @@ static void init_interrupts(void) {
     volatile uint32_t * const meies      = (uint32_t*) SWERV_MM_PIC_MEIES;      // Treat these
     volatile uint32_t * const meigwctrls = (uint32_t*) SWERV_MM_PIC_MEIGWCTRLS; // as arrays
     volatile uint32_t * const meigwclrs  = (uint32_t*) SWERV_MM_PIC_MEIGWCLRS;  //
+    volatile uint32_t * const mbox_reg   = (uint32_t*) MBOX_REG_BASE;
     char* DCCM = (char *) RV_DCCM_SADR;
     uint32_t value;
 
@@ -204,38 +287,29 @@ static void init_interrupts(void) {
                       : /* clobbers: none */);
 
     // MEIPL_S - assign interrupt priorities
-    // arbitrary
-    meipls[1]  = 5; __asm__ volatile ("fence");
-    meipls[2]  = 6; __asm__ volatile ("fence"); // <---.
-    meipls[3]  = 1; __asm__ volatile ("fence"); // <-. |
-    meipls[4]  = 3; __asm__ volatile ("fence"); //   | |
-    meipls[5]  = 4; __asm__ volatile ("fence"); //  1| |6
-    meipls[6]  = 2; __asm__ volatile ("fence"); //   | |
-    meipls[7]  = 6; __asm__ volatile ("fence"); // <-|-'
-    meipls[8]  = 1; __asm__ volatile ("fence"); // <-'
-    meipls[9]  = 0; __asm__ volatile ("fence"); //------.
-    meipls[10] = 0; __asm__ volatile ("fence"); //      |
-    meipls[11] = 0; __asm__ volatile ("fence"); //      |
-    meipls[12] = 0; __asm__ volatile ("fence"); //      |
-    meipls[13] = 0; __asm__ volatile ("fence"); //      |
-    meipls[14] = 0; __asm__ volatile ("fence"); //      |
-    meipls[15] = 0; __asm__ volatile ("fence"); //      |
-    meipls[16] = 0; __asm__ volatile ("fence"); //      |
-    meipls[17] = 0; __asm__ volatile ("fence"); //      | Set to 0
-    meipls[18] = 0; __asm__ volatile ("fence"); //      | meaning
-    meipls[19] = 0; __asm__ volatile ("fence"); //      | NEVER
-    meipls[20] = 0; __asm__ volatile ("fence"); //      | interrupt
-    meipls[21] = 0; __asm__ volatile ("fence"); //      |
-    meipls[22] = 0; __asm__ volatile ("fence"); //      |
-    meipls[23] = 0; __asm__ volatile ("fence"); //      |
-    meipls[24] = 0; __asm__ volatile ("fence"); //      |
-    meipls[25] = 0; __asm__ volatile ("fence"); //      |
-    meipls[26] = 0; __asm__ volatile ("fence"); //      |
-    meipls[27] = 0; __asm__ volatile ("fence"); //      |
-    meipls[28] = 0; __asm__ volatile ("fence"); //      |
-    meipls[29] = 0; __asm__ volatile ("fence"); //      |
-    meipls[30] = 0; __asm__ volatile ("fence"); //      |
-    meipls[31] = 0; __asm__ volatile ("fence"); //------'
+    meipls[SWERV_INTR_VEC_AES_ERROR   ] = SWERV_INTR_PRIO_AES_ERROR   ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_AES_NOTIF   ] = SWERV_INTR_PRIO_AES_NOTIF   ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_ECC_ERROR   ] = SWERV_INTR_PRIO_ECC_ERROR   ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_ECC_NOTIF   ] = SWERV_INTR_PRIO_ECC_NOTIF   ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_HMAC_ERROR  ] = SWERV_INTR_PRIO_HMAC_ERROR  ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_HMAC_NOTIF  ] = SWERV_INTR_PRIO_HMAC_NOTIF  ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_KV_ERROR    ] = SWERV_INTR_PRIO_KV_ERROR    ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_KV_NOTIF    ] = SWERV_INTR_PRIO_KV_NOTIF    ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_SHA512_ERROR] = SWERV_INTR_PRIO_SHA512_ERROR; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_SHA512_NOTIF] = SWERV_INTR_PRIO_SHA512_NOTIF; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_SHA256_ERROR] = SWERV_INTR_PRIO_SHA256_ERROR; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_SHA256_NOTIF] = SWERV_INTR_PRIO_SHA256_NOTIF; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_QSPI_ERROR  ] = SWERV_INTR_PRIO_QSPI_ERROR  ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_QSPI_NOTIF  ] = SWERV_INTR_PRIO_QSPI_NOTIF  ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_UART_ERROR  ] = SWERV_INTR_PRIO_UART_ERROR  ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_UART_NOTIF  ] = SWERV_INTR_PRIO_UART_NOTIF  ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_I3C_ERROR   ] = SWERV_INTR_PRIO_I3C_ERROR   ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_I3C_NOTIF   ] = SWERV_INTR_PRIO_I3C_NOTIF   ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_MBOX_ERROR  ] = SWERV_INTR_PRIO_MBOX_ERROR  ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_MBOX_NOTIF  ] = SWERV_INTR_PRIO_MBOX_NOTIF  ; __asm__ volatile ("fence");
+    for (uint8_t undef = SWERV_INTR_VEC_MAX_ASSIGNED+1; undef <= RV_PIC_TOTAL_INT; undef++) {
+        meipls[undef] = 0; __asm__ volatile ("fence"); // Set to 0 meaning NEVER interrupt
+    }
 
     // MEICIDPL - Initialize the Claim ID priority level to 0
     //            to allow nesting interrupts (Per PRM 6.5.1)
@@ -251,109 +325,29 @@ static void init_interrupts(void) {
                       : "i" (SWERV_CSR_MEICURPL), "i" (0x00)  /* input : immediate  */ \
                       : /* clobbers: none */);
 
-    // MEIGWCTRL_S
-    // Configured according to the sim_irq_gen config driven in caliptra_top
-    meigwctrls[1]  = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[2]  = SWERV_MEIGWCTRL_ACTIVE_HI_EDGE;   __asm__ volatile ("fence");
-    meigwctrls[3]  = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[4]  = SWERV_MEIGWCTRL_ACTIVE_HI_EDGE;   __asm__ volatile ("fence");
-    meigwctrls[5]  = SWERV_MEIGWCTRL_ACTIVE_LO_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[6]  = SWERV_MEIGWCTRL_ACTIVE_LO_EDGE;   __asm__ volatile ("fence");
-    meigwctrls[7]  = SWERV_MEIGWCTRL_ACTIVE_LO_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[8]  = SWERV_MEIGWCTRL_ACTIVE_LO_EDGE;   __asm__ volatile ("fence");
-    meigwctrls[9]  = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[10] = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[11] = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[12] = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[13] = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[14] = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[15] = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[16] = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[17] = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[18] = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[19] = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[20] = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[21] = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[22] = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[23] = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[24] = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[25] = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[26] = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[27] = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[28] = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[29] = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[30] = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
-    meigwctrls[31] = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
+    for (uint8_t vec = 1; vec <= RV_PIC_TOTAL_INT; vec++) {
+        // MEIGWCTRL_S
+        meigwctrls[vec] = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
 
-    // MEIGWCLRS - Ensure all pending bits are clear in the gateway
-    //             NOTE: Any write value clears the pending bit
-    meigwclrs[1]  = 0; __asm__ volatile ("fence");
-    meigwclrs[2]  = 0; __asm__ volatile ("fence");
-    meigwclrs[3]  = 0; __asm__ volatile ("fence");
-    meigwclrs[4]  = 0; __asm__ volatile ("fence");
-    meigwclrs[5]  = 0; __asm__ volatile ("fence");
-    meigwclrs[6]  = 0; __asm__ volatile ("fence");
-    meigwclrs[7]  = 0; __asm__ volatile ("fence");
-    meigwclrs[8]  = 0; __asm__ volatile ("fence");
-    meigwclrs[9]  = 0; __asm__ volatile ("fence");
-    meigwclrs[10] = 0; __asm__ volatile ("fence");
-    meigwclrs[11] = 0; __asm__ volatile ("fence");
-    meigwclrs[12] = 0; __asm__ volatile ("fence");
-    meigwclrs[13] = 0; __asm__ volatile ("fence");
-    meigwclrs[14] = 0; __asm__ volatile ("fence");
-    meigwclrs[15] = 0; __asm__ volatile ("fence");
-    meigwclrs[16] = 0; __asm__ volatile ("fence");
-    meigwclrs[17] = 0; __asm__ volatile ("fence");
-    meigwclrs[18] = 0; __asm__ volatile ("fence");
-    meigwclrs[19] = 0; __asm__ volatile ("fence");
-    meigwclrs[20] = 0; __asm__ volatile ("fence");
-    meigwclrs[21] = 0; __asm__ volatile ("fence");
-    meigwclrs[22] = 0; __asm__ volatile ("fence");
-    meigwclrs[23] = 0; __asm__ volatile ("fence");
-    meigwclrs[24] = 0; __asm__ volatile ("fence");
-    meigwclrs[25] = 0; __asm__ volatile ("fence");
-    meigwclrs[26] = 0; __asm__ volatile ("fence");
-    meigwclrs[27] = 0; __asm__ volatile ("fence");
-    meigwclrs[28] = 0; __asm__ volatile ("fence");
-    meigwclrs[29] = 0; __asm__ volatile ("fence");
-    meigwclrs[30] = 0; __asm__ volatile ("fence");
-    meigwclrs[31] = 0; __asm__ volatile ("fence");
+        // MEIGWCLRS - Ensure all pending bits are clear in the gateway
+        //             NOTE: Any write value clears the pending bit
+        meigwclrs[vec]  = 0; __asm__ volatile ("fence");
 
-    // MEIE_S - Enable 8 interrupt sources
-    meies[1]  = 1; __asm__ volatile ("fence");
-    meies[2]  = 1; __asm__ volatile ("fence");
-    meies[3]  = 1; __asm__ volatile ("fence");
-    meies[4]  = 1; __asm__ volatile ("fence");
-    meies[5]  = 1; __asm__ volatile ("fence");
-    meies[6]  = 1; __asm__ volatile ("fence");
-    meies[7]  = 1; __asm__ volatile ("fence");
-    meies[8]  = 1; __asm__ volatile ("fence");
-    meies[9]  = 0; __asm__ volatile ("fence");
-    meies[10] = 0; __asm__ volatile ("fence");
-    meies[11] = 0; __asm__ volatile ("fence");
-    meies[12] = 0; __asm__ volatile ("fence");
-    meies[13] = 0; __asm__ volatile ("fence");
-    meies[14] = 0; __asm__ volatile ("fence");
-    meies[15] = 0; __asm__ volatile ("fence");
-    meies[16] = 0; __asm__ volatile ("fence");
-    meies[17] = 0; __asm__ volatile ("fence");
-    meies[18] = 0; __asm__ volatile ("fence");
-    meies[19] = 0; __asm__ volatile ("fence");
-    meies[20] = 0; __asm__ volatile ("fence");
-    meies[21] = 0; __asm__ volatile ("fence");
-    meies[22] = 0; __asm__ volatile ("fence");
-    meies[23] = 0; __asm__ volatile ("fence");
-    meies[24] = 0; __asm__ volatile ("fence");
-    meies[25] = 0; __asm__ volatile ("fence");
-    meies[26] = 0; __asm__ volatile ("fence");
-    meies[27] = 0; __asm__ volatile ("fence");
-    meies[28] = 0; __asm__ volatile ("fence");
-    meies[29] = 0; __asm__ volatile ("fence");
-    meies[30] = 0; __asm__ volatile ("fence");
-    meies[31] = 0; __asm__ volatile ("fence");
-
+        // MEIE_S - Enable implemented interrupt sources
+        meies[vec]  = (vec <= SWERV_INTR_VEC_MAX_ASSIGNED); __asm__ volatile ("fence");
+    }
 
     /* -- Re-enable global interrupts -- */
+
+    // Enable Interrupts for each component
+    // Mailbox
+    mbox_reg[MBOX_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R /sizeof(uint32_t)] = MBOX_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INTERNAL_EN_MASK |
+                                                                         MBOX_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INV_DEV_EN_MASK  |
+                                                                         MBOX_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_CMD_FAIL_EN_MASK |
+                                                                         MBOX_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_BAD_FUSE_EN_MASK;
+    mbox_reg[MBOX_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R /sizeof(uint32_t)] = MBOX_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_AVAIL_EN_MASK;
+    mbox_reg[MBOX_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = MBOX_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
+                                                                         MBOX_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
 
     // MIE
     // Enable MIE.MEI (External Interrupts)
@@ -548,570 +542,169 @@ static void nonstd_swerv_isr_0 (void) {
     return;
 }
 
-// Non-Standard Vectored Interrupt Handler (vector 1)
-// ISR 1 is an active high, level interrupt at the generator
-static void nonstd_swerv_isr_1 (void) {
-    *stdout=0xfb; //FIXME
-    const char* const msg = "In:1\n";
-    unsigned char hw_ii = 0;
-
-    // Print msg before enabling nested interrupts so it
-    // completes printing and is legible
-    while (msg[hw_ii] != 0) {
-        *stdout = msg[hw_ii++];
+// These macros are used to insert event-specific functionality into the
+// otherwise generic ISR that gets laid down by the parameterized macro "nonstd_swerv_isr"
+// Didn't try messing with 'inline', that may work too
+#define service_aes_error_intr
+#define service_aes_notif_intr
+#define service_ecc_error_intr
+#define service_ecc_notif_intr
+#define service_hmac_error_intr
+#define service_hmac_notif_intr
+#define service_kv_error_intr
+#define service_kv_notif_intr
+#define service_sha512_error_intr
+#define service_sha512_notif_intr
+#define service_sha256_error_intr
+#define service_sha256_notif_intr
+#define service_qspi_error_intr
+#define service_qspi_notif_intr
+#define service_uart_error_intr
+#define service_uart_notif_intr
+#define service_i3c_error_intr
+#define service_i3c_notif_intr
+#define service_mbox_error_intr                                                                     \
+    uint32_t * reg = (uint32_t *) (MBOX_REG_BASE + MBOX_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);   \
+    uint32_t sts = *reg;                                                                            \
+    /* Write 1 to Clear the pending interrupt */                                                    \
+    if (sts & MBOX_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK) {               \
+        *reg = MBOX_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK;                \
+    }                                                                                               \
+    if (sts & MBOX_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INV_DEV_STS_MASK) {                \
+        *reg = MBOX_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INV_DEV_STS_MASK;                 \
+    }                                                                                               \
+    if (sts & MBOX_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK) {               \
+        *reg = MBOX_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK;                \
+    }                                                                                               \
+    if (sts & MBOX_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_BAD_FUSE_STS_MASK) {               \
+        *reg = MBOX_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_BAD_FUSE_STS_MASK;                \
+    }                                                                                               \
+    if (sts == 0) {                                                                                 \
+        print_reg_to_console("bad mbox_error_intr sts", sts);                                       \
     }
 
-//    // Capture the priority and ID
-//    __asm__ volatile ("csrwi    %0, 0" \
-//                      : /* output: none */        \
-//                      : "i" (SWERV_CSR_MEICPCT) /* input : immediate */ \
-//                      : /* clobbers: none */);
-
-    // Save Context to Stack
-    uint32_t meicidpl;
-    uint32_t prev_meicurpl;
-    uint_xlen_t prev_mepc;
-    uint_xlen_t prev_mstatus;
-    uint_xlen_t prev_mie;
-    __asm__ volatile ("csrr    %0, %1"
-                      : "=r" (meicidpl)  /* output : register */
-                      : "i" (SWERV_CSR_MEICIDPL) /* input : immediate */
-                      : /* clobbers: none */);
-    __asm__ volatile ("csrr    %0, %1"
-                      : "=r" (prev_meicurpl)  /* output : register */
-                      : "i" (SWERV_CSR_MEICURPL) /* input : immediate */
-                      : /* clobbers: none */);
-    prev_mepc    = csr_read_mepc();
-    prev_mstatus = csr_read_mstatus();
-    prev_mie     = csr_read_mie();
-
-    // Set the priority threshold to current priority
-    __asm__ volatile ("csrw    %0, %1" \
-                      : /* output: none */        \
-                      : "i" (SWERV_CSR_MEICURPL), "r" (meicidpl)  /* input : immediate  */ \
-                      : /* clobbers: none */);
-
-    // Reenable interrupts (nesting)
-    csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
-
-    // Service the interrupt (here, just increment counter)
-    intr_count++;
-    print_reg_to_console("cnt1",intr_count);
-
-    // Clear the Interrupt Source
-    *stdout = 0x80;
-
-    // Disable interrupts
-    csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
-
-    // Restore Context from Stack
-    __asm__ volatile ("csrw    %0, %1" \
-                      : /* output: none */        \
-                      : "i" (SWERV_CSR_MEICURPL), "r" (prev_meicurpl)  /* input : immediate  */ \
-                      : /* clobbers: none */);
-    csr_write_mepc(prev_mepc);
-    csr_set_bits_mstatus(prev_mstatus & (MSTATUS_MPIE_BIT_MASK | MSTATUS_MPP_BIT_MASK));
-    csr_set_bits_mie(prev_mie & (MIE_MSI_BIT_MASK | MIE_MTI_BIT_MASK | MIE_MEI_BIT_MASK));
-
-    // Done
-    *stdout=0xfc; //FIXME
-    return;
-}
-
-// Non-Standard Vectored Interrupt Handler (vector 2)
-// ISR 2 is an active high, pulse interrupt at the generator
-static void nonstd_swerv_isr_2 (void) {
-    *stdout=0xfb; //FIXME
-    volatile uint32_t * const meigwclrs  = (uint32_t*) SWERV_MM_PIC_MEIGWCLR(2);
-    const char* const msg = "In:2\n";
-    unsigned char hw_ii = 0;
-
-    // Print msg before enabling nested interrupts so it
-    // completes printing and is legible
-    while (msg[hw_ii] != 0) {
-        *stdout = msg[hw_ii++];
+#define service_mbox_notif_intr                                                                     \
+    uint32_t * reg = (uint32_t *) (MBOX_REG_BASE + MBOX_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);   \
+    uint32_t sts = *reg;                                                                            \
+    /* Write 1 to Clear the pending interrupt */                                                    \
+    if (sts & MBOX_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK) {              \
+        *reg = MBOX_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK;               \
+    }                                                                                               \
+    if (sts == 0) {                                                                                 \
+        print_reg_to_console("bad mbox_notif_intr sts", sts);                                       \
     }
 
-    // Capture the priority and ID
-//    __asm__ volatile ("csrwi    %0, 0" \
-//                      : /* output: none */        \
-//                      : "i" (SWERV_CSR_MEICPCT) /* input : immediate */ \
-//                      : /* clobbers: none */);
-
-    // Save Context to Stack
-    uint32_t meicidpl;
-    uint32_t prev_meicurpl;
-    uint_xlen_t prev_mepc;
-    uint_xlen_t prev_mstatus;
-    uint_xlen_t prev_mie;
-    __asm__ volatile ("csrr    %0, %1"
-                      : "=r" (meicidpl)  /* output : register */
-                      : "i" (SWERV_CSR_MEICIDPL) /* input : immediate */
-                      : /* clobbers: none */);
-    __asm__ volatile ("csrr    %0, %1"
-                      : "=r" (prev_meicurpl)  /* output : register */
-                      : "i" (SWERV_CSR_MEICURPL) /* input : immediate */
-                      : /* clobbers: none */);
-    prev_mepc    = csr_read_mepc();
-    prev_mstatus = csr_read_mstatus();
-    prev_mie     = csr_read_mie();
-
-    // Set the priority threshold to current priority
-    __asm__ volatile ("csrw    %0, %1" \
-                      : /* output: none */        \
-                      : "i" (SWERV_CSR_MEICURPL), "r" (meicidpl)  /* input : immediate  */ \
-                      : /* clobbers: none */);
-
-    // Reenable interrupts (nesting)
-    csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
-
-    // Service the interrupt (here, just increment counter)
-    intr_count++;
-    print_reg_to_console("cnt2",intr_count);
-
-    // Clear the Interrupt Source (i.e. Gateway)
-    *stdout = 0x81;
-    *meigwclrs = 0x0; __asm__ volatile ("fence");
-
-    // Disable interrupts
-    csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
-
-    // Restore Context from Stack
-    __asm__ volatile ("csrw    %0, %1" \
-                      : /* output: none */        \
-                      : "i" (SWERV_CSR_MEICURPL), "r" (prev_meicurpl)  /* input : immediate  */ \
-                      : /* clobbers: none */);
-    csr_write_mepc(prev_mepc);
-    csr_set_bits_mstatus(prev_mstatus & (MSTATUS_MPIE_BIT_MASK | MSTATUS_MPP_BIT_MASK));
-    csr_set_bits_mie(prev_mie & (MIE_MSI_BIT_MASK | MIE_MTI_BIT_MASK | MIE_MEI_BIT_MASK));
-
-    // Done
-    *stdout=0xfc; //FIXME
-    return;
+// Macro used to lay down mostly equivalent ISR for each of the supported
+// interrupt sources, with the only unique functionality provided by the service_xxx_intr
+// macro
+// Using macros instead of calling event-specific functions from inside a single
+// generic function reduces the overhead from context switches (which is critical
+// in an ISR)
+#define stringify(text) #text
+#define nonstd_swerv_isr(name) static void nonstd_swerv_isr_##name (void) {                           \
+    *stdout=0xfb; /*FIXME*/                                                                           \
+    const char* const msg = "In:"stringify(name)"\n";                                                 \
+    unsigned char hw_ii = 0;                                                                          \
+                                                                                                      \
+    /* Print msg before enabling nested interrupts so it                                              \
+     * completes printing and is legible                                                              \
+     */                                                                                               \
+    while (msg[hw_ii] != 0) {                                                                         \
+        *stdout = msg[hw_ii++];                                                                       \
+    }                                                                                                 \
+                                                                                                      \
+    /* Save Context to Stack */                                                                       \
+    uint32_t meicidpl;                                                                                \
+    uint32_t prev_meicurpl;                                                                           \
+    uint_xlen_t prev_mepc;                                                                            \
+    uint_xlen_t prev_mstatus;                                                                         \
+    uint_xlen_t prev_mie;                                                                             \
+    __asm__ volatile ("csrr    %0, %1"                                                                \
+                      : "=r" (meicidpl)  /* output : register */                                      \
+                      : "i" (SWERV_CSR_MEICIDPL) /* input : immediate */                              \
+                      : /* clobbers: none */);                                                        \
+    __asm__ volatile ("csrr    %0, %1"                                                                \
+                      : "=r" (prev_meicurpl)  /* output : register */                                 \
+                      : "i" (SWERV_CSR_MEICURPL) /* input : immediate */                              \
+                      : /* clobbers: none */);                                                        \
+    prev_mepc    = csr_read_mepc();                                                                   \
+    prev_mstatus = csr_read_mstatus();                                                                \
+    prev_mie     = csr_read_mie();                                                                    \
+                                                                                                      \
+    /* Set the priority threshold to current priority */                                              \
+    __asm__ volatile ("csrw    %0, %1"                                                                \
+                      : /* output: none */                                                            \
+                      : "i" (SWERV_CSR_MEICURPL), "r" (meicidpl)  /* input : immediate  */            \
+                      : /* clobbers: none */);                                                        \
+                                                                                                      \
+    /* Reenable interrupts (nesting) */                                                               \
+    csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);                                                       \
+                                                                                                      \
+    /* Service the interrupt (clear the interrupt source) */                                          \
+    intr_count++;                                                                                     \
+    print_reg_to_console("cnt_"stringify(name),intr_count);                                           \
+    /* Fill in with macro contents, e.g. "service_mbox_error_intr" */                                 \
+    service_##name##_intr                                                                             \
+                                                                                                      \
+    /* Disable interrupts */                                                                          \
+    csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);                                                       \
+                                                                                                      \
+    /* Restore Context from Stack */                                                                  \
+    __asm__ volatile ("csrw    %0, %1"                                                                \
+                      : /* output: none */                                                            \
+                      : "i" (SWERV_CSR_MEICURPL), "r" (prev_meicurpl)  /* input : immediate  */       \
+                      : /* clobbers: none */);                                                        \
+    csr_write_mepc(prev_mepc);                                                                        \
+    csr_set_bits_mstatus(prev_mstatus & (MSTATUS_MPIE_BIT_MASK | MSTATUS_MPP_BIT_MASK));              \
+    csr_set_bits_mie(prev_mie & (MIE_MSI_BIT_MASK | MIE_MTI_BIT_MASK | MIE_MEI_BIT_MASK));            \
+                                                                                                      \
+    /* Done */                                                                                        \
+    *stdout=0xfc; /*FIXME */                                                                          \
+    return;                                                                                           \
 }
 
-// Non-Standard Vectored Interrupt Handler (vector 3)
-// ISR 3 is an active high, level interrupt at the generator
-static void nonstd_swerv_isr_3 (void) {
-    *stdout=0xfb; //FIXME
-    const char* const msg = "In:3\n";
-    unsigned char hw_ii = 0;
+////////////////////////////////////////////////////////////////////////////////
+// Auto define ISR for each interrupt source using a macro
+// Resulting defined functions are, e.g. "nonstd_swerv_isr_aes_error" (for Vector 1)
+
+// Non-Standard Vectored Interrupt Handler (AES Error = Vector 1)
+nonstd_swerv_isr(aes_error)
+// Non-Standard Vectored Interrupt Handler (AES Notification = vector 2)
+nonstd_swerv_isr(aes_notif)
+// Non-Standard Vectored Interrupt Handler (ECC Error = vector 3)
+nonstd_swerv_isr(ecc_error)
+// Non-Standard Vectored Interrupt Handler (ECC Notification = vector 4)
+nonstd_swerv_isr(ecc_notif)
+// Non-Standard Vectored Interrupt Handler (HMAC Error = vector 5)
+nonstd_swerv_isr(hmac_error)
+// Non-Standard Vectored Interrupt Handler (HMAC Notification = vector 6)
+nonstd_swerv_isr(hmac_notif)
+// Non-Standard Vectored Interrupt Handler (KeyVault Error = vector 7)
+nonstd_swerv_isr(kv_error)
+// Non-Standard Vectored Interrupt Handler (KeyVault Notification = vector 8)
+nonstd_swerv_isr(kv_notif)
+// Non-Standard Vectored Interrupt Handler (SHA512 Error = vector 9)
+nonstd_swerv_isr(sha512_error)
+// Non-Standard Vectored Interrupt Handler (SHA512 Notification = vector 10)
+nonstd_swerv_isr(sha512_notif)
+// Non-Standard Vectored Interrupt Handler (SHA256 Error = vector 11)
+nonstd_swerv_isr(sha256_error)
+// Non-Standard Vectored Interrupt Handler (SHA256 Notification = vector 12)
+nonstd_swerv_isr(sha256_notif)
+// Non-Standard Vectored Interrupt Handler (QSPI Error = vector 13)
+nonstd_swerv_isr(qspi_error)
+// Non-Standard Vectored Interrupt Handler (QSPI Notification = vector 14)
+nonstd_swerv_isr(qspi_notif)
+// Non-Standard Vectored Interrupt Handler (UART Error = vector 15)
+nonstd_swerv_isr(uart_error)
+// Non-Standard Vectored Interrupt Handler (UART Notification = vector 16)
+nonstd_swerv_isr(uart_notif)
+// Non-Standard Vectored Interrupt Handler (I3C Error = vector 17)
+nonstd_swerv_isr(i3c_error)
+// Non-Standard Vectored Interrupt Handler (I3C Notification = vector 18)
+nonstd_swerv_isr(i3c_notif)
+// Non-Standard Vectored Interrupt Handler (Mbox Error = vector 19)
+nonstd_swerv_isr(mbox_error)
+// Non-Standard Vectored Interrupt Handler (Mbox Notification = vector 20)
+nonstd_swerv_isr(mbox_notif)
 
-    // Print msg before enabling nested interrupts so it
-    // completes printing and is legible
-    while (msg[hw_ii] != 0) {
-        *stdout = msg[hw_ii++];
-    }
-
-    // Capture the priority and ID
-//    __asm__ volatile ("csrwi    %0, 0" \
-//                      : /* output: none */        \
-//                      : "i" (SWERV_CSR_MEICPCT) /* input : immediate */ \
-//                      : /* clobbers: none */);
-
-    // Save Context to Stack
-    uint32_t meicidpl;
-    uint32_t prev_meicurpl;
-    uint_xlen_t prev_mepc;
-    uint_xlen_t prev_mstatus;
-    uint_xlen_t prev_mie;
-    __asm__ volatile ("csrr    %0, %1"
-                      : "=r" (meicidpl)  /* output : register */
-                      : "i" (SWERV_CSR_MEICIDPL) /* input : immediate */
-                      : /* clobbers: none */);
-    __asm__ volatile ("csrr    %0, %1"
-                      : "=r" (prev_meicurpl)  /* output : register */
-                      : "i" (SWERV_CSR_MEICURPL) /* input : immediate */
-                      : /* clobbers: none */);
-    prev_mepc    = csr_read_mepc();
-    prev_mstatus = csr_read_mstatus();
-    prev_mie     = csr_read_mie();
-
-    // Set the priority threshold to current priority
-    __asm__ volatile ("csrw    %0, %1" \
-                      : /* output: none */        \
-                      : "i" (SWERV_CSR_MEICURPL), "r" (meicidpl)  /* input : immediate  */ \
-                      : /* clobbers: none */);
-
-    // Reenable interrupts (nesting)
-    csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
-
-    // Service the interrupt (here, just increment counter)
-    intr_count++;
-    print_reg_to_console("cnt3",intr_count);
-
-    // Clear the Interrupt Source
-    *stdout = 0x82;
-
-    // Disable interrupts
-    csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
-
-    // Restore Context from Stack
-    __asm__ volatile ("csrw    %0, %1" \
-                      : /* output: none */        \
-                      : "i" (SWERV_CSR_MEICURPL), "r" (prev_meicurpl)  /* input : immediate  */ \
-                      : /* clobbers: none */);
-    csr_write_mepc(prev_mepc);
-    csr_set_bits_mstatus(prev_mstatus & (MSTATUS_MPIE_BIT_MASK | MSTATUS_MPP_BIT_MASK));
-    csr_set_bits_mie(prev_mie & (MIE_MSI_BIT_MASK | MIE_MTI_BIT_MASK | MIE_MEI_BIT_MASK));
-
-    // Done
-    *stdout=0xfc; //FIXME
-    return;
-}
-
-// Non-Standard Vectored Interrupt Handler (vector 4)
-// ISR 4 is an active high, pulse interrupt at the generator
-static void nonstd_swerv_isr_4 (void) {
-    *stdout=0xfb; //FIXME
-    volatile uint32_t * const meigwclrs  = (uint32_t*) SWERV_MM_PIC_MEIGWCLR(4);
-    const char* const msg = "In:4\n";
-    unsigned char hw_ii = 0;
-
-    // Print msg before enabling nested interrupts so it
-    // completes printing and is legible
-    while (msg[hw_ii] != 0) {
-        *stdout = msg[hw_ii++];
-    }
-
-    // Capture the priority and ID
-//    __asm__ volatile ("csrwi    %0, 0" \
-//                      : /* output: none */        \
-//                      : "i" (SWERV_CSR_MEICPCT) /* input : immediate */ \
-//                      : /* clobbers: none */);
-
-    // Save Context to Stack
-    uint32_t meicidpl;
-    uint32_t prev_meicurpl;
-    uint_xlen_t prev_mepc;
-    uint_xlen_t prev_mstatus;
-    uint_xlen_t prev_mie;
-    __asm__ volatile ("csrr    %0, %1"
-                      : "=r" (meicidpl)  /* output : register */
-                      : "i" (SWERV_CSR_MEICIDPL) /* input : immediate */
-                      : /* clobbers: none */);
-    __asm__ volatile ("csrr    %0, %1"
-                      : "=r" (prev_meicurpl)  /* output : register */
-                      : "i" (SWERV_CSR_MEICURPL) /* input : immediate */
-                      : /* clobbers: none */);
-    prev_mepc    = csr_read_mepc();
-    prev_mstatus = csr_read_mstatus();
-    prev_mie     = csr_read_mie();
-
-    // Set the priority threshold to current priority
-    __asm__ volatile ("csrw    %0, %1" \
-                      : /* output: none */        \
-                      : "i" (SWERV_CSR_MEICURPL), "r" (meicidpl)  /* input : immediate  */ \
-                      : /* clobbers: none */);
-
-    // Reenable interrupts (nesting)
-    csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
-
-    // Service the interrupt (here, just increment counter)
-    intr_count++;
-    print_reg_to_console("cnt4",intr_count);
-
-    // Clear the Interrupt Source (i.e. Gateway)
-    *stdout = 0x83;
-    *meigwclrs = 0x0; __asm__ volatile ("fence");
-
-    // Disable interrupts
-    csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
-
-    // Restore Context from Stack
-    __asm__ volatile ("csrw    %0, %1" \
-                      : /* output: none */        \
-                      : "i" (SWERV_CSR_MEICURPL), "r" (prev_meicurpl)  /* input : immediate  */ \
-                      : /* clobbers: none */);
-    csr_write_mepc(prev_mepc);
-    csr_set_bits_mstatus(prev_mstatus & (MSTATUS_MPIE_BIT_MASK | MSTATUS_MPP_BIT_MASK));
-    csr_set_bits_mie(prev_mie & (MIE_MSI_BIT_MASK | MIE_MTI_BIT_MASK | MIE_MEI_BIT_MASK));
-
-    // Done
-    *stdout=0xfc; //FIXME
-    return;
-}
-
-// Non-Standard Vectored Interrupt Handler (vector 5)
-// ISR 5 is an active low, level interrupt at the generator
-static void nonstd_swerv_isr_5 (void) {
-    *stdout=0xfb; //FIXME
-    const char* const msg = "In:5\n";
-    unsigned char hw_ii = 0;
-
-    // Print msg before enabling nested interrupts so it
-    // completes printing and is legible
-    while (msg[hw_ii] != 0) {
-        *stdout = msg[hw_ii++];
-    }
-
-    // Capture the priority and ID
-//    __asm__ volatile ("csrwi    %0, 0" \
-//                      : /* output: none */        \
-//                      : "i" (SWERV_CSR_MEICPCT) /* input : immediate */ \
-//                      : /* clobbers: none */);
-
-    // Save Context to Stack
-    uint32_t meicidpl;
-    uint32_t prev_meicurpl;
-    uint_xlen_t prev_mepc;
-    uint_xlen_t prev_mstatus;
-    uint_xlen_t prev_mie;
-    __asm__ volatile ("csrr    %0, %1"
-                      : "=r" (meicidpl)  /* output : register */
-                      : "i" (SWERV_CSR_MEICIDPL) /* input : immediate */
-                      : /* clobbers: none */);
-    __asm__ volatile ("csrr    %0, %1"
-                      : "=r" (prev_meicurpl)  /* output : register */
-                      : "i" (SWERV_CSR_MEICURPL) /* input : immediate */
-                      : /* clobbers: none */);
-    prev_mepc    = csr_read_mepc();
-    prev_mstatus = csr_read_mstatus();
-    prev_mie     = csr_read_mie();
-
-    // Set the priority threshold to current priority
-    __asm__ volatile ("csrw    %0, %1" \
-                      : /* output: none */        \
-                      : "i" (SWERV_CSR_MEICURPL), "r" (meicidpl)  /* input : immediate  */ \
-                      : /* clobbers: none */);
-
-    // Reenable interrupts (nesting)
-    csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
-
-    // Service the interrupt (here, just increment counter)
-    intr_count++;
-    print_reg_to_console("cnt5",intr_count);
-
-    // Clear the Interrupt Source
-    *stdout = 0x84;
-
-    // Disable interrupts
-    csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
-
-    // Restore Context from Stack
-    __asm__ volatile ("csrw    %0, %1" \
-                      : /* output: none */        \
-                      : "i" (SWERV_CSR_MEICURPL), "r" (prev_meicurpl)  /* input : immediate  */ \
-                      : /* clobbers: none */);
-    csr_write_mepc(prev_mepc);
-    csr_set_bits_mstatus(prev_mstatus & (MSTATUS_MPIE_BIT_MASK | MSTATUS_MPP_BIT_MASK));
-    csr_set_bits_mie(prev_mie & (MIE_MSI_BIT_MASK | MIE_MTI_BIT_MASK | MIE_MEI_BIT_MASK));
-
-    // Done
-    *stdout=0xfc; //FIXME
-    return;
-}
-
-// Non-Standard Vectored Interrupt Handler (vector 6)
-// ISR 6 is an active low, pulse interrupt at the generator
-static void nonstd_swerv_isr_6 (void) {
-    *stdout=0xfb; //FIXME
-    volatile uint32_t * const meigwclrs  = (uint32_t*) SWERV_MM_PIC_MEIGWCLR(6);
-    const char* const msg = "In:6\n";
-    unsigned char hw_ii = 0;
-
-    // Print msg before enabling nested interrupts so it
-    // completes printing and is legible
-    while (msg[hw_ii] != 0) {
-        *stdout = msg[hw_ii++];
-    }
-
-    // Capture the priority and ID
-//    __asm__ volatile ("csrwi    %0, 0" \
-//                      : /* output: none */        \
-//                      : "i" (SWERV_CSR_MEICPCT) /* input : immediate */ \
-//                      : /* clobbers: none */);
-
-    // Save Context to Stack
-    uint32_t meicidpl;
-    uint32_t prev_meicurpl;
-    uint_xlen_t prev_mepc;
-    uint_xlen_t prev_mstatus;
-    uint_xlen_t prev_mie;
-    __asm__ volatile ("csrr    %0, %1"
-                      : "=r" (meicidpl)  /* output : register */
-                      : "i" (SWERV_CSR_MEICIDPL) /* input : immediate */
-                      : /* clobbers: none */);
-    __asm__ volatile ("csrr    %0, %1"
-                      : "=r" (prev_meicurpl)  /* output : register */
-                      : "i" (SWERV_CSR_MEICURPL) /* input : immediate */
-                      : /* clobbers: none */);
-    prev_mepc    = csr_read_mepc();
-    prev_mstatus = csr_read_mstatus();
-    prev_mie     = csr_read_mie();
-
-    // Set the priority threshold to current priority
-    __asm__ volatile ("csrw    %0, %1" \
-                      : /* output: none */        \
-                      : "i" (SWERV_CSR_MEICURPL), "r" (meicidpl)  /* input : immediate  */ \
-                      : /* clobbers: none */);
-
-    // Reenable interrupts (nesting)
-    csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
-
-    // Service the interrupt (here, just increment counter)
-    intr_count++;
-    print_reg_to_console("cnt6",intr_count);
-
-    // Clear the Interrupt Source (i.e. Gateway)
-    *stdout = 0x85;
-    *meigwclrs = 0x0; __asm__ volatile ("fence");
-
-    // Disable interrupts
-    csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
-
-    // Restore Context from Stack
-    __asm__ volatile ("csrw    %0, %1" \
-                      : /* output: none */        \
-                      : "i" (SWERV_CSR_MEICURPL), "r" (prev_meicurpl)  /* input : immediate  */ \
-                      : /* clobbers: none */);
-    csr_write_mepc(prev_mepc);
-    csr_set_bits_mstatus(prev_mstatus & (MSTATUS_MPIE_BIT_MASK | MSTATUS_MPP_BIT_MASK));
-    csr_set_bits_mie(prev_mie & (MIE_MSI_BIT_MASK | MIE_MTI_BIT_MASK | MIE_MEI_BIT_MASK));
-
-    // Done
-    *stdout=0xfc; //FIXME
-    return;
-}
-
-// Non-Standard Vectored Interrupt Handler (vector 7)
-// ISR 7 is an active low, level interrupt at the generator
-static void nonstd_swerv_isr_7 (void) {
-    *stdout=0xfb; //FIXME
-    const char* const msg = "In:7\n";
-    unsigned char hw_ii = 0;
-
-    // Print msg before enabling nested interrupts so it
-    // completes printing and is legible
-    while (msg[hw_ii] != 0) {
-        *stdout = msg[hw_ii++];
-    }
-
-    // Capture the priority and ID
-//    __asm__ volatile ("csrwi    %0, 0" \
-//                      : /* output: none */        \
-//                      : "i" (SWERV_CSR_MEICPCT) /* input : immediate */ \
-//                      : /* clobbers: none */);
-
-    // Save Context to Stack
-    uint32_t meicidpl;
-    uint32_t prev_meicurpl;
-    uint_xlen_t prev_mepc;
-    uint_xlen_t prev_mstatus;
-    uint_xlen_t prev_mie;
-    __asm__ volatile ("csrr    %0, %1"
-                      : "=r" (meicidpl)  /* output : register */
-                      : "i" (SWERV_CSR_MEICIDPL) /* input : immediate */
-                      : /* clobbers: none */);
-    __asm__ volatile ("csrr    %0, %1"
-                      : "=r" (prev_meicurpl)  /* output : register */
-                      : "i" (SWERV_CSR_MEICURPL) /* input : immediate */
-                      : /* clobbers: none */);
-    prev_mepc    = csr_read_mepc();
-    prev_mstatus = csr_read_mstatus();
-    prev_mie     = csr_read_mie();
-
-    // Set the priority threshold to current priority
-    __asm__ volatile ("csrw    %0, %1" \
-                      : /* output: none */        \
-                      : "i" (SWERV_CSR_MEICURPL), "r" (meicidpl)  /* input : immediate  */ \
-                      : /* clobbers: none */);
-
-    // Reenable interrupts (nesting)
-    csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
-
-    // Service the interrupt (here, just increment counter)
-    intr_count++;
-    print_reg_to_console("cnt7",intr_count);
-
-    // Clear the Interrupt Source
-    *stdout = 0x86;
-
-    // Disable interrupts
-    csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
-
-    // Restore Context from Stack
-    __asm__ volatile ("csrw    %0, %1" \
-                      : /* output: none */        \
-                      : "i" (SWERV_CSR_MEICURPL), "r" (prev_meicurpl)  /* input : immediate  */ \
-                      : /* clobbers: none */);
-    csr_write_mepc(prev_mepc);
-    csr_set_bits_mstatus(prev_mstatus & (MSTATUS_MPIE_BIT_MASK | MSTATUS_MPP_BIT_MASK));
-    csr_set_bits_mie(prev_mie & (MIE_MSI_BIT_MASK | MIE_MTI_BIT_MASK | MIE_MEI_BIT_MASK));
-
-    // Done
-    *stdout=0xfc; //FIXME
-    return;
-}
-
-// Non-Standard Vectored Interrupt Handler (vector 8)
-// ISR 8 is an active low, pulse interrupt at the generator
-static void nonstd_swerv_isr_8 (void) {
-    *stdout=0xfb; //FIXME
-    volatile uint32_t * const meigwclrs  = (uint32_t*) SWERV_MM_PIC_MEIGWCLR(8);
-    const char* const msg = "In:8\n";
-    unsigned char hw_ii = 0;
-
-    // Print msg before enabling nested interrupts so it
-    // completes printing and is legible
-    while (msg[hw_ii] != 0) {
-        *stdout = msg[hw_ii++];
-    }
-
-    // Capture the priority and ID
-//    __asm__ volatile ("csrwi    %0, 0" \
-//                      : /* output: none */        \
-//                      : "i" (SWERV_CSR_MEICPCT) /* input : immediate */ \
-//                      : /* clobbers: none */);
-
-    // Save Context to Stack
-    uint32_t meicidpl;
-    uint32_t prev_meicurpl;
-    uint_xlen_t prev_mepc;
-    uint_xlen_t prev_mstatus;
-    uint_xlen_t prev_mie;
-    __asm__ volatile ("csrr    %0, %1"
-                      : "=r" (meicidpl)  /* output : register */
-                      : "i" (SWERV_CSR_MEICIDPL) /* input : immediate */
-                      : /* clobbers: none */);
-    __asm__ volatile ("csrr    %0, %1"
-                      : "=r" (prev_meicurpl)  /* output : register */
-                      : "i" (SWERV_CSR_MEICURPL) /* input : immediate */
-                      : /* clobbers: none */);
-    prev_mepc    = csr_read_mepc();
-    prev_mstatus = csr_read_mstatus();
-    prev_mie     = csr_read_mie();
-
-    // Set the priority threshold to current priority
-    __asm__ volatile ("csrw    %0, %1" \
-                      : /* output: none */        \
-                      : "i" (SWERV_CSR_MEICURPL), "r" (meicidpl)  /* input : immediate  */ \
-                      : /* clobbers: none */);
-
-    // Reenable interrupts (nesting)
-    csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
-
-    // Service the interrupt (here, just increment counter)
-    intr_count++;
-    print_reg_to_console("cnt8",intr_count);
-
-    // Clear the Interrupt Source (i.e. Gateway)
-    *stdout = 0x87;
-    *meigwclrs = 0x0; __asm__ volatile ("fence");
-
-    // Disable interrupts
-    csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
-
-    // Restore Context from Stack
-    __asm__ volatile ("csrw    %0, %1" \
-                      : /* output: none */        \
-                      : "i" (SWERV_CSR_MEICURPL), "r" (prev_meicurpl)  /* input : immediate  */ \
-                      : /* clobbers: none */);
-    csr_write_mepc(prev_mepc);
-    csr_set_bits_mstatus(prev_mstatus & (MSTATUS_MPIE_BIT_MASK | MSTATUS_MPP_BIT_MASK));
-    csr_set_bits_mie(prev_mie & (MIE_MSI_BIT_MASK | MIE_MTI_BIT_MASK | MIE_MEI_BIT_MASK));
-
-    // Done
-    *stdout=0xfc; //FIXME
-    return;
-}

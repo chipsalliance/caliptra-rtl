@@ -156,4 +156,7 @@ package ecc_reg_pkg;
         ecc_reg__ecc_VERIFY_R__out_t ecc_VERIFY_R[12];
         ecc_reg__ecc_LAMBDA__out_t ecc_LAMBDA[12];
     } ecc_reg__out_t;
+
+    localparam ECC_REG_ADDR_WIDTH = 32'd11;
+
 endpackage

@@ -39,6 +39,10 @@ ifeq (0,$(shell test -e $(TEST_DIR)/printf.c && echo $$?))
 	OFILES += printf.o
 endif
 OFILES += $(TESTNAME).o
+HEADER_FILES := ${INCLUDES_DIR}/caliptra_defines.h \
+		${INCLUDES_DIR}/defines.h \
+		${COMPILE_ROOT}/../mbox/rtl/mbox_reg.h \
+		${COMPILE_ROOT}/../mbox/rtl/mbox_csr.h
 
 # provide specific link file
 ifeq (,$(wildcard $(TEST_DIR)/$(TESTNAME).ld))
@@ -81,20 +85,20 @@ program.hex: $(OFILES) $(LINK)
 	$(GCC_PREFIX)-gcc $(ABI) -Wl,-Map=$(TEST).map -lgcc -T$(LINK) -o $(TESTNAME).exe $(OFILES) -nostartfiles  $(TEST_LIBS)
 	$(GCC_PREFIX)-objcopy -O verilog --remove-section .data --remove-section .bss               $(TESTNAME).exe program.hex
 	$(GCC_PREFIX)-objcopy -O verilog -j .data --change-section-address .data=0 --pad-to 0x20000 $(TESTNAME).exe mailbox.hex
-	$(GCC_PREFIX)-objcopy -O verilog -j .dccm --change-section-address .dccm=0 --pad-to 0x10000 $(TESTNAME).exe dccm.hex
+	$(GCC_PREFIX)-objcopy -O verilog -j .dccm --change-section-address .dccm=0 --pad-to 0x20000 $(TESTNAME).exe dccm.hex
 	$(GCC_PREFIX)-objdump -S  $(TESTNAME).exe > $(TESTNAME).dis
 	$(GCC_PREFIX)-size        $(TESTNAME).exe | tee $(TESTNAME).size
 	@echo Completed building $(TESTNAME)
 
 
-%.o : %.s ${INCLUDES_DIR}/caliptra_defines.h ${INCLUDES_DIR}/defines.h
-	cp ${INCLUDES_DIR}/caliptra_defines.h ${INCLUDES_DIR}/defines.h ${BUILD_DIR}
+%.o : %.s ${HEADER_FILES}
+	cp ${HEADER_FILES} ${BUILD_DIR}
 	$(GCC_PREFIX)-cpp -I${TEST_DIR}  $<  > $*.cpp.s
 	$(GCC_PREFIX)-as ${ABI} $*.cpp.s -o $@
 
 
-%.o : %.c ${INCLUDES_DIR}/caliptra_defines.h ${INCLUDES_DIR}/defines.h
-	cp ${INCLUDES_DIR}/caliptra_defines.h ${INCLUDES_DIR}/defines.h ${BUILD_DIR}
+%.o : %.c ${HEADER_FILES}
+	cp ${HEADER_FILES} ${BUILD_DIR}
 	cp ${TEST_DIR}/*.h ${BUILD_DIR}
 	$(GCC_PREFIX)-gcc ${includes} ${TEST_CFLAGS} -DCOMPILER_FLAGS="\"${TEST_CFLAGS}\"" ${ABI} -nostdlib -c $< -o $@
 

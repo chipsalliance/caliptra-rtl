@@ -107,4 +107,7 @@ package kv_reg_pkg;
         kv_reg__kvCtrl__out_t pcr_ctrl[8];
         kv_reg__keyReg__out_t key_entry[8][16];
     } kv_reg__out_t;
+
+    localparam KV_REG_ADDR_WIDTH = 32'd11;
+
 endpackage

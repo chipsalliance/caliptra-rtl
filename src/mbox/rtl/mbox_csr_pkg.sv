@@ -104,4 +104,7 @@ package mbox_csr_pkg;
         mbox_csr__mbox_dataout__out_t mbox_dataout;
         mbox_csr__mbox_execute__out_t mbox_execute;
     } mbox_csr__out_t;
+
+    localparam MBOX_CSR_ADDR_WIDTH = 32'd5;
+
 endpackage

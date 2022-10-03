@@ -12,7 +12,6 @@ requires:
   - ecc_top
   - keyvault
   - mbox_top
-  - sim_irq_gen
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]

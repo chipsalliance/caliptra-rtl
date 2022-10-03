@@ -11,6 +11,5 @@ files:
   - src/hmac_drbg/config/compile.yml
   - src/ecc/config/compile.yml
   - src/keyvault/config/compile.yml
-  - src/sim_irq_gen/config/compile.yml
   # Please add your next file/folder above not below the line
   - src/integration/config/compile.yml

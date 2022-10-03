@@ -27,7 +27,7 @@ SECTIONS {
   . = 0x30000000;
   .data  :  { *(.*data) *(.rodata*) *(.sbss) STACK = ALIGN(16) + 0x2000;}
   .bss : { *(.bss) }
-  . = 0x3003001c;
+  . = 0x3003002c;
   .data.io .  : { *(.data.io) }
   . = 0x40040000;
   .dccm : { *(.dccm*) }

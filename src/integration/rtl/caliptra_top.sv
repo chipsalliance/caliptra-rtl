@@ -86,6 +86,10 @@ module caliptra_top (
 
 );
 
+
+    localparam NUM_INTR = `RV_PIC_TOTAL_INT; // 31
+
+
     //caliptra reset driven by boot fsm in mailbox
     logic                       cptra_uc_rst_b;
 
@@ -167,6 +171,30 @@ module caliptra_top (
     logic [31:0][31:0] obf_field_entropy;
     logic [11:0][31:0] obf_uds_seed;
 
+    // Interrupt Signals
+    wire aes_error_intr;
+    wire aes_notif_intr;
+    wire ecc_error_intr;
+    wire ecc_notif_intr;
+    wire hmac_error_intr;
+    wire hmac_notif_intr;
+    wire kv_error_intr;
+    wire kv_notif_intr;
+    wire sha512_error_intr;
+    wire sha512_notif_intr;
+    wire sha256_error_intr;
+    wire sha256_notif_intr;
+    wire qspi_error_intr;
+    wire qspi_notif_intr;
+    wire uart_error_intr;
+    wire uart_notif_intr;
+    wire i3c_error_intr;
+    wire i3c_notif_intr;
+    wire mbox_error_intr;
+    wire mbox_notif_intr;
+
+    logic [NUM_INTR-1:0] intr;
+
     kv_read_t [`KV_NUM_READ-1:0]  kv_read;
     kv_write_t [`KV_NUM_WRITE-1:0]  kv_write;
     kv_resp_t [`KV_NUM_READ-1:0] kv_resp;
@@ -237,30 +265,50 @@ assign reset_vector = `RV_RESET_VEC;
 assign nmi_vector   = 32'hee000000;
 assign nmi_int   = 0;
 
-localparam NUM_INTR = `RV_PIC_TOTAL_INT; // 31
-wire [NUM_INTR-1:0] intr;
+assign aes_error_intr = 1'b0; // TODO
+assign aes_notif_intr = 1'b0; // TODO
+assign ecc_error_intr = 1'b0; // TODO
+assign ecc_notif_intr = 1'b0; // TODO
+assign hmac_error_intr = 1'b0; // TODO
+assign hmac_notif_intr = 1'b0; // TODO
+assign kv_error_intr = 1'b0; // TODO
+assign kv_notif_intr = 1'b0; // TODO
+assign sha512_error_intr = 1'b0; // TODO
+assign sha512_notif_intr = 1'b0; // TODO
+assign sha256_error_intr = 1'b0; // TODO
+assign sha256_notif_intr = 1'b0; // TODO
+assign qspi_error_intr = 1'b0; // TODO
+assign qspi_notif_intr = 1'b0; // TODO
+assign uart_error_intr = 1'b0; // TODO
+assign uart_notif_intr = 1'b0; // TODO
+assign i3c_error_intr = 1'b0; // TODO
+assign i3c_notif_intr = 1'b0; // TODO
 
-`ifdef INST_ON
-import sim_irq_pkg::irq_type_t;
-
-// Default is active-high, level interrupt
-irq_type_t intr_cfg = '{active_high: {{255-`RV_PIC_TOTAL_INT{1'b1}},31'b1111111_11111111_11111111_00001111},
-                        level_assert:{{255-`RV_PIC_TOTAL_INT{1'b1}},31'b0000000_00000000_00000000_01010101}};
-
-
-sim_irq_gen #(
-    .NUM_INTR (NUM_INTR  ), // Number of interrupts per class (SWerV allows up to 255)
-    .INTR_FREQ("LOW" )  // "HIGH" "MEDIUM" "LOW"
-) i_irq_gen (
-    .clk     (clk      ),
-    .rst_n   (cptra_uc_rst_b), // NOTE: tb uses force/release to override this
-
-    .intr_cfg(intr_cfg),
-
-    .intr    (intr    ),
-    .intr_clr(NUM_INTR'(0)) // NOTE: overridden by tb through hierarchy
-);
-`endif
+// Vector 0 usage is reserved by SweRV, so bit 0 of the intr wire
+// drive Vector 1
+always_comb begin
+    intr[`SWERV_INTR_VEC_AES_ERROR   -1]          = aes_error_intr;
+    intr[`SWERV_INTR_VEC_AES_NOTIF   -1]          = aes_notif_intr;
+    intr[`SWERV_INTR_VEC_ECC_ERROR   -1]          = ecc_error_intr;
+    intr[`SWERV_INTR_VEC_ECC_NOTIF   -1]          = ecc_notif_intr;
+    intr[`SWERV_INTR_VEC_HMAC_ERROR  -1]          = hmac_error_intr;
+    intr[`SWERV_INTR_VEC_HMAC_NOTIF  -1]          = hmac_notif_intr;
+    intr[`SWERV_INTR_VEC_KV_ERROR    -1]          = kv_error_intr;
+    intr[`SWERV_INTR_VEC_KV_NOTIF    -1]          = kv_notif_intr;
+    intr[`SWERV_INTR_VEC_SHA512_ERROR-1]          = sha512_error_intr;
+    intr[`SWERV_INTR_VEC_SHA512_NOTIF-1]          = sha512_notif_intr;
+    intr[`SWERV_INTR_VEC_SHA256_ERROR-1]          = sha256_error_intr;
+    intr[`SWERV_INTR_VEC_SHA256_NOTIF-1]          = sha256_notif_intr;
+    intr[`SWERV_INTR_VEC_QSPI_ERROR  -1]          = qspi_error_intr;
+    intr[`SWERV_INTR_VEC_QSPI_NOTIF  -1]          = qspi_notif_intr;
+    intr[`SWERV_INTR_VEC_UART_ERROR  -1]          = uart_error_intr;
+    intr[`SWERV_INTR_VEC_UART_NOTIF  -1]          = uart_notif_intr;
+    intr[`SWERV_INTR_VEC_I3C_ERROR   -1]          = i3c_error_intr;
+    intr[`SWERV_INTR_VEC_I3C_NOTIF   -1]          = i3c_notif_intr;
+    intr[`SWERV_INTR_VEC_MBOX_ERROR  -1]          = mbox_error_intr;
+    intr[`SWERV_INTR_VEC_MBOX_NOTIF  -1]          = mbox_notif_intr;
+    intr[NUM_INTR-1:`SWERV_INTR_VEC_MAX_ASSIGNED] = '0;
+end
 
 el2_swerv_wrapper rvtop (
     .rst_l                  ( cptra_uc_rst_b),
@@ -604,10 +652,15 @@ mbox_top #(
     .hresp_o    (s_slave[`SLAVE_SEL_MBOX].hresp),
     .hreadyout_o(s_slave[`SLAVE_SEL_MBOX].hreadyout),
     .hrdata_o   (s_slave[`SLAVE_SEL_MBOX].hrdata),
+    // uC Interrupts
+    .error_intr(mbox_error_intr),
+    .notif_intr(mbox_notif_intr),
+    //Obfuscated UDS and FE
     .cptra_obf_key(cptra_obf_key),
     .cptra_obf_key_reg(cptra_obf_key_reg),
     .obf_field_entropy(obf_field_entropy),
     .obf_uds_seed(obf_uds_seed),
+    //uC reset
     .cptra_uc_rst_b (cptra_uc_rst_b) 
 );
 

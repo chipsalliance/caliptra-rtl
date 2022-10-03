@@ -68,6 +68,8 @@ module mbox_top #(
     //SoC Interrupts
 
     //uC Interrupts
+    output wire              error_intr,
+    output wire              notif_intr,
 
     //SRAM interface
     output mbox_sram_req_t  mbox_sram_req,
@@ -110,6 +112,11 @@ mbox_req_t mbox_reg_req_data;
 logic [MBOX_DATA_W-1:0] mbox_reg_rdata;
 logic mbox_reg_error, mbox_reg_read_error, mbox_reg_write_error;
 logic clear_secrets;
+
+// Pulse signals to trigger interrupts
+logic uc_mbox_data_avail;
+logic uc_mbox_data_avail_d;
+logic uc_cmd_avail_p;
 
 mbox_reg_pkg::mbox_reg__in_t mbox_reg_hwif_in;
 mbox_reg_pkg::mbox_reg__out_t mbox_reg_hwif_out;
@@ -286,6 +293,13 @@ always_comb begin
     end
 end
 
+// Pulse input to mbox_reg to set the interrupt status bit and generate interrupt output (if enabled)
+always_comb mbox_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset  = 1'b0; // TODO @michnorris please assign
+always_comb mbox_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_inv_dev_sts.hwset   = 1'b0; // TODO should decode from APB PAUSER
+always_comb mbox_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_cmd_fail_sts.hwset  = 1'b0; // TODO @michnorris please assign -- should this be set by write of "FAIL" to mbox_csr.status if soc_req is set? (i.e. SoC cmd execution failed)
+always_comb mbox_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_bad_fuse_sts.hwset  = 1'b0; // TODO @michnorris please assign
+always_comb mbox_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.hwset = uc_cmd_avail_p; // TODO @michnorris to confirm
+
 
 
 mbox_reg mbox_reg1 (
@@ -294,7 +308,7 @@ mbox_reg mbox_reg1 (
 
     .s_cpuif_req(mbox_reg_req_dv),
     .s_cpuif_req_is_wr(mbox_reg_req_data.write),
-    .s_cpuif_addr(mbox_reg_req_data.addr[9:0]),
+    .s_cpuif_addr(mbox_reg_req_data.addr[mbox_reg_pkg::MBOX_REG_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data(mbox_reg_req_data.wdata),
     .s_cpuif_req_stall_wr(),
     .s_cpuif_req_stall_rd(),
@@ -307,6 +321,9 @@ mbox_reg mbox_reg1 (
     .hwif_in(mbox_reg_hwif_in),
     .hwif_out(mbox_reg_hwif_out)
 );
+
+assign error_intr = mbox_reg_hwif_out.intr_block_rf.error_global_intr_r.intr;
+assign notif_intr = mbox_reg_hwif_out.intr_block_rf.notif_global_intr_r.intr;
 
 
 //Mailbox
@@ -328,8 +345,12 @@ mbox1 (
     .mbox_sram_req(mbox_sram_req),
     .mbox_sram_resp(mbox_sram_resp),
     .soc_mbox_data_avail(mailbox_data_avail),
-    .uc_mbox_data_avail() //FIXME DANGLE
+    .uc_mbox_data_avail(uc_mbox_data_avail)
 );
+
+// Generate a pulse to set the interrupt bit
+`CLP_RST_FF(uc_mbox_data_avail_d, uc_mbox_data_avail, clk, cptra_uc_rst_b)
+always_comb uc_cmd_avail_p = uc_mbox_data_avail & !uc_mbox_data_avail_d;
 
 `ASSERT_KNOWN(ERR_AHB_INF_X, {hreadyout_o,hresp_o}, clk, cptra_rst_b)
 //this generates an NMI in the core, but we don't have a handler so it just hangs

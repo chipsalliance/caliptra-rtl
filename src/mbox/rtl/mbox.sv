@@ -177,7 +177,7 @@ end
 //need to hold direct read accesses for 1 clock to get response
 //create a qualified direct request signal that is masked during the data phase
 //hold the interface to insert wait state when direct request comes
-`CLP_EN_RST_FF(dir_req_dv_f, dir_req_dv & ~req_data.write, clk, (dir_req_dv & ~req_data.write) | dir_req_dv_f, rst_b)
+`CLP_EN_RST_FF(dir_req_dv_f, !dir_req_dv_f & dir_req_dv & ~req_data.write, clk, (dir_req_dv & ~req_data.write) | dir_req_dv_f, rst_b)
 always_comb dir_req_dv_q = dir_req_dv & ~dir_req_dv_f;
 always_comb req_hold = dir_req_dv_q & ~req_data.write;
 

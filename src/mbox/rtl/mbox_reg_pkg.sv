@@ -34,6 +34,42 @@ package mbox_reg_pkg;
     } mbox_reg__obf_key__in_t;
 
     typedef struct {
+        logic hwset;
+    } mbox_reg__intr_block_t__error_intr_t__error_internal_sts_enable_d33001bb_next_52b75ffa_resetsignal_0d7eaa27__in_t;
+
+    typedef struct {
+        logic hwset;
+    } mbox_reg__intr_block_t__error_intr_t__error_inv_dev_sts_enable_e83f2724_next_8318aff8_resetsignal_0d7eaa27__in_t;
+
+    typedef struct {
+        logic hwset;
+    } mbox_reg__intr_block_t__error_intr_t__error_cmd_fail_sts_enable_d535c05b_next_eee7e362_resetsignal_0d7eaa27__in_t;
+
+    typedef struct {
+        logic hwset;
+    } mbox_reg__intr_block_t__error_intr_t__error_bad_fuse_sts_enable_fceb289f_next_14761353_resetsignal_0d7eaa27__in_t;
+
+    typedef struct {
+        mbox_reg__intr_block_t__error_intr_t__error_internal_sts_enable_d33001bb_next_52b75ffa_resetsignal_0d7eaa27__in_t error_internal_sts;
+        mbox_reg__intr_block_t__error_intr_t__error_inv_dev_sts_enable_e83f2724_next_8318aff8_resetsignal_0d7eaa27__in_t error_inv_dev_sts;
+        mbox_reg__intr_block_t__error_intr_t__error_cmd_fail_sts_enable_d535c05b_next_eee7e362_resetsignal_0d7eaa27__in_t error_cmd_fail_sts;
+        mbox_reg__intr_block_t__error_intr_t__error_bad_fuse_sts_enable_fceb289f_next_14761353_resetsignal_0d7eaa27__in_t error_bad_fuse_sts;
+    } mbox_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7__in_t;
+
+    typedef struct {
+        logic hwset;
+    } mbox_reg__intr_block_t__notif_intr_t__notif_cmd_avail_sts_enable_f40f37a0_next_6afe0a88__in_t;
+
+    typedef struct {
+        mbox_reg__intr_block_t__notif_intr_t__notif_cmd_avail_sts_enable_f40f37a0_next_6afe0a88__in_t notif_cmd_avail_sts;
+    } mbox_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b__in_t;
+
+    typedef struct {
+        mbox_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7__in_t error_internal_intr_r;
+        mbox_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b__in_t notif_internal_intr_r;
+    } mbox_reg__intr_block_t__in_t;
+
+    typedef struct {
         logic reset_b;
         logic hard_reset_b;
         logic soc_req;
@@ -41,6 +77,7 @@ package mbox_reg_pkg;
         mbox_reg__uds_seed__in_t uds_seed[12];
         mbox_reg__field_entropy__in_t field_entropy[32];
         mbox_reg__obf_key__in_t obf_key[8];
+        mbox_reg__intr_block_t__in_t intr_block_rf;
     } mbox_reg__in_t;
 
     typedef struct {
@@ -149,6 +186,29 @@ package mbox_reg_pkg;
     } mbox_reg__obf_key__out_t;
 
     typedef struct {
+        logic intr;
+    } mbox_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a__out_t;
+
+    typedef struct {
+        logic intr;
+    } mbox_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a__out_t;
+
+    typedef struct {
+        logic intr;
+    } mbox_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7__out_t;
+
+    typedef struct {
+        logic intr;
+    } mbox_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b__out_t;
+
+    typedef struct {
+        mbox_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a__out_t error_global_intr_r;
+        mbox_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a__out_t notif_global_intr_r;
+        mbox_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7__out_t error_internal_intr_r;
+        mbox_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b__out_t notif_internal_intr_r;
+    } mbox_reg__intr_block_t__out_t;
+
+    typedef struct {
         mbox_reg__FLOW_STATUS__out_t FLOW_STATUS;
         mbox_reg__CLEAR_SECRETS__out_t CLEAR_SECRETS;
         mbox_reg__generic_output_wires__out_t generic_output_wires[2];
@@ -166,5 +226,9 @@ package mbox_reg_pkg;
         mbox_reg__ieee_idevid_cert_chain__out_t ieee_idevid_cert_chain;
         mbox_reg__fuse_done__out_t fuse_done;
         mbox_reg__obf_key__out_t obf_key[8];
+        mbox_reg__intr_block_t__out_t intr_block_rf;
     } mbox_reg__out_t;
+
+    localparam MBOX_REG_ADDR_WIDTH = 32'd12;
+
 endpackage

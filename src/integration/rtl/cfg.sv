@@ -24,6 +24,8 @@
   `define QSPI_CS_WIDTH       2
   `define QSPI_IO_WIDTH       4
   `define SOC_SEC_STATE_WIDTH 3
+
+  // AHB Address Map
   `define SLAVE_NAMES         {"SWERV_DMA"  , "MBOX"       , "I3C"        , "UART"       , "QSPI"       , "SHA"        , "KEYVAULT"   , "HMAC"       , "ECC"        , "AES_CTRL"   } /* Array of names for peripherals */
   `define SLAVE_BASE_ADDR     {32'h4000_0000, 32'h3000_0000, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'h1002_0000, 32'h1001_8000, 32'h1001_0000, 32'h1000_8000, 32'h1000_0000} /* Array with slave base address */
   `define SLAVE_MASK_ADDR     {32'h4007_FFFF, 32'h3003_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'h1002_FFFF, 32'h1001_FFFF, 32'h1001_0FFF, 32'h1000_FFFF, 32'h1000_FFFF} /* Array with slave offset address */
@@ -40,6 +42,31 @@
   `define SLAVE_SEL_MBOX      8
   `define SLAVE_SEL_DMA       9
 
+  // Interrupt Assignments
+  // NOTE Vector 0 is reserved by SweRV
+  `define SWERV_INTR_VEC_AES_ERROR    1
+  `define SWERV_INTR_VEC_AES_NOTIF    2
+  `define SWERV_INTR_VEC_ECC_ERROR    3
+  `define SWERV_INTR_VEC_ECC_NOTIF    4
+  `define SWERV_INTR_VEC_HMAC_ERROR   5
+  `define SWERV_INTR_VEC_HMAC_NOTIF   6
+  `define SWERV_INTR_VEC_KV_ERROR     7
+  `define SWERV_INTR_VEC_KV_NOTIF     8
+  `define SWERV_INTR_VEC_SHA512_ERROR 9
+  `define SWERV_INTR_VEC_SHA512_NOTIF 10
+  `define SWERV_INTR_VEC_SHA256_ERROR 11
+  `define SWERV_INTR_VEC_SHA256_NOTIF 12
+  `define SWERV_INTR_VEC_QSPI_ERROR   13
+  `define SWERV_INTR_VEC_QSPI_NOTIF   14
+  `define SWERV_INTR_VEC_UART_ERROR   15
+  `define SWERV_INTR_VEC_UART_NOTIF   16
+  `define SWERV_INTR_VEC_I3C_ERROR    17
+  `define SWERV_INTR_VEC_I3C_NOTIF    18
+  `define SWERV_INTR_VEC_MBOX_ERROR   19
+  `define SWERV_INTR_VEC_MBOX_NOTIF   20
+  // Used to tie-off unused upper intr bits
+  `define SWERV_INTR_VEC_MAX_ASSIGNED `SWERV_INTR_VEC_MBOX_NOTIF
+
   `define KV_NUM_READ 1
   `define KV_NUM_WRITE 2
 
@@ -54,5 +81,4 @@
 
   `define RV_TOP              `CALIPTRA_RV_TOP.rvtop
 
-  `define INST_ON
 `endif

@@ -128,11 +128,8 @@ module caliptra_top_tb (
     //         8'h2 : 8'h5  - Do nothing
     //         8'h6 : 8'h7E - WriteData is an ASCII character - dump to console.log
     //         8'h7F        - Do nothing
-    //         8'h80: 8'hfa - Clear the interrupt at sim_irq_gen for vector (WriteData-8'h80)
     //         8'hfb        - Set the isr_active bit
     //         8'hfc        - Clear the isr_active bit
-    //         8'hfd        - Force reset on sim_irq_gen
-    //         8'hfe        - Release reset on sim_irq_gen
     //         8'hff        - End the simulation with a Success status
     assign mailbox_write = caliptra_top_dut.mbox_top1.mbox_reg1.field_combo.generic_output_wires[0].generic_wires.load_next;
     assign WriteData = caliptra_top_dut.mbox_top1.mbox_reg1.field_combo.generic_output_wires[0].generic_wires.next;
@@ -150,36 +147,20 @@ module caliptra_top_tb (
 `ifndef VERILATOR
     always
     begin : clk_gen
-      core_clk = #5 ~core_clk;
+      core_clk = #5ns ~core_clk;
     end // clk_gen
 `endif
     
     logic isr_active;
     initial begin
         isr_active = 1'b0;
-        force caliptra_top_dut.i_irq_gen.rst_n = 1'b0;
         forever begin
             @(negedge core_clk)
-            if ((WriteData[7:0] == 8'hfe) && mailbox_write) begin
-                release caliptra_top_dut.i_irq_gen.rst_n;
-                $display("releasing irq rst_n");
-                @(negedge core_clk)
-                $display("irq rst_n value: 0x%x", caliptra_top_dut.i_irq_gen.rst_n);
-            end
-            else if ((WriteData[7:0] == 8'hfd) && mailbox_write) begin
-                force caliptra_top_dut.i_irq_gen.rst_n = 1'b0;
-                $display("force assertion of irq rst_n");
-            end
-            else if ((WriteData[7:0] == 8'hfc) && mailbox_write) begin
+            if ((WriteData[7:0] == 8'hfc) && mailbox_write) begin
                 isr_active = 1'b0;
             end
             else if ((WriteData[7:0] == 8'hfb) && mailbox_write) begin
                 isr_active = 1'b1;
-            end
-            else if ((WriteData[7:0] inside {[8'h80:8'hfa]}) && mailbox_write) begin
-                force caliptra_top_dut.i_irq_gen.intr_clr = `RV_PIC_TOTAL_INT'(1) << (WriteData[7:0] - 8'h80);
-                @(negedge core_clk)
-                release caliptra_top_dut.i_irq_gen.intr_clr;
             end
         end
     end
@@ -375,7 +356,7 @@ module caliptra_top_tb (
 
         $readmemh("program.hex",  imem_inst1.ram,0,32'h00008000);
         $readmemh("mailbox.hex",  mbox_ram1.ram,0,32'h0002_0000);
-        $readmemh("dccm.hex",     dummy_dccm_preloader.ram,0,32'h0001_0000);
+        $readmemh("dccm.hex",     dummy_dccm_preloader.ram,0,32'h0002_0000);
         tp = $fopen("trace_port.csv","w");
         el = $fopen("exec.log","w");
         ifu_p = $fopen("ifu_master_ahb_trace.log", "w");
@@ -519,9 +500,9 @@ caliptra_sram #(
 // This is used to load the generated DCCM hexfile prior to
 // running slam_dccm_ram
 caliptra_sram #(
-     .DEPTH     (8192         ), // 64KiB
+     .DEPTH     (16384        ), // 128KiB
      .DATA_WIDTH(64           ),
-     .ADDR_WIDTH($clog2(8192) )
+     .ADDR_WIDTH($clog2(16384))
 
 ) dummy_dccm_preloader (
     .clk_i   (core_clk),
@@ -617,10 +598,10 @@ task preload_dccm;
 
     for(addr=saddr; addr <= eaddr; addr+=4) begin
         // FIXME hardcoded address indices?
-        data = {dummy_dccm_preloader.ram [addr[15:3]] [{addr[2],2'h3}],
-                dummy_dccm_preloader.ram [addr[15:3]] [{addr[2],2'h2}],
-                dummy_dccm_preloader.ram [addr[15:3]] [{addr[2],2'h1}],
-                dummy_dccm_preloader.ram [addr[15:3]] [{addr[2],2'h0}]};
+        data = {dummy_dccm_preloader.ram [addr[16:3]] [{addr[2],2'h3}],
+                dummy_dccm_preloader.ram [addr[16:3]] [{addr[2],2'h2}],
+                dummy_dccm_preloader.ram [addr[16:3]] [{addr[2],2'h1}],
+                dummy_dccm_preloader.ram [addr[16:3]] [{addr[2],2'h0}]};
         slam_dccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
     end
     $display("DCCM pre-load completed");
