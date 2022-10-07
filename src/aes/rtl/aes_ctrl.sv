@@ -125,7 +125,7 @@ ahb_slv_sif #(
     //COMPONENT INF
     .dv(aes_cs),
     .hold('0), //no holds from aes
-    .error('0), //no errors from aes
+    .err('0), //no errors from aes
     .write(aes_we),
     .wdata(aes_write_data[31:0]),
     .addr(aes_address),

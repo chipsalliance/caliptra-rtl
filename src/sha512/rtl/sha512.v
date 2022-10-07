@@ -136,14 +136,14 @@ module sha512 #(
                    .clk(clk),
                    .reset_n(reset_n),
 
-                   .init(init_reg),
-                   .next(next_reg),
+                   .init_cmd(init_reg),
+                   .next_cmd(next_reg),
                    .mode(mode_reg),
 
                    .work_factor(work_factor_reg),
                    .work_factor_num(work_factor_num_reg),
 
-                   .block(core_block),
+                   .block_msg(core_block),
 
                    .ready(core_ready),
 

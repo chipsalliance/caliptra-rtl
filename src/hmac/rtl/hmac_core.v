@@ -28,14 +28,14 @@ module hmac_core
       input wire            reset_n,
       
       // Control.
-      input wire            init,
-      input wire            next,
+      input wire            init_cmd,
+      input wire            next_cmd,
       output wire           ready,
       output wire           tag_valid,
 
       // Data ports.
       input wire [383 : 0]  key,
-      input wire [1023 : 0]  block,
+      input wire [1023 : 0]  block_msg,
       output wire [383 : 0] tag
     );
 
@@ -43,9 +43,9 @@ module hmac_core
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam IPAD       = 1024'h3636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636;
-  localparam OPAD       = 1024'h5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c;
-  localparam FINAL_PAD  = 640'h8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000580;
+  localparam bit [1023:0] IPAD       = 1024'h3636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636;
+  localparam bit [1023:0] OPAD       = 1024'h5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c;
+  localparam bit [639:0]  FINAL_PAD  = 640'h8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000580;
 
   localparam CTRL_IDLE   = 0;
   localparam CTRL_IPAD   = 1;
@@ -101,36 +101,36 @@ module hmac_core
   //----------------------------------------------------------------
   // core instantiation.
   //----------------------------------------------------------------
-  sha512_core H1(
+  sha512_core u_sha512_core_h1 (
                      .clk(clk),
                      .reset_n(reset_n),
 
-                     .init(H1_init),
-                     .next(H1_next),
+                     .init_cmd(H1_init),
+                     .next_cmd(H1_next),
                      .mode(2'h2),
 
                      .work_factor(1'b0),
-                     .work_factor_num(0),
+                     .work_factor_num(32'h0),
 
-                     .block(H1_block),
+                     .block_msg(H1_block),
 
                      .ready(H1_ready),
                      .digest({H1_digest,garbage_bit_vector1}),
                      .digest_valid(H1_digest_valid)
                     );
 
-  sha512_core H2(
+  sha512_core u_sha512_core_h2 (
                      .clk(clk),
                      .reset_n(reset_n),
 
-                     .init(H2_init),
-                     .next(H2_next),
+                     .init_cmd(H2_init),
+                     .next_cmd(H2_next),
                      .mode(2'h2),
 
                      .work_factor(1'b0),
-                     .work_factor_num(0),
+                     .work_factor_num(32'h0),
 
-                     .block(H2_block),
+                     .block_msg(H2_block),
 
                      .ready(H2_ready),
                      .digest({H2_digest,garbage_bit_vector2}),
@@ -154,13 +154,15 @@ module hmac_core
         end
       else
         begin
+          hmac_ctrl_last <= hmac_ctrl_reg;
+
           if (digest_valid_we)
             digest_valid_reg <= digest_valid_new;
 
           if (hmac_ctrl_we)
             hmac_ctrl_reg <= hmac_ctrl_new;
 
-          hmac_ctrl_last <= hmac_ctrl_reg;
+
         end
     end // reg_update
 
@@ -189,7 +191,7 @@ module hmac_core
       H2_init = 0;
       H2_next = 0;
 
-      first_round = (hmac_ctrl_reg == hmac_ctrl_last)? 0 : 1;
+      first_round = (hmac_ctrl_reg == hmac_ctrl_last)? 1'b0 : 1'b1;
 
       case (hmac_ctrl_reg)
         CTRL_IPAD:
@@ -213,7 +215,7 @@ module hmac_core
                 OPAD_ready = 0;
               end
 
-            H1_block = block;  
+            H1_block = block_msg;  
           end
 
         CTRL_HMAC:
@@ -230,9 +232,13 @@ module hmac_core
 
         default:
           begin
+            H1_init = 0;
+            H1_next = 0;
+            H2_init = 0;
+            H2_next = 0;
           end
-      endcase;
-    end;
+      endcase
+    end
 
   //----------------------------------------------------------------
   // hmac_ctrl_fsm
@@ -252,7 +258,7 @@ module hmac_core
           begin
             ready_flag = 1;
 
-            if (init)
+            if (init_cmd)
               begin
                 digest_valid_new = 0;
                 digest_valid_we  = 1;
@@ -260,7 +266,7 @@ module hmac_core
                 hmac_ctrl_we     = 1;
               end
 
-            if (next)
+            if (next_cmd)
               begin
                 digest_valid_new = 0;
                 digest_valid_we  = 1;

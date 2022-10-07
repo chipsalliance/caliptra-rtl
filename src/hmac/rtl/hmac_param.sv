@@ -25,8 +25,6 @@
   localparam HMAC_CTRL_NEXT_BIT    = 1;
 
   localparam HMAC_ADDR_STATUS      = 32'h00000018;
-  localparam HMAC_STATUS_READY_BIT = 0;
-  localparam HMAC_STATUS_VALID_BIT = 1;
 
   localparam HMAC_ADDR_KEY0        = 32'h00000040;
   localparam HMAC_ADDR_KEY11       = 32'h0000006C;
@@ -39,5 +37,5 @@
 
   localparam HMAC_KV_CTRL          = 32'h00000200;
 
-  localparam HMAC_CORE_NAME        = 64'h61327368_6163686d; // "hmacsha2"
-  localparam HMAC_CORE_VERSION     = 64'h00000000_3030312e; // "1.00"
+  localparam bit [63:0] HMAC_CORE_NAME        = 64'h61327368_6163686d; // "hmacsha2"
+  localparam bit [63:0] HMAC_CORE_VERSION     = 64'h00000000_3030312e; // "1.00"

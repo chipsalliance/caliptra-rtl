@@ -76,7 +76,7 @@ module ecc_top #(
         //COMPONENT INF
         .dv(ecc_cs),
         .hold('0),
-        .error(ecc_reg_error),
+        .err(ecc_reg_error),
         .write(uc_req.write),
         .wdata(uc_req.wdata),
         .addr(uc_req.addr[AHB_ADDR_WIDTH-1:0]),

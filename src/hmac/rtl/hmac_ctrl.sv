@@ -26,8 +26,7 @@
 
 module hmac_ctrl #(
     parameter AHB_DATA_WIDTH = 32,
-    parameter AHB_ADDR_WIDTH = 32,
-    parameter BYPASS_HSEL = 0
+    parameter AHB_ADDR_WIDTH = 32
 )
 (
     // Clock and reset.
@@ -103,8 +102,8 @@ ahb_slv_sif #(
 
     //COMPONENT INF
     .dv(hmac_cs),
-    .hold('0), //no holes from hmac
-    .error('0), //no errors from hmac
+    .hold(1'b0), //no holes from hmac
+    .err(1'b0), //no errors from hmac
     .write(hmac_we),
     .wdata(hmac_write_data),
     .addr(hmac_address),

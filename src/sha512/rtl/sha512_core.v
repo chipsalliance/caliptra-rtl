@@ -44,15 +44,15 @@ module sha512_core(
                    input wire            clk,
                    input wire            reset_n,
                    // Control.
-                   input wire            init,
-                   input wire            next,
+                   input wire            init_cmd,
+                   input wire            next_cmd,
                    input wire [1 : 0]    mode,
 
                    input wire            work_factor,
                    input wire [31 : 0]   work_factor_num,
                    
                    // Data port.
-                   input wire [1023 : 0] block,
+                   input wire [1023 : 0] block_msg,
 
                    output wire           ready,
                    output wire [511 : 0] digest,
@@ -169,7 +169,7 @@ module sha512_core(
   //----------------------------------------------------------------
   sha512_k_constants k_constants_inst(
                                       .addr(round_ctr_reg),
-                                      .K(k_data)
+                                      .K_val(k_data)
                                      );
 
 
@@ -191,11 +191,11 @@ module sha512_core(
                           .clk(clk),
                           .reset_n(reset_n),
 
-                          .block(block),
+                          .block_msg(block_msg),
 
-                          .init(w_init),
-                          .next(w_next),
-                          .w(w_data)
+                          .init_cmd(w_init),
+                          .next_cmd(w_next),
+                          .w_val(w_data)
                          );
 
 
@@ -510,7 +510,7 @@ module sha512_core(
       case (sha512_ctrl_reg)
         CTRL_IDLE:
           begin
-            if (init)
+            if (init_cmd)
               begin
                 ready_new           = 1'b0;
                 ready_we            = 1'b1;
@@ -526,7 +526,7 @@ module sha512_core(
                 sha512_ctrl_we      = 1;
               end
 
-            if (next)
+            if (next_cmd)
               begin
                 ready_new           = 1'b0;
                 ready_we            = 1'b1;
@@ -595,6 +595,23 @@ module sha512_core(
 
         default:
           begin
+            digest_init         = 1'b0;
+            digest_update       = 1'b0;
+            state_init          = 1'b0;
+            state_update        = 1'b0;
+            first_block         = 1'b0;
+            w_init              = 1'b0;
+            w_next              = 1'b0;
+            round_ctr_inc       = 1'b0;
+            round_ctr_rst       = 1'b0;
+            digest_valid_new    = 1'b0;
+            digest_valid_we     = 1'b0;
+            work_factor_ctr_rst = 1'b0;
+            work_factor_ctr_inc = 1'b0;
+            ready_new           = 1'b0;
+            ready_we            = 1'b0;
+            sha512_ctrl_new     = CTRL_IDLE;
+            sha512_ctrl_we      = 1'b0;
           end
 
       endcase // case (sha512_ctrl_reg)

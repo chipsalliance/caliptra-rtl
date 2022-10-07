@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+`include "ahb_defines.svh"
+
 module caliptra_ahb_srom #(
     parameter AHB_DATA_WIDTH    = 64,
     parameter AHB_ADDR_WIDTH    = 32,
@@ -43,8 +45,8 @@ module caliptra_ahb_srom #(
 
 );
 
-`define H_OKAY 1'b0;
-`define H_ERROR 1'b1;
+//`define H_OKAY 1'b0;
+//`define H_ERROR 1'b1;
 
 /////////////////////////////////
 // Signals

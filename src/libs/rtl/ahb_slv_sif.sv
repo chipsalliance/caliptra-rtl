@@ -13,6 +13,7 @@
 // limitations under the License.
 
 `include "caliptra_sva.svh"
+`include "ahb_defines.svh"
 
 module ahb_slv_sif #(
     parameter AHB_DATA_WIDTH = 64
@@ -42,7 +43,7 @@ module ahb_slv_sif #(
     //COMPONENT INF
     output logic                         dv,
     input  logic                         hold,
-    input  logic                         error,
+    input  logic                         err,
     output logic                         write,
     output logic [CLIENT_DATA_WIDTH-1:0] wdata,
     output logic [CLIENT_ADDR_WIDTH-1:0] addr,
@@ -50,10 +51,7 @@ module ahb_slv_sif #(
     input  logic [CLIENT_DATA_WIDTH-1:0] rdata
    );
 
-`define H_OKAY 1'b0;
-`define H_ERROR 1'b1;
-
-logic error_f;
+logic err_f;
 
 //support bus widths:
 //64b ahb, 32b client
@@ -112,10 +110,10 @@ endgenerate
             dv <= 1'b0;
             write <= 1'b0;
             addr <= '0;
-            error_f <= '0;
+            err_f <= '0;
         end
         else begin
-            error_f <= error;
+            err_f <= err;
             if (hready_i) begin
                 dv <= hsel_i & htrans_i inside {2'b10, 2'b11};
             end
@@ -129,20 +127,19 @@ endgenerate
 always_comb begin : response_block
     hreadyout_o = 1'b1;
     hresp_o = `H_OKAY;
-    //first error cycle, de-assert ready and drive error
-    if (error) begin
+    //first err cycle, de-assert ready and drive err
+    if (err) begin
         hreadyout_o = 1'b0;
         hresp_o = `H_ERROR;
     end else if (hold) begin
         hreadyout_o = 1'b0;
         hresp_o = `H_OKAY;
-    end else if (error_f) begin
+    end else if (err_f) begin
         hreadyout_o = 1'b1;
         hresp_o = `H_ERROR;
     end
 end
 
-//bypass lint error //FIXME when lint rule is removed
-
+//bypass lint err //FIXME when lint rule is removed
 
 endmodule

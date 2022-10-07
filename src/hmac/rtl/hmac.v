@@ -122,12 +122,12 @@ module hmac #(
                  .clk(clk),
                  .reset_n(reset_n),
 
-                 .init(init_reg),
-                 .next(next_reg),
+                 .init_cmd(init_reg),
+                 .next_cmd(next_reg),
 
                  .key(core_key),
 
-                 .block(core_block),
+                 .block_msg(core_block),
 
                  .ready(core_ready),
                  .tag(core_tag),
@@ -144,15 +144,15 @@ module hmac #(
   //----------------------------------------------------------------
   always @ (posedge clk or negedge reset_n)
     begin : reg_update
-      integer i;
+      integer ii;
 
       if (!reset_n)
         begin
-          for (i = 0 ; i < 32 ; i = i + 1)
-            block_reg[i] <= 32'h0;
+          for (ii = 0 ; ii < 32 ; ii = ii + 1)
+            block_reg[ii] <= 32'h0;
 
-          for (i = 0 ; i < 12 ; i = i + 1)
-            key_reg[i] <= 32'h0;
+          for (ii = 0 ; ii < 12 ; ii = ii + 1)
+            key_reg[ii] <= 32'h0;
 
           init_reg      <= 1'h0;
           next_reg      <= 1'h0;
@@ -244,31 +244,32 @@ module hmac #(
             begin
               if ((address >= HMAC_ADDR_TAG0) && (address <= HMAC_ADDR_TAG11))
                 tmp_read_data = tag_reg[(11 - ((address - HMAC_ADDR_TAG0) >> 2)) * 32 +: 32];
+              else begin
+                case (address)
+                  // Read operations.
+                  HMAC_ADDR_NAME0:
+                    tmp_read_data = HMAC_CORE_NAME[31:0];
+                  
+                  HMAC_ADDR_NAME1:
+                    tmp_read_data = HMAC_CORE_NAME[63:32];
 
-              case (address)
-                // Read operations.
-                HMAC_ADDR_NAME0:
-                  tmp_read_data = HMAC_CORE_NAME;
-                
-                HMAC_ADDR_NAME1:
-                  tmp_read_data = HMAC_CORE_NAME;
+                  HMAC_ADDR_VERSION0:
+                    tmp_read_data = HMAC_CORE_VERSION[31:0];
 
-                HMAC_ADDR_VERSION0:
-                  tmp_read_data = HMAC_CORE_VERSION;
+                  HMAC_ADDR_VERSION1:
+                    tmp_read_data = HMAC_CORE_VERSION[63:32];
 
-                HMAC_ADDR_VERSION1:
-                  tmp_read_data = HMAC_CORE_VERSION;
+                  HMAC_ADDR_STATUS:
+                    tmp_read_data = {30'h0, tag_valid_reg, ready_reg};
 
-                HMAC_ADDR_STATUS:
-                  tmp_read_data = {30'h0, tag_valid_reg, ready_reg};
+                  HMAC_KV_CTRL:
+                    tmp_read_data = kv_ctrl_reg;
 
-                HMAC_KV_CTRL:
-                  tmp_read_data = kv_ctrl_reg;
+                  default:
+                    tmp_read_data = 32'h0;
 
-                default:
-                  begin
-                  end
-              endcase // case (address)
+                endcase // case (address)
+              end
             end
         end
     end // addr_decoder

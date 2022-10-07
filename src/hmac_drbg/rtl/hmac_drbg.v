@@ -90,10 +90,10 @@ module hmac_drbg
   (
    .clk(clk),
    .reset_n(reset_n),
-   .init(HMAC_init),
-   .next(HMAC_next),  // There will be no next message! 
+   .init_cmd(HMAC_init),
+   .next_cmd(HMAC_next),  // There will be no next message! 
    .key(HMAC_key),
-   .block(HMAC_block),
+   .block_msg(HMAC_block),
    .ready(HMAC_ready),
    .tag(HMAC_tag),
    .tag_valid(HMAC_tag_valid)
@@ -103,7 +103,7 @@ module hmac_drbg
   //----------------------------------------------------------------
   // FSM_flow
   //
-  // This FSM starts with the init command and then generates a nonce.
+  // This FSM starts with the init_cmd command and then generates a nonce.
   // Active low and async reset.
   //----------------------------------------------------------------
 

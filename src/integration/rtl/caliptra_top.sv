@@ -515,8 +515,7 @@ aes_ctrl #(
 
 hmac_ctrl #(
      .AHB_DATA_WIDTH(`AHB_HDATA_SIZE),
-     .AHB_ADDR_WIDTH(`SLAVE_ADDR_WIDTH(`SLAVE_SEL_HMAC)),
-     .BYPASS_HSEL(0)
+     .AHB_ADDR_WIDTH(`SLAVE_ADDR_WIDTH(`SLAVE_SEL_HMAC))
 )hmac (
      .clk(clk),
      .reset_n       (cptra_uc_rst_b),

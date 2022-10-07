@@ -39,19 +39,9 @@ module kv_fsm #(
 localparam KV_MAX_DWORDS = 1024/32;
 localparam KV_NUM_DWORDS_W = $clog2(KV_MAX_DWORDS);
 
-//hmac data size is encoded as N-1 128b chunks, add 1 and multiply by 4 to get dwords
-//data width is in bits, divide by 32 to get dwords
 logic [KV_NUM_DWORDS_W:0] num_dwords_data;
-assign num_dwords_data = (HMAC_PAD == 1) ? ((hmac_data_size+1)*4) : DATA_WIDTH/32;
 logic [KV_NUM_DWORDS_W:0] num_dwords_total;
-assign num_dwords_total = (HMAC_PAD == 1) ? KV_MAX_DWORDS : DATA_WIDTH/32;
-
 logic [31:0][31:0] full_pad_data;
-always_comb begin
-    full_pad_data = '0;
-    full_pad_data[31] = hmac_data_size < 6 ? num_dwords_data*32 + 'd1024 : '0; //size of data goes in the last dword if we have room after pad
-    full_pad_data[num_dwords_data] = 32'h8000_0000; //insert start of pad at dword immediately following data size
-end
 
 //declare fsm state variables
 typedef enum logic [1:0] {
@@ -71,13 +61,27 @@ logic arc_KV_PAD_KV_DONE;
 logic offset_en;
 logic [KV_NUM_DWORDS_W:0] offset, offset_nxt;
 
+//hmac data size is encoded as N-1 128b chunks, add 1 and multiply by 4 to get dwords
+//data width is in bits, divide by 32 to get dwords
+assign num_dwords_data = (HMAC_PAD == 1) ? ((hmac_data_size+1)*4) : DATA_WIDTH/32;
+assign num_dwords_total = (HMAC_PAD == 1) ? KV_MAX_DWORDS : DATA_WIDTH/32;
+
+
+always_comb begin
+    full_pad_data = '0;
+    full_pad_data[31] = hmac_data_size < 6 ? num_dwords_data*32 + 'd1024 : '0; //size of data goes in the last dword if we have room after pad
+    full_pad_data[num_dwords_data] = 32'h8000_0000; //insert start of pad at dword immediately following data size
+end
+
+
+
 always_comb arc_KV_IDLE_KV_RW = start;
 always_comb arc_KV_RW_KV_DONE = (offset_nxt == num_dwords_total); //jump to done when we've written all dwords
 always_comb arc_KV_RW_KV_PAD = (HMAC_PAD == 1) & (offset_nxt == num_dwords_data); //jump to pad when data is done, but not full block size
 always_comb arc_KV_PAD_KV_DONE = (offset_nxt == num_dwords_total); 
 always_comb arc_KV_DONE_KV_IDLE = '1;
 
-always_comb begin : kv_fsm
+always_comb begin : kv_fsm_comb
     kv_fsm_ns = kv_fsm_ps;
     write_en = '0;
     write_pad = '0;

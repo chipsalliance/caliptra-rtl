@@ -18,6 +18,10 @@ targets:
       #- $COMPILE_ROOT/rtl/sha512/sha512_k_constants.v
       #- $COMPILE_ROOT/rtl/sha512/sha512_w_mem.v
     tops: [hmac_ctrl]
+  rtl_lint:
+    directories: []
+    waiver_files: 
+      - $COMPILE_ROOT/config/rtl_lint/hmac.waiver
 ---
 provides: [hmac_ctrl_tb]  
 schema_version: 2.4.0
