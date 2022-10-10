@@ -470,8 +470,7 @@ caliptra_ahb_srom #(
 
 sha512_ctrl #(
     .AHB_DATA_WIDTH (64),
-    .AHB_ADDR_WIDTH (`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SHA)),
-    .BYPASS_HSEL    (0)
+    .AHB_ADDR_WIDTH (`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SHA))
 ) sha512 (
     .clk            (clk),
     .reset_n        (cptra_uc_rst_b),

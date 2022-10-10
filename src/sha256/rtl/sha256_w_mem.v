@@ -44,11 +44,11 @@ module sha256_w_mem(
                     input wire           clk,
                     input wire           reset_n,
                     // Data port.
-                    input wire [511 : 0] block,
+                    input wire [511 : 0] block_msg,
                     // Control.
-                    input wire           init,
-                    input wire           next,
-                    output wire [31 : 0] w
+                    input wire           init_cmd,
+                    input wire           next_cmd,
+                    output wire [31 : 0] w_val
                    );
 
 
@@ -89,7 +89,7 @@ module sha256_w_mem(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign w = w_tmp;
+  assign w_val = w_tmp;
 
 
   //----------------------------------------------------------------
@@ -100,12 +100,12 @@ module sha256_w_mem(
   //----------------------------------------------------------------
   always @ (posedge clk or negedge reset_n)
     begin : reg_update
-      integer i;
+      integer ii;
 
       if (!reset_n)
         begin
-          for (i = 0 ; i < 16 ; i = i + 1)
-            w_mem[i] <= 32'h0;
+          for (ii = 0 ; ii < 16 ; ii = ii + 1)
+            w_mem[ii] <= 32'h0;
 
           w_ctr_reg <= 6'h0;
         end
@@ -200,28 +200,28 @@ module sha256_w_mem(
 
       w_new = d1 + w_9 + d0 + w_0;
 
-      if (init)
+      if (init_cmd)
         begin
-          w_mem00_new = block[511 : 480];
-          w_mem01_new = block[479 : 448];
-          w_mem02_new = block[447 : 416];
-          w_mem03_new = block[415 : 384];
-          w_mem04_new = block[383 : 352];
-          w_mem05_new = block[351 : 320];
-          w_mem06_new = block[319 : 288];
-          w_mem07_new = block[287 : 256];
-          w_mem08_new = block[255 : 224];
-          w_mem09_new = block[223 : 192];
-          w_mem10_new = block[191 : 160];
-          w_mem11_new = block[159 : 128];
-          w_mem12_new = block[127 :  96];
-          w_mem13_new = block[95  :  64];
-          w_mem14_new = block[63  :  32];
-          w_mem15_new = block[31  :   0];
+          w_mem00_new = block_msg[511 : 480];
+          w_mem01_new = block_msg[479 : 448];
+          w_mem02_new = block_msg[447 : 416];
+          w_mem03_new = block_msg[415 : 384];
+          w_mem04_new = block_msg[383 : 352];
+          w_mem05_new = block_msg[351 : 320];
+          w_mem06_new = block_msg[319 : 288];
+          w_mem07_new = block_msg[287 : 256];
+          w_mem08_new = block_msg[255 : 224];
+          w_mem09_new = block_msg[223 : 192];
+          w_mem10_new = block_msg[191 : 160];
+          w_mem11_new = block_msg[159 : 128];
+          w_mem12_new = block_msg[127 :  96];
+          w_mem13_new = block_msg[95  :  64];
+          w_mem14_new = block_msg[63  :  32];
+          w_mem15_new = block_msg[31  :   0];
           w_mem_we    = 1;
         end
 
-      if (next && (w_ctr_reg > 15))
+      if (next_cmd && (w_ctr_reg > 15))
         begin
           w_mem00_new = w_mem[01];
           w_mem01_new = w_mem[02];
@@ -254,13 +254,13 @@ module sha256_w_mem(
       w_ctr_new = 6'h0;
       w_ctr_we  = 1'h0;
 
-      if (init)
+      if (init_cmd)
         begin
           w_ctr_new = 6'h0;
           w_ctr_we  = 1'h1;
         end
 
-      if (next)
+      if (next_cmd)
         begin
           w_ctr_new = w_ctr_reg + 6'h01;
           w_ctr_we  = 1'h1;

@@ -1,0 +1,2 @@
+waive -rules CONST_OUTPUT -loc sha512_h_constants.v -comment {This is by design.} -pattern {Output '*" is driven by constant zero}
+waive -rules CONST_OUTPUT -loc sha512_h_constants.v -comment {This is by design.} -pattern {Output '*" is driven by constant one}

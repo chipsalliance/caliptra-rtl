@@ -45,12 +45,12 @@ module sha256_core(
                    input wire            reset_n,
 
                    // Control.
-                   input wire            init,
-                   input wire            next,
+                   input wire            init_cmd,
+                   input wire            next_cmd,
                    input wire            mode,
 
                    // Data ports.
-                   input wire [511 : 0]  block,
+                   input wire [511 : 0]  block_msg,
 
                    output wire           ready,
                    output wire [255 : 0] digest,
@@ -168,7 +168,7 @@ module sha256_core(
   //----------------------------------------------------------------
   sha256_k_constants k_constants_inst(
                                       .round(t_ctr_reg),
-                                      .K(k_data)
+                                      .K_val(k_data)
                                      );
 
 
@@ -176,11 +176,11 @@ module sha256_core(
                           .clk(clk),
                           .reset_n(reset_n),
 
-                          .block(block),
+                          .block_msg(block_msg),
 
-                          .init(w_init),
-                          .next(w_next),
-                          .w(w_data)
+                          .init_cmd(w_init),
+                          .next_cmd(w_next),
+                          .w_val(w_data)
                          );
 
 
@@ -364,7 +364,7 @@ module sha256_core(
 
 
   //----------------------------------------------------------------
-  // state_logic
+  // state_logicerr
   //
   // The logic needed to init as well as update the state during
   // round processing.
@@ -496,7 +496,7 @@ module sha256_core(
           begin
             ready_flag = 1;
 
-            if (init)
+            if (init_cmd)
               begin
                 digest_init      = 1;
                 w_init           = 1;
@@ -509,7 +509,7 @@ module sha256_core(
                 sha256_ctrl_we   = 1;
               end
 
-            if (next)
+            if (next_cmd)
               begin
                 t_ctr_rst        = 1;
                 w_init           = 1;

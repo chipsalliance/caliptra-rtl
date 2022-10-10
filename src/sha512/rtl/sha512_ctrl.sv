@@ -23,8 +23,7 @@
 
 module sha512_ctrl #(
     parameter AHB_DATA_WIDTH = 32,
-    parameter AHB_ADDR_WIDTH = 32,
-    parameter BYPASS_HSEL = 0
+    parameter AHB_ADDR_WIDTH = 32
 )
 (
     // Clock and reset.
@@ -53,7 +52,7 @@ module sha512_ctrl #(
     reg  [AHB_ADDR_WIDTH - 1 : 0] sha512_address;
     reg  [31 : 0] sha512_write_data;
     reg  [31 : 0] sha512_read_data;
-    reg           sha512_error;
+    reg           sha512_err;
 
     sha512 #(
         .ADDR_WIDTH(AHB_ADDR_WIDTH),
@@ -67,7 +66,7 @@ module sha512_ctrl #(
         .address(sha512_address),
         .write_data(sha512_write_data),
         .read_data(sha512_read_data),
-        .error(sha512_error)
+        .err(sha512_err)
     );
 
     //instantiate ahb lite module
@@ -95,8 +94,8 @@ module sha512_ctrl #(
 
         //COMPONENT INF
         .dv(sha512_cs),
-        .hold('0), //no holds from sha512
-        .err('0),
+        .hold(1'b0), //no holds from sha512
+        .err(1'b0),
         .write(sha512_we),
         .wdata(sha512_write_data),
         .addr(sha512_address),

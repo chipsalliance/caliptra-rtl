@@ -28,8 +28,8 @@
   localparam CTRL_WORK_FACTOR_BIT = 7;
 
   localparam ADDR_STATUS          = 32'h00000018;
-  localparam STATUS_READY_BIT     = 0;
-  localparam STATUS_VALID_BIT     = 1;
+  //localparam STATUS_READY_BIT     = 0;
+  //localparam STATUS_VALID_BIT     = 1;
 
   localparam ADDR_WORK_FACTOR_NUM = 32'h00000020;
 
@@ -51,8 +51,6 @@
 
   localparam DEFAULT_WORK_FACTOR_NUM = 32'h000f0000;
 
-  // `define DATA_BUS_64
-  
 //======================================================================
 // EOF sha512_param.sv
 //======================================================================

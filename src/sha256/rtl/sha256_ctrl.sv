@@ -23,8 +23,7 @@
 
 module sha256_ctrl #(
     parameter AHB_DATA_WIDTH = 64,
-    parameter AHB_ADDR_WIDTH = 32,
-    parameter BYPASS_HSEL = 0
+    parameter AHB_ADDR_WIDTH = 32
 )
 (
     // Clock and reset.
@@ -50,12 +49,15 @@ module sha256_ctrl #(
     //----------------------------------------------------------------
     reg           sha256_cs;
     reg           sha256_we;
-    reg  [31 : 0] sha256_address;
-    reg  [63 : 0] sha256_write_data;
-    reg  [63 : 0] sha256_read_data;
-    reg           sha256_error;
+    reg  [AHB_ADDR_WIDTH-1 : 0] sha256_address;
+    reg  [31 : 0] sha256_write_data;
+    reg  [31 : 0] sha256_read_data;
+    reg           sha256_err;
 
-    sha256 sha256_inst(
+    sha256 #(
+        .ADDR_WIDTH(AHB_ADDR_WIDTH),
+        .DATA_WIDTH(32)
+        ) sha256_inst(
         .clk(clk),
         .reset_n(reset_n),
         .cs(sha256_cs),
@@ -63,7 +65,7 @@ module sha256_ctrl #(
         .address(sha256_address),
         .write_data(sha256_write_data),
         .read_data(sha256_read_data),
-        .error(sha256_error)
+        .err(sha256_err)
     );
 
 
@@ -73,9 +75,9 @@ module sha256_ctrl #(
         
     //instantiate ahb lite module
     ahb_slv_sif #(
-        .ADDR_WIDTH(AHB_ADDR_WIDTH),
+        .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH),
         .AHB_DATA_WIDTH(AHB_DATA_WIDTH),
-        .CLIENT_DATA_WIDTH(64)
+        .CLIENT_DATA_WIDTH(32)
     ) ahb_slv_sif_uut
     (
         //AMBA AHB Lite INF
@@ -95,8 +97,8 @@ module sha256_ctrl #(
 
         //COMPONENT INF
         .dv(sha256_cs),
-        .hold('0), //no holds from sha256
-        .err('0),
+        .hold(1'b0), //no holds from sha256
+        .err(1'b0),
         .write(sha256_we),
         .wdata(sha256_write_data),
         .addr(sha256_address),

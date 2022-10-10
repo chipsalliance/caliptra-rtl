@@ -56,7 +56,7 @@ module sha512 #(
               input wire  [ADDR_WIDTH-1 : 0] address,
               input wire  [DATA_WIDTH-1 : 0] write_data,
               output wire [DATA_WIDTH-1 : 0] read_data,
-              output wire          error
+              output wire          err
              );
 
   //----------------------------------------------------------------
@@ -103,30 +103,23 @@ module sha512 #(
   wire            core_digest_valid;
 
   reg [DATA_WIDTH-1 : 0]  tmp_read_data;
-  reg                     tmp_error;
+  reg                     tmp_err;
 
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  `ifdef DATA_BUS_64
-    assign core_block = { block_reg[00], block_reg[01], block_reg[02], block_reg[03],
-                          block_reg[04], block_reg[05], block_reg[06], block_reg[07],
-                          block_reg[08], block_reg[09], block_reg[10], block_reg[11],
-                          block_reg[12], block_reg[13], block_reg[14], block_reg[15]};
-  `else
-    assign core_block = { block_reg[00], block_reg[01], block_reg[02], block_reg[03],
-                          block_reg[04], block_reg[05], block_reg[06], block_reg[07],
-                          block_reg[08], block_reg[09], block_reg[10], block_reg[11],
-                          block_reg[12], block_reg[13], block_reg[14], block_reg[15],
-                          block_reg[16], block_reg[17], block_reg[18], block_reg[19],
-                          block_reg[20], block_reg[21], block_reg[22], block_reg[23],
-                          block_reg[24], block_reg[25], block_reg[26], block_reg[27],
-                          block_reg[28], block_reg[29], block_reg[30], block_reg[31]};
-  `endif
-
+   assign core_block = { block_reg[00], block_reg[01], block_reg[02], block_reg[03],
+                         block_reg[04], block_reg[05], block_reg[06], block_reg[07],
+                         block_reg[08], block_reg[09], block_reg[10], block_reg[11],
+                         block_reg[12], block_reg[13], block_reg[14], block_reg[15],
+                         block_reg[16], block_reg[17], block_reg[18], block_reg[19],
+                         block_reg[20], block_reg[21], block_reg[22], block_reg[23],
+                         block_reg[24], block_reg[25], block_reg[26], block_reg[27],
+                         block_reg[28], block_reg[29], block_reg[30], block_reg[31]};
+  
   assign read_data = tmp_read_data;
-  assign error     = tmp_error;
+  assign err    = tmp_err;
 
 
   //----------------------------------------------------------------
@@ -161,12 +154,12 @@ module sha512 #(
   //----------------------------------------------------------------
   always @ (posedge clk or negedge reset_n)
     begin : reg_update
-      integer i;
+      integer ii;
 
       if (!reset_n)
         begin
-          for (i = 0 ; i < BLOCK_NO ; i = i + 1)
-            block_reg[i] <= 0;
+          for (ii = 0 ; ii < BLOCK_NO ; ii = ii + 1)
+            block_reg[ii] <= 0;
 
           init_reg            <= 1'h0;
           next_reg            <= 1'h0;
@@ -197,11 +190,7 @@ module sha512 #(
             digest_reg <= core_digest;
 
           if (block_we)
-            `ifdef DATA_BUS_64
-              block_reg[address[6 : 3]] <= write_data;
-            `else
-              block_reg[address[6 : 2]] <= write_data;
-            `endif
+            block_reg[address[6 : 2]] <= write_data;
         end
     end // reg_update
 
@@ -223,7 +212,7 @@ module sha512 #(
       work_factor_num_we = 1'h0;
       block_we           = 1'h0;
       tmp_read_data      = '0;
-      tmp_error          = 1'h0;
+      tmp_err          = 1'h0;
 
       if (cs)
         begin
@@ -247,7 +236,7 @@ module sha512 #(
                   work_factor_num_we = 1'h1;
 
                 default:
-                    tmp_error = 1'h1;
+                    tmp_err = 1'h1;
               endcase // case (address)
             end // if (we)
 
@@ -255,43 +244,35 @@ module sha512 #(
             begin
               
               if ((address >= ADDR_DIGEST_START) && (address <= ADDR_DIGEST_END))
-                `ifdef DATA_BUS_64
-                  tmp_read_data = digest_reg[(7 - ((address - ADDR_DIGEST_START) >> 3)) * DATA_WIDTH +: DATA_WIDTH];
-                `else
-                  tmp_read_data = digest_reg[(15 - ((address - ADDR_DIGEST_START) >> 2)) * DATA_WIDTH +: DATA_WIDTH];
-                `endif
+                tmp_read_data = digest_reg[(15 - ((address - ADDR_DIGEST_START) >> 2)) * DATA_WIDTH +: DATA_WIDTH];
 
               if ((address >= ADDR_BLOCK_START) && (address <= ADDR_BLOCK_END))
-                `ifdef DATA_BUS_64
-                  tmp_read_data = block_reg[address[6 : 3]];
-                `else
-                  tmp_read_data = block_reg[address[6 : 2]];
-                `endif
+                tmp_read_data = block_reg[address[6 : 2]];
               
               case (address)
                 ADDR_NAME0:
-                  tmp_read_data = {CORE_NAME1, CORE_NAME0};
+                  tmp_read_data = CORE_NAME0;
 
                 ADDR_NAME1:
                   tmp_read_data = CORE_NAME1;
 
                 ADDR_VERSION0:
-                  tmp_read_data = {CORE_VERSION1, CORE_VERSION0};
+                  tmp_read_data = CORE_VERSION0;
 
                 ADDR_VERSION1:
                   tmp_read_data = CORE_VERSION1;
 
                 ADDR_CTRL:
-                  tmp_read_data = {work_factor_reg, 3'b0, mode_reg, next_reg, init_reg};
+                  tmp_read_data = {24'h0, work_factor_reg, 3'b0, mode_reg, next_reg, init_reg};
 
                 ADDR_STATUS:
-                  tmp_read_data = {digest_valid_reg, ready_reg};
+                  tmp_read_data = {30'h0, digest_valid_reg, ready_reg};
 
                 ADDR_WORK_FACTOR_NUM:
                   tmp_read_data = work_factor_num_reg;
 
                 default:
-                  tmp_error = 1'h1;
+                  tmp_err = 1'h1;
               endcase // case (address)
             end
         end

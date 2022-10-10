@@ -14,6 +14,10 @@ targets:
       - $COMPILE_ROOT/rtl/sha256_k_constants.v
       - $COMPILE_ROOT/rtl/sha256_w_mem.v
     tops: [sha256_ctrl]
+  rtl_lint:
+    directories: []
+    waiver_files: 
+      - $COMPILE_ROOT/config/rtl_lint/sha256.waiver
 ---
 provides: [sha256_ctrl_tb]  
 schema_version: 2.4.0

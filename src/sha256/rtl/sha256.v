@@ -41,7 +41,10 @@
 
 `default_nettype none
 
-module sha256(
+module sha256 #(
+              parameter ADDR_WIDTH = 32,
+              parameter DATA_WIDTH = 64
+            )(
               // Clock and reset.
               input wire           clk,
               input wire           reset_n,
@@ -51,10 +54,10 @@ module sha256(
               input wire           we,
 
               // Data ports.
-              input wire  [31 : 0] address,
-              input wire  [63 : 0] write_data,
-              output wire [63 : 0] read_data,
-              output wire          error
+              input wire  [ADDR_WIDTH-1 : 0] address,
+              input wire  [DATA_WIDTH-1 : 0] write_data,
+              output wire [DATA_WIDTH-1 : 0] read_data,
+              output wire          err
              );
 
   //----------------------------------------------------------------
@@ -77,7 +80,9 @@ module sha256(
 
   reg ready_reg;
 
-  reg [63 : 0] block_reg [0 : 7];
+  localparam BLOCK_NO = 512 / DATA_WIDTH;
+
+  reg [DATA_WIDTH-1 : 0] block_reg [0 : BLOCK_NO-1];
   reg          block_we;
 
   reg [255 : 0] digest_reg;
@@ -93,8 +98,8 @@ module sha256(
   wire [255 : 0] core_digest;
   wire           core_digest_valid;
 
-  reg [63 : 0]   tmp_read_data;
-  reg            tmp_error;
+  reg [DATA_WIDTH-1 : 0]   tmp_read_data;
+  reg            tmp_err;
 
 
   //----------------------------------------------------------------
@@ -104,7 +109,7 @@ module sha256(
                        block_reg[4], block_reg[5], block_reg[6], block_reg[7]};
 
   assign read_data = tmp_read_data;
-  assign error     = tmp_error;
+  assign err     = tmp_err;
 
 
   //----------------------------------------------------------------
@@ -114,11 +119,11 @@ module sha256(
                    .clk(clk),
                    .reset_n(reset_n),
 
-                   .init(init_reg),
-                   .next(next_reg),
+                   .init_cmd(init_reg),
+                   .next_cmd(next_reg),
                    .mode(mode_reg),
 
-                   .block(core_block),
+                   .block_msg(core_block),
 
                    .ready(core_ready),
 
@@ -136,12 +141,12 @@ module sha256(
   //----------------------------------------------------------------
   always @ (posedge clk or negedge reset_n)
     begin : reg_update
-      integer i;
+      integer ii;
 
       if (!reset_n)
         begin
-          for (i = 0 ; i < 8 ; i = i + 1)
-            block_reg[i] <= 64'h0;
+          for (ii = 0 ; ii < 8 ; ii = ii + 1)
+            block_reg[ii] <= 64'h0;
 
           init_reg         <= 0;
           next_reg         <= 0;
@@ -183,7 +188,7 @@ module sha256(
       mode_we       = 0;
       block_we      = 0;
       tmp_read_data = 64'h0;
-      tmp_error     = 0;
+      tmp_err     = 0;
 
       if (cs)
         begin
@@ -205,28 +210,41 @@ module sha256(
             begin
               if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK7))
                 tmp_read_data = block_reg[address[5 : 3]];
+              else if ((address >= ADDR_DIGEST0) && (address <= ADDR_DIGEST3))
+                tmp_read_data = digest_reg[(3 - ((address - ADDR_DIGEST0) >> 3)) * DATA_WIDTH +: DATA_WIDTH];
+              else begin
+                case (address)
+                  // Read operations.
+                  ADDR_NAME0:
+                  tmp_read_data = CORE_NAME0;
 
-              if ((address >= ADDR_DIGEST0) && (address <= ADDR_DIGEST3))
-                tmp_read_data = digest_reg[(3 - ((address - ADDR_DIGEST0) >> 3)) * 64 +: 64];
+                  ADDR_NAME1:
+                    tmp_read_data = CORE_NAME1;
 
-              case (address)
-                // Read operations.
-                ADDR_NAME:
-                  tmp_read_data = CORE_NAME;
+                  ADDR_VERSION0:
+                    tmp_read_data = CORE_VERSION0;
 
-                ADDR_VERSION:
-                  tmp_read_data = CORE_VERSION;
+                  ADDR_VERSION1:
+                    tmp_read_data = CORE_VERSION1;
 
-                ADDR_CTRL:
-                  tmp_read_data = {61'h0, mode_reg, next_reg, init_reg};
+                  ADDR_CTRL:
+                    tmp_read_data = {29'h0, mode_reg, next_reg, init_reg};
 
-                ADDR_STATUS:
-                  tmp_read_data = {62'h0, digest_valid_reg, ready_reg};
+                  ADDR_STATUS:
+                    tmp_read_data = {30'h0, digest_valid_reg, ready_reg};
 
-                default:
-                  begin
-                  end
-              endcase // case (address)
+                  default:
+                    begin
+                      init_new      = 0;
+                      next_new      = 0;
+                      mode_new      = 0;
+                      mode_we       = 0;
+                      block_we      = 0;
+                      tmp_read_data = '0;
+                      tmp_err     = 0;
+                    end
+                endcase // case (address)
+              end
             end
         end
     end // addr_decoder
