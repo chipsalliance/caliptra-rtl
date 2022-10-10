@@ -1,3 +1,17 @@
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 //======================================================================
 //
 // ecc_scalar_blinding.sv
@@ -18,14 +32,13 @@
 // From the contraint, the output has REG_SIZE+RND_SIZE bit length:
 //      scalar + rnd*group_order < (rnd+1)*group_order < (2^RND_SIZE)*group_order
 //
-// Author: Mojtaba Bisheh-Niasar
 //======================================================================
 
 module ecc_scalar_blinding #(
-    parameter REG_SIZE     = 384,
-    parameter RND_SIZE     = 192,
-    parameter RADIX        = 32,
-    parameter GROUP_ORDER  = 384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973
+    parameter                   REG_SIZE     = 384,
+    parameter                   RND_SIZE     = 192,
+    parameter                   RADIX        = 32,
+    parameter [REG_SIZE-1 : 0]  GROUP_ORDER  = 384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973
     )
     (
     // Clock and reset.
@@ -52,6 +65,9 @@ module ecc_scalar_blinding #(
     localparam  FULL_RND_SIZE   = RND_DIG_NUM * RADIX;
     localparam  FULL_SIZE       = FULL_DIG_NUM * RADIX;
 
+    localparam [FULL_RND_SIZE-RND_SIZE-1 : 0] zero_pad_rnd = '0;
+    localparam [FULL_SIZE-REG_SIZE-1 : 0]     zero_pad_reg = '0;
+    localparam [RADIX-1 : 0]                  zero_pad_radix = '0;
     //----------------------------------------------------------------
     // Registers
     //----------------------------------------------------------------
@@ -101,9 +117,9 @@ module ecc_scalar_blinding #(
             scalar_reg <= 'b0;
         end
         else if (en_i) begin
-            a_reg <= GROUP_ORDER;
-            b_reg <= rnd_i;
-            scalar_reg <= data_i;
+            a_reg       <= {zero_pad_reg, GROUP_ORDER};
+            b_reg       <= {zero_pad_rnd, rnd_i};
+            scalar_reg  <= {zero_pad_reg, data_i};
         end 
     end // input_reg
 
@@ -234,7 +250,7 @@ module ecc_scalar_blinding #(
 
     // Determines which a and b is pushed through the adders
     always_comb begin
-        add0_opa = mult_out;
+        add0_opa = {zero_pad_radix, mult_out};
         add0_opb = accu_reg;
 
         add1_opa = accu_reg[RADIX-1 : 0];

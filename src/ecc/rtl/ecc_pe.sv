@@ -83,7 +83,7 @@ module ecc_pe #(
     assign res_LSW = res[RADIX-1 : 0];
 
     always_comb begin
-        res = {1'b0, mult0_out} + {1'b0, mult1_out} + c_mux + s_mux;
+        res = mult0_out + mult1_out + c_mux + s_mux;
     end
 
     always_ff @(posedge clk) begin

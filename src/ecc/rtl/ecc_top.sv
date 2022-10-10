@@ -11,6 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//======================================================================
+//
+// ecc_top.sv
+// --------
+// top-level wrapper for ecc architecture including:
+// 1- ecc_dsa_ctrl module as ecc engin
+// 2- ecc_reg module as register memory of ecc to interface with external
+// 3- ahb_slv_sif module to handle AHB-lite interface
+//======================================================================
 
 `include "ecc_defines.svh"
 

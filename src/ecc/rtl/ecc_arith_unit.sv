@@ -23,15 +23,16 @@
 //======================================================================
 
 module ecc_arith_unit #(
-    parameter REG_SIZE      = 384,
-    parameter RND_SIZE      = 192,
-    parameter RADIX         = 32,
-    parameter p_prime       = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff,
-    parameter p_mu          = 32'h00000001,
-    parameter q_grouporder  = 384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973,
-    parameter q_mu          = 32'he88fdc45,
-    parameter ADD_NUM_ADDS  = 1,
-    parameter ADD_BASE_SZ   = 384
+    parameter                  REG_SIZE     = 384,
+    parameter                  RND_SIZE     = 192,
+    parameter                  RADIX        = 32,
+    parameter                  ADDR_WIDTH   = 6,
+    parameter [REG_SIZE-1 : 0] p_prime      = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff,
+    parameter [RADIX-1    : 0] p_mu         = 32'h00000001,
+    parameter [REG_SIZE-1 : 0] q_grouporder = 384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973,
+    parameter [RADIX-1    : 0] q_mu         = 32'he88fdc45,
+    parameter                  ADD_NUM_ADDS = 1,
+    parameter                  ADD_BASE_SZ  = 384
     )
     (
     // Clock and reset.
@@ -40,7 +41,8 @@ module ecc_arith_unit #(
 
     // DATA PORT
     input  wire [2 : 0]                   ecc_cmd_i,
-    input  wire [7 : 0]                   addr_i,
+    input  wire                           sca_en_i,
+    input  wire [ADDR_WIDTH-1 : 0]        addr_i,
     input  wire                           wr_op_sel_i,
     input  wire                           wr_en_i,
     input  wire                           rd_reg_i,
@@ -48,31 +50,59 @@ module ecc_arith_unit #(
     output wire [REG_SIZE-1: 0]           data_o,
     output wire                           busy_o
     );
+    
+    //----------------------------------------------------------------
+    // Internal constant and parameter definitions.
+    //----------------------------------------------------------------
+
+    `include "ecc_pm_uop.sv"
+
+    //----------------------------------------------------------------
+    // Registers including update variables and write enable.
+    //----------------------------------------------------------------
+    
+    logic [REG_SIZE-1 : 0]      opa_s;
+    logic [REG_SIZE-1 : 0]      opb_s;
+    logic [REG_SIZE-1 : 0]      add_res_s;
+    logic [REG_SIZE-1 : 0]      mult_res_s;
+
+    reg                 digit_in; 
+    logic               req_digit;
+    logic               ecc_busy_s;
+
+    logic [INSTRUCTION_LENGTH-1 : 0]    ecc_instr_s;
+    logic [REG_SIZE-1 : 0]              reg_dinb_r;
+    logic [REG_SIZE-1 : 0]              dinb_mux_s;
+    logic [OPR_ADDR_WIDTH-1 : 0]        reg_addr_r;
+    logic [OPR_ADDR_WIDTH-1 : 0]        addrb_mux_s;
+    logic                               reg_web_r;
+    logic                               web_mux_s;
+
+    logic [REG_SIZE   : 0]      di_mux;
+    logic [REG_SIZE-1 : 0]      d_o;
+
+    logic                       mod_p_q;
+    logic [REG_SIZE-1 : 0]      adder_prime;
+    logic [RADIX-1 : 0]         mult_mu;
+
+    reg [REG_SIZE+RND_SIZE-1 : 0]         secret_key; 
 
     //----------------------------------------------------------------
     // 
     // ECC Control Logic
     // 
     //----------------------------------------------------------------
-    logic [REG_SIZE-1 : 0]      opa_s;
-    logic [REG_SIZE-1 : 0]      opb_s;
-    logic [REG_SIZE-1 : 0]      add_res_s;
-    logic [REG_SIZE-1 : 0]      mult_res_s;
-    logic                       fau_ready;
-
-    reg                 digit_in; 
-    logic [23  :  0]    ecc_instr_s;
-    logic               req_digit;
-    logic               ecc_busy_s;
     
     ecc_pm_ctrl #(
         .REG_SIZE(REG_SIZE),
-        .RND_SIZE(RND_SIZE)
+        .RND_SIZE(RND_SIZE),
+        .INSTR_SIZE(INSTRUCTION_LENGTH)
         )
         ecc_pm_ctrl_i(
         .clk(clk),
         .reset_n(reset_n),
         .ecc_cmd_i(ecc_cmd_i),
+        .sca_en_i(sca_en_i),
         .digit_i(digit_in),
         .instr_o(ecc_instr_s),
         .req_digit_o(req_digit),
@@ -84,31 +114,20 @@ module ecc_arith_unit #(
     // Memory interface
     // 
     //----------------------------------------------------------------
-    logic [REG_SIZE-1 : 0]      reg_dinb_r;
-    logic [REG_SIZE-1 : 0]      reg_dout_r;
-    logic [REG_SIZE-1 : 0]      dinb_mux_s;
-    logic [7 : 0]               reg_addr_r;
-    logic [7 : 0]               addrb_mux_s;
-    logic                       reg_web_r;
-    logic                       web_mux_s;
-
-    logic [REG_SIZE   : 0]      di_mux;
-    logic [REG_SIZE-1 : 0]      d_o;
-
     ecc_ram_tdp_file #(
-        .ADDR_WIDTH(6),
+        .ADDR_WIDTH(OPR_ADDR_WIDTH),
         .DATA_WIDTH(REG_SIZE)
         )
         ram_tdp_file_i(
         .clk(clk),
         .ena(1'b1),
-        .wea(ecc_instr_s[17]),
-        .addra(ecc_instr_s[13 : 8]),
+        .wea(ecc_instr_s[2*OPR_ADDR_WIDTH+1]),
+        .addra(ecc_instr_s[OPR_ADDR_WIDTH +: OPR_ADDR_WIDTH]),
         .dina(add_res_s),
         .douta(opa_s),
         .enb(1'b1),
         .web(web_mux_s),
-        .addrb(addrb_mux_s[5 : 0]),
+        .addrb(addrb_mux_s),
         .dinb(dinb_mux_s),
         .doutb(opb_s)
     );
@@ -118,12 +137,8 @@ module ecc_arith_unit #(
     // fau interface
     // 
     //----------------------------------------------------------------
-    
-    logic                       mod_p_q;
-    logic [REG_SIZE-1 : 0]      adder_prime;
-    logic [RADIX-1 : 0]         mult_mu;
 
-    assign mod_p_q     = ecc_instr_s[21];  //performing mod_p if (mod_p_q = 0), else mod_q
+    assign mod_p_q     = ecc_instr_s[2*OPR_ADDR_WIDTH+5];  //performing mod_p if (mod_p_q = 0), else mod_q
     assign adder_prime = (mod_p_q)? q_grouporder : p_prime;
     assign mult_mu     = (mod_p_q)? q_mu : p_mu;
 
@@ -140,34 +155,29 @@ module ecc_arith_unit #(
         .reset_n(reset_n),
 
         // DATA PORT
-        .sub_i(ecc_instr_s[18]),
-        .red_i(ecc_instr_s[19]),
-        .mult_start_i(ecc_instr_s[20]),
+        .sub_i(ecc_instr_s[2*OPR_ADDR_WIDTH+2]),
+        .mult_start_i(ecc_instr_s[2*OPR_ADDR_WIDTH+4]),
         .prime_i(adder_prime),
         .mult_mu_i(mult_mu),
         .opa_i(opa_s),
         .opb_i(opb_s),
         .add_res_o(add_res_s),
-        .mult_res_o(mult_res_s),
-        .ready_o(fau_ready)
+        .mult_res_o(mult_res_s)
     );
 
 
     //----------------------------------------------------------------
     // 
-    // Memory mapped register interface
+    // Register updates
     // 
     //----------------------------------------------------------------
-    reg [REG_SIZE+RND_SIZE-1 : 0]         secret_key; 
-
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk) 
+    begin :reg_update
         if (!reset_n) begin
             reg_dinb_r      <= 0;
             reg_addr_r      <= 0;
             reg_web_r       <= 0;
             secret_key      <= 0;
-            digit_in        <= 0;
-            reg_dout_r      <= 0;
         end
         else begin
             if (wr_en_i) begin
@@ -176,14 +186,10 @@ module ecc_arith_unit #(
                 else                    // Write new key
                     secret_key <= data_i;
             end
-
             else if (req_digit) begin
-                //Shift digit
-                secret_key[REG_SIZE+RND_SIZE-1  : 1]  <= secret_key[REG_SIZE+RND_SIZE-2 : 0];
-                secret_key[0]                         <= secret_key[REG_SIZE+RND_SIZE-1];
+                //Shift secret_key to the left
+                secret_key  <= {secret_key[REG_SIZE+RND_SIZE-2 : 0], secret_key[REG_SIZE+RND_SIZE-1]};
             end
-            //Push key bit to ecc control
-            digit_in <= secret_key[0];
 
             reg_addr_r <= addr_i;
             if (wr_op_sel_i == 1'b0)
@@ -195,12 +201,14 @@ module ecc_arith_unit #(
             else
                 d_o <= 0;
         end
-    end
+    end // reg_update
 
+    //Push key bit to ecc pm control
+    assign digit_in = secret_key[0];
             
-    assign addrb_mux_s = ecc_busy_s ? ecc_instr_s[7 : 0] : reg_addr_r;
-    assign web_mux_s   = ecc_busy_s ? ecc_instr_s[16]    : reg_web_r;
-    assign dinb_mux_s  = ecc_busy_s ? mult_res_s         : reg_dinb_r;
+    assign addrb_mux_s = ecc_busy_s ? ecc_instr_s[0 +: OPR_ADDR_WIDTH] : reg_addr_r;
+    assign web_mux_s   = ecc_busy_s ? ecc_instr_s[2*OPR_ADDR_WIDTH]    : reg_web_r;
+    assign dinb_mux_s  = ecc_busy_s ? mult_res_s                       : reg_dinb_r;
     assign busy_o      = ecc_busy_s;
     assign data_o      = d_o;
 

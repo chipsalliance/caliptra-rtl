@@ -118,22 +118,22 @@ module ecc_pe_first #(
     assign a = odd ? a_in : a_reg;
 
     always_comb begin
-        res_0 = {1'b0, s} + {1'b0, mult_out_0_LSW};
+        res_0 = s + mult_out_0_LSW;
         sum_0 = res_0[RADIX-1 : 0];
         carry_0 = res_0[RADIX];
     end
 
     always_comb begin
-        res_1 = {1'b0, sum_0_reg} + {1'b0, mult_out_2_LSW};
+        res_1 = sum_0_reg + mult_out_2_LSW;
         carry_1 = res_1[RADIX];
     end
 
     always_comb begin
-        c_0 = {1'b0, mult_out_0_MSW} + carry_0;
+        c_0 = mult_out_0_MSW + carry_0;
     end
 
     always_comb begin
-        c_1 = {1'b0, mult_out_2_MSW} + carry_1;
+        c_1 = mult_out_2_MSW + carry_1;
     end
 
     always_ff @(posedge clk) begin

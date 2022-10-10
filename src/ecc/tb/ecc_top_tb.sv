@@ -42,6 +42,8 @@ module ecc_top_tb #(
   localparam STATUS_READY_BIT = 0;
   localparam STATUS_VALID_BIT = 1;
 
+  localparam ADDR_SCACONFIG   = BASE_ADDR + 32'h00000020;
+
   localparam ADDR_SEED0       = BASE_ADDR + 32'h00000080;
   localparam ADDR_SEED11      = BASE_ADDR + 32'h000000A8;
 
@@ -66,8 +68,8 @@ module ecc_top_tb #(
   localparam ADDR_VERIFY_R0   = BASE_ADDR + 32'h00000400;
   localparam ADDR_VERIFY_R11  = BASE_ADDR + 32'h00000428;
 
-  localparam ADDR_LAMBDA0     = BASE_ADDR + 32'h00000480;
-  localparam ADDR_LAMBDA11    = BASE_ADDR + 32'h000004A8;
+  localparam ADDR_IV0         = BASE_ADDR + 32'h00000480;
+  localparam ADDR_IV11        = BASE_ADDR + 32'h000004A8;
 
   
   parameter           R_WIDTH                   = 384;
@@ -91,7 +93,7 @@ module ecc_top_tb #(
       operand_t     R;
       operand_t     S;
       operand_t     seed;
-      operand_t     lambda;
+      operand_t     IV;
   } test_vector_t;
 
   test_vector_t [TEST_VECTOR_NUM-1:0] test_vectors;
@@ -468,7 +470,7 @@ module ecc_top_tb #(
       start_time = cycle_ctr;
 
       write_block(ADDR_SEED0, test_vector.seed);
-      write_block(ADDR_LAMBDA0, test_vector.lambda);
+      write_block(ADDR_IV0, test_vector.IV);
 
       trig_ECC(KEYGEN);
       #(CLK_PERIOD);
@@ -530,7 +532,7 @@ module ecc_top_tb #(
 
       write_block(ADDR_MSG0, test_vector.hashed_msg);
       write_block(ADDR_PRIVKEY0, test_vector.privkey);
-      write_block(ADDR_LAMBDA0, test_vector.lambda);
+      write_block(ADDR_IV0, test_vector.IV);
 
       trig_ECC(SIGN);
       #(CLK_PERIOD);
@@ -591,7 +593,6 @@ module ecc_top_tb #(
       write_block(ADDR_PUBKEYY0, test_vector.pubkey.y);
       write_block(ADDR_SIGNR0, test_vector.R);
       write_block(ADDR_SIGNS0, test_vector.S);
-      write_block(ADDR_LAMBDA0, 384'h1);
 
       trig_ECC(VERIFY);
       #(CLK_PERIOD);
@@ -622,6 +623,83 @@ module ecc_top_tb #(
     end
   endtask // ecc_verifying_test
 
+
+  //----------------------------------------------------------------
+  // ecc_sca_config_test()
+  //
+  // Perform different sca configuration tests.
+  //----------------------------------------------------------------
+  task ecc_sca_config_test();
+    
+    begin
+      wait_ready();
+
+      $display("*** ECC SCA configuration test started.");
+      
+      // with all countermeasures by default
+      $display("\ntest with all countermeasures by default");
+      ecc_keygen_test(1, test_vectors[1]);
+      ecc_signing_test(8, test_vectors[8]);
+      ecc_verifying_test(8, test_vectors[8]);
+
+      // without any protection
+      $display("\ntest without any protection");
+      write_block(ADDR_SCACONFIG, 3'b000);  
+      ecc_keygen_test(1, test_vectors[1]);
+      ecc_signing_test(8, test_vectors[8]);
+      ecc_verifying_test(8, test_vectors[8]);
+
+      // with only point randomization
+      $display("\ntest with only point randomization");
+      write_block(ADDR_SCACONFIG, 3'b001);  
+      ecc_keygen_test(1, test_vectors[1]);
+      ecc_signing_test(8, test_vectors[8]);
+      ecc_verifying_test(8, test_vectors[8]);
+
+      // with only masking sign
+      $display("\ntest with only masking sign");
+      write_block(ADDR_SCACONFIG, 3'b010);  
+      ecc_keygen_test(1, test_vectors[1]);
+      ecc_signing_test(8, test_vectors[8]);
+      ecc_verifying_test(8, test_vectors[8]);
+
+      // with only scalar blinding
+      $display("\ntest with only scalar blinding");
+      write_block(ADDR_SCACONFIG, 3'b100);  
+      ecc_keygen_test(1, test_vectors[1]);
+      ecc_signing_test(8, test_vectors[8]);
+      ecc_verifying_test(8, test_vectors[8]);
+
+      // with point randomization and masking sign
+      $display("\ntest with point randomization and masking sign");
+      write_block(ADDR_SCACONFIG, 3'b011);  
+      ecc_keygen_test(1, test_vectors[1]);
+      ecc_signing_test(8, test_vectors[8]);
+      ecc_verifying_test(8, test_vectors[8]);
+
+      // with point randomization and scalar blinding
+      $display("\ntest with point randomization and scalar blinding");
+      write_block(ADDR_SCACONFIG, 3'b101);  
+      ecc_keygen_test(1, test_vectors[1]);
+      ecc_signing_test(8, test_vectors[8]);
+      ecc_verifying_test(8, test_vectors[8]);
+
+      // with masking sign and scalar blinding
+      $display("\ntest with masking sign and scalar blinding");
+      write_block(ADDR_SCACONFIG, 3'b110);  
+      ecc_keygen_test(1, test_vectors[1]);
+      ecc_signing_test(8, test_vectors[8]);
+      ecc_verifying_test(8, test_vectors[8]);
+
+      // with all countermeasures
+      $display("\ntest with all countermeasures");
+      write_block(ADDR_SCACONFIG, 3'b111);  
+      ecc_keygen_test(1, test_vectors[1]);
+      ecc_signing_test(8, test_vectors[8]);
+      ecc_verifying_test(8, test_vectors[8]);
+
+    end
+  endtask // ecc_signing_test
 
 
   //----------------------------------------------------------------
@@ -677,7 +755,7 @@ module ecc_top_tb #(
               5: test_vector.R           = val;
               6: test_vector.S           = val;
               7: begin
-                 test_vector.lambda      = val;
+                 test_vector.IV          = val;
                  test_vectors[test_vector_cnt] = test_vector;
               end
               8 : test_vector_cnt++;
@@ -711,7 +789,9 @@ module ecc_top_tb #(
       reset_dut();
       check_name_version();
 
-      ecc_test();
+      //ecc_test();
+
+      ecc_sca_config_test();
 
       display_test_results();
       

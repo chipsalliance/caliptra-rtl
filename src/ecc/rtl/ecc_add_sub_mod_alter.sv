@@ -33,7 +33,6 @@ module ecc_add_sub_mod_alter #(
 
     // DATA PORT
     input  wire                 sub_i,
-    input  wire                 red_i,
     input  wire  [REG_SIZE-1:0] opa_i,
     input  wire  [REG_SIZE-1:0] opb_i,
     input  wire  [REG_SIZE-1:0] prime_i,
@@ -49,8 +48,6 @@ module ecc_add_sub_mod_alter #(
     logic [REG_SIZE-1 : 0] r1;
     logic                  add_nsub;
     logic                  carry0;
-    logic                  carry1;
-
 
     assign opb0 = sub_i ? ~opb_i : opb_i;
     assign opb1 = sub_i ? prime_i : ~prime_i;
@@ -74,7 +71,7 @@ module ecc_add_sub_mod_alter #(
         .b(opb1),
         .cin(~sub_i),
         .s(r1),
-        .cout(carry1)
+        .cout()
     );
 
     assign res_o = (~sub_i ^ carry0)? r0 : r1;

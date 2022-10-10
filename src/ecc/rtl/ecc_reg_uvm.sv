@@ -42,7 +42,7 @@ package ecc_reg_uvm;
 
         virtual function void build();
             this.CTRL = new("CTRL");
-            this.CTRL.configure(this, 32, 0, "RW", 1, 'h0, 0, 1, 0);
+            this.CTRL.configure(this, 2, 0, "RW", 1, 'h0, 0, 1, 0);
         endfunction : build
     endclass : ecc_reg__ecc_CTRL
 
@@ -56,9 +56,23 @@ package ecc_reg_uvm;
 
         virtual function void build();
             this.STATUS = new("STATUS");
-            this.STATUS.configure(this, 32, 0, "RO", 1, 'h0, 0, 1, 0);
+            this.STATUS.configure(this, 2, 0, "RO", 1, 'h0, 0, 1, 0);
         endfunction : build
     endclass : ecc_reg__ecc_STATUS
+
+    // Reg - ecc_reg::ecc_SCACONFIG
+    class ecc_reg__ecc_SCACONFIG extends uvm_reg;
+        rand uvm_reg_field SCACONFIG;
+
+        function new(string name = "ecc_reg__ecc_SCACONFIG");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.SCACONFIG = new("SCACONFIG");
+            this.SCACONFIG.configure(this, 3, 0, "RW", 1, 'h0, 0, 1, 0);
+        endfunction : build
+    endclass : ecc_reg__ecc_SCACONFIG
 
     // Reg - ecc_reg::ecc_SEED
     class ecc_reg__ecc_SEED extends uvm_reg;
@@ -172,19 +186,19 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__ecc_VERIFY_R
 
-    // Reg - ecc_reg::ecc_LAMBDA
-    class ecc_reg__ecc_LAMBDA extends uvm_reg;
-        rand uvm_reg_field LAMBDA;
+    // Reg - ecc_reg::ecc_IV
+    class ecc_reg__ecc_IV extends uvm_reg;
+        rand uvm_reg_field IV;
 
-        function new(string name = "ecc_reg__ecc_LAMBDA");
+        function new(string name = "ecc_reg__ecc_IV");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
         virtual function void build();
-            this.LAMBDA = new("LAMBDA");
-            this.LAMBDA.configure(this, 32, 0, "RW", 0, 'h0, 0, 1, 0);
+            this.IV = new("IV");
+            this.IV.configure(this, 32, 0, "RW", 0, 'h0, 0, 1, 0);
         endfunction : build
-    endclass : ecc_reg__ecc_LAMBDA
+    endclass : ecc_reg__ecc_IV
 
     // Addrmap - ecc_reg
     class ecc_reg extends uvm_reg_block;
@@ -192,6 +206,7 @@ package ecc_reg_uvm;
         rand ecc_reg__ecc_VERSION ecc_VERSION[2];
         rand ecc_reg__ecc_CTRL ecc_CTRL;
         rand ecc_reg__ecc_STATUS ecc_STATUS;
+        rand ecc_reg__ecc_SCACONFIG ecc_SCACONFIG;
         rand ecc_reg__ecc_SEED ecc_SEED[12];
         rand ecc_reg__ecc_MSG ecc_MSG[12];
         rand ecc_reg__ecc_PRIVKEY ecc_PRIVKEY[12];
@@ -200,7 +215,7 @@ package ecc_reg_uvm;
         rand ecc_reg__ecc_R ecc_R[12];
         rand ecc_reg__ecc_S ecc_S[12];
         rand ecc_reg__ecc_VERIFY_R ecc_VERIFY_R[12];
-        rand ecc_reg__ecc_LAMBDA ecc_LAMBDA[12];
+        rand ecc_reg__ecc_IV ecc_IV[12];
 
         function new(string name = "ecc_reg");
             super.new(name);
@@ -232,6 +247,11 @@ package ecc_reg_uvm;
 
             this.ecc_STATUS.build();
             this.default_map.add_reg(this.ecc_STATUS, 'h18);
+            this.ecc_SCACONFIG = new("ecc_SCACONFIG");
+            this.ecc_SCACONFIG.configure(this);
+
+            this.ecc_SCACONFIG.build();
+            this.default_map.add_reg(this.ecc_SCACONFIG, 'h20);
             foreach(this.ecc_SEED[i0]) begin
                 this.ecc_SEED[i0] = new($sformatf("ecc_SEED[%0d]", i0));
                 this.ecc_SEED[i0].configure(this);
@@ -288,12 +308,12 @@ package ecc_reg_uvm;
                 this.ecc_VERIFY_R[i0].build();
                 this.default_map.add_reg(this.ecc_VERIFY_R[i0], 'h400 + i0*'h4);
             end
-            foreach(this.ecc_LAMBDA[i0]) begin
-                this.ecc_LAMBDA[i0] = new($sformatf("ecc_LAMBDA[%0d]", i0));
-                this.ecc_LAMBDA[i0].configure(this);
+            foreach(this.ecc_IV[i0]) begin
+                this.ecc_IV[i0] = new($sformatf("ecc_IV[%0d]", i0));
+                this.ecc_IV[i0].configure(this);
                 
-                this.ecc_LAMBDA[i0].build();
-                this.default_map.add_reg(this.ecc_LAMBDA[i0], 'h480 + i0*'h4);
+                this.ecc_IV[i0].build();
+                this.default_map.add_reg(this.ecc_IV[i0], 'h480 + i0*'h4);
             end
         endfunction : build
     endclass : ecc_reg

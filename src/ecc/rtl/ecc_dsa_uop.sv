@@ -21,11 +21,10 @@
 //
 //======================================================================
 
-localparam DSA_INSTRUCTION_LENGTH       = 24;    // opcode + 2 * operand
-localparam DSA_PROG_ADDR_W              = 6;
-
 localparam integer DSA_UOP_ADDR_WIDTH    = 8;
-localparam integer DSA_OPR_ADDR_WIDTH    = 8;
+localparam integer DSA_OPR_ADDR_WIDTH    = 6;
+
+localparam DSA_INSTRUCTION_LENGTH       = DSA_UOP_ADDR_WIDTH + 2*DSA_OPR_ADDR_WIDTH;    // opcode + 2 * operand
 
 // DSA INSTRUCTIONS LIST
 localparam [DSA_UOP_ADDR_WIDTH-1 : 0] DSA_UOP_NOP                  = 8'b0000_0000;
@@ -68,6 +67,8 @@ localparam [DSA_OPR_ADDR_WIDTH-1 : 0] LAMBDA_ID                = 27;
 localparam [DSA_OPR_ADDR_WIDTH-1 : 0] MASKING_ID               = 28;
 
 // DSA Subroutine listing
+localparam DSA_RESET                    = 0;
+localparam DSA_SCA_INIT                 = 11;
 localparam DSA_NOP                      = 12;  
 localparam DSA_KG_S                     = DSA_NOP + 2; 
 localparam DSA_KG_E                     = DSA_KG_S + 10; 
@@ -75,3 +76,5 @@ localparam DSA_SGN_S                    = DSA_KG_E + 2;
 localparam DSA_SGN_E                    = DSA_SGN_S + 12; 
 localparam DSA_VER_S                    = DSA_SGN_E + 2; 
 localparam DSA_VER_E                    = DSA_VER_S + 17;
+
+localparam DSA_PROG_ADDR_W              = $clog2(DSA_VER_E+2); //6

@@ -19,10 +19,9 @@
 
 
 module ecc_hmac_drbg_interface#(
-    parameter REG_SIZE       = 384,
-    parameter SEED_SIZE      = 384,
-    parameter RND_SIZE       = 192,
-    parameter GROUP_ORDER    = 384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973
+    parameter                  REG_SIZE       = 384,
+    parameter                  SEED_SIZE      = 384,
+    parameter [REG_SIZE-1 : 0] GROUP_ORDER    = 384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973
     )
     (
     // Clock and reset.
@@ -31,7 +30,6 @@ module ecc_hmac_drbg_interface#(
     input wire                      keygen_sign,
     input wire                      en,
     output wire                     ready,
-    output wire                     valid,
 
     //Data
     input wire   [SEED_SIZE-1 : 0]  seed,
@@ -40,7 +38,7 @@ module ecc_hmac_drbg_interface#(
     input wire   [REG_SIZE-1 : 0]   hashed_msg,
 
     output wire  [REG_SIZE-1 : 0]   lambda,
-    output wire  [RND_SIZE-1 : 0]   scalar_rnd,
+    output wire  [REG_SIZE-1 : 0]   scalar_rnd,
     output wire  [REG_SIZE-1 : 0]   masking_rnd,
     output wire  [REG_SIZE-1 : 0]   nonce
     );
@@ -59,13 +57,26 @@ module ecc_hmac_drbg_interface#(
 
     logic                   first_round;
     logic [REG_SIZE-1 : 0]  lambda_reg;
-    logic [RND_SIZE-1 : 0]  scalar_rnd_reg;
+    logic [REG_SIZE-1 : 0]  scalar_rnd_reg;
     logic [REG_SIZE-1 : 0]  masking_rnd_reg;
     logic [REG_SIZE-1 : 0]  nonce_reg;
     logic                   ready_reg;
-    logic                   valid_reg;
     logic                   hmac_valid_last;
     logic                   hmac_valid_edge;
+
+    /*State register*/
+    reg [2 : 0]  state_reg;
+    reg [2 : 0]  state_next;
+    reg [2 : 0]  state_reg_last;
+
+    /*STATES*/
+    localparam IDLE_ST          = 0; 
+    localparam LAMBDA_ST        = 1;
+    localparam SCALAR_RND_ST    = 2;
+    localparam MASKING_RND_ST   = 3;
+    localparam KEYGEN_ST        = 4;  
+    localparam SIGN_ST          = 5;  
+    localparam DONE_ST          = 6;  
 
     //----------------------------------------------------------------
     // Module instantiantions.
@@ -80,8 +91,8 @@ module ecc_hmac_drbg_interface#(
         .clk(clk),
         .reset_n(reset_n),
         .mode(hmac_mode),
-        .init(hmac_init),
-        .next(hmac_next),
+        .init_cmd(hmac_init),
+        .next_cmd(hmac_next),
         .ready(hmac_ready),
         .valid(hmac_valid),
         .seed(hmac_seed),
@@ -98,25 +109,9 @@ module ecc_hmac_drbg_interface#(
     // Active low and async reset.
     //----------------------------------------------------------------
 
-    /*State register*/
-    reg [3 : 0]  state_reg;
-    reg [3 : 0]  state_next;
-    reg [3 : 0]  state_reg_last;
-
-    /*STATES*/
-    localparam IDLE_ST          = 0; 
-    localparam LAMBDA_ST        = 1;
-    localparam SCALAR_RND_ST    = 2;
-    localparam MASKING_RND_ST   = 3;
-    localparam KEYGEN_ST        = 4;  
-    localparam SIGN_ST          = 5;  
-    localparam DONE_ST          = 6;  
-    
-
-
     always_comb
     begin
-        first_round = (state_reg == state_reg_last)? 0 : 1;
+        first_round = (state_reg == state_reg_last)? 1'b0 : 1'b1;
         hmac_valid_edge = hmac_valid & (!hmac_valid_last);
     end
 
@@ -172,7 +167,7 @@ module ecc_hmac_drbg_interface#(
         if (hmac_valid_edge) begin
             case(state_reg)
                 LAMBDA_ST:      lambda_reg <= hmac_nonce;
-                SCALAR_RND_ST:  scalar_rnd_reg <= hmac_nonce[RND_SIZE-1 : 0];
+                SCALAR_RND_ST:  scalar_rnd_reg <= hmac_nonce;
                 MASKING_RND_ST: masking_rnd_reg <= hmac_nonce;
                 KEYGEN_ST:      nonce_reg <= hmac_nonce;
                 SIGN_ST:        nonce_reg <= hmac_nonce;
@@ -181,32 +176,20 @@ module ecc_hmac_drbg_interface#(
     end
 
     always_ff @(posedge clk) 
-    begin
+    begin : state_reg_update
         if (!reset_n)
-            valid_reg <= 0;
+            state_reg       <= IDLE_ST;
         else
-        begin
-            case(state_reg)
-                IDLE_ST: begin
-                    if (en)
-                        valid_reg <= 0;
-                end
-                DONE_ST:  valid_reg <= 1;
-            endcase
-        end
-    end
+            state_reg       <= state_next;
+    end // state_reg_update
 
     always_ff @(posedge clk) 
-    begin : fsm_process
-        if (!reset_n) begin
-            state_reg       <= IDLE_ST;
+    begin : ff_state_reg
+        if (!reset_n)
             state_reg_last  <= IDLE_ST;
-        end
-        else begin
-            state_reg       <= state_next;
+        else 
             state_reg_last  <= state_reg;
-        end
-    end // fsm_process
+    end // ff_state_reg
 
     always_comb 
     begin : interface_fsm
@@ -214,9 +197,10 @@ module ecc_hmac_drbg_interface#(
             state_next    = IDLE_ST;
         else
         begin
+            state_next = IDLE_ST;
             case(state_reg)
                 IDLE_ST: begin
-                    if (en) begin
+                    if (en & hmac_ready) begin
                         state_next = LAMBDA_ST;
                     end
                 end
@@ -271,7 +255,6 @@ module ecc_hmac_drbg_interface#(
     assign scalar_rnd = scalar_rnd_reg;
     assign masking_rnd = masking_rnd_reg;
     assign nonce = nonce_reg;
-    assign valid = valid_reg;
     assign ready = ready_reg;
 
 endmodule

@@ -31,7 +31,7 @@ addrmap ecc_reg {
     field rw_rw {};
 
     //defined fields by access type
-    field sr_hw {sw = r; hw = rw;};
+    field sr_hw {sw = r; hw = w;};
     field srw_hr {sw = rw; hw = r;};
     field sr_hrw {sw = r; hw = rw;};
     field srw_hrw {sw = rw; hw = rw;};
@@ -40,8 +40,9 @@ addrmap ecc_reg {
     reg {sr_hw NAME[32];} ecc_NAME[2];
     reg {sr_hw VERSION[32];} ecc_VERSION[2];
 
-    reg {srw_hrw CTRL[32];} ecc_CTRL;
-    reg {sr_hrw STATUS[32];} ecc_STATUS @0x00000018;
+    reg {srw_hrw CTRL[2];} ecc_CTRL @0x00000010;
+    reg {sr_hw STATUS[2];} ecc_STATUS @0x00000018;
+    reg {srw_hrw SCACONFIG[3];} ecc_SCACONFIG @0x00000020;
     
     reg {srw_hrw SEED[32];} ecc_SEED[12] @0x00000080;
     reg {srw_hr MSG[32];} ecc_MSG[12] @0x00000100;

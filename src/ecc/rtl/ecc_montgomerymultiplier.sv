@@ -46,12 +46,13 @@ module ecc_montgomerymultiplier #(
     localparam  int unsigned S_NUM = $ceil(real'(REG_SIZE) / RADIX) + 1;
     localparam  int unsigned FULL_REG_SIZE = S_NUM * RADIX;
     // Each PE performs two iterations out of S_NUM - 1
-    // See section 4.2 of Khatib_2019 paper.
+    // See section 4.2 of Elkhatib_2019 paper.
     // PE_UNITS does not include the last PE.
     // The last PE is instantiated separately.
     localparam  PE_UNITS = (S_NUM - 1) / 2 - 1;
+    localparam [FULL_REG_SIZE-REG_SIZE-1 : 0]       zero_pad        = '0;
 
-
+    localparam int T_WIDTH  = $clog2(2*(PE_UNITS+1)+1);
     //----------------------------------------------------------------
     // Registers
     //----------------------------------------------------------------
@@ -70,10 +71,10 @@ module ecc_montgomerymultiplier #(
     logic               sub_b_i[0:2*(PE_UNITS+1)];
     logic               sub_b_o[0:2*(PE_UNITS+1)];
     
-    logic   [FULL_REG_SIZE-1 : 0]          a_reg;
-    logic   [FULL_REG_SIZE+RADIX-1 : 0]    b_reg;  //extended with zero
-    logic   [FULL_REG_SIZE+RADIX-1 : 0]    p_reg;  //extended with zero
-    logic   [FULL_REG_SIZE+RADIX-1 : 0]    p_neg_reg; //extended with one
+    logic   [FULL_REG_SIZE-1 : 0]     a_reg;  //extended with zero
+    logic   [FULL_REG_SIZE-1 : 0]     b_reg;  //extended with zero
+    logic   [FULL_REG_SIZE-1 : 0]     p_reg;  //extended with zero
+    logic   [FULL_REG_SIZE-1 : 0]     p_neg_reg; //extended with one
     logic   [RADIX-1:0]               n_prime_reg;
     logic   [3*S_NUM-1 : 0]           push_reg;
     logic                             push_reg_eq_zero;
@@ -177,9 +178,9 @@ module ecc_montgomerymultiplier #(
     always_ff @(posedge clk) 
     begin : input_reg
         if (start_i) begin
-            a_reg <= opa_i;
-            b_reg <= opb_i;
-            p_reg <= n_i;
+            a_reg <= {zero_pad, opa_i};
+            b_reg <= {zero_pad, opb_i};
+            p_reg <= {zero_pad, n_i};
             n_prime_reg <= n_prime_i;
         end else begin
             if (odd) begin
@@ -223,6 +224,8 @@ module ecc_montgomerymultiplier #(
     genvar t0;
     generate 
         for (t0=0; t0 < 2*(PE_UNITS+1)+1; t0++) begin : gen_sub_t
+            parameter [T_WIDTH-1 : 0] t0_idx = t0;
+
             if (t0 == 0)
                 always_comb sub_b_i[t0] = 1;
             else
@@ -232,7 +235,8 @@ module ecc_montgomerymultiplier #(
                 //if (~reset_n)
                 //    sub_res[t0] = 0;
                 //else if (push_reg[2*(PE_UNITS+1) - t0])
-                sub_res[t0] = {1'b0, s_array[t0 >> 1]} + p_neg_array[t0] + sub_b_i[t0];
+                
+                sub_res[t0] = s_array[t0_idx >> 1] + p_neg_array[t0] + sub_b_i[t0];
                 
                 sub_b_o[t0] = sub_res[t0][RADIX];
             end
@@ -242,13 +246,15 @@ module ecc_montgomerymultiplier #(
     genvar t;
     generate 
         for (t=0; t < 2*(PE_UNITS+1)+1; t++) begin : gen_t_reg
+            parameter [T_WIDTH-1 : 0] t_idx = t;
+
             always_ff @(posedge clk) begin
                 if (~reset_n) begin
                     t_reg[t] <= 'b0;
                     t_subtracted_reg[t] <= 'b0;
                 end
                 else if (push_reg[2*(PE_UNITS+1) - t]) begin
-                    t_reg[t] <= s_array[t >> 1];
+                    t_reg[t] <= s_array[t_idx >> 1];
                     t_subtracted_reg[t] <= sub_res[t][RADIX-1 : 0];
                 end
                 else begin

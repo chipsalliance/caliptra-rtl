@@ -34,29 +34,24 @@ module ecc_fau #(
 
     // DATA PORT
     input  wire                 sub_i,
-    input  wire                 red_i,
     input  wire                 mult_start_i,
     input  wire [REG_SIZE-1:0]  prime_i,
     input  wire [RADIX-1 : 0]   mult_mu_i,
     input  wire [REG_SIZE-1:0]  opa_i,
     input  wire [REG_SIZE-1:0]  opb_i,
     output wire [REG_SIZE-1:0]  add_res_o,
-    output wire [REG_SIZE-1:0]  mult_res_o,
-    output wire                 ready_o
+    output wire [REG_SIZE-1:0]  mult_res_o
     );
 
     logic [REG_SIZE-1 : 0]  mult_res_s;
     logic [REG_SIZE-1 : 0]  mult_opa;
     logic [REG_SIZE-1 : 0]  mult_opb;
-    logic                   mult_ready;
     logic [REG_SIZE-1 : 0]  add_res_s;
-    logic                   add_ready;
     
     reg                     mult_start;
     reg                     mult_start_dly;
     wire                    mult_start_edge;
     reg                     sub;
-    reg                     red;
 
     assign mult_opa = opa_i;
     assign mult_opb = opb_i;
@@ -80,7 +75,7 @@ module ecc_fau #(
         .n_i(prime_i),
         .n_prime_i(mult_mu_i), // only need the last few bits
         .p_o(mult_res_s),
-        .ready_o(mult_ready)
+        .ready_o()
     );
 
 
@@ -96,21 +91,22 @@ module ecc_fau #(
         .clk(clk),
         .reset_n(reset_n),
 
-        .red_i(red),
         .sub_i(sub),
         .opa_i(opa_i),
         .opb_i(opb_i),
         .prime_i(prime_i),
         .res_o(add_res_s),
-        .ready_o(add_ready)
+        .ready_o()
         );
 
 
     always_ff @(posedge clk) begin
-            mult_start <= mult_start_i;
-            mult_start_dly <= mult_start;
-            sub <= sub_i;
-            red <= red_i;
+        mult_start <= mult_start_i;
+        sub <= sub_i;
+    end
+
+    always_ff @(posedge clk) begin
+        mult_start_dly <= mult_start;
     end
     
     assign mult_start_edge = mult_start & ~mult_start_dly;

@@ -17,14 +17,35 @@
 // hmac_drbg.v
 // ------
 // HMAC384-drbg top-level wrapper with 384 bit data access.
+// The module supports two different modes:
+//
+// Mode 0: Based on section 10.1.2. of NIST SP 800-90A, Rev 1:
+//         "Recommendation for Random Number Generation Using 
+//         Deterministic Random Bit Generators"
+//         Functionality:
+//         Using the given "seed", the module generates a random number 
+//         with 384-bit. This mode is used in keygen operation in 
+//         deterministic ECDSA. 
+//         This mode is also used to generate different random numbers
+//         by a given seed "IV" to feed side-channel countermeasures in
+//         ECC architecture.
+//
+// Mode 1: Based on section 3.1. RFC 6979: "Deterministic Usage of the 
+//         Digital Signature Algorithm (DSA) and Elliptic Curve Digital 
+//         Signature Algorithm (ECDSA)"
+//         Functionality:
+//         Using the given "privkey" and "hashed_msg", this module 
+//         generates a 384-bit nonce "k" used in signing operation in
+//         deterministic ECDSA. 
+// 
 //
 //======================================================================
 
 module hmac_drbg  
 #(
-  parameter REG_SIZE        = 384,
-  parameter SEED_SIZE       = 384,
-  parameter HMAC_DRBG_PRIME = 384'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC7634D81F4372DDF581A0DB248B0A77AECEC196ACCC52973
+  parameter                  REG_SIZE        = 384,
+  parameter                  SEED_SIZE       = 384,
+  parameter [REG_SIZE-1 : 0] HMAC_DRBG_PRIME = 384'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC7634D81F4372DDF581A0DB248B0A77AECEC196ACCC52973
 )    
 (
   // Clock and reset.
@@ -33,8 +54,8 @@ module hmac_drbg
 
   //Control
   input wire                        mode,
-  input wire                        init,
-  input wire                        next,
+  input wire                        init_cmd,
+  input wire                        next_cmd,
   output wire                       ready,
   output wire                       valid,
 
@@ -48,8 +69,8 @@ module hmac_drbg
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam V_init = 384'h010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101;
-  localparam K_init = 384'h000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+  localparam [REG_SIZE-1 : 0] V_init = 384'h010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101;
+  localparam [REG_SIZE-1 : 0] K_init = 384'h000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
 
   localparam CNT_SIZE = 8;
   localparam ZERO_PAD_MODE0_K   = 1024 - REG_SIZE - SEED_SIZE - CNT_SIZE - 32'd1 - 32'd12; // 1 for header and 12 bit for message length  
@@ -57,60 +78,6 @@ module hmac_drbg
 
   localparam [11 : 0] MODE0_K_SIZE  = 1024 + REG_SIZE + SEED_SIZE + CNT_SIZE;
   localparam [11 : 0] V_SIZE        = 1024 + REG_SIZE;
-  //----------------------------------------------------------------
-  // Registers including update variables and write enable.
-  //----------------------------------------------------------------
-  reg                   ready_reg;
-  reg                   valid_reg;
-  reg [REG_SIZE-1 : 0]  nonce_reg;
-  reg [CNT_SIZE-1 : 0]  cnt_reg;
-  reg                   first_round;
-  reg                   HMAC_tag_valid_last;
-  reg                   HMAC_tag_valid_edge;
-
-
-  reg [REG_SIZE-1:0]    K_reg;
-  reg [REG_SIZE-1:0]    V_reg;
-  //----------------------------------------------------------------
-  // Register/Wires for HMAC-384 module instantiation.
-  //----------------------------------------------------------------
-  reg                   HMAC_init;
-  reg                   HMAC_next;
-  reg  [1023:0]         HMAC_block;
-  reg  [REG_SIZE-1:0]   HMAC_key;
-
-  wire                  HMAC_ready;
-  wire                  HMAC_tag_valid;
-  wire [REG_SIZE-1:0]   HMAC_tag;
-
-  //----------------------------------------------------------------
-  // HMAC module instantiation.
-  //----------------------------------------------------------------
-  hmac_core HMAC_K
-  (
-   .clk(clk),
-   .reset_n(reset_n),
-   .init_cmd(HMAC_init),
-   .next_cmd(HMAC_next),  // There will be no next message! 
-   .key(HMAC_key),
-   .block_msg(HMAC_block),
-   .ready(HMAC_ready),
-   .tag(HMAC_tag),
-   .tag_valid(HMAC_tag_valid)
-  );
-
-  
-  //----------------------------------------------------------------
-  // FSM_flow
-  //
-  // This FSM starts with the init_cmd command and then generates a nonce.
-  // Active low and async reset.
-  //----------------------------------------------------------------
-
-  /*State register*/
-  reg [4:0]  nonce_st_reg;
-  reg [4:0]  nonce_next_st;
-  reg [4:0]  nonce_st_reg_last;
 
   /*STATES*/
   localparam NONCE_IDLE_ST      = 0;  // IDLE WAIT and Return step
@@ -138,15 +105,68 @@ module hmac_drbg
   localparam MODE1_V3_ST        = 28;  // V = HMAC_K(V) and Jump to SIGN_T2_ST 
   localparam MODE1_DONE_ST      = 29;
 
+  //----------------------------------------------------------------
+  // Registers including update variables and write enable.
+  //----------------------------------------------------------------
+  
+  /*State register*/
+  reg [4:0]  nonce_st_reg;
+  reg [4:0]  nonce_next_st;
+  reg [4:0]  nonce_st_reg_last;
+  
+  reg                   ready_reg;
+  reg                   valid_reg;
+  reg [REG_SIZE-1 : 0]  nonce_reg;
+  reg [CNT_SIZE-1 : 0]  cnt_reg;
+  reg                   first_round;
+  reg                   HMAC_tag_valid_last;
+  reg                   HMAC_tag_valid_edge;
 
+
+  reg [REG_SIZE-1:0]    K_reg;
+  reg [REG_SIZE-1:0]    V_reg;
+
+  //----------------------------------------------------------------
+  // Register/Wires for HMAC-384 module instantiation.
+  //----------------------------------------------------------------
+  reg                   HMAC_init;
+  reg                   HMAC_next;
+  reg  [1023:0]         HMAC_block;
+  reg  [REG_SIZE-1:0]   HMAC_key;
+
+  wire                  HMAC_ready;
+  wire                  HMAC_tag_valid;
+  wire [REG_SIZE-1:0]   HMAC_tag;
+
+  //----------------------------------------------------------------
+  // HMAC module instantiation.
+  //----------------------------------------------------------------
+  hmac_core HMAC_K
+  (
+   .clk(clk),
+   .reset_n(reset_n),
+   .init_cmd(HMAC_init),
+   .next_cmd(HMAC_next),
+   .key(HMAC_key),
+   .block_msg(HMAC_block),
+   .ready(HMAC_ready),
+   .tag(HMAC_tag),
+   .tag_valid(HMAC_tag_valid)
+  );
+
+  //----------------------------------------------------------------
+  // reg_update
+  // Update functionality for all registers in the core.
+  //----------------------------------------------------------------
+  
   always @*
-  begin
-    first_round = (nonce_st_reg == nonce_st_reg_last)? 0 : 1;
+  begin : edge_detector
+    first_round = (nonce_st_reg == nonce_st_reg_last)? 1'b0 : 1'b1;
     HMAC_tag_valid_edge = HMAC_tag_valid & (!HMAC_tag_valid_last);
-  end
+  end // edge_detector
 
   always @ (posedge clk) 
-  begin
+  begin 
     HMAC_tag_valid_last <= HMAC_tag_valid;
   end
 
@@ -159,7 +179,7 @@ module hmac_drbg
   end
 
   always @ (posedge clk) 
-  begin
+  begin : valid_nonce_regs_updates
     if (!reset_n) begin
       valid_reg   <= 0;
       nonce_reg   <= '0;
@@ -168,7 +188,7 @@ module hmac_drbg
     begin
       case(nonce_st_reg)
         NONCE_IDLE_ST: begin
-          if (init | next)
+          if (init_cmd | next_cmd)
             valid_reg    <= 0;
         end
 
@@ -181,12 +201,17 @@ module hmac_drbg
           nonce_reg   <= HMAC_tag;
           valid_reg   <= HMAC_tag_valid;
         end
+
+        default: begin
+          valid_reg   <= 0;
+          nonce_reg   <= '0;
+        end
       endcase
     end
-  end
+  end // valid_nonce_regs_updates
 
   always @ (posedge clk) 
-  begin
+  begin : hmac_inputs_update
     HMAC_init <= 0;
     HMAC_next <= 0;
     if (first_round) begin
@@ -256,6 +281,10 @@ module hmac_drbg
           V_reg   <= HMAC_tag;
         end 
 
+        MODE1_K3_ST: begin
+          HMAC_init <= 1;
+        end
+
         MODE1_V3_ST: begin
           HMAC_init <= 1;
           K_reg   <= HMAC_tag;
@@ -265,12 +294,17 @@ module hmac_drbg
           V_reg   <= HMAC_tag;
         end
 
+        default: begin
+           HMAC_init <= 0;
+           HMAC_next <= 0;
+        end 
+
       endcase;
     end
-  end
+  end // hmac_inputs_update
 
   always @*
-  begin
+  begin : hmac_block_update
     HMAC_key = K_reg;
     case(nonce_st_reg)
       MODE0_K1_ST:    HMAC_block  = {V_reg, cnt_reg, seed, 1'h1, {ZERO_PAD_MODE0_K{1'b0}}, MODE0_K_SIZE};
@@ -288,10 +322,10 @@ module hmac_drbg
       MODE1_V3_ST:    HMAC_block  = {V_reg, 1'h1, {ZERO_PAD_V{1'b0}}, V_SIZE};
       default:        HMAC_block  = '0;
     endcase;
-  end
+  end // hmac_block_update
      
   always @ (posedge clk) 
-  begin
+  begin : cnt_reg_update
     if (!reset_n)
       cnt_reg    <= '0;
     else begin
@@ -305,23 +339,33 @@ module hmac_drbg
         default:            cnt_reg    <= cnt_reg;
       endcase
     end
-  end
+  end // cnt_reg_update
 
   always @ (posedge clk) 
-  begin
-    if (!reset_n) begin
+  begin : state_update
+    if (!reset_n) 
       nonce_st_reg      <= NONCE_IDLE_ST;
-      nonce_st_reg_last <= NONCE_IDLE_ST;
-    end
-    else begin
+    else 
       nonce_st_reg      <= nonce_next_st;
-      nonce_st_reg_last <= nonce_st_reg;
-    end
-  end
+  end // state_update
 
+  always @ (posedge clk) 
+  begin : ff_state_update
+    if (!reset_n) 
+      nonce_st_reg_last <= NONCE_IDLE_ST;
+    else 
+      nonce_st_reg_last <= nonce_st_reg;
+  end // ff_state_update
+   
+  //----------------------------------------------------------------
+  // FSM_flow
+  //
+  // This FSM starts with the init command and then generates a nonce.
+  // Active low and async reset.
+  //----------------------------------------------------------------
 
   always @*
-  begin: nonce_fsm
+  begin: state_logic
     if (!reset_n)
       nonce_next_st    = NONCE_IDLE_ST;
     else
@@ -330,7 +374,7 @@ module hmac_drbg
         NONCE_IDLE_ST: // IDLE WAIT
         begin
           if (HMAC_ready) begin
-            case ({init, next, mode})
+            case ({init_cmd, next_cmd, mode})  // check the mode
               3'b100 :    nonce_next_st    = MODE0_INIT_ST;
               3'b101 :    nonce_next_st    = MODE1_INIT_ST;
               3'b010 :    nonce_next_st    = MODE0_NEXT_ST;
@@ -467,7 +511,7 @@ module hmac_drbg
 
         MODE1_CHCK_ST:
         begin
-          if (nonce_reg==0 || HMAC_tag > HMAC_DRBG_PRIME)
+          if ((HMAC_tag==0) || (HMAC_tag > HMAC_DRBG_PRIME))
             nonce_next_st    = MODE1_K3_ST;
           else
             nonce_next_st    = MODE1_DONE_ST;
@@ -494,11 +538,14 @@ module hmac_drbg
           nonce_next_st    = NONCE_IDLE_ST;
         end
 
-      endcase  // case (nonce_st)
+      endcase
     end
 
-  end //nonce_fsm
+  end //state_logic
 
+  //----------------------------------------------------------------
+  // Concurrent connectivity for ports etc.
+  //----------------------------------------------------------------
   assign ready = ready_reg; 
   assign valid = valid_reg;
   assign nonce = nonce_reg;

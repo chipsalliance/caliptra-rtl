@@ -44,18 +44,22 @@ module ecc_ram_tdp_file #(
     // Declare the RAM variable
 	reg [DATA_WIDTH-1:0] mem[2**ADDR_WIDTH-1:0];
 
-    always_ff @ (posedge clk) begin
-        if (ena) begin
+    always_ff @ (posedge clk) 
+    begin : reading_memory
+        if (ena)
             douta <= mem[addra];
-            if(wea)
-                mem[addra] <= dina;
-        end
 
-        if (enb) begin
+        if (enb)
             doutb <= mem[addrb];
-            if(web)
-                mem[addrb] <= dinb;
-        end
-    end
+    end // reading_memory
+
+    always_ff @ (posedge clk) 
+    begin : writing_memory
+        if (ena & wea)
+            mem[addra] <= dina;
+
+        if (enb & web)
+            mem[addrb] <= dinb;
+    end // writing_memory
 
 endmodule

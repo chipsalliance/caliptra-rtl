@@ -20,12 +20,10 @@
 //
 //
 //======================================================================
+localparam integer UOP_ADDR_WIDTH    = 6;
+localparam integer OPR_ADDR_WIDTH    = 6;
 
-localparam INSTRUCTION_LENGTH       = 24;    // opcode + 2 * operand
-localparam PROG_ADDR_W              = 15;
-
-localparam integer UOP_ADDR_WIDTH    = 8;
-localparam integer OPR_ADDR_WIDTH    = 8;
+localparam INSTRUCTION_LENGTH       = UOP_ADDR_WIDTH + 2*OPR_ADDR_WIDTH;    // opcode + 2 * operand
 
 localparam [UOP_ADDR_WIDTH-1 : 0] UOP_NOP                   = 8'b0000_0000;
 
@@ -41,14 +39,14 @@ localparam [UOP_ADDR_WIDTH-1 : 0] UOP_DO_ADD_q              = 8'b0010_1000;
 localparam [UOP_ADDR_WIDTH-1 : 0] UOP_DO_SUB_q              = 8'b0010_1100;
 localparam [UOP_ADDR_WIDTH-1 : 0] UOP_ST_ADD_q              = 8'b0010_0010;
 
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_DONTCARE          = 8'dX;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_DONTCARE          = 6'dX;
 
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_ZERO        = 8'd00;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_ONE         = 8'd01;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_E_a         = 8'd02;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_E_3b        = 8'd03;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_ONE_MONT    = 8'd04;  // Mont_mult(1, R2) % p
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_R2_p        = 8'd05;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_ZERO        = 6'd00;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_ONE         = 6'd01;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_E_a         = 6'd02;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_E_3b        = 6'd03;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_ONE_MONT    = 6'd04;  // Mont_mult(1, R2) % p
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_R2_p        = 6'd05;
 
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_GX_MONT     = 8'd06;
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_GY_MONT     = 8'd07;
@@ -146,3 +144,5 @@ localparam PM_INIT_PK_S         = VER1_ST_E + 2;  // verifying2 R1 INIT with PK
 localparam PM_INIT_PK_E         = PM_INIT_PK_S + 5;
 localparam VER2_PA_S            = PM_INIT_PK_E + 2;  // verifying2 point addtion of PA((h*s_inv)*G, (r*s_inv)*PK)
 localparam VER2_PA_E            = VER2_PA_S + 81;
+
+localparam PROG_ADDR_W          = $clog2(VER2_PA_E+2); //15

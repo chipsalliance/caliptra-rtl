@@ -20,7 +20,6 @@
 //
 //======================================================================
 
-
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
@@ -59,15 +58,14 @@
   parameter ECC_ADDR_SIGNS0      = ECC_BASE_ADDR + 32'h00000380;
   parameter ECC_ADDR_SIGNS11     = ECC_BASE_ADDR + 32'h000003A8;
 
-  parameter ECC_CORE_NAME        = 64'h38342D33_63707365; // "secp-384"
-  parameter ECC_CORE_VERSION     = 64'h00000000_3030312e; // "1.00"
+  parameter [63  : 0] ECC_CORE_NAME        = 64'h38342D33_63707365; // "secp-384"
+  parameter [63  : 0] ECC_CORE_VERSION     = 64'h00000000_3030312e; // "1.00"
 
   // Implementation parameters for field arithmetic
-  parameter REG_SIZE         = 384;
-  parameter RND_SIZE         = 64;
-  parameter RADIX            = 32;
-  parameter ADD_NUM_ADDS     = 1;
-  parameter ADD_BASE_SZ      = 384;
+  parameter REG_SIZE             = 384;
+  parameter RADIX                = 32;
+  parameter ADD_NUM_ADDS         = 1;
+  parameter ADD_BASE_SZ          = 384;
 
   // prime parameters in Montgomery domain
   parameter [REG_SIZE-1 : 0] PRIME       = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff;
@@ -87,6 +85,32 @@
   parameter [REG_SIZE-1 : 0] ONE_q_MONT  = 384'h389cb27e0bc8d220a7e5f24db74f58851313e695333ad68d00000000;
   parameter [RADIX-1 : 0] GROUP_ORDER_mu = 32'he88fdc45;
   
+  // Side-channel countermeasures configuration
+
+  // Randomized Projective Coordinates countermeasure based on section 5.3 
+  // "Resistance against Differential Power Analysis for Elliptic Curve 
+  // Cryptosystems" in CHES 1999 by Coron, J.  
+  // This countermesure uses a random value "lambda" in point multiplication
+  // (Q = k * P) in keygen/signing to randomiza base point P = (X, Y, 1)
+  // as follows:
+  // P = (X * Lambda, Y * lambda, Lambda)
+  parameter                   sca_point_rnd_init     = 1;
+
+  // Scalar blinding countermeasure based on section 5.1 
+  // "Resistance against Differential Power Analysis for Elliptic Curve 
+  // Cryptosystems" in CHES 1999 by Coron, J.  
+  // This countermeasure uses a random value "r" in the point multiplication
+  // (Q = k * P) in keygen/signing to randomiza scalar k as follows:
+  // k = k + r*group_order
+  parameter                   sca_scalar_rnd_init    = 1;
+  parameter [7  : 0]          RND_SIZE               = 192;
+  
+
+  // Masking sign countermeasure uses a random value "d" in the signing 
+  // operation to generate signature proof s = (privkey * r + h)*k_inv 
+  // as follows:
+  // s = [((privkey - d) * r + (h - d)) * k_inv] + [(d * r + d) * k_inv]
+  parameter                   sca_mask_sign_init     = 1;
 //======================================================================
 // EOF ecc_params.sv
 //======================================================================

@@ -36,7 +36,7 @@ module ecc_adder #(
     logic [N : 0]   s_full;
 
     always_comb begin
-        s_full = {1'b0, a} + {1'b0, b} + cin;
+        s_full = a + b + cin;
     end
         
     assign s = s_full[N-1 : 0];
