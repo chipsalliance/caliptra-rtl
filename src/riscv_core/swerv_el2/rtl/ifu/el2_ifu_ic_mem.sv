@@ -50,7 +50,6 @@ import el2_pkg::*;
       output logic [pt.ICACHE_BANKS_WAY-1:0]        ic_parerr,          // ecc error per bank
       input logic [pt.ICACHE_NUM_WAYS-1:0]          ic_tag_valid,       // Valid from the I$ tag valid outside (in flops).
 
-      el2_mem_if                                    ic_mem_export,
 
       output logic [pt.ICACHE_NUM_WAYS-1:0]         ic_rd_hit,          // ic_rd_hit[3:0]
       output logic                                  ic_tag_perr,        // Tag Parity error
@@ -63,19 +62,17 @@ import el2_pkg::*;
    EL2_IC_TAG #(.pt(pt)) ic_tag_inst
           (
            .*,
-           .ic_wr_en          (ic_wr_en[pt.ICACHE_NUM_WAYS-1:0]   ),
-           .ic_debug_addr     (ic_debug_addr[pt.ICACHE_INDEX_HI:3]),
-           .ic_rw_addr        (ic_rw_addr[31:3]                   ),
-           .ic_tag_mem_export (ic_mem_export.swerv_ic_tag         )
+           .ic_wr_en     (ic_wr_en[pt.ICACHE_NUM_WAYS-1:0]),
+           .ic_debug_addr(ic_debug_addr[pt.ICACHE_INDEX_HI:3]),
+           .ic_rw_addr   (ic_rw_addr[31:3])
            ) ;
 
    EL2_IC_DATA #(.pt(pt)) ic_data_inst
           (
            .*,
-           .ic_wr_en          (ic_wr_en[pt.ICACHE_NUM_WAYS-1:0]   ),
-           .ic_debug_addr     (ic_debug_addr[pt.ICACHE_INDEX_HI:3]),
-           .ic_rw_addr        (ic_rw_addr[31:1]                   ),
-           .ic_data_mem_export(ic_mem_export.swerv_ic_data        )
+           .ic_wr_en     (ic_wr_en[pt.ICACHE_NUM_WAYS-1:0]),
+           .ic_debug_addr(ic_debug_addr[pt.ICACHE_INDEX_HI:3]),
+           .ic_rw_addr   (ic_rw_addr[31:1])
            ) ;
 
  endmodule
@@ -112,8 +109,6 @@ import el2_pkg::*;
       input logic [pt.ICACHE_NUM_WAYS-1:0]   ic_debug_way,        // Debug way. Rd or Wr.
       input logic [63:0]                     ic_premux_data,      // Premux data to be muxed with each way of the Icache.
       input logic                            ic_sel_premux_data,  // Select the pre_muxed data
-
-      el2_mem_if.swerv_ic_data                      ic_data_mem_export,
 
       input logic [pt.ICACHE_NUM_WAYS-1:0]ic_rd_hit,
       input  logic                         scan_mode
@@ -252,17 +247,27 @@ import el2_pkg::*;
     logic [pt.ICACHE_NUM_WAYS-1:0][pt.ICACHE_BANKS_WAY-1:0]                                 any_bypass_up;
     logic [pt.ICACHE_NUM_WAYS-1:0][pt.ICACHE_BANKS_WAY-1:0]                                 any_addr_match_up;
 
-`define EL2_IC_DATA_SRAM(depth,width)                                                                                   \
-        always_comb begin                                                                                               \
-            // Only drive these signals for the first WAY since they are replicated                                          \
-            if (i == 0) begin                                                                                                \
-                ic_data_mem_export.ic_data_sb_wr_data[k][``width-1:0] = ic_sb_wr_data[k][``width-1:0];                       \
-                ic_data_mem_export.ic_data_addr_bank_q[k]             = ic_rw_addr_bank_q[k];                                \
-            end                                                                                                              \
-            ic_data_mem_export.ic_data_bank_way_clken[k][i]  = ic_bank_way_clken_final_up[i][k];                             \
-            ic_data_mem_export.ic_data_wren[k][i]            = ic_b_sb_wren[k][i];                                           \
-            wb_dout_pre_up[i][k]                             = ic_data_mem_export.ic_data_dout_pre[k][``width * i+:``width]; \
-        end                                                                                                                  \
+`define EL2_IC_DATA_SRAM(depth,width)                                                                               \
+           ram_``depth``x``width ic_bank_sb_way_data (                                                               \
+                                     .ME(ic_bank_way_clken_final_up[i][k]),                                          \
+                                     .WE (ic_b_sb_wren[k][i]),                                                       \
+                                     .D  (ic_sb_wr_data[k][``width-1:0]),                                            \
+                                     .ADR(ic_rw_addr_bank_q[k][pt.ICACHE_INDEX_HI:pt.ICACHE_DATA_INDEX_LO]),         \
+                                     .Q  (wb_dout_pre_up[i][k]),                                                     \
+                                     .CLK (clk),                                                                     \
+                                     .ROP ( ),                                                                       \
+                                     .TEST1(1'b0),                                                                   \
+                                     .RME(1'b0),                                                                     \
+                                     .RM(4'b0000),                                                                   \
+                                                                                                                     \
+                                     .LS(1'b0),                                                                      \
+                                     .DS(1'b0),                                                                      \
+                                     .SD(1'b0),                                                                      \
+                                                                                                                     \
+                                     .TEST_RNM(1'b0),                                                                \
+                                     .BC1(1'b0),                                                                     \
+                                     .BC2(1'b0)                                                                      \
+                                    );  \
 if (pt.ICACHE_BYPASS_ENABLE == 1) begin \
                  assign wrptr_in_up[i][k] = (wrptr_up[i][k] == (pt.ICACHE_NUM_BYPASS-1)) ? '0 : (wrptr_up[i][k] + 1'd1);                                    \
                  rvdffs  #(pt.ICACHE_NUM_BYPASS_WIDTH)  wrptr_ff(.*, .clk(active_clk),  .en(|write_bypass_en_up[i][k]), .din (wrptr_in_up[i][k]), .dout(wrptr_up[i][k])) ;     \
@@ -393,15 +398,28 @@ if (pt.ICACHE_BYPASS_ENABLE == 1) begin \
 
 // SRAM macros
 
-`define EL2_PACKED_IC_DATA_SRAM(depth,width,waywidth)                                                                     \
-        always_comb begin                                                                                                       \
-            ic_data_mem_export.ic_data_bank_way_clken[k]             = {pt.ICACHE_NUM_WAYS{ic_bank_way_clken_final[k]}};        \
-            ic_data_mem_export.ic_data_wren[k]                       = ic_b_sb_wren[k];                                         \
-            ic_data_mem_export.ic_data_sb_wr_data[k][``waywidth-1:0] = ic_sb_wr_data[k][``waywidth-1:0];                        \
-            ic_data_mem_export.ic_data_bit_en_vec[k]                 = ic_b_sb_bit_en_vec[k];                                   \
-            ic_data_mem_export.ic_data_addr_bank_q[k]                = ic_rw_addr_bank_q[k];                                    \
-            wb_packeddout_pre[k]                                     = ic_data_mem_export.ic_data_dout_pre[k];                  \
-        end                                                                                                                     \
+`define EL2_PACKED_IC_DATA_SRAM(depth,width,waywidth)                                                                                                 \
+            ram_be_``depth``x``width  ic_bank_sb_way_data (                                                                                           \
+                            .CLK   (clk),                                                                                                             \
+                            .WE    (|ic_b_sb_wren[k]),                                                    // OR of all the ways in the bank           \
+                            .WEM   (ic_b_sb_bit_en_vec[k]),                                               // 284 bits of bit enables                  \
+                            .D     ({pt.ICACHE_NUM_WAYS{ic_sb_wr_data[k][``waywidth-1:0]}}),                                                          \
+                            .ADR   (ic_rw_addr_bank_q[k][pt.ICACHE_INDEX_HI:pt.ICACHE_DATA_INDEX_LO]),                                                \
+                            .Q     (wb_packeddout_pre[k]),                                                                                            \
+                            .ME    (|ic_bank_way_clken_final[k]),                                                                                     \
+                            .ROP   ( ),                                                                                                               \
+                            .TEST1    (1'b0                        ),                                                                                 \
+                            .RME      (1'b0                        ),                                                                                 \
+                            .RM       (4'b0000                     ),                                                                                 \
+                                                                                                                                                      \
+                            .LS       (1'b0                        ),                                                                                 \
+                            .DS       (1'b0                        ),                                                                                 \
+                            .SD       (1'b0                        ),                                                                                 \
+                                                                                                                                                      \
+                            .TEST_RNM (1'b0                        ),                                                                                 \
+                            .BC1      (1'b0                        ),                                                                                 \
+                            .BC2      (1'b0                        )                                                                                  \
+                           );                                                                                                                         \
                                                                                                                                                       \
               if (pt.ICACHE_BYPASS_ENABLE == 1) begin                                                                                                                                                 \
                                                                                                                                                                                                       \
@@ -798,7 +816,6 @@ import el2_pkg::*;
       input logic                                                  ic_debug_tag_array,   // Debug tag array
       input logic [pt.ICACHE_NUM_WAYS-1:0]                         ic_debug_way,         // Debug way. Rd or Wr.
 
-      el2_mem_if.swerv_ic_tag                                      ic_tag_mem_export,
 
       output logic [25:0]                                          ictag_debug_rd_data,
       input  logic [70:0]                                          ic_debug_wr_data,     // Debug wr cache.
@@ -939,16 +956,30 @@ end // block: OTHERS
     logic [pt.ICACHE_NUM_WAYS-1:0]        any_addr_match;
     logic [pt.ICACHE_NUM_WAYS-1:0]        ic_tag_clken_final;
 
-      `define EL2_IC_TAG_SRAM(depth,width)                                                                                          \
-          always_comb begin                                                                                                         \
-              if (i == 0) begin                                                                                                     \
-                  ic_tag_mem_export.ic_tag_wr_data[``width-1:0]   = ic_tag_wr_data[``width-1:0];                                    \
-                  ic_tag_mem_export.ic_tag_addr_q                 = ic_rw_addr_q;                                                   \
-              end                                                                                                                   \
-              ic_tag_mem_export.ic_tag_clken_final[i]         = ic_tag_clken_final[i];                                              \
-              ic_tag_mem_export.ic_tag_wren_q[i]              = ic_tag_wren_q[i];                                                   \
-              ic_tag_data_raw_pre[i][``width-1:0]             = ic_tag_mem_export.ic_tag_data_raw_pre[``width * i+:``width];        \
-          end \
+      `define EL2_IC_TAG_SRAM(depth,width)                                                                                                      \
+                                  ram_``depth``x``width  ic_way_tag (                                                                           \
+                                .ME(ic_tag_clken_final[i]),                                                                                     \
+                                .WE (ic_tag_wren_q[i]),                                                                                         \
+                                .D  (ic_tag_wr_data[``width-1:0]),                                                                              \
+                                .ADR(ic_rw_addr_q[pt.ICACHE_INDEX_HI:pt.ICACHE_TAG_INDEX_LO]),                                                  \
+                                .Q  (ic_tag_data_raw_pre[i][``width-1:0]),                                                                      \
+                                .CLK (clk),                                                                                                     \
+                                .ROP ( ),                                                                                                       \
+                                                                                                                                                \
+                                .TEST1   (1'b0                         ),                                                                       \
+                                .RME     (1'b0                         ),                                                                       \
+                                .RM      (4'b0000                      ),                                                                       \
+                                                                                                                                                \
+                                .LS      (1'b0                         ),                                                                       \
+                                .DS      (1'b0                         ),                                                                       \
+                                .SD      (1'b0                         ),                                                                       \
+                                                                                                                                                \
+                                .TEST_RNM(1'b0                         ),                                                                       \
+                                .BC1     (1'b0                         ),                                                                       \
+                                .BC2     (1'b0                         )                                                                        \
+                                                                                                                                                \
+                               );                                                                                                               \
+                                                                                                                                                \
                                                                                                                                                 \
                                                                                                                                                 \
                                                                                                                                                 \
@@ -1128,14 +1159,30 @@ end // block: OTHERS
     logic                                ic_tag_clken_final;
 
 `define EL2_IC_TAG_PACKED_SRAM(depth,width)                                                               \
-          always_comb begin                                                                                                         \
-              ic_tag_mem_export.ic_tag_clken_final                                 = {pt.ICACHE_NUM_WAYS{ic_tag_clken_final}};                  \
-              ic_tag_mem_export.ic_tag_wren_q                                      = ic_tag_wren_q;                                             \
-              ic_tag_mem_export.ic_tag_wren_biten_vec                              = ic_tag_wren_biten_vec;                                     \
-              ic_tag_mem_export.ic_tag_wr_data[``width/pt.ICACHE_NUM_WAYS-1:0]     = ic_tag_wr_data[``width/pt.ICACHE_NUM_WAYS-1:0];            \
-              ic_tag_mem_export.ic_tag_addr_q                                      = ic_rw_addr_q;                                              \
-              ic_tag_data_raw_packed_pre[``width-1:0]                              = ic_tag_mem_export.ic_tag_data_raw_pre[``width-1:0];        \
-          end                                                                                                                                   \
+                  ram_be_``depth``x``width  ic_way_tag (                                                   \
+                                .ME  ( ic_tag_clken_final),                                                \
+                                .WE  (|ic_tag_wren_q[pt.ICACHE_NUM_WAYS-1:0]),                             \
+                                .WEM (ic_tag_wren_biten_vec[``width-1:0]),                                 \
+                                                                                                           \
+                                .D   ({pt.ICACHE_NUM_WAYS{ic_tag_wr_data[``width/pt.ICACHE_NUM_WAYS-1:0]}}), \
+                                .ADR (ic_rw_addr_q[pt.ICACHE_INDEX_HI:pt.ICACHE_TAG_INDEX_LO]),            \
+                                .Q   (ic_tag_data_raw_packed_pre[``width-1:0]),                            \
+                                .CLK (clk),                                                                \
+                                .ROP ( ),                                                                  \
+                                                                                                           \
+                                .TEST1    (1'b0                                  ),                        \
+                                .RME      (1'b0                                  ),                        \
+                                .RM       (4'b0000                               ),                        \
+                                                                                                           \
+                                .LS       (1'b0                                  ),                        \
+                                .DS       (1'b0                                  ),                        \
+                                .SD       (1'b0                                  ),                        \
+                                                                                                           \
+                                .TEST_RNM (1'b0                                  ),                        \
+                                .BC1      (1'b0                                  ),                        \
+                                .BC2      (1'b0                                  )                         \
+                                                                                                           \
+                               );                                                                          \
                                                                                                            \
               if (pt.ICACHE_TAG_BYPASS_ENABLE == 1) begin                                                                                                                                             \
                                                                                                                                                                                                       \

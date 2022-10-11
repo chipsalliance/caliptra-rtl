@@ -33,25 +33,6 @@ logic clk;
 
 
 //////////////////////////////////////////
-// IC (Cache) Data
-logic [pt.ICACHE_BANKS_WAY-1:0][pt.ICACHE_NUM_WAYS-1:0]                                 ic_data_wren;    //bank x ways
-logic [pt.ICACHE_BANKS_WAY-1:0][pt.ICACHE_NUM_WAYS-1:0]                                 ic_data_bank_way_clken; // Different based on WAYPACK
-logic [pt.ICACHE_BANKS_WAY-1:0][70:0]                                                   ic_data_sb_wr_data;
-logic [pt.ICACHE_BANKS_WAY-1:0][pt.ICACHE_INDEX_HI : pt.ICACHE_DATA_INDEX_LO]           ic_data_addr_bank_q;
-logic [pt.ICACHE_BANKS_WAY-1:0] [((68+(pt.ICACHE_ECC ? 3 : 0))*pt.ICACHE_NUM_WAYS)-1:0] ic_data_bit_en_vec, ic_data_dout_pre; // data and its bit enables WAYPACK = 1
-
-
-//////////////////////////////////////////
-// IC (Cache) Tag
-logic [pt.ICACHE_NUM_WAYS-1:0]                     ic_tag_wren_q;
-logic [pt.ICACHE_NUM_WAYS-1:0]                     ic_tag_clken_final; // Single bit for WAYPACK = 1
-logic [25:0]                                       ic_tag_wr_data; // Replicated across all WAYS
-logic [pt.ICACHE_INDEX_HI: pt.ICACHE_TAG_INDEX_LO] ic_tag_addr_q;
-logic [(26*pt.ICACHE_NUM_WAYS)-1 :0]               ic_tag_wren_biten_vec; // Only exists for WAYPACK = 1
-logic [(26*pt.ICACHE_NUM_WAYS)-1 :0]               ic_tag_data_raw_pre; // Differs by WAYPACK, use packed array for interface
-
-
-//////////////////////////////////////////
 // ICCM
 logic [pt.ICCM_NUM_BANKS-1:0]                                        iccm_clken;
 logic [pt.ICCM_NUM_BANKS-1:0]                                        iccm_wren_bank;
@@ -72,20 +53,6 @@ logic [pt.DCCM_NUM_BANKS-1:0] [pt.DCCM_FDATA_WIDTH-1:0]              dccm_bank_d
 
 //////////////////////////////////////////
 // MODPORTS
-modport swerv_ic_data (
-    input clk,
-    // IC (Cache) Data
-    output ic_data_wren, ic_data_bank_way_clken, ic_data_sb_wr_data, ic_data_addr_bank_q, ic_data_bit_en_vec,
-    input  ic_data_dout_pre
-);
-
-modport swerv_ic_tag (
-    input clk,
-    // IC (Cache) Tag
-    output ic_tag_wren_q, ic_tag_clken_final, ic_tag_wr_data, ic_tag_addr_q, ic_tag_wren_biten_vec,
-    input  ic_tag_data_raw_pre
-);
-
 modport swerv_iccm (
     input clk,
     // ICCM
@@ -102,12 +69,6 @@ modport swerv_dccm (
 
 modport top (
     input clk,
-    // IC (Cache) Data
-    input  ic_data_wren, ic_data_bank_way_clken, ic_data_sb_wr_data, ic_data_addr_bank_q, ic_data_bit_en_vec,
-    output ic_data_dout_pre,
-    // IC (Cache) Tag
-    input  ic_tag_wren_q, ic_tag_clken_final, ic_tag_wr_data, ic_tag_addr_q, ic_tag_wren_biten_vec,
-    output ic_tag_data_raw_pre,
     // ICCM
     input  iccm_clken, iccm_wren_bank, iccm_addr_bank, iccm_bank_wr_data,
     output iccm_bank_dout,

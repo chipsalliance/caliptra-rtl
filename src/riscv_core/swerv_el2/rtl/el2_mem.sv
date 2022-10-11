@@ -104,7 +104,6 @@ import el2_pkg::*;
 if ( pt.ICACHE_ENABLE ) begin: icache
    el2_ifu_ic_mem #(.pt(pt)) icm  (
       .clk_override(icm_clk_override),
-      .ic_mem_export(mem_export),
       .*
    );
 end
