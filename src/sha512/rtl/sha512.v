@@ -1,5 +1,6 @@
 //======================================================================
 // Updated by Caliptra team to modify data access width
+// and removing the work factor
 //
 // sha512.v
 // --------
@@ -75,16 +76,9 @@ module sha512 #(
 
   reg ready_reg;
 
-  reg work_factor_reg;
-  reg work_factor_new;
-  reg work_factor_we;
-
   reg [1 : 0] mode_reg;
   reg [1 : 0] mode_new;
   reg         mode_we;
-
-  reg [31 : 0] work_factor_num_reg;
-  reg          work_factor_num_we;
 
   localparam BLOCK_NO = 1024 / DATA_WIDTH;
   reg [DATA_WIDTH-1 : 0] block_reg [0 : BLOCK_NO-1];
@@ -133,8 +127,8 @@ module sha512 #(
                    .next_cmd(next_reg),
                    .mode(mode_reg),
 
-                   .work_factor(work_factor_reg),
-                   .work_factor_num(work_factor_num_reg),
+                   .work_factor(1'b0),
+                   .work_factor_num(32'b0),
 
                    .block_msg(core_block),
 
@@ -164,8 +158,6 @@ module sha512 #(
           init_reg            <= 1'h0;
           next_reg            <= 1'h0;
           mode_reg            <= MODE_SHA_512;
-          work_factor_reg     <= 1'h0;
-          work_factor_num_reg <= DEFAULT_WORK_FACTOR_NUM;
           ready_reg           <= 1'h0;
           digest_reg          <= 512'h0;
           digest_valid_reg    <= 1'h0;
@@ -179,12 +171,6 @@ module sha512 #(
 
           if (mode_we)
             mode_reg <= mode_new;
-
-          if (work_factor_we)
-            work_factor_reg <= work_factor_new;
-
-          if (work_factor_num_we)
-            work_factor_num_reg <= write_data[31 : 0];
 
           if (core_digest_valid)
             digest_reg <= core_digest;
@@ -207,9 +193,6 @@ module sha512 #(
       next_new           = 1'h0;
       mode_new           = MODE_SHA_512;
       mode_we            = 1'h0;
-      work_factor_new    = 1'h0;
-      work_factor_we     = 1'h0;
-      work_factor_num_we = 1'h0;
       block_we           = 1'h0;
       tmp_read_data      = '0;
       tmp_err          = 1'h0;
@@ -228,12 +211,7 @@ module sha512 #(
                     next_new        = write_data[CTRL_NEXT_BIT];
                     mode_new        = write_data[CTRL_MODE_HIGH_BIT : CTRL_MODE_LOW_BIT];
                     mode_we         = 1'h1;
-                    work_factor_new = write_data[CTRL_WORK_FACTOR_BIT];
-                    work_factor_we  = 1'h1;
                   end
-
-                ADDR_WORK_FACTOR_NUM:
-                  work_factor_num_we = 1'h1;
 
                 default:
                     tmp_err = 1'h1;
@@ -263,13 +241,10 @@ module sha512 #(
                   tmp_read_data = CORE_VERSION1;
 
                 ADDR_CTRL:
-                  tmp_read_data = {24'h0, work_factor_reg, 3'b0, mode_reg, next_reg, init_reg};
+                  tmp_read_data = {28'h0, mode_reg, next_reg, init_reg};
 
                 ADDR_STATUS:
                   tmp_read_data = {30'h0, digest_valid_reg, ready_reg};
-
-                ADDR_WORK_FACTOR_NUM:
-                  tmp_read_data = work_factor_num_reg;
 
                 default:
                   tmp_err = 1'h1;
