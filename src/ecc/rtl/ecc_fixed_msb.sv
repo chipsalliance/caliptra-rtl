@@ -47,7 +47,7 @@ module ecc_fixed_msb #(
     logic [REG_SIZE+1 : 0]  data_2q;
     logic [REG_SIZE+1 : 0]  data_2q_reg;
 
-    always_ff @(posedge clk) 
+    always_ff @(posedge clk or negedge reset_n) 
     begin : register_results
         if (!reset_n) begin
             data_q_reg  <= '0;

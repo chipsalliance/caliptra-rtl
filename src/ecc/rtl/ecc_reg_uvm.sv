@@ -84,7 +84,7 @@ package ecc_reg_uvm;
 
         virtual function void build();
             this.SEED = new("SEED");
-            this.SEED.configure(this, 32, 0, "RW", 1, 'h0, 0, 1, 0);
+            this.SEED.configure(this, 32, 0, "RW", 0, 'h0, 0, 1, 0);
         endfunction : build
     endclass : ecc_reg__ecc_SEED
 
@@ -144,33 +144,33 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__ecc_PUBKEY_Y
 
-    // Reg - ecc_reg::ecc_R
-    class ecc_reg__ecc_R extends uvm_reg;
-        rand uvm_reg_field R;
+    // Reg - ecc_reg::ecc_SIGN_R
+    class ecc_reg__ecc_SIGN_R extends uvm_reg;
+        rand uvm_reg_field SIGN_R;
 
-        function new(string name = "ecc_reg__ecc_R");
+        function new(string name = "ecc_reg__ecc_SIGN_R");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
         virtual function void build();
-            this.R = new("R");
-            this.R.configure(this, 32, 0, "RW", 1, 'h0, 0, 1, 0);
+            this.SIGN_R = new("SIGN_R");
+            this.SIGN_R.configure(this, 32, 0, "RW", 1, 'h0, 0, 1, 0);
         endfunction : build
-    endclass : ecc_reg__ecc_R
+    endclass : ecc_reg__ecc_SIGN_R
 
-    // Reg - ecc_reg::ecc_S
-    class ecc_reg__ecc_S extends uvm_reg;
-        rand uvm_reg_field S;
+    // Reg - ecc_reg::ecc_SIGN_S
+    class ecc_reg__ecc_SIGN_S extends uvm_reg;
+        rand uvm_reg_field SIGN_S;
 
-        function new(string name = "ecc_reg__ecc_S");
+        function new(string name = "ecc_reg__ecc_SIGN_S");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
         virtual function void build();
-            this.S = new("S");
-            this.S.configure(this, 32, 0, "RW", 1, 'h0, 0, 1, 0);
+            this.SIGN_S = new("SIGN_S");
+            this.SIGN_S.configure(this, 32, 0, "RW", 1, 'h0, 0, 1, 0);
         endfunction : build
-    endclass : ecc_reg__ecc_S
+    endclass : ecc_reg__ecc_SIGN_S
 
     // Reg - ecc_reg::ecc_VERIFY_R
     class ecc_reg__ecc_VERIFY_R extends uvm_reg;
@@ -212,8 +212,8 @@ package ecc_reg_uvm;
         rand ecc_reg__ecc_PRIVKEY ecc_PRIVKEY[12];
         rand ecc_reg__ecc_PUBKEY_X ecc_PUBKEY_X[12];
         rand ecc_reg__ecc_PUBKEY_Y ecc_PUBKEY_Y[12];
-        rand ecc_reg__ecc_R ecc_R[12];
-        rand ecc_reg__ecc_S ecc_S[12];
+        rand ecc_reg__ecc_SIGN_R ecc_SIGN_R[12];
+        rand ecc_reg__ecc_SIGN_S ecc_SIGN_S[12];
         rand ecc_reg__ecc_VERIFY_R ecc_VERIFY_R[12];
         rand ecc_reg__ecc_IV ecc_IV[12];
 
@@ -287,19 +287,19 @@ package ecc_reg_uvm;
                 this.ecc_PUBKEY_Y[i0].build();
                 this.default_map.add_reg(this.ecc_PUBKEY_Y[i0], 'h280 + i0*'h4);
             end
-            foreach(this.ecc_R[i0]) begin
-                this.ecc_R[i0] = new($sformatf("ecc_R[%0d]", i0));
-                this.ecc_R[i0].configure(this);
+            foreach(this.ecc_SIGN_R[i0]) begin
+                this.ecc_SIGN_R[i0] = new($sformatf("ecc_SIGN_R[%0d]", i0));
+                this.ecc_SIGN_R[i0].configure(this);
                 
-                this.ecc_R[i0].build();
-                this.default_map.add_reg(this.ecc_R[i0], 'h300 + i0*'h4);
+                this.ecc_SIGN_R[i0].build();
+                this.default_map.add_reg(this.ecc_SIGN_R[i0], 'h300 + i0*'h4);
             end
-            foreach(this.ecc_S[i0]) begin
-                this.ecc_S[i0] = new($sformatf("ecc_S[%0d]", i0));
-                this.ecc_S[i0].configure(this);
+            foreach(this.ecc_SIGN_S[i0]) begin
+                this.ecc_SIGN_S[i0] = new($sformatf("ecc_SIGN_S[%0d]", i0));
+                this.ecc_SIGN_S[i0].configure(this);
                 
-                this.ecc_S[i0].build();
-                this.default_map.add_reg(this.ecc_S[i0], 'h380 + i0*'h4);
+                this.ecc_SIGN_S[i0].build();
+                this.default_map.add_reg(this.ecc_SIGN_S[i0], 'h380 + i0*'h4);
             end
             foreach(this.ecc_VERIFY_R[i0]) begin
                 this.ecc_VERIFY_R[i0] = new($sformatf("ecc_VERIFY_R[%0d]", i0));

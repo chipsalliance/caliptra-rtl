@@ -23,9 +23,7 @@
 
 module ecc_fau #(
     parameter REG_SIZE      = 384,
-    parameter RADIX         = 32,
-    parameter ADD_NUM_ADDS  = 1,
-    parameter ADD_BASE_SZ   = 384
+    parameter RADIX         = 32
     )
     (
     // Clock and reset.
@@ -33,8 +31,9 @@ module ecc_fau #(
     input wire           reset_n,
 
     // DATA PORT
+    input  wire                 add_en_i,
     input  wire                 sub_i,
-    input  wire                 mult_start_i,
+    input  wire                 mult_en_i,
     input  wire [REG_SIZE-1:0]  prime_i,
     input  wire [RADIX-1 : 0]   mult_mu_i,
     input  wire [REG_SIZE-1:0]  opa_i,
@@ -51,6 +50,7 @@ module ecc_fau #(
     reg                     mult_start;
     reg                     mult_start_dly;
     wire                    mult_start_edge;
+    reg                     add_en;   
     reg                     sub;
 
     assign mult_opa = opa_i;
@@ -83,14 +83,13 @@ module ecc_fau #(
     // ADDER/SUBTRACTOR
     //----------------------------------------------------------------
     ecc_add_sub_mod_alter #(
-        .REG_SIZE(REG_SIZE),
-        .NUM_ADDS(ADD_NUM_ADDS),
-        .BASE_SZ(ADD_BASE_SZ)
+        .REG_SIZE(REG_SIZE)
         )
         i_ADDER_SUBTRACTOR (
         .clk(clk),
         .reset_n(reset_n),
 
+        .add_en_i(add_en),
         .sub_i(sub),
         .opa_i(opa_i),
         .opb_i(opb_i),
@@ -100,13 +99,25 @@ module ecc_fau #(
         );
 
 
-    always_ff @(posedge clk) begin
-        mult_start <= mult_start_i;
-        sub <= sub_i;
+    always_ff @(posedge clk or negedge reset_n) 
+    begin
+        if (!reset_n) begin
+            mult_start <= '0;
+            add_en <= '0;
+            sub <= '0;
+        end
+        else begin
+            mult_start <= mult_en_i;
+            add_en <= add_en_i;
+            sub <= sub_i;
+        end
     end
 
-    always_ff @(posedge clk) begin
-        mult_start_dly <= mult_start;
+    always_ff @(posedge clk or negedge reset_n) begin
+        if (!reset_n)
+            mult_start_dly <= '0;
+        else
+            mult_start_dly <= mult_start;
     end
     
     assign mult_start_edge = mult_start & ~mult_start_dly;

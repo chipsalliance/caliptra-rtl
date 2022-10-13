@@ -107,9 +107,9 @@ module ecc_montgomerymultiplier #(
         .c_out(c_array[0])
         );
 
-    genvar i;
+    genvar i0;
     generate 
-        for (i=0; i < PE_UNITS; i++) begin : gen_PE //PE general boxes
+        for (i0=0; i0 < PE_UNITS; i0++) begin : gen_PE //PE general boxes
             ecc_pe #(
                 .RADIX(RADIX)
                 )
@@ -118,18 +118,18 @@ module ecc_montgomerymultiplier #(
                 .clk(clk),
                 .reset_n(reset_n),
                 .start_in(start_i),
-                .a_in(a_array[i+1]),
-                .b_in(b_array[i+1]),
-                .p_in(p_array[i+1]),
-                .m_in(m_array[i]),
-                .s_in(s_array[i+1]),
-                .c_in(c_array[i]),
+                .a_in(a_array[i0+1]),
+                .b_in(b_array[i0+1]),
+                .p_in(p_array[i0+1]),
+                .m_in(m_array[i0]),
+                .s_in(s_array[i0+1]),
+                .c_in(c_array[i0]),
                 .odd(odd),
 
-                .a_out(a_array[i+2]),
-                .m_out(m_array[i+1]),
-                .s_out(s_array[i]),
-                .c_out(c_array[i+1])
+                .a_out(a_array[i0+2]),
+                .m_out(m_array[i0+1]),
+                .s_out(s_array[i0]),
+                .c_out(c_array[i0+1])
                 );
         end
     endgenerate
@@ -156,7 +156,8 @@ module ecc_montgomerymultiplier #(
     
     // Determines the input s for the final PE
     assign s_array[PE_UNITS+1] = last_s_reg;
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk or negedge reset_n) 
+    begin
         if (~reset_n)
             last_s_reg <= 'b0;
         else if (start_i)
@@ -166,7 +167,8 @@ module ecc_montgomerymultiplier #(
     end
 
     // Set odd flag
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk or negedge reset_n) 
+    begin
         if (~reset_n)
             odd <= 0;
         else if (start_i)
@@ -175,9 +177,15 @@ module ecc_montgomerymultiplier #(
             odd <= ~odd;
     end
 
-    always_ff @(posedge clk) 
+    always_ff @(posedge clk or negedge reset_n) 
     begin : input_reg
-        if (start_i) begin
+        if (~reset_n) begin
+            a_reg <= 'b0;
+            b_reg <= 'b0;
+            p_reg <= 'b0;
+            n_prime_reg <= 'b0;
+        end
+        else if (start_i) begin
             a_reg <= {zero_pad, opa_i};
             b_reg <= {zero_pad, opb_i};
             p_reg <= {zero_pad, n_i};
@@ -188,13 +196,6 @@ module ecc_montgomerymultiplier #(
                 a_reg[FULL_REG_SIZE-1 : FULL_REG_SIZE-RADIX] <= 'b0; //Shift 
             end 
         end
-
-        if (~reset_n) begin
-            a_reg <= 'b0;
-            b_reg <= 'b0;
-            p_reg <= 'b0;
-            n_prime_reg <= 'b0;
-        end
     end // input_reg
 
     assign a_array[0] = a_reg[RADIX-1 : 0];
@@ -202,81 +203,104 @@ module ecc_montgomerymultiplier #(
     // Determines which b and p is pushed through the system
     assign b_array[0] = b_reg[RADIX-1 : 0];
     assign p_array[0] = p_reg[RADIX-1 : 0];
-    genvar j;
+    genvar j0;
     generate 
-        for (j=1; j < PE_UNITS+2; j++) begin : gen_b_p_array
-            assign b_array[j] = odd ? b_reg[(2*j+1)*RADIX-1 : (2*j)*RADIX] : b_reg[(2*j)*RADIX-1 : (2*j-1)*RADIX];
-            assign p_array[j] = odd ? p_reg[(2*j+1)*RADIX-1 : (2*j)*RADIX] : p_reg[(2*j)*RADIX-1 : (2*j-1)*RADIX];
+        for (j0=1; j0 < PE_UNITS+2; j0++) begin : gen_b_p_array
+            assign b_array[j0] = odd ? b_reg[(2*j0+1)*RADIX-1 : (2*j0)*RADIX] : b_reg[(2*j0)*RADIX-1 : (2*j0-1)*RADIX];
+            assign p_array[j0] = odd ? p_reg[(2*j0+1)*RADIX-1 : (2*j0)*RADIX] : p_reg[(2*j0)*RADIX-1 : (2*j0-1)*RADIX];
         end
     endgenerate
 
 
     assign p_neg_reg = ~p_reg;
     
-    genvar i0;
+    genvar i1;
     generate 
-        for (i0=0; i0 < 2*(PE_UNITS+1)+1; i0++) begin : gen_n_neg_array
-            assign p_neg_array[i0] = p_neg_reg[i0*RADIX +: RADIX];
+        for (i1=0; i1 < 2*(PE_UNITS+1)+1; i1++) begin : gen_n_neg_array
+            assign p_neg_array[i1] = p_neg_reg[i1*RADIX +: RADIX];
         end
     endgenerate
 
-    // Storing the results from the system
+    // Storing the partial results from the system
     genvar t0;
     generate 
-        for (t0=0; t0 < 2*(PE_UNITS+1)+1; t0++) begin : gen_sub_t
-            parameter [T_WIDTH-1 : 0] t0_idx = t0;
+        for (t0=0; t0 < 2*(PE_UNITS+1)+1; t0++) begin : gen_t_reg
+            if (t0 == 0 | t0 == 1) begin
+                always_ff @(posedge clk or negedge reset_n) begin
+                    if (~reset_n)
+                        t_reg[t0] <= '0;
+                    else if (push_reg[2*(PE_UNITS+1) - t0])
+                        t_reg[t0] <= s_array[0];
+                    else
+                        t_reg[t0] <= t_reg[t0];
+                end
+            end
+            else begin
+                always_ff @(posedge clk or negedge reset_n) begin
+                    if (~reset_n)
+                        t_reg[t0] <= '0;
+                    else if (push_reg[2*(PE_UNITS+1) - t0])
+                        t_reg[t0] <= s_array[t0 >> 1];
+                    else
+                        t_reg[t0] <= t_reg[t0];
+                end
+            end
+        end // gen_t_reg
+    endgenerate
 
-            if (t0 == 0)
-                always_comb sub_b_i[t0] = 1;
+    genvar t1;
+    generate 
+        for (t1=0; t1 < 2*(PE_UNITS+1)+1; t1++) begin : gen_sub_t
+            if (t1 == 0)
+                always_comb sub_b_i[t1] = 1;
             else
-                always_comb sub_b_i[t0] = sub_b_o[t0 - 1];
+                always_comb sub_b_i[t1] = sub_b_o[t1 - 1];
                 
-            always_comb begin
-                //if (~reset_n)
-                //    sub_res[t0] = 0;
-                //else if (push_reg[2*(PE_UNITS+1) - t0])
-                
-                sub_res[t0] = s_array[t0_idx >> 1] + p_neg_array[t0] + sub_b_i[t0];
-                
-                sub_b_o[t0] = sub_res[t0][RADIX];
-            end
+            always_comb sub_b_o[t1] = sub_res[t1][RADIX];
         end
     endgenerate
 
-    genvar t;
+    genvar t2;
     generate 
-        for (t=0; t < 2*(PE_UNITS+1)+1; t++) begin : gen_t_reg
-            parameter [T_WIDTH-1 : 0] t_idx = t;
-
-            always_ff @(posedge clk) begin
-                if (~reset_n) begin
-                    t_reg[t] <= 'b0;
-                    t_subtracted_reg[t] <= 'b0;
-                end
-                else if (push_reg[2*(PE_UNITS+1) - t]) begin
-                    t_reg[t] <= s_array[t_idx >> 1];
-                    t_subtracted_reg[t] <= sub_res[t][RADIX-1 : 0];
-                end
-                else begin
-                    t_reg[t] <= t_reg[t];
-                    t_subtracted_reg[t] <= t_subtracted_reg[t];
-                end
-            end
-        end
+        for (t2=0; t2 < 2*(PE_UNITS+1)+1; t2++) 
+        begin : gen_sub_res_t
+            //if (~reset_n)
+            //    sub_res[t2] = 0;
+            //else if (push_reg[2*(PE_UNITS+1) - t2])
+            if (t2 == 0 | t2 == 1)
+                always_comb sub_res[t2] = s_array[0] + p_neg_array[t2] + sub_b_i[t2];
+            else
+                always_comb sub_res[t2] = s_array[t2 >> 1] + p_neg_array[t2] + sub_b_i[t2];
+        end // gen_sub_res_t
     endgenerate
-    
-    genvar k;
+
+    genvar t3;
     generate 
-        for (k=0; k < 2*(PE_UNITS+1)+1; k++) begin : gen_p_o
-            assign p_internal[k*RADIX +: RADIX] = t_reg[k];
-            assign p_subtracted_internal[k*RADIX +: RADIX] = t_subtracted_reg[k];
+        for (t3=0; t3 < 2*(PE_UNITS+1)+1; t3++) begin : gen_t_sub_reg
+            always_ff @(posedge clk or negedge reset_n) begin
+                if (~reset_n)
+                    t_subtracted_reg[t3] <= '0;
+                else if (push_reg[2*(PE_UNITS+1) - t3])
+                    t_subtracted_reg[t3] <= sub_res[t3][RADIX-1 : 0];
+                else 
+                    t_subtracted_reg[t3] <= t_subtracted_reg[t3];
+            end
+        end // gen_t_sub_reg
+    endgenerate
+
+    // Storing the final results from the system
+    genvar k0;
+    generate 
+        for (k0=0; k0 < 2*(PE_UNITS+1)+1; k0++) begin : gen_p_o
+            assign p_internal[k0*RADIX +: RADIX] = t_reg[k0];
+            assign p_subtracted_internal[k0*RADIX +: RADIX] = t_subtracted_reg[k0];
         end
     endgenerate
 
     assign p_o = (sub_b_o[2*(PE_UNITS+1)])? p_subtracted_internal[REG_SIZE-1:0] : p_internal[REG_SIZE-1:0];
 
     // Determines when results are ready based on S_NUM
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n)
             push_reg <= 'b0;
         else if (start_i)
@@ -285,8 +309,11 @@ module ecc_montgomerymultiplier #(
             push_reg <= push_reg >> 1;
     end
     
-    always_ff @(posedge clk) begin
-        push_reg_eq_zero_ff <= push_reg_eq_zero;
+    always_ff @(posedge clk or negedge reset_n) begin
+        if (!reset_n)
+            push_reg_eq_zero_ff <= '0;
+        else
+            push_reg_eq_zero_ff <= push_reg_eq_zero;
     end
 
     assign push_reg_eq_zero = push_reg == 'b0;

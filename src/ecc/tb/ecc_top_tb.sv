@@ -45,31 +45,31 @@ module ecc_top_tb #(
   localparam ADDR_SCACONFIG   = BASE_ADDR + 32'h00000020;
 
   localparam ADDR_SEED0       = BASE_ADDR + 32'h00000080;
-  localparam ADDR_SEED11      = BASE_ADDR + 32'h000000A8;
+  localparam ADDR_SEED11      = BASE_ADDR + 32'h000000AC;
 
   localparam ADDR_MSG0        = BASE_ADDR + 32'h00000100;
-  localparam ADDR_MSG11       = BASE_ADDR + 32'h00000128;
+  localparam ADDR_MSG11       = BASE_ADDR + 32'h0000012C;
 
   localparam ADDR_PRIVKEY0    = BASE_ADDR + 32'h00000180;
-  localparam ADDR_PRIVKEY11   = BASE_ADDR + 32'h000001A8;
+  localparam ADDR_PRIVKEY11   = BASE_ADDR + 32'h000001AC;
 
   localparam ADDR_PUBKEYX0    = BASE_ADDR + 32'h00000200;
-  localparam ADDR_PUBKEYX11   = BASE_ADDR + 32'h00000228;
+  localparam ADDR_PUBKEYX11   = BASE_ADDR + 32'h0000022C;
 
   localparam ADDR_PUBKEYY0    = BASE_ADDR + 32'h00000280;
-  localparam ADDR_PUBKEYY11   = BASE_ADDR + 32'h000002A8;
+  localparam ADDR_PUBKEYY11   = BASE_ADDR + 32'h000002AC;
 
   localparam ADDR_SIGNR0      = BASE_ADDR + 32'h00000300;
-  localparam ADDR_SIGNR11     = BASE_ADDR + 32'h00000328;
+  localparam ADDR_SIGNR11     = BASE_ADDR + 32'h0000032C;
 
   localparam ADDR_SIGNS0      = BASE_ADDR + 32'h00000380;
-  localparam ADDR_SIGNS11     = BASE_ADDR + 32'h000003A8;
+  localparam ADDR_SIGNS11     = BASE_ADDR + 32'h000003AC;
 
   localparam ADDR_VERIFY_R0   = BASE_ADDR + 32'h00000400;
-  localparam ADDR_VERIFY_R11  = BASE_ADDR + 32'h00000428;
+  localparam ADDR_VERIFY_R11  = BASE_ADDR + 32'h0000042C;
 
   localparam ADDR_IV0         = BASE_ADDR + 32'h00000480;
-  localparam ADDR_IV11        = BASE_ADDR + 32'h000004A8;
+  localparam ADDR_IV11        = BASE_ADDR + 32'h000004AC;
 
   
   parameter           R_WIDTH                   = 384;

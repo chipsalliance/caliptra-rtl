@@ -120,23 +120,23 @@
 #define STATUS_READY_BIT          0x0
 #define STATUS_VALID_BIT          0x1
 #define ECC_ADDR_SEED0            0x10008080
-#define ECC_ADDR_SEED11           0x100080A8
+#define ECC_ADDR_SEED11           0x100080AC
 #define ECC_ADDR_MSG0             0x10008100
-#define ECC_ADDR_MSG11            0x10008128
+#define ECC_ADDR_MSG11            0x1000812C
 #define ECC_ADDR_PRIVKEY0         0x10008180
-#define ECC_ADDR_PRIVKEY11        0x100081A8
+#define ECC_ADDR_PRIVKEY11        0x100081AC
 #define ECC_ADDR_PUBKEYX0         0x10008200
-#define ECC_ADDR_PUBKEYX11        0x10008228
+#define ECC_ADDR_PUBKEYX11        0x1000822C
 #define ECC_ADDR_PUBKEYY0         0x10008280
-#define AECC_DDR_PUBKEYY11        0x100082A8
+#define AECC_DDR_PUBKEYY11        0x100082AC
 #define ECC_ADDR_SIGNR0           0x10008300
-#define ECC_ADDR_SIGNR11          0x10008328
+#define ECC_ADDR_SIGNR11          0x1000832C
 #define ECC_ADDR_SIGNS0           0x10008380
-#define ECC_ADDR_SIGNS11          0x100083A8
+#define ECC_ADDR_SIGNS11          0x100083AC
 #define ECC_ADDR_VERIFYR0         0x10008400
-#define ECC_ADDR_VERIFYR11        0x10008428
-#define ECC_ADDR_LAMBDA0          0x10008480
-#define ECC_ADDR_LAMBDA11         0x100084A8
+#define ECC_ADDR_VERIFYR11        0x1000842C
+#define ECC_ADDR_IV0              0x10008480
+#define ECC_ADDR_IV11             0x100084AC
 
 
 

@@ -49,9 +49,9 @@ module ecc_pe_first #(
     // ecc_pe_first
     //----------------------------------------------------------------
     logic  [RADIX-1:0]        s_reg;
-    logic  [RADIX-1:0]        s;
+    logic  [RADIX-1:0]        s_val;
     logic  [RADIX-1:0]        a_reg;
-    logic  [RADIX-1:0]        a;
+    logic  [RADIX-1:0]        a_val;
 
     logic  [2*RADIX-1 : 0]    mult_out_0;
     logic  [RADIX-1 : 0]      mult_out_0_MSW;
@@ -61,10 +61,8 @@ module ecc_pe_first #(
     logic  [RADIX-1 : 0]      sum_0;
     logic                     carry_0;
     logic  [RADIX-1 : 0]      sum_0_reg;
-    logic                     carry_0_reg;
 
     logic  [RADIX   : 0]      res_1;
-    logic  [RADIX-1 : 0]      sum_1;
     logic                     carry_1;
 
     logic  [RADIX   : 0]      c_0;
@@ -79,32 +77,28 @@ module ecc_pe_first #(
     logic  [RADIX-1 : 0]      mult_out_2_MSW;
     logic  [RADIX-1 : 0]      mult_out_2_LSW;
 
-    logic [RADIX-1:0] a_out_reg;
-    logic [RADIX-1:0] m_out_reg;
-    logic [RADIX  :0] c_out_reg;
-
     ecc_mult_dsp #(
         .RADIX(RADIX)
     ) MULT0 (
-        .A(a),
-        .B(b_in),
-        .P(mult_out_0)
+        .A_i(a_val),
+        .B_i(b_in),
+        .P_o(mult_out_0)
     );
 
     ecc_mult_dsp #(
         .RADIX(RADIX)
     ) MULT1 (
-        .A(n_prime_in),
-        .B(sum_0),
-        .P(mult_out_1)
+        .A_i(n_prime_in),
+        .B_i(sum_0),
+        .P_o(mult_out_1)
     );
 
     ecc_mult_dsp #(
         .RADIX(RADIX)
     ) MULT2 (
-        .A(m_temp_reg),
-        .B(p_in),
-        .P(mult_out_2)
+        .A_i(m_temp_reg),
+        .B_i(p_in),
+        .P_o(mult_out_2)
     );
 
     assign m_temp = mult_out_1[RADIX-1:0];
@@ -114,11 +108,11 @@ module ecc_pe_first #(
     assign mult_out_2_MSW = mult_out_2[2*RADIX-1 : RADIX];
     assign mult_out_2_LSW = mult_out_2[RADIX-1 : 0];
 
-    assign s = odd ? s_in : s_reg;
-    assign a = odd ? a_in : a_reg;
+    assign s_val = odd ? s_in : s_reg;
+    assign a_val = odd ? a_in : a_reg;
 
     always_comb begin
-        res_0 = s + mult_out_0_LSW;
+        res_0 = s_val + mult_out_0_LSW;
         sum_0 = res_0[RADIX-1 : 0];
         carry_0 = res_0[RADIX];
     end
@@ -136,8 +130,15 @@ module ecc_pe_first #(
         c_1 = mult_out_2_MSW + carry_1;
     end
 
-    always_ff @(posedge clk) begin
-        if (start_in) begin
+    always_ff @(posedge clk or negedge reset_n) begin
+        if(~reset_n) begin
+            c_0_reg <= 'b0;
+            sum_0_reg <= 'b0;
+            m_temp_reg <= 'b0;
+            s_reg <= 'b0;
+            a_reg <= 'b0;
+        end
+        else if (start_in) begin
             c_0_reg <= 'b0;
             sum_0_reg <= 'b0;
             m_temp_reg <= 'b0;
@@ -150,39 +151,29 @@ module ecc_pe_first #(
             c_0_reg <= c_0;
             sum_0_reg <= sum_0;
         end
-
-        if(~reset_n) begin
-            c_0_reg <= 'b0;
-            sum_0_reg <= 'b0;
-            m_temp_reg <= 'b0;
-            s_reg <= 'b0;
-            a_reg <= 'b0;
-        end
     end
 
     assign c_out = c_0_reg + c_1;
 
-    always_ff @(posedge clk) begin
-        if (start_in) begin
-            a_out <= 'b0;
-        end else begin
-            a_out <= a;
-        end
-
+    always_ff @(posedge clk or negedge reset_n) begin
         if (~reset_n) begin
             a_out <= 'b0;
+        end
+        else if (start_in) begin
+            a_out <= 'b0;
+        end else begin
+            a_out <= a_val;
         end
     end
 
-    always_ff @(posedge clk) begin
-        if (start_in) begin
+    always_ff @(posedge clk or negedge reset_n) begin
+        if (~reset_n) begin
+            m_out <= 'b0;
+        end
+        else if (start_in) begin
             m_out <= 'b0;
         end else begin
             m_out <= m_temp;
-        end
-
-        if (~reset_n) begin
-            m_out <= 'b0;
         end
     end
 

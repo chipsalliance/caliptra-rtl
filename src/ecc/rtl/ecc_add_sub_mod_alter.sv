@@ -22,9 +22,7 @@
 //======================================================================
 
 module ecc_add_sub_mod_alter #(
-    parameter REG_SIZE      = 384,
-    parameter NUM_ADDS      = 1,
-    parameter BASE_SZ       = 384
+    parameter REG_SIZE      = 384
     )
     (
     // Clock and reset.
@@ -32,6 +30,7 @@ module ecc_add_sub_mod_alter #(
     input wire           reset_n,
 
     // DATA PORT
+    input  wire                 add_en_i,
     input  wire                 sub_i,
     input  wire  [REG_SIZE-1:0] opa_i,
     input  wire  [REG_SIZE-1:0] opb_i,
@@ -42,38 +41,50 @@ module ecc_add_sub_mod_alter #(
   
     logic [REG_SIZE-1 : 0] opb0;
     logic [REG_SIZE-1 : 0] opb1;
-    logic [REG_SIZE   : 0] result;
-    logic [REG_SIZE   : 0] c;
     logic [REG_SIZE-1 : 0] r0;
     logic [REG_SIZE-1 : 0] r1;
-    logic                  add_nsub;
-    logic                  carry0;
+    logic                  carry0; 
+
+    logic [REG_SIZE-1 : 0] r0_reg;
+    logic                  carry0_reg;
+
+    ecc_adder #(
+        .RADIX(REG_SIZE)
+        ) 
+        adder_inst_0(
+        .a_i(opa_i),
+        .b_i(opb0),
+        .cin_i(sub_i),
+        .s_o(r0),
+        .cout_o(carry0)
+    );
+
+    ecc_adder #(
+        .RADIX(REG_SIZE)
+        ) 
+        adder_inst_1(
+        .a_i(r0_reg),
+        .b_i(opb1),
+        .cin_i(~sub_i),
+        .s_o(r1),
+        .cout_o()
+    );
 
     assign opb0 = sub_i ? ~opb_i : opb_i;
     assign opb1 = sub_i ? prime_i : ~prime_i;
 
-    ecc_adder #(
-        .N(REG_SIZE)
-        ) 
-        adder_inst_0(
-        .a(opa_i),
-        .b(opb0),
-        .cin(sub_i),
-        .s(r0),
-        .cout(carry0)
-    );
+    always_ff @(posedge clk or negedge reset_n) 
+    begin
+        if(!reset_n) begin
+            r0_reg <= '0;
+            carry0_reg <= '0;
+        end
+        else if (add_en_i) begin 
+            r0_reg <= r0;
+            carry0_reg <= carry0;
+        end
+    end
 
-    ecc_adder #(
-        .N(REG_SIZE)
-        ) 
-        adder_inst_1(
-        .a(r0),
-        .b(opb1),
-        .cin(~sub_i),
-        .s(r1),
-        .cout()
-    );
-
-    assign res_o = (~sub_i ^ carry0)? r0 : r1;
+    assign res_o = (~sub_i ^ carry0_reg)? r0 : r1;
     
 endmodule

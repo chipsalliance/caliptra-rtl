@@ -30,9 +30,7 @@ module ecc_arith_unit #(
     parameter [REG_SIZE-1 : 0] p_prime      = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff,
     parameter [RADIX-1    : 0] p_mu         = 32'h00000001,
     parameter [REG_SIZE-1 : 0] q_grouporder = 384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973,
-    parameter [RADIX-1    : 0] q_mu         = 32'he88fdc45,
-    parameter                  ADD_NUM_ADDS = 1,
-    parameter                  ADD_BASE_SZ  = 384
+    parameter [RADIX-1    : 0] q_mu         = 32'he88fdc45
     )
     (
     // Clock and reset.
@@ -78,7 +76,6 @@ module ecc_arith_unit #(
     logic                               reg_web_r;
     logic                               web_mux_s;
 
-    logic [REG_SIZE   : 0]      di_mux;
     logic [REG_SIZE-1 : 0]      d_o;
 
     logic                       mod_p_q;
@@ -144,9 +141,7 @@ module ecc_arith_unit #(
 
     ecc_fau #(
         .REG_SIZE(REG_SIZE),
-        .RADIX(RADIX),
-        .ADD_NUM_ADDS(ADD_NUM_ADDS),
-        .ADD_BASE_SZ(ADD_BASE_SZ)
+        .RADIX(RADIX)
         )
         ecc_fau_i
         (
@@ -155,8 +150,9 @@ module ecc_arith_unit #(
         .reset_n(reset_n),
 
         // DATA PORT
+        .add_en_i(ecc_instr_s[2*OPR_ADDR_WIDTH+3]),
         .sub_i(ecc_instr_s[2*OPR_ADDR_WIDTH+2]),
-        .mult_start_i(ecc_instr_s[2*OPR_ADDR_WIDTH+4]),
+        .mult_en_i(ecc_instr_s[2*OPR_ADDR_WIDTH+4]),
         .prime_i(adder_prime),
         .mult_mu_i(mult_mu),
         .opa_i(opa_s),
@@ -171,7 +167,7 @@ module ecc_arith_unit #(
     // Register updates
     // 
     //----------------------------------------------------------------
-    always_ff @(posedge clk) 
+    always_ff @(posedge clk or negedge reset_n) 
     begin :reg_update
         if (!reset_n) begin
             reg_dinb_r      <= 0;
@@ -194,6 +190,8 @@ module ecc_arith_unit #(
             reg_addr_r <= addr_i;
             if (wr_op_sel_i == 1'b0)
                 reg_web_r <= wr_en_i;
+            else
+                reg_web_r <= '0;
             
             // Read multiplexer    
             if (rd_reg_i)

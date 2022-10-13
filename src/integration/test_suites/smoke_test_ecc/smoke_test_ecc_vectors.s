@@ -92,7 +92,7 @@ TEST_VECTOR_KEYGEN:
 .word 0x00000000
 .word 0x00000000
 .word 0x00000000
-// start of lambda (LSB to MSB)
+// start of IV (LSB to MSB)
 .word 0x00000001
 .word 0x00000000
 .word 0x00000000
@@ -198,7 +198,7 @@ TEST_VECTOR_KEYSIGN_VERIFY:
 .word 0xa1fe40db
 .word 0x15f178ce
 .word 0x99ef4aeb
-// start of lambda (LSB to MSB)
+// start of IV (LSB to MSB)
 .word 0x00000001
 .word 0x00000000
 .word 0x00000000

@@ -71,8 +71,8 @@ module ecc_reg (
         logic ecc_PRIVKEY[12];
         logic ecc_PUBKEY_X[12];
         logic ecc_PUBKEY_Y[12];
-        logic ecc_R[12];
-        logic ecc_S[12];
+        logic ecc_SIGN_R[12];
+        logic ecc_SIGN_S[12];
         logic ecc_VERIFY_R[12];
         logic ecc_IV[12];
     } decoded_reg_strb_t;
@@ -107,10 +107,10 @@ module ecc_reg (
             decoded_reg_strb.ecc_PUBKEY_Y[i0] = cpuif_req_masked & (cpuif_addr == 'h280 + i0*'h4);
         end
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.ecc_R[i0] = cpuif_req_masked & (cpuif_addr == 'h300 + i0*'h4);
+            decoded_reg_strb.ecc_SIGN_R[i0] = cpuif_req_masked & (cpuif_addr == 'h300 + i0*'h4);
         end
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.ecc_S[i0] = cpuif_req_masked & (cpuif_addr == 'h380 + i0*'h4);
+            decoded_reg_strb.ecc_SIGN_S[i0] = cpuif_req_masked & (cpuif_addr == 'h380 + i0*'h4);
         end
         for(int i0=0; i0<12; i0++) begin
             decoded_reg_strb.ecc_VERIFY_R[i0] = cpuif_req_masked & (cpuif_addr == 'h400 + i0*'h4);
@@ -179,14 +179,14 @@ module ecc_reg (
             struct {
                 logic [31:0] next;
                 logic load_next;
-            } R;
-        } ecc_R[12];
+            } SIGN_R;
+        } ecc_SIGN_R[12];
         struct {
             struct {
                 logic [31:0] next;
                 logic load_next;
-            } S;
-        } ecc_S[12];
+            } SIGN_S;
+        } ecc_SIGN_S[12];
         struct {
             struct {
                 logic [31:0] next;
@@ -241,13 +241,13 @@ module ecc_reg (
         struct {
             struct {
                 logic [31:0] value;
-            } R;
-        } ecc_R[12];
+            } SIGN_R;
+        } ecc_SIGN_R[12];
         struct {
             struct {
                 logic [31:0] value;
-            } S;
-        } ecc_S[12];
+            } SIGN_S;
+        } ecc_SIGN_S[12];
         struct {
             struct {
                 logic [31:0] value;
@@ -308,9 +308,6 @@ module ecc_reg (
             automatic logic load_next_c = '0;
             if(decoded_reg_strb.ecc_SEED[i0] && decoded_req_is_wr) begin // SW write
                 next_c = decoded_wr_data[31:0];
-                load_next_c = '1;
-            end else if(1) begin // HW Write
-                next_c = hwif_in.ecc_SEED[i0].SEED.next;
                 load_next_c = '1;
             end
             field_combo.ecc_SEED[i0].SEED.next = next_c;
@@ -409,48 +406,48 @@ module ecc_reg (
         assign hwif_out.ecc_PUBKEY_Y[i0].PUBKEY_Y.value = field_storage.ecc_PUBKEY_Y[i0].PUBKEY_Y.value;
     end
     for(genvar i0=0; i0<12; i0++) begin
-        // Field: ecc_reg.ecc_R[].R
+        // Field: ecc_reg.ecc_SIGN_R[].SIGN_R
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.ecc_R[i0].R.value;
+            automatic logic [31:0] next_c = field_storage.ecc_SIGN_R[i0].SIGN_R.value;
             automatic logic load_next_c = '0;
-            if(decoded_reg_strb.ecc_R[i0] && decoded_req_is_wr) begin // SW write
+            if(decoded_reg_strb.ecc_SIGN_R[i0] && decoded_req_is_wr) begin // SW write
                 next_c = decoded_wr_data[31:0];
                 load_next_c = '1;
             end else if(1) begin // HW Write
-                next_c = hwif_in.ecc_R[i0].R.next;
+                next_c = hwif_in.ecc_SIGN_R[i0].SIGN_R.next;
                 load_next_c = '1;
             end
-            field_combo.ecc_R[i0].R.next = next_c;
-            field_combo.ecc_R[i0].R.load_next = load_next_c;
+            field_combo.ecc_SIGN_R[i0].SIGN_R.next = next_c;
+            field_combo.ecc_SIGN_R[i0].SIGN_R.load_next = load_next_c;
         end
         always_ff @(posedge clk) begin
-            if(field_combo.ecc_R[i0].R.load_next) begin
-                field_storage.ecc_R[i0].R.value <= field_combo.ecc_R[i0].R.next;
+            if(field_combo.ecc_SIGN_R[i0].SIGN_R.load_next) begin
+                field_storage.ecc_SIGN_R[i0].SIGN_R.value <= field_combo.ecc_SIGN_R[i0].SIGN_R.next;
             end
         end
-        assign hwif_out.ecc_R[i0].R.value = field_storage.ecc_R[i0].R.value;
+        assign hwif_out.ecc_SIGN_R[i0].SIGN_R.value = field_storage.ecc_SIGN_R[i0].SIGN_R.value;
     end
     for(genvar i0=0; i0<12; i0++) begin
-        // Field: ecc_reg.ecc_S[].S
+        // Field: ecc_reg.ecc_SIGN_S[].SIGN_S
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.ecc_S[i0].S.value;
+            automatic logic [31:0] next_c = field_storage.ecc_SIGN_S[i0].SIGN_S.value;
             automatic logic load_next_c = '0;
-            if(decoded_reg_strb.ecc_S[i0] && decoded_req_is_wr) begin // SW write
+            if(decoded_reg_strb.ecc_SIGN_S[i0] && decoded_req_is_wr) begin // SW write
                 next_c = decoded_wr_data[31:0];
                 load_next_c = '1;
             end else if(1) begin // HW Write
-                next_c = hwif_in.ecc_S[i0].S.next;
+                next_c = hwif_in.ecc_SIGN_S[i0].SIGN_S.next;
                 load_next_c = '1;
             end
-            field_combo.ecc_S[i0].S.next = next_c;
-            field_combo.ecc_S[i0].S.load_next = load_next_c;
+            field_combo.ecc_SIGN_S[i0].SIGN_S.next = next_c;
+            field_combo.ecc_SIGN_S[i0].SIGN_S.load_next = load_next_c;
         end
         always_ff @(posedge clk) begin
-            if(field_combo.ecc_S[i0].S.load_next) begin
-                field_storage.ecc_S[i0].S.value <= field_combo.ecc_S[i0].S.next;
+            if(field_combo.ecc_SIGN_S[i0].SIGN_S.load_next) begin
+                field_storage.ecc_SIGN_S[i0].SIGN_S.value <= field_combo.ecc_SIGN_S[i0].SIGN_S.next;
             end
         end
-        assign hwif_out.ecc_S[i0].S.value = field_storage.ecc_S[i0].S.value;
+        assign hwif_out.ecc_SIGN_S[i0].SIGN_S.value = field_storage.ecc_SIGN_S[i0].SIGN_S.value;
     end
     for(genvar i0=0; i0<12; i0++) begin
         // Field: ecc_reg.ecc_VERIFY_R[].VERIFY_R
@@ -528,10 +525,10 @@ module ecc_reg (
         assign readback_array[i0*1 + 55][31:0] = (decoded_reg_strb.ecc_PUBKEY_Y[i0] && !decoded_req_is_wr) ? field_storage.ecc_PUBKEY_Y[i0].PUBKEY_Y.value : '0;
     end
     for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 67][31:0] = (decoded_reg_strb.ecc_R[i0] && !decoded_req_is_wr) ? field_storage.ecc_R[i0].R.value : '0;
+        assign readback_array[i0*1 + 67][31:0] = (decoded_reg_strb.ecc_SIGN_R[i0] && !decoded_req_is_wr) ? field_storage.ecc_SIGN_R[i0].SIGN_R.value : '0;
     end
     for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 79][31:0] = (decoded_reg_strb.ecc_S[i0] && !decoded_req_is_wr) ? field_storage.ecc_S[i0].S.value : '0;
+        assign readback_array[i0*1 + 79][31:0] = (decoded_reg_strb.ecc_SIGN_S[i0] && !decoded_req_is_wr) ? field_storage.ecc_SIGN_S[i0].SIGN_S.value : '0;
     end
     for(genvar i0=0; i0<12; i0++) begin
         assign readback_array[i0*1 + 91][31:0] = (decoded_reg_strb.ecc_VERIFY_R[i0] && !decoded_req_is_wr) ? field_storage.ecc_VERIFY_R[i0].VERIFY_R.value : '0;

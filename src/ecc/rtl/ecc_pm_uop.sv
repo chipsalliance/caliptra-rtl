@@ -39,7 +39,7 @@ localparam [UOP_ADDR_WIDTH-1 : 0] UOP_DO_ADD_q              = 8'b0010_1000;
 localparam [UOP_ADDR_WIDTH-1 : 0] UOP_DO_SUB_q              = 8'b0010_1100;
 localparam [UOP_ADDR_WIDTH-1 : 0] UOP_ST_ADD_q              = 8'b0010_0010;
 
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_DONTCARE          = 6'dX;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_DONTCARE          = 6'd0;
 
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_ZERO        = 6'd00;
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_ONE         = 6'd01;

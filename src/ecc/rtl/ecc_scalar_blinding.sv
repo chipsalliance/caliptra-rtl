@@ -104,17 +104,19 @@ module ecc_scalar_blinding #(
 
     logic [7 : 0]            product_idx;
     logic [7 : 0]            operand_idx;
+    logic [7 : 0]            product_idx_reg;
+    logic [7 : 0]            operand_idx_reg;
 
     //----------------------------------------------------------------
     // reg update
     //----------------------------------------------------------------
 
-    always_ff @(posedge clk) 
+    always_ff @(posedge clk or negedge reset_n) 
     begin : input_reg
         if (~reset_n) begin
-            a_reg <= 'b0;
-            b_reg <= 'b0;
-            scalar_reg <= 'b0;
+            a_reg <= '0;
+            b_reg <= '0;
+            scalar_reg <= '0;
         end
         else if (en_i) begin
             a_reg       <= {zero_pad_reg, GROUP_ORDER};
@@ -123,24 +125,24 @@ module ecc_scalar_blinding #(
         end 
     end // input_reg
 
-    genvar i;
+    genvar i0;
     generate 
-        for (i=0; i < REG_DIG_NUM; i++) begin : gen_a_array
-            assign a_array[i] = a_reg[i*RADIX +: RADIX];
+        for (i0=0; i0 < REG_DIG_NUM; i0++) begin : gen_a_array
+            assign a_array[i0] = a_reg[i0*RADIX +: RADIX];
         end
     endgenerate // gen_a_array
 
-    genvar j;
+    genvar j0;
     generate 
-        for (j=0; j < RND_DIG_NUM; j++) begin : gen_b_array
-            assign b_array[j] = b_reg[j*RADIX +: RADIX];
+        for (j0=0; j0 < RND_DIG_NUM; j0++) begin : gen_b_array
+            assign b_array[j0] = b_reg[j0*RADIX +: RADIX];
         end
     endgenerate // gen_b_array
 
-    genvar k;
+    genvar k0;
     generate 
-        for (k=0; k < FULL_DIG_NUM; k++) begin : gen_scalar_array
-            assign scalar_array[k] = scalar_reg[k*RADIX +: RADIX];
+        for (k0=0; k0 < FULL_DIG_NUM; k0++) begin : gen_scalar_array
+            assign scalar_array[k0] = scalar_reg[k0*RADIX +: RADIX];
         end
     endgenerate // gen_scalar_array
 
@@ -153,31 +155,31 @@ module ecc_scalar_blinding #(
         .RADIX(RADIX)
         ) 
         ecc_mult_dsp_i (
-        .A(mult_opa),
-        .B(mult_opb),
-        .P(mult_out)
+        .A_i(mult_opa),
+        .B_i(mult_opb),
+        .P_o(mult_out)
     );
 
     ecc_adder #(
-        .N(3*RADIX)
+        .RADIX(3*RADIX)
         ) 
         ecc_adder_i0(
-        .a(add0_opa),
-        .b(add0_opb),
-        .cin(1'b0),
-        .s(add0_out),
-        .cout()
+        .a_i(add0_opa),
+        .b_i(add0_opb),
+        .cin_i(1'b0),
+        .s_o(add0_out),
+        .cout_o()
     );
 
     ecc_adder #(
-        .N(RADIX)
+        .RADIX(RADIX)
         ) 
         ecc_adder_i1(
-        .a(add1_opa),
-        .b(add1_opb),
-        .cin(add1_cin),
-        .s(add1_out),
-        .cout(add1_cout)
+        .a_i(add1_opa),
+        .b_i(add1_opb),
+        .cin_i(add1_cin),
+        .s_o(add1_out),
+        .cout_o(add1_cout)
     );
 
 
@@ -185,7 +187,7 @@ module ecc_scalar_blinding #(
     // accumulator
     //----------------------------------------------------------------
 
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n)
             accu_reg      <= 0;
         else if (en_i)
@@ -202,34 +204,34 @@ module ecc_scalar_blinding #(
     // multiplier state logic
     //----------------------------------------------------------------
     
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
-            product_idx     <= FULL_DIG_NUM-1;
-            operand_idx     <= 0;
+            product_idx_reg <= FULL_DIG_NUM-1;
+            operand_idx_reg <= 0;
             shift_state     <= 0;
             add1_cin        <= 0;
         end
         else if (en_i) begin
-            product_idx     <= 0;
-            operand_idx     <= 0;
+            product_idx_reg <= 0;
+            operand_idx_reg <= 0;
             shift_state     <= 0;
             add1_cin        <= 0;
         end
         else begin
             if (product_idx < FULL_DIG_NUM-1) begin
                 if (shift_state) begin
-                    product_idx <= product_idx + 1;
+                    product_idx_reg <= product_idx + 1;
                     if (product_idx < REG_DIG_NUM-1)
-                        operand_idx <= 0;
+                        operand_idx_reg <= 0;
                     else
-                        operand_idx <= 2 + product_idx - REG_DIG_NUM;
+                        operand_idx_reg <= 2 + product_idx - REG_DIG_NUM;
                     add1_cin <= add1_cout;
                     shift_state <= 0;
                 end
                 else begin
                     if ((operand_idx < product_idx) & (operand_idx < RND_DIG_NUM-1)) begin
                         shift_state <= 0;
-                        operand_idx <= operand_idx + 1;
+                        operand_idx_reg <= operand_idx + 1;
                     end
                     else
                         shift_state <= 1;
@@ -237,6 +239,9 @@ module ecc_scalar_blinding #(
             end
         end
     end
+
+    assign product_idx = product_idx_reg;
+    assign operand_idx = operand_idx_reg;
 
     assign accu_store = (accu_done)? 0 : (!shift_state);
     assign accu_shift = (accu_done)? 0 : shift_state;
@@ -260,24 +265,22 @@ module ecc_scalar_blinding #(
     //----------------------------------------------------------------
     // Storing the results
     //----------------------------------------------------------------
-    genvar t;
+    genvar t0;
     generate 
-        for (t=0; t < FULL_DIG_NUM; t++) begin : gen_t_reg
-            always_ff @(posedge clk) begin
-                if (~reset_n) begin
-                    p_array[t] <= 'b0;
-                end
-                else if (accu_shift & (t == product_idx)) begin
-                    p_array[t] <= add1_out;
-                end
+        for (t0=0; t0 < FULL_DIG_NUM; t0++) begin : gen_t_reg
+            always_ff @(posedge clk or negedge reset_n) begin
+                if (~reset_n)
+                    p_array[t0] <= '0;
+                else if (accu_shift & (t0 == product_idx))
+                    p_array[t0] <= add1_out;
             end
         end
     endgenerate
 
-    genvar t0;
+    genvar t1;
     generate 
-        for (t0=0; t0 < FULL_DIG_NUM; t0++) begin : gen_p_o
-            assign p_internal[t0*RADIX +: RADIX] = p_array[t0];
+        for (t1=0; t1 < FULL_DIG_NUM; t1++) begin : gen_p_o
+            assign p_internal[t1*RADIX +: RADIX] = p_array[t1];
         end
     endgenerate
 

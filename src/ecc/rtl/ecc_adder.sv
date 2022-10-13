@@ -22,24 +22,24 @@
 //======================================================================
 
 module ecc_adder #(
-    parameter N      = 8
+    parameter RADIX          = 8
 )
 (
     // DATA PORT
-    input  wire [N-1:0]  a,
-    input  wire [N-1:0]  b,
-    input  wire          cin,
-    output wire [N-1:0]  s,
-    output wire          cout
+    input  wire [RADIX-1:0]  a_i,
+    input  wire [RADIX-1:0]  b_i,
+    input  wire              cin_i,
+    output wire [RADIX-1:0]  s_o,
+    output wire              cout_o
 );
 
-    logic [N : 0]   s_full;
+    logic [RADIX : 0]   s_full;
 
     always_comb begin
-        s_full = a + b + cin;
+        s_full = a_i + b_i + cin_i;
     end
         
-    assign s = s_full[N-1 : 0];
-    assign cout = s_full[N];
+    assign s_o = s_full[RADIX-1 : 0];
+    assign cout_o = s_full[RADIX];
 
 endmodule

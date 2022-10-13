@@ -44,15 +44,15 @@ addrmap ecc_reg {
     reg {sr_hw STATUS[2];} ecc_STATUS @0x00000018;
     reg {srw_hrw SCACONFIG[3];} ecc_SCACONFIG @0x00000020;
     
-    reg {srw_hrw SEED[32];} ecc_SEED[12] @0x00000080;
+    reg {srw_hr SEED[32];} ecc_SEED[12] @0x00000080;
     reg {srw_hr MSG[32];} ecc_MSG[12] @0x00000100;
 
     reg {srw_hrw PRIVKEY[32];} ecc_PRIVKEY[12] @0x00000180;
     reg {srw_hrw PUBKEY_X[32];} ecc_PUBKEY_X[12] @0x00000200;
     reg {srw_hrw PUBKEY_Y[32];} ecc_PUBKEY_Y[12] @0x00000280;
     
-    reg {srw_hrw R[32];} ecc_R[12] @0x00000300;
-    reg {srw_hrw S[32];} ecc_S[12] @0x00000380;
+    reg {srw_hrw SIGN_R[32];} ecc_SIGN_R[12] @0x00000300;
+    reg {srw_hrw SIGN_S[32];} ecc_SIGN_S[12] @0x00000380;
     reg {sr_hrw VERIFY_R[32];} ecc_VERIFY_R[12] @0x00000400;
     
     reg {srw_hr IV[32];} ecc_IV[12] @0x00000480;

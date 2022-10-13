@@ -115,9 +115,12 @@ module ecc_hmac_drbg_interface#(
         hmac_valid_edge = hmac_valid & (!hmac_valid_last);
     end
 
-    always_ff @(posedge clk) 
+    always_ff @(posedge clk or negedge reset_n) 
     begin
-        hmac_valid_last <= hmac_valid;
+        if (!reset_n)
+            hmac_valid_last <= '0;
+        else
+            hmac_valid_last <= hmac_valid;
     end
 
     always_comb 
@@ -147,15 +150,10 @@ module ecc_hmac_drbg_interface#(
         end
     end
 
-    always_comb
-    begin
-        if (!reset_n)
-            ready_reg   = 0; 
-        else
-            ready_reg   = (state_reg == IDLE_ST);
-    end
 
-    always_ff @(posedge clk) 
+    assign ready_reg = (state_reg == IDLE_ST);
+
+    always_ff @(posedge clk or negedge reset_n) 
     begin
         if (!reset_n) begin
             lambda_reg <= '0;
@@ -175,7 +173,7 @@ module ecc_hmac_drbg_interface#(
         end
     end
 
-    always_ff @(posedge clk) 
+    always_ff @(posedge clk or negedge reset_n) 
     begin : state_reg_update
         if (!reset_n)
             state_reg       <= IDLE_ST;
@@ -183,7 +181,7 @@ module ecc_hmac_drbg_interface#(
             state_reg       <= state_next;
     end // state_reg_update
 
-    always_ff @(posedge clk) 
+    always_ff @(posedge clk or negedge reset_n) 
     begin : ff_state_reg
         if (!reset_n)
             state_reg_last  <= IDLE_ST;
@@ -193,62 +191,57 @@ module ecc_hmac_drbg_interface#(
 
     always_comb 
     begin : interface_fsm
-        if (!reset_n)
-            state_next    = IDLE_ST;
-        else
-        begin
-            state_next = IDLE_ST;
-            case(state_reg)
-                IDLE_ST: begin
-                    if (en & hmac_ready) begin
-                        state_next = LAMBDA_ST;
-                    end
+        state_next = IDLE_ST;
+        case(state_reg)
+            IDLE_ST: begin
+                if (en & hmac_ready) begin
+                    state_next = LAMBDA_ST;
                 end
+            end
 
-                LAMBDA_ST: begin
-                    if (hmac_valid_edge)
-                        state_next    = SCALAR_RND_ST;
-                    else
-                        state_next    = LAMBDA_ST;
-                end
+            LAMBDA_ST: begin
+                if (hmac_valid_edge)
+                    state_next    = SCALAR_RND_ST;
+                else
+                    state_next    = LAMBDA_ST;
+            end
 
-                SCALAR_RND_ST: begin
-                    if (hmac_valid_edge) begin
-                        if (keygen_sign)
-                            state_next    = MASKING_RND_ST;
-                        else
-                            state_next    = KEYGEN_ST;
-                    end
-                    else
-                        state_next    = SCALAR_RND_ST;
-                end
-
-                MASKING_RND_ST: begin
-                    if (hmac_valid_edge)
-                        state_next    = SIGN_ST;
-                    else
+            SCALAR_RND_ST: begin
+                if (hmac_valid_edge) begin
+                    if (keygen_sign)
                         state_next    = MASKING_RND_ST;
-                end
-
-                KEYGEN_ST: begin
-                    if (hmac_valid_edge)
-                        state_next    = DONE_ST;
                     else
                         state_next    = KEYGEN_ST;
                 end
+                else
+                    state_next    = SCALAR_RND_ST;
+            end
 
-                SIGN_ST: begin
-                    if (hmac_valid_edge)
-                        state_next    = DONE_ST;
-                    else
-                        state_next    = SIGN_ST;
-                end
+            MASKING_RND_ST: begin
+                if (hmac_valid_edge)
+                    state_next    = SIGN_ST;
+                else
+                    state_next    = MASKING_RND_ST;
+            end
 
-                DONE_ST: begin
-                    state_next    = IDLE_ST;
-                end
-            endcase
-        end
+            KEYGEN_ST: begin
+                if (hmac_valid_edge)
+                    state_next    = DONE_ST;
+                else
+                    state_next    = KEYGEN_ST;
+            end
+
+            SIGN_ST: begin
+                if (hmac_valid_edge)
+                    state_next    = DONE_ST;
+                else
+                    state_next    = SIGN_ST;
+            end
+
+            DONE_ST: begin
+                state_next    = IDLE_ST;
+            end
+        endcase
     end // interface_fsm
 
     assign lambda = lambda_reg;

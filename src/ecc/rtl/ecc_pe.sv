@@ -63,17 +63,17 @@ module ecc_pe #(
     ecc_mult_dsp #(
         .RADIX(RADIX)
     ) MULT1 (
-        .A(a_in),
-        .B(b_in),
-        .P(mult0_out)
+        .A_i(a_in),
+        .B_i(b_in),
+        .P_o(mult0_out)
     );
 
     ecc_mult_dsp #(
         .RADIX(RADIX)
     ) MULT2 (
-        .A(p_in),
-        .B(m_in),
-        .P(mult1_out)
+        .A_i(p_in),
+        .B_i(m_in),
+        .P_o(mult1_out)
     );
 
     assign c_mux = odd ? c_out : c_in;
@@ -86,55 +86,51 @@ module ecc_pe #(
         res = mult0_out + mult1_out + c_mux + s_mux;
     end
 
-    always_ff @(posedge clk) begin
-        if (start_in) begin
+    always_ff @(posedge clk or negedge reset_n) begin
+        if (~reset_n) begin
+            c_out <= 'b0;
+        end
+        else if (start_in) begin
             c_out <= 'b0;
         end else begin
             c_out <= res_MSW;
         end
-
-        if (~reset_n) begin
-            c_out <= 'b0;
-        end
     end
 
-    always_ff @(posedge clk) begin
-        if (start_in) begin
+    always_ff @(posedge clk or negedge reset_n) begin
+        if (~reset_n) begin
+            s_out <= 'b0;
+        end
+        else if (start_in) begin
             s_out <= 'b0;
         end else begin
             s_out <= res_LSW;
         end
-
-        if (~reset_n) begin
-            s_out <= 'b0;
-        end
     end
 
-    always_ff @(posedge clk) begin
-        if (start_in) begin
+    always_ff @(posedge clk or negedge reset_n) begin
+        if (~reset_n) begin
+            a_out <= 'b0;
+        end
+        else if (start_in) begin
             a_out <= 'b0;
         end else begin
             if (odd) begin
                 a_out <= a_in;
             end
         end
-
-        if (~reset_n) begin
-            a_out <= 'b0;
-        end
     end
 
-    always_ff @(posedge clk) begin
-        if (start_in) begin
+    always_ff @(posedge clk or negedge reset_n) begin
+        if (~reset_n) begin
+            m_out <= 'b0;
+        end
+        else if (start_in) begin
             m_out <= 'b0;
         end else begin
             if (odd) begin
                 m_out <= m_in;
             end
-        end
-
-        if (~reset_n) begin
-            m_out <= 'b0;
         end
     end
 

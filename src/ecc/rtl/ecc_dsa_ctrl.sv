@@ -52,7 +52,6 @@ module ecc_dsa_ctrl(
     `include "ecc_params.sv"
     `include "ecc_dsa_uop.sv"
 
-    localparam DSA_PROG_LENGTH              = 2**DSA_PROG_ADDR_W;
     localparam [RND_SIZE-1 : 0]  zero_pad               = 0;
     
     //----------------------------------------------------------------
@@ -63,14 +62,12 @@ module ecc_dsa_ctrl(
     
     logic [REG_SIZE-1 : 0]          read_reg;
     logic [REG_SIZE+RND_SIZE-1 : 0] write_reg;
-    logic [7 : 0]                   addr_reg;
     logic [1 : 0]                   cycle_cnt;
 
     logic                   dsa_busy;
     logic                   subcomponent_busy;
     logic                   pm_busy_o;
     
-    logic hw_seed_we;
     logic hw_privkey_we;
     logic hw_pubkeyx_we;
     logic hw_pubkeyy_we;
@@ -111,10 +108,7 @@ module ecc_dsa_ctrl(
 
     logic                   hmac_mode;
     logic                   hmac_init;
-    logic                   hmac_next;
     logic                   hmac_ready;
-    logic                   hmac_valid;
-    logic [REG_SIZE-1 : 0]  hmac_seed;
     logic [REG_SIZE-1 : 0]  hmac_nonce;
     logic                   hmac_busy;
 
@@ -158,9 +152,7 @@ module ecc_dsa_ctrl(
         .p_prime(PRIME),
         .p_mu(PRIME_mu),
         .q_grouporder(GROUP_ORDER),
-        .q_mu(GROUP_ORDER_mu),
-        .ADD_NUM_ADDS(ADD_NUM_ADDS),
-        .ADD_BASE_SZ(ADD_BASE_SZ)
+        .q_mu(GROUP_ORDER_mu)
         )
         ecc_arith_unit_i (
         .clk(clk),
@@ -245,9 +237,23 @@ module ecc_dsa_ctrl(
     //----------------------------------------------------------------
 
     // read the registers written by sw
-    always_ff @(posedge clk) 
+    always_ff @(posedge clk or negedge reset_n) 
     begin : ecc_reg_reading
-        if (dsa_ready_reg) begin
+        if (!reset_n) begin
+            cmd_reg  <= '0;
+            sca_point_rnd_en  <= '0;
+            sca_mask_sign_en  <= '0;
+            sca_scalar_rnd_en <= '0;
+            seed_reg    <= '0;
+            msg_reg     <= '0;
+            privkey_reg <= '0;
+            pubkeyx_reg <= '0;
+            pubkeyy_reg <= '0;
+            r_reg       <= '0;
+            s_reg       <= '0;
+            IV_reg      <= '0;
+        end
+        else if (dsa_ready_reg) begin
             cmd_reg <= hwif_in.ecc_CTRL.CTRL.value;
             
             sca_point_rnd_en  <= hwif_in.ecc_SCACONFIG.SCACONFIG.value[0];
@@ -260,8 +266,8 @@ module ecc_dsa_ctrl(
                 privkey_reg[i0*32 +: 32] <= hwif_in.ecc_PRIVKEY[i0].PRIVKEY.value;
                 pubkeyx_reg[i0*32 +: 32] <= hwif_in.ecc_PUBKEY_X[i0].PUBKEY_X.value;
                 pubkeyy_reg[i0*32 +: 32] <= hwif_in.ecc_PUBKEY_Y[i0].PUBKEY_Y.value;
-                r_reg[i0*32 +: 32]       <= hwif_in.ecc_R[i0].R.value;
-                s_reg[i0*32 +: 32]       <= hwif_in.ecc_S[i0].S.value;
+                r_reg[i0*32 +: 32]       <= hwif_in.ecc_SIGN_R[i0].SIGN_R.value;
+                s_reg[i0*32 +: 32]       <= hwif_in.ecc_SIGN_S[i0].SIGN_S.value;
                 IV_reg[i0*32 +: 32]      <= hwif_in.ecc_IV[i0].IV.value;
             end
         end
@@ -281,12 +287,11 @@ module ecc_dsa_ctrl(
         
         for(int i0=0; i0<12; i0++) begin
             hwif_out.ecc_CTRL.CTRL.next = 0;
-            hwif_out.ecc_SEED[i0].SEED.next = hw_seed_we? read_reg[i0*32 +: 32] : hwif_in.ecc_SEED[i0].SEED.value;
             hwif_out.ecc_PRIVKEY[i0].PRIVKEY.next = hw_privkey_we? read_reg[i0*32 +: 32] : hwif_in.ecc_PRIVKEY[i0].PRIVKEY.value;
             hwif_out.ecc_PUBKEY_X[i0].PUBKEY_X.next = hw_pubkeyx_we? read_reg[i0*32 +: 32] : hwif_in.ecc_PUBKEY_X[i0].PUBKEY_X.value;
             hwif_out.ecc_PUBKEY_Y[i0].PUBKEY_Y.next = hw_pubkeyy_we? read_reg[i0*32 +: 32] : hwif_in.ecc_PUBKEY_Y[i0].PUBKEY_Y.value;
-            hwif_out.ecc_R[i0].R.next = hw_r_we? read_reg[i0*32 +: 32] : hwif_in.ecc_R[i0].R.value;
-            hwif_out.ecc_S[i0].S.next = hw_s_we? read_reg[i0*32 +: 32] : hwif_in.ecc_S[i0].S.value;
+            hwif_out.ecc_SIGN_R[i0].SIGN_R.next = hw_r_we? read_reg[i0*32 +: 32] : hwif_in.ecc_SIGN_R[i0].SIGN_R.value;
+            hwif_out.ecc_SIGN_S[i0].SIGN_S.next = hw_s_we? read_reg[i0*32 +: 32] : hwif_in.ecc_SIGN_S[i0].SIGN_S.value;
             hwif_out.ecc_VERIFY_R[i0].VERIFY_R.next = hw_verify_r_we? read_reg[i0*32 +: 32] : hwif_in.ecc_VERIFY_R[i0].VERIFY_R.value;
         end
     end // ecc_reg_writing
@@ -296,7 +301,7 @@ module ecc_dsa_ctrl(
     //
     // update the internal registers and their wr_en
     //----------------------------------------------------------------
-    always_ff @(posedge clk) 
+    always_ff @(posedge clk or negedge reset_n) 
     begin : SCALAR_REG
         if(!reset_n) begin
             scalar_G_reg <= 0;
@@ -315,7 +320,6 @@ module ecc_dsa_ctrl(
 
     always_comb 
     begin : wr_en_signals
-        hw_seed_we = 0;
         hw_privkey_we = 0;
         hw_pubkeyx_we = 0;
         hw_pubkeyy_we = 0;
@@ -334,7 +338,17 @@ module ecc_dsa_ctrl(
                 SCALAR_G_ID     : hw_scalar_G_we = 1;
                 SCALAR_PK_ID    : hw_scalar_PK_we = 1;
                 VERIFY_R_ID     : hw_verify_r_we = 1;
-                default         : begin end
+                default         : 
+                    begin 
+                        hw_privkey_we = 0;
+                        hw_pubkeyx_we = 0;
+                        hw_pubkeyy_we = 0;
+                        hw_r_we = 0;
+                        hw_s_we = 0;
+                        hw_scalar_G_we = 0;
+                        hw_scalar_PK_we = 0;
+                        hw_verify_r_we = 0;
+                    end
             endcase
         end
     end // wr_en_signals
@@ -377,7 +391,7 @@ module ecc_dsa_ctrl(
         end
     end // write_to_pm_core
 
-    always_ff @(posedge clk) 
+    always_ff @(posedge clk or negedge reset_n) 
     begin : scalar_sca_ctrl
         if(!reset_n) begin
             scalar_in_reg <= 0;
@@ -392,7 +406,7 @@ module ecc_dsa_ctrl(
     assign hmac_busy = ~hmac_ready;
     assign subcomponent_busy = pm_busy_o | hmac_busy | scalar_sca_busy_o;
 
-    always_ff @(posedge clk) 
+    always_ff @(posedge clk or negedge reset_n) 
     begin : ECDSA_FSM
         if(!reset_n) begin
             prog_cntr <= DSA_RESET;

@@ -61,20 +61,20 @@ _start:
         sub x1, x1, x2
         bne x1, x0, write_seed0_loop
 
-    // Load lambda0 and write to ECC core
-    li x3, ECC_ADDR_LAMBDA0
-    // 12 words or 384-bit lambda0   
+    // Load IV0 and write to ECC core
+    li x3, ECC_ADDR_IV0
+    // 12 words or 384-bit IV0   
     li x1, 0xc
     li x2, 0x1
     la x4, TEST_VECTOR_KEYGEN
     addi x4, x4, 336
-    write_lambda0_loop:
+    write_IV0_loop:
         lw x5, 0(x4)
         sw x5, 0(x3)
         addi x4, x4, 4
         addi x3, x3, 4
         sub x1, x1, x2
-        bne x1, x0, write_lambda0_loop
+        bne x1, x0, write_IV0_loop
 
     // Load and write ECC_CMD_KEYGEN to ECC_CORE
     li x3, ECC_ADDR_CTRL
@@ -173,20 +173,20 @@ _start:
         sub x1, x1, x2
         bne x1, x0, write_privkey0_loop
 
-    // Load lambda and write to ECC core
-    li x3, ECC_ADDR_LAMBDA0
-    // 12 words or 384-bit lambda0   
+    // Load IV and write to ECC core
+    li x3, ECC_ADDR_IV0
+    // 12 words or 384-bit IV0   
     li x1, 0xc
     li x2, 0x1
     la x4, TEST_VECTOR_KEYSIGN_VERIFY
     addi x4, x4, 336
-    write_lambda0_loop1:
+    write_IV0_loop1:
         lw x5, 0(x4)
         sw x5, 0(x3)
         addi x4, x4, 4
         addi x3, x3, 4
         sub x1, x1, x2
-        bne x1, x0, write_lambda0_loop1
+        bne x1, x0, write_IV0_loop1
 
     // Load and write ECC_CMD_KEYSIGN to ECC_CORE
     li x3, ECC_ADDR_CTRL

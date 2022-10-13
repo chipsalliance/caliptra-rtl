@@ -47,7 +47,7 @@ module ecc_pm_ctrl #(
     `include "ecc_pm_uop.sv"
 
     localparam MULT_DELAY          = 39 -1;
-    localparam ADD_DELAY           = 1  -1;
+    localparam ADD_DELAY           = 2  -1;
     
     localparam Secp384_SCA_MONT_COUNT   = REG_SIZE + RND_SIZE;
     localparam Secp384_MONT_COUNT       = REG_SIZE;
@@ -88,24 +88,24 @@ module ecc_pm_ctrl #(
         .douta(prog_line)
     );
     
-    always_ff @(posedge clk) 
+    always_ff @(posedge clk or negedge reset_n) 
     begin : ff_stalled_reg
         if(!reset_n) 
-            stalled_pipe1 <= 0;
+            stalled_pipe1 <= '0;
         else
             stalled_pipe1 <= stalled;
     end // ff_stalled_reg
 
-    always_ff @(posedge clk) 
+    always_ff @(posedge clk or negedge reset_n) 
     begin : pm_fsm
         if(!reset_n) begin
-            prog_cntr   <= 0;
-            mont_cntr   <= 0;
-            stall_cntr  <= 0;
-            stalled     <= 0;
-            req_digit_o <= 0;
-            mont_ladder <= 0;
-            ecc_cmd_reg <= 0;
+            prog_cntr   <= '0;
+            mont_cntr   <= '0;
+            stall_cntr  <= '0;
+            stalled     <= '0;
+            req_digit_o <= '0;
+            mont_ladder <= '0;
+            ecc_cmd_reg <= '0;
         end
         else begin
             if (stalled & (stall_cntr > 0)) begin
@@ -264,12 +264,11 @@ module ecc_pm_ctrl #(
                         prog_cntr <= prog_cntr + 1;
                     end
                 endcase
-            end
-               
+            end 
         end
     end // pm_fsm
 
-    always_ff @(posedge clk) 
+    always_ff @(posedge clk or negedge reset_n) 
     begin : sequencer_pipeline1
         if (!reset_n) 
             prog_line_pipe1 <= 0;
@@ -281,7 +280,7 @@ module ecc_pm_ctrl #(
         end
     end // sequencer_pipeline1
 
-    always_ff @(posedge clk) 
+    always_ff @(posedge clk or negedge reset_n) 
     begin : sequencer_pipeline2
         if (!reset_n) 
             prog_line_pipe2 <= 0;
@@ -308,24 +307,24 @@ module ecc_pm_ctrl #(
      
 
     //Instruction out to arithmetic units and memory
-    always_ff @(posedge clk) 
+    always_ff @(posedge clk or negedge reset_n) 
     begin : instruction_out
         if (!reset_n)
             instr_o <= 0;
 	    else begin
             instr_o <= 0;
             instr_o[2*OPR_ADDR_WIDTH+5] <= prog_line_pipe2[2*OPR_ADDR_WIDTH+5];  // mod_p_q : performing mod_p if (mod_p_q = 0), else mod_q
-
-            case (prog_line_pipe2[2*OPR_ADDR_WIDTH+2 +: 3])
+            
+            case (prog_line_pipe2[2*OPR_ADDR_WIDTH+2 +: 3]) //14,15,16
                 3'b000 :  instr_o[2*OPR_ADDR_WIDTH+2 +: 3] <= 3'b000; // NOP
-                3'b001 :  instr_o[2*OPR_ADDR_WIDTH+2 +: 3] <= 3'b010; // RED
-                3'b010 :  instr_o[2*OPR_ADDR_WIDTH+2 +: 3] <= 3'b000; // ADD
-                3'b011 :  instr_o[2*OPR_ADDR_WIDTH+2 +: 3] <= 3'b001; // SUB
+                //3'b001 :  instr_o[2*OPR_ADDR_WIDTH+2 +: 3] <= 3'b010; // RED
+                3'b010 :  instr_o[2*OPR_ADDR_WIDTH+2 +: 3] <= 3'b010; // ADD
+                3'b011 :  instr_o[2*OPR_ADDR_WIDTH+2 +: 3] <= 3'b011; // SUB
                 3'b100 :  instr_o[2*OPR_ADDR_WIDTH+2 +: 3] <= 3'b100; // MULT
                 default:  instr_o[2*OPR_ADDR_WIDTH+2 +: 3] <= 3'b000;
             endcase
 
-            instr_o[2*OPR_ADDR_WIDTH+1]    <= prog_line_pipe2[2*OPR_ADDR_WIDTH+1];        //Mem writeA
+            instr_o[2*OPR_ADDR_WIDTH+1]    <= prog_line_pipe2[2*OPR_ADDR_WIDTH+1];      //Mem writeA
             instr_o[2*OPR_ADDR_WIDTH]      <= prog_line_pipe2[2*OPR_ADDR_WIDTH];        //Mem writeB
             if (mont_ladder) begin
                 if (prog_line_pipe2[OPR_ADDR_WIDTH+3 +: OPR_ADDR_WIDTH-3] == 3'b001)

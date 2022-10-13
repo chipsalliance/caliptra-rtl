@@ -30,17 +30,17 @@ module ecc_top #(
     parameter CLIENT_DATA_WIDTH = 32
     )
     (
-    input logic                       clk,
-    input logic                       reset_n,
+    input wire                        clk,
+    input wire                        reset_n,
 
     //AHB Lite Interface
-    input logic [AHB_ADDR_WIDTH-1:0]  haddr_i,
-    input logic [AHB_DATA_WIDTH-1:0]  hwdata_i,
-    input logic                       hsel_i,
-    input logic                       hwrite_i,
-    input logic                       hready_i,
-    input logic [1:0]                 htrans_i,
-    input logic [2:0]                 hsize_i,
+    input wire  [AHB_ADDR_WIDTH-1:0]  haddr_i,
+    input wire  [AHB_DATA_WIDTH-1:0]  hwdata_i,
+    input wire                        hsel_i,
+    input wire                        hwrite_i,
+    input wire                        hready_i,
+    input wire  [1:0]                 htrans_i,
+    input wire  [2:0]                 hsize_i,
 
     output logic                      hresp_o,
     output logic                      hreadyout_o,
@@ -52,7 +52,7 @@ module ecc_top #(
     logic [CLIENT_DATA_WIDTH-1:0] uc_req_rdata;
     ecc_req_t uc_req;
 
-    logic ecc_reg_error, ecc_reg_read_error, ecc_reg_write_error;
+    logic ecc_reg_err, ecc_reg_read_err, ecc_reg_write_err;
 
     ecc_reg_pkg::ecc_reg__in_t ecc_reg_hwif_in;
     ecc_reg_pkg::ecc_reg__out_t ecc_reg_hwif_out;
@@ -85,7 +85,7 @@ module ecc_top #(
         //COMPONENT INF
         .dv(ecc_cs),
         .hold('0),
-        .err(ecc_reg_error),
+        .err(ecc_reg_err),
         .write(uc_req.write),
         .wdata(uc_req.wdata),
         .addr(uc_req.addr[AHB_ADDR_WIDTH-1:0]),
@@ -97,11 +97,11 @@ module ecc_top #(
     //This module contains the functional registers maintained by the Caliptra ECC
     //These registers are memory mapped per the Caliptra Specification
     //Read and Write permissions are controlled within this block
-    always_comb ecc_reg_error = ecc_reg_read_error | ecc_reg_write_error;
+    always_comb ecc_reg_err = ecc_reg_read_err | ecc_reg_write_err;
 
     ecc_reg ecc_reg1 (
         .clk(clk),
-        .rst('0),
+        .rst(reset_n),
 
         .s_cpuif_req(ecc_cs),
         .s_cpuif_req_is_wr(uc_req.write),
@@ -110,10 +110,10 @@ module ecc_top #(
         .s_cpuif_req_stall_wr(),
         .s_cpuif_req_stall_rd(),
         .s_cpuif_rd_ack(),
-        .s_cpuif_rd_err(ecc_reg_read_error),
+        .s_cpuif_rd_err(ecc_reg_read_err),
         .s_cpuif_rd_data(uc_req_rdata),
         .s_cpuif_wr_ack(),
-        .s_cpuif_wr_err(ecc_reg_write_error),
+        .s_cpuif_wr_err(ecc_reg_write_err),
 
         .hwif_in(ecc_reg_hwif_in),
         .hwif_out(ecc_reg_hwif_out)

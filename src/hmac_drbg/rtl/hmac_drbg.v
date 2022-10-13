@@ -165,20 +165,23 @@ module hmac_drbg
     HMAC_tag_valid_edge = HMAC_tag_valid & (!HMAC_tag_valid_last);
   end // edge_detector
 
-  always @ (posedge clk) 
-  begin 
-    HMAC_tag_valid_last <= HMAC_tag_valid;
-  end
-
-  always @*
+  always @ (posedge clk or negedge reset_n) 
   begin
     if (!reset_n)
-      ready_reg   = 0; 
-    else
-      ready_reg   = (nonce_st_reg == NONCE_IDLE_ST);
+      HMAC_tag_valid_last <= '0;
+    else 
+      HMAC_tag_valid_last <= HMAC_tag_valid;
   end
 
-  always @ (posedge clk) 
+  always @ (posedge clk or negedge reset_n) 
+  begin
+    if (!reset_n)
+      ready_reg   <= '0; 
+    else
+      ready_reg   <= (nonce_st_reg == NONCE_IDLE_ST);
+  end
+
+  always @ (posedge clk or negedge reset_n) 
   begin : valid_nonce_regs_updates
     if (!reset_n) begin
       valid_reg   <= 0;
@@ -210,103 +213,111 @@ module hmac_drbg
     end
   end // valid_nonce_regs_updates
 
-  always @ (posedge clk) 
+  always @ (posedge clk or negedge reset_n) 
   begin : hmac_inputs_update
-    HMAC_init <= 0;
-    HMAC_next <= 0;
-    if (first_round) begin
-      case(nonce_st_reg)
-        MODE0_INIT_ST: begin
-          K_reg   <= K_init;
-          V_reg   <= V_init;
-        end
+    if (!reset_n) begin
+      HMAC_init <= 0;
+      HMAC_next <= 0;
+      K_reg   <= '0;
+      V_reg   <= '0;
+    end
+    else begin
+      HMAC_init <= 0;
+      HMAC_next <= 0;
+      if (first_round) begin
+        unique casez(nonce_st_reg)
+          MODE0_INIT_ST: begin
+            K_reg   <= K_init;
+            V_reg   <= V_init;
+          end
 
-        MODE0_K1_ST: begin
-          HMAC_init <= 1;
-        end
+          MODE0_K1_ST: begin
+            HMAC_init <= 1;
+          end
 
-        MODE0_V1_ST: begin
-          HMAC_init <= 1;
-          K_reg   <= HMAC_tag;
-        end
+          MODE0_V1_ST: begin
+            HMAC_init <= 1;
+            K_reg   <= HMAC_tag;
+          end
 
-        MODE0_K2_ST: begin
-          HMAC_init <= 1;
-          V_reg   <= HMAC_tag;
-        end 
+          MODE0_K2_ST: begin
+            HMAC_init <= 1;
+            V_reg   <= HMAC_tag;
+          end 
 
-        MODE0_V2_ST: begin
-          HMAC_init <= 1;
-          K_reg   <= HMAC_tag;
-        end
+          MODE0_V2_ST: begin
+            HMAC_init <= 1;
+            K_reg   <= HMAC_tag;
+          end
 
-        MODE0_DONE_ST: begin
-          V_reg   <= HMAC_tag;
-        end
+          MODE0_DONE_ST: begin
+            V_reg   <= HMAC_tag;
+          end
 
-        MODE1_INIT_ST: begin
-          K_reg   <= K_init;
-          V_reg   <= V_init;
-        end
+          MODE1_INIT_ST: begin
+            K_reg   <= K_init;
+            V_reg   <= V_init;
+          end
 
-        MODE1_K10_ST: begin
-          HMAC_init <= 1;
-        end
+          MODE1_K10_ST: begin
+            HMAC_init <= 1;
+          end
 
-        MODE1_K11_ST: begin
-          HMAC_next <= 1;
-        end
+          MODE1_K11_ST: begin
+            HMAC_next <= 1;
+          end
 
-        MODE1_V1_ST: begin
-          HMAC_init <= 1;
-          K_reg   <= HMAC_tag;
-        end
+          MODE1_V1_ST: begin
+            HMAC_init <= 1;
+            K_reg   <= HMAC_tag;
+          end
 
-        MODE1_K20_ST: begin
-          HMAC_init <= 1;
-          V_reg   <= HMAC_tag;
-        end 
+          MODE1_K20_ST: begin
+            HMAC_init <= 1;
+            V_reg   <= HMAC_tag;
+          end 
 
-        MODE1_K21_ST: begin
-          HMAC_next <= 1;
-        end 
+          MODE1_K21_ST: begin
+            HMAC_next <= 1;
+          end 
 
-        MODE1_V2_ST: begin
-          HMAC_init <= 1;
-          K_reg   <= HMAC_tag;
-        end
+          MODE1_V2_ST: begin
+            HMAC_init <= 1;
+            K_reg   <= HMAC_tag;
+          end
 
-        MODE1_T_ST: begin
-          HMAC_init <= 1;
-          V_reg   <= HMAC_tag;
-        end 
+          MODE1_T_ST: begin
+            HMAC_init <= 1;
+            V_reg   <= HMAC_tag;
+          end 
 
-        MODE1_K3_ST: begin
-          HMAC_init <= 1;
-        end
+          MODE1_K3_ST: begin
+            HMAC_init <= 1;
+          end
 
-        MODE1_V3_ST: begin
-          HMAC_init <= 1;
-          K_reg   <= HMAC_tag;
-        end 
-             
-        MODE1_DONE_ST: begin
-          V_reg   <= HMAC_tag;
-        end
+          MODE1_V3_ST: begin
+            HMAC_init <= 1;
+            K_reg   <= HMAC_tag;
+          end 
+              
+          MODE1_DONE_ST: begin
+            V_reg   <= HMAC_tag;
+          end
 
-        default: begin
-           HMAC_init <= 0;
-           HMAC_next <= 0;
-        end 
+          default: begin
+            HMAC_init <= 0;
+            HMAC_next <= 0;
+          end 
 
-      endcase;
+        endcase;
+      end
     end
   end // hmac_inputs_update
 
   always @*
   begin : hmac_block_update
     HMAC_key = K_reg;
-    case(nonce_st_reg)
+    unique casez(nonce_st_reg)
       MODE0_K1_ST:    HMAC_block  = {V_reg, cnt_reg, seed, 1'h1, {ZERO_PAD_MODE0_K{1'b0}}, MODE0_K_SIZE};
       MODE0_V1_ST:    HMAC_block  = {V_reg, 1'h1, {ZERO_PAD_V{1'b0}}, V_SIZE};
       MODE0_K2_ST:    HMAC_block  = {V_reg, cnt_reg, seed, 1'h1, {ZERO_PAD_MODE0_K{1'b0}}, MODE0_K_SIZE};
@@ -324,7 +335,7 @@ module hmac_drbg
     endcase;
   end // hmac_block_update
      
-  always @ (posedge clk) 
+  always @ (posedge clk or negedge reset_n) 
   begin : cnt_reg_update
     if (!reset_n)
       cnt_reg    <= '0;
@@ -341,7 +352,7 @@ module hmac_drbg
     end
   end // cnt_reg_update
 
-  always @ (posedge clk) 
+  always @ (posedge clk or negedge reset_n) 
   begin : state_update
     if (!reset_n) 
       nonce_st_reg      <= NONCE_IDLE_ST;
@@ -349,7 +360,7 @@ module hmac_drbg
       nonce_st_reg      <= nonce_next_st;
   end // state_update
 
-  always @ (posedge clk) 
+  always @ (posedge clk or negedge reset_n) 
   begin : ff_state_update
     if (!reset_n) 
       nonce_st_reg_last <= NONCE_IDLE_ST;
@@ -366,181 +377,180 @@ module hmac_drbg
 
   always @*
   begin: state_logic
-    if (!reset_n)
-      nonce_next_st    = NONCE_IDLE_ST;
-    else
-    begin
-      case(nonce_st_reg)
-        NONCE_IDLE_ST: // IDLE WAIT
-        begin
-          if (HMAC_ready) begin
-            case ({init_cmd, next_cmd, mode})  // check the mode
-              3'b100 :    nonce_next_st    = MODE0_INIT_ST;
-              3'b101 :    nonce_next_st    = MODE1_INIT_ST;
-              3'b010 :    nonce_next_st    = MODE0_NEXT_ST;
-              3'b011 :    nonce_next_st    = MODE1_NEXT_ST;
-              default:    nonce_next_st    = NONCE_IDLE_ST;
-            endcase
-          end
-          else
-            nonce_next_st    = NONCE_IDLE_ST;
+    case(nonce_st_reg)
+      NONCE_IDLE_ST: // IDLE WAIT
+      begin
+        if (HMAC_ready) begin
+          case ({init_cmd, next_cmd, mode})  // check the mode
+            3'b100 :    nonce_next_st    = MODE0_INIT_ST;
+            3'b101 :    nonce_next_st    = MODE1_INIT_ST;
+            3'b010 :    nonce_next_st    = MODE0_NEXT_ST;
+            3'b011 :    nonce_next_st    = MODE1_NEXT_ST;
+            default:    nonce_next_st    = NONCE_IDLE_ST;
+          endcase
         end
-
-        MODE0_INIT_ST:
-        begin
-          nonce_next_st    = MODE0_K1_ST;
-        end
-
-        MODE0_NEXT_ST:
-        begin
-          nonce_next_st    = MODE0_K1_ST;
-        end
-
-        MODE0_K1_ST:
-        begin
-          if (HMAC_tag_valid_edge)
-            nonce_next_st    = MODE0_V1_ST;
-          else
-            nonce_next_st    = MODE0_K1_ST;
-        end
-
-        MODE0_V1_ST:
-        begin
-          if (HMAC_tag_valid_edge)
-            nonce_next_st    = MODE0_K2_INIT_ST;
-          else
-            nonce_next_st    = MODE0_V1_ST;
-        end
-
-        MODE0_K2_INIT_ST:
-        begin
-            nonce_next_st    = MODE0_K2_ST;
-        end
-
-        MODE0_K2_ST:
-        begin
-          if (HMAC_tag_valid_edge)
-            nonce_next_st    = MODE0_V2_ST;
-          else
-            nonce_next_st    = MODE0_K2_ST;
-        end
-
-        MODE0_V2_ST:
-        begin
-          if (HMAC_tag_valid_edge)
-            nonce_next_st    = MODE0_DONE_ST;
-          else
-            nonce_next_st    = MODE0_V2_ST;
-        end
-
-        MODE0_DONE_ST:
-        begin
+        else
           nonce_next_st    = NONCE_IDLE_ST;
-        end
+      end
 
-        MODE1_INIT_ST:
-        begin
+      MODE0_INIT_ST:
+      begin
+        nonce_next_st    = MODE0_K1_ST;
+      end
+
+      MODE0_NEXT_ST:
+      begin
+        nonce_next_st    = MODE0_K1_ST;
+      end
+
+      MODE0_K1_ST:
+      begin
+        if (HMAC_tag_valid_edge)
+          nonce_next_st    = MODE0_V1_ST;
+        else
+          nonce_next_st    = MODE0_K1_ST;
+      end
+
+      MODE0_V1_ST:
+      begin
+        if (HMAC_tag_valid_edge)
+          nonce_next_st    = MODE0_K2_INIT_ST;
+        else
+          nonce_next_st    = MODE0_V1_ST;
+      end
+
+      MODE0_K2_INIT_ST:
+      begin
+          nonce_next_st    = MODE0_K2_ST;
+      end
+
+      MODE0_K2_ST:
+      begin
+        if (HMAC_tag_valid_edge)
+          nonce_next_st    = MODE0_V2_ST;
+        else
+          nonce_next_st    = MODE0_K2_ST;
+      end
+
+      MODE0_V2_ST:
+      begin
+        if (HMAC_tag_valid_edge)
+          nonce_next_st    = MODE0_DONE_ST;
+        else
+          nonce_next_st    = MODE0_V2_ST;
+      end
+
+      MODE0_DONE_ST:
+      begin
+        nonce_next_st    = NONCE_IDLE_ST;
+      end
+
+      MODE1_INIT_ST:
+      begin
+        nonce_next_st    = MODE1_K10_ST;
+      end
+
+      MODE1_NEXT_ST:
+      begin
+        nonce_next_st    = MODE1_K10_ST;
+      end
+
+      MODE1_K10_ST:
+      begin
+        if (HMAC_tag_valid_edge)
+          nonce_next_st    = MODE1_K11_ST;
+        else
           nonce_next_st    = MODE1_K10_ST;
-        end
+      end
 
-        MODE1_NEXT_ST:
-        begin
-          nonce_next_st    = MODE1_K10_ST;
-        end
+      MODE1_K11_ST:
+      begin
+        if (HMAC_tag_valid_edge)
+          nonce_next_st    = MODE1_V1_ST;
+        else
+          nonce_next_st    = MODE1_K11_ST;
+      end
 
-        MODE1_K10_ST:
-        begin
-          if (HMAC_tag_valid_edge)
-            nonce_next_st    = MODE1_K11_ST;
-          else
-            nonce_next_st    = MODE1_K10_ST;
-        end
+      MODE1_V1_ST:
+      begin
+        if (HMAC_tag_valid_edge)
+          nonce_next_st    = MODE1_K20_INIT_ST;
+        else
+          nonce_next_st    = MODE1_V1_ST;
+      end
 
-        MODE1_K11_ST:
-        begin
-          if (HMAC_tag_valid_edge)
-            nonce_next_st    = MODE1_V1_ST;
-          else
-            nonce_next_st    = MODE1_K11_ST;
-        end
+      MODE1_K20_INIT_ST:
+      begin
+        nonce_next_st    = MODE1_K20_ST;
+      end
 
-        MODE1_V1_ST:
-        begin
-          if (HMAC_tag_valid_edge)
-            nonce_next_st    = MODE1_K20_INIT_ST;
-          else
-            nonce_next_st    = MODE1_V1_ST;
-        end
-
-        MODE1_K20_INIT_ST:
-        begin
+      MODE1_K20_ST:
+      begin
+        if (HMAC_tag_valid_edge)
+          nonce_next_st    = MODE1_K21_ST;
+        else
           nonce_next_st    = MODE1_K20_ST;
-        end
+      end
 
-        MODE1_K20_ST:
-        begin
-          if (HMAC_tag_valid_edge)
-            nonce_next_st    = MODE1_K21_ST;
-          else
-            nonce_next_st    = MODE1_K20_ST;
-        end
+      MODE1_K21_ST:
+      begin
+        if (HMAC_tag_valid_edge)
+          nonce_next_st    = MODE1_V2_ST;
+        else
+          nonce_next_st    = MODE1_K21_ST;
+      end
 
-        MODE1_K21_ST:
-        begin
-          if (HMAC_tag_valid_edge)
-            nonce_next_st    = MODE1_V2_ST;
-          else
-            nonce_next_st    = MODE1_K21_ST;
-        end
+      MODE1_V2_ST:
+      begin
+        if (HMAC_tag_valid_edge)
+          nonce_next_st    = MODE1_T_ST;
+        else
+          nonce_next_st    = MODE1_V2_ST;
+      end
 
-        MODE1_V2_ST:
-        begin
-          if (HMAC_tag_valid_edge)
-            nonce_next_st    = MODE1_T_ST;
-          else
-            nonce_next_st    = MODE1_V2_ST;
-        end
+      MODE1_T_ST:
+      begin
+        if (HMAC_tag_valid_edge)
+          nonce_next_st    = MODE1_CHCK_ST;
+        else
+          nonce_next_st    = MODE1_T_ST;
+      end
 
-        MODE1_T_ST:
-        begin
-          if (HMAC_tag_valid_edge)
-            nonce_next_st    = MODE1_CHCK_ST;
-          else
-            nonce_next_st    = MODE1_T_ST;
-        end
+      MODE1_CHCK_ST:
+      begin
+        if ((HMAC_tag==0) || (HMAC_tag > HMAC_DRBG_PRIME))
+          nonce_next_st    = MODE1_K3_ST;
+        else
+          nonce_next_st    = MODE1_DONE_ST;
+      end
 
-        MODE1_CHCK_ST:
-        begin
-          if ((HMAC_tag==0) || (HMAC_tag > HMAC_DRBG_PRIME))
-            nonce_next_st    = MODE1_K3_ST;
-          else
-            nonce_next_st    = MODE1_DONE_ST;
-        end
+      MODE1_K3_ST:
+      begin
+        if (HMAC_tag_valid_edge)
+          nonce_next_st    = MODE1_V3_ST;
+        else
+          nonce_next_st    = MODE1_K3_ST;
+      end
 
-        MODE1_K3_ST:
-        begin
-          if (HMAC_tag_valid_edge)
-            nonce_next_st    = MODE1_V3_ST;
-          else
-            nonce_next_st    = MODE1_K3_ST;
-        end
+      MODE1_V3_ST:
+      begin
+        if (HMAC_tag_valid_edge)
+          nonce_next_st    = MODE1_T_ST;
+        else
+          nonce_next_st    = MODE1_V3_ST;
+      end
 
-        MODE1_V3_ST:
-        begin
-          if (HMAC_tag_valid_edge)
-            nonce_next_st    = MODE1_T_ST;
-          else
-            nonce_next_st    = MODE1_V3_ST;
-        end
+      MODE1_DONE_ST:
+      begin
+        nonce_next_st    = NONCE_IDLE_ST;
+      end
 
-        MODE1_DONE_ST:
-        begin
-          nonce_next_st    = NONCE_IDLE_ST;
-        end
+      default:
+      begin
+        nonce_next_st    = NONCE_IDLE_ST;
+      end
 
-      endcase
-    end
-
+    endcase
   end //state_logic
 
   //----------------------------------------------------------------

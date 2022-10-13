@@ -318,31 +318,31 @@ end
   parameter STATUS_READY_BIT = 0;
   parameter STATUS_VALID_BIT = 1;
   parameter ADDR_SEED0       = BASE_ADDR + 32'h00000080;
-  parameter ADDR_SEED11      = BASE_ADDR + 32'h000000A8;
+  parameter ADDR_SEED11      = BASE_ADDR + 32'h000000AC;
 
   parameter ADDR_MSG0        = BASE_ADDR + 32'h00000100;
-  parameter ADDR_MSG11       = BASE_ADDR + 32'h00000128;
+  parameter ADDR_MSG11       = BASE_ADDR + 32'h0000012C;
 
   parameter ADDR_PRIVKEY0    = BASE_ADDR + 32'h00000180;
-  parameter ADDR_PRIVKEY11   = BASE_ADDR + 32'h000001A8;
+  parameter ADDR_PRIVKEY11   = BASE_ADDR + 32'h000001AC;
 
   parameter ADDR_PUBKEYX0    = BASE_ADDR + 32'h00000200;
-  parameter ADDR_PUBKEYX11   = BASE_ADDR + 32'h00000228;
+  parameter ADDR_PUBKEYX11   = BASE_ADDR + 32'h0000022C;
 
   parameter ADDR_PUBKEYY0    = BASE_ADDR + 32'h00000280;
-  parameter ADDR_PUBKEYY11   = BASE_ADDR + 32'h000002A8;
+  parameter ADDR_PUBKEYY11   = BASE_ADDR + 32'h000002AC;
 
   parameter ADDR_SIGNR0      = BASE_ADDR + 32'h00000300;
-  parameter ADDR_SIGNR11     = BASE_ADDR + 32'h00000328;
+  parameter ADDR_SIGNR11     = BASE_ADDR + 32'h0000032C;
 
   parameter ADDR_SIGNS0      = BASE_ADDR + 32'h00000380;
-  parameter ADDR_SIGNS11     = BASE_ADDR + 32'h000003A8;
+  parameter ADDR_SIGNS11     = BASE_ADDR + 32'h000003AC;
 
   parameter ADDR_VERIFY_R0   = BASE_ADDR + 32'h00000400;
-  parameter ADDR_VERIFY_R11  = BASE_ADDR + 32'h00000428;
+  parameter ADDR_VERIFY_R11  = BASE_ADDR + 32'h0000042C;
   
-  parameter ADDR_LAMBDA0     = BASE_ADDR + 32'h00000480;
-  parameter ADDR_LAMBDA11    = BASE_ADDR + 32'h000004A8;
+  parameter ADDR_IV0         = BASE_ADDR + 32'h00000480;
+  parameter ADDR_IV11        = BASE_ADDR + 32'h000004AC;
 
   parameter REG_SIZE      = 384;
   parameter PRIME         = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff;
@@ -383,7 +383,7 @@ end
       operand_t     R;
       operand_t     S;
       operand_t     seed;
-      operand_t     lambda;
+      operand_t     IV;
   } test_vector_t;
 
   test_vector_t test_vector;
@@ -641,7 +641,7 @@ end
       start_time = cycle_ctr;
 
       write_block(ADDR_SEED0, test_vector.seed);
-      write_block(ADDR_LAMBDA0, test_vector.lambda);
+      write_block(ADDR_IV0, test_vector.IV);
 
       trig_ECC(KEYGEN);
       @(posedge clk_i);
@@ -718,7 +718,7 @@ end
 
       write_block(ADDR_MSG0, test_vector.hashed_msg);
       write_block(ADDR_PRIVKEY0, test_vector.privkey);
-      write_block(ADDR_LAMBDA0, test_vector.lambda);
+      write_block(ADDR_IV0, test_vector.IV);
 
       trig_ECC(SIGN);
       @(posedge clk_i);
@@ -792,7 +792,7 @@ end
       write_block(ADDR_PUBKEYY0, test_vector.pubkey.y);
       write_block(ADDR_SIGNR0, test_vector.R);
       write_block(ADDR_SIGNS0, test_vector.S);
-      write_block(ADDR_LAMBDA0, 384'h1);
+      write_block(ADDR_IV0, 384'h1);
 
       trig_ECC(VERIFY);
       @(posedge clk_i);
@@ -925,7 +925,7 @@ end
       $fgets(line_read, fd_r); 
       $sscanf(line_read, "%h", test_vector.S);
       $fgets(line_read, fd_r);
-      $sscanf(line_read, "%h", test_vector.lambda);
+      $sscanf(line_read, "%h", test_vector.IV);
 
       $fclose(fd_r);
 
