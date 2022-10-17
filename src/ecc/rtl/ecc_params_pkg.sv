@@ -14,11 +14,16 @@
 //
 //======================================================================
 //
-// ecc_params.sv
+// ecc_params_pkg.sv
 // --------
 // required parameters and register address for ECC Secp384.
 //
 //======================================================================
+
+`ifndef ECC_PARAMS_PKG
+`define ECC_PARAMS_PKG
+
+package ecc_params_pkg;
 
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
@@ -117,6 +122,13 @@
   // as follows:
   // s = [((privkey - d) * r + (h - d)) * k_inv] + [(d * r + d) * k_inv]
   parameter                   sca_mask_sign_init     = 1;
+
+  // openssl keygen test should be deleted after openssl keygen test.
+  parameter                   openssl_init           = 0;
+
+  `endif
+
+endpackage
 //======================================================================
 // EOF ecc_params.sv
 //======================================================================

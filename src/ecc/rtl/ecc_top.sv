@@ -21,10 +21,9 @@
 // 3- ahb_slv_sif module to handle AHB-lite interface
 //======================================================================
 
-`include "ecc_defines.svh"
-
-
-module ecc_top #(
+module ecc_top 
+    import ecc_defines_pkg::*;
+    #(
     parameter AHB_ADDR_WIDTH = 32,
     parameter AHB_DATA_WIDTH = 32,
     parameter CLIENT_DATA_WIDTH = 32

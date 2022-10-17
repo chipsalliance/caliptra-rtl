@@ -11,9 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//======================================================================
+//
+// ecc_defines_pkg.sv
+// --------
+// ECC interface parameters for the digital signature algorithm (DSA).
+//
+//
+//======================================================================
 
 `ifndef ECC_DEFINES
 `define ECC_DEFINES
+
+package ecc_defines_pkg;
 
 localparam ECC_ADDR_W = 32;
 localparam ECC_DATA_W = 32;
@@ -26,3 +36,5 @@ typedef struct packed {
 } ecc_req_t;
 
 `endif
+
+endpackage

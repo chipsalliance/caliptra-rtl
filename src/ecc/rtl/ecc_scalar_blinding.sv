@@ -68,6 +68,10 @@ module ecc_scalar_blinding #(
     localparam [FULL_RND_SIZE-RND_SIZE-1 : 0] zero_pad_rnd = '0;
     localparam [FULL_SIZE-REG_SIZE-1 : 0]     zero_pad_reg = '0;
     localparam [RADIX-1 : 0]                  zero_pad_radix = '0;
+
+    localparam A_ARR_WIDTH      = $clog2(REG_DIG_NUM+1);
+    localparam B_ARR_WIDTH      = $clog2(RND_DIG_NUM+1);
+    localparam P_ARR_WIDTH      = $clog2(FULL_DIG_NUM+1);
     //----------------------------------------------------------------
     // Registers
     //----------------------------------------------------------------
@@ -75,6 +79,10 @@ module ecc_scalar_blinding #(
     logic [RADIX-1 : 0] b_array[0 : RND_DIG_NUM-1];
     logic [RADIX-1 : 0] p_array[0 : FULL_DIG_NUM-1];
     logic [RADIX-1 : 0] scalar_array[0 : FULL_DIG_NUM-1];
+
+    logic [A_ARR_WIDTH-1 : 0]       a_idx;
+    logic [B_ARR_WIDTH-1 : 0]       b_idx;
+    logic [P_ARR_WIDTH-1 : 0]       p_idx;
 
     logic [FULL_REG_SIZE-1 : 0]     a_reg;        //extended with zero
     logic [FULL_RND_SIZE-1 : 0]     b_reg;        //extended with zero
@@ -102,9 +110,9 @@ module ecc_scalar_blinding #(
 
     logic                    shift_state;
 
-    logic [7 : 0]            product_idx;
+    logic [P_ARR_WIDTH-1 : 0]            product_idx;
     logic [7 : 0]            operand_idx;
-    logic [7 : 0]            product_idx_reg;
+    logic [P_ARR_WIDTH-1 : 0]            product_idx_reg;
     logic [7 : 0]            operand_idx_reg;
 
     //----------------------------------------------------------------
@@ -249,8 +257,10 @@ module ecc_scalar_blinding #(
 
     // Determines which a and b is pushed through the multiplier
     always_comb begin
-        mult_opa = a_array[product_idx - operand_idx];
-        mult_opb = b_array[operand_idx];
+        a_idx = product_idx - operand_idx;
+        b_idx = operand_idx;
+        mult_opa = a_array[a_idx];
+        mult_opb = b_array[b_idx];
     end
 
     // Determines which a and b is pushed through the adders

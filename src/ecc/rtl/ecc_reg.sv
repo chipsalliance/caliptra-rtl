@@ -141,7 +141,7 @@ module ecc_reg (
         } ecc_CTRL;
         struct {
             struct {
-                logic [2:0] next;
+                logic [3:0] next;
                 logic load_next;
             } SCACONFIG;
         } ecc_SCACONFIG;
@@ -210,7 +210,7 @@ module ecc_reg (
         } ecc_CTRL;
         struct {
             struct {
-                logic [2:0] value;
+                logic [3:0] value;
             } SCACONFIG;
         } ecc_SCACONFIG;
         struct {
@@ -283,10 +283,10 @@ module ecc_reg (
     assign hwif_out.ecc_CTRL.CTRL.value = field_storage.ecc_CTRL.CTRL.value;
     // Field: ecc_reg.ecc_SCACONFIG.SCACONFIG
     always_comb begin
-        automatic logic [2:0] next_c = field_storage.ecc_SCACONFIG.SCACONFIG.value;
+        automatic logic [3:0] next_c = field_storage.ecc_SCACONFIG.SCACONFIG.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.ecc_SCACONFIG && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[2:0];
+            next_c = decoded_wr_data[3:0];
             load_next_c = '1;
         end else if(1) begin // HW Write
             next_c = hwif_in.ecc_SCACONFIG.SCACONFIG.next;
@@ -507,8 +507,8 @@ module ecc_reg (
     assign readback_array[4][31:2] = '0;
     assign readback_array[5][1:0] = (decoded_reg_strb.ecc_STATUS && !decoded_req_is_wr) ? hwif_in.ecc_STATUS.STATUS.next : '0;
     assign readback_array[5][31:2] = '0;
-    assign readback_array[6][2:0] = (decoded_reg_strb.ecc_SCACONFIG && !decoded_req_is_wr) ? field_storage.ecc_SCACONFIG.SCACONFIG.value : '0;
-    assign readback_array[6][31:3] = '0;
+    assign readback_array[6][3:0] = (decoded_reg_strb.ecc_SCACONFIG && !decoded_req_is_wr) ? field_storage.ecc_SCACONFIG.SCACONFIG.value : '0;
+    assign readback_array[6][31:4] = '0;
     for(genvar i0=0; i0<12; i0++) begin
         assign readback_array[i0*1 + 7][31:0] = (decoded_reg_strb.ecc_SEED[i0] && !decoded_req_is_wr) ? field_storage.ecc_SEED[i0].SEED.value : '0;
     end

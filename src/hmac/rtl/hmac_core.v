@@ -253,7 +253,7 @@ module hmac_core
       hmac_ctrl_new    = CTRL_IDLE;
       hmac_ctrl_we     = 0;
 
-      case (hmac_ctrl_reg)
+      unique casez (hmac_ctrl_reg)
         CTRL_IDLE:
           begin
             ready_flag = 1;
@@ -320,6 +320,16 @@ module hmac_core
             hmac_ctrl_new    = CTRL_IDLE;
             hmac_ctrl_we     = 1;
           end
+
+        default:
+          begin
+            ready_flag       = 0;
+            digest_valid_new = 0;
+            digest_valid_we  = 0;
+            hmac_ctrl_new    = CTRL_IDLE;
+            hmac_ctrl_we     = 0;
+          end
+      
       endcase // case (hmac_ctrl_reg)
     end // hmac_ctrl_fsm
 

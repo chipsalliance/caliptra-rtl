@@ -27,6 +27,7 @@ module ecc_ram_tdp_file #(
     )
     (      
     input  wire                      clk,
+    input  wire                      reset_n,
     
     input  wire                      ena,
     input  wire                      wea,
@@ -42,7 +43,8 @@ module ecc_ram_tdp_file #(
     );
  
     // Declare the RAM variable
-	reg [DATA_WIDTH-1:0] mem[2**ADDR_WIDTH-1:0];
+    localparam ADDR_LENGTH = 2**ADDR_WIDTH;
+	reg [DATA_WIDTH-1:0] mem[ADDR_LENGTH-1:0];
 
     always_ff @ (posedge clk) 
     begin : reading_memory
@@ -53,13 +55,19 @@ module ecc_ram_tdp_file #(
             doutb <= mem[addrb];
     end // reading_memory
 
-    always_ff @ (posedge clk) 
+    always_ff @ (posedge clk or negedge reset_n) 
     begin : writing_memory
-        if (ena & wea)
-            mem[addra] <= dina;
+        if (!reset_n) begin
+            for (int i0 = 0; i0 < ADDR_LENGTH; i0++)
+                mem[i0] <= '0;
+        end
+        else begin
+            if (ena & wea)
+                mem[addra] <= dina;
 
-        if (enb & web)
-            mem[addrb] <= dinb;
+            if (enb & web)
+                mem[addrb] <= dinb;
+        end
     end // writing_memory
 
 endmodule

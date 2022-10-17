@@ -14,19 +14,19 @@ targets:
     directories: [$COMPILE_ROOT/rtl]
     files:
       - $COMPILE_ROOT/rtl/ecc_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/ecc_defines_pkg.sv
+      - $COMPILE_ROOT/rtl/ecc_params_pkg.sv
+      - $COMPILE_ROOT/rtl/ecc_dsa_uop_pkg.sv
+      - $COMPILE_ROOT/rtl/ecc_pm_uop_pkg.sv
       - $COMPILE_ROOT/rtl/ecc_top.sv
       - $COMPILE_ROOT/rtl/ecc_reg.sv
-      - $COMPILE_ROOT/rtl/ecc_defines.svh
-      - $COMPILE_ROOT/rtl/ecc_params.sv
       - $COMPILE_ROOT/rtl/ecc_dsa_ctrl.sv
       - $COMPILE_ROOT/rtl/ecc_dsa_sequencer.sv
-      - $COMPILE_ROOT/rtl/ecc_dsa_uop.sv
       #- $COMPILE_ROOT/rtl/ecc_fixed_msb.sv
       - $COMPILE_ROOT/rtl/ecc_scalar_blinding.sv
       - $COMPILE_ROOT/rtl/ecc_hmac_drbg_interface.sv
       - $COMPILE_ROOT/rtl/ecc_arith_unit.sv
       - $COMPILE_ROOT/rtl/ecc_pm_ctrl.sv
-      - $COMPILE_ROOT/rtl/ecc_pm_uop.sv
       - $COMPILE_ROOT/rtl/ecc_pm_sequencer.sv
       - $COMPILE_ROOT/rtl/ecc_ram_tdp_file.sv
       - $COMPILE_ROOT/rtl/ecc_fau.sv

@@ -42,7 +42,7 @@ addrmap ecc_reg {
 
     reg {srw_hrw CTRL[2];} ecc_CTRL @0x00000010;
     reg {sr_hw STATUS[2];} ecc_STATUS @0x00000018;
-    reg {srw_hrw SCACONFIG[3];} ecc_SCACONFIG @0x00000020;
+    reg {srw_hrw SCACONFIG[4];} ecc_SCACONFIG @0x00000020;  // bit 4 should be deleted after openssl keygen test.
     
     reg {srw_hr SEED[32];} ecc_SEED[12] @0x00000080;
     reg {srw_hr MSG[32];} ecc_MSG[12] @0x00000100;

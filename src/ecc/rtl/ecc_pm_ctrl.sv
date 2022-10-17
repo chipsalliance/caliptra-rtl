@@ -21,7 +21,9 @@
 //
 //======================================================================
 
-module ecc_pm_ctrl #(
+module ecc_pm_ctrl 
+    import ecc_pm_uop_pkg::*;
+    #(
     parameter REG_SIZE      = 384,
     parameter RND_SIZE      = 192,
     parameter INSTR_SIZE    = 24
@@ -44,8 +46,6 @@ module ecc_pm_ctrl #(
     //----------------------------------------------------------------
     // Internal constant and parameter definitions.
     //----------------------------------------------------------------
-    `include "ecc_pm_uop.sv"
-
     localparam MULT_DELAY          = 39 -1;
     localparam ADD_DELAY           = 2  -1;
     
@@ -111,7 +111,7 @@ module ecc_pm_ctrl #(
             if (stalled & (stall_cntr > 0)) begin
                 stall_cntr <= stall_cntr - 1;
             end
-            else if (stall_flag & ~stalled & ~stalled_pipe1) begin
+            else if (stall_flag & !stalled & !stalled_pipe1) begin
                 case (prog_line[2*OPR_ADDR_WIDTH +: UOP_ADDR_WIDTH])
                     UOP_DO_ADD_p :  begin stalled <= 1; stall_cntr <= ADD_DELAY; end  // ADD
                     UOP_DO_SUB_p :  begin stalled <= 1; stall_cntr <= ADD_DELAY; end  // SUB
@@ -122,7 +122,7 @@ module ecc_pm_ctrl #(
                     default      :  begin stalled <= 0; stall_cntr <= 0; end
                 endcase
             end
-            else if ((~stalled | (stalled & !stall_cntr))) begin
+            else if ((!stalled) | (stalled & (stall_cntr == 0))) begin
                 stalled <= 0;
                 case (prog_cntr)
 		            // Waiting for new valid command    

@@ -192,7 +192,7 @@ module ecc_hmac_drbg_interface#(
     always_comb 
     begin : interface_fsm
         state_next = IDLE_ST;
-        case(state_reg)
+        unique casez(state_reg)
             IDLE_ST: begin
                 if (en & hmac_ready) begin
                     state_next = LAMBDA_ST;
@@ -239,6 +239,10 @@ module ecc_hmac_drbg_interface#(
             end
 
             DONE_ST: begin
+                state_next    = IDLE_ST;
+            end
+
+            default: begin
                 state_next    = IDLE_ST;
             end
         endcase

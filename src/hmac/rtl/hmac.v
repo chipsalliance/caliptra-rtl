@@ -21,32 +21,30 @@
 //======================================================================
 `include "kv_defines.svh"
 
-module hmac #(
-            ADDR_WIDTH = 32
-            )(
-            // Clock and reset.
-            input wire           clk,
-            input wire           reset_n,
+module hmac 
+       import hmac_param_pkg::*;
+       //import kv_defines_pkg::*;      
+      #(
+        ADDR_WIDTH = 32
+      )(
+        // Clock and reset.
+        input wire           clk,
+        input wire           reset_n,
 
-            // Control.
-            input wire           cs,
-            input wire           we,
+        // Control.
+        input wire           cs,
+        input wire           we,
 
-            // Data ports.
-            input wire  [ADDR_WIDTH - 1 : 0] address,
-            input wire  [31 : 0] write_data,
-            output wire [31 : 0] read_data,
+        // Data ports.
+        input wire  [ADDR_WIDTH - 1 : 0] address,
+        input wire  [31 : 0] write_data,
+        output wire [31 : 0] read_data,
 
-            // KV interface
-            output kv_read_t kv_read,
-            output kv_write_t kv_write,
-            input kv_resp_t kv_resp
-           );
-
-  //----------------------------------------------------------------
-  // Internal constant and parameter definitions.
-  //----------------------------------------------------------------
-  `include "hmac_param.sv"
+        // KV interface
+        output kv_read_t kv_read,
+        output kv_write_t kv_write,
+        input kv_resp_t kv_resp
+      );
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.

@@ -31,11 +31,11 @@ package ecc_reg_pkg;
     } ecc_reg__ecc_STATUS__in_t;
 
     typedef struct {
-        logic [2:0] next;
-    } ecc_reg__srw_hrw_w3__in_t;
+        logic [3:0] next;
+    } ecc_reg__srw_hrw_w4__in_t;
 
     typedef struct {
-        ecc_reg__srw_hrw_w3__in_t SCACONFIG;
+        ecc_reg__srw_hrw_w4__in_t SCACONFIG;
     } ecc_reg__ecc_SCACONFIG__in_t;
 
     typedef struct {
@@ -94,11 +94,11 @@ package ecc_reg_pkg;
     } ecc_reg__ecc_CTRL__out_t;
 
     typedef struct {
-        logic [2:0] value;
-    } ecc_reg__srw_hrw_w3__out_t;
+        logic [3:0] value;
+    } ecc_reg__srw_hrw_w4__out_t;
 
     typedef struct {
-        ecc_reg__srw_hrw_w3__out_t SCACONFIG;
+        ecc_reg__srw_hrw_w4__out_t SCACONFIG;
     } ecc_reg__ecc_SCACONFIG__out_t;
 
     typedef struct {

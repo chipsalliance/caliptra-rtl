@@ -12,6 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+//======================================================================
+//
+// hmac_param_pkg.sv
+// --------
+// HMAC384 Parameters
+//
+//
+//======================================================================
+
+`ifndef HMAC_PARAM_PKG
+`define HMAC_PARAM_PKG
+
+package hmac_param_pkg;
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
@@ -39,3 +52,7 @@
 
   localparam bit [63:0] HMAC_CORE_NAME        = 64'h61327368_6163686d; // "hmacsha2"
   localparam bit [63:0] HMAC_CORE_VERSION     = 64'h00000000_3030312e; // "1.00"
+
+`endif
+
+endpackage

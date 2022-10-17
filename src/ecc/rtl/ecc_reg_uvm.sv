@@ -70,7 +70,7 @@ package ecc_reg_uvm;
 
         virtual function void build();
             this.SCACONFIG = new("SCACONFIG");
-            this.SCACONFIG.configure(this, 3, 0, "RW", 1, 'h0, 0, 1, 0);
+            this.SCACONFIG.configure(this, 4, 0, "RW", 1, 'h0, 0, 1, 0);
         endfunction : build
     endclass : ecc_reg__ecc_SCACONFIG
 

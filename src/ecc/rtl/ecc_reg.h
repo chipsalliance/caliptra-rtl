@@ -28,7 +28,7 @@
 #define ECC_REG_ECC_STATUS_STATUS_MASK                                          (0x3)
 #define ECC_REG_ECC_SCACONFIG                                                   (0x20)
 #define ECC_REG_ECC_SCACONFIG_SCACONFIG_LOW                                     (0)
-#define ECC_REG_ECC_SCACONFIG_SCACONFIG_MASK                                    (0x7)
+#define ECC_REG_ECC_SCACONFIG_SCACONFIG_MASK                                    (0xf)
 #define ECC_REG_ECC_SEED_0                                                      (0x80)
 #define ECC_REG_ECC_SEED_1                                                      (0x84)
 #define ECC_REG_ECC_SEED_2                                                      (0x88)

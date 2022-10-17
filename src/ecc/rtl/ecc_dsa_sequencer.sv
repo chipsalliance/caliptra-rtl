@@ -21,7 +21,10 @@
 //
 //======================================================================
 
-module ecc_dsa_sequencer #(
+module ecc_dsa_sequencer 
+    import ecc_pm_uop_pkg::*;
+    import ecc_dsa_uop_pkg::*;
+    #(
     parameter ADDR_WIDTH = 8,
     parameter DATA_WIDTH = 32
     )
@@ -30,14 +33,8 @@ module ecc_dsa_sequencer #(
     input  wire                      ena,
     input  wire  [ADDR_WIDTH-1 : 0]  addra,
     output logic [DATA_WIDTH-1 : 0]  douta
-);
+    );
 
-  //----------------------------------------------------------------
-  // Internal constant and parameter definitions.
-  //----------------------------------------------------------------
-  `include "ecc_pm_uop.sv"
-  `include "ecc_dsa_uop.sv"
- 
 
   //----------------------------------------------------------------
   // ROM content
@@ -45,7 +42,7 @@ module ecc_dsa_sequencer #(
  
     always_ff @(posedge clka) begin
         if (ena) begin
-            case(addra)
+            unique casez(addra)
                 //PM CORE INIT
                 0       : douta <= {DSA_UOP_NOP,       NOP_ID,                  UOP_OPR_DONTCARE};
                 1       : douta <= {DSA_UOP_WR_CORE,   CONST_ZERO_ID,           UOP_OPR_CONST_ZERO};

@@ -30,7 +30,9 @@
 //
 //======================================================================
 
-module ecc_pm_sequencer #(
+module ecc_pm_sequencer 
+    import ecc_pm_uop_pkg::*;
+    #(
     parameter ADDR_WIDTH = 10,
     parameter DATA_WIDTH = 32
     )
@@ -39,13 +41,7 @@ module ecc_pm_sequencer #(
     input  wire                      ena,
     input  wire  [ADDR_WIDTH-1 : 0]  addra,
     output logic [DATA_WIDTH-1 : 0]  douta
-);
-
-  //----------------------------------------------------------------
-  // Internal constant and parameter definitions.
-  //----------------------------------------------------------------
-  `include "ecc_pm_uop.sv"
- 
+    );
 
   //----------------------------------------------------------------
   // ROM content
@@ -54,7 +50,7 @@ module ecc_pm_sequencer #(
     always_ff @(posedge clka) 
     begin : prog_rom
         if (ena) begin
-            case(addra)
+            unique casez(addra)
                 NOP : douta <= '0;
                 1   : douta <= '0;
                 

@@ -22,7 +22,9 @@
 //
 //======================================================================
 
-module ecc_arith_unit #(
+module ecc_arith_unit 
+    import ecc_pm_uop_pkg::*;
+    #(
     parameter                  REG_SIZE     = 384,
     parameter                  RND_SIZE     = 192,
     parameter                  RADIX        = 32,
@@ -49,12 +51,6 @@ module ecc_arith_unit #(
     output wire                           busy_o
     );
     
-    //----------------------------------------------------------------
-    // Internal constant and parameter definitions.
-    //----------------------------------------------------------------
-
-    `include "ecc_pm_uop.sv"
-
     //----------------------------------------------------------------
     // Registers including update variables and write enable.
     //----------------------------------------------------------------
@@ -117,6 +113,7 @@ module ecc_arith_unit #(
         )
         ram_tdp_file_i(
         .clk(clk),
+        .reset_n(reset_n),
         .ena(1'b1),
         .wea(ecc_instr_s[2*OPR_ADDR_WIDTH+1]),
         .addra(ecc_instr_s[OPR_ADDR_WIDTH +: OPR_ADDR_WIDTH]),

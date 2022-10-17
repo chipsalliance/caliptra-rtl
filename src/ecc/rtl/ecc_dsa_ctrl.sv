@@ -36,7 +36,10 @@
 //
 //======================================================================
 
-module ecc_dsa_ctrl(
+module ecc_dsa_ctrl
+    import ecc_params_pkg::*;
+    import ecc_dsa_uop_pkg::*;
+    (
     // Clock and reset.
     input wire           clk,
     input wire           reset_n,
@@ -49,8 +52,6 @@ module ecc_dsa_ctrl(
     //----------------------------------------------------------------
     // Internal constant and parameter definitions.
     //----------------------------------------------------------------
-    `include "ecc_params.sv"
-    `include "ecc_dsa_uop.sv"
 
     localparam [RND_SIZE-1 : 0]  zero_pad               = 0;
     
@@ -113,10 +114,12 @@ module ecc_dsa_ctrl(
     logic                   hmac_busy;
 
     logic                   sca_init;
-    logic [2 : 0]           sca_init_config;
+    logic [3 : 0]           sca_init_config;
     logic                   sca_point_rnd_en;
     logic                   sca_mask_sign_en;
     logic                   sca_scalar_rnd_en;
+
+    logic                   openssl_test_en;  // without hmac-drbg
 
     //----------------------------------------------------------------
     // Module instantiantions.
@@ -212,7 +215,7 @@ module ecc_dsa_ctrl(
 
     always_comb 
     begin : SCA_config
-        sca_init_config = {sca_scalar_rnd_init[0], sca_mask_sign_init[0], sca_point_rnd_init[0]};
+        sca_init_config = {openssl_init[0], sca_scalar_rnd_init[0], sca_mask_sign_init[0], sca_point_rnd_init[0]};
 
         if (sca_scalar_rnd_en)
             scalar_out_reg = scalar_out;
@@ -229,7 +232,6 @@ module ecc_dsa_ctrl(
         else
             masking_rnd_reg = 0;
     end // SCA_config
-    
 
     //----------------------------------------------------------------
     // ecc_reg_update
@@ -244,6 +246,7 @@ module ecc_dsa_ctrl(
             sca_point_rnd_en  <= '0;
             sca_mask_sign_en  <= '0;
             sca_scalar_rnd_en <= '0;
+            openssl_test_en <= '0;
             seed_reg    <= '0;
             msg_reg     <= '0;
             privkey_reg <= '0;
@@ -259,6 +262,7 @@ module ecc_dsa_ctrl(
             sca_point_rnd_en  <= hwif_in.ecc_SCACONFIG.SCACONFIG.value[0];
             sca_mask_sign_en  <= hwif_in.ecc_SCACONFIG.SCACONFIG.value[1];
             sca_scalar_rnd_en <= hwif_in.ecc_SCACONFIG.SCACONFIG.value[2];
+            openssl_test_en   <= hwif_in.ecc_SCACONFIG.SCACONFIG.value[3]; // bit 4 should be deleted after openssl keygen test.
 
             for(int i0=0; i0<12; i0++) begin
                 seed_reg[i0*32 +: 32]    <= hwif_in.ecc_SEED[i0].SEED.value;
@@ -281,20 +285,24 @@ module ecc_dsa_ctrl(
 
     always_comb hwif_out.ecc_STATUS.STATUS.next = {dsa_valid_reg, dsa_ready_reg};
 
-    always_comb 
-    begin : ecc_reg_writing
-        hwif_out.ecc_SCACONFIG.SCACONFIG.next = (sca_init)? sca_init_config : hwif_in.ecc_SCACONFIG.SCACONFIG.value;
-        
-        for(int i0=0; i0<12; i0++) begin
-            hwif_out.ecc_CTRL.CTRL.next = 0;
-            hwif_out.ecc_PRIVKEY[i0].PRIVKEY.next = hw_privkey_we? read_reg[i0*32 +: 32] : hwif_in.ecc_PRIVKEY[i0].PRIVKEY.value;
-            hwif_out.ecc_PUBKEY_X[i0].PUBKEY_X.next = hw_pubkeyx_we? read_reg[i0*32 +: 32] : hwif_in.ecc_PUBKEY_X[i0].PUBKEY_X.value;
-            hwif_out.ecc_PUBKEY_Y[i0].PUBKEY_Y.next = hw_pubkeyy_we? read_reg[i0*32 +: 32] : hwif_in.ecc_PUBKEY_Y[i0].PUBKEY_Y.value;
-            hwif_out.ecc_SIGN_R[i0].SIGN_R.next = hw_r_we? read_reg[i0*32 +: 32] : hwif_in.ecc_SIGN_R[i0].SIGN_R.value;
-            hwif_out.ecc_SIGN_S[i0].SIGN_S.next = hw_s_we? read_reg[i0*32 +: 32] : hwif_in.ecc_SIGN_S[i0].SIGN_S.value;
-            hwif_out.ecc_VERIFY_R[i0].VERIFY_R.next = hw_verify_r_we? read_reg[i0*32 +: 32] : hwif_in.ecc_VERIFY_R[i0].VERIFY_R.value;
+    always_comb hwif_out.ecc_SCACONFIG.SCACONFIG.next = (sca_init)? sca_init_config : hwif_in.ecc_SCACONFIG.SCACONFIG.value;
+    always_comb hwif_out.ecc_CTRL.CTRL.next = 0;
+    
+    genvar i0;
+    generate 
+        for (i0=0; i0 < 12; i0++) begin : ecc_reg_writing
+            always_comb 
+            begin
+                hwif_out.ecc_PRIVKEY[i0].PRIVKEY.next = hw_privkey_we? read_reg[i0*32 +: 32] : hwif_in.ecc_PRIVKEY[i0].PRIVKEY.value;
+                hwif_out.ecc_PUBKEY_X[i0].PUBKEY_X.next = hw_pubkeyx_we? read_reg[i0*32 +: 32] : hwif_in.ecc_PUBKEY_X[i0].PUBKEY_X.value;
+                hwif_out.ecc_PUBKEY_Y[i0].PUBKEY_Y.next = hw_pubkeyy_we? read_reg[i0*32 +: 32] : hwif_in.ecc_PUBKEY_Y[i0].PUBKEY_Y.value;
+                hwif_out.ecc_SIGN_R[i0].SIGN_R.next = hw_r_we? read_reg[i0*32 +: 32] : hwif_in.ecc_SIGN_R[i0].SIGN_R.value;
+                hwif_out.ecc_SIGN_S[i0].SIGN_S.next = hw_s_we? read_reg[i0*32 +: 32] : hwif_in.ecc_SIGN_S[i0].SIGN_S.value;
+                hwif_out.ecc_VERIFY_R[i0].VERIFY_R.next = hw_verify_r_we? read_reg[i0*32 +: 32] : hwif_in.ecc_VERIFY_R[i0].VERIFY_R.value;
+            end
         end
-    end // ecc_reg_writing
+    endgenerate // ecc_reg_writing
+
 
     //----------------------------------------------------------------
     // register updates
@@ -309,7 +317,10 @@ module ecc_dsa_ctrl(
         end
         else begin
             if (!scalar_G_sel)
-                scalar_G_reg <= hmac_nonce;
+                if (openssl_test_en) // this feature should be deleted after openssl keygen test.
+                    scalar_G_reg <= seed_reg;
+                else
+                    scalar_G_reg <= hmac_nonce;
             else if (hw_scalar_G_we)
                 scalar_G_reg <= read_reg;
             

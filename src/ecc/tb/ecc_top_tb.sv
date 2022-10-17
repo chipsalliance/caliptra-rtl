@@ -703,6 +703,66 @@ module ecc_top_tb #(
 
 
   //----------------------------------------------------------------
+  // ecc_openssl_keygen_test()
+  //
+  // Perform a single point multiplication block test without hmac-drbg.
+  //----------------------------------------------------------------
+  task ecc_openssl_keygen_test(input [7 : 0]  tc_number,
+                       input test_vector_t test_vector);
+    reg [31  : 0]   start_time;
+    reg [31  : 0]   end_time;
+    reg [383 : 0]   privkey;
+    affn_point_t    pubkey;
+    begin
+      wait_ready();
+
+      $display("*** TC %0d openssl keygen test without hmac-drbg started.", tc_number);
+      tc_ctr = tc_ctr + 1;
+    
+      start_time = cycle_ctr;
+
+      write_block(ADDR_SCACONFIG, 4'b1111); // disbaled hmac-drbg
+      write_block(ADDR_SEED0, test_vector.privkey);
+      write_block(ADDR_IV0, test_vector.IV);
+
+      trig_ECC(KEYGEN);
+      #(CLK_PERIOD);
+      
+      wait_ready();
+
+      read_block(ADDR_PRIVKEY0);
+      privkey = reg_read_data;
+
+      read_block(ADDR_PUBKEYX0);
+      pubkey.x = reg_read_data;
+
+      read_block(ADDR_PUBKEYY0);
+      pubkey.y = reg_read_data;
+      
+      end_time = cycle_ctr - start_time;
+      $display("*** keygen test processing time = %01d cycles.", end_time);
+      $display("privkey    : 0x%96x", test_vector.privkey);
+
+      if ((privkey == test_vector.privkey) & (pubkey == test_vector.pubkey))
+        begin
+          $display("*** TC %0d keygen successful.", tc_number);
+          $display("");
+        end
+      else
+        begin
+          $display("*** ERROR: TC %0d keygen NOT successful.", tc_number);
+          $display("Expected_x: 0x%96x", test_vector.pubkey.x);
+          $display("Got:        0x%96x", pubkey.x);
+          $display("Expected_y: 0x%96x", test_vector.pubkey.y);
+          $display("Got:        0x%96x", pubkey.y);
+          $display("");
+
+          error_ctr = error_ctr + 1;
+        end
+    end
+  endtask // ecc_keygen_test
+
+  //----------------------------------------------------------------
   // ecc_test()
   //
   //----------------------------------------------------------------
@@ -716,6 +776,20 @@ module ecc_top_tb #(
       for (int i = 6; i < 10; i++) begin: test_vector_loop
           ecc_signing_test(i, test_vectors[i]);
           ecc_verifying_test(i, test_vectors[i]);
+      end
+    end
+  endtask // ecc_test
+
+
+  //----------------------------------------------------------------
+  // ecc_openssl_test()
+  //
+  //----------------------------------------------------------------
+  task ecc_openssl_test();
+    begin   
+      // The first 6-set test vectors work for keygen, 
+      for (int i = 0; i < 6; i++) begin: test_vector_loop
+          ecc_openssl_keygen_test(i, test_vectors[i]);
       end
     end
   endtask // ecc_test
@@ -791,7 +865,9 @@ module ecc_top_tb #(
 
       //ecc_test();
 
-      ecc_sca_config_test();
+      //ecc_sca_config_test();
+
+      ecc_openssl_test();
 
       display_test_results();
       
