@@ -73,37 +73,37 @@ module hmac_drbg
   localparam [REG_SIZE-1 : 0] K_init = 384'h000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
 
   localparam CNT_SIZE = 8;
-  localparam ZERO_PAD_MODE0_K   = 1024 - REG_SIZE - SEED_SIZE - CNT_SIZE - 32'd1 - 32'd12; // 1 for header and 12 bit for message length  
-  localparam ZERO_PAD_V         = 1024 - REG_SIZE - 32'd1 - 32'd12; // 1 for header and 12 bit for message length  
+  localparam [1024-REG_SIZE-SEED_SIZE-CNT_SIZE-1-12-1 : 0] ZERO_PAD_MODE0_K   = '0; // 1 for header and 12 bit for message length  
+  localparam [1024-REG_SIZE-1-12-1 : 0] ZERO_PAD_V         = '0; // 1 for header and 12 bit for message length  
 
-  localparam [11 : 0] MODE0_K_SIZE  = 1024 + REG_SIZE + SEED_SIZE + CNT_SIZE;
-  localparam [11 : 0] V_SIZE        = 1024 + REG_SIZE;
+  localparam [11 : 0] MODE0_K_SIZE  = 12'd1024 + REG_SIZE + SEED_SIZE + CNT_SIZE;
+  localparam [11 : 0] V_SIZE        = 12'd1024 + REG_SIZE;
 
   /*STATES*/
-  localparam NONCE_IDLE_ST      = 0;  // IDLE WAIT and Return step
-  localparam MODE0_INIT_ST      = 1;
-  localparam MODE0_NEXT_ST      = 2;
-  localparam MODE0_K1_ST        = 3;  // K = HMAC_K(V || 0x00 || seed)
-  localparam MODE0_V1_ST        = 4;  // V = HMAC_K(V) 
-  localparam MODE0_K2_INIT_ST   = 5;
-  localparam MODE0_K2_ST        = 6;  // K = HMAC_K(V || 0x01 || seed) 
-  localparam MODE0_V2_ST        = 7;  // V = HMAC_K(V) 
-  localparam MODE0_DONE_ST      = 8;
+  localparam [4 : 0] NONCE_IDLE_ST      = 5'd0;  // IDLE WAIT and Return step
+  localparam [4 : 0] MODE0_INIT_ST      = 5'd1;
+  localparam [4 : 0] MODE0_NEXT_ST      = 5'd2;
+  localparam [4 : 0] MODE0_K1_ST        = 5'd3;  // K = HMAC_K(V || 0x00 || seed)
+  localparam [4 : 0] MODE0_V1_ST        = 5'd4;  // V = HMAC_K(V) 
+  localparam [4 : 0] MODE0_K2_INIT_ST   = 5'd5;
+  localparam [4 : 0] MODE0_K2_ST        = 5'd6;  // K = HMAC_K(V || 0x01 || seed) 
+  localparam [4 : 0] MODE0_V2_ST        = 5'd7;  // V = HMAC_K(V) 
+  localparam [4 : 0] MODE0_DONE_ST      = 5'd8;
 
-  localparam MODE1_INIT_ST      = 16;
-  localparam MODE1_NEXT_ST      = 17;
-  localparam MODE1_K10_ST       = 18;  // K = HMAC_K(V || 0x00 || privKey || h1) ->long message 
-  localparam MODE1_K11_ST       = 19;  // K = HMAC_K(V || 0x00 || privKey || h1) ->long message 
-  localparam MODE1_V1_ST        = 20;  // V = HMAC_K(V) 
-  localparam MODE1_K20_INIT_ST  = 21;
-  localparam MODE1_K20_ST       = 22;  // K = HMAC_K(V || 0x01 || privKey || h1) ->long message 
-  localparam MODE1_K21_ST       = 23;  // K = HMAC_K(V || 0x01 || privKey || h1) ->long message 
-  localparam MODE1_V2_ST        = 24;  // V = HMAC_K(V) 
-  localparam MODE1_T_ST         = 25;  // T = HMAC_K(V) 
-  localparam MODE1_CHCK_ST      = 26;  // Return T if T is within the [1,q-1] range, otherwise: 
-  localparam MODE1_K3_ST        = 27;  // K = HMAC_K(V || 0x00) 
-  localparam MODE1_V3_ST        = 28;  // V = HMAC_K(V) and Jump to SIGN_T2_ST 
-  localparam MODE1_DONE_ST      = 29;
+  localparam [4 : 0] MODE1_INIT_ST      = 5'd16;
+  localparam [4 : 0] MODE1_NEXT_ST      = 5'd17;
+  localparam [4 : 0] MODE1_K10_ST       = 5'd18;  // K = HMAC_K(V || 0x00 || privKey || h1) ->long message 
+  localparam [4 : 0] MODE1_K11_ST       = 5'd19;  // K = HMAC_K(V || 0x00 || privKey || h1) ->long message 
+  localparam [4 : 0] MODE1_V1_ST        = 5'd20;  // V = HMAC_K(V) 
+  localparam [4 : 0] MODE1_K20_INIT_ST  = 5'd21;
+  localparam [4 : 0] MODE1_K20_ST       = 5'd22;  // K = HMAC_K(V || 0x01 || privKey || h1) ->long message 
+  localparam [4 : 0] MODE1_K21_ST       = 5'd23;  // K = HMAC_K(V || 0x01 || privKey || h1) ->long message 
+  localparam [4 : 0] MODE1_V2_ST        = 5'd24;  // V = HMAC_K(V) 
+  localparam [4 : 0] MODE1_T_ST         = 5'd25;  // T = HMAC_K(V) 
+  localparam [4 : 0] MODE1_CHCK_ST      = 5'd26;  // Return T if T is within the [1,q-1] range, otherwise: 
+  localparam [4 : 0] MODE1_K3_ST        = 5'd27;  // K = HMAC_K(V || 0x00) 
+  localparam [4 : 0] MODE1_V3_ST        = 5'd28;  // V = HMAC_K(V) and Jump to SIGN_T2_ST 
+  localparam [4 : 0] MODE1_DONE_ST      = 5'd29;
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -318,19 +318,19 @@ module hmac_drbg
   begin : hmac_block_update
     HMAC_key = K_reg;
     unique casez(nonce_st_reg)
-      MODE0_K1_ST:    HMAC_block  = {V_reg, cnt_reg, seed, 1'h1, {ZERO_PAD_MODE0_K{1'b0}}, MODE0_K_SIZE};
-      MODE0_V1_ST:    HMAC_block  = {V_reg, 1'h1, {ZERO_PAD_V{1'b0}}, V_SIZE};
-      MODE0_K2_ST:    HMAC_block  = {V_reg, cnt_reg, seed, 1'h1, {ZERO_PAD_MODE0_K{1'b0}}, MODE0_K_SIZE};
-      MODE0_V2_ST:    HMAC_block  = {V_reg, 1'h1, {ZERO_PAD_V{1'b0}}, V_SIZE};
+      MODE0_K1_ST:    HMAC_block  = {V_reg, cnt_reg, seed, 1'h1, ZERO_PAD_MODE0_K, MODE0_K_SIZE};
+      MODE0_V1_ST:    HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
+      MODE0_K2_ST:    HMAC_block  = {V_reg, cnt_reg, seed, 1'h1, ZERO_PAD_MODE0_K, MODE0_K_SIZE};
+      MODE0_V2_ST:    HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
       MODE1_K10_ST:   HMAC_block  = {V_reg, cnt_reg, privkey, hashed_msg[383:136]};
       MODE1_K11_ST:   HMAC_block  = {hashed_msg[135:0], 1'h1, 875'b0, 12'h888};
-      MODE1_V1_ST:    HMAC_block  = {V_reg, 1'h1, {ZERO_PAD_V{1'b0}}, V_SIZE};
+      MODE1_V1_ST:    HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
       MODE1_K20_ST:   HMAC_block  = {V_reg, cnt_reg, privkey, hashed_msg[383:136]};
       MODE1_K21_ST:   HMAC_block  = {hashed_msg[135:0], 1'h1, 875'b0, 12'h888};
-      MODE1_V2_ST:    HMAC_block  = {V_reg, 1'h1, {ZERO_PAD_V{1'b0}}, V_SIZE};
-      MODE1_T_ST:     HMAC_block  = {V_reg, 1'h1, {ZERO_PAD_V{1'b0}}, V_SIZE};
+      MODE1_V2_ST:    HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
+      MODE1_T_ST:     HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
       MODE1_K3_ST:    HMAC_block  = {V_reg, 8'h00, 1'h1, 619'b0, 12'h578};
-      MODE1_V3_ST:    HMAC_block  = {V_reg, 1'h1, {ZERO_PAD_V{1'b0}}, V_SIZE};
+      MODE1_V3_ST:    HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
       default:        HMAC_block  = '0;
     endcase;
   end // hmac_block_update

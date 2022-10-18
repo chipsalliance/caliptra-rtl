@@ -59,7 +59,7 @@ module ecc_dsa_ctrl
     // Internal constant and parameter definitions.
     //----------------------------------------------------------------
 
-    localparam [RND_SIZE-1 : 0]  zero_pad               = 0;
+    localparam [RND_SIZE-1 : 0]  zero_pad               = '0;
     
     //----------------------------------------------------------------
     // Registers including update variables and write enable.
@@ -234,12 +234,12 @@ module ecc_dsa_ctrl
         if (sca_point_rnd_en)
             lambda_reg = lambda;
         else
-            lambda_reg = 1;
+            lambda_reg = ONE_CONST;
 
         if (sca_mask_sign_en)
             masking_rnd_reg = masking_rnd;
         else
-            masking_rnd_reg = 0;
+            masking_rnd_reg = ZERO_CONST;
     end // SCA_config
 
     //----------------------------------------------------------------
@@ -285,6 +285,7 @@ module ecc_dsa_ctrl
             end
         end
     end // ecc_reg_reading
+
     assign error_intr = hwif_in.intr_block_rf.error_global_intr_r.intr;
     assign notif_intr = hwif_in.intr_block_rf.notif_global_intr_r.intr;
 
@@ -299,10 +300,11 @@ module ecc_dsa_ctrl
     always_comb hwif_out.ecc_STATUS.STATUS.next = {dsa_valid_reg, dsa_ready_reg};
 
     always_comb hwif_out.ecc_SCACONFIG.SCACONFIG.next = (sca_init)? sca_init_config : hwif_in.ecc_SCACONFIG.SCACONFIG.value;
-    always_comb hwif_out.ecc_CTRL.CTRL.next = 0;
+    always_comb hwif_out.ecc_CTRL.CTRL.next = '0;
     // TODO add other interrupt hwset signals (errors)
     always_comb hwif_out.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset = 1'b0;
     always_comb hwif_out.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = ecc_status_done_p;
+
 
     genvar i0;
     generate 
@@ -328,8 +330,8 @@ module ecc_dsa_ctrl
     always_ff @(posedge clk or negedge reset_n) 
     begin : SCALAR_REG
         if(!reset_n) begin
-            scalar_G_reg <= 0;
-            scalar_PK_reg <= 0;
+            scalar_G_reg <= '0;
+            scalar_PK_reg <= '0;
         end
         else begin
             if (!scalar_G_sel)
@@ -384,11 +386,11 @@ module ecc_dsa_ctrl
 
     always_comb 
     begin : write_to_pm_core
-        write_reg = 0;
+        write_reg = '0;
         if (prog_line[2*DSA_OPR_ADDR_WIDTH +: DSA_UOP_ADDR_WIDTH] == DSA_UOP_WR_CORE) begin
             case (prog_line[DSA_OPR_ADDR_WIDTH +: DSA_OPR_ADDR_WIDTH])
-                CONST_ZERO_ID         : write_reg = 0;
-                CONST_ONE_ID          : write_reg = 1;
+                CONST_ZERO_ID         : write_reg = {zero_pad, ZERO_CONST};
+                CONST_ONE_ID          : write_reg = {zero_pad, ONE_CONST};
                 CONST_E_a_MONT_ID     : write_reg = {zero_pad, E_a_MONT};
                 CONST_E_3b_MONT_ID    : write_reg = {zero_pad, E_3b_MONT};
                 CONST_ONE_p_MONT_ID   : write_reg = {zero_pad, ONE_p_MONT};
@@ -421,7 +423,7 @@ module ecc_dsa_ctrl
     always_ff @(posedge clk or negedge reset_n) 
     begin : scalar_sca_ctrl
         if(!reset_n) begin
-            scalar_in_reg <= 0;
+            scalar_in_reg <= '0;
         end
         else begin
             if (prog_line[2*DSA_OPR_ADDR_WIDTH +: DSA_UOP_ADDR_WIDTH] == DSA_UOP_SCALAR_SCA) begin
@@ -437,7 +439,7 @@ module ecc_dsa_ctrl
     begin : ECDSA_FSM
         if(!reset_n) begin
             prog_cntr <= DSA_RESET;
-            cycle_cnt <= 0;
+            cycle_cnt <= '0;
             dsa_valid_reg <= 0;
             scalar_G_sel <= 0;
             hmac_mode <= 0;
@@ -446,8 +448,8 @@ module ecc_dsa_ctrl
         else begin
             if (subcomponent_busy) begin //Stalled until sub-component is done
                 prog_cntr       <= prog_cntr;
-                cycle_cnt       <= 3;
-                pm_cmd_reg      <= 0;
+                cycle_cnt       <= 2'd3;
+                pm_cmd_reg      <= '0;
                 scalar_sca_en   <= 0;
                 hmac_init       <= 0;
                 sca_init        <= 0;
@@ -456,7 +458,7 @@ module ecc_dsa_ctrl
                 cycle_cnt <= cycle_cnt + 1;
             end
             else begin
-                cycle_cnt <= 0;
+                cycle_cnt <= '0;
                 unique casez (prog_cntr)
                     DSA_SCA_INIT : begin // SCA init
                         prog_cntr <= DSA_NOP;
@@ -490,7 +492,7 @@ module ecc_dsa_ctrl
                                 scalar_G_sel <= 0;
                             end
                         endcase
-                        pm_cmd_reg  <= 0;
+                        pm_cmd_reg  <= '0;
                         hmac_init   <= 0;
                         sca_init    <= 0;
                     end                

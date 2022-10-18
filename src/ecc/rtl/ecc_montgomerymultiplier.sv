@@ -306,7 +306,7 @@ module ecc_montgomerymultiplier #(
         else if (start_i)
             push_reg[3*S_NUM-1] <= 1'b1;
         else
-            push_reg <= push_reg >> 1;
+            push_reg <= {1'b0, push_reg >> 1};
     end
     
     always_ff @(posedge clk or negedge reset_n) begin

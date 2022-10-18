@@ -42,7 +42,7 @@ package ecc_reg_uvm;
 
         virtual function void build();
             this.CTRL = new("CTRL");
-            this.CTRL.configure(this, 2, 0, "RW", 1, 'h0, 0, 1, 0);
+            this.CTRL.configure(this, 2, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : ecc_reg__ecc_CTRL
 
@@ -56,7 +56,7 @@ package ecc_reg_uvm;
 
         virtual function void build();
             this.STATUS = new("STATUS");
-            this.STATUS.configure(this, 2, 0, "RO", 1, 'h0, 0, 1, 0);
+            this.STATUS.configure(this, 2, 0, "RO", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : ecc_reg__ecc_STATUS
 
@@ -70,7 +70,7 @@ package ecc_reg_uvm;
 
         virtual function void build();
             this.SCACONFIG = new("SCACONFIG");
-            this.SCACONFIG.configure(this, 4, 0, "RW", 1, 'h0, 0, 1, 0);
+            this.SCACONFIG.configure(this, 4, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : ecc_reg__ecc_SCACONFIG
 
@@ -84,7 +84,7 @@ package ecc_reg_uvm;
 
         virtual function void build();
             this.SEED = new("SEED");
-            this.SEED.configure(this, 32, 0, "RW", 0, 'h0, 0, 1, 0);
+            this.SEED.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : ecc_reg__ecc_SEED
 
@@ -98,7 +98,7 @@ package ecc_reg_uvm;
 
         virtual function void build();
             this.MSG = new("MSG");
-            this.MSG.configure(this, 32, 0, "RW", 0, 'h0, 0, 1, 0);
+            this.MSG.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : ecc_reg__ecc_MSG
 
@@ -112,7 +112,7 @@ package ecc_reg_uvm;
 
         virtual function void build();
             this.PRIVKEY = new("PRIVKEY");
-            this.PRIVKEY.configure(this, 32, 0, "RW", 1, 'h0, 0, 1, 0);
+            this.PRIVKEY.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : ecc_reg__ecc_PRIVKEY
 
@@ -126,7 +126,7 @@ package ecc_reg_uvm;
 
         virtual function void build();
             this.PUBKEY_X = new("PUBKEY_X");
-            this.PUBKEY_X.configure(this, 32, 0, "RW", 1, 'h0, 0, 1, 0);
+            this.PUBKEY_X.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : ecc_reg__ecc_PUBKEY_X
 
@@ -140,7 +140,7 @@ package ecc_reg_uvm;
 
         virtual function void build();
             this.PUBKEY_Y = new("PUBKEY_Y");
-            this.PUBKEY_Y.configure(this, 32, 0, "RW", 1, 'h0, 0, 1, 0);
+            this.PUBKEY_Y.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : ecc_reg__ecc_PUBKEY_Y
 
@@ -154,7 +154,7 @@ package ecc_reg_uvm;
 
         virtual function void build();
             this.SIGN_R = new("SIGN_R");
-            this.SIGN_R.configure(this, 32, 0, "RW", 1, 'h0, 0, 1, 0);
+            this.SIGN_R.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : ecc_reg__ecc_SIGN_R
 
@@ -168,7 +168,7 @@ package ecc_reg_uvm;
 
         virtual function void build();
             this.SIGN_S = new("SIGN_S");
-            this.SIGN_S.configure(this, 32, 0, "RW", 1, 'h0, 0, 1, 0);
+            this.SIGN_S.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : ecc_reg__ecc_SIGN_S
 
@@ -182,7 +182,7 @@ package ecc_reg_uvm;
 
         virtual function void build();
             this.VERIFY_R = new("VERIFY_R");
-            this.VERIFY_R.configure(this, 32, 0, "RO", 1, 'h0, 0, 1, 0);
+            this.VERIFY_R.configure(this, 32, 0, "RO", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : ecc_reg__ecc_VERIFY_R
 
@@ -196,7 +196,7 @@ package ecc_reg_uvm;
 
         virtual function void build();
             this.IV = new("IV");
-            this.IV.configure(this, 32, 0, "RW", 0, 'h0, 0, 1, 0);
+            this.IV.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : ecc_reg__ecc_IV
 

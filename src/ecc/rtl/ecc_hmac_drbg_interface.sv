@@ -70,13 +70,13 @@ module ecc_hmac_drbg_interface#(
     reg [2 : 0]  state_reg_last;
 
     /*STATES*/
-    localparam IDLE_ST          = 0; 
-    localparam LAMBDA_ST        = 1;
-    localparam SCALAR_RND_ST    = 2;
-    localparam MASKING_RND_ST   = 3;
-    localparam KEYGEN_ST        = 4;  
-    localparam SIGN_ST          = 5;  
-    localparam DONE_ST          = 6;  
+    localparam [2 : 0] IDLE_ST          = 3'd0; 
+    localparam [2 : 0] LAMBDA_ST        = 3'd1;
+    localparam [2 : 0] SCALAR_RND_ST    = 3'd2;
+    localparam [2 : 0] MASKING_RND_ST   = 3'd3;
+    localparam [2 : 0] KEYGEN_ST        = 3'd4;  
+    localparam [2 : 0] SIGN_ST          = 3'd5;  
+    localparam [2 : 0] DONE_ST          = 3'd6;  
 
     //----------------------------------------------------------------
     // Module instantiantions.

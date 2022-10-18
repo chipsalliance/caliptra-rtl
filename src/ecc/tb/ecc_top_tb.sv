@@ -789,7 +789,8 @@ module ecc_top_tb #(
     begin   
       // The first 6-set test vectors work for keygen, 
       for (int i = 0; i < 6; i++) begin: test_vector_loop
-          ecc_openssl_keygen_test(i, test_vectors[i]);
+        reset_dut();
+        ecc_openssl_keygen_test(i, test_vectors[i]);
       end
     end
   endtask // ecc_test

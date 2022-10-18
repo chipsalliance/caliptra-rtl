@@ -465,8 +465,10 @@ module ecc_reg (
         field_combo.ecc_CTRL.CTRL.next = next_c;
         field_combo.ecc_CTRL.CTRL.load_next = load_next_c;
     end
-    always_ff @(posedge clk) begin
-        if(field_combo.ecc_CTRL.CTRL.load_next) begin
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_CTRL.CTRL.value <= 'h0;
+        end else if(field_combo.ecc_CTRL.CTRL.load_next) begin
             field_storage.ecc_CTRL.CTRL.value <= field_combo.ecc_CTRL.CTRL.next;
         end
     end
@@ -485,8 +487,10 @@ module ecc_reg (
         field_combo.ecc_SCACONFIG.SCACONFIG.next = next_c;
         field_combo.ecc_SCACONFIG.SCACONFIG.load_next = load_next_c;
     end
-    always_ff @(posedge clk) begin
-        if(field_combo.ecc_SCACONFIG.SCACONFIG.load_next) begin
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_SCACONFIG.SCACONFIG.value <= 'h0;
+        end else if(field_combo.ecc_SCACONFIG.SCACONFIG.load_next) begin
             field_storage.ecc_SCACONFIG.SCACONFIG.value <= field_combo.ecc_SCACONFIG.SCACONFIG.next;
         end
     end
@@ -503,8 +507,10 @@ module ecc_reg (
             field_combo.ecc_SEED[i0].SEED.next = next_c;
             field_combo.ecc_SEED[i0].SEED.load_next = load_next_c;
         end
-        always_ff @(posedge clk) begin
-            if(field_combo.ecc_SEED[i0].SEED.load_next) begin
+        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+            if(~hwif_in.reset_b) begin
+                field_storage.ecc_SEED[i0].SEED.value <= 'h0;
+            end else if(field_combo.ecc_SEED[i0].SEED.load_next) begin
                 field_storage.ecc_SEED[i0].SEED.value <= field_combo.ecc_SEED[i0].SEED.next;
             end
         end
@@ -522,8 +528,10 @@ module ecc_reg (
             field_combo.ecc_MSG[i0].MSG.next = next_c;
             field_combo.ecc_MSG[i0].MSG.load_next = load_next_c;
         end
-        always_ff @(posedge clk) begin
-            if(field_combo.ecc_MSG[i0].MSG.load_next) begin
+        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+            if(~hwif_in.reset_b) begin
+                field_storage.ecc_MSG[i0].MSG.value <= 'h0;
+            end else if(field_combo.ecc_MSG[i0].MSG.load_next) begin
                 field_storage.ecc_MSG[i0].MSG.value <= field_combo.ecc_MSG[i0].MSG.next;
             end
         end
@@ -544,8 +552,10 @@ module ecc_reg (
             field_combo.ecc_PRIVKEY[i0].PRIVKEY.next = next_c;
             field_combo.ecc_PRIVKEY[i0].PRIVKEY.load_next = load_next_c;
         end
-        always_ff @(posedge clk) begin
-            if(field_combo.ecc_PRIVKEY[i0].PRIVKEY.load_next) begin
+        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+            if(~hwif_in.reset_b) begin
+                field_storage.ecc_PRIVKEY[i0].PRIVKEY.value <= 'h0;
+            end else if(field_combo.ecc_PRIVKEY[i0].PRIVKEY.load_next) begin
                 field_storage.ecc_PRIVKEY[i0].PRIVKEY.value <= field_combo.ecc_PRIVKEY[i0].PRIVKEY.next;
             end
         end
@@ -566,8 +576,10 @@ module ecc_reg (
             field_combo.ecc_PUBKEY_X[i0].PUBKEY_X.next = next_c;
             field_combo.ecc_PUBKEY_X[i0].PUBKEY_X.load_next = load_next_c;
         end
-        always_ff @(posedge clk) begin
-            if(field_combo.ecc_PUBKEY_X[i0].PUBKEY_X.load_next) begin
+        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+            if(~hwif_in.reset_b) begin
+                field_storage.ecc_PUBKEY_X[i0].PUBKEY_X.value <= 'h0;
+            end else if(field_combo.ecc_PUBKEY_X[i0].PUBKEY_X.load_next) begin
                 field_storage.ecc_PUBKEY_X[i0].PUBKEY_X.value <= field_combo.ecc_PUBKEY_X[i0].PUBKEY_X.next;
             end
         end
@@ -588,8 +600,10 @@ module ecc_reg (
             field_combo.ecc_PUBKEY_Y[i0].PUBKEY_Y.next = next_c;
             field_combo.ecc_PUBKEY_Y[i0].PUBKEY_Y.load_next = load_next_c;
         end
-        always_ff @(posedge clk) begin
-            if(field_combo.ecc_PUBKEY_Y[i0].PUBKEY_Y.load_next) begin
+        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+            if(~hwif_in.reset_b) begin
+                field_storage.ecc_PUBKEY_Y[i0].PUBKEY_Y.value <= 'h0;
+            end else if(field_combo.ecc_PUBKEY_Y[i0].PUBKEY_Y.load_next) begin
                 field_storage.ecc_PUBKEY_Y[i0].PUBKEY_Y.value <= field_combo.ecc_PUBKEY_Y[i0].PUBKEY_Y.next;
             end
         end
@@ -610,8 +624,10 @@ module ecc_reg (
             field_combo.ecc_SIGN_R[i0].SIGN_R.next = next_c;
             field_combo.ecc_SIGN_R[i0].SIGN_R.load_next = load_next_c;
         end
-        always_ff @(posedge clk) begin
-            if(field_combo.ecc_SIGN_R[i0].SIGN_R.load_next) begin
+        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+            if(~hwif_in.reset_b) begin
+                field_storage.ecc_SIGN_R[i0].SIGN_R.value <= 'h0;
+            end else if(field_combo.ecc_SIGN_R[i0].SIGN_R.load_next) begin
                 field_storage.ecc_SIGN_R[i0].SIGN_R.value <= field_combo.ecc_SIGN_R[i0].SIGN_R.next;
             end
         end
@@ -632,8 +648,10 @@ module ecc_reg (
             field_combo.ecc_SIGN_S[i0].SIGN_S.next = next_c;
             field_combo.ecc_SIGN_S[i0].SIGN_S.load_next = load_next_c;
         end
-        always_ff @(posedge clk) begin
-            if(field_combo.ecc_SIGN_S[i0].SIGN_S.load_next) begin
+        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+            if(~hwif_in.reset_b) begin
+                field_storage.ecc_SIGN_S[i0].SIGN_S.value <= 'h0;
+            end else if(field_combo.ecc_SIGN_S[i0].SIGN_S.load_next) begin
                 field_storage.ecc_SIGN_S[i0].SIGN_S.value <= field_combo.ecc_SIGN_S[i0].SIGN_S.next;
             end
         end
@@ -651,8 +669,10 @@ module ecc_reg (
             field_combo.ecc_VERIFY_R[i0].VERIFY_R.next = next_c;
             field_combo.ecc_VERIFY_R[i0].VERIFY_R.load_next = load_next_c;
         end
-        always_ff @(posedge clk) begin
-            if(field_combo.ecc_VERIFY_R[i0].VERIFY_R.load_next) begin
+        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+            if(~hwif_in.reset_b) begin
+                field_storage.ecc_VERIFY_R[i0].VERIFY_R.value <= 'h0;
+            end else if(field_combo.ecc_VERIFY_R[i0].VERIFY_R.load_next) begin
                 field_storage.ecc_VERIFY_R[i0].VERIFY_R.value <= field_combo.ecc_VERIFY_R[i0].VERIFY_R.next;
             end
         end
@@ -670,8 +690,10 @@ module ecc_reg (
             field_combo.ecc_IV[i0].IV.next = next_c;
             field_combo.ecc_IV[i0].IV.load_next = load_next_c;
         end
-        always_ff @(posedge clk) begin
-            if(field_combo.ecc_IV[i0].IV.load_next) begin
+        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+            if(~hwif_in.reset_b) begin
+                field_storage.ecc_IV[i0].IV.value <= 'h0;
+            end else if(field_combo.ecc_IV[i0].IV.load_next) begin
                 field_storage.ecc_IV[i0].IV.value <= field_combo.ecc_IV[i0].IV.next;
             end
         end

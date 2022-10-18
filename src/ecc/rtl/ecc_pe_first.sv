@@ -77,6 +77,8 @@ module ecc_pe_first #(
     logic  [RADIX-1 : 0]      mult_out_2_MSW;
     logic  [RADIX-1 : 0]      mult_out_2_LSW;
 
+    logic                     carry_garbage_bit;
+
     ecc_mult_dsp #(
         .RADIX(RADIX)
     ) MULT0 (
@@ -153,7 +155,7 @@ module ecc_pe_first #(
         end
     end
 
-    assign c_out = c_0_reg + c_1;
+    assign {carry_garbage_bit, c_out} = c_0_reg + c_1;
 
     always_ff @(posedge clk or negedge reset_n) begin
         if (~reset_n) begin

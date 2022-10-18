@@ -47,71 +47,71 @@ localparam [UOP_ADDR_WIDTH-1 : 0] UOP_DO_ADD_q              = 6'b10_1000;
 localparam [UOP_ADDR_WIDTH-1 : 0] UOP_DO_SUB_q              = 6'b10_1100;
 localparam [UOP_ADDR_WIDTH-1 : 0] UOP_ST_ADD_q              = 6'b10_0010;
 
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_DONTCARE          =  0;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_DONTCARE          = 6'd0;
 
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_ZERO        =  0;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_ONE         =  1;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_E_a         =  2;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_E_3b        =  3;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_ONE_MONT    =  4;  // Mont_mult(1, R2) % p
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_R2_p        =  5;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_ZERO        = 6'd0;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_ONE         = 6'd1;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_E_a         = 6'd2;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_E_3b        = 6'd3;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_ONE_MONT    = 6'd4;  // Mont_mult(1, R2) % p
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_R2_p        = 6'd5;
 
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_GX_MONT     =  6;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_GY_MONT     =  7;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_GX_MONT     = 6'd6;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_GY_MONT     = 6'd7;
 
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_R0_X              =  8;  // 8'b0000_1000;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_R0_Y              =  9;  // 8'b0000_1001;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_R0_Z              = 10;  // 8'b0000_1010;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_R0_X              = 6'd8;  // 8'b0000_1000;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_R0_Y              = 6'd9;  // 8'b0000_1001;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_R0_Z              = 6'd10;  // 8'b0000_1010;
 
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_R1_X              = 12;  // 8'b0000_1100;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_R1_Y              = 13;  // 8'b0000_1101;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_R1_Z              = 14;  // 8'b0000_1110;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_R1_X              = 6'd12;  // 8'b0000_1100;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_R1_Y              = 6'd13;  // 8'b0000_1101;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_R1_Z              = 6'd14;  // 8'b0000_1110;
 
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_Qx_AFFN           = 16;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_Qy_AFFN           = 17;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_Qx_AFFN           = 6'd16;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_Qy_AFFN           = 6'd17;
 
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_SIGN_R            = 18;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_SIGN_S            = 19;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_SIGN_R            = 6'd18;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_SIGN_S            = 6'd19;
 
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_PRIVKEY           = 20;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_HASH_MSG          = 21;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_SCALAR_G          = 22;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_SCALAR_PK         = 23;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_PRIVKEY           = 6'd20;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_HASH_MSG          = 6'd21;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_SCALAR_G          = 6'd22;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_SCALAR_PK         = 6'd23;
 
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_LAMBDA            = 24;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_MASKING           = 25;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_LAMBDA            = 6'd24;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_MASKING           = 6'd25;
 
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_ONE_q_MONT  = 28;  // Mont_mult(1, R2) % q
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_R2_q        = 29;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_ONE_q_MONT  = 6'd28;  // Mont_mult(1, R2) % q
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_R2_q        = 6'd29;
 
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_A                 = 32;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_B                 = 33;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_C                 = 34;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_D                 = 35;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_E                 = 36;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_F                 = 37;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_G                 = 38;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_H                 = 39;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_J                 = 40;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_A                 = 6'd32;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_B                 = 6'd33;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_C                 = 6'd34;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_D                 = 6'd35;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_E                 = 6'd36;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_F                 = 6'd37;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_G                 = 6'd38;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_H                 = 6'd39;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_J                 = 6'd40;
 
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_INV_IN            = UOP_OPR_R0_Z;  // operand to be inverted
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_INV_PRE0          = 41;  // precomputed value based on UOP_OPR_Z_INV
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_INV_PRE1          = 42;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_INV_PRE2          = 43;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_INV_PRE3          = 44;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_INV_PRE4          = 45;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_INV_PRE5          = 46;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_INV_PRE6          = 47;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_INV_PRE7          = 48;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_A_INV             = 49;  // intermediate results during inversion
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_INV_OUT           = 50;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_INV_PRE0          = 6'd41;  // precomputed value based on UOP_OPR_Z_INV
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_INV_PRE1          = 6'd42;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_INV_PRE2          = 6'd43;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_INV_PRE3          = 6'd44;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_INV_PRE4          = 6'd45;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_INV_PRE5          = 6'd46;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_INV_PRE6          = 6'd47;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_INV_PRE7          = 6'd48;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_A_INV             = 6'd49;  // intermediate results during inversion
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_INV_OUT           = 6'd50;
 
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_Qx_MONT           = 51;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_Qy_MONT           = 52;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_Qx_MONT           = 6'd51;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_Qy_MONT           = 6'd52;
 
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_P1_X_MONT         = 53;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_P1_Y_MONT         = 54;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_P1_Z_MONT         = 55;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_P1_X_MONT         = 6'd53;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_P1_Y_MONT         = 6'd54;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_P1_Z_MONT         = 6'd55;
 
 //PM command listing
 localparam [2 : 0] KEYGEN_CMD           = 3'b001;
@@ -121,8 +121,8 @@ localparam [2 : 0] VER_PART1_CMD        = 3'b101;
 localparam [2 : 0] VER_PART2_CMD        = 3'b110;    
 
 //PM Subroutine listing
-localparam [PROG_ADDR_W-1 : 0] NOP                  = 0;
-localparam [PROG_ADDR_W-1 : 0] PM_INIT_G_S          = 2;               // R1 INIT with G
+localparam [PROG_ADDR_W-1 : 0] NOP                  = 12'd0;
+localparam [PROG_ADDR_W-1 : 0] PM_INIT_G_S          = 12'd2;               // R1 INIT with G
 localparam [PROG_ADDR_W-1 : 0] PM_INIT_G_E          = PM_INIT_G_S + 5;
 localparam [PROG_ADDR_W-1 : 0] PM_INIT_S            = PM_INIT_G_E + 2; // R0 INIT with O
 localparam [PROG_ADDR_W-1 : 0] PM_INIT_E            = PM_INIT_S + 9;

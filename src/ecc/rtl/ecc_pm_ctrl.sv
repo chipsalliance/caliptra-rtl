@@ -46,11 +46,11 @@ module ecc_pm_ctrl
     //----------------------------------------------------------------
     // Internal constant and parameter definitions.
     //----------------------------------------------------------------
-    localparam MULT_DELAY          = 39 -1;
-    localparam ADD_DELAY           = 2  -1;
+    localparam [7 : 0] MULT_DELAY          = 8'd38; //39 -1;
+    localparam [7 : 0] ADD_DELAY           = 8'd1;  // 2 -1;
     
-    localparam Secp384_SCA_MONT_COUNT   = REG_SIZE + RND_SIZE;
-    localparam Secp384_MONT_COUNT       = REG_SIZE;
+    localparam [9 : 0] Secp384_SCA_MONT_COUNT   = REG_SIZE + RND_SIZE;
+    localparam [9 : 0] Secp384_MONT_COUNT       = {1'b0, REG_SIZE};
     
     //----------------------------------------------------------------
     // Registers 
@@ -113,13 +113,13 @@ module ecc_pm_ctrl
             end
             else if (stall_flag & !stalled & !stalled_pipe1) begin
                 case (prog_line[2*OPR_ADDR_WIDTH +: UOP_ADDR_WIDTH])
-                    UOP_DO_ADD_p :  begin stalled <= 1; stall_cntr <= ADD_DELAY; end  // ADD
-                    UOP_DO_SUB_p :  begin stalled <= 1; stall_cntr <= ADD_DELAY; end  // SUB
-                    UOP_DO_MUL_p :  begin stalled <= 1; stall_cntr <= MULT_DELAY; end // MULT
-                    UOP_DO_ADD_q :  begin stalled <= 1; stall_cntr <= ADD_DELAY; end  // ADD
-                    UOP_DO_SUB_q :  begin stalled <= 1; stall_cntr <= ADD_DELAY; end  // SUB
-                    UOP_DO_MUL_q :  begin stalled <= 1; stall_cntr <= MULT_DELAY; end // MULT
-                    default      :  begin stalled <= 0; stall_cntr <= 0; end
+                    UOP_DO_ADD_p :  begin stalled <= 1'b1; stall_cntr <= ADD_DELAY; end  // ADD
+                    UOP_DO_SUB_p :  begin stalled <= 1'b1; stall_cntr <= ADD_DELAY; end  // SUB
+                    UOP_DO_MUL_p :  begin stalled <= 1'b1; stall_cntr <= MULT_DELAY; end // MULT
+                    UOP_DO_ADD_q :  begin stalled <= 1'b1; stall_cntr <= ADD_DELAY; end  // ADD
+                    UOP_DO_SUB_q :  begin stalled <= 1'b1; stall_cntr <= ADD_DELAY; end  // SUB
+                    UOP_DO_MUL_q :  begin stalled <= 1'b1; stall_cntr <= MULT_DELAY; end // MULT
+                    default      :  begin stalled <= 1'b0; stall_cntr <= '0; end
                 endcase
             end
             else if ((!stalled) | (stalled & (stall_cntr == 0))) begin
@@ -271,7 +271,7 @@ module ecc_pm_ctrl
     always_ff @(posedge clk or negedge reset_n) 
     begin : sequencer_pipeline1
         if (!reset_n) 
-            prog_line_pipe1 <= 0;
+            prog_line_pipe1 <= '0;
         else begin
             if (stalled_pipe1) 
                 prog_line_pipe1 <= prog_line_pipe1;
@@ -283,7 +283,7 @@ module ecc_pm_ctrl
     always_ff @(posedge clk or negedge reset_n) 
     begin : sequencer_pipeline2
         if (!reset_n) 
-            prog_line_pipe2 <= 0;
+            prog_line_pipe2 <= '0;
         else begin
             if (stalled_pipe1) 
                 prog_line_pipe2 <= prog_line_pipe2;
@@ -310,9 +310,9 @@ module ecc_pm_ctrl
     always_ff @(posedge clk or negedge reset_n) 
     begin : instruction_out
         if (!reset_n)
-            instr_o <= 0;
+            instr_o <= '0;
 	    else begin
-            instr_o <= 0;
+            instr_o <= '0;
             instr_o[2*OPR_ADDR_WIDTH+5] <= prog_line_pipe2[2*OPR_ADDR_WIDTH+5];  // mod_p_q : performing mod_p if (mod_p_q = 0), else mod_q
             
             case (prog_line_pipe2[2*OPR_ADDR_WIDTH+2 +: 3]) //14,15,16

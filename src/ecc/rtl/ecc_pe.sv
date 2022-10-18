@@ -60,6 +60,8 @@ module ecc_pe #(
     logic  [RADIX-1 : 0]      res_LSW;
     logic  [RADIX   : 0]      res_MSW;
 
+    logic                     carry_garbage_bit;
+
     ecc_mult_dsp #(
         .RADIX(RADIX)
     ) MULT1 (
@@ -83,7 +85,7 @@ module ecc_pe #(
     assign res_LSW = res[RADIX-1 : 0];
 
     always_comb begin
-        res = mult0_out + mult1_out + c_mux + s_mux;
+        {carry_garbage_bit, res} = mult0_out + mult1_out + c_mux + s_mux;
     end
 
     always_ff @(posedge clk or negedge reset_n) begin

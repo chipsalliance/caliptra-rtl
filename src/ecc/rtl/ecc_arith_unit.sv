@@ -167,10 +167,10 @@ module ecc_arith_unit
     always_ff @(posedge clk or negedge reset_n) 
     begin :reg_update
         if (!reset_n) begin
-            reg_dinb_r      <= 0;
-            reg_addr_r      <= 0;
+            reg_dinb_r      <= '0;
+            reg_addr_r      <= '0;
             reg_web_r       <= 0;
-            secret_key      <= 0;
+            secret_key      <= '0;
         end
         else begin
             if (wr_en_i) begin
@@ -194,7 +194,7 @@ module ecc_arith_unit
             if (rd_reg_i)
                 d_o <= opb_s;
             else
-                d_o <= 0;
+                d_o <= '0;
         end
     end // reg_update
 

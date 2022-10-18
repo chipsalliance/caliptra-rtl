@@ -73,7 +73,7 @@ package ecc_params_pkg;
   parameter [63  : 0] ECC_CORE_VERSION     = 64'h00000000_3030312e; // "1.00"
 
   // Implementation parameters for field arithmetic
-  parameter REG_SIZE             = 384;
+  parameter [8 : 0] REG_SIZE     = 9'd384;
   parameter RADIX                = 32;
   parameter ADD_NUM_ADDS         = 1;
   parameter ADD_BASE_SZ          = 384;
@@ -83,6 +83,8 @@ package ecc_params_pkg;
   parameter [REG_SIZE-1 : 0] GROUP_ORDER = 384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973;
 
   // prime parameters in Montgomery domain
+  parameter [REG_SIZE-1 : 0] ZERO_CONST  = 384'h0;
+  parameter [REG_SIZE-1 : 0] ONE_CONST   = 384'h1;
   parameter [REG_SIZE-1 : 0] E_a_MONT    = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffcfffffffbffffffff00000002fffffffdffffffff;
   parameter [REG_SIZE-1 : 0] E_3b_MONT   = 384'h20ef3fed228165dc5d0661bea9a5e3cbbdbaa0a767d661d14b60068f4c953d6dd5fccca61834995270ab5584671833e2;
   parameter [REG_SIZE-1 : 0] ONE_p_MONT  = 384'h100000000ffffffffffffffff0000000100000000;

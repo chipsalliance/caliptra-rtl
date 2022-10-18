@@ -47,11 +47,11 @@ module hmac_core
   localparam bit [1023:0] OPAD       = 1024'h5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c;
   localparam bit [639:0]  FINAL_PAD  = 640'h8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000580;
 
-  localparam CTRL_IDLE   = 0;
-  localparam CTRL_IPAD   = 1;
-  localparam CTRL_OPAD   = 2;
-  localparam CTRL_HMAC   = 3;
-  localparam CTRL_DONE   = 4;
+  localparam [2 : 0] CTRL_IDLE   = 3'd0;
+  localparam [2 : 0] CTRL_IPAD   = 3'd1;
+  localparam [2 : 0] CTRL_OPAD   = 3'd2;
+  localparam [2 : 0] CTRL_HMAC   = 3'd3;
+  localparam [2 : 0] CTRL_DONE   = 3'd4;
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
