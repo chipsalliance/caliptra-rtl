@@ -140,8 +140,8 @@ _start:
     addi x4, x4, 112
     read_result_loop1:
         lw x5, 0(x3)
-        lw x2, 0(x4)
-        beq x5, x2, equal1
+        lw t3, 0(x4)
+        beq x5, t3, equal1
         li x6, STDOUT
         li x7, 0x01
         sb x7, 0(x6)
@@ -195,8 +195,8 @@ _start:
     addi x4, x4, 128
     read_result_loop2:
         lw x5, 0(x3)
-        lw x2, 0(x4)
-        beq x5, x2, equal2
+        lw t3, 0(x4)
+        beq x5, t3, equal2
         li x6, STDOUT
         li x7, 0x01
         sb x7, 0(x6)
@@ -250,8 +250,8 @@ _start:
     addi x4, x4, 144
     read_result_loop3:
         lw x5, 0(x3)
-        lw x2, 0(x4)
-        beq x5, x2, equal3
+        lw t3, 0(x4)
+        beq x5, t3, equal3
         li x6, STDOUT
         li x7, 0x01
         sb x7, 0(x6)
@@ -304,8 +304,8 @@ _start:
     addi x4, x4, 160
     read_result_loop4:
         lw x5, 0(x3)
-        lw x2, 0(x4)
-        beq x5, x2, equal4
+        lw t3, 0(x4)
+        beq x5, t3, equal4
         li x6, STDOUT
         li x7, 0x01
         sb x7, 0(x6)

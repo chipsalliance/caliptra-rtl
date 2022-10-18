@@ -83,14 +83,14 @@ addrmap interrupt_regs {
     reg error_intr_t {
         name = "Interrupt Status Register type definition";
         desc = "Single bit indicating occurrence of each interrupt event.
-                Sticky, edge assertion, write-1-to-clear.";
+                Sticky, level assertion, write-1-to-clear.";
 
         default precedence = hw;
         default hw = w;
         default hwset = true;
         default sw = rw;
         default woclr = true;
-        default posedge intr;
+        default level intr;
 
         field {desc = "Interrupt Event 0 status bit";} error0_sts = 1'b0;
         field {desc = "Interrupt Event 1 status bit";} error1_sts = 1'b0;
@@ -102,14 +102,14 @@ addrmap interrupt_regs {
     reg notif_intr_t {
         name = "Interrupt Status Register type definition";
         desc = "Single bit indicating occurrence of each interrupt event.
-                Sticky, edge assertion, write-1-to-clear.";
+                Sticky, level assertion, write-1-to-clear.";
 
         default precedence = hw;
         default hw = w;
         default hwset = true;
         default sw = rw;
         default woclr = true;
-        default posedge intr;
+        default level intr;
 
         field {desc = "Interrupt Event 0 status bit";} notif0_sts = 1'b0;
         field {desc = "Interrupt Event 1 status bit";} notif1_sts = 1'b0;
@@ -242,7 +242,7 @@ addrmap interrupt_regs {
         intr_count_t      error1_intr_count_r;         /* Per error */                                                   //
         intr_count_t      error2_intr_count_r;         /* Per error */                                                   //
         intr_count_t      error3_intr_count_r;         /* Per error */                                                   //
-        intr_count_t      notif0_intr_count_r;         /* Per notification */                                            //
+        intr_count_t      notif0_intr_count_r @0x180;  /* Per notification */                                            //
         intr_count_t      notif1_intr_count_r;         /* Per notification */                                            //
         intr_count_t      notif2_intr_count_r;         /* Per notification */                                            //
         intr_count_t      notif3_intr_count_r;         /* Per notification */                                            //
@@ -309,49 +309,49 @@ addrmap interrupt_regs {
         //       The output pulse is then used to increment the ACTUAL counter
         error0_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error0_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
         error0_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error0_sts -> next;  // /      as a pulse to increment the intr_count_r register
-        error0_intr_count_incr_r.pulse -> hwenable = error_internal_intr_r.error0_sts -> enable; // Only count events when interrupt enable is set for that event
+        error0_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error0_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
         error0_intr_count_incr_r.pulse -> decr     = error0_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
         error0_intr_count_r.cnt        -> incr     = error0_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
         error1_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error1_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
         error1_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error1_sts -> next;  // /      as a pulse to increment the intr_count_r register
-        error1_intr_count_incr_r.pulse -> hwenable = error_internal_intr_r.error1_sts -> enable; // Only count events when interrupt enable is set for that event
+        error1_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error1_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
         error1_intr_count_incr_r.pulse -> decr     = error1_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
         error1_intr_count_r.cnt        -> incr     = error1_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
         error2_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error2_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
         error2_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error2_sts -> next;  // /      as a pulse to increment the intr_count_r register
-        error2_intr_count_incr_r.pulse -> hwenable = error_internal_intr_r.error2_sts -> enable; // Only count events when interrupt enable is set for that event
+        error2_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error2_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
         error2_intr_count_incr_r.pulse -> decr     = error2_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
         error2_intr_count_r.cnt        -> incr     = error2_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
         error3_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error3_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
         error3_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error3_sts -> next;  // /      as a pulse to increment the intr_count_r register
-        error3_intr_count_incr_r.pulse -> hwenable = error_internal_intr_r.error3_sts -> enable; // Only count events when interrupt enable is set for that event
+        error3_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error3_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
         error3_intr_count_incr_r.pulse -> decr     = error3_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
         error3_intr_count_r.cnt        -> incr     = error3_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
         notif0_intr_count_incr_r.pulse -> hwset    = notif_internal_intr_r.notif0_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
         notif0_intr_count_incr_r.pulse -> next     = notif_internal_intr_r.notif0_sts -> next;  // /      as a pulse to increment the intr_count_r register
-        notif0_intr_count_incr_r.pulse -> hwenable = notif_internal_intr_r.notif0_sts -> enable; // Only count events when interrupt enable is set for that event
+        notif0_intr_count_incr_r.pulse -> we       = notif_internal_intr_r.notif0_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
         notif0_intr_count_incr_r.pulse -> decr     = notif0_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
         notif0_intr_count_r.cnt        -> incr     = notif0_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
         notif1_intr_count_incr_r.pulse -> hwset    = notif_internal_intr_r.notif1_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
         notif1_intr_count_incr_r.pulse -> next     = notif_internal_intr_r.notif1_sts -> next;  // /      as a pulse to increment the intr_count_r register
-        notif1_intr_count_incr_r.pulse -> hwenable = notif_internal_intr_r.notif1_sts -> enable; // Only count events when interrupt enable is set for that event
+        notif1_intr_count_incr_r.pulse -> we       = notif_internal_intr_r.notif1_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
         notif1_intr_count_incr_r.pulse -> decr     = notif1_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
         notif1_intr_count_r.cnt        -> incr     = notif1_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
         notif2_intr_count_incr_r.pulse -> hwset    = notif_internal_intr_r.notif2_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
         notif2_intr_count_incr_r.pulse -> next     = notif_internal_intr_r.notif2_sts -> next;  // /      as a pulse to increment the intr_count_r register
-        notif2_intr_count_incr_r.pulse -> hwenable = notif_internal_intr_r.notif2_sts -> enable; // Only count events when interrupt enable is set for that event
+        notif2_intr_count_incr_r.pulse -> we       = notif_internal_intr_r.notif2_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
         notif2_intr_count_incr_r.pulse -> decr     = notif2_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
         notif2_intr_count_r.cnt        -> incr     = notif2_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
         notif3_intr_count_incr_r.pulse -> hwset    = notif_internal_intr_r.notif3_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
         notif3_intr_count_incr_r.pulse -> next     = notif_internal_intr_r.notif3_sts -> next;  // /      as a pulse to increment the intr_count_r register
-        notif3_intr_count_incr_r.pulse -> hwenable = notif_internal_intr_r.notif3_sts -> enable; // Only count events when interrupt enable is set for that event
+        notif3_intr_count_incr_r.pulse -> we       = notif_internal_intr_r.notif3_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
         notif3_intr_count_incr_r.pulse -> decr     = notif3_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
         notif3_intr_count_r.cnt        -> incr     = notif3_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 

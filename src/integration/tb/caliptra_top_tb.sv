@@ -151,16 +151,16 @@ module caliptra_top_tb (
     end // clk_gen
 `endif
     
-    logic isr_active;
+    logic [7:0] isr_active;
     initial begin
-        isr_active = 1'b0;
+        isr_active = 8'h0;
         forever begin
             @(negedge core_clk)
             if ((WriteData[7:0] == 8'hfc) && mailbox_write) begin
-                isr_active = 1'b0;
+                isr_active--;
             end
             else if ((WriteData[7:0] == 8'hfb) && mailbox_write) begin
-                isr_active = 1'b1;
+                isr_active++;
             end
         end
     end

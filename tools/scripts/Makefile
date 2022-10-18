@@ -32,17 +32,18 @@ INCLUDES_DIR = ${COMPILE_ROOT}/test_suites/includes
 #  TEST_DIR = $(TBDIR)/tests/$(TEST)
 #endif
 
+HEADER_FILES := ${INCLUDES_DIR}/caliptra_defines.h \
+		${INCLUDES_DIR}/defines.h \
+		${COMPILE_ROOT}/../aes/rtl/aes_intr_regs.h \
+		${COMPILE_ROOT}/../ecc/rtl/ecc_reg.h \
+		${COMPILE_ROOT}/../hmac/rtl/hmac_intr_regs.h \
+		${COMPILE_ROOT}/../sha512/rtl/sha512_intr_regs.h \
+		${COMPILE_ROOT}/../mbox/rtl/mbox_reg.h \
+		${COMPILE_ROOT}/../mbox/rtl/mbox_csr.h
 ifeq (0,$(shell test -e $(TEST_DIR)/crt0.[sS] && echo $$?))
 	OFILES += crt0.o
 endif
-ifeq (0,$(shell test -e $(TEST_DIR)/printf.c && echo $$?))
-	OFILES += printf.o
-endif
 OFILES += $(TESTNAME).o
-HEADER_FILES := ${INCLUDES_DIR}/caliptra_defines.h \
-		${INCLUDES_DIR}/defines.h \
-		${COMPILE_ROOT}/../mbox/rtl/mbox_reg.h \
-		${COMPILE_ROOT}/../mbox/rtl/mbox_csr.h
 
 # provide specific link file
 ifeq (,$(wildcard $(TEST_DIR)/$(TESTNAME).ld))
@@ -93,13 +94,12 @@ program.hex: $(OFILES) $(LINK)
 
 %.o : %.s ${HEADER_FILES}
 	cp ${HEADER_FILES} ${BUILD_DIR}
-	$(GCC_PREFIX)-cpp -I${TEST_DIR}  $<  > $*.cpp.s
+	$(GCC_PREFIX)-cpp ${includes} -I${TEST_DIR}  $<  > $*.cpp.s
 	$(GCC_PREFIX)-as ${ABI} $*.cpp.s -o $@
 
 
 %.o : %.c ${HEADER_FILES}
 	cp ${HEADER_FILES} ${BUILD_DIR}
-	cp ${TEST_DIR}/*.h ${BUILD_DIR}
 	$(GCC_PREFIX)-gcc ${includes} ${TEST_CFLAGS} -DCOMPILER_FLAGS="\"${TEST_CFLAGS}\"" ${ABI} -nostdlib -c $< -o $@
 
 endif

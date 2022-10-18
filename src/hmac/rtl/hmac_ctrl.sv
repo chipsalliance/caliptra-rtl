@@ -32,6 +32,7 @@ module hmac_ctrl #(
     // Clock and reset.
     input wire           clk,
     input wire           reset_n,
+    input wire           cptra_pwrgood,
 
     // from SLAVES PORT
     input logic [AHB_ADDR_WIDTH-1:0] hadrr_i,
@@ -49,7 +50,11 @@ module hmac_ctrl #(
     // kv interface
     output kv_read_t kv_read,
     output kv_write_t kv_write,
-    input kv_resp_t kv_resp
+    input kv_resp_t kv_resp,
+
+    // Interrupt
+    output error_intr,
+    output notif_intr
 );
 
     //----------------------------------------------------------------
@@ -67,6 +72,7 @@ module hmac_ctrl #(
         (
         .clk(clk),
         .reset_n(reset_n),
+        .cptra_pwrgood(cptra_pwrgood),
         .cs(hmac_cs),
         .we(hmac_we),
         .address(hmac_address),
@@ -74,7 +80,9 @@ module hmac_ctrl #(
         .read_data(hmac_read_data),
         .kv_read(kv_read),
         .kv_write(kv_write),
-        .kv_resp(kv_resp)
+        .kv_resp(kv_resp),
+        .error_intr(error_intr),
+        .notif_intr(notif_intr)
     );
 
     //instantiate ahb lite module

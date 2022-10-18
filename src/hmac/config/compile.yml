@@ -10,9 +10,11 @@ targets:
     directories: [$COMPILE_ROOT/rtl]
     files:
       - $COMPILE_ROOT/rtl/hmac_param_pkg.sv
+      - $COMPILE_ROOT/rtl/hmac_intr_regs_pkg.sv
       - $COMPILE_ROOT/rtl/hmac_ctrl.sv
-      - $COMPILE_ROOT/rtl/hmac.v
+      - $COMPILE_ROOT/rtl/hmac.sv
       - $COMPILE_ROOT/rtl/hmac_core.v
+      - $COMPILE_ROOT/rtl/hmac_intr_regs.sv
       #- $COMPILE_ROOT/rtl/sha512/sha512_core.v
       #- $COMPILE_ROOT/rtl/sha512/sha512_h_constants.v
       #- $COMPILE_ROOT/rtl/sha512/sha512_k_constants.v

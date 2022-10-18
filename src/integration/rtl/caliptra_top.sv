@@ -265,16 +265,8 @@ assign reset_vector = `RV_RESET_VEC;
 assign nmi_vector   = 32'hee000000;
 assign nmi_int   = 0;
 
-assign aes_error_intr = 1'b0; // TODO
-assign aes_notif_intr = 1'b0; // TODO
-assign ecc_error_intr = 1'b0; // TODO
-assign ecc_notif_intr = 1'b0; // TODO
-assign hmac_error_intr = 1'b0; // TODO
-assign hmac_notif_intr = 1'b0; // TODO
 assign kv_error_intr = 1'b0; // TODO
 assign kv_notif_intr = 1'b0; // TODO
-assign sha512_error_intr = 1'b0; // TODO
-assign sha512_notif_intr = 1'b0; // TODO
 assign sha256_error_intr = 1'b0; // TODO
 assign sha256_notif_intr = 1'b0; // TODO
 assign qspi_error_intr = 1'b0; // TODO
@@ -474,6 +466,7 @@ sha512_ctrl #(
 ) sha512 (
     .clk            (clk),
     .reset_n        (cptra_uc_rst_b),
+    .cptra_pwrgood  (cptra_pwrgood),
     .haddr_i        (s_slave[`SLAVE_SEL_SHA].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SHA)-1:0]),
     .hwdata_i       (s_slave[`SLAVE_SEL_SHA].hwdata),
     .hsel_i         (s_slave[`SLAVE_SEL_SHA].hsel),
@@ -483,7 +476,10 @@ sha512_ctrl #(
     .hsize_i        (s_slave[`SLAVE_SEL_SHA].hsize),
     .hresp_o        (s_slave[`SLAVE_SEL_SHA].hresp),
     .hreadyout_o    (s_slave[`SLAVE_SEL_SHA].hreadyout),
-    .hrdata_o       (s_slave[`SLAVE_SEL_SHA].hrdata)
+    .hrdata_o       (s_slave[`SLAVE_SEL_SHA].hrdata),
+
+    .error_intr(sha512_error_intr),
+    .notif_intr(sha512_notif_intr)
 );
 
 aes_ctrl #(
@@ -493,6 +489,7 @@ aes_ctrl #(
 ) aes (
     .clk            (clk),
     .reset_n        (cptra_uc_rst_b),
+    .cptra_pwrgood  (cptra_pwrgood),
     .cptra_obf_key  (cptra_obf_key_reg),
     .obf_uds_seed   (obf_uds_seed),
     .obf_field_entropy(obf_field_entropy),
@@ -507,6 +504,9 @@ aes_ctrl #(
     .hreadyout_o    (s_slave[`SLAVE_SEL_AES].hreadyout),
     .hrdata_o       (s_slave[`SLAVE_SEL_AES].hrdata),
 
+    .error_intr(aes_error_intr),
+    .notif_intr(aes_notif_intr),
+
     .kv_write (kv_write[`KV_NUM_WRITE-1])
 
     
@@ -518,6 +518,7 @@ hmac_ctrl #(
 )hmac (
      .clk(clk),
      .reset_n       (cptra_uc_rst_b),
+     .cptra_pwrgood (cptra_pwrgood),
      .hadrr_i       (s_slave[`SLAVE_SEL_HMAC].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_HMAC)-1:0]),
      .hwdata_i      (s_slave[`SLAVE_SEL_HMAC].hwdata),
      .hsel_i        (s_slave[`SLAVE_SEL_HMAC].hsel),
@@ -530,7 +531,11 @@ hmac_ctrl #(
      .hrdata_o      (s_slave[`SLAVE_SEL_HMAC].hrdata),
      .kv_read       (kv_read[0]),
      .kv_write      (kv_write[0]),
-     .kv_resp       (kv_resp[0])
+     .kv_resp       (kv_resp[0]),
+
+     .error_intr(hmac_error_intr),
+     .notif_intr(hmac_notif_intr)
+
 );
 
 
@@ -571,6 +576,7 @@ ecc_top1
 (
     .clk           (clk),
     .reset_n       (cptra_uc_rst_b),
+    .cptra_pwrgood (cptra_pwrgood),
     .haddr_i       (s_slave[`SLAVE_SEL_ECC].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_ECC)-1:0]),
     .hwdata_i      (s_slave[`SLAVE_SEL_ECC].hwdata),
     .hsel_i        (s_slave[`SLAVE_SEL_ECC].hsel),
@@ -580,7 +586,9 @@ ecc_top1
     .hsize_i       (s_slave[`SLAVE_SEL_ECC].hsize),
     .hresp_o       (s_slave[`SLAVE_SEL_ECC].hresp),
     .hreadyout_o   (s_slave[`SLAVE_SEL_ECC].hreadyout),
-    .hrdata_o      (s_slave[`SLAVE_SEL_ECC].hrdata)
+    .hrdata_o      (s_slave[`SLAVE_SEL_ECC].hrdata),
+    .error_intr    (ecc_error_intr                ),
+    .notif_intr    (ecc_notif_intr                )
 );
 
 mbox_top #(

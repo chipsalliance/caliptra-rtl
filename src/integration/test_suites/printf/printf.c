@@ -16,13 +16,14 @@
 
 #include <stdarg.h>
 #include <stdint.h>
-extern volatile char tohost;
+
+extern volatile char *stdout;
 
 static int
 whisperPutc(char c)
 {
-  tohost = c;
-  return c;
+  *stdout = c;
+  return (int) c;
 }
 
 
@@ -104,38 +105,37 @@ whisperPrintInt(int value, int width, int pad, int base)
   if (base == 10)
     return whisperPrintDecimal(value, width, pad);
 
-  char buffer[20];
   int charCount = 0;
+  uint8_t flag = 0;
 
   unsigned uu = value;
 
   if (base == 8)
     {
-      do
-        {
-          char c = '0' + (uu & 7);
-          buffer[charCount++] = c;
-          uu >>= 3;
-        }
-      while (uu);
+      for (uint8_t ii = 30; ii <= 30; ii-=3) {
+          int digit = (uu >> ii) & 0x7;
+          if (digit || flag) {
+              flag = 1;
+              char c = '0' + digit;
+              whisperPutc(c);
+              charCount++;
+          }
+      }
     }
   else if (base == 16)
     {
-      do
-        {
-          int digit = uu & 0xf;
-          char c = digit < 10 ? '0' + digit : 'a' + digit - 10;
-          buffer[charCount++] = c;
-          uu >>= 4;
-        }
-      while (uu);
+      for (uint8_t ii = 28; ii <= 28; ii-=4) {
+          int digit = (uu >> ii) & 0xF;
+          if (digit || flag) {
+              flag = 1;
+              char c = digit < 10 ? '0' + digit : 'A' + digit - 10;
+              whisperPutc(c);
+              charCount++;
+          }
+      }
     }
   else
     return -1;
-
-  char* p = buffer + charCount - 1;
-  for (unsigned i = 0; i < charCount; ++i)
-    whisperPutc(*p--);
 
   return charCount;
 }

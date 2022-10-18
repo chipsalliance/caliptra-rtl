@@ -14,7 +14,7 @@
 //
 //======================================================================
 //
-// hmac.v
+// hmac.sv
 // ------
 // HMAC-384 top-level wrapper with 32 bit data access.
 //
@@ -23,6 +23,7 @@
 
 module hmac 
        import hmac_param_pkg::*;
+       import hmac_intr_regs_pkg::*;
        //import kv_defines_pkg::*;      
       #(
         ADDR_WIDTH = 32
@@ -30,6 +31,7 @@ module hmac
         // Clock and reset.
         input wire           clk,
         input wire           reset_n,
+        input wire           cptra_pwrgood,
 
         // Control.
         input wire           cs,
@@ -43,7 +45,10 @@ module hmac
         // KV interface
         output kv_read_t kv_read,
         output kv_write_t kv_write,
-        input kv_resp_t kv_resp
+        input kv_resp_t kv_resp,
+
+        output wire error_intr,
+        output wire notif_intr
       );
 
   //----------------------------------------------------------------
@@ -76,6 +81,12 @@ module hmac
   reg [383 : 0]  tag_reg;
   reg [383 : 0]  kv_reg;
   reg [31  : 0]  tmp_read_data;
+
+  // Interrupts
+  logic intr_reg_we;
+  logic [31:0] intr_reg_read_data;
+  hmac_intr_regs__in_t hwif_in;
+  hmac_intr_regs__out_t hwif_out;
 
   //interface with client
   logic kv_key_write_en;
@@ -216,6 +227,7 @@ module hmac
       key_we        = 0;
       block_we      = 0;
       kv_ctrl_we    = 0;
+      intr_reg_we   = 0;
       tmp_read_data = 32'h0;
 
       if (cs)
@@ -236,6 +248,9 @@ module hmac
 
               if (address == HMAC_KV_CTRL)
                 kv_ctrl_we = 1;
+
+              if (address inside {[HMAC_ADDR_INTR_START:HMAC_ADDR_INTR_END]})
+                intr_reg_we = 1;
             end // if (we)
 
           else
@@ -243,7 +258,7 @@ module hmac
               if ((address >= HMAC_ADDR_TAG0) && (address <= HMAC_ADDR_TAG11))
                 tmp_read_data = tag_reg[(11 - ((address - HMAC_ADDR_TAG0) >> 2)) * 32 +: 32];
               else begin
-                case (address)
+                unique case (address) inside
                   // Read operations.
                   HMAC_ADDR_NAME0:
                     tmp_read_data = HMAC_CORE_NAME[31:0];
@@ -263,6 +278,9 @@ module hmac
                   HMAC_KV_CTRL:
                     tmp_read_data = kv_ctrl_reg;
 
+                  [HMAC_ADDR_INTR_START:HMAC_ADDR_INTR_END]:
+                    tmp_read_data = intr_reg_read_data;
+
                   default:
                     tmp_read_data = 32'h0;
 
@@ -271,6 +289,34 @@ module hmac
             end
         end
     end // addr_decoder
+
+// Interrupt Registers
+hmac_intr_regs i_hmac_intr_regs (
+    .clk(clk),
+    .rst(1'b0),
+
+    .s_cpuif_req         (cs                                    ),
+    .s_cpuif_req_is_wr   (intr_reg_we                           ),
+    .s_cpuif_addr        (address[HMAC_INTR_REGS_ADDR_WIDTH-1:0]),
+    .s_cpuif_wr_data     (write_data                            ),
+    .s_cpuif_req_stall_wr(                                      ),
+    .s_cpuif_req_stall_rd(                                      ),
+    .s_cpuif_rd_ack      (                                      ),
+    .s_cpuif_rd_err      (                                      ),
+    .s_cpuif_rd_data     (intr_reg_read_data                    ),
+    .s_cpuif_wr_ack      (                                      ),
+    .s_cpuif_wr_err      (                                      ),
+
+    .hwif_in (hwif_in ),
+    .hwif_out(hwif_out)
+);
+
+assign hwif_in.reset_b = reset_n;
+assign hwif_in.error_reset_b = cptra_pwrgood;
+assign hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = core_tag_we;
+
+assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
+assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
 
 //keyvault module
 kv_client #(
@@ -310,5 +356,5 @@ kv_client_hmac
 endmodule // hmac
 
 //======================================================================
-// EOF hmac.v
+// EOF hmac.sv
 //======================================================================

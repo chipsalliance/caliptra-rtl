@@ -30,13 +30,23 @@ _start:
     csrw minstret, zero
     csrw minstreth, zero
 
-    // Set up MTVEC - not expecting to use it though
-    li x1, RV_ICCM_SADR
-    csrw mtvec, x1  
-
     // Enable Caches in MRAC
     li x1, 0xaaaaaaaa
     csrw 0x7c0, x1
+
+    // Initialize MTVEC to point to a dummy interrupt handler prior to entering
+    // main and subsequent (more complex) initialization procedure
+    la t0, early_trap_vector
+    csrw mtvec, t0
+
+    // Init. the stack
+    la sp, STACK
+
+    // Entry message
+    call print_startup
+
+    // Call interrupt init
+    call init_interrupts
 
     // read info
     la x4, CBCMMT256
@@ -86,10 +96,9 @@ _start:
 
     // wait for initialization get finished
     li x3, AES_ADDR_STATUS
-    li x1, 0x00
     ready_int_loop:
         lw x5, 0(x3)
-        beq x5, x1, ready_int_loop
+        beqz x5, ready_int_loop
 
     // Write IV
     li x3, AES_ADDR_IV_START
@@ -122,7 +131,7 @@ _start:
             ble x3, x1, write_block_loop1
 
         // configure to encoder
-        li x3, AES_ADDR_CONFIG    
+        li x3, AES_ADDR_CONFIG
         sw t3, 0(x3)
 
         // Enable AES core
@@ -131,11 +140,11 @@ _start:
         sw x4, 0(x3)
 
         // wait for AES process
-        li x3, AES_ADDR_STATUS
-        li x1, AES_VALID
+        la x3, aes_intr_status
         ready_loop1:
             lw x5, 0(x3)
-            bne x5, x1, ready_loop1
+            beqz x5, ready_loop1
+        sw x0, 0(x3) // clear status variable
 
         // Read the data back from AES register
         li x3, AES_ADDR_RESULT_START
@@ -144,8 +153,8 @@ _start:
         addi x4, x4, 72
         read_result_loop1:
             lw x5, 0(x3)
-            lw x2, 0(x4)
-            beq x5, x2, equal1
+            lw t5, 0(x4)
+            beq x5, t5, equal1
             li x6, STDOUT
             li x7, 0x01
             sb x7, 0(x6)
@@ -153,6 +162,9 @@ _start:
                 addi x3, x3, 4
                 addi x4, x4, 4
                 ble x3, x1, read_result_loop1
+
+        // Print a message each iteration
+        call print_loop
 
         // check if finished
         bne x8, t4, multi_block_loop
@@ -166,3 +178,53 @@ _finish:
 .rept 99
     nop
 .endr
+
+print_startup:
+    li x3, STDOUT
+    la x4, print_data
+    j loop
+
+print_loop:
+    li x3, STDOUT
+    la x4, loop_data
+    j loop
+
+loop:
+   lb x5, 0(x4)
+   sb x5, 0(x3)
+   addi x4, x4, 1
+   bnez x5, loop
+   ret
+
+.section .data
+.global stdout
+stdout: .word STDOUT
+.global intr_count
+intr_count: .word 0
+// FW polls this variable instead of the AES reg....
+.global aes_intr_status
+aes_intr_status: .word 0
+print_data:
+.ascii "----------------------------------------\n"
+.ascii "Running AES Smoke Test                !!\n"
+.ascii "----------------------------------------\n"
+.byte 0
+loop_data:
+.ascii "End of block loop\n"
+.byte 0
+
+// From SiFive Interrupt Cookbook:
+// https://sifive.cdn.prismic.io/sifive/0d163928-2128-42be-a75a-464df65e04e0_sifive-interrupt-cookbook.pdf
+//
+/* For sanity's sake we set up an early trap vector that just does nothing. If
+* you end up here then there's a bug in the early boot code somewhere. */
+.section .text.metal.init.trapvec
+.align 2 /* Aligns to 4-bytes (log2(4) = 2) */
+.global early_trap_vector
+early_trap_vector:
+.cfi_startproc
+csrr t0, mcause
+csrr t1, mepc
+csrr t2, mtval
+j early_trap_vector
+.cfi_endproc

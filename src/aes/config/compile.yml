@@ -8,6 +8,7 @@ targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
+      - $COMPILE_ROOT/rtl/aes_intr_regs_pkg.sv
       - $COMPILE_ROOT/rtl/aes_ctrl.sv
       - $COMPILE_ROOT/rtl/aes.v
       - $COMPILE_ROOT/rtl/aes_param.sv
@@ -17,8 +18,9 @@ targets:
       - $COMPILE_ROOT/rtl/aes_inv_sbox.v
       - $COMPILE_ROOT/rtl/aes_key_mem.v
       - $COMPILE_ROOT/rtl/aes_sbox.v
-      - $COMPILE_ROOT/rtl/aes_cbc.v
+      - $COMPILE_ROOT/rtl/aes_cbc.sv
       - $COMPILE_ROOT/rtl/aes_core_cbc.v
+      - $COMPILE_ROOT/rtl/aes_intr_regs.sv
     tops: [aes_ctrl]
 ---
 provides: [aes_cbc_tb]  

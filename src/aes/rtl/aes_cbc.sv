@@ -42,6 +42,7 @@ module aes_cbc
    // Clock and reset.
    input wire           clk,
    input wire           reset_n,
+   input wire           cptra_pwrgood,
 
    input logic [255:0] cptra_obf_key,
 
@@ -52,11 +53,15 @@ module aes_cbc
    // Control.
    input wire           cs,
    input wire           we,
-   
+
    // Data ports.
    input wire  [ADDR_WIDTH-1 : 0] address,
    input wire  [DATA_WIDTH-1 : 0] write_data,
    output wire [DATA_WIDTH-1 : 0] read_data,
+
+   // Interrupt Outputs
+   output error_intr,
+   output notif_intr,
 
    //interface with kv
    output kv_write_t kv_write
@@ -66,6 +71,7 @@ module aes_cbc
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
   `include "aes_param.sv"
+  import aes_intr_regs_pkg::*;
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -80,6 +86,7 @@ module aes_cbc
   reg keylen_reg;
   reg config_we;
   reg kv_ctrl_we;
+  reg intr_regs_we;
 
   localparam BLOCK_NO = 128 / DATA_WIDTH;
   localparam KEY_NO   = 256 / DATA_WIDTH;
@@ -96,8 +103,10 @@ module aes_cbc
 
   reg [127 : 0] result_reg;
   reg [127 : 0] kv_result_reg;
+  reg [31  : 0] intr_reg_data;
   reg           valid_reg;
   reg           ready_reg;
+  logic         core_valid_p;
 
 
   //----------------------------------------------------------------
@@ -132,6 +141,9 @@ module aes_cbc
   logic doe_flow_ip;
 
   logic flow_done;
+
+  aes_intr_regs__in_t  intr_regs_hwif_in;
+  aes_intr_regs__out_t intr_regs_hwif_out;
 
 
   //----------------------------------------------------------------
@@ -273,6 +285,7 @@ module aes_cbc
       block_we      = 1'b0;
       IV_we         = 1'b0;
       kv_ctrl_we    = 1'b0;
+      intr_regs_we  = 1'b0;
       tmp_read_data = 0;
 
       if (cs)
@@ -298,16 +311,20 @@ module aes_cbc
                 IV_we = 1'b1;
               if (address == AES_ADDR_KV_CTRL)
                 kv_ctrl_we = 1'b1;
+              if ((address >= AES_ADDR_INTR_START) && (address <= AES_ADDR_INTR_END))
+                intr_regs_we = 1'b1;
             end // if (we)
 
           else
             begin
-              case (address)
+              case (address) inside
                 `ifdef AES_DATA_BUS_64
                   AES_ADDR_NAME0:    tmp_read_data = AES_CORE_NAME;
                   AES_ADDR_VERSION0: tmp_read_data = AES_CORE_VERSION;
                   AES_ADDR_CTRL:     tmp_read_data = {60'h0, keylen_reg, encdec_reg, next_reg, init_reg};
                   AES_ADDR_STATUS:   tmp_read_data = {62'h0, valid_reg, ready_reg};
+                  [AES_ADDR_RESULT_START:AES_ADDR_RESULT_END]: tmp_read_data = result_reg[(1 - ((address - AES_ADDR_RESULT_START) >> 3)) * 64 +: 64];
+                  [AES_ADDR_INTR_START:AES_ADDR_INTR_END]: tmp_read_data = {32'h0,intr_reg_data};
                 `else
                   AES_ADDR_NAME0:    tmp_read_data = AES_CORE_NAME[31 : 0];
                   AES_ADDR_NAME1:    tmp_read_data = AES_CORE_NAME[63 : 32];
@@ -316,6 +333,8 @@ module aes_cbc
                   AES_ADDR_CTRL:     tmp_read_data = {28'h0, keylen_reg, encdec_reg, next_reg, init_reg};
                   AES_ADDR_STATUS:   tmp_read_data = {30'h0, valid_reg, ready_reg};
                   AES_ADDR_KV_CTRL:  tmp_read_data = {26'h0, doe_ctrl_reg};
+                  [AES_ADDR_RESULT_START:AES_ADDR_RESULT_END]: tmp_read_data = result_reg[(3 - ((address - AES_ADDR_RESULT_START) >> 2)) * 32 +: 32];
+                  [AES_ADDR_INTR_START:AES_ADDR_INTR_END]: tmp_read_data = intr_reg_data;
                 `endif
 
                 default:
@@ -323,13 +342,6 @@ module aes_cbc
                   end
               endcase // case (address)
 
-              if ((address >= AES_ADDR_RESULT_START) && (address <= AES_ADDR_RESULT_END))
-                `ifdef AES_DATA_BUS_64
-                  tmp_read_data = result_reg[(1 - ((address - AES_ADDR_RESULT_START) >> 3)) * 64 +: 64];
-                `else
-                  tmp_read_data = result_reg[(3 - ((address - AES_ADDR_RESULT_START) >> 2)) * 32 +: 32];
-                `endif
-                
             end
         end
     end // addr_decoder
@@ -367,6 +379,43 @@ kv_doe1
   .flow_done(flow_done)
 
 );
+
+always_comb core_valid_p = core_valid & ~valid_reg;
+
+always_comb intr_regs_hwif_in.reset_b = reset_n;
+always_comb intr_regs_hwif_in.error_reset_b = cptra_pwrgood;
+
+// Pulse input to intr_regs to set the interrupt status bit and generate interrupt output (if enabled)
+always_comb intr_regs_hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset  = 1'b0; // TODO please assign
+always_comb intr_regs_hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset  = 1'b0; // TODO please assign
+always_comb intr_regs_hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset  = 1'b0; // TODO please assign
+always_comb intr_regs_hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset  = 1'b0; // TODO please assign
+always_comb intr_regs_hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = core_valid_p;
+
+
+aes_intr_regs i_intr_regs (
+        .clk(clk),
+        .rst(reset_n),
+
+        .s_cpuif_req         (cs                                   ),
+        .s_cpuif_req_is_wr   (intr_regs_we                         ),
+        .s_cpuif_addr        (address[AES_INTR_REGS_ADDR_WIDTH-1:0]),
+        .s_cpuif_wr_data     (write_data[31:0]                     ),
+
+        .s_cpuif_req_stall_wr(                  ),
+        .s_cpuif_req_stall_rd(                  ),
+        .s_cpuif_rd_ack      (                  ),
+        .s_cpuif_rd_err      (/*TODO*/          ),
+        .s_cpuif_rd_data     (intr_reg_data     ),
+        .s_cpuif_wr_ack      (                  ),
+        .s_cpuif_wr_err      (/*TODO*/          ),
+
+        .hwif_in             (intr_regs_hwif_in ),
+        .hwif_out            (intr_regs_hwif_out)
+    );
+
+assign error_intr = intr_regs_hwif_out.intr_block_rf.error_global_intr_r.intr;
+assign notif_intr = intr_regs_hwif_out.intr_block_rf.notif_global_intr_r.intr;
 
 endmodule // aes
 

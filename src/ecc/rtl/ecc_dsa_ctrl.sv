@@ -39,14 +39,20 @@
 module ecc_dsa_ctrl
     import ecc_params_pkg::*;
     import ecc_dsa_uop_pkg::*;
+    import ecc_reg_pkg::*;
     (
     // Clock and reset.
     input wire           clk,
     input wire           reset_n,
+    input wire           cptra_pwrgood,
 
     // Reg ports.
-    input ecc_reg_pkg::ecc_reg__out_t hwif_in,
-    output ecc_reg_pkg::ecc_reg__in_t hwif_out
+    input ecc_reg__out_t hwif_in,
+    output ecc_reg__in_t hwif_out,
+
+    // Interrupts (from ecc_reg)
+    output logic error_intr,
+    output logic notif_intr
     );
 
     //----------------------------------------------------------------
@@ -81,6 +87,9 @@ module ecc_dsa_ctrl
 
     logic dsa_valid_reg;
     logic dsa_ready_reg;
+
+    logic ecc_status_done_d;
+    logic ecc_status_done_p;
 
     logic [1  : 0]          cmd_reg;
     logic [2  : 0]          pm_cmd_reg;
@@ -276,8 +285,12 @@ module ecc_dsa_ctrl
             end
         end
     end // ecc_reg_reading
+    assign error_intr = hwif_in.intr_block_rf.error_global_intr_r.intr;
+    assign notif_intr = hwif_in.intr_block_rf.notif_global_intr_r.intr;
 
     // write the registers by hw
+    always_comb hwif_out.reset_b = reset_n;
+    always_comb hwif_out.hard_reset_b = cptra_pwrgood;
     always_comb hwif_out.ecc_NAME[0].NAME.next = ECC_CORE_NAME[31 : 0];
     always_comb hwif_out.ecc_NAME[1].NAME.next = ECC_CORE_NAME[63 : 32];
     always_comb hwif_out.ecc_VERSION[0].VERSION.next = ECC_CORE_VERSION[31 : 0];
@@ -287,7 +300,10 @@ module ecc_dsa_ctrl
 
     always_comb hwif_out.ecc_SCACONFIG.SCACONFIG.next = (sca_init)? sca_init_config : hwif_in.ecc_SCACONFIG.SCACONFIG.value;
     always_comb hwif_out.ecc_CTRL.CTRL.next = 0;
-    
+    // TODO add other interrupt hwset signals (errors)
+    always_comb hwif_out.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset = 1'b0;
+    always_comb hwif_out.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = ecc_status_done_p;
+
     genvar i0;
     generate 
         for (i0=0; i0 < 12; i0++) begin : ecc_reg_writing
@@ -514,6 +530,13 @@ module ecc_dsa_ctrl
             end
         end
     end // ECDSA_FSM
+
+    always_ff @(posedge clk)
+        if (!reset_n)
+            ecc_status_done_d <= 1'b0;
+        else
+            ecc_status_done_d <= hwif_out.ecc_STATUS.STATUS.next[1];
+    always_comb ecc_status_done_p = hwif_out.ecc_STATUS.STATUS.next[1] && !ecc_status_done_d;
 
     assign dsa_busy = (prog_cntr == DSA_NOP)? 1'b0 : 1'b1;
 

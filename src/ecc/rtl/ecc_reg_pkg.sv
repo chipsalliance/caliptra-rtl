@@ -71,7 +71,29 @@ package ecc_reg_pkg;
     } ecc_reg__ecc_VERIFY_R__in_t;
 
     typedef struct {
+        logic hwset;
+    } ecc_reg__intr_block_t__error_intr_t__error_internal_sts_enable_d33001bb_next_52b75ffa_resetsignal_0d7eaa27__in_t;
+
+    typedef struct {
+        ecc_reg__intr_block_t__error_intr_t__error_internal_sts_enable_d33001bb_next_52b75ffa_resetsignal_0d7eaa27__in_t error_internal_sts;
+    } ecc_reg__intr_block_t__error_intr_t_error_internal_sts_83adab02__in_t;
+
+    typedef struct {
+        logic hwset;
+    } ecc_reg__intr_block_t__notif_intr_t__notif_cmd_done_sts_enable_dabe0b8b_next_540fa3b7__in_t;
+
+    typedef struct {
+        ecc_reg__intr_block_t__notif_intr_t__notif_cmd_done_sts_enable_dabe0b8b_next_540fa3b7__in_t notif_cmd_done_sts;
+    } ecc_reg__intr_block_t__notif_intr_t_notif_cmd_done_sts_1c68637e__in_t;
+
+    typedef struct {
+        ecc_reg__intr_block_t__error_intr_t_error_internal_sts_83adab02__in_t error_internal_intr_r;
+        ecc_reg__intr_block_t__notif_intr_t_notif_cmd_done_sts_1c68637e__in_t notif_internal_intr_r;
+    } ecc_reg__intr_block_t__in_t;
+
+    typedef struct {
         logic reset_b;
+        logic hard_reset_b;
         ecc_reg__ecc_NAME__in_t ecc_NAME[2];
         ecc_reg__ecc_VERSION__in_t ecc_VERSION[2];
         ecc_reg__ecc_CTRL__in_t ecc_CTRL;
@@ -83,6 +105,7 @@ package ecc_reg_pkg;
         ecc_reg__ecc_SIGN_R__in_t ecc_SIGN_R[12];
         ecc_reg__ecc_SIGN_S__in_t ecc_SIGN_S[12];
         ecc_reg__ecc_VERIFY_R__in_t ecc_VERIFY_R[12];
+        ecc_reg__intr_block_t__in_t intr_block_rf;
     } ecc_reg__in_t;
 
     typedef struct {
@@ -150,6 +173,29 @@ package ecc_reg_pkg;
     } ecc_reg__ecc_IV__out_t;
 
     typedef struct {
+        logic intr;
+    } ecc_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a__out_t;
+
+    typedef struct {
+        logic intr;
+    } ecc_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a__out_t;
+
+    typedef struct {
+        logic intr;
+    } ecc_reg__intr_block_t__error_intr_t_error_internal_sts_83adab02__out_t;
+
+    typedef struct {
+        logic intr;
+    } ecc_reg__intr_block_t__notif_intr_t_notif_cmd_done_sts_1c68637e__out_t;
+
+    typedef struct {
+        ecc_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a__out_t error_global_intr_r;
+        ecc_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a__out_t notif_global_intr_r;
+        ecc_reg__intr_block_t__error_intr_t_error_internal_sts_83adab02__out_t error_internal_intr_r;
+        ecc_reg__intr_block_t__notif_intr_t_notif_cmd_done_sts_1c68637e__out_t notif_internal_intr_r;
+    } ecc_reg__intr_block_t__out_t;
+
+    typedef struct {
         ecc_reg__ecc_CTRL__out_t ecc_CTRL;
         ecc_reg__ecc_SCACONFIG__out_t ecc_SCACONFIG;
         ecc_reg__ecc_SEED__out_t ecc_SEED[12];
@@ -161,8 +207,9 @@ package ecc_reg_pkg;
         ecc_reg__ecc_SIGN_S__out_t ecc_SIGN_S[12];
         ecc_reg__ecc_VERIFY_R__out_t ecc_VERIFY_R[12];
         ecc_reg__ecc_IV__out_t ecc_IV[12];
+        ecc_reg__intr_block_t__out_t intr_block_rf;
     } ecc_reg__out_t;
 
-    localparam ECC_REG_ADDR_WIDTH = 32'd11;
+    localparam ECC_REG_ADDR_WIDTH = 32'd12;
 
 endpackage

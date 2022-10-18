@@ -66,8 +66,3 @@ csrr t1, mepc
 csrr t2, mtval
 j early_trap_vector
 .cfi_endproc
-
-.section .data.io
-.global tohost
-tohost: .word 0
-

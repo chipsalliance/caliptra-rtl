@@ -21,8 +21,9 @@
 // 3- ahb_slv_sif module to handle AHB-lite interface
 //======================================================================
 
-module ecc_top 
+module ecc_top
     import ecc_defines_pkg::*;
+    import ecc_reg_pkg::*;
     #(
     parameter AHB_ADDR_WIDTH = 32,
     parameter AHB_DATA_WIDTH = 32,
@@ -31,6 +32,7 @@ module ecc_top
     (
     input wire                        clk,
     input wire                        reset_n,
+    input wire                        cptra_pwrgood,
 
     //AHB Lite Interface
     input wire  [AHB_ADDR_WIDTH-1:0]  haddr_i,
@@ -43,7 +45,10 @@ module ecc_top
 
     output logic                      hresp_o,
     output logic                      hreadyout_o,
-    output logic [AHB_DATA_WIDTH-1:0] hrdata_o
+    output logic [AHB_DATA_WIDTH-1:0] hrdata_o,
+
+    output logic error_intr,
+    output logic notif_intr
 );
 
     //gasket to assemble ecc request
@@ -53,8 +58,8 @@ module ecc_top
 
     logic ecc_reg_err, ecc_reg_read_err, ecc_reg_write_err;
 
-    ecc_reg_pkg::ecc_reg__in_t ecc_reg_hwif_in;
-    ecc_reg_pkg::ecc_reg__out_t ecc_reg_hwif_out;
+    ecc_reg__in_t ecc_reg_hwif_in;
+    ecc_reg__out_t ecc_reg_hwif_out;
 
     //AHB-Lite Interface
     //This module contains the logic for interfacing with the Caliptra uC over the AHB-Lite Interface
@@ -104,7 +109,7 @@ module ecc_top
 
         .s_cpuif_req(ecc_cs),
         .s_cpuif_req_is_wr(uc_req.write),
-        .s_cpuif_addr(uc_req.addr[10:0]),
+        .s_cpuif_addr(uc_req.addr[ECC_REG_ADDR_WIDTH-1:0]),
         .s_cpuif_wr_data(uc_req.wdata),
         .s_cpuif_req_stall_wr(),
         .s_cpuif_req_stall_rd(),
@@ -121,9 +126,13 @@ module ecc_top
     ecc_dsa_ctrl ecc_dsa_ctrl_i(
         .clk(clk),
         .reset_n(reset_n),
+        .cptra_pwrgood(cptra_pwrgood),
 
         .hwif_in(ecc_reg_hwif_out),
-        .hwif_out(ecc_reg_hwif_in)
+        .hwif_out(ecc_reg_hwif_in),
+
+        .error_intr(error_intr),
+        .notif_intr(notif_intr)
     );
 
 endmodule

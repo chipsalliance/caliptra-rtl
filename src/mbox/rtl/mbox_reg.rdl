@@ -153,14 +153,14 @@ addrmap mbox_reg {
         reg error_intr_t {
             name = "Interrupt Status Register type definition";
             desc = "Single bit indicating occurrence of each interrupt event.
-                    Sticky, edge assertion, write-1-to-clear.";
+                    Sticky, level assertion, write-1-to-clear.";
 
             default precedence = hw;
             default hw = w;
             default hwset = true;
             default sw = rw;
             default woclr = true;
-            default posedge intr;
+            default level intr;
 
             field {desc = "Internal Errors status bit";                 } error_internal_sts = 1'b0;
             field {desc = "Invalid Device in Pauser field status bit";  } error_inv_dev_sts = 1'b0;
@@ -172,14 +172,14 @@ addrmap mbox_reg {
         reg notif_intr_t {
             name = "Interrupt Status Register type definition";
             desc = "Single bit indicating occurrence of each interrupt event.
-                    Sticky, edge assertion, write-1-to-clear.";
+                    Sticky, level assertion, write-1-to-clear.";
 
             default precedence = hw;
             default hw = w;
             default hwset = true;
             default sw = rw;
             default woclr = true;
-            default posedge intr;
+            default level intr;
 
             field {desc = "Command Available status bit";} notif_cmd_avail_sts = 1'b0;
         };
@@ -294,7 +294,7 @@ addrmap mbox_reg {
         intr_count_t      error_inv_dev_intr_count_r;          /* Per error */                                           //
         intr_count_t      error_cmd_fail_intr_count_r;         /* Per error */                                           //
         intr_count_t      error_bad_fuse_intr_count_r;         /* Per error */                                           //
-        intr_count_t      notif_cmd_avail_intr_count_r;        /* Per notification */                                    //
+        intr_count_t      notif_cmd_avail_intr_count_r @0x180; /* Per notification */                                    //
                                                                                                                          //
         // These registers should be treated by SW as reserved, and ignored.                                             //
         // Offset at 0x200 gives enough space for 32 Errors and 32 Notifications                                         //
@@ -349,31 +349,31 @@ addrmap mbox_reg {
         //       The output pulse is then used to increment the ACTUAL counter
         error_internal_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error_internal_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
         error_internal_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error_internal_sts -> next;  // /      as a pulse to increment the intr_count_r register
-        error_internal_intr_count_incr_r.pulse -> hwenable = error_internal_intr_r.error_internal_sts -> enable; // Only count events when interrupt enable is set for that event
+        error_internal_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_internal_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
         error_internal_intr_count_incr_r.pulse -> decr     = error_internal_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
         error_internal_intr_count_r.cnt        -> incr     = error_internal_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
         error_inv_dev_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error_inv_dev_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
         error_inv_dev_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error_inv_dev_sts -> next;  // /      as a pulse to increment the intr_count_r register
-        error_inv_dev_intr_count_incr_r.pulse -> hwenable = error_internal_intr_r.error_inv_dev_sts -> enable; // Only count events when interrupt enable is set for that event
+        error_inv_dev_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_inv_dev_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
         error_inv_dev_intr_count_incr_r.pulse -> decr     = error_inv_dev_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
         error_inv_dev_intr_count_r.cnt        -> incr     = error_inv_dev_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
         error_cmd_fail_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error_cmd_fail_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
         error_cmd_fail_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error_cmd_fail_sts -> next;  // /      as a pulse to increment the intr_count_r register
-        error_cmd_fail_intr_count_incr_r.pulse -> hwenable = error_internal_intr_r.error_cmd_fail_sts -> enable; // Only count events when interrupt enable is set for that event
+        error_cmd_fail_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_cmd_fail_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
         error_cmd_fail_intr_count_incr_r.pulse -> decr     = error_cmd_fail_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
         error_cmd_fail_intr_count_r.cnt        -> incr     = error_cmd_fail_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
         error_bad_fuse_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error_bad_fuse_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
         error_bad_fuse_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error_bad_fuse_sts -> next;  // /      as a pulse to increment the intr_count_r register
-        error_bad_fuse_intr_count_incr_r.pulse -> hwenable = error_internal_intr_r.error_bad_fuse_sts -> enable; // Only count events when interrupt enable is set for that event
+        error_bad_fuse_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_bad_fuse_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
         error_bad_fuse_intr_count_incr_r.pulse -> decr     = error_bad_fuse_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
         error_bad_fuse_intr_count_r.cnt        -> incr     = error_bad_fuse_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
         notif_cmd_avail_intr_count_incr_r.pulse -> hwset    = notif_internal_intr_r.notif_cmd_avail_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
         notif_cmd_avail_intr_count_incr_r.pulse -> next     = notif_internal_intr_r.notif_cmd_avail_sts -> next;  // /      as a pulse to increment the intr_count_r register
-        notif_cmd_avail_intr_count_incr_r.pulse -> hwenable = notif_internal_intr_r.notif_cmd_avail_sts -> enable; // Only count events when interrupt enable is set for that event
+        notif_cmd_avail_intr_count_incr_r.pulse -> we       = notif_internal_intr_r.notif_cmd_avail_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
         notif_cmd_avail_intr_count_incr_r.pulse -> decr     = notif_cmd_avail_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
         notif_cmd_avail_intr_count_r.cnt        -> incr     = notif_cmd_avail_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 

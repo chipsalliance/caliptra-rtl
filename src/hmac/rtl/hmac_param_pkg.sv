@@ -50,6 +50,10 @@ package hmac_param_pkg;
 
   localparam HMAC_KV_CTRL          = 32'h00000200;
 
+  localparam HMAC_ADDR_INTR_START = 32'h00000800; // span = 0x400; 0x800 base offset matches mailbox for fw ease
+  localparam HMAC_ADDR_INTR_END   = 32'h00000BFC;
+
+
   localparam bit [63:0] HMAC_CORE_NAME        = 64'h61327368_6163686d; // "hmacsha2"
   localparam bit [63:0] HMAC_CORE_VERSION     = 64'h00000000_3030312e; // "1.00"
 

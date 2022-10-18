@@ -125,7 +125,7 @@ $(UVMF_PROJECT_DIR)/tb/tests/HMAC_tests_pkg.sv
 HMAC_VERILOG_DUT ?=\
 $(UVMF_PROJECT_DIR)/../../../../rtl/hmac_ctrl.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/hmac_core.v\
-$(UVMF_PROJECT_DIR)/../../../../rtl/hmac.v\
+$(UVMF_PROJECT_DIR)/../../../../rtl/hmac.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/hmac_param.sv\
 $(UVMF_PROJECT_DIR)/../../../../../sha512/rtl/sha512_ctrl.sv\
 $(UVMF_PROJECT_DIR)/../../../../../sha512/rtl/sha512_core.v\

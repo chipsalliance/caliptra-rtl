@@ -2,7 +2,7 @@
 // Updated by Caliptra team to modify data access width
 // and removing the work factor
 //
-// sha512.v
+// sha512.sv
 // --------
 // Top level wrapper for the SHA-512 hash function providing
 // a simple memory like interface with 32 bit data access.
@@ -41,24 +41,31 @@
 
 `default_nettype none
 
-module sha512 #(
-              parameter ADDR_WIDTH = 32,
-              parameter DATA_WIDTH = 64
-              )(
-              // Clock and reset.
-              input wire           clk,
-              input wire           reset_n,
+module sha512
+    import sha512_intr_regs_pkg::*;
+    #(
+        parameter ADDR_WIDTH = 32,
+        parameter DATA_WIDTH = 64
+    )(
+        // Clock and reset.
+        input wire           clk,
+        input wire           reset_n,
+        input wire           cptra_pwrgood,
 
-              // Control.
-              input wire           cs,
-              input wire           we,
+        // Control.
+        input wire           cs,
+        input wire           we,
 
-              // Data ports.
-              input wire  [ADDR_WIDTH-1 : 0] address,
-              input wire  [DATA_WIDTH-1 : 0] write_data,
-              output wire [DATA_WIDTH-1 : 0] read_data,
-              output wire          err
-             );
+        // Data ports.
+        input wire  [ADDR_WIDTH-1 : 0] address,
+        input wire  [DATA_WIDTH-1 : 0] write_data,
+        output wire [DATA_WIDTH-1 : 0] read_data,
+        output wire          err,
+
+        // Interrupts
+        output wire error_intr,
+        output wire notif_intr
+    );
 
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
@@ -86,6 +93,12 @@ module sha512 #(
 
   reg [511 : 0] digest_reg;
   reg           digest_valid_reg;
+
+  // Interrupts
+  logic intr_reg_we;
+  logic [31:0] intr_reg_read_data;
+  sha512_intr_regs__in_t hwif_in;
+  sha512_intr_regs__out_t hwif_out;
 
 
   //----------------------------------------------------------------
@@ -194,6 +207,7 @@ module sha512 #(
       mode_new           = MODE_SHA_512;
       mode_we            = 1'h0;
       block_we           = 1'h0;
+      intr_reg_we        = 1'b0;
       tmp_read_data      = '0;
       tmp_err          = 1'h0;
 
@@ -203,6 +217,9 @@ module sha512 #(
             begin
               if ((address >= ADDR_BLOCK_START) && (address <= ADDR_BLOCK_END))
                 block_we = 1'h1;
+
+              if ((address >= SHA512_ADDR_INTR_START) && (address <= SHA512_ADDR_INTR_END))
+                intr_reg_we = 1'h1;
 
               case (address)
                 ADDR_CTRL:
@@ -227,6 +244,9 @@ module sha512 #(
               if ((address >= ADDR_BLOCK_START) && (address <= ADDR_BLOCK_END))
                 tmp_read_data = block_reg[address[6 : 2]];
               
+              if ((address >= SHA512_ADDR_INTR_START) && (address <= SHA512_ADDR_INTR_END))
+                tmp_read_data = intr_reg_read_data;
+
               case (address)
                 ADDR_NAME0:
                   tmp_read_data = CORE_NAME0;
@@ -252,8 +272,38 @@ module sha512 #(
             end
         end
     end // addr_decoder
+
+// Interrupt Registers
+sha512_intr_regs i_sha512_intr_regs (
+    .clk(clk),
+    .rst(1'b0),
+
+    .s_cpuif_req         (cs                                      ),
+    .s_cpuif_req_is_wr   (intr_reg_we                             ),
+    .s_cpuif_addr        (address[SHA512_INTR_REGS_ADDR_WIDTH-1:0]),
+    .s_cpuif_wr_data     (write_data                              ),
+    .s_cpuif_req_stall_wr(                                        ),
+    .s_cpuif_req_stall_rd(                                        ),
+    .s_cpuif_rd_ack      (                                        ),
+    .s_cpuif_rd_err      (                                        ),
+    .s_cpuif_rd_data     (intr_reg_read_data                      ),
+    .s_cpuif_wr_ack      (                                        ),
+    .s_cpuif_wr_err      (                                        ),
+
+    .hwif_in (hwif_in ),
+    .hwif_out(hwif_out)
+);
+
+assign hwif_in.reset_b = reset_n;
+assign hwif_in.error_reset_b = cptra_pwrgood;
+assign hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = core_digest_valid & ~digest_valid_reg;
+
+assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
+assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
+
+
 endmodule // sha512
 
 //======================================================================
-// EOF sha512.v
+// EOF sha512.sv
 //======================================================================

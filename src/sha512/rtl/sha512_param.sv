@@ -39,6 +39,9 @@
   localparam ADDR_DIGEST_START    = 32'h00000100;
   localparam ADDR_DIGEST_END      = 32'h0000013f;
 
+  localparam SHA512_ADDR_INTR_START    = 32'h00000800;
+  localparam SHA512_ADDR_INTR_END      = 32'h00000BFC;
+
   localparam CORE_NAME0           = 32'h61327368; // "sha2"
   localparam CORE_NAME1           = 32'h31322d35; // "-512"
   localparam CORE_VERSION0        = 32'h3830302e; // "0.80"

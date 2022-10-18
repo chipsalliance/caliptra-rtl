@@ -7,13 +7,15 @@ targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
+      - $COMPILE_ROOT/rtl/sha512_intr_regs_pkg.sv
       - $COMPILE_ROOT/rtl/sha512_ctrl.sv
-      - $COMPILE_ROOT/rtl/sha512.v
+      - $COMPILE_ROOT/rtl/sha512.sv
       - $COMPILE_ROOT/rtl/sha512_param.sv
       - $COMPILE_ROOT/rtl/sha512_core.v
       - $COMPILE_ROOT/rtl/sha512_h_constants.v
       - $COMPILE_ROOT/rtl/sha512_k_constants.v
       - $COMPILE_ROOT/rtl/sha512_w_mem.v
+      - $COMPILE_ROOT/rtl/sha512_intr_regs.sv
     tops: [sha512_ctrl]
   rtl_lint:
     directories: []

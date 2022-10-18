@@ -30,6 +30,7 @@ module aes_ctrl #(
     // Clock and reset.
     input wire           clk,
     input wire           reset_n,
+    input wire           cptra_pwrgood,
 
     input logic [255:0] cptra_obf_key,
 
@@ -49,7 +50,11 @@ module aes_ctrl #(
     output logic hresp_o,
     output logic hreadyout_o,
     output logic [AHB_DATA_WIDTH-1:0] hrdata_o,
-    output kv_write_t kv_write
+    output kv_write_t kv_write,
+
+    // Interrupt
+    output error_intr,
+    output notif_intr
 );
 
   //----------------------------------------------------------------
@@ -73,6 +78,7 @@ module aes_ctrl #(
         ) aes_inst(
         .clk(clk),
         .reset_n(reset_n),
+        .cptra_pwrgood(cptra_pwrgood),
         .cptra_obf_key(cptra_obf_key),
         .obf_uds_seed(obf_uds_seed),
         .obf_field_entropy(obf_field_entropy),
@@ -81,6 +87,8 @@ module aes_ctrl #(
         .address(aes_address),
         .write_data(aes_write_data[31:0]),
         .read_data(aes_read_data[31:0]),
+        .error_intr(error_intr),
+        .notif_intr(notif_intr),
         .kv_write(kv_write)
         );
     `else
@@ -96,7 +104,11 @@ module aes_ctrl #(
         .address(aes_address),
         .write_data(aes_write_data),
         .read_data(aes_read_data)
-    );
+        );
+        always_comb begin
+            error_intr = 1'b0; // TODO
+            notif_intr = 1'b0; // TODO
+        end
     `endif
 
 //instantiate ahb lite module

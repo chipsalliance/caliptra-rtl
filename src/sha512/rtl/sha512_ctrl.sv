@@ -29,6 +29,7 @@ module sha512_ctrl #(
     // Clock and reset.
     input wire           clk,
     input wire           reset_n,
+    input wire           cptra_pwrgood,
 
     // from SLAVES PORT
     input logic [AHB_ADDR_WIDTH-1:0] haddr_i,
@@ -41,7 +42,11 @@ module sha512_ctrl #(
 
     output logic hresp_o,
     output logic hreadyout_o,
-    output logic [AHB_DATA_WIDTH-1:0] hrdata_o
+    output logic [AHB_DATA_WIDTH-1:0] hrdata_o,
+
+    // Interrupt
+    output error_intr,
+    output notif_intr
 );
 
     //----------------------------------------------------------------
@@ -61,12 +66,15 @@ module sha512_ctrl #(
         sha512_inst(
         .clk(clk),
         .reset_n(reset_n),
+        .cptra_pwrgood(cptra_pwrgood),
         .cs(sha512_cs),
         .we(sha512_we),
         .address(sha512_address),
         .write_data(sha512_write_data),
         .read_data(sha512_read_data),
-        .err(sha512_err)
+        .err(sha512_err),
+        .error_intr(error_intr),
+        .notif_intr(notif_intr)
     );
 
     //instantiate ahb lite module

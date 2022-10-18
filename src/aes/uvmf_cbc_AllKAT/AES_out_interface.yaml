@@ -38,6 +38,12 @@ uvmf:
       - name: transaction_flag_in_monitor
         dir: input
         width: '1'
+      - name: error_intr
+        dir: input
+        width: '1'
+      - name: notif_intr
+        dir: input
+        width: '1'
  
       response_info:
         data: []
@@ -49,3 +55,11 @@ uvmf:
         isrand: 'False'
         name: result
         type: bit [OUTPUT_TEXT_WIDTH-1:0]
+      - iscompare: 'False'
+        isrand: 'False'
+        name: error_intr_pending
+        type: bit
+      - iscompare: 'False'
+        isrand: 'False'
+        name: notif_intr_pending
+        type: bit

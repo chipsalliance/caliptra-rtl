@@ -123,9 +123,11 @@ $(UVMF_PROJECT_DIR)/tb/tests/AES_tests_pkg.sv
 # pragma uvmf custom dut_files begin
 # UVMF_CHANGE_ME : Reference Verilog DUT source.
 AES_VERILOG_DUT ?=\
+$(UVMF_PROJECT_DIR)/../../../../rtl/aes_intr_regs_pkg.sv\
+$(UVMF_PROJECT_DIR)/../../../../rtl/aes_intr_regs.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/aes_ctrl.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/aes.v\
-$(UVMF_PROJECT_DIR)/../../../../rtl/aes_cbc.v\
+$(UVMF_PROJECT_DIR)/../../../../rtl/aes_cbc.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/aes_param.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/aes_core.v\
 $(UVMF_PROJECT_DIR)/../../../../rtl/aes_core_cbc.v\

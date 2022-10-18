@@ -28,6 +28,9 @@ uvmf:
       - name: aes_rst
         dir: output
         width: '1'
+      - name: cptra_pwrgood
+        dir: output
+        width: '1'
       - name: hadrr
         dir: output
         width: AHB_ADDR_WIDTH
@@ -70,6 +73,7 @@ uvmf:
       - name: key_len
         dir: output
         width: '1'
+        #FIXME obf_key, kv_write, etc?
 
       response_info:
         data: []

@@ -46,6 +46,9 @@
 
   localparam AES_ADDR_KV_CTRL  = 32'h00000200;
 
+  localparam AES_ADDR_INTR_START = 32'h00000800; // span = 0x400; 0x800 base offset matches mailbox for fw ease
+  localparam AES_ADDR_INTR_END   = 32'h00000BFC;
+
   localparam AES_CORE_NAME        = 64'h20202020_73206165; // "aes "
   localparam AES_CORE_VERSION     = 64'h00000000_3630302e; // "0.60"
 
