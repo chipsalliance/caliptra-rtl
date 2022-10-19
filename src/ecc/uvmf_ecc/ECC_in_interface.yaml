@@ -14,8 +14,10 @@ uvmf:
         value: '32'
 
       hdl_typedefs:
+      - name: ecc_in_test_transactions
+        type: enum bit[2:0] {ecc_reset_test = 3'b000, ecc_normal_test = 3'b001, ecc_otf_reset_test = 3'b010, ecc_openssl_test = 3'b011}
       - name: ecc_in_op_transactions
-        type: enum bit[2:0] {reset_op = 3'b000, key_gen = 3'b001, key_sign = 3'b010, key_verify = 3'b011, otf_reset_op = 3'b100 }
+        type: enum bit[1:0] {key_gen = 2'b00, key_sign = 2'b01, key_verify = 2'b10 }
 
       ports:
       - name: ecc_rst_n
@@ -33,21 +35,12 @@ uvmf:
       - name: hwrite
         dir: output
         width: '1'
-      - name: hmastlock
-        dir: output
-        width: '1'
       - name: hready
         dir: output
         width: '1'
       - name: htrans
         dir: output
         width: '2'
-      - name: hprot
-        dir: output
-        width: '4'
-      - name: hburst
-        dir: output
-        width: '3'
       - name: hsize
         dir: output
         width: '3'
@@ -60,6 +53,9 @@ uvmf:
       - name: transaction_flag_out_monitor
         dir: output
         width: '1'
+      - name: test
+        dir: output
+        width: '3'
       - name: op
         dir: output
         width: '2'
@@ -72,6 +68,12 @@ uvmf:
         operation: 1'b0
 
       transaction_vars:
+      - comment: ''
+        name: test
+        type: ecc_in_test_transactions
+        iscompare: 'True'
+        isrand: 'True'
+        unpacked_dimension: ''
       - comment: ''
         name: op
         type: ecc_in_op_transactions
@@ -86,15 +88,27 @@ uvmf:
         unpacked_dimension: ''
 
       transaction_constraints:
+      - name: ecc_valid_test_contraints
+        value: '{ test inside {ecc_normal_test, ecc_otf_reset_test, ecc_openssl_test}; }'
       - name: ecc_valid_op_constrainsts
-        value: '{ op inside {key_sign, key_gen, key_verify }; }'
+        value: '{ if (test == ecc_normal_test || test == ecc_otf_reset_test) {
+                    op inside {key_gen, key_sign, key_verify} ;
+                  }
+                  else if (test == ecc_openssl_test) {
+                    op inside {key_gen};
+                  } }'
       - name: ecc_valid_testcasesel_constraints
-        value: '{ if (op == key_gen) {
-                    test_case_sel >= 0; 
-                    test_case_sel <= 5;
-                }
-                else if (op == key_sign || op == key_verify) {
-                    test_case_sel >= 5; 
-                    test_case_sel <= 9;
-                } }'
+        value: '{ if (test == ecc_normal_test || test == ecc_otf_reset_test) { 
+                    if (op == key_gen) {
+                        test_case_sel >= 0; 
+                        test_case_sel <= 5;
+                    }
+                    else if (op == key_sign || op == key_verify) {
+                        test_case_sel >= 5; 
+                        test_case_sel <= 9;
+                    } 
+                  } else if (test == ecc_openssl_test) {
+                    test_case_sel >= 0;
+                    test_case_sel < 1;
+                  } }'
 

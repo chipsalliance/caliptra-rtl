@@ -35,6 +35,9 @@ uvmf:
         - name: transaction_flag_out_monitor
           dir: input
           width: '1'
+        - name: test
+          dir: output
+          width: '3'
         - name: op
           dir: output
           width: '2'

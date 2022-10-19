@@ -84,6 +84,7 @@ end
   tri [AHB_DATA_WIDTH-1:0] hrdata_i;
   tri  hreadyout_i;
   tri  transaction_flag_out_monitor_i;
+  tri [2:0] test_i;
   tri [1:0] op_i;
   tri [7:0] test_case_sel_i;
   assign clk_i = bus.clk;
@@ -99,6 +100,7 @@ end
   assign hrdata_i = bus.hrdata;
   assign hreadyout_i = bus.hreadyout;
   assign transaction_flag_out_monitor_i = bus.transaction_flag_out_monitor;
+  assign test_i = bus.test;
   assign op_i = bus.op;
   assign test_case_sel_i = bus.test_case_sel;
 
@@ -111,8 +113,8 @@ end
   // pragma tbx oneway proxy.notify_transaction                 
 
   // pragma uvmf custom interface_item_additional begin
-    reg transaction_flag;
-  // pragma uvmf custom interface_item_additional end
+  reg transaction_flag;
+ // pragma uvmf custom interface_item_additional end
   
   //******************************************************************                         
   task wait_for_reset();// pragma tbx xtf  
@@ -175,6 +177,7 @@ end
   task do_monitor(output ECC_in_monitor_s ECC_in_monitor_struct);
     //
     // Available struct members:
+    //     //    ECC_in_monitor_struct.test
     //     //    ECC_in_monitor_struct.op
     //     //    ECC_in_monitor_struct.test_case_sel
     //     //
@@ -195,6 +198,7 @@ end
     //      ECC_in_monitor_struct.xyz = hrdata_i;  //    [AHB_DATA_WIDTH-1:0] 
     //      ECC_in_monitor_struct.xyz = hreadyout_i;  //     
     //      ECC_in_monitor_struct.xyz = transaction_flag_out_monitor_i;  //     
+    //      ECC_in_monitor_struct.xyz = test_i;  //    [2:0] 
     //      ECC_in_monitor_struct.xyz = op_i;  //    [1:0] 
     //      ECC_in_monitor_struct.xyz = test_case_sel_i;  //    [7:0] 
     // pragma uvmf custom do_monitor begin
@@ -207,6 +211,7 @@ end
     // the next transfer. One clock cycle is consumed between calls to do_monitor.
     if (ecc_rst_n_i == 1'b0) begin
       while (ecc_rst_n_i == 1'b0) @(posedge clk_i);
+      ECC_in_monitor_struct.test = ecc_in_test_transactions'(test_i);
       ECC_in_monitor_struct.op = ecc_in_op_transactions'(op_i);
       ECC_in_monitor_struct.test_case_sel = test_case_sel_i;
       transaction_flag = 0; //Still want to capture reset tx in the out monitor
@@ -216,6 +221,7 @@ end
 	    while (transaction_flag == 0) begin
 		    if (transaction_flag_out_monitor_i == 1) begin
           transaction_flag = 1;
+          ECC_in_monitor_struct.test = ecc_in_test_transactions'(test_i);
 				  ECC_in_monitor_struct.op = ecc_in_op_transactions'(op_i);
 				  ECC_in_monitor_struct.test_case_sel = test_case_sel_i;
 		    end //tx flag monitor = 1

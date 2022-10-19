@@ -23,6 +23,7 @@
 // .dut_signal_port(ECC_out_bus.hreadyout), // Agent input 
 // .dut_signal_port(ECC_out_bus.hrdata), // Agent input 
 // .dut_signal_port(ECC_out_bus.transaction_flag_out_monitor), // Agent input 
+// .dut_signal_port(ECC_out_bus.test), // Agent output 
 // .dut_signal_port(ECC_out_bus.op), // Agent output 
 
 import uvmf_base_pkg_hdl::*;
@@ -42,6 +43,7 @@ interface  ECC_out_if #(
   inout tri  hreadyout,
   inout tri [AHB_DATA_WIDTH-1:0] hrdata,
   inout tri  transaction_flag_out_monitor,
+  inout tri [2:0] test,
   inout tri [1:0] op
   );
 
@@ -53,6 +55,7 @@ modport monitor_port
   input hreadyout,
   input hrdata,
   input transaction_flag_out_monitor,
+  input test,
   input op
   );
 
@@ -64,6 +67,7 @@ modport initiator_port
   input hreadyout,
   input hrdata,
   input transaction_flag_out_monitor,
+  output test,
   output op
   );
 
@@ -75,6 +79,7 @@ modport responder_port
   output hreadyout,
   output hrdata,
   output transaction_flag_out_monitor,
+  input test,
   input op
   );
   

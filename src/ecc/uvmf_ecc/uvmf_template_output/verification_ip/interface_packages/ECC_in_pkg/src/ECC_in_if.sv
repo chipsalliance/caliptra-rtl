@@ -30,6 +30,7 @@
 // .dut_signal_port(ECC_in_bus.hrdata), // Agent input 
 // .dut_signal_port(ECC_in_bus.hreadyout), // Agent input 
 // .dut_signal_port(ECC_in_bus.transaction_flag_out_monitor), // Agent output 
+// .dut_signal_port(ECC_in_bus.test), // Agent output 
 // .dut_signal_port(ECC_in_bus.op), // Agent output 
 // .dut_signal_port(ECC_in_bus.test_case_sel), // Agent output 
 
@@ -56,6 +57,7 @@ interface  ECC_in_if #(
   inout tri [AHB_DATA_WIDTH-1:0] hrdata,
   inout tri  hreadyout,
   inout tri  transaction_flag_out_monitor,
+  inout tri [2:0] test,
   inout tri [1:0] op,
   inout tri [7:0] test_case_sel
   );
@@ -75,6 +77,7 @@ modport monitor_port
   input hrdata,
   input hreadyout,
   input transaction_flag_out_monitor,
+  input test,
   input op,
   input test_case_sel
   );
@@ -94,6 +97,7 @@ modport initiator_port
   input hrdata,
   input hreadyout,
   output transaction_flag_out_monitor,
+  output test,
   output op,
   output test_case_sel
   );
@@ -113,6 +117,7 @@ modport responder_port
   output hrdata,
   output hreadyout,
   input transaction_flag_out_monitor,
+  input test,
   input op,
   input test_case_sel
   );

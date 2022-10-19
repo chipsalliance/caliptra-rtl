@@ -155,6 +155,7 @@ module ecc_top_tb #(
             dut (
              .clk(clk_tb),
              .reset_n(reset_n_tb),
+             .cptra_pwrgood(),
 
              .haddr_i(haddr_i_tb),
              .hwdata_i(hwdata_i_tb),
@@ -166,7 +167,10 @@ module ecc_top_tb #(
 
              .hresp_o(hresp_o_tb),
              .hreadyout_o(hreadyout_o_tb),
-             .hrdata_o(hrdata_o_tb)
+             .hrdata_o(hrdata_o_tb),
+
+             .error_intr(),
+             .notif_intr()
             );
 
 
@@ -866,9 +870,9 @@ module ecc_top_tb #(
 
       //ecc_test();
 
-      //ecc_sca_config_test();
+      ecc_sca_config_test();
 
-      ecc_openssl_test();
+      //ecc_openssl_test();
 
       display_test_results();
       

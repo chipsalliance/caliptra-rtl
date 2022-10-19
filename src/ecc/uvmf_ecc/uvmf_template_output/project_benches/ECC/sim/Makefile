@@ -123,32 +123,37 @@ $(UVMF_PROJECT_DIR)/tb/tests/ECC_tests_pkg.sv
 # pragma uvmf custom dut_files begin
 # UVMF_CHANGE_ME : Reference Verilog DUT source.
 ECC_VERILOG_DUT ?=\
-$(UVMF_PROJECT_DIR)/../../../../../hmac_drbg/rtl/hmac_drbg_param.sv\
 $(UVMF_PROJECT_DIR)/../../../../../hmac_drbg/rtl/hmac_drbg.v\
 $(UVMF_PROJECT_DIR)/../../../../../hmac/rtl/hmac_core.v\
 $(UVMF_PROJECT_DIR)/../../../../../keyvault/rtl/kv_defines.svh\
 $(UVMF_PROJECT_DIR)/../../../../../hmac/rtl/hmac_ctrl.sv\
-$(UVMF_PROJECT_DIR)/../../../../../hmac/rtl/hmac_param.sv\
-$(UVMF_PROJECT_DIR)/../../../../../hmac/rtl/hmac.v\
+$(UVMF_PROJECT_DIR)/../../../../../hmac/rtl/hmac_param_pkg.sv\
+$(UVMF_PROJECT_DIR)/../../../../../hmac/rtl/hmac_intr_regs_pkg.sv\
+$(UVMF_PROJECT_DIR)/../../../../../hmac/rtl/hmac.sv\
+$(UVMF_PROJECT_DIR)/../../../../../hmac/rtl/hmac_intr_regs.sv\
 $(UVMF_PROJECT_DIR)/../../../../../sha512/rtl/sha512_ctrl.sv\
 $(UVMF_PROJECT_DIR)/../../../../../sha512/rtl/sha512_core.v\
 $(UVMF_PROJECT_DIR)/../../../../../sha512/rtl/sha512_h_constants.v\
 $(UVMF_PROJECT_DIR)/../../../../../sha512/rtl/sha512_k_constants.v\
 $(UVMF_PROJECT_DIR)/../../../../../sha512/rtl/sha512_param.sv\
-$(UVMF_PROJECT_DIR)/../../../../../sha512/rtl/sha512.v\
+$(UVMF_PROJECT_DIR)/../../../../../sha512/rtl/sha512.sv\
 $(UVMF_PROJECT_DIR)/../../../../../sha512/rtl/sha512_w_mem.v\
-$(UVMF_PROJECT_DIR)/../../../../rtl/ecc_defines.svh\
-$(UVMF_PROJECT_DIR)/../../../../rtl/ecc_params.sv\
+$(UVMF_PROJECT_DIR)/../../../../../sha512/rtl/sha512_intr_regs_pkg.sv\
+$(UVMF_PROJECT_DIR)/../../../../../sha512/rtl/sha512_intr_regs.sv\
+$(UVMF_PROJECT_DIR)/../../../../rtl/ecc_defines_pkg.sv\
+$(UVMF_PROJECT_DIR)/../../../../rtl/ecc_params_pkg.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/ecc_reg_pkg.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/ecc_top.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/ecc_reg.sv\
+$(UVMF_PROJECT_DIR)/../../../../rtl/ecc_scalar_blinding.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/ecc_dsa_ctrl.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/ecc_dsa_sequencer.sv\
-$(UVMF_PROJECT_DIR)/../../../../rtl/ecc_dsa_uop.sv\
+$(UVMF_PROJECT_DIR)/../../../../rtl/ecc_dsa_uop_pkg.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/ecc_fixed_msb.sv\
+$(UVMF_PROJECT_DIR)/../../../../rtl/ecc_hmac_drbg_interface.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/ecc_arith_unit.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/ecc_pm_ctrl.sv\
-$(UVMF_PROJECT_DIR)/../../../../rtl/ecc_pm_uop.sv\
+$(UVMF_PROJECT_DIR)/../../../../rtl/ecc_pm_uop_pkg.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/ecc_pm_sequencer.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/ecc_ram_tdp_file.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/ecc_fau.sv\

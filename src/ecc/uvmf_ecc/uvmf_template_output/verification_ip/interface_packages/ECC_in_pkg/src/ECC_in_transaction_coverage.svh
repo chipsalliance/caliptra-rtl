@@ -41,6 +41,7 @@ class ECC_in_transaction_coverage #(
     // UVMF_CHANGE_ME : Add coverage bins, crosses, exclusions, etc. according to coverage needs.
     option.auto_bin_max=1024;
     option.per_instance=1;
+    test: coverpoint coverage_trans.test;
     op: coverpoint coverage_trans.op;
     test_case_sel: coverpoint coverage_trans.test_case_sel;
     // pragma uvmf custom covergroup end

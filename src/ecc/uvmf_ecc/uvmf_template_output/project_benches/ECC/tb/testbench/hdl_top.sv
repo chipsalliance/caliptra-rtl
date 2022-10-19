@@ -57,6 +57,7 @@ import uvmf_base_pkg_hdl::*;
     wire [31:0] hrdata_top;
     wire hreadyout_top;
     wire [1:0] op_top;
+    wire [2:0] test_top;
   // pragma uvmf custom module_item_additional end
 
   // Instantiate the signal bundle, monitor bfm and driver bfm for each interface.
@@ -69,6 +70,7 @@ import uvmf_base_pkg_hdl::*;
      .hrdata(hrdata_top),
      .hreadyout(hreadyout_top),
      .op(op_top),
+     .test(test_top),
      .transaction_flag_out_monitor(transaction_flag_out_monitor_top)
      // pragma uvmf custom ECC_in_agent_bus_connections end
      );
@@ -78,6 +80,7 @@ import uvmf_base_pkg_hdl::*;
      .hrdata(hrdata_top),
      .hreadyout(hreadyout_top),
      .op(op_top),
+     .test(test_top),
      .transaction_flag_out_monitor(transaction_flag_out_monitor_top)
      // pragma uvmf custom ECC_out_agent_bus_connections end
      );
@@ -98,6 +101,7 @@ import uvmf_base_pkg_hdl::*;
   ) dut (
       .clk              (ECC_in_agent_bus.clk),
       .reset_n          (ECC_in_agent_bus.ecc_rst_n),
+      .cptra_pwrgood    (),
 
       .haddr_i          (ECC_in_agent_bus.haddr),
       .hwdata_i         (ECC_in_agent_bus.hwdata),
@@ -109,7 +113,10 @@ import uvmf_base_pkg_hdl::*;
 
       .hresp_o          (ECC_out_agent_bus.hresp),
       .hreadyout_o      (ECC_out_agent_bus.hreadyout),
-      .hrdata_o         (ECC_out_agent_bus.hrdata)
+      .hrdata_o         (ECC_out_agent_bus.hrdata), 
+
+      .error_intr       (),
+      .notif_intr       ()
   );
 
   // pragma uvmf custom dut_instantiation end

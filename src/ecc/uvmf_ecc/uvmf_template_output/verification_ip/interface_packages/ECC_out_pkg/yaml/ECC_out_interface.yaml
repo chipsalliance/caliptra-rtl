@@ -38,6 +38,10 @@ uvmf:
         reset_value: '''bz'
         width: '1'
       - dir: output
+        name: test
+        reset_value: '''bz'
+        width: '3'
+      - dir: output
         name: op
         reset_value: '''bz'
         width: '2'

@@ -105,6 +105,8 @@ end
   reg  transaction_flag_out_monitor_o = 'bz;
 
   // INITIATOR mode output signals
+  tri [2:0] test_i;
+  reg [2:0] test_o = 'bz;
   tri [1:0] op_i;
   reg [1:0] op_o = 'bz;
 
@@ -128,6 +130,8 @@ end
 
   // These are signals marked as 'output' by the config file, but the outputs will
   // not be driven by this BFM unless placed in INITIATOR mode.
+  assign bus.test = (initiator_responder == INITIATOR) ? test_o : 'bz;
+  assign test_i = bus.test;
   assign bus.op = (initiator_responder == INITIATOR) ? op_o : 'bz;
   assign op_i = bus.op;
 
@@ -170,6 +174,7 @@ end
        hrdata_o <= 'bz;
        transaction_flag_out_monitor_o <= 'bz;
        // INITIATOR mode output signals
+       test_o <= 'bz;
        op_o <= 'bz;
        // Bi-directional signals
  
@@ -241,6 +246,7 @@ end
        //    All available initiator output and inout signals listed.
        //    Notice the _o.  Those are storage variables that allow for procedural assignment.
        //    Initiator output signals
+       //      test_o <= ECC_out_initiator_struct.xyz;  //    [2:0] 
        //      op_o <= ECC_out_initiator_struct.xyz;  //    [1:0] 
        //    Initiator inout signals
     // Initiate a transfer using the data received.
@@ -293,6 +299,7 @@ bit first_transfer=1;
        //    How to assign a responder struct member, named xyz, from a signal.   
        //    All available responder input and inout signals listed.
        //    Responder input signals
+       //      ECC_out_responder_struct.xyz = test_i;  //    [2:0] 
        //      ECC_out_responder_struct.xyz = op_i;  //    [1:0] 
        //    Responder inout signals
        //    How to assign a signal, named xyz, from an initiator struct member.   

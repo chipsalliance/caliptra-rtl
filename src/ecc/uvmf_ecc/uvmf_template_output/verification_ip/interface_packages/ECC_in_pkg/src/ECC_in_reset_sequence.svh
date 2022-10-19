@@ -52,9 +52,9 @@ task body();
               )::type_id::create("req");
     start_item(req);
     // Randomize the transaction
-    if(!req.randomize()) `uvm_fatal("SEQ", "ECC_in_reset_sequence::body()-ECC_in_transaction randomization failed")
+    if(!req.randomize() with { test == ecc_otf_reset_test; }) `uvm_fatal("SEQ", "ECC_in_reset_sequence::body()-ECC_in_transaction randomization failed")
     // set the operation to be a reset
-    req.op = reset_op;
+    //req.op = reset_op;
     // Send the transaction to the ECC_in_driver_bfm via the sequencer and ECC_in_driver.
     finish_item(req);
     `uvm_info("SEQ", {"Response:",req.convert2string()},UVM_MEDIUM)

@@ -49,6 +49,7 @@ typedef struct packed  { \
 //      and from_monitor_struct methods of the ECC_in_transaction class.
 //
   `define ECC_in_MONITOR_STRUCT typedef struct packed  { \
+  ecc_in_test_transactions test ; \
   ecc_in_op_transactions op ; \
   bit [7:0] test_case_sel ; \
      } ECC_in_monitor_s;
@@ -57,6 +58,7 @@ typedef struct packed  { \
   virtual function ECC_in_monitor_s to_monitor_struct();\
     ECC_in_monitor_struct = \
             { \
+            this.test , \
             this.op , \
             this.test_case_sel  \
             };\
@@ -66,6 +68,7 @@ typedef struct packed  { \
   `define ECC_in_FROM_MONITOR_STRUCT_FUNCTION \
   virtual function void from_monitor_struct(ECC_in_monitor_s ECC_in_monitor_struct);\
             {\
+            this.test , \
             this.op , \
             this.test_case_sel  \
             } = ECC_in_monitor_struct;\
@@ -77,6 +80,7 @@ typedef struct packed  { \
 //      Also update the comments in the driver BFM.
 //
   `define ECC_in_INITIATOR_STRUCT typedef struct packed  { \
+  ecc_in_test_transactions test ; \
   ecc_in_op_transactions op ; \
   bit [7:0] test_case_sel ; \
      } ECC_in_initiator_s;
@@ -85,6 +89,7 @@ typedef struct packed  { \
   virtual function ECC_in_initiator_s to_initiator_struct();\
     ECC_in_initiator_struct = \
            {\
+           this.test , \
            this.op , \
            this.test_case_sel  \
            };\
@@ -94,6 +99,7 @@ typedef struct packed  { \
   `define ECC_in_FROM_INITIATOR_STRUCT_FUNCTION \
   virtual function void from_initiator_struct(ECC_in_initiator_s ECC_in_initiator_struct);\
            {\
+           this.test , \
            this.op , \
            this.test_case_sel  \
            } = ECC_in_initiator_struct;\
@@ -105,6 +111,7 @@ typedef struct packed  { \
 //      Also update the comments in the driver BFM.
 //
   `define ECC_in_RESPONDER_STRUCT typedef struct packed  { \
+  ecc_in_test_transactions test ; \
   ecc_in_op_transactions op ; \
   bit [7:0] test_case_sel ; \
      } ECC_in_responder_s;
@@ -113,6 +120,7 @@ typedef struct packed  { \
   virtual function ECC_in_responder_s to_responder_struct();\
     ECC_in_responder_struct = \
            {\
+           this.test , \
            this.op , \
            this.test_case_sel  \
            };\
@@ -122,6 +130,7 @@ typedef struct packed  { \
   `define ECC_in_FROM_RESPONDER_STRUCT_FUNCTION \
   virtual function void from_responder_struct(ECC_in_responder_s ECC_in_responder_struct);\
            {\
+           this.test , \
            this.op , \
            this.test_case_sel  \
            } = ECC_in_responder_struct;\

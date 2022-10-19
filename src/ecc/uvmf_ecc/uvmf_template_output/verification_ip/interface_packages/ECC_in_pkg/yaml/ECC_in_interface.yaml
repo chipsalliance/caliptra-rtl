@@ -8,8 +8,10 @@ uvmf:
       gen_inbound_streaming_driver: 'False'
       hdl_pkg_parameters: []
       hdl_typedefs:
+      - name: ecc_in_test_transactions
+        type: enum bit[2:0] {ecc_reset_test = 3'b000, ecc_normal_test = 3'b001, ecc_otf_reset_test = 3'b010, ecc_openssl_test = 3'b011}
       - name: ecc_in_op_transactions
-        type: enum bit[2:0] {reset_op = 3'b000, key_gen = 3'b001, key_sign = 3'b010, key_verify = 3'b011, otf_reset_op = 3'b100 }
+        type: enum bit[1:0] {key_gen = 2'b00, key_sign = 2'b01, key_verify = 2'b10 }
       hvl_pkg_parameters: []
       hvl_typedefs: []
       parameters:
@@ -41,10 +43,6 @@ uvmf:
         reset_value: '''bz'
         width: '1'
       - dir: output
-        name: hmastlock
-        reset_value: '''bz'
-        width: '1'
-      - dir: output
         name: hready
         reset_value: '''bz'
         width: '1'
@@ -52,14 +50,6 @@ uvmf:
         name: htrans
         reset_value: '''bz'
         width: '2'
-      - dir: output
-        name: hprot
-        reset_value: '''bz'
-        width: '4'
-      - dir: output
-        name: hburst
-        reset_value: '''bz'
-        width: '3'
       - dir: output
         name: hsize
         reset_value: '''bz'
@@ -77,6 +67,10 @@ uvmf:
         reset_value: '''bz'
         width: '1'
       - dir: output
+        name: test
+        reset_value: '''bz'
+        width: '3'
+      - dir: output
         name: op
         reset_value: '''bz'
         width: '2'
@@ -88,12 +82,21 @@ uvmf:
       reset_assertion_level: 'False'
       transaction_constraints:
       - comment: ''
+        name: ecc_valid_test_contraints
+        value: '{ test inside {ecc_normal_test, ecc_otf_reset_test, ecc_openssl_test}; }'
+      - comment: ''
         name: ecc_valid_op_constrainsts
-        value: '{ op inside {key_sign, key_gen, key_verify }; }'
+        value: '{ if (test == ecc_normal_test || test == ecc_otf_reset_test) { op inside {key_gen, key_sign, key_verify} ; } else if (test == ecc_openssl_test) { op inside {key_gen}; } }'
       - comment: ''
         name: ecc_valid_testcasesel_constraints
-        value: '{ if (op == key_gen) { test_case_sel >= 0; test_case_sel <= 2; } else if (op == key_sign || op == key_verify) { test_case_sel >= 3; test_case_sel <= 4; } }'
+        value: '{ if (test == ecc_normal_test || test == ecc_otf_reset_test) { if (op == key_gen) { test_case_sel >= 0; test_case_sel <= 5; } else if (op == key_sign || op == key_verify) { test_case_sel >= 5; test_case_sel <= 9; } } else if (test == ecc_openssl_test) { test_case_sel >= 0; test_case_sel < 1; } }'
       transaction_vars:
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'True'
+        name: test
+        type: ecc_in_test_transactions
+        unpacked_dimension: ''
       - comment: ''
         iscompare: 'True'
         isrand: 'True'

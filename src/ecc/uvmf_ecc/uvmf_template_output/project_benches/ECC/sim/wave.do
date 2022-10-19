@@ -12,7 +12,9 @@ add wave -noupdate -group ECC_out_agent_bus /hdl_top/ECC_out_agent_bus/*
 add wave -noupdate -divider Internal_Signals
 add wave -noupdate /hdl_top/dut/ecc_dsa_ctrl_i/dsa_busy
 add wave -noupdate /hdl_top/dut/ecc_dsa_ctrl_i/pm_busy_o
+add wave -noupdate /hdl_top/dut/ecc_dsa_ctrl_i/privkey_reg
 add wave -noupdate /hdl_top/dut/ecc_dsa_ctrl_i/cmd_reg
+add wave -noupdate /hdl_top/dut/ecc_reg1/field_combo
 add wave -noupdate /hdl_top/dut/ecc_reg_hwif_in
 add wave -noupdate /hdl_top/dut/ecc_reg_hwif_out
 add wave -noupdate /hdl_top/dut/hrdata_o
@@ -25,7 +27,7 @@ add wave -noupdate /hdl_top/ECC_out_agent_mon_bfm/pubkey_x
 add wave -noupdate /hdl_top/ECC_out_agent_mon_bfm/pubkey_y
 add wave -noupdate /hdl_top/ECC_out_agent_mon_bfm/R
 add wave -noupdate /hdl_top/ECC_out_agent_mon_bfm/S
-add wave -noupdate /hdl_top/ECC_out_agent_mon_bfm/verify
+add wave -noupdate /hdl_top/ECC_out_agent_mon_bfm/verify_R
 add wave -noupdate /hdl_top/ECC_out_agent_mon_bfm/op
 
 TreeUpdate [SetDefaultTree]

@@ -15,7 +15,7 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-class ECC_in_otf_reset_sequence #(
+class ECC_in_openssl_keygen_sequence #(
       int AHB_DATA_WIDTH = 32,
       int AHB_ADDR_WIDTH = 32
       )
@@ -25,7 +25,7 @@ class ECC_in_otf_reset_sequence #(
 
       );
 
-  `uvm_object_param_utils( ECC_in_otf_reset_sequence #(
+  `uvm_object_param_utils( ECC_in_openssl_keygen_sequence #(
                            AHB_DATA_WIDTH,
                            AHB_ADDR_WIDTH
                            ))
@@ -51,10 +51,11 @@ class ECC_in_otf_reset_sequence #(
                 .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH)
                 )::type_id::create("req");
       start_item(req);
+      
       // Randomize the transaction
-      if(!req.randomize() with { test == ecc_otf_reset_test; }) `uvm_fatal("SEQ", "ECC_in_otf_reset_sequence::body()-ECC_in_transaction randomization failed")
+      if(!req.randomize() with { test == ecc_openssl_test; }) `uvm_fatal("SEQ", "ECC_in_openssl_keygen_sequence::body()-ECC_in_transaction randomization failed")
       // set the operation
-      //req.test = ecc_otf_reset_test;
+      //req.test = ecc_openssl_test;
       $display("*** ANJANA*** op = %h", req.test);
       // Send the transaction to the ECC_in_driver_bfm via the sequencer and ECC_in_driver.
       finish_item(req);
@@ -63,5 +64,5 @@ class ECC_in_otf_reset_sequence #(
 
   endtask
 
-endclass: ECC_in_otf_reset_sequence
+endclass: ECC_in_openssl_keygen_sequence
 

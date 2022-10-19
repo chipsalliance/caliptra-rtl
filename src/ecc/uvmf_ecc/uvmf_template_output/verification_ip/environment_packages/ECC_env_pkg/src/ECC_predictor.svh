@@ -116,121 +116,174 @@ class ECC_predictor #(
     //`uvm_info("UNIMPLEMENTED_PREDICTOR_MODEL", "UVMF_CHANGE_ME: The ECC_predictor::write_ECC_in_agent_ae function needs to be completed with DUT prediction model",UVM_NONE)
     //`uvm_info("UNIMPLEMENTED_PREDICTOR_MODEL", "******************************************************************************************************",UVM_NONE)
  
-    $display("**ECC_predictor** t.op= %d",t.op);
-    $display("**ECC_predictor** t.test_case_sel = %d",t.test_case_sel);
-    if ((t.op == 3'b000) || (t.op == 3'b100)) begin
+    if ((t.test == ecc_reset_test) || (t.test == ecc_otf_reset_test)) begin
+      test_case_sel = t.test_case_sel;
+
+      $display("**ECC_predictor** test = %0s", t.test.name());
+      $display("**ECC_predictor** op = %0s", t.op.name());
+      $display("**ECC_predictor** test_case_sel = %d", test_case_sel);
+
       ECC_sb_ap_output_transaction.result_privkey   = 0;
       ECC_sb_ap_output_transaction.result_pubkey_x  = 0;
       ECC_sb_ap_output_transaction.result_pubkey_y  = 0;
       ECC_sb_ap_output_transaction.result_R         = 0;
       ECC_sb_ap_output_transaction.result_S         = 0; 
       ECC_sb_ap_output_transaction.result_verify_R  = 0;
-    end
-    else if (t.op == 3'b001) begin // KEY_GEN
-      cnt_tmp = 0;
-      
-      test_case_sel = t.test_case_sel;
 
-      $display("**ECC_predictor** op = %b", t.op);
+      $display("**ECC_predictor** privkey = %96x", ECC_sb_ap_output_transaction.result_privkey);
+      $display("**ECC_predictor** pubkey_x = %96x", ECC_sb_ap_output_transaction.result_pubkey_x);
+      $display("**ECC_predictor** pubkey_y = %96x", ECC_sb_ap_output_transaction.result_pubkey_y);
+      $display("**ECC_predictor** result_R = %96x", ECC_sb_ap_output_transaction.result_R);
+      $display("**ECC_predictor** result_S = %96x", ECC_sb_ap_output_transaction.result_S);
+      $display("**ECC_predictor** verify_R = %96x", ECC_sb_ap_output_transaction.result_verify_R);
+
+
+    end
+    else if (t.test == ecc_normal_test) begin 
+      if (t.op == key_gen) begin// KEY_GEN
+        cnt_tmp = 0;
+        
+        test_case_sel = t.test_case_sel;
+
+        $display("**ECC_predictor** test = %0s", t.test.name());
+        $display("**ECC_predictor** op = %0s", t.op.name());
+        $display("**ECC_predictor** test_case_sel = %d", test_case_sel);
+        
+        file_name = "/home/anjpar/AHA_Workspaces/caliptra_ws2/Caliptra/src/ecc/tb/test_vectors/ecc_drbg.hex";
+      
+        
+        line_skip = test_case_sel * 9 + 2;
+
+        fd_r = $fopen(file_name, "r");
+        if (!fd_r) $display(" ** ECC-in_driver_bfm ** Cannot open file %s", file_name);
+          
+        while (cnt_tmp < line_skip) begin
+          cnt_tmp = cnt_tmp + 1;
+          $fgets(line_read, fd_r);
+        end
+
+        $sscanf(line_read, "%h", privkey);
+        $display("**ECC_predictor** privkey = %96x", privkey);
+        $fgets(line_read, fd_r);
+        $sscanf(line_read, "%h", pubkey_x);
+        $display("**ECC_predictor** pubkey_x = %96x", pubkey_x);
+        $fgets(line_read, fd_r);
+        $sscanf(line_read, "%h", pubkey_y);
+        $display("**ECC_predictor** pubkey_y = %96x", pubkey_y);
+  
+        ECC_sb_ap_output_transaction.result_privkey   = privkey;
+        ECC_sb_ap_output_transaction.result_pubkey_x  = pubkey_x;
+        ECC_sb_ap_output_transaction.result_pubkey_y  = pubkey_y;
+        ECC_sb_ap_output_transaction.result_R         = 0;
+        ECC_sb_ap_output_transaction.result_S         = 0; 
+        ECC_sb_ap_output_transaction.result_verify_R  = 0;
+
+        `uvm_info("PREDICT",{"ECC_OUT: ",ECC_sb_ap_output_transaction.convert2string()},UVM_MEDIUM);
+      end
+      else if (t.op == key_sign) begin // KEY_SIGN
+        cnt_tmp = 0;
+        
+        test_case_sel = t.test_case_sel;
+
+        $display("**ECC_predictor** test = %0s", t.test.name());
+        $display("**ECC_predictor** op = %0s", t.op.name());
+        $display("**ECC_predictor** test_case_sel = %d", test_case_sel);
+        
+        file_name = "/home/anjpar/AHA_Workspaces/caliptra_ws2/Caliptra/src/ecc/tb/test_vectors/ecc_drbg.hex";
+      
+        line_skip = test_case_sel * 9 + 6;
+
+        fd_r = $fopen(file_name, "r");
+        if (!fd_r) $display(" ** ECC-in_driver_bfm ** Cannot open file %s", file_name);
+          
+        while (cnt_tmp < line_skip) begin
+          cnt_tmp = cnt_tmp + 1;
+          $fgets(line_read, fd_r);
+        end
+
+        $sscanf(line_read, "%h", R);
+        $display("**ECC_predictor** R = %96x", R);
+        $fgets(line_read, fd_r);
+        $sscanf(line_read, "%h", S);
+        $display("**ECC_predictor** S = %96x", S);
+  
+        ECC_sb_ap_output_transaction.result_privkey   = 0;
+        ECC_sb_ap_output_transaction.result_pubkey_x  = 0;
+        ECC_sb_ap_output_transaction.result_pubkey_y  = 0;
+        ECC_sb_ap_output_transaction.result_R         = R;
+        ECC_sb_ap_output_transaction.result_S         = S; 
+        ECC_sb_ap_output_transaction.result_verify_R  = 0;
+
+        `uvm_info("PREDICT",{"ECC_OUT: ",ECC_sb_ap_output_transaction.convert2string()},UVM_MEDIUM);
+      end
+      else if (t.op == key_verify) begin // KEY_VERIFY
+        cnt_tmp = 0;
+        
+        test_case_sel = t.test_case_sel;
+
+        $display("**ECC_predictor** test = %0s", t.test.name());
+        $display("**ECC_predictor** op = %0s", t.op.name());
+        $display("**ECC_predictor** test_case_sel = %d", test_case_sel);
+        
+        file_name = "/home/anjpar/AHA_Workspaces/caliptra_ws2/Caliptra/src/ecc/tb/test_vectors/ecc_drbg.hex";
+      
+        line_skip = test_case_sel * 9 + 6;
+
+        fd_r = $fopen(file_name, "r");
+        if (!fd_r) $display(" ** ECC-in_driver_bfm ** Cannot open file %s", file_name);
+          
+        while (cnt_tmp < line_skip) begin
+          cnt_tmp = cnt_tmp + 1;
+          $fgets(line_read, fd_r);
+        end
+
+        $sscanf(line_read, "%h", verify_R);
+        $display("**ECC_predictor** R = %96x", verify_R);
+
+        ECC_sb_ap_output_transaction.result_privkey   = 0;
+        ECC_sb_ap_output_transaction.result_pubkey_x  = 0;
+        ECC_sb_ap_output_transaction.result_pubkey_y  = 0;
+        ECC_sb_ap_output_transaction.result_R         = 0;
+        ECC_sb_ap_output_transaction.result_S         = 0; 
+        ECC_sb_ap_output_transaction.result_verify_R  = verify_R;
+
+        `uvm_info("PREDICT",{"ECC_OUT: ",ECC_sb_ap_output_transaction.convert2string()},UVM_MEDIUM);
+      end
+    end
+    else if (t.test == ecc_openssl_test) begin // openssl keygen
+      test_case_sel = 0;
+
+      cnt_tmp = 0;
+
+      $display("**ECC_predictor** test = %0s", t.test.name());
+      $display("**ECC_predictor** op = %0s", t.op.name());
       $display("**ECC_predictor** test_case_sel = %d", test_case_sel);
-      
-      file_name = "/home/anjpar/AHA_Workspaces/caliptra_ws2/Caliptra/src/ecc/tb/test_vectors/ecc_drbg.hex";
-     
-      
-      line_skip = test_case_sel * 8 + 2;
+
+      file_name = "keygen_vectors_no_hmac_drbg.hex";
+
+      line_skip = test_case_sel * 3 + 2;
 
       fd_r = $fopen(file_name, "r");
       if (!fd_r) $display(" ** ECC-in_driver_bfm ** Cannot open file %s", file_name);
-        
+
       while (cnt_tmp < line_skip) begin
         cnt_tmp = cnt_tmp + 1;
         $fgets(line_read, fd_r);
       end
-
-      $sscanf(line_read, "%h", privkey);
-      $display("**ECC_predictor** privkey = %96x", privkey);
-      $fgets(line_read, fd_r);
+      
       $sscanf(line_read, "%h", pubkey_x);
       $display("**ECC_predictor** pubkey_x = %96x", pubkey_x);
       $fgets(line_read, fd_r);
       $sscanf(line_read, "%h", pubkey_y);
       $display("**ECC_predictor** pubkey_y = %96x", pubkey_y);
- 
-      ECC_sb_ap_output_transaction.result_privkey   = privkey;
+
+
+      ECC_sb_ap_output_transaction.result_privkey   = 0;
       ECC_sb_ap_output_transaction.result_pubkey_x  = pubkey_x;
       ECC_sb_ap_output_transaction.result_pubkey_y  = pubkey_y;
       ECC_sb_ap_output_transaction.result_R         = 0;
       ECC_sb_ap_output_transaction.result_S         = 0; 
       ECC_sb_ap_output_transaction.result_verify_R  = 0;
-
-      `uvm_info("PREDICT",{"ECC_OUT: ",ECC_sb_ap_output_transaction.convert2string()},UVM_MEDIUM);
-    end
-    else if (t.op == 3'b010) begin // KEY_SIGN
-      cnt_tmp = 0;
-      
-      test_case_sel = t.test_case_sel;
-
-      $display("**ECC_predictor** op = %b", t.op);
-      $display("**ECC_predictor** test_case_sel = %d", test_case_sel);
-      
-      file_name = "/home/anjpar/AHA_Workspaces/caliptra_ws2/Caliptra/src/ecc/tb/test_vectors/ecc_drbg.hex";
-     
-      line_skip = test_case_sel * 8 + 6;
-
-      fd_r = $fopen(file_name, "r");
-      if (!fd_r) $display(" ** ECC-in_driver_bfm ** Cannot open file %s", file_name);
-        
-      while (cnt_tmp < line_skip) begin
-        cnt_tmp = cnt_tmp + 1;
-        $fgets(line_read, fd_r);
-      end
-
-      $sscanf(line_read, "%h", R);
-      $display("**ECC_predictor** R = %96x", R);
-      $fgets(line_read, fd_r);
-      $sscanf(line_read, "%h", S);
-      $display("**ECC_predictor** S = %96x", S);
- 
-      ECC_sb_ap_output_transaction.result_privkey   = 0;
-      ECC_sb_ap_output_transaction.result_pubkey_x  = 0;
-      ECC_sb_ap_output_transaction.result_pubkey_y  = 0;
-      ECC_sb_ap_output_transaction.result_R         = R;
-      ECC_sb_ap_output_transaction.result_S         = S; 
-      ECC_sb_ap_output_transaction.result_verify_R  = 0;
-
-      `uvm_info("PREDICT",{"ECC_OUT: ",ECC_sb_ap_output_transaction.convert2string()},UVM_MEDIUM);
-    end
-    else if (t.op == 3'b011) begin // KEY_VERIFY
-      cnt_tmp = 0;
-      
-      test_case_sel = t.test_case_sel;
-
-      $display("**ECC_predictor** op = %b", t.op);
-      $display("**ECC_predictor** test_case_sel = %d", test_case_sel);
-      
-      file_name = "/home/anjpar/AHA_Workspaces/caliptra_ws2/Caliptra/src/ecc/tb/test_vectors/ecc_drbg.hex";
-     
-      line_skip = test_case_sel * 8 + 6;
-
-      fd_r = $fopen(file_name, "r");
-      if (!fd_r) $display(" ** ECC-in_driver_bfm ** Cannot open file %s", file_name);
-        
-      while (cnt_tmp < line_skip) begin
-        cnt_tmp = cnt_tmp + 1;
-        $fgets(line_read, fd_r);
-      end
-
-      $sscanf(line_read, "%h", verify_R);
-      $display("**ECC_predictor** R = %96x", verify_R);
-
-      ECC_sb_ap_output_transaction.result_privkey   = 0;
-      ECC_sb_ap_output_transaction.result_pubkey_x  = 0;
-      ECC_sb_ap_output_transaction.result_pubkey_y  = 0;
-      ECC_sb_ap_output_transaction.result_R         = 0;
-      ECC_sb_ap_output_transaction.result_S         = 0; 
-      ECC_sb_ap_output_transaction.result_verify_R  = verify_R;
-
-      `uvm_info("PREDICT",{"ECC_OUT: ",ECC_sb_ap_output_transaction.convert2string()},UVM_MEDIUM);
     end
 
     // Code for sending output transaction out through ECC_sb_ap

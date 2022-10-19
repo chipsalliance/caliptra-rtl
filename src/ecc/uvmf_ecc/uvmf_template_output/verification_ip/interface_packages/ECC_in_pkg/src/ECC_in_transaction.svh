@@ -26,13 +26,14 @@ class ECC_in_transaction #(
                            )
 )
 
+  rand ecc_in_test_transactions test ;
   rand ecc_in_op_transactions op ;
   rand bit [7:0] test_case_sel ;
 
   //Constraints for the transaction variables:
-  constraint ecc_valid_op_constrainsts { op inside {key_sign, key_gen, key_verify }; }
-  constraint ecc_valid_testcasesel_constraints { if (op == key_gen) { test_case_sel >= 0; test_case_sel <= 5; } else if (op == key_sign || op == key_verify) { test_case_sel >= 5; test_case_sel <= 9; } }
-
+  constraint ecc_valid_test_contraints { test inside {ecc_normal_test, ecc_otf_reset_test, ecc_openssl_test}; }
+  constraint ecc_valid_op_constrainsts { if (test == ecc_openssl_test) op == key_gen; else op inside {key_gen, key_sign, key_verify}; }
+  constraint ecc_valid_testcasesel_constraints { if (test == ecc_openssl_test) test_case_sel == 0; else if (op == key_gen) { test_case_sel >= 0; test_case_sel <= 5; } else { test_case_sel >= 5; test_case_sel <= 9; } }
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end
 
@@ -112,7 +113,7 @@ class ECC_in_transaction #(
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("op:0x%x test_case_sel:0x%x ",op,test_case_sel);
+    return $sformatf("test:0x%x op:0x%x test_case_sel:0x%x ",test,op,test_case_sel);
     // pragma uvmf custom convert2string end
   endfunction
 
@@ -144,6 +145,7 @@ class ECC_in_transaction #(
     // pragma uvmf custom do_compare begin
     // UVMF_CHANGE_ME : Eliminate comparison of variables not to be used for compare
     return (super.do_compare(rhs,comparer)
+            &&(this.test == RHS.test)
             &&(this.op == RHS.op)
             &&(this.test_case_sel == RHS.test_case_sel)
             );
@@ -164,6 +166,7 @@ class ECC_in_transaction #(
     assert($cast(RHS,rhs));
     // pragma uvmf custom do_copy begin
     super.do_copy(rhs);
+    this.test = RHS.test;
     this.op = RHS.op;
     this.test_case_sel = RHS.test_case_sel;
     // pragma uvmf custom do_copy end
@@ -180,14 +183,6 @@ class ECC_in_transaction #(
     `ifdef QUESTA
     if (transaction_view_h == 0) begin
       transaction_view_h = $begin_transaction(transaction_viewing_stream_h,"ECC_in_transaction",start_time);
-      case (op)
-        reset_op    : $add_color(transaction_view_h,"red");
-        key_gen     : $add_color(transaction_view_h, "blue");
-        key_sign    : $add_color(transaction_view_h, "green");
-        key_verify  : $add_color(transaction_view_h, "yellow");
-        otf_reset_op: $add_color(transaction_view_h, "cyan");
-        default     : $add_color(transaction_view_h,"red");
-      endcase
     end
     super.add_to_wave(transaction_view_h);
     // pragma uvmf custom add_to_wave begin
@@ -197,6 +192,7 @@ class ECC_in_transaction #(
     //   default : $add_color(transaction_view_h,"grey");
     // endcase
     // UVMF_CHANGE_ME : Eliminate transaction variables not wanted in transaction viewing in the waveform viewer
+    $add_attribute(transaction_view_h,test,"test");
     $add_attribute(transaction_view_h,op,"op");
     $add_attribute(transaction_view_h,test_case_sel,"test_case_sel");
     // pragma uvmf custom add_to_wave end
