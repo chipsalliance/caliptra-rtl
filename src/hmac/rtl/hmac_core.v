@@ -193,7 +193,7 @@ module hmac_core
 
       first_round = (hmac_ctrl_reg == hmac_ctrl_last)? 1'b0 : 1'b1;
 
-      case (hmac_ctrl_reg)
+      unique casez (hmac_ctrl_reg)
         CTRL_IPAD:
           begin
             if (first_round)

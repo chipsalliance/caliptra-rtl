@@ -40,15 +40,15 @@ module ecc_arith_unit
     input wire           reset_n,
 
     // DATA PORT
-    input  wire [2 : 0]                   ecc_cmd_i,
-    input  wire                           sca_en_i,
-    input  wire [ADDR_WIDTH-1 : 0]        addr_i,
-    input  wire                           wr_op_sel_i,
-    input  wire                           wr_en_i,
-    input  wire                           rd_reg_i,
-    input  wire [REG_SIZE+RND_SIZE-1 : 0] data_i,
-    output wire [REG_SIZE-1: 0]           data_o,
-    output wire                           busy_o
+    input  wire [2 : 0]                     ecc_cmd_i,
+    input  wire                             sca_en_i,
+    input  wire [ADDR_WIDTH-1 : 0]          addr_i,
+    input  wire                             wr_op_sel_i,
+    input  wire                             wr_en_i,
+    input  wire                             rd_reg_i,
+    input  wire [(REG_SIZE+RND_SIZE)-1 : 0] data_i,
+    output wire [REG_SIZE-1: 0]             data_o,
+    output wire                             busy_o
     );
     
     //----------------------------------------------------------------
@@ -72,13 +72,13 @@ module ecc_arith_unit
     logic                               reg_web_r;
     logic                               web_mux_s;
 
-    logic [REG_SIZE-1 : 0]      d_o;
+    logic [REG_SIZE-1 : 0]              d_o;
 
-    logic                       mod_p_q;
-    logic [REG_SIZE-1 : 0]      adder_prime;
-    logic [RADIX-1 : 0]         mult_mu;
+    logic                               mod_p_q;
+    logic [REG_SIZE-1 : 0]              adder_prime;
+    logic [RADIX-1 : 0]                 mult_mu;
 
-    reg [REG_SIZE+RND_SIZE-1 : 0]         secret_key; 
+    reg [(REG_SIZE+RND_SIZE)-1 : 0]     secret_key; 
 
     //----------------------------------------------------------------
     // 
@@ -115,7 +115,7 @@ module ecc_arith_unit
         .clk(clk),
         .reset_n(reset_n),
         .ena(1'b1),
-        .wea(ecc_instr_s[2*OPR_ADDR_WIDTH+1]),
+        .wea(ecc_instr_s[(2*OPR_ADDR_WIDTH)+1]),
         .addra(ecc_instr_s[OPR_ADDR_WIDTH +: OPR_ADDR_WIDTH]),
         .dina(add_res_s),
         .douta(opa_s),
@@ -132,7 +132,7 @@ module ecc_arith_unit
     // 
     //----------------------------------------------------------------
 
-    assign mod_p_q     = ecc_instr_s[2*OPR_ADDR_WIDTH+5];  //performing mod_p if (mod_p_q = 0), else mod_q
+    assign mod_p_q     = ecc_instr_s[(2*OPR_ADDR_WIDTH) + 5];  //performing mod_p if (mod_p_q = 0), else mod_q
     assign adder_prime = (mod_p_q)? q_grouporder : p_prime;
     assign mult_mu     = (mod_p_q)? q_mu : p_mu;
 
@@ -147,9 +147,9 @@ module ecc_arith_unit
         .reset_n(reset_n),
 
         // DATA PORT
-        .add_en_i(ecc_instr_s[2*OPR_ADDR_WIDTH+3]),
-        .sub_i(ecc_instr_s[2*OPR_ADDR_WIDTH+2]),
-        .mult_en_i(ecc_instr_s[2*OPR_ADDR_WIDTH+4]),
+        .add_en_i(ecc_instr_s[(2*OPR_ADDR_WIDTH)+3]),
+        .sub_i(ecc_instr_s[(2*OPR_ADDR_WIDTH)+2]),
+        .mult_en_i(ecc_instr_s[(2*OPR_ADDR_WIDTH)+4]),
         .prime_i(adder_prime),
         .mult_mu_i(mult_mu),
         .opa_i(opa_s),
@@ -171,6 +171,7 @@ module ecc_arith_unit
             reg_addr_r      <= '0;
             reg_web_r       <= 0;
             secret_key      <= '0;
+            d_o             <= '0;
         end
         else begin
             if (wr_en_i) begin
@@ -181,7 +182,7 @@ module ecc_arith_unit
             end
             else if (req_digit) begin
                 //Shift secret_key to the left
-                secret_key  <= {secret_key[REG_SIZE+RND_SIZE-2 : 0], secret_key[REG_SIZE+RND_SIZE-1]};
+                secret_key  <= {secret_key[(REG_SIZE+RND_SIZE)-2 : 0], secret_key[(REG_SIZE+RND_SIZE)-1]};
             end
 
             reg_addr_r <= addr_i;

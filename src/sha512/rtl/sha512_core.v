@@ -507,7 +507,7 @@ module sha512_core(
       sha512_ctrl_new     = CTRL_IDLE;
       sha512_ctrl_we      = 1'b0;
 
-      case (sha512_ctrl_reg)
+      unique casez (sha512_ctrl_reg)
         CTRL_IDLE:
           begin
             if (init_cmd)

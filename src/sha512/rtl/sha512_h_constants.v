@@ -84,7 +84,7 @@ module sha512_h_constants(
   //----------------------------------------------------------------
   always @*
     begin : mode_mux
-      case(mode)
+      unique casez (mode)
         0:
           begin
             // SHA-512/224

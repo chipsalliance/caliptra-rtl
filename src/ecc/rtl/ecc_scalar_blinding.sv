@@ -49,7 +49,7 @@ module ecc_scalar_blinding #(
     input  wire                             en_i,
     input  wire [REG_SIZE-1 : 0]            data_i,
     input  wire [RND_SIZE-1 : 0]            rnd_i,
-    output wire [REG_SIZE+RND_SIZE-1 : 0]   data_o,
+    output wire [(REG_SIZE+RND_SIZE)-1 : 0] data_o,
     output wire                             busy_o
     );
 
@@ -57,22 +57,23 @@ module ecc_scalar_blinding #(
     // Local Parameters
     //----------------------------------------------------------------
     // Equivalent to $ceil(REG_SIZE/RADIX) + 1
-    localparam  REG_DIG_NUM  = ((REG_SIZE + RADIX - 1) / RADIX) + 1;  //13
-    localparam  RND_DIG_NUM  = ((RND_SIZE + RADIX - 1) / RADIX) + 1;  //7
+    localparam  REG_DIG_NUM  = (((REG_SIZE + RADIX) - 1) / RADIX) + 1;  //13
+    localparam  RND_DIG_NUM  = (((RND_SIZE + RADIX) - 1) / RADIX) + 1;  //7
     localparam  FULL_DIG_NUM = REG_DIG_NUM + RND_DIG_NUM;  //20
     
     localparam  FULL_REG_SIZE   = REG_DIG_NUM * RADIX;
     localparam  FULL_RND_SIZE   = RND_DIG_NUM * RADIX;
     localparam  FULL_SIZE       = FULL_DIG_NUM * RADIX;
 
-    localparam [FULL_RND_SIZE-RND_SIZE-1 : 0] zero_pad_rnd = '0;
-    localparam [FULL_REG_SIZE-REG_SIZE-1 : 0] zero_pad_reg = '0;
-    localparam [FULL_SIZE-REG_SIZE-1 : 0]     zero_pad_reg_full = '0;
-    localparam [RADIX-1 : 0]                  zero_pad_radix = '0;
+    localparam [(FULL_RND_SIZE-RND_SIZE)-1 : 0] zero_pad_rnd = '0;
+    localparam [(FULL_REG_SIZE-REG_SIZE)-1 : 0] zero_pad_reg = '0;
+    localparam [(FULL_SIZE-REG_SIZE)-1 : 0]     zero_pad_reg_full = '0;
+    localparam [RADIX-1 : 0]                    zero_pad_radix = '0;
 
     localparam A_ARR_WIDTH      = $clog2(REG_DIG_NUM+1);   //4
     localparam B_ARR_WIDTH      = $clog2(RND_DIG_NUM+1);   //3
     localparam P_ARR_WIDTH      = $clog2(FULL_DIG_NUM+1);  //5
+
     //----------------------------------------------------------------
     // Registers
     //----------------------------------------------------------------
@@ -83,42 +84,40 @@ module ecc_scalar_blinding #(
 
     logic [A_ARR_WIDTH-1 : 0]       a_idx;
     logic [B_ARR_WIDTH-1 : 0]       b_idx;
-    logic [P_ARR_WIDTH-1 : 0]       p_idx;
 
     logic [FULL_REG_SIZE-1 : 0]     a_reg;        //extended with zero
     logic [FULL_RND_SIZE-1 : 0]     b_reg;        //extended with zero
     logic [FULL_SIZE-1 : 0]         scalar_reg;   //extended with zero
     logic [FULL_SIZE-1 : 0]         p_internal;
 
-    logic [RADIX-1   : 0]    mult_opa;
-    logic [RADIX-1   : 0]    mult_opb;
-    logic [2*RADIX-1 : 0]    mult_out;
+    logic [RADIX-1      : 0]        mult_opa;
+    logic [RADIX-1      : 0]        mult_opb;
+    logic [(2*RADIX)-1  : 0]        mult_out;
 
-    logic [3*RADIX-1 : 0]    add0_opa;
-    logic [3*RADIX-1 : 0]    add0_opb;
-    logic [3*RADIX-1 : 0]    add0_out;
+    logic [(3*RADIX)-1  : 0]        add0_opa;
+    logic [(3*RADIX)-1  : 0]        add0_opb;
+    logic [(3*RADIX)-1  : 0]        add0_out;
 
-    logic [RADIX-1 : 0]      add1_opa;
-    logic [RADIX-1 : 0]      add1_opb;
-    logic                    add1_cin;
-    logic [RADIX-1 : 0]      add1_out;
-    logic                    add1_cout;
+    logic [RADIX-1 : 0]             add1_opa;
+    logic [RADIX-1 : 0]             add1_opb;
+    logic                           add1_cin;
+    logic [RADIX-1 : 0]             add1_out;
+    logic                           add1_cout;
 
-    logic [3*RADIX-1 : 0]    accu_reg;
-    logic                    accu_store;
-    logic                    accu_shift;
-    logic                    accu_done;
+    logic [(3*RADIX)-1 : 0]         accu_reg;
+    logic                           accu_store;
+    logic                           accu_shift;
+    logic                           accu_done;
 
-    logic                    shift_state;
+    logic                           shift_state;
 
     logic [P_ARR_WIDTH-1 : 0]            product_idx;
     logic [B_ARR_WIDTH-1 : 0]            operand_idx;
     logic [P_ARR_WIDTH-1 : 0]            product_idx_reg;
     logic [B_ARR_WIDTH-1 : 0]            operand_idx_reg;
 
-    logic [P_ARR_WIDTH-A_ARR_WIDTH-1 : 0]   carry_garbage_bits0;
-    logic [P_ARR_WIDTH-B_ARR_WIDTH   : 0]   carry_garbage_bits1;
-
+    logic [P_ARR_WIDTH-B_ARR_WIDTH   : 0]   carry_garbage_bits0;
+    logic                                   carry_garbage_bit1;
     //----------------------------------------------------------------
     // reg update
     //----------------------------------------------------------------
@@ -180,7 +179,7 @@ module ecc_scalar_blinding #(
         .b_i(add0_opb),
         .cin_i(1'b0),
         .s_o(add0_out),
-        .cout_o()
+        .cout_o(carry_garbage_bit1)
     );
 
     ecc_adder #(
@@ -208,7 +207,7 @@ module ecc_scalar_blinding #(
             if (accu_store)
                 accu_reg <= add0_out;
             else if (accu_shift)
-                accu_reg <= {zero_pad_radix, accu_reg >> RADIX};
+                accu_reg <= {zero_pad_radix, accu_reg[(3*RADIX)-1 : RADIX]};
         end
     end
 
@@ -222,6 +221,7 @@ module ecc_scalar_blinding #(
             operand_idx_reg <= '0;
             shift_state     <= 0;
             add1_cin        <= 0;
+            carry_garbage_bits0 <= '0;
         end
         else if (en_i) begin
             product_idx_reg <= '0;
@@ -230,18 +230,18 @@ module ecc_scalar_blinding #(
             add1_cin        <= 0;
         end
         else begin
-            if (product_idx < FULL_DIG_NUM-1) begin
+            if (product_idx < (FULL_DIG_NUM-1)) begin
                 if (shift_state) begin
                     product_idx_reg <= product_idx + 1;
-                    if (product_idx < REG_DIG_NUM-1)
+                    if (product_idx < (REG_DIG_NUM-1))
                         operand_idx_reg <= '0;
                     else
-                        {carry_garbage_bits1, operand_idx_reg} <= 2 + product_idx - REG_DIG_NUM;
+                        {carry_garbage_bits0, operand_idx_reg} <= (2'h2 + product_idx) - REG_DIG_NUM;
                     add1_cin <= add1_cout;
                     shift_state <= 0;
                 end
                 else begin
-                    if ((operand_idx < product_idx) & (operand_idx < RND_DIG_NUM-1)) begin
+                    if (({2'b00, operand_idx} < product_idx) & (operand_idx < (RND_DIG_NUM-1))) begin
                         shift_state <= 0;
                         operand_idx_reg <= operand_idx + 1;
                     end
@@ -257,11 +257,12 @@ module ecc_scalar_blinding #(
 
     assign accu_store = (accu_done)? 0 : (!shift_state);
     assign accu_shift = (accu_done)? 0 : shift_state;
-    assign accu_done = (product_idx == FULL_DIG_NUM-1);
+    assign accu_done = (product_idx == (FULL_DIG_NUM-1));
 
     // Determines which a and b is pushed through the multiplier
     always_comb begin
-        {carry_garbage_bits0, a_idx} = product_idx - operand_idx;
+        a_idx = 4'(product_idx - operand_idx);
+        //2,4 =  5- 3
         b_idx = operand_idx;
         mult_opa = a_array[a_idx];
         mult_opb = b_array[b_idx];
@@ -299,7 +300,7 @@ module ecc_scalar_blinding #(
     endgenerate
 
     
-    assign data_o = p_internal[REG_SIZE+RND_SIZE-1   : 0];
+    assign data_o = p_internal[(REG_SIZE+RND_SIZE)-1   : 0];
     assign busy_o = ~accu_done;
 
 endmodule

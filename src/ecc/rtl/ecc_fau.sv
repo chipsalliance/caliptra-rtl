@@ -53,6 +53,11 @@ module ecc_fau #(
     reg                     add_en;   
     reg                     sub;
 
+    logic                   add_ready_o;
+    logic                   mult_ready_o;
+
+    logic                   ready_garbage_bit;
+
     assign mult_opa = opa_i;
     assign mult_opb = opb_i;
 
@@ -75,7 +80,7 @@ module ecc_fau #(
         .n_i(prime_i),
         .n_prime_i(mult_mu_i), // only need the last few bits
         .p_o(mult_res_s),
-        .ready_o()
+        .ready_o(mult_ready_o)
     );
 
 
@@ -95,7 +100,7 @@ module ecc_fau #(
         .opb_i(opb_i),
         .prime_i(prime_i),
         .res_o(add_res_s),
-        .ready_o()
+        .ready_o(add_ready_o)
         );
 
 
@@ -120,6 +125,8 @@ module ecc_fau #(
             mult_start_dly <= mult_start;
     end
     
+    assign ready_garbage_bit = add_ready_o & mult_ready_o;
+
     assign mult_start_edge = mult_start & ~mult_start_dly;
     assign mult_res_o = mult_res_s;
     assign add_res_o  = add_res_s;

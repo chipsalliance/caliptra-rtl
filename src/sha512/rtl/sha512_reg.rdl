@@ -1,0 +1,141 @@
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+
+addrmap sha512_reg {
+    desc="address maps for SHA512 register space";
+
+
+    addressing = regalign; // This is the default if not specified
+    lsb0 = true; // lsb0 property is implicit/default. See docs for
+                 // SystemRDL 2.0 sections 9.1 and 13.4
+
+    default hw = na;
+    signal {activelow; async; cpuif_reset; field_reset;} reset_b;
+
+    /* -----------------------
+    * Register definitive definitions
+    * ----------------------- */
+
+    /* ---- SHA512 Component Name ---- */
+    reg {
+        name = "SHA512 component name register type definition";
+        desc = "Two 32-bit read-only registers repereseting of the name
+                of SHA512 component. These registers are located at
+                SHA512_base_address + 0x0000_0000 and 0x0000_0004 addresses.";
+
+        default sw = r;
+        default hw = w;
+        field {desc = "Name field";} NAME[32];
+
+    } SHA512_NAME[2] @0x00000000;
+
+
+
+    /* ---- SHA512 Component Version ---- */
+    reg {
+        name = "SHA512 component version register type definition";
+        desc = "Two 32-bit read-only registers repereseting of the version
+                of SHA512 component. These registers are located at
+                SHA512_base_address + 0x0000_0008 and 0x0000_000C addresses.";
+
+        default sw = r;
+        default hw = w;
+        field {desc = "Version field";} VERSION[32];
+        
+    } SHA512_VERSION[2] @0x00000008;
+
+
+
+    /* ---- SHA512 Component Control ---- */
+    reg {
+        name = "SHA512 component control register type definition";
+        desc = "One 4-bit register including the following flags: 
+                bit #0: INIT : Trigs the SHA512 core to start the 
+                                processing for the first padded message block.
+                bit #1: NEXT: ​Trigs the SHA512 core to start the 
+                                processing for the remining padded message block. 
+                bit #3-2: MODE : Indicates the SHA512 core to set dynamically
+                                 the type of hashing algorithm. This can be:
+                                 00 for SHA512/224
+                                 01 for SHA512/256
+                                 10 for SHA384
+                                 11 for SHA512
+                This register is located at SHA512_base_address + 0x0000_0010
+                After each software write, hardware will erase the register.";
+
+        default sw = w;
+        default hw = rw;
+        default resetsignal = reset_b;
+        field {desc = "Control init command bit";} INIT = 1'b0;
+        field {desc = "Control next command bit";} NEXT = 1'b0;
+        field {desc = "Control mode command bits";} MODE[2] = 2'b0;
+    
+    } SHA512_CTRL @0x00000010;
+
+
+
+    /* ---- SHA512 Component Status ---- */
+    reg {
+        name = "SHA512 component status register type definition";
+        desc = "One 2-bit register including the following flags: 
+                bit #0: READY : ​Indicates if the core is ready to take
+                                a control command and process the block.  
+                bit #1: Valid: ​Indicates if the process is done and the
+                                hash value stored in DIGEST registers is valid. 
+                This register is located at SHA512_base_address + 0x0000_0018.";
+
+        default sw = r;
+        default hw = w;
+        default resetsignal = reset_b;
+        field {desc = "Status ready bit";} READY = 1'b0;
+        field {desc = "Status valid bit";} VALID = 1'b0;
+    
+    } SHA512_STATUS @0x00000018;
+
+    
+
+
+    /* ---- SHA512 Component Input Message Block ---- */
+    reg {
+        name = "SHA512 component block register type definition";
+        desc = "32 32-bit registers storing the 1024-bit padded input.
+                These registers are located at SHA512_base_address + 
+                0x0000_0080 to 0x0000_00FC in big-endian representation.";
+
+        default sw = w;
+        default hw = r;
+        default resetsignal = reset_b;
+        field {desc = "Input message block field";} BLOCK[32] = 32'b0;
+    
+    } SHA512_BLOCK[32] @0x00000080;
+
+    
+
+    /* ---- SHA512 Component Output Digest ---- */
+    reg {
+        name = "SHA512 component digest register type definition";
+        desc = "16 32-bit registers storing the 512-bit digest output.
+                These registers are located at SHA512_base_address + 
+                0x0000_0100 to 0x0000_013C in big-endian representation.";
+
+        default sw = r;
+        default hw = w;
+        default resetsignal = reset_b;
+        field {desc = "Output digest field";} DIGEST[32] = 32'b0;
+    
+    } SHA512_DIGEST[16] @0x00000100;
+
+};

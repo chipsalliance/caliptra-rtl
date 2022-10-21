@@ -50,8 +50,8 @@ module ecc_pe #(
     //----------------------------------------------------------------
     // ecc_pe
     //----------------------------------------------------------------
-    logic  [2*RADIX-1 : 0]    mult0_out;
-    logic  [2*RADIX-1 : 0]    mult1_out;
+    logic  [(2*RADIX)-1 : 0]  mult0_out;
+    logic  [(2*RADIX)-1 : 0]  mult1_out;
 
     logic  [RADIX   : 0]      c_mux;
     logic  [RADIX-1 : 0]      s_mux;

@@ -155,7 +155,6 @@ module ecc_top_tb #(
             dut (
              .clk(clk_tb),
              .reset_n(reset_n_tb),
-             .cptra_pwrgood(),
 
              .haddr_i(haddr_i_tb),
              .hwdata_i(hwdata_i_tb),
@@ -167,10 +166,7 @@ module ecc_top_tb #(
 
              .hresp_o(hresp_o_tb),
              .hreadyout_o(hreadyout_o_tb),
-             .hrdata_o(hrdata_o_tb),
-
-             .error_intr(),
-             .notif_intr()
+             .hrdata_o(hrdata_o_tb)
             );
 
 
@@ -573,7 +569,7 @@ module ecc_top_tb #(
   endtask // ecc_signing_test
 
 
-//----------------------------------------------------------------
+  //----------------------------------------------------------------
   // ecc_verifying_test()
   //
   // Perform a single verifying operation test.
@@ -725,7 +721,7 @@ module ecc_top_tb #(
     
       start_time = cycle_ctr;
 
-      write_block(ADDR_SCACONFIG, 4'b1111); // disbaled hmac-drbg
+      write_block(ADDR_SCACONFIG, 4'b1111); // disabled hmac-drbg
       write_block(ADDR_SEED0, test_vector.privkey);
       write_block(ADDR_IV0, test_vector.IV);
 
@@ -775,9 +771,11 @@ module ecc_top_tb #(
       // The first 6-set test vectors work for keygen, 
       // and the last 4-set test vectors work for signing/verifying
       for (int i = 0; i < 6; i++) begin: test_vector_loop
+          ecc_onthefly_reset_test(i, test_vectors[i]);
           ecc_keygen_test(i, test_vectors[i]);
       end
       for (int i = 6; i < 10; i++) begin: test_vector_loop
+          ecc_onthefly_reset_test(i, test_vectors[i]);
           ecc_signing_test(i, test_vectors[i]);
           ecc_verifying_test(i, test_vectors[i]);
       end
@@ -793,13 +791,17 @@ module ecc_top_tb #(
     begin   
       // The first 6-set test vectors work for keygen, 
       for (int i = 0; i < 6; i++) begin: test_vector_loop
-        reset_dut();
+        ecc_onthefly_reset_test(i, test_vectors[i]);
         ecc_openssl_keygen_test(i, test_vectors[i]);
       end
+      write_block(ADDR_SCACONFIG, 4'b0111); // enabled hmac-drbg
     end
-  endtask // ecc_test
+  endtask // ecc_openssl_test
 
-
+  //----------------------------------------------------------------
+  // read_test_vectors()
+  //
+  //----------------------------------------------------------------
   task read_test_vectors(input string fname);
       integer values_per_test_vector;
       integer line_cnt;
@@ -847,6 +849,67 @@ module ecc_top_tb #(
       $display("Read %0d test vectors from %s", test_vector_cnt, fname);
   endtask
 
+
+  //----------------------------------------------------------------
+  // ecc_onthefly_reset_test()
+  //
+  // Perform a single on the fly reset test.
+  //----------------------------------------------------------------
+  task ecc_onthefly_reset_test(input [7 : 0]  tc_number,
+                        input test_vector_t test_vector);
+    reg [383 : 0]   R;
+    reg [383 : 0]   S;
+    reg [383 : 0]   privkey;
+    reg [383 : 0]   pubkey_x;
+    reg [383 : 0]   pubkey_y;
+
+    begin
+      wait_ready();
+
+      $display("*** TC %0d on the fly reset test started.", tc_number);
+      tc_ctr = tc_ctr + 1;
+
+      write_block(ADDR_MSG0, test_vector.hashed_msg);
+      write_block(ADDR_PRIVKEY0, test_vector.privkey);
+      write_block(ADDR_IV0, test_vector.IV);
+
+      trig_ECC(SIGN);
+      #(500 * CLK_PERIOD);
+
+      reset_dut();
+      wait_ready();
+
+      read_block(ADDR_SIGNR0);
+      R = reg_read_data;
+
+      read_block(ADDR_SIGNS0);
+      S = reg_read_data;
+
+      read_block(ADDR_PRIVKEY0);
+      privkey = reg_read_data;
+
+      read_block(ADDR_PUBKEYX0);
+      pubkey_x = reg_read_data;
+
+      read_block(ADDR_PUBKEYY0);
+      pubkey_y = reg_read_data;
+      
+      if (R == 0 & S == 0 & privkey == 0 & pubkey_x ==0 & pubkey_y == 0)
+        begin
+          $display("*** TC %0d on the fly reset test successful.", tc_number);
+          $display("");
+        end
+      else
+        begin
+          $display("*** ERROR: TC %0d on the fly reset test NOT successful.", tc_number);
+          $display("");
+
+          error_ctr = error_ctr + 1;
+        end
+    end
+  endtask // ecc_onthefly_reset_test
+
+
   //----------------------------------------------------------------
   // main
   //
@@ -868,11 +931,11 @@ module ecc_top_tb #(
       reset_dut();
       check_name_version();
 
-      //ecc_test();
+      ecc_openssl_test();
+
+      ecc_test();
 
       ecc_sca_config_test();
-
-      //ecc_openssl_test();
 
       display_test_results();
       

@@ -39,6 +39,10 @@ targets:
       - $COMPILE_ROOT/rtl/ecc_adder.sv
 
     tops: [ecc_top]
+  rtl_lint:
+    directories: []
+    waiver_files:
+      - $COMPILE_ROOT/config/design_lint/ecc_top/sglint_waivers
 ---
 provides: [ecc_top_tb]  
 schema_version: 2.4.0

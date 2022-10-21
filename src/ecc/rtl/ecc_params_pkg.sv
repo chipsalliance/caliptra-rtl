@@ -73,7 +73,7 @@ package ecc_params_pkg;
   parameter [63  : 0] ECC_CORE_VERSION     = 64'h00000000_3030312e; // "1.00"
 
   // Implementation parameters for field arithmetic
-  parameter [8 : 0] REG_SIZE     = 9'd384;
+  parameter [9 : 0] REG_SIZE     = 10'd384;
   parameter RADIX                = 32;
   parameter ADD_NUM_ADDS         = 1;
   parameter ADD_BASE_SZ          = 384;
@@ -116,7 +116,7 @@ package ecc_params_pkg;
   // (Q = k * P) in keygen/signing to randomiza scalar k as follows:
   // k = k + r*group_order
   parameter                   sca_scalar_rnd_init    = 1;
-  parameter [7  : 0]          RND_SIZE               = 192;
+  parameter [9  : 0]          RND_SIZE               = 10'd192;
   
 
   // Masking sign countermeasure uses a random value "d" in the signing 

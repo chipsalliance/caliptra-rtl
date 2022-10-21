@@ -73,11 +73,11 @@ module hmac_drbg
   localparam [REG_SIZE-1 : 0] K_init = 384'h000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
 
   localparam CNT_SIZE = 8;
-  localparam [1024-REG_SIZE-SEED_SIZE-CNT_SIZE-1-12-1 : 0] ZERO_PAD_MODE0_K   = '0; // 1 for header and 12 bit for message length  
-  localparam [1024-REG_SIZE-1-12-1 : 0] ZERO_PAD_V         = '0; // 1 for header and 12 bit for message length  
+  localparam [(((((1024-REG_SIZE)-SEED_SIZE)-CNT_SIZE)-1)-12)-1 : 0] ZERO_PAD_MODE0_K   = '0; // 1 for header and 12 bit for message length  
+  localparam [(((1024-REG_SIZE)-1)-12)-1 : 0] ZERO_PAD_V         = '0; // 1 for header and 12 bit for message length  
 
-  localparam [11 : 0] MODE0_K_SIZE  = 12'd1024 + REG_SIZE + SEED_SIZE + CNT_SIZE;
-  localparam [11 : 0] V_SIZE        = 12'd1024 + REG_SIZE;
+  localparam [11 : 0] MODE0_K_SIZE  = {1'b0, 1024 + REG_SIZE + SEED_SIZE + CNT_SIZE};
+  localparam [11 : 0] V_SIZE        = {1'b0, 1024 + REG_SIZE};
 
   /*STATES*/
   localparam [4 : 0] NONCE_IDLE_ST      = 5'd0;  // IDLE WAIT and Return step
@@ -189,7 +189,7 @@ module hmac_drbg
     end
     else
     begin
-      case(nonce_st_reg)
+      unique casez (nonce_st_reg)
         NONCE_IDLE_ST: begin
           if (init_cmd | next_cmd)
             valid_reg    <= 0;
@@ -309,7 +309,7 @@ module hmac_drbg
             HMAC_next <= 0;
           end 
 
-        endcase;
+        endcase
       end
     end
   end // hmac_inputs_update
@@ -332,7 +332,7 @@ module hmac_drbg
       MODE1_K3_ST:    HMAC_block  = {V_reg, 8'h00, 1'h1, 619'b0, 12'h578};
       MODE1_V3_ST:    HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
       default:        HMAC_block  = '0;
-    endcase;
+    endcase
   end // hmac_block_update
      
   always @ (posedge clk or negedge reset_n) 
@@ -340,7 +340,7 @@ module hmac_drbg
     if (!reset_n)
       cnt_reg    <= '0;
     else begin
-      case(nonce_st_reg)
+      unique casez (nonce_st_reg)
         MODE0_INIT_ST:      cnt_reg    <= '0;
         MODE1_INIT_ST:      cnt_reg    <= '0;
         MODE0_NEXT_ST:      cnt_reg    <= cnt_reg + 1;
@@ -377,11 +377,11 @@ module hmac_drbg
 
   always @*
   begin: state_logic
-    case(nonce_st_reg)
+    unique casez (nonce_st_reg)
       NONCE_IDLE_ST: // IDLE WAIT
       begin
         if (HMAC_ready) begin
-          case ({init_cmd, next_cmd, mode})  // check the mode
+          unique casez ({init_cmd, next_cmd, mode})  // check the mode
             3'b100 :    nonce_next_st    = MODE0_INIT_ST;
             3'b101 :    nonce_next_st    = MODE1_INIT_ST;
             3'b010 :    nonce_next_st    = MODE0_NEXT_ST;

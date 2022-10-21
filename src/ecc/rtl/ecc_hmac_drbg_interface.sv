@@ -125,12 +125,12 @@ module ecc_hmac_drbg_interface#(
 
     always_comb 
     begin : hmac_drbg_seed
-        hmac_seed = '0;
-        case(state_reg)
+        unique casez (state_reg)
             LAMBDA_ST:      hmac_seed = IV;
             SCALAR_RND_ST:  hmac_seed = IV;
             MASKING_RND_ST: hmac_seed = IV;
             KEYGEN_ST:      hmac_seed = seed;
+            default:        hmac_seed = '0;
         endcase
     end // hmac_drbg_seed
 
@@ -140,12 +140,16 @@ module ecc_hmac_drbg_interface#(
         hmac_init = 0;
         hmac_next = 0;
         if (first_round) begin
-            case(state_reg)
+            unique casez (state_reg)
                 LAMBDA_ST:      hmac_init = 1;
                 SCALAR_RND_ST:  hmac_next = 1;
                 MASKING_RND_ST: hmac_next = 1;
                 KEYGEN_ST:      hmac_init = 1;
                 SIGN_ST:        hmac_init = 1;
+                default: begin
+                    hmac_init = 0;
+                    hmac_next = 0;
+                end
             endcase
         end
     end
@@ -163,7 +167,7 @@ module ecc_hmac_drbg_interface#(
         end
         else
         if (hmac_valid_edge) begin
-            case(state_reg)
+            unique casez (state_reg)
                 LAMBDA_ST:      lambda_reg <= hmac_nonce;
                 SCALAR_RND_ST:  scalar_rnd_reg <= hmac_nonce;
                 MASKING_RND_ST: masking_rnd_reg <= hmac_nonce;

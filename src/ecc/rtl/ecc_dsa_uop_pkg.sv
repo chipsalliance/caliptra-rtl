@@ -31,7 +31,7 @@ localparam integer DSA_UOP_ADDR_WIDTH       = 8;
 localparam integer DSA_OPR_ADDR_WIDTH       = 6;
 
 localparam DSA_PROG_ADDR_W                  = 6; //$clog2(DSA_VER_E+2);
-localparam DSA_INSTRUCTION_LENGTH           = DSA_UOP_ADDR_WIDTH + 2*DSA_OPR_ADDR_WIDTH;    // opcode + 2 * operand
+localparam DSA_INSTRUCTION_LENGTH           = DSA_UOP_ADDR_WIDTH + (2*DSA_OPR_ADDR_WIDTH);    // opcode + 2 * operand
 
 // DSA INSTRUCTIONS LIST
 localparam [DSA_UOP_ADDR_WIDTH-1 : 0] DSA_UOP_NOP                  = 8'b0000_0000;

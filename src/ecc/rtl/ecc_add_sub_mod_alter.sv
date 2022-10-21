@@ -36,7 +36,7 @@ module ecc_add_sub_mod_alter #(
     input  wire  [REG_SIZE-1:0] opb_i,
     input  wire  [REG_SIZE-1:0] prime_i,
     output logic [REG_SIZE-1:0] res_o,
-    output wire                 ready_o
+    output logic                ready_o
 );
   
     logic [REG_SIZE-1 : 0] opb0;
@@ -45,8 +45,11 @@ module ecc_add_sub_mod_alter #(
     logic [REG_SIZE-1 : 0] r1;
     logic                  carry0; 
 
+    logic                  sub_n;
     logic [REG_SIZE-1 : 0] r0_reg;
     logic                  carry0_reg;
+
+    logic                   carry_garbage_bit;
 
     ecc_adder #(
         .RADIX(REG_SIZE)
@@ -65,11 +68,13 @@ module ecc_add_sub_mod_alter #(
         adder_inst_1(
         .a_i(r0_reg),
         .b_i(opb1),
-        .cin_i(~sub_i),
+        .cin_i(sub_n),
         .s_o(r1),
-        .cout_o()
+        .cout_o(carry_garbage_bit)
     );
 
+
+    assign sub_n = !sub_i;
     assign opb0 = sub_i ? ~opb_i : opb_i;
     assign opb1 = sub_i ? prime_i : ~prime_i;
 
@@ -78,13 +83,17 @@ module ecc_add_sub_mod_alter #(
         if(!reset_n) begin
             r0_reg <= '0;
             carry0_reg <= '0;
+            ready_o <= 1'b0;
         end
         else if (add_en_i) begin 
             r0_reg <= r0;
             carry0_reg <= carry0;
+            ready_o <= 1'b0;
         end
+        else
+            ready_o <= 1'b1;
     end
 
-    assign res_o = (~sub_i ^ carry0_reg)? r0 : r1;
+    assign res_o = (sub_n ^ carry0_reg)? r0 : r1;
     
 endmodule

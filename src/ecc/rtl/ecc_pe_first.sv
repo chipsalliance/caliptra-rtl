@@ -53,7 +53,7 @@ module ecc_pe_first #(
     logic  [RADIX-1:0]        a_reg;
     logic  [RADIX-1:0]        a_val;
 
-    logic  [2*RADIX-1 : 0]    mult_out_0;
+    logic  [(2*RADIX)-1 : 0]  mult_out_0;
     logic  [RADIX-1 : 0]      mult_out_0_MSW;
     logic  [RADIX-1 : 0]      mult_out_0_LSW;
 
@@ -69,11 +69,11 @@ module ecc_pe_first #(
     logic  [RADIX   : 0]      c_0_reg;
     logic  [RADIX   : 0]      c_1;
 
-    logic  [2*RADIX-1 : 0]    mult_out_1;
+    logic  [(2*RADIX)-1 : 0]  mult_out_1;
     logic  [RADIX-1 : 0]      m_temp;
     logic  [RADIX-1 : 0]      m_temp_reg;
 
-    logic  [2*RADIX-1 : 0]    mult_out_2;
+    logic  [(2*RADIX)-1 : 0]  mult_out_2;
     logic  [RADIX-1 : 0]      mult_out_2_MSW;
     logic  [RADIX-1 : 0]      mult_out_2_LSW;
 
@@ -105,9 +105,9 @@ module ecc_pe_first #(
 
     assign m_temp = mult_out_1[RADIX-1:0];
 
-    assign mult_out_0_MSW = mult_out_0[2*RADIX-1 : RADIX];
+    assign mult_out_0_MSW = mult_out_0[(2*RADIX)-1 : RADIX];
     assign mult_out_0_LSW = mult_out_0[RADIX-1 : 0];
-    assign mult_out_2_MSW = mult_out_2[2*RADIX-1 : RADIX];
+    assign mult_out_2_MSW = mult_out_2[(2*RADIX)-1 : RADIX];
     assign mult_out_2_LSW = mult_out_2[RADIX-1 : 0];
 
     assign s_val = odd ? s_in : s_reg;

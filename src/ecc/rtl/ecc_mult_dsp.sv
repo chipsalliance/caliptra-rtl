@@ -26,10 +26,10 @@ module ecc_mult_dsp #(
 )
 (
     // DATA PORT
-    input  wire  [RADIX-1:0]   A_i,
-    input  wire  [RADIX-1:0]   B_i,
+    input  wire  [RADIX-1 : 0]        A_i,
+    input  wire  [RADIX-1 : 0]        B_i,
     
-    output logic [2*RADIX-1:0] P_o
+    output logic [(2*RADIX)-1 : 0]    P_o
 );
 
     always_comb begin

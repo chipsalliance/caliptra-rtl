@@ -64,16 +64,16 @@ module ecc_dsa_ctrl
     //----------------------------------------------------------------
     // Registers including update variables and write enable.
     //----------------------------------------------------------------
-    logic [DSA_PROG_ADDR_W-1 : 0]        prog_cntr;
-    logic [DSA_INSTRUCTION_LENGTH-1 : 0] prog_line;   
+    logic [DSA_PROG_ADDR_W-1 : 0]           prog_cntr;
+    logic [(DSA_INSTRUCTION_LENGTH)-1 : 0]  prog_line;   
     
-    logic [REG_SIZE-1 : 0]          read_reg;
-    logic [REG_SIZE+RND_SIZE-1 : 0] write_reg;
-    logic [1 : 0]                   cycle_cnt;
+    logic [REG_SIZE-1 : 0]                  read_reg;
+    logic [(REG_SIZE+RND_SIZE)-1 : 0]       write_reg;
+    logic [1 : 0]                           cycle_cnt;
 
-    logic                   dsa_busy;
-    logic                   subcomponent_busy;
-    logic                   pm_busy_o;
+    logic dsa_busy;
+    logic subcomponent_busy;
+    logic pm_busy_o;
     
     logic hw_privkey_we;
     logic hw_pubkeyx_we;
@@ -109,12 +109,12 @@ module ecc_dsa_ctrl
     logic [REG_SIZE-1 : 0]  scalar_G_reg;
     logic [REG_SIZE-1 : 0]  scalar_PK_reg;
 
-    logic [REG_SIZE-1 : 0]          scalar_in_reg;
-    logic [REG_SIZE-1 : 0]          scalar_rnd_reg;
-    logic [REG_SIZE+RND_SIZE-1 : 0] scalar_out;
-    logic [REG_SIZE+RND_SIZE-1 : 0] scalar_out_reg;
-    logic                           scalar_sca_en;
-    logic                           scalar_sca_busy_o;
+    logic [REG_SIZE-1 : 0]              scalar_in_reg;
+    logic [REG_SIZE-1 : 0]              scalar_rnd_reg;
+    logic [(REG_SIZE+RND_SIZE)-1 : 0]   scalar_out;
+    logic [(REG_SIZE+RND_SIZE)-1 : 0]   scalar_out_reg;
+    logic                               scalar_sca_en;
+    logic                               scalar_sca_busy_o;
 
     logic                   hmac_mode;
     logic                   hmac_init;
@@ -139,6 +139,7 @@ module ecc_dsa_ctrl
         )
         ecc_dsa_sequencer_i(
         .clka(clk),
+        .reset_n(reset_n),
         .ena(1'b1),
         .addra(prog_cntr),
         .douta(prog_line)
@@ -173,8 +174,8 @@ module ecc_dsa_ctrl
         .sca_en_i(sca_scalar_rnd_en),
         .addr_i(prog_line[DSA_OPR_ADDR_WIDTH-1 : 0]),
         .wr_op_sel_i(prog_line[2*DSA_OPR_ADDR_WIDTH]),
-        .wr_en_i(prog_line[2*DSA_OPR_ADDR_WIDTH+1]),
-        .rd_reg_i(prog_line[2*DSA_OPR_ADDR_WIDTH+2]),
+        .wr_en_i(prog_line[(2*DSA_OPR_ADDR_WIDTH)+1]),
+        .rd_reg_i(prog_line[(2*DSA_OPR_ADDR_WIDTH)+2]),
         .data_i(write_reg),
         .data_o(read_reg),
         .busy_o(pm_busy_o)
@@ -358,7 +359,7 @@ module ecc_dsa_ctrl
         hw_scalar_PK_we = 0;
         hw_verify_r_we = 0;
         if (prog_line[2*DSA_OPR_ADDR_WIDTH +: DSA_UOP_ADDR_WIDTH] == DSA_UOP_RD_CORE)begin
-            case (prog_line[DSA_OPR_ADDR_WIDTH +: DSA_OPR_ADDR_WIDTH])
+            unique casez (prog_line[DSA_OPR_ADDR_WIDTH +: DSA_OPR_ADDR_WIDTH])
                 PRIVKEY_ID      : hw_privkey_we = 1;
                 PUBKEYX_ID      : hw_pubkeyx_we = 1;
                 PUBKEYY_ID      : hw_pubkeyy_we = 1;
@@ -388,7 +389,7 @@ module ecc_dsa_ctrl
     begin : write_to_pm_core
         write_reg = '0;
         if (prog_line[2*DSA_OPR_ADDR_WIDTH +: DSA_UOP_ADDR_WIDTH] == DSA_UOP_WR_CORE) begin
-            case (prog_line[DSA_OPR_ADDR_WIDTH +: DSA_OPR_ADDR_WIDTH])
+            unique casez (prog_line[DSA_OPR_ADDR_WIDTH +: DSA_OPR_ADDR_WIDTH])
                 CONST_ZERO_ID         : write_reg = {zero_pad, ZERO_CONST};
                 CONST_ONE_ID          : write_reg = {zero_pad, ONE_CONST};
                 CONST_E_a_MONT_ID     : write_reg = {zero_pad, E_a_MONT};
@@ -412,10 +413,11 @@ module ecc_dsa_ctrl
             endcase
         end
         else if (prog_line[2*DSA_OPR_ADDR_WIDTH +: DSA_UOP_ADDR_WIDTH] == DSA_UOP_WR_SCALAR) begin
-            case (prog_line[DSA_OPR_ADDR_WIDTH +: DSA_OPR_ADDR_WIDTH])
+            unique casez (prog_line[DSA_OPR_ADDR_WIDTH +: DSA_OPR_ADDR_WIDTH])
                 SCALAR_PK_ID          : write_reg = (scalar_PK_reg << RND_SIZE);
                 SCALAR_G_ID           : write_reg = (scalar_G_reg << RND_SIZE);
-                default               : write_reg = scalar_out_reg; // SCA
+                SCALAR_ID             : write_reg = scalar_out_reg; // SCA
+                default               : write_reg = '0;
             endcase
         end
     end // write_to_pm_core
@@ -438,12 +440,15 @@ module ecc_dsa_ctrl
     always_ff @(posedge clk or negedge reset_n) 
     begin : ECDSA_FSM
         if(!reset_n) begin
-            prog_cntr <= DSA_RESET;
-            cycle_cnt <= '0;
-            dsa_valid_reg <= 0;
-            scalar_G_sel <= 0;
-            hmac_mode <= 0;
-            hmac_init <= 0;
+            prog_cntr       <= DSA_RESET;
+            cycle_cnt       <= '0;
+            pm_cmd_reg      <= '0;
+            dsa_valid_reg   <= 0;
+            scalar_G_sel    <= 0;
+            hmac_mode       <= 0;
+            hmac_init       <= 0;
+            scalar_sca_en   <= 0;
+            sca_init        <= 0;
         end
         else begin
             if (subcomponent_busy) begin //Stalled until sub-component is done
@@ -454,8 +459,10 @@ module ecc_dsa_ctrl
                 hmac_init       <= 0;
                 sca_init        <= 0;
             end
-            else if (dsa_busy & (cycle_cnt != 3)) begin
+            else if (dsa_busy & (cycle_cnt != 2'd3)) begin
                 cycle_cnt <= cycle_cnt + 1;
+                hmac_init       <= prog_line[(2*DSA_OPR_ADDR_WIDTH)+6];
+                scalar_sca_en   <= prog_line[(2*DSA_OPR_ADDR_WIDTH)+7];
             end
             else begin
                 cycle_cnt <= '0;
@@ -467,7 +474,7 @@ module ecc_dsa_ctrl
 
                     DSA_NOP : begin 
                         // Waiting for new valid command 
-                        case (cmd_reg)
+                        unique casez (cmd_reg)
                             KEYGEN : begin  // keygen
                                 prog_cntr <= DSA_KG_S;
                                 dsa_valid_reg <= 0;
@@ -487,6 +494,7 @@ module ecc_dsa_ctrl
                                 dsa_valid_reg <= 0;
                                 scalar_G_sel <= 1;
                             end
+
                             default : begin
                                 prog_cntr <= DSA_NOP;
                                 scalar_G_sel <= 0;
@@ -517,23 +525,23 @@ module ecc_dsa_ctrl
                     DSA_SGN_S,
                     DSA_VER_S : begin
                         prog_cntr       <= prog_cntr + 1;
-                        pm_cmd_reg      <= prog_line[2*DSA_OPR_ADDR_WIDTH+3 +: 3];
-                        hmac_init       <= prog_line[2*DSA_OPR_ADDR_WIDTH+6];
-                        scalar_sca_en   <= prog_line[2*DSA_OPR_ADDR_WIDTH+7];
+                        pm_cmd_reg      <= prog_line[(2*DSA_OPR_ADDR_WIDTH)+3 +: 3];
+                        hmac_init       <= prog_line[(2*DSA_OPR_ADDR_WIDTH)+6];
+                        scalar_sca_en   <= prog_line[(2*DSA_OPR_ADDR_WIDTH)+7];
                     end
 
                     default : begin
                         prog_cntr       <= prog_cntr + 1;
-                        pm_cmd_reg      <= prog_line[2*DSA_OPR_ADDR_WIDTH+3 +: 3];
-                        hmac_init       <= prog_line[2*DSA_OPR_ADDR_WIDTH+6];
-                        scalar_sca_en   <= prog_line[2*DSA_OPR_ADDR_WIDTH+7];
+                        pm_cmd_reg      <= prog_line[(2*DSA_OPR_ADDR_WIDTH)+3 +: 3];
+                        hmac_init       <= prog_line[(2*DSA_OPR_ADDR_WIDTH)+6];
+                        scalar_sca_en   <= prog_line[(2*DSA_OPR_ADDR_WIDTH)+7];
                     end
                 endcase
             end
         end
     end // ECDSA_FSM
 
-    always_ff @(posedge clk)
+    always_ff @(posedge clk or negedge reset_n)
         if (!reset_n)
             ecc_status_done_d <= 1'b0;
         else

@@ -44,15 +44,21 @@ module ecc_ram_tdp_file #(
  
     // Declare the RAM variable
     localparam ADDR_LENGTH = 2**ADDR_WIDTH;
-	reg [DATA_WIDTH-1:0] mem[ADDR_LENGTH-1:0];
+    reg [DATA_WIDTH-1:0]    mem[ADDR_LENGTH-1:0];
 
-    always_ff @ (posedge clk) 
+    always_ff @ (posedge clk or negedge reset_n) 
     begin : reading_memory
-        if (ena)
-            douta <= mem[addra];
+        if (!reset_n) begin
+            douta <= '0;
+            doutb <= '0;
+        end
+        else begin
+            if (ena)
+                douta <= mem[addra];
 
-        if (enb)
-            doutb <= mem[addrb];
+            if (enb)
+                doutb <= mem[addrb];
+        end
     end // reading_memory
 
     always_ff @ (posedge clk or negedge reset_n) 

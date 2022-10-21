@@ -49,8 +49,8 @@ module ecc_pm_ctrl
     localparam [7 : 0] MULT_DELAY          = 8'd38; //39 -1;
     localparam [7 : 0] ADD_DELAY           = 8'd1;  // 2 -1;
     
-    localparam [9 : 0] Secp384_SCA_MONT_COUNT   = REG_SIZE + RND_SIZE;
-    localparam [9 : 0] Secp384_MONT_COUNT       = {1'b0, REG_SIZE};
+    localparam [9 : 0] Secp384_SCA_MONT_COUNT   = REG_SIZE[9 : 0] + RND_SIZE[9 : 0];
+    localparam [9 : 0] Secp384_MONT_COUNT       = REG_SIZE[9 : 0];
     
     //----------------------------------------------------------------
     // Registers 
@@ -83,6 +83,7 @@ module ecc_pm_ctrl
         )
         i_ecc_pm_sequencer(
         .clka(clk),
+        .reset_n(reset_n),
         .ena(1'b1),
         .addra(prog_addr),
         .douta(prog_line)
@@ -111,8 +112,8 @@ module ecc_pm_ctrl
             if (stalled & (stall_cntr > 0)) begin
                 stall_cntr <= stall_cntr - 1;
             end
-            else if (stall_flag & !stalled & !stalled_pipe1) begin
-                case (prog_line[2*OPR_ADDR_WIDTH +: UOP_ADDR_WIDTH])
+            else if (stall_flag & (!stalled) & (!stalled_pipe1)) begin
+                unique casez (prog_line[2*OPR_ADDR_WIDTH +: UOP_ADDR_WIDTH])
                     UOP_DO_ADD_p :  begin stalled <= 1'b1; stall_cntr <= ADD_DELAY; end  // ADD
                     UOP_DO_SUB_p :  begin stalled <= 1'b1; stall_cntr <= ADD_DELAY; end  // SUB
                     UOP_DO_MUL_p :  begin stalled <= 1'b1; stall_cntr <= MULT_DELAY; end // MULT
@@ -124,11 +125,10 @@ module ecc_pm_ctrl
             end
             else if ((!stalled) | (stalled & (stall_cntr == 0))) begin
                 stalled <= 0;
-                case (prog_cntr)
-		            // Waiting for new valid command    
-                    NOP : begin
+                unique casez (prog_cntr)
+                    NOP : begin     // Waiting for new valid command
                         ecc_cmd_reg <= ecc_cmd_i;
-                        case (ecc_cmd_i)
+                        unique casez (ecc_cmd_i)
                             KEYGEN_CMD : begin  // keygen
                                 mont_cntr <= (sca_en_i)? Secp384_SCA_MONT_COUNT : Secp384_MONT_COUNT;
                                 prog_cntr <= PM_INIT_G_S;
@@ -190,7 +190,7 @@ module ecc_pm_ctrl
                     
                     PD_E : begin //End of point doubling
                         if (mont_cntr == 0) begin // Montgomery ladder is done
-                            case (ecc_cmd_reg)
+                            unique casez (ecc_cmd_reg)
                                 VER_PART1_CMD : prog_cntr <= NOP;
                                 VER_PART2_CMD : prog_cntr <= VER2_PA_S;
                                 default       : prog_cntr <= INV_S;
@@ -210,7 +210,7 @@ module ecc_pm_ctrl
                     end
                     
                     CONV_E : begin // End of conversion from projective Mont (X,Y,Z) to affine normanl (x,y)
-                        case (ecc_cmd_reg)
+                        unique casez (ecc_cmd_reg)
                             SIGN_CMD : prog_cntr <= SIGN0_S;
                             default  : prog_cntr <= NOP;
                         endcase
@@ -221,7 +221,7 @@ module ecc_pm_ctrl
                     end
 
                     INVq_E : begin // End of inversion mod q
-                        case (ecc_cmd_reg)
+                        unique casez (ecc_cmd_reg)
                             SIGN_CMD      : prog_cntr <= SIGN1_S;
                             VER_PART0_CMD : prog_cntr <= VER0_P1_S;
                             default       : prog_cntr <= NOP;
@@ -294,7 +294,7 @@ module ecc_pm_ctrl
 
     always_comb 
     begin : delay_flag
-        case (prog_line[2*OPR_ADDR_WIDTH +: UOP_ADDR_WIDTH])
+        unique casez (prog_line[2*OPR_ADDR_WIDTH +: UOP_ADDR_WIDTH])
             UOP_DO_ADD_p :  stall_flag = 1;
             UOP_DO_SUB_p :  stall_flag = 1;
             UOP_DO_MUL_p :  stall_flag = 1;
@@ -311,20 +311,19 @@ module ecc_pm_ctrl
     begin : instruction_out
         if (!reset_n)
             instr_o <= '0;
-	    else begin
-            instr_o <= '0;
-            instr_o[2*OPR_ADDR_WIDTH+5] <= prog_line_pipe2[2*OPR_ADDR_WIDTH+5];  // mod_p_q : performing mod_p if (mod_p_q = 0), else mod_q
+        else begin
+            instr_o[(2*OPR_ADDR_WIDTH)+5] <= prog_line_pipe2[(2*OPR_ADDR_WIDTH)+5];  // mod_p_q : performing mod_p if (mod_p_q = 0), else mod_q
             
-            case (prog_line_pipe2[2*OPR_ADDR_WIDTH+2 +: 3]) //14,15,16
-                3'b000 :  instr_o[2*OPR_ADDR_WIDTH+2 +: 3] <= 3'b000; // NOP
+            unique casez (prog_line_pipe2[(2*OPR_ADDR_WIDTH)+2 +: 3]) //14,15,16
+                3'b000 :  instr_o[(2*OPR_ADDR_WIDTH)+2 +: 3] <= 3'b000; // NOP
                 //3'b001 :  instr_o[2*OPR_ADDR_WIDTH+2 +: 3] <= 3'b010; // RED
-                3'b010 :  instr_o[2*OPR_ADDR_WIDTH+2 +: 3] <= 3'b010; // ADD
-                3'b011 :  instr_o[2*OPR_ADDR_WIDTH+2 +: 3] <= 3'b011; // SUB
-                3'b100 :  instr_o[2*OPR_ADDR_WIDTH+2 +: 3] <= 3'b100; // MULT
-                default:  instr_o[2*OPR_ADDR_WIDTH+2 +: 3] <= 3'b000;
+                3'b010 :  instr_o[(2*OPR_ADDR_WIDTH)+2 +: 3] <= 3'b010; // ADD
+                3'b011 :  instr_o[(2*OPR_ADDR_WIDTH)+2 +: 3] <= 3'b011; // SUB
+                3'b100 :  instr_o[(2*OPR_ADDR_WIDTH)+2 +: 3] <= 3'b100; // MULT
+                default:  instr_o[(2*OPR_ADDR_WIDTH)+2 +: 3] <= 3'b000;
             endcase
 
-            instr_o[2*OPR_ADDR_WIDTH+1]    <= prog_line_pipe2[2*OPR_ADDR_WIDTH+1];      //Mem writeA
+            instr_o[(2*OPR_ADDR_WIDTH)+1]  <= prog_line_pipe2[(2*OPR_ADDR_WIDTH)+1];    //Mem writeA
             instr_o[2*OPR_ADDR_WIDTH]      <= prog_line_pipe2[2*OPR_ADDR_WIDTH];        //Mem writeB
             if (mont_ladder) begin
                 if (prog_line_pipe2[OPR_ADDR_WIDTH+3 +: OPR_ADDR_WIDTH-3] == 3'b001)
@@ -340,7 +339,7 @@ module ecc_pm_ctrl
                 instr_o[OPR_ADDR_WIDTH +: OPR_ADDR_WIDTH]  <= prog_line_pipe2[OPR_ADDR_WIDTH +: OPR_ADDR_WIDTH];    //Addr A for ADD/SUB result
                 instr_o[0              +: OPR_ADDR_WIDTH]  <= prog_line_pipe2[0 +: OPR_ADDR_WIDTH];     //Addr B for MULT result
             end 
-	    end
+        end
     end // instruction_out
 
     assign busy_o = ~(prog_cntr == NOP);

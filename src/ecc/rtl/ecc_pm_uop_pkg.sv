@@ -31,7 +31,7 @@ localparam integer UOP_ADDR_WIDTH       = 6;
 localparam integer OPR_ADDR_WIDTH       = 6;
 
 localparam PROG_ADDR_W                  = 12; //$clog2(VER2_PA_E+2);
-localparam INSTRUCTION_LENGTH           = UOP_ADDR_WIDTH + 2*OPR_ADDR_WIDTH;    // opcode + 2 * operand
+localparam INSTRUCTION_LENGTH           = UOP_ADDR_WIDTH + (2*OPR_ADDR_WIDTH);    // opcode + 2 * operand
 
 localparam [UOP_ADDR_WIDTH-1 : 0] UOP_NOP                   = 6'b00_0000;
 
