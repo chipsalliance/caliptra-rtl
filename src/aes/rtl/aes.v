@@ -40,7 +40,9 @@
 
 `default_nettype none
 
-module aes #(
+module aes 
+  import aes_param_pkg::*;
+  #(
             parameter ADDR_WIDTH = 32,
             parameter DATA_WIDTH = 32
             )(
@@ -61,7 +63,7 @@ module aes #(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  `include "aes_param.sv"
+  //`include "aes_param.sv"
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.

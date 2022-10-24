@@ -5,11 +5,11 @@ targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/common_defines.vh
+      - $COMPILE_ROOT/rtl/common_defines.sv
   tb:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/common_defines.vh
+      - $COMPILE_ROOT/rtl/common_defines.sv
 ---
 provides: [el2_swerv_wrapper]
 schema_version: 2.4.0

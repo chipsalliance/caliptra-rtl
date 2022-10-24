@@ -1,13 +1,24 @@
+provides: [kv_defines_pkg]
+schema_version: 2.4.0
+requires: []
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files: 
+      - $COMPILE_ROOT/rtl/kv_defines_pkg.sv
+---
 provides: [keyvault]
 schema_version: 2.4.0
-requires: [libs]
+requires: 
+  - libs
+  - kv_defines_pkg
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
       - $COMPILE_ROOT/rtl/kv_reg_pkg.sv
       - $COMPILE_ROOT/rtl/kv_reg.sv
-      - $COMPILE_ROOT/rtl/kv_defines.svh
+      - $COMPILE_ROOT/rtl/kv_defines_pkg.sv
       - $COMPILE_ROOT/rtl/kv.sv
       - $COMPILE_ROOT/rtl/kv_fsm.sv
       - $COMPILE_ROOT/rtl/kv_client.sv

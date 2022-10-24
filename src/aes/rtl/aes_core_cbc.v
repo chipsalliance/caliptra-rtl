@@ -52,8 +52,8 @@ module aes_core_cbc(
 
                 // Control.
                 input wire            encdec,
-                input wire            init,
-                input wire            next,
+                input wire            init_cmd,
+                input wire            next_cmd,
                 output wire           ready,
 
                 //Data.
@@ -61,7 +61,7 @@ module aes_core_cbc(
                 input wire            keylen,
                 input wire [127 : 0]  IV,
                 input wire            IV_updated,
-                input wire [127 : 0]  block,
+                input wire [127 : 0]  block_msg,
                 output wire [127 : 0] result,
                 output wire           result_valid
                );
@@ -129,7 +129,16 @@ module aes_core_cbc(
   reg [127 : 0]  IV_decry_next;
   reg IV_updated_delayed;
 
+  reg [1:0] IV_enc_state;
+  reg [1:0] IV_dec_state;
 
+  reg [127:0] block_msg_encr;
+  
+  localparam st_IV_engine_idle  = 2'h0,
+             st_IV_engine_stars = 2'h1,
+             st_IV_1st_decrypt  = 2'h2;
+
+  assign block_msg_encr = block_msg ^ IV_encry;
   //----------------------------------------------------------------
   // Instantiations.
   //----------------------------------------------------------------
@@ -137,7 +146,7 @@ module aes_core_cbc(
                                .clk(clk),
                                .reset_n(reset_n),
 
-                               .next(enc_next),
+                               .next_cmd(enc_next),
 
                                .keylen(keylen),
                                .round(enc_round_nr),
@@ -146,7 +155,7 @@ module aes_core_cbc(
                                .sboxw(enc_sboxw),
                                .new_sboxw(new_sboxw),
 
-                               .block(block^IV_encry),
+                               .block_msg(block_msg_encr),
                                .new_block(enc_new_block),
                                .ready(enc_ready)
                               );
@@ -156,13 +165,13 @@ module aes_core_cbc(
                                .clk(clk),
                                .reset_n(reset_n),
 
-                               .next(dec_next),
+                               .next_cmd(dec_next),
 
                                .keylen(keylen),
                                .round(dec_round_nr),
                                .round_key(round_key),
 
-                               .block(block),
+                               .block_msg(block_msg),
                                .new_block(dec_new_block),
                                .ready(dec_ready)
                               );
@@ -174,7 +183,7 @@ module aes_core_cbc(
 
                      .key(key),
                      .keylen(keylen),
-                     .init(init),
+                     .init_cmd(init_cmd),
 
                      .round(muxed_round_nr),
                      .round_key(round_key),
@@ -196,11 +205,6 @@ module aes_core_cbc(
   // FSM provides this functionality
   //----------------------------------------------------------------
 
-  reg IV_enc_state;
-  reg [1:0]IV_dec_state;
-  localparam st_IV_engine_idle  = 0,
-             st_IV_engine_stars = 1,
-             st_IV_1st_decrypt  = 2;
 
   always @ (posedge clk or negedge reset_n)
   begin:IV_storage_management
@@ -215,7 +219,7 @@ module aes_core_cbc(
         end
       else
         begin
-            IV_updated_delayed <= IV_updated;
+            
         // ENCRYPTION IV CONTROLLER
             if(IV_updated_delayed)
                 IV_encry <= IV;
@@ -241,20 +245,22 @@ module aes_core_cbc(
                     else
                         IV_enc_state <= st_IV_engine_stars;                 
                 end
-                default: 
-                    IV_enc_state <= st_IV_engine_idle;  
+                default:
+                begin
+                  IV_enc_state <= st_IV_engine_idle;
+                end
             endcase //IV_enc_state
 
         // DECRYPTION IV CONTROLLER
             case (IV_dec_state)
                 st_IV_engine_idle:
                 begin
-                    IV_decry_next <= block;
+                    IV_decry_next <= block_msg;
                     IV_decry      <= IV;
                     if(dec_ready & dec_next)
                         IV_dec_state <= st_IV_1st_decrypt;
                     else
-                        IV_dec_state <= st_IV_engine_idle;                 
+                        IV_dec_state  <= st_IV_engine_idle;                 
                 end
                 st_IV_1st_decrypt:
                 begin                    
@@ -267,7 +273,7 @@ module aes_core_cbc(
                     else if(dec_ready & dec_next)
                     begin
                         IV_dec_state  <= st_IV_engine_stars;
-                        IV_decry_next <= block;
+                        IV_decry_next <= block_msg;
                         IV_decry      <= IV_decry_next;
                     end
                     else
@@ -285,11 +291,13 @@ module aes_core_cbc(
                 end
                 default:
                 begin 
-                    IV_dec_state <= st_IV_engine_idle;  
+                    IV_dec_state  <= st_IV_engine_idle; 
                     IV_decry_next <= IV;
                     IV_decry      <= IV;
                 end
-            endcase //IV_dec_state             
+            endcase //IV_dec_state  
+             
+            IV_updated_delayed <= IV_updated;      
         end
   end //IV_storage_management
 
@@ -366,7 +374,7 @@ module aes_core_cbc(
       if (encdec)
         begin
           // Encipher operations
-          enc_next        = next;
+          enc_next        = next_cmd;
           muxed_round_nr  = enc_round_nr;
           muxed_new_block = enc_new_block;
           muxed_ready     = enc_ready;
@@ -374,7 +382,7 @@ module aes_core_cbc(
       else
         begin
           // Decipher operations
-          dec_next        = next;
+          dec_next        = next_cmd;
           muxed_round_nr  = dec_round_nr;
           muxed_new_block = dec_new_block^IV_decry;
           muxed_ready     = dec_ready;
@@ -402,7 +410,7 @@ module aes_core_cbc(
       case (aes_core_ctrl_reg)
         CTRL_IDLE:
           begin
-            if (init)
+            if (init_cmd)
               begin
                 init_state        = 1'b1;
                 ready_new         = 1'b0;
@@ -412,7 +420,7 @@ module aes_core_cbc(
                 aes_core_ctrl_new = CTRL_INIT;
                 aes_core_ctrl_we  = 1'b1;
               end
-            else if (next)
+            else if (next_cmd)
               begin
                 init_state        = 1'b0;
                 ready_new         = 1'b0;
@@ -454,7 +462,13 @@ module aes_core_cbc(
 
         default:
           begin
-
+            init_state        = 1'b0;
+            ready_new         = 1'b0;
+            ready_we          = 1'b0;
+            result_valid_new  = 1'b0;
+            result_valid_we   = 1'b0;
+            aes_core_ctrl_new = CTRL_IDLE;
+            aes_core_ctrl_we  = 1'b0;
           end
       endcase // case (aes_core_ctrl_reg)
 

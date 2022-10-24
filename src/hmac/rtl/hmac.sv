@@ -19,12 +19,12 @@
 // HMAC-384 top-level wrapper with 32 bit data access.
 //
 //======================================================================
-`include "kv_defines.svh"
+//`include "kv_defines.svh"
 
 module hmac 
        import hmac_param_pkg::*;
        import hmac_intr_regs_pkg::*;
-       //import kv_defines_pkg::*;      
+       import kv_defines_pkg::*;      
       #(
         ADDR_WIDTH = 32
       )(

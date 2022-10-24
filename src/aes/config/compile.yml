@@ -1,9 +1,20 @@
 ---
+provides: [aes_param_pkg]
+schema_version: 2.4.0
+requires: []
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files: 
+      - $COMPILE_ROOT/rtl/aes_param_pkg.sv
+---
 provides: [aes_ctrl]
 schema_version: 2.4.0
 requires:
   - libs
   - keyvault
+  - aes_param_pkg
+  - kv_defines_pkg
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -11,7 +22,7 @@ targets:
       - $COMPILE_ROOT/rtl/aes_intr_regs_pkg.sv
       - $COMPILE_ROOT/rtl/aes_ctrl.sv
       - $COMPILE_ROOT/rtl/aes.v
-      - $COMPILE_ROOT/rtl/aes_param.sv
+      #- $COMPILE_ROOT/rtl/aes_param.sv
       - $COMPILE_ROOT/rtl/aes_core.v
       - $COMPILE_ROOT/rtl/aes_decipher_block.v
       - $COMPILE_ROOT/rtl/aes_encipher_block.v
@@ -22,6 +33,12 @@ targets:
       - $COMPILE_ROOT/rtl/aes_core_cbc.v
       - $COMPILE_ROOT/rtl/aes_intr_regs.sv
     tops: [aes_ctrl]
+  rtl_lint:
+    directories: []
+    waiver_files:
+      - $COMPILE_ROOT/config/design_lint/aes_ctrl/sglint_waivers
+    black_box:
+      - aes_intr_regs
 ---
 provides: [aes_cbc_tb]  
 schema_version: 2.4.0

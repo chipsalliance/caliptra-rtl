@@ -102,7 +102,7 @@ module sha512_ctrl #(
 
         //COMPONENT INF
         .dv(sha512_cs),
-        .hold(1'b0), //no holds from sha512
+        .hld(1'b0), //no holds from sha512
         .err(1'b0),
         .write(sha512_we),
         .wdata(sha512_write_data),

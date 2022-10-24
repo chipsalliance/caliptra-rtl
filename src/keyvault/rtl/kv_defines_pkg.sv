@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-`ifndef KV_DEFINES
-`define KV_DEFINES
+`ifndef KV_DEFINES_PKG
+`define KV_DEFINES_PKG
+
+package kv_defines_pkg;
 
 `include "caliptra_sva.svh"
 
@@ -85,4 +87,8 @@ typedef struct packed {
     kv_doe_cmd_e cmd;
 } kv_doe_reg_t;
 
+endpackage
+
 `endif
+
+

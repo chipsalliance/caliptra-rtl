@@ -200,7 +200,7 @@ mailbox_ahb_slv1 (
 
     //COMPONENT INF
     .dv(uc_req_dv),
-    .hold(uc_req_hold),
+    .hld(uc_req_hold),
     .err(uc_req_error),
     .write(uc_req.write),
     .wdata(uc_req.wdata),

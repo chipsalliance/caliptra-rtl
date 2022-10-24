@@ -13,10 +13,14 @@
 // limitations under the License.
 //
 
-`include "cfg.sv"
-`include "common_defines.vh"
+//`include "config_pkg.sv"
+//`include "common_defines.vh"
 
-module caliptra_top (
+module caliptra_top 
+    import el2_swerv_pkg::*;
+    import config_pkg::*;
+    import kv_defines_pkg::*;
+    (
     input bit                          clk,
 
     input logic                        cptra_pwrgood,
@@ -484,8 +488,7 @@ sha512_ctrl #(
 
 aes_ctrl #(
     .AHB_DATA_WIDTH (64),
-    .AHB_ADDR_WIDTH (`SLAVE_ADDR_WIDTH(`SLAVE_SEL_AES)),
-    .BYPASS_HSEL    (0)
+    .AHB_ADDR_WIDTH (`SLAVE_ADDR_WIDTH(`SLAVE_SEL_AES))
 ) aes (
     .clk            (clk),
     .reset_n        (cptra_uc_rst_b),

@@ -14,9 +14,11 @@
 //
 
 
-`include "kv_defines.svh"
+//`include "kv_defines.svh"
 
-module kv #(
+module kv 
+    import kv_defines_pkg::*;
+    #(
      parameter KV_NUM_READ = 1
     ,parameter KV_NUM_WRITE = 1
     ,parameter AHB_ADDR_WIDTH = 32
@@ -80,7 +82,7 @@ kv_ahb_slv1 (
 
     //COMPONENT INF
     .dv(uc_req_dv),
-    .hold(uc_req_hold),
+    .hld(uc_req_hold),
     .err(uc_req_error),
     .write(uc_req.write),
     .wdata(uc_req.wdata),

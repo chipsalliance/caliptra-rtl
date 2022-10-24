@@ -34,6 +34,9 @@
 `default_nettype none
 
 module aes_cbc 
+  import aes_param_pkg::*;
+  import kv_defines_pkg::*;
+  import aes_intr_regs_pkg::*;
  #(
     parameter ADDR_WIDTH = 32,
     parameter DATA_WIDTH = 32
@@ -44,11 +47,11 @@ module aes_cbc
    input wire           reset_n,
    input wire           cptra_pwrgood,
 
-   input logic [255:0] cptra_obf_key,
+   input wire [255:0] cptra_obf_key,
 
    //Obfuscated UDS and FE
-   input logic [31:0][31:0] obf_field_entropy,
-   input logic [11:0][31:0] obf_uds_seed,
+   input wire [31:0][31:0] obf_field_entropy,
+   input wire [11:0][31:0] obf_uds_seed,
 
    // Control.
    input wire           cs,
@@ -66,12 +69,6 @@ module aes_cbc
    //interface with kv
    output kv_write_t kv_write
   );
-
-  //----------------------------------------------------------------
-  // Internal constant and parameter definitions.
-  //----------------------------------------------------------------
-  `include "aes_param.sv"
-  import aes_intr_regs_pkg::*;
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -98,15 +95,19 @@ module aes_cbc
   logic [KEY_NO-1:0][DATA_WIDTH-1:0] key_reg ;
   reg          key_we;
 
-  reg [DATA_WIDTH - 1 : 0] IV_reg [0 : BLOCK_NO - 1];
+  reg [DATA_WIDTH - 1 : 0] IV_reg [BLOCK_NO - 1 : 0];
   reg          IV_we;
 
   reg [127 : 0] result_reg;
   reg [127 : 0] kv_result_reg;
-  reg [31  : 0] intr_reg_data;
+  logic [31  : 0] intr_reg_data;
   reg           valid_reg;
   reg           ready_reg;
   logic         core_valid_p;
+
+  reg [3:0] addr_diff;
+  reg [1:0] temp_result;
+  reg [1:0] result_idx;
 
 
   //----------------------------------------------------------------
@@ -151,15 +152,9 @@ module aes_cbc
   //----------------------------------------------------------------
   assign read_data = tmp_read_data;
 
-  `ifdef AES_DATA_BUS_64
-    assign core_key     = {key_reg[0], key_reg[1], key_reg[2], key_reg[3]};
-    assign core_block   = {block_reg[0], block_reg[1]};
-    assign core_IV      = {IV_reg[0], IV_reg[1]};
-  `else
-    assign core_key     = {key_reg[0], key_reg[1], key_reg[2], key_reg[3], key_reg[4], key_reg[5], key_reg[6], key_reg[7]};
-    assign core_block   = {block_reg[0], block_reg[1], block_reg[2], block_reg[3]};
-    assign core_IV      = {IV_reg[0], IV_reg[1], IV_reg[2], IV_reg[3]};
-  `endif
+  assign core_key     = {key_reg[0], key_reg[1], key_reg[2], key_reg[3], key_reg[4], key_reg[5], key_reg[6], key_reg[7]};
+  assign core_block   = {block_reg[0], block_reg[1], block_reg[2], block_reg[3]};
+  assign core_IV      = {IV_reg[0], IV_reg[1], IV_reg[2], IV_reg[3]};
 
   assign core_init   = init_reg | doe_init;
   assign core_next   = next_reg | doe_next;
@@ -175,8 +170,8 @@ module aes_cbc
                 .reset_n(reset_n),
 
                 .encdec(core_encdec),
-                .init(core_init),
-                .next(core_next),
+                .init_cmd(core_init),
+                .next_cmd(core_next),
                 .ready(core_ready),
 
                 .key(core_key),
@@ -185,7 +180,7 @@ module aes_cbc
                 .IV(core_IV),
                 .IV_updated(IV_we),
 
-                .block(core_block),
+                .block_msg(core_block),
                 .result(core_result),
                 .result_valid(core_valid)
                );
@@ -199,18 +194,18 @@ module aes_cbc
   //----------------------------------------------------------------
   always @ (posedge clk or negedge reset_n)
     begin : reg_update
-      integer i;
+      integer ii;
 
       if (!reset_n)
         begin
-          for (i = 0 ; i < BLOCK_NO ; i = i + 1)
-            block_reg[i] <= 0;
+          for (ii = 0 ; ii < BLOCK_NO ; ii = ii + 1)
+            block_reg[ii] <= '{default:0};
 
-          for (i = 0 ; i < IV_NO ; i = i + 1)
-            IV_reg[i] <= 0;
+          for (ii = 0 ; ii < IV_NO ; ii = ii + 1)
+            IV_reg[ii] <= 32'h0;
 
-          for (i = 0 ; i < KEY_NO ; i = i + 1)
-            key_reg[i] <= 0;
+          for (ii = 0 ; ii < KEY_NO ; ii = ii + 1)
+            key_reg[ii] <= 32'h0;
 
           init_reg   <= 1'b0;
           next_reg   <= 1'b0;
@@ -220,6 +215,9 @@ module aes_cbc
           result_reg <= 128'h0;
           valid_reg  <= 1'b0;
           ready_reg  <= 1'b0;
+
+          kv_result_reg <= 128'h0;
+          doe_ctrl_reg <= '0;
         end
       else
         begin
@@ -239,30 +237,21 @@ module aes_cbc
             end
 
           if (key_we)
-            `ifdef AES_DATA_BUS_64
-              key_reg[address[4 : 3]] <= write_data;
-            `else
-              key_reg[address[4 : 2]] <= write_data;
-            `endif
-          if (doe_key_write_en) 
+            key_reg[address[4 : 2]] <= write_data;
+          else if (doe_key_write_en) 
             key_reg <= cptra_obf_key;
           if (block_we)
-            `ifdef AES_DATA_BUS_64
-              block_reg[address[3]] <= write_data;
-            `else
-              block_reg[address[3 : 2]] <= write_data;
-            `endif
-          if (doe_src_write_en) 
+            block_reg[address[3 : 2]] <= write_data;
+          else if (doe_src_write_en) 
             block_reg <= doe_src_write_data;
           if (IV_we)
-            `ifdef AES_DATA_BUS_64
-              IV_reg[address[3]] <= write_data;
-            `else
-              IV_reg[address[3 : 2]] <= write_data;
-            `endif
-          if (kv_ctrl_we)
-            doe_ctrl_reg <= write_data[5:0];
-          if (flow_done) begin
+            IV_reg[address[3 : 2]] <= write_data;
+          if (kv_ctrl_we) begin
+            doe_ctrl_reg.flow_done  <= write_data[0];
+            doe_ctrl_reg.dest_sel   <= write_data[3:1];
+            doe_ctrl_reg.cmd        <= kv_doe_cmd_e'(write_data[5:4]);
+          end
+          else if (flow_done) begin
             doe_ctrl_reg.cmd <= DOE_NOP;
             doe_ctrl_reg.dest_sel <= '0;
             doe_ctrl_reg.flow_done <= 1'b1;
@@ -276,6 +265,12 @@ module aes_cbc
   //
   // The interface command decoding logic.
   //----------------------------------------------------------------
+  always @* begin
+    addr_diff = (address[3:0] - AES_ADDR_RESULT_START[3:0]);
+    temp_result = 4'h3 - (addr_diff >> 2);
+    result_idx = temp_result[1:0];
+  end
+
   always @*
     begin : api
       init_new      = 1'b0;
@@ -286,7 +281,7 @@ module aes_cbc
       IV_we         = 1'b0;
       kv_ctrl_we    = 1'b0;
       intr_regs_we  = 1'b0;
-      tmp_read_data = 0;
+      tmp_read_data = 32'h0;
 
       if (cs)
         begin
@@ -333,12 +328,13 @@ module aes_cbc
                   AES_ADDR_CTRL:     tmp_read_data = {28'h0, keylen_reg, encdec_reg, next_reg, init_reg};
                   AES_ADDR_STATUS:   tmp_read_data = {30'h0, valid_reg, ready_reg};
                   AES_ADDR_KV_CTRL:  tmp_read_data = {26'h0, doe_ctrl_reg};
-                  [AES_ADDR_RESULT_START:AES_ADDR_RESULT_END]: tmp_read_data = result_reg[(3 - ((address - AES_ADDR_RESULT_START) >> 2)) * 32 +: 32];
+                  [AES_ADDR_RESULT_START:AES_ADDR_RESULT_END]: tmp_read_data = result_reg[result_idx * 32 +: 32];
                   [AES_ADDR_INTR_START:AES_ADDR_INTR_END]: tmp_read_data = intr_reg_data;
                 `endif
 
                 default:
                   begin
+                    tmp_read_data = 32'h0;
                   end
               endcase // case (address)
 

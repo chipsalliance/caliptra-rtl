@@ -21,10 +21,12 @@
 //
 //======================================================================
 
-module aes_ctrl #(
+module aes_ctrl 
+    import aes_param_pkg::*;
+    import kv_defines_pkg::*;
+    #(
     parameter AHB_DATA_WIDTH = 32,
-    parameter AHB_ADDR_WIDTH = 32,
-    parameter BYPASS_HSEL = 0
+    parameter AHB_ADDR_WIDTH = 32
 )
 (
     // Clock and reset.
@@ -60,7 +62,7 @@ module aes_ctrl #(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  `include "aes_param.sv"
+  //`include "aes_param.sv"
 
     //----------------------------------------------------------------
     // aes
@@ -136,8 +138,8 @@ ahb_slv_sif #(
 
     //COMPONENT INF
     .dv(aes_cs),
-    .hold('0), //no holds from aes
-    .err('0), //no errors from aes
+    .hld(1'b0), //no holds from aes
+    .err(1'b0), //no errors from aes
     .write(aes_we),
     .wdata(aes_write_data[31:0]),
     .addr(aes_address),

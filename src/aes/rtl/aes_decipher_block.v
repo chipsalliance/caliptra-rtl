@@ -46,13 +46,13 @@ module aes_decipher_block(
                           input wire            reset_n,
 
                           //Control
-                          input wire            next,
+                          input wire            next_cmd,
 
                           //Data
                           input wire            keylen,
                           output wire [3 : 0]   round,
                           input wire [127 : 0]  round_key,
-                          input wire [127 : 0]  block,
+                          input wire [127 : 0]  block_msg,
                           output wire [127 : 0] new_block,
                           output wire           ready
                          );
@@ -61,7 +61,7 @@ module aes_decipher_block(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam AES_128_BIT_KEY = 1'h0;
+  //localparam AES_128_BIT_KEY = 1'h0;
   localparam AES_256_BIT_KEY = 1'h1;
 
   localparam AES128_ROUNDS = 4'ha;
@@ -82,62 +82,62 @@ module aes_decipher_block(
   //----------------------------------------------------------------
   // Gaolis multiplication functions for Inverse MixColumn.
   //----------------------------------------------------------------
-  function [7 : 0] gm2(input [7 : 0] op);
+  function automatic [7 : 0] gm2(input [7 : 0] op);
     begin
       gm2 = {op[6 : 0], 1'b0} ^ (8'h1b & {8{op[7]}});
     end
   endfunction // gm2
 
-  function [7 : 0] gm3(input [7 : 0] op);
+  function automatic [7 : 0] gm3(input [7 : 0] op);
     begin
       gm3 = gm2(op) ^ op;
     end
   endfunction // gm3
 
-  function [7 : 0] gm4(input [7 : 0] op);
+  function automatic [7 : 0] gm4(input [7 : 0] op);
     begin
       gm4 = gm2(gm2(op));
     end
   endfunction // gm4
 
-  function [7 : 0] gm8(input [7 : 0] op);
+  function automatic [7 : 0] gm8(input [7 : 0] op);
     begin
       gm8 = gm2(gm4(op));
     end
   endfunction // gm8
 
-  function [7 : 0] gm09(input [7 : 0] op);
+  function automatic [7 : 0] gm09(input [7 : 0] op);
     begin
       gm09 = gm8(op) ^ op;
     end
   endfunction // gm09
 
-  function [7 : 0] gm11(input [7 : 0] op);
+  function automatic [7 : 0] gm11(input [7 : 0] op);
     begin
       gm11 = gm8(op) ^ gm2(op) ^ op;
     end
   endfunction // gm11
 
-  function [7 : 0] gm13(input [7 : 0] op);
+  function automatic [7 : 0] gm13(input [7 : 0] op);
     begin
       gm13 = gm8(op) ^ gm4(op) ^ op;
     end
   endfunction // gm13
 
-  function [7 : 0] gm14(input [7 : 0] op);
+  function automatic [7 : 0] gm14(input [7 : 0] op);
     begin
       gm14 = gm8(op) ^ gm4(op) ^ gm2(op);
     end
   endfunction // gm14
 
-  function [31 : 0] inv_mixw(input [31 : 0] w);
+  function automatic [31 : 0] inv_mixw(input [31 : 0] w_val);
     reg [7 : 0] b0, b1, b2, b3;
     reg [7 : 0] mb0, mb1, mb2, mb3;
     begin
-      b0 = w[31 : 24];
-      b1 = w[23 : 16];
-      b2 = w[15 : 08];
-      b3 = w[07 : 00];
+      b0 = w_val[31 : 24];
+      b1 = w_val[23 : 16];
+      b2 = w_val[15 : 08];
+      b3 = w_val[07 : 00];
 
       mb0 = gm14(b0) ^ gm11(b1) ^ gm13(b2) ^ gm09(b3);
       mb1 = gm09(b0) ^ gm14(b1) ^ gm11(b2) ^ gm13(b3);
@@ -148,7 +148,7 @@ module aes_decipher_block(
     end
   endfunction // mixw
 
-  function [127 : 0] inv_mixcolumns(input [127 : 0] data);
+  function automatic [127 : 0] inv_mixcolumns(input [127 : 0] data);
     reg [31 : 0] w0, w1, w2, w3;
     reg [31 : 0] ws0, ws1, ws2, ws3;
     begin
@@ -166,7 +166,7 @@ module aes_decipher_block(
     end
   endfunction // inv_mixcolumns
 
-  function [127 : 0] inv_shiftrows(input [127 : 0] data);
+  function automatic [127 : 0] inv_shiftrows(input [127 : 0] data);
     reg [31 : 0] w0, w1, w2, w3;
     reg [31 : 0] ws0, ws1, ws2, ws3;
     begin
@@ -184,7 +184,7 @@ module aes_decipher_block(
     end
   endfunction // inv_shiftrows
 
-  function [127 : 0] addroundkey(input [127 : 0] data, input [127 : 0] rkey);
+  function automatic [127 : 0] addroundkey(input [127 : 0] data, input [127 : 0] rkey);
     begin
       addroundkey = data ^ rkey;
     end
@@ -323,7 +323,7 @@ module aes_decipher_block(
         // InitRound
         INIT_UPDATE:
           begin
-            old_block           = block;
+            old_block           = block_msg;
             addkey_block        = addroundkey(old_block, round_key);
             inv_shiftrows_block = inv_shiftrows(addkey_block);
             block_new           = inv_shiftrows_block;
@@ -387,6 +387,15 @@ module aes_decipher_block(
 
         default:
           begin
+            inv_shiftrows_block  = 128'h0;
+            inv_mixcolumns_block = 128'h0;
+            addkey_block         = 128'h0;
+            block_new            = 128'h0;
+            tmp_sboxw            = 32'h0;
+            block_w0_we          = 1'b0;
+            block_w1_we          = 1'b0;
+            block_w2_we          = 1'b0;
+            block_w3_we          = 1'b0;
           end
       endcase // case (update_type)
     end // round_logic
@@ -431,7 +440,7 @@ module aes_decipher_block(
             begin
               round_ctr_new = AES256_ROUNDS;
             end
-          else
+          else // keylen == AES_128_BIT_KEY
             begin
               round_ctr_new = AES128_ROUNDS;
             end
@@ -462,10 +471,10 @@ module aes_decipher_block(
       dec_ctrl_new  = CTRL_IDLE;
       dec_ctrl_we   = 1'b0;
 
-      case(dec_ctrl_reg)
+      case (dec_ctrl_reg)
         CTRL_IDLE:
           begin
-            if (next)
+            if (next_cmd)
               begin
                 round_ctr_set = 1'b1;
                 ready_new     = 1'b0;
@@ -516,6 +525,15 @@ module aes_decipher_block(
 
         default:
           begin
+            sword_ctr_inc = 1'b0;
+            sword_ctr_rst = 1'b0;
+            round_ctr_dec = 1'b0;
+            round_ctr_set = 1'b0;
+            ready_new     = 1'b0;
+            ready_we      = 1'b0;
+            update_type   = NO_UPDATE;
+            dec_ctrl_new  = CTRL_IDLE;
+            dec_ctrl_we   = 1'b0;
             // Empty. Just here to make the synthesis tool happy.
           end
       endcase // case (dec_ctrl_reg)

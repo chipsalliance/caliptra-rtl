@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-`include "kv_defines.svh"
+//`include "kv_defines.svh"
 
-module kv_fsm #(
+module kv_fsm 
+    import kv_defines_pkg::*;
+    #(
     parameter DATA_WIDTH = 384
    ,parameter HMAC_PAD = 0
    ,localparam OFFSET_W = $clog2(DATA_WIDTH/32)

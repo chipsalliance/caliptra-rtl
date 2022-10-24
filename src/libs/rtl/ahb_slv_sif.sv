@@ -42,7 +42,7 @@ module ahb_slv_sif #(
 
     //COMPONENT INF
     output logic                         dv,
-    input  logic                         hold,
+    input  logic                         hld,
     input  logic                         err,
     output logic                         write,
     output logic [CLIENT_DATA_WIDTH-1:0] wdata,
@@ -53,6 +53,8 @@ module ahb_slv_sif #(
 
 logic err_f;
 
+localparam BITS_WDATA = $bits(wdata);
+
 //support bus widths:
 //64b ahb, 32b client
 //64b ahb, 64b client
@@ -61,9 +63,11 @@ generate
         always_comb begin
             unique casez (hsize_i)
                 3'b000:  //byte
-                    wdata = {{$bits(wdata)-8{1'b0}},hwdata_i[7:0]};
+                    //wdata = {{$bits(wdata)-8{1'b0}},hwdata_i[7:0]};
+                    wdata = {{BITS_WDATA-8{1'b0}},hwdata_i[7:0]};
                 3'b001:  //halfword
-                    wdata = {{$bits(wdata)-16{1'b0}},hwdata_i[15:0]};
+                    //wdata = {{$bits(wdata)-16{1'b0}},hwdata_i[15:0]};
+                    wdata = {{BITS_WDATA-16{1'b0}},hwdata_i[15:0]};
                 3'b010:  //word
                     wdata = hwdata_i[31:0];
                 default: //word
@@ -75,9 +79,11 @@ generate
         always_comb begin
             unique casez (hsize_i)
                 3'b000:  //byte
-                    wdata = addr[2] ? {{$bits(wdata)-8{1'b0}},hwdata_i[39:32]} : {{$bits(wdata)-8{1'b0}},hwdata_i[7:0]};
+                    //wdata = addr[2] ? {{$bits(wdata)-8{1'b0}},hwdata_i[39:32]} : {{$bits(wdata)-8{1'b0}},hwdata_i[7:0]};
+                    wdata = addr[2] ? {{BITS_WDATA-8{1'b0}},hwdata_i[39:32]} : {{BITS_WDATA-8{1'b0}},hwdata_i[7:0]};
                 3'b001:  //halfword
-                    wdata = addr[2] ? {{$bits(wdata)-16{1'b0}},hwdata_i[47:32]} : {{$bits(wdata)-16{1'b0}},hwdata_i[15:0]};
+                    //wdata = addr[2] ? {{$bits(wdata)-16{1'b0}},hwdata_i[47:32]} : {{$bits(wdata)-16{1'b0}},hwdata_i[15:0]};
+                    wdata = addr[2] ? {{BITS_WDATA-16{1'b0}},hwdata_i[47:32]} : {{BITS_WDATA-16{1'b0}},hwdata_i[15:0]};
                 3'b010:  //word
                     wdata = addr[2] ? hwdata_i[63:32] : hwdata_i[31:0];
                 default: //word
@@ -89,9 +95,11 @@ generate
         always_comb begin
             unique casez (hsize_i)
                 3'b000:  //byte
-                    wdata = {{$bits(wdata)-8{1'b0}},hwdata_i[7:0]};
+                    //wdata = {{$bits(wdata)-8{1'b0}},hwdata_i[7:0]};
+                    wdata = {{BITS_WDATA-8{1'b0}},hwdata_i[7:0]};
                 3'b001:  //halfword
-                    wdata = {{$bits(wdata)-16{1'b0}},hwdata_i[15:0]};
+                    //wdata = {{$bits(wdata)-16{1'b0}},hwdata_i[15:0]};
+                    wdata = {{BITS_WDATA-16{1'b0}},hwdata_i[15:0]};
                 3'b010:  //word
                     wdata = addr[2]? hwdata_i[63:32] : hwdata_i[31:0];
                 3'b011: //dword
@@ -126,17 +134,17 @@ endgenerate
 
 always_comb begin : response_block
     hreadyout_o = 1'b1;
-    hresp_o = `H_OKAY;
+    hresp_o = `H_OKAY
     //first err cycle, de-assert ready and drive err
     if (err) begin
         hreadyout_o = 1'b0;
-        hresp_o = `H_ERROR;
-    end else if (hold) begin
+        hresp_o = `H_ERROR
+    end else if (hld) begin
         hreadyout_o = 1'b0;
-        hresp_o = `H_OKAY;
+        hresp_o = `H_OKAY
     end else if (err_f) begin
         hreadyout_o = 1'b1;
-        hresp_o = `H_ERROR;
+        hresp_o = `H_ERROR
     end
 end
 

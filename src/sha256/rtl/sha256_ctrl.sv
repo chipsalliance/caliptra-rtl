@@ -97,7 +97,7 @@ module sha256_ctrl #(
 
         //COMPONENT INF
         .dv(sha256_cs),
-        .hold(1'b0), //no holds from sha256
+        .hld(1'b0), //no holds from sha256
         .err(1'b0),
         .write(sha256_we),
         .wdata(sha256_write_data),

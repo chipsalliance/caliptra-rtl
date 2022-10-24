@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-`include "kv_defines.svh"
+//`include "kv_defines.svh"
 
-module kv_doe #(
+module kv_doe 
+    import kv_defines_pkg::*;
+    #(
     parameter SRC_WIDTH = 128
    ,parameter DEST_WIDTH = 128
     //derived params don't change
@@ -89,12 +91,12 @@ logic arc_DOE_WAIT_DOE_WRITE;
 logic arc_DOE_WRITE_DOE_BLOCK;
 logic arc_DOE_WRITE_DOE_DONE;
 
-always_comb running_uds = doe_ctrl_reg.cmd == DOE_UDS;
-always_comb running_fe = doe_ctrl_reg.cmd == DOE_FE;
-always_comb block_done = running_uds ? block_offset == (UDS_NUM_BLOCKS-1) :
-                                       block_offset == (FE_NUM_BLOCKS-1) ;
+always_comb running_uds = (doe_ctrl_reg.cmd == DOE_UDS);
+always_comb running_fe = (doe_ctrl_reg.cmd == DOE_FE);
+always_comb block_done = running_uds ? (block_offset == (UDS_NUM_BLOCKS-1)) :
+                                       (block_offset == (FE_NUM_BLOCKS-1)) ;
 
-always_comb dest_write_done = dest_write_offset[DEST_OFFSET_W-1:0] == DEST_NUM_DWORDS-1;
+always_comb dest_write_done = (dest_write_offset[DEST_OFFSET_W-1:0] == (DEST_NUM_DWORDS-1));
 always_comb incr_dest_sel = (dest_write_offset_nxt == '0) & (dest_write_offset == '1);
 
 //assign arc equations
@@ -145,7 +147,7 @@ always_comb begin : kv_doe_fsm
         end
         DOE_WAIT: begin
             if (arc_DOE_WAIT_DOE_WRITE) kv_doe_fsm_ns = DOE_WRITE;
-            if (arc_DOE_WAIT_DOE_BLOCK) kv_doe_fsm_ns = DOE_BLOCK;
+            else if (arc_DOE_WAIT_DOE_BLOCK) kv_doe_fsm_ns = DOE_BLOCK;
         end
         DOE_WRITE: begin
             dest_write_en = '1;
@@ -172,7 +174,17 @@ always_comb begin : kv_doe_fsm
             dest_write_offset_nxt = '0;
         end
         default: begin
-
+            kv_doe_fsm_ns = kv_doe_fsm_ps;
+            key_write_en = '0;
+            src_write_en = '0;
+            block_offset_nxt = block_offset;
+            block_offset_en = '0;
+            doe_init = '0;
+            doe_next = '0;
+            dest_write_en = '0;
+            dest_write_offset_en ='0;
+            dest_write_offset_nxt = dest_write_offset;
+            flow_done = '0;
         end
     endcase
 end

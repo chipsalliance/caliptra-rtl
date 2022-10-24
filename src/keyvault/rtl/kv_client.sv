@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-`include "kv_defines.svh"
+//`include "kv_defines.svh"
 
-module kv_client #(
+module kv_client 
+    import kv_defines_pkg::*;
+    #(
     parameter KEY_WIDTH = 384
    ,parameter SRC_WIDTH = 384
    ,parameter DEST_WIDTH = 384

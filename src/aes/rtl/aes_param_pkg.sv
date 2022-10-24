@@ -12,6 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+
+`ifndef AES_PARAM_PKG
+`define AES_PARAM_PKG
+
+package aes_param_pkg;
+
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
@@ -55,3 +61,7 @@
   //`define AES_DATA_BUS_64
 
   `define AES_CBC_MODE
+
+`endif
+
+endpackage

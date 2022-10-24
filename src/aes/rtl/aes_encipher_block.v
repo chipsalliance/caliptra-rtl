@@ -44,7 +44,7 @@ module aes_encipher_block(
                           input wire            clk,
                           input wire            reset_n,
 
-                          input wire            next,
+                          input wire            next_cmd,
 
                           input wire            keylen,
                           output wire [3 : 0]   round,
@@ -53,7 +53,7 @@ module aes_encipher_block(
                           output wire [31 : 0]  sboxw,
                           input wire  [31 : 0]  new_sboxw,
 
-                          input wire [127 : 0]  block,
+                          input wire [127 : 0]  block_msg,
                           output wire [127 : 0] new_block,
                           output wire           ready
                          );
@@ -62,7 +62,7 @@ module aes_encipher_block(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam AES_128_BIT_KEY = 1'h0;
+  //localparam AES_128_BIT_KEY = 1'h0;
   localparam AES_256_BIT_KEY = 1'h1;
 
   localparam AES128_ROUNDS = 4'ha;
@@ -83,26 +83,26 @@ module aes_encipher_block(
   //----------------------------------------------------------------
   // Round functions with sub functions.
   //----------------------------------------------------------------
-  function [7 : 0] gm2(input [7 : 0] op);
+  function automatic [7 : 0] gm2(input [7 : 0] op);
     begin
       gm2 = {op[6 : 0], 1'b0} ^ (8'h1b & {8{op[7]}});
     end
   endfunction // gm2
 
-  function [7 : 0] gm3(input [7 : 0] op);
+  function automatic [7 : 0] gm3(input [7 : 0] op);
     begin
       gm3 = gm2(op) ^ op;
     end
   endfunction // gm3
 
-  function [31 : 0] mixw(input [31 : 0] w);
+  function automatic [31 : 0] mixw(input [31 : 0] w_val);
     reg [7 : 0] b0, b1, b2, b3;
     reg [7 : 0] mb0, mb1, mb2, mb3;
     begin
-      b0 = w[31 : 24];
-      b1 = w[23 : 16];
-      b2 = w[15 : 08];
-      b3 = w[07 : 00];
+      b0 = w_val[31 : 24];
+      b1 = w_val[23 : 16];
+      b2 = w_val[15 : 08];
+      b3 = w_val[07 : 00];
 
       mb0 = gm2(b0) ^ gm3(b1) ^ b2      ^ b3;
       mb1 = b0      ^ gm2(b1) ^ gm3(b2) ^ b3;
@@ -113,7 +113,7 @@ module aes_encipher_block(
     end
   endfunction // mixw
 
-  function [127 : 0] mixcolumns(input [127 : 0] data);
+  function automatic [127 : 0] mixcolumns(input [127 : 0] data);
     reg [31 : 0] w0, w1, w2, w3;
     reg [31 : 0] ws0, ws1, ws2, ws3;
     begin
@@ -131,7 +131,7 @@ module aes_encipher_block(
     end
   endfunction // mixcolumns
 
-  function [127 : 0] shiftrows(input [127 : 0] data);
+  function automatic [127 : 0] shiftrows(input [127 : 0] data);
     reg [31 : 0] w0, w1, w2, w3;
     reg [31 : 0] ws0, ws1, ws2, ws3;
     begin
@@ -149,7 +149,7 @@ module aes_encipher_block(
     end
   endfunction // shiftrows
 
-  function [127 : 0] addroundkey(input [127 : 0] data, input [127 : 0] rkey);
+  function automatic [127 : 0] addroundkey(input [127 : 0] data, input [127 : 0] rkey);
     begin
       addroundkey = data ^ rkey;
     end
@@ -275,7 +275,7 @@ module aes_encipher_block(
       old_block          = {block_w0_reg, block_w1_reg, block_w2_reg, block_w3_reg};
       shiftrows_block    = shiftrows(old_block);
       mixcolumns_block   = mixcolumns(shiftrows_block);
-      addkey_init_block  = addroundkey(block, round_key);
+      addkey_init_block  = addroundkey(block_msg, round_key);
       addkey_main_block  = addroundkey(mixcolumns_block, round_key);
       addkey_final_block = addroundkey(shiftrows_block, round_key);
 
@@ -340,6 +340,12 @@ module aes_encipher_block(
 
         default:
           begin
+            block_new   = 128'h0;
+            muxed_sboxw = 32'h0;
+            block_w0_we = 1'b0;
+            block_w1_we = 1'b0;
+            block_w2_we = 1'b0;
+            block_w3_we = 1'b0;
           end
       endcase // case (update_type)
     end // round_logic
@@ -347,7 +353,7 @@ module aes_encipher_block(
 
   //----------------------------------------------------------------
   // sword_ctr
-  //
+  //Not all cases are covered in case statement: default case may be used
   // The subbytes word counter with reset and increase logic.
   //----------------------------------------------------------------
   always @*
@@ -415,15 +421,15 @@ module aes_encipher_block(
         begin
           num_rounds = AES256_ROUNDS;
         end
-      else
+      else // keylen == AES_128_BIT_KEY
         begin
           num_rounds = AES128_ROUNDS;
         end
 
-      case(enc_ctrl_reg)
+      case (enc_ctrl_reg) 
         CTRL_IDLE:
           begin
-            if (next)
+            if (next_cmd)
               begin
                 round_ctr_rst = 1'b1;
                 ready_new     = 1'b0;
@@ -475,6 +481,15 @@ module aes_encipher_block(
 
         default:
           begin
+            sword_ctr_inc = 1'b0;
+            sword_ctr_rst = 1'b0;
+            round_ctr_inc = 1'b0;
+            round_ctr_rst = 1'b0;
+            ready_new     = 1'b0;
+            ready_we      = 1'b0;
+            update_type   = NO_UPDATE;
+            enc_ctrl_new  = CTRL_IDLE;
+            enc_ctrl_we   = 1'b0;
             // Empty. Just here to make the synthesis tool happy.
           end
       endcase // case (enc_ctrl_reg)

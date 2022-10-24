@@ -22,9 +22,11 @@
 // 
 //======================================================================
 
-`include "kv_defines.svh"
+//`include "kv_defines.svh"
 
-module hmac_ctrl #(
+module hmac_ctrl 
+    import kv_defines_pkg::*; 
+    #(
     parameter AHB_DATA_WIDTH = 32,
     parameter AHB_ADDR_WIDTH = 32
 )
@@ -110,7 +112,7 @@ ahb_slv_sif #(
 
     //COMPONENT INF
     .dv(hmac_cs),
-    .hold(1'b0), //no holes from hmac
+    .hld(1'b0), //no holes from hmac
     .err(1'b0), //no errors from hmac
     .write(hmac_we),
     .wdata(hmac_write_data),

@@ -14,6 +14,9 @@
 //
 `ifndef CFG_SV
 `define CFG_SV
+
+package config_pkg;
+
   `define AHB_SLAVES_NUM      4'd10 // Number of slaves AHB
   `define AHB_MASTERS_NUM     4'd1 // Number of masters AHB
   `define AHB_HADDR_SIZE      32 // bit-width AHB address haddr
@@ -81,4 +84,7 @@
 
   `define RV_TOP              `CALIPTRA_RV_TOP.rvtop
 
+endpackage
+
 `endif
+

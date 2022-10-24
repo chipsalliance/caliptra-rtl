@@ -88,7 +88,7 @@ module ecc_top
 
         //COMPONENT INF
         .dv(ecc_cs),
-        .hold('0),
+        .hld('0),
         .err(ecc_reg_err),
         .write(uc_req.write),
         .wdata(uc_req.wdata),
