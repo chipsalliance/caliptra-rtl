@@ -55,8 +55,8 @@ module aes_ctrl
     output kv_write_t kv_write,
 
     // Interrupt
-    output error_intr,
-    output notif_intr
+    output logic error_intr,
+    output logic notif_intr
 );
 
   //----------------------------------------------------------------

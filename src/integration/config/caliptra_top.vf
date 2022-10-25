@@ -68,7 +68,7 @@ ${WORKSPACE}/Caliptra/src/libs/rtl/apb_slv_sif.sv
 ${WORKSPACE}/Caliptra/src/libs/rtl/ahb_slv_sif.sv
 ${WORKSPACE}/Caliptra/src/sha512/rtl/sha512_intr_regs_pkg.sv
 ${WORKSPACE}/Caliptra/src/sha512/rtl/sha512_ctrl.sv
-${WORKSPACE}/Caliptra/src/sha512/rtl/sha512.v
+${WORKSPACE}/Caliptra/src/sha512/rtl/sha512.sv
 ${WORKSPACE}/Caliptra/src/sha512/rtl/sha512_param.sv
 ${WORKSPACE}/Caliptra/src/sha512/rtl/sha512_core.v
 ${WORKSPACE}/Caliptra/src/sha512/rtl/sha512_h_constants.v

@@ -55,8 +55,8 @@ module hmac_ctrl
     input kv_resp_t kv_resp,
 
     // Interrupt
-    output error_intr,
-    output notif_intr
+    output logic error_intr,
+    output logic notif_intr
 );
 
     //----------------------------------------------------------------

@@ -63,8 +63,8 @@ module aes_cbc
    output wire [DATA_WIDTH-1 : 0] read_data,
 
    // Interrupt Outputs
-   output error_intr,
-   output notif_intr,
+   output logic error_intr,
+   output logic notif_intr,
 
    //interface with kv
    output kv_write_t kv_write
