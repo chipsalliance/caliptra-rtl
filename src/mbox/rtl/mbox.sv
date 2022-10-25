@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-`include "mbox_defines.svh"
-
-module mbox #(
+module mbox 
+    import mbox_pkg::*;
+    #(
      parameter DATA_W = 32
     ,parameter SIZE_KB = 128
     )
@@ -254,6 +254,12 @@ always_comb hwif_in.mbox_dataout.dataout.next = update_dataout ? sram_wdata : sr
 //clear the lock when moving from execute to idle
 always_comb hwif_in.mbox_lock.lock.hwclr = arc_MBOX_EXECUTE_SOC_MBOX_IDLE | arc_MBOX_EXECUTE_UC_MBOX_IDLE;
 
+
+logic s_cpuif_req_stall_wr_nc;
+logic s_cpuif_req_stall_rd_nc;
+logic s_cpuif_rd_ack_nc;
+logic s_cpuif_wr_ack_nc;
+
 mbox_csr
 mbox_csr1(
     .clk(clk),
@@ -263,12 +269,12 @@ mbox_csr1(
     .s_cpuif_req_is_wr(req_data.write),
     .s_cpuif_addr(req_data.addr[5:0]),
     .s_cpuif_wr_data(req_data.wdata),
-    .s_cpuif_req_stall_wr(),
-    .s_cpuif_req_stall_rd(),
-    .s_cpuif_rd_ack(),
+    .s_cpuif_req_stall_wr(s_cpuif_req_stall_wr_nc),
+    .s_cpuif_req_stall_rd(s_cpuif_req_stall_rd_nc),
+    .s_cpuif_rd_ack(s_cpuif_rd_ack_nc),
     .s_cpuif_rd_err(read_error),
     .s_cpuif_rd_data(csr_rdata),
-    .s_cpuif_wr_ack(),
+    .s_cpuif_wr_ack(s_cpuif_wr_ack_nc),
     .s_cpuif_wr_err(write_error),
 
     .hwif_in(hwif_in),

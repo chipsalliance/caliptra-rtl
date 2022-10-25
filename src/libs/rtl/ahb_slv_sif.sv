@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-`include "caliptra_sva.svh"
 `include "ahb_defines.svh"
 
 module ahb_slv_sif #(

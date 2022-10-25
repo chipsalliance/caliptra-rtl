@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 addrmap mbox_reg {
-    desc="address maps for mbox arch register and fuse space";
+    desc="Address map for mailbox architectural registers and fuse space";
 
     addressing = regalign; // This is the default if not specified
     lsb0 = true; // lsb0 property is implicit/default. See docs for
@@ -40,26 +40,51 @@ addrmap mbox_reg {
     field secret {sw = w1; hw = r; hwclr; resetsignal = hard_reset_b;};
     field key {sw = w; swwe; hw = rw; wel; hwclr;};
 
-    reg {rw_ro_sticky error_code[32]=0; } HW_ERROR_FATAL;
-    reg {rw_ro_sticky error_code[32]=0; } HW_ERROR_NON_FATAL;
-    reg {rw_ro_sticky error_code[32]=0; } FW_ERROR_FATAL;
-    reg {rw_ro_sticky error_code[32]=0; } FW_ERROR_NON_FATAL;
-    reg {rw_ro_sticky error_code[32]=0; } HW_ERROR_ENC;
-    reg {rw_ro_sticky error_code[32]=0; } FW_ERROR_ENC;
-    reg {rw_ro status[32]=0;} BOOT_STATUS;
-    reg {rw_ro status[30]=0;
+    reg {name = "Hardware Error Fatal";
+        desc = "Indicates fatal hardware error";
+        rw_ro_sticky error_code[32]=0; } HW_ERROR_FATAL;
+    reg {name = "Hardware Error Non-Fatal";
+        desc = "Indicates non-fatal hardware error";
+        rw_ro_sticky error_code[32]=0; } HW_ERROR_NON_FATAL;
+    reg {name = "Firmware Error Fatal";
+        desc = "Indicates fatal firmware error";
+        rw_ro_sticky error_code[32]=0; } FW_ERROR_FATAL;
+    reg {name = "Firmware Error Non-Fatal";
+        desc = "Indicates non-fatal firmware error";
+        rw_ro_sticky error_code[32]=0; } FW_ERROR_NON_FATAL;
+    reg {name = "Hardware Error Encoding";
+        desc = "Encoded error value for hardware errors";
+        rw_ro_sticky error_code[32]=0; } HW_ERROR_ENC;
+    reg {name = "Firmware Error Encoding";
+        desc = "Encoded error value for firmware errors";
+        rw_ro_sticky error_code[32]=0; } FW_ERROR_ENC;
+    reg {name = "Boot Status";
+        desc = "Reports the boot status";
+        rw_ro status[32]=0;} BOOT_STATUS;
+    reg {name = "Flow Status";
+        desc = "Reports the status of the firmware flows";
+        rw_ro status[30]=0;
          field {sw=rw; swwel = soc_req; hw=r;} ready_for_fw[1]=0;
          field {sw=rw; swwel = soc_req; hw=r;} ready_for_runtime[1]=0;} FLOW_STATUS;
 
-    reg {field {sw=w; swwel = soc_req; hw=r; singlepulse;} clear=0;} CLEAR_SECRETS;
+    reg {name = "Clear Secrets";
+        desc = "Firmware writable register that will clear flops containing device secrets";
+        field {sw=w; swwel = soc_req; hw=r; singlepulse;} clear=0;} CLEAR_SECRETS;
 
-    reg {field {sw=rw; hw=w;} generic_wires[32];} generic_input_wires[2];
-    reg {field {sw=rw; hw=r;} generic_wires[32];} generic_output_wires[2];
+    reg {name = "Generic Input Wires";
+        desc = "Generic input wires connected to SoC interface";
+        field {sw=rw; hw=w;} generic_wires[32];} generic_input_wires[2];
+    reg {name = "Generic Output Wires";
+        desc = "Generic output wires connected to SoC interface";
+        field {sw=rw; hw=r;} generic_wires[32];} generic_output_wires[2];
 
 
     //fuses
-    reg {secret seed[32]=0;} uds_seed[12] @0x200;
-    reg {secret seed[32]=0;} field_entropy[32];
+    reg {name = "Unique Device Secret";
+        desc = "Obfuscated UDS";
+        secret seed[32]=0;} uds_seed[12] @0x200;
+    reg {name = "Field Entropy";
+        desc = "Obfuscated Field Entropy";secret seed[32]=0;} field_entropy[32];
     //TODO review write once and stickiness of fuses
     reg {fuse hash[32]=0;} key_manifest_pk_hash_0[12];
     reg {fuse hash[32]=0;} key_manifest_pk_hash_1[12];
@@ -70,10 +95,12 @@ addrmap mbox_reg {
     reg {fuse svn[32]=0;} boot_loader_svn;
     reg {fuse svn[32]=0;} runtime_svn[4];
     reg {fuse dis[1]=0;} anti_rollback_disable;
-    reg {fuse cert[32]=0;} ieee_idevid_cert_chain;
+    reg {fuse cert[32]=0;} ieee_idevid_cert_chain[24];
     reg {field {sw=rw; hw=r;} done[1]=0;} fuse_done;
 
-    reg {key key[32];} obf_key[8];
+    reg {name = "De-Obfuscation Key";
+        desc = "Stored De-Obfuscation key, not accessible by software";
+        key key[32];} obf_key[8];
 
 
     ////////////////////////////////////////////////////////////////

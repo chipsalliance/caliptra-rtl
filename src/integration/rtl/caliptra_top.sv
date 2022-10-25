@@ -13,13 +13,11 @@
 // limitations under the License.
 //
 
-//`include "config_pkg.sv"
-//`include "common_defines.vh"
-
 module caliptra_top 
     import el2_swerv_pkg::*;
     import config_pkg::*;
     import kv_defines_pkg::*;
+    import mbox_pkg::*;
     (
     input bit                          clk,
 

@@ -34,22 +34,22 @@ void main(void) {
 
         char* DCCM = (char *) RV_DCCM_SADR;
         char* ICCM = (char *) RV_ICCM_SADR;
-        uint32_t * aes_notif_trig    = (uint32_t *) (AES_ADDR_INTR_START + AES_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
-        uint32_t * ecc_notif_trig    = (uint32_t *) (ECC_BASE_ADDR + ECC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
-        uint32_t * hmac_notif_trig   = (uint32_t *) (HMAC_ADDR_INTR_START + HMAC_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
-        uint32_t * sha512_notif_trig = (uint32_t *) (SHA512_ADDR_INTR_START + SHA512_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
-        uint32_t * mbox_error_trig   = (uint32_t *) (MBOX_REG_BASE + MBOX_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R);
-        uint32_t * mbox_notif_trig   = (uint32_t *) (MBOX_REG_BASE + MBOX_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
+        uint32_t * aes_notif_trig    = (uint32_t *) (CLP_AES_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
+        uint32_t * ecc_notif_trig    = (uint32_t *) (CLP_ECC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
+        uint32_t * hmac_notif_trig   = (uint32_t *) (CLP_HMAC_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
+        uint32_t * sha512_notif_trig = (uint32_t *) (CLP_SHA512_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
+        uint32_t * mbox_error_trig   = (uint32_t *) (CLP_MBOX_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R);
+        uint32_t * mbox_notif_trig   = (uint32_t *) (CLP_MBOX_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
 
-        uint32_t * sha512_notif_ctr         = (uint32_t *) (SHA512_ADDR_INTR_START + SHA512_INTR_REGS_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
-        uint32_t * hmac_notif_ctr           = (uint32_t *) (HMAC_ADDR_INTR_START + HMAC_INTR_REGS_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
-        uint32_t * ecc_notif_ctr            = (uint32_t *) (ECC_BASE_ADDR + ECC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
-        uint32_t * aes_notif_ctr            = (uint32_t *) (AES_ADDR_INTR_START + AES_INTR_REGS_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
-        uint32_t * mbox_error_internal_ctr  = (uint32_t *) (MBOX_REG_BASE + MBOX_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R);
-        uint32_t * mbox_error_inv_dev_ctr   = (uint32_t *) (MBOX_REG_BASE + MBOX_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_R);
-        uint32_t * mbox_error_cmd_fail_ctr  = (uint32_t *) (MBOX_REG_BASE + MBOX_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_R);
-        uint32_t * mbox_error_bad_fuse_ctr  = (uint32_t *) (MBOX_REG_BASE + MBOX_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_R);
-        uint32_t * mbox_notif_cmd_avail_ctr = (uint32_t *) (MBOX_REG_BASE + MBOX_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_R);
+        uint32_t * sha512_notif_ctr         = (uint32_t *) (CLP_SHA512_INTR_REGS_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
+        uint32_t * hmac_notif_ctr           = (uint32_t *) (CLP_HMAC_INTR_REGS_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
+        uint32_t * ecc_notif_ctr            = (uint32_t *) (CLP_ECC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
+        uint32_t * aes_notif_ctr            = (uint32_t *) (CLP_AES_INTR_REGS_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
+        uint32_t * mbox_error_internal_ctr  = (uint32_t *) (CLP_MBOX_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R);
+        uint32_t * mbox_error_inv_dev_ctr   = (uint32_t *) (CLP_MBOX_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_R);
+        uint32_t * mbox_error_cmd_fail_ctr  = (uint32_t *) (CLP_MBOX_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_R);
+        uint32_t * mbox_error_bad_fuse_ctr  = (uint32_t *) (CLP_MBOX_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_R);
+        uint32_t * mbox_notif_cmd_avail_ctr = (uint32_t *) (CLP_MBOX_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_R);
 
         uint32_t sha512_intr_count = 0;
         uint32_t hmac_intr_count = 0;

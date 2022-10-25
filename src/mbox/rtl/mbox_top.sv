@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-`include "mbox_defines.svh"
-
-module mbox_top #(
+module mbox_top 
+    import mbox_pkg::*;
+    #(
      parameter APB_ADDR_WIDTH = 18
     ,parameter APB_DATA_WIDTH = 32
     ,parameter APB_USER_WIDTH = 32
@@ -35,8 +35,8 @@ module mbox_top #(
     output logic mailbox_data_avail,
     output logic mailbox_flow_done,
 
-    input logic  [63:0] generic_input_wires,
-    output logic [63:0] generic_output_wires,
+    input logic  [1:0][31:0] generic_input_wires,
+    output logic [1:0][31:0] generic_output_wires,
 
     //SoC APB Interface
     input logic [APB_ADDR_WIDTH-1:0]     paddr_i,
@@ -148,7 +148,7 @@ mailbox_apb_slv1 (
     .PCLK(clk),
     .PRESETn(cptra_rst_b),
     .PADDR(paddr_i),
-    .PPROT('x),
+    .PPROT('0),
     .PSEL(psel_i),
     .PENABLE(penable_i),
     .PWRITE(pwrite_i),
@@ -161,7 +161,7 @@ mailbox_apb_slv1 (
 
     //COMPONENT INF
     .dv(soc_req_dv),
-    .hold(soc_req_hold),
+    .req_hold(soc_req_hold),
     .write(soc_req.write),
     .user(soc_req.user),
     .wdata(soc_req.wdata),
@@ -277,13 +277,14 @@ always_comb begin
     end
 
     //flow status
+    mailbox_flow_done = '0;
     ready_for_fw_push = mbox_reg_hwif_out.FLOW_STATUS.ready_for_fw.value;
     ready_for_runtime = mbox_reg_hwif_out.FLOW_STATUS.ready_for_runtime.value;
 
     //generic wires
     for (int i = 0; i < 2; i++) begin
-        generic_output_wires[i*32+:32] = mbox_reg_hwif_out.generic_output_wires[i].generic_wires.value;
-        mbox_reg_hwif_in.generic_input_wires[i].generic_wires.next = generic_input_wires[i*32+:32];
+        generic_output_wires[i] = mbox_reg_hwif_out.generic_output_wires[i].generic_wires.value;
+        mbox_reg_hwif_in.generic_input_wires[i].generic_wires.next = generic_input_wires[i];
     end
 end
 
@@ -296,6 +297,11 @@ always_comb mbox_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_avail
 
 
 
+logic s_cpuif_req_stall_wr_nc;
+logic s_cpuif_req_stall_rd_nc;
+logic s_cpuif_rd_ack_nc;
+logic s_cpuif_wr_ack_nc;
+
 mbox_reg mbox_reg1 (
     .clk(clk),
     .rst('0),
@@ -304,12 +310,12 @@ mbox_reg mbox_reg1 (
     .s_cpuif_req_is_wr(mbox_reg_req_data.write),
     .s_cpuif_addr(mbox_reg_req_data.addr[mbox_reg_pkg::MBOX_REG_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data(mbox_reg_req_data.wdata),
-    .s_cpuif_req_stall_wr(),
-    .s_cpuif_req_stall_rd(),
-    .s_cpuif_rd_ack(),
+    .s_cpuif_req_stall_wr(s_cpuif_req_stall_wr_nc),
+    .s_cpuif_req_stall_rd(s_cpuif_req_stall_rd_nc),
+    .s_cpuif_rd_ack(s_cpuif_rd_ack_nc),
     .s_cpuif_rd_err(mbox_reg_read_error),
     .s_cpuif_rd_data(mbox_reg_rdata),
-    .s_cpuif_wr_ack(),
+    .s_cpuif_wr_ack(s_cpuif_wr_ack_nc),
     .s_cpuif_wr_err(mbox_reg_write_error),
 
     .hwif_in(mbox_reg_hwif_in),

@@ -21,11 +21,7 @@
   #define CALIPTRA_DEFINES_H
 
 #include "defines.h"
-#include "mbox_reg.h"
-#include "aes_intr_regs.h"
-#include "ecc_reg.h"
-#include "hmac_intr_regs.h"
-#include "sha512_intr_regs.h"
+#include "caliptra_reg.h"
 
 
 /* ---- Key Vault ---- */

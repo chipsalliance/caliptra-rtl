@@ -37,45 +37,71 @@ addrmap mbox_csr {
     // set on read, indicate to mailbox when modified
     // clear comes from mailbox control
     reg {
-        desc="lock register for mailbox access";
+        name="Mailbox Lock";
+        desc="Mailbox lock register for mailbox access, reading 0 will set the lock";
         field {rset; sw=r; hw=r; hwclr=true; swmod=true;} lock=0;
     } mbox_lock;
 
     // user register
     // store user from interface when setting lock
     reg {
-        desc="store user that locked the mailbox";
+        name="Mailbox User";
+        desc="Stores the user that locked the mailbox";
         field {sw=r; hw=rw; we=lock_set;} user[32]=0;
     } mbox_user;
 
     reg {
-        desc="command requested for data in mailbox";
+        name="Mailbox Command";
+        desc="Command requested for data in mailbox";
         field {sw=rw; hw=na; swwe=valid_user; swmod=true;} command[32]=0;
     } mbox_cmd;
 
     reg {
-        desc="data length for mailbox access";
+        name="Mailbox Data Length";
+        desc="Data length for mailbox access";
         field {sw=rw; hw=na; swwe=valid_user; swmod=true;} length[32]=0;
     } mbox_dlen;
 
     reg {
-        desc="data in register, write the next data to mailbox";
+        name="Mailbox DataIn";
+        desc="Data in register, write the next data to mailbox";
         field {sw=rw; hw=na; swwe=valid_user; swmod=true;} datain[32];
     } mbox_datain;
 
     reg {
-        desc="data out register, read the next data from mailbox";
+        name="Mailbox DataOut";
+        desc="Data out register, read the next data from mailbox";
         field {sw=rw; hw=w; we; swwe; swacc=true;} dataout[32];
     } mbox_dataout;
 
     reg {
-        desc="mailbox execution register";
+        name="Mailbox Execute";
+        desc="Mailbox execute register indicates to receiver that the sender is done";
         field {sw=rw; hw=r;} execute=0;
     } mbox_execute;
 
     reg {
-        desc="mailbox status register";
-        field {sw=rw; hw=na;} status[2]=0;
+        name="Mailbox Status";
+        desc="Status of the mailbox command";
+        field {
+            name = "Mailbox Status";
+            desc = "Indicates the status of mailbox command";
+
+            enum mbox_status_e {
+                CMD_BUSY = 2'd0 {
+                    desc = "Receiver is busy, command is not yet complete.";
+                };
+                DATA_READY = 2'd1 {
+                    desc = "Requested data is ready in the mailbox.";
+                };
+                CMD_COMPLETE = 2'd2 {
+                    desc = "Requested command is complete.";
+                };
+                CMD_FAILURE = 2'd3 {
+                    desc = "The requested command experienced a failure.";
+                };
+            };
+            sw=rw; hw=na; encode = mbox_status_e;} status[2]=0;
     } mbox_status;
 
 };

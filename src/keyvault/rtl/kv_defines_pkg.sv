@@ -17,8 +17,6 @@
 
 package kv_defines_pkg;
 
-`include "caliptra_sva.svh"
-
 parameter KV_NUM_DWORDS = 16; //number of dwords per key
 parameter KV_NUM_KEYS = 8;
 parameter KV_NUM_PCR = 8;

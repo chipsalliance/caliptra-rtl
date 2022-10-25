@@ -2,11 +2,11 @@ Magic 271485
 Revision Verdi_R-2020.12-SP2-7
 
 ; Window Layout <x> <y> <width> <height> <signalwidth> <valuewidth>
-viewPort 0 25 2560 1105 191 65
+viewPort 0 25 2560 856 371 1
 
 ; File list:
 ; openDirFile [-d delimiter] [-s time_offset] [-rf auto_bus_rule_file] path_name file_name
-openDirFile -d / "" "/home/scratch/designinfra/users/users/michnorris/workspaces/clp_dev2_mjn-c5c64b175f1a175204ebdb720b91764a/michnorris/simland/caliptra_top_tb/caliptra_demo/20220927.140903/caliptra_demo.fsdb"
+openDirFile -d / "" "/home/scratch/designinfra/users/users/michnorris/workspaces/clp_dev_mjn-8fe30323b2d2ec5bafc2c88ca8e6a53b/michnorris/simland/caliptra_top_tb/caliptra_demo/20221011.133529/caliptra_demo.fsdb"
 
 ; file time scale:
 ; fileTimeScale ### s|ms|us|ns|ps
@@ -16,16 +16,20 @@ signalSpacing 5
 
 ; windowTimeUnit is used for zoom, cursor & marker
 ; waveform viewport range
-zoom 0.000000 109524400.000000
-cursor 40455000.000000
+zoom 125374.395187 329247.385782
+cursor 1105000.000000
 marker 0.000000
 
 ; user define markers
 ; userMarker time_pos marker_name color linestyle
+userMarker 205000 "Assert ready_for_fuses" ID_GREEN5 long_dashed
+userMarker 195000 "De-Assert cptra_rst_b" ID_GREEN5 long_dashed
+userMarker 145000 "Assert cptra_pwrgood" ID_GREEN5 long_dashed
+
 ; visible top row signal index
-top 0
+top 6
 ; marker line index
-markerPos 10
+markerPos 11
 
 ; event list
 ; addEvent event_name event_expression
@@ -46,7 +50,7 @@ curSTATUS ByChange
 
 
 addGroup "Boot Sequence"
-activeDirFile "" "/home/scratch/designinfra/users/users/michnorris/workspaces/clp_dev2_mjn-c5c64b175f1a175204ebdb720b91764a/michnorris/simland/caliptra_top_tb/caliptra_demo/20220927.140903/caliptra_demo.fsdb"
+activeDirFile "" "/home/scratch/designinfra/users/users/michnorris/workspaces/clp_dev_mjn-8fe30323b2d2ec5bafc2c88ca8e6a53b/michnorris/simland/caliptra_top_tb/caliptra_demo/20221011.133529/caliptra_demo.fsdb"
 addSignal -h 15 /caliptra_top_tb/caliptra_top_dut/clk
 addSignal -h 15 -holdScope cptra_pwrgood
 addSignal -h 15 -holdScope cptra_rst_b
@@ -57,6 +61,14 @@ addSignal -h 15 /caliptra_top_tb/caliptra_top_dut/ready_for_fw_push
 addSignal -h 15 -holdScope ready_for_runtime
 addSignal -h 15 /caliptra_top_tb/caliptra_top_dut/mbox_top1/mbox_reg1/hwif_out.uds_seed[0:11]
 addSignal -h 15 -holdScope hwif_out.field_entropy[0:31]
+addGroup "APB Interface - Write Fuses"
+addSignal -h 15 /caliptra_top_tb/core_clk
+addSignal -h 15 /caliptra_top_tb/caliptra_top_dut/PSEL
+addSignal -h 15 -holdScope PENABLE
+addSignal -h 15 /caliptra_top_tb/PWRITE
+addSignal -h 15 /caliptra_top_tb/caliptra_top_dut/PADDR[31:0]
+addSignal -h 15 -holdScope PWDATA[31:0]
+addSignal -h 15 /caliptra_top_tb/PRDATA[31:0]
 addGroup "Deobfuscation"
 addSignal -h 15 -UNSIGNED /caliptra_top_tb/caliptra_top_dut/aes/aes_inst/kv_doe1/doe_ctrl_reg.cmd[1:0]
 addSignal -h 15 -UNSIGNED -holdScope kv_doe_fsm_ps[2:0]
@@ -66,12 +78,10 @@ addSignal -h 15 -holdScope next
 addSignal -h 15 -holdScope result_valid
 addSignal -expanded -h 15 /caliptra_top_tb/caliptra_top_dut/aes/aes_inst/kv_write
 addSignal -h 15 -holdScope kv_write.dest_wr_vld
-addSignal -h 15 -holdScope kv_write.dest_addr[2:0]
-addSignal -expanded -h 15 /caliptra_top_tb/caliptra_top_dut/aes/aes_inst/kv_doe1/doe_ctrl_reg
 addSignal -h 15 /caliptra_top_tb/caliptra_top_dut/key_vault1/kv_reg1/hwif_out.key_entry[0][0:15]
 addSignal -h 15 -holdScope hwif_out.key_entry[6][0:15]
 addSignal -h 15 -holdScope hwif_out.key_entry[7][0:15]
-addGroup "HMAC"
+addGroup "CDI LDEVID"
 addSignal -h 15 /caliptra_top_tb/caliptra_top_dut/hmac/hmac_inst/kv_client_hmac/client_ctrl_reg.key_sel_en
 addSignal -h 15 -holdScope client_ctrl_reg.key_done
 addSignal -h 15 -holdScope client_ctrl_reg.src_sel_en
@@ -80,12 +90,23 @@ addSignal -h 15 -holdScope client_ctrl_reg.dest_sel_en
 addSignal -h 15 -holdScope client_ctrl_reg.dest_done
 addSignal -h 15 /caliptra_top_tb/caliptra_top_dut/hmac/hmac_inst/init_reg
 addSignal -h 15 -holdScope next_reg
-addSignal -h 15 -holdScope kv_write
+addSignal -h 15 /caliptra_top_tb/caliptra_top_dut/hmac/hmac_inst/core/key[383:0]
+addSignal -h 15 -holdScope block[1023:0]
+addSignal -h 15 -holdScope tag[383:0]
+addSignal -expanded -h 15 /caliptra_top_tb/caliptra_top_dut/hmac/hmac_inst/kv_write
+addSignal -h 15 -holdScope kv_write.dest_wr_vld
+addSignal -h 15 -holdScope kv_write.dest_is_pcr
+addSignal -h 15 -holdScope kv_write.dest_addr[2:0]
+addSignal -h 15 -holdScope kv_write.dest_offset[3:0]
+addSignal -h 15 -holdScope kv_write.dest_valid[2:0]
 addGroup "APB Interface"
+addSignal -h 15 /caliptra_top_tb/core_clk
 addSignal -h 15 /caliptra_top_tb/caliptra_top_dut/PSEL
 addSignal -h 15 -holdScope PENABLE
-addSignal -h 15 -holdScope PADDR[31:0]
+addSignal -h 15 /caliptra_top_tb/PWRITE
+addSignal -h 15 /caliptra_top_tb/caliptra_top_dut/PADDR[31:0]
 addSignal -h 15 -holdScope PWDATA[31:0]
+addSignal -h 15 /caliptra_top_tb/PRDATA[31:0]
 addGroup "SOC Mailbox Requests"
 addSignal -h 15 /caliptra_top_tb/caliptra_top_dut/mbox_top1/mbox_arb1/soc_req_dv
 addSignal -h 15 -holdScope soc_req_hold

@@ -22,10 +22,9 @@
 // 
 //======================================================================
 
-//`include "kv_defines.svh"
 
 module hmac_ctrl 
-    import kv_defines_pkg::*; 
+    import kv_defines_pkg::*;
     #(
     parameter AHB_DATA_WIDTH = 32,
     parameter AHB_ADDR_WIDTH = 32

@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-`include "caliptra_sva.svh"
-
 module apb_slv_sif #(
     parameter DATA_WIDTH = 32
    ,parameter ADDR_WIDTH = 32
@@ -38,7 +36,7 @@ module apb_slv_sif #(
 
     //COMPONENT INF
     output logic                       dv,
-    input  logic                       hold,
+    input  logic                       req_hold,
     output logic                       write,
     output logic [USER_WIDTH-1:0]      user,
     output logic [DATA_WIDTH-1:0]      wdata,
@@ -79,7 +77,7 @@ end
 always_comb access_phase = PSEL & PENABLE;
 
 //drive ready if no hold from component
-always_comb PREADY = (dv & access_phase) ? ~hold : '1;
+always_comb PREADY = (dv & access_phase) ? ~req_hold : '1;
 //drive read data from component
 always_comb PRDATA = (dv & access_phase) ? rdata : '0;
 //drive error from component for valid access, drive error for invalid access phase

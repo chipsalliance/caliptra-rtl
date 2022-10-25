@@ -206,7 +206,7 @@ always_comb kv_write.dest_data = dest_write_en ? dest_data[(DEST_NUM_DWORDS-1) -
 always_comb doe_flow_ip = kv_doe_fsm_ps != DOE_IDLE;
 //pick uds or fe based on command
 always_comb src_write_data = running_uds ? obf_uds_seed[block_offset] : 
-                             running_fe  ? obf_field_entropy[block_offset] : 'x;
+                             running_fe  ? obf_field_entropy[block_offset] : '0;
 
 //state flops
 always_ff @(posedge clk or negedge rst_b) begin

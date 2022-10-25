@@ -20,7 +20,7 @@ targets:
       - $COMPILE_ROOT/rtl/config_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_top.sv
       - $COMPILE_ROOT/rtl/caliptra_top_dummy.sv
-      - $COMPILE_ROOT/rtl/ahb_sif.sv 
+      - $COMPILE_ROOT/rtl/ahb_sif.sv
     tops: [caliptra_top_dummy]
   rtl_lint:
     waiver_files:

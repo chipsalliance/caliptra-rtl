@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-`include "mbox_defines.svh"
-
-module mbox_boot_fsm (
+module mbox_boot_fsm 
+    import mbox_pkg::*;
+    (
     input logic clk,
     input logic cptra_pwrgood,
     input logic cptra_rst_b,
@@ -38,7 +38,7 @@ logic propagate_reset_en;
 logic fsm_synch_rst_b;
 
 //move to fuse state when SoC signals pwrgood and de-asserts reset
-always_comb arc_BOOT_IDLE_BOOT_FUSE = cptra_pwrgood && cptra_rst_b;
+always_comb arc_BOOT_IDLE_BOOT_FUSE = cptra_pwrgood;
 
 //move from fuse state to done when fuse done register is set
 always_comb arc_BOOT_FUSE_BOOT_DONE = fuse_done;
@@ -49,6 +49,7 @@ always_comb arc_BOOT_DONE_BOOT_IDLE = '0;
 always_comb begin
     boot_fsm_ns = boot_fsm_ps;
     ready_for_fuses = '0;
+    propagate_reset_en = '0;
     unique casez (boot_fsm_ps)
         BOOT_IDLE: begin
             if (arc_BOOT_IDLE_BOOT_FUSE) begin
@@ -65,6 +66,8 @@ always_comb begin
             if (arc_BOOT_DONE_BOOT_IDLE) begin
                 boot_fsm_ns = BOOT_IDLE;
             end
+            //propagate reset de-assertion from synchronizer when boot fsm is in BOOT_DONE state
+            propagate_reset_en = 1'b1;
         end
         default: begin
             boot_fsm_ns = boot_fsm_ps;
@@ -73,13 +76,11 @@ always_comb begin
 end
 
 //uC reset generation
-//propagate reset de-assertion from synchronizer when boot fsm is in BOOT_DONE state
-always_comb propagate_reset_en = boot_fsm_ps == BOOT_DONE;
 
 //next state -> present state
 //reset boot fsm to idle on cptra_rst_b
 always_ff @(posedge clk or negedge cptra_rst_b) begin
-    if (!cptra_rst_b) begin
+    if (~cptra_rst_b) begin
         boot_fsm_ps <= BOOT_IDLE;
         fsm_synch_rst_b <= '0;
         cptra_uc_rst_b <= '0;
@@ -88,7 +89,7 @@ always_ff @(posedge clk or negedge cptra_rst_b) begin
         boot_fsm_ps <= boot_fsm_ns;
         fsm_synch_rst_b <= propagate_reset_en ? '1 : fsm_synch_rst_b;
         cptra_uc_rst_b <= fsm_synch_rst_b;
-    end 
+    end
 end
 
 `ASSERT_KNOWN(ERR_FSM_ARC_X, {arc_BOOT_IDLE_BOOT_FUSE,arc_BOOT_FUSE_BOOT_DONE}, clk, cptra_rst_b)

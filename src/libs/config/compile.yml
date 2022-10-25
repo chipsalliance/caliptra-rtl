@@ -4,7 +4,7 @@ targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/caliptra_sva.svh
+      - $COMPILE_ROOT/rtl/caliptra_sva_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_sram.sv
       - $COMPILE_ROOT/rtl/caliptra_ahb_srom.sv
       - $COMPILE_ROOT/rtl/apb_slv_sif.sv

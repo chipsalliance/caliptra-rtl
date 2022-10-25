@@ -469,26 +469,34 @@ module ecc_top_tb #(
     
       start_time = cycle_ctr;
 
+      $display("*** TC %0d writing seed value %0h", tc_number, test_vector.seed);
       write_block(ADDR_SEED0, test_vector.seed);
+      $display("*** TC %0d writing IV value %0h", tc_number, test_vector.IV);
       write_block(ADDR_IV0, test_vector.IV);
 
+      $display("*** TC %0d starting ECC keygen flow", tc_number);
       trig_ECC(KEYGEN);
       #(CLK_PERIOD);
       
       wait_ready();
 
+      $display("*** TC %0d reading PRIVATE KEY", tc_number);
       read_block(ADDR_PRIVKEY0);
       privkey = reg_read_data;
 
+      $display("*** TC %0d reading PUBLIC KEY X", tc_number);
       read_block(ADDR_PUBKEYX0);
       pubkey.x = reg_read_data;
 
+      $display("*** TC %0d reading PUBLIC KEY Y", tc_number);
       read_block(ADDR_PUBKEYY0);
       pubkey.y = reg_read_data;
       
       end_time = cycle_ctr - start_time;
       $display("*** keygen test processing time = %01d cycles.", end_time);
-      $display("privkey    : 0x%96x", test_vector.privkey);
+      $display("privkey    : 0x%96x", privkey);
+      $display("pubkeyx    : 0x%96x", pubkey.x);
+      $display("pubkeyy    : 0x%96x", pubkey.y);
 
       if ((privkey == test_vector.privkey) & (pubkey == test_vector.pubkey))
         begin
@@ -530,18 +538,24 @@ module ecc_top_tb #(
 
       start_time = cycle_ctr;
 
+      $display("*** TC %0d writing message value %0h", tc_number, test_vector.hashed_msg);
       write_block(ADDR_MSG0, test_vector.hashed_msg);
+      $display("*** TC %0d writing private key value %0h", tc_number, test_vector.privkey);
       write_block(ADDR_PRIVKEY0, test_vector.privkey);
+      $display("*** TC %0d writing IV value %0h", tc_number, test_vector.IV);
       write_block(ADDR_IV0, test_vector.IV);
 
+      $display("*** TC %0d starting ECC signing flow", tc_number);
       trig_ECC(SIGN);
       #(CLK_PERIOD);
 
       wait_ready();
 
+      $display("*** TC %0d reading R value", tc_number);
       read_block(ADDR_SIGNR0);
       R = reg_read_data;
 
+      $display("*** TC %0d reading S value", tc_number);
       read_block(ADDR_SIGNS0);
       S = reg_read_data;
       
@@ -588,17 +602,24 @@ module ecc_top_tb #(
 
       start_time = cycle_ctr;
 
+      $display("*** TC %0d writing message value %0h", tc_number, test_vector.hashed_msg);
       write_block(ADDR_MSG0, test_vector.hashed_msg);
+      $display("*** TC %0d writing PUBLIC KEY X value %0h", tc_number, test_vector.pubkey.x);
       write_block(ADDR_PUBKEYX0, test_vector.pubkey.x);
+      $display("*** TC %0d writing PUBLIC KEY Y value %0h", tc_number, test_vector.pubkey.y);
       write_block(ADDR_PUBKEYY0, test_vector.pubkey.y);
+      $display("*** TC %0d writing R value %0h", tc_number, test_vector.R);
       write_block(ADDR_SIGNR0, test_vector.R);
+      $display("*** TC %0d writing S value %0h", tc_number, test_vector.S);
       write_block(ADDR_SIGNS0, test_vector.S);
 
+      $display("*** TC %0d starting ECC verify flow", tc_number);
       trig_ECC(VERIFY);
       #(CLK_PERIOD);
 
       wait_ready();
 
+      $display("*** TC %0d reading VERIFY R value", tc_number);
       read_block(ADDR_VERIFY_R0);
       verify_r = reg_read_data;
       

@@ -26,7 +26,7 @@
 #ifndef CALIPTRA_ISR_H
     #define CALIPTRA_ISR_H
 
-#include "caliptra_defines.h"
+#include "caliptra_reg.h"
 #include <stdint.h>
 #include "printf.h"
 
@@ -41,7 +41,7 @@ void init_interrupts(void);
 // otherwise generic ISR that gets laid down by the parameterized macro "nonstd_swerv_isr"
 inline void service_aes_error_intr() {return;}
 inline void service_aes_notif_intr() {
-    uint32_t * reg = (uint32_t *) (AES_ADDR_INTR_START + AES_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+    uint32_t * reg = (uint32_t *) (CLP_AES_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
     uint32_t sts = *reg;
     /* Write 1 to Clear the pending interrupt */
     if (sts & AES_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
@@ -54,7 +54,7 @@ inline void service_aes_notif_intr() {
 
 inline void service_ecc_error_intr() {return;}
 inline void service_ecc_notif_intr() {
-    uint32_t * reg = (uint32_t *) (ECC_BASE_ADDR + ECC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+    uint32_t * reg = (uint32_t *) (CLP_ECC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
     uint32_t sts = *reg;
     /* Write 1 to Clear the pending interrupt */
     if (sts & ECC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
@@ -67,7 +67,7 @@ inline void service_ecc_notif_intr() {
 
 inline void service_hmac_error_intr() {return;}
 inline void service_hmac_notif_intr() {
-    uint32_t * reg = (uint32_t *) (HMAC_ADDR_INTR_START + HMAC_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+    uint32_t * reg = (uint32_t *) (CLP_HMAC_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
     uint32_t sts = *reg;
     /* Write 1 to Clear the pending interrupt */
     if (sts & HMAC_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
@@ -82,7 +82,7 @@ inline void service_kv_error_intr() {return;}
 inline void service_kv_notif_intr() {return;}
 inline void service_sha512_error_intr() {return;}
 inline void service_sha512_notif_intr() {
-    uint32_t * reg = (uint32_t *) (SHA512_ADDR_INTR_START + SHA512_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+    uint32_t * reg = (uint32_t *) (CLP_SHA512_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
     uint32_t sts = *reg;
     /* Write 1 to Clear the pending interrupt */
     if (sts & SHA512_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
@@ -102,7 +102,7 @@ inline void service_uart_notif_intr() {return;}
 inline void service_i3c_error_intr() {return;}
 inline void service_i3c_notif_intr() {return;}
 inline void service_mbox_error_intr() {
-    uint32_t * reg = (uint32_t *) (MBOX_REG_BASE + MBOX_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
+    uint32_t * reg = (uint32_t *) (CLP_MBOX_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
     uint32_t sts = *reg;
     /* Write 1 to Clear the pending interrupt */
     if (sts & MBOX_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK) {
@@ -123,7 +123,7 @@ inline void service_mbox_error_intr() {
 }
 
 inline void service_mbox_notif_intr () {
-    uint32_t * reg = (uint32_t *) (MBOX_REG_BASE + MBOX_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+    uint32_t * reg = (uint32_t *) (CLP_MBOX_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
     uint32_t sts = *reg;
     /* Write 1 to Clear the pending interrupt */
     if (sts & MBOX_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK) {

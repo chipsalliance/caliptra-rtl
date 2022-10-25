@@ -1,22 +1,40 @@
 ---
-provides: [mbox_top]
+provides: [mbox_pkg]
 schema_version: 2.4.0
-requires: 
-  - libs
+requires: []
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
+      - $COMPILE_ROOT/rtl/mbox_pkg.sv
       - $COMPILE_ROOT/rtl/mbox_csr_pkg.sv
       - $COMPILE_ROOT/rtl/mbox_reg_pkg.sv
+---
+provides: [mbox_top]
+schema_version: 2.4.0
+requires: 
+  - libs
+  - mbox_pkg
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
       - $COMPILE_ROOT/rtl/mbox_top.sv
       - $COMPILE_ROOT/rtl/mbox.sv
       - $COMPILE_ROOT/rtl/mbox_boot_fsm.sv
       - $COMPILE_ROOT/rtl/mbox_arb.sv
-      - $COMPILE_ROOT/rtl/mbox_defines.svh
-      - $COMPILE_ROOT/rtl/mbox_params.svh
       - $COMPILE_ROOT/rtl/mbox_csr.sv
       - $COMPILE_ROOT/rtl/mbox_reg.sv
+    tops: [mbox_top]
+  rtl_lint:
+    directories: [$COMPILE_ROOT/config/design_lint]
+    black_box:
+      - mbox_csr
+      - mbox_csr_pkg
+      - mbox_reg
+      - mbox_reg_pkg
+    waiver_files:
+      - $COMPILE_ROOT/config/design_lint/sglint_waivers.tcl
     tops: [mbox_top]
 ---
 provides: [mailbox_tb]

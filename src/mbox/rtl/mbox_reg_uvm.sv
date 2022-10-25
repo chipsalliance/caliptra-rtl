@@ -806,7 +806,7 @@ package mbox_reg_uvm;
         rand mbox_reg__boot_loader_svn boot_loader_svn;
         rand mbox_reg__runtime_svn runtime_svn[4];
         rand mbox_reg__anti_rollback_disable anti_rollback_disable;
-        rand mbox_reg__ieee_idevid_cert_chain ieee_idevid_cert_chain;
+        rand mbox_reg__ieee_idevid_cert_chain ieee_idevid_cert_chain[24];
         rand mbox_reg__fuse_done fuse_done;
         rand mbox_reg__obf_key obf_key[8];
         rand mbox_reg__intr_block_t intr_block_rf;
@@ -945,22 +945,24 @@ package mbox_reg_uvm;
 
             this.anti_rollback_disable.build();
             this.default_map.add_reg(this.anti_rollback_disable, 'h38c);
-            this.ieee_idevid_cert_chain = new("ieee_idevid_cert_chain");
-            this.ieee_idevid_cert_chain.configure(this);
-
-            this.ieee_idevid_cert_chain.build();
-            this.default_map.add_reg(this.ieee_idevid_cert_chain, 'h390);
+            foreach(this.ieee_idevid_cert_chain[i0]) begin
+                this.ieee_idevid_cert_chain[i0] = new($sformatf("ieee_idevid_cert_chain[%0d]", i0));
+                this.ieee_idevid_cert_chain[i0].configure(this);
+                
+                this.ieee_idevid_cert_chain[i0].build();
+                this.default_map.add_reg(this.ieee_idevid_cert_chain[i0], 'h390 + i0*'h4);
+            end
             this.fuse_done = new("fuse_done");
             this.fuse_done.configure(this);
 
             this.fuse_done.build();
-            this.default_map.add_reg(this.fuse_done, 'h394);
+            this.default_map.add_reg(this.fuse_done, 'h3f0);
             foreach(this.obf_key[i0]) begin
                 this.obf_key[i0] = new($sformatf("obf_key[%0d]", i0));
                 this.obf_key[i0].configure(this);
                 
                 this.obf_key[i0].build();
-                this.default_map.add_reg(this.obf_key[i0], 'h398 + i0*'h4);
+                this.default_map.add_reg(this.obf_key[i0], 'h3f4 + i0*'h4);
             end
             this.intr_block_rf = new("intr_block_rf");
             this.intr_block_rf.configure(this);

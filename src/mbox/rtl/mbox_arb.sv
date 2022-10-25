@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-`include "mbox_defines.svh"
-
-module mbox_arb (
+module mbox_arb 
+    import mbox_pkg::*;
+    (
     input  logic clk,
     input  logic rst_b,
 

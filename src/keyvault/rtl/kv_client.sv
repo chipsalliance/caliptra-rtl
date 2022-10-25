@@ -74,7 +74,7 @@ kv_key_read_fsm
 (
     .clk(clk),
     .rst_b(rst_b),
-    .hmac_data_size('x),
+    .hmac_data_size('0),
     .start(client_ctrl_reg.key_sel_en),
     .read_offset(key_read_offset),
     .write_en(key_write_en),
@@ -124,7 +124,7 @@ kv_dest_write_fsm
 (
     .clk(clk),
     .rst_b(rst_b),
-    .hmac_data_size('x),
+    .hmac_data_size('0),
     .start(dest_data_avail & client_ctrl_reg.dest_sel_en),
     .read_offset(dest_read_offset),
     .write_en(dest_write_en),

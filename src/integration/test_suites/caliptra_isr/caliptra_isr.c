@@ -188,11 +188,11 @@ void init_interrupts(void) {
     volatile uint32_t * const meies      = (uint32_t*) SWERV_MM_PIC_MEIES;      // Treat these
     volatile uint32_t * const meigwctrls = (uint32_t*) SWERV_MM_PIC_MEIGWCTRLS; // as arrays
     volatile uint32_t * const meigwclrs  = (uint32_t*) SWERV_MM_PIC_MEIGWCLRS;  //
-    volatile uint32_t * const mbox_reg   = (uint32_t*) MBOX_REG_BASE;
-    volatile uint32_t * const aes_reg    = (uint32_t*) AES_ADDR_INTR_START;
-    volatile uint32_t * const ecc_reg    = (uint32_t*) ECC_BASE_ADDR;
-    volatile uint32_t * const hmac_reg   = (uint32_t*) HMAC_ADDR_INTR_START;
-    volatile uint32_t * const sha512_reg = (uint32_t*) SHA512_ADDR_INTR_START;
+    volatile uint32_t * const mbox_reg   = (uint32_t*) CLP_MBOX_REG_BASE_ADDR;
+    volatile uint32_t * const aes_reg    = (uint32_t*) CLP_AES_INTR_REGS_INTR_BLOCK_RF_START;
+    volatile uint32_t * const ecc_reg    = (uint32_t*) CLP_ECC_REG_BASE_ADDR;
+    volatile uint32_t * const hmac_reg   = (uint32_t*) CLP_HMAC_INTR_REGS_INTR_BLOCK_RF_START;
+    volatile uint32_t * const sha512_reg = (uint32_t*) CLP_SHA512_INTR_REGS_INTR_BLOCK_RF_START;
     char* DCCM = (char *) RV_DCCM_SADR;
     uint32_t value;
 

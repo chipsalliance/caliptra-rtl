@@ -1,0 +1,39 @@
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+addrmap clp {
+    desc="Address Map for Caliptra Register Space";
+    
+    doe_reg doe_reg @ 0x1000_0000;
+
+    aes_intr_regs aes_intr_regs @ 0x1000_0800;
+
+    ecc_reg ecc_reg @ 0x1000_8000;
+
+    hmac_reg hmac_reg @ 0x1001_0000;
+
+    hmac_intr_regs hmac_intr_regs @ 0x1001_0800;
+
+    kv_reg kv_reg @ 0x1001_8000;
+
+    sha512_reg sha512_reg @ 0x1002_0000;
+
+    sha512_intr_regs sha512_intr_regs @ 0x1002_0800;
+
+    mbox_csr mbox_csr @ 0x3002_0000;
+    
+    mbox_reg mbox_reg @ 0x3003_0000;
+
+};

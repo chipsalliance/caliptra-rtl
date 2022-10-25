@@ -105,7 +105,7 @@ module caliptra_top_tb (
 
     parameter MBOX_UDS_ADDR = 32'h3003_0200;
     parameter MBOX_FE_ADDR  = 32'h3003_0230;
-    parameter MBOX_FUSE_DONE_ADDR = 32'h3003_0394;
+    parameter MBOX_FUSE_DONE_ADDR = 32'h3003_03f0; //FIXME need to not hardcode these
 
     parameter MBOX_ADDR_BASE        = 32'h30020000;
     parameter MBOX_ADDR_LOCK        = MBOX_ADDR_BASE;
@@ -313,45 +313,6 @@ module caliptra_top_tb (
         PAUSER = '0;
         PPROT = '0;
 
-        //Key for UDS 
-        cptra_obf_key_uds = 256'h54682728db5035eb04b79645c64a95606abb6ba392b6633d79173c027c5acf77;
-        cptra_uds_tb = 384'he4046d05385ab789c6a72866e08350f93f583e2a005ca0faecc32b5cfc323d461c76c107307654db5566a5bd693e227c;
-
-        //Key for FE
-        cptra_obf_key_fe = 256'h31358e8af34d6ac31c958bbd5c8fb33c334714bffb41700d28b07f11cfe891e7;
-        cptra_fe_tb = {256'hb32e2b171b63827034ebb0d1909f7ef1d51c5f82c1bb9bc26bc4ac4dccdee835,
-                       256'h7dca6154c2510ae1c87b1b422b02b621bb06cac280023894fcff3406af08ee9b,
-                       256'he1dd72419beccddff77c722d992cdcc87e9c7486f56ab406ea608d8c6aeb060c,
-                       256'h64cf2785ad1a159147567e39e303370da445247526d95942bf4d7e88057178b0};
-
-        //swizzle the key so it matches the endianness of AES block
-        //used for visual inspection of uds/fe flow, manually switching keys and checking both
-        for (int dword = 0; dword < $bits(cptra_obf_key/32); dword++) begin
-            //cptra_obf_key[dword] = cptra_obf_key_uds[dword];
-            cptra_obf_key[dword] = cptra_obf_key_fe[dword];
-        end
-
-        //assert power good
-        repeat (5) @(posedge core_clk);
-        cptra_pwrgood = 1'b1;
-
-        //de-assert reset
-        repeat (5) @(posedge core_clk);
-        cptra_rst_b = 1'b1;
-
-        //wait for fuse indication
-        wait (ready_for_fuses == 1'b1);
-
-        //load fuses
-        for (int i = 0; i < 12; i++)begin
-            write_single_word_apb(MBOX_UDS_ADDR + i*4, cptra_uds_tb[i]);
-        end
-        for (int i = 0; i < 32; i++)begin
-            write_single_word_apb(MBOX_FE_ADDR + i*4, cptra_fe_tb[i]);
-        end
-        //set fuse done
-        write_single_word_apb(MBOX_FUSE_DONE_ADDR, 32'h00000001);  
-
         $readmemh("program.hex",  imem_inst1.ram,0,32'h00008000);
         $readmemh("mailbox.hex",  mbox_ram1.ram,0,32'h0002_0000);
         $readmemh("dccm.hex",     dummy_dccm_preloader.ram,0,32'h0002_0000);
@@ -378,25 +339,89 @@ module caliptra_top_tb (
         if($test$plusargs("dumpon")) $dumpvars;
 `endif
 
+        //Key for UDS 
+        cptra_obf_key_uds = 256'h54682728db5035eb04b79645c64a95606abb6ba392b6633d79173c027c5acf77;
+        cptra_uds_tb = 384'he4046d05385ab789c6a72866e08350f93f583e2a005ca0faecc32b5cfc323d461c76c107307654db5566a5bd693e227c;
+
+        //Key for FE
+        cptra_obf_key_fe = 256'h31358e8af34d6ac31c958bbd5c8fb33c334714bffb41700d28b07f11cfe891e7;
+        cptra_fe_tb = {256'hb32e2b171b63827034ebb0d1909f7ef1d51c5f82c1bb9bc26bc4ac4dccdee835,
+                       256'h7dca6154c2510ae1c87b1b422b02b621bb06cac280023894fcff3406af08ee9b,
+                       256'he1dd72419beccddff77c722d992cdcc87e9c7486f56ab406ea608d8c6aeb060c,
+                       256'h64cf2785ad1a159147567e39e303370da445247526d95942bf4d7e88057178b0};
+
+        //swizzle the key so it matches the endianness of AES block
+        //used for visual inspection of uds/fe flow, manually switching keys and checking both
+        for (int dword = 0; dword < $bits(cptra_obf_key/32); dword++) begin
+            //cptra_obf_key[dword] = cptra_obf_key_uds[dword];
+            cptra_obf_key[dword] = cptra_obf_key_fe[dword];
+        end
+        repeat (10) @(posedge core_clk);
+        $display ("\n\n\n\n\n\n");
+        $display ("SoC: Asserting cptra_pwrgood\n");
+        //assert power good
+        repeat (5) @(posedge core_clk);
+        cptra_pwrgood = 1'b1;
+
+        $display ("SoC: De-Asserting cptra_rst_b\n");
+        //de-assert reset
+        repeat (5) @(posedge core_clk);
+        cptra_rst_b = 1'b1;
+
+        //wait for fuse indication
+        wait (ready_for_fuses == 1'b1);
+        
+        repeat (5) @(posedge core_clk);
+
+        $display ("CLP: Ready for fuse download\n");
+
+        $display ("SoC: Writing obfuscated UDS to fuse bank\n");
+        //load fuses
+        for (int i = 0; i < 12; i++)begin
+            write_single_word_apb(MBOX_UDS_ADDR + i*4, cptra_uds_tb[i]);
+        end
+        
+        $display ("SoC: Writing obfuscated Field Entropy to fuse bank\n");
+        for (int i = 0; i < 32; i++)begin
+            write_single_word_apb(MBOX_FE_ADDR + i*4, cptra_fe_tb[i]);
+        end
+        
+        $display ("SoC: Writing fuse done register\n");
+        //set fuse done
+        write_single_word_apb(MBOX_FUSE_DONE_ADDR, 32'h00000001);  
+
+        $display ("CLP: ROM Flow in progress...\n");
+
         //This is for Caliptra Demo, smoke tests will stop here since they don't set ready for fw
         //wait for fw req
         wait (ready_for_fw_push == 1'b1);
-
+        
+        repeat (5) @(posedge core_clk);
+        
+        $display ("CLP: Ready for firmware push\n");
+    
         // poll for lock register
         wait_unlock_apb();
+        repeat (5) @(posedge core_clk);
+        $display ("SoC: Lock granted\n");
 
+        
+        $display ("SoC: Writing the Command Register\n");
         //write to MBOX_ADDR_CMD
-        write_single_word_apb(MBOX_ADDR_CMD, 32'hDEADBEEF);
+        write_single_word_apb(MBOX_ADDR_CMD, 32'hBA5EBA11);
 
+        $display ("SoC: Writing the Data Length Register\n");
         // write to MBOX_ADDR_DLEN
         write_single_word_apb(MBOX_ADDR_DLEN, FW_NUM_DWORDS*4);
 
+        $display ("SoC: Writing the Firmware into Data-in Register\n");
         // write a random block in
         for (int i = 0; i < FW_NUM_DWORDS; i++) begin
             fw_blob[i] = $urandom();
             write_single_word_apb(MBOX_ADDR_DATAIN, fw_blob[i]);
         end 
         
+        $display ("SoC: Setting the Execute Register\n");
         // execute
         write_single_word_apb(MBOX_ADDR_EXECUTE, 32'h00000001);
     end
@@ -940,10 +965,12 @@ endtask // read_single_word_apb
 
 task wait_unlock_apb;
     begin
-      read_single_word_apb(MBOX_ADDR_LOCK);
-      while (PRDATA != 0)
+        $display ("SoC: Requesting mailbox lock\n");
+        read_single_word_apb(MBOX_ADDR_LOCK);
+        while (PRDATA != 0)
         begin
-          read_single_word_apb(MBOX_ADDR_LOCK);
+            $display ("SoC: Requesting mailbox lock\n");
+            read_single_word_apb(MBOX_ADDR_LOCK);
         end
     end
   endtask // wait_unlock_apb
