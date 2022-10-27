@@ -40,7 +40,7 @@ class ECC_openssl_keygen_sequence #(int AHB_DATA_WIDTH = 32,
     join
 
     //repeat (10) ECC_in_agent_random_seq.start(ECC_in_agent_sequencer);
-    repeat (10) ECC_in_openssl_keygen_s.start(ECC_in_agent_sequencer);
+    repeat (1000) ECC_in_openssl_keygen_s.start(ECC_in_agent_sequencer);
     //repeat (5) ECC_in_agent_random_seq.start(ECC_in_agent_sequencer);
     fork
       ECC_in_agent_config.wait_for_num_clocks(400);    

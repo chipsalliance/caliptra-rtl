@@ -31,14 +31,22 @@ def generate_test():
         for line in k:
             if (re.match("^priv:$", line)):
                 private_key_flag = 1
-            elif (private_key_flag == 1 and re.match("^\s+00:[0-9a-f]{2}:.*", line)):
+            elif ((private_key_flag == 1) and (byte_count == 0) and (re.match("^\s+00:[0-9a-f]{2}:.*", line))):
                 private_key += line.strip()[3:].replace(':', '')
+                byte_count += 14
             elif (private_key_flag == 1 and re.match("^\s+[0-9a-f]{2}:.*", line)):
                 private_key += line.strip().replace(':', '')
+                if (byte_count == 44):
+                    byte_count += 4
+                elif (byte_count == 43):
+                    byte_count += 3
+                else:
+                    byte_count += bytes_per_line
             elif (re.match("^pub:", line)):
                 private_key_flag = 0
                 public_key_flag = 1
                 public_key_x_flag = 1
+                byte_count = 0
             elif (public_key_flag == 1 and re.match("^\s+[0-9a-f]{2}:.*", line)):
                 if (public_key_x_flag == 1 and byte_count == 0): 
                     public_key_x += line.strip()[3:].replace(':', '')
