@@ -6,7 +6,7 @@ requires:
   - kv_defines_pkg
   - el2_swerv_pkg
   - el2_swerv_wrapper
-  - ahb_node_wrap
+  - ahb_lite_bus
   - sha512_ctrl
   - aes_ctrl
   - hmac_ctrl

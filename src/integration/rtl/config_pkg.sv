@@ -31,7 +31,7 @@ package config_pkg;
   // AHB Address Map
   `define SLAVE_NAMES         {"SWERV_DMA"  , "MBOX"       , "I3C"        , "UART"       , "QSPI"       , "SHA"        , "KEYVAULT"   , "HMAC"       , "ECC"        , "AES_CTRL"   } /* Array of names for peripherals */
   `define SLAVE_BASE_ADDR     {32'h4000_0000, 32'h3000_0000, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'h1002_0000, 32'h1001_8000, 32'h1001_0000, 32'h1000_8000, 32'h1000_0000} /* Array with slave base address */
-  `define SLAVE_MASK_ADDR     {32'h4007_FFFF, 32'h3003_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'h1002_FFFF, 32'h1001_FFFF, 32'h1001_0FFF, 32'h1000_FFFF, 32'h1000_FFFF} /* Array with slave offset address */
+  `define SLAVE_MASK_ADDR     {32'h4007_FFFF, 32'h3003_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'h1002_FFFF, 32'h1001_FFFF, 32'h1001_0FFF, 32'h1000_FFFF, 32'h1000_7FFF} /* Array with slave offset address */
   `define SLAVE_ADDR_MASK     (`SLAVE_BASE_ADDR ^ `SLAVE_MASK_ADDR) /* Array indicating meaningful address bits for each slave */
   `define SLAVE_ADDR_WIDTH(n) $clog2((`SLAVE_ADDR_MASK >> (`AHB_HADDR_SIZE*n)) & {`AHB_HADDR_SIZE{1'b1}}) /* Decode address width for each slave from assigned BASE/MASK address */
   `define SLAVE_SEL_AES       0

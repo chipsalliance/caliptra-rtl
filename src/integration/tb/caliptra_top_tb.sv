@@ -231,7 +231,7 @@ module caliptra_top_tb (
         end
     end
 
-    // IFU Master monitor
+    // IFU Initiator monitor
     always @(posedge core_clk) begin
         $fstrobe(ifu_p, "%10d : 0x%0h %h %b %h %h %h %b 0x%08h_%08h %b %b\n", cycleCnt, 
                         caliptra_top_dut.ic_haddr, caliptra_top_dut.ic_hburst, caliptra_top_dut.ic_hmastlock, 
@@ -240,25 +240,25 @@ module caliptra_top_tb (
                         caliptra_top_dut.ic_hready, caliptra_top_dut.ic_hresp);
     end
 
-    // LSU Master monitor
+    // LSU Initiator monitor
     always @(posedge core_clk) begin
         $fstrobe(lsu_p, "%10d : 0x%0h %h %h %b 0x%08h_%08h 0x%08h_%08h %b %b\n", cycleCnt, 
-                        caliptra_top_dut.s_smaster.haddr, caliptra_top_dut.s_smaster.hsize, caliptra_top_dut.s_smaster.htrans, 
-                        caliptra_top_dut.s_smaster.hwrite, caliptra_top_dut.s_smaster.hrdata[63:32], caliptra_top_dut.s_smaster.hrdata[31:0], 
-                        caliptra_top_dut.s_smaster.hwdata[63:32], caliptra_top_dut.s_smaster.hwdata[31:0], 
-                        caliptra_top_dut.s_smaster.hready, caliptra_top_dut.s_smaster.hresp);
+                        caliptra_top_dut.initiator_inst.haddr, caliptra_top_dut.initiator_inst.hsize, caliptra_top_dut.initiator_inst.htrans, 
+                        caliptra_top_dut.initiator_inst.hwrite, caliptra_top_dut.initiator_inst.hrdata[63:32], caliptra_top_dut.initiator_inst.hrdata[31:0], 
+                        caliptra_top_dut.initiator_inst.hwdata[63:32], caliptra_top_dut.initiator_inst.hwdata[31:0], 
+                        caliptra_top_dut.initiator_inst.hready, caliptra_top_dut.initiator_inst.hresp);
     end
 
-    // AHB slave interfaces monitor
+    // AHB responder interfaces monitor
     genvar sl_i;
     generate
-        for (sl_i = 0; sl_i < `AHB_SLAVES_NUM; sl_i = sl_i + 1) begin
+        for (sl_i = 0; sl_i < `AHB_SLAVES_NUM; sl_i = sl_i + 1) begin: gen_responder_inf_monitor
             always @(posedge core_clk) begin
                 $fstrobe(sl_p[sl_i], "%10d : 0x%0h %h %h %b 0x%08h_%08h 0x%08h_%08h %b %b %b %b\n", cycleCnt, 
-                        caliptra_top_dut.s_slave[sl_i].haddr, caliptra_top_dut.s_slave[sl_i].hsize, caliptra_top_dut.s_slave[sl_i].htrans, 
-                        caliptra_top_dut.s_slave[sl_i].hwrite, caliptra_top_dut.s_slave[sl_i].hrdata[63:32], caliptra_top_dut.s_slave[sl_i].hrdata[31:0], 
-                        caliptra_top_dut.s_slave[sl_i].hwdata[63:32], caliptra_top_dut.s_slave[sl_i].hwdata[31:0], 
-                        caliptra_top_dut.s_slave[sl_i].hready, caliptra_top_dut.s_slave[sl_i].hreadyout, caliptra_top_dut.s_slave[sl_i].hresp, caliptra_top_dut.s_slave[sl_i].hsel);
+                        caliptra_top_dut.responder_inst[sl_i].haddr, caliptra_top_dut.responder_inst[sl_i].hsize, caliptra_top_dut.responder_inst[sl_i].htrans, 
+                        caliptra_top_dut.responder_inst[sl_i].hwrite, caliptra_top_dut.responder_inst[sl_i].hrdata[63:32], caliptra_top_dut.responder_inst[sl_i].hrdata[31:0], 
+                        caliptra_top_dut.responder_inst[sl_i].hwdata[63:32], caliptra_top_dut.responder_inst[sl_i].hwdata[31:0], 
+                        caliptra_top_dut.responder_inst[sl_i].hready, caliptra_top_dut.responder_inst[sl_i].hreadyout, caliptra_top_dut.responder_inst[sl_i].hresp, caliptra_top_dut.responder_inst[sl_i].hsel);
             end
         end
     endgenerate

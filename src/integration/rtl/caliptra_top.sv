@@ -217,37 +217,36 @@ end
     // Slave 0: LMEM
     // Slave 1: DMA Slave port
     //========================================================================
-    AHB_BUS #(
-        .AHB_ADDR_WIDTH(`AHB_HADDR_SIZE),
-        .AHB_DATA_WIDTH(`AHB_HDATA_SIZE)
+    AHB_LITE_BUS_INF #(
+        .AHB_LITE_ADDR_WIDTH(`AHB_HADDR_SIZE),
+        .AHB_LITE_DATA_WIDTH(`AHB_HDATA_SIZE)
     )
-    s_slave[`AHB_SLAVES_NUM-1:0]();
+    responder_inst[`AHB_SLAVES_NUM-1:0]();
 
     //========================================================================
     // AHB Master ports
     //========================================================================
-    AHB_BUS #(
-        .AHB_ADDR_WIDTH(`AHB_HADDR_SIZE),
-        .AHB_DATA_WIDTH(`AHB_HDATA_SIZE)
+    AHB_LITE_BUS_INF #(
+        .AHB_LITE_ADDR_WIDTH(`AHB_HADDR_SIZE),
+        .AHB_LITE_DATA_WIDTH(`AHB_HDATA_SIZE)
     )
-    s_smaster();
+    initiator_inst();
 
     //========================================================================
-    // AHB Interface and decoder logic instance
+    // AHB Lite Interface and decoder logic instance
     //========================================================================
-    ahb_node_wrap #(
-        .NB_SLAVES        (`AHB_SLAVES_NUM),
-        .AHB_ADDR_WIDTH   (`AHB_HADDR_SIZE),
-        .AHB_DATA_WIDTH   (`AHB_HDATA_SIZE),
-        .BYPASS_HSEL      (             0 )
+    ahb_lite_bus #(
+        .NUM_RESPONDERS        (`AHB_SLAVES_NUM),
+        .AHB_LITE_ADDR_WIDTH   (`AHB_HADDR_SIZE),
+        .AHB_LITE_DATA_WIDTH   (`AHB_HDATA_SIZE)
     )
-    ahb_node_wrap_i (
-        .hclk             ( clk          ),
-        .hreset_n         ( cptra_uc_rst_b    ),
-        .ahb_slaves       ( s_slave           ),
-        .ahb_master       ( s_smaster         ),
-        .start_addr_i     ( `SLAVE_BASE_ADDR  ),
-        .end_addr_i       ( `SLAVE_MASK_ADDR  )
+    ahb_lite_bus_i (
+        .hclk                   ( clk          ),
+        .hreset_n               ( cptra_uc_rst_b    ),
+        .ahb_lite_responders    ( responder_inst    ),
+        .ahb_lite_initiator     ( initiator_inst    ),
+        .ahb_lite_start_addr_i  ( `SLAVE_BASE_ADDR  ),
+        .ahb_lite_end_addr_i    ( `SLAVE_MASK_ADDR  )
     );
 
 
@@ -344,36 +343,36 @@ el2_swerv_wrapper rvtop (
     //---------------------------------------------------------------
     // LSU AHB Master
     //---------------------------------------------------------------
-    .lsu_haddr              ( s_smaster.haddr       ),
+    .lsu_haddr              ( initiator_inst.haddr       ),
     .lsu_hburst             (                       ),
     .lsu_hmastlock          (                       ),
     .lsu_hprot              (                       ),
-    .lsu_hsize              ( s_smaster.hsize       ),
-    .lsu_htrans             ( s_smaster.htrans      ),
-    .lsu_hwrite             ( s_smaster.hwrite      ),
-    .lsu_hwdata             ( s_smaster.hwdata      ),
+    .lsu_hsize              ( initiator_inst.hsize       ),
+    .lsu_htrans             ( initiator_inst.htrans      ),
+    .lsu_hwrite             ( initiator_inst.hwrite      ),
+    .lsu_hwdata             ( initiator_inst.hwdata      ),
 
-    .lsu_hrdata             ( s_smaster.hrdata[63:0]),
-    .lsu_hready             ( s_smaster.hready      ),
-    .lsu_hresp              ( s_smaster.hresp       ),
+    .lsu_hrdata             ( initiator_inst.hrdata[63:0]),
+    .lsu_hready             ( initiator_inst.hready      ),
+    .lsu_hresp              ( initiator_inst.hresp       ),
 
     //---------------------------------------------------------------
     // DMA Slave
     //---------------------------------------------------------------
-    .dma_haddr              ( s_slave[`SLAVE_SEL_DMA].haddr ),
+    .dma_haddr              ( responder_inst[`SLAVE_SEL_DMA].haddr ),
     .dma_hburst             ( '0                            ),
     .dma_hmastlock          ( '0                            ),
     .dma_hprot              ( 4'd3                          ),
-    .dma_hsize              ( s_slave[`SLAVE_SEL_DMA].hsize ),
-    .dma_htrans             ( s_slave[`SLAVE_SEL_DMA].htrans ),
-    .dma_hwrite             ( s_slave[`SLAVE_SEL_DMA].hwrite ),
-    .dma_hwdata             ( s_slave[`SLAVE_SEL_DMA].hwdata ),
+    .dma_hsize              ( responder_inst[`SLAVE_SEL_DMA].hsize ),
+    .dma_htrans             ( responder_inst[`SLAVE_SEL_DMA].htrans ),
+    .dma_hwrite             ( responder_inst[`SLAVE_SEL_DMA].hwrite ),
+    .dma_hwdata             ( responder_inst[`SLAVE_SEL_DMA].hwdata ),
 
-    .dma_hrdata             ( s_slave[`SLAVE_SEL_DMA].hrdata    ),
-    .dma_hresp              ( s_slave[`SLAVE_SEL_DMA].hresp     ),
-    .dma_hsel               ( s_slave[`SLAVE_SEL_DMA].hsel      ),
-    .dma_hreadyin           ( s_slave[`SLAVE_SEL_DMA].hreadyout  ),
-    .dma_hreadyout          ( s_slave[`SLAVE_SEL_DMA].hreadyout  ),
+    .dma_hrdata             ( responder_inst[`SLAVE_SEL_DMA].hrdata    ),
+    .dma_hresp              ( responder_inst[`SLAVE_SEL_DMA].hresp     ),
+    .dma_hsel               ( responder_inst[`SLAVE_SEL_DMA].hsel      ),
+    .dma_hreadyin           ( responder_inst[`SLAVE_SEL_DMA].hreadyout  ),
+    .dma_hreadyout          ( responder_inst[`SLAVE_SEL_DMA].hreadyout  ),
 
     .timer_int              ( 1'b0     ),
     .extintsrc_req          ( intr     ),
@@ -426,7 +425,6 @@ el2_swerv_wrapper rvtop (
 
 );
 
-assign s_smaster.hsel = 1'b1;
 
 //=========================================================================-
 // AHB I$ instance
@@ -469,16 +467,16 @@ sha512_ctrl #(
     .clk            (clk),
     .reset_n        (cptra_uc_rst_b),
     .cptra_pwrgood  (cptra_pwrgood),
-    .haddr_i        (s_slave[`SLAVE_SEL_SHA].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SHA)-1:0]),
-    .hwdata_i       (s_slave[`SLAVE_SEL_SHA].hwdata),
-    .hsel_i         (s_slave[`SLAVE_SEL_SHA].hsel),
-    .hwrite_i       (s_slave[`SLAVE_SEL_SHA].hwrite),
-    .hready_i       (s_slave[`SLAVE_SEL_SHA].hready),
-    .htrans_i       (s_slave[`SLAVE_SEL_SHA].htrans),
-    .hsize_i        (s_slave[`SLAVE_SEL_SHA].hsize),
-    .hresp_o        (s_slave[`SLAVE_SEL_SHA].hresp),
-    .hreadyout_o    (s_slave[`SLAVE_SEL_SHA].hreadyout),
-    .hrdata_o       (s_slave[`SLAVE_SEL_SHA].hrdata),
+    .haddr_i        (responder_inst[`SLAVE_SEL_SHA].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SHA)-1:0]),
+    .hwdata_i       (responder_inst[`SLAVE_SEL_SHA].hwdata),
+    .hsel_i         (responder_inst[`SLAVE_SEL_SHA].hsel),
+    .hwrite_i       (responder_inst[`SLAVE_SEL_SHA].hwrite),
+    .hready_i       (responder_inst[`SLAVE_SEL_SHA].hready),
+    .htrans_i       (responder_inst[`SLAVE_SEL_SHA].htrans),
+    .hsize_i        (responder_inst[`SLAVE_SEL_SHA].hsize),
+    .hresp_o        (responder_inst[`SLAVE_SEL_SHA].hresp),
+    .hreadyout_o    (responder_inst[`SLAVE_SEL_SHA].hreadyout),
+    .hrdata_o       (responder_inst[`SLAVE_SEL_SHA].hrdata),
 
     .error_intr(sha512_error_intr),
     .notif_intr(sha512_notif_intr)
@@ -494,16 +492,16 @@ aes_ctrl #(
     .cptra_obf_key  (cptra_obf_key_reg),
     .obf_uds_seed   (obf_uds_seed),
     .obf_field_entropy(obf_field_entropy),
-    .haddr_i        (s_slave[`SLAVE_SEL_AES].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_AES)-1:0]),
-    .hwdata_i       (s_slave[`SLAVE_SEL_AES].hwdata),
-    .hsel_i         (s_slave[`SLAVE_SEL_AES].hsel),
-    .hwrite_i       (s_slave[`SLAVE_SEL_AES].hwrite),
-    .hready_i       (s_slave[`SLAVE_SEL_AES].hready),
-    .htrans_i       (s_slave[`SLAVE_SEL_AES].htrans),
-    .hsize_i        (s_slave[`SLAVE_SEL_AES].hsize),
-    .hresp_o        (s_slave[`SLAVE_SEL_AES].hresp),
-    .hreadyout_o    (s_slave[`SLAVE_SEL_AES].hreadyout),
-    .hrdata_o       (s_slave[`SLAVE_SEL_AES].hrdata),
+    .haddr_i        (responder_inst[`SLAVE_SEL_AES].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_AES)-1:0]),
+    .hwdata_i       (responder_inst[`SLAVE_SEL_AES].hwdata),
+    .hsel_i         (responder_inst[`SLAVE_SEL_AES].hsel),
+    .hwrite_i       (responder_inst[`SLAVE_SEL_AES].hwrite),
+    .hready_i       (responder_inst[`SLAVE_SEL_AES].hready),
+    .htrans_i       (responder_inst[`SLAVE_SEL_AES].htrans),
+    .hsize_i        (responder_inst[`SLAVE_SEL_AES].hsize),
+    .hresp_o        (responder_inst[`SLAVE_SEL_AES].hresp),
+    .hreadyout_o    (responder_inst[`SLAVE_SEL_AES].hreadyout),
+    .hrdata_o       (responder_inst[`SLAVE_SEL_AES].hrdata),
 
     .error_intr(aes_error_intr),
     .notif_intr(aes_notif_intr),
@@ -520,16 +518,16 @@ hmac_ctrl #(
      .clk(clk),
      .reset_n       (cptra_uc_rst_b),
      .cptra_pwrgood (cptra_pwrgood),
-     .hadrr_i       (s_slave[`SLAVE_SEL_HMAC].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_HMAC)-1:0]),
-     .hwdata_i      (s_slave[`SLAVE_SEL_HMAC].hwdata),
-     .hsel_i        (s_slave[`SLAVE_SEL_HMAC].hsel),
-     .hwrite_i      (s_slave[`SLAVE_SEL_HMAC].hwrite),
-     .hready_i      (s_slave[`SLAVE_SEL_HMAC].hready),
-     .htrans_i      (s_slave[`SLAVE_SEL_HMAC].htrans),
-     .hsize_i       (s_slave[`SLAVE_SEL_HMAC].hsize),
-     .hresp_o       (s_slave[`SLAVE_SEL_HMAC].hresp),
-     .hreadyout_o   (s_slave[`SLAVE_SEL_HMAC].hreadyout),
-     .hrdata_o      (s_slave[`SLAVE_SEL_HMAC].hrdata),
+     .hadrr_i       (responder_inst[`SLAVE_SEL_HMAC].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_HMAC)-1:0]),
+     .hwdata_i      (responder_inst[`SLAVE_SEL_HMAC].hwdata),
+     .hsel_i        (responder_inst[`SLAVE_SEL_HMAC].hsel),
+     .hwrite_i      (responder_inst[`SLAVE_SEL_HMAC].hwrite),
+     .hready_i      (responder_inst[`SLAVE_SEL_HMAC].hready),
+     .htrans_i      (responder_inst[`SLAVE_SEL_HMAC].htrans),
+     .hsize_i       (responder_inst[`SLAVE_SEL_HMAC].hsize),
+     .hresp_o       (responder_inst[`SLAVE_SEL_HMAC].hresp),
+     .hreadyout_o   (responder_inst[`SLAVE_SEL_HMAC].hreadyout),
+     .hrdata_o      (responder_inst[`SLAVE_SEL_HMAC].hrdata),
      .kv_read       (kv_read[0]),
      .kv_write      (kv_write[0]),
      .kv_resp       (kv_resp[0]),
@@ -553,16 +551,16 @@ key_vault1
     .clk           (clk),
     .rst_b         (cptra_uc_rst_b),
     .cptra_pwrgood (cptra_pwrgood),
-    .haddr_i       (s_slave[`SLAVE_SEL_KV].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_KV)-1:0]),
-    .hwdata_i      (s_slave[`SLAVE_SEL_KV].hwdata),
-    .hsel_i        (s_slave[`SLAVE_SEL_KV].hsel),
-    .hwrite_i      (s_slave[`SLAVE_SEL_KV].hwrite),
-    .hready_i      (s_slave[`SLAVE_SEL_KV].hready),
-    .htrans_i      (s_slave[`SLAVE_SEL_KV].htrans),
-    .hsize_i       (s_slave[`SLAVE_SEL_KV].hsize),
-    .hresp_o       (s_slave[`SLAVE_SEL_KV].hresp),
-    .hreadyout_o   (s_slave[`SLAVE_SEL_KV].hreadyout),
-    .hrdata_o      (s_slave[`SLAVE_SEL_KV].hrdata),
+    .haddr_i       (responder_inst[`SLAVE_SEL_KV].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_KV)-1:0]),
+    .hwdata_i      (responder_inst[`SLAVE_SEL_KV].hwdata),
+    .hsel_i        (responder_inst[`SLAVE_SEL_KV].hsel),
+    .hwrite_i      (responder_inst[`SLAVE_SEL_KV].hwrite),
+    .hready_i      (responder_inst[`SLAVE_SEL_KV].hready),
+    .htrans_i      (responder_inst[`SLAVE_SEL_KV].htrans),
+    .hsize_i       (responder_inst[`SLAVE_SEL_KV].hsize),
+    .hresp_o       (responder_inst[`SLAVE_SEL_KV].hresp),
+    .hreadyout_o   (responder_inst[`SLAVE_SEL_KV].hreadyout),
+    .hrdata_o      (responder_inst[`SLAVE_SEL_KV].hrdata),
 
     .kv_read       (kv_read),
     .kv_write      (kv_write),
@@ -578,16 +576,16 @@ ecc_top1
     .clk           (clk),
     .reset_n       (cptra_uc_rst_b),
     .cptra_pwrgood (cptra_pwrgood),
-    .haddr_i       (s_slave[`SLAVE_SEL_ECC].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_ECC)-1:0]),
-    .hwdata_i      (s_slave[`SLAVE_SEL_ECC].hwdata),
-    .hsel_i        (s_slave[`SLAVE_SEL_ECC].hsel),
-    .hwrite_i      (s_slave[`SLAVE_SEL_ECC].hwrite),
-    .hready_i      (s_slave[`SLAVE_SEL_ECC].hready),
-    .htrans_i      (s_slave[`SLAVE_SEL_ECC].htrans),
-    .hsize_i       (s_slave[`SLAVE_SEL_ECC].hsize),
-    .hresp_o       (s_slave[`SLAVE_SEL_ECC].hresp),
-    .hreadyout_o   (s_slave[`SLAVE_SEL_ECC].hreadyout),
-    .hrdata_o      (s_slave[`SLAVE_SEL_ECC].hrdata),
+    .haddr_i       (responder_inst[`SLAVE_SEL_ECC].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_ECC)-1:0]),
+    .hwdata_i      (responder_inst[`SLAVE_SEL_ECC].hwdata),
+    .hsel_i        (responder_inst[`SLAVE_SEL_ECC].hsel),
+    .hwrite_i      (responder_inst[`SLAVE_SEL_ECC].hwrite),
+    .hready_i      (responder_inst[`SLAVE_SEL_ECC].hready),
+    .htrans_i      (responder_inst[`SLAVE_SEL_ECC].htrans),
+    .hsize_i       (responder_inst[`SLAVE_SEL_ECC].hsize),
+    .hresp_o       (responder_inst[`SLAVE_SEL_ECC].hresp),
+    .hreadyout_o   (responder_inst[`SLAVE_SEL_ECC].hreadyout),
+    .hrdata_o      (responder_inst[`SLAVE_SEL_ECC].hrdata),
     .error_intr    (ecc_error_intr                ),
     .notif_intr    (ecc_notif_intr                )
 );
@@ -628,16 +626,16 @@ mbox_top #(
     .prdata_o(PRDATA),
     .pslverr_o(PSLVERR),
     //AHB Interface with uC
-    .haddr_i    (s_slave[`SLAVE_SEL_MBOX].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_MBOX)-1:0]), 
-    .hwdata_i   (s_slave[`SLAVE_SEL_MBOX].hwdata), 
-    .hsel_i     (s_slave[`SLAVE_SEL_MBOX].hsel), 
-    .hwrite_i   (s_slave[`SLAVE_SEL_MBOX].hwrite),
-    .hready_i   (s_slave[`SLAVE_SEL_MBOX].hready),
-    .htrans_i   (s_slave[`SLAVE_SEL_MBOX].htrans),
-    .hsize_i    (s_slave[`SLAVE_SEL_MBOX].hsize),
-    .hresp_o    (s_slave[`SLAVE_SEL_MBOX].hresp),
-    .hreadyout_o(s_slave[`SLAVE_SEL_MBOX].hreadyout),
-    .hrdata_o   (s_slave[`SLAVE_SEL_MBOX].hrdata),
+    .haddr_i    (responder_inst[`SLAVE_SEL_MBOX].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_MBOX)-1:0]), 
+    .hwdata_i   (responder_inst[`SLAVE_SEL_MBOX].hwdata), 
+    .hsel_i     (responder_inst[`SLAVE_SEL_MBOX].hsel), 
+    .hwrite_i   (responder_inst[`SLAVE_SEL_MBOX].hwrite),
+    .hready_i   (responder_inst[`SLAVE_SEL_MBOX].hready),
+    .htrans_i   (responder_inst[`SLAVE_SEL_MBOX].htrans),
+    .hsize_i    (responder_inst[`SLAVE_SEL_MBOX].hsize),
+    .hresp_o    (responder_inst[`SLAVE_SEL_MBOX].hresp),
+    .hreadyout_o(responder_inst[`SLAVE_SEL_MBOX].hreadyout),
+    .hrdata_o   (responder_inst[`SLAVE_SEL_MBOX].hrdata),
     // uC Interrupts
     .error_intr(mbox_error_intr),
     .notif_intr(mbox_notif_intr),
@@ -652,42 +650,41 @@ mbox_top #(
 
 //TIE OFF slaves
 always_comb begin: tie_off_slaves
-    s_slave[`SLAVE_SEL_QSPI].hresp = '0;
-    s_slave[`SLAVE_SEL_QSPI].hreadyout = '0;
-    s_slave[`SLAVE_SEL_QSPI].hrdata = '0;
-    s_slave[`SLAVE_SEL_UART].hresp = '0;
-    s_slave[`SLAVE_SEL_UART].hreadyout = '0;
-    s_slave[`SLAVE_SEL_UART].hrdata = '0;
-    s_slave[`SLAVE_SEL_I3C].hresp = '0;
-    s_slave[`SLAVE_SEL_I3C].hreadyout = '0;
-    s_slave[`SLAVE_SEL_I3C].hrdata = '0;
+    responder_inst[`SLAVE_SEL_QSPI].hresp = '0;
+    responder_inst[`SLAVE_SEL_QSPI].hreadyout = '0;
+    responder_inst[`SLAVE_SEL_QSPI].hrdata = '0;
+    responder_inst[`SLAVE_SEL_UART].hresp = '0;
+    responder_inst[`SLAVE_SEL_UART].hreadyout = '0;
+    responder_inst[`SLAVE_SEL_UART].hrdata = '0;
+    responder_inst[`SLAVE_SEL_I3C].hresp = '0;
+    responder_inst[`SLAVE_SEL_I3C].hreadyout = '0;
+    responder_inst[`SLAVE_SEL_I3C].hrdata = '0;
 end 
 
 genvar sva_i;
 generate
   for(sva_i= 0; sva_i<`AHB_SLAVES_NUM; sva_i=sva_i+1)
-  begin
-    `ASSERT_KNOWN(AHB_SLAVE_HADDR_X,        s_slave[sva_i].haddr,       clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HWDATA_X,       s_slave[sva_i].hwdata,      clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HSEL_X,         s_slave[sva_i].hsel,        clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HWRITE_X,       s_slave[sva_i].hwrite,      clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HREADY_X,       s_slave[sva_i].hready,      clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HTRANS_X,       s_slave[sva_i].htrans,      clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HSIZE_X,        s_slave[sva_i].hsize,       clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HRESP_X,        s_slave[sva_i].hresp,       clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HREADYOUT_X,    s_slave[sva_i].hreadyout,   clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HRDATA_X,       s_slave[sva_i].hreadyout ? s_slave[sva_i].hrdata : '0,      clk, cptra_uc_rst_b)
+  begin: gen_caliptra_asserts
+    `ASSERT_KNOWN(AHB_SLAVE_HADDR_X,        responder_inst[sva_i].haddr,       clk, cptra_uc_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HWDATA_X,       responder_inst[sva_i].hwdata,      clk, cptra_uc_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HSEL_X,         responder_inst[sva_i].hsel,        clk, cptra_uc_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HWRITE_X,       responder_inst[sva_i].hwrite,      clk, cptra_uc_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HREADY_X,       responder_inst[sva_i].hready,      clk, cptra_uc_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HTRANS_X,       responder_inst[sva_i].htrans,      clk, cptra_uc_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HSIZE_X,        responder_inst[sva_i].hsize,       clk, cptra_uc_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HRESP_X,        responder_inst[sva_i].hresp,       clk, cptra_uc_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HREADYOUT_X,    responder_inst[sva_i].hreadyout,   clk, cptra_uc_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HRDATA_X,       responder_inst[sva_i].hreadyout ? responder_inst[sva_i].hrdata : '0,      clk, cptra_uc_rst_b)
   end
 endgenerate
 
-`ASSERT_KNOWN(AHB_MASTER_HADDR_X,        s_smaster.haddr,       clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HWDATA_X,       s_smaster.hwdata,      clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HSEL_X,         s_smaster.hsel,        clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HWRITE_X,       s_smaster.hwrite,      clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HREADY_X,       s_smaster.hready,      clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HTRANS_X,       s_smaster.htrans,      clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HSIZE_X,        s_smaster.hsize,       clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HRESP_X,        s_smaster.hresp,       clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HRDATA_X,       s_smaster.hready ? s_smaster.hrdata : '0,      clk, cptra_uc_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HADDR_X,        initiator_inst.haddr,       clk, cptra_uc_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HWDATA_X,       initiator_inst.hwdata,      clk, cptra_uc_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HWRITE_X,       initiator_inst.hwrite,      clk, cptra_uc_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HREADY_X,       initiator_inst.hready,      clk, cptra_uc_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HTRANS_X,       initiator_inst.htrans,      clk, cptra_uc_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HSIZE_X,        initiator_inst.hsize,       clk, cptra_uc_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HRESP_X,        initiator_inst.hresp,       clk, cptra_uc_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HRDATA_X,       initiator_inst.hready ? initiator_inst.hrdata : '0,      clk, cptra_uc_rst_b)
 
 endmodule
