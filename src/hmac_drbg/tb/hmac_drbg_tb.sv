@@ -57,7 +57,7 @@ module hmac_drbg_tb();
 
   //Data
   reg   [SEED_SIZE-1 : 0]    seed_tb;
-  reg   [383 : 0]            privkey_tb,
+  reg   [383 : 0]            privkey_tb;
   reg   [383 : 0]            hashed_msg_tb;
   wire  [383 : 0]            nonce_tb;
 
@@ -75,8 +75,8 @@ module hmac_drbg_tb();
         .clk(clk_tb),
         .reset_n(reset_n_tb),
         .mode(mode_tb),
-        .init(init_tb),
-        .next(next_tb),
+        .init_cmd(init_tb),
+        .next_cmd(next_tb),
         .ready(ready_tb),
         .valid(valid_tb),
         .seed(seed_tb),
@@ -339,7 +339,13 @@ module hmac_drbg_tb();
         nist_expected = 384'hcd4bf0a6e15e9db50e200fc490933a89452a328287975ea37346ead493f99a89d7057dfb48c486208dd138accd4da162;
 
         seed = {nist_entropy,nist_nonce};
-        keygen_sim(seed,nist_expected); 
+        keygen_sim(seed,nist_expected);
+
+
+        nist_expected = 384'h4AE1C2B3AE2EE2A5FA0769B369C86A299160CE78F9A55176BEDE44CFD80E45F65449E2F83479DB4661B4F417605E0BB6;
+        seed          = 384'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
+        
+        keygen_sim(seed,nist_expected);
 
         $display("\n\n=================SIGNING TEST STARTS=================\n\n"); 
         
@@ -354,6 +360,25 @@ module hmac_drbg_tb();
         nist_h1       = 384'h768412320f7b0aa5812fce428dc4706b3cae50e02a64caa16a782249bfe8efc4b7ef1ccb126255d196047dfedf17a0a9;
         nist_expected = 384'h015EE46A5BF88773ED9123A5AB0807962D193719503C527B031B4C2D225092ADA71F4A459BC0DA98ADB95837DB8312EA;
 
+        sign_sim(nist_h1,nist_privKey,nist_expected); 
+
+        nist_privKey  = 384'h14AEFB51DF578FF3D77662153B10CEE5C7930454AAE90E1A68C951E7466216DEEEAB7032856F3E6244194E9BE0923BE9;
+        nist_h1       = 384'h31759BD97E875F3559D260BEE1C6F9995F330BA2D3DD2D93502E7E696C1900632E22672EB5C83CF761F592AAFC0E040A;
+        nist_expected = 384'hC8958B49032629A9EAB4FE2F7CA7F3B7C768EC825D143FE65002904A6E91EF971AC8F6B3C1E97F132F99161AE3E58E38;
+
+        sign_sim(nist_h1,nist_privKey,nist_expected); 
+
+        nist_privKey  = 384'h14F93F145CE951B987CC52CD8EE5B916DF9042433E63F5771210B2E596709CFD4A9080EC1E0252F82E08333CBB259F0C;
+        nist_h1       = 384'h31759BD97E875F3559D260BEE1C6F9995F330BA2D3DD2D93502E7E696C1900632E22672EB5C83CF761F592AAFC0E040A;
+        nist_expected = 384'h1E006AABF131E194003305A959A0B5C070C2E298393FB399D3F54181900B089E5619EF4AD594C4C4C71F4479DD87E96A;
+
+        sign_sim(nist_h1,nist_privKey,nist_expected);
+
+
+        nist_privKey  = 384'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
+        nist_h1       = 384'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
+        nist_expected = 384'h7F68A6D896EA5DA62E78DEDB46F6662BC141F2F0B9E641ACC7342663FD51444E380FEA1DABBCA55F18987C0CFC10DF77;
+        
         sign_sim(nist_h1,nist_privKey,nist_expected); 
 
     end

@@ -43,7 +43,9 @@ module ecc_montgomerymultiplier #(
     //----------------------------------------------------------------
     // Local Parameters
     //----------------------------------------------------------------
-    localparam  int unsigned S_NUM = $ceil(real'(REG_SIZE) / RADIX) + 1;
+    
+    // Equivalent to $ceil(real'(REG_SIZE) / RADIX) + 1;
+    localparam  int unsigned S_NUM =  ((REG_SIZE + RADIX - 1) / RADIX) + 1; 
     localparam  int unsigned FULL_REG_SIZE = S_NUM * RADIX;
     // Each PE performs two iterations out of S_NUM - 1
     // See section 4.2 of Elkhatib_2019 paper.

@@ -61,7 +61,7 @@ _start:
     // 12 words or 384-bit seed
     li x1, 0xc
     li t3, 0x1
-    la x4, TEST_VECTOR_KEYGEN
+    la x4, TEST_VECTOR
     addi x4, x4, 192
     write_seed0_loop:
         lw x5, 0(x4)
@@ -76,7 +76,7 @@ _start:
     // 12 words or 384-bit IV0   
     li x1, 0xc
     li t3, 0x1
-    la x4, TEST_VECTOR_KEYGEN
+    la x4, TEST_VECTOR
     addi x4, x4, 336
     write_IV0_loop:
         lw x5, 0(x4)
@@ -101,7 +101,7 @@ _start:
 
     // Read privkey back from ECC Register
     li x3, ECC_ADDR_PRIVKEY0
-    la x4, TEST_VECTOR_KEYGEN
+    la x4, TEST_VECTOR
     addi x4, x4, 48
     read_privkey_loop:
         lw x5, 0(x3)
@@ -117,7 +117,7 @@ _start:
 
     // Read public key x from ECC register
     li x3, ECC_ADDR_PUBKEYX0
-    la x4, TEST_VECTOR_KEYGEN
+    la x4, TEST_VECTOR
     addi x4, x4, 96
     read_pubkeyx_loop:
         lw x5, 0(x3)
@@ -133,7 +133,7 @@ _start:
 
     // Read public key y from ECC register
     li x3, ECC_ADDR_PUBKEYY0
-    la x4, TEST_VECTOR_KEYGEN
+    la x4, TEST_VECTOR
     addi x4, x4, 144
     read_pubkeyy_loop:
         lw x5, 0(x3)
@@ -147,7 +147,7 @@ _start:
             addi x4, x4, 4
             ble x3, x1, read_pubkeyy_loop
 
-    // ECC KEY SIGN TEST
+    // ECC SIGNING TEST
     // wait_ready
     li x3, ECC_ADDR_STATUS
     li x1, 0x00
@@ -160,7 +160,7 @@ _start:
     // 12 words or 384-bit seed
     li x1, 0xc
     li t3, 0x1
-    la x4, TEST_VECTOR_KEYSIGN_VERIFY
+    la x4, TEST_VECTOR
     write_msg0_loop:
         lw x5, 0(x4)
         sw x5, 0(x3)
@@ -174,7 +174,7 @@ _start:
     // 12 words or 384-bit seed
     li x1, 0xc
     li t3, 0x1
-    la x4, TEST_VECTOR_KEYSIGN_VERIFY
+    la x4, TEST_VECTOR
     addi x4, x4, 48
     write_privkey0_loop:
         lw x5, 0(x4)
@@ -189,7 +189,7 @@ _start:
     // 12 words or 384-bit IV0   
     li x1, 0xc
     li t3, 0x1
-    la x4, TEST_VECTOR_KEYSIGN_VERIFY
+    la x4, TEST_VECTOR
     addi x4, x4, 336
     write_IV0_loop1:
         lw x5, 0(x4)
@@ -214,7 +214,7 @@ _start:
 
     // Read R0 back from ECC Register
     li x3, ECC_ADDR_SIGNR0
-    la x4, TEST_VECTOR_KEYSIGN_VERIFY
+    la x4, TEST_VECTOR
     addi x4, x4, 240
     read_signr0_loop:
         lw x5, 0(x3)
@@ -230,7 +230,7 @@ _start:
 
     // Read S0 back from ECC Register
     li x3, ECC_ADDR_SIGNS0
-    la x4, TEST_VECTOR_KEYSIGN_VERIFY
+    la x4, TEST_VECTOR
     addi x4, x4, 288
     read_signs0_loop:
         lw x5, 0(x3)
@@ -257,7 +257,7 @@ _start:
     // 12 words or 384-bit seed
     li x1, 0xc
     li t3, 0x1
-    la x4, TEST_VECTOR_KEYSIGN_VERIFY
+    la x4, TEST_VECTOR
     write_msg0_loop1:
         lw x5, 0(x4)
         sw x5, 0(x3)
@@ -271,7 +271,7 @@ _start:
     // 12 words or 384-bit seed
     li x1, 0xc
     li t3, 0x1
-    la x4, TEST_VECTOR_KEYSIGN_VERIFY
+    la x4, TEST_VECTOR
     addi x4, x4, 96
     write_pubkeyx0_loop:
         lw x5, 0(x4)
@@ -286,7 +286,7 @@ _start:
     // 12 words or 384-bit seed
     li x1, 0xc
     li t3, 0x1
-    la x4, TEST_VECTOR_KEYSIGN_VERIFY
+    la x4, TEST_VECTOR
     addi x4, x4, 144
     write_pubkeyy0_loop:
         lw x5, 0(x4)
@@ -301,7 +301,7 @@ _start:
     // 12 words or 384-bit seed
     li x1, 0xc
     li t3, 0x1
-    la x4, TEST_VECTOR_KEYSIGN_VERIFY
+    la x4, TEST_VECTOR
     addi x4, x4, 240
     write_signr0_loop:
         lw x5, 0(x4)
@@ -316,7 +316,7 @@ _start:
     // 12 words or 384-bit seed
     li x1, 0xc
     li t3, 0x1
-    la x4, TEST_VECTOR_KEYSIGN_VERIFY
+    la x4, TEST_VECTOR
     addi x4, x4, 288
     write_signs0_loop:
         lw x5, 0(x4)
@@ -341,7 +341,7 @@ _start:
 
     // Read VERIFYR0 back from ECC Register
     li x3, ECC_ADDR_VERIFYR0
-    la x4, TEST_VECTOR_KEYSIGN_VERIFY
+    la x4, TEST_VECTOR
     addi x4, x4, 240
     read_verifyr0_loop:
         lw x5, 0(x3)

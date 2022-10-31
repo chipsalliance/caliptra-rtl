@@ -88,7 +88,11 @@ module hmac_drbg
   localparam [4 : 0] MODE0_K2_INIT_ST   = 5'd5;
   localparam [4 : 0] MODE0_K2_ST        = 5'd6;  // K = HMAC_K(V || 0x01 || seed) 
   localparam [4 : 0] MODE0_V2_ST        = 5'd7;  // V = HMAC_K(V) 
-  localparam [4 : 0] MODE0_DONE_ST      = 5'd8;
+  localparam [4 : 0] MODE0_T_ST         = 5'd8;  // T = HMAC_K(V) 
+  localparam [4 : 0] MODE0_CHCK_ST      = 5'd9;  // Return T if T is within the [1,q-1] range, otherwise: 
+  localparam [4 : 0] MODE0_K3_ST        = 5'd10; // K = HMAC_K(V || 0x00) 
+  localparam [4 : 0] MODE0_V3_ST        = 5'd11; // V = HMAC_K(V) and Jump to SIGN_T2_ST 
+  localparam [4 : 0] MODE0_DONE_ST      = 5'd12;
 
   localparam [4 : 0] MODE1_INIT_ST      = 5'd16;
   localparam [4 : 0] MODE1_NEXT_ST      = 5'd17;
@@ -250,6 +254,20 @@ module hmac_drbg
             K_reg   <= HMAC_tag;
           end
 
+          MODE0_T_ST: begin
+            HMAC_init <= 1;
+            V_reg   <= HMAC_tag;
+          end 
+
+          MODE0_K3_ST: begin
+            HMAC_init <= 1;
+          end
+
+          MODE0_V3_ST: begin
+            HMAC_init <= 1;
+            K_reg   <= HMAC_tag;
+          end 
+
           MODE0_DONE_ST: begin
             V_reg   <= HMAC_tag;
           end
@@ -322,6 +340,9 @@ module hmac_drbg
       MODE0_V1_ST:    HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
       MODE0_K2_ST:    HMAC_block  = {V_reg, cnt_reg, seed, 1'h1, ZERO_PAD_MODE0_K, MODE0_K_SIZE};
       MODE0_V2_ST:    HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
+      MODE0_T_ST:     HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
+      MODE0_K3_ST:    HMAC_block  = {V_reg, 8'h00, 1'h1, 619'b0, 12'h578};
+      MODE0_V3_ST:    HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
       MODE1_K10_ST:   HMAC_block  = {V_reg, cnt_reg, privkey, hashed_msg[383:136]};
       MODE1_K11_ST:   HMAC_block  = {hashed_msg[135:0], 1'h1, 875'b0, 12'h888};
       MODE1_V1_ST:    HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
@@ -435,9 +456,41 @@ module hmac_drbg
       MODE0_V2_ST:
       begin
         if (HMAC_tag_valid_edge)
-          nonce_next_st    = MODE0_DONE_ST;
+          nonce_next_st    = MODE0_T_ST;
         else
           nonce_next_st    = MODE0_V2_ST;
+      end
+
+      MODE0_T_ST:
+      begin
+        if (HMAC_tag_valid_edge)
+          nonce_next_st    = MODE0_CHCK_ST;
+        else
+          nonce_next_st    = MODE0_T_ST;
+      end
+
+      MODE0_CHCK_ST:
+      begin
+        if ((HMAC_tag==0) || (HMAC_tag > HMAC_DRBG_PRIME))
+          nonce_next_st    = MODE0_K3_ST;
+        else
+          nonce_next_st    = MODE0_DONE_ST;
+      end
+
+      MODE0_K3_ST:
+      begin
+        if (HMAC_tag_valid_edge)
+          nonce_next_st    = MODE0_V3_ST;
+        else
+          nonce_next_st    = MODE0_K3_ST;
+      end
+
+      MODE0_V3_ST:
+      begin
+        if (HMAC_tag_valid_edge)
+          nonce_next_st    = MODE0_T_ST;
+        else
+          nonce_next_st    = MODE0_V3_ST;
       end
 
       MODE0_DONE_ST:

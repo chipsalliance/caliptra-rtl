@@ -788,17 +788,13 @@ module ecc_top_tb #(
   //
   //----------------------------------------------------------------
   task ecc_test();
-    begin   
-      // The first 6-set test vectors work for keygen, 
-      // and the last 4-set test vectors work for signing/verifying
-      for (int i = 0; i < 6; i++) begin: test_vector_loop
-          ecc_onthefly_reset_test(i, test_vectors[i]);
+    begin  
+      for (int i = 0; i < 10; i++) begin: test_vector_loop
           ecc_keygen_test(i, test_vectors[i]);
-      end
-      for (int i = 6; i < 10; i++) begin: test_vector_loop
-          ecc_onthefly_reset_test(i, test_vectors[i]);
           ecc_signing_test(i, test_vectors[i]);
           ecc_verifying_test(i, test_vectors[i]);
+          if (i==3)
+            ecc_onthefly_reset_test(i, test_vectors[i]);
       end
     end
   endtask // ecc_test
@@ -945,14 +941,14 @@ module ecc_top_tb #(
       $display("    ==============================");
       $display("");
 
-      fname = "/home/mojtabab/workspace_aha_poc/ws1/Caliptra/src/ecc/tb/test_vectors/ecc_drbg.hex";
+      fname = "/home/mojtabab/workspace_aha_poc/ws1/Caliptra/src/ecc/tb/test_vectors/ecc_drbg_mbedtls.hex";
       read_test_vectors(fname);
 
       init_sim();
       reset_dut();
       check_name_version();
 
-      ecc_openssl_test();
+      //ecc_openssl_test();
 
       ecc_test();
 
