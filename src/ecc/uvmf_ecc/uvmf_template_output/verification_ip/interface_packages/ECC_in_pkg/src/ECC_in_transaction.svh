@@ -28,12 +28,11 @@ class ECC_in_transaction #(
 
   rand ecc_in_test_transactions test ;
   rand ecc_in_op_transactions op ;
-  rand bit [7:0] test_case_sel ;
 
   //Constraints for the transaction variables:
-  constraint ecc_valid_test_contraints { test inside {ecc_normal_test, ecc_otf_reset_test, ecc_openssl_test}; }
-  constraint ecc_valid_op_constrainsts { if (test == ecc_openssl_test) op == key_gen; else op inside {key_gen, key_sign, key_verify}; }
-  constraint ecc_valid_testcasesel_constraints { if (test == ecc_openssl_test) test_case_sel == 0; else if (op == key_gen) { test_case_sel >= 0; test_case_sel <= 5; } else { test_case_sel >= 5; test_case_sel <= 9; } }
+  constraint ecc_valid_test_contraints { test inside {ecc_normal_test, ecc_otf_reset_test}; }
+  constraint ecc_valid_op_constraints { op inside {key_gen, key_sign, key_verify}; }
+
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end
 
@@ -113,7 +112,7 @@ class ECC_in_transaction #(
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("test:0x%x op:0x%x test_case_sel:0x%x ",test,op,test_case_sel);
+    return $sformatf("test:0x%x op:0x%x ",test,op);
     // pragma uvmf custom convert2string end
   endfunction
 
@@ -147,7 +146,6 @@ class ECC_in_transaction #(
     return (super.do_compare(rhs,comparer)
             &&(this.test == RHS.test)
             &&(this.op == RHS.op)
-            &&(this.test_case_sel == RHS.test_case_sel)
             );
     // pragma uvmf custom do_compare end
   endfunction
@@ -168,7 +166,6 @@ class ECC_in_transaction #(
     super.do_copy(rhs);
     this.test = RHS.test;
     this.op = RHS.op;
-    this.test_case_sel = RHS.test_case_sel;
     // pragma uvmf custom do_copy end
   endfunction
 
@@ -194,7 +191,6 @@ class ECC_in_transaction #(
     // UVMF_CHANGE_ME : Eliminate transaction variables not wanted in transaction viewing in the waveform viewer
     $add_attribute(transaction_view_h,test,"test");
     $add_attribute(transaction_view_h,op,"op");
-    $add_attribute(transaction_view_h,test_case_sel,"test_case_sel");
     // pragma uvmf custom add_to_wave end
     $end_transaction(transaction_view_h,end_time);
     $free_transaction(transaction_view_h);

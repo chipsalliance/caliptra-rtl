@@ -86,7 +86,6 @@ end
   tri  transaction_flag_out_monitor_i;
   tri [2:0] test_i;
   tri [1:0] op_i;
-  tri [7:0] test_case_sel_i;
   assign clk_i = bus.clk;
   assign rst_n_i = bus.rst_n;
   assign ecc_rst_n_i = bus.ecc_rst_n;
@@ -102,7 +101,6 @@ end
   assign transaction_flag_out_monitor_i = bus.transaction_flag_out_monitor;
   assign test_i = bus.test;
   assign op_i = bus.op;
-  assign test_case_sel_i = bus.test_case_sel;
 
   // Proxy handle to UVM monitor
   ECC_in_pkg::ECC_in_monitor #(
@@ -179,7 +177,6 @@ end
     // Available struct members:
     //     //    ECC_in_monitor_struct.test
     //     //    ECC_in_monitor_struct.op
-    //     //    ECC_in_monitor_struct.test_case_sel
     //     //
     // Reference code;
     //    How to wait for signal value
@@ -200,7 +197,6 @@ end
     //      ECC_in_monitor_struct.xyz = transaction_flag_out_monitor_i;  //     
     //      ECC_in_monitor_struct.xyz = test_i;  //    [2:0] 
     //      ECC_in_monitor_struct.xyz = op_i;  //    [1:0] 
-    //      ECC_in_monitor_struct.xyz = test_case_sel_i;  //    [7:0] 
     // pragma uvmf custom do_monitor begin
     // UVMF_CHANGE_ME : Implement protocol monitoring.  The commented reference code 
     // below are examples of how to capture signal values and assign them to 
@@ -213,7 +209,6 @@ end
       while (ecc_rst_n_i == 1'b0) @(posedge clk_i);
       ECC_in_monitor_struct.test = ecc_in_test_transactions'(test_i);
       ECC_in_monitor_struct.op = ecc_in_op_transactions'(op_i);
-      ECC_in_monitor_struct.test_case_sel = test_case_sel_i;
       transaction_flag = 0; //Still want to capture reset tx in the out monitor
     end
     else begin
@@ -223,12 +218,11 @@ end
           transaction_flag = 1;
           ECC_in_monitor_struct.test = ecc_in_test_transactions'(test_i);
 				  ECC_in_monitor_struct.op = ecc_in_op_transactions'(op_i);
-				  ECC_in_monitor_struct.test_case_sel = test_case_sel_i;
 		    end //tx flag monitor = 1
 		    @(posedge clk_i);
 	    end //tx flag = 0
-
     end
+
     // pragma uvmf custom do_monitor end
   endtask         
   

@@ -32,7 +32,6 @@
 // .dut_signal_port(ECC_in_bus.transaction_flag_out_monitor), // Agent output 
 // .dut_signal_port(ECC_in_bus.test), // Agent output 
 // .dut_signal_port(ECC_in_bus.op), // Agent output 
-// .dut_signal_port(ECC_in_bus.test_case_sel), // Agent output 
 
 import uvmf_base_pkg_hdl::*;
 import ECC_in_pkg_hdl::*;
@@ -58,8 +57,7 @@ interface  ECC_in_if #(
   inout tri  hreadyout,
   inout tri  transaction_flag_out_monitor,
   inout tri [2:0] test,
-  inout tri [1:0] op,
-  inout tri [7:0] test_case_sel
+  inout tri [1:0] op
   );
 
 modport monitor_port 
@@ -78,8 +76,7 @@ modport monitor_port
   input hreadyout,
   input transaction_flag_out_monitor,
   input test,
-  input op,
-  input test_case_sel
+  input op
   );
 
 modport initiator_port 
@@ -98,8 +95,7 @@ modport initiator_port
   input hreadyout,
   output transaction_flag_out_monitor,
   output test,
-  output op,
-  output test_case_sel
+  output op
   );
 
 modport responder_port 
@@ -118,8 +114,7 @@ modport responder_port
   output hreadyout,
   input transaction_flag_out_monitor,
   input test,
-  input op,
-  input test_case_sel
+  input op
   );
   
 

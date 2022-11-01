@@ -37,3 +37,11 @@ verissimo_html_report
 
 # DVT output
 dvt_build.log
+
+# UVM work folder
+*/work/
+transcript
+*.ucdb
+
+
+#

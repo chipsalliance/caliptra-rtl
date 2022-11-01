@@ -139,7 +139,7 @@ end
 
 
   reg [1:0]     op;
-  reg [2:0]     test;
+  reg [1:0]     test;
 
   // ****************************************************************************              
   initial begin  
@@ -238,288 +238,217 @@ end
       
       transaction_flag = 0;
 
-      $display("@ %0t ** ECC_out_monitor_bfm** : test = %3b", $time, test);
-      $display("@ %0t ** ECC_out_monitor_bfm** : op = %2b", $time, op);
+      //$display("@ %0t ** ECC_out_monitor_bfm** : test = %2b", $time, test);
+      //$display("@ %0t ** ECC_out_monitor_bfm** : op = %2b", $time, op);
 
       while (transaction_flag_out_monitor_i ==0) @(posedge clk_i);
       if (transaction_flag_out_monitor_i == 1 ) begin
-        $display("***DEBUG*** transaction_flag_out_monitor is 1");
+        //$display("***DEBUG*** transaction_flag_out_monitor is 1");
         transaction_flag = 1;
         repeat (2) @(posedge clk_i);
-        if (test == 3'b001 || test == 3'b010) begin // ecc_normal_test (3'b001) or ecc_otl_reset_test (3'b010)
-          if (op == 2'b00) begin // KEY_GEN
-            @(posedge clk_i);
-            privkey[383:352] = hrdata_i;
-            $display("**ECC_out_monitor_bfm: privkey[383:352] = %h, time = %0t", privkey[383:352], $time);
-            repeat (2) @(posedge clk_i);
-            privkey[351:320] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            privkey[319:288] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            privkey[287:256] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            privkey[255:224] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            privkey[223:192] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            privkey[191:160] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            privkey[159:128] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            privkey[127:96]  = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            privkey[95:64]   = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            privkey[63:32]   = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            privkey[31:0]    = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_x[383:352] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_x[351:320] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_x[319:288] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_x[287:256] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_x[255:224] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_x[223:192] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_x[191:160] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_x[159:128] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_x[127:96]  = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_x[95:64]   = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_x[63:32]   = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_x[31:0]    = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_y[383:352] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_y[351:320] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_y[319:288] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_y[287:256] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_y[255:224] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_y[223:192] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_y[191:160] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_y[159:128] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_y[127:96]  = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_y[95:64]   = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_y[63:32]   = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_y[31:0]    = hrdata_i;
+        if (op == 2'b00) begin // KEY_GEN
+          @(posedge clk_i);
+          privkey[383:352] = hrdata_i;
+          //$display("**ECC_out_monitor_bfm: privkey[383:352] = %h, time = %0t", privkey[383:352], $time);
+          repeat (2) @(posedge clk_i);
+          privkey[351:320] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          privkey[319:288] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          privkey[287:256] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          privkey[255:224] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          privkey[223:192] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          privkey[191:160] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          privkey[159:128] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          privkey[127:96]  = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          privkey[95:64]   = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          privkey[63:32]   = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          privkey[31:0]    = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          pubkey_x[383:352] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          pubkey_x[351:320] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          pubkey_x[319:288] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          pubkey_x[287:256] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          pubkey_x[255:224] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          pubkey_x[223:192] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          pubkey_x[191:160] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          pubkey_x[159:128] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          pubkey_x[127:96]  = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          pubkey_x[95:64]   = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          pubkey_x[63:32]   = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          pubkey_x[31:0]    = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          pubkey_y[383:352] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          pubkey_y[351:320] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          pubkey_y[319:288] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          pubkey_y[287:256] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          pubkey_y[255:224] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          pubkey_y[223:192] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          pubkey_y[191:160] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          pubkey_y[159:128] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          pubkey_y[127:96]  = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          pubkey_y[95:64]   = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          pubkey_y[63:32]   = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          pubkey_y[31:0]    = hrdata_i;
 
-            @(posedge clk_i);
-            ECC_out_monitor_struct.result_privkey = privkey;
-            ECC_out_monitor_struct.result_pubkey_x = pubkey_x;
-            ECC_out_monitor_struct.result_pubkey_y = pubkey_y;
-            ECC_out_monitor_struct.result_R = 0;
-            ECC_out_monitor_struct.result_S = 0;
-            ECC_out_monitor_struct.result_verify_R = 0;
+          @(posedge clk_i);
+          ECC_out_monitor_struct.result_privkey = privkey;
+          ECC_out_monitor_struct.result_pubkey_x = pubkey_x;
+          ECC_out_monitor_struct.result_pubkey_y = pubkey_y;
+          ECC_out_monitor_struct.result_R = 0;
+          ECC_out_monitor_struct.result_S = 0;
+          ECC_out_monitor_struct.result_verify_R = 0;
             
-            privkey   = 0;
-            pubkey_x  = 0;
-            pubkey_y  = 0;
-            R         = 0;
-            S         = 0;
-            verify_R  = 0;
+          privkey   = 0;
+          pubkey_x  = 0;
+          pubkey_y  = 0;
+          R         = 0;
+          S         = 0;
+          verify_R  = 0;
 
             
-          end
-          else if (op == 2'b01) begin // KEY_SIGN
-            @(posedge clk_i);
-            R[383:352] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            R[351:320] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            R[319:288] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            R[287:256] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            R[255:224] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            R[223:192] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            R[191:160] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            R[159:128] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            R[127:96]  = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            R[95:64]   = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            R[63:32]   = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            R[31:0]    = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            S[383:352] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            S[351:320] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            S[319:288] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            S[287:256] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            S[255:224] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            S[223:192] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            S[191:160] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            S[159:128] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            S[127:96]  = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            S[95:64]   = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            S[63:32]   = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            S[31:0]    = hrdata_i;
-
-            @(posedge clk_i);
-            ECC_out_monitor_struct.result_privkey = 0;
-            ECC_out_monitor_struct.result_pubkey_x = 0;
-            ECC_out_monitor_struct.result_pubkey_y = 0;
-            ECC_out_monitor_struct.result_R = R;
-            ECC_out_monitor_struct.result_S = S;
-            ECC_out_monitor_struct.result_verify_R = 0;
-            
-
-            privkey   = 0;
-            pubkey_x  = 0;
-            pubkey_y  = 0;
-            R         = 0;
-            S         = 0;
-            verify_R  = 0;
-
-          end
-          else if (op == 2'b10) begin // KEY_VERIFY
-            @(posedge clk_i);
-            verify_R[383:352] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            verify_R[351:320] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            verify_R[319:288] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            verify_R[287:256] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            verify_R[255:224] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            verify_R[223:192] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            verify_R[191:160] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            verify_R[159:128] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            verify_R[127:96]  = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            verify_R[95:64]   = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            verify_R[63:32]   = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            verify_R[31:0]    = hrdata_i;
-
-            @(posedge clk_i);
-            ECC_out_monitor_struct.result_privkey = 0;
-            ECC_out_monitor_struct.result_pubkey_x = 0;
-            ECC_out_monitor_struct.result_pubkey_y = 0;
-            ECC_out_monitor_struct.result_R = 0;
-            ECC_out_monitor_struct.result_S = 0;
-            ECC_out_monitor_struct.result_verify_R = verify_R;
-            
-
-            privkey   = 0;
-            pubkey_x  = 0;
-            pubkey_y  = 0;
-            R         = 0;
-            S         = 0;
-            verify_R  = 0;
-
-          end
         end
-          else if (test == 3'b011) begin // ecc_openssl_test, KEY_GEN
-            $display("***DEBUG*** TEst is ecc_openssl_test");
-            @(posedge clk_i);
-            pubkey_x[383:352] = hrdata_i;
-            $display("pubkey[383:352] = %h", pubkey_x[383:352]);
-            repeat (2) @(posedge clk_i);
-            pubkey_x[351:320] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_x[319:288] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_x[287:256] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_x[255:224] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_x[223:192] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_x[191:160] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_x[159:128] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_x[127:96]  = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_x[95:64]   = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_x[63:32]   = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_x[31:0]    = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_y[383:352] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_y[351:320] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_y[319:288] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_y[287:256] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_y[255:224] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_y[223:192] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_y[191:160] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_y[159:128] = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_y[127:96]  = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_y[95:64]   = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_y[63:32]   = hrdata_i;
-            repeat (2) @(posedge clk_i);
-            pubkey_y[31:0]    = hrdata_i;
+        else if (op == 2'b01) begin // KEY_SIGN
+          @(posedge clk_i);
+          R[383:352] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          R[351:320] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          R[319:288] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          R[287:256] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          R[255:224] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          R[223:192] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          R[191:160] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          R[159:128] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          R[127:96]  = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          R[95:64]   = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          R[63:32]   = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          R[31:0]    = hrdata_i;
+          repeat (2) @(posedge clk_i);       
+          S[383:352] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          S[351:320] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          S[319:288] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          S[287:256] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          S[255:224] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          S[223:192] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          S[191:160] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          S[159:128] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          S[127:96]  = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          S[95:64]   = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          S[63:32]   = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          S[31:0]    = hrdata_i;
 
-            @(posedge clk_i);
-            ECC_out_monitor_struct.result_privkey = 0;
-            ECC_out_monitor_struct.result_pubkey_x = pubkey_x;
-            ECC_out_monitor_struct.result_pubkey_y = pubkey_y;
-            ECC_out_monitor_struct.result_R = 0;
-            ECC_out_monitor_struct.result_S = 0;
-            ECC_out_monitor_struct.result_verify_R = 0;
-            
+          @(posedge clk_i);
+          ECC_out_monitor_struct.result_privkey = 0;
+          ECC_out_monitor_struct.result_pubkey_x = 0;
+          ECC_out_monitor_struct.result_pubkey_y = 0;
+          ECC_out_monitor_struct.result_R = R;
+          ECC_out_monitor_struct.result_S = S;
+          ECC_out_monitor_struct.result_verify_R = 0;
+          
 
-            privkey   = 0;
-            pubkey_x  = 0;
-            pubkey_y  = 0;
-            R         = 0;
-            S         = 0;
-            verify_R  = 0;
-          end
+          privkey   = 0;
+          pubkey_x  = 0;
+          pubkey_y  = 0;
+          R         = 0;
+          S         = 0;
+          verify_R  = 0;
+
+        end
+        else if (op == 2'b10) begin // KEY_VERIFY
+          @(posedge clk_i);
+          verify_R[383:352] = hrdata_i;      
+          repeat (2) @(posedge clk_i);
+          verify_R[351:320] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          verify_R[319:288] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          verify_R[287:256] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          verify_R[255:224] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          verify_R[223:192] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          verify_R[191:160] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          verify_R[159:128] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          verify_R[127:96]  = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          verify_R[95:64]   = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          verify_R[63:32]   = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          verify_R[31:0]    = hrdata_i;
+
+          @(posedge clk_i);
+          ECC_out_monitor_struct.result_privkey = 0;
+          ECC_out_monitor_struct.result_pubkey_x = 0;
+          ECC_out_monitor_struct.result_pubkey_y = 0;
+          ECC_out_monitor_struct.result_R = 0;
+          ECC_out_monitor_struct.result_S = 0;
+          ECC_out_monitor_struct.result_verify_R = verify_R;
+
+          privkey   = 0;
+          pubkey_x  = 0;
+          pubkey_y  = 0;
+          R         = 0;
+          S         = 0;
+          verify_R  = 0;
+
         end
       end
+    end
     // pragma uvmf custom do_monitor end
   endtask         
   

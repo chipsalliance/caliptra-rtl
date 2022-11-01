@@ -9,7 +9,7 @@ uvmf:
       hdl_pkg_parameters: []
       hdl_typedefs:
       - name: ecc_in_test_transactions
-        type: enum bit[2:0] {ecc_reset_test = 3'b000, ecc_normal_test = 3'b001, ecc_otf_reset_test = 3'b010, ecc_openssl_test = 3'b011}
+        type: enum bit[1:0] {ecc_reset_test = 2'b00, ecc_normal_test = 2'b01, ecc_otf_reset_test = 2'b10}
       - name: ecc_in_op_transactions
         type: enum bit[1:0] {key_gen = 2'b00, key_sign = 2'b01, key_verify = 2'b10 }
       hvl_pkg_parameters: []
@@ -74,22 +74,15 @@ uvmf:
         name: op
         reset_value: '''bz'
         width: '2'
-      - dir: output
-        name: test_case_sel
-        reset_value: '''bz'
-        width: '8'
       reset: rst_n
       reset_assertion_level: 'False'
       transaction_constraints:
       - comment: ''
-        name: ecc_valid_test_contraints
+        name: ecc_valid_test_constraints
         value: '{ test inside {ecc_normal_test, ecc_otf_reset_test, ecc_openssl_test}; }'
       - comment: ''
-        name: ecc_valid_op_constrainsts
-        value: '{ if (test == ecc_normal_test || test == ecc_otf_reset_test) { op inside {key_gen, key_sign, key_verify} ; } else if (test == ecc_openssl_test) { op inside {key_gen}; } }'
-      - comment: ''
-        name: ecc_valid_testcasesel_constraints
-        value: '{ if (test == ecc_normal_test || test == ecc_otf_reset_test) { if (op == key_gen) { test_case_sel >= 0; test_case_sel <= 5; } else if (op == key_sign || op == key_verify) { test_case_sel >= 5; test_case_sel <= 9; } } else if (test == ecc_openssl_test) { test_case_sel >= 0; test_case_sel < 1; } }'
+        name: ecc_valid_op_constraints
+        value: '{ op inside {key_gen, key_sign, key_verify}; }'
       transaction_vars:
       - comment: ''
         iscompare: 'True'
@@ -102,11 +95,5 @@ uvmf:
         isrand: 'True'
         name: op
         type: ecc_in_op_transactions
-        unpacked_dimension: ''
-      - comment: ''
-        iscompare: 'True'
-        isrand: 'True'
-        name: test_case_sel
-        type: bit [7:0]
         unpacked_dimension: ''
       use_dpi_link: 'False'

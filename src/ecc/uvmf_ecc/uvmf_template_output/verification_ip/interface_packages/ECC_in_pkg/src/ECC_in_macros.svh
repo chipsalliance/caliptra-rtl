@@ -51,7 +51,6 @@ typedef struct packed  { \
   `define ECC_in_MONITOR_STRUCT typedef struct packed  { \
   ecc_in_test_transactions test ; \
   ecc_in_op_transactions op ; \
-  bit [7:0] test_case_sel ; \
      } ECC_in_monitor_s;
 
   `define ECC_in_TO_MONITOR_STRUCT_FUNCTION \
@@ -59,8 +58,7 @@ typedef struct packed  { \
     ECC_in_monitor_struct = \
             { \
             this.test , \
-            this.op , \
-            this.test_case_sel  \
+            this.op  \
             };\
     return ( ECC_in_monitor_struct);\
   endfunction\
@@ -69,8 +67,7 @@ typedef struct packed  { \
   virtual function void from_monitor_struct(ECC_in_monitor_s ECC_in_monitor_struct);\
             {\
             this.test , \
-            this.op , \
-            this.test_case_sel  \
+            this.op  \
             } = ECC_in_monitor_struct;\
   endfunction
 
@@ -82,7 +79,6 @@ typedef struct packed  { \
   `define ECC_in_INITIATOR_STRUCT typedef struct packed  { \
   ecc_in_test_transactions test ; \
   ecc_in_op_transactions op ; \
-  bit [7:0] test_case_sel ; \
      } ECC_in_initiator_s;
 
   `define ECC_in_TO_INITIATOR_STRUCT_FUNCTION \
@@ -90,8 +86,7 @@ typedef struct packed  { \
     ECC_in_initiator_struct = \
            {\
            this.test , \
-           this.op , \
-           this.test_case_sel  \
+           this.op  \
            };\
     return ( ECC_in_initiator_struct);\
   endfunction
@@ -100,8 +95,7 @@ typedef struct packed  { \
   virtual function void from_initiator_struct(ECC_in_initiator_s ECC_in_initiator_struct);\
            {\
            this.test , \
-           this.op , \
-           this.test_case_sel  \
+           this.op  \
            } = ECC_in_initiator_struct;\
   endfunction
 
@@ -113,7 +107,6 @@ typedef struct packed  { \
   `define ECC_in_RESPONDER_STRUCT typedef struct packed  { \
   ecc_in_test_transactions test ; \
   ecc_in_op_transactions op ; \
-  bit [7:0] test_case_sel ; \
      } ECC_in_responder_s;
 
   `define ECC_in_TO_RESPONDER_STRUCT_FUNCTION \
@@ -121,8 +114,7 @@ typedef struct packed  { \
     ECC_in_responder_struct = \
            {\
            this.test , \
-           this.op , \
-           this.test_case_sel  \
+           this.op  \
            };\
     return ( ECC_in_responder_struct);\
   endfunction
@@ -131,8 +123,7 @@ typedef struct packed  { \
   virtual function void from_responder_struct(ECC_in_responder_s ECC_in_responder_struct);\
            {\
            this.test , \
-           this.op , \
-           this.test_case_sel  \
+           this.op  \
            } = ECC_in_responder_struct;\
   endfunction
 // pragma uvmf custom additional begin
