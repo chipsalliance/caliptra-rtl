@@ -48,7 +48,9 @@ package hmac_param_pkg;
   localparam HMAC_ADDR_TAG0        = 32'h00000100;
   localparam HMAC_ADDR_TAG11       = 32'h0000012C;
 
-  localparam HMAC_KV_CTRL          = 32'h00000200;
+  localparam HMAC_KV_KEY_READ_CTRL = 32'h00000600;
+  localparam HMAC_KV_SRC_READ_CTRL = 32'h00000604;
+  localparam HMAC_KV_WRITE_CTRL    = 32'h00000608;
 
   localparam HMAC_ADDR_INTR_START = 32'h00000800; // span = 0x400; 0x800 base offset matches mailbox for fw ease
   localparam HMAC_ADDR_INTR_END   = 32'h00000BFC;

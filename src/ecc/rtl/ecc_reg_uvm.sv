@@ -212,6 +212,79 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__ECC_IV
 
+    // Reg - kv_read_ctrl_reg
+    class kv_read_ctrl_reg extends uvm_reg;
+        rand uvm_reg_field read_en;
+        rand uvm_reg_field read_entry;
+        rand uvm_reg_field entry_is_pcr;
+        rand uvm_reg_field entry_data_size;
+        rand uvm_reg_field rsvd;
+        rand uvm_reg_field read_done;
+
+        function new(string name = "kv_read_ctrl_reg");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.read_en = new("read_en");
+            this.read_en.configure(this, 1, 0, "RW", 1, 'h0, 1, 1, 0);
+            this.read_entry = new("read_entry");
+            this.read_entry.configure(this, 3, 1, "RW", 0, 'h0, 1, 1, 0);
+            this.entry_is_pcr = new("entry_is_pcr");
+            this.entry_is_pcr.configure(this, 1, 4, "RW", 0, 'h0, 1, 1, 0);
+            this.entry_data_size = new("entry_data_size");
+            this.entry_data_size.configure(this, 5, 5, "RW", 0, 'h0, 1, 1, 0);
+            this.rsvd = new("rsvd");
+            this.rsvd.configure(this, 21, 10, "RW", 0, 'h0, 1, 1, 0);
+            this.read_done = new("read_done");
+            this.read_done.configure(this, 1, 31, "RO", 1, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : kv_read_ctrl_reg
+
+    // Reg - kv_write_ctrl_reg
+    class kv_write_ctrl_reg extends uvm_reg;
+        rand uvm_reg_field write_en;
+        rand uvm_reg_field write_entry;
+        rand uvm_reg_field entry_is_pcr;
+        rand uvm_reg_field hmac_key_dest_valid;
+        rand uvm_reg_field hmac_block_dest_valid;
+        rand uvm_reg_field sha_block_dest_valid;
+        rand uvm_reg_field ecc_pkey_dest_valid;
+        rand uvm_reg_field ecc_seed_dest_valid;
+        rand uvm_reg_field ecc_msg_dest_valid;
+        rand uvm_reg_field rsvd;
+        rand uvm_reg_field write_done;
+
+        function new(string name = "kv_write_ctrl_reg");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.write_en = new("write_en");
+            this.write_en.configure(this, 1, 0, "RW", 1, 'h0, 1, 1, 0);
+            this.write_entry = new("write_entry");
+            this.write_entry.configure(this, 3, 1, "RW", 0, 'h0, 1, 1, 0);
+            this.entry_is_pcr = new("entry_is_pcr");
+            this.entry_is_pcr.configure(this, 1, 4, "RW", 0, 'h0, 1, 1, 0);
+            this.hmac_key_dest_valid = new("hmac_key_dest_valid");
+            this.hmac_key_dest_valid.configure(this, 1, 5, "RW", 0, 'h0, 1, 1, 0);
+            this.hmac_block_dest_valid = new("hmac_block_dest_valid");
+            this.hmac_block_dest_valid.configure(this, 1, 6, "RW", 0, 'h0, 1, 1, 0);
+            this.sha_block_dest_valid = new("sha_block_dest_valid");
+            this.sha_block_dest_valid.configure(this, 1, 7, "RW", 0, 'h0, 1, 1, 0);
+            this.ecc_pkey_dest_valid = new("ecc_pkey_dest_valid");
+            this.ecc_pkey_dest_valid.configure(this, 1, 8, "RW", 0, 'h0, 1, 1, 0);
+            this.ecc_seed_dest_valid = new("ecc_seed_dest_valid");
+            this.ecc_seed_dest_valid.configure(this, 1, 9, "RW", 0, 'h0, 1, 1, 0);
+            this.ecc_msg_dest_valid = new("ecc_msg_dest_valid");
+            this.ecc_msg_dest_valid.configure(this, 1, 10, "RW", 0, 'h0, 1, 1, 0);
+            this.rsvd = new("rsvd");
+            this.rsvd.configure(this, 20, 11, "RW", 0, 'h0, 1, 1, 0);
+            this.write_done = new("write_done");
+            this.write_done.configure(this, 1, 31, "RO", 1, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : kv_write_ctrl_reg
+
     // Reg - ecc_reg::intr_block_t::global_intr_en_t
     class ecc_reg__intr_block_t__global_intr_en_t extends uvm_reg;
         rand uvm_reg_field error_en;
@@ -503,6 +576,10 @@ package ecc_reg_uvm;
         rand ecc_reg__ECC_SIGN_S ECC_SIGN_S[12];
         rand ecc_reg__ECC_VERIFY_R ECC_VERIFY_R[12];
         rand ecc_reg__ECC_IV ECC_IV[12];
+        rand kv_read_ctrl_reg ecc_kv_rd_pkey_ctrl;
+        rand kv_read_ctrl_reg ecc_kv_rd_seed_ctrl;
+        rand kv_read_ctrl_reg ecc_kv_rd_msg_ctrl;
+        rand kv_write_ctrl_reg ecc_kv_wr_pkey_ctrl;
         rand ecc_reg__intr_block_t intr_block_rf;
 
         function new(string name = "ecc_reg");
@@ -603,6 +680,26 @@ package ecc_reg_uvm;
                 this.ECC_IV[i0].build();
                 this.default_map.add_reg(this.ECC_IV[i0], 'h480 + i0*'h4);
             end
+            this.ecc_kv_rd_pkey_ctrl = new("ecc_kv_rd_pkey_ctrl");
+            this.ecc_kv_rd_pkey_ctrl.configure(this);
+
+            this.ecc_kv_rd_pkey_ctrl.build();
+            this.default_map.add_reg(this.ecc_kv_rd_pkey_ctrl, 'h600);
+            this.ecc_kv_rd_seed_ctrl = new("ecc_kv_rd_seed_ctrl");
+            this.ecc_kv_rd_seed_ctrl.configure(this);
+
+            this.ecc_kv_rd_seed_ctrl.build();
+            this.default_map.add_reg(this.ecc_kv_rd_seed_ctrl, 'h604);
+            this.ecc_kv_rd_msg_ctrl = new("ecc_kv_rd_msg_ctrl");
+            this.ecc_kv_rd_msg_ctrl.configure(this);
+
+            this.ecc_kv_rd_msg_ctrl.build();
+            this.default_map.add_reg(this.ecc_kv_rd_msg_ctrl, 'h608);
+            this.ecc_kv_wr_pkey_ctrl = new("ecc_kv_wr_pkey_ctrl");
+            this.ecc_kv_wr_pkey_ctrl.configure(this);
+
+            this.ecc_kv_wr_pkey_ctrl.build();
+            this.default_map.add_reg(this.ecc_kv_wr_pkey_ctrl, 'h60c);
             this.intr_block_rf = new("intr_block_rf");
             this.intr_block_rf.configure(this);
             this.intr_block_rf.build();

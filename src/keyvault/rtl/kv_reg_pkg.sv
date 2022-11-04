@@ -26,7 +26,7 @@ package kv_reg_pkg;
     } kv_reg__kvCtrl__lock_use__in_t;
 
     typedef struct {
-        logic [2:0] next;
+        logic [5:0] next;
         logic we;
     } kv_reg__kvCtrl__dest_valid__in_t;
 
@@ -82,7 +82,7 @@ package kv_reg_pkg;
     } kv_reg__kvCtrl__clear__out_t;
 
     typedef struct {
-        logic [2:0] value;
+        logic [5:0] value;
     } kv_reg__kvCtrl__dest_valid__out_t;
 
     typedef struct {

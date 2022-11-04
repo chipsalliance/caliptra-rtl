@@ -88,6 +88,34 @@ package ecc_reg_pkg;
     } ecc_reg__ECC_VERIFY_R__in_t;
 
     typedef struct {
+        logic hwclr;
+    } kv_read_ctrl_reg__read_en__in_t;
+
+    typedef struct {
+        logic hwclr;
+        logic hwset;
+    } kv_read_ctrl_reg__read_done__in_t;
+
+    typedef struct {
+        kv_read_ctrl_reg__read_en__in_t read_en;
+        kv_read_ctrl_reg__read_done__in_t read_done;
+    } __kv_read_ctrl_reg__in_t;
+
+    typedef struct {
+        logic hwclr;
+    } kv_write_ctrl_reg__write_en__in_t;
+
+    typedef struct {
+        logic hwclr;
+        logic hwset;
+    } kv_write_ctrl_reg__write_done__in_t;
+
+    typedef struct {
+        kv_write_ctrl_reg__write_en__in_t write_en;
+        kv_write_ctrl_reg__write_done__in_t write_done;
+    } __kv_write_ctrl_reg__in_t;
+
+    typedef struct {
         logic hwset;
     } ecc_reg__intr_block_t__error_intr_t__error_internal_sts_enable_d33001bb_next_52b75ffa_resetsignal_0d7eaa27__in_t;
 
@@ -121,6 +149,10 @@ package ecc_reg_pkg;
         ecc_reg__ECC_SIGN_R__in_t ECC_SIGN_R[12];
         ecc_reg__ECC_SIGN_S__in_t ECC_SIGN_S[12];
         ecc_reg__ECC_VERIFY_R__in_t ECC_VERIFY_R[12];
+        __kv_read_ctrl_reg__in_t ecc_kv_rd_pkey_ctrl;
+        __kv_read_ctrl_reg__in_t ecc_kv_rd_seed_ctrl;
+        __kv_read_ctrl_reg__in_t ecc_kv_rd_msg_ctrl;
+        __kv_write_ctrl_reg__in_t ecc_kv_wr_pkey_ctrl;
         ecc_reg__intr_block_t__in_t intr_block_rf;
     } ecc_reg__in_t;
 
@@ -228,6 +260,97 @@ package ecc_reg_pkg;
     } ecc_reg__ECC_IV__out_t;
 
     typedef struct {
+        logic value;
+    } kv_read_ctrl_reg__read_en__out_t;
+
+    typedef struct {
+        logic [2:0] value;
+    } kv_read_ctrl_reg__read_entry__out_t;
+
+    typedef struct {
+        logic value;
+    } kv_read_ctrl_reg__entry_is_pcr__out_t;
+
+    typedef struct {
+        logic [4:0] value;
+    } kv_read_ctrl_reg__entry_data_size__out_t;
+
+    typedef struct {
+        logic [20:0] value;
+    } kv_read_ctrl_reg__rsvd__out_t;
+
+    typedef struct {
+        logic value;
+    } kv_read_ctrl_reg__read_done__out_t;
+
+    typedef struct {
+        kv_read_ctrl_reg__read_en__out_t read_en;
+        kv_read_ctrl_reg__read_entry__out_t read_entry;
+        kv_read_ctrl_reg__entry_is_pcr__out_t entry_is_pcr;
+        kv_read_ctrl_reg__entry_data_size__out_t entry_data_size;
+        kv_read_ctrl_reg__rsvd__out_t rsvd;
+        kv_read_ctrl_reg__read_done__out_t read_done;
+    } __kv_read_ctrl_reg__out_t;
+
+    typedef struct {
+        logic value;
+    } kv_write_ctrl_reg__write_en__out_t;
+
+    typedef struct {
+        logic [2:0] value;
+    } kv_write_ctrl_reg__write_entry__out_t;
+
+    typedef struct {
+        logic value;
+    } kv_write_ctrl_reg__entry_is_pcr__out_t;
+
+    typedef struct {
+        logic value;
+    } kv_write_ctrl_reg__hmac_key_dest_valid__out_t;
+
+    typedef struct {
+        logic value;
+    } kv_write_ctrl_reg__hmac_block_dest_valid__out_t;
+
+    typedef struct {
+        logic value;
+    } kv_write_ctrl_reg__sha_block_dest_valid__out_t;
+
+    typedef struct {
+        logic value;
+    } kv_write_ctrl_reg__ecc_pkey_dest_valid__out_t;
+
+    typedef struct {
+        logic value;
+    } kv_write_ctrl_reg__ecc_seed_dest_valid__out_t;
+
+    typedef struct {
+        logic value;
+    } kv_write_ctrl_reg__ecc_msg_dest_valid__out_t;
+
+    typedef struct {
+        logic [19:0] value;
+    } kv_write_ctrl_reg__rsvd__out_t;
+
+    typedef struct {
+        logic value;
+    } kv_write_ctrl_reg__write_done__out_t;
+
+    typedef struct {
+        kv_write_ctrl_reg__write_en__out_t write_en;
+        kv_write_ctrl_reg__write_entry__out_t write_entry;
+        kv_write_ctrl_reg__entry_is_pcr__out_t entry_is_pcr;
+        kv_write_ctrl_reg__hmac_key_dest_valid__out_t hmac_key_dest_valid;
+        kv_write_ctrl_reg__hmac_block_dest_valid__out_t hmac_block_dest_valid;
+        kv_write_ctrl_reg__sha_block_dest_valid__out_t sha_block_dest_valid;
+        kv_write_ctrl_reg__ecc_pkey_dest_valid__out_t ecc_pkey_dest_valid;
+        kv_write_ctrl_reg__ecc_seed_dest_valid__out_t ecc_seed_dest_valid;
+        kv_write_ctrl_reg__ecc_msg_dest_valid__out_t ecc_msg_dest_valid;
+        kv_write_ctrl_reg__rsvd__out_t rsvd;
+        kv_write_ctrl_reg__write_done__out_t write_done;
+    } __kv_write_ctrl_reg__out_t;
+
+    typedef struct {
         logic intr;
     } ecc_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a__out_t;
 
@@ -262,6 +385,10 @@ package ecc_reg_pkg;
         ecc_reg__ECC_SIGN_S__out_t ECC_SIGN_S[12];
         ecc_reg__ECC_VERIFY_R__out_t ECC_VERIFY_R[12];
         ecc_reg__ECC_IV__out_t ECC_IV[12];
+        __kv_read_ctrl_reg__out_t ecc_kv_rd_pkey_ctrl;
+        __kv_read_ctrl_reg__out_t ecc_kv_rd_seed_ctrl;
+        __kv_read_ctrl_reg__out_t ecc_kv_rd_msg_ctrl;
+        __kv_write_ctrl_reg__out_t ecc_kv_wr_pkey_ctrl;
         ecc_reg__intr_block_t__out_t intr_block_rf;
     } ecc_reg__out_t;
 

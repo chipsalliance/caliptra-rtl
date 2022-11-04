@@ -21,9 +21,15 @@ targets:
       - $COMPILE_ROOT/rtl/kv_defines_pkg.sv
       - $COMPILE_ROOT/rtl/kv.sv
       - $COMPILE_ROOT/rtl/kv_fsm.sv
-      - $COMPILE_ROOT/rtl/kv_client.sv
-      - $COMPILE_ROOT/rtl/kv_doe.sv
+      - $COMPILE_ROOT/rtl/kv_read_client.sv
+      - $COMPILE_ROOT/rtl/kv_write_client.sv
     tops: [keyvault]
+  rtl_lint:
+    directories: []
+    waiver_files:
+      - $COMPILE_ROOT/config/design_lint/sglint_waivers
+    black_box:
+      - kv_reg
 global:
   tool:
     vcs:

@@ -14,6 +14,7 @@
 
 module mbox_top 
     import mbox_pkg::*;
+    import mbox_reg_pkg::*;
     #(
      parameter APB_ADDR_WIDTH = 18
     ,parameter APB_DATA_WIDTH = 32
@@ -115,8 +116,8 @@ logic uc_mbox_data_avail;
 logic uc_mbox_data_avail_d;
 logic uc_cmd_avail_p;
 
-mbox_reg_pkg::mbox_reg__in_t mbox_reg_hwif_in;
-mbox_reg_pkg::mbox_reg__out_t mbox_reg_hwif_out;
+mbox_reg__in_t mbox_reg_hwif_in;
+mbox_reg__out_t mbox_reg_hwif_out;
 
 //Boot FSM
 //This module contains the logic required to control the Caliptra Boot Flow
@@ -306,9 +307,9 @@ mbox_reg mbox_reg1 (
     .clk(clk),
     .rst('0),
     //qualify request so no addresses alias
-    .s_cpuif_req(mbox_reg_req_dv & (mbox_reg_req_data.addr[MBOX_INF_ADDR_W-1:mbox_reg_pkg::MBOX_REG_ADDR_WIDTH] == MBOX_REG_MEM_START_ADDR[MBOX_INF_ADDR_W-1:mbox_reg_pkg::MBOX_REG_ADDR_WIDTH])),
+    .s_cpuif_req(mbox_reg_req_dv & (mbox_reg_req_data.addr[MBOX_INF_ADDR_W-1:MBOX_REG_ADDR_WIDTH] == MBOX_REG_MEM_START_ADDR[MBOX_INF_ADDR_W-1:MBOX_REG_ADDR_WIDTH])),
     .s_cpuif_req_is_wr(mbox_reg_req_data.write),
-    .s_cpuif_addr(mbox_reg_req_data.addr[mbox_reg_pkg::MBOX_REG_ADDR_WIDTH-1:0]),
+    .s_cpuif_addr(mbox_reg_req_data.addr[MBOX_REG_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data(mbox_reg_req_data.wdata),
     .s_cpuif_req_stall_wr(s_cpuif_req_stall_wr_nc),
     .s_cpuif_req_stall_rd(s_cpuif_req_stall_rd_nc),

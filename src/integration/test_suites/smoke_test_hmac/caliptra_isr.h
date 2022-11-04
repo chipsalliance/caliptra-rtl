@@ -38,17 +38,17 @@ void init_interrupts(void);
 
 // These inline functions are used to insert event-specific functionality into the
 // otherwise generic ISR that gets laid down by the parameterized macro "nonstd_swerv_isr"
-inline void service_aes_error_intr() {return;}
-inline void service_aes_notif_intr() {printf("ERROR");}
+inline void service_doe_error_intr() {return;}
+inline void service_doe_notif_intr() {printf("ERROR");}
 inline void service_ecc_error_intr   () {printf("ERROR");}
 inline void service_ecc_notif_intr   () {printf("ERROR");}
 inline void service_hmac_error_intr  () {printf("ERROR");}
 inline void service_hmac_notif_intr  () {
-    uint32_t * reg = (uint32_t *) (HMAC_ADDR_INTR_START + HMAC_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+    uint32_t * reg = (uint32_t *) (CLP_HMAC_REG_BASE_ADDR + HMAC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
     uint32_t sts = *reg;
     /* Write 1 to Clear the pending interrupt */
-    if (sts & HMAC_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
-        *reg = HMAC_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
+    if (sts & HMAC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
+        *reg = HMAC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
     }
     if (sts == 0) {
         printf("bad hmac_notif_intr sts:%x\n", sts);

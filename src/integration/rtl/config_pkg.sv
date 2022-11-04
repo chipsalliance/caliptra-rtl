@@ -29,12 +29,12 @@ package config_pkg;
   `define SOC_SEC_STATE_WIDTH 3
 
   // AHB Address Map
-  `define SLAVE_NAMES         {"SWERV_DMA"  , "MBOX"       , "I3C"        , "UART"       , "QSPI"       , "SHA"        , "KEYVAULT"   , "HMAC"       , "ECC"        , "AES_CTRL"   } /* Array of names for peripherals */
+  `define SLAVE_NAMES         {"SWERV_DMA"  , "MBOX"       , "I3C"        , "UART"       , "QSPI"       , "SHA"        , "KEYVAULT"   , "HMAC"       , "ECC"        , "DOE_CTRL"   } /* Array of names for peripherals */
   `define SLAVE_BASE_ADDR     {32'h4000_0000, 32'h3000_0000, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'h1002_0000, 32'h1001_8000, 32'h1001_0000, 32'h1000_8000, 32'h1000_0000} /* Array with slave base address */
   `define SLAVE_MASK_ADDR     {32'h4007_FFFF, 32'h3003_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'h1002_FFFF, 32'h1001_FFFF, 32'h1001_0FFF, 32'h1000_FFFF, 32'h1000_7FFF} /* Array with slave offset address */
   `define SLAVE_ADDR_MASK     (`SLAVE_BASE_ADDR ^ `SLAVE_MASK_ADDR) /* Array indicating meaningful address bits for each slave */
   `define SLAVE_ADDR_WIDTH(n) $clog2((`SLAVE_ADDR_MASK >> (`AHB_HADDR_SIZE*n)) & {`AHB_HADDR_SIZE{1'b1}}) /* Decode address width for each slave from assigned BASE/MASK address */
-  `define SLAVE_SEL_AES       0
+  `define SLAVE_SEL_DOE       0
   `define SLAVE_SEL_ECC       1
   `define SLAVE_SEL_HMAC      2
   `define SLAVE_SEL_KV        3
@@ -47,8 +47,8 @@ package config_pkg;
 
   // Interrupt Assignments
   // NOTE Vector 0 is reserved by SweRV
-  `define SWERV_INTR_VEC_AES_ERROR    1
-  `define SWERV_INTR_VEC_AES_NOTIF    2
+  `define SWERV_INTR_VEC_DOE_ERROR    1
+  `define SWERV_INTR_VEC_DOE_NOTIF    2
   `define SWERV_INTR_VEC_ECC_ERROR    3
   `define SWERV_INTR_VEC_ECC_NOTIF    4
   `define SWERV_INTR_VEC_HMAC_ERROR   5
@@ -70,8 +70,8 @@ package config_pkg;
   // Used to tie-off unused upper intr bits
   `define SWERV_INTR_VEC_MAX_ASSIGNED `SWERV_INTR_VEC_MBOX_NOTIF
 
-  `define KV_NUM_READ 1
-  `define KV_NUM_WRITE 2
+  `define KV_NUM_READ 6
+  `define KV_NUM_WRITE 4
 
   `define IMEM_BYTE_SIZE  32768
   `define IMEM_DATA_WIDTH 64

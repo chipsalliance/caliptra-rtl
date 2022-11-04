@@ -23,7 +23,7 @@
 
 module hmac 
        import hmac_param_pkg::*;
-       import hmac_intr_regs_pkg::*;
+       import hmac_reg_pkg::*;
        import kv_defines_pkg::*;      
       #(
         ADDR_WIDTH = 32
@@ -43,9 +43,9 @@ module hmac
         output wire [31 : 0] read_data,
 
         // KV interface
-        output kv_read_t kv_read,
+        output kv_read_t [1:0] kv_read,
         output kv_write_t kv_write,
-        input kv_resp_t kv_resp,
+        input kv_resp_t [1:0] kv_resp,
 
         output wire error_intr,
         output wire notif_intr
@@ -78,31 +78,28 @@ module hmac
   wire           core_ready;
   wire [383 : 0] core_tag;
   wire           core_tag_valid;
-  reg [383 : 0]  tag_reg;
-  reg [383 : 0]  kv_reg;
-  reg [31  : 0]  tmp_read_data;
+  reg [0:11][31:0] tag_reg;
+  reg [0:11][31:0] kv_reg;
 
-  // Interrupts
-  logic intr_reg_we;
-  logic [31:0] intr_reg_read_data;
-  hmac_intr_regs__in_t hwif_in;
-  hmac_intr_regs__out_t hwif_out;
+  hmac_reg__in_t hwif_in;
+  hmac_reg__out_t hwif_out;
 
-  //interface with client
+  //interface with kv client
   logic kv_key_write_en;
   logic [3:0] kv_key_write_offset;
   logic [31:0] kv_key_write_data;
-  logic kv_src_write_en;
-  logic [4:0] kv_src_write_offset;
-  logic [31:0] kv_src_write_data;
-
-  logic kv_key_done;
-  logic kv_src_done;
-  logic kv_dest_done;
+  logic kv_block_write_en;
+  logic [4:0] kv_block_write_offset;
+  logic [31:0] kv_block_write_data;
 
   logic dest_keyvault;
-  logic kv_ctrl_we;
-  kv_reg_t kv_ctrl_reg;
+  logic kv_key_done;
+  logic kv_block_done;
+  logic kv_write_done;
+
+  kv_read_ctrl_reg_t kv_key_read_ctrl_reg;
+  kv_read_ctrl_reg_t kv_block_read_ctrl_reg;
+  kv_write_ctrl_reg_t kv_write_ctrl_reg;
   logic core_tag_we;
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
@@ -118,8 +115,6 @@ module hmac
 
   assign core_key = {key_reg[00], key_reg[01], key_reg[02], key_reg[03], key_reg[04], key_reg[05],
                      key_reg[06], key_reg[07], key_reg[08], key_reg[09], key_reg[10], key_reg[11]};
-
-  assign read_data = tmp_read_data;
 
   //rising edge detect on core tag valid
   assign core_tag_we = core_tag_valid & ~tag_valid_reg;
@@ -157,25 +152,12 @@ module hmac
 
       if (!reset_n)
         begin
-          for (ii = 0 ; ii < 32 ; ii = ii + 1)
-            block_reg[ii] <= 32'h0;
-
-          for (ii = 0 ; ii < 12 ; ii = ii + 1)
-            key_reg[ii] <= 32'h0;
-
-          init_reg      <= 1'h0;
-          next_reg      <= 1'h0;
-          tag_reg       <= 384'h0;
           kv_reg        <= '0;
-          kv_ctrl_reg   <= '0;
-          ready_reg     <= 0;
-          tag_valid_reg <= 0;
+          tag_reg       <= '0;
+          tag_valid_reg <= '0;
         end
       else
         begin
-          init_reg      <= init_new;
-          next_reg      <= next_new;
-          ready_reg     <= core_ready;
           tag_valid_reg <= core_tag_valid;
 
           //write to sw register
@@ -183,136 +165,84 @@ module hmac
             tag_reg <= core_tag;
           if (core_tag_we & dest_keyvault)
             kv_reg <= core_tag;
-          if (key_we)
-            key_reg[address[5 : 2]] <= write_data;
-          if (kv_key_write_en)
-            key_reg[kv_key_write_offset] <= kv_key_write_data;
-          if (block_we)
-            block_reg[address[6 : 2]] <= write_data;
-          if (kv_src_write_en)
-            block_reg[kv_src_write_offset] <= kv_src_write_data;
-          if (kv_ctrl_we)
-            kv_ctrl_reg <= write_data;
-          //clear key sel and set key done when key has been copied
-          if (kv_key_done) begin
-            kv_ctrl_reg.key_sel_en <= '0;
-            kv_ctrl_reg.key_done <= '1;
-          end
-          //clear src sel and set src done when src has been copied
-          if (kv_src_done) begin
-            kv_ctrl_reg.src_sel_en <= '0;
-            kv_ctrl_reg.src_done <= '1;
-          end
-          //clear dest sel and set dest done when dest has been copied
-          if (kv_dest_done) begin
-            kv_ctrl_reg.dest_done <= '1;
-          end
-          if (next_new) begin
-            kv_ctrl_reg.dest_done <= '0;
-          end
+
         end
     end // reg_update
 
+//HMAC register hardware interfaces
+always_comb begin
+  //drive resets to register block
+  hwif_in.error_reset_b = cptra_pwrgood;
+  hwif_in.reset_b = reset_n;
+  //drive hardware writeable registers from hmac core
+  hwif_in.HMAC384_NAME[0].NAME.next = HMAC_CORE_NAME[31:0];
+  hwif_in.HMAC384_NAME[1].NAME.next = HMAC_CORE_NAME[63:32];
+  hwif_in.HMAC384_VERSION[0].VERSION.next = HMAC_CORE_VERSION[31:0];
+  hwif_in.HMAC384_VERSION[1].VERSION.next = HMAC_CORE_VERSION[63:32];
+  hwif_in.HMAC384_STATUS.READY.next = core_ready;
+  hwif_in.HMAC384_STATUS.VALID.next = tag_valid_reg;
+  for (int dword=0; dword < 12; dword++) begin
+    hwif_in.HMAC384_TAG[dword].TAG.next = tag_reg[dword];
+  end
+  //drive hardware writable registers from key vault
+  for (int dword=0; dword < 32; dword++)begin
+    hwif_in.HMAC384_BLOCK[dword].BLOCK.we = kv_block_write_en & (kv_block_write_offset == dword);
+    hwif_in.HMAC384_BLOCK[dword].BLOCK.next = kv_block_write_data;
+  end
+  for (int dword=0; dword < 12; dword++)begin
+    hwif_in.HMAC384_KEY[dword].KEY.we = kv_key_write_en & (kv_key_write_offset == dword);
+    hwif_in.HMAC384_KEY[dword].KEY.next = kv_key_write_data;
+  end
+  //set done when fsm is done
+  hwif_in.HMAC384_KV_RD_KEY_CTRL.read_done.hwset = kv_key_done;
+  hwif_in.HMAC384_KV_RD_BLOCK_CTRL.read_done.hwset = kv_block_done;
+  hwif_in.HMAC384_KV_WR_CTRL.write_done.hwset = kv_write_done;
+  //clear done when new request is made
+  hwif_in.HMAC384_KV_RD_KEY_CTRL.read_done.hwclr = kv_key_read_ctrl_reg.read_en;
+  hwif_in.HMAC384_KV_RD_BLOCK_CTRL.read_done.hwclr = kv_block_read_ctrl_reg.read_en;
+  hwif_in.HMAC384_KV_WR_CTRL.write_done.hwclr = kv_write_ctrl_reg.write_en;
+  //clear enable when done
+  hwif_in.HMAC384_KV_RD_KEY_CTRL.read_en.hwclr = kv_key_done;
+  hwif_in.HMAC384_KV_RD_BLOCK_CTRL.read_en.hwclr = kv_block_done;
+  hwif_in.HMAC384_KV_WR_CTRL.write_en.hwclr = kv_write_done;
+  //assign hardware readable registers to drive hmac core
+  init_reg = hwif_out.HMAC384_CTRL.INIT.value;
+  next_reg = hwif_out.HMAC384_CTRL.NEXT.value;
+  for (int dword=0; dword < 12; dword++) begin
+    key_reg[dword] = hwif_out.HMAC384_KEY[dword].KEY.value;
+  end
+  for (int dword=0; dword < 32; dword++)begin
+    block_reg[dword] = hwif_out.HMAC384_BLOCK[dword].BLOCK.value;
+  end
+end
 
-  //----------------------------------------------------------------
-  // api_logic
-  //
-  // Implementation of the api logic. If cs is enabled will either
-  // try to write to or read from the internal registers.
-  //----------------------------------------------------------------
-  always @*
-    begin : api_logic
-      init_new      = 0;
-      next_new      = 0;
-      key_we        = 0;
-      block_we      = 0;
-      kv_ctrl_we    = 0;
-      intr_reg_we   = 0;
-      tmp_read_data = 32'h0;
+//keyvault control reg macros for assigning to struct
+`KV_READ_CTRL_REG2STRUCT(kv_key_read_ctrl_reg, HMAC384_KV_RD_KEY_CTRL)
+`KV_READ_CTRL_REG2STRUCT(kv_block_read_ctrl_reg, HMAC384_KV_RD_BLOCK_CTRL)
+`KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, HMAC384_KV_WR_CTRL)
 
-      if (cs)
-        begin
-          if (we)
-            begin
-              if (address == HMAC_ADDR_CTRL)
-                begin
-                  init_new     = write_data[HMAC_CTRL_INIT_BIT];
-                  next_new     = write_data[HMAC_CTRL_NEXT_BIT];
-                end
-
-              if ((address >= HMAC_ADDR_KEY0) && (address <= HMAC_ADDR_KEY11))
-                key_we = 1;
-
-              if ((address >= HMAC_ADDR_BLOCK0) && (address <= HMAC_ADDR_BLOCK31))
-                block_we = 1;
-
-              if (address == HMAC_KV_CTRL)
-                kv_ctrl_we = 1;
-
-              if (address inside {[HMAC_ADDR_INTR_START:HMAC_ADDR_INTR_END]})
-                intr_reg_we = 1;
-            end // if (we)
-
-          else
-            begin
-              if ((address >= HMAC_ADDR_TAG0) && (address <= HMAC_ADDR_TAG11))
-                tmp_read_data = tag_reg[(11 - ((address - HMAC_ADDR_TAG0) >> 2)) * 32 +: 32];
-              else begin
-                unique case (address) inside
-                  // Read operations.
-                  HMAC_ADDR_NAME0:
-                    tmp_read_data = HMAC_CORE_NAME[31:0];
-                  
-                  HMAC_ADDR_NAME1:
-                    tmp_read_data = HMAC_CORE_NAME[63:32];
-
-                  HMAC_ADDR_VERSION0:
-                    tmp_read_data = HMAC_CORE_VERSION[31:0];
-
-                  HMAC_ADDR_VERSION1:
-                    tmp_read_data = HMAC_CORE_VERSION[63:32];
-
-                  HMAC_ADDR_STATUS:
-                    tmp_read_data = {30'h0, tag_valid_reg, ready_reg};
-
-                  HMAC_KV_CTRL:
-                    tmp_read_data = kv_ctrl_reg;
-
-                  [HMAC_ADDR_INTR_START:HMAC_ADDR_INTR_END]:
-                    tmp_read_data = intr_reg_read_data;
-
-                  default:
-                    tmp_read_data = 32'h0;
-
-                endcase // case (address)
-              end
-            end
-        end
-    end // addr_decoder
-
-// Interrupt Registers
-hmac_intr_regs i_hmac_intr_regs (
+// Register block
+hmac_reg i_hmac_reg (
     .clk(clk),
     .rst(1'b0),
 
-    .s_cpuif_req         (cs                                    ),
-    .s_cpuif_req_is_wr   (intr_reg_we                           ),
-    .s_cpuif_addr        (address[HMAC_INTR_REGS_ADDR_WIDTH-1:0]),
-    .s_cpuif_wr_data     (write_data                            ),
-    .s_cpuif_req_stall_wr(                                      ),
-    .s_cpuif_req_stall_rd(                                      ),
-    .s_cpuif_rd_ack      (                                      ),
-    .s_cpuif_rd_err      (                                      ),
-    .s_cpuif_rd_data     (intr_reg_read_data                    ),
-    .s_cpuif_wr_ack      (                                      ),
-    .s_cpuif_wr_err      (                                      ),
+    .s_cpuif_req         (cs),
+    .s_cpuif_req_is_wr   (we),
+    .s_cpuif_addr        (address[HMAC_REG_ADDR_WIDTH-1:0]),
+    .s_cpuif_wr_data     (write_data),
+    .s_cpuif_req_stall_wr(),
+    .s_cpuif_req_stall_rd(),
+    .s_cpuif_rd_ack      (),
+    .s_cpuif_rd_err      (),
+    .s_cpuif_rd_data     (read_data),
+    .s_cpuif_wr_ack      (),
+    .s_cpuif_wr_err      (),
 
-    .hwif_in (hwif_in ),
+    .hwif_in (hwif_in),
     .hwif_out(hwif_out)
 );
 
-assign hwif_in.reset_b = reset_n;
-assign hwif_in.error_reset_b = cptra_pwrgood;
+//Interrupts hardware interface
 assign hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = core_tag_we;
 assign hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = 1'b0; // TODO
 assign hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = 1'b0; // TODO
@@ -322,41 +252,79 @@ assign hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // T
 assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
 assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
 
-//keyvault module
-kv_client #(
-    .DEST_WIDTH(384),
-    .KEY_WIDTH(384),
-    .SRC_WIDTH(1024),
-    .HMAC_PAD(1)
+//Read Key
+kv_read_client #(
+  .DATA_WIDTH(384),
+  .PAD(0)
 )
-kv_client_hmac
+hmac_key_kv_read
 (
     .clk(clk),
     .rst_b(reset_n),
+
     //client control register
-    .client_ctrl_reg(kv_ctrl_reg), 
+    .read_ctrl_reg(kv_key_read_ctrl_reg),
 
     //interface with kv
-    .kv_read(kv_read),
-    .kv_write(kv_write),
-    .kv_resp(kv_resp),
+    .kv_read(kv_read[0]),
+    .kv_resp(kv_resp[0]),
 
     //interface with client
-    .key_write_en(kv_key_write_en),
-    .key_write_offset(kv_key_write_offset),
-    .key_write_data(kv_key_write_data),
-    .src_write_en(kv_src_write_en),
-    .src_write_offset(kv_src_write_offset),
-    .src_write_data(kv_src_write_data),
+    .write_en(kv_key_write_en),
+    .write_offset(kv_key_write_offset),
+    .write_data(kv_key_write_data),
 
-    .dest_keyvault(dest_keyvault),
-    .dest_data_avail(core_tag_we),
-    .dest_data(kv_reg),
-
-    .key_done(kv_key_done),
-    .src_done(kv_src_done),
-    .dest_done(kv_dest_done)
+    .read_done(kv_key_done)
 );
+
+//Read Block
+kv_read_client #(
+  .DATA_WIDTH(1024),
+  .PAD(1)
+)
+hmac_block_kv_read
+(
+    .clk(clk),
+    .rst_b(reset_n),
+
+    //client control register
+    .read_ctrl_reg(kv_block_read_ctrl_reg),
+
+    //interface with kv
+    .kv_read(kv_read[1]),
+    .kv_resp(kv_resp[1]),
+
+    //interface with client
+    .write_en(kv_block_write_en),
+    .write_offset(kv_block_write_offset),
+    .write_data(kv_block_write_data),
+
+    .read_done(kv_block_done)
+);
+
+//Write to keyvault
+kv_write_client #(
+  .DATA_WIDTH(384)
+)
+hmac_result_kv_write
+(
+  .clk(clk),
+  .rst_b(reset_n),
+
+  //client control register
+  .write_ctrl_reg(kv_write_ctrl_reg),
+
+  //interface with kv
+  .kv_write(kv_write),
+
+  //interface with client
+  .dest_keyvault(dest_keyvault),
+  .dest_data_avail(core_tag_we),
+  .dest_data(kv_reg),
+
+  .dest_done(kv_write_done)
+);
+
 endmodule // hmac
 
 //======================================================================

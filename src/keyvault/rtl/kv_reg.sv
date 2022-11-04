@@ -127,11 +127,11 @@ module kv_reg (
                 logic load_next;
             } clear;
             struct {
-                logic [2:0] next;
+                logic [5:0] next;
                 logic load_next;
             } dest_valid;
             struct {
-                logic [19:0] next;
+                logic [16:0] next;
                 logic load_next;
             } rsvd;
         } key_ctrl[8];
@@ -153,11 +153,11 @@ module kv_reg (
                 logic load_next;
             } clear;
             struct {
-                logic [2:0] next;
+                logic [5:0] next;
                 logic load_next;
             } dest_valid;
             struct {
-                logic [19:0] next;
+                logic [16:0] next;
                 logic load_next;
             } rsvd;
         } pcr_ctrl[8];
@@ -190,10 +190,10 @@ module kv_reg (
                 logic value;
             } clear;
             struct {
-                logic [2:0] value;
+                logic [5:0] value;
             } dest_valid;
             struct {
-                logic [19:0] value;
+                logic [16:0] value;
             } rsvd;
         } key_ctrl[8];
         struct {
@@ -210,10 +210,10 @@ module kv_reg (
                 logic value;
             } clear;
             struct {
-                logic [2:0] value;
+                logic [5:0] value;
             } dest_valid;
             struct {
-                logic [19:0] value;
+                logic [16:0] value;
             } rsvd;
         } pcr_ctrl[8];
         struct {
@@ -335,7 +335,7 @@ module kv_reg (
         assign hwif_out.key_ctrl[i0].clear.value = field_storage.key_ctrl[i0].clear.value;
         // Field: kv_reg.key_ctrl[].dest_valid
         always_comb begin
-            automatic logic [2:0] next_c = field_storage.key_ctrl[i0].dest_valid.value;
+            automatic logic [5:0] next_c = field_storage.key_ctrl[i0].dest_valid.value;
             automatic logic load_next_c = '0;
             if(hwif_in.key_ctrl[i0].dest_valid.we) begin // HW Write - we
                 next_c = hwif_in.key_ctrl[i0].dest_valid.next;
@@ -354,10 +354,10 @@ module kv_reg (
         assign hwif_out.key_ctrl[i0].dest_valid.value = field_storage.key_ctrl[i0].dest_valid.value;
         // Field: kv_reg.key_ctrl[].rsvd
         always_comb begin
-            automatic logic [19:0] next_c = field_storage.key_ctrl[i0].rsvd.value;
+            automatic logic [16:0] next_c = field_storage.key_ctrl[i0].rsvd.value;
             automatic logic load_next_c = '0;
             if(decoded_reg_strb.key_ctrl[i0] && decoded_req_is_wr) begin // SW write
-                next_c = decoded_wr_data[31:12];
+                next_c = decoded_wr_data[31:15];
                 load_next_c = '1;
             end
             field_combo.key_ctrl[i0].rsvd.next = next_c;
@@ -453,7 +453,7 @@ module kv_reg (
         assign hwif_out.pcr_ctrl[i0].clear.value = field_storage.pcr_ctrl[i0].clear.value;
         // Field: kv_reg.pcr_ctrl[].dest_valid
         always_comb begin
-            automatic logic [2:0] next_c = field_storage.pcr_ctrl[i0].dest_valid.value;
+            automatic logic [5:0] next_c = field_storage.pcr_ctrl[i0].dest_valid.value;
             automatic logic load_next_c = '0;
             if(hwif_in.pcr_ctrl[i0].dest_valid.we) begin // HW Write - we
                 next_c = hwif_in.pcr_ctrl[i0].dest_valid.next;
@@ -472,10 +472,10 @@ module kv_reg (
         assign hwif_out.pcr_ctrl[i0].dest_valid.value = field_storage.pcr_ctrl[i0].dest_valid.value;
         // Field: kv_reg.pcr_ctrl[].rsvd
         always_comb begin
-            automatic logic [19:0] next_c = field_storage.pcr_ctrl[i0].rsvd.value;
+            automatic logic [16:0] next_c = field_storage.pcr_ctrl[i0].rsvd.value;
             automatic logic load_next_c = '0;
             if(decoded_reg_strb.pcr_ctrl[i0] && decoded_req_is_wr) begin // SW write
-                next_c = decoded_wr_data[31:12];
+                next_c = decoded_wr_data[31:15];
                 load_next_c = '1;
             end
             field_combo.pcr_ctrl[i0].rsvd.next = next_c;
@@ -539,8 +539,8 @@ module kv_reg (
         assign readback_array[i0*1 + 128][2:2] = (decoded_reg_strb.key_ctrl[i0] && !decoded_req_is_wr) ? field_storage.key_ctrl[i0].lock_use.value : '0;
         assign readback_array[i0*1 + 128][3:3] = (decoded_reg_strb.key_ctrl[i0] && !decoded_req_is_wr) ? field_storage.key_ctrl[i0].clear.value : '0;
         assign readback_array[i0*1 + 128][8:4] = '0;
-        assign readback_array[i0*1 + 128][11:9] = (decoded_reg_strb.key_ctrl[i0] && !decoded_req_is_wr) ? field_storage.key_ctrl[i0].dest_valid.value : '0;
-        assign readback_array[i0*1 + 128][31:12] = (decoded_reg_strb.key_ctrl[i0] && !decoded_req_is_wr) ? field_storage.key_ctrl[i0].rsvd.value : '0;
+        assign readback_array[i0*1 + 128][14:9] = (decoded_reg_strb.key_ctrl[i0] && !decoded_req_is_wr) ? field_storage.key_ctrl[i0].dest_valid.value : '0;
+        assign readback_array[i0*1 + 128][31:15] = (decoded_reg_strb.key_ctrl[i0] && !decoded_req_is_wr) ? field_storage.key_ctrl[i0].rsvd.value : '0;
     end
     for(genvar i0=0; i0<8; i0++) begin
         assign readback_array[i0*1 + 136][0:0] = (decoded_reg_strb.pcr_ctrl[i0] && !decoded_req_is_wr) ? field_storage.pcr_ctrl[i0].lock_rd.value : '0;
@@ -548,8 +548,8 @@ module kv_reg (
         assign readback_array[i0*1 + 136][2:2] = (decoded_reg_strb.pcr_ctrl[i0] && !decoded_req_is_wr) ? field_storage.pcr_ctrl[i0].lock_use.value : '0;
         assign readback_array[i0*1 + 136][3:3] = (decoded_reg_strb.pcr_ctrl[i0] && !decoded_req_is_wr) ? field_storage.pcr_ctrl[i0].clear.value : '0;
         assign readback_array[i0*1 + 136][8:4] = '0;
-        assign readback_array[i0*1 + 136][11:9] = (decoded_reg_strb.pcr_ctrl[i0] && !decoded_req_is_wr) ? field_storage.pcr_ctrl[i0].dest_valid.value : '0;
-        assign readback_array[i0*1 + 136][31:12] = (decoded_reg_strb.pcr_ctrl[i0] && !decoded_req_is_wr) ? field_storage.pcr_ctrl[i0].rsvd.value : '0;
+        assign readback_array[i0*1 + 136][14:9] = (decoded_reg_strb.pcr_ctrl[i0] && !decoded_req_is_wr) ? field_storage.pcr_ctrl[i0].dest_valid.value : '0;
+        assign readback_array[i0*1 + 136][31:15] = (decoded_reg_strb.pcr_ctrl[i0] && !decoded_req_is_wr) ? field_storage.pcr_ctrl[i0].rsvd.value : '0;
     end
 
 

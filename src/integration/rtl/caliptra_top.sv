@@ -174,8 +174,8 @@ module caliptra_top
     logic [11:0][31:0] obf_uds_seed;
 
     // Interrupt Signals
-    wire aes_error_intr;
-    wire aes_notif_intr;
+    wire doe_error_intr;
+    wire doe_notif_intr;
     wire ecc_error_intr;
     wire ecc_notif_intr;
     wire hmac_error_intr;
@@ -280,8 +280,8 @@ assign i3c_notif_intr = 1'b0; // TODO
 // Vector 0 usage is reserved by SweRV, so bit 0 of the intr wire
 // drive Vector 1
 always_comb begin
-    intr[`SWERV_INTR_VEC_AES_ERROR   -1]          = aes_error_intr;
-    intr[`SWERV_INTR_VEC_AES_NOTIF   -1]          = aes_notif_intr;
+    intr[`SWERV_INTR_VEC_DOE_ERROR   -1]          = doe_error_intr;
+    intr[`SWERV_INTR_VEC_DOE_NOTIF   -1]          = doe_notif_intr;
     intr[`SWERV_INTR_VEC_ECC_ERROR   -1]          = ecc_error_intr;
     intr[`SWERV_INTR_VEC_ECC_NOTIF   -1]          = ecc_notif_intr;
     intr[`SWERV_INTR_VEC_HMAC_ERROR  -1]          = hmac_error_intr;
@@ -477,38 +477,69 @@ sha512_ctrl #(
     .hresp_o        (responder_inst[`SLAVE_SEL_SHA].hresp),
     .hreadyout_o    (responder_inst[`SLAVE_SEL_SHA].hreadyout),
     .hrdata_o       (responder_inst[`SLAVE_SEL_SHA].hrdata),
+    .kv_read        (kv_read[2]),
+    .kv_write       (kv_write[1]),
+    .kv_resp        (kv_resp[2]),
 
     .error_intr(sha512_error_intr),
     .notif_intr(sha512_notif_intr)
 );
 
-aes_ctrl #(
+doe_ctrl #(
     .AHB_DATA_WIDTH (64),
-    .AHB_ADDR_WIDTH (`SLAVE_ADDR_WIDTH(`SLAVE_SEL_AES))
-) aes (
+    .AHB_ADDR_WIDTH (`SLAVE_ADDR_WIDTH(`SLAVE_SEL_DOE))
+) doe (
     .clk            (clk),
     .reset_n        (cptra_uc_rst_b),
     .cptra_pwrgood  (cptra_pwrgood),
     .cptra_obf_key  (cptra_obf_key_reg),
     .obf_uds_seed   (obf_uds_seed),
     .obf_field_entropy(obf_field_entropy),
-    .haddr_i        (responder_inst[`SLAVE_SEL_AES].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_AES)-1:0]),
-    .hwdata_i       (responder_inst[`SLAVE_SEL_AES].hwdata),
-    .hsel_i         (responder_inst[`SLAVE_SEL_AES].hsel),
-    .hwrite_i       (responder_inst[`SLAVE_SEL_AES].hwrite),
-    .hready_i       (responder_inst[`SLAVE_SEL_AES].hready),
-    .htrans_i       (responder_inst[`SLAVE_SEL_AES].htrans),
-    .hsize_i        (responder_inst[`SLAVE_SEL_AES].hsize),
-    .hresp_o        (responder_inst[`SLAVE_SEL_AES].hresp),
-    .hreadyout_o    (responder_inst[`SLAVE_SEL_AES].hreadyout),
-    .hrdata_o       (responder_inst[`SLAVE_SEL_AES].hrdata),
+    .haddr_i        (responder_inst[`SLAVE_SEL_DOE].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_DOE)-1:0]),
+    .hwdata_i       (responder_inst[`SLAVE_SEL_DOE].hwdata),
+    .hsel_i         (responder_inst[`SLAVE_SEL_DOE].hsel),
+    .hwrite_i       (responder_inst[`SLAVE_SEL_DOE].hwrite),
+    .hready_i       (responder_inst[`SLAVE_SEL_DOE].hready),
+    .htrans_i       (responder_inst[`SLAVE_SEL_DOE].htrans),
+    .hsize_i        (responder_inst[`SLAVE_SEL_DOE].hsize),
+    .hresp_o        (responder_inst[`SLAVE_SEL_DOE].hresp),
+    .hreadyout_o    (responder_inst[`SLAVE_SEL_DOE].hreadyout),
+    .hrdata_o       (responder_inst[`SLAVE_SEL_DOE].hrdata),
 
-    .error_intr(aes_error_intr),
-    .notif_intr(aes_notif_intr),
+    .error_intr(doe_error_intr),
+    .notif_intr(doe_notif_intr),
 
     .kv_write (kv_write[`KV_NUM_WRITE-1])
 
     
+);
+
+ecc_top #(
+    .AHB_ADDR_WIDTH(`SLAVE_ADDR_WIDTH(`SLAVE_SEL_ECC)),
+    .AHB_DATA_WIDTH(`AHB_HDATA_SIZE)
+)
+ecc_top1
+(
+    .clk           (clk),
+    .reset_n       (cptra_uc_rst_b),
+    .cptra_pwrgood (cptra_pwrgood),
+    .haddr_i       (responder_inst[`SLAVE_SEL_ECC].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_ECC)-1:0]),
+    .hwdata_i      (responder_inst[`SLAVE_SEL_ECC].hwdata),
+    .hsel_i        (responder_inst[`SLAVE_SEL_ECC].hsel),
+    .hwrite_i      (responder_inst[`SLAVE_SEL_ECC].hwrite),
+    .hready_i      (responder_inst[`SLAVE_SEL_ECC].hready),
+    .htrans_i      (responder_inst[`SLAVE_SEL_ECC].htrans),
+    .hsize_i       (responder_inst[`SLAVE_SEL_ECC].hsize),
+    .hresp_o       (responder_inst[`SLAVE_SEL_ECC].hresp),
+    .hreadyout_o   (responder_inst[`SLAVE_SEL_ECC].hreadyout),
+    .hrdata_o      (responder_inst[`SLAVE_SEL_ECC].hrdata),
+
+    .kv_read        (kv_read[5:3]),
+    .kv_resp        (kv_resp[5:3]),
+    .kv_write       (kv_write[2]),
+
+    .error_intr    (ecc_error_intr),
+    .notif_intr    (ecc_notif_intr)
 );
 
 hmac_ctrl #(
@@ -528,17 +559,14 @@ hmac_ctrl #(
      .hresp_o       (responder_inst[`SLAVE_SEL_HMAC].hresp),
      .hreadyout_o   (responder_inst[`SLAVE_SEL_HMAC].hreadyout),
      .hrdata_o      (responder_inst[`SLAVE_SEL_HMAC].hrdata),
-     .kv_read       (kv_read[0]),
+     .kv_read       (kv_read[1:0]),
      .kv_write      (kv_write[0]),
-     .kv_resp       (kv_resp[0]),
+     .kv_resp       (kv_resp[1:0]),
 
      .error_intr(hmac_error_intr),
      .notif_intr(hmac_notif_intr)
 
 );
-
-
-
 
 kv #(
     .AHB_ADDR_WIDTH(`SLAVE_ADDR_WIDTH(`SLAVE_SEL_KV)),
@@ -565,29 +593,6 @@ key_vault1
     .kv_read       (kv_read),
     .kv_write      (kv_write),
     .kv_resp       (kv_resp)
-);
-
-ecc_top #(
-    .AHB_ADDR_WIDTH(`SLAVE_ADDR_WIDTH(`SLAVE_SEL_ECC)),
-    .AHB_DATA_WIDTH(`AHB_HDATA_SIZE)
-)
-ecc_top1
-(
-    .clk           (clk),
-    .reset_n       (cptra_uc_rst_b),
-    .cptra_pwrgood (cptra_pwrgood),
-    .haddr_i       (responder_inst[`SLAVE_SEL_ECC].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_ECC)-1:0]),
-    .hwdata_i      (responder_inst[`SLAVE_SEL_ECC].hwdata),
-    .hsel_i        (responder_inst[`SLAVE_SEL_ECC].hsel),
-    .hwrite_i      (responder_inst[`SLAVE_SEL_ECC].hwrite),
-    .hready_i      (responder_inst[`SLAVE_SEL_ECC].hready),
-    .htrans_i      (responder_inst[`SLAVE_SEL_ECC].htrans),
-    .hsize_i       (responder_inst[`SLAVE_SEL_ECC].hsize),
-    .hresp_o       (responder_inst[`SLAVE_SEL_ECC].hresp),
-    .hreadyout_o   (responder_inst[`SLAVE_SEL_ECC].hreadyout),
-    .hrdata_o      (responder_inst[`SLAVE_SEL_ECC].hrdata),
-    .error_intr    (ecc_error_intr                ),
-    .notif_intr    (ecc_notif_intr                )
 );
 
 mbox_top #(

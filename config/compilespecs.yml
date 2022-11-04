@@ -5,7 +5,7 @@ files:
   - src/riscv_core/swerv_el2/config/compile.yml
   - src/sha512/config/compile.yml
   - src/sha256/config/compile.yml
-  - src/aes/config/compile.yml
+  - src/doe/config/compile.yml
   - src/hmac/config/compile.yml
   - src/mbox/config/compile.yml
   - src/hmac_drbg/config/compile.yml

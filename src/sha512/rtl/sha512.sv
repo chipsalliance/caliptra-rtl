@@ -42,7 +42,8 @@
 `default_nettype none
 
 module sha512
-    import sha512_intr_regs_pkg::*;
+    import sha512_reg_pkg::*;
+    import kv_defines_pkg::*;    
     #(
         parameter ADDR_WIDTH = 32,
         parameter DATA_WIDTH = 64
@@ -62,6 +63,11 @@ module sha512
         output wire [DATA_WIDTH-1 : 0] read_data,
         output wire          err,
 
+        // KV interface
+        output kv_read_t kv_read,
+        output kv_write_t kv_write,
+        input kv_resp_t kv_resp,
+
         // Interrupts
         output wire error_intr,
         output wire notif_intr
@@ -76,42 +82,41 @@ module sha512
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
   reg init_reg;
-  reg init_new;
-
   reg next_reg;
-  reg next_new;
-
   reg ready_reg;
-
   reg [1 : 0] mode_reg;
-  reg [1 : 0] mode_new;
-  reg         mode_we;
 
   localparam BLOCK_NO = 1024 / DATA_WIDTH;
   reg [DATA_WIDTH-1 : 0] block_reg [0 : BLOCK_NO-1];
-  reg          block_we;
 
-  reg [511 : 0] digest_reg;
-  reg           digest_valid_reg;
+  //output comes in big endian
+  reg [0:15][31:0] digest_reg;
+  reg [511:0]      kv_reg;
+  reg              digest_valid_reg;
 
-  // Interrupts
-  logic intr_reg_we;
-  logic [31:0] intr_reg_read_data;
-  sha512_intr_regs__in_t hwif_in;
-  sha512_intr_regs__out_t hwif_out;
+  sha512_reg__in_t hwif_in;
+  sha512_reg__out_t hwif_out;
+  logic read_error, write_error;
 
+  //interface with client
+  logic kv_src_write_en;
+  logic [4:0] kv_src_write_offset;
+  logic [31:0] kv_src_write_data;
+
+  logic kv_src_done;
+  logic kv_dest_done;
+
+  logic dest_keyvault;
+  kv_write_ctrl_reg_t kv_write_ctrl_reg;
+  kv_read_ctrl_reg_t kv_read_ctrl_reg;
 
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-  wire            core_ready;
-  wire [1023 : 0] core_block;
-  wire [511 : 0]  core_digest;
-  wire            core_digest_valid;
-
-  reg [DATA_WIDTH-1 : 0]  tmp_read_data;
-  reg                     tmp_err;
-
+  wire              core_ready;
+  wire [1023 : 0]   core_block;
+  wire [15:0][31:0] core_digest;
+  wire              core_digest_valid;
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
@@ -125,9 +130,7 @@ module sha512
                          block_reg[24], block_reg[25], block_reg[26], block_reg[27],
                          block_reg[28], block_reg[29], block_reg[30], block_reg[31]};
   
-  assign read_data = tmp_read_data;
-  assign err    = tmp_err;
-
+  assign err = read_error | write_error;
 
   //----------------------------------------------------------------
   // core instantiation.
@@ -159,141 +162,87 @@ module sha512
   // All registers are positive edge triggered with asynchronous
   // active low reset. All registers have write enable.
   //----------------------------------------------------------------
-  always @ (posedge clk or negedge reset_n)
-    begin : reg_update
-      integer ii;
+  always @ (posedge clk or negedge reset_n) begin : reg_update
+    if (!reset_n) begin
+      ready_reg           <= '0;
+      digest_reg          <= '0;
+      digest_valid_reg    <= '0;
+      kv_reg              <= '0;
+    end
+    else begin
+      ready_reg        <= core_ready;
+      digest_valid_reg <= core_digest_valid;
 
-      if (!reset_n)
-        begin
-          for (ii = 0 ; ii < BLOCK_NO ; ii = ii + 1)
-            block_reg[ii] <= 0;
-
-          init_reg            <= 1'h0;
-          next_reg            <= 1'h0;
-          mode_reg            <= MODE_SHA_512;
-          ready_reg           <= 1'h0;
-          digest_reg          <= 512'h0;
-          digest_valid_reg    <= 1'h0;
-        end
-      else
-        begin
-          ready_reg        <= core_ready;
-          digest_valid_reg <= core_digest_valid;
-          init_reg         <= init_new;
-          next_reg         <= next_new;
-
-          if (mode_we)
-            mode_reg <= mode_new;
-
-          if (core_digest_valid)
-            digest_reg <= core_digest;
-
-          if (block_we)
-            block_reg[address[6 : 2]] <= write_data;
-        end
-    end // reg_update
+      if (core_digest_valid & ~digest_valid_reg & ~dest_keyvault)
+        digest_reg <= core_digest;
+      if (core_digest_valid & ~digest_valid_reg & dest_keyvault)
+        kv_reg <= core_digest;
+    end
+  end // reg_update
 
 
-  //----------------------------------------------------------------
-  // api_logic
-  //
-  // Implementation of the api logic. If cs is enabled will either
-  // try to write to or read from the internal registers.
-  //----------------------------------------------------------------
-  always @*
-    begin : api_logic
-      init_new           = 1'h0;
-      next_new           = 1'h0;
-      mode_new           = MODE_SHA_512;
-      mode_we            = 1'h0;
-      block_we           = 1'h0;
-      intr_reg_we        = 1'b0;
-      tmp_read_data      = '0;
-      tmp_err          = 1'h0;
+  //register hw interface
+  always_comb begin
 
-      if (cs)
-        begin
-          if (we)
-            begin
-              if ((address >= ADDR_BLOCK_START) && (address <= ADDR_BLOCK_END))
-                block_we = 1'h1;
+    hwif_in.SHA512_NAME[0].NAME.next = CORE_NAME0;
+    hwif_in.SHA512_NAME[1].NAME.next = CORE_NAME1;
 
-              if ((address >= SHA512_ADDR_INTR_START) && (address <= SHA512_ADDR_INTR_END))
-                intr_reg_we = 1'h1;
+    hwif_in.SHA512_VERSION[0].VERSION.next = CORE_VERSION0;
+    hwif_in.SHA512_VERSION[1].VERSION.next = CORE_VERSION1;
 
-              case (address)
-                ADDR_CTRL:
-                  begin
-                    init_new        = write_data[CTRL_INIT_BIT];
-                    next_new        = write_data[CTRL_NEXT_BIT];
-                    mode_new        = write_data[CTRL_MODE_HIGH_BIT : CTRL_MODE_LOW_BIT];
-                    mode_we         = 1'h1;
-                  end
+    init_reg = hwif_out.SHA512_CTRL.INIT.value;
+    next_reg = hwif_out.SHA512_CTRL.NEXT.value;
+    mode_reg = hwif_out.SHA512_CTRL.MODE.value;
 
-                default:
-                    tmp_err = 1'h1;
-              endcase // case (address)
-            end // if (we)
+    hwif_in.SHA512_STATUS.READY.next = ready_reg;
+    hwif_in.SHA512_STATUS.VALID.next = digest_valid_reg;
 
-          else
-            begin
-              
-              if ((address >= ADDR_DIGEST_START) && (address <= ADDR_DIGEST_END))
-                tmp_read_data = digest_reg[(15 - ((address - ADDR_DIGEST_START) >> 2)) * DATA_WIDTH +: DATA_WIDTH];
+    for (int dword =0; dword < 16; dword++) begin
+      hwif_in.SHA512_DIGEST[dword].DIGEST.next = digest_reg[dword];
+    end
 
-              if ((address >= ADDR_BLOCK_START) && (address <= ADDR_BLOCK_END))
-                tmp_read_data = block_reg[address[6 : 2]];
-              
-              if ((address >= SHA512_ADDR_INTR_START) && (address <= SHA512_ADDR_INTR_END))
-                tmp_read_data = intr_reg_read_data;
+    for (int dword=0; dword< BLOCK_NO; dword++) begin
+      block_reg[dword] = hwif_out.SHA512_BLOCK[dword].BLOCK.value;
+      hwif_in.SHA512_BLOCK[dword].BLOCK.we = kv_src_write_en & (kv_src_write_offset == dword);
+      hwif_in.SHA512_BLOCK[dword].BLOCK.next = kv_src_write_data;
 
-              case (address)
-                ADDR_NAME0:
-                  tmp_read_data = CORE_NAME0;
+    end
+    
+    hwif_in.SHA512_KV_RD_CTRL.read_done.hwset = kv_src_done;
+    hwif_in.SHA512_KV_RD_CTRL.read_done.hwclr = kv_src_write_en;
+    hwif_in.SHA512_KV_WR_CTRL.write_done.hwset = kv_dest_done;
+    hwif_in.SHA512_KV_WR_CTRL.write_done.hwclr = kv_write_ctrl_reg.write_en;
 
-                ADDR_NAME1:
-                  tmp_read_data = CORE_NAME1;
+    hwif_in.SHA512_KV_RD_CTRL.read_en.hwclr = kv_src_done;
+    hwif_in.SHA512_KV_WR_CTRL.write_en.hwclr = kv_dest_done;
 
-                ADDR_VERSION0:
-                  tmp_read_data = CORE_VERSION0;
+  end
 
-                ADDR_VERSION1:
-                  tmp_read_data = CORE_VERSION1;
+  `KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, SHA512_KV_WR_CTRL)
+  `KV_READ_CTRL_REG2STRUCT(kv_read_ctrl_reg, SHA512_KV_RD_CTRL)
 
-                ADDR_CTRL:
-                  tmp_read_data = {28'h0, mode_reg, next_reg, init_reg};
-
-                ADDR_STATUS:
-                  tmp_read_data = {30'h0, digest_valid_reg, ready_reg};
-
-                default:
-                  tmp_err = 1'h1;
-              endcase // case (address)
-            end
-        end
-    end // addr_decoder
-
-// Interrupt Registers
-sha512_intr_regs i_sha512_intr_regs (
+// Register Block
+sha512_reg i_sha512_reg (
     .clk(clk),
     .rst(1'b0),
 
-    .s_cpuif_req         (cs                                      ),
-    .s_cpuif_req_is_wr   (intr_reg_we                             ),
-    .s_cpuif_addr        (address[SHA512_INTR_REGS_ADDR_WIDTH-1:0]),
+    .s_cpuif_req         (cs),
+    .s_cpuif_req_is_wr   (we),
+    .s_cpuif_addr        (address[SHA512_REG_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data     (write_data                              ),
-    .s_cpuif_req_stall_wr(                                        ),
-    .s_cpuif_req_stall_rd(                                        ),
-    .s_cpuif_rd_ack      (                                        ),
-    .s_cpuif_rd_err      (                                        ),
-    .s_cpuif_rd_data     (intr_reg_read_data                      ),
-    .s_cpuif_wr_ack      (                                        ),
-    .s_cpuif_wr_err      (                                        ),
+    .s_cpuif_req_stall_wr( ),
+    .s_cpuif_req_stall_rd( ),
+    .s_cpuif_rd_ack      ( ),
+    .s_cpuif_rd_err      (read_error),
+    .s_cpuif_rd_data     (read_data),
+    .s_cpuif_wr_ack      ( ),
+    .s_cpuif_wr_err      (write_error),
 
     .hwif_in (hwif_in ),
     .hwif_out(hwif_out)
 );
 
+//interrupt register hw interface
 assign hwif_in.reset_b = reset_n;
 assign hwif_in.error_reset_b = cptra_pwrgood;
 assign hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = core_digest_valid & ~digest_valid_reg;
@@ -305,6 +254,52 @@ assign hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // T
 assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
 assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
 
+//Read Block
+kv_read_client #(
+    .DATA_WIDTH(1024),
+    .PAD(1)
+)
+sha512_block_kv_read
+(
+    .clk(clk),
+    .rst_b(reset_n),
+
+    //client control register
+    .read_ctrl_reg(kv_read_ctrl_reg),
+
+    //interface with kv
+    .kv_read(kv_read),
+    .kv_resp(kv_resp),
+
+    //interface with client
+    .write_en(kv_src_write_en),
+    .write_offset(kv_src_write_offset),
+    .write_data(kv_src_write_data),
+
+    .read_done(kv_src_done)
+);
+
+kv_write_client #(
+  .DATA_WIDTH(512)
+)
+sha512_result_kv_write
+(
+  .clk(clk),
+  .rst_b(reset_n),
+
+  //client control register
+  .write_ctrl_reg(kv_write_ctrl_reg),
+
+  //interface with kv
+  .kv_write(kv_write),
+
+  //interface with client
+  .dest_keyvault(dest_keyvault),
+  .dest_data_avail(core_digest_valid & ~digest_valid_reg),
+  .dest_data(kv_reg),
+
+  .dest_done(kv_dest_done)
+);
 
 endmodule // sha512
 

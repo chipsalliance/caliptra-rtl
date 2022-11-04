@@ -75,6 +75,10 @@ module ecc_reg (
         logic ECC_SIGN_S[12];
         logic ECC_VERIFY_R[12];
         logic ECC_IV[12];
+        logic ecc_kv_rd_pkey_ctrl;
+        logic ecc_kv_rd_seed_ctrl;
+        logic ecc_kv_rd_msg_ctrl;
+        logic ecc_kv_wr_pkey_ctrl;
         struct {
             logic global_intr_en_r;
             logic error_intr_en_r;
@@ -133,6 +137,10 @@ module ecc_reg (
         for(int i0=0; i0<12; i0++) begin
             decoded_reg_strb.ECC_IV[i0] = cpuif_req_masked & (cpuif_addr == 'h480 + i0*'h4);
         end
+        decoded_reg_strb.ecc_kv_rd_pkey_ctrl = cpuif_req_masked & (cpuif_addr == 'h600);
+        decoded_reg_strb.ecc_kv_rd_seed_ctrl = cpuif_req_masked & (cpuif_addr == 'h604);
+        decoded_reg_strb.ecc_kv_rd_msg_ctrl = cpuif_req_masked & (cpuif_addr == 'h608);
+        decoded_reg_strb.ecc_kv_wr_pkey_ctrl = cpuif_req_masked & (cpuif_addr == 'h60c);
         decoded_reg_strb.intr_block_rf.global_intr_en_r = cpuif_req_masked & (cpuif_addr == 'h800);
         decoded_reg_strb.intr_block_rf.error_intr_en_r = cpuif_req_masked & (cpuif_addr == 'h804);
         decoded_reg_strb.intr_block_rf.notif_intr_en_r = cpuif_req_masked & (cpuif_addr == 'h808);
@@ -239,6 +247,130 @@ module ecc_reg (
                 logic load_next;
             } IV;
         } ECC_IV[12];
+        struct {
+            struct {
+                logic next;
+                logic load_next;
+            } read_en;
+            struct {
+                logic [2:0] next;
+                logic load_next;
+            } read_entry;
+            struct {
+                logic next;
+                logic load_next;
+            } entry_is_pcr;
+            struct {
+                logic [4:0] next;
+                logic load_next;
+            } entry_data_size;
+            struct {
+                logic [20:0] next;
+                logic load_next;
+            } rsvd;
+            struct {
+                logic next;
+                logic load_next;
+            } read_done;
+        } ecc_kv_rd_pkey_ctrl;
+        struct {
+            struct {
+                logic next;
+                logic load_next;
+            } read_en;
+            struct {
+                logic [2:0] next;
+                logic load_next;
+            } read_entry;
+            struct {
+                logic next;
+                logic load_next;
+            } entry_is_pcr;
+            struct {
+                logic [4:0] next;
+                logic load_next;
+            } entry_data_size;
+            struct {
+                logic [20:0] next;
+                logic load_next;
+            } rsvd;
+            struct {
+                logic next;
+                logic load_next;
+            } read_done;
+        } ecc_kv_rd_seed_ctrl;
+        struct {
+            struct {
+                logic next;
+                logic load_next;
+            } read_en;
+            struct {
+                logic [2:0] next;
+                logic load_next;
+            } read_entry;
+            struct {
+                logic next;
+                logic load_next;
+            } entry_is_pcr;
+            struct {
+                logic [4:0] next;
+                logic load_next;
+            } entry_data_size;
+            struct {
+                logic [20:0] next;
+                logic load_next;
+            } rsvd;
+            struct {
+                logic next;
+                logic load_next;
+            } read_done;
+        } ecc_kv_rd_msg_ctrl;
+        struct {
+            struct {
+                logic next;
+                logic load_next;
+            } write_en;
+            struct {
+                logic [2:0] next;
+                logic load_next;
+            } write_entry;
+            struct {
+                logic next;
+                logic load_next;
+            } entry_is_pcr;
+            struct {
+                logic next;
+                logic load_next;
+            } hmac_key_dest_valid;
+            struct {
+                logic next;
+                logic load_next;
+            } hmac_block_dest_valid;
+            struct {
+                logic next;
+                logic load_next;
+            } sha_block_dest_valid;
+            struct {
+                logic next;
+                logic load_next;
+            } ecc_pkey_dest_valid;
+            struct {
+                logic next;
+                logic load_next;
+            } ecc_seed_dest_valid;
+            struct {
+                logic next;
+                logic load_next;
+            } ecc_msg_dest_valid;
+            struct {
+                logic [19:0] next;
+                logic load_next;
+            } rsvd;
+            struct {
+                logic next;
+                logic load_next;
+            } write_done;
+        } ecc_kv_wr_pkey_ctrl;
         struct {
             struct {
                 struct {
@@ -399,6 +531,101 @@ module ecc_reg (
                 logic [31:0] value;
             } IV;
         } ECC_IV[12];
+        struct {
+            struct {
+                logic value;
+            } read_en;
+            struct {
+                logic [2:0] value;
+            } read_entry;
+            struct {
+                logic value;
+            } entry_is_pcr;
+            struct {
+                logic [4:0] value;
+            } entry_data_size;
+            struct {
+                logic [20:0] value;
+            } rsvd;
+            struct {
+                logic value;
+            } read_done;
+        } ecc_kv_rd_pkey_ctrl;
+        struct {
+            struct {
+                logic value;
+            } read_en;
+            struct {
+                logic [2:0] value;
+            } read_entry;
+            struct {
+                logic value;
+            } entry_is_pcr;
+            struct {
+                logic [4:0] value;
+            } entry_data_size;
+            struct {
+                logic [20:0] value;
+            } rsvd;
+            struct {
+                logic value;
+            } read_done;
+        } ecc_kv_rd_seed_ctrl;
+        struct {
+            struct {
+                logic value;
+            } read_en;
+            struct {
+                logic [2:0] value;
+            } read_entry;
+            struct {
+                logic value;
+            } entry_is_pcr;
+            struct {
+                logic [4:0] value;
+            } entry_data_size;
+            struct {
+                logic [20:0] value;
+            } rsvd;
+            struct {
+                logic value;
+            } read_done;
+        } ecc_kv_rd_msg_ctrl;
+        struct {
+            struct {
+                logic value;
+            } write_en;
+            struct {
+                logic [2:0] value;
+            } write_entry;
+            struct {
+                logic value;
+            } entry_is_pcr;
+            struct {
+                logic value;
+            } hmac_key_dest_valid;
+            struct {
+                logic value;
+            } hmac_block_dest_valid;
+            struct {
+                logic value;
+            } sha_block_dest_valid;
+            struct {
+                logic value;
+            } ecc_pkey_dest_valid;
+            struct {
+                logic value;
+            } ecc_seed_dest_valid;
+            struct {
+                logic value;
+            } ecc_msg_dest_valid;
+            struct {
+                logic [19:0] value;
+            } rsvd;
+            struct {
+                logic value;
+            } write_done;
+        } ecc_kv_wr_pkey_ctrl;
         struct {
             struct {
                 struct {
@@ -774,6 +1001,581 @@ module ecc_reg (
         end
         assign hwif_out.ECC_IV[i0].IV.value = field_storage.ECC_IV[i0].IV.value;
     end
+    // Field: ecc_reg.ecc_kv_rd_pkey_ctrl.read_en
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.ecc_kv_rd_pkey_ctrl.read_en.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_rd_pkey_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[0:0];
+            load_next_c = '1;
+        end else if(hwif_in.ecc_kv_rd_pkey_ctrl.read_en.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_rd_pkey_ctrl.read_en.next = next_c;
+        field_combo.ecc_kv_rd_pkey_ctrl.read_en.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_rd_pkey_ctrl.read_en.value <= 'h0;
+        end else if(field_combo.ecc_kv_rd_pkey_ctrl.read_en.load_next) begin
+            field_storage.ecc_kv_rd_pkey_ctrl.read_en.value <= field_combo.ecc_kv_rd_pkey_ctrl.read_en.next;
+        end
+    end
+    assign hwif_out.ecc_kv_rd_pkey_ctrl.read_en.value = field_storage.ecc_kv_rd_pkey_ctrl.read_en.value;
+    // Field: ecc_reg.ecc_kv_rd_pkey_ctrl.read_entry
+    always_comb begin
+        automatic logic [2:0] next_c = field_storage.ecc_kv_rd_pkey_ctrl.read_entry.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_rd_pkey_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[3:1];
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_rd_pkey_ctrl.read_entry.next = next_c;
+        field_combo.ecc_kv_rd_pkey_ctrl.read_entry.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_rd_pkey_ctrl.read_entry.value <= 'h0;
+        end else if(field_combo.ecc_kv_rd_pkey_ctrl.read_entry.load_next) begin
+            field_storage.ecc_kv_rd_pkey_ctrl.read_entry.value <= field_combo.ecc_kv_rd_pkey_ctrl.read_entry.next;
+        end
+    end
+    assign hwif_out.ecc_kv_rd_pkey_ctrl.read_entry.value = field_storage.ecc_kv_rd_pkey_ctrl.read_entry.value;
+    // Field: ecc_reg.ecc_kv_rd_pkey_ctrl.entry_is_pcr
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.ecc_kv_rd_pkey_ctrl.entry_is_pcr.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_rd_pkey_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[4:4];
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_rd_pkey_ctrl.entry_is_pcr.next = next_c;
+        field_combo.ecc_kv_rd_pkey_ctrl.entry_is_pcr.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_rd_pkey_ctrl.entry_is_pcr.value <= 'h0;
+        end else if(field_combo.ecc_kv_rd_pkey_ctrl.entry_is_pcr.load_next) begin
+            field_storage.ecc_kv_rd_pkey_ctrl.entry_is_pcr.value <= field_combo.ecc_kv_rd_pkey_ctrl.entry_is_pcr.next;
+        end
+    end
+    assign hwif_out.ecc_kv_rd_pkey_ctrl.entry_is_pcr.value = field_storage.ecc_kv_rd_pkey_ctrl.entry_is_pcr.value;
+    // Field: ecc_reg.ecc_kv_rd_pkey_ctrl.entry_data_size
+    always_comb begin
+        automatic logic [4:0] next_c = field_storage.ecc_kv_rd_pkey_ctrl.entry_data_size.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_rd_pkey_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[9:5];
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_rd_pkey_ctrl.entry_data_size.next = next_c;
+        field_combo.ecc_kv_rd_pkey_ctrl.entry_data_size.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_rd_pkey_ctrl.entry_data_size.value <= 'h0;
+        end else if(field_combo.ecc_kv_rd_pkey_ctrl.entry_data_size.load_next) begin
+            field_storage.ecc_kv_rd_pkey_ctrl.entry_data_size.value <= field_combo.ecc_kv_rd_pkey_ctrl.entry_data_size.next;
+        end
+    end
+    assign hwif_out.ecc_kv_rd_pkey_ctrl.entry_data_size.value = field_storage.ecc_kv_rd_pkey_ctrl.entry_data_size.value;
+    // Field: ecc_reg.ecc_kv_rd_pkey_ctrl.rsvd
+    always_comb begin
+        automatic logic [20:0] next_c = field_storage.ecc_kv_rd_pkey_ctrl.rsvd.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_rd_pkey_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[30:10];
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_rd_pkey_ctrl.rsvd.next = next_c;
+        field_combo.ecc_kv_rd_pkey_ctrl.rsvd.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_rd_pkey_ctrl.rsvd.value <= 'h0;
+        end else if(field_combo.ecc_kv_rd_pkey_ctrl.rsvd.load_next) begin
+            field_storage.ecc_kv_rd_pkey_ctrl.rsvd.value <= field_combo.ecc_kv_rd_pkey_ctrl.rsvd.next;
+        end
+    end
+    assign hwif_out.ecc_kv_rd_pkey_ctrl.rsvd.value = field_storage.ecc_kv_rd_pkey_ctrl.rsvd.value;
+    // Field: ecc_reg.ecc_kv_rd_pkey_ctrl.read_done
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.ecc_kv_rd_pkey_ctrl.read_done.value;
+        automatic logic load_next_c = '0;
+        if(hwif_in.ecc_kv_rd_pkey_ctrl.read_done.hwset) begin // HW Set
+            next_c = '1;
+            load_next_c = '1;
+        end else if(hwif_in.ecc_kv_rd_pkey_ctrl.read_done.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_rd_pkey_ctrl.read_done.next = next_c;
+        field_combo.ecc_kv_rd_pkey_ctrl.read_done.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_rd_pkey_ctrl.read_done.value <= 'h0;
+        end else if(field_combo.ecc_kv_rd_pkey_ctrl.read_done.load_next) begin
+            field_storage.ecc_kv_rd_pkey_ctrl.read_done.value <= field_combo.ecc_kv_rd_pkey_ctrl.read_done.next;
+        end
+    end
+    assign hwif_out.ecc_kv_rd_pkey_ctrl.read_done.value = field_storage.ecc_kv_rd_pkey_ctrl.read_done.value;
+    // Field: ecc_reg.ecc_kv_rd_seed_ctrl.read_en
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.ecc_kv_rd_seed_ctrl.read_en.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_rd_seed_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[0:0];
+            load_next_c = '1;
+        end else if(hwif_in.ecc_kv_rd_seed_ctrl.read_en.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_rd_seed_ctrl.read_en.next = next_c;
+        field_combo.ecc_kv_rd_seed_ctrl.read_en.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_rd_seed_ctrl.read_en.value <= 'h0;
+        end else if(field_combo.ecc_kv_rd_seed_ctrl.read_en.load_next) begin
+            field_storage.ecc_kv_rd_seed_ctrl.read_en.value <= field_combo.ecc_kv_rd_seed_ctrl.read_en.next;
+        end
+    end
+    assign hwif_out.ecc_kv_rd_seed_ctrl.read_en.value = field_storage.ecc_kv_rd_seed_ctrl.read_en.value;
+    // Field: ecc_reg.ecc_kv_rd_seed_ctrl.read_entry
+    always_comb begin
+        automatic logic [2:0] next_c = field_storage.ecc_kv_rd_seed_ctrl.read_entry.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_rd_seed_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[3:1];
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_rd_seed_ctrl.read_entry.next = next_c;
+        field_combo.ecc_kv_rd_seed_ctrl.read_entry.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_rd_seed_ctrl.read_entry.value <= 'h0;
+        end else if(field_combo.ecc_kv_rd_seed_ctrl.read_entry.load_next) begin
+            field_storage.ecc_kv_rd_seed_ctrl.read_entry.value <= field_combo.ecc_kv_rd_seed_ctrl.read_entry.next;
+        end
+    end
+    assign hwif_out.ecc_kv_rd_seed_ctrl.read_entry.value = field_storage.ecc_kv_rd_seed_ctrl.read_entry.value;
+    // Field: ecc_reg.ecc_kv_rd_seed_ctrl.entry_is_pcr
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.ecc_kv_rd_seed_ctrl.entry_is_pcr.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_rd_seed_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[4:4];
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_rd_seed_ctrl.entry_is_pcr.next = next_c;
+        field_combo.ecc_kv_rd_seed_ctrl.entry_is_pcr.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_rd_seed_ctrl.entry_is_pcr.value <= 'h0;
+        end else if(field_combo.ecc_kv_rd_seed_ctrl.entry_is_pcr.load_next) begin
+            field_storage.ecc_kv_rd_seed_ctrl.entry_is_pcr.value <= field_combo.ecc_kv_rd_seed_ctrl.entry_is_pcr.next;
+        end
+    end
+    assign hwif_out.ecc_kv_rd_seed_ctrl.entry_is_pcr.value = field_storage.ecc_kv_rd_seed_ctrl.entry_is_pcr.value;
+    // Field: ecc_reg.ecc_kv_rd_seed_ctrl.entry_data_size
+    always_comb begin
+        automatic logic [4:0] next_c = field_storage.ecc_kv_rd_seed_ctrl.entry_data_size.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_rd_seed_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[9:5];
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_rd_seed_ctrl.entry_data_size.next = next_c;
+        field_combo.ecc_kv_rd_seed_ctrl.entry_data_size.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_rd_seed_ctrl.entry_data_size.value <= 'h0;
+        end else if(field_combo.ecc_kv_rd_seed_ctrl.entry_data_size.load_next) begin
+            field_storage.ecc_kv_rd_seed_ctrl.entry_data_size.value <= field_combo.ecc_kv_rd_seed_ctrl.entry_data_size.next;
+        end
+    end
+    assign hwif_out.ecc_kv_rd_seed_ctrl.entry_data_size.value = field_storage.ecc_kv_rd_seed_ctrl.entry_data_size.value;
+    // Field: ecc_reg.ecc_kv_rd_seed_ctrl.rsvd
+    always_comb begin
+        automatic logic [20:0] next_c = field_storage.ecc_kv_rd_seed_ctrl.rsvd.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_rd_seed_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[30:10];
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_rd_seed_ctrl.rsvd.next = next_c;
+        field_combo.ecc_kv_rd_seed_ctrl.rsvd.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_rd_seed_ctrl.rsvd.value <= 'h0;
+        end else if(field_combo.ecc_kv_rd_seed_ctrl.rsvd.load_next) begin
+            field_storage.ecc_kv_rd_seed_ctrl.rsvd.value <= field_combo.ecc_kv_rd_seed_ctrl.rsvd.next;
+        end
+    end
+    assign hwif_out.ecc_kv_rd_seed_ctrl.rsvd.value = field_storage.ecc_kv_rd_seed_ctrl.rsvd.value;
+    // Field: ecc_reg.ecc_kv_rd_seed_ctrl.read_done
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.ecc_kv_rd_seed_ctrl.read_done.value;
+        automatic logic load_next_c = '0;
+        if(hwif_in.ecc_kv_rd_seed_ctrl.read_done.hwset) begin // HW Set
+            next_c = '1;
+            load_next_c = '1;
+        end else if(hwif_in.ecc_kv_rd_seed_ctrl.read_done.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_rd_seed_ctrl.read_done.next = next_c;
+        field_combo.ecc_kv_rd_seed_ctrl.read_done.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_rd_seed_ctrl.read_done.value <= 'h0;
+        end else if(field_combo.ecc_kv_rd_seed_ctrl.read_done.load_next) begin
+            field_storage.ecc_kv_rd_seed_ctrl.read_done.value <= field_combo.ecc_kv_rd_seed_ctrl.read_done.next;
+        end
+    end
+    assign hwif_out.ecc_kv_rd_seed_ctrl.read_done.value = field_storage.ecc_kv_rd_seed_ctrl.read_done.value;
+    // Field: ecc_reg.ecc_kv_rd_msg_ctrl.read_en
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.ecc_kv_rd_msg_ctrl.read_en.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_rd_msg_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[0:0];
+            load_next_c = '1;
+        end else if(hwif_in.ecc_kv_rd_msg_ctrl.read_en.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_rd_msg_ctrl.read_en.next = next_c;
+        field_combo.ecc_kv_rd_msg_ctrl.read_en.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_rd_msg_ctrl.read_en.value <= 'h0;
+        end else if(field_combo.ecc_kv_rd_msg_ctrl.read_en.load_next) begin
+            field_storage.ecc_kv_rd_msg_ctrl.read_en.value <= field_combo.ecc_kv_rd_msg_ctrl.read_en.next;
+        end
+    end
+    assign hwif_out.ecc_kv_rd_msg_ctrl.read_en.value = field_storage.ecc_kv_rd_msg_ctrl.read_en.value;
+    // Field: ecc_reg.ecc_kv_rd_msg_ctrl.read_entry
+    always_comb begin
+        automatic logic [2:0] next_c = field_storage.ecc_kv_rd_msg_ctrl.read_entry.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_rd_msg_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[3:1];
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_rd_msg_ctrl.read_entry.next = next_c;
+        field_combo.ecc_kv_rd_msg_ctrl.read_entry.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_rd_msg_ctrl.read_entry.value <= 'h0;
+        end else if(field_combo.ecc_kv_rd_msg_ctrl.read_entry.load_next) begin
+            field_storage.ecc_kv_rd_msg_ctrl.read_entry.value <= field_combo.ecc_kv_rd_msg_ctrl.read_entry.next;
+        end
+    end
+    assign hwif_out.ecc_kv_rd_msg_ctrl.read_entry.value = field_storage.ecc_kv_rd_msg_ctrl.read_entry.value;
+    // Field: ecc_reg.ecc_kv_rd_msg_ctrl.entry_is_pcr
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.ecc_kv_rd_msg_ctrl.entry_is_pcr.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_rd_msg_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[4:4];
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_rd_msg_ctrl.entry_is_pcr.next = next_c;
+        field_combo.ecc_kv_rd_msg_ctrl.entry_is_pcr.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_rd_msg_ctrl.entry_is_pcr.value <= 'h0;
+        end else if(field_combo.ecc_kv_rd_msg_ctrl.entry_is_pcr.load_next) begin
+            field_storage.ecc_kv_rd_msg_ctrl.entry_is_pcr.value <= field_combo.ecc_kv_rd_msg_ctrl.entry_is_pcr.next;
+        end
+    end
+    assign hwif_out.ecc_kv_rd_msg_ctrl.entry_is_pcr.value = field_storage.ecc_kv_rd_msg_ctrl.entry_is_pcr.value;
+    // Field: ecc_reg.ecc_kv_rd_msg_ctrl.entry_data_size
+    always_comb begin
+        automatic logic [4:0] next_c = field_storage.ecc_kv_rd_msg_ctrl.entry_data_size.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_rd_msg_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[9:5];
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_rd_msg_ctrl.entry_data_size.next = next_c;
+        field_combo.ecc_kv_rd_msg_ctrl.entry_data_size.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_rd_msg_ctrl.entry_data_size.value <= 'h0;
+        end else if(field_combo.ecc_kv_rd_msg_ctrl.entry_data_size.load_next) begin
+            field_storage.ecc_kv_rd_msg_ctrl.entry_data_size.value <= field_combo.ecc_kv_rd_msg_ctrl.entry_data_size.next;
+        end
+    end
+    assign hwif_out.ecc_kv_rd_msg_ctrl.entry_data_size.value = field_storage.ecc_kv_rd_msg_ctrl.entry_data_size.value;
+    // Field: ecc_reg.ecc_kv_rd_msg_ctrl.rsvd
+    always_comb begin
+        automatic logic [20:0] next_c = field_storage.ecc_kv_rd_msg_ctrl.rsvd.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_rd_msg_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[30:10];
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_rd_msg_ctrl.rsvd.next = next_c;
+        field_combo.ecc_kv_rd_msg_ctrl.rsvd.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_rd_msg_ctrl.rsvd.value <= 'h0;
+        end else if(field_combo.ecc_kv_rd_msg_ctrl.rsvd.load_next) begin
+            field_storage.ecc_kv_rd_msg_ctrl.rsvd.value <= field_combo.ecc_kv_rd_msg_ctrl.rsvd.next;
+        end
+    end
+    assign hwif_out.ecc_kv_rd_msg_ctrl.rsvd.value = field_storage.ecc_kv_rd_msg_ctrl.rsvd.value;
+    // Field: ecc_reg.ecc_kv_rd_msg_ctrl.read_done
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.ecc_kv_rd_msg_ctrl.read_done.value;
+        automatic logic load_next_c = '0;
+        if(hwif_in.ecc_kv_rd_msg_ctrl.read_done.hwset) begin // HW Set
+            next_c = '1;
+            load_next_c = '1;
+        end else if(hwif_in.ecc_kv_rd_msg_ctrl.read_done.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_rd_msg_ctrl.read_done.next = next_c;
+        field_combo.ecc_kv_rd_msg_ctrl.read_done.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_rd_msg_ctrl.read_done.value <= 'h0;
+        end else if(field_combo.ecc_kv_rd_msg_ctrl.read_done.load_next) begin
+            field_storage.ecc_kv_rd_msg_ctrl.read_done.value <= field_combo.ecc_kv_rd_msg_ctrl.read_done.next;
+        end
+    end
+    assign hwif_out.ecc_kv_rd_msg_ctrl.read_done.value = field_storage.ecc_kv_rd_msg_ctrl.read_done.value;
+    // Field: ecc_reg.ecc_kv_wr_pkey_ctrl.write_en
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.ecc_kv_wr_pkey_ctrl.write_en.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_wr_pkey_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[0:0];
+            load_next_c = '1;
+        end else if(hwif_in.ecc_kv_wr_pkey_ctrl.write_en.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_wr_pkey_ctrl.write_en.next = next_c;
+        field_combo.ecc_kv_wr_pkey_ctrl.write_en.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_wr_pkey_ctrl.write_en.value <= 'h0;
+        end else if(field_combo.ecc_kv_wr_pkey_ctrl.write_en.load_next) begin
+            field_storage.ecc_kv_wr_pkey_ctrl.write_en.value <= field_combo.ecc_kv_wr_pkey_ctrl.write_en.next;
+        end
+    end
+    assign hwif_out.ecc_kv_wr_pkey_ctrl.write_en.value = field_storage.ecc_kv_wr_pkey_ctrl.write_en.value;
+    // Field: ecc_reg.ecc_kv_wr_pkey_ctrl.write_entry
+    always_comb begin
+        automatic logic [2:0] next_c = field_storage.ecc_kv_wr_pkey_ctrl.write_entry.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_wr_pkey_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[3:1];
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_wr_pkey_ctrl.write_entry.next = next_c;
+        field_combo.ecc_kv_wr_pkey_ctrl.write_entry.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_wr_pkey_ctrl.write_entry.value <= 'h0;
+        end else if(field_combo.ecc_kv_wr_pkey_ctrl.write_entry.load_next) begin
+            field_storage.ecc_kv_wr_pkey_ctrl.write_entry.value <= field_combo.ecc_kv_wr_pkey_ctrl.write_entry.next;
+        end
+    end
+    assign hwif_out.ecc_kv_wr_pkey_ctrl.write_entry.value = field_storage.ecc_kv_wr_pkey_ctrl.write_entry.value;
+    // Field: ecc_reg.ecc_kv_wr_pkey_ctrl.entry_is_pcr
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.ecc_kv_wr_pkey_ctrl.entry_is_pcr.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_wr_pkey_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[4:4];
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_wr_pkey_ctrl.entry_is_pcr.next = next_c;
+        field_combo.ecc_kv_wr_pkey_ctrl.entry_is_pcr.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_wr_pkey_ctrl.entry_is_pcr.value <= 'h0;
+        end else if(field_combo.ecc_kv_wr_pkey_ctrl.entry_is_pcr.load_next) begin
+            field_storage.ecc_kv_wr_pkey_ctrl.entry_is_pcr.value <= field_combo.ecc_kv_wr_pkey_ctrl.entry_is_pcr.next;
+        end
+    end
+    assign hwif_out.ecc_kv_wr_pkey_ctrl.entry_is_pcr.value = field_storage.ecc_kv_wr_pkey_ctrl.entry_is_pcr.value;
+    // Field: ecc_reg.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_wr_pkey_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[5:5];
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.next = next_c;
+        field_combo.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.value <= 'h0;
+        end else if(field_combo.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.load_next) begin
+            field_storage.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.next;
+        end
+    end
+    assign hwif_out.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.value = field_storage.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.value;
+    // Field: ecc_reg.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_wr_pkey_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[6:6];
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.next = next_c;
+        field_combo.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.value <= 'h0;
+        end else if(field_combo.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.load_next) begin
+            field_storage.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.next;
+        end
+    end
+    assign hwif_out.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.value = field_storage.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.value;
+    // Field: ecc_reg.ecc_kv_wr_pkey_ctrl.sha_block_dest_valid
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.ecc_kv_wr_pkey_ctrl.sha_block_dest_valid.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_wr_pkey_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[7:7];
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_wr_pkey_ctrl.sha_block_dest_valid.next = next_c;
+        field_combo.ecc_kv_wr_pkey_ctrl.sha_block_dest_valid.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_wr_pkey_ctrl.sha_block_dest_valid.value <= 'h0;
+        end else if(field_combo.ecc_kv_wr_pkey_ctrl.sha_block_dest_valid.load_next) begin
+            field_storage.ecc_kv_wr_pkey_ctrl.sha_block_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.sha_block_dest_valid.next;
+        end
+    end
+    assign hwif_out.ecc_kv_wr_pkey_ctrl.sha_block_dest_valid.value = field_storage.ecc_kv_wr_pkey_ctrl.sha_block_dest_valid.value;
+    // Field: ecc_reg.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_wr_pkey_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[8:8];
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.next = next_c;
+        field_combo.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.value <= 'h0;
+        end else if(field_combo.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.load_next) begin
+            field_storage.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.next;
+        end
+    end
+    assign hwif_out.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.value = field_storage.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.value;
+    // Field: ecc_reg.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_wr_pkey_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[9:9];
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.next = next_c;
+        field_combo.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.value <= 'h0;
+        end else if(field_combo.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.load_next) begin
+            field_storage.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.next;
+        end
+    end
+    assign hwif_out.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.value = field_storage.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.value;
+    // Field: ecc_reg.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_wr_pkey_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[10:10];
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid.next = next_c;
+        field_combo.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid.value <= 'h0;
+        end else if(field_combo.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid.load_next) begin
+            field_storage.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid.next;
+        end
+    end
+    assign hwif_out.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid.value = field_storage.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid.value;
+    // Field: ecc_reg.ecc_kv_wr_pkey_ctrl.rsvd
+    always_comb begin
+        automatic logic [19:0] next_c = field_storage.ecc_kv_wr_pkey_ctrl.rsvd.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ecc_kv_wr_pkey_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[30:11];
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_wr_pkey_ctrl.rsvd.next = next_c;
+        field_combo.ecc_kv_wr_pkey_ctrl.rsvd.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_wr_pkey_ctrl.rsvd.value <= 'h0;
+        end else if(field_combo.ecc_kv_wr_pkey_ctrl.rsvd.load_next) begin
+            field_storage.ecc_kv_wr_pkey_ctrl.rsvd.value <= field_combo.ecc_kv_wr_pkey_ctrl.rsvd.next;
+        end
+    end
+    assign hwif_out.ecc_kv_wr_pkey_ctrl.rsvd.value = field_storage.ecc_kv_wr_pkey_ctrl.rsvd.value;
+    // Field: ecc_reg.ecc_kv_wr_pkey_ctrl.write_done
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.ecc_kv_wr_pkey_ctrl.write_done.value;
+        automatic logic load_next_c = '0;
+        if(hwif_in.ecc_kv_wr_pkey_ctrl.write_done.hwset) begin // HW Set
+            next_c = '1;
+            load_next_c = '1;
+        end else if(hwif_in.ecc_kv_wr_pkey_ctrl.write_done.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.ecc_kv_wr_pkey_ctrl.write_done.next = next_c;
+        field_combo.ecc_kv_wr_pkey_ctrl.write_done.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ecc_kv_wr_pkey_ctrl.write_done.value <= 'h0;
+        end else if(field_combo.ecc_kv_wr_pkey_ctrl.write_done.load_next) begin
+            field_storage.ecc_kv_wr_pkey_ctrl.write_done.value <= field_combo.ecc_kv_wr_pkey_ctrl.write_done.next;
+        end
+    end
+    assign hwif_out.ecc_kv_wr_pkey_ctrl.write_done.value = field_storage.ecc_kv_wr_pkey_ctrl.write_done.value;
     // Field: ecc_reg.intr_block_rf.global_intr_en_r.error_en
     always_comb begin
         automatic logic [0:0] next_c = field_storage.intr_block_rf.global_intr_en_r.error_en.value;
@@ -1111,7 +1913,7 @@ module ecc_reg (
     logic [31:0] readback_data;
     
     // Assign readback values to a flattened array
-    logic [31:0] readback_array[90];
+    logic [31:0] readback_array[94];
     for(genvar i0=0; i0<2; i0++) begin
         assign readback_array[i0*1 + 0][31:0] = (decoded_reg_strb.ECC_NAME[i0] && !decoded_req_is_wr) ? hwif_in.ECC_NAME[i0].NAME.next : '0;
     end
@@ -1139,31 +1941,60 @@ module ecc_reg (
     for(genvar i0=0; i0<12; i0++) begin
         assign readback_array[i0*1 + 65][31:0] = (decoded_reg_strb.ECC_VERIFY_R[i0] && !decoded_req_is_wr) ? field_storage.ECC_VERIFY_R[i0].VERIFY_R.value : '0;
     end
-    assign readback_array[77][0:0] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.error_en.value : '0;
-    assign readback_array[77][1:1] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.notif_en.value : '0;
-    assign readback_array[77][31:2] = '0;
-    assign readback_array[78][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_internal_en.value : '0;
-    assign readback_array[78][31:1] = '0;
-    assign readback_array[79][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value : '0;
-    assign readback_array[79][31:1] = '0;
-    assign readback_array[80][0:0] = (decoded_reg_strb.intr_block_rf.error_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_global_intr_r.agg_sts.value : '0;
-    assign readback_array[80][31:1] = '0;
-    assign readback_array[81][0:0] = (decoded_reg_strb.intr_block_rf.notif_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value : '0;
-    assign readback_array[81][31:1] = '0;
-    assign readback_array[82][0:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_internal_sts.value : '0;
+    assign readback_array[77][0:0] = (decoded_reg_strb.ecc_kv_rd_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_pkey_ctrl.read_en.value : '0;
+    assign readback_array[77][3:1] = (decoded_reg_strb.ecc_kv_rd_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_pkey_ctrl.read_entry.value : '0;
+    assign readback_array[77][4:4] = (decoded_reg_strb.ecc_kv_rd_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_pkey_ctrl.entry_is_pcr.value : '0;
+    assign readback_array[77][9:5] = (decoded_reg_strb.ecc_kv_rd_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_pkey_ctrl.entry_data_size.value : '0;
+    assign readback_array[77][30:10] = (decoded_reg_strb.ecc_kv_rd_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_pkey_ctrl.rsvd.value : '0;
+    assign readback_array[77][31:31] = (decoded_reg_strb.ecc_kv_rd_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_pkey_ctrl.read_done.value : '0;
+    assign readback_array[78][0:0] = (decoded_reg_strb.ecc_kv_rd_seed_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_seed_ctrl.read_en.value : '0;
+    assign readback_array[78][3:1] = (decoded_reg_strb.ecc_kv_rd_seed_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_seed_ctrl.read_entry.value : '0;
+    assign readback_array[78][4:4] = (decoded_reg_strb.ecc_kv_rd_seed_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_seed_ctrl.entry_is_pcr.value : '0;
+    assign readback_array[78][9:5] = (decoded_reg_strb.ecc_kv_rd_seed_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_seed_ctrl.entry_data_size.value : '0;
+    assign readback_array[78][30:10] = (decoded_reg_strb.ecc_kv_rd_seed_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_seed_ctrl.rsvd.value : '0;
+    assign readback_array[78][31:31] = (decoded_reg_strb.ecc_kv_rd_seed_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_seed_ctrl.read_done.value : '0;
+    assign readback_array[79][0:0] = (decoded_reg_strb.ecc_kv_rd_msg_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_msg_ctrl.read_en.value : '0;
+    assign readback_array[79][3:1] = (decoded_reg_strb.ecc_kv_rd_msg_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_msg_ctrl.read_entry.value : '0;
+    assign readback_array[79][4:4] = (decoded_reg_strb.ecc_kv_rd_msg_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_msg_ctrl.entry_is_pcr.value : '0;
+    assign readback_array[79][9:5] = (decoded_reg_strb.ecc_kv_rd_msg_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_msg_ctrl.entry_data_size.value : '0;
+    assign readback_array[79][30:10] = (decoded_reg_strb.ecc_kv_rd_msg_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_msg_ctrl.rsvd.value : '0;
+    assign readback_array[79][31:31] = (decoded_reg_strb.ecc_kv_rd_msg_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_msg_ctrl.read_done.value : '0;
+    assign readback_array[80][0:0] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.write_en.value : '0;
+    assign readback_array[80][3:1] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.write_entry.value : '0;
+    assign readback_array[80][4:4] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.entry_is_pcr.value : '0;
+    assign readback_array[80][5:5] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.value : '0;
+    assign readback_array[80][6:6] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.value : '0;
+    assign readback_array[80][7:7] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.sha_block_dest_valid.value : '0;
+    assign readback_array[80][8:8] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.value : '0;
+    assign readback_array[80][9:9] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.value : '0;
+    assign readback_array[80][10:10] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid.value : '0;
+    assign readback_array[80][30:11] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.rsvd.value : '0;
+    assign readback_array[80][31:31] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.write_done.value : '0;
+    assign readback_array[81][0:0] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.error_en.value : '0;
+    assign readback_array[81][1:1] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.notif_en.value : '0;
+    assign readback_array[81][31:2] = '0;
+    assign readback_array[82][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_internal_en.value : '0;
     assign readback_array[82][31:1] = '0;
-    assign readback_array[83][0:0] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value : '0;
+    assign readback_array[83][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value : '0;
     assign readback_array[83][31:1] = '0;
-    assign readback_array[84][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value : '0;
+    assign readback_array[84][0:0] = (decoded_reg_strb.intr_block_rf.error_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_global_intr_r.agg_sts.value : '0;
     assign readback_array[84][31:1] = '0;
-    assign readback_array[85][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value : '0;
+    assign readback_array[85][0:0] = (decoded_reg_strb.intr_block_rf.notif_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value : '0;
     assign readback_array[85][31:1] = '0;
-    assign readback_array[86][31:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_count_r.cnt.value : '0;
-    assign readback_array[87][31:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value : '0;
-    assign readback_array[88][0:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[86][0:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_internal_sts.value : '0;
+    assign readback_array[86][31:1] = '0;
+    assign readback_array[87][0:0] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value : '0;
+    assign readback_array[87][31:1] = '0;
+    assign readback_array[88][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value : '0;
     assign readback_array[88][31:1] = '0;
-    assign readback_array[89][0:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[89][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value : '0;
     assign readback_array[89][31:1] = '0;
+    assign readback_array[90][31:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_count_r.cnt.value : '0;
+    assign readback_array[91][31:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value : '0;
+    assign readback_array[92][0:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[92][31:1] = '0;
+    assign readback_array[93][0:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[93][31:1] = '0;
 
 
     // Reduce the array
@@ -1172,7 +2003,7 @@ module ecc_reg (
         readback_done = decoded_req & ~decoded_req_is_wr;
         readback_err = '0;
         readback_data_var = '0;
-        for(int i=0; i<90; i++) readback_data_var |= readback_array[i];
+        for(int i=0; i<94; i++) readback_data_var |= readback_array[i];
         readback_data = readback_data_var;
     end
 

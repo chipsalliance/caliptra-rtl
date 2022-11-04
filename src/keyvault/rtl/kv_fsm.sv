@@ -18,7 +18,7 @@ module kv_fsm
     import kv_defines_pkg::*;
     #(
     parameter DATA_WIDTH = 384
-   ,parameter HMAC_PAD = 0
+   ,parameter PAD = 0
    ,localparam OFFSET_W = $clog2(DATA_WIDTH/32)
 )
 (
@@ -26,7 +26,7 @@ module kv_fsm
     input logic rst_b,
 
     input logic start,
-    input logic [2:0] hmac_data_size,
+    input logic [4:0] pad_data_size,
 
     output logic [OFFSET_W-1:0] read_offset,
 
@@ -65,21 +65,21 @@ logic [KV_NUM_DWORDS_W:0] offset, offset_nxt;
 
 //hmac data size is encoded as N-1 128b chunks, add 1 and multiply by 4 to get dwords
 //data width is in bits, divide by 32 to get dwords
-assign num_dwords_data = (HMAC_PAD == 1) ? ((hmac_data_size+1)*4) : DATA_WIDTH/32;
-assign num_dwords_total = (HMAC_PAD == 1) ? KV_MAX_DWORDS : DATA_WIDTH/32;
+assign num_dwords_data = (PAD == 1) ? ((pad_data_size+1)) : DATA_WIDTH/32;
+assign num_dwords_total = (PAD == 1) ? KV_MAX_DWORDS : DATA_WIDTH/32;
 
 
 always_comb begin
     full_pad_data = '0;
-    full_pad_data[31] = hmac_data_size < 6 ? num_dwords_data*32 + 'd1024 : '0; //size of data goes in the last dword if we have room after pad
-    full_pad_data[num_dwords_data] = 32'h8000_0000; //insert start of pad at dword immediately following data size
+    full_pad_data[31] = pad_data_size < 27 ? num_dwords_data*32 + 'd1024 : '0; //size of data goes in the last dword if we have room after pad
+    full_pad_data[num_dwords_data[KV_NUM_DWORDS_W-1:0]] = 32'h8000_0000; //insert start of pad at dword immediately following data size
 end
 
 
 
 always_comb arc_KV_IDLE_KV_RW = start;
 always_comb arc_KV_RW_KV_DONE = (offset_nxt == num_dwords_total); //jump to done when we've written all dwords
-always_comb arc_KV_RW_KV_PAD = (HMAC_PAD == 1) & (offset_nxt == num_dwords_data); //jump to pad when data is done, but not full block size
+always_comb arc_KV_RW_KV_PAD = (PAD == 1) & (offset_nxt == num_dwords_data); //jump to pad when data is done, but not full block size
 always_comb arc_KV_PAD_KV_DONE = (offset_nxt == num_dwords_total); 
 always_comb arc_KV_DONE_KV_IDLE = '1;
 
@@ -134,6 +134,6 @@ end
 always_comb read_offset = offset[OFFSET_W-1:0];
 always_comb write_offset = offset[OFFSET_W-1:0];
 
-always_comb pad_data = full_pad_data[offset];
+always_comb pad_data = full_pad_data[offset[KV_NUM_DWORDS_W-1:0]];
 
 endmodule

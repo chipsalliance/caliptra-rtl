@@ -18,10 +18,12 @@
 
 module kv 
     import kv_defines_pkg::*;
+    import kv_reg_pkg::*;
+
     #(
-     parameter KV_NUM_READ = 1
-    ,parameter KV_NUM_WRITE = 1
-    ,parameter AHB_ADDR_WIDTH = 32
+     parameter KV_NUM_READ = 6
+    ,parameter KV_NUM_WRITE = 3
+    ,parameter AHB_ADDR_WIDTH = KV_ADDR_W
     ,parameter AHB_DATA_WIDTH = 32
     )
     (
@@ -55,8 +57,8 @@ logic [31:0] uc_req_rdata;
 logic kv_reg_read_error, kv_reg_write_error;
 kv_uc_req_t uc_req;
 
-kv_reg_pkg::kv_reg__in_t kv_reg_hwif_in;
-kv_reg_pkg::kv_reg__out_t kv_reg_hwif_out;
+kv_reg__in_t kv_reg_hwif_in;
+kv_reg__out_t kv_reg_hwif_out;
 
 ahb_slv_sif #(
     .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH),
@@ -106,8 +108,8 @@ always_comb begin : keyvault_ctrl
         kv_reg_hwif_in.key_ctrl[entry].dest_valid.next = '0; 
         kv_reg_hwif_in.key_ctrl[entry].dest_valid.we = '0;
         for (int client = 0; client < KV_NUM_WRITE; client++) begin
-            kv_reg_hwif_in.key_ctrl[entry].dest_valid.we |= (kv_write[client].dest_addr == entry) & ~kv_write[client].dest_is_pcr & kv_write[client].dest_wr_vld; 
-            kv_reg_hwif_in.key_ctrl[entry].dest_valid.next |= kv_write[client].dest_wr_vld ? kv_write[client].dest_valid : '0; 
+            kv_reg_hwif_in.key_ctrl[entry].dest_valid.we |= (kv_write[client].write_entry == entry) & ~kv_write[client].entry_is_pcr & kv_write[client].write_en; 
+            kv_reg_hwif_in.key_ctrl[entry].dest_valid.next |= kv_write[client].write_en ? kv_write[client].write_dest_valid : '0; 
         end 
     end
 
@@ -119,14 +121,14 @@ always_comb begin : keyvault_ctrl
         kv_reg_hwif_in.pcr_ctrl[entry].dest_valid.next = '0; 
         kv_reg_hwif_in.pcr_ctrl[entry].dest_valid.we = '0; 
         for (int client = 0; client < KV_NUM_WRITE; client++) begin
-            kv_reg_hwif_in.pcr_ctrl[entry].dest_valid.we |= (kv_write[client].dest_addr == entry) & kv_write[client].dest_is_pcr & kv_write[client].dest_wr_vld; 
-            kv_reg_hwif_in.pcr_ctrl[entry].dest_valid.next |= kv_write[client].dest_wr_vld? kv_write[client].dest_valid : '0; 
+            kv_reg_hwif_in.pcr_ctrl[entry].dest_valid.we |= (kv_write[client].write_entry == entry) & kv_write[client].entry_is_pcr & kv_write[client].write_en; 
+            kv_reg_hwif_in.pcr_ctrl[entry].dest_valid.next |= kv_write[client].write_en? kv_write[client].write_dest_valid : '0; 
         end 
     end
 
     //keyvault storage
     //AND-OR mux writes to each entry from crypto blocks
-    //write to the appropriate dest entry and offset when dest_wr_vld is set
+    //write to the appropriate dest entry and offset when write_en is set
     for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
         for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
             kv_reg_hwif_in.key_entry[entry][dword].data.swwel = '1; //never allow sw writes
@@ -135,9 +137,9 @@ always_comb begin : keyvault_ctrl
             kv_reg_hwif_in.key_entry[entry][dword].data.we = '0;
             for (int client = 0; client < KV_NUM_WRITE; client++) begin
                 kv_reg_hwif_in.key_entry[entry][dword].data.hwclr = kv_reg_hwif_out.key_ctrl[entry].clear.value;
-                kv_reg_hwif_in.key_entry[entry][dword].data.we |= (kv_write[client].dest_addr == entry) & (kv_write[client].dest_offset == dword) & 
-                                                                  ~kv_write[client].dest_is_pcr & kv_write[client].dest_wr_vld;
-                kv_reg_hwif_in.key_entry[entry][dword].data.next |= kv_write[client].dest_wr_vld ? kv_write[client].dest_data : '0;
+                kv_reg_hwif_in.key_entry[entry][dword].data.we |= (kv_write[client].write_entry == entry) & (kv_write[client].write_offset == dword) & 
+                                                                  ~kv_write[client].entry_is_pcr & kv_write[client].write_en;
+                kv_reg_hwif_in.key_entry[entry][dword].data.next |= kv_write[client].write_en ? kv_write[client].write_data : '0;
             end
         end
     end
@@ -149,9 +151,9 @@ always_comb begin : keyvault_ctrl
             kv_reg_hwif_in.pcr_entry[entry][dword].data.we = '0; //hook up the write enable from crypto writing to this key
             for (int client = 0; client < KV_NUM_WRITE; client++) begin
                 kv_reg_hwif_in.pcr_entry[entry][dword].data.hwclr = kv_reg_hwif_out.pcr_ctrl[entry].clear.value;
-                kv_reg_hwif_in.pcr_entry[entry][dword].data.we |= (kv_write[client].dest_addr == entry) & (kv_write[client].dest_offset == dword) & 
-                                                                   kv_write[client].dest_is_pcr & kv_write[client].dest_wr_vld;
-                kv_reg_hwif_in.pcr_entry[entry][dword].data.next |= kv_write[client].dest_wr_vld ? kv_write[client].dest_data : '0;
+                kv_reg_hwif_in.pcr_entry[entry][dword].data.we |= (kv_write[client].write_entry == entry) & (kv_write[client].write_offset == dword) & 
+                                                                   kv_write[client].entry_is_pcr & kv_write[client].write_en;
+                kv_reg_hwif_in.pcr_entry[entry][dword].data.next |= kv_write[client].write_en ? kv_write[client].write_data : '0;
             end 
         end
     end
@@ -163,26 +165,19 @@ end
 //qualify with dest valid to ensure requesting client has permission to read this entry
 always_comb begin : keyvault_readmux
     for (int client = 0; client < KV_NUM_READ; client++) begin  
-        kv_resp[client].key_data = '0;
-        kv_resp[client].src_data = '0;  
+        kv_resp[client].read_data = '0;
         for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
             for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
-                kv_resp[client].key_data |= ~kv_read[client].key_is_pcr & (kv_read[client].key_entry == entry) & (kv_read[client].key_offset == dword) &
-                                            ~kv_reg_hwif_out.key_ctrl[entry].lock_use.value & kv_reg_hwif_out.key_ctrl[entry].dest_valid.value[client] ? 
-                                            kv_reg_hwif_out.key_entry[entry][dword].data.value : '0;
-                kv_resp[client].src_data |= ~kv_read[client].src_is_pcr & (kv_read[client].src_entry == entry) & (kv_read[client].src_offset == dword) &
+                kv_resp[client].read_data |= ~kv_read[client].entry_is_pcr & (kv_read[client].read_entry == entry) & (kv_read[client].read_offset == dword) &
                                             ~kv_reg_hwif_out.key_ctrl[entry].lock_use.value & kv_reg_hwif_out.key_ctrl[entry].dest_valid.value[client] ? 
                                             kv_reg_hwif_out.key_entry[entry][dword].data.value : '0;
             end
         end
         for (int entry = 0; entry < KV_NUM_PCR; entry++) begin
             for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
-                kv_resp[client].key_data |= kv_read[client].key_is_pcr & (kv_read[client].key_entry == entry) & (kv_read[client].key_offset == dword) &
+                kv_resp[client].read_data |= kv_read[client].entry_is_pcr & (kv_read[client].read_entry == entry) & (kv_read[client].read_offset == dword) &
                                             ~kv_reg_hwif_out.pcr_ctrl[entry].lock_use.value & kv_reg_hwif_out.pcr_ctrl[entry].dest_valid.value[client] ? 
                                             kv_reg_hwif_out.pcr_entry[entry][dword].data.value : '0;
-                kv_resp[client].src_data |= kv_read[client].src_is_pcr & (kv_read[client].src_entry == entry) & (kv_read[client].src_offset == dword) &
-                                           ~kv_reg_hwif_out.pcr_ctrl[entry].lock_use.value & kv_reg_hwif_out.pcr_ctrl[entry].dest_valid.value[client] ? 
-                                           kv_reg_hwif_out.pcr_entry[entry][dword].data.value : '0;
             end
         end
     end
@@ -194,9 +189,9 @@ kv_reg kv_reg1 (
     .clk(clk),
     .rst('0),
     //qualify request so no addresses alias
-    .s_cpuif_req(uc_req_dv & (uc_req.addr[KV_ADDR_W-1:11] == '0)),
+    .s_cpuif_req(uc_req_dv & (uc_req.addr[KV_ADDR_W-1:KV_REG_ADDR_WIDTH] == '0)),
     .s_cpuif_req_is_wr(uc_req.write),
-    .s_cpuif_addr(uc_req.addr[10:0]),
+    .s_cpuif_addr(uc_req.addr[KV_REG_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data(uc_req.wdata),
     .s_cpuif_req_stall_wr(),
     .s_cpuif_req_stall_rd(),

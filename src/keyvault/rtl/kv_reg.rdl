@@ -35,8 +35,8 @@ addrmap kv_reg {
         field {sw=rw; hw=r; singlepulse;} clear=0;
         //field {sw=rw; hw=r; hwclr;} copy[4];
         //field {sw=rw; hw=r;} copy_dest[8:5];
-        field {sw=r; hw=rw; we=true;} dest_valid[11:9]=7;
-        field {sw=rw; hw=na;} rsvd[31:12]=0;
+        field {sw=r; hw=rw; we=true;} dest_valid[14:9]=7;
+        field {sw=rw; hw=na;} rsvd[31:15]=0;
     };
 
     kvCtrl key_ctrl[8];

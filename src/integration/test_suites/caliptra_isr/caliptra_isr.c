@@ -48,8 +48,8 @@ void std_rv_mtvec_sti(void) __attribute__ ((interrupt ("machine") , aligned(4) ,
 
 
 // SweRV Per-Source Vectored ISR functions
-static void nonstd_swerv_isr_aes_error    (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_aes_notif    (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_swerv_isr_doe_error    (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_swerv_isr_doe_notif    (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_swerv_isr_ecc_error    (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_swerv_isr_ecc_notif    (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_swerv_isr_hmac_error   (void) __attribute__ ((interrupt ("machine")));
@@ -72,8 +72,8 @@ static void nonstd_swerv_isr_mbox_notif   (void) __attribute__ ((interrupt ("mac
 // Could be much more fancy with C preprocessing to pair up the ISR with Vector
 // numbers as defined in caliptra_defines.h.... TODO
 static void          nonstd_swerv_isr_0   (void) __attribute__ ((interrupt ("machine"))); // Empty function instead of function pointer for Vec 0
-static void (* const nonstd_swerv_isr_1 ) (void) = nonstd_swerv_isr_aes_error   ; // -------.
-static void (* const nonstd_swerv_isr_2 ) (void) = nonstd_swerv_isr_aes_notif   ; //        |
+static void (* const nonstd_swerv_isr_1 ) (void) = nonstd_swerv_isr_doe_error   ; // -------.
+static void (* const nonstd_swerv_isr_2 ) (void) = nonstd_swerv_isr_doe_notif   ; //        |
 static void (* const nonstd_swerv_isr_3 ) (void) = nonstd_swerv_isr_ecc_error   ; //        |
 static void (* const nonstd_swerv_isr_4 ) (void) = nonstd_swerv_isr_ecc_notif   ; //        |
 static void (* const nonstd_swerv_isr_5 ) (void) = nonstd_swerv_isr_hmac_error  ; //        |
@@ -189,10 +189,10 @@ void init_interrupts(void) {
     volatile uint32_t * const meigwctrls = (uint32_t*) SWERV_MM_PIC_MEIGWCTRLS; // as arrays
     volatile uint32_t * const meigwclrs  = (uint32_t*) SWERV_MM_PIC_MEIGWCLRS;  //
     volatile uint32_t * const mbox_reg   = (uint32_t*) CLP_MBOX_REG_BASE_ADDR;
-    volatile uint32_t * const aes_reg    = (uint32_t*) CLP_AES_INTR_REGS_INTR_BLOCK_RF_START;
+    volatile uint32_t * const doe_reg    = (uint32_t*) CLP_DOE_REG_BASE_ADDR;
     volatile uint32_t * const ecc_reg    = (uint32_t*) CLP_ECC_REG_BASE_ADDR;
-    volatile uint32_t * const hmac_reg   = (uint32_t*) CLP_HMAC_INTR_REGS_INTR_BLOCK_RF_START;
-    volatile uint32_t * const sha512_reg = (uint32_t*) CLP_SHA512_INTR_REGS_INTR_BLOCK_RF_START;
+    volatile uint32_t * const hmac_reg   = (uint32_t*) CLP_HMAC_REG_BASE_ADDR;
+    volatile uint32_t * const sha512_reg = (uint32_t*) CLP_SHA512_REG_BASE_ADDR;
     char* DCCM = (char *) RV_DCCM_SADR;
     uint32_t value;
 
@@ -230,8 +230,8 @@ void init_interrupts(void) {
                       : /* clobbers: none */);
 
     // MEIPL_S - assign interrupt priorities
-    meipls[SWERV_INTR_VEC_AES_ERROR   ] = SWERV_INTR_PRIO_AES_ERROR   ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_AES_NOTIF   ] = SWERV_INTR_PRIO_AES_NOTIF   ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_DOE_ERROR   ] = SWERV_INTR_PRIO_DOE_ERROR   ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_DOE_NOTIF   ] = SWERV_INTR_PRIO_DOE_NOTIF   ; __asm__ volatile ("fence");
     meipls[SWERV_INTR_VEC_ECC_ERROR   ] = SWERV_INTR_PRIO_ECC_ERROR   ; __asm__ volatile ("fence");
     meipls[SWERV_INTR_VEC_ECC_NOTIF   ] = SWERV_INTR_PRIO_ECC_NOTIF   ; __asm__ volatile ("fence");
     meipls[SWERV_INTR_VEC_HMAC_ERROR  ] = SWERV_INTR_PRIO_HMAC_ERROR  ; __asm__ volatile ("fence");
@@ -283,11 +283,11 @@ void init_interrupts(void) {
     /* -- Re-enable global interrupts -- */
 
     // Enable Interrupts for each component
-    // AES
+    // DOE
     // TODO error interrupt enables
-    aes_reg[AES_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTR_EN_R /sizeof(uint32_t)] = AES_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK;
-    aes_reg[AES_INTR_REGS_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = AES_INTR_REGS_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
-                                                                             AES_INTR_REGS_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
+    doe_reg[DOE_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R /sizeof(uint32_t)] = DOE_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK;
+    doe_reg[DOE_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = DOE_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
+                                                                             DOE_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
 
     // ECC
     // TODO error interrupt enables
@@ -297,15 +297,15 @@ void init_interrupts(void) {
 
     // HMAC
     // TODO error interrupt enables
-    hmac_reg[HMAC_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTR_EN_R /sizeof(uint32_t)] = HMAC_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK;
-    hmac_reg[HMAC_INTR_REGS_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = HMAC_INTR_REGS_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
-                                                                               HMAC_INTR_REGS_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
+    hmac_reg[HMAC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R /sizeof(uint32_t)] = HMAC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK;
+    hmac_reg[HMAC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = HMAC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
+                                                                         HMAC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
 
     // SHA512
     // TODO error interrupt enables
-    sha512_reg[SHA512_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTR_EN_R /sizeof(uint32_t)] = SHA512_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK;
-    sha512_reg[SHA512_INTR_REGS_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = SHA512_INTR_REGS_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
-                                                                                   SHA512_INTR_REGS_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
+    sha512_reg[SHA512_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R /sizeof(uint32_t)] = SHA512_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK;
+    sha512_reg[SHA512_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = SHA512_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
+                                                                             SHA512_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
 
     // Mailbox
     mbox_reg[MBOX_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R /sizeof(uint32_t)] = MBOX_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INTERNAL_EN_MASK |
@@ -554,8 +554,8 @@ static void nonstd_swerv_isr_0 (void) {
     printf("cnt_"stringify(name)":%x\n",intr_count);                                                  \
     /* Fill in with macro contents, e.g. "service_mbox_error_intr" */                                 \
     /* This will match one macro from this list:                                                      \
-     * service_aes_error_intr                                                                         \
-     * service_aes_notif_intr                                                                         \
+     * service_doe_error_intr                                                                         \
+     * service_doe_notif_intr                                                                         \
      * service_ecc_error_intr                                                                         \
      * service_ecc_notif_intr                                                                         \
      * service_hmac_error_intr                                                                        \
@@ -596,12 +596,12 @@ static void nonstd_swerv_isr_0 (void) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Auto define ISR for each interrupt source using a macro
-// Resulting defined functions are, e.g. "nonstd_swerv_isr_aes_error" (for Vector 1)
+// Resulting defined functions are, e.g. "nonstd_swerv_isr_doe_error" (for Vector 1)
 
-// Non-Standard Vectored Interrupt Handler (AES Error = Vector 1)
-nonstd_swerv_isr(aes_error)
-// Non-Standard Vectored Interrupt Handler (AES Notification = vector 2)
-nonstd_swerv_isr(aes_notif)
+// Non-Standard Vectored Interrupt Handler (DOE Error = Vector 1)
+nonstd_swerv_isr(doe_error)
+// Non-Standard Vectored Interrupt Handler (DOE Notification = vector 2)
+nonstd_swerv_isr(doe_notif)
 // Non-Standard Vectored Interrupt Handler (ECC Error = vector 3)
 nonstd_swerv_isr(ecc_error)
 // Non-Standard Vectored Interrupt Handler (ECC Notification = vector 4)

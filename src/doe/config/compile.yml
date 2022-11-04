@@ -1,0 +1,62 @@
+---
+provides: [doe_defines_pkg]
+schema_version: 2.4.0
+requires: []
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files: 
+      - $COMPILE_ROOT/rtl/doe_defines_pkg.sv
+---
+provides: [doe_ctrl]
+schema_version: 2.4.0
+requires:
+  - libs
+  - keyvault
+  - doe_defines_pkg
+  - kv_defines_pkg
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/doe_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/doe_ctrl.sv
+      - $COMPILE_ROOT/rtl/doe_decipher_block.sv
+      - $COMPILE_ROOT/rtl/doe_encipher_block.sv
+      - $COMPILE_ROOT/rtl/doe_inv_sbox.sv
+      - $COMPILE_ROOT/rtl/doe_key_mem.sv
+      - $COMPILE_ROOT/rtl/doe_sbox.sv
+      - $COMPILE_ROOT/rtl/doe_cbc.sv
+      - $COMPILE_ROOT/rtl/doe_core_cbc.sv
+      - $COMPILE_ROOT/rtl/doe_reg.sv
+      - $COMPILE_ROOT/rtl/doe_fsm.sv
+    tops: [doe_ctrl]
+  rtl_lint:
+    directories: []
+    waiver_files:
+      - $COMPILE_ROOT/config/design_lint/sglint_waivers
+    black_box:
+      - doe_reg
+---
+provides: [doe_cbc_tb]  
+schema_version: 2.4.0
+requires: 
+  - doe_ctrl
+targets:
+  tb:
+    directories: 
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/tb/doe_cbc_tb.sv
+    tops: [doe_cbc_tb]
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        #- '-v2k_generate'
+        #- '-timescale=1ns/1ps'
+        - '-noinherit_timescale=1ns/1ps'
+        #- '-ucli -i dump.ucli'
+      #sim:
+        #- '-ucli -i dump.ucli'

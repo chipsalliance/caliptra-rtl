@@ -18,19 +18,13 @@ addrmap clp {
     
     doe_reg doe_reg @ 0x1000_0000;
 
-    aes_intr_regs aes_intr_regs @ 0x1000_0800;
-
     ecc_reg ecc_reg @ 0x1000_8000;
 
     hmac_reg hmac_reg @ 0x1001_0000;
 
-    hmac_intr_regs hmac_intr_regs @ 0x1001_0800;
-
     kv_reg kv_reg @ 0x1001_8000;
 
     sha512_reg sha512_reg @ 0x1002_0000;
-
-    sha512_intr_regs sha512_intr_regs @ 0x1002_0800;
 
     mbox_csr mbox_csr @ 0x3002_0000;
     

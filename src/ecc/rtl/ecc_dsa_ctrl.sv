@@ -40,6 +40,7 @@ module ecc_dsa_ctrl
     import ecc_params_pkg::*;
     import ecc_dsa_uop_pkg::*;
     import ecc_reg_pkg::*;
+    import kv_defines_pkg::*;
     (
     // Clock and reset.
     input wire           clk,
@@ -47,8 +48,13 @@ module ecc_dsa_ctrl
     input wire           cptra_pwrgood,
 
     // Reg ports.
-    input ecc_reg__out_t hwif_in,
-    output ecc_reg__in_t hwif_out,
+    input ecc_reg__out_t hwif_out,
+    output ecc_reg__in_t hwif_in,
+
+    // KV interface
+    output kv_read_t [2:0] kv_read,
+    output kv_write_t kv_write,
+    input kv_resp_t [2:0] kv_resp,
 
     // Interrupts (from ecc_reg)
     output logic error_intr,
@@ -95,6 +101,7 @@ module ecc_dsa_ctrl
     logic [2  : 0]          pm_cmd_reg;
     logic [REG_SIZE-1 : 0]  msg_reg;
     logic [REG_SIZE-1 : 0]  privkey_reg;
+    logic [REG_SIZE-1 : 0]  kv_reg;
     logic [REG_SIZE-1 : 0]  pubkeyx_reg;
     logic [REG_SIZE-1 : 0]  pubkeyy_reg;
     logic [REG_SIZE-1 : 0]  seed_reg;
@@ -127,6 +134,28 @@ module ecc_dsa_ctrl
     logic                   sca_scalar_rnd_en;
 
     logic                   openssl_test_en;  // without hmac-drbg
+
+    //interface with kv client
+    logic kv_privkey_write_en;
+    logic [REG_OFFSET_W-1:0] kv_privkey_write_offset;
+    logic [31:0] kv_privkey_write_data;
+    logic kv_seed_write_en;
+    logic [REG_OFFSET_W-1:0] kv_seed_write_offset;
+    logic [31:0] kv_seed_write_data;
+    logic kv_msg_write_en;
+    logic [REG_OFFSET_W-1:0] kv_msg_write_offset;
+    logic [31:0] kv_msg_write_data;
+  
+    logic dest_keyvault;
+    logic kv_privkey_done;
+    logic kv_seed_done;
+    logic kv_msg_done;
+    logic kv_write_done;
+  
+    kv_read_ctrl_reg_t kv_privkey_read_ctrl_reg;
+    kv_read_ctrl_reg_t kv_seed_read_ctrl_reg;
+    kv_read_ctrl_reg_t kv_msg_read_ctrl_reg;
+    kv_write_ctrl_reg_t kv_write_ctrl_reg;
 
     //----------------------------------------------------------------
     // Module instantiantions.
@@ -172,6 +201,7 @@ module ecc_dsa_ctrl
         .sca_en_i(sca_scalar_rnd_en),
         .addr_i(prog_line[DSA_OPR_ADDR_WIDTH-1 : 0]),
         .wr_op_sel_i(prog_line[2*DSA_OPR_ADDR_WIDTH]),
+
         .wr_en_i(prog_line[(2*DSA_OPR_ADDR_WIDTH)+1]),
         .rd_reg_i(prog_line[(2*DSA_OPR_ADDR_WIDTH)+2]),
         .data_i(write_reg),
@@ -253,9 +283,6 @@ module ecc_dsa_ctrl
             sca_mask_sign_en  <= '0;
             sca_scalar_rnd_en <= '0;
             openssl_test_en <= '0;
-            seed_reg    <= '0;
-            msg_reg     <= '0;
-            privkey_reg <= '0;
             pubkeyx_reg <= '0;
             pubkeyy_reg <= '0;
             r_reg       <= '0;
@@ -263,44 +290,74 @@ module ecc_dsa_ctrl
             IV_reg      <= '0;
         end
         else if (dsa_ready_reg) begin
-            cmd_reg <= hwif_in.ECC_CTRL.CTRL.value;
+            cmd_reg <= hwif_out.ECC_CTRL.CTRL.value;
             
-            sca_point_rnd_en  <= hwif_in.ECC_SCACONFIG.POINT_RND_EN.value;
-            sca_mask_sign_en  <= hwif_in.ECC_SCACONFIG.MASK_SIGN_EN.value;
-            sca_scalar_rnd_en <= hwif_in.ECC_SCACONFIG.SCALAR_RND_EN.value;
-            openssl_test_en   <= hwif_in.ECC_SCACONFIG.OPENSSL_EN.value; // this bit should be deleted after openssl keygen test.
+            sca_point_rnd_en  <= hwif_out.ECC_SCACONFIG.POINT_RND_EN.value;
+            sca_mask_sign_en  <= hwif_out.ECC_SCACONFIG.MASK_SIGN_EN.value;
+            sca_scalar_rnd_en <= hwif_out.ECC_SCACONFIG.SCALAR_RND_EN.value;
+            openssl_test_en   <= hwif_out.ECC_SCACONFIG.OPENSSL_EN.value; // this bit should be deleted after openssl keygen test.
 
             for(int i0=0; i0<12; i0++) begin
-                seed_reg[i0*32 +: 32]    <= hwif_in.ECC_SEED[i0].SEED.value;
-                msg_reg[i0*32 +: 32]     <= hwif_in.ECC_MSG[i0].MSG.value;
-                privkey_reg[i0*32 +: 32] <= hwif_in.ECC_PRIVKEY[i0].PRIVKEY.value;
-                pubkeyx_reg[i0*32 +: 32] <= hwif_in.ECC_PUBKEY_X[i0].PUBKEY_X.value;
-                pubkeyy_reg[i0*32 +: 32] <= hwif_in.ECC_PUBKEY_Y[i0].PUBKEY_Y.value;
-                r_reg[i0*32 +: 32]       <= hwif_in.ECC_SIGN_R[i0].SIGN_R.value;
-                s_reg[i0*32 +: 32]       <= hwif_in.ECC_SIGN_S[i0].SIGN_S.value;
-                IV_reg[i0*32 +: 32]      <= hwif_in.ECC_IV[i0].IV.value;
+
+                pubkeyx_reg[i0*32 +: 32] <= hwif_out.ECC_PUBKEY_X[i0].PUBKEY_X.value;
+                pubkeyy_reg[i0*32 +: 32] <= hwif_out.ECC_PUBKEY_Y[i0].PUBKEY_Y.value;
+                r_reg[i0*32 +: 32]       <= hwif_out.ECC_SIGN_R[i0].SIGN_R.value;
+                s_reg[i0*32 +: 32]       <= hwif_out.ECC_SIGN_S[i0].SIGN_S.value;
+                IV_reg[i0*32 +: 32]      <= hwif_out.ECC_IV[i0].IV.value;
             end
         end
     end // ecc_reg_reading
 
-    assign error_intr = hwif_in.intr_block_rf.error_global_intr_r.intr;
-    assign notif_intr = hwif_in.intr_block_rf.notif_global_intr_r.intr;
+    always_ff @(posedge clk or negedge reset_n) 
+    begin : ecc_reg_reading_kv
+        if (!reset_n) begin
+            seed_reg    <= '0;
+            msg_reg     <= '0;
+            privkey_reg <= '0;
+        end
+        //Key Vault has priority if enabled to drive these registers
+        //If keyvault is not enabled, grab the sw value on dsa_ready_reg as usual
+        else begin
+            for(int i0=0; i0<12; i0++) begin
+                privkey_reg[i0*32 +: 32] <= (kv_privkey_write_en & (kv_privkey_write_offset == i0)) ? kv_privkey_write_data : 
+                                            (~kv_privkey_write_en & dsa_ready_reg) ? hwif_out.ECC_PRIVKEY[i0].PRIVKEY.value : privkey_reg[i0*32 +: 32];
+                seed_reg[i0*32 +: 32]    <= (kv_seed_write_en & (kv_seed_write_offset == i0)) ? kv_seed_write_data : 
+                                            (~kv_seed_write_en & dsa_ready_reg) ? hwif_out.ECC_SEED[i0].SEED.value : seed_reg[i0*32 +: 32];
+                msg_reg[i0*32 +: 32]     <= (kv_msg_write_en & (kv_msg_write_offset == i0)) ? kv_msg_write_data : 
+                                            (~kv_msg_write_en & dsa_ready_reg) ? hwif_out.ECC_MSG[i0].MSG.value : msg_reg[i0*32 +: 32];
+            end
+        end
+    end
+
+    always_ff @(posedge clk or negedge reset_n) 
+    begin : ecc_kv_reg
+        if (!reset_n) begin
+            kv_reg    <= '0;
+        end
+        //Store private key here before pushing to keyvault
+        else begin
+            kv_reg <= (hw_privkey_we & dest_keyvault) ? read_reg : kv_reg;
+        end
+    end
+
+    assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
+    assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
 
     // write the registers by hw
-    always_comb hwif_out.reset_b = reset_n;
-    always_comb hwif_out.hard_reset_b = cptra_pwrgood;
-    always_comb hwif_out.ECC_NAME[0].NAME.next = ECC_CORE_NAME[31 : 0];
-    always_comb hwif_out.ECC_NAME[1].NAME.next = ECC_CORE_NAME[63 : 32];
-    always_comb hwif_out.ECC_VERSION[0].VERSION.next = ECC_CORE_VERSION[31 : 0];
-    always_comb hwif_out.ECC_VERSION[1].VERSION.next = ECC_CORE_VERSION[63 : 32];
+    always_comb hwif_in.reset_b = reset_n;
+    always_comb hwif_in.hard_reset_b = cptra_pwrgood;
+    always_comb hwif_in.ECC_NAME[0].NAME.next = ECC_CORE_NAME[31 : 0];
+    always_comb hwif_in.ECC_NAME[1].NAME.next = ECC_CORE_NAME[63 : 32];
+    always_comb hwif_in.ECC_VERSION[0].VERSION.next = ECC_CORE_VERSION[31 : 0];
+    always_comb hwif_in.ECC_VERSION[1].VERSION.next = ECC_CORE_VERSION[63 : 32];
 
-    always_comb hwif_out.ECC_STATUS.READY.next = dsa_ready_reg;
-    always_comb hwif_out.ECC_STATUS.VALID.next = dsa_valid_reg;
+    always_comb hwif_in.ECC_STATUS.READY.next = dsa_ready_reg;
+    always_comb hwif_in.ECC_STATUS.VALID.next = dsa_valid_reg;
 
-    always_comb hwif_out.ECC_CTRL.CTRL.next = '0;
+    always_comb hwif_in.ECC_CTRL.CTRL.next = '0;
     // TODO add other interrupt hwset signals (errors)
-    always_comb hwif_out.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset = 1'b0;
-    always_comb hwif_out.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = ecc_status_done_p;
+    always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset = 1'b0;
+    always_comb hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = ecc_status_done_p;
 
 
     genvar i0;
@@ -308,16 +365,40 @@ module ecc_dsa_ctrl
         for (i0=0; i0 < 12; i0++) begin : ecc_reg_writing
             always_comb 
             begin
-                hwif_out.ECC_PRIVKEY[i0].PRIVKEY.next = hw_privkey_we? read_reg[i0*32 +: 32] : hwif_in.ECC_PRIVKEY[i0].PRIVKEY.value;
-                hwif_out.ECC_PUBKEY_X[i0].PUBKEY_X.next = hw_pubkeyx_we? read_reg[i0*32 +: 32] : hwif_in.ECC_PUBKEY_X[i0].PUBKEY_X.value;
-                hwif_out.ECC_PUBKEY_Y[i0].PUBKEY_Y.next = hw_pubkeyy_we? read_reg[i0*32 +: 32] : hwif_in.ECC_PUBKEY_Y[i0].PUBKEY_Y.value;
-                hwif_out.ECC_SIGN_R[i0].SIGN_R.next = hw_r_we? read_reg[i0*32 +: 32] : hwif_in.ECC_SIGN_R[i0].SIGN_R.value;
-                hwif_out.ECC_SIGN_S[i0].SIGN_S.next = hw_s_we? read_reg[i0*32 +: 32] : hwif_in.ECC_SIGN_S[i0].SIGN_S.value;
-                hwif_out.ECC_VERIFY_R[i0].VERIFY_R.next = hw_verify_r_we? read_reg[i0*32 +: 32] : hwif_in.ECC_VERIFY_R[i0].VERIFY_R.value;
+                //don't store the private key generated in sw accessible register if it's going to keyvault
+                hwif_in.ECC_PRIVKEY[i0].PRIVKEY.next = hw_privkey_we & ~dest_keyvault ? read_reg[i0*32 +: 32] : hwif_out.ECC_PRIVKEY[i0].PRIVKEY.value;
+                hwif_in.ECC_PUBKEY_X[i0].PUBKEY_X.next = hw_pubkeyx_we? read_reg[i0*32 +: 32] : hwif_out.ECC_PUBKEY_X[i0].PUBKEY_X.value;
+                hwif_in.ECC_PUBKEY_Y[i0].PUBKEY_Y.next = hw_pubkeyy_we? read_reg[i0*32 +: 32] : hwif_out.ECC_PUBKEY_Y[i0].PUBKEY_Y.value;
+                hwif_in.ECC_SIGN_R[i0].SIGN_R.next = hw_r_we? read_reg[i0*32 +: 32] : hwif_out.ECC_SIGN_R[i0].SIGN_R.value;
+                hwif_in.ECC_SIGN_S[i0].SIGN_S.next = hw_s_we? read_reg[i0*32 +: 32] : hwif_out.ECC_SIGN_S[i0].SIGN_S.value;
+                hwif_in.ECC_VERIFY_R[i0].VERIFY_R.next = hw_verify_r_we? read_reg[i0*32 +: 32] : hwif_out.ECC_VERIFY_R[i0].VERIFY_R.value;
             end
         end
     endgenerate // ecc_reg_writing
 
+    always_comb begin: ecc_kv_ctrl_reg
+        //set done when fsm is done
+        hwif_in.ecc_kv_rd_pkey_ctrl.read_done.hwset = kv_privkey_done;
+        hwif_in.ecc_kv_rd_seed_ctrl.read_done.hwset = kv_seed_done;
+        hwif_in.ecc_kv_rd_msg_ctrl.read_done.hwset = kv_msg_done;
+        hwif_in.ecc_kv_wr_pkey_ctrl.write_done.hwset = kv_write_done;
+        //clear done when new request is made
+        hwif_in.ecc_kv_rd_pkey_ctrl.read_done.hwclr = kv_privkey_read_ctrl_reg.read_en;
+        hwif_in.ecc_kv_rd_seed_ctrl.read_done.hwclr = kv_seed_read_ctrl_reg.read_en;
+        hwif_in.ecc_kv_rd_msg_ctrl.read_done.hwclr = kv_msg_read_ctrl_reg.read_en;
+        hwif_in.ecc_kv_wr_pkey_ctrl.write_done.hwclr = kv_write_ctrl_reg.write_en;
+        //clear enable when done
+        hwif_in.ecc_kv_rd_pkey_ctrl.read_en.hwclr = kv_privkey_done;
+        hwif_in.ecc_kv_rd_seed_ctrl.read_en.hwclr = kv_seed_done;
+        hwif_in.ecc_kv_rd_msg_ctrl.read_en.hwclr = kv_msg_done;
+        hwif_in.ecc_kv_wr_pkey_ctrl.write_en.hwclr = kv_write_done;
+    end
+
+    //keyvault control reg macros for assigning to struct
+    `KV_READ_CTRL_REG2STRUCT(kv_privkey_read_ctrl_reg, ecc_kv_rd_pkey_ctrl)
+    `KV_READ_CTRL_REG2STRUCT(kv_seed_read_ctrl_reg, ecc_kv_rd_seed_ctrl)
+    `KV_READ_CTRL_REG2STRUCT(kv_msg_read_ctrl_reg, ecc_kv_rd_msg_ctrl)
+    `KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, ecc_kv_wr_pkey_ctrl)
 
     //----------------------------------------------------------------
     // register updates
@@ -531,8 +612,8 @@ module ecc_dsa_ctrl
         if (!reset_n)
             ecc_status_done_d <= 1'b0;
         else
-            ecc_status_done_d <= hwif_out.ECC_STATUS.VALID.next;
-    always_comb ecc_status_done_p = hwif_out.ECC_STATUS.VALID.next && !ecc_status_done_d;
+            ecc_status_done_d <= hwif_in.ECC_STATUS.VALID.next;
+    always_comb ecc_status_done_p = hwif_in.ECC_STATUS.VALID.next && !ecc_status_done_d;
 
     assign dsa_busy = (prog_cntr == DSA_NOP)? 1'b0 : 1'b1;
 
@@ -541,4 +622,103 @@ module ecc_dsa_ctrl
         dsa_ready_reg = !(dsa_busy | pm_busy_o);
     end // ready_flag
     
+    //Key Vault Control Modules
+    //Read PRIVKEY
+    kv_read_client #(
+        .DATA_WIDTH(REG_SIZE),
+        .PAD(0)
+    )
+    ecc_privkey_kv_read
+    (
+        .clk(clk),
+        .rst_b(reset_n),
+
+        //client control register
+        .read_ctrl_reg(kv_privkey_read_ctrl_reg),
+
+        //interface with kv
+        .kv_read(kv_read[0]),
+        .kv_resp(kv_resp[0]),
+
+        //interface with client
+        .write_en(kv_privkey_write_en),
+        .write_offset(kv_privkey_write_offset),
+        .write_data(kv_privkey_write_data),
+
+        .read_done(kv_privkey_done)
+    );
+
+    //Read SEED
+    kv_read_client #(
+        .DATA_WIDTH(REG_SIZE),
+        .PAD(1)
+    )
+    ecc_seed_kv_read
+    (
+        .clk(clk),
+        .rst_b(reset_n),
+
+        //client control register
+        .read_ctrl_reg(kv_seed_read_ctrl_reg),
+
+        //interface with kv
+        .kv_read(kv_read[1]),
+        .kv_resp(kv_resp[1]),
+
+        //interface with client
+        .write_en(kv_seed_write_en),
+        .write_offset(kv_seed_write_offset),
+        .write_data(kv_seed_write_data),
+
+        .read_done(kv_seed_done)
+    );
+
+    //Read MSG
+    kv_read_client #(
+        .DATA_WIDTH(REG_SIZE),
+        .PAD(1)
+    )
+    ecc_msg_kv_read
+    (
+        .clk(clk),
+        .rst_b(reset_n),
+
+        //client control register
+        .read_ctrl_reg(kv_msg_read_ctrl_reg),
+
+        //interface with kv
+        .kv_read(kv_read[2]),
+        .kv_resp(kv_resp[2]),
+
+        //interface with client
+        .write_en(kv_msg_write_en),
+        .write_offset(kv_msg_write_offset),
+        .write_data(kv_msg_write_data),
+
+        .read_done(kv_msg_done)
+    );
+
+    //Write to keyvault
+    kv_write_client #(
+        .DATA_WIDTH(REG_SIZE)
+    )
+    ecc_privkey_kv_write
+    (
+        .clk(clk),
+        .rst_b(reset_n),
+
+        //client control register
+        .write_ctrl_reg(kv_write_ctrl_reg),
+
+        //interface with kv
+        .kv_write(kv_write),
+
+        //interface with client
+        .dest_keyvault(dest_keyvault),
+        .dest_data_avail(hw_privkey_we),
+        .dest_data(kv_reg),
+
+        .dest_done(kv_write_done)
+    );
+
 endmodule

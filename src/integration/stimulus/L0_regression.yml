@@ -6,7 +6,8 @@ contents:
       tags: ["L0", "Lop_regression", "top_regression"]
       paths:
         - ../test_suites/smoke_test_swerv/smoke_test_swerv.yml
-        - ../test_suites/smoke_test_aes/smoke_test_aes.yml
+        #add back for aes
+        #- ../test_suites/smoke_test_aes/smoke_test_aes.yml
         - ../test_suites/smoke_test_mbox/smoke_test_mbox.yml
         - ../test_suites/smoke_test_sha512/smoke_test_sha512.yml
         - ../test_suites/memCpy_ROM_to_dccm/memCpy_ROM_to_dccm.yml

@@ -41,9 +41,9 @@ package kv_reg_uvm;
             this.clear = new("clear");
             this.clear.configure(this, 1, 3, "RW", 0, 'h0, 1, 1, 0);
             this.dest_valid = new("dest_valid");
-            this.dest_valid.configure(this, 3, 9, "RO", 1, 'h7, 1, 1, 0);
+            this.dest_valid.configure(this, 6, 9, "RO", 1, 'h7, 1, 1, 0);
             this.rsvd = new("rsvd");
-            this.rsvd.configure(this, 20, 12, "RW", 0, 'h0, 1, 1, 0);
+            this.rsvd.configure(this, 17, 15, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : kv_reg__kvCtrl
 

@@ -49,9 +49,9 @@ module hmac_ctrl
     output logic [AHB_DATA_WIDTH-1:0] hrdata_o,
 
     // kv interface
-    output kv_read_t kv_read,
+    output kv_read_t [1:0] kv_read,
     output kv_write_t kv_write,
-    input kv_resp_t kv_resp,
+    input kv_resp_t [1:0] kv_resp,
 
     // Interrupt
     output logic error_intr,

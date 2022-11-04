@@ -21,7 +21,9 @@
 //
 //======================================================================
 
-module sha512_ctrl #(
+module sha512_ctrl 
+    import kv_defines_pkg::*;
+    #(
     parameter AHB_DATA_WIDTH = 32,
     parameter AHB_ADDR_WIDTH = 32
 )
@@ -43,6 +45,11 @@ module sha512_ctrl #(
     output logic hresp_o,
     output logic hreadyout_o,
     output logic [AHB_DATA_WIDTH-1:0] hrdata_o,
+
+    // kv interface
+    output kv_read_t kv_read,
+    output kv_write_t kv_write,
+    input kv_resp_t kv_resp,
 
     // Interrupt
     output error_intr,
@@ -73,6 +80,9 @@ module sha512_ctrl #(
         .write_data(sha512_write_data),
         .read_data(sha512_read_data),
         .err(sha512_err),
+        .kv_read(kv_read),
+        .kv_write(kv_write),
+        .kv_resp(kv_resp),
         .error_intr(error_intr),
         .notif_intr(notif_intr)
     );

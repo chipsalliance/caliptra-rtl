@@ -8,7 +8,7 @@ requires:
   - el2_swerv_wrapper
   - ahb_lite_bus
   - sha512_ctrl
-  - aes_ctrl
+  - doe_ctrl
   - hmac_ctrl
   - ecc_top
   - keyvault

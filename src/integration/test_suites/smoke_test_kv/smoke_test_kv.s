@@ -36,48 +36,48 @@ _start:
     csrw 0x7c0, x1
 
     // Write IV
-    li x3, AES_ADDR_IV_START
-    li x1, AES_ADDR_IV_END
+    li x3, CLP_DOE_REG_DOE_IV_0
+    li x1, CLP_DOE_REG_DOE_IV_3
     la x4, iv_data_uds
     write_uds_IV_loop:
         lw x5, 0(x4)
         sw x5, 0(x3)
         addi x4, x4, 4
         addi x3, x3, 4
-        ble x3, x1, write_uds_IV_loop
+        blt x3, x1, write_uds_IV_loop
 
     //start UDS and store in KV0
-    li x3, AES_ADDR_KV_CTRL
+    li x3, CLP_DOE_REG_DOE_CTRL
     li x1, 0x00000001
     sw x1, 0(x3)
 
     // Check that UDS flow is done
-    li x3, AES_ADDR_KV_CTRL
-    li x1, 0x00000020
+    li x3, CLP_DOE_REG_DOE_STATUS
+    li x1, DOE_REG_DOE_STATUS_VALID_MASK
     uds_done_poll_loop:
         lw x5, 0(x3)
         and x5, x5, x1
         bne x5, x1, uds_done_poll_loop
 
    // Write IV
-    li x3, AES_ADDR_IV_START
-    li x1, AES_ADDR_IV_END
+    li x3, CLP_DOE_REG_DOE_IV_0
+    li x1, CLP_DOE_REG_DOE_IV_3
     la x4, iv_data_fe
     write_fe_IV_loop:
         lw x5, 0(x4)
         sw x5, 0(x3)
         addi x4, x4, 4
         addi x3, x3, 4
-        ble x3, x1, write_fe_IV_loop
+        blt x3, x1, write_fe_IV_loop
 
     //start FE and store in KV6/7
-    li x3, AES_ADDR_KV_CTRL
+    li x3, CLP_DOE_REG_DOE_CTRL
     li x1, 0x0000001A
     sw x1, 0(x3)
 
     // Check that FE flow is done
-    li x3, AES_ADDR_KV_CTRL
-    li x1, 0x00000020
+    li x3, CLP_DOE_REG_DOE_STATUS
+    li x1, DOE_REG_DOE_STATUS_VALID_MASK
     fe_done_poll_loop:
         lw x5, 0(x3)
         and x5, x5, x1
@@ -93,7 +93,7 @@ _start:
     //-------
 
     // Load key from hw_data and write to PCR
-    li x3, KV_BASE_ADDR
+    li x3, CLP_KV_REG_PCR_ENTRY_0_0
     li x2, HMAC_KEY_NUM_DWORDS
     li x1, 0x00000000
     la x4, hw_data
@@ -105,27 +105,40 @@ _start:
         addi x1, x1, 1
         bne x2, x1, write_key_loop
 
-    // Program HMAC_ADDR_KV_CTRL
-    li x3, HMAC_ADDR_KV_CTRL
-    li x4, 0x07014111
+    // Program CLP_HMAC_REG_HMAC384_KV_RD_KEY_CTRL
+    // Read key from PCR 0
+    li x3, CLP_HMAC_REG_HMAC384_KV_RD_KEY_CTRL
+    li x4, 0x00000011
+    sw x4, 0(x3)
+
+    // Program CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL
+    // Read block from Key 0
+    li x3, CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL
+    li x4, 0x00000161
+    sw x4, 0(x3)
+
+    // Program CLP_HMAC_REG_HMAC384_KV_WR_CTRL
+    // Write to key 0 with all dest valid
+    li x3, CLP_HMAC_REG_HMAC384_KV_WR_CTRL
+    li x4, 0x000007e1
     sw x4, 0(x3)
 
     // Check that HMAC KEY and BLOCK are loaded
-    li x3, HMAC_ADDR_KV_CTRL
-    li x1, 0x60000000
-    key_done_poll_loop:
+    li x3, CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL
+    li x1, 0x80000000
+    block_done_poll_loop:
         lw x5, 0(x3)
         and x5, x5, x1
-        bne x5, x1, key_done_poll_loop
+        bne x5, x1, block_done_poll_loop
 
     // Enable HMAC core
-    li x3, HMAC_ADDR_CNTRL
-    li x4, HMAC_INIT
+    li x3, CLP_HMAC_REG_HMAC384_CTRL
+    li x4, HMAC_REG_HMAC384_CTRL_INIT_MASK
     sw x4, 0(x3)
 
     // wait for HMAC process - check dest done
-    li x3, HMAC_ADDR_KV_CTRL
-    li x1, 0x80000000
+    li x3, CLP_HMAC_REG_HMAC384_KV_WR_CTRL
+    li x1, HMAC_REG_HMAC384_KV_WR_CTRL_WRITE_DONE_MASK
     dest_done_loop:
         lw x5, 0(x3)
         and x5, x5, x1
@@ -137,59 +150,73 @@ _start:
     //CDI LDEVID
     //-------
 
-    // Program HMAC_ADDR_KV_CTRL
-    li x3, HMAC_ADDR_KV_CTRL
-    li x4, 0x0701ED01
+    // Program CLP_HMAC_REG_HMAC384_KV_RD_KEY_CTRL
+    // Read Key from key slot 0
+    li x3, CLP_HMAC_REG_HMAC384_KV_RD_KEY_CTRL
+    li x4, 0x00000001
+    sw x4, 0(x3)
+
+    // Program CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL
+    // Read block from Key slot 6/7
+    li x3, CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL
+    li x4, 0x000003ed
+    sw x4, 0(x3)
+
+    // Program CLP_HMAC_REG_HMAC384_KV_WR_CTRL
+    // Write result to entry 0, all dest valid
+    li x3, CLP_HMAC_REG_HMAC384_KV_WR_CTRL
+    li x4, 0x000007e1
     sw x4, 0(x3)
 
     // Check that HMAC KEY and BLOCK are loaded
-    li x3, HMAC_ADDR_KV_CTRL
-    li x1, 0x60000000
-    key_done2_poll_loop:
+    li x3, CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL
+    li x1, 0x80000000
+    block_done2_poll_loop:
         lw x5, 0(x3)
         and x5, x5, x1
-        bne x5, x1, key_done2_poll_loop
+        bne x5, x1, block_done2_poll_loop
 
     // Enable HMAC core
-    li x3, HMAC_ADDR_CNTRL
-    li x4, HMAC_INIT
+    li x3, CLP_HMAC_REG_HMAC384_CTRL
+    li x4, HMAC_REG_HMAC384_CTRL_INIT_MASK
     sw x4, 0(x3)
 
     // wait for HMAC process
-    li x3, HMAC_ADDR_STATUS
-    li x1, HMAC_VALID
+    li x3, CLP_HMAC_REG_HMAC384_STATUS
+    li x1, HMAC_REG_HMAC384_STATUS_VALID_MASK
     ready_loop:
         lw x5, 0(x3)
+        and x5, x5, x1
         bne x5, x1, ready_loop
 
     // Write PAD for 1024 size block
     // FE is 1024 so we did init with the full data
     // Now we need to do next with a full pad and size 
-    li x3, HMAC_ADDR_BLOCK_START
-    li x1, HMAC_ADDR_BLOCK_END
+    li x3, CLP_HMAC_REG_HMAC384_BLOCK_0
+    li x1, CLP_HMAC_REG_HMAC384_BLOCK_31
     la x4, pad_block
     write_block_loop:
         lw x5, 0(x4)
         sw x5, 0(x3)
         addi x4, x4, 4
         addi x3, x3, 4
-        ble x3, x1, write_block_loop
+        blt x3, x1, write_block_loop
 
     // Give the next command to HMAC core
-    li x3, HMAC_ADDR_CNTRL
-    li x4, HMAC_NEXT
+    li x3, CLP_HMAC_REG_HMAC384_CTRL
+    li x4, HMAC_REG_HMAC384_CTRL_NEXT_MASK
     sw x4, 0(x3)
 
     // wait for HMAC process - check dest done
-    li x3, HMAC_ADDR_KV_CTRL
-    li x1, 0x80000000
+    li x3, CLP_HMAC_REG_HMAC384_KV_WR_CTRL
+    li x1, HMAC_REG_HMAC384_KV_WR_CTRL_WRITE_DONE_MASK
     dest_done2_loop:
         lw x5, 0(x3)
         and x5, x5, x1
         bne x5, x1, dest_done2_loop
 
     //write to PCR
-    li x3, KV_BASE_ADDR
+    li x3, CLP_KV_REG_PCR_ENTRY_0_0
     li x6, KV_NUM_PCR
     li x7, 0x00000000
     li x8, KV_NUM_DWORDS
@@ -207,7 +234,7 @@ _start:
         bne x7, x6, write_pcr_reg_loop
 
     //read back PCR and check
-    li x3, KV_BASE_ADDR
+    li x3, CLP_KV_REG_PCR_ENTRY_0_0
     li x6, KV_NUM_PCR
     li x7, 0x00000000
     li x8, KV_NUM_DWORDS
@@ -226,11 +253,11 @@ _start:
         bne x7, x6, read_pcr_reg_loop       
         
     //clear FE 
-    li x3, KV_KEY_CTRL_ADDR
+    li x3, CLP_KV_REG_KEY_CTRL_6
     addi x3, x3, 24
-    li x5, 0x00000008
+    li x5, KV_REG_KEY_CTRL_6_CLEAR_MASK
     sw x5, 0(x3)
-    addi x3, x3, 4
+    li x3, CLP_KV_REG_KEY_CTRL_7
     sw x5, 0(x3)
 
     // Load string from hw_data

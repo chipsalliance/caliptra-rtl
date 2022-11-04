@@ -74,6 +74,8 @@ package ecc_params_pkg;
 
   // Implementation parameters for field arithmetic
   parameter [9 : 0] REG_SIZE     = 10'd384;
+  parameter REG_NUM_DWORDS       = REG_SIZE/32;
+  parameter REG_OFFSET_W         = $clog2(REG_NUM_DWORDS);
   parameter RADIX                = 32;
   parameter ADD_NUM_ADDS         = 1;
   parameter ADD_BASE_SZ          = 384;

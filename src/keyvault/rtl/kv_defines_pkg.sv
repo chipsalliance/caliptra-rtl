@@ -30,26 +30,22 @@ typedef struct packed {
 } kv_uc_req_t;
 
 typedef struct packed {
-    logic          key_is_pcr;
-    logic   [2:0]  key_entry;
-    logic   [3:0]  key_offset;
-    logic          src_is_pcr;
-    logic   [2:0]  src_entry;
-    logic   [3:0]  src_offset;
+    logic          entry_is_pcr;
+    logic   [2:0]  read_entry;
+    logic   [3:0]  read_offset;
 } kv_read_t;
 
 typedef struct packed {
-    logic          dest_wr_vld;
-    logic          dest_is_pcr;
-    logic   [2:0]  dest_addr;
-    logic   [3:0]  dest_offset;
-    logic   [31:0] dest_data;
-    logic   [2:0]  dest_valid;
+    logic          write_en;
+    logic          entry_is_pcr;
+    logic   [2:0]  write_entry;
+    logic   [3:0]  write_offset;
+    logic   [31:0] write_data;
+    logic   [5:0]  write_dest_valid;
 } kv_write_t;
 
 typedef struct packed {
-    logic   [31:0] key_data;
-    logic   [31:0] src_data;
+    logic   [31:0] read_data;
 } kv_resp_t;
 
 typedef struct packed {
@@ -72,18 +68,44 @@ typedef struct packed {
     logic key_sel_en;
 } kv_reg_t;
 
-typedef enum logic [1:0] {
-    DOE_NOP    = 2'b00,
-    DOE_UDS    = 2'b01,
-    DOE_FE     = 2'b10,
-    DOE_RSVD   = 2'b11
-} kv_doe_cmd_e;
-
+//control register for KV reads
 typedef struct packed {
-    logic flow_done;
-    logic [2:0] dest_sel;
-    kv_doe_cmd_e cmd;
-} kv_doe_reg_t;
+    logic read_done;
+    logic [20:0] rsvd;
+    logic [4:0] entry_data_size;
+    logic entry_is_pcr;
+    logic [2:0] read_entry;
+    logic read_en;
+} kv_read_ctrl_reg_t;
+
+//control register for KV writes
+typedef struct packed {
+    logic write_done;
+    logic [19:0] rsvd;
+    logic [5:0] write_dest_vld;
+    logic entry_is_pcr;
+    logic [2:0] write_entry;
+    logic write_en;
+} kv_write_ctrl_reg_t;
+
+`define KV_WRITE_CTRL_REG2STRUCT(struct_name, ctrl_reg_name)\
+assign struct_name.write_done = hwif_out.``ctrl_reg_name.write_done.value;\
+assign struct_name.write_dest_vld[0] = hwif_out.``ctrl_reg_name.hmac_key_dest_valid.value;\
+assign struct_name.write_dest_vld[1] = hwif_out.``ctrl_reg_name.hmac_block_dest_valid.value;\
+assign struct_name.write_dest_vld[2] = hwif_out.``ctrl_reg_name.sha_block_dest_valid.value;\
+assign struct_name.write_dest_vld[3] = hwif_out.``ctrl_reg_name.ecc_pkey_dest_valid.value;\
+assign struct_name.write_dest_vld[4] = hwif_out.``ctrl_reg_name.ecc_seed_dest_valid.value;\
+assign struct_name.write_dest_vld[5] = hwif_out.``ctrl_reg_name.ecc_msg_dest_valid.value;\
+assign struct_name.entry_is_pcr = hwif_out.``ctrl_reg_name.entry_is_pcr.value;\
+assign struct_name.write_entry = hwif_out.``ctrl_reg_name.write_entry.value;\
+assign struct_name.write_en = hwif_out.``ctrl_reg_name.write_en.value;\
+
+`define KV_READ_CTRL_REG2STRUCT(struct_name, ctrl_reg_name)\
+assign struct_name.read_done = hwif_out.``ctrl_reg_name.read_done.value;\
+assign struct_name.entry_data_size = hwif_out.``ctrl_reg_name.entry_data_size.value;\
+assign struct_name.entry_is_pcr = hwif_out.``ctrl_reg_name.entry_is_pcr.value;\
+assign struct_name.read_entry = hwif_out.``ctrl_reg_name.read_entry.value;\
+assign struct_name.read_en = hwif_out.``ctrl_reg_name.read_en.value;
 
 endpackage
 

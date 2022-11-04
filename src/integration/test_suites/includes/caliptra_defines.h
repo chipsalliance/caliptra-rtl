@@ -33,29 +33,29 @@
 #define KV_NUM_DWORDS             0x00000010
 
 
-/* ---- AES ---- */
-#define AES_BASE_ADDR             0x10000000
-#define AES_ADDR_NAME0            (AES_BASE_ADDR + 0x0000)
-#define AES_ADDR_NAME1            (AES_BASE_ADDR + 0x0004)
-#define AES_ADDR_VER0             (AES_BASE_ADDR + 0x0008)
-#define AES_ADDR_VER1             (AES_BASE_ADDR + 0x000c)
-#define AES_ADDR_CNTRL            (AES_BASE_ADDR + 0x0010)
-#define AES_ADDR_STATUS           (AES_BASE_ADDR + 0x0018)
-#define AES_ADDR_KEY_START        (AES_BASE_ADDR + 0x0040)
-#define AES_ADDR_KEY_END          (AES_BASE_ADDR + 0x005f)
-#define AES_ADDR_BLOCK_START      (AES_BASE_ADDR + 0x0080)
-#define AES_ADDR_BLOCK_END        (AES_BASE_ADDR + 0x008f)
-#define AES_ADDR_RESULT_START     (AES_BASE_ADDR + 0x0100)
-#define AES_ADDR_RESULT_END       (AES_BASE_ADDR + 0x010f)
-#define AES_ADDR_CONFIG           (AES_BASE_ADDR + 0x0020)
-#define AES_ADDR_IV_START         (AES_BASE_ADDR + 0x0110)
-#define AES_ADDR_IV_END           (AES_BASE_ADDR + 0x011f)
-#define AES_ADDR_KV_CTRL          (AES_BASE_ADDR + 0x0200)
-#define AES_ADDR_INTR_START       (AES_BASE_ADDR + 0x0800)
+/* ---- DOE ---- */
+#define DOE_BASE_ADDR             0x10000000
+#define DOE_ADDR_NAME0            (DOE_BASE_ADDR + 0x0000)
+#define DOE_ADDR_NAME1            (DOE_BASE_ADDR + 0x0004)
+#define DOE_ADDR_VER0             (DOE_BASE_ADDR + 0x0008)
+#define DOE_ADDR_VER1             (DOE_BASE_ADDR + 0x000c)
+#define DOE_ADDR_CNTRL            (DOE_BASE_ADDR + 0x0010)
+#define DOE_ADDR_STATUS           (DOE_BASE_ADDR + 0x0018)
+#define DOE_ADDR_KEY_START        (DOE_BASE_ADDR + 0x0040)
+#define DOE_ADDR_KEY_END          (DOE_BASE_ADDR + 0x005f)
+#define DOE_ADDR_BLOCK_START      (DOE_BASE_ADDR + 0x0080)
+#define DOE_ADDR_BLOCK_END        (DOE_BASE_ADDR + 0x008f)
+#define DOE_ADDR_RESULT_START     (DOE_BASE_ADDR + 0x0100)
+#define DOE_ADDR_RESULT_END       (DOE_BASE_ADDR + 0x010f)
+#define DOE_ADDR_CONFIG           (DOE_BASE_ADDR + 0x0020)
+#define DOE_ADDR_IV_START         (DOE_BASE_ADDR + 0x0110)
+#define DOE_ADDR_IV_END           (DOE_BASE_ADDR + 0x011f)
+#define DOE_ADDR_KV_CTRL          (DOE_BASE_ADDR + 0x0200)
+#define DOE_ADDR_INTR_START       (DOE_BASE_ADDR + 0x0800)
 
-#define AES_INIT                  0x0000000D
-#define AES_NEXT                  0x0000000E
-#define AES_VALID                 0x00000003
+#define DOE_INIT                  0x0000000D
+#define DOE_NEXT                  0x0000000E
+#define DOE_VALID                 0x00000003
 
 
 /* ---- HMAC ---- */
@@ -150,8 +150,8 @@
 
 
 /* ---- Interrupts ---- */
-#define SWERV_INTR_VEC_AES_ERROR    1
-#define SWERV_INTR_VEC_AES_NOTIF    2
+#define SWERV_INTR_VEC_DOE_ERROR    1
+#define SWERV_INTR_VEC_DOE_NOTIF    2
 #define SWERV_INTR_VEC_ECC_ERROR    3
 #define SWERV_INTR_VEC_ECC_NOTIF    4
 #define SWERV_INTR_VEC_HMAC_ERROR   5
@@ -173,8 +173,8 @@
 // Used to tie-off unused upper intr bits
 #define SWERV_INTR_VEC_MAX_ASSIGNED SWERV_INTR_VEC_MBOX_NOTIF
 
-#define SWERV_INTR_PRIO_AES_ERROR    8
-#define SWERV_INTR_PRIO_AES_NOTIF    7
+#define SWERV_INTR_PRIO_DOE_ERROR    8
+#define SWERV_INTR_PRIO_DOE_NOTIF    7
 #define SWERV_INTR_PRIO_ECC_ERROR    8
 #define SWERV_INTR_PRIO_ECC_NOTIF    7
 #define SWERV_INTR_PRIO_HMAC_ERROR   8

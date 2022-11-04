@@ -91,7 +91,7 @@ write_sdf "delay.sdf"
 report_area -physical > ${DESIGN_NAME}.area.rpt
 report_area -physical -hierarchy > ${DESIGN_NAME}.area.hier.rpt
 report_qor -nosplit > ${DESIGN_NAME}.qor.rpt
-report_timing -variation -derate -transition_time -nets -cap -inp -attributes -start_end_pair -sig 3 -max_paths 100 -sort_by slack > ${DESIGN_NAME}.timing.rpt
+report_timing -variation -derate -transition_time -nets -cap -inp -attributes -start_end_pair -sig 3 -max_paths 1000 -sort_by slack -slack_lesser_than 0.05 -physical > ${DESIGN_NAME}.timing.rpt
 
 #Report Latches               
 if {[sizeof_collection [all_registers -level_sensitive]] != 0} {

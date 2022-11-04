@@ -38,8 +38,8 @@ void init_interrupts(void);
 
 // These inline functions are used to insert event-specific functionality into the
 // otherwise generic ISR that gets laid down by the parameterized macro "nonstd_swerv_isr"
-inline void service_aes_error_intr() {return;}
-inline void service_aes_notif_intr() {printf("ERROR");}
+inline void service_doe_error_intr() {return;}
+inline void service_doe_notif_intr() {printf("ERROR");}
 inline void service_ecc_error_intr   () {printf("ERROR");}
 inline void service_ecc_notif_intr   () {
     uint32_t * reg = (uint32_t *) (ECC_BASE_ADDR + ECC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);

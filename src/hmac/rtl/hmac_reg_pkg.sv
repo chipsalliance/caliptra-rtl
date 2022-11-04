@@ -20,19 +20,6 @@ package hmac_reg_pkg;
 
     typedef struct {
         logic next;
-    } hmac_reg__HMAC384_CTRL__INIT__in_t;
-
-    typedef struct {
-        logic next;
-    } hmac_reg__HMAC384_CTRL__NEXT__in_t;
-
-    typedef struct {
-        hmac_reg__HMAC384_CTRL__INIT__in_t INIT;
-        hmac_reg__HMAC384_CTRL__NEXT__in_t NEXT;
-    } hmac_reg__HMAC384_CTRL__in_t;
-
-    typedef struct {
-        logic next;
     } hmac_reg__HMAC384_STATUS__READY__in_t;
 
     typedef struct {
@@ -46,6 +33,24 @@ package hmac_reg_pkg;
 
     typedef struct {
         logic [31:0] next;
+        logic we;
+    } hmac_reg__HMAC384_KEY__KEY__in_t;
+
+    typedef struct {
+        hmac_reg__HMAC384_KEY__KEY__in_t KEY;
+    } hmac_reg__HMAC384_KEY__in_t;
+
+    typedef struct {
+        logic [31:0] next;
+        logic we;
+    } hmac_reg__HMAC384_BLOCK__BLOCK__in_t;
+
+    typedef struct {
+        hmac_reg__HMAC384_BLOCK__BLOCK__in_t BLOCK;
+    } hmac_reg__HMAC384_BLOCK__in_t;
+
+    typedef struct {
+        logic [31:0] next;
     } hmac_reg__HMAC384_TAG__TAG__in_t;
 
     typedef struct {
@@ -53,12 +58,82 @@ package hmac_reg_pkg;
     } hmac_reg__HMAC384_TAG__in_t;
 
     typedef struct {
+        logic hwclr;
+    } kv_read_ctrl_reg__read_en__in_t;
+
+    typedef struct {
+        logic hwclr;
+        logic hwset;
+    } kv_read_ctrl_reg__read_done__in_t;
+
+    typedef struct {
+        kv_read_ctrl_reg__read_en__in_t read_en;
+        kv_read_ctrl_reg__read_done__in_t read_done;
+    } __kv_read_ctrl_reg__in_t;
+
+    typedef struct {
+        logic hwclr;
+    } kv_write_ctrl_reg__write_en__in_t;
+
+    typedef struct {
+        logic hwclr;
+        logic hwset;
+    } kv_write_ctrl_reg__write_done__in_t;
+
+    typedef struct {
+        kv_write_ctrl_reg__write_en__in_t write_en;
+        kv_write_ctrl_reg__write_done__in_t write_done;
+    } __kv_write_ctrl_reg__in_t;
+
+    typedef struct {
+        logic hwset;
+    } hmac_reg__error_intr_t__error0_sts_enable_528ccada_next_b1018582_resetsignal_939e99d4__in_t;
+
+    typedef struct {
+        logic hwset;
+    } hmac_reg__error_intr_t__error1_sts_enable_938cafef_next_f460eb81_resetsignal_939e99d4__in_t;
+
+    typedef struct {
+        logic hwset;
+    } hmac_reg__error_intr_t__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_939e99d4__in_t;
+
+    typedef struct {
+        logic hwset;
+    } hmac_reg__error_intr_t__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_939e99d4__in_t;
+
+    typedef struct {
+        hmac_reg__error_intr_t__error0_sts_enable_528ccada_next_b1018582_resetsignal_939e99d4__in_t error0_sts;
+        hmac_reg__error_intr_t__error1_sts_enable_938cafef_next_f460eb81_resetsignal_939e99d4__in_t error1_sts;
+        hmac_reg__error_intr_t__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_939e99d4__in_t error2_sts;
+        hmac_reg__error_intr_t__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_939e99d4__in_t error3_sts;
+    } hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__in_t;
+
+    typedef struct {
+        logic hwset;
+    } hmac_reg__notif_intr_t__notif_cmd_done_sts_enable_dabe0b8b_next_540fa3b7__in_t;
+
+    typedef struct {
+        hmac_reg__notif_intr_t__notif_cmd_done_sts_enable_dabe0b8b_next_540fa3b7__in_t notif_cmd_done_sts;
+    } hmac_reg__notif_intr_t_notif_cmd_done_sts_1c68637e__in_t;
+
+    typedef struct {
+        hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__in_t error_internal_intr_r;
+        hmac_reg__notif_intr_t_notif_cmd_done_sts_1c68637e__in_t notif_internal_intr_r;
+    } hmac_reg__intr_block_t__in_t;
+
+    typedef struct {
         logic reset_b;
+        logic error_reset_b;
         hmac_reg__HMAC384_NAME__in_t HMAC384_NAME[2];
         hmac_reg__HMAC384_VERSION__in_t HMAC384_VERSION[2];
-        hmac_reg__HMAC384_CTRL__in_t HMAC384_CTRL;
         hmac_reg__HMAC384_STATUS__in_t HMAC384_STATUS;
+        hmac_reg__HMAC384_KEY__in_t HMAC384_KEY[12];
+        hmac_reg__HMAC384_BLOCK__in_t HMAC384_BLOCK[32];
         hmac_reg__HMAC384_TAG__in_t HMAC384_TAG[12];
+        __kv_read_ctrl_reg__in_t HMAC384_KV_RD_KEY_CTRL;
+        __kv_read_ctrl_reg__in_t HMAC384_KV_RD_BLOCK_CTRL;
+        __kv_write_ctrl_reg__in_t HMAC384_KV_WR_CTRL;
+        hmac_reg__intr_block_t__in_t intr_block_rf;
     } hmac_reg__in_t;
 
     typedef struct {
@@ -91,11 +166,129 @@ package hmac_reg_pkg;
     } hmac_reg__HMAC384_BLOCK__out_t;
 
     typedef struct {
+        logic value;
+    } kv_read_ctrl_reg__read_en__out_t;
+
+    typedef struct {
+        logic [2:0] value;
+    } kv_read_ctrl_reg__read_entry__out_t;
+
+    typedef struct {
+        logic value;
+    } kv_read_ctrl_reg__entry_is_pcr__out_t;
+
+    typedef struct {
+        logic [4:0] value;
+    } kv_read_ctrl_reg__entry_data_size__out_t;
+
+    typedef struct {
+        logic [20:0] value;
+    } kv_read_ctrl_reg__rsvd__out_t;
+
+    typedef struct {
+        logic value;
+    } kv_read_ctrl_reg__read_done__out_t;
+
+    typedef struct {
+        kv_read_ctrl_reg__read_en__out_t read_en;
+        kv_read_ctrl_reg__read_entry__out_t read_entry;
+        kv_read_ctrl_reg__entry_is_pcr__out_t entry_is_pcr;
+        kv_read_ctrl_reg__entry_data_size__out_t entry_data_size;
+        kv_read_ctrl_reg__rsvd__out_t rsvd;
+        kv_read_ctrl_reg__read_done__out_t read_done;
+    } __kv_read_ctrl_reg__out_t;
+
+    typedef struct {
+        logic value;
+    } kv_write_ctrl_reg__write_en__out_t;
+
+    typedef struct {
+        logic [2:0] value;
+    } kv_write_ctrl_reg__write_entry__out_t;
+
+    typedef struct {
+        logic value;
+    } kv_write_ctrl_reg__entry_is_pcr__out_t;
+
+    typedef struct {
+        logic value;
+    } kv_write_ctrl_reg__hmac_key_dest_valid__out_t;
+
+    typedef struct {
+        logic value;
+    } kv_write_ctrl_reg__hmac_block_dest_valid__out_t;
+
+    typedef struct {
+        logic value;
+    } kv_write_ctrl_reg__sha_block_dest_valid__out_t;
+
+    typedef struct {
+        logic value;
+    } kv_write_ctrl_reg__ecc_pkey_dest_valid__out_t;
+
+    typedef struct {
+        logic value;
+    } kv_write_ctrl_reg__ecc_seed_dest_valid__out_t;
+
+    typedef struct {
+        logic value;
+    } kv_write_ctrl_reg__ecc_msg_dest_valid__out_t;
+
+    typedef struct {
+        logic [19:0] value;
+    } kv_write_ctrl_reg__rsvd__out_t;
+
+    typedef struct {
+        logic value;
+    } kv_write_ctrl_reg__write_done__out_t;
+
+    typedef struct {
+        kv_write_ctrl_reg__write_en__out_t write_en;
+        kv_write_ctrl_reg__write_entry__out_t write_entry;
+        kv_write_ctrl_reg__entry_is_pcr__out_t entry_is_pcr;
+        kv_write_ctrl_reg__hmac_key_dest_valid__out_t hmac_key_dest_valid;
+        kv_write_ctrl_reg__hmac_block_dest_valid__out_t hmac_block_dest_valid;
+        kv_write_ctrl_reg__sha_block_dest_valid__out_t sha_block_dest_valid;
+        kv_write_ctrl_reg__ecc_pkey_dest_valid__out_t ecc_pkey_dest_valid;
+        kv_write_ctrl_reg__ecc_seed_dest_valid__out_t ecc_seed_dest_valid;
+        kv_write_ctrl_reg__ecc_msg_dest_valid__out_t ecc_msg_dest_valid;
+        kv_write_ctrl_reg__rsvd__out_t rsvd;
+        kv_write_ctrl_reg__write_done__out_t write_done;
+    } __kv_write_ctrl_reg__out_t;
+
+    typedef struct {
+        logic intr;
+    } hmac_reg__global_intr_t_agg_sts_dd3dcf0a__out_t;
+
+    typedef struct {
+        logic intr;
+    } hmac_reg__global_intr_t_agg_sts_e6399b4a__out_t;
+
+    typedef struct {
+        logic intr;
+    } hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__out_t;
+
+    typedef struct {
+        logic intr;
+    } hmac_reg__notif_intr_t_notif_cmd_done_sts_1c68637e__out_t;
+
+    typedef struct {
+        hmac_reg__global_intr_t_agg_sts_dd3dcf0a__out_t error_global_intr_r;
+        hmac_reg__global_intr_t_agg_sts_e6399b4a__out_t notif_global_intr_r;
+        hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__out_t error_internal_intr_r;
+        hmac_reg__notif_intr_t_notif_cmd_done_sts_1c68637e__out_t notif_internal_intr_r;
+    } hmac_reg__intr_block_t__out_t;
+
+    typedef struct {
         hmac_reg__HMAC384_CTRL__out_t HMAC384_CTRL;
         hmac_reg__HMAC384_KEY__out_t HMAC384_KEY[12];
         hmac_reg__HMAC384_BLOCK__out_t HMAC384_BLOCK[32];
+        __kv_read_ctrl_reg__out_t HMAC384_KV_RD_KEY_CTRL;
+        __kv_read_ctrl_reg__out_t HMAC384_KV_RD_BLOCK_CTRL;
+        __kv_write_ctrl_reg__out_t HMAC384_KV_WR_CTRL;
+        hmac_reg__intr_block_t__out_t intr_block_rf;
     } hmac_reg__out_t;
 
-    localparam HMAC_REG_ADDR_WIDTH = 32'd9;
+    localparam HMAC_REG_ADDR_WIDTH = 32'd12;
 
 endpackage

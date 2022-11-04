@@ -197,7 +197,7 @@ stdout: .word STDOUT
 .global intr_count
 intr_count: .word 0
 
-// FW polls this variable instead of the AES reg....
+// FW polls this variable instead of the HMAC reg....
 .global hmac_intr_status
 hmac_intr_status: .word 0
 

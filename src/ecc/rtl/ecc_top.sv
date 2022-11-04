@@ -24,6 +24,7 @@
 module ecc_top
     import ecc_defines_pkg::*;
     import ecc_reg_pkg::*;
+    import kv_defines_pkg::*;
     #(
     parameter AHB_ADDR_WIDTH = 32,
     parameter AHB_DATA_WIDTH = 32,
@@ -46,6 +47,11 @@ module ecc_top
     output logic                      hresp_o,
     output logic                      hreadyout_o,
     output logic [AHB_DATA_WIDTH-1:0] hrdata_o,
+
+    // KV interface
+    output kv_read_t [2:0] kv_read,
+    output kv_write_t kv_write,
+    input kv_resp_t [2:0] kv_resp,
 
     output logic error_intr,
     output logic notif_intr
@@ -128,8 +134,12 @@ module ecc_top
         .reset_n(reset_n),
         .cptra_pwrgood(cptra_pwrgood),
 
-        .hwif_in(ecc_reg_hwif_out),
-        .hwif_out(ecc_reg_hwif_in),
+        .hwif_out(ecc_reg_hwif_out),
+        .hwif_in(ecc_reg_hwif_in),
+
+        .kv_read(kv_read),
+        .kv_resp(kv_resp),
+        .kv_write(kv_write),
 
         .error_intr(error_intr),
         .notif_intr(notif_intr)
