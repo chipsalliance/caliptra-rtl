@@ -122,8 +122,6 @@ module ecc_dsa_ctrl
     logic [REG_SIZE-1 : 0]  hmac_nonce;
     logic                   hmac_busy;
 
-    logic                   sca_init;
-    logic [3 : 0]           sca_init_config;
     logic                   sca_point_rnd_en;
     logic                   sca_mask_sign_en;
     logic                   sca_scalar_rnd_en;
@@ -225,8 +223,6 @@ module ecc_dsa_ctrl
 
     always_comb 
     begin : SCA_config
-        sca_init_config = {openssl_init[0], sca_scalar_rnd_init[0], sca_mask_sign_init[0], sca_point_rnd_init[0]};
-
         if (sca_scalar_rnd_en)
             scalar_out_reg = scalar_out;
         else
@@ -267,22 +263,22 @@ module ecc_dsa_ctrl
             IV_reg      <= '0;
         end
         else if (dsa_ready_reg) begin
-            cmd_reg <= hwif_in.ecc_CTRL.CTRL.value;
+            cmd_reg <= hwif_in.ECC_CTRL.CTRL.value;
             
-            sca_point_rnd_en  <= hwif_in.ecc_SCACONFIG.SCACONFIG.value[0];
-            sca_mask_sign_en  <= hwif_in.ecc_SCACONFIG.SCACONFIG.value[1];
-            sca_scalar_rnd_en <= hwif_in.ecc_SCACONFIG.SCACONFIG.value[2];
-            openssl_test_en   <= hwif_in.ecc_SCACONFIG.SCACONFIG.value[3]; // bit 4 should be deleted after openssl keygen test.
+            sca_point_rnd_en  <= hwif_in.ECC_SCACONFIG.POINT_RND_EN.value;
+            sca_mask_sign_en  <= hwif_in.ECC_SCACONFIG.MASK_SIGN_EN.value;
+            sca_scalar_rnd_en <= hwif_in.ECC_SCACONFIG.SCALAR_RND_EN.value;
+            openssl_test_en   <= hwif_in.ECC_SCACONFIG.OPENSSL_EN.value; // this bit should be deleted after openssl keygen test.
 
             for(int i0=0; i0<12; i0++) begin
-                seed_reg[i0*32 +: 32]    <= hwif_in.ecc_SEED[i0].SEED.value;
-                msg_reg[i0*32 +: 32]     <= hwif_in.ecc_MSG[i0].MSG.value;
-                privkey_reg[i0*32 +: 32] <= hwif_in.ecc_PRIVKEY[i0].PRIVKEY.value;
-                pubkeyx_reg[i0*32 +: 32] <= hwif_in.ecc_PUBKEY_X[i0].PUBKEY_X.value;
-                pubkeyy_reg[i0*32 +: 32] <= hwif_in.ecc_PUBKEY_Y[i0].PUBKEY_Y.value;
-                r_reg[i0*32 +: 32]       <= hwif_in.ecc_SIGN_R[i0].SIGN_R.value;
-                s_reg[i0*32 +: 32]       <= hwif_in.ecc_SIGN_S[i0].SIGN_S.value;
-                IV_reg[i0*32 +: 32]      <= hwif_in.ecc_IV[i0].IV.value;
+                seed_reg[i0*32 +: 32]    <= hwif_in.ECC_SEED[i0].SEED.value;
+                msg_reg[i0*32 +: 32]     <= hwif_in.ECC_MSG[i0].MSG.value;
+                privkey_reg[i0*32 +: 32] <= hwif_in.ECC_PRIVKEY[i0].PRIVKEY.value;
+                pubkeyx_reg[i0*32 +: 32] <= hwif_in.ECC_PUBKEY_X[i0].PUBKEY_X.value;
+                pubkeyy_reg[i0*32 +: 32] <= hwif_in.ECC_PUBKEY_Y[i0].PUBKEY_Y.value;
+                r_reg[i0*32 +: 32]       <= hwif_in.ECC_SIGN_R[i0].SIGN_R.value;
+                s_reg[i0*32 +: 32]       <= hwif_in.ECC_SIGN_S[i0].SIGN_S.value;
+                IV_reg[i0*32 +: 32]      <= hwif_in.ECC_IV[i0].IV.value;
             end
         end
     end // ecc_reg_reading
@@ -293,15 +289,15 @@ module ecc_dsa_ctrl
     // write the registers by hw
     always_comb hwif_out.reset_b = reset_n;
     always_comb hwif_out.hard_reset_b = cptra_pwrgood;
-    always_comb hwif_out.ecc_NAME[0].NAME.next = ECC_CORE_NAME[31 : 0];
-    always_comb hwif_out.ecc_NAME[1].NAME.next = ECC_CORE_NAME[63 : 32];
-    always_comb hwif_out.ecc_VERSION[0].VERSION.next = ECC_CORE_VERSION[31 : 0];
-    always_comb hwif_out.ecc_VERSION[1].VERSION.next = ECC_CORE_VERSION[63 : 32];
+    always_comb hwif_out.ECC_NAME[0].NAME.next = ECC_CORE_NAME[31 : 0];
+    always_comb hwif_out.ECC_NAME[1].NAME.next = ECC_CORE_NAME[63 : 32];
+    always_comb hwif_out.ECC_VERSION[0].VERSION.next = ECC_CORE_VERSION[31 : 0];
+    always_comb hwif_out.ECC_VERSION[1].VERSION.next = ECC_CORE_VERSION[63 : 32];
 
-    always_comb hwif_out.ecc_STATUS.STATUS.next = {dsa_valid_reg, dsa_ready_reg};
+    always_comb hwif_out.ECC_STATUS.READY.next = dsa_ready_reg;
+    always_comb hwif_out.ECC_STATUS.VALID.next = dsa_valid_reg;
 
-    always_comb hwif_out.ecc_SCACONFIG.SCACONFIG.next = (sca_init)? sca_init_config : hwif_in.ecc_SCACONFIG.SCACONFIG.value;
-    always_comb hwif_out.ecc_CTRL.CTRL.next = '0;
+    always_comb hwif_out.ECC_CTRL.CTRL.next = '0;
     // TODO add other interrupt hwset signals (errors)
     always_comb hwif_out.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset = 1'b0;
     always_comb hwif_out.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = ecc_status_done_p;
@@ -312,12 +308,12 @@ module ecc_dsa_ctrl
         for (i0=0; i0 < 12; i0++) begin : ecc_reg_writing
             always_comb 
             begin
-                hwif_out.ecc_PRIVKEY[i0].PRIVKEY.next = hw_privkey_we? read_reg[i0*32 +: 32] : hwif_in.ecc_PRIVKEY[i0].PRIVKEY.value;
-                hwif_out.ecc_PUBKEY_X[i0].PUBKEY_X.next = hw_pubkeyx_we? read_reg[i0*32 +: 32] : hwif_in.ecc_PUBKEY_X[i0].PUBKEY_X.value;
-                hwif_out.ecc_PUBKEY_Y[i0].PUBKEY_Y.next = hw_pubkeyy_we? read_reg[i0*32 +: 32] : hwif_in.ecc_PUBKEY_Y[i0].PUBKEY_Y.value;
-                hwif_out.ecc_SIGN_R[i0].SIGN_R.next = hw_r_we? read_reg[i0*32 +: 32] : hwif_in.ecc_SIGN_R[i0].SIGN_R.value;
-                hwif_out.ecc_SIGN_S[i0].SIGN_S.next = hw_s_we? read_reg[i0*32 +: 32] : hwif_in.ecc_SIGN_S[i0].SIGN_S.value;
-                hwif_out.ecc_VERIFY_R[i0].VERIFY_R.next = hw_verify_r_we? read_reg[i0*32 +: 32] : hwif_in.ecc_VERIFY_R[i0].VERIFY_R.value;
+                hwif_out.ECC_PRIVKEY[i0].PRIVKEY.next = hw_privkey_we? read_reg[i0*32 +: 32] : hwif_in.ECC_PRIVKEY[i0].PRIVKEY.value;
+                hwif_out.ECC_PUBKEY_X[i0].PUBKEY_X.next = hw_pubkeyx_we? read_reg[i0*32 +: 32] : hwif_in.ECC_PUBKEY_X[i0].PUBKEY_X.value;
+                hwif_out.ECC_PUBKEY_Y[i0].PUBKEY_Y.next = hw_pubkeyy_we? read_reg[i0*32 +: 32] : hwif_in.ECC_PUBKEY_Y[i0].PUBKEY_Y.value;
+                hwif_out.ECC_SIGN_R[i0].SIGN_R.next = hw_r_we? read_reg[i0*32 +: 32] : hwif_in.ECC_SIGN_R[i0].SIGN_R.value;
+                hwif_out.ECC_SIGN_S[i0].SIGN_S.next = hw_s_we? read_reg[i0*32 +: 32] : hwif_in.ECC_SIGN_S[i0].SIGN_S.value;
+                hwif_out.ECC_VERIFY_R[i0].VERIFY_R.next = hw_verify_r_we? read_reg[i0*32 +: 32] : hwif_in.ECC_VERIFY_R[i0].VERIFY_R.value;
             end
         end
     endgenerate // ecc_reg_writing
@@ -448,7 +444,6 @@ module ecc_dsa_ctrl
             hmac_mode       <= 0;
             hmac_init       <= 0;
             scalar_sca_en   <= 0;
-            sca_init        <= 0;
         end
         else begin
             if (subcomponent_busy) begin //Stalled until sub-component is done
@@ -457,21 +452,13 @@ module ecc_dsa_ctrl
                 pm_cmd_reg      <= '0;
                 scalar_sca_en   <= 0;
                 hmac_init       <= 0;
-                sca_init        <= 0;
             end
             else if (dsa_busy & (cycle_cnt != 2'd3)) begin
                 cycle_cnt <= cycle_cnt + 1;
-                hmac_init       <= prog_line[(2*DSA_OPR_ADDR_WIDTH)+6];
-                scalar_sca_en   <= prog_line[(2*DSA_OPR_ADDR_WIDTH)+7];
             end
             else begin
                 cycle_cnt <= '0;
                 unique casez (prog_cntr)
-                    DSA_SCA_INIT : begin // SCA init
-                        prog_cntr <= DSA_NOP;
-                        sca_init  <= 1;
-                    end
-
                     DSA_NOP : begin 
                         // Waiting for new valid command 
                         unique casez (cmd_reg)
@@ -502,7 +489,6 @@ module ecc_dsa_ctrl
                         endcase
                         pm_cmd_reg  <= '0;
                         hmac_init   <= 0;
-                        sca_init    <= 0;
                     end                
 
                     DSA_KG_E : begin // end of keygen
@@ -545,8 +531,8 @@ module ecc_dsa_ctrl
         if (!reset_n)
             ecc_status_done_d <= 1'b0;
         else
-            ecc_status_done_d <= hwif_out.ecc_STATUS.STATUS.next[1];
-    always_comb ecc_status_done_p = hwif_out.ecc_STATUS.STATUS.next[1] && !ecc_status_done_d;
+            ecc_status_done_d <= hwif_out.ECC_STATUS.VALID.next;
+    always_comb ecc_status_done_p = hwif_out.ECC_STATUS.VALID.next && !ecc_status_done_d;
 
     assign dsa_busy = (prog_cntr == DSA_NOP)? 1'b0 : 1'b1;
 

@@ -75,12 +75,11 @@ localparam [DSA_OPR_ADDR_WIDTH-1 : 0] MASKING_ID               = 6'd28;
 
 // DSA Subroutine listing
 localparam [DSA_PROG_ADDR_W-1 : 0] DSA_RESET                    = 6'd0;
-localparam [DSA_PROG_ADDR_W-1 : 0] DSA_SCA_INIT                 = 6'd11;
 localparam [DSA_PROG_ADDR_W-1 : 0] DSA_NOP                      = 6'd12;  
 localparam [DSA_PROG_ADDR_W-1 : 0] DSA_KG_S                     = DSA_NOP + 2; 
-localparam [DSA_PROG_ADDR_W-1 : 0] DSA_KG_E                     = DSA_KG_S + 10; 
+localparam [DSA_PROG_ADDR_W-1 : 0] DSA_KG_E                     = DSA_KG_S + 12; 
 localparam [DSA_PROG_ADDR_W-1 : 0] DSA_SGN_S                    = DSA_KG_E + 2; 
-localparam [DSA_PROG_ADDR_W-1 : 0] DSA_SGN_E                    = DSA_SGN_S + 12; 
+localparam [DSA_PROG_ADDR_W-1 : 0] DSA_SGN_E                    = DSA_SGN_S + 14; 
 localparam [DSA_PROG_ADDR_W-1 : 0] DSA_VER_S                    = DSA_SGN_E + 2; 
 localparam [DSA_PROG_ADDR_W-1 : 0] DSA_VER_E                    = DSA_VER_S + 17;
 

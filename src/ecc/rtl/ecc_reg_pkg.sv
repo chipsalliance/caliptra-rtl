@@ -4,71 +4,88 @@
 package ecc_reg_pkg;
     typedef struct {
         logic [31:0] next;
-    } ecc_reg__sr_hw_w32__in_t;
+    } ecc_reg__ECC_NAME__NAME__in_t;
 
     typedef struct {
-        ecc_reg__sr_hw_w32__in_t NAME;
-    } ecc_reg__ecc_NAME__in_t;
-
-    typedef struct {
-        ecc_reg__sr_hw_w32__in_t VERSION;
-    } ecc_reg__ecc_VERSION__in_t;
-
-    typedef struct {
-        logic [1:0] next;
-    } ecc_reg__srw_hrw_w2__in_t;
-
-    typedef struct {
-        ecc_reg__srw_hrw_w2__in_t CTRL;
-    } ecc_reg__ecc_CTRL__in_t;
-
-    typedef struct {
-        logic [1:0] next;
-    } ecc_reg__sr_hw_w2__in_t;
-
-    typedef struct {
-        ecc_reg__sr_hw_w2__in_t STATUS;
-    } ecc_reg__ecc_STATUS__in_t;
-
-    typedef struct {
-        logic [3:0] next;
-    } ecc_reg__srw_hrw_w4__in_t;
-
-    typedef struct {
-        ecc_reg__srw_hrw_w4__in_t SCACONFIG;
-    } ecc_reg__ecc_SCACONFIG__in_t;
+        ecc_reg__ECC_NAME__NAME__in_t NAME;
+    } ecc_reg__ECC_NAME__in_t;
 
     typedef struct {
         logic [31:0] next;
-    } ecc_reg__srw_hrw_w32__in_t;
+    } ecc_reg__ECC_VERSION__VERSION__in_t;
 
     typedef struct {
-        ecc_reg__srw_hrw_w32__in_t PRIVKEY;
-    } ecc_reg__ecc_PRIVKEY__in_t;
+        ecc_reg__ECC_VERSION__VERSION__in_t VERSION;
+    } ecc_reg__ECC_VERSION__in_t;
 
     typedef struct {
-        ecc_reg__srw_hrw_w32__in_t PUBKEY_X;
-    } ecc_reg__ecc_PUBKEY_X__in_t;
+        logic [1:0] next;
+    } ecc_reg__ECC_CTRL__CTRL__in_t;
 
     typedef struct {
-        ecc_reg__srw_hrw_w32__in_t PUBKEY_Y;
-    } ecc_reg__ecc_PUBKEY_Y__in_t;
+        ecc_reg__ECC_CTRL__CTRL__in_t CTRL;
+    } ecc_reg__ECC_CTRL__in_t;
 
     typedef struct {
-        ecc_reg__srw_hrw_w32__in_t SIGN_R;
-    } ecc_reg__ecc_SIGN_R__in_t;
+        logic next;
+    } ecc_reg__ECC_STATUS__READY__in_t;
 
     typedef struct {
-        ecc_reg__srw_hrw_w32__in_t SIGN_S;
-    } ecc_reg__ecc_SIGN_S__in_t;
+        logic next;
+    } ecc_reg__ECC_STATUS__VALID__in_t;
+
+    typedef struct {
+        ecc_reg__ECC_STATUS__READY__in_t READY;
+        ecc_reg__ECC_STATUS__VALID__in_t VALID;
+    } ecc_reg__ECC_STATUS__in_t;
 
     typedef struct {
         logic [31:0] next;
-    } ecc_reg__sr_hrw_w32__in_t;
+    } ecc_reg__ECC_PRIVKEY__PRIVKEY__in_t;
 
     typedef struct {
-        ecc_reg__sr_hrw_w32__in_t VERIFY_R;
-    } ecc_reg__ecc_VERIFY_R__in_t;
+        ecc_reg__ECC_PRIVKEY__PRIVKEY__in_t PRIVKEY;
+    } ecc_reg__ECC_PRIVKEY__in_t;
+
+    typedef struct {
+        logic [31:0] next;
+    } ecc_reg__ECC_PUBKEY_X__PUBKEY_X__in_t;
+
+    typedef struct {
+        ecc_reg__ECC_PUBKEY_X__PUBKEY_X__in_t PUBKEY_X;
+    } ecc_reg__ECC_PUBKEY_X__in_t;
+
+    typedef struct {
+        logic [31:0] next;
+    } ecc_reg__ECC_PUBKEY_Y__PUBKEY_Y__in_t;
+
+    typedef struct {
+        ecc_reg__ECC_PUBKEY_Y__PUBKEY_Y__in_t PUBKEY_Y;
+    } ecc_reg__ECC_PUBKEY_Y__in_t;
+
+    typedef struct {
+        logic [31:0] next;
+    } ecc_reg__ECC_SIGN_R__SIGN_R__in_t;
+
+    typedef struct {
+        ecc_reg__ECC_SIGN_R__SIGN_R__in_t SIGN_R;
+    } ecc_reg__ECC_SIGN_R__in_t;
+
+    typedef struct {
+        logic [31:0] next;
+    } ecc_reg__ECC_SIGN_S__SIGN_S__in_t;
+
+    typedef struct {
+        ecc_reg__ECC_SIGN_S__SIGN_S__in_t SIGN_S;
+    } ecc_reg__ECC_SIGN_S__in_t;
+
+    typedef struct {
+        logic [31:0] next;
+    } ecc_reg__ECC_VERIFY_R__VERIFY_R__in_t;
+
+    typedef struct {
+        ecc_reg__ECC_VERIFY_R__VERIFY_R__in_t VERIFY_R;
+    } ecc_reg__ECC_VERIFY_R__in_t;
 
     typedef struct {
         logic hwset;
@@ -94,83 +111,121 @@ package ecc_reg_pkg;
     typedef struct {
         logic reset_b;
         logic hard_reset_b;
-        ecc_reg__ecc_NAME__in_t ecc_NAME[2];
-        ecc_reg__ecc_VERSION__in_t ecc_VERSION[2];
-        ecc_reg__ecc_CTRL__in_t ecc_CTRL;
-        ecc_reg__ecc_STATUS__in_t ecc_STATUS;
-        ecc_reg__ecc_SCACONFIG__in_t ecc_SCACONFIG;
-        ecc_reg__ecc_PRIVKEY__in_t ecc_PRIVKEY[12];
-        ecc_reg__ecc_PUBKEY_X__in_t ecc_PUBKEY_X[12];
-        ecc_reg__ecc_PUBKEY_Y__in_t ecc_PUBKEY_Y[12];
-        ecc_reg__ecc_SIGN_R__in_t ecc_SIGN_R[12];
-        ecc_reg__ecc_SIGN_S__in_t ecc_SIGN_S[12];
-        ecc_reg__ecc_VERIFY_R__in_t ecc_VERIFY_R[12];
+        ecc_reg__ECC_NAME__in_t ECC_NAME[2];
+        ecc_reg__ECC_VERSION__in_t ECC_VERSION[2];
+        ecc_reg__ECC_CTRL__in_t ECC_CTRL;
+        ecc_reg__ECC_STATUS__in_t ECC_STATUS;
+        ecc_reg__ECC_PRIVKEY__in_t ECC_PRIVKEY[12];
+        ecc_reg__ECC_PUBKEY_X__in_t ECC_PUBKEY_X[12];
+        ecc_reg__ECC_PUBKEY_Y__in_t ECC_PUBKEY_Y[12];
+        ecc_reg__ECC_SIGN_R__in_t ECC_SIGN_R[12];
+        ecc_reg__ECC_SIGN_S__in_t ECC_SIGN_S[12];
+        ecc_reg__ECC_VERIFY_R__in_t ECC_VERIFY_R[12];
         ecc_reg__intr_block_t__in_t intr_block_rf;
     } ecc_reg__in_t;
 
     typedef struct {
         logic [1:0] value;
-    } ecc_reg__srw_hrw_w2__out_t;
+    } ecc_reg__ECC_CTRL__CTRL__out_t;
 
     typedef struct {
-        ecc_reg__srw_hrw_w2__out_t CTRL;
-    } ecc_reg__ecc_CTRL__out_t;
+        ecc_reg__ECC_CTRL__CTRL__out_t CTRL;
+    } ecc_reg__ECC_CTRL__out_t;
 
     typedef struct {
-        logic [3:0] value;
-    } ecc_reg__srw_hrw_w4__out_t;
+        logic value;
+    } ecc_reg__ECC_SCACONFIG__POINT_RND_EN__out_t;
 
     typedef struct {
-        ecc_reg__srw_hrw_w4__out_t SCACONFIG;
-    } ecc_reg__ecc_SCACONFIG__out_t;
+        logic value;
+    } ecc_reg__ECC_SCACONFIG__MASK_SIGN_EN__out_t;
 
     typedef struct {
-        logic [31:0] value;
-    } ecc_reg__srw_hr_w32__out_t;
+        logic value;
+    } ecc_reg__ECC_SCACONFIG__SCALAR_RND_EN__out_t;
 
     typedef struct {
-        ecc_reg__srw_hr_w32__out_t SEED;
-    } ecc_reg__ecc_SEED__out_t;
+        logic value;
+    } ecc_reg__ECC_SCACONFIG__OPENSSL_EN__out_t;
 
     typedef struct {
-        ecc_reg__srw_hr_w32__out_t MSG;
-    } ecc_reg__ecc_MSG__out_t;
-
-    typedef struct {
-        logic [31:0] value;
-    } ecc_reg__srw_hrw_w32__out_t;
-
-    typedef struct {
-        ecc_reg__srw_hrw_w32__out_t PRIVKEY;
-    } ecc_reg__ecc_PRIVKEY__out_t;
-
-    typedef struct {
-        ecc_reg__srw_hrw_w32__out_t PUBKEY_X;
-    } ecc_reg__ecc_PUBKEY_X__out_t;
-
-    typedef struct {
-        ecc_reg__srw_hrw_w32__out_t PUBKEY_Y;
-    } ecc_reg__ecc_PUBKEY_Y__out_t;
-
-    typedef struct {
-        ecc_reg__srw_hrw_w32__out_t SIGN_R;
-    } ecc_reg__ecc_SIGN_R__out_t;
-
-    typedef struct {
-        ecc_reg__srw_hrw_w32__out_t SIGN_S;
-    } ecc_reg__ecc_SIGN_S__out_t;
+        ecc_reg__ECC_SCACONFIG__POINT_RND_EN__out_t POINT_RND_EN;
+        ecc_reg__ECC_SCACONFIG__MASK_SIGN_EN__out_t MASK_SIGN_EN;
+        ecc_reg__ECC_SCACONFIG__SCALAR_RND_EN__out_t SCALAR_RND_EN;
+        ecc_reg__ECC_SCACONFIG__OPENSSL_EN__out_t OPENSSL_EN;
+    } ecc_reg__ECC_SCACONFIG__out_t;
 
     typedef struct {
         logic [31:0] value;
-    } ecc_reg__sr_hrw_w32__out_t;
+    } ecc_reg__ECC_SEED__SEED__out_t;
 
     typedef struct {
-        ecc_reg__sr_hrw_w32__out_t VERIFY_R;
-    } ecc_reg__ecc_VERIFY_R__out_t;
+        ecc_reg__ECC_SEED__SEED__out_t SEED;
+    } ecc_reg__ECC_SEED__out_t;
 
     typedef struct {
-        ecc_reg__srw_hr_w32__out_t IV;
-    } ecc_reg__ecc_IV__out_t;
+        logic [31:0] value;
+    } ecc_reg__ECC_MSG__MSG__out_t;
+
+    typedef struct {
+        ecc_reg__ECC_MSG__MSG__out_t MSG;
+    } ecc_reg__ECC_MSG__out_t;
+
+    typedef struct {
+        logic [31:0] value;
+    } ecc_reg__ECC_PRIVKEY__PRIVKEY__out_t;
+
+    typedef struct {
+        ecc_reg__ECC_PRIVKEY__PRIVKEY__out_t PRIVKEY;
+    } ecc_reg__ECC_PRIVKEY__out_t;
+
+    typedef struct {
+        logic [31:0] value;
+    } ecc_reg__ECC_PUBKEY_X__PUBKEY_X__out_t;
+
+    typedef struct {
+        ecc_reg__ECC_PUBKEY_X__PUBKEY_X__out_t PUBKEY_X;
+    } ecc_reg__ECC_PUBKEY_X__out_t;
+
+    typedef struct {
+        logic [31:0] value;
+    } ecc_reg__ECC_PUBKEY_Y__PUBKEY_Y__out_t;
+
+    typedef struct {
+        ecc_reg__ECC_PUBKEY_Y__PUBKEY_Y__out_t PUBKEY_Y;
+    } ecc_reg__ECC_PUBKEY_Y__out_t;
+
+    typedef struct {
+        logic [31:0] value;
+    } ecc_reg__ECC_SIGN_R__SIGN_R__out_t;
+
+    typedef struct {
+        ecc_reg__ECC_SIGN_R__SIGN_R__out_t SIGN_R;
+    } ecc_reg__ECC_SIGN_R__out_t;
+
+    typedef struct {
+        logic [31:0] value;
+    } ecc_reg__ECC_SIGN_S__SIGN_S__out_t;
+
+    typedef struct {
+        ecc_reg__ECC_SIGN_S__SIGN_S__out_t SIGN_S;
+    } ecc_reg__ECC_SIGN_S__out_t;
+
+    typedef struct {
+        logic [31:0] value;
+    } ecc_reg__ECC_VERIFY_R__VERIFY_R__out_t;
+
+    typedef struct {
+        ecc_reg__ECC_VERIFY_R__VERIFY_R__out_t VERIFY_R;
+    } ecc_reg__ECC_VERIFY_R__out_t;
+
+    typedef struct {
+        logic [31:0] value;
+    } ecc_reg__ECC_IV__IV__out_t;
+
+    typedef struct {
+        ecc_reg__ECC_IV__IV__out_t IV;
+    } ecc_reg__ECC_IV__out_t;
 
     typedef struct {
         logic intr;
@@ -196,17 +251,17 @@ package ecc_reg_pkg;
     } ecc_reg__intr_block_t__out_t;
 
     typedef struct {
-        ecc_reg__ecc_CTRL__out_t ecc_CTRL;
-        ecc_reg__ecc_SCACONFIG__out_t ecc_SCACONFIG;
-        ecc_reg__ecc_SEED__out_t ecc_SEED[12];
-        ecc_reg__ecc_MSG__out_t ecc_MSG[12];
-        ecc_reg__ecc_PRIVKEY__out_t ecc_PRIVKEY[12];
-        ecc_reg__ecc_PUBKEY_X__out_t ecc_PUBKEY_X[12];
-        ecc_reg__ecc_PUBKEY_Y__out_t ecc_PUBKEY_Y[12];
-        ecc_reg__ecc_SIGN_R__out_t ecc_SIGN_R[12];
-        ecc_reg__ecc_SIGN_S__out_t ecc_SIGN_S[12];
-        ecc_reg__ecc_VERIFY_R__out_t ecc_VERIFY_R[12];
-        ecc_reg__ecc_IV__out_t ecc_IV[12];
+        ecc_reg__ECC_CTRL__out_t ECC_CTRL;
+        ecc_reg__ECC_SCACONFIG__out_t ECC_SCACONFIG;
+        ecc_reg__ECC_SEED__out_t ECC_SEED[12];
+        ecc_reg__ECC_MSG__out_t ECC_MSG[12];
+        ecc_reg__ECC_PRIVKEY__out_t ECC_PRIVKEY[12];
+        ecc_reg__ECC_PUBKEY_X__out_t ECC_PUBKEY_X[12];
+        ecc_reg__ECC_PUBKEY_Y__out_t ECC_PUBKEY_Y[12];
+        ecc_reg__ECC_SIGN_R__out_t ECC_SIGN_R[12];
+        ecc_reg__ECC_SIGN_S__out_t ECC_SIGN_S[12];
+        ecc_reg__ECC_VERIFY_R__out_t ECC_VERIFY_R[12];
+        ecc_reg__ECC_IV__out_t ECC_IV[12];
         ecc_reg__intr_block_t__out_t intr_block_rf;
     } ecc_reg__out_t;
 

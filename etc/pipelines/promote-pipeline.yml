@@ -25,7 +25,7 @@ stages:
       - configspec_name: 'integration_lib'
       - dut: 'caliptra_top_tb'
       - args: ''
-      - timeout: 20
+      - timeout: 30
       - testsuites:
         - l0_regress:
           - enabled: true

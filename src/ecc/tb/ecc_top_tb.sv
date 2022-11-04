@@ -340,7 +340,7 @@ module ecc_top_tb #(
   endtask // write_block
 
 
-    //----------------------------------------------------------------
+  //----------------------------------------------------------------
   // read_word()
   //
   // Read a data word from the given address in the DUT.
