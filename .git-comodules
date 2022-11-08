@@ -11,7 +11,7 @@
         "url": "origin://Ether/d261839b-fbfb-4c03-8bc2-8c8215f98b06",
         "dest": "common/infra",
         "name": "sim_tools",
-        "version": "v2.0.5"
+        "version": "v2.0.4"
     },
     {
         "description": "Verification Tools",
@@ -38,11 +38,11 @@
         "has_submodules": "True"
     },
     {
-        "description": "Test Config",
-        "url": "origin://Base_Tools/17a17100-7fc1-4d21-a3d7-945b645986d5",
+        "description": "Caliptra Config",
+        "url": "origin://AHA_POC/c1d93415-7025-4099-98d0-31b78ff267b0",
         "dest": "common",
-        "name": "test_config",
-        "version": "promote_test_config_44",
+        "name": "caliptra_config",
+        "version": "promote_caliptra_config_3",
         "populate": "when_top"
     }
 ]

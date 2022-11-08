@@ -14,8 +14,8 @@
 # limitations under the License.
 #
 
-ISR_DIR = ${COMPILE_ROOT}/test_suites/caliptra_isr
-PRINTF_DIR = ${COMPILE_ROOT}/test_suites/printf
+ISR_DIR = ${SIM_TOOLS_TOP_COMPILE_ROOT}/test_suites/caliptra_isr
+PRINTF_DIR = ${SIM_TOOLS_TOP_COMPILE_ROOT}/test_suites/printf
 
 OFILES       += caliptra_isr.o \
 	        printf.o

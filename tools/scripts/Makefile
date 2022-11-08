@@ -20,12 +20,11 @@ ABI = -mabi=ilp32 -march=rv32imac
 GCC_PREFIX = riscv64-unknown-elf
 BUILD_DIR = ${PWD}
 
-
 # Define test name
 #TESTNAME = hello_world
-TEST_DIR = ${COMPILE_ROOT}/test_suites/${TESTNAME}
-HEX_DIR = ${COMPILE_ROOT}/test_suites/hex
-INCLUDES_DIR = ${COMPILE_ROOT}/test_suites/includes
+TEST_DIR = ${SIM_TOOLS_TOP_COMPILE_ROOT}/test_suites/${TESTNAME}
+HEX_DIR = ${SIM_TOOLS_TOP_COMPILE_ROOT}/test_suites/hex
+INCLUDES_DIR = ${SIM_TOOLS_TOP_COMPILE_ROOT}/test_suites/includes
 
 # Determine test directory
 #ifneq (,$(wildcard $(TBDIR)/tests/$(TEST)))
@@ -34,12 +33,14 @@ INCLUDES_DIR = ${COMPILE_ROOT}/test_suites/includes
 
 HEADER_FILES := ${INCLUDES_DIR}/caliptra_defines.h \
 		${INCLUDES_DIR}/defines.h \
-		${COMPILE_ROOT}/../integration/rtl/caliptra_reg.h 
+		${SIM_TOOLS_TOP_COMPILE_ROOT}/rtl/caliptra_reg.h 
+
 ifeq (0,$(shell test -e $(TEST_DIR)/crt0.[sS] && echo $$?))
 	OFILES += crt0.o
 endif
 OFILES += $(TESTNAME).o
 
+# RK
 # provide specific link file
 ifeq (,$(wildcard $(TEST_DIR)/$(TESTNAME).ld))
 	LINK = $(BUILD_DIR)/link.ld
@@ -60,9 +61,6 @@ clean:
 	rm -rf *.log *.s *.hex *.dis *.tbl irun* vcs* simv* *.map snapshots swerv* \
 	verilator* *.exe obj* *.o ucli.key vc_hdrs.h csrc *.csv work\
 	dataset.asdb  library.cfg vsimsa.cfg  riviera-build wave.asdb
-
-
-
 
 ############ TEST build ###############################
 
@@ -86,12 +84,10 @@ program.hex: $(OFILES) $(LINK)
 	$(GCC_PREFIX)-size        $(TESTNAME).exe | tee $(TESTNAME).size
 	@echo Completed building $(TESTNAME)
 
-
 %.o : %.s ${HEADER_FILES}
-	cp ${HEADER_FILES} ${BUILD_DIR}
+	cp $(HEADER_FILES) $(BUILD_DIR)
 	$(GCC_PREFIX)-cpp ${includes} -I${TEST_DIR}  $<  > $*.cpp.s
 	$(GCC_PREFIX)-as ${ABI} $*.cpp.s -o $@
-
 
 %.o : %.c ${HEADER_FILES}
 	cp ${HEADER_FILES} ${BUILD_DIR}
@@ -99,7 +95,6 @@ program.hex: $(OFILES) $(LINK)
 
 endif
 endif
-
 
 help:
 	@echo Make sure the environment variable RV_ROOT is set.
