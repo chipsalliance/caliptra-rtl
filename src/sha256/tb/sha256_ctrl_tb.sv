@@ -32,33 +32,46 @@ module sha256_ctrl_tb();
   parameter CLK_PERIOD = 2 * CLK_HALF_PERIOD;
 
   // The address map.
-  parameter BASE_ADDR        = 32'h50000000;
 
-  parameter ADDR_NAME        = BASE_ADDR + 32'h00000000;
-  parameter ADDR_VERSION     = BASE_ADDR + 32'h00000008;
+  parameter ADDR_NAME0       = 32'h00000000;
+  parameter ADDR_NAME1       = 32'h00000004;
+  parameter ADDR_VERSION0    = 32'h00000008;
+  parameter ADDR_VERSION1    = 32'h0000000c;
 
-  parameter ADDR_CTRL        = BASE_ADDR + 32'h00000010;
+  parameter ADDR_CTRL        = 32'h00000010;
   parameter CTRL_INIT_VALUE  = 8'h01;
   parameter CTRL_NEXT_VALUE  = 8'h02;
   parameter CTRL_MODE_VALUE  = 8'h04;
 
-  parameter ADDR_STATUS      = BASE_ADDR + 32'h00000018;
+  parameter ADDR_STATUS      = 32'h00000018;
   parameter STATUS_READY_BIT = 0;
   parameter STATUS_VALID_BIT = 1;
 
-  parameter ADDR_BLOCK0    = BASE_ADDR + 32'h00000080;
-  parameter ADDR_BLOCK1    = BASE_ADDR + 32'h00000088;
-  parameter ADDR_BLOCK2    = BASE_ADDR + 32'h00000090;
-  parameter ADDR_BLOCK3    = BASE_ADDR + 32'h00000098;
-  parameter ADDR_BLOCK4    = BASE_ADDR + 32'h000000a0;
-  parameter ADDR_BLOCK5    = BASE_ADDR + 32'h000000a8;
-  parameter ADDR_BLOCK6    = BASE_ADDR + 32'h000000b0;
-  parameter ADDR_BLOCK7    = BASE_ADDR + 32'h000000b8;
+  parameter ADDR_BLOCK0    = 32'h00000080;
+  parameter ADDR_BLOCK1    = 32'h00000084;
+  parameter ADDR_BLOCK2    = 32'h00000088;
+  parameter ADDR_BLOCK3    = 32'h0000008c;
+  parameter ADDR_BLOCK4    = 32'h00000090;
+  parameter ADDR_BLOCK5    = 32'h00000094;
+  parameter ADDR_BLOCK6    = 32'h00000098;
+  parameter ADDR_BLOCK7    = 32'h0000009c;
+  parameter ADDR_BLOCK8    = 32'h000000a0;
+  parameter ADDR_BLOCK9    = 32'h000000a4;
+  parameter ADDR_BLOCK10   = 32'h000000a8;
+  parameter ADDR_BLOCK11   = 32'h000000ac;
+  parameter ADDR_BLOCK12   = 32'h000000b0;
+  parameter ADDR_BLOCK13   = 32'h000000b4;
+  parameter ADDR_BLOCK14   = 32'h000000b8;
+  parameter ADDR_BLOCK15   = 32'h000000bc;
 
-  parameter ADDR_DIGEST0   = BASE_ADDR + 32'h00000100;
-  parameter ADDR_DIGEST1   = BASE_ADDR + 32'h00000108;
-  parameter ADDR_DIGEST2   = BASE_ADDR + 32'h00000110;
-  parameter ADDR_DIGEST3   = BASE_ADDR + 32'h00000118;
+  parameter ADDR_DIGEST0   = 32'h00000100;
+  parameter ADDR_DIGEST1   = 32'h00000104;
+  parameter ADDR_DIGEST2   = 32'h00000108;
+  parameter ADDR_DIGEST3   = 32'h0000010c;
+  parameter ADDR_DIGEST4   = 32'h00000110;
+  parameter ADDR_DIGEST5   = 32'h00000114;
+  parameter ADDR_DIGEST6   = 32'h00000118;
+  parameter ADDR_DIGEST7   = 32'h0000011c;
 
   parameter SHA224_MODE    = 0;
   parameter SHA256_MODE    = 1;
@@ -69,14 +82,14 @@ module sha256_ctrl_tb();
   parameter AHB_HTRANS_SEQ      = 3;
 
   parameter AHB_ADDR_WIDTH = 32;
-  parameter AHB_DATA_WIDTH = 64;
+  parameter AHB_DATA_WIDTH = 32;
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
   //----------------------------------------------------------------
-  reg [63 : 0] cycle_ctr;
-  reg [63 : 0] error_ctr;
-  reg [63 : 0] tc_ctr;
+  reg [31 : 0] cycle_ctr;
+  reg [31 : 0] error_ctr;
+  reg [31 : 0] tc_ctr;
 
   reg           clk_tb;
   reg           reset_n_tb;
@@ -93,20 +106,20 @@ module sha256_ctrl_tb();
   wire          hreadyout_o_tb;
   wire [AHB_DATA_WIDTH-1:0] hrdata_o_tb;
 
-  reg [63 : 0]  read_data;
+  reg [31 : 0]  read_data;
   reg [255 : 0] digest_data;
 
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
   sha256_ctrl #(
-             .AHB_DATA_WIDTH(64),
-             .AHB_ADDR_WIDTH(32),
-             .BYPASS_HSEL(0)
+             .AHB_DATA_WIDTH(32),
+             .AHB_ADDR_WIDTH(32)
             )
             dut (
              .clk(clk_tb),
              .reset_n(reset_n_tb),
+             .cptra_pwrgood(reset_n_tb),
 
              .haddr_i(haddr_i_tb),
              .hwdata_i(hwdata_i_tb),
@@ -118,7 +131,10 @@ module sha256_ctrl_tb();
 
              .hresp_o(hresp_o_tb),
              .hreadyout_o(hreadyout_o_tb),
-             .hrdata_o(hrdata_o_tb)
+             .hrdata_o(hrdata_o_tb),
+
+             .error_intr(),
+             .notif_intr()
             );
 
 
@@ -129,7 +145,8 @@ module sha256_ctrl_tb();
   //----------------------------------------------------------------
   always
     begin : clk_gen
-      #CLK_HALF_PERIOD clk_tb = !clk_tb;
+      #CLK_HALF_PERIOD 
+      clk_tb = !clk_tb;
     end // clk_gen
 
 
@@ -151,12 +168,20 @@ module sha256_ctrl_tb();
   //
   // Toggles reset to force the DUT into a well defined state.
   //----------------------------------------------------------------
-  task reset_dut;
+    task reset_dut;
     begin
       $display("*** Toggle reset.");
       reset_n_tb = 0;
+
       #(2 * CLK_PERIOD);
+
+      @(posedge clk_tb);
       reset_n_tb = 1;
+
+      #(2 * CLK_PERIOD);
+
+      @(posedge clk_tb);
+      $display("");
     end
   endtask // reset_dut
 
@@ -197,11 +222,13 @@ module sha256_ctrl_tb();
       if (error_ctr == 0)
         begin
           $display("*** All %02d test cases completed successfully.", tc_ctr);
+          $display("* TESTCASE PASSED");
         end
       else
         begin
           $display("*** %02d test cases completed.", tc_ctr);
           $display("*** %02d errors detected during testing.", error_ctr);
+          $display("* TESTCASE FAILED");
         end
     end
   endtask // display_test_result
@@ -219,15 +246,14 @@ module sha256_ctrl_tb();
   //----------------------------------------------------------------
   task wait_ready;
     begin
-      read_data = 0;
-      #(CLK_PERIOD);
-
-      while (read_data == 0)
+      read_single_word(ADDR_STATUS);
+      while (hrdata_o_tb == 0)
         begin
           read_single_word(ADDR_STATUS);
         end
     end
   endtask // wait_ready
+
 
 
   //----------------------------------------------------------------
@@ -236,22 +262,27 @@ module sha256_ctrl_tb();
   // Write the given word to the DUT using the DUT interface.
   //----------------------------------------------------------------
   task write_single_word(input [31 : 0]  address,
-                  input [63 : 0] word);
+                  input [31 : 0] word);
     begin
-      hsel_i_tb       = 1;
-      haddr_i_tb      = address;
-      hwrite_i_tb     = 1;
-      hready_i_tb     = 1;
-      htrans_i_tb     = AHB_HTRANS_NONSEQ;
-      hsize_i_tb      = 3'b011;
-      #(CLK_PERIOD);
+      hsel_i_tb       <= 1;
+      haddr_i_tb      <= address;
+      hwrite_i_tb     <= 1;
+      hready_i_tb     <= 1;
+      htrans_i_tb     <= AHB_HTRANS_NONSEQ;
+      hsize_i_tb      <= 3'b010;
+      
+      @(posedge clk_tb);
+      haddr_i_tb      <= 'Z;
+      hwdata_i_tb     <= word;
+      hwrite_i_tb     <= 0;
+      htrans_i_tb     <= AHB_HTRANS_IDLE;
+      wait(hreadyout_o_tb == 1'b1);
 
-      haddr_i_tb      = 'Z;
-      hwdata_i_tb     = word;
-      hwrite_i_tb     = 0;
-      htrans_i_tb     = AHB_HTRANS_IDLE;
+      @(posedge clk_tb);
+      hsel_i_tb       <= 0;
     end
   endtask // write_single_word
+
 
 
   //----------------------------------------------------------------
@@ -261,20 +292,28 @@ module sha256_ctrl_tb();
   //----------------------------------------------------------------
   task write_block(input [511 : 0] block);
     begin
-      write_single_word(ADDR_BLOCK0,  block[511 : 448]);
-      write_single_word(ADDR_BLOCK1,  block[447 : 384]);
-      write_single_word(ADDR_BLOCK2,  block[383 : 320]);
-      write_single_word(ADDR_BLOCK3,  block[319 : 256]);
-      write_single_word(ADDR_BLOCK4,  block[255 : 192]);
-      write_single_word(ADDR_BLOCK5,  block[191 : 128]);
-      write_single_word(ADDR_BLOCK6,  block[127 :  64]);
-      write_single_word(ADDR_BLOCK7,  block[63  :   0]);
+      write_single_word(ADDR_BLOCK0 , block[511  : 480]);
+      write_single_word(ADDR_BLOCK1 , block[479  : 448]);
+      write_single_word(ADDR_BLOCK2 , block[447  : 416]);
+      write_single_word(ADDR_BLOCK3 , block[415  : 384]);
+      write_single_word(ADDR_BLOCK4 , block[383  : 352]);
+      write_single_word(ADDR_BLOCK5 , block[351  : 320]);
+      write_single_word(ADDR_BLOCK6 , block[319  : 288]);
+      write_single_word(ADDR_BLOCK7 , block[287  : 256]);
+      write_single_word(ADDR_BLOCK8 , block[255  : 224]);
+      write_single_word(ADDR_BLOCK9 , block[223  : 192]);
+      write_single_word(ADDR_BLOCK10, block[191  : 160]);
+      write_single_word(ADDR_BLOCK11, block[159  : 128]);
+      write_single_word(ADDR_BLOCK12, block[127  :  96]);
+      write_single_word(ADDR_BLOCK13, block[95   :  64]);
+      write_single_word(ADDR_BLOCK14, block[63   :  32]);
+      write_single_word(ADDR_BLOCK15, block[31   :   0]);
     end
   endtask // write_block
 
 
   //----------------------------------------------------------------
-  // read_single_word()
+  // read_word()
   //
   // Read a data word from the given address in the DUT.
   // the word read will be available in the global variable
@@ -282,22 +321,23 @@ module sha256_ctrl_tb();
   //----------------------------------------------------------------
   task read_single_word(input [31 : 0]  address);
     begin
-      hsel_i_tb       = 1;
-      haddr_i_tb      = address;
-      hwrite_i_tb     = 0;
-      hready_i_tb     = 1;
-      htrans_i_tb     = AHB_HTRANS_NONSEQ;
-      hsize_i_tb      = 3'b011;
-      #(CLK_PERIOD);
+      hsel_i_tb       <= 1;
+      haddr_i_tb      <= address;
+      hwrite_i_tb     <= 0;
+      hready_i_tb     <= 1;
+      htrans_i_tb     <= AHB_HTRANS_NONSEQ;
+      hsize_i_tb      <= 3'b010;
       
-      hwdata_i_tb     = 0;
-      haddr_i_tb     = 'Z;
-      htrans_i_tb     = AHB_HTRANS_IDLE;
+      @(posedge clk_tb);
+      hwdata_i_tb     <= 0;
+      haddr_i_tb      <= 'Z;
+      htrans_i_tb     <= AHB_HTRANS_IDLE;
+      wait(hreadyout_o_tb == 1'b1);
 
-      read_data = hrdata_o_tb;
-
+      @(posedge clk_tb);
+      hsel_i_tb       <= 0;      
     end
-  endtask // read_single_word
+  endtask // read_word
 
 
   //----------------------------------------------------------------
@@ -306,25 +346,31 @@ module sha256_ctrl_tb();
   // Read the name and version from the DUT.
   //----------------------------------------------------------------
   task check_name_version;
-    reg [63 : 0] name;
-    reg [63 : 0] version;
+    reg [31 : 0] name0;
+    reg [31 : 0] name1;
+    reg [31 : 0] version0;
+    reg [31 : 0] version1;
     begin
 
-      read_single_word(ADDR_NAME);
-      name = read_data;
-      read_single_word(ADDR_VERSION);
-      version = read_data;
+      read_single_word(ADDR_NAME0);
+      name0 = hrdata_o_tb;
+      read_single_word(ADDR_NAME1);
+      name1 = hrdata_o_tb;
+      read_single_word(ADDR_VERSION0);
+      version0 = hrdata_o_tb;
+      read_single_word(ADDR_VERSION1);
+      version1 = hrdata_o_tb;
 
       $display("DUT name: %c%c%c%c%c%c%c%c",
-               name[15 :  8], name[7  :  0],
-               name[31 : 24], name[23 : 16], 
-               name[47 : 40], name[39 : 32],
-               name[63 : 56], name[55 : 48]);
+               name0[15 :  8], name0[7  :  0],
+               name0[31 : 24], name0[23 : 16], 
+               name1[15 :  8], name1[7  :  0],
+               name1[31 : 24], name1[23 : 16]);
       $display("DUT version: %c%c%c%c%c%c%c%c",
-               version[15 :  8], version[7  :  0],
-               version[31 : 24], version[23 : 16],
-               version[47 : 40], version[39 : 32],
-               version[63 : 56], version[55 : 48]);
+               version0[15 :  8], version0[7  :  0],
+               version0[31 : 24], version0[23 : 16],
+               version1[15 :  8], version1[7  :  0],
+               version1[31 : 24], version1[23 : 16]);
     end
   endtask // check_name_version
 
@@ -338,13 +384,21 @@ module sha256_ctrl_tb();
   task read_digest;
     begin
       read_single_word(ADDR_DIGEST0);
-      digest_data[255 : 192] = read_data;
+      digest_data[255 : 224] = hrdata_o_tb;
       read_single_word(ADDR_DIGEST1);
-      digest_data[191 : 128] = read_data;
+      digest_data[223 : 192] = hrdata_o_tb;
       read_single_word(ADDR_DIGEST2);
-      digest_data[127 :  64] = read_data;
+      digest_data[191 : 160] = hrdata_o_tb;
       read_single_word(ADDR_DIGEST3);
-      digest_data[63  :   0] = read_data;
+      digest_data[159 : 128] = hrdata_o_tb;
+      read_single_word(ADDR_DIGEST4);
+      digest_data[127 :  96] = hrdata_o_tb;
+      read_single_word(ADDR_DIGEST5);
+      digest_data[95  :  64] = hrdata_o_tb;
+      read_single_word(ADDR_DIGEST6);
+      digest_data[63  :  32] = hrdata_o_tb;
+      read_single_word(ADDR_DIGEST7);
+      digest_data[31  :   0] = hrdata_o_tb;
     end
   endtask // read_digest
 

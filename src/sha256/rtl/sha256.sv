@@ -41,13 +41,16 @@
 
 `default_nettype none
 
-module sha256 #(
+module sha256 
+            import sha256_intr_regs_pkg::*;
+            #(
               parameter ADDR_WIDTH = 32,
-              parameter DATA_WIDTH = 64
+              parameter DATA_WIDTH = 32
             )(
               // Clock and reset.
               input wire           clk,
               input wire           reset_n,
+              input wire           cptra_pwrgood,
 
               // Control.
               input wire           cs,
@@ -57,7 +60,12 @@ module sha256 #(
               input wire  [ADDR_WIDTH-1 : 0] address,
               input wire  [DATA_WIDTH-1 : 0] write_data,
               output wire [DATA_WIDTH-1 : 0] read_data,
-              output wire          err
+              output wire          err,
+
+
+              // Interrupts
+              output wire error_intr,
+              output wire notif_intr
              );
 
   //----------------------------------------------------------------
@@ -89,7 +97,12 @@ module sha256 #(
 
   reg digest_valid_reg;
 
-
+  // Interrupts
+  logic intr_reg_we;
+  logic [31:0] intr_reg_read_data;
+  sha256_intr_regs__in_t hwif_in;
+  sha256_intr_regs__out_t hwif_out;
+  
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
@@ -105,12 +118,13 @@ module sha256 #(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign core_block = {block_reg[0], block_reg[1], block_reg[2], block_reg[3],
-                       block_reg[4], block_reg[5], block_reg[6], block_reg[7]};
+  assign core_block = {block_reg[00], block_reg[01], block_reg[02], block_reg[03],
+                       block_reg[04], block_reg[05], block_reg[06], block_reg[07],
+                       block_reg[08], block_reg[09], block_reg[10], block_reg[11],
+                       block_reg[12], block_reg[13], block_reg[14], block_reg[15]};
 
   assign read_data = tmp_read_data;
   assign err     = tmp_err;
-
 
   //----------------------------------------------------------------
   // core instantiation.
@@ -145,13 +159,13 @@ module sha256 #(
 
       if (!reset_n)
         begin
-          for (ii = 0 ; ii < 8 ; ii = ii + 1)
-            block_reg[ii] <= 64'h0;
+          for (ii = 0 ; ii < BLOCK_NO ; ii = ii + 1)
+            block_reg[ii] <= '0;
 
           init_reg         <= 0;
           next_reg         <= 0;
           ready_reg        <= 0;
-          mode_reg         <= MODE_SHA_256;
+          mode_reg         <= SHA256_MODE_SHA_256;
           digest_reg       <= 256'h0;
           digest_valid_reg <= 0;
         end
@@ -169,7 +183,7 @@ module sha256 #(
             digest_reg <= core_digest;
 
           if (block_we)
-            block_reg[address[5 : 3]] <= write_data;
+            block_reg[address[5 : 2]] <= write_data;
         end
     end // reg_update
 
@@ -187,67 +201,100 @@ module sha256 #(
       mode_new      = 0;
       mode_we       = 0;
       block_we      = 0;
-      tmp_read_data = 64'h0;
-      tmp_err     = 0;
+      intr_reg_we   = 1'b0;
+      tmp_read_data = '0;
+      tmp_err       = 0;
 
       if (cs)
         begin
           if (we)
             begin
-              if (address == ADDR_CTRL)
+              if (address == SHA256_ADDR_CTRL)
                 begin
-                  init_new = write_data[CTRL_INIT_BIT];
-                  next_new = write_data[CTRL_NEXT_BIT];
-                  mode_new = write_data[CTRL_MODE_BIT];
+                  init_new = write_data[SHA256_CTRL_INIT_BIT];
+                  next_new = write_data[SHA256_CTRL_NEXT_BIT];
+                  mode_new = write_data[SHA256_CTRL_MODE_BIT];
                   mode_we  = 1;
                 end
 
-              if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK7))
+              if ((address >= SHA256_ADDR_BLOCK_START) && (address <= SHA256_ADDR_BLOCK_END))
                 block_we = 1;
+
+              if ((address >= SHA256_ADDR_INTR_START) && (address <= SHA256_ADDR_INTR_END))
+                intr_reg_we = 1'h1;
             end // if (we)
 
           else
             begin
-              if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK7))
-                tmp_read_data = block_reg[address[5 : 3]];
-              else if ((address >= ADDR_DIGEST0) && (address <= ADDR_DIGEST3))
-                tmp_read_data = digest_reg[(3 - ((address - ADDR_DIGEST0) >> 3)) * DATA_WIDTH +: DATA_WIDTH];
-              else begin
-                case (address)
-                  // Read operations.
-                  ADDR_NAME0:
-                  tmp_read_data = CORE_NAME0;
+              if ((address >= SHA256_ADDR_BLOCK_START) && (address <= SHA256_ADDR_BLOCK_END))
+                tmp_read_data = block_reg[address[5 : 2]];
+              
+              if ((address >= SHA256_ADDR_DIGEST_START) && (address <= SHA256_ADDR_DIGEST_END))
+                tmp_read_data = digest_reg[(7 - ((address - SHA256_ADDR_DIGEST_START) >> 2)) * DATA_WIDTH +: DATA_WIDTH];
+              
+              if ((address >= SHA256_ADDR_INTR_START) && (address <= SHA256_ADDR_INTR_END))
+                tmp_read_data = intr_reg_read_data;
 
-                  ADDR_NAME1:
-                    tmp_read_data = CORE_NAME1;
+              case (address)
+                // Read operations.
+                SHA256_ADDR_NAME0:
+                tmp_read_data = SHA256_CORE_NAME0;
 
-                  ADDR_VERSION0:
-                    tmp_read_data = CORE_VERSION0;
+                SHA256_ADDR_NAME1:
+                  tmp_read_data = SHA256_CORE_NAME1;
 
-                  ADDR_VERSION1:
-                    tmp_read_data = CORE_VERSION1;
+                SHA256_ADDR_VERSION0:
+                  tmp_read_data = SHA256_CORE_VERSION0;
 
-                  ADDR_CTRL:
-                    tmp_read_data = {29'h0, mode_reg, next_reg, init_reg};
+                SHA256_ADDR_VERSION1:
+                  tmp_read_data = SHA256_CORE_VERSION1;
 
-                  ADDR_STATUS:
-                    tmp_read_data = {30'h0, digest_valid_reg, ready_reg};
+                SHA256_ADDR_CTRL:
+                  tmp_read_data = {29'h0, mode_reg, next_reg, init_reg};
 
-                  default:
-                    begin
-                      init_new      = 0;
-                      next_new      = 0;
-                      mode_new      = 0;
-                      mode_we       = 0;
-                      block_we      = 0;
-                      tmp_read_data = '0;
-                      tmp_err     = 0;
-                    end
-                endcase // case (address)
-              end
+                SHA256_ADDR_STATUS:
+                  tmp_read_data = {30'h0, digest_valid_reg, ready_reg};
+
+                default:
+                    tmp_err = 1'b1;
+              endcase // case (address)
             end
         end
     end // addr_decoder
+  
+
+  // Interrupt Registers
+  sha256_intr_regs i_sha256_intr_regs (
+      .clk(clk),
+      .rst(1'b0),
+
+      .s_cpuif_req         (cs                                      ),
+      .s_cpuif_req_is_wr   (intr_reg_we                             ),
+      .s_cpuif_addr        (address[SHA256_INTR_REGS_ADDR_WIDTH-1:0]),
+      .s_cpuif_wr_data     (write_data                              ),
+      .s_cpuif_req_stall_wr(                                        ),
+      .s_cpuif_req_stall_rd(                                        ),
+      .s_cpuif_rd_ack      (                                        ),
+      .s_cpuif_rd_err      (                                        ),
+      .s_cpuif_rd_data     (intr_reg_read_data                      ),
+      .s_cpuif_wr_ack      (                                        ),
+      .s_cpuif_wr_err      (                                        ),
+
+      .hwif_in (hwif_in ),
+      .hwif_out(hwif_out)
+  );
+
+
+    assign hwif_in.reset_b = reset_n;
+    assign hwif_in.error_reset_b = cptra_pwrgood;
+    assign hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = core_digest_valid & ~digest_valid_reg;
+    assign hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = 1'b0; // TODO
+    assign hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = 1'b0; // TODO
+    assign hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = 1'b0; // TODO
+    assign hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // TODO
+
+    assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
+    assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;    
 endmodule // sha256
 
 //======================================================================

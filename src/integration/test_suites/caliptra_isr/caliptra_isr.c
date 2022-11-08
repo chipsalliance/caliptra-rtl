@@ -193,6 +193,7 @@ void init_interrupts(void) {
     volatile uint32_t * const ecc_reg    = (uint32_t*) CLP_ECC_REG_BASE_ADDR;
     volatile uint32_t * const hmac_reg   = (uint32_t*) CLP_HMAC_REG_BASE_ADDR;
     volatile uint32_t * const sha512_reg = (uint32_t*) CLP_SHA512_REG_BASE_ADDR;
+    volatile uint32_t * const sha256_reg = (uint32_t*) CLP_SHA256_INTR_REGS_INTR_BLOCK_RF_START;
     char* DCCM = (char *) RV_DCCM_SADR;
     uint32_t value;
 
@@ -306,6 +307,12 @@ void init_interrupts(void) {
     sha512_reg[SHA512_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R /sizeof(uint32_t)] = SHA512_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK;
     sha512_reg[SHA512_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = SHA512_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
                                                                              SHA512_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
+
+    // SHA256
+    // TODO error interrupt enables
+    sha256_reg[SHA256_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTR_EN_R /sizeof(uint32_t)] = SHA256_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK;
+    sha256_reg[SHA256_INTR_REGS_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = SHA256_INTR_REGS_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
+                                                                                   SHA256_INTR_REGS_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
 
     // Mailbox
     mbox_reg[MBOX_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R /sizeof(uint32_t)] = MBOX_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INTERNAL_EN_MASK |

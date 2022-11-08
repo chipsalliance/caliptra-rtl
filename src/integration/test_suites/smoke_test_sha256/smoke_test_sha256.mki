@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-# Copyright 2022 Microsoft Corporation or its affiliates.
+# Copyright 2020 Western Digital Corporation or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,15 +14,15 @@
 # limitations under the License.
 #
 
-python tools/scripts/reg_doc_gen.py \
-src/integration/rtl/caliptra_reg.rdl \
-src/keyvault/rtl/kv_reg.rdl \
-src/ecc/rtl/ecc_reg.rdl \
-src/sha512/rtl/sha512_reg.rdl \
-src/sha256/rtl/sha256_reg.rdl \
-src/sha256/rtl/sha256_intr_regs.rdl \
-src/mbox/rtl/mbox_reg.rdl \
-src/mbox/rtl/mbox_csr.rdl \
-src/hmac/rtl/hmac_reg.rdl \
-src/doe/rtl/doe_reg.rdl \
-src/keyvault/rtl/kv_def.rdl
+ISR_DIR = ${COMPILE_ROOT}/test_suites/caliptra_isr
+PRINTF_DIR = ${COMPILE_ROOT}/test_suites/printf
+
+OFILES       += caliptra_isr.o \
+	        printf.o
+HEADER_FILES += ${TEST_DIR}/*.h \
+		${PRINTF_DIR}/printf.h \
+		$(ISR_DIR)/riscv-csr.h \
+		$(ISR_DIR)/riscv-interrupts.h \
+		$(ISR_DIR)/swerv-csr.h
+VPATH        += $(ISR_DIR) \
+	        $(PRINTF_DIR)

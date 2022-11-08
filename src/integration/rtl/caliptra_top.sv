@@ -268,8 +268,6 @@ assign nmi_int   = 0;
 
 assign kv_error_intr = 1'b0; // TODO
 assign kv_notif_intr = 1'b0; // TODO
-assign sha256_error_intr = 1'b0; // TODO
-assign sha256_notif_intr = 1'b0; // TODO
 assign qspi_error_intr = 1'b0; // TODO
 assign qspi_notif_intr = 1'b0; // TODO
 assign uart_error_intr = 1'b0; // TODO
@@ -462,21 +460,21 @@ caliptra_ahb_srom #(
 
 sha512_ctrl #(
     .AHB_DATA_WIDTH (64),
-    .AHB_ADDR_WIDTH (`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SHA))
+    .AHB_ADDR_WIDTH (`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SHA512))
 ) sha512 (
     .clk            (clk),
     .reset_n        (cptra_uc_rst_b),
     .cptra_pwrgood  (cptra_pwrgood),
-    .haddr_i        (responder_inst[`SLAVE_SEL_SHA].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SHA)-1:0]),
-    .hwdata_i       (responder_inst[`SLAVE_SEL_SHA].hwdata),
-    .hsel_i         (responder_inst[`SLAVE_SEL_SHA].hsel),
-    .hwrite_i       (responder_inst[`SLAVE_SEL_SHA].hwrite),
-    .hready_i       (responder_inst[`SLAVE_SEL_SHA].hready),
-    .htrans_i       (responder_inst[`SLAVE_SEL_SHA].htrans),
-    .hsize_i        (responder_inst[`SLAVE_SEL_SHA].hsize),
-    .hresp_o        (responder_inst[`SLAVE_SEL_SHA].hresp),
-    .hreadyout_o    (responder_inst[`SLAVE_SEL_SHA].hreadyout),
-    .hrdata_o       (responder_inst[`SLAVE_SEL_SHA].hrdata),
+    .haddr_i        (responder_inst[`SLAVE_SEL_SHA512].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SHA512)-1:0]),
+    .hwdata_i       (responder_inst[`SLAVE_SEL_SHA512].hwdata),
+    .hsel_i         (responder_inst[`SLAVE_SEL_SHA512].hsel),
+    .hwrite_i       (responder_inst[`SLAVE_SEL_SHA512].hwrite),
+    .hready_i       (responder_inst[`SLAVE_SEL_SHA512].hready),
+    .htrans_i       (responder_inst[`SLAVE_SEL_SHA512].htrans),
+    .hsize_i        (responder_inst[`SLAVE_SEL_SHA512].hsize),
+    .hresp_o        (responder_inst[`SLAVE_SEL_SHA512].hresp),
+    .hreadyout_o    (responder_inst[`SLAVE_SEL_SHA512].hreadyout),
+    .hrdata_o       (responder_inst[`SLAVE_SEL_SHA512].hrdata),
     .kv_read        (kv_read[2]),
     .kv_write       (kv_write[1]),
     .kv_resp        (kv_resp[2]),
@@ -484,6 +482,29 @@ sha512_ctrl #(
     .error_intr(sha512_error_intr),
     .notif_intr(sha512_notif_intr)
 );
+
+sha256_ctrl #(
+    .AHB_DATA_WIDTH (64),
+    .AHB_ADDR_WIDTH (`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SHA256))
+) sha256 (
+    .clk            (clk),
+    .reset_n        (cptra_uc_rst_b),
+    .cptra_pwrgood  (cptra_pwrgood),
+    .haddr_i        (responder_inst[`SLAVE_SEL_SHA256].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SHA256)-1:0]),
+    .hwdata_i       (responder_inst[`SLAVE_SEL_SHA256].hwdata),
+    .hsel_i         (responder_inst[`SLAVE_SEL_SHA256].hsel),
+    .hwrite_i       (responder_inst[`SLAVE_SEL_SHA256].hwrite),
+    .hready_i       (responder_inst[`SLAVE_SEL_SHA256].hready),
+    .htrans_i       (responder_inst[`SLAVE_SEL_SHA256].htrans),
+    .hsize_i        (responder_inst[`SLAVE_SEL_SHA256].hsize),
+    .hresp_o        (responder_inst[`SLAVE_SEL_SHA256].hresp),
+    .hreadyout_o    (responder_inst[`SLAVE_SEL_SHA256].hreadyout),
+    .hrdata_o       (responder_inst[`SLAVE_SEL_SHA256].hrdata),
+
+    .error_intr(sha256_error_intr),
+    .notif_intr(sha256_notif_intr)
+);
+
 
 doe_ctrl #(
     .AHB_DATA_WIDTH (64),

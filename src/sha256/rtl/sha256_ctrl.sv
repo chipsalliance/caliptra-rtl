@@ -22,13 +22,14 @@
 //======================================================================
 
 module sha256_ctrl #(
-    parameter AHB_DATA_WIDTH = 64,
+    parameter AHB_DATA_WIDTH = 32,
     parameter AHB_ADDR_WIDTH = 32
 )
 (
     // Clock and reset.
     input wire           clk,
     input wire           reset_n,
+    input wire           cptra_pwrgood,
 
     // from SLAVES PORT
     input logic [AHB_ADDR_WIDTH-1:0] haddr_i,
@@ -41,7 +42,11 @@ module sha256_ctrl #(
 
     output logic hresp_o,
     output logic hreadyout_o,
-    output logic [AHB_DATA_WIDTH-1:0] hrdata_o
+    output logic [AHB_DATA_WIDTH-1:0] hrdata_o,
+
+    // Interrupt
+    output logic error_intr,
+    output logic notif_intr
 );
 
     //----------------------------------------------------------------
@@ -60,12 +65,15 @@ module sha256_ctrl #(
         ) sha256_inst(
         .clk(clk),
         .reset_n(reset_n),
+        .cptra_pwrgood(cptra_pwrgood),
         .cs(sha256_cs),
         .we(sha256_we),
         .address(sha256_address),
         .write_data(sha256_write_data),
         .read_data(sha256_read_data),
-        .err(sha256_err)
+        .err(sha256_err),
+        .error_intr(error_intr),
+        .notif_intr(notif_intr)
     );
 
 

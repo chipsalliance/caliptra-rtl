@@ -97,6 +97,24 @@
 #define SHA512_VALID                0x00000003
 
 
+
+/* ---- SHA256 ---- */
+#define SHA256_BASE_ADDR            0x10028000
+#define SHA256_ADDR_NAME            (SHA256_BASE_ADDR + 0x0000)
+#define SHA256_ADDR_VER             (SHA256_BASE_ADDR + 0x0008)
+#define SHA256_ADDR_CNTRL           (SHA256_BASE_ADDR + 0x0010)
+#define SHA256_ADDR_STATUS          (SHA256_BASE_ADDR + 0x0018)
+#define SHA256_ADDR_BLOCK_START     (SHA256_BASE_ADDR + 0x0080)
+#define SHA256_ADDR_BLOCK_END       (SHA256_BASE_ADDR + 0x00bf)
+#define SHA256_ADDR_DIGEST_START    (SHA256_BASE_ADDR + 0x0100)
+#define SHA256_ADDR_DIGEST_END      (SHA256_BASE_ADDR + 0x011f)
+#define SHA256_ADDR_INTR_START      (SHA256_BASE_ADDR + 0x0800)
+
+#define SHA256_INIT                 0x00000005
+#define SHA256_NEXT                 0x00000006
+#define SHA256_VALID                0x00000003
+
+
 /* ---- Mailbox ---- */
 #define MBOX_REG_BASE             0x30030000
 #define MBOX_FLOW_STATUS          (MBOX_REG_BASE + 0x1c)
