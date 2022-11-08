@@ -95,11 +95,11 @@ inline void service_sha512_notif_intr() {
 
 inline void service_sha256_error_intr() {return;}
 inline void service_sha256_notif_intr() {
-    uint32_t * reg = (uint32_t *) (CLP_SHA256_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+    uint32_t * reg = (uint32_t *) (CLP_SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
     uint32_t sts = *reg;
     /* Write 1 to Clear the pending interrupt */
-    if (sts & SHA256_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
-        *reg = SHA256_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
+    if (sts & SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
+        *reg = SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
     }
     if (sts == 0) {
         printf("bad sha256_notif_intr sts:%x\n", sts);

@@ -31,6 +31,7 @@ stages:
           - enabled: true
           - configspec_name: 'integration_lib'
           - dut: 'caliptra_top_tb'
+          - timeout: 20
           - path: 'Caliptra/src/integration/stimulus/L0_regression.yml'
 
     - integration_top_ius:

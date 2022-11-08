@@ -20,7 +20,6 @@ src/keyvault/rtl/kv_reg.rdl \
 src/ecc/rtl/ecc_reg.rdl \
 src/sha512/rtl/sha512_reg.rdl \
 src/sha256/rtl/sha256_reg.rdl \
-src/sha256/rtl/sha256_intr_regs.rdl \
 src/mbox/rtl/mbox_reg.rdl \
 src/mbox/rtl/mbox_csr.rdl \
 src/hmac/rtl/hmac_reg.rdl \

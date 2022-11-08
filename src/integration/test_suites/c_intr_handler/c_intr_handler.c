@@ -38,12 +38,12 @@ void main(void) {
         uint32_t * ecc_notif_trig    = (uint32_t *) (CLP_ECC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
         uint32_t * hmac_notif_trig   = (uint32_t *) (CLP_HMAC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
         uint32_t * sha512_notif_trig = (uint32_t *) (CLP_SHA512_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
-        uint32_t * sha256_notif_trig = (uint32_t *) (CLP_SHA256_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
+        uint32_t * sha256_notif_trig = (uint32_t *) (CLP_SHA256_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
         uint32_t * mbox_error_trig   = (uint32_t *) (CLP_MBOX_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R);
         uint32_t * mbox_notif_trig   = (uint32_t *) (CLP_MBOX_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
 
         uint32_t * sha512_notif_ctr         = (uint32_t *) (CLP_SHA512_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
-        uint32_t * sha256_notif_ctr         = (uint32_t *) (CLP_SHA256_INTR_REGS_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
+        uint32_t * sha256_notif_ctr         = (uint32_t *) (CLP_SHA256_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
         uint32_t * hmac_notif_ctr           = (uint32_t *) (CLP_HMAC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
         uint32_t * ecc_notif_ctr            = (uint32_t *) (CLP_ECC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
         uint32_t * doe_notif_ctr            = (uint32_t *) (CLP_DOE_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
@@ -77,7 +77,7 @@ void main(void) {
                 *sha512_notif_trig = SHA512_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK;
                 sha512_intr_count++;
             } else if ((intr_count & 0xF) >= 0xD) {
-                *sha256_notif_trig = SHA256_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK;
+                *sha256_notif_trig = SHA256_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK;
                 sha256_intr_count++;
             } else if ((intr_count & 0xF) >= 0xC) {
                 *hmac_notif_trig = HMAC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK;
