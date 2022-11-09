@@ -21,6 +21,8 @@ targets:
     directories: []
     waiver_files: 
       - $COMPILE_ROOT/config/rtl_lint/sha512.waiver
+    black_box:
+      - sha512_reg
 ---
 provides: [sha512_ctrl_32bit_tb]  
 schema_version: 2.4.0

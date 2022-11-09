@@ -14,16 +14,16 @@
 //
 //======================================================================
 //
-// mailbox_tb.sv
+// soc_ifc_tb.sv
 // --------
-// mbox testbench for the mbox AHb_lite interface controller.
+// soc_ifc testbench for the soc_ifc AHb_lite interface controller.
 //
 //
 //======================================================================
 
-module mailbox_tb();
+module soc_ifc_tb();
 
-//----------------------------------------------------------------
+  //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
   parameter DEBUG     = 0;
@@ -102,7 +102,7 @@ module mailbox_tb();
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
-  mbox_top #(
+  soc_ifc_top #(
              .AHB_DATA_WIDTH(32),
              .AHB_ADDR_WIDTH(32),
              .APB_USER_WIDTH(32),

@@ -13,7 +13,7 @@ requires:
   - hmac_ctrl
   - ecc_top
   - keyvault
-  - mbox_top
+  - soc_ifc_top
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]

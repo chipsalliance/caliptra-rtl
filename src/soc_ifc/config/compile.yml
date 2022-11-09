@@ -1,53 +1,53 @@
 ---
-provides: [mbox_pkg]
+provides: [soc_ifc_pkg]
 schema_version: 2.4.0
 requires: []
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/mbox_pkg.sv
+      - $COMPILE_ROOT/rtl/soc_ifc_pkg.sv
       - $COMPILE_ROOT/rtl/mbox_csr_pkg.sv
-      - $COMPILE_ROOT/rtl/mbox_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/soc_ifc_reg_pkg.sv
 ---
-provides: [mbox_top]
+provides: [soc_ifc_top]
 schema_version: 2.4.0
 requires: 
   - libs
-  - mbox_pkg
+  - soc_ifc_pkg
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/mbox_top.sv
       - $COMPILE_ROOT/rtl/mbox.sv
-      - $COMPILE_ROOT/rtl/mbox_boot_fsm.sv
-      - $COMPILE_ROOT/rtl/mbox_arb.sv
       - $COMPILE_ROOT/rtl/mbox_csr.sv
-      - $COMPILE_ROOT/rtl/mbox_reg.sv
-    tops: [mbox_top]
+      - $COMPILE_ROOT/rtl/soc_ifc_top.sv
+      - $COMPILE_ROOT/rtl/soc_ifc_boot_fsm.sv
+      - $COMPILE_ROOT/rtl/soc_ifc_arb.sv
+      - $COMPILE_ROOT/rtl/soc_ifc_reg.sv
+    tops: [soc_ifc_top]
   rtl_lint:
     directories: [$COMPILE_ROOT/config/design_lint]
     black_box:
       - mbox_csr
       - mbox_csr_pkg
-      - mbox_reg
-      - mbox_reg_pkg
+      - soc_ifc_reg
+      - soc_ifc_reg_pkg
     waiver_files:
       - $COMPILE_ROOT/config/design_lint/sglint_waivers.tcl
-    tops: [mbox_top]
+    tops: [soc_ifc_top]
 ---
-provides: [mailbox_tb]
+provides: [soc_ifc_tb]
 schema_version: 2.4.0
 requires: 
-  - mbox_top
+  - soc_ifc_top
 targets:
   tb:
     directories: 
       - $COMPILE_ROOT/tb
     files:
-      - $COMPILE_ROOT/tb/mailbox_tb.sv
-    tops: [mailbox_tb]
+      - $COMPILE_ROOT/tb/soc_ifc_tb.sv
+    tops: [soc_ifc_tb]
 global:
   tool:
     vcs:

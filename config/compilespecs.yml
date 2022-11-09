@@ -7,7 +7,7 @@ files:
   - src/sha256/config/compile.yml
   - src/doe/config/compile.yml
   - src/hmac/config/compile.yml
-  - src/mbox/config/compile.yml
+  - src/soc_ifc/config/compile.yml
   - src/hmac_drbg/config/compile.yml
   - src/ecc/config/compile.yml
   - src/keyvault/config/compile.yml

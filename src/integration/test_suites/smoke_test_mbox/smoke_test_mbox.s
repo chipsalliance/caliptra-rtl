@@ -20,6 +20,8 @@
 
 #include "../includes/caliptra_defines.h"
 
+#define MBOX_DLEN_VAL             0x0000001C
+
 // Code to execute
 .section .text
 .global _start
@@ -38,25 +40,25 @@ _start:
     csrw 0x7c0, x1
 
     //poll for lock register
-    li x3, MBOX_ADDR_LOCK
+    li x3, CLP_MBOX_CSR_MBOX_LOCK
     li x1, 0x00000001
     lock_poll_loop:
         lw x5, 0(x3)
         and x5, x5, x1
         bne x5, x0, lock_poll_loop
 
-    //write to MBOX_ADDR_CMD
-    li x3, MBOX_ADDR_CMD
+    //write to CLP_MBOX_CSR_MBOX_CMD
+    li x3, CLP_MBOX_CSR_MBOX_CMD
     li x5, 0xDEADBEEF
     sw x5, 0(x3)
 
-    //write to MBOX_ADDR_DLEN
-    li x3, MBOX_ADDR_DLEN
+    //write to CLP_MBOX_CSR_MBOX_DLEN
+    li x3, CLP_MBOX_CSR_MBOX_DLEN
     li x5, MBOX_DLEN_VAL
     sw x5, 0(x3)
 
-    //write to MBOX_ADDR_DATAIN
-    li x3, MBOX_ADDR_DATAIN
+    //write to CLP_MBOX_CSR_MBOX_DATAIN
+    li x3, CLP_MBOX_CSR_MBOX_DATAIN
     li x6, MBOX_DLEN_VAL
     li x7, 0x00000000
     la x4, mbox_data
@@ -67,13 +69,13 @@ _start:
         addi x7, x7, 4
         ble x7, x6, write_mbox_loop
 
-    //write to MBOX_ADDR_EXECUTE
-    li x3, MBOX_ADDR_EXECUTE
+    //write to CLP_MBOX_CSR_MBOX_EXECUTE
+    li x3, CLP_MBOX_CSR_MBOX_EXECUTE
     li x5, 0x00000001
     sw x5, 0(x3)
 
-    //read from MBOX_ADDR_DATAOUT
-    li x3, MBOX_ADDR_DATAOUT
+    //read from CLP_MBOX_CSR_MBOX_DATAOUT
+    li x3, CLP_MBOX_CSR_MBOX_DATAOUT
     li x6, MBOX_DLEN_VAL
     li x7, 0x00000000
     la x4, mbox_data

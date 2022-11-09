@@ -66,8 +66,8 @@ static void nonstd_swerv_isr_uart_error   (void) __attribute__ ((interrupt ("mac
 static void nonstd_swerv_isr_uart_notif   (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_swerv_isr_i3c_error    (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_swerv_isr_i3c_notif    (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_mbox_error   (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_mbox_notif   (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_swerv_isr_soc_ifc_error   (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_swerv_isr_soc_ifc_notif   (void) __attribute__ ((interrupt ("machine")));
 
 // Could be much more fancy with C preprocessing to pair up the ISR with Vector
 // numbers as defined in caliptra_defines.h.... TODO
@@ -90,8 +90,8 @@ static void (* const nonstd_swerv_isr_15) (void) = nonstd_swerv_isr_uart_error  
 static void (* const nonstd_swerv_isr_16) (void) = nonstd_swerv_isr_uart_notif  ; //        |
 static void (* const nonstd_swerv_isr_17) (void) = nonstd_swerv_isr_i3c_error   ; //        |
 static void (* const nonstd_swerv_isr_18) (void) = nonstd_swerv_isr_i3c_notif   ; //        |
-static void (* const nonstd_swerv_isr_19) (void) = nonstd_swerv_isr_mbox_error  ; //        |
-static void (* const nonstd_swerv_isr_20) (void) = nonstd_swerv_isr_mbox_notif  ; // -------'
+static void (* const nonstd_swerv_isr_19) (void) = nonstd_swerv_isr_soc_ifc_error  ; //        |
+static void (* const nonstd_swerv_isr_20) (void) = nonstd_swerv_isr_soc_ifc_notif  ; // -------'
 static void (* const nonstd_swerv_isr_21) (void) = std_rv_nop_machine; // --------.
 static void (* const nonstd_swerv_isr_22) (void) = std_rv_nop_machine; //         |
 static void (* const nonstd_swerv_isr_23) (void) = std_rv_nop_machine; //         |
@@ -188,7 +188,7 @@ void init_interrupts(void) {
     volatile uint32_t * const meies      = (uint32_t*) SWERV_MM_PIC_MEIES;      // Treat these
     volatile uint32_t * const meigwctrls = (uint32_t*) SWERV_MM_PIC_MEIGWCTRLS; // as arrays
     volatile uint32_t * const meigwclrs  = (uint32_t*) SWERV_MM_PIC_MEIGWCLRS;  //
-    volatile uint32_t * const mbox_reg   = (uint32_t*) CLP_MBOX_REG_BASE_ADDR;
+    volatile uint32_t * const soc_ifc_reg   = (uint32_t*) CLP_SOC_IFC_REG_BASE_ADDR;
     volatile uint32_t * const doe_reg    = (uint32_t*) CLP_DOE_REG_BASE_ADDR;
     volatile uint32_t * const ecc_reg    = (uint32_t*) CLP_ECC_REG_BASE_ADDR;
     volatile uint32_t * const hmac_reg   = (uint32_t*) CLP_HMAC_REG_BASE_ADDR;
@@ -249,8 +249,8 @@ void init_interrupts(void) {
     meipls[SWERV_INTR_VEC_UART_NOTIF  ] = SWERV_INTR_PRIO_UART_NOTIF  ; __asm__ volatile ("fence");
     meipls[SWERV_INTR_VEC_I3C_ERROR   ] = SWERV_INTR_PRIO_I3C_ERROR   ; __asm__ volatile ("fence");
     meipls[SWERV_INTR_VEC_I3C_NOTIF   ] = SWERV_INTR_PRIO_I3C_NOTIF   ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_MBOX_ERROR  ] = SWERV_INTR_PRIO_MBOX_ERROR  ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_MBOX_NOTIF  ] = SWERV_INTR_PRIO_MBOX_NOTIF  ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_SOC_IFC_ERROR  ] = SWERV_INTR_PRIO_SOC_IFC_ERROR  ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_SOC_IFC_NOTIF  ] = SWERV_INTR_PRIO_SOC_IFC_NOTIF  ; __asm__ volatile ("fence");
     for (uint8_t undef = SWERV_INTR_VEC_MAX_ASSIGNED+1; undef <= RV_PIC_TOTAL_INT; undef++) {
         meipls[undef] = 0; __asm__ volatile ("fence"); // Set to 0 meaning NEVER interrupt
     }
@@ -315,13 +315,13 @@ void init_interrupts(void) {
                                                                                    SHA256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
 
     // Mailbox
-    mbox_reg[MBOX_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R /sizeof(uint32_t)] = MBOX_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INTERNAL_EN_MASK |
-                                                                         MBOX_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INV_DEV_EN_MASK  |
-                                                                         MBOX_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_CMD_FAIL_EN_MASK |
-                                                                         MBOX_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_BAD_FUSE_EN_MASK;
-    mbox_reg[MBOX_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R /sizeof(uint32_t)] = MBOX_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_AVAIL_EN_MASK;
-    mbox_reg[MBOX_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = MBOX_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
-                                                                         MBOX_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
+    soc_ifc_reg[SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R /sizeof(uint32_t)] = SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INTERNAL_EN_MASK |
+                                                                         SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INV_DEV_EN_MASK  |
+                                                                         SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_CMD_FAIL_EN_MASK |
+                                                                         SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_BAD_FUSE_EN_MASK;
+    soc_ifc_reg[SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R /sizeof(uint32_t)] = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_AVAIL_EN_MASK;
+    soc_ifc_reg[SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
+                                                                         SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
 
     // MIE
     // Enable MIE.MEI (External Interrupts)
@@ -559,7 +559,7 @@ static void nonstd_swerv_isr_0 (void) {
     /* Service the interrupt (clear the interrupt source) */                                          \
     intr_count++;                                                                                     \
     printf("cnt_"stringify(name)":%x\n",intr_count);                                                  \
-    /* Fill in with macro contents, e.g. "service_mbox_error_intr" */                                 \
+    /* Fill in with macro contents, e.g. "service_soc_ifc_error_intr" */                                 \
     /* This will match one macro from this list:                                                      \
      * service_doe_error_intr                                                                         \
      * service_doe_notif_intr                                                                         \
@@ -579,8 +579,8 @@ static void nonstd_swerv_isr_0 (void) {
      * service_uart_notif_intr                                                                        \
      * service_i3c_error_intr                                                                         \
      * service_i3c_notif_intr                                                                         \
-     * service_mbox_error_intr                                                                        \
-     * service_mbox_notif_intr                                                                        \
+     * service_soc_ifc_error_intr                                                                        \
+     * service_soc_ifc_notif_intr                                                                        \
      */                                                                                               \
     service_##name##_intr();                                                                          \
                                                                                                       \
@@ -641,8 +641,8 @@ nonstd_swerv_isr(uart_notif)
 nonstd_swerv_isr(i3c_error)
 // Non-Standard Vectored Interrupt Handler (I3C Notification = vector 18)
 nonstd_swerv_isr(i3c_notif)
-// Non-Standard Vectored Interrupt Handler (Mbox Error = vector 19)
-nonstd_swerv_isr(mbox_error)
-// Non-Standard Vectored Interrupt Handler (Mbox Notification = vector 20)
-nonstd_swerv_isr(mbox_notif)
+// Non-Standard Vectored Interrupt Handler (SOC_IFC Error = vector 19)
+nonstd_swerv_isr(soc_ifc_error)
+// Non-Standard Vectored Interrupt Handler (SOC_IFC Notification = vector 20)
+nonstd_swerv_isr(soc_ifc_notif)
 

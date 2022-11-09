@@ -15,15 +15,13 @@ targets:
       - $COMPILE_ROOT/rtl/hmac.sv
       - $COMPILE_ROOT/rtl/hmac_core.v
       - $COMPILE_ROOT/rtl/hmac_reg.sv
-      #- $COMPILE_ROOT/rtl/sha512/sha512_core.v
-      #- $COMPILE_ROOT/rtl/sha512/sha512_h_constants.v
-      #- $COMPILE_ROOT/rtl/sha512/sha512_k_constants.v
-      #- $COMPILE_ROOT/rtl/sha512/sha512_w_mem.v
     tops: [hmac_ctrl]
   rtl_lint:
     directories: []
     waiver_files: 
       - $COMPILE_ROOT/config/rtl_lint/hmac.waiver
+    black_box:
+      - hmac_reg
 ---
 provides: [hmac_ctrl_tb]  
 schema_version: 2.4.0

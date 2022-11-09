@@ -30,6 +30,6 @@ addrmap clp {
 
     mbox_csr mbox_csr @ 0x3002_0000;
     
-    mbox_reg mbox_reg @ 0x3003_0000;
+    soc_ifc_reg soc_ifc_reg @ 0x3003_0000;
 
 };

@@ -17,7 +17,7 @@ module caliptra_top
     import el2_swerv_pkg::*;
     import config_pkg::*;
     import kv_defines_pkg::*;
-    import mbox_pkg::*;
+    import soc_ifc_pkg::*;
     (
     input bit                          clk,
 
@@ -192,8 +192,8 @@ module caliptra_top
     wire uart_notif_intr;
     wire i3c_error_intr;
     wire i3c_notif_intr;
-    wire mbox_error_intr;
-    wire mbox_notif_intr;
+    wire soc_ifc_error_intr;
+    wire soc_ifc_notif_intr;
 
     logic [NUM_INTR-1:0] intr;
 
@@ -278,27 +278,27 @@ assign i3c_notif_intr = 1'b0; // TODO
 // Vector 0 usage is reserved by SweRV, so bit 0 of the intr wire
 // drive Vector 1
 always_comb begin
-    intr[`SWERV_INTR_VEC_DOE_ERROR   -1]          = doe_error_intr;
-    intr[`SWERV_INTR_VEC_DOE_NOTIF   -1]          = doe_notif_intr;
-    intr[`SWERV_INTR_VEC_ECC_ERROR   -1]          = ecc_error_intr;
-    intr[`SWERV_INTR_VEC_ECC_NOTIF   -1]          = ecc_notif_intr;
-    intr[`SWERV_INTR_VEC_HMAC_ERROR  -1]          = hmac_error_intr;
-    intr[`SWERV_INTR_VEC_HMAC_NOTIF  -1]          = hmac_notif_intr;
-    intr[`SWERV_INTR_VEC_KV_ERROR    -1]          = kv_error_intr;
-    intr[`SWERV_INTR_VEC_KV_NOTIF    -1]          = kv_notif_intr;
-    intr[`SWERV_INTR_VEC_SHA512_ERROR-1]          = sha512_error_intr;
-    intr[`SWERV_INTR_VEC_SHA512_NOTIF-1]          = sha512_notif_intr;
-    intr[`SWERV_INTR_VEC_SHA256_ERROR-1]          = sha256_error_intr;
-    intr[`SWERV_INTR_VEC_SHA256_NOTIF-1]          = sha256_notif_intr;
-    intr[`SWERV_INTR_VEC_QSPI_ERROR  -1]          = qspi_error_intr;
-    intr[`SWERV_INTR_VEC_QSPI_NOTIF  -1]          = qspi_notif_intr;
-    intr[`SWERV_INTR_VEC_UART_ERROR  -1]          = uart_error_intr;
-    intr[`SWERV_INTR_VEC_UART_NOTIF  -1]          = uart_notif_intr;
-    intr[`SWERV_INTR_VEC_I3C_ERROR   -1]          = i3c_error_intr;
-    intr[`SWERV_INTR_VEC_I3C_NOTIF   -1]          = i3c_notif_intr;
-    intr[`SWERV_INTR_VEC_MBOX_ERROR  -1]          = mbox_error_intr;
-    intr[`SWERV_INTR_VEC_MBOX_NOTIF  -1]          = mbox_notif_intr;
-    intr[NUM_INTR-1:`SWERV_INTR_VEC_MAX_ASSIGNED] = '0;
+    intr[`SWERV_INTR_VEC_DOE_ERROR    -1]          = doe_error_intr;
+    intr[`SWERV_INTR_VEC_DOE_NOTIF    -1]          = doe_notif_intr;
+    intr[`SWERV_INTR_VEC_ECC_ERROR    -1]          = ecc_error_intr;
+    intr[`SWERV_INTR_VEC_ECC_NOTIF    -1]          = ecc_notif_intr;
+    intr[`SWERV_INTR_VEC_HMAC_ERROR   -1]          = hmac_error_intr;
+    intr[`SWERV_INTR_VEC_HMAC_NOTIF   -1]          = hmac_notif_intr;
+    intr[`SWERV_INTR_VEC_KV_ERROR     -1]          = kv_error_intr;
+    intr[`SWERV_INTR_VEC_KV_NOTIF     -1]          = kv_notif_intr;
+    intr[`SWERV_INTR_VEC_SHA512_ERROR -1]          = sha512_error_intr;
+    intr[`SWERV_INTR_VEC_SHA512_NOTIF -1]          = sha512_notif_intr;
+    intr[`SWERV_INTR_VEC_SHA256_ERROR- 1]          = sha256_error_intr;
+    intr[`SWERV_INTR_VEC_SHA256_NOTIF -1]          = sha256_notif_intr;
+    intr[`SWERV_INTR_VEC_QSPI_ERROR   -1]          = qspi_error_intr;
+    intr[`SWERV_INTR_VEC_QSPI_NOTIF   -1]          = qspi_notif_intr;
+    intr[`SWERV_INTR_VEC_UART_ERROR   -1]          = uart_error_intr;
+    intr[`SWERV_INTR_VEC_UART_NOTIF   -1]          = uart_notif_intr;
+    intr[`SWERV_INTR_VEC_I3C_ERROR    -1]          = i3c_error_intr;
+    intr[`SWERV_INTR_VEC_I3C_NOTIF    -1]          = i3c_notif_intr;
+    intr[`SWERV_INTR_VEC_SOC_IFC_ERROR-1]          = soc_ifc_error_intr;
+    intr[`SWERV_INTR_VEC_SOC_IFC_NOTIF-1]          = soc_ifc_notif_intr;
+    intr[NUM_INTR-1:`SWERV_INTR_VEC_MAX_ASSIGNED]  = '0;
 end
 
 el2_swerv_wrapper rvtop (
@@ -616,14 +616,14 @@ key_vault1
     .kv_resp       (kv_resp)
 );
 
-mbox_top #(
-    .AHB_ADDR_WIDTH(`SLAVE_ADDR_WIDTH(`SLAVE_SEL_MBOX)),
+soc_ifc_top #(
+    .AHB_ADDR_WIDTH(`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SOC_IFC)),
     .AHB_DATA_WIDTH(`AHB_HDATA_SIZE),
-    .APB_ADDR_WIDTH(`SLAVE_ADDR_WIDTH(`SLAVE_SEL_MBOX)),
+    .APB_ADDR_WIDTH(`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SOC_IFC)),
     .APB_DATA_WIDTH(`APB_DATA_WIDTH),
     .APB_USER_WIDTH(`APB_USER_WIDTH)
     )
-    mbox_top1 
+soc_ifc_top1 
     (
     .clk(clk),
     .cptra_pwrgood(cptra_pwrgood), 
@@ -642,7 +642,7 @@ mbox_top #(
     .mbox_sram_resp(mbox_sram_resp),
 
     //APB Interface with SoC
-    .paddr_i(PADDR[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_MBOX)-1:0]),
+    .paddr_i(PADDR[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SOC_IFC)-1:0]),
     .psel_i(PSEL),
     .penable_i(PENABLE),
     .pwrite_i(PWRITE),
@@ -652,19 +652,19 @@ mbox_top #(
     .prdata_o(PRDATA),
     .pslverr_o(PSLVERR),
     //AHB Interface with uC
-    .haddr_i    (responder_inst[`SLAVE_SEL_MBOX].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_MBOX)-1:0]), 
-    .hwdata_i   (responder_inst[`SLAVE_SEL_MBOX].hwdata), 
-    .hsel_i     (responder_inst[`SLAVE_SEL_MBOX].hsel), 
-    .hwrite_i   (responder_inst[`SLAVE_SEL_MBOX].hwrite),
-    .hready_i   (responder_inst[`SLAVE_SEL_MBOX].hready),
-    .htrans_i   (responder_inst[`SLAVE_SEL_MBOX].htrans),
-    .hsize_i    (responder_inst[`SLAVE_SEL_MBOX].hsize),
-    .hresp_o    (responder_inst[`SLAVE_SEL_MBOX].hresp),
-    .hreadyout_o(responder_inst[`SLAVE_SEL_MBOX].hreadyout),
-    .hrdata_o   (responder_inst[`SLAVE_SEL_MBOX].hrdata),
+    .haddr_i    (responder_inst[`SLAVE_SEL_SOC_IFC].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SOC_IFC)-1:0]), 
+    .hwdata_i   (responder_inst[`SLAVE_SEL_SOC_IFC].hwdata), 
+    .hsel_i     (responder_inst[`SLAVE_SEL_SOC_IFC].hsel), 
+    .hwrite_i   (responder_inst[`SLAVE_SEL_SOC_IFC].hwrite),
+    .hready_i   (responder_inst[`SLAVE_SEL_SOC_IFC].hready),
+    .htrans_i   (responder_inst[`SLAVE_SEL_SOC_IFC].htrans),
+    .hsize_i    (responder_inst[`SLAVE_SEL_SOC_IFC].hsize),
+    .hresp_o    (responder_inst[`SLAVE_SEL_SOC_IFC].hresp),
+    .hreadyout_o(responder_inst[`SLAVE_SEL_SOC_IFC].hreadyout),
+    .hrdata_o   (responder_inst[`SLAVE_SEL_SOC_IFC].hrdata),
     // uC Interrupts
-    .error_intr(mbox_error_intr),
-    .notif_intr(mbox_notif_intr),
+    .error_intr(soc_ifc_error_intr),
+    .notif_intr(soc_ifc_notif_intr),
     //Obfuscated UDS and FE
     .cptra_obf_key(cptra_obf_key),
     .cptra_obf_key_reg(cptra_obf_key_reg),

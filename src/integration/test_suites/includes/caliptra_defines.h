@@ -114,22 +114,8 @@
 #define SHA256_NEXT                 0x00000006
 #define SHA256_VALID                0x00000003
 
-
 /* ---- Mailbox ---- */
-#define MBOX_REG_BASE             0x30030000
-#define MBOX_FLOW_STATUS          (MBOX_REG_BASE + 0x1c)
-#define MBOX_CLEAR_SECRETS        (MBOX_REG_BASE + 0x20)
-#define STDOUT                    (MBOX_REG_BASE + 0x2c)
-
-#define MBOX_ADDR_BASE            0x30020000
-#define MBOX_ADDR_LOCK            (MBOX_ADDR_BASE + 0x00)
-#define MBOX_ADDR_CMD             (MBOX_ADDR_BASE + 0x08)
-#define MBOX_ADDR_DLEN            (MBOX_ADDR_BASE + 0x0C)
-#define MBOX_ADDR_DATAIN          (MBOX_ADDR_BASE + 0x10)
-#define MBOX_ADDR_DATAOUT         (MBOX_ADDR_BASE + 0x14)
-#define MBOX_ADDR_EXECUTE         (MBOX_ADDR_BASE + 0x18)
-
-#define MBOX_DLEN_VAL             0x0000001C
+#define STDOUT                    CLP_SOC_IFC_REG_GENERIC_OUTPUT_WIRES_0
 
 /* ---- ECC ----*/
 #define ECC_BASE_ADDR             0x10008000
@@ -186,10 +172,10 @@
 #define SWERV_INTR_VEC_UART_NOTIF   16
 #define SWERV_INTR_VEC_I3C_ERROR    17
 #define SWERV_INTR_VEC_I3C_NOTIF    18
-#define SWERV_INTR_VEC_MBOX_ERROR   19
-#define SWERV_INTR_VEC_MBOX_NOTIF   20
+#define SWERV_INTR_VEC_SOC_IFC_ERROR   19
+#define SWERV_INTR_VEC_SOC_IFC_NOTIF   20
 // Used to tie-off unused upper intr bits
-#define SWERV_INTR_VEC_MAX_ASSIGNED SWERV_INTR_VEC_MBOX_NOTIF
+#define SWERV_INTR_VEC_MAX_ASSIGNED SWERV_INTR_VEC_SOC_IFC_NOTIF
 
 #define SWERV_INTR_PRIO_DOE_ERROR    8
 #define SWERV_INTR_PRIO_DOE_NOTIF    7
@@ -209,8 +195,8 @@
 #define SWERV_INTR_PRIO_UART_NOTIF   3
 #define SWERV_INTR_PRIO_I3C_ERROR    4
 #define SWERV_INTR_PRIO_I3C_NOTIF    3
-#define SWERV_INTR_PRIO_MBOX_ERROR   8
-#define SWERV_INTR_PRIO_MBOX_NOTIF   7
+#define SWERV_INTR_PRIO_SOC_IFC_ERROR   8
+#define SWERV_INTR_PRIO_SOC_IFC_NOTIF   7
 
 
 #endif // CALIPTRA_DEFINES_H

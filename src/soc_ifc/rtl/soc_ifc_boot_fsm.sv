@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-module mbox_boot_fsm 
-    import mbox_pkg::*;
+module soc_ifc_boot_fsm 
+    import soc_ifc_pkg::*;
     (
     input logic clk,
     input logic cptra_pwrgood,

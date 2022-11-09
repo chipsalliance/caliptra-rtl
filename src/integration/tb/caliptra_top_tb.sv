@@ -131,8 +131,8 @@ module caliptra_top_tb (
     //         8'hfb        - Set the isr_active bit
     //         8'hfc        - Clear the isr_active bit
     //         8'hff        - End the simulation with a Success status
-    assign mailbox_write = caliptra_top_dut.mbox_top1.mbox_reg1.field_combo.generic_output_wires[0].generic_wires.load_next;
-    assign WriteData = caliptra_top_dut.mbox_top1.mbox_reg1.field_combo.generic_output_wires[0].generic_wires.next;
+    assign mailbox_write = caliptra_top_dut.soc_ifc_top1.soc_ifc_reg1.field_combo.generic_output_wires[0].generic_wires.load_next;
+    assign WriteData = caliptra_top_dut.soc_ifc_top1.soc_ifc_reg1.field_combo.generic_output_wires[0].generic_wires.next;
     assign mailbox_data_val = WriteData[7:0] > 8'h5 && WriteData[7:0] < 8'h7f;
 
     parameter MAX_CYCLES = 20_000_000;

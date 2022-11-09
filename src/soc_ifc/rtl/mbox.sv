@@ -13,7 +13,8 @@
 // limitations under the License.
 
 module mbox 
-    import mbox_pkg::*;
+    import soc_ifc_pkg::*;
+    import mbox_csr_pkg::*;
     #(
      parameter DATA_W = 32
     ,parameter SIZE_KB = 128
@@ -26,7 +27,7 @@ module mbox
     input logic        req_dv,
     output logic       req_hold,
     input logic        dir_req_dv,
-    input mbox_req_t   req_data,
+    input soc_ifc_req_t   req_data,
     output logic       mbox_error,
 
     output logic [DATA_W-1:0] rdata,
@@ -86,8 +87,8 @@ logic [DATA_W-1:0] csr_rdata;
 logic read_error;
 logic write_error;
 
-mbox_csr_pkg::mbox_csr__in_t hwif_in;
-mbox_csr_pkg::mbox_csr__out_t hwif_out;
+mbox_csr__in_t hwif_in;
+mbox_csr__out_t hwif_out;
 
 assign mbox_error = read_error | write_error;
 
@@ -265,7 +266,7 @@ mbox_csr1(
     .clk(clk),
     .rst('0),
 
-    .s_cpuif_req(req_dv & (req_data.addr[MBOX_INF_ADDR_W-1:10] == MBOX_MEM_START_ADDR[MBOX_INF_ADDR_W-1:10])),
+    .s_cpuif_req(req_dv & (req_data.addr[SOC_IFC_ADDR_W-1:10] == MBOX_REG_START_ADDR[SOC_IFC_ADDR_W-1:10])),
     .s_cpuif_req_is_wr(req_data.write),
     .s_cpuif_addr(req_data.addr[5:0]),
     .s_cpuif_wr_data(req_data.wdata),

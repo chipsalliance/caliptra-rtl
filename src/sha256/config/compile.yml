@@ -20,6 +20,8 @@ targets:
     directories: []
     waiver_files: 
       - $COMPILE_ROOT/config/rtl_lint/sha256.waiver
+    black_box:
+      - sha256_reg
 ---
 provides: [sha256_ctrl_tb]  
 schema_version: 2.4.0

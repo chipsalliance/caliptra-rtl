@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-addrmap mbox_reg {
-    desc="Address map for mailbox architectural registers and fuse space";
+addrmap soc_ifc_reg {
+    desc="Address map for SoC Interface Block architectural registers and fuse space";
 
     addressing = regalign; // This is the default if not specified
     lsb0 = true; // lsb0 property is implicit/default. See docs for

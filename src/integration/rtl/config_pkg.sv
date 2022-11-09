@@ -29,7 +29,7 @@ package config_pkg;
   `define SOC_SEC_STATE_WIDTH 3
 
   // AHB Address Map
-  `define SLAVE_NAMES         {"SHA256"     , "SWERV_DMA"  , "MBOX"       , "I3C"        , "UART"       , "QSPI"       , "SHA512"     , "KEYVAULT"   , "HMAC"       , "ECC"        , "DOE_CTRL"   } /* Array of names for peripherals */
+  `define SLAVE_NAMES         {"SHA256"     , "SWERV_DMA"  , "SOC_IFC"    , "I3C"        , "UART"       , "QSPI"       , "SHA512"     , "KEYVAULT"   , "HMAC"       , "ECC"        , "DOE_CTRL"   } /* Array of names for peripherals */
   `define SLAVE_BASE_ADDR     {32'h1002_8000, 32'h4000_0000, 32'h3000_0000, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'h1002_0000, 32'h1001_8000, 32'h1001_0000, 32'h1000_8000, 32'h1000_0000} /* Array with slave base address */
   `define SLAVE_MASK_ADDR     {32'h1002_FFFF, 32'h4007_FFFF, 32'h3003_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'h1002_7FFF, 32'h1001_FFFF, 32'h1001_0FFF, 32'h1000_FFFF, 32'h1000_7FFF} /* Array with slave offset address */
   `define SLAVE_ADDR_MASK     (`SLAVE_BASE_ADDR ^ `SLAVE_MASK_ADDR) /* Array indicating meaningful address bits for each slave */
@@ -42,7 +42,7 @@ package config_pkg;
   `define SLAVE_SEL_QSPI      5
   `define SLAVE_SEL_UART      6
   `define SLAVE_SEL_I3C       7
-  `define SLAVE_SEL_MBOX      8
+  `define SLAVE_SEL_SOC_IFC      8
   `define SLAVE_SEL_DMA       9
   `define SLAVE_SEL_SHA256    10
 
@@ -66,10 +66,10 @@ package config_pkg;
   `define SWERV_INTR_VEC_UART_NOTIF   16
   `define SWERV_INTR_VEC_I3C_ERROR    17
   `define SWERV_INTR_VEC_I3C_NOTIF    18
-  `define SWERV_INTR_VEC_MBOX_ERROR   19
-  `define SWERV_INTR_VEC_MBOX_NOTIF   20
+  `define SWERV_INTR_VEC_SOC_IFC_ERROR   19
+  `define SWERV_INTR_VEC_SOC_IFC_NOTIF   20
   // Used to tie-off unused upper intr bits
-  `define SWERV_INTR_VEC_MAX_ASSIGNED `SWERV_INTR_VEC_MBOX_NOTIF
+  `define SWERV_INTR_VEC_MAX_ASSIGNED `SWERV_INTR_VEC_SOC_IFC_NOTIF
 
   `define KV_NUM_READ 6
   `define KV_NUM_WRITE 4

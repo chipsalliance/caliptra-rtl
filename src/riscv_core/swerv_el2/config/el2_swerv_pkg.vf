@@ -1,2 +1,2 @@
 +incdir+${WORKSPACE}/Caliptra/src/riscv_core/swerv_el2/rtl
-${WORKSPACE}/Caliptra/src/riscv_core/swerv_el2/rtl/common_defines.vh
+${WORKSPACE}/Caliptra/src/riscv_core/swerv_el2/rtl/common_defines.sv

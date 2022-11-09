@@ -12,26 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-`ifndef MBOX_PKG
-`define MBOX_PKG
+`ifndef SOC_IFC_PKG
+`define SOC_IFC_PKG
 
-package mbox_pkg;
+package soc_ifc_pkg;
     
-    parameter MBOX_INF_ADDR_W = 18;
-    parameter MBOX_DATA_W = 32;
-    parameter MBOX_USER_W = 32;
+    parameter SOC_IFC_ADDR_W = 18;
+    parameter SOC_IFC_DATA_W = 32;
+    parameter SOC_IFC_USER_W = 32;
     
     parameter MBOX_SIZE_KB = 128;
+    parameter MBOX_DATA_W = 32;
     parameter MBOX_DEPTH = (MBOX_SIZE_KB * 1024 * 8) / MBOX_DATA_W;
     parameter MBOX_ADDR_W = $clog2(MBOX_DEPTH);
-    
+
     //memory map
-    parameter MBOX_DIR_START_ADDR     = 18'h0_0000;
-    parameter MBOX_DIR_END_ADDR       = 18'h1_FFFF;
-    parameter MBOX_MEM_START_ADDR     = 18'h2_0000;
-    parameter MBOX_MEM_END_ADDR       = 18'h2_FFFF;
-    parameter MBOX_REG_MEM_START_ADDR = 18'h3_0000;
-    parameter MBOX_REG_MEM_END_ADDR   = 18'h3_FFFF;
+    parameter MBOX_DIR_START_ADDR    = 18'h0_0000;
+    parameter MBOX_DIR_END_ADDR      = 18'h1_FFFF;
+    parameter MBOX_REG_START_ADDR    = 18'h2_0000;
+    parameter MBOX_REG_END_ADDR      = 18'h2_FFFF;
+    parameter SOC_IFC_REG_START_ADDR = 18'h3_0000;
+    parameter SOC_IFC_REG_END_ADDR   = 18'h3_FFFF;
 
     //BOOT FSM
     typedef enum logic [1:0] {
@@ -50,29 +51,29 @@ package mbox_pkg;
         MBOX_EXECUTE_SOC  = 3'b100
     } mbox_fsm_state_e;
 
-    //MAILBOX REQ
+    //Any request into soc ifc block
     typedef struct packed {
-        logic   [MBOX_INF_ADDR_W-1:0] addr;
-        logic   [MBOX_DATA_W-1:0]     wdata;
-        logic   [MBOX_USER_W-1:0]     user;
-        logic                         write;
-        logic                         soc_req;
-    } mbox_req_t;
-
+        logic   [SOC_IFC_ADDR_W-1:0] addr;
+        logic   [SOC_IFC_DATA_W-1:0] wdata;
+        logic   [SOC_IFC_USER_W-1:0] user;
+        logic                        write;
+        logic                        soc_req;
+    } soc_ifc_req_t;
+    //Request specific to soc ifc reg block
     typedef struct packed {
-        logic   [MBOX_INF_ADDR_W-1:0] addr;
-        logic   [MBOX_DATA_W-1:0]     wdata;
-        logic                         write;
-        logic                         soc_req;
-    } mbox_reg_req_t;
-
+        logic   [SOC_IFC_ADDR_W-1:0] addr;
+        logic   [SOC_IFC_DATA_W-1:0] wdata;
+        logic                        write;
+        logic                        soc_req;
+    } soc_ifc_reg_req_t;
+    //Request to mbox sram
     typedef struct packed {
         logic cs;
         logic we;
         logic [MBOX_ADDR_W-1:0] addr;
         logic [MBOX_DATA_W-1:0] wdata;
     } mbox_sram_req_t;
-
+    //Response from mbox sram
     typedef struct packed {
         logic [MBOX_DATA_W-1:0] rdata;
     } mbox_sram_resp_t;
