@@ -39,6 +39,12 @@ module ahb_lite_bus #(
     AHB_LITE_BUS_INF.Responder_Interface_Ports ahb_lite_responders[NUM_RESPONDERS-1:0],
 
     // ----------------------------------------------
+    // Respnder Disable
+    // ----------------------------------------------
+    input  logic [NUM_RESPONDERS-1:0]                         ahb_lite_resp_disable_i,
+    output logic [NUM_RESPONDERS-1:0]                         ahb_lite_resp_access_blocked_o,
+
+    // ----------------------------------------------
     // Respnder Address Map (Start and End addresses)
     // ----------------------------------------------
     input logic [NUM_RESPONDERS-1:0][AHB_LITE_ADDR_WIDTH-1:0] ahb_lite_start_addr_i,
@@ -68,7 +74,7 @@ module ahb_lite_bus #(
             assign ahb_lite_responders[ii].hready        = hready[ii];
             assign ahb_lite_responders[ii].htrans        = htrans[ii];
             assign ahb_lite_responders[ii].hsize         = hsize[ii];
-            
+
             assign hrdata[ii]       = ahb_lite_responders[ii].hrdata;
             assign hresp[ii]        = ahb_lite_responders[ii].hresp;
             assign hreadyout[ii]    = ahb_lite_responders[ii].hreadyout;
@@ -118,6 +124,12 @@ module ahb_lite_bus #(
         .hresponderready_o  (hready),
         .htrans_o           (htrans),
         .hsize_o            (hsize),
+
+        // ----------------------------------------------
+        // Respnder Disable
+        // ----------------------------------------------
+        .responder_disable_i          (ahb_lite_resp_disable_i),
+        .access_blocked_o             (ahb_lite_resp_access_blocked_o),
 
         // -----------------------------------------
         // Configuration Address Port

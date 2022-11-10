@@ -55,7 +55,13 @@ module ahb_lite_address_decoder #(
     output logic    [NUM_RESPONDERS-1:0]                            hresponderready_o,
     output logic    [NUM_RESPONDERS-1:0][1:0]                       htrans_o,
     output logic    [NUM_RESPONDERS-1:0][2:0]                       hsize_o,
-    
+
+    // ----------------------------------------------
+    // Respnder Disable
+    // ----------------------------------------------
+    input logic     [NUM_RESPONDERS-1:0]                            responder_disable_i,
+    output logic    [NUM_RESPONDERS-1:0]                            access_blocked_o,
+
     // -----------------------------------------------
     // Responder Address Map (Start and End Addresses)
     // -----------------------------------------------
@@ -66,6 +72,7 @@ module ahb_lite_address_decoder #(
 
     logic [NUM_RESPONDERS-1:0]                          pending_hsel;
     logic                                               hinitiator_ready_int;
+    logic [NUM_RESPONDERS-1:0]                          hsel_o_int_pre;
     logic [NUM_RESPONDERS-1:0]                          hsel_o_int;
 
 
@@ -74,9 +81,20 @@ module ahb_lite_address_decoder #(
     genvar resp_num;
     generate
         for (resp_num = 0; resp_num < NUM_RESPONDERS; resp_num++) begin: gen_responder_hsel
-            assign hsel_o_int[resp_num] = ((haddr_i >= responder_start_addr_i[resp_num]) && (haddr_i <= responder_end_addr_i[resp_num]));
+            assign hsel_o_int_pre[resp_num] = (haddr_i >= responder_start_addr_i[resp_num]) && (haddr_i <= responder_end_addr_i[resp_num]);
+            assign hsel_o_int    [resp_num] = hsel_o_int_pre[resp_num] && !responder_disable_i[resp_num];
         end
     endgenerate
+
+    // Pulse during address phase indicating an access was attempted to a disabled responder
+    always @(posedge hclk or negedge hreset_n) begin
+        if (!hreset_n)
+            access_blocked_o <= '0;
+        else if (|htrans_i && hinitiator_ready_int && |(hsel_o_int_pre & responder_disable_i))
+            access_blocked_o <= hsel_o_int_pre;
+        else
+            access_blocked_o <= '0;
+    end
 
     always @(posedge hclk or negedge hreset_n) begin
         if (!hreset_n)
@@ -100,6 +118,9 @@ module ahb_lite_address_decoder #(
     end
 
     // Use retimed select to drive response / data phase of the AHB Lite Transaction
+    // Default (for the case where an access does not hit any responder) is to
+    // return rdata = 0
+    // This code will never inject hresp = 1
     always_comb begin
         hrdata_o                = {AHB_LITE_DATA_WIDTH{1'b0}};
         hresp_o                 = 1'b0;

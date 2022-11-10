@@ -20,9 +20,6 @@
 
 #include "caliptra_defines.h"
 
-#define ICCMOUT 0xee000000
-
-
 // Code to execute
 .section .text
 .global _start
@@ -42,9 +39,9 @@ _start:
     csrw 0x7c0, x1
 
     // Load string from hw_data
-    // and write to stdout address
+    // and write to ICCM address
 
-    li x3, ICCMOUT
+    li x3, RV_ICCM_SADR
     la x4, hw_data
 
 loop:
@@ -54,7 +51,7 @@ loop:
    addi x3, x3, 4
    bnez x5, loop
 
-// Write 0xff to STDOUT for TB to termiate test.
+// Write 0xff to STDOUT for TB to terminate test.
 _finish:
     li x3, STDOUT
     addi x5, x0, 0xff
@@ -64,7 +61,7 @@ _finish:
     nop
 .endr
 
-.data
+.section .dccm
 hw_data:
 .ascii "----------------------------------\n"
 .ascii "Hello World from SweRV EL2 @WDC !!\n"

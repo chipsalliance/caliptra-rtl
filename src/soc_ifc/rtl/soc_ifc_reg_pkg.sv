@@ -138,6 +138,14 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__obf_key__out_t;
 
     typedef struct {
+        logic value;
+    } soc_ifc_reg__iccm_lock__lock__out_t;
+
+    typedef struct {
+        soc_ifc_reg__iccm_lock__lock__out_t lock;
+    } soc_ifc_reg__iccm_lock__out_t;
+
+    typedef struct {
         logic intr;
     } soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a__out_t;
 
@@ -168,6 +176,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__field_entropy__out_t field_entropy[32];
         soc_ifc_reg__fuse_done__out_t fuse_done;
         soc_ifc_reg__obf_key__out_t obf_key[8];
+        soc_ifc_reg__iccm_lock__out_t iccm_lock;
         soc_ifc_reg__intr_block_t__out_t intr_block_rf;
     } soc_ifc_reg__out_t;
 

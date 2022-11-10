@@ -79,6 +79,9 @@ module soc_ifc_top
     output logic [31:0][31:0] obf_field_entropy,
     output logic [11:0][31:0] obf_uds_seed,
 
+    // ICCM Lock
+    output logic iccm_lock,
+
     //uC reset
     output logic cptra_uc_rst_b
 );
@@ -325,7 +328,7 @@ soc_ifc_reg soc_ifc_reg1 (
 
 assign error_intr = soc_ifc_reg_hwif_out.intr_block_rf.error_global_intr_r.intr;
 assign notif_intr = soc_ifc_reg_hwif_out.intr_block_rf.notif_global_intr_r.intr;
-
+assign iccm_lock  = soc_ifc_reg_hwif_out.iccm_lock.lock.value;
 
 //Mailbox
 //This module contains the Caliptra Mailbox and associated control logic

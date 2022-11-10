@@ -23,14 +23,14 @@ SECTIONS {
   . = 0x00007ff0;
   .iccm.ctl : { LONG(0x40000000); LONG(0x40020000) }
   . = 0x00007ff8;
-  .data.ctl : { LONG(0x40040000); LONG(0x40060000) }
+  .data.ctl : { LONG(0x50000000); LONG(0x50020000) }
   . = 0x30000000;
   .data  :  { *(.*data) *(.rodata*) *(.sbss) STACK = ALIGN(16) + 0x1000;}
   .bss : { *(.bss) }
-  . = 0x10000;
   . = ALIGN(4);
   printf_start = .;
-  . = 0xee000000;
-  .data_load : AT(printf_start) {*(.data_text)}
-  printf_end = printf_start + SIZEOF(.data_load);
+  /* ICCM as VMA */
+  . = 0x40000000;
+  .data_iccm : AT(printf_start) {*(.data_iccm)} /* printf_start, after .data, as LMA */
+  printf_end = printf_start + SIZEOF(.data_iccm);
 }

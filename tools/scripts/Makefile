@@ -77,9 +77,15 @@ else
 program.hex: $(OFILES) $(LINK)
 	@echo Building $(TESTNAME)
 	$(GCC_PREFIX)-gcc $(ABI) -Wl,-Map=$(TEST).map -lgcc -T$(LINK) -o $(TESTNAME).exe $(OFILES) -nostartfiles  $(TEST_LIBS)
-	$(GCC_PREFIX)-objcopy -O verilog --remove-section .data --remove-section .bss               $(TESTNAME).exe program.hex
-	$(GCC_PREFIX)-objcopy -O verilog -j .data --change-section-address .data=0 --pad-to 0x20000 $(TESTNAME).exe mailbox.hex
-	$(GCC_PREFIX)-objcopy -O verilog -j .dccm --change-section-address .dccm=0 --pad-to 0x20000 $(TESTNAME).exe dccm.hex
+	$(GCC_PREFIX)-objcopy -O verilog -R .data -R .bss -R .data_iccm -R .iccm -R .dccm $(TESTNAME).exe program.hex
+	$(GCC_PREFIX)-objcopy -O verilog -j .data -j .bss -j .data_iccm \
+			      --change-section-lma      .data-0x30000000 \
+			      --change-section-lma       .bss-0x30000000 \
+			      --change-section-lma .data_iccm-0x30000000 \
+			      --pad-to 0x20000 \
+			      $(TESTNAME).exe mailbox.hex
+	$(GCC_PREFIX)-objcopy -O verilog -j .dccm                       --change-section-address .dccm=0 --pad-to 0x20000 $(TESTNAME).exe dccm.hex
+	$(GCC_PREFIX)-objcopy -O verilog -j .iccm                       --change-section-address .iccm=0 --pad-to 0x20000 $(TESTNAME).exe iccm.hex
 	$(GCC_PREFIX)-objdump -S  $(TESTNAME).exe > $(TESTNAME).dis
 	$(GCC_PREFIX)-size        $(TESTNAME).exe | tee $(TESTNAME).size
 	@echo Completed building $(TESTNAME)

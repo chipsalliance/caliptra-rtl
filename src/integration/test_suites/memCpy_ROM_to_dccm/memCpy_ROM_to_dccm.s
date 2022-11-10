@@ -20,8 +20,6 @@
 
 #include "caliptra_defines.h"
 
-#define DCCMOUT 0xf0040000
-
 
 // Code to execute
 .section .text
@@ -42,9 +40,9 @@ _start:
     csrw 0x7c0, x1
 
     // Load string from hw_data
-    // and write to dccmout address
+    // and write to DCCM
 
-    li x3, DCCMOUT
+    li x3, RV_DCCM_SADR
     la x4, hw_data
 
 loop:

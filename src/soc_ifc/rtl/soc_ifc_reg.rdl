@@ -23,6 +23,7 @@ addrmap soc_ifc_reg {
     default hw = na;
     signal {activelow; async; cpuif_reset; field_reset;} reset_b;
     signal {activelow; async;} hard_reset_b;
+    // TODO: Add reset for ICCM_LOCK register
 
     //signal to indicate request is coming from soc side
     signal {} soc_req;
@@ -101,6 +102,16 @@ addrmap soc_ifc_reg {
     reg {name = "De-Obfuscation Key";
         desc = "Stored De-Obfuscation key, not accessible by software";
         key key[32];} obf_key[8];
+
+    reg {
+        name = "ICCM Lock";
+        desc = "Control register to gate writes to the ICCM. When set to
+                1, writes are blocked. When cleared to 0, writes allowed.
+                Write-once, meaning only a reset can clear it once set to 1.
+                Writes available to Caliptra subsystem, not SoC.";
+
+        field {desc = "Lock bit gates writes to ICCM."; hw = r; sw = rw1; swwel = soc_req;} lock = 1'b0;
+    } iccm_lock;
 
 
     ////////////////////////////////////////////////////////////////

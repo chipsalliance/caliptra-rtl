@@ -360,6 +360,20 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__obf_key
 
+    // Reg - soc_ifc_reg::iccm_lock
+    class soc_ifc_reg__iccm_lock extends uvm_reg;
+        rand uvm_reg_field lock;
+
+        function new(string name = "soc_ifc_reg__iccm_lock");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.lock = new("lock");
+            this.lock.configure(this, 1, 0, "W1", 0, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__iccm_lock
+
     // Reg - soc_ifc_reg::intr_block_t::global_intr_en_t
     class soc_ifc_reg__intr_block_t__global_intr_en_t extends uvm_reg;
         rand uvm_reg_field error_en;
@@ -809,6 +823,7 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__ieee_idevid_cert_chain ieee_idevid_cert_chain[24];
         rand soc_ifc_reg__fuse_done fuse_done;
         rand soc_ifc_reg__obf_key obf_key[8];
+        rand soc_ifc_reg__iccm_lock iccm_lock;
         rand soc_ifc_reg__intr_block_t intr_block_rf;
 
         function new(string name = "soc_ifc_reg");
@@ -964,6 +979,11 @@ package soc_ifc_reg_uvm;
                 this.obf_key[i0].build();
                 this.default_map.add_reg(this.obf_key[i0], 'h3f4 + i0*'h4);
             end
+            this.iccm_lock = new("iccm_lock");
+            this.iccm_lock.configure(this);
+
+            this.iccm_lock.build();
+            this.default_map.add_reg(this.iccm_lock, 'h414);
             this.intr_block_rf = new("intr_block_rf");
             this.intr_block_rf.configure(this);
             this.intr_block_rf.build();

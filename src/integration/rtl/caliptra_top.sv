@@ -173,6 +173,8 @@ module caliptra_top
     logic [31:0][31:0] obf_field_entropy;
     logic [11:0][31:0] obf_uds_seed;
 
+    logic iccm_lock;
+
     // Interrupt Signals
     wire doe_error_intr;
     wire doe_notif_intr;
@@ -200,7 +202,7 @@ module caliptra_top
     kv_read_t [`KV_NUM_READ-1:0]  kv_read;
     kv_write_t [`KV_NUM_WRITE-1:0]  kv_write;
     kv_resp_t [`KV_NUM_READ-1:0] kv_resp;
- 
+
     //mailbox sram gasket
     mbox_sram_req_t mbox_sram_req;
     mbox_sram_resp_t mbox_sram_resp;
@@ -233,6 +235,12 @@ end
     initiator_inst();
 
     //========================================================================
+    // AHB Responder Disable
+    //========================================================================
+    logic [`AHB_SLAVES_NUM-1:0] ahb_lite_resp_disable;
+    logic [`AHB_SLAVES_NUM-1:0] ahb_lite_resp_access_blocked;
+
+    //========================================================================
     // AHB Lite Interface and decoder logic instance
     //========================================================================
     ahb_lite_bus #(
@@ -241,13 +249,27 @@ end
         .AHB_LITE_DATA_WIDTH   (`AHB_HDATA_SIZE)
     )
     ahb_lite_bus_i (
-        .hclk                   ( clk          ),
-        .hreset_n               ( cptra_uc_rst_b    ),
-        .ahb_lite_responders    ( responder_inst    ),
-        .ahb_lite_initiator     ( initiator_inst    ),
-        .ahb_lite_start_addr_i  ( `SLAVE_BASE_ADDR  ),
-        .ahb_lite_end_addr_i    ( `SLAVE_MASK_ADDR  )
+        .hclk                          ( clk                         ),
+        .hreset_n                      ( cptra_uc_rst_b              ),
+        .ahb_lite_responders           ( responder_inst              ),
+        .ahb_lite_initiator            ( initiator_inst              ),
+        .ahb_lite_resp_disable_i       ( ahb_lite_resp_disable       ),
+        .ahb_lite_resp_access_blocked_o( ahb_lite_resp_access_blocked), // TODO connect to soc if iccm_lock register
+        .ahb_lite_start_addr_i         ( `SLAVE_BASE_ADDR            ),
+        .ahb_lite_end_addr_i           ( `SLAVE_MASK_ADDR            )
     );
+    always_comb ahb_lite_resp_disable[`SLAVE_SEL_DOE]     = 1'b0;
+    always_comb ahb_lite_resp_disable[`SLAVE_SEL_ECC]     = 1'b0;
+    always_comb ahb_lite_resp_disable[`SLAVE_SEL_HMAC]    = 1'b0;
+    always_comb ahb_lite_resp_disable[`SLAVE_SEL_KV]      = 1'b0;
+    always_comb ahb_lite_resp_disable[`SLAVE_SEL_SHA512]  = 1'b0;
+    always_comb ahb_lite_resp_disable[`SLAVE_SEL_QSPI]    = 1'b0;
+    always_comb ahb_lite_resp_disable[`SLAVE_SEL_UART]    = 1'b0;
+    always_comb ahb_lite_resp_disable[`SLAVE_SEL_I3C]     = 1'b0;
+    always_comb ahb_lite_resp_disable[`SLAVE_SEL_SOC_IFC] = 1'b0;
+    always_comb ahb_lite_resp_disable[`SLAVE_SEL_DDMA]    = 1'b0;
+    always_comb ahb_lite_resp_disable[`SLAVE_SEL_IDMA]    = iccm_lock;
+    always_comb ahb_lite_resp_disable[`SLAVE_SEL_SHA256]  = 1'b0;
 
 
    //=========================================================================-
@@ -263,7 +285,7 @@ assign jtag_id[31:28] = 4'b1;
 assign jtag_id[27:12] = '0;
 assign jtag_id[11:1]  = 11'h45;
 assign reset_vector = `RV_RESET_VEC;
-assign nmi_vector   = 32'hee000000;
+assign nmi_vector   = 32'h40000000; // TODO this should come from a ctrl reg...
 assign nmi_int   = 0;
 
 assign kv_error_intr = 1'b0; // TODO
@@ -357,20 +379,20 @@ el2_swerv_wrapper rvtop (
     //---------------------------------------------------------------
     // DMA Slave
     //---------------------------------------------------------------
-    .dma_haddr              ( responder_inst[`SLAVE_SEL_DMA].haddr ),
-    .dma_hburst             ( '0                            ),
-    .dma_hmastlock          ( '0                            ),
-    .dma_hprot              ( 4'd3                          ),
-    .dma_hsize              ( responder_inst[`SLAVE_SEL_DMA].hsize ),
-    .dma_htrans             ( responder_inst[`SLAVE_SEL_DMA].htrans ),
-    .dma_hwrite             ( responder_inst[`SLAVE_SEL_DMA].hwrite ),
-    .dma_hwdata             ( responder_inst[`SLAVE_SEL_DMA].hwdata ),
+    .dma_haddr              ( responder_inst[`SLAVE_SEL_IDMA].hsel ? responder_inst[`SLAVE_SEL_IDMA].haddr  : responder_inst[`SLAVE_SEL_DDMA].haddr ),
+    .dma_hburst             ( '0                             ),
+    .dma_hmastlock          ( '0                             ),
+    .dma_hprot              ( 4'd3                           ),
+    .dma_hsize              ( responder_inst[`SLAVE_SEL_IDMA].hsel ? responder_inst[`SLAVE_SEL_IDMA].hsize  : responder_inst[`SLAVE_SEL_DDMA].hsize ),
+    .dma_htrans             ( responder_inst[`SLAVE_SEL_IDMA].hsel ? responder_inst[`SLAVE_SEL_IDMA].htrans : responder_inst[`SLAVE_SEL_DDMA].htrans ),
+    .dma_hwrite             ( responder_inst[`SLAVE_SEL_IDMA].hsel ? responder_inst[`SLAVE_SEL_IDMA].hwrite : responder_inst[`SLAVE_SEL_DDMA].hwrite ),
+    .dma_hwdata             ( responder_inst[`SLAVE_SEL_IDMA].hsel ? responder_inst[`SLAVE_SEL_IDMA].hwdata : responder_inst[`SLAVE_SEL_DDMA].hwdata ),
 
-    .dma_hrdata             ( responder_inst[`SLAVE_SEL_DMA].hrdata    ),
-    .dma_hresp              ( responder_inst[`SLAVE_SEL_DMA].hresp     ),
-    .dma_hsel               ( responder_inst[`SLAVE_SEL_DMA].hsel      ),
-    .dma_hreadyin           ( responder_inst[`SLAVE_SEL_DMA].hreadyout  ),
-    .dma_hreadyout          ( responder_inst[`SLAVE_SEL_DMA].hreadyout  ),
+    .dma_hrdata             ( responder_inst[`SLAVE_SEL_DDMA].hrdata    ),
+    .dma_hresp              ( responder_inst[`SLAVE_SEL_DDMA].hresp     ),
+    .dma_hsel               ( responder_inst[`SLAVE_SEL_IDMA].hsel | responder_inst[`SLAVE_SEL_DDMA].hsel),
+    .dma_hreadyin           ( responder_inst[`SLAVE_SEL_IDMA].hsel ? responder_inst[`SLAVE_SEL_IDMA].hready : responder_inst[`SLAVE_SEL_DDMA].hready     ),
+    .dma_hreadyout          ( responder_inst[`SLAVE_SEL_DDMA].hreadyout  ),
 
     .timer_int              ( 1'b0     ),
     .extintsrc_req          ( intr     ),
@@ -422,6 +444,10 @@ el2_swerv_wrapper rvtop (
     .mbist_mode             ( 1'b0 )        // to enable mbist
 
 );
+    // Duplicate ICCM/DCCM accesses, using only hsel to differentiate
+    always_comb responder_inst[`SLAVE_SEL_IDMA].hrdata    = responder_inst[`SLAVE_SEL_DDMA].hrdata;
+    always_comb responder_inst[`SLAVE_SEL_IDMA].hresp     = responder_inst[`SLAVE_SEL_DDMA].hresp;
+    always_comb responder_inst[`SLAVE_SEL_IDMA].hreadyout = responder_inst[`SLAVE_SEL_DDMA].hreadyout;
 
 
 //=========================================================================-
@@ -670,6 +696,8 @@ soc_ifc_top1
     .cptra_obf_key_reg(cptra_obf_key_reg),
     .obf_field_entropy(obf_field_entropy),
     .obf_uds_seed(obf_uds_seed),
+    // ICCM Lock
+    .iccm_lock(iccm_lock),
     //uC reset
     .cptra_uc_rst_b (cptra_uc_rst_b) 
 );

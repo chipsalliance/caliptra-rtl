@@ -52,8 +52,8 @@ $RV_ROOT/configs/swerv.config    \
 -set=div_new=1                   \
 -set=dccm_enable=1               \
 -set=dccm_num_banks=4            \
--set=dccm_region=0x4             \
--set=dccm_offset=0x40000         \
+-set=dccm_region=0x5             \
+-set=dccm_offset=0x00000         \
 -set=dccm_size=128               \
 -set=dma_buf_depth=5             \
 -set=fast_interrupt_redirect=1   \
@@ -75,7 +75,7 @@ $RV_ROOT/configs/swerv.config    \
 -set=lsu_num_nbload=4            \
 -set=load_to_use_plus1=0         \
 -set=pic_2cycle=0                \
--set=pic_region=0x5              \
+-set=pic_region=0x6              \
 -set=pic_offset=0                \
 -set=pic_size=32                 \
 -set=pic_total_int=31            \

@@ -14,4 +14,4 @@
 #
 ---
 seed: 1
-testname: memCpy_ROM_to_dccm
+testname: iccm_lock

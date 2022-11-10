@@ -316,6 +316,7 @@ module caliptra_top_tb (
         $readmemh("program.hex",  imem_inst1.ram,0,32'h00008000);
         $readmemh("mailbox.hex",  mbox_ram1.ram,0,32'h0002_0000);
         $readmemh("dccm.hex",     dummy_dccm_preloader.ram,0,32'h0002_0000);
+        $readmemh("iccm.hex",     dummy_iccm_preloader.ram,0,32'h0002_0000);
         tp = $fopen("trace_port.csv","w");
         el = $fopen("exec.log","w");
         ifu_p = $fopen("ifu_master_ahb_trace.log", "w");
@@ -520,6 +521,24 @@ caliptra_sram #(
     .rdata_o (imem_rdata                         )
 );
 
+// This is used to load the generated ICCM hexfile prior to
+// running slam_iccm_ram
+caliptra_sram #(
+     .DEPTH     (16384        ), // 128KiB
+     .DATA_WIDTH(64           ),
+     .ADDR_WIDTH($clog2(16384))
+
+) dummy_iccm_preloader (
+    .clk_i   (core_clk),
+
+    .cs_i    (        ),
+    .we_i    (        ),
+    .addr_i  (        ),
+    .wdata_i (        ),
+    .rdata_o (        )
+);
+
+
 // This is used to load the generated DCCM hexfile prior to
 // running slam_dccm_ram
 caliptra_sram #(
@@ -574,11 +593,10 @@ task preload_iccm;
 
     for(addr= saddr; addr <= eaddr; addr+=4) begin
         // FIXME hardcoded address indices?
-        //       trying to read offset ee00_0000 from within mbox, out of bounds - error?
-        data = {imem_inst1.ram [addr[14:3]] [{addr[2],2'h3}],
-                imem_inst1.ram [addr[14:3]] [{addr[2],2'h2}],
-                imem_inst1.ram [addr[14:3]] [{addr[2],2'h1}],
-                imem_inst1.ram [addr[14:3]] [{addr[2],2'h0}]};
+        data = {dummy_iccm_preloader.ram [addr[16:3]] [{addr[2],2'h3}],
+                dummy_iccm_preloader.ram [addr[16:3]] [{addr[2],2'h2}],
+                dummy_iccm_preloader.ram [addr[16:3]] [{addr[2],2'h1}],
+                dummy_iccm_preloader.ram [addr[16:3]] [{addr[2],2'h0}]};
         //data = {caliptra_top_dut.imem.mem[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
         slam_iccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
     end
