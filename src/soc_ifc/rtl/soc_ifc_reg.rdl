@@ -79,6 +79,13 @@ addrmap soc_ifc_reg {
         desc = "Generic output wires connected to SoC interface";
         field {sw=rw; hw=r;} generic_wires[32];} generic_output_wires[2];
 
+    reg {name = "TRNG Data";
+         desc = "Storage for the requested TRNG Data";
+         field {sw=rw; hw=na;} DATA[32];} TRNG[12];
+        
+    reg {name = "TRNG Done";
+         desc = "Indicates that the requests TRNG Data is done and stored in the TRNG Data register";
+         field {sw=rw; hw=na;} DONE;} TRNG_DONE;
 
     //fuses
     reg {name = "Unique Device Secret";

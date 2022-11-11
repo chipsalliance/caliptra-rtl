@@ -164,6 +164,34 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__generic_output_wires
 
+    // Reg - soc_ifc_reg::TRNG
+    class soc_ifc_reg__TRNG extends uvm_reg;
+        rand uvm_reg_field DATA;
+
+        function new(string name = "soc_ifc_reg__TRNG");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.DATA = new("DATA");
+            this.DATA.configure(this, 32, 0, "RW", 0, 'h0, 0, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__TRNG
+
+    // Reg - soc_ifc_reg::TRNG_DONE
+    class soc_ifc_reg__TRNG_DONE extends uvm_reg;
+        rand uvm_reg_field DONE;
+
+        function new(string name = "soc_ifc_reg__TRNG_DONE");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.DONE = new("DONE");
+            this.DONE.configure(this, 1, 0, "RW", 0, 'h0, 0, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__TRNG_DONE
+
     // Reg - soc_ifc_reg::uds_seed
     class soc_ifc_reg__uds_seed extends uvm_reg;
         rand uvm_reg_field seed;
@@ -809,6 +837,8 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__CLEAR_SECRETS CLEAR_SECRETS;
         rand soc_ifc_reg__generic_input_wires generic_input_wires[2];
         rand soc_ifc_reg__generic_output_wires generic_output_wires[2];
+        rand soc_ifc_reg__TRNG TRNG[12];
+        rand soc_ifc_reg__TRNG_DONE TRNG_DONE;
         rand soc_ifc_reg__uds_seed uds_seed[12];
         rand soc_ifc_reg__field_entropy field_entropy[32];
         rand soc_ifc_reg__key_manifest_pk_hash_0 key_manifest_pk_hash_0[12];
@@ -891,6 +921,18 @@ package soc_ifc_reg_uvm;
                 this.generic_output_wires[i0].build();
                 this.default_map.add_reg(this.generic_output_wires[i0], 'h2c + i0*'h4);
             end
+            foreach(this.TRNG[i0]) begin
+                this.TRNG[i0] = new($sformatf("TRNG[%0d]", i0));
+                this.TRNG[i0].configure(this);
+                
+                this.TRNG[i0].build();
+                this.default_map.add_reg(this.TRNG[i0], 'h34 + i0*'h4);
+            end
+            this.TRNG_DONE = new("TRNG_DONE");
+            this.TRNG_DONE.configure(this);
+
+            this.TRNG_DONE.build();
+            this.default_map.add_reg(this.TRNG_DONE, 'h64);
             foreach(this.uds_seed[i0]) begin
                 this.uds_seed[i0] = new($sformatf("uds_seed[%0d]", i0));
                 this.uds_seed[i0].configure(this);
