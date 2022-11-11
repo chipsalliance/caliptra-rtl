@@ -1,0 +1,2 @@
++incdir+${WORKSPACE}/Caliptra/src/doe/rtl
+${WORKSPACE}/Caliptra/src/doe/rtl/doe_defines_pkg.sv

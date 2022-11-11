@@ -1,0 +1,4 @@
++incdir+${WORKSPACE}/Caliptra/src/soc_ifc/rtl
+${WORKSPACE}/Caliptra/src/soc_ifc/rtl/soc_ifc_pkg.sv
+${WORKSPACE}/Caliptra/src/soc_ifc/rtl/mbox_csr_pkg.sv
+${WORKSPACE}/Caliptra/src/soc_ifc/rtl/soc_ifc_reg_pkg.sv
