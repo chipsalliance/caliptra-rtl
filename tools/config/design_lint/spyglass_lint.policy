@@ -1,1 +1,4 @@
-/home/anjpar/AHA_Workspaces/caliptra_ws1/common/caliptra_config/config/design_lint/spyglass_lint.policy
+###############
+# Load the Caliptra project ruleset (from caliptra_config)
+###############
+source $::env(CALIPTRA_CONFIG)/config/design_lint/spyglass_lint.policy 

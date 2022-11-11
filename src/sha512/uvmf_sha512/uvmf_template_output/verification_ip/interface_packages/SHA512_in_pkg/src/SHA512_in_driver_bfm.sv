@@ -527,11 +527,11 @@ end
           // mode = MODE_SHA_512_224;
           case(test_case_sel) inside
             [0:127]: begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/sha512_uvm/Caliptra/src/sha512/tb/vectors/SHA512_224ShortMsg.rsp";
+              file_name = "./SHA512_224ShortMsg.rsp";
               line_skip = test_case_sel * 4 + 7;
             end
             [128:255]: begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/sha512_uvm/Caliptra/src/sha512/tb/vectors/SHA512_224LongMsg.rsp";
+              file_name = "./SHA512_224LongMsg.rsp";
               line_skip = (test_case_sel - 128) * 4 + 7;
             end
           endcase
@@ -540,11 +540,11 @@ end
           // mode = MODE_SHA_512_256;
           case(test_case_sel) inside
             [0:127]: begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/sha512_uvm/Caliptra/src/sha512/tb/vectors/SHA512_256ShortMsg.rsp";
+              file_name = "./SHA512_256ShortMsg.rsp";
               line_skip = test_case_sel * 4 + 7;
             end
             [128:255]: begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/sha512_uvm/Caliptra/src/sha512/tb/vectors/SHA512_256LongMsg.rsp";
+              file_name = "./SHA512_256LongMsg.rsp";
               line_skip = (test_case_sel - 128) * 4 + 7;
             end
           endcase
@@ -553,11 +553,11 @@ end
           // mode = MODE_SHA_384;
           case(test_case_sel) inside
             [0:127]: begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/sha512_uvm/Caliptra/src/sha512/tb/vectors/SHA384ShortMsg.rsp";
+              file_name = "./SHA384ShortMsg.rsp";
               line_skip = test_case_sel * 4 + 7;
             end
             [128:255]: begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/sha512_uvm/Caliptra/src/sha512/tb/vectors/SHA384LongMsg.rsp";
+              file_name = "./SHA384LongMsg.rsp";
               line_skip = (test_case_sel - 128) * 4 + 7;
             end
           endcase
@@ -566,11 +566,11 @@ end
           // mode = MODE_SHA_512;
           case(test_case_sel) inside
             [0:127]: begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/sha512_uvm/Caliptra/src/sha512/tb/vectors/SHA512ShortMsg.rsp";
+              file_name = "./SHA512ShortMsg.rsp";
               line_skip = test_case_sel * 4 + 7;
             end
             [128:255]: begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/sha512_uvm/Caliptra/src/sha512/tb/vectors/SHA512LongMsg.rsp";
+              file_name = "./SHA512LongMsg.rsp";
               line_skip = (test_case_sel - 128) * 4 + 7;
             end
           endcase

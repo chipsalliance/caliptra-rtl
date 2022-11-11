@@ -126,11 +126,11 @@ class SHA512_predictor #(
           expected_shift = 512 - 224;
           case(test_case_sel) inside
             [0:127]: begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/sha512_uvm/Caliptra/src/sha512/tb/vectors/SHA512_224ShortMsg.rsp";
+              file_name = "./SHA512_224ShortMsg.rsp";
               line_skip = test_case_sel * 4 + 10;
             end
             [128:255]: begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/sha512_uvm/Caliptra/src/sha512/tb/vectors/SHA512_224LongMsg.rsp";
+              file_name = "./SHA512_224LongMsg.rsp";
               line_skip = (test_case_sel - 128) * 4 + 10;
             end
           endcase
@@ -139,11 +139,11 @@ class SHA512_predictor #(
           expected_shift = 256;
           case(test_case_sel) inside
             [0:127]: begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/sha512_uvm/Caliptra/src/sha512/tb/vectors/SHA512_256ShortMsg.rsp";
+              file_name = "./SHA512_256ShortMsg.rsp";
               line_skip = test_case_sel * 4 + 10;
             end
             [128:255]: begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/sha512_uvm/Caliptra/src/sha512/tb/vectors/SHA512_256LongMsg.rsp";
+              file_name = "./SHA512_256LongMsg.rsp";
               line_skip = (test_case_sel - 128) * 4 + 10;
             end
           endcase
@@ -152,11 +152,11 @@ class SHA512_predictor #(
           expected_shift = 512 - 384;
           case(test_case_sel) inside
             [0:127]: begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/sha512_uvm/Caliptra/src/sha512/tb/vectors/SHA384ShortMsg.rsp";
+              file_name = "./SHA384ShortMsg.rsp";
               line_skip = test_case_sel * 4 + 10;
             end
             [128:255]: begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/sha512_uvm/Caliptra/src/sha512/tb/vectors/SHA384LongMsg.rsp";
+              file_name = "./SHA384LongMsg.rsp";
               line_skip = (test_case_sel - 128) * 4 + 10;
             end
           endcase
@@ -165,11 +165,11 @@ class SHA512_predictor #(
           expected_shift = 0;
           case(test_case_sel) inside
             [0:127]: begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/sha512_uvm/Caliptra/src/sha512/tb/vectors/SHA512ShortMsg.rsp";
+              file_name = "./SHA512ShortMsg.rsp";
               line_skip = test_case_sel * 4 + 10;
             end
             [128:255]: begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/sha512_uvm/Caliptra/src/sha512/tb/vectors/SHA512LongMsg.rsp";
+              file_name = "./SHA512LongMsg.rsp";
               line_skip = (test_case_sel - 128) * 4 + 10;
             end
           endcase

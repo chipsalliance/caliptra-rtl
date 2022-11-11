@@ -866,7 +866,7 @@ end
       else if (test == ecc_otf_reset_test)
         test_otf_reset = 1;
      
-      $system("/home/anjpar/AHA_Workspaces/caliptra_ws2/Caliptra/src/ecc/tb/ecdsa_secp384r1.exe");
+      $system("./ecdsa_secp384r1.exe");
 
       file_name = "secp384_testvector.hex";
       read_test_vectors(file_name);

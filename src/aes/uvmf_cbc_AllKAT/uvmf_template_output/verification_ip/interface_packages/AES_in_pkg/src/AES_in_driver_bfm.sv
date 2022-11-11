@@ -537,28 +537,28 @@ task cbc_mode_mmt_vector_test(input aes_in_op_transactions op,
           if (test_case_sel > 293) test_case_sel = test_case_sel - 294;
           case(test_case_sel) inside
             [0:6]:    begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/tb/vectors/CBCGFSbox128.rsp";
+              file_name = "./CBCGFSbox128.rsp";
               line_skip = test_case_sel * 6 + 11;
               if (op == 2'b10) line_skip = line_skip + 44;
             end
             [7:27]:   begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/tb/vectors/CBCKeySbox128.rsp";
+              file_name = "./CBCKeySbox128.rsp";
               line_skip = (test_case_sel - 7) * 6 + 11;
               if (op == 2'b10) line_skip = line_skip + 128;
             end
             [28:37]:  begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/tb/vectors/CBCMMT128.rsp";
+              file_name = "./CBCMMT128.rsp";
               line_skip = (test_case_sel - 28) * 6 + 11;
               block_shift = test_case_sel - 28;
               if (op == 2'b10) line_skip = line_skip + 62;
             end
             [38:165]: begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/tb/vectors/CBCVarKey128.rsp";
+              file_name = "./CBCVarKey128.rsp";
               line_skip = (test_case_sel - 38) * 6 + 11;
               if (op == 2'b10) line_skip = line_skip + 770;
             end
             [166:293]:begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/tb/vectors/CBCVarTxt128.rsp";
+              file_name = "./CBCVarTxt128.rsp";
               line_skip = (test_case_sel - 166) * 6 + 11;
               if (op == 2'b10) line_skip = line_skip + 770;
             end
@@ -571,28 +571,28 @@ task cbc_mode_mmt_vector_test(input aes_in_op_transactions op,
           if (test_case_sel > 414) test_case_sel = (test_case_sel - 415) * 4;
           case(test_case_sel) inside
             [0:4]:    begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/tb/vectors/CBCGFSbox256.rsp";
+              file_name = "./CBCGFSbox256.rsp";
               line_skip = test_case_sel * 6 + 11;
               if (op == 2'b10) line_skip = line_skip + 32;
             end
             [5:20]:   begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/tb/vectors/CBCKeySbox256.rsp";
+              file_name = "./CBCKeySbox256.rsp";
               line_skip = (test_case_sel - 5) * 6 + 11;
               if (op == 2'b10) line_skip = line_skip + 98;
             end
             [21:30]:  begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/tb/vectors/CBCMMT256.rsp";
+              file_name = "./CBCMMT256.rsp";
               line_skip = (test_case_sel - 21) * 6 + 11;
               block_shift = test_case_sel - 21;
               if (op == 2'b10) line_skip = line_skip + 62;
             end
             [31:286]: begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/tb/vectors/CBCVarKey256.rsp";
+              file_name = "./CBCVarKey256.rsp";
               line_skip = (test_case_sel - 31) * 6 + 11;
               if (op == 2'b10) line_skip = line_skip + 1538;
             end
             [287:414]:begin
-              file_name = "/home/t-stevenlian/AHA_workspaces/aes_vector_v2/Caliptra/src/aes/tb/vectors/CBCVarTxt256.rsp";
+              file_name = "./CBCVarTxt256.rsp";
               line_skip = (test_case_sel - 287) * 6 + 11;
               if (op == 2'b10) line_skip = line_skip + 770;
             end

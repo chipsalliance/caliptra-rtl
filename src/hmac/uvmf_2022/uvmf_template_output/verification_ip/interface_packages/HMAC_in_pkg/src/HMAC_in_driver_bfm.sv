@@ -642,7 +642,7 @@ key_len_o = key_len;
       
 cnt_tmp = 0;
 
-$system("python ../../../../../tb/test_gen.py");
+$system("python ./test_gen.py");
 //file_name = "../../../../../tb/test_vector.txt";
 file_name = "test_vector.txt";
 fd_r = $fopen(file_name, "r");
@@ -745,7 +745,7 @@ key_len_o = key_len;
     
 cnt_tmp = 0;
 
-$system("python ../../../../../tb/test_gen.py");
+$system("python ./test_gen.py");
 //file_name = "../../../../../tb/test_vector.txt";
 file_name = "test_vector.txt";
 fd_r = $fopen(file_name, "r");
