@@ -1,9 +1,0 @@
-+incdir+/home/cwhitehead/Projects/ws1/Caliptra/src/libs/rtl
-+incdir+/home/cwhitehead/Projects/ws1/Caliptra/src/sim_irq_gen/rtl
-/home/cwhitehead/Projects/ws1/Caliptra/src/libs/rtl/caliptra_sva.svh
-/home/cwhitehead/Projects/ws1/Caliptra/src/libs/rtl/caliptra_sram.sv
-/home/cwhitehead/Projects/ws1/Caliptra/src/libs/rtl/caliptra_ahb_srom.sv
-/home/cwhitehead/Projects/ws1/Caliptra/src/libs/rtl/apb_slv_sif.sv
-/home/cwhitehead/Projects/ws1/Caliptra/src/libs/rtl/ahb_slv_sif.sv
-/home/cwhitehead/Projects/ws1/Caliptra/src/sim_irq_gen/rtl/sim_irq_pkg.sv
-/home/cwhitehead/Projects/ws1/Caliptra/src/sim_irq_gen/rtl/sim_irq_gen.sv

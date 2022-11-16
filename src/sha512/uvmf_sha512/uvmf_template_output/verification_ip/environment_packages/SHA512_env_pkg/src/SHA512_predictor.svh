@@ -84,7 +84,6 @@ class SHA512_predictor #(
   // FUNCTION: new
   function new(string name, uvm_component parent);
      super.new(name,parent);
-    `uvm_warning("PREDICTOR_REVIEW", "This predictor has been created either through generation or re-generation with merging.  Remove this warning after the predictor has been reviewed.")
   // pragma uvmf custom new begin
   // pragma uvmf custom new end
   endfunction

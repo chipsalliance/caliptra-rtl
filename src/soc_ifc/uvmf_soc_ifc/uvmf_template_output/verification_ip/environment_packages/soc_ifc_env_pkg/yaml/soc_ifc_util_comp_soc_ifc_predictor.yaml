@@ -1,0 +1,15 @@
+uvmf:
+  util_components:
+    soc_ifc_predictor:
+      analysis_exports:
+      - name: soc_ifc_ctrl_agent_ae
+        type: soc_ifc_ctrl_transaction
+      - name: ahb_slave_0_ae
+        type: mvc_sequence_item_base
+      - name: apb5_slave_0_ae
+        type: mvc_sequence_item_base
+      analysis_ports:
+      - name: soc_ifc_sb_ap
+        type: soc_ifc_status_transaction
+      existing_library_component: 'True'
+      type: predictor

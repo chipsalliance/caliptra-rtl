@@ -1,0 +1,6 @@
+---
+# Random seed desired...
+seed: ${PLAYBOOK_RANDOM_SEED}
+plusargs:
+- '+UVM_TESTNAME=AES_random_test'
+testname: aes_random_test

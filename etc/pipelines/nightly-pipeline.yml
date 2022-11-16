@@ -1,0 +1,105 @@
+# Copyright (C) Microsoft Corporation. All rights reserved.
+
+trigger: none
+pr: none
+schedules:
+  - cron: '0 0 * * *'
+    displayName: Nightly Regression
+    branches:
+      include:
+        - master
+    always: true
+
+# Point to another repository for the pipeline template
+resources:
+  repositories:
+  - repository: templates
+    type: git
+    name: Ether/pipelines
+variables:
+- group: AHA_POC_Pipelines
+
+stages:
+  - template: /etc/pipelines/templates/nightly-pipeline-template.yml@templates # Template reference
+    parameters:
+      project: 'AHA_POC'
+      repo_url: 'git@ssh.dev.azure.com:v3/ms-tsd/AHA_POC/Caliptra'
+      target_branch: 'master'
+
+      pre_steps:
+        setup: []
+        build: []
+        test: []
+        regress: []
+
+      # Define UVMF playbook invocations
+      build_and_sim_map:
+# TODO: Add this back once aes uvmf project is fixed
+#        - uvmf_aes:
+#          - display_name: 'UVMF_AES'
+#          - enabled: true
+#          - configspec_name: 'integration_lib'
+#          - dut: 'uvmf_cbc_AllKAT'
+#          - args: ''
+#          - testsuites:
+#            - l1_regress:
+#              - enabled: true
+#              - configspec_name: 'integration_lib'
+#              - dut: 'uvmf_cbc_AllKAT'
+#              - path: 'Caliptra/src/aes/stimulus/L1_regression.yml'
+#              - timeout: 15
+        - uvmf_ecc:
+          - display_name: 'UVMF_ECC'
+          - enabled: true
+          - configspec_name: 'integration_lib'
+          - dut: 'uvmf_ecc'
+          - args: ''
+          - testsuites:
+            - l1_regress:
+              - enabled: true
+              - configspec_name: 'integration_lib'
+              - dut: 'uvmf_ecc'
+              - path: 'Caliptra/src/ecc/stimulus/L1_regression.yml'
+              - timeout: 30
+        - uvmf_hmac:
+          - display_name: 'UVMF_HMAC'
+          - enabled: true
+          - configspec_name: 'integration_lib'
+          - dut: 'uvmf_hmac'
+          - args: ''
+          - testsuites:
+            - l1_regress:
+              - enabled: true
+              - configspec_name: 'integration_lib'
+              - dut: 'uvmf_hmac'
+              - path: 'Caliptra/src/hmac/stimulus/L1_regression.yml'
+              - timeout: 30
+
+# TODO: Add this back once sha512 uvmf project is fixed
+#        - uvmf_sha512:
+#          - display_name: 'UVMF_SHA512'
+#          - enabled: true
+#          - configspec_name: 'integration_lib'
+#          - dut: 'uvmf_sha512'
+#          - args: ''
+#          - testsuites:
+#            - l1_regress:
+#              - enabled: true
+#              - configspec_name: 'integration_lib'
+#              - dut: 'uvmf_sha512'
+#              - path: 'Caliptra/src/sha512/stimulus/L1_regression.yml'
+#              - timeout: 30
+        - uvmf_soc_ifc:
+            - display_name: 'UVMF_SOC_IFC'
+            - enabled: true
+            - configspec_name: 'integration_lib'
+            - dut: 'uvmf_soc_ifc'
+            - args: ''
+            - timeout: 10
+            - testsuites:
+              - l1_regress:
+                - enabled: true
+                - configspec_name: 'integration_lib'
+                - dut: 'uvmf_soc_ifc'
+                - path: 'Caliptra/src/soc_ifc/stimulus/L1_regression.yml'
+                - timeout: 30

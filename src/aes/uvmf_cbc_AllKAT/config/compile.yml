@@ -1,0 +1,70 @@
+---
+provides: [uvmf_cbc_AllKAT]
+schema_version: 2.4.0
+requires:
+  - uvmf_lib
+  - doe_ctrl
+    # - UVM? UVMF?
+targets:
+  tb:
+    directories:
+      [
+        ${COMPILE_ROOT}/../../doe/rtl,
+        ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/AES_in_pkg,
+        ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/AES_in_pkg/src,
+        ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/AES_out_pkg,
+        ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/AES_out_pkg/src,
+        ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/AES_env_pkg,
+        ${COMPILE_ROOT}/uvmf_template_output/project_benches/AES/tb/parameters,
+        ${COMPILE_ROOT}/uvmf_template_output/project_benches/AES/tb/sequences,
+        ${COMPILE_ROOT}/uvmf_template_output/project_benches/AES/tb/tests,
+        ${COMPILE_ROOT}/uvmf_template_output/project_benches/AES/tb/testbench,
+      ]
+    files:
+      [
+        ${COMPILE_ROOT}/../../doe/rtl/doe_reg_uvm.sv,
+        ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/AES_in_pkg/AES_in_pkg_hdl.sv,
+        ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/AES_in_pkg/AES_in_pkg.sv,
+        ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/AES_in_pkg/src/AES_in_driver_bfm.sv,
+        ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/AES_in_pkg/src/AES_in_if.sv,
+        ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/AES_in_pkg/src/AES_in_monitor_bfm.sv,
+        ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/AES_out_pkg/AES_out_pkg_hdl.sv,
+        ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/AES_out_pkg/AES_out_pkg.sv,
+        ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/AES_out_pkg/src/AES_out_driver_bfm.sv,
+        ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/AES_out_pkg/src/AES_out_if.sv,
+        ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/AES_out_pkg/src/AES_out_monitor_bfm.sv,
+        ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/AES_env_pkg/AES_env_pkg.sv,
+        ${COMPILE_ROOT}/uvmf_template_output/project_benches/AES/tb/parameters/AES_parameters_pkg.sv,
+        ${COMPILE_ROOT}/uvmf_template_output/project_benches/AES/tb/sequences/AES_sequences_pkg.sv,
+        ${COMPILE_ROOT}/uvmf_template_output/project_benches/AES/tb/tests/AES_tests_pkg.sv,
+        ${COMPILE_ROOT}/uvmf_template_output/project_benches/AES/tb/testbench/hdl_top.sv,
+        ${COMPILE_ROOT}/uvmf_template_output/project_benches/AES/tb/testbench/hvl_top.sv,
+      ]
+    tops:
+      - hdl_top
+      - hvl_top
+  sim:
+    pre_exec: 'echo "[PRE-EXEC] Copying AES Vectors to $(pwd)" && cp $COMPILE_ROOT/../../doe/tb/vectors/CBC*.rsp .'
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        #- '-v2k_generate'
+        #- '-timescale=1ns/1ps'
+        - '-noinherit_timescale=1ns/1ps'
+        #- '-ucli -i dump.ucli'
+      #sim:
+        #- '-ucli -i dump.ucli'
+        # Suppress a warning due to calling $fgets as task instead of function
+        # i.e. discarding the return value. This is in auto-generated code.
+        - '+warn=noRVOSFD'
+        # Suppress NOTE about repeated package imports within the same
+        # package (each .svh file included in the auto-generated UVM _pkg.sv
+        # files imports the same dependencies)
+        - '-suppress=SV-LCM-PPWI'
+      elab:
+        # Suppress warnings about too few port connections - auto-generated interfaces
+        # declare all signals as inout, but are driven at a lower layer than the
+        # instantiation, so they will always flag this
+        - '-suppress=TFIPC'

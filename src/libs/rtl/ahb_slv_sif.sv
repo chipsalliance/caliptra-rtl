@@ -60,7 +60,7 @@ localparam BITS_WDATA = $bits(wdata);
 generate 
     if ((AHB_DATA_WIDTH == 32) & (CLIENT_DATA_WIDTH == 32)) begin
         always_comb begin
-            unique casez (hsize_i)
+            unique case (hsize_i) inside
                 3'b000:  //byte
                     //wdata = {{$bits(wdata)-8{1'b0}},hwdata_i[7:0]};
                     wdata = {{BITS_WDATA-8{1'b0}},hwdata_i[7:0]};
@@ -76,7 +76,7 @@ generate
         always_comb hrdata_o = rdata;
     end else if ((AHB_DATA_WIDTH == 64) & (CLIENT_DATA_WIDTH == 32)) begin
         always_comb begin
-            unique casez (hsize_i)
+            unique case (hsize_i) inside
                 3'b000:  //byte
                     //wdata = addr[2] ? {{$bits(wdata)-8{1'b0}},hwdata_i[39:32]} : {{$bits(wdata)-8{1'b0}},hwdata_i[7:0]};
                     wdata = addr[2] ? {{BITS_WDATA-8{1'b0}},hwdata_i[39:32]} : {{BITS_WDATA-8{1'b0}},hwdata_i[7:0]};
@@ -92,7 +92,7 @@ generate
         always_comb hrdata_o = addr[2] ? {rdata, 32'b0} : {32'b0, rdata};
     end else if ((AHB_DATA_WIDTH == 64) & (CLIENT_DATA_WIDTH == 64)) begin
         always_comb begin
-            unique casez (hsize_i)
+            unique case (hsize_i) inside
                 3'b000:  //byte
                     //wdata = {{$bits(wdata)-8{1'b0}},hwdata_i[7:0]};
                     wdata = {{BITS_WDATA-8{1'b0}},hwdata_i[7:0]};

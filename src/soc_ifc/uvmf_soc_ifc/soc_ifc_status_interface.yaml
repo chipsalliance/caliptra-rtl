@@ -1,0 +1,139 @@
+uvmf:
+  interfaces:
+    soc_ifc_status:
+      clock: clk
+      reset: dummy
+      reset_assertion_level: 'False'
+
+      config_constraints: []
+      config_vars: []
+
+      hdl_typedefs: []
+      hvl_typedefs: []
+
+#      parameters:
+#      - name: AHB_ADDR_WIDTH
+#        type: int
+#        value: '32'
+#      - name: AHB_DATA_WIDTH
+#        type: int
+#        value: '32'
+
+      response_info:
+        data: []
+        operation: 1'b1
+
+      ports:
+#      # Clock
+#      - name: clk
+#        dir: output
+#        width: '1'
+      #uC reset
+      - name: cptra_uc_rst_b
+        dir: output
+        width: '1'
+
+      - name: ready_for_fuses
+        dir: output
+        width: '1'
+      - name: ready_for_fw_push
+        dir: output
+        width: '1'
+      - name: ready_for_runtime
+        dir: output
+        width: '1'
+
+      - name: mailbox_data_avail
+        dir: output
+        width: '1'
+      - name: mailbox_flow_done
+        dir: output
+        width: '1'
+
+      - name: generic_output_wires
+        dir: output
+        width: '64'
+
+      #Obfuscated UDS and FE
+      - name: cptra_obf_key_reg
+        dir: output
+        width: ["8","32"]
+      - name: obf_field_entropy
+        dir: output
+        width: ["32","32"]
+      - name: obf_uds_seed
+        dir: output
+        width: ["12","32"]
+
+      #uC Interrupts
+      - name: error_intr
+        dir: output
+        width: '1'
+      - name: notif_intr
+        dir: output
+        width: '1'
+      # ICCM Lock
+      - name: iccm_lock
+        dir: output
+        width: '1'
+
+      transaction_constraints: []
+      transaction_vars:
+      - name: err_intr_pending
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+      - name: notif_intr_pending
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+      - name: uc_rst_asserted
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+      - name: ready_for_fuses
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+      - name: ready_for_fw_push
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+      - name: ready_for_runtime
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+
+      - name: mailbox_data_avail
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+      - name: mailbox_flow_done
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+
+      - name: generic_output_val
+        type: bit [63:0]
+        iscompare: 'False'
+        isrand: 'False'
+
+      #Obfuscated UDS and FE
+      - name: cptra_obf_key_reg
+        type: bit [7:0] [31:0]
+        iscompare: 'False'
+        isrand: 'False'
+      - name: obf_field_entropy
+        type: bit [31:0] [31:0]
+        iscompare: 'False'
+        isrand: 'False'
+      - name: obf_uds_seed
+        type: bit [11:0] [31:0]
+        iscompare: 'False'
+        isrand: 'False'
+
+      # ICCM Lock
+      - name: iccm_locked
+        type: bit
+        iscompare: 'True'
+        isrand: 'False'

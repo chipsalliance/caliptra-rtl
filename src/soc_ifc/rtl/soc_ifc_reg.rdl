@@ -18,6 +18,7 @@ addrmap soc_ifc_reg {
     addressing = regalign; // This is the default if not specified
     lsb0 = true; // lsb0 property is implicit/default. See docs for
                  // SystemRDL 2.0 sections 9.1 and 13.4
+    littleendian = true;
 
 
     default hw = na;

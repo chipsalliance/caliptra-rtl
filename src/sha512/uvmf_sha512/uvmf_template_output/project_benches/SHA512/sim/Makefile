@@ -131,6 +131,7 @@ $(UVMF_PROJECT_DIR)/../../../../rtl/sha512_h_constants.v\
 $(UVMF_PROJECT_DIR)/../../../../rtl/sha512_k_constants.v\
 $(UVMF_PROJECT_DIR)/../../../../rtl/sha512_w_mem.v\
 $(UVMF_PROJECT_DIR)/../../../../../libs/rtl/ahb_slv_sif.sv\
+$(UVMF_PROJECT_DIR)/../../../../../libs/rtl/caliptra_macros.svh\
 $(UVMF_PROJECT_DIR)/../../../../../libs/rtl/caliptra_sva.svh
 
 # UVMF_CHANGE_ME : Reference VHDL DUT source.

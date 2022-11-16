@@ -1,0 +1,68 @@
+---
+provides: [uvmf_soc_ifc]
+schema_version: 2.4.0
+requires:
+  - uvmf_lib
+  - soc_ifc_uvm_pkg
+  - soc_ifc_top
+targets:
+  tb:
+    directories:
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_ctrl_pkg
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_ctrl_pkg/src
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_status_pkg
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_status_pkg/src
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/parameters
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/sequences
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/tests
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/testbench
+    files:
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_ctrl_pkg/soc_ifc_ctrl_pkg_hdl.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_ctrl_pkg/soc_ifc_ctrl_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_ctrl_pkg/src/soc_ifc_ctrl_driver_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_ctrl_pkg/src/soc_ifc_ctrl_if.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_ctrl_pkg/src/soc_ifc_ctrl_monitor_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_status_pkg/soc_ifc_status_pkg_hdl.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_status_pkg/soc_ifc_status_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_status_pkg/src/soc_ifc_status_driver_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_status_pkg/src/soc_ifc_status_if.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_status_pkg/src/soc_ifc_status_monitor_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/registers/soc_ifc_reg_model_top_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/soc_ifc_env_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/parameters/soc_ifc_parameters_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/sequences/soc_ifc_sequences_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/tests/soc_ifc_tests_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/testbench/hdl_top.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/testbench/hvl_top.sv
+    tops:
+      - hdl_top
+      - hvl_top
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        #- '-v2k_generate'
+        #- '-timescale=1ns/1ps'
+        - '-noinherit_timescale=1ns/1ps'
+        #- '-ucli -i dump.ucli'
+      #sim:
+        #- '-ucli -i dump.ucli'
+        # Suppress a warning due to calling $fgets as task instead of function
+        # i.e. discarding the return value. This is in auto-generated code.
+        - '+warn=noRVOSFD'
+        # Suppress NOTE about repeated package imports within the same
+        # package (each .svh file included in the auto-generated UVM _pkg.sv
+        # files imports the same dependencies)
+        - '-suppress=SV-LCM-PPWI'
+      elab:
+        # Suppress warnings about too few port connections - auto-generated interfaces
+        # declare all signals as inout, but are driven at a lower layer than the
+        # instantiation, so they will always flag this
+        - '-suppress=TFIPC'
+      sim:
+        - '-sv_root $QUESTA_MVC_HOME/questa_mvc_core/linux_x86_64_gcc-6.2.0_vcs'
+        - '-sv_lib libahb_IN_SystemVerilog_VCS_full'
+        - '-sv_lib libapb3_IN_SystemVerilog_VCS_full'
+        - '+UVM_VERBOSITY=UVM_MEDIUM'

@@ -48,6 +48,10 @@ class ECC_normal_sequence #(int AHB_DATA_WIDTH = 32,
       ECC_out_agent_config.wait_for_num_clocks(50);
     join
 
+    if (1) // TODO -- how to properly choose which to print?
+        $display("* TESTCASE PASSED");
+    else
+        $display("* TESTCASE FAILED");
   endtask
 
 

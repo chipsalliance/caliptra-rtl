@@ -1,0 +1,6 @@
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.vinfo
+@use soc_ifc_ctrl_pkg_hdl.vinfo
++incdir+@vinfodir
+src/soc_ifc_ctrl_if.sv
+src/soc_ifc_ctrl_driver_bfm.sv
+src/soc_ifc_ctrl_monitor_bfm.sv

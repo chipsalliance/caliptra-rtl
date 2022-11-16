@@ -1,0 +1,9 @@
+document:
+  schema: 1.0
+
+contents:
+  - tests:
+      tags: ["L1", "SHA512_regression"]
+      paths:
+        #- ../uvmf_sha512/uvmf_template_output/project_benches/SHA512/tb/tests/src/example_derived_test.yml
+        - ../uvmf_sha512/uvmf_template_output/project_benches/SHA512/tb/tests/src/SHA512_random_test.yml

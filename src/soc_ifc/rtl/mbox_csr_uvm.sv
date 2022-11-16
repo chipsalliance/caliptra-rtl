@@ -132,7 +132,7 @@ package mbox_csr_uvm;
         endfunction : new
 
         virtual function void build();
-            this.default_map = create_map("reg_map", 0, 4, UVM_NO_ENDIAN);
+            this.default_map = create_map("reg_map", 0, 4, UVM_LITTLE_ENDIAN);
             this.mbox_lock = new("mbox_lock");
             this.mbox_lock.configure(this);
 

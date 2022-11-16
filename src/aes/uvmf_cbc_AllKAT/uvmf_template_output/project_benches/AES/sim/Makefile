@@ -9,6 +9,7 @@
 
 
 # pragma uvmf custom additional begin
+$(error "Makefile build flow is deprecated for Caliptra AES UVMF project - use Playbook to simulate")
 # pragma uvmf custom additional end
 
 # *********************************************************************************************
@@ -89,6 +90,7 @@ VCOM_ARGS             +=
 # Note: vsim-3009 error can be eliminated by adding -timescale 1ps/1ps to VLOG_ARGS
 
 VLOG_ARGS             += $(UVM_DISABLE_FILE_LINE_CMD)
+EXTRA_VLOG_ARGS       += +incdir+$(UVMF_PROJECT_DIR)/../../../../../keyvault/rtl +incdir+$(UVMF_PROJECT_DIR)/../../../../../libs/rtl
 
 VELANALYZE_ARGS       +=
 VELANALYZE_HVL_ARGS   +=
@@ -137,7 +139,9 @@ $(UVMF_PROJECT_DIR)/../../../../rtl/aes_inv_sbox.v\
 $(UVMF_PROJECT_DIR)/../../../../rtl/aes_key_mem.v\
 $(UVMF_PROJECT_DIR)/../../../../rtl/aes_sbox.v\
 $(UVMF_PROJECT_DIR)/../../../../../libs/rtl/ahb_slv_sif.sv\
-$(UVMF_PROJECT_DIR)/../../../../../libs/rtl/caliptra_sva.svh
+$(UVMF_PROJECT_DIR)/../../../../../libs/rtl/caliptra_macros.svh\
+$(UVMF_PROJECT_DIR)/../../../../../libs/rtl/caliptra_sva.svh\
+$(UVMF_PROJECT_DIR)/../../../../../keyvault/rtl/kv_doe.sv
 
 
 # UVMF_CHANGE_ME : Reference VHDL DUT source.

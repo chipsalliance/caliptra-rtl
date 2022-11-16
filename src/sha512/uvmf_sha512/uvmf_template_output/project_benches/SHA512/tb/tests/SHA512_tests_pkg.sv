@@ -41,10 +41,7 @@ package SHA512_tests_pkg;
    `include "src/example_derived_test.svh"
 
   // pragma uvmf custom package_item_additional begin
-  // UVMF_CHANGE_ME : When adding new tests to the src directory
-  //    be sure to add the test file here so that it will be
-  //    compiled as part of the test package.  Be sure to place
-  //    the new test after any base tests of the new test.
+   `include "src/SHA512_random_test.svh"
   // pragma uvmf custom package_item_additional end
 
 endpackage

@@ -36,13 +36,9 @@ package SHA512_sequences_pkg;
   `include "src/SHA512_bench_sequence_base.svh"
   `include "src/register_test_sequence.svh"
   `include "src/example_derived_test_sequence.svh"
-  `include "src/SHA512_random_sequence.svh"
 
   // pragma uvmf custom package_item_additional begin
-  // UVMF_CHANGE_ME : When adding new sequences to the src directory
-  //    be sure to add the sequence file here so that it will be
-  //    compiled as part of the sequence package.  Be sure to place
-  //    the new sequence after any base sequences of the new sequence.
+  `include "src/SHA512_random_sequence.svh"
   // pragma uvmf custom package_item_additional end
 
 endpackage

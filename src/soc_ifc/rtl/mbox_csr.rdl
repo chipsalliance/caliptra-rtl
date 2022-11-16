@@ -16,6 +16,7 @@
 
 addrmap mbox_csr {
     desc="address maps for mbox register space";
+    littleendian = true;
     default hw = na;
     signal {activelow; async; cpuif_reset; field_reset;} reset_b;
     signal {activelow; async;} hard_reset_b;

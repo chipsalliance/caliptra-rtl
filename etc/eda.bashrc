@@ -53,3 +53,5 @@ export VCS_LICENSE_WAIT=1
 module load tools/mentor/questa/2021.2_1
 module load tools/mentor/questa_cdc/2021.2_1
 
+# Provides $QUESTA_MVC_HOME
+module load tools/mentor/questa_vip/2022.2/x86_64_gcc-6.7.2_vcs

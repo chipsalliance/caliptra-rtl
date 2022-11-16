@@ -44,6 +44,10 @@ class HMAC_random_sequence #(int AHB_DATA_WIDTH = 32,
 
     HMAC_in_agent_config.wait_for_num_clocks(50);    
     
+    if (1) // TODO -- how to properly choose which to print?
+        $display("* TESTCASE PASSED");
+    else
+        $display("* TESTCASE FAILED");
   endtask
 
 

@@ -80,7 +80,7 @@ import uvmf_base_pkg_hdl::*;
   // These DUT's instantiated to show verilog and vhdl instantiation
   // verilog_dut         dut_verilog(   .clk(clk), .rst(rst), .in_signal(vhdl_to_verilog_signal), .out_signal(verilog_to_vhdl_signal));
   // vhdl_dut            dut_vhdl   (   .clk(clk), .rst(rst), .in_signal(verilog_to_vhdl_signal), .out_signal(vhdl_to_verilog_signal));
-  aes_ctrl #(
+  doe_ctrl #(
              .AHB_DATA_WIDTH(32),
              .AHB_ADDR_WIDTH(32),
              .BYPASS_HSEL(0)

@@ -1,0 +1,9 @@
+document:
+  schema: 1.0
+
+contents:
+  - tests:
+      tags: ["L1", "HMAC_regression"]
+      paths:
+        - ../uvmf_2022/uvmf_template_output/project_benches/HMAC/tb/tests/src/HMAC_random_test.yml
+        - ../uvmf_2022/uvmf_template_output/project_benches/HMAC/tb/tests/src/HMAC_otf_reset_test.yml

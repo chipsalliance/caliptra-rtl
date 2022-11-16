@@ -3,6 +3,7 @@ provides: [sha512_ctrl]
 schema_version: 2.4.0
 requires:
   - libs
+  - keyvault
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]

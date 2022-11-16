@@ -80,8 +80,7 @@ import uvmf_base_pkg_hdl::*;
   // These DUT's instantiated to show verilog and vhdl instantiation
   sha512_ctrl #(
              .AHB_DATA_WIDTH(32),
-             .AHB_ADDR_WIDTH(32),
-             .BYPASS_HSEL(0)
+             .AHB_ADDR_WIDTH(32)
             )
             dut (
              .clk(SHA512_in_agent_bus.clk),

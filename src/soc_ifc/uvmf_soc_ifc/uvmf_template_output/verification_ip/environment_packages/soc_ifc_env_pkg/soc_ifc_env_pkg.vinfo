@@ -1,0 +1,6 @@
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/soc_ifc_ctrl_pkg/soc_ifc_ctrl_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/soc_ifc_status_pkg/soc_ifc_status_pkg.vinfo
+registers/soc_ifc_reg_model_top_pkg.sv
++incdir+@vinfodir
+soc_ifc_env_pkg.sv

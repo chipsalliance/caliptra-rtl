@@ -1,5 +1,6 @@
 name: integration_lib
 files:
+  # Components
   - src/libs/config/compile.yml
   - src/ahb_lite_bus/config/compile.yml
   - src/riscv_core/swerv_el2/config/compile.yml
@@ -11,5 +12,12 @@ files:
   - src/hmac_drbg/config/compile.yml
   - src/ecc/config/compile.yml
   - src/keyvault/config/compile.yml
+  # UVMF TBs
+  - src/aes/uvmf_cbc_AllKAT/config/compile.yml
+  - src/ecc/uvmf_ecc/config/compile.yml
+  - src/hmac/uvmf_2022/config/compile.yml
+  #- src/sha256/uvmf_sha256/config/compile.yml
+  - src/sha512/uvmf_sha512/config/compile.yml
+  - src/soc_ifc/uvmf_soc_ifc/config/compile.yml
   # Please add your next file/folder above not below the line
   - src/integration/config/compile.yml

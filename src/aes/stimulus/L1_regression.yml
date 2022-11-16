@@ -1,0 +1,8 @@
+document:
+  schema: 1.0
+
+contents:
+  - tests:
+      tags: ["L1", "aes_regression"]
+      paths:
+        - ../uvmf_cbc_AllKAT/uvmf_template_output/project_benches/AES/tb/tests/src/AES_random_test.yml

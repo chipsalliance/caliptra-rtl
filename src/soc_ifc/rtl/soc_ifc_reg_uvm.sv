@@ -725,7 +725,7 @@ package soc_ifc_reg_uvm;
         endfunction : new
 
         virtual function void build();
-            this.default_map = create_map("reg_map", 0, 4, UVM_NO_ENDIAN);
+            this.default_map = create_map("reg_map", 0, 4, UVM_LITTLE_ENDIAN);
             this.global_intr_en_r = new("global_intr_en_r");
             this.global_intr_en_r.configure(this);
 
@@ -861,7 +861,7 @@ package soc_ifc_reg_uvm;
         endfunction : new
 
         virtual function void build();
-            this.default_map = create_map("reg_map", 0, 4, UVM_NO_ENDIAN);
+            this.default_map = create_map("reg_map", 0, 4, UVM_LITTLE_ENDIAN);
             this.HW_ERROR_FATAL = new("HW_ERROR_FATAL");
             this.HW_ERROR_FATAL.configure(this);
 
