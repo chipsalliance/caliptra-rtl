@@ -72,24 +72,24 @@ static void nonstd_swerv_isr_soc_ifc_notif   (void) __attribute__ ((interrupt ("
 // Could be much more fancy with C preprocessing to pair up the ISR with Vector
 // numbers as defined in caliptra_defines.h.... TODO
 static void          nonstd_swerv_isr_0   (void) __attribute__ ((interrupt ("machine"))); // Empty function instead of function pointer for Vec 0
-static void (* const nonstd_swerv_isr_1 ) (void) = nonstd_swerv_isr_doe_error   ; // -------.
-static void (* const nonstd_swerv_isr_2 ) (void) = nonstd_swerv_isr_doe_notif   ; //        |
-static void (* const nonstd_swerv_isr_3 ) (void) = nonstd_swerv_isr_ecc_error   ; //        |
-static void (* const nonstd_swerv_isr_4 ) (void) = nonstd_swerv_isr_ecc_notif   ; //        |
-static void (* const nonstd_swerv_isr_5 ) (void) = nonstd_swerv_isr_hmac_error  ; //        |
-static void (* const nonstd_swerv_isr_6 ) (void) = nonstd_swerv_isr_hmac_notif  ; //        |
-static void (* const nonstd_swerv_isr_7 ) (void) = nonstd_swerv_isr_kv_error    ; //        |
-static void (* const nonstd_swerv_isr_8 ) (void) = nonstd_swerv_isr_kv_notif    ; //        |
-static void (* const nonstd_swerv_isr_9 ) (void) = nonstd_swerv_isr_sha512_error; // Definitions come
-static void (* const nonstd_swerv_isr_10) (void) = nonstd_swerv_isr_sha512_notif; // from the param'd
-static void (* const nonstd_swerv_isr_11) (void) = nonstd_swerv_isr_sha256_error; // macro "nonstd_swerv_isr"
-static void (* const nonstd_swerv_isr_12) (void) = nonstd_swerv_isr_sha256_notif; // below
-static void (* const nonstd_swerv_isr_13) (void) = nonstd_swerv_isr_qspi_error  ; //        |
-static void (* const nonstd_swerv_isr_14) (void) = nonstd_swerv_isr_qspi_notif  ; //        |
-static void (* const nonstd_swerv_isr_15) (void) = nonstd_swerv_isr_uart_error  ; //        |
-static void (* const nonstd_swerv_isr_16) (void) = nonstd_swerv_isr_uart_notif  ; //        |
-static void (* const nonstd_swerv_isr_17) (void) = nonstd_swerv_isr_i3c_error   ; //        |
-static void (* const nonstd_swerv_isr_18) (void) = nonstd_swerv_isr_i3c_notif   ; //        |
+static void (* const nonstd_swerv_isr_1 ) (void) = nonstd_swerv_isr_doe_error      ; // -------.
+static void (* const nonstd_swerv_isr_2 ) (void) = nonstd_swerv_isr_doe_notif      ; //        |
+static void (* const nonstd_swerv_isr_3 ) (void) = nonstd_swerv_isr_ecc_error      ; //        |
+static void (* const nonstd_swerv_isr_4 ) (void) = nonstd_swerv_isr_ecc_notif      ; //        |
+static void (* const nonstd_swerv_isr_5 ) (void) = nonstd_swerv_isr_hmac_error     ; //        |
+static void (* const nonstd_swerv_isr_6 ) (void) = nonstd_swerv_isr_hmac_notif     ; //        |
+static void (* const nonstd_swerv_isr_7 ) (void) = nonstd_swerv_isr_kv_error       ; //        |
+static void (* const nonstd_swerv_isr_8 ) (void) = nonstd_swerv_isr_kv_notif       ; //        |
+static void (* const nonstd_swerv_isr_9 ) (void) = nonstd_swerv_isr_sha512_error   ; // Definitions come
+static void (* const nonstd_swerv_isr_10) (void) = nonstd_swerv_isr_sha512_notif   ; // from the param'd
+static void (* const nonstd_swerv_isr_11) (void) = nonstd_swerv_isr_sha256_error   ; // macro "nonstd_swerv_isr"
+static void (* const nonstd_swerv_isr_12) (void) = nonstd_swerv_isr_sha256_notif   ; // below
+static void (* const nonstd_swerv_isr_13) (void) = nonstd_swerv_isr_qspi_error     ; //        |
+static void (* const nonstd_swerv_isr_14) (void) = nonstd_swerv_isr_qspi_notif     ; //        |
+static void (* const nonstd_swerv_isr_15) (void) = nonstd_swerv_isr_uart_error     ; //        |
+static void (* const nonstd_swerv_isr_16) (void) = nonstd_swerv_isr_uart_notif     ; //        |
+static void (* const nonstd_swerv_isr_17) (void) = nonstd_swerv_isr_i3c_error      ; //        |
+static void (* const nonstd_swerv_isr_18) (void) = nonstd_swerv_isr_i3c_notif      ; //        |
 static void (* const nonstd_swerv_isr_19) (void) = nonstd_swerv_isr_soc_ifc_error  ; //        |
 static void (* const nonstd_swerv_isr_20) (void) = nonstd_swerv_isr_soc_ifc_notif  ; // -------'
 static void (* const nonstd_swerv_isr_21) (void) = std_rv_nop_machine; // --------.
@@ -188,7 +188,7 @@ void init_interrupts(void) {
     volatile uint32_t * const meies      = (uint32_t*) SWERV_MM_PIC_MEIES;      // Treat these
     volatile uint32_t * const meigwctrls = (uint32_t*) SWERV_MM_PIC_MEIGWCTRLS; // as arrays
     volatile uint32_t * const meigwclrs  = (uint32_t*) SWERV_MM_PIC_MEIGWCLRS;  //
-    volatile uint32_t * const soc_ifc_reg   = (uint32_t*) CLP_SOC_IFC_REG_BASE_ADDR;
+    volatile uint32_t * const soc_ifc_reg= (uint32_t*) CLP_SOC_IFC_REG_BASE_ADDR;
     volatile uint32_t * const doe_reg    = (uint32_t*) CLP_DOE_REG_BASE_ADDR;
     volatile uint32_t * const ecc_reg    = (uint32_t*) CLP_ECC_REG_BASE_ADDR;
     volatile uint32_t * const hmac_reg   = (uint32_t*) CLP_HMAC_REG_BASE_ADDR;
@@ -231,26 +231,26 @@ void init_interrupts(void) {
                       : /* clobbers: none */);
 
     // MEIPL_S - assign interrupt priorities
-    meipls[SWERV_INTR_VEC_DOE_ERROR   ] = SWERV_INTR_PRIO_DOE_ERROR   ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_DOE_NOTIF   ] = SWERV_INTR_PRIO_DOE_NOTIF   ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_ECC_ERROR   ] = SWERV_INTR_PRIO_ECC_ERROR   ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_ECC_NOTIF   ] = SWERV_INTR_PRIO_ECC_NOTIF   ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_HMAC_ERROR  ] = SWERV_INTR_PRIO_HMAC_ERROR  ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_HMAC_NOTIF  ] = SWERV_INTR_PRIO_HMAC_NOTIF  ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_KV_ERROR    ] = SWERV_INTR_PRIO_KV_ERROR    ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_KV_NOTIF    ] = SWERV_INTR_PRIO_KV_NOTIF    ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_SHA512_ERROR] = SWERV_INTR_PRIO_SHA512_ERROR; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_SHA512_NOTIF] = SWERV_INTR_PRIO_SHA512_NOTIF; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_SHA256_ERROR] = SWERV_INTR_PRIO_SHA256_ERROR; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_SHA256_NOTIF] = SWERV_INTR_PRIO_SHA256_NOTIF; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_QSPI_ERROR  ] = SWERV_INTR_PRIO_QSPI_ERROR  ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_QSPI_NOTIF  ] = SWERV_INTR_PRIO_QSPI_NOTIF  ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_UART_ERROR  ] = SWERV_INTR_PRIO_UART_ERROR  ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_UART_NOTIF  ] = SWERV_INTR_PRIO_UART_NOTIF  ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_I3C_ERROR   ] = SWERV_INTR_PRIO_I3C_ERROR   ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_I3C_NOTIF   ] = SWERV_INTR_PRIO_I3C_NOTIF   ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_SOC_IFC_ERROR  ] = SWERV_INTR_PRIO_SOC_IFC_ERROR  ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_SOC_IFC_NOTIF  ] = SWERV_INTR_PRIO_SOC_IFC_NOTIF  ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_DOE_ERROR    ] = SWERV_INTR_PRIO_DOE_ERROR   ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_DOE_NOTIF    ] = SWERV_INTR_PRIO_DOE_NOTIF   ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_ECC_ERROR    ] = SWERV_INTR_PRIO_ECC_ERROR   ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_ECC_NOTIF    ] = SWERV_INTR_PRIO_ECC_NOTIF   ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_HMAC_ERROR   ] = SWERV_INTR_PRIO_HMAC_ERROR  ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_HMAC_NOTIF   ] = SWERV_INTR_PRIO_HMAC_NOTIF  ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_KV_ERROR     ] = SWERV_INTR_PRIO_KV_ERROR    ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_KV_NOTIF     ] = SWERV_INTR_PRIO_KV_NOTIF    ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_SHA512_ERROR ] = SWERV_INTR_PRIO_SHA512_ERROR; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_SHA512_NOTIF ] = SWERV_INTR_PRIO_SHA512_NOTIF; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_SHA256_ERROR ] = SWERV_INTR_PRIO_SHA256_ERROR; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_SHA256_NOTIF ] = SWERV_INTR_PRIO_SHA256_NOTIF; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_QSPI_ERROR   ] = SWERV_INTR_PRIO_QSPI_ERROR  ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_QSPI_NOTIF   ] = SWERV_INTR_PRIO_QSPI_NOTIF  ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_UART_ERROR   ] = SWERV_INTR_PRIO_UART_ERROR  ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_UART_NOTIF   ] = SWERV_INTR_PRIO_UART_NOTIF  ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_I3C_ERROR    ] = SWERV_INTR_PRIO_I3C_ERROR   ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_I3C_NOTIF    ] = SWERV_INTR_PRIO_I3C_NOTIF   ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_SOC_IFC_ERROR] = SWERV_INTR_PRIO_SOC_IFC_ERROR  ; __asm__ volatile ("fence");
+    meipls[SWERV_INTR_VEC_SOC_IFC_NOTIF] = SWERV_INTR_PRIO_SOC_IFC_NOTIF  ; __asm__ volatile ("fence");
     for (uint8_t undef = SWERV_INTR_VEC_MAX_ASSIGNED+1; undef <= RV_PIC_TOTAL_INT; undef++) {
         meipls[undef] = 0; __asm__ volatile ("fence"); // Set to 0 meaning NEVER interrupt
     }
@@ -312,16 +312,17 @@ void init_interrupts(void) {
     // TODO error interrupt enables
     sha256_reg[SHA256_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R /sizeof(uint32_t)] = SHA256_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK;
     sha256_reg[SHA256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = SHA256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
-                                                                                   SHA256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
+                                                                             SHA256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
 
-    // Mailbox
+    // SoC IFC
     soc_ifc_reg[SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R /sizeof(uint32_t)] = SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INTERNAL_EN_MASK |
-                                                                         SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INV_DEV_EN_MASK  |
-                                                                         SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_CMD_FAIL_EN_MASK |
-                                                                         SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_BAD_FUSE_EN_MASK;
+                                                                               SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INV_DEV_EN_MASK  |
+                                                                               SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_CMD_FAIL_EN_MASK |
+                                                                               SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_BAD_FUSE_EN_MASK |
+                                                                               SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_ICCM_BLOCKED_EN_MASK;
     soc_ifc_reg[SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R /sizeof(uint32_t)] = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_AVAIL_EN_MASK;
     soc_ifc_reg[SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
-                                                                         SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
+                                                                               SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
 
     // MIE
     // Enable MIE.MEI (External Interrupts)
@@ -527,7 +528,7 @@ static void nonstd_swerv_isr_0 (void) {
     /* Print msg before enabling nested interrupts so it                                              \
      * completes printing and is legible                                                              \
      */                                                                                               \
-    printf("In:"stringify(name)"\n");                                                                 \
+    if (EN_ISR_PRINTS) printf("In:"stringify(name)"\n");                                              \
                                                                                                       \
     /* Save Context to Stack */                                                                       \
     uint32_t meicidpl;                                                                                \
@@ -558,8 +559,8 @@ static void nonstd_swerv_isr_0 (void) {
                                                                                                       \
     /* Service the interrupt (clear the interrupt source) */                                          \
     intr_count++;                                                                                     \
-    printf("cnt_"stringify(name)":%x\n",intr_count);                                                  \
-    /* Fill in with macro contents, e.g. "service_soc_ifc_error_intr" */                                 \
+    if (EN_ISR_PRINTS) printf("cnt_"stringify(name)":%x\n",intr_count);                               \
+    /* Fill in with macro contents, e.g. "service_soc_ifc_error_intr" */                              \
     /* This will match one macro from this list:                                                      \
      * service_doe_error_intr                                                                         \
      * service_doe_notif_intr                                                                         \
@@ -579,8 +580,8 @@ static void nonstd_swerv_isr_0 (void) {
      * service_uart_notif_intr                                                                        \
      * service_i3c_error_intr                                                                         \
      * service_i3c_notif_intr                                                                         \
-     * service_soc_ifc_error_intr                                                                        \
-     * service_soc_ifc_notif_intr                                                                        \
+     * service_soc_ifc_error_intr                                                                     \
+     * service_soc_ifc_notif_intr                                                                     \
      */                                                                                               \
     service_##name##_intr();                                                                          \
                                                                                                       \

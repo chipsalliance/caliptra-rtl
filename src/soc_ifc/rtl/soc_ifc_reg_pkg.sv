@@ -34,6 +34,14 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__obf_key__in_t;
 
     typedef struct {
+        logic hwclr;
+    } soc_ifc_reg__iccm_lock__lock__in_t;
+
+    typedef struct {
+        soc_ifc_reg__iccm_lock__lock__in_t lock;
+    } soc_ifc_reg__iccm_lock__in_t;
+
+    typedef struct {
         logic hwset;
     } soc_ifc_reg__intr_block_t__error_intr_t__error_internal_sts_enable_d33001bb_next_52b75ffa_resetsignal_0d7eaa27__in_t;
 
@@ -50,11 +58,16 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__intr_block_t__error_intr_t__error_bad_fuse_sts_enable_fceb289f_next_14761353_resetsignal_0d7eaa27__in_t;
 
     typedef struct {
+        logic hwset;
+    } soc_ifc_reg__intr_block_t__error_intr_t__error_iccm_blocked_sts_enable_4ccfea15_next_86c0a4d2_resetsignal_0d7eaa27__in_t;
+
+    typedef struct {
         soc_ifc_reg__intr_block_t__error_intr_t__error_internal_sts_enable_d33001bb_next_52b75ffa_resetsignal_0d7eaa27__in_t error_internal_sts;
         soc_ifc_reg__intr_block_t__error_intr_t__error_inv_dev_sts_enable_e83f2724_next_8318aff8_resetsignal_0d7eaa27__in_t error_inv_dev_sts;
         soc_ifc_reg__intr_block_t__error_intr_t__error_cmd_fail_sts_enable_d535c05b_next_eee7e362_resetsignal_0d7eaa27__in_t error_cmd_fail_sts;
         soc_ifc_reg__intr_block_t__error_intr_t__error_bad_fuse_sts_enable_fceb289f_next_14761353_resetsignal_0d7eaa27__in_t error_bad_fuse_sts;
-    } soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7__in_t;
+        soc_ifc_reg__intr_block_t__error_intr_t__error_iccm_blocked_sts_enable_4ccfea15_next_86c0a4d2_resetsignal_0d7eaa27__in_t error_iccm_blocked_sts;
+    } soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_iccm_blocked_sts_9be0379b_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7__in_t;
 
     typedef struct {
         logic hwset;
@@ -65,7 +78,7 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b__in_t;
 
     typedef struct {
-        soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7__in_t error_internal_intr_r;
+        soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_iccm_blocked_sts_9be0379b_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7__in_t error_internal_intr_r;
         soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b__in_t notif_internal_intr_r;
     } soc_ifc_reg__intr_block_t__in_t;
 
@@ -77,6 +90,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__uds_seed__in_t uds_seed[12];
         soc_ifc_reg__field_entropy__in_t field_entropy[32];
         soc_ifc_reg__obf_key__in_t obf_key[8];
+        soc_ifc_reg__iccm_lock__in_t iccm_lock;
         soc_ifc_reg__intr_block_t__in_t intr_block_rf;
     } soc_ifc_reg__in_t;
 
@@ -155,7 +169,7 @@ package soc_ifc_reg_pkg;
 
     typedef struct {
         logic intr;
-    } soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7__out_t;
+    } soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_iccm_blocked_sts_9be0379b_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7__out_t;
 
     typedef struct {
         logic intr;
@@ -164,7 +178,7 @@ package soc_ifc_reg_pkg;
     typedef struct {
         soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a__out_t error_global_intr_r;
         soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a__out_t notif_global_intr_r;
-        soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7__out_t error_internal_intr_r;
+        soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_iccm_blocked_sts_9be0379b_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7__out_t error_internal_intr_r;
         soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b__out_t notif_internal_intr_r;
     } soc_ifc_reg__intr_block_t__out_t;
 

@@ -398,7 +398,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.lock = new("lock");
-            this.lock.configure(this, 1, 0, "W1", 0, 'h0, 1, 1, 0);
+            this.lock.configure(this, 1, 0, "W1S", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__iccm_lock
 
@@ -425,6 +425,7 @@ package soc_ifc_reg_uvm;
         rand uvm_reg_field error_inv_dev_en;
         rand uvm_reg_field error_cmd_fail_en;
         rand uvm_reg_field error_bad_fuse_en;
+        rand uvm_reg_field error_iccm_blocked_en;
 
         function new(string name = "soc_ifc_reg__intr_block_t__error_intr_en_t");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -439,6 +440,8 @@ package soc_ifc_reg_uvm;
             this.error_cmd_fail_en.configure(this, 1, 2, "RW", 0, 'h0, 1, 1, 0);
             this.error_bad_fuse_en = new("error_bad_fuse_en");
             this.error_bad_fuse_en.configure(this, 1, 3, "RW", 0, 'h0, 1, 1, 0);
+            this.error_iccm_blocked_en = new("error_iccm_blocked_en");
+            this.error_iccm_blocked_en.configure(this, 1, 4, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__error_intr_en_t
 
@@ -484,14 +487,15 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a
 
-    // Reg - soc_ifc_reg::intr_block_t::error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7
-    class soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7 extends uvm_reg;
+    // Reg - soc_ifc_reg::intr_block_t::error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_iccm_blocked_sts_9be0379b_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7
+    class soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_iccm_blocked_sts_9be0379b_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7 extends uvm_reg;
         rand uvm_reg_field error_internal_sts;
         rand uvm_reg_field error_inv_dev_sts;
         rand uvm_reg_field error_cmd_fail_sts;
         rand uvm_reg_field error_bad_fuse_sts;
+        rand uvm_reg_field error_iccm_blocked_sts;
 
-        function new(string name = "soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7");
+        function new(string name = "soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_iccm_blocked_sts_9be0379b_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -504,8 +508,10 @@ package soc_ifc_reg_uvm;
             this.error_cmd_fail_sts.configure(this, 1, 2, "W1C", 1, 'h0, 1, 1, 0);
             this.error_bad_fuse_sts = new("error_bad_fuse_sts");
             this.error_bad_fuse_sts.configure(this, 1, 3, "W1C", 1, 'h0, 1, 1, 0);
+            this.error_iccm_blocked_sts = new("error_iccm_blocked_sts");
+            this.error_iccm_blocked_sts.configure(this, 1, 4, "W1C", 1, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7
+    endclass : soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_iccm_blocked_sts_9be0379b_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7
 
     // Reg - soc_ifc_reg::intr_block_t::notif_intr_t_notif_cmd_avail_sts_1871606b
     class soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b extends uvm_reg;
@@ -527,6 +533,7 @@ package soc_ifc_reg_uvm;
         rand uvm_reg_field error_inv_dev_trig;
         rand uvm_reg_field error_cmd_fail_trig;
         rand uvm_reg_field error_bad_fuse_trig;
+        rand uvm_reg_field error_iccm_blocked_trig;
 
         function new(string name = "soc_ifc_reg__intr_block_t__error_intr_trig_t");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -541,6 +548,8 @@ package soc_ifc_reg_uvm;
             this.error_cmd_fail_trig.configure(this, 1, 2, "W1S", 0, 'h0, 1, 1, 0);
             this.error_bad_fuse_trig = new("error_bad_fuse_trig");
             this.error_bad_fuse_trig.configure(this, 1, 3, "W1S", 0, 'h0, 1, 1, 0);
+            this.error_iccm_blocked_trig = new("error_iccm_blocked_trig");
+            this.error_iccm_blocked_trig.configure(this, 1, 4, "W1S", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__error_intr_trig_t
 
@@ -614,6 +623,20 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_7df2a496
 
+    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_4750cf87
+    class soc_ifc_reg__intr_block_t__intr_count_t_cnt_4750cf87 extends uvm_reg;
+        rand uvm_reg_field cnt;
+
+        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_4750cf87");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.cnt = new("cnt");
+            this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_4750cf87
+
     // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_a06f0954
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_a06f0954 extends uvm_reg;
         rand uvm_reg_field cnt;
@@ -684,6 +707,20 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_26fa5955
 
+    // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_3e43d258
+    class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_3e43d258 extends uvm_reg;
+        rand uvm_reg_field pulse;
+
+        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_3e43d258");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.pulse = new("pulse");
+            this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_3e43d258
+
     // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_90d52137
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_90d52137 extends uvm_reg;
         rand uvm_reg_field pulse;
@@ -705,7 +742,7 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__intr_block_t__notif_intr_en_t notif_intr_en_r;
         rand soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a error_global_intr_r;
         rand soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a notif_global_intr_r;
-        rand soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7 error_internal_intr_r;
+        rand soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_iccm_blocked_sts_9be0379b_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7 error_internal_intr_r;
         rand soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b notif_internal_intr_r;
         rand soc_ifc_reg__intr_block_t__error_intr_trig_t error_intr_trig_r;
         rand soc_ifc_reg__intr_block_t__notif_intr_trig_t notif_intr_trig_r;
@@ -713,11 +750,13 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_e0eaed4e error_inv_dev_intr_count_r;
         rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_bdad0a1b error_cmd_fail_intr_count_r;
         rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_7df2a496 error_bad_fuse_intr_count_r;
+        rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_4750cf87 error_iccm_blocked_intr_count_r;
         rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_a06f0954 notif_cmd_avail_intr_count_r;
         rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_15e6ed7e error_internal_intr_count_incr_r;
         rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f762ea9c error_inv_dev_intr_count_incr_r;
         rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_aa8718c6 error_cmd_fail_intr_count_incr_r;
         rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_26fa5955 error_bad_fuse_intr_count_incr_r;
+        rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_3e43d258 error_iccm_blocked_intr_count_incr_r;
         rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_90d52137 notif_cmd_avail_intr_count_incr_r;
 
         function new(string name = "soc_ifc_reg__intr_block_t");
@@ -791,6 +830,11 @@ package soc_ifc_reg_uvm;
 
             this.error_bad_fuse_intr_count_r.build();
             this.default_map.add_reg(this.error_bad_fuse_intr_count_r, 'h10c);
+            this.error_iccm_blocked_intr_count_r = new("error_iccm_blocked_intr_count_r");
+            this.error_iccm_blocked_intr_count_r.configure(this);
+
+            this.error_iccm_blocked_intr_count_r.build();
+            this.default_map.add_reg(this.error_iccm_blocked_intr_count_r, 'h110);
             this.notif_cmd_avail_intr_count_r = new("notif_cmd_avail_intr_count_r");
             this.notif_cmd_avail_intr_count_r.configure(this);
 
@@ -816,11 +860,16 @@ package soc_ifc_reg_uvm;
 
             this.error_bad_fuse_intr_count_incr_r.build();
             this.default_map.add_reg(this.error_bad_fuse_intr_count_incr_r, 'h20c);
+            this.error_iccm_blocked_intr_count_incr_r = new("error_iccm_blocked_intr_count_incr_r");
+            this.error_iccm_blocked_intr_count_incr_r.configure(this);
+
+            this.error_iccm_blocked_intr_count_incr_r.build();
+            this.default_map.add_reg(this.error_iccm_blocked_intr_count_incr_r, 'h210);
             this.notif_cmd_avail_intr_count_incr_r = new("notif_cmd_avail_intr_count_incr_r");
             this.notif_cmd_avail_intr_count_incr_r.configure(this);
 
             this.notif_cmd_avail_intr_count_incr_r.build();
-            this.default_map.add_reg(this.notif_cmd_avail_intr_count_incr_r, 'h210);
+            this.default_map.add_reg(this.notif_cmd_avail_intr_count_incr_r, 'h214);
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t
 

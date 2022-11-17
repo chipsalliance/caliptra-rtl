@@ -254,7 +254,7 @@ end
         .ahb_lite_responders           ( responder_inst              ),
         .ahb_lite_initiator            ( initiator_inst              ),
         .ahb_lite_resp_disable_i       ( ahb_lite_resp_disable       ),
-        .ahb_lite_resp_access_blocked_o( ahb_lite_resp_access_blocked), // TODO connect to soc if iccm_lock register
+        .ahb_lite_resp_access_blocked_o( ahb_lite_resp_access_blocked),
         .ahb_lite_start_addr_i         ( `SLAVE_BASE_ADDR            ),
         .ahb_lite_end_addr_i           ( `SLAVE_MASK_ADDR            )
     );
@@ -697,7 +697,8 @@ soc_ifc_top1
     .obf_field_entropy(obf_field_entropy),
     .obf_uds_seed(obf_uds_seed),
     // ICCM Lock
-    .iccm_lock(iccm_lock),
+    .iccm_lock       (iccm_lock                                    ),
+    .iccm_axs_blocked(ahb_lite_resp_access_blocked[`SLAVE_SEL_IDMA]),
     //uC reset
     .cptra_uc_rst_b (cptra_uc_rst_b) 
 );

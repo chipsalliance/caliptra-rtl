@@ -81,6 +81,7 @@ module soc_ifc_top
 
     // ICCM Lock
     output logic iccm_lock,
+    input  logic iccm_axs_blocked,
 
     //uC reset
     output logic cptra_uc_rst_b
@@ -293,11 +294,14 @@ always_comb begin
 end
 
 // Pulse input to soc_ifc_reg to set the interrupt status bit and generate interrupt output (if enabled)
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset  = 1'b0; // TODO @michnorris please assign
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_inv_dev_sts.hwset   = 1'b0; // TODO should decode from APB PAUSER
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_cmd_fail_sts.hwset  = 1'b0; // TODO @michnorris please assign -- should this be set by write of "FAIL" to mbox_csr.status if soc_req is set? (i.e. SoC cmd execution failed)
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_bad_fuse_sts.hwset  = 1'b0; // TODO @michnorris please assign
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.hwset = uc_cmd_avail_p; // TODO @michnorris to confirm
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset     = 1'b0; // TODO @michnorris please assign
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_inv_dev_sts.hwset      = 1'b0; // TODO should decode from APB PAUSER
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_cmd_fail_sts.hwset     = 1'b0; // TODO @michnorris please assign -- should this be set by write of "FAIL" to mbox_csr.status if soc_req is set? (i.e. SoC cmd execution failed)
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_bad_fuse_sts.hwset     = 1'b0; // TODO @michnorris please assign
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_iccm_blocked_sts.hwset = iccm_axs_blocked;
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.hwset    = uc_cmd_avail_p; // TODO @michnorris to confirm
+
+always_comb soc_ifc_reg_hwif_in.iccm_lock.lock.hwclr    = 1'b0; // TODO from FW reset
 
 
 

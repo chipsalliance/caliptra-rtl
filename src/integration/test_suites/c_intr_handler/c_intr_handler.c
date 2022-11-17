@@ -47,11 +47,12 @@ void main(void) {
         uint32_t * hmac_notif_ctr           = (uint32_t *) (CLP_HMAC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
         uint32_t * ecc_notif_ctr            = (uint32_t *) (CLP_ECC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
         uint32_t * doe_notif_ctr            = (uint32_t *) (CLP_DOE_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
-        uint32_t * soc_ifc_error_internal_ctr  = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R);
-        uint32_t * soc_ifc_error_inv_dev_ctr   = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_R);
-        uint32_t * soc_ifc_error_cmd_fail_ctr  = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_R);
-        uint32_t * soc_ifc_error_bad_fuse_ctr  = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_R);
-        uint32_t * soc_ifc_notif_cmd_avail_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_R);
+        uint32_t * soc_ifc_error_internal_ctr     = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R);
+        uint32_t * soc_ifc_error_inv_dev_ctr      = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_R);
+        uint32_t * soc_ifc_error_cmd_fail_ctr     = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_R);
+        uint32_t * soc_ifc_error_bad_fuse_ctr     = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_R);
+        uint32_t * soc_ifc_error_iccm_blocked_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_R);
+        uint32_t * soc_ifc_notif_cmd_avail_ctr    = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_R);
 
         uint32_t sha512_intr_count = 0;
         uint32_t sha256_intr_count = 0;
@@ -88,11 +89,11 @@ void main(void) {
             } else if ((intr_count & 0xF) >= 0x8) {
                 *doe_notif_trig = DOE_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK;
                 doe_intr_count++;
-            } else if ((intr_count & 0xF) >= 0x4) {
+            } else if ((intr_count & 0xF) >= 0x5) {
                 *soc_ifc_notif_trig = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_AVAIL_TRIG_MASK;
                 soc_ifc_notif_intr_count++;
             } else {
-                *soc_ifc_error_trig = 1 << (intr_count & 0x3);
+                *soc_ifc_error_trig = 1 << (intr_count % 0x5);
                 soc_ifc_error_intr_count++;
             }
             __asm__ volatile ("wfi"); // "Wait for interrupt"
@@ -144,9 +145,10 @@ void main(void) {
         // SOC_IFC Error
         printf("SOC_IFC Err fw count: %x\n", soc_ifc_error_intr_count);
         soc_ifc_error_intr_count_hw =  *soc_ifc_error_internal_ctr +
-                                    *soc_ifc_error_inv_dev_ctr  +
-                                    *soc_ifc_error_cmd_fail_ctr +
-                                    *soc_ifc_error_bad_fuse_ctr;
+                                       *soc_ifc_error_inv_dev_ctr  +
+                                       *soc_ifc_error_cmd_fail_ctr +
+                                       *soc_ifc_error_bad_fuse_ctr +
+                                       *soc_ifc_error_iccm_blocked_ctr;
         printf("SOC_IFC Err hw count: %x\n", soc_ifc_error_intr_count_hw);
         if (soc_ifc_error_intr_count != soc_ifc_error_intr_count_hw) {
             printf("%c", 0x1); // Kill sim with ERROR

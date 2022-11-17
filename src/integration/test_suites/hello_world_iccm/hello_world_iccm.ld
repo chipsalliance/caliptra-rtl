@@ -31,6 +31,6 @@ SECTIONS {
   printf_start = .;
   /* ICCM as VMA */
   . = 0x40000000;
-  .data_iccm : AT(printf_start) {*(.data_iccm)} /* printf_start, after .data, as LMA */
-  printf_end = printf_start + SIZEOF(.data_iccm);
+  .data_iccm0 : AT(printf_start) {*(.data_iccm)} /* printf_start, after .data, as LMA */
+  printf_end = printf_start + SIZEOF(.data_iccm0);
 }

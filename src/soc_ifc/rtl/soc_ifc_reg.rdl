@@ -113,12 +113,12 @@ addrmap soc_ifc_reg {
 
     reg {
         name = "ICCM Lock";
-        desc = "Control register to gate writes to the ICCM. When set to
+        desc = "Lock feature gates writes to the ICCM. When lock is set to
                 1, writes are blocked. When cleared to 0, writes allowed.
                 Write-once, meaning only a reset can clear it once set to 1.
                 Writes available to Caliptra subsystem, not SoC.";
 
-        field {desc = "Lock bit gates writes to ICCM."; hw = r; sw = rw1; swwel = soc_req;} lock = 1'b0;
+        field {desc="Lock bit gates writes to ICCM. Write 1 to set - cannot be cleared by SW."; hw=r; hwclr=true; sw=rw; onwrite=woset; precedence=hw; swwel=soc_req;} lock = 1'b0;
     } iccm_lock;
 
 
@@ -180,6 +180,7 @@ addrmap soc_ifc_reg {
             field {desc = "Enable bit for Invalid Device in Pauser field";} error_inv_dev_en  = 1'b0;
             field {desc = "Enable bit for Failed Commands";               } error_cmd_fail_en = 1'b0;
             field {desc = "Enable bit for Bad Fuse received from SoC";    } error_bad_fuse_en = 1'b0;
+            field {desc = "Enable bit for ICCM access blocked by lock";   } error_iccm_blocked_en = 1'b0;
         };
 
         /* ---- Notification Interrupt Enable ---- */
@@ -212,6 +213,7 @@ addrmap soc_ifc_reg {
             field {desc = "Invalid Device in Pauser field status bit";  } error_inv_dev_sts = 1'b0;
             field {desc = "Failed Commands status bit";                 } error_cmd_fail_sts = 1'b0;
             field {desc = "Bad Fuse received from SoC status bit";      } error_bad_fuse_sts = 1'b0;
+            field {desc = "ICCM access blocked by lock status bit";     } error_iccm_blocked_sts = 1'b0;
         };
 
         /* ---- Notification Interrupt Status ---- */
@@ -267,6 +269,7 @@ addrmap soc_ifc_reg {
             field {desc = "Invalid Device in Pauser field trigger bit";} error_inv_dev_trig  = 1'b0;
             field {desc = "Failed Commands trigger bit";               } error_cmd_fail_trig = 1'b0;
             field {desc = "Bad Fuse received from SoC trigger bit";    } error_bad_fuse_trig = 1'b0;
+            field {desc = "ICCM access blocked by lock trigger bit";   } error_iccm_blocked_trig = 1'b0;
         };
 
         /* ---- Notification Interrupt Trigger ---- */
@@ -340,6 +343,7 @@ addrmap soc_ifc_reg {
         intr_count_t      error_inv_dev_intr_count_r;          /* Per error */                                           //
         intr_count_t      error_cmd_fail_intr_count_r;         /* Per error */                                           //
         intr_count_t      error_bad_fuse_intr_count_r;         /* Per error */                                           //
+        intr_count_t      error_iccm_blocked_intr_count_r;     /* Per error */                                           //
         intr_count_t      notif_cmd_avail_intr_count_r @0x180; /* Per notification */                                    //
                                                                                                                          //
         // These registers should be treated by SW as reserved, and ignored.                                             //
@@ -351,32 +355,37 @@ addrmap soc_ifc_reg {
         intr_count_incr_t error_inv_dev_intr_count_incr_r;         /* Per error count incrementor pulse */               //
         intr_count_incr_t error_cmd_fail_intr_count_incr_r;        /* Per error count incrementor pulse */               //
         intr_count_incr_t error_bad_fuse_intr_count_incr_r;        /* Per error count incrementor pulse */               //
+        intr_count_incr_t error_iccm_blocked_intr_count_incr_r;    /* Per error count incrementor pulse */               //
         intr_count_incr_t notif_cmd_avail_intr_count_incr_r;       /* Per notification count incrementor pulse */        //
         /* ------------------------------------------------------------------------------------------------------------- */
 
         /* ---- Reset assignment for Error Events ---- */
-        error_internal_intr_r.error_internal_sts -> resetsignal = hard_reset_b;
-        error_internal_intr_r.error_inv_dev_sts  -> resetsignal = hard_reset_b;
-        error_internal_intr_r.error_cmd_fail_sts -> resetsignal = hard_reset_b;
-        error_internal_intr_r.error_bad_fuse_sts -> resetsignal = hard_reset_b;
+        error_internal_intr_r.error_internal_sts     -> resetsignal = hard_reset_b;
+        error_internal_intr_r.error_inv_dev_sts      -> resetsignal = hard_reset_b;
+        error_internal_intr_r.error_cmd_fail_sts     -> resetsignal = hard_reset_b;
+        error_internal_intr_r.error_bad_fuse_sts     -> resetsignal = hard_reset_b;
+        error_internal_intr_r.error_iccm_blocked_sts -> resetsignal = hard_reset_b;
         error_internal_intr_count_r.cnt          -> resetsignal = hard_reset_b;
         error_inv_dev_intr_count_r.cnt           -> resetsignal = hard_reset_b;
         error_cmd_fail_intr_count_r.cnt          -> resetsignal = hard_reset_b;
         error_bad_fuse_intr_count_r.cnt          -> resetsignal = hard_reset_b;
+        error_iccm_blocked_intr_count_r.cnt      -> resetsignal = hard_reset_b;
         // TODO: Use this same reset for the error incrementor pulse too?
 
         /* ---- Interrupt Event Dynamic Assignments ---- */
-        error_internal_intr_r.error_internal_sts  -> enable = error_intr_en_r.error_internal_en;
-        error_internal_intr_r.error_inv_dev_sts   -> enable = error_intr_en_r.error_inv_dev_en;
-        error_internal_intr_r.error_cmd_fail_sts  -> enable = error_intr_en_r.error_cmd_fail_en;
-        error_internal_intr_r.error_bad_fuse_sts  -> enable = error_intr_en_r.error_bad_fuse_en;
-        notif_internal_intr_r.notif_cmd_avail_sts -> enable = notif_intr_en_r.notif_cmd_avail_en;
+        error_internal_intr_r.error_internal_sts     -> enable = error_intr_en_r.error_internal_en;
+        error_internal_intr_r.error_inv_dev_sts      -> enable = error_intr_en_r.error_inv_dev_en;
+        error_internal_intr_r.error_cmd_fail_sts     -> enable = error_intr_en_r.error_cmd_fail_en;
+        error_internal_intr_r.error_bad_fuse_sts     -> enable = error_intr_en_r.error_bad_fuse_en;
+        error_internal_intr_r.error_iccm_blocked_sts -> enable = error_intr_en_r.error_iccm_blocked_en;
+        notif_internal_intr_r.notif_cmd_avail_sts    -> enable = notif_intr_en_r.notif_cmd_avail_en;
 
-        error_internal_intr_r.error_internal_sts  -> next   = error_intr_trig_r.error_internal_trig;
-        error_internal_intr_r.error_inv_dev_sts   -> next   = error_intr_trig_r.error_inv_dev_trig;
-        error_internal_intr_r.error_cmd_fail_sts  -> next   = error_intr_trig_r.error_cmd_fail_trig;
-        error_internal_intr_r.error_bad_fuse_sts  -> next   = error_intr_trig_r.error_bad_fuse_trig;
-        notif_internal_intr_r.notif_cmd_avail_sts -> next   = notif_intr_trig_r.notif_cmd_avail_trig;
+        error_internal_intr_r.error_internal_sts     -> next   = error_intr_trig_r.error_internal_trig;
+        error_internal_intr_r.error_inv_dev_sts      -> next   = error_intr_trig_r.error_inv_dev_trig;
+        error_internal_intr_r.error_cmd_fail_sts     -> next   = error_intr_trig_r.error_cmd_fail_trig;
+        error_internal_intr_r.error_bad_fuse_sts     -> next   = error_intr_trig_r.error_bad_fuse_trig;
+        error_internal_intr_r.error_iccm_blocked_sts -> next   = error_intr_trig_r.error_iccm_blocked_trig;
+        notif_internal_intr_r.notif_cmd_avail_sts    -> next   = notif_intr_trig_r.notif_cmd_avail_trig;
 
         // NOTE: hwset for events is implicitly defined as module input
 
@@ -416,6 +425,12 @@ addrmap soc_ifc_reg {
         error_bad_fuse_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_bad_fuse_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
         error_bad_fuse_intr_count_incr_r.pulse -> decr     = error_bad_fuse_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
         error_bad_fuse_intr_count_r.cnt        -> incr     = error_bad_fuse_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+        error_iccm_blocked_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error_iccm_blocked_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+        error_iccm_blocked_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error_iccm_blocked_sts -> next;  // /      as a pulse to increment the intr_count_r register
+        error_iccm_blocked_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_iccm_blocked_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        error_iccm_blocked_intr_count_incr_r.pulse -> decr     = error_iccm_blocked_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        error_iccm_blocked_intr_count_r.cnt        -> incr     = error_iccm_blocked_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
         notif_cmd_avail_intr_count_incr_r.pulse -> hwset    = notif_internal_intr_r.notif_cmd_avail_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
         notif_cmd_avail_intr_count_incr_r.pulse -> next     = notif_internal_intr_r.notif_cmd_avail_sts -> next;  // /      as a pulse to increment the intr_count_r register

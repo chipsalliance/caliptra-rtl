@@ -23,6 +23,11 @@
 //     modified for each test.
 // ---------------------------------------------------------------------
 
+#ifndef CALIPTRA_ISR_H
+    #define CALIPTRA_ISR_H
+
+#define EN_ISR_PRINTS 1
+
 #include "caliptra_defines.h"
 #include <stdint.h>
 #include "printf.h"
@@ -72,3 +77,6 @@ inline void service_i3c_error_intr   () {printf("ERROR");}
 inline void service_i3c_notif_intr   () {printf("ERROR");}
 inline void service_soc_ifc_error_intr  () {printf("ERROR");}
 inline void service_soc_ifc_notif_intr  () {printf("ERROR");}
+
+
+#endif //CALIPTRA_ISR_H
