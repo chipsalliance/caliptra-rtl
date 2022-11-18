@@ -196,6 +196,8 @@ module caliptra_top
     wire i3c_notif_intr;
     wire soc_ifc_error_intr;
     wire soc_ifc_notif_intr;
+    wire sha_error_intr;
+    wire sha_notif_intr;
 
     logic [NUM_INTR-1:0] intr;
 
@@ -320,6 +322,8 @@ always_comb begin
     intr[`SWERV_INTR_VEC_I3C_NOTIF    -1]          = i3c_notif_intr;
     intr[`SWERV_INTR_VEC_SOC_IFC_ERROR-1]          = soc_ifc_error_intr;
     intr[`SWERV_INTR_VEC_SOC_IFC_NOTIF-1]          = soc_ifc_notif_intr;
+    intr[`SWERV_INTR_VEC_SHA_ERROR    -1]          = sha_error_intr;
+    intr[`SWERV_INTR_VEC_SHA_NOTIF    -1]          = sha_notif_intr;
     intr[NUM_INTR-1:`SWERV_INTR_VEC_MAX_ASSIGNED]  = '0;
 end
 
@@ -689,8 +693,10 @@ soc_ifc_top1
     .hreadyout_o(responder_inst[`SLAVE_SEL_SOC_IFC].hreadyout),
     .hrdata_o   (responder_inst[`SLAVE_SEL_SOC_IFC].hrdata),
     // uC Interrupts
-    .error_intr(soc_ifc_error_intr),
-    .notif_intr(soc_ifc_notif_intr),
+    .soc_ifc_error_intr(soc_ifc_error_intr),
+    .soc_ifc_notif_intr(soc_ifc_notif_intr),
+    .sha_error_intr(sha_error_intr),
+    .sha_notif_intr(sha_notif_intr),
     //Obfuscated UDS and FE
     .cptra_obf_key(cptra_obf_key),
     .cptra_obf_key_reg(cptra_obf_key_reg),

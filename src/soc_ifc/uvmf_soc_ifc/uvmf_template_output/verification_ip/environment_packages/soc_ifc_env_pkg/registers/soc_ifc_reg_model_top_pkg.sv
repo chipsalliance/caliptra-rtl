@@ -32,6 +32,7 @@ package soc_ifc_reg_model_top_pkg;
 // pragma uvmf custom additional_imports begin
     import soc_ifc_reg_uvm::*;
     import mbox_csr_uvm::*;
+    import sha512_acc_csr_uvm::*;
 // pragma uvmf custom additional_imports end
 
    `include "uvm_macros.svh"
@@ -151,6 +152,34 @@ package soc_ifc_reg_model_top_pkg;
         endfunction
 
     endclass : mbox_csr_ext
+
+    class sha512_acc_csr_ext extends sha512_acc_csr;
+        uvm_reg_map sha512_acc_csr_AHB_map;
+        uvm_reg_map sha512_acc_csr_APB_map;
+
+        function new(string name = "sha512_acc_csr_ext");
+            super.new(name);
+        endfunction : new
+
+        virtual function void build();
+            super.build();
+            this.sha512_acc_csr_AHB_map = create_map("AHB_reg_map", 0, 4, UVM_LITTLE_ENDIAN);
+            this.sha512_acc_csr_APB_map = create_map("APB_reg_map", 0, 4, UVM_LITTLE_ENDIAN);
+        endfunction
+
+        virtual function void build_ext_maps();
+            uvm_reg        regs[$];
+
+            this.default_map.get_registers(regs, UVM_NO_HIER);
+
+            foreach(regs[c_reg]) begin
+                this.sha512_acc_csr_AHB_map.add_reg(regs[c_reg], regs[c_reg].get_offset(this.default_map));
+                this.sha512_acc_csr_APB_map.add_reg(regs[c_reg], regs[c_reg].get_offset(this.default_map));
+            end
+
+        endfunction
+
+    endclass : sha512_acc_csr_ext
 // pragma uvmf custom define_register_classes end
 
 // pragma uvmf custom define_block_map_coverage_class begin
@@ -199,9 +228,10 @@ package soc_ifc_reg_model_top_pkg;
    class soc_ifc_reg_model_top extends uvm_reg_block;
       `uvm_object_utils(soc_ifc_reg_model_top)
 // pragma uvmf custom instantiate_registers_within_block begin
-        rand uvm_mem          mbox_mem_rm;
-        rand mbox_csr_ext     mbox_csr_rm;
-        rand soc_ifc_reg_ext  soc_ifc_reg_rm;
+        rand uvm_mem            mbox_mem_rm;
+        rand mbox_csr_ext       mbox_csr_rm;
+        rand sha512_acc_csr_ext sha512_acc_csr_rm;
+        rand soc_ifc_reg_ext    soc_ifc_reg_rm;
 
         uvm_reg_map default_map; // Block map
         uvm_reg_map soc_ifc_APB_map; // Block map
@@ -238,6 +268,11 @@ package soc_ifc_reg_model_top_pkg;
         this.mbox_csr_rm.configure(this);
         this.mbox_csr_rm.build();
 
+        /*sha512_acc_csr_ahb_apb*/
+        this.sha512_acc_csr_rm = new("sha512_acc_csr_rm");
+        this.sha512_acc_csr_rm.configure(this);
+        this.sha512_acc_csr_rm.build();
+
         /*soc_ifc_reg_ahb_apb*/
         this.soc_ifc_reg_rm = new("soc_ifc_reg_rm");
         this.soc_ifc_reg_rm.configure(this);
@@ -252,6 +287,7 @@ package soc_ifc_reg_model_top_pkg;
         this.default_map = create_map("soc_ifc_default_map", 0, 4, UVM_LITTLE_ENDIAN);
         this.default_map.add_mem(this.mbox_mem_rm, 0, "RW");
         this.default_map.add_submap(this.mbox_csr_rm.default_map, 'h2_0000);
+        this.default_map.add_submap(this.sha512_acc_csr_rm.default_map, 'h2_1000);
         this.default_map.add_submap(this.soc_ifc_reg_rm.default_map, 'h3_0000);
 
         this.soc_ifc_APB_map = create_map("soc_ifc_APB_map", 0, 4, UVM_LITTLE_ENDIAN);
@@ -265,16 +301,19 @@ package soc_ifc_reg_model_top_pkg;
         // is_intialized (due to look-up of get_offset in constituent regs)
         // Also requires block.is_locked() to be true
         this.mbox_csr_rm.build_ext_maps();
+        this.sha512_acc_csr_rm.build_ext_maps();
         this.soc_ifc_reg_rm.build_ext_maps();
 
         /* Top register model APB map */
         this.soc_ifc_APB_map.add_mem(this.mbox_mem_rm, 0, "RW");
         this.soc_ifc_APB_map.add_submap(this.mbox_csr_rm.mbox_csr_APB_map, 'h2_0000);
+        this.soc_ifc_APB_map.add_submap(this.sha512_acc_csr_rm.sha512_acc_csr_APB_map, 'h2_1000);
         this.soc_ifc_APB_map.add_submap(this.soc_ifc_reg_rm.soc_ifc_reg_APB_map, 'h3_0000);
 
         /* Top register model AHB map */
         this.soc_ifc_AHB_map.add_mem(this.mbox_mem_rm, 0, "RW");
         this.soc_ifc_AHB_map.add_submap(this.mbox_csr_rm.mbox_csr_AHB_map, 'h2_0000);
+        this.soc_ifc_AHB_map.add_submap(this.sha512_acc_csr_rm.sha512_acc_csr_AHB_map, 'h2_1000);
         this.soc_ifc_AHB_map.add_submap(this.soc_ifc_reg_rm.soc_ifc_reg_AHB_map, 'h3_0000);
 
 // pragma uvmf custom add_registers_to_block_map end

@@ -23,6 +23,8 @@
 //======================================================================
 
 
+`include "kv_macros.svh"
+
 module hmac_ctrl 
     import kv_defines_pkg::*;
     #(

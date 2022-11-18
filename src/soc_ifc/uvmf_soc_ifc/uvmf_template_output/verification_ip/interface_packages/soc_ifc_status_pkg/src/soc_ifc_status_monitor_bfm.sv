@@ -93,8 +93,10 @@ end
   tri [7:0][31:0] cptra_obf_key_reg_i;
   tri [31:0][31:0] obf_field_entropy_i;
   tri [11:0][31:0] obf_uds_seed_i;
-  tri  error_intr_i;
-  tri  notif_intr_i;
+  tri  soc_ifc_error_intr_i;
+  tri  soc_ifc_notif_intr_i;
+  tri  sha_error_intr_i;
+  tri  sha_notif_intr_i;
   tri  iccm_lock_i;
   assign clk_i = bus.clk;
   assign dummy_i = bus.dummy;
@@ -108,8 +110,10 @@ end
   assign cptra_obf_key_reg_i = bus.cptra_obf_key_reg;
   assign obf_field_entropy_i = bus.obf_field_entropy;
   assign obf_uds_seed_i = bus.obf_uds_seed;
-  assign error_intr_i = bus.error_intr;
-  assign notif_intr_i = bus.notif_intr;
+  assign soc_ifc_error_intr_i = bus.soc_ifc_error_intr;
+  assign soc_ifc_notif_intr_i = bus.soc_ifc_notif_intr;
+  assign sha_error_intr_i = bus.sha_error_intr;
+  assign sha_notif_intr_i = bus.sha_notif_intr;
   assign iccm_lock_i = bus.iccm_lock;
 
   // Proxy handle to UVM monitor
@@ -127,8 +131,10 @@ end
   reg [7:0][31:0] cptra_obf_key_reg_o = 'b0;
   reg [31:0][31:0] obf_field_entropy_o = 'b0;
   reg [11:0][31:0] obf_uds_seed_o = 'b0;
-  reg  error_intr_o = 'b0;
-  reg  notif_intr_o = 'b0;
+  reg  soc_ifc_error_intr_o = 'b0;
+  reg  soc_ifc_notif_intr_o = 'b0;
+  reg  sha_error_intr_o = 'b0;
+  reg  sha_notif_intr_o = 'b0;
   reg  iccm_lock_o = 'b0;
   function bit any_signal_changed();
       if (!cptra_uc_rst_b_o)
@@ -144,8 +150,10 @@ end
                  |(cptra_obf_key_reg_i    ^  cptra_obf_key_reg_o        ) ||
                  |(obf_field_entropy_i    ^  obf_field_entropy_o        ) ||
                  |(obf_uds_seed_i         ^  obf_uds_seed_o             ) ||
-                 |(error_intr_i           & !error_intr_o               ) ||
-                 |(notif_intr_i           & !notif_intr_o               ) ||
+                 |(soc_ifc_error_intr_i   & !soc_ifc_error_intr_o       ) ||
+                 |(soc_ifc_notif_intr_i   & !soc_ifc_notif_intr_o       ) ||
+                 |(sha_error_intr_i       & !sha_error_intr_o           ) ||
+                 |(sha_notif_intr_i       & !sha_notif_intr_o           ) ||
                  |(iccm_lock_i            ^ iccm_lock_o                 );
   endfunction
   // pragma uvmf custom interface_item_additional end
@@ -211,8 +219,10 @@ end
   task do_monitor(output soc_ifc_status_monitor_s soc_ifc_status_monitor_struct);
     //
     // Available struct members:
-    //     //    soc_ifc_status_monitor_struct.err_intr_pending
-    //     //    soc_ifc_status_monitor_struct.notif_intr_pending
+    //     //    soc_ifc_status_monitor_struct.soc_ifc_err_intr_pending
+    //     //    soc_ifc_status_monitor_struct.soc_ifc_notif_intr_pending
+    //     //    soc_ifc_status_monitor_struct.sha_err_intr_pending
+    //     //    soc_ifc_status_monitor_struct.sha_notif_intr_pending
     //     //    soc_ifc_status_monitor_struct.uc_rst_asserted
     //     //    soc_ifc_status_monitor_struct.ready_for_fuses
     //     //    soc_ifc_status_monitor_struct.ready_for_fw_push
@@ -231,19 +241,21 @@ end
     //
     //    How to assign a struct member, named xyz, from a signal.
     //    All available input signals listed.
-    //      soc_ifc_status_monitor_struct.xyz = cptra_uc_rst_b_i;  //
-    //      soc_ifc_status_monitor_struct.xyz = ready_for_fuses_i;  //
-    //      soc_ifc_status_monitor_struct.xyz = ready_for_fw_push_i;  //
-    //      soc_ifc_status_monitor_struct.xyz = ready_for_runtime_i;  //
-    //      soc_ifc_status_monitor_struct.xyz = mailbox_data_avail_i;  //
-    //      soc_ifc_status_monitor_struct.xyz = mailbox_flow_done_i;  //
-    //      soc_ifc_status_monitor_struct.xyz = generic_output_wires_i;  //    [63:0]
-    //      soc_ifc_status_monitor_struct.xyz = cptra_obf_key_reg_i;  //    [7:0][31:0]
-    //      soc_ifc_status_monitor_struct.xyz = obf_field_entropy_i;  //    [31:0][31:0]
-    //      soc_ifc_status_monitor_struct.xyz = obf_uds_seed_i;  //    [11:0][31:0]
-    //      soc_ifc_status_monitor_struct.xyz = error_intr_i;  //
-    //      soc_ifc_status_monitor_struct.xyz = notif_intr_i;  //
-    //      soc_ifc_status_monitor_struct.xyz = iccm_lock_i;  //
+    //      soc_ifc_status_monitor_struct.xyz = cptra_uc_rst_b_i;  //     
+    //      soc_ifc_status_monitor_struct.xyz = ready_for_fuses_i;  //     
+    //      soc_ifc_status_monitor_struct.xyz = ready_for_fw_push_i;  //     
+    //      soc_ifc_status_monitor_struct.xyz = ready_for_runtime_i;  //     
+    //      soc_ifc_status_monitor_struct.xyz = mailbox_data_avail_i;  //     
+    //      soc_ifc_status_monitor_struct.xyz = mailbox_flow_done_i;  //     
+    //      soc_ifc_status_monitor_struct.xyz = generic_output_wires_i;  //    [63:0] 
+    //      soc_ifc_status_monitor_struct.xyz = cptra_obf_key_reg_i;  //    [7:0][31:0] 
+    //      soc_ifc_status_monitor_struct.xyz = obf_field_entropy_i;  //    [31:0][31:0] 
+    //      soc_ifc_status_monitor_struct.xyz = obf_uds_seed_i;  //    [11:0][31:0] 
+    //      soc_ifc_status_monitor_struct.xyz = soc_ifc_error_intr_i;  //     
+    //      soc_ifc_status_monitor_struct.xyz = soc_ifc_notif_intr_i;  //     
+    //      soc_ifc_status_monitor_struct.xyz = sha_error_intr_i;  //     
+    //      soc_ifc_status_monitor_struct.xyz = sha_notif_intr_i;  //     
+    //      soc_ifc_status_monitor_struct.xyz = iccm_lock_i;  //     
     // pragma uvmf custom do_monitor begin
     // UVMF_CHANGE_ME : Implement protocol monitoring.  The commented reference code
     // below are examples of how to capture signal values and assign them to
@@ -266,25 +278,29 @@ end
     cptra_obf_key_reg_o            <= cptra_obf_key_reg_i   ;
     obf_field_entropy_o            <= obf_field_entropy_i   ;
     obf_uds_seed_o                 <= obf_uds_seed_i        ;
-    error_intr_o                   <= error_intr_i          ;
-    notif_intr_o                   <= notif_intr_i          ;
+    soc_ifc_error_intr_o           <= soc_ifc_error_intr_i  ;
+    soc_ifc_notif_intr_o           <= soc_ifc_notif_intr_i  ;
+    sha_error_intr_o               <= sha_error_intr_i      ;
+    sha_notif_intr_o               <= sha_notif_intr_i      ;
     iccm_lock_o                    <= iccm_lock_i           ;
 //    @(posedge clk_i);
     begin: build_return_struct
   // Variables within the soc_ifc_status_initiator_struct:
-         soc_ifc_status_monitor_struct.err_intr_pending   =  error_intr_i;
-         soc_ifc_status_monitor_struct.notif_intr_pending =  notif_intr_i;
-         soc_ifc_status_monitor_struct.uc_rst_asserted    = !cptra_uc_rst_b_i;
-         soc_ifc_status_monitor_struct.ready_for_fuses    =  ready_for_fuses_i;
-         soc_ifc_status_monitor_struct.ready_for_fw_push  =  ready_for_fw_push_i;
-         soc_ifc_status_monitor_struct.ready_for_runtime  =  ready_for_runtime_i;
-         soc_ifc_status_monitor_struct.mailbox_data_avail =  mailbox_data_avail_i;
-         soc_ifc_status_monitor_struct.mailbox_flow_done  =  mailbox_flow_done_i;
-         soc_ifc_status_monitor_struct.generic_output_val =  generic_output_wires_i;
-         soc_ifc_status_monitor_struct.cptra_obf_key_reg  =  cptra_obf_key_reg_i;
-         soc_ifc_status_monitor_struct.obf_field_entropy  =  obf_field_entropy_i;
-         soc_ifc_status_monitor_struct.obf_uds_seed       =  obf_uds_seed_i;
-         soc_ifc_status_monitor_struct.iccm_locked        =  iccm_lock_i;
+         soc_ifc_status_monitor_struct.soc_ifc_err_intr_pending   =  soc_ifc_error_intr_i;
+         soc_ifc_status_monitor_struct.soc_ifc_notif_intr_pending =  soc_ifc_notif_intr_i;
+         soc_ifc_status_monitor_struct.sha_err_intr_pending       =  sha_error_intr_i;
+         soc_ifc_status_monitor_struct.sha_notif_intr_pending     =  sha_notif_intr_i;
+         soc_ifc_status_monitor_struct.uc_rst_asserted            = !cptra_uc_rst_b_i;
+         soc_ifc_status_monitor_struct.ready_for_fuses            =  ready_for_fuses_i;
+         soc_ifc_status_monitor_struct.ready_for_fw_push          =  ready_for_fw_push_i;
+         soc_ifc_status_monitor_struct.ready_for_runtime          =  ready_for_runtime_i;
+         soc_ifc_status_monitor_struct.mailbox_data_avail         =  mailbox_data_avail_i;
+         soc_ifc_status_monitor_struct.mailbox_flow_done          =  mailbox_flow_done_i;
+         soc_ifc_status_monitor_struct.generic_output_val         =  generic_output_wires_i;
+         soc_ifc_status_monitor_struct.cptra_obf_key_reg          =  cptra_obf_key_reg_i;
+         soc_ifc_status_monitor_struct.obf_field_entropy          =  obf_field_entropy_i;
+         soc_ifc_status_monitor_struct.obf_uds_seed               =  obf_uds_seed_i;
+         soc_ifc_status_monitor_struct.iccm_locked                =  iccm_lock_i;
     end
     // pragma uvmf custom do_monitor end
   endtask

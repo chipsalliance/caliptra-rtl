@@ -34,16 +34,18 @@ void main(void) {
 
         char* DCCM = (char *) RV_DCCM_SADR;
         char* ICCM = (char *) RV_ICCM_SADR;
-        uint32_t * doe_notif_trig    = (uint32_t *) (CLP_DOE_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
-        uint32_t * ecc_notif_trig    = (uint32_t *) (CLP_ECC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
-        uint32_t * hmac_notif_trig   = (uint32_t *) (CLP_HMAC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
-        uint32_t * sha512_notif_trig = (uint32_t *) (CLP_SHA512_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
-        uint32_t * sha256_notif_trig = (uint32_t *) (CLP_SHA256_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
-        uint32_t * soc_ifc_error_trig   = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R);
-        uint32_t * soc_ifc_notif_trig   = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
+        uint32_t * doe_notif_trig        = (uint32_t *) (CLP_DOE_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
+        uint32_t * ecc_notif_trig        = (uint32_t *) (CLP_ECC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
+        uint32_t * hmac_notif_trig       = (uint32_t *) (CLP_HMAC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
+        uint32_t * sha512_notif_trig     = (uint32_t *) (CLP_SHA512_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
+        uint32_t * sha256_notif_trig     = (uint32_t *) (CLP_SHA256_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
+        uint32_t * sha512_acc_notif_trig = (uint32_t *) (CLP_SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
+        uint32_t * soc_ifc_error_trig    = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R);
+        uint32_t * soc_ifc_notif_trig    = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
 
         uint32_t * sha512_notif_ctr         = (uint32_t *) (CLP_SHA512_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
         uint32_t * sha256_notif_ctr         = (uint32_t *) (CLP_SHA256_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
+        uint32_t * sha512_acc_notif_ctr     = (uint32_t *) (CLP_SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
         uint32_t * hmac_notif_ctr           = (uint32_t *) (CLP_HMAC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
         uint32_t * ecc_notif_ctr            = (uint32_t *) (CLP_ECC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
         uint32_t * doe_notif_ctr            = (uint32_t *) (CLP_DOE_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
@@ -56,6 +58,7 @@ void main(void) {
 
         uint32_t sha512_intr_count = 0;
         uint32_t sha256_intr_count = 0;
+        uint32_t sha512_acc_intr_count = 0;
         uint32_t hmac_intr_count = 0;
         uint32_t ecc_intr_count = 0;
         uint32_t doe_intr_count = 0;
@@ -74,12 +77,15 @@ void main(void) {
         // Busy loop
         while (intr_count < 64) {
             // Trigger interrupt manually
-            if ((intr_count & 0xF) >= 0xE) {
+            if ((intr_count & 0xF) >= 0xF) {
                 *sha512_notif_trig = SHA512_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK;
                 sha512_intr_count++;
-            } else if ((intr_count & 0xF) >= 0xD) {
+            } else if ((intr_count & 0xF) >= 0xE) {
                 *sha256_notif_trig = SHA256_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK;
                 sha256_intr_count++;
+            } else if ((intr_count & 0xF) >= 0xD) {
+                *sha512_acc_notif_trig = SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK;
+                sha512_acc_intr_count++;
             } else if ((intr_count & 0xF) >= 0xC) {
                 *hmac_notif_trig = HMAC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK;
                 hmac_intr_count++;
@@ -118,6 +124,13 @@ void main(void) {
         printf("SHA256 fw count: %x\n", sha256_intr_count);
         printf("SHA256 hw count: %x\n", *sha256_notif_ctr);
         if (sha256_intr_count != *sha256_notif_ctr) {
+            printf("%c", 0x1); // Kill sim with ERROR
+        }
+
+        // SHA Accelerator
+        printf("SHA Accel fw count: %x\n", sha512_acc_intr_count);
+        printf("SHA Accel hw count: %x\n", *sha512_acc_notif_ctr);
+        if (sha512_acc_intr_count != *sha512_acc_notif_ctr) {
             printf("%c", 0x1); // Kill sim with ERROR
         }
 
@@ -163,7 +176,7 @@ void main(void) {
 
         // Print total interrupt count
         printf("main end - intr_cnt:%x\n", intr_count);
-        if (intr_count != *sha512_notif_ctr + *sha256_notif_ctr + *hmac_notif_ctr + *ecc_notif_ctr + *doe_notif_ctr + soc_ifc_error_intr_count_hw + *soc_ifc_notif_cmd_avail_ctr) {
+        if (intr_count != *sha512_notif_ctr + *sha256_notif_ctr + *sha512_acc_notif_ctr + *hmac_notif_ctr + *ecc_notif_ctr + *doe_notif_ctr + soc_ifc_error_intr_count_hw + *soc_ifc_notif_cmd_avail_ctr) {
             printf("%c", 0x1); // Kill sim with ERROR
         }
 

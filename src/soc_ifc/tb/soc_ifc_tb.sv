@@ -18,7 +18,8 @@
 // --------
 // soc_ifc testbench for the soc_ifc AHb_lite interface controller.
 //
-//
+// This Testbench no longer works
+// Probably should be deprecated and utilize UVMF environment only
 //======================================================================
 
 module soc_ifc_tb();
@@ -138,18 +139,23 @@ module soc_ifc_tb();
              .hrdata_o(hrdata_o_tb),
              .cptra_obf_key('0),
              .cptra_obf_key_reg(),
-            .generic_input_wires('x),
-            .generic_output_wires(),
-            .mailbox_data_avail(),
-            .mailbox_flow_done(),
-            .obf_field_entropy(),
-            .obf_uds_seed(),
-            .ready_for_fuses(ready_for_fuses),
+             .generic_input_wires('x),
+             .generic_output_wires(),
+             .mailbox_data_avail(),
+             .mailbox_flow_done(),
+             .obf_field_entropy(),
+             .obf_uds_seed(),
+             .ready_for_fuses(ready_for_fuses),
              .cptra_uc_rst_b(cptra_uc_rst_b_tb),
              .mbox_sram_req(),
              .mbox_sram_resp(),
              .ready_for_fw_push(),
-             .ready_for_runtime()
+             .ready_for_runtime(),
+             .iccm_lock(),
+             .soc_ifc_error_intr(),
+             .soc_ifc_notif_intr(),
+             .sha_error_intr(),
+             .sha_notif_intr()
             );
 
 

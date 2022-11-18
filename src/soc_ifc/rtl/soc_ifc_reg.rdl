@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 addrmap soc_ifc_reg {
-    desc="Address map for SoC Interface Block architectural registers and fuse space";
+    desc="Address map for SoC Interface Block  architectural registers and fuse space";
 
     addressing = regalign; // This is the default if not specified
     lsb0 = true; // lsb0 property is implicit/default. See docs for

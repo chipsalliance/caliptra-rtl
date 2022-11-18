@@ -138,8 +138,10 @@ class soc_ifc_predictor #(
             soc_ifc_rst_in_asserted = 1'b0;
             soc_ifc_sb_ap_output_transaction.ready_for_fuses = 1'b1; // <-- this is what we expect to change
             soc_ifc_sb_ap_output_transaction.uc_rst_asserted = 1'b1;
-            soc_ifc_sb_ap_output_transaction.err_intr_pending = 1'b0;
-            soc_ifc_sb_ap_output_transaction.notif_intr_pending = 1'b0;
+            soc_ifc_sb_ap_output_transaction.soc_ifc_err_intr_pending = 1'b0;
+            soc_ifc_sb_ap_output_transaction.soc_ifc_notif_intr_pending = 1'b0;
+            soc_ifc_sb_ap_output_transaction.sha_err_intr_pending = 1'b0;
+            soc_ifc_sb_ap_output_transaction.sha_notif_intr_pending = 1'b0;
             soc_ifc_sb_ap_output_transaction.ready_for_fw_push = 1'b0;
             soc_ifc_sb_ap_output_transaction.ready_for_runtime = 1'b0;
             soc_ifc_sb_ap_output_transaction.mailbox_data_avail = 1'b0;
@@ -153,8 +155,10 @@ class soc_ifc_predictor #(
             //TODO beyond detecting uc_rst_asserted, this block needs more logic
             soc_ifc_sb_ap_output_transaction.ready_for_fuses = 1'b0;
             soc_ifc_sb_ap_output_transaction.uc_rst_asserted = 1'b0; // <-- all status transactions after the first one should reflect Caliptra reset deasserted
-            soc_ifc_sb_ap_output_transaction.err_intr_pending = 1'b0;
-            soc_ifc_sb_ap_output_transaction.notif_intr_pending = 1'b0;
+            soc_ifc_sb_ap_output_transaction.soc_ifc_err_intr_pending = 1'b0;
+            soc_ifc_sb_ap_output_transaction.soc_ifc_notif_intr_pending = 1'b0;
+            soc_ifc_sb_ap_output_transaction.sha_err_intr_pending = 1'b0;
+            soc_ifc_sb_ap_output_transaction.sha_notif_intr_pending = 1'b0;
             soc_ifc_sb_ap_output_transaction.ready_for_fw_push = 1'b0;
             soc_ifc_sb_ap_output_transaction.ready_for_runtime = 1'b0;
             soc_ifc_sb_ap_output_transaction.mailbox_data_avail = 1'b0;
@@ -251,8 +255,10 @@ class soc_ifc_predictor #(
     if (send_sts_txn) begin
         soc_ifc_sb_ap_output_transaction.ready_for_fuses = 1'b0; // <-- no APB access should result in ready_for_fuses being set to 1 // FIXME
         soc_ifc_sb_ap_output_transaction.uc_rst_asserted = soc_ifc_rst_out_asserted;
-        soc_ifc_sb_ap_output_transaction.err_intr_pending = 1'b0;
-        soc_ifc_sb_ap_output_transaction.notif_intr_pending = 1'b0;
+        soc_ifc_sb_ap_output_transaction.soc_ifc_err_intr_pending = 1'b0;
+        soc_ifc_sb_ap_output_transaction.soc_ifc_notif_intr_pending = 1'b0;
+        soc_ifc_sb_ap_output_transaction.sha_err_intr_pending = 1'b0;
+        soc_ifc_sb_ap_output_transaction.sha_notif_intr_pending = 1'b0;
         soc_ifc_sb_ap_output_transaction.ready_for_fw_push = 1'b0; // FIXME
         soc_ifc_sb_ap_output_transaction.ready_for_runtime = 1'b0; // FIXME
         soc_ifc_sb_ap_output_transaction.mailbox_data_avail = 1'b0; // FIXME

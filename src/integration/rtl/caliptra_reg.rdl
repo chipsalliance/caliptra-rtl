@@ -29,6 +29,8 @@ addrmap clp {
     sha256_reg sha256_reg @ 0x1002_8000;
 
     mbox_csr mbox_csr @ 0x3002_0000;
+
+    sha512_acc_csr sha512_acc_csr @ 0x3002_1000;
     
     soc_ifc_reg soc_ifc_reg @ 0x3003_0000;
 

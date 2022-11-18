@@ -24,16 +24,6 @@ addrmap mbox_csr {
     signal {} lock_set;
     signal {} valid_user;
 
-    //signal to indicate request is coming from soc side
-    signal {} soc_req;
-
-    //defined fields by access type
-    //first is uc access type, second is soc access type
-    field rw_ro {swwel = soc_req;}; //writes enabled only for uc
-    field ro_rw {swwe  = soc_req;}; //writes enabled only for soc
-    field ro_ro {sw = r;};
-    field rw_rw {};
-
     // lock register
     // set on read, indicate to mailbox when modified
     // clear comes from mailbox control
@@ -59,7 +49,7 @@ addrmap mbox_csr {
 
     reg {
         name="Mailbox Data Length";
-        desc="Data length for mailbox access";
+        desc="Data length for mailbox access in bytes";
         field {sw=rw; hw=na; swwe=valid_user; swmod=true;} length[32]=0;
     } mbox_dlen;
 

@@ -21,6 +21,8 @@
 //
 //======================================================================
 
+`include "kv_macros.svh"
+
 module sha512_ctrl 
     import kv_defines_pkg::*;
     #(

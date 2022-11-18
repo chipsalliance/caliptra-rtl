@@ -126,10 +126,14 @@ end
   reg [31:0][31:0] obf_field_entropy_o = 'bz;
   tri [11:0][31:0] obf_uds_seed_i;
   reg [11:0][31:0] obf_uds_seed_o = 'bz;
-  tri  error_intr_i;
-  reg  error_intr_o = 'bz;
-  tri  notif_intr_i;
-  reg  notif_intr_o = 'bz;
+  tri  soc_ifc_error_intr_i;
+  reg  soc_ifc_error_intr_o = 'bz;
+  tri  soc_ifc_notif_intr_i;
+  reg  soc_ifc_notif_intr_o = 'bz;
+  tri  sha_error_intr_i;
+  reg  sha_error_intr_o = 'bz;
+  tri  sha_notif_intr_i;
+  reg  sha_notif_intr_o = 'bz;
   tri  iccm_lock_i;
   reg  iccm_lock_o = 'bz;
 
@@ -165,10 +169,14 @@ end
   assign obf_field_entropy_i = bus.obf_field_entropy;
   assign bus.obf_uds_seed = (initiator_responder == INITIATOR) ? obf_uds_seed_o : 'bz;
   assign obf_uds_seed_i = bus.obf_uds_seed;
-  assign bus.error_intr = (initiator_responder == INITIATOR) ? error_intr_o : 'bz;
-  assign error_intr_i = bus.error_intr;
-  assign bus.notif_intr = (initiator_responder == INITIATOR) ? notif_intr_o : 'bz;
-  assign notif_intr_i = bus.notif_intr;
+  assign bus.soc_ifc_error_intr = (initiator_responder == INITIATOR) ? soc_ifc_error_intr_o : 'bz;
+  assign soc_ifc_error_intr_i = bus.soc_ifc_error_intr;
+  assign bus.soc_ifc_notif_intr = (initiator_responder == INITIATOR) ? soc_ifc_notif_intr_o : 'bz;
+  assign soc_ifc_notif_intr_i = bus.soc_ifc_notif_intr;
+  assign bus.sha_error_intr = (initiator_responder == INITIATOR) ? sha_error_intr_o : 'bz;
+  assign sha_error_intr_i = bus.sha_error_intr;
+  assign bus.sha_notif_intr = (initiator_responder == INITIATOR) ? sha_notif_intr_o : 'bz;
+  assign sha_notif_intr_i = bus.sha_notif_intr;
   assign bus.iccm_lock = (initiator_responder == INITIATOR) ? iccm_lock_o : 'bz;
   assign iccm_lock_i = bus.iccm_lock;
 
@@ -212,8 +220,10 @@ end
        cptra_obf_key_reg_o <= 'bz;
        obf_field_entropy_o <= 'bz;
        obf_uds_seed_o <= 'bz;
-       error_intr_o <= 'bz;
-       notif_intr_o <= 'bz;
+       soc_ifc_error_intr_o <= 'bz;
+       soc_ifc_notif_intr_o <= 'bz;
+       sha_error_intr_o <= 'bz;
+       sha_notif_intr_o <= 'bz;
        iccm_lock_o <= 'bz;
        // Bi-directional signals
  
@@ -235,8 +245,10 @@ end
                  |(cptra_obf_key_reg_i    ^  cptra_obf_key_reg_o        ) ||
                  |(obf_field_entropy_i    ^  obf_field_entropy_o        ) ||
                  |(obf_uds_seed_i         ^  obf_uds_seed_o             ) ||
-                 |(error_intr_i           & !error_intr_o               ) ||
-                 |(notif_intr_i           & !notif_intr_o               ) ||
+                 |(soc_ifc_error_intr_i   & !soc_ifc_error_intr_o       ) ||
+                 |(soc_ifc_notif_intr_i   & !soc_ifc_notif_intr_o       ) ||
+                 |(sha_error_intr_i       & !sha_error_intr_o           ) ||
+                 |(sha_notif_intr_i       & !sha_notif_intr_o           ) ||
                  |(iccm_lock_i            ^  iccm_lock_o                );
   endfunction
   // pragma uvmf custom interface_item_additional end
@@ -323,8 +335,10 @@ end
        //      cptra_obf_key_reg_o <= soc_ifc_status_initiator_struct.xyz;  //    [7:0][31:0] 
        //      obf_field_entropy_o <= soc_ifc_status_initiator_struct.xyz;  //    [31:0][31:0] 
        //      obf_uds_seed_o <= soc_ifc_status_initiator_struct.xyz;  //    [11:0][31:0] 
-       //      error_intr_o <= soc_ifc_status_initiator_struct.xyz;  //     
-       //      notif_intr_o <= soc_ifc_status_initiator_struct.xyz;  //     
+       //      soc_ifc_error_intr_o <= soc_ifc_status_initiator_struct.xyz;  //     
+       //      soc_ifc_notif_intr_o <= soc_ifc_status_initiator_struct.xyz;  //    
+       //      sha_error_intr_o <= soc_ifc_status_initiator_struct.xyz;  //     
+       //      sha_notif_intr_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //      iccm_lock_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //    Initiator inout signals
     // Initiate a transfer using the data received.
@@ -401,8 +415,10 @@ bit first_transfer=1;
        //      soc_ifc_status_responder_struct.xyz = cptra_obf_key_reg_i;  //    [7:0][31:0] 
        //      soc_ifc_status_responder_struct.xyz = obf_field_entropy_i;  //    [31:0][31:0] 
        //      soc_ifc_status_responder_struct.xyz = obf_uds_seed_i;  //    [11:0][31:0] 
-       //      soc_ifc_status_responder_struct.xyz = error_intr_i;  //     
-       //      soc_ifc_status_responder_struct.xyz = notif_intr_i;  //     
+       //      soc_ifc_status_responder_struct.xyz = soc_ifc_error_intr_i;  //     
+       //      soc_ifc_status_responder_struct.xyz = soc_ifc_notif_intr_i;  //   
+       //      soc_ifc_status_responder_struct.xyz = sha_error_intr_i;  //     
+       //      soc_ifc_status_responder_struct.xyz = sha_notif_intr_i;  //     
        //      soc_ifc_status_responder_struct.xyz = iccm_lock_i;  //     
        //    Responder inout signals
        //    How to assign a signal, named xyz, from an initiator struct member.   
@@ -432,26 +448,30 @@ bit first_transfer=1;
     cptra_obf_key_reg_o            <= cptra_obf_key_reg_i   ;
     obf_field_entropy_o            <= obf_field_entropy_i   ;
     obf_uds_seed_o                 <= obf_uds_seed_i        ;
-    error_intr_o                   <= error_intr_i          ;
-    notif_intr_o                   <= notif_intr_i          ;
+    soc_ifc_error_intr_o           <= soc_ifc_error_intr_i          ;
+    soc_ifc_notif_intr_o           <= soc_ifc_notif_intr_i          ;
+    sha_error_intr_o               <= sha_error_intr_i          ;
+    sha_notif_intr_o               <= sha_notif_intr_i          ;
     iccm_lock_o                    <= iccm_lock_i           ;
 //    @(posedge clk_i);
     first_transfer = 0;
     begin: build_return_struct
   // Variables within the soc_ifc_status_initiator_struct:
-         soc_ifc_status_initiator_struct.err_intr_pending   = error_intr_i;
-         soc_ifc_status_initiator_struct.notif_intr_pending = notif_intr_i;
-         soc_ifc_status_initiator_struct.uc_rst_asserted    = !cptra_uc_rst_b_i;
-         soc_ifc_status_initiator_struct.ready_for_fuses    = ready_for_fuses_i;
-         soc_ifc_status_initiator_struct.ready_for_fw_push  = ready_for_fw_push_i;
-         soc_ifc_status_initiator_struct.ready_for_runtime  = ready_for_runtime_i;
-         soc_ifc_status_initiator_struct.mailbox_data_avail = mailbox_data_avail_i;
-         soc_ifc_status_initiator_struct.mailbox_flow_done  = mailbox_flow_done_i;
-         soc_ifc_status_initiator_struct.generic_output_val = generic_output_wires_i;
-         soc_ifc_status_initiator_struct.cptra_obf_key_reg  = cptra_obf_key_reg_i;
-         soc_ifc_status_initiator_struct.obf_field_entropy  = obf_field_entropy_i;
-         soc_ifc_status_initiator_struct.obf_uds_seed       = obf_uds_seed_i;
-         soc_ifc_status_initiator_struct.iccm_locked        = iccm_lock_i;
+         soc_ifc_status_initiator_struct.soc_ifc_err_intr_pending   = soc_ifc_error_intr_i;
+         soc_ifc_status_initiator_struct.soc_ifc_notif_intr_pending = soc_ifc_notif_intr_i;
+         soc_ifc_status_initiator_struct.sha_err_intr_pending       = sha_error_intr_i;
+         soc_ifc_status_initiator_struct.sha_notif_intr_pending     = sha_notif_intr_i;
+         soc_ifc_status_initiator_struct.uc_rst_asserted            = !cptra_uc_rst_b_i;
+         soc_ifc_status_initiator_struct.ready_for_fuses            = ready_for_fuses_i;
+         soc_ifc_status_initiator_struct.ready_for_fw_push          = ready_for_fw_push_i;
+         soc_ifc_status_initiator_struct.ready_for_runtime          = ready_for_runtime_i;
+         soc_ifc_status_initiator_struct.mailbox_data_avail         = mailbox_data_avail_i;
+         soc_ifc_status_initiator_struct.mailbox_flow_done          = mailbox_flow_done_i;
+         soc_ifc_status_initiator_struct.generic_output_val         = generic_output_wires_i;
+         soc_ifc_status_initiator_struct.cptra_obf_key_reg          = cptra_obf_key_reg_i;
+         soc_ifc_status_initiator_struct.obf_field_entropy          = obf_field_entropy_i;
+         soc_ifc_status_initiator_struct.obf_uds_seed               = obf_uds_seed_i;
+         soc_ifc_status_initiator_struct.iccm_locked                = iccm_lock_i;
     end
   endtask
 // pragma uvmf custom respond_and_wait_for_next_transfer end

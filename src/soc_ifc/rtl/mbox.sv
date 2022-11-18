@@ -20,25 +20,29 @@ module mbox
     ,parameter SIZE_KB = 128
     )
     (
-    input logic        clk,
-    input logic        rst_b,
+    input logic         clk,
+    input logic         rst_b,
 
     //mailbox request
-    input logic        req_dv,
-    output logic       req_hold,
-    input logic        dir_req_dv,
-    input soc_ifc_req_t   req_data,
-    output logic       mbox_error,
+    input logic         req_dv,
+    output logic        req_hold,
+    input logic         dir_req_dv,
+    input soc_ifc_req_t req_data,
+    output logic        mbox_error,
 
     output logic [DATA_W-1:0] rdata,
+
+    input logic sha_sram_req_dv,
+    input logic [MBOX_ADDR_W-1:0] sha_sram_req_addr,
+    output mbox_sram_resp_t sha_sram_resp,
 
     //SRAM interface
     output mbox_sram_req_t  mbox_sram_req,
     input  mbox_sram_resp_t mbox_sram_resp,
 
     //interrupts
-    output logic       uc_mbox_data_avail,
-    output logic       soc_mbox_data_avail
+    output logic uc_mbox_data_avail,
+    output logic soc_mbox_data_avail
 
 );
 
@@ -78,7 +82,7 @@ logic rst_mbox_ptr;
 logic [DATA_W-1:0] sram_rdata;
 logic sram_we;
 logic mbox_protocol_sram_we;
-logic dir_req_dv_q, dir_req_dv_f;
+logic dir_req_dv_q, dir_req_rd_phase;
 
 logic soc_has_lock, soc_has_lock_nxt;
 
@@ -174,7 +178,7 @@ always_ff @(posedge clk or negedge rst_b) begin
     if (!rst_b)begin
         mbox_fsm_ps <= MBOX_IDLE;
         soc_has_lock <= '0;
-        dir_req_dv_f <= '0;
+        dir_req_rd_phase <= '0;
         mbox_wrptr <= '0;
         mbox_rdptr <= '0;
         inc_rdptr_f <= '0;
@@ -183,7 +187,7 @@ always_ff @(posedge clk or negedge rst_b) begin
     else begin
         mbox_fsm_ps <= mbox_fsm_ns;
         soc_has_lock <= arc_MBOX_IDLE_MBOX_RDY_FOR_CMD ? soc_has_lock_nxt : soc_has_lock;
-        dir_req_dv_f <= ((dir_req_dv & ~req_data.write) | dir_req_dv_f) ? (!dir_req_dv_f & dir_req_dv & ~req_data.write) : dir_req_dv_f;
+        dir_req_rd_phase <= dir_req_dv_q & ~req_data.write;
         mbox_wrptr <= (inc_wrptr | rst_mbox_ptr) ? mbox_wrptr_nxt : mbox_wrptr;
         mbox_rdptr <= (inc_rdptr | rst_mbox_ptr) ? mbox_rdptr_nxt : mbox_rdptr;
         inc_rdptr_f <= (inc_rdptr | inc_rdptr_f) ? inc_rdptr : inc_rdptr_f;
@@ -194,8 +198,9 @@ end
 //need to hold direct read accesses for 1 clock to get response
 //create a qualified direct request signal that is masked during the data phase
 //hold the interface to insert wait state when direct request comes
-always_comb dir_req_dv_q = dir_req_dv & ~dir_req_dv_f;
-always_comb req_hold = dir_req_dv_q & ~req_data.write;
+//mask the request and hold the interface if SHA is using the mailbox
+always_comb dir_req_dv_q = dir_req_dv & ~dir_req_rd_phase & ~sha_sram_req_dv;
+always_comb req_hold = (dir_req_dv_q & ~req_data.write) | (dir_req_dv & sha_sram_req_dv);
 
 //SRAM interface
 always_comb sram_we = (dir_req_dv_q & req_data.write) | mbox_protocol_sram_we;
@@ -203,19 +208,21 @@ always_comb sram_we = (dir_req_dv_q & req_data.write) | mbox_protocol_sram_we;
 always_comb sram_rdaddr = dir_req_dv_q ? req_data.addr[$clog2(DEPTH)+1:2] : mbox_rdptr;
 always_comb sram_waddr = dir_req_dv_q ? req_data.addr[$clog2(DEPTH)+1:2] : mbox_wrptr;
 //data phase after request for direct access
-always_comb rdata = dir_req_dv_f ? sram_rdata : csr_rdata;
+always_comb rdata = dir_req_rd_phase ? sram_rdata : csr_rdata;
 
 //if we wrote to mbox while rdptr is the same as wrptr we need to refresh the dataout reg
 always_comb update_dataout = hwif_out.mbox_datain.datain.swmod & hwif_in.valid_user & (mbox_wrptr == mbox_rdptr);
 
 always_comb begin: mbox_sram_inf
     //read live on direct access, or when pointer has been incremented, or if write was made to same address as rdptr
-    mbox_sram_req.cs = dir_req_dv_q | sram_we | inc_rdptr_f;
-    mbox_sram_req.we = sram_we;
-    mbox_sram_req.addr = sram_we ? sram_waddr : sram_rdaddr;
+    mbox_sram_req.cs = sha_sram_req_dv | dir_req_dv_q | mbox_protocol_sram_we | inc_rdptr_f;
+    mbox_sram_req.we = sram_we & ~sha_sram_req_dv;
+    mbox_sram_req.addr = sha_sram_req_dv ? sha_sram_req_addr :
+                                 sram_we ? sram_waddr : sram_rdaddr;
     mbox_sram_req.wdata = sram_wdata;
 
     sram_rdata = mbox_sram_resp.rdata;
+    sha_sram_resp = mbox_sram_resp;
 end
 
 //control for sram write and read pointer
@@ -235,14 +242,14 @@ always_comb mbox_rdptr_nxt = rst_mbox_ptr ? '0 :
                                          mbox_rdptr;
 
 always_comb hwif_in.reset_b = rst_b;
-//always_comb hwif_in.soc_req = req_data.soc_req;
 always_comb hwif_in.mbox_user.user.next = req_data.user;
+
 //check the requesting user:
 //don't update mailbox data if lock hasn't been acquired
-//if uc has the lock, check that this request if rom uc
-//if soc has the lock, check that this request is from soc and user attribute matters
+//if uc has the lock, check that this request is from uc
+//if soc has the lock, check that this request is from soc and user attributes match
 always_comb hwif_in.valid_user = hwif_out.mbox_lock.lock.value & ((~soc_has_lock & ~req_data.soc_req) |
-                                                                  (soc_has_lock & req_data.soc_req & (req_data.user == hwif_out.mbox_user.user.value))) ;
+                                                                  (soc_has_lock & req_data.soc_req & (req_data.user == hwif_out.mbox_user.user.value)));
 //indicate that requesting user is setting the lock
 always_comb hwif_in.lock_set = arc_MBOX_IDLE_MBOX_RDY_FOR_CMD;
 
@@ -266,9 +273,9 @@ mbox_csr1(
     .clk(clk),
     .rst('0),
 
-    .s_cpuif_req(req_dv & (req_data.addr[SOC_IFC_ADDR_W-1:10] == MBOX_REG_START_ADDR[SOC_IFC_ADDR_W-1:10])),
+    .s_cpuif_req(req_dv & (req_data.addr[SOC_IFC_ADDR_W-1:MBOX_CSR_ADDR_WIDTH] == MBOX_REG_START_ADDR[SOC_IFC_ADDR_W-1:MBOX_CSR_ADDR_WIDTH])),
     .s_cpuif_req_is_wr(req_data.write),
-    .s_cpuif_addr(req_data.addr[5:0]),
+    .s_cpuif_addr(req_data.addr[MBOX_CSR_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data(req_data.wdata),
     .s_cpuif_req_stall_wr(s_cpuif_req_stall_wr_nc),
     .s_cpuif_req_stall_rd(s_cpuif_req_stall_rd_nc),
@@ -283,5 +290,6 @@ mbox_csr1(
 );
 
 `ASSERT_NEVER(ERR_MBOX_COLLISION, update_dataout & inc_rdptr_ff, clk, rst_b)
+`ASSERT_MUTEX(ERR_MBOX_ACCESS_MUTEX, {sha_sram_req_dv, dir_req_dv_q, mbox_protocol_sram_we, inc_rdptr_f}, clk, rst_b)
 
 endmodule

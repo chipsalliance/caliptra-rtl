@@ -20,7 +20,7 @@ from peakrdl_regblock import RegblockExporter
 from peakrdl_uvm import UVMExporter
 from peakrdl_html import HTMLExporter
 from peakrdl_regblock.cpuif.passthrough import PassthroughCpuif
-from math import log, ceil
+from math import log, ceil, floor
 import sys
 import os
 
@@ -44,7 +44,7 @@ class SVPkgAppendingListener(RDLListener):
         self.file.close()
         self.file = open(pkg_file_path, 'w')
         self.file.write(self.orig_file)
-        self.file.write("\n    localparam " + node.inst_name.upper() + "_ADDR_WIDTH = " + "32'd" + str(int(ceil(log(node.total_size, 2)))) + ";")
+        self.file.write("\n    localparam " + node.inst_name.upper() + "_ADDR_WIDTH = " + "32'd" + str(int(floor(log(node.total_size, 2)) + 1)) + ";")
 
     def exit_Addrmap(self, node):
         self.file.write("\n\nendpackage")

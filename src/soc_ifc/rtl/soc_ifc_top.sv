@@ -66,8 +66,10 @@ module soc_ifc_top
     //SoC Interrupts
 
     //uC Interrupts
-    output wire              error_intr,
-    output wire              notif_intr,
+    output wire              soc_ifc_error_intr,
+    output wire              soc_ifc_notif_intr,
+    output wire              sha_error_intr,
+    output wire              sha_notif_intr,
 
     //SRAM interface
     output mbox_sram_req_t  mbox_sram_req,
@@ -107,6 +109,13 @@ soc_ifc_req_t mbox_req_data;
 logic [SOC_IFC_DATA_W-1:0] mbox_rdata;
 logic mbox_error;
 
+//sha req inf
+logic sha_req_dv;
+logic sha_req_hold;
+soc_ifc_req_t sha_req_data;
+logic [SOC_IFC_DATA_W-1:0] sha_rdata;
+logic sha_error;
+
 //mbox reg inf
 logic soc_ifc_reg_req_dv;
 logic soc_ifc_reg_req_hold;
@@ -114,6 +123,10 @@ soc_ifc_reg_req_t soc_ifc_reg_req_data;
 logic [SOC_IFC_DATA_W-1:0] soc_ifc_reg_rdata;
 logic soc_ifc_reg_error, soc_ifc_reg_read_error, soc_ifc_reg_write_error;
 logic clear_secrets;
+
+logic sha_sram_req_dv;
+logic [MBOX_ADDR_W-1:0] sha_sram_req_addr;
+mbox_sram_resp_t sha_sram_resp;
 
 // Pulse signals to trigger interrupts
 logic uc_mbox_data_avail;
@@ -127,7 +140,7 @@ soc_ifc_reg__out_t soc_ifc_reg_hwif_out;
 //This module contains the logic required to control the Caliptra Boot Flow
 //Once the SoC has powered on Caliptra and de-asserted RESET, we can request fuses
 //This FSM will de-assert reset and allow the Caliptra uC to boot after fuses are downloaded
-soc_ifc_boot_fsm soc_ifc_boot_fsm1 (
+soc_ifc_boot_fsm i_soc_ifc_boot_fsm (
     .clk(clk),
     .cptra_pwrgood(cptra_pwrgood),
     .cptra_rst_b (cptra_rst_b),
@@ -148,7 +161,7 @@ apb_slv_sif #(
     .DATA_WIDTH(APB_DATA_WIDTH),
     .USER_WIDTH(APB_USER_WIDTH)
 )
-mailbox_apb_slv1 (
+i_apb_slv_sif_soc_ifc (
     //AMBA APB INF
     .PCLK(clk),
     .PRESETn(cptra_rst_b),
@@ -186,7 +199,7 @@ ahb_slv_sif #(
     .AHB_DATA_WIDTH(AHB_DATA_WIDTH),
     .CLIENT_DATA_WIDTH(32)
 )
-mailbox_ahb_slv1 (
+i_ahb_slv_sif_soc_ifc (
     //AMBA AHB Lite INF
     .hclk(clk),
     .hreset_n(cptra_uc_rst_b),
@@ -221,7 +234,7 @@ always_comb uc_req.soc_req = 1'b0;
 //This module contains the arbitration logic between SoC and Caliptra uC requests
 //Requests are serviced using round robin arbitration
 
-soc_ifc_arb soc_ifc_arb1 (
+soc_ifc_arb i_soc_ifc_arb (
     .clk(clk),
     .rst_b(cptra_rst_b),
     //UC inf
@@ -243,6 +256,12 @@ soc_ifc_arb soc_ifc_arb1 (
     .mbox_req_data(mbox_req_data),
     .mbox_rdata(mbox_rdata),
     .mbox_error(mbox_error),
+    //SHA inf
+    .sha_req_dv(sha_req_dv),
+    .sha_req_hold(sha_req_hold),
+    .sha_req_data(sha_req_data),
+    .sha_rdata(sha_rdata),
+    .sha_error(sha_error),
     //FUNC reg inf
     .soc_ifc_reg_req_dv(soc_ifc_reg_req_dv), 
     .soc_ifc_reg_req_hold(1'b0),
@@ -310,7 +329,7 @@ logic s_cpuif_req_stall_rd_nc;
 logic s_cpuif_rd_ack_nc;
 logic s_cpuif_wr_ack_nc;
 
-soc_ifc_reg soc_ifc_reg1 (
+soc_ifc_reg i_soc_ifc_reg (
     .clk(clk),
     .rst('0),
     //qualify request so no addresses alias
@@ -330,9 +349,34 @@ soc_ifc_reg soc_ifc_reg1 (
     .hwif_out(soc_ifc_reg_hwif_out)
 );
 
-assign error_intr = soc_ifc_reg_hwif_out.intr_block_rf.error_global_intr_r.intr;
-assign notif_intr = soc_ifc_reg_hwif_out.intr_block_rf.notif_global_intr_r.intr;
+assign soc_ifc_error_intr = soc_ifc_reg_hwif_out.intr_block_rf.error_global_intr_r.intr;
+assign soc_ifc_notif_intr = soc_ifc_reg_hwif_out.intr_block_rf.notif_global_intr_r.intr;
 assign iccm_lock  = soc_ifc_reg_hwif_out.iccm_lock.lock.value;
+
+//SHA Accelerator
+sha512_acc_top #(
+    .DATA_WIDTH(APB_DATA_WIDTH)
+)
+i_sha512_acc_top (
+    .clk(clk),
+    .rst_b(cptra_uc_rst_b),
+    .cptra_pwrgood(cptra_pwrgood),
+    
+    .req_dv(sha_req_dv),
+    .req_hold(sha_req_hold),
+    .req_data(sha_req_data),
+
+    .rdata(sha_rdata),
+    .err(sha_error),
+
+    .sha_sram_req_dv(sha_sram_req_dv),
+    .sha_sram_req_addr(sha_sram_req_addr),
+    .sha_sram_resp(sha_sram_resp),
+
+    .error_intr(sha_error_intr),
+    .notif_intr(sha_notif_intr)
+);
+
 
 //Mailbox
 //This module contains the Caliptra Mailbox and associated control logic
@@ -341,7 +385,7 @@ mbox #(
     .DATA_W(APB_DATA_WIDTH),
     .SIZE_KB(MBOX_SIZE_KB)
     )
-mbox1 (
+i_mbox (
     .clk(clk),
     .rst_b(cptra_uc_rst_b),
     .req_dv(mbox_req_dv), 
@@ -350,6 +394,9 @@ mbox1 (
     .req_data(mbox_req_data),
     .mbox_error(mbox_error),
     .rdata(mbox_rdata),
+    .sha_sram_req_dv(sha_sram_req_dv),
+    .sha_sram_req_addr(sha_sram_req_addr),
+    .sha_sram_resp(sha_sram_resp),
     .mbox_sram_req(mbox_sram_req),
     .mbox_sram_resp(mbox_sram_resp),
     .soc_mbox_data_avail(mailbox_data_avail),

@@ -30,7 +30,9 @@ package soc_ifc_pkg;
     parameter MBOX_DIR_START_ADDR    = 18'h0_0000;
     parameter MBOX_DIR_END_ADDR      = 18'h1_FFFF;
     parameter MBOX_REG_START_ADDR    = 18'h2_0000;
-    parameter MBOX_REG_END_ADDR      = 18'h2_FFFF;
+    parameter MBOX_REG_END_ADDR      = 18'h2_0FFF;
+    parameter SHA_REG_START_ADDR     = 18'h2_1000;
+    parameter SHA_REG_END_ADDR       = 18'h2_1FFF;
     parameter SOC_IFC_REG_START_ADDR = 18'h3_0000;
     parameter SOC_IFC_REG_END_ADDR   = 18'h3_FFFF;
 

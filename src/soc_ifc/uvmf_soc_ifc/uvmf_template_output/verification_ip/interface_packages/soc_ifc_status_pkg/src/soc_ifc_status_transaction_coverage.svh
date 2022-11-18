@@ -43,8 +43,10 @@ class soc_ifc_status_transaction_coverage  extends uvm_subscriber #(.T(soc_ifc_s
     // UVMF_CHANGE_ME : Add coverage bins, crosses, exclusions, etc. according to coverage needs.
     option.auto_bin_max=1024;
     option.per_instance=1;
-    err_intr_pending: coverpoint coverage_trans.err_intr_pending;
-    notif_intr_pending: coverpoint coverage_trans.notif_intr_pending;
+    soc_ifc_err_intr_pending: coverpoint coverage_trans.soc_ifc_err_intr_pending;
+    soc_ifc_notif_intr_pending: coverpoint coverage_trans.soc_ifc_notif_intr_pending;
+    sha_err_intr_pending: coverpoint coverage_trans.sha_err_intr_pending;
+    sha_notif_intr_pending: coverpoint coverage_trans.sha_notif_intr_pending;
     uc_rst_asserted: coverpoint coverage_trans.uc_rst_asserted;
     ready_for_fuses: coverpoint coverage_trans.ready_for_fuses;
     ready_for_fw_push: coverpoint coverage_trans.ready_for_fw_push;

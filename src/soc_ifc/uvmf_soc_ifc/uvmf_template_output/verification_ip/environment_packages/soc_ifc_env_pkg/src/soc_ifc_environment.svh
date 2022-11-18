@@ -174,15 +174,11 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     super.connect_phase(phase);
     soc_ifc_ctrl_agent.monitored_ap.connect(soc_ifc_pred.soc_ifc_ctrl_agent_ae);
     soc_ifc_pred.soc_ifc_sb_ap.connect(soc_ifc_sb.expected_analysis_export);
-//    soc_ifc_pred.soc_ifc_sb_ahb_ap.connect(soc_ifc_sb.expected_ahb_analysis_export);
-//    soc_ifc_pred.soc_ifc_sb_apb_ap.connect(soc_ifc_sb.expected_apb_analysis_export);
     soc_ifc_status_agent.monitored_ap.connect(soc_ifc_sb.actual_analysis_export);
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap = qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.ap; 
     qvip_apb5_slave_subenv_apb5_master_0_ap = qvip_apb5_slave_subenv.apb5_master_0.ap; 
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer"].connect(soc_ifc_pred.ahb_slave_0_ae);
-    //qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer_sb"].connect(soc_ifc_sb.ahb_slave_0_ae);
     qvip_apb5_slave_subenv_apb5_master_0_ap["trans_ap"].connect(soc_ifc_pred.apb5_slave_0_ae);
-    //qvip_apb5_slave_subenv_apb5_master_0_ap["trans_ap_sb"].connect(soc_ifc_sb.apb5_slave_0_ae);
     if ( configuration.qvip_ahb_lite_slave_subenv_interface_activity[0] == ACTIVE )
        uvm_config_db #(mvc_sequencer)::set(null,UVMF_SEQUENCERS,configuration.qvip_ahb_lite_slave_subenv_interface_names[0],qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.m_sequencer  );
     if ( configuration.qvip_apb5_slave_subenv_interface_activity[0] == ACTIVE )

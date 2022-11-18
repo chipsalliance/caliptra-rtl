@@ -10,6 +10,7 @@ ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_ahb_srom.sv
 ${WORKSPACE}/Caliptra/src/libs/rtl/apb_slv_sif.sv
 ${WORKSPACE}/Caliptra/src/libs/rtl/ahb_slv_sif.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_defines_pkg.sv
+${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_macros.svh
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_reg_pkg.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_reg.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_defines_pkg.sv

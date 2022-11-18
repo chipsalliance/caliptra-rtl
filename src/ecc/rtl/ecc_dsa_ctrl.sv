@@ -36,6 +36,8 @@
 //
 //======================================================================
 
+`include "kv_macros.svh"
+
 module ecc_dsa_ctrl
     import ecc_params_pkg::*;
     import ecc_dsa_uop_pkg::*;

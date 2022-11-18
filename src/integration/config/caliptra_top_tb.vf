@@ -63,6 +63,7 @@ ${WORKSPACE}/Caliptra/src/riscv_core/swerv_el2/rtl/lsu/el2_lsu_stbuf.sv
 ${WORKSPACE}/Caliptra/src/riscv_core/swerv_el2/rtl/lsu/el2_lsu.sv
 ${WORKSPACE}/Caliptra/src/riscv_core/swerv_el2/rtl/lsu/el2_lsu_trigger.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_defines_pkg.sv
+${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_macros.svh
 ${WORKSPACE}/Caliptra/src/ahb_lite_bus/rtl/ahb_lite_bus_inf.sv
 ${WORKSPACE}/Caliptra/src/ahb_lite_bus/rtl/ahb_lite_address_decoder.sv
 ${WORKSPACE}/Caliptra/src/ahb_lite_bus/rtl/ahb_lite_bus.sv
@@ -139,13 +140,16 @@ ${WORKSPACE}/Caliptra/src/ecc/rtl/ecc_add_sub_mod_alter.sv
 ${WORKSPACE}/Caliptra/src/ecc/rtl/ecc_adder.sv
 ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/soc_ifc_pkg.sv
 ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/mbox_csr_pkg.sv
+${WORKSPACE}/Caliptra/src/soc_ifc/rtl/sha_csr_pkg.sv
 ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/soc_ifc_reg_pkg.sv
-${WORKSPACE}/Caliptra/src/soc_ifc/rtl/mbox.sv
-${WORKSPACE}/Caliptra/src/soc_ifc/rtl/mbox_csr.sv
 ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/soc_ifc_top.sv
 ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/soc_ifc_boot_fsm.sv
 ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/soc_ifc_arb.sv
 ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/soc_ifc_reg.sv
+${WORKSPACE}/Caliptra/src/soc_ifc/rtl/mbox.sv
+${WORKSPACE}/Caliptra/src/soc_ifc/rtl/mbox_csr.sv
+${WORKSPACE}/Caliptra/src/soc_ifc/rtl/sha_top.sv
+${WORKSPACE}/Caliptra/src/soc_ifc/rtl/sha_csr.sv
 ${WORKSPACE}/Caliptra/src/integration/rtl/config_pkg.sv
 ${WORKSPACE}/Caliptra/src/integration/rtl/caliptra_top.sv
 ${WORKSPACE}/Caliptra/src/integration/rtl/caliptra_top_dummy.sv

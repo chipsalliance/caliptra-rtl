@@ -180,8 +180,10 @@ import soc_ifc_pkg::*;
         .hreadyout_o(uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HREADY     ),
         .hrdata_o   (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HRDATA     ),
         // uC Interrupts
-        .error_intr(soc_ifc_status_agent_bus.error_intr),
-        .notif_intr(soc_ifc_status_agent_bus.notif_intr),
+        .soc_ifc_error_intr(soc_ifc_status_agent_bus.soc_ifc_error_intr),
+        .soc_ifc_notif_intr(soc_ifc_status_agent_bus.soc_ifc_notif_intr),
+        .sha_error_intr(soc_ifc_status_agent_bus.sha_error_intr),
+        .sha_notif_intr(soc_ifc_status_agent_bus.sha_notif_intr),
         //Obfuscated UDS and FE
         .cptra_obf_key(soc_ifc_ctrl_agent_bus.cptra_obf_key),
         .cptra_obf_key_reg(soc_ifc_status_agent_bus.cptra_obf_key_reg),

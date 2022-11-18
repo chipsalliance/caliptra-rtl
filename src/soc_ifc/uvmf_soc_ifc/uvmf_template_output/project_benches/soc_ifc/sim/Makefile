@@ -133,6 +133,7 @@ $(UVMF_PROJECT_DIR)/tb/tests/soc_ifc_tests_pkg.sv
 # pragma uvmf custom dut_files begin
 # UVMF_CHANGE_ME : Reference Verilog DUT source.
 soc_ifc_VERILOG_DUT ?=\
+$(UVMF_PROJECT_DIR)/../../../../rtl/sha512_acc_csr_uvm.sv \
 $(UVMF_PROJECT_DIR)/../../../../rtl/mbox_csr_uvm.sv \
 $(UVMF_PROJECT_DIR)/../../../../rtl/soc_ifc_reg_uvm.sv \
 -F $(UVMF_PROJECT_DIR)/../../../../config/soc_ifc_top.vf

@@ -8,6 +8,7 @@ targets:
     files:
       - $COMPILE_ROOT/rtl/soc_ifc_pkg.sv
       - $COMPILE_ROOT/rtl/mbox_csr_pkg.sv
+      - $COMPILE_ROOT/rtl/sha512_acc_csr_pkg.sv
       - $COMPILE_ROOT/rtl/soc_ifc_reg_pkg.sv
 ---
 provides: [soc_ifc_uvm_pkg]
@@ -19,6 +20,7 @@ targets:
     files:
       - $COMPILE_ROOT/rtl/soc_ifc_pkg.sv
       - $COMPILE_ROOT/rtl/mbox_csr_uvm.sv
+      - $COMPILE_ROOT/rtl/sha512_acc_csr_uvm.sv
       - $COMPILE_ROOT/rtl/soc_ifc_reg_uvm.sv
 ---
 provides: [soc_ifc_top]
@@ -26,17 +28,20 @@ schema_version: 2.4.0
 requires:
   - libs
   - soc_ifc_pkg
+  - sha512_ctrl
 targets:
   rtl:
     directories:
       - $COMPILE_ROOT/rtl
     files:
-      - $COMPILE_ROOT/rtl/mbox.sv
-      - $COMPILE_ROOT/rtl/mbox_csr.sv
       - $COMPILE_ROOT/rtl/soc_ifc_top.sv
       - $COMPILE_ROOT/rtl/soc_ifc_boot_fsm.sv
       - $COMPILE_ROOT/rtl/soc_ifc_arb.sv
       - $COMPILE_ROOT/rtl/soc_ifc_reg.sv
+      - $COMPILE_ROOT/rtl/mbox.sv
+      - $COMPILE_ROOT/rtl/mbox_csr.sv
+      - $COMPILE_ROOT/rtl/sha512_acc_top.sv
+      - $COMPILE_ROOT/rtl/sha512_acc_csr.sv
     tops: [soc_ifc_top]
   rtl_lint:
     directories: [$COMPILE_ROOT/config/design_lint]

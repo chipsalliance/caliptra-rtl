@@ -32,8 +32,10 @@ class soc_ifc_status_transaction  extends uvmf_transaction_base;
 
   `uvm_object_utils( soc_ifc_status_transaction )
 
-  bit err_intr_pending ;
-  bit notif_intr_pending ;
+  bit soc_ifc_err_intr_pending ;
+  bit soc_ifc_notif_intr_pending ;
+  bit sha_err_intr_pending ;
+  bit sha_notif_intr_pending ;
   bit uc_rst_asserted ;
   bit ready_for_fuses ;
   bit ready_for_fw_push ;
@@ -127,7 +129,7 @@ class soc_ifc_status_transaction  extends uvmf_transaction_base;
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("err_intr_pending:0x%x notif_intr_pending:0x%x uc_rst_asserted:0x%x ready_for_fuses:0x%x ready_for_fw_push:0x%x ready_for_runtime:0x%x mailbox_data_avail:0x%x mailbox_flow_done:0x%x generic_output_val:0x%x cptra_obf_key_reg:0x%x obf_field_entropy:0x%x obf_uds_seed:0x%x iccm_locked:0x%x ",err_intr_pending,notif_intr_pending,uc_rst_asserted,ready_for_fuses,ready_for_fw_push,ready_for_runtime,mailbox_data_avail,mailbox_flow_done,generic_output_val,cptra_obf_key_reg,obf_field_entropy,obf_uds_seed,iccm_locked);
+    return $sformatf("soc_ifc_err_intr_pending:0x%x soc_ifc_notif_intr_pending:0x%x sha_err_intr_pending:0x%x sha_notif_intr_pending:0x%x uc_rst_asserted:0x%x ready_for_fuses:0x%x ready_for_fw_push:0x%x ready_for_runtime:0x%x mailbox_data_avail:0x%x mailbox_flow_done:0x%x generic_output_val:0x%x cptra_obf_key_reg:0x%x obf_field_entropy:0x%x obf_uds_seed:0x%x iccm_locked:0x%x ",soc_ifc_err_intr_pending,soc_ifc_notif_intr_pending,sha_err_intr_pending,sha_notif_intr_pending,uc_rst_asserted,ready_for_fuses,ready_for_fw_push,ready_for_runtime,mailbox_data_avail,mailbox_flow_done,generic_output_val,cptra_obf_key_reg,obf_field_entropy,obf_uds_seed,iccm_locked);
     // pragma uvmf custom convert2string end
   endfunction
 
@@ -170,8 +172,10 @@ class soc_ifc_status_transaction  extends uvmf_transaction_base;
     assert($cast(RHS,rhs));
     // pragma uvmf custom do_copy begin
     super.do_copy(rhs);
-    this.err_intr_pending = RHS.err_intr_pending;
-    this.notif_intr_pending = RHS.notif_intr_pending;
+    this.soc_ifc_err_intr_pending = RHS.soc_ifc_err_intr_pending;
+    this.soc_ifc_notif_intr_pending = RHS.soc_ifc_notif_intr_pending;
+    this.sha_err_intr_pending = RHS.sha_err_intr_pending;
+    this.sha_notif_intr_pending = RHS.sha_notif_intr_pending;
     this.uc_rst_asserted = RHS.uc_rst_asserted;
     this.ready_for_fuses = RHS.ready_for_fuses;
     this.ready_for_fw_push = RHS.ready_for_fw_push;
@@ -206,8 +210,10 @@ class soc_ifc_status_transaction  extends uvmf_transaction_base;
     //   default : $add_color(transaction_view_h,"grey");
     // endcase
     // UVMF_CHANGE_ME : Eliminate transaction variables not wanted in transaction viewing in the waveform viewer
-    $add_attribute(transaction_view_h,err_intr_pending,"err_intr_pending");
-    $add_attribute(transaction_view_h,notif_intr_pending,"notif_intr_pending");
+    $add_attribute(transaction_view_h,soc_ifc_err_intr_pending,"soc_ifc_err_intr_pending");
+    $add_attribute(transaction_view_h,soc_ifc_notif_intr_pending,"soc_ifc_notif_intr_pending");
+    $add_attribute(transaction_view_h,sha_err_intr_pending,"sha_err_intr_pending");
+    $add_attribute(transaction_view_h,sha_notif_intr_pending,"sha_notif_intr_pending");
     $add_attribute(transaction_view_h,uc_rst_asserted,"uc_rst_asserted");
     $add_attribute(transaction_view_h,ready_for_fuses,"ready_for_fuses");
     $add_attribute(transaction_view_h,ready_for_fw_push,"ready_for_fw_push");

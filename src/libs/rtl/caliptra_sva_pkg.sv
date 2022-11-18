@@ -45,5 +45,8 @@ package caliptra_sva_pkg;
 `define ASSERT_KNOWN(assert_name, sig, clk, rst_b)     \
   `ASSERT(assert_name, !$isunknown(sig), clk, rst_b)
 
+// Assert that a vector of signals is mutually exclusive
+`define ASSERT_MUTEX(assert_name, sig, clk, rst_b)     \
+    `ASSERT(assert_name, $onehot0(sig), clk, rst_b)
 
 endpackage

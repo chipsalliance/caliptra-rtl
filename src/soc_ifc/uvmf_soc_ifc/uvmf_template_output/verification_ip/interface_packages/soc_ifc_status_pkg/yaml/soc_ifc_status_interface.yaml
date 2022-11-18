@@ -53,11 +53,19 @@ uvmf:
         reset_value: '''bz'
         width: '[''12'', ''32'']'
       - dir: output
-        name: error_intr
+        name: soc_ifc_error_intr
         reset_value: '''bz'
         width: '1'
       - dir: output
-        name: notif_intr
+        name: soc_ifc_notif_intr
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: sha_error_intr
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: sha_notif_intr
         reset_value: '''bz'
         width: '1'
       - dir: output
@@ -71,13 +79,25 @@ uvmf:
       - comment: ''
         iscompare: 'False'
         isrand: 'False'
-        name: err_intr_pending
+        name: soc_ifc_err_intr_pending
         type: bit
         unpacked_dimension: ''
       - comment: ''
         iscompare: 'False'
         isrand: 'False'
-        name: notif_intr_pending
+        name: soc_ifc_notif_intr_pending
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: sha_err_intr_pending
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: sha_notif_intr_pending
         type: bit
         unpacked_dimension: ''
       - comment: ''

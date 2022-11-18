@@ -43,8 +43,10 @@
 // .dut_signal_port(soc_ifc_status_bus.cptra_obf_key_reg), // Agent output 
 // .dut_signal_port(soc_ifc_status_bus.obf_field_entropy), // Agent output 
 // .dut_signal_port(soc_ifc_status_bus.obf_uds_seed), // Agent output 
-// .dut_signal_port(soc_ifc_status_bus.error_intr), // Agent output 
-// .dut_signal_port(soc_ifc_status_bus.notif_intr), // Agent output 
+// .dut_signal_port(soc_ifc_status_bus.soc_ifc_error_intr), // Agent output 
+// .dut_signal_port(soc_ifc_status_bus.soc_ifc_notif_intr), // Agent output 
+// .dut_signal_port(soc_ifc_status_bus.sha_error_intr), // Agent output 
+// .dut_signal_port(soc_ifc_status_bus.sha_notif_intr), // Agent output 
 // .dut_signal_port(soc_ifc_status_bus.iccm_lock), // Agent output 
 
 import uvmf_base_pkg_hdl::*;
@@ -65,8 +67,10 @@ interface  soc_ifc_status_if
   inout tri [7:0][31:0] cptra_obf_key_reg,
   inout tri [31:0][31:0] obf_field_entropy,
   inout tri [11:0][31:0] obf_uds_seed,
-  inout tri  error_intr,
-  inout tri  notif_intr,
+  inout tri  soc_ifc_error_intr,
+  inout tri  soc_ifc_notif_intr,
+  inout tri  sha_error_intr,
+  inout tri  sha_notif_intr,
   inout tri  iccm_lock
   );
 
@@ -84,8 +88,10 @@ modport monitor_port
   input cptra_obf_key_reg,
   input obf_field_entropy,
   input obf_uds_seed,
-  input error_intr,
-  input notif_intr,
+  input soc_ifc_error_intr,
+  input soc_ifc_notif_intr,
+  input sha_error_intr,
+  input sha_notif_intr,
   input iccm_lock
   );
 
@@ -103,8 +109,10 @@ modport initiator_port
   output cptra_obf_key_reg,
   output obf_field_entropy,
   output obf_uds_seed,
-  output error_intr,
-  output notif_intr,
+  output soc_ifc_error_intr,
+  output soc_ifc_notif_intr,
+  output sha_error_intr,
+  output sha_notif_intr,
   output iccm_lock
   );
 
@@ -122,8 +130,10 @@ modport responder_port
   input cptra_obf_key_reg,
   input obf_field_entropy,
   input obf_uds_seed,
-  input error_intr,
-  input notif_intr,
+  input soc_ifc_error_intr,
+  input soc_ifc_notif_intr,
+  input sha_error_intr,
+  input sha_notif_intr,
   input iccm_lock
   );
   

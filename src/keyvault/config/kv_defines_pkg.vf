@@ -1,2 +1,3 @@
 +incdir+${WORKSPACE}/Caliptra/src/keyvault/rtl
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_defines_pkg.sv
+${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_macros.svh

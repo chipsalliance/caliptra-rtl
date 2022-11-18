@@ -63,8 +63,10 @@ typedef struct packed  { \
 //      and from_monitor_struct methods of the soc_ifc_status_transaction class.
 //
   `define soc_ifc_status_MONITOR_STRUCT typedef struct packed  { \
-  bit err_intr_pending ; \
-  bit notif_intr_pending ; \
+  bit soc_ifc_err_intr_pending ; \
+  bit soc_ifc_notif_intr_pending ; \
+  bit sha_err_intr_pending ; \
+  bit sha_notif_intr_pending ; \
   bit uc_rst_asserted ; \
   bit ready_for_fuses ; \
   bit ready_for_fw_push ; \
@@ -82,8 +84,10 @@ typedef struct packed  { \
   virtual function soc_ifc_status_monitor_s to_monitor_struct();\
     soc_ifc_status_monitor_struct = \
             { \
-            this.err_intr_pending , \
-            this.notif_intr_pending , \
+            this.soc_ifc_err_intr_pending , \
+            this.soc_ifc_notif_intr_pending , \
+            this.sha_err_intr_pending , \
+            this.sha_notif_intr_pending , \
             this.uc_rst_asserted , \
             this.ready_for_fuses , \
             this.ready_for_fw_push , \
@@ -102,8 +106,10 @@ typedef struct packed  { \
   `define soc_ifc_status_FROM_MONITOR_STRUCT_FUNCTION \
   virtual function void from_monitor_struct(soc_ifc_status_monitor_s soc_ifc_status_monitor_struct);\
             {\
-            this.err_intr_pending , \
-            this.notif_intr_pending , \
+            this.soc_ifc_err_intr_pending , \
+            this.soc_ifc_notif_intr_pending , \
+            this.sha_err_intr_pending , \
+            this.sha_notif_intr_pending , \
             this.uc_rst_asserted , \
             this.ready_for_fuses , \
             this.ready_for_fw_push , \
@@ -124,8 +130,10 @@ typedef struct packed  { \
 //      Also update the comments in the driver BFM.
 //
   `define soc_ifc_status_INITIATOR_STRUCT typedef struct packed  { \
-  bit err_intr_pending ; \
-  bit notif_intr_pending ; \
+  bit soc_ifc_err_intr_pending ; \
+  bit soc_ifc_notif_intr_pending ; \
+  bit sha_err_intr_pending ; \
+  bit sha_notif_intr_pending ; \
   bit uc_rst_asserted ; \
   bit ready_for_fuses ; \
   bit ready_for_fw_push ; \
@@ -143,8 +151,10 @@ typedef struct packed  { \
   virtual function soc_ifc_status_initiator_s to_initiator_struct();\
     soc_ifc_status_initiator_struct = \
            {\
-           this.err_intr_pending , \
-           this.notif_intr_pending , \
+           this.soc_ifc_err_intr_pending , \
+           this.soc_ifc_notif_intr_pending , \
+           this.sha_err_intr_pending , \
+           this.sha_notif_intr_pending , \
            this.uc_rst_asserted , \
            this.ready_for_fuses , \
            this.ready_for_fw_push , \
@@ -163,8 +173,10 @@ typedef struct packed  { \
   `define soc_ifc_status_FROM_INITIATOR_STRUCT_FUNCTION \
   virtual function void from_initiator_struct(soc_ifc_status_initiator_s soc_ifc_status_initiator_struct);\
            {\
-           this.err_intr_pending , \
-           this.notif_intr_pending , \
+           this.soc_ifc_err_intr_pending , \
+           this.soc_ifc_notif_intr_pending , \
+           this.sha_err_intr_pending , \
+           this.sha_notif_intr_pending , \
            this.uc_rst_asserted , \
            this.ready_for_fuses , \
            this.ready_for_fw_push , \
@@ -185,8 +197,10 @@ typedef struct packed  { \
 //      Also update the comments in the driver BFM.
 //
   `define soc_ifc_status_RESPONDER_STRUCT typedef struct packed  { \
-  bit err_intr_pending ; \
-  bit notif_intr_pending ; \
+  bit soc_ifc_err_intr_pending ; \
+  bit soc_ifc_notif_intr_pending ; \
+  bit sha_err_intr_pending ; \
+  bit sha_notif_intr_pending ; \
   bit uc_rst_asserted ; \
   bit ready_for_fuses ; \
   bit ready_for_fw_push ; \
@@ -204,8 +218,10 @@ typedef struct packed  { \
   virtual function soc_ifc_status_responder_s to_responder_struct();\
     soc_ifc_status_responder_struct = \
            {\
-           this.err_intr_pending , \
-           this.notif_intr_pending , \
+           this.soc_ifc_err_intr_pending , \
+           this.soc_ifc_notif_intr_pending , \
+           this.sha_err_intr_pending , \
+           this.sha_notif_intr_pending , \
            this.uc_rst_asserted , \
            this.ready_for_fuses , \
            this.ready_for_fw_push , \
@@ -224,8 +240,10 @@ typedef struct packed  { \
   `define soc_ifc_status_FROM_RESPONDER_STRUCT_FUNCTION \
   virtual function void from_responder_struct(soc_ifc_status_responder_s soc_ifc_status_responder_struct);\
            {\
-           this.err_intr_pending , \
-           this.notif_intr_pending , \
+           this.soc_ifc_err_intr_pending , \
+           this.soc_ifc_notif_intr_pending , \
+           this.sha_err_intr_pending , \
+           this.sha_notif_intr_pending , \
            this.uc_rst_asserted , \
            this.ready_for_fuses , \
            this.ready_for_fw_push , \
