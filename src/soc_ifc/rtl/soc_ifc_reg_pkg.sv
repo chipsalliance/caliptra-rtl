@@ -109,10 +109,10 @@ package soc_ifc_reg_pkg;
 
     typedef struct {
         logic value;
-    } soc_ifc_reg__CLEAR_SECRETS__clear__out_t;
+    } soc_ifc_reg__CLEAR_SECRETS__clear_secrets__out_t;
 
     typedef struct {
-        soc_ifc_reg__CLEAR_SECRETS__clear__out_t clear;
+        soc_ifc_reg__CLEAR_SECRETS__clear_secrets__out_t clear_secrets;
     } soc_ifc_reg__CLEAR_SECRETS__out_t;
 
     typedef struct {

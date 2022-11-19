@@ -29,6 +29,7 @@ module doe_fsm
 (
     input logic clk,
     input logic rst_b,
+    input logic hard_rst_b,
 
     //Obfuscated UDS and FE
     input logic [FE_NUM_BLOCKS-1:0][SRC_WIDTH-1:0] obf_field_entropy,
@@ -70,6 +71,8 @@ typedef enum logic [2:0] {
 } kv_doe_fsm_state_e;
 
 logic running_uds, running_fe;
+logic lock_uds_flow;
+logic lock_fe_flow;
 
 logic [2:0] dest_addr, dest_addr_nxt;
 logic dest_addr_en;
@@ -100,8 +103,9 @@ always_comb dest_write_done = (dest_write_offset[DEST_OFFSET_W-1:0] == (DEST_NUM
 always_comb incr_dest_sel = (dest_write_offset_nxt == '0) & (dest_write_offset == '1);
 
 //assign arc equations
-//move to init state when command is set
-always_comb arc_DOE_IDLE_DOE_INIT = doe_cmd_reg.cmd inside {DOE_UDS,DOE_FE};
+//move to init state when command is set and that command isn't locked
+always_comb arc_DOE_IDLE_DOE_INIT = (running_uds & ~lock_uds_flow) |
+                                    (running_fe & ~lock_fe_flow);
 //wait to write when init is done and we have data to write
 always_comb arc_DOE_WAIT_DOE_WRITE = init_done & dest_data_avail;
 //wait to block when init is done and no data
@@ -127,6 +131,8 @@ always_comb begin : kv_doe_fsm
     unique casez (kv_doe_fsm_ps)
         DOE_IDLE: begin
             if (arc_DOE_IDLE_DOE_INIT) kv_doe_fsm_ns = DOE_INIT;
+            //assert flow done if a locked flow is attempted
+            flow_done = (running_uds & lock_uds_flow) | (running_fe & lock_fe_flow);
         end
         DOE_INIT: begin
             kv_doe_fsm_ns = DOE_WAIT;
@@ -213,6 +219,18 @@ always_ff @(posedge clk or negedge rst_b) begin
         dest_write_offset <= dest_write_offset_en ? dest_write_offset_nxt : dest_write_offset;
         block_offset <= block_offset_en ? block_offset_nxt : block_offset;
         dest_addr <= dest_addr_en ? dest_addr_nxt : dest_addr;
+    end
+end
+
+//sticky flops for locking UDS/FE flow after execution
+always_ff @(posedge clk or negedge hard_rst_b) begin
+    if (~hard_rst_b) begin
+        lock_uds_flow <= '0;
+        lock_fe_flow <= '0;
+    end
+    else begin
+        lock_uds_flow <= running_uds & flow_done ? '1 : lock_uds_flow;
+        lock_fe_flow <= running_fe & flow_done ? '1 : lock_fe_flow;
     end
 end
 

@@ -76,6 +76,7 @@ module soc_ifc_top
     input  mbox_sram_resp_t mbox_sram_resp,
 
     //Obfuscated UDS and FE
+    input  logic clear_secrets,
     input  logic [7:0][31:0] cptra_obf_key,
     output logic [7:0][31:0] cptra_obf_key_reg,
     output logic [31:0][31:0] obf_field_entropy,
@@ -122,7 +123,6 @@ logic soc_ifc_reg_req_hold;
 soc_ifc_reg_req_t soc_ifc_reg_req_data;
 logic [SOC_IFC_DATA_W-1:0] soc_ifc_reg_rdata;
 logic soc_ifc_reg_error, soc_ifc_reg_read_error, soc_ifc_reg_write_error;
-logic clear_secrets;
 
 logic sha_sram_req_dv;
 logic [MBOX_ADDR_W-1:0] sha_sram_req_addr;
@@ -135,6 +135,8 @@ logic uc_cmd_avail_p;
 
 soc_ifc_reg__in_t soc_ifc_reg_hwif_in;
 soc_ifc_reg__out_t soc_ifc_reg_hwif_out;
+
+logic flush_keyvault;
 
 //Boot FSM
 //This module contains the logic required to control the Caliptra Boot Flow
@@ -281,7 +283,8 @@ always_comb soc_ifc_reg_hwif_in.reset_b = cptra_rst_b;
 always_comb soc_ifc_reg_hwif_in.hard_reset_b = cptra_pwrgood;
 always_comb soc_ifc_reg_hwif_in.soc_req = soc_ifc_reg_req_data.soc_req;
 
-always_comb clear_secrets = soc_ifc_reg_hwif_out.CLEAR_SECRETS.clear.value;
+//TODO: part of security state changes
+always_comb flush_keyvault = soc_ifc_reg_hwif_out.CLEAR_SECRETS.clear_secrets.value;
 
 always_comb begin
     for (int i = 0; i < 8; i++) begin

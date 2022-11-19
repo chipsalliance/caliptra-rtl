@@ -70,8 +70,10 @@ addrmap soc_ifc_reg {
          field {sw=rw; swwel = soc_req; hw=r;} ready_for_runtime[1]=0;} FLOW_STATUS;
 
     reg {name = "Clear Secrets";
-        desc = "Firmware writable register that will clear flops containing device secrets";
-        field {sw=w; swwel = soc_req; hw=r; singlepulse;} clear=0;} CLEAR_SECRETS;
+        desc = "Firmware writable register that will clear flops containing device secrets.
+                Keyvault is flushed, along with UDS, FE, and OBF KEY.
+                This is a failsafe mechanism for unexpected security state changes.";
+        field {sw=w; swwel = soc_req; hw=r; singlepulse;} clear_secrets=0;} CLEAR_SECRETS;
 
     reg {name = "Generic Input Wires";
         desc = "Generic input wires connected to SoC interface";

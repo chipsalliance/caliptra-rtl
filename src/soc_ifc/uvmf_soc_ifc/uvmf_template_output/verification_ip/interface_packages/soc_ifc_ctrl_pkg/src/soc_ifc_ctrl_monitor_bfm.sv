@@ -87,12 +87,14 @@ end
   tri  cptra_rst_b_i;
   tri [7:0][31:0] cptra_obf_key_i;
   tri [63:0] generic_input_wires_i;
+  tri  clear_secrets_i;
   assign clk_i = bus.clk;
   assign dummy_i = bus.dummy;
   assign cptra_pwrgood_i = bus.cptra_pwrgood;
   assign cptra_rst_b_i = bus.cptra_rst_b;
   assign cptra_obf_key_i = bus.cptra_obf_key;
   assign generic_input_wires_i = bus.generic_input_wires;
+  assign clear_secrets_i = bus.clear_secrets;
 
   // Proxy handle to UVM monitor
   soc_ifc_ctrl_pkg::soc_ifc_ctrl_monitor  proxy;
@@ -182,6 +184,7 @@ end
     //     //    soc_ifc_ctrl_monitor_struct.assert_rst
     //     //    soc_ifc_ctrl_monitor_struct.wait_cycles
     //     //    soc_ifc_ctrl_monitor_struct.generic_input_val
+    //     //    soc_ifc_ctrl_monitor_struct.assert_clear_secrets
     //     //
     // Reference code;
     //    How to wait for signal value
@@ -189,10 +192,11 @@ end
     //
     //    How to assign a struct member, named xyz, from a signal.
     //    All available input signals listed.
-    //      soc_ifc_ctrl_monitor_struct.xyz = cptra_pwrgood_i;  //
-    //      soc_ifc_ctrl_monitor_struct.xyz = cptra_rst_b_i;  //
-    //      soc_ifc_ctrl_monitor_struct.xyz = cptra_obf_key_i;  //    [7:0][31:0]
-    //      soc_ifc_ctrl_monitor_struct.xyz = generic_input_wires_i;  //    [63:0]
+    //      soc_ifc_ctrl_monitor_struct.xyz = cptra_pwrgood_i;  //     
+    //      soc_ifc_ctrl_monitor_struct.xyz = cptra_rst_b_i;  //     
+    //      soc_ifc_ctrl_monitor_struct.xyz = cptra_obf_key_i;  //    [7:0][31:0] 
+    //      soc_ifc_ctrl_monitor_struct.xyz = generic_input_wires_i;  //    [63:0] 
+    //      soc_ifc_ctrl_monitor_struct.xyz = clear_secrets_i;  //     
     // pragma uvmf custom do_monitor begin
     // UVMF_CHANGE_ME : Implement protocol monitoring.  The commented reference code
     // below are examples of how to capture signal values and assign them to

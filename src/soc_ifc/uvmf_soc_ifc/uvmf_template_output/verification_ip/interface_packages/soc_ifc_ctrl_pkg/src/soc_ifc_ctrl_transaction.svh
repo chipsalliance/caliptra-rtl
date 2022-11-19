@@ -37,6 +37,7 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
   bit assert_rst ;
   rand int unsigned wait_cycles ;
   rand bit [63:0] generic_input_val ;
+  bit assert_clear_secrets ;
 
   //Constraints for the transaction variables:
   constraint wait_cycles_c { wait_cycles dist {[1:25] := 80, [25:100] := 15, [100:500] := 5}; }

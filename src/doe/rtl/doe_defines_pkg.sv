@@ -62,7 +62,7 @@ typedef enum logic [1:0] {
     DOE_NOP    = 2'b00,
     DOE_UDS    = 2'b01,
     DOE_FE     = 2'b10,
-    DOE_RSVD   = 2'b11
+    DOE_CLEAR  = 2'b11
 } doe_cmd_e;
 
 typedef struct packed {

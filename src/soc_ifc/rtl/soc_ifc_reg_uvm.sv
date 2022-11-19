@@ -124,15 +124,15 @@ package soc_ifc_reg_uvm;
 
     // Reg - soc_ifc_reg::CLEAR_SECRETS
     class soc_ifc_reg__CLEAR_SECRETS extends uvm_reg;
-        rand uvm_reg_field clear;
+        rand uvm_reg_field clear_secrets;
 
         function new(string name = "soc_ifc_reg__CLEAR_SECRETS");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
         virtual function void build();
-            this.clear = new("clear");
-            this.clear.configure(this, 1, 0, "WO", 0, 'h0, 1, 1, 0);
+            this.clear_secrets = new("clear_secrets");
+            this.clear_secrets.configure(this, 1, 0, "WO", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__CLEAR_SECRETS
 

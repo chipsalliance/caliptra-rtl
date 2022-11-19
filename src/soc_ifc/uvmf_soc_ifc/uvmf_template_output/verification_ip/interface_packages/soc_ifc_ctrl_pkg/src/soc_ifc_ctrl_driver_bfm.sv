@@ -114,6 +114,8 @@ end
   reg [7:0][31:0] cptra_obf_key_o = 'bz;
   tri [63:0] generic_input_wires_i;
   reg [63:0] generic_input_wires_o = 'bz;
+  tri  clear_secrets_i;
+  reg  clear_secrets_o = 'bz;
 
   // Bi-directional signals
   
@@ -135,6 +137,8 @@ end
   assign cptra_obf_key_i = bus.cptra_obf_key;
   assign bus.generic_input_wires = (initiator_responder == INITIATOR) ? generic_input_wires_o : 'bz;
   assign generic_input_wires_i = bus.generic_input_wires;
+  assign bus.clear_secrets = (initiator_responder == INITIATOR) ? clear_secrets_o : 'bz;
+  assign clear_secrets_i = bus.clear_secrets;
 
   // Proxy handle to UVM driver
   soc_ifc_ctrl_pkg::soc_ifc_ctrl_driver   proxy;

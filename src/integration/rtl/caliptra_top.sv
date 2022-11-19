@@ -209,6 +209,8 @@ module caliptra_top
     mbox_sram_req_t mbox_sram_req;
     mbox_sram_resp_t mbox_sram_resp;
 
+    logic clear_secrets;
+
 always_comb begin
     mbox_sram_cs = mbox_sram_req.cs;
     mbox_sram_we = mbox_sram_req.we;
@@ -559,7 +561,7 @@ doe_ctrl #(
 
     .error_intr(doe_error_intr),
     .notif_intr(doe_notif_intr),
-
+    .clear_secrets(clear_secrets),
     .kv_write (kv_write[`KV_NUM_WRITE-1])
 
     
@@ -698,6 +700,7 @@ soc_ifc_top1
     .sha_error_intr(sha_error_intr),
     .sha_notif_intr(sha_notif_intr),
     //Obfuscated UDS and FE
+    .clear_secrets(clear_secrets),
     .cptra_obf_key(cptra_obf_key),
     .cptra_obf_key_reg(cptra_obf_key_reg),
     .obf_field_entropy(obf_field_entropy),

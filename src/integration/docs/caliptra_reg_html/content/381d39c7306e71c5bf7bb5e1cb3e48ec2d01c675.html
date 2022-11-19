@@ -13,7 +13,9 @@
 </dl>
 <h2>Description</h2>
 <div id="_Content.desc">
-<p>Firmware writable register that will clear flops containing device secrets</p>
+<p>Firmware writable register that will clear flops containing device secrets.
+Keyvault is flushed, along with UDS, FE, and OBF KEY.
+This is a failsafe mechanism for unexpected security state changes.</p>
 </div>
 
 <h2>Contents</h2>
@@ -36,24 +38,24 @@
     <td>-</td>
     <td></td>
 </tr>
-    <tr id="clear">
+    <tr id="clear_secrets">
         <td>[0]</td>
-        <td>clear</td>
+        <td>clear_secrets</td>
         <td>
             <span title='Write-only'>w</span></td>
         <td>0x0
         </td>
         <td>
-            <input id="_FieldValueTesterclear" class="field-value-tester"
+            <input id="_FieldValueTesterclear_secrets" class="field-value-tester"
                 type="text" autocomplete="off"
-                data-name="clear" oninput="onDecodedFieldInput(this)"/>
+                data-name="clear_secrets" oninput="onDecodedFieldInput(this)"/>
         </td>
         <td>-</td>
         <td>
-            <button type="button" id="_RadixButtonclear" class="radix-button"
+            <button type="button" id="_RadixButtonclear_secrets" class="radix-button"
                 title="Switch radix" aria-label="Switch radix"
-                data-name="clear" onclick="onRadixSwitch(this)">H</button>
-            <a class="headerlink" href="#clear" title="Permalink to this row"></a>
+                data-name="clear_secrets" onclick="onRadixSwitch(this)">H</button>
+            <a class="headerlink" href="#clear_secrets" title="Permalink to this row"></a>
         </td>
     </tr>
 </table>

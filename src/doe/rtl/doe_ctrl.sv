@@ -54,6 +54,8 @@ module doe_ctrl
     output logic [AHB_DATA_WIDTH-1:0] hrdata_o,
     output kv_write_t kv_write,
 
+    output logic clear_secrets,
+
     // Interrupt
     output logic error_intr,
     output logic notif_intr
@@ -85,6 +87,7 @@ module doe_ctrl
         .read_data(doe_read_data[31:0]),
         .error_intr(error_intr),
         .notif_intr(notif_intr),
+        .clear_secrets(clear_secrets),
         .kv_write(kv_write)
     );
 

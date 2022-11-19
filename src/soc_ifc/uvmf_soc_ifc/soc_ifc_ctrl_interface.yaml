@@ -45,6 +45,10 @@ uvmf:
         dir: output
         width: '64'
 
+      - name: clear_secrets
+        dir: output
+        width: '1'
+
       transaction_constraints:
       - name: wait_cycles_c
         value: '{ wait_cycles dist {[1:25] := 80, [25:100] := 15, [100:500] := 5}; }'
@@ -72,3 +76,7 @@ uvmf:
         type: bit [63:0]
         iscompare: 'False'
         isrand: 'True'
+      - name: assert_clear_secrets
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'

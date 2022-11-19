@@ -267,7 +267,7 @@ module soc_ifc_reg (
             struct {
                 logic next;
                 logic load_next;
-            } clear;
+            } clear_secrets;
         } CLEAR_SECRETS;
         struct {
             struct {
@@ -640,7 +640,7 @@ module soc_ifc_reg (
         struct {
             struct {
                 logic value;
-            } clear;
+            } clear_secrets;
         } CLEAR_SECRETS;
         struct {
             struct {
@@ -1068,9 +1068,9 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.FLOW_STATUS.ready_for_runtime.value = field_storage.FLOW_STATUS.ready_for_runtime.value;
-    // Field: soc_ifc_reg.CLEAR_SECRETS.clear
+    // Field: soc_ifc_reg.CLEAR_SECRETS.clear_secrets
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CLEAR_SECRETS.clear.value;
+        automatic logic [0:0] next_c = field_storage.CLEAR_SECRETS.clear_secrets.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.CLEAR_SECRETS && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = decoded_wr_data[0:0];
@@ -1079,17 +1079,17 @@ module soc_ifc_reg (
             next_c = '0;
             load_next_c = '1;
         end
-        field_combo.CLEAR_SECRETS.clear.next = next_c;
-        field_combo.CLEAR_SECRETS.clear.load_next = load_next_c;
+        field_combo.CLEAR_SECRETS.clear_secrets.next = next_c;
+        field_combo.CLEAR_SECRETS.clear_secrets.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.CLEAR_SECRETS.clear.value <= 'h0;
-        end else if(field_combo.CLEAR_SECRETS.clear.load_next) begin
-            field_storage.CLEAR_SECRETS.clear.value <= field_combo.CLEAR_SECRETS.clear.next;
+            field_storage.CLEAR_SECRETS.clear_secrets.value <= 'h0;
+        end else if(field_combo.CLEAR_SECRETS.clear_secrets.load_next) begin
+            field_storage.CLEAR_SECRETS.clear_secrets.value <= field_combo.CLEAR_SECRETS.clear_secrets.next;
         end
     end
-    assign hwif_out.CLEAR_SECRETS.clear.value = field_storage.CLEAR_SECRETS.clear.value;
+    assign hwif_out.CLEAR_SECRETS.clear_secrets.value = field_storage.CLEAR_SECRETS.clear_secrets.value;
     for(genvar i0=0; i0<2; i0++) begin
         // Field: soc_ifc_reg.generic_input_wires[].generic_wires
         always_comb begin
