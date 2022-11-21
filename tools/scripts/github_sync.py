@@ -14,6 +14,12 @@
 # limitations under the License.
 #
 
+#######################################################################################
+#                              !!IMPORTANT!!                                          #
+# You need to be in the PB enviroment to run this script                              #
+# Specify complete path to source and destination workspaces ($HOME/<workspace_name>) #
+#######################################################################################
+
 
 import sys
 import os
@@ -21,11 +27,51 @@ import shutil
 import argparse
 import yaml
 import re
+import subprocess
+import logging
+import codecs
 
-blacklistRepoDirsFiles = ["SCA", "etc", "config", "dvt_build.log"]
-blacklistIpDirsFiles = ["aes", "sim_irq_gen", "syn"]
-blacklistScriptsDirsFiles = ["gen_pb_file_lists.sh", "README.md", "sim_config_parse.py", "github_sync.py", "syn"]
-#regressionTestList = ['smoke_test_swerv', 'smoke_test_mbox', 'smoke_test_sha512', 'memCpy_ROM_to_dccm', 'memCpy_dccm_to_iccm', 'c_intr_handler', 'smoke_test_ecc', 'smoke_test_hmac', 'smoke_test_kv']
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+console_handler = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s | %(levelname)s: %(message)s', '%Y-%m-%d %H:%M:%S')
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
+
+# Run command and wait for it to complete before returning the results
+def runBashScript(cmd):
+    p = subprocess.Popen(cmd, stdin=None, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+    exitCode = p.wait()
+    return exitCode, p
+    #return os.popen(cmd).read()
+
+def prepDestRepo(inDestWS, inDestRepo, inDestBranch):
+    scriptsDir = get_script_dir()
+    prepRepoScript = os.path.join(scriptsDir, "prepDestRepo.sh")
+    cmd = ". {} -dw {} -dr {} -db {}".format(prepRepoScript, inDestWS, inDestRepo, inDestBranch)
+    exitcode, prepRepoResult = runBashScript(cmd)
+    if (exitcode == 0):
+        infoMsg = "Destination repo {} setup with branch {}.".format(inDestRepo, inDestBranch)
+        logger.info(infoMsg)
+    else:
+        print(exitcode)
+        print(prepRepoResult.stderr.read().decode())
+        return 1
+
+def prepPBSrcRepo(inSrcWS, inSrcRepo):
+    scriptsDir = get_script_dir()
+    prepRepoScript = os.path.join(scriptsDir, "prepPBSrcRepo.sh")
+    cmd = ". {} -sw {} -sr {}".format(prepRepoScript, inSrcWS, inSrcRepo)
+    exitcode, prepRepoResult = runBashScript(cmd)
+    if (exitcode == 0):
+        infoMsg = "Source repo {} setup with branch {}.".format(inSrcRepo, "master")
+        logger.info(infoMsg)
+    else:
+        print(exitcode)
+        print(prepRepoResult.stderr.read().decode())
+
+def get_script_dir():
+    return os.path.dirname(os.path.realpath(__file__))
 
 def listdir_nohidden(dirpath):
     fileList = []
@@ -34,120 +80,151 @@ def listdir_nohidden(dirpath):
         f_fullPath = os.path.join(dirpath, f)
         if not f.startswith('.'):
             if os.path.isfile(f_fullPath):
-                print(f + "is a file")
                 fileList.append(f)
             else:
                 dirList.append(f)
     return fileList, dirList
 
-parser = argparse.ArgumentParser()
-parser.add_argument("-s", "--srcCaliptra",
-                    action="store",
-                    help="path to internal Caliptra repo")
-parser.add_argument("-d", "--destCaliptra",
-                    action="store",
-                    help="path to external Caliptra repo")
-args = parser.parse_args()
+def copy_tree(src, dest):
+    if (os.path.exists(dest)):
+        infoMsg = "Copying directory {}".format(src)
+        logger.info(infoMsg)
+        shutil.rmtree(dest)
+        shutil.copytree(src,dest)
 
-repoFiles, repoDirs = listdir_nohidden(args.srcCaliptra)
-print (repoDirs)
-print (repoFiles)
+def create_directory(dest):
+    if (not os.path.exists(dest)):
+        infoMsg = "Creating directory {}".format(dest)
+        logger.info(infoMsg)
+        os.mkdir(dest)
+    else:
+        infoMsg = "Destination directory {} already exists".format(dest)
+        logger.info(infoMsg)
 
-print(args.srcCaliptra)
-print(args.destCaliptra)
-
-ipList = []
-for f in repoFiles:
-    if (not f in blacklistRepoDirsFiles):
-        src = args.srcCaliptra + "/" + f 
-        dest = args.destCaliptra + "/" + f 
-        shutil.copy(src, dest)
-
-for dir in repoDirs:
-    if (not dir in blacklistRepoDirsFiles):
-        srcDir_FullPath = args.srcCaliptra + "/" + dir 
-        destDir_FullPath = args.destCaliptra + "/" + dir 
-        if (dir == 'src'):
-            ipFileList, ipDirList = listdir_nohidden(srcDir_FullPath)
-            print(ipDirList)
-            os.mkdir(destDir_FullPath)
-            for ipDir in ipDirList:
-                print(ipDir)
-                if (not ipDir in blacklistIpDirsFiles):
-                    src = srcDir_FullPath +  "/" + str(ipDir)
-                    dest = destDir_FullPath + "/" + str(ipDir)
-                    shutil.copytree(src, dest)
-        elif (dir == 'tools'):
-            toolsFileList, toolsDirList = listdir_nohidden(srcDir_FullPath)
-            print(toolsDirList)
-            os.mkdir(destDir_FullPath)
-            for dir in toolsDirList:
-                if (dir == 'scripts'):
-                    scriptsSrcDir_Full_Path = srcDir_FullPath + "/" + dir
-                    scriptsDestDir_Full_Path = destDir_FullPath + "/" + dir
-                    os.mkdir(scriptsDestDir_Full_Path)
-                    scriptsFileList, scriptsDirList = listdir_nohidden(scriptsSrcDir_Full_Path)
-                    for f in scriptsFileList:
-                        if (not f in blacklistScriptsDirsFiles):
-                            shutil.copy(scriptsSrcDir_Full_Path + "/" + f,  scriptsDestDir_Full_Path)
-                    for d in scriptsDirList:
-                        if (not d in blacklistScriptsDirsFiles):
-                            shutil.copy(scriptsSrcDir_Full_Path + "/" + d,  scriptsDestDir_Full_Path)
-                else:
-                    src = srcDir_FullPath + "/" + dir
-                    dest = destDir_FullPath + "/" + dir
-                    shutil.copytree(src, dest)
-            for f in toolsFileList:
-                if (not f in blacklistScriptsDirsFiles):
-                    src = srcDir_FullPath + "/" + f
-                    dest = destDir_FullPath + "/" + f
-                    shutil.copy(src, dest)
-
-#Remove tests not in the regression suite
-os.chdir(args.destCaliptra + "/src/integration")
-curDir = os.getcwd()
-print("Current directory is ")
-print (curDir)
-l0_regress_file = curDir + "/stimulus/L0_regression.yml"
-testPaths = []
-l0_test_list = []
-x = ''
-
-with open (l0_regress_file) as f:
-    dict = yaml.load(f, Loader=yaml.FullLoader)
-    #print (dict)
-    print (dict["contents"])
-    print(type(dict["contents"]))
-    for item in dict["contents"]:
-        #print(type(item))
-        for key in item.keys():
-            #print(key)
-            #print (item[key])
-            #print(type(item[key]))
-            for testKey in item[key].keys():
-                print(testKey)
-                if (testKey == 'paths'):
-                    testPaths = item[key][testKey]
-                    #print(testPaths)
-
-for testYml in testPaths:
-    print(testYml)
-    x = re.search(r'../test_suites/(\S+)/\S+.yml', testYml)
-    #print (x.groups()[0])
-    l0_test_list.append(x.groups()[0])
-    print (l0_test_list)
-    #x = re.search('*/test_suites/(.*)/.*.yml', testYml)
-
-os.chdir("test_suites")
-curDir = os.getcwd()
-testfiles, testdirs = listdir_nohidden(curDir)
-print(testdirs)
-
-for t in testdirs:
-    if (not t in l0_test_list and ((t != 'caliptra_demo') or (t != 'includes') or (t != 'printf') or (c != 'caliptra_isr'))):
-        shutil.rmtree(t)
+def copy_file(file, srcDir,destDir):
+    src = os.path.join(srcDir, file)
+    dest = os.path.join(destDir, file)
+    infoMsg = "Copying file {}".format(src)
+    logger.info(infoMsg)
+    shutil.copy(src, dest)
 
 
+def copyFilesSrcToDest(sWorkspace, sRepo, dWorkspace, dRepo):
+    blacklistRepoDirsFiles = ["SCA", "etc", "config", "dvt_build.log"]
+    blacklistIpDirsFiles = ["aes", "sim_irq_gen", "syn"]
+    blacklistScriptsDirsFiles = ["gen_pb_file_lists.sh", "README.md", "sim_config_parse.py", "github_sync.py", "prepDestRepo.sh", "prepPBSrcRepo.sh", "run_test_makefile", "syn"]
+    integrationTestSuiteList = ['caliptra_demo', 'caliptra_isr', 'includes', 'printf']
+
+    srcCaliptraDir = os.path.join(sWorkspace, sRepo)
+    destCaliptraDir = os.path.join(dWorkspace, dRepo)
+    repoFiles, repoDirs = listdir_nohidden(srcCaliptraDir)
+
+    ipList = []
+    for f in repoFiles:
+        if (not f in blacklistRepoDirsFiles):
+            copy_file(f, srcCaliptraDir, destCaliptraDir)
+
+    for dir in repoDirs:
+        if (not dir in blacklistRepoDirsFiles):
+            srcDir_FullPath = os.path.join(srcCaliptraDir, dir)
+            destDir_FullPath = os.path.join(destCaliptraDir, dir)
+            if (dir == 'src'):
+                ipFileList, ipDirList = listdir_nohidden(srcDir_FullPath)
+                create_directory(destDir_FullPath)
+                for ipDir in ipDirList:
+                    if (not ipDir in blacklistIpDirsFiles):
+                        src = os.path.join(srcDir_FullPath, str(ipDir))
+                        dest = os.path.join(destDir_FullPath, str(ipDir))
+                        copy_tree(src, dest)
+            elif (dir == 'tools'):
+                toolsFileList, toolsDirList = listdir_nohidden(srcDir_FullPath)
+                create_directory(destDir_FullPath)
+                for dir in toolsDirList:
+                    if (dir == 'scripts'):
+                        scriptsSrcDir_Full_Path = os.path.join(srcDir_FullPath, dir)
+                        scriptsDestDir_Full_Path = os.path.join(destDir_FullPath, dir)
+                        create_directory(scriptsDestDir_Full_Path)
+                        scriptsFileList, scriptsDirList = listdir_nohidden(scriptsSrcDir_Full_Path)
+                        for f in scriptsFileList:
+                            if (not f in blacklistScriptsDirsFiles):
+                                copy_file(f, scriptsSrcDir_Full_Path,  scriptsDestDir_Full_Path)
+                        for d in scriptsDirList:
+                            if (not d in blacklistScriptsDirsFiles):
+                                copy_file(d, scriptsSrcDir_Full_Path,  scriptsDestDir_Full_Path)
+                    else:
+                        src = os.path.join(srcDir_FullPath, dir)
+                        dest = os.path.join(destDir_FullPath, dir)
+                        copy_tree(src, dest)
+                for f in toolsFileList:
+                    if (not f in blacklistScriptsDirsFiles):
+                        copy_file(f, srcDir_FullPath, destDir_FullPath)
+
+    #Remove tests not in the regression suite
+    os.chdir(os.path.join(destCaliptraDir, "src/integration"))
+    curDir = os.getcwd()
+    l0_regress_file = os.path.join(curDir, "stimulus/L0_regression.yml")
+    testPaths = []
+    x = ''
+
+    with open (l0_regress_file) as f:
+        dict = yaml.load(f, Loader=yaml.FullLoader)
+        for item in dict["contents"]:
+            for key in item.keys():
+                for testKey in item[key].keys():
+                    if (testKey == 'paths'):
+                        testPaths = item[key][testKey]
+
+    for testYml in testPaths:
+        x = re.search(r'../test_suites/(\S+)/\S+.yml', testYml)
+        integrationTestSuiteList.append(x.groups()[0])
+
+    infoMsg = "Cleaning up integration/test_suites directory"
+    logger.info(infoMsg)
+
+    os.chdir("test_suites")
+    curDir = os.getcwd()
+    testfiles, testdirs = listdir_nohidden(curDir)
+
+    for test in testdirs:
+        if (not test in integrationTestSuiteList):
+                shutil.rmtree(test)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-sw", "--srcWorkspace",
+                        action="store",
+                        help="path to internal Caliptra repo workspace")
+    parser.add_argument("-sr", "--srcRepo",
+                        action="store",
+                        help="src repository name")
+    parser.add_argument("-dw", "--destWorkspace",
+                        action="store",
+                        help="path to external Caliptra repo workspace")
+    parser.add_argument("-dr", "--destRepo",
+                        action="store",
+                        help="destination repository name") 
+    parser.add_argument("-db", "--destBranch",
+                        action="store",
+                        help="destination repo branch for updates")                   
+    args = parser.parse_args()
+
+    sWorkspace = args.srcWorkspace
+    sRepo = args.srcRepo
+    dWorkspace = args.destWorkspace
+    dRepo = args.destRepo
+    dBranch = args.destBranch
+
+    infoMsg = "Command: {} {} {} {} {} {} {} {} {} {} {}".format(sys.argv[0], sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9], sys.argv[10])
+    logger.info(infoMsg)
+
+    prepDestRepo(dWorkspace, dRepo, dBranch)
+    prepPBSrcRepo(sWorkspace, sRepo)
+    copyFilesSrcToDest(sWorkspace, sRepo, dWorkspace, dRepo)
+
+    
+if __name__ == "__main__":
+    main()
 
 
 
