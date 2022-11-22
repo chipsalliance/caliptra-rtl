@@ -36,11 +36,15 @@ package soc_ifc_pkg;
     parameter SOC_IFC_REG_START_ADDR = 18'h3_0000;
     parameter SOC_IFC_REG_END_ADDR   = 18'h3_FFFF;
 
+    parameter UC_FW_UPDT_RST_CYCLES  = 5;
+
     //BOOT FSM
-    typedef enum logic [1:0] {
-        BOOT_IDLE   = 2'b00,
-        BOOT_FUSE   = 2'b01,
-        BOOT_DONE   = 2'b11
+    typedef enum logic [2:0] {
+        BOOT_IDLE   = 3'b000,
+        BOOT_FUSE   = 3'b001,
+        BOOT_FW_RST = 3'b010,
+        BOOT_WAIT   = 3'b011,
+        BOOT_DONE   = 3'b100
     } boot_fsm_state_e;
 
     //MAILBOX FSM

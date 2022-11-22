@@ -402,6 +402,20 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__iccm_lock
 
+    // Reg - soc_ifc_reg::fw_update_reset
+    class soc_ifc_reg__fw_update_reset extends uvm_reg;
+        rand uvm_reg_field reset;
+
+        function new(string name = "soc_ifc_reg__fw_update_reset");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.reset = new("reset");
+            this.reset.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__fw_update_reset
+
     // Reg - soc_ifc_reg::intr_block_t::global_intr_en_t
     class soc_ifc_reg__intr_block_t__global_intr_en_t extends uvm_reg;
         rand uvm_reg_field error_en;
@@ -903,6 +917,7 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__fuse_done fuse_done;
         rand soc_ifc_reg__obf_key obf_key[8];
         rand soc_ifc_reg__iccm_lock iccm_lock;
+        rand soc_ifc_reg__fw_update_reset fw_update_reset;
         rand soc_ifc_reg__intr_block_t intr_block_rf;
 
         function new(string name = "soc_ifc_reg");
@@ -1075,6 +1090,11 @@ package soc_ifc_reg_uvm;
 
             this.iccm_lock.build();
             this.default_map.add_reg(this.iccm_lock, 'h414);
+            this.fw_update_reset = new("fw_update_reset");
+            this.fw_update_reset.configure(this);
+
+            this.fw_update_reset.build();
+            this.default_map.add_reg(this.fw_update_reset, 'h418);
             this.intr_block_rf = new("intr_block_rf");
             this.intr_block_rf.configure(this);
             this.intr_block_rf.build();

@@ -123,6 +123,16 @@ addrmap soc_ifc_reg {
         field {desc="Lock bit gates writes to ICCM. Write 1 to set - cannot be cleared by SW."; hw=r; hwclr=true; sw=rw; onwrite=woset; precedence=hw; swwel=soc_req;} lock = 1'b0;
     } iccm_lock;
 
+    reg {
+        name = "FW Update Reset";
+        desc = "Control register to assert FW update reset. When cleared to
+                0, the uc core alone is reset. When set to 1, reset is deasserted.
+                Writes available to Caliptra subsystem, not SoC.";
+
+        //field {desc = "FW Update reset to reset core"; hw = r; precedence=hw; sw = rw; swwel = soc_req;} reset = 1'b1;
+        field {desc = "FW Update reset to reset core"; hw = r; sw = rw; singlepulse=true; swwel = soc_req;} reset = 1'b0;
+    } fw_update_reset;
+
 
     ////////////////////////////////////////////////////////////////
     // Interrupts

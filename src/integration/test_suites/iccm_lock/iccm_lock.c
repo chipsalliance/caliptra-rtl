@@ -65,6 +65,7 @@ void main(void) {
         volatile uint32_t * soc_ifc_error_iccm_blocked_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_R);
         volatile uint32_t * soc_ifc_notif_cmd_avail_ctr    = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_R);
         volatile uint32_t * soc_ifc_iccm_lock              = (uint32_t *) (CLP_SOC_IFC_REG_ICCM_LOCK);
+        volatile uint32_t * soc_ifc_fw_update_reset        = (uint32_t *) (CLP_SOC_IFC_REG_FW_UPDATE_RESET);
 
         uint32_t * code_word = 0;
         uint32_t * iccm_dest = ICCM;
@@ -161,7 +162,7 @@ void main(void) {
             printf("Success! Reached end of ICCM lock firmware during second iteration\n");
         } else {
             persistent_is_second_pass = 1;
-            // TODO << do reset here
+            *soc_ifc_fw_update_reset = SOC_IFC_REG_FW_UPDATE_RESET_RESET_MASK;
         }
 
         return;

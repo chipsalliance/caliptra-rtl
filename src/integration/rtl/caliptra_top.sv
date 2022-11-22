@@ -94,6 +94,7 @@ module caliptra_top
 
     //caliptra reset driven by boot fsm in mailbox
     logic                       cptra_uc_rst_b;
+    logic                       cptra_uc_fw_rst_b;
 
     logic        [31:0]         ic_haddr        ;
     logic        [2:0]          ic_hburst       ;
@@ -330,7 +331,7 @@ always_comb begin
 end
 
 el2_swerv_wrapper rvtop (
-    .rst_l                  ( cptra_uc_rst_b),
+    .rst_l                  ( cptra_uc_fw_rst_b),
     .dbg_rst_l              ( cptra_pwrgood), 
     .clk                    ( clk      ),
     .rst_vec                ( reset_vector[31:1]),
@@ -709,7 +710,8 @@ soc_ifc_top1
     .iccm_lock       (iccm_lock                                    ),
     .iccm_axs_blocked(ahb_lite_resp_access_blocked[`SLAVE_SEL_IDMA]),
     //uC reset
-    .cptra_uc_rst_b (cptra_uc_rst_b) 
+    .cptra_uc_rst_b (cptra_uc_rst_b),
+    .cptra_uc_fw_rst_b (cptra_uc_fw_rst_b)
 );
 
 //TIE OFF slaves

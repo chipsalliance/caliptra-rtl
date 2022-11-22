@@ -86,8 +86,10 @@ module soc_ifc_top
     output logic iccm_lock,
     input  logic iccm_axs_blocked,
 
+    //Other blocks reset
+    output logic cptra_uc_rst_b,
     //uC reset
-    output logic cptra_uc_rst_b
+    output logic cptra_uc_fw_rst_b   
 );
 
 //gasket to assemble mailbox request
@@ -133,6 +135,8 @@ logic uc_mbox_data_avail;
 logic uc_mbox_data_avail_d;
 logic uc_cmd_avail_p;
 
+logic iccm_unlock;
+
 soc_ifc_reg__in_t soc_ifc_reg_hwif_in;
 soc_ifc_reg__out_t soc_ifc_reg_hwif_out;
 
@@ -146,12 +150,14 @@ soc_ifc_boot_fsm i_soc_ifc_boot_fsm (
     .clk(clk),
     .cptra_pwrgood(cptra_pwrgood),
     .cptra_rst_b (cptra_rst_b),
-
+    .fw_update_rst (soc_ifc_reg_hwif_out.fw_update_reset.reset.value),
     .ready_for_fuses(ready_for_fuses),
 
     .fuse_done(soc_ifc_reg_hwif_out.fuse_done.done.value),
 
-    .cptra_uc_rst_b(cptra_uc_rst_b)
+    .cptra_uc_rst_b(cptra_uc_rst_b), //goes to all other blocks
+    .cptra_uc_fw_rst_b(cptra_uc_fw_rst_b), //goes to swerv core
+    .iccm_unlock(iccm_unlock)
 );
 
 //APB Interface
@@ -323,7 +329,7 @@ always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_bad_fu
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_iccm_blocked_sts.hwset = iccm_axs_blocked;
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.hwset    = uc_cmd_avail_p; // TODO @michnorris to confirm
 
-always_comb soc_ifc_reg_hwif_in.iccm_lock.lock.hwclr    = 1'b0; // TODO from FW reset
+always_comb soc_ifc_reg_hwif_in.iccm_lock.lock.hwclr    = iccm_unlock;
 
 
 

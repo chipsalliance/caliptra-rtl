@@ -540,7 +540,7 @@ static void nonstd_swerv_isr_0 (void) {
     /* Print msg before enabling nested interrupts so it                                              \
      * completes printing and is legible                                                              \
      */                                                                                               \
-    printf("In:"stringify(name)"\n");                                                                 \
+    if (EN_ISR_PRINTS) printf("In:"stringify(name)"\n");                                                                 \
                                                                                                       \
     /* Save Context to Stack */                                                                       \
     uint32_t meicidpl;                                                                                \
@@ -571,7 +571,7 @@ static void nonstd_swerv_isr_0 (void) {
                                                                                                       \
     /* Service the interrupt (clear the interrupt source) */                                          \
     intr_count++;                                                                                     \
-    printf("cnt_"stringify(name)":%x\n",intr_count);                                                  \
+    if (EN_ISR_PRINTS) printf("cnt_"stringify(name)":%x\n",intr_count);                                                  \
     /* Fill in with macro contents, e.g. "service_soc_ifc_error_intr" */                                 \
     /* This will match one macro from this list:                                                      \
      * service_doe_error_intr                                                                         \
