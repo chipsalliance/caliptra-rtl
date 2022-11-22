@@ -25,6 +25,7 @@ stages:
       project: 'AHA_POC'
       repo_url: 'git@ssh.dev.azure.com:v3/ms-tsd/AHA_POC/Caliptra'
       target_branch: 'master'
+      enable_pipeline_audits: true
 
       pre_steps:
         setup: []

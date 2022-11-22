@@ -83,9 +83,10 @@ The "Integration" sub-component contains the top-level fileset for Caliptra. `sr
 Steps:
 1. Setup tools, add to PATH (ensure riscv64-unknown-elf-gcc is also available)
 1. Define all environment variables above
+    - For the initial test run after downloading repository, `hello_world_iccm` is recommended for TESTNAME
 1. Create a run folder for build outputs (and cd to it)
 1. Invoke `${WORKSPACE}/Caliptra/tools/scripts/Makefile` with target 'program.hex' to produce SRAM initialization files from the firmware found in `src/integration/test_suites/${TESTNAME}`
-     - E.g.: `make -f ${WORKSPACE}/Caliptra/tools/scripts/Makefile program.hex`
+    - E.g.: `make -f ${WORKSPACE}/Caliptra/tools/scripts/Makefile program.hex`
 1. Compile complete project using `src/integration/config/caliptra_top_tb.vf` as a compilation target in VCS. When running the `vcs` command to generate simv, users should ensure that `caliptra_top_tb` is explicitly specified as the top-level component in their command to ensure this is the sole "top" that gets simulated.
 1. Simulate project with `caliptra_top_tb` as the top target
 
