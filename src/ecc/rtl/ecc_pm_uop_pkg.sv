@@ -33,19 +33,35 @@ localparam integer OPR_ADDR_WIDTH       = 6;
 localparam PROG_ADDR_W                  = 12; //$clog2(VER2_PA_E+2);
 localparam INSTRUCTION_LENGTH           = UOP_ADDR_WIDTH + (2*OPR_ADDR_WIDTH);    // opcode + 2 * operand
 
-localparam [UOP_ADDR_WIDTH-1 : 0] UOP_NOP                   = 6'b00_0000;
+typedef struct packed
+{
+    logic       mult_we;
+    logic       add_we;
+    logic       sub_sel;
+    logic       add_en;
+    logic       mult_en;
+    logic       mod_q_sel;
+} pm_opcode_t;
 
-localparam [UOP_ADDR_WIDTH-1 : 0] UOP_DO_MUL_p              = 6'b01_0000;
-localparam [UOP_ADDR_WIDTH-1 : 0] UOP_ST_MUL_p              = 6'b00_0001;
-localparam [UOP_ADDR_WIDTH-1 : 0] UOP_DO_ADD_p              = 6'b00_1000;
-localparam [UOP_ADDR_WIDTH-1 : 0] UOP_DO_SUB_p              = 6'b00_1100;
-localparam [UOP_ADDR_WIDTH-1 : 0] UOP_ST_ADD_p              = 6'b00_0010;
+typedef struct packed
+{
+    pm_opcode_t                     opcode;
+    logic [OPR_ADDR_WIDTH-1 : 0]    opa_addr;
+    logic [OPR_ADDR_WIDTH-1 : 0]    opb_addr;
+} pm_instr_struct_t;
 
-localparam [UOP_ADDR_WIDTH-1 : 0] UOP_DO_MUL_q              = 6'b11_0000;
-localparam [UOP_ADDR_WIDTH-1 : 0] UOP_ST_MUL_q              = 6'b10_0001;
-localparam [UOP_ADDR_WIDTH-1 : 0] UOP_DO_ADD_q              = 6'b10_1000;
-localparam [UOP_ADDR_WIDTH-1 : 0] UOP_DO_SUB_q              = 6'b10_1100;
-localparam [UOP_ADDR_WIDTH-1 : 0] UOP_ST_ADD_q              = 6'b10_0010;
+localparam pm_opcode_t UOP_NOP      = {mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b0}; // = 6'b00_0000;
+localparam pm_opcode_t UOP_DO_MUL_p = {mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b1, mod_q_sel:1'b0}; // = 6'b01_0000;
+localparam pm_opcode_t UOP_ST_MUL_p = {mult_we:1'b1, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b0}; // = 6'b00_0001;
+localparam pm_opcode_t UOP_DO_ADD_p = {mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b0}; // = 6'b00_1000;
+localparam pm_opcode_t UOP_DO_SUB_p = {mult_we:1'b0, add_we:1'b0, sub_sel:1'b1, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b0}; // = 6'b00_1100;
+localparam pm_opcode_t UOP_ST_ADD_p = {mult_we:1'b0, add_we:1'b1, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b0}; // = 6'b00_0010;
+
+localparam pm_opcode_t UOP_DO_MUL_q = {mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b1, mod_q_sel:1'b1}; // = 6'b11_0000;
+localparam pm_opcode_t UOP_ST_MUL_q = {mult_we:1'b1, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b1}; // = 6'b10_0001;
+localparam pm_opcode_t UOP_DO_ADD_q = {mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b1}; // = 6'b10_1000;
+localparam pm_opcode_t UOP_DO_SUB_q = {mult_we:1'b0, add_we:1'b0, sub_sel:1'b1, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b1}; // = 6'b10_1100;
+localparam pm_opcode_t UOP_ST_ADD_q = {mult_we:1'b0, add_we:1'b1, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b1}; // = 6'b10_0010;
 
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_DONTCARE          = 6'd0;
 

@@ -16,7 +16,8 @@
 //
 // ecc_adder.sv
 // --------
-// 
+// Full adder module to compute a + b in RADIX bits and output add result
+// with carry    
 //
 //
 //======================================================================

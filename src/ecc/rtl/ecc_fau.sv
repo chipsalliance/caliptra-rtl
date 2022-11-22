@@ -104,6 +104,9 @@ module ecc_fau #(
         );
 
 
+    //----------------------------------------------------------------
+    // Registers including update enables.
+    //----------------------------------------------------------------
     always_ff @(posedge clk or negedge reset_n) 
     begin
         if (!reset_n) begin
@@ -126,8 +129,13 @@ module ecc_fau #(
     end
     
     assign ready_garbage_bit = add_ready_o & mult_ready_o;
-
+    
+    // generate a pulse enable for mult
     assign mult_start_edge = mult_start & ~mult_start_dly;
+
+    //----------------------------------------------------------------
+    // Concurrent connectivity for ports etc.
+    //----------------------------------------------------------------
     assign mult_res_o = mult_res_s;
     assign add_res_o  = add_res_s;
 

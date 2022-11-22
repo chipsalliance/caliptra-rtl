@@ -33,18 +33,45 @@ localparam integer DSA_OPR_ADDR_WIDTH       = 6;
 localparam DSA_PROG_ADDR_W                  = 6; //$clog2(DSA_VER_E+2);
 localparam DSA_INSTRUCTION_LENGTH           = DSA_UOP_ADDR_WIDTH + (2*DSA_OPR_ADDR_WIDTH);    // opcode + 2 * operand
 
+typedef enum logic[2 : 0]
+{
+    no_cmd      = 3'b000,
+    keygen_cmd  = 3'b001,
+    sign_cmd    = 3'b010,
+    verify0_cmd = 3'b100,
+    verify1_cmd = 3'b101,
+    verify2_cmd = 3'b110
+} cmd_t;
+
+typedef struct packed
+{
+    logic       op_sel;
+    logic       wr_en;
+    logic       rd_en;
+    cmd_t       pm_cmd;
+    logic       hmac_drbg_en;
+    logic       sca_en;
+} opcode_t;
+
+typedef struct packed
+{
+    opcode_t                            opcode;
+    logic [DSA_OPR_ADDR_WIDTH-1 : 0]    reg_id;
+    logic [DSA_OPR_ADDR_WIDTH-1 : 0]    mem_addr;
+} instr_struct_t;
+
 // DSA INSTRUCTIONS LIST
-localparam [DSA_UOP_ADDR_WIDTH-1 : 0] DSA_UOP_NOP                  = 8'b0000_0000;
-localparam [DSA_UOP_ADDR_WIDTH-1 : 0] DSA_UOP_WR_CORE              = 8'b0000_0010;
-localparam [DSA_UOP_ADDR_WIDTH-1 : 0] DSA_UOP_WR_SCALAR            = 8'b0000_0011;
-localparam [DSA_UOP_ADDR_WIDTH-1 : 0] DSA_UOP_RD_CORE              = 8'b0000_0100;
-localparam [DSA_UOP_ADDR_WIDTH-1 : 0] DSA_UOP_KEYGEN               = 8'b0000_1000;
-localparam [DSA_UOP_ADDR_WIDTH-1 : 0] DSA_UOP_SIGN                 = 8'b0001_0000;
-localparam [DSA_UOP_ADDR_WIDTH-1 : 0] DSA_UOP_VERIFY0              = 8'b0010_0000;
-localparam [DSA_UOP_ADDR_WIDTH-1 : 0] DSA_UOP_VERIFY1              = 8'b0010_1000;
-localparam [DSA_UOP_ADDR_WIDTH-1 : 0] DSA_UOP_VERIFY2              = 8'b0011_0000;
-localparam [DSA_UOP_ADDR_WIDTH-1 : 0] DSA_UOP_HMAC_DRBG            = 8'b0100_0000;
-localparam [DSA_UOP_ADDR_WIDTH-1 : 0] DSA_UOP_SCALAR_SCA           = 8'b1000_0000;
+localparam opcode_t DSA_UOP_NOP           = {op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:no_cmd,      hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0000_0000;
+localparam opcode_t DSA_UOP_WR_CORE       = {op_sel:1'b0,   wr_en:1'b1, rd_en:1'b0, pm_cmd:no_cmd,      hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0000_0010;
+localparam opcode_t DSA_UOP_WR_SCALAR     = {op_sel:1'b1,   wr_en:1'b1, rd_en:1'b0, pm_cmd:no_cmd,      hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0000_0011;
+localparam opcode_t DSA_UOP_RD_CORE       = {op_sel:1'b0,   wr_en:1'b0, rd_en:1'b1, pm_cmd:no_cmd,      hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0000_0100;
+localparam opcode_t DSA_UOP_KEYGEN        = {op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:keygen_cmd,  hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0000_1000;
+localparam opcode_t DSA_UOP_SIGN          = {op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:sign_cmd,    hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0001_0000;
+localparam opcode_t DSA_UOP_VERIFY0       = {op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:verify0_cmd, hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0010_0000;
+localparam opcode_t DSA_UOP_VERIFY1       = {op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:verify1_cmd, hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0010_1000;
+localparam opcode_t DSA_UOP_VERIFY2       = {op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:verify2_cmd, hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0011_0000;
+localparam opcode_t DSA_UOP_HMAC_DRBG     = {op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:no_cmd,      hmac_drbg_en:1'b1, sca_en:1'b0}; // = 8'b0100_0000;
+localparam opcode_t DSA_UOP_SCALAR_SCA    = {op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:no_cmd,      hmac_drbg_en:1'b0, sca_en:1'b1}; // = 8'b1000_0000;
 
 // DSA REGISTERS ID listing
 localparam [DSA_OPR_ADDR_WIDTH-1 : 0] NOP_ID                   = 6'd0;

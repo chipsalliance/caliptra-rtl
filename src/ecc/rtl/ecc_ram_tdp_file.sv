@@ -16,7 +16,7 @@
 //
 // ecc_ram_tdp_file.sv
 // --------
-// ECC Data Memory.
+// ECC Data Memory to store intermediate results from point multiplication.
 //
 //
 //======================================================================

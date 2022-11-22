@@ -21,7 +21,9 @@
 //
 //======================================================================
 
-module ecc_top_tb #(
+module ecc_top_tb 
+    import kv_defines_pkg::*;
+#(
     parameter   TEST_VECTOR_NUM = 10
 )
 ();
@@ -127,6 +129,7 @@ module ecc_top_tb #(
 
   reg           clk_tb;
   reg           reset_n_tb;
+  reg           cptra_pwrgood_tb;
 
   reg [AHB_ADDR_WIDTH-1:0]  haddr_i_tb;
   reg [AHB_DATA_WIDTH-1:0]  hwdata_i_tb;
@@ -139,6 +142,13 @@ module ecc_top_tb #(
   wire          hresp_o_tb;
   wire          hreadyout_o_tb;
   wire [AHB_DATA_WIDTH-1:0] hrdata_o_tb;
+
+  kv_read_t [2:0] kv_read_tb;
+  kv_write_t kv_write_tb;
+  kv_resp_t [2:0] kv_resp_tb;
+
+  wire error_intr_tb;
+  wire notif_intr_tb;
 
   //reg [31 : 0]  read_data;
   reg [383: 0]  reg_read_data;
@@ -155,6 +165,7 @@ module ecc_top_tb #(
             dut (
              .clk(clk_tb),
              .reset_n(reset_n_tb),
+             .cptra_pwrgood(cptra_pwrgood_tb),
 
              .haddr_i(haddr_i_tb),
              .hwdata_i(hwdata_i_tb),
@@ -166,7 +177,14 @@ module ecc_top_tb #(
 
              .hresp_o(hresp_o_tb),
              .hreadyout_o(hreadyout_o_tb),
-             .hrdata_o(hrdata_o_tb)
+             .hrdata_o(hrdata_o_tb),
+
+             .kv_read(kv_read_tb),
+             .kv_write(kv_write_tb),
+             .kv_resp(kv_resp_tb),
+
+             .error_intr(error_intr_tb),
+             .notif_intr(notif_intr_tb)
             );
 
 
@@ -204,11 +222,13 @@ module ecc_top_tb #(
     begin
       $display("*** Toggle reset.");
       reset_n_tb = 0;
+      cptra_pwrgood_tb = 0;
 
       #(2 * CLK_PERIOD);
 
       @(posedge clk_tb);
       reset_n_tb = 1;
+      cptra_pwrgood_tb = 1;
 
       #(2 * CLK_PERIOD);
 
@@ -255,6 +275,7 @@ module ecc_top_tb #(
 
       clk_tb        = 0;
       reset_n_tb    = 0;
+      cptra_pwrgood_tb = 0;
 
       haddr_i_tb      = 0;
       hwdata_i_tb     = 0;
@@ -263,6 +284,8 @@ module ecc_top_tb #(
       hready_i_tb     = 0;
       htrans_i_tb     = AHB_HTRANS_IDLE;
       hsize_i_tb      = 3'b011;
+
+      kv_resp_tb      = '0;
     end
   endtask // init_dut
 

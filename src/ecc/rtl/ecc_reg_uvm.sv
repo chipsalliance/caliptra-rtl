@@ -68,7 +68,6 @@ package ecc_reg_uvm;
         rand uvm_reg_field POINT_RND_EN;
         rand uvm_reg_field MASK_SIGN_EN;
         rand uvm_reg_field SCALAR_RND_EN;
-        rand uvm_reg_field OPENSSL_EN;
 
         function new(string name = "ecc_reg__ECC_SCACONFIG");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -81,8 +80,6 @@ package ecc_reg_uvm;
             this.MASK_SIGN_EN.configure(this, 1, 1, "WO", 0, 'h1, 1, 1, 0);
             this.SCALAR_RND_EN = new("SCALAR_RND_EN");
             this.SCALAR_RND_EN.configure(this, 1, 2, "WO", 0, 'h1, 1, 1, 0);
-            this.OPENSSL_EN = new("OPENSSL_EN");
-            this.OPENSSL_EN.configure(this, 1, 3, "WO", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : ecc_reg__ECC_SCACONFIG
 

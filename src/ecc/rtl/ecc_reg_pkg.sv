@@ -177,14 +177,9 @@ package ecc_reg_pkg;
     } ecc_reg__ECC_SCACONFIG__SCALAR_RND_EN__out_t;
 
     typedef struct {
-        logic value;
-    } ecc_reg__ECC_SCACONFIG__OPENSSL_EN__out_t;
-
-    typedef struct {
         ecc_reg__ECC_SCACONFIG__POINT_RND_EN__out_t POINT_RND_EN;
         ecc_reg__ECC_SCACONFIG__MASK_SIGN_EN__out_t MASK_SIGN_EN;
         ecc_reg__ECC_SCACONFIG__SCALAR_RND_EN__out_t SCALAR_RND_EN;
-        ecc_reg__ECC_SCACONFIG__OPENSSL_EN__out_t OPENSSL_EN;
     } ecc_reg__ECC_SCACONFIG__out_t;
 
     typedef struct {

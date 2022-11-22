@@ -19,10 +19,7 @@
 // Elliptic Curve Cryptography (ECC) digital signature algorithm (DSA) 
 // controller to support deterministic ECDSA based on RFC 6979.
 // The dsa architecture includes several countermeasuress to be protected
-// against a subset of side-channel analysis (SCA) attacks. The embedded
-// countermeasures are:
-// - scalar blinding
-// - point randomization
+// against a subset of side-channel analysis (SCA) attacks. 
 //
 // The architecture includes:
 // 1) ecc_dsa_sequencer: including the required sequence to perform 
@@ -33,7 +30,27 @@
 // 4) ecc_scalar_blinding: the SCA countermeasure to randomized scalar
 //    to avoid information leakage.
 //
-//
+// The embedded countermeasures are:
+// - point randomization: 
+//      Randomized Projective Coordinates countermeasure based on section 5.3 
+//      "Resistance against Differential Power Analysis for Elliptic Curve 
+//      Cryptosystems" in CHES 1999 by Coron, J.  
+//      This countermesure uses a random value "lambda" in point multiplication
+//      (Q = k * P) in keygen/signing to randomiza base point P = (X, Y, 1)
+//      as follows:
+//      P = (X * Lambda, Y * lambda, Lambda)
+// - scalar blinding: 
+//      Scalar blinding countermeasure based on section 5.1 
+//      "Resistance against Differential Power Analysis for Elliptic Curve 
+//      Cryptosystems" in CHES 1999 by Coron, J.  
+//      This countermeasure uses a random value "r" in the point multiplication
+//      (Q = k * P) in keygen/signing to randomiza scalar k as follows:
+//      k = k + r*group_order
+// - masking signature: 
+//      Masking sign countermeasure uses a random value "d" in the signing 
+//      operation to generate signature proof s = (privkey * r + h)*k_inv 
+//      as follows:
+//      s = [((privkey - d) * r + (h - d)) * k_inv] + [(d * r + d) * k_inv
 //======================================================================
 
 `include "kv_macros.svh"
@@ -73,7 +90,6 @@ module ecc_dsa_ctrl
     // Registers including update variables and write enable.
     //----------------------------------------------------------------
     logic [DSA_PROG_ADDR_W-1 : 0]           prog_cntr;
-    logic [(DSA_INSTRUCTION_LENGTH)-1 : 0]  prog_line;   
     
     logic [REG_SIZE-1 : 0]                  read_reg;
     logic [(REG_SIZE+RND_SIZE)-1 : 0]       write_reg;
@@ -135,8 +151,6 @@ module ecc_dsa_ctrl
     logic                   sca_mask_sign_en;
     logic                   sca_scalar_rnd_en;
 
-    logic                   openssl_test_en;  // without hmac-drbg
-
     //interface with kv client
     logic kv_privkey_write_en;
     logic [REG_OFFSET_W-1:0] kv_privkey_write_offset;
@@ -159,6 +173,7 @@ module ecc_dsa_ctrl
     kv_read_ctrl_reg_t kv_msg_read_ctrl_reg;
     kv_write_ctrl_reg_t kv_write_ctrl_reg;
 
+    instr_struct_t prog_instr;
     //----------------------------------------------------------------
     // Module instantiantions.
     //----------------------------------------------------------------
@@ -171,20 +186,8 @@ module ecc_dsa_ctrl
         .reset_n(reset_n),
         .ena(1'b1),
         .addra(prog_cntr),
-        .douta(prog_line)
-    );
-
-    /*ecc_fixed_msb #(
-        .REG_SIZE(REG_SIZE),
-        .GROUP_ORDER(GROUP_ORDER)
-        )
-        ecc_fixed_msb_i(
-        .clk(clk),
-        .reset_n(reset_n),
-        .en_i(fixed_msb_en),
-        .data_i(scalar_in_reg),
-        .data_o(scalar_out_reg)
-    );*/
+        .douta(prog_instr)
+        );
 
     ecc_arith_unit #(
         .REG_SIZE(REG_SIZE),
@@ -201,11 +204,11 @@ module ecc_dsa_ctrl
         .reset_n(reset_n),
         .ecc_cmd_i(pm_cmd_reg),
         .sca_en_i(sca_scalar_rnd_en),
-        .addr_i(prog_line[DSA_OPR_ADDR_WIDTH-1 : 0]),
-        .wr_op_sel_i(prog_line[2*DSA_OPR_ADDR_WIDTH]),
+        .addr_i(prog_instr.mem_addr),
+        .wr_op_sel_i(prog_instr.opcode.op_sel),
 
-        .wr_en_i(prog_line[(2*DSA_OPR_ADDR_WIDTH)+1]),
-        .rd_reg_i(prog_line[(2*DSA_OPR_ADDR_WIDTH)+2]),
+        .wr_en_i(prog_instr.opcode.wr_en),
+        .rd_reg_i(prog_instr.opcode.rd_en),
         .data_i(write_reg),
         .data_o(read_reg),
         .busy_o(pm_busy_o)
@@ -246,7 +249,7 @@ module ecc_dsa_ctrl
         .rnd_i(scalar_rnd_reg[RND_SIZE-1 : 0]),
         .data_o(scalar_out),
         .busy_o(scalar_sca_busy_o)
-    );
+        );
 
     //----------------------------------------------------------------
     // side-channel config update
@@ -255,20 +258,9 @@ module ecc_dsa_ctrl
 
     always_comb 
     begin : SCA_config
-        if (sca_scalar_rnd_en)
-            scalar_out_reg = scalar_out;
-        else
-            scalar_out_reg = (scalar_in_reg << RND_SIZE);
-
-        if (sca_point_rnd_en)
-            lambda_reg = lambda;
-        else
-            lambda_reg = ONE_CONST;
-
-        if (sca_mask_sign_en)
-            masking_rnd_reg = masking_rnd;
-        else
-            masking_rnd_reg = ZERO_CONST;
+        scalar_out_reg = (sca_scalar_rnd_en)? scalar_out : (scalar_in_reg << RND_SIZE);
+        lambda_reg = (sca_point_rnd_en)? lambda : ONE_CONST;
+        masking_rnd_reg = (sca_mask_sign_en)? masking_rnd : ZERO_CONST;
     end // SCA_config
 
     //----------------------------------------------------------------
@@ -284,7 +276,6 @@ module ecc_dsa_ctrl
             sca_point_rnd_en  <= '0;
             sca_mask_sign_en  <= '0;
             sca_scalar_rnd_en <= '0;
-            openssl_test_en <= '0;
             pubkeyx_reg <= '0;
             pubkeyy_reg <= '0;
             r_reg       <= '0;
@@ -297,10 +288,8 @@ module ecc_dsa_ctrl
             sca_point_rnd_en  <= hwif_out.ECC_SCACONFIG.POINT_RND_EN.value;
             sca_mask_sign_en  <= hwif_out.ECC_SCACONFIG.MASK_SIGN_EN.value;
             sca_scalar_rnd_en <= hwif_out.ECC_SCACONFIG.SCALAR_RND_EN.value;
-            openssl_test_en   <= hwif_out.ECC_SCACONFIG.OPENSSL_EN.value; // this bit should be deleted after openssl keygen test.
 
             for(int i0=0; i0<12; i0++) begin
-
                 pubkeyx_reg[i0*32 +: 32] <= hwif_out.ECC_PUBKEY_X[i0].PUBKEY_X.value;
                 pubkeyy_reg[i0*32 +: 32] <= hwif_out.ECC_PUBKEY_Y[i0].PUBKEY_Y.value;
                 r_reg[i0*32 +: 32]       <= hwif_out.ECC_SIGN_R[i0].SIGN_R.value;
@@ -415,10 +404,7 @@ module ecc_dsa_ctrl
         end
         else begin
             if (!scalar_G_sel)
-                if (openssl_test_en) // this feature should be deleted after openssl keygen test.
-                    scalar_G_reg <= seed_reg;
-                else
-                    scalar_G_reg <= hmac_nonce;
+                scalar_G_reg <= hmac_nonce;
             else if (hw_scalar_G_we)
                 scalar_G_reg <= read_reg;
             
@@ -427,6 +413,8 @@ module ecc_dsa_ctrl
         end
     end
 
+    // Set the write enable flag for different register based on sequencer output of "DSA_UOP_RD_CORE"
+    // to read them from data memory inside ecc_arith_unit
     always_comb 
     begin : wr_en_signals
         hw_privkey_we = 0;
@@ -437,8 +425,8 @@ module ecc_dsa_ctrl
         hw_scalar_G_we = 0;
         hw_scalar_PK_we = 0;
         hw_verify_r_we = 0;
-        if (prog_line[2*DSA_OPR_ADDR_WIDTH +: DSA_UOP_ADDR_WIDTH] == DSA_UOP_RD_CORE)begin
-            unique casez (prog_line[DSA_OPR_ADDR_WIDTH +: DSA_OPR_ADDR_WIDTH])
+        if (prog_instr.opcode == DSA_UOP_RD_CORE)begin
+            unique casez (prog_instr.reg_id)
                 PRIVKEY_ID      : hw_privkey_we = 1;
                 PUBKEYX_ID      : hw_pubkeyx_we = 1;
                 PUBKEYY_ID      : hw_pubkeyy_we = 1;
@@ -463,12 +451,13 @@ module ecc_dsa_ctrl
     end // wr_en_signals
 
     
-
+    // set the write register value based on sequencer output of "DSA_UOP_WR_CORE"
+    // to write into data memory inside ecc_arith_unit
     always_comb 
     begin : write_to_pm_core
         write_reg = '0;
-        if (prog_line[2*DSA_OPR_ADDR_WIDTH +: DSA_UOP_ADDR_WIDTH] == DSA_UOP_WR_CORE) begin
-            unique casez (prog_line[DSA_OPR_ADDR_WIDTH +: DSA_OPR_ADDR_WIDTH])
+        if (prog_instr.opcode == DSA_UOP_WR_CORE) begin
+            unique casez (prog_instr.reg_id)
                 CONST_ZERO_ID         : write_reg = {zero_pad, ZERO_CONST};
                 CONST_ONE_ID          : write_reg = {zero_pad, ONE_CONST};
                 CONST_E_a_MONT_ID     : write_reg = {zero_pad, E_a_MONT};
@@ -491,8 +480,8 @@ module ecc_dsa_ctrl
                 default               : write_reg = '0;
             endcase
         end
-        else if (prog_line[2*DSA_OPR_ADDR_WIDTH +: DSA_UOP_ADDR_WIDTH] == DSA_UOP_WR_SCALAR) begin
-            unique casez (prog_line[DSA_OPR_ADDR_WIDTH +: DSA_OPR_ADDR_WIDTH])
+        else if (prog_instr.opcode == DSA_UOP_WR_SCALAR) begin
+            unique casez (prog_instr.reg_id)
                 SCALAR_PK_ID          : write_reg = (scalar_PK_reg << RND_SIZE);
                 SCALAR_G_ID           : write_reg = (scalar_G_reg << RND_SIZE);
                 SCALAR_ID             : write_reg = scalar_out_reg; // SCA
@@ -501,13 +490,14 @@ module ecc_dsa_ctrl
         end
     end // write_to_pm_core
 
+    // Set the input scalar for scalar_blinding module
     always_ff @(posedge clk or negedge reset_n) 
     begin : scalar_sca_ctrl
         if(!reset_n) begin
             scalar_in_reg <= '0;
         end
         else begin
-            if (prog_line[2*DSA_OPR_ADDR_WIDTH +: DSA_UOP_ADDR_WIDTH] == DSA_UOP_SCALAR_SCA) begin
+            if (prog_instr.opcode == DSA_UOP_SCALAR_SCA) begin
                 scalar_in_reg <= scalar_G_reg;
             end
         end
@@ -516,6 +506,13 @@ module ecc_dsa_ctrl
     assign hmac_busy = ~hmac_ready;
     assign subcomponent_busy = pm_busy_o | hmac_busy | scalar_sca_busy_o;
 
+    //----------------------------------------------------------------
+    // ECDSA_FSM_flow
+    //
+    // This FSM starts with the keyfen/signing/verifying command to 
+    // perform different operations.
+    // Active low and async reset.
+    //----------------------------------------------------------------
     always_ff @(posedge clk or negedge reset_n) 
     begin : ECDSA_FSM
         if(!reset_n) begin
@@ -594,22 +591,23 @@ module ecc_dsa_ctrl
                     DSA_SGN_S,
                     DSA_VER_S : begin
                         prog_cntr       <= prog_cntr + 1;
-                        pm_cmd_reg      <= prog_line[(2*DSA_OPR_ADDR_WIDTH)+3 +: 3];
-                        hmac_init       <= prog_line[(2*DSA_OPR_ADDR_WIDTH)+6];
-                        scalar_sca_en   <= prog_line[(2*DSA_OPR_ADDR_WIDTH)+7];
+                        pm_cmd_reg      <= prog_instr.opcode.pm_cmd;
+                        hmac_init       <= prog_instr.opcode.hmac_drbg_en;
+                        scalar_sca_en   <= prog_instr.opcode.sca_en;
                     end
 
                     default : begin
                         prog_cntr       <= prog_cntr + 1;
-                        pm_cmd_reg      <= prog_line[(2*DSA_OPR_ADDR_WIDTH)+3 +: 3];
-                        hmac_init       <= prog_line[(2*DSA_OPR_ADDR_WIDTH)+6];
-                        scalar_sca_en   <= prog_line[(2*DSA_OPR_ADDR_WIDTH)+7];
+                        pm_cmd_reg      <= prog_instr.opcode.pm_cmd;
+                        hmac_init       <= prog_instr.opcode.hmac_drbg_en;
+                        scalar_sca_en   <= prog_instr.opcode.sca_en;
                     end
                 endcase
             end
         end
     end // ECDSA_FSM
 
+    // Generate a pulse to trig the interupt after finishing the operation
     always_ff @(posedge clk or negedge reset_n)
         if (!reset_n)
             ecc_status_done_d <= 1'b0;
@@ -617,12 +615,9 @@ module ecc_dsa_ctrl
             ecc_status_done_d <= hwif_in.ECC_STATUS.VALID.next;
     always_comb ecc_status_done_p = hwif_in.ECC_STATUS.VALID.next && !ecc_status_done_d;
 
+    // Set the ready/busy flag of ECC
     assign dsa_busy = (prog_cntr == DSA_NOP)? 1'b0 : 1'b1;
-
-    always_comb 
-    begin : ready_flag
-        dsa_ready_reg = !(dsa_busy | pm_busy_o);
-    end // ready_flag
+    always_comb dsa_ready_reg = !(dsa_busy | pm_busy_o);
     
     //Key Vault Control Modules
     //Read PRIVKEY

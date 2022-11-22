@@ -105,15 +105,13 @@ addrmap ecc_reg {
     /* ---- ECC Component Side-Channel Countermeasure Configuration ---- */
     reg {
         name = "ECC component SCA configuration register type definition";
-        desc = "One 4-bit register to enable/disable the ECC SCA countermeasures.
+        desc = "One 3-bit register to enable/disable the ECC SCA countermeasures.
                 bit #0: POINT_RND_EN : ​Indicates if the base point randomization 
                                        countermeasure is enabled.
                 bit #1: MASK_SIGN_EN: ​Indicates if the mask countermeasure in SIGNING
                                       is enabled.
                 bit #2: SCALAR_RND_EN: ​Indicates if the scalar ransomization countermeasure
                                       is enabled.
-                bit #3: OPENSSL_EN: ​Indicates if the openssl test is enabled.
-                                    bit 4 should be deleted after openssl keygen test.
                                 
                 This register is located at ECC_base_address + 0x0000_0020
                 After each software write, hardware will erase the register.";
@@ -121,10 +119,9 @@ addrmap ecc_reg {
         default sw = w;
         default hw = r;
         default resetsignal = reset_b;
-        field {desc = "SCA point randomization field";} POINT_RND_EN = 2'b1;
-        field {desc = "SCA mask signing field";} MASK_SIGN_EN = 2'b1;
-        field {desc = "SCA scalar randomization field";} SCALAR_RND_EN = 2'b1;
-        field {desc = "OPENSSL configuration field";} OPENSSL_EN = 2'b0;  //bit 4 should be deleted after openssl keygen test.
+        field {desc = "SCA point randomization field";} POINT_RND_EN = 1'b1;
+        field {desc = "SCA mask signing field";} MASK_SIGN_EN = 1'b1;
+        field {desc = "SCA scalar randomization field";} SCALAR_RND_EN = 1'b1;
     
     } ECC_SCACONFIG @0x00000020;
 

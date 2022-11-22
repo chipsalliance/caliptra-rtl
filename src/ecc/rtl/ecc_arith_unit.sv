@@ -17,7 +17,11 @@
 // ecc_arith_unit.sv
 // --------
 // ECC arithmetic unit to perform point multiplication including 
-// data memory, pm sequencer, and field arithmeric
+// data memory, point mult (pm) controller, and field arithmeric
+// - The module controlol memory acces from outside and pm controller
+// - Secret key is stored in this madule's register instead of data memory,
+//   and this module shifts and feeds one bit of secret key to pm controller
+//   in each iteration corresponding with pm controller request (req_digit)
 //
 //
 //======================================================================
@@ -64,7 +68,7 @@ module ecc_arith_unit
     logic               req_digit;
     logic               ecc_busy_s;
 
-    logic [INSTRUCTION_LENGTH-1 : 0]    ecc_instr_s;
+    pm_instr_struct_t                   ecc_instr_s;
     logic [REG_SIZE-1 : 0]              reg_dinb_r;
     logic [REG_SIZE-1 : 0]              dinb_mux_s;
     logic [OPR_ADDR_WIDTH-1 : 0]        reg_addr_r;
@@ -115,8 +119,8 @@ module ecc_arith_unit
         .clk(clk),
         .reset_n(reset_n),
         .ena(1'b1),
-        .wea(ecc_instr_s[(2*OPR_ADDR_WIDTH)+1]),
-        .addra(ecc_instr_s[OPR_ADDR_WIDTH +: OPR_ADDR_WIDTH]),
+        .wea(ecc_instr_s.opcode.add_we),
+        .addra(ecc_instr_s.opa_addr),
         .dina(add_res_s),
         .douta(opa_s),
         .enb(1'b1),
@@ -132,7 +136,7 @@ module ecc_arith_unit
     // 
     //----------------------------------------------------------------
 
-    assign mod_p_q     = ecc_instr_s[(2*OPR_ADDR_WIDTH) + 5];  //performing mod_p if (mod_p_q = 0), else mod_q
+    assign mod_p_q     = ecc_instr_s.opcode.mod_q_sel;  //performing mod_p if (mod_p_q = 0), else mod_q
     assign adder_prime = (mod_p_q)? q_grouporder : p_prime;
     assign mult_mu     = (mod_p_q)? q_mu : p_mu;
 
@@ -147,9 +151,9 @@ module ecc_arith_unit
         .reset_n(reset_n),
 
         // DATA PORT
-        .add_en_i(ecc_instr_s[(2*OPR_ADDR_WIDTH)+3]),
-        .sub_i(ecc_instr_s[(2*OPR_ADDR_WIDTH)+2]),
-        .mult_en_i(ecc_instr_s[(2*OPR_ADDR_WIDTH)+4]),
+        .add_en_i(ecc_instr_s.opcode.add_en),
+        .sub_i(ecc_instr_s.opcode.sub_sel),
+        .mult_en_i(ecc_instr_s.opcode.mult_en),
         .prime_i(adder_prime),
         .mult_mu_i(mult_mu),
         .opa_i(opa_s),
@@ -202,9 +206,9 @@ module ecc_arith_unit
     //Push key bit to ecc pm control
     assign digit_in = secret_key[0];
             
-    assign addrb_mux_s = ecc_busy_s ? ecc_instr_s[0 +: OPR_ADDR_WIDTH] : reg_addr_r;
-    assign web_mux_s   = ecc_busy_s ? ecc_instr_s[2*OPR_ADDR_WIDTH]    : reg_web_r;
-    assign dinb_mux_s  = ecc_busy_s ? mult_res_s                       : reg_dinb_r;
+    assign addrb_mux_s = ecc_busy_s ? ecc_instr_s.opb_addr : reg_addr_r;
+    assign web_mux_s   = ecc_busy_s ? ecc_instr_s.opcode.mult_we    : reg_web_r;
+    assign dinb_mux_s  = ecc_busy_s ? mult_res_s                    : reg_dinb_r;
     assign busy_o      = ecc_busy_s;
     assign data_o      = d_o;
 

@@ -16,7 +16,7 @@
 //
 // ecc_params_pkg.sv
 // --------
-// required parameters and register address for ECC Secp384.
+// required parameters and register address for ECC Secp384r1.
 //
 //======================================================================
 
@@ -74,6 +74,8 @@ package ecc_params_pkg;
 
   // Implementation parameters for field arithmetic
   parameter [9 : 0] REG_SIZE     = 10'd384;
+  parameter [9 : 0] RND_SIZE     = 10'd192;  // half of REG_SIZE based on Schindler W, Wiemers A (2015) Efficient side-channel attacks on
+                                             // scalar blinding on elliptic curves with special structure. In: NIST Workshop on ECC standards
   parameter REG_NUM_DWORDS       = REG_SIZE/32;
   parameter REG_OFFSET_W         = $clog2(REG_NUM_DWORDS);
   parameter RADIX                = 32;
@@ -99,36 +101,6 @@ package ecc_params_pkg;
   parameter [REG_SIZE-1 : 0] R2_q_MONT   = 384'h3fb05b7a28266895d40d49174aab1cc5bf030606de609f43be80721782118942bfd3ccc974971bd0d8d34124f50ddb2d;
   parameter [REG_SIZE-1 : 0] ONE_q_MONT  = 384'h389cb27e0bc8d220a7e5f24db74f58851313e695333ad68d00000000;
   parameter [RADIX-1 : 0] GROUP_ORDER_mu = 32'he88fdc45;
-  
-  // Side-channel countermeasures configuration
-
-  // Randomized Projective Coordinates countermeasure based on section 5.3 
-  // "Resistance against Differential Power Analysis for Elliptic Curve 
-  // Cryptosystems" in CHES 1999 by Coron, J.  
-  // This countermesure uses a random value "lambda" in point multiplication
-  // (Q = k * P) in keygen/signing to randomiza base point P = (X, Y, 1)
-  // as follows:
-  // P = (X * Lambda, Y * lambda, Lambda)
-  parameter                   sca_point_rnd_init     = 1;
-
-  // Scalar blinding countermeasure based on section 5.1 
-  // "Resistance against Differential Power Analysis for Elliptic Curve 
-  // Cryptosystems" in CHES 1999 by Coron, J.  
-  // This countermeasure uses a random value "r" in the point multiplication
-  // (Q = k * P) in keygen/signing to randomiza scalar k as follows:
-  // k = k + r*group_order
-  parameter                   sca_scalar_rnd_init    = 1;
-  parameter [9  : 0]          RND_SIZE               = 10'd192;
-  
-
-  // Masking sign countermeasure uses a random value "d" in the signing 
-  // operation to generate signature proof s = (privkey * r + h)*k_inv 
-  // as follows:
-  // s = [((privkey - d) * r + (h - d)) * k_inv] + [(d * r + d) * k_inv]
-  parameter                   sca_mask_sign_init     = 1;
-
-  // openssl keygen test should be deleted after openssl keygen test.
-  parameter                   openssl_init           = 0;
 
   `endif
 

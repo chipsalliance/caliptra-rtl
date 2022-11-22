@@ -16,7 +16,25 @@
 //
 // ecc_hmac_drbg_interface.sv
 // --------
-
+// interface with hmac_drbg component to generate the required values:
+// 1) in keygen mode:
+//      1.1. generate lambda from IV for point randomization SCA countermeasure
+//      1.2. generate scalar_rnd from IV for scalar blinding SCA countermeasure
+//      1.3. generate privkey from seed for key generation
+// 2) in sign mode:
+//      2.1. generate lambda from IV for point randomization SCA countermeasure
+//      2.2. generate scalar_rnd from IV for scalar blinding SCA countermeasure
+//      2.3. generate masking_rnd from IV for masking signature SCA countermeasure
+//      2.4. generate k (nonce) from privkey for signing
+//
+// To generate random values using IV, the hmac_drbg is continued by trigging 
+// next command (instead of init) which increases counter inside hmac_drbg component. 
+// It means:
+// lambda is generated from IV with counter equal to 0 and 1
+// scalar_rnd is generated from IV with counter equal to 2 and 3
+// masking_rnd is generated from IV with counter equal to 4 and 5
+//
+//======================================================================
 
 module ecc_hmac_drbg_interface#(
     parameter                  REG_SIZE       = 384,
@@ -60,9 +78,8 @@ module ecc_hmac_drbg_interface#(
     logic [REG_SIZE-1 : 0]  scalar_rnd_reg;
     logic [REG_SIZE-1 : 0]  masking_rnd_reg;
     logic [REG_SIZE-1 : 0]  nonce_reg;
-    logic                   ready_reg;
     logic                   hmac_valid_last;
-    logic                   hmac_valid_edge;
+    logic                   hmac_done_edge;
 
     /*State register*/
     reg [2 : 0]  state_reg;
@@ -73,10 +90,11 @@ module ecc_hmac_drbg_interface#(
     localparam [2 : 0] IDLE_ST          = 3'd0; 
     localparam [2 : 0] LAMBDA_ST        = 3'd1;
     localparam [2 : 0] SCALAR_RND_ST    = 3'd2;
-    localparam [2 : 0] MASKING_RND_ST   = 3'd3;
-    localparam [2 : 0] KEYGEN_ST        = 3'd4;  
-    localparam [2 : 0] SIGN_ST          = 3'd5;  
-    localparam [2 : 0] DONE_ST          = 3'd6;  
+    localparam [2 : 0] RND_DONE_ST      = 3'd3;
+    localparam [2 : 0] MASKING_RND_ST   = 3'd4;
+    localparam [2 : 0] KEYGEN_ST        = 3'd5;  
+    localparam [2 : 0] SIGN_ST          = 3'd6;  
+    localparam [2 : 0] DONE_ST          = 3'd7;  
 
     //----------------------------------------------------------------
     // Module instantiantions.
@@ -103,25 +121,12 @@ module ecc_hmac_drbg_interface#(
 
 
     //----------------------------------------------------------------
-    // FSM_flow
+    // hmac_drbg_interface_logic
     //
-    // This FSM starts with the init command and then generates a nonce.
-    // Active low and async reset.
+    // The logic needed to init as well as update the hmac_drbg commands.
     //----------------------------------------------------------------
-
-    always_comb
-    begin
-        first_round = (state_reg == state_reg_last)? 1'b0 : 1'b1;
-        hmac_valid_edge = hmac_valid & (!hmac_valid_last);
-    end
-
-    always_ff @(posedge clk or negedge reset_n) 
-    begin
-        if (!reset_n)
-            hmac_valid_last <= '0;
-        else
-            hmac_valid_last <= hmac_valid;
-    end
+    always_comb first_round = (state_reg == state_reg_last)? 1'b0 : 1'b1;
+    always_comb hmac_done_edge = hmac_valid & (!hmac_valid_last);
 
     always_comb 
     begin : hmac_drbg_seed
@@ -135,7 +140,7 @@ module ecc_hmac_drbg_interface#(
     end // hmac_drbg_seed
 
     always_comb
-    begin
+    begin :hmac_trigger
         hmac_mode = (state_reg == SIGN_ST);
         hmac_init = 0;
         hmac_next = 0;
@@ -152,13 +157,15 @@ module ecc_hmac_drbg_interface#(
                 end
             endcase
         end
-    end
+    end //hmac_trigger
 
-
-    assign ready_reg = (state_reg == IDLE_ST);
-
+    //----------------------------------------------------------------
+    // register updates
+    //
+    // update the internal registers
+    //----------------------------------------------------------------
     always_ff @(posedge clk or negedge reset_n) 
-    begin
+    begin //reg_update
         if (!reset_n) begin
             lambda_reg <= '0;
             scalar_rnd_reg <= '0;
@@ -166,7 +173,7 @@ module ecc_hmac_drbg_interface#(
             nonce_reg <= '0;
         end
         else
-        if (hmac_valid_edge) begin
+        if (hmac_done_edge) begin
             unique casez (state_reg)
                 LAMBDA_ST:      lambda_reg <= hmac_nonce;
                 SCALAR_RND_ST:  scalar_rnd_reg <= hmac_nonce;
@@ -175,7 +182,7 @@ module ecc_hmac_drbg_interface#(
                 SIGN_ST:        nonce_reg <= hmac_nonce;
             endcase
         end
-    end
+    end //reg_update
 
     always_ff @(posedge clk or negedge reset_n) 
     begin : state_reg_update
@@ -193,69 +200,43 @@ module ecc_hmac_drbg_interface#(
             state_reg_last  <= state_reg;
     end // ff_state_reg
 
+    always_ff @(posedge clk or negedge reset_n) 
+    begin : ff_hamc_valid
+        if (!reset_n)
+            hmac_valid_last <= '0;
+        else
+            hmac_valid_last <= hmac_valid;
+    end //ff_hamc_valid
+
+    //----------------------------------------------------------------
+    // FSM_flow
+    //
+    // This FSM starts with the en command to perfrom HMAC-DRBG.
+    // Active low and async reset.
+    //----------------------------------------------------------------
     always_comb 
     begin : interface_fsm
         state_next = IDLE_ST;
         unique casez(state_reg)
-            IDLE_ST: begin
-                if (en & hmac_ready) begin
-                    state_next = LAMBDA_ST;
-                end
-            end
-
-            LAMBDA_ST: begin
-                if (hmac_valid_edge)
-                    state_next    = SCALAR_RND_ST;
-                else
-                    state_next    = LAMBDA_ST;
-            end
-
-            SCALAR_RND_ST: begin
-                if (hmac_valid_edge) begin
-                    if (keygen_sign)
-                        state_next    = MASKING_RND_ST;
-                    else
-                        state_next    = KEYGEN_ST;
-                end
-                else
-                    state_next    = SCALAR_RND_ST;
-            end
-
-            MASKING_RND_ST: begin
-                if (hmac_valid_edge)
-                    state_next    = SIGN_ST;
-                else
-                    state_next    = MASKING_RND_ST;
-            end
-
-            KEYGEN_ST: begin
-                if (hmac_valid_edge)
-                    state_next    = DONE_ST;
-                else
-                    state_next    = KEYGEN_ST;
-            end
-
-            SIGN_ST: begin
-                if (hmac_valid_edge)
-                    state_next    = DONE_ST;
-                else
-                    state_next    = SIGN_ST;
-            end
-
-            DONE_ST: begin
-                state_next    = IDLE_ST;
-            end
-
-            default: begin
-                state_next    = IDLE_ST;
-            end
+            IDLE_ST:        state_next = (en & hmac_ready)? LAMBDA_ST : IDLE_ST;
+            LAMBDA_ST:      state_next = (hmac_done_edge)? SCALAR_RND_ST : LAMBDA_ST;
+            SCALAR_RND_ST:  state_next = (hmac_done_edge)? RND_DONE_ST : SCALAR_RND_ST;
+            RND_DONE_ST:    state_next = (keygen_sign)? MASKING_RND_ST : KEYGEN_ST;
+            MASKING_RND_ST: state_next = (hmac_done_edge)? SIGN_ST : MASKING_RND_ST;
+            KEYGEN_ST:      state_next = (hmac_done_edge)? DONE_ST : KEYGEN_ST;
+            SIGN_ST:        state_next = (hmac_done_edge)? DONE_ST: SIGN_ST;
+            DONE_ST:        state_next = IDLE_ST;
+            default:        state_next = IDLE_ST;
         endcase
     end // interface_fsm
 
+    //----------------------------------------------------------------
+    // Concurrent connectivity for ports etc.
+    //----------------------------------------------------------------
     assign lambda = lambda_reg;
     assign scalar_rnd = scalar_rnd_reg;
     assign masking_rnd = masking_rnd_reg;
     assign nonce = nonce_reg;
-    assign ready = ready_reg;
+    assign ready = (state_reg == IDLE_ST);
 
 endmodule

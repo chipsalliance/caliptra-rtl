@@ -21,7 +21,9 @@
 //
 //======================================================================
 
-module sha512_ctrl_32bit_tb();
+module sha512_ctrl_32bit_tb 
+  import kv_defines_pkg::*; 
+  ();
 
 //----------------------------------------------------------------
   // Internal constant and parameter definitions.
@@ -127,6 +129,7 @@ module sha512_ctrl_32bit_tb();
 
   reg           clk_tb;
   reg           reset_n_tb;
+  reg           cptra_pwrgood_tb;
 
   reg [AHB_ADDR_WIDTH-1:0]  haddr_i_tb;
   reg [AHB_DATA_WIDTH-1:0]  hwdata_i_tb;
@@ -139,6 +142,13 @@ module sha512_ctrl_32bit_tb();
   wire          hresp_o_tb;
   wire          hreadyout_o_tb;
   wire [AHB_DATA_WIDTH-1:0] hrdata_o_tb;
+
+  kv_read_t kv_read_tb;
+  kv_write_t kv_write_tb;
+  kv_resp_t kv_resp_tb;
+
+  wire error_intr_tb;
+  wire notif_intr_tb;
 
   reg [31 : 0]  read_data;
   reg [511 : 0] digest_data;
@@ -154,6 +164,7 @@ module sha512_ctrl_32bit_tb();
             dut (
              .clk(clk_tb),
              .reset_n(reset_n_tb),
+             .cptra_pwrgood(cptra_pwrgood_tb),
 
              .haddr_i(haddr_i_tb),
              .hwdata_i(hwdata_i_tb),
@@ -165,7 +176,14 @@ module sha512_ctrl_32bit_tb();
 
              .hresp_o(hresp_o_tb),
              .hreadyout_o(hreadyout_o_tb),
-             .hrdata_o(hrdata_o_tb)
+             .hrdata_o(hrdata_o_tb),
+
+             .kv_read(kv_read_tb),
+             .kv_write(kv_write_tb),
+             .kv_resp(kv_resp_tb),
+
+             .error_intr(error_intr_tb),
+             .notif_intr(notif_intr_tb)
             );
 
   //----------------------------------------------------------------
@@ -199,10 +217,12 @@ module sha512_ctrl_32bit_tb();
     begin
       $display("*** Toggle reset.");
       reset_n_tb = 0;
+      cptra_pwrgood_tb = 0;
 
       #(4 * CLK_HALF_PERIOD);
 
       reset_n_tb = 1;
+      cptra_pwrgood_tb = 1;
     end
   endtask // reset_dut
 
@@ -221,6 +241,7 @@ module sha512_ctrl_32bit_tb();
 
       clk_tb        = 0;
       reset_n_tb    = 0;
+      cptra_pwrgood_tb = 0;
 
       haddr_i_tb      = 0;
       hwdata_i_tb     = 0;
@@ -229,6 +250,8 @@ module sha512_ctrl_32bit_tb();
       hready_i_tb     = 0;
       htrans_i_tb     = AHB_HTRANS_IDLE;
       hsize_i_tb      = 3'b011;
+
+      kv_resp_tb      = '0;
     end
   endtask // init_dut
 
@@ -551,7 +574,7 @@ module sha512_ctrl_32bit_tb();
   endtask // single_block_test
 
 
-//----------------------------------------------------------------
+  //----------------------------------------------------------------
   // double_block_test()
   //
   //
@@ -630,7 +653,7 @@ module sha512_ctrl_32bit_tb();
   endtask // double_block_test
 
 
-//----------------------------------------------------------------
+  //----------------------------------------------------------------
   // double_block_test()
   //
   //
@@ -641,11 +664,10 @@ module sha512_ctrl_32bit_tb();
                          input [1 : 0]    mode,
                          input [1023 : 0] block0,
                          input [1023 : 0] block1,
-                         input [511 : 0]  expected0,
-                         input [511 : 0]  expected1
+                         input [511 : 0]  expected
                         );
     reg [511 : 0] mask;
-    reg [511 : 0] masked_data1;
+    reg [511 : 0] masked_data;
     reg [31 : 0] start_time;
     reg [31 : 0] end_time;
 
@@ -675,17 +697,17 @@ module sha512_ctrl_32bit_tb();
       read_digest();
 
       mask = get_mask(mode);
-      masked_data1 = digest_data & mask;
+      masked_data = digest_data & mask;
 
-      if (masked_data1 == expected1)
+      if (masked_data == expected)
         begin
           $display("TC%01d final block: OK.", tc_ctr);
         end
       else
         begin
           $display("TC%01d: ERROR in final digest", tc_ctr);
-          $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected1);
-          $display("TC%01d: Got:      0x%0128x", tc_ctr, masked_data1);
+          $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, masked_data);
           error_ctr = error_ctr + 1;
         end
 
@@ -694,165 +716,6 @@ module sha512_ctrl_32bit_tb();
     end
   endtask // double_block_test
 
-
-  task long_message_test(input [7 : 0]    tc_number,
-                         input [1 : 0]    mode,
-                         input [63  : 0] vector_cnt
-                        );
-    reg [511 : 0] mask;
-    reg [511 : 0] masked_data;
-    reg [511 : 0] expected;
-    reg [31 : 0] start_time;
-    reg [31 : 0] end_time;
-    reg [1023: 0] block;
-    reg [1023: 0] block_last;
-    reg [102399: 0] block_all;
-    reg [1:0] ctrl_value;
-
-    string        line_read;
-    string        tmp_str1;
-    string        tmp_str2;
-    string        file_name;
-
-    int cyc_cnt;
-    int cnt_tmp;
-    int fd_r;
-    int block_len;
-    int block_len_res;
-    int block_shift;
-    int block_shift_cnt;
-    int expected_shift;
-
-    begin
-      cyc_cnt = 0;
-      block_len = 0;
-      block_len_res = 0;
-      block_shift = 0;
-      block_shift_cnt = 0;
-      expected_shift = 0;
-      ctrl_value = 0;
-
-      $display("*** TC%01d - Double block test pipelined started.", tc_ctr);
-      
-      case(mode)
-        MODE_SHA_512_224: begin
-          file_name = "/home/t-stevenlian/AHA_workspaces/sha512_uvm/Caliptra/src/sha512/tb/vectors/SHA512_224LongMsg.rsp";
-          expected_shift = 512 - 224;
-        end
-        MODE_SHA_512_256: begin
-          file_name = "/home/t-stevenlian/AHA_workspaces/sha512_uvm/Caliptra/src/sha512/tb/vectors/SHA512_256LongMsg.rsp";
-          expected_shift = 256;
-        end
-        MODE_SHA_384:     begin
-          file_name = "/home/t-stevenlian/AHA_workspaces/sha512_uvm/Caliptra/src/sha512/tb/vectors/SHA384LongMsg.rsp";
-          expected_shift = 512 - 384;
-        end
-        MODE_SHA_512:     begin
-          file_name = "/home/t-stevenlian/AHA_workspaces/sha512_uvm/Caliptra/src/sha512/tb/vectors/SHA512LongMsg.rsp";
-          expected_shift = 0;
-        end
-      endcase
-
-      fd_r = $fopen(file_name,"r");
-      if(fd_r) $display("**** file opened successfully!");
-
-      while (cnt_tmp <= 7) begin
-        cnt_tmp = cnt_tmp + 1;
-        $fgets(line_read,fd_r);
-      end
-      
-      while (cyc_cnt < vector_cnt) begin
-
-        // get the block and its length
-        $display("**** Getting block length");
-        $sscanf( line_read, "%s %s %d", tmp_str1, tmp_str2, block_len);
-        $fgets(line_read,fd_r);
-        $sscanf( line_read, "%s %s %h", tmp_str1, tmp_str2, block_all);
-        $fgets(line_read,fd_r);
-        $sscanf( line_read, "%s %s %h", tmp_str1, tmp_str2, expected);
-        expected = expected << expected_shift;
-        // $display("*** block_len is: %d", block_len);
-        // $display("*** block_all is: %h", block_all);
-        // $display("*** expected is: %h", expected);
-        repeat (2) $fgets(line_read,fd_r);
-
-        block_all = block_all << (102400 - block_len);
-
-        $display("**** SHA512 test started");
-        block_shift = block_len / 1024;
-        block_len_res = block_len % 1024;
-        block_len_res = 1024 - block_len_res - 1;
-        block_shift_cnt = 0;
-        block_last = 0;
-        ctrl_value = 0;
-
-        // $display("*** block_shift is: %d", block_shift);
-        // $display("*** block_len_res is: %d", block_len_res);
-
-        while (block_shift_cnt <= block_shift) begin
-          // $display("*** block_shift_cnt is: %d", block_shift_cnt);
-          block_shift_cnt = block_shift_cnt + 1;
-
-          block = block_all[102399:101376];
-          block_all = block_all << 1024;
-          // $display("*** block is: %h", block);
-          
-          if (block_shift_cnt == block_shift + 1) begin
-            if (block_len_res > 128) block_last = block + (1024'h1 << block_len_res) + block_len;
-            else begin
-              if (block_last == 0) begin
-                block_last = block + (1024'h1 << block_len_res);
-                block_shift_cnt = block_shift_cnt - 1;
-              end
-              else block_last = block_len;
-            end
-
-            block = block_last;
-            // $display("*** last block is: %h", block);
-          end
-
-          // write block
-          write_block(block);
-          wait_ready();
-
-          // configure mode
-          if (ctrl_value == 0) ctrl_value = CTRL_INIT_VALUE;
-          else ctrl_value = CTRL_NEXT_VALUE;
-          write_single_word(ADDR_CTRL, {28'h0, mode, ctrl_value});
-  
-          #CLK_PERIOD;
-          hsel_i_tb       = 0;
-          wait_ready();
-  
-        end
-        
-        // read out data
-        read_digest();
-        mask = get_mask(mode);
-        masked_data = digest_data & mask;
-
-        if (masked_data == expected)
-        begin
-          $display("*** TC %0d cycle %0d OK.", tc_ctr, cyc_cnt);
-        end
-        else
-          begin
-            $display("TC%01d: ERROR in final digest", tc_ctr);
-            $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected);
-            $display("TC%01d: Got:      0x%0128x", tc_ctr, masked_data);
-            error_ctr = error_ctr + 1;
-          end
-
-        cyc_cnt = cyc_cnt + 1;
-
-      end
-      
-
-      $display("*** TC%01d - Double block test done.", tc_ctr);
-      tc_ctr = tc_ctr + 1;
-
-    end
-  endtask // long_message_test
 
   //----------------------------------------------------------------
   // sha512_test
@@ -931,9 +794,7 @@ module sha512_ctrl_32bit_tb();
       tc12_expected = {384'h09330C33F71147E83D192FC782CD1B4753111B173B3B05D22FA08086E3B0F712FCC7C71A557E2DB966C3E9FA91746039, {4{32'h00000000}}};
       double_block_test(8'h08, MODE_SHA_384, double_block_one, double_block_two, tc11_expected, tc12_expected);
 
-      double_block_test_pipelined(8'h09, MODE_SHA_512, double_block_one, double_block_two, tc5_expected, tc6_expected);
-
-      long_message_test(8'h10, MODE_SHA_512_224, 128);
+      double_block_test_pipelined(8'h09, MODE_SHA_512, double_block_one, double_block_two, tc6_expected);
 
       display_test_result();
       

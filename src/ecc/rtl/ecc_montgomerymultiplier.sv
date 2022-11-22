@@ -20,6 +20,21 @@
 // Optimized Algorithms and Architectures for Montgomery Multiplication
 // for Post-quantum Cryptography by Rami Elkhatib et. al.
 //
+// Description:
+//      The module produces a Montgomery product of input operands with the following contraints:
+//          Input operands must be less than n_i, i.e. opa_i < n_i and opb_i < n_i.
+//          RADIX > 2
+//          R = 2^((ceil($bits(n_i) / RADIX) + 1) * RADIX)
+//          R > n_i.
+//      (1) T = opa_i * opb_i < n_i * n_i = n_i^2
+//      (2) p_internal = (T + (T*n_prime mod R) * n_i) / R
+//      (3) p_subtracted_internal = p_internal - n_i       
+//      (4) p_o = (p_internal >= ni)? p_subtracted_internal : p_internal
+//      From (1) and (2) given R > n_i, and opa_i, opb_i < n_i:
+//          p_internal < (n_i^2 + R * n_i) / R = n_i + n_i^2 / R < n_i + n_i^2 / n_i = n_i + n_i = 2*n_i
+//      From (3) and (4):
+//          p_subtracted_internal < 2*n_i - n_i = n_i
+//          p_o < n_i
 //======================================================================
 
 module ecc_montgomerymultiplier #(

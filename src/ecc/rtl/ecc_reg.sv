@@ -188,10 +188,6 @@ module ecc_reg (
                 logic next;
                 logic load_next;
             } SCALAR_RND_EN;
-            struct {
-                logic next;
-                logic load_next;
-            } OPENSSL_EN;
         } ECC_SCACONFIG;
         struct {
             struct {
@@ -482,9 +478,6 @@ module ecc_reg (
             struct {
                 logic value;
             } SCALAR_RND_EN;
-            struct {
-                logic value;
-            } OPENSSL_EN;
         } ECC_SCACONFIG;
         struct {
             struct {
@@ -778,25 +771,6 @@ module ecc_reg (
         end
     end
     assign hwif_out.ECC_SCACONFIG.SCALAR_RND_EN.value = field_storage.ECC_SCACONFIG.SCALAR_RND_EN.value;
-    // Field: ecc_reg.ECC_SCACONFIG.OPENSSL_EN
-    always_comb begin
-        automatic logic [0:0] next_c = field_storage.ECC_SCACONFIG.OPENSSL_EN.value;
-        automatic logic load_next_c = '0;
-        if(decoded_reg_strb.ECC_SCACONFIG && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[3:3];
-            load_next_c = '1;
-        end
-        field_combo.ECC_SCACONFIG.OPENSSL_EN.next = next_c;
-        field_combo.ECC_SCACONFIG.OPENSSL_EN.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
-            field_storage.ECC_SCACONFIG.OPENSSL_EN.value <= 'h0;
-        end else if(field_combo.ECC_SCACONFIG.OPENSSL_EN.load_next) begin
-            field_storage.ECC_SCACONFIG.OPENSSL_EN.value <= field_combo.ECC_SCACONFIG.OPENSSL_EN.next;
-        end
-    end
-    assign hwif_out.ECC_SCACONFIG.OPENSSL_EN.value = field_storage.ECC_SCACONFIG.OPENSSL_EN.value;
     for(genvar i0=0; i0<12; i0++) begin
         // Field: ecc_reg.ECC_SEED[].SEED
         always_comb begin

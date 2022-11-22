@@ -16,7 +16,19 @@
 //
 // ecc_dsa_sequencer.sv
 // --------
-// 
+// This module contains the sequence of ECC operation. it includes 4 sequences
+// of operation:
+// 1) reset sequence:  After reset, the core will initilze the data memory based
+//                     on the first lines of sequencer. Then, it will stay on NOP
+//                     line until getting the command.
+// 2) keygen sequence: After getting the keygen command, it will generate and 
+//                     randomize privkey and feed it into the pm core and return
+//                     key pairs of (privkey, pubkey)
+// 3) sign sequence:   After getting the sign command, it will generate and 
+//                     randomize nonce and feed it into the pm core and return
+//                     the signature (R, S).                     
+// 4) verify sequence: After getting the verify command, it will feed the signature
+//                     into the pm core and return the computed verify_R.
 //
 //
 //======================================================================

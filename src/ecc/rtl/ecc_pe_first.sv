@@ -79,6 +79,9 @@ module ecc_pe_first #(
 
     logic                     carry_garbage_bit;
 
+    //----------------------------------------------------------------
+    // Module instantiantions.
+    //----------------------------------------------------------------
     ecc_mult_dsp #(
         .RADIX(RADIX)
     ) MULT0 (
@@ -103,6 +106,11 @@ module ecc_pe_first #(
         .P_o(mult_out_2)
     );
 
+    //----------------------------------------------------------------
+    // pe_logic
+    //
+    // The logic needed to update the multiplier inputs.
+    //----------------------------------------------------------------
     assign m_temp = mult_out_1[RADIX-1:0];
 
     assign mult_out_0_MSW = mult_out_0[(2*RADIX)-1 : RADIX];
@@ -124,14 +132,16 @@ module ecc_pe_first #(
         carry_1 = res_1[RADIX];
     end
 
-    always_comb begin
-        c_0 = mult_out_0_MSW + carry_0;
-    end
+    always_comb c_0 = mult_out_0_MSW + carry_0;
 
-    always_comb begin
-        c_1 = mult_out_2_MSW + carry_1;
-    end
+    always_comb c_1 = mult_out_2_MSW + carry_1;
 
+    assign {carry_garbage_bit, c_out} = c_0_reg + c_1;
+
+    //----------------------------------------------------------------
+    // register updates
+    //
+    //----------------------------------------------------------------
     always_ff @(posedge clk or negedge reset_n) begin
         if(~reset_n) begin
             c_0_reg <= 'b0;
@@ -154,8 +164,6 @@ module ecc_pe_first #(
             sum_0_reg <= sum_0;
         end
     end
-
-    assign {carry_garbage_bit, c_out} = c_0_reg + c_1;
 
     always_ff @(posedge clk or negedge reset_n) begin
         if (~reset_n) begin

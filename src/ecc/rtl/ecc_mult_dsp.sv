@@ -16,7 +16,7 @@
 //
 // ecc_mult_dsp.sv
 // --------
-// General multiplier.
+// General multiplier to perfrom P = A*B.
 //
 //
 //======================================================================
