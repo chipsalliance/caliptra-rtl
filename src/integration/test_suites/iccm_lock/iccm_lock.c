@@ -162,7 +162,7 @@ void main(void) {
             printf("Success! Reached end of ICCM lock firmware during second iteration\n");
         } else {
             persistent_is_second_pass = 1;
-            *soc_ifc_fw_update_reset = SOC_IFC_REG_FW_UPDATE_RESET_RESET_MASK;
+            *soc_ifc_fw_update_reset = SOC_IFC_REG_FW_UPDATE_RESET_CORE_RST_MASK;
         }
 
         return;

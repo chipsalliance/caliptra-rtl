@@ -150,7 +150,7 @@ soc_ifc_boot_fsm i_soc_ifc_boot_fsm (
     .clk(clk),
     .cptra_pwrgood(cptra_pwrgood),
     .cptra_rst_b (cptra_rst_b),
-    .fw_update_rst (soc_ifc_reg_hwif_out.fw_update_reset.reset.value),
+    .fw_update_rst (soc_ifc_reg_hwif_out.fw_update_reset.core_rst.value),
     .ready_for_fuses(ready_for_fuses),
 
     .fuse_done(soc_ifc_reg_hwif_out.fuse_done.done.value),

@@ -404,15 +404,15 @@ package soc_ifc_reg_uvm;
 
     // Reg - soc_ifc_reg::fw_update_reset
     class soc_ifc_reg__fw_update_reset extends uvm_reg;
-        rand uvm_reg_field reset;
+        rand uvm_reg_field core_rst;
 
         function new(string name = "soc_ifc_reg__fw_update_reset");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
         virtual function void build();
-            this.reset = new("reset");
-            this.reset.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.core_rst = new("core_rst");
+            this.core_rst.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__fw_update_reset
 

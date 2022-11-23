@@ -24,7 +24,6 @@ addrmap soc_ifc_reg {
     default hw = na;
     signal {activelow; async; cpuif_reset; field_reset;} reset_b;
     signal {activelow; async;} hard_reset_b;
-    // TODO: Add reset for ICCM_LOCK register
 
     //signal to indicate request is coming from soc side
     signal {} soc_req;
@@ -85,7 +84,7 @@ addrmap soc_ifc_reg {
     reg {name = "TRNG Data";
          desc = "Storage for the requested TRNG Data";
          field {sw=rw; hw=na;} DATA[32];} TRNG[12];
-        
+
     reg {name = "TRNG Done";
          desc = "Indicates that the requests TRNG Data is done and stored in the TRNG Data register";
          field {sw=rw; hw=na;} DONE;} TRNG_DONE;
@@ -129,8 +128,7 @@ addrmap soc_ifc_reg {
                 0, the uc core alone is reset. When set to 1, reset is deasserted.
                 Writes available to Caliptra subsystem, not SoC.";
 
-        //field {desc = "FW Update reset to reset core"; hw = r; precedence=hw; sw = rw; swwel = soc_req;} reset = 1'b1;
-        field {desc = "FW Update reset to reset core"; hw = r; sw = rw; singlepulse=true; swwel = soc_req;} reset = 1'b0;
+        field {desc = "FW Update reset to reset core"; hw = r; sw = rw; singlepulse=true; swwel = soc_req;} core_rst = 1'b0;
     } fw_update_reset;
 
 

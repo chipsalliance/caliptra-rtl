@@ -161,10 +161,10 @@ package soc_ifc_reg_pkg;
 
     typedef struct {
         logic value;
-    } soc_ifc_reg__fw_update_reset__reset__out_t;
+    } soc_ifc_reg__fw_update_reset__core_rst__out_t;
 
     typedef struct {
-        soc_ifc_reg__fw_update_reset__reset__out_t reset;
+        soc_ifc_reg__fw_update_reset__core_rst__out_t core_rst;
     } soc_ifc_reg__fw_update_reset__out_t;
 
     typedef struct {

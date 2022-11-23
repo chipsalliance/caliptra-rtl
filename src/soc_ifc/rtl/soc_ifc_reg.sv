@@ -389,7 +389,7 @@ module soc_ifc_reg (
             struct {
                 logic next;
                 logic load_next;
-            } reset;
+            } core_rst;
         } fw_update_reset;
         struct {
             struct {
@@ -748,7 +748,7 @@ module soc_ifc_reg (
         struct {
             struct {
                 logic value;
-            } reset;
+            } core_rst;
         } fw_update_reset;
         struct {
             struct {
@@ -1483,9 +1483,9 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.iccm_lock.lock.value = field_storage.iccm_lock.lock.value;
-    // Field: soc_ifc_reg.fw_update_reset.reset
+    // Field: soc_ifc_reg.fw_update_reset.core_rst
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.fw_update_reset.reset.value;
+        automatic logic [0:0] next_c = field_storage.fw_update_reset.core_rst.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.fw_update_reset && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = decoded_wr_data[0:0];
@@ -1494,17 +1494,17 @@ module soc_ifc_reg (
             next_c = '0;
             load_next_c = '1;
         end
-        field_combo.fw_update_reset.reset.next = next_c;
-        field_combo.fw_update_reset.reset.load_next = load_next_c;
+        field_combo.fw_update_reset.core_rst.next = next_c;
+        field_combo.fw_update_reset.core_rst.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.fw_update_reset.reset.value <= 'h0;
-        end else if(field_combo.fw_update_reset.reset.load_next) begin
-            field_storage.fw_update_reset.reset.value <= field_combo.fw_update_reset.reset.next;
+            field_storage.fw_update_reset.core_rst.value <= 'h0;
+        end else if(field_combo.fw_update_reset.core_rst.load_next) begin
+            field_storage.fw_update_reset.core_rst.value <= field_combo.fw_update_reset.core_rst.next;
         end
     end
-    assign hwif_out.fw_update_reset.reset.value = field_storage.fw_update_reset.reset.value;
+    assign hwif_out.fw_update_reset.core_rst.value = field_storage.fw_update_reset.core_rst.value;
     // Field: soc_ifc_reg.intr_block_rf.global_intr_en_r.error_en
     always_comb begin
         automatic logic [0:0] next_c = field_storage.intr_block_rf.global_intr_en_r.error_en.value;
@@ -2392,7 +2392,7 @@ module soc_ifc_reg (
     assign readback_array[105][31:1] = '0;
     assign readback_array[106][0:0] = (decoded_reg_strb.iccm_lock && !decoded_req_is_wr) ? field_storage.iccm_lock.lock.value : '0;
     assign readback_array[106][31:1] = '0;
-    assign readback_array[107][0:0] = (decoded_reg_strb.fw_update_reset && !decoded_req_is_wr) ? field_storage.fw_update_reset.reset.value : '0;
+    assign readback_array[107][0:0] = (decoded_reg_strb.fw_update_reset && !decoded_req_is_wr) ? field_storage.fw_update_reset.core_rst.value : '0;
     assign readback_array[107][31:1] = '0;
     assign readback_array[108][0:0] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.error_en.value : '0;
     assign readback_array[108][1:1] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.notif_en.value : '0;
