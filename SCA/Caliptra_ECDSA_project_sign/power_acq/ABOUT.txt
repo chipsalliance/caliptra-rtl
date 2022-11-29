@@ -1,1 +1,0 @@
-This is the checker with one adder modelled. It doesn't have PS3000 integration

@@ -110,7 +110,7 @@ def copy_file(file, srcDir,destDir):
 
 
 def copyFilesSrcToDest(sWorkspace, sRepo, dWorkspace, dRepo):
-    blacklistRepoDirsFiles = ["SCA", "etc", "config", "dvt_build.log"]
+    blacklistRepoDirsFiles = ["etc", "config", "dvt_build.log"]
     blacklistIpDirsFiles = ["aes", "sim_irq_gen", "syn"]
     blacklistScriptsDirsFiles = ["gen_pb_file_lists.sh", "README.md", "sim_config_parse.py", "github_sync.py", "prepDestRepo.sh", "prepPBSrcRepo.sh", "run_test_makefile", "syn"]
     integrationTestSuiteList = ['caliptra_demo', 'caliptra_isr', 'includes', 'printf']

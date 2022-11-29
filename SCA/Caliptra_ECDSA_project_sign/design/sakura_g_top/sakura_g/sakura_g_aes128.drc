@@ -1,8 +1,0 @@
-Release 14.7 Drc P.20131013 (nt64)
-Copyright (c) 1995-2013 Xilinx, Inc.  All rights reserved.
-
-Tue Sep 06 15:16:42 2022
-
-drc -z sakura_g_aes128.ncd sakura_g_aes128.pcf
-
-DRC detected 0 errors and 0 warnings.

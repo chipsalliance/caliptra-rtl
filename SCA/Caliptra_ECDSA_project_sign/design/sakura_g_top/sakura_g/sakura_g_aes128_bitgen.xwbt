@@ -1,8 +1,0 @@
-INTSTYLE=ise
-INFILE=C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project_sign\design\sakura_g_top\sakura_g\sakura_g_aes128.ncd
-OUTFILE=C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project_sign\design\sakura_g_top\sakura_g\sakura_g_aes128.bit
-FAMILY=Spartan6
-PART=xc6slx75-2csg484
-WORKINGDIR=C:\Users\t-ekarabulut\OneDrive - Microsoft\Caliptra_ECDSA_project_sign\design\sakura_g_top\sakura_g
-LICENSE=WebPack
-USER_INFO=151665_27830494_210656223_321
