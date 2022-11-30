@@ -73,6 +73,7 @@ always_comb begin
     ready_for_fuses = '0;
     propagate_reset_en = '0;
     propagate_fw_reset_en = '0;
+
     unique casez (boot_fsm_ps)
         BOOT_IDLE: begin
             if (arc_BOOT_IDLE_BOOT_FUSE) begin
@@ -90,6 +91,12 @@ always_comb begin
                 boot_fsm_ns = BOOT_DONE;
             end
             ready_for_fuses = 1'b1;
+
+            //reset flags
+            fsm_synch_fw_rst_b = '0;
+            fsm_iccm_unlock = '0;
+            wait_count_decr = 0;
+            wait_count_rst = 1;
         end
         BOOT_FW_RST: begin
             boot_fsm_ns = BOOT_WAIT;
@@ -99,6 +106,7 @@ always_comb begin
             //Unlock ICCM
             fsm_iccm_unlock = '1;
             //Timer init done
+            wait_count_decr = 0;
             wait_count_rst = 0;
         end
         BOOT_WAIT: begin
@@ -106,6 +114,7 @@ always_comb begin
                 boot_fsm_ns = BOOT_DONE;
             end
 
+            fsm_synch_fw_rst_b = '0;
             fsm_iccm_unlock = '0;
             //Start timer
             wait_count_decr = 1;
@@ -124,12 +133,17 @@ always_comb begin
             propagate_fw_reset_en = 1'b1;
             //Deassert core reset
             fsm_synch_fw_rst_b = '1;
+            fsm_iccm_unlock = '0;
             //Timer re-init
             wait_count_rst = 1;
             wait_count_decr = 0;
         end
         default: begin
             boot_fsm_ns = boot_fsm_ps;
+            fsm_synch_fw_rst_b = '1;
+            fsm_iccm_unlock = '0;
+            wait_count_decr = 0;
+            wait_count_rst = 1;
         end
     endcase
 end

@@ -19,7 +19,7 @@ module caliptra_top
     import kv_defines_pkg::*;
     import soc_ifc_pkg::*;
     (
-    input bit                          clk,
+    input logic                        clk,
 
     input logic                        cptra_pwrgood,
     input logic                        cptra_rst_b,
@@ -160,11 +160,11 @@ module caliptra_top
     logic                       mpc_debug_run_ack;
     logic                       debug_brkpt_status;
 
-    int                         cycleCnt;
+    integer                     cycleCnt;
     logic                       mailbox_data_val;
 
     wire                        dma_hready_out;
-    int                         commit_count;
+    integer                     commit_count;
 
     logic                       wb_valid;
     logic [4:0]                 wb_dest;

@@ -25,7 +25,9 @@ targets:
     tops: [caliptra_top_dummy]
   rtl_lint:
     waiver_files:
-      - $COMPILE_ROOT/config/design_lint/integration_lint.waivers
+      - $COMPILE_ROOT/config/design_lint/sglint_waivers
+    black_box:
+      - el2_swerv_wrapper
   cdc:
     tcl_files:
       - $COMPILE_ROOT/config/cdc/integration_top.constraints.tcl

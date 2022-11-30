@@ -19,7 +19,8 @@ targets:
   rtl_lint:
     directories: []
     waiver_files: 
-      - $COMPILE_ROOT/config/rtl_lint/sha256.waiver
+      #- $COMPILE_ROOT/config/rtl_lint/sha256.waiver
+      - $COMPILE_ROOT/config/design_lint/sha256_ctrl/sglint_waivers
     black_box:
       - sha256_reg
 ---

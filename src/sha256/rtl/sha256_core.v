@@ -81,9 +81,9 @@ module sha256_core(
 
   localparam SHA256_ROUNDS = 63;
 
-  localparam CTRL_IDLE   = 0;
-  localparam CTRL_ROUNDS = 1;
-  localparam CTRL_DONE   = 2;
+  localparam [1:0] CTRL_IDLE   = 0;
+  localparam [1:0] CTRL_ROUNDS = 1;
+  localparam [1:0] CTRL_DONE   = 2;
 
 
   //----------------------------------------------------------------

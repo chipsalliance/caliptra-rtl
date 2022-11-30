@@ -66,6 +66,10 @@ targets:
       - $COMPILE_ROOT/rtl/lsu/el2_lsu.sv
       - $COMPILE_ROOT/rtl/lsu/el2_lsu_trigger.sv
     tops: [el2_swerv_wrapper]
+  rtl_lint:
+    directories: []
+    waiver_files:
+      - $COMPILE_ROOT/config/design_lint/el2_swerv_wrapper/sglint_waivers
 global:
   tool:
     vcs:

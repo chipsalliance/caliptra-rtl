@@ -43,11 +43,13 @@ stages:
       - timeout: 10
 
     design_lint_map:
-    - caliptra_top:
-      - enabled: false
+    - caliptra_top_sglint:
+      - enabled: true
       - configspec_name: 'integration_lib'
       - dut: 'caliptra_top'
-      - timeout: 10
+      - lint_tool: 'sglint'
+      - timeout: 30
+      - args: '--inherit-waivers=True'
 
     dv_lint_map:
     - caliptra_top_tb:

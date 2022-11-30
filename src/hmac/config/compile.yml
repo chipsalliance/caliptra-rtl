@@ -19,7 +19,7 @@ targets:
   rtl_lint:
     directories: []
     waiver_files: 
-      - $COMPILE_ROOT/config/rtl_lint/hmac.waiver
+      - $COMPILE_ROOT/config/design_lint/hmac_ctrl/sglint_waivers
     black_box:
       - hmac_reg
 ---

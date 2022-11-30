@@ -24,11 +24,11 @@ targets:
       - $COMPILE_ROOT/rtl/kv_fsm.sv
       - $COMPILE_ROOT/rtl/kv_read_client.sv
       - $COMPILE_ROOT/rtl/kv_write_client.sv
-    tops: [keyvault]
+    tops: [kv]
   rtl_lint:
     directories: []
     waiver_files:
-      - $COMPILE_ROOT/config/design_lint/sglint_waivers
+      - $COMPILE_ROOT/config/design_lint/keyvault/sglint_waivers
     black_box:
       - kv_reg
 global:
