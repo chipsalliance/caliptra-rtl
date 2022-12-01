@@ -1,9 +1,11 @@
++incdir+${WORKSPACE}/Caliptra/src/hmac_drbg/tb
 +incdir+${WORKSPACE}/Caliptra/src/libs/rtl
 +incdir+${WORKSPACE}/Caliptra/src/keyvault/rtl
 +incdir+${WORKSPACE}/Caliptra/src/keyvault/rtl
 +incdir+${WORKSPACE}/Caliptra/src/sha512/rtl
 +incdir+${WORKSPACE}/Caliptra/src/hmac/rtl
 +incdir+${WORKSPACE}/Caliptra/src/hmac_drbg/rtl
+${WORKSPACE}/Caliptra/src/hmac_drbg/tb/hmac_drbg_tb.sv
 ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_sva_pkg.sv
 ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_sram.sv
 ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_ahb_srom.sv
@@ -33,4 +35,4 @@ ${WORKSPACE}/Caliptra/src/hmac/rtl/hmac_ctrl.sv
 ${WORKSPACE}/Caliptra/src/hmac/rtl/hmac.sv
 ${WORKSPACE}/Caliptra/src/hmac/rtl/hmac_core.v
 ${WORKSPACE}/Caliptra/src/hmac/rtl/hmac_reg.sv
-${WORKSPACE}/Caliptra/src/hmac_drbg/rtl/hmac_drbg.v
+${WORKSPACE}/Caliptra/src/hmac_drbg/rtl/hmac_drbg.sv

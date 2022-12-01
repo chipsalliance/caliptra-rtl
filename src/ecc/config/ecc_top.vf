@@ -34,7 +34,7 @@ ${WORKSPACE}/Caliptra/src/hmac/rtl/hmac_ctrl.sv
 ${WORKSPACE}/Caliptra/src/hmac/rtl/hmac.sv
 ${WORKSPACE}/Caliptra/src/hmac/rtl/hmac_core.v
 ${WORKSPACE}/Caliptra/src/hmac/rtl/hmac_reg.sv
-${WORKSPACE}/Caliptra/src/hmac_drbg/rtl/hmac_drbg.v
+${WORKSPACE}/Caliptra/src/hmac_drbg/rtl/hmac_drbg.sv
 ${WORKSPACE}/Caliptra/src/ecc/rtl/ecc_reg_pkg.sv
 ${WORKSPACE}/Caliptra/src/ecc/rtl/ecc_defines_pkg.sv
 ${WORKSPACE}/Caliptra/src/ecc/rtl/ecc_params_pkg.sv

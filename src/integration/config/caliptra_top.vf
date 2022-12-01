@@ -1,3 +1,4 @@
++incdir+${WORKSPACE}/Caliptra/src/riscv_core/swerv_el2/rtl
 +incdir+${WORKSPACE}/Caliptra/src/keyvault/rtl
 +incdir+${WORKSPACE}/Caliptra/src/riscv_core/swerv_el2/rtl
 +incdir+${WORKSPACE}/Caliptra/src/riscv_core/swerv_el2/rtl
@@ -14,6 +15,7 @@
 +incdir+${WORKSPACE}/Caliptra/src/soc_ifc/rtl
 +incdir+${WORKSPACE}/Caliptra/src/soc_ifc/rtl
 +incdir+${WORKSPACE}/Caliptra/src/integration/rtl
+${WORKSPACE}/Caliptra/src/riscv_core/swerv_el2/rtl/common_defines.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_defines_pkg.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_macros.svh
 ${WORKSPACE}/Caliptra/src/riscv_core/swerv_el2/rtl/common_defines.sv
@@ -114,7 +116,7 @@ ${WORKSPACE}/Caliptra/src/hmac/rtl/hmac_ctrl.sv
 ${WORKSPACE}/Caliptra/src/hmac/rtl/hmac.sv
 ${WORKSPACE}/Caliptra/src/hmac/rtl/hmac_core.v
 ${WORKSPACE}/Caliptra/src/hmac/rtl/hmac_reg.sv
-${WORKSPACE}/Caliptra/src/hmac_drbg/rtl/hmac_drbg.v
+${WORKSPACE}/Caliptra/src/hmac_drbg/rtl/hmac_drbg.sv
 ${WORKSPACE}/Caliptra/src/ecc/rtl/ecc_reg_pkg.sv
 ${WORKSPACE}/Caliptra/src/ecc/rtl/ecc_defines_pkg.sv
 ${WORKSPACE}/Caliptra/src/ecc/rtl/ecc_params_pkg.sv
@@ -140,7 +142,7 @@ ${WORKSPACE}/Caliptra/src/ecc/rtl/ecc_add_sub_mod_alter.sv
 ${WORKSPACE}/Caliptra/src/ecc/rtl/ecc_adder.sv
 ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/soc_ifc_pkg.sv
 ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/mbox_csr_pkg.sv
-${WORKSPACE}/Caliptra/src/soc_ifc/rtl/sha_csr_pkg.sv
+${WORKSPACE}/Caliptra/src/soc_ifc/rtl/sha512_acc_csr_pkg.sv
 ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/soc_ifc_reg_pkg.sv
 ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/soc_ifc_top.sv
 ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/soc_ifc_boot_fsm.sv
@@ -148,8 +150,8 @@ ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/soc_ifc_arb.sv
 ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/soc_ifc_reg.sv
 ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/mbox.sv
 ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/mbox_csr.sv
-${WORKSPACE}/Caliptra/src/soc_ifc/rtl/sha_top.sv
-${WORKSPACE}/Caliptra/src/soc_ifc/rtl/sha_csr.sv
+${WORKSPACE}/Caliptra/src/soc_ifc/rtl/sha512_acc_top.sv
+${WORKSPACE}/Caliptra/src/soc_ifc/rtl/sha512_acc_csr.sv
 ${WORKSPACE}/Caliptra/src/integration/rtl/config_pkg.sv
 ${WORKSPACE}/Caliptra/src/integration/rtl/caliptra_top.sv
 ${WORKSPACE}/Caliptra/src/integration/rtl/caliptra_top_dummy.sv

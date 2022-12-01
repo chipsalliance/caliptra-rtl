@@ -30,7 +30,7 @@ for i in ${cpt_ymls}; do
     for j in ${cpt_libs}; do
         if [[ $j == "uvmf_lib" || $j == "uvm_lib" || $j == "mvc_lib" ]]; then continue; fi
         echo "Generating File List for lib [${j}] in [src/${cpt_dir}/config/${j}.vf]";
-        pb fe file_list --tb integration_lib::${j} --flat --dir-fmt=+incdir+{directory} --file src/${cpt_dir}/config/${j}.vf;
+        pb fe file_list --tb integration_lib::${j} +def-target 'tb' --flat --dir-fmt=+incdir+{directory} --file src/${cpt_dir}/config/${j}.vf;
         sed 's/\/home.*Caliptra\/src/\${WORKSPACE}\/Caliptra\/src/' -i src/${cpt_dir}/config/${j}.vf
     done
 done
