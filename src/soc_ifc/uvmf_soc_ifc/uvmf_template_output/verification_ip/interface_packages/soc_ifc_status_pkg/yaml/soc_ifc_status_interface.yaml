@@ -13,6 +13,10 @@ uvmf:
       parameters: []
       ports:
       - dir: output
+        name: cptra_noncore_rst_b
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
         name: cptra_uc_rst_b
         reset_value: '''bz'
         width: '1'

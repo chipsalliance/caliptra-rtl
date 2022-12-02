@@ -83,6 +83,7 @@ end
 
   tri clk_i;
   tri dummy_i;
+  tri  cptra_noncore_rst_b_i;
   tri  cptra_uc_rst_b_i;
   tri  ready_for_fuses_i;
   tri  ready_for_fw_push_i;
@@ -100,6 +101,7 @@ end
   tri  iccm_lock_i;
   assign clk_i = bus.clk;
   assign dummy_i = bus.dummy;
+  assign cptra_noncore_rst_b_i = bus.cptra_noncore_rst_b;
   assign cptra_uc_rst_b_i = bus.cptra_uc_rst_b;
   assign ready_for_fuses_i = bus.ready_for_fuses;
   assign ready_for_fw_push_i = bus.ready_for_fw_push;
@@ -121,6 +123,7 @@ end
   // pragma tbx oneway proxy.notify_transaction
 
   // pragma uvmf custom interface_item_additional begin
+  reg  cptra_noncore_rst_b_o = 'b0;
   reg  cptra_uc_rst_b_o = 'b0;
   reg  ready_for_fuses_o = 'b0;
   reg  ready_for_fw_push_o = 'b0;
@@ -137,10 +140,11 @@ end
   reg  sha_notif_intr_o = 'b0;
   reg  iccm_lock_o = 'b0;
   function bit any_signal_changed();
-      if (!cptra_uc_rst_b_o)
-          return cptra_uc_rst_b_i || (ready_for_fuses_i & !ready_for_fuses_o);
+      if (!cptra_noncore_rst_b_o)
+          return cptra_noncore_rst_b_i || (ready_for_fuses_i & !ready_for_fuses_o);
       else
-          return |(cptra_uc_rst_b_i       ^  cptra_uc_rst_b_o           ) ||
+          return |(cptra_noncore_rst_b_i  ^  cptra_noncore_rst_b_o      ) ||
+                 |(cptra_uc_rst_b_i       ^  cptra_uc_rst_b_o           ) ||
                  |(ready_for_fuses_i      & !ready_for_fuses_o          ) ||
                  |(ready_for_fw_push_i    & !ready_for_fw_push_o        ) ||
                  |(ready_for_runtime_i    & !ready_for_runtime_o        ) ||
@@ -241,7 +245,7 @@ end
     //
     //    How to assign a struct member, named xyz, from a signal.
     //    All available input signals listed.
-    //      soc_ifc_status_monitor_struct.xyz = cptra_uc_rst_b_i;  //     
+    //      soc_ifc_status_monitor_struct.xyz = cptra_noncore_rst_b_i;  //     
     //      soc_ifc_status_monitor_struct.xyz = ready_for_fuses_i;  //     
     //      soc_ifc_status_monitor_struct.xyz = ready_for_fw_push_i;  //     
     //      soc_ifc_status_monitor_struct.xyz = ready_for_runtime_i;  //     
@@ -268,7 +272,8 @@ end
     // Wait for next transfer then gather info from intiator about the transfer.
     // Place the data into the soc_ifc_status_initiator_struct.
     while (!any_signal_changed()) @(posedge clk_i);
-    cptra_uc_rst_b_o               <= cptra_uc_rst_b_i      ;
+    cptra_noncore_rst_b_o          <= cptra_noncore_rst_b_i      ;
+    cptra_uc_rst_b_o               <= cptra_uc_rst_b_i   ;
     ready_for_fuses_o              <= ready_for_fuses_i     ;
     ready_for_fw_push_o            <= ready_for_fw_push_i   ;
     ready_for_runtime_o            <= ready_for_runtime_i   ;
@@ -290,7 +295,7 @@ end
          soc_ifc_status_monitor_struct.soc_ifc_notif_intr_pending =  soc_ifc_notif_intr_i;
          soc_ifc_status_monitor_struct.sha_err_intr_pending       =  sha_error_intr_i;
          soc_ifc_status_monitor_struct.sha_notif_intr_pending     =  sha_notif_intr_i;
-         soc_ifc_status_monitor_struct.uc_rst_asserted            = !cptra_uc_rst_b_i;
+         soc_ifc_status_monitor_struct.uc_rst_asserted            = !cptra_noncore_rst_b_i;
          soc_ifc_status_monitor_struct.ready_for_fuses            =  ready_for_fuses_i;
          soc_ifc_status_monitor_struct.ready_for_fw_push          =  ready_for_fw_push_i;
          soc_ifc_status_monitor_struct.ready_for_runtime          =  ready_for_runtime_i;

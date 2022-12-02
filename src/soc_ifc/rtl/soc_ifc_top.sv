@@ -87,9 +87,9 @@ module soc_ifc_top
     input  logic iccm_axs_blocked,
 
     //Other blocks reset
-    output logic cptra_uc_rst_b,
+    output logic cptra_noncore_rst_b,
     //uC reset
-    output logic cptra_uc_fw_rst_b   
+    output logic cptra_uc_rst_b   
 );
 
 //gasket to assemble mailbox request
@@ -151,12 +151,13 @@ soc_ifc_boot_fsm i_soc_ifc_boot_fsm (
     .cptra_pwrgood(cptra_pwrgood),
     .cptra_rst_b (cptra_rst_b),
     .fw_update_rst (soc_ifc_reg_hwif_out.fw_update_reset.core_rst.value),
+    .fw_update_rst_wait_cycles (soc_ifc_reg_hwif_out.fw_update_reset_wait_cycles.wait_cycles.value),
     .ready_for_fuses(ready_for_fuses),
 
     .fuse_done(soc_ifc_reg_hwif_out.fuse_done.done.value),
 
-    .cptra_uc_rst_b(cptra_uc_rst_b), //goes to all other blocks
-    .cptra_uc_fw_rst_b(cptra_uc_fw_rst_b), //goes to swerv core
+    .cptra_noncore_rst_b(cptra_noncore_rst_b), //goes to all other blocks
+    .cptra_uc_rst_b(cptra_uc_rst_b), //goes to swerv core
     .iccm_unlock(iccm_unlock)
 );
 
@@ -210,7 +211,7 @@ ahb_slv_sif #(
 i_ahb_slv_sif_soc_ifc (
     //AMBA AHB Lite INF
     .hclk(clk),
-    .hreset_n(cptra_uc_rst_b),
+    .hreset_n(cptra_noncore_rst_b),
     .haddr_i(haddr_i),
     .hwdata_i(hwdata_i),
     .hsel_i(hsel_i),
@@ -368,7 +369,7 @@ sha512_acc_top #(
 )
 i_sha512_acc_top (
     .clk(clk),
-    .rst_b(cptra_uc_rst_b),
+    .rst_b(cptra_noncore_rst_b),
     .cptra_pwrgood(cptra_pwrgood),
     
     .req_dv(sha_req_dv),
@@ -396,7 +397,7 @@ mbox #(
     )
 i_mbox (
     .clk(clk),
-    .rst_b(cptra_uc_rst_b),
+    .rst_b(cptra_noncore_rst_b),
     .req_dv(mbox_req_dv), 
     .req_hold(mbox_req_hold),
     .dir_req_dv(mbox_dir_req_dv),
@@ -413,8 +414,8 @@ i_mbox (
 );
 
 // Generate a pulse to set the interrupt bit
-always_ff @(posedge clk or negedge cptra_uc_rst_b) begin
-    if (~cptra_uc_rst_b) begin
+always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
+    if (~cptra_noncore_rst_b) begin
         uc_mbox_data_avail_d <= '0;
 	end
 	else begin

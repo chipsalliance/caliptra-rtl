@@ -29,6 +29,9 @@ uvmf:
 #        dir: output
 #        width: '1'
       #uC reset
+      - name: cptra_noncore_rst_b
+        dir: output
+        width: '1'
       - name: cptra_uc_rst_b
         dir: output
         width: '1'

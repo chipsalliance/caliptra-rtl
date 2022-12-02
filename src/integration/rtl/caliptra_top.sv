@@ -93,8 +93,8 @@ module caliptra_top
 
 
     //caliptra reset driven by boot fsm in mailbox
+    logic                       cptra_noncore_rst_b;
     logic                       cptra_uc_rst_b;
-    logic                       cptra_uc_fw_rst_b;
 
     logic        [31:0]         ic_haddr        ;
     logic        [2:0]          ic_hburst       ;
@@ -255,7 +255,7 @@ end
     )
     ahb_lite_bus_i (
         .hclk                          ( clk                         ),
-        .hreset_n                      ( cptra_uc_rst_b              ),
+        .hreset_n                      ( cptra_noncore_rst_b              ),
         .ahb_lite_responders           ( responder_inst              ),
         .ahb_lite_initiator            ( initiator_inst              ),
         .ahb_lite_resp_disable_i       ( ahb_lite_resp_disable       ),
@@ -331,7 +331,7 @@ always_comb begin
 end
 
 el2_swerv_wrapper rvtop (
-    .rst_l                  ( cptra_uc_fw_rst_b),
+    .rst_l                  ( cptra_uc_rst_b),
     .dbg_rst_l              ( cptra_pwrgood), 
     .clk                    ( clk      ),
     .rst_vec                ( reset_vector[31:1]),
@@ -470,7 +470,7 @@ caliptra_ahb_srom #(
 
     //AMBA AHB Lite INF
     .hclk       (clk                            ),
-    .hreset_n   (cptra_uc_rst_b                 ),
+    .hreset_n   (cptra_noncore_rst_b                 ),
     .haddr_i    (ic_haddr[`IMEM_BYTE_ADDR_W-1:0]),
     .hwdata_i   (`IMEM_DATA_WIDTH'(0)           ),
     .hsel_i     (1'b1                           ),
@@ -496,7 +496,7 @@ sha512_ctrl #(
     .AHB_ADDR_WIDTH (`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SHA512))
 ) sha512 (
     .clk            (clk),
-    .reset_n        (cptra_uc_rst_b),
+    .reset_n        (cptra_noncore_rst_b),
     .cptra_pwrgood  (cptra_pwrgood),
     .haddr_i        (responder_inst[`SLAVE_SEL_SHA512].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SHA512)-1:0]),
     .hwdata_i       (responder_inst[`SLAVE_SEL_SHA512].hwdata),
@@ -521,7 +521,7 @@ sha256_ctrl #(
     .AHB_ADDR_WIDTH (`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SHA256))
 ) sha256 (
     .clk            (clk),
-    .reset_n        (cptra_uc_rst_b),
+    .reset_n        (cptra_noncore_rst_b),
     .cptra_pwrgood  (cptra_pwrgood),
     .haddr_i        (responder_inst[`SLAVE_SEL_SHA256].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SHA256)-1:0]),
     .hwdata_i       (responder_inst[`SLAVE_SEL_SHA256].hwdata),
@@ -544,7 +544,7 @@ doe_ctrl #(
     .AHB_ADDR_WIDTH (`SLAVE_ADDR_WIDTH(`SLAVE_SEL_DOE))
 ) doe (
     .clk            (clk),
-    .reset_n        (cptra_uc_rst_b),
+    .reset_n        (cptra_noncore_rst_b),
     .cptra_pwrgood  (cptra_pwrgood),
     .cptra_obf_key  (cptra_obf_key_reg),
     .obf_uds_seed   (obf_uds_seed),
@@ -575,7 +575,7 @@ ecc_top #(
 ecc_top1
 (
     .clk           (clk),
-    .reset_n       (cptra_uc_rst_b),
+    .reset_n       (cptra_noncore_rst_b),
     .cptra_pwrgood (cptra_pwrgood),
     .haddr_i       (responder_inst[`SLAVE_SEL_ECC].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_ECC)-1:0]),
     .hwdata_i      (responder_inst[`SLAVE_SEL_ECC].hwdata),
@@ -601,7 +601,7 @@ hmac_ctrl #(
      .AHB_ADDR_WIDTH(`SLAVE_ADDR_WIDTH(`SLAVE_SEL_HMAC))
 )hmac (
      .clk(clk),
-     .reset_n       (cptra_uc_rst_b),
+     .reset_n       (cptra_noncore_rst_b),
      .cptra_pwrgood (cptra_pwrgood),
      .hadrr_i       (responder_inst[`SLAVE_SEL_HMAC].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_HMAC)-1:0]),
      .hwdata_i      (responder_inst[`SLAVE_SEL_HMAC].hwdata),
@@ -631,7 +631,7 @@ kv #(
 key_vault1
 (
     .clk           (clk),
-    .rst_b         (cptra_uc_rst_b),
+    .rst_b         (cptra_noncore_rst_b),
     .cptra_pwrgood (cptra_pwrgood),
     .haddr_i       (responder_inst[`SLAVE_SEL_KV].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_KV)-1:0]),
     .hwdata_i      (responder_inst[`SLAVE_SEL_KV].hwdata),
@@ -710,8 +710,8 @@ soc_ifc_top1
     .iccm_lock       (iccm_lock                                    ),
     .iccm_axs_blocked(ahb_lite_resp_access_blocked[`SLAVE_SEL_IDMA]),
     //uC reset
-    .cptra_uc_rst_b (cptra_uc_rst_b),
-    .cptra_uc_fw_rst_b (cptra_uc_fw_rst_b)
+    .cptra_noncore_rst_b (cptra_noncore_rst_b),
+    .cptra_uc_rst_b (cptra_uc_rst_b)
 );
 
 //TIE OFF slaves
@@ -731,26 +731,26 @@ genvar sva_i;
 generate
   for(sva_i= 0; sva_i<`AHB_SLAVES_NUM; sva_i=sva_i+1)
   begin: gen_caliptra_asserts
-    `ASSERT_KNOWN(AHB_SLAVE_HADDR_X,        responder_inst[sva_i].haddr,       clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HWDATA_X,       responder_inst[sva_i].hwdata,      clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HSEL_X,         responder_inst[sva_i].hsel,        clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HWRITE_X,       responder_inst[sva_i].hwrite,      clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HREADY_X,       responder_inst[sva_i].hready,      clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HTRANS_X,       responder_inst[sva_i].htrans,      clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HSIZE_X,        responder_inst[sva_i].hsize,       clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HRESP_X,        responder_inst[sva_i].hresp,       clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HREADYOUT_X,    responder_inst[sva_i].hreadyout,   clk, cptra_uc_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HRDATA_X,       responder_inst[sva_i].hreadyout ? responder_inst[sva_i].hrdata : '0,      clk, cptra_uc_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HADDR_X,        responder_inst[sva_i].haddr,       clk, cptra_noncore_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HWDATA_X,       responder_inst[sva_i].hwdata,      clk, cptra_noncore_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HSEL_X,         responder_inst[sva_i].hsel,        clk, cptra_noncore_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HWRITE_X,       responder_inst[sva_i].hwrite,      clk, cptra_noncore_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HREADY_X,       responder_inst[sva_i].hready,      clk, cptra_noncore_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HTRANS_X,       responder_inst[sva_i].htrans,      clk, cptra_noncore_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HSIZE_X,        responder_inst[sva_i].hsize,       clk, cptra_noncore_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HRESP_X,        responder_inst[sva_i].hresp,       clk, cptra_noncore_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HREADYOUT_X,    responder_inst[sva_i].hreadyout,   clk, cptra_noncore_rst_b)
+    `ASSERT_KNOWN(AHB_SLAVE_HRDATA_X,       responder_inst[sva_i].hreadyout ? responder_inst[sva_i].hrdata : '0,      clk, cptra_noncore_rst_b)
   end
 endgenerate
 
-`ASSERT_KNOWN(AHB_MASTER_HADDR_X,        initiator_inst.haddr,       clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HWDATA_X,       initiator_inst.hwdata,      clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HWRITE_X,       initiator_inst.hwrite,      clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HREADY_X,       initiator_inst.hready,      clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HTRANS_X,       initiator_inst.htrans,      clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HSIZE_X,        initiator_inst.hsize,       clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HRESP_X,        initiator_inst.hresp,       clk, cptra_uc_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HRDATA_X,       initiator_inst.hready ? initiator_inst.hrdata : '0,      clk, cptra_uc_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HADDR_X,        initiator_inst.haddr,       clk, cptra_noncore_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HWDATA_X,       initiator_inst.hwdata,      clk, cptra_noncore_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HWRITE_X,       initiator_inst.hwrite,      clk, cptra_noncore_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HREADY_X,       initiator_inst.hready,      clk, cptra_noncore_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HTRANS_X,       initiator_inst.htrans,      clk, cptra_noncore_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HSIZE_X,        initiator_inst.hsize,       clk, cptra_noncore_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HRESP_X,        initiator_inst.hresp,       clk, cptra_noncore_rst_b)
+`ASSERT_KNOWN(AHB_MASTER_HRDATA_X,       initiator_inst.hready ? initiator_inst.hrdata : '0,      clk, cptra_noncore_rst_b)
 
 endmodule

@@ -131,6 +131,14 @@ addrmap soc_ifc_reg {
         field {desc = "FW Update reset to reset core"; hw = r; sw = rw; singlepulse=true; swwel = soc_req;} core_rst = 1'b0;
     } fw_update_reset;
 
+    reg {
+        name = "FW Update Reset Wait Cycles";
+        desc = "Control register to set the number of cycles for which FW update reset must be asserted. Default is 5. Max value is 255 (8 bit)
+                Writes available to Caliptra subsystem, not SoC.";
+
+        field {desc = "FW Update reset wait cycles"; hw = r; sw = rw; swwel = soc_req;} wait_cycles[8] = 8'h5;
+    } fw_update_reset_wait_cycles;
+
 
     ////////////////////////////////////////////////////////////////
     // Interrupts

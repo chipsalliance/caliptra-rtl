@@ -416,6 +416,20 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fw_update_reset
 
+    // Reg - soc_ifc_reg::fw_update_reset_wait_cycles
+    class soc_ifc_reg__fw_update_reset_wait_cycles extends uvm_reg;
+        rand uvm_reg_field wait_cycles;
+
+        function new(string name = "soc_ifc_reg__fw_update_reset_wait_cycles");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.wait_cycles = new("wait_cycles");
+            this.wait_cycles.configure(this, 8, 0, "RW", 0, 'h5, 1, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__fw_update_reset_wait_cycles
+
     // Reg - soc_ifc_reg::intr_block_t::global_intr_en_t
     class soc_ifc_reg__intr_block_t__global_intr_en_t extends uvm_reg;
         rand uvm_reg_field error_en;
@@ -918,6 +932,7 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__obf_key obf_key[8];
         rand soc_ifc_reg__iccm_lock iccm_lock;
         rand soc_ifc_reg__fw_update_reset fw_update_reset;
+        rand soc_ifc_reg__fw_update_reset_wait_cycles fw_update_reset_wait_cycles;
         rand soc_ifc_reg__intr_block_t intr_block_rf;
 
         function new(string name = "soc_ifc_reg");
@@ -1095,6 +1110,11 @@ package soc_ifc_reg_uvm;
 
             this.fw_update_reset.build();
             this.default_map.add_reg(this.fw_update_reset, 'h418);
+            this.fw_update_reset_wait_cycles = new("fw_update_reset_wait_cycles");
+            this.fw_update_reset_wait_cycles.configure(this);
+
+            this.fw_update_reset_wait_cycles.build();
+            this.default_map.add_reg(this.fw_update_reset_wait_cycles, 'h41c);
             this.intr_block_rf = new("intr_block_rf");
             this.intr_block_rf.configure(this);
             this.intr_block_rf.build();

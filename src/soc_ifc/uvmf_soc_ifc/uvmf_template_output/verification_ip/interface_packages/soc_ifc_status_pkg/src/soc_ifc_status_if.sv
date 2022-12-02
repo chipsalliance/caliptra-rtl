@@ -33,7 +33,7 @@
 //
 // This template can be used to connect a DUT to these signals
 //
-// .dut_signal_port(soc_ifc_status_bus.cptra_uc_rst_b), // Agent output 
+// .dut_signal_port(soc_ifc_status_bus.cptra_noncore_rst_b), // Agent output 
 // .dut_signal_port(soc_ifc_status_bus.ready_for_fuses), // Agent output 
 // .dut_signal_port(soc_ifc_status_bus.ready_for_fw_push), // Agent output 
 // .dut_signal_port(soc_ifc_status_bus.ready_for_runtime), // Agent output 
@@ -57,6 +57,7 @@ interface  soc_ifc_status_if
   (
   input tri clk, 
   input tri dummy,
+  inout tri  cptra_noncore_rst_b,
   inout tri  cptra_uc_rst_b,
   inout tri  ready_for_fuses,
   inout tri  ready_for_fw_push,
@@ -78,6 +79,7 @@ modport monitor_port
   (
   input clk,
   input dummy,
+  input cptra_noncore_rst_b,
   input cptra_uc_rst_b,
   input ready_for_fuses,
   input ready_for_fw_push,
@@ -99,6 +101,7 @@ modport initiator_port
   (
   input clk,
   input dummy,
+  output cptra_noncore_rst_b,
   output cptra_uc_rst_b,
   output ready_for_fuses,
   output ready_for_fw_push,
@@ -120,6 +123,7 @@ modport responder_port
   (
   input clk,
   input dummy,  
+  input cptra_noncore_rst_b,
   input cptra_uc_rst_b,
   input ready_for_fuses,
   input ready_for_fw_push,

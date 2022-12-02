@@ -192,8 +192,10 @@ import soc_ifc_pkg::*;
         .clear_secrets(soc_ifc_ctrl_agent_bus.clear_secrets),
         // ICCM Lock
         .iccm_lock(soc_ifc_status_agent_bus.iccm_lock),
+        //Other blocks reset
+        .cptra_noncore_rst_b (soc_ifc_status_agent_bus.cptra_noncore_rst_b),
         //uC reset
-        .cptra_uc_rst_b (soc_ifc_status_agent_bus.cptra_uc_rst_b) 
+        .cptra_uc_rst_b (soc_ifc_status_agent_bus.cptra_uc_rst_b)
     );
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HBURST    = 3'b0;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HPROT     = 7'b0;

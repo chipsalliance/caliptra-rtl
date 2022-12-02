@@ -168,6 +168,14 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__fw_update_reset__out_t;
 
     typedef struct {
+        logic [7:0] value;
+    } soc_ifc_reg__fw_update_reset_wait_cycles__wait_cycles__out_t;
+
+    typedef struct {
+        soc_ifc_reg__fw_update_reset_wait_cycles__wait_cycles__out_t wait_cycles;
+    } soc_ifc_reg__fw_update_reset_wait_cycles__out_t;
+
+    typedef struct {
         logic intr;
     } soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a__out_t;
 
@@ -200,6 +208,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__obf_key__out_t obf_key[8];
         soc_ifc_reg__iccm_lock__out_t iccm_lock;
         soc_ifc_reg__fw_update_reset__out_t fw_update_reset;
+        soc_ifc_reg__fw_update_reset_wait_cycles__out_t fw_update_reset_wait_cycles;
         soc_ifc_reg__intr_block_t__out_t intr_block_rf;
     } soc_ifc_reg__out_t;
 

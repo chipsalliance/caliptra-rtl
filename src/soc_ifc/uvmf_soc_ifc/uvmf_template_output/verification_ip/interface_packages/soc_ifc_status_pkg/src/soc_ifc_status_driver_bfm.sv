@@ -106,6 +106,8 @@ end
   // INITIATOR mode input signals
 
   // INITIATOR mode output signals
+  tri  cptra_noncore_rst_b_i;
+  reg  cptra_noncore_rst_b_o = 'b0;
   tri  cptra_uc_rst_b_i;
   reg  cptra_uc_rst_b_o = 'b0;
   tri  ready_for_fuses_i;
@@ -149,6 +151,8 @@ end
 
   // These are signals marked as 'output' by the config file, but the outputs will
   // not be driven by this BFM unless placed in INITIATOR mode.
+  assign bus.cptra_noncore_rst_b = (initiator_responder == INITIATOR) ? cptra_noncore_rst_b_o : 'bz;
+  assign cptra_noncore_rst_b_i = bus.cptra_noncore_rst_b;
   assign bus.cptra_uc_rst_b = (initiator_responder == INITIATOR) ? cptra_uc_rst_b_o : 'bz;
   assign cptra_uc_rst_b_i = bus.cptra_uc_rst_b;
   assign bus.ready_for_fuses = (initiator_responder == INITIATOR) ? ready_for_fuses_o : 'bz;
@@ -210,6 +214,7 @@ end
      begin
        // RESPONDER mode output signals
        // INITIATOR mode output signals
+       cptra_noncore_rst_b_o <= 'b0;
        cptra_uc_rst_b_o <= 'b0;
        ready_for_fuses_o <= 'bz;
        ready_for_fw_push_o <= 'bz;
@@ -232,10 +237,11 @@ end
 
   // pragma uvmf custom interface_item_additional begin
   function bit any_signal_changed();
-      if (!cptra_uc_rst_b_o)
-          return cptra_uc_rst_b_i || (ready_for_fuses_i & !ready_for_fuses_o);
+      if (!cptra_noncore_rst_b_o)
+          return cptra_noncore_rst_b_i || (ready_for_fuses_i & !ready_for_fuses_o);
       else
-          return |(cptra_uc_rst_b_i       ^  cptra_uc_rst_b_o           ) ||
+          return |(cptra_noncore_rst_b_i  ^  cptra_noncore_rst_b_o      ) ||
+                 |(cptra_uc_rst_b_i       ^  cptra_uc_rst_b_o           ) ||
                  |(ready_for_fuses_i      & !ready_for_fuses_o          ) ||
                  |(ready_for_fw_push_i    & !ready_for_fw_push_o        ) ||
                  |(ready_for_runtime_i    & !ready_for_runtime_o        ) ||
@@ -325,7 +331,7 @@ end
        //    All available initiator output and inout signals listed.
        //    Notice the _o.  Those are storage variables that allow for procedural assignment.
        //    Initiator output signals
-       //      cptra_uc_rst_b_o <= soc_ifc_status_initiator_struct.xyz;  //     
+       //      cptra_noncore_rst_b_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //      ready_for_fuses_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //      ready_for_fw_push_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //      ready_for_runtime_o <= soc_ifc_status_initiator_struct.xyz;  //     
@@ -405,7 +411,7 @@ bit first_transfer=1;
        //    How to assign a responder struct member, named xyz, from a signal.   
        //    All available responder input and inout signals listed.
        //    Responder input signals
-       //      soc_ifc_status_responder_struct.xyz = cptra_uc_rst_b_i;  //     
+       //      soc_ifc_status_responder_struct.xyz = cptra_noncore_rst_b_i;  //     
        //      soc_ifc_status_responder_struct.xyz = ready_for_fuses_i;  //     
        //      soc_ifc_status_responder_struct.xyz = ready_for_fw_push_i;  //     
        //      soc_ifc_status_responder_struct.xyz = ready_for_runtime_i;  //     
@@ -438,7 +444,8 @@ bit first_transfer=1;
     // Wait for next transfer then gather info from intiator about the transfer.
     // Place the data into the soc_ifc_status_initiator_struct.
     while (!any_signal_changed()) @(posedge clk_i);
-    cptra_uc_rst_b_o               <= cptra_uc_rst_b_i      ;
+    cptra_noncore_rst_b_o          <= cptra_noncore_rst_b_i      ;
+    cptra_uc_rst_b_o               <= cptra_uc_rst_b_i   ;
     ready_for_fuses_o              <= ready_for_fuses_i     ;
     ready_for_fw_push_o            <= ready_for_fw_push_i   ;
     ready_for_runtime_o            <= ready_for_runtime_i   ;
@@ -461,7 +468,7 @@ bit first_transfer=1;
          soc_ifc_status_initiator_struct.soc_ifc_notif_intr_pending = soc_ifc_notif_intr_i;
          soc_ifc_status_initiator_struct.sha_err_intr_pending       = sha_error_intr_i;
          soc_ifc_status_initiator_struct.sha_notif_intr_pending     = sha_notif_intr_i;
-         soc_ifc_status_initiator_struct.uc_rst_asserted            = !cptra_uc_rst_b_i;
+         soc_ifc_status_initiator_struct.uc_rst_asserted            = !cptra_noncore_rst_b_i;
          soc_ifc_status_initiator_struct.ready_for_fuses            = ready_for_fuses_i;
          soc_ifc_status_initiator_struct.ready_for_fw_push          = ready_for_fw_push_i;
          soc_ifc_status_initiator_struct.ready_for_runtime          = ready_for_runtime_i;

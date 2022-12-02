@@ -93,6 +93,7 @@ module soc_ifc_tb();
   wire          hreadyout_o_tb;
   wire [AHB_DATA_WIDTH-1:0] hrdata_o_tb;
 
+  wire cptra_noncore_rst_b_tb;
   wire cptra_uc_rst_b_tb;
 
   reg [127 : 0] result_data;
@@ -146,6 +147,7 @@ module soc_ifc_tb();
              .obf_field_entropy(),
              .obf_uds_seed(),
              .ready_for_fuses(ready_for_fuses),
+             .cptra_noncore_rst_b(cptra_noncore_rst_b_tb),
              .cptra_uc_rst_b(cptra_uc_rst_b_tb),
              .mbox_sram_req(),
              .mbox_sram_resp(),
