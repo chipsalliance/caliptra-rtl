@@ -78,16 +78,17 @@ program.hex: $(OFILES) $(LINK)
 	@echo Building $(TESTNAME)
 	$(GCC_PREFIX)-gcc $(ABI) -Wl,-Map=$(TEST).map -lgcc -T$(LINK) -o $(TESTNAME).exe $(OFILES) -nostartfiles  $(TEST_LIBS)
 	$(GCC_PREFIX)-objcopy -O verilog -R .data -R .bss -R .data_iccm0 -R .data_iccm1 -R .data_iccm2 -R .iccm -R .dccm -R .eh_frame $(TESTNAME).exe program.hex
-	$(GCC_PREFIX)-objcopy -O verilog -j .data -j .bss -j .data_iccm0 -j .data_iccm1 -j .data_iccm2 \
-			      --change-section-lma       .data-0x30000000 \
-			      --change-section-lma        .bss-0x30000000 \
-			      --change-section-lma .data_iccm0-0x30000000 \
-			      --change-section-lma .data_iccm1-0x30000000 \
-			      --change-section-lma .data_iccm2-0x30000000 \
+	$(GCC_PREFIX)-objcopy -O verilog -j .data -j .bss -j .data_iccm0 -j .data_iccm1 -j .data_iccm2 -j .dccm \
+			      --change-section-lma       .data-0x50000000 \
+			      --change-section-lma        .bss-0x50000000 \
+			      --change-section-lma .data_iccm0-0x50000000 \
+			      --change-section-lma .data_iccm1-0x50000000 \
+			      --change-section-lma .data_iccm2-0x50000000 \
+			      --change-section-lma       .dccm-0x50000000 \
 			      --pad-to 0x20000 \
-			      $(TESTNAME).exe mailbox.hex
-	$(GCC_PREFIX)-objcopy -O verilog -j .dccm                       --change-section-address .dccm=0 --pad-to 0x20000 $(TESTNAME).exe dccm.hex
+			      $(TESTNAME).exe dccm.hex
 	$(GCC_PREFIX)-objcopy -O verilog -j .iccm                       --change-section-address .iccm=0 --pad-to 0x20000 $(TESTNAME).exe iccm.hex
+	$(GCC_PREFIX)-objcopy -O verilog -j .mailbox --gap-fill 0x0     --change-section-address .mailbox=0 --pad-to 0x20000 $(TESTNAME).exe mailbox.hex
 	$(GCC_PREFIX)-objdump -S  $(TESTNAME).exe > $(TESTNAME).dis
 	$(GCC_PREFIX)-size        $(TESTNAME).exe | tee $(TESTNAME).size
 	@echo Completed building $(TESTNAME)

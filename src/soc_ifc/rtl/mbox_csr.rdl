@@ -93,6 +93,32 @@ addrmap mbox_csr {
                 };
             };
             sw=rw; hw=na; encode = mbox_status_e;} status[2]=0;
+        field {
+            name = "Mailbox ECC Single Error";
+            desc = "Indicates a correctable ECC single-bit error was
+                    detected and corrected while reading dataout.
+                    Auto-clears when mbox_execute field is cleared.";
+
+            sw=r; hwset = true; hw=w; wel; } ecc_single_error=1'b0;
+        field {
+            name = "Mailbox ECC Double Error";
+            desc = "Indicates an uncorrectable ECC double-bit error
+                    was detected while reading dataout.
+                    Firmware developers are advised to set the command
+                    status to CMD_FAILURE in response.
+                    Auto-clears when mbox_execute field is cleared.";
+
+            sw=r; hwset = true; hw=w; wel; } ecc_double_error=1'b0;
     } mbox_status;
+
+    // This will auto clear the status register whenever a mailbox transfer
+    // is not in progress. 1-cycle delayed from when the Receiver clears
+    // the execute field.
+    // For errors during AHB (direct-mode) reads, interrupt signals
+    // will be used.
+    mbox_status.ecc_single_error->wel  = mbox_execute.execute;
+    mbox_status.ecc_double_error->wel  = mbox_execute.execute;
+    mbox_status.ecc_single_error->next = mbox_execute.execute;
+    mbox_status.ecc_double_error->next = mbox_execute.execute;
 
 };

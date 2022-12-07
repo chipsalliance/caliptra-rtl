@@ -13,9 +13,9 @@
 // limitations under the License.
 //
 
+`include "config_defines.svh"
+
 module caliptra_top 
-    import el2_swerv_pkg::*;
-    import config_pkg::*;
     import kv_defines_pkg::*;
     import soc_ifc_pkg::*;
     (
@@ -64,8 +64,8 @@ module caliptra_top
     output logic mbox_sram_cs,
     output logic mbox_sram_we,
     output logic [MBOX_ADDR_W-1:0] mbox_sram_addr,
-    output logic [MBOX_DATA_W-1:0] mbox_sram_wdata,
-    input  logic [MBOX_DATA_W-1:0] mbox_sram_rdata,
+    output logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata,
+    input  logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_rdata,
 
     //SRAM interface for imem
     output logic imem_cs,
@@ -78,7 +78,7 @@ module caliptra_top
 
     output logic                       mailbox_data_avail,
     output logic                       mailbox_flow_done,
-    
+
     input logic                        BootFSM_BrkPoint,
 
     input logic  [63:0]                generic_input_wires,
@@ -88,6 +88,7 @@ module caliptra_top
 
 );
 
+    `include "common_defines.sv"
 
     localparam NUM_INTR = `RV_PIC_TOTAL_INT; // 31
 
@@ -216,8 +217,8 @@ always_comb begin
     mbox_sram_cs = mbox_sram_req.cs;
     mbox_sram_we = mbox_sram_req.we;
     mbox_sram_addr = mbox_sram_req.addr;
-    mbox_sram_wdata = mbox_sram_req.wdata;
-    mbox_sram_resp.rdata = mbox_sram_rdata;
+    mbox_sram_wdata = mbox_sram_req.wdata; // Contains data + ecc fields
+    mbox_sram_resp.rdata = mbox_sram_rdata; // Contains data + ecc fields
 end
     //========================================================================
     // AHB Slave ports. 

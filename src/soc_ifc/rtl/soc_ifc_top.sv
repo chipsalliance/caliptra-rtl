@@ -129,11 +129,14 @@ logic soc_ifc_reg_error, soc_ifc_reg_read_error, soc_ifc_reg_write_error;
 logic sha_sram_req_dv;
 logic [MBOX_ADDR_W-1:0] sha_sram_req_addr;
 mbox_sram_resp_t sha_sram_resp;
+logic sha_sram_hold;
 
 // Pulse signals to trigger interrupts
 logic uc_mbox_data_avail;
 logic uc_mbox_data_avail_d;
 logic uc_cmd_avail_p;
+logic sram_single_ecc_error;
+logic sram_double_ecc_error;
 
 logic iccm_unlock;
 
@@ -323,12 +326,14 @@ always_comb begin
 end
 
 // Pulse input to soc_ifc_reg to set the interrupt status bit and generate interrupt output (if enabled)
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset     = 1'b0; // TODO @michnorris please assign
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset     = 1'b0; // TODO
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_inv_dev_sts.hwset      = 1'b0; // TODO should decode from APB PAUSER
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_cmd_fail_sts.hwset     = 1'b0; // TODO @michnorris please assign -- should this be set by write of "FAIL" to mbox_csr.status if soc_req is set? (i.e. SoC cmd execution failed)
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_bad_fuse_sts.hwset     = 1'b0; // TODO @michnorris please assign
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_cmd_fail_sts.hwset     = 1'b0; // TODO should this be set by write of "FAIL" to mbox_csr.status if soc_req is set? (i.e. SoC cmd execution failed)
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_bad_fuse_sts.hwset     = 1'b0; // TODO
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_iccm_blocked_sts.hwset = iccm_axs_blocked;
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.hwset    = uc_cmd_avail_p; // TODO @michnorris to confirm
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts.hwset = sram_double_ecc_error;
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.hwset    = uc_cmd_avail_p; // TODO confirm signal correctness
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.hwset = sram_single_ecc_error;
 
 always_comb soc_ifc_reg_hwif_in.iccm_lock.lock.hwclr    = iccm_unlock;
 
@@ -382,6 +387,7 @@ i_sha512_acc_top (
     .sha_sram_req_dv(sha_sram_req_dv),
     .sha_sram_req_addr(sha_sram_req_addr),
     .sha_sram_resp(sha_sram_resp),
+    .sha_sram_hold(sha_sram_hold),
 
     .error_intr(sha_error_intr),
     .notif_intr(sha_notif_intr)
@@ -392,7 +398,7 @@ i_sha512_acc_top (
 //This module contains the Caliptra Mailbox and associated control logic
 //The SoC and uC can read and write to the mailbox by following the Caliptra Mailbox Protocol
 mbox #(
-    .DATA_W(APB_DATA_WIDTH),
+    .DATA_W(SOC_IFC_DATA_W),
     .SIZE_KB(MBOX_SIZE_KB)
     )
 i_mbox (
@@ -407,8 +413,11 @@ i_mbox (
     .sha_sram_req_dv(sha_sram_req_dv),
     .sha_sram_req_addr(sha_sram_req_addr),
     .sha_sram_resp(sha_sram_resp),
+    .sha_sram_hold(sha_sram_hold),
     .mbox_sram_req(mbox_sram_req),
     .mbox_sram_resp(mbox_sram_resp),
+    .sram_single_ecc_error(sram_single_ecc_error),
+    .sram_double_ecc_error(sram_double_ecc_error),
     .soc_mbox_data_avail(mailbox_data_avail),
     .uc_mbox_data_avail(uc_mbox_data_avail)
 );

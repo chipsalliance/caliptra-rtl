@@ -23,6 +23,8 @@ package soc_ifc_pkg;
     
     parameter MBOX_SIZE_KB = 128;
     parameter MBOX_DATA_W = 32;
+    parameter MBOX_ECC_DATA_W = 7;
+    parameter MBOX_DATA_AND_ECC_W = MBOX_DATA_W + MBOX_ECC_DATA_W;
     parameter MBOX_DEPTH = (MBOX_SIZE_KB * 1024 * 8) / MBOX_DATA_W;
     parameter MBOX_ADDR_W = $clog2(MBOX_DEPTH);
 
@@ -72,16 +74,21 @@ package soc_ifc_pkg;
         logic                        write;
         logic                        soc_req;
     } soc_ifc_reg_req_t;
+    // ECC protected data
+    typedef struct packed {
+        logic [MBOX_ECC_DATA_W-1:0] ecc;
+        logic [MBOX_DATA_W-1:0]     data;
+    } mbox_sram_data_t;
     //Request to mbox sram
     typedef struct packed {
         logic cs;
         logic we;
         logic [MBOX_ADDR_W-1:0] addr;
-        logic [MBOX_DATA_W-1:0] wdata;
+        mbox_sram_data_t wdata;
     } mbox_sram_req_t;
     //Response from mbox sram
     typedef struct packed {
-        logic [MBOX_DATA_W-1:0] rdata;
+        mbox_sram_data_t rdata;
     } mbox_sram_resp_t;
 
 endpackage

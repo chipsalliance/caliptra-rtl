@@ -15,10 +15,14 @@ requires:
   - keyvault
   - soc_ifc_top
 targets:
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/config_defines.svh
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/config_pkg.sv
+      - $COMPILE_ROOT/rtl/config_defines.svh
       - $COMPILE_ROOT/rtl/caliptra_top.sv
       - $COMPILE_ROOT/rtl/caliptra_top_dummy.sv
       - $COMPILE_ROOT/rtl/ahb_sif.sv
@@ -49,10 +53,8 @@ global:
     tb:
       directories: [$COMPILE_ROOT/tb]
       files:
-        - $COMPILE_ROOT/rtl/config_pkg.sv
-        - $COMPILE_ROOT/../riscv_core/swerv_el2/rtl/include/el2_def.sv
-        - $COMPILE_ROOT/../riscv_core/swerv_el2/rtl/el2_pdef.vh
         - $COMPILE_ROOT/tb/caliptra_swerv_sram_export.sv
+        - $COMPILE_ROOT/tb/caliptra_top_tb_pkg.sv
         - $COMPILE_ROOT/tb/caliptra_top_tb.sv
       tops: [caliptra_top_tb]
     sim:

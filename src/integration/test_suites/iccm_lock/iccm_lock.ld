@@ -24,9 +24,10 @@ SECTIONS {
   .iccm.ctl : { LONG(0x40000000); LONG(0x40020000) }
   . = 0x00007ff8;
   .data.ctl : { LONG(0x50000000); LONG(0x50020000) }
-  . = 0x30000000;
+  . = 0x50000000;
   .data  :  { *(.*data) *(.rodata*) *(.sbss) }
   .bss : { *(.bss) }
+  .dccm : { *(.dccm*) }
   . = ALIGN(4);
   iccm_code0_start = .;
   /* ICCM as VMA */
@@ -38,7 +39,6 @@ SECTIONS {
   iccm_code2_start = ALIGN(iccm_code1_end,4);
   .data_iccm2 0x40000000 : AT(iccm_code2_start) {*(.data_iccm2) ; . = ALIGN(4); } =0x0000, /* iccm_code2_start, after .data, as LMA */
   iccm_code2_end = iccm_code2_start + SIZEOF(.data_iccm2);
-  STACK = ALIGN(iccm_code2_end,16) + 0x2000;
-  . = 0x50000000;
-  .dccm : { *(.dccm*) }
+  . = ALIGN(iccm_code2_end,16);
+  STACK = ALIGN(16) + 0x4000;
 }

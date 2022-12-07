@@ -115,6 +115,8 @@
 #define SHA256_VALID                0x00000003
 
 /* ---- Mailbox ---- */
+#define MBOX_DIR_BASE_ADDR        0x30000000
+#define MBOX_DIR_SPAN             0x00020000 /* 128 KiB */
 #define STDOUT                    CLP_SOC_IFC_REG_GENERIC_OUTPUT_WIRES_0
 
 /* ---- ECC ----*/

@@ -146,6 +146,14 @@ module mbox_csr (
                 logic [1:0] next;
                 logic load_next;
             } status;
+            struct {
+                logic next;
+                logic load_next;
+            } ecc_single_error;
+            struct {
+                logic next;
+                logic load_next;
+            } ecc_double_error;
         } mbox_status;
     } field_combo_t;
     field_combo_t field_combo;
@@ -190,6 +198,12 @@ module mbox_csr (
             struct {
                 logic [1:0] value;
             } status;
+            struct {
+                logic value;
+            } ecc_single_error;
+            struct {
+                logic value;
+            } ecc_double_error;
         } mbox_status;
     } field_storage_t;
     field_storage_t field_storage;
@@ -348,6 +362,48 @@ module mbox_csr (
             field_storage.mbox_status.status.value <= field_combo.mbox_status.status.next;
         end
     end
+    // Field: mbox_csr.mbox_status.ecc_single_error
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.mbox_status.ecc_single_error.value;
+        automatic logic load_next_c = '0;
+        if(!field_storage.mbox_execute.execute.value) begin // HW Write - wel
+            next_c = field_storage.mbox_execute.execute.value;
+            load_next_c = '1;
+        end else if(hwif_in.mbox_status.ecc_single_error.hwset) begin // HW Set
+            next_c = '1;
+            load_next_c = '1;
+        end
+        field_combo.mbox_status.ecc_single_error.next = next_c;
+        field_combo.mbox_status.ecc_single_error.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.mbox_status.ecc_single_error.value <= 'h0;
+        end else if(field_combo.mbox_status.ecc_single_error.load_next) begin
+            field_storage.mbox_status.ecc_single_error.value <= field_combo.mbox_status.ecc_single_error.next;
+        end
+    end
+    // Field: mbox_csr.mbox_status.ecc_double_error
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.mbox_status.ecc_double_error.value;
+        automatic logic load_next_c = '0;
+        if(!field_storage.mbox_execute.execute.value) begin // HW Write - wel
+            next_c = field_storage.mbox_execute.execute.value;
+            load_next_c = '1;
+        end else if(hwif_in.mbox_status.ecc_double_error.hwset) begin // HW Set
+            next_c = '1;
+            load_next_c = '1;
+        end
+        field_combo.mbox_status.ecc_double_error.next = next_c;
+        field_combo.mbox_status.ecc_double_error.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.mbox_status.ecc_double_error.value <= 'h0;
+        end else if(field_combo.mbox_status.ecc_double_error.load_next) begin
+            field_storage.mbox_status.ecc_double_error.value <= field_combo.mbox_status.ecc_double_error.next;
+        end
+    end
 
     //--------------------------------------------------------------------------
     // Readback
@@ -368,7 +424,9 @@ module mbox_csr (
     assign readback_array[6][0:0] = (decoded_reg_strb.mbox_execute && !decoded_req_is_wr) ? field_storage.mbox_execute.execute.value : '0;
     assign readback_array[6][31:1] = '0;
     assign readback_array[7][1:0] = (decoded_reg_strb.mbox_status && !decoded_req_is_wr) ? field_storage.mbox_status.status.value : '0;
-    assign readback_array[7][31:2] = '0;
+    assign readback_array[7][2:2] = (decoded_reg_strb.mbox_status && !decoded_req_is_wr) ? field_storage.mbox_status.ecc_single_error.value : '0;
+    assign readback_array[7][3:3] = (decoded_reg_strb.mbox_status && !decoded_req_is_wr) ? field_storage.mbox_status.ecc_double_error.value : '0;
+    assign readback_array[7][31:4] = '0;
 
 
     // Reduce the array

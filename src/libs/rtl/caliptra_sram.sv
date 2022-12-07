@@ -28,7 +28,7 @@ module caliptra_sram #(
     output logic [DATA_WIDTH-1:0]      rdata_o
     );
 
-    localparam NUM_BYTES = DATA_WIDTH/8;
+    localparam NUM_BYTES = DATA_WIDTH/8 + ((DATA_WIDTH % 8) ? 1 : 0);
 
     //storage element
     logic [7:0] ram [DEPTH][NUM_BYTES-1:0];

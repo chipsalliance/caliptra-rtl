@@ -35,10 +35,15 @@ module mbox
     input logic sha_sram_req_dv,
     input logic [MBOX_ADDR_W-1:0] sha_sram_req_addr,
     output mbox_sram_resp_t sha_sram_resp,
+    output logic sha_sram_hold, // Throttle the SRAM requests when writing corrected ECC
 
     //SRAM interface
     output mbox_sram_req_t  mbox_sram_req,
     input  mbox_sram_resp_t mbox_sram_resp,
+
+    // ECC Status
+    output logic sram_single_ecc_error,
+    output logic sram_double_ecc_error,
 
     //interrupts
     output logic uc_mbox_data_avail,
@@ -71,6 +76,7 @@ logic arc_MBOX_EXECUTE_SOC_MBOX_IDLE;
 
 //sram
 logic [DATA_W-1:0] sram_wdata;
+logic [MBOX_ECC_DATA_W-1:0] sram_wdata_ecc;
 logic [$clog2(DEPTH)-1:0] sram_waddr;
 logic [$clog2(DEPTH)-1:0] mbox_wrptr, mbox_wrptr_nxt;
 logic inc_wrptr;
@@ -80,8 +86,13 @@ logic inc_rdptr,inc_rdptr_f,inc_rdptr_ff;
 logic update_dataout;
 logic rst_mbox_ptr;
 logic [DATA_W-1:0] sram_rdata;
+logic [MBOX_ECC_DATA_W-1:0] sram_rdata_ecc;
+logic [DATA_W-1:0] sram_rdata_cor;
+logic [MBOX_ECC_DATA_W-1:0] sram_rdata_cor_ecc;
 logic sram_we;
 logic mbox_protocol_sram_we;
+logic sram_ecc_cor_we;
+logic [$clog2(DEPTH)-1:0] sram_ecc_cor_waddr;
 logic dir_req_dv_q, dir_req_rd_phase;
 
 logic soc_has_lock, soc_has_lock_nxt;
@@ -183,6 +194,8 @@ always_ff @(posedge clk or negedge rst_b) begin
         mbox_rdptr <= '0;
         inc_rdptr_f <= '0;
         inc_rdptr_ff <= '0;
+//        sram_ecc_cor_we <= 1'b0;
+        sram_ecc_cor_waddr <= '0;
     end
     else begin
         mbox_fsm_ps <= mbox_fsm_ns;
@@ -192,6 +205,9 @@ always_ff @(posedge clk or negedge rst_b) begin
         mbox_rdptr <= (inc_rdptr | rst_mbox_ptr) ? mbox_rdptr_nxt : mbox_rdptr;
         inc_rdptr_f <= (inc_rdptr | inc_rdptr_f) ? inc_rdptr : inc_rdptr_f;
         inc_rdptr_ff <= (inc_rdptr_f | inc_rdptr_ff) ? inc_rdptr_f : inc_rdptr_ff;
+//        sram_ecc_cor_we <= sram_single_ecc_error;
+        sram_ecc_cor_waddr <= /*dir_req_rd_phase ? sram_ecc_cor_waddr :*/
+                                                 sram_rdaddr;
     end
 end
 
@@ -201,29 +217,54 @@ end
 //mask the request and hold the interface if SHA is using the mailbox
 always_comb dir_req_dv_q = dir_req_dv & ~dir_req_rd_phase & ~sha_sram_req_dv;
 always_comb req_hold = (dir_req_dv_q & ~req_data.write) | (dir_req_dv & sha_sram_req_dv);
+always_comb sha_sram_hold = sram_single_ecc_error/* || sram_ecc_cor_we*/;
 
 //SRAM interface
-always_comb sram_we = (dir_req_dv_q & req_data.write) | mbox_protocol_sram_we;
+always_comb sram_ecc_cor_we = sram_single_ecc_error; // TODO we probably want this to be a reg-stage to reduce combo logic SRAM -> rdata -> wdata -> SRAM
+always_comb sram_we = (dir_req_dv_q & req_data.write) | mbox_protocol_sram_we | sram_ecc_cor_we;
 //align the direct address to a word
 always_comb sram_rdaddr = dir_req_dv_q ? req_data.addr[$clog2(DEPTH)+1:2] : mbox_rdptr;
-always_comb sram_waddr = dir_req_dv_q ? req_data.addr[$clog2(DEPTH)+1:2] : mbox_wrptr;
+always_comb sram_waddr = sram_ecc_cor_we ? sram_ecc_cor_waddr :
+                         dir_req_dv_q    ? req_data.addr[$clog2(DEPTH)+1:2] : mbox_wrptr;
 //data phase after request for direct access
-always_comb rdata = dir_req_rd_phase ? sram_rdata : csr_rdata;
+always_comb rdata = dir_req_rd_phase ? sram_rdata_cor : csr_rdata;
 
 //if we wrote to mbox while rdptr is the same as wrptr we need to refresh the dataout reg
 always_comb update_dataout = hwif_out.mbox_datain.datain.swmod & hwif_in.valid_user & (mbox_wrptr == mbox_rdptr);
 
 always_comb begin: mbox_sram_inf
     //read live on direct access, or when pointer has been incremented, or if write was made to same address as rdptr
-    mbox_sram_req.cs = sha_sram_req_dv | dir_req_dv_q | mbox_protocol_sram_we | inc_rdptr_f;
+    mbox_sram_req.cs = sha_sram_req_dv | dir_req_dv_q | mbox_protocol_sram_we | inc_rdptr_f | sram_ecc_cor_we;
     mbox_sram_req.we = sram_we & ~sha_sram_req_dv;
     mbox_sram_req.addr = sha_sram_req_dv ? sha_sram_req_addr :
                                  sram_we ? sram_waddr : sram_rdaddr;
-    mbox_sram_req.wdata = sram_wdata;
+    mbox_sram_req.wdata.data = sram_ecc_cor_we ? sram_rdata_cor     : sram_wdata;
+    mbox_sram_req.wdata.ecc  = sram_ecc_cor_we ? sram_rdata_cor_ecc : sram_wdata_ecc;
 
-    sram_rdata = mbox_sram_resp.rdata;
-    sha_sram_resp = mbox_sram_resp;
+    sram_rdata     = mbox_sram_resp.rdata.data;
+    sram_rdata_ecc = mbox_sram_resp.rdata.ecc;
+    sha_sram_resp  = '{rdata: '{ecc:sram_rdata_cor_ecc , data:sram_rdata_cor}};
 end
+
+// From RISC-V core beh_lib.sv
+// 32-bit data width hardcoded
+// 7-bit ECC width hardcoded
+rvecc_encode mbox_ecc_encode (
+    .din    (sram_wdata    ),
+    .ecc_out(sram_wdata_ecc)
+);
+initial assert(DATA_W == 32) else
+    $error("%m::rvecc_encode supports 32-bit data width; must change SRAM ECC implementation to support DATA_W = %d", DATA_W);
+rvecc_decode ecc_decode (
+    .en              (dir_req_rd_phase     ),
+    .sed_ded         ( 1'b0                ),    // 1 : means only detection
+    .din             (sram_rdata           ),
+    .ecc_in          (sram_rdata_ecc       ),
+    .dout            (sram_rdata_cor       ),
+    .ecc_out         (sram_rdata_cor_ecc   ),
+    .single_ecc_error(sram_single_ecc_error), // TODO use to flag write-back
+    .double_ecc_error(sram_double_ecc_error)  // TODO use to flag command error
+);
 
 //control for sram write and read pointer
 //SoC access is controlled by mailbox, each subsequent read or write increments the pointer
@@ -258,9 +299,12 @@ always_comb hwif_in.mbox_dataout.dataout.swwe = '0; //no sw write enable, but ne
 //update dataout whenever we read from it, or when a write occurs to the same address as the read pointer
 always_comb hwif_in.mbox_dataout.dataout.we = update_dataout | inc_rdptr_ff;
 //when updating the same address read pointer points to, write directly to dataout
-always_comb hwif_in.mbox_dataout.dataout.next = update_dataout ? sram_wdata : sram_rdata;
+always_comb hwif_in.mbox_dataout.dataout.next = update_dataout ? sram_wdata : sram_rdata_cor;
 //clear the lock when moving from execute to idle
 always_comb hwif_in.mbox_lock.lock.hwclr = arc_MBOX_EXECUTE_SOC_MBOX_IDLE | arc_MBOX_EXECUTE_UC_MBOX_IDLE;
+// Set mbox_csr status fields in response to ECC errors
+always_comb hwif_in.mbox_status.ecc_single_error.hwset = sram_single_ecc_error;
+always_comb hwif_in.mbox_status.ecc_double_error.hwset = sram_double_ecc_error;
 
 
 logic s_cpuif_req_stall_wr_nc;

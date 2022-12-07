@@ -106,13 +106,17 @@ module soc_ifc_reg (
             logic error_cmd_fail_intr_count_r;
             logic error_bad_fuse_intr_count_r;
             logic error_iccm_blocked_intr_count_r;
+            logic error_mbox_ecc_unc_intr_count_r;
             logic notif_cmd_avail_intr_count_r;
+            logic notif_mbox_ecc_cor_intr_count_r;
             logic error_internal_intr_count_incr_r;
             logic error_inv_dev_intr_count_incr_r;
             logic error_cmd_fail_intr_count_incr_r;
             logic error_bad_fuse_intr_count_incr_r;
             logic error_iccm_blocked_intr_count_incr_r;
+            logic error_mbox_ecc_unc_intr_count_incr_r;
             logic notif_cmd_avail_intr_count_incr_r;
+            logic notif_mbox_ecc_cor_intr_count_incr_r;
         } intr_block_rf;
     } decoded_reg_strb_t;
     decoded_reg_strb_t decoded_reg_strb;
@@ -189,13 +193,17 @@ module soc_ifc_reg (
         decoded_reg_strb.intr_block_rf.error_cmd_fail_intr_count_r = cpuif_req_masked & (cpuif_addr == 'h908);
         decoded_reg_strb.intr_block_rf.error_bad_fuse_intr_count_r = cpuif_req_masked & (cpuif_addr == 'h90c);
         decoded_reg_strb.intr_block_rf.error_iccm_blocked_intr_count_r = cpuif_req_masked & (cpuif_addr == 'h910);
+        decoded_reg_strb.intr_block_rf.error_mbox_ecc_unc_intr_count_r = cpuif_req_masked & (cpuif_addr == 'h914);
         decoded_reg_strb.intr_block_rf.notif_cmd_avail_intr_count_r = cpuif_req_masked & (cpuif_addr == 'h980);
+        decoded_reg_strb.intr_block_rf.notif_mbox_ecc_cor_intr_count_r = cpuif_req_masked & (cpuif_addr == 'h984);
         decoded_reg_strb.intr_block_rf.error_internal_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 'ha00);
         decoded_reg_strb.intr_block_rf.error_inv_dev_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 'ha04);
         decoded_reg_strb.intr_block_rf.error_cmd_fail_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 'ha08);
         decoded_reg_strb.intr_block_rf.error_bad_fuse_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 'ha0c);
         decoded_reg_strb.intr_block_rf.error_iccm_blocked_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 'ha10);
-        decoded_reg_strb.intr_block_rf.notif_cmd_avail_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 'ha14);
+        decoded_reg_strb.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 'ha14);
+        decoded_reg_strb.intr_block_rf.notif_cmd_avail_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 'ha18);
+        decoded_reg_strb.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 'ha1c);
     end
 
     // Pass down signals to next stage
@@ -431,12 +439,20 @@ module soc_ifc_reg (
                     logic next;
                     logic load_next;
                 } error_iccm_blocked_en;
+                struct {
+                    logic next;
+                    logic load_next;
+                } error_mbox_ecc_unc_en;
             } error_intr_en_r;
             struct {
                 struct {
                     logic next;
                     logic load_next;
                 } notif_cmd_avail_en;
+                struct {
+                    logic next;
+                    logic load_next;
+                } notif_mbox_ecc_cor_en;
             } notif_intr_en_r;
             struct {
                 struct {
@@ -471,12 +487,20 @@ module soc_ifc_reg (
                     logic next;
                     logic load_next;
                 } error_iccm_blocked_sts;
+                struct {
+                    logic next;
+                    logic load_next;
+                } error_mbox_ecc_unc_sts;
             } error_internal_intr_r;
             struct {
                 struct {
                     logic next;
                     logic load_next;
                 } notif_cmd_avail_sts;
+                struct {
+                    logic next;
+                    logic load_next;
+                } notif_mbox_ecc_cor_sts;
             } notif_internal_intr_r;
             struct {
                 struct {
@@ -499,12 +523,20 @@ module soc_ifc_reg (
                     logic next;
                     logic load_next;
                 } error_iccm_blocked_trig;
+                struct {
+                    logic next;
+                    logic load_next;
+                } error_mbox_ecc_unc_trig;
             } error_intr_trig_r;
             struct {
                 struct {
                     logic next;
                     logic load_next;
                 } notif_cmd_avail_trig;
+                struct {
+                    logic next;
+                    logic load_next;
+                } notif_mbox_ecc_cor_trig;
             } notif_intr_trig_r;
             struct {
                 struct {
@@ -553,7 +585,23 @@ module soc_ifc_reg (
                     logic incrthreshold;
                     logic incrsaturate;
                 } cnt;
+            } error_mbox_ecc_unc_intr_count_r;
+            struct {
+                struct {
+                    logic [31:0] next;
+                    logic load_next;
+                    logic incrthreshold;
+                    logic incrsaturate;
+                } cnt;
             } notif_cmd_avail_intr_count_r;
+            struct {
+                struct {
+                    logic [31:0] next;
+                    logic load_next;
+                    logic incrthreshold;
+                    logic incrsaturate;
+                } cnt;
+            } notif_mbox_ecc_cor_intr_count_r;
             struct {
                 struct {
                     logic next;
@@ -601,7 +649,23 @@ module soc_ifc_reg (
                     logic decrthreshold;
                     logic underflow;
                 } pulse;
+            } error_mbox_ecc_unc_intr_count_incr_r;
+            struct {
+                struct {
+                    logic next;
+                    logic load_next;
+                    logic decrthreshold;
+                    logic underflow;
+                } pulse;
             } notif_cmd_avail_intr_count_incr_r;
+            struct {
+                struct {
+                    logic next;
+                    logic load_next;
+                    logic decrthreshold;
+                    logic underflow;
+                } pulse;
+            } notif_mbox_ecc_cor_intr_count_incr_r;
         } intr_block_rf;
     } field_combo_t;
     field_combo_t field_combo;
@@ -788,11 +852,17 @@ module soc_ifc_reg (
                 struct {
                     logic value;
                 } error_iccm_blocked_en;
+                struct {
+                    logic value;
+                } error_mbox_ecc_unc_en;
             } error_intr_en_r;
             struct {
                 struct {
                     logic value;
                 } notif_cmd_avail_en;
+                struct {
+                    logic value;
+                } notif_mbox_ecc_cor_en;
             } notif_intr_en_r;
             struct {
                 struct {
@@ -820,11 +890,17 @@ module soc_ifc_reg (
                 struct {
                     logic value;
                 } error_iccm_blocked_sts;
+                struct {
+                    logic value;
+                } error_mbox_ecc_unc_sts;
             } error_internal_intr_r;
             struct {
                 struct {
                     logic value;
                 } notif_cmd_avail_sts;
+                struct {
+                    logic value;
+                } notif_mbox_ecc_cor_sts;
             } notif_internal_intr_r;
             struct {
                 struct {
@@ -842,11 +918,17 @@ module soc_ifc_reg (
                 struct {
                     logic value;
                 } error_iccm_blocked_trig;
+                struct {
+                    logic value;
+                } error_mbox_ecc_unc_trig;
             } error_intr_trig_r;
             struct {
                 struct {
                     logic value;
                 } notif_cmd_avail_trig;
+                struct {
+                    logic value;
+                } notif_mbox_ecc_cor_trig;
             } notif_intr_trig_r;
             struct {
                 struct {
@@ -877,7 +959,17 @@ module soc_ifc_reg (
                 struct {
                     logic [31:0] value;
                 } cnt;
+            } error_mbox_ecc_unc_intr_count_r;
+            struct {
+                struct {
+                    logic [31:0] value;
+                } cnt;
             } notif_cmd_avail_intr_count_r;
+            struct {
+                struct {
+                    logic [31:0] value;
+                } cnt;
+            } notif_mbox_ecc_cor_intr_count_r;
             struct {
                 struct {
                     logic value;
@@ -907,7 +999,17 @@ module soc_ifc_reg (
                 struct {
                     logic value;
                 } pulse;
+            } error_mbox_ecc_unc_intr_count_incr_r;
+            struct {
+                struct {
+                    logic value;
+                } pulse;
             } notif_cmd_avail_intr_count_incr_r;
+            struct {
+                struct {
+                    logic value;
+                } pulse;
+            } notif_mbox_ecc_cor_intr_count_incr_r;
         } intr_block_rf;
     } field_storage_t;
     field_storage_t field_storage;
@@ -1663,6 +1765,24 @@ module soc_ifc_reg (
             field_storage.intr_block_rf.error_intr_en_r.error_iccm_blocked_en.value <= field_combo.intr_block_rf.error_intr_en_r.error_iccm_blocked_en.next;
         end
     end
+    // Field: soc_ifc_reg.intr_block_rf.error_intr_en_r.error_mbox_ecc_unc_en
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error_mbox_ecc_unc_en.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
+            next_c = decoded_wr_data[5:5];
+            load_next_c = '1;
+        end
+        field_combo.intr_block_rf.error_intr_en_r.error_mbox_ecc_unc_en.next = next_c;
+        field_combo.intr_block_rf.error_intr_en_r.error_mbox_ecc_unc_en.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.intr_block_rf.error_intr_en_r.error_mbox_ecc_unc_en.value <= 'h0;
+        end else if(field_combo.intr_block_rf.error_intr_en_r.error_mbox_ecc_unc_en.load_next) begin
+            field_storage.intr_block_rf.error_intr_en_r.error_mbox_ecc_unc_en.value <= field_combo.intr_block_rf.error_intr_en_r.error_mbox_ecc_unc_en.next;
+        end
+    end
     // Field: soc_ifc_reg.intr_block_rf.notif_intr_en_r.notif_cmd_avail_en
     always_comb begin
         automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_avail_en.value;
@@ -1679,6 +1799,24 @@ module soc_ifc_reg (
             field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_avail_en.value <= 'h0;
         end else if(field_combo.intr_block_rf.notif_intr_en_r.notif_cmd_avail_en.load_next) begin
             field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_avail_en.value <= field_combo.intr_block_rf.notif_intr_en_r.notif_cmd_avail_en.next;
+        end
+    end
+    // Field: soc_ifc_reg.intr_block_rf.notif_intr_en_r.notif_mbox_ecc_cor_en
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_mbox_ecc_cor_en.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.intr_block_rf.notif_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
+            next_c = decoded_wr_data[1:1];
+            load_next_c = '1;
+        end
+        field_combo.intr_block_rf.notif_intr_en_r.notif_mbox_ecc_cor_en.next = next_c;
+        field_combo.intr_block_rf.notif_intr_en_r.notif_mbox_ecc_cor_en.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.intr_block_rf.notif_intr_en_r.notif_mbox_ecc_cor_en.value <= 'h0;
+        end else if(field_combo.intr_block_rf.notif_intr_en_r.notif_mbox_ecc_cor_en.load_next) begin
+            field_storage.intr_block_rf.notif_intr_en_r.notif_mbox_ecc_cor_en.value <= field_combo.intr_block_rf.notif_intr_en_r.notif_mbox_ecc_cor_en.next;
         end
     end
     // Field: soc_ifc_reg.intr_block_rf.error_global_intr_r.agg_sts
@@ -1841,12 +1979,37 @@ module soc_ifc_reg (
             field_storage.intr_block_rf.error_internal_intr_r.error_iccm_blocked_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error_iccm_blocked_sts.next;
         end
     end
+    // Field: soc_ifc_reg.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts.value;
+        automatic logic load_next_c = '0;
+        if(field_storage.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.value) begin // stickybit
+            next_c = field_storage.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.value;
+            load_next_c = '1;
+        end else if(hwif_in.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts.hwset) begin // HW Set
+            next_c = '1;
+            load_next_c = '1;
+        end else if(decoded_reg_strb.intr_block_rf.error_internal_intr_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 clear
+            next_c = field_storage.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts.value & ~decoded_wr_data[5:5];
+            load_next_c = '1;
+        end
+        field_combo.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts.next = next_c;
+        field_combo.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+        if(~hwif_in.hard_reset_b) begin
+            field_storage.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts.value <= 'h0;
+        end else if(field_combo.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts.load_next) begin
+            field_storage.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts.next;
+        end
+    end
     assign hwif_out.intr_block_rf.error_internal_intr_r.intr =
         |(field_storage.intr_block_rf.error_internal_intr_r.error_internal_sts.value & field_storage.intr_block_rf.error_intr_en_r.error_internal_en.value)
         || |(field_storage.intr_block_rf.error_internal_intr_r.error_inv_dev_sts.value & field_storage.intr_block_rf.error_intr_en_r.error_inv_dev_en.value)
         || |(field_storage.intr_block_rf.error_internal_intr_r.error_cmd_fail_sts.value & field_storage.intr_block_rf.error_intr_en_r.error_cmd_fail_en.value)
         || |(field_storage.intr_block_rf.error_internal_intr_r.error_bad_fuse_sts.value & field_storage.intr_block_rf.error_intr_en_r.error_bad_fuse_en.value)
-        || |(field_storage.intr_block_rf.error_internal_intr_r.error_iccm_blocked_sts.value & field_storage.intr_block_rf.error_intr_en_r.error_iccm_blocked_en.value);
+        || |(field_storage.intr_block_rf.error_internal_intr_r.error_iccm_blocked_sts.value & field_storage.intr_block_rf.error_intr_en_r.error_iccm_blocked_en.value)
+        || |(field_storage.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts.value & field_storage.intr_block_rf.error_intr_en_r.error_mbox_ecc_unc_en.value);
     // Field: soc_ifc_reg.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts
     always_comb begin
         automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.value;
@@ -1871,8 +2034,33 @@ module soc_ifc_reg (
             field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.value <= field_combo.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.next;
         end
     end
+    // Field: soc_ifc_reg.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.value;
+        automatic logic load_next_c = '0;
+        if(field_storage.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig.value) begin // stickybit
+            next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.value | field_storage.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig.value;
+            load_next_c = '1;
+        end else if(hwif_in.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.hwset) begin // HW Set
+            next_c = '1;
+            load_next_c = '1;
+        end else if(decoded_reg_strb.intr_block_rf.notif_internal_intr_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 clear
+            next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.value & ~decoded_wr_data[1:1];
+            load_next_c = '1;
+        end
+        field_combo.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.next = next_c;
+        field_combo.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.value <= 'h0;
+        end else if(field_combo.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.load_next) begin
+            field_storage.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.value <= field_combo.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.next;
+        end
+    end
     assign hwif_out.intr_block_rf.notif_internal_intr_r.intr =
-        |(field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.value & field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_avail_en.value);
+        |(field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.value & field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_avail_en.value)
+        || |(field_storage.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.value & field_storage.intr_block_rf.notif_intr_en_r.notif_mbox_ecc_cor_en.value);
     // Field: soc_ifc_reg.intr_block_rf.error_intr_trig_r.error_internal_trig
     always_comb begin
         automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value;
@@ -1978,6 +2166,27 @@ module soc_ifc_reg (
             field_storage.intr_block_rf.error_intr_trig_r.error_iccm_blocked_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error_iccm_blocked_trig.next;
         end
     end
+    // Field: soc_ifc_reg.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
+            next_c = field_storage.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.value | decoded_wr_data[5:5];
+            load_next_c = '1;
+        end else if(1) begin // singlepulse clears back to 0
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.next = next_c;
+        field_combo.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.value <= 'h0;
+        end else if(field_combo.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.load_next) begin
+            field_storage.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.next;
+        end
+    end
     // Field: soc_ifc_reg.intr_block_rf.notif_intr_trig_r.notif_cmd_avail_trig
     always_comb begin
         automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_avail_trig.value;
@@ -1997,6 +2206,27 @@ module soc_ifc_reg (
             field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_avail_trig.value <= 'h0;
         end else if(field_combo.intr_block_rf.notif_intr_trig_r.notif_cmd_avail_trig.load_next) begin
             field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_avail_trig.value <= field_combo.intr_block_rf.notif_intr_trig_r.notif_cmd_avail_trig.next;
+        end
+    end
+    // Field: soc_ifc_reg.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.intr_block_rf.notif_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
+            next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig.value | decoded_wr_data[1:1];
+            load_next_c = '1;
+        end else if(1) begin // singlepulse clears back to 0
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig.next = next_c;
+        field_combo.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig.value <= 'h0;
+        end else if(field_combo.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig.load_next) begin
+            field_storage.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig.value <= field_combo.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig.next;
         end
     end
     // Field: soc_ifc_reg.intr_block_rf.error_internal_intr_count_r.cnt
@@ -2159,6 +2389,38 @@ module soc_ifc_reg (
             field_storage.intr_block_rf.error_iccm_blocked_intr_count_r.cnt.value <= field_combo.intr_block_rf.error_iccm_blocked_intr_count_r.cnt.next;
         end
     end
+    // Field: soc_ifc_reg.intr_block_rf.error_mbox_ecc_unc_intr_count_r.cnt
+    always_comb begin
+        automatic logic [31:0] next_c = field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_r.cnt.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.intr_block_rf.error_mbox_ecc_unc_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
+            next_c = decoded_wr_data[31:0];
+            load_next_c = '1;
+        end
+        if(field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r.pulse.value) begin // increment
+            if(((33)'(next_c) + 'h1) > 'hffffffff) begin // up-counter saturated
+                next_c = 'hffffffff;
+            end else begin
+                next_c = next_c + 'h1;
+            end
+            load_next_c = '1;
+        end
+        field_combo.intr_block_rf.error_mbox_ecc_unc_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_r.cnt.value >= 'hffffffff);
+        field_combo.intr_block_rf.error_mbox_ecc_unc_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_r.cnt.value >= 'hffffffff);
+        if(next_c > 'hffffffff) begin
+            next_c = 'hffffffff;
+            load_next_c = '1;
+        end
+        field_combo.intr_block_rf.error_mbox_ecc_unc_intr_count_r.cnt.next = next_c;
+        field_combo.intr_block_rf.error_mbox_ecc_unc_intr_count_r.cnt.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+        if(~hwif_in.hard_reset_b) begin
+            field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_r.cnt.value <= 'h0;
+        end else if(field_combo.intr_block_rf.error_mbox_ecc_unc_intr_count_r.cnt.load_next) begin
+            field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_r.cnt.value <= field_combo.intr_block_rf.error_mbox_ecc_unc_intr_count_r.cnt.next;
+        end
+    end
     // Field: soc_ifc_reg.intr_block_rf.notif_cmd_avail_intr_count_r.cnt
     always_comb begin
         automatic logic [31:0] next_c = field_storage.intr_block_rf.notif_cmd_avail_intr_count_r.cnt.value;
@@ -2189,6 +2451,38 @@ module soc_ifc_reg (
             field_storage.intr_block_rf.notif_cmd_avail_intr_count_r.cnt.value <= 'h0;
         end else if(field_combo.intr_block_rf.notif_cmd_avail_intr_count_r.cnt.load_next) begin
             field_storage.intr_block_rf.notif_cmd_avail_intr_count_r.cnt.value <= field_combo.intr_block_rf.notif_cmd_avail_intr_count_r.cnt.next;
+        end
+    end
+    // Field: soc_ifc_reg.intr_block_rf.notif_mbox_ecc_cor_intr_count_r.cnt
+    always_comb begin
+        automatic logic [31:0] next_c = field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_r.cnt.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.intr_block_rf.notif_mbox_ecc_cor_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
+            next_c = decoded_wr_data[31:0];
+            load_next_c = '1;
+        end
+        if(field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r.pulse.value) begin // increment
+            if(((33)'(next_c) + 'h1) > 'hffffffff) begin // up-counter saturated
+                next_c = 'hffffffff;
+            end else begin
+                next_c = next_c + 'h1;
+            end
+            load_next_c = '1;
+        end
+        field_combo.intr_block_rf.notif_mbox_ecc_cor_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_r.cnt.value >= 'hffffffff);
+        field_combo.intr_block_rf.notif_mbox_ecc_cor_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_r.cnt.value >= 'hffffffff);
+        if(next_c > 'hffffffff) begin
+            next_c = 'hffffffff;
+            load_next_c = '1;
+        end
+        field_combo.intr_block_rf.notif_mbox_ecc_cor_intr_count_r.cnt.next = next_c;
+        field_combo.intr_block_rf.notif_mbox_ecc_cor_intr_count_r.cnt.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_r.cnt.value <= 'h0;
+        end else if(field_combo.intr_block_rf.notif_mbox_ecc_cor_intr_count_r.cnt.load_next) begin
+            field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_r.cnt.value <= field_combo.intr_block_rf.notif_mbox_ecc_cor_intr_count_r.cnt.next;
         end
     end
     // Field: soc_ifc_reg.intr_block_rf.error_internal_intr_count_incr_r.pulse
@@ -2336,6 +2630,35 @@ module soc_ifc_reg (
             field_storage.intr_block_rf.error_iccm_blocked_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error_iccm_blocked_intr_count_incr_r.pulse.next;
         end
     end
+    // Field: soc_ifc_reg.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r.pulse
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r.pulse.value;
+        automatic logic load_next_c = '0;
+        if(field_storage.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.value) begin // HW Write - we
+            next_c = field_storage.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.value;
+            load_next_c = '1;
+        end else if(hwif_in.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts.hwset) begin // HW Set
+            next_c = '1;
+            load_next_c = '1;
+        end
+        if(field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r.pulse.value) begin // decrement
+            field_combo.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r.pulse.underflow = (next_c < ('h1));
+            next_c = next_c - 'h1;
+            load_next_c = '1;
+        end else begin
+            field_combo.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r.pulse.underflow = '0;
+        end
+        field_combo.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r.pulse.decrthreshold = (field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r.pulse.value <= 'd0);
+        field_combo.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r.pulse.next = next_c;
+        field_combo.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r.pulse.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r.pulse.value <= 'h0;
+        end else if(field_combo.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r.pulse.load_next) begin
+            field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r.pulse.next;
+        end
+    end
     // Field: soc_ifc_reg.intr_block_rf.notif_cmd_avail_intr_count_incr_r.pulse
     always_comb begin
         automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_cmd_avail_intr_count_incr_r.pulse.value;
@@ -2365,6 +2688,35 @@ module soc_ifc_reg (
             field_storage.intr_block_rf.notif_cmd_avail_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.notif_cmd_avail_intr_count_incr_r.pulse.next;
         end
     end
+    // Field: soc_ifc_reg.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r.pulse
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r.pulse.value;
+        automatic logic load_next_c = '0;
+        if(field_storage.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig.value) begin // HW Write - we
+            next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig.value;
+            load_next_c = '1;
+        end else if(hwif_in.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.hwset) begin // HW Set
+            next_c = '1;
+            load_next_c = '1;
+        end
+        if(field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r.pulse.value) begin // decrement
+            field_combo.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r.pulse.underflow = (next_c < ('h1));
+            next_c = next_c - 'h1;
+            load_next_c = '1;
+        end else begin
+            field_combo.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r.pulse.underflow = '0;
+        end
+        field_combo.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r.pulse.decrthreshold = (field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r.pulse.value <= 'd0);
+        field_combo.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r.pulse.next = next_c;
+        field_combo.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r.pulse.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r.pulse.value <= 'h0;
+        end else if(field_combo.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r.pulse.load_next) begin
+            field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r.pulse.next;
+        end
+    end
 
     //--------------------------------------------------------------------------
     // Readback
@@ -2374,7 +2726,7 @@ module soc_ifc_reg (
     logic [31:0] readback_data;
     
     // Assign readback values to a flattened array
-    logic [31:0] readback_array[130];
+    logic [31:0] readback_array[134];
     assign readback_array[0][31:0] = (decoded_reg_strb.HW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.HW_ERROR_FATAL.error_code.value : '0;
     assign readback_array[1][31:0] = (decoded_reg_strb.HW_ERROR_NON_FATAL && !decoded_req_is_wr) ? field_storage.HW_ERROR_NON_FATAL.error_code.value : '0;
     assign readback_array[2][31:0] = (decoded_reg_strb.FW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.FW_ERROR_FATAL.error_code.value : '0;
@@ -2436,9 +2788,11 @@ module soc_ifc_reg (
     assign readback_array[110][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_cmd_fail_en.value : '0;
     assign readback_array[110][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_bad_fuse_en.value : '0;
     assign readback_array[110][4:4] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_iccm_blocked_en.value : '0;
-    assign readback_array[110][31:5] = '0;
+    assign readback_array[110][5:5] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_mbox_ecc_unc_en.value : '0;
+    assign readback_array[110][31:6] = '0;
     assign readback_array[111][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_avail_en.value : '0;
-    assign readback_array[111][31:1] = '0;
+    assign readback_array[111][1:1] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_mbox_ecc_cor_en.value : '0;
+    assign readback_array[111][31:2] = '0;
     assign readback_array[112][0:0] = (decoded_reg_strb.intr_block_rf.error_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_global_intr_r.agg_sts.value : '0;
     assign readback_array[112][31:1] = '0;
     assign readback_array[113][0:0] = (decoded_reg_strb.intr_block_rf.notif_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value : '0;
@@ -2448,35 +2802,45 @@ module soc_ifc_reg (
     assign readback_array[114][2:2] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_cmd_fail_sts.value : '0;
     assign readback_array[114][3:3] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_bad_fuse_sts.value : '0;
     assign readback_array[114][4:4] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_iccm_blocked_sts.value : '0;
-    assign readback_array[114][31:5] = '0;
+    assign readback_array[114][5:5] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts.value : '0;
+    assign readback_array[114][31:6] = '0;
     assign readback_array[115][0:0] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.value : '0;
-    assign readback_array[115][31:1] = '0;
+    assign readback_array[115][1:1] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.value : '0;
+    assign readback_array[115][31:2] = '0;
     assign readback_array[116][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value : '0;
     assign readback_array[116][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_inv_dev_trig.value : '0;
     assign readback_array[116][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_cmd_fail_trig.value : '0;
     assign readback_array[116][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_bad_fuse_trig.value : '0;
     assign readback_array[116][4:4] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_iccm_blocked_trig.value : '0;
-    assign readback_array[116][31:5] = '0;
+    assign readback_array[116][5:5] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.value : '0;
+    assign readback_array[116][31:6] = '0;
     assign readback_array[117][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_avail_trig.value : '0;
-    assign readback_array[117][31:1] = '0;
+    assign readback_array[117][1:1] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig.value : '0;
+    assign readback_array[117][31:2] = '0;
     assign readback_array[118][31:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_count_r.cnt.value : '0;
     assign readback_array[119][31:0] = (decoded_reg_strb.intr_block_rf.error_inv_dev_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_inv_dev_intr_count_r.cnt.value : '0;
     assign readback_array[120][31:0] = (decoded_reg_strb.intr_block_rf.error_cmd_fail_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_cmd_fail_intr_count_r.cnt.value : '0;
     assign readback_array[121][31:0] = (decoded_reg_strb.intr_block_rf.error_bad_fuse_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_bad_fuse_intr_count_r.cnt.value : '0;
     assign readback_array[122][31:0] = (decoded_reg_strb.intr_block_rf.error_iccm_blocked_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_iccm_blocked_intr_count_r.cnt.value : '0;
-    assign readback_array[123][31:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_avail_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_avail_intr_count_r.cnt.value : '0;
-    assign readback_array[124][0:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[124][31:1] = '0;
-    assign readback_array[125][0:0] = (decoded_reg_strb.intr_block_rf.error_inv_dev_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_inv_dev_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[125][31:1] = '0;
-    assign readback_array[126][0:0] = (decoded_reg_strb.intr_block_rf.error_cmd_fail_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_cmd_fail_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[123][31:0] = (decoded_reg_strb.intr_block_rf.error_mbox_ecc_unc_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_r.cnt.value : '0;
+    assign readback_array[124][31:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_avail_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_avail_intr_count_r.cnt.value : '0;
+    assign readback_array[125][31:0] = (decoded_reg_strb.intr_block_rf.notif_mbox_ecc_cor_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_r.cnt.value : '0;
+    assign readback_array[126][0:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_count_incr_r.pulse.value : '0;
     assign readback_array[126][31:1] = '0;
-    assign readback_array[127][0:0] = (decoded_reg_strb.intr_block_rf.error_bad_fuse_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_bad_fuse_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[127][0:0] = (decoded_reg_strb.intr_block_rf.error_inv_dev_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_inv_dev_intr_count_incr_r.pulse.value : '0;
     assign readback_array[127][31:1] = '0;
-    assign readback_array[128][0:0] = (decoded_reg_strb.intr_block_rf.error_iccm_blocked_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_iccm_blocked_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[128][0:0] = (decoded_reg_strb.intr_block_rf.error_cmd_fail_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_cmd_fail_intr_count_incr_r.pulse.value : '0;
     assign readback_array[128][31:1] = '0;
-    assign readback_array[129][0:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_avail_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_avail_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[129][0:0] = (decoded_reg_strb.intr_block_rf.error_bad_fuse_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_bad_fuse_intr_count_incr_r.pulse.value : '0;
     assign readback_array[129][31:1] = '0;
+    assign readback_array[130][0:0] = (decoded_reg_strb.intr_block_rf.error_iccm_blocked_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_iccm_blocked_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[130][31:1] = '0;
+    assign readback_array[131][0:0] = (decoded_reg_strb.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[131][31:1] = '0;
+    assign readback_array[132][0:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_avail_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_avail_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[132][31:1] = '0;
+    assign readback_array[133][0:0] = (decoded_reg_strb.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[133][31:1] = '0;
 
 
     // Reduce the array
@@ -2485,7 +2849,7 @@ module soc_ifc_reg (
         readback_done = decoded_req & ~decoded_req_is_wr;
         readback_err = '0;
         readback_data_var = '0;
-        for(int i=0; i<130; i++) readback_data_var |= readback_array[i];
+        for(int i=0; i<134; i++) readback_data_var |= readback_array[i];
         readback_data = readback_data_var;
     end
 

@@ -34,6 +34,7 @@ module sha512_acc_top
       output logic sha_sram_req_dv,
       output logic [MBOX_ADDR_W-1:0] sha_sram_req_addr,
       input mbox_sram_resp_t sha_sram_resp,
+      input logic sha_sram_hold,
 
       // Interrupts
       output logic error_intr,
@@ -192,9 +193,10 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   always_comb last_dword_wr = block_we & (block_wptr == (BLOCK_NO-1));
 
   //read from mbox is one clock ahead of writes
+  //stall reads based on hold signal from mbox (which is asserted during ECC write-back)
   //don't read the next dword if we are writing the last dword of a block and core isn't ready
   //keep stalling the read once the block is full until core is ready - this will reset the block pointer and start the next one
-  always_comb mbox_read_en = mailbox_mode & ~mbox_read_done & (~(last_dword_wr | block_full) | core_ready);
+  always_comb mbox_read_en = mailbox_mode & ~mbox_read_done & !sha_sram_hold & (~(last_dword_wr | block_full) | core_ready);
 
   always_comb sha_sram_req_dv = mbox_read_en;
   always_comb sha_sram_req_addr = mbox_rdptr;
@@ -206,7 +208,7 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
                          (mailbox_mode & mbox_block_we);
   
   always_comb block_wdata = ({DATA_WIDTH{streaming_mode}} & req_data.wdata) | 
-                            ({DATA_WIDTH{mailbox_mode}} & sha_sram_resp.rdata);
+                            ({DATA_WIDTH{mailbox_mode}} & sha_sram_resp.rdata.data);
 
   //registers for the HW API
   always_ff @(posedge clk or negedge rst_b) begin : api_regs

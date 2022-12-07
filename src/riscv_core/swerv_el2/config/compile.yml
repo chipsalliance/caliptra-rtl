@@ -5,10 +5,15 @@ targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
+      - $COMPILE_ROOT/rtl/el2_pdef.vh
+      - $COMPILE_ROOT/rtl/include/el2_def.sv
       - $COMPILE_ROOT/rtl/common_defines.sv
+      - $COMPILE_ROOT/rtl/lib/beh_lib.sv
   tb:
     directories: [$COMPILE_ROOT/rtl]
     files:
+      - $COMPILE_ROOT/rtl/el2_pdef.vh
+      - $COMPILE_ROOT/rtl/include/el2_def.sv
       - $COMPILE_ROOT/rtl/common_defines.sv
 ---
 provides: [el2_swerv_wrapper]
@@ -18,8 +23,6 @@ targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/el2_pdef.vh
-      - $COMPILE_ROOT/rtl/include/el2_def.sv
       - $COMPILE_ROOT/rtl/el2_mem.sv
       - $COMPILE_ROOT/rtl/el2_dma_ctrl.sv
       - $COMPILE_ROOT/rtl/el2_pic_ctrl.sv
@@ -50,7 +53,6 @@ targets:
       - $COMPILE_ROOT/rtl/ifu/el2_ifu_tb_memread.sv
       - $COMPILE_ROOT/rtl/lib/ahb_to_axi4.sv
       - $COMPILE_ROOT/rtl/lib/axi4_to_ahb.sv
-      - $COMPILE_ROOT/rtl/lib/beh_lib.sv
       - $COMPILE_ROOT/rtl/lib/el2_lib.sv
       - $COMPILE_ROOT/rtl/lib/mem_lib.sv
       - $COMPILE_ROOT/rtl/lib/el2_mem_if.sv

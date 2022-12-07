@@ -100,8 +100,8 @@ _start:
     li x1, CLP_SHA512_ACC_CSR_DIGEST_15
     read_result_loop0:
         lw x5, 0(x3)
-        lw t2, 0(t3)
-        beq x5, t2, equal0
+        lw x7, 0(t3)
+        beq x5, x7, equal0
         li x6, STDOUT
         li x7, 0x01
         sb x7, 0(x6)
@@ -167,8 +167,8 @@ _start:
     li x1, CLP_SHA512_ACC_CSR_DIGEST_15
     read_result_loop1:
         lw x5, 0(x3)
-        lw t2, 0(t3)
-        beq x5, t2, equal1
+        lw x7, 0(t3)
+        beq x5, x7, equal1
         li x6, STDOUT
         li x7, 0x01
         sb x7, 0(x6)
@@ -194,7 +194,9 @@ _start:
     li x1, 0x00000003
     sw x1, 0(x3)
 
-    // Load block from hw_data and write to SHA Accelerator
+
+    // Submit task to SHA Accelerator, providing
+    // mailbox start address where vector is located
     li x3, CLP_SHA512_ACC_CSR_START_ADDRESS
     li x4, CLP_SHA512_ACC_CSR_DLEN
     // set t3 to constantly tracking current ptr
@@ -204,11 +206,26 @@ _start:
     // write the length in bytes to DLEN
     srli x7, x7, 3
     sw x7, 0(x4)
+    //round dlen up to nearest dword
+    addi x7, x7, 3
+    andi x7, x7, 0xFFFFFFFC
+    // Increment pointer to start of test vector
     addi t3, t3, 4
+    // Load test vector from hw_data and write to Mailbox
+    li x8, MBOX_DIR_BASE_ADDR
+    add x8, x8, x7 /* ending destination address of test vector */
+    li x6, MBOX_DIR_BASE_ADDR /* destination address to write in mailbox */
+    cp_to_mbox_loop0:
+        lw x5, 0(t3)
+        sw x5, 0(x6)
+        addi t3, t3, 4
+        addi x6, x6, 4
+        bltu x6, x8, cp_to_mbox_loop0
     //store the start address of the test vector
     //first shift it into a dword address
-    srli t4, t3, 2
-    sw t4, 0(x3)
+    li x6, MBOX_DIR_BASE_ADDR
+    srli x6, x6, 2
+    sw x6, 0(x3)
 
     // set execute for stream Mode
     li x3, CLP_SHA512_ACC_CSR_EXECUTE
@@ -223,19 +240,16 @@ _start:
         bne x5, x1, ready_loop2
     sw x0, 0(x3) // clear status variable
 
-    //round dlen up to nearest dword
-    addi x7, x7, 3
-    andi x7, x7, 0xFFFFFFFC
-    //add this gets us to the result
-    add t3, t3, x7
+//    //add this gets us to the result
+//    add t3, t3, x7
 
     // Read the data back from SHA Accelerator Digest register
     li x3, CLP_SHA512_ACC_CSR_DIGEST_0
     li x1, CLP_SHA512_ACC_CSR_DIGEST_15
     read_result_loop2:
         lw x5, 0(x3)
-        lw t2, 0(t3)
-        beq x5, t2, equal2
+        lw x7, 0(t3)
+        beq x5, x7, equal2
         li x6, STDOUT
         li x7, 0x01
         sb x7, 0(x6)
@@ -261,7 +275,7 @@ _start:
     li x1, 0x00000002
     sw x1, 0(x3)
 
-    // Load block from hw_data and write to SHA Accelerator
+    // Load block from hw_data and write to Mailbox
     li x3, CLP_SHA512_ACC_CSR_START_ADDRESS
     li x4, CLP_SHA512_ACC_CSR_DLEN
     // set t3 to constantly tracking current ptr
@@ -271,11 +285,25 @@ _start:
     // write the length in bytes to DLEN
     srli x7, x7, 3
     sw x7, 0(x4)
+    //round dlen up to nearest dword
+    addi x7, x7, 3
+    andi x7, x7, 0xFFFFFFFC
     addi t3, t3, 4
+    // Load test vector from hw_data and write to Mailbox
+    li x8, MBOX_DIR_BASE_ADDR
+    add x8, x8, x7 /* ending destination address of test vector */
+    li x6, MBOX_DIR_BASE_ADDR /* destination address to write in mailbox */
+    cp_to_mbox_loop1:
+        lw x5, 0(t3)
+        sw x5, 0(x6)
+        addi t3, t3, 4
+        addi x6, x6, 4
+        bltu x6, x8, cp_to_mbox_loop1
     //store the start address of the test vector
     //first shift it into a dword address
-    srli t4, t3, 2
-    sw t4, 0(x3)
+    li x6, MBOX_DIR_BASE_ADDR
+    srli x6, x6, 2
+    sw x6, 0(x3)
 
     // set execute for stream Mode
     li x3, CLP_SHA512_ACC_CSR_EXECUTE
@@ -290,19 +318,16 @@ _start:
         bne x5, x1, ready_loop3
     sw x0, 0(x3) // clear status variable
 
-    //round dlen up to nearest dword
-    addi x7, x7, 3
-    andi x7, x7, 0xFFFFFFFC
-    //add this to start gets us to the result
-    add t3, t3, x7
+//    //add this to start gets us to the result
+//    add t3, t3, x7
 
     // Read the data back from SHA Accelerator Digest register
     li x3, CLP_SHA512_ACC_CSR_DIGEST_0
     li x1, CLP_SHA512_ACC_CSR_DIGEST_11
     read_result_loop3:
         lw x5, 0(x3)
-        lw t2, 0(t3)
-        beq x5, t2, equal3
+        lw x7, 0(t3)
+        beq x5, x7, equal3
         li x6, STDOUT
         li x7, 0x01
         sb x7, 0(x6)
@@ -310,13 +335,13 @@ _start:
             addi x3, x3, 4
             addi t3, t3, 4
             blt x3, x1, read_result_loop3
-    
+
     //Release SHA lock
     li x3, CLP_SHA512_ACC_CSR_LOCK
     li x1, SHA512_ACC_CSR_LOCK_LOCK_MASK
     sw x1, 0(x3)
 
-// Write 0xff to STDOUT for TB to termiate test.
+// Write 0xff to STDOUT for TB to terminate test.
 _finish:
     li x3, STDOUT
     addi x5, x0, 0xff

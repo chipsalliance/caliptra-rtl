@@ -15,6 +15,8 @@
 //
 `default_nettype none
 
+`include "config_defines.svh"
+
 `ifndef VERILATOR
 module caliptra_top_tb;
 `else
@@ -23,6 +25,10 @@ module caliptra_top_tb (
     input bit rst_l
     ); 
 `endif
+
+    import caliptra_top_tb_pkg::*;
+    import soc_ifc_pkg::*;
+
     // Time formatting for %t in display tasks
     // -9 = ns units
     // 3  = 3 bits of precision (to the ps)
@@ -86,8 +92,9 @@ module caliptra_top_tb (
     logic mbox_sram_cs;
     logic mbox_sram_we;
     logic [14:0] mbox_sram_addr;
-    logic [31:0] mbox_sram_wdata;
-    logic [31:0] mbox_sram_rdata;
+    logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata;
+    logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata_bitflip;
+    logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_rdata;
 
     logic imem_cs;
     logic [`IMEM_ADDR_WIDTH-1:0] imem_addr;
@@ -130,6 +137,8 @@ module caliptra_top_tb (
     //         8'h7F        - Do nothing
     //         8'hfb        - Set the isr_active bit
     //         8'hfc        - Clear the isr_active bit
+    //         8'hfd        - Toggle random SRAM single bit error injection
+    //         8'hfe        - Toggle random SRAM double bit error injection
     //         8'hff        - End the simulation with a Success status
     assign mailbox_write = caliptra_top_dut.soc_ifc_top1.i_soc_ifc_reg.field_combo.generic_output_wires[0].generic_wires.load_next;
     assign WriteData = caliptra_top_dut.soc_ifc_top1.i_soc_ifc_reg.field_combo.generic_output_wires[0].generic_wires.next;
@@ -161,6 +170,36 @@ module caliptra_top_tb (
             end
             else if ((WriteData[7:0] == 8'hfb) && mailbox_write) begin
                 isr_active++;
+            end
+        end
+    end
+    logic [1:0] inject_rand_sram_error;
+    initial begin
+        inject_rand_sram_error = 1'b0;
+        forever begin
+            @(negedge core_clk)
+            if ((WriteData[7:0] == 8'hfd) && mailbox_write) begin
+                inject_rand_sram_error ^= 2'b01;
+            end
+            else if ((WriteData[7:0] == 8'hfe) && mailbox_write) begin
+                inject_rand_sram_error ^= 2'b10;
+            end
+        end
+    end
+    initial begin
+        bitflip_mask_generator #(MBOX_DATA_AND_ECC_W) bitflip_gen = new();
+        bit flip_bit;
+        forever begin
+            @(posedge core_clk)
+            if (~|inject_rand_sram_error) begin
+                mbox_sram_wdata_bitflip <= '0;
+            end
+            else if (mbox_sram_cs & mbox_sram_we) begin
+                // Corrupt 10% of the writes
+                flip_bit = $urandom_range(0,99) < 10;
+                mbox_sram_wdata_bitflip <= flip_bit ? bitflip_gen.get_mask(inject_rand_sram_error[1]) : '0;
+//                if (flip_bit) $display("%t Injecting bit flips", $realtime);
+//                else          $display("%t No bit flips injected", $realtime);
             end
         end
     end
@@ -314,7 +353,7 @@ module caliptra_top_tb (
         PPROT = '0;
 
         $readmemh("program.hex",  imem_inst1.ram,0,32'h00008000);
-        $readmemh("mailbox.hex",  mbox_ram1.ram,0,32'h0002_0000);
+        $readmemh("mailbox.hex",  dummy_mbox_preloader.ram,0,32'h0002_0000);
         $readmemh("dccm.hex",     dummy_dccm_preloader.ram,0,32'h0002_0000);
         $readmemh("iccm.hex",     dummy_iccm_preloader.ram,0,32'h0002_0000);
         tp = $fopen("trace_port.csv","w");
@@ -335,6 +374,7 @@ module caliptra_top_tb (
         commit_count = 0;
         preload_dccm();
         preload_iccm();
+        preload_mbox();
 
 `ifndef VERILATOR
         if($test$plusargs("dumpon")) $dumpvars;
@@ -488,21 +528,38 @@ caliptra_swerv_sram_export swerv_sram_export_inst (
     .el2_mem_export(el2_mem_export.top)
 );
 
-//SRAM for mbox
+//SRAM for mbox (preload raw data here)
 caliptra_sram 
 #(
-    .DATA_WIDTH(32),
-    .DEPTH('h8000)
+    .DATA_WIDTH(MBOX_DATA_W),
+    .DEPTH     (MBOX_DEPTH )
+)
+dummy_mbox_preloader
+(
+    .clk_i(core_clk),
+
+    .cs_i   (),
+    .we_i   (),
+    .addr_i (),
+    .wdata_i(),
+    .rdata_o()
+);
+// Actual Mailbox RAM -- preloaded with data from
+// dummy_mbox_preloader with ECC bits appended
+caliptra_sram 
+#(
+    .DATA_WIDTH(MBOX_DATA_AND_ECC_W),
+    .DEPTH     (MBOX_DEPTH         )
 )
 mbox_ram1
 (
     .clk_i(core_clk),
-    
+
     .cs_i(mbox_sram_cs),
     .we_i(mbox_sram_we),
     .addr_i(mbox_sram_addr),
-    .wdata_i(mbox_sram_wdata),
-    
+    .wdata_i(mbox_sram_wdata ^ mbox_sram_wdata_bitflip),
+
     .rdata_o(mbox_sram_rdata)
 );
 
@@ -556,6 +613,30 @@ caliptra_sram #(
     .rdata_o (        )
 );
 
+
+task preload_mbox;
+    // Variables
+    mbox_sram_data_t      ecc_data;
+    bit [MBOX_ADDR_W  :0] addr;
+    int                   byt;
+    localparam NUM_BYTES = MBOX_DATA_AND_ECC_W / 8 + ((MBOX_DATA_AND_ECC_W%8) ? 1 : 0);
+
+    // Init
+    mbox_ram1.ram = '{default:MBOX_DATA_AND_ECC_W'(0)};
+
+    // Slam
+    $display("MBOX pre-load from %h to %h", 0, MBOX_DEPTH);
+    for (addr = 0; addr < MBOX_DEPTH; addr++) begin
+        ecc_data.data = {dummy_mbox_preloader.ram[addr][3],
+                         dummy_mbox_preloader.ram[addr][2],
+                         dummy_mbox_preloader.ram[addr][1],
+                         dummy_mbox_preloader.ram[addr][0]};
+        ecc_data.ecc  = |ecc_data.data ? riscv_ecc32(ecc_data.data) : 0;
+        for (byt = 0; byt < NUM_BYTES; byt++) begin
+            mbox_ram1.ram[addr][byt] = ecc_data[byt*8+:8];
+        end
+    end
+endtask
 
 task preload_iccm;
     bit[31:0] data;

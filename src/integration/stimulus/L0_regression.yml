@@ -20,11 +20,11 @@ contents:
         - ../test_suites/smoke_test_ecc/smoke_test_ecc.yml
         - ../test_suites/smoke_test_hmac/smoke_test_hmac.yml
         - ../test_suites/smoke_test_kv/smoke_test_kv.yml
+        - ../test_suites/smoke_test_sram_ecc/smoke_test_sram_ecc.yml
         #smoke test icc locking
         #smoke test impactles reset
         #smoke test debug state transition
         #smoke test interrupt handling
         #smoke test wd timer expiry and nmi generation
-        #smoke test sram ecc errors
         #smoke test jtag
         #smoke test generic input wire to fw interrupt

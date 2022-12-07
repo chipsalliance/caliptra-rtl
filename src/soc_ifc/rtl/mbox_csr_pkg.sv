@@ -29,12 +29,26 @@ package mbox_csr_pkg;
     } mbox_csr__mbox_dataout__in_t;
 
     typedef struct {
+        logic hwset;
+    } mbox_csr__mbox_status__ecc_single_error_next_e066e214_wel_e066e214__in_t;
+
+    typedef struct {
+        logic hwset;
+    } mbox_csr__mbox_status__ecc_double_error_next_e066e214_wel_e066e214__in_t;
+
+    typedef struct {
+        mbox_csr__mbox_status__ecc_single_error_next_e066e214_wel_e066e214__in_t ecc_single_error;
+        mbox_csr__mbox_status__ecc_double_error_next_e066e214_wel_e066e214__in_t ecc_double_error;
+    } mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__in_t;
+
+    typedef struct {
         logic reset_b;
         logic lock_set;
         logic valid_user;
         mbox_csr__mbox_lock__in_t mbox_lock;
         mbox_csr__mbox_user__in_t mbox_user;
         mbox_csr__mbox_dataout__in_t mbox_dataout;
+        mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__in_t mbox_status;
     } mbox_csr__in_t;
 
     typedef struct {

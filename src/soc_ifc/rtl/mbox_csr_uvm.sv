@@ -102,19 +102,25 @@ package mbox_csr_uvm;
         endfunction : build
     endclass : mbox_csr__mbox_execute
 
-    // Reg - mbox_csr::mbox_status
-    class mbox_csr__mbox_status extends uvm_reg;
+    // Reg - mbox_csr::mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760
+    class mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760 extends uvm_reg;
         rand uvm_reg_field status;
+        rand uvm_reg_field ecc_single_error;
+        rand uvm_reg_field ecc_double_error;
 
-        function new(string name = "mbox_csr__mbox_status");
+        function new(string name = "mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
         virtual function void build();
             this.status = new("status");
             this.status.configure(this, 2, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.ecc_single_error = new("ecc_single_error");
+            this.ecc_single_error.configure(this, 1, 2, "RO", 1, 'h0, 1, 1, 0);
+            this.ecc_double_error = new("ecc_double_error");
+            this.ecc_double_error.configure(this, 1, 3, "RO", 1, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : mbox_csr__mbox_status
+    endclass : mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760
 
     // Addrmap - mbox_csr
     class mbox_csr extends uvm_reg_block;
@@ -125,7 +131,7 @@ package mbox_csr_uvm;
         rand mbox_csr__mbox_datain mbox_datain;
         rand mbox_csr__mbox_dataout mbox_dataout;
         rand mbox_csr__mbox_execute mbox_execute;
-        rand mbox_csr__mbox_status mbox_status;
+        rand mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760 mbox_status;
 
         function new(string name = "mbox_csr");
             super.new(name);
