@@ -151,10 +151,6 @@
 #define ECC_ADDR_IV0              (ECC_BASE_ADDR + 0x480)
 #define ECC_ADDR_IV11             (ECC_BASE_ADDR + 0x4AC)
 
-
-
-
-
 /* ---- Interrupts ---- */
 #define SWERV_INTR_VEC_DOE_ERROR        1
 #define SWERV_INTR_VEC_DOE_NOTIF        2
