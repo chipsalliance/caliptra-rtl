@@ -89,8 +89,8 @@ import soc_ifc_pkg::*;
     //SRAM for mbox
     caliptra_sram 
     #(
-        .DATA_WIDTH(32),
-        .DEPTH('h8000)
+        .DATA_WIDTH(MBOX_DATA_AND_ECC_W),
+        .DEPTH(MBOX_DEPTH)
     )
     i_mbox_ram
     (
