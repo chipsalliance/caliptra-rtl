@@ -35,6 +35,7 @@ def generate_test():
 
     #Open file for logging outputs
     f = open("test_vector.txt", "w")
+    g = open("test_vectors_all.txt", "a")
 
     #Generate 384-bit key
     key = subprocess.check_output('openssl rand -hex 48', shell=True)
@@ -46,6 +47,7 @@ def generate_test():
     else:
         key_str = key_str.rstrip()
     f.write('KEY = '+key_str+'\n')
+    g.write('KEY = '+key_str+'\n')
 
     #Generate random length msg (upper limit of length is 512 bytes)
     num_bytes = random.randrange(1,512)
@@ -78,6 +80,7 @@ def generate_test():
         if num_bits > 1023: #case 1 and 2
             block = msg_str[0:256]
             f.write('BLOCK = '+block+'\n')
+            g.write('BLOCK = '+block+'\n')
             msg_str = msg_str[256:]
             num_bits = num_bits - 1024
 
@@ -97,6 +100,7 @@ def generate_test():
 
             block = msg_str + pad + msg_len
             f.write('BLOCK = '+block+'\n')
+            g.write('BLOCK = '+block+'\n')
 
         else: #case 3 and 4
             #We know here that we don't have space for msg, pad AND msg length, so we just do msg + pad
@@ -105,6 +109,7 @@ def generate_test():
             pad = one + zero * pad_chars
             block = msg_str + pad
             f.write('BLOCK = '+block+'\n')
+            g.write('BLOCK = '+block+'\n')
             
             pad_chars = calc_pad_chars(128, 0) #No msg in this block. Only msg_len and padding is continued (all 0s in padding)
             pad = zero * pad_chars
@@ -114,6 +119,7 @@ def generate_test():
 
             block = pad + msg_len
             f.write('BLOCK = '+block+'\n')
+            g.write('BLOCK = '+block+'\n')
 
             
     
@@ -130,9 +136,12 @@ def generate_test():
         tag_str = tag_str.rstrip()
         tag_str = tag_str[9:]
     f.write('TAG = '+tag_str+'\n')
+    g.write('TAG = '+tag_str+'\n')
+    g.write('======================================================================================================'+'\n')
 
     #Close file
     f.close()
+    g.close()
 
 generate_test()
 
