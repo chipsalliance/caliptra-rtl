@@ -14,6 +14,8 @@
 //
 
 `include "config_defines.svh"
+`include "caliptra_macros.svh"
+`include "caliptra_sva.svh"
 
 module caliptra_top 
     import kv_defines_pkg::*;
@@ -84,14 +86,13 @@ module caliptra_top
     input logic  [63:0]                generic_input_wires,
     output logic [63:0]                generic_output_wires,
 
-    input logic  [`SOC_SEC_STATE_WIDTH-1:0] security_state
+    input security_state_t security_state
 
 );
 
     `include "common_defines.sv"
 
     localparam NUM_INTR = `RV_PIC_TOTAL_INT; // 31
-
 
     //caliptra reset driven by boot fsm in mailbox
     logic                       cptra_noncore_rst_b;
@@ -205,14 +206,16 @@ module caliptra_top
 
     kv_read_t [`KV_NUM_READ-1:0]  kv_read;
     kv_write_t [`KV_NUM_WRITE-1:0]  kv_write;
-    kv_resp_t [`KV_NUM_READ-1:0] kv_resp;
+    kv_rd_resp_t [`KV_NUM_READ-1:0] kv_rd_resp;
+    kv_wr_resp_t [`KV_NUM_READ-1:0] kv_wr_resp;
 
     //mailbox sram gasket
     mbox_sram_req_t mbox_sram_req;
     mbox_sram_resp_t mbox_sram_resp;
 
+    logic clear_obf_secrets;
     logic clear_secrets;
-
+    
 always_comb begin
     mbox_sram_cs = mbox_sram_req.cs;
     mbox_sram_we = mbox_sram_req.we;
@@ -511,7 +514,8 @@ sha512_ctrl #(
     .hrdata_o       (responder_inst[`SLAVE_SEL_SHA512].hrdata),
     .kv_read        (kv_read[2]),
     .kv_write       (kv_write[1]),
-    .kv_resp        (kv_resp[2]),
+    .kv_rd_resp     (kv_rd_resp[2]),
+    .kv_wr_resp     (kv_wr_resp[1]),
 
     .error_intr(sha512_error_intr),
     .notif_intr(sha512_notif_intr)
@@ -539,32 +543,41 @@ sha256_ctrl #(
     .notif_intr(sha256_notif_intr)
 );
 
+logic [255:0] cptra_obf_key_dbg;
+logic [31:0][31:0] obf_field_entropy_dbg;
+logic [11:0][31:0] obf_uds_seed_dbg;
+
+//override device secrets with debug values in debug mode
+always_comb cptra_obf_key_dbg = ~security_state.debug_locked ? `DEBUG_MODE_OBF_KEY : cptra_obf_key_reg;
+always_comb obf_uds_seed_dbg = ~security_state.debug_locked ? `DEBUG_MODE_UDS_SEED : obf_uds_seed;
+always_comb obf_field_entropy_dbg = ~security_state.debug_locked ? `DEBUG_MODE_FIELD_ENTROPY : obf_field_entropy;
 
 doe_ctrl #(
     .AHB_DATA_WIDTH (64),
     .AHB_ADDR_WIDTH (`SLAVE_ADDR_WIDTH(`SLAVE_SEL_DOE))
 ) doe (
-    .clk            (clk),
-    .reset_n        (cptra_noncore_rst_b),
-    .cptra_pwrgood  (cptra_pwrgood),
-    .cptra_obf_key  (cptra_obf_key_reg),
-    .obf_uds_seed   (obf_uds_seed),
-    .obf_field_entropy(obf_field_entropy),
-    .haddr_i        (responder_inst[`SLAVE_SEL_DOE].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_DOE)-1:0]),
-    .hwdata_i       (responder_inst[`SLAVE_SEL_DOE].hwdata),
-    .hsel_i         (responder_inst[`SLAVE_SEL_DOE].hsel),
-    .hwrite_i       (responder_inst[`SLAVE_SEL_DOE].hwrite),
-    .hready_i       (responder_inst[`SLAVE_SEL_DOE].hready),
-    .htrans_i       (responder_inst[`SLAVE_SEL_DOE].htrans),
-    .hsize_i        (responder_inst[`SLAVE_SEL_DOE].hsize),
-    .hresp_o        (responder_inst[`SLAVE_SEL_DOE].hresp),
-    .hreadyout_o    (responder_inst[`SLAVE_SEL_DOE].hreadyout),
-    .hrdata_o       (responder_inst[`SLAVE_SEL_DOE].hrdata),
+    .clk               (clk),
+    .reset_n           (cptra_noncore_rst_b),
+    .cptra_pwrgood     (cptra_pwrgood),
+    .cptra_obf_key     (cptra_obf_key_dbg),
+    .obf_uds_seed      (obf_uds_seed_dbg),
+    .obf_field_entropy (obf_field_entropy_dbg),
+    .haddr_i           (responder_inst[`SLAVE_SEL_DOE].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_DOE)-1:0]),
+    .hwdata_i          (responder_inst[`SLAVE_SEL_DOE].hwdata),
+    .hsel_i            (responder_inst[`SLAVE_SEL_DOE].hsel),
+    .hwrite_i          (responder_inst[`SLAVE_SEL_DOE].hwrite),
+    .hready_i          (responder_inst[`SLAVE_SEL_DOE].hready),
+    .htrans_i          (responder_inst[`SLAVE_SEL_DOE].htrans),
+    .hsize_i           (responder_inst[`SLAVE_SEL_DOE].hsize),
+    .hresp_o           (responder_inst[`SLAVE_SEL_DOE].hresp),
+    .hreadyout_o       (responder_inst[`SLAVE_SEL_DOE].hreadyout),
+    .hrdata_o          (responder_inst[`SLAVE_SEL_DOE].hrdata),
 
     .error_intr(doe_error_intr),
     .notif_intr(doe_notif_intr),
-    .clear_secrets(clear_secrets),
-    .kv_write (kv_write[`KV_NUM_WRITE-1])
+    .clear_obf_secrets(clear_obf_secrets),
+    .kv_write (kv_write[`KV_NUM_WRITE-1]),
+    .kv_wr_resp (kv_wr_resp[`KV_NUM_WRITE-1])
 
     
 );
@@ -590,8 +603,9 @@ ecc_top1
     .hrdata_o      (responder_inst[`SLAVE_SEL_ECC].hrdata),
 
     .kv_read        (kv_read[5:3]),
-    .kv_resp        (kv_resp[5:3]),
+    .kv_rd_resp     (kv_rd_resp[5:3]),
     .kv_write       (kv_write[2]),
+    .kv_wr_resp     (kv_wr_resp[2]),
 
     .error_intr    (ecc_error_intr),
     .notif_intr    (ecc_notif_intr)
@@ -616,7 +630,8 @@ hmac_ctrl #(
      .hrdata_o      (responder_inst[`SLAVE_SEL_HMAC].hrdata),
      .kv_read       (kv_read[1:0]),
      .kv_write      (kv_write[0]),
-     .kv_resp       (kv_resp[1:0]),
+     .kv_rd_resp    (kv_rd_resp[1:0]),
+     .kv_wr_resp    (kv_wr_resp[0]),
 
      .error_intr(hmac_error_intr),
      .notif_intr(hmac_notif_intr)
@@ -634,6 +649,7 @@ key_vault1
     .clk           (clk),
     .rst_b         (cptra_noncore_rst_b),
     .cptra_pwrgood (cptra_pwrgood),
+    .debug_locked  (security_state.debug_locked),
     .haddr_i       (responder_inst[`SLAVE_SEL_KV].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_KV)-1:0]),
     .hwdata_i      (responder_inst[`SLAVE_SEL_KV].hwdata),
     .hsel_i        (responder_inst[`SLAVE_SEL_KV].hsel),
@@ -647,7 +663,8 @@ key_vault1
 
     .kv_read       (kv_read),
     .kv_write      (kv_write),
-    .kv_resp       (kv_resp)
+    .kv_rd_resp    (kv_rd_resp),
+    .kv_wr_resp    (kv_wr_resp)
 );
 
 soc_ifc_top #(
@@ -702,7 +719,7 @@ soc_ifc_top1
     .sha_error_intr(sha_error_intr),
     .sha_notif_intr(sha_notif_intr),
     //Obfuscated UDS and FE
-    .clear_secrets(clear_secrets),
+    .clear_obf_secrets(clear_obf_secrets),
     .cptra_obf_key(cptra_obf_key),
     .cptra_obf_key_reg(cptra_obf_key_reg),
     .obf_field_entropy(obf_field_entropy),

@@ -45,8 +45,13 @@ typedef struct packed {
 } kv_write_t;
 
 typedef struct packed {
+    logic          error;
+} kv_wr_resp_t;
+
+typedef struct packed {
+    logic          error;
     logic   [31:0] read_data;
-} kv_resp_t;
+} kv_rd_resp_t;
 
 typedef struct packed {
     logic dest_done;
@@ -70,8 +75,7 @@ typedef struct packed {
 
 //control register for KV reads
 typedef struct packed {
-    logic read_done;
-    logic [20:0] rsvd;
+    logic [21:0] rsvd;
     logic [4:0] entry_data_size;
     logic entry_is_pcr;
     logic [2:0] read_entry;
@@ -80,13 +84,18 @@ typedef struct packed {
 
 //control register for KV writes
 typedef struct packed {
-    logic write_done;
-    logic [19:0] rsvd;
+    logic [20:0] rsvd;
     logic [5:0] write_dest_vld;
     logic entry_is_pcr;
     logic [2:0] write_entry;
     logic write_en;
 } kv_write_ctrl_reg_t;
+
+typedef enum logic [7:0] {
+    KV_SUCCESS = 8'h00,
+    KV_READ_FAIL = 8'h01,
+    KV_WRITE_FAIL = 8'h02
+} kv_error_code_e;
 
 endpackage
 

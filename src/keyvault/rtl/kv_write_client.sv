@@ -32,12 +32,15 @@ module kv_write_client
 
     //interface with kv
     output kv_write_t kv_write,
+    input  kv_wr_resp_t kv_resp,
 
     //interface with client
     output logic dest_keyvault,
     input logic dest_data_avail,
     input logic [DATA_NUM_DWORDS-1:0][31:0] dest_data,
 
+    output kv_error_code_e error_code,
+    output logic kv_ready,
     output logic dest_done
 );
 
@@ -63,6 +66,7 @@ kv_dest_write_fsm
     .write_offset(dest_write_offset),
     .write_pad(write_pad),
     .pad_data(pad_data),
+    .ready(kv_ready),
     .done(dest_done)
 );
 
@@ -75,5 +79,15 @@ always_comb kv_write.write_en = dest_write_en;
 always_comb kv_write.write_data = dest_data[(DATA_NUM_DWORDS-1) - dest_read_offset];
 
 always_comb kv_write.write_dest_valid = write_ctrl_reg.write_dest_vld;
+
+always_ff @(posedge clk or negedge rst_b) begin
+    if (!rst_b) begin
+        error_code <= KV_SUCCESS;
+    end
+    else begin
+        error_code <= dest_write_en & kv_resp.error ? KV_WRITE_FAIL : 
+                      dest_write_en & ~kv_resp.error ? KV_SUCCESS : error_code;
+    end
+end
 
 endmodule

@@ -1,3 +1,4 @@
++incdir+${WORKSPACE}/Caliptra/src/libs/rtl
 +incdir+${WORKSPACE}/Caliptra/src/ecc/tb
 +incdir+${WORKSPACE}/Caliptra/src/libs/rtl
 +incdir+${WORKSPACE}/Caliptra/src/keyvault/rtl
@@ -6,8 +7,15 @@
 +incdir+${WORKSPACE}/Caliptra/src/hmac/rtl
 +incdir+${WORKSPACE}/Caliptra/src/hmac_drbg/rtl
 +incdir+${WORKSPACE}/Caliptra/src/ecc/rtl
+${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_sva.svh
+${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_macros.svh
+${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_sram.sv
+${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_ahb_srom.sv
+${WORKSPACE}/Caliptra/src/libs/rtl/apb_slv_sif.sv
+${WORKSPACE}/Caliptra/src/libs/rtl/ahb_slv_sif.sv
 ${WORKSPACE}/Caliptra/src/ecc/tb/ecc_top_tb.sv
-${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_sva_pkg.sv
+${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_sva.svh
+${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_macros.svh
 ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_sram.sv
 ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_ahb_srom.sv
 ${WORKSPACE}/Caliptra/src/libs/rtl/apb_slv_sif.sv

@@ -115,7 +115,6 @@ package hmac_reg_uvm;
         rand uvm_reg_field entry_is_pcr;
         rand uvm_reg_field entry_data_size;
         rand uvm_reg_field rsvd;
-        rand uvm_reg_field read_done;
 
         function new(string name = "kv_read_ctrl_reg");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -132,10 +131,28 @@ package hmac_reg_uvm;
             this.entry_data_size.configure(this, 5, 5, "RW", 0, 'h0, 1, 1, 0);
             this.rsvd = new("rsvd");
             this.rsvd.configure(this, 21, 10, "RW", 0, 'h0, 1, 1, 0);
-            this.read_done = new("read_done");
-            this.read_done.configure(this, 1, 31, "RO", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : kv_read_ctrl_reg
+
+    // Reg - kv_status_reg
+    class kv_status_reg extends uvm_reg;
+        rand uvm_reg_field READY;
+        rand uvm_reg_field VALID;
+        rand uvm_reg_field ERROR;
+
+        function new(string name = "kv_status_reg");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.READY = new("READY");
+            this.READY.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            this.VALID = new("VALID");
+            this.VALID.configure(this, 1, 1, "RO", 1, 'h0, 1, 1, 0);
+            this.ERROR = new("ERROR");
+            this.ERROR.configure(this, 8, 2, "RO", 1, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : kv_status_reg
 
     // Reg - kv_write_ctrl_reg
     class kv_write_ctrl_reg extends uvm_reg;
@@ -149,7 +166,6 @@ package hmac_reg_uvm;
         rand uvm_reg_field ecc_seed_dest_valid;
         rand uvm_reg_field ecc_msg_dest_valid;
         rand uvm_reg_field rsvd;
-        rand uvm_reg_field write_done;
 
         function new(string name = "kv_write_ctrl_reg");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -176,8 +192,6 @@ package hmac_reg_uvm;
             this.ecc_msg_dest_valid.configure(this, 1, 10, "RW", 0, 'h0, 1, 1, 0);
             this.rsvd = new("rsvd");
             this.rsvd.configure(this, 20, 11, "RW", 0, 'h0, 1, 1, 0);
-            this.write_done = new("write_done");
-            this.write_done.configure(this, 1, 31, "RO", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : kv_write_ctrl_reg
 
@@ -613,8 +627,11 @@ package hmac_reg_uvm;
         rand hmac_reg__HMAC384_BLOCK HMAC384_BLOCK[32];
         rand hmac_reg__HMAC384_TAG HMAC384_TAG[12];
         rand kv_read_ctrl_reg HMAC384_KV_RD_KEY_CTRL;
+        rand kv_status_reg HMAC384_KV_RD_KEY_STATUS;
         rand kv_read_ctrl_reg HMAC384_KV_RD_BLOCK_CTRL;
+        rand kv_status_reg HMAC384_KV_RD_BLOCK_STATUS;
         rand kv_write_ctrl_reg HMAC384_KV_WR_CTRL;
+        rand kv_status_reg HMAC384_KV_WR_STATUS;
         rand hmac_reg__intr_block_t intr_block_rf;
 
         function new(string name = "hmac_reg");
@@ -673,16 +690,31 @@ package hmac_reg_uvm;
 
             this.HMAC384_KV_RD_KEY_CTRL.build();
             this.default_map.add_reg(this.HMAC384_KV_RD_KEY_CTRL, 'h600);
+            this.HMAC384_KV_RD_KEY_STATUS = new("HMAC384_KV_RD_KEY_STATUS");
+            this.HMAC384_KV_RD_KEY_STATUS.configure(this);
+
+            this.HMAC384_KV_RD_KEY_STATUS.build();
+            this.default_map.add_reg(this.HMAC384_KV_RD_KEY_STATUS, 'h604);
             this.HMAC384_KV_RD_BLOCK_CTRL = new("HMAC384_KV_RD_BLOCK_CTRL");
             this.HMAC384_KV_RD_BLOCK_CTRL.configure(this);
 
             this.HMAC384_KV_RD_BLOCK_CTRL.build();
-            this.default_map.add_reg(this.HMAC384_KV_RD_BLOCK_CTRL, 'h604);
+            this.default_map.add_reg(this.HMAC384_KV_RD_BLOCK_CTRL, 'h608);
+            this.HMAC384_KV_RD_BLOCK_STATUS = new("HMAC384_KV_RD_BLOCK_STATUS");
+            this.HMAC384_KV_RD_BLOCK_STATUS.configure(this);
+
+            this.HMAC384_KV_RD_BLOCK_STATUS.build();
+            this.default_map.add_reg(this.HMAC384_KV_RD_BLOCK_STATUS, 'h60c);
             this.HMAC384_KV_WR_CTRL = new("HMAC384_KV_WR_CTRL");
             this.HMAC384_KV_WR_CTRL.configure(this);
 
             this.HMAC384_KV_WR_CTRL.build();
-            this.default_map.add_reg(this.HMAC384_KV_WR_CTRL, 'h608);
+            this.default_map.add_reg(this.HMAC384_KV_WR_CTRL, 'h610);
+            this.HMAC384_KV_WR_STATUS = new("HMAC384_KV_WR_STATUS");
+            this.HMAC384_KV_WR_STATUS.configure(this);
+
+            this.HMAC384_KV_WR_STATUS.build();
+            this.default_map.add_reg(this.HMAC384_KV_WR_STATUS, 'h614);
             this.intr_block_rf = new("intr_block_rf");
             this.intr_block_rf.configure(this);
             this.intr_block_rf.build();

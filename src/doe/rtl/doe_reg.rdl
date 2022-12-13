@@ -75,8 +75,8 @@ addrmap doe_reg {
                 DOE_FE = 2'd2 {
                     desc = "Request DOE to run FE flow.";
                 };
-                DOE_CLEAR_SECRETS = 2'd3 {
-                    desc = "Clears the UDS, FE, and OBF KEY secrets from the machine.";
+                DOE_CLEAR_OBF_SECRETS = 2'd3 {
+                    desc = "Sets the UDS, FE, and OBF KEY flops to zeroes.";
                 };
             };
             encode = doe_cmd_e; hwclr; swmod;} CMD[2]=0;
@@ -84,7 +84,7 @@ addrmap doe_reg {
 
     } DOE_CTRL;
 
-        reg {
+    reg {
         name = "DOE component status register";
         desc = "One 2-bit register including the following flags: 
                 bit #0: READY : ​Indicates if the core is ready to take

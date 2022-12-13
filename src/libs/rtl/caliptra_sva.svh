@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-package caliptra_sva_pkg;
+`ifndef CALIPTRA_SVA
+`define CALIPTRA_SVA
 
 // Converts an arbitrary block of code into a Verilog string
 `define STRINGIFY(__x) `"__x`"
@@ -49,4 +49,4 @@ package caliptra_sva_pkg;
 `define ASSERT_MUTEX(assert_name, sig, clk, rst_b)     \
     `ASSERT(assert_name, $onehot0(sig), clk, rst_b)
 
-endpackage
+`endif

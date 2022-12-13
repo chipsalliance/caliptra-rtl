@@ -16,6 +16,7 @@
 `default_nettype none
 
 `include "config_defines.svh"
+`include "caliptra_macros.svh"
 
 `ifndef VERILATOR
 module caliptra_top_tb;
@@ -100,6 +101,11 @@ module caliptra_top_tb (
     logic [`IMEM_ADDR_WIDTH-1:0] imem_addr;
     logic [`IMEM_DATA_WIDTH-1:0] imem_rdata;
 
+    security_state_t security_state;
+
+    //TIE-OFF device lifecycle
+    assign security_state.device_lifecycle = DEVICE_PRODUCTION;
+
 `define DEC caliptra_top_dut.rvtop.swerv.dec
 
 `define LMEM mbox_ram1.ram 
@@ -135,6 +141,8 @@ module caliptra_top_tb (
     //         8'h2 : 8'h5  - Do nothing
     //         8'h6 : 8'h7E - WriteData is an ASCII character - dump to console.log
     //         8'h7F        - Do nothing
+    //         8'hf9        - Lock debug in security state
+    //         8'hfa        - Unlock debug in security state
     //         8'hfb        - Set the isr_active bit
     //         8'hfc        - Clear the isr_active bit
     //         8'hfd        - Toggle random SRAM single bit error injection
@@ -183,6 +191,20 @@ module caliptra_top_tb (
             end
             else if ((WriteData[7:0] == 8'hfe) && mailbox_write) begin
                 inject_rand_sram_error ^= 2'b10;
+            end
+        end
+    end
+    initial begin
+        security_state.debug_locked = 1'b1;
+        forever begin
+            @(negedge core_clk)
+            //lock debug mode
+            if ((WriteData[7:0] == 8'hf9) && mailbox_write) begin
+                security_state.debug_locked = 1'b1;
+            end
+            //unlock debug mode
+            else if ((WriteData[7:0] == 8'hfa) && mailbox_write) begin
+                security_state.debug_locked = 1'b0;
             end
         end
     end
@@ -521,7 +543,7 @@ caliptra_top caliptra_top_dut (
     .generic_input_wires('x), //FIXME TIE-OFF
     .generic_output_wires(),
 
-    .security_state('x) //FIXME TIE-OFF
+    .security_state(security_state) //FIXME TIE-OFF
 );
 
 caliptra_swerv_sram_export swerv_sram_export_inst (

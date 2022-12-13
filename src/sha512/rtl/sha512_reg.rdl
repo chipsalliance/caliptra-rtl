@@ -138,8 +138,9 @@ addrmap sha512_reg {
 
     /* ---- SHA512 Key Vault Control Reg ---- */
     kv_read_ctrl_reg SHA512_KV_RD_CTRL @0x00000600;
-
-    kv_write_ctrl_reg SHA512_KV_WR_CTRL @0x00000604;
+    kv_status_reg SHA512_KV_RD_STATUS;
+    kv_write_ctrl_reg SHA512_KV_WR_CTRL;
+    kv_status_reg SHA512_KV_WR_STATUS;
 
     /* ---- Global Interrupt Enable ---- */
     reg global_intr_en_t {

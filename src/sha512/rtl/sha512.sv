@@ -66,7 +66,8 @@ module sha512
         // KV interface
         output kv_read_t kv_read,
         output kv_write_t kv_write,
-        input kv_resp_t kv_resp,
+        input kv_rd_resp_t kv_rd_resp,
+        input kv_wr_resp_t kv_wr_resp,
 
         // Interrupts
         output wire error_intr,
@@ -103,8 +104,9 @@ module sha512
   logic [4:0] kv_src_write_offset;
   logic [31:0] kv_src_write_data;
 
-  logic kv_src_done;
-  logic kv_dest_done;
+  kv_error_code_e kv_src_error, kv_dest_error;
+  logic kv_src_ready, kv_src_done;
+  logic kv_dest_ready, kv_dest_done;
 
   logic dest_keyvault;
   kv_write_ctrl_reg_t kv_write_ctrl_reg;
@@ -207,14 +209,21 @@ module sha512
       hwif_in.SHA512_BLOCK[dword].BLOCK.next = kv_src_write_data;
 
     end
-    
-    hwif_in.SHA512_KV_RD_CTRL.read_done.hwset = kv_src_done;
-    hwif_in.SHA512_KV_RD_CTRL.read_done.hwclr = kv_src_write_en;
-    hwif_in.SHA512_KV_WR_CTRL.write_done.hwset = kv_dest_done;
-    hwif_in.SHA512_KV_WR_CTRL.write_done.hwclr = kv_write_ctrl_reg.write_en;
-
-    hwif_in.SHA512_KV_RD_CTRL.read_en.hwclr = kv_src_done;
-    hwif_in.SHA512_KV_WR_CTRL.write_en.hwclr = kv_dest_done;
+    //Set valid when fsm is done
+    hwif_in.SHA512_KV_RD_STATUS.ERROR.next = kv_src_error;
+    hwif_in.SHA512_KV_WR_STATUS.ERROR.next = kv_dest_error;
+    //Set valid when fsm is done
+    hwif_in.SHA512_KV_RD_STATUS.READY.next = kv_src_ready;
+    hwif_in.SHA512_KV_WR_STATUS.READY.next = kv_dest_ready;
+    //Set valid when fsm is done
+    hwif_in.SHA512_KV_RD_STATUS.VALID.hwset = kv_src_done;
+    hwif_in.SHA512_KV_WR_STATUS.VALID.hwset = kv_dest_done;
+    //reset valid when fsm is started
+    hwif_in.SHA512_KV_RD_STATUS.VALID.hwclr = kv_read_ctrl_reg.read_en;
+    hwif_in.SHA512_KV_WR_STATUS.VALID.hwclr = kv_write_ctrl_reg.write_en;
+    //clear en when busy
+    hwif_in.SHA512_KV_RD_CTRL.read_en.hwclr = ~kv_src_ready;
+    hwif_in.SHA512_KV_WR_CTRL.write_en.hwclr = ~kv_dest_ready;
 
   end
 
@@ -269,13 +278,15 @@ sha512_block_kv_read
 
     //interface with kv
     .kv_read(kv_read),
-    .kv_resp(kv_resp),
+    .kv_resp(kv_rd_resp),
 
     //interface with client
     .write_en(kv_src_write_en),
     .write_offset(kv_src_write_offset),
     .write_data(kv_src_write_data),
 
+    .error_code(kv_src_error),
+    .kv_ready(kv_src_ready),
     .read_done(kv_src_done)
 );
 
@@ -292,12 +303,15 @@ sha512_result_kv_write
 
   //interface with kv
   .kv_write(kv_write),
+  .kv_resp(kv_wr_resp),
 
   //interface with client
   .dest_keyvault(dest_keyvault),
   .dest_data_avail(core_digest_valid & ~digest_valid_reg),
   .dest_data(kv_reg),
 
+  .error_code(kv_dest_error),
+  .kv_ready(kv_dest_ready),
   .dest_done(kv_dest_done)
 );
 

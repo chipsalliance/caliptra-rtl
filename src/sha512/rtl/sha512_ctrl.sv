@@ -51,7 +51,8 @@ module sha512_ctrl
     // kv interface
     output kv_read_t kv_read,
     output kv_write_t kv_write,
-    input kv_resp_t kv_resp,
+    input kv_rd_resp_t kv_rd_resp,
+    input kv_wr_resp_t kv_wr_resp,
 
     // Interrupt
     output logic error_intr,
@@ -84,7 +85,8 @@ module sha512_ctrl
         .err(sha512_err),
         .kv_read(kv_read),
         .kv_write(kv_write),
-        .kv_resp(kv_resp),
+        .kv_rd_resp(kv_rd_resp),
+        .kv_wr_resp(kv_wr_resp),
         .error_intr(error_intr),
         .notif_intr(notif_intr)
     );

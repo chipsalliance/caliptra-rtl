@@ -31,13 +31,15 @@ module kv_read_client
 
     //interface with kv
     output kv_read_t kv_read,
-    input kv_resp_t kv_resp,
+    input kv_rd_resp_t kv_resp,
 
     //interface with client
     output logic write_en,
     output logic [DATA_OFFSET_W-1:0] write_offset,
     output logic [31:0] write_data,
 
+    output kv_error_code_e error_code,
+    output logic kv_ready,
     output logic read_done
 );
 
@@ -61,6 +63,7 @@ kv_read_fsm
     .write_offset(write_offset),
     .write_pad(write_pad),
     .pad_data(pad_data),
+    .ready(kv_ready),
     .done(read_done)
 );
 
@@ -69,5 +72,15 @@ always_comb kv_read.read_entry = (PAD == 1) ? read_ctrl_reg.read_entry + read_of
 always_comb kv_read.read_offset = read_offset[3:0];
 
 always_comb write_data = write_pad ? pad_data : kv_resp.read_data;
+
+always_ff @(posedge clk or negedge rst_b) begin
+    if (!rst_b) begin
+        error_code <= KV_SUCCESS;
+    end
+    else begin
+        error_code <= read_ctrl_reg.read_en & kv_resp.error ? KV_READ_FAIL : 
+                      read_ctrl_reg.read_en & ~kv_resp.error ? KV_SUCCESS : error_code;
+    end
+end
 
 endmodule

@@ -104,7 +104,6 @@ package sha512_reg_uvm;
         rand uvm_reg_field entry_is_pcr;
         rand uvm_reg_field entry_data_size;
         rand uvm_reg_field rsvd;
-        rand uvm_reg_field read_done;
 
         function new(string name = "kv_read_ctrl_reg");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -121,10 +120,28 @@ package sha512_reg_uvm;
             this.entry_data_size.configure(this, 5, 5, "RW", 0, 'h0, 1, 1, 0);
             this.rsvd = new("rsvd");
             this.rsvd.configure(this, 21, 10, "RW", 0, 'h0, 1, 1, 0);
-            this.read_done = new("read_done");
-            this.read_done.configure(this, 1, 31, "RO", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : kv_read_ctrl_reg
+
+    // Reg - kv_status_reg
+    class kv_status_reg extends uvm_reg;
+        rand uvm_reg_field READY;
+        rand uvm_reg_field VALID;
+        rand uvm_reg_field ERROR;
+
+        function new(string name = "kv_status_reg");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.READY = new("READY");
+            this.READY.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            this.VALID = new("VALID");
+            this.VALID.configure(this, 1, 1, "RO", 1, 'h0, 1, 1, 0);
+            this.ERROR = new("ERROR");
+            this.ERROR.configure(this, 8, 2, "RO", 1, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : kv_status_reg
 
     // Reg - kv_write_ctrl_reg
     class kv_write_ctrl_reg extends uvm_reg;
@@ -138,7 +155,6 @@ package sha512_reg_uvm;
         rand uvm_reg_field ecc_seed_dest_valid;
         rand uvm_reg_field ecc_msg_dest_valid;
         rand uvm_reg_field rsvd;
-        rand uvm_reg_field write_done;
 
         function new(string name = "kv_write_ctrl_reg");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -165,8 +181,6 @@ package sha512_reg_uvm;
             this.ecc_msg_dest_valid.configure(this, 1, 10, "RW", 0, 'h0, 1, 1, 0);
             this.rsvd = new("rsvd");
             this.rsvd.configure(this, 20, 11, "RW", 0, 'h0, 1, 1, 0);
-            this.write_done = new("write_done");
-            this.write_done.configure(this, 1, 31, "RO", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : kv_write_ctrl_reg
 
@@ -601,7 +615,9 @@ package sha512_reg_uvm;
         rand sha512_reg__SHA512_BLOCK SHA512_BLOCK[32];
         rand sha512_reg__SHA512_DIGEST SHA512_DIGEST[16];
         rand kv_read_ctrl_reg SHA512_KV_RD_CTRL;
+        rand kv_status_reg SHA512_KV_RD_STATUS;
         rand kv_write_ctrl_reg SHA512_KV_WR_CTRL;
+        rand kv_status_reg SHA512_KV_WR_STATUS;
         rand sha512_reg__intr_block_t intr_block_rf;
 
         function new(string name = "sha512_reg");
@@ -653,11 +669,21 @@ package sha512_reg_uvm;
 
             this.SHA512_KV_RD_CTRL.build();
             this.default_map.add_reg(this.SHA512_KV_RD_CTRL, 'h600);
+            this.SHA512_KV_RD_STATUS = new("SHA512_KV_RD_STATUS");
+            this.SHA512_KV_RD_STATUS.configure(this);
+
+            this.SHA512_KV_RD_STATUS.build();
+            this.default_map.add_reg(this.SHA512_KV_RD_STATUS, 'h604);
             this.SHA512_KV_WR_CTRL = new("SHA512_KV_WR_CTRL");
             this.SHA512_KV_WR_CTRL.configure(this);
 
             this.SHA512_KV_WR_CTRL.build();
-            this.default_map.add_reg(this.SHA512_KV_WR_CTRL, 'h604);
+            this.default_map.add_reg(this.SHA512_KV_WR_CTRL, 'h608);
+            this.SHA512_KV_WR_STATUS = new("SHA512_KV_WR_STATUS");
+            this.SHA512_KV_WR_STATUS.configure(this);
+
+            this.SHA512_KV_WR_STATUS.build();
+            this.default_map.add_reg(this.SHA512_KV_WR_STATUS, 'h60c);
             this.intr_block_rf = new("intr_block_rf");
             this.intr_block_rf.configure(this);
             this.intr_block_rf.build();

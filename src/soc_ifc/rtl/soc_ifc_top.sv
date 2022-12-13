@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+`include "caliptra_sva.svh"
+
 module soc_ifc_top 
     import soc_ifc_pkg::*;
     import soc_ifc_reg_pkg::*;
@@ -76,7 +78,7 @@ module soc_ifc_top
     input  mbox_sram_resp_t mbox_sram_resp,
 
     //Obfuscated UDS and FE
-    input  logic clear_secrets,
+    input  logic clear_obf_secrets,
     input  logic [7:0][31:0] cptra_obf_key,
     output logic [7:0][31:0] cptra_obf_key_reg,
     output logic [31:0][31:0] obf_field_entropy,
@@ -142,8 +144,6 @@ logic iccm_unlock;
 
 soc_ifc_reg__in_t soc_ifc_reg_hwif_in;
 soc_ifc_reg__out_t soc_ifc_reg_hwif_out;
-
-logic flush_keyvault;
 
 //Boot FSM
 //This module contains the logic required to control the Caliptra Boot Flow
@@ -293,23 +293,20 @@ always_comb soc_ifc_reg_hwif_in.reset_b = cptra_rst_b;
 always_comb soc_ifc_reg_hwif_in.hard_reset_b = cptra_pwrgood;
 always_comb soc_ifc_reg_hwif_in.soc_req = soc_ifc_reg_req_data.soc_req;
 
-//TODO: part of security state changes
-always_comb flush_keyvault = soc_ifc_reg_hwif_out.CLEAR_SECRETS.clear_secrets.value;
-
 always_comb begin
     for (int i = 0; i < 8; i++) begin
         soc_ifc_reg_hwif_in.obf_key[i].key.swwe = '0; //sw can't write to obf key
         soc_ifc_reg_hwif_in.obf_key[i].key.wel = cptra_pwrgood; //capture value during pwrgood de-assertion
         soc_ifc_reg_hwif_in.obf_key[i].key.next = cptra_obf_key[i];
-        soc_ifc_reg_hwif_in.obf_key[i].key.hwclr = clear_secrets;
+        soc_ifc_reg_hwif_in.obf_key[i].key.hwclr = clear_obf_secrets;
         cptra_obf_key_reg[i] = soc_ifc_reg_hwif_out.obf_key[i].key.value;
     end
     for (int i = 0; i < 12; i++) begin
-        soc_ifc_reg_hwif_in.uds_seed[i].seed.hwclr = clear_secrets; 
+        soc_ifc_reg_hwif_in.uds_seed[i].seed.hwclr = clear_obf_secrets; 
         obf_uds_seed[i] = soc_ifc_reg_hwif_out.uds_seed[i].seed.value;
     end
     for (int i = 0; i < 32; i++) begin
-        soc_ifc_reg_hwif_in.field_entropy[i].seed.hwclr = clear_secrets;
+        soc_ifc_reg_hwif_in.field_entropy[i].seed.hwclr = clear_obf_secrets;
         obf_field_entropy[i] = soc_ifc_reg_hwif_out.field_entropy[i].seed.value;
     end
 

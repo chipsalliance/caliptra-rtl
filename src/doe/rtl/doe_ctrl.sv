@@ -30,9 +30,9 @@ module doe_ctrl
 )
 (
     // Clock and reset.
-    input wire           clk,
-    input wire           reset_n,
-    input wire           cptra_pwrgood,
+    input wire          clk,
+    input wire          reset_n,
+    input wire          cptra_pwrgood,
 
     input logic [255:0] cptra_obf_key,
 
@@ -53,8 +53,9 @@ module doe_ctrl
     output logic hreadyout_o,
     output logic [AHB_DATA_WIDTH-1:0] hrdata_o,
     output kv_write_t kv_write,
+    input  kv_wr_resp_t kv_wr_resp,
 
-    output logic clear_secrets,
+    output logic clear_obf_secrets,
 
     // Interrupt
     output logic error_intr,
@@ -87,7 +88,7 @@ module doe_ctrl
         .read_data(doe_read_data[31:0]),
         .error_intr(error_intr),
         .notif_intr(notif_intr),
-        .clear_secrets(clear_secrets),
+        .clear_obf_secrets(clear_obf_secrets),
         .kv_write(kv_write)
     );
 

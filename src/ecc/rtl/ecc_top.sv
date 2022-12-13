@@ -51,7 +51,8 @@ module ecc_top
     // KV interface
     output kv_read_t [2:0] kv_read,
     output kv_write_t kv_write,
-    input kv_resp_t [2:0] kv_resp,
+    input kv_rd_resp_t [2:0] kv_rd_resp,
+    input kv_wr_resp_t kv_wr_resp,
 
     output logic error_intr,
     output logic notif_intr
@@ -138,8 +139,9 @@ module ecc_top
         .hwif_in(ecc_reg_hwif_in),
 
         .kv_read(kv_read),
-        .kv_resp(kv_resp),
+        .kv_rd_resp(kv_rd_resp),
         .kv_write(kv_write),
+        .kv_wr_resp(kv_wr_resp),
 
         .error_intr(error_intr),
         .notif_intr(notif_intr)

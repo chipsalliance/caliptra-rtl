@@ -1,8 +1,8 @@
 ---
 provides: [caliptra_top]
 schema_version: 2.4.0
-requires: [libs]
 requires:
+  - libs
   - kv_defines_pkg
   - el2_swerv_pkg
   - el2_swerv_wrapper
@@ -43,31 +43,32 @@ global:
         - '-assert svaext'
         #- '-v2k_generate'
 ---
-  provides: [caliptra_top_tb]
-  schema_version: 2.4.0
-  requires:
-    - el2_swerv_pkg
-    - el2_swerv_wrapper
-    - caliptra_top
-  targets:
-    tb:
-      directories: [$COMPILE_ROOT/tb]
-      files:
-        - $COMPILE_ROOT/tb/caliptra_swerv_sram_export.sv
-        - $COMPILE_ROOT/tb/caliptra_top_tb_pkg.sv
-        - $COMPILE_ROOT/tb/caliptra_top_tb.sv
-      tops: [caliptra_top_tb]
-    sim:
-      pre_exec: $TOOLS/scripts/run_test_makefile
-  global:
-    tool:
-      vcs:
-        default:
-          - '-assert svaext'
-          #- '-v2k_generate'
-          #- '-timescale=1ns/1ps'
-          - '-noinherit_timescale=1ns/1ps'
-          #- '-ucli -i dump.ucli'
-        #sim:
-          #- '-ucli -i dump.ucli'
+provides: [caliptra_top_tb]
+schema_version: 2.4.0
+requires:
+  - libs
+  - caliptra_top
+  - el2_swerv_pkg
+  - el2_swerv_wrapper
+targets:
+  tb:
+    directories: [$COMPILE_ROOT/tb]
+    files:
+      - $COMPILE_ROOT/tb/caliptra_swerv_sram_export.sv
+      - $COMPILE_ROOT/tb/caliptra_top_tb_pkg.sv
+      - $COMPILE_ROOT/tb/caliptra_top_tb.sv
+    tops: [caliptra_top_tb]
+  sim:
+    pre_exec: $TOOLS/scripts/run_test_makefile
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        #- '-v2k_generate'
+        #- '-timescale=1ns/1ps'
+        - '-noinherit_timescale=1ns/1ps'
+        #- '-ucli -i dump.ucli'
+      #sim:
+        #- '-ucli -i dump.ucli'
 

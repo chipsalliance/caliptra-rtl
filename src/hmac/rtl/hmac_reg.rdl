@@ -154,10 +154,11 @@ addrmap hmac_reg {
 
     /* ---- HMAC Key Vault Control Reg ---- */
     kv_read_ctrl_reg HMAC384_KV_RD_KEY_CTRL @0x00000600;
-
-    kv_read_ctrl_reg HMAC384_KV_RD_BLOCK_CTRL @0x00000604;
-
-    kv_write_ctrl_reg HMAC384_KV_WR_CTRL @0x00000608;
+    kv_status_reg HMAC384_KV_RD_KEY_STATUS;
+    kv_read_ctrl_reg HMAC384_KV_RD_BLOCK_CTRL;
+    kv_status_reg HMAC384_KV_RD_BLOCK_STATUS;
+    kv_write_ctrl_reg HMAC384_KV_WR_CTRL;
+    kv_status_reg HMAC384_KV_WR_STATUS;
 
 
    

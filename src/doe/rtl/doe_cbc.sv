@@ -66,8 +66,8 @@ module doe_cbc
    output logic error_intr,
    output logic notif_intr,
 
-   output logic clear_secrets,
-  
+   output logic clear_obf_secrets,
+
    //interface with kv
    output kv_write_t kv_write
   );
@@ -173,15 +173,17 @@ module doe_cbc
 
 //DOE Register Hardware Interface
 assign hwif_in.DOE_STATUS.READY.next = ready_reg;
-assign hwif_in.DOE_STATUS.VALID.hwset = flow_done;
+assign hwif_in.DOE_STATUS.VALID.hwset = flow_done | clear_obf_secrets;
 assign hwif_in.DOE_STATUS.VALID.hwclr = hwif_out.DOE_CTRL.CMD.swmod;
 
-assign hwif_in.DOE_CTRL.CMD.hwclr = flow_done | clear_secrets;
+assign hwif_in.DOE_CTRL.CMD.hwclr = flow_done | clear_obf_secrets;
 
 assign doe_cmd_reg.cmd = doe_cmd_e'(hwif_out.DOE_CTRL.CMD.value);
 assign doe_cmd_reg.dest_sel = hwif_out.DOE_CTRL.DEST.value;
 
-assign clear_secrets = (doe_cmd_reg.cmd == DOE_CLEAR);
+//FW can do this to clear the obfuscation related secrets
+//the Obfuscated UDS, FE, and OBF KEY
+always_comb clear_obf_secrets = (doe_cmd_reg.cmd == DOE_CLEAR);
 
 always_comb begin
   IV_updated = '0;

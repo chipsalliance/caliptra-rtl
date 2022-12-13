@@ -73,7 +73,8 @@ module ecc_dsa_ctrl
     // KV interface
     output kv_read_t [2:0] kv_read,
     output kv_write_t kv_write,
-    input kv_resp_t [2:0] kv_resp,
+    input kv_rd_resp_t [2:0] kv_rd_resp,
+    input kv_wr_resp_t kv_wr_resp,
 
     // Interrupts (from ecc_reg)
     output logic error_intr,
@@ -163,10 +164,11 @@ module ecc_dsa_ctrl
     logic [31:0] kv_msg_write_data;
   
     logic dest_keyvault;
-    logic kv_privkey_done;
-    logic kv_seed_done;
-    logic kv_msg_done;
-    logic kv_write_done;
+    kv_error_code_e kv_privkey_error, kv_seed_error, kv_msg_error, kv_write_error;
+    logic kv_privkey_ready, kv_privkey_done;
+    logic kv_seed_ready, kv_seed_done ;
+    logic kv_msg_ready, kv_msg_done;
+    logic kv_write_ready, kv_write_done;
   
     kv_read_ctrl_reg_t kv_privkey_read_ctrl_reg;
     kv_read_ctrl_reg_t kv_seed_read_ctrl_reg;
@@ -368,21 +370,31 @@ module ecc_dsa_ctrl
     endgenerate // ecc_reg_writing
 
     always_comb begin: ecc_kv_ctrl_reg
-        //set done when fsm is done
-        hwif_in.ecc_kv_rd_pkey_ctrl.read_done.hwset = kv_privkey_done;
-        hwif_in.ecc_kv_rd_seed_ctrl.read_done.hwset = kv_seed_done;
-        hwif_in.ecc_kv_rd_msg_ctrl.read_done.hwset = kv_msg_done;
-        hwif_in.ecc_kv_wr_pkey_ctrl.write_done.hwset = kv_write_done;
-        //clear done when new request is made
-        hwif_in.ecc_kv_rd_pkey_ctrl.read_done.hwclr = kv_privkey_read_ctrl_reg.read_en;
-        hwif_in.ecc_kv_rd_seed_ctrl.read_done.hwclr = kv_seed_read_ctrl_reg.read_en;
-        hwif_in.ecc_kv_rd_msg_ctrl.read_done.hwclr = kv_msg_read_ctrl_reg.read_en;
-        hwif_in.ecc_kv_wr_pkey_ctrl.write_done.hwclr = kv_write_ctrl_reg.write_en;
-        //clear enable when done
-        hwif_in.ecc_kv_rd_pkey_ctrl.read_en.hwclr = kv_privkey_done;
-        hwif_in.ecc_kv_rd_seed_ctrl.read_en.hwclr = kv_seed_done;
-        hwif_in.ecc_kv_rd_msg_ctrl.read_en.hwclr = kv_msg_done;
-        hwif_in.ecc_kv_wr_pkey_ctrl.write_en.hwclr = kv_write_done;
+        //ready when fsm is not busy
+        hwif_in.ecc_kv_rd_pkey_status.ERROR.next = kv_privkey_error;
+        hwif_in.ecc_kv_rd_seed_status.ERROR.next = kv_seed_error;
+        hwif_in.ecc_kv_rd_msg_status.ERROR.next = kv_msg_error;
+        hwif_in.ecc_kv_wr_pkey_status.ERROR.next = kv_write_error;
+        //ready when fsm is not busy
+        hwif_in.ecc_kv_rd_pkey_status.READY.next = kv_privkey_ready;
+        hwif_in.ecc_kv_rd_seed_status.READY.next = kv_seed_ready;
+        hwif_in.ecc_kv_rd_msg_status.READY.next = kv_msg_ready;
+        hwif_in.ecc_kv_wr_pkey_status.READY.next = kv_write_ready;
+        //set valid when fsm is done
+        hwif_in.ecc_kv_rd_pkey_status.VALID.hwset = kv_privkey_done;
+        hwif_in.ecc_kv_rd_seed_status.VALID.hwset = kv_seed_done;
+        hwif_in.ecc_kv_rd_msg_status.VALID.hwset = kv_msg_done;
+        hwif_in.ecc_kv_wr_pkey_status.VALID.hwset = kv_write_done;
+        //clear valid when new request is made
+        hwif_in.ecc_kv_rd_pkey_status.VALID.hwclr = kv_privkey_read_ctrl_reg.read_en;
+        hwif_in.ecc_kv_rd_seed_status.VALID.hwclr = kv_seed_read_ctrl_reg.read_en;
+        hwif_in.ecc_kv_rd_msg_status.VALID.hwclr = kv_msg_read_ctrl_reg.read_en;
+        hwif_in.ecc_kv_wr_pkey_status.VALID.hwclr = kv_write_ctrl_reg.write_en;
+        //clear enable when busy
+        hwif_in.ecc_kv_rd_pkey_ctrl.read_en.hwclr = ~kv_privkey_ready;
+        hwif_in.ecc_kv_rd_seed_ctrl.read_en.hwclr = ~kv_seed_ready;
+        hwif_in.ecc_kv_rd_msg_ctrl.read_en.hwclr = ~kv_msg_ready;
+        hwif_in.ecc_kv_wr_pkey_ctrl.write_en.hwclr = ~kv_write_ready;
     end
 
     //keyvault control reg macros for assigning to struct
@@ -635,13 +647,15 @@ module ecc_dsa_ctrl
 
         //interface with kv
         .kv_read(kv_read[0]),
-        .kv_resp(kv_resp[0]),
+        .kv_resp(kv_rd_resp[0]),
 
         //interface with client
         .write_en(kv_privkey_write_en),
         .write_offset(kv_privkey_write_offset),
         .write_data(kv_privkey_write_data),
 
+        .error_code(kv_privkey_error),
+        .kv_ready(kv_privkey_ready),
         .read_done(kv_privkey_done)
     );
 
@@ -660,13 +674,15 @@ module ecc_dsa_ctrl
 
         //interface with kv
         .kv_read(kv_read[1]),
-        .kv_resp(kv_resp[1]),
+        .kv_resp(kv_rd_resp[1]),
 
         //interface with client
         .write_en(kv_seed_write_en),
         .write_offset(kv_seed_write_offset),
         .write_data(kv_seed_write_data),
 
+        .error_code(kv_seed_error),
+        .kv_ready(kv_seed_ready),
         .read_done(kv_seed_done)
     );
 
@@ -685,13 +701,15 @@ module ecc_dsa_ctrl
 
         //interface with kv
         .kv_read(kv_read[2]),
-        .kv_resp(kv_resp[2]),
+        .kv_resp(kv_rd_resp[2]),
 
         //interface with client
         .write_en(kv_msg_write_en),
         .write_offset(kv_msg_write_offset),
         .write_data(kv_msg_write_data),
 
+        .error_code(kv_msg_error),
+        .kv_ready(kv_msg_ready),
         .read_done(kv_msg_done)
     );
 
@@ -709,12 +727,15 @@ module ecc_dsa_ctrl
 
         //interface with kv
         .kv_write(kv_write),
+        .kv_resp(kv_wr_resp),
 
         //interface with client
         .dest_keyvault(dest_keyvault),
         .dest_data_avail(hw_privkey_we),
         .dest_data(kv_reg),
 
+        .error_code(kv_write_error),
+        .kv_ready(kv_write_ready),
         .dest_done(kv_write_done)
     );
 

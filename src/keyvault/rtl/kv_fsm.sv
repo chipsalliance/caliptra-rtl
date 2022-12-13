@@ -35,6 +35,8 @@ module kv_fsm
     output logic write_pad,
     output logic [31:0] pad_data,
 
+    output logic ready,
+
     output logic done
 );
 
@@ -68,6 +70,7 @@ logic [KV_NUM_DWORDS_W:0] offset, offset_nxt;
 assign num_dwords_data = (PAD == 1) ? ((pad_data_size+1)) : DATA_WIDTH/32;
 assign num_dwords_total = (PAD == 1) ? KV_MAX_DWORDS : DATA_WIDTH/32;
 
+always_comb ready = (kv_fsm_ps == KV_IDLE);
 
 always_comb begin
     full_pad_data = '0;

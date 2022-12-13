@@ -8,7 +8,7 @@
     <dt>Absolute Address:</dt><dd id="_AbsAddr" class="address"></dd>
     <div id="_AbsAddrDetails"></div>
     <dt>Base Offset:</dt><dd class="address">0x10018000</dd>
-    <dt>Size:</dt><dd class="address">0x440</dd>
+    <dt>Size:</dt><dd class="address">0x804</dd>
     
 </dl>
 <h2>Description</h2>
@@ -25,36 +25,56 @@
         <th>Name</th>
         <th></th>
     </tr>
-    <tr id="pcr_entry">
+    <tr id="PCR_CTRL">
         <td class="address">0x000</td>
-        <td><a href="?p=clp.kv_reg.pcr_entry" data-id="90" onclick="onClickNodeLink(event); return(false)">pcr_entry[8][16]</a></td>
+        <td><a href="?p=clp.kv_reg.PCR_CTRL" data-id="97" onclick="onClickNodeLink(event); return(false)">PCR_CTRL[8]</a></td>
         <td>-</td>
         <td>
-            <a class="headerlink" href="#pcr_entry" title="Permalink to this row"></a>
+            <a class="headerlink" href="#PCR_CTRL" title="Permalink to this row"></a>
         </td>
     </tr>
-    <tr id="key_ctrl">
+    <tr class="reserved-addr">
+    <td class="address">0x020</td>
+    <td>-</td>
+    <td>-</td>
+    <td></td>
+</tr>
+    <tr id="PCR_ENTRY">
         <td class="address">0x200</td>
-        <td><a href="?p=clp.kv_reg.key_ctrl" data-id="91" onclick="onClickNodeLink(event); return(false)">key_ctrl[8]</a></td>
+        <td><a href="?p=clp.kv_reg.PCR_ENTRY" data-id="98" onclick="onClickNodeLink(event); return(false)">PCR_ENTRY[8][16]</a></td>
         <td>-</td>
         <td>
-            <a class="headerlink" href="#key_ctrl" title="Permalink to this row"></a>
+            <a class="headerlink" href="#PCR_ENTRY" title="Permalink to this row"></a>
         </td>
     </tr>
-    <tr id="pcr_ctrl">
-        <td class="address">0x220</td>
-        <td><a href="?p=clp.kv_reg.pcr_ctrl" data-id="92" onclick="onClickNodeLink(event); return(false)">pcr_ctrl[8]</a></td>
+    <tr id="KEY_CTRL">
+        <td class="address">0x400</td>
+        <td><a href="?p=clp.kv_reg.KEY_CTRL" data-id="99" onclick="onClickNodeLink(event); return(false)">KEY_CTRL[8]</a></td>
         <td>-</td>
         <td>
-            <a class="headerlink" href="#pcr_ctrl" title="Permalink to this row"></a>
+            <a class="headerlink" href="#KEY_CTRL" title="Permalink to this row"></a>
         </td>
     </tr>
-    <tr id="key_entry">
-        <td class="address">0x240</td>
-        <td><a href="?p=clp.kv_reg.key_entry" data-id="93" onclick="onClickNodeLink(event); return(false)">key_entry[8][16]</a></td>
+    <tr class="reserved-addr">
+    <td class="address">0x420</td>
+    <td>-</td>
+    <td>-</td>
+    <td></td>
+</tr>
+    <tr id="KEY_ENTRY">
+        <td class="address">0x600</td>
+        <td><a href="?p=clp.kv_reg.KEY_ENTRY" data-id="100" onclick="onClickNodeLink(event); return(false)">KEY_ENTRY[8][16]</a></td>
         <td>-</td>
         <td>
-            <a class="headerlink" href="#key_entry" title="Permalink to this row"></a>
+            <a class="headerlink" href="#KEY_ENTRY" title="Permalink to this row"></a>
+        </td>
+    </tr>
+    <tr id="CLEAR_SECRETS">
+        <td class="address">0x800</td>
+        <td><a href="?p=clp.kv_reg.CLEAR_SECRETS" data-id="101" onclick="onClickNodeLink(event); return(false)">CLEAR_SECRETS</a></td>
+        <td>-</td>
+        <td>
+            <a class="headerlink" href="#CLEAR_SECRETS" title="Permalink to this row"></a>
         </td>
     </tr>
 </table>

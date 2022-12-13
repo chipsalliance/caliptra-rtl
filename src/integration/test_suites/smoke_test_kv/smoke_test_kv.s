@@ -124,8 +124,8 @@ _start:
     sw x4, 0(x3)
 
     // Check that HMAC KEY and BLOCK are loaded
-    li x3, CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL
-    li x1, 0x80000000
+    li x3, CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS
+    li x1, HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS_VALID_MASK
     block_done_poll_loop:
         lw x5, 0(x3)
         and x5, x5, x1
@@ -137,8 +137,8 @@ _start:
     sw x4, 0(x3)
 
     // wait for HMAC process - check dest done
-    li x3, CLP_HMAC_REG_HMAC384_KV_WR_CTRL
-    li x1, HMAC_REG_HMAC384_KV_WR_CTRL_WRITE_DONE_MASK
+    li x3, CLP_HMAC_REG_HMAC384_KV_WR_STATUS
+    li x1, HMAC_REG_HMAC384_KV_WR_STATUS_VALID_MASK
     dest_done_loop:
         lw x5, 0(x3)
         and x5, x5, x1
@@ -169,8 +169,8 @@ _start:
     sw x4, 0(x3)
 
     // Check that HMAC KEY and BLOCK are loaded
-    li x3, CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL
-    li x1, 0x80000000
+    li x3, CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS
+    li x1, HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS_VALID_MASK
     block_done2_poll_loop:
         lw x5, 0(x3)
         and x5, x5, x1
@@ -208,8 +208,8 @@ _start:
     sw x4, 0(x3)
 
     // wait for HMAC process - check dest done
-    li x3, CLP_HMAC_REG_HMAC384_KV_WR_CTRL
-    li x1, HMAC_REG_HMAC384_KV_WR_CTRL_WRITE_DONE_MASK
+    li x3, CLP_HMAC_REG_HMAC384_KV_WR_STATUS
+    li x1, HMAC_REG_HMAC384_KV_WR_STATUS_VALID_MASK
     dest_done2_loop:
         lw x5, 0(x3)
         and x5, x5, x1
@@ -259,6 +259,12 @@ _start:
     sw x5, 0(x3)
     li x3, CLP_KV_REG_KEY_CTRL_7
     sw x5, 0(x3)
+
+    // Load string from hw_data
+    // and write to stdout address
+    li x3, STDOUT
+    li x5, 0xfa
+    sb x5, 0(x3)
 
     // Load string from hw_data
     // and write to stdout address

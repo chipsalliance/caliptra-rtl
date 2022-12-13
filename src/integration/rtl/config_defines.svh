@@ -85,6 +85,6 @@
   `define CALIPTRA_RV_TOP     `CALIPTRA_TOP.caliptra_top_dut
 
   `define RV_TOP              `CALIPTRA_RV_TOP.rvtop
-
+  
 `endif
 

@@ -110,8 +110,8 @@ _start:
     sw x4, 0(x3)
 
     // Check that HMAC KEY is loaded
-    li x3, CLP_HMAC_REG_HMAC384_KV_RD_KEY_CTRL
-    li x1, HMAC_REG_HMAC384_KV_RD_KEY_CTRL_READ_DONE_MASK
+    li x3, CLP_HMAC_REG_HMAC384_KV_RD_KEY_STATUS
+    li x1, HMAC_REG_HMAC384_KV_RD_KEY_STATUS_VALID_MASK
     key_done0_poll_loop:
         lw x5, 0(x3)
         and x5, x5, x1
@@ -123,8 +123,8 @@ _start:
     sw x4, 0(x3)
 
     // Check that HMAC BLOCK is loaded
-    li x3, CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL
-    li x1, HMAC_REG_HMAC384_KV_RD_KEY_CTRL_READ_DONE_MASK
+    li x3, CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS
+    li x1, HMAC_REG_HMAC384_KV_RD_KEY_STATUS_VALID_MASK
     key_done1_poll_loop:
         lw x5, 0(x3)
         and x5, x5, x1
@@ -141,8 +141,8 @@ _start:
     sw x4, 0(x3)
 
     // wait for HMAC process - check dest done
-    li x3, CLP_HMAC_REG_HMAC384_KV_WR_CTRL
-    li x1, HMAC_REG_HMAC384_KV_WR_CTRL_WRITE_DONE_MASK
+    li x3, CLP_HMAC_REG_HMAC384_KV_WR_STATUS
+    li x1, HMAC_REG_HMAC384_KV_WR_STATUS_VALID_MASK
     dest_done_loop1:
         lw x5, 0(x3)
         and x5, x5, x1
@@ -160,8 +160,8 @@ _start:
     sw x4, 0(x3)
 
     // Check that HMAC KEY is loaded
-    li x3, CLP_HMAC_REG_HMAC384_KV_RD_KEY_CTRL
-    li x1, HMAC_REG_HMAC384_KV_RD_KEY_CTRL_READ_DONE_MASK
+    li x3, CLP_HMAC_REG_HMAC384_KV_RD_KEY_STATUS
+    li x1, HMAC_REG_HMAC384_KV_RD_KEY_STATUS_VALID_MASK
     key_done2_poll_loop:
         lw x5, 0(x3)
         and x5, x5, x1
@@ -173,8 +173,8 @@ _start:
     sw x4, 0(x3)
 
     // Check that HMAC BLOCK is loaded
-    li x3, CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL
-    li x1, HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL_READ_DONE_MASK
+    li x3, CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS
+    li x1, HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS_VALID_MASK
     key_done3_poll_loop:
         lw x5, 0(x3)
         and x5, x5, x1
@@ -222,8 +222,8 @@ _start:
     sw x4, 0(x3)
 
     // wait for HMAC process - check dest done
-    li x3, CLP_HMAC_REG_HMAC384_KV_WR_CTRL
-    li x1, HMAC_REG_HMAC384_KV_WR_CTRL_WRITE_DONE_MASK
+    li x3, CLP_HMAC_REG_HMAC384_KV_WR_STATUS
+    li x1, HMAC_REG_HMAC384_KV_WR_STATUS_VALID_MASK
     dest_done_loop2:
         lw x5, 0(x3)
         and x5, x5, x1

@@ -165,7 +165,8 @@ module hmac_ctrl_tb();
 
              .kv_read(),
              .kv_write(),
-             .kv_resp('x)
+             .kv_rd_resp('x),
+             .kv_wr_resp('x)
             );
 
 

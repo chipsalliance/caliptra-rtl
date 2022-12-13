@@ -304,9 +304,13 @@ addrmap ecc_reg {
     } ECC_IV[12] @0x00000480;
 
     kv_read_ctrl_reg ecc_kv_rd_pkey_ctrl  @0x00000600;
-    kv_read_ctrl_reg ecc_kv_rd_seed_ctrl  @0x00000604;
-    kv_read_ctrl_reg ecc_kv_rd_msg_ctrl   @0x00000608;
-    kv_write_ctrl_reg ecc_kv_wr_pkey_ctrl @0x0000060C;
+    kv_status_reg ecc_kv_rd_pkey_status;
+    kv_read_ctrl_reg ecc_kv_rd_seed_ctrl;
+    kv_status_reg ecc_kv_rd_seed_status;
+    kv_read_ctrl_reg ecc_kv_rd_msg_ctrl;
+    kv_status_reg ecc_kv_rd_msg_status;
+    kv_write_ctrl_reg ecc_kv_wr_pkey_ctrl;
+    kv_status_reg ecc_kv_wr_pkey_status;
 
     ////////////////////////////////////////////////////////////////
     // Interrupts

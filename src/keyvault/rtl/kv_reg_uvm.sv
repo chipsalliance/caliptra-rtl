@@ -4,20 +4,6 @@ package kv_reg_uvm;
     `include "uvm_macros.svh"
     import uvm_pkg::*;
     
-    // Reg - kv_reg::pcrReg
-    class kv_reg__pcrReg extends uvm_reg;
-        rand uvm_reg_field data;
-
-        function new(string name = "kv_reg__pcrReg");
-            super.new(name, 32, UVM_NO_COVERAGE);
-        endfunction : new
-
-        virtual function void build();
-            this.data = new("data");
-            this.data.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
-        endfunction : build
-    endclass : kv_reg__pcrReg
-
     // Reg - kv_reg::kvCtrl
     class kv_reg__kvCtrl extends uvm_reg;
         rand uvm_reg_field lock_rd;
@@ -41,11 +27,25 @@ package kv_reg_uvm;
             this.clear = new("clear");
             this.clear.configure(this, 1, 3, "RW", 0, 'h0, 1, 1, 0);
             this.dest_valid = new("dest_valid");
-            this.dest_valid.configure(this, 6, 9, "RO", 1, 'h7, 1, 1, 0);
+            this.dest_valid.configure(this, 6, 9, "RO", 1, 'h0, 1, 1, 0);
             this.rsvd = new("rsvd");
             this.rsvd.configure(this, 17, 15, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : kv_reg__kvCtrl
+
+    // Reg - kv_reg::pcrReg
+    class kv_reg__pcrReg extends uvm_reg;
+        rand uvm_reg_field data;
+
+        function new(string name = "kv_reg__pcrReg");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.data = new("data");
+            this.data.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : kv_reg__pcrReg
 
     // Reg - kv_reg::keyReg
     class kv_reg__keyReg extends uvm_reg;
@@ -61,12 +61,30 @@ package kv_reg_uvm;
         endfunction : build
     endclass : kv_reg__keyReg
 
+    // Reg - kv_reg::CLEAR_SECRETS
+    class kv_reg__CLEAR_SECRETS extends uvm_reg;
+        rand uvm_reg_field wr_debug_values;
+        rand uvm_reg_field sel_debug_value;
+
+        function new(string name = "kv_reg__CLEAR_SECRETS");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.wr_debug_values = new("wr_debug_values");
+            this.wr_debug_values.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.sel_debug_value = new("sel_debug_value");
+            this.sel_debug_value.configure(this, 1, 1, "RW", 0, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : kv_reg__CLEAR_SECRETS
+
     // Addrmap - kv_reg
     class kv_reg extends uvm_reg_block;
-        rand kv_reg__pcrReg pcr_entry[8][16];
-        rand kv_reg__kvCtrl key_ctrl[8];
-        rand kv_reg__kvCtrl pcr_ctrl[8];
-        rand kv_reg__keyReg key_entry[8][16];
+        rand kv_reg__kvCtrl PCR_CTRL[8];
+        rand kv_reg__pcrReg PCR_ENTRY[8][16];
+        rand kv_reg__kvCtrl KEY_CTRL[8];
+        rand kv_reg__keyReg KEY_ENTRY[8][16];
+        rand kv_reg__CLEAR_SECRETS CLEAR_SECRETS;
 
         function new(string name = "kv_reg");
             super.new(name);
@@ -74,34 +92,39 @@ package kv_reg_uvm;
 
         virtual function void build();
             this.default_map = create_map("reg_map", 0, 4, UVM_NO_ENDIAN);
-            foreach(this.pcr_entry[i0, i1]) begin
-                this.pcr_entry[i0][i1] = new($sformatf("pcr_entry[%0d][%0d]", i0, i1));
-                this.pcr_entry[i0][i1].configure(this);
+            foreach(this.PCR_CTRL[i0]) begin
+                this.PCR_CTRL[i0] = new($sformatf("PCR_CTRL[%0d]", i0));
+                this.PCR_CTRL[i0].configure(this);
                 
-                this.pcr_entry[i0][i1].build();
-                this.default_map.add_reg(this.pcr_entry[i0][i1], 'h0 + i0*'h40 + i1*'h4);
+                this.PCR_CTRL[i0].build();
+                this.default_map.add_reg(this.PCR_CTRL[i0], 'h0 + i0*'h4);
             end
-            foreach(this.key_ctrl[i0]) begin
-                this.key_ctrl[i0] = new($sformatf("key_ctrl[%0d]", i0));
-                this.key_ctrl[i0].configure(this);
+            foreach(this.PCR_ENTRY[i0, i1]) begin
+                this.PCR_ENTRY[i0][i1] = new($sformatf("PCR_ENTRY[%0d][%0d]", i0, i1));
+                this.PCR_ENTRY[i0][i1].configure(this);
                 
-                this.key_ctrl[i0].build();
-                this.default_map.add_reg(this.key_ctrl[i0], 'h200 + i0*'h4);
+                this.PCR_ENTRY[i0][i1].build();
+                this.default_map.add_reg(this.PCR_ENTRY[i0][i1], 'h200 + i0*'h40 + i1*'h4);
             end
-            foreach(this.pcr_ctrl[i0]) begin
-                this.pcr_ctrl[i0] = new($sformatf("pcr_ctrl[%0d]", i0));
-                this.pcr_ctrl[i0].configure(this);
+            foreach(this.KEY_CTRL[i0]) begin
+                this.KEY_CTRL[i0] = new($sformatf("KEY_CTRL[%0d]", i0));
+                this.KEY_CTRL[i0].configure(this);
                 
-                this.pcr_ctrl[i0].build();
-                this.default_map.add_reg(this.pcr_ctrl[i0], 'h220 + i0*'h4);
+                this.KEY_CTRL[i0].build();
+                this.default_map.add_reg(this.KEY_CTRL[i0], 'h400 + i0*'h4);
             end
-            foreach(this.key_entry[i0, i1]) begin
-                this.key_entry[i0][i1] = new($sformatf("key_entry[%0d][%0d]", i0, i1));
-                this.key_entry[i0][i1].configure(this);
+            foreach(this.KEY_ENTRY[i0, i1]) begin
+                this.KEY_ENTRY[i0][i1] = new($sformatf("KEY_ENTRY[%0d][%0d]", i0, i1));
+                this.KEY_ENTRY[i0][i1].configure(this);
                 
-                this.key_entry[i0][i1].build();
-                this.default_map.add_reg(this.key_entry[i0][i1], 'h240 + i0*'h40 + i1*'h4);
+                this.KEY_ENTRY[i0][i1].build();
+                this.default_map.add_reg(this.KEY_ENTRY[i0][i1], 'h600 + i0*'h40 + i1*'h4);
             end
+            this.CLEAR_SECRETS = new("CLEAR_SECRETS");
+            this.CLEAR_SECRETS.configure(this);
+
+            this.CLEAR_SECRETS.build();
+            this.default_map.add_reg(this.CLEAR_SECRETS, 'h800);
         endfunction : build
     endclass : kv_reg
 

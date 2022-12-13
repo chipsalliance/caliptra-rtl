@@ -15,13 +15,19 @@
 #
 #Synopsys DC setup
 #Design: Caliptra
+set MY_CLOCK_PERIOD 2.0
+set MY_IO_DLY_MAX [expr $MY_CLOCK_PERIOD * 0.3]
 
 #----------------------------
 #Set libraries
 #TODO: Add the correct libs
 #----------------------------
-set target_library [list /home/shared/hardware/common/technology/lib_data/tsmc/tsmc005ff/stdcell/H210/tcbn05_bwph210l6p51cnod_base_svt/110a/TSMCHOME/digital/Front_End/timing_power_noise/CCS/tcbn05_bwph210l6p51cnod_base_svt_110a/tcbn05_bwph210l6p51cnod_base_svttt_0p75v_85c_typical_ccs.db]
-set mw_reference_library [list /home/shared/hardware/common/technology/lib_data/tsmc/tsmc005ff/stdcell/H210/tcbn05_bwph210l6p51cnod_base_svt/110a/TSMCHOME/digital/Back_End/milkyway/tcbn05_bwph210l6p51cnod_base_svt_110a]
+#set target_library [list /home/shared/hardware/common/technology/lib_data/tsmc/tsmc005ff/stdcell/H210/tcbn05_bwph210l6p51cnod_base_svt/110a/TSMCHOME/digital/Front_End/timing_power_noise/CCS/tcbn05_bwph210l6p51cnod_base_svt_110a/tcbn05_bwph210l6p51cnod_base_svttt_0p75v_85c_typical_ccs.db]
+#set mw_reference_library [list /home/shared/hardware/common/technology/lib_data/tsmc/tsmc005ff/stdcell/H210/tcbn05_bwph210l6p51cnod_base_svt/110a/TSMCHOME/digital/Back_End/milkyway/tcbn05_bwph210l6p51cnod_base_svt_110a]
+
+set target_library [list /home/shared/hardware/common/technology/lib_data/tsmc/tsmc012ffc_MVL/stdcell/6t/tcbn12ffcllbwp6t20p96cpd/120c/TSMCHOME/digital/Front_End/timing_power_noise/CCS/tcbn12ffcllbwp6t20p96cpd_120a/tcbn12ffcllbwp6t20p96cpdtt0p8v85c_ccs.db]
+set mw_reference_library [list /home/shared/hardware/common/technology/lib_data/tsmc/tsmc012ffc_MVL/stdcell/6t/tcbn12ffcllbwp6t20p96cpd/120c/TSMCHOME/digital/Back_End/milkyway/tcbn12ffcllbwp6t20p96cpd_120a]
+
 set max_library [list ]
 set min_library [list ]
 set synthetic_library [list dw_foundation.sldb]
@@ -57,9 +63,9 @@ if ($command_status==0) {quit}
 #----------------------------
 #Specify clock attributes
 #----------------------------
-set command_status [create_clock -name "clk" -period 2 -waveform {0 1} {clk}]
+set command_status [create_clock -name "clk" -period $MY_CLOCK_PERIOD -waveform {0 1} {clk}]
 if ($command_status==0) {quit}
-set command_status [set_clock_uncertainty 0.4 [get_clocks clk]]
+set command_status [set_clock_uncertainty 0.1 [get_clocks clk]]
 set command_status [set_clock_latency 0.2 [get_clocks clk]]
 set command_status [set_input_transition -max 0.01 [all_inputs]]
 
@@ -72,6 +78,11 @@ set command_status [set_wire_load_mode top]
 set command_status [set_max_fanout 5000 [get_designs $DESIGN_NAME]]
 #this isn't working
 #set_app_var compile_enable_report_transformed_registers true
+
+set_input_delay $MY_IO_DLY_MAX -clock [get_clocks clk] [get_ports * -filter {pin_direction == in && name != "clk"}]
+set_output_delay $MY_IO_DLY_MAX -clock [get_clocks clk] [get_ports * -filter {pin_direction == out}]
+
+write -format ddc  -hierarchy -output ${DESIGN_NAME}.pre_compile.ddc
 
 #----------------------------
 #Compile design
@@ -86,6 +97,7 @@ exec mkdir reports
 cd reports
 
 write -format verilog -hierarchy -output ${DESIGN_NAME}.netlist.v
+write -format ddc  -hierarchy -output ${DESIGN_NAME}.ddc
 write_sdc "dcon.sdc"
 write_sdf "delay.sdf"
 report_area -physical > ${DESIGN_NAME}.area.rpt
