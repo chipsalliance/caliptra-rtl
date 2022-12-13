@@ -82,8 +82,7 @@ logic [$clog2(DEPTH)-1:0] mbox_wrptr, mbox_wrptr_nxt;
 logic inc_wrptr;
 logic [$clog2(DEPTH)-1:0] sram_rdaddr;
 logic [$clog2(DEPTH)-1:0] mbox_rdptr, mbox_rdptr_nxt;
-logic inc_rdptr,inc_rdptr_f,inc_rdptr_ff;
-logic update_dataout;
+logic inc_rdptr,inc_rdptr_f;
 logic rst_mbox_ptr;
 logic [DATA_W-1:0] sram_rdata;
 logic [MBOX_ECC_DATA_W-1:0] sram_rdata_ecc;
@@ -150,15 +149,18 @@ always_comb begin : mbox_fsm_combo
             end
         end
         MBOX_RDY_FOR_DATA: begin
-            //update the read/write pointers to sram when accessing datain/dataout registers
-            inc_rdptr = hwif_out.mbox_dataout.dataout.swacc & hwif_in.valid_user;
+            //update the write pointers to sram when accessing datain register
             inc_wrptr = hwif_out.mbox_datain.datain.swmod & hwif_in.valid_user;
             mbox_protocol_sram_we = hwif_out.mbox_datain.datain.swmod & hwif_in.valid_user;
             if (arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC) begin
                 mbox_fsm_ns = MBOX_EXECUTE_UC;
+                //load the first dword when we move to execute
+                inc_rdptr = 1'b1;
             end
             else if (arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC) begin
                 mbox_fsm_ns = MBOX_EXECUTE_SOC;
+                //load the first dword when we move to execute
+                inc_rdptr = 1'b1;
             end
         end
         MBOX_EXECUTE_UC: begin
@@ -193,7 +195,6 @@ always_ff @(posedge clk or negedge rst_b) begin
         mbox_wrptr <= '0;
         mbox_rdptr <= '0;
         inc_rdptr_f <= '0;
-        inc_rdptr_ff <= '0;
 //        sram_ecc_cor_we <= 1'b0;
         sram_ecc_cor_waddr <= '0;
     end
@@ -204,8 +205,6 @@ always_ff @(posedge clk or negedge rst_b) begin
         mbox_wrptr <= (inc_wrptr | rst_mbox_ptr) ? mbox_wrptr_nxt : mbox_wrptr;
         mbox_rdptr <= (inc_rdptr | rst_mbox_ptr) ? mbox_rdptr_nxt : mbox_rdptr;
         inc_rdptr_f <= (inc_rdptr | inc_rdptr_f) ? inc_rdptr : inc_rdptr_f;
-        inc_rdptr_ff <= (inc_rdptr_f | inc_rdptr_ff) ? inc_rdptr_f : inc_rdptr_ff;
-//        sram_ecc_cor_we <= sram_single_ecc_error;
         sram_ecc_cor_waddr <= /*dir_req_rd_phase ? sram_ecc_cor_waddr :*/
                                                  sram_rdaddr;
     end
@@ -215,8 +214,12 @@ end
 //create a qualified direct request signal that is masked during the data phase
 //hold the interface to insert wait state when direct request comes
 //mask the request and hold the interface if SHA is using the mailbox
+//hold when a read to dataout is coming and we haven't updated the data yet
+//FIXME: it's possible we could deliver the read data directly from the sram, or we could have two flop stages and speculatively read ahead to stream
 always_comb dir_req_dv_q = dir_req_dv & ~dir_req_rd_phase & ~sha_sram_req_dv;
-always_comb req_hold = (dir_req_dv_q & ~req_data.write) | (dir_req_dv & sha_sram_req_dv);
+always_comb req_hold = (dir_req_dv_q & ~req_data.write) | 
+                       (dir_req_dv & sha_sram_req_dv) |
+                       (hwif_out.mbox_dataout.dataout.swacc & inc_rdptr_f);
 always_comb sha_sram_hold = sram_single_ecc_error/* || sram_ecc_cor_we*/;
 
 //SRAM interface
@@ -229,12 +232,9 @@ always_comb sram_waddr = sram_ecc_cor_we ? sram_ecc_cor_waddr :
 //data phase after request for direct access
 always_comb rdata = dir_req_rd_phase ? sram_rdata_cor : csr_rdata;
 
-//if we wrote to mbox while rdptr is the same as wrptr we need to refresh the dataout reg
-always_comb update_dataout = hwif_out.mbox_datain.datain.swmod & hwif_in.valid_user & (mbox_wrptr == mbox_rdptr);
-
 always_comb begin: mbox_sram_inf
     //read live on direct access, or when pointer has been incremented, or if write was made to same address as rdptr
-    mbox_sram_req.cs = sha_sram_req_dv | dir_req_dv_q | mbox_protocol_sram_we | inc_rdptr_f | sram_ecc_cor_we;
+    mbox_sram_req.cs = sha_sram_req_dv | dir_req_dv_q | mbox_protocol_sram_we | inc_rdptr | sram_ecc_cor_we;
     mbox_sram_req.we = sram_we & ~sha_sram_req_dv;
     mbox_sram_req.addr = sha_sram_req_dv ? sha_sram_req_addr :
                                  sram_we ? sram_waddr : sram_rdaddr;
@@ -296,10 +296,10 @@ always_comb hwif_in.lock_set = arc_MBOX_IDLE_MBOX_RDY_FOR_CMD;
 
 //update dataout
 always_comb hwif_in.mbox_dataout.dataout.swwe = '0; //no sw write enable, but need the storage element
-//update dataout whenever we read from it, or when a write occurs to the same address as the read pointer
-always_comb hwif_in.mbox_dataout.dataout.we = update_dataout | inc_rdptr_ff;
-//when updating the same address read pointer points to, write directly to dataout
-always_comb hwif_in.mbox_dataout.dataout.next = update_dataout ? sram_wdata : sram_rdata_cor;
+//update dataout whenever we read from the sram for a dataout access
+//we load the first entry on the arc to execute
+always_comb hwif_in.mbox_dataout.dataout.we = inc_rdptr_f;
+always_comb hwif_in.mbox_dataout.dataout.next = sram_rdata_cor;
 //clear the lock when moving from execute to idle
 always_comb hwif_in.mbox_lock.lock.hwclr = arc_MBOX_EXECUTE_SOC_MBOX_IDLE | arc_MBOX_EXECUTE_UC_MBOX_IDLE;
 // Set mbox_csr status fields in response to ECC errors
@@ -333,7 +333,6 @@ mbox_csr1(
     .hwif_out(hwif_out)
 );
 
-`ASSERT_NEVER(ERR_MBOX_COLLISION, update_dataout & inc_rdptr_ff, clk, rst_b)
-`ASSERT_MUTEX(ERR_MBOX_ACCESS_MUTEX, {sha_sram_req_dv, dir_req_dv_q, mbox_protocol_sram_we, inc_rdptr_f}, clk, rst_b)
+`ASSERT_MUTEX(ERR_MBOX_ACCESS_MUTEX, {sha_sram_req_dv, dir_req_dv_q, mbox_protocol_sram_we, inc_rdptr}, clk, rst_b)
 
 endmodule
