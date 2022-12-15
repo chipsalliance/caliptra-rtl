@@ -189,9 +189,10 @@ import soc_ifc_pkg::*;
         .cptra_obf_key_reg(soc_ifc_status_agent_bus.cptra_obf_key_reg),
         .obf_field_entropy(soc_ifc_status_agent_bus.obf_field_entropy),
         .obf_uds_seed(soc_ifc_status_agent_bus.obf_uds_seed),
-        .clear_secrets(soc_ifc_ctrl_agent_bus.clear_secrets),
+        .clear_obf_secrets(soc_ifc_ctrl_agent_bus.clear_obf_secrets),
         // ICCM Lock
         .iccm_lock(soc_ifc_status_agent_bus.iccm_lock),
+        .iccm_axs_blocked(soc_ifc_ctrl_agent_bus.iccm_axs_blocked),
         //Other blocks reset
         .cptra_noncore_rst_b (soc_ifc_status_agent_bus.cptra_noncore_rst_b),
         //uC reset

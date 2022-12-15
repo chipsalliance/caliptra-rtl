@@ -87,14 +87,16 @@ end
   tri  cptra_rst_b_i;
   tri [7:0][31:0] cptra_obf_key_i;
   tri [63:0] generic_input_wires_i;
-  tri  clear_secrets_i;
+  tri  clear_obf_secrets_i;
+  tri  iccm_axs_blocked_i;
   assign clk_i = bus.clk;
   assign dummy_i = bus.dummy;
   assign cptra_pwrgood_i = bus.cptra_pwrgood;
   assign cptra_rst_b_i = bus.cptra_rst_b;
   assign cptra_obf_key_i = bus.cptra_obf_key;
   assign generic_input_wires_i = bus.generic_input_wires;
-  assign clear_secrets_i = bus.clear_secrets;
+  assign clear_obf_secrets_i = bus.clear_obf_secrets;
+  assign iccm_axs_blocked_i = bus.iccm_axs_blocked;
 
   // Proxy handle to UVM monitor
   soc_ifc_ctrl_pkg::soc_ifc_ctrl_monitor  proxy;
@@ -105,6 +107,8 @@ end
   logic  cptra_rst_b_r = 1'b0;
   logic [7:0][31:0] cptra_obf_key_r;
   logic [63:0] generic_input_wires_r;
+  logic clear_obf_secrets_r;
+  logic iccm_axs_blocked_r;
   function bit any_signal_changed();
       if (!cptra_pwrgood_r)
           return cptra_pwrgood_i;
@@ -114,7 +118,9 @@ end
           return |(cptra_pwrgood_i       ^  cptra_pwrgood_r      ) ||
                  |(cptra_rst_b_i         ^  cptra_rst_b_r        ) ||
                  |(cptra_obf_key_i       ^  cptra_obf_key_r      ) ||
-                 |(generic_input_wires_i ^  generic_input_wires_r);
+                 |(generic_input_wires_i ^  generic_input_wires_r) ||
+                 |(clear_obf_secrets_i   ^  clear_obf_secrets_r  ) ||
+                 |(iccm_axs_blocked_i    ^  iccm_axs_blocked_r   );
   endfunction
   // pragma uvmf custom interface_item_additional end
 
@@ -185,6 +191,7 @@ end
     //     //    soc_ifc_ctrl_monitor_struct.wait_cycles
     //     //    soc_ifc_ctrl_monitor_struct.generic_input_val
     //     //    soc_ifc_ctrl_monitor_struct.assert_clear_secrets
+    //     //    soc_ifc_ctrl_monitor_struct.iccm_axs_blocked
     //     //
     // Reference code;
     //    How to wait for signal value
@@ -196,7 +203,8 @@ end
     //      soc_ifc_ctrl_monitor_struct.xyz = cptra_rst_b_i;  //     
     //      soc_ifc_ctrl_monitor_struct.xyz = cptra_obf_key_i;  //    [7:0][31:0] 
     //      soc_ifc_ctrl_monitor_struct.xyz = generic_input_wires_i;  //    [63:0] 
-    //      soc_ifc_ctrl_monitor_struct.xyz = clear_secrets_i;  //     
+    //      soc_ifc_ctrl_monitor_struct.xyz = clear_obf_secrets_i;  //
+    //      soc_ifc_ctrl_monitor_struct.xyz = iccm_axs_blocked_i;  //
     // pragma uvmf custom do_monitor begin
     // UVMF_CHANGE_ME : Implement protocol monitoring.  The commented reference code
     // below are examples of how to capture signal values and assign them to
@@ -213,13 +221,17 @@ end
     cptra_rst_b_r         = cptra_rst_b_i;
     cptra_obf_key_r       = cptra_obf_key_i;
     generic_input_wires_r = generic_input_wires_i;
+    iccm_axs_blocked_r    = iccm_axs_blocked_i;
+    clear_obf_secrets_r   = clear_obf_secrets_i;
     begin: build_return_struct
   // Variables within the soc_ifc_ctrl_monitor_struct:
-         soc_ifc_ctrl_monitor_struct.set_pwrgood        = cptra_pwrgood_i;
-         soc_ifc_ctrl_monitor_struct.assert_rst         = !cptra_rst_b_i;
-         soc_ifc_ctrl_monitor_struct.cptra_obf_key_rand = cptra_obf_key_i;
-         soc_ifc_ctrl_monitor_struct.generic_input_val  = generic_input_wires_i;
-         soc_ifc_ctrl_monitor_struct.wait_cycles        = 0;
+         soc_ifc_ctrl_monitor_struct.set_pwrgood          = cptra_pwrgood_i;
+         soc_ifc_ctrl_monitor_struct.assert_rst           = !cptra_rst_b_i;
+         soc_ifc_ctrl_monitor_struct.cptra_obf_key_rand   = cptra_obf_key_i;
+         soc_ifc_ctrl_monitor_struct.generic_input_val    = generic_input_wires_i;
+         soc_ifc_ctrl_monitor_struct.wait_cycles          = 0;
+         soc_ifc_ctrl_monitor_struct.iccm_axs_blocked     = iccm_axs_blocked_i;
+         soc_ifc_ctrl_monitor_struct.assert_clear_secrets = clear_obf_secrets_i;
     end
     // pragma uvmf custom do_monitor end
   endtask

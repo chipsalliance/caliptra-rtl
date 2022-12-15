@@ -45,7 +45,11 @@ uvmf:
         dir: output
         width: '64'
 
-      - name: clear_secrets
+      - name: clear_obf_secrets
+        dir: output
+        width: '1'
+
+      - name: iccm_axs_blocked
         dir: output
         width: '1'
 
@@ -77,6 +81,10 @@ uvmf:
         iscompare: 'False'
         isrand: 'True'
       - name: assert_clear_secrets
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+      - name: iccm_axs_blocked
         type: bit
         iscompare: 'False'
         isrand: 'False'

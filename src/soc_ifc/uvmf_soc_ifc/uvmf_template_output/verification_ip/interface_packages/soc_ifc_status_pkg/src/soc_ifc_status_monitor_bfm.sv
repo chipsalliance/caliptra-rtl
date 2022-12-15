@@ -246,6 +246,7 @@ end
     //    How to assign a struct member, named xyz, from a signal.
     //    All available input signals listed.
     //      soc_ifc_status_monitor_struct.xyz = cptra_noncore_rst_b_i;  //     
+    //      soc_ifc_status_monitor_struct.xyz = cptra_uc_rst_b_i;  //     
     //      soc_ifc_status_monitor_struct.xyz = ready_for_fuses_i;  //     
     //      soc_ifc_status_monitor_struct.xyz = ready_for_fw_push_i;  //     
     //      soc_ifc_status_monitor_struct.xyz = ready_for_runtime_i;  //     

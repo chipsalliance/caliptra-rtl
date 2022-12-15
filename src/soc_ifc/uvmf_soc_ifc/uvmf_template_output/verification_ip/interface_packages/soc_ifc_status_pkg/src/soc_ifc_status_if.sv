@@ -34,6 +34,7 @@
 // This template can be used to connect a DUT to these signals
 //
 // .dut_signal_port(soc_ifc_status_bus.cptra_noncore_rst_b), // Agent output 
+// .dut_signal_port(soc_ifc_status_bus.cptra_uc_rst_b), // Agent output 
 // .dut_signal_port(soc_ifc_status_bus.ready_for_fuses), // Agent output 
 // .dut_signal_port(soc_ifc_status_bus.ready_for_fw_push), // Agent output 
 // .dut_signal_port(soc_ifc_status_bus.ready_for_runtime), // Agent output 

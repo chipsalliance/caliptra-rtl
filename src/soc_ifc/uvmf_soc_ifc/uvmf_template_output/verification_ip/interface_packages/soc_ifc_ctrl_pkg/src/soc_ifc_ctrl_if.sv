@@ -37,7 +37,8 @@
 // .dut_signal_port(soc_ifc_ctrl_bus.cptra_rst_b), // Agent output 
 // .dut_signal_port(soc_ifc_ctrl_bus.cptra_obf_key), // Agent output 
 // .dut_signal_port(soc_ifc_ctrl_bus.generic_input_wires), // Agent output 
-// .dut_signal_port(soc_ifc_ctrl_bus.clear_secrets), // Agent output 
+// .dut_signal_port(soc_ifc_ctrl_bus.clear_obf_secrets), // Agent output 
+// .dut_signal_port(soc_ifc_ctrl_bus.iccm_axs_blocked), // Agent output 
 
 import uvmf_base_pkg_hdl::*;
 import soc_ifc_ctrl_pkg_hdl::*;
@@ -51,7 +52,8 @@ interface  soc_ifc_ctrl_if
   inout tri  cptra_rst_b,
   inout tri [7:0][31:0] cptra_obf_key,
   inout tri [63:0] generic_input_wires,
-  inout tri  clear_secrets
+  inout tri  clear_obf_secrets,
+  inout tri  iccm_axs_blocked
   );
 
 modport monitor_port 
@@ -62,7 +64,8 @@ modport monitor_port
   input cptra_rst_b,
   input cptra_obf_key,
   input generic_input_wires,
-  input clear_secrets
+  input clear_obf_secrets,
+  input iccm_axs_blocked
   );
 
 modport initiator_port 
@@ -73,7 +76,8 @@ modport initiator_port
   output cptra_rst_b,
   output cptra_obf_key,
   output generic_input_wires,
-  output clear_secrets
+  output clear_obf_secrets,
+  output iccm_axs_blocked
   );
 
 modport responder_port 
@@ -84,7 +88,8 @@ modport responder_port
   input cptra_rst_b,
   input cptra_obf_key,
   input generic_input_wires,
-  input clear_secrets
+  input clear_obf_secrets,
+  input iccm_axs_blocked
   );
   
 

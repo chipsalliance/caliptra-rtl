@@ -29,7 +29,11 @@ uvmf:
         reset_value: '''bz'
         width: '64'
       - dir: output
-        name: clear_secrets
+        name: clear_obf_secrets
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: iccm_axs_blocked
         reset_value: '''bz'
         width: '1'
       reset: dummy
@@ -76,6 +80,12 @@ uvmf:
         iscompare: 'False'
         isrand: 'False'
         name: assert_clear_secrets
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: iccm_axs_blocked
         type: bit
         unpacked_dimension: ''
       use_dpi_link: 'False'
