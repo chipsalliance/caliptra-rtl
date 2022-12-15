@@ -1,3 +1,6 @@
+# Copyright (C) Microsoft Corporation. All rights reserved.
+schema_version:       1.0.0
+
 expansion:
   vcs:
     description: VCS-only command line expansions

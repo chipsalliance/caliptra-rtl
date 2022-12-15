@@ -32,6 +32,9 @@
 # VCS Timescale override Repo config
 module prepend-path PB_CMD_CONFIGS "${WORKSPACE}/Caliptra/config/pb_cmd_config_local"
 
+# Smart CLI Expansions
+module prepend-path PB_CMD_SMART_ROOTS "${WORKSPACE}/Caliptra/config/smartexp_roots"
+
 # Synopsys
 module load tools/synopsys/zebu/2020.03-SP1-1-B4_nfs_fix_08172021
 module load tools/synopsys/zebu_ip_root/2021.06-1_1223

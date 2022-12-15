@@ -16,8 +16,28 @@ resources:
   - repository: templates
     type: git
     name: Ether/pipelines
+
 variables:
 - group: AHA_POC_Pipelines
+
+- name: pipeline.start_time
+  value: $[format('{0:yyyyMMddHH}', pipeline.startTime)]
+
+- name: coverage_dir_path
+  value: $[format('/home/scratch/caliptra/coverage/{{namespace}}/{0}/{{provider}}/{{tag}}_{1}_{2:yyyyMMddHH}', variables['System.DefinitionId'], variables['Build.BuildId'], pipeline.startTime)]
+
+- name: coverage_root_args
+  ${{ if or(eq(parameters.force_global_coverage, 'true'), eq(variables['Build.SourceBranchName'], 'master')) }}:
+    value : --coverage-root $COVERAGE_DIR_PATH
+
+- name: PROJECT_SUFFIX
+  value: nightly
+
+parameters:
+  - name: force_global_coverage
+    displayName: Force global coverage collection when running from non-master branch (not recommended)
+    type: boolean
+    default: false
 
 stages:
   - template: /etc/pipelines/templates/nightly-pipeline-template.yml@templates # Template reference
@@ -25,7 +45,9 @@ stages:
       project: 'AHA_POC'
       repo_url: 'git@ssh.dev.azure.com:v3/ms-tsd/AHA_POC/Caliptra'
       target_branch: 'master'
-      enable_pipeline_audits: true
+      enable_pipeline_audits: True
+      legal_header: false
+      legal_header_warning: false
       #fixme_args: --exclude-dirs *SCA*
 
       pre_steps:
@@ -55,12 +77,13 @@ stages:
           - enabled: true
           - configspec_name: 'integration_lib'
           - dut: 'uvmf_ecc'
-          - args: ''
+          - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/ecc/uvmf_ecc/coverage/config/uvmf_ecc_cm_hier.cfg --submit-resource-args RAM/28000'
           - testsuites:
             - l1_regress:
               - enabled: true
               - configspec_name: 'integration_lib'
               - dut: 'uvmf_ecc'
+              - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
               - path: 'Caliptra/src/ecc/stimulus/L1_regression.yml'
               - timeout: 30
         - uvmf_hmac:
@@ -68,12 +91,13 @@ stages:
           - enabled: true
           - configspec_name: 'integration_lib'
           - dut: 'uvmf_hmac'
-          - args: ''
+          - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/hmac/uvmf_2022/coverage/config/uvmf_hmac_cm_hier.cfg --submit-resource-args RAM/28000'
           - testsuites:
             - l1_regress:
               - enabled: true
               - configspec_name: 'integration_lib'
               - dut: 'uvmf_hmac'
+              - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
               - path: 'Caliptra/src/hmac/stimulus/L1_regression.yml'
               - timeout: 30
 
@@ -96,12 +120,13 @@ stages:
             - enabled: true
             - configspec_name: 'integration_lib'
             - dut: 'uvmf_soc_ifc'
-            - args: ''
+            - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/soc_ifc/uvmf_soc_ifc/coverage/config/uvmf_soc_ifc_cm_hier.cfg --submit-resource-args RAM/28000'
             - timeout: 10
             - testsuites:
               - l1_regress:
                 - enabled: true
                 - configspec_name: 'integration_lib'
                 - dut: 'uvmf_soc_ifc'
+                - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
                 - path: 'Caliptra/src/soc_ifc/stimulus/L1_regression.yml'
                 - timeout: 30

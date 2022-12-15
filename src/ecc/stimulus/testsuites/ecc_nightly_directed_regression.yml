@@ -1,0 +1,10 @@
+document:
+  schema: 1.0
+
+contents:
+  - tests:
+      tags: ["L0", "directed", "nightly", "ECC"]
+      paths:
+        - ${WORKSPACE}/Caliptra/src/ecc/stimulus/tests/directed/ecc_normal_test.yml
+        - ${WORKSPACE}/Caliptra/src/ecc/stimulus/tests/directed/ecc_otf_reset_test.yml
+        - ${WORKSPACE}/Caliptra/src/ecc/stimulus/tests/directed/ecc_sca_config_test.yml

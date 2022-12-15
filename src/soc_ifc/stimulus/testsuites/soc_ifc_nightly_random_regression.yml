@@ -1,0 +1,14 @@
+document:
+  schema: 1.0
+
+contents:
+  - generator:
+      tags: ["L1", "SOC_IFC",  "random"]
+      path: ""
+      weight: 100
+      generations: 15
+      formats: 
+        generate: "reseed {template}.yml -seed {seed}"
+        path: "{template_basename}__{seed}.yml"
+      templates:
+        $WORKSPACE/Caliptra/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/tests/src/soc_ifc_rand_test   : { weight 100 }

@@ -22,7 +22,9 @@
 // Probably should be deprecated and utilize UVMF environment only
 //======================================================================
 
-module soc_ifc_tb();
+module soc_ifc_tb
+  import soc_ifc_pkg::*;
+  ();
 
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
@@ -42,14 +44,17 @@ module soc_ifc_tb();
   parameter MBOX_ADDR_DATAIN      = MBOX_ADDR_BASE + 32'h00000010;
   parameter MBOX_ADDR_DATAOUT     = MBOX_ADDR_BASE + 32'h00000014;
   parameter MBOX_ADDR_EXECUTE     = MBOX_ADDR_BASE + 32'h00000018;
+  
 
   parameter MBOX_DLEN_VAL         = 32'h0000001C;
 
-  parameter MBOX_FUSE_DONE_ADDR = 32'h3003_0394;
+  parameter MBOX_UDS_ADDR         = 32'h3003_0200;
+  parameter MBOX_FE_ADDR          = 32'h3003_0230;
+  parameter MBOX_FUSE_DONE_ADDR   = 32'h3003_03F0;
 
-  parameter AHB_ADDR_WIDTH = 32;
+  parameter AHB_ADDR_WIDTH = 18;
   parameter AHB_DATA_WIDTH = 32;
-  parameter APB_ADDR_WIDTH = 32;
+  parameter APB_ADDR_WIDTH = 18;
   parameter APB_DATA_WIDTH = 32;
   parameter APB_USER_WIDTH = 32;
 
@@ -99,6 +104,28 @@ module soc_ifc_tb();
   reg [127 : 0] result_data;
   logic ready_for_fuses;
 
+  //SRAM interface for mbox
+  logic mbox_sram_cs;
+  logic mbox_sram_we;
+  logic [MBOX_ADDR_W-1:0] mbox_sram_addr;
+  logic [MBOX_DATA_W-1:0] mbox_sram_wdata;
+  logic [MBOX_DATA_W-1:0] mbox_sram_rdata;
+
+  logic [0:11][31:0]          cptra_uds_tb;
+  logic [0:31][31:0]          cptra_fe_tb;
+
+  //mailbox sram gasket
+  mbox_sram_req_t mbox_sram_req;
+  mbox_sram_resp_t mbox_sram_resp;
+
+  always_comb begin
+    mbox_sram_cs = mbox_sram_req.cs;
+    mbox_sram_we = mbox_sram_req.we;
+    mbox_sram_addr = mbox_sram_req.addr;
+    mbox_sram_wdata = mbox_sram_req.wdata;
+    mbox_sram_resp.rdata = mbox_sram_rdata;
+  end
+
   assign hready_i_tb = hreadyout_o_tb;
 
   //----------------------------------------------------------------
@@ -106,9 +133,9 @@ module soc_ifc_tb();
   //----------------------------------------------------------------
   soc_ifc_top #(
              .AHB_DATA_WIDTH(32),
-             .AHB_ADDR_WIDTH(32),
+             .AHB_ADDR_WIDTH(18),
              .APB_USER_WIDTH(32),
-             .APB_ADDR_WIDTH(32),
+             .APB_ADDR_WIDTH(18),
              .APB_DATA_WIDTH(32)
             )
             dut (
@@ -149,16 +176,37 @@ module soc_ifc_tb();
              .ready_for_fuses(ready_for_fuses),
              .cptra_noncore_rst_b(cptra_noncore_rst_b_tb),
              .cptra_uc_rst_b(cptra_uc_rst_b_tb),
-             .mbox_sram_req(),
-             .mbox_sram_resp(),
-             .ready_for_fw_push(),
+             .mbox_sram_req(mbox_sram_req),
+             .mbox_sram_resp(mbox_sram_resp),
+             .ready_for_fw_push(ready_for_fw_push),
              .ready_for_runtime(),
              .iccm_lock(),
+             .iccm_axs_blocked(),
              .soc_ifc_error_intr(),
              .soc_ifc_notif_intr(),
              .sha_error_intr(),
-             .sha_notif_intr()
+             .sha_notif_intr(),
+             .clear_obf_secrets()
+
             );
+
+  //SRAM for mbox
+  caliptra_sram 
+  #(
+    .DATA_WIDTH(32),
+    .DEPTH('h8000)
+  )
+  mbox_ram1
+  (
+    .clk_i(clk_tb),
+    
+    .cs_i(mbox_sram_cs),
+    .we_i(mbox_sram_we),
+    .addr_i(mbox_sram_addr),
+    .wdata_i(mbox_sram_wdata),
+    
+    .rdata_o(mbox_sram_rdata)
+  );
 
 
   //----------------------------------------------------------------
@@ -208,6 +256,36 @@ module soc_ifc_tb();
     end
   endtask // reset_dut
 
+  //----------------------------------------------------------------
+  // load_fuses()
+  //
+  // Load Fuses (required to get other blocks out of reset)
+  //----------------------------------------------------------------
+  task load_fuses;
+    begin
+      for (int i = 0; i < 12; i++)begin
+        write_single_word_apb(MBOX_UDS_ADDR + i*4, cptra_uds_tb[i]);
+      end
+      
+      $display ("SoC: Writing obfuscated Field Entropy to fuse bank\n");
+      for (int i = 0; i < 32; i++)begin
+          write_single_word_apb(MBOX_FE_ADDR + i*4, cptra_fe_tb[i]);
+      end
+      
+      $display ("SoC: Writing fuse done register\n");
+      //set fuse done
+      write_single_word_apb(MBOX_FUSE_DONE_ADDR, 32'h00000001); 
+      
+      /*
+      wait (ready_for_fw_push == 1'b1);
+        
+      repeat (5) @(posedge clk_tb);
+      // poll for lock register
+      wait_unlock_apb();
+      repeat (5) @(posedge clk_tb);
+        */
+    end
+  endtask
 
   //----------------------------------------------------------------
   // display_test_results()
@@ -219,11 +297,13 @@ module soc_ifc_tb();
       if (error_ctr == 0)
         begin
           $display("*** All %02d test cases completed successfully", tc_ctr);
+          $display("* TESTCASE PASSED");
         end
       else
         begin
           $display("*** %02d tests completed - %02d test cases did not complete successfully.",
                    tc_ctr, error_ctr);
+          $display("* TESTCASE FAILED");
         end
     end
   endtask // display_test_results
@@ -259,6 +339,15 @@ module soc_ifc_tb();
       pwrite_i_tb     = 0;
       pwdata_i_tb     = 0;
       pauser_i_tb     = 0;
+
+      //Key for UDS 
+      cptra_uds_tb = 384'he4046d05385ab789c6a72866e08350f93f583e2a005ca0faecc32b5cfc323d461c76c107307654db5566a5bd693e227c;
+
+      //Key for FE
+      cptra_fe_tb = {256'hb32e2b171b63827034ebb0d1909f7ef1d51c5f82c1bb9bc26bc4ac4dccdee835,
+                     256'h7dca6154c2510ae1c87b1b422b02b621bb06cac280023894fcff3406af08ee9b,
+                     256'he1dd72419beccddff77c722d992cdcc87e9c7486f56ab406ea608d8c6aeb060c,
+                     256'h64cf2785ad1a159147567e39e303370da445247526d95942bf4d7e88057178b0};
 
     end
   endtask // init_sim
@@ -621,6 +710,7 @@ module soc_ifc_tb();
       reset_dut();
 
       wait (ready_for_fuses == 1'b1);
+      //load_fuses();
       write_single_word_apb(MBOX_FUSE_DONE_ADDR, 32'h00000001);
       repeat (5) @(posedge clk_tb);
       

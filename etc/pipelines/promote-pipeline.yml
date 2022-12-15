@@ -17,6 +17,8 @@ stages:
     project: 'AHA_POC'
     repo_url: 'git@ssh.dev.azure.com:v3/ms-tsd/AHA_POC/Caliptra'
     target_branch: 'master'
+    legal_header: false
+    legal_header_warning: false
 
     build_and_sim_map:
     - integration_top_vcs:
@@ -115,3 +117,16 @@ stages:
                  echo \"*****************************************\";
                  exit 1;
                fi'
+      - license_header_check:
+        - display_name: 'LICENSE_HEADER_CHECK'
+        - enabled: true 
+        - run_in_workspace: True
+        - timeout: 5
+        - commands: 
+          - 'set -e'
+          - 'cd \$AHA_POC_REPO'
+
+          # Run the license checker script
+          - 'bash \$AHA_POC_REPO/tools/scripts/licenseHeaderCheck.sh'
+
+

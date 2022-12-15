@@ -36,7 +36,6 @@ targets:
       - $COMPILE_ROOT/rtl/ecc_mult_dsp.sv
       - $COMPILE_ROOT/rtl/ecc_add_sub_mod_alter.sv
       - $COMPILE_ROOT/rtl/ecc_adder.sv
-
     tops: [ecc_top]
   rtl_lint:
     directories: []
@@ -49,12 +48,14 @@ provides: [ecc_top_tb]
 schema_version: 2.4.0
 requires: 
   - ecc_top
+  - keyvault
 targets:
   tb:
     directories: 
       - $COMPILE_ROOT/tb
     files:
       - $COMPILE_ROOT/tb/ecc_top_tb.sv
+
     tops: [ecc_top_tb]
 global:
   tool:

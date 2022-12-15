@@ -24,9 +24,8 @@ targets:
     files:
       - $COMPILE_ROOT/rtl/config_defines.svh
       - $COMPILE_ROOT/rtl/caliptra_top.sv
-      - $COMPILE_ROOT/rtl/caliptra_top_dummy.sv
       - $COMPILE_ROOT/rtl/ahb_sif.sv
-    tops: [caliptra_top_dummy]
+    tops: [caliptra_top]
   rtl_lint:
     waiver_files:
       - $COMPILE_ROOT/config/design_lint/sglint_waivers

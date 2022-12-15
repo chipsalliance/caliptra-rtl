@@ -123,6 +123,7 @@ module hmac_ctrl_tb();
 
   reg           clk_tb;
   reg           reset_n_tb;
+  reg           cptra_pwrgood_tb;
 
   reg [AHB_ADDR_WIDTH-1:0]  hadrr_i_tb;
   reg [AHB_DATA_WIDTH-1:0]  hwdata_i_tb;
@@ -144,12 +145,12 @@ module hmac_ctrl_tb();
   //----------------------------------------------------------------
   hmac_ctrl #(
              .AHB_DATA_WIDTH(AHB_DATA_WIDTH),
-             .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH),
-             .BYPASS_HSEL(0)
+             .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH)
             )
             dut (
              .clk(clk_tb),
              .reset_n(reset_n_tb),
+             .cptra_pwrgood(cptra_pwrgood_tb),
 
              .hadrr_i(hadrr_i_tb),
              .hwdata_i(hwdata_i_tb),
@@ -166,7 +167,10 @@ module hmac_ctrl_tb();
              .kv_read(),
              .kv_write(),
              .kv_rd_resp('x),
-             .kv_wr_resp('x)
+             .kv_wr_resp('x),
+
+             .error_intr(),
+             .notif_intr()
             );
 
 
@@ -202,7 +206,12 @@ module hmac_ctrl_tb();
   task reset_dut;
     begin
       $display("*** Toggle reset.");
+      cptra_pwrgood_tb = '0;
       reset_n_tb = 0;
+
+      #(2 * CLK_PERIOD);
+      cptra_pwrgood_tb = 1;
+
       #(2 * CLK_PERIOD);
       reset_n_tb = 1;
     end
@@ -223,6 +232,7 @@ module hmac_ctrl_tb();
 
       clk_tb        = 0;
       reset_n_tb    = 0;
+      cptra_pwrgood_tb = 0;
 
       hadrr_i_tb      = 0;
       hwdata_i_tb     = 0;

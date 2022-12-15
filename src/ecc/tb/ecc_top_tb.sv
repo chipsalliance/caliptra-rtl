@@ -28,6 +28,9 @@ module ecc_top_tb
 )
 ();
 
+  string      ecc_test_vector_file; // Input test vector file
+  string      ecc_test_to_run;      // ECC tests - default, ECC_normal_test, ECC_otf_reset_test, ECC_sca_config_test
+
   localparam BASE_ADDR        = 32'h00000000;
 
   localparam ADDR_NAME0       = BASE_ADDR + 32'h00000000;
@@ -155,6 +158,22 @@ module ecc_top_tb
   reg [383: 0]  reg_read_data;
 
   int                   test_vector_cnt;
+
+  initial begin
+    if ($value$plusargs("ECC_TEST_VECTOR_FILE=%s", ecc_test_vector_file)) begin
+      $display("%m: Using ECC test vectors from file specified via plusarg: %s", ecc_test_vector_file);
+    end else begin
+      $display("%m: Please re-run with a valid test vector file.");
+      $finish;
+    end
+
+    if ($value$plusargs("ECC_TEST=%s", ecc_test_to_run)) begin
+      $display("%m: Running with ECC_TEST = %s", ecc_test_to_run);
+    end else begin
+      ecc_test_to_run = "default";
+      $display("%m: Running default test = %s", ecc_test_to_run);
+    end
+  end
 
   //----------------------------------------------------------------
   // Device Under Test.
@@ -816,11 +835,14 @@ module ecc_top_tb
   task ecc_test();
     begin  
       for (int i = 0; i < 10; i++) begin: test_vector_loop
+        if ((ecc_test_to_run == "ECC_normal_test") || (ecc_test_to_run == "default")) begin
           ecc_keygen_test(i, test_vectors[i]);
           ecc_signing_test(i, test_vectors[i]);
           ecc_verifying_test(i, test_vectors[i]);
-          if (i==3)
-            ecc_onthefly_reset_test(i, test_vectors[i]);
+        end
+        else if (ecc_test_to_run == "ECC_otf_reset_test") begin
+          ecc_onthefly_reset_test(i, test_vectors[i]);
+        end
       end
     end
   endtask // ecc_test
@@ -967,8 +989,8 @@ module ecc_top_tb
       $display("    ==============================");
       $display("");
 
-      fname = "/home/mojtabab/workspace_aha_poc/ws1/Caliptra/src/ecc/tb/test_vectors/ecc_drbg_mbedtls.hex";
-      read_test_vectors(fname);
+      //fname = "/home/mojtabab/workspace_aha_poc/ws1/Caliptra/src/ecc/tb/test_vectors/ecc_drbg_mbedtls.hex";
+      read_test_vectors(ecc_test_vector_file);
 
       init_sim();
       reset_dut();
@@ -976,9 +998,12 @@ module ecc_top_tb
 
       //ecc_openssl_test();
 
-      ecc_test();
-
-      ecc_sca_config_test();
+      if ((ecc_test_to_run == "default") || (ecc_test_to_run == "ECC_normal_test") || (ecc_test_to_run == "ECC_otf_reset_test")) begin
+        ecc_test(); 
+      end
+      else if (ecc_test_to_run == "ECC_sca_config_test") begin
+        ecc_sca_config_test();
+      end
 
       display_test_results();
       
