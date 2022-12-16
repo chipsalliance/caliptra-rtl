@@ -85,11 +85,12 @@ def generate_test():
             num_bits = num_bits - 1024
 
 
-            #We know here that we don't have space for msg, pad AND msg length, so we just do msg + pad
-            pad_chars = calc_pad_chars(num_bits, 1)
-            pad = one + zero * pad_chars
-
             if num_bits == 0: #case 2
+                #We know here that we don't have space for msg, pad AND msg length, so we just do msg + pad
+                pad_chars = calc_pad_chars(num_bits+128, 1)
+
+                pad = one + zero * pad_chars
+
                 msg_len = calc_msg_len(total_num_bits)
                 block = pad + msg_len
                 f.write('BLOCK = '+block+'\n')
@@ -97,12 +98,9 @@ def generate_test():
 
         elif num_bits <= 895: #case 5
             pad_chars = calc_pad_chars(num_bits+128, 1) #pad chars = 1024 - (msg + msg_len bits)
-        
             pad = one + zero * pad_chars
-    
             msg_len = calc_msg_len(total_num_bits)
             num_bits = 0
-
             block = msg_str + pad + msg_len
             f.write('BLOCK = '+block+'\n')
             g.write('BLOCK = '+block+'\n')
