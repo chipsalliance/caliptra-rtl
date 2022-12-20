@@ -423,6 +423,6 @@ addrmap sha256_reg {
     /* -----------------------
      * Register File instance
      * ----------------------- */
-    intr_block_t intr_block_rf;
+    intr_block_t intr_block_rf @0x800;
 
 };

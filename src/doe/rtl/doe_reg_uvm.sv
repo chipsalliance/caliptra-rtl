@@ -507,7 +507,7 @@ package doe_reg_uvm;
             this.intr_block_rf = new("intr_block_rf");
             this.intr_block_rf.configure(this);
             this.intr_block_rf.build();
-            this.default_map.add_submap(this.intr_block_rf.default_map, 'h18);
+            this.default_map.add_submap(this.intr_block_rf.default_map, 'h800);
         endfunction : build
     endclass : doe_reg
 

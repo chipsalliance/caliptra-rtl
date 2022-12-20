@@ -120,6 +120,6 @@ package doe_reg_pkg;
         doe_reg__intr_block_t__out_t intr_block_rf;
     } doe_reg__out_t;
 
-    localparam DOE_REG_ADDR_WIDTH = 32'd10;
+    localparam DOE_REG_ADDR_WIDTH = 32'd12;
 
 endpackage

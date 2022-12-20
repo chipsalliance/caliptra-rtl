@@ -140,6 +140,6 @@ package sha256_reg_pkg;
         sha256_reg__intr_block_t__out_t intr_block_rf;
     } sha256_reg__out_t;
 
-    localparam SHA256_REG_ADDR_WIDTH = 32'd10;
+    localparam SHA256_REG_ADDR_WIDTH = 32'd12;
 
 endpackage
