@@ -50,18 +50,18 @@ typedef struct packed
     logic [OPR_ADDR_WIDTH-1 : 0]    opb_addr;
 } pm_instr_struct_t;
 
-localparam pm_opcode_t UOP_NOP      = {mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b0}; // = 6'b00_0000;
-localparam pm_opcode_t UOP_DO_MUL_p = {mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b1, mod_q_sel:1'b0}; // = 6'b01_0000;
-localparam pm_opcode_t UOP_ST_MUL_p = {mult_we:1'b1, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b0}; // = 6'b00_0001;
-localparam pm_opcode_t UOP_DO_ADD_p = {mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b0}; // = 6'b00_1000;
-localparam pm_opcode_t UOP_DO_SUB_p = {mult_we:1'b0, add_we:1'b0, sub_sel:1'b1, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b0}; // = 6'b00_1100;
-localparam pm_opcode_t UOP_ST_ADD_p = {mult_we:1'b0, add_we:1'b1, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b0}; // = 6'b00_0010;
+localparam pm_opcode_t UOP_NOP      = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b0}; // = 6'b00_0000;
+localparam pm_opcode_t UOP_DO_MUL_p = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b1, mod_q_sel:1'b0}; // = 6'b01_0000;
+localparam pm_opcode_t UOP_ST_MUL_p = '{mult_we:1'b1, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b0}; // = 6'b00_0001;
+localparam pm_opcode_t UOP_DO_ADD_p = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b0}; // = 6'b00_1000;
+localparam pm_opcode_t UOP_DO_SUB_p = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b1, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b0}; // = 6'b00_1100;
+localparam pm_opcode_t UOP_ST_ADD_p = '{mult_we:1'b0, add_we:1'b1, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b0}; // = 6'b00_0010;
 
-localparam pm_opcode_t UOP_DO_MUL_q = {mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b1, mod_q_sel:1'b1}; // = 6'b11_0000;
-localparam pm_opcode_t UOP_ST_MUL_q = {mult_we:1'b1, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b1}; // = 6'b10_0001;
-localparam pm_opcode_t UOP_DO_ADD_q = {mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b1}; // = 6'b10_1000;
-localparam pm_opcode_t UOP_DO_SUB_q = {mult_we:1'b0, add_we:1'b0, sub_sel:1'b1, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b1}; // = 6'b10_1100;
-localparam pm_opcode_t UOP_ST_ADD_q = {mult_we:1'b0, add_we:1'b1, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b1}; // = 6'b10_0010;
+localparam pm_opcode_t UOP_DO_MUL_q = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b1, mod_q_sel:1'b1}; // = 6'b11_0000;
+localparam pm_opcode_t UOP_ST_MUL_q = '{mult_we:1'b1, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b1}; // = 6'b10_0001;
+localparam pm_opcode_t UOP_DO_ADD_q = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b1}; // = 6'b10_1000;
+localparam pm_opcode_t UOP_DO_SUB_q = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b1, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b1}; // = 6'b10_1100;
+localparam pm_opcode_t UOP_ST_ADD_q = '{mult_we:1'b0, add_we:1'b1, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b1}; // = 6'b10_0010;
 
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_DONTCARE          = 6'd0;
 

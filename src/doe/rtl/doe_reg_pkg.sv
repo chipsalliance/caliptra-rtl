@@ -2,65 +2,65 @@
 //  https://github.com/SystemRDL/PeakRDL-regblock
 
 package doe_reg_pkg;
-    typedef struct {
+    typedef struct packed{
         logic hwclr;
     } doe_reg__DOE_CTRL__CMD__in_t;
 
-    typedef struct {
+    typedef struct packed{
         doe_reg__DOE_CTRL__CMD__in_t CMD;
     } doe_reg__DOE_CTRL__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic next;
     } doe_reg__DOE_STATUS__READY__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic hwclr;
         logic hwset;
     } doe_reg__DOE_STATUS__VALID__in_t;
 
-    typedef struct {
+    typedef struct packed{
         doe_reg__DOE_STATUS__READY__in_t READY;
         doe_reg__DOE_STATUS__VALID__in_t VALID;
     } doe_reg__DOE_STATUS__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic hwset;
     } doe_reg__error_intr_t__error0_sts_enable_528ccada_next_b1018582_resetsignal_939e99d4__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic hwset;
     } doe_reg__error_intr_t__error1_sts_enable_938cafef_next_f460eb81_resetsignal_939e99d4__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic hwset;
     } doe_reg__error_intr_t__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_939e99d4__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic hwset;
     } doe_reg__error_intr_t__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_939e99d4__in_t;
 
-    typedef struct {
+    typedef struct packed{
         doe_reg__error_intr_t__error0_sts_enable_528ccada_next_b1018582_resetsignal_939e99d4__in_t error0_sts;
         doe_reg__error_intr_t__error1_sts_enable_938cafef_next_f460eb81_resetsignal_939e99d4__in_t error1_sts;
         doe_reg__error_intr_t__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_939e99d4__in_t error2_sts;
         doe_reg__error_intr_t__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_939e99d4__in_t error3_sts;
     } doe_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic hwset;
     } doe_reg__notif_intr_t__notif_cmd_done_sts_enable_dabe0b8b_next_540fa3b7__in_t;
 
-    typedef struct {
+    typedef struct packed{
         doe_reg__notif_intr_t__notif_cmd_done_sts_enable_dabe0b8b_next_540fa3b7__in_t notif_cmd_done_sts;
     } doe_reg__notif_intr_t_notif_cmd_done_sts_1c68637e__in_t;
 
-    typedef struct {
+    typedef struct packed{
         doe_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__in_t error_internal_intr_r;
         doe_reg__notif_intr_t_notif_cmd_done_sts_1c68637e__in_t notif_internal_intr_r;
     } doe_reg__intr_block_t__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic reset_b;
         logic error_reset_b;
         doe_reg__DOE_CTRL__in_t DOE_CTRL;
@@ -68,54 +68,54 @@ package doe_reg_pkg;
         doe_reg__intr_block_t__in_t intr_block_rf;
     } doe_reg__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic [31:0] value;
         logic swmod;
     } doe_reg__DOE_IV__IV__out_t;
 
-    typedef struct {
+    typedef struct packed{
         doe_reg__DOE_IV__IV__out_t IV;
     } doe_reg__DOE_IV__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic [1:0] value;
         logic swmod;
     } doe_reg__DOE_CTRL__CMD__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic [2:0] value;
     } doe_reg__DOE_CTRL__DEST__out_t;
 
-    typedef struct {
+    typedef struct packed{
         doe_reg__DOE_CTRL__CMD__out_t CMD;
         doe_reg__DOE_CTRL__DEST__out_t DEST;
     } doe_reg__DOE_CTRL__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic intr;
     } doe_reg__global_intr_t_agg_sts_dd3dcf0a__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic intr;
     } doe_reg__global_intr_t_agg_sts_e6399b4a__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic intr;
     } doe_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic intr;
     } doe_reg__notif_intr_t_notif_cmd_done_sts_1c68637e__out_t;
 
-    typedef struct {
+    typedef struct packed{
         doe_reg__global_intr_t_agg_sts_dd3dcf0a__out_t error_global_intr_r;
         doe_reg__global_intr_t_agg_sts_e6399b4a__out_t notif_global_intr_r;
         doe_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__out_t error_internal_intr_r;
         doe_reg__notif_intr_t_notif_cmd_done_sts_1c68637e__out_t notif_internal_intr_r;
     } doe_reg__intr_block_t__out_t;
 
-    typedef struct {
-        doe_reg__DOE_IV__out_t DOE_IV[4];
+    typedef struct packed{
+        doe_reg__DOE_IV__out_t [4-1:0]DOE_IV;
         doe_reg__DOE_CTRL__out_t DOE_CTRL;
         doe_reg__intr_block_t__out_t intr_block_rf;
     } doe_reg__out_t;

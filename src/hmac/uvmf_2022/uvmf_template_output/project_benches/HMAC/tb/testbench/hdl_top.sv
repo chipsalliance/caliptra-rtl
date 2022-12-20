@@ -89,7 +89,7 @@ hmac_ctrl #(
 ) dut (
      .clk	          (HMAC_in_agent_bus.clk),
      .reset_n       (HMAC_in_agent_bus.hmac_rst),
-     .hadrr_i       (HMAC_in_agent_bus.hadrr),
+     .haddr_i       (HMAC_in_agent_bus.haddr),
      .hwdata_i      (HMAC_in_agent_bus.hwdata),
      .hsel_i        (HMAC_in_agent_bus.hsel),
      .hwrite_i      (HMAC_in_agent_bus.hwrite),

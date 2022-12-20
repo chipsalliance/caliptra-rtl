@@ -76,8 +76,8 @@ module hmac_drbg
   localparam [(((((1024-REG_SIZE)-SEED_SIZE)-CNT_SIZE)-1)-12)-1 : 0] ZERO_PAD_MODE0_K   = '0; // 1 for header and 12 bit for message length  
   localparam [(((1024-REG_SIZE)-1)-12)-1 : 0] ZERO_PAD_V         = '0; // 1 for header and 12 bit for message length  
 
-  localparam [11 : 0] MODE0_K_SIZE  = {1'b0, 1024 + REG_SIZE + SEED_SIZE + CNT_SIZE};
-  localparam [11 : 0] V_SIZE        = {1'b0, 1024 + REG_SIZE};
+  localparam [11 : 0] MODE0_K_SIZE  = {1'b0, 11'd1024 + 11'(REG_SIZE) + 11'(SEED_SIZE) + 11'(CNT_SIZE)};
+  localparam [11 : 0] V_SIZE        = {1'b0, 11'd1024 + 11'(REG_SIZE)};
 
   /*STATES*/
   localparam [4 : 0] IDLE_ST        = 5'd0;   // IDLE WAIT and Return step

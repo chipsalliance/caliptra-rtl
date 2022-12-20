@@ -76,9 +76,9 @@ stages:
             - 'bash \$AHA_POC_REPO/tools/scripts/gen_pb_file_lists.sh'
 
             # Check for any file changes
-            - 'if [[ \$(git status -s --untracked-files=all --ignored=traditional | wc -l) -gt 0 ]]; then
+            - 'if [[ \$(git status -s --untracked-files=all --ignored=traditional | grep \"\\.vf\" | wc -l) -gt 0 ]]; then
                  echo \"Regenerating VF file lists produced some file changes:\";
-                 git status -s --untracked-files=all --ignored=traditional;
+                 git status -s --untracked-files=all --ignored=traditional | grep \"\\.vf\";
                  git diff;
                  echo \"*****************************************\";
                  echo \"Review above changes locally and resubmit pipeline\";
@@ -107,10 +107,10 @@ stages:
                fi'
 
             # Check for any file changes
-            - 'if [[ \$(git status -s --untracked-files=all --ignored=traditional | wc -l) -gt 0 ]]; then
+            - 'if [[ \$(git status -s --untracked-files=all --ignored=traditional -- \$AHA_POC_REPO/src/integration/ | wc -l) -gt 0 ]]; then
                  echo \"Regenerating HTML Reg documentation produced some file changes:\";
-                 git status -s --untracked-files=all --ignored=traditional;
-                 git diff;
+                 git status -s --untracked-files=all --ignored=traditional -- \$AHA_POC_REPO/src/integration/;
+                 git diff -- \$AHA_POC_REPO/src/integration/;
                  echo \"*****************************************\";
                  echo \"Review above changes locally and resubmit pipeline\";
                  echo \"(Hint: Check \$AHA_POC_REPO for the above changes)\";
@@ -129,4 +129,26 @@ stages:
           # Run the license checker script
           - 'bash \$AHA_POC_REPO/tools/scripts/licenseHeaderCheck.sh'
 
-
+#      - verilator_smoke_test:
+#        - display_name: 'Verilator Smoke Test'
+#        - enabled: true
+#        - run_in_workspace: True
+#        - timeout: 30
+#        - commands:
+#            - 'set -e'
+#            - 'module load tools/python/python3/3.9.2'
+#
+#            # Run the default Verilator test and dump a log
+#            #- 'submit -i make -C \$AHA_POC_REPO/tools/scripts/tmp_verilator_run_dir -f ../Makefile verilator |& tee \$AHA_POC_REPO/tools/scripts/tmp_verilator_run_dir/verilate.log'
+#            - 'submit -i python3 \$AHA_POC_REPO/tools/scripts/run_verilator_l0_regression.py'
+#
+#            # Check the result
+##            - 'echo \"exiting with status \$STS\"'
+##            - 'exit \$STS'
+##            # Check the result
+##            - 'if [[ \$(grep \"TESTCASE PASSED\" \$AHA_POC_REPO/tools/scripts/tmp_verilator_run_dir/verilate.log | wc -l) -gt 0 ]]; then
+##                 echo \"Successful verilator run\";
+##               else
+##                 echo \"Verilator run was unsuccessful - did not observed TESTCASE PASSED message\";
+##                 exit 1;
+##               fi'

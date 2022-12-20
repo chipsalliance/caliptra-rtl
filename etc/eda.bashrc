@@ -42,3 +42,6 @@ export VCS_LICENSE_WAIT=1
 
 # Provides $QUESTA_MVC_HOME
 module load tools/mentor/questa_vip/2022.2/x86_64_gcc-6.7.2_vcs
+
+# Verilator is loaded as EDA tool when launching sims through 'submit'
+module load tools/verilator/4.228

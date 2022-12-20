@@ -126,7 +126,7 @@ whisperPrintInt(int value, int width, int pad, int base)
     {
       for (uint8_t ii = 28; ii <= 28; ii-=4) {
           int digit = (uu >> ii) & 0xF;
-          if (digit || flag) {
+          if (digit || flag || ii==0) {
               flag = 1;
               char c = digit < 10 ? '0' + digit : 'A' + digit - 10;
               whisperPutc(c);

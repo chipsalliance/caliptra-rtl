@@ -618,7 +618,7 @@ hmac_ctrl #(
      .clk(clk),
      .reset_n       (cptra_noncore_rst_b),
      .cptra_pwrgood (cptra_pwrgood),
-     .hadrr_i       (responder_inst[`SLAVE_SEL_HMAC].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_HMAC)-1:0]),
+     .haddr_i       (responder_inst[`SLAVE_SEL_HMAC].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_HMAC)-1:0]),
      .hwdata_i      (responder_inst[`SLAVE_SEL_HMAC].hwdata),
      .hsel_i        (responder_inst[`SLAVE_SEL_HMAC].hsel),
      .hwrite_i      (responder_inst[`SLAVE_SEL_HMAC].hwrite),

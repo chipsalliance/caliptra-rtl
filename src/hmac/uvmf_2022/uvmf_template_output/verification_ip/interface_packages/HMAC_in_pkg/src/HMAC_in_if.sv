@@ -20,7 +20,7 @@
 // This template can be used to connect a DUT to these signals
 //
 // .dut_signal_port(HMAC_in_bus.hmac_rst), // Agent output 
-// .dut_signal_port(HMAC_in_bus.hadrr), // Agent output 
+// .dut_signal_port(HMAC_in_bus.haddr), // Agent output 
 // .dut_signal_port(HMAC_in_bus.hwdata), // Agent output 
 // .dut_signal_port(HMAC_in_bus.hsel), // Agent output 
 // .dut_signal_port(HMAC_in_bus.hwrite), // Agent output 
@@ -46,7 +46,7 @@ interface  HMAC_in_if #(
   input tri clk, 
   input tri rst,
   inout tri  hmac_rst,
-  inout tri [AHB_ADDR_WIDTH-1:0] hadrr,
+  inout tri [AHB_ADDR_WIDTH-1:0] haddr,
   inout tri [AHB_DATA_WIDTH-1:0] hwdata,
   inout tri  hsel,
   inout tri  hwrite,
@@ -64,7 +64,7 @@ modport monitor_port
   input clk,
   input rst,
   input hmac_rst,
-  input hadrr,
+  input haddr,
   input hwdata,
   input hsel,
   input hwrite,
@@ -82,7 +82,7 @@ modport initiator_port
   input clk,
   input rst,
   output hmac_rst,
-  output hadrr,
+  output haddr,
   output hwdata,
   output hsel,
   output hwrite,
@@ -100,7 +100,7 @@ modport responder_port
   input clk,
   input rst,  
   input hmac_rst,
-  input hadrr,
+  input haddr,
   input hwdata,
   input hsel,
   input hwrite,

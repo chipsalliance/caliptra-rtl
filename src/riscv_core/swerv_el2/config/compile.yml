@@ -50,7 +50,6 @@ targets:
       - $COMPILE_ROOT/rtl/ifu/el2_ifu_ifc_ctl.sv
       - $COMPILE_ROOT/rtl/ifu/el2_ifu_mem_ctl.sv
       - $COMPILE_ROOT/rtl/ifu/el2_ifu.sv
-      - $COMPILE_ROOT/rtl/ifu/el2_ifu_tb_memread.sv
       - $COMPILE_ROOT/rtl/lib/ahb_to_axi4.sv
       - $COMPILE_ROOT/rtl/lib/axi4_to_ahb.sv
       - $COMPILE_ROOT/rtl/lib/el2_lib.sv
@@ -89,6 +88,7 @@ targets:
     directories: 
       - $COMPILE_ROOT/tb
     files:
+      - $COMPILE_ROOT/rtl/ifu/el2_ifu_tb_memread.sv
       - $COMPILE_ROOT/tb/el2_swerv_wrapper_tb.sv
       - $COMPILE_ROOT/tb/ahb_sif.sv
     tops: [el2_swerv_wrapper_tb]

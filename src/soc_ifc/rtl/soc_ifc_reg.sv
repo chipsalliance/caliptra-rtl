@@ -60,7 +60,7 @@ module soc_ifc_reg (
     //--------------------------------------------------------------------------
     // Address Decode
     //--------------------------------------------------------------------------
-    typedef struct {
+    typedef struct packed{
         logic HW_ERROR_FATAL;
         logic HW_ERROR_NON_FATAL;
         logic FW_ERROR_FATAL;
@@ -70,28 +70,28 @@ module soc_ifc_reg (
         logic BOOT_STATUS;
         logic FLOW_STATUS;
         logic CLEAR_SECRETS;
-        logic generic_input_wires[2];
-        logic generic_output_wires[2];
-        logic TRNG[12];
+        logic [2-1:0]generic_input_wires;
+        logic [2-1:0]generic_output_wires;
+        logic [12-1:0]TRNG;
         logic TRNG_DONE;
-        logic uds_seed[12];
-        logic field_entropy[32];
-        logic key_manifest_pk_hash_0[12];
-        logic key_manifest_pk_hash_1[12];
-        logic key_manifest_pk_hash_2[12];
-        logic key_manifest_pk_hash_3[12];
+        logic [12-1:0]uds_seed;
+        logic [32-1:0]field_entropy;
+        logic [12-1:0]key_manifest_pk_hash_0;
+        logic [12-1:0]key_manifest_pk_hash_1;
+        logic [12-1:0]key_manifest_pk_hash_2;
+        logic [12-1:0]key_manifest_pk_hash_3;
         logic key_manifest_pk_hash_mask;
         logic key_manifest_svn;
         logic boot_loader_svn;
-        logic runtime_svn[4];
+        logic [4-1:0]runtime_svn;
         logic anti_rollback_disable;
-        logic ieee_idevid_cert_chain[24];
+        logic [24-1:0]ieee_idevid_cert_chain;
         logic fuse_done;
-        logic obf_key[8];
+        logic [8-1:0]obf_key;
         logic iccm_lock;
         logic fw_update_reset;
         logic fw_update_reset_wait_cycles;
-        struct {
+        struct packed{
             logic global_intr_en_r;
             logic error_intr_en_r;
             logic notif_intr_en_r;
@@ -218,448 +218,448 @@ module soc_ifc_reg (
     //--------------------------------------------------------------------------
     // Field logic
     //--------------------------------------------------------------------------
-    typedef struct {
-        struct {
-            struct {
+    typedef struct packed{
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } error_code;
         } HW_ERROR_FATAL;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } error_code;
         } HW_ERROR_NON_FATAL;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } error_code;
         } FW_ERROR_FATAL;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } error_code;
         } FW_ERROR_NON_FATAL;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } error_code;
         } HW_ERROR_ENC;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } error_code;
         } FW_ERROR_ENC;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } status;
         } BOOT_STATUS;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [29:0] next;
                 logic load_next;
             } status;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } ready_for_fw;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } ready_for_runtime;
         } FLOW_STATUS;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } clear_secrets;
         } CLEAR_SECRETS;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } generic_wires;
-        } generic_input_wires[2];
-        struct {
-            struct {
+        } [2-1:0]generic_input_wires;
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } generic_wires;
-        } generic_output_wires[2];
-        struct {
-            struct {
+        } [2-1:0]generic_output_wires;
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } DATA;
-        } TRNG[12];
-        struct {
-            struct {
+        } [12-1:0]TRNG;
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } DONE;
         } TRNG_DONE;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } seed;
-        } uds_seed[12];
-        struct {
-            struct {
+        } [12-1:0]uds_seed;
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } seed;
-        } field_entropy[32];
-        struct {
-            struct {
+        } [32-1:0]field_entropy;
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } hash;
-        } key_manifest_pk_hash_0[12];
-        struct {
-            struct {
+        } [12-1:0]key_manifest_pk_hash_0;
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } hash;
-        } key_manifest_pk_hash_1[12];
-        struct {
-            struct {
+        } [12-1:0]key_manifest_pk_hash_1;
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } hash;
-        } key_manifest_pk_hash_2[12];
-        struct {
-            struct {
+        } [12-1:0]key_manifest_pk_hash_2;
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } hash;
-        } key_manifest_pk_hash_3[12];
-        struct {
-            struct {
+        } [12-1:0]key_manifest_pk_hash_3;
+        struct packed{
+            struct packed{
                 logic [3:0] next;
                 logic load_next;
             } mask;
         } key_manifest_pk_hash_mask;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } svn;
         } key_manifest_svn;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } svn;
         } boot_loader_svn;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } svn;
-        } runtime_svn[4];
-        struct {
-            struct {
+        } [4-1:0]runtime_svn;
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } dis;
         } anti_rollback_disable;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } cert;
-        } ieee_idevid_cert_chain[24];
-        struct {
-            struct {
+        } [24-1:0]ieee_idevid_cert_chain;
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } done;
         } fuse_done;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } key;
-        } obf_key[8];
-        struct {
-            struct {
+        } [8-1:0]obf_key;
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } lock;
         } iccm_lock;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } core_rst;
         } fw_update_reset;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [7:0] next;
                 logic load_next;
             } wait_cycles;
         } fw_update_reset_wait_cycles;
-        struct {
-            struct {
-                struct {
+        struct packed{
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } error_en;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } notif_en;
             } global_intr_en_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } error_internal_en;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } error_inv_dev_en;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } error_cmd_fail_en;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } error_bad_fuse_en;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } error_iccm_blocked_en;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } error_mbox_ecc_unc_en;
             } error_intr_en_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } notif_cmd_avail_en;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } notif_mbox_ecc_cor_en;
             } notif_intr_en_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } agg_sts;
             } error_global_intr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } agg_sts;
             } notif_global_intr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } error_internal_sts;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } error_inv_dev_sts;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } error_cmd_fail_sts;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } error_bad_fuse_sts;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } error_iccm_blocked_sts;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } error_mbox_ecc_unc_sts;
             } error_internal_intr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } notif_cmd_avail_sts;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } notif_mbox_ecc_cor_sts;
             } notif_internal_intr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } error_internal_trig;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } error_inv_dev_trig;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } error_cmd_fail_trig;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } error_bad_fuse_trig;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } error_iccm_blocked_trig;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } error_mbox_ecc_unc_trig;
             } error_intr_trig_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } notif_cmd_avail_trig;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } notif_mbox_ecc_cor_trig;
             } notif_intr_trig_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] next;
                     logic load_next;
                     logic incrthreshold;
                     logic incrsaturate;
                 } cnt;
             } error_internal_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] next;
                     logic load_next;
                     logic incrthreshold;
                     logic incrsaturate;
                 } cnt;
             } error_inv_dev_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] next;
                     logic load_next;
                     logic incrthreshold;
                     logic incrsaturate;
                 } cnt;
             } error_cmd_fail_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] next;
                     logic load_next;
                     logic incrthreshold;
                     logic incrsaturate;
                 } cnt;
             } error_bad_fuse_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] next;
                     logic load_next;
                     logic incrthreshold;
                     logic incrsaturate;
                 } cnt;
             } error_iccm_blocked_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] next;
                     logic load_next;
                     logic incrthreshold;
                     logic incrsaturate;
                 } cnt;
             } error_mbox_ecc_unc_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] next;
                     logic load_next;
                     logic incrthreshold;
                     logic incrsaturate;
                 } cnt;
             } notif_cmd_avail_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] next;
                     logic load_next;
                     logic incrthreshold;
                     logic incrsaturate;
                 } cnt;
             } notif_mbox_ecc_cor_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                     logic decrthreshold;
                     logic underflow;
                 } pulse;
             } error_internal_intr_count_incr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                     logic decrthreshold;
                     logic underflow;
                 } pulse;
             } error_inv_dev_intr_count_incr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                     logic decrthreshold;
                     logic underflow;
                 } pulse;
             } error_cmd_fail_intr_count_incr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                     logic decrthreshold;
                     logic underflow;
                 } pulse;
             } error_bad_fuse_intr_count_incr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                     logic decrthreshold;
                     logic underflow;
                 } pulse;
             } error_iccm_blocked_intr_count_incr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                     logic decrthreshold;
                     logic underflow;
                 } pulse;
             } error_mbox_ecc_unc_intr_count_incr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                     logic decrthreshold;
                     logic underflow;
                 } pulse;
             } notif_cmd_avail_intr_count_incr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                     logic decrthreshold;
@@ -670,343 +670,343 @@ module soc_ifc_reg (
     } field_combo_t;
     field_combo_t field_combo;
 
-    typedef struct {
-        struct {
-            struct {
+    typedef struct packed{
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } error_code;
         } HW_ERROR_FATAL;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } error_code;
         } HW_ERROR_NON_FATAL;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } error_code;
         } FW_ERROR_FATAL;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } error_code;
         } FW_ERROR_NON_FATAL;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } error_code;
         } HW_ERROR_ENC;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } error_code;
         } FW_ERROR_ENC;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } status;
         } BOOT_STATUS;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [29:0] value;
             } status;
-            struct {
+            struct packed{
                 logic value;
             } ready_for_fw;
-            struct {
+            struct packed{
                 logic value;
             } ready_for_runtime;
         } FLOW_STATUS;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic value;
             } clear_secrets;
         } CLEAR_SECRETS;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } generic_wires;
-        } generic_input_wires[2];
-        struct {
-            struct {
+        } [2-1:0]generic_input_wires;
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } generic_wires;
-        } generic_output_wires[2];
-        struct {
-            struct {
+        } [2-1:0]generic_output_wires;
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } DATA;
-        } TRNG[12];
-        struct {
-            struct {
+        } [12-1:0]TRNG;
+        struct packed{
+            struct packed{
                 logic value;
             } DONE;
         } TRNG_DONE;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } seed;
-        } uds_seed[12];
-        struct {
-            struct {
+        } [12-1:0]uds_seed;
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } seed;
-        } field_entropy[32];
-        struct {
-            struct {
+        } [32-1:0]field_entropy;
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } hash;
-        } key_manifest_pk_hash_0[12];
-        struct {
-            struct {
+        } [12-1:0]key_manifest_pk_hash_0;
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } hash;
-        } key_manifest_pk_hash_1[12];
-        struct {
-            struct {
+        } [12-1:0]key_manifest_pk_hash_1;
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } hash;
-        } key_manifest_pk_hash_2[12];
-        struct {
-            struct {
+        } [12-1:0]key_manifest_pk_hash_2;
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } hash;
-        } key_manifest_pk_hash_3[12];
-        struct {
-            struct {
+        } [12-1:0]key_manifest_pk_hash_3;
+        struct packed{
+            struct packed{
                 logic [3:0] value;
             } mask;
         } key_manifest_pk_hash_mask;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } svn;
         } key_manifest_svn;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } svn;
         } boot_loader_svn;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } svn;
-        } runtime_svn[4];
-        struct {
-            struct {
+        } [4-1:0]runtime_svn;
+        struct packed{
+            struct packed{
                 logic value;
             } dis;
         } anti_rollback_disable;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } cert;
-        } ieee_idevid_cert_chain[24];
-        struct {
-            struct {
+        } [24-1:0]ieee_idevid_cert_chain;
+        struct packed{
+            struct packed{
                 logic value;
             } done;
         } fuse_done;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } key;
-        } obf_key[8];
-        struct {
-            struct {
+        } [8-1:0]obf_key;
+        struct packed{
+            struct packed{
                 logic value;
             } lock;
         } iccm_lock;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic value;
             } core_rst;
         } fw_update_reset;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [7:0] value;
             } wait_cycles;
         } fw_update_reset_wait_cycles;
-        struct {
-            struct {
-                struct {
+        struct packed{
+            struct packed{
+                struct packed{
                     logic value;
                 } error_en;
-                struct {
+                struct packed{
                     logic value;
                 } notif_en;
             } global_intr_en_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } error_internal_en;
-                struct {
+                struct packed{
                     logic value;
                 } error_inv_dev_en;
-                struct {
+                struct packed{
                     logic value;
                 } error_cmd_fail_en;
-                struct {
+                struct packed{
                     logic value;
                 } error_bad_fuse_en;
-                struct {
+                struct packed{
                     logic value;
                 } error_iccm_blocked_en;
-                struct {
+                struct packed{
                     logic value;
                 } error_mbox_ecc_unc_en;
             } error_intr_en_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } notif_cmd_avail_en;
-                struct {
+                struct packed{
                     logic value;
                 } notif_mbox_ecc_cor_en;
             } notif_intr_en_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } agg_sts;
             } error_global_intr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } agg_sts;
             } notif_global_intr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } error_internal_sts;
-                struct {
+                struct packed{
                     logic value;
                 } error_inv_dev_sts;
-                struct {
+                struct packed{
                     logic value;
                 } error_cmd_fail_sts;
-                struct {
+                struct packed{
                     logic value;
                 } error_bad_fuse_sts;
-                struct {
+                struct packed{
                     logic value;
                 } error_iccm_blocked_sts;
-                struct {
+                struct packed{
                     logic value;
                 } error_mbox_ecc_unc_sts;
             } error_internal_intr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } notif_cmd_avail_sts;
-                struct {
+                struct packed{
                     logic value;
                 } notif_mbox_ecc_cor_sts;
             } notif_internal_intr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } error_internal_trig;
-                struct {
+                struct packed{
                     logic value;
                 } error_inv_dev_trig;
-                struct {
+                struct packed{
                     logic value;
                 } error_cmd_fail_trig;
-                struct {
+                struct packed{
                     logic value;
                 } error_bad_fuse_trig;
-                struct {
+                struct packed{
                     logic value;
                 } error_iccm_blocked_trig;
-                struct {
+                struct packed{
                     logic value;
                 } error_mbox_ecc_unc_trig;
             } error_intr_trig_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } notif_cmd_avail_trig;
-                struct {
+                struct packed{
                     logic value;
                 } notif_mbox_ecc_cor_trig;
             } notif_intr_trig_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] value;
                 } cnt;
             } error_internal_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] value;
                 } cnt;
             } error_inv_dev_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] value;
                 } cnt;
             } error_cmd_fail_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] value;
                 } cnt;
             } error_bad_fuse_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] value;
                 } cnt;
             } error_iccm_blocked_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] value;
                 } cnt;
             } error_mbox_ecc_unc_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] value;
                 } cnt;
             } notif_cmd_avail_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] value;
                 } cnt;
             } notif_mbox_ecc_cor_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } pulse;
             } error_internal_intr_count_incr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } pulse;
             } error_inv_dev_intr_count_incr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } pulse;
             } error_cmd_fail_intr_count_incr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } pulse;
             } error_bad_fuse_intr_count_incr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } pulse;
             } error_iccm_blocked_intr_count_incr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } pulse;
             } error_mbox_ecc_unc_intr_count_incr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } pulse;
             } notif_cmd_avail_intr_count_incr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } pulse;
             } notif_mbox_ecc_cor_intr_count_incr_r;
@@ -2726,7 +2726,7 @@ module soc_ifc_reg (
     logic [31:0] readback_data;
     
     // Assign readback values to a flattened array
-    logic [31:0] readback_array[134];
+    logic [134-1:0][31:0] readback_array;
     assign readback_array[0][31:0] = (decoded_reg_strb.HW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.HW_ERROR_FATAL.error_code.value : '0;
     assign readback_array[1][31:0] = (decoded_reg_strb.HW_ERROR_NON_FATAL && !decoded_req_is_wr) ? field_storage.HW_ERROR_NON_FATAL.error_code.value : '0;
     assign readback_array[2][31:0] = (decoded_reg_strb.FW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.FW_ERROR_FATAL.error_code.value : '0;

@@ -28,7 +28,7 @@ uvmf:
         reset_value: '''bz'
         width: '1'
       - dir: output
-        name: hadrr
+        name: haddr
         reset_value: '''bz'
         width: AHB_ADDR_WIDTH
       - dir: output

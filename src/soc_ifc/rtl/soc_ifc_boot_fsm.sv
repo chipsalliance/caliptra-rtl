@@ -30,6 +30,8 @@ module soc_ifc_boot_fsm
     output logic iccm_unlock
 );
 
+`include "caliptra_sva.svh"
+
 //present and next state
 boot_fsm_state_e boot_fsm_ns;
 boot_fsm_state_e boot_fsm_ps;

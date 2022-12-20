@@ -64,10 +64,10 @@ module hmac
   reg ready_reg;
   reg tag_valid_reg;
 
-  reg [31 : 0] key_reg [0 : 11];
+  reg [31 : 0] key_reg [11 : 0];
   reg          key_we;
 
-  reg [31 : 0] block_reg [0 : 31];
+  reg [31 : 0] block_reg [31 : 0];
   reg          block_we;
 
 
@@ -79,8 +79,8 @@ module hmac
   wire           core_ready;
   wire [383 : 0] core_tag;
   wire           core_tag_valid;
-  reg [0:11][31:0] tag_reg;
-  reg [0:11][31:0] kv_reg;
+  reg [11:0][31:0] tag_reg;
+  reg [11:0][31:0] kv_reg;
 
   hmac_reg__in_t hwif_in;
   hmac_reg__out_t hwif_out;
@@ -184,7 +184,7 @@ always_comb begin
   hwif_in.HMAC384_STATUS.READY.next = core_ready;
   hwif_in.HMAC384_STATUS.VALID.next = tag_valid_reg;
   for (int dword=0; dword < 12; dword++) begin
-    hwif_in.HMAC384_TAG[dword].TAG.next = tag_reg[dword];
+    hwif_in.HMAC384_TAG[dword].TAG.next = tag_reg[11-dword];
   end
   //drive hardware writable registers from key vault
   for (int dword=0; dword < 32; dword++)begin

@@ -38,7 +38,7 @@ module hmac_ctrl
     input wire           cptra_pwrgood,
 
     // from SLAVES PORT
-    input logic [AHB_ADDR_WIDTH-1:0] hadrr_i,
+    input logic [AHB_ADDR_WIDTH-1:0] haddr_i,
     input logic [AHB_DATA_WIDTH-1:0] hwdata_i,
     input logic hsel_i,
     input logic hwrite_i,
@@ -100,7 +100,7 @@ ahb_slv_sif #(
     //AMBA AHB Lite INF
     .hclk(clk),
     .hreset_n(reset_n),
-    .haddr_i(hadrr_i),
+    .haddr_i(haddr_i),
     .hwdata_i(hwdata_i),
     .hsel_i(hsel_i),
     .hwrite_i(hwrite_i),

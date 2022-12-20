@@ -545,6 +545,11 @@ module sha256_core(
             sha256_ctrl_new  = CTRL_IDLE;
             sha256_ctrl_we   = 1;
           end
+        default:
+          begin
+            sha256_ctrl_new = sha256_ctrl_reg;
+            sha256_ctrl_we   = 0;
+          end
       endcase // case (sha256_ctrl_reg)
     end // sha256_ctrl_fsm
 

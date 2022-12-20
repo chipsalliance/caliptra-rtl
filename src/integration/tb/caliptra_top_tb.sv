@@ -30,18 +30,21 @@ module caliptra_top_tb (
     import caliptra_top_tb_pkg::*;
     import soc_ifc_pkg::*;
 
+`ifndef VERILATOR
     // Time formatting for %t in display tasks
     // -9 = ns units
     // 3  = 3 bits of precision (to the ps)
     // "ns" = nanosecond suffix for output time values
     // 15 = 15 bits minimum field width
     initial $timeformat(-9, 3, " ns", 15); // up to 99ms representable in this width
+`endif
 
 `ifndef VERILATOR
     bit                         core_clk;
 `endif
 
     int                         cycleCnt;
+    int                         cycleCnt_Flag = '0;
     logic                       mailbox_write;
     logic                       mailbox_data_val;
     int                         commit_count;
@@ -58,6 +61,8 @@ module caliptra_top_tb (
     logic                       trace_rv_i_interrupt_ip;
     logic        [31:0]         trace_rv_i_tval_ip;
 
+    bit                         hex_file_is_empty;
+    logic                       start_apb_fuse_sequence;
     logic                       cptra_pwrgood;
     logic                       cptra_rst_b;
 
@@ -66,6 +71,25 @@ module caliptra_top_tb (
     
     logic [0:11][31:0]          cptra_uds_tb;
     logic [0:31][31:0]          cptra_fe_tb;
+
+    enum logic [5:0] {
+        S_APB_IDLE,
+        S_APB_WR_UDS,
+        S_APB_WR_FE,
+        S_APB_WR_FUSE_DONE,
+        S_APB_WAIT_FW_READY,
+        S_APB_POLL_LOCK,
+        S_APB_PRE_WR_CMD,
+        S_APB_WR_CMD,
+        S_APB_WR_DLEN,
+        S_APB_WR_DATAIN,
+        S_APB_WR_EXEC,
+        S_APB_DONE,
+        S_APB_ERROR
+    } n_state_apb, c_state_apb;
+
+    logic [$clog2(FW_NUM_DWORDS)-1:0] apb_wr_count, apb_wr_count_nxt;
+    logic apb_xfer_end;
 
     wire[31:0] WriteData;
     string                      abi_reg[32]; // ABI register names
@@ -101,10 +125,8 @@ module caliptra_top_tb (
     logic [`IMEM_ADDR_WIDTH-1:0] imem_addr;
     logic [`IMEM_DATA_WIDTH-1:0] imem_rdata;
 
-    security_state_t security_state;
-
     //TIE-OFF device lifecycle
-    assign security_state.device_lifecycle = DEVICE_PRODUCTION;
+    security_state_t security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1};
 
 `define DEC caliptra_top_dut.rvtop.swerv.dec
 
@@ -168,63 +190,66 @@ module caliptra_top_tb (
     end // clk_gen
 `endif
     
-    logic [7:0] isr_active;
-    initial begin
-        isr_active = 8'h0;
-        forever begin
-            @(negedge core_clk)
-            if ((WriteData[7:0] == 8'hfc) && mailbox_write) begin
-                isr_active--;
-            end
-            else if ((WriteData[7:0] == 8'hfb) && mailbox_write) begin
-                isr_active++;
-            end
+    logic [7:0] isr_active = 8'h0;
+    always @(negedge core_clk) begin
+        if ((WriteData[7:0] == 8'hfc) && mailbox_write) begin
+            isr_active--;
+        end
+        else if ((WriteData[7:0] == 8'hfb) && mailbox_write) begin
+            isr_active++;
         end
     end
-    logic [1:0] inject_rand_sram_error;
-    initial begin
-        inject_rand_sram_error = 1'b0;
-        forever begin
-            @(negedge core_clk)
-            if ((WriteData[7:0] == 8'hfd) && mailbox_write) begin
-                inject_rand_sram_error ^= 2'b01;
-            end
-            else if ((WriteData[7:0] == 8'hfe) && mailbox_write) begin
-                inject_rand_sram_error ^= 2'b10;
-            end
+    logic [1:0] inject_rand_sram_error = 2'b0;
+    always @(negedge core_clk) begin
+        if ((WriteData[7:0] == 8'hfd) && mailbox_write) begin
+            inject_rand_sram_error ^= 2'b01;
+        end
+        else if ((WriteData[7:0] == 8'hfe) && mailbox_write) begin
+            inject_rand_sram_error ^= 2'b10;
         end
     end
-    initial begin
-        security_state.debug_locked = 1'b1;
-        forever begin
-            @(negedge core_clk)
-            //lock debug mode
-            if ((WriteData[7:0] == 8'hf9) && mailbox_write) begin
-                security_state.debug_locked = 1'b1;
-            end
-            //unlock debug mode
-            else if ((WriteData[7:0] == 8'hfa) && mailbox_write) begin
-                security_state.debug_locked = 1'b0;
-            end
+
+    always @(negedge core_clk) begin
+        //lock debug mode
+        if ((WriteData[7:0] == 8'hf9) && mailbox_write) begin
+            security_state.debug_locked <= 1'b1;
+        end
+        //unlock debug mode
+        else if ((WriteData[7:0] == 8'hfa) && mailbox_write) begin
+            security_state.debug_locked <= 1'b0;
         end
     end
-    initial begin
-        bitflip_mask_generator #(MBOX_DATA_AND_ECC_W) bitflip_gen = new();
-        bit flip_bit;
-        forever begin
-            @(posedge core_clk)
+
+    bit flip_bit;
+    `ifndef VERILATOR
+        initial begin
+            bitflip_mask_generator #(MBOX_DATA_AND_ECC_W) bitflip_gen = new();
+            forever begin
+                @(posedge core_clk)
+                if (~|inject_rand_sram_error) begin
+                    mbox_sram_wdata_bitflip <= '0;
+                end
+                else if (mbox_sram_cs & mbox_sram_we) begin
+                    // Corrupt 10% of the writes
+                    flip_bit = $urandom_range(0,99) < 10;
+                    mbox_sram_wdata_bitflip <= flip_bit ? bitflip_gen.get_mask(inject_rand_sram_error[1]) : '0;
+//                    if (flip_bit) $display("%t Injecting bit flips", $realtime);
+//                    else          $display("%t No bit flips injected", $realtime);
+                end
+            end
+        end
+    `else
+        always @(posedge core_clk) begin
+            // Corrupt 10% of the writes
+            flip_bit <= ($urandom % 100) < 10;
             if (~|inject_rand_sram_error) begin
                 mbox_sram_wdata_bitflip <= '0;
             end
             else if (mbox_sram_cs & mbox_sram_we) begin
-                // Corrupt 10% of the writes
-                flip_bit = $urandom_range(0,99) < 10;
-                mbox_sram_wdata_bitflip <= flip_bit ? bitflip_gen.get_mask(inject_rand_sram_error[1]) : '0;
-//                if (flip_bit) $display("%t Injecting bit flips", $realtime);
-//                else          $display("%t No bit flips injected", $realtime);
+                mbox_sram_wdata_bitflip <= flip_bit ? get_bitflip_mask(inject_rand_sram_error[1]) : '0;
             end
         end
-    end
+    `endif
 
     always @(negedge core_clk) begin
         cycleCnt <= cycleCnt+1;
@@ -292,6 +317,8 @@ module caliptra_top_tb (
         end
     end
 
+// FIXME -- this should work in Verilator 4.106+
+//`ifndef VERILATOR
     // IFU Initiator monitor
     always @(posedge core_clk) begin
         $fstrobe(ifu_p, "%10d : 0x%0h %h %b %h %h %h %b 0x%08h_%08h %b %b\n", cycleCnt, 
@@ -323,11 +350,13 @@ module caliptra_top_tb (
             end
         end
     endgenerate
+//`endif
 
 
     initial begin
         cptra_pwrgood = 1'b0;
         cptra_rst_b = 1'b0;
+        start_apb_fuse_sequence = 1'b0;
         abi_reg[0] = "zero";
         abi_reg[1] = "ra";
         abi_reg[2] = "sp";
@@ -366,18 +395,20 @@ module caliptra_top_tb (
         jtag_tdi = 1'b0;    // JTAG tdi
         jtag_trst_n = 1'b0; // JTAG Reset
         //TIE-OFF
-        PADDR = '0;
         PSEL = '0;
         PENABLE = '0;
         PWRITE = '0;
-        PWDATA = '0;
         PAUSER = '0;
         PPROT = '0;
 
-        $readmemh("program.hex",  imem_inst1.ram,0,32'h00008000);
-        $readmemh("mailbox.hex",  dummy_mbox_preloader.ram,0,32'h0002_0000);
-        $readmemh("dccm.hex",     dummy_dccm_preloader.ram,0,32'h0002_0000);
-        $readmemh("iccm.hex",     dummy_iccm_preloader.ram,0,32'h0002_0000);
+        hex_file_is_empty = $system("test -s program.hex");
+        if (!hex_file_is_empty) $readmemh("program.hex",  imem_inst1.ram,0,32'h00007FFF);
+        hex_file_is_empty = $system("test -s mailbox.hex");
+        if (!hex_file_is_empty) $readmemh("mailbox.hex",  dummy_mbox_preloader.ram,0,32'h0001_FFFF);
+        hex_file_is_empty = $system("test -s dccm.hex");
+        if (!hex_file_is_empty) $readmemh("dccm.hex",     dummy_dccm_preloader.ram,0,32'h0001_FFFF);
+        hex_file_is_empty = $system("test -s iccm.hex");
+        if (!hex_file_is_empty) $readmemh("iccm.hex",     dummy_iccm_preloader.ram,0,32'h0001_FFFF);
         tp = $fopen("trace_port.csv","w");
         el = $fopen("exec.log","w");
         ifu_p = $fopen("ifu_master_ahb_trace.log", "w");
@@ -386,11 +417,13 @@ module caliptra_top_tb (
         $fwrite(ifu_p, "//   Cycle: ic_haddr     ic_hburst     ic_hmastlock     ic_hprot     ic_hsize     ic_htrans     ic_hwrite     ic_hrdata     ic_hwdata     ic_hready     ic_hresp\n");
         $fwrite(lsu_p, "//   Cycle: lsu_haddr     lsu_hsize     lsu_htrans     lsu_hwrite     lsu_hrdata     lsu_hwdata     lsu_hready     lsu_hresp\n");
 
+//`ifndef VERILATOR
         for (j = 0; j < `AHB_SLAVES_NUM; j = j + 1) begin
             slaveLog_fileName[j] = {$sformatf("slave%0d_ahb_trace.log", j)};
             sl_p[j] = $fopen(slaveLog_fileName[j], "w");
             $fwrite(sl_p[j], "//   Cycle: haddr     hsize     htrans     hwrite     hrdata     hwdata     hready     hreadyout     hresp\n");
         end
+//`endif
 
         fd = $fopen("console.log","w");
         commit_count = 0;
@@ -419,75 +452,330 @@ module caliptra_top_tb (
             //cptra_obf_key[dword] = cptra_obf_key_uds[dword];
             cptra_obf_key[dword] = cptra_obf_key_fe[dword];
         end
-        repeat (10) @(posedge core_clk);
-        $display ("\n\n\n\n\n\n");
-        $display ("SoC: Asserting cptra_pwrgood\n");
-        //assert power good
-        repeat (5) @(posedge core_clk);
-        cptra_pwrgood = 1'b1;
-
-        $display ("SoC: De-Asserting cptra_rst_b\n");
-        //de-assert reset
-        repeat (5) @(posedge core_clk);
-        cptra_rst_b = 1'b1;
-
-        //wait for fuse indication
-        wait (ready_for_fuses == 1'b1);
-        
-        repeat (5) @(posedge core_clk);
-
-        $display ("CLP: Ready for fuse download\n");
-
-        $display ("SoC: Writing obfuscated UDS to fuse bank\n");
-        //load fuses
-        for (int i = 0; i < 12; i++)begin
-            write_single_word_apb(MBOX_UDS_ADDR + i*4, cptra_uds_tb[i]);
-        end
-        
-        $display ("SoC: Writing obfuscated Field Entropy to fuse bank\n");
-        for (int i = 0; i < 32; i++)begin
-            write_single_word_apb(MBOX_FE_ADDR + i*4, cptra_fe_tb[i]);
-        end
-        
-        $display ("SoC: Writing fuse done register\n");
-        //set fuse done
-        write_single_word_apb(MBOX_FUSE_DONE_ADDR, 32'h00000001);  
-
-        $display ("CLP: ROM Flow in progress...\n");
-
-        //This is for Caliptra Demo, smoke tests will stop here since they don't set ready for fw
-        //wait for fw req
-        wait (ready_for_fw_push == 1'b1);
-        
-        repeat (5) @(posedge core_clk);
-        
-        $display ("CLP: Ready for firmware push\n");
-    
-        // poll for lock register
-        wait_unlock_apb();
-        repeat (5) @(posedge core_clk);
-        $display ("SoC: Lock granted\n");
-
-        
-        $display ("SoC: Writing the Command Register\n");
-        //write to MBOX_ADDR_CMD
-        write_single_word_apb(MBOX_ADDR_CMD, 32'hBA5EBA11);
-
-        $display ("SoC: Writing the Data Length Register\n");
-        // write to MBOX_ADDR_DLEN
-        write_single_word_apb(MBOX_ADDR_DLEN, FW_NUM_DWORDS*4);
-
-        $display ("SoC: Writing the Firmware into Data-in Register\n");
-        // write a random block in
-        for (int i = 0; i < FW_NUM_DWORDS; i++) begin
-            fw_blob[i] = $urandom();
-            write_single_word_apb(MBOX_ADDR_DATAIN, fw_blob[i]);
-        end 
-        
-        $display ("SoC: Setting the Execute Register\n");
-        // execute
-        write_single_word_apb(MBOX_ADDR_EXECUTE, 32'h00000001);
     end
+
+    always @(posedge core_clk) begin
+        if (cycleCnt == 15) begin
+            $display ("\n\n\n\n\n\n");
+            $display ("SoC: Asserting cptra_pwrgood\n");
+            //assert power good
+            cptra_pwrgood <= 1'b1;
+        end
+        else if (cycleCnt == 20) begin
+            $display ("SoC: De-Asserting cptra_rst_b\n");
+            //de-assert reset
+            cptra_rst_b <= 1'b1;
+        end
+        //wait for fuse indication
+        else if (ready_for_fuses == 1'b0) begin
+            //nop
+            cycleCnt_Flag <= cycleCnt;
+        end
+        else if (cycleCnt == cycleCnt_Flag + 5) begin
+            start_apb_fuse_sequence <= 1'b1;
+        end
+    end
+
+    always@(posedge core_clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b) begin
+            c_state_apb  <= S_APB_IDLE;
+            apb_wr_count <= '0;
+        end
+        else begin
+            c_state_apb  <= n_state_apb;
+            apb_wr_count <= apb_wr_count_nxt;
+        end
+        if (c_state_apb != n_state_apb) begin
+            case (n_state_apb)
+                S_APB_WR_UDS: begin
+                    $display ("CLP: Ready for fuse download\n");
+                    $display ("SoC: Writing obfuscated UDS to fuse bank\n");
+                end
+                S_APB_WR_FE: begin
+                    $display ("SoC: Writing obfuscated Field Entropy to fuse bank\n");
+                end
+                S_APB_WR_FUSE_DONE: begin
+                    $display ("SoC: Writing fuse done register\n");
+                end
+                S_APB_WAIT_FW_READY: begin
+                    $display ("CLP: ROM Flow in progress...\n");
+                end
+                S_APB_POLL_LOCK: begin
+                    $display ("CLP: Ready for firmware push\n");
+                    $display ("SoC: Requesting mailbox lock\n");
+                end
+                S_APB_PRE_WR_CMD: begin
+                    $display ("SoC: Lock granted\n");
+                end
+                S_APB_WR_CMD: begin
+                    $display ("SoC: Writing the Command Register\n");
+                end
+                S_APB_WR_DLEN: begin
+                    $display ("SoC: Writing the Data Length Register\n");
+                end
+                S_APB_WR_DATAIN: begin
+                    $display ("SoC: Writing the Firmware into Data-in Register\n");
+                end
+                S_APB_WR_EXEC: begin
+                    $display ("SoC: Setting the Execute Register\n");
+                end
+                S_APB_DONE: begin
+                end
+                default: begin
+                    $display("Entering unexpected APB state: %p", n_state_apb);
+                end
+            endcase
+        end
+    end
+
+    always_comb begin
+        apb_wr_count_nxt = 0;
+        case (c_state_apb) inside
+            S_APB_IDLE: begin
+                if (start_apb_fuse_sequence)
+                    n_state_apb = S_APB_WR_UDS;
+                else
+                    n_state_apb = S_APB_IDLE;
+            end
+            //load fuses
+            S_APB_WR_UDS: begin
+                if (apb_xfer_end && apb_wr_count == 11) begin
+                    n_state_apb = S_APB_WR_FE;
+                    apb_wr_count_nxt = '0;
+                end
+                else if (apb_xfer_end) begin
+                    n_state_apb = S_APB_WR_UDS;
+                    apb_wr_count_nxt = apb_wr_count + 1;
+                end
+                else begin
+                    n_state_apb = S_APB_WR_UDS;
+                    apb_wr_count_nxt = apb_wr_count;
+                end
+            end
+            S_APB_WR_FE: begin
+                if (apb_xfer_end && apb_wr_count == 31) begin
+                    n_state_apb = S_APB_WR_FUSE_DONE;
+                    apb_wr_count_nxt = '0;
+                end
+                else if (apb_xfer_end) begin
+                    n_state_apb = S_APB_WR_FE;
+                    apb_wr_count_nxt = apb_wr_count + 1;
+                end
+                else begin
+                    n_state_apb = S_APB_WR_FE;
+                    apb_wr_count_nxt = apb_wr_count;
+                end
+            end
+            //set fuse done
+            S_APB_WR_FUSE_DONE: begin
+                if (apb_xfer_end) begin
+                    n_state_apb = S_APB_WAIT_FW_READY;
+                end
+                else begin
+                    n_state_apb = S_APB_WR_FUSE_DONE;
+                end
+            end
+            //This is for Caliptra Demo, smoke tests will stop here since they don't set ready for fw
+            //wait for fw req
+            S_APB_WAIT_FW_READY: begin
+                if (ready_for_fw_push & (apb_wr_count == 5)) begin
+                    n_state_apb = S_APB_POLL_LOCK;
+                    apb_wr_count_nxt = 0;
+                end
+                else if (ready_for_fw_push) begin
+                    n_state_apb = S_APB_WAIT_FW_READY;
+                    apb_wr_count_nxt = apb_wr_count + 1;
+                end
+                else begin
+                    n_state_apb = S_APB_WAIT_FW_READY;
+                    apb_wr_count_nxt = 0;
+                end
+            end
+            // poll for lock register
+            S_APB_POLL_LOCK: begin
+                if (apb_xfer_end && (PRDATA != 0)) begin
+                    n_state_apb = S_APB_WR_CMD;
+                end
+                else begin
+                    n_state_apb = S_APB_POLL_LOCK;
+                end
+            end
+            S_APB_PRE_WR_CMD: begin
+                if (apb_wr_count == 5) begin
+                    n_state_apb = S_APB_WR_CMD;
+                    apb_wr_count_nxt = 0;
+                end
+                else begin
+                    n_state_apb = S_APB_PRE_WR_CMD;
+                    apb_wr_count_nxt = apb_wr_count + 1;
+                end
+            end
+            //write to MBOX_ADDR_CMD
+            S_APB_WR_CMD: begin
+                if (apb_xfer_end)
+                    n_state_apb = S_APB_WR_DLEN;
+                else
+                    n_state_apb = S_APB_WR_CMD;
+            end
+            // write to MBOX_ADDR_DLEN
+            S_APB_WR_DLEN: begin
+                if (apb_xfer_end)
+                    n_state_apb = S_APB_WR_DATAIN;
+                else
+                    n_state_apb = S_APB_WR_DLEN;
+            end
+            // write a random block in
+            S_APB_WR_DATAIN: begin
+                if (apb_xfer_end && apb_wr_count == (FW_NUM_DWORDS-1)) begin
+                    n_state_apb = S_APB_WR_EXEC;
+                    apb_wr_count_nxt = '0;
+                end
+                else if (apb_xfer_end) begin
+                    n_state_apb = S_APB_WR_DATAIN;
+                    apb_wr_count_nxt = apb_wr_count + 1;
+                end
+                else begin
+                    n_state_apb = S_APB_WR_DATAIN;
+                    apb_wr_count_nxt = apb_wr_count;
+                end
+            end
+            // execute
+            S_APB_WR_EXEC: begin
+                if (apb_xfer_end)
+                    n_state_apb = S_APB_DONE;
+                else
+                    n_state_apb = S_APB_WR_EXEC;
+            end
+            S_APB_DONE: begin
+                apb_wr_count_nxt = '0;
+                n_state_apb = S_APB_DONE;
+            end
+            default: begin
+                apb_wr_count_nxt = apb_wr_count;
+                n_state_apb = S_APB_ERROR;
+            end
+        endcase
+    end
+    assign apb_xfer_end = PSEL && PENABLE && PREADY;
+    always@(posedge core_clk) begin
+        if ((n_state_apb == S_APB_WR_DATAIN) && apb_xfer_end)
+            fw_blob[apb_wr_count_nxt] <= $urandom;
+    end
+    always_comb begin
+        case (c_state_apb) inside
+            S_APB_WR_UDS: begin
+                PADDR      = MBOX_UDS_ADDR + 4 * apb_wr_count;
+                PWDATA     = cptra_uds_tb[apb_wr_count];
+            end
+            S_APB_WR_FE: begin
+                PADDR      = MBOX_FE_ADDR + 4 * apb_wr_count;
+                PWDATA     = cptra_fe_tb[apb_wr_count];
+            end
+            S_APB_WR_FUSE_DONE: begin
+                PADDR      = MBOX_FUSE_DONE_ADDR;
+                PWDATA     = 32'h00000001;
+            end
+            S_APB_POLL_LOCK: begin
+                PADDR      = MBOX_ADDR_LOCK;
+                PWDATA     = '0;
+            end
+            S_APB_WR_CMD: begin
+                PADDR      = MBOX_ADDR_CMD;
+                PWDATA     = 32'hBA5EBA11;
+            end
+            S_APB_WR_DLEN: begin
+                PADDR      = MBOX_ADDR_DLEN;
+                PWDATA     = FW_NUM_DWORDS*4;
+            end
+            S_APB_WR_DATAIN: begin
+                PADDR      = MBOX_ADDR_DATAIN;
+                PWDATA     = fw_blob[apb_wr_count];
+            end
+            S_APB_WR_EXEC: begin
+                PADDR      = MBOX_ADDR_EXECUTE;
+                PWDATA     = 32'h00000001;
+            end
+            S_APB_DONE: begin
+                PADDR      = '0;
+                PWDATA     = '0;
+            end
+            default: begin
+                PADDR      = '0;
+                PWDATA     = '0;
+            end
+        endcase
+    end
+    always@(posedge core_clk) begin
+        case (c_state_apb) inside
+            S_APB_IDLE: begin
+                PSEL       <= 0;
+                PENABLE    <= 0;
+                PWRITE     <= 0;
+                PAUSER     <= 0;
+            end
+            S_APB_WR_UDS: begin
+                PSEL       <= 1;
+                PENABLE    <= PSEL ^ apb_xfer_end;
+                PWRITE     <= 1;
+                PAUSER     <= 0;
+            end
+            S_APB_WR_FE: begin
+                PSEL       <= 1;
+                PENABLE    <= PSEL ^ apb_xfer_end;
+                PWRITE     <= 1;
+                PAUSER     <= 0;
+            end
+            S_APB_WR_FUSE_DONE: begin
+                PSEL       <= 1;
+                PENABLE    <= PSEL ^ apb_xfer_end;
+                PWRITE     <= 1;
+                PAUSER     <= 0;
+            end
+            S_APB_POLL_LOCK: begin
+                PSEL       <= 1;
+                PENABLE    <= PSEL ^ apb_xfer_end;
+                PWRITE     <= 0;
+                PAUSER     <= 0;
+            end
+            S_APB_WR_CMD: begin
+                PSEL       <= 1;
+                PENABLE    <= PSEL ^ apb_xfer_end;
+                PWRITE     <= 1;
+                PAUSER     <= 0;
+            end
+            S_APB_WR_DLEN: begin
+                PSEL       <= 1;
+                PENABLE    <= PSEL ^ apb_xfer_end;
+                PWRITE     <= 1;
+                PAUSER     <= 0;
+            end
+            S_APB_WR_DATAIN: begin
+                PSEL       <= 1;
+                PENABLE    <= PSEL ^ apb_xfer_end;
+                PWRITE     <= 1;
+                PAUSER     <= 0;
+            end
+            S_APB_WR_EXEC: begin
+                PSEL       <= 1;
+                PENABLE    <= PSEL ^ apb_xfer_end;
+                PWRITE     <= 1;
+                PAUSER     <= 0;
+            end
+            S_APB_DONE: begin
+                PSEL       <= 0;
+                PENABLE    <= 0;
+                PWRITE     <= 0;
+                PAUSER     <= 0;
+            end
+            default: begin
+                PSEL       <= 0;
+                PENABLE    <= 0;
+                PWRITE     <= 0;
+                PAUSER     <= 0;
+            end
+        endcase
+    end
+
 
    //=========================================================================-
    // DUT instance
@@ -644,7 +932,9 @@ task preload_mbox;
     localparam NUM_BYTES = MBOX_DATA_AND_ECC_W / 8 + ((MBOX_DATA_AND_ECC_W%8) ? 1 : 0);
 
     // Init
-    mbox_ram1.ram = '{default:MBOX_DATA_AND_ECC_W'(0)};
+    `ifndef VERILATOR
+    mbox_ram1.ram = '{default:8'h0};
+    `endif
 
     // Slam
     $display("MBOX pre-load from %h to %h", 0, MBOX_DEPTH);
@@ -658,6 +948,7 @@ task preload_mbox;
             mbox_ram1.ram[addr][byt] = ecc_data[byt*8+:8];
         end
     end
+    $display("MBOX pre-load completed");
 endtask
 
 task preload_iccm;
@@ -694,7 +985,7 @@ task preload_iccm;
     //eaddr = {caliptra_top_dut.imem.mem[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
     $display("ICCM pre-load from %h to %h", saddr, eaddr);
 
-    for(addr= saddr; addr <= eaddr; addr+=4) begin
+    for(addr= saddr; addr < eaddr; addr+=4) begin
         // FIXME hardcoded address indices?
         data = {dummy_iccm_preloader.ram [addr[16:3]] [{addr[2],2'h3}],
                 dummy_iccm_preloader.ram [addr[16:3]] [{addr[2],2'h2}],
@@ -740,7 +1031,7 @@ task preload_dccm;
              imem_inst1.ram [addr[14:3]] [{addr[2],2'h0}]};
     $display("DCCM pre-load from %h to %h", saddr, eaddr);
 
-    for(addr=saddr; addr <= eaddr; addr+=4) begin
+    for(addr=saddr; addr < eaddr; addr+=4) begin
         // FIXME hardcoded address indices?
         data = {dummy_dccm_preloader.ram [addr[16:3]] [{addr[2],2'h3}],
                 dummy_dccm_preloader.ram [addr[16:3]] [{addr[2],2'h2}],
@@ -964,6 +1255,11 @@ task dump_memory_contents;
                             endcase // }
                             `endif
             end
+            default: begin
+                data = 0;
+                bank = 0;
+                ecc_data = 0;
+            end
         endcase
 
         case (mem_type)
@@ -990,6 +1286,7 @@ task dump_memory_contents;
                                 $fwrite(of, "%x ", ecc_data);
                             end
             end
+            default: begin end
         endcase
     end
 endtask
@@ -1038,6 +1335,7 @@ function int get_iccm_bank(input[31:0] addr,  output int bank_idx);
     `endif
 endfunction
 
+`ifndef VERILATOR
 //apb interface tasks
 //----------------------------------------------------------------
 // write_single_word_apb()
@@ -1084,17 +1382,7 @@ begin
 end
 endtask // read_single_word_apb
 
-task wait_unlock_apb;
-    begin
-        $display ("SoC: Requesting mailbox lock\n");
-        read_single_word_apb(MBOX_ADDR_LOCK);
-        while (PRDATA != 0)
-        begin
-            $display ("SoC: Requesting mailbox lock\n");
-            read_single_word_apb(MBOX_ADDR_LOCK);
-        end
-    end
-  endtask // wait_unlock_apb
+  `endif
 
 /* verilator lint_off CASEINCOMPLETE */
 `include "dasm.svi"

@@ -87,7 +87,9 @@ always_comb toggle_priority = req_collision;
 //uC requests to mailbox
 always_comb uc_mbox_req = uc_mbox_reg_req | uc_mbox_dir_req;
 always_comb uc_mbox_reg_req = (uc_req_dv & (uc_req_data.addr inside {[MBOX_REG_START_ADDR:MBOX_REG_END_ADDR]}));
+/* verilator lint_off UNSIGNED */
 always_comb uc_mbox_dir_req = (uc_req_dv & (uc_req_data.addr inside {[MBOX_DIR_START_ADDR:MBOX_DIR_END_ADDR]}));
+/* verilator lint_on UNSIGNED */
 //SoC requests to mailbox
 always_comb soc_mbox_req = (soc_req_dv & (soc_req_data.addr inside {[MBOX_REG_START_ADDR:MBOX_REG_END_ADDR]}));
 //Requests to arch/fuse register block

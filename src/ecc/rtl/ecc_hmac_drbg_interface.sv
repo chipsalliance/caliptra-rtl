@@ -174,13 +174,15 @@ module ecc_hmac_drbg_interface#(
         end
         else
         if (hmac_done_edge) begin
-            unique casez (state_reg)
+            /* verilator lint_off CASEINCOMPLETE */
+            unique case (state_reg) inside
                 LAMBDA_ST:      lambda_reg <= hmac_nonce;
                 SCALAR_RND_ST:  scalar_rnd_reg <= hmac_nonce;
                 MASKING_RND_ST: masking_rnd_reg <= hmac_nonce;
                 KEYGEN_ST:      nonce_reg <= hmac_nonce;
                 SIGN_ST:        nonce_reg <= hmac_nonce;
             endcase
+            /* verilator lint_on CASEINCOMPLETE */
         end
     end //reg_update
 

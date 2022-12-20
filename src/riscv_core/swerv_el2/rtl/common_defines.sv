@@ -157,7 +157,9 @@
 `define RV_LDERR_ROLLBACK 1
 `define CPU_TOP `RV_TOP.swerv
 `define RV_EXT_DATAWIDTH 64
-`define RV_ASSERT_ON 
+`ifndef VERILATOR
+    `define RV_ASSERT_ON 
+`endif
 `define RV_EXT_ADDRWIDTH 32
 `define RV_BTB_ENABLE 1
 `define RV_BTB_BTAG_FOLD 0

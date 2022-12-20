@@ -60,11 +60,11 @@ module kv_reg (
     //--------------------------------------------------------------------------
     // Address Decode
     //--------------------------------------------------------------------------
-    typedef struct {
-        logic PCR_CTRL[8];
-        logic PCR_ENTRY[8][16];
-        logic KEY_CTRL[8];
-        logic KEY_ENTRY[8][16];
+    typedef struct packed{
+        logic [8-1:0]PCR_CTRL;
+        logic [8-1:0][16-1:0]PCR_ENTRY;
+        logic [8-1:0]KEY_CTRL;
+        logic [8-1:0][16-1:0]KEY_ENTRY;
         logic CLEAR_SECRETS;
     } decoded_reg_strb_t;
     decoded_reg_strb_t decoded_reg_strb;
@@ -104,77 +104,77 @@ module kv_reg (
     //--------------------------------------------------------------------------
     // Field logic
     //--------------------------------------------------------------------------
-    typedef struct {
-        struct {
-            struct {
+    typedef struct packed{
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } lock_rd;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } lock_wr;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } lock_use;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } clear;
-            struct {
+            struct packed{
                 logic [5:0] next;
                 logic load_next;
             } dest_valid;
-            struct {
+            struct packed{
                 logic [16:0] next;
                 logic load_next;
             } rsvd;
-        } PCR_CTRL[8];
-        struct {
-            struct {
+        } [8-1:0]PCR_CTRL;
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } data;
-        } PCR_ENTRY[8][16];
-        struct {
-            struct {
+        } [8-1:0][16-1:0]PCR_ENTRY;
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } lock_rd;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } lock_wr;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } lock_use;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } clear;
-            struct {
+            struct packed{
                 logic [5:0] next;
                 logic load_next;
             } dest_valid;
-            struct {
+            struct packed{
                 logic [16:0] next;
                 logic load_next;
             } rsvd;
-        } KEY_CTRL[8];
-        struct {
-            struct {
+        } [8-1:0]KEY_CTRL;
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } data;
-        } KEY_ENTRY[8][16];
-        struct {
-            struct {
+        } [8-1:0][16-1:0]KEY_ENTRY;
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } wr_debug_values;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } sel_debug_value;
@@ -182,62 +182,62 @@ module kv_reg (
     } field_combo_t;
     field_combo_t field_combo;
 
-    typedef struct {
-        struct {
-            struct {
+    typedef struct packed{
+        struct packed{
+            struct packed{
                 logic value;
             } lock_rd;
-            struct {
+            struct packed{
                 logic value;
             } lock_wr;
-            struct {
+            struct packed{
                 logic value;
             } lock_use;
-            struct {
+            struct packed{
                 logic value;
             } clear;
-            struct {
+            struct packed{
                 logic [5:0] value;
             } dest_valid;
-            struct {
+            struct packed{
                 logic [16:0] value;
             } rsvd;
-        } PCR_CTRL[8];
-        struct {
-            struct {
+        } [8-1:0]PCR_CTRL;
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } data;
-        } PCR_ENTRY[8][16];
-        struct {
-            struct {
+        } [8-1:0][16-1:0]PCR_ENTRY;
+        struct packed{
+            struct packed{
                 logic value;
             } lock_rd;
-            struct {
+            struct packed{
                 logic value;
             } lock_wr;
-            struct {
+            struct packed{
                 logic value;
             } lock_use;
-            struct {
+            struct packed{
                 logic value;
             } clear;
-            struct {
+            struct packed{
                 logic [5:0] value;
             } dest_valid;
-            struct {
+            struct packed{
                 logic [16:0] value;
             } rsvd;
-        } KEY_CTRL[8];
-        struct {
-            struct {
+        } [8-1:0]KEY_CTRL;
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } data;
-        } KEY_ENTRY[8][16];
-        struct {
-            struct {
+        } [8-1:0][16-1:0]KEY_ENTRY;
+        struct packed{
+            struct packed{
                 logic value;
             } wr_debug_values;
-            struct {
+            struct packed{
                 logic value;
             } sel_debug_value;
         } CLEAR_SECRETS;
@@ -588,7 +588,7 @@ module kv_reg (
     logic [31:0] readback_data;
     
     // Assign readback values to a flattened array
-    logic [31:0] readback_array[145];
+    logic [145-1:0][31:0] readback_array;
     for(genvar i0=0; i0<8; i0++) begin
         assign readback_array[i0*1 + 0][0:0] = (decoded_reg_strb.PCR_CTRL[i0] && !decoded_req_is_wr) ? field_storage.PCR_CTRL[i0].lock_rd.value : '0;
         assign readback_array[i0*1 + 0][1:1] = (decoded_reg_strb.PCR_CTRL[i0] && !decoded_req_is_wr) ? field_storage.PCR_CTRL[i0].lock_wr.value : '0;

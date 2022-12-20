@@ -195,7 +195,6 @@ always_ff @(posedge clk or negedge rst_b) begin
         mbox_wrptr <= '0;
         mbox_rdptr <= '0;
         inc_rdptr_f <= '0;
-//        sram_ecc_cor_we <= 1'b0;
         sram_ecc_cor_waddr <= '0;
     end
     else begin
@@ -253,8 +252,10 @@ rvecc_encode mbox_ecc_encode (
     .din    (sram_wdata    ),
     .ecc_out(sram_wdata_ecc)
 );
+// synthesis translate_off
 initial assert(DATA_W == 32) else
     $error("%m::rvecc_encode supports 32-bit data width; must change SRAM ECC implementation to support DATA_W = %d", DATA_W);
+// synthesis translate_on
 rvecc_decode ecc_decode (
     .en              (dir_req_rd_phase     ),
     .sed_ded         ( 1'b0                ),    // 1 : means only detection

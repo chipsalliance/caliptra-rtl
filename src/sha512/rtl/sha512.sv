@@ -88,10 +88,9 @@ module sha512
   reg [1 : 0] mode_reg;
 
   localparam BLOCK_NO = 1024 / DATA_WIDTH;
-  reg [DATA_WIDTH-1 : 0] block_reg [0 : BLOCK_NO-1];
+  reg [DATA_WIDTH-1 : 0] block_reg [BLOCK_NO-1 : 0];
 
-  //output comes in big endian
-  reg [0:15][31:0] digest_reg;
+  reg [15:0][31:0] digest_reg;
   reg [511:0]      kv_reg;
   reg              digest_valid_reg;
 
@@ -199,8 +198,9 @@ module sha512
     hwif_in.SHA512_STATUS.READY.next = ready_reg;
     hwif_in.SHA512_STATUS.VALID.next = digest_valid_reg;
 
+    //output comes in big endian
     for (int dword =0; dword < 16; dword++) begin
-      hwif_in.SHA512_DIGEST[dword].DIGEST.next = digest_reg[dword];
+      hwif_in.SHA512_DIGEST[dword].DIGEST.next = digest_reg[15-dword];
     end
 
     for (int dword=0; dword< BLOCK_NO; dword++) begin

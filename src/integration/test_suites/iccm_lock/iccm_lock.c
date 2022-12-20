@@ -133,6 +133,7 @@ void main(void) {
         // Copy error code section from Mailbox to ICCM
         //   - This code section will kill the sim with error
         code_word = (uint32_t *) &iccm_code2_start;
+        iccm_dest = ICCM;
         printf("Copying code from %x to %x\n", (uintptr_t) code_word, (uintptr_t) iccm_dest);
         while (code_word < (uint32_t *) &iccm_code2_end) {
             printf("at %x: %x\n", (uintptr_t) code_word, *code_word);

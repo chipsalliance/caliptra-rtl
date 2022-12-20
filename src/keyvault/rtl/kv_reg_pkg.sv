@@ -2,82 +2,82 @@
 //  https://github.com/SystemRDL/PeakRDL-regblock
 
 package kv_reg_pkg;
-    typedef struct {
+    typedef struct packed{
         logic swwel;
     } kv_reg__kvCtrl__lock_rd__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic swwel;
     } kv_reg__kvCtrl__lock_wr__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic swwel;
     } kv_reg__kvCtrl__lock_use__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic [5:0] next;
         logic we;
     } kv_reg__kvCtrl__dest_valid__in_t;
 
-    typedef struct {
+    typedef struct packed{
         kv_reg__kvCtrl__lock_rd__in_t lock_rd;
         kv_reg__kvCtrl__lock_wr__in_t lock_wr;
         kv_reg__kvCtrl__lock_use__in_t lock_use;
         kv_reg__kvCtrl__dest_valid__in_t dest_valid;
     } kv_reg__kvCtrl__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic [31:0] next;
         logic we;
         logic swwel;
         logic hwclr;
     } kv_reg__pcr_w32__in_t;
 
-    typedef struct {
+    typedef struct packed{
         kv_reg__pcr_w32__in_t data;
     } kv_reg__pcrReg__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic [31:0] next;
         logic we;
         logic swwel;
         logic hwclr;
     } kv_reg__key_w32__in_t;
 
-    typedef struct {
+    typedef struct packed{
         kv_reg__key_w32__in_t data;
     } kv_reg__keyReg__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic reset_b;
         logic hard_reset_b;
-        kv_reg__kvCtrl__in_t PCR_CTRL[8];
-        kv_reg__pcrReg__in_t PCR_ENTRY[8][16];
-        kv_reg__kvCtrl__in_t KEY_CTRL[8];
-        kv_reg__keyReg__in_t KEY_ENTRY[8][16];
+        kv_reg__kvCtrl__in_t [8-1:0]PCR_CTRL;
+        kv_reg__pcrReg__in_t [8-1:0][16-1:0]PCR_ENTRY;
+        kv_reg__kvCtrl__in_t [8-1:0]KEY_CTRL;
+        kv_reg__keyReg__in_t [8-1:0][16-1:0]KEY_ENTRY;
     } kv_reg__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic value;
     } kv_reg__kvCtrl__lock_rd__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic value;
     } kv_reg__kvCtrl__lock_wr__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic value;
     } kv_reg__kvCtrl__lock_use__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic value;
     } kv_reg__kvCtrl__clear__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic [5:0] value;
     } kv_reg__kvCtrl__dest_valid__out_t;
 
-    typedef struct {
+    typedef struct packed{
         kv_reg__kvCtrl__lock_rd__out_t lock_rd;
         kv_reg__kvCtrl__lock_wr__out_t lock_wr;
         kv_reg__kvCtrl__lock_use__out_t lock_use;
@@ -85,40 +85,40 @@ package kv_reg_pkg;
         kv_reg__kvCtrl__dest_valid__out_t dest_valid;
     } kv_reg__kvCtrl__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic [31:0] value;
     } kv_reg__pcr_w32__out_t;
 
-    typedef struct {
+    typedef struct packed{
         kv_reg__pcr_w32__out_t data;
     } kv_reg__pcrReg__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic [31:0] value;
     } kv_reg__key_w32__out_t;
 
-    typedef struct {
+    typedef struct packed{
         kv_reg__key_w32__out_t data;
     } kv_reg__keyReg__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic value;
     } kv_reg__CLEAR_SECRETS__wr_debug_values__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic value;
     } kv_reg__CLEAR_SECRETS__sel_debug_value__out_t;
 
-    typedef struct {
+    typedef struct packed{
         kv_reg__CLEAR_SECRETS__wr_debug_values__out_t wr_debug_values;
         kv_reg__CLEAR_SECRETS__sel_debug_value__out_t sel_debug_value;
     } kv_reg__CLEAR_SECRETS__out_t;
 
-    typedef struct {
-        kv_reg__kvCtrl__out_t PCR_CTRL[8];
-        kv_reg__pcrReg__out_t PCR_ENTRY[8][16];
-        kv_reg__kvCtrl__out_t KEY_CTRL[8];
-        kv_reg__keyReg__out_t KEY_ENTRY[8][16];
+    typedef struct packed{
+        kv_reg__kvCtrl__out_t [8-1:0]PCR_CTRL;
+        kv_reg__pcrReg__out_t [8-1:0][16-1:0]PCR_ENTRY;
+        kv_reg__kvCtrl__out_t [8-1:0]KEY_CTRL;
+        kv_reg__keyReg__out_t [8-1:0][16-1:0]KEY_ENTRY;
         kv_reg__CLEAR_SECRETS__out_t CLEAR_SECRETS;
     } kv_reg__out_t;
 

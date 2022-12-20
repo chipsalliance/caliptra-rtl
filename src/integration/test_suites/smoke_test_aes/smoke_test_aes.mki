@@ -14,8 +14,13 @@
 # limitations under the License.
 #
 
-ISR_DIR = ${SIM_TOOLS_TOP_COMPILE_ROOT}/test_suites/caliptra_isr
-PRINTF_DIR = ${SIM_TOOLS_TOP_COMPILE_ROOT}/test_suites/printf
+ifneq (,${SIM_TOOLS_TOP_COMPILE_ROOT})
+	ISR_DIR    = ${SIM_TOOLS_TOP_COMPILE_ROOT}/test_suites/caliptra_isr
+	PRINTF_DIR = ${SIM_TOOLS_TOP_COMPILE_ROOT}/test_suites/printf
+else
+	ISR_DIR    = ${WORKSPACE}/Caliptra/src/integration/test_suites/caliptra_isr
+	PRINTF_DIR = ${WORKSPACE}/Caliptra/src/integration/test_suites/printf
+endif
 
 OFILES       += caliptra_isr.o \
 	        printf.o

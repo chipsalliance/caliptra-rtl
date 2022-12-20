@@ -61,17 +61,17 @@ typedef struct packed
 } instr_struct_t;
 
 // DSA INSTRUCTIONS LIST
-localparam opcode_t DSA_UOP_NOP           = {op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:no_cmd,      hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0000_0000;
-localparam opcode_t DSA_UOP_WR_CORE       = {op_sel:1'b0,   wr_en:1'b1, rd_en:1'b0, pm_cmd:no_cmd,      hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0000_0010;
-localparam opcode_t DSA_UOP_WR_SCALAR     = {op_sel:1'b1,   wr_en:1'b1, rd_en:1'b0, pm_cmd:no_cmd,      hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0000_0011;
-localparam opcode_t DSA_UOP_RD_CORE       = {op_sel:1'b0,   wr_en:1'b0, rd_en:1'b1, pm_cmd:no_cmd,      hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0000_0100;
-localparam opcode_t DSA_UOP_KEYGEN        = {op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:keygen_cmd,  hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0000_1000;
-localparam opcode_t DSA_UOP_SIGN          = {op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:sign_cmd,    hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0001_0000;
-localparam opcode_t DSA_UOP_VERIFY0       = {op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:verify0_cmd, hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0010_0000;
-localparam opcode_t DSA_UOP_VERIFY1       = {op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:verify1_cmd, hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0010_1000;
-localparam opcode_t DSA_UOP_VERIFY2       = {op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:verify2_cmd, hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0011_0000;
-localparam opcode_t DSA_UOP_HMAC_DRBG     = {op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:no_cmd,      hmac_drbg_en:1'b1, sca_en:1'b0}; // = 8'b0100_0000;
-localparam opcode_t DSA_UOP_SCALAR_SCA    = {op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:no_cmd,      hmac_drbg_en:1'b0, sca_en:1'b1}; // = 8'b1000_0000;
+localparam opcode_t DSA_UOP_NOP           = '{op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:no_cmd,      hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0000_0000;
+localparam opcode_t DSA_UOP_WR_CORE       = '{op_sel:1'b0,   wr_en:1'b1, rd_en:1'b0, pm_cmd:no_cmd,      hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0000_0010;
+localparam opcode_t DSA_UOP_WR_SCALAR     = '{op_sel:1'b1,   wr_en:1'b1, rd_en:1'b0, pm_cmd:no_cmd,      hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0000_0011;
+localparam opcode_t DSA_UOP_RD_CORE       = '{op_sel:1'b0,   wr_en:1'b0, rd_en:1'b1, pm_cmd:no_cmd,      hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0000_0100;
+localparam opcode_t DSA_UOP_KEYGEN        = '{op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:keygen_cmd,  hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0000_1000;
+localparam opcode_t DSA_UOP_SIGN          = '{op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:sign_cmd,    hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0001_0000;
+localparam opcode_t DSA_UOP_VERIFY0       = '{op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:verify0_cmd, hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0010_0000;
+localparam opcode_t DSA_UOP_VERIFY1       = '{op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:verify1_cmd, hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0010_1000;
+localparam opcode_t DSA_UOP_VERIFY2       = '{op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:verify2_cmd, hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0011_0000;
+localparam opcode_t DSA_UOP_HMAC_DRBG     = '{op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:no_cmd,      hmac_drbg_en:1'b1, sca_en:1'b0}; // = 8'b0100_0000;
+localparam opcode_t DSA_UOP_SCALAR_SCA    = '{op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:no_cmd,      hmac_drbg_en:1'b0, sca_en:1'b1}; // = 8'b1000_0000;
 
 // DSA REGISTERS ID listing
 localparam [DSA_OPR_ADDR_WIDTH-1 : 0] NOP_ID                   = 6'd0;

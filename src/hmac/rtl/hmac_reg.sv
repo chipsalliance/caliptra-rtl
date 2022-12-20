@@ -60,21 +60,21 @@ module hmac_reg (
     //--------------------------------------------------------------------------
     // Address Decode
     //--------------------------------------------------------------------------
-    typedef struct {
-        logic HMAC384_NAME[2];
-        logic HMAC384_VERSION[2];
+    typedef struct packed{
+        logic [2-1:0]HMAC384_NAME;
+        logic [2-1:0]HMAC384_VERSION;
         logic HMAC384_CTRL;
         logic HMAC384_STATUS;
-        logic HMAC384_KEY[12];
-        logic HMAC384_BLOCK[32];
-        logic HMAC384_TAG[12];
+        logic [12-1:0]HMAC384_KEY;
+        logic [32-1:0]HMAC384_BLOCK;
+        logic [12-1:0]HMAC384_TAG;
         logic HMAC384_KV_RD_KEY_CTRL;
         logic HMAC384_KV_RD_KEY_STATUS;
         logic HMAC384_KV_RD_BLOCK_CTRL;
         logic HMAC384_KV_RD_BLOCK_STATUS;
         logic HMAC384_KV_WR_CTRL;
         logic HMAC384_KV_WR_STATUS;
-        struct {
+        struct packed{
             logic global_intr_en_r;
             logic error_intr_en_r;
             logic notif_intr_en_r;
@@ -158,302 +158,302 @@ module hmac_reg (
     //--------------------------------------------------------------------------
     // Field logic
     //--------------------------------------------------------------------------
-    typedef struct {
-        struct {
-            struct {
+    typedef struct packed{
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } INIT;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } NEXT;
         } HMAC384_CTRL;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } KEY;
-        } HMAC384_KEY[12];
-        struct {
-            struct {
+        } [12-1:0]HMAC384_KEY;
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } BLOCK;
-        } HMAC384_BLOCK[32];
-        struct {
-            struct {
+        } [32-1:0]HMAC384_BLOCK;
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } read_en;
-            struct {
+            struct packed{
                 logic [2:0] next;
                 logic load_next;
             } read_entry;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } entry_is_pcr;
-            struct {
+            struct packed{
                 logic [4:0] next;
                 logic load_next;
             } entry_data_size;
-            struct {
-                logic [20:0] next;
+            struct packed{
+                logic [21:0] next;
                 logic load_next;
             } rsvd;
         } HMAC384_KV_RD_KEY_CTRL;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } VALID;
         } HMAC384_KV_RD_KEY_STATUS;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } read_en;
-            struct {
+            struct packed{
                 logic [2:0] next;
                 logic load_next;
             } read_entry;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } entry_is_pcr;
-            struct {
+            struct packed{
                 logic [4:0] next;
                 logic load_next;
             } entry_data_size;
-            struct {
-                logic [20:0] next;
+            struct packed{
+                logic [21:0] next;
                 logic load_next;
             } rsvd;
         } HMAC384_KV_RD_BLOCK_CTRL;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } VALID;
         } HMAC384_KV_RD_BLOCK_STATUS;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } write_en;
-            struct {
+            struct packed{
                 logic [2:0] next;
                 logic load_next;
             } write_entry;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } entry_is_pcr;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } hmac_key_dest_valid;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } hmac_block_dest_valid;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } sha_block_dest_valid;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } ecc_pkey_dest_valid;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } ecc_seed_dest_valid;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } ecc_msg_dest_valid;
-            struct {
-                logic [19:0] next;
+            struct packed{
+                logic [20:0] next;
                 logic load_next;
             } rsvd;
         } HMAC384_KV_WR_CTRL;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } VALID;
         } HMAC384_KV_WR_STATUS;
-        struct {
-            struct {
-                struct {
+        struct packed{
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } error_en;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } notif_en;
             } global_intr_en_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } error0_en;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } error1_en;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } error2_en;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } error3_en;
             } error_intr_en_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } notif_cmd_done_en;
             } notif_intr_en_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } agg_sts;
             } error_global_intr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } agg_sts;
             } notif_global_intr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } error0_sts;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } error1_sts;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } error2_sts;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } error3_sts;
             } error_internal_intr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } notif_cmd_done_sts;
             } notif_internal_intr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } error0_trig;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } error1_trig;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } error2_trig;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } error3_trig;
             } error_intr_trig_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } notif_cmd_done_trig;
             } notif_intr_trig_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] next;
                     logic load_next;
                     logic incrthreshold;
                     logic incrsaturate;
                 } cnt;
             } error0_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] next;
                     logic load_next;
                     logic incrthreshold;
                     logic incrsaturate;
                 } cnt;
             } error1_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] next;
                     logic load_next;
                     logic incrthreshold;
                     logic incrsaturate;
                 } cnt;
             } error2_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] next;
                     logic load_next;
                     logic incrthreshold;
                     logic incrsaturate;
                 } cnt;
             } error3_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] next;
                     logic load_next;
                     logic incrthreshold;
                     logic incrsaturate;
                 } cnt;
             } notif_cmd_done_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                     logic decrthreshold;
                     logic underflow;
                 } pulse;
             } error0_intr_count_incr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                     logic decrthreshold;
                     logic underflow;
                 } pulse;
             } error1_intr_count_incr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                     logic decrthreshold;
                     logic underflow;
                 } pulse;
             } error2_intr_count_incr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                     logic decrthreshold;
                     logic underflow;
                 } pulse;
             } error3_intr_count_incr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                     logic decrthreshold;
@@ -464,229 +464,229 @@ module hmac_reg (
     } field_combo_t;
     field_combo_t field_combo;
 
-    typedef struct {
-        struct {
-            struct {
+    typedef struct packed{
+        struct packed{
+            struct packed{
                 logic value;
             } INIT;
-            struct {
+            struct packed{
                 logic value;
             } NEXT;
         } HMAC384_CTRL;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } KEY;
-        } HMAC384_KEY[12];
-        struct {
-            struct {
+        } [12-1:0]HMAC384_KEY;
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } BLOCK;
-        } HMAC384_BLOCK[32];
-        struct {
-            struct {
+        } [32-1:0]HMAC384_BLOCK;
+        struct packed{
+            struct packed{
                 logic value;
             } read_en;
-            struct {
+            struct packed{
                 logic [2:0] value;
             } read_entry;
-            struct {
+            struct packed{
                 logic value;
             } entry_is_pcr;
-            struct {
+            struct packed{
                 logic [4:0] value;
             } entry_data_size;
-            struct {
-                logic [20:0] value;
+            struct packed{
+                logic [21:0] value;
             } rsvd;
         } HMAC384_KV_RD_KEY_CTRL;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic value;
             } VALID;
         } HMAC384_KV_RD_KEY_STATUS;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic value;
             } read_en;
-            struct {
+            struct packed{
                 logic [2:0] value;
             } read_entry;
-            struct {
+            struct packed{
                 logic value;
             } entry_is_pcr;
-            struct {
+            struct packed{
                 logic [4:0] value;
             } entry_data_size;
-            struct {
-                logic [20:0] value;
+            struct packed{
+                logic [21:0] value;
             } rsvd;
         } HMAC384_KV_RD_BLOCK_CTRL;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic value;
             } VALID;
         } HMAC384_KV_RD_BLOCK_STATUS;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic value;
             } write_en;
-            struct {
+            struct packed{
                 logic [2:0] value;
             } write_entry;
-            struct {
+            struct packed{
                 logic value;
             } entry_is_pcr;
-            struct {
+            struct packed{
                 logic value;
             } hmac_key_dest_valid;
-            struct {
+            struct packed{
                 logic value;
             } hmac_block_dest_valid;
-            struct {
+            struct packed{
                 logic value;
             } sha_block_dest_valid;
-            struct {
+            struct packed{
                 logic value;
             } ecc_pkey_dest_valid;
-            struct {
+            struct packed{
                 logic value;
             } ecc_seed_dest_valid;
-            struct {
+            struct packed{
                 logic value;
             } ecc_msg_dest_valid;
-            struct {
-                logic [19:0] value;
+            struct packed{
+                logic [20:0] value;
             } rsvd;
         } HMAC384_KV_WR_CTRL;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic value;
             } VALID;
         } HMAC384_KV_WR_STATUS;
-        struct {
-            struct {
-                struct {
+        struct packed{
+            struct packed{
+                struct packed{
                     logic value;
                 } error_en;
-                struct {
+                struct packed{
                     logic value;
                 } notif_en;
             } global_intr_en_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } error0_en;
-                struct {
+                struct packed{
                     logic value;
                 } error1_en;
-                struct {
+                struct packed{
                     logic value;
                 } error2_en;
-                struct {
+                struct packed{
                     logic value;
                 } error3_en;
             } error_intr_en_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } notif_cmd_done_en;
             } notif_intr_en_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } agg_sts;
             } error_global_intr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } agg_sts;
             } notif_global_intr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } error0_sts;
-                struct {
+                struct packed{
                     logic value;
                 } error1_sts;
-                struct {
+                struct packed{
                     logic value;
                 } error2_sts;
-                struct {
+                struct packed{
                     logic value;
                 } error3_sts;
             } error_internal_intr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } notif_cmd_done_sts;
             } notif_internal_intr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } error0_trig;
-                struct {
+                struct packed{
                     logic value;
                 } error1_trig;
-                struct {
+                struct packed{
                     logic value;
                 } error2_trig;
-                struct {
+                struct packed{
                     logic value;
                 } error3_trig;
             } error_intr_trig_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } notif_cmd_done_trig;
             } notif_intr_trig_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] value;
                 } cnt;
             } error0_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] value;
                 } cnt;
             } error1_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] value;
                 } cnt;
             } error2_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] value;
                 } cnt;
             } error3_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] value;
                 } cnt;
             } notif_cmd_done_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } pulse;
             } error0_intr_count_incr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } pulse;
             } error1_intr_count_incr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } pulse;
             } error2_intr_count_incr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } pulse;
             } error3_intr_count_incr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } pulse;
             } notif_cmd_done_intr_count_incr_r;
@@ -867,10 +867,10 @@ module hmac_reg (
     assign hwif_out.HMAC384_KV_RD_KEY_CTRL.entry_data_size.value = field_storage.HMAC384_KV_RD_KEY_CTRL.entry_data_size.value;
     // Field: hmac_reg.HMAC384_KV_RD_KEY_CTRL.rsvd
     always_comb begin
-        automatic logic [20:0] next_c = field_storage.HMAC384_KV_RD_KEY_CTRL.rsvd.value;
+        automatic logic [21:0] next_c = field_storage.HMAC384_KV_RD_KEY_CTRL.rsvd.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.HMAC384_KV_RD_KEY_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[30:10];
+            next_c = decoded_wr_data[31:10];
             load_next_c = '1;
         end
         field_combo.HMAC384_KV_RD_KEY_CTRL.rsvd.next = next_c;
@@ -986,10 +986,10 @@ module hmac_reg (
     assign hwif_out.HMAC384_KV_RD_BLOCK_CTRL.entry_data_size.value = field_storage.HMAC384_KV_RD_BLOCK_CTRL.entry_data_size.value;
     // Field: hmac_reg.HMAC384_KV_RD_BLOCK_CTRL.rsvd
     always_comb begin
-        automatic logic [20:0] next_c = field_storage.HMAC384_KV_RD_BLOCK_CTRL.rsvd.value;
+        automatic logic [21:0] next_c = field_storage.HMAC384_KV_RD_BLOCK_CTRL.rsvd.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.HMAC384_KV_RD_BLOCK_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[30:10];
+            next_c = decoded_wr_data[31:10];
             load_next_c = '1;
         end
         field_combo.HMAC384_KV_RD_BLOCK_CTRL.rsvd.next = next_c;
@@ -1200,10 +1200,10 @@ module hmac_reg (
     assign hwif_out.HMAC384_KV_WR_CTRL.ecc_msg_dest_valid.value = field_storage.HMAC384_KV_WR_CTRL.ecc_msg_dest_valid.value;
     // Field: hmac_reg.HMAC384_KV_WR_CTRL.rsvd
     always_comb begin
-        automatic logic [19:0] next_c = field_storage.HMAC384_KV_WR_CTRL.rsvd.value;
+        automatic logic [20:0] next_c = field_storage.HMAC384_KV_WR_CTRL.rsvd.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.HMAC384_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[30:11];
+            next_c = decoded_wr_data[31:11];
             load_next_c = '1;
         end
         field_combo.HMAC384_KV_WR_CTRL.rsvd.next = next_c;
@@ -1950,7 +1950,7 @@ module hmac_reg (
     logic [31:0] readback_data;
     
     // Assign readback values to a flattened array
-    logic [31:0] readback_array[42];
+    logic [42-1:0][31:0] readback_array;
     for(genvar i0=0; i0<2; i0++) begin
         assign readback_array[i0*1 + 0][31:0] = (decoded_reg_strb.HMAC384_NAME[i0] && !decoded_req_is_wr) ? hwif_in.HMAC384_NAME[i0].NAME.next : '0;
     end
@@ -1967,8 +1967,7 @@ module hmac_reg (
     assign readback_array[17][3:1] = (decoded_reg_strb.HMAC384_KV_RD_KEY_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_KEY_CTRL.read_entry.value : '0;
     assign readback_array[17][4:4] = (decoded_reg_strb.HMAC384_KV_RD_KEY_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_KEY_CTRL.entry_is_pcr.value : '0;
     assign readback_array[17][9:5] = (decoded_reg_strb.HMAC384_KV_RD_KEY_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_KEY_CTRL.entry_data_size.value : '0;
-    assign readback_array[17][30:10] = (decoded_reg_strb.HMAC384_KV_RD_KEY_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_KEY_CTRL.rsvd.value : '0;
-    assign readback_array[17][31:31] = '0;
+    assign readback_array[17][31:10] = (decoded_reg_strb.HMAC384_KV_RD_KEY_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_KEY_CTRL.rsvd.value : '0;
     assign readback_array[18][0:0] = (decoded_reg_strb.HMAC384_KV_RD_KEY_STATUS && !decoded_req_is_wr) ? hwif_in.HMAC384_KV_RD_KEY_STATUS.READY.next : '0;
     assign readback_array[18][1:1] = (decoded_reg_strb.HMAC384_KV_RD_KEY_STATUS && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_KEY_STATUS.VALID.value : '0;
     assign readback_array[18][9:2] = (decoded_reg_strb.HMAC384_KV_RD_KEY_STATUS && !decoded_req_is_wr) ? hwif_in.HMAC384_KV_RD_KEY_STATUS.ERROR.next : '0;
@@ -1977,8 +1976,7 @@ module hmac_reg (
     assign readback_array[19][3:1] = (decoded_reg_strb.HMAC384_KV_RD_BLOCK_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_BLOCK_CTRL.read_entry.value : '0;
     assign readback_array[19][4:4] = (decoded_reg_strb.HMAC384_KV_RD_BLOCK_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_BLOCK_CTRL.entry_is_pcr.value : '0;
     assign readback_array[19][9:5] = (decoded_reg_strb.HMAC384_KV_RD_BLOCK_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_BLOCK_CTRL.entry_data_size.value : '0;
-    assign readback_array[19][30:10] = (decoded_reg_strb.HMAC384_KV_RD_BLOCK_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_BLOCK_CTRL.rsvd.value : '0;
-    assign readback_array[19][31:31] = '0;
+    assign readback_array[19][31:10] = (decoded_reg_strb.HMAC384_KV_RD_BLOCK_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_BLOCK_CTRL.rsvd.value : '0;
     assign readback_array[20][0:0] = (decoded_reg_strb.HMAC384_KV_RD_BLOCK_STATUS && !decoded_req_is_wr) ? hwif_in.HMAC384_KV_RD_BLOCK_STATUS.READY.next : '0;
     assign readback_array[20][1:1] = (decoded_reg_strb.HMAC384_KV_RD_BLOCK_STATUS && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_BLOCK_STATUS.VALID.value : '0;
     assign readback_array[20][9:2] = (decoded_reg_strb.HMAC384_KV_RD_BLOCK_STATUS && !decoded_req_is_wr) ? hwif_in.HMAC384_KV_RD_BLOCK_STATUS.ERROR.next : '0;
@@ -1992,8 +1990,7 @@ module hmac_reg (
     assign readback_array[21][8:8] = (decoded_reg_strb.HMAC384_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_CTRL.ecc_pkey_dest_valid.value : '0;
     assign readback_array[21][9:9] = (decoded_reg_strb.HMAC384_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_CTRL.ecc_seed_dest_valid.value : '0;
     assign readback_array[21][10:10] = (decoded_reg_strb.HMAC384_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_CTRL.ecc_msg_dest_valid.value : '0;
-    assign readback_array[21][30:11] = (decoded_reg_strb.HMAC384_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_CTRL.rsvd.value : '0;
-    assign readback_array[21][31:31] = '0;
+    assign readback_array[21][31:11] = (decoded_reg_strb.HMAC384_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_CTRL.rsvd.value : '0;
     assign readback_array[22][0:0] = (decoded_reg_strb.HMAC384_KV_WR_STATUS && !decoded_req_is_wr) ? hwif_in.HMAC384_KV_WR_STATUS.READY.next : '0;
     assign readback_array[22][1:1] = (decoded_reg_strb.HMAC384_KV_WR_STATUS && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_STATUS.VALID.value : '0;
     assign readback_array[22][9:2] = (decoded_reg_strb.HMAC384_KV_WR_STATUS && !decoded_req_is_wr) ? hwif_in.HMAC384_KV_WR_STATUS.ERROR.next : '0;

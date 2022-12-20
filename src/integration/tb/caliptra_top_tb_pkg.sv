@@ -15,6 +15,7 @@
 
 package caliptra_top_tb_pkg;
 
+`ifndef VERILATOR
 class bitflip_mask_generator #(int MBOX_DATA_AND_ECC_W = 39);
 
     rand logic [MBOX_DATA_AND_ECC_W-1:0] rand_sram_bitflip_mask;
@@ -39,5 +40,10 @@ class bitflip_mask_generator #(int MBOX_DATA_AND_ECC_W = 39);
     endfunction
 
 endclass
+`else
+function logic [soc_ifc_pkg::MBOX_DATA_AND_ECC_W-1:0] get_bitflip_mask(bit do_double_bit = 1'b0);
+    return 2<<($urandom%(soc_ifc_pkg::MBOX_DATA_AND_ECC_W-2)) | soc_ifc_pkg::MBOX_DATA_AND_ECC_W'(do_double_bit);
+endfunction
+`endif
 
 endpackage

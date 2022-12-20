@@ -59,19 +59,7 @@
 
 
 /* ---- HMAC ---- */
-#define HMAC_BASE_ADDR            0x10010000
-#define HMAC_ADDR_NAME            (HMAC_BASE_ADDR + 0x0000)
-#define HMAC_ADDR_VER             (HMAC_BASE_ADDR + 0x0008)
-#define HMAC_ADDR_CNTRL           (HMAC_BASE_ADDR + 0x0010)
-#define HMAC_ADDR_STATUS          (HMAC_BASE_ADDR + 0x0018)
-#define HMAC_ADDR_KEY_START       (HMAC_BASE_ADDR + 0x0040)
-#define HMAC_ADDR_KEY_END         (HMAC_BASE_ADDR + 0x006c)
-#define HMAC_ADDR_BLOCK_START     (HMAC_BASE_ADDR + 0x0080)
-#define HMAC_ADDR_BLOCK_END       (HMAC_BASE_ADDR + 0x00fc)
-#define HMAC_ADDR_TAG_START       (HMAC_BASE_ADDR + 0x0100)
-#define HMAC_ADDR_TAG_END         (HMAC_BASE_ADDR + 0x012c)
-#define HMAC_ADDR_KV_CTRL         (HMAC_BASE_ADDR + 0x0200)
-#define HMAC_ADDR_INTR_START      (HMAC_BASE_ADDR + 0x0800)
+#define HMAC_BASE_ADDR            CLP_HMAC_REG_BASE_ADDR
 
 #define HMAC_INIT                 0x0000000D
 #define HMAC_NEXT                 0x0000000E

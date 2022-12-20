@@ -28,7 +28,7 @@ uvmf:
       - name: hmac_rst
         dir: output
         width: '1'
-      - name: hadrr
+      - name: haddr
         dir: output
         width: AHB_ADDR_WIDTH
       - name: hwdata

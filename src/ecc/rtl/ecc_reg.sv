@@ -60,21 +60,21 @@ module ecc_reg (
     //--------------------------------------------------------------------------
     // Address Decode
     //--------------------------------------------------------------------------
-    typedef struct {
-        logic ECC_NAME[2];
-        logic ECC_VERSION[2];
+    typedef struct packed{
+        logic [2-1:0]ECC_NAME;
+        logic [2-1:0]ECC_VERSION;
         logic ECC_CTRL;
         logic ECC_STATUS;
         logic ECC_SCACONFIG;
-        logic ECC_SEED[12];
-        logic ECC_MSG[12];
-        logic ECC_PRIVKEY[12];
-        logic ECC_PUBKEY_X[12];
-        logic ECC_PUBKEY_Y[12];
-        logic ECC_SIGN_R[12];
-        logic ECC_SIGN_S[12];
-        logic ECC_VERIFY_R[12];
-        logic ECC_IV[12];
+        logic [12-1:0]ECC_SEED;
+        logic [12-1:0]ECC_MSG;
+        logic [12-1:0]ECC_PRIVKEY;
+        logic [12-1:0]ECC_PUBKEY_X;
+        logic [12-1:0]ECC_PUBKEY_Y;
+        logic [12-1:0]ECC_SIGN_R;
+        logic [12-1:0]ECC_SIGN_S;
+        logic [12-1:0]ECC_VERIFY_R;
+        logic [12-1:0]ECC_IV;
         logic ecc_kv_rd_pkey_ctrl;
         logic ecc_kv_rd_pkey_status;
         logic ecc_kv_rd_seed_ctrl;
@@ -83,7 +83,7 @@ module ecc_reg (
         logic ecc_kv_rd_msg_status;
         logic ecc_kv_wr_pkey_ctrl;
         logic ecc_kv_wr_pkey_status;
-        struct {
+        struct packed{
             logic global_intr_en_r;
             logic error_intr_en_r;
             logic notif_intr_en_r;
@@ -176,298 +176,298 @@ module ecc_reg (
     //--------------------------------------------------------------------------
     // Field logic
     //--------------------------------------------------------------------------
-    typedef struct {
-        struct {
-            struct {
+    typedef struct packed{
+        struct packed{
+            struct packed{
                 logic [1:0] next;
                 logic load_next;
             } CTRL;
         } ECC_CTRL;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } POINT_RND_EN;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } MASK_SIGN_EN;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } SCALAR_RND_EN;
         } ECC_SCACONFIG;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } SEED;
-        } ECC_SEED[12];
-        struct {
-            struct {
+        } [12-1:0]ECC_SEED;
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } MSG;
-        } ECC_MSG[12];
-        struct {
-            struct {
+        } [12-1:0]ECC_MSG;
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } PRIVKEY;
-        } ECC_PRIVKEY[12];
-        struct {
-            struct {
+        } [12-1:0]ECC_PRIVKEY;
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } PUBKEY_X;
-        } ECC_PUBKEY_X[12];
-        struct {
-            struct {
+        } [12-1:0]ECC_PUBKEY_X;
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } PUBKEY_Y;
-        } ECC_PUBKEY_Y[12];
-        struct {
-            struct {
+        } [12-1:0]ECC_PUBKEY_Y;
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } SIGN_R;
-        } ECC_SIGN_R[12];
-        struct {
-            struct {
+        } [12-1:0]ECC_SIGN_R;
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } SIGN_S;
-        } ECC_SIGN_S[12];
-        struct {
-            struct {
+        } [12-1:0]ECC_SIGN_S;
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } VERIFY_R;
-        } ECC_VERIFY_R[12];
-        struct {
-            struct {
+        } [12-1:0]ECC_VERIFY_R;
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } IV;
-        } ECC_IV[12];
-        struct {
-            struct {
+        } [12-1:0]ECC_IV;
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } read_en;
-            struct {
+            struct packed{
                 logic [2:0] next;
                 logic load_next;
             } read_entry;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } entry_is_pcr;
-            struct {
+            struct packed{
                 logic [4:0] next;
                 logic load_next;
             } entry_data_size;
-            struct {
-                logic [20:0] next;
+            struct packed{
+                logic [21:0] next;
                 logic load_next;
             } rsvd;
         } ecc_kv_rd_pkey_ctrl;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } VALID;
         } ecc_kv_rd_pkey_status;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } read_en;
-            struct {
+            struct packed{
                 logic [2:0] next;
                 logic load_next;
             } read_entry;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } entry_is_pcr;
-            struct {
+            struct packed{
                 logic [4:0] next;
                 logic load_next;
             } entry_data_size;
-            struct {
-                logic [20:0] next;
+            struct packed{
+                logic [21:0] next;
                 logic load_next;
             } rsvd;
         } ecc_kv_rd_seed_ctrl;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } VALID;
         } ecc_kv_rd_seed_status;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } read_en;
-            struct {
+            struct packed{
                 logic [2:0] next;
                 logic load_next;
             } read_entry;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } entry_is_pcr;
-            struct {
+            struct packed{
                 logic [4:0] next;
                 logic load_next;
             } entry_data_size;
-            struct {
-                logic [20:0] next;
+            struct packed{
+                logic [21:0] next;
                 logic load_next;
             } rsvd;
         } ecc_kv_rd_msg_ctrl;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } VALID;
         } ecc_kv_rd_msg_status;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } write_en;
-            struct {
+            struct packed{
                 logic [2:0] next;
                 logic load_next;
             } write_entry;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } entry_is_pcr;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } hmac_key_dest_valid;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } hmac_block_dest_valid;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } sha_block_dest_valid;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } ecc_pkey_dest_valid;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } ecc_seed_dest_valid;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } ecc_msg_dest_valid;
-            struct {
-                logic [19:0] next;
+            struct packed{
+                logic [20:0] next;
                 logic load_next;
             } rsvd;
         } ecc_kv_wr_pkey_ctrl;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } VALID;
         } ecc_kv_wr_pkey_status;
-        struct {
-            struct {
-                struct {
+        struct packed{
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } error_en;
-                struct {
+                struct packed{
                     logic next;
                     logic load_next;
                 } notif_en;
             } global_intr_en_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } error_internal_en;
             } error_intr_en_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } notif_cmd_done_en;
             } notif_intr_en_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } agg_sts;
             } error_global_intr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } agg_sts;
             } notif_global_intr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } error_internal_sts;
             } error_internal_intr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } notif_cmd_done_sts;
             } notif_internal_intr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } error_internal_trig;
             } error_intr_trig_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                 } notif_cmd_done_trig;
             } notif_intr_trig_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] next;
                     logic load_next;
                     logic incrthreshold;
                     logic incrsaturate;
                 } cnt;
             } error_internal_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] next;
                     logic load_next;
                     logic incrthreshold;
                     logic incrsaturate;
                 } cnt;
             } notif_cmd_done_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                     logic decrthreshold;
                     logic underflow;
                 } pulse;
             } error_internal_intr_count_incr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic next;
                     logic load_next;
                     logic decrthreshold;
@@ -478,237 +478,237 @@ module ecc_reg (
     } field_combo_t;
     field_combo_t field_combo;
 
-    typedef struct {
-        struct {
-            struct {
+    typedef struct packed{
+        struct packed{
+            struct packed{
                 logic [1:0] value;
             } CTRL;
         } ECC_CTRL;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic value;
             } POINT_RND_EN;
-            struct {
+            struct packed{
                 logic value;
             } MASK_SIGN_EN;
-            struct {
+            struct packed{
                 logic value;
             } SCALAR_RND_EN;
         } ECC_SCACONFIG;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } SEED;
-        } ECC_SEED[12];
-        struct {
-            struct {
+        } [12-1:0]ECC_SEED;
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } MSG;
-        } ECC_MSG[12];
-        struct {
-            struct {
+        } [12-1:0]ECC_MSG;
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } PRIVKEY;
-        } ECC_PRIVKEY[12];
-        struct {
-            struct {
+        } [12-1:0]ECC_PRIVKEY;
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } PUBKEY_X;
-        } ECC_PUBKEY_X[12];
-        struct {
-            struct {
+        } [12-1:0]ECC_PUBKEY_X;
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } PUBKEY_Y;
-        } ECC_PUBKEY_Y[12];
-        struct {
-            struct {
+        } [12-1:0]ECC_PUBKEY_Y;
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } SIGN_R;
-        } ECC_SIGN_R[12];
-        struct {
-            struct {
+        } [12-1:0]ECC_SIGN_R;
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } SIGN_S;
-        } ECC_SIGN_S[12];
-        struct {
-            struct {
+        } [12-1:0]ECC_SIGN_S;
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } VERIFY_R;
-        } ECC_VERIFY_R[12];
-        struct {
-            struct {
+        } [12-1:0]ECC_VERIFY_R;
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } IV;
-        } ECC_IV[12];
-        struct {
-            struct {
+        } [12-1:0]ECC_IV;
+        struct packed{
+            struct packed{
                 logic value;
             } read_en;
-            struct {
+            struct packed{
                 logic [2:0] value;
             } read_entry;
-            struct {
+            struct packed{
                 logic value;
             } entry_is_pcr;
-            struct {
+            struct packed{
                 logic [4:0] value;
             } entry_data_size;
-            struct {
-                logic [20:0] value;
+            struct packed{
+                logic [21:0] value;
             } rsvd;
         } ecc_kv_rd_pkey_ctrl;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic value;
             } VALID;
         } ecc_kv_rd_pkey_status;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic value;
             } read_en;
-            struct {
+            struct packed{
                 logic [2:0] value;
             } read_entry;
-            struct {
+            struct packed{
                 logic value;
             } entry_is_pcr;
-            struct {
+            struct packed{
                 logic [4:0] value;
             } entry_data_size;
-            struct {
-                logic [20:0] value;
+            struct packed{
+                logic [21:0] value;
             } rsvd;
         } ecc_kv_rd_seed_ctrl;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic value;
             } VALID;
         } ecc_kv_rd_seed_status;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic value;
             } read_en;
-            struct {
+            struct packed{
                 logic [2:0] value;
             } read_entry;
-            struct {
+            struct packed{
                 logic value;
             } entry_is_pcr;
-            struct {
+            struct packed{
                 logic [4:0] value;
             } entry_data_size;
-            struct {
-                logic [20:0] value;
+            struct packed{
+                logic [21:0] value;
             } rsvd;
         } ecc_kv_rd_msg_ctrl;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic value;
             } VALID;
         } ecc_kv_rd_msg_status;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic value;
             } write_en;
-            struct {
+            struct packed{
                 logic [2:0] value;
             } write_entry;
-            struct {
+            struct packed{
                 logic value;
             } entry_is_pcr;
-            struct {
+            struct packed{
                 logic value;
             } hmac_key_dest_valid;
-            struct {
+            struct packed{
                 logic value;
             } hmac_block_dest_valid;
-            struct {
+            struct packed{
                 logic value;
             } sha_block_dest_valid;
-            struct {
+            struct packed{
                 logic value;
             } ecc_pkey_dest_valid;
-            struct {
+            struct packed{
                 logic value;
             } ecc_seed_dest_valid;
-            struct {
+            struct packed{
                 logic value;
             } ecc_msg_dest_valid;
-            struct {
-                logic [19:0] value;
+            struct packed{
+                logic [20:0] value;
             } rsvd;
         } ecc_kv_wr_pkey_ctrl;
-        struct {
-            struct {
+        struct packed{
+            struct packed{
                 logic value;
             } VALID;
         } ecc_kv_wr_pkey_status;
-        struct {
-            struct {
-                struct {
+        struct packed{
+            struct packed{
+                struct packed{
                     logic value;
                 } error_en;
-                struct {
+                struct packed{
                     logic value;
                 } notif_en;
             } global_intr_en_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } error_internal_en;
             } error_intr_en_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } notif_cmd_done_en;
             } notif_intr_en_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } agg_sts;
             } error_global_intr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } agg_sts;
             } notif_global_intr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } error_internal_sts;
             } error_internal_intr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } notif_cmd_done_sts;
             } notif_internal_intr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } error_internal_trig;
             } error_intr_trig_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } notif_cmd_done_trig;
             } notif_intr_trig_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] value;
                 } cnt;
             } error_internal_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic [31:0] value;
                 } cnt;
             } notif_cmd_done_intr_count_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } pulse;
             } error_internal_intr_count_incr_r;
-            struct {
-                struct {
+            struct packed{
+                struct packed{
                     logic value;
                 } pulse;
             } notif_cmd_done_intr_count_incr_r;
@@ -1080,10 +1080,10 @@ module ecc_reg (
     assign hwif_out.ecc_kv_rd_pkey_ctrl.entry_data_size.value = field_storage.ecc_kv_rd_pkey_ctrl.entry_data_size.value;
     // Field: ecc_reg.ecc_kv_rd_pkey_ctrl.rsvd
     always_comb begin
-        automatic logic [20:0] next_c = field_storage.ecc_kv_rd_pkey_ctrl.rsvd.value;
+        automatic logic [21:0] next_c = field_storage.ecc_kv_rd_pkey_ctrl.rsvd.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.ecc_kv_rd_pkey_ctrl && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[30:10];
+            next_c = decoded_wr_data[31:10];
             load_next_c = '1;
         end
         field_combo.ecc_kv_rd_pkey_ctrl.rsvd.next = next_c;
@@ -1199,10 +1199,10 @@ module ecc_reg (
     assign hwif_out.ecc_kv_rd_seed_ctrl.entry_data_size.value = field_storage.ecc_kv_rd_seed_ctrl.entry_data_size.value;
     // Field: ecc_reg.ecc_kv_rd_seed_ctrl.rsvd
     always_comb begin
-        automatic logic [20:0] next_c = field_storage.ecc_kv_rd_seed_ctrl.rsvd.value;
+        automatic logic [21:0] next_c = field_storage.ecc_kv_rd_seed_ctrl.rsvd.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.ecc_kv_rd_seed_ctrl && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[30:10];
+            next_c = decoded_wr_data[31:10];
             load_next_c = '1;
         end
         field_combo.ecc_kv_rd_seed_ctrl.rsvd.next = next_c;
@@ -1318,10 +1318,10 @@ module ecc_reg (
     assign hwif_out.ecc_kv_rd_msg_ctrl.entry_data_size.value = field_storage.ecc_kv_rd_msg_ctrl.entry_data_size.value;
     // Field: ecc_reg.ecc_kv_rd_msg_ctrl.rsvd
     always_comb begin
-        automatic logic [20:0] next_c = field_storage.ecc_kv_rd_msg_ctrl.rsvd.value;
+        automatic logic [21:0] next_c = field_storage.ecc_kv_rd_msg_ctrl.rsvd.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.ecc_kv_rd_msg_ctrl && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[30:10];
+            next_c = decoded_wr_data[31:10];
             load_next_c = '1;
         end
         field_combo.ecc_kv_rd_msg_ctrl.rsvd.next = next_c;
@@ -1532,10 +1532,10 @@ module ecc_reg (
     assign hwif_out.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid.value = field_storage.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid.value;
     // Field: ecc_reg.ecc_kv_wr_pkey_ctrl.rsvd
     always_comb begin
-        automatic logic [19:0] next_c = field_storage.ecc_kv_wr_pkey_ctrl.rsvd.value;
+        automatic logic [20:0] next_c = field_storage.ecc_kv_wr_pkey_ctrl.rsvd.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.ecc_kv_wr_pkey_ctrl && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[30:11];
+            next_c = decoded_wr_data[31:11];
             load_next_c = '1;
         end
         field_combo.ecc_kv_wr_pkey_ctrl.rsvd.next = next_c;
@@ -1907,7 +1907,7 @@ module ecc_reg (
     logic [31:0] readback_data;
     
     // Assign readback values to a flattened array
-    logic [31:0] readback_array[98];
+    logic [98-1:0][31:0] readback_array;
     for(genvar i0=0; i0<2; i0++) begin
         assign readback_array[i0*1 + 0][31:0] = (decoded_reg_strb.ECC_NAME[i0] && !decoded_req_is_wr) ? hwif_in.ECC_NAME[i0].NAME.next : '0;
     end
@@ -1939,8 +1939,7 @@ module ecc_reg (
     assign readback_array[77][3:1] = (decoded_reg_strb.ecc_kv_rd_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_pkey_ctrl.read_entry.value : '0;
     assign readback_array[77][4:4] = (decoded_reg_strb.ecc_kv_rd_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_pkey_ctrl.entry_is_pcr.value : '0;
     assign readback_array[77][9:5] = (decoded_reg_strb.ecc_kv_rd_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_pkey_ctrl.entry_data_size.value : '0;
-    assign readback_array[77][30:10] = (decoded_reg_strb.ecc_kv_rd_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_pkey_ctrl.rsvd.value : '0;
-    assign readback_array[77][31:31] = '0;
+    assign readback_array[77][31:10] = (decoded_reg_strb.ecc_kv_rd_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_pkey_ctrl.rsvd.value : '0;
     assign readback_array[78][0:0] = (decoded_reg_strb.ecc_kv_rd_pkey_status && !decoded_req_is_wr) ? hwif_in.ecc_kv_rd_pkey_status.READY.next : '0;
     assign readback_array[78][1:1] = (decoded_reg_strb.ecc_kv_rd_pkey_status && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_pkey_status.VALID.value : '0;
     assign readback_array[78][9:2] = (decoded_reg_strb.ecc_kv_rd_pkey_status && !decoded_req_is_wr) ? hwif_in.ecc_kv_rd_pkey_status.ERROR.next : '0;
@@ -1949,8 +1948,7 @@ module ecc_reg (
     assign readback_array[79][3:1] = (decoded_reg_strb.ecc_kv_rd_seed_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_seed_ctrl.read_entry.value : '0;
     assign readback_array[79][4:4] = (decoded_reg_strb.ecc_kv_rd_seed_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_seed_ctrl.entry_is_pcr.value : '0;
     assign readback_array[79][9:5] = (decoded_reg_strb.ecc_kv_rd_seed_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_seed_ctrl.entry_data_size.value : '0;
-    assign readback_array[79][30:10] = (decoded_reg_strb.ecc_kv_rd_seed_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_seed_ctrl.rsvd.value : '0;
-    assign readback_array[79][31:31] = '0;
+    assign readback_array[79][31:10] = (decoded_reg_strb.ecc_kv_rd_seed_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_seed_ctrl.rsvd.value : '0;
     assign readback_array[80][0:0] = (decoded_reg_strb.ecc_kv_rd_seed_status && !decoded_req_is_wr) ? hwif_in.ecc_kv_rd_seed_status.READY.next : '0;
     assign readback_array[80][1:1] = (decoded_reg_strb.ecc_kv_rd_seed_status && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_seed_status.VALID.value : '0;
     assign readback_array[80][9:2] = (decoded_reg_strb.ecc_kv_rd_seed_status && !decoded_req_is_wr) ? hwif_in.ecc_kv_rd_seed_status.ERROR.next : '0;
@@ -1959,8 +1957,7 @@ module ecc_reg (
     assign readback_array[81][3:1] = (decoded_reg_strb.ecc_kv_rd_msg_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_msg_ctrl.read_entry.value : '0;
     assign readback_array[81][4:4] = (decoded_reg_strb.ecc_kv_rd_msg_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_msg_ctrl.entry_is_pcr.value : '0;
     assign readback_array[81][9:5] = (decoded_reg_strb.ecc_kv_rd_msg_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_msg_ctrl.entry_data_size.value : '0;
-    assign readback_array[81][30:10] = (decoded_reg_strb.ecc_kv_rd_msg_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_msg_ctrl.rsvd.value : '0;
-    assign readback_array[81][31:31] = '0;
+    assign readback_array[81][31:10] = (decoded_reg_strb.ecc_kv_rd_msg_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_msg_ctrl.rsvd.value : '0;
     assign readback_array[82][0:0] = (decoded_reg_strb.ecc_kv_rd_msg_status && !decoded_req_is_wr) ? hwif_in.ecc_kv_rd_msg_status.READY.next : '0;
     assign readback_array[82][1:1] = (decoded_reg_strb.ecc_kv_rd_msg_status && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_msg_status.VALID.value : '0;
     assign readback_array[82][9:2] = (decoded_reg_strb.ecc_kv_rd_msg_status && !decoded_req_is_wr) ? hwif_in.ecc_kv_rd_msg_status.ERROR.next : '0;
@@ -1974,8 +1971,7 @@ module ecc_reg (
     assign readback_array[83][8:8] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.value : '0;
     assign readback_array[83][9:9] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.value : '0;
     assign readback_array[83][10:10] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid.value : '0;
-    assign readback_array[83][30:11] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.rsvd.value : '0;
-    assign readback_array[83][31:31] = '0;
+    assign readback_array[83][31:11] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.rsvd.value : '0;
     assign readback_array[84][0:0] = (decoded_reg_strb.ecc_kv_wr_pkey_status && !decoded_req_is_wr) ? hwif_in.ecc_kv_wr_pkey_status.READY.next : '0;
     assign readback_array[84][1:1] = (decoded_reg_strb.ecc_kv_wr_pkey_status && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_status.VALID.value : '0;
     assign readback_array[84][9:2] = (decoded_reg_strb.ecc_kv_wr_pkey_status && !decoded_req_is_wr) ? hwif_in.ecc_kv_wr_pkey_status.ERROR.next : '0;

@@ -99,8 +99,8 @@ end
   // INITIATOR mode output signals
   tri  hmac_rst_i;
   reg  hmac_rst_o = 'bz;
-  tri [AHB_ADDR_WIDTH-1:0] hadrr_i;
-  reg [AHB_ADDR_WIDTH-1:0] hadrr_o = 'bz;
+  tri [AHB_ADDR_WIDTH-1:0] haddr_i;
+  reg [AHB_ADDR_WIDTH-1:0] haddr_o = 'bz;
   tri [AHB_DATA_WIDTH-1:0] hwdata_i;
   reg [AHB_DATA_WIDTH-1:0] hwdata_o = 'bz;
   tri  hsel_i;
@@ -136,8 +136,8 @@ end
   // not be driven by this BFM unless placed in INITIATOR mode.
   assign bus.hmac_rst = (initiator_responder == INITIATOR) ? (hmac_rst_o && rst_i) : 'bz;
   assign hmac_rst_i = bus.hmac_rst;
-  assign bus.hadrr = (initiator_responder == INITIATOR) ? hadrr_o : 'bz;
-  assign hadrr_i = bus.hadrr;
+  assign bus.haddr = (initiator_responder == INITIATOR) ? haddr_o : 'bz;
+  assign haddr_i = bus.haddr;
   assign bus.hwdata = (initiator_responder == INITIATOR) ? hwdata_o : 'bz;
   assign hwdata_i = bus.hwdata;
   assign bus.hsel = (initiator_responder == INITIATOR) ? hsel_o : 'bz;
@@ -195,7 +195,7 @@ end
        // RESPONDER mode output signals
        // INITIATOR mode output signals
        hmac_rst_o <= 'b0;
-       hadrr_o <= 'bz;
+       haddr_o <= 'bz;
        hwdata_o <= 'bz;
        hsel_o <= 'b0;
        hwrite_o <= 'b0;
@@ -267,7 +267,7 @@ end
        //    Notice the _o.  Those are storage variables that allow for procedural assignment.
        //    Initiator output signals
        //      hmac_rst_o <= HMAC_in_initiator_struct.xyz;  //     
-       //      hadrr_o <= HMAC_in_initiator_struct.xyz;  //    [AHB_ADDR_WIDTH-1:0] 
+       //      haddr_o <= HMAC_in_initiator_struct.xyz;  //    [AHB_ADDR_WIDTH-1:0] 
        //      hwdata_o <= HMAC_in_initiator_struct.xyz;  //    [AHB_DATA_WIDTH-1:0] 
        //      hsel_o <= HMAC_in_initiator_struct.xyz;  //     
        //      hwrite_o <= HMAC_in_initiator_struct.xyz;  //     
@@ -408,7 +408,7 @@ end
     hmac_rst_o <= 1'b0;
     transaction_flag_in_monitor_o = 0;
 
-    hadrr_o     = 'Z;
+    haddr_o     = 'Z;
     hwdata_o    = 'Z;
     hsel_o      = 0;
     hwrite_o    = 0;
@@ -430,7 +430,7 @@ end
   always @( negedge rst_i )
      begin
        hmac_rst_o <= 'b0;
-       hadrr_o <= 'bz;
+       haddr_o <= 'bz;
        hwdata_o <= 'bz;
        hsel_o <= 'b0;
        hwrite_o <= 'b0;
@@ -451,14 +451,14 @@ task write_single_word(input [31 : 0]  address,
                   input [31 : 0] word);
     begin
       hsel_o       = 1;
-      hadrr_o      = address;
+      haddr_o      = address;
       hwrite_o    = 1;
       hready_o    = 1;
       htrans_o    = AHB_HTRANS_NONSEQ;
       hsize_o     = 3'b010;
       @(posedge clk_i); 
 
-      hadrr_o     = 'Z;
+      haddr_o     = 'Z;
       hwdata_o    = word;
       hwrite_o    = 0;
       htrans_o    = AHB_HTRANS_IDLE;
@@ -534,7 +534,7 @@ task write_single_word(input [31 : 0]  address,
   task read_single_word_driverbfm(input [31 : 0]  address);
     begin
       hsel_o       = 1;
-      hadrr_o      = address;
+      haddr_o      = address;
       hwrite_o     = 0;
       hready_o     = 1;
       htrans_o     = AHB_HTRANS_NONSEQ;
@@ -542,7 +542,7 @@ task write_single_word(input [31 : 0]  address,
       @(posedge clk_i);
       
       hwdata_o     = 0;
-      //hadrr_o     = 'Z;
+      //haddr_o     = 'Z;
       //htrans_o     = AHB_HTRANS_IDLE;
       //read_data = hrdata_i;
     end
@@ -854,7 +854,7 @@ bit first_transfer=1;
        //    All available responder input and inout signals listed.
        //    Responder input signals
        //      HMAC_in_responder_struct.xyz = hmac_rst_i;  //     
-       //      HMAC_in_responder_struct.xyz = hadrr_i;  //    [AHB_ADDR_WIDTH-1:0] 
+       //      HMAC_in_responder_struct.xyz = haddr_i;  //    [AHB_ADDR_WIDTH-1:0] 
        //      HMAC_in_responder_struct.xyz = hwdata_i;  //    [AHB_DATA_WIDTH-1:0] 
        //      HMAC_in_responder_struct.xyz = hsel_i;  //     
        //      HMAC_in_responder_struct.xyz = hwrite_i;  //     

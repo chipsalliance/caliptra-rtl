@@ -82,9 +82,9 @@ module sha256
   reg ready_reg;
 
   localparam BLOCK_NO = 512 / DATA_WIDTH;
-  reg [DATA_WIDTH-1 : 0] block_reg [0 : BLOCK_NO-1];
+  reg [DATA_WIDTH-1 : 0] block_reg [BLOCK_NO-1 : 0];
 
-  reg [0 : 7][31 : 0] digest_reg;
+  reg [7 : 0][31 : 0] digest_reg;
   reg                 digest_valid_reg;
 
   // Interrupts
@@ -171,7 +171,7 @@ module sha256
     hwif_in.SHA256_STATUS.VALID.next = digest_valid_reg;
 
     for (int dword =0; dword < 8; dword++) begin
-      hwif_in.SHA256_DIGEST[dword].DIGEST.next = digest_reg[dword];
+      hwif_in.SHA256_DIGEST[dword].DIGEST.next = digest_reg[7-dword];
     end
 
     for (int dword=0; dword< BLOCK_NO; dword++) begin

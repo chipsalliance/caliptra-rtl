@@ -23,6 +23,7 @@ from peakrdl_regblock.cpuif.passthrough import PassthroughCpuif
 from math import log, ceil, floor
 import sys
 import os
+import rdl_post_process
 
 #output directory for dumping files
 rtl_output_dir = os.path.abspath(os.path.dirname(sys.argv[1]))
@@ -36,7 +37,8 @@ class SVPkgAppendingListener(RDLListener):
         self.orig_file = ""
 
     def enter_Addrmap(self,node):
-        pkg_file_path = os.path.join(self.file_path, node.inst_name + "_pkg.sv")
+        self.regfile_name = os.path.join(self.file_path, node.inst_name)
+        pkg_file_path = str(self.regfile_name + "_pkg.sv")
         self.file = open(pkg_file_path, 'r')
         for line in self.file.readlines():
             if (line != "endpackage"):
@@ -49,6 +51,9 @@ class SVPkgAppendingListener(RDLListener):
     def exit_Addrmap(self, node):
         self.file.write("\n\nendpackage")
         self.file.close()
+
+    def get_regfile_name(self):
+        return self.regfile_name
 
 # Create an instance of the compiler
 rdlc = RDLCompiler()
@@ -77,6 +82,11 @@ try:
     walker = RDLWalker(unroll=True)
     pkglistener = SVPkgAppendingListener(rtl_output_dir)
     walker.walk(root, pkglistener)
+
+    # Scrub the output SystemVerilog files to modify the coding style
+    #  - Change unpacked arrays to packed, unpacked structs to packed
+    rdl_post_process.scrub_line_by_line(str(pkglistener.get_regfile_name() + ".sv"))
+    rdl_post_process.scrub_line_by_line(str(pkglistener.get_regfile_name() + "_pkg.sv"))
 
 except RDLCompileError:
     # A compilation error occurred. Exit with error code

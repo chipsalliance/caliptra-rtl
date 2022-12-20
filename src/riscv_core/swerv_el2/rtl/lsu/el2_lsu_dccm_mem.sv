@@ -27,17 +27,6 @@
 // //********************************************************************************
 
 
-`define EL2_LOCAL_DCCM_RAM_TEST_PORTS    .TEST1(0),                      \
-                                     .RME(1'b0),                      \
-                                     .RM(4'b0000),                        \
-                                     .LS(1'b0),                        \
-                                     .DS(1'b0),                        \
-                                     .SD(1'b0),                        \
-                                     .TEST_RNM(1'b0),            \
-                                     .BC1(1'b0),                      \
-                                     .BC2(1'b0),                      \
-
-
 
 module el2_lsu_dccm_mem
 import el2_pkg::*;
@@ -126,7 +115,6 @@ import el2_pkg::*;
    rvdff  #(pt.DCCM_BANK_BITS) rd_addr_lo_ff (.*, .din(dccm_rd_addr_lo[DCCM_WIDTH_BITS+:pt.DCCM_BANK_BITS]), .dout(dccm_rd_addr_lo_q[DCCM_WIDTH_BITS+:pt.DCCM_BANK_BITS]), .clk(active_clk));
    rvdff  #(pt.DCCM_BANK_BITS) rd_addr_hi_ff (.*, .din(dccm_rd_addr_hi[DCCM_WIDTH_BITS+:pt.DCCM_BANK_BITS]), .dout(dccm_rd_addr_hi_q[DCCM_WIDTH_BITS+:pt.DCCM_BANK_BITS]), .clk(active_clk));
 
-`undef EL2_LOCAL_DCCM_RAM_TEST_PORTS
 
 endmodule // el2_lsu_dccm_mem
 

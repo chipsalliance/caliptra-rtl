@@ -75,7 +75,7 @@ end
   tri clk_i;
   tri rst_i;
   tri  hmac_rst_i;
-  tri [AHB_ADDR_WIDTH-1:0] hadrr_i;
+  tri [AHB_ADDR_WIDTH-1:0] haddr_i;
   tri [AHB_DATA_WIDTH-1:0] hwdata_i;
   tri  hsel_i;
   tri  hwrite_i;
@@ -89,7 +89,7 @@ end
   assign clk_i = bus.clk;
   assign rst_i = bus.rst;
   assign hmac_rst_i = bus.hmac_rst;
-  assign hadrr_i = bus.hadrr;
+  assign haddr_i = bus.haddr;
   assign hwdata_i = bus.hwdata;
   assign hsel_i = bus.hsel;
   assign hwrite_i = bus.hwrite;
@@ -191,7 +191,7 @@ end
     //    How to assign a struct member, named xyz, from a signal.   
     //    All available input signals listed.
     //      HMAC_in_monitor_struct.xyz = hmac_rst_i;  //     
-    //      HMAC_in_monitor_struct.xyz = hadrr_i;  //    [AHB_ADDR_WIDTH-1:0] 
+    //      HMAC_in_monitor_struct.xyz = haddr_i;  //    [AHB_ADDR_WIDTH-1:0] 
     //      HMAC_in_monitor_struct.xyz = hwdata_i;  //    [AHB_DATA_WIDTH-1:0] 
     //      HMAC_in_monitor_struct.xyz = hsel_i;  //     
     //      HMAC_in_monitor_struct.xyz = hwrite_i;  //     
