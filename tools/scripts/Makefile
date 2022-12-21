@@ -158,18 +158,37 @@ ifeq ($(shell which $(GCC_PREFIX)-gcc 2> /dev/null),)
 program.hex: ${BUILD_DIR}/defines.h
 	@echo " !!! No $(GCC_PREFIX)-gcc in path, using canned hex files !!"
 	cp ${HEX_DIR}/$(TESTNAME).hex program.hex
-else
-ifneq (,$(wildcard $(TEST_DIR)/$(TESTNAME).makefile))
+else ifneq (,$(wildcard $(TEST_DIR)/$(TESTNAME).makefile))
 program.hex:
 	@echo Building $(TESTNAME) via $(TEST_DIR)/$(TESTNAME).makefile
 	$(MAKE) -f $(TEST_DIR)/$(TESTNAME).makefile
+else ifneq (,$(wildcard $(TEST_DIR)/$(TESTNAME)))
+program.hex:
+	@echo "Building program.hex from $(TESTNAME) using Crypto Test rules for pre-compiled RUST executables"
+	-$(GCC_PREFIX)-objcopy -O verilog -R .data -R .rodata -R .bss -R .sbss -R .iccm -R .dccm -R .eh_frame --pad-to 0x8000 --no-change-warnings $(TESTNAME) program.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -j .data -j .rodata -j .bss -j .sbss -j .dccm \
+			      --change-section-lma       .data-0x50000000 \
+			      --change-section-lma     .rodata-0x50000000 \
+			      --change-section-lma        .bss-0x50000000 \
+			      --change-section-lma       .sbss-0x50000000 \
+			      --change-section-lma       .dccm-0x50000000 \
+			      --pad-to 0x20000 \
+			      --no-change-warnings \
+			      $(TESTNAME) dccm.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -j .iccm                       --change-section-address .iccm=0 --pad-to 0x20000 --no-change-warnings $(TESTNAME) iccm.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -j .mailbox --gap-fill 0x0     --change-section-address .mailbox=0 --pad-to 0x20000 --no-change-warnings $(TESTNAME) mailbox.hex
+	$(GCC_PREFIX)-objdump -S  $(TESTNAME) > $(TESTNAME).dis
+	$(GCC_PREFIX)-size        $(TESTNAME) | tee $(TESTNAME).size
+
 else
 program.hex: $(OFILES) $(LINK)
 	@echo Building $(TESTNAME)
 	$(GCC_PREFIX)-gcc $(ABI) -Wl,-Map=$(TEST).map -lgcc -T$(LINK) -o $(TESTNAME).exe $(OFILES) -nostartfiles  $(TEST_LIBS)
-	-$(GCC_PREFIX)-objcopy -O verilog -R .data -R .bss -R .data_iccm0 -R .data_iccm1 -R .data_iccm2 -R .iccm -R .dccm -R .eh_frame --pad-to 0x8000 --no-change-warnings $(TESTNAME).exe program.hex
-	-$(GCC_PREFIX)-objcopy -O verilog -j .data -j .bss -j .data_iccm0 -j .data_iccm1 -j .data_iccm2 -j .dccm \
+	-$(GCC_PREFIX)-objcopy -O verilog -R .data -R .rodata -R .sbss -R .bss -R .data_iccm0 -R .data_iccm1 -R .data_iccm2 -R .iccm -R .dccm -R .eh_frame --pad-to 0x8000 --no-change-warnings $(TESTNAME).exe program.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -j .data -j .rodata -j .sbss -j .bss -j .data_iccm0 -j .data_iccm1 -j .data_iccm2 -j .dccm \
 			      --change-section-lma       .data-0x50000000 \
+			      --change-section-lma     .rodata-0x50000000 \
+			      --change-section-lma       .sbss-0x50000000 \
 			      --change-section-lma        .bss-0x50000000 \
 			      --change-section-lma .data_iccm0-0x50000000 \
 			      --change-section-lma .data_iccm1-0x50000000 \
@@ -193,7 +212,6 @@ program.hex: $(OFILES) $(LINK)
 	cp ${HEADER_FILES} ${BUILD_DIR}
 	$(GCC_PREFIX)-gcc ${includes} ${TEST_CFLAGS} -DCOMPILER_FLAGS="\"${TEST_CFLAGS}\"" ${ABI} -nostdlib -c $< -o $@
 
-endif
 endif
 
 help:
