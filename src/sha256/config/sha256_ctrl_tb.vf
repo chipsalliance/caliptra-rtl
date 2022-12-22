@@ -8,6 +8,7 @@ ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_ahb_srom.sv
 ${WORKSPACE}/Caliptra/src/libs/rtl/apb_slv_sif.sv
 ${WORKSPACE}/Caliptra/src/libs/rtl/ahb_slv_sif.sv
 ${WORKSPACE}/Caliptra/src/sha256/tb/sha256_ctrl_tb.sv
+${WORKSPACE}/Caliptra/src/libs/rtl/clk_gate.sv
 ${WORKSPACE}/Caliptra/src/sha256/rtl/sha256_reg_pkg.sv
 ${WORKSPACE}/Caliptra/src/sha256/rtl/sha256_ctrl.sv
 ${WORKSPACE}/Caliptra/src/sha256/rtl/sha256.sv

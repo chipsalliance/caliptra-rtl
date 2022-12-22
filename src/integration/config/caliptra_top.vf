@@ -23,6 +23,7 @@ ${WORKSPACE}/Caliptra/src/riscv_core/swerv_el2/rtl/include/el2_def.sv
 ${WORKSPACE}/Caliptra/src/riscv_core/swerv_el2/rtl/common_defines.sv
 ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/soc_ifc_pkg.sv
 ${WORKSPACE}/Caliptra/src/integration/rtl/config_defines.svh
+${WORKSPACE}/Caliptra/src/libs/rtl/clk_gate.sv
 ${WORKSPACE}/Caliptra/src/riscv_core/swerv_el2/rtl/lib/beh_lib.sv
 ${WORKSPACE}/Caliptra/src/riscv_core/swerv_el2/rtl/el2_mem.sv
 ${WORKSPACE}/Caliptra/src/riscv_core/swerv_el2/rtl/el2_dma_ctrl.sv

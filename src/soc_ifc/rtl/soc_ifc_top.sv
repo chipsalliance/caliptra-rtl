@@ -26,6 +26,8 @@ module soc_ifc_top
     )
     (
     input logic clk,
+    input logic clk_cg,
+    input logic soc_ifc_clk_cg,
 
     //SoC boot signals
     input logic cptra_pwrgood,
@@ -91,7 +93,8 @@ module soc_ifc_top
     //Other blocks reset
     output logic cptra_noncore_rst_b,
     //uC reset
-    output logic cptra_uc_rst_b   
+    output logic cptra_uc_rst_b,
+    output logic clk_gating_en   
 );
 
 //gasket to assemble mailbox request
@@ -175,7 +178,7 @@ apb_slv_sif #(
 )
 i_apb_slv_sif_soc_ifc (
     //AMBA APB INF
-    .PCLK(clk),
+    .PCLK(soc_ifc_clk_cg),
     .PRESETn(cptra_rst_b),
     .PADDR(paddr_i),
     .PPROT('0),
@@ -213,7 +216,7 @@ ahb_slv_sif #(
 )
 i_ahb_slv_sif_soc_ifc (
     //AMBA AHB Lite INF
-    .hclk(clk),
+    .hclk(clk_cg),
     .hreset_n(cptra_noncore_rst_b),
     .haddr_i(haddr_i),
     .hwdata_i(hwdata_i),
@@ -247,7 +250,7 @@ always_comb uc_req.soc_req = 1'b0;
 //Requests are serviced using round robin arbitration
 
 soc_ifc_arb i_soc_ifc_arb (
-    .clk(clk),
+    .clk(soc_ifc_clk_cg),
     .rst_b(cptra_rst_b),
     //UC inf
     .uc_req_dv(uc_req_dv), 
@@ -342,7 +345,7 @@ logic s_cpuif_rd_ack_nc;
 logic s_cpuif_wr_ack_nc;
 
 soc_ifc_reg i_soc_ifc_reg (
-    .clk(clk),
+    .clk(soc_ifc_clk_cg),
     .rst('0),
     //qualify request so no addresses alias
     .s_cpuif_req(soc_ifc_reg_req_dv & (soc_ifc_reg_req_data.addr[SOC_IFC_ADDR_W-1:SOC_IFC_REG_ADDR_WIDTH] == SOC_IFC_REG_START_ADDR[SOC_IFC_ADDR_W-1:SOC_IFC_REG_ADDR_WIDTH])),
@@ -364,13 +367,14 @@ soc_ifc_reg i_soc_ifc_reg (
 assign soc_ifc_error_intr = soc_ifc_reg_hwif_out.intr_block_rf.error_global_intr_r.intr;
 assign soc_ifc_notif_intr = soc_ifc_reg_hwif_out.intr_block_rf.notif_global_intr_r.intr;
 assign iccm_lock  = soc_ifc_reg_hwif_out.iccm_lock.lock.value;
+assign clk_gating_en = soc_ifc_reg_hwif_out.clk_gating_en.clk_gating_en.value;
 
 //SHA Accelerator
 sha512_acc_top #(
     .DATA_WIDTH(APB_DATA_WIDTH)
 )
 i_sha512_acc_top (
-    .clk(clk),
+    .clk(soc_ifc_clk_cg),
     .rst_b(cptra_noncore_rst_b),
     .cptra_pwrgood(cptra_pwrgood),
     
@@ -399,7 +403,7 @@ mbox #(
     .SIZE_KB(MBOX_SIZE_KB)
     )
 i_mbox (
-    .clk(clk),
+    .clk(soc_ifc_clk_cg),
     .rst_b(cptra_noncore_rst_b),
     .req_dv(mbox_req_dv), 
     .req_hold(mbox_req_hold),
@@ -420,7 +424,7 @@ i_mbox (
 );
 
 // Generate a pulse to set the interrupt bit
-always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
+always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
     if (~cptra_noncore_rst_b) begin
         uc_mbox_data_avail_d <= '0;
 	end
@@ -431,7 +435,7 @@ end
 
 always_comb uc_cmd_avail_p = uc_mbox_data_avail & !uc_mbox_data_avail_d;
 
-`ASSERT_KNOWN(ERR_AHB_INF_X, {hreadyout_o,hresp_o}, clk, cptra_rst_b)
+`ASSERT_KNOWN(ERR_AHB_INF_X, {hreadyout_o,hresp_o}, soc_ifc_clk_cg, cptra_rst_b)
 //this generates an NMI in the core, but we don't have a handler so it just hangs
-`ASSERT_NEVER(ERR_SOC_IFC_AHB_ERR, hresp_o, clk, cptra_rst_b)
+`ASSERT_NEVER(ERR_SOC_IFC_AHB_ERR, hresp_o, soc_ifc_clk_cg, cptra_rst_b)
 endmodule

@@ -139,6 +139,14 @@ addrmap soc_ifc_reg {
         field {desc = "FW Update reset wait cycles"; hw = r; sw = rw; swwel = soc_req;} wait_cycles[8] = 8'h5;
     } fw_update_reset_wait_cycles;
 
+    reg {
+        name = "Clk gating enable";
+        desc = "Control register to enable clk gating. Default is 0 (disabled).
+                Writes available to Caliptra subsystem, not SoC.";
+
+        field {desc = "Clk gating enable"; hw = r; sw = rw; swwel = soc_req;} clk_gating_en = 1'b0;
+    } clk_gating_en;
+
 
     ////////////////////////////////////////////////////////////////
     // Interrupts

@@ -42,6 +42,7 @@ void std_rv_nop_machine(void) __attribute__ ((interrupt ("machine"), aligned(4))
 void std_rv_mtvec_mei(void) __attribute__ ((interrupt ("machine") , aligned(4) , weak, alias("std_rv_nop_machine") ));
 void std_rv_mtvec_msi(void) __attribute__ ((interrupt ("machine") , aligned(4) , weak, alias("std_rv_nop_machine") ));
 void std_rv_mtvec_mti(void) __attribute__ ((interrupt ("machine") , aligned(4) , weak, alias("std_rv_nop_machine") ));
+void std_rv_mtvec_miti0(void) __attribute__ ((interrupt ("machine") , aligned(4) ));
 void std_rv_mtvec_sei(void) __attribute__ ((interrupt ("machine") , aligned(4) , weak, alias("std_rv_nop_machine") ));
 void std_rv_mtvec_ssi(void) __attribute__ ((interrupt ("machine") , aligned(4) , weak, alias("std_rv_nop_machine") ));
 void std_rv_mtvec_sti(void) __attribute__ ((interrupt ("machine") , aligned(4) , weak, alias("std_rv_nop_machine") ));
@@ -354,6 +355,16 @@ void std_rv_nop_machine(void)  {
     return;
 }
 
+void std_rv_mtvec_miti0(void) {
+    uint_xlen_t value;
+    //Disable internal timer 0 count en to service intr
+    __asm__ volatile ("csrwi %0, %1" \
+                      : /* output : none */ \
+                      : "i" (0x7d4), "i" (0x00) /* input : immediate */ \
+                      : /* clobbers : none */);
+
+}
+
 static void std_rv_isr(void) {
     void (* isr) (void); // Function pointer to source-specific ISR
     printf("%c",0xfb); //FIXME
@@ -446,6 +457,8 @@ static void std_rv_isr_vector_table(void) {
         "jal   zero,std_rv_mtvec_sei;"  /* 9  */
         ".org  std_rv_isr_vector_table + 11*4;"
         "jal   zero,std_rv_mtvec_mei;"  /* 11 */
+        ".org  std_rv_isr_vector_table + 29*4;"
+        "jal   zero,std_rv_mtvec_miti0;" /* 29 */
 //        #ifndef VECTOR_TABLE_MTVEC_PLATFORM_INTS
 //        ".org  std_rv_isr_vector_table + 16*4;"
 //        "jal   std_rv_mtvec_platform_irq0;"

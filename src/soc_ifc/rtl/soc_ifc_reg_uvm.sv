@@ -430,6 +430,20 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fw_update_reset_wait_cycles
 
+    // Reg - soc_ifc_reg::clk_gating_en
+    class soc_ifc_reg__clk_gating_en extends uvm_reg;
+        rand uvm_reg_field clk_gating_en;
+
+        function new(string name = "soc_ifc_reg__clk_gating_en");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.clk_gating_en = new("clk_gating_en");
+            this.clk_gating_en.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__clk_gating_en
+
     // Reg - soc_ifc_reg::intr_block_t::global_intr_en_t
     class soc_ifc_reg__intr_block_t__global_intr_en_t extends uvm_reg;
         rand uvm_reg_field error_en;
@@ -1031,6 +1045,7 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__iccm_lock iccm_lock;
         rand soc_ifc_reg__fw_update_reset fw_update_reset;
         rand soc_ifc_reg__fw_update_reset_wait_cycles fw_update_reset_wait_cycles;
+        rand soc_ifc_reg__clk_gating_en clk_gating_en;
         rand soc_ifc_reg__intr_block_t intr_block_rf;
 
         function new(string name = "soc_ifc_reg");
@@ -1213,6 +1228,11 @@ package soc_ifc_reg_uvm;
 
             this.fw_update_reset_wait_cycles.build();
             this.default_map.add_reg(this.fw_update_reset_wait_cycles, 'h41c);
+            this.clk_gating_en = new("clk_gating_en");
+            this.clk_gating_en.configure(this);
+
+            this.clk_gating_en.build();
+            this.default_map.add_reg(this.clk_gating_en, 'h420);
             this.intr_block_rf = new("intr_block_rf");
             this.intr_block_rf.configure(this);
             this.intr_block_rf.build();

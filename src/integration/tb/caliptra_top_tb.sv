@@ -128,6 +128,14 @@ module caliptra_top_tb (
     //TIE-OFF device lifecycle
     security_state_t security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1};
 
+    logic [63:0] generic_input_wires;
+
+    //Interrupt flags
+    //logic nmi_int;
+    //logic soft_int;
+    //logic timer_int;
+    logic int_flag;
+
 `define DEC caliptra_top_dut.rvtop.swerv.dec
 
 `define LMEM mbox_ram1.ram 
@@ -163,6 +171,7 @@ module caliptra_top_tb (
     //         8'h2 : 8'h5  - Do nothing
     //         8'h6 : 8'h7E - WriteData is an ASCII character - dump to console.log
     //         8'h7F        - Do nothing
+    //         8'hf8        - Assert interrupt flags at fixed intervals to wake up halted core
     //         8'hf9        - Lock debug in security state
     //         8'hfa        - Unlock debug in security state
     //         8'hfb        - Set the isr_active bit
@@ -220,6 +229,13 @@ module caliptra_top_tb (
         end
     end
 
+    always @(negedge core_clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b) int_flag <= 'b0;
+        else if((WriteData[7:0] == 8'hf8) && mailbox_write) begin
+            int_flag <= 1'b1;
+        end
+    end
+
     bit flip_bit;
     `ifndef VERILATOR
         initial begin
@@ -250,6 +266,31 @@ module caliptra_top_tb (
             end
         end
     `endif
+
+    always@(negedge core_clk) begin
+        if((cycleCnt == 'h3000) && int_flag) begin
+            force caliptra_top_dut.rvtop.soft_int = 'b1;
+        end
+        
+        else if((cycleCnt == 'h4000) && int_flag) begin
+            force caliptra_top_dut.rvtop.timer_int = 'b1;
+        end
+        
+        else if((cycleCnt == 'h5000) && int_flag) begin
+            generic_input_wires <= 'h4000;
+        end
+        
+        else if((cycleCnt == 'h6000) && int_flag) begin
+            force caliptra_top_dut.rvtop.soft_int = 'b1;
+            int_flag <= 'b0;
+        end
+        
+        else begin
+            release caliptra_top_dut.rvtop.soft_int;
+            release caliptra_top_dut.rvtop.timer_int;
+            generic_input_wires <= 'h0;
+        end
+    end
 
     always @(negedge core_clk) begin
         cycleCnt <= cycleCnt+1;
@@ -828,10 +869,15 @@ caliptra_top caliptra_top_dut (
     .mailbox_flow_done(),
     .BootFSM_BrkPoint('x), //FIXME TIE-OFF
 
-    .generic_input_wires('x), //FIXME TIE-OFF
+    .generic_input_wires(generic_input_wires),
     .generic_output_wires(),
 
     .security_state(security_state) //FIXME TIE-OFF
+    /*
+    .nmi_int(nmi_int),
+    .timer_int(timer_int),
+    .soft_int(soft_int)
+    */
 );
 
 caliptra_swerv_sram_export swerv_sram_export_inst (

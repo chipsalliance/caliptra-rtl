@@ -87,7 +87,6 @@ module caliptra_top
     output logic [63:0]                generic_output_wires,
 
     input security_state_t security_state
-
 );
 
     `include "common_defines.sv"
@@ -97,6 +96,11 @@ module caliptra_top
     //caliptra reset driven by boot fsm in mailbox
     logic                       cptra_noncore_rst_b;
     logic                       cptra_uc_rst_b;
+
+    //clock gating signals
+    logic                       clk_gating_en   ;
+    logic                       clk_cg          ;
+    logic                       soc_ifc_clk_cg  ;
 
     logic        [31:0]         ic_haddr        ;
     logic        [2:0]          ic_hburst       ;
@@ -258,8 +262,8 @@ end
         .AHB_LITE_DATA_WIDTH   (`AHB_HDATA_SIZE)
     )
     ahb_lite_bus_i (
-        .hclk                          ( clk                         ),
-        .hreset_n                      ( cptra_noncore_rst_b              ),
+        .hclk                          ( clk_cg                      ),
+        .hreset_n                      ( cptra_noncore_rst_b         ),
         .ahb_lite_responders           ( responder_inst              ),
         .ahb_lite_initiator            ( initiator_inst              ),
         .ahb_lite_resp_disable_i       ( ahb_lite_resp_disable       ),
@@ -295,7 +299,7 @@ assign jtag_id[27:12] = '0;
 assign jtag_id[11:1]  = 11'h45;
 assign reset_vector = `RV_RESET_VEC;
 assign nmi_vector   = 32'h40000000; // TODO this should come from a ctrl reg...
-assign nmi_int   = 0;
+assign nmi_int      = 0;
 
 assign kv_error_intr = 1'b0; // TODO
 assign kv_notif_intr = 1'b0; // TODO
@@ -460,7 +464,19 @@ el2_swerv_wrapper rvtop (
     always_comb responder_inst[`SLAVE_SEL_IDMA].hresp     = responder_inst[`SLAVE_SEL_DDMA].hresp;
     always_comb responder_inst[`SLAVE_SEL_IDMA].hreadyout = responder_inst[`SLAVE_SEL_DDMA].hreadyout;
 
-
+//=========================================================================-
+// Clock gating instance
+//=========================================================================-
+clk_gate cg (
+    .clk(clk),
+    .cptra_rst_b(cptra_noncore_rst_b),
+    .psel(PSEL),
+    .clk_gate_en(clk_gating_en),
+    .cpu_halt_status(o_cpu_halt_status),
+    .clk_cg (clk_cg),
+    .soc_ifc_clk_cg (soc_ifc_clk_cg),
+    .generic_input_wires(generic_input_wires)
+);
 //=========================================================================-
 // AHB I$ instance
 //=========================================================================-
@@ -473,8 +489,8 @@ caliptra_ahb_srom #(
 ) imem (
 
     //AMBA AHB Lite INF
-    .hclk       (clk                            ),
-    .hreset_n   (cptra_noncore_rst_b                 ),
+    .hclk       (clk_cg                         ),
+    .hreset_n   (cptra_noncore_rst_b            ),
     .haddr_i    (ic_haddr[`IMEM_BYTE_ADDR_W-1:0]),
     .hwdata_i   (`IMEM_DATA_WIDTH'(0)           ),
     .hsel_i     (1'b1                           ),
@@ -499,7 +515,7 @@ sha512_ctrl #(
     .AHB_DATA_WIDTH (64),
     .AHB_ADDR_WIDTH (`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SHA512))
 ) sha512 (
-    .clk            (clk),
+    .clk            (clk_cg),
     .reset_n        (cptra_noncore_rst_b),
     .cptra_pwrgood  (cptra_pwrgood),
     .haddr_i        (responder_inst[`SLAVE_SEL_SHA512].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SHA512)-1:0]),
@@ -525,7 +541,7 @@ sha256_ctrl #(
     .AHB_DATA_WIDTH (64),
     .AHB_ADDR_WIDTH (`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SHA256))
 ) sha256 (
-    .clk            (clk),
+    .clk            (clk_cg),
     .reset_n        (cptra_noncore_rst_b),
     .cptra_pwrgood  (cptra_pwrgood),
     .haddr_i        (responder_inst[`SLAVE_SEL_SHA256].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_SHA256)-1:0]),
@@ -556,7 +572,7 @@ doe_ctrl #(
     .AHB_DATA_WIDTH (64),
     .AHB_ADDR_WIDTH (`SLAVE_ADDR_WIDTH(`SLAVE_SEL_DOE))
 ) doe (
-    .clk               (clk),
+    .clk               (clk_cg),
     .reset_n           (cptra_noncore_rst_b),
     .cptra_pwrgood     (cptra_pwrgood),
     .cptra_obf_key     (cptra_obf_key_dbg),
@@ -588,7 +604,7 @@ ecc_top #(
 )
 ecc_top1
 (
-    .clk           (clk),
+    .clk           (clk_cg),
     .reset_n       (cptra_noncore_rst_b),
     .cptra_pwrgood (cptra_pwrgood),
     .haddr_i       (responder_inst[`SLAVE_SEL_ECC].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_ECC)-1:0]),
@@ -615,7 +631,7 @@ hmac_ctrl #(
      .AHB_DATA_WIDTH(`AHB_HDATA_SIZE),
      .AHB_ADDR_WIDTH(`SLAVE_ADDR_WIDTH(`SLAVE_SEL_HMAC))
 )hmac (
-     .clk(clk),
+     .clk(clk_cg),
      .reset_n       (cptra_noncore_rst_b),
      .cptra_pwrgood (cptra_pwrgood),
      .haddr_i       (responder_inst[`SLAVE_SEL_HMAC].haddr[`SLAVE_ADDR_WIDTH(`SLAVE_SEL_HMAC)-1:0]),
@@ -646,7 +662,7 @@ kv #(
 )
 key_vault1
 (
-    .clk           (clk),
+    .clk           (clk_cg),
     .rst_b         (cptra_noncore_rst_b),
     .cptra_pwrgood (cptra_pwrgood),
     .debug_locked  (security_state.debug_locked),
@@ -677,6 +693,8 @@ soc_ifc_top #(
 soc_ifc_top1 
     (
     .clk(clk),
+    .clk_cg(clk_cg),
+    .soc_ifc_clk_cg(soc_ifc_clk_cg),
     .cptra_pwrgood(cptra_pwrgood), 
     .cptra_rst_b(cptra_rst_b),
     .ready_for_fuses(ready_for_fuses),
@@ -729,7 +747,9 @@ soc_ifc_top1
     .iccm_axs_blocked(ahb_lite_resp_access_blocked[`SLAVE_SEL_IDMA]),
     //uC reset
     .cptra_noncore_rst_b (cptra_noncore_rst_b),
-    .cptra_uc_rst_b (cptra_uc_rst_b)
+    .cptra_uc_rst_b (cptra_uc_rst_b),
+    //Clock gating en
+    .clk_gating_en(clk_gating_en)
 );
 
 //TIE OFF slaves

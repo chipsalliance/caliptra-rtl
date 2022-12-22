@@ -20,6 +20,7 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_ahb_srom.sv
       - $COMPILE_ROOT/rtl/apb_slv_sif.sv
       - $COMPILE_ROOT/rtl/ahb_slv_sif.sv
+      - $COMPILE_ROOT/rtl/clk_gate.sv
 ---
 provides: [uvm_lib]
 schema_version: 2.4.0
