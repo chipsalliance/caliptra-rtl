@@ -142,6 +142,8 @@ import soc_ifc_pkg::*;
         dut
         (
         .clk               (clk               ),
+        .clk_cg            (clk               ),
+        .soc_ifc_clk_cg    (clk               ),
         .cptra_pwrgood     (soc_ifc_ctrl_agent_bus.cptra_pwrgood     ),
         .cptra_rst_b       (soc_ifc_ctrl_agent_bus.cptra_rst_b       ),
         .ready_for_fuses   (soc_ifc_status_agent_bus.ready_for_fuses   ),
@@ -196,7 +198,8 @@ import soc_ifc_pkg::*;
         //Other blocks reset
         .cptra_noncore_rst_b (soc_ifc_status_agent_bus.cptra_noncore_rst_b),
         //uC reset
-        .cptra_uc_rst_b (soc_ifc_status_agent_bus.cptra_uc_rst_b)
+        .cptra_uc_rst_b (soc_ifc_status_agent_bus.cptra_uc_rst_b),
+        .clk_gating_en  ()
     );
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HBURST    = 3'b0;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HPROT     = 7'b0;

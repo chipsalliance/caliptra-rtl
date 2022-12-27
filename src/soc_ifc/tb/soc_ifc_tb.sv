@@ -140,6 +140,8 @@ module soc_ifc_tb
             )
             dut (
              .clk(clk_tb),
+             .clk_cg(clk_tb),
+             .soc_ifc_clk_cg(clk_tb),
 
              .cptra_pwrgood(cptra_pwrgood_tb),
              .cptra_rst_b(cptra_rst_b_tb),
@@ -186,7 +188,8 @@ module soc_ifc_tb
              .soc_ifc_notif_intr(),
              .sha_error_intr(),
              .sha_notif_intr(),
-             .clear_obf_secrets()
+             .clear_obf_secrets(),
+             .clk_gating_en()
 
             );
 
