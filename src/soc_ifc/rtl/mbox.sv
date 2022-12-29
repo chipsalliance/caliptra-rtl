@@ -121,10 +121,10 @@ assign mbox_error = read_error | write_error;
 
 //determine if the request is coming from a valid user
 //1) uC requests are valid if uc has lock or if we're in execute uc
-//2) SoC requests are valid if soc has lock and it's the user that locked it
+//2) SoC requests are valid if soc has lock and it's the user that locked it or we're in execute SOC 
 always_comb valid_user = hwif_out.mbox_lock.lock.value & 
                         ((~req_data.soc_req & (~soc_has_lock | (mbox_fsm_ps == MBOX_EXECUTE_UC))) |
-                         ( req_data.soc_req & soc_has_lock & (req_data.user == hwif_out.mbox_user.user.value)));
+                         ( req_data.soc_req & (req_data.user == hwif_out.mbox_user.user.value) & (soc_has_lock | (mbox_fsm_ps == MBOX_EXECUTE_SOC))));
 
 //We want to mask read data when
 //1) Invalid user is trying to access the mailbox data, or we're not in execute state

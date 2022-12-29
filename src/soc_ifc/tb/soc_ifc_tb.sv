@@ -395,7 +395,7 @@ module soc_ifc_tb
       penable_i_tb    <= 0;
       pwrite_i_tb     <= 1;
       pwdata_i_tb     <= word;
-      pauser_i_tb     <= 0;
+      pauser_i_tb     <= '1;
       wait(pready_o_tb == 1'b1);
       
       @(posedge clk_tb);
@@ -473,7 +473,7 @@ module soc_ifc_tb
       penable_i_tb    <= 0;
       pwrite_i_tb     <= 0;
       pwdata_i_tb     <= 0;
-      pauser_i_tb     <= 0;
+      pauser_i_tb     <= '1;
       wait(pready_o_tb == 1'b1);
 
       @(posedge clk_tb);
