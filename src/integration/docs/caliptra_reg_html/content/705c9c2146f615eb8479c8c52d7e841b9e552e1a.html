@@ -31,7 +31,7 @@ SHA Supports streaming mode - SHA is computed on a stream of incoming data to da
         <th></th>
     </tr>
     <tr class="reserved-field">
-    <td>[31:2]</td>
+    <td>[31:3]</td>
     <td>-</td>
     <td>-</td>
     <td>-</td>
@@ -39,6 +39,26 @@ SHA Supports streaming mode - SHA is computed on a stream of incoming data to da
     <td>-</td>
     <td></td>
 </tr>
+    <tr id="ENDIAN_TOGGLE">
+        <td>[2]</td>
+        <td><a href="#ENDIAN_TOGGLE.desc">ENDIAN_TOGGLE</a></td>
+        <td>
+            <span title='Readable and Writable'>rw</span></td>
+        <td>0x0
+        </td>
+        <td>
+            <input id="_FieldValueTesterENDIAN_TOGGLE" class="field-value-tester"
+                type="text" autocomplete="off"
+                data-name="ENDIAN_TOGGLE" oninput="onDecodedFieldInput(this)"/>
+        </td>
+        <td>Endianness Toggle for SHA in mailbox mode</td>
+        <td>
+            <button type="button" id="_RadixButtonENDIAN_TOGGLE" class="radix-button"
+                title="Switch radix" aria-label="Switch radix"
+                data-name="ENDIAN_TOGGLE" onclick="onRadixSwitch(this)">H</button>
+            <a class="headerlink" href="#ENDIAN_TOGGLE" title="Permalink to this row"></a>
+        </td>
+    </tr>
     <tr id="MODE">
         <td>[1:0]</td>
         <td><a href="#MODE.desc">MODE</a></td>
@@ -80,6 +100,15 @@ SHA Supports streaming mode - SHA is computed on a stream of incoming data to da
     </label>
 </p>
 <hr/><h2>Field Descriptions</h2>
+
+<h3 id="ENDIAN_TOGGLE.desc">ENDIAN_TOGGLE - Endianness Toggle for SHA in mailbox mode
+    <a class="headerlink" href="#ENDIAN_TOGGLE.desc" title="Permalink to this headline"></a>
+</h3>
+<div id="_Content.ENDIAN_TOGGLE.desc">
+<p>Default behavior assumes that data in mailbox is little endian,
+When set to 0, data from mailbox will be swizzled from little to big endian at the byte level.
+When set to 1, data from the mailbox will be loaded into SHA as-is.</p>
+</div>
 
 <h3 id="MODE.desc">MODE
     <a class="headerlink" href="#MODE.desc" title="Permalink to this headline"></a>

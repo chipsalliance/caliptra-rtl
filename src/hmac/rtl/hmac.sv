@@ -292,6 +292,7 @@ hmac_key_kv_read
 //Read Block
 kv_read_client #(
   .DATA_WIDTH(1024),
+  .HMAC(1),
   .PAD(1)
 )
 hmac_block_kv_read

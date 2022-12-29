@@ -64,6 +64,12 @@ addrmap sha512_acc_csr {
                 };
             };
             sw=rw; hw=r; swwe=valid_user; swmod=true; encode = sha_cmd_e;} MODE[2]=0;
+        field {
+            name="Endianness Toggle for SHA in mailbox mode";
+            desc="Default behavior assumes that data in mailbox is little endian,
+                  When set to 0, data from mailbox will be swizzled from little to big endian at the byte level.
+                  When set to 1, data from the mailbox will be loaded into SHA as-is.";
+            sw=rw; hw=r; swwe=valid_user;} ENDIAN_TOGGLE=0;
     } MODE;
 
     reg {

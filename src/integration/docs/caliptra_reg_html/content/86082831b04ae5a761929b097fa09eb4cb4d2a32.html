@@ -89,55 +89,79 @@
             <a class="headerlink" href="#FLOW_STATUS" title="Permalink to this row"></a>
         </td>
     </tr>
-    <tr id="CLEAR_SECRETS">
+    <tr id="VALID_PAUSER">
         <td class="address">0x020</td>
-        <td><a href="?p=clp.soc_ifc_reg.CLEAR_SECRETS" data-id="208" onclick="onClickNodeLink(event); return(false)">CLEAR_SECRETS</a></td>
-        <td>Clear Secrets</td>
+        <td><a href="?p=clp.soc_ifc_reg.VALID_PAUSER" data-id="208" onclick="onClickNodeLink(event); return(false)">VALID_PAUSER[5]</a></td>
+        <td>Valid User Registers</td>
         <td>
-            <a class="headerlink" href="#CLEAR_SECRETS" title="Permalink to this row"></a>
+            <a class="headerlink" href="#VALID_PAUSER" title="Permalink to this row"></a>
+        </td>
+    </tr>
+    <tr id="PAUSER_LOCK">
+        <td class="address">0x034</td>
+        <td><a href="?p=clp.soc_ifc_reg.PAUSER_LOCK" data-id="209" onclick="onClickNodeLink(event); return(false)">PAUSER_LOCK[5]</a></td>
+        <td>Valid User Register Lock</td>
+        <td>
+            <a class="headerlink" href="#PAUSER_LOCK" title="Permalink to this row"></a>
         </td>
     </tr>
     <tr id="generic_input_wires">
-        <td class="address">0x024</td>
-        <td><a href="?p=clp.soc_ifc_reg.generic_input_wires" data-id="209" onclick="onClickNodeLink(event); return(false)">generic_input_wires[2]</a></td>
+        <td class="address">0x048</td>
+        <td><a href="?p=clp.soc_ifc_reg.generic_input_wires" data-id="210" onclick="onClickNodeLink(event); return(false)">generic_input_wires[2]</a></td>
         <td>Generic Input Wires</td>
         <td>
             <a class="headerlink" href="#generic_input_wires" title="Permalink to this row"></a>
         </td>
     </tr>
     <tr id="generic_output_wires">
-        <td class="address">0x02C</td>
-        <td><a href="?p=clp.soc_ifc_reg.generic_output_wires" data-id="210" onclick="onClickNodeLink(event); return(false)">generic_output_wires[2]</a></td>
+        <td class="address">0x050</td>
+        <td><a href="?p=clp.soc_ifc_reg.generic_output_wires" data-id="211" onclick="onClickNodeLink(event); return(false)">generic_output_wires[2]</a></td>
         <td>Generic Output Wires</td>
         <td>
             <a class="headerlink" href="#generic_output_wires" title="Permalink to this row"></a>
         </td>
     </tr>
+    <tr id="TRNG_VALID_PAUSER">
+        <td class="address">0x058</td>
+        <td><a href="?p=clp.soc_ifc_reg.TRNG_VALID_PAUSER" data-id="212" onclick="onClickNodeLink(event); return(false)">TRNG_VALID_PAUSER</a></td>
+        <td>Valid User for TRNG</td>
+        <td>
+            <a class="headerlink" href="#TRNG_VALID_PAUSER" title="Permalink to this row"></a>
+        </td>
+    </tr>
+    <tr id="TRNG_PAUSER_LOCK">
+        <td class="address">0x05C</td>
+        <td><a href="?p=clp.soc_ifc_reg.TRNG_PAUSER_LOCK" data-id="213" onclick="onClickNodeLink(event); return(false)">TRNG_PAUSER_LOCK</a></td>
+        <td>Valid User for TRNG Lock</td>
+        <td>
+            <a class="headerlink" href="#TRNG_PAUSER_LOCK" title="Permalink to this row"></a>
+        </td>
+    </tr>
     <tr id="TRNG">
-        <td class="address">0x034</td>
-        <td><a href="?p=clp.soc_ifc_reg.TRNG" data-id="211" onclick="onClickNodeLink(event); return(false)">TRNG[12]</a></td>
+        <td class="address">0x060</td>
+        <td><a href="?p=clp.soc_ifc_reg.TRNG" data-id="214" onclick="onClickNodeLink(event); return(false)">TRNG[12]</a></td>
         <td>TRNG Data</td>
         <td>
             <a class="headerlink" href="#TRNG" title="Permalink to this row"></a>
         </td>
     </tr>
     <tr id="TRNG_DONE">
-        <td class="address">0x064</td>
-        <td><a href="?p=clp.soc_ifc_reg.TRNG_DONE" data-id="212" onclick="onClickNodeLink(event); return(false)">TRNG_DONE</a></td>
+        <td class="address">0x090</td>
+        <td><a href="?p=clp.soc_ifc_reg.TRNG_DONE" data-id="215" onclick="onClickNodeLink(event); return(false)">TRNG_DONE</a></td>
         <td>TRNG Done</td>
         <td>
             <a class="headerlink" href="#TRNG_DONE" title="Permalink to this row"></a>
         </td>
     </tr>
     <tr class="reserved-addr">
-    <td class="address">0x068</td>
+    <td class="address">0x094</td>
     <td>-</td>
     <td>-</td>
     <td></td>
 </tr>
     <tr id="uds_seed">
         <td class="address">0x200</td>
-        <td><a href="?p=clp.soc_ifc_reg.uds_seed" data-id="213" onclick="onClickNodeLink(event); return(false)">uds_seed[12]</a></td>
+        <td><a href="?p=clp.soc_ifc_reg.uds_seed" data-id="216" onclick="onClickNodeLink(event); return(false)">uds_seed[12]</a></td>
         <td>Unique Device Secret</td>
         <td>
             <a class="headerlink" href="#uds_seed" title="Permalink to this row"></a>
@@ -145,7 +169,7 @@
     </tr>
     <tr id="field_entropy">
         <td class="address">0x230</td>
-        <td><a href="?p=clp.soc_ifc_reg.field_entropy" data-id="214" onclick="onClickNodeLink(event); return(false)">field_entropy[32]</a></td>
+        <td><a href="?p=clp.soc_ifc_reg.field_entropy" data-id="217" onclick="onClickNodeLink(event); return(false)">field_entropy[32]</a></td>
         <td>Field Entropy</td>
         <td>
             <a class="headerlink" href="#field_entropy" title="Permalink to this row"></a>
@@ -153,7 +177,7 @@
     </tr>
     <tr id="key_manifest_pk_hash_0">
         <td class="address">0x2B0</td>
-        <td><a href="?p=clp.soc_ifc_reg.key_manifest_pk_hash_0" data-id="215" onclick="onClickNodeLink(event); return(false)">key_manifest_pk_hash_0[12]</a></td>
+        <td><a href="?p=clp.soc_ifc_reg.key_manifest_pk_hash_0" data-id="218" onclick="onClickNodeLink(event); return(false)">key_manifest_pk_hash_0[12]</a></td>
         <td>-</td>
         <td>
             <a class="headerlink" href="#key_manifest_pk_hash_0" title="Permalink to this row"></a>
@@ -161,7 +185,7 @@
     </tr>
     <tr id="key_manifest_pk_hash_1">
         <td class="address">0x2E0</td>
-        <td><a href="?p=clp.soc_ifc_reg.key_manifest_pk_hash_1" data-id="216" onclick="onClickNodeLink(event); return(false)">key_manifest_pk_hash_1[12]</a></td>
+        <td><a href="?p=clp.soc_ifc_reg.key_manifest_pk_hash_1" data-id="219" onclick="onClickNodeLink(event); return(false)">key_manifest_pk_hash_1[12]</a></td>
         <td>-</td>
         <td>
             <a class="headerlink" href="#key_manifest_pk_hash_1" title="Permalink to this row"></a>
@@ -169,7 +193,7 @@
     </tr>
     <tr id="key_manifest_pk_hash_2">
         <td class="address">0x310</td>
-        <td><a href="?p=clp.soc_ifc_reg.key_manifest_pk_hash_2" data-id="217" onclick="onClickNodeLink(event); return(false)">key_manifest_pk_hash_2[12]</a></td>
+        <td><a href="?p=clp.soc_ifc_reg.key_manifest_pk_hash_2" data-id="220" onclick="onClickNodeLink(event); return(false)">key_manifest_pk_hash_2[12]</a></td>
         <td>-</td>
         <td>
             <a class="headerlink" href="#key_manifest_pk_hash_2" title="Permalink to this row"></a>
@@ -177,7 +201,7 @@
     </tr>
     <tr id="key_manifest_pk_hash_3">
         <td class="address">0x340</td>
-        <td><a href="?p=clp.soc_ifc_reg.key_manifest_pk_hash_3" data-id="218" onclick="onClickNodeLink(event); return(false)">key_manifest_pk_hash_3[12]</a></td>
+        <td><a href="?p=clp.soc_ifc_reg.key_manifest_pk_hash_3" data-id="221" onclick="onClickNodeLink(event); return(false)">key_manifest_pk_hash_3[12]</a></td>
         <td>-</td>
         <td>
             <a class="headerlink" href="#key_manifest_pk_hash_3" title="Permalink to this row"></a>
@@ -185,7 +209,7 @@
     </tr>
     <tr id="key_manifest_pk_hash_mask">
         <td class="address">0x370</td>
-        <td><a href="?p=clp.soc_ifc_reg.key_manifest_pk_hash_mask" data-id="219" onclick="onClickNodeLink(event); return(false)">key_manifest_pk_hash_mask</a></td>
+        <td><a href="?p=clp.soc_ifc_reg.key_manifest_pk_hash_mask" data-id="222" onclick="onClickNodeLink(event); return(false)">key_manifest_pk_hash_mask</a></td>
         <td>-</td>
         <td>
             <a class="headerlink" href="#key_manifest_pk_hash_mask" title="Permalink to this row"></a>
@@ -193,7 +217,7 @@
     </tr>
     <tr id="key_manifest_svn">
         <td class="address">0x374</td>
-        <td><a href="?p=clp.soc_ifc_reg.key_manifest_svn" data-id="220" onclick="onClickNodeLink(event); return(false)">key_manifest_svn</a></td>
+        <td><a href="?p=clp.soc_ifc_reg.key_manifest_svn" data-id="223" onclick="onClickNodeLink(event); return(false)">key_manifest_svn</a></td>
         <td>-</td>
         <td>
             <a class="headerlink" href="#key_manifest_svn" title="Permalink to this row"></a>
@@ -201,7 +225,7 @@
     </tr>
     <tr id="boot_loader_svn">
         <td class="address">0x378</td>
-        <td><a href="?p=clp.soc_ifc_reg.boot_loader_svn" data-id="221" onclick="onClickNodeLink(event); return(false)">boot_loader_svn</a></td>
+        <td><a href="?p=clp.soc_ifc_reg.boot_loader_svn" data-id="224" onclick="onClickNodeLink(event); return(false)">boot_loader_svn</a></td>
         <td>-</td>
         <td>
             <a class="headerlink" href="#boot_loader_svn" title="Permalink to this row"></a>
@@ -209,7 +233,7 @@
     </tr>
     <tr id="runtime_svn">
         <td class="address">0x37C</td>
-        <td><a href="?p=clp.soc_ifc_reg.runtime_svn" data-id="222" onclick="onClickNodeLink(event); return(false)">runtime_svn[4]</a></td>
+        <td><a href="?p=clp.soc_ifc_reg.runtime_svn" data-id="225" onclick="onClickNodeLink(event); return(false)">runtime_svn[4]</a></td>
         <td>-</td>
         <td>
             <a class="headerlink" href="#runtime_svn" title="Permalink to this row"></a>
@@ -217,7 +241,7 @@
     </tr>
     <tr id="anti_rollback_disable">
         <td class="address">0x38C</td>
-        <td><a href="?p=clp.soc_ifc_reg.anti_rollback_disable" data-id="223" onclick="onClickNodeLink(event); return(false)">anti_rollback_disable</a></td>
+        <td><a href="?p=clp.soc_ifc_reg.anti_rollback_disable" data-id="226" onclick="onClickNodeLink(event); return(false)">anti_rollback_disable</a></td>
         <td>-</td>
         <td>
             <a class="headerlink" href="#anti_rollback_disable" title="Permalink to this row"></a>
@@ -225,7 +249,7 @@
     </tr>
     <tr id="ieee_idevid_cert_chain">
         <td class="address">0x390</td>
-        <td><a href="?p=clp.soc_ifc_reg.ieee_idevid_cert_chain" data-id="224" onclick="onClickNodeLink(event); return(false)">ieee_idevid_cert_chain[24]</a></td>
+        <td><a href="?p=clp.soc_ifc_reg.ieee_idevid_cert_chain" data-id="227" onclick="onClickNodeLink(event); return(false)">ieee_idevid_cert_chain[24]</a></td>
         <td>-</td>
         <td>
             <a class="headerlink" href="#ieee_idevid_cert_chain" title="Permalink to this row"></a>
@@ -233,7 +257,7 @@
     </tr>
     <tr id="fuse_done">
         <td class="address">0x3F0</td>
-        <td><a href="?p=clp.soc_ifc_reg.fuse_done" data-id="225" onclick="onClickNodeLink(event); return(false)">fuse_done</a></td>
+        <td><a href="?p=clp.soc_ifc_reg.fuse_done" data-id="228" onclick="onClickNodeLink(event); return(false)">fuse_done</a></td>
         <td>-</td>
         <td>
             <a class="headerlink" href="#fuse_done" title="Permalink to this row"></a>
@@ -241,7 +265,7 @@
     </tr>
     <tr id="obf_key">
         <td class="address">0x3F4</td>
-        <td><a href="?p=clp.soc_ifc_reg.obf_key" data-id="226" onclick="onClickNodeLink(event); return(false)">obf_key[8]</a></td>
+        <td><a href="?p=clp.soc_ifc_reg.obf_key" data-id="229" onclick="onClickNodeLink(event); return(false)">obf_key[8]</a></td>
         <td>De-Obfuscation Key</td>
         <td>
             <a class="headerlink" href="#obf_key" title="Permalink to this row"></a>
@@ -249,7 +273,7 @@
     </tr>
     <tr id="iccm_lock">
         <td class="address">0x414</td>
-        <td><a href="?p=clp.soc_ifc_reg.iccm_lock" data-id="227" onclick="onClickNodeLink(event); return(false)">iccm_lock</a></td>
+        <td><a href="?p=clp.soc_ifc_reg.iccm_lock" data-id="230" onclick="onClickNodeLink(event); return(false)">iccm_lock</a></td>
         <td>ICCM Lock</td>
         <td>
             <a class="headerlink" href="#iccm_lock" title="Permalink to this row"></a>
@@ -257,7 +281,7 @@
     </tr>
     <tr id="fw_update_reset">
         <td class="address">0x418</td>
-        <td><a href="?p=clp.soc_ifc_reg.fw_update_reset" data-id="228" onclick="onClickNodeLink(event); return(false)">fw_update_reset</a></td>
+        <td><a href="?p=clp.soc_ifc_reg.fw_update_reset" data-id="231" onclick="onClickNodeLink(event); return(false)">fw_update_reset</a></td>
         <td>FW Update Reset</td>
         <td>
             <a class="headerlink" href="#fw_update_reset" title="Permalink to this row"></a>
@@ -265,7 +289,7 @@
     </tr>
     <tr id="fw_update_reset_wait_cycles">
         <td class="address">0x41C</td>
-        <td><a href="?p=clp.soc_ifc_reg.fw_update_reset_wait_cycles" data-id="229" onclick="onClickNodeLink(event); return(false)">fw_update_reset_wait_cycles</a></td>
+        <td><a href="?p=clp.soc_ifc_reg.fw_update_reset_wait_cycles" data-id="232" onclick="onClickNodeLink(event); return(false)">fw_update_reset_wait_cycles</a></td>
         <td>FW Update Reset Wait Cycles</td>
         <td>
             <a class="headerlink" href="#fw_update_reset_wait_cycles" title="Permalink to this row"></a>
@@ -273,7 +297,7 @@
     </tr>
     <tr id="clk_gating_en">
         <td class="address">0x420</td>
-        <td><a href="?p=clp.soc_ifc_reg.clk_gating_en" data-id="230" onclick="onClickNodeLink(event); return(false)">clk_gating_en</a></td>
+        <td><a href="?p=clp.soc_ifc_reg.clk_gating_en" data-id="233" onclick="onClickNodeLink(event); return(false)">clk_gating_en</a></td>
         <td>Clk gating enable</td>
         <td>
             <a class="headerlink" href="#clk_gating_en" title="Permalink to this row"></a>
@@ -287,7 +311,7 @@
 </tr>
     <tr id="intr_block_rf">
         <td class="address">0x800</td>
-        <td><a href="?p=clp.soc_ifc_reg.intr_block_rf" data-id="231" onclick="onClickNodeLink(event); return(false)">intr_block_rf</a></td>
+        <td><a href="?p=clp.soc_ifc_reg.intr_block_rf" data-id="234" onclick="onClickNodeLink(event); return(false)">intr_block_rf</a></td>
         <td>Interrupt Register Block</td>
         <td>
             <a class="headerlink" href="#intr_block_rf" title="Permalink to this row"></a>

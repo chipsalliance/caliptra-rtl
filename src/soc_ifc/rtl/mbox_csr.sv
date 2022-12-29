@@ -351,6 +351,9 @@ module mbox_csr (
         if(decoded_reg_strb.mbox_status && decoded_req_is_wr) begin // SW write
             next_c = decoded_wr_data[1:0];
             load_next_c = '1;
+        end else if(hwif_in.mbox_status.status.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
         end
         field_combo.mbox_status.status.next = next_c;
         field_combo.mbox_status.status.load_next = load_next_c;
@@ -362,6 +365,7 @@ module mbox_csr (
             field_storage.mbox_status.status.value <= field_combo.mbox_status.status.next;
         end
     end
+    assign hwif_out.mbox_status.status.value = field_storage.mbox_status.status.value;
     // Field: mbox_csr.mbox_status.ecc_single_error
     always_comb begin
         automatic logic [0:0] next_c = field_storage.mbox_status.ecc_single_error.value;
@@ -426,7 +430,8 @@ module mbox_csr (
     assign readback_array[7][1:0] = (decoded_reg_strb.mbox_status && !decoded_req_is_wr) ? field_storage.mbox_status.status.value : '0;
     assign readback_array[7][2:2] = (decoded_reg_strb.mbox_status && !decoded_req_is_wr) ? field_storage.mbox_status.ecc_single_error.value : '0;
     assign readback_array[7][3:3] = (decoded_reg_strb.mbox_status && !decoded_req_is_wr) ? field_storage.mbox_status.ecc_double_error.value : '0;
-    assign readback_array[7][31:4] = '0;
+    assign readback_array[7][6:4] = (decoded_reg_strb.mbox_status && !decoded_req_is_wr) ? hwif_in.mbox_status.mbox_fsm_ps.next : '0;
+    assign readback_array[7][31:7] = '0;
 
 
     // Reduce the array

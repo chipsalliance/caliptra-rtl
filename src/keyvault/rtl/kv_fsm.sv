@@ -19,6 +19,7 @@ module kv_fsm
     #(
     parameter DATA_WIDTH = 384
    ,parameter PAD = 0
+   ,parameter HMAC = 0
    ,localparam OFFSET_W = $clog2(DATA_WIDTH/32)
 )
 (
@@ -74,7 +75,11 @@ always_comb ready = (kv_fsm_ps == KV_IDLE);
 
 always_comb begin
     full_pad_data = '0;
-    full_pad_data[31] = pad_data_size < 27 ? num_dwords_data*32 + 'd1024 : '0; //size of data goes in the last dword if we have room after pad
+    if (HMAC == 1) begin //HMAC padding adds 1024 to account for the key
+        full_pad_data[31] = pad_data_size < 27 ? num_dwords_data*32 + 'd1024 : '0; //size of data goes in the last dword if we have room after pad
+    end else begin
+        full_pad_data[31] = pad_data_size < 27 ? num_dwords_data*32 : '0; //size of data goes in the last dword if we have room after pad
+    end
     full_pad_data[num_dwords_data[KV_NUM_DWORDS_W-1:0]] = 32'h8000_0000; //insert start of pad at dword immediately following data size
 end
 

@@ -14,13 +14,13 @@
 //
 addrmap kv_reg {
     desc="address map for keyvault";
-    signal {activelow; async; cpuif_reset; field_reset;} reset_b;
-    signal {activelow; async;} hard_reset_b;
+    signal {activelow; async; cpuif_reset; field_reset;} hard_reset_b;
+    //signal {activelow; async;} hard_reset_b;
 
     //keys are not accessible by sw
-    field key {desc="Key Entries are not accessible by software"; sw=w; swwel=true; hw=rw; we=true; hwclr; resetsignal=hard_reset_b;};
+    field key {desc="Key Entries are not accessible by software"; sw=w; swwel=true; hw=rw; we=true; hwclr;};
     //PCR are sw accessible
-    field pcr {desc="PCR Entries"; sw=rw; swwel=true; hw=rw; we=true; hwclr;  resetsignal=hard_reset_b;};
+    field pcr {desc="PCR Entries"; sw=rw; swwel=true; hw=rw; we=true; hwclr;};
 
     reg pcrReg {pcr data[32]=0;}; //generic reg for pcr
     reg keyReg {desc="Key Entries are not readable or writeable by software"; key data[32]=0;}; //generic reg for keys
@@ -29,13 +29,13 @@ addrmap kv_reg {
     //controls
     reg kvCtrl {
         desc="Controls for each keyvault and pcr entry";
-        field {sw=rw; swwel=true; hw=r;} lock_rd=0;
-        field {sw=rw; swwel=true; hw=r;} lock_wr=0;
-        field {sw=rw; swwel=true; hw=r;} lock_use=0;
+        field {sw=rw; swwel=true; hw=r; hwclr;} lock_rd=0;
+        field {sw=rw; swwel=true; hw=r; hwclr;} lock_wr=0;
+        field {sw=rw; swwel=true; hw=r; hwclr;} lock_use=0;
         field {sw=rw; hw=r; singlepulse;} clear=0;
         //field {sw=rw; hw=r; hwclr;} copy[4];
         //field {sw=rw; hw=r;} copy_dest[8:5];
-        field {sw=r; hw=rw; we=true;} dest_valid[14:9]=0;
+        field {sw=r; hw=rw; we=true; hwclr;} dest_valid[14:9]=0;
         field {sw=rw; hw=na;} rsvd[31:15]=0;
     };
 

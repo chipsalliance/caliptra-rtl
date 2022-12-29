@@ -89,6 +89,7 @@ module caliptra_top_tb (
     } n_state_apb, c_state_apb;
 
     logic [$clog2(FW_NUM_DWORDS)-1:0] apb_wr_count, apb_wr_count_nxt;
+    logic apb_enable_ph;
     logic apb_xfer_end;
 
     wire[31:0] WriteData;
@@ -436,10 +437,6 @@ module caliptra_top_tb (
         jtag_tdi = 1'b0;    // JTAG tdi
         jtag_trst_n = 1'b0; // JTAG Reset
         //TIE-OFF
-        PSEL = '0;
-        PENABLE = '0;
-        PWRITE = '0;
-        PAUSER = '0;
         PPROT = '0;
 
         hex_file_is_empty = $system("test -s program.hex");
@@ -521,10 +518,13 @@ module caliptra_top_tb (
         if (!cptra_rst_b) begin
             c_state_apb  <= S_APB_IDLE;
             apb_wr_count <= '0;
+            apb_enable_ph <= 0;
         end
         else begin
             c_state_apb  <= n_state_apb;
             apb_wr_count <= apb_wr_count_nxt;
+            //next phase is an access phase if this is setup phase OR it's access and responder isn't ready
+            apb_enable_ph <= (PSEL & ~PENABLE) | (PSEL & PENABLE & ~PREADY);
         end
         if (c_state_apb != n_state_apb) begin
             case (n_state_apb)
@@ -697,6 +697,7 @@ module caliptra_top_tb (
             end
         endcase
     end
+    
     assign apb_xfer_end = PSEL && PENABLE && PREADY;
     always@(posedge core_clk) begin
         if ((n_state_apb == S_APB_WR_DATAIN) && apb_xfer_end)
@@ -746,73 +747,63 @@ module caliptra_top_tb (
             end
         endcase
     end
-    always@(posedge core_clk) begin
+    always_comb begin
+        PENABLE = apb_enable_ph;
         case (c_state_apb) inside
             S_APB_IDLE: begin
-                PSEL       <= 0;
-                PENABLE    <= 0;
-                PWRITE     <= 0;
-                PAUSER     <= 0;
+                PSEL       = 0;
+                PWRITE     = 0;
+                PAUSER     = 0;
             end
             S_APB_WR_UDS: begin
-                PSEL       <= 1;
-                PENABLE    <= PSEL ^ apb_xfer_end;
-                PWRITE     <= 1;
-                PAUSER     <= 0;
+                PSEL       = 1;
+                PWRITE     = 1;
+                PAUSER     = 0;
             end
             S_APB_WR_FE: begin
-                PSEL       <= 1;
-                PENABLE    <= PSEL ^ apb_xfer_end;
-                PWRITE     <= 1;
-                PAUSER     <= 0;
+                PSEL       = 1;
+                PWRITE     = 1;
+                PAUSER     = 0;
             end
             S_APB_WR_FUSE_DONE: begin
-                PSEL       <= 1;
-                PENABLE    <= PSEL ^ apb_xfer_end;
-                PWRITE     <= 1;
-                PAUSER     <= 0;
+                PSEL       = 1;
+                PWRITE     = 1;
+                PAUSER     = 0;
             end
             S_APB_POLL_LOCK: begin
-                PSEL       <= 1;
-                PENABLE    <= PSEL ^ apb_xfer_end;
-                PWRITE     <= 0;
-                PAUSER     <= 0;
+                PSEL       = 1;
+                PWRITE     = 0;
+                PAUSER     = '1;
             end
             S_APB_WR_CMD: begin
-                PSEL       <= 1;
-                PENABLE    <= PSEL ^ apb_xfer_end;
-                PWRITE     <= 1;
-                PAUSER     <= 0;
+                PSEL       = 1;
+                PWRITE     = 1;
+                PAUSER     = '1;
             end
             S_APB_WR_DLEN: begin
-                PSEL       <= 1;
-                PENABLE    <= PSEL ^ apb_xfer_end;
-                PWRITE     <= 1;
-                PAUSER     <= 0;
+                PSEL       = 1;
+                PWRITE     = 1;
+                PAUSER     = '1;
             end
             S_APB_WR_DATAIN: begin
-                PSEL       <= 1;
-                PENABLE    <= PSEL ^ apb_xfer_end;
-                PWRITE     <= 1;
-                PAUSER     <= 0;
+                PSEL       = 1;
+                PWRITE     = 1;
+                PAUSER     = '1;
             end
             S_APB_WR_EXEC: begin
-                PSEL       <= 1;
-                PENABLE    <= PSEL ^ apb_xfer_end;
-                PWRITE     <= 1;
-                PAUSER     <= 0;
+                PSEL       = 1;
+                PWRITE     = 1;
+                PAUSER     = '1;
             end
             S_APB_DONE: begin
-                PSEL       <= 0;
-                PENABLE    <= 0;
-                PWRITE     <= 0;
-                PAUSER     <= 0;
+                PSEL       = 0;
+                PWRITE     = 0;
+                PAUSER     = 0;
             end
             default: begin
-                PSEL       <= 0;
-                PENABLE    <= 0;
-                PWRITE     <= 0;
-                PAUSER     <= 0;
+                PSEL       = 0;
+                PWRITE     = 0;
+                PAUSER     = 0;
             end
         endcase
     end
@@ -1380,55 +1371,6 @@ function int get_iccm_bank(input[31:0] addr,  output int bank_idx);
         return int'( addr[5:2]);
     `endif
 endfunction
-
-`ifndef VERILATOR
-//apb interface tasks
-//----------------------------------------------------------------
-// write_single_word_apb()
-//
-// Write the given word to the DUT using the AHB-lite interface.
-//----------------------------------------------------------------
-task write_single_word_apb(input [31 : 0] address, input [31 : 0] word);
-begin
-    PADDR      <= address;
-    PSEL       <= 1;
-    PENABLE    <= 0;
-    PWRITE     <= 1;
-    PWDATA     <= word;
-    PAUSER     <= 0;
-    #1
-    wait(PREADY == 1'b1);
-    @(posedge core_clk);
-    PENABLE    <= 1;
-    #1
-    wait(PREADY == 1'b1);
-    @(posedge core_clk);
-    PSEL       <= 0;
-    PENABLE    <= 0;
-end
-endtask // write_single_word_apb
-
-task read_single_word_apb(input [31 : 0] address);
-begin
-    PADDR      <= address;
-    PSEL       <= 1;
-    PENABLE    <= 0;
-    PWRITE     <= 0;
-    PWDATA     <= 0;
-    PAUSER     <= 0;
-    #1
-    wait(PREADY == 1'b1);
-    @(posedge core_clk);
-    PENABLE    <= 1;
-    #1
-    wait(PREADY == 1'b1);
-    @(posedge core_clk);
-    PSEL       <= 0;
-    PENABLE    <= 0;
-end
-endtask // read_single_word_apb
-
-  `endif
 
 /* verilator lint_off CASEINCOMPLETE */
 `include "dasm.svi"

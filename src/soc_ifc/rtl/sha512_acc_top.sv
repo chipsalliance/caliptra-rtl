@@ -45,6 +45,7 @@ module sha512_acc_top
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
   `include "sha512_param.sv"
+  localparam DATA_NUM_BYTES = DATA_WIDTH / 8;
   localparam BLOCK_NO = 1024 / DATA_WIDTH;
   localparam BYTE_NO = 1024 / 8;
   localparam BLOCK_OFFSET_W = $clog2(BLOCK_NO);
@@ -98,6 +99,7 @@ module sha512_acc_top
   logic last_dword_wr;
   logic block_full;
   logic [BLOCK_OFFSET_W:0] block_wptr;
+  logic [DATA_NUM_BYTES-1:0][7:0] mbox_rdata;
   logic [DATA_WIDTH-1:0] block_wdata;
   logic [0:BLOCK_NO-1][DATA_WIDTH-1:0] block_reg,block_reg_nxt;
   logic [0:BYTE_NO-1][7:0] block_reg_nxt_pad;
@@ -207,8 +209,15 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   always_comb block_we = (streaming_mode & datain_write & ~stall_write) |
                          (mailbox_mode & mbox_block_we);
   
+  always_comb begin
+    for (int b=0; b<DATA_NUM_BYTES; b++) begin
+      mbox_rdata[b] = hwif_out.MODE.ENDIAN_TOGGLE.value ? sha_sram_resp.rdata.data[b*8 +: 8] : //assign data as-is from mailbox
+                                                          sha_sram_resp.rdata.data[(DATA_NUM_BYTES-1-b)*8 +: 8]; //convert data to big endian 
+    end
+  end
+
   always_comb block_wdata = ({DATA_WIDTH{streaming_mode}} & req_data.wdata) | 
-                            ({DATA_WIDTH{mailbox_mode}} & sha_sram_resp.rdata.data);
+                            ({DATA_WIDTH{mailbox_mode}} & mbox_rdata);
 
   //registers for the HW API
   always_ff @(posedge clk or negedge rst_b) begin : api_regs

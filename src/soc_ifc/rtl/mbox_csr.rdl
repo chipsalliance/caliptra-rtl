@@ -92,7 +92,7 @@ addrmap mbox_csr {
                     desc = "The requested command experienced a failure.";
                 };
             };
-            sw=rw; hw=na; encode = mbox_status_e;} status[2]=0;
+            sw=rw; hw=r; encode = mbox_status_e; hwclr;} status[2]=0;
         field {
             name = "Mailbox ECC Single Error";
             desc = "Indicates a correctable ECC single-bit error was
@@ -109,6 +109,32 @@ addrmap mbox_csr {
                     Auto-clears when mbox_execute field is cleared.";
 
             sw=r; hwset = true; hw=w; wel; } ecc_double_error=1'b0;
+        field {
+            name = "Mailbox FSM Present State";
+            desc = "Indicates the present state of the mailbox FSM";
+
+            enum mbox_fsm_e {
+                MBOX_IDLE = 3'b000 {
+                    desc = "Mailbox is idle";
+                };
+                MBOX_RDY_FOR_CMD = 3'b001 {
+                    desc = "Mailbox is waiting for command";
+                };
+                MBOX_RDY_FOR_DLEN = 3'b011 {
+                    desc = "Mailbox is waiting for data length";
+                };
+                MBOX_RDY_FOR_DATA = 3'b010 {
+                    desc = "Mailbox is ready for data";
+                };
+                MBOX_EXECUTE_UC = 3'b110 {
+                    desc = "Mailbox has data for uC";
+                };
+                MBOX_EXECUTE_SOC = 3'b100 {
+                    desc = "Mailbox has data for SoC";
+                };
+            };
+            sw=r; hw=w; encode = mbox_fsm_e;
+        } mbox_fsm_ps[3] = 0;
     } mbox_status;
 
     // This will auto clear the status register whenever a mailbox transfer

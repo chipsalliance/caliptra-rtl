@@ -107,6 +107,7 @@ package mbox_csr_uvm;
         rand uvm_reg_field status;
         rand uvm_reg_field ecc_single_error;
         rand uvm_reg_field ecc_double_error;
+        rand uvm_reg_field mbox_fsm_ps;
 
         function new(string name = "mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -114,11 +115,13 @@ package mbox_csr_uvm;
 
         virtual function void build();
             this.status = new("status");
-            this.status.configure(this, 2, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.status.configure(this, 2, 0, "RW", 1, 'h0, 1, 1, 0);
             this.ecc_single_error = new("ecc_single_error");
             this.ecc_single_error.configure(this, 1, 2, "RO", 1, 'h0, 1, 1, 0);
             this.ecc_double_error = new("ecc_double_error");
             this.ecc_double_error.configure(this, 1, 3, "RO", 1, 'h0, 1, 1, 0);
+            this.mbox_fsm_ps = new("mbox_fsm_ps");
+            this.mbox_fsm_ps.configure(this, 3, 4, "RO", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760
 

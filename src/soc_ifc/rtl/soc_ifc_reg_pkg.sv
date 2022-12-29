@@ -3,12 +3,68 @@
 
 package soc_ifc_reg_pkg;
     typedef struct packed{
+        logic next;
+    } soc_ifc_reg__FLOW_STATUS__ready_for_fuses__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__FLOW_STATUS__ready_for_fuses__in_t ready_for_fuses;
+    } soc_ifc_reg__FLOW_STATUS__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__VALID_PAUSER__PAUSER__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__VALID_PAUSER__PAUSER__in_t PAUSER;
+    } soc_ifc_reg__VALID_PAUSER__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__PAUSER_LOCK__LOCK__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__PAUSER_LOCK__LOCK__in_t LOCK;
+    } soc_ifc_reg__PAUSER_LOCK__in_t;
+
+    typedef struct packed{
         logic [31:0] next;
     } soc_ifc_reg__generic_input_wires__generic_wires__in_t;
 
     typedef struct packed{
         soc_ifc_reg__generic_input_wires__generic_wires__in_t generic_wires;
     } soc_ifc_reg__generic_input_wires__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__TRNG_VALID_PAUSER__PAUSER__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__TRNG_VALID_PAUSER__PAUSER__in_t PAUSER;
+    } soc_ifc_reg__TRNG_VALID_PAUSER__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__TRNG_PAUSER_LOCK__LOCK__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__TRNG_PAUSER_LOCK__LOCK__in_t LOCK;
+    } soc_ifc_reg__TRNG_PAUSER_LOCK__in_t;
+
+    typedef struct packed{
+        logic swwe;
+    } soc_ifc_reg__TRNG__DATA__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__TRNG__DATA__in_t DATA;
+    } soc_ifc_reg__TRNG__in_t;
+
+    typedef struct packed{
+        logic swwe;
+    } soc_ifc_reg__TRNG_DONE__DONE__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__TRNG_DONE__DONE__in_t DONE;
+    } soc_ifc_reg__TRNG_DONE__in_t;
 
     typedef struct packed{
         logic hwclr;
@@ -96,7 +152,14 @@ package soc_ifc_reg_pkg;
         logic reset_b;
         logic hard_reset_b;
         logic soc_req;
+        soc_ifc_reg__FLOW_STATUS__in_t FLOW_STATUS;
+        soc_ifc_reg__VALID_PAUSER__in_t [5-1:0]VALID_PAUSER;
+        soc_ifc_reg__PAUSER_LOCK__in_t [5-1:0]PAUSER_LOCK;
         soc_ifc_reg__generic_input_wires__in_t [2-1:0]generic_input_wires;
+        soc_ifc_reg__TRNG_VALID_PAUSER__in_t TRNG_VALID_PAUSER;
+        soc_ifc_reg__TRNG_PAUSER_LOCK__in_t TRNG_PAUSER_LOCK;
+        soc_ifc_reg__TRNG__in_t [12-1:0]TRNG;
+        soc_ifc_reg__TRNG_DONE__in_t TRNG_DONE;
         soc_ifc_reg__uds_seed__in_t [12-1:0]uds_seed;
         soc_ifc_reg__field_entropy__in_t [32-1:0]field_entropy;
         soc_ifc_reg__obf_key__in_t [8-1:0]obf_key;
@@ -113,17 +176,35 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__FLOW_STATUS__ready_for_runtime__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__FLOW_STATUS__ready_for_fw__out_t ready_for_fw;
-        soc_ifc_reg__FLOW_STATUS__ready_for_runtime__out_t ready_for_runtime;
-    } soc_ifc_reg__FLOW_STATUS__out_t;
+        logic value;
+    } soc_ifc_reg__FLOW_STATUS__ready_for_fuses__out_t;
 
     typedef struct packed{
         logic value;
-    } soc_ifc_reg__CLEAR_SECRETS__clear_secrets__out_t;
+    } soc_ifc_reg__FLOW_STATUS__mailbox_flow_done__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__CLEAR_SECRETS__clear_secrets__out_t clear_secrets;
-    } soc_ifc_reg__CLEAR_SECRETS__out_t;
+        soc_ifc_reg__FLOW_STATUS__ready_for_fw__out_t ready_for_fw;
+        soc_ifc_reg__FLOW_STATUS__ready_for_runtime__out_t ready_for_runtime;
+        soc_ifc_reg__FLOW_STATUS__ready_for_fuses__out_t ready_for_fuses;
+        soc_ifc_reg__FLOW_STATUS__mailbox_flow_done__out_t mailbox_flow_done;
+    } soc_ifc_reg__FLOW_STATUS__out_t;
+
+    typedef struct packed{
+        logic [31:0] value;
+    } soc_ifc_reg__VALID_PAUSER__PAUSER__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__VALID_PAUSER__PAUSER__out_t PAUSER;
+    } soc_ifc_reg__VALID_PAUSER__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__PAUSER_LOCK__LOCK__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__PAUSER_LOCK__LOCK__out_t LOCK;
+    } soc_ifc_reg__PAUSER_LOCK__out_t;
 
     typedef struct packed{
         logic [31:0] value;
@@ -132,6 +213,22 @@ package soc_ifc_reg_pkg;
     typedef struct packed{
         soc_ifc_reg__generic_output_wires__generic_wires__out_t generic_wires;
     } soc_ifc_reg__generic_output_wires__out_t;
+
+    typedef struct packed{
+        logic [31:0] value;
+    } soc_ifc_reg__TRNG_VALID_PAUSER__PAUSER__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__TRNG_VALID_PAUSER__PAUSER__out_t PAUSER;
+    } soc_ifc_reg__TRNG_VALID_PAUSER__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__TRNG_PAUSER_LOCK__LOCK__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__TRNG_PAUSER_LOCK__LOCK__out_t LOCK;
+    } soc_ifc_reg__TRNG_PAUSER_LOCK__out_t;
 
     typedef struct packed{
         logic [31:0] value;
@@ -218,8 +315,11 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         soc_ifc_reg__FLOW_STATUS__out_t FLOW_STATUS;
-        soc_ifc_reg__CLEAR_SECRETS__out_t CLEAR_SECRETS;
+        soc_ifc_reg__VALID_PAUSER__out_t [5-1:0]VALID_PAUSER;
+        soc_ifc_reg__PAUSER_LOCK__out_t [5-1:0]PAUSER_LOCK;
         soc_ifc_reg__generic_output_wires__out_t [2-1:0]generic_output_wires;
+        soc_ifc_reg__TRNG_VALID_PAUSER__out_t TRNG_VALID_PAUSER;
+        soc_ifc_reg__TRNG_PAUSER_LOCK__out_t TRNG_PAUSER_LOCK;
         soc_ifc_reg__uds_seed__out_t [12-1:0]uds_seed;
         soc_ifc_reg__field_entropy__out_t [32-1:0]field_entropy;
         soc_ifc_reg__fuse_done__out_t fuse_done;

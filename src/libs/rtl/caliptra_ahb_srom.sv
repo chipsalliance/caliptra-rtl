@@ -55,11 +55,10 @@ logic                       sram_error,sram_error_f;
 
 /////////////////////////////////
 // Assignments/Shim logic
-assign sram_dv = hready_i & hsel_i & htrans_i inside {2'b10, 2'b11};
-assign cs = sram_dv;
+assign cs = hready_i & hsel_i & htrans_i inside {2'b10, 2'b11};
 assign addr = haddr_i >> $clog2(AHB_DATA_WIDTH/8);
 
-assign sram_error = sram_dv && hwrite_i; // Error if trying to write to ROM
+assign sram_error = hsel_i && hwrite_i; // Error if trying to write to ROM
 
 assign hrdata_o = rdata;
 

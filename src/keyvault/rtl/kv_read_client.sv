@@ -18,6 +18,7 @@ module kv_read_client
     import kv_defines_pkg::*;
     #(
     parameter DATA_WIDTH = 384
+   ,parameter HMAC = 0
    ,parameter PAD = 0
 
    ,localparam DATA_OFFSET_W = $clog2(DATA_WIDTH/32)
@@ -50,6 +51,7 @@ logic [31:0] pad_data;
 //read fsm
 kv_fsm #(
     .DATA_WIDTH(DATA_WIDTH),
+    .HMAC(HMAC),
     .PAD(PAD)
 )
 kv_read_fsm

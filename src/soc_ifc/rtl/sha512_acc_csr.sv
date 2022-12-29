@@ -160,6 +160,10 @@ module sha512_acc_csr (
                 logic [1:0] next;
                 logic load_next;
             } MODE;
+            struct packed{
+                logic next;
+                logic load_next;
+            } ENDIAN_TOGGLE;
         } MODE;
         struct packed{
             struct packed{
@@ -385,6 +389,9 @@ module sha512_acc_csr (
             struct packed{
                 logic [1:0] value;
             } MODE;
+            struct packed{
+                logic value;
+            } ENDIAN_TOGGLE;
         } MODE;
         struct packed{
             struct packed{
@@ -603,6 +610,25 @@ module sha512_acc_csr (
     end
     assign hwif_out.MODE.MODE.value = field_storage.MODE.MODE.value;
     assign hwif_out.MODE.MODE.swmod = decoded_reg_strb.MODE && decoded_req_is_wr;
+    // Field: sha512_acc_csr.MODE.ENDIAN_TOGGLE
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.MODE.ENDIAN_TOGGLE.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.MODE && decoded_req_is_wr && hwif_in.valid_user) begin // SW write
+            next_c = decoded_wr_data[2:2];
+            load_next_c = '1;
+        end
+        field_combo.MODE.ENDIAN_TOGGLE.next = next_c;
+        field_combo.MODE.ENDIAN_TOGGLE.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.MODE.ENDIAN_TOGGLE.value <= 'h0;
+        end else if(field_combo.MODE.ENDIAN_TOGGLE.load_next) begin
+            field_storage.MODE.ENDIAN_TOGGLE.value <= field_combo.MODE.ENDIAN_TOGGLE.next;
+        end
+    end
+    assign hwif_out.MODE.ENDIAN_TOGGLE.value = field_storage.MODE.ENDIAN_TOGGLE.value;
     // Field: sha512_acc_csr.START_ADDRESS.ADDR
     always_comb begin
         automatic logic [31:0] next_c = field_storage.START_ADDRESS.ADDR.value;
@@ -1416,7 +1442,8 @@ module sha512_acc_csr (
     assign readback_array[0][31:1] = '0;
     assign readback_array[1][31:0] = (decoded_reg_strb.USER && !decoded_req_is_wr) ? field_storage.USER.USER.value : '0;
     assign readback_array[2][1:0] = (decoded_reg_strb.MODE && !decoded_req_is_wr) ? field_storage.MODE.MODE.value : '0;
-    assign readback_array[2][31:2] = '0;
+    assign readback_array[2][2:2] = (decoded_reg_strb.MODE && !decoded_req_is_wr) ? field_storage.MODE.ENDIAN_TOGGLE.value : '0;
+    assign readback_array[2][31:3] = '0;
     assign readback_array[3][31:0] = (decoded_reg_strb.START_ADDRESS && !decoded_req_is_wr) ? field_storage.START_ADDRESS.ADDR.value : '0;
     assign readback_array[4][31:0] = (decoded_reg_strb.DLEN && !decoded_req_is_wr) ? field_storage.DLEN.LENGTH.value : '0;
     assign readback_array[5][31:0] = (decoded_reg_strb.DATAIN && !decoded_req_is_wr) ? field_storage.DATAIN.DATAIN.value : '0;

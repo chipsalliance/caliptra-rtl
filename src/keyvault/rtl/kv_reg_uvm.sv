@@ -19,11 +19,11 @@ package kv_reg_uvm;
 
         virtual function void build();
             this.lock_rd = new("lock_rd");
-            this.lock_rd.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.lock_rd.configure(this, 1, 0, "RW", 1, 'h0, 1, 1, 0);
             this.lock_wr = new("lock_wr");
-            this.lock_wr.configure(this, 1, 1, "RW", 0, 'h0, 1, 1, 0);
+            this.lock_wr.configure(this, 1, 1, "RW", 1, 'h0, 1, 1, 0);
             this.lock_use = new("lock_use");
-            this.lock_use.configure(this, 1, 2, "RW", 0, 'h0, 1, 1, 0);
+            this.lock_use.configure(this, 1, 2, "RW", 1, 'h0, 1, 1, 0);
             this.clear = new("clear");
             this.clear.configure(this, 1, 3, "RW", 0, 'h0, 1, 1, 0);
             this.dest_valid = new("dest_valid");

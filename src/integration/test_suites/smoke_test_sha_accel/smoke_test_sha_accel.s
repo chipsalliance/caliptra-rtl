@@ -191,7 +191,7 @@ _start:
 
     //Set to Mailbox SHA512 Mode
     li x3, CLP_SHA512_ACC_CSR_MODE
-    li x1, 0x00000003
+    li x1, 0x00000007
     sw x1, 0(x3)
 
 
@@ -272,7 +272,7 @@ _start:
 
     //Set to Mailbox SHA384 Mode
     li x3, CLP_SHA512_ACC_CSR_MODE
-    li x1, 0x00000002
+    li x1, 0x00000006
     sw x1, 0(x3)
 
     // Load block from hw_data and write to Mailbox

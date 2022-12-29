@@ -31,14 +31,14 @@
 `define ASSERT(assert_name, prop, clk, rst_b)                                  \
   assert_name: assert property (@(posedge clk) disable iff (~rst_b) (prop))    \
     else begin                                                                 \
-        `ASSERT_RPT(`STRINGIFY(assert_name))                                          \
+        `ASSERT_RPT(`STRINGIFY(assert_name))                                   \
     end
 
 // Assert a concurrent property NEVER happens
 `define ASSERT_NEVER(assert_name, prop, clk, rst_b)                             \
   assert_name: assert property (@(posedge clk) disable iff (~rst_b) not (prop)) \
     else begin                                                                  \
-        `ASSERT_RPT(`STRINGIFY(assert_name))                                           \
+        `ASSERT_RPT(`STRINGIFY(assert_name))                                    \
     end
 
 // Assert that signal is not x

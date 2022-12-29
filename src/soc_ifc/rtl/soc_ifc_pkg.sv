@@ -67,13 +67,6 @@ package soc_ifc_pkg;
         logic                        write;
         logic                        soc_req;
     } soc_ifc_req_t;
-    //Request specific to soc ifc reg block
-    typedef struct packed {
-        logic   [SOC_IFC_ADDR_W-1:0] addr;
-        logic   [SOC_IFC_DATA_W-1:0] wdata;
-        logic                        write;
-        logic                        soc_req;
-    } soc_ifc_reg_req_t;
     // ECC protected data
     typedef struct packed {
         logic [MBOX_ECC_DATA_W-1:0] ecc;

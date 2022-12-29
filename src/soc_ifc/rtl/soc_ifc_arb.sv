@@ -14,10 +14,13 @@
 
 module soc_ifc_arb 
     import soc_ifc_pkg::*;
-    (
+    #(
+        parameter APB_USER_WIDTH = 32
+    )(
     input  logic clk,
     input  logic rst_b,
 
+    input logic [4:0][APB_USER_WIDTH-1:0] valid_mbox_users,
     //UC inf
     input  logic uc_req_dv,
     output logic uc_req_hold,
@@ -46,7 +49,7 @@ module soc_ifc_arb
     //SOC IFC REG inf
     output logic soc_ifc_reg_req_dv,
     input  logic soc_ifc_reg_req_hold,
-    output soc_ifc_reg_req_t soc_ifc_reg_req_data,
+    output soc_ifc_req_t soc_ifc_reg_req_data,
     input  logic [SOC_IFC_DATA_W-1:0] soc_ifc_reg_rdata,
     input  logic soc_ifc_reg_error
     
@@ -55,6 +58,8 @@ logic uc_has_priority;
 logic soc_has_priority;
 logic toggle_priority;
 logic req_collision;
+
+logic valid_mbox_req;
 
 //dv for each req/target
 logic soc_mbox_req;
@@ -91,13 +96,22 @@ always_comb uc_mbox_reg_req = (uc_req_dv & (uc_req_data.addr inside {[MBOX_REG_S
 always_comb uc_mbox_dir_req = (uc_req_dv & (uc_req_data.addr inside {[MBOX_DIR_START_ADDR:MBOX_DIR_END_ADDR]}));
 /* verilator lint_on UNSIGNED */
 //SoC requests to mailbox
-always_comb soc_mbox_req = (soc_req_dv & (soc_req_data.addr inside {[MBOX_REG_START_ADDR:MBOX_REG_END_ADDR]}));
+always_comb soc_mbox_req = (valid_mbox_req & (soc_req_data.addr inside {[MBOX_REG_START_ADDR:MBOX_REG_END_ADDR]}));
 //Requests to arch/fuse register block
 always_comb uc_reg_req = (uc_req_dv & (uc_req_data.addr inside {[SOC_IFC_REG_START_ADDR:SOC_IFC_REG_END_ADDR]}));
 always_comb soc_reg_req = (soc_req_dv & (soc_req_data.addr inside {[SOC_IFC_REG_START_ADDR:SOC_IFC_REG_END_ADDR]}));
 //Requests to SHA
 always_comb uc_sha_req = (uc_req_dv & (uc_req_data.addr inside {[SHA_REG_START_ADDR:SHA_REG_END_ADDR]}));
 always_comb soc_sha_req = (soc_req_dv & (soc_req_data.addr inside {[SHA_REG_START_ADDR:SHA_REG_END_ADDR]}));
+
+//Check if SoC request is coming from a valid user
+//There are 5 valid pauser registers, check if user attribute matches any of them
+always_comb begin
+    valid_mbox_req = '0;
+    for (int i=0; i < 5; i++) begin
+        valid_mbox_req |= soc_req_dv & (soc_req_data.user == valid_mbox_users[i]);
+    end
+end
 
 //check for collisions
 always_comb req_collision = (uc_mbox_req & soc_mbox_req) |
@@ -113,12 +127,7 @@ always_comb sha_req_dv = uc_sha_req | soc_sha_req;
 //drive the appropriate request to each destination
 always_comb mbox_req_data = (soc_mbox_req & (~req_collision | soc_has_priority)) ? soc_req_data : uc_req_data;
 
-always_comb begin
-    soc_ifc_reg_req_data.addr = (soc_reg_req & (~req_collision | soc_has_priority)) ? soc_req_data.addr : uc_req_data.addr;
-    soc_ifc_reg_req_data.write = (soc_reg_req & (~req_collision | soc_has_priority)) ? soc_req_data.write : uc_req_data.write;
-    soc_ifc_reg_req_data.wdata = (soc_reg_req & (~req_collision | soc_has_priority)) ? soc_req_data.wdata : uc_req_data.wdata;
-    soc_ifc_reg_req_data.soc_req = (soc_reg_req & (~req_collision | soc_has_priority)) ? soc_req_data.soc_req : uc_req_data.soc_req;
-end
+always_comb soc_ifc_reg_req_data = (soc_reg_req & (~req_collision | soc_has_priority)) ? soc_req_data : uc_req_data;
 
 always_comb sha_req_data = (soc_sha_req & (~req_collision | soc_has_priority)) ? soc_req_data : uc_req_data;
 

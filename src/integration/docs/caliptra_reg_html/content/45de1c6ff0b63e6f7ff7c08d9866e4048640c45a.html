@@ -28,7 +28,7 @@
         <th></th>
     </tr>
     <tr class="reserved-field">
-    <td>[31:4]</td>
+    <td>[31:7]</td>
     <td>-</td>
     <td>-</td>
     <td>-</td>
@@ -36,6 +36,42 @@
     <td>-</td>
     <td></td>
 </tr>
+    <tr id="mbox_fsm_ps">
+        <td>[6:4]</td>
+        <td><a href="#mbox_fsm_ps.desc">mbox_fsm_ps</a></td>
+        <td>
+            <span title='Read-only'>r</span></td>
+        <td>0x0
+        </td>
+        <td>
+            <input id="_FieldValueTestermbox_fsm_ps" class="field-value-tester"
+                type="text" autocomplete="off"
+                data-name="mbox_fsm_ps" oninput="onDecodedFieldInput(this)"/>
+            <select id="_FieldValueEnumTestermbox_fsm_ps" class="field-value-enum-tester"
+                data-name="mbox_fsm_ps" onchange="onDecodedFieldEnumChange(this)">
+            
+                <option value="0x0">MBOX_IDLE</option>
+            
+                <option value="0x1">MBOX_RDY_FOR_CMD</option>
+            
+                <option value="0x3">MBOX_RDY_FOR_DLEN</option>
+            
+                <option value="0x2">MBOX_RDY_FOR_DATA</option>
+            
+                <option value="0x6">MBOX_EXECUTE_UC</option>
+            
+                <option value="0x4">MBOX_EXECUTE_SOC</option>
+            
+            </select>
+        </td>
+        <td>Mailbox FSM Present State</td>
+        <td>
+            <button type="button" id="_RadixButtonmbox_fsm_ps" class="radix-button"
+                title="Switch radix" aria-label="Switch radix"
+                data-name="mbox_fsm_ps" onclick="onRadixSwitch(this)">H</button>
+            <a class="headerlink" href="#mbox_fsm_ps" title="Permalink to this row"></a>
+        </td>
+    </tr>
     <tr id="ecc_double_error">
         <td>[3]</td>
         <td><a href="#ecc_double_error.desc">ecc_double_error</a></td>
@@ -117,6 +153,48 @@
     </label>
 </p>
 <hr/><h2>Field Descriptions</h2>
+
+<h3 id="mbox_fsm_ps.desc">mbox_fsm_ps - Mailbox FSM Present State
+    <a class="headerlink" href="#mbox_fsm_ps.desc" title="Permalink to this headline"></a>
+</h3>
+<div id="_Content.mbox_fsm_ps.desc">
+<p>Indicates the present state of the mailbox FSM</p>
+<table border="1">
+    <tr>
+        <th colspan="3">enum mbox_fsm_e</th>
+    </tr>
+    <tr>
+        <td>MBOX_IDLE</td>
+        <td>0x0</td>
+        <td><p>Mailbox is idle</p></td>
+    </tr>
+    <tr>
+        <td>MBOX_RDY_FOR_CMD</td>
+        <td>0x1</td>
+        <td><p>Mailbox is waiting for command</p></td>
+    </tr>
+    <tr>
+        <td>MBOX_RDY_FOR_DLEN</td>
+        <td>0x3</td>
+        <td><p>Mailbox is waiting for data length</p></td>
+    </tr>
+    <tr>
+        <td>MBOX_RDY_FOR_DATA</td>
+        <td>0x2</td>
+        <td><p>Mailbox is ready for data</p></td>
+    </tr>
+    <tr>
+        <td>MBOX_EXECUTE_UC</td>
+        <td>0x6</td>
+        <td><p>Mailbox has data for uC</p></td>
+    </tr>
+    <tr>
+        <td>MBOX_EXECUTE_SOC</td>
+        <td>0x4</td>
+        <td><p>Mailbox has data for SoC</p></td>
+    </tr>
+</table>
+</div>
 
 <h3 id="ecc_double_error.desc">ecc_double_error - Mailbox ECC Double Error
     <a class="headerlink" href="#ecc_double_error.desc" title="Permalink to this headline"></a>

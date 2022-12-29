@@ -84,8 +84,8 @@ _start:
         bne x5, x1, fe_done_poll_loop
 
     // Clear Secrets
-    li x3, CLP_SOC_IFC_REG_CLEAR_SECRETS
-    li x1, 0x00000001
+    li x3, CLP_DOE_REG_DOE_CTRL
+    li x1, 0x00000003
     sw x1, 0(x3)
 
     //-------

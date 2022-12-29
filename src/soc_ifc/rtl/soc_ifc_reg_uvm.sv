@@ -107,6 +107,8 @@ package soc_ifc_reg_uvm;
         rand uvm_reg_field status;
         rand uvm_reg_field ready_for_fw;
         rand uvm_reg_field ready_for_runtime;
+        rand uvm_reg_field ready_for_fuses;
+        rand uvm_reg_field mailbox_flow_done;
 
         function new(string name = "soc_ifc_reg__FLOW_STATUS");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -114,27 +116,45 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.status = new("status");
-            this.status.configure(this, 30, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.status.configure(this, 28, 0, "RW", 0, 'h0, 1, 1, 0);
             this.ready_for_fw = new("ready_for_fw");
-            this.ready_for_fw.configure(this, 1, 30, "RW", 0, 'h0, 1, 1, 0);
+            this.ready_for_fw.configure(this, 1, 28, "RW", 0, 'h0, 1, 1, 0);
             this.ready_for_runtime = new("ready_for_runtime");
-            this.ready_for_runtime.configure(this, 1, 31, "RW", 0, 'h0, 1, 1, 0);
+            this.ready_for_runtime.configure(this, 1, 29, "RW", 0, 'h0, 1, 1, 0);
+            this.ready_for_fuses = new("ready_for_fuses");
+            this.ready_for_fuses.configure(this, 1, 30, "RO", 1, 'h0, 0, 1, 0);
+            this.mailbox_flow_done = new("mailbox_flow_done");
+            this.mailbox_flow_done.configure(this, 1, 31, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__FLOW_STATUS
 
-    // Reg - soc_ifc_reg::CLEAR_SECRETS
-    class soc_ifc_reg__CLEAR_SECRETS extends uvm_reg;
-        rand uvm_reg_field clear_secrets;
+    // Reg - soc_ifc_reg::VALID_PAUSER
+    class soc_ifc_reg__VALID_PAUSER extends uvm_reg;
+        rand uvm_reg_field PAUSER;
 
-        function new(string name = "soc_ifc_reg__CLEAR_SECRETS");
+        function new(string name = "soc_ifc_reg__VALID_PAUSER");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
         virtual function void build();
-            this.clear_secrets = new("clear_secrets");
-            this.clear_secrets.configure(this, 1, 0, "WO", 0, 'h0, 1, 1, 0);
+            this.PAUSER = new("PAUSER");
+            this.PAUSER.configure(this, 32, 0, "RW", 0, 'hffffffff, 1, 1, 0);
         endfunction : build
-    endclass : soc_ifc_reg__CLEAR_SECRETS
+    endclass : soc_ifc_reg__VALID_PAUSER
+
+    // Reg - soc_ifc_reg::PAUSER_LOCK
+    class soc_ifc_reg__PAUSER_LOCK extends uvm_reg;
+        rand uvm_reg_field LOCK;
+
+        function new(string name = "soc_ifc_reg__PAUSER_LOCK");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.LOCK = new("LOCK");
+            this.LOCK.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__PAUSER_LOCK
 
     // Reg - soc_ifc_reg::generic_input_wires
     class soc_ifc_reg__generic_input_wires extends uvm_reg;
@@ -163,6 +183,34 @@ package soc_ifc_reg_uvm;
             this.generic_wires.configure(this, 32, 0, "RW", 0, 'h0, 0, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__generic_output_wires
+
+    // Reg - soc_ifc_reg::TRNG_VALID_PAUSER
+    class soc_ifc_reg__TRNG_VALID_PAUSER extends uvm_reg;
+        rand uvm_reg_field PAUSER;
+
+        function new(string name = "soc_ifc_reg__TRNG_VALID_PAUSER");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.PAUSER = new("PAUSER");
+            this.PAUSER.configure(this, 32, 0, "RW", 0, 'hffffffff, 1, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__TRNG_VALID_PAUSER
+
+    // Reg - soc_ifc_reg::TRNG_PAUSER_LOCK
+    class soc_ifc_reg__TRNG_PAUSER_LOCK extends uvm_reg;
+        rand uvm_reg_field LOCK;
+
+        function new(string name = "soc_ifc_reg__TRNG_PAUSER_LOCK");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.LOCK = new("LOCK");
+            this.LOCK.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__TRNG_PAUSER_LOCK
 
     // Reg - soc_ifc_reg::TRNG
     class soc_ifc_reg__TRNG extends uvm_reg;
@@ -1023,9 +1071,12 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__FW_ERROR_ENC FW_ERROR_ENC;
         rand soc_ifc_reg__BOOT_STATUS BOOT_STATUS;
         rand soc_ifc_reg__FLOW_STATUS FLOW_STATUS;
-        rand soc_ifc_reg__CLEAR_SECRETS CLEAR_SECRETS;
+        rand soc_ifc_reg__VALID_PAUSER VALID_PAUSER[5];
+        rand soc_ifc_reg__PAUSER_LOCK PAUSER_LOCK[5];
         rand soc_ifc_reg__generic_input_wires generic_input_wires[2];
         rand soc_ifc_reg__generic_output_wires generic_output_wires[2];
+        rand soc_ifc_reg__TRNG_VALID_PAUSER TRNG_VALID_PAUSER;
+        rand soc_ifc_reg__TRNG_PAUSER_LOCK TRNG_PAUSER_LOCK;
         rand soc_ifc_reg__TRNG TRNG[12];
         rand soc_ifc_reg__TRNG_DONE TRNG_DONE;
         rand soc_ifc_reg__uds_seed uds_seed[12];
@@ -1094,37 +1145,56 @@ package soc_ifc_reg_uvm;
 
             this.FLOW_STATUS.build();
             this.default_map.add_reg(this.FLOW_STATUS, 'h1c);
-            this.CLEAR_SECRETS = new("CLEAR_SECRETS");
-            this.CLEAR_SECRETS.configure(this);
-
-            this.CLEAR_SECRETS.build();
-            this.default_map.add_reg(this.CLEAR_SECRETS, 'h20);
+            foreach(this.VALID_PAUSER[i0]) begin
+                this.VALID_PAUSER[i0] = new($sformatf("VALID_PAUSER[%0d]", i0));
+                this.VALID_PAUSER[i0].configure(this);
+                
+                this.VALID_PAUSER[i0].build();
+                this.default_map.add_reg(this.VALID_PAUSER[i0], 'h20 + i0*'h4);
+            end
+            foreach(this.PAUSER_LOCK[i0]) begin
+                this.PAUSER_LOCK[i0] = new($sformatf("PAUSER_LOCK[%0d]", i0));
+                this.PAUSER_LOCK[i0].configure(this);
+                
+                this.PAUSER_LOCK[i0].build();
+                this.default_map.add_reg(this.PAUSER_LOCK[i0], 'h34 + i0*'h4);
+            end
             foreach(this.generic_input_wires[i0]) begin
                 this.generic_input_wires[i0] = new($sformatf("generic_input_wires[%0d]", i0));
                 this.generic_input_wires[i0].configure(this);
                 
                 this.generic_input_wires[i0].build();
-                this.default_map.add_reg(this.generic_input_wires[i0], 'h24 + i0*'h4);
+                this.default_map.add_reg(this.generic_input_wires[i0], 'h48 + i0*'h4);
             end
             foreach(this.generic_output_wires[i0]) begin
                 this.generic_output_wires[i0] = new($sformatf("generic_output_wires[%0d]", i0));
                 this.generic_output_wires[i0].configure(this);
                 
                 this.generic_output_wires[i0].build();
-                this.default_map.add_reg(this.generic_output_wires[i0], 'h2c + i0*'h4);
+                this.default_map.add_reg(this.generic_output_wires[i0], 'h50 + i0*'h4);
             end
+            this.TRNG_VALID_PAUSER = new("TRNG_VALID_PAUSER");
+            this.TRNG_VALID_PAUSER.configure(this);
+
+            this.TRNG_VALID_PAUSER.build();
+            this.default_map.add_reg(this.TRNG_VALID_PAUSER, 'h58);
+            this.TRNG_PAUSER_LOCK = new("TRNG_PAUSER_LOCK");
+            this.TRNG_PAUSER_LOCK.configure(this);
+
+            this.TRNG_PAUSER_LOCK.build();
+            this.default_map.add_reg(this.TRNG_PAUSER_LOCK, 'h5c);
             foreach(this.TRNG[i0]) begin
                 this.TRNG[i0] = new($sformatf("TRNG[%0d]", i0));
                 this.TRNG[i0].configure(this);
                 
                 this.TRNG[i0].build();
-                this.default_map.add_reg(this.TRNG[i0], 'h34 + i0*'h4);
+                this.default_map.add_reg(this.TRNG[i0], 'h60 + i0*'h4);
             end
             this.TRNG_DONE = new("TRNG_DONE");
             this.TRNG_DONE.configure(this);
 
             this.TRNG_DONE.build();
-            this.default_map.add_reg(this.TRNG_DONE, 'h64);
+            this.default_map.add_reg(this.TRNG_DONE, 'h90);
             foreach(this.uds_seed[i0]) begin
                 this.uds_seed[i0] = new($sformatf("uds_seed[%0d]", i0));
                 this.uds_seed[i0].configure(this);

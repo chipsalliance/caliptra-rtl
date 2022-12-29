@@ -127,7 +127,7 @@ logic sha_error;
 //mbox reg inf
 logic soc_ifc_reg_req_dv;
 logic soc_ifc_reg_req_hold;
-soc_ifc_reg_req_t soc_ifc_reg_req_data;
+soc_ifc_req_t soc_ifc_reg_req_data;
 logic [SOC_IFC_DATA_W-1:0] soc_ifc_reg_rdata;
 logic soc_ifc_reg_error, soc_ifc_reg_read_error, soc_ifc_reg_write_error;
 
@@ -135,6 +135,8 @@ logic sha_sram_req_dv;
 logic [MBOX_ADDR_W-1:0] sha_sram_req_addr;
 mbox_sram_resp_t sha_sram_resp;
 logic sha_sram_hold;
+
+logic [4:0][APB_USER_WIDTH-1:0] valid_mbox_users;
 
 // Pulse signals to trigger interrupts
 logic uc_mbox_data_avail;
@@ -249,9 +251,13 @@ always_comb uc_req.soc_req = 1'b0;
 //This module contains the arbitration logic between SoC and Caliptra uC requests
 //Requests are serviced using round robin arbitration
 
-soc_ifc_arb i_soc_ifc_arb (
+soc_ifc_arb #(
+    .APB_USER_WIDTH(APB_USER_WIDTH)
+    )
+    i_soc_ifc_arb (
     .clk(soc_ifc_clk_cg),
     .rst_b(cptra_rst_b),
+    .valid_mbox_users(valid_mbox_users),
     //UC inf
     .uc_req_dv(uc_req_dv), 
     .uc_req_hold(uc_req_hold), 
@@ -314,14 +320,38 @@ always_comb begin
     end
 
     //flow status
-    mailbox_flow_done = '0;
+    mailbox_flow_done = soc_ifc_reg_hwif_out.FLOW_STATUS.mailbox_flow_done.value;
     ready_for_fw_push = soc_ifc_reg_hwif_out.FLOW_STATUS.ready_for_fw.value;
     ready_for_runtime = soc_ifc_reg_hwif_out.FLOW_STATUS.ready_for_runtime.value;
-
+    soc_ifc_reg_hwif_in.FLOW_STATUS.ready_for_fuses.next = ready_for_fuses;
     //generic wires
     for (int i = 0; i < 2; i++) begin
         generic_output_wires[i] = soc_ifc_reg_hwif_out.generic_output_wires[i].generic_wires.value;
         soc_ifc_reg_hwif_in.generic_input_wires[i].generic_wires.next = generic_input_wires[i];
+    end
+end
+
+//Filtering by PAUSER
+always_comb begin
+    for (int i=0; i<5; i++) begin
+        //once locked, can't be cleared until reset
+        soc_ifc_reg_hwif_in.PAUSER_LOCK[i].LOCK.swwel = soc_ifc_reg_hwif_out.PAUSER_LOCK[i].LOCK.value;
+        //lock the writes to valid user field once lock is set
+        soc_ifc_reg_hwif_in.VALID_PAUSER[i].PAUSER.swwel = soc_ifc_reg_hwif_out.PAUSER_LOCK[i].LOCK.value;
+        //If integrator set PAUSER values at integration time, pick it up from the define
+        valid_mbox_users[i] = `SET_PAUSER_INTEG[i] ? `VALID_PAUSER[i] : soc_ifc_reg_hwif_out.VALID_PAUSER[i].PAUSER.value[APB_USER_WIDTH-1:0];
+    end
+end
+//can't write to trng valid user after it is locked
+always_comb soc_ifc_reg_hwif_in.TRNG_VALID_PAUSER.PAUSER.swwel = soc_ifc_reg_hwif_out.TRNG_PAUSER_LOCK.LOCK.value;
+always_comb soc_ifc_reg_hwif_in.TRNG_PAUSER_LOCK.LOCK.swwel = soc_ifc_reg_hwif_out.TRNG_PAUSER_LOCK.LOCK.value;
+//only allow valid users to write to TRNG
+always_comb soc_ifc_reg_hwif_in.TRNG_DONE.DONE.swwe = ~soc_ifc_reg_req_data.soc_req | 
+                                                      (soc_ifc_reg_req_data.user == soc_ifc_reg_hwif_out.TRNG_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]);
+always_comb begin 
+    for (int i = 0; i < 12; i++) begin
+        soc_ifc_reg_hwif_in.TRNG[i].DATA.swwe = ~soc_ifc_reg_req_data.soc_req | 
+                                                (soc_ifc_reg_req_data.user == soc_ifc_reg_hwif_out.TRNG_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]);
     end
 end
 

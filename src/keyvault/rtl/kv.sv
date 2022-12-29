@@ -103,7 +103,6 @@ kv_ahb_slv1 (
 
 always_comb uc_req_error = kv_reg_read_error | kv_reg_write_error;
 always_comb uc_req_hold = '0;
-always_comb kv_reg_hwif_in.reset_b = rst_b;
 
 always_ff @(posedge clk or negedge rst_b) begin
     if (!rst_b) begin
@@ -128,6 +127,10 @@ always_comb begin : keyvault_ctrl
         kv_reg_hwif_in.KEY_CTRL[entry].lock_rd.swwel = kv_reg_hwif_out.KEY_CTRL[entry].lock_rd.value;
         kv_reg_hwif_in.KEY_CTRL[entry].lock_wr.swwel = kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value;
         kv_reg_hwif_in.KEY_CTRL[entry].lock_use.swwel = kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value;
+        kv_reg_hwif_in.KEY_CTRL[entry].lock_rd.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value;
+        kv_reg_hwif_in.KEY_CTRL[entry].lock_wr.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value;
+        kv_reg_hwif_in.KEY_CTRL[entry].lock_use.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value;
+        kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value;
         //init for AND-OR
         kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.next = '0; 
         kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.we = '0;
@@ -141,6 +144,10 @@ always_comb begin : keyvault_ctrl
         kv_reg_hwif_in.PCR_CTRL[entry].lock_rd.swwel = kv_reg_hwif_out.PCR_CTRL[entry].lock_rd.value;
         kv_reg_hwif_in.PCR_CTRL[entry].lock_wr.swwel = kv_reg_hwif_out.PCR_CTRL[entry].lock_wr.value;
         kv_reg_hwif_in.PCR_CTRL[entry].lock_use.swwel = kv_reg_hwif_out.PCR_CTRL[entry].lock_use.value;
+        kv_reg_hwif_in.PCR_CTRL[entry].lock_rd.hwclr = kv_reg_hwif_out.PCR_CTRL[entry].clear.value;
+        kv_reg_hwif_in.PCR_CTRL[entry].lock_wr.hwclr = kv_reg_hwif_out.PCR_CTRL[entry].clear.value;
+        kv_reg_hwif_in.PCR_CTRL[entry].lock_use.hwclr = kv_reg_hwif_out.PCR_CTRL[entry].clear.value;
+        kv_reg_hwif_in.PCR_CTRL[entry].dest_valid.hwclr = kv_reg_hwif_out.PCR_CTRL[entry].clear.value;
         //init for AND-OR
         kv_reg_hwif_in.PCR_CTRL[entry].dest_valid.next = '0; 
         kv_reg_hwif_in.PCR_CTRL[entry].dest_valid.we = '0; 
@@ -162,7 +169,8 @@ always_comb begin : keyvault_ctrl
             for (int client = 0; client < KV_NUM_WRITE; client++) begin
                 kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value;
                 kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.we |= ((kv_write[client].write_entry == entry) & (kv_write[client].write_offset == dword) & 
-                                                                   ~kv_write[client].entry_is_pcr & kv_write[client].write_en) | 
+                                                                   ~kv_write[client].entry_is_pcr & kv_write[client].write_en & 
+                                                                   ~kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value) | 
                                                                    //Security state change or FW flushing KV
                                                                     flush_keyvault;
                 kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.next |= flush_keyvault ? debug_value :
@@ -179,7 +187,8 @@ always_comb begin : keyvault_ctrl
             for (int client = 0; client < KV_NUM_WRITE; client++) begin
                 kv_reg_hwif_in.PCR_ENTRY[entry][dword].data.hwclr = kv_reg_hwif_out.PCR_CTRL[entry].clear.value;
                 kv_reg_hwif_in.PCR_ENTRY[entry][dword].data.we |= (kv_write[client].write_entry == entry) & (kv_write[client].write_offset == dword) & 
-                                                                   kv_write[client].entry_is_pcr & kv_write[client].write_en;
+                                                                   kv_write[client].entry_is_pcr & kv_write[client].write_en &
+                                                                   ~kv_reg_hwif_out.PCR_CTRL[entry].lock_wr.value;
                 kv_reg_hwif_in.PCR_ENTRY[entry][dword].data.next |= kv_write[client].write_en ? kv_write[client].write_data : '0;
             end 
         end

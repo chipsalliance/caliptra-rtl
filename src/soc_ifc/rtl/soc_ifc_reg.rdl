@@ -31,7 +31,7 @@ addrmap soc_ifc_reg {
     //defined fields by access type
     //first is uc access type, second is soc access type
     field rw_ro {swwel = soc_req;}; //writes enabled only for uc
-    field rw_ro_sticky {swwel = soc_req; resetsignal = hard_reset_b;}; //writes enabled only for uc
+    field rw_rw_sticky {resetsignal = hard_reset_b;}; //writes enabled only for uc
     field ro_rw {swwe  = soc_req;}; //writes enabled only for soc
     field ro_ro {sw = r;};
     field rw_rw { };
@@ -43,36 +43,42 @@ addrmap soc_ifc_reg {
 
     reg {name = "Hardware Error Fatal";
         desc = "Indicates fatal hardware error";
-        rw_ro_sticky error_code[32]=0; } HW_ERROR_FATAL;
+        rw_rw_sticky error_code[32]=0; } HW_ERROR_FATAL;
     reg {name = "Hardware Error Non-Fatal";
         desc = "Indicates non-fatal hardware error";
-        rw_ro_sticky error_code[32]=0; } HW_ERROR_NON_FATAL;
+        rw_rw_sticky error_code[32]=0; } HW_ERROR_NON_FATAL;
     reg {name = "Firmware Error Fatal";
         desc = "Indicates fatal firmware error";
-        rw_ro_sticky error_code[32]=0; } FW_ERROR_FATAL;
+        rw_rw_sticky error_code[32]=0; } FW_ERROR_FATAL;
     reg {name = "Firmware Error Non-Fatal";
         desc = "Indicates non-fatal firmware error";
-        rw_ro_sticky error_code[32]=0; } FW_ERROR_NON_FATAL;
+        rw_rw_sticky error_code[32]=0; } FW_ERROR_NON_FATAL;
     reg {name = "Hardware Error Encoding";
         desc = "Encoded error value for hardware errors";
-        rw_ro_sticky error_code[32]=0; } HW_ERROR_ENC;
+        rw_rw_sticky error_code[32]=0; } HW_ERROR_ENC;
     reg {name = "Firmware Error Encoding";
         desc = "Encoded error value for firmware errors";
-        rw_ro_sticky error_code[32]=0; } FW_ERROR_ENC;
+        rw_rw_sticky error_code[32]=0; } FW_ERROR_ENC;
     reg {name = "Boot Status";
         desc = "Reports the boot status";
         rw_ro status[32]=0;} BOOT_STATUS;
     reg {name = "Flow Status";
         desc = "Reports the status of the firmware flows";
-        rw_ro status[30]=0;
+        rw_ro status[28]=0;
+        //TRNG request bit
          field {sw=rw; swwel = soc_req; hw=r;} ready_for_fw[1]=0;
-         field {sw=rw; swwel = soc_req; hw=r;} ready_for_runtime[1]=0;} FLOW_STATUS;
+         field {sw=rw; swwel = soc_req; hw=r;} ready_for_runtime[1]=0;
+         field {sw=r; hw=rw;} ready_for_fuses[1];
+         field {sw=rw; swwel = soc_req; hw=r;} mailbox_flow_done[1]=0;} FLOW_STATUS;
 
-    reg {name = "Clear Secrets";
-        desc = "Firmware writable register that will clear flops containing device secrets.
-                Keyvault is flushed, along with UDS, FE, and OBF KEY.
-                This is a failsafe mechanism for unexpected security state changes.";
-        field {sw=w; swwel = soc_req; hw=r; singlepulse;} clear_secrets=0;} CLEAR_SECRETS;
+    reg {name = "Valid User Registers";
+         desc = "Valid PAUSER attributes for requests from SoC APB Interface";
+         field {sw=rw; hw=r; swwel;} PAUSER[32]=0xFFFF_FFFF;} VALID_PAUSER[5];
+
+    reg {name = "Valid User Register Lock";
+         desc = "Valid PAUSER attributes for requests from SoC APB Interface.
+                 Each bit corresponds to locking the associated  VALID_PAUSER register.";
+         field {sw=rw; hw=r; swwel;} LOCK=0;} PAUSER_LOCK[5];
 
     reg {name = "Generic Input Wires";
         desc = "Generic input wires connected to SoC interface";
@@ -81,13 +87,22 @@ addrmap soc_ifc_reg {
         desc = "Generic output wires connected to SoC interface";
         field {sw=rw; hw=r;} generic_wires[32];} generic_output_wires[2];
 
+    reg {name = "Valid User for TRNG";
+         desc = "Valid PAUSER attributes for TRNG on SoC APB Interface";
+         field {sw=rw; hw=r; swwel;} PAUSER[32]=0xFFFF_FFFF;} TRNG_VALID_PAUSER;
+
+    reg {name = "Valid User for TRNG Lock";
+         desc = "Valid PAUSER attributes for requests from SoC APB Interface.
+                 Each bit corresponds to locking the associated  VALID_PAUSER register.";
+         field {sw=rw; hw=r; swwel;} LOCK=0;} TRNG_PAUSER_LOCK;
+
     reg {name = "TRNG Data";
          desc = "Storage for the requested TRNG Data";
-         field {sw=rw; hw=na;} DATA[32];} TRNG[12];
+         field {sw=rw; hw=na; swwe;} DATA[32];} TRNG[12];
 
     reg {name = "TRNG Done";
          desc = "Indicates that the requests TRNG Data is done and stored in the TRNG Data register";
-         field {sw=rw; hw=na;} DONE;} TRNG_DONE;
+         field {sw=rw; hw=na; swwe;} DONE;} TRNG_DONE;
 
     //fuses
     reg {name = "Unique Device Secret";
@@ -125,7 +140,7 @@ addrmap soc_ifc_reg {
     reg {
         name = "FW Update Reset";
         desc = "Control register to assert FW update reset. When cleared to
-                0, the uc core alone is reset. When set to 1, reset is deasserted.
+                0, the uc core alone is reset. When set to 1, reset is asserted.
                 Writes available to Caliptra subsystem, not SoC.";
 
         field {desc = "FW Update reset to reset core"; hw = r; sw = rw; singlepulse=true; swwel = soc_req;} core_rst = 1'b0;

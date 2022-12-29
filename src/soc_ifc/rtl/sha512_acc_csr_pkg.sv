@@ -105,7 +105,12 @@ package sha512_acc_csr_pkg;
     } sha512_acc_csr__MODE__MODE__out_t;
 
     typedef struct packed{
+        logic value;
+    } sha512_acc_csr__MODE__ENDIAN_TOGGLE__out_t;
+
+    typedef struct packed{
         sha512_acc_csr__MODE__MODE__out_t MODE;
+        sha512_acc_csr__MODE__ENDIAN_TOGGLE__out_t ENDIAN_TOGGLE;
     } sha512_acc_csr__MODE__out_t;
 
     typedef struct packed{

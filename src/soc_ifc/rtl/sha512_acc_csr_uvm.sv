@@ -35,6 +35,7 @@ package sha512_acc_csr_uvm;
     // Reg - sha512_acc_csr::MODE
     class sha512_acc_csr__MODE extends uvm_reg;
         rand uvm_reg_field MODE;
+        rand uvm_reg_field ENDIAN_TOGGLE;
 
         function new(string name = "sha512_acc_csr__MODE");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -43,6 +44,8 @@ package sha512_acc_csr_uvm;
         virtual function void build();
             this.MODE = new("MODE");
             this.MODE.configure(this, 2, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.ENDIAN_TOGGLE = new("ENDIAN_TOGGLE");
+            this.ENDIAN_TOGGLE.configure(this, 1, 2, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : sha512_acc_csr__MODE
 
