@@ -41,34 +41,35 @@ logger.addHandler(console_handler)
 # Run command and wait for it to complete before returning the results
 def runBashScript(cmd):
     p = subprocess.Popen(cmd, stdin=None, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
-    exitCode = p.wait()
-    return exitCode, p
+    stdout, stderr = p.communicate()
+    exitCode = p.returncode
+    return exitCode, stdout, stderr
     #return os.popen(cmd).read()
 
 def prepDestRepo(inDestWS, inDestRepo, inDestBranch):
     scriptsDir = get_script_dir()
     prepRepoScript = os.path.join(scriptsDir, "prepDestRepo.sh")
     cmd = ". {} -dw {} -dr {} -db {}".format(prepRepoScript, inDestWS, inDestRepo, inDestBranch)
-    exitcode, prepRepoResult = runBashScript(cmd)
+    exitcode, prepRepoStdout, prepRepoStderr = runBashScript(cmd)
     if (exitcode == 0):
         infoMsg = "Destination repo {} setup with branch {}.".format(inDestRepo, inDestBranch)
         logger.info(infoMsg)
     else:
         print(exitcode)
-        print(prepRepoResult.stderr.read().decode())
+        print(prepRepoStderr.decode())
         return 1
 
 def prepPBSrcRepo(inSrcWS, inSrcRepo):
     scriptsDir = get_script_dir()
     prepRepoScript = os.path.join(scriptsDir, "prepPBSrcRepo.sh")
     cmd = ". {} -sw {} -sr {}".format(prepRepoScript, inSrcWS, inSrcRepo)
-    exitcode, prepRepoResult = runBashScript(cmd)
+    exitcode, prepRepoStdout, prepRepoStderr = runBashScript(cmd)
     if (exitcode == 0):
         infoMsg = "Source repo {} setup with branch {}.".format(inSrcRepo, "master")
         logger.info(infoMsg)
     else:
         print(exitcode)
-        print(prepRepoResult.stderr.read().decode())
+        print(prepRepoStderr.decode())
 
 def get_script_dir():
     return os.path.dirname(os.path.realpath(__file__))
@@ -218,9 +219,13 @@ def main():
     infoMsg = "Command: {} {} {} {} {} {} {} {} {} {} {}".format(sys.argv[0], sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9], sys.argv[10])
     logger.info(infoMsg)
 
+    logger.info("Prepping Dest Repo")
     prepDestRepo(dWorkspace, dRepo, dBranch)
+    logger.info("Prepping Src Repo")
     prepPBSrcRepo(sWorkspace, sRepo)
+    logger.info("Copying files")
     copyFilesSrcToDest(sWorkspace, sRepo, dWorkspace, dRepo)
+    logger.info("Done copying files")
 
     
 if __name__ == "__main__":

@@ -23,16 +23,16 @@ BUILD_DIR = $(CURDIR)
 
 # Define test name
 TESTNAME ?= iccm_lock
-ifneq (,${SIM_TOOLS_TOP_COMPILE_ROOT})
-	TEST_DIR = ${SIM_TOOLS_TOP_COMPILE_ROOT}/test_suites/${TESTNAME}
-	HEX_DIR = ${SIM_TOOLS_TOP_COMPILE_ROOT}/test_suites/hex
-	INCLUDES_DIR = ${SIM_TOOLS_TOP_COMPILE_ROOT}/test_suites/includes
-	TBDIR = ${SIM_TOOLS_TOP_COMPILE_ROOT}/tb
+ifneq (,$(SIM_TOOLS_TOP_COMPILE_ROOT))
+	TEST_DIR = $(SIM_TOOLS_TOP_COMPILE_ROOT)/test_suites/$(TESTNAME)
+	HEX_DIR = $(SIM_TOOLS_TOP_COMPILE_ROOT)/test_suites/hex
+	INCLUDES_DIR = $(SIM_TOOLS_TOP_COMPILE_ROOT)/test_suites/includes
+	TBDIR = $(SIM_TOOLS_TOP_COMPILE_ROOT)/tb
 else
-	TEST_DIR = ${WORKSPACE}/Caliptra/src/integration/test_suites/${TESTNAME}
-	HEX_DIR = ${WORKSPACE}/Caliptra/src/integration/test_suites/hex
-	INCLUDES_DIR = ${WORKSPACE}/Caliptra/src/integration/test_suites/includes
-	TBDIR = ${WORKSPACE}/Caliptra/src/integration/tb
+	TEST_DIR = $(WORKSPACE)/Caliptra/src/integration/test_suites/$(TESTNAME)
+	HEX_DIR = $(WORKSPACE)/Caliptra/src/integration/test_suites/hex
+	INCLUDES_DIR = $(WORKSPACE)/Caliptra/src/integration/test_suites/includes
+	TBDIR = $(WORKSPACE)/Caliptra/src/integration/tb
 endif
 
 # Determine test directory
@@ -40,9 +40,9 @@ endif
 #  TEST_DIR = $(TBDIR)/tests/$(TEST)
 #endif
 
-HEADER_FILES := ${INCLUDES_DIR}/caliptra_defines.h \
-		${INCLUDES_DIR}/defines.h \
-		${WORKSPACE}/Caliptra/src/integration/rtl/caliptra_reg.h 
+HEADER_FILES := $(INCLUDES_DIR)/caliptra_defines.h \
+		$(INCLUDES_DIR)/defines.h \
+		$(WORKSPACE)/Caliptra/src/integration/rtl/caliptra_reg.h 
 
 ifeq (0,$(shell test -e $(TEST_DIR)/crt0.[sS] && echo $$?))
 	OFILES += crt0.o
@@ -52,7 +52,7 @@ OFILES += $(TESTNAME).o
 ifdef debug
  DEBUG_PLUS = +dumpon
  IRUN_DEBUG = -access +rc
- IRUN_DEBUG_RUN = -input ${RV_ROOT}/testbench/input.tcl
+ IRUN_DEBUG_RUN = -input $(RV_ROOT)/testbench/input.tcl
  VCS_DEBUG = -debug_access
  VERILATOR_DEBUG = --trace
  RIVIERA_DEBUG = +access +r
@@ -74,9 +74,9 @@ VPATH = $(TEST_DIR) $(BUILD_DIR) $(TBDIR)
 $(eval TBFILES = $(shell cat $(TBDIR)/../config/caliptra_top_tb.vf | grep -v '+incdir+'))
 
 #defines  = $(BUILD_DIR)/common_defines.vh
-#defines += ${RV_ROOT}/design/include/el2_def.sv
+#defines += $(RV_ROOT)/design/include/el2_def.sv
 #defines += $(BUILD_DIR)/el2_pdef.vh
-includes = -I${BUILD_DIR}
+includes = -I$(BUILD_DIR)
 #
 #         .--------------------------------------------------------------------------------.
 #         | Verilator does not support unpacked structs/unions - waive this warning so     |
@@ -135,15 +135,15 @@ clean:
 
 ############ Model Builds ###############################
 
-verilator-build: ${TBFILES} ${INCLUDES_DIR}/defines.h test_caliptra_top_tb.cpp
-	$(VERILATOR)  --cc -CFLAGS ${CFLAGS} \
+verilator-build: $(TBFILES) $(INCLUDES_DIR)/defines.h test_caliptra_top_tb.cpp
+	$(VERILATOR)  --cc -CFLAGS $(CFLAGS) \
 	  +libext+.v+.sv +define+RV_OPENSOURCE \
 	  --timescale 1ns/1ps \
 	  $(includes) \
 	  $(suppress) \
 	  -f $(TBDIR)/../config/caliptra_top_tb.vf --top-module caliptra_top_tb \
 	  -exe test_caliptra_top_tb.cpp --autoflush $(VERILATOR_DEBUG)
-	cp ${TBDIR}/test_caliptra_top_tb.cpp obj_dir/
+	cp $(TBDIR)/test_caliptra_top_tb.cpp obj_dir/
 	$(MAKE) -j -e -C obj_dir/ -f Vcaliptra_top_tb.mk $(VERILATOR_MAKE_FLAGS) VM_PARALLEL_BUILDS=1
 	touch verilator-build
 
@@ -155,9 +155,9 @@ verilator: program.hex verilator-build
 ############ TEST build ###############################
 
 ifeq ($(shell which $(GCC_PREFIX)-gcc 2> /dev/null),)
-program.hex: ${BUILD_DIR}/defines.h
+program.hex: $(BUILD_DIR)/defines.h
 	@echo " !!! No $(GCC_PREFIX)-gcc in path, using canned hex files !!"
-	cp ${HEX_DIR}/$(TESTNAME).hex program.hex
+	cp $(HEX_DIR)/$(TESTNAME).hex program.hex
 else ifneq (,$(wildcard $(TEST_DIR)/$(TESTNAME).makefile))
 program.hex:
 	@echo Building $(TESTNAME) via $(TEST_DIR)/$(TESTNAME).makefile
@@ -203,14 +203,14 @@ program.hex: $(OFILES) $(LINK)
 	$(GCC_PREFIX)-size        $(TESTNAME).exe | tee $(TESTNAME).size
 	@echo Completed building $(TESTNAME)
 
-%.o : %.s ${HEADER_FILES}
+%.o : %.s $(HEADER_FILES)
 	cp $(HEADER_FILES) $(BUILD_DIR)
-	$(GCC_PREFIX)-cpp ${includes} -I${TEST_DIR}  $<  > $*.cpp.s
-	$(GCC_PREFIX)-as ${ABI} $*.cpp.s -o $@
+	$(GCC_PREFIX)-cpp $(includes) -I$(TEST_DIR)  $<  > $*.cpp.s
+	$(GCC_PREFIX)-as $(ABI) $*.cpp.s -o $@
 
-%.o : %.c ${HEADER_FILES}
-	cp ${HEADER_FILES} ${BUILD_DIR}
-	$(GCC_PREFIX)-gcc ${includes} ${TEST_CFLAGS} -DCOMPILER_FLAGS="\"${TEST_CFLAGS}\"" ${ABI} -nostdlib -c $< -o $@
+%.o : %.c $(HEADER_FILES)
+	cp $(HEADER_FILES) $(BUILD_DIR)
+	$(GCC_PREFIX)-gcc $(includes) $(TEST_CFLAGS) -DCOMPILER_FLAGS="\"$(TEST_CFLAGS)\"" $(ABI) -nostdlib -c $< -o $@
 
 endif
 

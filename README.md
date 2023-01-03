@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Caliptra Hands-On Guide** #
-_*Last Update: 2022/12/20*_
+_*Last Update: 2022/12/27*_
 
 [[_TOC_]]
 
@@ -122,7 +122,7 @@ Verilator Steps:
     - Example command:
         `make -C <path/to/run/folder> -f ${WORKSPACE}/Caliptra/tools/scripts/Makefile TESTNAME=${TESTNAME} debug=1 verilator`
     - NOTE: `debug=1` is optional; if provided, the verilator run will produce a .vcd file with waveform information
-    - NOTE: `TESTNAME=${TESTNAME}` is optional; if not provided, test defaults to `iccm_lock`
+    - NOTE: `TESTNAME=${TESTNAME}` is optional; if not provided, test defaults to value of TESTNAME environment variable, then to `iccm_lock`
     - NOTE: Users may wish to produce a run log by piping the make command to a tee command, e.g.:
         `make ... <args> ... | tee <path/to/run/folder>/verilate.log`
 1. Users have the option to run the entire suite of smoke tests using the provided python script `run_verilator_l0_regression.py`
