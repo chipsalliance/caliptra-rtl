@@ -136,3 +136,19 @@ stages:
                 - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
                 - path: '${WORKSPACE}/Caliptra/src/soc_ifc/stimulus/testsuites/soc_ifc_nightly_directed_regression.yml'
                 - timeout: 30
+
+        - firmware_tb:
+            - display_name: 'FIRMWARE_TB'
+            - enabled: true
+            - configspec_name: 'integration_lib'
+            - dut: 'caliptra_top_tb'
+            - args: ''
+            - timeout: 10
+            - testsuites:
+              - nightly_directed:
+                - enabled: true
+                - configspec_name: 'integration_lib'
+                - dut: 'caliptra_top_tb'
+                - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
+                - path: '${WORKSPACE}/Caliptra/src/integration/stimulus/testsuites/caliptra_top_nightly_directed_regresion.yml'
+                - timeout: 30

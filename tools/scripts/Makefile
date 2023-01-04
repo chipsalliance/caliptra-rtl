@@ -165,7 +165,7 @@ program.hex:
 else ifneq (,$(wildcard $(TEST_DIR)/$(TESTNAME)))
 program.hex:
 	@echo "Building program.hex from $(TESTNAME) using Crypto Test rules for pre-compiled RUST executables"
-	-$(GCC_PREFIX)-objcopy -O verilog -R .data -R .rodata -R .bss -R .sbss -R .iccm -R .dccm -R .eh_frame --pad-to 0x8000 --no-change-warnings $(TESTNAME) program.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -R .data -R .rodata -R .bss -R .sbss -R .iccm -R .dccm -R .eh_frame --pad-to 0x8000 --no-change-warnings $(TEST_DIR)/$(TESTNAME) program.hex
 	-$(GCC_PREFIX)-objcopy -O verilog -j .data -j .rodata -j .bss -j .sbss -j .dccm \
 			      --change-section-lma       .data-0x50000000 \
 			      --change-section-lma     .rodata-0x50000000 \
@@ -174,11 +174,11 @@ program.hex:
 			      --change-section-lma       .dccm-0x50000000 \
 			      --pad-to 0x20000 \
 			      --no-change-warnings \
-			      $(TESTNAME) dccm.hex
-	-$(GCC_PREFIX)-objcopy -O verilog -j .iccm                       --change-section-address .iccm=0 --pad-to 0x20000 --no-change-warnings $(TESTNAME) iccm.hex
-	-$(GCC_PREFIX)-objcopy -O verilog -j .mailbox --gap-fill 0x0     --change-section-address .mailbox=0 --pad-to 0x20000 --no-change-warnings $(TESTNAME) mailbox.hex
-	$(GCC_PREFIX)-objdump -S  $(TESTNAME) > $(TESTNAME).dis
-	$(GCC_PREFIX)-size        $(TESTNAME) | tee $(TESTNAME).size
+			      $(TEST_DIR)/$(TESTNAME) dccm.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -j .iccm                       --change-section-address .iccm=0 --pad-to 0x20000 --no-change-warnings $(TEST_DIR)/$(TESTNAME) iccm.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -j .mailbox --gap-fill 0x0     --change-section-address .mailbox=0 --pad-to 0x20000 --no-change-warnings $(TEST_DIR)/$(TESTNAME) mailbox.hex
+	$(GCC_PREFIX)-objdump -S  $(TEST_DIR)/$(TESTNAME) > $(TESTNAME).dis
+	$(GCC_PREFIX)-size        $(TEST_DIR)/$(TESTNAME) | tee $(TESTNAME).size
 
 else
 program.hex: $(OFILES) $(LINK)
