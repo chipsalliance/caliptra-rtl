@@ -29,8 +29,7 @@
 // .dut_signal_port(HMAC_in_bus.hsize), // Agent output 
 // .dut_signal_port(HMAC_in_bus.transaction_flag_in_monitor), // Agent output 
 // .dut_signal_port(HMAC_in_bus.op), // Agent output 
-// .dut_signal_port(HMAC_in_bus.test_case_sel), // Agent output 
-// .dut_signal_port(HMAC_in_bus.key_len), // Agent output 
+// .dut_signal_port(HMAC_in_bus.block_length), // Agent output
 
 import uvmf_base_pkg_hdl::*;
 import HMAC_in_pkg_hdl::*;
@@ -55,8 +54,8 @@ interface  HMAC_in_if #(
   inout tri [2:0] hsize,
   inout tri  transaction_flag_in_monitor,
   inout tri [1:0] op,
-  inout tri [8:0] test_case_sel,
-  inout tri  key_len
+  inout tri [3:0] block_length,
+  inout tri [15:0] bit_length
   );
 
 modport monitor_port 
@@ -73,8 +72,8 @@ modport monitor_port
   input hsize,
   input transaction_flag_in_monitor,
   input op,
-  input test_case_sel,
-  input key_len
+  input block_length,
+  input bit_length
   );
 
 modport initiator_port 
@@ -91,8 +90,8 @@ modport initiator_port
   output hsize,
   output transaction_flag_in_monitor,
   output op,
-  output test_case_sel,
-  output key_len
+  output block_length,
+  output bit_length
   );
 
 modport responder_port 
@@ -109,8 +108,8 @@ modport responder_port
   input hsize,
   input transaction_flag_in_monitor,
   input op,
-  input test_case_sel,
-  input key_len
+  input block_length,
+  input bit_length
   );
   
 

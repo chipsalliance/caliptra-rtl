@@ -84,8 +84,8 @@ end
   tri [2:0] hsize_i;
   tri  transaction_flag_in_monitor_i;
   tri [1:0] op_i;
-  tri [8:0] test_case_sel_i;
-  tri  key_len_i;
+  tri [3:0] block_length_i;
+  tri [15:0] bit_length_i;
   assign clk_i = bus.clk;
   assign rst_i = bus.rst;
   assign hmac_rst_i = bus.hmac_rst;
@@ -98,8 +98,8 @@ end
   assign hsize_i = bus.hsize;
   assign transaction_flag_in_monitor_i = bus.transaction_flag_in_monitor;
   assign op_i = bus.op;
-  assign test_case_sel_i = bus.test_case_sel;
-  assign key_len_i = bus.key_len;
+  assign block_length_i = bus.block_length;
+  assign bit_length_i = bus.bit_length;
 
   // Proxy handle to UVM monitor
   HMAC_in_pkg::HMAC_in_monitor #(
@@ -181,9 +181,7 @@ end
     //
     // Available struct members:
     //     //    HMAC_in_monitor_struct.op
-    //     //    HMAC_in_monitor_struct.key_len
-    //     //    HMAC_in_monitor_struct.test_case_sel
-    //     //
+    //     //    HMAC_in_monitor_struct.block_length
     // Reference code;
     //    How to wait for signal value
     //      while (control_signal === 1'b1) @(posedge clk_i);
@@ -200,8 +198,8 @@ end
     //      HMAC_in_monitor_struct.xyz = hsize_i;  //    [2:0] 
     //      HMAC_in_monitor_struct.xyz = transaction_flag_in_monitor_i;  //     
     //      HMAC_in_monitor_struct.xyz = op_i;  //     
-    //      HMAC_in_monitor_struct.xyz = test_case_sel_i;  //    [8:0] 
-    //      HMAC_in_monitor_struct.xyz = key_len_i;  //     
+    //      HMAC_in_monitor_struct.xyz = block_length_i;  //    [3:0] 
+         
     // pragma uvmf custom do_monitor begin
     // UVMF_CHANGE_ME : Implement protocol monitoring.  The commented reference code 
     // below are examples of how to capture signal values and assign them to 
@@ -214,8 +212,8 @@ end
     if (hmac_rst_i == 1'b0) begin
       while (hmac_rst_i == 1'b0) @(posedge clk_i);
       HMAC_in_monitor_struct.op = hmac_in_op_transactions'(op_i);
-      HMAC_in_monitor_struct.test_case_sel = test_case_sel_i;
-      HMAC_in_monitor_struct.key_len = key_len_i;
+      HMAC_in_monitor_struct.block_length = block_length_i;
+      HMAC_in_monitor_struct.bit_length = bit_length_i;
       transaction_flag = 0; //Still want to capture reset tx in the out monitor
     end
     else begin
@@ -224,8 +222,8 @@ end
 		    if (transaction_flag_in_monitor_i == 1) begin
           transaction_flag = 1;
 				  HMAC_in_monitor_struct.op = hmac_in_op_transactions'(op_i);
-				  HMAC_in_monitor_struct.test_case_sel = test_case_sel_i;
-				  HMAC_in_monitor_struct.key_len = key_len_i;
+				  HMAC_in_monitor_struct.block_length = block_length_i;
+          HMAC_in_monitor_struct.bit_length = bit_length_i;
 		    end //tx flag monitor = 1
 		    @(posedge clk_i);
 	    end //tx flag = 0

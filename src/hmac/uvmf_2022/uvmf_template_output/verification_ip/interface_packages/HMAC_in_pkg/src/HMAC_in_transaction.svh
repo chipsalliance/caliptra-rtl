@@ -29,15 +29,24 @@ class HMAC_in_transaction #(
 )
 
   rand hmac_in_op_transactions op ;
-  rand bit key_len ;
-  rand bit [8:0] test_case_sel ;
+  rand bit [3:0] block_length;
+  rand bit [15:0] bit_length;
 
   //Constraints for the transaction variables:
   constraint hmac_valid_op_constraints { op inside {normal_op};}
-  constraint hmac_valid_testcasesel_constraints { 
-    test_case_sel >= 0;
-    test_case_sel <= 6;
-    }
+  // constraint hmac_valid_testcasesel_constraints { 
+  //   test_case_sel >= 0;
+  //   test_case_sel <= 6;
+  //   }
+  constraint hmac_valid_block_length_constraints {
+    block_length > 0;
+  }
+
+  constraint hmac_valid_bit_length_constraints {
+    //bit_length > 0;
+    //bit_length <= 'd8192;
+    bit_length == 'd896;
+  }
 
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end
@@ -118,7 +127,7 @@ class HMAC_in_transaction #(
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("op:0x%x key_len:0x%x test_case_sel:0x%x ",op,key_len,test_case_sel);
+    return $sformatf("op:0x%x block_length: 0x%x bit_length: 0x%x",op,block_length,bit_length);
     // pragma uvmf custom convert2string end
   endfunction
 
@@ -152,8 +161,8 @@ class HMAC_in_transaction #(
     // UVMF_CHANGE_ME : Eliminate comparison of variables not to be used for compare
     return (super.do_compare(rhs,comparer)
             &&(this.op == RHS.op)
-            &&(this.key_len == RHS.key_len)
-            &&(this.test_case_sel == RHS.test_case_sel)
+            &&(this.block_length == RHS.block_length)
+            &&(this.bit_length == RHS.bit_length)
             );
     // pragma uvmf custom do_compare end
   endfunction
@@ -174,8 +183,8 @@ class HMAC_in_transaction #(
     // pragma uvmf custom do_copy begin
     super.do_copy(rhs);
     this.op = RHS.op;
-    this.key_len = RHS.key_len;
-    this.test_case_sel = RHS.test_case_sel;
+    this.block_length = RHS.block_length;
+    this.bit_length = RHS.bit_length;
     // pragma uvmf custom do_copy end
   endfunction
 
@@ -205,8 +214,8 @@ class HMAC_in_transaction #(
     // endcase
     // UVMF_CHANGE_ME : Eliminate transaction variables not wanted in transaction viewing in the waveform viewer
     $add_attribute(transaction_view_h,op,"op");
-    $add_attribute(transaction_view_h,key_len,"key_len");
-    $add_attribute(transaction_view_h,test_case_sel,"test_case_sel");
+    $add_attribute(transaction_view_h,block_length,"block_length");
+    $add_attribute(transaction_view_h,bit_length,"bit_length");
     // pragma uvmf custom add_to_wave end
     $end_transaction(transaction_view_h,end_time);
     $free_transaction(transaction_view_h);

@@ -50,8 +50,8 @@ typedef struct packed  { \
 //
   `define HMAC_in_MONITOR_STRUCT typedef struct packed  { \
   hmac_in_op_transactions op ; \
-  bit key_len ; \
-  bit [8:0] test_case_sel ; \
+  bit [3:0] block_length ; \
+  bit [15:0] bit_length ; \
      } HMAC_in_monitor_s;
 
   `define HMAC_in_TO_MONITOR_STRUCT_FUNCTION \
@@ -59,8 +59,8 @@ typedef struct packed  { \
     HMAC_in_monitor_struct = \
             { \
             this.op , \
-            this.key_len , \
-            this.test_case_sel  \
+            this.block_length , \
+            this.bit_length  \
             };\
     return ( HMAC_in_monitor_struct);\
   endfunction\
@@ -69,8 +69,8 @@ typedef struct packed  { \
   virtual function void from_monitor_struct(HMAC_in_monitor_s HMAC_in_monitor_struct);\
             {\
             this.op , \
-            this.key_len , \
-            this.test_case_sel  \
+            this.block_length , \
+            this.bit_length  \
             } = HMAC_in_monitor_struct;\
   endfunction
 
@@ -81,8 +81,8 @@ typedef struct packed  { \
 //
   `define HMAC_in_INITIATOR_STRUCT typedef struct packed  { \
   hmac_in_op_transactions op ; \
-  bit key_len ; \
-  bit [8:0] test_case_sel ; \
+  bit [3:0] block_length ; \
+  bit [15:0] bit_length ; \
      } HMAC_in_initiator_s;
 
   `define HMAC_in_TO_INITIATOR_STRUCT_FUNCTION \
@@ -90,8 +90,8 @@ typedef struct packed  { \
     HMAC_in_initiator_struct = \
            {\
            this.op , \
-           this.key_len , \
-           this.test_case_sel  \
+           this.block_length , \
+           this.bit_length  \
            };\
     return ( HMAC_in_initiator_struct);\
   endfunction
@@ -100,8 +100,8 @@ typedef struct packed  { \
   virtual function void from_initiator_struct(HMAC_in_initiator_s HMAC_in_initiator_struct);\
            {\
            this.op , \
-           this.key_len , \
-           this.test_case_sel  \
+           this.block_length , \
+           this.bit_length  \
            } = HMAC_in_initiator_struct;\
   endfunction
 
@@ -112,8 +112,8 @@ typedef struct packed  { \
 //
   `define HMAC_in_RESPONDER_STRUCT typedef struct packed  { \
   hmac_in_op_transactions op ; \
-  bit key_len ; \
-  bit [8:0] test_case_sel ; \
+  bit [3:0] block_length ; \
+  bit [15:0] bit_length ; \
      } HMAC_in_responder_s;
 
   `define HMAC_in_TO_RESPONDER_STRUCT_FUNCTION \
@@ -121,8 +121,8 @@ typedef struct packed  { \
     HMAC_in_responder_struct = \
            {\
            this.op , \
-           this.key_len , \
-           this.test_case_sel  \
+           this.block_length , \
+           this.bit_length  \
            };\
     return ( HMAC_in_responder_struct);\
   endfunction
@@ -131,8 +131,8 @@ typedef struct packed  { \
   virtual function void from_responder_struct(HMAC_in_responder_s HMAC_in_responder_struct);\
            {\
            this.op , \
-           this.key_len , \
-           this.test_case_sel  \
+           this.block_length , \
+           this.bit_length  \
            } = HMAC_in_responder_struct;\
   endfunction
 // pragma uvmf custom additional begin

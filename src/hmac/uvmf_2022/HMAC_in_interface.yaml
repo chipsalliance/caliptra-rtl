@@ -64,12 +64,12 @@ uvmf:
       - name: op
         dir: output
         width: '2'
-      - name: test_case_sel
+      - name: block_length
         dir: output
-        width: '9'
-      - name: key_len
+        width: '4'
+      - name: bit_length
         dir: output
-        width: '1'
+        width: '16'
 
       response_info:
         data: []
@@ -78,19 +78,19 @@ uvmf:
       transaction_constraints:
       - name: hmac_valid_op_constraints
         value: '{ op inside {normal_op};}'
-      - name: hmac_valid_testcasesel_constraints
-        value: '{ test_case_sel >= 0; test_case_sel <= 5;}'
+      # - name: hmac_valid_testcasesel_constraints
+      #   value: '{ test_case_sel >= 0; test_case_sel <= 5;}'
 
       transaction_vars:
       - name: op
         type: hmac_in_op_transactions
         iscompare: 'True'
         isrand: 'True'
-      - name: key_len
-        type: bit
+      - name: block_length
+        type: bit [3:0]
         iscompare: 'True'
         isrand: 'True'
-      - name: test_case_sel
-        type: bit [8:0]
+      - name: bit_length
+        type: bit [15:0]
         iscompare: 'True'
         isrand: 'True'

@@ -68,7 +68,6 @@ class HMAC_predictor #(
   // pragma uvmf custom class_item_additional begin
   reg [383:0] expected;
   reg [383:0] tmp;
-  reg [8:0] test_case_sel;
 
   int line_skip;
   int cnt_tmp;
@@ -113,12 +112,12 @@ class HMAC_predictor #(
     //`uvm_info("UNIMPLEMENTED_PREDICTOR_MODEL", "******************************************************************************************************",UVM_NONE)
  
     //$display("**HMAC_predictor** t.op= %d",t.op);
-    //$display("**HMAC_predictor** t.test_case_sel = %d",t.test_case_sel);
-    //$display("**HMAC_predictor** t.key_len = %d",t.key_len);
 
     if (t.op== 2'b00 || t.op == 2'b10) HMAC_sb_ap_output_transaction.result = 0;
     else begin
-      file_name = "test_vector.txt";
+      $system("python ./test_gen.py");
+
+      file_name = "expected_tag.txt";
 
       cnt_tmp = 0;      
       fd_r = $fopen(file_name, "r");

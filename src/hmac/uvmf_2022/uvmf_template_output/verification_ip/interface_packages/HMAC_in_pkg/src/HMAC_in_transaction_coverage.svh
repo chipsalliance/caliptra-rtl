@@ -45,8 +45,8 @@ class HMAC_in_transaction_coverage #(
     option.auto_bin_max=1024;
     option.per_instance=1;
     op: coverpoint coverage_trans.op;
-    key_len: coverpoint coverage_trans.key_len;
-    test_case_sel: coverpoint coverage_trans.test_case_sel;
+    block_length: coverpoint coverage_trans.block_length;
+    bit_length: coverpoint coverage_trans.bit_length;
     // pragma uvmf custom covergroup end
   endgroup
 

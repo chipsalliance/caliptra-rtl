@@ -117,10 +117,10 @@ end
   reg  transaction_flag_in_monitor_o = 'bz;
   tri  [1:0] op_i;
   reg  [1:0] op_o = 'bz;
-  tri [8:0] test_case_sel_i;
-  reg [8:0] test_case_sel_o = 'bz;
-  tri  key_len_i;
-  reg  key_len_o = 'bz;
+  tri [3:0] block_length_i;
+  reg [3:0] block_length_o = 'bz;
+  tri [15:0] bit_length_i;
+  reg [15:0] bit_length_o = 'bz;
 
   // Bi-directional signals
   
@@ -154,10 +154,10 @@ end
   assign transaction_flag_in_monitor_i = bus.transaction_flag_in_monitor;
   assign bus.op = (initiator_responder == INITIATOR) ? op_o : 'bz;
   assign op_i = bus.op;
-  assign bus.test_case_sel = (initiator_responder == INITIATOR) ? test_case_sel_o : 'bz;
-  assign test_case_sel_i = bus.test_case_sel;
-  assign bus.key_len = (initiator_responder == INITIATOR) ? key_len_o : 'bz;
-  assign key_len_i = bus.key_len;
+  assign bus.block_length = (initiator_responder == INITIATOR) ? block_length_o : 'bz;
+  assign block_length_i = bus.block_length;
+  assign bus.bit_length = (initiator_responder == INITIATOR) ? bit_length_o : 'bz;
+  assign bit_length_i = bus.bit_length;
 
   // Proxy handle to UVM driver
   HMAC_in_pkg::HMAC_in_driver #(
@@ -204,8 +204,8 @@ end
        hsize_o <= 3'b011;
        transaction_flag_in_monitor_o <= 'b0;
        op_o <= 'bz;
-       test_case_sel_o <= 'b0;
-       key_len_o <= 'b0;
+       block_length_o <= 'b0;
+       bit_length_o <= 'b0;
        // Bi-directional signals
  
      end    
@@ -246,12 +246,12 @@ end
        // 
        // Members within the HMAC_in_initiator_struct:
        //   hmac_in_op_transactions op ;
-       //   bit key_len ;
-       //   bit [8:0] test_case_sel ;
+       //   bit [3:0] block_length ;
+       //   bit [15:0] bit_length ;
        // Members within the HMAC_in_responder_struct:
        //   hmac_in_op_transactions op ;
-       //   bit key_len ;
-       //   bit [8:0] test_case_sel ;
+       //   bit [3:0] block_length ;
+       //   bit [15:0] bit_length ;
        initiator_struct = HMAC_in_initiator_struct;
        //
        // Reference code;
@@ -276,8 +276,8 @@ end
        //      hsize_o <= HMAC_in_initiator_struct.xyz;  //    [2:0] 
        //      transaction_flag_in_monitor_o <= HMAC_in_initiator_struct.xyz;  //     
        //      op_o <= HMAC_in_initiator_struct.xyz;  //     
-       //      test_case_sel_o <= HMAC_in_initiator_struct.xyz;  //    [8:0] 
-       //      key_len_o <= HMAC_in_initiator_struct.xyz;  //     
+       //      block_length_o <= HMAC_in_initiator_struct.xyz;  //    [3:0] 
+       //      bit_length_o <= HMAC_in_initiator_struct.xyz;  //    [15:0] 
        //    Initiator inout signals
     // Initiate a transfer using the data received.
     @(posedge clk_i);
@@ -288,10 +288,10 @@ end
     //TODO knupadhy: make op only reset or normal op (single and multi will be processed in same task)
     case (HMAC_in_initiator_struct.op)
 
-      reset_op    : hmac_init       (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.test_case_sel, HMAC_in_initiator_struct.key_len);
-      normal_op   : block_test      (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.test_case_sel, HMAC_in_initiator_struct.key_len);
-      otf_reset_op: otf_reset_test  (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.test_case_sel, HMAC_in_initiator_struct.key_len);
-      default     : block_test      (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.test_case_sel, HMAC_in_initiator_struct.key_len);
+      reset_op    : hmac_init       (HMAC_in_initiator_struct.op);
+      normal_op   : block_test      (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.block_length, HMAC_in_initiator_struct.bit_length);
+      otf_reset_op: otf_reset_test  (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.block_length);
+      default     : block_test      (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.block_length, HMAC_in_initiator_struct.bit_length);
 
     endcase
   
@@ -399,12 +399,9 @@ end
   //--------------------
   //Init DUT
   //--------------------
-  task hmac_init(input hmac_in_op_transactions op,
-                input bit [8:0] test_case_sel,
-                input bit key_len);
+  task hmac_init(input hmac_in_op_transactions op);
     $display("%d ***************   Starting Reset", $time);
     op_o = op;
-    test_case_sel_o = 0;
     hmac_rst_o <= 1'b0;
     transaction_flag_in_monitor_o = 0;
 
@@ -606,73 +603,58 @@ task write_single_word(input [31 : 0]  address,
   end
   endtask
 
+//---------------------
+//Generate test vector
+//---------------------
+task gen_test_vector (
+  input bit [3:0] block_length
+);
+
+  int i;
+  reg [1023:0] rand_block;
+  reg [1023:0] msg_array [int];
+
+  reg [383:0] key;
+  reg [1023:0] block;
+  reg [1023:0] last_padding;
+  reg [127:0] msg_size;
+
+  int fd_w, fd_all_a;
+  string file_name, file_name_bak;
+
+  //Open files for writing/appending
+  file_name = "hmac_uvm_test_vector.txt";
+  file_name_bak = "hmac_uvm_test_vectors_all.txt"; 
+  fd_w = $fopen(file_name, "w");
+  fd_all_a = $fopen(file_name_bak, "a");
+  if(!fd_w) $display("**HMAC_in_driver_bfm** Cannot open file %s", file_name);
+  if(!fd_all_a) $display("**HMAC_in_driver_bfm** Cannot open file %s", file_name_bak);
+
+
+  //Generate random message of random block length
+  for(i=0; i<block_length; i=i+1) begin
+    std::randomize(rand_block);
+    msg_array[i] = rand_block;
+  end
   
-//---------------------
-//Block test 
-//---------------------
-task block_test (
-    input hmac_in_op_transactions op,
-    input bit [8:0] test_case_sel,
-    input bit key_len
-  );
+  //Calculate padding
+  //Currently all generated messages will be multiples of 1024 bits. So, padding + msg_len will always be in the last block. TODO: other cases
+  msg_size = 'd1024 + (block_length * 'd1024);
+  last_padding = {8'b1000_0000, 888'b0, msg_size};
+  msg_array[block_length] = last_padding;
 
-reg [383 :0] key;
-reg [1023:0] block;
-reg [383 :0] expected;
-reg [1023:0] tmp;
+  //Generate random key and write to DUT
+  std::randomize(key);
+  write_key(key);
+  $fdisplay(fd_w, "KEY = %h", key);
+  $fdisplay(fd_all_a, "KEY = %h", key);
 
-int line_skip;
-int cnt_tmp;
-int fd_r;
-
-string line_read;
-string tmp_str1;
-string tmp_str2;
-string file_name;
-int key_disp;
-longint msg_disp;
-
- begin
- 
-//pass op and selection to monitor
-transaction_flag_in_monitor_o = 1'b0;
-op_o = op;
-test_case_sel_o = test_case_sel;
-key_len_o = key_len;
-      
-cnt_tmp = 0;
-
-$system("python ./test_gen.py");
-//file_name = "../../../../../tb/test_vector.txt";
-file_name = "test_vector.txt";
-fd_r = $fopen(file_name, "r");
-if(!fd_r) $display("**HMAC_in_driver_bfm** Cannot open file %s", file_name);
-
-
-//Get key, block and tag:
-$fgets(line_read, fd_r);
-$sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, key);
-write_key(key);
-
-$fgets(line_read, fd_r);
-$sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, block);
-write_block(block);
-write_single_word(ADDR_CTRL, CTRL_INIT_VALUE);
-@(posedge clk_i);
-hsel_o = 0;
-@(posedge clk_i);
-
-repeat(130) begin //TODO knupadhy: need to figure out how to poll for status in the in driver bfm (needs hrdata_i input which is connected to out agent not the in agent)
-  @(posedge clk_i);
-  read_single_word_driverbfm(ADDR_STATUS);
-end
-
-$fgets(line_read, fd_r);
-$sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, tmp);
-while (tmp_str1 == "BLOCK") begin
-  block = tmp;
+  //Write 1st block to DUT
+  block = msg_array[0];
+  $fdisplay(fd_w, "BLOCK = %h", block);
+  $fdisplay(fd_all_a, "BLOCK = %h", block);
   write_block(block);
-  write_single_word(ADDR_CTRL, CTRL_NEXT_VALUE);
+  write_single_word(ADDR_CTRL, CTRL_INIT_VALUE);
   @(posedge clk_i);
   hsel_o = 0;
   @(posedge clk_i);
@@ -682,11 +664,54 @@ while (tmp_str1 == "BLOCK") begin
     read_single_word_driverbfm(ADDR_STATUS);
   end
 
-  $fgets(line_read, fd_r);
-  $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, tmp);
-end
-expected = tmp;
-$fclose(fd_r);
+  //Write rest of the blocks to DUT
+  foreach(msg_array[i]) begin
+    if(i > 0) begin
+      block = msg_array[i];
+      if(i < block_length) begin //Don't write padding to python input file
+        $fdisplay(fd_w, "BLOCK = %h", block);
+        $fdisplay(fd_all_a, "BLOCK = %h", block);
+      end
+      else
+        $fdisplay(fd_all_a, "BLOCK = %h", block); //Only write padding to all vectors file
+
+      write_block(block);
+      write_single_word(ADDR_CTRL, CTRL_NEXT_VALUE);
+      @(posedge clk_i);
+      hsel_o = 0;
+      @(posedge clk_i);
+
+      repeat(130) begin //TODO knupadhy: need to figure out how to poll for status in the in driver bfm (needs hrdata_i input which is connected to out agent not the in agent)
+        @(posedge clk_i);
+        read_single_word_driverbfm(ADDR_STATUS);
+      end
+    end
+  end
+msg_array.delete();
+$fdisplay(fd_all_a, "=======================================");
+
+$fclose(fd_w);
+$fclose(fd_all_a);
+
+
+endtask
+//---------------------
+//Block test 
+//---------------------
+task block_test (
+    input hmac_in_op_transactions op,
+    input bit [3:0] block_length,
+    input bit [15:0] bit_length
+  );
+
+ begin
+ 
+//pass op and selection to monitor
+transaction_flag_in_monitor_o = 1'b0;
+op_o = op;
+
+gen_test_vector(block_length);
+
 repeat(130) begin //TODO knupadhy: need to figure out how to poll for status in the in driver bfm (needs hrdata_i input which is connected to out agent not the in agent)
   @(posedge clk_i);
   read_single_word_driverbfm(ADDR_STATUS);
@@ -715,79 +740,16 @@ read_digest();
 //---------------------
  task otf_reset_test (
   input hmac_in_op_transactions op,
-  input bit [8:0] test_case_sel,
-  input bit key_len
+  input bit [3:0] block_length
 );
-
-reg [383 :0] key;
-reg [1023:0] block;
-reg [383 :0] expected;
-reg [1023:0] tmp;
-
-int line_skip;
-int cnt_tmp;
-int fd_r;
-
-string line_read;
-string tmp_str1;
-string tmp_str2;
-string file_name;
-int key_disp;
-longint msg_disp;
 
 begin
 
 //pass op and selection to monitor
 transaction_flag_in_monitor_o = 1'b0;
 op_o = op;
-test_case_sel_o = test_case_sel;
-key_len_o = key_len;
-    
-cnt_tmp = 0;
 
-$system("python ./test_gen.py");
-//file_name = "../../../../../tb/test_vector.txt";
-file_name = "test_vector.txt";
-fd_r = $fopen(file_name, "r");
-if(!fd_r) $display("**HMAC_in_driver_bfm** Cannot open file %s", file_name);
-
-
-//Get key, block and tag:
-$fgets(line_read, fd_r);
-$sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, key);
-write_key(key);
-
-$fgets(line_read, fd_r);
-$sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, block);
-write_block(block);
-write_single_word(ADDR_CTRL, CTRL_INIT_VALUE);
-@(posedge clk_i);
-hsel_o = 0;
-@(posedge clk_i);
-
-$fgets(line_read, fd_r);
-$sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, tmp);
-
-while (tmp_str1 == "BLOCK") begin
-  //wait for prev block's ready
-  repeat(130) begin //TODO knupadhy: need to figure out how to poll for status in the in driver bfm (needs hrdata_i input which is connected to out agent not the in agent)
-    @(posedge clk_i);
-    read_single_word_driverbfm(ADDR_STATUS);
-  end
-  //write next block
-  block = tmp;
-  write_block(block);
-  write_single_word(ADDR_CTRL, CTRL_NEXT_VALUE);
-  @(posedge clk_i);
-  hsel_o = 0;
-  @(posedge clk_i);
-
-  $fgets(line_read, fd_r);
-  $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, tmp);
-end
-
-  expected = tmp;
-  $fclose(fd_r);
+gen_test_vector(block_length);
   /*
   repeat(130) begin //TODO knupadhy: need to figure out how to poll for status in the in driver bfm (needs hrdata_i input which is connected to out agent not the in agent)
   @(posedge clk_i);
@@ -795,7 +757,7 @@ end
   end
   */
   //Toggle OTF reset
-  @(posedge clk_i);
+  repeat (1000) @(posedge clk_i);
   hmac_rst_o = 1'b0;
   repeat (2) @(posedge clk_i);
   hmac_rst_o = 1'b1;
@@ -840,12 +802,12 @@ bit first_transfer=1;
        );// pragma tbx xtf   
   // Variables within the HMAC_in_initiator_struct:
   //   hmac_in_op_transactions op ;
-  //   bit key_len ;
-  //   bit [8:0] test_case_sel ;
+  //   bit [3:0] block_length ;
+  //   bit [15:0] bit_length ;
   // Variables within the HMAC_in_responder_struct:
   //   hmac_in_op_transactions op ;
-  //   bit key_len ;
-  //   bit [8:0] test_case_sel ;
+  //   bit [3:0] block_length ;
+  //   bit [15:0] bit_length ;
        // Reference code;
        //    How to wait for signal value
        //      while (control_signal == 1'b1) @(posedge clk_i);
@@ -863,8 +825,8 @@ bit first_transfer=1;
        //      HMAC_in_responder_struct.xyz = hsize_i;  //    [2:0] 
        //      HMAC_in_responder_struct.xyz = transaction_flag_in_monitor_i;  //     
        //      HMAC_in_responder_struct.xyz = op_i;  //     
-       //      HMAC_in_responder_struct.xyz = test_case_sel_i;  //    [8:0] 
-       //      HMAC_in_responder_struct.xyz = key_len_i;  //     
+       //      HMAC_in_responder_struct.xyz = block_length_i;  //    [3:0]    
+       //      HMAC_in_responder_struct.xyz = bit_length_i;  //    [15:0]    
        //    Responder inout signals
        //    How to assign a signal, named xyz, from an initiator struct member.   
        //    All available responder output and inout signals listed.

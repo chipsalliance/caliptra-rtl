@@ -49,7 +49,8 @@ class HMAC_in_random_sequence #(
   // start(sequencerHandle) task.
   //
   task body();
-  
+      int i;
+      bit [1023:0] block;
       // Construct the transaction
       req=HMAC_in_transaction#(
                 .AHB_DATA_WIDTH(AHB_DATA_WIDTH),
@@ -60,9 +61,10 @@ class HMAC_in_random_sequence #(
       start_item(req);
       // Randomize the transaction
       if(!req.randomize()) `uvm_fatal("SEQ", "HMAC_in_random_sequence::body()-HMAC_in_transaction randomization failed")
+      `uvm_info("SEQ", {"Request:",req.convert2string()},UVM_MEDIUM)
       // Send the transaction to the HMAC_in_driver_bfm via the sequencer and HMAC_in_driver.
       finish_item(req);
-      `uvm_info("SEQ", {"Response:",req.convert2string()},UVM_MEDIUM)
+      //`uvm_info("SEQ", {"Response:",req.convert2string()},UVM_MEDIUM)
 
   endtask
 

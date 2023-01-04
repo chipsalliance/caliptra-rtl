@@ -76,13 +76,13 @@ uvmf:
         reset_value: '''bz'
         width: '1'
       - dir: output
-        name: test_case_sel
+        name: block_length
         reset_value: '''bz'
-        width: '9'
+        width: '4'
       - dir: output
-        name: key_len
+        name: bit_length
         reset_value: '''bz'
-        width: '1'
+        width: '16'
       reset: rst
       reset_assertion_level: 'False'
       transaction_constraints:
@@ -99,13 +99,13 @@ uvmf:
       - comment: ''
         iscompare: 'True'
         isrand: 'True'
-        name: key_len
-        type: bit
+        name: block_length
+        type: bit [3:0]
         unpacked_dimension: ''
       - comment: ''
         iscompare: 'True'
         isrand: 'True'
-        name: test_case_sel
-        type: bit [8:0]
+        name: bit_length
+        type: bit [15:0]
         unpacked_dimension: ''
       use_dpi_link: 'False'
