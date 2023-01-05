@@ -298,7 +298,6 @@ assign jtag_id[31:28] = 4'b1;
 assign jtag_id[27:12] = '0;
 assign jtag_id[11:1]  = 11'h45;
 assign reset_vector = `RV_RESET_VEC;
-assign nmi_vector   = 32'h40000000; // TODO this should come from a ctrl reg...
 assign nmi_int      = 0;
 
 assign kv_error_intr = 1'b0; // TODO
@@ -742,6 +741,8 @@ soc_ifc_top1
     .cptra_obf_key_reg(cptra_obf_key_reg),
     .obf_field_entropy(obf_field_entropy),
     .obf_uds_seed(obf_uds_seed),
+    // NMI Vector 
+    .nmi_vector(nmi_vector),
     // ICCM Lock
     .iccm_lock       (iccm_lock                                    ),
     .iccm_axs_blocked(ahb_lite_resp_access_blocked[`SLAVE_SEL_IDMA]),
@@ -790,5 +791,6 @@ endgenerate
 `ASSERT_KNOWN(AHB_MASTER_HSIZE_X,        initiator_inst.hsize,       clk, cptra_noncore_rst_b)
 `ASSERT_KNOWN(AHB_MASTER_HRESP_X,        initiator_inst.hresp,       clk, cptra_noncore_rst_b)
 `ASSERT_KNOWN(AHB_MASTER_HRDATA_X,       initiator_inst.hready ? initiator_inst.hrdata : '0,      clk, cptra_noncore_rst_b)
+`ASSERT_NEVER(AHB_MASTER_HTRANS_BUSY,    initiator_inst.htrans == 2'b01, clk, cptra_noncore_rst_b)
 
 endmodule

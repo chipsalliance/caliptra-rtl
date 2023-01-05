@@ -18,6 +18,7 @@
 #define SWERV_CSR_H
 
 #include "caliptra_defines.h"
+#include "riscv-csr.h" /* for __riscv_xlen */
 
 //////////////////////////////////////////////////////////////////////////////
 // Non-Standard SweRV CSR offset macros
@@ -60,6 +61,17 @@ enum {
   SWERV_MEIGWCTRL_ACTIVE_HI_EDGE  = 0x00000002,
   SWERV_MEIGWCTRL_ACTIVE_LO_EDGE  = 0x00000003,
 };
+
+
+//////////////////////////////////////////////////////////////////////////////
+// SweRV Core-Specific MCAUSE values
+//
+#define MCAUSE_NMI_BIT_MASK                     (0xFUL << ((__riscv_xlen-4)))
+#define MCAUSE_NMI_CODE_DBUS_STORE_VALUE        (MCAUSE_NMI_BIT_MASK | 0x0000)
+#define MCAUSE_NMI_CODE_DBUS_LOAD_VALUE         (MCAUSE_NMI_BIT_MASK | 0x0001)
+#define MCAUSE_NMI_CODE_FAST_INT_ECC_VALUE      (MCAUSE_NMI_BIT_MASK | 0x1000)
+#define MCAUSE_NMI_CODE_FAST_INT_DCCM_VALUE     (MCAUSE_NMI_BIT_MASK | 0x1001)
+#define MCAUSE_NMI_CODE_FAST_INT_NONDCCM_VALUE  (MCAUSE_NMI_BIT_MASK | 0x1002)
 
 
 #endif // #define SWERV_CSR_H

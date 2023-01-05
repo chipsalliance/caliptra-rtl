@@ -70,10 +70,19 @@ module ahb_lite_address_decoder #(
 
 );
 
+    localparam AHB_XFER_IDLE   = 2'b00;
+    localparam AHB_XFER_BUSY   = 2'b01;
+    localparam AHB_XFER_NONSEQ = 2'b10;
+    localparam AHB_XFER_SEQ    = 2'b11;
+
     logic [NUM_RESPONDERS-1:0]                          pending_hsel;
+    logic                                               hinitiator_ready_default;
     logic                                               hinitiator_ready_int;
     logic [NUM_RESPONDERS-1:0]                          hsel_o_int_pre;
+    logic [NUM_RESPONDERS-1:0]                          hsel_blocked;
     logic [NUM_RESPONDERS-1:0]                          hsel_o_int;
+    logic                                               hresp_error;
+    logic                                               hresp_error_r;
 
 
 
@@ -82,6 +91,7 @@ module ahb_lite_address_decoder #(
     generate
         for (resp_num = 0; resp_num < NUM_RESPONDERS; resp_num++) begin: gen_responder_hsel
             assign hsel_o_int_pre[resp_num] = (haddr_i >= responder_start_addr_i[resp_num]) && (haddr_i <= responder_end_addr_i[resp_num]);
+            assign hsel_blocked  [resp_num] = hsel_o_int_pre[resp_num] &&  responder_disable_i[resp_num];
             assign hsel_o_int    [resp_num] = hsel_o_int_pre[resp_num] && !responder_disable_i[resp_num];
         end
     endgenerate
@@ -90,8 +100,8 @@ module ahb_lite_address_decoder #(
     always @(posedge hclk or negedge hreset_n) begin
         if (!hreset_n)
             access_blocked_o <= '0;
-        else if (|htrans_i && hinitiator_ready_int && |(hsel_o_int_pre & responder_disable_i))
-            access_blocked_o <= hsel_o_int_pre;
+        else if (|htrans_i && hinitiator_ready_int && |hsel_blocked)
+            access_blocked_o <= hsel_blocked;
         else
             access_blocked_o <= '0;
     end
@@ -103,6 +113,30 @@ module ahb_lite_address_decoder #(
             pending_hsel    <= hsel_o_int;
         else if (hinitiator_ready_int)
             pending_hsel    <= '0;
+    end
+
+    always_comb begin
+        // Only flag errors for NONSEQ or SEQ type transfers
+        // (BUSY transfers require OKAY response)
+        hresp_error = htrans_i inside {AHB_XFER_NONSEQ, AHB_XFER_SEQ} && hinitiator_ready_int && ~|hsel_o_int;
+    end
+
+    always @(posedge hclk or negedge hreset_n) begin
+        if (!hreset_n)
+            hinitiator_ready_default <= 1'b1;
+        else
+            hinitiator_ready_default <= !hresp_error;
+    end
+
+    always @(posedge hclk or negedge hreset_n) begin
+        if (!hreset_n)
+            hresp_error_r <= 1'b0;
+        else if (hresp_error)
+            hresp_error_r <= 1'b1;
+        else if (hinitiator_ready_int)
+            hresp_error_r <= 1'b0;
+        else
+            hresp_error_r <= hresp_error_r;
     end
 
     // Drive the address phase of the AHB Lite Transaction
@@ -119,12 +153,12 @@ module ahb_lite_address_decoder #(
 
     // Use retimed select to drive response / data phase of the AHB Lite Transaction
     // Default (for the case where an access does not hit any responder) is to
-    // return rdata = 0
-    // This code will never inject hresp = 1
+    // return rdata = 0 and hresp = 1
+    // This code will inject hresp = 1 for non-decoded addresses or blocked accesses
     always_comb begin
         hrdata_o                = {AHB_LITE_DATA_WIDTH{1'b0}};
-        hresp_o                 = 1'b0;
-        hinitiator_ready_int    = 1'b1;
+        hresp_o                 = hresp_error_r;
+        hinitiator_ready_int    = hinitiator_ready_default; // Deassert for hresp = 1, first cycle
         for (int rr = 0; rr < NUM_RESPONDERS; rr++) begin
             if (hsel_o_int[rr] == 1'b1) begin
                 hinitiator_ready_int    = hreadyout_i[rr];

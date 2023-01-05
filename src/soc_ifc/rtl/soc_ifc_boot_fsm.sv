@@ -106,8 +106,8 @@ always_comb begin
 
             //Assert core reset
             fsm_synch_uc_rst_b = '0;
-            //Unlock ICCM
-            fsm_iccm_unlock = '1;
+            //Keep ICCM locked until end of fw rst
+            fsm_iccm_unlock = '0;
             //Start timer
             wait_count_decr = 1;
             wait_count_rst = 0;
@@ -116,10 +116,14 @@ always_comb begin
             //TODO: Add tap logic control for fw_update_reset
             if (arc_BOOT_WAIT_BOOT_DONE) begin
                 boot_fsm_ns = BOOT_DONE;
+                fsm_iccm_unlock = 1'b1;
             end
-
+            // Unlock ICCM at the end of reset flow to avoid a potential
+            // race-condition attack against ICCM
+            else begin
+                fsm_iccm_unlock = '0;
+            end
             fsm_synch_uc_rst_b = '0;
-            fsm_iccm_unlock = '0;
             wait_count_decr = 1;
             wait_count_rst = 0;
         end

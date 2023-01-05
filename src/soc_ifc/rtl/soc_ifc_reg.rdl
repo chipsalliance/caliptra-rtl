@@ -155,6 +155,16 @@ addrmap soc_ifc_reg {
     } fw_update_reset_wait_cycles;
 
     reg {
+        name = "NMI Vector";
+        desc = "32-bit register providing the jump vector for RISC-V to transition for NMI handling code.
+                Default is the base address of ROM, but may be updated for enhanced handling by runtime images.
+                Bit [0] is ignored to enforce half-word alignment of address.
+                Writes available to Caliptra subsystem, not SoC.";
+
+        field {desc = "NMI Vector"; hw = r; sw = rw; swwel = soc_req;} vector[32] = 32'h0;
+    } nmi_vector;
+
+    reg {
         name = "Clk gating enable";
         desc = "Control register to enable clk gating. Default is 0 (disabled).
                 Writes available to Caliptra subsystem, not SoC.";

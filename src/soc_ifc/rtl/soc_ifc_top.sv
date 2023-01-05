@@ -86,6 +86,9 @@ module soc_ifc_top
     output logic [31:0][31:0] obf_field_entropy,
     output logic [11:0][31:0] obf_uds_seed,
 
+    // NMI Vector 
+    output logic [31:0] nmi_vector,
+
     // ICCM Lock
     output logic iccm_lock,
     input  logic iccm_axs_blocked,
@@ -396,6 +399,7 @@ soc_ifc_reg i_soc_ifc_reg (
 
 assign soc_ifc_error_intr = soc_ifc_reg_hwif_out.intr_block_rf.error_global_intr_r.intr;
 assign soc_ifc_notif_intr = soc_ifc_reg_hwif_out.intr_block_rf.notif_global_intr_r.intr;
+assign nmi_vector = soc_ifc_reg_hwif_out.nmi_vector.vector.value;
 assign iccm_lock  = soc_ifc_reg_hwif_out.iccm_lock.lock.value;
 assign clk_gating_en = soc_ifc_reg_hwif_out.clk_gating_en.clk_gating_en.value;
 
