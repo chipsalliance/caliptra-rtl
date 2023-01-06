@@ -182,6 +182,7 @@ module soc_ifc_tb
              .mbox_sram_resp(mbox_sram_resp),
              .ready_for_fw_push(ready_for_fw_push),
              .ready_for_runtime(),
+             .nmi_vector(),
              .iccm_lock(),
              .iccm_axs_blocked(),
              .soc_ifc_error_intr(),
