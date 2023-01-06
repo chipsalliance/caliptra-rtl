@@ -315,38 +315,38 @@ end
   parameter SIGN             = 2'b10;
   parameter VERIFY           = 2'b11;
 
-  parameter ADDR_STATUS      = BASE_ADDR + 32'h00000018;
+  parameter ADDR_STATUS          = BASE_ADDR + 32'h00000018;
   parameter STATUS_READY_BIT = 0;
   parameter STATUS_VALID_BIT = 1;
 
-  parameter ADDR_SCACONFIG   = BASE_ADDR + 32'h00000020;
+  parameter ADDR_SCACONFIG       = BASE_ADDR + 32'h00000020;
 
-  parameter ADDR_SEED0       = BASE_ADDR + 32'h00000080;
-  parameter ADDR_SEED11      = BASE_ADDR + 32'h000000AC;
+  parameter ADDR_SEED_START      = BASE_ADDR + 32'h00000080;
+  parameter ADDR_SEED_END        = BASE_ADDR + 32'h000000AC;
 
-  parameter ADDR_MSG0        = BASE_ADDR + 32'h00000100;
-  parameter ADDR_MSG11       = BASE_ADDR + 32'h0000012C;
+  parameter ADDR_MSG_START       = BASE_ADDR + 32'h00000100;
+  parameter ADDR_MSG_END         = BASE_ADDR + 32'h0000012C;
 
-  parameter ADDR_PRIVKEY0    = BASE_ADDR + 32'h00000180;
-  parameter ADDR_PRIVKEY11   = BASE_ADDR + 32'h000001AC;
+  parameter ADDR_PRIVKEY_START   = BASE_ADDR + 32'h00000180;
+  parameter ADDR_PRIVKEY_END     = BASE_ADDR + 32'h000001AC;
 
-  parameter ADDR_PUBKEYX0    = BASE_ADDR + 32'h00000200;
-  parameter ADDR_PUBKEYX11   = BASE_ADDR + 32'h0000022C;
+  parameter ADDR_PUBKEYX_START   = BASE_ADDR + 32'h00000200;
+  parameter ADDR_PUBKEYX_END     = BASE_ADDR + 32'h0000022C;
 
-  parameter ADDR_PUBKEYY0    = BASE_ADDR + 32'h00000280;
-  parameter ADDR_PUBKEYY11   = BASE_ADDR + 32'h000002AC;
+  parameter ADDR_PUBKEYY_START   = BASE_ADDR + 32'h00000280;
+  parameter ADDR_PUBKEYY_END     = BASE_ADDR + 32'h000002AC;
 
-  parameter ADDR_SIGNR0      = BASE_ADDR + 32'h00000300;
-  parameter ADDR_SIGNR11     = BASE_ADDR + 32'h0000032C;
+  parameter ADDR_SIGNR_START     = BASE_ADDR + 32'h00000300;
+  parameter ADDR_SIGNR_END       = BASE_ADDR + 32'h0000032C;
 
-  parameter ADDR_SIGNS0      = BASE_ADDR + 32'h00000380;
-  parameter ADDR_SIGNS11     = BASE_ADDR + 32'h000003AC;
+  parameter ADDR_SIGNS_START     = BASE_ADDR + 32'h00000380;
+  parameter ADDR_SIGNS_END       = BASE_ADDR + 32'h000003AC;
 
-  parameter ADDR_VERIFY_R0   = BASE_ADDR + 32'h00000400;
-  parameter ADDR_VERIFY_R11  = BASE_ADDR + 32'h0000042C;
-  
-  parameter ADDR_IV0         = BASE_ADDR + 32'h00000480;
-  parameter ADDR_IV11        = BASE_ADDR + 32'h000004AC;
+  parameter ADDR_VERIFY_R_START  = BASE_ADDR + 32'h00000400;
+  parameter ADDR_VERIFY_R_END    = BASE_ADDR + 32'h0000042C;
+
+  parameter ADDR_IV_START        = BASE_ADDR + 32'h00000480;
+  parameter ADDR_IV_END          = BASE_ADDR + 32'h000004AC;
 
   parameter REG_SIZE      = 384;
   parameter PRIME         = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff;
@@ -534,18 +534,18 @@ end
     input [383 : 0] block
     );
     begin
-      write_single_word(addr+4*11, block[383  : 352]);
-      write_single_word(addr+4*10, block[351  : 320]);
-      write_single_word(addr+4*9,  block[319  : 288]);
-      write_single_word(addr+4*8,  block[287  : 256]);
-      write_single_word(addr+4*7,  block[255  : 224]);
-      write_single_word(addr+4*6,  block[223  : 192]);
-      write_single_word(addr+4*5,  block[191  : 160]);
-      write_single_word(addr+4*4,  block[159  : 128]);
-      write_single_word(addr+4*3,  block[127  :  96]);
-      write_single_word(addr+4*2,  block[95   :  64]);
-      write_single_word(addr+4*1,  block[63   :  32]);
-      write_single_word(addr  ,    block[31   :   0]);
+      write_single_word(addr,      block[383  : 352]);
+      write_single_word(addr+4*1,  block[351  : 320]);
+      write_single_word(addr+4*2,  block[319  : 288]);
+      write_single_word(addr+4*3,  block[287  : 256]);
+      write_single_word(addr+4*4,  block[255  : 224]);
+      write_single_word(addr+4*5,  block[223  : 192]);
+      write_single_word(addr+4*6,  block[191  : 160]);
+      write_single_word(addr+4*7,  block[159  : 128]);
+      write_single_word(addr+4*8,  block[127  :  96]);
+      write_single_word(addr+4*9,  block[95   :  64]);
+      write_single_word(addr+4*10, block[63   :  32]);
+      write_single_word(addr+4*11, block[31   :   0]);
     end
   endtask // write_block
 
@@ -586,29 +586,29 @@ end
     input [31 : 0] addr
     );
     begin
-      read_single_word(addr + 4*11);
-      reg_read_data[383 : 352] = hrdata_i;
-      read_single_word(addr + 4*10);
-      reg_read_data[351 : 320] = hrdata_i;
-      read_single_word(addr +  4*9);
-      reg_read_data[319 : 288] = hrdata_i;
-      read_single_word(addr +  4*8);
-      reg_read_data[287 : 256] = hrdata_i;
-      read_single_word(addr +  4*7);
-      reg_read_data[255 : 224] = hrdata_i;
-      read_single_word(addr +  4*6);
-      reg_read_data[223 : 192] = hrdata_i;
-      read_single_word(addr +  4*5);
-      reg_read_data[191 : 160] = hrdata_i;
-      read_single_word(addr +  4*4);
-      reg_read_data[159 : 128] = hrdata_i;
-      read_single_word(addr +  4*3);
-      reg_read_data[127 :  96] = hrdata_i;
-      read_single_word(addr +  4*2);
-      reg_read_data[95  :  64] = hrdata_i;
-      read_single_word(addr +  4*1);
-      reg_read_data[63  :  32] = hrdata_i;
       read_single_word(addr);
+      reg_read_data[383 : 352] = hrdata_i;
+      read_single_word(addr + 4*1);
+      reg_read_data[351 : 320] = hrdata_i;
+      read_single_word(addr +  4*2);
+      reg_read_data[319 : 288] = hrdata_i;
+      read_single_word(addr +  4*3);
+      reg_read_data[287 : 256] = hrdata_i;
+      read_single_word(addr +  4*4);
+      reg_read_data[255 : 224] = hrdata_i;
+      read_single_word(addr +  4*5);
+      reg_read_data[223 : 192] = hrdata_i;
+      read_single_word(addr +  4*6);
+      reg_read_data[191 : 160] = hrdata_i;
+      read_single_word(addr +  4*7);
+      reg_read_data[159 : 128] = hrdata_i;
+      read_single_word(addr +  4*8);
+      reg_read_data[127 :  96] = hrdata_i;
+      read_single_word(addr +  4*9);
+      reg_read_data[95  :  64] = hrdata_i;
+      read_single_word(addr +  4*10);
+      reg_read_data[63  :  32] = hrdata_i;
+      read_single_word(addr +  4*11);
       reg_read_data[31  :   0] = hrdata_i;
     end
   endtask // read_digest
@@ -645,8 +645,8 @@ end
       
       start_time = cycle_ctr;
       write_block(ADDR_SCACONFIG, 4'b0111); // enable hmac_drbg
-      write_block(ADDR_SEED0, test_vector.seed);
-      write_block(ADDR_IV0, test_vector.IV);
+      write_block(ADDR_SEED_START, test_vector.seed);
+      write_block(ADDR_IV_START, test_vector.IV);
 
       trig_ECC(KEYGEN);
       @(posedge clk_i);
@@ -666,13 +666,13 @@ end
       transaction_flag_out_monitor_o = 1'b0;
       @(posedge clk_i); 
 
-      read_block(ADDR_PRIVKEY0);
+      read_block(ADDR_PRIVKEY_START);
       privkey = reg_read_data;
 
-      read_block(ADDR_PUBKEYX0);
+      read_block(ADDR_PUBKEYX_START);
       pubkey.x = reg_read_data;
 
-      read_block(ADDR_PUBKEYY0);
+      read_block(ADDR_PUBKEYY_START);
       pubkey.y = reg_read_data;
 
       end_time = cycle_ctr - start_time;
@@ -719,9 +719,9 @@ end
       start_time = cycle_ctr;
 
       write_block(ADDR_SCACONFIG, 4'b0111); // enable hmac_drbg
-      write_block(ADDR_MSG0, test_vector.hashed_msg);
-      write_block(ADDR_PRIVKEY0, test_vector.privkey);
-      write_block(ADDR_IV0, test_vector.IV);
+      write_block(ADDR_MSG_START, test_vector.hashed_msg);
+      write_block(ADDR_PRIVKEY_START, test_vector.privkey);
+      write_block(ADDR_IV_START, test_vector.IV);
 
       trig_ECC(SIGN);
       @(posedge clk_i);
@@ -741,10 +741,10 @@ end
       transaction_flag_out_monitor_o = 1'b0;
       @(posedge clk_i); 
       
-      read_block(ADDR_SIGNR0);
+      read_block(ADDR_SIGNR_START);
       R = reg_read_data;
 
-      read_block(ADDR_SIGNS0);
+      read_block(ADDR_SIGNS_START);
       S = reg_read_data;
 
       end_time = cycle_ctr - start_time;
@@ -789,12 +789,12 @@ end
       start_time = cycle_ctr;
 
       write_block(ADDR_SCACONFIG, 4'b0111); // enable hmac_drbg
-      write_block(ADDR_MSG0, test_vector.hashed_msg);
-      write_block(ADDR_PUBKEYX0, test_vector.pubkey.x);
-      write_block(ADDR_PUBKEYY0, test_vector.pubkey.y);
-      write_block(ADDR_SIGNR0, test_vector.R);
-      write_block(ADDR_SIGNS0, test_vector.S);
-      write_block(ADDR_IV0, 384'h1);
+      write_block(ADDR_MSG_START, test_vector.hashed_msg);
+      write_block(ADDR_PUBKEYX_START, test_vector.pubkey.x);
+      write_block(ADDR_PUBKEYY_START, test_vector.pubkey.y);
+      write_block(ADDR_SIGNR_START, test_vector.R);
+      write_block(ADDR_SIGNS_START, test_vector.S);
+      write_block(ADDR_IV_START, 384'h1);
 
       trig_ECC(VERIFY);
       @(posedge clk_i);
@@ -814,7 +814,7 @@ end
       transaction_flag_out_monitor_o = 1'b0;
       @(posedge clk_i); 
 
-      read_block(ADDR_VERIFY_R0);
+      read_block(ADDR_VERIFY_R_START);
       verify_r = reg_read_data;
 
       end_time = cycle_ctr - start_time;

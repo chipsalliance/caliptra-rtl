@@ -292,11 +292,11 @@ module ecc_dsa_ctrl
             sca_scalar_rnd_en <= hwif_out.ECC_SCACONFIG.SCALAR_RND_EN.value;
 
             for(int i0=0; i0<12; i0++) begin
-                pubkeyx_reg[i0*32 +: 32] <= hwif_out.ECC_PUBKEY_X[i0].PUBKEY_X.value;
-                pubkeyy_reg[i0*32 +: 32] <= hwif_out.ECC_PUBKEY_Y[i0].PUBKEY_Y.value;
-                r_reg[i0*32 +: 32]       <= hwif_out.ECC_SIGN_R[i0].SIGN_R.value;
-                s_reg[i0*32 +: 32]       <= hwif_out.ECC_SIGN_S[i0].SIGN_S.value;
-                IV_reg[i0*32 +: 32]      <= hwif_out.ECC_IV[i0].IV.value;
+                pubkeyx_reg[i0*32 +: 32] <= hwif_out.ECC_PUBKEY_X[11-i0].PUBKEY_X.value;
+                pubkeyy_reg[i0*32 +: 32] <= hwif_out.ECC_PUBKEY_Y[11-i0].PUBKEY_Y.value;
+                r_reg[i0*32 +: 32]       <= hwif_out.ECC_SIGN_R[11-i0].SIGN_R.value;
+                s_reg[i0*32 +: 32]       <= hwif_out.ECC_SIGN_S[11-i0].SIGN_S.value;
+                IV_reg[i0*32 +: 32]      <= hwif_out.ECC_IV[11-i0].IV.value;
             end
         end
     end // ecc_reg_reading
@@ -313,11 +313,11 @@ module ecc_dsa_ctrl
         else begin
             for(int i0=0; i0<12; i0++) begin
                 privkey_reg[i0*32 +: 32] <= (kv_privkey_write_en & (kv_privkey_write_offset == i0)) ? kv_privkey_write_data : 
-                                            (~kv_privkey_write_en & dsa_ready_reg) ? hwif_out.ECC_PRIVKEY[i0].PRIVKEY.value : privkey_reg[i0*32 +: 32];
+                                            (~kv_privkey_write_en & dsa_ready_reg) ? hwif_out.ECC_PRIVKEY[11-i0].PRIVKEY.value : privkey_reg[i0*32 +: 32];
                 seed_reg[i0*32 +: 32]    <= (kv_seed_write_en & (kv_seed_write_offset == i0)) ? kv_seed_write_data : 
-                                            (~kv_seed_write_en & dsa_ready_reg) ? hwif_out.ECC_SEED[i0].SEED.value : seed_reg[i0*32 +: 32];
+                                            (~kv_seed_write_en & dsa_ready_reg) ? hwif_out.ECC_SEED[11-i0].SEED.value : seed_reg[i0*32 +: 32];
                 msg_reg[i0*32 +: 32]     <= (kv_msg_write_en & (kv_msg_write_offset == i0)) ? kv_msg_write_data : 
-                                            (~kv_msg_write_en & dsa_ready_reg) ? hwif_out.ECC_MSG[i0].MSG.value : msg_reg[i0*32 +: 32];
+                                            (~kv_msg_write_en & dsa_ready_reg) ? hwif_out.ECC_MSG[11-i0].MSG.value : msg_reg[i0*32 +: 32];
             end
         end
     end
@@ -359,12 +359,12 @@ module ecc_dsa_ctrl
             always_comb 
             begin
                 //don't store the private key generated in sw accessible register if it's going to keyvault
-                hwif_in.ECC_PRIVKEY[i0].PRIVKEY.next = hw_privkey_we & ~dest_keyvault ? read_reg[i0*32 +: 32] : hwif_out.ECC_PRIVKEY[i0].PRIVKEY.value;
-                hwif_in.ECC_PUBKEY_X[i0].PUBKEY_X.next = hw_pubkeyx_we? read_reg[i0*32 +: 32] : hwif_out.ECC_PUBKEY_X[i0].PUBKEY_X.value;
-                hwif_in.ECC_PUBKEY_Y[i0].PUBKEY_Y.next = hw_pubkeyy_we? read_reg[i0*32 +: 32] : hwif_out.ECC_PUBKEY_Y[i0].PUBKEY_Y.value;
-                hwif_in.ECC_SIGN_R[i0].SIGN_R.next = hw_r_we? read_reg[i0*32 +: 32] : hwif_out.ECC_SIGN_R[i0].SIGN_R.value;
-                hwif_in.ECC_SIGN_S[i0].SIGN_S.next = hw_s_we? read_reg[i0*32 +: 32] : hwif_out.ECC_SIGN_S[i0].SIGN_S.value;
-                hwif_in.ECC_VERIFY_R[i0].VERIFY_R.next = hw_verify_r_we? read_reg[i0*32 +: 32] : hwif_out.ECC_VERIFY_R[i0].VERIFY_R.value;
+                hwif_in.ECC_PRIVKEY[11-i0].PRIVKEY.next = hw_privkey_we & ~dest_keyvault ? read_reg[i0*32 +: 32] : hwif_out.ECC_PRIVKEY[11-i0].PRIVKEY.value;
+                hwif_in.ECC_PUBKEY_X[11-i0].PUBKEY_X.next = hw_pubkeyx_we? read_reg[i0*32 +: 32] : hwif_out.ECC_PUBKEY_X[11-i0].PUBKEY_X.value;
+                hwif_in.ECC_PUBKEY_Y[11-i0].PUBKEY_Y.next = hw_pubkeyy_we? read_reg[i0*32 +: 32] : hwif_out.ECC_PUBKEY_Y[11-i0].PUBKEY_Y.value;
+                hwif_in.ECC_SIGN_R[11-i0].SIGN_R.next = hw_r_we? read_reg[i0*32 +: 32] : hwif_out.ECC_SIGN_R[11-i0].SIGN_R.value;
+                hwif_in.ECC_SIGN_S[11-i0].SIGN_S.next = hw_s_we? read_reg[i0*32 +: 32] : hwif_out.ECC_SIGN_S[11-i0].SIGN_S.value;
+                hwif_in.ECC_VERIFY_R[11-i0].VERIFY_R.next = hw_verify_r_we? read_reg[i0*32 +: 32] : hwif_out.ECC_VERIFY_R[11-i0].VERIFY_R.value;
             end
         end
     endgenerate // ecc_reg_writing

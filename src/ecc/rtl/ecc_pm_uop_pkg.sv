@@ -169,6 +169,6 @@ localparam [PROG_ADDR_W-1 : 0] PM_INIT_PK_E         = PM_INIT_PK_S + 5;
 localparam [PROG_ADDR_W-1 : 0] VER2_PA_S            = PM_INIT_PK_E + 2;  // verifying2 point addtion of PA((h*s_inv)*G, (r*s_inv)*PK)
 localparam [PROG_ADDR_W-1 : 0] VER2_PA_E            = VER2_PA_S + 81;
 
-`endif
-
 endpackage
+
+`endif

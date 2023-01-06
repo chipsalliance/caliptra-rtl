@@ -35,6 +35,6 @@ typedef struct packed {
     logic                    write;
 } ecc_req_t;
 
-`endif
-
 endpackage
+
+`endif

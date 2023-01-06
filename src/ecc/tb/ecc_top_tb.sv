@@ -43,38 +43,38 @@ module ecc_top_tb
   localparam SIGN             = 2'b10;
   localparam VERIFY           = 2'b11;
 
-  localparam ADDR_STATUS      = BASE_ADDR + 32'h00000018;
+  localparam ADDR_STATUS          = BASE_ADDR + 32'h00000018;
   localparam STATUS_READY_BIT = 0;
   localparam STATUS_VALID_BIT = 1;
 
-  localparam ADDR_SCACONFIG   = BASE_ADDR + 32'h00000020;
+  localparam ADDR_SCACONFIG       = BASE_ADDR + 32'h00000020;
 
-  localparam ADDR_SEED0       = BASE_ADDR + 32'h00000080;
-  localparam ADDR_SEED11      = BASE_ADDR + 32'h000000AC;
+  localparam ADDR_SEED_START      = BASE_ADDR + 32'h00000080;
+  localparam ADDR_SEED_END        = BASE_ADDR + 32'h000000AC;
 
-  localparam ADDR_MSG0        = BASE_ADDR + 32'h00000100;
-  localparam ADDR_MSG11       = BASE_ADDR + 32'h0000012C;
+  localparam ADDR_MSG_START       = BASE_ADDR + 32'h00000100;
+  localparam ADDR_MSG_END         = BASE_ADDR + 32'h0000012C;
 
-  localparam ADDR_PRIVKEY0    = BASE_ADDR + 32'h00000180;
-  localparam ADDR_PRIVKEY11   = BASE_ADDR + 32'h000001AC;
+  localparam ADDR_PRIVKEY_START   = BASE_ADDR + 32'h00000180;
+  localparam ADDR_PRIVKEY_END     = BASE_ADDR + 32'h000001AC;
 
-  localparam ADDR_PUBKEYX0    = BASE_ADDR + 32'h00000200;
-  localparam ADDR_PUBKEYX11   = BASE_ADDR + 32'h0000022C;
+  localparam ADDR_PUBKEYX_START   = BASE_ADDR + 32'h00000200;
+  localparam ADDR_PUBKEYX_END     = BASE_ADDR + 32'h0000022C;
 
-  localparam ADDR_PUBKEYY0    = BASE_ADDR + 32'h00000280;
-  localparam ADDR_PUBKEYY11   = BASE_ADDR + 32'h000002AC;
+  localparam ADDR_PUBKEYY_START   = BASE_ADDR + 32'h00000280;
+  localparam ADDR_PUBKEYY_END     = BASE_ADDR + 32'h000002AC;
 
-  localparam ADDR_SIGNR0      = BASE_ADDR + 32'h00000300;
-  localparam ADDR_SIGNR11     = BASE_ADDR + 32'h0000032C;
+  localparam ADDR_SIGNR_START     = BASE_ADDR + 32'h00000300;
+  localparam ADDR_SIGNR_END       = BASE_ADDR + 32'h0000032C;
 
-  localparam ADDR_SIGNS0      = BASE_ADDR + 32'h00000380;
-  localparam ADDR_SIGNS11     = BASE_ADDR + 32'h000003AC;
+  localparam ADDR_SIGNS_START     = BASE_ADDR + 32'h00000380;
+  localparam ADDR_SIGNS_END       = BASE_ADDR + 32'h000003AC;
 
-  localparam ADDR_VERIFY_R0   = BASE_ADDR + 32'h00000400;
-  localparam ADDR_VERIFY_R11  = BASE_ADDR + 32'h0000042C;
+  localparam ADDR_VERIFY_R_START  = BASE_ADDR + 32'h00000400;
+  localparam ADDR_VERIFY_R_END    = BASE_ADDR + 32'h0000042C;
 
-  localparam ADDR_IV0         = BASE_ADDR + 32'h00000480;
-  localparam ADDR_IV11        = BASE_ADDR + 32'h000004AC;
+  localparam ADDR_IV_START        = BASE_ADDR + 32'h00000480;
+  localparam ADDR_IV_END          = BASE_ADDR + 32'h000004AC;
 
   
   parameter           R_WIDTH                   = 384;
@@ -369,18 +369,18 @@ module ecc_top_tb
   //----------------------------------------------------------------
   task write_block(input [31 : 0] addr, input [383 : 0] block);
     begin
-      write_single_word(addr+4*11, block[383  : 352]);
-      write_single_word(addr+4*10, block[351  : 320]);
-      write_single_word(addr+4*9,  block[319  : 288]);
-      write_single_word(addr+4*8,  block[287  : 256]);
-      write_single_word(addr+4*7,  block[255  : 224]);
-      write_single_word(addr+4*6,  block[223  : 192]);
-      write_single_word(addr+4*5,  block[191  : 160]);
-      write_single_word(addr+4*4,  block[159  : 128]);
-      write_single_word(addr+4*3,  block[127  :  96]);
-      write_single_word(addr+4*2,  block[95   :  64]);
-      write_single_word(addr+4*1,  block[63   :  32]);
-      write_single_word(addr  ,    block[31   :   0]);
+      write_single_word(addr,      block[383  : 352]);
+      write_single_word(addr+4*1,  block[351  : 320]);
+      write_single_word(addr+4*2,  block[319  : 288]);
+      write_single_word(addr+4*3,  block[287  : 256]);
+      write_single_word(addr+4*4,  block[255  : 224]);
+      write_single_word(addr+4*5,  block[223  : 192]);
+      write_single_word(addr+4*6,  block[191  : 160]);
+      write_single_word(addr+4*7,  block[159  : 128]);
+      write_single_word(addr+4*8,  block[127  :  96]);
+      write_single_word(addr+4*9,  block[95   :  64]);
+      write_single_word(addr+4*10, block[63   :  32]);
+      write_single_word(addr+4*11, block[31   :   0]);
     end
   endtask // write_block
 
@@ -421,29 +421,29 @@ module ecc_top_tb
   //----------------------------------------------------------------
   task read_block(input [31 : 0] addr);
     begin
-      read_single_word(addr + 4*11);
-      reg_read_data[383 : 352] = hrdata_o_tb;
-      read_single_word(addr + 4*10);
-      reg_read_data[351 : 320] = hrdata_o_tb;
-      read_single_word(addr +  4*9);
-      reg_read_data[319 : 288] = hrdata_o_tb;
-      read_single_word(addr +  4*8);
-      reg_read_data[287 : 256] = hrdata_o_tb;
-      read_single_word(addr +  4*7);
-      reg_read_data[255 : 224] = hrdata_o_tb;
-      read_single_word(addr +  4*6);
-      reg_read_data[223 : 192] = hrdata_o_tb;
-      read_single_word(addr +  4*5);
-      reg_read_data[191 : 160] = hrdata_o_tb;
-      read_single_word(addr +  4*4);
-      reg_read_data[159 : 128] = hrdata_o_tb;
-      read_single_word(addr +  4*3);
-      reg_read_data[127 :  96] = hrdata_o_tb;
-      read_single_word(addr +  4*2);
-      reg_read_data[95  :  64] = hrdata_o_tb;
-      read_single_word(addr +  4*1);
-      reg_read_data[63  :  32] = hrdata_o_tb;
       read_single_word(addr);
+      reg_read_data[383 : 352] = hrdata_o_tb;
+      read_single_word(addr + 4*1);
+      reg_read_data[351 : 320] = hrdata_o_tb;
+      read_single_word(addr +  4*2);
+      reg_read_data[319 : 288] = hrdata_o_tb;
+      read_single_word(addr +  4*3);
+      reg_read_data[287 : 256] = hrdata_o_tb;
+      read_single_word(addr +  4*4);
+      reg_read_data[255 : 224] = hrdata_o_tb;
+      read_single_word(addr +  4*5);
+      reg_read_data[223 : 192] = hrdata_o_tb;
+      read_single_word(addr +  4*6);
+      reg_read_data[191 : 160] = hrdata_o_tb;
+      read_single_word(addr +  4*7);
+      reg_read_data[159 : 128] = hrdata_o_tb;
+      read_single_word(addr +  4*8);
+      reg_read_data[127 :  96] = hrdata_o_tb;
+      read_single_word(addr +  4*9);
+      reg_read_data[95  :  64] = hrdata_o_tb;
+      read_single_word(addr +  4*10);
+      reg_read_data[63  :  32] = hrdata_o_tb;
+      read_single_word(addr +  4*11);
       reg_read_data[31  :   0] = hrdata_o_tb;
     end
   endtask // read_digest
@@ -515,9 +515,9 @@ module ecc_top_tb
       start_time = cycle_ctr;
 
       $display("*** TC %0d writing seed value %0h", tc_number, test_vector.seed);
-      write_block(ADDR_SEED0, test_vector.seed);
+      write_block(ADDR_SEED_START, test_vector.seed);
       $display("*** TC %0d writing IV value %0h", tc_number, test_vector.IV);
-      write_block(ADDR_IV0, test_vector.IV);
+      write_block(ADDR_IV_START, test_vector.IV);
 
       $display("*** TC %0d starting ECC keygen flow", tc_number);
       trig_ECC(KEYGEN);
@@ -526,15 +526,15 @@ module ecc_top_tb
       wait_ready();
 
       $display("*** TC %0d reading PRIVATE KEY", tc_number);
-      read_block(ADDR_PRIVKEY0);
+      read_block(ADDR_PRIVKEY_START);
       privkey = reg_read_data;
 
       $display("*** TC %0d reading PUBLIC KEY X", tc_number);
-      read_block(ADDR_PUBKEYX0);
+      read_block(ADDR_PUBKEYX_START);
       pubkey.x = reg_read_data;
 
       $display("*** TC %0d reading PUBLIC KEY Y", tc_number);
-      read_block(ADDR_PUBKEYY0);
+      read_block(ADDR_PUBKEYY_START);
       pubkey.y = reg_read_data;
       
       end_time = cycle_ctr - start_time;
@@ -584,11 +584,11 @@ module ecc_top_tb
       start_time = cycle_ctr;
 
       $display("*** TC %0d writing message value %0h", tc_number, test_vector.hashed_msg);
-      write_block(ADDR_MSG0, test_vector.hashed_msg);
+      write_block(ADDR_MSG_START, test_vector.hashed_msg);
       $display("*** TC %0d writing private key value %0h", tc_number, test_vector.privkey);
-      write_block(ADDR_PRIVKEY0, test_vector.privkey);
+      write_block(ADDR_PRIVKEY_START, test_vector.privkey);
       $display("*** TC %0d writing IV value %0h", tc_number, test_vector.IV);
-      write_block(ADDR_IV0, test_vector.IV);
+      write_block(ADDR_IV_START, test_vector.IV);
 
       $display("*** TC %0d starting ECC signing flow", tc_number);
       trig_ECC(SIGN);
@@ -597,11 +597,11 @@ module ecc_top_tb
       wait_ready();
 
       $display("*** TC %0d reading R value", tc_number);
-      read_block(ADDR_SIGNR0);
+      read_block(ADDR_SIGNR_START);
       R = reg_read_data;
 
       $display("*** TC %0d reading S value", tc_number);
-      read_block(ADDR_SIGNS0);
+      read_block(ADDR_SIGNS_START);
       S = reg_read_data;
       
       end_time = cycle_ctr - start_time;
@@ -648,15 +648,15 @@ module ecc_top_tb
       start_time = cycle_ctr;
 
       $display("*** TC %0d writing message value %0h", tc_number, test_vector.hashed_msg);
-      write_block(ADDR_MSG0, test_vector.hashed_msg);
+      write_block(ADDR_MSG_START, test_vector.hashed_msg);
       $display("*** TC %0d writing PUBLIC KEY X value %0h", tc_number, test_vector.pubkey.x);
-      write_block(ADDR_PUBKEYX0, test_vector.pubkey.x);
+      write_block(ADDR_PUBKEYX_START, test_vector.pubkey.x);
       $display("*** TC %0d writing PUBLIC KEY Y value %0h", tc_number, test_vector.pubkey.y);
-      write_block(ADDR_PUBKEYY0, test_vector.pubkey.y);
+      write_block(ADDR_PUBKEYY_START, test_vector.pubkey.y);
       $display("*** TC %0d writing R value %0h", tc_number, test_vector.R);
-      write_block(ADDR_SIGNR0, test_vector.R);
+      write_block(ADDR_SIGNR_START, test_vector.R);
       $display("*** TC %0d writing S value %0h", tc_number, test_vector.S);
-      write_block(ADDR_SIGNS0, test_vector.S);
+      write_block(ADDR_SIGNS_START, test_vector.S);
 
       $display("*** TC %0d starting ECC verify flow", tc_number);
       trig_ECC(VERIFY);
@@ -665,7 +665,7 @@ module ecc_top_tb
       wait_ready();
 
       $display("*** TC %0d reading VERIFY R value", tc_number);
-      read_block(ADDR_VERIFY_R0);
+      read_block(ADDR_VERIFY_R_START);
       verify_r = reg_read_data;
       
       end_time = cycle_ctr - start_time;
@@ -788,21 +788,21 @@ module ecc_top_tb
       start_time = cycle_ctr;
 
       write_block(ADDR_SCACONFIG, 4'b1111); // disabled hmac-drbg
-      write_block(ADDR_SEED0, test_vector.privkey);
-      write_block(ADDR_IV0, test_vector.IV);
+      write_block(ADDR_SEED_START, test_vector.privkey);
+      write_block(ADDR_IV_START, test_vector.IV);
 
       trig_ECC(KEYGEN);
       #(CLK_PERIOD);
       
       wait_ready();
 
-      read_block(ADDR_PRIVKEY0);
+      read_block(ADDR_PRIVKEY_START);
       privkey = reg_read_data;
 
-      read_block(ADDR_PUBKEYX0);
+      read_block(ADDR_PUBKEYX_START);
       pubkey.x = reg_read_data;
 
-      read_block(ADDR_PUBKEYY0);
+      read_block(ADDR_PUBKEYY_START);
       pubkey.y = reg_read_data;
       
       end_time = cycle_ctr - start_time;
@@ -934,9 +934,9 @@ module ecc_top_tb
       $display("*** TC %0d on the fly reset test started.", tc_number);
       tc_ctr = tc_ctr + 1;
 
-      write_block(ADDR_MSG0, test_vector.hashed_msg);
-      write_block(ADDR_PRIVKEY0, test_vector.privkey);
-      write_block(ADDR_IV0, test_vector.IV);
+      write_block(ADDR_MSG_START, test_vector.hashed_msg);
+      write_block(ADDR_PRIVKEY_START, test_vector.privkey);
+      write_block(ADDR_IV_START, test_vector.IV);
 
       trig_ECC(SIGN);
       #(500 * CLK_PERIOD);
@@ -944,19 +944,19 @@ module ecc_top_tb
       reset_dut();
       wait_ready();
 
-      read_block(ADDR_SIGNR0);
+      read_block(ADDR_SIGNR_START);
       R = reg_read_data;
 
-      read_block(ADDR_SIGNS0);
+      read_block(ADDR_SIGNS_START);
       S = reg_read_data;
 
-      read_block(ADDR_PRIVKEY0);
+      read_block(ADDR_PRIVKEY_START);
       privkey = reg_read_data;
 
-      read_block(ADDR_PUBKEYX0);
+      read_block(ADDR_PUBKEYX_START);
       pubkey_x = reg_read_data;
 
-      read_block(ADDR_PUBKEYY0);
+      read_block(ADDR_PUBKEYY_START);
       pubkey_y = reg_read_data;
       
       if (R == 0 & S == 0 & privkey == 0 & pubkey_x ==0 & pubkey_y == 0)

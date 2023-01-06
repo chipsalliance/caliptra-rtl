@@ -101,17 +101,17 @@ module caliptra_top_tb (
     logic                       jtag_trst_n; // JTAG Reset
     logic                       jtag_tdo;    // JTAG TDO
     //APB Interface
-    logic [`APB_ADDR_WIDTH-1:0] PADDR;
+    logic [`CALIPTRA_APB_ADDR_WIDTH-1:0] PADDR;
     logic [3:0]                 PPROT;
     logic                       PSEL;
     logic                       PENABLE;
     logic                       PWRITE;
-    logic [`APB_DATA_WIDTH-1:0] PWDATA;
-    logic [`APB_USER_WIDTH-1:0] PAUSER;
+    logic [`CALIPTRA_APB_DATA_WIDTH-1:0] PWDATA;
+    logic [`CALIPTRA_APB_USER_WIDTH-1:0] PAUSER;
 
     logic                       PREADY;
     logic                       PSLVERR;
-    logic [`APB_DATA_WIDTH-1:0] PRDATA;
+    logic [`CALIPTRA_APB_DATA_WIDTH-1:0] PRDATA;
 
     logic ready_for_fuses;
     logic ready_for_fw_push;
@@ -123,8 +123,8 @@ module caliptra_top_tb (
     logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_rdata;
 
     logic imem_cs;
-    logic [`IMEM_ADDR_WIDTH-1:0] imem_addr;
-    logic [`IMEM_DATA_WIDTH-1:0] imem_rdata;
+    logic [`CALIPTRA_IMEM_ADDR_WIDTH-1:0] imem_addr;
+    logic [`CALIPTRA_IMEM_DATA_WIDTH-1:0] imem_rdata;
 
     //TIE-OFF device lifecycle
     security_state_t security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1};
@@ -187,11 +187,11 @@ module caliptra_top_tb (
     parameter MAX_CYCLES = 20_000_000;
 
     integer fd, tp, el, sm, i;
-    integer ifu_p, lsu_p, sl_p[`AHB_SLAVES_NUM];
+    integer ifu_p, lsu_p, sl_p[`CALIPTRA_AHB_SLAVES_NUM];
 
     integer j;
 
-    string slaveLog_fileName[`AHB_SLAVES_NUM];
+    string slaveLog_fileName[`CALIPTRA_AHB_SLAVES_NUM];
 
 `ifndef VERILATOR
     always
@@ -382,7 +382,7 @@ module caliptra_top_tb (
     // AHB responder interfaces monitor
     genvar sl_i;
     generate
-        for (sl_i = 0; sl_i < `AHB_SLAVES_NUM; sl_i = sl_i + 1) begin: gen_responder_inf_monitor
+        for (sl_i = 0; sl_i < `CALIPTRA_AHB_SLAVES_NUM; sl_i = sl_i + 1) begin: gen_responder_inf_monitor
             always @(posedge core_clk) begin
                 $fstrobe(sl_p[sl_i], "%10d : 0x%0h %h %h %b 0x%08h_%08h 0x%08h_%08h %b %b %b %b\n", cycleCnt, 
                         caliptra_top_dut.responder_inst[sl_i].haddr, caliptra_top_dut.responder_inst[sl_i].hsize, caliptra_top_dut.responder_inst[sl_i].htrans, 
@@ -456,7 +456,7 @@ module caliptra_top_tb (
         $fwrite(lsu_p, "//   Cycle: lsu_haddr     lsu_hsize     lsu_htrans     lsu_hwrite     lsu_hrdata     lsu_hwdata     lsu_hready     lsu_hresp\n");
 
 //`ifndef VERILATOR
-        for (j = 0; j < `AHB_SLAVES_NUM; j = j + 1) begin
+        for (j = 0; j < `CALIPTRA_AHB_SLAVES_NUM; j = j + 1) begin
             slaveLog_fileName[j] = {$sformatf("slave%0d_ahb_trace.log", j)};
             sl_p[j] = $fopen(slaveLog_fileName[j], "w");
             $fwrite(sl_p[j], "//   Cycle: haddr     hsize     htrans     hwrite     hrdata     hwdata     hready     hreadyout     hresp\n");
@@ -912,16 +912,16 @@ mbox_ram1
 
 //SRAM for imem
 caliptra_sram #(
-    .DEPTH     (`IMEM_DEPTH     ), // Depth in WORDS
-    .DATA_WIDTH(`IMEM_DATA_WIDTH),
-    .ADDR_WIDTH(`IMEM_ADDR_WIDTH)
+    .DEPTH     (`CALIPTRA_IMEM_DEPTH     ), // Depth in WORDS
+    .DATA_WIDTH(`CALIPTRA_IMEM_DATA_WIDTH),
+    .ADDR_WIDTH(`CALIPTRA_IMEM_ADDR_WIDTH)
 ) imem_inst1 (
     .clk_i   (core_clk   ),
 
     .cs_i    (imem_cs),
     .we_i    (1'b0/*sram_write && sram_dv*/      ),
     .addr_i  (imem_addr                          ),
-    .wdata_i (`IMEM_DATA_WIDTH'(0)/*sram_wdata   */),
+    .wdata_i (`CALIPTRA_IMEM_DATA_WIDTH'(0)/*sram_wdata   */),
     .rdata_o (imem_rdata                         )
 );
 

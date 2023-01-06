@@ -111,7 +111,6 @@ localparam [DSA_PROG_ADDR_W-1 : 0] DSA_VER_S                    = DSA_SGN_E + 2;
 localparam [DSA_PROG_ADDR_W-1 : 0] DSA_VER_E                    = DSA_VER_S + 17;
 
 
+endpackage
 
 `endif
-
-endpackage
