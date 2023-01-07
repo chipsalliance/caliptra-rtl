@@ -69,8 +69,8 @@ end
 //Latch disable for both clk and soc_ifc clk
 always_latch begin
     if(!clk) begin
-        disable_clk_lat <= disable_clk;
-        disable_soc_ifc_clk_lat <= disable_soc_ifc_clk;
+        disable_clk_lat = disable_clk;
+        disable_soc_ifc_clk_lat = disable_soc_ifc_clk;
     end
 end
 

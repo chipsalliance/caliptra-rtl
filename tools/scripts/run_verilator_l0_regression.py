@@ -43,8 +43,8 @@ def createScratch():
 # Run command and wait for it to complete before returning the results
 def runBashScript(cmd):
     p = subprocess.Popen(cmd, stdin=None, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
-    exitCode = p.wait()
     result = p.communicate()
+    exitCode = p.returncode
     resultOut, resultErr = result
     return exitCode, resultOut, resultErr
 
@@ -96,7 +96,15 @@ def runTest(test, scratch):
     # Parse and log the results
     infoMsg = f"############################################## {test} ##############################################"
     logger.info(infoMsg)
-    if (exitcode == 0):
+    if (exitcode is None):
+        errorMsg = f"Running {test} in Verilator failed to complete as expected"
+        logger.error(errorMsg)
+        infoMsg = f"Run output logged at: {logfile}"
+        logger.info(infoMsg)
+        testlogger.info(resultout.decode())
+        testlogger.error(resulterr.decode())
+        teststatus = 1
+    elif (exitcode == 0):
         infoMsg = f"Ran {test} in Verilator to completion - parsing output for status"
         logger.info(infoMsg)
         infoMsg = f"Run output logged at: {logfile}"
@@ -132,6 +140,8 @@ def main():
     for test in testnames:
         exitcode += runTest(test, scratch)
     # Ending summary
+    infoMsg = f"############################################## SUMMARY ##############################################"
+    logger.info(infoMsg)
     if exitcode == 0:
         infoMsg = f"All tests passed!"
         logger.info(infoMsg)

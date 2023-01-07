@@ -293,12 +293,16 @@ logic [31:0] jtag_id;
 logic [31:0] reset_vector;
 logic [31:0] nmi_vector;
 logic nmi_int;
+logic soft_int;
+logic timer_int;
 
 assign jtag_id[31:28] = 4'b1;
 assign jtag_id[27:12] = '0;
 assign jtag_id[11:1]  = 11'h45;
 assign reset_vector = `RV_RESET_VEC;
-assign nmi_int      = 0;
+assign nmi_int      = 1'b0;
+assign soft_int     = 1'b0;
+assign timer_int    = 1'b0;
 
 assign kv_error_intr = 1'b0; // TODO
 assign kv_notif_intr = 1'b0; // TODO
@@ -408,7 +412,7 @@ el2_swerv_wrapper rvtop (
     .dma_hreadyin           ( responder_inst[`CALIPTRA_SLAVE_SEL_IDMA].hsel ? responder_inst[`CALIPTRA_SLAVE_SEL_IDMA].hready : responder_inst[`CALIPTRA_SLAVE_SEL_DDMA].hready     ),
     .dma_hreadyout          ( responder_inst[`CALIPTRA_SLAVE_SEL_DDMA].hreadyout  ),
 
-    .timer_int              ( 1'b0     ),
+    .timer_int              ( timer_int),
     .extintsrc_req          ( intr     ),
 
     .lsu_bus_clk_en         ( 1'b1  ),// Clock ratio b/w cpu core clk & AHB master interface
@@ -452,7 +456,7 @@ el2_swerv_wrapper rvtop (
     // Caliptra Memory Export Interface
     .el2_mem_export         (el2_mem_export),
 
-    .soft_int               ('0),
+    .soft_int               (soft_int),
     .core_id                ('0),
     .scan_mode              ( 1'b0 ),         // To enable scan mode
     .mbist_mode             ( 1'b0 )        // to enable mbist

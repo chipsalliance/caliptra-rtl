@@ -480,15 +480,15 @@ package soc_ifc_reg_uvm;
 
     // Reg - soc_ifc_reg::nmi_vector
     class soc_ifc_reg__nmi_vector extends uvm_reg;
-        rand uvm_reg_field vector;
+        rand uvm_reg_field vec;
 
         function new(string name = "soc_ifc_reg__nmi_vector");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
         virtual function void build();
-            this.vector = new("vector");
-            this.vector.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.vec = new("vec");
+            this.vec.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__nmi_vector
 

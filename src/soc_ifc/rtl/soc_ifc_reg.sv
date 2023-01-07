@@ -451,7 +451,7 @@ module soc_ifc_reg (
             struct packed{
                 logic [31:0] next;
                 logic load_next;
-            } vector;
+            } vec;
         } nmi_vector;
         struct packed{
             struct packed{
@@ -903,7 +903,7 @@ module soc_ifc_reg (
         struct packed{
             struct packed{
                 logic [31:0] value;
-            } vector;
+            } vec;
         } nmi_vector;
         struct packed{
             struct packed{
@@ -1816,25 +1816,25 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.fw_update_reset_wait_cycles.wait_cycles.value = field_storage.fw_update_reset_wait_cycles.wait_cycles.value;
-    // Field: soc_ifc_reg.nmi_vector.vector
+    // Field: soc_ifc_reg.nmi_vector.vec
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.nmi_vector.vector.value;
+        automatic logic [31:0] next_c = field_storage.nmi_vector.vec.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.nmi_vector && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = decoded_wr_data[31:0];
             load_next_c = '1;
         end
-        field_combo.nmi_vector.vector.next = next_c;
-        field_combo.nmi_vector.vector.load_next = load_next_c;
+        field_combo.nmi_vector.vec.next = next_c;
+        field_combo.nmi_vector.vec.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.nmi_vector.vector.value <= 'h0;
-        end else if(field_combo.nmi_vector.vector.load_next) begin
-            field_storage.nmi_vector.vector.value <= field_combo.nmi_vector.vector.next;
+            field_storage.nmi_vector.vec.value <= 'h0;
+        end else if(field_combo.nmi_vector.vec.load_next) begin
+            field_storage.nmi_vector.vec.value <= field_combo.nmi_vector.vec.next;
         end
     end
-    assign hwif_out.nmi_vector.vector.value = field_storage.nmi_vector.vector.value;
+    assign hwif_out.nmi_vector.vec.value = field_storage.nmi_vector.vec.value;
     // Field: soc_ifc_reg.clk_gating_en.clk_gating_en
     always_comb begin
         automatic logic [0:0] next_c = field_storage.clk_gating_en.clk_gating_en.value;
@@ -3007,7 +3007,7 @@ module soc_ifc_reg (
     assign readback_array[119][31:1] = '0;
     assign readback_array[120][7:0] = (decoded_reg_strb.fw_update_reset_wait_cycles && !decoded_req_is_wr) ? field_storage.fw_update_reset_wait_cycles.wait_cycles.value : '0;
     assign readback_array[120][31:8] = '0;
-    assign readback_array[121][31:0] = (decoded_reg_strb.nmi_vector && !decoded_req_is_wr) ? field_storage.nmi_vector.vector.value : '0;
+    assign readback_array[121][31:0] = (decoded_reg_strb.nmi_vector && !decoded_req_is_wr) ? field_storage.nmi_vector.vec.value : '0;
     assign readback_array[122][0:0] = (decoded_reg_strb.clk_gating_en && !decoded_req_is_wr) ? field_storage.clk_gating_en.clk_gating_en.value : '0;
     assign readback_array[122][31:1] = '0;
     assign readback_array[123][0:0] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.error_en.value : '0;

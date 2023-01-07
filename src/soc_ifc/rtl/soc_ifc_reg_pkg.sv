@@ -284,10 +284,10 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic [31:0] value;
-    } soc_ifc_reg__nmi_vector__vector__out_t;
+    } soc_ifc_reg__nmi_vector__vec__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__nmi_vector__vector__out_t vector;
+        soc_ifc_reg__nmi_vector__vec__out_t vec;
     } soc_ifc_reg__nmi_vector__out_t;
 
     typedef struct packed{

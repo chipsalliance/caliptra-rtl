@@ -129,26 +129,14 @@ stages:
           # Run the license checker script
           - 'bash \$AHA_POC_REPO/tools/scripts/licenseHeaderCheck.sh'
 
-#      - verilator_smoke_test:
-#        - display_name: 'Verilator Smoke Test'
-#        - enabled: true
-#        - run_in_workspace: True
-#        - timeout: 30
-#        - commands:
-#            - 'set -e'
-#            - 'module load tools/python/python3/3.9.2'
-#
-#            # Run the default Verilator test and dump a log
-#            #- 'submit -i make -C \$AHA_POC_REPO/tools/scripts/tmp_verilator_run_dir -f ../Makefile verilator |& tee \$AHA_POC_REPO/tools/scripts/tmp_verilator_run_dir/verilate.log'
-#            - 'submit -i python3 \$AHA_POC_REPO/tools/scripts/run_verilator_l0_regression.py'
-#
-#            # Check the result
-##            - 'echo \"exiting with status \$STS\"'
-##            - 'exit \$STS'
-##            # Check the result
-##            - 'if [[ \$(grep \"TESTCASE PASSED\" \$AHA_POC_REPO/tools/scripts/tmp_verilator_run_dir/verilate.log | wc -l) -gt 0 ]]; then
-##                 echo \"Successful verilator run\";
-##               else
-##                 echo \"Verilator run was unsuccessful - did not observed TESTCASE PASSED message\";
-##                 exit 1;
-##               fi'
+      - verilator_smoke_test:
+        - display_name: 'Verilator Smoke Test'
+        - enabled: true
+        - run_in_workspace: True
+        - timeout: 45
+        - commands:
+            - 'set -e'
+            - 'module load tools/python/python3/3.9.2'
+
+            # Run the Verilator test regression and dump logfiles to scratch
+            - 'submit -i python3 \$AHA_POC_REPO/tools/scripts/run_verilator_l0_regression.py'

@@ -270,11 +270,11 @@ module caliptra_top_tb (
 
     always@(negedge core_clk) begin
         if((cycleCnt == 'h3000) && int_flag) begin
-            force caliptra_top_dut.rvtop.soft_int = 'b1;
+            force caliptra_top_dut.soft_int = 'b1;
         end
         
         else if((cycleCnt == 'h4000) && int_flag) begin
-            force caliptra_top_dut.rvtop.timer_int = 'b1;
+            force caliptra_top_dut.timer_int = 'b1;
         end
         
         else if((cycleCnt == 'h5000) && int_flag) begin
@@ -282,13 +282,13 @@ module caliptra_top_tb (
         end
         
         else if((cycleCnt == 'h6000) && int_flag) begin
-            force caliptra_top_dut.rvtop.soft_int = 'b1;
+            force caliptra_top_dut.soft_int = 'b1;
             int_flag <= 'b0;
         end
         
         else begin
-            release caliptra_top_dut.rvtop.soft_int;
-            release caliptra_top_dut.rvtop.timer_int;
+            release caliptra_top_dut.soft_int;
+            release caliptra_top_dut.timer_int;
             generic_input_wires <= 'h0;
         end
     end

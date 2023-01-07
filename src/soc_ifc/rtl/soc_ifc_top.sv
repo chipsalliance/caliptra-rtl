@@ -399,7 +399,7 @@ soc_ifc_reg i_soc_ifc_reg (
 
 assign soc_ifc_error_intr = soc_ifc_reg_hwif_out.intr_block_rf.error_global_intr_r.intr;
 assign soc_ifc_notif_intr = soc_ifc_reg_hwif_out.intr_block_rf.notif_global_intr_r.intr;
-assign nmi_vector = soc_ifc_reg_hwif_out.nmi_vector.vector.value;
+assign nmi_vector = soc_ifc_reg_hwif_out.nmi_vector.vec.value;
 assign iccm_lock  = soc_ifc_reg_hwif_out.iccm_lock.lock.value;
 assign clk_gating_en = soc_ifc_reg_hwif_out.clk_gating_en.clk_gating_en.value;
 

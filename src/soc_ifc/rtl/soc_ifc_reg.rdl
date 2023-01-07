@@ -161,7 +161,7 @@ addrmap soc_ifc_reg {
                 Bit [0] is ignored to enforce half-word alignment of address.
                 Writes available to Caliptra subsystem, not SoC.";
 
-        field {desc = "NMI Vector"; hw = r; sw = rw; swwel = soc_req;} vector[32] = 32'h0;
+        field {desc = "NMI Vector"; hw = r; sw = rw; swwel = soc_req;} vec[32] = 32'h0;
     } nmi_vector;
 
     reg {
