@@ -97,7 +97,8 @@ module soc_ifc_top
     output logic cptra_noncore_rst_b,
     //uC reset
     output logic cptra_uc_rst_b,
-    output logic clk_gating_en   
+    //Clock gating
+    output logic clk_gating_en 
 );
 
 //gasket to assemble mailbox request

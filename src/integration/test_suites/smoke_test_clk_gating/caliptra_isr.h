@@ -37,8 +37,6 @@ extern volatile uint32_t hmac_intr_status;
 //////////////////////////////////////////////////////////////////////////////
 // Function Declarations
 //
-//Change SHA512 notif priority to max so core can wake up from halt
-#define SWERV_INTR_PRIO_HMAC_NOTIF       15
 // Performs all the CSR setup to configure and enable vectored external interrupts
 void init_interrupts(void);
 

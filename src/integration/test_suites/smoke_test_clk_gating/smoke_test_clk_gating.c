@@ -40,11 +40,6 @@ void main() {
     init_interrupts();
 
     //----------------------------------------------------
-    //Enable clk gating
-    //----------------------------------------------------
-    *soc_ifc_clk_gating_en = SOC_IFC_REG_CLK_GATING_EN_CLK_GATING_EN_MASK;
-
-    //----------------------------------------------------
     //Wake up using internal timer0
     //----------------------------------------------------
         //Set internal timer0 counter to 0
@@ -84,7 +79,8 @@ void main() {
                       : /* clobbers: none */);
 
     //------------------------------------------------------
-    //Set STDOUT to F8 until all cases below finish running
+    //Set STDOUT to F8 until all cases below finish running.
+    //This is to assert interrupts to the core for testing
     //------------------------------------------------------
         printf("%c",0xf8); 
 

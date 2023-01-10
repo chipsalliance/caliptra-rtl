@@ -169,7 +169,7 @@ addrmap soc_ifc_reg {
         desc = "Control register to enable clk gating. Default is 0 (disabled).
                 Writes available to Caliptra subsystem, not SoC.";
 
-        field {desc = "Clk gating enable"; hw = r; sw = rw; swwel = soc_req;} clk_gating_en = 1'b0;
+        field {desc = "Clk gating enable"; hw = r; sw = rw; swwe = soc_req;} clk_gating_en = 1'b0;
     } clk_gating_en;
 
 
@@ -516,6 +516,7 @@ addrmap soc_ifc_reg {
         notif_mbox_ecc_cor_intr_count_incr_r.pulse -> we    = notif_internal_intr_r.notif_mbox_ecc_cor_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
         notif_mbox_ecc_cor_intr_count_incr_r.pulse -> decr  = notif_mbox_ecc_cor_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
         notif_mbox_ecc_cor_intr_count_r.cnt        -> incr  = notif_mbox_ecc_cor_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
 
     };
 

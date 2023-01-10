@@ -278,7 +278,7 @@ module caliptra_top_tb (
         end
         
         else if((cycleCnt == 'h5000) && int_flag) begin
-            generic_input_wires <= 'h4000;
+            generic_input_wires <= 'h4001; //Toggle wires
         end
         
         else if((cycleCnt == 'h6000) && int_flag) begin

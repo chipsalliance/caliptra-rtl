@@ -1839,7 +1839,7 @@ module soc_ifc_reg (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.clk_gating_en.clk_gating_en.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.clk_gating_en && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
+        if(decoded_reg_strb.clk_gating_en && decoded_req_is_wr && hwif_in.soc_req) begin // SW write
             next_c = decoded_wr_data[0:0];
             load_next_c = '1;
         end

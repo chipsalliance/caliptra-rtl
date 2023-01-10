@@ -53,17 +53,19 @@ cpu_halt_status     psel    generic_input_wires    Expected behavior
 
 //Flop generic input wires to detect change
 always_ff@(posedge clk or negedge cptra_rst_b) begin
-    if(!cptra_rst_b) 
+    if(!cptra_rst_b) begin
         generic_input_wires_f <= 'h0;
-    else 
+    end
+    else begin 
         generic_input_wires_f <= generic_input_wires;
+    end
 end
 
 //Generate clk disable signal
 always_comb begin
     change_in_generic_wires = ((generic_input_wires ^ generic_input_wires_f) != 'h0);
-    disable_clk = (cpu_halt_status && !change_in_generic_wires);
-    disable_soc_ifc_clk = cpu_halt_status && !psel && !change_in_generic_wires;
+    disable_clk             = clk_gate_en && (cpu_halt_status && !change_in_generic_wires);
+    disable_soc_ifc_clk     = clk_gate_en && (cpu_halt_status && !psel && !change_in_generic_wires);
 end
 
 //Latch disable for both clk and soc_ifc clk
