@@ -165,7 +165,7 @@ always_ff @(posedge clk or negedge cptra_rst_b) begin
         fsm_synch_noncore_rst_b <= '0;
         cptra_noncore_rst_b <= '0;
         cptra_uc_rst_b <= '0;
-        wait_count <= fw_update_rst_wait_cycles;
+        wait_count <= '0;
         synch_uc_rst_b <= 0;
         iccm_unlock <= 0;
     end
