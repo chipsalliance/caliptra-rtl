@@ -55,21 +55,30 @@ def prepDestRepo(inDestWS, inDestRepo, inDestBranch):
         infoMsg = "Destination repo {} setup with branch {}.".format(inDestRepo, inDestBranch)
         logger.info(infoMsg)
     else:
-        print(exitcode)
-        print(prepRepoStderr.decode())
-        return 1
+        errorMsg = f"prepDestRepo.sh failed with code: {exitcode}"
+        logger.error(errorMsg)
+        for line in prepRepoStderr.decode().splitlines():
+            logger.error(line)
+    return exitcode
 
-def prepPBSrcRepo(inSrcWS, inSrcRepo):
+def prepPBSrcRepo(inSrcWS, inSrcRepo, ignoreReadme):
     scriptsDir = get_script_dir()
     prepRepoScript = os.path.join(scriptsDir, "prepPBSrcRepo.sh")
-    cmd = ". {} -sw {} -sr {}".format(prepRepoScript, inSrcWS, inSrcRepo)
+    if ignoreReadme == True:
+        ignoreOpt = "-ir"
+    else:
+        ignoreOpt = ""
+    cmd = ". {} -sw {} -sr {} {}".format(prepRepoScript, inSrcWS, inSrcRepo, ignoreOpt)
     exitcode, prepRepoStdout, prepRepoStderr = runBashScript(cmd)
     if (exitcode == 0):
         infoMsg = "Source repo {} setup with branch {}.".format(inSrcRepo, "master")
         logger.info(infoMsg)
     else:
-        print(exitcode)
-        print(prepRepoStderr.decode())
+        errorMsg = f"prepPBSrcRepo.sh failed with code: {exitcode}"
+        logger.error(errorMsg)
+        for line in prepRepoStderr.decode().splitlines():
+            logger.error(line)
+    return exitcode
 
 def get_script_dir():
     return os.path.dirname(os.path.realpath(__file__))
@@ -114,7 +123,7 @@ def copyFilesSrcToDest(sWorkspace, sRepo, dWorkspace, dRepo):
     blacklistRepoDirsFiles = ["etc", "config", "dvt_build.log"]
     blacklistIpDirsFiles = ["aes", "sim_irq_gen", "syn"]
     blacklistScriptsDirsFiles = ["gen_pb_file_lists.sh", "README.md", "sim_config_parse.py", "github_sync.py", "prepDestRepo.sh", "prepPBSrcRepo.sh", "run_test_makefile", "syn"]
-    integrationTestSuiteList = ['caliptra_demo', 'caliptra_isr', 'includes', 'printf']
+    integrationTestSuiteList = ['caliptra_demo', 'caliptra_isr', 'includes', 'printf', 'riscv_hw_if']
 
     srcCaliptraDir = os.path.join(sWorkspace, sRepo)
     destCaliptraDir = os.path.join(dWorkspace, dRepo)
@@ -208,6 +217,9 @@ def main():
     parser.add_argument("-db", "--destBranch",
                         action="store",
                         help="destination repo branch for updates")                   
+    parser.add_argument("-ir", "--ignoreReadme",
+                        action="store_true",
+                        help="Ignore README timestamp check in source repo")                   
     args = parser.parse_args()
 
     sWorkspace = args.srcWorkspace
@@ -215,14 +227,20 @@ def main():
     dWorkspace = args.destWorkspace
     dRepo = args.destRepo
     dBranch = args.destBranch
+    ignoreReadme = args.ignoreReadme
 
-    infoMsg = "Command: {} {} {} {} {} {} {} {} {} {} {}".format(sys.argv[0], sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9], sys.argv[10])
+    infoMsg = "Command: {} {} {} {} {} {} {} {} {} {} {} {}".format(sys.argv[0], sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9], sys.argv[10], sys.argv[11])
     logger.info(infoMsg)
 
     logger.info("Prepping Dest Repo")
-    prepDestRepo(dWorkspace, dRepo, dBranch)
+    if prepDestRepo(dWorkspace, dRepo, dBranch) != 0:
+        quit(1)
     logger.info("Prepping Src Repo")
-    prepPBSrcRepo(sWorkspace, sRepo)
+    # Kill the operation when README is out of date for syncs to
+    # GitHub repo, but allow an exception for periodic development updates
+    # when automated syncs won't be updating README
+    if prepPBSrcRepo(sWorkspace, sRepo, ignoreReadme) != 0:
+        quit(1)
     logger.info("Copying files")
     copyFilesSrcToDest(sWorkspace, sRepo, dWorkspace, dRepo)
     logger.info("Done copying files")

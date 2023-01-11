@@ -22,6 +22,7 @@ function show_usage() {
    printf "Options:\n"
    printf " -sw|--srcWS [srcWorkpsace], print srcWorkspace\n"
    printf " -sr|--srcRepo [srcRepo], print srcRepo\n"
+   printf " -ir|--ignoreReadme\n"
    printf " -h|--help, Print help\n"
 
 return 0
@@ -30,6 +31,7 @@ return 0
 while [ ! -z "$1" ]; do
    if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
       show_usage
+      return
    elif [[ "$1" == "-sw" ]] || [[ "$1" == "--srcWS" ]]; then
       SRC_WS="$2"
       echo "Source workspace is $SRC_WS"
@@ -38,12 +40,18 @@ while [ ! -z "$1" ]; do
       SRC_REPO="$2"
       echo "Source Repo is $SRC_REPO"
       shift
+   elif [[ $1 == "-ir" ]] || [[ "$1" == "--ignoreReadme" ]]; then
+      IGNORE_README="true"
+      echo "Ignore README is enabled"
    else
       echo "Incorrect input provided $1"
       show_usage
+      return 1
    fi
 shift
 done   
+
+IGNORE_README=${IGNORE_README:-"false"}
 
 #Verify source PB workspace
 module load settings/tsd
@@ -67,7 +75,7 @@ if [ $? -ne 0 ]; then
     echo "Verify you can change to master branch of source repo and try again" 1>&2
     exit 1
 fi
-git pull
+git pull --ff-only
 if [ $? -ne 0 ]; then
     echo "Verify you can pull source repo master branch and try again" 1>&2
     exit 1
@@ -83,8 +91,12 @@ if [[ ( $gitstat =~ $matchStr1 ) && ( $gitstat =~ $matchStr2 ) ]]; then
    readmeDate=$(grep -oP "_\*Last Update: \d{4}\/\d{2}\/\d{2}\*_" README.md | sed 's/Last Update: //g' | sed 's/_//g' | sed 's/\*//g' | sed 's/\//-/g')
     #Check if dates match
     if [ "$readmeDate" != "$today" ]; then
-        echo "README.md is out of date. Update file and timestamp and try again!!" 1>&2
-        exit 1
+        if [ ${IGNORE_README} == "true" ]; then
+            echo "Warning - README.md is out of date. Not returning error code per script runtime options"
+        else
+            echo "README.md is out of date. Update file and timestamp and try again!!" 1>&2
+            exit 1
+        fi
     fi
 else
     echo "Check master branch and try again!!!" 1>&2
