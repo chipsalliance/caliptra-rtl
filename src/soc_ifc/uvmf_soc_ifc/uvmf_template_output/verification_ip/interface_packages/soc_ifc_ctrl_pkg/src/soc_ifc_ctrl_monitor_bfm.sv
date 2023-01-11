@@ -74,11 +74,11 @@ end
 
   // Structure used to pass configuration data from monitor class to monitor BFM.
  `soc_ifc_ctrl_CONFIGURATION_STRUCT
+ 
 
-
-  // Config value to determine if this is an initiator or a responder
+  // Config value to determine if this is an initiator or a responder 
   uvmf_initiator_responder_t initiator_responder;
-  // Custom configuration variables.
+  // Custom configuration variables.  
   // These are set using the configure function which is called during the UVM connect_phase
 
   tri clk_i;
@@ -87,16 +87,12 @@ end
   tri  cptra_rst_b_i;
   tri [7:0][31:0] cptra_obf_key_i;
   tri [63:0] generic_input_wires_i;
-  tri  clear_obf_secrets_i;
-  tri  iccm_axs_blocked_i;
   assign clk_i = bus.clk;
   assign dummy_i = bus.dummy;
   assign cptra_pwrgood_i = bus.cptra_pwrgood;
   assign cptra_rst_b_i = bus.cptra_rst_b;
   assign cptra_obf_key_i = bus.cptra_obf_key;
   assign generic_input_wires_i = bus.generic_input_wires;
-  assign clear_obf_secrets_i = bus.clear_obf_secrets;
-  assign iccm_axs_blocked_i = bus.iccm_axs_blocked;
 
   // Proxy handle to UVM monitor
   soc_ifc_ctrl_pkg::soc_ifc_ctrl_monitor  proxy;
@@ -107,8 +103,6 @@ end
   logic  cptra_rst_b_r = 1'b0;
   logic [7:0][31:0] cptra_obf_key_r;
   logic [63:0] generic_input_wires_r;
-  logic clear_obf_secrets_r;
-  logic iccm_axs_blocked_r;
   function bit any_signal_changed();
       if (!cptra_pwrgood_r)
           return cptra_pwrgood_i;
@@ -118,70 +112,68 @@ end
           return |(cptra_pwrgood_i       ^  cptra_pwrgood_r      ) ||
                  |(cptra_rst_b_i         ^  cptra_rst_b_r        ) ||
                  |(cptra_obf_key_i       ^  cptra_obf_key_r      ) ||
-                 |(generic_input_wires_i ^  generic_input_wires_r) ||
-                 |(clear_obf_secrets_i   ^  clear_obf_secrets_r  ) ||
-                 |(iccm_axs_blocked_i    ^  iccm_axs_blocked_r   );
+                 |(generic_input_wires_i ^  generic_input_wires_r);
   endfunction
   // pragma uvmf custom interface_item_additional end
-
-  //******************************************************************
-  task wait_for_reset();// pragma tbx xtf
+  
+  //******************************************************************                         
+  task wait_for_reset();// pragma tbx xtf  
 //    @(posedge clk_i) ;
 //    do_wait_for_reset();
-  endtask
+  endtask                                                                                   
 
-  // ****************************************************************************
-  task do_wait_for_reset();
+  // ****************************************************************************              
+  task do_wait_for_reset(); 
   // pragma uvmf custom reset_condition begin
-    wait ( dummy_i === 1 ) ;
-    @(posedge clk_i) ;
-  // pragma uvmf custom reset_condition end
-  endtask
+    wait ( dummy_i === 1 ) ;                                                              
+    @(posedge clk_i) ;                                                                    
+  // pragma uvmf custom reset_condition end                                                                
+  endtask    
 
-  //******************************************************************
+  //******************************************************************                         
+ 
+  task wait_for_num_clocks(input int unsigned count); // pragma tbx xtf 
+    @(posedge clk_i);  
+                                                                   
+    repeat (count-1) @(posedge clk_i);                                                    
+  endtask      
 
-  task wait_for_num_clocks(input int unsigned count); // pragma tbx xtf
-    @(posedge clk_i);
-
-    repeat (count-1) @(posedge clk_i);
-  endtask
-
-  //******************************************************************
-  event go;
-  function void start_monitoring();// pragma tbx xtf
+  //******************************************************************                         
+  event go;                                                                                 
+  function void start_monitoring();// pragma tbx xtf    
     -> go;
-  endfunction
-
-  // ****************************************************************************
-  initial begin
-    @go;
-    forever begin
-      @(posedge clk_i);
+  endfunction                                                                               
+  
+  // ****************************************************************************              
+  initial begin                                                                             
+    @go;                                                                                   
+    forever begin                                                                        
+      @(posedge clk_i);  
       do_monitor( soc_ifc_ctrl_monitor_struct );
-
-
+                                                                 
+ 
       proxy.notify_transaction( soc_ifc_ctrl_monitor_struct );
-
-    end
-  end
+ 
+    end                                                                                    
+  end                                                                                       
 
   //******************************************************************
   // The configure() function is used to pass agent configuration
   // variables to the monitor BFM.  It is called by the monitor within
-  // the agent at the beginning of the simulation.  It may be called
+  // the agent at the beginning of the simulation.  It may be called 
   // during the simulation if agent configuration variables are updated
-  // and the monitor BFM needs to be aware of the new configuration
+  // and the monitor BFM needs to be aware of the new configuration 
   // variables.
   //
-    function void configure(soc_ifc_ctrl_configuration_s soc_ifc_ctrl_configuration_arg); // pragma tbx xtf
+    function void configure(soc_ifc_ctrl_configuration_s soc_ifc_ctrl_configuration_arg); // pragma tbx xtf  
     initiator_responder = soc_ifc_ctrl_configuration_arg.initiator_responder;
   // pragma uvmf custom configure begin
   // pragma uvmf custom configure end
-  endfunction
+  endfunction   
 
 
-  // ****************************************************************************
-
+  // ****************************************************************************  
+            
   task do_monitor(output soc_ifc_ctrl_monitor_s soc_ifc_ctrl_monitor_struct);
     //
     // Available struct members:
@@ -190,28 +182,24 @@ end
     //     //    soc_ifc_ctrl_monitor_struct.assert_rst
     //     //    soc_ifc_ctrl_monitor_struct.wait_cycles
     //     //    soc_ifc_ctrl_monitor_struct.generic_input_val
-    //     //    soc_ifc_ctrl_monitor_struct.assert_clear_secrets
-    //     //    soc_ifc_ctrl_monitor_struct.iccm_axs_blocked
     //     //
     // Reference code;
     //    How to wait for signal value
     //      while (control_signal === 1'b1) @(posedge clk_i);
-    //
-    //    How to assign a struct member, named xyz, from a signal.
+    //    
+    //    How to assign a struct member, named xyz, from a signal.   
     //    All available input signals listed.
     //      soc_ifc_ctrl_monitor_struct.xyz = cptra_pwrgood_i;  //     
     //      soc_ifc_ctrl_monitor_struct.xyz = cptra_rst_b_i;  //     
     //      soc_ifc_ctrl_monitor_struct.xyz = cptra_obf_key_i;  //    [7:0][31:0] 
     //      soc_ifc_ctrl_monitor_struct.xyz = generic_input_wires_i;  //    [63:0] 
-    //      soc_ifc_ctrl_monitor_struct.xyz = clear_obf_secrets_i;  //
-    //      soc_ifc_ctrl_monitor_struct.xyz = iccm_axs_blocked_i;  //
     // pragma uvmf custom do_monitor begin
-    // UVMF_CHANGE_ME : Implement protocol monitoring.  The commented reference code
-    // below are examples of how to capture signal values and assign them to
-    // structure members.  All available input signals are listed.  The 'while'
+    // UVMF_CHANGE_ME : Implement protocol monitoring.  The commented reference code 
+    // below are examples of how to capture signal values and assign them to 
+    // structure members.  All available input signals are listed.  The 'while' 
     // code example shows how to wait for a synchronous flow control signal.  This
     // task should return when a complete transfer has been observed.  Once this task is
-    // exited with captured values, it is then called again to wait for and observe
+    // exited with captured values, it is then called again to wait for and observe 
     // the next transfer. One clock cycle is consumed between calls to do_monitor.
 
     // Wait for next transfer then gather info from intiator about the transfer.
@@ -221,22 +209,18 @@ end
     cptra_rst_b_r         = cptra_rst_b_i;
     cptra_obf_key_r       = cptra_obf_key_i;
     generic_input_wires_r = generic_input_wires_i;
-    iccm_axs_blocked_r    = iccm_axs_blocked_i;
-    clear_obf_secrets_r   = clear_obf_secrets_i;
     begin: build_return_struct
-  // Variables within the soc_ifc_ctrl_monitor_struct:
+         // Variables within the soc_ifc_ctrl_monitor_struct:
          soc_ifc_ctrl_monitor_struct.set_pwrgood          = cptra_pwrgood_i;
          soc_ifc_ctrl_monitor_struct.assert_rst           = !cptra_rst_b_i;
          soc_ifc_ctrl_monitor_struct.cptra_obf_key_rand   = cptra_obf_key_i;
          soc_ifc_ctrl_monitor_struct.generic_input_val    = generic_input_wires_i;
          soc_ifc_ctrl_monitor_struct.wait_cycles          = 0;
-         soc_ifc_ctrl_monitor_struct.iccm_axs_blocked     = iccm_axs_blocked_i;
-         soc_ifc_ctrl_monitor_struct.assert_clear_secrets = clear_obf_secrets_i;
     end
     // pragma uvmf custom do_monitor end
-  endtask
-
-
+  endtask         
+  
+ 
 endinterface
 
 // pragma uvmf custom external begin

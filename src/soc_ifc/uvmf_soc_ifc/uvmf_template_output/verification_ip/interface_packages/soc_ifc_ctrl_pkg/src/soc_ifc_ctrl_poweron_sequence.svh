@@ -58,8 +58,6 @@ class soc_ifc_ctrl_poweron_sequence
       if(!req.randomize()) `uvm_fatal("SEQ", "soc_ifc_ctrl_poweron_sequence::body()-soc_ifc_ctrl_transaction randomization failed")
       req.set_pwrgood = 1'b0;
       req.assert_rst = 1'b1;
-      req.assert_clear_secrets = 1'b0;
-      req.iccm_axs_blocked = 1'b0;
       // Send the transaction to the soc_ifc_ctrl_driver_bfm via the sequencer and soc_ifc_ctrl_driver.
       finish_item(req);
       `uvm_info("SEQ", {"Response:",req.convert2string()},UVM_MEDIUM)
@@ -72,8 +70,6 @@ class soc_ifc_ctrl_poweron_sequence
       if(!req.randomize()) `uvm_fatal("SEQ", "soc_ifc_ctrl_poweron_sequence::body()-soc_ifc_ctrl_transaction randomization failed")
       req.set_pwrgood = 1'b1;
       req.assert_rst = 1'b1;
-      req.assert_clear_secrets = 1'b0;
-      req.iccm_axs_blocked = 1'b0;
       req.cptra_obf_key_rand = cptra_obf_key;
       // Send the transaction to the soc_ifc_ctrl_driver_bfm via the sequencer and soc_ifc_ctrl_driver.
       finish_item(req);
@@ -86,8 +82,6 @@ class soc_ifc_ctrl_poweron_sequence
       if(!req.randomize()) `uvm_fatal("SEQ", "soc_ifc_ctrl_poweron_sequence::body()-soc_ifc_ctrl_transaction randomization failed")
       req.set_pwrgood = 1'b1;
       req.assert_rst = 1'b0;
-      req.assert_clear_secrets = 1'b0;
-      req.iccm_axs_blocked = 1'b0;
       req.cptra_obf_key_rand = cptra_obf_key;
       // Send the transaction to the soc_ifc_ctrl_driver_bfm via the sequencer and soc_ifc_ctrl_driver.
       finish_item(req);

@@ -52,7 +52,9 @@ class register_test_sequence extends soc_ifc_bench_sequence_base;
       // Select the desired wait_for_reset or provide custom mechanism.
       // fork-join for this code block may be unnecessary based on your situation.
       soc_ifc_ctrl_agent_config.wait_for_reset();
+      cptra_ctrl_agent_config.wait_for_reset();
       soc_ifc_status_agent_config.wait_for_reset();
+      cptra_status_agent_config.wait_for_reset();
       // pragma uvmf custom register_test_reset end
     join
 

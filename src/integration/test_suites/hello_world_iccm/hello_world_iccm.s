@@ -21,7 +21,7 @@
 #include "caliptra_defines.h"
 
     .set    mfdc, 0x7f9
-.extern printf_start, printf_end
+.extern iccm_code0_start, iccm_code0_end
 // Code to execute
 .section .text
 .global _start
@@ -36,9 +36,9 @@ _start:
     li  x3, 4
     csrw    mfdc, x3     // disable store merging
     li  x3, RV_ICCM_SADR // desired destination (ICCM) for printf subroutine (i.e. VMA)
-    la  x4, printf_start // This is an address in .data_iccm (Mailbox) where printf
-                         // executable code is loaded (i.e. LMA)
-    la  x5, printf_end
+    la  x4, iccm_code0_start // This is an address in .data_iccm0 (Mailbox) where
+                             // printf executable code is loaded (i.e. LMA)
+    la  x5, iccm_code0_end
 
 
 // move the print data from Mailbox to ICCM
@@ -69,7 +69,7 @@ hw_data:
 .ascii "----------------------------------------\n"
 .byte 0
 
-.section .data_iccm, "ax"
+.section .data_iccm0, "ax"
     // Load string from hw_data
     // and write to stdout address
 

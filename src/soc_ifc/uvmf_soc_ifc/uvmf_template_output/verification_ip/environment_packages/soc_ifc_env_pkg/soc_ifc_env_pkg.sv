@@ -28,6 +28,7 @@
 //     - <soc_ifc_environment.svh>
 //     - <soc_ifc_env_sequence_base.svh>
 //     - <soc_ifc_predictor.svh>
+//     - <soc_ifc_scoreboard.svh>
 //
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
@@ -43,8 +44,12 @@ package soc_ifc_env_pkg;
   import rw_txn_pkg::*;
   import soc_ifc_ctrl_pkg::*;
   import soc_ifc_ctrl_pkg_hdl::*;
+  import cptra_ctrl_pkg::*;
+  import cptra_ctrl_pkg_hdl::*;
   import soc_ifc_status_pkg::*;
   import soc_ifc_status_pkg_hdl::*;
+  import cptra_status_pkg::*;
+  import cptra_status_pkg_hdl::*;
   import soc_ifc_reg_model_top_pkg::*;
   import qvip_ahb_lite_slave_pkg::*;
   import qvip_ahb_lite_slave_params_pkg::*;
@@ -52,8 +57,17 @@ package soc_ifc_env_pkg;
   import qvip_apb5_slave_params_pkg::*;
  
   `uvm_analysis_imp_decl(_soc_ifc_ctrl_agent_ae)
+  `uvm_analysis_imp_decl(_cptra_ctrl_agent_ae)
   `uvm_analysis_imp_decl(_ahb_slave_0_ae)
   `uvm_analysis_imp_decl(_apb5_slave_0_ae)
+  `uvm_analysis_imp_decl(_expected_analysis_export)
+  `uvm_analysis_imp_decl(_expected_cptra_analysis_export)
+  `uvm_analysis_imp_decl(_actual_analysis_export)
+  `uvm_analysis_imp_decl(_actual_cptra_analysis_export)
+  `uvm_analysis_imp_decl(_expected_ahb_analysis_export)
+  `uvm_analysis_imp_decl(_expected_apb_analysis_export)
+  `uvm_analysis_imp_decl(_actual_ahb_analysis_export)
+  `uvm_analysis_imp_decl(_actual_apb_analysis_export)
 
   // pragma uvmf custom package_imports_additional begin
   // pragma uvmf custom package_imports_additional end
@@ -63,6 +77,7 @@ package soc_ifc_env_pkg;
   `include "src/soc_ifc_env_typedefs.svh"
   `include "src/soc_ifc_env_configuration.svh"
   `include "src/soc_ifc_predictor.svh"
+  `include "src/soc_ifc_scoreboard.svh"
   `include "src/soc_ifc_environment.svh"
   `include "src/soc_ifc_env_sequence_base.svh"
 
@@ -72,6 +87,7 @@ package soc_ifc_env_pkg;
   //    compiled as part of the environment package.  Be sure to place
   //    the new sequence after any base sequence of the new sequence.
   `include "src/soc_ifc_env_bringup_sequence.svh"
+  `include "src/soc_ifc_env_cptra_rst_wait_sequence.svh"
   // pragma uvmf custom package_item_additional end
 
 endpackage

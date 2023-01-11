@@ -32,21 +32,12 @@ class soc_ifc_status_transaction  extends uvmf_transaction_base;
 
   `uvm_object_utils( soc_ifc_status_transaction )
 
-  bit soc_ifc_err_intr_pending ;
-  bit soc_ifc_notif_intr_pending ;
-  bit sha_err_intr_pending ;
-  bit sha_notif_intr_pending ;
-  bit uc_rst_asserted ;
   bit ready_for_fuses ;
   bit ready_for_fw_push ;
   bit ready_for_runtime ;
   bit mailbox_data_avail ;
   bit mailbox_flow_done ;
   bit [63:0] generic_output_val ;
-  bit [7:0] [31:0] cptra_obf_key_reg ;
-  bit [31:0] [31:0] obf_field_entropy ;
-  bit [11:0] [31:0] obf_uds_seed ;
-  bit iccm_locked ;
 
   //Constraints for the transaction variables:
 
@@ -129,7 +120,7 @@ class soc_ifc_status_transaction  extends uvmf_transaction_base;
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("soc_ifc_err_intr_pending:0x%x soc_ifc_notif_intr_pending:0x%x sha_err_intr_pending:0x%x sha_notif_intr_pending:0x%x uc_rst_asserted:0x%x ready_for_fuses:0x%x ready_for_fw_push:0x%x ready_for_runtime:0x%x mailbox_data_avail:0x%x mailbox_flow_done:0x%x generic_output_val:0x%x cptra_obf_key_reg:0x%x obf_field_entropy:0x%x obf_uds_seed:0x%x iccm_locked:0x%x ",soc_ifc_err_intr_pending,soc_ifc_notif_intr_pending,sha_err_intr_pending,sha_notif_intr_pending,uc_rst_asserted,ready_for_fuses,ready_for_fw_push,ready_for_runtime,mailbox_data_avail,mailbox_flow_done,generic_output_val,cptra_obf_key_reg,obf_field_entropy,obf_uds_seed,iccm_locked);
+    return $sformatf("ready_for_fuses:0x%x ready_for_fw_push:0x%x ready_for_runtime:0x%x mailbox_data_avail:0x%x mailbox_flow_done:0x%x generic_output_val:0x%x ",ready_for_fuses,ready_for_fw_push,ready_for_runtime,mailbox_data_avail,mailbox_flow_done,generic_output_val);
     // pragma uvmf custom convert2string end
   endfunction
 
@@ -157,7 +148,6 @@ class soc_ifc_status_transaction  extends uvmf_transaction_base;
     // pragma uvmf custom do_compare begin
     // UVMF_CHANGE_ME : Eliminate comparison of variables not to be used for compare
     return (super.do_compare(rhs,comparer)
-            &&(this.iccm_locked == RHS.iccm_locked)
             );
     // pragma uvmf custom do_compare end
   endfunction
@@ -172,21 +162,12 @@ class soc_ifc_status_transaction  extends uvmf_transaction_base;
     assert($cast(RHS,rhs));
     // pragma uvmf custom do_copy begin
     super.do_copy(rhs);
-    this.soc_ifc_err_intr_pending = RHS.soc_ifc_err_intr_pending;
-    this.soc_ifc_notif_intr_pending = RHS.soc_ifc_notif_intr_pending;
-    this.sha_err_intr_pending = RHS.sha_err_intr_pending;
-    this.sha_notif_intr_pending = RHS.sha_notif_intr_pending;
-    this.uc_rst_asserted = RHS.uc_rst_asserted;
     this.ready_for_fuses = RHS.ready_for_fuses;
     this.ready_for_fw_push = RHS.ready_for_fw_push;
     this.ready_for_runtime = RHS.ready_for_runtime;
     this.mailbox_data_avail = RHS.mailbox_data_avail;
     this.mailbox_flow_done = RHS.mailbox_flow_done;
     this.generic_output_val = RHS.generic_output_val;
-    this.cptra_obf_key_reg = RHS.cptra_obf_key_reg;
-    this.obf_field_entropy = RHS.obf_field_entropy;
-    this.obf_uds_seed = RHS.obf_uds_seed;
-    this.iccm_locked = RHS.iccm_locked;
     // pragma uvmf custom do_copy end
   endfunction
 
@@ -210,21 +191,12 @@ class soc_ifc_status_transaction  extends uvmf_transaction_base;
     //   default : $add_color(transaction_view_h,"grey");
     // endcase
     // UVMF_CHANGE_ME : Eliminate transaction variables not wanted in transaction viewing in the waveform viewer
-    $add_attribute(transaction_view_h,soc_ifc_err_intr_pending,"soc_ifc_err_intr_pending");
-    $add_attribute(transaction_view_h,soc_ifc_notif_intr_pending,"soc_ifc_notif_intr_pending");
-    $add_attribute(transaction_view_h,sha_err_intr_pending,"sha_err_intr_pending");
-    $add_attribute(transaction_view_h,sha_notif_intr_pending,"sha_notif_intr_pending");
-    $add_attribute(transaction_view_h,uc_rst_asserted,"uc_rst_asserted");
     $add_attribute(transaction_view_h,ready_for_fuses,"ready_for_fuses");
     $add_attribute(transaction_view_h,ready_for_fw_push,"ready_for_fw_push");
     $add_attribute(transaction_view_h,ready_for_runtime,"ready_for_runtime");
     $add_attribute(transaction_view_h,mailbox_data_avail,"mailbox_data_avail");
     $add_attribute(transaction_view_h,mailbox_flow_done,"mailbox_flow_done");
     $add_attribute(transaction_view_h,generic_output_val,"generic_output_val");
-    $add_attribute(transaction_view_h,cptra_obf_key_reg,"cptra_obf_key_reg");
-    $add_attribute(transaction_view_h,obf_field_entropy,"obf_field_entropy");
-    $add_attribute(transaction_view_h,obf_uds_seed,"obf_uds_seed");
-    $add_attribute(transaction_view_h,iccm_locked,"iccm_locked");
     // pragma uvmf custom add_to_wave end
     $end_transaction(transaction_view_h,end_time);
     $free_transaction(transaction_view_h);

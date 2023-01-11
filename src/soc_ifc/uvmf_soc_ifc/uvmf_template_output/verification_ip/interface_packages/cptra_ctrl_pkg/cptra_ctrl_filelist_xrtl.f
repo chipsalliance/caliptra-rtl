@@ -1,0 +1,3 @@
+$UVMF_VIP_LIBRARY_HOME/interface_packages/cptra_ctrl_pkg/src/cptra_ctrl_if.sv
+$UVMF_VIP_LIBRARY_HOME/interface_packages/cptra_ctrl_pkg/src/cptra_ctrl_monitor_bfm.sv
+$UVMF_VIP_LIBRARY_HOME/interface_packages/cptra_ctrl_pkg/src/cptra_ctrl_driver_bfm.sv

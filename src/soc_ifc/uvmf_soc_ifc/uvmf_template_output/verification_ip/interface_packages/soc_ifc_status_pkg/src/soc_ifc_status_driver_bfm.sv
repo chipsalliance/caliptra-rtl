@@ -106,38 +106,18 @@ end
   // INITIATOR mode input signals
 
   // INITIATOR mode output signals
-  tri  cptra_noncore_rst_b_i;
-  reg  cptra_noncore_rst_b_o = 'b0;
-  tri  cptra_uc_rst_b_i;
-  reg  cptra_uc_rst_b_o = 'b0;
   tri  ready_for_fuses_i;
   reg  ready_for_fuses_o = 'b0;
   tri  ready_for_fw_push_i;
-  reg  ready_for_fw_push_o = 'bz;
+  reg  ready_for_fw_push_o = 'b0;
   tri  ready_for_runtime_i;
-  reg  ready_for_runtime_o = 'bz;
+  reg  ready_for_runtime_o = 'b0;
   tri  mailbox_data_avail_i;
-  reg  mailbox_data_avail_o = 'bz;
+  reg  mailbox_data_avail_o = 'b0;
   tri  mailbox_flow_done_i;
-  reg  mailbox_flow_done_o = 'bz;
+  reg  mailbox_flow_done_o = 'b0;
   tri [63:0] generic_output_wires_i;
-  reg [63:0] generic_output_wires_o = 'bz;
-  tri [7:0][31:0] cptra_obf_key_reg_i;
-  reg [7:0][31:0] cptra_obf_key_reg_o = 'bz;
-  tri [31:0][31:0] obf_field_entropy_i;
-  reg [31:0][31:0] obf_field_entropy_o = 'bz;
-  tri [11:0][31:0] obf_uds_seed_i;
-  reg [11:0][31:0] obf_uds_seed_o = 'bz;
-  tri  soc_ifc_error_intr_i;
-  reg  soc_ifc_error_intr_o = 'bz;
-  tri  soc_ifc_notif_intr_i;
-  reg  soc_ifc_notif_intr_o = 'bz;
-  tri  sha_error_intr_i;
-  reg  sha_error_intr_o = 'bz;
-  tri  sha_notif_intr_i;
-  reg  sha_notif_intr_o = 'bz;
-  tri  iccm_lock_i;
-  reg  iccm_lock_o = 'bz;
+  reg [63:0] generic_output_wires_o = 'b0;
 
   // Bi-directional signals
   
@@ -151,10 +131,6 @@ end
 
   // These are signals marked as 'output' by the config file, but the outputs will
   // not be driven by this BFM unless placed in INITIATOR mode.
-  assign bus.cptra_noncore_rst_b = (initiator_responder == INITIATOR) ? cptra_noncore_rst_b_o : 'bz;
-  assign cptra_noncore_rst_b_i = bus.cptra_noncore_rst_b;
-  assign bus.cptra_uc_rst_b = (initiator_responder == INITIATOR) ? cptra_uc_rst_b_o : 'bz;
-  assign cptra_uc_rst_b_i = bus.cptra_uc_rst_b;
   assign bus.ready_for_fuses = (initiator_responder == INITIATOR) ? ready_for_fuses_o : 'bz;
   assign ready_for_fuses_i = bus.ready_for_fuses;
   assign bus.ready_for_fw_push = (initiator_responder == INITIATOR) ? ready_for_fw_push_o : 'bz;
@@ -167,22 +143,6 @@ end
   assign mailbox_flow_done_i = bus.mailbox_flow_done;
   assign bus.generic_output_wires = (initiator_responder == INITIATOR) ? generic_output_wires_o : 'bz;
   assign generic_output_wires_i = bus.generic_output_wires;
-  assign bus.cptra_obf_key_reg = (initiator_responder == INITIATOR) ? cptra_obf_key_reg_o : 'bz;
-  assign cptra_obf_key_reg_i = bus.cptra_obf_key_reg;
-  assign bus.obf_field_entropy = (initiator_responder == INITIATOR) ? obf_field_entropy_o : 'bz;
-  assign obf_field_entropy_i = bus.obf_field_entropy;
-  assign bus.obf_uds_seed = (initiator_responder == INITIATOR) ? obf_uds_seed_o : 'bz;
-  assign obf_uds_seed_i = bus.obf_uds_seed;
-  assign bus.soc_ifc_error_intr = (initiator_responder == INITIATOR) ? soc_ifc_error_intr_o : 'bz;
-  assign soc_ifc_error_intr_i = bus.soc_ifc_error_intr;
-  assign bus.soc_ifc_notif_intr = (initiator_responder == INITIATOR) ? soc_ifc_notif_intr_o : 'bz;
-  assign soc_ifc_notif_intr_i = bus.soc_ifc_notif_intr;
-  assign bus.sha_error_intr = (initiator_responder == INITIATOR) ? sha_error_intr_o : 'bz;
-  assign sha_error_intr_i = bus.sha_error_intr;
-  assign bus.sha_notif_intr = (initiator_responder == INITIATOR) ? sha_notif_intr_o : 'bz;
-  assign sha_notif_intr_i = bus.sha_notif_intr;
-  assign bus.iccm_lock = (initiator_responder == INITIATOR) ? iccm_lock_o : 'bz;
-  assign iccm_lock_i = bus.iccm_lock;
 
   // Proxy handle to UVM driver
   soc_ifc_status_pkg::soc_ifc_status_driver   proxy;
@@ -214,22 +174,12 @@ end
      begin
        // RESPONDER mode output signals
        // INITIATOR mode output signals
-       cptra_noncore_rst_b_o <= 'b0;
-       cptra_uc_rst_b_o <= 'b0;
-       ready_for_fuses_o <= 'bz;
-       ready_for_fw_push_o <= 'bz;
-       ready_for_runtime_o <= 'bz;
-       mailbox_data_avail_o <= 'bz;
-       mailbox_flow_done_o <= 'bz;
-       generic_output_wires_o <= 'bz;
-       cptra_obf_key_reg_o <= 'bz;
-       obf_field_entropy_o <= 'bz;
-       obf_uds_seed_o <= 'bz;
-       soc_ifc_error_intr_o <= 'bz;
-       soc_ifc_notif_intr_o <= 'bz;
-       sha_error_intr_o <= 'bz;
-       sha_notif_intr_o <= 'bz;
-       iccm_lock_o <= 'bz;
+       ready_for_fuses_o <= 'b0;
+       ready_for_fw_push_o <= 'b0;
+       ready_for_runtime_o <= 'b0;
+       mailbox_data_avail_o <= 'b0;
+       mailbox_flow_done_o <= 'b0;
+       generic_output_wires_o <= 'b0;
        // Bi-directional signals
  
      end    
@@ -237,25 +187,12 @@ end
 
   // pragma uvmf custom interface_item_additional begin
   function bit any_signal_changed();
-      if (!cptra_noncore_rst_b_o)
-          return cptra_noncore_rst_b_i || (ready_for_fuses_i & !ready_for_fuses_o);
-      else
-          return |(cptra_noncore_rst_b_i  ^  cptra_noncore_rst_b_o      ) ||
-                 |(cptra_uc_rst_b_i       ^  cptra_uc_rst_b_o           ) ||
-                 |(ready_for_fuses_i      & !ready_for_fuses_o          ) ||
-                 |(ready_for_fw_push_i    & !ready_for_fw_push_o        ) ||
-                 |(ready_for_runtime_i    & !ready_for_runtime_o        ) ||
-                 |(mailbox_data_avail_i   & !mailbox_data_avail_o       ) ||
-                 |(mailbox_flow_done_i    & !mailbox_flow_done_o        ) ||
-                 |(generic_output_wires_i ^  generic_output_wires_o     ) ||
-                 |(cptra_obf_key_reg_i    ^  cptra_obf_key_reg_o        ) ||
-                 |(obf_field_entropy_i    ^  obf_field_entropy_o        ) ||
-                 |(obf_uds_seed_i         ^  obf_uds_seed_o             ) ||
-                 |(soc_ifc_error_intr_i   & !soc_ifc_error_intr_o       ) ||
-                 |(soc_ifc_notif_intr_i   & !soc_ifc_notif_intr_o       ) ||
-                 |(sha_error_intr_i       & !sha_error_intr_o           ) ||
-                 |(sha_notif_intr_i       & !sha_notif_intr_o           ) ||
-                 |(iccm_lock_i            ^  iccm_lock_o                );
+      return |(ready_for_fuses_i      ^  ready_for_fuses_o          ) ||
+             |(ready_for_fw_push_i    & !ready_for_fw_push_o        ) ||
+             |(ready_for_runtime_i    & !ready_for_runtime_o        ) ||
+             |(mailbox_data_avail_i   & !mailbox_data_avail_o       ) ||
+             |(mailbox_flow_done_i    & !mailbox_flow_done_o        ) ||
+             |(generic_output_wires_i ^  generic_output_wires_o     );
   endfunction
   // pragma uvmf custom interface_item_additional end
 
@@ -290,33 +227,19 @@ end
        );// pragma tbx xtf  
        // 
        // Members within the soc_ifc_status_initiator_struct:
-       //   bit err_intr_pending ;
-       //   bit notif_intr_pending ;
-       //   bit uc_rst_asserted ;
        //   bit ready_for_fuses ;
        //   bit ready_for_fw_push ;
        //   bit ready_for_runtime ;
        //   bit mailbox_data_avail ;
        //   bit mailbox_flow_done ;
        //   bit [63:0] generic_output_val ;
-       //   bit [7:0] [31:0] cptra_obf_key_reg ;
-       //   bit [31:0] [31:0] obf_field_entropy ;
-       //   bit [11:0] [31:0] obf_uds_seed ;
-       //   bit iccm_locked ;
        // Members within the soc_ifc_status_responder_struct:
-       //   bit err_intr_pending ;
-       //   bit notif_intr_pending ;
-       //   bit uc_rst_asserted ;
        //   bit ready_for_fuses ;
        //   bit ready_for_fw_push ;
        //   bit ready_for_runtime ;
        //   bit mailbox_data_avail ;
        //   bit mailbox_flow_done ;
        //   bit [63:0] generic_output_val ;
-       //   bit [7:0] [31:0] cptra_obf_key_reg ;
-       //   bit [31:0] [31:0] obf_field_entropy ;
-       //   bit [11:0] [31:0] obf_uds_seed ;
-       //   bit iccm_locked ;
        initiator_struct = soc_ifc_status_initiator_struct;
        //
        // Reference code;
@@ -331,21 +254,12 @@ end
        //    All available initiator output and inout signals listed.
        //    Notice the _o.  Those are storage variables that allow for procedural assignment.
        //    Initiator output signals
-       //      cptra_noncore_rst_b_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //      ready_for_fuses_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //      ready_for_fw_push_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //      ready_for_runtime_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //      mailbox_data_avail_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //      mailbox_flow_done_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //      generic_output_wires_o <= soc_ifc_status_initiator_struct.xyz;  //    [63:0] 
-       //      cptra_obf_key_reg_o <= soc_ifc_status_initiator_struct.xyz;  //    [7:0][31:0] 
-       //      obf_field_entropy_o <= soc_ifc_status_initiator_struct.xyz;  //    [31:0][31:0] 
-       //      obf_uds_seed_o <= soc_ifc_status_initiator_struct.xyz;  //    [11:0][31:0] 
-       //      soc_ifc_error_intr_o <= soc_ifc_status_initiator_struct.xyz;  //     
-       //      soc_ifc_notif_intr_o <= soc_ifc_status_initiator_struct.xyz;  //    
-       //      sha_error_intr_o <= soc_ifc_status_initiator_struct.xyz;  //     
-       //      sha_notif_intr_o <= soc_ifc_status_initiator_struct.xyz;  //     
-       //      iccm_lock_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //    Initiator inout signals
     // Initiate a transfer using the data received.
     @(posedge clk_i);
@@ -377,33 +291,19 @@ bit first_transfer=1;
        input soc_ifc_status_responder_s soc_ifc_status_responder_struct 
        );// pragma tbx xtf   
   // Variables within the soc_ifc_status_initiator_struct:
-  //   bit err_intr_pending ;
-  //   bit notif_intr_pending ;
-  //   bit uc_rst_asserted ;
   //   bit ready_for_fuses ;
   //   bit ready_for_fw_push ;
   //   bit ready_for_runtime ;
   //   bit mailbox_data_avail ;
   //   bit mailbox_flow_done ;
   //   bit [63:0] generic_output_val ;
-  //   bit [7:0] [31:0] cptra_obf_key_reg ;
-  //   bit [31:0] [31:0] obf_field_entropy ;
-  //   bit [11:0] [31:0] obf_uds_seed ;
-  //   bit iccm_locked ;
   // Variables within the soc_ifc_status_responder_struct:
-  //   bit err_intr_pending ;
-  //   bit notif_intr_pending ;
-  //   bit uc_rst_asserted ;
   //   bit ready_for_fuses ;
   //   bit ready_for_fw_push ;
   //   bit ready_for_runtime ;
   //   bit mailbox_data_avail ;
   //   bit mailbox_flow_done ;
   //   bit [63:0] generic_output_val ;
-  //   bit [7:0] [31:0] cptra_obf_key_reg ;
-  //   bit [31:0] [31:0] obf_field_entropy ;
-  //   bit [11:0] [31:0] obf_uds_seed ;
-  //   bit iccm_locked ;
        // Reference code;
        //    How to wait for signal value
        //      while (control_signal == 1'b1) @(posedge clk_i);
@@ -411,21 +311,12 @@ bit first_transfer=1;
        //    How to assign a responder struct member, named xyz, from a signal.   
        //    All available responder input and inout signals listed.
        //    Responder input signals
-       //      soc_ifc_status_responder_struct.xyz = cptra_noncore_rst_b_i;  //     
        //      soc_ifc_status_responder_struct.xyz = ready_for_fuses_i;  //     
        //      soc_ifc_status_responder_struct.xyz = ready_for_fw_push_i;  //     
        //      soc_ifc_status_responder_struct.xyz = ready_for_runtime_i;  //     
        //      soc_ifc_status_responder_struct.xyz = mailbox_data_avail_i;  //     
        //      soc_ifc_status_responder_struct.xyz = mailbox_flow_done_i;  //     
        //      soc_ifc_status_responder_struct.xyz = generic_output_wires_i;  //    [63:0] 
-       //      soc_ifc_status_responder_struct.xyz = cptra_obf_key_reg_i;  //    [7:0][31:0] 
-       //      soc_ifc_status_responder_struct.xyz = obf_field_entropy_i;  //    [31:0][31:0] 
-       //      soc_ifc_status_responder_struct.xyz = obf_uds_seed_i;  //    [11:0][31:0] 
-       //      soc_ifc_status_responder_struct.xyz = soc_ifc_error_intr_i;  //     
-       //      soc_ifc_status_responder_struct.xyz = soc_ifc_notif_intr_i;  //   
-       //      soc_ifc_status_responder_struct.xyz = sha_error_intr_i;  //     
-       //      soc_ifc_status_responder_struct.xyz = sha_notif_intr_i;  //     
-       //      soc_ifc_status_responder_struct.xyz = iccm_lock_i;  //     
        //    Responder inout signals
        //    How to assign a signal, named xyz, from an initiator struct member.   
        //    All available responder output and inout signals listed.
@@ -436,49 +327,30 @@ bit first_transfer=1;
 //  @(posedge clk_i);
 //  if (!first_transfer) begin
 //    // Perform transfer response here.   
-//    // Reply using data recieved in the soc_ifc_status_responder_struct.
+//    // Reply using data received in the soc_ifc_status_responder_struct.
 //    @(posedge clk_i);
-//    // Reply using data recieved in the transaction handle.
+//    // Reply using data received in the transaction handle.
 //    @(posedge clk_i);
 //  end
     // Wait for next transfer then gather info from intiator about the transfer.
     // Place the data into the soc_ifc_status_initiator_struct.
     while (!any_signal_changed()) @(posedge clk_i);
-    cptra_noncore_rst_b_o          <= cptra_noncore_rst_b_i      ;
-    cptra_uc_rst_b_o               <= cptra_uc_rst_b_i   ;
     ready_for_fuses_o              <= ready_for_fuses_i     ;
     ready_for_fw_push_o            <= ready_for_fw_push_i   ;
     ready_for_runtime_o            <= ready_for_runtime_i   ;
     mailbox_data_avail_o           <= mailbox_data_avail_i  ;
     mailbox_flow_done_o            <= mailbox_flow_done_i   ;
     generic_output_wires_o         <= generic_output_wires_i;
-    cptra_obf_key_reg_o            <= cptra_obf_key_reg_i   ;
-    obf_field_entropy_o            <= obf_field_entropy_i   ;
-    obf_uds_seed_o                 <= obf_uds_seed_i        ;
-    soc_ifc_error_intr_o           <= soc_ifc_error_intr_i          ;
-    soc_ifc_notif_intr_o           <= soc_ifc_notif_intr_i          ;
-    sha_error_intr_o               <= sha_error_intr_i          ;
-    sha_notif_intr_o               <= sha_notif_intr_i          ;
-    iccm_lock_o                    <= iccm_lock_i           ;
 //    @(posedge clk_i);
     first_transfer = 0;
     begin: build_return_struct
   // Variables within the soc_ifc_status_initiator_struct:
-         soc_ifc_status_initiator_struct.soc_ifc_err_intr_pending   = soc_ifc_error_intr_i;
-         soc_ifc_status_initiator_struct.soc_ifc_notif_intr_pending = soc_ifc_notif_intr_i;
-         soc_ifc_status_initiator_struct.sha_err_intr_pending       = sha_error_intr_i;
-         soc_ifc_status_initiator_struct.sha_notif_intr_pending     = sha_notif_intr_i;
-         soc_ifc_status_initiator_struct.uc_rst_asserted            = !cptra_noncore_rst_b_i;
          soc_ifc_status_initiator_struct.ready_for_fuses            = ready_for_fuses_i;
          soc_ifc_status_initiator_struct.ready_for_fw_push          = ready_for_fw_push_i;
          soc_ifc_status_initiator_struct.ready_for_runtime          = ready_for_runtime_i;
          soc_ifc_status_initiator_struct.mailbox_data_avail         = mailbox_data_avail_i;
          soc_ifc_status_initiator_struct.mailbox_flow_done          = mailbox_flow_done_i;
          soc_ifc_status_initiator_struct.generic_output_val         = generic_output_wires_i;
-         soc_ifc_status_initiator_struct.cptra_obf_key_reg          = cptra_obf_key_reg_i;
-         soc_ifc_status_initiator_struct.obf_field_entropy          = obf_field_entropy_i;
-         soc_ifc_status_initiator_struct.obf_uds_seed               = obf_uds_seed_i;
-         soc_ifc_status_initiator_struct.iccm_locked                = iccm_lock_i;
     end
   endtask
 // pragma uvmf custom respond_and_wait_for_next_transfer end

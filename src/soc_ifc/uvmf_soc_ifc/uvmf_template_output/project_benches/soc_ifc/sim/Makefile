@@ -84,7 +84,9 @@ include $(UVMF_HOME)/common/utility_packages/qvip_utils_pkg/Makefile
 
 # Include all requisite interface package targets for this bench
 include $(UVMF_VIP_LIBRARY_HOME)/interface_packages/soc_ifc_ctrl_pkg/Makefile
+include $(UVMF_VIP_LIBRARY_HOME)/interface_packages/cptra_ctrl_pkg/Makefile
 include $(UVMF_VIP_LIBRARY_HOME)/interface_packages/soc_ifc_status_pkg/Makefile
+include $(UVMF_VIP_LIBRARY_HOME)/interface_packages/cptra_status_pkg/Makefile
 
 # Include all requisite environment package targets for this bench
 include $(UVMF_VIP_LIBRARY_HOME)/environment_packages/soc_ifc_env_pkg/Makefile
@@ -194,7 +196,7 @@ comp_hvl : comp_hvl_core
 
 
 comp_hvl_core :  comp_qvip comp_qvip_utils_pkg   \
-	 comp_soc_ifc_ctrl_pkg  comp_soc_ifc_status_pkg  \
+	 comp_soc_ifc_ctrl_pkg  comp_cptra_ctrl_pkg  comp_soc_ifc_status_pkg  comp_cptra_status_pkg  \
 	comp_soc_ifc_env_pkg \
 	comp_soc_ifc_parameters_pkg comp_soc_ifc_sequence_pkg comp_soc_ifc_tests_pkg 
 
@@ -202,7 +204,7 @@ comp_uvmf_core : comp_uvm_pkg comp_uvmf_base_pkg
 
 make_build: comp_soc_ifc_dut comp_uvmf_core comp_hvl comp_test_bench  
 
-hvl_build:  q_comp_soc_ifc_ctrl_pkg  q_comp_soc_ifc_status_pkg  comp_soc_ifc_env_pkg comp_soc_ifc_sequence_pkg comp_soc_ifc_tests_pkg hvl_comp_testbench link optimize
+hvl_build:  q_comp_soc_ifc_ctrl_pkg  q_comp_cptra_ctrl_pkg  q_comp_soc_ifc_status_pkg  q_comp_cptra_status_pkg  comp_soc_ifc_env_pkg comp_soc_ifc_sequence_pkg comp_soc_ifc_tests_pkg hvl_comp_testbench link optimize
 
 
 vinfo_build: comp_qvip  comp_soc_ifc_vhdl_dut  build_hdl_vinfo build_hvl_vinfo $(VINFO_TGT)

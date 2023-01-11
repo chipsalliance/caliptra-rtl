@@ -11,31 +11,12 @@ uvmf:
       hdl_typedefs: []
       hvl_typedefs: []
 
-#      parameters:
-#      - name: AHB_ADDR_WIDTH
-#        type: int
-#        value: '32'
-#      - name: AHB_DATA_WIDTH
-#        type: int
-#        value: '32'
+      parameters: []
 
-      response_info:
-        data: []
-        operation: 1'b1
-
+      # NOTE: Ports are 'output' instead of 'input' because this agent
+      #       will be in RESPONDER mode, which inverts all port's polarities
       ports:
-#      # Clock
-#      - name: clk
-#        dir: output
-#        width: '1'
-      #uC reset
-      - name: cptra_noncore_rst_b
-        dir: output
-        width: '1'
-      - name: cptra_uc_rst_b
-        dir: output
-        width: '1'
-
+      # Ready indicators
       - name: ready_for_fuses
         dir: output
         width: '1'
@@ -46,6 +27,7 @@ uvmf:
         dir: output
         width: '1'
 
+      # Command indicators
       - name: mailbox_data_avail
         dir: output
         width: '1'
@@ -53,9 +35,66 @@ uvmf:
         dir: output
         width: '1'
 
+      # Generic signals
       - name: generic_output_wires
         dir: output
         width: '64'
+
+      transaction_constraints: []
+      transaction_vars:
+      # Ready indicators
+      - name: ready_for_fuses
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+      - name: ready_for_fw_push
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+      - name: ready_for_runtime
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+
+      # Command indicators
+      - name: mailbox_data_avail
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+      - name: mailbox_flow_done
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+
+      # Generic signals
+      - name: generic_output_val
+        type: bit [63:0]
+        iscompare: 'False'
+        isrand: 'False'
+
+    cptra_status:
+      clock: clk
+      reset: dummy
+      reset_assertion_level: 'False'
+
+      config_constraints: []
+      config_vars: []
+
+      hdl_typedefs: []
+      hvl_typedefs: []
+
+      parameters: []
+
+      # NOTE: Ports are 'output' instead of 'input' because this agent
+      #       will be in RESPONDER mode, which inverts all port's polarities
+      ports:
+      #uC reset
+      - name: cptra_noncore_rst_b
+        dir: output
+        width: '1'
+      - name: cptra_uc_rst_b
+        dir: output
+        width: '1'
 
       #Obfuscated UDS and FE
       - name: cptra_obf_key_reg
@@ -81,6 +120,12 @@ uvmf:
       - name: sha_notif_intr
         dir: output
         width: '1'
+
+      # NMI Vector
+      - name: nmi_vector
+        dir: output
+        width: '32'
+
       # ICCM Lock
       - name: iccm_lock
         dir: output
@@ -88,6 +133,7 @@ uvmf:
 
       transaction_constraints: []
       transaction_vars:
+      # Caliptra Internal Interrupts
       - name: soc_ifc_err_intr_pending
         type: bit
         iscompare: 'False'
@@ -104,34 +150,14 @@ uvmf:
         type: bit
         iscompare: 'False'
         isrand: 'False'
+
+      # Subsystem reset
+      - name: noncore_rst_asserted
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
       - name: uc_rst_asserted
         type: bit
-        iscompare: 'False'
-        isrand: 'False'
-      - name: ready_for_fuses
-        type: bit
-        iscompare: 'False'
-        isrand: 'False'
-      - name: ready_for_fw_push
-        type: bit
-        iscompare: 'False'
-        isrand: 'False'
-      - name: ready_for_runtime
-        type: bit
-        iscompare: 'False'
-        isrand: 'False'
-
-      - name: mailbox_data_avail
-        type: bit
-        iscompare: 'False'
-        isrand: 'False'
-      - name: mailbox_flow_done
-        type: bit
-        iscompare: 'False'
-        isrand: 'False'
-
-      - name: generic_output_val
-        type: bit [63:0]
         iscompare: 'False'
         isrand: 'False'
 
@@ -147,6 +173,12 @@ uvmf:
       - name: obf_uds_seed
         type: bit [11:0] [31:0]
         iscompare: 'False'
+        isrand: 'False'
+
+      # NMI Vector
+      - name: nmi_vector
+        type: bit [31:0]
+        iscompare: 'True'
         isrand: 'False'
 
       # ICCM Lock

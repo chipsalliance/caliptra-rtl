@@ -8,13 +8,21 @@ uvmf:
       - name: soc_ifc_ctrl_agent
         type: soc_ifc_ctrl
         initiator_responder: "INITIATOR"
+      - name: cptra_ctrl_agent
+        type: cptra_ctrl
+        initiator_responder: "INITIATOR"
       - name: soc_ifc_status_agent
         type: soc_ifc_status
+        initiator_responder: "RESPONDER"
+      - name: cptra_status_agent
+        type: cptra_status
         initiator_responder: "RESPONDER"
 
       analysis_components:
       - name: soc_ifc_pred
         type: soc_ifc_predictor
+      - name: soc_ifc_sb
+        type: soc_ifc_scoreboard
 
 #      analysis_exports :
 #        - name: "ahb_master_0_export"
@@ -31,10 +39,10 @@ uvmf:
 
       parameters: []
 
-      scoreboards:
-      - name: soc_ifc_sb
-        sb_type: uvmf_in_order_scoreboard
-        trans_type: soc_ifc_status_transaction
+      scoreboards: []
+#      - name: soc_ifc_sb
+#        sb_type: uvmf_in_order_scoreboard
+#        trans_type: soc_ifc_status_transaction
 
       subenvs: []
 
@@ -55,24 +63,32 @@ uvmf:
       tlm_connections:
       ############# Predictor connections ############
       - driver: soc_ifc_ctrl_agent.monitored_ap                    # SOC IFC Control
-        receiver: soc_ifc_pred.soc_ifc_ctrl_agent_ae                  #
-#      - driver: qvip_ahb_lite_master_subenv.ahb_master_0.export_rw   # AHB
+        receiver: soc_ifc_pred.soc_ifc_ctrl_agent_ae               #
+      - driver: cptra_ctrl_agent.monitored_ap                      # Caliptra Control
+        receiver: soc_ifc_pred.cptra_ctrl_agent_ae                 #
+#      - driver: qvip_ahb_lite_master_subenv.ahb_master_0.export_rw # AHB
 #        receiver: soc_ifc_pred.ahb_master_0_ae                     #
-#      - driver: qvip_apb5_master_subenv.apb5_master_0.export_rw      # APB
+#      - driver: qvip_apb5_master_subenv.apb5_master_0.export_rw    # APB
 #        receiver: soc_ifc_pred.apb5_master_0_ae                    #
       ############# Scoreboard connections ############
-      - driver: soc_ifc_pred.soc_ifc_sb_ap                   #
-        receiver: soc_ifc_sb.expected_analysis_export     #
-#      - driver: soc_ifc_pred.soc_ifc_sb_ahb_ap               # TODO
-#        receiver: soc_ifc_sb.expected_ahb_analysis_export # TODO
-#      - driver: soc_ifc_pred.soc_ifc_sb_apb_ap               # TODO
-#        receiver: soc_ifc_sb.expected_apb_analysis_export # TODO
-#      - driver: 'qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer_sb"]' # TODO
-#        receiver: soc_ifc_sb.actual_ahb_analysis_export                                  # TODO
-#      - driver: 'qvip_apb5_slave_subenv_apb5_master_0_ap["trans_ap_sb"]'              # TODO
-#        receiver: soc_ifc_sb.actual_apb_analysis_export                                  # TODO
+      # Expected
+      - driver: soc_ifc_pred.soc_ifc_sb_ap                  #
+        receiver: soc_ifc_sb.expected_analysis_export       #
+      - driver: soc_ifc_pred.cptra_sb_ap                    #
+        receiver: soc_ifc_sb.expected_cptra_analysis_export #
+      - driver: soc_ifc_pred.soc_ifc_sb_ahb_ap              #
+        receiver: soc_ifc_sb.expected_ahb_analysis_export   #
+      - driver: soc_ifc_pred.soc_ifc_sb_apb_ap              #
+        receiver: soc_ifc_sb.expected_apb_analysis_export   #
+      # Actual
       - driver: soc_ifc_status_agent.monitored_ap         #
         receiver: soc_ifc_sb.actual_analysis_export       #
+      - driver: cptra_status_agent.monitored_ap           #
+        receiver: soc_ifc_sb.actual_cptra_analysis_export #
+#      - driver: 'qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer_sb"]' #
+#        receiver: soc_ifc_sb.actual_ahb_analysis_export                               #
+#      - driver: 'qvip_apb5_slave_subenv_apb5_master_0_ap["trans_ap_sb"]'              #
+#        receiver: soc_ifc_sb.actual_apb_analysis_export                               #
 
       register_model:
         use_adapter: "True"

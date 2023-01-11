@@ -114,10 +114,6 @@ end
   reg [7:0][31:0] cptra_obf_key_o = 'bz;
   tri [63:0] generic_input_wires_i;
   reg [63:0] generic_input_wires_o = 'bz;
-  tri  clear_obf_secrets_i;
-  reg  clear_obf_secrets_o = 'bz;
-  tri  iccm_axs_blocked_i;
-  reg  iccm_axs_blocked_o = 'bz;
 
   // Bi-directional signals
   
@@ -139,10 +135,6 @@ end
   assign cptra_obf_key_i = bus.cptra_obf_key;
   assign bus.generic_input_wires = (initiator_responder == INITIATOR) ? generic_input_wires_o : 'bz;
   assign generic_input_wires_i = bus.generic_input_wires;
-  assign bus.clear_obf_secrets = (initiator_responder == INITIATOR) ? clear_obf_secrets_o : 'bz;
-  assign clear_obf_secrets_i = bus.clear_obf_secrets;
-  assign bus.iccm_axs_blocked = (initiator_responder == INITIATOR) ? iccm_axs_blocked_o : 'bz;
-  assign iccm_axs_blocked_i = bus.iccm_axs_blocked;
 
   // Proxy handle to UVM driver
   soc_ifc_ctrl_pkg::soc_ifc_ctrl_driver   proxy;
@@ -178,8 +170,6 @@ end
        cptra_rst_b_o <= 'b0;
        cptra_obf_key_o <= 'b0;
        generic_input_wires_o <= 'b0;
-       clear_obf_secrets_o <= 1'b0;
-       iccm_axs_blocked_o <= 1'b0;
        // Bi-directional signals
 
      end
@@ -248,8 +238,6 @@ end
        //      cptra_rst_b_o <= soc_ifc_ctrl_initiator_struct.xyz;  //     
        //      cptra_obf_key_o <= soc_ifc_ctrl_initiator_struct.xyz;  //    [7:0][31:0] 
        //      generic_input_wires_o <= soc_ifc_ctrl_initiator_struct.xyz;  //    [63:0] 
-       //      clear_obf_secrets_o <= soc_ifc_ctrl_initiator_struct.xyz;  //
-       //      iccm_axs_blocked_o <= soc_ifc_ctrl_initiator_struct.xyz;  //
        //    Initiator inout signals
     // Initiate a transfer using the data received.
     generic_input_wires_o <= initiator_struct.generic_input_val;
@@ -267,8 +255,6 @@ end
     // Synchronously set pwrgood
     if (initiator_struct.set_pwrgood)
         cptra_pwrgood_o <= 1'b1;
-    clear_obf_secrets_o <= initiator_struct.assert_clear_secrets;
-    iccm_axs_blocked_o <= initiator_struct.iccm_axs_blocked;
     // Wait for the responder to complete the transfer then place the responder data into 
     // soc_ifc_ctrl_responder_struct.
     repeat(initiator_struct.wait_cycles) @(posedge clk_i);
@@ -276,8 +262,6 @@ end
     soc_ifc_ctrl_responder_struct.set_pwrgood          = cptra_pwrgood_i;
     soc_ifc_ctrl_responder_struct.assert_rst           = !cptra_rst_b_i;
     soc_ifc_ctrl_responder_struct.generic_input_val    = generic_input_wires_i;
-    soc_ifc_ctrl_responder_struct.assert_clear_secrets = clear_obf_secrets_i;
-    soc_ifc_ctrl_responder_struct.iccm_axs_blocked     = iccm_axs_blocked_i;
     responder_struct = soc_ifc_ctrl_responder_struct;
   endtask        
 // pragma uvmf custom initiate_and_get_response end

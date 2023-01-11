@@ -45,8 +45,14 @@ class soc_ifc_environment  extends uvmf_environment_base #(
   typedef soc_ifc_ctrl_agent  soc_ifc_ctrl_agent_t;
   soc_ifc_ctrl_agent_t soc_ifc_ctrl_agent;
 
+  typedef cptra_ctrl_agent  cptra_ctrl_agent_t;
+  cptra_ctrl_agent_t cptra_ctrl_agent;
+
   typedef soc_ifc_status_agent  soc_ifc_status_agent_t;
   soc_ifc_status_agent_t soc_ifc_status_agent;
+
+  typedef cptra_status_agent  cptra_status_agent_t;
+  cptra_status_agent_t cptra_status_agent;
 
 
 
@@ -56,9 +62,12 @@ class soc_ifc_environment  extends uvmf_environment_base #(
                 )
  soc_ifc_pred_t;
   soc_ifc_pred_t soc_ifc_pred;
-
-  typedef uvmf_in_order_scoreboard #(.T(soc_ifc_status_transaction))  soc_ifc_sb_t;
+  typedef soc_ifc_scoreboard #(
+                .CONFIG_T(CONFIG_T)
+                )
+ soc_ifc_sb_t;
   soc_ifc_sb_t soc_ifc_sb;
+
 
 // UVMF_CHANGE_ME: QVIP_AGENT_USED_FOR_REG_MAP: 
 // Identify the UVM reg adapter in the QVIP installation for the protocol agent.
@@ -141,11 +150,16 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     qvip_apb5_slave_subenv.set_config(configuration.qvip_apb5_slave_subenv_config);
     soc_ifc_ctrl_agent = soc_ifc_ctrl_agent_t::type_id::create("soc_ifc_ctrl_agent",this);
     soc_ifc_ctrl_agent.set_config(configuration.soc_ifc_ctrl_agent_config);
+    cptra_ctrl_agent = cptra_ctrl_agent_t::type_id::create("cptra_ctrl_agent",this);
+    cptra_ctrl_agent.set_config(configuration.cptra_ctrl_agent_config);
     soc_ifc_status_agent = soc_ifc_status_agent_t::type_id::create("soc_ifc_status_agent",this);
     soc_ifc_status_agent.set_config(configuration.soc_ifc_status_agent_config);
+    cptra_status_agent = cptra_status_agent_t::type_id::create("cptra_status_agent",this);
+    cptra_status_agent.set_config(configuration.cptra_status_agent_config);
     soc_ifc_pred = soc_ifc_pred_t::type_id::create("soc_ifc_pred",this);
     soc_ifc_pred.configuration = configuration;
     soc_ifc_sb = soc_ifc_sb_t::type_id::create("soc_ifc_sb",this);
+    soc_ifc_sb.configuration = configuration;
 // pragma uvmf custom reg_model_build_phase begin
   // Build register model predictor if prediction is enabled
   if (configuration.enable_reg_prediction) begin
@@ -173,12 +187,19 @@ class soc_ifc_environment  extends uvmf_environment_base #(
 // pragma uvmf custom connect_phase_pre_super end
     super.connect_phase(phase);
     soc_ifc_ctrl_agent.monitored_ap.connect(soc_ifc_pred.soc_ifc_ctrl_agent_ae);
+    cptra_ctrl_agent.monitored_ap.connect(soc_ifc_pred.cptra_ctrl_agent_ae);
     soc_ifc_pred.soc_ifc_sb_ap.connect(soc_ifc_sb.expected_analysis_export);
+    soc_ifc_pred.cptra_sb_ap.connect(soc_ifc_sb.expected_cptra_analysis_export);
+    soc_ifc_pred.soc_ifc_sb_ahb_ap.connect(soc_ifc_sb.expected_ahb_analysis_export);
+    soc_ifc_pred.soc_ifc_sb_apb_ap.connect(soc_ifc_sb.expected_apb_analysis_export);
     soc_ifc_status_agent.monitored_ap.connect(soc_ifc_sb.actual_analysis_export);
+    cptra_status_agent.monitored_ap.connect(soc_ifc_sb.actual_cptra_analysis_export);
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap = qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.ap; 
     qvip_apb5_slave_subenv_apb5_master_0_ap = qvip_apb5_slave_subenv.apb5_master_0.ap; 
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer"].connect(soc_ifc_pred.ahb_slave_0_ae);
+    qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer_sb"].connect(soc_ifc_sb.actual_ahb_analysis_export);
     qvip_apb5_slave_subenv_apb5_master_0_ap["trans_ap"].connect(soc_ifc_pred.apb5_slave_0_ae);
+    qvip_apb5_slave_subenv_apb5_master_0_ap["trans_ap_sb"].connect(soc_ifc_sb.actual_apb_analysis_export);
     if ( configuration.qvip_ahb_lite_slave_subenv_interface_activity[0] == ACTIVE )
        uvm_config_db #(mvc_sequencer)::set(null,UVMF_SEQUENCERS,configuration.qvip_ahb_lite_slave_subenv_interface_names[0],qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.m_sequencer  );
     if ( configuration.qvip_apb5_slave_subenv_interface_activity[0] == ACTIVE )

@@ -37,8 +37,6 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
   bit assert_rst ;
   rand int unsigned wait_cycles ;
   rand bit [63:0] generic_input_val ;
-  bit assert_clear_secrets ;
-  bit iccm_axs_blocked ;
 
   //Constraints for the transaction variables:
   constraint wait_cycles_c { wait_cycles dist {[1:25] := 80, [25:100] := 15, [100:500] := 5}; }
@@ -123,7 +121,7 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("cptra_obf_key_rand:0x%x set_pwrgood:0x%x assert_rst:0x%x wait_cycles:0x%x generic_input_val:0x%x assert_clear_secrets:0x%x iccm_axs_blocked:0x%x",cptra_obf_key_rand,set_pwrgood,assert_rst,wait_cycles,generic_input_val, assert_clear_secrets, iccm_axs_blocked);
+    return $sformatf("cptra_obf_key_rand:0x%x set_pwrgood:0x%x assert_rst:0x%x wait_cycles:0x%x generic_input_val:0x%x ",cptra_obf_key_rand,set_pwrgood,assert_rst,wait_cycles,generic_input_val);
     // pragma uvmf custom convert2string end
   endfunction
 
@@ -171,8 +169,6 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
     this.assert_rst = RHS.assert_rst;
     this.wait_cycles = RHS.wait_cycles;
     this.generic_input_val = RHS.generic_input_val;
-    this.assert_clear_secrets = RHS.assert_clear_secrets;
-    this.iccm_axs_blocked = RHS.iccm_axs_blocked;
     // pragma uvmf custom do_copy end
   endfunction
 
@@ -201,8 +197,6 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
     $add_attribute(transaction_view_h,assert_rst,"assert_rst");
     $add_attribute(transaction_view_h,wait_cycles,"wait_cycles");
     $add_attribute(transaction_view_h,generic_input_val,"generic_input_val");
-    $add_attribute(transaction_view_h,assert_clear_secrets,"assert_clear_secrets");
-    $add_attribute(transaction_view_h,iccm_axs_blocked,"iccm_axs_blocked");
     // pragma uvmf custom add_to_wave end
     $end_transaction(transaction_view_h,end_time);
     $free_transaction(transaction_view_h);

@@ -1,0 +1,39 @@
+uvmf:
+  interfaces:
+    cptra_ctrl:
+      clock: clk
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      gen_inbound_streaming_driver: 'False'
+      hdl_pkg_parameters: []
+      hdl_typedefs: []
+      hvl_pkg_parameters: []
+      hvl_typedefs: []
+      parameters: []
+      ports:
+      - dir: output
+        name: clear_obf_secrets
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: iccm_axs_blocked
+        reset_value: '''bz'
+        width: '1'
+      reset: dummy
+      reset_assertion_level: 'False'
+      transaction_constraints: []
+      transaction_vars:
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: assert_clear_secrets
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: iccm_axs_blocked
+        type: bit
+        unpacked_dimension: ''
+      use_dpi_link: 'False'

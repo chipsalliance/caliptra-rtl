@@ -50,14 +50,18 @@ qvip_memory_message_handler message_handler;
     uvm_test_top_environment_qvip_ahb_lite_slave_subenv_ahb_lite_slave_0 /* ahb_lite_slave_0     [0] */ , 
     uvm_test_top_environment_qvip_apb5_slave_subenv_apb5_master_0 /* apb5_master_0     [1] */ , 
     soc_ifc_ctrl_agent_BFM /* soc_ifc_ctrl_agent     [2] */ , 
-    soc_ifc_status_agent_BFM /* soc_ifc_status_agent     [3] */ 
+    cptra_ctrl_agent_BFM /* cptra_ctrl_agent     [3] */ , 
+    soc_ifc_status_agent_BFM /* soc_ifc_status_agent     [4] */ , 
+    cptra_status_agent_BFM /* cptra_status_agent     [5] */ 
 };
 
 uvmf_active_passive_t interface_activities[] = { 
     ACTIVE /* ahb_lite_slave_0     [0] */ , 
     ACTIVE /* apb5_master_0     [1] */ , 
     ACTIVE /* soc_ifc_ctrl_agent     [2] */ , 
-    ACTIVE /* soc_ifc_status_agent     [3] */   };
+    ACTIVE /* cptra_ctrl_agent     [3] */ , 
+    ACTIVE /* soc_ifc_status_agent     [4] */ , 
+    ACTIVE /* cptra_status_agent     [5] */   };
 
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end

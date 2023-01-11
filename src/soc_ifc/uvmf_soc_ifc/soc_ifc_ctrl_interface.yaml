@@ -19,10 +19,6 @@ uvmf:
 #        type: int
 #        value: '32'
 
-      response_info:
-        data: []
-        operation: 1'b0
-
       ports:
 #      # Clock
 #      - name: clk
@@ -44,14 +40,6 @@ uvmf:
       - name: generic_input_wires
         dir: output
         width: '64'
-
-      - name: clear_obf_secrets
-        dir: output
-        width: '1'
-
-      - name: iccm_axs_blocked
-        dir: output
-        width: '1'
 
       transaction_constraints:
       - name: wait_cycles_c
@@ -80,6 +68,29 @@ uvmf:
         type: bit [63:0]
         iscompare: 'False'
         isrand: 'True'
+    cptra_ctrl:
+      clock: clk
+      reset: dummy
+      reset_assertion_level: 'False'
+
+      config_constraints: []
+      config_vars: []
+
+      hdl_typedefs: []
+      hvl_typedefs: []
+
+      ports:
+      - name: clear_obf_secrets
+        dir: output
+        width: '1'
+
+      - name: iccm_axs_blocked
+        dir: output
+        width: '1'
+
+      transaction_constraints: []
+
+      transaction_vars:
       - name: assert_clear_secrets
         type: bit
         iscompare: 'False'

@@ -114,15 +114,29 @@ import soc_ifc_pkg::*;
      .clk(clk), .dummy(1'b1)
      // pragma uvmf custom soc_ifc_ctrl_agent_bus_connections end
      );
+  cptra_ctrl_if  cptra_ctrl_agent_bus(
+     // pragma uvmf custom cptra_ctrl_agent_bus_connections begin
+     .clk(clk), .dummy(1'b1)
+     // pragma uvmf custom cptra_ctrl_agent_bus_connections end
+     );
   soc_ifc_status_if  soc_ifc_status_agent_bus(
      // pragma uvmf custom soc_ifc_status_agent_bus_connections begin
      .clk(clk), .dummy(1'b1)
      // pragma uvmf custom soc_ifc_status_agent_bus_connections end
      );
+  cptra_status_if  cptra_status_agent_bus(
+     // pragma uvmf custom cptra_status_agent_bus_connections begin
+     .clk(clk), .dummy(1'b1)
+     // pragma uvmf custom cptra_status_agent_bus_connections end
+     );
   soc_ifc_ctrl_monitor_bfm  soc_ifc_ctrl_agent_mon_bfm(soc_ifc_ctrl_agent_bus.monitor_port);
+  cptra_ctrl_monitor_bfm  cptra_ctrl_agent_mon_bfm(cptra_ctrl_agent_bus.monitor_port);
   soc_ifc_status_monitor_bfm  soc_ifc_status_agent_mon_bfm(soc_ifc_status_agent_bus.monitor_port);
+  cptra_status_monitor_bfm  cptra_status_agent_mon_bfm(cptra_status_agent_bus.monitor_port);
   soc_ifc_ctrl_driver_bfm  soc_ifc_ctrl_agent_drv_bfm(soc_ifc_ctrl_agent_bus.initiator_port);
+  cptra_ctrl_driver_bfm  cptra_ctrl_agent_drv_bfm(cptra_ctrl_agent_bus.initiator_port);
   soc_ifc_status_driver_bfm  soc_ifc_status_agent_drv_bfm(soc_ifc_status_agent_bus.responder_port);
+  cptra_status_driver_bfm  cptra_status_agent_drv_bfm(cptra_status_agent_bus.responder_port);
 
   // pragma uvmf custom dut_instantiation begin
   // AHB Clock/reset
@@ -182,23 +196,25 @@ import soc_ifc_pkg::*;
         .hreadyout_o(uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HREADY     ),
         .hrdata_o   (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HRDATA     ),
         // uC Interrupts
-        .soc_ifc_error_intr(soc_ifc_status_agent_bus.soc_ifc_error_intr),
-        .soc_ifc_notif_intr(soc_ifc_status_agent_bus.soc_ifc_notif_intr),
-        .sha_error_intr(soc_ifc_status_agent_bus.sha_error_intr),
-        .sha_notif_intr(soc_ifc_status_agent_bus.sha_notif_intr),
+        .soc_ifc_error_intr(cptra_status_agent_bus.soc_ifc_error_intr),
+        .soc_ifc_notif_intr(cptra_status_agent_bus.soc_ifc_notif_intr),
+        .sha_error_intr(cptra_status_agent_bus.sha_error_intr),
+        .sha_notif_intr(cptra_status_agent_bus.sha_notif_intr),
         //Obfuscated UDS and FE
         .cptra_obf_key(soc_ifc_ctrl_agent_bus.cptra_obf_key),
-        .cptra_obf_key_reg(soc_ifc_status_agent_bus.cptra_obf_key_reg),
-        .obf_field_entropy(soc_ifc_status_agent_bus.obf_field_entropy),
-        .obf_uds_seed(soc_ifc_status_agent_bus.obf_uds_seed),
-        .clear_obf_secrets(soc_ifc_ctrl_agent_bus.clear_obf_secrets),
+        .cptra_obf_key_reg(cptra_status_agent_bus.cptra_obf_key_reg),
+        .obf_field_entropy(cptra_status_agent_bus.obf_field_entropy),
+        .obf_uds_seed(cptra_status_agent_bus.obf_uds_seed),
+        .clear_obf_secrets(cptra_ctrl_agent_bus.clear_obf_secrets),
+        // NMI Vector 
+        .nmi_vector(cptra_status_agent_bus.nmi_vector),
         // ICCM Lock
-        .iccm_lock(soc_ifc_status_agent_bus.iccm_lock),
-        .iccm_axs_blocked(soc_ifc_ctrl_agent_bus.iccm_axs_blocked),
+        .iccm_lock(cptra_status_agent_bus.iccm_lock),
+        .iccm_axs_blocked(cptra_ctrl_agent_bus.iccm_axs_blocked),
         //Other blocks reset
-        .cptra_noncore_rst_b (soc_ifc_status_agent_bus.cptra_noncore_rst_b),
+        .cptra_noncore_rst_b (cptra_status_agent_bus.cptra_noncore_rst_b),
         //uC reset
-        .cptra_uc_rst_b (soc_ifc_status_agent_bus.cptra_uc_rst_b),
+        .cptra_uc_rst_b (cptra_status_agent_bus.cptra_uc_rst_b),
         .clk_gating_en  ()
     );
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HBURST    = 3'b0;
@@ -240,9 +256,13 @@ import soc_ifc_pkg::*;
     // The string names are passed to the agent configurations by test_top through the top level configuration.
     // They are retrieved by the agents configuration class for use by the agent.
     uvm_config_db #( virtual soc_ifc_ctrl_monitor_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , soc_ifc_ctrl_agent_BFM , soc_ifc_ctrl_agent_mon_bfm ); 
+    uvm_config_db #( virtual cptra_ctrl_monitor_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , cptra_ctrl_agent_BFM , cptra_ctrl_agent_mon_bfm ); 
     uvm_config_db #( virtual soc_ifc_status_monitor_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , soc_ifc_status_agent_BFM , soc_ifc_status_agent_mon_bfm ); 
+    uvm_config_db #( virtual cptra_status_monitor_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , cptra_status_agent_BFM , cptra_status_agent_mon_bfm ); 
     uvm_config_db #( virtual soc_ifc_ctrl_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , soc_ifc_ctrl_agent_BFM , soc_ifc_ctrl_agent_drv_bfm  );
+    uvm_config_db #( virtual cptra_ctrl_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , cptra_ctrl_agent_BFM , cptra_ctrl_agent_drv_bfm  );
     uvm_config_db #( virtual soc_ifc_status_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , soc_ifc_status_agent_BFM , soc_ifc_status_agent_drv_bfm  );
+    uvm_config_db #( virtual cptra_status_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , cptra_status_agent_BFM , cptra_status_agent_drv_bfm  );
   end
 
 endmodule

@@ -5,6 +5,8 @@ uvmf:
       active_passive:
       - bfm_name: soc_ifc_ctrl_agent
         value: ACTIVE
+      - bfm_name: cptra_ctrl_agent
+        value: ACTIVE
         # STATUS agent is configured as a responder and only has inputs
         # from the DUT. It must still be considered ACTIVE so that the
         # driver is instantiated, which is used to create sequences that
@@ -13,6 +15,8 @@ uvmf:
         # the ctrl agent because SOC IFC output wires generate activity
         # based on signals other than just those in the ctrl if.
       - bfm_name: soc_ifc_status_agent
+        value: ACTIVE
+      - bfm_name: cptra_status_agent
         value: ACTIVE
 
       clock_half_period: 5ns

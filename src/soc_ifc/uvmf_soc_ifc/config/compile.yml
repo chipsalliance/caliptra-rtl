@@ -10,8 +10,12 @@ targets:
     directories:
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_ctrl_pkg
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_ctrl_pkg/src
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_ctrl_pkg
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_ctrl_pkg/src
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_status_pkg
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_status_pkg/src
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_status_pkg
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_status_pkg/src
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/parameters
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/sequences
@@ -23,11 +27,21 @@ targets:
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_ctrl_pkg/src/soc_ifc_ctrl_driver_bfm.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_ctrl_pkg/src/soc_ifc_ctrl_if.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_ctrl_pkg/src/soc_ifc_ctrl_monitor_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_ctrl_pkg/cptra_ctrl_pkg_hdl.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_ctrl_pkg/cptra_ctrl_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_ctrl_pkg/src/cptra_ctrl_driver_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_ctrl_pkg/src/cptra_ctrl_if.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_ctrl_pkg/src/cptra_ctrl_monitor_bfm.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_status_pkg/soc_ifc_status_pkg_hdl.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_status_pkg/soc_ifc_status_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_status_pkg/src/soc_ifc_status_driver_bfm.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_status_pkg/src/soc_ifc_status_if.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_status_pkg/src/soc_ifc_status_monitor_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_status_pkg/cptra_status_pkg_hdl.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_status_pkg/cptra_status_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_status_pkg/src/cptra_status_driver_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_status_pkg/src/cptra_status_if.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_status_pkg/src/cptra_status_monitor_bfm.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/registers/soc_ifc_reg_model_top_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/soc_ifc_env_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/parameters/soc_ifc_parameters_pkg.sv

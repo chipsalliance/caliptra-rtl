@@ -4,7 +4,11 @@ uvmf:
       active_passive:
       - bfm_name: soc_ifc_ctrl_agent
         value: ACTIVE
+      - bfm_name: cptra_ctrl_agent
+        value: ACTIVE
       - bfm_name: soc_ifc_status_agent
+        value: ACTIVE
+      - bfm_name: cptra_status_agent
         value: ACTIVE
       active_passive_default: ACTIVE
       clock_half_period: 5ns

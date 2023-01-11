@@ -42,7 +42,9 @@ package soc_ifc_parameters_pkg;
   parameter string uvm_test_top_environment_qvip_ahb_lite_slave_subenv_ahb_lite_slave_0  = "uvm_test_top.environment.qvip_ahb_lite_slave_subenv.ahb_lite_slave_0"; /* [0] */
   parameter string uvm_test_top_environment_qvip_apb5_slave_subenv_apb5_master_0  = "uvm_test_top.environment.qvip_apb5_slave_subenv.apb5_master_0"; /* [1] */
   parameter string soc_ifc_ctrl_agent_BFM  = "soc_ifc_ctrl_agent_BFM"; /* [2] */
-  parameter string soc_ifc_status_agent_BFM  = "soc_ifc_status_agent_BFM"; /* [3] */
+  parameter string cptra_ctrl_agent_BFM  = "cptra_ctrl_agent_BFM"; /* [3] */
+  parameter string soc_ifc_status_agent_BFM  = "soc_ifc_status_agent_BFM"; /* [4] */
+  parameter string cptra_status_agent_BFM  = "cptra_status_agent_BFM"; /* [5] */
 
   // pragma uvmf custom package_item_additional begin
   // pragma uvmf custom package_item_additional end

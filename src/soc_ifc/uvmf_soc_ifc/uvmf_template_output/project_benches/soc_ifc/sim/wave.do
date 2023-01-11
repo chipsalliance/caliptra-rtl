@@ -6,9 +6,15 @@ quietly WaveActivateNextPane {} 0
 add wave -noupdate -divider soc_ifc_ctrl_agent 
 add wave -noupdate /uvm_root/uvm_test_top/environment/soc_ifc_ctrl_agent/soc_ifc_ctrl_agent_monitor/txn_stream
 add wave -noupdate -group soc_ifc_ctrl_agent_bus /hdl_top/soc_ifc_ctrl_agent_bus/*
+add wave -noupdate -divider cptra_ctrl_agent 
+add wave -noupdate /uvm_root/uvm_test_top/environment/cptra_ctrl_agent/cptra_ctrl_agent_monitor/txn_stream
+add wave -noupdate -group cptra_ctrl_agent_bus /hdl_top/cptra_ctrl_agent_bus/*
 add wave -noupdate -divider soc_ifc_status_agent 
 add wave -noupdate /uvm_root/uvm_test_top/environment/soc_ifc_status_agent/soc_ifc_status_agent_monitor/txn_stream
 add wave -noupdate -group soc_ifc_status_agent_bus /hdl_top/soc_ifc_status_agent_bus/*
+add wave -noupdate -divider cptra_status_agent 
+add wave -noupdate /uvm_root/uvm_test_top/environment/cptra_status_agent/cptra_status_agent_monitor/txn_stream
+add wave -noupdate -group cptra_status_agent_bus /hdl_top/cptra_status_agent_bus/*
 
 TreeUpdate [SetDefaultTree]
 quietly wave cursor active 0

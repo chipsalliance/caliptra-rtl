@@ -28,11 +28,13 @@ ifneq (,$(SIM_TOOLS_TOP_COMPILE_ROOT))
 	HEX_DIR = $(SIM_TOOLS_TOP_COMPILE_ROOT)/test_suites/hex
 	INCLUDES_DIR = $(SIM_TOOLS_TOP_COMPILE_ROOT)/test_suites/includes
 	TBDIR = $(SIM_TOOLS_TOP_COMPILE_ROOT)/tb
+	RISCV_HW_IF_DIR = $(SIM_TOOLS_TOP_COMPILE_ROOT)/test_suites/riscv_hw_if
 else
 	TEST_DIR = $(WORKSPACE)/Caliptra/src/integration/test_suites/$(TESTNAME)
 	HEX_DIR = $(WORKSPACE)/Caliptra/src/integration/test_suites/hex
 	INCLUDES_DIR = $(WORKSPACE)/Caliptra/src/integration/test_suites/includes
 	TBDIR = $(WORKSPACE)/Caliptra/src/integration/tb
+	RISCV_HW_IF_DIR = $(WORKSPACE)/Caliptra/src/integration/test_suites/riscv_hw_if
 endif
 
 # Determine test directory
@@ -42,7 +44,8 @@ endif
 
 HEADER_FILES := $(INCLUDES_DIR)/caliptra_defines.h \
 		$(INCLUDES_DIR)/defines.h \
-		$(WORKSPACE)/Caliptra/src/integration/rtl/caliptra_reg.h 
+		$(WORKSPACE)/Caliptra/src/integration/rtl/caliptra_reg.h  \
+		$(RISCV_HW_IF_DIR)/riscv_hw_if.h
 
 ifeq (0,$(shell test -e $(TEST_DIR)/crt0.[sS] && echo $$?))
 	OFILES += crt0.o
@@ -61,13 +64,14 @@ endif
 # RK
 # provide specific link file
 ifeq (,$(wildcard $(TEST_DIR)/$(TESTNAME).ld))
-	LINK = $(BUILD_DIR)/link.ld
+	LINK = $(RISCV_HW_IF_DIR)/link.ld
 else
 	LINK = $(TEST_DIR)/$(TESTNAME).ld
 endif
 
 VPATH = $(TEST_DIR) $(BUILD_DIR) $(TBDIR)
 
+# Provides updates to OFILES, HEADER_FILES, VPATH
 -include $(TEST_DIR)/$(TESTNAME).mki
 
 # Use eval to expand env variables in the .vf file

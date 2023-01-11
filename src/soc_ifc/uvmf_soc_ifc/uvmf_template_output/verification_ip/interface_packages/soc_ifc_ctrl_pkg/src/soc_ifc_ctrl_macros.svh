@@ -68,8 +68,6 @@ typedef struct packed  { \
   bit assert_rst ; \
   int unsigned wait_cycles ; \
   bit [63:0] generic_input_val ; \
-  bit assert_clear_secrets ; \
-  bit iccm_axs_blocked ; \
      } soc_ifc_ctrl_monitor_s;
 
   `define soc_ifc_ctrl_TO_MONITOR_STRUCT_FUNCTION \
@@ -80,9 +78,7 @@ typedef struct packed  { \
             this.set_pwrgood , \
             this.assert_rst , \
             this.wait_cycles , \
-            this.generic_input_val , \
-            this.assert_clear_secrets , \
-            this.iccm_axs_blocked  \
+            this.generic_input_val  \
             };\
     return ( soc_ifc_ctrl_monitor_struct);\
   endfunction\
@@ -94,9 +90,7 @@ typedef struct packed  { \
             this.set_pwrgood , \
             this.assert_rst , \
             this.wait_cycles , \
-            this.generic_input_val , \
-            this.assert_clear_secrets , \
-            this.iccm_axs_blocked  \
+            this.generic_input_val  \
             } = soc_ifc_ctrl_monitor_struct;\
   endfunction
 
@@ -111,8 +105,6 @@ typedef struct packed  { \
   bit assert_rst ; \
   int unsigned wait_cycles ; \
   bit [63:0] generic_input_val ; \
-  bit assert_clear_secrets ; \
-  bit iccm_axs_blocked ; \
      } soc_ifc_ctrl_initiator_s;
 
   `define soc_ifc_ctrl_TO_INITIATOR_STRUCT_FUNCTION \
@@ -123,9 +115,7 @@ typedef struct packed  { \
            this.set_pwrgood , \
            this.assert_rst , \
            this.wait_cycles , \
-           this.generic_input_val , \
-           this.assert_clear_secrets , \
-           this.iccm_axs_blocked  \
+           this.generic_input_val  \
            };\
     return ( soc_ifc_ctrl_initiator_struct);\
   endfunction
@@ -137,9 +127,7 @@ typedef struct packed  { \
            this.set_pwrgood , \
            this.assert_rst , \
            this.wait_cycles , \
-           this.generic_input_val , \
-           this.assert_clear_secrets , \
-           this.iccm_axs_blocked  \
+           this.generic_input_val  \
            } = soc_ifc_ctrl_initiator_struct;\
   endfunction
 
@@ -154,8 +142,6 @@ typedef struct packed  { \
   bit assert_rst ; \
   int unsigned wait_cycles ; \
   bit [63:0] generic_input_val ; \
-  bit assert_clear_secrets ; \
-  bit iccm_axs_blocked ; \
      } soc_ifc_ctrl_responder_s;
 
   `define soc_ifc_ctrl_TO_RESPONDER_STRUCT_FUNCTION \
@@ -166,9 +152,7 @@ typedef struct packed  { \
            this.set_pwrgood , \
            this.assert_rst , \
            this.wait_cycles , \
-           this.generic_input_val , \
-           this.assert_clear_secrets , \
-           this.iccm_axs_blocked  \
+           this.generic_input_val  \
            };\
     return ( soc_ifc_ctrl_responder_struct);\
   endfunction
@@ -180,9 +164,7 @@ typedef struct packed  { \
            this.set_pwrgood , \
            this.assert_rst , \
            this.wait_cycles , \
-           this.generic_input_val , \
-           this.assert_clear_secrets , \
-           this.iccm_axs_blocked  \
+           this.generic_input_val  \
            } = soc_ifc_ctrl_responder_struct;\
   endfunction
 // pragma uvmf custom additional begin

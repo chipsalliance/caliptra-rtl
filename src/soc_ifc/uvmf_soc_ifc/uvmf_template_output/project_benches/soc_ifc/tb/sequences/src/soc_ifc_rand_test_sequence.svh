@@ -37,9 +37,11 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
             )
             soc_ifc_env_bringup_sequence_t;
     rand soc_ifc_env_bringup_sequence_t soc_ifc_env_bringup_seq;
-
-    typedef soc_ifc_status_responder_sequence soc_ifc_status_agent_responder_sequence_t;
-    soc_ifc_status_agent_responder_sequence_t soc_ifc_status_agent_rsp_seq;
+    typedef soc_ifc_env_cptra_rst_wait_sequence #(
+            .CONFIG_T(soc_ifc_env_configuration_t)
+            )
+            soc_ifc_env_cptra_rst_wait_sequence_t;
+    rand soc_ifc_env_cptra_rst_wait_sequence_t soc_ifc_env_cptra_rst_wait_seq;
 
   function new(string name = "" );
     super.new(name);
@@ -48,40 +50,54 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
   // ****************************************************************************
   virtual task body();
     // pragma uvmf custom body begin
-
     // Construct sequences here
 
-    soc_ifc_env_bringup_seq = soc_ifc_env_bringup_sequence_t::type_id::create("soc_ifc_env_bringup_seq");
-    soc_ifc_env_seq = soc_ifc_env_sequence_base_t::type_id::create("soc_ifc_env_seq");
-    soc_ifc_status_agent_rsp_seq = soc_ifc_status_agent_responder_sequence_t::type_id::create("soc_ifc_status_agent_rsp_seq");
+    soc_ifc_env_bringup_seq        = soc_ifc_env_bringup_sequence_t::type_id::create("soc_ifc_env_bringup_seq");
+    soc_ifc_env_cptra_rst_wait_seq = soc_ifc_env_cptra_rst_wait_sequence_t::type_id::create("soc_ifc_env_cptra_rst_wait_seq");
 
-    soc_ifc_ctrl_agent_random_seq     = soc_ifc_ctrl_agent_random_seq_t::type_id::create("soc_ifc_ctrl_agent_random_seq");
+    soc_ifc_ctrl_agent_random_seq      = soc_ifc_ctrl_agent_random_seq_t::type_id::create("soc_ifc_ctrl_agent_random_seq");
+    cptra_ctrl_agent_random_seq        = cptra_ctrl_agent_random_seq_t::type_id::create("cptra_ctrl_agent_random_seq");
+    soc_ifc_status_agent_responder_seq = soc_ifc_status_agent_responder_seq_t::type_id::create("soc_ifc_status_agent_responder_seq");
+    cptra_status_agent_responder_seq   = cptra_status_agent_responder_seq_t::type_id::create("cptra_status_agent_responder_seq");
 
     // Handle to the responder sequence for getting response transactions
-    soc_ifc_env_bringup_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_status_agent_rsp_seq;
+    soc_ifc_env_bringup_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_status_agent_responder_seq;
+    soc_ifc_env_cptra_rst_wait_seq.cptra_status_agent_rsp_seq = cptra_status_agent_responder_seq;
 
 //    fork
 //      soc_ifc_ctrl_agent_config.wait_for_reset();
+//      cptra_ctrl_agent_config.wait_for_reset();
 //      soc_ifc_status_agent_config.wait_for_reset();
+//      cptra_status_agent_config.wait_for_reset();
 //    join
     reg_model.reset();
     // Start RESPONDER sequences here
     fork
-        soc_ifc_status_agent_rsp_seq.start(soc_ifc_status_agent_sequencer);
+        soc_ifc_status_agent_responder_seq.start(soc_ifc_status_agent_sequencer);
+        cptra_status_agent_responder_seq.start(cptra_status_agent_sequencer);
     join_none
 //    // Start INITIATOR sequences here
 //    fork
 //      repeat (25) soc_ifc_ctrl_agent_random_seq.start(soc_ifc_ctrl_agent_sequencer);
+//      repeat (25) cptra_ctrl_agent_random_seq.start(cptra_ctrl_agent_sequencer);
 //    join
 
     soc_ifc_env_bringup_seq.start(top_configuration.vsqr);
+
+    // Wait for Caliptra system reset to be deasserted by SOC_IFC
+    soc_ifc_env_cptra_rst_wait_seq.start(top_configuration.vsqr);
+    `uvm_info("SOC_IFC_BRINGUP", "Mailbox completed poweron and observed reset deassertion to system", UVM_LOW)
+
+    // TODO watch for UC reset to deassert? Requires fw reset deassertion...
 
     // UVMF_CHANGE_ME : Extend the simulation XXX number of clocks after 
     // the last sequence to allow for the last sequence item to flow 
     // through the design.
     fork
       soc_ifc_ctrl_agent_config.wait_for_num_clocks(400);
+      cptra_ctrl_agent_config.wait_for_num_clocks(400);
       soc_ifc_status_agent_config.wait_for_num_clocks(400);
+      cptra_status_agent_config.wait_for_num_clocks(400);
     join
 
     if (1) // TODO -- how to properly choose which to print?

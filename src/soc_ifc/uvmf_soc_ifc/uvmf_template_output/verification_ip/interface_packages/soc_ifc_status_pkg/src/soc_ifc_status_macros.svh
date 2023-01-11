@@ -63,42 +63,24 @@ typedef struct packed  { \
 //      and from_monitor_struct methods of the soc_ifc_status_transaction class.
 //
   `define soc_ifc_status_MONITOR_STRUCT typedef struct packed  { \
-  bit soc_ifc_err_intr_pending ; \
-  bit soc_ifc_notif_intr_pending ; \
-  bit sha_err_intr_pending ; \
-  bit sha_notif_intr_pending ; \
-  bit uc_rst_asserted ; \
   bit ready_for_fuses ; \
   bit ready_for_fw_push ; \
   bit ready_for_runtime ; \
   bit mailbox_data_avail ; \
   bit mailbox_flow_done ; \
   bit [63:0] generic_output_val ; \
-  bit [7:0] [31:0] cptra_obf_key_reg ; \
-  bit [31:0] [31:0] obf_field_entropy ; \
-  bit [11:0] [31:0] obf_uds_seed ; \
-  bit iccm_locked ; \
      } soc_ifc_status_monitor_s;
 
   `define soc_ifc_status_TO_MONITOR_STRUCT_FUNCTION \
   virtual function soc_ifc_status_monitor_s to_monitor_struct();\
     soc_ifc_status_monitor_struct = \
             { \
-            this.soc_ifc_err_intr_pending , \
-            this.soc_ifc_notif_intr_pending , \
-            this.sha_err_intr_pending , \
-            this.sha_notif_intr_pending , \
-            this.uc_rst_asserted , \
             this.ready_for_fuses , \
             this.ready_for_fw_push , \
             this.ready_for_runtime , \
             this.mailbox_data_avail , \
             this.mailbox_flow_done , \
-            this.generic_output_val , \
-            this.cptra_obf_key_reg , \
-            this.obf_field_entropy , \
-            this.obf_uds_seed , \
-            this.iccm_locked  \
+            this.generic_output_val  \
             };\
     return ( soc_ifc_status_monitor_struct);\
   endfunction\
@@ -106,21 +88,12 @@ typedef struct packed  { \
   `define soc_ifc_status_FROM_MONITOR_STRUCT_FUNCTION \
   virtual function void from_monitor_struct(soc_ifc_status_monitor_s soc_ifc_status_monitor_struct);\
             {\
-            this.soc_ifc_err_intr_pending , \
-            this.soc_ifc_notif_intr_pending , \
-            this.sha_err_intr_pending , \
-            this.sha_notif_intr_pending , \
-            this.uc_rst_asserted , \
             this.ready_for_fuses , \
             this.ready_for_fw_push , \
             this.ready_for_runtime , \
             this.mailbox_data_avail , \
             this.mailbox_flow_done , \
-            this.generic_output_val , \
-            this.cptra_obf_key_reg , \
-            this.obf_field_entropy , \
-            this.obf_uds_seed , \
-            this.iccm_locked  \
+            this.generic_output_val  \
             } = soc_ifc_status_monitor_struct;\
   endfunction
 
@@ -130,42 +103,24 @@ typedef struct packed  { \
 //      Also update the comments in the driver BFM.
 //
   `define soc_ifc_status_INITIATOR_STRUCT typedef struct packed  { \
-  bit soc_ifc_err_intr_pending ; \
-  bit soc_ifc_notif_intr_pending ; \
-  bit sha_err_intr_pending ; \
-  bit sha_notif_intr_pending ; \
-  bit uc_rst_asserted ; \
   bit ready_for_fuses ; \
   bit ready_for_fw_push ; \
   bit ready_for_runtime ; \
   bit mailbox_data_avail ; \
   bit mailbox_flow_done ; \
   bit [63:0] generic_output_val ; \
-  bit [7:0] [31:0] cptra_obf_key_reg ; \
-  bit [31:0] [31:0] obf_field_entropy ; \
-  bit [11:0] [31:0] obf_uds_seed ; \
-  bit iccm_locked ; \
      } soc_ifc_status_initiator_s;
 
   `define soc_ifc_status_TO_INITIATOR_STRUCT_FUNCTION \
   virtual function soc_ifc_status_initiator_s to_initiator_struct();\
     soc_ifc_status_initiator_struct = \
            {\
-           this.soc_ifc_err_intr_pending , \
-           this.soc_ifc_notif_intr_pending , \
-           this.sha_err_intr_pending , \
-           this.sha_notif_intr_pending , \
-           this.uc_rst_asserted , \
            this.ready_for_fuses , \
            this.ready_for_fw_push , \
            this.ready_for_runtime , \
            this.mailbox_data_avail , \
            this.mailbox_flow_done , \
-           this.generic_output_val , \
-           this.cptra_obf_key_reg , \
-           this.obf_field_entropy , \
-           this.obf_uds_seed , \
-           this.iccm_locked  \
+           this.generic_output_val  \
            };\
     return ( soc_ifc_status_initiator_struct);\
   endfunction
@@ -173,21 +128,12 @@ typedef struct packed  { \
   `define soc_ifc_status_FROM_INITIATOR_STRUCT_FUNCTION \
   virtual function void from_initiator_struct(soc_ifc_status_initiator_s soc_ifc_status_initiator_struct);\
            {\
-           this.soc_ifc_err_intr_pending , \
-           this.soc_ifc_notif_intr_pending , \
-           this.sha_err_intr_pending , \
-           this.sha_notif_intr_pending , \
-           this.uc_rst_asserted , \
            this.ready_for_fuses , \
            this.ready_for_fw_push , \
            this.ready_for_runtime , \
            this.mailbox_data_avail , \
            this.mailbox_flow_done , \
-           this.generic_output_val , \
-           this.cptra_obf_key_reg , \
-           this.obf_field_entropy , \
-           this.obf_uds_seed , \
-           this.iccm_locked  \
+           this.generic_output_val  \
            } = soc_ifc_status_initiator_struct;\
   endfunction
 
@@ -197,42 +143,24 @@ typedef struct packed  { \
 //      Also update the comments in the driver BFM.
 //
   `define soc_ifc_status_RESPONDER_STRUCT typedef struct packed  { \
-  bit soc_ifc_err_intr_pending ; \
-  bit soc_ifc_notif_intr_pending ; \
-  bit sha_err_intr_pending ; \
-  bit sha_notif_intr_pending ; \
-  bit uc_rst_asserted ; \
   bit ready_for_fuses ; \
   bit ready_for_fw_push ; \
   bit ready_for_runtime ; \
   bit mailbox_data_avail ; \
   bit mailbox_flow_done ; \
   bit [63:0] generic_output_val ; \
-  bit [7:0] [31:0] cptra_obf_key_reg ; \
-  bit [31:0] [31:0] obf_field_entropy ; \
-  bit [11:0] [31:0] obf_uds_seed ; \
-  bit iccm_locked ; \
      } soc_ifc_status_responder_s;
 
   `define soc_ifc_status_TO_RESPONDER_STRUCT_FUNCTION \
   virtual function soc_ifc_status_responder_s to_responder_struct();\
     soc_ifc_status_responder_struct = \
            {\
-           this.soc_ifc_err_intr_pending , \
-           this.soc_ifc_notif_intr_pending , \
-           this.sha_err_intr_pending , \
-           this.sha_notif_intr_pending , \
-           this.uc_rst_asserted , \
            this.ready_for_fuses , \
            this.ready_for_fw_push , \
            this.ready_for_runtime , \
            this.mailbox_data_avail , \
            this.mailbox_flow_done , \
-           this.generic_output_val , \
-           this.cptra_obf_key_reg , \
-           this.obf_field_entropy , \
-           this.obf_uds_seed , \
-           this.iccm_locked  \
+           this.generic_output_val  \
            };\
     return ( soc_ifc_status_responder_struct);\
   endfunction
@@ -240,21 +168,12 @@ typedef struct packed  { \
   `define soc_ifc_status_FROM_RESPONDER_STRUCT_FUNCTION \
   virtual function void from_responder_struct(soc_ifc_status_responder_s soc_ifc_status_responder_struct);\
            {\
-           this.soc_ifc_err_intr_pending , \
-           this.soc_ifc_notif_intr_pending , \
-           this.sha_err_intr_pending , \
-           this.sha_notif_intr_pending , \
-           this.uc_rst_asserted , \
            this.ready_for_fuses , \
            this.ready_for_fw_push , \
            this.ready_for_runtime , \
            this.mailbox_data_avail , \
            this.mailbox_flow_done , \
-           this.generic_output_val , \
-           this.cptra_obf_key_reg , \
-           this.obf_field_entropy , \
-           this.obf_uds_seed , \
-           this.iccm_locked  \
+           this.generic_output_val  \
            } = soc_ifc_status_responder_struct;\
   endfunction
 // pragma uvmf custom additional begin

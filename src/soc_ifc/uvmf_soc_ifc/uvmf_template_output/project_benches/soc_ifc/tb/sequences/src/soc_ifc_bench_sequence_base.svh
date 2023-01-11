@@ -29,6 +29,7 @@
 //----------------------------------------------------------------------
 //
 
+
 typedef soc_ifc_env_configuration  soc_ifc_env_configuration_t;
 
 class soc_ifc_bench_sequence_base extends uvmf_sequence_base #(uvm_sequence_item);
@@ -49,15 +50,23 @@ rand soc_ifc_env_sequence_base_t soc_ifc_env_seq;
   // Instantiate sequences here
   typedef soc_ifc_ctrl_random_sequence  soc_ifc_ctrl_agent_random_seq_t;
   soc_ifc_ctrl_agent_random_seq_t soc_ifc_ctrl_agent_random_seq;
+  typedef cptra_ctrl_random_sequence  cptra_ctrl_agent_random_seq_t;
+  cptra_ctrl_agent_random_seq_t cptra_ctrl_agent_random_seq;
   typedef soc_ifc_status_responder_sequence  soc_ifc_status_agent_responder_seq_t;
   soc_ifc_status_agent_responder_seq_t soc_ifc_status_agent_responder_seq;
+  typedef cptra_status_responder_sequence  cptra_status_agent_responder_seq_t;
+  cptra_status_agent_responder_seq_t cptra_status_agent_responder_seq;
   // pragma uvmf custom sequences end
 
   // Sequencer handles for each active interface in the environment
   typedef soc_ifc_ctrl_transaction  soc_ifc_ctrl_agent_transaction_t;
   uvm_sequencer #(soc_ifc_ctrl_agent_transaction_t)  soc_ifc_ctrl_agent_sequencer; 
+  typedef cptra_ctrl_transaction  cptra_ctrl_agent_transaction_t;
+  uvm_sequencer #(cptra_ctrl_agent_transaction_t)  cptra_ctrl_agent_sequencer; 
   typedef soc_ifc_status_transaction  soc_ifc_status_agent_transaction_t;
   uvm_sequencer #(soc_ifc_status_agent_transaction_t)  soc_ifc_status_agent_sequencer; 
+  typedef cptra_status_transaction  cptra_status_agent_transaction_t;
+  uvm_sequencer #(cptra_status_agent_transaction_t)  cptra_status_agent_sequencer; 
 
   // Sequencer handles for each QVIP interface
   mvc_sequencer uvm_test_top_environment_qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_sqr;
@@ -68,7 +77,9 @@ rand soc_ifc_env_sequence_base_t soc_ifc_env_seq;
 
   // Configuration handles to access interface BFM's
   soc_ifc_ctrl_configuration  soc_ifc_ctrl_agent_config;
+  cptra_ctrl_configuration  cptra_ctrl_agent_config;
   soc_ifc_status_configuration  soc_ifc_status_agent_config;
+  cptra_status_configuration  cptra_status_agent_config;
   // Local handle to register model for convenience
   soc_ifc_reg_model_top reg_model;
   uvm_status_e status;
@@ -90,12 +101,18 @@ rand soc_ifc_env_sequence_base_t soc_ifc_env_seq;
     // Retrieve config handles for all agents
     if( !uvm_config_db #( soc_ifc_ctrl_configuration )::get( null , UVMF_CONFIGURATIONS , soc_ifc_ctrl_agent_BFM , soc_ifc_ctrl_agent_config ) ) 
       `uvm_fatal("CFG" , "uvm_config_db #( soc_ifc_ctrl_configuration )::get cannot find resource soc_ifc_ctrl_agent_BFM" )
+    if( !uvm_config_db #( cptra_ctrl_configuration )::get( null , UVMF_CONFIGURATIONS , cptra_ctrl_agent_BFM , cptra_ctrl_agent_config ) ) 
+      `uvm_fatal("CFG" , "uvm_config_db #( cptra_ctrl_configuration )::get cannot find resource cptra_ctrl_agent_BFM" )
     if( !uvm_config_db #( soc_ifc_status_configuration )::get( null , UVMF_CONFIGURATIONS , soc_ifc_status_agent_BFM , soc_ifc_status_agent_config ) ) 
       `uvm_fatal("CFG" , "uvm_config_db #( soc_ifc_status_configuration )::get cannot find resource soc_ifc_status_agent_BFM" )
+    if( !uvm_config_db #( cptra_status_configuration )::get( null , UVMF_CONFIGURATIONS , cptra_status_agent_BFM , cptra_status_agent_config ) ) 
+      `uvm_fatal("CFG" , "uvm_config_db #( cptra_status_configuration )::get cannot find resource cptra_status_agent_BFM" )
 
     // Assign the sequencer handles from the handles within agent configurations
     soc_ifc_ctrl_agent_sequencer = soc_ifc_ctrl_agent_config.get_sequencer();
+    cptra_ctrl_agent_sequencer = cptra_ctrl_agent_config.get_sequencer();
     soc_ifc_status_agent_sequencer = soc_ifc_status_agent_config.get_sequencer();
+    cptra_status_agent_sequencer = cptra_status_agent_config.get_sequencer();
 
     // Retrieve QVIP sequencer handles from the uvm_config_db
     if( !uvm_config_db #(mvc_sequencer)::get( null,UVMF_SEQUENCERS,"uvm_test_top.environment.qvip_ahb_lite_slave_subenv.ahb_lite_slave_0", uvm_test_top_environment_qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_sqr) ) 
@@ -119,19 +136,25 @@ rand soc_ifc_env_sequence_base_t soc_ifc_env_seq;
     soc_ifc_env_seq = soc_ifc_env_sequence_base_t::type_id::create("soc_ifc_env_seq");
 
     soc_ifc_ctrl_agent_random_seq     = soc_ifc_ctrl_agent_random_seq_t::type_id::create("soc_ifc_ctrl_agent_random_seq");
+    cptra_ctrl_agent_random_seq     = cptra_ctrl_agent_random_seq_t::type_id::create("cptra_ctrl_agent_random_seq");
     soc_ifc_status_agent_responder_seq  = soc_ifc_status_agent_responder_seq_t::type_id::create("soc_ifc_status_agent_responder_seq");
+    cptra_status_agent_responder_seq  = cptra_status_agent_responder_seq_t::type_id::create("cptra_status_agent_responder_seq");
     fork
       soc_ifc_ctrl_agent_config.wait_for_reset();
+      cptra_ctrl_agent_config.wait_for_reset();
       soc_ifc_status_agent_config.wait_for_reset();
+      cptra_status_agent_config.wait_for_reset();
     join
     reg_model.reset();
     // Start RESPONDER sequences here
     fork
       soc_ifc_status_agent_responder_seq.start(soc_ifc_status_agent_sequencer);
+      cptra_status_agent_responder_seq.start(cptra_status_agent_sequencer);
     join_none
     // Start INITIATOR sequences here
     fork
       repeat (25) soc_ifc_ctrl_agent_random_seq.start(soc_ifc_ctrl_agent_sequencer);
+      repeat (25) cptra_ctrl_agent_random_seq.start(cptra_ctrl_agent_sequencer);
     join
 
 soc_ifc_env_seq.start(top_configuration.vsqr);
@@ -141,7 +164,9 @@ soc_ifc_env_seq.start(top_configuration.vsqr);
     // through the design.
     fork
       soc_ifc_ctrl_agent_config.wait_for_num_clocks(400);
+      cptra_ctrl_agent_config.wait_for_num_clocks(400);
       soc_ifc_status_agent_config.wait_for_num_clocks(400);
+      cptra_status_agent_config.wait_for_num_clocks(400);
     join
 
     // pragma uvmf custom body end
