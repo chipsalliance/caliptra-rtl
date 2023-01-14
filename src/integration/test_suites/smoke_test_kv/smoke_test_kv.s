@@ -243,6 +243,7 @@ _start:
     li x9, 0x00000000
     read_pcr_dword_loop:
         lw x5, 0(x3)
+        nop
         lw x10, 0(x4)
         bne x5, x10, _finish_fail
         addi x3, x3, 4
@@ -296,7 +297,7 @@ _finish_pass:
     nop
 .endr
 
-.data
+.align 4
 kv_data:
 .word 0x00000000    
 .word 0x11111111
@@ -376,4 +377,6 @@ hello_world:
 .ascii "----------------------------------\n"
 .ascii "Hello World from KeyVault       !!\n"
 .ascii "----------------------------------\n"
-.byte 0
+.word 0
+.word 0
+.word 0

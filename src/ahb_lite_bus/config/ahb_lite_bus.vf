@@ -2,3 +2,4 @@
 ${WORKSPACE}/Caliptra/src/ahb_lite_bus/rtl/ahb_lite_bus_inf.sv
 ${WORKSPACE}/Caliptra/src/ahb_lite_bus/rtl/ahb_lite_address_decoder.sv
 ${WORKSPACE}/Caliptra/src/ahb_lite_bus/rtl/ahb_lite_bus.sv
+${WORKSPACE}/Caliptra/src/ahb_lite_bus/rtl/ahb_lite_2to1_mux.sv

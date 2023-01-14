@@ -50,7 +50,6 @@ module caliptra_ahb_srom #(
 
 /////////////////////////////////
 // Signals
-logic                       sram_dv;
 logic                       sram_error,sram_error_f;
 
 /////////////////////////////////

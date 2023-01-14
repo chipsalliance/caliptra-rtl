@@ -95,7 +95,11 @@ module sha512_acc_top
   logic arc_SHA_PAD1_SHA_DONE;
   logic arc_IDLE;
 
+  logic mbox_mode_block_we;
+  logic stream_mode_block_we;
   logic block_we;
+  logic mbox_mode_last_dword_wr;
+  logic stream_mode_last_dword_wr;
   logic last_dword_wr;
   logic block_full;
   logic [BLOCK_OFFSET_W:0] block_wptr;
@@ -192,13 +196,15 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
 
   //When we reach the end of a block we indicate block full
   always_comb block_full = block_wptr[BLOCK_OFFSET_W];
+  always_comb mbox_mode_last_dword_wr = mbox_mode_block_we & (block_wptr == (BLOCK_NO-1));
+  always_comb stream_mode_last_dword_wr = stream_mode_block_we & (block_wptr == (BLOCK_NO-1));
   always_comb last_dword_wr = block_we & (block_wptr == (BLOCK_NO-1));
 
   //read from mbox is one clock ahead of writes
   //stall reads based on hold signal from mbox (which is asserted during ECC write-back)
   //don't read the next dword if we are writing the last dword of a block and core isn't ready
   //keep stalling the read once the block is full until core is ready - this will reset the block pointer and start the next one
-  always_comb mbox_read_en = mailbox_mode & ~mbox_read_done & !sha_sram_hold & (~(last_dword_wr | block_full) | core_ready);
+  always_comb mbox_read_en = mailbox_mode & ~mbox_read_done & !sha_sram_hold & (~(mbox_mode_last_dword_wr | block_full) | core_ready);
 
   always_comb sha_sram_req_dv = mbox_read_en;
   always_comb sha_sram_req_addr = mbox_rdptr;
@@ -206,8 +212,10 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   //stall the write if we are trying to stream datain and it's the end of a block but the core isn't ready
   always_comb stall_write = datain_write & block_full;
 
-  always_comb block_we = (streaming_mode & datain_write & ~stall_write) |
-                         (mailbox_mode & mbox_block_we);
+  always_comb mbox_mode_block_we = (mailbox_mode & mbox_block_we);
+  always_comb stream_mode_block_we = (streaming_mode & datain_write & ~stall_write);
+
+  always_comb block_we = mbox_mode_block_we | stream_mode_block_we;
   
   always_comb begin
     for (int b=0; b<DATA_NUM_BYTES; b++) begin

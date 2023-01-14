@@ -343,7 +343,7 @@ always_comb begin
         //lock the writes to valid user field once lock is set
         soc_ifc_reg_hwif_in.VALID_PAUSER[i].PAUSER.swwel = soc_ifc_reg_hwif_out.PAUSER_LOCK[i].LOCK.value;
         //If integrator set PAUSER values at integration time, pick it up from the define
-        valid_mbox_users[i] = `SET_PAUSER_INTEG[i] ? `VALID_PAUSER[i] : soc_ifc_reg_hwif_out.VALID_PAUSER[i].PAUSER.value[APB_USER_WIDTH-1:0];
+        valid_mbox_users[i] = CLP_SET_PAUSER_INTEG[i] ? CLP_VALID_PAUSER[i][APB_USER_WIDTH-1:0] : soc_ifc_reg_hwif_out.VALID_PAUSER[i].PAUSER.value[APB_USER_WIDTH-1:0];
     end
 end
 //can't write to trng valid user after it is locked

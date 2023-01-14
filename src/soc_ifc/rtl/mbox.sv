@@ -292,7 +292,7 @@ always_comb rdata = dir_req_rd_phase ? sram_rdata_cor : ({DATA_W{~mask_rdata}} &
 always_comb begin: mbox_sram_inf
     //read live on direct access, or when pointer has been incremented, or if write was made to same address as rdptr
     mbox_sram_req.cs = dir_req_dv_q | mbox_protocol_sram_we | inc_rdptr | sram_ecc_cor_we;
-    mbox_sram_req.we = sram_we & ~sha_sram_req_dv;
+    mbox_sram_req.we = sram_we & ~sha_sram_req_dv; //TODO why is this qualified?
     mbox_sram_req.addr = sram_we & ~sha_sram_req_dv ? sram_waddr : sram_rdaddr;
     mbox_sram_req.wdata.data = sram_ecc_cor_we ? sram_rdata_cor     : sram_wdata;
     mbox_sram_req.wdata.ecc  = sram_ecc_cor_we ? sram_rdata_cor_ecc : sram_wdata_ecc;

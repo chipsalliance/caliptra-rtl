@@ -8,6 +8,7 @@ targets:
       - $COMPILE_ROOT/rtl/ahb_lite_bus_inf.sv
       - $COMPILE_ROOT/rtl/ahb_lite_address_decoder.sv
       - $COMPILE_ROOT/rtl/ahb_lite_bus.sv
+      - $COMPILE_ROOT/rtl/ahb_lite_2to1_mux.sv
     tops: [ahb_lite_bus]
   rtl_lint:
     directories: []

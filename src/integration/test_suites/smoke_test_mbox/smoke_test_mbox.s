@@ -125,7 +125,7 @@ _finish_pass:
     nop
 .endr
 
-.data
+.align 4
 mbox_data:
 .word 0x00000000    
 .word 0x11111111
@@ -139,4 +139,6 @@ hello_world:
 .ascii "----------------------------------\n"
 .ascii "Hello World from SweRV EL2 @WDC !!\n"
 .ascii "----------------------------------\n"
-.byte 0
+.word 0
+.word 0
+.word 0

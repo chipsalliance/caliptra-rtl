@@ -71,6 +71,7 @@ ${WORKSPACE}/Caliptra/src/riscv_core/swerv_el2/rtl/lsu/el2_lsu_trigger.sv
 ${WORKSPACE}/Caliptra/src/ahb_lite_bus/rtl/ahb_lite_bus_inf.sv
 ${WORKSPACE}/Caliptra/src/ahb_lite_bus/rtl/ahb_lite_address_decoder.sv
 ${WORKSPACE}/Caliptra/src/ahb_lite_bus/rtl/ahb_lite_bus.sv
+${WORKSPACE}/Caliptra/src/ahb_lite_bus/rtl/ahb_lite_2to1_mux.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_reg_pkg.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_reg.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv.sv

@@ -25,8 +25,8 @@
 
   //Valid PAUSER
   //Lock the PAUSER values from integration time
-  `define SET_PAUSER_INTEG { 1'b0,          1'b0,          1'b0,          1'b0,          1'b0}
-  `define VALID_PAUSER     {32'h4444_4444, 32'h3333_3333, 32'h2222_2222, 32'h1111_1111, 32'h0000_0000}
+  parameter [4:0] CLP_SET_PAUSER_INTEG = { 1'b0,          1'b0,          1'b0,          1'b0,          1'b0};
+  parameter [4:0][31:0] CLP_VALID_PAUSER = {32'h4444_4444, 32'h3333_3333, 32'h2222_2222, 32'h1111_1111, 32'h0000_0000};
   
   typedef enum logic [1:0] {
     DEVICE_UNPROVISIONED = 2'b00,

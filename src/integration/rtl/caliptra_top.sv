@@ -220,6 +220,19 @@ module caliptra_top
     logic clear_obf_secrets;
     logic clear_secrets;
     
+    logic [31:0] imem_haddr;
+    logic imem_hsel;
+    logic imem_hwrite;
+    logic imem_hready;
+    logic imem_hreadyout;
+    logic [1:0] imem_htrans;
+    logic [2:0] imem_hsize;
+    logic [63:0] imem_hrdata;
+    logic imem_hresp;
+    
+    logic lsu_addr_ph, lsu_data_ph, lsu_sel;
+    logic ic_addr_ph, ic_data_ph, ic_sel;
+
 always_comb begin
     mbox_sram_cs = mbox_sram_req.cs;
     mbox_sram_we = mbox_sram_req.we;
@@ -268,8 +281,8 @@ end
         .ahb_lite_initiator            ( initiator_inst              ),
         .ahb_lite_resp_disable_i       ( ahb_lite_resp_disable       ),
         .ahb_lite_resp_access_blocked_o( ahb_lite_resp_access_blocked),
-        .ahb_lite_start_addr_i         ( `CALIPTRA_SLAVE_BASE_ADDR            ),
-        .ahb_lite_end_addr_i           ( `CALIPTRA_SLAVE_MASK_ADDR            )
+        .ahb_lite_start_addr_i         ( `CALIPTRA_SLAVE_BASE_ADDR   ),
+        .ahb_lite_end_addr_i           ( `CALIPTRA_SLAVE_MASK_ADDR   )
     );
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_DOE]     = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_ECC]     = 1'b0;
@@ -283,6 +296,7 @@ end
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_DDMA]    = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_IDMA]    = iccm_lock;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_SHA256]  = 1'b0;
+    always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_IMEM]    = 1'b0;
 
 
    //=========================================================================-
@@ -484,33 +498,80 @@ clk_gate cg (
 // AHB I$ instance
 //=========================================================================-
 
+    // Instanitate AHB Lite Address Decoder
+ahb_lite_2to1_mux #(
+    .AHB_LITE_ADDR_WIDTH(`CALIPTRA_IMEM_BYTE_ADDR_W),
+    .AHB_LITE_DATA_WIDTH(`CALIPTRA_IMEM_DATA_WIDTH)
+) u_ahb_lite_2to1_mux (
+    .hclk           (clk_cg),
+    .hreset_n       (cptra_noncore_rst_b),
+    // From Initiator 0
+    // Inputs
+    .hsel_i_0             (responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hsel),
+    .haddr_i_0            (responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].haddr[`CALIPTRA_IMEM_BYTE_ADDR_W-1:0]),
+    .hwdata_i_0           ('0),
+    .hwrite_i_0           (responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hwrite),
+    .htrans_i_0           (responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].htrans),
+    .hsize_i_0            (responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hsize),
+    .hready_i_0           (responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hready),
+    // Outputs
+    .hresp_o_0            (responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hresp),
+    .hready_o_0           (responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hreadyout),
+    .hrdata_o_0           (responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hrdata),
+    // From Initiator 1
+    // Inputs
+    .hsel_i_1             (1'b1),
+    .haddr_i_1            (ic_haddr[`CALIPTRA_IMEM_BYTE_ADDR_W-1:0]),
+    .hwdata_i_1           ('0),
+    .hwrite_i_1           (ic_hwrite),
+    .htrans_i_1           (ic_htrans),
+    .hsize_i_1            (ic_hsize),
+    .hready_i_1           (1'b1),
+    // Outputs
+    .hresp_o_1            (ic_hresp),
+    .hready_o_1           (ic_hready),
+    .hrdata_o_1           (ic_hrdata),
+    // To Responder
+    // Inputs
+    .hresp_i            (imem_hresp),
+    .hrdata_i           (imem_hrdata),
+    .hreadyout_i        (imem_hreadyout),
+    // Outputs
+    .haddr_o            (imem_haddr[`CALIPTRA_IMEM_BYTE_ADDR_W-1:0]),
+    .hwdata_o           ( ),
+    .hsel_o             (imem_hsel),
+    .hwrite_o           (imem_hwrite),
+    .hready_o           (imem_hready),
+    .htrans_o           (imem_htrans),
+    .hsize_o            (imem_hsize)
+);
+
 caliptra_ahb_srom #(
     .AHB_DATA_WIDTH(`CALIPTRA_IMEM_DATA_WIDTH),
     .AHB_ADDR_WIDTH(`CALIPTRA_IMEM_BYTE_ADDR_W),
     .CLIENT_ADDR_WIDTH(`CALIPTRA_IMEM_ADDR_WIDTH)
-
 ) imem (
 
     //AMBA AHB Lite INF
-    .hclk       (clk_cg                         ),
-    .hreset_n   (cptra_noncore_rst_b            ),
-    .haddr_i    (ic_haddr[`CALIPTRA_IMEM_BYTE_ADDR_W-1:0]),
-    .hwdata_i   (`CALIPTRA_IMEM_DATA_WIDTH'(0)           ),
-    .hsel_i     (1'b1                           ),
-    .hwrite_i   (ic_hwrite                      ),
+    .hclk       (clk_cg),
+    .hreset_n   (cptra_noncore_rst_b),
+    .haddr_i    (imem_haddr[`CALIPTRA_IMEM_BYTE_ADDR_W-1:0]),
+    .hwdata_i   (`CALIPTRA_IMEM_DATA_WIDTH'(0)             ),
+    .hsel_i     (imem_hsel),
+    .hwrite_i   (imem_hwrite),
 
-    .hready_i   (ic_hready                      ),
-    .htrans_i   (ic_htrans                      ),
-    .hsize_i    (ic_hsize                       ),
+    .hready_i   (imem_hready),
+    .htrans_i   (imem_htrans),
+    .hsize_i    (imem_hsize),
 
 
-    .hresp_o    (ic_hresp                       ),
-    .hreadyout_o(ic_hready                      ),
-    .hrdata_o   (ic_hrdata[63:0]                ),
+    .hresp_o    (imem_hresp),
+    .hreadyout_o(imem_hreadyout),
+    .hrdata_o   (imem_hrdata),
 
-    .cs         (imem_cs                        ),
-    .addr       (imem_addr                      ),
-    .rdata      (imem_rdata                     )
+    .cs         (imem_cs),
+    .addr       (imem_addr),
+    .rdata      (imem_rdata)
 
 );
 
