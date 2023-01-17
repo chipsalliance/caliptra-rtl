@@ -34,6 +34,11 @@ set synthetic_library [list dw_foundation.sldb]
 set link_library [list $target_library $synthetic_library]
 
 #----------------------------
+#Set elab flag. If 1, exit after elab. If 0, run full flow. Defaults to 0
+#----------------------------
+set ELAB 0
+set ELAB $elab
+#----------------------------
 #Set design name and units of measurement
 #----------------------------
 set DESIGN_NAME $design
@@ -48,23 +53,30 @@ analyze -format sverilog -vcs "-f $design.vf"
 #Elaborate, link and uniquify
 #----------------------------
 set command_status [elaborate $DESIGN_NAME -architecture verilog -library WORK -update]
-if ($command_status==0) {quit}
+#----------------------------
+#If elab flag is set to 1, exit after elaborate command. Return 1 if there's an error and 0 if not
+#----------------------------
+if { $command_status==0 } {
+	exit 1
+} elseif { $command_status==1 && $ELAB==1 } {
+	exit 0
+}
 set command_status [link]
-if ($command_status==0) {quit}
+if ($command_status==0) {exit 1}
 set command_status [uniquify]
-if ($command_status==0) {quit}
+if ($command_status==0) {exit 1}
 
 #----------------------------
 #Set operating conditions
 #----------------------------
 #set command_status [set_operating_conditions -min_library $target_library -min nom_pvt -max_library $target_library -max nom_pvt]
-#if ($command_status==0) {quit}
+#if ($command_status==0) {exit}
 
 #----------------------------
 #Specify clock attributes
 #----------------------------
 set command_status [create_clock -name "clk" -period $MY_CLOCK_PERIOD -waveform {0 1} {clk}]
-if ($command_status==0) {quit}
+if ($command_status==0) {exit 1}
 set command_status [set_clock_uncertainty 0.1 [get_clocks clk]]
 set command_status [set_clock_latency 0.2 [get_clocks clk]]
 set command_status [set_input_transition -max 0.01 [all_inputs]]
@@ -74,7 +86,7 @@ set command_status [set_input_transition -max 0.01 [all_inputs]]
 #----------------------------
 set command_status [set_wire_load_mode top]
 #set command_status [set_wire_load_model -name 90x90]
-#if ($command_status==0) {quit}
+#if ($command_status==0) {exit}
 set command_status [set_max_fanout 5000 [get_designs $DESIGN_NAME]]
 #this isn't working
 #set_app_var compile_enable_report_transformed_registers true
@@ -88,7 +100,7 @@ write -format ddc  -hierarchy -output ${DESIGN_NAME}.pre_compile.ddc
 #Compile design
 #----------------------------
 set command_status [compile -exact_map -map_effort medium -area_effort medium -power_effort medium -boundary_optimization]
-if ($command_status==0) {quit}
+if ($command_status==0) {exit 1}
 
 #----------------------------
 #Export files
@@ -135,4 +147,4 @@ foreach f $pvk_files {
 }
 exec rm default.svf
 
-exit
+exit 0

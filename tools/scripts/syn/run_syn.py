@@ -27,18 +27,23 @@ def exec_print(cmd):
         sys.stdout.write(nextline)
         sys.stdout.flush()
 
+    stdout = popen.communicate()
     popen.stdout.close()
-    return_code = popen.wait()
+    return_code = popen.returncode
     if return_code:
         raise subprocess.CalledProcessError(return_code, cmd)
 
 timestr = time.strftime("%Y%m%d.%H%M%S")
 
 unit = sys.argv[1];
+if len(sys.argv) == 3:
+    elab_flag = sys.argv[2]
+else: #set default to 0 so full dc flow is run when elab_flag is not specified
+    elab_flag = 0
 workspace = os.environ.get('WORKSPACE')
 user = os.environ.get('USER')
 output_dir = f"{workspace}/scratch/{user}/syn/{unit}/{timestr}"
-dc_cmds = f"-x 'set design {unit}; set workspace {workspace}; set user {user};'"
+dc_cmds = f"-x 'set design {unit}; set workspace {workspace}; set user {user}; set elab {elab_flag}'"
 
 # checking if the out directory exists or not.
 if not os.path.exists(output_dir):  
