@@ -13,6 +13,7 @@
 // limitations under the License.
 
 `include "caliptra_sva.svh"
+`include "caliptra_macros.svh"
 
 module soc_ifc_top 
     import soc_ifc_pkg::*;
@@ -39,6 +40,8 @@ module soc_ifc_top
 
     output logic mailbox_data_avail,
     output logic mailbox_flow_done,
+
+    input var security_state_t security_state,
 
     input logic  [1:0][31:0] generic_input_wires,
     output logic [1:0][31:0] generic_output_wires,
@@ -146,6 +149,8 @@ logic [4:0][APB_USER_WIDTH-1:0] valid_mbox_users;
 logic uc_mbox_data_avail;
 logic uc_mbox_data_avail_d;
 logic uc_cmd_avail_p;
+logic security_state_debug_locked_d;
+logic security_state_debug_locked_p;
 logic sram_single_ecc_error;
 logic sram_double_ecc_error;
 
@@ -162,11 +167,11 @@ soc_ifc_boot_fsm i_soc_ifc_boot_fsm (
     .clk(clk),
     .cptra_pwrgood(cptra_pwrgood),
     .cptra_rst_b (cptra_rst_b),
-    .fw_update_rst (soc_ifc_reg_hwif_out.fw_update_reset.core_rst.value),
-    .fw_update_rst_wait_cycles (soc_ifc_reg_hwif_out.fw_update_reset_wait_cycles.wait_cycles.value),
+    .fw_update_rst (soc_ifc_reg_hwif_out.internal_fw_update_reset.core_rst.value),
+    .fw_update_rst_wait_cycles (soc_ifc_reg_hwif_out.internal_fw_update_reset_wait_cycles.wait_cycles.value),
     .ready_for_fuses(ready_for_fuses),
 
-    .fuse_done(soc_ifc_reg_hwif_out.fuse_done.done.value),
+    .fuse_done(soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value),
 
     .cptra_noncore_rst_b(cptra_noncore_rst_b), //goes to all other blocks
     .cptra_uc_rst_b(cptra_uc_rst_b), //goes to swerv core
@@ -308,54 +313,70 @@ always_comb soc_ifc_reg_hwif_in.soc_req = soc_ifc_reg_req_data.soc_req;
 
 always_comb begin
     for (int i = 0; i < 8; i++) begin
-        soc_ifc_reg_hwif_in.obf_key[i].key.swwe = '0; //sw can't write to obf key
-        soc_ifc_reg_hwif_in.obf_key[i].key.wel = cptra_pwrgood; //capture value during pwrgood de-assertion
-        soc_ifc_reg_hwif_in.obf_key[i].key.next = cptra_obf_key[i];
-        soc_ifc_reg_hwif_in.obf_key[i].key.hwclr = clear_obf_secrets;
-        cptra_obf_key_reg[i] = soc_ifc_reg_hwif_out.obf_key[i].key.value;
+        soc_ifc_reg_hwif_in.internal_obf_key[i].key.swwe = '0; //sw can't write to obf key
+        soc_ifc_reg_hwif_in.internal_obf_key[i].key.wel = cptra_pwrgood; //capture value during pwrgood de-assertion
+        soc_ifc_reg_hwif_in.internal_obf_key[i].key.next = cptra_obf_key[i];
+        soc_ifc_reg_hwif_in.internal_obf_key[i].key.hwclr = clear_obf_secrets;
+        cptra_obf_key_reg[i] = soc_ifc_reg_hwif_out.internal_obf_key[i].key.value;
     end
     for (int i = 0; i < 12; i++) begin
-        soc_ifc_reg_hwif_in.uds_seed[i].seed.hwclr = clear_obf_secrets; 
-        obf_uds_seed[i] = soc_ifc_reg_hwif_out.uds_seed[i].seed.value;
+        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.hwclr = clear_obf_secrets; 
+        obf_uds_seed[i] = soc_ifc_reg_hwif_out.fuse_uds_seed[i].seed.value;
     end
     for (int i = 0; i < 32; i++) begin
-        soc_ifc_reg_hwif_in.field_entropy[i].seed.hwclr = clear_obf_secrets;
-        obf_field_entropy[i] = soc_ifc_reg_hwif_out.field_entropy[i].seed.value;
+        soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.hwclr = clear_obf_secrets;
+        obf_field_entropy[i] = soc_ifc_reg_hwif_out.fuse_field_entropy[i].seed.value;
     end
 
     //flow status
-    mailbox_flow_done = soc_ifc_reg_hwif_out.FLOW_STATUS.mailbox_flow_done.value;
-    ready_for_fw_push = soc_ifc_reg_hwif_out.FLOW_STATUS.ready_for_fw.value;
-    ready_for_runtime = soc_ifc_reg_hwif_out.FLOW_STATUS.ready_for_runtime.value;
-    soc_ifc_reg_hwif_in.FLOW_STATUS.ready_for_fuses.next = ready_for_fuses;
+    mailbox_flow_done = soc_ifc_reg_hwif_out.CPTRA_FLOW_STATUS.mailbox_flow_done.value;
+    ready_for_fw_push = soc_ifc_reg_hwif_out.CPTRA_FLOW_STATUS.ready_for_fw.value;
+    ready_for_runtime = soc_ifc_reg_hwif_out.CPTRA_FLOW_STATUS.ready_for_runtime.value;
+    soc_ifc_reg_hwif_in.CPTRA_FLOW_STATUS.ready_for_fuses.next = ready_for_fuses;
+    soc_ifc_reg_hwif_in.CPTRA_RESET_REASON.reason.next = 32'hdeadbeef; // FIXME
+    soc_ifc_reg_hwif_in.CPTRA_RESET_REASON.reason.we = 1'b0; // FIXME -- should be written by hardware when NMI is triggered via pin "nmi_int"
+    soc_ifc_reg_hwif_in.CPTRA_SECURITY_STATE.device_lifecycle.next = security_state.device_lifecycle;
+    soc_ifc_reg_hwif_in.CPTRA_SECURITY_STATE.debug_locked.next = security_state.debug_locked;
     //generic wires
     for (int i = 0; i < 2; i++) begin
-        generic_output_wires[i] = soc_ifc_reg_hwif_out.generic_output_wires[i].generic_wires.value;
-        soc_ifc_reg_hwif_in.generic_input_wires[i].generic_wires.next = generic_input_wires[i];
+        generic_output_wires[i] = soc_ifc_reg_hwif_out.CPTRA_GENERIC_OUTPUT_WIRES[i].generic_wires.value;
+        soc_ifc_reg_hwif_in.CPTRA_GENERIC_INPUT_WIRES[i].generic_wires.next = generic_input_wires[i];
     end
 end
+
+// Generate a pulse to set the interrupt bit
+always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
+    if (~cptra_noncore_rst_b) begin
+        security_state_debug_locked_d <= '0;
+    end
+    else begin
+        security_state_debug_locked_d <= security_state.debug_locked;
+    end
+end
+
+always_comb security_state_debug_locked_p = security_state.debug_locked ^ security_state_debug_locked_d;
 
 //Filtering by PAUSER
 always_comb begin
     for (int i=0; i<5; i++) begin
         //once locked, can't be cleared until reset
-        soc_ifc_reg_hwif_in.PAUSER_LOCK[i].LOCK.swwel = soc_ifc_reg_hwif_out.PAUSER_LOCK[i].LOCK.value;
+        soc_ifc_reg_hwif_in.CPTRA_PAUSER_LOCK[i].LOCK.swwel = soc_ifc_reg_hwif_out.CPTRA_PAUSER_LOCK[i].LOCK.value;
         //lock the writes to valid user field once lock is set
-        soc_ifc_reg_hwif_in.VALID_PAUSER[i].PAUSER.swwel = soc_ifc_reg_hwif_out.PAUSER_LOCK[i].LOCK.value;
+        soc_ifc_reg_hwif_in.CPTRA_VALID_PAUSER[i].PAUSER.swwel = soc_ifc_reg_hwif_out.CPTRA_PAUSER_LOCK[i].LOCK.value;
         //If integrator set PAUSER values at integration time, pick it up from the define
-        valid_mbox_users[i] = CLP_SET_PAUSER_INTEG[i] ? CLP_VALID_PAUSER[i][APB_USER_WIDTH-1:0] : soc_ifc_reg_hwif_out.VALID_PAUSER[i].PAUSER.value[APB_USER_WIDTH-1:0];
+        valid_mbox_users[i] = CLP_SET_PAUSER_INTEG[i] ? CLP_VALID_PAUSER[i][APB_USER_WIDTH-1:0] : soc_ifc_reg_hwif_out.CPTRA_VALID_PAUSER[i].PAUSER.value[APB_USER_WIDTH-1:0];
     end
 end
 //can't write to trng valid user after it is locked
-always_comb soc_ifc_reg_hwif_in.TRNG_VALID_PAUSER.PAUSER.swwel = soc_ifc_reg_hwif_out.TRNG_PAUSER_LOCK.LOCK.value;
-always_comb soc_ifc_reg_hwif_in.TRNG_PAUSER_LOCK.LOCK.swwel = soc_ifc_reg_hwif_out.TRNG_PAUSER_LOCK.LOCK.value;
+always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_VALID_PAUSER.PAUSER.swwel = soc_ifc_reg_hwif_out.CPTRA_TRNG_PAUSER_LOCK.LOCK.value;
+always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_PAUSER_LOCK.LOCK.swwel = soc_ifc_reg_hwif_out.CPTRA_TRNG_PAUSER_LOCK.LOCK.value;
 //only allow valid users to write to TRNG
-always_comb soc_ifc_reg_hwif_in.TRNG_DONE.DONE.swwe = ~soc_ifc_reg_req_data.soc_req | 
-                                                      (soc_ifc_reg_req_data.user == soc_ifc_reg_hwif_out.TRNG_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]);
+always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_DONE.DONE.swwe = ~soc_ifc_reg_req_data.soc_req | 
+                                                            (soc_ifc_reg_req_data.user == soc_ifc_reg_hwif_out.CPTRA_TRNG_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]);
 always_comb begin 
     for (int i = 0; i < 12; i++) begin
-        soc_ifc_reg_hwif_in.TRNG[i].DATA.swwe = ~soc_ifc_reg_req_data.soc_req | 
-                                                (soc_ifc_reg_req_data.user == soc_ifc_reg_hwif_out.TRNG_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]);
+        soc_ifc_reg_hwif_in.CPTRA_TRNG[i].DATA.swwe = ~soc_ifc_reg_req_data.soc_req | 
+                                                      (soc_ifc_reg_req_data.user == soc_ifc_reg_hwif_out.CPTRA_TRNG_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]);
     end
 end
 
@@ -368,8 +389,9 @@ always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_iccm_b
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts.hwset = sram_double_ecc_error;
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.hwset    = uc_cmd_avail_p; // TODO confirm signal correctness
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.hwset = sram_single_ecc_error;
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_debug_locked_sts.hwset = security_state_debug_locked_p; // Any transition results in interrupt
 
-always_comb soc_ifc_reg_hwif_in.iccm_lock.lock.hwclr    = iccm_unlock;
+always_comb soc_ifc_reg_hwif_in.internal_iccm_lock.lock.hwclr    = iccm_unlock;
 
 
 
@@ -400,9 +422,9 @@ soc_ifc_reg i_soc_ifc_reg (
 
 assign soc_ifc_error_intr = soc_ifc_reg_hwif_out.intr_block_rf.error_global_intr_r.intr;
 assign soc_ifc_notif_intr = soc_ifc_reg_hwif_out.intr_block_rf.notif_global_intr_r.intr;
-assign nmi_vector = soc_ifc_reg_hwif_out.nmi_vector.vec.value;
-assign iccm_lock  = soc_ifc_reg_hwif_out.iccm_lock.lock.value;
-assign clk_gating_en = soc_ifc_reg_hwif_out.clk_gating_en.clk_gating_en.value;
+assign nmi_vector = soc_ifc_reg_hwif_out.internal_nmi_vector.vec.value;
+assign iccm_lock  = soc_ifc_reg_hwif_out.internal_iccm_lock.lock.value;
+assign clk_gating_en = soc_ifc_reg_hwif_out.CPTRA_CLK_GATING_EN.clk_gating_en.value;
 
 //SHA Accelerator
 sha512_acc_top #(
@@ -462,10 +484,10 @@ i_mbox (
 always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
     if (~cptra_noncore_rst_b) begin
         uc_mbox_data_avail_d <= '0;
-	end
-	else begin
-		uc_mbox_data_avail_d <= uc_mbox_data_avail;
-	end
+    end
+    else begin
+        uc_mbox_data_avail_d <= uc_mbox_data_avail;
+    end
 end
 
 always_comb uc_cmd_avail_p = uc_mbox_data_avail & !uc_mbox_data_avail_d;

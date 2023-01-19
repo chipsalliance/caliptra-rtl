@@ -57,6 +57,7 @@ void main(void) {
         uint32_t * soc_ifc_error_mbox_ecc_unc_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R);
         uint32_t * soc_ifc_notif_cmd_avail_ctr    = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_R);
         uint32_t * soc_ifc_notif_mbox_ecc_cor_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R);
+        uint32_t * soc_ifc_notif_debug_locked_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_R);
 
         uint32_t sha512_intr_count = 0;
         uint32_t sha256_intr_count = 0;
@@ -95,11 +96,11 @@ void main(void) {
             } else if ((intr_count & 0xF) >= 0xA) {
                 *ecc_notif_trig = ECC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK;
                 ecc_intr_count++;
-            } else if ((intr_count & 0xF) >= 0x8) {
+            } else if ((intr_count & 0xF) >= 0x9) {
                 *doe_notif_trig = DOE_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK;
                 doe_intr_count++;
             } else if ((intr_count & 0xF) >= 0x6) {
-                *soc_ifc_notif_trig = 1 << (intr_count % 0x2);
+                *soc_ifc_notif_trig = 1 << (intr_count % 0x3);
                 soc_ifc_notif_intr_count++;
             } else {
                 *soc_ifc_error_trig = 1 << (intr_count % 0x6);
@@ -174,7 +175,8 @@ void main(void) {
         // SOC_IFC Notif
         printf("SOC_IFC Notif fw count: %x\n", soc_ifc_notif_intr_count);
         soc_ifc_notif_intr_count_hw =  *soc_ifc_notif_cmd_avail_ctr +
-                                       *soc_ifc_notif_mbox_ecc_cor_ctr;
+                                       *soc_ifc_notif_mbox_ecc_cor_ctr +
+                                       *soc_ifc_notif_debug_locked_ctr;
         printf("SOC_IFC Notif hw count: %x\n", soc_ifc_notif_intr_count_hw);
         if (soc_ifc_notif_intr_count != soc_ifc_notif_intr_count_hw) {
             printf("%c", 0x1); // Kill sim with ERROR

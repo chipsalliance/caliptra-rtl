@@ -4,67 +4,89 @@
 package soc_ifc_reg_pkg;
     typedef struct packed{
         logic next;
-    } soc_ifc_reg__FLOW_STATUS__ready_for_fuses__in_t;
+    } soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_fuses__in_t;
 
     typedef struct packed{
-        soc_ifc_reg__FLOW_STATUS__ready_for_fuses__in_t ready_for_fuses;
-    } soc_ifc_reg__FLOW_STATUS__in_t;
-
-    typedef struct packed{
-        logic swwel;
-    } soc_ifc_reg__VALID_PAUSER__PAUSER__in_t;
-
-    typedef struct packed{
-        soc_ifc_reg__VALID_PAUSER__PAUSER__in_t PAUSER;
-    } soc_ifc_reg__VALID_PAUSER__in_t;
-
-    typedef struct packed{
-        logic swwel;
-    } soc_ifc_reg__PAUSER_LOCK__LOCK__in_t;
-
-    typedef struct packed{
-        soc_ifc_reg__PAUSER_LOCK__LOCK__in_t LOCK;
-    } soc_ifc_reg__PAUSER_LOCK__in_t;
+        soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_fuses__in_t ready_for_fuses;
+    } soc_ifc_reg__CPTRA_FLOW_STATUS__in_t;
 
     typedef struct packed{
         logic [31:0] next;
-    } soc_ifc_reg__generic_input_wires__generic_wires__in_t;
+        logic we;
+    } soc_ifc_reg__CPTRA_RESET_REASON__reason__in_t;
 
     typedef struct packed{
-        soc_ifc_reg__generic_input_wires__generic_wires__in_t generic_wires;
-    } soc_ifc_reg__generic_input_wires__in_t;
+        soc_ifc_reg__CPTRA_RESET_REASON__reason__in_t reason;
+    } soc_ifc_reg__CPTRA_RESET_REASON__in_t;
+
+    typedef struct packed{
+        logic [1:0] next;
+    } soc_ifc_reg__CPTRA_SECURITY_STATE__device_lifecycle__in_t;
+
+    typedef struct packed{
+        logic next;
+    } soc_ifc_reg__CPTRA_SECURITY_STATE__debug_locked__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_SECURITY_STATE__device_lifecycle__in_t device_lifecycle;
+        soc_ifc_reg__CPTRA_SECURITY_STATE__debug_locked__in_t debug_locked;
+    } soc_ifc_reg__CPTRA_SECURITY_STATE__in_t;
 
     typedef struct packed{
         logic swwel;
-    } soc_ifc_reg__TRNG_VALID_PAUSER__PAUSER__in_t;
+    } soc_ifc_reg__CPTRA_VALID_PAUSER__PAUSER__in_t;
 
     typedef struct packed{
-        soc_ifc_reg__TRNG_VALID_PAUSER__PAUSER__in_t PAUSER;
-    } soc_ifc_reg__TRNG_VALID_PAUSER__in_t;
+        soc_ifc_reg__CPTRA_VALID_PAUSER__PAUSER__in_t PAUSER;
+    } soc_ifc_reg__CPTRA_VALID_PAUSER__in_t;
 
     typedef struct packed{
         logic swwel;
-    } soc_ifc_reg__TRNG_PAUSER_LOCK__LOCK__in_t;
+    } soc_ifc_reg__CPTRA_PAUSER_LOCK__LOCK__in_t;
 
     typedef struct packed{
-        soc_ifc_reg__TRNG_PAUSER_LOCK__LOCK__in_t LOCK;
-    } soc_ifc_reg__TRNG_PAUSER_LOCK__in_t;
+        soc_ifc_reg__CPTRA_PAUSER_LOCK__LOCK__in_t LOCK;
+    } soc_ifc_reg__CPTRA_PAUSER_LOCK__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER__PAUSER__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER__PAUSER__in_t PAUSER;
+    } soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK__LOCK__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK__LOCK__in_t LOCK;
+    } soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK__in_t;
 
     typedef struct packed{
         logic swwe;
-    } soc_ifc_reg__TRNG__DATA__in_t;
+    } soc_ifc_reg__CPTRA_TRNG__DATA__in_t;
 
     typedef struct packed{
-        soc_ifc_reg__TRNG__DATA__in_t DATA;
-    } soc_ifc_reg__TRNG__in_t;
+        soc_ifc_reg__CPTRA_TRNG__DATA__in_t DATA;
+    } soc_ifc_reg__CPTRA_TRNG__in_t;
 
     typedef struct packed{
         logic swwe;
-    } soc_ifc_reg__TRNG_DONE__DONE__in_t;
+    } soc_ifc_reg__CPTRA_TRNG_DONE__DONE__in_t;
 
     typedef struct packed{
-        soc_ifc_reg__TRNG_DONE__DONE__in_t DONE;
-    } soc_ifc_reg__TRNG_DONE__in_t;
+        soc_ifc_reg__CPTRA_TRNG_DONE__DONE__in_t DONE;
+    } soc_ifc_reg__CPTRA_TRNG_DONE__in_t;
+
+    typedef struct packed{
+        logic [31:0] next;
+    } soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES__generic_wires__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES__generic_wires__in_t generic_wires;
+    } soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES__in_t;
 
     typedef struct packed{
         logic hwclr;
@@ -72,11 +94,11 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         soc_ifc_reg__secret_w32__in_t seed;
-    } soc_ifc_reg__uds_seed__in_t;
+    } soc_ifc_reg__fuse_uds_seed__in_t;
 
     typedef struct packed{
         soc_ifc_reg__secret_w32__in_t seed;
-    } soc_ifc_reg__field_entropy__in_t;
+    } soc_ifc_reg__fuse_field_entropy__in_t;
 
     typedef struct packed{
         logic [31:0] next;
@@ -87,15 +109,15 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         soc_ifc_reg__key_w32__in_t key;
-    } soc_ifc_reg__obf_key__in_t;
+    } soc_ifc_reg__internal_obf_key__in_t;
 
     typedef struct packed{
         logic hwclr;
-    } soc_ifc_reg__iccm_lock__lock__in_t;
+    } soc_ifc_reg__internal_iccm_lock__lock__in_t;
 
     typedef struct packed{
-        soc_ifc_reg__iccm_lock__lock__in_t lock;
-    } soc_ifc_reg__iccm_lock__in_t;
+        soc_ifc_reg__internal_iccm_lock__lock__in_t lock;
+    } soc_ifc_reg__internal_iccm_lock__in_t;
 
     typedef struct packed{
         logic hwset;
@@ -139,96 +161,119 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__intr_block_t__notif_intr_t__notif_mbox_ecc_cor_sts_enable_c4f9db68_next_96c01bef__in_t;
 
     typedef struct packed{
+        logic hwset;
+    } soc_ifc_reg__intr_block_t__notif_intr_t__notif_debug_locked_sts_enable_097fcd5b_next_36fa44d8__in_t;
+
+    typedef struct packed{
         soc_ifc_reg__intr_block_t__notif_intr_t__notif_cmd_avail_sts_enable_f40f37a0_next_6afe0a88__in_t notif_cmd_avail_sts;
         soc_ifc_reg__intr_block_t__notif_intr_t__notif_mbox_ecc_cor_sts_enable_c4f9db68_next_96c01bef__in_t notif_mbox_ecc_cor_sts;
-    } soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_mbox_ecc_cor_sts_5c3d26bb__in_t;
+        soc_ifc_reg__intr_block_t__notif_intr_t__notif_debug_locked_sts_enable_097fcd5b_next_36fa44d8__in_t notif_debug_locked_sts;
+    } soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_mbox_ecc_cor_sts_5c3d26bb__in_t;
 
     typedef struct packed{
         soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_iccm_blocked_sts_9be0379b_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7_error_mbox_ecc_unc_sts_243a4927__in_t error_internal_intr_r;
-        soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_mbox_ecc_cor_sts_5c3d26bb__in_t notif_internal_intr_r;
+        soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_mbox_ecc_cor_sts_5c3d26bb__in_t notif_internal_intr_r;
     } soc_ifc_reg__intr_block_t__in_t;
 
     typedef struct packed{
         logic reset_b;
         logic hard_reset_b;
         logic soc_req;
-        soc_ifc_reg__FLOW_STATUS__in_t FLOW_STATUS;
-        soc_ifc_reg__VALID_PAUSER__in_t [5-1:0]VALID_PAUSER;
-        soc_ifc_reg__PAUSER_LOCK__in_t [5-1:0]PAUSER_LOCK;
-        soc_ifc_reg__generic_input_wires__in_t [2-1:0]generic_input_wires;
-        soc_ifc_reg__TRNG_VALID_PAUSER__in_t TRNG_VALID_PAUSER;
-        soc_ifc_reg__TRNG_PAUSER_LOCK__in_t TRNG_PAUSER_LOCK;
-        soc_ifc_reg__TRNG__in_t [12-1:0]TRNG;
-        soc_ifc_reg__TRNG_DONE__in_t TRNG_DONE;
-        soc_ifc_reg__uds_seed__in_t [12-1:0]uds_seed;
-        soc_ifc_reg__field_entropy__in_t [32-1:0]field_entropy;
-        soc_ifc_reg__obf_key__in_t [8-1:0]obf_key;
-        soc_ifc_reg__iccm_lock__in_t iccm_lock;
+        soc_ifc_reg__CPTRA_FLOW_STATUS__in_t CPTRA_FLOW_STATUS;
+        soc_ifc_reg__CPTRA_RESET_REASON__in_t CPTRA_RESET_REASON;
+        soc_ifc_reg__CPTRA_SECURITY_STATE__in_t CPTRA_SECURITY_STATE;
+        soc_ifc_reg__CPTRA_VALID_PAUSER__in_t [5-1:0]CPTRA_VALID_PAUSER;
+        soc_ifc_reg__CPTRA_PAUSER_LOCK__in_t [5-1:0]CPTRA_PAUSER_LOCK;
+        soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER__in_t CPTRA_TRNG_VALID_PAUSER;
+        soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK__in_t CPTRA_TRNG_PAUSER_LOCK;
+        soc_ifc_reg__CPTRA_TRNG__in_t [12-1:0]CPTRA_TRNG;
+        soc_ifc_reg__CPTRA_TRNG_DONE__in_t CPTRA_TRNG_DONE;
+        soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES__in_t [2-1:0]CPTRA_GENERIC_INPUT_WIRES;
+        soc_ifc_reg__fuse_uds_seed__in_t [12-1:0]fuse_uds_seed;
+        soc_ifc_reg__fuse_field_entropy__in_t [32-1:0]fuse_field_entropy;
+        soc_ifc_reg__internal_obf_key__in_t [8-1:0]internal_obf_key;
+        soc_ifc_reg__internal_iccm_lock__in_t internal_iccm_lock;
         soc_ifc_reg__intr_block_t__in_t intr_block_rf;
     } soc_ifc_reg__in_t;
 
     typedef struct packed{
         logic value;
-    } soc_ifc_reg__FLOW_STATUS__ready_for_fw__out_t;
+    } soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_fw__out_t;
 
     typedef struct packed{
         logic value;
-    } soc_ifc_reg__FLOW_STATUS__ready_for_runtime__out_t;
+    } soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_runtime__out_t;
 
     typedef struct packed{
         logic value;
-    } soc_ifc_reg__FLOW_STATUS__ready_for_fuses__out_t;
+    } soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_fuses__out_t;
 
     typedef struct packed{
         logic value;
-    } soc_ifc_reg__FLOW_STATUS__mailbox_flow_done__out_t;
+    } soc_ifc_reg__CPTRA_FLOW_STATUS__mailbox_flow_done__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__FLOW_STATUS__ready_for_fw__out_t ready_for_fw;
-        soc_ifc_reg__FLOW_STATUS__ready_for_runtime__out_t ready_for_runtime;
-        soc_ifc_reg__FLOW_STATUS__ready_for_fuses__out_t ready_for_fuses;
-        soc_ifc_reg__FLOW_STATUS__mailbox_flow_done__out_t mailbox_flow_done;
-    } soc_ifc_reg__FLOW_STATUS__out_t;
+        soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_fw__out_t ready_for_fw;
+        soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_runtime__out_t ready_for_runtime;
+        soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_fuses__out_t ready_for_fuses;
+        soc_ifc_reg__CPTRA_FLOW_STATUS__mailbox_flow_done__out_t mailbox_flow_done;
+    } soc_ifc_reg__CPTRA_FLOW_STATUS__out_t;
 
     typedef struct packed{
         logic [31:0] value;
-    } soc_ifc_reg__VALID_PAUSER__PAUSER__out_t;
+    } soc_ifc_reg__CPTRA_VALID_PAUSER__PAUSER__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__VALID_PAUSER__PAUSER__out_t PAUSER;
-    } soc_ifc_reg__VALID_PAUSER__out_t;
-
-    typedef struct packed{
-        logic value;
-    } soc_ifc_reg__PAUSER_LOCK__LOCK__out_t;
-
-    typedef struct packed{
-        soc_ifc_reg__PAUSER_LOCK__LOCK__out_t LOCK;
-    } soc_ifc_reg__PAUSER_LOCK__out_t;
-
-    typedef struct packed{
-        logic [31:0] value;
-    } soc_ifc_reg__generic_output_wires__generic_wires__out_t;
-
-    typedef struct packed{
-        soc_ifc_reg__generic_output_wires__generic_wires__out_t generic_wires;
-    } soc_ifc_reg__generic_output_wires__out_t;
-
-    typedef struct packed{
-        logic [31:0] value;
-    } soc_ifc_reg__TRNG_VALID_PAUSER__PAUSER__out_t;
-
-    typedef struct packed{
-        soc_ifc_reg__TRNG_VALID_PAUSER__PAUSER__out_t PAUSER;
-    } soc_ifc_reg__TRNG_VALID_PAUSER__out_t;
+        soc_ifc_reg__CPTRA_VALID_PAUSER__PAUSER__out_t PAUSER;
+    } soc_ifc_reg__CPTRA_VALID_PAUSER__out_t;
 
     typedef struct packed{
         logic value;
-    } soc_ifc_reg__TRNG_PAUSER_LOCK__LOCK__out_t;
+    } soc_ifc_reg__CPTRA_PAUSER_LOCK__LOCK__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__TRNG_PAUSER_LOCK__LOCK__out_t LOCK;
-    } soc_ifc_reg__TRNG_PAUSER_LOCK__out_t;
+        soc_ifc_reg__CPTRA_PAUSER_LOCK__LOCK__out_t LOCK;
+    } soc_ifc_reg__CPTRA_PAUSER_LOCK__out_t;
+
+    typedef struct packed{
+        logic [31:0] value;
+    } soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER__PAUSER__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER__PAUSER__out_t PAUSER;
+    } soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK__LOCK__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK__LOCK__out_t LOCK;
+    } soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__CPTRA_FUSE_WR_DONE__done__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_FUSE_WR_DONE__done__out_t done;
+    } soc_ifc_reg__CPTRA_FUSE_WR_DONE__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__CPTRA_CLK_GATING_EN__clk_gating_en__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_CLK_GATING_EN__clk_gating_en__out_t clk_gating_en;
+    } soc_ifc_reg__CPTRA_CLK_GATING_EN__out_t;
+
+    typedef struct packed{
+        logic [31:0] value;
+    } soc_ifc_reg__CPTRA_GENERIC_OUTPUT_WIRES__generic_wires__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_GENERIC_OUTPUT_WIRES__generic_wires__out_t generic_wires;
+    } soc_ifc_reg__CPTRA_GENERIC_OUTPUT_WIRES__out_t;
 
     typedef struct packed{
         logic [31:0] value;
@@ -236,19 +281,11 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         soc_ifc_reg__secret_w32__out_t seed;
-    } soc_ifc_reg__uds_seed__out_t;
+    } soc_ifc_reg__fuse_uds_seed__out_t;
 
     typedef struct packed{
         soc_ifc_reg__secret_w32__out_t seed;
-    } soc_ifc_reg__field_entropy__out_t;
-
-    typedef struct packed{
-        logic value;
-    } soc_ifc_reg__fuse_done__done__out_t;
-
-    typedef struct packed{
-        soc_ifc_reg__fuse_done__done__out_t done;
-    } soc_ifc_reg__fuse_done__out_t;
+    } soc_ifc_reg__fuse_field_entropy__out_t;
 
     typedef struct packed{
         logic [31:0] value;
@@ -256,47 +293,39 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         soc_ifc_reg__key_w32__out_t key;
-    } soc_ifc_reg__obf_key__out_t;
+    } soc_ifc_reg__internal_obf_key__out_t;
 
     typedef struct packed{
         logic value;
-    } soc_ifc_reg__iccm_lock__lock__out_t;
+    } soc_ifc_reg__internal_iccm_lock__lock__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__iccm_lock__lock__out_t lock;
-    } soc_ifc_reg__iccm_lock__out_t;
+        soc_ifc_reg__internal_iccm_lock__lock__out_t lock;
+    } soc_ifc_reg__internal_iccm_lock__out_t;
 
     typedef struct packed{
         logic value;
-    } soc_ifc_reg__fw_update_reset__core_rst__out_t;
+    } soc_ifc_reg__internal_fw_update_reset__core_rst__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__fw_update_reset__core_rst__out_t core_rst;
-    } soc_ifc_reg__fw_update_reset__out_t;
+        soc_ifc_reg__internal_fw_update_reset__core_rst__out_t core_rst;
+    } soc_ifc_reg__internal_fw_update_reset__out_t;
 
     typedef struct packed{
         logic [7:0] value;
-    } soc_ifc_reg__fw_update_reset_wait_cycles__wait_cycles__out_t;
+    } soc_ifc_reg__internal_fw_update_reset_wait_cycles__wait_cycles__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__fw_update_reset_wait_cycles__wait_cycles__out_t wait_cycles;
-    } soc_ifc_reg__fw_update_reset_wait_cycles__out_t;
+        soc_ifc_reg__internal_fw_update_reset_wait_cycles__wait_cycles__out_t wait_cycles;
+    } soc_ifc_reg__internal_fw_update_reset_wait_cycles__out_t;
 
     typedef struct packed{
         logic [31:0] value;
-    } soc_ifc_reg__nmi_vector__vec__out_t;
+    } soc_ifc_reg__internal_nmi_vector__vec__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__nmi_vector__vec__out_t vec;
-    } soc_ifc_reg__nmi_vector__out_t;
-
-    typedef struct packed{
-        logic value;
-    } soc_ifc_reg__clk_gating_en__clk_gating_en__out_t;
-
-    typedef struct packed{
-        soc_ifc_reg__clk_gating_en__clk_gating_en__out_t clk_gating_en;
-    } soc_ifc_reg__clk_gating_en__out_t;
+        soc_ifc_reg__internal_nmi_vector__vec__out_t vec;
+    } soc_ifc_reg__internal_nmi_vector__out_t;
 
     typedef struct packed{
         logic intr;
@@ -312,31 +341,31 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic intr;
-    } soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_mbox_ecc_cor_sts_5c3d26bb__out_t;
+    } soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_mbox_ecc_cor_sts_5c3d26bb__out_t;
 
     typedef struct packed{
         soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a__out_t error_global_intr_r;
         soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a__out_t notif_global_intr_r;
         soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_iccm_blocked_sts_9be0379b_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7_error_mbox_ecc_unc_sts_243a4927__out_t error_internal_intr_r;
-        soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_mbox_ecc_cor_sts_5c3d26bb__out_t notif_internal_intr_r;
+        soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_mbox_ecc_cor_sts_5c3d26bb__out_t notif_internal_intr_r;
     } soc_ifc_reg__intr_block_t__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__FLOW_STATUS__out_t FLOW_STATUS;
-        soc_ifc_reg__VALID_PAUSER__out_t [5-1:0]VALID_PAUSER;
-        soc_ifc_reg__PAUSER_LOCK__out_t [5-1:0]PAUSER_LOCK;
-        soc_ifc_reg__generic_output_wires__out_t [2-1:0]generic_output_wires;
-        soc_ifc_reg__TRNG_VALID_PAUSER__out_t TRNG_VALID_PAUSER;
-        soc_ifc_reg__TRNG_PAUSER_LOCK__out_t TRNG_PAUSER_LOCK;
-        soc_ifc_reg__uds_seed__out_t [12-1:0]uds_seed;
-        soc_ifc_reg__field_entropy__out_t [32-1:0]field_entropy;
-        soc_ifc_reg__fuse_done__out_t fuse_done;
-        soc_ifc_reg__obf_key__out_t [8-1:0]obf_key;
-        soc_ifc_reg__iccm_lock__out_t iccm_lock;
-        soc_ifc_reg__fw_update_reset__out_t fw_update_reset;
-        soc_ifc_reg__fw_update_reset_wait_cycles__out_t fw_update_reset_wait_cycles;
-        soc_ifc_reg__nmi_vector__out_t nmi_vector;
-        soc_ifc_reg__clk_gating_en__out_t clk_gating_en;
+        soc_ifc_reg__CPTRA_FLOW_STATUS__out_t CPTRA_FLOW_STATUS;
+        soc_ifc_reg__CPTRA_VALID_PAUSER__out_t [5-1:0]CPTRA_VALID_PAUSER;
+        soc_ifc_reg__CPTRA_PAUSER_LOCK__out_t [5-1:0]CPTRA_PAUSER_LOCK;
+        soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER__out_t CPTRA_TRNG_VALID_PAUSER;
+        soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK__out_t CPTRA_TRNG_PAUSER_LOCK;
+        soc_ifc_reg__CPTRA_FUSE_WR_DONE__out_t CPTRA_FUSE_WR_DONE;
+        soc_ifc_reg__CPTRA_CLK_GATING_EN__out_t CPTRA_CLK_GATING_EN;
+        soc_ifc_reg__CPTRA_GENERIC_OUTPUT_WIRES__out_t [2-1:0]CPTRA_GENERIC_OUTPUT_WIRES;
+        soc_ifc_reg__fuse_uds_seed__out_t [12-1:0]fuse_uds_seed;
+        soc_ifc_reg__fuse_field_entropy__out_t [32-1:0]fuse_field_entropy;
+        soc_ifc_reg__internal_obf_key__out_t [8-1:0]internal_obf_key;
+        soc_ifc_reg__internal_iccm_lock__out_t internal_iccm_lock;
+        soc_ifc_reg__internal_fw_update_reset__out_t internal_fw_update_reset;
+        soc_ifc_reg__internal_fw_update_reset_wait_cycles__out_t internal_fw_update_reset_wait_cycles;
+        soc_ifc_reg__internal_nmi_vector__out_t internal_nmi_vector;
         soc_ifc_reg__intr_block_t__out_t intr_block_rf;
     } soc_ifc_reg__out_t;
 

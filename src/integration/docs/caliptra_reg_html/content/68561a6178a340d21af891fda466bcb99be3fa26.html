@@ -29,7 +29,7 @@ Sticky, level assertion, write-1-to-clear.</p>
         <th></th>
     </tr>
     <tr class="reserved-field">
-    <td>[31:2]</td>
+    <td>[31:3]</td>
     <td>-</td>
     <td>-</td>
     <td>-</td>
@@ -37,6 +37,26 @@ Sticky, level assertion, write-1-to-clear.</p>
     <td>-</td>
     <td></td>
 </tr>
+    <tr id="notif_debug_locked_sts">
+        <td>[2]</td>
+        <td><a href="#notif_debug_locked_sts.desc">notif_debug_locked_sts</a></td>
+        <td>
+            <span title='Readable and Writable'>rw</span>, <span title='Bitwise write 1 to clear'>woclr</span></td>
+        <td>0x0
+        </td>
+        <td>
+            <input id="_FieldValueTesternotif_debug_locked_sts" class="field-value-tester"
+                type="text" autocomplete="off"
+                data-name="notif_debug_locked_sts" oninput="onDecodedFieldInput(this)"/>
+        </td>
+        <td>-</td>
+        <td>
+            <button type="button" id="_RadixButtonnotif_debug_locked_sts" class="radix-button"
+                title="Switch radix" aria-label="Switch radix"
+                data-name="notif_debug_locked_sts" onclick="onRadixSwitch(this)">H</button>
+            <a class="headerlink" href="#notif_debug_locked_sts" title="Permalink to this row"></a>
+        </td>
+    </tr>
     <tr id="notif_mbox_ecc_cor_sts">
         <td>[1]</td>
         <td><a href="#notif_mbox_ecc_cor_sts.desc">notif_mbox_ecc_cor_sts</a></td>
@@ -86,6 +106,13 @@ Sticky, level assertion, write-1-to-clear.</p>
     </label>
 </p>
 <hr/><h2>Field Descriptions</h2>
+
+<h3 id="notif_debug_locked_sts.desc">notif_debug_locked_sts
+    <a class="headerlink" href="#notif_debug_locked_sts.desc" title="Permalink to this headline"></a>
+</h3>
+<div id="_Content.notif_debug_locked_sts.desc">
+<p>Security State, Debug Locked transition status bit</p>
+</div>
 
 <h3 id="notif_mbox_ecc_cor_sts.desc">notif_mbox_ecc_cor_sts
     <a class="headerlink" href="#notif_mbox_ecc_cor_sts.desc" title="Permalink to this headline"></a>

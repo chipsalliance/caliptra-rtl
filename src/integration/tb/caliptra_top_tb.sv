@@ -149,7 +149,7 @@ module caliptra_top_tb (
 
     parameter MBOX_UDS_ADDR = 32'h3003_0200;
     parameter MBOX_FE_ADDR  = 32'h3003_0230;
-    parameter MBOX_FUSE_DONE_ADDR = 32'h3003_03f0; //FIXME need to not hardcode these
+    parameter MBOX_FUSE_DONE_ADDR = 32'h3003_008c; //FIXME need to not hardcode these
 
     parameter MBOX_ADDR_BASE        = 32'h30020000;
     parameter MBOX_ADDR_LOCK        = MBOX_ADDR_BASE;
@@ -180,8 +180,8 @@ module caliptra_top_tb (
     //         8'hfd        - Toggle random SRAM single bit error injection
     //         8'hfe        - Toggle random SRAM double bit error injection
     //         8'hff        - End the simulation with a Success status
-    assign mailbox_write = caliptra_top_dut.soc_ifc_top1.i_soc_ifc_reg.field_combo.generic_output_wires[0].generic_wires.load_next;
-    assign WriteData = caliptra_top_dut.soc_ifc_top1.i_soc_ifc_reg.field_combo.generic_output_wires[0].generic_wires.next;
+    assign mailbox_write = caliptra_top_dut.soc_ifc_top1.i_soc_ifc_reg.field_combo.CPTRA_GENERIC_OUTPUT_WIRES[0].generic_wires.load_next;
+    assign WriteData = caliptra_top_dut.soc_ifc_top1.i_soc_ifc_reg.field_combo.CPTRA_GENERIC_OUTPUT_WIRES[0].generic_wires.next;
     assign mailbox_data_val = WriteData[7:0] > 8'h5 && WriteData[7:0] < 8'h7f;
 
     parameter MAX_CYCLES = 20_000_000;

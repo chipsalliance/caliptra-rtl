@@ -51,6 +51,7 @@ inline void service_doe_notif_intr() {
     }
     if (sts == 0) {
         printf("bad doe_notif_intr sts:%x\n", sts);
+        printf("%c", 0x1);
     }
 }
 
@@ -64,6 +65,7 @@ inline void service_ecc_notif_intr() {
     }
     if (sts == 0) {
         printf("bad ecc_notif_intr sts:%x\n", sts);
+        printf("%c", 0x1);
     }
 }
 
@@ -77,6 +79,7 @@ inline void service_hmac_notif_intr() {
     }
     if (sts == 0) {
         printf("bad hmac_notif_intr sts:%x\n", sts);
+        printf("%c", 0x1);
     }
 }
 
@@ -92,6 +95,7 @@ inline void service_sha512_notif_intr() {
     }
     if (sts == 0) {
         printf("bad sha512_notif_intr sts:%x\n", sts);
+        printf("%c", 0x1);
     }
 }
 
@@ -105,6 +109,7 @@ inline void service_sha256_notif_intr() {
     }
     if (sts == 0) {
         printf("bad sha256_notif_intr sts:%x\n", sts);
+        printf("%c", 0x1);
     }
 }
 
@@ -133,8 +138,12 @@ inline void service_soc_ifc_error_intr() {
     if (sts & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_ICCM_BLOCKED_STS_MASK) {
         *reg = SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_ICCM_BLOCKED_STS_MASK;
     }
+    if (sts & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK) {
+        *reg = SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK;
+    }
     if (sts == 0) {
         printf("bad soc_ifc_error_intr sts:%x\n", sts);
+        printf("%c", 0x1);
     }
 }
 
@@ -145,8 +154,15 @@ inline void service_soc_ifc_notif_intr () {
     if (sts & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK) {
         *reg = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK;
     }
+    if (sts & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_MBOX_ECC_COR_STS_MASK) {
+        *reg = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_MBOX_ECC_COR_STS_MASK;
+    }
+    if (sts & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_DEBUG_LOCKED_STS_MASK) {
+        *reg = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_DEBUG_LOCKED_STS_MASK;
+    }
     if (sts == 0) {
         printf("bad soc_ifc_notif_intr sts:%x\n", sts);
+        printf("%c", 0x1);
     }
 }
 
@@ -160,6 +176,7 @@ inline void service_sha512_acc_notif_intr() {
     }
     if (sts == 0) {
         printf("bad sha512_acc_notif_intr sts:%x\n", sts);
+        printf("%c", 0x1);
     }
 }
 

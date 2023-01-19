@@ -26,6 +26,8 @@ module soc_ifc_tb
   import soc_ifc_pkg::*;
   ();
 
+  `include "caliptra_macros.svh"
+
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
@@ -50,7 +52,7 @@ module soc_ifc_tb
 
   parameter MBOX_UDS_ADDR         = 32'h3003_0200;
   parameter MBOX_FE_ADDR          = 32'h3003_0230;
-  parameter MBOX_FUSE_DONE_ADDR   = 32'h3003_03F0;
+  parameter MBOX_FUSE_DONE_ADDR   = 32'h3003_008c;
 
   parameter AHB_ADDR_WIDTH = 18;
   parameter AHB_DATA_WIDTH = 32;
@@ -118,6 +120,9 @@ module soc_ifc_tb
   mbox_sram_req_t mbox_sram_req;
   mbox_sram_resp_t mbox_sram_resp;
 
+  //TIE-OFF device lifecycle
+  security_state_t security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1};
+
   always_comb begin
     mbox_sram_cs = mbox_sram_req.cs;
     mbox_sram_we = mbox_sram_req.we;
@@ -173,6 +178,7 @@ module soc_ifc_tb
              .generic_output_wires(),
              .mailbox_data_avail(),
              .mailbox_flow_done(),
+             .security_state(security_state),
              .obf_field_entropy(),
              .obf_uds_seed(),
              .ready_for_fuses(ready_for_fuses),

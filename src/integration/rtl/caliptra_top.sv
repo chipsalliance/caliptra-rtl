@@ -766,6 +766,8 @@ soc_ifc_top1
     .ready_for_runtime(ready_for_runtime),
     .mailbox_data_avail(mailbox_data_avail),
     .mailbox_flow_done(mailbox_flow_done),
+
+    .security_state(security_state),
     
     .generic_input_wires(generic_input_wires),
     .generic_output_wires(generic_output_wires),

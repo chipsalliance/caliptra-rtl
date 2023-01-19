@@ -47,8 +47,8 @@ void main(void) {
         uint32_t * ICCM = (uint32_t *) RV_ICCM_SADR;
 
         volatile uint32_t * soc_ifc_error_iccm_blocked_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_R);
-        volatile uint32_t * soc_ifc_iccm_lock              = (uint32_t *) (CLP_SOC_IFC_REG_ICCM_LOCK);
-        volatile uint32_t * soc_ifc_nmi_vector             = (uint32_t *) (CLP_SOC_IFC_REG_NMI_VECTOR);
+        volatile uint32_t * soc_ifc_iccm_lock              = (uint32_t *) (CLP_SOC_IFC_REG_INTERNAL_ICCM_LOCK);
+        volatile uint32_t * soc_ifc_nmi_vector             = (uint32_t *) (CLP_SOC_IFC_REG_INTERNAL_NMI_VECTOR);
 
         uint32_t * code_word = 0;
         uint32_t * iccm_dest = ICCM;
@@ -65,7 +65,7 @@ void main(void) {
         persistent_nmi_expected = 0;
 
         // Check ICCM_LOCK is not currently set
-        if (*soc_ifc_iccm_lock & SOC_IFC_REG_ICCM_LOCK_LOCK_MASK == SOC_IFC_REG_ICCM_LOCK_LOCK_MASK) {
+        if (*soc_ifc_iccm_lock & SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK == SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK) {
             printf("ERROR: ICCM_LOCK set unexpectedly!\n");
             printf("%c", 0x1);
         }
@@ -109,8 +109,8 @@ void main(void) {
         }
 
         // Lock ICCM Writes
-        *soc_ifc_iccm_lock = SOC_IFC_REG_ICCM_LOCK_LOCK_MASK;
-        if (*soc_ifc_iccm_lock & SOC_IFC_REG_ICCM_LOCK_LOCK_MASK != SOC_IFC_REG_ICCM_LOCK_LOCK_MASK) {
+        *soc_ifc_iccm_lock = SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK;
+        if (*soc_ifc_iccm_lock & SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK != SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK) {
             printf("ERROR: Failed to set ICCM_LOCK!\n");
             printf("%c", 0x1);
         }
@@ -141,7 +141,7 @@ void execute_first_pass_from_iccm (void) {
     // If we got here via NMI (D-Bus Store Error), document the iteration status
     // and reset the core
     if ((csr_read_mcause() & MCAUSE_NMI_BIT_MASK) == MCAUSE_NMI_BIT_MASK) {
-        volatile uint32_t * soc_ifc_fw_update_reset = (uint32_t *) (CLP_SOC_IFC_REG_FW_UPDATE_RESET);
+        volatile uint32_t * soc_ifc_fw_update_reset = (uint32_t *) (CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET);
         printf("**** NMI ****\n");
         intr_count++;
         if (!persistent_nmi_expected) {
@@ -165,7 +165,7 @@ void execute_first_pass_from_iccm (void) {
         } else {
             printf("At the end of first pass through ICCM LOCK test: resetting the core!\n");
             persistent_is_second_pass = 1;
-            *soc_ifc_fw_update_reset = SOC_IFC_REG_FW_UPDATE_RESET_CORE_RST_MASK;
+            *soc_ifc_fw_update_reset = SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK;
             while(1);
         }
     }

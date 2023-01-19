@@ -40,8 +40,8 @@ _start:
     csrw 0x7c0, x1
 
     //set ready for FW so tb will push FW
-    li x3, CLP_SOC_IFC_REG_FLOW_STATUS
-    li x4, SOC_IFC_REG_FLOW_STATUS_READY_FOR_FW_MASK
+    li x3, CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS
+    li x4, SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK
     sw x4, 0(x3)
 
 .rept 99

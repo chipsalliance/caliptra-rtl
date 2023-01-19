@@ -41,136 +41,329 @@ addrmap soc_ifc_reg {
     field secret {sw = w1; hw = r; hwclr; resetsignal = hard_reset_b;};
     field key {sw = w; swwe; hw = rw; wel; hwclr;};
 
-    reg {name = "Hardware Error Fatal";
-        desc = "Indicates fatal hardware error";
-        rw_rw_sticky error_code[32]=0; } HW_ERROR_FATAL;
-    reg {name = "Hardware Error Non-Fatal";
-        desc = "Indicates non-fatal hardware error";
-        rw_rw_sticky error_code[32]=0; } HW_ERROR_NON_FATAL;
-    reg {name = "Firmware Error Fatal";
-        desc = "Indicates fatal firmware error";
-        rw_rw_sticky error_code[32]=0; } FW_ERROR_FATAL;
-    reg {name = "Firmware Error Non-Fatal";
-        desc = "Indicates non-fatal firmware error";
-        rw_rw_sticky error_code[32]=0; } FW_ERROR_NON_FATAL;
-    reg {name = "Hardware Error Encoding";
-        desc = "Encoded error value for hardware errors";
-        rw_rw_sticky error_code[32]=0; } HW_ERROR_ENC;
-    reg {name = "Firmware Error Encoding";
-        desc = "Encoded error value for firmware errors";
-        rw_rw_sticky error_code[32]=0; } FW_ERROR_ENC;
-    reg {name = "Boot Status";
-        desc = "Reports the boot status";
-        rw_ro status[32]=0;} BOOT_STATUS;
-    reg {name = "Flow Status";
-        desc = "Reports the status of the firmware flows";
+
+    ////////////////////////////////////////////////////////////////
+    // SOC-Facing Registers
+    reg {
+        name = "Hardware Error Fatal";
+        desc = "Indicates fatal hardware error.
+                [br]Caliptra Access: RW
+                [br]SOC Access:      RW";
+        rw_rw_sticky error_code[32]=0; 
+    } CPTRA_HW_ERROR_FATAL;
+    reg {
+        name = "Hardware Error Non-Fatal";
+        desc = "Indicates non-fatal hardware error.
+                [br]Caliptra Access: RW
+                [br]SOC Access:      RW";
+        rw_rw_sticky error_code[32]=0; 
+    } CPTRA_HW_ERROR_NON_FATAL;
+    reg {
+        name = "Firmware Error Fatal";
+        desc = "Indicates fatal firmware error.
+                [br]Caliptra Access: RW
+                [br]SOC Access:      RW";
+        rw_rw_sticky error_code[32]=0; 
+    } CPTRA_FW_ERROR_FATAL;
+    reg {
+        name = "Firmware Error Non-Fatal";
+        desc = "Indicates non-fatal firmware error.
+                [br]Caliptra Access: RW
+                [br]SOC Access:      RW";
+        rw_rw_sticky error_code[32]=0; 
+    } CPTRA_FW_ERROR_NON_FATAL;
+    reg {
+        name = "Hardware Error Encoding";
+        desc = "Encoded error value for hardware errors.
+                [br]Caliptra Access: RW
+                [br]SOC Access:      RW";
+        rw_rw_sticky error_code[32]=0; 
+    } CPTRA_HW_ERROR_ENC;
+    reg {
+        name = "Firmware Error Encoding";
+        desc = "Encoded error value for firmware errors.
+                [br]Caliptra Access: RW
+                [br]SOC Access:      RW";
+        rw_rw_sticky error_code[32]=0; 
+    } CPTRA_FW_ERROR_ENC;
+
+    reg {
+        name = "Boot Status";
+        desc = "Reports the boot status.
+                [br]Caliptra Access: RW
+                [br]SOC Access:      RO";
+        rw_ro status[32]=0;
+    } CPTRA_BOOT_STATUS;
+    reg {
+        name = "Flow Status";
+        desc = "Reports the status of the firmware flows.
+                [br]Caliptra Access: RW
+                [br]SOC Access:      RO";
         rw_ro status[28]=0;
         //TRNG request bit
-         field {sw=rw; swwel = soc_req; hw=r;} ready_for_fw[1]=0;
-         field {sw=rw; swwel = soc_req; hw=r;} ready_for_runtime[1]=0;
-         field {sw=r; hw=rw;} ready_for_fuses[1];
-         field {sw=rw; swwel = soc_req; hw=r;} mailbox_flow_done[1]=0;} FLOW_STATUS;
+         field {desc="Indicates Caliptra is ready for Firmware Download";         sw=rw; swwel = soc_req; hw=r ;} ready_for_fw[1]=0;
+         field {desc="Indicates Caliptra is ready for Runtime Firmware Download"; sw=rw; swwel = soc_req; hw=r ;} ready_for_runtime[1]=0;
+         field {desc="Indicates Caliptra is ready for Fuses to be programmed.
+                      Read-only to both Caliptra and SOC.";                       sw=r;                   hw=rw;} ready_for_fuses[1];
+         field {desc="Indicates Caliptra is has completed Mailbox Flow.";         sw=rw; swwel = soc_req; hw=r ;} mailbox_flow_done[1]=0;
+    } CPTRA_FLOW_STATUS;
+    reg {
+        name = "Reset Reason";
+        desc = "Indicates to ROM the originating cause for the PC to be reset to 0.
+                Only reset during cold-boot (sticky).
+                [br]Caliptra Access: RW
+                [br]SOC Access:      RO";
+        field {sw=rw; hw=w; we=true; resetsignal = hard_reset_b;} reason[32]=0x0157b007; // L33t for 1stboot is the reset value
+    } CPTRA_RESET_REASON;
 
-    reg {name = "Valid User Registers";
-         desc = "Valid PAUSER attributes for requests from SoC APB Interface";
-         field {sw=rw; hw=r; swwel;} PAUSER[32]=0xFFFF_FFFF;} VALID_PAUSER[5];
+    reg {
+        name = "Security State";
+        desc = "Indicates current hardware security state.
+                [br]Caliptra Access: RO
+                [br]SOC Access:      RO";
+        enum device_lifecycle_e {
+            DEVICE_UNPROVISIONED = 2'b00 {
+                desc = "Unprovisioned";
+            };
+            DEVICE_MANUFACTURING = 2'b01 {
+                desc = "Manufacturing";
+            };
+            DEVICE_PRODUCTION    = 2'b11 {
+                desc = "Production";
+            };
+        };
+        field {desc = "Device Lifecycle"; sw=r; hw=w; encode = device_lifecycle_e;} device_lifecycle[2];
+        field {desc = "Debug Locked"    ; sw=r; hw=w;                             } debug_locked;
+        field {desc = "Reserved field"  ; sw=r;                                   } rsvd[29] = 0;
+    } CPTRA_SECURITY_STATE;
 
-    reg {name = "Valid User Register Lock";
+    reg {
+        name = "Valid User Registers";
          desc = "Valid PAUSER attributes for requests from SoC APB Interface.
-                 Each bit corresponds to locking the associated  VALID_PAUSER register.";
-         field {sw=rw; hw=r; swwel;} LOCK=0;} PAUSER_LOCK[5];
+                 [br]Caliptra Access: RW
+                 [br]SOC Access:      RW
+                 Read-Only once locked by PAUSER_LOCK.";
+         field {sw=rw; hw=r; swwel;} PAUSER[32]=0xFFFF_FFFF;
+     } CPTRA_VALID_PAUSER[5];
 
-    reg {name = "Generic Input Wires";
-        desc = "Generic input wires connected to SoC interface";
-        field {sw=rw; hw=w;} generic_wires[32];} generic_input_wires[2];
-    reg {name = "Generic Output Wires";
-        desc = "Generic output wires connected to SoC interface";
-        field {sw=rw; hw=r;} generic_wires[32];} generic_output_wires[2];
-
-    reg {name = "Valid User for TRNG";
-         desc = "Valid PAUSER attributes for TRNG on SoC APB Interface";
-         field {sw=rw; hw=r; swwel;} PAUSER[32]=0xFFFF_FFFF;} TRNG_VALID_PAUSER;
-
-    reg {name = "Valid User for TRNG Lock";
+    reg {
+        name = "Valid User Register Lock";
          desc = "Valid PAUSER attributes for requests from SoC APB Interface.
-                 Each bit corresponds to locking the associated  VALID_PAUSER register.";
-         field {sw=rw; hw=r; swwel;} LOCK=0;} TRNG_PAUSER_LOCK;
+                 Each bit corresponds to locking the associated  VALID_PAUSER register.
+                 [br]Caliptra Access: RW
+                 [br]SOC Access:      RW
+                 Read-Only once locked.";
+         field {sw=rw; hw=r; swwel;} LOCK=0;
+     } CPTRA_PAUSER_LOCK[5];
 
-    reg {name = "TRNG Data";
-         desc = "Storage for the requested TRNG Data";
-         field {sw=rw; hw=na; swwe;} DATA[32];} TRNG[12];
+    reg {
+        name = "Valid User for TRNG";
+        desc = "Valid PAUSER attributes for TRNG on SoC APB Interface.
+                [br]Caliptra Access: RW
+                [br]SOC Access:      RW
+                Read-Only once locked by TRNG_PAUSER_LOCK.";
+        field {sw=rw; hw=r; swwel;} PAUSER[32]=0xFFFF_FFFF;
+     } CPTRA_TRNG_VALID_PAUSER;
 
-    reg {name = "TRNG Done";
-         desc = "Indicates that the requests TRNG Data is done and stored in the TRNG Data register";
-         field {sw=rw; hw=na; swwe;} DONE;} TRNG_DONE;
+    reg {
+        name = "Valid User for TRNG Lock";
+        desc = "Valid PAUSER attributes for requests from SoC APB Interface.
+                Each bit corresponds to locking the associated VALID_PAUSER register.
+                [br]Caliptra Access: RW
+                [br]SOC Access:      RW
+                Read-Only once locked.";
+        field {sw=rw; hw=r; swwel;} LOCK=0;
+     } CPTRA_TRNG_PAUSER_LOCK;
 
-    //fuses
-    reg {name = "Unique Device Secret";
-        desc = "Obfuscated UDS";
-        secret seed[32]=0;} uds_seed[12] @0x200;
-    reg {name = "Field Entropy";
-        desc = "Obfuscated Field Entropy";secret seed[32]=0;} field_entropy[32];
+    reg {
+        name = "TRNG Data";
+        desc = "Storage for the requested TRNG Data.
+                [br]Caliptra Access: RW
+                [br]SOC Access:      RO";
+        field {sw=rw; hw=na; swwe;} DATA[32];
+     } CPTRA_TRNG[12];
+
+    reg {
+        name = "TRNG Done";
+        desc = "Indicates that the requests TRNG Data is done and stored in the TRNG Data register.
+                [br]Caliptra Access: RW
+                [br]SOC Access:      RO";
+        field {sw=rw; hw=na; swwe;} DONE;
+     } CPTRA_TRNG_DONE;
+
+    reg {
+        name = "Fuse Write Done";
+        desc = "Writes to fuse registers are completed. After the done bit is set, any subsequent writes to a fuse register will be dropped unless there is a power cycle.
+                 [br]Caliptra Access: RW
+                 [br]SOC Access:      RW";
+         field {sw=rw; hw=r; } done[1]=0;
+    } CPTRA_FUSE_WR_DONE;
+
+    reg {
+        name = "Timer Config";
+        desc = "Provides the clock period of the system clock.
+                Used to standardize the RISC-V Standard MTIME count register.
+                Clock Period is indicated as an integer number of picoseconds.
+                [br]Caliptra Access: RW
+                [br]SOC Access:      RW";
+        field {desc = "Period in (ps)"; sw=rw; hw=na;} clk_period[32] = 32'h0;
+    } CPTRA_TIMER_CONFIG;
+
+    reg {
+        name = "Clk gating enable";
+        desc = "Control register to enable clk gating. Default is 0 (disabled).
+                [br]Caliptra Access: RO
+                [br]SOC Access:      RW";
+
+        field {desc = "Clk gating enable"; hw = r; sw = rw; swwe = soc_req;} clk_gating_en = 1'b0;
+    } CPTRA_CLK_GATING_EN;
+
+    reg {
+        name = "Generic Input Wires";
+        desc = "Generic input wires connected to SoC interface.
+                [br]Caliptra Access: RW
+                [br]SOC Access:      RW";
+        field {sw=rw; hw=w;} generic_wires[32];
+    } CPTRA_GENERIC_INPUT_WIRES[2];
+    reg {
+        name = "Generic Output Wires";
+        desc = "Generic output wires connected to SoC interface.
+                [br]Caliptra Access: RW
+                [br]SOC Access:      RW";
+        field {sw=rw; hw=r;} generic_wires[32];
+    } CPTRA_GENERIC_OUTPUT_WIRES[2];
+
+
+    ////////////////////////////////////////////////////////////////
+    // FUSE Registers
+    reg {
+        name = "Unique Device Secret";
+        desc = "Obfuscated UDS.
+                [br]Caliptra Access: -
+                [br]SOC Access:      W1";
+        secret seed[32]=0;
+    } fuse_uds_seed[12] @0x200;
+    reg {
+        name = "Field Entropy";
+        desc = "Obfuscated Field Entropy.
+                [br]Caliptra Access: -
+                [br]SOC Access:      W1";
+                secret seed[32]=0;
+    } fuse_field_entropy[32];
     //TODO review write once and stickiness of fuses
-    reg {fuse hash[32]=0;} key_manifest_pk_hash_0[12];
-    reg {fuse hash[32]=0;} key_manifest_pk_hash_1[12];
-    reg {fuse hash[32]=0;} key_manifest_pk_hash_2[12];
-    reg {fuse hash[32]=0;} key_manifest_pk_hash_3[12];
-    reg {fuse mask[4]=0;} key_manifest_pk_hash_mask;
-    reg {fuse svn[32]=0;} key_manifest_svn;
-    reg {fuse svn[32]=0;} boot_loader_svn;
-    reg {fuse svn[32]=0;} runtime_svn[4];
-    reg {fuse dis[1]=0;} anti_rollback_disable;
-    reg {fuse cert[32]=0;} ieee_idevid_cert_chain[24];
-    reg {field {sw=rw; hw=r;} done[1]=0;} fuse_done;
+    reg {
+        desc = "Key Manifest [0] Fuse.
+                 [br]Caliptra Access: RW1
+                 [br]SOC Access:      RW1";
+         fuse hash[32]=0;
+    } fuse_key_manifest_pk_hash_0[12];
+    reg {
+        desc = "Key Manifest [1] Fuse.
+                 [br]Caliptra Access: RW1
+                 [br]SOC Access:      RW1";
+         fuse hash[32]=0;
+    } fuse_key_manifest_pk_hash_1[12];
+    reg {
+        desc = "Key Manifest [2] Fuse.
+                 [br]Caliptra Access: RW1
+                 [br]SOC Access:      RW1";
+         fuse hash[32]=0;
+    } fuse_key_manifest_pk_hash_2[12];
+    reg {
+        desc = "Key Manifest [3] Fuse.
+                 [br]Caliptra Access: RW1
+                 [br]SOC Access:      RW1";
+         fuse hash[32]=0;
+    } fuse_key_manifest_pk_hash_3[12];
+    reg {
+        desc = "Key Manifest Mask Fuse.
+                 [br]Caliptra Access: RW1
+                 [br]SOC Access:      RW1";
+         fuse mask[4]=0;
+    } fuse_key_manifest_pk_hash_mask;
+    reg {
+        desc = "Key Manifest SVN Fuse.
+                 [br]Caliptra Access: RW1
+                 [br]SOC Access:      RW1";
+         fuse svn[32]=0;
+    } fuse_key_manifest_svn;
+    reg {
+        desc = "Bootloader Fuse.
+                 [br]Caliptra Access: RW1
+                 [br]SOC Access:      RW1";
+         fuse svn[32]=0;
+    } fuse_boot_loader_svn;
+    reg {
+        desc = "Runtime SVN Fuse.
+                 [br]Caliptra Access: RW1
+                 [br]SOC Access:      RW1";
+         fuse svn[32]=0;
+    } fuse_runtime_svn[4];
+    reg {
+        desc = "Anti Rollback Disable Fuse.
+                 [br]Caliptra Access: RW1
+                 [br]SOC Access:      RW1";
+         fuse dis[1]=0;
+    } fuse_anti_rollback_disable;
+    reg {
+        desc = "IEEE IDevID Certificate Chain Fuse.
+                 [br]Caliptra Access: RW1
+                 [br]SOC Access:      RW1";
+         fuse cert[32]=0;
+    } fuse_ieee_idevid_cert_chain[24];
 
-    reg {name = "De-Obfuscation Key";
-        desc = "Stored De-Obfuscation key, not accessible by software";
-        key key[32];} obf_key[8];
+
+    ////////////////////////////////////////////////////////////////
+    // Caliptra Internal Registers
+    reg {
+        name = "De-Obfuscation Key";
+        desc = "Stored De-Obfuscation key, not accessible by software.
+                [br]Caliptra Access: -
+                [br]SOC Access:      -";
+        key key[32];
+    } internal_obf_key[8] @0x600;
 
     reg {
         name = "ICCM Lock";
         desc = "Lock feature gates writes to the ICCM. When lock is set to
                 1, writes are blocked. When cleared to 0, writes allowed.
                 Write-once, meaning only a reset can clear it once set to 1.
-                Writes available to Caliptra subsystem, not SoC.";
+                [br]Caliptra Access: RW1
+                [br]SOC Access:      RO";
 
         field {desc="Lock bit gates writes to ICCM. Write 1 to set - cannot be cleared by SW."; hw=r; hwclr=true; sw=rw; onwrite=woset; precedence=hw; swwel=soc_req;} lock = 1'b0;
-    } iccm_lock;
+    } internal_iccm_lock;
 
     reg {
         name = "FW Update Reset";
         desc = "Control register to assert FW update reset. When cleared to
-                0, the uc core alone is reset. When set to 1, reset is asserted.
-                Writes available to Caliptra subsystem, not SoC.";
+                0, no reset is triggered. When set to 1, uc-only reset is asserted.
+                Field automatically clears 1 cycle after being set.
+                [br]Caliptra Access: RW
+                [br]SOC Access:      RO";
 
         field {desc = "FW Update reset to reset core"; hw = r; sw = rw; singlepulse=true; swwel = soc_req;} core_rst = 1'b0;
-    } fw_update_reset;
+    } internal_fw_update_reset;
 
     reg {
         name = "FW Update Reset Wait Cycles";
-        desc = "Control register to set the number of cycles for which FW update reset must be asserted. Default is 5. Max value is 255 (8 bit)
-                Writes available to Caliptra subsystem, not SoC.";
+        desc = "Control register to set the number of cycles for which FW update reset must be asserted. Default is 5. Max value is 255 (8 bit).
+                [br]Caliptra Access: RW
+                [br]SOC Access:      RO";
 
         field {desc = "FW Update reset wait cycles"; hw = r; sw = rw; swwel = soc_req;} wait_cycles[8] = 8'h5;
-    } fw_update_reset_wait_cycles;
+    } internal_fw_update_reset_wait_cycles;
 
     reg {
         name = "NMI Vector";
         desc = "32-bit register providing the jump vector for RISC-V to transition for NMI handling code.
                 Default is the base address of ROM, but may be updated for enhanced handling by runtime images.
                 Bit [0] is ignored to enforce half-word alignment of address.
-                Writes available to Caliptra subsystem, not SoC.";
+                [br]Caliptra Access: RW
+                [br]SOC Access:      RO";
 
         field {desc = "NMI Vector"; hw = r; sw = rw; swwel = soc_req;} vec[32] = 32'h0;
-    } nmi_vector;
-
-    reg {
-        name = "Clk gating enable";
-        desc = "Control register to enable clk gating. Default is 0 (disabled).
-                Writes available to Caliptra subsystem, not SoC.";
-
-        field {desc = "Clk gating enable"; hw = r; sw = rw; swwe = soc_req;} clk_gating_en = 1'b0;
-    } clk_gating_en;
+    } internal_nmi_vector;
 
 
     ////////////////////////////////////////////////////////////////
@@ -192,7 +385,10 @@ addrmap soc_ifc_reg {
 
         name = "Interrupt Register Block";
         desc = "Set of registers to implement interrupt functionality
-                for mailbox";
+                for soc interface.
+                All registers have the following access privileges:
+                [br]Caliptra Access: RW
+                [br]SOC Access:      RO";
 
         default regwidth = 32; // reg property
         default accesswidth = 32; // reg property
@@ -247,6 +443,7 @@ addrmap soc_ifc_reg {
             // event type in the instantiating peripheral.
             field {desc = "Enable bit for Command Available";                         } notif_cmd_avail_en = 1'b0;
             field {desc = "Enable bit for Mailbox ECC Single-bit Error (correctable)";} notif_mbox_ecc_cor_en = 1'b0;
+            field {desc = "Enable bit for Security State, Debug Locked transition";   } notif_debug_locked_en = 1'b0;
         };
 
         /* ---- Error Interrupt Status ---- */
@@ -285,6 +482,7 @@ addrmap soc_ifc_reg {
 
             field {desc = "Command Available status bit";} notif_cmd_avail_sts = 1'b0;
             field {desc = "Mailbox ECC Single-bit Error (correctable) status bit";} notif_mbox_ecc_cor_sts = 1'b0;
+            field {desc = "Security State, Debug Locked transition status bit";   } notif_debug_locked_sts = 1'b0;
         };
 
         /* ---- Aggregated Interrupt Status ---- */
@@ -343,6 +541,7 @@ addrmap soc_ifc_reg {
             // Instantiate triggers bit-by-bit.
             field {desc = "Command Available trigger bit";                         } notif_cmd_avail_trig = 1'b0;
             field {desc = "Mailbox ECC Single-bit Error (correctable) trigger bit";} notif_mbox_ecc_cor_trig = 1'b0;
+            field {desc = "Security State, Debug Locked transition trigger bit";   } notif_debug_locked_trig = 1'b0;
         };
 
         /* ---- Interrupt Statistics Counter Incrementor ---- */
@@ -404,6 +603,7 @@ addrmap soc_ifc_reg {
         intr_count_t      error_mbox_ecc_unc_intr_count_r;     /* Per error */                                           //
         intr_count_t      notif_cmd_avail_intr_count_r @0x180; /* Per notification */                                    //
         intr_count_t      notif_mbox_ecc_cor_intr_count_r;     /* Per notification */                                    //
+        intr_count_t      notif_debug_locked_intr_count_r;     /* Per notification */                                    //
                                                                                                                          //
         // These registers should be treated by SW as reserved, and ignored.                                             //
         // Offset at 0x200 gives enough space for 32 Errors and 32 Notifications                                         //
@@ -418,6 +618,7 @@ addrmap soc_ifc_reg {
         intr_count_incr_t error_mbox_ecc_unc_intr_count_incr_r;    /* Per error count incrementor pulse */               //
         intr_count_incr_t notif_cmd_avail_intr_count_incr_r;       /* Per notification count incrementor pulse */        //
         intr_count_incr_t notif_mbox_ecc_cor_intr_count_incr_r;    /* Per notification count incrementor pulse */        //
+        intr_count_incr_t notif_debug_locked_intr_count_incr_r;    /* Per notification count incrementor pulse */        //
         /* ------------------------------------------------------------------------------------------------------------- */
 
         /* ---- Reset assignment for Error Events ---- */
@@ -444,6 +645,7 @@ addrmap soc_ifc_reg {
         error_internal_intr_r.error_mbox_ecc_unc_sts -> enable = error_intr_en_r.error_mbox_ecc_unc_en;
         notif_internal_intr_r.notif_cmd_avail_sts    -> enable = notif_intr_en_r.notif_cmd_avail_en;
         notif_internal_intr_r.notif_mbox_ecc_cor_sts -> enable = notif_intr_en_r.notif_mbox_ecc_cor_en;
+        notif_internal_intr_r.notif_debug_locked_sts -> enable = notif_intr_en_r.notif_debug_locked_en;
 
         error_internal_intr_r.error_internal_sts     -> next   = error_intr_trig_r.error_internal_trig;
         error_internal_intr_r.error_inv_dev_sts      -> next   = error_intr_trig_r.error_inv_dev_trig;
@@ -453,6 +655,7 @@ addrmap soc_ifc_reg {
         error_internal_intr_r.error_mbox_ecc_unc_sts -> next   = error_intr_trig_r.error_mbox_ecc_unc_trig;
         notif_internal_intr_r.notif_cmd_avail_sts    -> next   = notif_intr_trig_r.notif_cmd_avail_trig;
         notif_internal_intr_r.notif_mbox_ecc_cor_sts -> next   = notif_intr_trig_r.notif_mbox_ecc_cor_trig;
+        notif_internal_intr_r.notif_debug_locked_sts -> next   = notif_intr_trig_r.notif_debug_locked_trig;
 
         // NOTE: hwset for events is implicitly defined as module input
 
@@ -516,6 +719,12 @@ addrmap soc_ifc_reg {
         notif_mbox_ecc_cor_intr_count_incr_r.pulse -> we    = notif_internal_intr_r.notif_mbox_ecc_cor_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
         notif_mbox_ecc_cor_intr_count_incr_r.pulse -> decr  = notif_mbox_ecc_cor_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
         notif_mbox_ecc_cor_intr_count_r.cnt        -> incr  = notif_mbox_ecc_cor_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+        notif_debug_locked_intr_count_incr_r.pulse -> hwset = notif_internal_intr_r.notif_debug_locked_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+        notif_debug_locked_intr_count_incr_r.pulse -> next  = notif_internal_intr_r.notif_debug_locked_sts -> next;  // /      as a pulse to increment the intr_count_r register
+        notif_debug_locked_intr_count_incr_r.pulse -> we    = notif_internal_intr_r.notif_debug_locked_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        notif_debug_locked_intr_count_incr_r.pulse -> decr  = notif_debug_locked_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        notif_debug_locked_intr_count_r.cnt        -> incr  = notif_debug_locked_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
 
     };
