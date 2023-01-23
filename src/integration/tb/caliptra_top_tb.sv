@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2019 Western Digital Corporation or its affiliates.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +15,7 @@
 `default_nettype none
 
 `include "config_defines.svh"
+`include "caliptra_reg_defines.svh"
 `include "caliptra_macros.svh"
 
 `ifndef VERILATOR
@@ -65,6 +65,7 @@ module caliptra_top_tb (
     logic                       start_apb_fuse_sequence;
     logic                       cptra_pwrgood;
     logic                       cptra_rst_b;
+    logic                       BootFSM_BrkPoint;
 
     logic [7:0][31:0]           cptra_obf_key;
     logic [0:7][31:0]           cptra_obf_key_uds, cptra_obf_key_fe;
@@ -77,6 +78,7 @@ module caliptra_top_tb (
         S_APB_WR_UDS,
         S_APB_WR_FE,
         S_APB_WR_FUSE_DONE,
+        S_APB_WR_BOOT_GO,
         S_APB_WAIT_FW_READY,
         S_APB_POLL_LOCK,
         S_APB_PRE_WR_CMD,
@@ -147,17 +149,6 @@ module caliptra_top_tb (
     parameter MEMTYPE_DCCM = 3'h2;
     parameter MEMTYPE_ICCM = 3'h3;
 
-    parameter MBOX_UDS_ADDR = 32'h3003_0200;
-    parameter MBOX_FE_ADDR  = 32'h3003_0230;
-    parameter MBOX_FUSE_DONE_ADDR = 32'h3003_008c; //FIXME need to not hardcode these
-
-    parameter MBOX_ADDR_BASE        = 32'h30020000;
-    parameter MBOX_ADDR_LOCK        = MBOX_ADDR_BASE;
-    parameter MBOX_ADDR_CMD         = MBOX_ADDR_BASE + 32'h00000008;
-    parameter MBOX_ADDR_DLEN        = MBOX_ADDR_BASE + 32'h0000000C;
-    parameter MBOX_ADDR_DATAIN      = MBOX_ADDR_BASE + 32'h00000010;
-    parameter MBOX_ADDR_DATAOUT     = MBOX_ADDR_BASE + 32'h00000014;
-    parameter MBOX_ADDR_EXECUTE     = MBOX_ADDR_BASE + 32'h00000018;
     parameter FW_NUM_DWORDS         = 256;
 
     logic [FW_NUM_DWORDS-1:0][31:0] fw_blob;
@@ -397,6 +388,7 @@ module caliptra_top_tb (
 
     initial begin
         cptra_pwrgood = 1'b0;
+        BootFSM_BrkPoint = 1'b1; //Set to 1 even before anything starts
         cptra_rst_b = 1'b0;
         start_apb_fuse_sequence = 1'b0;
         abi_reg[0] = "zero";
@@ -495,9 +487,10 @@ module caliptra_top_tb (
     always @(posedge core_clk) begin
         if (cycleCnt == 15) begin
             $display ("\n\n\n\n\n\n");
-            $display ("SoC: Asserting cptra_pwrgood\n");
+            $display ("SoC: Asserting cptra_pwrgood and breakpoint\n");
             //assert power good
             cptra_pwrgood <= 1'b1;
+            //BootFSM_BrkPoint <= 1'b1;
         end
         else if (cycleCnt == 20) begin
             $display ("SoC: De-Asserting cptra_rst_b\n");
@@ -537,6 +530,9 @@ module caliptra_top_tb (
                 end
                 S_APB_WR_FUSE_DONE: begin
                     $display ("SoC: Writing fuse done register\n");
+                end
+                S_APB_WR_BOOT_GO: begin
+                    $display ("SoC: Writing BootGo register\n");
                 end
                 S_APB_WAIT_FW_READY: begin
                     $display ("CLP: ROM Flow in progress...\n");
@@ -610,12 +606,27 @@ module caliptra_top_tb (
             //set fuse done
             S_APB_WR_FUSE_DONE: begin
                 if (apb_xfer_end) begin
-                    n_state_apb = S_APB_WAIT_FW_READY;
+                    if(BootFSM_BrkPoint) begin
+                       n_state_apb = S_APB_WR_BOOT_GO;
+                    end
+                    else begin
+                       n_state_apb = S_APB_WAIT_FW_READY;
+                    end
                 end
                 else begin
                     n_state_apb = S_APB_WR_FUSE_DONE;
                 end
             end
+            //Write BootGo register
+            S_APB_WR_BOOT_GO: begin
+                if(apb_xfer_end) begin
+                   n_state_apb = S_APB_WAIT_FW_READY;
+                end
+                else begin
+                   n_state_apb = S_APB_WR_BOOT_GO;
+                end
+            end
+        
             //This is for Caliptra Demo, smoke tests will stop here since they don't set ready for fw
             //wait for fw req
             S_APB_WAIT_FW_READY: begin
@@ -706,35 +717,39 @@ module caliptra_top_tb (
     always_comb begin
         case (c_state_apb) inside
             S_APB_WR_UDS: begin
-                PADDR      = MBOX_UDS_ADDR + 4 * apb_wr_count;
+                PADDR      = `CLP_SOC_IFC_REG_FUSE_UDS_SEED_0 + 4 * apb_wr_count;
                 PWDATA     = cptra_uds_tb[apb_wr_count];
             end
             S_APB_WR_FE: begin
-                PADDR      = MBOX_FE_ADDR + 4 * apb_wr_count;
+                PADDR      = `CLP_SOC_IFC_REG_FUSE_FIELD_ENTROPY_0 + 4 * apb_wr_count;
                 PWDATA     = cptra_fe_tb[apb_wr_count];
             end
             S_APB_WR_FUSE_DONE: begin
-                PADDR      = MBOX_FUSE_DONE_ADDR;
+                PADDR      = `CLP_SOC_IFC_REG_CPTRA_FUSE_WR_DONE;
+                PWDATA     = 32'h00000001;
+            end
+            S_APB_WR_BOOT_GO: begin
+                PADDR      = `CLP_SOC_IFC_REG_CPTRA_BOOTFSM_GO; 
                 PWDATA     = 32'h00000001;
             end
             S_APB_POLL_LOCK: begin
-                PADDR      = MBOX_ADDR_LOCK;
+                PADDR      = `CLP_MBOX_CSR_MBOX_LOCK;
                 PWDATA     = '0;
             end
             S_APB_WR_CMD: begin
-                PADDR      = MBOX_ADDR_CMD;
+                PADDR      = `CLP_MBOX_CSR_MBOX_CMD;
                 PWDATA     = 32'hBA5EBA11;
             end
             S_APB_WR_DLEN: begin
-                PADDR      = MBOX_ADDR_DLEN;
+                PADDR      = `CLP_MBOX_CSR_MBOX_DLEN;
                 PWDATA     = FW_NUM_DWORDS*4;
             end
             S_APB_WR_DATAIN: begin
-                PADDR      = MBOX_ADDR_DATAIN;
+                PADDR      = `CLP_MBOX_CSR_MBOX_DATAIN;
                 PWDATA     = fw_blob[apb_wr_count];
             end
             S_APB_WR_EXEC: begin
-                PADDR      = MBOX_ADDR_EXECUTE;
+                PADDR      = `CLP_MBOX_CSR_MBOX_EXECUTE;
                 PWDATA     = 32'h00000001;
             end
             S_APB_DONE: begin
@@ -766,6 +781,11 @@ module caliptra_top_tb (
                 PAUSER     = 0;
             end
             S_APB_WR_FUSE_DONE: begin
+                PSEL       = 1;
+                PWRITE     = 1;
+                PAUSER     = 0;
+            end
+            S_APB_WR_BOOT_GO: begin
                 PSEL       = 1;
                 PWRITE     = 1;
                 PAUSER     = 0;
@@ -858,7 +878,7 @@ caliptra_top caliptra_top_dut (
 
     .mailbox_data_avail(),
     .mailbox_flow_done(),
-    .BootFSM_BrkPoint('x), //FIXME TIE-OFF
+    .BootFSM_BrkPoint(BootFSM_BrkPoint), //FIXME TIE-OFF
 
     .generic_input_wires(generic_input_wires),
     .generic_output_wires(),

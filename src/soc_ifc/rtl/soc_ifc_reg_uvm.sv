@@ -138,7 +138,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.reason = new("reason");
-            this.reason.configure(this, 32, 0, "RW", 1, 'h157b007, 1, 1, 0);
+            this.reason.configure(this, 4, 0, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_RESET_REASON
 
@@ -274,6 +274,20 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_TIMER_CONFIG
 
+    // Reg - soc_ifc_reg::CPTRA_BOOTFSM_GO
+    class soc_ifc_reg__CPTRA_BOOTFSM_GO extends uvm_reg;
+        rand uvm_reg_field GO;
+
+        function new(string name = "soc_ifc_reg__CPTRA_BOOTFSM_GO");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.GO = new("GO");
+            this.GO.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__CPTRA_BOOTFSM_GO
+
     // Reg - soc_ifc_reg::CPTRA_CLK_GATING_EN
     class soc_ifc_reg__CPTRA_CLK_GATING_EN extends uvm_reg;
         rand uvm_reg_field clk_gating_en;
@@ -344,11 +358,11 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fuse_field_entropy
 
-    // Reg - soc_ifc_reg::fuse_key_manifest_pk_hash_0
-    class soc_ifc_reg__fuse_key_manifest_pk_hash_0 extends uvm_reg;
+    // Reg - soc_ifc_reg::fuse_key_manifest_pk_hash
+    class soc_ifc_reg__fuse_key_manifest_pk_hash extends uvm_reg;
         rand uvm_reg_field hash;
 
-        function new(string name = "soc_ifc_reg__fuse_key_manifest_pk_hash_0");
+        function new(string name = "soc_ifc_reg__fuse_key_manifest_pk_hash");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -356,49 +370,7 @@ package soc_ifc_reg_uvm;
             this.hash = new("hash");
             this.hash.configure(this, 32, 0, "W1", 0, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : soc_ifc_reg__fuse_key_manifest_pk_hash_0
-
-    // Reg - soc_ifc_reg::fuse_key_manifest_pk_hash_1
-    class soc_ifc_reg__fuse_key_manifest_pk_hash_1 extends uvm_reg;
-        rand uvm_reg_field hash;
-
-        function new(string name = "soc_ifc_reg__fuse_key_manifest_pk_hash_1");
-            super.new(name, 32, UVM_NO_COVERAGE);
-        endfunction : new
-
-        virtual function void build();
-            this.hash = new("hash");
-            this.hash.configure(this, 32, 0, "W1", 0, 'h0, 1, 1, 0);
-        endfunction : build
-    endclass : soc_ifc_reg__fuse_key_manifest_pk_hash_1
-
-    // Reg - soc_ifc_reg::fuse_key_manifest_pk_hash_2
-    class soc_ifc_reg__fuse_key_manifest_pk_hash_2 extends uvm_reg;
-        rand uvm_reg_field hash;
-
-        function new(string name = "soc_ifc_reg__fuse_key_manifest_pk_hash_2");
-            super.new(name, 32, UVM_NO_COVERAGE);
-        endfunction : new
-
-        virtual function void build();
-            this.hash = new("hash");
-            this.hash.configure(this, 32, 0, "W1", 0, 'h0, 1, 1, 0);
-        endfunction : build
-    endclass : soc_ifc_reg__fuse_key_manifest_pk_hash_2
-
-    // Reg - soc_ifc_reg::fuse_key_manifest_pk_hash_3
-    class soc_ifc_reg__fuse_key_manifest_pk_hash_3 extends uvm_reg;
-        rand uvm_reg_field hash;
-
-        function new(string name = "soc_ifc_reg__fuse_key_manifest_pk_hash_3");
-            super.new(name, 32, UVM_NO_COVERAGE);
-        endfunction : new
-
-        virtual function void build();
-            this.hash = new("hash");
-            this.hash.configure(this, 32, 0, "W1", 0, 'h0, 1, 1, 0);
-        endfunction : build
-    endclass : soc_ifc_reg__fuse_key_manifest_pk_hash_3
+    endclass : soc_ifc_reg__fuse_key_manifest_pk_hash
 
     // Reg - soc_ifc_reg::fuse_key_manifest_pk_hash_mask
     class soc_ifc_reg__fuse_key_manifest_pk_hash_mask extends uvm_reg;
@@ -410,9 +382,37 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.mask = new("mask");
-            this.mask.configure(this, 4, 0, "W1", 0, 'h0, 1, 1, 0);
+            this.mask.configure(this, 4, 0, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__fuse_key_manifest_pk_hash_mask
+
+    // Reg - soc_ifc_reg::fuse_owner_key_manifest_pk_hash
+    class soc_ifc_reg__fuse_owner_key_manifest_pk_hash extends uvm_reg;
+        rand uvm_reg_field hash;
+
+        function new(string name = "soc_ifc_reg__fuse_owner_key_manifest_pk_hash");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.hash = new("hash");
+            this.hash.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__fuse_owner_key_manifest_pk_hash
+
+    // Reg - soc_ifc_reg::fuse_owner_key_manifest_pk_hash_mask
+    class soc_ifc_reg__fuse_owner_key_manifest_pk_hash_mask extends uvm_reg;
+        rand uvm_reg_field mask;
+
+        function new(string name = "soc_ifc_reg__fuse_owner_key_manifest_pk_hash_mask");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.mask = new("mask");
+            this.mask.configure(this, 4, 0, "RW", 0, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__fuse_owner_key_manifest_pk_hash_mask
 
     // Reg - soc_ifc_reg::fuse_key_manifest_svn
     class soc_ifc_reg__fuse_key_manifest_svn extends uvm_reg;
@@ -424,7 +424,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.svn = new("svn");
-            this.svn.configure(this, 32, 0, "W1", 0, 'h0, 1, 1, 0);
+            this.svn.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__fuse_key_manifest_svn
 
@@ -438,7 +438,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.svn = new("svn");
-            this.svn.configure(this, 32, 0, "W1", 0, 'h0, 1, 1, 0);
+            this.svn.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__fuse_boot_loader_svn
 
@@ -452,7 +452,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.svn = new("svn");
-            this.svn.configure(this, 32, 0, "W1", 0, 'h0, 1, 1, 0);
+            this.svn.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__fuse_runtime_svn
 
@@ -466,15 +466,15 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.dis = new("dis");
-            this.dis.configure(this, 1, 0, "W1", 0, 'h0, 1, 1, 0);
+            this.dis.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__fuse_anti_rollback_disable
 
-    // Reg - soc_ifc_reg::fuse_ieee_idevid_cert_chain
-    class soc_ifc_reg__fuse_ieee_idevid_cert_chain extends uvm_reg;
+    // Reg - soc_ifc_reg::fuse_idevid_cert_attr
+    class soc_ifc_reg__fuse_idevid_cert_attr extends uvm_reg;
         rand uvm_reg_field cert;
 
-        function new(string name = "soc_ifc_reg__fuse_ieee_idevid_cert_chain");
+        function new(string name = "soc_ifc_reg__fuse_idevid_cert_attr");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -482,7 +482,21 @@ package soc_ifc_reg_uvm;
             this.cert = new("cert");
             this.cert.configure(this, 32, 0, "W1", 0, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : soc_ifc_reg__fuse_ieee_idevid_cert_chain
+    endclass : soc_ifc_reg__fuse_idevid_cert_attr
+
+    // Reg - soc_ifc_reg::fuse_idevid_manuf_hsm_id
+    class soc_ifc_reg__fuse_idevid_manuf_hsm_id extends uvm_reg;
+        rand uvm_reg_field cert;
+
+        function new(string name = "soc_ifc_reg__fuse_idevid_manuf_hsm_id");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.cert = new("cert");
+            this.cert.configure(this, 32, 0, "W1", 0, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__fuse_idevid_manuf_hsm_id
 
     // Reg - soc_ifc_reg::internal_obf_key
     class soc_ifc_reg__internal_obf_key extends uvm_reg;
@@ -1192,21 +1206,22 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__CPTRA_TRNG_DONE CPTRA_TRNG_DONE;
         rand soc_ifc_reg__CPTRA_FUSE_WR_DONE CPTRA_FUSE_WR_DONE;
         rand soc_ifc_reg__CPTRA_TIMER_CONFIG CPTRA_TIMER_CONFIG;
+        rand soc_ifc_reg__CPTRA_BOOTFSM_GO CPTRA_BOOTFSM_GO;
         rand soc_ifc_reg__CPTRA_CLK_GATING_EN CPTRA_CLK_GATING_EN;
         rand soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES CPTRA_GENERIC_INPUT_WIRES[2];
         rand soc_ifc_reg__CPTRA_GENERIC_OUTPUT_WIRES CPTRA_GENERIC_OUTPUT_WIRES[2];
         rand soc_ifc_reg__fuse_uds_seed fuse_uds_seed[12];
-        rand soc_ifc_reg__fuse_field_entropy fuse_field_entropy[32];
-        rand soc_ifc_reg__fuse_key_manifest_pk_hash_0 fuse_key_manifest_pk_hash_0[12];
-        rand soc_ifc_reg__fuse_key_manifest_pk_hash_1 fuse_key_manifest_pk_hash_1[12];
-        rand soc_ifc_reg__fuse_key_manifest_pk_hash_2 fuse_key_manifest_pk_hash_2[12];
-        rand soc_ifc_reg__fuse_key_manifest_pk_hash_3 fuse_key_manifest_pk_hash_3[12];
+        rand soc_ifc_reg__fuse_field_entropy fuse_field_entropy[8];
+        rand soc_ifc_reg__fuse_key_manifest_pk_hash fuse_key_manifest_pk_hash[12];
         rand soc_ifc_reg__fuse_key_manifest_pk_hash_mask fuse_key_manifest_pk_hash_mask;
+        rand soc_ifc_reg__fuse_owner_key_manifest_pk_hash fuse_owner_key_manifest_pk_hash[12];
+        rand soc_ifc_reg__fuse_owner_key_manifest_pk_hash_mask fuse_owner_key_manifest_pk_hash_mask;
         rand soc_ifc_reg__fuse_key_manifest_svn fuse_key_manifest_svn;
         rand soc_ifc_reg__fuse_boot_loader_svn fuse_boot_loader_svn;
         rand soc_ifc_reg__fuse_runtime_svn fuse_runtime_svn[4];
         rand soc_ifc_reg__fuse_anti_rollback_disable fuse_anti_rollback_disable;
-        rand soc_ifc_reg__fuse_ieee_idevid_cert_chain fuse_ieee_idevid_cert_chain[24];
+        rand soc_ifc_reg__fuse_idevid_cert_attr fuse_idevid_cert_attr[24];
+        rand soc_ifc_reg__fuse_idevid_manuf_hsm_id fuse_idevid_manuf_hsm_id[4];
         rand soc_ifc_reg__internal_obf_key internal_obf_key[8];
         rand soc_ifc_reg__internal_iccm_lock internal_iccm_lock;
         rand soc_ifc_reg__internal_fw_update_reset internal_fw_update_reset;
@@ -1316,24 +1331,29 @@ package soc_ifc_reg_uvm;
 
             this.CPTRA_TIMER_CONFIG.build();
             this.default_map.add_reg(this.CPTRA_TIMER_CONFIG, 'h90);
+            this.CPTRA_BOOTFSM_GO = new("CPTRA_BOOTFSM_GO");
+            this.CPTRA_BOOTFSM_GO.configure(this);
+
+            this.CPTRA_BOOTFSM_GO.build();
+            this.default_map.add_reg(this.CPTRA_BOOTFSM_GO, 'h94);
             this.CPTRA_CLK_GATING_EN = new("CPTRA_CLK_GATING_EN");
             this.CPTRA_CLK_GATING_EN.configure(this);
 
             this.CPTRA_CLK_GATING_EN.build();
-            this.default_map.add_reg(this.CPTRA_CLK_GATING_EN, 'h94);
+            this.default_map.add_reg(this.CPTRA_CLK_GATING_EN, 'h98);
             foreach(this.CPTRA_GENERIC_INPUT_WIRES[i0]) begin
                 this.CPTRA_GENERIC_INPUT_WIRES[i0] = new($sformatf("CPTRA_GENERIC_INPUT_WIRES[%0d]", i0));
                 this.CPTRA_GENERIC_INPUT_WIRES[i0].configure(this);
                 
                 this.CPTRA_GENERIC_INPUT_WIRES[i0].build();
-                this.default_map.add_reg(this.CPTRA_GENERIC_INPUT_WIRES[i0], 'h98 + i0*'h4);
+                this.default_map.add_reg(this.CPTRA_GENERIC_INPUT_WIRES[i0], 'h9c + i0*'h4);
             end
             foreach(this.CPTRA_GENERIC_OUTPUT_WIRES[i0]) begin
                 this.CPTRA_GENERIC_OUTPUT_WIRES[i0] = new($sformatf("CPTRA_GENERIC_OUTPUT_WIRES[%0d]", i0));
                 this.CPTRA_GENERIC_OUTPUT_WIRES[i0].configure(this);
                 
                 this.CPTRA_GENERIC_OUTPUT_WIRES[i0].build();
-                this.default_map.add_reg(this.CPTRA_GENERIC_OUTPUT_WIRES[i0], 'ha0 + i0*'h4);
+                this.default_map.add_reg(this.CPTRA_GENERIC_OUTPUT_WIRES[i0], 'ha4 + i0*'h4);
             end
             foreach(this.fuse_uds_seed[i0]) begin
                 this.fuse_uds_seed[i0] = new($sformatf("fuse_uds_seed[%0d]", i0));
@@ -1349,67 +1369,65 @@ package soc_ifc_reg_uvm;
                 this.fuse_field_entropy[i0].build();
                 this.default_map.add_reg(this.fuse_field_entropy[i0], 'h230 + i0*'h4);
             end
-            foreach(this.fuse_key_manifest_pk_hash_0[i0]) begin
-                this.fuse_key_manifest_pk_hash_0[i0] = new($sformatf("fuse_key_manifest_pk_hash_0[%0d]", i0));
-                this.fuse_key_manifest_pk_hash_0[i0].configure(this);
+            foreach(this.fuse_key_manifest_pk_hash[i0]) begin
+                this.fuse_key_manifest_pk_hash[i0] = new($sformatf("fuse_key_manifest_pk_hash[%0d]", i0));
+                this.fuse_key_manifest_pk_hash[i0].configure(this);
                 
-                this.fuse_key_manifest_pk_hash_0[i0].build();
-                this.default_map.add_reg(this.fuse_key_manifest_pk_hash_0[i0], 'h2b0 + i0*'h4);
-            end
-            foreach(this.fuse_key_manifest_pk_hash_1[i0]) begin
-                this.fuse_key_manifest_pk_hash_1[i0] = new($sformatf("fuse_key_manifest_pk_hash_1[%0d]", i0));
-                this.fuse_key_manifest_pk_hash_1[i0].configure(this);
-                
-                this.fuse_key_manifest_pk_hash_1[i0].build();
-                this.default_map.add_reg(this.fuse_key_manifest_pk_hash_1[i0], 'h2e0 + i0*'h4);
-            end
-            foreach(this.fuse_key_manifest_pk_hash_2[i0]) begin
-                this.fuse_key_manifest_pk_hash_2[i0] = new($sformatf("fuse_key_manifest_pk_hash_2[%0d]", i0));
-                this.fuse_key_manifest_pk_hash_2[i0].configure(this);
-                
-                this.fuse_key_manifest_pk_hash_2[i0].build();
-                this.default_map.add_reg(this.fuse_key_manifest_pk_hash_2[i0], 'h310 + i0*'h4);
-            end
-            foreach(this.fuse_key_manifest_pk_hash_3[i0]) begin
-                this.fuse_key_manifest_pk_hash_3[i0] = new($sformatf("fuse_key_manifest_pk_hash_3[%0d]", i0));
-                this.fuse_key_manifest_pk_hash_3[i0].configure(this);
-                
-                this.fuse_key_manifest_pk_hash_3[i0].build();
-                this.default_map.add_reg(this.fuse_key_manifest_pk_hash_3[i0], 'h340 + i0*'h4);
+                this.fuse_key_manifest_pk_hash[i0].build();
+                this.default_map.add_reg(this.fuse_key_manifest_pk_hash[i0], 'h250 + i0*'h4);
             end
             this.fuse_key_manifest_pk_hash_mask = new("fuse_key_manifest_pk_hash_mask");
             this.fuse_key_manifest_pk_hash_mask.configure(this);
 
             this.fuse_key_manifest_pk_hash_mask.build();
-            this.default_map.add_reg(this.fuse_key_manifest_pk_hash_mask, 'h370);
+            this.default_map.add_reg(this.fuse_key_manifest_pk_hash_mask, 'h280);
+            foreach(this.fuse_owner_key_manifest_pk_hash[i0]) begin
+                this.fuse_owner_key_manifest_pk_hash[i0] = new($sformatf("fuse_owner_key_manifest_pk_hash[%0d]", i0));
+                this.fuse_owner_key_manifest_pk_hash[i0].configure(this);
+                
+                this.fuse_owner_key_manifest_pk_hash[i0].build();
+                this.default_map.add_reg(this.fuse_owner_key_manifest_pk_hash[i0], 'h284 + i0*'h4);
+            end
+            this.fuse_owner_key_manifest_pk_hash_mask = new("fuse_owner_key_manifest_pk_hash_mask");
+            this.fuse_owner_key_manifest_pk_hash_mask.configure(this);
+
+            this.fuse_owner_key_manifest_pk_hash_mask.build();
+            this.default_map.add_reg(this.fuse_owner_key_manifest_pk_hash_mask, 'h2b4);
             this.fuse_key_manifest_svn = new("fuse_key_manifest_svn");
             this.fuse_key_manifest_svn.configure(this);
 
             this.fuse_key_manifest_svn.build();
-            this.default_map.add_reg(this.fuse_key_manifest_svn, 'h374);
+            this.default_map.add_reg(this.fuse_key_manifest_svn, 'h2b8);
             this.fuse_boot_loader_svn = new("fuse_boot_loader_svn");
             this.fuse_boot_loader_svn.configure(this);
 
             this.fuse_boot_loader_svn.build();
-            this.default_map.add_reg(this.fuse_boot_loader_svn, 'h378);
+            this.default_map.add_reg(this.fuse_boot_loader_svn, 'h2bc);
             foreach(this.fuse_runtime_svn[i0]) begin
                 this.fuse_runtime_svn[i0] = new($sformatf("fuse_runtime_svn[%0d]", i0));
                 this.fuse_runtime_svn[i0].configure(this);
                 
                 this.fuse_runtime_svn[i0].build();
-                this.default_map.add_reg(this.fuse_runtime_svn[i0], 'h37c + i0*'h4);
+                this.default_map.add_reg(this.fuse_runtime_svn[i0], 'h2c0 + i0*'h4);
             end
             this.fuse_anti_rollback_disable = new("fuse_anti_rollback_disable");
             this.fuse_anti_rollback_disable.configure(this);
 
             this.fuse_anti_rollback_disable.build();
-            this.default_map.add_reg(this.fuse_anti_rollback_disable, 'h38c);
-            foreach(this.fuse_ieee_idevid_cert_chain[i0]) begin
-                this.fuse_ieee_idevid_cert_chain[i0] = new($sformatf("fuse_ieee_idevid_cert_chain[%0d]", i0));
-                this.fuse_ieee_idevid_cert_chain[i0].configure(this);
+            this.default_map.add_reg(this.fuse_anti_rollback_disable, 'h2d0);
+            foreach(this.fuse_idevid_cert_attr[i0]) begin
+                this.fuse_idevid_cert_attr[i0] = new($sformatf("fuse_idevid_cert_attr[%0d]", i0));
+                this.fuse_idevid_cert_attr[i0].configure(this);
                 
-                this.fuse_ieee_idevid_cert_chain[i0].build();
-                this.default_map.add_reg(this.fuse_ieee_idevid_cert_chain[i0], 'h390 + i0*'h4);
+                this.fuse_idevid_cert_attr[i0].build();
+                this.default_map.add_reg(this.fuse_idevid_cert_attr[i0], 'h2d4 + i0*'h4);
+            end
+            foreach(this.fuse_idevid_manuf_hsm_id[i0]) begin
+                this.fuse_idevid_manuf_hsm_id[i0] = new($sformatf("fuse_idevid_manuf_hsm_id[%0d]", i0));
+                this.fuse_idevid_manuf_hsm_id[i0].configure(this);
+                
+                this.fuse_idevid_manuf_hsm_id[i0].build();
+                this.default_map.add_reg(this.fuse_idevid_manuf_hsm_id[i0], 'h334 + i0*'h4);
             end
             foreach(this.internal_obf_key[i0]) begin
                 this.internal_obf_key[i0] = new($sformatf("internal_obf_key[%0d]", i0));

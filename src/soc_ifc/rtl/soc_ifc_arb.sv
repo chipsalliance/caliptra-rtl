@@ -51,7 +51,14 @@ module soc_ifc_arb
     input  logic soc_ifc_reg_req_hold,
     output soc_ifc_req_t soc_ifc_reg_req_data,
     input  logic [SOC_IFC_DATA_W-1:0] soc_ifc_reg_rdata,
-    input  logic soc_ifc_reg_error
+    input  logic soc_ifc_reg_error,
+
+    //caliptra uncore jtag ports
+   input  logic                            cptra_uncore_dmi_reg_en,
+   input  logic                            cptra_uncore_dmi_reg_wr_en,
+   output logic [31:0]                     cptra_uncore_dmi_reg_rdata,
+   input  logic [6:0]                      cptra_uncore_dmi_reg_addr,
+   input  logic [31:0]                     cptra_uncore_dmi_reg_wdata 
     
 );
 logic uc_has_priority;
@@ -71,6 +78,9 @@ logic uc_mbox_reg_req;
 logic uc_mbox_dir_req;
 logic uc_reg_req;
 logic uc_sha_req;
+
+// JTAG logic FIXME - taking care of lint until logic is done
+assign cptra_uncore_dmi_reg_rdata = '0;
 
 //simple arbitration scheme, track most recently granted client (SOC or UC)
 //give priority in case of collision to the least recently granted client

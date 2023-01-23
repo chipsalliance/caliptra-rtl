@@ -22,6 +22,7 @@
 //********************************************************************************
 module el2_swerv_wrapper
 import el2_pkg::*;
+import soc_ifc_pkg::*;
  #(
 `include "el2_param.vh"
 )
@@ -305,6 +306,14 @@ import el2_pkg::*;
    input logic                             jtag_tdi,    // JTAG tdi
    input logic                             jtag_trst_n, // JTAG Reset
    output logic                            jtag_tdo,    // JTAG TDO
+ 
+   //caliptra uncore jtag ports
+   output logic                            cptra_uncore_dmi_reg_en,
+   output logic                            cptra_uncore_dmi_reg_wr_en,
+   input  logic [31:0]                     cptra_uncore_dmi_reg_rdata,
+   output logic [6:0]                      cptra_uncore_dmi_reg_addr,
+   output logic [31:0]                     cptra_uncore_dmi_reg_wdata,
+   input  security_state_t                 cptra_security_state_Latched,
 
    input logic [31:4] core_id,
 
@@ -674,11 +683,12 @@ import el2_pkg::*;
 
 `endif //  `ifdef RV_BUILD_AHB_LITE
 
-   logic                   dmi_reg_en;
+   logic                   dmi_reg_en, dmi_reg_en_preQ;
    logic [6:0]             dmi_reg_addr;
-   logic                   dmi_reg_wr_en;
+   logic                   dmi_reg_wr_en, dmi_reg_wr_en_preQ;
    logic [31:0]            dmi_reg_wdata;
-   logic [31:0]            dmi_reg_rdata;
+   logic [31:0]            dmi_reg_rdata, dmi_reg_rdata_PostQ;
+   logic                   cptra_uncore_tap_aperture;
 
    // Instantiate the el2_swerv core
    el2_swerv #(.pt(pt)) swerv (
@@ -709,13 +719,41 @@ import el2_pkg::*;
     .core_rst_n  (dbg_rst_l),       // Debug reset, active low
     .core_clk    (clk),             // Core clock
     .jtag_id     (jtag_id),         // JTAG ID
-    .rd_data     (dmi_reg_rdata),   // Read data from  Processor
+    .rd_data     (dmi_reg_rdata_PostQ),   // Read data from  Processor
     .reg_wr_data (dmi_reg_wdata),   // Write data to Processor
     .reg_wr_addr (dmi_reg_addr),    // Write address to Processor
-    .reg_en      (dmi_reg_en),      // Write interface bit to Processor
-    .reg_wr_en   (dmi_reg_wr_en),   // Write enable to Processor
+    .reg_en      (dmi_reg_en_preQ),      // Write interface bit to Processor
+    .reg_wr_en   (dmi_reg_wr_en_preQ),   // Write enable to Processor
     .dmi_hard_reset   ()
    );
+
+   logic cptra_dmi_reg_en_jtag_acccess_allowed, cptra_dmi_reg_wr_en_jtag_acccess_allowed, cptra_jtag_access_allowed;
+  
+   // reg enable towards core is not enabled unless it is equal to or less than 0x4F - as in 0x50 to 0x7F are not routed
+   // Core tap reg aperture is 0x0 to 0x4F and uncore is 0x50 to 0x7F
+   assign cptra_uncore_tap_aperture = (dmi_reg_addr[6] & (dmi_reg_addr[5] | dmi_reg_addr[4]));
+
+   // All JTAG accesses are blocked unless debug mode or manufacturing mode is enabled
+   // JTAG access is allowed if Caliptra is in debug or manuf mode (driven by SOC security_state inputs) when caliptra reset is deasserted
+   // Any change to debug or manuf mode bits after Caliptra reset is deasserted will keep JTAG locked.
+   assign cptra_jtag_access_allowed = ~(cptra_security_state_Latched.debug_locked) | 
+                                      ((cptra_security_state_Latched.debug_locked) & (cptra_security_state_Latched.device_lifecycle == DEVICE_MANUFACTURING)); 
+
+   assign cptra_dmi_reg_en_jtag_acccess_allowed    = dmi_reg_en_preQ & cptra_jtag_access_allowed;
+   assign cptra_dmi_reg_wr_en_jtag_acccess_allowed = dmi_reg_wr_en_preQ & cptra_jtag_access_allowed;
+
+   // Driving core vs uncore enables based on the right aperture
+   assign dmi_reg_en                 = cptra_uncore_tap_aperture ? '0                                       : cptra_dmi_reg_en_jtag_acccess_allowed;
+   assign cptra_uncore_dmi_reg_en    = cptra_uncore_tap_aperture ? cptra_dmi_reg_en_jtag_acccess_allowed    : '0;
+   assign dmi_reg_wr_en              = cptra_uncore_tap_aperture ? '0                                       : cptra_dmi_reg_wr_en_jtag_acccess_allowed;
+   assign cptra_uncore_dmi_reg_wr_en = cptra_uncore_tap_aperture ? cptra_dmi_reg_wr_en_jtag_acccess_allowed : '0;
+
+   // Qualified read data from core vs uncore
+   assign dmi_reg_rdata_PostQ        = cptra_uncore_tap_aperture ? cptra_uncore_dmi_reg_rdata : dmi_reg_rdata;
+
+   // Passing the address and data without qualification is fine because the enables are qualified with JTAG allowed bits
+   assign cptra_uncore_dmi_reg_wdata = dmi_reg_wdata;
+   assign cptra_uncore_dmi_reg_addr  = dmi_reg_addr;
 
 `ifdef RV_ASSERT_ON
 // to avoid internal assertions failure at time 0

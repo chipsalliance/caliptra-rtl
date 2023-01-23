@@ -113,7 +113,18 @@ addrmap soc_ifc_reg {
                 Only reset during cold-boot (sticky).
                 [br]Caliptra Access: RW
                 [br]SOC Access:      RO";
-        field {sw=rw; hw=w; we=true; resetsignal = hard_reset_b;} reason[32]=0x0157b007; // L33t for 1stboot is the reset value
+        enum reset_type_e {
+            CPTRA_COLD_RESET = 4'b0000 {
+                desc = "Caliptra went through Cold Reset";
+            };
+            CPTRA_WARM_RESET = 4'b0001 {
+                desc = "Caliptra went through warm reset";
+            };
+            CPTRA_FW_UPD_RESET = 4'b0010 {
+                desc = "Caliptra uC went through FW update reset";
+            };
+        };
+        field {sw=rw; swwel = soc_req; hw=na; encode = reset_type_e; resetsignal = hard_reset_b;} reason[4]=0;
     } CPTRA_RESET_REASON;
 
     reg {
@@ -146,6 +157,7 @@ addrmap soc_ifc_reg {
          field {sw=rw; hw=r; swwel;} PAUSER[32]=0xFFFF_FFFF;
      } CPTRA_VALID_PAUSER[5];
 
+    //FIXME: Should LOCK be W1 here?
     reg {
         name = "Valid User Register Lock";
          desc = "Valid PAUSER attributes for requests from SoC APB Interface.
@@ -191,6 +203,7 @@ addrmap soc_ifc_reg {
         field {sw=rw; hw=na; swwe;} DONE;
      } CPTRA_TRNG_DONE;
 
+    //FIXME: Fuse write clear once written should be done only by Caliptra FW if it allows a fuse override to happen for the IFPs
     reg {
         name = "Fuse Write Done";
         desc = "Writes to fuse registers are completed. After the done bit is set, any subsequent writes to a fuse register will be dropped unless there is a power cycle.
@@ -208,6 +221,12 @@ addrmap soc_ifc_reg {
                 [br]SOC Access:      RW";
         field {desc = "Period in (ps)"; sw=rw; hw=na;} clk_period[32] = 32'h0;
     } CPTRA_TIMER_CONFIG;
+
+    reg {
+        name = "BOOTFSM GO";
+        desc = "Indicates that the BootFSM can continue to execute to bring the uController out of reset";
+        field {sw=rw; hw=r;} GO[1]=0;
+    } CPTRA_BOOTFSM_GO;
 
     reg {
         name = "Clk gating enable";
@@ -236,6 +255,10 @@ addrmap soc_ifc_reg {
 
     ////////////////////////////////////////////////////////////////
     // FUSE Registers
+    // All In-field programmable fuses are set as Read-Write-Locked => RWL
+    // They are writeable only when FUSE_WR_DONE is zero/IFPs are unlocked
+    // For SOC to reupdate the fuses, it has to ask Caliptra FW to unlock
+    // these fuse registers
     reg {
         name = "Unique Device Secret";
         desc = "Obfuscated UDS.
@@ -249,68 +272,68 @@ addrmap soc_ifc_reg {
                 [br]Caliptra Access: -
                 [br]SOC Access:      W1";
                 secret seed[32]=0;
-    } fuse_field_entropy[32];
+    } fuse_field_entropy[8];
     //TODO review write once and stickiness of fuses
     reg {
-        desc = "Key Manifest [0] Fuse.
-                 [br]Caliptra Access: RW1
-                 [br]SOC Access:      RW1";
+        desc = "Key Manifest PK hash Fuse.
+                 [br]Caliptra Access: RWL
+                 [br]SOC Access:      RWL";
          fuse hash[32]=0;
-    } fuse_key_manifest_pk_hash_0[12];
-    reg {
-        desc = "Key Manifest [1] Fuse.
-                 [br]Caliptra Access: RW1
-                 [br]SOC Access:      RW1";
-         fuse hash[32]=0;
-    } fuse_key_manifest_pk_hash_1[12];
-    reg {
-        desc = "Key Manifest [2] Fuse.
-                 [br]Caliptra Access: RW1
-                 [br]SOC Access:      RW1";
-         fuse hash[32]=0;
-    } fuse_key_manifest_pk_hash_2[12];
-    reg {
-        desc = "Key Manifest [3] Fuse.
-                 [br]Caliptra Access: RW1
-                 [br]SOC Access:      RW1";
-         fuse hash[32]=0;
-    } fuse_key_manifest_pk_hash_3[12];
+    } fuse_key_manifest_pk_hash[12];
     reg {
         desc = "Key Manifest Mask Fuse.
-                 [br]Caliptra Access: RW1
-                 [br]SOC Access:      RW1";
-         fuse mask[4]=0;
+                 [br]Caliptra Access: RWL
+                 [br]SOC Access:      RWL";
+         field {sw=rw; hw=r; swwel; resetsignal = reset_b;}  mask[4]=0;
     } fuse_key_manifest_pk_hash_mask;
     reg {
+        desc = "Owner Key Manifest PK hash Fuse.
+                 [br]Caliptra Access: RWL
+                 [br]SOC Access:      RWL";
+         field {sw=rw; hw=r; swwel; resetsignal = reset_b;} hash[32]=0;
+    } fuse_owner_key_manifest_pk_hash[12];
+    reg {
+        desc = "Onwer Key Manifest Mask Fuse.
+                 [br]Caliptra Access: RWL
+                 [br]SOC Access:      RWL";
+         field {sw=rw; hw=r; swwel; resetsignal = reset_b;}  mask[4]=0;
+    } fuse_owner_key_manifest_pk_hash_mask;
+    reg {
         desc = "Key Manifest SVN Fuse.
-                 [br]Caliptra Access: RW1
-                 [br]SOC Access:      RW1";
-         fuse svn[32]=0;
+                 [br]Caliptra Access: RWL
+                 [br]SOC Access:      RWL";
+         field {sw=rw; hw=r; swwel; resetsignal = reset_b;} svn[32]=0;
     } fuse_key_manifest_svn;
     reg {
-        desc = "Bootloader Fuse.
-                 [br]Caliptra Access: RW1
-                 [br]SOC Access:      RW1";
-         fuse svn[32]=0;
+        desc = "Bootloader SVN Fuse.
+                 [br]Caliptra Access: RWL
+                 [br]SOC Access:      RWL";
+         field {sw=rw; hw=r; swwel; resetsignal = reset_b;} svn[32]=0;
     } fuse_boot_loader_svn;
     reg {
         desc = "Runtime SVN Fuse.
-                 [br]Caliptra Access: RW1
-                 [br]SOC Access:      RW1";
-         fuse svn[32]=0;
+                 [br]Caliptra Access: RWL
+                 [br]SOC Access:      RWL";
+         field {sw=rw; hw=r; swwel; resetsignal = reset_b;} svn[32]=0;
     } fuse_runtime_svn[4];
     reg {
         desc = "Anti Rollback Disable Fuse.
-                 [br]Caliptra Access: RW1
-                 [br]SOC Access:      RW1";
-         fuse dis[1]=0;
+                 [br]Caliptra Access: RWL
+                 [br]SOC Access:      RWL";
+         field {sw=rw; hw=r; swwel; resetsignal = reset_b;} dis[1]=0;
     } fuse_anti_rollback_disable;
     reg {
-        desc = "IEEE IDevID Certificate Chain Fuse.
+        desc = "Manufacturer IEEE IDevID Certificate Gen Attributes.
                  [br]Caliptra Access: RW1
                  [br]SOC Access:      RW1";
          fuse cert[32]=0;
-    } fuse_ieee_idevid_cert_chain[24];
+    } fuse_idevid_cert_attr[24];
+    reg {
+        desc = " Manufacturer IDEVID Manufacturer’s HSM identifier (this is used to find the certificate chain from the boot media)
+                 [br]Caliptra Access: RW1
+                 [br]SOC Access:      RW1";
+         fuse cert[32]=0;
+    } fuse_idevid_manuf_hsm_id[4];
 
 
     ////////////////////////////////////////////////////////////////

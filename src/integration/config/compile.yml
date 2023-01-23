@@ -19,10 +19,12 @@ targets:
     directories: [$COMPILE_ROOT/rtl]
     files:
       - $COMPILE_ROOT/rtl/config_defines.svh
+      - $COMPILE_ROOT/rtl/caliptra_reg_defines.svh
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
       - $COMPILE_ROOT/rtl/config_defines.svh
+      - $COMPILE_ROOT/rtl/caliptra_reg_defines.svh
       - $COMPILE_ROOT/rtl/caliptra_top.sv
     tops: [caliptra_top]
   rtl_lint:

@@ -11,15 +11,6 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__CPTRA_FLOW_STATUS__in_t;
 
     typedef struct packed{
-        logic [31:0] next;
-        logic we;
-    } soc_ifc_reg__CPTRA_RESET_REASON__reason__in_t;
-
-    typedef struct packed{
-        soc_ifc_reg__CPTRA_RESET_REASON__reason__in_t reason;
-    } soc_ifc_reg__CPTRA_RESET_REASON__in_t;
-
-    typedef struct packed{
         logic [1:0] next;
     } soc_ifc_reg__CPTRA_SECURITY_STATE__device_lifecycle__in_t;
 
@@ -101,6 +92,62 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__fuse_field_entropy__in_t;
 
     typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__fuse_key_manifest_pk_hash_mask__mask__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__fuse_key_manifest_pk_hash_mask__mask__in_t mask;
+    } soc_ifc_reg__fuse_key_manifest_pk_hash_mask__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__fuse_owner_key_manifest_pk_hash__hash__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__fuse_owner_key_manifest_pk_hash__hash__in_t hash;
+    } soc_ifc_reg__fuse_owner_key_manifest_pk_hash__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__fuse_owner_key_manifest_pk_hash_mask__mask__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__fuse_owner_key_manifest_pk_hash_mask__mask__in_t mask;
+    } soc_ifc_reg__fuse_owner_key_manifest_pk_hash_mask__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__fuse_key_manifest_svn__svn__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__fuse_key_manifest_svn__svn__in_t svn;
+    } soc_ifc_reg__fuse_key_manifest_svn__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__fuse_boot_loader_svn__svn__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__fuse_boot_loader_svn__svn__in_t svn;
+    } soc_ifc_reg__fuse_boot_loader_svn__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__fuse_runtime_svn__svn__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__fuse_runtime_svn__svn__in_t svn;
+    } soc_ifc_reg__fuse_runtime_svn__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__fuse_anti_rollback_disable__dis__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__fuse_anti_rollback_disable__dis__in_t dis;
+    } soc_ifc_reg__fuse_anti_rollback_disable__in_t;
+
+    typedef struct packed{
         logic [31:0] next;
         logic wel;
         logic swwe;
@@ -180,7 +227,6 @@ package soc_ifc_reg_pkg;
         logic hard_reset_b;
         logic soc_req;
         soc_ifc_reg__CPTRA_FLOW_STATUS__in_t CPTRA_FLOW_STATUS;
-        soc_ifc_reg__CPTRA_RESET_REASON__in_t CPTRA_RESET_REASON;
         soc_ifc_reg__CPTRA_SECURITY_STATE__in_t CPTRA_SECURITY_STATE;
         soc_ifc_reg__CPTRA_VALID_PAUSER__in_t [5-1:0]CPTRA_VALID_PAUSER;
         soc_ifc_reg__CPTRA_PAUSER_LOCK__in_t [5-1:0]CPTRA_PAUSER_LOCK;
@@ -190,7 +236,14 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_TRNG_DONE__in_t CPTRA_TRNG_DONE;
         soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES__in_t [2-1:0]CPTRA_GENERIC_INPUT_WIRES;
         soc_ifc_reg__fuse_uds_seed__in_t [12-1:0]fuse_uds_seed;
-        soc_ifc_reg__fuse_field_entropy__in_t [32-1:0]fuse_field_entropy;
+        soc_ifc_reg__fuse_field_entropy__in_t [8-1:0]fuse_field_entropy;
+        soc_ifc_reg__fuse_key_manifest_pk_hash_mask__in_t fuse_key_manifest_pk_hash_mask;
+        soc_ifc_reg__fuse_owner_key_manifest_pk_hash__in_t [12-1:0]fuse_owner_key_manifest_pk_hash;
+        soc_ifc_reg__fuse_owner_key_manifest_pk_hash_mask__in_t fuse_owner_key_manifest_pk_hash_mask;
+        soc_ifc_reg__fuse_key_manifest_svn__in_t fuse_key_manifest_svn;
+        soc_ifc_reg__fuse_boot_loader_svn__in_t fuse_boot_loader_svn;
+        soc_ifc_reg__fuse_runtime_svn__in_t [4-1:0]fuse_runtime_svn;
+        soc_ifc_reg__fuse_anti_rollback_disable__in_t fuse_anti_rollback_disable;
         soc_ifc_reg__internal_obf_key__in_t [8-1:0]internal_obf_key;
         soc_ifc_reg__internal_iccm_lock__in_t internal_iccm_lock;
         soc_ifc_reg__intr_block_t__in_t intr_block_rf;
@@ -261,6 +314,14 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic value;
+    } soc_ifc_reg__CPTRA_BOOTFSM_GO__GO__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_BOOTFSM_GO__GO__out_t GO;
+    } soc_ifc_reg__CPTRA_BOOTFSM_GO__out_t;
+
+    typedef struct packed{
+        logic value;
     } soc_ifc_reg__CPTRA_CLK_GATING_EN__clk_gating_en__out_t;
 
     typedef struct packed{
@@ -286,6 +347,62 @@ package soc_ifc_reg_pkg;
     typedef struct packed{
         soc_ifc_reg__secret_w32__out_t seed;
     } soc_ifc_reg__fuse_field_entropy__out_t;
+
+    typedef struct packed{
+        logic [3:0] value;
+    } soc_ifc_reg__fuse_key_manifest_pk_hash_mask__mask__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__fuse_key_manifest_pk_hash_mask__mask__out_t mask;
+    } soc_ifc_reg__fuse_key_manifest_pk_hash_mask__out_t;
+
+    typedef struct packed{
+        logic [31:0] value;
+    } soc_ifc_reg__fuse_owner_key_manifest_pk_hash__hash__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__fuse_owner_key_manifest_pk_hash__hash__out_t hash;
+    } soc_ifc_reg__fuse_owner_key_manifest_pk_hash__out_t;
+
+    typedef struct packed{
+        logic [3:0] value;
+    } soc_ifc_reg__fuse_owner_key_manifest_pk_hash_mask__mask__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__fuse_owner_key_manifest_pk_hash_mask__mask__out_t mask;
+    } soc_ifc_reg__fuse_owner_key_manifest_pk_hash_mask__out_t;
+
+    typedef struct packed{
+        logic [31:0] value;
+    } soc_ifc_reg__fuse_key_manifest_svn__svn__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__fuse_key_manifest_svn__svn__out_t svn;
+    } soc_ifc_reg__fuse_key_manifest_svn__out_t;
+
+    typedef struct packed{
+        logic [31:0] value;
+    } soc_ifc_reg__fuse_boot_loader_svn__svn__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__fuse_boot_loader_svn__svn__out_t svn;
+    } soc_ifc_reg__fuse_boot_loader_svn__out_t;
+
+    typedef struct packed{
+        logic [31:0] value;
+    } soc_ifc_reg__fuse_runtime_svn__svn__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__fuse_runtime_svn__svn__out_t svn;
+    } soc_ifc_reg__fuse_runtime_svn__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__fuse_anti_rollback_disable__dis__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__fuse_anti_rollback_disable__dis__out_t dis;
+    } soc_ifc_reg__fuse_anti_rollback_disable__out_t;
 
     typedef struct packed{
         logic [31:0] value;
@@ -357,10 +474,18 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER__out_t CPTRA_TRNG_VALID_PAUSER;
         soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK__out_t CPTRA_TRNG_PAUSER_LOCK;
         soc_ifc_reg__CPTRA_FUSE_WR_DONE__out_t CPTRA_FUSE_WR_DONE;
+        soc_ifc_reg__CPTRA_BOOTFSM_GO__out_t CPTRA_BOOTFSM_GO;
         soc_ifc_reg__CPTRA_CLK_GATING_EN__out_t CPTRA_CLK_GATING_EN;
         soc_ifc_reg__CPTRA_GENERIC_OUTPUT_WIRES__out_t [2-1:0]CPTRA_GENERIC_OUTPUT_WIRES;
         soc_ifc_reg__fuse_uds_seed__out_t [12-1:0]fuse_uds_seed;
-        soc_ifc_reg__fuse_field_entropy__out_t [32-1:0]fuse_field_entropy;
+        soc_ifc_reg__fuse_field_entropy__out_t [8-1:0]fuse_field_entropy;
+        soc_ifc_reg__fuse_key_manifest_pk_hash_mask__out_t fuse_key_manifest_pk_hash_mask;
+        soc_ifc_reg__fuse_owner_key_manifest_pk_hash__out_t [12-1:0]fuse_owner_key_manifest_pk_hash;
+        soc_ifc_reg__fuse_owner_key_manifest_pk_hash_mask__out_t fuse_owner_key_manifest_pk_hash_mask;
+        soc_ifc_reg__fuse_key_manifest_svn__out_t fuse_key_manifest_svn;
+        soc_ifc_reg__fuse_boot_loader_svn__out_t fuse_boot_loader_svn;
+        soc_ifc_reg__fuse_runtime_svn__out_t [4-1:0]fuse_runtime_svn;
+        soc_ifc_reg__fuse_anti_rollback_disable__out_t fuse_anti_rollback_disable;
         soc_ifc_reg__internal_obf_key__out_t [8-1:0]internal_obf_key;
         soc_ifc_reg__internal_iccm_lock__out_t internal_iccm_lock;
         soc_ifc_reg__internal_fw_update_reset__out_t internal_fw_update_reset;

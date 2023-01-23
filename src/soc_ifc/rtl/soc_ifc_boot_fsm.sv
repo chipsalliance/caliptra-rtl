@@ -21,6 +21,10 @@ module soc_ifc_boot_fsm
     input logic fw_update_rst,
     input logic [7:0] fw_update_rst_wait_cycles,
 
+    // Debug wires to Stop the BootFSM from bringing uC out of reset and continue on a write
+    input logic BootFSM_BrkPoint,
+    input logic BootFSM_Continue,
+
     output logic ready_for_fuses,
 
     input logic fuse_done,
@@ -38,6 +42,7 @@ boot_fsm_state_e boot_fsm_ps;
 //arcs between states - global rst
 logic arc_BOOT_IDLE_BOOT_FUSE;
 logic arc_BOOT_FUSE_BOOT_DONE;
+logic arc_BOOT_FUSE_BOOT_WAIT;
 logic arc_BOOT_DONE_BOOT_IDLE;
 //arcs for fw update rst
 logic arc_BOOT_DONE_BOOT_FWRST;
@@ -60,15 +65,22 @@ always_comb arc_BOOT_IDLE_BOOT_FUSE = cptra_pwrgood;
 //move from fuse state to done when fuse done register is set
 always_comb arc_BOOT_FUSE_BOOT_DONE = fuse_done;
 
+// Hold the bootFSM from bringing uC out of reset if the breakpoint is set after fuse writes are done
+always_comb arc_BOOT_FUSE_BOOT_WAIT = BootFSM_BrkPoint;
+
 //dummy arc for terminal state lint check
 always_comb arc_BOOT_DONE_BOOT_IDLE = '0;
+
 
 always_comb begin
     //move to rst state when reg bit is set to 1. This state will assert fw_rst to uc
     arc_BOOT_DONE_BOOT_FWRST = fw_update_rst;
 
-    //move to done state after a fixed time
-    arc_BOOT_WAIT_BOOT_DONE = (wait_count == '0);
+    // TODO: Capture BootFSM_BrkPoint only at the point of cold or warm reset exit
+    // Move to BOOT_DONE state when
+          // a fixed time is met AND
+          // if the BootFSM breakpoint is asserted and the BootFSM continue is not set, stay put in WAIT state
+    arc_BOOT_WAIT_BOOT_DONE = (wait_count == '0) & ~(BootFSM_BrkPoint & ~BootFSM_Continue);
 end
 
 always_comb begin
@@ -91,7 +103,12 @@ always_comb begin
         end
         BOOT_FUSE: begin
             if (arc_BOOT_FUSE_BOOT_DONE) begin
-                boot_fsm_ns = BOOT_DONE;
+               if (arc_BOOT_FUSE_BOOT_WAIT) begin
+                  boot_fsm_ns = BOOT_WAIT;
+               end
+               else begin
+                   boot_fsm_ns = BOOT_DONE;
+               end
             end
             ready_for_fuses = 1'b1;
 
@@ -113,7 +130,6 @@ always_comb begin
             wait_count_rst = 0;
         end
         BOOT_WAIT: begin
-            //TODO: Add tap logic control for fw_update_reset
             if (arc_BOOT_WAIT_BOOT_DONE) begin
                 boot_fsm_ns = BOOT_DONE;
                 fsm_iccm_unlock = 1'b1;

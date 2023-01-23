@@ -30,17 +30,36 @@ Only reset during cold-boot (sticky).
         <th>Name</th>
         <th></th>
     </tr>
+    <tr class="reserved-field">
+    <td>[31:4]</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td></td>
+    <td>-</td>
+    <td></td>
+</tr>
     <tr id="reason">
-        <td>[31:0]</td>
-        <td>reason</td>
+        <td>[3:0]</td>
+        <td><a href="#reason.desc">reason</a></td>
         <td>
             <span title='Readable and Writable'>rw</span></td>
-        <td>0x157b007
+        <td>0x0
         </td>
         <td>
             <input id="_FieldValueTesterreason" class="field-value-tester"
                 type="text" autocomplete="off"
                 data-name="reason" oninput="onDecodedFieldInput(this)"/>
+            <select id="_FieldValueEnumTesterreason" class="field-value-enum-tester"
+                data-name="reason" onchange="onDecodedFieldEnumChange(this)">
+            
+                <option value="0x0">CPTRA_COLD_RESET</option>
+            
+                <option value="0x1">CPTRA_WARM_RESET</option>
+            
+                <option value="0x2">CPTRA_FW_UPD_RESET</option>
+            
+            </select>
         </td>
         <td>-</td>
         <td>
@@ -58,4 +77,31 @@ Only reset during cold-boot (sticky).
         <button type="button" class="reset-button" title="Reset register values" aria-label="Reset register values" onclick="onResetRegValue(this)"></button>
     </label>
 </p>
+<hr/><h2>Field Descriptions</h2>
+
+<h3 id="reason.desc">reason
+    <a class="headerlink" href="#reason.desc" title="Permalink to this headline"></a>
+</h3>
+<div id="_Content.reason.desc">
+<table border="1">
+    <tr>
+        <th colspan="3">enum reset_type_e</th>
+    </tr>
+    <tr>
+        <td>CPTRA_COLD_RESET</td>
+        <td>0x0</td>
+        <td><p>Caliptra went through Cold Reset</p></td>
+    </tr>
+    <tr>
+        <td>CPTRA_WARM_RESET</td>
+        <td>0x1</td>
+        <td><p>Caliptra went through warm reset</p></td>
+    </tr>
+    <tr>
+        <td>CPTRA_FW_UPD_RESET</td>
+        <td>0x2</td>
+        <td><p>Caliptra uC went through FW update reset</p></td>
+    </tr>
+</table>
+</div>
 </div>

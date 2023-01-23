@@ -180,6 +180,15 @@ module caliptra_top
     logic [31:0][31:0] obf_field_entropy;
     logic [11:0][31:0] obf_uds_seed;
 
+    //caliptra uncore jtag ports & pertinent logic
+    logic                       cptra_uncore_dmi_reg_en;
+    logic                       cptra_uncore_dmi_reg_wr_en;
+    logic [31:0]                cptra_uncore_dmi_reg_rdata;
+    logic [6:0]                 cptra_uncore_dmi_reg_addr;
+    logic [31:0]                cptra_uncore_dmi_reg_wdata;
+    security_state_t            cptra_security_state_Latched;
+    
+
     logic iccm_lock;
 
     // Interrupt Signals
@@ -448,6 +457,14 @@ el2_swerv_wrapper rvtop (
     .jtag_trst_n            ( jtag_trst_n  ),
     .jtag_tdo               ( jtag_tdo ),
 
+    //caliptra uncore jtag ports
+   .cptra_uncore_dmi_reg_en      ( cptra_uncore_dmi_reg_en ),
+   .cptra_uncore_dmi_reg_wr_en   ( cptra_uncore_dmi_reg_wr_en ),
+   .cptra_uncore_dmi_reg_rdata   ( cptra_uncore_dmi_reg_rdata ),
+   .cptra_uncore_dmi_reg_addr    ( cptra_uncore_dmi_reg_addr ),
+   .cptra_uncore_dmi_reg_wdata   ( cptra_uncore_dmi_reg_wdata ),
+   .cptra_security_state_Latched ( cptra_security_state_Latched),
+
     .mpc_debug_halt_ack     ( mpc_debug_halt_ack),
     .mpc_debug_halt_req     ( 1'b0),
     .mpc_debug_run_ack      ( mpc_debug_run_ack),
@@ -480,6 +497,20 @@ el2_swerv_wrapper rvtop (
     always_comb responder_inst[`CALIPTRA_SLAVE_SEL_IDMA].hrdata    = responder_inst[`CALIPTRA_SLAVE_SEL_DDMA].hrdata;
     always_comb responder_inst[`CALIPTRA_SLAVE_SEL_IDMA].hresp     = responder_inst[`CALIPTRA_SLAVE_SEL_DDMA].hresp;
     always_comb responder_inst[`CALIPTRA_SLAVE_SEL_IDMA].hreadyout = responder_inst[`CALIPTRA_SLAVE_SEL_DDMA].hreadyout;
+
+    logic cptra_security_state_captured;
+
+    // Security State value captured on a Caliptra reset deassertion (0->1 signal transition)
+    always_ff @(posedge clk or negedge cptra_rst_b) begin
+        if (~cptra_rst_b) begin
+            cptra_security_state_Latched <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; //Setting the default value to be debug locked and in production mode
+            cptra_security_state_captured <= 0;
+        end
+        else if(!cptra_security_state_captured) begin
+            cptra_security_state_Latched <= security_state;
+            cptra_security_state_captured <= 1;
+        end
+    end
 
 //=========================================================================-
 // Clock gating instance
@@ -769,6 +800,8 @@ soc_ifc_top1
 
     .security_state(security_state),
     
+    .BootFSM_BrkPoint (BootFSM_BrkPoint),
+    
     .generic_input_wires(generic_input_wires),
     .generic_output_wires(generic_output_wires),
 
@@ -817,7 +850,14 @@ soc_ifc_top1
     .cptra_noncore_rst_b (cptra_noncore_rst_b),
     .cptra_uc_rst_b (cptra_uc_rst_b),
     //Clock gating en
-    .clk_gating_en(clk_gating_en)
+    .clk_gating_en(clk_gating_en),
+
+    //caliptra uncore jtag ports
+   .cptra_uncore_dmi_reg_en   ( cptra_uncore_dmi_reg_en ),
+   .cptra_uncore_dmi_reg_wr_en( cptra_uncore_dmi_reg_wr_en ),
+   .cptra_uncore_dmi_reg_rdata( cptra_uncore_dmi_reg_rdata ),
+   .cptra_uncore_dmi_reg_addr ( cptra_uncore_dmi_reg_addr ),
+   .cptra_uncore_dmi_reg_wdata( cptra_uncore_dmi_reg_wdata )
 );
 
 //TIE OFF slaves

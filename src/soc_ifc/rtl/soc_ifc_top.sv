@@ -44,6 +44,7 @@ module soc_ifc_top
     input var security_state_t security_state,
 
     input logic  [1:0][31:0] generic_input_wires,
+    input logic BootFSM_BrkPoint,
     output logic [1:0][31:0] generic_output_wires,
 
     //SoC APB Interface
@@ -101,7 +102,14 @@ module soc_ifc_top
     //uC reset
     output logic cptra_uc_rst_b,
     //Clock gating
-    output logic clk_gating_en 
+    output logic clk_gating_en,
+
+    //caliptra uncore jtag ports
+   input  logic                            cptra_uncore_dmi_reg_en,
+   input  logic                            cptra_uncore_dmi_reg_wr_en,
+   output logic [31:0]                     cptra_uncore_dmi_reg_rdata,
+   input  logic [6:0]                      cptra_uncore_dmi_reg_addr,
+   input  logic [31:0]                     cptra_uncore_dmi_reg_wdata 
 );
 
 //gasket to assemble mailbox request
@@ -156,6 +164,9 @@ logic sram_double_ecc_error;
 
 logic iccm_unlock;
 
+logic BootFSM_BrkPoint_Latched;
+logic BootFSM_BrkPoint_Flag;
+
 soc_ifc_reg__in_t soc_ifc_reg_hwif_in;
 soc_ifc_reg__out_t soc_ifc_reg_hwif_out;
 
@@ -172,6 +183,9 @@ soc_ifc_boot_fsm i_soc_ifc_boot_fsm (
     .ready_for_fuses(ready_for_fuses),
 
     .fuse_done(soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value),
+
+    .BootFSM_BrkPoint(BootFSM_BrkPoint_Latched),
+    .BootFSM_Continue(soc_ifc_reg_hwif_out.CPTRA_BOOTFSM_GO.GO.value),
 
     .cptra_noncore_rst_b(cptra_noncore_rst_b), //goes to all other blocks
     .cptra_uc_rst_b(cptra_uc_rst_b), //goes to swerv core
@@ -297,9 +311,17 @@ soc_ifc_arb #(
     .soc_ifc_reg_req_hold(1'b0),
     .soc_ifc_reg_req_data(soc_ifc_reg_req_data),
     .soc_ifc_reg_rdata(soc_ifc_reg_rdata),
-    .soc_ifc_reg_error(soc_ifc_reg_error)
+    .soc_ifc_reg_error(soc_ifc_reg_error),
+
+    //caliptra uncore jtag ports
+    .cptra_uncore_dmi_reg_en   (cptra_uncore_dmi_reg_en),
+    .cptra_uncore_dmi_reg_wr_en(cptra_uncore_dmi_reg_wr_en),
+    .cptra_uncore_dmi_reg_rdata(cptra_uncore_dmi_reg_rdata),
+    .cptra_uncore_dmi_reg_addr (cptra_uncore_dmi_reg_addr),
+    .cptra_uncore_dmi_reg_wdata(cptra_uncore_dmi_reg_wdata) 
 
 );
+
 
 //Functional Registers and Fuses
 //This module contains the functional registers maintained by the Caliptra Mailbox
@@ -333,14 +355,28 @@ always_comb begin
     ready_for_fw_push = soc_ifc_reg_hwif_out.CPTRA_FLOW_STATUS.ready_for_fw.value;
     ready_for_runtime = soc_ifc_reg_hwif_out.CPTRA_FLOW_STATUS.ready_for_runtime.value;
     soc_ifc_reg_hwif_in.CPTRA_FLOW_STATUS.ready_for_fuses.next = ready_for_fuses;
-    soc_ifc_reg_hwif_in.CPTRA_RESET_REASON.reason.next = 32'hdeadbeef; // FIXME
-    soc_ifc_reg_hwif_in.CPTRA_RESET_REASON.reason.we = 1'b0; // FIXME -- should be written by hardware when NMI is triggered via pin "nmi_int"
     soc_ifc_reg_hwif_in.CPTRA_SECURITY_STATE.device_lifecycle.next = security_state.device_lifecycle;
     soc_ifc_reg_hwif_in.CPTRA_SECURITY_STATE.debug_locked.next = security_state.debug_locked;
     //generic wires
     for (int i = 0; i < 2; i++) begin
         generic_output_wires[i] = soc_ifc_reg_hwif_out.CPTRA_GENERIC_OUTPUT_WIRES[i].generic_wires.value;
         soc_ifc_reg_hwif_in.CPTRA_GENERIC_INPUT_WIRES[i].generic_wires.next = generic_input_wires[i];
+    end
+
+end
+
+// Breakpoint value captured on a Caliptra reset deassertion (0->1 signal transition)
+// BootFSM_Continue will allow the boot fsm to continue
+always_ff @(posedge clk or negedge cptra_rst_b) begin
+    if (~cptra_rst_b) begin
+        BootFSM_BrkPoint_Latched <= 0;
+        BootFSM_BrkPoint_Flag <= 0;
+    end
+    // Breakpoint value captured on a Caliptra reset deassertion (0->1 signal transition) and is reset on BootFSM_Continue is set
+    // BootFSM_Continue's reset value is zero
+    else if(!BootFSM_BrkPoint_Flag) begin
+        BootFSM_BrkPoint_Latched <= BootFSM_BrkPoint;
+        BootFSM_BrkPoint_Flag <= 1;
     end
 end
 
@@ -370,6 +406,26 @@ end
 //can't write to trng valid user after it is locked
 always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_VALID_PAUSER.PAUSER.swwel = soc_ifc_reg_hwif_out.CPTRA_TRNG_PAUSER_LOCK.LOCK.value;
 always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_PAUSER_LOCK.LOCK.swwel = soc_ifc_reg_hwif_out.CPTRA_TRNG_PAUSER_LOCK.LOCK.value;
+
+// Can't write to RW-able fuses once fuse_done is set (implies the register is being locked using the fuse_wr_done)
+always_comb begin
+    for (int i=0; i<12; i++) begin
+        soc_ifc_reg_hwif_in.fuse_owner_key_manifest_pk_hash[i].hash.swwel  = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+    end
+end
+
+always_comb begin
+    for (int i=0; i<4; i++) begin
+        soc_ifc_reg_hwif_in.fuse_runtime_svn[i].svn.swwel                       = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+    end
+end
+
+always_comb soc_ifc_reg_hwif_in.fuse_key_manifest_pk_hash_mask.mask.swwel       = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.fuse_owner_key_manifest_pk_hash_mask.mask.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.fuse_key_manifest_svn.svn.swwel                 = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.fuse_boot_loader_svn.svn.swwel                  = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.fuse_anti_rollback_disable.dis.swwel            = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+
 //only allow valid users to write to TRNG
 always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_DONE.DONE.swwe = ~soc_ifc_reg_req_data.soc_req | 
                                                             (soc_ifc_reg_req_data.user == soc_ifc_reg_hwif_out.CPTRA_TRNG_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]);
