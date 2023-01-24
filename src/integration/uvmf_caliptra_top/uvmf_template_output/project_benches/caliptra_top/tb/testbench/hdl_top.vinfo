@@ -1,0 +1,8 @@
+@use $UVMF_PROJECT_DIR/rtl/verilog/verilog_dut.vinfo
+@use $UVMF_PROJECT_DIR/tb/parameters/caliptra_top_parameters_pkg.vinfo
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/soc_ifc_ctrl_pkg/soc_ifc_ctrl_bfm.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/cptra_ctrl_pkg/cptra_ctrl_bfm.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/soc_ifc_status_pkg/soc_ifc_status_bfm.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/cptra_status_pkg/cptra_status_bfm.vinfo
+hdl_top.sv

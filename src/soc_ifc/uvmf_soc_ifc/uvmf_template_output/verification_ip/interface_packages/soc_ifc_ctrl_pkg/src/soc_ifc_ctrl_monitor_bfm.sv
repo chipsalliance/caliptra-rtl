@@ -16,6 +16,7 @@
 // limitations under the License.
 
 // pragma uvmf custom header begin
+import soc_ifc_pkg::*;
 // pragma uvmf custom header end
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
@@ -86,12 +87,16 @@ end
   tri  cptra_pwrgood_i;
   tri  cptra_rst_b_i;
   tri [7:0][31:0] cptra_obf_key_i;
+  tri [2:0] security_state_i;
+  tri  BootFSM_BrkPoint_i;
   tri [63:0] generic_input_wires_i;
   assign clk_i = bus.clk;
   assign dummy_i = bus.dummy;
   assign cptra_pwrgood_i = bus.cptra_pwrgood;
   assign cptra_rst_b_i = bus.cptra_rst_b;
   assign cptra_obf_key_i = bus.cptra_obf_key;
+  assign security_state_i = bus.security_state;
+  assign BootFSM_BrkPoint_i = bus.BootFSM_BrkPoint;
   assign generic_input_wires_i = bus.generic_input_wires;
 
   // Proxy handle to UVM monitor
@@ -103,6 +108,8 @@ end
   logic  cptra_rst_b_r = 1'b0;
   logic [7:0][31:0] cptra_obf_key_r;
   logic [63:0] generic_input_wires_r;
+  security_state_t security_state_r;
+  logic BootFSM_BrkPoint_r;
   function bit any_signal_changed();
       if (!cptra_pwrgood_r)
           return cptra_pwrgood_i;
@@ -112,6 +119,8 @@ end
           return |(cptra_pwrgood_i       ^  cptra_pwrgood_r      ) ||
                  |(cptra_rst_b_i         ^  cptra_rst_b_r        ) ||
                  |(cptra_obf_key_i       ^  cptra_obf_key_r      ) ||
+                 |(security_state_i      ^  security_state_r     ) ||
+                 |(BootFSM_BrkPoint_i    ^  BootFSM_BrkPoint_r   ) ||
                  |(generic_input_wires_i ^  generic_input_wires_r);
   endfunction
   // pragma uvmf custom interface_item_additional end
@@ -181,6 +190,8 @@ end
     //     //    soc_ifc_ctrl_monitor_struct.set_pwrgood
     //     //    soc_ifc_ctrl_monitor_struct.assert_rst
     //     //    soc_ifc_ctrl_monitor_struct.wait_cycles
+    //     //    soc_ifc_ctrl_monitor_struct.security_state
+    //     //    soc_ifc_ctrl_monitor_struct.set_bootfsm_breakpoint
     //     //    soc_ifc_ctrl_monitor_struct.generic_input_val
     //     //
     // Reference code;
@@ -192,6 +203,8 @@ end
     //      soc_ifc_ctrl_monitor_struct.xyz = cptra_pwrgood_i;  //     
     //      soc_ifc_ctrl_monitor_struct.xyz = cptra_rst_b_i;  //     
     //      soc_ifc_ctrl_monitor_struct.xyz = cptra_obf_key_i;  //    [7:0][31:0] 
+    //      soc_ifc_ctrl_monitor_struct.xyz = security_state_i;  //    [2:0] 
+    //      soc_ifc_ctrl_monitor_struct.xyz = BootFSM_BrkPoint_i;  //     
     //      soc_ifc_ctrl_monitor_struct.xyz = generic_input_wires_i;  //    [63:0] 
     // pragma uvmf custom do_monitor begin
     // UVMF_CHANGE_ME : Implement protocol monitoring.  The commented reference code 
@@ -208,14 +221,18 @@ end
     cptra_pwrgood_r       = cptra_pwrgood_i;
     cptra_rst_b_r         = cptra_rst_b_i;
     cptra_obf_key_r       = cptra_obf_key_i;
+    security_state_r      = security_state_i;
+    BootFSM_BrkPoint_r    = BootFSM_BrkPoint_i;
     generic_input_wires_r = generic_input_wires_i;
     begin: build_return_struct
          // Variables within the soc_ifc_ctrl_monitor_struct:
-         soc_ifc_ctrl_monitor_struct.set_pwrgood          = cptra_pwrgood_i;
-         soc_ifc_ctrl_monitor_struct.assert_rst           = !cptra_rst_b_i;
-         soc_ifc_ctrl_monitor_struct.cptra_obf_key_rand   = cptra_obf_key_i;
-         soc_ifc_ctrl_monitor_struct.generic_input_val    = generic_input_wires_i;
-         soc_ifc_ctrl_monitor_struct.wait_cycles          = 0;
+         soc_ifc_ctrl_monitor_struct.set_pwrgood            = cptra_pwrgood_i;
+         soc_ifc_ctrl_monitor_struct.assert_rst             = !cptra_rst_b_i;
+         soc_ifc_ctrl_monitor_struct.cptra_obf_key_rand     = cptra_obf_key_i;
+         soc_ifc_ctrl_monitor_struct.security_state         = security_state_i;
+         soc_ifc_ctrl_monitor_struct.set_bootfsm_breakpoint = BootFSM_BrkPoint_i;
+         soc_ifc_ctrl_monitor_struct.generic_input_val      = generic_input_wires_i;
+         soc_ifc_ctrl_monitor_struct.wait_cycles            = 0;
     end
     // pragma uvmf custom do_monitor end
   endtask         

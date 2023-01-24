@@ -166,7 +166,10 @@ import soc_ifc_pkg::*;
         .mailbox_data_avail(soc_ifc_status_agent_bus.mailbox_data_avail),
         .mailbox_flow_done (soc_ifc_status_agent_bus.mailbox_flow_done ),
 
+        .security_state    (soc_ifc_ctrl_agent_bus.security_state),
+
         .generic_input_wires (soc_ifc_ctrl_agent_bus.generic_input_wires ),
+        .BootFSM_BrkPoint    (soc_ifc_ctrl_agent_bus.BootFSM_BrkPoint),
         .generic_output_wires(soc_ifc_status_agent_bus.generic_output_wires),
 
         //SRAM interface
@@ -187,7 +190,7 @@ import soc_ifc_pkg::*;
 
         .haddr_i    (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HADDR[17:0]),
         .hwdata_i   (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HWDATA     ),
-        .hsel_i     (1'b1                                                                                     ),
+        .hsel_i     (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HSEL       ),
         .hwrite_i   (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HWRITE     ),
         .hready_i   (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HREADYOUT  ),
         .htrans_i   (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HTRANS     ),
@@ -195,6 +198,10 @@ import soc_ifc_pkg::*;
         .hresp_o    (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HRESP      ),
         .hreadyout_o(uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HREADY     ),
         .hrdata_o   (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HRDATA     ),
+        //SoC Interrupts
+        .cptra_error_fatal    (soc_ifc_status_agent_bus.cptra_error_fatal    ),
+        .cptra_error_non_fatal(soc_ifc_status_agent_bus.cptra_error_non_fatal),
+        .trng_req             (soc_ifc_status_agent_bus.trng_req             ),
         // uC Interrupts
         .soc_ifc_error_intr(cptra_status_agent_bus.soc_ifc_error_intr),
         .soc_ifc_notif_intr(cptra_status_agent_bus.soc_ifc_notif_intr),
@@ -215,12 +222,17 @@ import soc_ifc_pkg::*;
         .cptra_noncore_rst_b (cptra_status_agent_bus.cptra_noncore_rst_b),
         //uC reset
         .cptra_uc_rst_b (cptra_status_agent_bus.cptra_uc_rst_b),
-        .clk_gating_en  ()
+        .clk_gating_en  (),
+        //caliptra uncore jtag ports
+        .cptra_uncore_dmi_reg_en   (1'b0 ),
+        .cptra_uncore_dmi_reg_wr_en(1'b0 ),
+        .cptra_uncore_dmi_reg_rdata(     ),
+        .cptra_uncore_dmi_reg_addr (7'h0 ),
+        .cptra_uncore_dmi_reg_wdata(32'h0)
     );
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HBURST    = 3'b0;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HPROT     = 7'b0;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HMASTLOCK = 1'b0;
-    assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HSEL      = 1'b0;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HNONSEC   = 1'b0;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HAUSER    = 64'b0;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HWUSER    = 64'b0;

@@ -151,4 +151,4 @@ def main():
     return exitcode
 
 if __name__ == "__main__":
-    quit(main())
+    sys.exit(main())

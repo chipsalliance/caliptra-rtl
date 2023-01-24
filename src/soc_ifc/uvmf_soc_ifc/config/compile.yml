@@ -1,5 +1,5 @@
 ---
-provides: [uvmf_soc_ifc]
+provides: [uvmf_soc_ifc_vip]
 schema_version: 2.4.0
 requires:
   - uvmf_lib
@@ -17,10 +17,6 @@ targets:
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_status_pkg
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_status_pkg/src
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg
-      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/parameters
-      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/sequences
-      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/tests
-      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/testbench
     files:
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_ctrl_pkg/soc_ifc_ctrl_pkg_hdl.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_ctrl_pkg/soc_ifc_ctrl_pkg.sv
@@ -44,6 +40,19 @@ targets:
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_status_pkg/src/cptra_status_monitor_bfm.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/registers/soc_ifc_reg_model_top_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/soc_ifc_env_pkg.sv
+---
+provides: [uvmf_soc_ifc]
+schema_version: 2.4.0
+requires:
+  - uvmf_soc_ifc_vip
+targets:
+  tb:
+    directories:
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/parameters
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/sequences
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/tests
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/testbench
+    files:
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/parameters/soc_ifc_parameters_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/sequences/soc_ifc_sequences_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/tests/soc_ifc_tests_pkg.sv

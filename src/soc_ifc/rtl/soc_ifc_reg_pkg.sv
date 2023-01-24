@@ -72,6 +72,14 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__CPTRA_TRNG_DONE__in_t;
 
     typedef struct packed{
+        logic swwe;
+    } soc_ifc_reg__CPTRA_FUSE_WR_DONE__done__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_FUSE_WR_DONE__done__in_t done;
+    } soc_ifc_reg__CPTRA_FUSE_WR_DONE__in_t;
+
+    typedef struct packed{
         logic [31:0] next;
     } soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES__generic_wires__in_t;
 
@@ -234,6 +242,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK__in_t CPTRA_TRNG_PAUSER_LOCK;
         soc_ifc_reg__CPTRA_TRNG__in_t [12-1:0]CPTRA_TRNG;
         soc_ifc_reg__CPTRA_TRNG_DONE__in_t CPTRA_TRNG_DONE;
+        soc_ifc_reg__CPTRA_FUSE_WR_DONE__in_t CPTRA_FUSE_WR_DONE;
         soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES__in_t [2-1:0]CPTRA_GENERIC_INPUT_WIRES;
         soc_ifc_reg__fuse_uds_seed__in_t [12-1:0]fuse_uds_seed;
         soc_ifc_reg__fuse_field_entropy__in_t [8-1:0]fuse_field_entropy;

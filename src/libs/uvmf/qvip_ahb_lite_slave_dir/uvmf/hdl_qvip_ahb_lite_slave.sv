@@ -97,6 +97,18 @@ module hdl_qvip_ahb_lite_slave;
         end
         else
         begin: generate_passive_ahb_lite_slave_0_monitor
+            logic [(ahb_lite_slave_0_params::AHB_RDATA_WIDTH-1):0] unpacked_HRDATA   [ahb_lite_slave_0_params::AHB_NUM_SLAVES];
+            logic                                                  unpacked_HREADY   [ahb_lite_slave_0_params::AHB_NUM_SLAVES];
+            logic                                                  unpacked_HRESP    [ahb_lite_slave_0_params::AHB_NUM_SLAVES];
+            logic                                                  unpacked_HSEL     [ahb_lite_slave_0_params::AHB_NUM_SLAVES];
+            logic [15:0]                                           unpacked_mult_HSEL[ahb_lite_slave_0_params::AHB_NUM_SLAVES];
+            logic                                                  unpacked_HEXOKAY  [ahb_lite_slave_0_params::AHB_NUM_SLAVES];
+            assign unpacked_HRDATA   [0] = ahb_lite_slave_0_HRDATA;
+            assign unpacked_HREADY   [0] = ahb_lite_slave_0_HREADY;
+            assign unpacked_HRESP    [0] = ahb_lite_slave_0_HRESP;
+            assign unpacked_HSEL     [0] = ahb_lite_slave_0_HSEL;
+            assign unpacked_mult_HSEL[0] = ahb_lite_slave_0_mult_HSEL;
+            assign unpacked_HEXOKAY  [0] = ahb_lite_slave_0_HEXOKAY;
             ahb_lite_monitor 
             #(
                 .NUM_MASTERS(ahb_lite_slave_0_params::AHB_NUM_MASTERS),
@@ -117,19 +129,19 @@ module hdl_qvip_ahb_lite_slave;
                 .HBURST(ahb_lite_slave_0_HBURST),
                 .HPROT(ahb_lite_slave_0_HPROT),
                 .HMASTLOCK(ahb_lite_slave_0_HMASTLOCK),
-                .HREADYOUT(ahb_lite_slave_0_HREADYOUT),
-                .HRDATA(ahb_lite_slave_0_HRDATA),
-                .HREADY(ahb_lite_slave_0_HREADY),
-                .HRESP(ahb_lite_slave_0_HRESP),
-                .HSEL(ahb_lite_slave_0_HSEL),
+//                .HREADYOUT(ahb_lite_slave_0_HREADYOUT),
+                .HRDATA(unpacked_HRDATA),
+                .HREADY(unpacked_HREADY),
+                .HRESP(unpacked_HRESP),
+                .HSEL(unpacked_HSEL),
                 .HNONSEC(ahb_lite_slave_0_HNONSEC),
                 .HAUSER(ahb_lite_slave_0_HAUSER),
                 .HWUSER(ahb_lite_slave_0_HWUSER),
                 .HRUSER(ahb_lite_slave_0_HRUSER),
-                .mult_HSEL(ahb_lite_slave_0_mult_HSEL),
+                .mult_HSEL(unpacked_mult_HSEL),
                 .HEXCL(ahb_lite_slave_0_HEXCL),
                 .HMASTER(ahb_lite_slave_0_HMASTER),
-                .HEXOKAY(ahb_lite_slave_0_HEXOKAY)
+                .HEXOKAY(unpacked_HEXOKAY)
             );
         end
     endgenerate

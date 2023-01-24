@@ -67,6 +67,8 @@ typedef struct packed  { \
   bit set_pwrgood ; \
   bit assert_rst ; \
   int unsigned wait_cycles ; \
+  security_state_t security_state ; \
+  bit set_bootfsm_breakpoint ; \
   bit [63:0] generic_input_val ; \
      } soc_ifc_ctrl_monitor_s;
 
@@ -78,6 +80,8 @@ typedef struct packed  { \
             this.set_pwrgood , \
             this.assert_rst , \
             this.wait_cycles , \
+            this.security_state , \
+            this.set_bootfsm_breakpoint , \
             this.generic_input_val  \
             };\
     return ( soc_ifc_ctrl_monitor_struct);\
@@ -90,6 +94,8 @@ typedef struct packed  { \
             this.set_pwrgood , \
             this.assert_rst , \
             this.wait_cycles , \
+            this.security_state , \
+            this.set_bootfsm_breakpoint , \
             this.generic_input_val  \
             } = soc_ifc_ctrl_monitor_struct;\
   endfunction
@@ -104,6 +110,8 @@ typedef struct packed  { \
   bit set_pwrgood ; \
   bit assert_rst ; \
   int unsigned wait_cycles ; \
+  security_state_t security_state ; \
+  bit set_bootfsm_breakpoint ; \
   bit [63:0] generic_input_val ; \
      } soc_ifc_ctrl_initiator_s;
 
@@ -115,6 +123,8 @@ typedef struct packed  { \
            this.set_pwrgood , \
            this.assert_rst , \
            this.wait_cycles , \
+           this.security_state , \
+           this.set_bootfsm_breakpoint , \
            this.generic_input_val  \
            };\
     return ( soc_ifc_ctrl_initiator_struct);\
@@ -127,6 +137,8 @@ typedef struct packed  { \
            this.set_pwrgood , \
            this.assert_rst , \
            this.wait_cycles , \
+           this.security_state , \
+           this.set_bootfsm_breakpoint , \
            this.generic_input_val  \
            } = soc_ifc_ctrl_initiator_struct;\
   endfunction
@@ -141,6 +153,8 @@ typedef struct packed  { \
   bit set_pwrgood ; \
   bit assert_rst ; \
   int unsigned wait_cycles ; \
+  security_state_t security_state ; \
+  bit set_bootfsm_breakpoint ; \
   bit [63:0] generic_input_val ; \
      } soc_ifc_ctrl_responder_s;
 
@@ -152,6 +166,8 @@ typedef struct packed  { \
            this.set_pwrgood , \
            this.assert_rst , \
            this.wait_cycles , \
+           this.security_state , \
+           this.set_bootfsm_breakpoint , \
            this.generic_input_val  \
            };\
     return ( soc_ifc_ctrl_responder_struct);\
@@ -164,6 +180,8 @@ typedef struct packed  { \
            this.set_pwrgood , \
            this.assert_rst , \
            this.wait_cycles , \
+           this.security_state , \
+           this.set_bootfsm_breakpoint , \
            this.generic_input_val  \
            } = soc_ifc_ctrl_responder_struct;\
   endfunction

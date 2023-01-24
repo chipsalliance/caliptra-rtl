@@ -88,6 +88,9 @@ end
   tri  ready_for_runtime_i;
   tri  mailbox_data_avail_i;
   tri  mailbox_flow_done_i;
+  tri  cptra_error_fatal_i;
+  tri  cptra_error_non_fatal_i;
+  tri  trng_req_i;
   tri [63:0] generic_output_wires_i;
   assign clk_i = bus.clk;
   assign dummy_i = bus.dummy;
@@ -96,6 +99,9 @@ end
   assign ready_for_runtime_i = bus.ready_for_runtime;
   assign mailbox_data_avail_i = bus.mailbox_data_avail;
   assign mailbox_flow_done_i = bus.mailbox_flow_done;
+  assign cptra_error_fatal_i = bus.cptra_error_fatal;
+  assign cptra_error_non_fatal_i = bus.cptra_error_non_fatal;
+  assign trng_req_i = bus.trng_req;
   assign generic_output_wires_i = bus.generic_output_wires;
 
   // Proxy handle to UVM monitor
@@ -108,14 +114,20 @@ end
   reg  ready_for_runtime_o = 'b0;
   reg  mailbox_data_avail_o = 'b0;
   reg  mailbox_flow_done_o = 'b0;
+  reg  cptra_error_fatal_o = 'b0;
+  reg  cptra_error_non_fatal_o = 'b0;
+  reg  trng_req_o = 'b0;
   reg [63:0] generic_output_wires_o = 'b0;
   function bit any_signal_changed();
-      return |(ready_for_fuses_i      ^  ready_for_fuses_o          ) ||
-             |(ready_for_fw_push_i    & !ready_for_fw_push_o        ) ||
-             |(ready_for_runtime_i    & !ready_for_runtime_o        ) ||
-             |(mailbox_data_avail_i   & !mailbox_data_avail_o       ) ||
-             |(mailbox_flow_done_i    & !mailbox_flow_done_o        ) ||
-             |(generic_output_wires_i ^  generic_output_wires_o     );
+      return |(ready_for_fuses_i       ^  ready_for_fuses_o          ) ||
+             |(ready_for_fw_push_i     & !ready_for_fw_push_o        ) ||
+             |(ready_for_runtime_i     & !ready_for_runtime_o        ) ||
+             |(mailbox_data_avail_i    & !mailbox_data_avail_o       ) ||
+             |(mailbox_flow_done_i     & !mailbox_flow_done_o        ) ||
+             |(cptra_error_fatal_i     & !cptra_error_fatal_o        ) ||
+             |(cptra_error_non_fatal_i & !cptra_error_non_fatal_o    ) ||
+             |(trng_req_i              & !trng_req_o                 ) ||
+             |(generic_output_wires_i  ^  generic_output_wires_o     );
   endfunction
   // pragma uvmf custom interface_item_additional end
 
@@ -185,6 +197,9 @@ end
     //     //    soc_ifc_status_monitor_struct.ready_for_runtime
     //     //    soc_ifc_status_monitor_struct.mailbox_data_avail
     //     //    soc_ifc_status_monitor_struct.mailbox_flow_done
+    //     //    soc_ifc_status_monitor_struct.cptra_error_fatal_intr_pending
+    //     //    soc_ifc_status_monitor_struct.cptra_error_non_fatal_intr_pending
+    //     //    soc_ifc_status_monitor_struct.trng_req_pending
     //     //    soc_ifc_status_monitor_struct.generic_output_val
     //     //
     // Reference code;
@@ -198,6 +213,9 @@ end
     //      soc_ifc_status_monitor_struct.xyz = ready_for_runtime_i;  //     
     //      soc_ifc_status_monitor_struct.xyz = mailbox_data_avail_i;  //     
     //      soc_ifc_status_monitor_struct.xyz = mailbox_flow_done_i;  //     
+    //      soc_ifc_status_monitor_struct.xyz = cptra_error_fatal_i;  //     
+    //      soc_ifc_status_monitor_struct.xyz = cptra_error_non_fatal_i;  //     
+    //      soc_ifc_status_monitor_struct.xyz = trng_req_i;  //     
     //      soc_ifc_status_monitor_struct.xyz = generic_output_wires_i;  //    [63:0] 
     // pragma uvmf custom do_monitor begin
     // UVMF_CHANGE_ME : Implement protocol monitoring.  The commented reference code
@@ -216,15 +234,21 @@ end
     ready_for_runtime_o            <= ready_for_runtime_i   ;
     mailbox_data_avail_o           <= mailbox_data_avail_i  ;
     mailbox_flow_done_o            <= mailbox_flow_done_i   ;
+    cptra_error_fatal_o            <= cptra_error_fatal_i   ;
+    cptra_error_non_fatal_o        <= cptra_error_non_fatal_i;
+    trng_req_o                     <= trng_req_i            ;
     generic_output_wires_o         <= generic_output_wires_i;
     begin: build_return_struct
     // Variables within the soc_ifc_status_initiator_struct:
-         soc_ifc_status_monitor_struct.ready_for_fuses            =  ready_for_fuses_i;
-         soc_ifc_status_monitor_struct.ready_for_fw_push          =  ready_for_fw_push_i;
-         soc_ifc_status_monitor_struct.ready_for_runtime          =  ready_for_runtime_i;
-         soc_ifc_status_monitor_struct.mailbox_data_avail         =  mailbox_data_avail_i;
-         soc_ifc_status_monitor_struct.mailbox_flow_done          =  mailbox_flow_done_i;
-         soc_ifc_status_monitor_struct.generic_output_val         =  generic_output_wires_i;
+         soc_ifc_status_monitor_struct.ready_for_fuses                    =  ready_for_fuses_i;
+         soc_ifc_status_monitor_struct.ready_for_fw_push                  =  ready_for_fw_push_i;
+         soc_ifc_status_monitor_struct.ready_for_runtime                  =  ready_for_runtime_i;
+         soc_ifc_status_monitor_struct.mailbox_data_avail                 =  mailbox_data_avail_i;
+         soc_ifc_status_monitor_struct.mailbox_flow_done                  =  mailbox_flow_done_i;
+         soc_ifc_status_monitor_struct.cptra_error_fatal_intr_pending     = cptra_error_fatal_i;
+         soc_ifc_status_monitor_struct.cptra_error_non_fatal_intr_pending = cptra_error_non_fatal_i;
+         soc_ifc_status_monitor_struct.trng_req_pending                   = trng_req_i;
+         soc_ifc_status_monitor_struct.generic_output_val                 =  generic_output_wires_i;
     end
     // pragma uvmf custom do_monitor end
   endtask

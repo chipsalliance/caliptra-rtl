@@ -1,5 +1,6 @@
 uvmf:
   interfaces:
+    ############## SOC-facing Status Interface ##############
     soc_ifc_status:
       clock: clk
       reset: dummy
@@ -35,6 +36,17 @@ uvmf:
         dir: output
         width: '1'
 
+      #SoC Interrupts
+      - name: cptra_error_fatal
+        dir: output
+        width: '1'
+      - name: cptra_error_non_fatal
+        dir: output
+        width: '1'
+      - name: trng_req
+        dir: output
+        width: '1'
+
       # Generic signals
       - name: generic_output_wires
         dir: output
@@ -66,12 +78,27 @@ uvmf:
         iscompare: 'False'
         isrand: 'False'
 
+      # Caliptra Internal Interrupts
+      - name: cptra_error_fatal_intr_pending
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+      - name: cptra_error_non_fatal_intr_pending
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+      - name: trng_req_pending
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+
       # Generic signals
       - name: generic_output_val
         type: bit [63:0]
         iscompare: 'False'
         isrand: 'False'
 
+    ############## Caliptra Internal Status Interface ##############
     cptra_status:
       clock: clk
       reset: dummy

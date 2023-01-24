@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Caliptra Hands-On Guide** #
-_*Last Update: 2022/12/27*_
+_*Last Update: 2023/01/23*_
 
 [[_TOC_]]
 
@@ -34,6 +34,10 @@ Simulation:
    - `Version R-2020.12-SP2-7_Full64`
  - Verilator
    - `Version 4.228`
+ - Mentor Graphics QVIP
+   - `Version 2021.2.1` of AHB/APB models
+ - UVM installation
+   - `Version 1.1d`
 
 Synthesis:
  - Synopsys DC
@@ -131,5 +135,23 @@ Verilator Steps:
         `python3 run_verilator_l0_regression.py`
     1. NOTE: The script automatically creates run output folders at `${WORKSPACE}/scratch/$USER/verilator/<timestamp>/<testname>` for each test run
     1. NOTE: The output folder is populated with a run log that reports the run results and pass/fail status
+
+UVM Testbench Steps for `caliptra_top`:<BR>
+Description:<BR>
+The UVM Framework generation tool was used to create the baseline UVM testbench for verification of the top-level Caliptra image. The top-level bench leverages the `soc_ifc_top` testbench as a subenvironment, to reuse environment level sequences, agents, register models, and predictors.
+
+Prerequisites:<BR>
+- QVIP 2021.2.1 for Mentor Graphics (provides the AHB/APB VIP)
+- UVM 1.1d installation
+
+Steps:<BR>
+1. Compile UVM 1.1d library
+1. Compile the AHB/APB QVIP source
+1. Compile the UVMF wrapper for APB/AHB in Caliptra/src/libs/uvmf
+1. Compile the `verification_ip` provided for `soc_ifc` found in `Caliptra/src/soc_ifc/uvmf_soc_ifc`
+1. Compile the `caliptra_top` testbench found in `Caliptra/src/integration/uvmf_caliptra_top`
+1. `Caliptra/src/integration/uvmf_caliptra_top/uvmf_template_output/project_benches/caliptra_top/tb/testbench/hdl_top.sv` is the top-level TB wrapper for the system
+1. Select a test to run from the set of tests in `Caliptra/src/integration/uvmf_caliptra_top/uvmf_template_output/project_benches/caliptra_top/tb/tests/src`
+1. Provide `+UVM_TESTNAME=<test>` argument to simulation
 
 ## **NOTES** ##

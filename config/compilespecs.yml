@@ -19,5 +19,6 @@ files:
   #- src/sha256/uvmf_sha256/config/compile.yml
   - src/sha512/uvmf_sha512/config/compile.yml
   - src/soc_ifc/uvmf_soc_ifc/config/compile.yml
+  - src/integration/uvmf_caliptra_top/config/compile.yml
   # Please add your next file/folder above not below the line
   - src/integration/config/compile.yml

@@ -33,6 +33,18 @@ uvmf:
         reset_value: '''bz'
         width: '1'
       - dir: output
+        name: cptra_error_fatal
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: cptra_error_non_fatal
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: trng_req
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
         name: generic_output_wires
         reset_value: '''bz'
         width: '64'
@@ -68,6 +80,24 @@ uvmf:
         iscompare: 'False'
         isrand: 'False'
         name: mailbox_flow_done
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: cptra_error_fatal_intr_pending
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: cptra_error_non_fatal_intr_pending
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: trng_req_pending
         type: bit
         unpacked_dimension: ''
       - comment: ''

@@ -22,21 +22,4 @@
   //Dword values to write into all KV entries during debug mode
   `define DEBUG_MODE_KV_0 {32'hAAAA_AAAA}
   `define DEBUG_MODE_KV_1 {32'h5555_5555}
-
-  //Valid PAUSER
-  //Lock the PAUSER values from integration time
-  parameter [4:0] CLP_SET_PAUSER_INTEG = { 1'b0,          1'b0,          1'b0,          1'b0,          1'b0};
-  parameter [4:0][31:0] CLP_VALID_PAUSER = {32'h4444_4444, 32'h3333_3333, 32'h2222_2222, 32'h1111_1111, 32'h0000_0000};
-  
-  typedef enum logic [1:0] {
-    DEVICE_UNPROVISIONED = 2'b00,
-    DEVICE_MANUFACTURING = 2'b01,
-    DEVICE_PRODUCTION    = 2'b11
-  } device_lifecycle_e;
-
-  typedef struct packed {
-    logic debug_locked;
-    device_lifecycle_e device_lifecycle;
-  } security_state_t;
-
 `endif

@@ -1,0 +1,12 @@
+incdir:
+  - ${uvm_path}/src
+  - .
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.compile
+  - ../parameters/caliptra_top_parameters_pkg.compile
+  - ../../../../verification_ip/interface_packages/soc_ifc_ctrl_pkg/soc_ifc_ctrl_hdl.compile
+  - ../../../../verification_ip/interface_packages/cptra_ctrl_pkg/cptra_ctrl_hdl.compile
+  - ../../../../verification_ip/interface_packages/soc_ifc_status_pkg/soc_ifc_status_hdl.compile
+  - ../../../../verification_ip/interface_packages/cptra_status_pkg/cptra_status_hdl.compile
+src:
+  - hdl_top.sv

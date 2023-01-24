@@ -25,6 +25,14 @@ uvmf:
         reset_value: '''bz'
         width: '[''8'', ''32'']'
       - dir: output
+        name: security_state
+        reset_value: '''bz'
+        width: '3'
+      - dir: output
+        name: BootFSM_BrkPoint
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
         name: generic_input_wires
         reset_value: '''bz'
         width: '64'
@@ -61,6 +69,18 @@ uvmf:
         isrand: 'True'
         name: wait_cycles
         type: int unsigned
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: security_state
+        type: security_state_t
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'True'
+        name: set_bootfsm_breakpoint
+        type: bit
         unpacked_dimension: ''
       - comment: ''
         iscompare: 'False'

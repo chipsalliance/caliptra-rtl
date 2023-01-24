@@ -23,19 +23,13 @@ BUILD_DIR = $(CURDIR)
 
 # Define test name
 TESTNAME ?= iccm_lock
-ifneq (,$(SIM_TOOLS_TOP_COMPILE_ROOT))
-	TEST_DIR = $(SIM_TOOLS_TOP_COMPILE_ROOT)/test_suites/$(TESTNAME)
-	HEX_DIR = $(SIM_TOOLS_TOP_COMPILE_ROOT)/test_suites/hex
-	INCLUDES_DIR = $(SIM_TOOLS_TOP_COMPILE_ROOT)/test_suites/includes
-	TBDIR = $(SIM_TOOLS_TOP_COMPILE_ROOT)/tb
-	RISCV_HW_IF_DIR = $(SIM_TOOLS_TOP_COMPILE_ROOT)/test_suites/riscv_hw_if
-else
-	TEST_DIR = $(WORKSPACE)/Caliptra/src/integration/test_suites/$(TESTNAME)
-	HEX_DIR = $(WORKSPACE)/Caliptra/src/integration/test_suites/hex
-	INCLUDES_DIR = $(WORKSPACE)/Caliptra/src/integration/test_suites/includes
-	TBDIR = $(WORKSPACE)/Caliptra/src/integration/tb
-	RISCV_HW_IF_DIR = $(WORKSPACE)/Caliptra/src/integration/test_suites/riscv_hw_if
-endif
+TEST_DIR = $(WORKSPACE)/Caliptra/src/integration/test_suites/$(TESTNAME)
+HEX_DIR = $(WORKSPACE)/Caliptra/src/integration/test_suites/hex
+INCLUDES_DIR = $(WORKSPACE)/Caliptra/src/integration/test_suites/includes
+TBDIR = $(WORKSPACE)/Caliptra/src/integration/tb
+RISCV_HW_IF_DIR = $(WORKSPACE)/Caliptra/src/integration/test_suites/libs/riscv_hw_if
+ISR_DIR    = $(WORKSPACE)/Caliptra/src/integration/test_suites/libs/caliptra_isr
+PRINTF_DIR = $(WORKSPACE)/Caliptra/src/integration/test_suites/libs/printf
 
 # Determine test directory
 #ifneq (,$(wildcard $(TBDIR)/tests/$(TEST)))
@@ -45,12 +39,25 @@ endif
 HEADER_FILES := $(INCLUDES_DIR)/caliptra_defines.h \
 		$(INCLUDES_DIR)/defines.h \
 		$(WORKSPACE)/Caliptra/src/integration/rtl/caliptra_reg.h  \
-		$(RISCV_HW_IF_DIR)/riscv_hw_if.h
+		$(RISCV_HW_IF_DIR)/riscv_hw_if.h \
+		$(wildcard $(TEST_DIR)/*.h) \
+		$(PRINTF_DIR)/printf.h \
+		$(ISR_DIR)/riscv-csr.h \
+		$(ISR_DIR)/riscv-interrupts.h \
+		$(ISR_DIR)/swerv-csr.h
 
-ifeq (0,$(shell test -e $(TEST_DIR)/crt0.[sS] && echo $$?))
+ifeq (0,$(shell test -e $(TEST_DIR)/$(TESTNAME).c && echo $$?))
 	OFILES += crt0.o
 endif
 OFILES += $(TESTNAME).o
+ifeq (0,$(shell test -e $(TEST_DIR)/caliptra_isr.h && echo $$?))
+	OFILES += caliptra_isr.o
+endif
+ifeq (0,$(shell test -e $(TEST_DIR)/$(TESTNAME).c && echo $$?))
+	OFILES += printf.o
+else ifeq (0,$(shell test -e $(TEST_DIR)/caliptra_isr.h && echo $$?))
+	OFILES += printf.o
+endif
 
 ifdef debug
  DEBUG_PLUS = +dumpon
@@ -69,10 +76,7 @@ else
 	LINK = $(TEST_DIR)/$(TESTNAME).ld
 endif
 
-VPATH = $(TEST_DIR) $(BUILD_DIR) $(TBDIR)
-
-# Provides updates to OFILES, HEADER_FILES, VPATH
--include $(TEST_DIR)/$(TESTNAME).mki
+VPATH = $(TEST_DIR) $(BUILD_DIR) $(TBDIR) $(RISCV_HW_IF_DIR) $(ISR_DIR) $(PRINTF_DIR)
 
 # Use eval to expand env variables in the .vf file
 $(eval TBFILES = $(shell cat $(TBDIR)/../config/caliptra_top_tb.vf | grep -v '+incdir+'))

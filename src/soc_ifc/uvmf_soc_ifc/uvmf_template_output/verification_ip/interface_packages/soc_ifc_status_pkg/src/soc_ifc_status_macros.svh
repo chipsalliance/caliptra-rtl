@@ -68,6 +68,9 @@ typedef struct packed  { \
   bit ready_for_runtime ; \
   bit mailbox_data_avail ; \
   bit mailbox_flow_done ; \
+  bit cptra_error_fatal_intr_pending ; \
+  bit cptra_error_non_fatal_intr_pending ; \
+  bit trng_req_pending ; \
   bit [63:0] generic_output_val ; \
      } soc_ifc_status_monitor_s;
 
@@ -80,6 +83,9 @@ typedef struct packed  { \
             this.ready_for_runtime , \
             this.mailbox_data_avail , \
             this.mailbox_flow_done , \
+            this.cptra_error_fatal_intr_pending , \
+            this.cptra_error_non_fatal_intr_pending , \
+            this.trng_req_pending , \
             this.generic_output_val  \
             };\
     return ( soc_ifc_status_monitor_struct);\
@@ -93,6 +99,9 @@ typedef struct packed  { \
             this.ready_for_runtime , \
             this.mailbox_data_avail , \
             this.mailbox_flow_done , \
+            this.cptra_error_fatal_intr_pending , \
+            this.cptra_error_non_fatal_intr_pending , \
+            this.trng_req_pending , \
             this.generic_output_val  \
             } = soc_ifc_status_monitor_struct;\
   endfunction
@@ -108,6 +117,9 @@ typedef struct packed  { \
   bit ready_for_runtime ; \
   bit mailbox_data_avail ; \
   bit mailbox_flow_done ; \
+  bit cptra_error_fatal_intr_pending ; \
+  bit cptra_error_non_fatal_intr_pending ; \
+  bit trng_req_pending ; \
   bit [63:0] generic_output_val ; \
      } soc_ifc_status_initiator_s;
 
@@ -120,6 +132,9 @@ typedef struct packed  { \
            this.ready_for_runtime , \
            this.mailbox_data_avail , \
            this.mailbox_flow_done , \
+           this.cptra_error_fatal_intr_pending , \
+           this.cptra_error_non_fatal_intr_pending , \
+           this.trng_req_pending , \
            this.generic_output_val  \
            };\
     return ( soc_ifc_status_initiator_struct);\
@@ -133,6 +148,9 @@ typedef struct packed  { \
            this.ready_for_runtime , \
            this.mailbox_data_avail , \
            this.mailbox_flow_done , \
+           this.cptra_error_fatal_intr_pending , \
+           this.cptra_error_non_fatal_intr_pending , \
+           this.trng_req_pending , \
            this.generic_output_val  \
            } = soc_ifc_status_initiator_struct;\
   endfunction
@@ -148,6 +166,9 @@ typedef struct packed  { \
   bit ready_for_runtime ; \
   bit mailbox_data_avail ; \
   bit mailbox_flow_done ; \
+  bit cptra_error_fatal_intr_pending ; \
+  bit cptra_error_non_fatal_intr_pending ; \
+  bit trng_req_pending ; \
   bit [63:0] generic_output_val ; \
      } soc_ifc_status_responder_s;
 
@@ -160,6 +181,9 @@ typedef struct packed  { \
            this.ready_for_runtime , \
            this.mailbox_data_avail , \
            this.mailbox_flow_done , \
+           this.cptra_error_fatal_intr_pending , \
+           this.cptra_error_non_fatal_intr_pending , \
+           this.trng_req_pending , \
            this.generic_output_val  \
            };\
     return ( soc_ifc_status_responder_struct);\
@@ -173,6 +197,9 @@ typedef struct packed  { \
            this.ready_for_runtime , \
            this.mailbox_data_avail , \
            this.mailbox_flow_done , \
+           this.cptra_error_fatal_intr_pending , \
+           this.cptra_error_non_fatal_intr_pending , \
+           this.trng_req_pending , \
            this.generic_output_val  \
            } = soc_ifc_status_responder_struct;\
   endfunction

@@ -37,6 +37,17 @@ uvmf:
         dir: output
         width: ["8","32"]
 
+      # Security State
+      - name: security_state
+        dir: output
+        width: '3'
+
+      # Breakpoint
+      - name: BootFSM_BrkPoint
+        dir: output
+        width: '1'
+
+      # Generic
       - name: generic_input_wires
         dir: output
         width: '64'
@@ -62,6 +73,14 @@ uvmf:
         isrand: 'False'
       - name: wait_cycles
         type: 'int unsigned'
+        iscompare: 'False'
+        isrand: 'True'
+      - name: security_state
+        type: security_state_t
+        iscompare: 'False'
+        isrand: 'False'
+      - name: set_bootfsm_breakpoint
+        type: bit
         iscompare: 'False'
         isrand: 'True'
       - name: generic_input_val

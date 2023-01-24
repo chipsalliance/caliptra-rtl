@@ -13,7 +13,6 @@
 // limitations under the License.
 
 `include "caliptra_sva.svh"
-`include "caliptra_macros.svh"
 
 module soc_ifc_top 
     import soc_ifc_pkg::*;
@@ -72,6 +71,9 @@ module soc_ifc_top
     output logic [AHB_DATA_WIDTH-1:0] hrdata_o,
 
     //SoC Interrupts
+    output logic             cptra_error_fatal,
+    output logic             cptra_error_non_fatal,
+    output logic             trng_req,
 
     //uC Interrupts
     output wire              soc_ifc_error_intr,
@@ -105,11 +107,11 @@ module soc_ifc_top
     output logic clk_gating_en,
 
     //caliptra uncore jtag ports
-   input  logic                            cptra_uncore_dmi_reg_en,
-   input  logic                            cptra_uncore_dmi_reg_wr_en,
-   output logic [31:0]                     cptra_uncore_dmi_reg_rdata,
-   input  logic [6:0]                      cptra_uncore_dmi_reg_addr,
-   input  logic [31:0]                     cptra_uncore_dmi_reg_wdata 
+    input  logic                            cptra_uncore_dmi_reg_en,
+    input  logic                            cptra_uncore_dmi_reg_wr_en,
+    output logic [31:0]                     cptra_uncore_dmi_reg_rdata,
+    input  logic [6:0]                      cptra_uncore_dmi_reg_addr,
+    input  logic [31:0]                     cptra_uncore_dmi_reg_wdata 
 );
 
 //gasket to assemble mailbox request
@@ -407,7 +409,9 @@ end
 always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_VALID_PAUSER.PAUSER.swwel = soc_ifc_reg_hwif_out.CPTRA_TRNG_PAUSER_LOCK.LOCK.value;
 always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_PAUSER_LOCK.LOCK.swwel = soc_ifc_reg_hwif_out.CPTRA_TRNG_PAUSER_LOCK.LOCK.value;
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Can't write to RW-able fuses once fuse_done is set (implies the register is being locked using the fuse_wr_done)
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 always_comb begin
     for (int i=0; i<12; i++) begin
         soc_ifc_reg_hwif_in.fuse_owner_key_manifest_pk_hash[i].hash.swwel  = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
@@ -425,6 +429,10 @@ always_comb soc_ifc_reg_hwif_in.fuse_owner_key_manifest_pk_hash_mask.mask.swwel 
 always_comb soc_ifc_reg_hwif_in.fuse_key_manifest_svn.svn.swwel                 = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.fuse_boot_loader_svn.svn.swwel                  = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.fuse_anti_rollback_disable.dis.swwel            = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+
+// Fuse write done can be written by SOC if it is already NOT '1. uController can update this bit anytime it wants
+always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_WR_DONE.done.swwe = ~soc_ifc_reg_req_data.soc_req | ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //only allow valid users to write to TRNG
 always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_DONE.DONE.swwe = ~soc_ifc_reg_req_data.soc_req | 
@@ -481,6 +489,11 @@ assign soc_ifc_notif_intr = soc_ifc_reg_hwif_out.intr_block_rf.notif_global_intr
 assign nmi_vector = soc_ifc_reg_hwif_out.internal_nmi_vector.vec.value;
 assign iccm_lock  = soc_ifc_reg_hwif_out.internal_iccm_lock.lock.value;
 assign clk_gating_en = soc_ifc_reg_hwif_out.CPTRA_CLK_GATING_EN.clk_gating_en.value;
+
+// TODO
+assign cptra_error_fatal = 1'b0; // FIXME
+assign cptra_error_non_fatal = 1'b0; // FIXME
+assign trng_req = 1'b0; // FIXME
 
 //SHA Accelerator
 sha512_acc_top #(

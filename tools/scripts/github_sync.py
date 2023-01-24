@@ -123,7 +123,7 @@ def copyFilesSrcToDest(sWorkspace, sRepo, dWorkspace, dRepo):
     blacklistRepoDirsFiles = ["etc", "config", "dvt_build.log"]
     blacklistIpDirsFiles = ["aes", "sim_irq_gen", "syn"]
     blacklistScriptsDirsFiles = ["gen_pb_file_lists.sh", "README.md", "sim_config_parse.py", "github_sync.py", "prepDestRepo.sh", "prepPBSrcRepo.sh", "run_test_makefile", "syn"]
-    integrationTestSuiteList = ['caliptra_demo', 'caliptra_isr', 'includes', 'printf', 'riscv_hw_if']
+    integrationTestSuiteList = ['caliptra_top', 'caliptra_demo', 'includes', 'libs']
 
     srcCaliptraDir = os.path.join(sWorkspace, sRepo)
     destCaliptraDir = os.path.join(dWorkspace, dRepo)
@@ -234,24 +234,18 @@ def main():
 
     logger.info("Prepping Dest Repo")
     if prepDestRepo(dWorkspace, dRepo, dBranch) != 0:
-        quit(1)
+        return 1
     logger.info("Prepping Src Repo")
     # Kill the operation when README is out of date for syncs to
     # GitHub repo, but allow an exception for periodic development updates
     # when automated syncs won't be updating README
     if prepPBSrcRepo(sWorkspace, sRepo, ignoreReadme) != 0:
-        quit(1)
+        return 1
     logger.info("Copying files")
     copyFilesSrcToDest(sWorkspace, sRepo, dWorkspace, dRepo)
     logger.info("Done copying files")
+    return 0
 
     
 if __name__ == "__main__":
-    main()
-
-
-
-    
-
-
-
+    sys.exit(main())

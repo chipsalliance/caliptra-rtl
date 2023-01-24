@@ -36,6 +36,8 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
   bit set_pwrgood ;
   bit assert_rst ;
   rand int unsigned wait_cycles ;
+  security_state_t security_state ;
+  rand bit set_bootfsm_breakpoint ;
   rand bit [63:0] generic_input_val ;
 
   //Constraints for the transaction variables:
@@ -121,7 +123,7 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("cptra_obf_key_rand:0x%x set_pwrgood:0x%x assert_rst:0x%x wait_cycles:0x%x generic_input_val:0x%x ",cptra_obf_key_rand,set_pwrgood,assert_rst,wait_cycles,generic_input_val);
+    return $sformatf("cptra_obf_key_rand:0x%x set_pwrgood:0x%x assert_rst:0x%x wait_cycles:0x%x security_state:%p set_bootfsm_breakpoint:0x%x generic_input_val:0x%x ",cptra_obf_key_rand,set_pwrgood,assert_rst,wait_cycles,security_state,set_bootfsm_breakpoint,generic_input_val);
     // pragma uvmf custom convert2string end
   endfunction
 
@@ -168,6 +170,8 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
     this.set_pwrgood = RHS.set_pwrgood;
     this.assert_rst = RHS.assert_rst;
     this.wait_cycles = RHS.wait_cycles;
+    this.security_state = RHS.security_state;
+    this.set_bootfsm_breakpoint = RHS.set_bootfsm_breakpoint;
     this.generic_input_val = RHS.generic_input_val;
     // pragma uvmf custom do_copy end
   endfunction
@@ -196,6 +200,8 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
     $add_attribute(transaction_view_h,set_pwrgood,"set_pwrgood");
     $add_attribute(transaction_view_h,assert_rst,"assert_rst");
     $add_attribute(transaction_view_h,wait_cycles,"wait_cycles");
+    $add_attribute(transaction_view_h,security_state,"security_state");
+    $add_attribute(transaction_view_h,set_bootfsm_breakpoint,"set_bootfsm_breakpoint");
     $add_attribute(transaction_view_h,generic_input_val,"generic_input_val");
     // pragma uvmf custom add_to_wave end
     $end_transaction(transaction_view_h,end_time);

@@ -90,20 +90,20 @@ class soc_ifc_env_bringup_sequence #(
 
     // Write UDS
     `uvm_info("SOC_IFC_BRINGUP", "Writing obfuscated UDS to fuse bank", UVM_LOW)
-    for (int ii = 0; ii < $size(reg_model.soc_ifc_reg_rm.uds_seed); ii++) begin
-        reg_model.soc_ifc_reg_rm.uds_seed[ii].write(sts, uds_seed_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
-        assert(sts == UVM_IS_OK) else `uvm_error("SOC_IFC_BRINGUP", $sformatf("Failed when writing to uds_seed index %d", ii))
+    for (int ii = 0; ii < $size(reg_model.soc_ifc_reg_rm.fuse_uds_seed); ii++) begin
+        reg_model.soc_ifc_reg_rm.fuse_uds_seed[ii].write(sts, uds_seed_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
+        assert(sts == UVM_IS_OK) else `uvm_error("SOC_IFC_BRINGUP", $sformatf("Failed when writing to fuse_uds_seed index %d", ii))
     end
 
     // Write FE
     `uvm_info("SOC_IFC_BRINGUP", "Writing obfuscated Field Entropy to fuse bank", UVM_LOW)
-    for (int ii = 0; ii < $size(reg_model.soc_ifc_reg_rm.field_entropy); ii++) begin
-        reg_model.soc_ifc_reg_rm.field_entropy[ii].write(sts, field_entropy_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
+    for (int ii = 0; ii < $size(reg_model.soc_ifc_reg_rm.fuse_field_entropy); ii++) begin
+        reg_model.soc_ifc_reg_rm.fuse_field_entropy[ii].write(sts, field_entropy_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
         assert(sts == UVM_IS_OK) else `uvm_error("SOC_IFC_BRINGUP", $sformatf("Failed when writing to field_entropy index %d", ii))
     end
 
     // Set Fuse Done
-    reg_model.soc_ifc_reg_rm.fuse_done.write(sts, `UVM_REG_DATA_WIDTH'(1), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
+    reg_model.soc_ifc_reg_rm.CPTRA_FUSE_WR_DONE.write(sts, `UVM_REG_DATA_WIDTH'(1), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
     `uvm_info("SOC_IFC_BRINGUP", $sformatf("Fuse download completed, status: %p", sts), UVM_MEDIUM)
 
 

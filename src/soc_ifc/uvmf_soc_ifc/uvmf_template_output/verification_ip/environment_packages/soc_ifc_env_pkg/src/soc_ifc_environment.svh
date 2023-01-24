@@ -236,8 +236,8 @@ class soc_ifc_environment  extends uvmf_environment_base #(
       // package constructs the top level register map.  The call fails when the 
       // register map associated with this environment is a sub-map.  Construction
       // of the sub-maps must be done manually.
-//      qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.ap["burst_transfer"].connect(ahb_reg_predictor.bus_in);
-//      qvip_apb5_slave_subenv.apb5_master_0.ap["trans_ap"].connect(apb_reg_predictor.bus_in);
+      qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.ap["burst_transfer"].connect(ahb_reg_predictor.bus_in);
+      qvip_apb5_slave_subenv.apb5_master_0.ap["trans_ap"].connect(apb_reg_predictor.bus_in);
     end
     // pragma uvmf custom reg_model_connect_phase end
   endfunction

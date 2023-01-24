@@ -206,10 +206,10 @@ addrmap soc_ifc_reg {
     //FIXME: Fuse write clear once written should be done only by Caliptra FW if it allows a fuse override to happen for the IFPs
     reg {
         name = "Fuse Write Done";
-        desc = "Writes to fuse registers are completed. After the done bit is set, any subsequent writes to a fuse register will be dropped unless there is a power cycle.
+        desc = "Writes to fuse registers are completed. After the done bit is set, any subsequent writes to a fuse register will be dropped unless there is a power cycle  or a warm reset or caliptra FW allows a write (negotiated through a mailbox command).
                  [br]Caliptra Access: RW
-                 [br]SOC Access:      RW";
-         field {sw=rw; hw=r; } done[1]=0;
+                 [br]SOC Access:      RW1";
+         field {sw=rw; hw=r; swwe;} done[1]=0;
     } CPTRA_FUSE_WR_DONE;
 
     reg {
@@ -271,68 +271,68 @@ addrmap soc_ifc_reg {
         desc = "Obfuscated Field Entropy.
                 [br]Caliptra Access: -
                 [br]SOC Access:      W1";
-                secret seed[32]=0;
+        secret seed[32]=0;
     } fuse_field_entropy[8];
     //TODO review write once and stickiness of fuses
     reg {
         desc = "Key Manifest PK hash Fuse.
-                 [br]Caliptra Access: RWL
-                 [br]SOC Access:      RWL";
-         fuse hash[32]=0;
+                 [br]Caliptra Access: RW1
+                 [br]SOC Access:      RW1";
+        fuse hash[32]=0;
     } fuse_key_manifest_pk_hash[12];
     reg {
         desc = "Key Manifest Mask Fuse.
                  [br]Caliptra Access: RWL
                  [br]SOC Access:      RWL";
-         field {sw=rw; hw=r; swwel; resetsignal = reset_b;}  mask[4]=0;
+        field {sw=rw; hw=r; swwel; resetsignal = reset_b;}  mask[4]=0;
     } fuse_key_manifest_pk_hash_mask;
     reg {
         desc = "Owner Key Manifest PK hash Fuse.
                  [br]Caliptra Access: RWL
                  [br]SOC Access:      RWL";
-         field {sw=rw; hw=r; swwel; resetsignal = reset_b;} hash[32]=0;
+        field {sw=rw; hw=r; swwel; resetsignal = reset_b;} hash[32]=0;
     } fuse_owner_key_manifest_pk_hash[12];
     reg {
-        desc = "Onwer Key Manifest Mask Fuse.
+        desc = "Owner Key Manifest Mask Fuse.
                  [br]Caliptra Access: RWL
                  [br]SOC Access:      RWL";
-         field {sw=rw; hw=r; swwel; resetsignal = reset_b;}  mask[4]=0;
+        field {sw=rw; hw=r; swwel; resetsignal = reset_b;}  mask[4]=0;
     } fuse_owner_key_manifest_pk_hash_mask;
     reg {
         desc = "Key Manifest SVN Fuse.
                  [br]Caliptra Access: RWL
                  [br]SOC Access:      RWL";
-         field {sw=rw; hw=r; swwel; resetsignal = reset_b;} svn[32]=0;
+        field {sw=rw; hw=r; swwel; resetsignal = reset_b;} svn[32]=0;
     } fuse_key_manifest_svn;
     reg {
         desc = "Bootloader SVN Fuse.
                  [br]Caliptra Access: RWL
                  [br]SOC Access:      RWL";
-         field {sw=rw; hw=r; swwel; resetsignal = reset_b;} svn[32]=0;
+        field {sw=rw; hw=r; swwel; resetsignal = reset_b;} svn[32]=0;
     } fuse_boot_loader_svn;
     reg {
         desc = "Runtime SVN Fuse.
                  [br]Caliptra Access: RWL
                  [br]SOC Access:      RWL";
-         field {sw=rw; hw=r; swwel; resetsignal = reset_b;} svn[32]=0;
+        field {sw=rw; hw=r; swwel; resetsignal = reset_b;} svn[32]=0;
     } fuse_runtime_svn[4];
     reg {
         desc = "Anti Rollback Disable Fuse.
                  [br]Caliptra Access: RWL
                  [br]SOC Access:      RWL";
-         field {sw=rw; hw=r; swwel; resetsignal = reset_b;} dis[1]=0;
+        field {sw=rw; hw=r; swwel; resetsignal = reset_b;} dis[1]=0;
     } fuse_anti_rollback_disable;
     reg {
         desc = "Manufacturer IEEE IDevID Certificate Gen Attributes.
                  [br]Caliptra Access: RW1
                  [br]SOC Access:      RW1";
-         fuse cert[32]=0;
+        fuse cert[32]=0;
     } fuse_idevid_cert_attr[24];
     reg {
         desc = " Manufacturer IDEVID Manufacturer’s HSM identifier (this is used to find the certificate chain from the boot media)
                  [br]Caliptra Access: RW1
                  [br]SOC Access:      RW1";
-         fuse cert[32]=0;
+        fuse cert[32]=0;
     } fuse_idevid_manuf_hsm_id[4];
 
 

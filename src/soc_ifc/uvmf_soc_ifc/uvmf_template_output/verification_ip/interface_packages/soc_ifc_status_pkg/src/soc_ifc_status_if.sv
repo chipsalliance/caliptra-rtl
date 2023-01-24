@@ -38,6 +38,9 @@
 // .dut_signal_port(soc_ifc_status_bus.ready_for_runtime), // Agent output 
 // .dut_signal_port(soc_ifc_status_bus.mailbox_data_avail), // Agent output 
 // .dut_signal_port(soc_ifc_status_bus.mailbox_flow_done), // Agent output 
+// .dut_signal_port(soc_ifc_status_bus.cptra_error_fatal), // Agent output 
+// .dut_signal_port(soc_ifc_status_bus.cptra_error_non_fatal), // Agent output 
+// .dut_signal_port(soc_ifc_status_bus.trng_req), // Agent output 
 // .dut_signal_port(soc_ifc_status_bus.generic_output_wires), // Agent output 
 
 import uvmf_base_pkg_hdl::*;
@@ -53,6 +56,9 @@ interface  soc_ifc_status_if
   inout tri  ready_for_runtime,
   inout tri  mailbox_data_avail,
   inout tri  mailbox_flow_done,
+  inout tri  cptra_error_fatal,
+  inout tri  cptra_error_non_fatal,
+  inout tri  trng_req,
   inout tri [63:0] generic_output_wires
   );
 
@@ -65,6 +71,9 @@ modport monitor_port
   input ready_for_runtime,
   input mailbox_data_avail,
   input mailbox_flow_done,
+  input cptra_error_fatal,
+  input cptra_error_non_fatal,
+  input trng_req,
   input generic_output_wires
   );
 
@@ -77,6 +86,9 @@ modport initiator_port
   output ready_for_runtime,
   output mailbox_data_avail,
   output mailbox_flow_done,
+  output cptra_error_fatal,
+  output cptra_error_non_fatal,
+  output trng_req,
   output generic_output_wires
   );
 
@@ -89,6 +101,9 @@ modport responder_port
   input ready_for_runtime,
   input mailbox_data_avail,
   input mailbox_flow_done,
+  input cptra_error_fatal,
+  input cptra_error_non_fatal,
+  input trng_req,
   input generic_output_wires
   );
   

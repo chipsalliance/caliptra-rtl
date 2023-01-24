@@ -116,6 +116,12 @@ end
   reg  mailbox_data_avail_o = 'b0;
   tri  mailbox_flow_done_i;
   reg  mailbox_flow_done_o = 'b0;
+  tri  cptra_error_fatal_i;
+  reg  cptra_error_fatal_o = 'bz;
+  tri  cptra_error_non_fatal_i;
+  reg  cptra_error_non_fatal_o = 'bz;
+  tri  trng_req_i;
+  reg  trng_req_o = 'bz;
   tri [63:0] generic_output_wires_i;
   reg [63:0] generic_output_wires_o = 'b0;
 
@@ -141,6 +147,12 @@ end
   assign mailbox_data_avail_i = bus.mailbox_data_avail;
   assign bus.mailbox_flow_done = (initiator_responder == INITIATOR) ? mailbox_flow_done_o : 'bz;
   assign mailbox_flow_done_i = bus.mailbox_flow_done;
+  assign bus.cptra_error_fatal = (initiator_responder == INITIATOR) ? cptra_error_fatal_o : 'bz;
+  assign cptra_error_fatal_i = bus.cptra_error_fatal;
+  assign bus.cptra_error_non_fatal = (initiator_responder == INITIATOR) ? cptra_error_non_fatal_o : 'bz;
+  assign cptra_error_non_fatal_i = bus.cptra_error_non_fatal;
+  assign bus.trng_req = (initiator_responder == INITIATOR) ? trng_req_o : 'bz;
+  assign trng_req_i = bus.trng_req;
   assign bus.generic_output_wires = (initiator_responder == INITIATOR) ? generic_output_wires_o : 'bz;
   assign generic_output_wires_i = bus.generic_output_wires;
 
@@ -179,6 +191,9 @@ end
        ready_for_runtime_o <= 'b0;
        mailbox_data_avail_o <= 'b0;
        mailbox_flow_done_o <= 'b0;
+       cptra_error_fatal_o <= 1'b0;
+       cptra_error_non_fatal_o <= 1'b0;
+       trng_req_o <= 1'b0;
        generic_output_wires_o <= 'b0;
        // Bi-directional signals
  
@@ -187,12 +202,15 @@ end
 
   // pragma uvmf custom interface_item_additional begin
   function bit any_signal_changed();
-      return |(ready_for_fuses_i      ^  ready_for_fuses_o          ) ||
-             |(ready_for_fw_push_i    & !ready_for_fw_push_o        ) ||
-             |(ready_for_runtime_i    & !ready_for_runtime_o        ) ||
-             |(mailbox_data_avail_i   & !mailbox_data_avail_o       ) ||
-             |(mailbox_flow_done_i    & !mailbox_flow_done_o        ) ||
-             |(generic_output_wires_i ^  generic_output_wires_o     );
+      return |(ready_for_fuses_i       ^  ready_for_fuses_o          ) ||
+             |(ready_for_fw_push_i     & !ready_for_fw_push_o        ) ||
+             |(ready_for_runtime_i     & !ready_for_runtime_o        ) ||
+             |(mailbox_data_avail_i    & !mailbox_data_avail_o       ) ||
+             |(mailbox_flow_done_i     & !mailbox_flow_done_o        ) ||
+             |(cptra_error_fatal_i     & !cptra_error_fatal_o        ) ||
+             |(cptra_error_non_fatal_i & !cptra_error_non_fatal_o    ) ||
+             |(trng_req_i              & !trng_req_o                 ) ||
+             |(generic_output_wires_i  ^  generic_output_wires_o     );
   endfunction
   // pragma uvmf custom interface_item_additional end
 
@@ -232,6 +250,9 @@ end
        //   bit ready_for_runtime ;
        //   bit mailbox_data_avail ;
        //   bit mailbox_flow_done ;
+       //   bit cptra_error_fatal_intr_pending ;
+       //   bit cptra_error_non_fatal_intr_pending ;
+       //   bit trng_req_pending ;
        //   bit [63:0] generic_output_val ;
        // Members within the soc_ifc_status_responder_struct:
        //   bit ready_for_fuses ;
@@ -239,6 +260,9 @@ end
        //   bit ready_for_runtime ;
        //   bit mailbox_data_avail ;
        //   bit mailbox_flow_done ;
+       //   bit cptra_error_fatal_intr_pending ;
+       //   bit cptra_error_non_fatal_intr_pending ;
+       //   bit trng_req_pending ;
        //   bit [63:0] generic_output_val ;
        initiator_struct = soc_ifc_status_initiator_struct;
        //
@@ -258,6 +282,9 @@ end
        //      ready_for_fw_push_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //      ready_for_runtime_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //      mailbox_data_avail_o <= soc_ifc_status_initiator_struct.xyz;  //     
+       //      cptra_error_fatal_o <= soc_ifc_status_initiator_struct.xyz;  //     
+       //      cptra_error_non_fatal_o <= soc_ifc_status_initiator_struct.xyz;  //     
+       //      trng_req_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //      mailbox_flow_done_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //      generic_output_wires_o <= soc_ifc_status_initiator_struct.xyz;  //    [63:0] 
        //    Initiator inout signals
@@ -296,6 +323,9 @@ bit first_transfer=1;
   //   bit ready_for_runtime ;
   //   bit mailbox_data_avail ;
   //   bit mailbox_flow_done ;
+  //   bit cptra_error_fatal_intr_pending ;
+  //   bit cptra_error_non_fatal_intr_pending ;
+  //   bit trng_req_pending ;
   //   bit [63:0] generic_output_val ;
   // Variables within the soc_ifc_status_responder_struct:
   //   bit ready_for_fuses ;
@@ -303,6 +333,9 @@ bit first_transfer=1;
   //   bit ready_for_runtime ;
   //   bit mailbox_data_avail ;
   //   bit mailbox_flow_done ;
+  //   bit cptra_error_fatal_intr_pending ;
+  //   bit cptra_error_non_fatal_intr_pending ;
+  //   bit trng_req_pending ;
   //   bit [63:0] generic_output_val ;
        // Reference code;
        //    How to wait for signal value
@@ -316,6 +349,9 @@ bit first_transfer=1;
        //      soc_ifc_status_responder_struct.xyz = ready_for_runtime_i;  //     
        //      soc_ifc_status_responder_struct.xyz = mailbox_data_avail_i;  //     
        //      soc_ifc_status_responder_struct.xyz = mailbox_flow_done_i;  //     
+       //      soc_ifc_status_responder_struct.xyz = cptra_error_fatal_i;  //     
+       //      soc_ifc_status_responder_struct.xyz = cptra_error_non_fatal_i;  //     
+       //      soc_ifc_status_responder_struct.xyz = trng_req_i;  //     
        //      soc_ifc_status_responder_struct.xyz = generic_output_wires_i;  //    [63:0] 
        //    Responder inout signals
        //    How to assign a signal, named xyz, from an initiator struct member.   
@@ -335,22 +371,28 @@ bit first_transfer=1;
     // Wait for next transfer then gather info from intiator about the transfer.
     // Place the data into the soc_ifc_status_initiator_struct.
     while (!any_signal_changed()) @(posedge clk_i);
-    ready_for_fuses_o              <= ready_for_fuses_i     ;
-    ready_for_fw_push_o            <= ready_for_fw_push_i   ;
-    ready_for_runtime_o            <= ready_for_runtime_i   ;
-    mailbox_data_avail_o           <= mailbox_data_avail_i  ;
-    mailbox_flow_done_o            <= mailbox_flow_done_i   ;
-    generic_output_wires_o         <= generic_output_wires_i;
+    ready_for_fuses_o              <= ready_for_fuses_i      ;
+    ready_for_fw_push_o            <= ready_for_fw_push_i    ;
+    ready_for_runtime_o            <= ready_for_runtime_i    ;
+    mailbox_data_avail_o           <= mailbox_data_avail_i   ;
+    mailbox_flow_done_o            <= mailbox_flow_done_i    ;
+    cptra_error_fatal_o            <= mailbox_flow_done_i    ;
+    cptra_error_non_fatal_o        <= cptra_error_non_fatal_i;
+    trng_req_o                     <= trng_req_i             ;
+    generic_output_wires_o         <= generic_output_wires_i ;
 //    @(posedge clk_i);
     first_transfer = 0;
     begin: build_return_struct
   // Variables within the soc_ifc_status_initiator_struct:
-         soc_ifc_status_initiator_struct.ready_for_fuses            = ready_for_fuses_i;
-         soc_ifc_status_initiator_struct.ready_for_fw_push          = ready_for_fw_push_i;
-         soc_ifc_status_initiator_struct.ready_for_runtime          = ready_for_runtime_i;
-         soc_ifc_status_initiator_struct.mailbox_data_avail         = mailbox_data_avail_i;
-         soc_ifc_status_initiator_struct.mailbox_flow_done          = mailbox_flow_done_i;
-         soc_ifc_status_initiator_struct.generic_output_val         = generic_output_wires_i;
+         soc_ifc_status_initiator_struct.ready_for_fuses                    = ready_for_fuses_i;
+         soc_ifc_status_initiator_struct.ready_for_fw_push                  = ready_for_fw_push_i;
+         soc_ifc_status_initiator_struct.ready_for_runtime                  = ready_for_runtime_i;
+         soc_ifc_status_initiator_struct.mailbox_data_avail                 = mailbox_data_avail_i;
+         soc_ifc_status_initiator_struct.mailbox_flow_done                  = mailbox_flow_done_i;
+         soc_ifc_status_responder_struct.cptra_error_fatal_intr_pending     = cptra_error_fatal_i;  //     
+         soc_ifc_status_responder_struct.cptra_error_non_fatal_intr_pending = cptra_error_non_fatal_i;  //     
+         soc_ifc_status_responder_struct.trng_req_pending                   = trng_req_i;  //     
+         soc_ifc_status_initiator_struct.generic_output_val                 = generic_output_wires_i;
     end
   endtask
 // pragma uvmf custom respond_and_wait_for_next_transfer end

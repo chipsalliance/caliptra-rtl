@@ -70,6 +70,7 @@ package soc_ifc_env_pkg;
   `uvm_analysis_imp_decl(_actual_apb_analysis_export)
 
   // pragma uvmf custom package_imports_additional begin
+  import soc_ifc_pkg::*;
   // pragma uvmf custom package_imports_additional end
 
   // Parameters defined as HVL parameters

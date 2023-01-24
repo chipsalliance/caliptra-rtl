@@ -43,7 +43,7 @@ _start:
 
 
 .global _finish
-// Write 0xff to STDOUT for TB to termiate test.
+// Write 0xff to STDOUT for TB to terminate test.
 _finish:
     li x3, STDOUT
     addi x5, x0, 0xff

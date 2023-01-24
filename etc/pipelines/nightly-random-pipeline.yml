@@ -129,3 +129,17 @@ stages:
                 - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
                 - path: '${WORKSPACE}/Caliptra/src/soc_ifc/stimulus/testsuites/soc_ifc_nightly_random_regression.yml'
                 - timeout: 1440
+        - uvmf_caliptra_top:
+            - display_name: 'UVMF_CALIPTRA_TOP'
+            - enabled: true
+            - configspec_name: 'integration_lib'
+            - dut: 'uvmf_caliptra_top'
+            - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/integration/uvmf_caliptra_top/coverage/config/uvmf_caliptra_top_cm_hier.cfg --submit-resource-args RAM/28000'
+            - testsuites:
+              - l1_regress:
+                - enabled: true
+                - configspec_name: 'integration_lib'
+                - dut: 'uvmf_caliptra_top'
+                - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
+                - path: '${WORKSPACE}/Caliptra/src/integration/stimulus/testsuites/caliptra_top_nightly_random_regression.yml'
+                - timeout: 1440

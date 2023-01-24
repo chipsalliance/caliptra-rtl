@@ -37,6 +37,9 @@ class soc_ifc_status_transaction  extends uvmf_transaction_base;
   bit ready_for_runtime ;
   bit mailbox_data_avail ;
   bit mailbox_flow_done ;
+  bit cptra_error_fatal_intr_pending ;
+  bit cptra_error_non_fatal_intr_pending ;
+  bit trng_req_pending ;
   bit [63:0] generic_output_val ;
 
   //Constraints for the transaction variables:
@@ -120,7 +123,7 @@ class soc_ifc_status_transaction  extends uvmf_transaction_base;
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("ready_for_fuses:0x%x ready_for_fw_push:0x%x ready_for_runtime:0x%x mailbox_data_avail:0x%x mailbox_flow_done:0x%x generic_output_val:0x%x ",ready_for_fuses,ready_for_fw_push,ready_for_runtime,mailbox_data_avail,mailbox_flow_done,generic_output_val);
+    return $sformatf("ready_for_fuses:0x%x ready_for_fw_push:0x%x ready_for_runtime:0x%x mailbox_data_avail:0x%x mailbox_flow_done:0x%x cptra_error_fatal_intr_pending:0x%x cptra_error_non_fatal_intr_pending:0x%x trng_req_pending:0x%x generic_output_val:0x%x ",ready_for_fuses,ready_for_fw_push,ready_for_runtime,mailbox_data_avail,mailbox_flow_done,cptra_error_fatal_intr_pending,cptra_error_non_fatal_intr_pending,trng_req_pending,generic_output_val);
     // pragma uvmf custom convert2string end
   endfunction
 
@@ -167,6 +170,9 @@ class soc_ifc_status_transaction  extends uvmf_transaction_base;
     this.ready_for_runtime = RHS.ready_for_runtime;
     this.mailbox_data_avail = RHS.mailbox_data_avail;
     this.mailbox_flow_done = RHS.mailbox_flow_done;
+    this.cptra_error_fatal_intr_pending     = RHS.cptra_error_fatal_intr_pending    ;
+    this.cptra_error_non_fatal_intr_pending = RHS.cptra_error_non_fatal_intr_pending;
+    this.trng_req_pending                   = RHS.trng_req_pending                  ;
     this.generic_output_val = RHS.generic_output_val;
     // pragma uvmf custom do_copy end
   endfunction
@@ -196,6 +202,9 @@ class soc_ifc_status_transaction  extends uvmf_transaction_base;
     $add_attribute(transaction_view_h,ready_for_runtime,"ready_for_runtime");
     $add_attribute(transaction_view_h,mailbox_data_avail,"mailbox_data_avail");
     $add_attribute(transaction_view_h,mailbox_flow_done,"mailbox_flow_done");
+    $add_attribute(transaction_view_h,cptra_error_fatal_intr_pending    ,"cptra_error_fatal_intr_pending    ");
+    $add_attribute(transaction_view_h,cptra_error_non_fatal_intr_pending,"cptra_error_non_fatal_intr_pending");
+    $add_attribute(transaction_view_h,trng_req_pending                  ,"trng_req_pending                  ");
     $add_attribute(transaction_view_h,generic_output_val,"generic_output_val");
     // pragma uvmf custom add_to_wave end
     $end_transaction(transaction_view_h,end_time);

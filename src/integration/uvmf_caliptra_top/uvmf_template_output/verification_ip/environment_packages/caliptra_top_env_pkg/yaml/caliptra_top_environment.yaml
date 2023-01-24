@@ -1,0 +1,24 @@
+uvmf:
+  environments:
+    caliptra_top:
+      agents: []
+      analysis_components: []
+      analysis_exports: []
+      analysis_ports: []
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      hvl_pkg_parameters: []
+      imports:
+      - name: mvc_pkg
+      - name: mgc_ahb_v2_0_pkg
+      - name: mgc_apb3_v1_0_pkg
+      non_uvmf_components: []
+      parameters: []
+      qvip_memory_agents: []
+      scoreboards: []
+      subenvs:
+      - name: soc_ifc_subenv
+        parameters: []
+        type: soc_ifc
+      tlm_connections: []

@@ -26,8 +26,6 @@ module soc_ifc_tb
   import soc_ifc_pkg::*;
   ();
 
-  `include "caliptra_macros.svh"
-
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
@@ -151,6 +149,19 @@ module soc_ifc_tb
              .cptra_pwrgood(cptra_pwrgood_tb),
              .cptra_rst_b(cptra_rst_b_tb),
 
+             .ready_for_fuses(ready_for_fuses),
+             .ready_for_fw_push(ready_for_fw_push),
+             .ready_for_runtime(),
+
+             .mailbox_data_avail(),
+             .mailbox_flow_done(),
+
+             .security_state(security_state),
+
+             .generic_input_wires('x),
+             .BootFSM_BrkPoint(1'b0), // TODO
+             .generic_output_wires(),
+
              .paddr_i(paddr_i_tb),
              .psel_i(psel_i_tb),
              .penable_i(penable_i_tb),
@@ -172,31 +183,39 @@ module soc_ifc_tb
              .hresp_o(hresp_o_tb),
              .hreadyout_o(hreadyout_o_tb),
              .hrdata_o(hrdata_o_tb),
-             .cptra_obf_key('0),
-             .cptra_obf_key_reg(),
-             .generic_input_wires('x),
-             .generic_output_wires(),
-             .mailbox_data_avail(),
-             .mailbox_flow_done(),
-             .security_state(security_state),
-             .obf_field_entropy(),
-             .obf_uds_seed(),
-             .ready_for_fuses(ready_for_fuses),
-             .cptra_noncore_rst_b(cptra_noncore_rst_b_tb),
-             .cptra_uc_rst_b(cptra_uc_rst_b_tb),
-             .mbox_sram_req(mbox_sram_req),
-             .mbox_sram_resp(mbox_sram_resp),
-             .ready_for_fw_push(ready_for_fw_push),
-             .ready_for_runtime(),
-             .nmi_vector(),
-             .iccm_lock(),
-             .iccm_axs_blocked(),
+
+             .cptra_error_fatal(),
+             .cptra_error_non_fatal(),
+             .trng_req(),
+
              .soc_ifc_error_intr(),
              .soc_ifc_notif_intr(),
              .sha_error_intr(),
              .sha_notif_intr(),
+
+             .mbox_sram_req(mbox_sram_req),
+             .mbox_sram_resp(mbox_sram_resp),
+
              .clear_obf_secrets(),
-             .clk_gating_en()
+             .cptra_obf_key('0),
+             .cptra_obf_key_reg(),
+             .obf_field_entropy(),
+             .obf_uds_seed(),
+
+             .nmi_vector(),
+
+             .iccm_lock(),
+             .iccm_axs_blocked(),
+
+             .cptra_noncore_rst_b(cptra_noncore_rst_b_tb),
+             .cptra_uc_rst_b(cptra_uc_rst_b_tb),
+             .clk_gating_en(),
+
+             .cptra_uncore_dmi_reg_en     ( 1'h0),
+             .cptra_uncore_dmi_reg_wr_en  ( 1'h0),
+             .cptra_uncore_dmi_reg_rdata  (32'h0),
+             .cptra_uncore_dmi_reg_addr   ( 7'h0),
+             .cptra_uncore_dmi_reg_wdata  (32'h0)
 
             );
 

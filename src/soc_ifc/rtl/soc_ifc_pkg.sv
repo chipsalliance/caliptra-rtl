@@ -40,6 +40,11 @@ package soc_ifc_pkg;
 
     parameter UC_FW_UPDT_RST_CYCLES  = 5;
 
+    //Valid PAUSER
+    //Lock the PAUSER values from integration time
+    parameter [4:0] CLP_SET_PAUSER_INTEG = { 1'b0,          1'b0,          1'b0,          1'b0,          1'b0};
+    parameter [4:0][31:0] CLP_VALID_PAUSER = {32'h4444_4444, 32'h3333_3333, 32'h2222_2222, 32'h1111_1111, 32'h0000_0000};
+  
     //BOOT FSM
     typedef enum logic [2:0] {
         BOOT_IDLE   = 3'b000,
@@ -83,6 +88,17 @@ package soc_ifc_pkg;
     typedef struct packed {
         mbox_sram_data_t rdata;
     } mbox_sram_resp_t;
+
+    typedef enum logic [1:0] {
+        DEVICE_UNPROVISIONED = 2'b00,
+        DEVICE_MANUFACTURING = 2'b01,
+        DEVICE_PRODUCTION    = 2'b11
+    } device_lifecycle_e;
+
+    typedef struct packed {
+        logic debug_locked;
+        device_lifecycle_e device_lifecycle;
+    } security_state_t;
 
 endpackage
 

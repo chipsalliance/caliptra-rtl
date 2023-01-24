@@ -83,6 +83,11 @@ module caliptra_top
 
     input logic                        BootFSM_BrkPoint,
 
+    //SoC Interrupts
+    output logic             cptra_error_fatal,
+    output logic             cptra_error_non_fatal,
+    output logic             trng_req,
+
     input logic  [63:0]                generic_input_wires,
     output logic [63:0]                generic_output_wires,
 
@@ -830,6 +835,10 @@ soc_ifc_top1
     .hresp_o    (responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hresp),
     .hreadyout_o(responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hreadyout),
     .hrdata_o   (responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hrdata),
+    //SoC Interrupts
+    .cptra_error_fatal    (cptra_error_fatal),
+    .cptra_error_non_fatal(cptra_error_non_fatal),
+    .trng_req             (trng_req),
     // uC Interrupts
     .soc_ifc_error_intr(soc_ifc_error_intr),
     .soc_ifc_notif_intr(soc_ifc_notif_intr),
@@ -853,11 +862,11 @@ soc_ifc_top1
     .clk_gating_en(clk_gating_en),
 
     //caliptra uncore jtag ports
-   .cptra_uncore_dmi_reg_en   ( cptra_uncore_dmi_reg_en ),
-   .cptra_uncore_dmi_reg_wr_en( cptra_uncore_dmi_reg_wr_en ),
-   .cptra_uncore_dmi_reg_rdata( cptra_uncore_dmi_reg_rdata ),
-   .cptra_uncore_dmi_reg_addr ( cptra_uncore_dmi_reg_addr ),
-   .cptra_uncore_dmi_reg_wdata( cptra_uncore_dmi_reg_wdata )
+    .cptra_uncore_dmi_reg_en   ( cptra_uncore_dmi_reg_en ),
+    .cptra_uncore_dmi_reg_wr_en( cptra_uncore_dmi_reg_wr_en ),
+    .cptra_uncore_dmi_reg_rdata( cptra_uncore_dmi_reg_rdata ),
+    .cptra_uncore_dmi_reg_addr ( cptra_uncore_dmi_reg_addr ),
+    .cptra_uncore_dmi_reg_wdata( cptra_uncore_dmi_reg_wdata )
 );
 
 //TIE OFF slaves

@@ -56,6 +56,7 @@ targets:
     files:
       - $COMPILE_ROOT/tb/caliptra_swerv_sram_export.sv
       - $COMPILE_ROOT/tb/caliptra_top_tb_pkg.sv
+      - $COMPILE_ROOT/tb/caliptra_top_tb_services.sv
       - $COMPILE_ROOT/tb/caliptra_top_tb.sv
     tops: [caliptra_top_tb]
   sim:

@@ -27,6 +27,7 @@ ${WORKSPACE}/Caliptra/src/integration/rtl/config_defines.svh
 ${WORKSPACE}/Caliptra/src/integration/rtl/caliptra_reg_defines.svh
 ${WORKSPACE}/Caliptra/src/integration/tb/caliptra_swerv_sram_export.sv
 ${WORKSPACE}/Caliptra/src/integration/tb/caliptra_top_tb_pkg.sv
+${WORKSPACE}/Caliptra/src/integration/tb/caliptra_top_tb_services.sv
 ${WORKSPACE}/Caliptra/src/integration/tb/caliptra_top_tb.sv
 ${WORKSPACE}/Caliptra/src/libs/rtl/clk_gate.sv
 ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/mbox_csr_pkg.sv

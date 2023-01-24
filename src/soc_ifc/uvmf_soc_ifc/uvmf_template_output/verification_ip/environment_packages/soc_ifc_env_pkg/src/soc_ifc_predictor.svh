@@ -148,6 +148,8 @@ class soc_ifc_predictor #(
   bit sha_notif_intr_pending = 1'b0;
   bit ready_for_fuses = 1'b0;
   bit [31:0] nmi_vector = 32'h0;
+  security_state_t security_state = '{debug_locked: 1'b1, device_lifecycle: DEVICE_UNPROVISIONED};
+  bit bootfsm_breakpoint = 1'b0;
   soc_ifc_reg_model_top  p_soc_ifc_rm;
   uvm_reg_map p_soc_ifc_APB_map; // Block map
   uvm_reg_map p_soc_ifc_AHB_map; // Block map
@@ -205,6 +207,7 @@ class soc_ifc_predictor #(
 
     if (!t.assert_rst) begin // No Status transaction expected if the latest control transaction still asserted SoC reset
         if (soc_ifc_rst_in_asserted) begin
+            // Todo check for breakpoint assertion and flag an expected AHB write to clear it
             soc_ifc_rst_in_asserted = 1'b0;
             ready_for_fuses = 1'b1;
             noncore_rst_out_asserted = 1'b1;
@@ -337,6 +340,8 @@ class soc_ifc_predictor #(
     // pragma uvmf custom ahb_slave_0_ae_predictor begin
     ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) ahb_txn;
     uvm_reg axs_reg;
+    bit [SOC_IFC_DATA_W-1:0] data_active;
+    bit [ahb_lite_slave_0_params::AHB_WDATA_WIDTH-1:0] address_aligned;
     // Flags control whether each transaction is sent to scoreboard
     bit send_soc_ifc_sts_txn = 0;
     bit send_cptra_sts_txn = 0;
@@ -355,22 +360,58 @@ class soc_ifc_predictor #(
 
     $cast(ahb_txn, t);
     axs_reg = p_soc_ifc_AHB_map.get_reg_by_offset(ahb_txn.address);
+    // Address must be aligned to the native data width in the SOC IFC! I.e. 4-byte aligned
+    address_aligned = ahb_txn.address & ~(SOC_IFC_DATA_W/8 - 1);
+    if (ahb_txn.address & ((SOC_IFC_DATA_W/8 - 1))) begin
+        `uvm_error("PRED_AHB", "Detected AHB transfer with bad address alignment! Address: 0x%x, expected alignment: 0x%x")
+    end
+    // Grab the data from the address offset, similar to how it's done in HW
+    data_active = SOC_IFC_DATA_W'(ahb_txn.data[0] >> (8*(address_aligned % (ahb_lite_slave_0_params::AHB_WDATA_WIDTH/8))));
 
     if (axs_reg == null) begin
         `uvm_error("PRED_AHB", $sformatf("AHB transaction to address: 0x%x decodes to null from soc_ifc_AHB_map", ahb_txn.address))
     end
-    else if (uvm_reg_data_t'(ahb_txn.data[0]) != axs_reg.get() && ahb_txn.RnW == AHB_WRITE) begin
-        `uvm_error("PRED_AHB", $sformatf("AHB transaction to register %s with data: 0x%x, write: %p, may not match reg model value: %x", axs_reg.get_name(), ahb_txn.data[0], ahb_txn.RnW, axs_reg.get()))
+    else if (uvm_reg_data_t'(data_active) != axs_reg.get() && ahb_txn.RnW == AHB_WRITE) begin
+        // Leave the un-shifted data in the error message to help with debug
+        `uvm_error("PRED_AHB", $sformatf("AHB transaction to register %s with data: 0x%x (data_active: 0x%x), write: %p, may not match reg model value: %x", axs_reg.get_name(), ahb_txn.data[0], data_active, ahb_txn.RnW, axs_reg.get()))
     end
     else begin
         case (axs_reg.get_name()) inside
-            "fuse_done": begin
-                `uvm_error("PRED_AHB", "Unexpected write to fuse_done register on AHB interface")
+            "CPTRA_FUSE_WR_DONE": begin
+                `uvm_error("PRED_AHB", "Unexpected write to CPTRA_FUSE_WR_DONE register on AHB interface")
             end
-            "nmi_vector": begin
+            "internal_nmi_vector": begin
                 if (ahb_txn.RnW == AHB_WRITE) begin
                     send_cptra_sts_txn = 1;
-                    nmi_vector = ahb_txn.data[0][31:0];
+                    nmi_vector = data_active;
+                end
+            end
+            "CPTRA_GENERIC_OUTPUT_WIRES[0]": begin
+                if (ahb_txn.RnW == AHB_WRITE) begin
+                    case (data_active) inside
+                        32'h0,[32'h2:32'h5],32'h7F:
+                            `uvm_warning("PRED_AHB", $sformatf("Observed write to CPTRA_GENERIC_OUTPUT_WIRES with an unassigned value: 0x%x", data_active))
+                        32'h1:
+                            `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES to Kill Simulation with Error!", UVM_LOW)
+                        [32'h6:32'h7E]:
+                            `uvm_info("PRED_AHB", $sformatf("Observed write to CPTRA_GENERIC_OUTPUT_WIRES and translating as ASCII character: %c", data_active[7:0]), UVM_MEDIUM)
+                        32'hf8:
+                            `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Assert interrupt flags at fixed intervals to wake up halted core]", UVM_MEDIUM)
+                        32'hf9:
+                            `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Lock debug in security state]", UVM_MEDIUM)
+                        32'hfa:
+                            `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Unlock debug in security state]", UVM_MEDIUM)
+                        32'hfb:
+                            `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Set the isr_active bit]", UVM_MEDIUM)
+                        32'hfc:
+                            `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Clear the isr_active bit]", UVM_MEDIUM)
+                        32'hfd:
+                            `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Toggle random SRAM single bit error injection]", UVM_MEDIUM)
+                        32'hfe:
+                            `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Toggle random SRAM double bit error injection]", UVM_MEDIUM)
+                        32'hff:
+                            `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES to End the simulation with a Success status", UVM_LOW)
+                    endcase
                 end
             end
             default: begin
@@ -409,6 +450,7 @@ class soc_ifc_predictor #(
     // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
     if (send_ahb_txn) begin
         soc_ifc_sb_ahb_ap_output_transaction.copy(ahb_txn);
+        soc_ifc_sb_ahb_ap_output_transaction.address = address_aligned;
         soc_ifc_sb_ahb_ap.write(soc_ifc_sb_ahb_ap_output_transaction);
         `uvm_info("PRED_AHB", "Transaction submitted through soc_ifc_sb_ahb_ap", UVM_MEDIUM)
     end
@@ -455,7 +497,7 @@ class soc_ifc_predictor #(
     end
     else begin
         case (axs_reg.get_name()) inside
-            "fuse_done": begin
+            "CPTRA_FUSE_WR_DONE": begin
                 if (apb_txn.wr_data != axs_reg.get() && apb_txn.read_or_write == APB3_TRANS_WRITE)
                     `uvm_error("PRED_APB", $sformatf("APB transaction with data: 0x%x, write: %p, may not match reg model value: %x", apb_txn.wr_data, apb_txn.read_or_write, axs_reg.get()))
                 // Only expect a status transaction if this fuse download is occuring during boot sequence // FIXME
@@ -466,14 +508,11 @@ class soc_ifc_predictor #(
                     send_soc_ifc_sts_txn = 1'b1;
                 end
             end
-            ["uds_seed[0]" :"uds_seed[9]" ],
-            ["uds_seed[10]":"uds_seed[11]"]: begin
+            ["fuse_uds_seed[0]" :"fuse_uds_seed[9]" ],
+            ["fuse_uds_seed[10]":"fuse_uds_seed[11]"]: begin
                 `uvm_info("PRED_APB", {"Detected access to register: ", axs_reg.get_name()}, UVM_MEDIUM)
             end
-            ["field_entropy[0]" :"field_entropy[9]" ],
-            ["field_entropy[10]":"field_entropy[19]"],
-            ["field_entropy[20]":"field_entropy[29]"],
-            ["field_entropy[30]":"field_entropy[31]"]: begin
+            ["fuse_field_entropy[0]" :"fuse_field_entropy[7]" ]: begin
                 `uvm_info("PRED_APB", {"Detected access to register: ", axs_reg.get_name()}, UVM_MEDIUM)
             end
             default: begin
@@ -529,12 +568,15 @@ endclass
 
 // pragma uvmf custom external begin
 function void soc_ifc_predictor::populate_expected_soc_ifc_status_txn(ref soc_ifc_sb_ap_output_transaction_t txn);
-    txn.ready_for_fuses    = this.ready_for_fuses;
-    txn.ready_for_fw_push  = 1'b0; // FIXME
-    txn.ready_for_runtime  = 1'b0; // FIXME
-    txn.mailbox_data_avail = 1'b0; // FIXME
-    txn.mailbox_flow_done  = 1'b0; // FIXME
-    txn.generic_output_val = 64'b0; // FIXME
+    txn.ready_for_fuses                    = this.ready_for_fuses;
+    txn.ready_for_fw_push                  = 1'b0; // FIXME
+    txn.ready_for_runtime                  = 1'b0; // FIXME
+    txn.mailbox_data_avail                 = 1'b0; // FIXME
+    txn.mailbox_flow_done                  = 1'b0; // FIXME
+    txn.cptra_error_fatal_intr_pending     = 1'b0; // FIXME
+    txn.cptra_error_non_fatal_intr_pending = 1'b0; // FIXME
+    txn.trng_req_pending                   = 1'b0; // FIXME
+    txn.generic_output_val                 = 64'b0; // FIXME
 endfunction
 
 function void soc_ifc_predictor::populate_expected_cptra_status_txn(ref cptra_sb_ap_output_transaction_t txn);
@@ -547,7 +589,7 @@ function void soc_ifc_predictor::populate_expected_cptra_status_txn(ref cptra_sb
     txn.cptra_obf_key_reg          = '0; // TODO
     txn.obf_field_entropy          = '0; // TODO
     txn.obf_uds_seed               = '0; // TODO
-    txn.nmi_vector                 = nmi_vector;
+    txn.nmi_vector                 = this.nmi_vector;
     txn.iccm_locked                = '0; // TODO
 endfunction
 // pragma uvmf custom external end
