@@ -213,7 +213,7 @@ module soc_ifc_tb
 
              .cptra_uncore_dmi_reg_en     ( 1'h0),
              .cptra_uncore_dmi_reg_wr_en  ( 1'h0),
-             .cptra_uncore_dmi_reg_rdata  (32'h0),
+             .cptra_uncore_dmi_reg_rdata  (     ),
              .cptra_uncore_dmi_reg_addr   ( 7'h0),
              .cptra_uncore_dmi_reg_wdata  (32'h0)
 

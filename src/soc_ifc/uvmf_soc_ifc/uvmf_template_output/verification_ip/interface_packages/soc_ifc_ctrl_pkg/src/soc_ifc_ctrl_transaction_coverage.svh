@@ -47,6 +47,8 @@ class soc_ifc_ctrl_transaction_coverage  extends uvm_subscriber #(.T(soc_ifc_ctr
     set_pwrgood: coverpoint coverage_trans.set_pwrgood;
     assert_rst: coverpoint coverage_trans.assert_rst;
     wait_cycles: coverpoint coverage_trans.wait_cycles;
+    security_state: coverpoint coverage_trans.security_state;
+    set_bootfsm_breakpoint: coverpoint coverage_trans.set_bootfsm_breakpoint;
     generic_input_val: coverpoint coverage_trans.generic_input_val;
     // pragma uvmf custom covergroup end
   endgroup

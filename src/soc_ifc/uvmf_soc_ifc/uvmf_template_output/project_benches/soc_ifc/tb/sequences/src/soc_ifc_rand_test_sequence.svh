@@ -82,11 +82,12 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
 //      repeat (25) cptra_ctrl_agent_random_seq.start(cptra_ctrl_agent_sequencer);
 //    join
 
+    if (!soc_ifc_env_bringup_seq.randomize()) `uvm_fatal("SEQ", "soc_ifc_rand_test_sequence::body() - soc_ifc_env_bringup_seq randomization failed");
     soc_ifc_env_bringup_seq.start(top_configuration.vsqr);
 
     // Wait for Caliptra system reset to be deasserted by SOC_IFC
     soc_ifc_env_cptra_rst_wait_seq.start(top_configuration.vsqr);
-    `uvm_info("SOC_IFC_BRINGUP", "Mailbox completed poweron and observed reset deassertion to system", UVM_LOW)
+    `uvm_info("SOC_IFC_RAND_TEST", "Mailbox completed poweron and observed reset deassertion to system", UVM_LOW)
 
     // TODO watch for UC reset to deassert? Requires fw reset deassertion...
 

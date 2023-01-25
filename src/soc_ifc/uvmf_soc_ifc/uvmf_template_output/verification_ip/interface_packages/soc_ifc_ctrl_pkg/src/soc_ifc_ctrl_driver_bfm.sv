@@ -252,8 +252,8 @@ end
        //      cptra_pwrgood_o <= soc_ifc_ctrl_initiator_struct.xyz;  //     
        //      cptra_rst_b_o <= soc_ifc_ctrl_initiator_struct.xyz;  //     
        //      cptra_obf_key_o <= soc_ifc_ctrl_initiator_struct.xyz;  //    [7:0][31:0] 
-       //      security_state_o <= soc_ifc_ctrl_initiator_struct.xyz;  //    [2:0]
-       //      BootFSM_BrkPoint_o <= soc_ifc_ctrl_initiator_struct.xyz;  //
+       //      security_state_o <= soc_ifc_ctrl_initiator_struct.xyz;  //    [2:0] 
+       //      BootFSM_BrkPoint_o <= soc_ifc_ctrl_initiator_struct.xyz;  //     
        //      generic_input_wires_o <= soc_ifc_ctrl_initiator_struct.xyz;  //    [63:0] 
        //    Initiator inout signals
     // Initiate a transfer using the data received.
@@ -332,7 +332,7 @@ bit first_transfer=1;
        //      soc_ifc_ctrl_responder_struct.xyz = cptra_rst_b_i;  //     
        //      soc_ifc_ctrl_responder_struct.xyz = cptra_obf_key_i;  //    [7:0][31:0] 
        //      soc_ifc_ctrl_responder_struct.xyz = security_state_i;  //    [2:0] 
-       //      soc_ifc_ctrl_responder_struct.xyz = BootFSM_BrkPoint_i;  //
+       //      soc_ifc_ctrl_responder_struct.xyz = BootFSM_BrkPoint_i;  //     
        //      soc_ifc_ctrl_responder_struct.xyz = generic_input_wires_i;  //    [63:0] 
        //    Responder inout signals
        //    How to assign a signal, named xyz, from an initiator struct member.   

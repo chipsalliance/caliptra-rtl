@@ -35,6 +35,7 @@ class soc_ifc_ctrl_poweron_sequence
   `uvm_object_utils( soc_ifc_ctrl_poweron_sequence )
 
   // pragma uvmf custom class_item_additional begin
+  bit set_bootfsm_breakpoint;
   // pragma uvmf custom class_item_additional end
 
   //*****************************************************************
@@ -55,37 +56,40 @@ class soc_ifc_ctrl_poweron_sequence
       req=soc_ifc_ctrl_transaction::type_id::create("pwr_req");
       start_item(req);
       // Randomize the transaction
-      if(!req.randomize()) `uvm_fatal("SEQ", "soc_ifc_ctrl_poweron_sequence::body()-soc_ifc_ctrl_transaction randomization failed")
+      if(!req.randomize()) `uvm_fatal("SOC_IFC_CTRL_POWERON", "soc_ifc_ctrl_poweron_sequence::body()-soc_ifc_ctrl_transaction randomization failed")
       req.set_pwrgood = 1'b0;
       req.assert_rst = 1'b1;
       // Send the transaction to the soc_ifc_ctrl_driver_bfm via the sequencer and soc_ifc_ctrl_driver.
       finish_item(req);
-      `uvm_info("SEQ", {"Response:",req.convert2string()},UVM_MEDIUM)
+      `uvm_info("SOC_IFC_CTRL_POWERON", {"Response:",req.convert2string()},UVM_MEDIUM)
       cptra_obf_key = req.cptra_obf_key_rand;
+      this.set_bootfsm_breakpoint = req.set_bootfsm_breakpoint;
 
       // Next, set pwrgood = 1, holding cptra_rst_b = 0 (asserted)
       req=soc_ifc_ctrl_transaction::type_id::create("rst_req");
       start_item(req);
       // Randomize the transaction
-      if(!req.randomize()) `uvm_fatal("SEQ", "soc_ifc_ctrl_poweron_sequence::body()-soc_ifc_ctrl_transaction randomization failed")
+      if(!req.randomize()) `uvm_fatal("SOC_IFC_CTRL_POWERON", "soc_ifc_ctrl_poweron_sequence::body()-soc_ifc_ctrl_transaction randomization failed")
       req.set_pwrgood = 1'b1;
       req.assert_rst = 1'b1;
       req.cptra_obf_key_rand = cptra_obf_key;
+      req.set_bootfsm_breakpoint = this.set_bootfsm_breakpoint;
       // Send the transaction to the soc_ifc_ctrl_driver_bfm via the sequencer and soc_ifc_ctrl_driver.
       finish_item(req);
-      `uvm_info("SEQ", {"Response:",req.convert2string()},UVM_MEDIUM)
+      `uvm_info("SOC_IFC_CTRL_POWERON", {"Response:",req.convert2string()},UVM_MEDIUM)
 
       // Deassert cptra_rst_b, completing the powerup
-      req=soc_ifc_ctrl_transaction::type_id::create("rst_req");
+      req=soc_ifc_ctrl_transaction::type_id::create("rst_release_req");
       start_item(req);
       // Randomize the transaction
-      if(!req.randomize()) `uvm_fatal("SEQ", "soc_ifc_ctrl_poweron_sequence::body()-soc_ifc_ctrl_transaction randomization failed")
+      if(!req.randomize()) `uvm_fatal("SOC_IFC_CTRL_POWERON", "soc_ifc_ctrl_poweron_sequence::body()-soc_ifc_ctrl_transaction randomization failed")
       req.set_pwrgood = 1'b1;
       req.assert_rst = 1'b0;
       req.cptra_obf_key_rand = cptra_obf_key;
+      req.set_bootfsm_breakpoint = this.set_bootfsm_breakpoint;
       // Send the transaction to the soc_ifc_ctrl_driver_bfm via the sequencer and soc_ifc_ctrl_driver.
       finish_item(req);
-      `uvm_info("SEQ", {"Response:",req.convert2string()},UVM_MEDIUM)
+      `uvm_info("SOC_IFC_CTRL_POWERON", {"Response:",req.convert2string()},UVM_MEDIUM)
 
   endtask
 

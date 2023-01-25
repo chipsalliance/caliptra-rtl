@@ -496,6 +496,7 @@ class soc_ifc_predictor #(
         `uvm_error("PRED_APB", $sformatf("APB transaction to address: 0x%x decodes to null from soc_ifc_APB_map", apb_txn.addr))
     end
     else begin
+        `uvm_info("PRED_APB", {"Detected access to register: ", axs_reg.get_name()}, UVM_MEDIUM)
         case (axs_reg.get_name()) inside
             "CPTRA_FUSE_WR_DONE": begin
                 if (apb_txn.wr_data != axs_reg.get() && apb_txn.read_or_write == APB3_TRANS_WRITE)
@@ -510,10 +511,8 @@ class soc_ifc_predictor #(
             end
             ["fuse_uds_seed[0]" :"fuse_uds_seed[9]" ],
             ["fuse_uds_seed[10]":"fuse_uds_seed[11]"]: begin
-                `uvm_info("PRED_APB", {"Detected access to register: ", axs_reg.get_name()}, UVM_MEDIUM)
             end
             ["fuse_field_entropy[0]" :"fuse_field_entropy[7]" ]: begin
-                `uvm_info("PRED_APB", {"Detected access to register: ", axs_reg.get_name()}, UVM_MEDIUM)
             end
             default: begin
                 `uvm_warning("PRED_APB", $sformatf("Prediction for accesses to register '%s' unimplemented! Fix soc_ifc_predictor", axs_reg.get_name()))

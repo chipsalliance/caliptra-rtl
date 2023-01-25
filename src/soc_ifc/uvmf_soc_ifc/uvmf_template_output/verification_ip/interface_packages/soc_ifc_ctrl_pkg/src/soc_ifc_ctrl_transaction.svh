@@ -36,15 +36,20 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
   bit set_pwrgood ;
   bit assert_rst ;
   rand int unsigned wait_cycles ;
-  security_state_t security_state ;
+  rand security_state_t security_state ;
   rand bit set_bootfsm_breakpoint ;
   rand bit [63:0] generic_input_val ;
 
   //Constraints for the transaction variables:
   constraint wait_cycles_c { wait_cycles dist {[1:25] := 80, [25:100] := 15, [100:500] := 5}; }
   constraint generic_tie_zero_c { generic_input_val == 64'h0; }
+  constraint device_lifecycle_const_c { if (device_lifecycle_set_static) {security_state.device_lifecycle == device_lifecycle_static; } }
+  
 
   // pragma uvmf custom class_item_additional begin
+  static device_lifecycle_e device_lifecycle_static = 'X;
+  static bit device_lifecycle_set_static = 1'b0;
+  extern function void post_randomize();
   // pragma uvmf custom class_item_additional end
 
   //*******************************************************************
@@ -212,5 +217,13 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
 endclass
 
 // pragma uvmf custom external begin
+function void soc_ifc_ctrl_transaction::post_randomize();
+    super.post_randomize();
+    if (!device_lifecycle_set_static || (device_lifecycle_static == 'hX)) begin
+        device_lifecycle_static = this.security_state.device_lifecycle;
+        device_lifecycle_set_static = 1'b1;
+        `uvm_info("SOC_IFC_CTRL_TXN", $sformatf("Initializing static class variable 'device_lifecycle_static' to value [%p] due to first randomize() call on class object", device_lifecycle_static), UVM_LOW)
+    end
+endfunction
 // pragma uvmf custom external end
 

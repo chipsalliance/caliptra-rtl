@@ -57,6 +57,8 @@ uvmf:
         value: '{ wait_cycles dist {[1:25] := 80, [25:100] := 15, [100:500] := 5}; }'
       - name: generic_tie_zero_c
         value: "{ generic_input_val == 64'h0; }"
+      - name: device_lifecycle_const_c
+        value: "{ if (device_lifecycle_set_static) {security_state.device_lifecycle == device_lifecycle_static; } }"
 
       transaction_vars:
       - name: cptra_obf_key_rand
@@ -78,7 +80,7 @@ uvmf:
       - name: security_state
         type: security_state_t
         iscompare: 'False'
-        isrand: 'False'
+        isrand: 'True'
       - name: set_bootfsm_breakpoint
         type: bit
         iscompare: 'False'
