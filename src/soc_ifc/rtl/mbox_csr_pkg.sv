@@ -45,14 +45,20 @@ package mbox_csr_pkg;
     } mbox_csr__mbox_status__mbox_fsm_ps__in_t;
 
     typedef struct packed{
+        logic next;
+    } mbox_csr__mbox_status__soc_has_lock__in_t;
+
+    typedef struct packed{
         mbox_csr__mbox_status__status__in_t status;
         mbox_csr__mbox_status__ecc_single_error_next_e066e214_wel_e066e214__in_t ecc_single_error;
         mbox_csr__mbox_status__ecc_double_error_next_e066e214_wel_e066e214__in_t ecc_double_error;
         mbox_csr__mbox_status__mbox_fsm_ps__in_t mbox_fsm_ps;
+        mbox_csr__mbox_status__soc_has_lock__in_t soc_has_lock;
     } mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__in_t;
 
     typedef struct packed{
         logic reset_b;
+        logic soc_req;
         logic lock_set;
         logic valid_user;
         mbox_csr__mbox_lock__in_t mbox_lock;
@@ -127,6 +133,14 @@ package mbox_csr_pkg;
     } mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__out_t;
 
     typedef struct packed{
+        logic value;
+    } mbox_csr__mbox_unlock__unlock__out_t;
+
+    typedef struct packed{
+        mbox_csr__mbox_unlock__unlock__out_t unlock;
+    } mbox_csr__mbox_unlock__out_t;
+
+    typedef struct packed{
         mbox_csr__mbox_lock__out_t mbox_lock;
         mbox_csr__mbox_user__out_t mbox_user;
         mbox_csr__mbox_cmd__out_t mbox_cmd;
@@ -135,6 +149,7 @@ package mbox_csr_pkg;
         mbox_csr__mbox_dataout__out_t mbox_dataout;
         mbox_csr__mbox_execute__out_t mbox_execute;
         mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__out_t mbox_status;
+        mbox_csr__mbox_unlock__out_t mbox_unlock;
     } mbox_csr__out_t;
 
     localparam MBOX_CSR_ADDR_WIDTH = 32'd6;

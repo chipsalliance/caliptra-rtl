@@ -39,6 +39,7 @@ global:
     vcs:
       default:
         - '-assert svaext'
+        - +define+CLP_ASSERT_ON
         #- '-v2k_generate'
         #- '-timescale=1ns/1ps'
         - '-noinherit_timescale=1ns/1ps'

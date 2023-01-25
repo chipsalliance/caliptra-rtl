@@ -377,6 +377,4 @@ hello_world:
 .ascii "----------------------------------\n"
 .ascii "Hello World from KeyVault       !!\n"
 .ascii "----------------------------------\n"
-.word 0
-.word 0
-.word 0
+.byte 0

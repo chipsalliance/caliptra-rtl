@@ -6,10 +6,11 @@ package kv_reg_uvm;
     
     // Reg - kv_reg::kvCtrl
     class kv_reg__kvCtrl extends uvm_reg;
-        rand uvm_reg_field lock_rd;
         rand uvm_reg_field lock_wr;
         rand uvm_reg_field lock_use;
         rand uvm_reg_field clear;
+        rand uvm_reg_field rsvd0;
+        rand uvm_reg_field rsvd1;
         rand uvm_reg_field dest_valid;
         rand uvm_reg_field rsvd;
 
@@ -18,18 +19,20 @@ package kv_reg_uvm;
         endfunction : new
 
         virtual function void build();
-            this.lock_rd = new("lock_rd");
-            this.lock_rd.configure(this, 1, 0, "RW", 1, 'h0, 1, 1, 0);
             this.lock_wr = new("lock_wr");
-            this.lock_wr.configure(this, 1, 1, "RW", 1, 'h0, 1, 1, 0);
+            this.lock_wr.configure(this, 1, 0, "RW", 1, 'h0, 1, 1, 0);
             this.lock_use = new("lock_use");
-            this.lock_use.configure(this, 1, 2, "RW", 1, 'h0, 1, 1, 0);
+            this.lock_use.configure(this, 1, 1, "RW", 1, 'h0, 1, 1, 0);
             this.clear = new("clear");
-            this.clear.configure(this, 1, 3, "RW", 0, 'h0, 1, 1, 0);
+            this.clear.configure(this, 1, 2, "RW", 0, 'h0, 1, 1, 0);
+            this.rsvd0 = new("rsvd0");
+            this.rsvd0.configure(this, 1, 3, "RW", 1, 'h0, 0, 1, 0);
+            this.rsvd1 = new("rsvd1");
+            this.rsvd1.configure(this, 4, 4, "RW", 0, 'h0, 0, 1, 0);
             this.dest_valid = new("dest_valid");
-            this.dest_valid.configure(this, 6, 9, "RO", 1, 'h0, 1, 1, 0);
+            this.dest_valid.configure(this, 6, 8, "RO", 1, 'h0, 1, 1, 0);
             this.rsvd = new("rsvd");
-            this.rsvd.configure(this, 17, 15, "RW", 0, 'h0, 1, 1, 0);
+            this.rsvd.configure(this, 18, 14, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : kv_reg__kvCtrl
 

@@ -664,9 +664,9 @@ logic [31:0][31:0] obf_field_entropy_dbg;
 logic [11:0][31:0] obf_uds_seed_dbg;
 
 //override device secrets with debug values in debug mode
-always_comb cptra_obf_key_dbg = ~security_state.debug_locked ? `DEBUG_MODE_OBF_KEY : cptra_obf_key_reg;
-always_comb obf_uds_seed_dbg = ~security_state.debug_locked ? `DEBUG_MODE_UDS_SEED : obf_uds_seed;
-always_comb obf_field_entropy_dbg = ~security_state.debug_locked ? `DEBUG_MODE_FIELD_ENTROPY : obf_field_entropy;
+always_comb cptra_obf_key_dbg = ~security_state.debug_locked ? `CLP_DEBUG_MODE_OBF_KEY : cptra_obf_key_reg;
+always_comb obf_uds_seed_dbg = ~security_state.debug_locked ? `CLP_DEBUG_MODE_UDS_SEED : obf_uds_seed;
+always_comb obf_field_entropy_dbg = ~security_state.debug_locked ? `CLP_DEBUG_MODE_FIELD_ENTROPY : obf_field_entropy;
 
 doe_ctrl #(
     .AHB_DATA_WIDTH (64),

@@ -109,10 +109,6 @@ module kv_reg (
             struct packed{
                 logic next;
                 logic load_next;
-            } lock_rd;
-            struct packed{
-                logic next;
-                logic load_next;
             } lock_wr;
             struct packed{
                 logic next;
@@ -123,11 +119,19 @@ module kv_reg (
                 logic load_next;
             } clear;
             struct packed{
+                logic next;
+                logic load_next;
+            } rsvd0;
+            struct packed{
+                logic [3:0] next;
+                logic load_next;
+            } rsvd1;
+            struct packed{
                 logic [5:0] next;
                 logic load_next;
             } dest_valid;
             struct packed{
-                logic [16:0] next;
+                logic [17:0] next;
                 logic load_next;
             } rsvd;
         } [8-1:0]PCR_CTRL;
@@ -141,10 +145,6 @@ module kv_reg (
             struct packed{
                 logic next;
                 logic load_next;
-            } lock_rd;
-            struct packed{
-                logic next;
-                logic load_next;
             } lock_wr;
             struct packed{
                 logic next;
@@ -155,11 +155,19 @@ module kv_reg (
                 logic load_next;
             } clear;
             struct packed{
+                logic next;
+                logic load_next;
+            } rsvd0;
+            struct packed{
+                logic [3:0] next;
+                logic load_next;
+            } rsvd1;
+            struct packed{
                 logic [5:0] next;
                 logic load_next;
             } dest_valid;
             struct packed{
-                logic [16:0] next;
+                logic [17:0] next;
                 logic load_next;
             } rsvd;
         } [8-1:0]KEY_CTRL;
@@ -186,9 +194,6 @@ module kv_reg (
         struct packed{
             struct packed{
                 logic value;
-            } lock_rd;
-            struct packed{
-                logic value;
             } lock_wr;
             struct packed{
                 logic value;
@@ -197,10 +202,16 @@ module kv_reg (
                 logic value;
             } clear;
             struct packed{
+                logic value;
+            } rsvd0;
+            struct packed{
+                logic [3:0] value;
+            } rsvd1;
+            struct packed{
                 logic [5:0] value;
             } dest_valid;
             struct packed{
-                logic [16:0] value;
+                logic [17:0] value;
             } rsvd;
         } [8-1:0]PCR_CTRL;
         struct packed{
@@ -211,9 +222,6 @@ module kv_reg (
         struct packed{
             struct packed{
                 logic value;
-            } lock_rd;
-            struct packed{
-                logic value;
             } lock_wr;
             struct packed{
                 logic value;
@@ -222,10 +230,16 @@ module kv_reg (
                 logic value;
             } clear;
             struct packed{
+                logic value;
+            } rsvd0;
+            struct packed{
+                logic [3:0] value;
+            } rsvd1;
+            struct packed{
                 logic [5:0] value;
             } dest_valid;
             struct packed{
-                logic [16:0] value;
+                logic [17:0] value;
             } rsvd;
         } [8-1:0]KEY_CTRL;
         struct packed{
@@ -245,34 +259,12 @@ module kv_reg (
     field_storage_t field_storage;
 
     for(genvar i0=0; i0<8; i0++) begin
-        // Field: kv_reg.PCR_CTRL[].lock_rd
-        always_comb begin
-            automatic logic [0:0] next_c = field_storage.PCR_CTRL[i0].lock_rd.value;
-            automatic logic load_next_c = '0;
-            if(decoded_reg_strb.PCR_CTRL[i0] && decoded_req_is_wr && !(hwif_in.PCR_CTRL[i0].lock_rd.swwel)) begin // SW write
-                next_c = decoded_wr_data[0:0];
-                load_next_c = '1;
-            end else if(hwif_in.PCR_CTRL[i0].lock_rd.hwclr) begin // HW Clear
-                next_c = '0;
-                load_next_c = '1;
-            end
-            field_combo.PCR_CTRL[i0].lock_rd.next = next_c;
-            field_combo.PCR_CTRL[i0].lock_rd.load_next = load_next_c;
-        end
-        always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
-            if(~hwif_in.hard_reset_b) begin
-                field_storage.PCR_CTRL[i0].lock_rd.value <= 'h0;
-            end else if(field_combo.PCR_CTRL[i0].lock_rd.load_next) begin
-                field_storage.PCR_CTRL[i0].lock_rd.value <= field_combo.PCR_CTRL[i0].lock_rd.next;
-            end
-        end
-        assign hwif_out.PCR_CTRL[i0].lock_rd.value = field_storage.PCR_CTRL[i0].lock_rd.value;
         // Field: kv_reg.PCR_CTRL[].lock_wr
         always_comb begin
             automatic logic [0:0] next_c = field_storage.PCR_CTRL[i0].lock_wr.value;
             automatic logic load_next_c = '0;
             if(decoded_reg_strb.PCR_CTRL[i0] && decoded_req_is_wr && !(hwif_in.PCR_CTRL[i0].lock_wr.swwel)) begin // SW write
-                next_c = decoded_wr_data[1:1];
+                next_c = decoded_wr_data[0:0];
                 load_next_c = '1;
             end else if(hwif_in.PCR_CTRL[i0].lock_wr.hwclr) begin // HW Clear
                 next_c = '0;
@@ -281,8 +273,8 @@ module kv_reg (
             field_combo.PCR_CTRL[i0].lock_wr.next = next_c;
             field_combo.PCR_CTRL[i0].lock_wr.load_next = load_next_c;
         end
-        always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
-            if(~hwif_in.hard_reset_b) begin
+        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+            if(~hwif_in.reset_b) begin
                 field_storage.PCR_CTRL[i0].lock_wr.value <= 'h0;
             end else if(field_combo.PCR_CTRL[i0].lock_wr.load_next) begin
                 field_storage.PCR_CTRL[i0].lock_wr.value <= field_combo.PCR_CTRL[i0].lock_wr.next;
@@ -294,7 +286,7 @@ module kv_reg (
             automatic logic [0:0] next_c = field_storage.PCR_CTRL[i0].lock_use.value;
             automatic logic load_next_c = '0;
             if(decoded_reg_strb.PCR_CTRL[i0] && decoded_req_is_wr && !(hwif_in.PCR_CTRL[i0].lock_use.swwel)) begin // SW write
-                next_c = decoded_wr_data[2:2];
+                next_c = decoded_wr_data[1:1];
                 load_next_c = '1;
             end else if(hwif_in.PCR_CTRL[i0].lock_use.hwclr) begin // HW Clear
                 next_c = '0;
@@ -303,8 +295,8 @@ module kv_reg (
             field_combo.PCR_CTRL[i0].lock_use.next = next_c;
             field_combo.PCR_CTRL[i0].lock_use.load_next = load_next_c;
         end
-        always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
-            if(~hwif_in.hard_reset_b) begin
+        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+            if(~hwif_in.reset_b) begin
                 field_storage.PCR_CTRL[i0].lock_use.value <= 'h0;
             end else if(field_combo.PCR_CTRL[i0].lock_use.load_next) begin
                 field_storage.PCR_CTRL[i0].lock_use.value <= field_combo.PCR_CTRL[i0].lock_use.next;
@@ -316,7 +308,7 @@ module kv_reg (
             automatic logic [0:0] next_c = field_storage.PCR_CTRL[i0].clear.value;
             automatic logic load_next_c = '0;
             if(decoded_reg_strb.PCR_CTRL[i0] && decoded_req_is_wr) begin // SW write
-                next_c = decoded_wr_data[3:3];
+                next_c = decoded_wr_data[2:2];
                 load_next_c = '1;
             end else if(1) begin // singlepulse clears back to 0
                 next_c = '0;
@@ -325,14 +317,51 @@ module kv_reg (
             field_combo.PCR_CTRL[i0].clear.next = next_c;
             field_combo.PCR_CTRL[i0].clear.load_next = load_next_c;
         end
-        always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
-            if(~hwif_in.hard_reset_b) begin
+        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+            if(~hwif_in.reset_b) begin
                 field_storage.PCR_CTRL[i0].clear.value <= 'h0;
             end else if(field_combo.PCR_CTRL[i0].clear.load_next) begin
                 field_storage.PCR_CTRL[i0].clear.value <= field_combo.PCR_CTRL[i0].clear.next;
             end
         end
         assign hwif_out.PCR_CTRL[i0].clear.value = field_storage.PCR_CTRL[i0].clear.value;
+        // Field: kv_reg.PCR_CTRL[].rsvd0
+        always_comb begin
+            automatic logic [0:0] next_c = field_storage.PCR_CTRL[i0].rsvd0.value;
+            automatic logic load_next_c = '0;
+            if(decoded_reg_strb.PCR_CTRL[i0] && decoded_req_is_wr) begin // SW write
+                next_c = decoded_wr_data[3:3];
+                load_next_c = '1;
+            end else if(hwif_in.PCR_CTRL[i0].rsvd0.hwclr) begin // HW Clear
+                next_c = '0;
+                load_next_c = '1;
+            end
+            field_combo.PCR_CTRL[i0].rsvd0.next = next_c;
+            field_combo.PCR_CTRL[i0].rsvd0.load_next = load_next_c;
+        end
+        always_ff @(posedge clk) begin
+            if(field_combo.PCR_CTRL[i0].rsvd0.load_next) begin
+                field_storage.PCR_CTRL[i0].rsvd0.value <= field_combo.PCR_CTRL[i0].rsvd0.next;
+            end
+        end
+        assign hwif_out.PCR_CTRL[i0].rsvd0.value = field_storage.PCR_CTRL[i0].rsvd0.value;
+        // Field: kv_reg.PCR_CTRL[].rsvd1
+        always_comb begin
+            automatic logic [3:0] next_c = field_storage.PCR_CTRL[i0].rsvd1.value;
+            automatic logic load_next_c = '0;
+            if(decoded_reg_strb.PCR_CTRL[i0] && decoded_req_is_wr) begin // SW write
+                next_c = decoded_wr_data[7:4];
+                load_next_c = '1;
+            end
+            field_combo.PCR_CTRL[i0].rsvd1.next = next_c;
+            field_combo.PCR_CTRL[i0].rsvd1.load_next = load_next_c;
+        end
+        always_ff @(posedge clk) begin
+            if(field_combo.PCR_CTRL[i0].rsvd1.load_next) begin
+                field_storage.PCR_CTRL[i0].rsvd1.value <= field_combo.PCR_CTRL[i0].rsvd1.next;
+            end
+        end
+        assign hwif_out.PCR_CTRL[i0].rsvd1.value = field_storage.PCR_CTRL[i0].rsvd1.value;
         // Field: kv_reg.PCR_CTRL[].dest_valid
         always_comb begin
             automatic logic [5:0] next_c = field_storage.PCR_CTRL[i0].dest_valid.value;
@@ -357,17 +386,17 @@ module kv_reg (
         assign hwif_out.PCR_CTRL[i0].dest_valid.value = field_storage.PCR_CTRL[i0].dest_valid.value;
         // Field: kv_reg.PCR_CTRL[].rsvd
         always_comb begin
-            automatic logic [16:0] next_c = field_storage.PCR_CTRL[i0].rsvd.value;
+            automatic logic [17:0] next_c = field_storage.PCR_CTRL[i0].rsvd.value;
             automatic logic load_next_c = '0;
             if(decoded_reg_strb.PCR_CTRL[i0] && decoded_req_is_wr) begin // SW write
-                next_c = decoded_wr_data[31:15];
+                next_c = decoded_wr_data[31:14];
                 load_next_c = '1;
             end
             field_combo.PCR_CTRL[i0].rsvd.next = next_c;
             field_combo.PCR_CTRL[i0].rsvd.load_next = load_next_c;
         end
-        always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
-            if(~hwif_in.hard_reset_b) begin
+        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+            if(~hwif_in.reset_b) begin
                 field_storage.PCR_CTRL[i0].rsvd.value <= 'h0;
             end else if(field_combo.PCR_CTRL[i0].rsvd.load_next) begin
                 field_storage.PCR_CTRL[i0].rsvd.value <= field_combo.PCR_CTRL[i0].rsvd.next;
@@ -404,34 +433,12 @@ module kv_reg (
         end
     end
     for(genvar i0=0; i0<8; i0++) begin
-        // Field: kv_reg.KEY_CTRL[].lock_rd
-        always_comb begin
-            automatic logic [0:0] next_c = field_storage.KEY_CTRL[i0].lock_rd.value;
-            automatic logic load_next_c = '0;
-            if(decoded_reg_strb.KEY_CTRL[i0] && decoded_req_is_wr && !(hwif_in.KEY_CTRL[i0].lock_rd.swwel)) begin // SW write
-                next_c = decoded_wr_data[0:0];
-                load_next_c = '1;
-            end else if(hwif_in.KEY_CTRL[i0].lock_rd.hwclr) begin // HW Clear
-                next_c = '0;
-                load_next_c = '1;
-            end
-            field_combo.KEY_CTRL[i0].lock_rd.next = next_c;
-            field_combo.KEY_CTRL[i0].lock_rd.load_next = load_next_c;
-        end
-        always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
-            if(~hwif_in.hard_reset_b) begin
-                field_storage.KEY_CTRL[i0].lock_rd.value <= 'h0;
-            end else if(field_combo.KEY_CTRL[i0].lock_rd.load_next) begin
-                field_storage.KEY_CTRL[i0].lock_rd.value <= field_combo.KEY_CTRL[i0].lock_rd.next;
-            end
-        end
-        assign hwif_out.KEY_CTRL[i0].lock_rd.value = field_storage.KEY_CTRL[i0].lock_rd.value;
         // Field: kv_reg.KEY_CTRL[].lock_wr
         always_comb begin
             automatic logic [0:0] next_c = field_storage.KEY_CTRL[i0].lock_wr.value;
             automatic logic load_next_c = '0;
             if(decoded_reg_strb.KEY_CTRL[i0] && decoded_req_is_wr && !(hwif_in.KEY_CTRL[i0].lock_wr.swwel)) begin // SW write
-                next_c = decoded_wr_data[1:1];
+                next_c = decoded_wr_data[0:0];
                 load_next_c = '1;
             end else if(hwif_in.KEY_CTRL[i0].lock_wr.hwclr) begin // HW Clear
                 next_c = '0;
@@ -440,8 +447,8 @@ module kv_reg (
             field_combo.KEY_CTRL[i0].lock_wr.next = next_c;
             field_combo.KEY_CTRL[i0].lock_wr.load_next = load_next_c;
         end
-        always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
-            if(~hwif_in.hard_reset_b) begin
+        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+            if(~hwif_in.reset_b) begin
                 field_storage.KEY_CTRL[i0].lock_wr.value <= 'h0;
             end else if(field_combo.KEY_CTRL[i0].lock_wr.load_next) begin
                 field_storage.KEY_CTRL[i0].lock_wr.value <= field_combo.KEY_CTRL[i0].lock_wr.next;
@@ -453,7 +460,7 @@ module kv_reg (
             automatic logic [0:0] next_c = field_storage.KEY_CTRL[i0].lock_use.value;
             automatic logic load_next_c = '0;
             if(decoded_reg_strb.KEY_CTRL[i0] && decoded_req_is_wr && !(hwif_in.KEY_CTRL[i0].lock_use.swwel)) begin // SW write
-                next_c = decoded_wr_data[2:2];
+                next_c = decoded_wr_data[1:1];
                 load_next_c = '1;
             end else if(hwif_in.KEY_CTRL[i0].lock_use.hwclr) begin // HW Clear
                 next_c = '0;
@@ -462,8 +469,8 @@ module kv_reg (
             field_combo.KEY_CTRL[i0].lock_use.next = next_c;
             field_combo.KEY_CTRL[i0].lock_use.load_next = load_next_c;
         end
-        always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
-            if(~hwif_in.hard_reset_b) begin
+        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+            if(~hwif_in.reset_b) begin
                 field_storage.KEY_CTRL[i0].lock_use.value <= 'h0;
             end else if(field_combo.KEY_CTRL[i0].lock_use.load_next) begin
                 field_storage.KEY_CTRL[i0].lock_use.value <= field_combo.KEY_CTRL[i0].lock_use.next;
@@ -475,7 +482,7 @@ module kv_reg (
             automatic logic [0:0] next_c = field_storage.KEY_CTRL[i0].clear.value;
             automatic logic load_next_c = '0;
             if(decoded_reg_strb.KEY_CTRL[i0] && decoded_req_is_wr) begin // SW write
-                next_c = decoded_wr_data[3:3];
+                next_c = decoded_wr_data[2:2];
                 load_next_c = '1;
             end else if(1) begin // singlepulse clears back to 0
                 next_c = '0;
@@ -484,14 +491,51 @@ module kv_reg (
             field_combo.KEY_CTRL[i0].clear.next = next_c;
             field_combo.KEY_CTRL[i0].clear.load_next = load_next_c;
         end
-        always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
-            if(~hwif_in.hard_reset_b) begin
+        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+            if(~hwif_in.reset_b) begin
                 field_storage.KEY_CTRL[i0].clear.value <= 'h0;
             end else if(field_combo.KEY_CTRL[i0].clear.load_next) begin
                 field_storage.KEY_CTRL[i0].clear.value <= field_combo.KEY_CTRL[i0].clear.next;
             end
         end
         assign hwif_out.KEY_CTRL[i0].clear.value = field_storage.KEY_CTRL[i0].clear.value;
+        // Field: kv_reg.KEY_CTRL[].rsvd0
+        always_comb begin
+            automatic logic [0:0] next_c = field_storage.KEY_CTRL[i0].rsvd0.value;
+            automatic logic load_next_c = '0;
+            if(decoded_reg_strb.KEY_CTRL[i0] && decoded_req_is_wr) begin // SW write
+                next_c = decoded_wr_data[3:3];
+                load_next_c = '1;
+            end else if(hwif_in.KEY_CTRL[i0].rsvd0.hwclr) begin // HW Clear
+                next_c = '0;
+                load_next_c = '1;
+            end
+            field_combo.KEY_CTRL[i0].rsvd0.next = next_c;
+            field_combo.KEY_CTRL[i0].rsvd0.load_next = load_next_c;
+        end
+        always_ff @(posedge clk) begin
+            if(field_combo.KEY_CTRL[i0].rsvd0.load_next) begin
+                field_storage.KEY_CTRL[i0].rsvd0.value <= field_combo.KEY_CTRL[i0].rsvd0.next;
+            end
+        end
+        assign hwif_out.KEY_CTRL[i0].rsvd0.value = field_storage.KEY_CTRL[i0].rsvd0.value;
+        // Field: kv_reg.KEY_CTRL[].rsvd1
+        always_comb begin
+            automatic logic [3:0] next_c = field_storage.KEY_CTRL[i0].rsvd1.value;
+            automatic logic load_next_c = '0;
+            if(decoded_reg_strb.KEY_CTRL[i0] && decoded_req_is_wr) begin // SW write
+                next_c = decoded_wr_data[7:4];
+                load_next_c = '1;
+            end
+            field_combo.KEY_CTRL[i0].rsvd1.next = next_c;
+            field_combo.KEY_CTRL[i0].rsvd1.load_next = load_next_c;
+        end
+        always_ff @(posedge clk) begin
+            if(field_combo.KEY_CTRL[i0].rsvd1.load_next) begin
+                field_storage.KEY_CTRL[i0].rsvd1.value <= field_combo.KEY_CTRL[i0].rsvd1.next;
+            end
+        end
+        assign hwif_out.KEY_CTRL[i0].rsvd1.value = field_storage.KEY_CTRL[i0].rsvd1.value;
         // Field: kv_reg.KEY_CTRL[].dest_valid
         always_comb begin
             automatic logic [5:0] next_c = field_storage.KEY_CTRL[i0].dest_valid.value;
@@ -516,17 +560,17 @@ module kv_reg (
         assign hwif_out.KEY_CTRL[i0].dest_valid.value = field_storage.KEY_CTRL[i0].dest_valid.value;
         // Field: kv_reg.KEY_CTRL[].rsvd
         always_comb begin
-            automatic logic [16:0] next_c = field_storage.KEY_CTRL[i0].rsvd.value;
+            automatic logic [17:0] next_c = field_storage.KEY_CTRL[i0].rsvd.value;
             automatic logic load_next_c = '0;
             if(decoded_reg_strb.KEY_CTRL[i0] && decoded_req_is_wr) begin // SW write
-                next_c = decoded_wr_data[31:15];
+                next_c = decoded_wr_data[31:14];
                 load_next_c = '1;
             end
             field_combo.KEY_CTRL[i0].rsvd.next = next_c;
             field_combo.KEY_CTRL[i0].rsvd.load_next = load_next_c;
         end
-        always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
-            if(~hwif_in.hard_reset_b) begin
+        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+            if(~hwif_in.reset_b) begin
                 field_storage.KEY_CTRL[i0].rsvd.value <= 'h0;
             end else if(field_combo.KEY_CTRL[i0].rsvd.load_next) begin
                 field_storage.KEY_CTRL[i0].rsvd.value <= field_combo.KEY_CTRL[i0].rsvd.next;
@@ -576,8 +620,8 @@ module kv_reg (
         field_combo.CLEAR_SECRETS.wr_debug_values.next = next_c;
         field_combo.CLEAR_SECRETS.wr_debug_values.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
-        if(~hwif_in.hard_reset_b) begin
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
             field_storage.CLEAR_SECRETS.wr_debug_values.value <= 'h0;
         end else if(field_combo.CLEAR_SECRETS.wr_debug_values.load_next) begin
             field_storage.CLEAR_SECRETS.wr_debug_values.value <= field_combo.CLEAR_SECRETS.wr_debug_values.next;
@@ -595,8 +639,8 @@ module kv_reg (
         field_combo.CLEAR_SECRETS.sel_debug_value.next = next_c;
         field_combo.CLEAR_SECRETS.sel_debug_value.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
-        if(~hwif_in.hard_reset_b) begin
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
             field_storage.CLEAR_SECRETS.sel_debug_value.value <= 'h0;
         end else if(field_combo.CLEAR_SECRETS.sel_debug_value.load_next) begin
             field_storage.CLEAR_SECRETS.sel_debug_value.value <= field_combo.CLEAR_SECRETS.sel_debug_value.next;
@@ -614,13 +658,13 @@ module kv_reg (
     // Assign readback values to a flattened array
     logic [145-1:0][31:0] readback_array;
     for(genvar i0=0; i0<8; i0++) begin
-        assign readback_array[i0*1 + 0][0:0] = (decoded_reg_strb.PCR_CTRL[i0] && !decoded_req_is_wr) ? field_storage.PCR_CTRL[i0].lock_rd.value : '0;
-        assign readback_array[i0*1 + 0][1:1] = (decoded_reg_strb.PCR_CTRL[i0] && !decoded_req_is_wr) ? field_storage.PCR_CTRL[i0].lock_wr.value : '0;
-        assign readback_array[i0*1 + 0][2:2] = (decoded_reg_strb.PCR_CTRL[i0] && !decoded_req_is_wr) ? field_storage.PCR_CTRL[i0].lock_use.value : '0;
-        assign readback_array[i0*1 + 0][3:3] = (decoded_reg_strb.PCR_CTRL[i0] && !decoded_req_is_wr) ? field_storage.PCR_CTRL[i0].clear.value : '0;
-        assign readback_array[i0*1 + 0][8:4] = '0;
-        assign readback_array[i0*1 + 0][14:9] = (decoded_reg_strb.PCR_CTRL[i0] && !decoded_req_is_wr) ? field_storage.PCR_CTRL[i0].dest_valid.value : '0;
-        assign readback_array[i0*1 + 0][31:15] = (decoded_reg_strb.PCR_CTRL[i0] && !decoded_req_is_wr) ? field_storage.PCR_CTRL[i0].rsvd.value : '0;
+        assign readback_array[i0*1 + 0][0:0] = (decoded_reg_strb.PCR_CTRL[i0] && !decoded_req_is_wr) ? field_storage.PCR_CTRL[i0].lock_wr.value : '0;
+        assign readback_array[i0*1 + 0][1:1] = (decoded_reg_strb.PCR_CTRL[i0] && !decoded_req_is_wr) ? field_storage.PCR_CTRL[i0].lock_use.value : '0;
+        assign readback_array[i0*1 + 0][2:2] = (decoded_reg_strb.PCR_CTRL[i0] && !decoded_req_is_wr) ? field_storage.PCR_CTRL[i0].clear.value : '0;
+        assign readback_array[i0*1 + 0][3:3] = (decoded_reg_strb.PCR_CTRL[i0] && !decoded_req_is_wr) ? field_storage.PCR_CTRL[i0].rsvd0.value : '0;
+        assign readback_array[i0*1 + 0][7:4] = (decoded_reg_strb.PCR_CTRL[i0] && !decoded_req_is_wr) ? field_storage.PCR_CTRL[i0].rsvd1.value : '0;
+        assign readback_array[i0*1 + 0][13:8] = (decoded_reg_strb.PCR_CTRL[i0] && !decoded_req_is_wr) ? field_storage.PCR_CTRL[i0].dest_valid.value : '0;
+        assign readback_array[i0*1 + 0][31:14] = (decoded_reg_strb.PCR_CTRL[i0] && !decoded_req_is_wr) ? field_storage.PCR_CTRL[i0].rsvd.value : '0;
     end
     for(genvar i0=0; i0<8; i0++) begin
         for(genvar i1=0; i1<16; i1++) begin
@@ -628,13 +672,13 @@ module kv_reg (
         end
     end
     for(genvar i0=0; i0<8; i0++) begin
-        assign readback_array[i0*1 + 136][0:0] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].lock_rd.value : '0;
-        assign readback_array[i0*1 + 136][1:1] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].lock_wr.value : '0;
-        assign readback_array[i0*1 + 136][2:2] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].lock_use.value : '0;
-        assign readback_array[i0*1 + 136][3:3] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].clear.value : '0;
-        assign readback_array[i0*1 + 136][8:4] = '0;
-        assign readback_array[i0*1 + 136][14:9] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].dest_valid.value : '0;
-        assign readback_array[i0*1 + 136][31:15] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].rsvd.value : '0;
+        assign readback_array[i0*1 + 136][0:0] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].lock_wr.value : '0;
+        assign readback_array[i0*1 + 136][1:1] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].lock_use.value : '0;
+        assign readback_array[i0*1 + 136][2:2] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].clear.value : '0;
+        assign readback_array[i0*1 + 136][3:3] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].rsvd0.value : '0;
+        assign readback_array[i0*1 + 136][7:4] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].rsvd1.value : '0;
+        assign readback_array[i0*1 + 136][13:8] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].dest_valid.value : '0;
+        assign readback_array[i0*1 + 136][31:14] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].rsvd.value : '0;
     end
     assign readback_array[144][0:0] = (decoded_reg_strb.CLEAR_SECRETS && !decoded_req_is_wr) ? field_storage.CLEAR_SECRETS.wr_debug_values.value : '0;
     assign readback_array[144][1:1] = (decoded_reg_strb.CLEAR_SECRETS && !decoded_req_is_wr) ? field_storage.CLEAR_SECRETS.sel_debug_value.value : '0;

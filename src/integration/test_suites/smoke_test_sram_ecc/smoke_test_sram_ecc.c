@@ -14,6 +14,7 @@
 //
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
+#include "riscv_hw_if.h"
 #include "riscv-csr.h"
 #include <string.h>
 #include <stdint.h>
@@ -34,6 +35,9 @@ uint32_t test_mbox_sram_ecc() {
     uint32_t sts = 0;
     uint32_t * soc_ifc_error_mbox_ecc_unc_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R);
     uint32_t * soc_ifc_notif_mbox_ecc_cor_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R);
+
+    // Acquire the mailbox lock
+    while((lsu_read_32((uint32_t*) CLP_MBOX_CSR_MBOX_LOCK) & MBOX_CSR_MBOX_LOCK_LOCK_MASK) != 0);
 
     // Allocate a large array in Mailbox SRAM
     uint32_t* myarray = (uint32_t*) MBOX_DIR_BASE_ADDR;
@@ -76,6 +80,10 @@ uint32_t test_mbox_sram_ecc() {
         printf("ERROR: Unexpected ecc_error_mode: %x\n", ecc_error_mode);
         sts |= 0x80;
     }
+
+    // Unlock Mailbox
+    lsu_write_32((uint32_t*) CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+
     return sts;
 }
 

@@ -31,8 +31,8 @@
         <th></th>
     </tr>
     <tr id="rsvd">
-        <td>[31:15]</td>
-        <td>rsvd</td>
+        <td>[31:14]</td>
+        <td><a href="#rsvd.desc">rsvd</a></td>
         <td>
             <span title='Readable and Writable'>rw</span></td>
         <td>0x0
@@ -51,8 +51,8 @@
         </td>
     </tr>
     <tr id="dest_valid">
-        <td>[14:9]</td>
-        <td>dest_valid</td>
+        <td>[13:8]</td>
+        <td><a href="#dest_valid.desc">dest_valid</a></td>
         <td>
             <span title='Read-only'>r</span></td>
         <td>0x0
@@ -70,18 +70,49 @@
             <a class="headerlink" href="#dest_valid" title="Permalink to this row"></a>
         </td>
     </tr>
-    <tr class="reserved-field">
-    <td>[8:4]</td>
-    <td>-</td>
-    <td>-</td>
-    <td>-</td>
-    <td></td>
-    <td>-</td>
-    <td></td>
-</tr>
-    <tr id="clear">
+    <tr id="rsvd1">
+        <td>[7:4]</td>
+        <td><a href="#rsvd1.desc">rsvd1</a></td>
+        <td>
+            <span title='Readable and Writable'>rw</span></td>
+        <td>-
+        </td>
+        <td>
+            <input id="_FieldValueTesterrsvd1" class="field-value-tester"
+                type="text" autocomplete="off"
+                data-name="rsvd1" oninput="onDecodedFieldInput(this)"/>
+        </td>
+        <td>-</td>
+        <td>
+            <button type="button" id="_RadixButtonrsvd1" class="radix-button"
+                title="Switch radix" aria-label="Switch radix"
+                data-name="rsvd1" onclick="onRadixSwitch(this)">H</button>
+            <a class="headerlink" href="#rsvd1" title="Permalink to this row"></a>
+        </td>
+    </tr>
+    <tr id="rsvd0">
         <td>[3]</td>
-        <td>clear</td>
+        <td><a href="#rsvd0.desc">rsvd0</a></td>
+        <td>
+            <span title='Readable and Writable'>rw</span></td>
+        <td>-
+        </td>
+        <td>
+            <input id="_FieldValueTesterrsvd0" class="field-value-tester"
+                type="text" autocomplete="off"
+                data-name="rsvd0" oninput="onDecodedFieldInput(this)"/>
+        </td>
+        <td>-</td>
+        <td>
+            <button type="button" id="_RadixButtonrsvd0" class="radix-button"
+                title="Switch radix" aria-label="Switch radix"
+                data-name="rsvd0" onclick="onRadixSwitch(this)">H</button>
+            <a class="headerlink" href="#rsvd0" title="Permalink to this row"></a>
+        </td>
+    </tr>
+    <tr id="clear">
+        <td>[2]</td>
+        <td><a href="#clear.desc">clear</a></td>
         <td>
             <span title='Readable and Writable'>rw</span></td>
         <td>0x0
@@ -100,8 +131,8 @@
         </td>
     </tr>
     <tr id="lock_use">
-        <td>[2]</td>
-        <td>lock_use</td>
+        <td>[1]</td>
+        <td><a href="#lock_use.desc">lock_use</a></td>
         <td>
             <span title='Readable and Writable'>rw</span></td>
         <td>0x0
@@ -120,8 +151,8 @@
         </td>
     </tr>
     <tr id="lock_wr">
-        <td>[1]</td>
-        <td>lock_wr</td>
+        <td>[0]</td>
+        <td><a href="#lock_wr.desc">lock_wr</a></td>
         <td>
             <span title='Readable and Writable'>rw</span></td>
         <td>0x0
@@ -139,26 +170,6 @@
             <a class="headerlink" href="#lock_wr" title="Permalink to this row"></a>
         </td>
     </tr>
-    <tr id="lock_rd">
-        <td>[0]</td>
-        <td>lock_rd</td>
-        <td>
-            <span title='Readable and Writable'>rw</span></td>
-        <td>0x0
-        </td>
-        <td>
-            <input id="_FieldValueTesterlock_rd" class="field-value-tester"
-                type="text" autocomplete="off"
-                data-name="lock_rd" oninput="onDecodedFieldInput(this)"/>
-        </td>
-        <td>-</td>
-        <td>
-            <button type="button" id="_RadixButtonlock_rd" class="radix-button"
-                title="Switch radix" aria-label="Switch radix"
-                data-name="lock_rd" onclick="onRadixSwitch(this)">H</button>
-            <a class="headerlink" href="#lock_rd" title="Permalink to this row"></a>
-        </td>
-    </tr>
 </table>
 <p>
     <label>
@@ -167,4 +178,60 @@
         <button type="button" class="reset-button" title="Reset register values" aria-label="Reset register values" onclick="onResetRegValue(this)"></button>
     </label>
 </p>
+<hr/><h2>Field Descriptions</h2>
+
+<h3 id="rsvd.desc">rsvd
+    <a class="headerlink" href="#rsvd.desc" title="Permalink to this headline"></a>
+</h3>
+<div id="_Content.rsvd.desc">
+<p>Reserved bits</p>
+</div>
+
+<h3 id="dest_valid.desc">dest_valid
+    <a class="headerlink" href="#dest_valid.desc" title="Permalink to this headline"></a>
+</h3>
+<div id="_Content.dest_valid.desc">
+<p>Destination valid bits stored as an array for ease of use in RTL.</p>
+<p>dest_valid[0] = hmac_key_dest_valid</p>
+<p>dest_valid[1] = hmac_block_dest_valid</p>
+<p>dest_valid[2] = sha_block_dest_valid</p>
+<p>dest_valid[3] = ecc_pkey_dest_valid</p>
+<p>dest_valid[4] = ecc_seed_dest_valid</p>
+<p>dest_valid[5] = ecc_msg_dest_valid</p>
+</div>
+
+<h3 id="rsvd1.desc">rsvd1
+    <a class="headerlink" href="#rsvd1.desc" title="Permalink to this headline"></a>
+</h3>
+<div id="_Content.rsvd1.desc">
+<p>Reserved</p>
+</div>
+
+<h3 id="rsvd0.desc">rsvd0
+    <a class="headerlink" href="#rsvd0.desc" title="Permalink to this headline"></a>
+</h3>
+<div id="_Content.rsvd0.desc">
+<p>Reserved</p>
+</div>
+
+<h3 id="clear.desc">clear
+    <a class="headerlink" href="#clear.desc" title="Permalink to this headline"></a>
+</h3>
+<div id="_Content.clear.desc">
+<p>Clear the data stored in this entry. Lock write will prevent this clear.</p>
+</div>
+
+<h3 id="lock_use.desc">lock_use
+    <a class="headerlink" href="#lock_use.desc" title="Permalink to this headline"></a>
+</h3>
+<div id="_Content.lock_use.desc">
+<p>Lock use of this entry. Reads will be suppressed and an error will be recorded.</p>
+</div>
+
+<h3 id="lock_wr.desc">lock_wr
+    <a class="headerlink" href="#lock_wr.desc" title="Permalink to this headline"></a>
+</h3>
+<div id="_Content.lock_wr.desc">
+<p>Lock writes to this entry. Writes will be suppressed and an error will be recorded.</p>
+</div>
 </div>

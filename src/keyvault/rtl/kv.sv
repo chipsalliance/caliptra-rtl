@@ -118,16 +118,15 @@ always_comb debug_unlocked = debug_locked_f & ~debug_locked;
 //Flush the keyvault with the debug value when FW pokes the register or we detect debug mode unlocking
 always_comb flush_keyvault = debug_unlocked | kv_reg_hwif_out.CLEAR_SECRETS.wr_debug_values.value;
 //Pick between keyvault debug mode 0 or 1
-always_comb debug_value = kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value ? `DEBUG_MODE_KV_1 : `DEBUG_MODE_KV_0;
+always_comb debug_value = kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value ? CLP_DEBUG_MODE_KV_1 : CLP_DEBUG_MODE_KV_0;
 
 always_comb begin : keyvault_ctrl
     //keyvault control registers
     for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
         //once lock is set, only reset can unset it
-        kv_reg_hwif_in.KEY_CTRL[entry].lock_rd.swwel = kv_reg_hwif_out.KEY_CTRL[entry].lock_rd.value;
         kv_reg_hwif_in.KEY_CTRL[entry].lock_wr.swwel = kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value;
         kv_reg_hwif_in.KEY_CTRL[entry].lock_use.swwel = kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value;
-        kv_reg_hwif_in.KEY_CTRL[entry].lock_rd.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value;
+        //clear control clears the locks
         kv_reg_hwif_in.KEY_CTRL[entry].lock_wr.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value;
         kv_reg_hwif_in.KEY_CTRL[entry].lock_use.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value;
         kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value;
@@ -141,10 +140,10 @@ always_comb begin : keyvault_ctrl
     end
 
     for (int entry = 0; entry < KV_NUM_PCR; entry++) begin
-        kv_reg_hwif_in.PCR_CTRL[entry].lock_rd.swwel = kv_reg_hwif_out.PCR_CTRL[entry].lock_rd.value;
+        //once lock is set, only reset can unset it
         kv_reg_hwif_in.PCR_CTRL[entry].lock_wr.swwel = kv_reg_hwif_out.PCR_CTRL[entry].lock_wr.value;
         kv_reg_hwif_in.PCR_CTRL[entry].lock_use.swwel = kv_reg_hwif_out.PCR_CTRL[entry].lock_use.value;
-        kv_reg_hwif_in.PCR_CTRL[entry].lock_rd.hwclr = kv_reg_hwif_out.PCR_CTRL[entry].clear.value;
+        //clear control clears the locks
         kv_reg_hwif_in.PCR_CTRL[entry].lock_wr.hwclr = kv_reg_hwif_out.PCR_CTRL[entry].clear.value;
         kv_reg_hwif_in.PCR_CTRL[entry].lock_use.hwclr = kv_reg_hwif_out.PCR_CTRL[entry].clear.value;
         kv_reg_hwif_in.PCR_CTRL[entry].dest_valid.hwclr = kv_reg_hwif_out.PCR_CTRL[entry].clear.value;
@@ -168,11 +167,9 @@ always_comb begin : keyvault_ctrl
             kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.we = '0;
             for (int client = 0; client < KV_NUM_WRITE; client++) begin
                 kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value;
-                kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.we |= ((kv_write[client].write_entry == entry) & (kv_write[client].write_offset == dword) & 
-                                                                   ~kv_write[client].entry_is_pcr & kv_write[client].write_en & 
-                                                                   ~kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value) | 
-                                                                   //Security state change or FW flushing KV
-                                                                    flush_keyvault;
+                kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.we |= (((kv_write[client].write_entry == entry) & (kv_write[client].write_offset == dword) & 
+                                                                   ~kv_write[client].entry_is_pcr & kv_write[client].write_en) | flush_keyvault) & 
+                                                                   ~kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value;
                 kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.next |= flush_keyvault ? debug_value :
                                                                     kv_write[client].write_en ? kv_write[client].write_data : '0;
             end
@@ -196,7 +193,7 @@ always_comb begin : keyvault_ctrl
 end
 
 //read mux for keyvault
-//qualify with selected entry, offset, and pcr or not for key and src
+//qualify with selected entry, offset, and pcr flag
 //qualify with lock use bit to ensure that locked values aren't read
 //qualify with dest valid to ensure requesting client has permission to read this entry
 always_comb begin : keyvault_readmux
@@ -209,6 +206,8 @@ always_comb begin : keyvault_readmux
                                                 ~kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value & kv_reg_hwif_out.KEY_CTRL[entry].dest_valid.value[client] ? 
                                                  kv_reg_hwif_out.KEY_ENTRY[entry][dword].data.value : '0;
             end
+        kv_rd_resp[client].error |= ~kv_read[client].entry_is_pcr & (kv_read[client].read_entry == entry) & 
+                                    (kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value | ~kv_reg_hwif_out.KEY_CTRL[entry].dest_valid.value[client]);
         end
         for (int entry = 0; entry < KV_NUM_PCR; entry++) begin
             for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
@@ -216,18 +215,42 @@ always_comb begin : keyvault_readmux
                                                 ~kv_reg_hwif_out.PCR_CTRL[entry].lock_use.value & kv_reg_hwif_out.PCR_CTRL[entry].dest_valid.value[client] ? 
                                                  kv_reg_hwif_out.PCR_ENTRY[entry][dword].data.value : '0;
             end
+        kv_rd_resp[client].error |= kv_read[client].entry_is_pcr & (kv_read[client].read_entry == entry) & 
+                                    (kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value | ~kv_reg_hwif_out.KEY_CTRL[entry].dest_valid.value[client]);
         end
     end
 end
 
-//write respons mux for keyvault
+//Write error when attempting to write to entry that is locked for writes
 always_comb begin : keyvault_write_resp
     for (int client = 0 ; client < KV_NUM_WRITE; client++) begin
         kv_wr_resp[client].error = '0;
+        for (int entry = 0; entry < KV_NUM_PCR; entry++) begin
+            kv_wr_resp[client].error |= (kv_write[client].write_entry == entry) & 
+                                        kv_write[client].entry_is_pcr & kv_write[client].write_en &
+                                        kv_reg_hwif_out.PCR_CTRL[entry].lock_wr.value;
+        end
+        for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
+            kv_wr_resp[client].error |= (kv_write[client].write_entry == entry) & 
+                                        ~kv_write[client].entry_is_pcr & kv_write[client].write_en &
+                                        kv_reg_hwif_out.PCR_CTRL[entry].lock_wr.value;
+        end
     end
 end
 
+//tie-offs
+always_comb begin
+    for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
+        kv_reg_hwif_in.KEY_CTRL[entry].rsvd0.hwclr = '0;
+    end
+    for (int entry = 0; entry < KV_NUM_PCR; entry++) begin
+        kv_reg_hwif_in.PCR_CTRL[entry].rsvd0.hwclr = '0;
+    end
+end
+
+
 always_comb kv_reg_hwif_in.hard_reset_b = cptra_pwrgood;
+always_comb kv_reg_hwif_in.reset_b = rst_b;
 
 kv_reg kv_reg1 (
     .clk(clk),

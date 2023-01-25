@@ -29,17 +29,21 @@
 
 // Assert a concurrent property directly.
 `define ASSERT(assert_name, prop, clk, rst_b)                                  \
+`ifdef CLP_ASSERT_ON                                                           \
   assert_name: assert property (@(posedge clk) disable iff (~rst_b) (prop))    \
     else begin                                                                 \
         `ASSERT_RPT(`STRINGIFY(assert_name))                                   \
-    end
+    end                                                                        \
+`endif
 
 // Assert a concurrent property NEVER happens
 `define ASSERT_NEVER(assert_name, prop, clk, rst_b)                             \
+`ifdef CLP_ASSERT_ON                                                            \
   assert_name: assert property (@(posedge clk) disable iff (~rst_b) not (prop)) \
     else begin                                                                  \
         `ASSERT_RPT(`STRINGIFY(assert_name))                                    \
-    end
+    end                                                                         \
+`endif
 
 // Assert that signal is not x
 `define ASSERT_KNOWN(assert_name, sig, clk, rst_b)     \

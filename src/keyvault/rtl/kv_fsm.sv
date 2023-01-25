@@ -43,6 +43,7 @@ module kv_fsm
 
 localparam KV_MAX_DWORDS = 1024/32;
 localparam KV_NUM_DWORDS_W = $clog2(KV_MAX_DWORDS);
+localparam KV_PAD_LENGTH_START = 28;
 
 logic [KV_NUM_DWORDS_W:0] num_dwords_data;
 logic [KV_NUM_DWORDS_W:0] num_dwords_total;
@@ -66,19 +67,25 @@ logic arc_KV_PAD_KV_DONE;
 logic offset_en;
 logic [KV_NUM_DWORDS_W:0] offset, offset_nxt;
 
-//hmac data size is encoded as N-1 128b chunks, add 1 and multiply by 4 to get dwords
+//hmac data size is encoded as N-1 dwords
 //data width is in bits, divide by 32 to get dwords
 assign num_dwords_data = (PAD == 1) ? ((pad_data_size+1)) : DATA_WIDTH/32;
 assign num_dwords_total = (PAD == 1) ? KV_MAX_DWORDS : DATA_WIDTH/32;
 
 always_comb ready = (kv_fsm_ps == KV_IDLE);
 
+// For SHA and HMAC Block -
+// Padding starts with a leading 1 after the valid data followed by 0's until 
+// the length of the valid data is stored in the last 4 dwords.
+// If we have room for the valid data and the leading 1 before the last 4 dwords
+// we'll append the length. If not, pad with zeroes and the length will be appended in
+// another block
 always_comb begin
     full_pad_data = '0;
     if (HMAC == 1) begin //HMAC padding adds 1024 to account for the key
-        full_pad_data[31] = pad_data_size < 27 ? num_dwords_data*32 + 'd1024 : '0; //size of data goes in the last dword if we have room after pad
+        full_pad_data[31] = pad_data_size < KV_PAD_LENGTH_START-1 ? num_dwords_data*32 + 'd1024 : '0; //size of data goes in the last dword if we have room after pad
     end else begin
-        full_pad_data[31] = pad_data_size < 27 ? num_dwords_data*32 : '0; //size of data goes in the last dword if we have room after pad
+        full_pad_data[31] = pad_data_size < KV_PAD_LENGTH_START-1 ? num_dwords_data*32 : '0; //size of data goes in the last dword if we have room after pad
     end
     full_pad_data[num_dwords_data[KV_NUM_DWORDS_W-1:0]] = 32'h8000_0000; //insert start of pad at dword immediately following data size
 end

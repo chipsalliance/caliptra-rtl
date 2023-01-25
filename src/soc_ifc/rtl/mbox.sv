@@ -73,6 +73,7 @@ mbox_fsm_state_e mbox_fsm_ns;
 mbox_fsm_state_e mbox_fsm_ps;
 
 //arcs between states
+logic arc_FORCE_MBOX_UNLOCK;
 logic arc_MBOX_IDLE_MBOX_RDY_FOR_CMD;
 logic arc_MBOX_RDY_FOR_CMD_MBOX_RDY_FOR_DLEN;
 logic arc_MBOX_RDY_FOR_DLEN_MBOX_RDY_FOR_DATA;
@@ -124,7 +125,7 @@ assign mbox_error = read_error | write_error;
 //2) SoC requests are valid if soc has lock and it's the user that locked it or we're in execute SOC 
 always_comb valid_user = hwif_out.mbox_lock.lock.value & 
                         ((~req_data.soc_req & (~soc_has_lock | (mbox_fsm_ps == MBOX_EXECUTE_UC))) |
-                         ( req_data.soc_req & (req_data.user == hwif_out.mbox_user.user.value) & (soc_has_lock | (mbox_fsm_ps == MBOX_EXECUTE_SOC))));
+                         ( req_data.soc_req & ((soc_has_lock & (req_data.user == hwif_out.mbox_user.user.value)) | (mbox_fsm_ps == MBOX_EXECUTE_SOC))));
 
 //We want to mask read data when
 //1) Invalid user is trying to access the mailbox data, or we're not in execute state
@@ -147,6 +148,9 @@ always_comb arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_SOC = (mbox_fsm_ps == MBOX_EXECUTE_
 //move from rdy to execute to idle when SoC resets execute
 always_comb arc_MBOX_EXECUTE_SOC_MBOX_IDLE = (mbox_fsm_ps == MBOX_EXECUTE_SOC) & ~hwif_out.mbox_execute.execute.value;
 always_comb arc_MBOX_EXECUTE_SOC_MBOX_EXECUTE_UC = (mbox_fsm_ps == MBOX_EXECUTE_SOC) & ~soc_has_lock & (hwif_out.mbox_status.status.value != CMD_BUSY);
+//move back to IDLE and unlock when force unlock is set
+always_comb arc_FORCE_MBOX_UNLOCK = hwif_out.mbox_unlock.unlock.value;
+
 
 always_comb begin : mbox_fsm_combo
     soc_has_lock_nxt = 0;
@@ -169,10 +173,20 @@ always_comb begin : mbox_fsm_combo
             if (arc_MBOX_RDY_FOR_CMD_MBOX_RDY_FOR_DLEN) begin
                 mbox_fsm_ns = MBOX_RDY_FOR_DLEN;
             end
+            if (arc_FORCE_MBOX_UNLOCK) begin
+                mbox_fsm_ns = MBOX_IDLE;
+                rst_mbox_wrptr = 1;
+                rst_mbox_rdptr = 1;
+            end
         end
         MBOX_RDY_FOR_DLEN: begin
             if (arc_MBOX_RDY_FOR_DLEN_MBOX_RDY_FOR_DATA) begin
                 mbox_fsm_ns = MBOX_RDY_FOR_DATA;
+            end
+            if (arc_FORCE_MBOX_UNLOCK) begin
+                mbox_fsm_ns = MBOX_IDLE;
+                rst_mbox_wrptr = 1;
+                rst_mbox_rdptr = 1;
             end
         end
         MBOX_RDY_FOR_DATA: begin
@@ -193,6 +207,11 @@ always_comb begin : mbox_fsm_combo
                 //load the first dword when we move to execute
                 inc_rdptr = 1'b1;
             end
+            if (arc_FORCE_MBOX_UNLOCK) begin
+                mbox_fsm_ns = MBOX_IDLE;
+                rst_mbox_wrptr = 1;
+                rst_mbox_rdptr = 1;
+            end
         end
         //SoC set execute, data is for the uC
         //only uC can read from mbox
@@ -209,6 +228,11 @@ always_comb begin : mbox_fsm_combo
             end
             else if (arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_SOC) begin
                 mbox_fsm_ns = MBOX_EXECUTE_SOC;
+                rst_mbox_wrptr = 1;
+                rst_mbox_rdptr = 1;
+            end
+            if (arc_FORCE_MBOX_UNLOCK) begin
+                mbox_fsm_ns = MBOX_IDLE;
                 rst_mbox_wrptr = 1;
                 rst_mbox_rdptr = 1;
             end
@@ -229,6 +253,11 @@ always_comb begin : mbox_fsm_combo
             end
             else if (arc_MBOX_EXECUTE_SOC_MBOX_EXECUTE_UC) begin
                 mbox_fsm_ns = MBOX_EXECUTE_UC;
+                rst_mbox_wrptr = 1;
+                rst_mbox_rdptr = 1;
+            end
+            if (arc_FORCE_MBOX_UNLOCK) begin
+                mbox_fsm_ns = MBOX_IDLE;
                 rst_mbox_wrptr = 1;
                 rst_mbox_rdptr = 1;
             end
@@ -268,7 +297,8 @@ end
 //hold the interface to insert wait state when direct request comes
 //mask the request and hold the interface if SHA is using the mailbox
 //hold when a read to dataout is coming and we haven't updated the data yet
-always_comb dir_req_dv_q = (dir_req_dv & ~dir_req_rd_phase) | sha_sram_req_dv;
+always_comb dir_req_dv_q = (dir_req_dv & ~dir_req_rd_phase & hwif_out.mbox_lock.lock.value & (~soc_has_lock | (mbox_fsm_ps == MBOX_EXECUTE_UC))) | 
+                            sha_sram_req_dv;
 
 always_comb dir_req_addr = sha_sram_req_dv ? sha_sram_req_addr : req_data.addr[$clog2(DEPTH)+1:2];
 
@@ -343,6 +373,8 @@ always_comb mbox_rdptr_nxt = rst_mbox_rdptr ? '0 :
 always_comb hwif_in.reset_b = rst_b;
 always_comb hwif_in.mbox_user.user.next = req_data.user;
 always_comb hwif_in.mbox_status.mbox_fsm_ps.next = mbox_fsm_ps;
+
+always_comb hwif_in.soc_req = req_data.soc_req;
 //check the requesting user:
 //don't update mailbox data if lock hasn't been acquired
 //if uc has the lock, check that this request is from uc
@@ -359,12 +391,13 @@ always_comb hwif_in.mbox_dataout.dataout.swwe = '0; //no sw write enable, but ne
 always_comb hwif_in.mbox_dataout.dataout.we = inc_rdptr_f;
 always_comb hwif_in.mbox_dataout.dataout.next = sram_rdata_cor;
 //clear the lock when moving from execute to idle
-always_comb hwif_in.mbox_lock.lock.hwclr = arc_MBOX_EXECUTE_SOC_MBOX_IDLE | arc_MBOX_EXECUTE_UC_MBOX_IDLE;
+always_comb hwif_in.mbox_lock.lock.hwclr = arc_MBOX_EXECUTE_SOC_MBOX_IDLE | arc_MBOX_EXECUTE_UC_MBOX_IDLE | arc_FORCE_MBOX_UNLOCK;
 //clear the mailbox status when we go back to IDLE
-always_comb hwif_in.mbox_status.status.hwclr = arc_MBOX_EXECUTE_SOC_MBOX_IDLE | arc_MBOX_EXECUTE_UC_MBOX_IDLE;
+always_comb hwif_in.mbox_status.status.hwclr = arc_MBOX_EXECUTE_SOC_MBOX_IDLE | arc_MBOX_EXECUTE_UC_MBOX_IDLE | arc_FORCE_MBOX_UNLOCK;
 // Set mbox_csr status fields in response to ECC errors
 always_comb hwif_in.mbox_status.ecc_single_error.hwset = sram_single_ecc_error;
 always_comb hwif_in.mbox_status.ecc_double_error.hwset = sram_double_ecc_error;
+always_comb hwif_in.mbox_status.soc_has_lock.next = soc_has_lock;
 
 logic s_cpuif_req_stall_wr_nc;
 logic s_cpuif_req_stall_rd_nc;
@@ -392,6 +425,9 @@ mbox_csr1(
     .hwif_out(hwif_out)
 );
 
+`ifdef CLP_ASSERT_ON
 `ASSERT_MUTEX(ERR_MBOX_ACCESS_MUTEX, {dir_req_dv_q, mbox_protocol_sram_we, inc_rdptr}, clk, rst_b)
+`ASSERT_MUTEX(ERR_MBOX_DIR_SHA_COLLISION, {dir_req_dv, sha_sram_req_dv}, clk, rst_b)
+`endif
 
 endmodule

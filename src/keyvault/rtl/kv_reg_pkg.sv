@@ -5,11 +5,6 @@ package kv_reg_pkg;
     typedef struct packed{
         logic swwel;
         logic hwclr;
-    } kv_reg__kvCtrl__lock_rd__in_t;
-
-    typedef struct packed{
-        logic swwel;
-        logic hwclr;
     } kv_reg__kvCtrl__lock_wr__in_t;
 
     typedef struct packed{
@@ -18,15 +13,19 @@ package kv_reg_pkg;
     } kv_reg__kvCtrl__lock_use__in_t;
 
     typedef struct packed{
+        logic hwclr;
+    } kv_reg__kvCtrl__rsvd0__in_t;
+
+    typedef struct packed{
         logic [5:0] next;
         logic we;
         logic hwclr;
     } kv_reg__kvCtrl__dest_valid__in_t;
 
     typedef struct packed{
-        kv_reg__kvCtrl__lock_rd__in_t lock_rd;
         kv_reg__kvCtrl__lock_wr__in_t lock_wr;
         kv_reg__kvCtrl__lock_use__in_t lock_use;
+        kv_reg__kvCtrl__rsvd0__in_t rsvd0;
         kv_reg__kvCtrl__dest_valid__in_t dest_valid;
     } kv_reg__kvCtrl__in_t;
 
@@ -53,16 +52,13 @@ package kv_reg_pkg;
     } kv_reg__keyReg__in_t;
 
     typedef struct packed{
+        logic reset_b;
         logic hard_reset_b;
         kv_reg__kvCtrl__in_t [8-1:0]PCR_CTRL;
         kv_reg__pcrReg__in_t [8-1:0][16-1:0]PCR_ENTRY;
         kv_reg__kvCtrl__in_t [8-1:0]KEY_CTRL;
         kv_reg__keyReg__in_t [8-1:0][16-1:0]KEY_ENTRY;
     } kv_reg__in_t;
-
-    typedef struct packed{
-        logic value;
-    } kv_reg__kvCtrl__lock_rd__out_t;
 
     typedef struct packed{
         logic value;
@@ -77,14 +73,23 @@ package kv_reg_pkg;
     } kv_reg__kvCtrl__clear__out_t;
 
     typedef struct packed{
+        logic value;
+    } kv_reg__kvCtrl__rsvd0__out_t;
+
+    typedef struct packed{
+        logic [3:0] value;
+    } kv_reg__kvCtrl__rsvd1__out_t;
+
+    typedef struct packed{
         logic [5:0] value;
     } kv_reg__kvCtrl__dest_valid__out_t;
 
     typedef struct packed{
-        kv_reg__kvCtrl__lock_rd__out_t lock_rd;
         kv_reg__kvCtrl__lock_wr__out_t lock_wr;
         kv_reg__kvCtrl__lock_use__out_t lock_use;
         kv_reg__kvCtrl__clear__out_t clear;
+        kv_reg__kvCtrl__rsvd0__out_t rsvd0;
+        kv_reg__kvCtrl__rsvd1__out_t rsvd1;
         kv_reg__kvCtrl__dest_valid__out_t dest_valid;
     } kv_reg__kvCtrl__out_t;
 

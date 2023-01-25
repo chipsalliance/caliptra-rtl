@@ -211,6 +211,13 @@ _start:
     andi x7, x7, 0xFFFFFFFC
     // Increment pointer to start of test vector
     addi t3, t3, 4
+    // Acquire lock before direct access to mailbox
+    li x3, CLP_MBOX_CSR_MBOX_LOCK
+    li x1, MBOX_CSR_MBOX_LOCK_LOCK_MASK
+    acquire_lock_loop0:
+        lw x5, 0(x3)
+        and x5, x5, x1
+        beq x5, x1, acquire_lock_loop0
     // Load test vector from hw_data and write to Mailbox
     li x8, MBOX_DIR_BASE_ADDR
     add x8, x8, x7 /* ending destination address of test vector */
@@ -263,6 +270,11 @@ _start:
     li x1, SHA512_ACC_CSR_LOCK_LOCK_MASK
     sw x1, 0(x3)
 
+    //Release MBOX lock
+    li x3, CLP_MBOX_CSR_MBOX_UNLOCK
+    li x1, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK
+    sw x1, 0(x3)
+    
     //Acquire SHA lock
     li x3, CLP_SHA512_ACC_CSR_LOCK
     lock_poll_loop3:
@@ -289,6 +301,13 @@ _start:
     addi x7, x7, 3
     andi x7, x7, 0xFFFFFFFC
     addi t3, t3, 4
+    // Acquire lock before direct access to mailbox
+    li x3, CLP_MBOX_CSR_MBOX_LOCK
+    li x1, MBOX_CSR_MBOX_LOCK_LOCK_MASK
+    acquire_lock_loop1:
+        lw x5, 0(x3)
+        and x5, x5, x1
+        beq x5, x1, acquire_lock_loop1
     // Load test vector from hw_data and write to Mailbox
     li x8, MBOX_DIR_BASE_ADDR
     add x8, x8, x7 /* ending destination address of test vector */
@@ -339,6 +358,11 @@ _start:
     //Release SHA lock
     li x3, CLP_SHA512_ACC_CSR_LOCK
     li x1, SHA512_ACC_CSR_LOCK_LOCK_MASK
+    sw x1, 0(x3)
+
+    //Release MBOX lock
+    li x3, CLP_MBOX_CSR_MBOX_UNLOCK
+    li x1, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK
     sw x1, 0(x3)
 
 // Write 0xff to STDOUT for TB to terminate test.

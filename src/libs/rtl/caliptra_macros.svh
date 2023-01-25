@@ -16,10 +16,11 @@
 `define CALIPTRA_MACROS
 
   //Debug values for obfuscated secrets when we unlock debug mode through security state
-  `define DEBUG_MODE_OBF_KEY {256{1'b1}}
-  `define DEBUG_MODE_UDS_SEED {384{1'b1}}
-  `define DEBUG_MODE_FIELD_ENTROPY {1024{1'b1}}
+  `define CLP_DEBUG_MODE_OBF_KEY {256{1'b1}}
+  `define CLP_DEBUG_MODE_UDS_SEED {384{1'b1}}
+  `define CLP_DEBUG_MODE_FIELD_ENTROPY {1024{1'b1}}
   //Dword values to write into all KV entries during debug mode
-  `define DEBUG_MODE_KV_0 {32'hAAAA_AAAA}
-  `define DEBUG_MODE_KV_1 {32'h5555_5555}
+  parameter CLP_DEBUG_MODE_KV_0 = 32'hAAAA_AAAA;
+  parameter CLP_DEBUG_MODE_KV_1 = 32'h5555_5555;
+
 `endif

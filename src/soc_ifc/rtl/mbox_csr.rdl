@@ -20,7 +20,9 @@ addrmap mbox_csr {
     default hw = na;
     signal {activelow; async; cpuif_reset; field_reset;} reset_b;
     signal {activelow; async;} hard_reset_b;
-
+    
+    //signal to indicate request is coming from soc side
+    signal {} soc_req;
     signal {} lock_set;
     signal {} valid_user;
 
@@ -68,7 +70,7 @@ addrmap mbox_csr {
     reg {
         name="Mailbox Execute";
         desc="Mailbox execute register indicates to receiver that the sender is done";
-        field {sw=rw; hw=r;} execute=0;
+        field {sw=rw; hw=r; swwe=valid_user;} execute=0;
     } mbox_execute;
 
     reg {
@@ -135,7 +137,17 @@ addrmap mbox_csr {
             };
             sw=r; hw=w; encode = mbox_fsm_e;
         } mbox_fsm_ps[3] = 0;
+        field {
+            name = "SoC Acquired the Lock";
+            desc = "Indicates that the current lock was acquired by the SoC";
+            sw=r; hw=w;} soc_has_lock=1'b0;
     } mbox_status;
+
+    reg {
+        name="Mailbox Force Unlock";
+        desc="Capability for uC only to force unlock the mailbox.";
+        field {sw=rw; hw=r; singlepulse; swwel = soc_req;} unlock=0;
+    } mbox_unlock;
 
     // This will auto clear the status register whenever a mailbox transfer
     // is not in progress. 1-cycle delayed from when the Receiver clears

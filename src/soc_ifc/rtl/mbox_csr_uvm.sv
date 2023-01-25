@@ -108,6 +108,7 @@ package mbox_csr_uvm;
         rand uvm_reg_field ecc_single_error;
         rand uvm_reg_field ecc_double_error;
         rand uvm_reg_field mbox_fsm_ps;
+        rand uvm_reg_field soc_has_lock;
 
         function new(string name = "mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -122,8 +123,24 @@ package mbox_csr_uvm;
             this.ecc_double_error.configure(this, 1, 3, "RO", 1, 'h0, 1, 1, 0);
             this.mbox_fsm_ps = new("mbox_fsm_ps");
             this.mbox_fsm_ps.configure(this, 3, 4, "RO", 1, 'h0, 1, 1, 0);
+            this.soc_has_lock = new("soc_has_lock");
+            this.soc_has_lock.configure(this, 1, 7, "RO", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760
+
+    // Reg - mbox_csr::mbox_unlock
+    class mbox_csr__mbox_unlock extends uvm_reg;
+        rand uvm_reg_field unlock;
+
+        function new(string name = "mbox_csr__mbox_unlock");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.unlock = new("unlock");
+            this.unlock.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : mbox_csr__mbox_unlock
 
     // Addrmap - mbox_csr
     class mbox_csr extends uvm_reg_block;
@@ -135,6 +152,7 @@ package mbox_csr_uvm;
         rand mbox_csr__mbox_dataout mbox_dataout;
         rand mbox_csr__mbox_execute mbox_execute;
         rand mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760 mbox_status;
+        rand mbox_csr__mbox_unlock mbox_unlock;
 
         function new(string name = "mbox_csr");
             super.new(name);
@@ -182,6 +200,11 @@ package mbox_csr_uvm;
 
             this.mbox_status.build();
             this.default_map.add_reg(this.mbox_status, 'h1c);
+            this.mbox_unlock = new("mbox_unlock");
+            this.mbox_unlock.configure(this);
+
+            this.mbox_unlock.build();
+            this.default_map.add_reg(this.mbox_unlock, 'h20);
         endfunction : build
     endclass : mbox_csr
 
