@@ -123,6 +123,7 @@ def copyFilesSrcToDest(sWorkspace, sRepo, dWorkspace, dRepo):
     blacklistRepoDirsFiles = ["etc", "config", "dvt_build.log"]
     blacklistIpDirsFiles = ["aes", "sim_irq_gen", "syn"]
     blacklistScriptsDirsFiles = ["gen_pb_file_lists.sh", "README.md", "sim_config_parse.py", "github_sync.py", "prepDestRepo.sh", "prepPBSrcRepo.sh", "run_test_makefile", "syn"]
+    blacklistConfigDirsFiles = ["design_lint"]
     integrationTestSuiteList = ['caliptra_top', 'caliptra_demo', 'includes', 'libs']
 
     srcCaliptraDir = os.path.join(sWorkspace, sRepo)
@@ -161,6 +162,17 @@ def copyFilesSrcToDest(sWorkspace, sRepo, dWorkspace, dRepo):
                         for d in scriptsDirList:
                             if (not d in blacklistScriptsDirsFiles):
                                 copy_file(d, scriptsSrcDir_Full_Path,  scriptsDestDir_Full_Path)
+                    elif (dir == 'config'):
+                        configSrcDir_Full_Path = os.path.join(srcDir_FullPath, dir)
+                        configDestDir_Full_Path = os.path.join(destDir_FullPath, dir)
+                        create_directory(configDestDir_Full_Path)
+                        configFileList, configDirList = listdir_nohidden(configSrcDir_Full_Path)
+                        for f in configFileList:
+                            if (not f in blacklistConfigDirsFiles):
+                                copy_file(f, configSrcDir_Full_Path,  configDestDir_Full_Path)
+                        for d in configDirList:
+                            if (not d in blacklistConfigDirsFiles):
+                                copy_file(d, configSrcDir_Full_Path,  configDestDir_Full_Path)
                     else:
                         src = os.path.join(srcDir_FullPath, dir)
                         dest = os.path.join(destDir_FullPath, dir)
