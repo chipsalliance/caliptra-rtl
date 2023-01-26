@@ -111,20 +111,21 @@ addrmap soc_ifc_reg {
         name = "Reset Reason";
         desc = "Indicates to ROM the originating cause for the PC to be reset to 0.
                 Only reset during cold-boot (sticky).
-                [br]Caliptra Access: RW
+                [br]Caliptra Access: RO
                 [br]SOC Access:      RO";
-        enum reset_type_e {
-            CPTRA_COLD_RESET = 4'b0000 {
-                desc = "Caliptra went through Cold Reset";
-            };
-            CPTRA_WARM_RESET = 4'b0001 {
-                desc = "Caliptra went through warm reset";
-            };
-            CPTRA_FW_UPD_RESET = 4'b0010 {
-                desc = "Caliptra uC went through FW update reset";
-            };
-        };
-        field {sw=rw; swwel = soc_req; hw=na; encode = reset_type_e; resetsignal = hard_reset_b;} reason[4]=0;
+        //enum reset_type_e {
+        //    CPTRA_COLD_RESET = 4'b0000 {
+        //        desc = "Caliptra went through Cold Reset";
+        //    };
+        //    CPTRA_WARM_RESET = 4'b0001 {
+        //        desc = "Caliptra went through warm reset";
+        //    };
+        //    CPTRA_FW_UPD_RESET = 4'b0010 {
+        //        desc = "Caliptra uC went through FW update reset";
+        //    };
+        //};
+        field {desc = "FW update reset has been executed"; sw=r; hw=rw; we=true; resetsignal = reset_b;}      FW_UPD_RESET=0;
+        field {desc = "warm reset has been executed";      sw=r; hw=rw; resetsignal = hard_reset_b;} WARM_RESET=0;
     } CPTRA_RESET_REASON;
 
     reg {
@@ -206,7 +207,7 @@ addrmap soc_ifc_reg {
     //FIXME: Fuse write clear once written should be done only by Caliptra FW if it allows a fuse override to happen for the IFPs
     reg {
         name = "Fuse Write Done";
-        desc = "Writes to fuse registers are completed. After the done bit is set, any subsequent writes to a fuse register will be dropped unless there is a power cycle  or a warm reset or caliptra FW allows a write (negotiated through a mailbox command).
+        desc = "Writes to fuse registers are completed. After the done bit is set, any subsequent writes to a fuse register will be dropped unless there is a power cycle or a warm reset or caliptra FW allows a write (negotiated through a mailbox command).
                  [br]Caliptra Access: RW
                  [br]SOC Access:      RW1";
          field {sw=rw; hw=r; swwe;} done[1]=0;
@@ -221,12 +222,24 @@ addrmap soc_ifc_reg {
                 [br]SOC Access:      RW";
         field {desc = "Period in (ps)"; sw=rw; hw=na;} clk_period[32] = 32'h0;
     } CPTRA_TIMER_CONFIG;
-
+    
     reg {
         name = "BOOTFSM GO";
-        desc = "Indicates that the BootFSM can continue to execute to bring the uController out of reset";
+        desc = "Indicates that the BootFSM can continue to execute to bring the uController out of reset
+                [br]Caliptra Access: RW
+                [br]SOC Access:      RW
+                [br]TAP Access [in debug/manuf mode]: RW";
         field {sw=rw; hw=r;} GO[1]=0;
     } CPTRA_BOOTFSM_GO;
+
+    reg {
+        name = "DEBUG & MANUF SERVICE REG";
+        desc = "JTAG in debug/manuf mode or SOC can write to this register for ROM/FW defined skips or services; ROM/FW maintains the defintion of these bits.
+                [br]Caliptra Access: RW
+                [br]SOC Access:      RW
+                [br]TAP Access [in debug/manuf mode]: RW";
+        field {sw=rw; hw=na;} DATA[32] = 32'h0;
+    } CPTRA_DBG_MANUF_SERVICE_REG;
 
     reg {
         name = "Clk gating enable";
@@ -298,12 +311,6 @@ addrmap soc_ifc_reg {
                  [br]SOC Access:      RWL";
         field {sw=rw; hw=r; swwel; resetsignal = reset_b;}  mask[4]=0;
     } fuse_owner_key_manifest_pk_hash_mask;
-    reg {
-        desc = "Key Manifest SVN Fuse.
-                 [br]Caliptra Access: RWL
-                 [br]SOC Access:      RWL";
-        field {sw=rw; hw=r; swwel; resetsignal = reset_b;} svn[32]=0;
-    } fuse_key_manifest_svn;
     reg {
         desc = "Bootloader SVN Fuse.
                  [br]Caliptra Access: RWL

@@ -130,15 +130,18 @@ package soc_ifc_reg_uvm;
 
     // Reg - soc_ifc_reg::CPTRA_RESET_REASON
     class soc_ifc_reg__CPTRA_RESET_REASON extends uvm_reg;
-        rand uvm_reg_field reason;
+        rand uvm_reg_field FW_UPD_RESET;
+        rand uvm_reg_field WARM_RESET;
 
         function new(string name = "soc_ifc_reg__CPTRA_RESET_REASON");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
         virtual function void build();
-            this.reason = new("reason");
-            this.reason.configure(this, 4, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.FW_UPD_RESET = new("FW_UPD_RESET");
+            this.FW_UPD_RESET.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            this.WARM_RESET = new("WARM_RESET");
+            this.WARM_RESET.configure(this, 1, 1, "RO", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_RESET_REASON
 
@@ -288,6 +291,20 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_BOOTFSM_GO
 
+    // Reg - soc_ifc_reg::CPTRA_DBG_MANUF_SERVICE_REG
+    class soc_ifc_reg__CPTRA_DBG_MANUF_SERVICE_REG extends uvm_reg;
+        rand uvm_reg_field DATA;
+
+        function new(string name = "soc_ifc_reg__CPTRA_DBG_MANUF_SERVICE_REG");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.DATA = new("DATA");
+            this.DATA.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__CPTRA_DBG_MANUF_SERVICE_REG
+
     // Reg - soc_ifc_reg::CPTRA_CLK_GATING_EN
     class soc_ifc_reg__CPTRA_CLK_GATING_EN extends uvm_reg;
         rand uvm_reg_field clk_gating_en;
@@ -413,20 +430,6 @@ package soc_ifc_reg_uvm;
             this.mask.configure(this, 4, 0, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__fuse_owner_key_manifest_pk_hash_mask
-
-    // Reg - soc_ifc_reg::fuse_key_manifest_svn
-    class soc_ifc_reg__fuse_key_manifest_svn extends uvm_reg;
-        rand uvm_reg_field svn;
-
-        function new(string name = "soc_ifc_reg__fuse_key_manifest_svn");
-            super.new(name, 32, UVM_NO_COVERAGE);
-        endfunction : new
-
-        virtual function void build();
-            this.svn = new("svn");
-            this.svn.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
-        endfunction : build
-    endclass : soc_ifc_reg__fuse_key_manifest_svn
 
     // Reg - soc_ifc_reg::fuse_boot_loader_svn
     class soc_ifc_reg__fuse_boot_loader_svn extends uvm_reg;
@@ -1207,6 +1210,7 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__CPTRA_FUSE_WR_DONE CPTRA_FUSE_WR_DONE;
         rand soc_ifc_reg__CPTRA_TIMER_CONFIG CPTRA_TIMER_CONFIG;
         rand soc_ifc_reg__CPTRA_BOOTFSM_GO CPTRA_BOOTFSM_GO;
+        rand soc_ifc_reg__CPTRA_DBG_MANUF_SERVICE_REG CPTRA_DBG_MANUF_SERVICE_REG;
         rand soc_ifc_reg__CPTRA_CLK_GATING_EN CPTRA_CLK_GATING_EN;
         rand soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES CPTRA_GENERIC_INPUT_WIRES[2];
         rand soc_ifc_reg__CPTRA_GENERIC_OUTPUT_WIRES CPTRA_GENERIC_OUTPUT_WIRES[2];
@@ -1216,7 +1220,6 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__fuse_key_manifest_pk_hash_mask fuse_key_manifest_pk_hash_mask;
         rand soc_ifc_reg__fuse_owner_key_manifest_pk_hash fuse_owner_key_manifest_pk_hash[12];
         rand soc_ifc_reg__fuse_owner_key_manifest_pk_hash_mask fuse_owner_key_manifest_pk_hash_mask;
-        rand soc_ifc_reg__fuse_key_manifest_svn fuse_key_manifest_svn;
         rand soc_ifc_reg__fuse_boot_loader_svn fuse_boot_loader_svn;
         rand soc_ifc_reg__fuse_runtime_svn fuse_runtime_svn[4];
         rand soc_ifc_reg__fuse_anti_rollback_disable fuse_anti_rollback_disable;
@@ -1336,24 +1339,29 @@ package soc_ifc_reg_uvm;
 
             this.CPTRA_BOOTFSM_GO.build();
             this.default_map.add_reg(this.CPTRA_BOOTFSM_GO, 'h94);
+            this.CPTRA_DBG_MANUF_SERVICE_REG = new("CPTRA_DBG_MANUF_SERVICE_REG");
+            this.CPTRA_DBG_MANUF_SERVICE_REG.configure(this);
+
+            this.CPTRA_DBG_MANUF_SERVICE_REG.build();
+            this.default_map.add_reg(this.CPTRA_DBG_MANUF_SERVICE_REG, 'h98);
             this.CPTRA_CLK_GATING_EN = new("CPTRA_CLK_GATING_EN");
             this.CPTRA_CLK_GATING_EN.configure(this);
 
             this.CPTRA_CLK_GATING_EN.build();
-            this.default_map.add_reg(this.CPTRA_CLK_GATING_EN, 'h98);
+            this.default_map.add_reg(this.CPTRA_CLK_GATING_EN, 'h9c);
             foreach(this.CPTRA_GENERIC_INPUT_WIRES[i0]) begin
                 this.CPTRA_GENERIC_INPUT_WIRES[i0] = new($sformatf("CPTRA_GENERIC_INPUT_WIRES[%0d]", i0));
                 this.CPTRA_GENERIC_INPUT_WIRES[i0].configure(this);
                 
                 this.CPTRA_GENERIC_INPUT_WIRES[i0].build();
-                this.default_map.add_reg(this.CPTRA_GENERIC_INPUT_WIRES[i0], 'h9c + i0*'h4);
+                this.default_map.add_reg(this.CPTRA_GENERIC_INPUT_WIRES[i0], 'ha0 + i0*'h4);
             end
             foreach(this.CPTRA_GENERIC_OUTPUT_WIRES[i0]) begin
                 this.CPTRA_GENERIC_OUTPUT_WIRES[i0] = new($sformatf("CPTRA_GENERIC_OUTPUT_WIRES[%0d]", i0));
                 this.CPTRA_GENERIC_OUTPUT_WIRES[i0].configure(this);
                 
                 this.CPTRA_GENERIC_OUTPUT_WIRES[i0].build();
-                this.default_map.add_reg(this.CPTRA_GENERIC_OUTPUT_WIRES[i0], 'ha4 + i0*'h4);
+                this.default_map.add_reg(this.CPTRA_GENERIC_OUTPUT_WIRES[i0], 'ha8 + i0*'h4);
             end
             foreach(this.fuse_uds_seed[i0]) begin
                 this.fuse_uds_seed[i0] = new($sformatf("fuse_uds_seed[%0d]", i0));
@@ -1393,41 +1401,36 @@ package soc_ifc_reg_uvm;
 
             this.fuse_owner_key_manifest_pk_hash_mask.build();
             this.default_map.add_reg(this.fuse_owner_key_manifest_pk_hash_mask, 'h2b4);
-            this.fuse_key_manifest_svn = new("fuse_key_manifest_svn");
-            this.fuse_key_manifest_svn.configure(this);
-
-            this.fuse_key_manifest_svn.build();
-            this.default_map.add_reg(this.fuse_key_manifest_svn, 'h2b8);
             this.fuse_boot_loader_svn = new("fuse_boot_loader_svn");
             this.fuse_boot_loader_svn.configure(this);
 
             this.fuse_boot_loader_svn.build();
-            this.default_map.add_reg(this.fuse_boot_loader_svn, 'h2bc);
+            this.default_map.add_reg(this.fuse_boot_loader_svn, 'h2b8);
             foreach(this.fuse_runtime_svn[i0]) begin
                 this.fuse_runtime_svn[i0] = new($sformatf("fuse_runtime_svn[%0d]", i0));
                 this.fuse_runtime_svn[i0].configure(this);
                 
                 this.fuse_runtime_svn[i0].build();
-                this.default_map.add_reg(this.fuse_runtime_svn[i0], 'h2c0 + i0*'h4);
+                this.default_map.add_reg(this.fuse_runtime_svn[i0], 'h2bc + i0*'h4);
             end
             this.fuse_anti_rollback_disable = new("fuse_anti_rollback_disable");
             this.fuse_anti_rollback_disable.configure(this);
 
             this.fuse_anti_rollback_disable.build();
-            this.default_map.add_reg(this.fuse_anti_rollback_disable, 'h2d0);
+            this.default_map.add_reg(this.fuse_anti_rollback_disable, 'h2cc);
             foreach(this.fuse_idevid_cert_attr[i0]) begin
                 this.fuse_idevid_cert_attr[i0] = new($sformatf("fuse_idevid_cert_attr[%0d]", i0));
                 this.fuse_idevid_cert_attr[i0].configure(this);
                 
                 this.fuse_idevid_cert_attr[i0].build();
-                this.default_map.add_reg(this.fuse_idevid_cert_attr[i0], 'h2d4 + i0*'h4);
+                this.default_map.add_reg(this.fuse_idevid_cert_attr[i0], 'h2d0 + i0*'h4);
             end
             foreach(this.fuse_idevid_manuf_hsm_id[i0]) begin
                 this.fuse_idevid_manuf_hsm_id[i0] = new($sformatf("fuse_idevid_manuf_hsm_id[%0d]", i0));
                 this.fuse_idevid_manuf_hsm_id[i0].configure(this);
                 
                 this.fuse_idevid_manuf_hsm_id[i0].build();
-                this.default_map.add_reg(this.fuse_idevid_manuf_hsm_id[i0], 'h334 + i0*'h4);
+                this.default_map.add_reg(this.fuse_idevid_manuf_hsm_id[i0], 'h330 + i0*'h4);
             end
             foreach(this.internal_obf_key[i0]) begin
                 this.internal_obf_key[i0] = new($sformatf("internal_obf_key[%0d]", i0));

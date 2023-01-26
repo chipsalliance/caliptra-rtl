@@ -15,7 +15,7 @@
 <div id="_Content.desc">
 <p>Indicates to ROM the originating cause for the PC to be reset to 0.
 Only reset during cold-boot (sticky).
-<br>Caliptra Access: RW
+<br>Caliptra Access: RO
 <br>SOC Access:      RO</p>
 </div>
 
@@ -31,7 +31,7 @@ Only reset during cold-boot (sticky).
         <th></th>
     </tr>
     <tr class="reserved-field">
-    <td>[31:4]</td>
+    <td>[31:2]</td>
     <td>-</td>
     <td>-</td>
     <td>-</td>
@@ -39,34 +39,44 @@ Only reset during cold-boot (sticky).
     <td>-</td>
     <td></td>
 </tr>
-    <tr id="reason">
-        <td>[3:0]</td>
-        <td><a href="#reason.desc">reason</a></td>
+    <tr id="WARM_RESET">
+        <td>[1]</td>
+        <td><a href="#WARM_RESET.desc">WARM_RESET</a></td>
         <td>
-            <span title='Readable and Writable'>rw</span></td>
+            <span title='Read-only'>r</span></td>
         <td>0x0
         </td>
         <td>
-            <input id="_FieldValueTesterreason" class="field-value-tester"
+            <input id="_FieldValueTesterWARM_RESET" class="field-value-tester"
                 type="text" autocomplete="off"
-                data-name="reason" oninput="onDecodedFieldInput(this)"/>
-            <select id="_FieldValueEnumTesterreason" class="field-value-enum-tester"
-                data-name="reason" onchange="onDecodedFieldEnumChange(this)">
-            
-                <option value="0x0">CPTRA_COLD_RESET</option>
-            
-                <option value="0x1">CPTRA_WARM_RESET</option>
-            
-                <option value="0x2">CPTRA_FW_UPD_RESET</option>
-            
-            </select>
+                data-name="WARM_RESET" oninput="onDecodedFieldInput(this)"/>
         </td>
         <td>-</td>
         <td>
-            <button type="button" id="_RadixButtonreason" class="radix-button"
+            <button type="button" id="_RadixButtonWARM_RESET" class="radix-button"
                 title="Switch radix" aria-label="Switch radix"
-                data-name="reason" onclick="onRadixSwitch(this)">H</button>
-            <a class="headerlink" href="#reason" title="Permalink to this row"></a>
+                data-name="WARM_RESET" onclick="onRadixSwitch(this)">H</button>
+            <a class="headerlink" href="#WARM_RESET" title="Permalink to this row"></a>
+        </td>
+    </tr>
+    <tr id="FW_UPD_RESET">
+        <td>[0]</td>
+        <td><a href="#FW_UPD_RESET.desc">FW_UPD_RESET</a></td>
+        <td>
+            <span title='Read-only'>r</span></td>
+        <td>0x0
+        </td>
+        <td>
+            <input id="_FieldValueTesterFW_UPD_RESET" class="field-value-tester"
+                type="text" autocomplete="off"
+                data-name="FW_UPD_RESET" oninput="onDecodedFieldInput(this)"/>
+        </td>
+        <td>-</td>
+        <td>
+            <button type="button" id="_RadixButtonFW_UPD_RESET" class="radix-button"
+                title="Switch radix" aria-label="Switch radix"
+                data-name="FW_UPD_RESET" onclick="onRadixSwitch(this)">H</button>
+            <a class="headerlink" href="#FW_UPD_RESET" title="Permalink to this row"></a>
         </td>
     </tr>
 </table>
@@ -79,29 +89,17 @@ Only reset during cold-boot (sticky).
 </p>
 <hr/><h2>Field Descriptions</h2>
 
-<h3 id="reason.desc">reason
-    <a class="headerlink" href="#reason.desc" title="Permalink to this headline"></a>
+<h3 id="WARM_RESET.desc">WARM_RESET
+    <a class="headerlink" href="#WARM_RESET.desc" title="Permalink to this headline"></a>
 </h3>
-<div id="_Content.reason.desc">
-<table border="1">
-    <tr>
-        <th colspan="3">enum reset_type_e</th>
-    </tr>
-    <tr>
-        <td>CPTRA_COLD_RESET</td>
-        <td>0x0</td>
-        <td><p>Caliptra went through Cold Reset</p></td>
-    </tr>
-    <tr>
-        <td>CPTRA_WARM_RESET</td>
-        <td>0x1</td>
-        <td><p>Caliptra went through warm reset</p></td>
-    </tr>
-    <tr>
-        <td>CPTRA_FW_UPD_RESET</td>
-        <td>0x2</td>
-        <td><p>Caliptra uC went through FW update reset</p></td>
-    </tr>
-</table>
+<div id="_Content.WARM_RESET.desc">
+<p>warm reset has been executed</p>
+</div>
+
+<h3 id="FW_UPD_RESET.desc">FW_UPD_RESET
+    <a class="headerlink" href="#FW_UPD_RESET.desc" title="Permalink to this headline"></a>
+</h3>
+<div id="_Content.FW_UPD_RESET.desc">
+<p>FW update reset has been executed</p>
 </div>
 </div>

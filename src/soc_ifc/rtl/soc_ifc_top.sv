@@ -165,6 +165,7 @@ logic sram_single_ecc_error;
 logic sram_double_ecc_error;
 
 logic iccm_unlock;
+logic fw_upd_rst_executed;
 
 logic BootFSM_BrkPoint_Latched;
 logic BootFSM_BrkPoint_Flag;
@@ -191,8 +192,12 @@ soc_ifc_boot_fsm i_soc_ifc_boot_fsm (
 
     .cptra_noncore_rst_b(cptra_noncore_rst_b), //goes to all other blocks
     .cptra_uc_rst_b(cptra_uc_rst_b), //goes to swerv core
-    .iccm_unlock(iccm_unlock)
+    .iccm_unlock(iccm_unlock),
+    .fw_upd_rst_executed(fw_upd_rst_executed)
 );
+
+always_comb soc_ifc_reg_hwif_in.CPTRA_RESET_REASON.FW_UPD_RESET.we = fw_upd_rst_executed;
+always_comb soc_ifc_reg_hwif_in.CPTRA_RESET_REASON.FW_UPD_RESET.next = 1;
 
 //APB Interface
 //This module contains the logic for interfacing with the SoC over the APB Interface
@@ -382,6 +387,45 @@ always_ff @(posedge clk or negedge cptra_rst_b) begin
     end
 end
 
+logic pwrgood_toggle_hint;
+logic Warm_Reset_Capture_Flag;
+
+// pwrgood_hint informs if the powergood toggled
+always_ff @(posedge clk or negedge cptra_pwrgood) begin
+     if(~cptra_pwrgood) begin
+        pwrgood_toggle_hint <= 1;
+     end
+     // Reset the bit after warm reset deassertion has been observed
+     else if(Warm_Reset_Capture_Flag) begin
+        pwrgood_toggle_hint <= 0;
+     end
+end
+
+always_ff @(posedge clk or negedge cptra_rst_b) begin
+    if (~cptra_rst_b) begin
+        Warm_Reset_Capture_Flag <= 0;
+    end
+    else if(!Warm_Reset_Capture_Flag) begin
+        Warm_Reset_Capture_Flag <= 1;
+    end
+end
+
+// PwrGood is used to decide if the warm reset toggle happened due to pwrgood or
+// only due to warm reset. We also need to clear this bit when its
+// FW_UPD_RESET only path
+always_comb begin
+    if (!Warm_Reset_Capture_Flag) begin
+         soc_ifc_reg_hwif_in.CPTRA_RESET_REASON.WARM_RESET.next = ~pwrgood_toggle_hint;
+    end
+    else if (soc_ifc_reg_hwif_out.CPTRA_RESET_REASON.FW_UPD_RESET.value) begin
+         soc_ifc_reg_hwif_in.CPTRA_RESET_REASON.WARM_RESET.next = 1'b0;
+    end 
+    else begin
+         soc_ifc_reg_hwif_in.CPTRA_RESET_REASON.WARM_RESET.next = soc_ifc_reg_hwif_out.CPTRA_RESET_REASON.WARM_RESET.value;
+    end
+end
+
+
 // Generate a pulse to set the interrupt bit
 always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
     if (~cptra_noncore_rst_b) begin
@@ -426,7 +470,6 @@ end
 
 always_comb soc_ifc_reg_hwif_in.fuse_key_manifest_pk_hash_mask.mask.swwel       = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.fuse_owner_key_manifest_pk_hash_mask.mask.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
-always_comb soc_ifc_reg_hwif_in.fuse_key_manifest_svn.svn.swwel                 = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.fuse_boot_loader_svn.svn.swwel                  = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.fuse_anti_rollback_disable.dis.swwel            = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 

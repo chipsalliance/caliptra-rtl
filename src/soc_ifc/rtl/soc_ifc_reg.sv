@@ -80,6 +80,7 @@ module soc_ifc_reg (
         logic CPTRA_FUSE_WR_DONE;
         logic CPTRA_TIMER_CONFIG;
         logic CPTRA_BOOTFSM_GO;
+        logic CPTRA_DBG_MANUF_SERVICE_REG;
         logic CPTRA_CLK_GATING_EN;
         logic [2-1:0]CPTRA_GENERIC_INPUT_WIRES;
         logic [2-1:0]CPTRA_GENERIC_OUTPUT_WIRES;
@@ -89,7 +90,6 @@ module soc_ifc_reg (
         logic fuse_key_manifest_pk_hash_mask;
         logic [12-1:0]fuse_owner_key_manifest_pk_hash;
         logic fuse_owner_key_manifest_pk_hash_mask;
-        logic fuse_key_manifest_svn;
         logic fuse_boot_loader_svn;
         logic [4-1:0]fuse_runtime_svn;
         logic fuse_anti_rollback_disable;
@@ -161,12 +161,13 @@ module soc_ifc_reg (
         decoded_reg_strb.CPTRA_FUSE_WR_DONE = cpuif_req_masked & (cpuif_addr == 'h8c);
         decoded_reg_strb.CPTRA_TIMER_CONFIG = cpuif_req_masked & (cpuif_addr == 'h90);
         decoded_reg_strb.CPTRA_BOOTFSM_GO = cpuif_req_masked & (cpuif_addr == 'h94);
-        decoded_reg_strb.CPTRA_CLK_GATING_EN = cpuif_req_masked & (cpuif_addr == 'h98);
+        decoded_reg_strb.CPTRA_DBG_MANUF_SERVICE_REG = cpuif_req_masked & (cpuif_addr == 'h98);
+        decoded_reg_strb.CPTRA_CLK_GATING_EN = cpuif_req_masked & (cpuif_addr == 'h9c);
         for(int i0=0; i0<2; i0++) begin
-            decoded_reg_strb.CPTRA_GENERIC_INPUT_WIRES[i0] = cpuif_req_masked & (cpuif_addr == 'h9c + i0*'h4);
+            decoded_reg_strb.CPTRA_GENERIC_INPUT_WIRES[i0] = cpuif_req_masked & (cpuif_addr == 'ha0 + i0*'h4);
         end
         for(int i0=0; i0<2; i0++) begin
-            decoded_reg_strb.CPTRA_GENERIC_OUTPUT_WIRES[i0] = cpuif_req_masked & (cpuif_addr == 'ha4 + i0*'h4);
+            decoded_reg_strb.CPTRA_GENERIC_OUTPUT_WIRES[i0] = cpuif_req_masked & (cpuif_addr == 'ha8 + i0*'h4);
         end
         for(int i0=0; i0<12; i0++) begin
             decoded_reg_strb.fuse_uds_seed[i0] = cpuif_req_masked & (cpuif_addr == 'h200 + i0*'h4);
@@ -182,17 +183,16 @@ module soc_ifc_reg (
             decoded_reg_strb.fuse_owner_key_manifest_pk_hash[i0] = cpuif_req_masked & (cpuif_addr == 'h284 + i0*'h4);
         end
         decoded_reg_strb.fuse_owner_key_manifest_pk_hash_mask = cpuif_req_masked & (cpuif_addr == 'h2b4);
-        decoded_reg_strb.fuse_key_manifest_svn = cpuif_req_masked & (cpuif_addr == 'h2b8);
-        decoded_reg_strb.fuse_boot_loader_svn = cpuif_req_masked & (cpuif_addr == 'h2bc);
+        decoded_reg_strb.fuse_boot_loader_svn = cpuif_req_masked & (cpuif_addr == 'h2b8);
         for(int i0=0; i0<4; i0++) begin
-            decoded_reg_strb.fuse_runtime_svn[i0] = cpuif_req_masked & (cpuif_addr == 'h2c0 + i0*'h4);
+            decoded_reg_strb.fuse_runtime_svn[i0] = cpuif_req_masked & (cpuif_addr == 'h2bc + i0*'h4);
         end
-        decoded_reg_strb.fuse_anti_rollback_disable = cpuif_req_masked & (cpuif_addr == 'h2d0);
+        decoded_reg_strb.fuse_anti_rollback_disable = cpuif_req_masked & (cpuif_addr == 'h2cc);
         for(int i0=0; i0<24; i0++) begin
-            decoded_reg_strb.fuse_idevid_cert_attr[i0] = cpuif_req_masked & (cpuif_addr == 'h2d4 + i0*'h4);
+            decoded_reg_strb.fuse_idevid_cert_attr[i0] = cpuif_req_masked & (cpuif_addr == 'h2d0 + i0*'h4);
         end
         for(int i0=0; i0<4; i0++) begin
-            decoded_reg_strb.fuse_idevid_manuf_hsm_id[i0] = cpuif_req_masked & (cpuif_addr == 'h334 + i0*'h4);
+            decoded_reg_strb.fuse_idevid_manuf_hsm_id[i0] = cpuif_req_masked & (cpuif_addr == 'h330 + i0*'h4);
         end
         for(int i0=0; i0<8; i0++) begin
             decoded_reg_strb.internal_obf_key[i0] = cpuif_req_masked & (cpuif_addr == 'h600 + i0*'h4);
@@ -309,9 +309,13 @@ module soc_ifc_reg (
         } CPTRA_FLOW_STATUS;
         struct packed{
             struct packed{
-                logic [3:0] next;
+                logic next;
                 logic load_next;
-            } reason;
+            } FW_UPD_RESET;
+            struct packed{
+                logic next;
+                logic load_next;
+            } WARM_RESET;
         } CPTRA_RESET_REASON;
         struct packed{
             struct packed{
@@ -369,6 +373,12 @@ module soc_ifc_reg (
         } CPTRA_BOOTFSM_GO;
         struct packed{
             struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } DATA;
+        } CPTRA_DBG_MANUF_SERVICE_REG;
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } clk_gating_en;
@@ -421,12 +431,6 @@ module soc_ifc_reg (
                 logic load_next;
             } mask;
         } fuse_owner_key_manifest_pk_hash_mask;
-        struct packed{
-            struct packed{
-                logic [31:0] next;
-                logic load_next;
-            } svn;
-        } fuse_key_manifest_svn;
         struct packed{
             struct packed{
                 logic [31:0] next;
@@ -833,8 +837,11 @@ module soc_ifc_reg (
         } CPTRA_FLOW_STATUS;
         struct packed{
             struct packed{
-                logic [3:0] value;
-            } reason;
+                logic value;
+            } FW_UPD_RESET;
+            struct packed{
+                logic value;
+            } WARM_RESET;
         } CPTRA_RESET_REASON;
         struct packed{
             struct packed{
@@ -883,6 +890,11 @@ module soc_ifc_reg (
         } CPTRA_BOOTFSM_GO;
         struct packed{
             struct packed{
+                logic [31:0] value;
+            } DATA;
+        } CPTRA_DBG_MANUF_SERVICE_REG;
+        struct packed{
+            struct packed{
                 logic value;
             } clk_gating_en;
         } CPTRA_CLK_GATING_EN;
@@ -926,11 +938,6 @@ module soc_ifc_reg (
                 logic [3:0] value;
             } mask;
         } fuse_owner_key_manifest_pk_hash_mask;
-        struct packed{
-            struct packed{
-                logic [31:0] value;
-            } svn;
-        } fuse_key_manifest_svn;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -1405,24 +1412,44 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.CPTRA_FLOW_STATUS.mailbox_flow_done.value = field_storage.CPTRA_FLOW_STATUS.mailbox_flow_done.value;
-    // Field: soc_ifc_reg.CPTRA_RESET_REASON.reason
+    // Field: soc_ifc_reg.CPTRA_RESET_REASON.FW_UPD_RESET
     always_comb begin
-        automatic logic [3:0] next_c = field_storage.CPTRA_RESET_REASON.reason.value;
+        automatic logic [0:0] next_c = field_storage.CPTRA_RESET_REASON.FW_UPD_RESET.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.CPTRA_RESET_REASON && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
-            next_c = decoded_wr_data[3:0];
+        if(hwif_in.CPTRA_RESET_REASON.FW_UPD_RESET.we) begin // HW Write - we
+            next_c = hwif_in.CPTRA_RESET_REASON.FW_UPD_RESET.next;
             load_next_c = '1;
         end
-        field_combo.CPTRA_RESET_REASON.reason.next = next_c;
-        field_combo.CPTRA_RESET_REASON.reason.load_next = load_next_c;
+        field_combo.CPTRA_RESET_REASON.FW_UPD_RESET.next = next_c;
+        field_combo.CPTRA_RESET_REASON.FW_UPD_RESET.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.CPTRA_RESET_REASON.FW_UPD_RESET.value <= 'h0;
+        end else if(field_combo.CPTRA_RESET_REASON.FW_UPD_RESET.load_next) begin
+            field_storage.CPTRA_RESET_REASON.FW_UPD_RESET.value <= field_combo.CPTRA_RESET_REASON.FW_UPD_RESET.next;
+        end
+    end
+    assign hwif_out.CPTRA_RESET_REASON.FW_UPD_RESET.value = field_storage.CPTRA_RESET_REASON.FW_UPD_RESET.value;
+    // Field: soc_ifc_reg.CPTRA_RESET_REASON.WARM_RESET
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.CPTRA_RESET_REASON.WARM_RESET.value;
+        automatic logic load_next_c = '0;
+        if(1) begin // HW Write
+            next_c = hwif_in.CPTRA_RESET_REASON.WARM_RESET.next;
+            load_next_c = '1;
+        end
+        field_combo.CPTRA_RESET_REASON.WARM_RESET.next = next_c;
+        field_combo.CPTRA_RESET_REASON.WARM_RESET.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
         if(~hwif_in.hard_reset_b) begin
-            field_storage.CPTRA_RESET_REASON.reason.value <= 'h0;
-        end else if(field_combo.CPTRA_RESET_REASON.reason.load_next) begin
-            field_storage.CPTRA_RESET_REASON.reason.value <= field_combo.CPTRA_RESET_REASON.reason.next;
+            field_storage.CPTRA_RESET_REASON.WARM_RESET.value <= 'h0;
+        end else if(field_combo.CPTRA_RESET_REASON.WARM_RESET.load_next) begin
+            field_storage.CPTRA_RESET_REASON.WARM_RESET.value <= field_combo.CPTRA_RESET_REASON.WARM_RESET.next;
         end
     end
+    assign hwif_out.CPTRA_RESET_REASON.WARM_RESET.value = field_storage.CPTRA_RESET_REASON.WARM_RESET.value;
     for(genvar i0=0; i0<5; i0++) begin
         // Field: soc_ifc_reg.CPTRA_VALID_PAUSER[].PAUSER
         always_comb begin
@@ -1593,6 +1620,24 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.CPTRA_BOOTFSM_GO.GO.value = field_storage.CPTRA_BOOTFSM_GO.GO.value;
+    // Field: soc_ifc_reg.CPTRA_DBG_MANUF_SERVICE_REG.DATA
+    always_comb begin
+        automatic logic [31:0] next_c = field_storage.CPTRA_DBG_MANUF_SERVICE_REG.DATA.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.CPTRA_DBG_MANUF_SERVICE_REG && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[31:0];
+            load_next_c = '1;
+        end
+        field_combo.CPTRA_DBG_MANUF_SERVICE_REG.DATA.next = next_c;
+        field_combo.CPTRA_DBG_MANUF_SERVICE_REG.DATA.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.CPTRA_DBG_MANUF_SERVICE_REG.DATA.value <= 'h0;
+        end else if(field_combo.CPTRA_DBG_MANUF_SERVICE_REG.DATA.load_next) begin
+            field_storage.CPTRA_DBG_MANUF_SERVICE_REG.DATA.value <= field_combo.CPTRA_DBG_MANUF_SERVICE_REG.DATA.next;
+        end
+    end
     // Field: soc_ifc_reg.CPTRA_CLK_GATING_EN.clk_gating_en
     always_comb begin
         automatic logic [0:0] next_c = field_storage.CPTRA_CLK_GATING_EN.clk_gating_en.value;
@@ -1779,25 +1824,6 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.fuse_owner_key_manifest_pk_hash_mask.mask.value = field_storage.fuse_owner_key_manifest_pk_hash_mask.mask.value;
-    // Field: soc_ifc_reg.fuse_key_manifest_svn.svn
-    always_comb begin
-        automatic logic [31:0] next_c = field_storage.fuse_key_manifest_svn.svn.value;
-        automatic logic load_next_c = '0;
-        if(decoded_reg_strb.fuse_key_manifest_svn && decoded_req_is_wr && !(hwif_in.fuse_key_manifest_svn.svn.swwel)) begin // SW write
-            next_c = decoded_wr_data[31:0];
-            load_next_c = '1;
-        end
-        field_combo.fuse_key_manifest_svn.svn.next = next_c;
-        field_combo.fuse_key_manifest_svn.svn.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
-            field_storage.fuse_key_manifest_svn.svn.value <= 'h0;
-        end else if(field_combo.fuse_key_manifest_svn.svn.load_next) begin
-            field_storage.fuse_key_manifest_svn.svn.value <= field_combo.fuse_key_manifest_svn.svn.next;
-        end
-    end
-    assign hwif_out.fuse_key_manifest_svn.svn.value = field_storage.fuse_key_manifest_svn.svn.value;
     // Field: soc_ifc_reg.fuse_boot_loader_svn.svn
     always_comb begin
         automatic logic [31:0] next_c = field_storage.fuse_boot_loader_svn.svn.value;
@@ -3229,8 +3255,9 @@ module soc_ifc_reg (
     assign readback_array[7][29:29] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_FLOW_STATUS.ready_for_runtime.value : '0;
     assign readback_array[7][30:30] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_FLOW_STATUS.ready_for_fuses.value : '0;
     assign readback_array[7][31:31] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_FLOW_STATUS.mailbox_flow_done.value : '0;
-    assign readback_array[8][3:0] = (decoded_reg_strb.CPTRA_RESET_REASON && !decoded_req_is_wr) ? field_storage.CPTRA_RESET_REASON.reason.value : '0;
-    assign readback_array[8][31:4] = '0;
+    assign readback_array[8][0:0] = (decoded_reg_strb.CPTRA_RESET_REASON && !decoded_req_is_wr) ? field_storage.CPTRA_RESET_REASON.FW_UPD_RESET.value : '0;
+    assign readback_array[8][1:1] = (decoded_reg_strb.CPTRA_RESET_REASON && !decoded_req_is_wr) ? field_storage.CPTRA_RESET_REASON.WARM_RESET.value : '0;
+    assign readback_array[8][31:2] = '0;
     assign readback_array[9][1:0] = (decoded_reg_strb.CPTRA_SECURITY_STATE && !decoded_req_is_wr) ? hwif_in.CPTRA_SECURITY_STATE.device_lifecycle.next : '0;
     assign readback_array[9][2:2] = (decoded_reg_strb.CPTRA_SECURITY_STATE && !decoded_req_is_wr) ? hwif_in.CPTRA_SECURITY_STATE.debug_locked.next : '0;
     assign readback_array[9][31:3] = (decoded_reg_strb.CPTRA_SECURITY_STATE && !decoded_req_is_wr) ? 'h0 : '0;
@@ -3254,25 +3281,25 @@ module soc_ifc_reg (
     assign readback_array[36][31:0] = (decoded_reg_strb.CPTRA_TIMER_CONFIG && !decoded_req_is_wr) ? field_storage.CPTRA_TIMER_CONFIG.clk_period.value : '0;
     assign readback_array[37][0:0] = (decoded_reg_strb.CPTRA_BOOTFSM_GO && !decoded_req_is_wr) ? field_storage.CPTRA_BOOTFSM_GO.GO.value : '0;
     assign readback_array[37][31:1] = '0;
-    assign readback_array[38][0:0] = (decoded_reg_strb.CPTRA_CLK_GATING_EN && !decoded_req_is_wr) ? field_storage.CPTRA_CLK_GATING_EN.clk_gating_en.value : '0;
-    assign readback_array[38][31:1] = '0;
+    assign readback_array[38][31:0] = (decoded_reg_strb.CPTRA_DBG_MANUF_SERVICE_REG && !decoded_req_is_wr) ? field_storage.CPTRA_DBG_MANUF_SERVICE_REG.DATA.value : '0;
+    assign readback_array[39][0:0] = (decoded_reg_strb.CPTRA_CLK_GATING_EN && !decoded_req_is_wr) ? field_storage.CPTRA_CLK_GATING_EN.clk_gating_en.value : '0;
+    assign readback_array[39][31:1] = '0;
     for(genvar i0=0; i0<2; i0++) begin
-        assign readback_array[i0*1 + 39][31:0] = (decoded_reg_strb.CPTRA_GENERIC_INPUT_WIRES[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_GENERIC_INPUT_WIRES[i0].generic_wires.value : '0;
+        assign readback_array[i0*1 + 40][31:0] = (decoded_reg_strb.CPTRA_GENERIC_INPUT_WIRES[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_GENERIC_INPUT_WIRES[i0].generic_wires.value : '0;
     end
     for(genvar i0=0; i0<2; i0++) begin
-        assign readback_array[i0*1 + 41][31:0] = (decoded_reg_strb.CPTRA_GENERIC_OUTPUT_WIRES[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_GENERIC_OUTPUT_WIRES[i0].generic_wires.value : '0;
+        assign readback_array[i0*1 + 42][31:0] = (decoded_reg_strb.CPTRA_GENERIC_OUTPUT_WIRES[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_GENERIC_OUTPUT_WIRES[i0].generic_wires.value : '0;
     end
     for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 43][31:0] = (decoded_reg_strb.fuse_key_manifest_pk_hash[i0] && !decoded_req_is_wr) ? field_storage.fuse_key_manifest_pk_hash[i0].hash.value : '0;
+        assign readback_array[i0*1 + 44][31:0] = (decoded_reg_strb.fuse_key_manifest_pk_hash[i0] && !decoded_req_is_wr) ? field_storage.fuse_key_manifest_pk_hash[i0].hash.value : '0;
     end
-    assign readback_array[55][3:0] = (decoded_reg_strb.fuse_key_manifest_pk_hash_mask && !decoded_req_is_wr) ? field_storage.fuse_key_manifest_pk_hash_mask.mask.value : '0;
-    assign readback_array[55][31:4] = '0;
+    assign readback_array[56][3:0] = (decoded_reg_strb.fuse_key_manifest_pk_hash_mask && !decoded_req_is_wr) ? field_storage.fuse_key_manifest_pk_hash_mask.mask.value : '0;
+    assign readback_array[56][31:4] = '0;
     for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 56][31:0] = (decoded_reg_strb.fuse_owner_key_manifest_pk_hash[i0] && !decoded_req_is_wr) ? field_storage.fuse_owner_key_manifest_pk_hash[i0].hash.value : '0;
+        assign readback_array[i0*1 + 57][31:0] = (decoded_reg_strb.fuse_owner_key_manifest_pk_hash[i0] && !decoded_req_is_wr) ? field_storage.fuse_owner_key_manifest_pk_hash[i0].hash.value : '0;
     end
-    assign readback_array[68][3:0] = (decoded_reg_strb.fuse_owner_key_manifest_pk_hash_mask && !decoded_req_is_wr) ? field_storage.fuse_owner_key_manifest_pk_hash_mask.mask.value : '0;
-    assign readback_array[68][31:4] = '0;
-    assign readback_array[69][31:0] = (decoded_reg_strb.fuse_key_manifest_svn && !decoded_req_is_wr) ? field_storage.fuse_key_manifest_svn.svn.value : '0;
+    assign readback_array[69][3:0] = (decoded_reg_strb.fuse_owner_key_manifest_pk_hash_mask && !decoded_req_is_wr) ? field_storage.fuse_owner_key_manifest_pk_hash_mask.mask.value : '0;
+    assign readback_array[69][31:4] = '0;
     assign readback_array[70][31:0] = (decoded_reg_strb.fuse_boot_loader_svn && !decoded_req_is_wr) ? field_storage.fuse_boot_loader_svn.svn.value : '0;
     for(genvar i0=0; i0<4; i0++) begin
         assign readback_array[i0*1 + 71][31:0] = (decoded_reg_strb.fuse_runtime_svn[i0] && !decoded_req_is_wr) ? field_storage.fuse_runtime_svn[i0].svn.value : '0;

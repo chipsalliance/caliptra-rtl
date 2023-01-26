@@ -11,6 +11,20 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__CPTRA_FLOW_STATUS__in_t;
 
     typedef struct packed{
+        logic next;
+        logic we;
+    } soc_ifc_reg__CPTRA_RESET_REASON__FW_UPD_RESET__in_t;
+
+    typedef struct packed{
+        logic next;
+    } soc_ifc_reg__CPTRA_RESET_REASON__WARM_RESET__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_RESET_REASON__FW_UPD_RESET__in_t FW_UPD_RESET;
+        soc_ifc_reg__CPTRA_RESET_REASON__WARM_RESET__in_t WARM_RESET;
+    } soc_ifc_reg__CPTRA_RESET_REASON__in_t;
+
+    typedef struct packed{
         logic [1:0] next;
     } soc_ifc_reg__CPTRA_SECURITY_STATE__device_lifecycle__in_t;
 
@@ -125,14 +139,6 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic swwel;
-    } soc_ifc_reg__fuse_key_manifest_svn__svn__in_t;
-
-    typedef struct packed{
-        soc_ifc_reg__fuse_key_manifest_svn__svn__in_t svn;
-    } soc_ifc_reg__fuse_key_manifest_svn__in_t;
-
-    typedef struct packed{
-        logic swwel;
     } soc_ifc_reg__fuse_boot_loader_svn__svn__in_t;
 
     typedef struct packed{
@@ -235,6 +241,7 @@ package soc_ifc_reg_pkg;
         logic hard_reset_b;
         logic soc_req;
         soc_ifc_reg__CPTRA_FLOW_STATUS__in_t CPTRA_FLOW_STATUS;
+        soc_ifc_reg__CPTRA_RESET_REASON__in_t CPTRA_RESET_REASON;
         soc_ifc_reg__CPTRA_SECURITY_STATE__in_t CPTRA_SECURITY_STATE;
         soc_ifc_reg__CPTRA_VALID_PAUSER__in_t [5-1:0]CPTRA_VALID_PAUSER;
         soc_ifc_reg__CPTRA_PAUSER_LOCK__in_t [5-1:0]CPTRA_PAUSER_LOCK;
@@ -249,7 +256,6 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__fuse_key_manifest_pk_hash_mask__in_t fuse_key_manifest_pk_hash_mask;
         soc_ifc_reg__fuse_owner_key_manifest_pk_hash__in_t [12-1:0]fuse_owner_key_manifest_pk_hash;
         soc_ifc_reg__fuse_owner_key_manifest_pk_hash_mask__in_t fuse_owner_key_manifest_pk_hash_mask;
-        soc_ifc_reg__fuse_key_manifest_svn__in_t fuse_key_manifest_svn;
         soc_ifc_reg__fuse_boot_loader_svn__in_t fuse_boot_loader_svn;
         soc_ifc_reg__fuse_runtime_svn__in_t [4-1:0]fuse_runtime_svn;
         soc_ifc_reg__fuse_anti_rollback_disable__in_t fuse_anti_rollback_disable;
@@ -280,6 +286,19 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_fuses__out_t ready_for_fuses;
         soc_ifc_reg__CPTRA_FLOW_STATUS__mailbox_flow_done__out_t mailbox_flow_done;
     } soc_ifc_reg__CPTRA_FLOW_STATUS__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__CPTRA_RESET_REASON__FW_UPD_RESET__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__CPTRA_RESET_REASON__WARM_RESET__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_RESET_REASON__FW_UPD_RESET__out_t FW_UPD_RESET;
+        soc_ifc_reg__CPTRA_RESET_REASON__WARM_RESET__out_t WARM_RESET;
+    } soc_ifc_reg__CPTRA_RESET_REASON__out_t;
 
     typedef struct packed{
         logic [31:0] value;
@@ -383,14 +402,6 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic [31:0] value;
-    } soc_ifc_reg__fuse_key_manifest_svn__svn__out_t;
-
-    typedef struct packed{
-        soc_ifc_reg__fuse_key_manifest_svn__svn__out_t svn;
-    } soc_ifc_reg__fuse_key_manifest_svn__out_t;
-
-    typedef struct packed{
-        logic [31:0] value;
     } soc_ifc_reg__fuse_boot_loader_svn__svn__out_t;
 
     typedef struct packed{
@@ -478,6 +489,7 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         soc_ifc_reg__CPTRA_FLOW_STATUS__out_t CPTRA_FLOW_STATUS;
+        soc_ifc_reg__CPTRA_RESET_REASON__out_t CPTRA_RESET_REASON;
         soc_ifc_reg__CPTRA_VALID_PAUSER__out_t [5-1:0]CPTRA_VALID_PAUSER;
         soc_ifc_reg__CPTRA_PAUSER_LOCK__out_t [5-1:0]CPTRA_PAUSER_LOCK;
         soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER__out_t CPTRA_TRNG_VALID_PAUSER;
@@ -491,7 +503,6 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__fuse_key_manifest_pk_hash_mask__out_t fuse_key_manifest_pk_hash_mask;
         soc_ifc_reg__fuse_owner_key_manifest_pk_hash__out_t [12-1:0]fuse_owner_key_manifest_pk_hash;
         soc_ifc_reg__fuse_owner_key_manifest_pk_hash_mask__out_t fuse_owner_key_manifest_pk_hash_mask;
-        soc_ifc_reg__fuse_key_manifest_svn__out_t fuse_key_manifest_svn;
         soc_ifc_reg__fuse_boot_loader_svn__out_t fuse_boot_loader_svn;
         soc_ifc_reg__fuse_runtime_svn__out_t [4-1:0]fuse_runtime_svn;
         soc_ifc_reg__fuse_anti_rollback_disable__out_t fuse_anti_rollback_disable;

@@ -14,6 +14,7 @@
 
 module soc_ifc_boot_fsm 
     import soc_ifc_pkg::*;
+    import soc_ifc_reg_pkg::*;
     (
     input logic clk,
     input logic cptra_pwrgood,
@@ -31,7 +32,8 @@ module soc_ifc_boot_fsm
 
     output logic cptra_noncore_rst_b, //Global rst that goes to all other blocks
     output logic cptra_uc_rst_b, //Global + fw update rst that goes to SWeRV core only,
-    output logic iccm_unlock
+    output logic iccm_unlock,
+    output logic fw_upd_rst_executed
 );
 
 `include "caliptra_sva.svh"
@@ -88,6 +90,7 @@ always_comb begin
     ready_for_fuses = '0;
     propagate_reset_en = '0;
     propagate_uc_reset_en = '0;
+    fw_upd_rst_executed = 0;
 
     unique casez (boot_fsm_ps)
         BOOT_IDLE: begin
@@ -149,6 +152,11 @@ always_comb begin
             end
             else if (arc_BOOT_DONE_BOOT_FWRST) begin
                 boot_fsm_ns = BOOT_FW_RST;
+                // Even a single FW_UPD_RESET flow will assert this bit and it will never be deasserted.
+                // This is fine because if there is WARM or COLD RESET, this register bit gets reset.
+                // Implying the only time this bit can be observed as '1 is because the reset is happening due to a FW UPD RESET
+                // If that assumption changes, by adding a new reset state, then this bit needs to change
+                fw_upd_rst_executed = 1;
             end
 
             //propagate reset de-assertion from synchronizer when boot fsm is in BOOT_DONE state
