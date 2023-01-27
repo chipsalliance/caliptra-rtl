@@ -389,6 +389,7 @@ end
 
 logic pwrgood_toggle_hint;
 logic Warm_Reset_Capture_Flag;
+logic fuse_write_done_sticky;
 
 // pwrgood_hint informs if the powergood toggled
 always_ff @(posedge clk or negedge cptra_pwrgood) begin
@@ -456,25 +457,52 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_PAUSER_LOCK.LOCK.swwel = soc_ifc_reg_
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Can't write to RW-able fuses once fuse_done is set (implies the register is being locked using the fuse_wr_done)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//always_ff @(posedge clk or negedge cptra_pwrgood) begin
+//    if(~cptra_pwrgood) begin
+//        fuse_write_done_sticky <= 0;
+//    end
+//    else begin
+//        if(!fuse_write_done_sticky) begin
+//            fuse_write_done_sticky <= soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+//        end
+//    end
+//end
+
+// Make the relevant fuses sticky on fuse_wr_done
 always_comb begin
     for (int i=0; i<12; i++) begin
-        soc_ifc_reg_hwif_in.fuse_owner_key_manifest_pk_hash[i].hash.swwel  = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+        soc_ifc_reg_hwif_in.fuse_key_manifest_pk_hash[i].hash.swwel        = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+        soc_ifc_reg_hwif_in.fuse_owner_pk_hash[i].hash.swwel               = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.swwel                    = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
     end
-end
 
-always_comb begin
+    for (int i=0; i<8; i++) begin
+        soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.swwel               = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+    end
+
+    for (int i=0; i<24; i++) begin
+      soc_ifc_reg_hwif_in.fuse_idevid_cert_attr[i].cert.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+    end
+
+    for (int i=0; i<4; i++) begin
+      soc_ifc_reg_hwif_in.fuse_idevid_manuf_hsm_id[i].hsm_id.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+    end
+
+    // Run-time SVN can be unlocked whenever fuse_wr_done is 'reset' which happens on a warm reset
     for (int i=0; i<4; i++) begin
         soc_ifc_reg_hwif_in.fuse_runtime_svn[i].svn.swwel                       = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
     end
+     
 end
 
-always_comb soc_ifc_reg_hwif_in.fuse_key_manifest_pk_hash_mask.mask.swwel       = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
-always_comb soc_ifc_reg_hwif_in.fuse_owner_key_manifest_pk_hash_mask.mask.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
-always_comb soc_ifc_reg_hwif_in.fuse_boot_loader_svn.svn.swwel                  = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
-always_comb soc_ifc_reg_hwif_in.fuse_anti_rollback_disable.dis.swwel            = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.fuse_key_manifest_pk_hash_mask.mask.swwel  = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.fuse_key_manifest_svn.svn.swwel            = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.fuse_anti_rollback_disable.dis.swwel       = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.fuse_life_cycle.life_cycle.swwel           = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 
-// Fuse write done can be written by SOC if it is already NOT '1. uController can update this bit anytime it wants
-always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_WR_DONE.done.swwe = ~soc_ifc_reg_req_data.soc_req | ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+// Fuse write done can be written by SOC if it is already NOT '1. uController can only read this bit. The bit gets reset on warm reset
+//always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_WR_DONE.done.swwe = (soc_ifc_reg_req_data.soc_req & ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value);
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //only allow valid users to write to TRNG

@@ -88,13 +88,13 @@ module soc_ifc_reg (
         logic [8-1:0]fuse_field_entropy;
         logic [12-1:0]fuse_key_manifest_pk_hash;
         logic fuse_key_manifest_pk_hash_mask;
-        logic [12-1:0]fuse_owner_key_manifest_pk_hash;
-        logic fuse_owner_key_manifest_pk_hash_mask;
-        logic fuse_boot_loader_svn;
+        logic [12-1:0]fuse_owner_pk_hash;
+        logic fuse_key_manifest_svn;
         logic [4-1:0]fuse_runtime_svn;
         logic fuse_anti_rollback_disable;
         logic [24-1:0]fuse_idevid_cert_attr;
         logic [4-1:0]fuse_idevid_manuf_hsm_id;
+        logic fuse_life_cycle;
         logic [8-1:0]internal_obf_key;
         logic internal_iccm_lock;
         logic internal_fw_update_reset;
@@ -180,20 +180,20 @@ module soc_ifc_reg (
         end
         decoded_reg_strb.fuse_key_manifest_pk_hash_mask = cpuif_req_masked & (cpuif_addr == 'h280);
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.fuse_owner_key_manifest_pk_hash[i0] = cpuif_req_masked & (cpuif_addr == 'h284 + i0*'h4);
+            decoded_reg_strb.fuse_owner_pk_hash[i0] = cpuif_req_masked & (cpuif_addr == 'h284 + i0*'h4);
         end
-        decoded_reg_strb.fuse_owner_key_manifest_pk_hash_mask = cpuif_req_masked & (cpuif_addr == 'h2b4);
-        decoded_reg_strb.fuse_boot_loader_svn = cpuif_req_masked & (cpuif_addr == 'h2b8);
+        decoded_reg_strb.fuse_key_manifest_svn = cpuif_req_masked & (cpuif_addr == 'h2b4);
         for(int i0=0; i0<4; i0++) begin
-            decoded_reg_strb.fuse_runtime_svn[i0] = cpuif_req_masked & (cpuif_addr == 'h2bc + i0*'h4);
+            decoded_reg_strb.fuse_runtime_svn[i0] = cpuif_req_masked & (cpuif_addr == 'h2b8 + i0*'h4);
         end
-        decoded_reg_strb.fuse_anti_rollback_disable = cpuif_req_masked & (cpuif_addr == 'h2cc);
+        decoded_reg_strb.fuse_anti_rollback_disable = cpuif_req_masked & (cpuif_addr == 'h2c8);
         for(int i0=0; i0<24; i0++) begin
-            decoded_reg_strb.fuse_idevid_cert_attr[i0] = cpuif_req_masked & (cpuif_addr == 'h2d0 + i0*'h4);
+            decoded_reg_strb.fuse_idevid_cert_attr[i0] = cpuif_req_masked & (cpuif_addr == 'h2cc + i0*'h4);
         end
         for(int i0=0; i0<4; i0++) begin
-            decoded_reg_strb.fuse_idevid_manuf_hsm_id[i0] = cpuif_req_masked & (cpuif_addr == 'h330 + i0*'h4);
+            decoded_reg_strb.fuse_idevid_manuf_hsm_id[i0] = cpuif_req_masked & (cpuif_addr == 'h32c + i0*'h4);
         end
+        decoded_reg_strb.fuse_life_cycle = cpuif_req_masked & (cpuif_addr == 'h33c);
         for(int i0=0; i0<8; i0++) begin
             decoded_reg_strb.internal_obf_key[i0] = cpuif_req_masked & (cpuif_addr == 'h600 + i0*'h4);
         end
@@ -424,19 +424,13 @@ module soc_ifc_reg (
                 logic [31:0] next;
                 logic load_next;
             } hash;
-        } [12-1:0]fuse_owner_key_manifest_pk_hash;
-        struct packed{
-            struct packed{
-                logic [3:0] next;
-                logic load_next;
-            } mask;
-        } fuse_owner_key_manifest_pk_hash_mask;
+        } [12-1:0]fuse_owner_pk_hash;
         struct packed{
             struct packed{
                 logic [31:0] next;
                 logic load_next;
             } svn;
-        } fuse_boot_loader_svn;
+        } fuse_key_manifest_svn;
         struct packed{
             struct packed{
                 logic [31:0] next;
@@ -459,8 +453,14 @@ module soc_ifc_reg (
             struct packed{
                 logic [31:0] next;
                 logic load_next;
-            } cert;
+            } hsm_id;
         } [4-1:0]fuse_idevid_manuf_hsm_id;
+        struct packed{
+            struct packed{
+                logic [1:0] next;
+                logic load_next;
+            } life_cycle;
+        } fuse_life_cycle;
         struct packed{
             struct packed{
                 logic [31:0] next;
@@ -932,17 +932,12 @@ module soc_ifc_reg (
             struct packed{
                 logic [31:0] value;
             } hash;
-        } [12-1:0]fuse_owner_key_manifest_pk_hash;
-        struct packed{
-            struct packed{
-                logic [3:0] value;
-            } mask;
-        } fuse_owner_key_manifest_pk_hash_mask;
+        } [12-1:0]fuse_owner_pk_hash;
         struct packed{
             struct packed{
                 logic [31:0] value;
             } svn;
-        } fuse_boot_loader_svn;
+        } fuse_key_manifest_svn;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -961,8 +956,13 @@ module soc_ifc_reg (
         struct packed{
             struct packed{
                 logic [31:0] value;
-            } cert;
+            } hsm_id;
         } [4-1:0]fuse_idevid_manuf_hsm_id;
+        struct packed{
+            struct packed{
+                logic [1:0] value;
+            } life_cycle;
+        } fuse_life_cycle;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -1568,15 +1568,15 @@ module soc_ifc_reg (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.CPTRA_FUSE_WR_DONE.done.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.CPTRA_FUSE_WR_DONE && decoded_req_is_wr && hwif_in.CPTRA_FUSE_WR_DONE.done.swwe) begin // SW write
+        if(decoded_reg_strb.CPTRA_FUSE_WR_DONE && decoded_req_is_wr && hwif_in.soc_req) begin // SW write
             next_c = decoded_wr_data[0:0];
             load_next_c = '1;
         end
         field_combo.CPTRA_FUSE_WR_DONE.done.next = next_c;
         field_combo.CPTRA_FUSE_WR_DONE.done.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
+    always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+        if(~hwif_in.hard_reset_b) begin
             field_storage.CPTRA_FUSE_WR_DONE.done.value <= 'h0;
         end else if(field_combo.CPTRA_FUSE_WR_DONE.done.load_next) begin
             field_storage.CPTRA_FUSE_WR_DONE.done.value <= field_combo.CPTRA_FUSE_WR_DONE.done.next;
@@ -1605,7 +1605,7 @@ module soc_ifc_reg (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.CPTRA_BOOTFSM_GO.GO.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.CPTRA_BOOTFSM_GO && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.CPTRA_BOOTFSM_GO && decoded_req_is_wr && hwif_in.soc_req) begin // SW write
             next_c = decoded_wr_data[0:0];
             load_next_c = '1;
         end
@@ -1702,7 +1702,7 @@ module soc_ifc_reg (
         always_comb begin
             automatic logic [31:0] next_c = field_storage.fuse_uds_seed[i0].seed.value;
             automatic logic load_next_c = '0;
-            if(decoded_reg_strb.fuse_uds_seed[i0] && decoded_req_is_wr) begin // SW write
+            if(decoded_reg_strb.fuse_uds_seed[i0] && decoded_req_is_wr && !(hwif_in.fuse_uds_seed[i0].seed.swwel)) begin // SW write
                 next_c = decoded_wr_data[31:0];
                 load_next_c = '1;
             end else if(hwif_in.fuse_uds_seed[i0].seed.hwclr) begin // HW Clear
@@ -1726,7 +1726,7 @@ module soc_ifc_reg (
         always_comb begin
             automatic logic [31:0] next_c = field_storage.fuse_field_entropy[i0].seed.value;
             automatic logic load_next_c = '0;
-            if(decoded_reg_strb.fuse_field_entropy[i0] && decoded_req_is_wr) begin // SW write
+            if(decoded_reg_strb.fuse_field_entropy[i0] && decoded_req_is_wr && !(hwif_in.fuse_field_entropy[i0].seed.swwel)) begin // SW write
                 next_c = decoded_wr_data[31:0];
                 load_next_c = '1;
             end else if(hwif_in.fuse_field_entropy[i0].seed.hwclr) begin // HW Clear
@@ -1750,7 +1750,7 @@ module soc_ifc_reg (
         always_comb begin
             automatic logic [31:0] next_c = field_storage.fuse_key_manifest_pk_hash[i0].hash.value;
             automatic logic load_next_c = '0;
-            if(decoded_reg_strb.fuse_key_manifest_pk_hash[i0] && decoded_req_is_wr) begin // SW write
+            if(decoded_reg_strb.fuse_key_manifest_pk_hash[i0] && decoded_req_is_wr && !(hwif_in.fuse_key_manifest_pk_hash[i0].hash.swwel)) begin // SW write
                 next_c = decoded_wr_data[31:0];
                 load_next_c = '1;
             end
@@ -1764,6 +1764,7 @@ module soc_ifc_reg (
                 field_storage.fuse_key_manifest_pk_hash[i0].hash.value <= field_combo.fuse_key_manifest_pk_hash[i0].hash.next;
             end
         end
+        assign hwif_out.fuse_key_manifest_pk_hash[i0].hash.value = field_storage.fuse_key_manifest_pk_hash[i0].hash.value;
     end
     // Field: soc_ifc_reg.fuse_key_manifest_pk_hash_mask.mask
     always_comb begin
@@ -1776,8 +1777,8 @@ module soc_ifc_reg (
         field_combo.fuse_key_manifest_pk_hash_mask.mask.next = next_c;
         field_combo.fuse_key_manifest_pk_hash_mask.mask.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
+    always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+        if(~hwif_in.hard_reset_b) begin
             field_storage.fuse_key_manifest_pk_hash_mask.mask.value <= 'h0;
         end else if(field_combo.fuse_key_manifest_pk_hash_mask.mask.load_next) begin
             field_storage.fuse_key_manifest_pk_hash_mask.mask.value <= field_combo.fuse_key_manifest_pk_hash_mask.mask.next;
@@ -1785,64 +1786,45 @@ module soc_ifc_reg (
     end
     assign hwif_out.fuse_key_manifest_pk_hash_mask.mask.value = field_storage.fuse_key_manifest_pk_hash_mask.mask.value;
     for(genvar i0=0; i0<12; i0++) begin
-        // Field: soc_ifc_reg.fuse_owner_key_manifest_pk_hash[].hash
+        // Field: soc_ifc_reg.fuse_owner_pk_hash[].hash
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.fuse_owner_key_manifest_pk_hash[i0].hash.value;
+            automatic logic [31:0] next_c = field_storage.fuse_owner_pk_hash[i0].hash.value;
             automatic logic load_next_c = '0;
-            if(decoded_reg_strb.fuse_owner_key_manifest_pk_hash[i0] && decoded_req_is_wr && !(hwif_in.fuse_owner_key_manifest_pk_hash[i0].hash.swwel)) begin // SW write
+            if(decoded_reg_strb.fuse_owner_pk_hash[i0] && decoded_req_is_wr && !(hwif_in.fuse_owner_pk_hash[i0].hash.swwel)) begin // SW write
                 next_c = decoded_wr_data[31:0];
                 load_next_c = '1;
             end
-            field_combo.fuse_owner_key_manifest_pk_hash[i0].hash.next = next_c;
-            field_combo.fuse_owner_key_manifest_pk_hash[i0].hash.load_next = load_next_c;
+            field_combo.fuse_owner_pk_hash[i0].hash.next = next_c;
+            field_combo.fuse_owner_pk_hash[i0].hash.load_next = load_next_c;
         end
-        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-            if(~hwif_in.reset_b) begin
-                field_storage.fuse_owner_key_manifest_pk_hash[i0].hash.value <= 'h0;
-            end else if(field_combo.fuse_owner_key_manifest_pk_hash[i0].hash.load_next) begin
-                field_storage.fuse_owner_key_manifest_pk_hash[i0].hash.value <= field_combo.fuse_owner_key_manifest_pk_hash[i0].hash.next;
+        always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+            if(~hwif_in.hard_reset_b) begin
+                field_storage.fuse_owner_pk_hash[i0].hash.value <= 'h0;
+            end else if(field_combo.fuse_owner_pk_hash[i0].hash.load_next) begin
+                field_storage.fuse_owner_pk_hash[i0].hash.value <= field_combo.fuse_owner_pk_hash[i0].hash.next;
             end
         end
-        assign hwif_out.fuse_owner_key_manifest_pk_hash[i0].hash.value = field_storage.fuse_owner_key_manifest_pk_hash[i0].hash.value;
+        assign hwif_out.fuse_owner_pk_hash[i0].hash.value = field_storage.fuse_owner_pk_hash[i0].hash.value;
     end
-    // Field: soc_ifc_reg.fuse_owner_key_manifest_pk_hash_mask.mask
+    // Field: soc_ifc_reg.fuse_key_manifest_svn.svn
     always_comb begin
-        automatic logic [3:0] next_c = field_storage.fuse_owner_key_manifest_pk_hash_mask.mask.value;
+        automatic logic [31:0] next_c = field_storage.fuse_key_manifest_svn.svn.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.fuse_owner_key_manifest_pk_hash_mask && decoded_req_is_wr && !(hwif_in.fuse_owner_key_manifest_pk_hash_mask.mask.swwel)) begin // SW write
-            next_c = decoded_wr_data[3:0];
-            load_next_c = '1;
-        end
-        field_combo.fuse_owner_key_manifest_pk_hash_mask.mask.next = next_c;
-        field_combo.fuse_owner_key_manifest_pk_hash_mask.mask.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
-            field_storage.fuse_owner_key_manifest_pk_hash_mask.mask.value <= 'h0;
-        end else if(field_combo.fuse_owner_key_manifest_pk_hash_mask.mask.load_next) begin
-            field_storage.fuse_owner_key_manifest_pk_hash_mask.mask.value <= field_combo.fuse_owner_key_manifest_pk_hash_mask.mask.next;
-        end
-    end
-    assign hwif_out.fuse_owner_key_manifest_pk_hash_mask.mask.value = field_storage.fuse_owner_key_manifest_pk_hash_mask.mask.value;
-    // Field: soc_ifc_reg.fuse_boot_loader_svn.svn
-    always_comb begin
-        automatic logic [31:0] next_c = field_storage.fuse_boot_loader_svn.svn.value;
-        automatic logic load_next_c = '0;
-        if(decoded_reg_strb.fuse_boot_loader_svn && decoded_req_is_wr && !(hwif_in.fuse_boot_loader_svn.svn.swwel)) begin // SW write
+        if(decoded_reg_strb.fuse_key_manifest_svn && decoded_req_is_wr && !(hwif_in.fuse_key_manifest_svn.svn.swwel)) begin // SW write
             next_c = decoded_wr_data[31:0];
             load_next_c = '1;
         end
-        field_combo.fuse_boot_loader_svn.svn.next = next_c;
-        field_combo.fuse_boot_loader_svn.svn.load_next = load_next_c;
+        field_combo.fuse_key_manifest_svn.svn.next = next_c;
+        field_combo.fuse_key_manifest_svn.svn.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
-            field_storage.fuse_boot_loader_svn.svn.value <= 'h0;
-        end else if(field_combo.fuse_boot_loader_svn.svn.load_next) begin
-            field_storage.fuse_boot_loader_svn.svn.value <= field_combo.fuse_boot_loader_svn.svn.next;
+    always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+        if(~hwif_in.hard_reset_b) begin
+            field_storage.fuse_key_manifest_svn.svn.value <= 'h0;
+        end else if(field_combo.fuse_key_manifest_svn.svn.load_next) begin
+            field_storage.fuse_key_manifest_svn.svn.value <= field_combo.fuse_key_manifest_svn.svn.next;
         end
     end
-    assign hwif_out.fuse_boot_loader_svn.svn.value = field_storage.fuse_boot_loader_svn.svn.value;
+    assign hwif_out.fuse_key_manifest_svn.svn.value = field_storage.fuse_key_manifest_svn.svn.value;
     for(genvar i0=0; i0<4; i0++) begin
         // Field: soc_ifc_reg.fuse_runtime_svn[].svn
         always_comb begin
@@ -1855,8 +1837,8 @@ module soc_ifc_reg (
             field_combo.fuse_runtime_svn[i0].svn.next = next_c;
             field_combo.fuse_runtime_svn[i0].svn.load_next = load_next_c;
         end
-        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-            if(~hwif_in.reset_b) begin
+        always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+            if(~hwif_in.hard_reset_b) begin
                 field_storage.fuse_runtime_svn[i0].svn.value <= 'h0;
             end else if(field_combo.fuse_runtime_svn[i0].svn.load_next) begin
                 field_storage.fuse_runtime_svn[i0].svn.value <= field_combo.fuse_runtime_svn[i0].svn.next;
@@ -1875,8 +1857,8 @@ module soc_ifc_reg (
         field_combo.fuse_anti_rollback_disable.dis.next = next_c;
         field_combo.fuse_anti_rollback_disable.dis.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
+    always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+        if(~hwif_in.hard_reset_b) begin
             field_storage.fuse_anti_rollback_disable.dis.value <= 'h0;
         end else if(field_combo.fuse_anti_rollback_disable.dis.load_next) begin
             field_storage.fuse_anti_rollback_disable.dis.value <= field_combo.fuse_anti_rollback_disable.dis.next;
@@ -1888,7 +1870,7 @@ module soc_ifc_reg (
         always_comb begin
             automatic logic [31:0] next_c = field_storage.fuse_idevid_cert_attr[i0].cert.value;
             automatic logic load_next_c = '0;
-            if(decoded_reg_strb.fuse_idevid_cert_attr[i0] && decoded_req_is_wr) begin // SW write
+            if(decoded_reg_strb.fuse_idevid_cert_attr[i0] && decoded_req_is_wr && !(hwif_in.fuse_idevid_cert_attr[i0].cert.swwel)) begin // SW write
                 next_c = decoded_wr_data[31:0];
                 load_next_c = '1;
             end
@@ -1902,27 +1884,48 @@ module soc_ifc_reg (
                 field_storage.fuse_idevid_cert_attr[i0].cert.value <= field_combo.fuse_idevid_cert_attr[i0].cert.next;
             end
         end
+        assign hwif_out.fuse_idevid_cert_attr[i0].cert.value = field_storage.fuse_idevid_cert_attr[i0].cert.value;
     end
     for(genvar i0=0; i0<4; i0++) begin
-        // Field: soc_ifc_reg.fuse_idevid_manuf_hsm_id[].cert
+        // Field: soc_ifc_reg.fuse_idevid_manuf_hsm_id[].hsm_id
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.fuse_idevid_manuf_hsm_id[i0].cert.value;
+            automatic logic [31:0] next_c = field_storage.fuse_idevid_manuf_hsm_id[i0].hsm_id.value;
             automatic logic load_next_c = '0;
-            if(decoded_reg_strb.fuse_idevid_manuf_hsm_id[i0] && decoded_req_is_wr) begin // SW write
+            if(decoded_reg_strb.fuse_idevid_manuf_hsm_id[i0] && decoded_req_is_wr && !(hwif_in.fuse_idevid_manuf_hsm_id[i0].hsm_id.swwel)) begin // SW write
                 next_c = decoded_wr_data[31:0];
                 load_next_c = '1;
             end
-            field_combo.fuse_idevid_manuf_hsm_id[i0].cert.next = next_c;
-            field_combo.fuse_idevid_manuf_hsm_id[i0].cert.load_next = load_next_c;
+            field_combo.fuse_idevid_manuf_hsm_id[i0].hsm_id.next = next_c;
+            field_combo.fuse_idevid_manuf_hsm_id[i0].hsm_id.load_next = load_next_c;
         end
         always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
             if(~hwif_in.hard_reset_b) begin
-                field_storage.fuse_idevid_manuf_hsm_id[i0].cert.value <= 'h0;
-            end else if(field_combo.fuse_idevid_manuf_hsm_id[i0].cert.load_next) begin
-                field_storage.fuse_idevid_manuf_hsm_id[i0].cert.value <= field_combo.fuse_idevid_manuf_hsm_id[i0].cert.next;
+                field_storage.fuse_idevid_manuf_hsm_id[i0].hsm_id.value <= 'h0;
+            end else if(field_combo.fuse_idevid_manuf_hsm_id[i0].hsm_id.load_next) begin
+                field_storage.fuse_idevid_manuf_hsm_id[i0].hsm_id.value <= field_combo.fuse_idevid_manuf_hsm_id[i0].hsm_id.next;
             end
         end
+        assign hwif_out.fuse_idevid_manuf_hsm_id[i0].hsm_id.value = field_storage.fuse_idevid_manuf_hsm_id[i0].hsm_id.value;
     end
+    // Field: soc_ifc_reg.fuse_life_cycle.life_cycle
+    always_comb begin
+        automatic logic [1:0] next_c = field_storage.fuse_life_cycle.life_cycle.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.fuse_life_cycle && decoded_req_is_wr && !(hwif_in.fuse_life_cycle.life_cycle.swwel)) begin // SW write
+            next_c = decoded_wr_data[1:0];
+            load_next_c = '1;
+        end
+        field_combo.fuse_life_cycle.life_cycle.next = next_c;
+        field_combo.fuse_life_cycle.life_cycle.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
+        if(~hwif_in.hard_reset_b) begin
+            field_storage.fuse_life_cycle.life_cycle.value <= 'h0;
+        end else if(field_combo.fuse_life_cycle.life_cycle.load_next) begin
+            field_storage.fuse_life_cycle.life_cycle.value <= field_combo.fuse_life_cycle.life_cycle.next;
+        end
+    end
+    assign hwif_out.fuse_life_cycle.life_cycle.value = field_storage.fuse_life_cycle.life_cycle.value;
     for(genvar i0=0; i0<8; i0++) begin
         // Field: soc_ifc_reg.internal_obf_key[].key
         always_comb begin
@@ -3296,22 +3299,22 @@ module soc_ifc_reg (
     assign readback_array[56][3:0] = (decoded_reg_strb.fuse_key_manifest_pk_hash_mask && !decoded_req_is_wr) ? field_storage.fuse_key_manifest_pk_hash_mask.mask.value : '0;
     assign readback_array[56][31:4] = '0;
     for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 57][31:0] = (decoded_reg_strb.fuse_owner_key_manifest_pk_hash[i0] && !decoded_req_is_wr) ? field_storage.fuse_owner_key_manifest_pk_hash[i0].hash.value : '0;
+        assign readback_array[i0*1 + 57][31:0] = (decoded_reg_strb.fuse_owner_pk_hash[i0] && !decoded_req_is_wr) ? field_storage.fuse_owner_pk_hash[i0].hash.value : '0;
     end
-    assign readback_array[69][3:0] = (decoded_reg_strb.fuse_owner_key_manifest_pk_hash_mask && !decoded_req_is_wr) ? field_storage.fuse_owner_key_manifest_pk_hash_mask.mask.value : '0;
-    assign readback_array[69][31:4] = '0;
-    assign readback_array[70][31:0] = (decoded_reg_strb.fuse_boot_loader_svn && !decoded_req_is_wr) ? field_storage.fuse_boot_loader_svn.svn.value : '0;
+    assign readback_array[69][31:0] = (decoded_reg_strb.fuse_key_manifest_svn && !decoded_req_is_wr) ? field_storage.fuse_key_manifest_svn.svn.value : '0;
     for(genvar i0=0; i0<4; i0++) begin
-        assign readback_array[i0*1 + 71][31:0] = (decoded_reg_strb.fuse_runtime_svn[i0] && !decoded_req_is_wr) ? field_storage.fuse_runtime_svn[i0].svn.value : '0;
+        assign readback_array[i0*1 + 70][31:0] = (decoded_reg_strb.fuse_runtime_svn[i0] && !decoded_req_is_wr) ? field_storage.fuse_runtime_svn[i0].svn.value : '0;
     end
-    assign readback_array[75][0:0] = (decoded_reg_strb.fuse_anti_rollback_disable && !decoded_req_is_wr) ? field_storage.fuse_anti_rollback_disable.dis.value : '0;
-    assign readback_array[75][31:1] = '0;
+    assign readback_array[74][0:0] = (decoded_reg_strb.fuse_anti_rollback_disable && !decoded_req_is_wr) ? field_storage.fuse_anti_rollback_disable.dis.value : '0;
+    assign readback_array[74][31:1] = '0;
     for(genvar i0=0; i0<24; i0++) begin
-        assign readback_array[i0*1 + 76][31:0] = (decoded_reg_strb.fuse_idevid_cert_attr[i0] && !decoded_req_is_wr) ? field_storage.fuse_idevid_cert_attr[i0].cert.value : '0;
+        assign readback_array[i0*1 + 75][31:0] = (decoded_reg_strb.fuse_idevid_cert_attr[i0] && !decoded_req_is_wr) ? field_storage.fuse_idevid_cert_attr[i0].cert.value : '0;
     end
     for(genvar i0=0; i0<4; i0++) begin
-        assign readback_array[i0*1 + 100][31:0] = (decoded_reg_strb.fuse_idevid_manuf_hsm_id[i0] && !decoded_req_is_wr) ? field_storage.fuse_idevid_manuf_hsm_id[i0].cert.value : '0;
+        assign readback_array[i0*1 + 99][31:0] = (decoded_reg_strb.fuse_idevid_manuf_hsm_id[i0] && !decoded_req_is_wr) ? field_storage.fuse_idevid_manuf_hsm_id[i0].hsm_id.value : '0;
     end
+    assign readback_array[103][1:0] = (decoded_reg_strb.fuse_life_cycle && !decoded_req_is_wr) ? field_storage.fuse_life_cycle.life_cycle.value : '0;
+    assign readback_array[103][31:2] = '0;
     assign readback_array[104][0:0] = (decoded_reg_strb.internal_iccm_lock && !decoded_req_is_wr) ? field_storage.internal_iccm_lock.lock.value : '0;
     assign readback_array[104][31:1] = '0;
     assign readback_array[105][0:0] = (decoded_reg_strb.internal_fw_update_reset && !decoded_req_is_wr) ? field_storage.internal_fw_update_reset.core_rst.value : '0;

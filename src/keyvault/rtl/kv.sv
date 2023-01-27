@@ -21,9 +21,7 @@ module kv
     import kv_reg_pkg::*;
 
     #(
-     parameter KV_NUM_READ = 6
-    ,parameter KV_NUM_WRITE = 3
-    ,parameter AHB_ADDR_WIDTH = KV_ADDR_W
+     parameter AHB_ADDR_WIDTH = KV_ADDR_W
     ,parameter AHB_DATA_WIDTH = 32
     )
     (

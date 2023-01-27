@@ -57,12 +57,14 @@ addrmap kv_reg {
                sw=rw; hw=na;} rsvd[31:14]=0;
     };
 
-    kvCtrl PCR_CTRL[8];
-    pcrReg PCR_ENTRY[8][16] @0x00000200;
+    // Implies we have KV_NUM_PCR entries of each 64B of width
+    kvCtrl PCR_CTRL[8]; //Shoud reflect KV_NUM_PCR from kv_defines_pkg.sv
+    pcrReg PCR_ENTRY[8][16] @0x00000200;//Shoud reflect KV_NUM_PCR from kv_defines_pkg.sv
 
-    kvCtrl KEY_CTRL[8] @0x00000400;
+    // Implies we have KV_NUM_KEYS entries of each 64B of width
+    kvCtrl KEY_CTRL[8] @0x00000400;//Shoud reflect KV_NUM_KEYS from kv_defines_pkg.sv
     //stick these at the end since sw won't actually address them ever
-    keyReg KEY_ENTRY[8][16] @0x00000600;
+    keyReg KEY_ENTRY[8][16] @0x00000600;//Shoud reflect KV_NUM_KEYS from kv_defines_pkg.sv
 
     reg {
         field {desc="Fill the keyvault with debug values"; sw=rw; hw=r; singlepulse;} wr_debug_values=0;

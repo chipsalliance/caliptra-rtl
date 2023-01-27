@@ -7,7 +7,7 @@
 <dl class="node-info">
     <dt>Absolute Address:</dt><dd id="_AbsAddr" class="address"></dd>
     <div id="_AbsAddrDetails"></div>
-    <dt>Base Offset:</dt><dd class="address">0x330</dd>
+    <dt>Base Offset:</dt><dd class="address">0x32c</dd>
     <dt>Size:</dt><dd class="address">0x4</dd>
     <dt>Array Dimensions:</dt><dd>[4]</dd>
     <dt>Array Stride:</dt><dd>+0x4</dd>
@@ -17,8 +17,8 @@
 <h2>Description</h2>
 <div id="_Content.desc">
 <p>Manufacturer IDEVID Manufacturer’s HSM identifier (this is used to find the certificate chain from the boot media)
-<br>Caliptra Access: RW1
-<br>SOC Access:      RW1</p>
+<br>Caliptra Access: RO
+<br>SOC Access:      RWL-S</p>
 </div>
 
 <h2>Contents</h2>
@@ -32,24 +32,24 @@
         <th>Name</th>
         <th></th>
     </tr>
-    <tr id="cert">
+    <tr id="hsm_id">
         <td>[31:0]</td>
-        <td>cert</td>
+        <td>hsm_id</td>
         <td>
-            <span title='Readable. Writable once.'>rw1</span></td>
+            <span title='Readable and Writable'>rw</span></td>
         <td>0x0
         </td>
         <td>
-            <input id="_FieldValueTestercert" class="field-value-tester"
+            <input id="_FieldValueTesterhsm_id" class="field-value-tester"
                 type="text" autocomplete="off"
-                data-name="cert" oninput="onDecodedFieldInput(this)"/>
+                data-name="hsm_id" oninput="onDecodedFieldInput(this)"/>
         </td>
         <td>-</td>
         <td>
-            <button type="button" id="_RadixButtoncert" class="radix-button"
+            <button type="button" id="_RadixButtonhsm_id" class="radix-button"
                 title="Switch radix" aria-label="Switch radix"
-                data-name="cert" onclick="onRadixSwitch(this)">H</button>
-            <a class="headerlink" href="#cert" title="Permalink to this row"></a>
+                data-name="hsm_id" onclick="onRadixSwitch(this)">H</button>
+            <a class="headerlink" href="#hsm_id" title="Permalink to this row"></a>
         </td>
     </tr>
 </table>

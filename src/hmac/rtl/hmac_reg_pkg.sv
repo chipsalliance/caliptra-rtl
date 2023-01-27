@@ -192,7 +192,7 @@ package hmac_reg_pkg;
     } kv_read_ctrl_reg__entry_data_size__out_t;
 
     typedef struct packed{
-        logic [21:0] value;
+        logic [19:0] value;
     } kv_read_ctrl_reg__rsvd__out_t;
 
     typedef struct packed{
@@ -240,7 +240,7 @@ package hmac_reg_pkg;
     } kv_write_ctrl_reg__ecc_msg_dest_valid__out_t;
 
     typedef struct packed{
-        logic [20:0] value;
+        logic [18:0] value;
     } kv_write_ctrl_reg__rsvd__out_t;
 
     typedef struct packed{

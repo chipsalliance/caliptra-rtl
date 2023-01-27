@@ -222,10 +222,10 @@ module caliptra_top
 
     logic [NUM_INTR-1:0] intr;
 
-    kv_read_t [`CALIPTRA_KV_NUM_READ-1:0]  kv_read;
-    kv_write_t [`CALIPTRA_KV_NUM_WRITE-1:0]  kv_write;
-    kv_rd_resp_t [`CALIPTRA_KV_NUM_READ-1:0] kv_rd_resp;
-    kv_wr_resp_t [`CALIPTRA_KV_NUM_READ-1:0] kv_wr_resp;
+    kv_read_t [KV_NUM_READ-1:0]  kv_read;
+    kv_write_t [KV_NUM_WRITE-1:0]  kv_write;
+    kv_rd_resp_t [KV_NUM_READ-1:0] kv_rd_resp;
+    kv_wr_resp_t [KV_NUM_READ-1:0] kv_wr_resp;
 
     //mailbox sram gasket
     mbox_sram_req_t mbox_sram_req;
@@ -692,8 +692,8 @@ doe_ctrl #(
     .error_intr(doe_error_intr),
     .notif_intr(doe_notif_intr),
     .clear_obf_secrets(clear_obf_secrets),
-    .kv_write (kv_write[`CALIPTRA_KV_NUM_WRITE-1]),
-    .kv_wr_resp (kv_wr_resp[`CALIPTRA_KV_NUM_WRITE-1])
+    .kv_write (kv_write[KV_NUM_WRITE-1]),
+    .kv_wr_resp (kv_wr_resp[KV_NUM_WRITE-1])
 
     
 );
@@ -756,9 +756,7 @@ hmac_ctrl #(
 
 kv #(
     .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_KV)),
-    .AHB_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE),
-    .KV_NUM_READ(`CALIPTRA_KV_NUM_READ),
-    .KV_NUM_WRITE(`CALIPTRA_KV_NUM_WRITE)
+    .AHB_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE)
 )
 key_vault1
 (

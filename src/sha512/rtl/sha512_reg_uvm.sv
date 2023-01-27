@@ -119,7 +119,7 @@ package sha512_reg_uvm;
             this.entry_data_size = new("entry_data_size");
             this.entry_data_size.configure(this, 5, 5, "RW", 0, 'h0, 1, 1, 0);
             this.rsvd = new("rsvd");
-            this.rsvd.configure(this, 22, 10, "RW", 0, 'h0, 1, 1, 0);
+            this.rsvd.configure(this, 20, 10, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : kv_read_ctrl_reg
 
@@ -180,7 +180,7 @@ package sha512_reg_uvm;
             this.ecc_msg_dest_valid = new("ecc_msg_dest_valid");
             this.ecc_msg_dest_valid.configure(this, 1, 10, "RW", 0, 'h0, 1, 1, 0);
             this.rsvd = new("rsvd");
-            this.rsvd.configure(this, 21, 11, "RW", 0, 'h0, 1, 1, 0);
+            this.rsvd.configure(this, 19, 11, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : kv_write_ctrl_reg
 

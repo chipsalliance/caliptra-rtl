@@ -73,8 +73,8 @@
   // Used to tie-off unused upper intr bits
   `define SWERV_INTR_VEC_MAX_ASSIGNED `SWERV_INTR_VEC_SHA_NOTIF
 
-  `define CALIPTRA_KV_NUM_READ 6
-  `define CALIPTRA_KV_NUM_WRITE 4
+  //`define CALIPTRA_KV_NUM_READ 6
+  //`define CALIPTRA_KV_NUM_WRITE 4
 
   `define CALIPTRA_IMEM_BYTE_SIZE   32768
   `define CALIPTRA_IMEM_DATA_WIDTH  64
