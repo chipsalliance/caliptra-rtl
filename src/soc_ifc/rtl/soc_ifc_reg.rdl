@@ -112,17 +112,6 @@ addrmap soc_ifc_reg {
                 Only reset during cold-boot (sticky).
                 [br]Caliptra Access: RO
                 [br]SOC Access:      RO";
-        //enum reset_type_e {
-        //    CPTRA_COLD_RESET = 4'b0000 {
-        //        desc = "Caliptra went through Cold Reset";
-        //    };
-        //    CPTRA_WARM_RESET = 4'b0001 {
-        //        desc = "Caliptra went through warm reset";
-        //    };
-        //    CPTRA_FW_UPD_RESET = 4'b0010 {
-        //        desc = "Caliptra uC went through FW update reset";
-        //    };
-        //};
         field {desc = "FW update reset has been executed"; sw=r; hw=rw; we=true; resetsignal = reset_b;}      FW_UPD_RESET=0;
         field {desc = "warm reset has been executed";      sw=r; hw=rw; resetsignal = hard_reset_b;} WARM_RESET=0;
     } CPTRA_RESET_REASON;
@@ -178,9 +167,10 @@ addrmap soc_ifc_reg {
      } CPTRA_TRNG_VALID_PAUSER;
 
     reg {
-        name = "Valid User for TRNG Lock";
+        name = "Valid User for TRNG PAUSER Lock";
         desc = "Valid PAUSER attributes for requests from SoC APB Interface.
                 Each bit corresponds to locking the associated VALID_PAUSER register.
+                Caliptra FW RW access for survivability but cannot unlock once locked
                 [br]Caliptra Access: RW
                 [br]SOC Access:      RW
                 Read-Only once locked.";
@@ -190,16 +180,16 @@ addrmap soc_ifc_reg {
     reg {
         name = "TRNG Data";
         desc = "Storage for the requested TRNG Data.
-                [br]Caliptra Access: RW
-                [br]SOC Access:      RO";
+                [br]Caliptra Access: RO
+                [br]SOC Access:      RW";
         field {sw=rw; hw=na; swwe;} DATA[32];
-     } CPTRA_TRNG[12];
+     } CPTRA_TRNG_DATA[12];
 
     reg {
         name = "TRNG Done";
         desc = "Indicates that the requests TRNG Data is done and stored in the TRNG Data register.
-                [br]Caliptra Access: RW
-                [br]SOC Access:      RO";
+                [br]Caliptra Access: RO
+                [br]SOC Access:      RW";
         field {sw=rw; hw=na; swwe;} DONE;
      } CPTRA_TRNG_DONE;
 
@@ -240,27 +230,26 @@ addrmap soc_ifc_reg {
     } CPTRA_DBG_MANUF_SERVICE_REG;
 
     reg {
-        name = "Clk gating enable";
-        desc = "Control register to enable clk gating. Default is 0 (disabled).
+        name = "Global Caliptra Clk gating enable";
+        desc = "Control register to enable or disable all of the caliptra clk gating. Default is 0 (disabled).
                 [br]Caliptra Access: RO
                 [br]SOC Access:      RW";
-
         field {desc = "Clk gating enable"; hw = r; sw = rw; swwe = soc_req;} clk_gating_en = 1'b0;
     } CPTRA_CLK_GATING_EN;
 
     reg {
         name = "Generic Input Wires";
         desc = "Generic input wires connected to SoC interface.
-                [br]Caliptra Access: RW
-                [br]SOC Access:      RW";
+                [br]Caliptra Access: RO
+                [br]SOC Access:      RO";
         field {sw=rw; hw=w;} generic_wires[32];
     } CPTRA_GENERIC_INPUT_WIRES[2];
     reg {
         name = "Generic Output Wires";
         desc = "Generic output wires connected to SoC interface.
                 [br]Caliptra Access: RW
-                [br]SOC Access:      RW";
-        field {sw=rw; hw=r;} generic_wires[32];
+                [br]SOC Access:      RO";
+        field {sw=rw; hw=r; swwel = soc_req;} generic_wires[32];
     } CPTRA_GENERIC_OUTPUT_WIRES[2];
 
 

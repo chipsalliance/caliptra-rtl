@@ -506,11 +506,11 @@ always_comb soc_ifc_reg_hwif_in.fuse_life_cycle.life_cycle.swwel           = soc
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //only allow valid users to write to TRNG
-always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_DONE.DONE.swwe = ~soc_ifc_reg_req_data.soc_req | 
+always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_DONE.DONE.swwe = soc_ifc_reg_req_data.soc_req & 
                                                             (soc_ifc_reg_req_data.user == soc_ifc_reg_hwif_out.CPTRA_TRNG_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]);
 always_comb begin 
     for (int i = 0; i < 12; i++) begin
-        soc_ifc_reg_hwif_in.CPTRA_TRNG[i].DATA.swwe = ~soc_ifc_reg_req_data.soc_req | 
+        soc_ifc_reg_hwif_in.CPTRA_TRNG_DATA[i].DATA.swwe = soc_ifc_reg_req_data.soc_req & 
                                                       (soc_ifc_reg_req_data.user == soc_ifc_reg_hwif_out.CPTRA_TRNG_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]);
     end
 end

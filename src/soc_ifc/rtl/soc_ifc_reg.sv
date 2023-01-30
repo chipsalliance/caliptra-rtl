@@ -75,7 +75,7 @@ module soc_ifc_reg (
         logic [5-1:0]CPTRA_PAUSER_LOCK;
         logic CPTRA_TRNG_VALID_PAUSER;
         logic CPTRA_TRNG_PAUSER_LOCK;
-        logic [12-1:0]CPTRA_TRNG;
+        logic [12-1:0]CPTRA_TRNG_DATA;
         logic CPTRA_TRNG_DONE;
         logic CPTRA_FUSE_WR_DONE;
         logic CPTRA_TIMER_CONFIG;
@@ -155,7 +155,7 @@ module soc_ifc_reg (
         decoded_reg_strb.CPTRA_TRNG_VALID_PAUSER = cpuif_req_masked & (cpuif_addr == 'h50);
         decoded_reg_strb.CPTRA_TRNG_PAUSER_LOCK = cpuif_req_masked & (cpuif_addr == 'h54);
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.CPTRA_TRNG[i0] = cpuif_req_masked & (cpuif_addr == 'h58 + i0*'h4);
+            decoded_reg_strb.CPTRA_TRNG_DATA[i0] = cpuif_req_masked & (cpuif_addr == 'h58 + i0*'h4);
         end
         decoded_reg_strb.CPTRA_TRNG_DONE = cpuif_req_masked & (cpuif_addr == 'h88);
         decoded_reg_strb.CPTRA_FUSE_WR_DONE = cpuif_req_masked & (cpuif_addr == 'h8c);
@@ -346,7 +346,7 @@ module soc_ifc_reg (
                 logic [31:0] next;
                 logic load_next;
             } DATA;
-        } [12-1:0]CPTRA_TRNG;
+        } [12-1:0]CPTRA_TRNG_DATA;
         struct packed{
             struct packed{
                 logic next;
@@ -867,7 +867,7 @@ module soc_ifc_reg (
             struct packed{
                 logic [31:0] value;
             } DATA;
-        } [12-1:0]CPTRA_TRNG;
+        } [12-1:0]CPTRA_TRNG_DATA;
         struct packed{
             struct packed{
                 logic value;
@@ -1531,20 +1531,20 @@ module soc_ifc_reg (
     end
     assign hwif_out.CPTRA_TRNG_PAUSER_LOCK.LOCK.value = field_storage.CPTRA_TRNG_PAUSER_LOCK.LOCK.value;
     for(genvar i0=0; i0<12; i0++) begin
-        // Field: soc_ifc_reg.CPTRA_TRNG[].DATA
+        // Field: soc_ifc_reg.CPTRA_TRNG_DATA[].DATA
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.CPTRA_TRNG[i0].DATA.value;
+            automatic logic [31:0] next_c = field_storage.CPTRA_TRNG_DATA[i0].DATA.value;
             automatic logic load_next_c = '0;
-            if(decoded_reg_strb.CPTRA_TRNG[i0] && decoded_req_is_wr && hwif_in.CPTRA_TRNG[i0].DATA.swwe) begin // SW write
+            if(decoded_reg_strb.CPTRA_TRNG_DATA[i0] && decoded_req_is_wr && hwif_in.CPTRA_TRNG_DATA[i0].DATA.swwe) begin // SW write
                 next_c = decoded_wr_data[31:0];
                 load_next_c = '1;
             end
-            field_combo.CPTRA_TRNG[i0].DATA.next = next_c;
-            field_combo.CPTRA_TRNG[i0].DATA.load_next = load_next_c;
+            field_combo.CPTRA_TRNG_DATA[i0].DATA.next = next_c;
+            field_combo.CPTRA_TRNG_DATA[i0].DATA.load_next = load_next_c;
         end
         always_ff @(posedge clk) begin
-            if(field_combo.CPTRA_TRNG[i0].DATA.load_next) begin
-                field_storage.CPTRA_TRNG[i0].DATA.value <= field_combo.CPTRA_TRNG[i0].DATA.next;
+            if(field_combo.CPTRA_TRNG_DATA[i0].DATA.load_next) begin
+                field_storage.CPTRA_TRNG_DATA[i0].DATA.value <= field_combo.CPTRA_TRNG_DATA[i0].DATA.next;
             end
         end
     end
@@ -1683,7 +1683,7 @@ module soc_ifc_reg (
         always_comb begin
             automatic logic [31:0] next_c = field_storage.CPTRA_GENERIC_OUTPUT_WIRES[i0].generic_wires.value;
             automatic logic load_next_c = '0;
-            if(decoded_reg_strb.CPTRA_GENERIC_OUTPUT_WIRES[i0] && decoded_req_is_wr) begin // SW write
+            if(decoded_reg_strb.CPTRA_GENERIC_OUTPUT_WIRES[i0] && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
                 next_c = decoded_wr_data[31:0];
                 load_next_c = '1;
             end
@@ -3275,7 +3275,7 @@ module soc_ifc_reg (
     assign readback_array[21][0:0] = (decoded_reg_strb.CPTRA_TRNG_PAUSER_LOCK && !decoded_req_is_wr) ? field_storage.CPTRA_TRNG_PAUSER_LOCK.LOCK.value : '0;
     assign readback_array[21][31:1] = '0;
     for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 22][31:0] = (decoded_reg_strb.CPTRA_TRNG[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_TRNG[i0].DATA.value : '0;
+        assign readback_array[i0*1 + 22][31:0] = (decoded_reg_strb.CPTRA_TRNG_DATA[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_TRNG_DATA[i0].DATA.value : '0;
     end
     assign readback_array[34][0:0] = (decoded_reg_strb.CPTRA_TRNG_DONE && !decoded_req_is_wr) ? field_storage.CPTRA_TRNG_DONE.DONE.value : '0;
     assign readback_array[34][31:1] = '0;

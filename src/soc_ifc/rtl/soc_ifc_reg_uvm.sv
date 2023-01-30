@@ -221,11 +221,11 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK
 
-    // Reg - soc_ifc_reg::CPTRA_TRNG
-    class soc_ifc_reg__CPTRA_TRNG extends uvm_reg;
+    // Reg - soc_ifc_reg::CPTRA_TRNG_DATA
+    class soc_ifc_reg__CPTRA_TRNG_DATA extends uvm_reg;
         rand uvm_reg_field DATA;
 
-        function new(string name = "soc_ifc_reg__CPTRA_TRNG");
+        function new(string name = "soc_ifc_reg__CPTRA_TRNG_DATA");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -233,7 +233,7 @@ package soc_ifc_reg_uvm;
             this.DATA = new("DATA");
             this.DATA.configure(this, 32, 0, "RW", 0, 'h0, 0, 1, 0);
         endfunction : build
-    endclass : soc_ifc_reg__CPTRA_TRNG
+    endclass : soc_ifc_reg__CPTRA_TRNG_DATA
 
     // Reg - soc_ifc_reg::CPTRA_TRNG_DONE
     class soc_ifc_reg__CPTRA_TRNG_DONE extends uvm_reg;
@@ -1205,7 +1205,7 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__CPTRA_PAUSER_LOCK CPTRA_PAUSER_LOCK[5];
         rand soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER CPTRA_TRNG_VALID_PAUSER;
         rand soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK CPTRA_TRNG_PAUSER_LOCK;
-        rand soc_ifc_reg__CPTRA_TRNG CPTRA_TRNG[12];
+        rand soc_ifc_reg__CPTRA_TRNG_DATA CPTRA_TRNG_DATA[12];
         rand soc_ifc_reg__CPTRA_TRNG_DONE CPTRA_TRNG_DONE;
         rand soc_ifc_reg__CPTRA_FUSE_WR_DONE CPTRA_FUSE_WR_DONE;
         rand soc_ifc_reg__CPTRA_TIMER_CONFIG CPTRA_TIMER_CONFIG;
@@ -1312,12 +1312,12 @@ package soc_ifc_reg_uvm;
 
             this.CPTRA_TRNG_PAUSER_LOCK.build();
             this.default_map.add_reg(this.CPTRA_TRNG_PAUSER_LOCK, 'h54);
-            foreach(this.CPTRA_TRNG[i0]) begin
-                this.CPTRA_TRNG[i0] = new($sformatf("CPTRA_TRNG[%0d]", i0));
-                this.CPTRA_TRNG[i0].configure(this);
+            foreach(this.CPTRA_TRNG_DATA[i0]) begin
+                this.CPTRA_TRNG_DATA[i0] = new($sformatf("CPTRA_TRNG_DATA[%0d]", i0));
+                this.CPTRA_TRNG_DATA[i0].configure(this);
                 
-                this.CPTRA_TRNG[i0].build();
-                this.default_map.add_reg(this.CPTRA_TRNG[i0], 'h58 + i0*'h4);
+                this.CPTRA_TRNG_DATA[i0].build();
+                this.default_map.add_reg(this.CPTRA_TRNG_DATA[i0], 'h58 + i0*'h4);
             end
             this.CPTRA_TRNG_DONE = new("CPTRA_TRNG_DONE");
             this.CPTRA_TRNG_DONE.configure(this);

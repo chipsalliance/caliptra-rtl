@@ -71,11 +71,11 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic swwe;
-    } soc_ifc_reg__CPTRA_TRNG__DATA__in_t;
+    } soc_ifc_reg__CPTRA_TRNG_DATA__DATA__in_t;
 
     typedef struct packed{
-        soc_ifc_reg__CPTRA_TRNG__DATA__in_t DATA;
-    } soc_ifc_reg__CPTRA_TRNG__in_t;
+        soc_ifc_reg__CPTRA_TRNG_DATA__DATA__in_t DATA;
+    } soc_ifc_reg__CPTRA_TRNG_DATA__in_t;
 
     typedef struct packed{
         logic swwe;
@@ -244,7 +244,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_PAUSER_LOCK__in_t [5-1:0]CPTRA_PAUSER_LOCK;
         soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER__in_t CPTRA_TRNG_VALID_PAUSER;
         soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK__in_t CPTRA_TRNG_PAUSER_LOCK;
-        soc_ifc_reg__CPTRA_TRNG__in_t [12-1:0]CPTRA_TRNG;
+        soc_ifc_reg__CPTRA_TRNG_DATA__in_t [12-1:0]CPTRA_TRNG_DATA;
         soc_ifc_reg__CPTRA_TRNG_DONE__in_t CPTRA_TRNG_DONE;
         soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES__in_t [2-1:0]CPTRA_GENERIC_INPUT_WIRES;
         soc_ifc_reg__fuse_uds_seed__in_t [12-1:0]fuse_uds_seed;
