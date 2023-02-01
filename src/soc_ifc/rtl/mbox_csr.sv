@@ -361,7 +361,7 @@ module mbox_csr (
     always_comb begin
         automatic logic [1:0] next_c = field_storage.mbox_status.status.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.mbox_status && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.mbox_status && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = decoded_wr_data[1:0];
             load_next_c = '1;
         end else if(hwif_in.mbox_status.status.hwclr) begin // HW Clear

@@ -1,0 +1,32 @@
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+desc="Address map for SHA Acceleration Block Register Space";
+addressing = compact;
+lsb0 = true; // lsb0 property is implicit/default. See docs for
+             // SystemRDL 2.0 sections 9.1 and 13.4
+
+default hw = na;
+default regwidth = 32; // reg property
+default accesswidth = 32; // reg property
+
+signal {} lock_set;
+signal {} valid_user;
+
+//signal to indicate request is coming from soc side
+signal {} soc_req;
+
+signal {activelow; async; cpuif_reset; field_reset;} reset_b;
+signal {activelow; async;} error_reset_b; // Driven by Caliptra pwrgood from SoC

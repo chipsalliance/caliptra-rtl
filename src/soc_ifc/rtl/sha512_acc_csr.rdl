@@ -12,123 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-
-
 addrmap sha512_acc_csr {
-    desc="Address map for SHA Acceleration Block Register Space";
-    addressing = compact;
-    lsb0 = true; // lsb0 property is implicit/default. See docs for
-                 // SystemRDL 2.0 sections 9.1 and 13.4
-
-    default hw = na;
-    default regwidth = 32; // reg property
-    default accesswidth = 32; // reg property
-
-    signal {} lock_set;
-    signal {} valid_user;
-
-    signal {activelow; async; cpuif_reset; field_reset;} reset_b;
-    signal {activelow; async;} error_reset_b; // Driven by Caliptra pwrgood from SoC
-    
-    reg {
-        name="SHA Accelerator Lock";
-        desc="SHA lock register for SHA access, reading 0 will set the lock";
-        field {rset; woclr; sw=rw; hw=r; swwe=valid_user; swmod=true;} LOCK=0;
-    } LOCK;
-
-    reg {
-        name="SHA Accelerator User";
-        desc="Stores the user that locked the SHA";
-        field {sw=r; hw=rw; we=lock_set;} USER[32]=0;
-    } USER;
-
-    reg {
-        name="SHA Accelerator Mode";
-        desc="Stores the requested mode for the SHA to execute.
-              SHA Supports both SHA384 and SHA512 modes of operation.
-              SHA Supports streaming mode - SHA is computed on a stream of incoming data to datain register.
-                           mailbox mode - SHA is computed on LENGTH bytes of data stored in the mailbox from START_ADDRESS.";
-        field {
-            enum sha_cmd_e {
-                SHA_STREAM_384 = 2'd0 {
-                    desc = "SHA is in SHA384, streaming mode";
-                };
-                SHA_STREAM_512 = 2'd1 {
-                    desc = "SHA is in SHA512, streaming mode";
-                };
-                SHA_MBOX_384 = 2'd2 {
-                    desc = "SHA is in SHA384, mailbox mode";
-                };
-                SHA_MBOX_512 = 2'd3 {
-                    desc = "SHA is in SHA512, mailbox mode";
-                };
-            };
-            sw=rw; hw=r; swwe=valid_user; swmod=true; encode = sha_cmd_e;} MODE[2]=0;
-        field {
-            name="Endianness Toggle for SHA in mailbox mode";
-            desc="Default behavior assumes that data in mailbox is little endian,
-                  When set to 0, data from mailbox will be swizzled from little to big endian at the byte level.
-                  When set to 1, data from the mailbox will be loaded into SHA as-is.";
-            sw=rw; hw=r; swwe=valid_user;} ENDIAN_TOGGLE=0;
-    } MODE;
-
-    reg {
-        name="SHA Accelerator Data Start Address";
-        desc="The start address for FW controlled SHA performed on data stored in the mailbox.
-              Start Address must be dword aligned.";
-        field {sw=rw; hw=r; swwe=valid_user;} ADDR[32]=0;
-    } START_ADDRESS;
-
-    reg {
-        name="SHA Accelerator Data Length";
-        desc="The length of data to be processed in bytes.";
-        field {sw=rw; hw=r; swwe=valid_user;} LENGTH[32]=0;
-    } DLEN;
-
-    reg {
-        name="SHA Accelerator Data In";
-        desc="Data in register for SHA Streaming function";
-        field {sw=rw; hw=na; swwe=valid_user; swmod=true;} DATAIN[32];
-    } DATAIN;
-
-    reg {
-        name="SHA Accelerator Execute";
-        desc="For Streaming Function, indicates that the initiator is done streaming.
-              For the Mailbox SHA Function, indicates that the SHA can begin execution.";
-        field {sw=rw; hw=r; hwclr;} EXECUTE=0;
-    } EXECUTE;
-
-    reg {
-        name = "SHA Accelerator Status";
-        desc = "Status register indicating when the requested function is complete";
-
-        default sw = r;
-        default hw = rw;
-        default resetsignal = reset_b;
-        field {desc = "Valid bit, indicating that the digest is complete";} VALID = 1'b0;
-    
-    } STATUS;
-   
-    reg {
-        name = "SHA Accelerator Digest";
-        desc = "16 32-bit registers storing the 512-bit digest output in
-                big-endian representation.";
-
-        default sw = r;
-        default hw = w;
-        default resetsignal = reset_b;
-        field {desc = "Output digest field";} DIGEST[32] = 32'b0;
-    
-    } DIGEST[16];
-
+    `include "sha512_acc_csr_properties.rdl"
+    `include "sha512_acc_external_csr.rdl"
 
     /* ---- Global Interrupt Enable ---- */
     reg global_intr_en_t {
         name = "Per-Type Interrupt Enable Register";
-        desc = "Dedicated register with one bit for each event type that may produce an interrupt.";
+        desc = "Dedicated register with one bit for each event type that may produce an interrupt.
+                [br]Caliptra Access: RW
+                [br]SOC Access:      RO";
 
         default hw = na;
         default sw = rw;
+        default swwel = soc_req;
 
         // Global enablement (for interrupts of the event types defined for this module)
         field {desc = "Global enable bit for all events of type 'Error'";       } error_en = 1'b0;
@@ -142,6 +39,7 @@ addrmap sha512_acc_csr {
 
         default hw = na;
         default sw = rw;
+        default swwel = soc_req;
 
         // Specific enables for the events defined in this
         // event type in the instantiating peripheral.
@@ -159,6 +57,7 @@ addrmap sha512_acc_csr {
 
         default hw = na;
         default sw = rw;
+        default swwel = soc_req;
 
         // Specific enables for the events defined in this
         // event type in the instantiating peripheral.
@@ -177,6 +76,7 @@ addrmap sha512_acc_csr {
         default sw = rw;
         default woclr = true;
         default level intr;
+        default swwel = soc_req;
 
         field {desc = "Interrupt Event 0 status bit";} error0_sts = 1'b0;
         field {desc = "Interrupt Event 1 status bit";} error1_sts = 1'b0;
@@ -196,6 +96,7 @@ addrmap sha512_acc_csr {
         default sw = rw;
         default woclr = true;
         default level intr;
+        default swwel = soc_req;
 
         field {desc = "Command Done Interrupt status bit";} notif_cmd_done_sts = 1'b0;
     };
@@ -231,6 +132,7 @@ addrmap sha512_acc_csr {
         default sw = rw;
         default woset = true;
         default singlepulse = true;
+        default swwel = soc_req;
 
         // Instantiate triggers bit-by-bit.
         field {desc = "Interrupt Trigger 0 bit";} error0_trig = 1'b0;
@@ -250,6 +152,7 @@ addrmap sha512_acc_csr {
         default sw = rw;
         default woset = true;
         default singlepulse = true;
+        default swwel = soc_req;
 
         // Instantiate triggers bit-by-bit.
         field {desc = "Interrupt Trigger 0 bit";} notif_cmd_done_trig = 1'b0;
@@ -288,6 +191,7 @@ addrmap sha512_acc_csr {
         default incrvalue = 1;
         default incrsaturate = true;
         default counter;
+        default swwel = soc_req;
 
         field {desc = "Count field";} cnt[32] = 32'h0;
     };

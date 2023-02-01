@@ -73,6 +73,7 @@ package sha512_acc_csr_pkg;
     typedef struct packed{
         logic lock_set;
         logic valid_user;
+        logic soc_req;
         logic reset_b;
         logic error_reset_b;
         sha512_acc_csr__USER__in_t USER;

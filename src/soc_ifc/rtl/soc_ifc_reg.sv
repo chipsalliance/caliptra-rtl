@@ -388,12 +388,6 @@ module soc_ifc_reg (
                 logic [31:0] next;
                 logic load_next;
             } generic_wires;
-        } [2-1:0]CPTRA_GENERIC_INPUT_WIRES;
-        struct packed{
-            struct packed{
-                logic [31:0] next;
-                logic load_next;
-            } generic_wires;
         } [2-1:0]CPTRA_GENERIC_OUTPUT_WIRES;
         struct packed{
             struct packed{
@@ -898,11 +892,6 @@ module soc_ifc_reg (
                 logic value;
             } clk_gating_en;
         } CPTRA_CLK_GATING_EN;
-        struct packed{
-            struct packed{
-                logic [31:0] value;
-            } generic_wires;
-        } [2-1:0]CPTRA_GENERIC_INPUT_WIRES;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -1657,27 +1646,6 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.CPTRA_CLK_GATING_EN.clk_gating_en.value = field_storage.CPTRA_CLK_GATING_EN.clk_gating_en.value;
-    for(genvar i0=0; i0<2; i0++) begin
-        // Field: soc_ifc_reg.CPTRA_GENERIC_INPUT_WIRES[].generic_wires
-        always_comb begin
-            automatic logic [31:0] next_c = field_storage.CPTRA_GENERIC_INPUT_WIRES[i0].generic_wires.value;
-            automatic logic load_next_c = '0;
-            if(decoded_reg_strb.CPTRA_GENERIC_INPUT_WIRES[i0] && decoded_req_is_wr) begin // SW write
-                next_c = decoded_wr_data[31:0];
-                load_next_c = '1;
-            end else if(1) begin // HW Write
-                next_c = hwif_in.CPTRA_GENERIC_INPUT_WIRES[i0].generic_wires.next;
-                load_next_c = '1;
-            end
-            field_combo.CPTRA_GENERIC_INPUT_WIRES[i0].generic_wires.next = next_c;
-            field_combo.CPTRA_GENERIC_INPUT_WIRES[i0].generic_wires.load_next = load_next_c;
-        end
-        always_ff @(posedge clk) begin
-            if(field_combo.CPTRA_GENERIC_INPUT_WIRES[i0].generic_wires.load_next) begin
-                field_storage.CPTRA_GENERIC_INPUT_WIRES[i0].generic_wires.value <= field_combo.CPTRA_GENERIC_INPUT_WIRES[i0].generic_wires.next;
-            end
-        end
-    end
     for(genvar i0=0; i0<2; i0++) begin
         // Field: soc_ifc_reg.CPTRA_GENERIC_OUTPUT_WIRES[].generic_wires
         always_comb begin
@@ -3288,7 +3256,7 @@ module soc_ifc_reg (
     assign readback_array[39][0:0] = (decoded_reg_strb.CPTRA_CLK_GATING_EN && !decoded_req_is_wr) ? field_storage.CPTRA_CLK_GATING_EN.clk_gating_en.value : '0;
     assign readback_array[39][31:1] = '0;
     for(genvar i0=0; i0<2; i0++) begin
-        assign readback_array[i0*1 + 40][31:0] = (decoded_reg_strb.CPTRA_GENERIC_INPUT_WIRES[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_GENERIC_INPUT_WIRES[i0].generic_wires.value : '0;
+        assign readback_array[i0*1 + 40][31:0] = (decoded_reg_strb.CPTRA_GENERIC_INPUT_WIRES[i0] && !decoded_req_is_wr) ? hwif_in.CPTRA_GENERIC_INPUT_WIRES[i0].generic_wires.next : '0;
     end
     for(genvar i0=0; i0<2; i0++) begin
         assign readback_array[i0*1 + 42][31:0] = (decoded_reg_strb.CPTRA_GENERIC_OUTPUT_WIRES[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_GENERIC_OUTPUT_WIRES[i0].generic_wires.value : '0;

@@ -1,0 +1,435 @@
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+////////////////////////////////////////////////////////////////
+// Caliptra Internal Registers
+reg {
+    name = "De-Obfuscation Key";
+    desc = "Stored De-Obfuscation key, not accessible by software.
+            [br]Caliptra Access: -
+            [br]SOC Access:      -";
+    key key[32];
+} internal_obf_key[8] @0x600;
+
+reg {
+    name = "ICCM Lock";
+    desc = "Lock feature gates writes to the ICCM. When lock is set to
+            1, writes are blocked. When cleared to 0, writes allowed.
+            Write-once, meaning only a reset can clear it once set to 1.
+            [br]Caliptra Access: RW1
+            [br]SOC Access:      RO";
+
+    field {desc="Lock bit gates writes to ICCM. Write 1 to set - cannot be cleared by SW."; hw=r; hwclr=true; sw=rw; onwrite=woset; precedence=hw; swwel=soc_req;} lock = 1'b0;
+} internal_iccm_lock;
+
+reg {
+    name = "FW Update Reset";
+    desc = "Control register to assert FW update reset. When cleared to
+            0, no reset is triggered. When set to 1, uc-only reset is asserted.
+            Field automatically clears 1 cycle after being set.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";
+
+    field {desc = "FW Update reset to reset core"; hw = r; sw = rw; singlepulse=true; swwel = soc_req;} core_rst = 1'b0;
+} internal_fw_update_reset;
+
+reg {
+    name = "FW Update Reset Wait Cycles";
+    desc = "Control register to set the number of cycles for which FW update reset must be asserted. Default is 5. Max value is 255 (8 bit).
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";
+
+    field {desc = "FW Update reset wait cycles"; hw = r; sw = rw; swwel = soc_req;} wait_cycles[8] = 8'h5;
+} internal_fw_update_reset_wait_cycles;
+
+reg {
+    name = "NMI Vector";
+    desc = "32-bit register providing the jump vector for RISC-V to transition for NMI handling code.
+            Default is the base address of ROM, but may be updated for enhanced handling by runtime images.
+            Bit [0] is ignored to enforce half-word alignment of address.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";
+
+    field {desc = "NMI Vector"; hw = r; sw = rw; swwel = soc_req;} vec[32] = 32'h0;
+} internal_nmi_vector;
+
+
+////////////////////////////////////////////////////////////////
+// Interrupts
+/* -----------------------
+ * Register File definitive definition
+ * ----------------------- */
+
+// Notifications are non-error events that occur during normal operation of the module.
+// E.g. a completion of a job may produce a notification.
+// Error and notification events are separated into separate status/trigger registers
+// to allow effective priority allocation by software
+regfile intr_block_t {
+
+
+    /* -----------------------
+     * Default properties for Register File
+     * ----------------------- */
+
+    name = "Interrupt Register Block";
+    desc = "Set of registers to implement interrupt functionality
+            for soc interface.
+            All registers have the following access privileges:
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";
+
+    default regwidth = 32; // reg property
+    default accesswidth = 32; // reg property
+    default hw = na; // field property
+    default swwel = soc_req; // Used in MBOX interrupt registers to avoid SoC write priv.
+
+
+    /* -----------------------
+     * Register definitive definitions
+     * ----------------------- */
+
+    /* ---- Global Interrupt Enable ---- */
+    reg global_intr_en_t {
+        name = "Per-Type Interrupt Enable Register";
+        desc = "Dedicated register with one bit for each event type that may produce an interrupt.";
+
+        default hw = na;
+        default sw = rw;
+
+        // Global enablement (for interrupts of the event types defined for this module)
+        field {desc = "Global enable bit for all events of type 'Error'";       } error_en = 1'b0;
+        field {desc = "Global enable bit for all events of type 'Notification'";} notif_en = 1'b0;
+    };
+
+    /* ---- Error Interrupt Enable ---- */
+    reg error_intr_en_t {
+        name = "Per-Event Interrupt Enable Register";
+        desc = "Dedicated register with one bit for each event that may produce an interrupt.";
+
+        default hw = na;
+        default sw = rw;
+
+        // Specific enables for the events defined in this
+        // event type in the instantiating peripheral.
+        field {desc = "Enable bit for Internal Errors";                             } error_internal_en = 1'b0;
+        field {desc = "Enable bit for Invalid Device in Pauser field";              } error_inv_dev_en  = 1'b0;
+        field {desc = "Enable bit for Failed Commands";                             } error_cmd_fail_en = 1'b0;
+        field {desc = "Enable bit for Bad Fuse received from SoC";                  } error_bad_fuse_en = 1'b0;
+        field {desc = "Enable bit for ICCM access blocked by lock";                 } error_iccm_blocked_en = 1'b0;
+        field {desc = "Enable bit for Mailbox ECC Double-bit Error (uncorrectable)";} error_mbox_ecc_unc_en = 1'b0;
+    };
+
+    /* ---- Notification Interrupt Enable ---- */
+    reg notif_intr_en_t {
+        name = "Per-Event Interrupt Enable Register";
+        desc = "Dedicated register with one bit for each event that may produce an interrupt.";
+
+        default hw = na;
+        default sw = rw;
+
+        // Specific enables for the events defined in this
+        // event type in the instantiating peripheral.
+        field {desc = "Enable bit for Command Available";                         } notif_cmd_avail_en = 1'b0;
+        field {desc = "Enable bit for Mailbox ECC Single-bit Error (correctable)";} notif_mbox_ecc_cor_en = 1'b0;
+        field {desc = "Enable bit for Security State, Debug Locked transition";   } notif_debug_locked_en = 1'b0;
+    };
+
+    /* ---- Error Interrupt Status ---- */
+    reg error_intr_t {
+        name = "Interrupt Status Register type definition";
+        desc = "Single bit indicating occurrence of each interrupt event.
+                Sticky, level assertion, write-1-to-clear.";
+
+        default precedence = hw;
+        default hw = w;
+        default hwset = true;
+        default sw = rw;
+        default woclr = true;
+        default level intr;
+
+        field {desc = "Internal Errors status bit";                             } error_internal_sts = 1'b0;
+        field {desc = "Invalid Device in Pauser field status bit";              } error_inv_dev_sts = 1'b0;
+        field {desc = "Failed Commands status bit";                             } error_cmd_fail_sts = 1'b0;
+        field {desc = "Bad Fuse received from SoC status bit";                  } error_bad_fuse_sts = 1'b0;
+        field {desc = "ICCM access blocked by lock status bit";                 } error_iccm_blocked_sts = 1'b0;
+        field {desc = "Mailbox ECC Double-bit Error (uncorrectable) status bit";} error_mbox_ecc_unc_sts = 1'b0;
+    };
+
+    /* ---- Notification Interrupt Status ---- */
+    reg notif_intr_t {
+        name = "Interrupt Status Register type definition";
+        desc = "Single bit indicating occurrence of each interrupt event.
+                Sticky, level assertion, write-1-to-clear.";
+
+        default precedence = hw;
+        default hw = w;
+        default hwset = true;
+        default sw = rw;
+        default woclr = true;
+        default level intr;
+
+        field {desc = "Command Available status bit";} notif_cmd_avail_sts = 1'b0;
+        field {desc = "Mailbox ECC Single-bit Error (correctable) status bit";} notif_mbox_ecc_cor_sts = 1'b0;
+        field {desc = "Security State, Debug Locked transition status bit";   } notif_debug_locked_sts = 1'b0;
+    };
+
+    /* ---- Aggregated Interrupt Status ---- */
+    reg global_intr_t {
+        name = "Interrupt Status Aggregation Register type definition";
+        desc = "Single bit indicating occurrence of any interrupt event
+                of a given type. E.g. Notifications and Errors may drive
+                to two separate interrupt registers. There may be
+                multiple sources of Notifications or Errors that are
+                aggregated into a single interrupt pin for that
+                respective type. That pin feeds through this register
+                in order to apply a global enablement of that interrupt
+                event type.
+                Nonsticky assertion.";
+
+        default hw = w;
+        default sw = r;
+        default nonsticky intr;
+
+        field {desc = "Interrupt Event Aggregation status bit";} agg_sts = 1'b0;
+    };
+
+    /* ---- Error Interrupt Trigger ---- */
+    reg error_intr_trig_t {
+        name = "Interrupt Trigger Register type definition";
+        desc = "Single bit for each interrupt event allows SW to manually
+                trigger occurrence of that event. Upon SW write, the bit
+                will pulse for 1 cycle then clear to 0.";
+
+        default hw = na;
+        default sw = rw;
+        default woset = true;
+        default singlepulse = true;
+
+        // Instantiate triggers bit-by-bit.
+        field {desc = "Internal Errors trigger bit";                             } error_internal_trig = 1'b0;
+        field {desc = "Invalid Device in Pauser field trigger bit";              } error_inv_dev_trig  = 1'b0;
+        field {desc = "Failed Commands trigger bit";                             } error_cmd_fail_trig = 1'b0;
+        field {desc = "Bad Fuse received from SoC trigger bit";                  } error_bad_fuse_trig = 1'b0;
+        field {desc = "ICCM access blocked by lock trigger bit";                 } error_iccm_blocked_trig = 1'b0;
+        field {desc = "Mailbox ECC Double-bit Error (uncorrectable) trigger bit";} error_mbox_ecc_unc_trig = 1'b0;
+    };
+
+    /* ---- Notification Interrupt Trigger ---- */
+    reg notif_intr_trig_t {
+        name = "Interrupt Trigger Register type definition";
+        desc = "Single bit for each interrupt event allows SW to manually
+                trigger occurrence of that event. Upon SW write, the bit
+                will pulse for 1 cycle then clear to 0.";
+
+        default hw = na;
+        default sw = rw;
+        default woset = true;
+        default singlepulse = true;
+
+        // Instantiate triggers bit-by-bit.
+        field {desc = "Command Available trigger bit";                         } notif_cmd_avail_trig = 1'b0;
+        field {desc = "Mailbox ECC Single-bit Error (correctable) trigger bit";} notif_mbox_ecc_cor_trig = 1'b0;
+        field {desc = "Security State, Debug Locked transition trigger bit";   } notif_debug_locked_trig = 1'b0;
+    };
+
+    /* ---- Interrupt Statistics Counter Incrementor ---- */
+    reg intr_count_incr_t {
+        name = "Interrupt Event Count Incrementor";
+        desc = "Trigger the event counter to increment based on observing
+                the rising edge of an interrupt event input from the
+                Hardware. The same input signal that causes an interrupt
+                event to be set (sticky) also causes this signal to pulse
+                for 1 clock cycle, resulting in the event counter
+                incrementing by 1 for every interrupt event.
+                This is implemented as a down-counter (1-bit) that will
+                decrement immediately on being set - resulting in a pulse";
+
+        default hw = w;
+        default sw = r; // Has to have some access.... ideally SW wouldn't even see this
+        default hwset = true;
+        default decrvalue = 1;
+        default counter;
+
+        field {desc = "Pulse mirrors interrupt event occurrence";} pulse = 1'b0;
+    };
+
+    /* ---- Interrupt Statistics Counter ---- */
+    reg intr_count_t {
+        name = "Interrupt Event Counter";
+        desc = "Provides statistics about the number of events that have
+                occurred.
+                Will not overflow ('incrsaturate').";
+
+        default sw = rw;
+        default hw = na;
+        default incrvalue = 1;
+        default incrsaturate = true;
+        default counter;
+
+        field {desc = "Count field";} cnt[32] = 32'h0;
+    };
+
+
+    /* ------------------------------------------------- Registers ------------------------------------------------- */
+    // First 9 registers are static and always defined                                                               //
+    global_intr_en_t  global_intr_en_r;      /* 1-bit per event type */                                              //
+    error_intr_en_t   error_intr_en_r;       /* 1-bit per error */                                                   //
+    notif_intr_en_t   notif_intr_en_r;       /* 1-bit per notification */                                            //
+    global_intr_t     error_global_intr_r;   /* 1-bit aggregating all error interrupts with global enable */         //
+    global_intr_t     notif_global_intr_r;   /* 1-bit aggregating all notification interrupts with global enable */  //
+    error_intr_t      error_internal_intr_r; /* Error pending, SW write 1 to clear */                                //
+    notif_intr_t      notif_internal_intr_r; /* Notification pending, SW write 1 to clear */                         //
+    error_intr_trig_t error_intr_trig_r;     /* SW sets error bit for interrupt testing */                           //
+    notif_intr_trig_t notif_intr_trig_r;     /* SW sets notification bit for interrupt testing */                    //
+                                                                                                                     //
+    // Align this set of registers; number of counters is based on peripheral event requirements                     //
+    intr_count_t      error_internal_intr_count_r @0x100;  /* Per error */                                           //
+    intr_count_t      error_inv_dev_intr_count_r;          /* Per error */                                           //
+    intr_count_t      error_cmd_fail_intr_count_r;         /* Per error */                                           //
+    intr_count_t      error_bad_fuse_intr_count_r;         /* Per error */                                           //
+    intr_count_t      error_iccm_blocked_intr_count_r;     /* Per error */                                           //
+    intr_count_t      error_mbox_ecc_unc_intr_count_r;     /* Per error */                                           //
+    intr_count_t      notif_cmd_avail_intr_count_r @0x180; /* Per notification */                                    //
+    intr_count_t      notif_mbox_ecc_cor_intr_count_r;     /* Per notification */                                    //
+    intr_count_t      notif_debug_locked_intr_count_r;     /* Per notification */                                    //
+                                                                                                                     //
+    // These registers should be treated by SW as reserved, and ignored.                                             //
+    // Offset at 0x200 gives enough space for 32 Errors and 32 Notifications                                         //
+    // to be implemented (requiring 2*32 32-bit registers starting at                                                //
+    // offset 0x100), and still allowing the entire regfile to fit                                                   //
+    // inside a 1024-byte space.                                                                                     //
+    intr_count_incr_t error_internal_intr_count_incr_r @0x200; /* Per error count incrementor pulse */               //
+    intr_count_incr_t error_inv_dev_intr_count_incr_r;         /* Per error count incrementor pulse */               //
+    intr_count_incr_t error_cmd_fail_intr_count_incr_r;        /* Per error count incrementor pulse */               //
+    intr_count_incr_t error_bad_fuse_intr_count_incr_r;        /* Per error count incrementor pulse */               //
+    intr_count_incr_t error_iccm_blocked_intr_count_incr_r;    /* Per error count incrementor pulse */               //
+    intr_count_incr_t error_mbox_ecc_unc_intr_count_incr_r;    /* Per error count incrementor pulse */               //
+    intr_count_incr_t notif_cmd_avail_intr_count_incr_r;       /* Per notification count incrementor pulse */        //
+    intr_count_incr_t notif_mbox_ecc_cor_intr_count_incr_r;    /* Per notification count incrementor pulse */        //
+    intr_count_incr_t notif_debug_locked_intr_count_incr_r;    /* Per notification count incrementor pulse */        //
+    /* ------------------------------------------------------------------------------------------------------------- */
+
+    /* ---- Reset assignment for Error Events ---- */
+    error_internal_intr_r.error_internal_sts     -> resetsignal = hard_reset_b;
+    error_internal_intr_r.error_inv_dev_sts      -> resetsignal = hard_reset_b;
+    error_internal_intr_r.error_cmd_fail_sts     -> resetsignal = hard_reset_b;
+    error_internal_intr_r.error_bad_fuse_sts     -> resetsignal = hard_reset_b;
+    error_internal_intr_r.error_iccm_blocked_sts -> resetsignal = hard_reset_b;
+    error_internal_intr_r.error_mbox_ecc_unc_sts -> resetsignal = hard_reset_b;
+    error_internal_intr_count_r.cnt          -> resetsignal = hard_reset_b;
+    error_inv_dev_intr_count_r.cnt           -> resetsignal = hard_reset_b;
+    error_cmd_fail_intr_count_r.cnt          -> resetsignal = hard_reset_b;
+    error_bad_fuse_intr_count_r.cnt          -> resetsignal = hard_reset_b;
+    error_iccm_blocked_intr_count_r.cnt      -> resetsignal = hard_reset_b;
+    error_mbox_ecc_unc_intr_count_r.cnt      -> resetsignal = hard_reset_b;
+    // TODO: Use this same reset for the error incrementor pulse too?
+
+    /* ---- Interrupt Event Dynamic Assignments ---- */
+    error_internal_intr_r.error_internal_sts     -> enable = error_intr_en_r.error_internal_en;
+    error_internal_intr_r.error_inv_dev_sts      -> enable = error_intr_en_r.error_inv_dev_en;
+    error_internal_intr_r.error_cmd_fail_sts     -> enable = error_intr_en_r.error_cmd_fail_en;
+    error_internal_intr_r.error_bad_fuse_sts     -> enable = error_intr_en_r.error_bad_fuse_en;
+    error_internal_intr_r.error_iccm_blocked_sts -> enable = error_intr_en_r.error_iccm_blocked_en;
+    error_internal_intr_r.error_mbox_ecc_unc_sts -> enable = error_intr_en_r.error_mbox_ecc_unc_en;
+    notif_internal_intr_r.notif_cmd_avail_sts    -> enable = notif_intr_en_r.notif_cmd_avail_en;
+    notif_internal_intr_r.notif_mbox_ecc_cor_sts -> enable = notif_intr_en_r.notif_mbox_ecc_cor_en;
+    notif_internal_intr_r.notif_debug_locked_sts -> enable = notif_intr_en_r.notif_debug_locked_en;
+
+    error_internal_intr_r.error_internal_sts     -> next   = error_intr_trig_r.error_internal_trig;
+    error_internal_intr_r.error_inv_dev_sts      -> next   = error_intr_trig_r.error_inv_dev_trig;
+    error_internal_intr_r.error_cmd_fail_sts     -> next   = error_intr_trig_r.error_cmd_fail_trig;
+    error_internal_intr_r.error_bad_fuse_sts     -> next   = error_intr_trig_r.error_bad_fuse_trig;
+    error_internal_intr_r.error_iccm_blocked_sts -> next   = error_intr_trig_r.error_iccm_blocked_trig;
+    error_internal_intr_r.error_mbox_ecc_unc_sts -> next   = error_intr_trig_r.error_mbox_ecc_unc_trig;
+    notif_internal_intr_r.notif_cmd_avail_sts    -> next   = notif_intr_trig_r.notif_cmd_avail_trig;
+    notif_internal_intr_r.notif_mbox_ecc_cor_sts -> next   = notif_intr_trig_r.notif_mbox_ecc_cor_trig;
+    notif_internal_intr_r.notif_debug_locked_sts -> next   = notif_intr_trig_r.notif_debug_locked_trig;
+
+    // NOTE: hwset for events is implicitly defined as module input
+
+    /* ---- Global Interrupt Dynamic Assignments ---- */
+    error_global_intr_r.agg_sts -> enable = global_intr_en_r.error_en;
+    notif_global_intr_r.agg_sts -> enable = global_intr_en_r.notif_en;
+
+    error_global_intr_r.agg_sts -> next = error_internal_intr_r -> intr;
+    notif_global_intr_r.agg_sts -> next = notif_internal_intr_r -> intr;
+
+    /* ---- Event Statistics Tracker Assignments ---- */
+    // NOTE: This method relies upon a "counter" that is set using the
+    //       same events that trigger an interrupt, then immediately
+    //       self-clearing, which results in a pulse. Must be configured
+    //       to be sensitive to the interrupt trigger events for each event.
+    //       The output pulse is then used to increment the ACTUAL counter
+    error_internal_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error_internal_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+    error_internal_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error_internal_sts -> next;  // /      as a pulse to increment the intr_count_r register
+    error_internal_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_internal_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+    error_internal_intr_count_incr_r.pulse -> decr     = error_internal_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+    error_internal_intr_count_r.cnt        -> incr     = error_internal_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+    error_inv_dev_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error_inv_dev_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+    error_inv_dev_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error_inv_dev_sts -> next;  // /      as a pulse to increment the intr_count_r register
+    error_inv_dev_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_inv_dev_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+    error_inv_dev_intr_count_incr_r.pulse -> decr     = error_inv_dev_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+    error_inv_dev_intr_count_r.cnt        -> incr     = error_inv_dev_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+    error_cmd_fail_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error_cmd_fail_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+    error_cmd_fail_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error_cmd_fail_sts -> next;  // /      as a pulse to increment the intr_count_r register
+    error_cmd_fail_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_cmd_fail_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+    error_cmd_fail_intr_count_incr_r.pulse -> decr     = error_cmd_fail_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+    error_cmd_fail_intr_count_r.cnt        -> incr     = error_cmd_fail_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+    error_bad_fuse_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error_bad_fuse_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+    error_bad_fuse_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error_bad_fuse_sts -> next;  // /      as a pulse to increment the intr_count_r register
+    error_bad_fuse_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_bad_fuse_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+    error_bad_fuse_intr_count_incr_r.pulse -> decr     = error_bad_fuse_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+    error_bad_fuse_intr_count_r.cnt        -> incr     = error_bad_fuse_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+    error_iccm_blocked_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error_iccm_blocked_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+    error_iccm_blocked_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error_iccm_blocked_sts -> next;  // /      as a pulse to increment the intr_count_r register
+    error_iccm_blocked_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_iccm_blocked_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+    error_iccm_blocked_intr_count_incr_r.pulse -> decr     = error_iccm_blocked_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+    error_iccm_blocked_intr_count_r.cnt        -> incr     = error_iccm_blocked_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+    error_mbox_ecc_unc_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error_mbox_ecc_unc_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+    error_mbox_ecc_unc_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error_mbox_ecc_unc_sts -> next;  // /      as a pulse to increment the intr_count_r register
+    error_mbox_ecc_unc_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_mbox_ecc_unc_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+    error_mbox_ecc_unc_intr_count_incr_r.pulse -> decr     = error_mbox_ecc_unc_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+    error_mbox_ecc_unc_intr_count_r.cnt        -> incr     = error_mbox_ecc_unc_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+    notif_cmd_avail_intr_count_incr_r.pulse -> hwset    = notif_internal_intr_r.notif_cmd_avail_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+    notif_cmd_avail_intr_count_incr_r.pulse -> next     = notif_internal_intr_r.notif_cmd_avail_sts -> next;  // /      as a pulse to increment the intr_count_r register
+    notif_cmd_avail_intr_count_incr_r.pulse -> we       = notif_internal_intr_r.notif_cmd_avail_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+    notif_cmd_avail_intr_count_incr_r.pulse -> decr     = notif_cmd_avail_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+    notif_cmd_avail_intr_count_r.cnt        -> incr     = notif_cmd_avail_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+    notif_mbox_ecc_cor_intr_count_incr_r.pulse -> hwset = notif_internal_intr_r.notif_mbox_ecc_cor_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+    notif_mbox_ecc_cor_intr_count_incr_r.pulse -> next  = notif_internal_intr_r.notif_mbox_ecc_cor_sts -> next;  // /      as a pulse to increment the intr_count_r register
+    notif_mbox_ecc_cor_intr_count_incr_r.pulse -> we    = notif_internal_intr_r.notif_mbox_ecc_cor_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+    notif_mbox_ecc_cor_intr_count_incr_r.pulse -> decr  = notif_mbox_ecc_cor_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+    notif_mbox_ecc_cor_intr_count_r.cnt        -> incr  = notif_mbox_ecc_cor_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+    notif_debug_locked_intr_count_incr_r.pulse -> hwset = notif_internal_intr_r.notif_debug_locked_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+    notif_debug_locked_intr_count_incr_r.pulse -> next  = notif_internal_intr_r.notif_debug_locked_sts -> next;  // /      as a pulse to increment the intr_count_r register
+    notif_debug_locked_intr_count_incr_r.pulse -> we    = notif_internal_intr_r.notif_debug_locked_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+    notif_debug_locked_intr_count_incr_r.pulse -> decr  = notif_debug_locked_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+    notif_debug_locked_intr_count_r.cnt        -> incr  = notif_debug_locked_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+
+};
+
+/* -----------------------
+ * Register File instance
+ * ----------------------- */
+intr_block_t intr_block_rf @0x800; // Offset to accommodate FUSES and allow space above for iDevID if needed

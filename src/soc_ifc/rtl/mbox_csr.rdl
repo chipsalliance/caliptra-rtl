@@ -31,7 +31,9 @@ addrmap mbox_csr {
     // clear comes from mailbox control
     reg {
         name="Mailbox Lock";
-        desc="Mailbox lock register for mailbox access, reading 0 will set the lock";
+        desc="Mailbox lock register for mailbox access, reading 0 will set the lock
+        [br]Caliptra Access: RO
+        [br]SOC Access:      RO";
         field {rset; sw=r; hw=r; hwclr=true; swmod=true;} lock=0;
     } mbox_lock;
 
@@ -39,37 +41,49 @@ addrmap mbox_csr {
     // store user from interface when setting lock
     reg {
         name="Mailbox User";
-        desc="Stores the user that locked the mailbox";
+        desc="Stores the user that locked the mailbox
+        [br]Caliptra Access: RO
+        [br]SOC Access:      RO";
         field {sw=r; hw=rw; we=lock_set;} user[32]=0;
     } mbox_user;
 
     reg {
         name="Mailbox Command";
-        desc="Command requested for data in mailbox";
+        desc="Command requested for data in mailbox
+        [br]Caliptra Access: RW
+        [br]SOC Access:      RW";
         field {sw=rw; hw=na; swwe=valid_user; swmod=true;} command[32]=0;
     } mbox_cmd;
 
     reg {
         name="Mailbox Data Length";
-        desc="Data length for mailbox access in bytes";
+        desc="Data length for mailbox access in bytes
+        [br]Caliptra Access: RW
+        [br]SOC Access:      RW";
         field {sw=rw; hw=na; swwe=valid_user; swmod=true;} length[32]=0;
     } mbox_dlen;
 
     reg {
         name="Mailbox DataIn";
-        desc="Data in register, write the next data to mailbox";
+        desc="Data in register, write the next data to mailbox
+        [br]Caliptra Access: RW
+        [br]SOC Access:      RW";
         field {sw=rw; hw=na; swwe=valid_user; swmod=true;} datain[32];
     } mbox_datain;
 
     reg {
         name="Mailbox DataOut";
-        desc="Data out register, read the next data from mailbox";
+        desc="Data out register, read the next data from mailbox
+        [br]Caliptra Access: RO
+        [br]SOC Access:      RO";
         field {sw=rw; hw=w; we; swwe; swacc=true;} dataout[32];
     } mbox_dataout;
 
     reg {
         name="Mailbox Execute";
-        desc="Mailbox execute register indicates to receiver that the sender is done";
+        desc="Mailbox execute register indicates to receiver that the sender is done
+        [br]Caliptra Access: RW
+        [br]SOC Access:      RW";
         field {sw=rw; hw=r; swwe=valid_user;} execute=0;
     } mbox_execute;
 
@@ -78,7 +92,9 @@ addrmap mbox_csr {
         desc="Status of the mailbox command";
         field {
             name = "Mailbox Status";
-            desc = "Indicates the status of mailbox command";
+            desc = "Indicates the status of mailbox command
+                    [br]Caliptra Access: RW
+                    [br]SOC Access:      RO";
 
             enum mbox_status_e {
                 CMD_BUSY = 2'd0 {
@@ -94,12 +110,14 @@ addrmap mbox_csr {
                     desc = "The requested command experienced a failure.";
                 };
             };
-            sw=rw; hw=r; encode = mbox_status_e; hwclr;} status[2]=0;
+            sw=rw; hw=r; encode = mbox_status_e; hwclr; swwel=soc_req;} status[2]=0;
         field {
             name = "Mailbox ECC Single Error";
             desc = "Indicates a correctable ECC single-bit error was
                     detected and corrected while reading dataout.
-                    Auto-clears when mbox_execute field is cleared.";
+                    Auto-clears when mbox_execute field is cleared.
+                    [br]Caliptra Access: RO
+                    [br]SOC Access:      RO";
 
             sw=r; hwset = true; hw=w; wel; } ecc_single_error=1'b0;
         field {
@@ -108,12 +126,16 @@ addrmap mbox_csr {
                     was detected while reading dataout.
                     Firmware developers are advised to set the command
                     status to CMD_FAILURE in response.
-                    Auto-clears when mbox_execute field is cleared.";
+                    Auto-clears when mbox_execute field is cleared.
+                    [br]Caliptra Access: RO
+                    [br]SOC Access:      RO";
 
             sw=r; hwset = true; hw=w; wel; } ecc_double_error=1'b0;
         field {
             name = "Mailbox FSM Present State";
-            desc = "Indicates the present state of the mailbox FSM";
+            desc = "Indicates the present state of the mailbox FSM
+                    [br]Caliptra Access: RO
+                    [br]SOC Access:      RO";
 
             enum mbox_fsm_e {
                 MBOX_IDLE = 3'b000 {
@@ -145,7 +167,9 @@ addrmap mbox_csr {
 
     reg {
         name="Mailbox Force Unlock";
-        desc="Capability for uC only to force unlock the mailbox.";
+        desc="Capability for uC only to force unlock the mailbox.
+              [br]Caliptra Access: RW
+              [br]SOC Access:      RO";
         field {sw=rw; hw=r; singlepulse; swwel = soc_req;} unlock=0;
     } mbox_unlock;
 

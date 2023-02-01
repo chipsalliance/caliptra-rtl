@@ -329,7 +329,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.generic_wires = new("generic_wires");
-            this.generic_wires.configure(this, 32, 0, "RW", 1, 'h0, 0, 1, 0);
+            this.generic_wires.configure(this, 32, 0, "RO", 1, 'h0, 0, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES
 

@@ -729,7 +729,7 @@ module sha512_acc_csr (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.intr_block_rf.global_intr_en_r.error_en.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.intr_block_rf.global_intr_en_r && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.intr_block_rf.global_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = decoded_wr_data[0:0];
             load_next_c = '1;
         end
@@ -747,7 +747,7 @@ module sha512_acc_csr (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.intr_block_rf.global_intr_en_r.notif_en.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.intr_block_rf.global_intr_en_r && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.intr_block_rf.global_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = decoded_wr_data[1:1];
             load_next_c = '1;
         end
@@ -765,7 +765,7 @@ module sha512_acc_csr (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error0_en.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = decoded_wr_data[0:0];
             load_next_c = '1;
         end
@@ -783,7 +783,7 @@ module sha512_acc_csr (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error1_en.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = decoded_wr_data[1:1];
             load_next_c = '1;
         end
@@ -801,7 +801,7 @@ module sha512_acc_csr (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error2_en.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = decoded_wr_data[2:2];
             load_next_c = '1;
         end
@@ -819,7 +819,7 @@ module sha512_acc_csr (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error3_en.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = decoded_wr_data[3:3];
             load_next_c = '1;
         end
@@ -837,7 +837,7 @@ module sha512_acc_csr (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.intr_block_rf.notif_intr_en_r && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.intr_block_rf.notif_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = decoded_wr_data[0:0];
             load_next_c = '1;
         end
@@ -901,7 +901,7 @@ module sha512_acc_csr (
         end else if(hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset) begin // HW Set
             next_c = '1;
             load_next_c = '1;
-        end else if(decoded_reg_strb.intr_block_rf.error_internal_intr_r && decoded_req_is_wr) begin // SW write 1 clear
+        end else if(decoded_reg_strb.intr_block_rf.error_internal_intr_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 clear
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value & ~decoded_wr_data[0:0];
             load_next_c = '1;
         end
@@ -925,7 +925,7 @@ module sha512_acc_csr (
         end else if(hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset) begin // HW Set
             next_c = '1;
             load_next_c = '1;
-        end else if(decoded_reg_strb.intr_block_rf.error_internal_intr_r && decoded_req_is_wr) begin // SW write 1 clear
+        end else if(decoded_reg_strb.intr_block_rf.error_internal_intr_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 clear
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value & ~decoded_wr_data[1:1];
             load_next_c = '1;
         end
@@ -949,7 +949,7 @@ module sha512_acc_csr (
         end else if(hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset) begin // HW Set
             next_c = '1;
             load_next_c = '1;
-        end else if(decoded_reg_strb.intr_block_rf.error_internal_intr_r && decoded_req_is_wr) begin // SW write 1 clear
+        end else if(decoded_reg_strb.intr_block_rf.error_internal_intr_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 clear
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value & ~decoded_wr_data[2:2];
             load_next_c = '1;
         end
@@ -973,7 +973,7 @@ module sha512_acc_csr (
         end else if(hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset) begin // HW Set
             next_c = '1;
             load_next_c = '1;
-        end else if(decoded_reg_strb.intr_block_rf.error_internal_intr_r && decoded_req_is_wr) begin // SW write 1 clear
+        end else if(decoded_reg_strb.intr_block_rf.error_internal_intr_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 clear
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value & ~decoded_wr_data[3:3];
             load_next_c = '1;
         end
@@ -1002,7 +1002,7 @@ module sha512_acc_csr (
         end else if(hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset) begin // HW Set
             next_c = '1;
             load_next_c = '1;
-        end else if(decoded_reg_strb.intr_block_rf.notif_internal_intr_r && decoded_req_is_wr) begin // SW write 1 clear
+        end else if(decoded_reg_strb.intr_block_rf.notif_internal_intr_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 clear
             next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value & ~decoded_wr_data[0:0];
             load_next_c = '1;
         end
@@ -1022,7 +1022,7 @@ module sha512_acc_csr (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
+        if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value | decoded_wr_data[0:0];
             load_next_c = '1;
         end else if(1) begin // singlepulse clears back to 0
@@ -1043,7 +1043,7 @@ module sha512_acc_csr (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
+        if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value | decoded_wr_data[1:1];
             load_next_c = '1;
         end else if(1) begin // singlepulse clears back to 0
@@ -1064,7 +1064,7 @@ module sha512_acc_csr (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
+        if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value | decoded_wr_data[2:2];
             load_next_c = '1;
         end else if(1) begin // singlepulse clears back to 0
@@ -1085,7 +1085,7 @@ module sha512_acc_csr (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
+        if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value | decoded_wr_data[3:3];
             load_next_c = '1;
         end else if(1) begin // singlepulse clears back to 0
@@ -1106,7 +1106,7 @@ module sha512_acc_csr (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.intr_block_rf.notif_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
+        if(decoded_reg_strb.intr_block_rf.notif_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value | decoded_wr_data[0:0];
             load_next_c = '1;
         end else if(1) begin // singlepulse clears back to 0
@@ -1127,7 +1127,7 @@ module sha512_acc_csr (
     always_comb begin
         automatic logic [31:0] next_c = field_storage.intr_block_rf.error0_intr_count_r.cnt.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.intr_block_rf.error0_intr_count_r && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.intr_block_rf.error0_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = decoded_wr_data[31:0];
             load_next_c = '1;
         end
@@ -1159,7 +1159,7 @@ module sha512_acc_csr (
     always_comb begin
         automatic logic [31:0] next_c = field_storage.intr_block_rf.error1_intr_count_r.cnt.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.intr_block_rf.error1_intr_count_r && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.intr_block_rf.error1_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = decoded_wr_data[31:0];
             load_next_c = '1;
         end
@@ -1191,7 +1191,7 @@ module sha512_acc_csr (
     always_comb begin
         automatic logic [31:0] next_c = field_storage.intr_block_rf.error2_intr_count_r.cnt.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.intr_block_rf.error2_intr_count_r && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.intr_block_rf.error2_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = decoded_wr_data[31:0];
             load_next_c = '1;
         end
@@ -1223,7 +1223,7 @@ module sha512_acc_csr (
     always_comb begin
         automatic logic [31:0] next_c = field_storage.intr_block_rf.error3_intr_count_r.cnt.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.intr_block_rf.error3_intr_count_r && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.intr_block_rf.error3_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = decoded_wr_data[31:0];
             load_next_c = '1;
         end
@@ -1255,7 +1255,7 @@ module sha512_acc_csr (
     always_comb begin
         automatic logic [31:0] next_c = field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_r && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = decoded_wr_data[31:0];
             load_next_c = '1;
         end
