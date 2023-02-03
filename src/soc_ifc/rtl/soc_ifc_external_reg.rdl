@@ -46,23 +46,26 @@ reg {
     name = "Hardware Error Encoding";
     desc = "Encoded error value for hardware errors.
             [br]Caliptra Access: RW
-            [br]SOC Access:      RW";
-    rw_rw_sticky error_code[32]=0; 
+            [br]SOC Access:      RW
+            [br]TAP Access [in debug/manuf mode]: RO";
+     field {resetsignal = hard_reset_b; hw=r;}error_code[32]=0; 
 } CPTRA_HW_ERROR_ENC;
 reg {
     name = "Firmware Error Encoding";
     desc = "Encoded error value for firmware errors.
             [br]Caliptra Access: RW
-            [br]SOC Access:      RW";
-    rw_rw_sticky error_code[32]=0; 
+            [br]SOC Access:      RW
+            [br]TAP Access [in debug/manuf mode]: RO";
+    field {resetsignal = hard_reset_b; hw=r;} error_code[32]=0; 
 } CPTRA_FW_ERROR_ENC;
 
 reg {
     name = "Boot Status";
     desc = "Reports the boot status.
             [br]Caliptra Access: RW
-            [br]SOC Access:      RO";
-    rw_ro status[32]=0;
+            [br]SOC Access:      RO
+            [br]TAP Access [in debug/manuf mode]: RO";
+    field {swwel = soc_req; hw=r;} status[32]=0;
 } CPTRA_BOOT_STATUS;
 reg {
     name = "Flow Status";
@@ -188,7 +191,7 @@ reg {
             [br]Caliptra Access: RO
             [br]SOC Access:      RW
             [br]TAP Access [in debug/manuf mode]: RW";
-    field {sw=rw; hw=r; swwe=soc_req;} GO[1]=0;
+    field {sw=rw; hw=rw; we=true; swwe=soc_req;} GO[1]=0;
 } CPTRA_BOOTFSM_GO;
 
 reg {
@@ -197,7 +200,7 @@ reg {
             [br]Caliptra Access: RW
             [br]SOC Access:      RW
             [br]TAP Access [in debug/manuf mode]: RW";
-    field {sw=rw; hw=na;} DATA[32] = 32'h0;
+    field {sw=rw; hw=rw; we=true;} DATA[32] = 32'h0;
 } CPTRA_DBG_MANUF_SERVICE_REG;
 
 reg {

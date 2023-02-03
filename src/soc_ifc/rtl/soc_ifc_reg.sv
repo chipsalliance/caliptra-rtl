@@ -1273,6 +1273,7 @@ module soc_ifc_reg (
             field_storage.CPTRA_HW_ERROR_ENC.error_code.value <= field_combo.CPTRA_HW_ERROR_ENC.error_code.next;
         end
     end
+    assign hwif_out.CPTRA_HW_ERROR_ENC.error_code.value = field_storage.CPTRA_HW_ERROR_ENC.error_code.value;
     // Field: soc_ifc_reg.CPTRA_FW_ERROR_ENC.error_code
     always_comb begin
         automatic logic [31:0] next_c = field_storage.CPTRA_FW_ERROR_ENC.error_code.value;
@@ -1291,6 +1292,7 @@ module soc_ifc_reg (
             field_storage.CPTRA_FW_ERROR_ENC.error_code.value <= field_combo.CPTRA_FW_ERROR_ENC.error_code.next;
         end
     end
+    assign hwif_out.CPTRA_FW_ERROR_ENC.error_code.value = field_storage.CPTRA_FW_ERROR_ENC.error_code.value;
     // Field: soc_ifc_reg.CPTRA_BOOT_STATUS.status
     always_comb begin
         automatic logic [31:0] next_c = field_storage.CPTRA_BOOT_STATUS.status.value;
@@ -1309,6 +1311,7 @@ module soc_ifc_reg (
             field_storage.CPTRA_BOOT_STATUS.status.value <= field_combo.CPTRA_BOOT_STATUS.status.next;
         end
     end
+    assign hwif_out.CPTRA_BOOT_STATUS.status.value = field_storage.CPTRA_BOOT_STATUS.status.value;
     // Field: soc_ifc_reg.CPTRA_FLOW_STATUS.status
     always_comb begin
         automatic logic [27:0] next_c = field_storage.CPTRA_FLOW_STATUS.status.value;
@@ -1597,6 +1600,9 @@ module soc_ifc_reg (
         if(decoded_reg_strb.CPTRA_BOOTFSM_GO && decoded_req_is_wr && hwif_in.soc_req) begin // SW write
             next_c = decoded_wr_data[0:0];
             load_next_c = '1;
+        end else if(hwif_in.CPTRA_BOOTFSM_GO.GO.we) begin // HW Write - we
+            next_c = hwif_in.CPTRA_BOOTFSM_GO.GO.next;
+            load_next_c = '1;
         end
         field_combo.CPTRA_BOOTFSM_GO.GO.next = next_c;
         field_combo.CPTRA_BOOTFSM_GO.GO.load_next = load_next_c;
@@ -1616,6 +1622,9 @@ module soc_ifc_reg (
         if(decoded_reg_strb.CPTRA_DBG_MANUF_SERVICE_REG && decoded_req_is_wr) begin // SW write
             next_c = decoded_wr_data[31:0];
             load_next_c = '1;
+        end else if(hwif_in.CPTRA_DBG_MANUF_SERVICE_REG.DATA.we) begin // HW Write - we
+            next_c = hwif_in.CPTRA_DBG_MANUF_SERVICE_REG.DATA.next;
+            load_next_c = '1;
         end
         field_combo.CPTRA_DBG_MANUF_SERVICE_REG.DATA.next = next_c;
         field_combo.CPTRA_DBG_MANUF_SERVICE_REG.DATA.load_next = load_next_c;
@@ -1627,6 +1636,7 @@ module soc_ifc_reg (
             field_storage.CPTRA_DBG_MANUF_SERVICE_REG.DATA.value <= field_combo.CPTRA_DBG_MANUF_SERVICE_REG.DATA.next;
         end
     end
+    assign hwif_out.CPTRA_DBG_MANUF_SERVICE_REG.DATA.value = field_storage.CPTRA_DBG_MANUF_SERVICE_REG.DATA.value;
     // Field: soc_ifc_reg.CPTRA_CLK_GATING_EN.clk_gating_en
     always_comb begin
         automatic logic [0:0] next_c = field_storage.CPTRA_CLK_GATING_EN.clk_gating_en.value;

@@ -170,6 +170,11 @@ logic fw_upd_rst_executed;
 logic BootFSM_BrkPoint_Latched;
 logic BootFSM_BrkPoint_Flag;
 
+logic dmi_inc_rdptr;
+logic cptra_uncore_dmi_reg_dout_access_f;
+mbox_dmi_reg_t mbox_dmi_reg;
+logic [31:0] cptra_uncore_dmi_reg_rdata_in;
+
 soc_ifc_reg__in_t soc_ifc_reg_hwif_in;
 soc_ifc_reg__out_t soc_ifc_reg_hwif_out;
 
@@ -318,14 +323,7 @@ soc_ifc_arb #(
     .soc_ifc_reg_req_hold(1'b0),
     .soc_ifc_reg_req_data(soc_ifc_reg_req_data),
     .soc_ifc_reg_rdata(soc_ifc_reg_rdata),
-    .soc_ifc_reg_error(soc_ifc_reg_error),
-
-    //caliptra uncore jtag ports
-    .cptra_uncore_dmi_reg_en   (cptra_uncore_dmi_reg_en),
-    .cptra_uncore_dmi_reg_wr_en(cptra_uncore_dmi_reg_wr_en),
-    .cptra_uncore_dmi_reg_rdata(cptra_uncore_dmi_reg_rdata),
-    .cptra_uncore_dmi_reg_addr (cptra_uncore_dmi_reg_addr),
-    .cptra_uncore_dmi_reg_wdata(cptra_uncore_dmi_reg_wdata) 
+    .soc_ifc_reg_error(soc_ifc_reg_error)
 
 );
 
@@ -472,13 +470,13 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_PAUSER_LOCK.LOCK.swwel = soc_ifc_reg_
 // Make the relevant fuses sticky on fuse_wr_done
 always_comb begin
     for (int i=0; i<12; i++) begin
-        soc_ifc_reg_hwif_in.fuse_key_manifest_pk_hash[i].hash.swwel        = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
-        soc_ifc_reg_hwif_in.fuse_owner_pk_hash[i].hash.swwel               = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
-        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.swwel                    = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+        soc_ifc_reg_hwif_in.fuse_key_manifest_pk_hash[i].hash.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+        soc_ifc_reg_hwif_in.fuse_owner_pk_hash[i].hash.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
     end
 
     for (int i=0; i<8; i++) begin
-        soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.swwel               = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+        soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
     end
 
     for (int i=0; i<24; i++) begin
@@ -491,7 +489,7 @@ always_comb begin
 
     // Run-time SVN can be unlocked whenever fuse_wr_done is 'reset' which happens on a warm reset
     for (int i=0; i<4; i++) begin
-        soc_ifc_reg_hwif_in.fuse_runtime_svn[i].svn.swwel                       = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+        soc_ifc_reg_hwif_in.fuse_runtime_svn[i].svn.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
     end
      
 end
@@ -515,6 +513,17 @@ always_comb begin
     end
 end
 
+// Generate a pulse to set the interrupt bit
+always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
+    if (~cptra_noncore_rst_b) begin
+        uc_mbox_data_avail_d <= '0;
+    end
+    else begin
+        uc_mbox_data_avail_d <= uc_mbox_data_avail;
+    end
+end
+
+always_comb uc_cmd_avail_p = uc_mbox_data_avail & !uc_mbox_data_avail_d;
 // Pulse input to soc_ifc_reg to set the interrupt status bit and generate interrupt output (if enabled)
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset     = 1'b0; // TODO
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_inv_dev_sts.hwset      = 1'b0; // TODO should decode from APB PAUSER
@@ -617,20 +626,43 @@ i_mbox (
     .sram_single_ecc_error(sram_single_ecc_error),
     .sram_double_ecc_error(sram_double_ecc_error),
     .soc_mbox_data_avail(mailbox_data_avail),
-    .uc_mbox_data_avail(uc_mbox_data_avail)
+    .uc_mbox_data_avail(uc_mbox_data_avail),
+    .dmi_inc_rdptr(dmi_inc_rdptr),
+    .dmi_reg(mbox_dmi_reg)
 );
 
-// Generate a pulse to set the interrupt bit
-always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
-    if (~cptra_noncore_rst_b) begin
-        uc_mbox_data_avail_d <= '0;
+//DMI register writes
+always_comb soc_ifc_reg_hwif_in.CPTRA_BOOTFSM_GO.GO.we = cptra_uncore_dmi_reg_wr_en & cptra_uncore_dmi_reg_en & 
+                                                         (cptra_uncore_dmi_reg_addr == DMI_REG_BOOTFSM_GO);
+always_comb soc_ifc_reg_hwif_in.CPTRA_BOOTFSM_GO.GO.next = cptra_uncore_dmi_reg_wdata[0];
+always_comb soc_ifc_reg_hwif_in.CPTRA_DBG_MANUF_SERVICE_REG.DATA.we = cptra_uncore_dmi_reg_wr_en & cptra_uncore_dmi_reg_en & 
+                                                                      (cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_DBG_MANUF_SERVICE_REG);
+always_comb soc_ifc_reg_hwif_in.CPTRA_DBG_MANUF_SERVICE_REG.DATA.next = cptra_uncore_dmi_reg_wdata;
+
+//DMI register read mux
+always_comb cptra_uncore_dmi_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_DLEN)}} & mbox_dmi_reg.MBOX_DLEN) | 
+                                            ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_DOUT)}} & mbox_dmi_reg.MBOX_DOUT) | 
+                                            ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_STATUS)}} & mbox_dmi_reg.MBOX_STATUS) | 
+                                            ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_BOOT_STATUS)}} & soc_ifc_reg_hwif_out.CPTRA_BOOT_STATUS.status.value) | 
+                                            ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_HW_ERRROR_ENC)}} & soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_ENC.error_code.value) | 
+                                            ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_FW_ERROR_ENC)}} & soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_ENC.error_code.value) |
+                                            ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_BOOTFSM_GO)}} & soc_ifc_reg_hwif_out.CPTRA_BOOTFSM_GO.GO.value) |
+                                            ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_DBG_MANUF_SERVICE_REG)}} & soc_ifc_reg_hwif_out.CPTRA_DBG_MANUF_SERVICE_REG.DATA.value) ;
+
+//Increment the read pointer when we had a dmi read to data out and no access this clock
+//This assumes that reg_en goes low between read accesses
+always_comb dmi_inc_rdptr = cptra_uncore_dmi_reg_dout_access_f & ~cptra_uncore_dmi_reg_en;
+
+always_ff @(posedge clk or negedge cptra_pwrgood) begin
+    if (~cptra_pwrgood) begin
+        cptra_uncore_dmi_reg_rdata <= '0;
+        cptra_uncore_dmi_reg_dout_access_f <= '0;
     end
     else begin
-        uc_mbox_data_avail_d <= uc_mbox_data_avail;
+        cptra_uncore_dmi_reg_rdata <= cptra_uncore_dmi_reg_en ? cptra_uncore_dmi_reg_rdata_in : cptra_uncore_dmi_reg_rdata;
+        cptra_uncore_dmi_reg_dout_access_f <= cptra_uncore_dmi_reg_en & ~cptra_uncore_dmi_reg_wr_en & (cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_DOUT);
     end
 end
-
-always_comb uc_cmd_avail_p = uc_mbox_data_avail & !uc_mbox_data_avail_d;
 
 `ASSERT_KNOWN(ERR_AHB_INF_X, {hreadyout_o,hresp_o}, soc_ifc_clk_cg, cptra_rst_b)
 //this generates an NMI in the core, but we don't have a handler so it just hangs

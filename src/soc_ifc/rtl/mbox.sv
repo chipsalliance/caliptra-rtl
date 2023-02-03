@@ -47,7 +47,11 @@ module mbox
 
     //interrupts
     output logic uc_mbox_data_avail,
-    output logic soc_mbox_data_avail
+    output logic soc_mbox_data_avail,
+
+    //DMI reg access
+    input logic dmi_inc_rdptr,
+    output mbox_dmi_reg_t dmi_reg
 
 );
 
@@ -218,7 +222,7 @@ always_comb begin : mbox_fsm_combo
         //only uC can write to datain here to respond to SoC
         MBOX_EXECUTE_UC: begin
             uc_mbox_data_avail = 1;
-            inc_rdptr = hwif_out.mbox_dataout.dataout.swacc & ~req_data.soc_req;
+            inc_rdptr = dmi_inc_rdptr | (hwif_out.mbox_dataout.dataout.swacc & ~req_data.soc_req);
             inc_wrptr = hwif_out.mbox_datain.datain.swmod & ~req_data.soc_req;
             mbox_protocol_sram_we = hwif_out.mbox_datain.datain.swmod & ~req_data.soc_req;
             if (arc_MBOX_EXECUTE_UC_MBOX_IDLE) begin
@@ -243,7 +247,7 @@ always_comb begin : mbox_fsm_combo
         //Only SoC can write to datain here to respond to uC
         MBOX_EXECUTE_SOC: begin
             soc_mbox_data_avail = 1;
-            inc_rdptr = hwif_out.mbox_dataout.dataout.swacc & req_data.soc_req & valid_user;
+            inc_rdptr = dmi_inc_rdptr | (hwif_out.mbox_dataout.dataout.swacc & req_data.soc_req & valid_user);
             inc_wrptr = hwif_out.mbox_datain.datain.swmod & req_data.soc_req & valid_user;
             mbox_protocol_sram_we = hwif_out.mbox_datain.datain.swmod & req_data.soc_req & valid_user;
             if (arc_MBOX_EXECUTE_SOC_MBOX_IDLE) begin
@@ -398,6 +402,16 @@ always_comb hwif_in.mbox_status.status.hwclr = arc_MBOX_EXECUTE_SOC_MBOX_IDLE | 
 always_comb hwif_in.mbox_status.ecc_single_error.hwset = sram_single_ecc_error;
 always_comb hwif_in.mbox_status.ecc_double_error.hwset = sram_double_ecc_error;
 always_comb hwif_in.mbox_status.soc_has_lock.next = soc_has_lock;
+
+always_comb dmi_reg.MBOX_DLEN = hwif_out.mbox_dlen.length.value;
+always_comb dmi_reg.MBOX_DOUT = hwif_out.mbox_dataout.dataout.value;
+always_comb dmi_reg.MBOX_STATUS = {22'd0,
+                                   hwif_out.mbox_status.status.value,
+                                   hwif_out.mbox_status.ecc_single_error.value,
+                                   hwif_out.mbox_status.ecc_double_error.value,
+                                   hwif_out.mbox_status.mbox_fsm_ps.value,
+                                   hwif_out.mbox_status.soc_has_lock.value
+                                   };
 
 logic s_cpuif_req_stall_wr_nc;
 logic s_cpuif_req_stall_rd_nc;

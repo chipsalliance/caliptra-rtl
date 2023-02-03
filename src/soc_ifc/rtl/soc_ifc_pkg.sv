@@ -45,6 +45,18 @@ package soc_ifc_pkg;
     parameter [4:0] CLP_SET_PAUSER_INTEG = { 1'b0,          1'b0,          1'b0,          1'b0,          1'b0};
     parameter [4:0][31:0] CLP_VALID_PAUSER = {32'h4444_4444, 32'h3333_3333, 32'h2222_2222, 32'h1111_1111, 32'h0000_0000};
   
+    //DMI Register encodings
+    //Read only registers
+    parameter DMI_REG_MBOX_DLEN = 7'h50;
+    parameter DMI_REG_MBOX_DOUT = 7'h51;
+    parameter DMI_REG_MBOX_STATUS = 7'h52;
+    parameter DMI_REG_BOOT_STATUS = 7'h53;
+    parameter DMI_REG_CPTRA_HW_ERRROR_ENC = 7'h54;
+    parameter DMI_REG_CPTRA_FW_ERROR_ENC = 7'h55;
+    //RW registers
+    parameter DMI_REG_CPTRA_DBG_MANUF_SERVICE_REG = 7'h60;
+    parameter DMI_REG_BOOTFSM_GO = 7'h61;
+    
     //BOOT FSM
     typedef enum logic [2:0] {
         BOOT_IDLE   = 3'b000,
@@ -99,6 +111,12 @@ package soc_ifc_pkg;
         logic debug_locked;
         device_lifecycle_e device_lifecycle;
     } security_state_t;
+
+    typedef struct packed {
+        logic [31:0] MBOX_DLEN;
+        logic [31:0] MBOX_DOUT;
+        logic [31:0] MBOX_STATUS;
+    } mbox_dmi_reg_t;
 
 endpackage
 

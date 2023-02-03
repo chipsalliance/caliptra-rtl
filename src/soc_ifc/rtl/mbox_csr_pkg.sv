@@ -93,6 +93,7 @@ package mbox_csr_pkg;
     } mbox_csr__mbox_cmd__out_t;
 
     typedef struct packed{
+        logic [31:0] value;
         logic swmod;
     } mbox_csr__mbox_dlen__length__out_t;
 
@@ -109,6 +110,7 @@ package mbox_csr_pkg;
     } mbox_csr__mbox_datain__out_t;
 
     typedef struct packed{
+        logic [31:0] value;
         logic swacc;
     } mbox_csr__mbox_dataout__dataout__out_t;
 
@@ -125,11 +127,31 @@ package mbox_csr_pkg;
     } mbox_csr__mbox_execute__out_t;
 
     typedef struct packed{
-        logic [1:0] value;
+        logic [3:0] value;
     } mbox_csr__mbox_status__status__out_t;
 
     typedef struct packed{
+        logic value;
+    } mbox_csr__mbox_status__ecc_single_error_next_e066e214_wel_e066e214__out_t;
+
+    typedef struct packed{
+        logic value;
+    } mbox_csr__mbox_status__ecc_double_error_next_e066e214_wel_e066e214__out_t;
+
+    typedef struct packed{
+        logic [2:0] value;
+    } mbox_csr__mbox_status__mbox_fsm_ps__out_t;
+
+    typedef struct packed{
+        logic value;
+    } mbox_csr__mbox_status__soc_has_lock__out_t;
+
+    typedef struct packed{
         mbox_csr__mbox_status__status__out_t status;
+        mbox_csr__mbox_status__ecc_single_error_next_e066e214_wel_e066e214__out_t ecc_single_error;
+        mbox_csr__mbox_status__ecc_double_error_next_e066e214_wel_e066e214__out_t ecc_double_error;
+        mbox_csr__mbox_status__mbox_fsm_ps__out_t mbox_fsm_ps;
+        mbox_csr__mbox_status__soc_has_lock__out_t soc_has_lock;
     } mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__out_t;
 
     typedef struct packed{

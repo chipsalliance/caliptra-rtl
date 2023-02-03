@@ -59,8 +59,9 @@ addrmap mbox_csr {
         name="Mailbox Data Length";
         desc="Data length for mailbox access in bytes
         [br]Caliptra Access: RW
-        [br]SOC Access:      RW";
-        field {sw=rw; hw=na; swwe=valid_user; swmod=true;} length[32]=0;
+        [br]SOC Access:      RW
+        [br]TAP Access [in debug/manuf mode]: RO";
+        field {sw=rw; hw=r; swwe=valid_user; swmod=true;} length[32]=0;
     } mbox_dlen;
 
     reg {
@@ -75,8 +76,9 @@ addrmap mbox_csr {
         name="Mailbox DataOut";
         desc="Data out register, read the next data from mailbox
         [br]Caliptra Access: RO
-        [br]SOC Access:      RO";
-        field {sw=rw; hw=w; we; swwe; swacc=true;} dataout[32];
+        [br]SOC Access:      RO
+        [br]TAP Access [in debug/manuf mode]: RO";
+        field {sw=rw; hw=rw; we; swwe; swacc=true;} dataout[32];
     } mbox_dataout;
 
     reg {
@@ -94,32 +96,37 @@ addrmap mbox_csr {
             name = "Mailbox Status";
             desc = "Indicates the status of mailbox command
                     [br]Caliptra Access: RW
-                    [br]SOC Access:      RO";
+                    [br]SOC Access:      RO
+                    [br]TAP Access [in debug/manuf mode]: RO";
 
             enum mbox_status_e {
-                CMD_BUSY = 2'd0 {
+                CMD_BUSY = 4'd0 {
                     desc = "Receiver is busy, command is not yet complete.";
                 };
-                DATA_READY = 2'd1 {
+                DATA_READY = 4'd1 {
                     desc = "Requested data is ready in the mailbox.";
                 };
-                CMD_COMPLETE = 2'd2 {
+                CMD_COMPLETE = 4'd2 {
                     desc = "Requested command is complete.";
                 };
-                CMD_FAILURE = 2'd3 {
+                CMD_FAILURE = 4'd3 {
                     desc = "The requested command experienced a failure.";
                 };
+                DATA_FOR_JTAG = 4'd4 {
+                    desc = "There is data in the mailbox for JTAG to read.";
+                };
             };
-            sw=rw; hw=r; encode = mbox_status_e; hwclr; swwel=soc_req;} status[2]=0;
+            sw=rw; hw=r; encode = mbox_status_e; hwclr; swwel=soc_req;} status[4]=0;
         field {
             name = "Mailbox ECC Single Error";
             desc = "Indicates a correctable ECC single-bit error was
                     detected and corrected while reading dataout.
                     Auto-clears when mbox_execute field is cleared.
                     [br]Caliptra Access: RO
-                    [br]SOC Access:      RO";
+                    [br]SOC Access:      RO
+                    [br]TAP Access [in debug/manuf mode]: RO";
 
-            sw=r; hwset = true; hw=w; wel; } ecc_single_error=1'b0;
+            sw=r; hwset = true; hw=rw; wel; } ecc_single_error=1'b0;
         field {
             name = "Mailbox ECC Double Error";
             desc = "Indicates an uncorrectable ECC double-bit error
@@ -128,14 +135,16 @@ addrmap mbox_csr {
                     status to CMD_FAILURE in response.
                     Auto-clears when mbox_execute field is cleared.
                     [br]Caliptra Access: RO
-                    [br]SOC Access:      RO";
+                    [br]SOC Access:      RO
+                    [br]TAP Access [in debug/manuf mode]: RO";
 
-            sw=r; hwset = true; hw=w; wel; } ecc_double_error=1'b0;
+            sw=r; hwset = true; hw=rw; wel; } ecc_double_error=1'b0;
         field {
             name = "Mailbox FSM Present State";
             desc = "Indicates the present state of the mailbox FSM
                     [br]Caliptra Access: RO
-                    [br]SOC Access:      RO";
+                    [br]SOC Access:      RO
+                    [br]TAP Access [in debug/manuf mode]: RO";
 
             enum mbox_fsm_e {
                 MBOX_IDLE = 3'b000 {
@@ -157,12 +166,15 @@ addrmap mbox_csr {
                     desc = "Mailbox has data for SoC";
                 };
             };
-            sw=r; hw=w; encode = mbox_fsm_e;
+            sw=r; hw=rw; encode = mbox_fsm_e;
         } mbox_fsm_ps[3] = 0;
         field {
             name = "SoC Acquired the Lock";
-            desc = "Indicates that the current lock was acquired by the SoC";
-            sw=r; hw=w;} soc_has_lock=1'b0;
+            desc = "Indicates that the current lock was acquired by the SoC
+                    [br]Caliptra Access: RO
+                    [br]SOC Access:      RO
+                    [br]TAP Access [in debug/manuf mode]: RO";
+            sw=r; hw=rw;} soc_has_lock=1'b0;
     } mbox_status;
 
     reg {

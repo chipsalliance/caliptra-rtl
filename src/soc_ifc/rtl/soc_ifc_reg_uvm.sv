@@ -287,7 +287,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.GO = new("GO");
-            this.GO.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.GO.configure(this, 1, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_BOOTFSM_GO
 
@@ -301,7 +301,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.DATA = new("DATA");
-            this.DATA.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.DATA.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_DBG_MANUF_SERVICE_REG
 
