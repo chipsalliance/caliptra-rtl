@@ -61,7 +61,11 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
     output int   cycleCnt,
 
     //Interrupt flags
-    output logic int_flag
+    output logic int_flag,
+
+    //Reset flags
+    output logic hard_rst_flag,
+    output logic rst_flag
 
 );
 
@@ -99,6 +103,10 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
     logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata_bitflip;
     int cycleCntKillReq;
 
+    int                         rst_cyclecnt = 0;
+    logic                       rst_flag_doe_done;
+    logic                       rst_flag_int;
+
 // Upwards name referencing per 23.8 of IEEE 1800-2017
 `define DEC caliptra_top_dut.rvtop.swerv.dec
 
@@ -116,6 +124,11 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
     //         8'h2 : 8'h5  - Do nothing
     //         8'h6 : 8'h7E - WriteData is an ASCII character - dump to console.log
     //         8'h7F        - Do nothing
+    //         8'hf3        - Make two clients write to KV
+    //         8'hf4        - Write random data to KV entry0
+    //         8'hf5        - Issue cold reset
+    //         8'hf6        - Issue warm reset
+    //         8'hf7        - Issue warm reset when DOE FSM is done
     //         8'hf8        - Assert interrupt flags at fixed intervals to wake up halted core
     //         8'hf9        - Lock debug in security state
     //         8'hfa        - Unlock debug in security state
@@ -168,10 +181,109 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
         end
     end
 
+    always@(negedge clk) begin
+        if((WriteData[7:0] == 8'hf3) && mailbox_write) begin
+            force caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_en = 1;
+            force caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.entry_is_pcr = 0;
+            force caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_entry = 6;
+            force caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_offset = 3;
+            force caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_data = 'hABCD_EF01;
+
+            force caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_en = 1;
+            force caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.entry_is_pcr = 0;
+            force caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_entry = 6;
+            force caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_offset = 3;
+            force caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_data = 'h2233_4455;
+        end
+        else begin
+            release caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_en;
+            release caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.entry_is_pcr;
+            release caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_entry;
+            release caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_offset;
+            release caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_data;
+
+            release caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_en;
+            release caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.entry_is_pcr;
+            release caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_entry;
+            release caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_offset;
+            release caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_data;
+
+        end
+    end
+
+    genvar dword;
+    generate
+        for(dword=0; dword<16; dword++) begin
+
+            always@(negedge clk) begin
+                if((WriteData[7:0] == 8'hf4) && mailbox_write) begin
+                    force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[0].dest_valid.we = 'b1;
+                    force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[0].dest_valid.next = (32'b10000 << `KV_REG_KEY_CTRL_0_DEST_VALID_LOW);
+                    force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[0][dword].data.we = 1'b1;
+                    force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[0][dword].data.next = $urandom();
+                end
+                else begin
+                    release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[0].dest_valid.we;
+                    release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[0].dest_valid.next;
+                    release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[0][dword].data.we;
+                    release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[0][dword].data.next;
+                end
+            end
+        end
+    endgenerate
+
+    always @(negedge clk) begin
+        if((WriteData[7:0] == 8'hf5) && mailbox_write) begin
+            hard_rst_flag <= 1;
+            rst_flag <= 1;
+            rst_flag_int <= 1;
+            rst_cyclecnt <= cycleCnt;
+            
+        end
+        else if(rst_flag_int && (cycleCnt == rst_cyclecnt + 'd10)) begin
+            hard_rst_flag <= 0;
+        end
+        else if(rst_flag_int && (cycleCnt == rst_cyclecnt + 'd20)) begin
+            rst_flag <= 0;
+            rst_flag_int <= 0;
+        end
+    end
+
+    always @(negedge clk) begin
+        if((WriteData[7:0] == 8'hf6) && mailbox_write) begin
+            rst_flag <= 1;
+            rst_cyclecnt <= cycleCnt;
+            
+        end
+        else if(!rst_flag_int && (cycleCnt == rst_cyclecnt + 'd10)) begin
+            rst_flag <= 0;
+            
+        end
+    end
+
+    always @(negedge clk) begin
+        if((WriteData[7:0] == 8'hf7) && mailbox_write) begin
+            rst_flag_doe_done <= 1;
+        end
+    end
+
     always @(negedge clk or negedge cptra_rst_b) begin
         if (!cptra_rst_b) int_flag <= 'b0;
         else if((WriteData[7:0] == 8'hf8) && mailbox_write) begin
             int_flag <= 1'b1;
+        end
+    end
+
+    //Wait till DOE FSM moves to DONE state before triggering reset
+    always@(posedge clk) begin
+        if(rst_flag_doe_done && (caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_doe_fsm_ns == 'h5)) begin
+            rst_flag <= 'b1;
+            rst_cyclecnt <= cycleCnt;
+        end
+        else if(rst_flag_doe_done && (cycleCnt == rst_cyclecnt + 'd5)) begin
+            rst_flag <= 0;
+            rst_flag_doe_done <= 'b0;
+            
         end
     end
 
@@ -383,6 +495,11 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
         preload_dccm();
         preload_iccm();
         preload_mbox();
+
+        hard_rst_flag = 0;
+        rst_flag = 0;
+        rst_flag_doe_done = 0;
+        rst_flag_int = 0;
 
     end
 

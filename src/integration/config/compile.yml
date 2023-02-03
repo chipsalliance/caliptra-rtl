@@ -46,6 +46,7 @@ global:
 provides: [caliptra_top_tb]
 schema_version: 2.4.0
 requires:
+  - asserts
   - libs
   - caliptra_top
   - el2_swerv_pkg

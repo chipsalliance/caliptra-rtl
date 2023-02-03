@@ -1,0 +1,157 @@
+uvmf:
+  interfaces:
+    #################### RST ####################
+    kv_rst:
+      clock: clk
+      reset: dummy
+      reset_assertion_level: 'False'
+
+      config_constraints: []
+      config_vars: []
+
+      hdl_typedefs: []
+      hvl_typedefs: []
+
+      parameters: []
+
+      ports:
+      #boot signals
+      - name: cptra_pwrgood
+        dir: output
+        width: '1'
+      - name: rst_b
+        dir: output
+        width: '1'
+      - name: debug_locked
+        dir: output
+        width: '1'
+
+      transaction_constraints:
+      - name: wait_cycles_c
+        value: '{ wait_cycles dist {[1:25] := 80, [25:100] := 15, [100:500] := 5}; }'
+
+      transaction_vars:
+      - name: set_pwrgood
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+      - name: assert_rst
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+      - name: wait_cycles
+        type: 'int unsigned'
+        iscompare: 'False'
+        isrand: 'True'
+      - name: debug_mode
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+
+    #################### WRITE ####################
+    kv_write:
+      clock: clk
+      reset: dummy
+      reset_assertion_level: 'False'
+
+      imports:
+      - name: "kv_defines_pkg"
+
+      config_constraints: []
+      config_vars: []
+
+      hdl_typedefs: []
+      hvl_typedefs: []
+
+      parameters:
+      - name: "KV_WRITE_REQUESTOR"
+        type: "string"
+        # Can be HMAC, ECC, DOE, SHA512
+        value: '"HMAC"'
+
+      ports:
+      - name: kv_write
+        dir: output
+        width: '$bits(kv_defines_pkg::kv_write_t)'
+      - name: kv_wr_resp
+        dir: input
+        width: '$bits(kv_defines_pkg::kv_wr_resp_t)'
+
+      transaction_constraints:
+      - name: dest_valid_c
+        # TODO correlate the actual values
+        value: '{ if (KV_WRITE_REQUESTOR inside {"ECC", "HMAC", "DOE", "SHA512"}) write_dest_valid == 63; }'
+
+      transaction_vars:
+      # KV Write
+      - name: write_en
+        type: logic
+        iscompare: 'False'
+        isrand: 'False'
+      - name: entry_is_pcr
+        type: logic          
+        iscompare: 'True'
+        isrand: 'True'
+      - name: write_entry
+        type: logic   [2:0]  
+        iscompare: 'True'
+        isrand: 'True'
+     - name: write_offset
+       type: logic   [3:0]  
+       iscompare: 'False'
+       isrand: 'False'
+      - name: write_data
+        type: logic   [31:0] 
+        iscompare: 'True'
+        isrand: 'True'
+      - name: write_dest_valid
+        type: logic   [5:0]  
+        iscompare: 'True'
+        isrand: 'True'
+
+    #################### READ ####################
+    kv_read:
+      clock: clk
+      reset: dummy
+      reset_assertion_level: 'False'
+
+      imports:
+      - name: "kv_defines_pkg"
+
+      config_constraints: []
+      config_vars: []
+
+      hdl_typedefs: []
+      hvl_typedefs: []
+
+      parameters:
+      - name: "KV_READ_REQUESTOR"
+        type: "string"
+        # Can be HMAC_KEY, HMAC_BLOCK, SHA512_BLOCK, ECC_PRIVKEY, ECC_SEED, ECC_MSG
+        value: '"HMAC_KEY"'
+
+      ports:
+      - name: kv_read
+        dir: output
+        width: '$bits(kv_defines_pkg::kv_read_t)'
+      - name: kv_rd_resp
+        dir: input
+        width: '$bits(kv_defines_pkg::kv_rd_resp_t)'
+
+      transaction_constraints: []
+
+      transaction_vars:
+      # KV Read
+      - name: entry_is_pcr
+        type: logic
+        iscompare: 'False'
+        isrand: 'True'
+      - name: read_entry
+        type: logic [2:0]
+        iscompare: 'True'
+        isrand: 'True'
+      # KV Resp
+      - name: read_data
+        type: logic [31:0]
+        iscompare: 'True'
+        isrand: 'False'

@@ -1,0 +1,50 @@
+uvmf:
+  interfaces:
+    kv_read:
+      clock: clk
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      gen_inbound_streaming_driver: 'False'
+      hdl_pkg_parameters: []
+      hdl_typedefs: []
+      hvl_pkg_parameters: []
+      hvl_typedefs: []
+      imports:
+      - name: kv_defines_pkg
+      parameters:
+      - name: KV_READ_REQUESTOR
+        type: string
+        value: '"HMAC_KEY"'
+      ports:
+      - dir: output
+        name: kv_read
+        reset_value: '''bz'
+        width: $bits(kv_defines_pkg::kv_read_t)
+      - dir: input
+        name: kv_resp
+        reset_value: '''bz'
+        width: $bits(kv_defines_pkg::kv_rd_resp_t)
+      reset: dummy
+      reset_assertion_level: 'False'
+      transaction_constraints: []
+      transaction_vars:
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'True'
+        name: entry_is_pcr
+        type: logic
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'True'
+        name: read_entry
+        type: logic [2:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: read_data
+        type: logic [31:0]
+        unpacked_dimension: ''
+      use_dpi_link: 'False'

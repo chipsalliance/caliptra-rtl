@@ -13,6 +13,14 @@ targets:
       - $COMPILE_ROOT/rtl/kv_defines_pkg.sv
       - $COMPILE_ROOT/rtl/kv_macros.svh
 ---
+provides: [kv_uvm_pkg]
+schema_version: 2.4.0
+targets:
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/kv_reg_uvm.sv
+---
 provides: [keyvault]
 schema_version: 2.4.0
 requires: 

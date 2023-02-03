@@ -44,7 +44,7 @@ _start:
         sw x5, 0(x3)
         addi x4, x4, 4
         addi x3, x3, 4
-        blt x3, x1, write_uds_IV_loop
+        ble x3, x1, write_uds_IV_loop
 
     //start UDS and store in KV0
     li x3, CLP_DOE_REG_DOE_CTRL
@@ -68,7 +68,7 @@ _start:
         sw x5, 0(x3)
         addi x4, x4, 4
         addi x3, x3, 4
-        blt x3, x1, write_fe_IV_loop
+        ble x3, x1, write_fe_IV_loop
 
     //start FE and store in KV6/7
     li x3, CLP_DOE_REG_DOE_CTRL

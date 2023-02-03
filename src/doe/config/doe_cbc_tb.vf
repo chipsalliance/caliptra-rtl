@@ -1,7 +1,7 @@
 +incdir+${WORKSPACE}/Caliptra/src/libs/rtl
 +incdir+${WORKSPACE}/Caliptra/src/keyvault/rtl
-+incdir+${WORKSPACE}/Caliptra/src/doe/tb
 +incdir+${WORKSPACE}/Caliptra/src/doe/rtl
++incdir+${WORKSPACE}/Caliptra/src/doe/tb
 ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_sva.svh
 ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_macros.svh
 ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_sram.sv
@@ -10,6 +10,7 @@ ${WORKSPACE}/Caliptra/src/libs/rtl/apb_slv_sif.sv
 ${WORKSPACE}/Caliptra/src/libs/rtl/ahb_slv_sif.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_defines_pkg.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_macros.svh
+${WORKSPACE}/Caliptra/src/doe/rtl/doe_defines_pkg.sv
 ${WORKSPACE}/Caliptra/src/doe/tb/doe_cbc_tb.sv
 ${WORKSPACE}/Caliptra/src/libs/rtl/clk_gate.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_reg_pkg.sv
@@ -18,7 +19,6 @@ ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_fsm.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_read_client.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_write_client.sv
-${WORKSPACE}/Caliptra/src/doe/rtl/doe_defines_pkg.sv
 ${WORKSPACE}/Caliptra/src/doe/rtl/doe_reg_pkg.sv
 ${WORKSPACE}/Caliptra/src/doe/rtl/doe_ctrl.sv
 ${WORKSPACE}/Caliptra/src/doe/rtl/doe_decipher_block.sv

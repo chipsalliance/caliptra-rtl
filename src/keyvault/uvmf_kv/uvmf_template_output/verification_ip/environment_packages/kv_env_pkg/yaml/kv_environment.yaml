@@ -1,0 +1,101 @@
+uvmf:
+  environments:
+    kv:
+      agents:
+      - initiator_responder: INITIATOR
+        name: kv_rst_agent
+        type: kv_rst
+      - initiator_responder: INITIATOR
+        name: kv_hmac_write_agent
+        type: kv_write
+      - initiator_responder: INITIATOR
+        name: kv_sha512_write_agent
+        type: kv_write
+      - initiator_responder: INITIATOR
+        name: kv_ecc_write_agent
+        type: kv_write
+      - initiator_responder: INITIATOR
+        name: kv_doe_write_agent
+        type: kv_write
+      - initiator_responder: INITIATOR
+        name: kv_hmac_key_read_agent
+        type: kv_read
+      - initiator_responder: INITIATOR
+        name: kv_hmac_block_read_agent
+        type: kv_read
+      - initiator_responder: INITIATOR
+        name: kv_sha512_block_read_agent
+        type: kv_read
+      - initiator_responder: INITIATOR
+        name: kv_ecc_privkey_read_agent
+        type: kv_read
+      - initiator_responder: INITIATOR
+        name: kv_ecc_seed_read_agent
+        type: kv_read
+      - initiator_responder: INITIATOR
+        name: kv_ecc_msg_read_agent
+        type: kv_read
+      analysis_components:
+      - name: kv_pred
+        parameters: []
+        type: kv_predictor
+      analysis_exports: []
+      analysis_ports: []
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      hvl_pkg_parameters: []
+      imports:
+      - name: mvc_pkg
+      - name: mgc_ahb_v2_0_pkg
+      - name: rw_txn_pkg
+      non_uvmf_components: []
+      parameters: []
+      qvip_connections:
+      - ap_key: burst_transfer
+        driver: qvip_ahb_lite_slave_subenv_ahb_lite_slave_0
+        receiver: kv_pred.ahb_slave_0_ae
+        validate: 'false'
+      qvip_memory_agents: []
+      qvip_subenvs:
+      - name: qvip_ahb_lite_slave_subenv
+        type: qvip_ahb_lite_slave
+      register_model:
+        maps:
+        - interface: qvip_ahb_lite_slave_subenv.ahb_lite_slave_0
+          name: ahb_map
+          qvip_agent: 'True'
+        reg_block_class: kv_reg_model_top
+        reg_model_package: kv_reg_model_top_pkg
+        use_adapter: 'True'
+        use_explicit_prediction: 'True'
+      scoreboards:
+      - name: kv_sb
+        sb_type: uvmf_in_order_scoreboard
+        trans_type: kv_read_transaction
+      subenvs: []
+      tlm_connections:
+      - driver: kv_rst_agent.monitored_ap
+        receiver: kv_pred.kv_rst_agent_ae
+        validate: 'True'
+      - driver: kv_pred.kv_sb_ap
+        receiver: kv_sb.expected_analysis_export
+        validate: 'True'
+      - driver: kv_hmac_key_read_agent.monitored_ap
+        receiver: kv_sb.actual_analysis_export
+        validate: 'True'
+      - driver: kv_hmac_block_read_agent.monitored_ap
+        receiver: kv_sb.actual_analysis_export
+        validate: 'True'
+      - driver: kv_sha512_block_read_agent.monitored_ap
+        receiver: kv_sb.actual_analysis_export
+        validate: 'True'
+      - driver: kv_ecc_privkey_read_agent.monitored_ap
+        receiver: kv_sb.actual_analysis_export
+        validate: 'True'
+      - driver: kv_ecc_seed_read_agent.monitored_ap
+        receiver: kv_sb.actual_analysis_export
+        validate: 'True'
+      - driver: kv_ecc_msg_read_agent.monitored_ap
+        receiver: kv_sb.actual_analysis_export
+        validate: 'True'

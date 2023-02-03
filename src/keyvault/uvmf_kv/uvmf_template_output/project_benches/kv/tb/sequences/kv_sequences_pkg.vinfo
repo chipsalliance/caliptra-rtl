@@ -1,0 +1,8 @@
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/kv_rst_pkg/kv_rst_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/kv_write_pkg/kv_write_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/kv_read_pkg/kv_read_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/environment_packages/kv_env_pkg/kv_env_pkg.vinfo
+@use $UVMF_PROJECT_DIR/tb/parameters/kv_parameters_pkg.vinfo
++incdir+@vinfodir
+kv_sequences_pkg.sv

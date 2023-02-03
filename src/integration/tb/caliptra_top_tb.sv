@@ -123,6 +123,10 @@ module caliptra_top_tb (
     //logic timer_int;
     logic int_flag;
 
+    //Reset flags
+    logic hard_rst_flag;
+    logic rst_flag;
+
     el2_mem_if el2_mem_export ();
 
     parameter FW_NUM_DWORDS         = 256;
@@ -157,6 +161,24 @@ module caliptra_top_tb (
             release caliptra_top_dut.soft_int;
             release caliptra_top_dut.timer_int;
             generic_input_wires <= 'h0;
+        end
+    end
+
+    always@(negedge core_clk) begin
+        if(hard_rst_flag) begin
+            cptra_pwrgood <= 'b0;
+        end
+        else begin
+            cptra_pwrgood <= 'b1;
+        end
+    end
+
+    always@(negedge core_clk) begin
+        if(rst_flag) begin
+            cptra_rst_b <= 'b0;
+        end
+        else begin 
+            cptra_rst_b <= 'b1;
         end
     end
 
@@ -636,9 +658,15 @@ caliptra_top_tb_services #(
     .cycleCnt(cycleCnt),
 
     //Interrupt flags
-    .int_flag(int_flag)
+    .int_flag(int_flag),
+
+    //Reset flags
+    .hard_rst_flag(hard_rst_flag),
+    .rst_flag(rst_flag)
 
 );
+
+caliptra_top_sva sva();
 
 
 endmodule

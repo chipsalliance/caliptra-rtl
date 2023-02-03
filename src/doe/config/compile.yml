@@ -3,6 +3,10 @@ provides: [doe_defines_pkg]
 schema_version: 2.4.0
 requires: []
 targets:
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files: 
+      - $COMPILE_ROOT/rtl/doe_defines_pkg.sv
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files: 

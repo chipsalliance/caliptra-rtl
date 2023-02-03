@@ -1,0 +1,71 @@
+uvmf:
+  interfaces:
+    kv_write:
+      clock: clk
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      gen_inbound_streaming_driver: 'False'
+      hdl_pkg_parameters: []
+      hdl_typedefs: []
+      hvl_pkg_parameters: []
+      hvl_typedefs: []
+      imports:
+      - name: kv_defines_pkg
+      parameters:
+      - name: KV_WRITE_REQUESTOR
+        type: string
+        value: '"HMAC"'
+      ports:
+      - dir: output
+        name: kv_write
+        reset_value: '''bz'
+        width: $bits(kv_defines_pkg::kv_write_t)
+      - dir: input
+        name: kv_wr_resp
+        reset_value: '''bz'
+        width: '$bits(kv_defines_pkg::kv_wr_resp_t)'
+      reset: dummy
+      reset_assertion_level: 'False'
+      transaction_constraints:
+      - comment: ''
+        name: dest_valid_c
+        value: '{ if (KV_WRITE_REQUESTOR inside {"ECC", "HMAC", "DOE", "SHA512"}) write_dest_valid == 63; }'
+      transaction_vars:
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: write_en
+        type: logic
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'True'
+        name: entry_is_pcr
+        type: logic
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'True'
+        name: write_entry
+        type: logic   [2:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'True'
+        name: write_offset
+        type: logic   [3:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'True'
+        name: write_data
+        type: logic   [31:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'True'
+        name: write_dest_valid
+        type: logic   [5:0]
+        unpacked_dimension: ''
+      use_dpi_link: 'False'

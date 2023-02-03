@@ -106,11 +106,16 @@ stages:
                  git restore \$AHA_POC_REPO/src/integration/docs/caliptra_reg_html/index.html;
                fi'
 
+            - 'if [[ \$(git diff --numstat -- \$AHA_POC_REPO/src/soc_ifc/docs/caliptra_top_reg_html/index.html | sed \"s/^\(\w\+\).*/\1/\") -eq 3 ]]; then
+                 echo \"index.html has only 3 changes after regeneration, which means only the timestamp was updated. Reverting changes.\";
+                 git restore \$AHA_POC_REPO/src/soc_ifc/docs/caliptra_top_reg_html/index.html;
+               fi'
+
             # Check for any file changes
-            - 'if [[ \$(git status -s --untracked-files=all --ignored=traditional -- \$AHA_POC_REPO/src/integration/ | wc -l) -gt 0 ]]; then
+            - 'if [[ \$(git status -s --untracked-files=all --ignored=traditional -- \$AHA_POC_REPO/src/integration/ \$AHA_POC_REPO/src/soc_ifc/  | wc -l) -gt 0 ]]; then
                  echo \"Regenerating HTML Reg documentation produced some file changes:\";
-                 git status -s --untracked-files=all --ignored=traditional -- \$AHA_POC_REPO/src/integration/;
-                 git diff -- \$AHA_POC_REPO/src/integration/;
+                 git status -s --untracked-files=all --ignored=traditional -- \$AHA_POC_REPO/src/integration/ \$AHA_POC_REPO/src/soc_ifc;
+                 git diff -- \$AHA_POC_REPO/src/integration/ \$AHA_POC_REPO/src/soc_ifc;
                  echo \"*****************************************\";
                  echo \"Review above changes locally and resubmit pipeline\";
                  echo \"(Hint: Check \$AHA_POC_REPO for the above changes)\";

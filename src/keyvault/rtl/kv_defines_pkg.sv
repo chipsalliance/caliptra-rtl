@@ -25,7 +25,7 @@ parameter KV_DATA_W = 32;
 parameter MAX_KV_MACRO_ENTRIES= (KV_NUM_PCR > KV_NUM_KEYS) ? KV_NUM_PCR : KV_NUM_KEYS; 
 parameter KV_MACRO_ENTRY_ADDRESS_WIDTH = $clog2(MAX_KV_MACRO_ENTRIES);
 parameter KV_ENTRY_SIZE = 512;
-parameter KV_ENTRY_SIZE_WIDTH = $clog2(KV_ENTRY_SIZE);
+parameter KV_ENTRY_SIZE_WIDTH = $clog2(KV_NUM_DWORDS);
 parameter KV_NUM_READ=6;
 parameter KV_NUM_WRITE=4;
 
