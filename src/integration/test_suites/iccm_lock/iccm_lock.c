@@ -115,6 +115,31 @@ void main(void) {
             printf("%c", 0x1);
         }
 
+
+         // Read ICCM here to see if there is any error when its being read while ICCM is being locked and that reads are getting expected data
+        iccm_dest = ICCM;
+        if (persistent_is_second_pass) {
+            code_word = (uint32_t *) &iccm_code1_start;
+            printf("Comparing second pass of the copy code from %x [through %x] to %x\n", (uintptr_t) code_word, &iccm_code1_end, (uintptr_t) iccm_dest);
+            while (code_word < (uint32_t *) &iccm_code1_end) {
+                printf("at %x: %x\n", (uintptr_t) iccm_dest, *iccm_dest);
+                if(*iccm_dest++ != *code_word++) {
+                    printf("ERROR: Reads mismatched on second pass\n");
+                    printf("%c", 0x1);
+                }
+            }
+        } else {
+            code_word = (uint32_t *) &iccm_code0_start;
+            printf("Comparing first pass of the copy code from %x [through %x] to %x\n", (uintptr_t) code_word, &iccm_code0_end, (uintptr_t) iccm_dest);
+            while (code_word < (uint32_t *) &iccm_code0_end) {
+                printf("at %x: %x\n", (uintptr_t) iccm_dest, *iccm_dest);
+                if(*iccm_dest++ != *code_word++) {
+                    printf("ERROR: Reads mismatched on first pass\n");
+                    printf("%c", 0x1);
+                }
+            }
+        }
+
         // Copy error code section from Mailbox to ICCM
         //   - This code section will kill the sim with error if executed
         //   - Copy of this code section is expected to fail since ICCM_LOCK=1
