@@ -47,11 +47,11 @@ module doe_cbc
    input wire           reset_n,
    input wire           cptra_pwrgood,
 
-   input wire [7:0][31:0] cptra_obf_key,
+   input wire [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key,
 
    //Obfuscated UDS and FE
-   input wire [31:0][31:0] obf_field_entropy,
-   input wire [11:0][31:0] obf_uds_seed,
+   input wire [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy,
+   input wire [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed,
 
    // Control.
    input wire           cs,

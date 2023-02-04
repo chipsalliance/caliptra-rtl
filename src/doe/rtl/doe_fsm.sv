@@ -23,8 +23,10 @@ module doe_fsm
     //derived params don't change
    ,localparam DEST_OFFSET_W   = $clog2(DEST_WIDTH/32)
    ,localparam DEST_NUM_DWORDS = (DEST_WIDTH/32)
-   ,localparam FE_NUM_BLOCKS   = 1024/SRC_WIDTH
-   ,localparam UDS_NUM_BLOCKS  = 384/SRC_WIDTH
+   ,localparam TOTAL_OBF_FE_BITS = `CLP_OBF_FE_DWORDS * 32
+   ,localparam TOTAL_OBF_UDS_BITS = `CLP_OBF_UDS_DWORDS * 32
+   ,localparam FE_NUM_BLOCKS   = TOTAL_OBF_FE_BITS/SRC_WIDTH
+   ,localparam UDS_NUM_BLOCKS  = TOTAL_OBF_UDS_BITS/SRC_WIDTH
 )
 (
     input logic clk,

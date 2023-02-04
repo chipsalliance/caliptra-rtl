@@ -38,8 +38,6 @@ package soc_ifc_pkg;
     parameter SOC_IFC_REG_START_ADDR = 18'h3_0000;
     parameter SOC_IFC_REG_END_ADDR   = 18'h3_FFFF;
 
-    parameter UC_FW_UPDT_RST_CYCLES  = 5;
-
     //Valid PAUSER
     //Lock the PAUSER values from integration time
     parameter [4:0] CLP_SET_PAUSER_INTEG = { 1'b0,          1'b0,          1'b0,          1'b0,          1'b0};

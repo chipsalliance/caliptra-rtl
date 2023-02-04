@@ -97,6 +97,7 @@ module caliptra_top
     `include "common_defines.sv"
 
     localparam NUM_INTR = `RV_PIC_TOTAL_INT; // 31
+    localparam TOTAL_OBF_KEY_BITS = `CLP_OBF_KEY_DWORDS * 32;
 
     //caliptra reset driven by boot fsm in mailbox
     logic                       cptra_noncore_rst_b;
@@ -181,9 +182,9 @@ module caliptra_top
     logic [4:0]                 wb_dest;
     logic [31:0]                wb_data;
 
-    logic [7:0][31:0] cptra_obf_key_reg;
-    logic [31:0][31:0] obf_field_entropy;
-    logic [11:0][31:0] obf_uds_seed;
+    logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg;
+    logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy;
+    logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed;
 
     //caliptra uncore jtag ports & pertinent logic
     logic                       cptra_uncore_dmi_reg_en;
@@ -659,9 +660,9 @@ sha256_ctrl #(
     .notif_intr(sha256_notif_intr)
 );
 
-logic [255:0] cptra_obf_key_dbg;
-logic [31:0][31:0] obf_field_entropy_dbg;
-logic [11:0][31:0] obf_uds_seed_dbg;
+logic [TOTAL_OBF_KEY_BITS-1:0]        cptra_obf_key_dbg;
+logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy_dbg;
+logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed_dbg;
 
 //override device secrets with debug values in debug mode
 always_comb cptra_obf_key_dbg = ~security_state.debug_locked ? `CLP_DEBUG_MODE_OBF_KEY : cptra_obf_key_reg;

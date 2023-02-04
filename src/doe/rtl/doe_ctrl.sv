@@ -20,13 +20,15 @@
 // DOE is the de-obfuscation engine, used to de-obfuscate the device secrets
 //
 //======================================================================
+`include "caliptra_macros.svh"
 
 module doe_ctrl 
     import doe_defines_pkg::*;
     import kv_defines_pkg::*;
     #(
     parameter AHB_DATA_WIDTH = 32,
-    parameter AHB_ADDR_WIDTH = 32
+    parameter AHB_ADDR_WIDTH = 32,
+    localparam TOTAL_OBF_KEY_BITS = `CLP_OBF_KEY_DWORDS * 32
 )
 (
     // Clock and reset.
@@ -34,11 +36,11 @@ module doe_ctrl
     input wire          reset_n,
     input wire          cptra_pwrgood,
 
-    input logic [255:0] cptra_obf_key,
+    input logic [TOTAL_OBF_KEY_BITS-1:0] cptra_obf_key,
 
     //Obfuscated UDS and FE
-    input logic [31:0][31:0] obf_field_entropy,
-    input logic [11:0][31:0] obf_uds_seed,
+    input logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy,
+    input logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed,
 
     // from SLAVES PORT
     input logic [AHB_ADDR_WIDTH-1:0] haddr_i,

@@ -89,17 +89,17 @@ module caliptra_top_sva
                             else $display("SVA ERROR: KV not flushed with correct debug values");
 
   //TODO: uncomment after fixing fuse_field_entropy bug
-  // genvar client;
-  // generate
-  //   for(client = 0; client < KV_NUM_WRITE; client++) begin
-  //     KV_client_wrdata_not_unknown: assert property (
-  //                                                   @(posedge `KEYVAULT_PATH.clk)
-  //                                                   disable iff (!`KEYVAULT_PATH.kv_write[client].write_en || !`KEYVAULT_PATH.rst_b)
-  //                                                   `KEYVAULT_PATH.kv_write[client].write_en |-> !$isunknown(`KEYVAULT_PATH.kv_write[client].write_data)
-  //                                                 )
-  //                                   else $display("SVA ERROR: KV client %0d data is unknown", client);
-  //   end
-  // endgenerate
+  genvar client;
+  generate
+    for(client = 0; client < KV_NUM_WRITE; client++) begin
+      KV_client_wrdata_not_unknown: assert property (
+                                                    @(posedge `KEYVAULT_PATH.clk)
+                                                    disable iff (!`KEYVAULT_PATH.kv_write[client].write_en || !`KEYVAULT_PATH.rst_b)
+                                                    `KEYVAULT_PATH.kv_write[client].write_en |-> !$isunknown(`KEYVAULT_PATH.kv_write[client].write_data)
+                                                  )
+                                    else $display("SVA ERROR: KV client %0d data is unknown", client);
+    end
+  endgenerate
     
 
 endmodule
