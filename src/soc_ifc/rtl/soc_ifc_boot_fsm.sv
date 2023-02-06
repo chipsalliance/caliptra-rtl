@@ -42,7 +42,6 @@ module soc_ifc_boot_fsm
 boot_fsm_state_e boot_fsm_ns;
 boot_fsm_state_e boot_fsm_ps;
 //arcs between states - global rst
-logic arc_BOOT_IDLE_BOOT_FUSE;
 logic arc_BOOT_FUSE_BOOT_DONE;
 logic arc_BOOT_FUSE_BOOT_WAIT;
 logic arc_BOOT_DONE_BOOT_IDLE;
@@ -61,8 +60,7 @@ logic [7:0] wait_count;
 logic wait_count_rst;
 logic wait_count_decr;
 
-//move to fuse state when SoC signals pwrgood and de-asserts reset
-always_comb arc_BOOT_IDLE_BOOT_FUSE = cptra_pwrgood;
+//move to fuse state when SoC de-asserts reset
 
 //move from fuse state to done when fuse done register is set
 always_comb arc_BOOT_FUSE_BOOT_DONE = fuse_done;
@@ -94,9 +92,7 @@ always_comb begin
 
     unique casez (boot_fsm_ps)
         BOOT_IDLE: begin
-            if (arc_BOOT_IDLE_BOOT_FUSE) begin
-                boot_fsm_ns = BOOT_FUSE;
-            end
+            boot_fsm_ns = BOOT_FUSE;
 
             //reset flags in IDLE
             fsm_synch_uc_rst_b = '1;
@@ -207,7 +203,7 @@ always_ff @(posedge clk or negedge cptra_rst_b) begin
     end
 end
 
-`ASSERT_KNOWN(ERR_FSM_ARC_X, {arc_BOOT_IDLE_BOOT_FUSE,arc_BOOT_FUSE_BOOT_DONE, arc_BOOT_DONE_BOOT_FWRST, arc_BOOT_WAIT_BOOT_DONE}, clk, cptra_rst_b)
+`ASSERT_KNOWN(ERR_FSM_ARC_X, {arc_BOOT_FUSE_BOOT_DONE, arc_BOOT_DONE_BOOT_FWRST, arc_BOOT_WAIT_BOOT_DONE}, clk, cptra_rst_b)
 `ASSERT_KNOWN(ERR_FSM_STATE_X, boot_fsm_ps, clk, cptra_rst_b)
 `ASSERT_KNOWN(ERR_UC_RST_X, cptra_noncore_rst_b, clk, cptra_rst_b)
 `ASSERT_KNOWN(ERR_UC_FWRST_X, cptra_uc_rst_b, clk, cptra_rst_b)
