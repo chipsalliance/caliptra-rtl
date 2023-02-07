@@ -23,7 +23,7 @@ uvmf:
       - dir: output
         name: cptra_obf_key
         reset_value: '''bz'
-        width: '[''8'', ''32'']'
+        width: '[''`CLP_OBF_KEY_DWORDS'', ''32'']'
       - dir: output
         name: security_state
         reset_value: '''bz'
@@ -53,7 +53,7 @@ uvmf:
         iscompare: 'True'
         isrand: 'True'
         name: cptra_obf_key_rand
-        type: bit [7:0] [31:0]
+        type: bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0]
         unpacked_dimension: ''
       - comment: ''
         iscompare: 'False'

@@ -110,12 +110,12 @@ end
   reg  cptra_noncore_rst_b_o = 'b0;
   tri  cptra_uc_rst_b_i;
   reg  cptra_uc_rst_b_o = 'b0;
-  tri [7:0][31:0] cptra_obf_key_reg_i;
-  reg [7:0][31:0] cptra_obf_key_reg_o = 'bz;
-  tri [31:0][31:0] obf_field_entropy_i;
-  reg [31:0][31:0] obf_field_entropy_o = 'bz;
-  tri [11:0][31:0] obf_uds_seed_i;
-  reg [11:0][31:0] obf_uds_seed_o = 'bz;
+  tri [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg_i;
+  reg [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg_o = 'bz;
+  tri [`CLP_OBF_FE_DWORDS-1:0][31:0] obf_field_entropy_i;
+  reg [`CLP_OBF_FE_DWORDS-1:0][31:0] obf_field_entropy_o = 'bz;
+  tri [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed_i;
+  reg [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed_o = 'bz;
   tri  soc_ifc_error_intr_i;
   reg  soc_ifc_error_intr_o = 'bz;
   tri  soc_ifc_notif_intr_i;
@@ -266,9 +266,9 @@ end
        //   bit sha_notif_intr_pending ;
        //   bit noncore_rst_asserted ;
        //   bit uc_rst_asserted ;
-       //   bit [7:0] [31:0] cptra_obf_key_reg ;
-       //   bit [31:0] [31:0] obf_field_entropy ;
-       //   bit [11:0] [31:0] obf_uds_seed ;
+       //   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg ;
+       //   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] obf_field_entropy ;
+       //   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] obf_uds_seed ;
        //   bit [31:0] nmi_vector ;
        //   bit iccm_locked ;
        // Members within the cptra_status_responder_struct:
@@ -278,9 +278,9 @@ end
        //   bit sha_notif_intr_pending ;
        //   bit noncore_rst_asserted ;
        //   bit uc_rst_asserted ;
-       //   bit [7:0] [31:0] cptra_obf_key_reg ;
-       //   bit [31:0] [31:0] obf_field_entropy ;
-       //   bit [11:0] [31:0] obf_uds_seed ;
+       //   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg ;
+       //   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] obf_field_entropy ;
+       //   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] obf_uds_seed ;
        //   bit [31:0] nmi_vector ;
        //   bit iccm_locked ;
        initiator_struct = cptra_status_initiator_struct;
@@ -299,9 +299,9 @@ end
        //    Initiator output signals
        //      cptra_noncore_rst_b_o <= cptra_status_initiator_struct.xyz;  //     
        //      cptra_uc_rst_b_o <= cptra_status_initiator_struct.xyz;  //
-       //      cptra_obf_key_reg_o <= cptra_status_initiator_struct.xyz;  //    [7:0][31:0] 
-       //      obf_field_entropy_o <= cptra_status_initiator_struct.xyz;  //    [31:0][31:0] 
-       //      obf_uds_seed_o <= cptra_status_initiator_struct.xyz;  //    [11:0][31:0] 
+       //      cptra_obf_key_reg_o <= cptra_status_initiator_struct.xyz;  //    [`CLP_OBF_KEY_DWORDS-1:0][31:0] 
+       //      obf_field_entropy_o <= cptra_status_initiator_struct.xyz;  //    [`CLP_OBF_FE_DWORDS-1:0][31:0] 
+       //      obf_uds_seed_o <= cptra_status_initiator_struct.xyz;  //    [`CLP_OBF_UDS_DWORDS-1:0][31:0] 
        //      soc_ifc_error_intr_o <= cptra_status_initiator_struct.xyz;  //     
        //      soc_ifc_notif_intr_o <= cptra_status_initiator_struct.xyz;  //    
        //      sha_error_intr_o <= cptra_status_initiator_struct.xyz;  //     
@@ -345,9 +345,9 @@ bit first_transfer=1;
   //   bit sha_notif_intr_pending ;
   //   bit noncore_rst_asserted ;
   //   bit uc_rst_asserted ;
-  //   bit [7:0] [31:0] cptra_obf_key_reg ;
-  //   bit [31:0] [31:0] obf_field_entropy ;
-  //   bit [11:0] [31:0] obf_uds_seed ;
+  //   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg ;
+  //   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] obf_field_entropy ;
+  //   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] obf_uds_seed ;
   //   bit [31:0] nmi_vector ;
   //   bit iccm_locked ;
   // Variables within the cptra_status_responder_struct:
@@ -357,9 +357,9 @@ bit first_transfer=1;
   //   bit sha_notif_intr_pending ;
   //   bit noncore_rst_asserted ;
   //   bit uc_rst_asserted ;
-  //   bit [7:0] [31:0] cptra_obf_key_reg ;
-  //   bit [31:0] [31:0] obf_field_entropy ;
-  //   bit [11:0] [31:0] obf_uds_seed ;
+  //   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg ;
+  //   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] obf_field_entropy ;
+  //   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] obf_uds_seed ;
   //   bit [31:0] nmi_vector ;
   //   bit iccm_locked ;
        // Reference code;
@@ -371,9 +371,9 @@ bit first_transfer=1;
        //    Responder input signals
        //      cptra_status_responder_struct.xyz = cptra_noncore_rst_b_i;  //     
        //      cptra_status_responder_struct.xyz = cptra_uc_rst_b_i;  //     
-       //      cptra_status_responder_struct.xyz = cptra_obf_key_reg_i;  //    [7:0][31:0] 
-       //      cptra_status_responder_struct.xyz = obf_field_entropy_i;  //    [31:0][31:0] 
-       //      cptra_status_responder_struct.xyz = obf_uds_seed_i;  //    [11:0][31:0] 
+       //      cptra_status_responder_struct.xyz = cptra_obf_key_reg_i;  //    [`CLP_OBF_KEY_DWORDS-1:0][31:0] 
+       //      cptra_status_responder_struct.xyz = obf_field_entropy_i;  //    [`CLP_OBF_FE_DWORDS-1:0][31:0] 
+       //      cptra_status_responder_struct.xyz = obf_uds_seed_i;  //    [`CLP_OBF_UDS_DWORDS-1:0][31:0] 
        //      cptra_status_responder_struct.xyz = soc_ifc_error_intr_i;  //     
        //      cptra_status_responder_struct.xyz = soc_ifc_notif_intr_i;  //   
        //      cptra_status_responder_struct.xyz = sha_error_intr_i;  //     

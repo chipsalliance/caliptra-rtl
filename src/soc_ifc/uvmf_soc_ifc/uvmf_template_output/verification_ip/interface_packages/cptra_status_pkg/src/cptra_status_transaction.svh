@@ -38,9 +38,9 @@ class cptra_status_transaction  extends uvmf_transaction_base;
   bit sha_notif_intr_pending ;
   bit noncore_rst_asserted ;
   bit uc_rst_asserted ;
-  bit [7:0] [31:0] cptra_obf_key_reg ;
-  bit [31:0] [31:0] obf_field_entropy ;
-  bit [11:0] [31:0] obf_uds_seed ;
+  bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg ;
+  bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] obf_field_entropy ;
+  bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] obf_uds_seed ;
   bit [31:0] nmi_vector ;
   bit iccm_locked ;
 

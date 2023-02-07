@@ -124,8 +124,10 @@ module caliptra_top_tb (
     logic int_flag;
 
     //Reset flags
-    logic hard_rst_flag;
-    logic rst_flag;
+    logic assert_hard_rst_flag;
+    logic deassert_hard_rst_flag;
+    logic assert_rst_flag;
+    logic deassert_rst_flag;
 
     el2_mem_if el2_mem_export ();
 
@@ -161,24 +163,6 @@ module caliptra_top_tb (
             release caliptra_top_dut.soft_int;
             release caliptra_top_dut.timer_int;
             generic_input_wires <= 'h0;
-        end
-    end
-
-    always@(negedge core_clk) begin
-        if(hard_rst_flag) begin
-            cptra_pwrgood <= 'b0;
-        end
-        else begin
-            cptra_pwrgood <= 'b1;
-        end
-    end
-
-    always@(negedge core_clk) begin
-        if(rst_flag) begin
-            cptra_rst_b <= 'b0;
-        end
-        else begin 
-            cptra_rst_b <= 'b1;
         end
     end
 
@@ -220,17 +204,25 @@ module caliptra_top_tb (
     end
 
     always @(posedge core_clk) begin
-        if (cycleCnt == 15) begin
+        //Reset/pwrgood assertion during runtime
+        if (cycleCnt == 15 || deassert_hard_rst_flag) begin
             $display ("\n\n\n\n\n\n");
             $display ("SoC: Asserting cptra_pwrgood and breakpoint\n");
             //assert power good
             cptra_pwrgood <= 1'b1;
             //BootFSM_BrkPoint <= 1'b1;
         end
-        else if (cycleCnt == 20) begin
+        else if (cycleCnt == 20 || deassert_rst_flag) begin
             $display ("SoC: De-Asserting cptra_rst_b\n");
             //de-assert reset
             cptra_rst_b <= 1'b1;
+        end
+        else if (assert_hard_rst_flag) begin
+            cptra_pwrgood <= 'b0;
+            cptra_rst_b <= 'b0;
+        end
+        else if (assert_rst_flag) begin
+            cptra_rst_b <= 'b0;
         end
         //wait for fuse indication
         else if (ready_for_fuses == 1'b0) begin
@@ -661,8 +653,10 @@ caliptra_top_tb_services #(
     .int_flag(int_flag),
 
     //Reset flags
-    .hard_rst_flag(hard_rst_flag),
-    .rst_flag(rst_flag)
+    .assert_hard_rst_flag(assert_hard_rst_flag),
+    .deassert_hard_rst_flag(deassert_hard_rst_flag),
+    .assert_rst_flag(assert_rst_flag),
+    .deassert_rst_flag(deassert_rst_flag)
 
 );
 

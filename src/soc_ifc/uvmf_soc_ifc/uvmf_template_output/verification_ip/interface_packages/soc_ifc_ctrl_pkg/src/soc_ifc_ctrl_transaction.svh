@@ -32,7 +32,7 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
 
   `uvm_object_utils( soc_ifc_ctrl_transaction )
 
-  rand bit [7:0] [31:0] cptra_obf_key_rand ;
+  rand bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_rand ;
   bit set_pwrgood ;
   bit assert_rst ;
   rand int unsigned wait_cycles ;

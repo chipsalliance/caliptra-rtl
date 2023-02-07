@@ -23,11 +23,11 @@ uvmf:
       - dir: output
         name: cptra_obf_key_reg
         reset_value: '''bz'
-        width: '[''8'', ''32'']'
+        width: '[''`CLP_OBF_KEY_DWORDS'', ''32'']'
       - dir: output
         name: obf_field_entropy
         reset_value: '''bz'
-        width: '[''32'', ''32'']'
+        width: '[''8'', ''32'']'
       - dir: output
         name: obf_uds_seed
         reset_value: '''bz'
@@ -100,13 +100,13 @@ uvmf:
         iscompare: 'False'
         isrand: 'False'
         name: cptra_obf_key_reg
-        type: bit [7:0] [31:0]
+        type: bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0]
         unpacked_dimension: ''
       - comment: ''
         iscompare: 'False'
         isrand: 'False'
         name: obf_field_entropy
-        type: bit [31:0] [31:0]
+        type: bit [7:0] [31:0]
         unpacked_dimension: ''
       - comment: ''
         iscompare: 'False'

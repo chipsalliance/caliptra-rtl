@@ -86,7 +86,7 @@ end
   tri dummy_i;
   tri  cptra_pwrgood_i;
   tri  cptra_rst_b_i;
-  tri [7:0][31:0] cptra_obf_key_i;
+  tri [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_i;
   tri [2:0] security_state_i;
   tri  BootFSM_BrkPoint_i;
   tri [63:0] generic_input_wires_i;
@@ -106,7 +106,7 @@ end
   // pragma uvmf custom interface_item_additional begin
   logic  cptra_pwrgood_r = 1'b0;
   logic  cptra_rst_b_r = 1'b0;
-  logic [7:0][31:0] cptra_obf_key_r;
+  logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_r;
   logic [63:0] generic_input_wires_r;
   security_state_t security_state_r;
   logic BootFSM_BrkPoint_r;
@@ -202,7 +202,7 @@ end
     //    All available input signals listed.
     //      soc_ifc_ctrl_monitor_struct.xyz = cptra_pwrgood_i;  //     
     //      soc_ifc_ctrl_monitor_struct.xyz = cptra_rst_b_i;  //     
-    //      soc_ifc_ctrl_monitor_struct.xyz = cptra_obf_key_i;  //    [7:0][31:0] 
+    //      soc_ifc_ctrl_monitor_struct.xyz = cptra_obf_key_i;  //    [`CLP_OBF_KEY_DWORDS-1:0][31:0] 
     //      soc_ifc_ctrl_monitor_struct.xyz = security_state_i;  //    [2:0] 
     //      soc_ifc_ctrl_monitor_struct.xyz = BootFSM_BrkPoint_i;  //     
     //      soc_ifc_ctrl_monitor_struct.xyz = generic_input_wires_i;  //    [63:0] 

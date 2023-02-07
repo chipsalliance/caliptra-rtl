@@ -63,7 +63,7 @@ typedef struct packed  { \
 //      and from_monitor_struct methods of the soc_ifc_ctrl_transaction class.
 //
   `define soc_ifc_ctrl_MONITOR_STRUCT typedef struct packed  { \
-  bit [7:0] [31:0] cptra_obf_key_rand ; \
+  bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_rand ; \
   bit set_pwrgood ; \
   bit assert_rst ; \
   int unsigned wait_cycles ; \
@@ -106,7 +106,7 @@ typedef struct packed  { \
 //      Also update the comments in the driver BFM.
 //
   `define soc_ifc_ctrl_INITIATOR_STRUCT typedef struct packed  { \
-  bit [7:0] [31:0] cptra_obf_key_rand ; \
+  bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_rand ; \
   bit set_pwrgood ; \
   bit assert_rst ; \
   int unsigned wait_cycles ; \
@@ -149,7 +149,7 @@ typedef struct packed  { \
 //      Also update the comments in the driver BFM.
 //
   `define soc_ifc_ctrl_RESPONDER_STRUCT typedef struct packed  { \
-  bit [7:0] [31:0] cptra_obf_key_rand ; \
+  bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_rand ; \
   bit set_pwrgood ; \
   bit assert_rst ; \
   int unsigned wait_cycles ; \

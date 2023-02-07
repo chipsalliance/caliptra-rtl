@@ -50,7 +50,7 @@ interface  soc_ifc_ctrl_if
   input tri dummy,
   inout tri  cptra_pwrgood,
   inout tri  cptra_rst_b,
-  inout tri [7:0][31:0] cptra_obf_key,
+  inout tri [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key,
   inout tri [2:0] security_state,
   inout tri  BootFSM_BrkPoint,
   inout tri [63:0] generic_input_wires

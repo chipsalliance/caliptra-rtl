@@ -64,8 +64,10 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
     output logic int_flag,
 
     //Reset flags
-    output logic hard_rst_flag,
-    output logic rst_flag
+    output logic assert_hard_rst_flag,
+    output logic assert_rst_flag,
+    output logic deassert_hard_rst_flag,
+    output logic deassert_rst_flag
 
 );
 
@@ -104,8 +106,11 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
     int cycleCntKillReq;
 
     int                         rst_cyclecnt = 0;
-    logic                       rst_flag_doe_done;
-    logic                       rst_flag_int;
+
+    logic                       cold_rst; 
+    logic                       warm_rst; 
+    logic                       timed_warm_rst; 
+    logic                       cold_rst_done;
 
 // Upwards name referencing per 23.8 of IEEE 1800-2017
 `define DEC caliptra_top_dut.rvtop.swerv.dec
@@ -232,38 +237,69 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
         end
     endgenerate
 
-    always @(negedge clk) begin
-        if((WriteData[7:0] == 8'hf5) && mailbox_write) begin
-            hard_rst_flag <= 1;
-            rst_flag <= 1;
-            rst_flag_int <= 1;
-            rst_cyclecnt <= cycleCnt;
-            
-        end
-        else if(rst_flag_int && (cycleCnt == rst_cyclecnt + 'd10)) begin
-            hard_rst_flag <= 0;
-        end
-        else if(rst_flag_int && (cycleCnt == rst_cyclecnt + 'd20)) begin
-            rst_flag <= 0;
-            rst_flag_int <= 0;
-        end
-    end
 
-    always @(negedge clk) begin
-        if((WriteData[7:0] == 8'hf6) && mailbox_write) begin
-            rst_flag <= 1;
-            rst_cyclecnt <= cycleCnt;
-            
-        end
-        else if(!rst_flag_int && (cycleCnt == rst_cyclecnt + 'd10)) begin
-            rst_flag <= 0;
-            
-        end
-    end
+    always@(negedge clk) begin
 
-    always @(negedge clk) begin
-        if((WriteData[7:0] == 8'hf7) && mailbox_write) begin
-            rst_flag_doe_done <= 1;
+        if((WriteData == 'hf5) && mailbox_write) begin 
+            cold_rst <= 'b1;
+            rst_cyclecnt <= cycleCnt;
+        end
+        else if((WriteData == 'hf6) && mailbox_write) begin
+            warm_rst <= 'b1;
+            rst_cyclecnt <= cycleCnt;
+        end
+        else if((WriteData == 'hf7) && mailbox_write) begin
+            timed_warm_rst <= 'b1;
+        end
+
+
+        if (cold_rst) begin
+            assert_hard_rst_flag <= cold_rst_done ? 'b0 : 'b1;
+            deassert_hard_rst_flag <= 'b0;
+            deassert_rst_flag <= 'b0;
+            
+
+            if(cycleCnt == rst_cyclecnt + 'd10) begin
+                assert_hard_rst_flag <= 'b0;
+                deassert_hard_rst_flag <= 'b1;
+                cold_rst_done <= 'b1;
+            end
+            else if(cycleCnt == rst_cyclecnt + 'd20) begin
+                deassert_rst_flag <= 'b1;
+                cold_rst <= 'b0;
+                cold_rst_done <= 'b0;
+            end
+            else begin
+                deassert_hard_rst_flag <= 'b0;
+                deassert_rst_flag <= 'b0;
+            end
+        end
+        else if(warm_rst) begin
+            assert_rst_flag <= 'b1;
+            deassert_rst_flag <= 'b0;
+            
+
+            if(cycleCnt == rst_cyclecnt + 'd10) begin
+                assert_rst_flag <= 'b0;
+                deassert_rst_flag <= 'b1;
+                warm_rst <= 'b0;
+            end
+        end
+        else if(timed_warm_rst) begin
+            if((caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_doe_fsm_ns == 'h5)) begin
+                assert_rst_flag <= 'b1;
+                deassert_rst_flag <= 'b0;
+                rst_cyclecnt <= cycleCnt;
+            end
+            else if(assert_rst_flag && (cycleCnt == rst_cyclecnt + 'd5)) begin
+                assert_rst_flag <= 0;
+                deassert_rst_flag <= 1;
+                timed_warm_rst <= 'b0;
+            end
+        end
+        else begin
+            deassert_hard_rst_flag <= 'b0;
+            deassert_rst_flag <= 'b0;
         end
     end
 
@@ -274,18 +310,6 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
         end
     end
 
-    //Wait till DOE FSM moves to DONE state before triggering reset
-    always@(posedge clk) begin
-        if(rst_flag_doe_done && (caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_doe_fsm_ns == 'h5)) begin
-            rst_flag <= 'b1;
-            rst_cyclecnt <= cycleCnt;
-        end
-        else if(rst_flag_doe_done && (cycleCnt == rst_cyclecnt + 'd5)) begin
-            rst_flag <= 0;
-            rst_flag_doe_done <= 'b0;
-            
-        end
-    end
 
     `ifndef VERILATOR
         initial begin
@@ -496,11 +520,15 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
         preload_iccm();
         preload_mbox();
 
-        hard_rst_flag = 0;
-        rst_flag = 0;
-        rst_flag_doe_done = 0;
-        rst_flag_int = 0;
+        assert_hard_rst_flag = 0;
+        deassert_hard_rst_flag = 0;
+        assert_rst_flag = 0;
+        deassert_rst_flag = 0;
 
+        cold_rst = 0;
+        warm_rst = 0;
+        timed_warm_rst = 0;
+        cold_rst_done = 0;
     end
 
    //=========================================================================-

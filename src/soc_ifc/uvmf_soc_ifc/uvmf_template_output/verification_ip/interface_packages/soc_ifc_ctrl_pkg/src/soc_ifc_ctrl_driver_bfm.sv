@@ -111,8 +111,8 @@ end
   reg  cptra_pwrgood_o = 'bz;
   tri  cptra_rst_b_i;
   reg  cptra_rst_b_o = 'bz;
-  tri [7:0][31:0] cptra_obf_key_i;
-  reg [7:0][31:0] cptra_obf_key_o = 'bz;
+  tri [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_i;
+  reg [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_o = 'bz;
   tri [2:0] security_state_i;
   reg [2:0] security_state_o = 'bz;
   tri  BootFSM_BrkPoint_i;
@@ -220,7 +220,7 @@ end
        );// pragma tbx xtf  
        // 
        // Members within the soc_ifc_ctrl_initiator_struct:
-       //   bit [7:0] [31:0] cptra_obf_key_rand ;
+       //   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_rand ;
        //   bit set_pwrgood ;
        //   bit assert_rst ;
        //   int unsigned wait_cycles ;
@@ -228,7 +228,7 @@ end
        //   bit set_bootfsm_breakpoint ;
        //   bit [63:0] generic_input_val ;
        // Members within the soc_ifc_ctrl_responder_struct:
-       //   bit [7:0] [31:0] cptra_obf_key_rand ;
+       //   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_rand ;
        //   bit set_pwrgood ;
        //   bit assert_rst ;
        //   int unsigned wait_cycles ;
@@ -251,7 +251,7 @@ end
        //    Initiator output signals
        //      cptra_pwrgood_o <= soc_ifc_ctrl_initiator_struct.xyz;  //     
        //      cptra_rst_b_o <= soc_ifc_ctrl_initiator_struct.xyz;  //     
-       //      cptra_obf_key_o <= soc_ifc_ctrl_initiator_struct.xyz;  //    [7:0][31:0] 
+       //      cptra_obf_key_o <= soc_ifc_ctrl_initiator_struct.xyz;  //    [`CLP_OBF_KEY_DWORDS-1:0][31:0] 
        //      security_state_o <= soc_ifc_ctrl_initiator_struct.xyz;  //    [2:0] 
        //      BootFSM_BrkPoint_o <= soc_ifc_ctrl_initiator_struct.xyz;  //     
        //      generic_input_wires_o <= soc_ifc_ctrl_initiator_struct.xyz;  //    [63:0] 
@@ -306,7 +306,7 @@ bit first_transfer=1;
        input soc_ifc_ctrl_responder_s soc_ifc_ctrl_responder_struct 
        );// pragma tbx xtf   
   // Variables within the soc_ifc_ctrl_initiator_struct:
-  //   bit [7:0] [31:0] cptra_obf_key_rand ;
+  //   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_rand ;
   //   bit set_pwrgood ;
   //   bit assert_rst ;
   //   int unsigned wait_cycles ;
@@ -314,7 +314,7 @@ bit first_transfer=1;
   //   bit set_bootfsm_breakpoint ;
   //   bit [63:0] generic_input_val ;
   // Variables within the soc_ifc_ctrl_responder_struct:
-  //   bit [7:0] [31:0] cptra_obf_key_rand ;
+  //   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_rand ;
   //   bit set_pwrgood ;
   //   bit assert_rst ;
   //   int unsigned wait_cycles ;
@@ -330,7 +330,7 @@ bit first_transfer=1;
        //    Responder input signals
        //      soc_ifc_ctrl_responder_struct.xyz = cptra_pwrgood_i;  //     
        //      soc_ifc_ctrl_responder_struct.xyz = cptra_rst_b_i;  //     
-       //      soc_ifc_ctrl_responder_struct.xyz = cptra_obf_key_i;  //    [7:0][31:0] 
+       //      soc_ifc_ctrl_responder_struct.xyz = cptra_obf_key_i;  //    [`CLP_OBF_KEY_DWORDS-1:0][31:0] 
        //      soc_ifc_ctrl_responder_struct.xyz = security_state_i;  //    [2:0] 
        //      soc_ifc_ctrl_responder_struct.xyz = BootFSM_BrkPoint_i;  //     
        //      soc_ifc_ctrl_responder_struct.xyz = generic_input_wires_i;  //    [63:0] 

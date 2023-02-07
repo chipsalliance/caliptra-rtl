@@ -126,13 +126,13 @@ uvmf:
       #Obfuscated UDS and FE
       - name: cptra_obf_key_reg
         dir: output
-        width: ["8","32"]
+        width: ["`CLP_OBF_KEY_DWORDS","32"]
       - name: obf_field_entropy
         dir: output
-        width: ["32","32"]
+        width: ["`CLP_OBF_FE_DWORDS","32"]
       - name: obf_uds_seed
         dir: output
-        width: ["12","32"]
+        width: ["`CLP_OBF_UDS_DWORDS","32"]
 
       #uC Interrupts
       - name: soc_ifc_error_intr
@@ -190,15 +190,15 @@ uvmf:
 
       #Obfuscated UDS and FE
       - name: cptra_obf_key_reg
-        type: bit [7:0] [31:0]
+        type: bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0]
         iscompare: 'False'
         isrand: 'False'
       - name: obf_field_entropy
-        type: bit [31:0] [31:0]
+        type: bit [`CLP_OBF_FE_DWORDS-1:0] [31:0]
         iscompare: 'False'
         isrand: 'False'
       - name: obf_uds_seed
-        type: bit [11:0] [31:0]
+        type: bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0]
         iscompare: 'False'
         isrand: 'False'
 

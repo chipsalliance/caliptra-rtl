@@ -85,9 +85,9 @@ end
   tri dummy_i;
   tri  cptra_noncore_rst_b_i;
   tri  cptra_uc_rst_b_i;
-  tri [7:0][31:0] cptra_obf_key_reg_i;
-  tri [31:0][31:0] obf_field_entropy_i;
-  tri [11:0][31:0] obf_uds_seed_i;
+  tri [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg_i;
+  tri [`CLP_OBF_FE_DWORDS-1:0][31:0] obf_field_entropy_i;
+  tri [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed_i;
   tri  soc_ifc_error_intr_i;
   tri  soc_ifc_notif_intr_i;
   tri  sha_error_intr_i;
@@ -115,9 +115,9 @@ end
   // pragma uvmf custom interface_item_additional begin
   reg  cptra_noncore_rst_b_o = 'b0;
   reg  cptra_uc_rst_b_o = 'b0;
-  reg [7:0][31:0] cptra_obf_key_reg_o = 'b0;
-  reg [31:0][31:0] obf_field_entropy_o = 'b0;
-  reg [11:0][31:0] obf_uds_seed_o = 'b0;
+  reg [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg_o = 'b0;
+  reg [`CLP_OBF_FE_DWORDS-1:0][31:0] obf_field_entropy_o = 'b0;
+  reg [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed_o = 'b0;
   reg  soc_ifc_error_intr_o = 'b0;
   reg  soc_ifc_notif_intr_o = 'b0;
   reg  sha_error_intr_o = 'b0;
@@ -223,9 +223,9 @@ end
     //    All available input signals listed.
     //      cptra_status_monitor_struct.xyz = cptra_noncore_rst_b_i;  //     
     //      cptra_status_monitor_struct.xyz = cptra_uc_rst_b_i;  //     
-    //      cptra_status_monitor_struct.xyz = cptra_obf_key_reg_i;  //    [7:0][31:0] 
-    //      cptra_status_monitor_struct.xyz = obf_field_entropy_i;  //    [31:0][31:0] 
-    //      cptra_status_monitor_struct.xyz = obf_uds_seed_i;  //    [11:0][31:0] 
+    //      cptra_status_monitor_struct.xyz = cptra_obf_key_reg_i;  //    [`CLP_OBF_KEY_DWORDS-1:0][31:0] 
+    //      cptra_status_monitor_struct.xyz = obf_field_entropy_i;  //    [`CLP_OBF_FE_DWORDS-1:0][31:0] 
+    //      cptra_status_monitor_struct.xyz = obf_uds_seed_i;  //    [`CLP_OBF_UDS_DWORDS-1:0][31:0] 
     //      cptra_status_monitor_struct.xyz = soc_ifc_error_intr_i;  //     
     //      cptra_status_monitor_struct.xyz = soc_ifc_notif_intr_i;  //     
     //      cptra_status_monitor_struct.xyz = sha_error_intr_i;  //     
