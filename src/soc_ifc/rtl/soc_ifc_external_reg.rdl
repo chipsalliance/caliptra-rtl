@@ -48,7 +48,7 @@ reg {
             [br]Caliptra Access: RW
             [br]SOC Access:      RW
             [br]TAP Access [in debug/manuf mode]: RO";
-     field {resetsignal = hard_reset_b; hw=r;}error_code[32]=0; 
+     field {resetsignal = cptra_pwrgood; hw=r;}error_code[32]=0; 
 } CPTRA_HW_ERROR_ENC;
 reg {
     name = "Firmware Error Encoding";
@@ -56,7 +56,7 @@ reg {
             [br]Caliptra Access: RW
             [br]SOC Access:      RW
             [br]TAP Access [in debug/manuf mode]: RO";
-    field {resetsignal = hard_reset_b; hw=r;} error_code[32]=0; 
+    field {resetsignal = cptra_pwrgood; hw=r;} error_code[32]=0; 
 } CPTRA_FW_ERROR_ENC;
 
 reg {
@@ -65,7 +65,7 @@ reg {
             [br]Caliptra Access: RW
             [br]SOC Access:      RO
             [br]TAP Access [in debug/manuf mode]: RO";
-    field {swwel = soc_req; hw=r;} status[32]=0;
+    field {swwel = soc_req; hw=r; resetsignal = cptra_rst_b;} status[32]=0;
 } CPTRA_BOOT_STATUS;
 reg {
     name = "Flow Status";
@@ -74,11 +74,11 @@ reg {
             [br]SOC Access:      RO";
     rw_ro status[28]=0;
     //TRNG request bit
-     field {desc="Indicates Caliptra is ready for Firmware Download";         sw=rw; swwel = soc_req; hw=r ;} ready_for_fw[1]=0;
-     field {desc="Indicates Caliptra is ready for Runtime Firmware Download"; sw=rw; swwel = soc_req; hw=r ;} ready_for_runtime[1]=0;
+     field {desc="Indicates Caliptra is ready for Firmware Download";         sw=rw; swwel = soc_req; hw=r ; resetsignal = cptra_rst_b;} ready_for_fw[1]=0;
+     field {desc="Indicates Caliptra is ready for Runtime Firmware Download"; sw=rw; swwel = soc_req; hw=r ; resetsignal = cptra_rst_b;} ready_for_runtime[1]=0;
      field {desc="Indicates Caliptra is ready for Fuses to be programmed.
-                  Read-only to both Caliptra and SOC.";                       sw=r;                   hw=rw;} ready_for_fuses[1];
-     field {desc="Indicates Caliptra is has completed Mailbox Flow.";         sw=rw; swwel = soc_req; hw=r ;} mailbox_flow_done[1]=0;
+                  Read-only to both Caliptra and SOC.";                       sw=r;                   hw=rw; resetsignal = cptra_rst_b;} ready_for_fuses[1];
+     field {desc="Indicates Caliptra is has completed Mailbox Flow.";         sw=rw; swwel = soc_req; hw=r ; resetsignal = cptra_rst_b;} mailbox_flow_done[1]=0;
 } CPTRA_FLOW_STATUS;
 reg {
     name = "Reset Reason";
@@ -86,8 +86,8 @@ reg {
             Only reset during cold-boot (sticky).
             [br]Caliptra Access: RO
             [br]SOC Access:      RO";
-    field {desc = "FW update reset has been executed"; sw=r; hw=rw; we=true; resetsignal = reset_b;}      FW_UPD_RESET=0;
-    field {desc = "warm reset has been executed";      sw=r; hw=rw; resetsignal = hard_reset_b;} WARM_RESET=0;
+    field {desc = "FW update reset has been executed"; sw=r; hw=rw; we=true; resetsignal = cptra_rst_b;}      FW_UPD_RESET=0;
+    field {desc = "warm reset has been executed";      sw=r; hw=rw; resetsignal = cptra_pwrgood;} WARM_RESET=0;
 } CPTRA_RESET_REASON;
 
 reg {
@@ -106,9 +106,9 @@ reg {
             desc = "Production";
         };
     };
-    field {desc = "Device Lifecycle"; sw=r; hw=w; encode = device_lifecycle_e;} device_lifecycle[2];
-    field {desc = "Debug Locked"    ; sw=r; hw=w;                             } debug_locked;
-    field {desc = "Reserved field"  ; sw=r;                                   } rsvd[29] = 0;
+    field {desc = "Device Lifecycle"; sw=r; hw=w; encode = device_lifecycle_e; resetsignal = cptra_rst_b;} device_lifecycle[2]=0;
+    field {desc = "Debug Locked"    ; sw=r; hw=w;                              resetsignal = cptra_rst_b;} debug_locked=0;
+    field {desc = "Reserved field"  ; sw=r;                                    resetsignal = cptra_rst_b;} rsvd[29] = 0;
 } CPTRA_SECURITY_STATE;
 
 reg {
@@ -117,7 +117,7 @@ reg {
              [br]Caliptra Access: RW
              [br]SOC Access:      RW
              Read-Only once locked by PAUSER_LOCK.";
-     field {sw=rw; hw=r; swwel;} PAUSER[32]=0xFFFF_FFFF;
+     field {sw=rw; hw=r; swwel;resetsignal = cptra_rst_b;} PAUSER[32]=0xFFFF_FFFF;
  } CPTRA_VALID_PAUSER[5];
 
 //FIXME: Should LOCK be W1 here?
@@ -128,7 +128,7 @@ reg {
              [br]Caliptra Access: RW
              [br]SOC Access:      RW
              Read-Only once locked.";
-     field {sw=rw; hw=r; swwel;} LOCK=0;
+     field {sw=rw; hw=r; swwel; resetsignal = cptra_rst_b;} LOCK=0;
  } CPTRA_PAUSER_LOCK[5];
 
 reg {
@@ -137,7 +137,7 @@ reg {
             [br]Caliptra Access: RW
             [br]SOC Access:      RW
             Read-Only once locked by TRNG_PAUSER_LOCK.";
-    field {sw=rw; hw=r; swwel;} PAUSER[32]=0xFFFF_FFFF;
+    field {sw=rw; hw=r; swwel; resetsignal = cptra_rst_b;} PAUSER[32]=0xFFFF_FFFF;
  } CPTRA_TRNG_VALID_PAUSER;
 
 reg {
@@ -148,7 +148,7 @@ reg {
             [br]Caliptra Access: RW
             [br]SOC Access:      RW
             Read-Only once locked.";
-    field {sw=rw; hw=r; swwel;} LOCK=0;
+    field {sw=rw; hw=r; swwel; resetsignal=cptra_rst_b;} LOCK=0;
  } CPTRA_TRNG_PAUSER_LOCK;
 
 reg {
@@ -156,23 +156,27 @@ reg {
     desc = "Storage for the requested TRNG Data.
             [br]Caliptra Access: RO
             [br]SOC Access:      RW";
-    field {sw=rw; hw=na; swwe;} DATA[32];
+    field {sw=rw; hw=na; swwe; resetsignal=cptra_rst_b;} DATA[32]=0;
  } CPTRA_TRNG_DATA[12];
 
 reg {
-    name = "TRNG Done";
-    desc = "Indicates that the requests TRNG Data is done and stored in the TRNG Data register.
+    name = "TRNG Status";
+    desc = "TRNG Status register to indicate request and done";
+    field {desc = "Indicates that the requests TRNG Data is done and stored in the TRNG Data register.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";  sw=rw; hw=r; swwel=soc_req; resetsignal=cptra_rst_b;} DATA_REQ=0;
+
+    field {desc = "Indicates that the requests TRNG Data is done and stored in the TRNG Data register.
             [br]Caliptra Access: RO
-            [br]SOC Access:      RW";
-    field {sw=rw; hw=na; swwe;} DONE;
- } CPTRA_TRNG_DONE;
+            [br]SOC Access:      RW";  sw=rw; hw=na; swwe; resetsignal=cptra_rst_b;} DATA_WR_DONE=0;
+ } CPTRA_TRNG_STATUS;
 
 reg {
     name = "Fuse Write Done";
     desc = "Writes to fuse registers are completed. After the done bit is set, any subsequent writes to a fuse register will be dropped unless there is a power cycle or a warm reset or caliptra FW allows a write (negotiated through a mailbox command).
              [br]Caliptra Access: RO
              [br]SOC Access:      RW1-S";
-     field {sw=rw; hw=r; swwe=soc_req; resetsignal=hard_reset_b;} done[1]=0;
+     field {sw=rw; hw=r; swwe=soc_req; resetsignal=cptra_pwrgood;} done[1]=0;
 } CPTRA_FUSE_WR_DONE;
 
 reg {
@@ -182,7 +186,7 @@ reg {
             Clock Period is indicated as an integer number of picoseconds.
             [br]Caliptra Access: RW
             [br]SOC Access:      RW";
-    field {desc = "Period in (ps)"; sw=rw; hw=na;} clk_period[32] = 32'h0;
+    field {desc = "Period in (ps)"; sw=rw; hw=na; resetsignal = cptra_pwrgood;} clk_period[32] = 32'h0;
 } CPTRA_TIMER_CONFIG;
 
 reg {
@@ -191,7 +195,7 @@ reg {
             [br]Caliptra Access: RO
             [br]SOC Access:      RW
             [br]TAP Access [in debug/manuf mode]: RW";
-    field {sw=rw; hw=rw; we=true; swwe=soc_req;} GO[1]=0;
+    field {sw=rw; hw=rw; we=true; swwe=soc_req; resetsignal = cptra_rst_b;} GO[1]=0;
 } CPTRA_BOOTFSM_GO;
 
 reg {
@@ -200,7 +204,7 @@ reg {
             [br]Caliptra Access: RW
             [br]SOC Access:      RW
             [br]TAP Access [in debug/manuf mode]: RW";
-    field {sw=rw; hw=rw; we=true;} DATA[32] = 32'h0;
+    field {sw=rw; hw=rw; we=true;resetsignal = cptra_rst_b;} DATA[32] = 32'h0;
 } CPTRA_DBG_MANUF_SERVICE_REG;
 
 reg {
@@ -208,7 +212,7 @@ reg {
     desc = "Control register to enable or disable all of the caliptra clk gating. Default is 0 (disabled).
             [br]Caliptra Access: RO
             [br]SOC Access:      RW";
-    field {desc = "Clk gating enable"; hw = r; sw = rw; swwe = soc_req;} clk_gating_en = 1'b0;
+    field {desc = "Clk gating enable"; hw = r; sw = rw; swwe = soc_req; resetsignal = cptra_rst_b;} clk_gating_en = 1'b0;
 } CPTRA_CLK_GATING_EN;
 
 reg {
@@ -216,12 +220,12 @@ reg {
     desc = "Generic input wires connected to SoC interface.
             [br]Caliptra Access: RO
             [br]SOC Access:      RO";
-    field {sw=r; hw=w;} generic_wires[32];
+    field {sw=r; hw=rw; resetsignal = cptra_rst_b;} generic_wires[32]=0;
 } CPTRA_GENERIC_INPUT_WIRES[2];
 reg {
     name = "Generic Output Wires";
     desc = "Generic output wires connected to SoC interface.
             [br]Caliptra Access: RW
             [br]SOC Access:      RO";
-    field {sw=rw; hw=r; swwel = soc_req;} generic_wires[32];
+    field {sw=rw; hw=r; swwel = soc_req; resetsignal = cptra_rst_b;} generic_wires[32]=0;
 } CPTRA_GENERIC_OUTPUT_WIRES[2];

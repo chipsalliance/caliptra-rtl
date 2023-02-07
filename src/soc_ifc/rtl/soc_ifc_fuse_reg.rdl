@@ -16,9 +16,9 @@
 // FUSE Registers
 // All fuses persist across caliptra reset. Locked by Fuse WR done. "Read/Write Lock - Sticky" => RWL-S
 
-field secret {sw = w1; hw = r; swwel; hwclr; resetsignal = hard_reset_b;};
+field secret {sw = w1; hw = r; swwel; hwclr; resetsignal = cptra_pwrgood;};
 field key    {sw = w; swwe; hw = rw; wel; hwclr;};
-field Fuse   {sw = rw; hw = r; swwel; resetsignal = hard_reset_b;};
+field Fuse   {sw = rw; hw = r; swwel; resetsignal = cptra_pwrgood;};
 
 reg {
     name = "Unique Device Secret";

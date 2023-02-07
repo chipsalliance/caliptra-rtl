@@ -124,7 +124,7 @@ try:
     os.makedirs(html_output_dir)
 
     # Export documentation in HTML
-    exporter = HTMLExporter()
+    exporter = HTMLExporter(extra_doc_properties=["resetsignal"])
     exporter.export(root, html_output_dir)
 
     # Traverse the register model

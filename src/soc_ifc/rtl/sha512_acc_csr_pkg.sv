@@ -36,26 +36,26 @@ package sha512_acc_csr_pkg;
 
     typedef struct packed{
         logic hwset;
-    } sha512_acc_csr__error_intr_t__error0_sts_enable_528ccada_next_b1018582_resetsignal_939e99d4__in_t;
+    } sha512_acc_csr__error_intr_t__error0_sts_enable_528ccada_next_b1018582_resetsignal_f7aac87a__in_t;
 
     typedef struct packed{
         logic hwset;
-    } sha512_acc_csr__error_intr_t__error1_sts_enable_938cafef_next_f460eb81_resetsignal_939e99d4__in_t;
+    } sha512_acc_csr__error_intr_t__error1_sts_enable_938cafef_next_f460eb81_resetsignal_f7aac87a__in_t;
 
     typedef struct packed{
         logic hwset;
-    } sha512_acc_csr__error_intr_t__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_939e99d4__in_t;
+    } sha512_acc_csr__error_intr_t__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_f7aac87a__in_t;
 
     typedef struct packed{
         logic hwset;
-    } sha512_acc_csr__error_intr_t__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_939e99d4__in_t;
+    } sha512_acc_csr__error_intr_t__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_f7aac87a__in_t;
 
     typedef struct packed{
-        sha512_acc_csr__error_intr_t__error0_sts_enable_528ccada_next_b1018582_resetsignal_939e99d4__in_t error0_sts;
-        sha512_acc_csr__error_intr_t__error1_sts_enable_938cafef_next_f460eb81_resetsignal_939e99d4__in_t error1_sts;
-        sha512_acc_csr__error_intr_t__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_939e99d4__in_t error2_sts;
-        sha512_acc_csr__error_intr_t__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_939e99d4__in_t error3_sts;
-    } sha512_acc_csr__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__in_t;
+        sha512_acc_csr__error_intr_t__error0_sts_enable_528ccada_next_b1018582_resetsignal_f7aac87a__in_t error0_sts;
+        sha512_acc_csr__error_intr_t__error1_sts_enable_938cafef_next_f460eb81_resetsignal_f7aac87a__in_t error1_sts;
+        sha512_acc_csr__error_intr_t__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_f7aac87a__in_t error2_sts;
+        sha512_acc_csr__error_intr_t__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_f7aac87a__in_t error3_sts;
+    } sha512_acc_csr__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba__in_t;
 
     typedef struct packed{
         logic hwset;
@@ -66,7 +66,7 @@ package sha512_acc_csr_pkg;
     } sha512_acc_csr__notif_intr_t_notif_cmd_done_sts_1c68637e__in_t;
 
     typedef struct packed{
-        sha512_acc_csr__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__in_t error_internal_intr_r;
+        sha512_acc_csr__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba__in_t error_internal_intr_r;
         sha512_acc_csr__notif_intr_t_notif_cmd_done_sts_1c68637e__in_t notif_internal_intr_r;
     } sha512_acc_csr__intr_block_t__in_t;
 
@@ -74,8 +74,8 @@ package sha512_acc_csr_pkg;
         logic lock_set;
         logic valid_user;
         logic soc_req;
-        logic reset_b;
-        logic error_reset_b;
+        logic cptra_rst_b;
+        logic cptra_pwrgood;
         sha512_acc_csr__USER__in_t USER;
         sha512_acc_csr__EXECUTE__in_t EXECUTE;
         sha512_acc_csr__STATUS__in_t STATUS;
@@ -164,7 +164,7 @@ package sha512_acc_csr_pkg;
 
     typedef struct packed{
         logic intr;
-    } sha512_acc_csr__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__out_t;
+    } sha512_acc_csr__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba__out_t;
 
     typedef struct packed{
         logic intr;
@@ -173,7 +173,7 @@ package sha512_acc_csr_pkg;
     typedef struct packed{
         sha512_acc_csr__global_intr_t_agg_sts_dd3dcf0a__out_t error_global_intr_r;
         sha512_acc_csr__global_intr_t_agg_sts_e6399b4a__out_t notif_global_intr_r;
-        sha512_acc_csr__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__out_t error_internal_intr_r;
+        sha512_acc_csr__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba__out_t error_internal_intr_r;
         sha512_acc_csr__notif_intr_t_notif_cmd_done_sts_1c68637e__out_t notif_internal_intr_r;
     } sha512_acc_csr__intr_block_t__out_t;
 

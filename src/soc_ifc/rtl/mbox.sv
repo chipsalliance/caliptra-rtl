@@ -374,7 +374,7 @@ always_comb mbox_rdptr_nxt = rst_mbox_rdptr ? '0 :
                              inc_rdptr ? mbox_rdptr + 'd1 : 
                                          mbox_rdptr;
 
-always_comb hwif_in.reset_b = rst_b;
+always_comb hwif_in.cptra_rst_b = rst_b;
 always_comb hwif_in.mbox_user.user.next = req_data.user;
 always_comb hwif_in.mbox_status.mbox_fsm_ps.next = mbox_fsm_ps;
 

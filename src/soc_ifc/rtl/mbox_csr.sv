@@ -249,8 +249,8 @@ module mbox_csr (
         field_combo.mbox_lock.lock.next = next_c;
         field_combo.mbox_lock.lock.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_lock.lock.value <= 'h0;
         end else if(field_combo.mbox_lock.lock.load_next) begin
             field_storage.mbox_lock.lock.value <= field_combo.mbox_lock.lock.next;
@@ -269,8 +269,8 @@ module mbox_csr (
         field_combo.mbox_user.user.next = next_c;
         field_combo.mbox_user.user.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_user.user.value <= 'h0;
         end else if(field_combo.mbox_user.user.load_next) begin
             field_storage.mbox_user.user.value <= field_combo.mbox_user.user.next;
@@ -288,8 +288,8 @@ module mbox_csr (
         field_combo.mbox_cmd.command.next = next_c;
         field_combo.mbox_cmd.command.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_cmd.command.value <= 'h0;
         end else if(field_combo.mbox_cmd.command.load_next) begin
             field_storage.mbox_cmd.command.value <= field_combo.mbox_cmd.command.next;
@@ -307,8 +307,8 @@ module mbox_csr (
         field_combo.mbox_dlen.length.next = next_c;
         field_combo.mbox_dlen.length.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_dlen.length.value <= 'h0;
         end else if(field_combo.mbox_dlen.length.load_next) begin
             field_storage.mbox_dlen.length.value <= field_combo.mbox_dlen.length.next;
@@ -365,8 +365,8 @@ module mbox_csr (
         field_combo.mbox_execute.execute.next = next_c;
         field_combo.mbox_execute.execute.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_execute.execute.value <= 'h0;
         end else if(field_combo.mbox_execute.execute.load_next) begin
             field_storage.mbox_execute.execute.value <= field_combo.mbox_execute.execute.next;
@@ -387,8 +387,8 @@ module mbox_csr (
         field_combo.mbox_status.status.next = next_c;
         field_combo.mbox_status.status.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_status.status.value <= 'h0;
         end else if(field_combo.mbox_status.status.load_next) begin
             field_storage.mbox_status.status.value <= field_combo.mbox_status.status.next;
@@ -409,8 +409,8 @@ module mbox_csr (
         field_combo.mbox_status.ecc_single_error.next = next_c;
         field_combo.mbox_status.ecc_single_error.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_status.ecc_single_error.value <= 'h0;
         end else if(field_combo.mbox_status.ecc_single_error.load_next) begin
             field_storage.mbox_status.ecc_single_error.value <= field_combo.mbox_status.ecc_single_error.next;
@@ -431,8 +431,8 @@ module mbox_csr (
         field_combo.mbox_status.ecc_double_error.next = next_c;
         field_combo.mbox_status.ecc_double_error.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_status.ecc_double_error.value <= 'h0;
         end else if(field_combo.mbox_status.ecc_double_error.load_next) begin
             field_storage.mbox_status.ecc_double_error.value <= field_combo.mbox_status.ecc_double_error.next;
@@ -450,8 +450,8 @@ module mbox_csr (
         field_combo.mbox_status.mbox_fsm_ps.next = next_c;
         field_combo.mbox_status.mbox_fsm_ps.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_status.mbox_fsm_ps.value <= 'h0;
         end else if(field_combo.mbox_status.mbox_fsm_ps.load_next) begin
             field_storage.mbox_status.mbox_fsm_ps.value <= field_combo.mbox_status.mbox_fsm_ps.next;
@@ -469,8 +469,8 @@ module mbox_csr (
         field_combo.mbox_status.soc_has_lock.next = next_c;
         field_combo.mbox_status.soc_has_lock.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_status.soc_has_lock.value <= 'h0;
         end else if(field_combo.mbox_status.soc_has_lock.load_next) begin
             field_storage.mbox_status.soc_has_lock.value <= field_combo.mbox_status.soc_has_lock.next;
@@ -491,8 +491,8 @@ module mbox_csr (
         field_combo.mbox_unlock.unlock.next = next_c;
         field_combo.mbox_unlock.unlock.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_unlock.unlock.value <= 'h0;
         end else if(field_combo.mbox_unlock.unlock.load_next) begin
             field_storage.mbox_unlock.unlock.value <= field_combo.mbox_unlock.unlock.next;

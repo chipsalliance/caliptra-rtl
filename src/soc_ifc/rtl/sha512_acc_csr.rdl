@@ -240,14 +240,14 @@ addrmap sha512_acc_csr {
         /* ------------------------------------------------------------------------------------------------------------- */
 
         /* ---- Reset assignment for Error Events ---- */
-        error_internal_intr_r.error0_sts -> resetsignal = error_reset_b;
-        error_internal_intr_r.error1_sts -> resetsignal = error_reset_b;
-        error_internal_intr_r.error2_sts -> resetsignal = error_reset_b;
-        error_internal_intr_r.error3_sts -> resetsignal = error_reset_b;
-        error0_intr_count_r.cnt          -> resetsignal = error_reset_b;
-        error1_intr_count_r.cnt          -> resetsignal = error_reset_b;
-        error2_intr_count_r.cnt          -> resetsignal = error_reset_b;
-        error3_intr_count_r.cnt          -> resetsignal = error_reset_b;
+        error_internal_intr_r.error0_sts -> resetsignal = cptra_pwrgood;
+        error_internal_intr_r.error1_sts -> resetsignal = cptra_pwrgood;
+        error_internal_intr_r.error2_sts -> resetsignal = cptra_pwrgood;
+        error_internal_intr_r.error3_sts -> resetsignal = cptra_pwrgood;
+        error0_intr_count_r.cnt          -> resetsignal = cptra_pwrgood;
+        error1_intr_count_r.cnt          -> resetsignal = cptra_pwrgood;
+        error2_intr_count_r.cnt          -> resetsignal = cptra_pwrgood;
+        error3_intr_count_r.cnt          -> resetsignal = cptra_pwrgood;
         // TODO: Use this same reset for the error incrementor pulse too?
 
         /* ---- Interrupt Event Dynamic Assignments ---- */

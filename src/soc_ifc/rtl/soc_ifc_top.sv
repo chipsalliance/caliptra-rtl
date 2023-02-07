@@ -335,8 +335,8 @@ soc_ifc_arb #(
 //Read and Write permissions are controlled within this block
 always_comb soc_ifc_reg_error = soc_ifc_reg_read_error | soc_ifc_reg_write_error;
 
-always_comb soc_ifc_reg_hwif_in.reset_b = cptra_rst_b;
-always_comb soc_ifc_reg_hwif_in.hard_reset_b = cptra_pwrgood;
+always_comb soc_ifc_reg_hwif_in.cptra_rst_b = cptra_rst_b;
+always_comb soc_ifc_reg_hwif_in.cptra_pwrgood = cptra_pwrgood;
 always_comb soc_ifc_reg_hwif_in.soc_req = soc_ifc_reg_req_data.soc_req;
 
 always_comb begin
@@ -511,7 +511,7 @@ always_comb soc_ifc_reg_hwif_in.fuse_life_cycle.life_cycle.swwel           = soc
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //only allow valid users to write to TRNG
-always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_DONE.DONE.swwe = soc_ifc_reg_req_data.soc_req & 
+always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_STATUS.DATA_WR_DONE.swwe = soc_ifc_reg_req_data.soc_req & 
                                                             (soc_ifc_reg_req_data.user == soc_ifc_reg_hwif_out.CPTRA_TRNG_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]);
 always_comb begin 
     for (int i = 0; i < 12; i++) begin
@@ -580,7 +580,7 @@ assign clk_gating_en = soc_ifc_reg_hwif_out.CPTRA_CLK_GATING_EN.clk_gating_en.va
 // TODO
 assign cptra_error_fatal = 1'b0; // FIXME
 assign cptra_error_non_fatal = 1'b0; // FIXME
-assign trng_req = 1'b0; // FIXME
+assign trng_req = soc_ifc_reg_hwif_out.CPTRA_TRNG_STATUS.DATA_REQ.value;
 
 //SHA Accelerator
 sha512_acc_top #(

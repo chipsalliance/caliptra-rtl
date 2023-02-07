@@ -106,7 +106,7 @@ reg {
 
     default sw = r;
     default hw = rw;
-    default resetsignal = reset_b;
+    default resetsignal = cptra_rst_b;
     field {desc = "Valid bit, indicating that the digest is complete";} VALID = 1'b0;
 
 } STATUS;
@@ -120,7 +120,7 @@ reg {
 
     default sw = r;
     default hw = w;
-    default resetsignal = reset_b;
+    default resetsignal = cptra_rst_b;
     field {desc = "Output digest field";} DIGEST[32] = 32'b0;
 
 } DIGEST[16];

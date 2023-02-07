@@ -215,14 +215,14 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__global_intr_t_agg_sts_e6399b4a
 
-    // Reg - sha512_acc_csr::error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378
-    class sha512_acc_csr__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378 extends uvm_reg;
+    // Reg - sha512_acc_csr::error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba
+    class sha512_acc_csr__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba extends uvm_reg;
         rand uvm_reg_field error0_sts;
         rand uvm_reg_field error1_sts;
         rand uvm_reg_field error2_sts;
         rand uvm_reg_field error3_sts;
 
-        function new(string name = "sha512_acc_csr__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378");
+        function new(string name = "sha512_acc_csr__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -236,7 +236,7 @@ package sha512_acc_csr_uvm;
             this.error3_sts = new("error3_sts");
             this.error3_sts.configure(this, 1, 3, "W1C", 1, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : sha512_acc_csr__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378
+    endclass : sha512_acc_csr__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba
 
     // Reg - sha512_acc_csr::notif_intr_t_notif_cmd_done_sts_1c68637e
     class sha512_acc_csr__notif_intr_t_notif_cmd_done_sts_1c68637e extends uvm_reg;
@@ -289,11 +289,11 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__notif_intr_trig_t
 
-    // Reg - sha512_acc_csr::intr_count_t_cnt_35ace267
-    class sha512_acc_csr__intr_count_t_cnt_35ace267 extends uvm_reg;
+    // Reg - sha512_acc_csr::intr_count_t_cnt_130ab269
+    class sha512_acc_csr__intr_count_t_cnt_130ab269 extends uvm_reg;
         rand uvm_reg_field cnt;
 
-        function new(string name = "sha512_acc_csr__intr_count_t_cnt_35ace267");
+        function new(string name = "sha512_acc_csr__intr_count_t_cnt_130ab269");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -301,13 +301,13 @@ package sha512_acc_csr_uvm;
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : sha512_acc_csr__intr_count_t_cnt_35ace267
+    endclass : sha512_acc_csr__intr_count_t_cnt_130ab269
 
-    // Reg - sha512_acc_csr::intr_count_t_cnt_73c42c28
-    class sha512_acc_csr__intr_count_t_cnt_73c42c28 extends uvm_reg;
+    // Reg - sha512_acc_csr::intr_count_t_cnt_324dfc53
+    class sha512_acc_csr__intr_count_t_cnt_324dfc53 extends uvm_reg;
         rand uvm_reg_field cnt;
 
-        function new(string name = "sha512_acc_csr__intr_count_t_cnt_73c42c28");
+        function new(string name = "sha512_acc_csr__intr_count_t_cnt_324dfc53");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -315,13 +315,13 @@ package sha512_acc_csr_uvm;
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : sha512_acc_csr__intr_count_t_cnt_73c42c28
+    endclass : sha512_acc_csr__intr_count_t_cnt_324dfc53
 
-    // Reg - sha512_acc_csr::intr_count_t_cnt_d8af96ff
-    class sha512_acc_csr__intr_count_t_cnt_d8af96ff extends uvm_reg;
+    // Reg - sha512_acc_csr::intr_count_t_cnt_791a4799
+    class sha512_acc_csr__intr_count_t_cnt_791a4799 extends uvm_reg;
         rand uvm_reg_field cnt;
 
-        function new(string name = "sha512_acc_csr__intr_count_t_cnt_d8af96ff");
+        function new(string name = "sha512_acc_csr__intr_count_t_cnt_791a4799");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -329,13 +329,13 @@ package sha512_acc_csr_uvm;
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : sha512_acc_csr__intr_count_t_cnt_d8af96ff
+    endclass : sha512_acc_csr__intr_count_t_cnt_791a4799
 
-    // Reg - sha512_acc_csr::intr_count_t_cnt_9bd7f809
-    class sha512_acc_csr__intr_count_t_cnt_9bd7f809 extends uvm_reg;
+    // Reg - sha512_acc_csr::intr_count_t_cnt_e9de7334
+    class sha512_acc_csr__intr_count_t_cnt_e9de7334 extends uvm_reg;
         rand uvm_reg_field cnt;
 
-        function new(string name = "sha512_acc_csr__intr_count_t_cnt_9bd7f809");
+        function new(string name = "sha512_acc_csr__intr_count_t_cnt_e9de7334");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -343,7 +343,7 @@ package sha512_acc_csr_uvm;
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : sha512_acc_csr__intr_count_t_cnt_9bd7f809
+    endclass : sha512_acc_csr__intr_count_t_cnt_e9de7334
 
     // Reg - sha512_acc_csr::intr_count_t_cnt_be67d6d5
     class sha512_acc_csr__intr_count_t_cnt_be67d6d5 extends uvm_reg;
@@ -436,14 +436,14 @@ package sha512_acc_csr_uvm;
         rand sha512_acc_csr__notif_intr_en_t notif_intr_en_r;
         rand sha512_acc_csr__global_intr_t_agg_sts_dd3dcf0a error_global_intr_r;
         rand sha512_acc_csr__global_intr_t_agg_sts_e6399b4a notif_global_intr_r;
-        rand sha512_acc_csr__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378 error_internal_intr_r;
+        rand sha512_acc_csr__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba error_internal_intr_r;
         rand sha512_acc_csr__notif_intr_t_notif_cmd_done_sts_1c68637e notif_internal_intr_r;
         rand sha512_acc_csr__error_intr_trig_t error_intr_trig_r;
         rand sha512_acc_csr__notif_intr_trig_t notif_intr_trig_r;
-        rand sha512_acc_csr__intr_count_t_cnt_35ace267 error0_intr_count_r;
-        rand sha512_acc_csr__intr_count_t_cnt_73c42c28 error1_intr_count_r;
-        rand sha512_acc_csr__intr_count_t_cnt_d8af96ff error2_intr_count_r;
-        rand sha512_acc_csr__intr_count_t_cnt_9bd7f809 error3_intr_count_r;
+        rand sha512_acc_csr__intr_count_t_cnt_130ab269 error0_intr_count_r;
+        rand sha512_acc_csr__intr_count_t_cnt_324dfc53 error1_intr_count_r;
+        rand sha512_acc_csr__intr_count_t_cnt_791a4799 error2_intr_count_r;
+        rand sha512_acc_csr__intr_count_t_cnt_e9de7334 error3_intr_count_r;
         rand sha512_acc_csr__intr_count_t_cnt_be67d6d5 notif_cmd_done_intr_count_r;
         rand sha512_acc_csr__intr_count_incr_t_pulse_37026c97 error0_intr_count_incr_r;
         rand sha512_acc_csr__intr_count_incr_t_pulse_d860d977 error1_intr_count_incr_r;

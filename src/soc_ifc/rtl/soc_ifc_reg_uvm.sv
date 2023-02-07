@@ -157,9 +157,9 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.device_lifecycle = new("device_lifecycle");
-            this.device_lifecycle.configure(this, 2, 0, "RO", 1, 'h0, 0, 1, 0);
+            this.device_lifecycle.configure(this, 2, 0, "RO", 1, 'h0, 1, 1, 0);
             this.debug_locked = new("debug_locked");
-            this.debug_locked.configure(this, 1, 2, "RO", 1, 'h0, 0, 1, 0);
+            this.debug_locked.configure(this, 1, 2, "RO", 1, 'h0, 1, 1, 0);
             this.rsvd = new("rsvd");
             this.rsvd.configure(this, 29, 3, "RO", 0, 'h0, 1, 1, 0);
         endfunction : build
@@ -231,23 +231,26 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.DATA = new("DATA");
-            this.DATA.configure(this, 32, 0, "RW", 0, 'h0, 0, 1, 0);
+            this.DATA.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_TRNG_DATA
 
-    // Reg - soc_ifc_reg::CPTRA_TRNG_DONE
-    class soc_ifc_reg__CPTRA_TRNG_DONE extends uvm_reg;
-        rand uvm_reg_field DONE;
+    // Reg - soc_ifc_reg::CPTRA_TRNG_STATUS
+    class soc_ifc_reg__CPTRA_TRNG_STATUS extends uvm_reg;
+        rand uvm_reg_field DATA_REQ;
+        rand uvm_reg_field DATA_WR_DONE;
 
-        function new(string name = "soc_ifc_reg__CPTRA_TRNG_DONE");
+        function new(string name = "soc_ifc_reg__CPTRA_TRNG_STATUS");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
         virtual function void build();
-            this.DONE = new("DONE");
-            this.DONE.configure(this, 1, 0, "RW", 0, 'h0, 0, 1, 0);
+            this.DATA_REQ = new("DATA_REQ");
+            this.DATA_REQ.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.DATA_WR_DONE = new("DATA_WR_DONE");
+            this.DATA_WR_DONE.configure(this, 1, 1, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : soc_ifc_reg__CPTRA_TRNG_DONE
+    endclass : soc_ifc_reg__CPTRA_TRNG_STATUS
 
     // Reg - soc_ifc_reg::CPTRA_FUSE_WR_DONE
     class soc_ifc_reg__CPTRA_FUSE_WR_DONE extends uvm_reg;
@@ -329,7 +332,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.generic_wires = new("generic_wires");
-            this.generic_wires.configure(this, 32, 0, "RO", 1, 'h0, 0, 1, 0);
+            this.generic_wires.configure(this, 32, 0, "RO", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES
 
@@ -343,7 +346,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.generic_wires = new("generic_wires");
-            this.generic_wires.configure(this, 32, 0, "RW", 0, 'h0, 0, 1, 0);
+            this.generic_wires.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_GENERIC_OUTPUT_WIRES
 
@@ -665,8 +668,8 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a
 
-    // Reg - soc_ifc_reg::intr_block_t::error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_iccm_blocked_sts_9be0379b_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7_error_mbox_ecc_unc_sts_243a4927
-    class soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_iccm_blocked_sts_9be0379b_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7_error_mbox_ecc_unc_sts_243a4927 extends uvm_reg;
+    // Reg - soc_ifc_reg::intr_block_t::error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330
+    class soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330 extends uvm_reg;
         rand uvm_reg_field error_internal_sts;
         rand uvm_reg_field error_inv_dev_sts;
         rand uvm_reg_field error_cmd_fail_sts;
@@ -674,7 +677,7 @@ package soc_ifc_reg_uvm;
         rand uvm_reg_field error_iccm_blocked_sts;
         rand uvm_reg_field error_mbox_ecc_unc_sts;
 
-        function new(string name = "soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_iccm_blocked_sts_9be0379b_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7_error_mbox_ecc_unc_sts_243a4927");
+        function new(string name = "soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -692,7 +695,7 @@ package soc_ifc_reg_uvm;
             this.error_mbox_ecc_unc_sts = new("error_mbox_ecc_unc_sts");
             this.error_mbox_ecc_unc_sts.configure(this, 1, 5, "W1C", 1, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_iccm_blocked_sts_9be0379b_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7_error_mbox_ecc_unc_sts_243a4927
+    endclass : soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330
 
     // Reg - soc_ifc_reg::intr_block_t::notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_mbox_ecc_cor_sts_5c3d26bb
     class soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_mbox_ecc_cor_sts_5c3d26bb extends uvm_reg;
@@ -763,11 +766,11 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__notif_intr_trig_t
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_60ddff93
-    class soc_ifc_reg__intr_block_t__intr_count_t_cnt_60ddff93 extends uvm_reg;
+    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_608f1141
+    class soc_ifc_reg__intr_block_t__intr_count_t_cnt_608f1141 extends uvm_reg;
         rand uvm_reg_field cnt;
 
-        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_60ddff93");
+        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_608f1141");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -775,13 +778,13 @@ package soc_ifc_reg_uvm;
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_60ddff93
+    endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_608f1141
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_e0eaed4e
-    class soc_ifc_reg__intr_block_t__intr_count_t_cnt_e0eaed4e extends uvm_reg;
+    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_916ab5df
+    class soc_ifc_reg__intr_block_t__intr_count_t_cnt_916ab5df extends uvm_reg;
         rand uvm_reg_field cnt;
 
-        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_e0eaed4e");
+        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_916ab5df");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -789,13 +792,13 @@ package soc_ifc_reg_uvm;
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_e0eaed4e
+    endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_916ab5df
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_bdad0a1b
-    class soc_ifc_reg__intr_block_t__intr_count_t_cnt_bdad0a1b extends uvm_reg;
+    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_b2a56031
+    class soc_ifc_reg__intr_block_t__intr_count_t_cnt_b2a56031 extends uvm_reg;
         rand uvm_reg_field cnt;
 
-        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_bdad0a1b");
+        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_b2a56031");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -803,13 +806,13 @@ package soc_ifc_reg_uvm;
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_bdad0a1b
+    endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_b2a56031
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_7df2a496
-    class soc_ifc_reg__intr_block_t__intr_count_t_cnt_7df2a496 extends uvm_reg;
+    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_fb7d2433
+    class soc_ifc_reg__intr_block_t__intr_count_t_cnt_fb7d2433 extends uvm_reg;
         rand uvm_reg_field cnt;
 
-        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_7df2a496");
+        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_fb7d2433");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -817,13 +820,13 @@ package soc_ifc_reg_uvm;
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_7df2a496
+    endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_fb7d2433
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_4750cf87
-    class soc_ifc_reg__intr_block_t__intr_count_t_cnt_4750cf87 extends uvm_reg;
+    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_25e76b6f
+    class soc_ifc_reg__intr_block_t__intr_count_t_cnt_25e76b6f extends uvm_reg;
         rand uvm_reg_field cnt;
 
-        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_4750cf87");
+        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_25e76b6f");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -831,13 +834,13 @@ package soc_ifc_reg_uvm;
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_4750cf87
+    endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_25e76b6f
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_be71b4d0
-    class soc_ifc_reg__intr_block_t__intr_count_t_cnt_be71b4d0 extends uvm_reg;
+    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_26b97e39
+    class soc_ifc_reg__intr_block_t__intr_count_t_cnt_26b97e39 extends uvm_reg;
         rand uvm_reg_field cnt;
 
-        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_be71b4d0");
+        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_26b97e39");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -845,7 +848,7 @@ package soc_ifc_reg_uvm;
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_be71b4d0
+    endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_26b97e39
 
     // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_a06f0954
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_a06f0954 extends uvm_reg;
@@ -1022,16 +1025,16 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__intr_block_t__notif_intr_en_t notif_intr_en_r;
         rand soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a error_global_intr_r;
         rand soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a notif_global_intr_r;
-        rand soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_15c6bdf2_error_cmd_fail_sts_a5f1c4c0_error_iccm_blocked_sts_9be0379b_error_internal_sts_83adab02_error_inv_dev_sts_534a6ab7_error_mbox_ecc_unc_sts_243a4927 error_internal_intr_r;
+        rand soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330 error_internal_intr_r;
         rand soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_mbox_ecc_cor_sts_5c3d26bb notif_internal_intr_r;
         rand soc_ifc_reg__intr_block_t__error_intr_trig_t error_intr_trig_r;
         rand soc_ifc_reg__intr_block_t__notif_intr_trig_t notif_intr_trig_r;
-        rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_60ddff93 error_internal_intr_count_r;
-        rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_e0eaed4e error_inv_dev_intr_count_r;
-        rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_bdad0a1b error_cmd_fail_intr_count_r;
-        rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_7df2a496 error_bad_fuse_intr_count_r;
-        rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_4750cf87 error_iccm_blocked_intr_count_r;
-        rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_be71b4d0 error_mbox_ecc_unc_intr_count_r;
+        rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_608f1141 error_internal_intr_count_r;
+        rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_916ab5df error_inv_dev_intr_count_r;
+        rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_b2a56031 error_cmd_fail_intr_count_r;
+        rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_fb7d2433 error_bad_fuse_intr_count_r;
+        rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_25e76b6f error_iccm_blocked_intr_count_r;
+        rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_26b97e39 error_mbox_ecc_unc_intr_count_r;
         rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_a06f0954 notif_cmd_avail_intr_count_r;
         rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_00e49272 notif_mbox_ecc_cor_intr_count_r;
         rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_ee53ded8 notif_debug_locked_intr_count_r;
@@ -1206,7 +1209,7 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER CPTRA_TRNG_VALID_PAUSER;
         rand soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK CPTRA_TRNG_PAUSER_LOCK;
         rand soc_ifc_reg__CPTRA_TRNG_DATA CPTRA_TRNG_DATA[12];
-        rand soc_ifc_reg__CPTRA_TRNG_DONE CPTRA_TRNG_DONE;
+        rand soc_ifc_reg__CPTRA_TRNG_STATUS CPTRA_TRNG_STATUS;
         rand soc_ifc_reg__CPTRA_FUSE_WR_DONE CPTRA_FUSE_WR_DONE;
         rand soc_ifc_reg__CPTRA_TIMER_CONFIG CPTRA_TIMER_CONFIG;
         rand soc_ifc_reg__CPTRA_BOOTFSM_GO CPTRA_BOOTFSM_GO;
@@ -1319,11 +1322,11 @@ package soc_ifc_reg_uvm;
                 this.CPTRA_TRNG_DATA[i0].build();
                 this.default_map.add_reg(this.CPTRA_TRNG_DATA[i0], 'h58 + i0*'h4);
             end
-            this.CPTRA_TRNG_DONE = new("CPTRA_TRNG_DONE");
-            this.CPTRA_TRNG_DONE.configure(this);
+            this.CPTRA_TRNG_STATUS = new("CPTRA_TRNG_STATUS");
+            this.CPTRA_TRNG_STATUS.configure(this);
 
-            this.CPTRA_TRNG_DONE.build();
-            this.default_map.add_reg(this.CPTRA_TRNG_DONE, 'h88);
+            this.CPTRA_TRNG_STATUS.build();
+            this.default_map.add_reg(this.CPTRA_TRNG_STATUS, 'h88);
             this.CPTRA_FUSE_WR_DONE = new("CPTRA_FUSE_WR_DONE");
             this.CPTRA_FUSE_WR_DONE.configure(this);
 

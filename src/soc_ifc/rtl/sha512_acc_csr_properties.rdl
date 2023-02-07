@@ -28,5 +28,6 @@ signal {} valid_user;
 //signal to indicate request is coming from soc side
 signal {} soc_req;
 
-signal {activelow; async; cpuif_reset; field_reset;} reset_b;
-signal {activelow; async;} error_reset_b; // Driven by Caliptra pwrgood from SoC
+signal {activelow; async; cpuif_reset; field_reset;} cptra_rst_b;
+signal {activelow; async;} cptra_pwrgood; // Driven by Caliptra pwrgood from SoC
+default resetsignal=cptra_rst_b;

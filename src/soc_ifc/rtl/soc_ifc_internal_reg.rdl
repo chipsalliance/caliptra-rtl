@@ -42,7 +42,7 @@ reg {
             [br]Caliptra Access: RW
             [br]SOC Access:      RO";
 
-    field {desc = "FW Update reset to reset core"; hw = r; sw = rw; singlepulse=true; swwel = soc_req;} core_rst = 1'b0;
+    field {desc = "FW Update reset to reset core"; hw = r; sw = rw; singlepulse=true; swwel = soc_req; resetsignal = cptra_rst_b;} core_rst = 1'b0;
 } internal_fw_update_reset;
 
 reg {
@@ -51,7 +51,7 @@ reg {
             [br]Caliptra Access: RW
             [br]SOC Access:      RO";
 
-    field {desc = "FW Update reset wait cycles"; hw = r; sw = rw; swwel = soc_req;} wait_cycles[8] = 8'h5;
+    field {desc = "FW Update reset wait cycles"; hw = r; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;} wait_cycles[8] = 8'h5;
 } internal_fw_update_reset_wait_cycles;
 
 reg {
@@ -62,7 +62,7 @@ reg {
             [br]Caliptra Access: RW
             [br]SOC Access:      RO";
 
-    field {desc = "NMI Vector"; hw = r; sw = rw; swwel = soc_req;} vec[32] = 32'h0;
+    field {desc = "NMI Vector"; hw = r; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;} vec[32] = 32'h0;
 } internal_nmi_vector;
 
 
@@ -322,18 +322,18 @@ regfile intr_block_t {
     /* ------------------------------------------------------------------------------------------------------------- */
 
     /* ---- Reset assignment for Error Events ---- */
-    error_internal_intr_r.error_internal_sts     -> resetsignal = hard_reset_b;
-    error_internal_intr_r.error_inv_dev_sts      -> resetsignal = hard_reset_b;
-    error_internal_intr_r.error_cmd_fail_sts     -> resetsignal = hard_reset_b;
-    error_internal_intr_r.error_bad_fuse_sts     -> resetsignal = hard_reset_b;
-    error_internal_intr_r.error_iccm_blocked_sts -> resetsignal = hard_reset_b;
-    error_internal_intr_r.error_mbox_ecc_unc_sts -> resetsignal = hard_reset_b;
-    error_internal_intr_count_r.cnt          -> resetsignal = hard_reset_b;
-    error_inv_dev_intr_count_r.cnt           -> resetsignal = hard_reset_b;
-    error_cmd_fail_intr_count_r.cnt          -> resetsignal = hard_reset_b;
-    error_bad_fuse_intr_count_r.cnt          -> resetsignal = hard_reset_b;
-    error_iccm_blocked_intr_count_r.cnt      -> resetsignal = hard_reset_b;
-    error_mbox_ecc_unc_intr_count_r.cnt      -> resetsignal = hard_reset_b;
+    error_internal_intr_r.error_internal_sts     -> resetsignal = cptra_pwrgood;
+    error_internal_intr_r.error_inv_dev_sts      -> resetsignal = cptra_pwrgood;
+    error_internal_intr_r.error_cmd_fail_sts     -> resetsignal = cptra_pwrgood;
+    error_internal_intr_r.error_bad_fuse_sts     -> resetsignal = cptra_pwrgood;
+    error_internal_intr_r.error_iccm_blocked_sts -> resetsignal = cptra_pwrgood;
+    error_internal_intr_r.error_mbox_ecc_unc_sts -> resetsignal = cptra_pwrgood;
+    error_internal_intr_count_r.cnt          -> resetsignal = cptra_pwrgood;
+    error_inv_dev_intr_count_r.cnt           -> resetsignal = cptra_pwrgood;
+    error_cmd_fail_intr_count_r.cnt          -> resetsignal = cptra_pwrgood;
+    error_bad_fuse_intr_count_r.cnt          -> resetsignal = cptra_pwrgood;
+    error_iccm_blocked_intr_count_r.cnt      -> resetsignal = cptra_pwrgood;
+    error_mbox_ecc_unc_intr_count_r.cnt      -> resetsignal = cptra_pwrgood;
     // TODO: Use this same reset for the error incrementor pulse too?
 
     /* ---- Interrupt Event Dynamic Assignments ---- */

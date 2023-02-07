@@ -57,7 +57,7 @@ package mbox_csr_pkg;
     } mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__in_t;
 
     typedef struct packed{
-        logic reset_b;
+        logic cptra_rst_b;
         logic soc_req;
         logic lock_set;
         logic valid_user;
