@@ -371,8 +371,14 @@ always_comb begin
 
 end
 
+logic cptra_in_dbg_or_manuf_mode;
+
 // Breakpoint value captured on a Caliptra reset deassertion (0->1 signal transition)
 // BootFSM_Continue will allow the boot fsm to continue
+// Security State in Debug or Manuf Mode
+assign cptra_in_dbg_or_manuf_mode = ~(security_state.debug_locked) | 
+                                     ((security_state.debug_locked) & (security_state.device_lifecycle == DEVICE_MANUFACTURING));
+
 always_ff @(posedge clk or negedge cptra_rst_b) begin
     if (~cptra_rst_b) begin
         BootFSM_BrkPoint_Latched <= 0;
@@ -381,7 +387,7 @@ always_ff @(posedge clk or negedge cptra_rst_b) begin
     // Breakpoint value captured on a Caliptra reset deassertion (0->1 signal transition) and is reset on BootFSM_Continue is set
     // BootFSM_Continue's reset value is zero
     else if(!BootFSM_BrkPoint_Flag) begin
-        BootFSM_BrkPoint_Latched <= BootFSM_BrkPoint;
+        BootFSM_BrkPoint_Latched <= BootFSM_BrkPoint & cptra_in_dbg_or_manuf_mode;
         BootFSM_BrkPoint_Flag <= 1;
     end
 end
