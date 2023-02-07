@@ -1,5 +1,6 @@
 {
   "name": "csrng",
+  "one_line_desc": "Takes entropy bits to produce cryptographically secure random numbers for consumption by hardware blocks and by software",
   "design_spec": "../doc",
   "dv_doc": "../doc/dv",
   "hw_checklist": "../doc/checklist",
