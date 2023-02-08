@@ -88,6 +88,20 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_FW_ERROR_ENC
 
+    // Reg - soc_ifc_reg::CPTRA_FW_EXTENDED_ERROR_INFO
+    class soc_ifc_reg__CPTRA_FW_EXTENDED_ERROR_INFO extends uvm_reg;
+        rand uvm_reg_field error_info;
+
+        function new(string name = "soc_ifc_reg__CPTRA_FW_EXTENDED_ERROR_INFO");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.error_info = new("error_info");
+            this.error_info.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__CPTRA_FW_EXTENDED_ERROR_INFO
+
     // Reg - soc_ifc_reg::CPTRA_BOOT_STATUS
     class soc_ifc_reg__CPTRA_BOOT_STATUS extends uvm_reg;
         rand uvm_reg_field status;
@@ -1200,6 +1214,7 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__CPTRA_FW_ERROR_NON_FATAL CPTRA_FW_ERROR_NON_FATAL;
         rand soc_ifc_reg__CPTRA_HW_ERROR_ENC CPTRA_HW_ERROR_ENC;
         rand soc_ifc_reg__CPTRA_FW_ERROR_ENC CPTRA_FW_ERROR_ENC;
+        rand soc_ifc_reg__CPTRA_FW_EXTENDED_ERROR_INFO CPTRA_FW_EXTENDED_ERROR_INFO[8];
         rand soc_ifc_reg__CPTRA_BOOT_STATUS CPTRA_BOOT_STATUS;
         rand soc_ifc_reg__CPTRA_FLOW_STATUS CPTRA_FLOW_STATUS;
         rand soc_ifc_reg__CPTRA_RESET_REASON CPTRA_RESET_REASON;
@@ -1271,100 +1286,107 @@ package soc_ifc_reg_uvm;
 
             this.CPTRA_FW_ERROR_ENC.build();
             this.default_map.add_reg(this.CPTRA_FW_ERROR_ENC, 'h14);
+            foreach(this.CPTRA_FW_EXTENDED_ERROR_INFO[i0]) begin
+                this.CPTRA_FW_EXTENDED_ERROR_INFO[i0] = new($sformatf("CPTRA_FW_EXTENDED_ERROR_INFO[%0d]", i0));
+                this.CPTRA_FW_EXTENDED_ERROR_INFO[i0].configure(this);
+                
+                this.CPTRA_FW_EXTENDED_ERROR_INFO[i0].build();
+                this.default_map.add_reg(this.CPTRA_FW_EXTENDED_ERROR_INFO[i0], 'h18 + i0*'h4);
+            end
             this.CPTRA_BOOT_STATUS = new("CPTRA_BOOT_STATUS");
             this.CPTRA_BOOT_STATUS.configure(this);
 
             this.CPTRA_BOOT_STATUS.build();
-            this.default_map.add_reg(this.CPTRA_BOOT_STATUS, 'h18);
+            this.default_map.add_reg(this.CPTRA_BOOT_STATUS, 'h38);
             this.CPTRA_FLOW_STATUS = new("CPTRA_FLOW_STATUS");
             this.CPTRA_FLOW_STATUS.configure(this);
 
             this.CPTRA_FLOW_STATUS.build();
-            this.default_map.add_reg(this.CPTRA_FLOW_STATUS, 'h1c);
+            this.default_map.add_reg(this.CPTRA_FLOW_STATUS, 'h3c);
             this.CPTRA_RESET_REASON = new("CPTRA_RESET_REASON");
             this.CPTRA_RESET_REASON.configure(this);
 
             this.CPTRA_RESET_REASON.build();
-            this.default_map.add_reg(this.CPTRA_RESET_REASON, 'h20);
+            this.default_map.add_reg(this.CPTRA_RESET_REASON, 'h40);
             this.CPTRA_SECURITY_STATE = new("CPTRA_SECURITY_STATE");
             this.CPTRA_SECURITY_STATE.configure(this);
 
             this.CPTRA_SECURITY_STATE.build();
-            this.default_map.add_reg(this.CPTRA_SECURITY_STATE, 'h24);
+            this.default_map.add_reg(this.CPTRA_SECURITY_STATE, 'h44);
             foreach(this.CPTRA_VALID_PAUSER[i0]) begin
                 this.CPTRA_VALID_PAUSER[i0] = new($sformatf("CPTRA_VALID_PAUSER[%0d]", i0));
                 this.CPTRA_VALID_PAUSER[i0].configure(this);
                 
                 this.CPTRA_VALID_PAUSER[i0].build();
-                this.default_map.add_reg(this.CPTRA_VALID_PAUSER[i0], 'h28 + i0*'h4);
+                this.default_map.add_reg(this.CPTRA_VALID_PAUSER[i0], 'h48 + i0*'h4);
             end
             foreach(this.CPTRA_PAUSER_LOCK[i0]) begin
                 this.CPTRA_PAUSER_LOCK[i0] = new($sformatf("CPTRA_PAUSER_LOCK[%0d]", i0));
                 this.CPTRA_PAUSER_LOCK[i0].configure(this);
                 
                 this.CPTRA_PAUSER_LOCK[i0].build();
-                this.default_map.add_reg(this.CPTRA_PAUSER_LOCK[i0], 'h3c + i0*'h4);
+                this.default_map.add_reg(this.CPTRA_PAUSER_LOCK[i0], 'h5c + i0*'h4);
             end
             this.CPTRA_TRNG_VALID_PAUSER = new("CPTRA_TRNG_VALID_PAUSER");
             this.CPTRA_TRNG_VALID_PAUSER.configure(this);
 
             this.CPTRA_TRNG_VALID_PAUSER.build();
-            this.default_map.add_reg(this.CPTRA_TRNG_VALID_PAUSER, 'h50);
+            this.default_map.add_reg(this.CPTRA_TRNG_VALID_PAUSER, 'h70);
             this.CPTRA_TRNG_PAUSER_LOCK = new("CPTRA_TRNG_PAUSER_LOCK");
             this.CPTRA_TRNG_PAUSER_LOCK.configure(this);
 
             this.CPTRA_TRNG_PAUSER_LOCK.build();
-            this.default_map.add_reg(this.CPTRA_TRNG_PAUSER_LOCK, 'h54);
+            this.default_map.add_reg(this.CPTRA_TRNG_PAUSER_LOCK, 'h74);
             foreach(this.CPTRA_TRNG_DATA[i0]) begin
                 this.CPTRA_TRNG_DATA[i0] = new($sformatf("CPTRA_TRNG_DATA[%0d]", i0));
                 this.CPTRA_TRNG_DATA[i0].configure(this);
                 
                 this.CPTRA_TRNG_DATA[i0].build();
-                this.default_map.add_reg(this.CPTRA_TRNG_DATA[i0], 'h58 + i0*'h4);
+                this.default_map.add_reg(this.CPTRA_TRNG_DATA[i0], 'h78 + i0*'h4);
             end
             this.CPTRA_TRNG_STATUS = new("CPTRA_TRNG_STATUS");
             this.CPTRA_TRNG_STATUS.configure(this);
 
             this.CPTRA_TRNG_STATUS.build();
-            this.default_map.add_reg(this.CPTRA_TRNG_STATUS, 'h88);
+            this.default_map.add_reg(this.CPTRA_TRNG_STATUS, 'ha8);
             this.CPTRA_FUSE_WR_DONE = new("CPTRA_FUSE_WR_DONE");
             this.CPTRA_FUSE_WR_DONE.configure(this);
 
             this.CPTRA_FUSE_WR_DONE.build();
-            this.default_map.add_reg(this.CPTRA_FUSE_WR_DONE, 'h8c);
+            this.default_map.add_reg(this.CPTRA_FUSE_WR_DONE, 'hac);
             this.CPTRA_TIMER_CONFIG = new("CPTRA_TIMER_CONFIG");
             this.CPTRA_TIMER_CONFIG.configure(this);
 
             this.CPTRA_TIMER_CONFIG.build();
-            this.default_map.add_reg(this.CPTRA_TIMER_CONFIG, 'h90);
+            this.default_map.add_reg(this.CPTRA_TIMER_CONFIG, 'hb0);
             this.CPTRA_BOOTFSM_GO = new("CPTRA_BOOTFSM_GO");
             this.CPTRA_BOOTFSM_GO.configure(this);
 
             this.CPTRA_BOOTFSM_GO.build();
-            this.default_map.add_reg(this.CPTRA_BOOTFSM_GO, 'h94);
+            this.default_map.add_reg(this.CPTRA_BOOTFSM_GO, 'hb4);
             this.CPTRA_DBG_MANUF_SERVICE_REG = new("CPTRA_DBG_MANUF_SERVICE_REG");
             this.CPTRA_DBG_MANUF_SERVICE_REG.configure(this);
 
             this.CPTRA_DBG_MANUF_SERVICE_REG.build();
-            this.default_map.add_reg(this.CPTRA_DBG_MANUF_SERVICE_REG, 'h98);
+            this.default_map.add_reg(this.CPTRA_DBG_MANUF_SERVICE_REG, 'hb8);
             this.CPTRA_CLK_GATING_EN = new("CPTRA_CLK_GATING_EN");
             this.CPTRA_CLK_GATING_EN.configure(this);
 
             this.CPTRA_CLK_GATING_EN.build();
-            this.default_map.add_reg(this.CPTRA_CLK_GATING_EN, 'h9c);
+            this.default_map.add_reg(this.CPTRA_CLK_GATING_EN, 'hbc);
             foreach(this.CPTRA_GENERIC_INPUT_WIRES[i0]) begin
                 this.CPTRA_GENERIC_INPUT_WIRES[i0] = new($sformatf("CPTRA_GENERIC_INPUT_WIRES[%0d]", i0));
                 this.CPTRA_GENERIC_INPUT_WIRES[i0].configure(this);
                 
                 this.CPTRA_GENERIC_INPUT_WIRES[i0].build();
-                this.default_map.add_reg(this.CPTRA_GENERIC_INPUT_WIRES[i0], 'ha0 + i0*'h4);
+                this.default_map.add_reg(this.CPTRA_GENERIC_INPUT_WIRES[i0], 'hc0 + i0*'h4);
             end
             foreach(this.CPTRA_GENERIC_OUTPUT_WIRES[i0]) begin
                 this.CPTRA_GENERIC_OUTPUT_WIRES[i0] = new($sformatf("CPTRA_GENERIC_OUTPUT_WIRES[%0d]", i0));
                 this.CPTRA_GENERIC_OUTPUT_WIRES[i0].configure(this);
                 
                 this.CPTRA_GENERIC_OUTPUT_WIRES[i0].build();
-                this.default_map.add_reg(this.CPTRA_GENERIC_OUTPUT_WIRES[i0], 'ha8 + i0*'h4);
+                this.default_map.add_reg(this.CPTRA_GENERIC_OUTPUT_WIRES[i0], 'hc8 + i0*'h4);
             end
             foreach(this.fuse_uds_seed[i0]) begin
                 this.fuse_uds_seed[i0] = new($sformatf("fuse_uds_seed[%0d]", i0));

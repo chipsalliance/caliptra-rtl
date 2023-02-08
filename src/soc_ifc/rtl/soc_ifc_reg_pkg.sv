@@ -301,6 +301,14 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic [31:0] value;
+    } soc_ifc_reg__CPTRA_FW_EXTENDED_ERROR_INFO__error_info__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_FW_EXTENDED_ERROR_INFO__error_info__out_t error_info;
+    } soc_ifc_reg__CPTRA_FW_EXTENDED_ERROR_INFO__out_t;
+
+    typedef struct packed{
+        logic [31:0] value;
     } soc_ifc_reg__CPTRA_BOOT_STATUS__status__out_t;
 
     typedef struct packed{
@@ -561,6 +569,7 @@ package soc_ifc_reg_pkg;
     typedef struct packed{
         soc_ifc_reg__CPTRA_HW_ERROR_ENC__out_t CPTRA_HW_ERROR_ENC;
         soc_ifc_reg__CPTRA_FW_ERROR_ENC__out_t CPTRA_FW_ERROR_ENC;
+        soc_ifc_reg__CPTRA_FW_EXTENDED_ERROR_INFO__out_t [8-1:0]CPTRA_FW_EXTENDED_ERROR_INFO;
         soc_ifc_reg__CPTRA_BOOT_STATUS__out_t CPTRA_BOOT_STATUS;
         soc_ifc_reg__CPTRA_FLOW_STATUS__out_t CPTRA_FLOW_STATUS;
         soc_ifc_reg__CPTRA_RESET_REASON__out_t CPTRA_RESET_REASON;

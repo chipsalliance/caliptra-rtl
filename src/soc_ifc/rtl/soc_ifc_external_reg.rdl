@@ -58,7 +58,13 @@ reg {
             [br]TAP Access [in debug/manuf mode]: RO";
     field {resetsignal = cptra_pwrgood; hw=r;} error_code[32]=0; 
 } CPTRA_FW_ERROR_ENC;
-
+reg {
+    name = "Firmware Extended Error Information";
+    desc = "Firmware Extended Error information for firmware errors.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RW";
+    field {resetsignal = cptra_pwrgood; hw=r;} error_info[32]=0; 
+} CPTRA_FW_EXTENDED_ERROR_INFO[8];
 reg {
     name = "Boot Status";
     desc = "Reports the boot status.
