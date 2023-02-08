@@ -92,7 +92,7 @@ addrmap doe_reg {
                 bit #1: Valid: ​Indicates if the process is done and the
                                 results have been stored in the keyvault.";
     
-        field {desc = "Status ready bit"; sw = r; hw = w;} READY = 1'b0;
+        field {desc = "Status ready bit"; sw = r; hw = na; hwset; hwclr;} READY = 1'b0;
         field {desc = "Status valid bit"; sw = r; hw = na; hwset; hwclr;} VALID = 1'b0;
     
     } DOE_STATUS;

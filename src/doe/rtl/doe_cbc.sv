@@ -110,6 +110,7 @@ module doe_cbc
   logic doe_next;
 
   logic flow_done;
+  logic flow_in_progress;
 
   doe_reg__in_t  hwif_in;
   doe_reg__out_t hwif_out;
@@ -172,7 +173,8 @@ module doe_cbc
   end// reg_update
 
 //DOE Register Hardware Interface
-assign hwif_in.DOE_STATUS.READY.next = ready_reg;
+assign hwif_in.DOE_STATUS.READY.hwset = ready_reg & ~(flow_in_progress);
+assign hwif_in.DOE_STATUS.READY.hwclr = ~ready_reg;
 assign hwif_in.DOE_STATUS.VALID.hwset = flow_done | clear_obf_secrets;
 assign hwif_in.DOE_STATUS.VALID.hwclr = hwif_out.DOE_CTRL.CMD.swmod;
 
@@ -220,7 +222,8 @@ doe_fsm1
   .dest_data_avail(core_valid),
   .dest_data(kv_result_reg),
 
-  .flow_done(flow_done)
+  .flow_done(flow_done),
+  .flow_in_progress(flow_in_progress)
 
 );
 

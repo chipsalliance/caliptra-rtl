@@ -151,6 +151,10 @@ module doe_reg (
             struct packed{
                 logic next;
                 logic load_next;
+            } READY;
+            struct packed{
+                logic next;
+                logic load_next;
             } VALID;
         } DOE_STATUS;
         struct packed{
@@ -349,6 +353,9 @@ module doe_reg (
         struct packed{
             struct packed{
                 logic value;
+            } READY;
+            struct packed{
+                logic value;
             } VALID;
         } DOE_STATUS;
         struct packed{
@@ -545,6 +552,27 @@ module doe_reg (
         end
     end
     assign hwif_out.DOE_CTRL.DEST.value = field_storage.DOE_CTRL.DEST.value;
+    // Field: doe_reg.DOE_STATUS.READY
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.DOE_STATUS.READY.value;
+        automatic logic load_next_c = '0;
+        if(hwif_in.DOE_STATUS.READY.hwset) begin // HW Set
+            next_c = '1;
+            load_next_c = '1;
+        end else if(hwif_in.DOE_STATUS.READY.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.DOE_STATUS.READY.next = next_c;
+        field_combo.DOE_STATUS.READY.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.DOE_STATUS.READY.value <= 'h0;
+        end else if(field_combo.DOE_STATUS.READY.load_next) begin
+            field_storage.DOE_STATUS.READY.value <= field_combo.DOE_STATUS.READY.next;
+        end
+    end
     // Field: doe_reg.DOE_STATUS.VALID
     always_comb begin
         automatic logic [0:0] next_c = field_storage.DOE_STATUS.VALID.value;
@@ -1285,7 +1313,7 @@ module doe_reg (
     assign readback_array[4][1:0] = (decoded_reg_strb.DOE_CTRL && !decoded_req_is_wr) ? field_storage.DOE_CTRL.CMD.value : '0;
     assign readback_array[4][4:2] = (decoded_reg_strb.DOE_CTRL && !decoded_req_is_wr) ? field_storage.DOE_CTRL.DEST.value : '0;
     assign readback_array[4][31:5] = '0;
-    assign readback_array[5][0:0] = (decoded_reg_strb.DOE_STATUS && !decoded_req_is_wr) ? hwif_in.DOE_STATUS.READY.next : '0;
+    assign readback_array[5][0:0] = (decoded_reg_strb.DOE_STATUS && !decoded_req_is_wr) ? field_storage.DOE_STATUS.READY.value : '0;
     assign readback_array[5][1:1] = (decoded_reg_strb.DOE_STATUS && !decoded_req_is_wr) ? field_storage.DOE_STATUS.VALID.value : '0;
     assign readback_array[5][31:2] = '0;
     assign readback_array[6][0:0] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.error_en.value : '0;

@@ -11,7 +11,8 @@ package doe_reg_pkg;
     } doe_reg__DOE_CTRL__in_t;
 
     typedef struct packed{
-        logic next;
+        logic hwclr;
+        logic hwset;
     } doe_reg__DOE_STATUS__READY__in_t;
 
     typedef struct packed{
