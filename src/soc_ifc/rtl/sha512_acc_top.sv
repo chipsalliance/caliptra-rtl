@@ -135,6 +135,7 @@ module sha512_acc_top
   sha512_core core(
                    .clk(clk),
                    .reset_n(rst_b),
+                   .zeroize(1'b0),
 
                    .init_cmd(init_reg),
                    .next_cmd(next_reg),

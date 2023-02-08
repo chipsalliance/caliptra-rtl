@@ -51,6 +51,7 @@ module hmac_drbg
   // Clock and reset.
   input wire                        clk,
   input wire                        reset_n,
+  input wire                        zeroize,
 
   //Control
   input wire                        mode,
@@ -137,6 +138,7 @@ module hmac_drbg
   (
    .clk(clk),
    .reset_n(reset_n),
+   .zeroize(zeroize),
    .init_cmd(HMAC_init),
    .next_cmd(HMAC_next),
    .key(HMAC_key),

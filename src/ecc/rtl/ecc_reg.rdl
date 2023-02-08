@@ -66,19 +66,20 @@ addrmap ecc_reg {
     /* ---- ECC Component Control ---- */
     reg {
         name = "ECC component control register type definition";
-        desc = "One 2-bit register to set the type of ECC operations.
-                This can be: 
-                    00 for NONE
-                    01 for KEYGEN
-                    10 for SIGNING
-                    11 for VERIFYING
-                This register is located at ECC_base_address + 0x0000_0010
-                After each software write, hardware will erase the register.";
+        desc = "One 3-bit register to set the type of ECC operations.
+                bit #[1:0]: This can be: 
+                            00 for NONE
+                            01 for KEYGEN
+                            10 for SIGNING
+                            11 for VERIFYING
+                bit #2: Zeroize all internal registers after ECC process, to avoid SCA leakage.
+                This register is located at ECC_base_address + 0x0000_0010.";
 
         default sw = w;
-        default hw = rw;
+        default hw = r;
         default resetsignal = reset_b;
-        field {desc = "Control command field";} CTRL[2] = 2'b0;
+        field {desc = "Control command field"; hwclr;} CTRL[2] = 2'b0;
+        field {desc = "Zeroize all internal registers"; singlepulse;} ZEROIZE = 1'b0;
     
     } ECC_CTRL @0x00000010;
 
@@ -113,8 +114,7 @@ addrmap ecc_reg {
                 bit #2: SCALAR_RND_EN: ​Indicates if the scalar ransomization countermeasure
                                       is enabled.
                                 
-                This register is located at ECC_base_address + 0x0000_0020
-                After each software write, hardware will erase the register.";
+                This register is located at ECC_base_address + 0x0000_0020.";
 
         default sw = w;
         default hw = r;
@@ -136,9 +136,10 @@ addrmap ecc_reg {
                 0x0000_0080 to 0x0000_00AC in big-endian representation.";
 
         default sw = w;
-        default hw = r;
+        default hw = rw;
+        default we = true;
         default resetsignal = reset_b;
-        field {desc = "Input seed field";} SEED[32] = 32'b0;
+        field {desc = "Input seed field"; hwclr;} SEED[32] = 32'b0;
     
     } ECC_SEED[12] @0x00000080;
 
@@ -154,9 +155,10 @@ addrmap ecc_reg {
                 0x0000_0100 to 0x0000_012C in big-endian representation.";
 
         default sw = w;
-        default hw = r;
+        default hw = rw;
+        default we = true;
         default resetsignal = reset_b;
-        field {desc = "Input message field";} MSG[32] = 32'b0;
+        field {desc = "Input message field"; hwclr;} MSG[32] = 32'b0;
     
     } ECC_MSG[12] @0x00000100;
 
@@ -176,8 +178,9 @@ addrmap ecc_reg {
 
         default sw = rw;
         default hw = rw;
+        default we = true;
         default resetsignal = reset_b;
-        field {desc = "Private key field";} PRIVKEY[32] = 32'b0;
+        field {desc = "Private key field"; hwclr;} PRIVKEY[32] = 32'b0;
     
     } ECC_PRIVKEY[12] @0x00000180;
 
@@ -196,8 +199,9 @@ addrmap ecc_reg {
 
         default sw = rw;
         default hw = rw;
+        default we = true;
         default resetsignal = reset_b;
-        field {desc = "Public key x field";} PUBKEY_X[32] = 32'b0;
+        field {desc = "Public key x field"; hwclr;} PUBKEY_X[32] = 32'b0;
     
     } ECC_PUBKEY_X[12] @0x00000200;
 
@@ -215,8 +219,9 @@ addrmap ecc_reg {
 
         default sw = rw;
         default hw = rw;
+        default we = true;
         default resetsignal = reset_b;
-        field {desc = "Public key y field";} PUBKEY_Y[32] = 32'b0;
+        field {desc = "Public key y field"; hwclr;} PUBKEY_Y[32] = 32'b0;
     
     } ECC_PUBKEY_Y[12] @0x00000280;
 
@@ -238,8 +243,9 @@ addrmap ecc_reg {
 
         default sw = rw;
         default hw = rw;
+        default we = true;
         default resetsignal = reset_b;
-        field {desc = "Signature R field";} SIGN_R[32] = 32'b0;
+        field {desc = "Signature R field"; hwclr;} SIGN_R[32] = 32'b0;
     
     } ECC_SIGN_R[12] @0x00000300;
 
@@ -258,8 +264,9 @@ addrmap ecc_reg {
 
         default sw = rw;
         default hw = rw;
+        default we = true;
         default resetsignal = reset_b;
-        field {desc = "Signature S field";} SIGN_S[32] = 32'b0;
+        field {desc = "Signature S field"; hwclr;} SIGN_S[32] = 32'b0;
     
     } ECC_SIGN_S[12] @0x00000380;
     
@@ -279,8 +286,9 @@ addrmap ecc_reg {
 
         default sw = r;
         default hw = rw;
+        default we = true;
         default resetsignal = reset_b;
-        field {desc = "Output digest field";} VERIFY_R[32] = 32'b0;
+        field {desc = "Output digest field"; hwclr;} VERIFY_R[32] = 32'b0;
     
     } ECC_VERIFY_R[12] @0x00000400;
 
@@ -299,7 +307,7 @@ addrmap ecc_reg {
         default sw = w;
         default hw = r;
         default resetsignal = reset_b;
-        field {desc = "Input IV field";} IV[32] = 32'b0;
+        field {desc = "Input IV field"; hwclr;} IV[32] = 32'b0;
     
     } ECC_IV[12] @0x00000480;
 

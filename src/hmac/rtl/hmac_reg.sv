@@ -168,6 +168,10 @@ module hmac_reg (
                 logic next;
                 logic load_next;
             } NEXT;
+            struct packed{
+                logic next;
+                logic load_next;
+            } ZEROIZE;
         } HMAC384_CTRL;
         struct packed{
             struct packed{
@@ -181,6 +185,12 @@ module hmac_reg (
                 logic load_next;
             } BLOCK;
         } [32-1:0]HMAC384_BLOCK;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } TAG;
+        } [12-1:0]HMAC384_TAG;
         struct packed{
             struct packed{
                 logic next;
@@ -472,6 +482,9 @@ module hmac_reg (
             struct packed{
                 logic value;
             } NEXT;
+            struct packed{
+                logic value;
+            } ZEROIZE;
         } HMAC384_CTRL;
         struct packed{
             struct packed{
@@ -483,6 +496,11 @@ module hmac_reg (
                 logic [31:0] value;
             } BLOCK;
         } [32-1:0]HMAC384_BLOCK;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } TAG;
+        } [12-1:0]HMAC384_TAG;
         struct packed{
             struct packed{
                 logic value;
@@ -738,6 +756,28 @@ module hmac_reg (
         end
     end
     assign hwif_out.HMAC384_CTRL.NEXT.value = field_storage.HMAC384_CTRL.NEXT.value;
+    // Field: hmac_reg.HMAC384_CTRL.ZEROIZE
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.HMAC384_CTRL.ZEROIZE.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.HMAC384_CTRL && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[2:2];
+            load_next_c = '1;
+        end else if(1) begin // singlepulse clears back to 0
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.HMAC384_CTRL.ZEROIZE.next = next_c;
+        field_combo.HMAC384_CTRL.ZEROIZE.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.HMAC384_CTRL.ZEROIZE.value <= 'h0;
+        end else if(field_combo.HMAC384_CTRL.ZEROIZE.load_next) begin
+            field_storage.HMAC384_CTRL.ZEROIZE.value <= field_combo.HMAC384_CTRL.ZEROIZE.next;
+        end
+    end
+    assign hwif_out.HMAC384_CTRL.ZEROIZE.value = field_storage.HMAC384_CTRL.ZEROIZE.value;
     for(genvar i0=0; i0<12; i0++) begin
         // Field: hmac_reg.HMAC384_KEY[].KEY
         always_comb begin
@@ -748,6 +788,9 @@ module hmac_reg (
                 load_next_c = '1;
             end else if(hwif_in.HMAC384_KEY[i0].KEY.we) begin // HW Write - we
                 next_c = hwif_in.HMAC384_KEY[i0].KEY.next;
+                load_next_c = '1;
+            end else if(hwif_in.HMAC384_KEY[i0].KEY.hwclr) begin // HW Clear
+                next_c = '0;
                 load_next_c = '1;
             end
             field_combo.HMAC384_KEY[i0].KEY.next = next_c;
@@ -773,6 +816,9 @@ module hmac_reg (
             end else if(hwif_in.HMAC384_BLOCK[i0].BLOCK.we) begin // HW Write - we
                 next_c = hwif_in.HMAC384_BLOCK[i0].BLOCK.next;
                 load_next_c = '1;
+            end else if(hwif_in.HMAC384_BLOCK[i0].BLOCK.hwclr) begin // HW Clear
+                next_c = '0;
+                load_next_c = '1;
             end
             field_combo.HMAC384_BLOCK[i0].BLOCK.next = next_c;
             field_combo.HMAC384_BLOCK[i0].BLOCK.load_next = load_next_c;
@@ -785,6 +831,29 @@ module hmac_reg (
             end
         end
         assign hwif_out.HMAC384_BLOCK[i0].BLOCK.value = field_storage.HMAC384_BLOCK[i0].BLOCK.value;
+    end
+    for(genvar i0=0; i0<12; i0++) begin
+        // Field: hmac_reg.HMAC384_TAG[].TAG
+        always_comb begin
+            automatic logic [31:0] next_c = field_storage.HMAC384_TAG[i0].TAG.value;
+            automatic logic load_next_c = '0;
+            if(1) begin // HW Write
+                next_c = hwif_in.HMAC384_TAG[i0].TAG.next;
+                load_next_c = '1;
+            end else if(hwif_in.HMAC384_TAG[i0].TAG.hwclr) begin // HW Clear
+                next_c = '0;
+                load_next_c = '1;
+            end
+            field_combo.HMAC384_TAG[i0].TAG.next = next_c;
+            field_combo.HMAC384_TAG[i0].TAG.load_next = load_next_c;
+        end
+        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+            if(~hwif_in.reset_b) begin
+                field_storage.HMAC384_TAG[i0].TAG.value <= 'h0;
+            end else if(field_combo.HMAC384_TAG[i0].TAG.load_next) begin
+                field_storage.HMAC384_TAG[i0].TAG.value <= field_combo.HMAC384_TAG[i0].TAG.next;
+            end
+        end
     end
     // Field: hmac_reg.HMAC384_KV_RD_KEY_CTRL.read_en
     always_comb begin
@@ -1961,7 +2030,7 @@ module hmac_reg (
     assign readback_array[4][1:1] = (decoded_reg_strb.HMAC384_STATUS && !decoded_req_is_wr) ? hwif_in.HMAC384_STATUS.VALID.next : '0;
     assign readback_array[4][31:2] = '0;
     for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 5][31:0] = (decoded_reg_strb.HMAC384_TAG[i0] && !decoded_req_is_wr) ? hwif_in.HMAC384_TAG[i0].TAG.next : '0;
+        assign readback_array[i0*1 + 5][31:0] = (decoded_reg_strb.HMAC384_TAG[i0] && !decoded_req_is_wr) ? field_storage.HMAC384_TAG[i0].TAG.value : '0;
     end
     assign readback_array[17][0:0] = (decoded_reg_strb.HMAC384_KV_RD_KEY_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_KEY_CTRL.read_en.value : '0;
     assign readback_array[17][3:1] = (decoded_reg_strb.HMAC384_KV_RD_KEY_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_KEY_CTRL.read_entry.value : '0;

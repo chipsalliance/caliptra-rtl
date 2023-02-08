@@ -34,6 +34,7 @@ package sha512_reg_pkg;
     typedef struct packed{
         logic [31:0] next;
         logic we;
+        logic hwclr;
     } sha512_reg__SHA512_BLOCK__BLOCK__in_t;
 
     typedef struct packed{
@@ -42,6 +43,7 @@ package sha512_reg_pkg;
 
     typedef struct packed{
         logic [31:0] next;
+        logic hwclr;
     } sha512_reg__SHA512_DIGEST__DIGEST__in_t;
 
     typedef struct packed{
@@ -147,9 +149,14 @@ package sha512_reg_pkg;
     } sha512_reg__SHA512_CTRL__MODE__out_t;
 
     typedef struct packed{
+        logic value;
+    } sha512_reg__SHA512_CTRL__ZEROIZE__out_t;
+
+    typedef struct packed{
         sha512_reg__SHA512_CTRL__INIT__out_t INIT;
         sha512_reg__SHA512_CTRL__NEXT__out_t NEXT;
         sha512_reg__SHA512_CTRL__MODE__out_t MODE;
+        sha512_reg__SHA512_CTRL__ZEROIZE__out_t ZEROIZE;
     } sha512_reg__SHA512_CTRL__out_t;
 
     typedef struct packed{

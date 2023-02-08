@@ -43,6 +43,7 @@ module sha512_core(
                    // Clock and reset.
                    input wire            clk,
                    input wire            reset_n,
+                   input wire            zeroize,
                    // Control.
                    input wire            init_cmd,
                    input wire            next_cmd,
@@ -190,6 +191,7 @@ module sha512_core(
   sha512_w_mem w_mem_inst(
                           .clk(clk),
                           .reset_n(reset_n),
+                          .zeroize(zeroize),
 
                           .block_msg(block_msg),
 
@@ -219,6 +221,31 @@ module sha512_core(
   always @ (posedge clk or negedge reset_n)
     begin : reg_update
       if (!reset_n)
+        begin
+          a_reg               <= 64'h0;
+          b_reg               <= 64'h0;
+          c_reg               <= 64'h0;
+          d_reg               <= 64'h0;
+          e_reg               <= 64'h0;
+          f_reg               <= 64'h0;
+          g_reg               <= 64'h0;
+          h_reg               <= 64'h0;
+          H0_reg              <= 64'h0;
+          H1_reg              <= 64'h0;
+          H2_reg              <= 64'h0;
+          H3_reg              <= 64'h0;
+          H4_reg              <= 64'h0;
+          H5_reg              <= 64'h0;
+          H6_reg              <= 64'h0;
+          H7_reg              <= 64'h0;
+          work_factor_ctr_reg <= 32'h0;
+          ready_reg           <= 1'b1;
+          digest_valid_reg    <= 1'b0;
+          round_ctr_reg       <= 7'h0;
+          sha512_ctrl_reg     <= CTRL_IDLE;
+        end
+
+      else if (zeroize) 
         begin
           a_reg               <= 64'h0;
           b_reg               <= 64'h0;

@@ -86,6 +86,7 @@ module sha512
   reg next_reg;
   reg ready_reg;
   reg [1 : 0] mode_reg;
+  logic zeroize_reg;
 
   localparam BLOCK_NO = 1024 / DATA_WIDTH;
   reg [DATA_WIDTH-1 : 0] block_reg [BLOCK_NO-1 : 0];
@@ -111,6 +112,7 @@ module sha512
   kv_write_ctrl_reg_t kv_write_ctrl_reg;
   kv_read_ctrl_reg_t kv_read_ctrl_reg;
 
+  logic [15:0][31:0] get_mask;
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
@@ -139,6 +141,7 @@ module sha512
   sha512_core core(
                    .clk(clk),
                    .reset_n(reset_n),
+                   .zeroize(zeroize_reg),
 
                    .init_cmd(init_reg),
                    .next_cmd(next_reg),
@@ -175,11 +178,21 @@ module sha512
       digest_valid_reg <= core_digest_valid;
 
       if (core_digest_valid & ~digest_valid_reg & ~dest_keyvault)
-        digest_reg <= core_digest;
+        digest_reg <= core_digest & get_mask;
       if (core_digest_valid & ~digest_valid_reg & dest_keyvault)
-        kv_reg <= core_digest;
+        kv_reg <= core_digest & get_mask;
+
     end
   end // reg_update
+
+  always_comb begin
+    unique casez (mode_reg)
+      2'b00 :    get_mask = {{7{32'hffffffff}}, {9{32'h00000000}}};   //SHA512/224
+      2'b01 :    get_mask = {{8{32'hffffffff}}, {8{32'h00000000}}};   //SHA512/256
+      2'b10 :    get_mask = {{12{32'hffffffff}}, {4{32'h00000000}}};  //SHA384
+      default :  get_mask = {16{32'hffffffff}};                       //SHA512
+    endcase
+  end
 
 
   //register hw interface
@@ -194,6 +207,7 @@ module sha512
     init_reg = hwif_out.SHA512_CTRL.INIT.value;
     next_reg = hwif_out.SHA512_CTRL.NEXT.value;
     mode_reg = hwif_out.SHA512_CTRL.MODE.value;
+    zeroize_reg = hwif_out.SHA512_CTRL.ZEROIZE.value;
 
     hwif_in.SHA512_STATUS.READY.next = ready_reg;
     hwif_in.SHA512_STATUS.VALID.next = digest_valid_reg;
@@ -201,13 +215,14 @@ module sha512
     //output comes in big endian
     for (int dword =0; dword < 16; dword++) begin
       hwif_in.SHA512_DIGEST[dword].DIGEST.next = digest_reg[15-dword];
+      hwif_in.SHA512_DIGEST[dword].DIGEST.hwclr = zeroize_reg;
     end
 
     for (int dword=0; dword< BLOCK_NO; dword++) begin
       block_reg[dword] = hwif_out.SHA512_BLOCK[dword].BLOCK.value;
-      hwif_in.SHA512_BLOCK[dword].BLOCK.we = kv_src_write_en & (kv_src_write_offset == dword);
+      hwif_in.SHA512_BLOCK[dword].BLOCK.we = (kv_src_write_en & (kv_src_write_offset == dword));
       hwif_in.SHA512_BLOCK[dword].BLOCK.next = kv_src_write_data;
-
+      hwif_in.SHA512_BLOCK[dword].BLOCK.hwclr = zeroize_reg;
     end
     //Set valid when fsm is done
     hwif_in.SHA512_KV_RD_STATUS.ERROR.next = kv_src_error;
@@ -229,6 +244,7 @@ module sha512
 
   `KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, SHA512_KV_WR_CTRL)
   `KV_READ_CTRL_REG2STRUCT(kv_read_ctrl_reg, SHA512_KV_RD_CTRL)
+
 
 // Register Block
 sha512_reg i_sha512_reg (

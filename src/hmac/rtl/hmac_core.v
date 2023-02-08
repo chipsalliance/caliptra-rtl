@@ -26,6 +26,7 @@ module hmac_core
       // Clock and reset.
       input wire            clk,
       input wire            reset_n,
+      input wire            zeroize,
       
       // Control.
       input wire            init_cmd,
@@ -104,6 +105,7 @@ module hmac_core
   sha512_core u_sha512_core_h1 (
                      .clk(clk),
                      .reset_n(reset_n),
+                     .zeroize(zeroize),
 
                      .init_cmd(H1_init),
                      .next_cmd(H1_next),
@@ -122,6 +124,7 @@ module hmac_core
   sha512_core u_sha512_core_h2 (
                      .clk(clk),
                      .reset_n(reset_n),
+                     .zeroize(zeroize),
 
                      .init_cmd(H2_init),
                      .next_cmd(H2_next),

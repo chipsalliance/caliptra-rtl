@@ -36,6 +36,7 @@ package hmac_reg_uvm;
     class hmac_reg__HMAC384_CTRL extends uvm_reg;
         rand uvm_reg_field INIT;
         rand uvm_reg_field NEXT;
+        rand uvm_reg_field ZEROIZE;
 
         function new(string name = "hmac_reg__HMAC384_CTRL");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -46,6 +47,8 @@ package hmac_reg_uvm;
             this.INIT.configure(this, 1, 0, "WO", 0, 'h0, 1, 1, 0);
             this.NEXT = new("NEXT");
             this.NEXT.configure(this, 1, 1, "WO", 0, 'h0, 1, 1, 0);
+            this.ZEROIZE = new("ZEROIZE");
+            this.ZEROIZE.configure(this, 1, 2, "WO", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : hmac_reg__HMAC384_CTRL
 

@@ -35,6 +35,7 @@ package ecc_reg_uvm;
     // Reg - ecc_reg::ECC_CTRL
     class ecc_reg__ECC_CTRL extends uvm_reg;
         rand uvm_reg_field CTRL;
+        rand uvm_reg_field ZEROIZE;
 
         function new(string name = "ecc_reg__ECC_CTRL");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -43,6 +44,8 @@ package ecc_reg_uvm;
         virtual function void build();
             this.CTRL = new("CTRL");
             this.CTRL.configure(this, 2, 0, "WO", 1, 'h0, 1, 1, 0);
+            this.ZEROIZE = new("ZEROIZE");
+            this.ZEROIZE.configure(this, 1, 2, "WO", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : ecc_reg__ECC_CTRL
 
@@ -93,7 +96,7 @@ package ecc_reg_uvm;
 
         virtual function void build();
             this.SEED = new("SEED");
-            this.SEED.configure(this, 32, 0, "WO", 0, 'h0, 1, 1, 0);
+            this.SEED.configure(this, 32, 0, "WO", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : ecc_reg__ECC_SEED
 
@@ -107,7 +110,7 @@ package ecc_reg_uvm;
 
         virtual function void build();
             this.MSG = new("MSG");
-            this.MSG.configure(this, 32, 0, "WO", 0, 'h0, 1, 1, 0);
+            this.MSG.configure(this, 32, 0, "WO", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : ecc_reg__ECC_MSG
 
@@ -205,7 +208,7 @@ package ecc_reg_uvm;
 
         virtual function void build();
             this.IV = new("IV");
-            this.IV.configure(this, 32, 0, "WO", 0, 'h0, 1, 1, 0);
+            this.IV.configure(this, 32, 0, "WO", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : ecc_reg__ECC_IV
 

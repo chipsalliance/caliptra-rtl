@@ -19,7 +19,7 @@ package ecc_reg_pkg;
     } ecc_reg__ECC_VERSION__in_t;
 
     typedef struct packed{
-        logic [1:0] next;
+        logic hwclr;
     } ecc_reg__ECC_CTRL__CTRL__in_t;
 
     typedef struct packed{
@@ -41,6 +41,28 @@ package ecc_reg_pkg;
 
     typedef struct packed{
         logic [31:0] next;
+        logic we;
+        logic hwclr;
+    } ecc_reg__ECC_SEED__SEED__in_t;
+
+    typedef struct packed{
+        ecc_reg__ECC_SEED__SEED__in_t SEED;
+    } ecc_reg__ECC_SEED__in_t;
+
+    typedef struct packed{
+        logic [31:0] next;
+        logic we;
+        logic hwclr;
+    } ecc_reg__ECC_MSG__MSG__in_t;
+
+    typedef struct packed{
+        ecc_reg__ECC_MSG__MSG__in_t MSG;
+    } ecc_reg__ECC_MSG__in_t;
+
+    typedef struct packed{
+        logic [31:0] next;
+        logic we;
+        logic hwclr;
     } ecc_reg__ECC_PRIVKEY__PRIVKEY__in_t;
 
     typedef struct packed{
@@ -49,6 +71,8 @@ package ecc_reg_pkg;
 
     typedef struct packed{
         logic [31:0] next;
+        logic we;
+        logic hwclr;
     } ecc_reg__ECC_PUBKEY_X__PUBKEY_X__in_t;
 
     typedef struct packed{
@@ -57,6 +81,8 @@ package ecc_reg_pkg;
 
     typedef struct packed{
         logic [31:0] next;
+        logic we;
+        logic hwclr;
     } ecc_reg__ECC_PUBKEY_Y__PUBKEY_Y__in_t;
 
     typedef struct packed{
@@ -65,6 +91,8 @@ package ecc_reg_pkg;
 
     typedef struct packed{
         logic [31:0] next;
+        logic we;
+        logic hwclr;
     } ecc_reg__ECC_SIGN_R__SIGN_R__in_t;
 
     typedef struct packed{
@@ -73,6 +101,8 @@ package ecc_reg_pkg;
 
     typedef struct packed{
         logic [31:0] next;
+        logic we;
+        logic hwclr;
     } ecc_reg__ECC_SIGN_S__SIGN_S__in_t;
 
     typedef struct packed{
@@ -81,11 +111,21 @@ package ecc_reg_pkg;
 
     typedef struct packed{
         logic [31:0] next;
+        logic we;
+        logic hwclr;
     } ecc_reg__ECC_VERIFY_R__VERIFY_R__in_t;
 
     typedef struct packed{
         ecc_reg__ECC_VERIFY_R__VERIFY_R__in_t VERIFY_R;
     } ecc_reg__ECC_VERIFY_R__in_t;
+
+    typedef struct packed{
+        logic hwclr;
+    } ecc_reg__ECC_IV__IV__in_t;
+
+    typedef struct packed{
+        ecc_reg__ECC_IV__IV__in_t IV;
+    } ecc_reg__ECC_IV__in_t;
 
     typedef struct packed{
         logic hwclr;
@@ -150,12 +190,15 @@ package ecc_reg_pkg;
         ecc_reg__ECC_VERSION__in_t [2-1:0]ECC_VERSION;
         ecc_reg__ECC_CTRL__in_t ECC_CTRL;
         ecc_reg__ECC_STATUS__in_t ECC_STATUS;
+        ecc_reg__ECC_SEED__in_t [12-1:0]ECC_SEED;
+        ecc_reg__ECC_MSG__in_t [12-1:0]ECC_MSG;
         ecc_reg__ECC_PRIVKEY__in_t [12-1:0]ECC_PRIVKEY;
         ecc_reg__ECC_PUBKEY_X__in_t [12-1:0]ECC_PUBKEY_X;
         ecc_reg__ECC_PUBKEY_Y__in_t [12-1:0]ECC_PUBKEY_Y;
         ecc_reg__ECC_SIGN_R__in_t [12-1:0]ECC_SIGN_R;
         ecc_reg__ECC_SIGN_S__in_t [12-1:0]ECC_SIGN_S;
         ecc_reg__ECC_VERIFY_R__in_t [12-1:0]ECC_VERIFY_R;
+        ecc_reg__ECC_IV__in_t [12-1:0]ECC_IV;
         __kv_read_ctrl_reg__in_t ecc_kv_rd_pkey_ctrl;
         __kv_status_reg__in_t ecc_kv_rd_pkey_status;
         __kv_read_ctrl_reg__in_t ecc_kv_rd_seed_ctrl;
@@ -172,7 +215,12 @@ package ecc_reg_pkg;
     } ecc_reg__ECC_CTRL__CTRL__out_t;
 
     typedef struct packed{
+        logic value;
+    } ecc_reg__ECC_CTRL__ZEROIZE__out_t;
+
+    typedef struct packed{
         ecc_reg__ECC_CTRL__CTRL__out_t CTRL;
+        ecc_reg__ECC_CTRL__ZEROIZE__out_t ZEROIZE;
     } ecc_reg__ECC_CTRL__out_t;
 
     typedef struct packed{

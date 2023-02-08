@@ -70,6 +70,7 @@ module hmac
   reg [31 : 0] block_reg [31 : 0];
   reg          block_we;
 
+  logic zeroize_reg;
 
   //----------------------------------------------------------------
   // Wires.
@@ -127,6 +128,7 @@ module hmac
   hmac_core core(
                  .clk(clk),
                  .reset_n(reset_n),
+                 .zeroize(zeroize_reg),
 
                  .init_cmd(init_reg),
                  .next_cmd(next_reg),
@@ -181,19 +183,29 @@ always_comb begin
   hwif_in.HMAC384_NAME[1].NAME.next = HMAC_CORE_NAME[63:32];
   hwif_in.HMAC384_VERSION[0].VERSION.next = HMAC_CORE_VERSION[31:0];
   hwif_in.HMAC384_VERSION[1].VERSION.next = HMAC_CORE_VERSION[63:32];
+
+  //assign hardware readable registers to drive hmac core
+  init_reg = hwif_out.HMAC384_CTRL.INIT.value;
+  next_reg = hwif_out.HMAC384_CTRL.NEXT.value;
+  zeroize_reg = hwif_out.HMAC384_CTRL.ZEROIZE.value;
+
+  //drive hardware writeable registers from hmac core
   hwif_in.HMAC384_STATUS.READY.next = core_ready;
   hwif_in.HMAC384_STATUS.VALID.next = tag_valid_reg;
   for (int dword=0; dword < 12; dword++) begin
     hwif_in.HMAC384_TAG[dword].TAG.next = tag_reg[11-dword];
+    hwif_in.HMAC384_TAG[dword].TAG.hwclr = zeroize_reg;
   end
   //drive hardware writable registers from key vault
   for (int dword=0; dword < 32; dword++)begin
     hwif_in.HMAC384_BLOCK[dword].BLOCK.we = kv_block_write_en & (kv_block_write_offset == dword);
     hwif_in.HMAC384_BLOCK[dword].BLOCK.next = kv_block_write_data;
+    hwif_in.HMAC384_BLOCK[dword].BLOCK.hwclr = zeroize_reg;
   end
   for (int dword=0; dword < 12; dword++)begin
     hwif_in.HMAC384_KEY[dword].KEY.we = kv_key_write_en & (kv_key_write_offset == dword);
     hwif_in.HMAC384_KEY[dword].KEY.next = kv_key_write_data;
+    hwif_in.HMAC384_KEY[dword].KEY.hwclr = zeroize_reg;
   end
   //set ready when keyvault isn't busy
   hwif_in.HMAC384_KV_RD_KEY_STATUS.READY.next = kv_key_ready;
@@ -216,8 +228,6 @@ always_comb begin
   hwif_in.HMAC384_KV_RD_BLOCK_CTRL.read_en.hwclr = ~kv_block_ready;
   hwif_in.HMAC384_KV_WR_CTRL.write_en.hwclr = ~kv_write_ready;
   //assign hardware readable registers to drive hmac core
-  init_reg = hwif_out.HMAC384_CTRL.INIT.value;
-  next_reg = hwif_out.HMAC384_CTRL.NEXT.value;
   for (int dword=0; dword < 12; dword++) begin
     key_reg[dword] = hwif_out.HMAC384_KEY[dword].KEY.value;
   end

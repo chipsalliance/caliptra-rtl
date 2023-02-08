@@ -45,6 +45,7 @@ module ecc_hmac_drbg_interface#(
     // Clock and reset.
     input wire                      clk,
     input wire                      reset_n,
+    input wire                      zeroize,
     input wire                      keygen_sign,
     input wire                      en,
     output wire                     ready,
@@ -108,6 +109,7 @@ module ecc_hmac_drbg_interface#(
         hmac_drbg_i (
         .clk(clk),
         .reset_n(reset_n),
+        .zeroize(zeroize),
         .mode(hmac_mode),
         .init_cmd(hmac_init),
         .next_cmd(hmac_next),

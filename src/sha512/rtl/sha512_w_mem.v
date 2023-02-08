@@ -42,6 +42,7 @@
 module sha512_w_mem(
                     input wire            clk,
                     input wire            reset_n,
+                    input wire            zeroize,
 
                     input wire [1023 : 0] block_msg,
 
@@ -102,6 +103,13 @@ module sha512_w_mem(
       integer ii;
 
       if (!reset_n)
+        begin
+          for (ii = 0; ii < 16; ii = ii + 1)
+            w_mem[ii] <= 64'h0;
+
+          w_ctr_reg <= 7'h0;
+        end
+      if (zeroize)
         begin
           for (ii = 0; ii < 16; ii = ii + 1)
             w_mem[ii] <= 64'h0;

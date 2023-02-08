@@ -34,6 +34,7 @@ package hmac_reg_pkg;
     typedef struct packed{
         logic [31:0] next;
         logic we;
+        logic hwclr;
     } hmac_reg__HMAC384_KEY__KEY__in_t;
 
     typedef struct packed{
@@ -43,6 +44,7 @@ package hmac_reg_pkg;
     typedef struct packed{
         logic [31:0] next;
         logic we;
+        logic hwclr;
     } hmac_reg__HMAC384_BLOCK__BLOCK__in_t;
 
     typedef struct packed{
@@ -51,6 +53,7 @@ package hmac_reg_pkg;
 
     typedef struct packed{
         logic [31:0] next;
+        logic hwclr;
     } hmac_reg__HMAC384_TAG__TAG__in_t;
 
     typedef struct packed{
@@ -155,8 +158,13 @@ package hmac_reg_pkg;
     } hmac_reg__HMAC384_CTRL__NEXT__out_t;
 
     typedef struct packed{
+        logic value;
+    } hmac_reg__HMAC384_CTRL__ZEROIZE__out_t;
+
+    typedef struct packed{
         hmac_reg__HMAC384_CTRL__INIT__out_t INIT;
         hmac_reg__HMAC384_CTRL__NEXT__out_t NEXT;
+        hmac_reg__HMAC384_CTRL__ZEROIZE__out_t ZEROIZE;
     } hmac_reg__HMAC384_CTRL__out_t;
 
     typedef struct packed{

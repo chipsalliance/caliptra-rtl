@@ -37,6 +37,7 @@ package sha512_reg_uvm;
         rand uvm_reg_field INIT;
         rand uvm_reg_field NEXT;
         rand uvm_reg_field MODE;
+        rand uvm_reg_field ZEROIZE;
 
         function new(string name = "sha512_reg__SHA512_CTRL");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -48,7 +49,9 @@ package sha512_reg_uvm;
             this.NEXT = new("NEXT");
             this.NEXT.configure(this, 1, 1, "WO", 0, 'h0, 1, 1, 0);
             this.MODE = new("MODE");
-            this.MODE.configure(this, 2, 2, "WO", 0, 'h3, 1, 1, 0);
+            this.MODE.configure(this, 2, 2, "WO", 0, 'h2, 1, 1, 0);
+            this.ZEROIZE = new("ZEROIZE");
+            this.ZEROIZE.configure(this, 1, 4, "WO", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : sha512_reg__SHA512_CTRL
 

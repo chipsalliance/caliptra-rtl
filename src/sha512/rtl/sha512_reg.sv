@@ -164,6 +164,10 @@ module sha512_reg (
                 logic [1:0] next;
                 logic load_next;
             } MODE;
+            struct packed{
+                logic next;
+                logic load_next;
+            } ZEROIZE;
         } SHA512_CTRL;
         struct packed{
             struct packed{
@@ -181,6 +185,12 @@ module sha512_reg (
                 logic load_next;
             } BLOCK;
         } [32-1:0]SHA512_BLOCK;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } DIGEST;
+        } [16-1:0]SHA512_DIGEST;
         struct packed{
             struct packed{
                 logic next;
@@ -447,6 +457,9 @@ module sha512_reg (
             struct packed{
                 logic [1:0] value;
             } MODE;
+            struct packed{
+                logic value;
+            } ZEROIZE;
         } SHA512_CTRL;
         struct packed{
             struct packed{
@@ -461,6 +474,11 @@ module sha512_reg (
                 logic [31:0] value;
             } BLOCK;
         } [32-1:0]SHA512_BLOCK;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } DIGEST;
+        } [16-1:0]SHA512_DIGEST;
         struct packed{
             struct packed{
                 logic value;
@@ -707,12 +725,34 @@ module sha512_reg (
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.SHA512_CTRL.MODE.value <= 'h3;
+            field_storage.SHA512_CTRL.MODE.value <= 'h2;
         end else if(field_combo.SHA512_CTRL.MODE.load_next) begin
             field_storage.SHA512_CTRL.MODE.value <= field_combo.SHA512_CTRL.MODE.next;
         end
     end
     assign hwif_out.SHA512_CTRL.MODE.value = field_storage.SHA512_CTRL.MODE.value;
+    // Field: sha512_reg.SHA512_CTRL.ZEROIZE
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.SHA512_CTRL.ZEROIZE.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.SHA512_CTRL && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[4:4];
+            load_next_c = '1;
+        end else if(1) begin // singlepulse clears back to 0
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.SHA512_CTRL.ZEROIZE.next = next_c;
+        field_combo.SHA512_CTRL.ZEROIZE.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.SHA512_CTRL.ZEROIZE.value <= 'h0;
+        end else if(field_combo.SHA512_CTRL.ZEROIZE.load_next) begin
+            field_storage.SHA512_CTRL.ZEROIZE.value <= field_combo.SHA512_CTRL.ZEROIZE.next;
+        end
+    end
+    assign hwif_out.SHA512_CTRL.ZEROIZE.value = field_storage.SHA512_CTRL.ZEROIZE.value;
     // Field: sha512_reg.SHA512_STATUS.READY
     always_comb begin
         automatic logic [0:0] next_c = field_storage.SHA512_STATUS.READY.value;
@@ -762,6 +802,9 @@ module sha512_reg (
             end else if(hwif_in.SHA512_BLOCK[i0].BLOCK.we) begin // HW Write - we
                 next_c = hwif_in.SHA512_BLOCK[i0].BLOCK.next;
                 load_next_c = '1;
+            end else if(hwif_in.SHA512_BLOCK[i0].BLOCK.hwclr) begin // HW Clear
+                next_c = '0;
+                load_next_c = '1;
             end
             field_combo.SHA512_BLOCK[i0].BLOCK.next = next_c;
             field_combo.SHA512_BLOCK[i0].BLOCK.load_next = load_next_c;
@@ -774,6 +817,29 @@ module sha512_reg (
             end
         end
         assign hwif_out.SHA512_BLOCK[i0].BLOCK.value = field_storage.SHA512_BLOCK[i0].BLOCK.value;
+    end
+    for(genvar i0=0; i0<16; i0++) begin
+        // Field: sha512_reg.SHA512_DIGEST[].DIGEST
+        always_comb begin
+            automatic logic [31:0] next_c = field_storage.SHA512_DIGEST[i0].DIGEST.value;
+            automatic logic load_next_c = '0;
+            if(1) begin // HW Write
+                next_c = hwif_in.SHA512_DIGEST[i0].DIGEST.next;
+                load_next_c = '1;
+            end else if(hwif_in.SHA512_DIGEST[i0].DIGEST.hwclr) begin // HW Clear
+                next_c = '0;
+                load_next_c = '1;
+            end
+            field_combo.SHA512_DIGEST[i0].DIGEST.next = next_c;
+            field_combo.SHA512_DIGEST[i0].DIGEST.load_next = load_next_c;
+        end
+        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+            if(~hwif_in.reset_b) begin
+                field_storage.SHA512_DIGEST[i0].DIGEST.value <= 'h0;
+            end else if(field_combo.SHA512_DIGEST[i0].DIGEST.load_next) begin
+                field_storage.SHA512_DIGEST[i0].DIGEST.value <= field_combo.SHA512_DIGEST[i0].DIGEST.next;
+            end
+        end
     end
     // Field: sha512_reg.SHA512_KV_RD_CTRL.read_en
     always_comb begin
@@ -1831,7 +1897,7 @@ module sha512_reg (
     assign readback_array[4][1:1] = (decoded_reg_strb.SHA512_STATUS && !decoded_req_is_wr) ? field_storage.SHA512_STATUS.VALID.value : '0;
     assign readback_array[4][31:2] = '0;
     for(genvar i0=0; i0<16; i0++) begin
-        assign readback_array[i0*1 + 5][31:0] = (decoded_reg_strb.SHA512_DIGEST[i0] && !decoded_req_is_wr) ? hwif_in.SHA512_DIGEST[i0].DIGEST.next : '0;
+        assign readback_array[i0*1 + 5][31:0] = (decoded_reg_strb.SHA512_DIGEST[i0] && !decoded_req_is_wr) ? field_storage.SHA512_DIGEST[i0].DIGEST.value : '0;
     end
     assign readback_array[21][0:0] = (decoded_reg_strb.SHA512_KV_RD_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_RD_CTRL.read_en.value : '0;
     assign readback_array[21][3:1] = (decoded_reg_strb.SHA512_KV_RD_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_RD_CTRL.read_entry.value : '0;

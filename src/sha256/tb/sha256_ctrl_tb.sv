@@ -412,6 +412,10 @@ module sha256_ctrl_tb();
   task single_block_test(input           mode,
                          input [511 : 0] block,
                          input [255 : 0] expected);
+    
+    reg [31 : 0] start_time;
+    reg [31 : 0] end_time;
+
     begin
       $display("*** TC%01d - Single block test started.", tc_ctr);
 
@@ -422,11 +426,15 @@ module sha256_ctrl_tb();
       else
         write_single_word(ADDR_CTRL, CTRL_INIT_VALUE);
 
+      start_time = cycle_ctr;
+      
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
       #(CLK_PERIOD);
       wait_ready();
+      end_time = cycle_ctr - start_time;
+      $display("*** Single block test processing time = %01d cycles", end_time);
       read_digest();
 
       // We need to ignore the LSW in SHA224 mode.

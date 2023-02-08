@@ -61,8 +61,9 @@
 /* ---- HMAC ---- */
 #define HMAC_BASE_ADDR            CLP_HMAC_REG_BASE_ADDR
 
-#define HMAC_INIT                 0x0000000D
-#define HMAC_NEXT                 0x0000000E
+#define HMAC_INIT                 0x00000001
+#define HMAC_NEXT                 0x00000002
+#define HMAC_ZEROIZ               0x00000004
 #define HMAC_VALID                0x00000003
 
 #define HMAC_KEY_NUM_DWORDS       0x0000000C

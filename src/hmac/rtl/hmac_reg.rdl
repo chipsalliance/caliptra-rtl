@@ -65,12 +65,13 @@ addrmap hmac_reg {
     /* ---- HMAC384 Component Control ---- */
     reg {
         name = "HMAC384 component control register type definition";
-        desc = "One 2-bit register including the following flags: 
+        desc = "One 3-bit register including the following flags: 
                 bit #0: INIT : Trigs the HMAC384 core to start the 
                                 processing for the key and the first padded 
                                 message block.
                 bit #1: NEXT: ​Trigs the HMAC384 core to start the 
                                 processing for the remining padded message block. 
+                bit #3: Zeroize all internal registers after HMAC process, to avoid SCA leakage.
                 This register is located at HMAC384_base_address + 0x0000_0010
                 After each software write, hardware will erase the register.";
 
@@ -79,6 +80,7 @@ addrmap hmac_reg {
         default resetsignal = reset_b;
         field {desc = "Control init command bit"; singlepulse;} INIT = 1'b0;
         field {desc = "Control next command bit"; singlepulse;} NEXT = 1'b0;
+        field {desc = "Zeroize all internal registers"; singlepulse;} ZEROIZE = 1'b0;
     
     } HMAC384_CTRL @0x00000010;
 
@@ -115,7 +117,7 @@ addrmap hmac_reg {
         default hw = rw;
         default we = true;
         default resetsignal = reset_b;
-        field {desc = "Input HMAC384 key field";} KEY[32] = 32'b0;
+        field {desc = "Input HMAC384 key field"; hwclr;} KEY[32] = 32'b0;
     
     } HMAC384_KEY[12] @0x00000040;
 
@@ -132,7 +134,7 @@ addrmap hmac_reg {
         default hw = rw;
         default we = true;
         default resetsignal = reset_b;
-        field {desc = "Input message block field";} BLOCK[32] = 32'b0;
+        field {desc = "Input message block field"; hwclr;} BLOCK[32] = 32'b0;
     
     } HMAC384_BLOCK[32] @0x00000080;
 
@@ -148,7 +150,7 @@ addrmap hmac_reg {
         default sw = r;
         default hw = w;
         default resetsignal = reset_b;
-        field {desc = "Output tag field";} TAG[32] = 32'b0;
+        field {desc = "Output tag field"; hwclr;} TAG[32] = 32'b0;
     
     } HMAC384_TAG[12] @0x00000100;
 
