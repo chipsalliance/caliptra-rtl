@@ -36,7 +36,7 @@ addrmap doe_reg {
 
     /* ---- Reset ---- */
     signal {activelow; async; cpuif_reset; field_reset;} reset_b;
-    signal {activelow; async;} error_reset_b; // Driven by Caliptra pwrgood from SoC
+    signal {activelow; async;} cptra_pwrgood; // Driven by Caliptra pwrgood from SoC
 
     /* -----------------------
     * Register definitive definitions
@@ -86,14 +86,15 @@ addrmap doe_reg {
 
     reg {
         name = "DOE component status register";
-        desc = "One 2-bit register including the following flags: 
-                bit #0: READY : ​Indicates if the core is ready to take
-                                a control command and process the block.  
-                bit #1: Valid: ​Indicates if the process is done and the
-                                results have been stored in the keyvault.";
+        desc = "Provides status of the DOE block and the status of the flows it runs";
     
-        field {desc = "Status ready bit"; sw = r; hw = na; hwset; hwclr;} READY = 1'b0;
-        field {desc = "Status valid bit"; sw = r; hw = na; hwset; hwclr;} VALID = 1'b0;
+        field {desc = "Status ready bit - Indicates if the core is ready to take a control command and process the block."; 
+                                                      sw = r; hw = na; hwset; hwclr;} READY = 1'b0;
+        field {desc = "Status valid bit - Indicates if the process is done and the results have been stored in the keyvault."; 
+                                                      sw = r; hw = na; hwset; hwclr;} VALID = 1'b0;
+        field {desc = "UDS Flow Completed";           sw = r; hw = w; resetsignal=cptra_pwrgood;} UDS_FLOW_DONE = 1'b0;
+        field {desc = "FE flow completed";            sw = r; hw = w; resetsignal=cptra_pwrgood;} FE_FLOW_DONE = 1'b0;
+        field {desc = "Clear Secrets flow completed"; sw = r; hw = na; hwset; resetsignal=cptra_pwrgood;} DEOBF_SECRETS_CLEARED = 1'b0;
     
     } DOE_STATUS;
 
@@ -316,14 +317,14 @@ addrmap doe_reg {
         /* ------------------------------------------------------------------------------------------------------------- */
 
         /* ---- Reset assignment for Error Events ---- */
-        error_internal_intr_r.error0_sts -> resetsignal = error_reset_b;
-        error_internal_intr_r.error1_sts -> resetsignal = error_reset_b;
-        error_internal_intr_r.error2_sts -> resetsignal = error_reset_b;
-        error_internal_intr_r.error3_sts -> resetsignal = error_reset_b;
-        error0_intr_count_r.cnt          -> resetsignal = error_reset_b;
-        error1_intr_count_r.cnt          -> resetsignal = error_reset_b;
-        error2_intr_count_r.cnt          -> resetsignal = error_reset_b;
-        error3_intr_count_r.cnt          -> resetsignal = error_reset_b;
+        error_internal_intr_r.error0_sts -> resetsignal = cptra_pwrgood;
+        error_internal_intr_r.error1_sts -> resetsignal = cptra_pwrgood;
+        error_internal_intr_r.error2_sts -> resetsignal = cptra_pwrgood;
+        error_internal_intr_r.error3_sts -> resetsignal = cptra_pwrgood;
+        error0_intr_count_r.cnt          -> resetsignal = cptra_pwrgood;
+        error1_intr_count_r.cnt          -> resetsignal = cptra_pwrgood;
+        error2_intr_count_r.cnt          -> resetsignal = cptra_pwrgood;
+        error3_intr_count_r.cnt          -> resetsignal = cptra_pwrgood;
         // TODO: Use this same reset for the error incrementor pulse too?
 
         /* ---- Interrupt Event Dynamic Assignments ---- */

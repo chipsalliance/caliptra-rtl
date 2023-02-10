@@ -111,12 +111,47 @@ always_ff @(posedge clk or negedge rst_b) begin
     end
 end
 
+
 //Edge detect - debug was locked and now it's not
 always_comb debug_unlocked = debug_locked_f & ~debug_locked;
 //Flush the keyvault with the debug value when FW pokes the register or we detect debug mode unlocking
 always_comb flush_keyvault = debug_unlocked | kv_reg_hwif_out.CLEAR_SECRETS.wr_debug_values.value;
 //Pick between keyvault debug mode 0 or 1
 always_comb debug_value = kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value ? CLP_DEBUG_MODE_KV_1 : CLP_DEBUG_MODE_KV_0;
+
+// Sticky (when lock is set, locked until cold reset) & Non-sticky (when lock is set, locked until warm reset) Generic DataVault registers.
+always_comb begin: datavault
+
+   //Sticky Data Vault Regs & Controls
+   for (int entry = 0; entry < STICKY_DV_NUM_ENTRIES; entry++) begin
+      kv_reg_hwif_in.StickyDataVaultCtrl[entry].lock_entry.swwel = kv_reg_hwif_out.StickyDataVaultCtrl[entry].lock_entry.value;
+      for (int dword = 0; dword < DV_NUM_DWORDS; dword++) begin
+          kv_reg_hwif_in.STICKY_DATA_VAULT_ENTRY[entry][dword].data.swwel = kv_reg_hwif_out.StickyDataVaultCtrl[entry].lock_entry.value;
+      end
+   end
+
+   //Non-Sticky Data Vault Regs & Controls
+   for (int entry = 0; entry < NONSTICKY_DV_NUM_ENTRIES; entry++) begin
+      kv_reg_hwif_in.NonStickyDataVaultCtrl[entry].lock_entry.swwel = kv_reg_hwif_out.NonStickyDataVaultCtrl[entry].lock_entry.value;
+      for (int dword = 0; dword < DV_NUM_DWORDS; dword++) begin
+          kv_reg_hwif_in.NONSTICKY_DATA_VAULT_ENTRY[entry][dword].data.swwel = kv_reg_hwif_out.NonStickyDataVaultCtrl[entry].lock_entry.value;
+      end
+   end
+
+   //Non-Sticky Generic Lockable Registers in the Data Vault
+   for (int entry = 0; entry < NONSTICKY_LOCKQ_SCRATCH_NUM_ENTRIES; entry++) begin
+      kv_reg_hwif_in.NonStickyLockableScratchRegCtrl[entry].lock_entry.swwel = kv_reg_hwif_out.NonStickyLockableScratchRegCtrl[entry].lock_entry.value;
+      kv_reg_hwif_in.NonStickyLockableScratchReg[entry].data.swwel  = kv_reg_hwif_out.NonStickyDataVaultCtrl[entry].lock_entry.value;
+   end
+
+   //Sticky Generic Lockable Registers in the Data Vault
+   for (int entry = 0; entry < STICKY_LOCKQ_SCRATCH_NUM_ENTRIES; entry++) begin
+      kv_reg_hwif_in.StickyLockableScratchRegCtrl[entry].lock_entry.swwel = kv_reg_hwif_out.StickyLockableScratchRegCtrl[entry].lock_entry.value;
+      kv_reg_hwif_in.StickyLockableScratchReg[entry].data.swwel  = kv_reg_hwif_out.StickyDataVaultCtrl[entry].lock_entry.value;
+   end
+
+
+end
 
 always_comb begin : keyvault_ctrl
     //keyvault control registers

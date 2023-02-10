@@ -39,6 +39,9 @@ package doe_reg_uvm;
     class doe_reg__DOE_STATUS extends uvm_reg;
         rand uvm_reg_field READY;
         rand uvm_reg_field VALID;
+        rand uvm_reg_field UDS_FLOW_DONE;
+        rand uvm_reg_field FE_FLOW_DONE;
+        rand uvm_reg_field DEOBF_SECRETS_CLEARED;
 
         function new(string name = "doe_reg__DOE_STATUS");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -49,6 +52,12 @@ package doe_reg_uvm;
             this.READY.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
             this.VALID = new("VALID");
             this.VALID.configure(this, 1, 1, "RO", 1, 'h0, 1, 1, 0);
+            this.UDS_FLOW_DONE = new("UDS_FLOW_DONE");
+            this.UDS_FLOW_DONE.configure(this, 1, 2, "RO", 1, 'h0, 1, 1, 0);
+            this.FE_FLOW_DONE = new("FE_FLOW_DONE");
+            this.FE_FLOW_DONE.configure(this, 1, 3, "RO", 1, 'h0, 1, 1, 0);
+            this.DEOBF_SECRETS_CLEARED = new("DEOBF_SECRETS_CLEARED");
+            this.DEOBF_SECRETS_CLEARED.configure(this, 1, 4, "RO", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : doe_reg__DOE_STATUS
 
@@ -134,14 +143,14 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__global_intr_t_agg_sts_e6399b4a
 
-    // Reg - doe_reg::error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378
-    class doe_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378 extends uvm_reg;
+    // Reg - doe_reg::error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba
+    class doe_reg__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba extends uvm_reg;
         rand uvm_reg_field error0_sts;
         rand uvm_reg_field error1_sts;
         rand uvm_reg_field error2_sts;
         rand uvm_reg_field error3_sts;
 
-        function new(string name = "doe_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378");
+        function new(string name = "doe_reg__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -155,7 +164,7 @@ package doe_reg_uvm;
             this.error3_sts = new("error3_sts");
             this.error3_sts.configure(this, 1, 3, "W1C", 1, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : doe_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378
+    endclass : doe_reg__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba
 
     // Reg - doe_reg::notif_intr_t_notif_cmd_done_sts_1c68637e
     class doe_reg__notif_intr_t_notif_cmd_done_sts_1c68637e extends uvm_reg;
@@ -208,11 +217,11 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__notif_intr_trig_t
 
-    // Reg - doe_reg::intr_count_t_cnt_35ace267
-    class doe_reg__intr_count_t_cnt_35ace267 extends uvm_reg;
+    // Reg - doe_reg::intr_count_t_cnt_130ab269
+    class doe_reg__intr_count_t_cnt_130ab269 extends uvm_reg;
         rand uvm_reg_field cnt;
 
-        function new(string name = "doe_reg__intr_count_t_cnt_35ace267");
+        function new(string name = "doe_reg__intr_count_t_cnt_130ab269");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -220,13 +229,13 @@ package doe_reg_uvm;
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : doe_reg__intr_count_t_cnt_35ace267
+    endclass : doe_reg__intr_count_t_cnt_130ab269
 
-    // Reg - doe_reg::intr_count_t_cnt_73c42c28
-    class doe_reg__intr_count_t_cnt_73c42c28 extends uvm_reg;
+    // Reg - doe_reg::intr_count_t_cnt_324dfc53
+    class doe_reg__intr_count_t_cnt_324dfc53 extends uvm_reg;
         rand uvm_reg_field cnt;
 
-        function new(string name = "doe_reg__intr_count_t_cnt_73c42c28");
+        function new(string name = "doe_reg__intr_count_t_cnt_324dfc53");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -234,13 +243,13 @@ package doe_reg_uvm;
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : doe_reg__intr_count_t_cnt_73c42c28
+    endclass : doe_reg__intr_count_t_cnt_324dfc53
 
-    // Reg - doe_reg::intr_count_t_cnt_d8af96ff
-    class doe_reg__intr_count_t_cnt_d8af96ff extends uvm_reg;
+    // Reg - doe_reg::intr_count_t_cnt_791a4799
+    class doe_reg__intr_count_t_cnt_791a4799 extends uvm_reg;
         rand uvm_reg_field cnt;
 
-        function new(string name = "doe_reg__intr_count_t_cnt_d8af96ff");
+        function new(string name = "doe_reg__intr_count_t_cnt_791a4799");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -248,13 +257,13 @@ package doe_reg_uvm;
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : doe_reg__intr_count_t_cnt_d8af96ff
+    endclass : doe_reg__intr_count_t_cnt_791a4799
 
-    // Reg - doe_reg::intr_count_t_cnt_9bd7f809
-    class doe_reg__intr_count_t_cnt_9bd7f809 extends uvm_reg;
+    // Reg - doe_reg::intr_count_t_cnt_e9de7334
+    class doe_reg__intr_count_t_cnt_e9de7334 extends uvm_reg;
         rand uvm_reg_field cnt;
 
-        function new(string name = "doe_reg__intr_count_t_cnt_9bd7f809");
+        function new(string name = "doe_reg__intr_count_t_cnt_e9de7334");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -262,7 +271,7 @@ package doe_reg_uvm;
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : doe_reg__intr_count_t_cnt_9bd7f809
+    endclass : doe_reg__intr_count_t_cnt_e9de7334
 
     // Reg - doe_reg::intr_count_t_cnt_be67d6d5
     class doe_reg__intr_count_t_cnt_be67d6d5 extends uvm_reg;
@@ -355,14 +364,14 @@ package doe_reg_uvm;
         rand doe_reg__notif_intr_en_t notif_intr_en_r;
         rand doe_reg__global_intr_t_agg_sts_dd3dcf0a error_global_intr_r;
         rand doe_reg__global_intr_t_agg_sts_e6399b4a notif_global_intr_r;
-        rand doe_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378 error_internal_intr_r;
+        rand doe_reg__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba error_internal_intr_r;
         rand doe_reg__notif_intr_t_notif_cmd_done_sts_1c68637e notif_internal_intr_r;
         rand doe_reg__error_intr_trig_t error_intr_trig_r;
         rand doe_reg__notif_intr_trig_t notif_intr_trig_r;
-        rand doe_reg__intr_count_t_cnt_35ace267 error0_intr_count_r;
-        rand doe_reg__intr_count_t_cnt_73c42c28 error1_intr_count_r;
-        rand doe_reg__intr_count_t_cnt_d8af96ff error2_intr_count_r;
-        rand doe_reg__intr_count_t_cnt_9bd7f809 error3_intr_count_r;
+        rand doe_reg__intr_count_t_cnt_130ab269 error0_intr_count_r;
+        rand doe_reg__intr_count_t_cnt_324dfc53 error1_intr_count_r;
+        rand doe_reg__intr_count_t_cnt_791a4799 error2_intr_count_r;
+        rand doe_reg__intr_count_t_cnt_e9de7334 error3_intr_count_r;
         rand doe_reg__intr_count_t_cnt_be67d6d5 notif_cmd_done_intr_count_r;
         rand doe_reg__intr_count_incr_t_pulse_37026c97 error0_intr_count_incr_r;
         rand doe_reg__intr_count_incr_t_pulse_d860d977 error1_intr_count_incr_r;

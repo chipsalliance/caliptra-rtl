@@ -110,7 +110,7 @@ module doe_cbc
   logic doe_next;
 
   logic flow_done;
-  logic flow_in_progress;
+  logic flow_in_progress, lock_fe_flow, lock_uds_flow;
 
   doe_reg__in_t  hwif_in;
   doe_reg__out_t hwif_out;
@@ -173,6 +173,14 @@ module doe_cbc
   end// reg_update
 
 //DOE Register Hardware Interface
+
+
+// Lock the UDS_FLOW_DONE & FE_FLOW_DONE status once the flow is done. Bit is reset only on cold reset on '1. FIXME: add an assertion
+assign hwif_in.DOE_STATUS.UDS_FLOW_DONE.next = lock_uds_flow;
+assign hwif_in.DOE_STATUS.FE_FLOW_DONE.next  = lock_fe_flow;
+
+assign hwif_in.DOE_STATUS.DEOBF_SECRETS_CLEARED.hwset = clear_obf_secrets;
+
 assign hwif_in.DOE_STATUS.READY.hwset = ready_reg & ~(flow_in_progress);
 assign hwif_in.DOE_STATUS.READY.hwclr = ~ready_reg;
 assign hwif_in.DOE_STATUS.VALID.hwset = flow_done | clear_obf_secrets;
@@ -223,12 +231,14 @@ doe_fsm1
   .dest_data(kv_result_reg),
 
   .flow_done(flow_done),
-  .flow_in_progress(flow_in_progress)
+  .flow_in_progress(flow_in_progress),
+  .lock_uds_flow(lock_uds_flow),
+  .lock_fe_flow(lock_fe_flow)
 
 );
 
 always_comb hwif_in.reset_b = reset_n;
-always_comb hwif_in.error_reset_b = cptra_pwrgood;
+always_comb hwif_in.cptra_pwrgood = cptra_pwrgood;
 
 // Pulse input to intr_regs to set the interrupt status bit and generate interrupt output (if enabled)
 always_comb hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset  = 1'b0; // TODO please assign

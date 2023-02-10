@@ -88,6 +88,7 @@ void main() {
         // //Poll for DOE status
         while(doe_status_int != (DOE_REG_DOE_STATUS_VALID_MASK | DOE_REG_DOE_STATUS_READY_MASK)) {
             doe_status_int = *doe_status;
+            doe_status_int = doe_status_int & (DOE_REG_DOE_STATUS_VALID_MASK | DOE_REG_DOE_STATUS_READY_MASK) ;
         }
         doe_status_int = 0x00000000; //reset internal status register to reuse next time
     }
@@ -105,6 +106,7 @@ void main() {
         //Poll for DOE status
         while(doe_status_int != (DOE_REG_DOE_STATUS_VALID_MASK | DOE_REG_DOE_STATUS_READY_MASK)) {
             doe_status_int = *doe_status;
+            doe_status_int = doe_status_int & (DOE_REG_DOE_STATUS_VALID_MASK | DOE_REG_DOE_STATUS_READY_MASK) ;
         }
         doe_status_int = 0x00000000; //reset internal status register to reuse next time
         
@@ -131,7 +133,9 @@ void main() {
         //Poll for DOE status
         while(doe_status_int != (DOE_REG_DOE_STATUS_VALID_MASK | DOE_REG_DOE_STATUS_READY_MASK)) {
             doe_status_int = *doe_status;
+            doe_status_int = doe_status_int & (DOE_REG_DOE_STATUS_VALID_MASK | DOE_REG_DOE_STATUS_READY_MASK) ;
         }
+        printf("DOE Status %d \n", doe_status_int);
 
         //Set KV and PCR locks
         *key_ctrl1 = 0x00000003;

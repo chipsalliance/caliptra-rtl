@@ -57,7 +57,7 @@ reg {
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
     Fuse svn[32]=0;
-} fuse_key_manifest_svn;
+} fuse_fmc_key_manifest_svn;
 reg {
     desc = "Runtime SVN Fuse.
              [br]Caliptra Access: RO

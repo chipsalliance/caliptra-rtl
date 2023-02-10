@@ -55,7 +55,9 @@ module doe_fsm
     input logic [DEST_NUM_DWORDS-1:0][31:0] dest_data,
 
     output logic flow_done,
-    output logic flow_in_progress
+    output logic flow_in_progress,
+    output logic lock_uds_flow,
+    output logic lock_fe_flow
 );
 localparam UDS_BLOCK_OFFSET_W = $clog2(UDS_NUM_BLOCKS);
 localparam FE_BLOCK_OFFSET_W = $clog2(FE_NUM_BLOCKS);
@@ -74,8 +76,6 @@ typedef enum logic [2:0] {
 } kv_doe_fsm_state_e;
 
 logic running_uds, running_fe;
-logic lock_uds_flow;
-logic lock_fe_flow;
 
 logic [2:0] dest_addr, dest_addr_nxt;
 logic dest_addr_en;
@@ -101,8 +101,8 @@ always_comb running_uds = (doe_cmd_reg.cmd == DOE_UDS);
 always_comb running_fe = (doe_cmd_reg.cmd == DOE_FE);
 always_comb block_done = running_uds ? (block_offset == (UDS_NUM_BLOCKS-1)) :
                                        (block_offset == (FE_NUM_BLOCKS-1)) ;
-always_comb flow_in_progress = running_uds | running_fe;
 
+always_comb flow_in_progress = running_uds | running_fe;
 always_comb dest_write_done = (dest_write_offset[DEST_OFFSET_W-1:0] == (DEST_NUM_DWORDS-1));
 always_comb incr_dest_sel = (dest_write_offset_nxt == '0) & (dest_write_offset == '1);
 

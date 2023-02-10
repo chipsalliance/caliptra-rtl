@@ -90,7 +90,7 @@ module soc_ifc_reg (
         logic [12-1:0]fuse_key_manifest_pk_hash;
         logic fuse_key_manifest_pk_hash_mask;
         logic [12-1:0]fuse_owner_pk_hash;
-        logic fuse_key_manifest_svn;
+        logic fuse_fmc_key_manifest_svn;
         logic [4-1:0]fuse_runtime_svn;
         logic fuse_anti_rollback_disable;
         logic [24-1:0]fuse_idevid_cert_attr;
@@ -186,7 +186,7 @@ module soc_ifc_reg (
         for(int i0=0; i0<12; i0++) begin
             decoded_reg_strb.fuse_owner_pk_hash[i0] = cpuif_req_masked & (cpuif_addr == 'h284 + i0*'h4);
         end
-        decoded_reg_strb.fuse_key_manifest_svn = cpuif_req_masked & (cpuif_addr == 'h2b4);
+        decoded_reg_strb.fuse_fmc_key_manifest_svn = cpuif_req_masked & (cpuif_addr == 'h2b4);
         for(int i0=0; i0<4; i0++) begin
             decoded_reg_strb.fuse_runtime_svn[i0] = cpuif_req_masked & (cpuif_addr == 'h2b8 + i0*'h4);
         end
@@ -444,7 +444,7 @@ module soc_ifc_reg (
                 logic [31:0] next;
                 logic load_next;
             } svn;
-        } fuse_key_manifest_svn;
+        } fuse_fmc_key_manifest_svn;
         struct packed{
             struct packed{
                 logic [31:0] next;
@@ -959,7 +959,7 @@ module soc_ifc_reg (
             struct packed{
                 logic [31:0] value;
             } svn;
-        } fuse_key_manifest_svn;
+        } fuse_fmc_key_manifest_svn;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -1884,25 +1884,25 @@ module soc_ifc_reg (
         end
         assign hwif_out.fuse_owner_pk_hash[i0].hash.value = field_storage.fuse_owner_pk_hash[i0].hash.value;
     end
-    // Field: soc_ifc_reg.fuse_key_manifest_svn.svn
+    // Field: soc_ifc_reg.fuse_fmc_key_manifest_svn.svn
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.fuse_key_manifest_svn.svn.value;
+        automatic logic [31:0] next_c = field_storage.fuse_fmc_key_manifest_svn.svn.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.fuse_key_manifest_svn && decoded_req_is_wr && !(hwif_in.fuse_key_manifest_svn.svn.swwel)) begin // SW write
+        if(decoded_reg_strb.fuse_fmc_key_manifest_svn && decoded_req_is_wr && !(hwif_in.fuse_fmc_key_manifest_svn.svn.swwel)) begin // SW write
             next_c = decoded_wr_data[31:0];
             load_next_c = '1;
         end
-        field_combo.fuse_key_manifest_svn.svn.next = next_c;
-        field_combo.fuse_key_manifest_svn.svn.load_next = load_next_c;
+        field_combo.fuse_fmc_key_manifest_svn.svn.next = next_c;
+        field_combo.fuse_fmc_key_manifest_svn.svn.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
         if(~hwif_in.cptra_pwrgood) begin
-            field_storage.fuse_key_manifest_svn.svn.value <= 'h0;
-        end else if(field_combo.fuse_key_manifest_svn.svn.load_next) begin
-            field_storage.fuse_key_manifest_svn.svn.value <= field_combo.fuse_key_manifest_svn.svn.next;
+            field_storage.fuse_fmc_key_manifest_svn.svn.value <= 'h0;
+        end else if(field_combo.fuse_fmc_key_manifest_svn.svn.load_next) begin
+            field_storage.fuse_fmc_key_manifest_svn.svn.value <= field_combo.fuse_fmc_key_manifest_svn.svn.next;
         end
     end
-    assign hwif_out.fuse_key_manifest_svn.svn.value = field_storage.fuse_key_manifest_svn.svn.value;
+    assign hwif_out.fuse_fmc_key_manifest_svn.svn.value = field_storage.fuse_fmc_key_manifest_svn.svn.value;
     for(genvar i0=0; i0<4; i0++) begin
         // Field: soc_ifc_reg.fuse_runtime_svn[].svn
         always_comb begin
@@ -3383,7 +3383,7 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<12; i0++) begin
         assign readback_array[i0*1 + 65][31:0] = (decoded_reg_strb.fuse_owner_pk_hash[i0] && !decoded_req_is_wr) ? field_storage.fuse_owner_pk_hash[i0].hash.value : '0;
     end
-    assign readback_array[77][31:0] = (decoded_reg_strb.fuse_key_manifest_svn && !decoded_req_is_wr) ? field_storage.fuse_key_manifest_svn.svn.value : '0;
+    assign readback_array[77][31:0] = (decoded_reg_strb.fuse_fmc_key_manifest_svn && !decoded_req_is_wr) ? field_storage.fuse_fmc_key_manifest_svn.svn.value : '0;
     for(genvar i0=0; i0<4; i0++) begin
         assign readback_array[i0*1 + 78][31:0] = (decoded_reg_strb.fuse_runtime_svn[i0] && !decoded_req_is_wr) ? field_storage.fuse_runtime_svn[i0].svn.value : '0;
     end

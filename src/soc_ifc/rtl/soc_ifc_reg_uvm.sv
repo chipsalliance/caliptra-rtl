@@ -434,11 +434,11 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fuse_owner_pk_hash
 
-    // Reg - soc_ifc_reg::fuse_key_manifest_svn
-    class soc_ifc_reg__fuse_key_manifest_svn extends uvm_reg;
+    // Reg - soc_ifc_reg::fuse_fmc_key_manifest_svn
+    class soc_ifc_reg__fuse_fmc_key_manifest_svn extends uvm_reg;
         rand uvm_reg_field svn;
 
-        function new(string name = "soc_ifc_reg__fuse_key_manifest_svn");
+        function new(string name = "soc_ifc_reg__fuse_fmc_key_manifest_svn");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -446,7 +446,7 @@ package soc_ifc_reg_uvm;
             this.svn = new("svn");
             this.svn.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : soc_ifc_reg__fuse_key_manifest_svn
+    endclass : soc_ifc_reg__fuse_fmc_key_manifest_svn
 
     // Reg - soc_ifc_reg::fuse_runtime_svn
     class soc_ifc_reg__fuse_runtime_svn extends uvm_reg;
@@ -1237,7 +1237,7 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__fuse_key_manifest_pk_hash fuse_key_manifest_pk_hash[12];
         rand soc_ifc_reg__fuse_key_manifest_pk_hash_mask fuse_key_manifest_pk_hash_mask;
         rand soc_ifc_reg__fuse_owner_pk_hash fuse_owner_pk_hash[12];
-        rand soc_ifc_reg__fuse_key_manifest_svn fuse_key_manifest_svn;
+        rand soc_ifc_reg__fuse_fmc_key_manifest_svn fuse_fmc_key_manifest_svn;
         rand soc_ifc_reg__fuse_runtime_svn fuse_runtime_svn[4];
         rand soc_ifc_reg__fuse_anti_rollback_disable fuse_anti_rollback_disable;
         rand soc_ifc_reg__fuse_idevid_cert_attr fuse_idevid_cert_attr[24];
@@ -1421,11 +1421,11 @@ package soc_ifc_reg_uvm;
                 this.fuse_owner_pk_hash[i0].build();
                 this.default_map.add_reg(this.fuse_owner_pk_hash[i0], 'h284 + i0*'h4);
             end
-            this.fuse_key_manifest_svn = new("fuse_key_manifest_svn");
-            this.fuse_key_manifest_svn.configure(this);
+            this.fuse_fmc_key_manifest_svn = new("fuse_fmc_key_manifest_svn");
+            this.fuse_fmc_key_manifest_svn.configure(this);
 
-            this.fuse_key_manifest_svn.build();
-            this.default_map.add_reg(this.fuse_key_manifest_svn, 'h2b4);
+            this.fuse_fmc_key_manifest_svn.build();
+            this.default_map.add_reg(this.fuse_fmc_key_manifest_svn, 'h2b4);
             foreach(this.fuse_runtime_svn[i0]) begin
                 this.fuse_runtime_svn[i0] = new($sformatf("fuse_runtime_svn[%0d]", i0));
                 this.fuse_runtime_svn[i0].configure(this);
