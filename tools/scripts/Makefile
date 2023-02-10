@@ -76,7 +76,7 @@ ifdef debug
  IRUN_DEBUG = -access +rc
  IRUN_DEBUG_RUN = -input $(RV_ROOT)/testbench/input.tcl
  VCS_DEBUG = -debug_access
- VERILATOR_DEBUG = --trace
+ VERILATOR_DEBUG = --trace --trace-structs
  RIVIERA_DEBUG = +access +r
 endif
 

@@ -63,6 +63,16 @@ logic debug_unlocked;
 logic flush_keyvault;
 logic [31:0] debug_value;
 
+//intermediate signals to make verilator happy
+logic [KV_NUM_KEYS-1:0][KV_NUM_DWORDS-1:0] key_entry_we;
+logic [KV_NUM_PCR-1:0][KV_NUM_DWORDS-1:0] pcr_entry_we;
+logic [KV_NUM_KEYS-1:0] key_entry_dest_valid_we;
+logic [KV_NUM_PCR-1:0] pcr_entry_dest_valid_we;
+logic [KV_NUM_KEYS-1:0][KV_NUM_DWORDS-1:0][31:0] key_entry_next;
+logic [KV_NUM_PCR-1:0][KV_NUM_DWORDS-1:0][31:0] pcr_entry_next;
+logic [KV_NUM_KEYS-1:0][KV_NUM_READ-1:0] key_entry_dest_valid_next;
+logic [KV_NUM_PCR-1:0][KV_NUM_READ-1:0] pcr_entry_dest_valid_next;
+
 kv_reg__in_t kv_reg_hwif_in;
 kv_reg__out_t kv_reg_hwif_out;
 
@@ -164,12 +174,14 @@ always_comb begin : keyvault_ctrl
         kv_reg_hwif_in.KEY_CTRL[entry].lock_use.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value;
         kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value;
         //init for AND-OR
-        kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.next = '0; 
-        kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.we = '0;
+        key_entry_dest_valid_we[entry] = '0;
+        key_entry_dest_valid_next[entry] = '0; 
         for (int client = 0; client < KV_NUM_WRITE; client++) begin
-            kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.we |= (kv_write[client].write_entry == entry) & ~kv_write[client].entry_is_pcr & kv_write[client].write_en; 
-            kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.next |= kv_write[client].write_en ? kv_write[client].write_dest_valid : '0; 
+            key_entry_dest_valid_we[entry] |= (kv_write[client].write_entry == entry) & ~kv_write[client].entry_is_pcr & kv_write[client].write_en; 
+            key_entry_dest_valid_next[entry] |= kv_write[client].write_en ? kv_write[client].write_dest_valid : '0; 
         end 
+        kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.we = key_entry_dest_valid_we[entry];
+        kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.next = key_entry_dest_valid_next[entry];
     end
 
     for (int entry = 0; entry < KV_NUM_PCR; entry++) begin
@@ -181,12 +193,14 @@ always_comb begin : keyvault_ctrl
         kv_reg_hwif_in.PCR_CTRL[entry].lock_use.hwclr = kv_reg_hwif_out.PCR_CTRL[entry].clear.value;
         kv_reg_hwif_in.PCR_CTRL[entry].dest_valid.hwclr = kv_reg_hwif_out.PCR_CTRL[entry].clear.value;
         //init for AND-OR
-        kv_reg_hwif_in.PCR_CTRL[entry].dest_valid.next = '0; 
-        kv_reg_hwif_in.PCR_CTRL[entry].dest_valid.we = '0; 
+        pcr_entry_dest_valid_we[entry] = '0; 
+        pcr_entry_dest_valid_next[entry] = '0; 
         for (int client = 0; client < KV_NUM_WRITE; client++) begin
-            kv_reg_hwif_in.PCR_CTRL[entry].dest_valid.we |= (kv_write[client].write_entry == entry) & kv_write[client].entry_is_pcr & kv_write[client].write_en; 
-            kv_reg_hwif_in.PCR_CTRL[entry].dest_valid.next |= kv_write[client].write_en? kv_write[client].write_dest_valid : '0; 
+            pcr_entry_dest_valid_we[entry] |= (kv_write[client].write_entry == entry) & kv_write[client].entry_is_pcr & kv_write[client].write_en; 
+            pcr_entry_dest_valid_next[entry] |= kv_write[client].write_en? kv_write[client].write_dest_valid : '0; 
         end 
+        kv_reg_hwif_in.PCR_CTRL[entry].dest_valid.we = pcr_entry_dest_valid_we[entry];
+        kv_reg_hwif_in.PCR_CTRL[entry].dest_valid.next = pcr_entry_dest_valid_next[entry];
     end
 
     //keyvault storage
@@ -196,31 +210,35 @@ always_comb begin : keyvault_ctrl
         for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
             kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.swwel = '1; //never allow sw writes
             //initialize to 0 for AND-OR mux
-            kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.next = '0;
-            kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.we = '0;
+            key_entry_we[entry][dword] = '0;
+            key_entry_next[entry][dword] = '0;
             for (int client = 0; client < KV_NUM_WRITE; client++) begin
-                kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value;
-                kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.we |= (((kv_write[client].write_entry == entry) & (kv_write[client].write_offset == dword) & 
-                                                                   ~kv_write[client].entry_is_pcr & kv_write[client].write_en) | flush_keyvault) & 
-                                                                   ~kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value;
-                kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.next |= flush_keyvault ? debug_value :
-                                                                    kv_write[client].write_en ? kv_write[client].write_data : '0;
+                key_entry_we[entry][dword] |= (((kv_write[client].write_entry == entry) & (kv_write[client].write_offset == dword) & 
+                                               ~kv_write[client].entry_is_pcr & kv_write[client].write_en) | flush_keyvault) & 
+                                               ~kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value;
+                key_entry_next[entry][dword] |= flush_keyvault ? debug_value :
+                                                kv_write[client].write_en ? kv_write[client].write_data : '0;
             end
+            kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.we = key_entry_we[entry][dword];
+            kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.next = key_entry_next[entry][dword];
+            kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value;
         end
     end
     for (int entry = 0; entry < KV_NUM_PCR; entry++) begin
         for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
             kv_reg_hwif_in.PCR_ENTRY[entry][dword].data.swwel = kv_reg_hwif_out.PCR_CTRL[entry].lock_wr.value; //disable sw writes if locked
             //initialize to 0 for AND-OR mux
-            kv_reg_hwif_in.PCR_ENTRY[entry][dword].data.next = '0; //hook up the next data to write from crypto writing to this key
-            kv_reg_hwif_in.PCR_ENTRY[entry][dword].data.we = '0; //hook up the write enable from crypto writing to this key
+            pcr_entry_we[entry][dword] = '0; 
+            pcr_entry_next[entry][dword] = '0; 
             for (int client = 0; client < KV_NUM_WRITE; client++) begin
-                kv_reg_hwif_in.PCR_ENTRY[entry][dword].data.hwclr = kv_reg_hwif_out.PCR_CTRL[entry].clear.value;
-                kv_reg_hwif_in.PCR_ENTRY[entry][dword].data.we |= (kv_write[client].write_entry == entry) & (kv_write[client].write_offset == dword) & 
+                pcr_entry_we[entry][dword] |= (kv_write[client].write_entry == entry) & (kv_write[client].write_offset == dword) & 
                                                                    kv_write[client].entry_is_pcr & kv_write[client].write_en &
                                                                    ~kv_reg_hwif_out.PCR_CTRL[entry].lock_wr.value;
-                kv_reg_hwif_in.PCR_ENTRY[entry][dword].data.next |= kv_write[client].write_en ? kv_write[client].write_data : '0;
+                pcr_entry_next[entry][dword] |= kv_write[client].write_en ? kv_write[client].write_data : '0;
             end 
+            kv_reg_hwif_in.PCR_ENTRY[entry][dword].data.we = pcr_entry_we[entry][dword];
+            kv_reg_hwif_in.PCR_ENTRY[entry][dword].data.next = pcr_entry_next[entry][dword];
+            kv_reg_hwif_in.PCR_ENTRY[entry][dword].data.hwclr = kv_reg_hwif_out.PCR_CTRL[entry].clear.value;
         end
     end
 end

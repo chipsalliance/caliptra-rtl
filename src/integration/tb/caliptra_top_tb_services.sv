@@ -131,6 +131,7 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
     logic                       inject_hmac_key;
     logic                       inject_ecc_seed;
     logic                       inject_sha_block;
+    logic                       inject_random_data;
 
 // Upwards name referencing per 23.8 of IEEE 1800-2017
 `define DEC caliptra_top_dut.rvtop.swerv.dec
@@ -194,7 +195,7 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
         end
     end
 
-
+    //keyvault injection hooks
     //Inject data to KV key reg
     logic [0:11][31:0]   ecc_seed_tb    = 384'h7F3654EFC470468CB14662D5B27C588758C68F3065623694C34A57405AE03CF401786957C5B89983293586D28F12482B;
     logic [0:11][31:0]   hmac_key_tb    = 384'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b;
@@ -208,31 +209,47 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
                     if(((WriteData[7:0] & 8'hf8) == 8'h80) && mailbox_write) begin
                         //$system("/home/mojtabab/workspace_aha_poc/ws1/Caliptra/src/ecc/tb/ecdsa_secp384r1.exe");
                         inject_ecc_seed <= 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = ((WriteData[7:0] & 8'h07) == slot_id);
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 6'b10000;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = ((WriteData[7:0] & 8'h07) == slot_id);
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = ecc_seed_tb[dword_i][31 : 0];
+                        if (((WriteData[7:0] & 8'h07) == slot_id)) begin
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 6'b10000;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = ecc_seed_tb[dword_i][31 : 0];
+                        end
                     end
                     //inject valid hmac_key dest and hmac_key value to key reg
                     else if(((WriteData[7:0] & 8'hf8) == 8'h88) && mailbox_write) begin
                         inject_hmac_key <= 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = ((WriteData[7:0] & 8'h07) == slot_id);
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 6'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = ((WriteData[7:0] & 8'h07) == slot_id);
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = hmac_key_tb[dword_i][31 : 0];
+                        if (((WriteData[7:0] & 8'h07) == slot_id)) begin
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 6'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = hmac_key_tb[dword_i][31 : 0];
+                        end
                     end
                     //inject valid sha dest and sha_block value to key reg
                     else if(((WriteData[7:0] & 8'hf8) == 8'h90) && mailbox_write) begin
                         inject_sha_block <= 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = ((WriteData[7:0] & 8'h07) == slot_id);
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 6'b100;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = ((WriteData[7:0] & 8'h07) == slot_id);
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = sha_block_tb[dword_i][31 : 0];
+                        if (((WriteData[7:0] & 8'h07) == slot_id)) begin
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 6'b100;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = sha_block_tb[dword_i][31 : 0];
+                        end
+                    end
+                    else if((WriteData[7:0] == 8'hf4) && mailbox_write) begin
+                        inject_random_data <= '1;
+                        if (slot_id == 0) begin
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = (32'b10000 << `KV_REG_KEY_CTRL_0_DEST_VALID_LOW);
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = $urandom();
+                        end
                     end
                     else begin
                         inject_ecc_seed <= '0;
                         inject_hmac_key <= '0;
                         inject_sha_block <= '0;
+                        inject_random_data <= '0;
                         release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we;
                         release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next;
                         release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we;
@@ -288,28 +305,6 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
 
         end
     end
-
-    genvar dword;
-    generate
-        for(dword=0; dword<16; dword++) begin
-
-            always@(negedge clk) begin
-                if((WriteData[7:0] == 8'hf4) && mailbox_write) begin
-                    force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[0].dest_valid.we = 'b1;
-                    force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[0].dest_valid.next = (32'b10000 << `KV_REG_KEY_CTRL_0_DEST_VALID_LOW);
-                    force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[0][dword].data.we = 1'b1;
-                    force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[0][dword].data.next = $urandom();
-                end
-                else begin
-                    release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[0].dest_valid.we;
-                    release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[0].dest_valid.next;
-                    release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[0][dword].data.we;
-                    release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[0][dword].data.next;
-                end
-            end
-        end
-    endgenerate
-
 
     always@(negedge clk) begin
 

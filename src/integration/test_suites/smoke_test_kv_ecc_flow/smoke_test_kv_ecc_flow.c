@@ -24,7 +24,11 @@
 
 volatile char*    stdout           = (char *)STDOUT;
 volatile uint32_t intr_count = 0;
-volatile uint32_t rst_count = 0;
+#ifdef CPT_VERBOSITY
+    enum printf_verbosity verbosity_g = CPT_VERBOSITY;
+#else
+    enum printf_verbosity verbosity_g = LOW;
+#endif
 
 uint8_t fail_cmd = 0x1;
 
@@ -50,6 +54,7 @@ void ecc_keygen_kvflow(uint8_t seed_kv_id, uint8_t privkey_kv_id, uint32_t ecc_i
     uint32_t ecc_pubkey_y [12];
 
     //inject seed to kv key reg (in RTL)
+    printf("Inject SEED into ECC\n");
     seed_inject_cmd = 0x80 + (seed_kv_id & 0x7);
     printf("%c", seed_inject_cmd);
 
@@ -77,12 +82,15 @@ void ecc_keygen_kvflow(uint8_t seed_kv_id, uint8_t privkey_kv_id, uint32_t ecc_i
         *reg_ptr++ = ecc_iv[offset++];
     }
 
+    printf("ECC KEYGEN\n");
     // Enable ECC KEYGEN core
     lsu_write_32((uint32_t *) CLP_ECC_REG_ECC_CTRL, 0x1);
 
+    printf("Wait for ECC KEYGEN\n");
     // wait for ECC KEYGEN process to be done
     while((lsu_read_32((uint32_t *) CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_VALID_MASK) == 0);
-    
+        
+    printf("Wait for KV write\n");
     // check dest done
     while((lsu_read_32((uint32_t *) CLP_ECC_REG_ECC_KV_WR_PKEY_STATUS) & ECC_REG_ECC_KV_WR_PKEY_STATUS_VALID_MASK) == 0);
 
@@ -93,7 +101,7 @@ void ecc_keygen_kvflow(uint8_t seed_kv_id, uint8_t privkey_kv_id, uint32_t ecc_i
     while (pubkey_x_reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_11) {
         ecc_pubkey_x[offset] = *pubkey_x_reg_ptr;
         if (ecc_pubkey_x[offset] != expected_pubkey_x[offset]) {
-            printf("At offset [%d], data mismatch!\n", offset);
+            printf("At offset [%d], ecc_pubkey_x data mismatch!\n", offset);
             printf("Actual   data: 0x%x\n", ecc_pubkey_x[offset]);
             printf("Expected data: 0x%x\n", expected_pubkey_x[offset]);
             printf("%c", fail_cmd);
@@ -110,7 +118,7 @@ void ecc_keygen_kvflow(uint8_t seed_kv_id, uint8_t privkey_kv_id, uint32_t ecc_i
     while (pubkey_y_reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_Y_11) {
         ecc_pubkey_y[offset] = *pubkey_y_reg_ptr;
         if (ecc_pubkey_y[offset] != expected_pubkey_y[offset]) {
-            printf("At offset [%d], data mismatch!\n", offset);
+            printf("At offset [%d], ecc_pubkey_y data mismatch!\n", offset);
             printf("Actual   data: 0x%x\n", ecc_pubkey_y[offset]);
             printf("Expected data: 0x%x\n", expected_pubkey_y[offset]);
             printf("%c", fail_cmd);
@@ -177,7 +185,7 @@ void ecc_signing_kvflow(uint8_t privkey_kv_id, uint32_t ecc_msg[12], uint32_t ec
     while (sign_r_reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_11) {
         ecc_sign_r[offset] = *sign_r_reg_ptr;
         if (ecc_sign_r[offset] != expected_sign_r[offset]) {
-            printf("At offset [%d], data mismatch!\n", offset);
+            printf("At offset [%d], ecc_sign_r data mismatch!\n", offset);
             printf("Actual   data: 0x%x\n", ecc_sign_r[offset]);
             printf("Expected data: 0x%x\n", expected_sign_r[offset]);
             printf("%c", fail_cmd);
@@ -194,7 +202,7 @@ void ecc_signing_kvflow(uint8_t privkey_kv_id, uint32_t ecc_msg[12], uint32_t ec
     while (sign_s_reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_11) {
         ecc_sign_s[offset] = *sign_s_reg_ptr;
         if (ecc_sign_s[offset] != expected_sign_s[offset]) {
-            printf("At offset [%d], data mismatch!\n", offset);
+            printf("At offset [%d], ecc_sign_s data mismatch!\n", offset);
             printf("Actual   data: 0x%x\n", ecc_sign_s[offset]);
             printf("Expected data: 0x%x\n", expected_sign_s[offset]);
             printf("%c", fail_cmd);
