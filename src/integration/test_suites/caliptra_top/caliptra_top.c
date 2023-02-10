@@ -15,48 +15,43 @@
 //
 
 #include "caliptra_defines.h"
-#include "caliptra_isr.h"
 #include "riscv_hw_if.h"
+#include "aes.h"
+#include "doe.h"
+#include "ecc.h"
+#include "hmac.h"
+#include "keyvault.h"
+#include "sha256.h"
+#include "sha512.h"
+#include "soc_ifc.h"
 #include <string.h>
 #include <stdint.h>
 #include "printf.h"
 
 /* --------------- Global symbols/typedefs --------------- */
-enum doe_cmd_e {
-    DOE_IDLE = 0,
-    DOE_UDS = 1,
-    DOE_FE = 2,
-    DOE_CLEAR_OBF_SECRETS = 3
-};
 
 /* --------------- Global vars --------------- */
-volatile char*    stdout           = (char *)STDOUT;
-volatile uint32_t intr_count       = 0;
+volatile char* stdout = (char *)STDOUT;
+#ifdef CPT_VERBOSITY
+    enum printf_verbosity verbosity_g = CPT_VERBOSITY;
+#else
+    enum printf_verbosity verbosity_g = WARNING;
+#endif
+
 
 /* --------------- Function Prototypes --------------- */
-void init_doe();
 
 /* --------------- Function Definitions --------------- */
 void main() {
 
-    printf("----------------------------------\n");
-    printf(" Caliptra Validation ROM!!\n"        );
-    printf("----------------------------------\n");
+    uint32_t intr_sts;
+    uint32_t reset_reason;
+    mbox_op_s op;
+    void (* iccm_fmc) (void) = (void*) (RV_ICCM_SADR + MBOX_ICCM_OFFSET_FMC);
+    void (* iccm_rt) (void) = (void*) (RV_ICCM_SADR + MBOX_ICCM_OFFSET_RT);
+    void (* iccm_fn) (void) = (void*) (RV_ICCM_SADR);
 
-    init_interrupts();
 
-    init_doe();
-
-    while(1);
-
-    printf("----------------------------------\n");
-    printf(" Reached end of val FW image unexpectedly! \n");
-    printf("----------------------------------\n");
-}
-
-void init_doe() {
-    uint8_t offset;
-    uint32_t* reg_ptr;
     uint32_t iv_data_uds[] = {0x2eb94297,
                               0x77285196,
                               0x3dd39a1e,
@@ -66,33 +61,89 @@ void init_doe() {
                              0x9056d884,
                              0xdaf3c89d};
 
-    // Write IV
-    reg_ptr = (uint32_t*) CLP_DOE_REG_DOE_IV_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_DOE_REG_DOE_IV_3) {
-        *reg_ptr++ = iv_data_uds[offset++];
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " Caliptra Validation ROM!!\n"        );
+    VPRINTF(LOW, "----------------------------------\n");
+
+    // TODO other init tasks? (interrupts later)
+
+    //Check the reset reason FIXME (as soc_ifc fn)
+    reset_reason = lsu_read_32( (uint32_t*) CLP_SOC_IFC_REG_CPTRA_RESET_REASON);
+
+    //Cold Boot, run DOE flows, wait for FW image
+    if (reset_reason == 0x0) {
+        doe_init(iv_data_uds, iv_data_fe, 0x6); // TODO replace 0x6 with entry indicators
+
+        soc_ifc_set_flow_status_field(SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK);
+
+        // Wait for FW available (FMC)
+        do {
+            intr_sts = lsu_read_32( (uint32_t*) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+            intr_sts &= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK;
+        } while (!intr_sts);
+        //clear the interrupt
+        lsu_write_32((uint32_t*) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK);
+
+        op = soc_ifc_read_mbox_cmd();
+        if (op.cmd != MBOX_CMD_FMC_UPDATE) {
+            VPRINTF(FATAL, "Received invalid mailbox command from SOC! Expected 0x%x, got 0x%x\n", MBOX_CMD_FMC_UPDATE, op.cmd);
+            SEND_STDOUT_CTRL(0x1);
+            while(1);
+        }
+        //TODO: Enhancement - Check the integrity of the firmware
+
+        // Load FMC from mailbox
+        soc_ifc_mbox_fw_flow(op);
+
+        // Wait for FW available (RT)
+        do {
+            intr_sts = lsu_read_32( (uint32_t*) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+            intr_sts &= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK;
+        } while (!intr_sts);
+        //clear the interrupt
+        lsu_write_32((uint32_t*) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK);
+        //read the mbox command
+        op = soc_ifc_read_mbox_cmd();
+        if (op.cmd != MBOX_CMD_RT_UPDATE) {
+            VPRINTF(FATAL, "Received invalid mailbox command from SOC! Expected 0x%x, got 0x%x\n", MBOX_CMD_RT_UPDATE, op.cmd);
+            SEND_STDOUT_CTRL(0x1);
+            while(1);
+        }
+
+        // Clear 'ready for fw'
+        soc_ifc_clr_flow_status_field(SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK);
+
+        // Jump to ICCM (this is the FMC image, a.k.a. Section 0)
+        iccm_fmc();
+    }  
+    //FW Update Reset
+    else if (reset_reason == 0x1) {
+        VPRINTF(LOW, "Beginning FW Update Reset flow\n");
+        op = soc_ifc_read_mbox_cmd();
+        if (op.cmd != MBOX_CMD_RT_UPDATE) {
+            VPRINTF(FATAL, "Received invalid mailbox command from SOC! Expected 0x%x, got 0x%x\n", MBOX_CMD_RT_UPDATE, op.cmd);
+            SEND_STDOUT_CTRL(0x1);
+            while(1);
+        }
+
+        // Jump to ICCM (this is the FMC image, a.k.a. Section 0)
+        iccm_fmc();
+    }
+    //Warm Reset
+    else if (reset_reason == 0x2) {
+        VPRINTF(LOW, "Beginning Warm Reset flow\n");
+        //FIXME - things to do only on Warm Reset
+        VPRINTF(FATAL, "----------------------------------\n");
+        VPRINTF(FATAL, " Encountered Warm Reset unexpectedly! \n");
+        VPRINTF(FATAL, "----------------------------------\n");
     }
 
-    //start UDS and store in KV0
-    lsu_write_32((uint32_t*) CLP_DOE_REG_DOE_CTRL, DOE_UDS);
 
-    // Check that UDS flow is done
-    while((lsu_read_32((uint32_t*) CLP_DOE_REG_DOE_STATUS) & DOE_REG_DOE_STATUS_VALID_MASK) == 0);
-
-    // Write IV
-    reg_ptr = (uint32_t*) CLP_DOE_REG_DOE_IV_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_DOE_REG_DOE_IV_3) {
-        *reg_ptr++ = iv_data_fe[offset++];
-    }
-
-    //start FE and store in KV6/7
-    lsu_write_32((uint32_t*) CLP_DOE_REG_DOE_CTRL, DOE_FE | (0x6 << DOE_REG_DOE_CTRL_DEST_LOW)); // TODO replace 0x6 with entry indicators
-
-    // Check that FE flow is done
-    while((lsu_read_32((uint32_t*) CLP_DOE_REG_DOE_STATUS) & DOE_REG_DOE_STATUS_VALID_MASK) == 0);
-
-    // Clear Secrets
-    lsu_write_32((uint32_t*) CLP_DOE_REG_DOE_CTRL, DOE_CLEAR_OBF_SECRETS);
-
+    // Should never get here
+    VPRINTF(FATAL, "----------------------------------\n");
+    VPRINTF(FATAL, " Reached end of val FW unexpectedly! \n");
+    VPRINTF(FATAL, "----------------------------------\n");
+    SEND_STDOUT_CTRL(0x1);
+    while(1);
 }
+

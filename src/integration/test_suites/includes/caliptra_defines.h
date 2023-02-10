@@ -25,33 +25,12 @@
 
 
 /* ---- Key Vault ---- */
-#define KV_BASE_ADDR              0x10018000
-#define KV_KEY_CTRL_ADDR          0x10018200
-#define KV_PCR_CTRL_ADDR          0x10018220
 
 #define KV_NUM_PCR                0x00000008
 #define KV_NUM_DWORDS             0x00000010
 
 
 /* ---- DOE ---- */
-#define DOE_BASE_ADDR             0x10000000
-#define DOE_ADDR_NAME0            (DOE_BASE_ADDR + 0x0000)
-#define DOE_ADDR_NAME1            (DOE_BASE_ADDR + 0x0004)
-#define DOE_ADDR_VER0             (DOE_BASE_ADDR + 0x0008)
-#define DOE_ADDR_VER1             (DOE_BASE_ADDR + 0x000c)
-#define DOE_ADDR_CNTRL            (DOE_BASE_ADDR + 0x0010)
-#define DOE_ADDR_STATUS           (DOE_BASE_ADDR + 0x0018)
-#define DOE_ADDR_KEY_START        (DOE_BASE_ADDR + 0x0040)
-#define DOE_ADDR_KEY_END          (DOE_BASE_ADDR + 0x005f)
-#define DOE_ADDR_BLOCK_START      (DOE_BASE_ADDR + 0x0080)
-#define DOE_ADDR_BLOCK_END        (DOE_BASE_ADDR + 0x008f)
-#define DOE_ADDR_RESULT_START     (DOE_BASE_ADDR + 0x0100)
-#define DOE_ADDR_RESULT_END       (DOE_BASE_ADDR + 0x010f)
-#define DOE_ADDR_CONFIG           (DOE_BASE_ADDR + 0x0020)
-#define DOE_ADDR_IV_START         (DOE_BASE_ADDR + 0x0110)
-#define DOE_ADDR_IV_END           (DOE_BASE_ADDR + 0x011f)
-#define DOE_ADDR_KV_CTRL          (DOE_BASE_ADDR + 0x0200)
-#define DOE_ADDR_INTR_START       (DOE_BASE_ADDR + 0x0800)
 
 #define DOE_INIT                  0x0000000D
 #define DOE_NEXT                  0x0000000E
@@ -70,16 +49,6 @@
 
 
 /* ---- SHA512 ---- */
-#define SHA512_BASE_ADDR            0x10020000
-#define SHA512_ADDR_NAME            (SHA512_BASE_ADDR + 0x0000)
-#define SHA512_ADDR_VER             (SHA512_BASE_ADDR + 0x0008)
-#define SHA512_ADDR_CNTRL           (SHA512_BASE_ADDR + 0x0010)
-#define SHA512_ADDR_STATUS          (SHA512_BASE_ADDR + 0x0018)
-#define SHA512_ADDR_BLOCK_START     (SHA512_BASE_ADDR + 0x0080)
-#define SHA512_ADDR_BLOCK_END       (SHA512_BASE_ADDR + 0x00ff)
-#define SHA512_ADDR_DIGEST_START    (SHA512_BASE_ADDR + 0x0100)
-#define SHA512_ADDR_DIGEST_END      (SHA512_BASE_ADDR + 0x013f)
-#define SHA512_ADDR_INTR_START      (SHA512_BASE_ADDR + 0x0800)
 
 #define SHA512_INIT                 0x0000000D
 #define SHA512_NEXT                 0x0000000E
@@ -88,20 +57,10 @@
 
 
 /* ---- SHA256 ---- */
-#define SHA256_BASE_ADDR            0x10028000
-#define SHA256_ADDR_NAME            (SHA256_BASE_ADDR + 0x0000)
-#define SHA256_ADDR_VER             (SHA256_BASE_ADDR + 0x0008)
-#define SHA256_ADDR_CNTRL           (SHA256_BASE_ADDR + 0x0010)
-#define SHA256_ADDR_STATUS          (SHA256_BASE_ADDR + 0x0018)
-#define SHA256_ADDR_BLOCK_START     (SHA256_BASE_ADDR + 0x0080)
-#define SHA256_ADDR_BLOCK_END       (SHA256_BASE_ADDR + 0x00bf)
-#define SHA256_ADDR_DIGEST_START    (SHA256_BASE_ADDR + 0x0100)
-#define SHA256_ADDR_DIGEST_END      (SHA256_BASE_ADDR + 0x011f)
-#define SHA256_ADDR_INTR_START      (SHA256_BASE_ADDR + 0x0800)
 
-#define SHA256_INIT                 0x00000005
-#define SHA256_NEXT                 0x00000006
-#define SHA256_VALID                0x00000003
+#define SHA256_INIT                 (SHA256_REG_SHA256_CTRL_INIT_MASK | SHA256_REG_SHA256_CTRL_MODE_MASK)
+#define SHA256_NEXT                 (SHA256_REG_SHA256_CTRL_NEXT_MASK | SHA256_REG_SHA256_CTRL_MODE_MASK)
+#define SHA256_VALID                (SHA256_REG_SHA256_STATUS_READY_MASK | SHA256_REG_SHA256_STATUS_VALID_MASK)
 
 /* ---- Mailbox ---- */
 #define MBOX_DIR_BASE_ADDR        0x30000000
@@ -109,36 +68,11 @@
 #define STDOUT                    CLP_SOC_IFC_REG_CPTRA_GENERIC_OUTPUT_WIRES_0
 
 /* ---- ECC ----*/
-#define ECC_BASE_ADDR             0x10008000
-#define ECC_ADDR_NAME0            (ECC_BASE_ADDR + ECC_REG_ECC_NAME_0   )
-#define ECC_ADDR_NAME1            (ECC_BASE_ADDR + ECC_REG_ECC_NAME_1   )
-#define ECC_ADDR_VERSION0         (ECC_BASE_ADDR + ECC_REG_ECC_VERSION_0)
-#define ECC_ADDR_VERSION1         (ECC_BASE_ADDR + ECC_REG_ECC_VERSION_1)
-#define ECC_ADDR_CTRL             (ECC_BASE_ADDR + ECC_REG_ECC_CTRL     )
 #define ECC_CMD_KEYGEN            0x1
 #define ECC_CMD_KEYSIGN           0x2
 #define ECC_CMD_KEYVERIFY         0x3
-#define ECC_ADDR_STATUS           (ECC_BASE_ADDR + ECC_REG_ECC_STATUS)
 #define STATUS_READY_BIT          0x0
 #define STATUS_VALID_BIT          0x1
-#define ECC_ADDR_SEED_START       (ECC_BASE_ADDR + 0x080)
-#define ECC_ADDR_SEED_END         (ECC_BASE_ADDR + 0x0AC)
-#define ECC_ADDR_MSG_START        (ECC_BASE_ADDR + 0x100)
-#define ECC_ADDR_MSG_END          (ECC_BASE_ADDR + 0x12C)
-#define ECC_ADDR_PRIVKEY_START    (ECC_BASE_ADDR + 0x180)
-#define ECC_ADDR_PRIVKEY_END      (ECC_BASE_ADDR + 0x1AC)
-#define ECC_ADDR_PUBKEYX_START    (ECC_BASE_ADDR + 0x200)
-#define ECC_ADDR_PUBKEYX_END      (ECC_BASE_ADDR + 0x22C)
-#define ECC_ADDR_PUBKEYY_START    (ECC_BASE_ADDR + 0x280)
-#define AECC_DDR_PUBKEYY_END      (ECC_BASE_ADDR + 0x2AC)
-#define ECC_ADDR_SIGNR_START      (ECC_BASE_ADDR + 0x300)
-#define ECC_ADDR_SIGNR_END        (ECC_BASE_ADDR + 0x32C)
-#define ECC_ADDR_SIGNS_START      (ECC_BASE_ADDR + 0x380)
-#define ECC_ADDR_SIGNS_END        (ECC_BASE_ADDR + 0x3AC)
-#define ECC_ADDR_VERIFYR_START    (ECC_BASE_ADDR + 0x400)
-#define ECC_ADDR_VERIFYR_END      (ECC_BASE_ADDR + 0x42C)
-#define ECC_ADDR_IV_START         (ECC_BASE_ADDR + 0x480)
-#define ECC_ADDR_IV_END           (ECC_BASE_ADDR + 0x4AC)
 
 /* ---- Interrupts ---- */
 #define SWERV_INTR_VEC_DOE_ERROR        1

@@ -157,32 +157,6 @@ static void (* __attribute__ ((aligned(4))) nonstd_swerv_isr_vector_table [RV_PI
 // This table is only consulted when MTVEC[1:0] indicates a vectored mode
 static void std_rv_isr_vector_table(void) __attribute__ ((naked));
 
-//// FIXME replace this with an actual printf eventually
-//static void print_reg_to_console(char* msg, uint32_t value) {
-//    uint8_t ii = 0;
-//    char digit;
-//    while (msg[ii] != 0) {
-//        *stdout = msg[ii++];
-//    }
-//    *stdout = ':';
-////    for (ii = 31; ii != 255; ii--) {
-////        *stdout = ((value >> ii) & 0x1) + 0x30; // Print binary representation bit-by-bit
-////                                                // Starting with MSB
-////        if ((ii > 0) && ((ii%8) == 0)) {
-////            *stdout = '_';
-////        }
-////    }
-//    for (ii = 28; ii != 252; ii-=4) {
-//        digit = ((value >> ii) & 0xf); // Grab a single hex digit
-//        *stdout = digit + ((digit < 0xa) ? 0x30 : 0x37); // Print hex representation digit-by-digit
-//                                                         // Starting with MSB
-//        if ((ii == 16)) {
-//            *stdout = '_';
-//        }
-//    }
-//    *stdout = '\n';
-//}
-
 // TODO args to control per-component enables
 void init_interrupts(void) {
 
@@ -294,7 +268,7 @@ void init_interrupts(void) {
     // TODO error interrupt enables
     doe_reg[DOE_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R /sizeof(uint32_t)] = DOE_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK;
     doe_reg[DOE_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = DOE_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
-                                                                             DOE_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
+                                                                       DOE_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
 
     // ECC
     // TODO error interrupt enables
@@ -356,7 +330,7 @@ void init_interrupts(void) {
 
 void std_rv_nop_machine(void)  {
     // Nop machine mode interrupt.
-    printf("nop\n");
+    VPRINTF(HIGH,"nop\n");
     return;
 }
 
@@ -372,9 +346,9 @@ void std_rv_mtvec_miti0(void) {
 
 static void std_rv_isr(void) {
     void (* isr) (void); // Function pointer to source-specific ISR
-    printf("%c",0xfb); //FIXME
+    SEND_STDOUT_CTRL(0xfb); //FIXME
     uint_xlen_t this_cause = csr_read_mcause();
-    printf("In:Std ISR\nmcause:%x\n", this_cause);
+    VPRINTF(LOW,"In:Std ISR\nmcause:%x\n", this_cause);
     if (this_cause &  MCAUSE_INTERRUPT_BIT_MASK) {
         this_cause &= 0xFF;
         // Known exceptions
@@ -427,17 +401,17 @@ static void std_rv_isr(void) {
                               : "=r" (this_cause)  /* output : register */
                               : /* input : none */
                               : /* clobbers: none */);
-            printf("mscause:%x\n",this_cause);
+            VPRINTF(LOW,"mscause:%x\n",this_cause);
             // mepc
             this_cause = csr_read_mepc();
-            printf("mepc:%x\n",this_cause);
+            VPRINTF(LOW,"mepc:%x\n",this_cause);
             // mtval
             this_cause = csr_read_mtval();
-            printf("mtval:%x\n",this_cause);
+            VPRINTF(LOW,"mtval:%x\n",this_cause);
             break;
         }
     }
-    printf("%c",0xfc); //FIXME
+    SEND_STDOUT_CTRL(0xfc); //FIXME
     return;
 }
 
@@ -491,11 +465,11 @@ static void std_rv_isr_vector_table(void) {
 
 // Exception handler for Standard RISC-V Vectored operation
 void std_rv_mtvec_exception(void) {
-    printf("%c", 0xfb); //FIXME
+    SEND_STDOUT_CTRL( 0xfb); //FIXME
     uint_xlen_t this_cause = csr_read_mcause();
-    printf("In:Std Excptn\nmcause:%x\n", this_cause);
+    VPRINTF(WARNING,"In:Std Excptn\nmcause:%x\n", this_cause);
     if (this_cause &  MCAUSE_INTERRUPT_BIT_MASK) {
-        printf("Unexpected Intr bit:%x\n", 0xFFFFFFFF);
+        VPRINTF(ERROR,"Unexpected Intr bit:%x\n", 0xFFFFFFFF);
     } else {
         switch (this_cause) {
         case RISCV_EXCP_LOAD_ACCESS_FAULT :
@@ -504,13 +478,13 @@ void std_rv_mtvec_exception(void) {
                               : "=r" (this_cause)  /* output : register */
                               : /* input : none */
                               : /* clobbers: none */);
-            printf("mscause:%x\n",this_cause);
+            VPRINTF(LOW,"mscause:%x\n",this_cause);
             // mepc
             this_cause = csr_read_mepc();
-            printf("mepc:%x\n",this_cause);
+            VPRINTF(LOW,"mepc:%x\n",this_cause);
             // mtval
             this_cause = csr_read_mtval();
-            printf("mtval:%x\n",this_cause);
+            VPRINTF(LOW,"mtval:%x\n",this_cause);
             break;
         case RISCV_EXCP_ILLEGAL_INSTRUCTION :
             // mscause
@@ -518,32 +492,32 @@ void std_rv_mtvec_exception(void) {
                               : "=r" (this_cause)  /* output : register */
                               : /* input : none */
                               : /* clobbers: none */);
-            printf("mscause:%x\n",this_cause);
+            VPRINTF(LOW,"mscause:%x\n",this_cause);
             // mepc
             this_cause = csr_read_mepc();
-            printf("mepc:%x\n",this_cause);
+            VPRINTF(LOW,"mepc:%x\n",this_cause);
             // mtval
             this_cause = csr_read_mtval();
-            printf("mtval:%x\n",this_cause);
+            VPRINTF(LOW,"mtval:%x\n",this_cause);
             break;
         default :
             // mepc
             this_cause = csr_read_mepc();
-            printf("mepc:%x\n",this_cause);
+            VPRINTF(LOW,"mepc:%x\n",this_cause);
             break;
         }
     }
-    printf("%c",0x1 ); // KILL THE SIMULATION with "ERROR"
-    printf("%c",0xfc); //FIXME
+    SEND_STDOUT_CTRL(0x1 ); // KILL THE SIMULATION with "ERROR"
+    SEND_STDOUT_CTRL(0xfc); //FIXME
     return;
 }
 
 // Non-Standard Vectored Interrupt Handler (vector 0)
 // ISR 0 is, by definition, not implemented and simply returns
 static void nonstd_swerv_isr_0 (void) {
-    printf("%c",0xfb); //FIXME
-    printf("In:0\n");
-    printf("%c",0xfc); //FIXME
+    SEND_STDOUT_CTRL(0xfb); //FIXME
+    VPRINTF(MEDIUM, "In:0\n");
+    SEND_STDOUT_CTRL(0xfc); //FIXME
     return;
 }
 
@@ -556,12 +530,12 @@ static void nonstd_swerv_isr_0 (void) {
 // calls
 #define stringify(text) #text
 #define nonstd_swerv_isr(name) static void nonstd_swerv_isr_##name (void) {                           \
-    printf("%c",0xfb); /*FIXME*/                                                                      \
+    SEND_STDOUT_CTRL(0xfb); /*FIXME*/                                                                 \
                                                                                                       \
     /* Print msg before enabling nested interrupts so it                                              \
      * completes printing and is legible                                                              \
      */                                                                                               \
-    if (EN_ISR_PRINTS) printf("In:"stringify(name)"\n");                                                                 \
+    VPRINTF(MEDIUM, "In:"stringify(name)"\n");                                                        \
                                                                                                       \
     /* Save Context to Stack */                                                                       \
     uint32_t meicidpl;                                                                                \
@@ -592,8 +566,8 @@ static void nonstd_swerv_isr_0 (void) {
                                                                                                       \
     /* Service the interrupt (clear the interrupt source) */                                          \
     intr_count++;                                                                                     \
-    if (EN_ISR_PRINTS) printf("cnt_"stringify(name)":%x\n",intr_count);                                                  \
-    /* Fill in with macro contents, e.g. "service_soc_ifc_error_intr" */                                 \
+    VPRINTF(MEDIUM,"cnt_"stringify(name)":%x\n",intr_count);                                          \
+    /* Fill in with macro contents, e.g. "service_soc_ifc_error_intr" */                              \
     /* This will match one macro from this list:                                                      \
      * service_doe_error_intr                                                                         \
      * service_doe_notif_intr                                                                         \
@@ -633,7 +607,7 @@ static void nonstd_swerv_isr_0 (void) {
     csr_set_bits_mie(prev_mie & (MIE_MSI_BIT_MASK | MIE_MTI_BIT_MASK | MIE_MEI_BIT_MASK));            \
                                                                                                       \
     /* Done */                                                                                        \
-    printf("%c",0xfc); /*FIXME */                                                                     \
+    SEND_STDOUT_CTRL(0xfc); /*FIXME */                                                                \
     return;                                                                                           \
 }
 

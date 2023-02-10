@@ -22,7 +22,12 @@
 
 volatile char*    stdout           = (char *)STDOUT;
 volatile uint32_t intr_count = 0;
-volatile uint32_t rst_count = 0;
+volatile uint32_t rst_count __attribute__((section(".dccm.persistent"))) = 0;
+#ifdef CPT_VERBOSITY
+    enum printf_verbosity verbosity_g = CPT_VERBOSITY;
+#else
+    enum printf_verbosity verbosity_g = LOW;
+#endif
 
 uint32_t IV_DATA_UDS0 = 0x2eb94297;
 uint32_t IV_DATA_UDS1 = 0x77285196;
@@ -50,14 +55,14 @@ volatile uint32_t * key_ctrl7 = (uint32_t *) CLP_KV_REG_KEY_CTRL_7;
 volatile uint32_t doe_status_int;
 
 void main() {
-    printf("---------------------------\n");
-    printf(" KV Smoke Test With Warm Reset !!\n");
-    printf("---------------------------\n");
+    VPRINTF(LOW,"---------------------------\n");
+    VPRINTF(LOW," KV Smoke Test With Warm Reset !!\n");
+    VPRINTF(LOW,"---------------------------\n");
 
     //Call interrupt init
     //init_interrupts();
     if(rst_count == 0) {
-        printf("1st UDS flow + warm reset\n");
+        VPRINTF(LOW,"1st UDS flow + warm reset\n");
         //Write UDS IV
         *doe_iv_0 = IV_DATA_UDS0;
         *doe_iv_1 = IV_DATA_UDS1;
@@ -68,10 +73,10 @@ void main() {
         *doe_ctrl = 0x00000001;
         //Issue warm reset after starting UDS - Interrupts UDS flow so lock_uds_flow should not be set
         rst_count++;
-        printf("%c",0xf6);
+        SEND_STDOUT_CTRL(0xf6);
     }
     else if(rst_count == 1) {
-        printf("2nd UDS flow + warm reset\n");
+        VPRINTF(LOW,"2nd UDS flow + warm reset\n");
         //Rewrite UDS IV
         *doe_iv_0 = IV_DATA_UDS0;
         *doe_iv_1 = IV_DATA_UDS1;
@@ -83,7 +88,7 @@ void main() {
 
         //Issue warm reset right before lock_uds_flow is set
          rst_count++;
-         printf("%c",0xf7);
+         SEND_STDOUT_CTRL(0xf7);
 
         // //Poll for DOE status
         while(doe_status_int != (DOE_REG_DOE_STATUS_VALID_MASK | DOE_REG_DOE_STATUS_READY_MASK)) {
@@ -93,7 +98,7 @@ void main() {
         doe_status_int = 0x00000000; //reset internal status register to reuse next time
     }
     else if(rst_count == 2) {
-        printf("3rd UDS flow + warm reset\n");
+        VPRINTF(LOW,"3rd UDS flow + warm reset\n");
         //Rewrite UDS IV
         *doe_iv_0 = IV_DATA_UDS0;
         *doe_iv_1 = IV_DATA_UDS1;
@@ -112,15 +117,15 @@ void main() {
         
         //Issue warm reset to make sure lock_uds_flow is not reset
         rst_count++;
-        printf("%c",0xf6);
+        SEND_STDOUT_CTRL(0xf6);
     }
     else if(rst_count == 3){
-        printf("Cold reset\n");
+        VPRINTF(LOW,"Cold reset\n");
         rst_count++;
-        printf("%c",0xf5); //Issue cold reset and see lock_uds_flow getting reset
+        SEND_STDOUT_CTRL(0xf5); //Issue cold reset and see lock_uds_flow getting reset
     }
     else if(rst_count == 4) {
-        printf("4th UDS flow after cold reset\n");
+        VPRINTF(LOW,"4th UDS flow after cold reset\n");
         //Rewrite UDS IV
         *doe_iv_0 = IV_DATA_UDS0;
         *doe_iv_1 = IV_DATA_UDS1;
@@ -151,7 +156,7 @@ void main() {
         *soc_ifc_fw_update_reset = SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK;
     }
     else {
-        printf("%c", 0xff);
+        SEND_STDOUT_CTRL( 0xff);
     }
     
 }

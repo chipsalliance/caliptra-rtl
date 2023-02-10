@@ -62,6 +62,10 @@ _finish:
 .endr
 
 .section .dccm
+.global stdout
+stdout: .word STDOUT
+.global verbosity_g
+verbosity_g: .word 2
 hw_data:
 .ascii "----------------------------------\n"
 .ascii "Hello World from SweRV EL2 @WDC !!\n"

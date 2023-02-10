@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-.data
+.section .dccm
 hw_data:
 // start of 128bit key
 .word 0x56e47a38  

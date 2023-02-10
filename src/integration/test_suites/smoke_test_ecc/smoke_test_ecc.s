@@ -50,14 +50,14 @@ _start:
 
     // ECC KEYGEN TEST 
     // wait_ready before initialization
-    li x3, ECC_ADDR_STATUS
+    li x3, CLP_ECC_REG_ECC_STATUS
     li x1, 0x00
     wait_ready_loop1:
         lw x5, 0(x3)
         beq x5, x1, wait_ready_loop1
 
     // Load the seed and write to ECC core
-    li x3, ECC_ADDR_SEED_START
+    li x3, CLP_ECC_REG_ECC_SEED_0
     // 12 words or 384-bit seed
     li x1, 0xc
     li t3, 0x1
@@ -72,7 +72,7 @@ _start:
         bne x1, x0, write_seed0_loop
 
     // Load IV0 and write to ECC core
-    li x3, ECC_ADDR_IV_START 
+    li x3, CLP_ECC_REG_ECC_IV_0 
     // 12 words or 384-bit IV0   
     li x1, 0xc
     li t3, 0x1
@@ -87,7 +87,7 @@ _start:
         bne x1, x0, write_IV0_loop
 
     // Load and write ECC_CMD_KEYGEN to ECC_CORE
-    li x3, ECC_ADDR_CTRL
+    li x3, CLP_ECC_REG_ECC_CTRL
     li x4, ECC_CMD_KEYGEN
     sw x4, 0(x3)
 
@@ -100,7 +100,7 @@ _start:
     sw x0, 0(x3) // clear status variable
 
     // Read privkey back from ECC Register
-    li x3, ECC_ADDR_PRIVKEY_START 
+    li x3, CLP_ECC_REG_ECC_PRIVKEY_0 
     la x4, TEST_VECTOR
     addi x4, x4, 48
     read_privkey_loop:
@@ -116,7 +116,7 @@ _start:
             ble x3, x1, read_privkey_loop
 
     // Read public key x from ECC register
-    li x3, ECC_ADDR_PUBKEYX_START
+    li x3, CLP_ECC_REG_ECC_PUBKEY_X_0
     la x4, TEST_VECTOR
     addi x4, x4, 96
     read_pubkeyx_loop:
@@ -132,7 +132,7 @@ _start:
             ble x3, x1, read_pubkeyx_loop
 
     // Read public key y from ECC register
-    li x3, ECC_ADDR_PUBKEYY_START
+    li x3, CLP_ECC_REG_ECC_PUBKEY_Y_0
     la x4, TEST_VECTOR
     addi x4, x4, 144
     read_pubkeyy_loop:
@@ -149,14 +149,14 @@ _start:
 
     // ECC SIGNING TEST
     // wait_ready
-    li x3, ECC_ADDR_STATUS
+    li x3, CLP_ECC_REG_ECC_STATUS
     li x1, 0x00
     wait_ready_loop3:
         lw x5, 0(x3)
         beq x5, x1, wait_ready_loop3
 
     // Load the message and write to ECC core
-    li x3, ECC_ADDR_MSG_START 
+    li x3, CLP_ECC_REG_ECC_MSG_0 
     // 12 words or 384-bit seed
     li x1, 0xc
     li t3, 0x1
@@ -170,7 +170,7 @@ _start:
         bne x1, x0, write_msg0_loop
 
     // Load private key and write to ECC core
-    li x3, ECC_ADDR_PRIVKEY_START 
+    li x3, CLP_ECC_REG_ECC_PRIVKEY_0 
     // 12 words or 384-bit seed
     li x1, 0xc
     li t3, 0x1
@@ -185,7 +185,7 @@ _start:
         bne x1, x0, write_privkey0_loop
 
     // Load IV and write to ECC core
-    li x3, ECC_ADDR_IV_START 
+    li x3, CLP_ECC_REG_ECC_IV_0 
     // 12 words or 384-bit IV0   
     li x1, 0xc
     li t3, 0x1
@@ -200,7 +200,7 @@ _start:
         bne x1, x0, write_IV0_loop1
 
     // Load and write ECC_CMD_KEYSIGN to ECC_CORE
-    li x3, ECC_ADDR_CTRL
+    li x3, CLP_ECC_REG_ECC_CTRL
     li x4, ECC_CMD_KEYSIGN
     sw x4, 0(x3)
 
@@ -213,7 +213,7 @@ _start:
     sw x0, 0(x3) // clear status variable
 
     // Read R0 back from ECC Register
-    li x3, ECC_ADDR_SIGNR_START 
+    li x3, CLP_ECC_REG_ECC_SIGN_R_0 
     la x4, TEST_VECTOR
     addi x4, x4, 240
     read_signr0_loop:
@@ -229,7 +229,7 @@ _start:
             ble x3, x1, read_signr0_loop
 
     // Read S0 back from ECC Register
-    li x3, ECC_ADDR_SIGNS_START 
+    li x3, CLP_ECC_REG_ECC_SIGN_S_0 
     la x4, TEST_VECTOR
     addi x4, x4, 288
     read_signs0_loop:
@@ -246,14 +246,14 @@ _start:
 
     // ECC KEY VERIFY TEST
     // wait_ready
-    li x3, ECC_ADDR_STATUS
+    li x3, CLP_ECC_REG_ECC_STATUS
     li x1, 0x00
     wait_ready_loop5:
         lw x5, 0(x3)
         beq x5, x1, wait_ready_loop5
 
     // Load the message and write to ECC core
-    li x3, ECC_ADDR_MSG_START 
+    li x3, CLP_ECC_REG_ECC_MSG_0 
     // 12 words or 384-bit seed
     li x1, 0xc
     li t3, 0x1
@@ -267,7 +267,7 @@ _start:
         bne x1, x0, write_msg0_loop1
 
     //Load public key x and write to ECC core
-    li x3, ECC_ADDR_PUBKEYX_START 
+    li x3, CLP_ECC_REG_ECC_PUBKEY_X_0 
     // 12 words or 384-bit seed
     li x1, 0xc
     li t3, 0x1
@@ -282,7 +282,7 @@ _start:
         bne x1, x0, write_pubkeyx0_loop
 
     //Load public key y and write to ECC core
-    li x3, ECC_ADDR_PUBKEYY_START 
+    li x3, CLP_ECC_REG_ECC_PUBKEY_Y_0 
     // 12 words or 384-bit seed
     li x1, 0xc
     li t3, 0x1
@@ -297,7 +297,7 @@ _start:
         bne x1, x0, write_pubkeyy0_loop
 
     //Load sign R0 and write to ECC core
-    li x3, ECC_ADDR_SIGNR_START 
+    li x3, CLP_ECC_REG_ECC_SIGN_R_0 
     // 12 words or 384-bit seed
     li x1, 0xc
     li t3, 0x1
@@ -312,7 +312,7 @@ _start:
         bne x1, x0, write_signr0_loop
 
     //Load sign S0 and write to ECC core
-    li x3, ECC_ADDR_SIGNS_START 
+    li x3, CLP_ECC_REG_ECC_SIGN_S_0 
     // 12 words or 384-bit seed
     li x1, 0xc
     li t3, 0x1
@@ -327,7 +327,7 @@ _start:
         bne x1, x0, write_signs0_loop
 
     // Load and write ECC_CMD_KEYVERIFY to ECC_CORE
-    li x3, ECC_ADDR_CTRL
+    li x3, CLP_ECC_REG_ECC_CTRL
     li x4, ECC_CMD_KEYVERIFY
     sw x4, 0(x3)
 
@@ -340,7 +340,7 @@ _start:
     sw x0, 0(x3) // clear status variable
 
     // Read VERIFYR0 back from ECC Register
-    li x3, ECC_ADDR_VERIFYR_START 
+    li x3, CLP_ECC_REG_ECC_VERIFY_R_0 
     la x4, TEST_VECTOR
     addi x4, x4, 240
     read_verifyr0_loop:
@@ -378,12 +378,14 @@ loop:
    bnez x5, loop
    ret
 
-.section .data
+.section .dccm
 .align 4
 .global stdout
 stdout: .word STDOUT
 .global intr_count
 intr_count: .word 0
+.global verbosity_g
+verbosity_g: .word 2
 // FW polls this variable instead of the ECC reg....
 .global ecc_intr_status
 ecc_intr_status: .word 0

@@ -22,7 +22,13 @@
 
 volatile char*    stdout           = (char *)STDOUT;
 volatile uint32_t intr_count = 0;
-volatile uint32_t rst_count = 0;
+volatile uint32_t rst_count __attribute__((section(".dccm.persistent"))) = 0;
+
+#ifdef CPT_VERBOSITY
+    enum printf_verbosity verbosity_g = CPT_VERBOSITY;
+#else
+    enum printf_verbosity verbosity_g = LOW;
+#endif
 
 volatile uint32_t * clear_secrets = (uint32_t *) CLP_KV_REG_CLEAR_SECRETS;
 

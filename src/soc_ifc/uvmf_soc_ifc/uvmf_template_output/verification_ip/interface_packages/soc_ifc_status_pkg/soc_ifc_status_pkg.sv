@@ -82,6 +82,9 @@ package soc_ifc_status_pkg;
    //    be sure to add the sequence file here so that it will be
    //    compiled as part of the interface package.  Be sure to place
    //    the new sequence after any base sequences of the new sequence.
+   typedef soc_ifc_status_sequence_base       soc_ifc_status_agent_seq_base_t;
+   typedef soc_ifc_status_random_sequence     soc_ifc_status_agent_rand_seq_t;
+   typedef soc_ifc_status_responder_sequence  soc_ifc_status_agent_responder_seq_t;
    // pragma uvmf custom package_item_additional end
 
 endpackage

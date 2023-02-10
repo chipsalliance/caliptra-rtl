@@ -63,7 +63,7 @@ void main() {
 
 void init_doe() {
     uint8_t offset;
-    uint32_t* reg_ptr;
+    volatile uint32_t* reg_ptr;
     uint32_t iv_data_uds[] = {0x2eb94297,
                               0x77285196,
                               0x3dd39a1e,
@@ -106,7 +106,7 @@ void init_doe() {
 
 void idevid() {
     uint8_t offset;
-    uint32_t* reg_ptr;
+    volatile uint32_t* reg_ptr;
     //this is the key 384-bit
     uint32_t hw_data[] = {0x0b0b0b0b,
                           0x0b0b0b0b,
@@ -163,7 +163,7 @@ void idevid() {
 }
 
 void ldevid() {
-    uint32_t* reg_ptr;
+    volatile uint32_t* reg_ptr;
     uint8_t offset = 0;
     //this is the pad block 1024-bit
     uint32_t pad_block[] = {0x80000000,

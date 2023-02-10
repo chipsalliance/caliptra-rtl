@@ -13,34 +13,25 @@
 // limitations under the License.
 //
 #include "caliptra_defines.h"
+#include "riscv_hw_if.h"
+#include "soc_ifc.h"
 #include <stdint.h>
 #include "printf.h"
-#include "riscv_hw_if.h"
 
 volatile char*    stdout           = (char *)STDOUT;
 volatile uint32_t intr_count       = 0;
+#ifdef CPT_VERBOSITY
+    enum printf_verbosity             verbosity_g = CPT_VERBOSITY;
+#else
+    enum printf_verbosity             verbosity_g = LOW;
+#endif
 
 #define MBOX_DLEN_VAL             0x00000020
 
-enum mbox_status_e {
-    CMD_BUSY     = 0,
-    DATA_READY   = 1,
-    CMD_COMPLETE = 2,
-    CMD_FAILURE  = 3,
-};
-enum mbox_fsm_e {
-    MBOX_IDLE         = 0x0,
-    MBOX_RDY_FOR_CMD  = 0x1,
-    MBOX_RDY_FOR_DLEN = 0x3,
-    MBOX_RDY_FOR_DATA = 0x2,
-    MBOX_EXECUTE_UC   = 0x6,
-    MBOX_EXECUTE_SOC  = 0x4,
-};
-
 void main () {
 
-    uint32_t cmd;
-    uint32_t dlen;
+    mbox_op_s op;
+    uint32_t ii;
     uint32_t data;
     enum mbox_fsm_e state;
     uint32_t mbox_data[] = { 0x00000000,
@@ -53,60 +44,54 @@ void main () {
                              0x77777777 };
 
     // Message
-    printf("----------------------------------\n");
-    printf(" Caliptra Mailbox Smoke Test!!\n"    );
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " Caliptra Mailbox Smoke Test!!\n"    );
+    VPRINTF(LOW, "----------------------------------\n");
 
     //set ready for FW so tb will push FW
-    printf("FW: Set ready for FW\n");
-    lsu_write_32((uint32_t*) CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS,SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK);
+    soc_ifc_set_flow_status_field(SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK);
 
     // Sleep
     for (uint16_t slp = 0; slp < 33; slp++);
 
     //wait for mailbox data avail
-    printf("FW: Wait\n");
+    VPRINTF(LOW, "FW: Wait\n");
     while((lsu_read_32((uint32_t*) CLP_MBOX_CSR_MBOX_EXECUTE) & MBOX_CSR_MBOX_EXECUTE_EXECUTE_MASK) != MBOX_CSR_MBOX_EXECUTE_EXECUTE_MASK);
 
     //read mbox command
-    cmd = lsu_read_32((uint32_t*) CLP_MBOX_CSR_MBOX_CMD);
-    printf("FW: CMD from mailbox: 0x%x\n", cmd);
-
-    //read mbox dlen
-    dlen = lsu_read_32((uint32_t*) CLP_MBOX_CSR_MBOX_DLEN);
-    printf("FW: DLEN from mailbox: 0x%x\n", dlen);
+    op = soc_ifc_read_mbox_cmd();
 
     //read from mbox
-    printf("FW: Reading %d bytes from mailbox\n", dlen);
-    while(dlen) {
-        data = lsu_read_32((uint32_t*) CLP_MBOX_CSR_MBOX_DATAOUT);
-        printf("  dataout: 0x%x\n", data);
-        if (dlen < 4) {
-            dlen=0;
+    VPRINTF(LOW, "FW: Reading %d bytes from mailbox\n", op.dlen);
+    while(op.dlen) {
+        data = soc_ifc_mbox_read_dataout_single();
+        VPRINTF(HIGH, "  dataout: 0x%x\n", data);
+        if (op.dlen < 4) {
+            op.dlen=0;
         } else {
-            dlen-=4;//sizeof(uint32_t);
+            op.dlen-=4;//sizeof(uint32_t);
         }
     }
 
     //push new data in like a response
-    printf("FW: Writing %d bytes to mailbox\n", MBOX_DLEN_VAL);
-    for (dlen = 0; dlen < MBOX_DLEN_VAL/4; dlen++) {
-        printf("  datain: 0x%x\n", mbox_data[dlen]);
-        lsu_write_32((uint32_t*) CLP_MBOX_CSR_MBOX_DATAIN,mbox_data[dlen]);
+    VPRINTF(LOW, "FW: Writing %d bytes to mailbox\n", MBOX_DLEN_VAL);
+    for (ii = 0; ii < MBOX_DLEN_VAL/4; ii++) {
+        VPRINTF(HIGH, "  datain: 0x%x\n", mbox_data[ii]);
+        lsu_write_32((uint32_t*) CLP_MBOX_CSR_MBOX_DATAIN,mbox_data[ii]);
     }
 
     //set data ready status
-    printf("FW: Set data ready status\n");
+    VPRINTF(LOW, "FW: Set data ready status\n");
     lsu_write_32((uint32_t*) CLP_MBOX_CSR_MBOX_STATUS,DATA_READY);
 
     //check FSM state, should be in EXECUTE_SOC
     state = (lsu_read_32((uint32_t*) CLP_MBOX_CSR_MBOX_STATUS) & MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_MASK) >> MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_LOW;
     if (state != MBOX_EXECUTE_SOC) {
-        printf("ERROR: mailbox in unexpected state (%x) when expecting MBOX_EXECUTE_SOC (0x%x)\n", state, MBOX_EXECUTE_SOC);
-        printf("%c", 0x1);
+        VPRINTF(ERROR, "ERROR: mailbox in unexpected state (%x) when expecting MBOX_EXECUTE_SOC (0x%x)\n", state, MBOX_EXECUTE_SOC);
+        SEND_STDOUT_CTRL( 0x1);
         while(1);
     } else {
-        printf("FW: Mailbox in expected state, MBOX_EXECUTE_SOC, ending test with success\n");
+        VPRINTF(LOW, "FW: Mailbox in expected state, MBOX_EXECUTE_SOC, ending test with success\n");
     }
 
 }

@@ -47,7 +47,7 @@ inline void service_doe_error_intr() {return;}
 inline void service_doe_notif_intr() {printf("ERROR");}
 inline void service_ecc_error_intr   () {printf("ERROR");}
 inline void service_ecc_notif_intr   () {
-    uint32_t * reg = (uint32_t *) (ECC_BASE_ADDR + ECC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+    uint32_t * reg = (uint32_t *) (CLP_ECC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
     uint32_t sts = *reg;
     /* Write 1 to Clear the pending interrupt */
     if (sts & ECC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
@@ -56,7 +56,7 @@ inline void service_ecc_notif_intr   () {
     if (sts == 0) {
         printf("bad ecc_notif_intr sts:%x\n", sts);
     } else {
-        reg = (uint32_t *) (ECC_ADDR_STATUS);
+        reg = (uint32_t *) (CLP_ECC_REG_ECC_STATUS);
         ecc_intr_status = *reg;
     }
 }

@@ -68,6 +68,8 @@ class soc_ifc_env_sequence_base #(
 
 
   // pragma uvmf custom class_item_additional begin
+    soc_ifc_status_agent_responder_seq_t soc_ifc_status_agent_rsp_seq;
+    cptra_status_agent_responder_seq_t cptra_status_agent_rsp_seq;
   // pragma uvmf custom class_item_additional end
   
   function new(string name = "" );

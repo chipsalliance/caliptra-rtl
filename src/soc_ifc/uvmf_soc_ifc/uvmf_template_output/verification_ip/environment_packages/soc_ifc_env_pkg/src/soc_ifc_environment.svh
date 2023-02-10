@@ -95,7 +95,7 @@ class soc_ifc_environment  extends uvmf_environment_base #(
                                         apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
                                         apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) apb_reg_transfer_t;
 
-   typedef reg2apb_adapter #(apb_reg_transfer_t,
+   typedef caliptra_reg2apb_adapter #(apb_reg_transfer_t,
                              apb5_master_0_params::APB3_SLAVE_COUNT,
                              apb5_master_0_params::APB3_PADDR_BIT_WIDTH,
                              apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
@@ -209,7 +209,9 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     if (configuration.enable_reg_prediction ||
         configuration.enable_reg_adaptation) begin
       ahb_reg_adapter = ahb_reg_adapter_t::type_id::create("reg2ahb_adapter");
-      apb_reg_adapter = apb_reg_adapter_t::type_id::create("reg2apb_adapter");
+      ahb_reg_adapter.en_n_bits = 1; // This is to allow the adapter to generate addresses
+                                     // that are not aligned to 64-bit width (the native AHB interface width)
+      apb_reg_adapter = apb_reg_adapter_t::type_id::create("caliptra_reg2apb_adapter");
     end
     // Set sequencer and adapter in register model map
     if ((configuration.enable_reg_adaptation) && (qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.m_sequencer != null ))

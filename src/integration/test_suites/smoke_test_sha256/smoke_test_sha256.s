@@ -56,8 +56,8 @@ _start:
         addi t4, t4, 1
 
         // Load block from hw_data and write to SHA256 core
-        li x3, SHA256_ADDR_BLOCK_START
-        li x1, SHA256_ADDR_BLOCK_END
+        li x3, CLP_SHA256_REG_SHA256_BLOCK_0
+        li x1, CLP_SHA256_REG_SHA256_BLOCK_15
         // set t3 to constantly tracking current ptr
         la t3, SHA256ShortMsg
         // set x7 as last word check
@@ -75,7 +75,7 @@ _start:
         mv x6, x5
 
         // Enable SHA256 core
-        li x3, SHA256_ADDR_CNTRL
+        li x3, CLP_SHA256_REG_SHA256_CTRL
         li x4, SHA256_NEXT
         bne t4, t5, indicate_next
         li x4, SHA256_INIT
@@ -94,8 +94,8 @@ _start:
         // bne x6, x7, write_msg_loop
 
     // Read the data back from SHA256 register
-    li x3, SHA256_ADDR_DIGEST_START
-    li x1, SHA256_ADDR_DIGEST_END
+    li x3, CLP_SHA256_REG_SHA256_DIGEST_0
+    li x1, CLP_SHA256_REG_SHA256_DIGEST_7
     la x4, SHA256ShortMsg
     addi x4, x4, 68
     read_result_loop:
@@ -138,11 +138,13 @@ loop:
    bnez x5, loop
    ret
 
-.section .data
+.section .dccm
 .global stdout
 stdout: .word STDOUT
 .global intr_count
 intr_count: .word 0
+.global verbosity_g
+verbosity_g: .word 2
 // FW polls this variable instead of the SHA256 reg....
 .global sha256_intr_status
 sha256_intr_status: .word 0

@@ -196,7 +196,7 @@ loop:
    bnez x5, loop
    ret
 
-.section .data
+.section .dccm
 .global stdout
 stdout: .word STDOUT
 .global intr_count

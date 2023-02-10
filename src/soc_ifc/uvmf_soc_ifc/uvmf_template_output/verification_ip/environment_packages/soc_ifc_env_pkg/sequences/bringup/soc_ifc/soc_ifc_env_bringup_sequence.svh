@@ -30,15 +30,12 @@ class soc_ifc_env_bringup_sequence #(
       ) extends soc_ifc_env_sequence_base #(.CONFIG_T(CONFIG_T));
 
 
-  `uvm_object_param_utils( soc_ifc_env_bringup_sequence #(
-                           CONFIG_T
-                           ) );
+  `uvm_object_param_utils_begin( soc_ifc_env_bringup_sequence #( CONFIG_T) )
+  `uvm_object_utils_end
+  `m_uvm_get_type_name_func    ( soc_ifc_env_bringup_sequence #( CONFIG_T) )
 
     typedef soc_ifc_ctrl_poweron_sequence soc_ifc_ctrl_agent_poweron_sequence_t;
     soc_ifc_ctrl_agent_poweron_sequence_t soc_ifc_ctrl_agent_poweron_seq;
-
-    typedef soc_ifc_status_responder_sequence  soc_ifc_status_agent_responder_seq_t;
-    soc_ifc_status_agent_responder_seq_t soc_ifc_status_agent_rsp_seq;
 
 
 
@@ -59,8 +56,6 @@ class soc_ifc_env_bringup_sequence #(
   function new(string name = "" );
     super.new(name);
     soc_ifc_ctrl_agent_poweron_seq = soc_ifc_ctrl_agent_poweron_sequence_t::type_id::create("soc_ifc_ctrl_agent_poweron_seq");
-    assert(this.randomize()) else `uvm_error("SOC_IFC_BRINGUP", "Failed to randomize CTRL poweron sequence");
-
 
   endfunction
 
@@ -73,7 +68,7 @@ class soc_ifc_env_bringup_sequence #(
     reg_model = configuration.soc_ifc_rm;
 
     if (soc_ifc_status_agent_rsp_seq == null)
-        `uvm_error("SOC_IFC_BRINGUP", "SOC_IFC ENV bringup sequence expected a handle to the soc_ifc status agent responder sequence (from bench-level sequence) but got null!")
+        `uvm_fatal("SOC_IFC_BRINGUP", "SOC_IFC ENV bringup sequence expected a handle to the soc_ifc status agent responder sequence (from bench-level sequence) but got null!")
     fork
         forever begin
             @(soc_ifc_status_agent_rsp_seq.new_rsp) sts_rsp_count++;

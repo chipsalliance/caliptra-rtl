@@ -150,5 +150,5 @@ stages:
                 - configspec_name: 'integration_lib'
                 - dut: 'caliptra_top_tb'
                 - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
-                - path: '${WORKSPACE}/Caliptra/src/integration/stimulus/testsuites/caliptra_top_nightly_directed_regresion.yml'
+                - path: '${WORKSPACE}/Caliptra/src/integration/stimulus/testsuites/caliptra_top_nightly_directed_regression.yml'
                 - timeout: 30

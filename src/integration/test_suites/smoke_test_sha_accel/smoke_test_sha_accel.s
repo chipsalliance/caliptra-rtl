@@ -392,11 +392,13 @@ loop:
    bnez x5, loop
    ret
 
-.section .data
+.section .dccm
 .global stdout
 stdout: .word STDOUT
 .global intr_count
 intr_count: .word 0
+.global verbosity_g
+verbosity_g: .word 2
 // FW polls this variable instead of the SHA reg....
 .global sha_intr_status
 sha_intr_status: .word 0

@@ -163,7 +163,7 @@ _finish:
     nop
 .endr
 
-.data
+.section .dccm
 hw_data_out:
 .ascii "----------------------------------\n"
 .ascii "Running clk gating test\n"
@@ -235,6 +235,8 @@ hw_data_out:
 .align 4
 .global stdout
 stdout: .word STDOUT
+.global verbosity_g
+verbosity_g: .word 2
 
 .global intr_count
 intr_count: .word 0

@@ -24,6 +24,11 @@
 
 volatile char* stdout = (char *)STDOUT;
 volatile uint32_t intr_count;
+#ifdef CPT_VERBOSITY
+    enum printf_verbosity verbosity_g = CPT_VERBOSITY;
+#else
+    enum printf_verbosity verbosity_g = LOW;
+#endif
 
 enum ecc_error_mode_type {
     NONE,
@@ -33,26 +38,26 @@ enum ecc_error_mode_type {
 
 uint32_t test_mbox_sram_ecc() {
     uint32_t sts = 0;
-    uint32_t * soc_ifc_error_mbox_ecc_unc_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R);
-    uint32_t * soc_ifc_notif_mbox_ecc_cor_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R);
+    volatile uint32_t * soc_ifc_error_mbox_ecc_unc_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R);
+    volatile uint32_t * soc_ifc_notif_mbox_ecc_cor_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R);
 
     // Acquire the mailbox lock
     while((lsu_read_32((uint32_t*) CLP_MBOX_CSR_MBOX_LOCK) & MBOX_CSR_MBOX_LOCK_LOCK_MASK) != 0);
 
     // Allocate a large array in Mailbox SRAM
-    uint32_t* myarray = (uint32_t*) MBOX_DIR_BASE_ADDR;
+    volatile uint32_t* myarray = (uint32_t*) MBOX_DIR_BASE_ADDR;
     for (uint32_t ii; ii < 64; ii++) {
         myarray[ii] = 64-ii;
     }
 
     // Read the array from the Mailbox and write to STDOUT
     for (uint32_t ii; ii < 64; ii++) {
-        printf("[%d]:%x\n", ii, myarray[ii]);
+        printf("[%d]:%x\n", ii, myarray[ii]); // no verbosity control -- dereferencing the array IS the test
     }
 
     // Check Interrupt Counts
     if (intr_count == 0) {
-        printf("ERROR: No interrupts received during ECC sram test\n");
+        VPRINTF(ERROR, "ERROR: No interrupts received during ECC sram test\n");
         sts = 1;
     }
     // Sleep in between checking/clearing intr_count to allow ISR to execute and show idle time in sims
@@ -64,20 +69,20 @@ uint32_t test_mbox_sram_ecc() {
     // Get the interrupt count for the expected type
     if (ecc_error_mode == SINGLE) {
         if (*soc_ifc_notif_mbox_ecc_cor_ctr == 0) {
-            printf("ERROR: Unexpected 0 count value for correctable ECC errors\n");
+            VPRINTF(ERROR, "ERROR: Unexpected 0 count value for correctable ECC errors\n");
             sts |= 0x04;
         } else {
-            printf("Correctable ECC err count: %x\n", *soc_ifc_notif_mbox_ecc_cor_ctr);
+            VPRINTF(LOW, "Correctable ECC err count: %x\n", *soc_ifc_notif_mbox_ecc_cor_ctr);
         }
     } else if (ecc_error_mode == DOUBLE) {
         if (*soc_ifc_error_mbox_ecc_unc_ctr == 0) {
-            printf("ERROR: Unexpected 0 count value for uncorrectable ECC errors\n");
+            VPRINTF(ERROR, "ERROR: Unexpected 0 count value for uncorrectable ECC errors\n");
             sts |= 0x08;
         } else {
-            printf("Uncorrectable ECC err count: %x\n", *soc_ifc_error_mbox_ecc_unc_ctr);
+            VPRINTF(LOW, "Uncorrectable ECC err count: %x\n", *soc_ifc_error_mbox_ecc_unc_ctr);
         }
     } else {
-        printf("ERROR: Unexpected ecc_error_mode: %x\n", ecc_error_mode);
+        VPRINTF(ERROR, "ERROR: Unexpected ecc_error_mode: %x\n", ecc_error_mode);
         sts |= 0x80;
     }
 
@@ -91,28 +96,26 @@ void main(void) {
         int argc=0;
         char *argv[1];
 
-        char* DCCM = (char *) RV_DCCM_SADR;
-        char* ICCM = (char *) RV_ICCM_SADR;
-        uint32_t * sha512_acc_notif_trig = (uint32_t *) (CLP_SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
-        uint32_t * soc_ifc_error_trig    = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R);
-        uint32_t * soc_ifc_notif_trig    = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
+        volatile uint32_t * sha512_acc_notif_trig = (uint32_t *) (CLP_SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
+        volatile uint32_t * soc_ifc_error_trig    = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R);
+        volatile uint32_t * soc_ifc_notif_trig    = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
 
-        uint32_t * sha512_acc_notif_ctr     = (uint32_t *) (CLP_SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
-        uint32_t * soc_ifc_error_internal_ctr     = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R);
-        uint32_t * soc_ifc_error_inv_dev_ctr      = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_R);
-        uint32_t * soc_ifc_error_cmd_fail_ctr     = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_R);
-        uint32_t * soc_ifc_error_bad_fuse_ctr     = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_R);
-        uint32_t * soc_ifc_error_iccm_blocked_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_R);
-        uint32_t * soc_ifc_error_mbox_ecc_unc_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R);
-        uint32_t * soc_ifc_notif_cmd_avail_ctr    = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_R);
-        uint32_t * soc_ifc_notif_mbox_ecc_cor_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R);
+        volatile uint32_t * sha512_acc_notif_ctr     = (uint32_t *) (CLP_SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
+        volatile uint32_t * soc_ifc_error_internal_ctr     = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R);
+        volatile uint32_t * soc_ifc_error_inv_dev_ctr      = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_R);
+        volatile uint32_t * soc_ifc_error_cmd_fail_ctr     = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_R);
+        volatile uint32_t * soc_ifc_error_bad_fuse_ctr     = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_R);
+        volatile uint32_t * soc_ifc_error_iccm_blocked_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_R);
+        volatile uint32_t * soc_ifc_error_mbox_ecc_unc_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R);
+        volatile uint32_t * soc_ifc_notif_cmd_avail_ctr    = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_R);
+        volatile uint32_t * soc_ifc_notif_mbox_ecc_cor_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R);
 
         uint32_t soc_ifc_notif_intr_count_hw = 0;
         uint32_t soc_ifc_error_intr_count_hw = 0;
 
         uint32_t sts;
 
-        printf("----------------------------------\nSRAM ECC Smoke Test!!\n----------------------------------\n");
+        VPRINTF(LOW, "----------------------------------\nSRAM ECC Smoke Test!!\n----------------------------------\n");
 
         // Setup the interrupt CSR configuration
         init_interrupts();
@@ -121,15 +124,15 @@ void main(void) {
         intr_count = 0;
 
         // Enable Random ECC single-bit error injection
-        printf("%c", 0xfd);
+        SEND_STDOUT_CTRL( 0xfd);
         ecc_error_mode = SINGLE;
 
         // Execute the test
         sts = test_mbox_sram_ecc();
 
         // Enable Random ECC double-bit error injection
-        printf("%c", 0xfd);
-        printf("%c", 0xfe);
+        SEND_STDOUT_CTRL( 0xfd);
+        SEND_STDOUT_CTRL( 0xfe);
         ecc_error_mode = DOUBLE;
 
         // Execute the test
@@ -139,7 +142,7 @@ void main(void) {
         // TODO Test SRAM single-bit errors corrected during a mailbox protocol operation
 
         // Disable Random ECC double-bit error injection
-        printf("%c", 0xfe);
+        SEND_STDOUT_CTRL( 0xfe);
         ecc_error_mode = NONE;
 
         // Disable interrutps
@@ -147,7 +150,7 @@ void main(void) {
 
         // Print interrupt count from FW/HW trackers
         // SHA Accelerator
-        printf("SHA Accel hw count: %x\n", *sha512_acc_notif_ctr);
+        VPRINTF(LOW, "SHA Accel hw count: %x\n", *sha512_acc_notif_ctr);
 
         // SOC_IFC Error
         soc_ifc_error_intr_count_hw =  *soc_ifc_error_internal_ctr +
@@ -156,17 +159,18 @@ void main(void) {
                                        *soc_ifc_error_bad_fuse_ctr +
                                        *soc_ifc_error_iccm_blocked_ctr +
                                        *soc_ifc_error_mbox_ecc_unc_ctr;
-        printf("SOC_IFC Err hw count: %x\n", soc_ifc_error_intr_count_hw);
+        VPRINTF(LOW, "SOC_IFC Err hw count: %x\n", soc_ifc_error_intr_count_hw);
 
         // SOC_IFC Notif
         soc_ifc_notif_intr_count_hw =  *soc_ifc_notif_cmd_avail_ctr +
                                        *soc_ifc_notif_mbox_ecc_cor_ctr;
-        printf("SOC_IFC Notif hw count: %x\n", soc_ifc_notif_intr_count_hw);
+        VPRINTF(LOW, "SOC_IFC Notif hw count: %x\n", soc_ifc_notif_intr_count_hw);
 
         // Print ending status
         if (sts) {
-            printf("Detected errors during ECC error injection test. Sts: [%x] - killing sim with error\n", sts);
-            printf("%c", 0x1); // Kill sim with ERROR
+            VPRINTF(ERROR, "Detected errors during ECC error injection test. Sts: [%x] - killing sim with error\n", sts);
+            SEND_STDOUT_CTRL( 0x1); // Kill sim with ERROR
+            while(1);
         }
 
         return;

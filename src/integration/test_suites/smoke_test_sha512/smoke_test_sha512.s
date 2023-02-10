@@ -56,8 +56,8 @@ _start:
         addi t4, t4, 1
 
         // Load block from hw_data and write to SHA512 core
-        li x3, SHA512_ADDR_BLOCK_START
-        li x1, SHA512_ADDR_BLOCK_END
+        li x3, CLP_SHA512_REG_SHA512_BLOCK_0
+        li x1, CLP_SHA512_REG_SHA512_BLOCK_31
         // set t3 to constantly tracking current ptr
         la t3, SHA512ShortMsg
         // set x7 as last word check
@@ -75,7 +75,7 @@ _start:
         mv x6, x5
 
         // Enable SHA512 core
-        li x3, SHA512_ADDR_CNTRL
+        li x3, CLP_SHA512_REG_SHA512_CTRL
         li x4, SHA512_NEXT
         bne t4, t5, indicate_next
         li x4, SHA512_INIT
@@ -94,8 +94,8 @@ _start:
         bne x6, x7, write_msg_loop
 
     // Read the data back from SHA512 register
-    li x3, SHA512_ADDR_DIGEST_START
-    li x1, SHA512_ADDR_DIGEST_END
+    li x3, CLP_SHA512_REG_SHA512_DIGEST_0
+    li x1, CLP_SHA512_REG_SHA512_DIGEST_15
     la x4, SHA512ShortMsg
     addi x4, x4, 132
     read_result_loop:
@@ -111,7 +111,7 @@ _start:
             ble x3, x1, read_result_loop
 
 
-// Write 0xff to STDOUT for TB to termiate test.
+// Write 0xff to STDOUT for TB to terminate test.
 _finish:
     li x3, STDOUT
     addi x5, x0, 0xff
@@ -138,11 +138,14 @@ loop:
    bnez x5, loop
    ret
 
-.section .data
+// .data is in ROM now, can't write to intr_count there...
+.section .dccm
 .global stdout
 stdout: .word STDOUT
 .global intr_count
 intr_count: .word 0
+.global verbosity_g
+verbosity_g: .word 2
 // FW polls this variable instead of the SHA512 reg....
 .global sha512_intr_status
 sha512_intr_status: .word 0

@@ -83,12 +83,49 @@ package soc_ifc_env_pkg;
   `include "src/soc_ifc_env_sequence_base.svh"
 
   // pragma uvmf custom package_item_additional begin
+  typedef soc_ifc_env_configuration  soc_ifc_env_configuration_t;
   // UVMF_CHANGE_ME : When adding new environment level sequences to the src directory
   //    be sure to add the sequence file here so that it will be
   //    compiled as part of the environment package.  Be sure to place
   //    the new sequence after any base sequence of the new sequence.
-  `include "src/soc_ifc_env_bringup_sequence.svh"
-  `include "src/soc_ifc_env_cptra_rst_wait_sequence.svh"
+  // TODO: Also declare the 'typedef'
+
+  ///////////////////// Base Sequence - do not run /////////////////////
+  typedef soc_ifc_env_sequence_base #( .CONFIG_T(soc_ifc_env_configuration_t)) soc_ifc_env_sequence_base_t;
+
+  ///////////////////// Sequences usable from Caliptra_top /////////////////////
+  `include "sequences/bringup/soc_ifc/soc_ifc_env_bringup_sequence.svh"
+  typedef soc_ifc_env_bringup_sequence #( .CONFIG_T(soc_ifc_env_configuration_t)) soc_ifc_env_bringup_sequence_t;
+  /* TODO: If desired in top-level rand sequence, add this to the rand_seq_idx enum/avail_env_seqs_c constraint */
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_sequence_base.svh"
+  typedef soc_ifc_env_mbox_sequence_base #(.CONFIG_T(soc_ifc_env_configuration_t)) soc_ifc_env_mbox_sequence_base_t;
+  /* TODO: If desired in top-level rand sequence, add this to the rand_seq_idx enum/avail_env_seqs_c constraint */
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_fw_sequence.svh"
+  typedef soc_ifc_env_mbox_rand_fw_sequence #(.CONFIG_T(soc_ifc_env_configuration_t)) soc_ifc_env_mbox_rand_fw_sequence_t;
+  /* TODO: If desired in top-level rand sequence, add this to the rand_seq_idx enum/avail_env_seqs_c constraint */
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_small_sequence.svh"
+  typedef soc_ifc_env_mbox_rand_small_sequence #(.CONFIG_T(soc_ifc_env_configuration_t)) soc_ifc_env_mbox_rand_small_sequence_t;
+  /* TODO: If desired in top-level rand sequence, add this to the rand_seq_idx enum/avail_env_seqs_c constraint */
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_large_sequence.svh"
+  typedef soc_ifc_env_mbox_rand_large_sequence #(.CONFIG_T(soc_ifc_env_configuration_t)) soc_ifc_env_mbox_rand_large_sequence_t;
+  /* TODO: If desired in top-level rand sequence, add this to the rand_seq_idx enum/avail_env_seqs_c constraint */
+
+  ///////////////////// Sequences usable from soc_ifc bench only /////////////////////
+  // These sequences include stimulus for the internal/caliptra-side of the
+  // soc_ifc, which is done by the uC in caliptra_top bench
+  `include "sequences/bringup/cptra/soc_ifc_env_cptra_rst_wait_sequence.svh"
+  typedef soc_ifc_env_cptra_rst_wait_sequence #( .CONFIG_T(soc_ifc_env_configuration_t)) soc_ifc_env_cptra_rst_wait_sequence_t;
+  /* TODO: If desired in top-level rand sequence, add this to the rand_seq_idx enum/avail_env_seqs_c constraint */
+  `include "sequences/mbox/cptra/soc_ifc_env_cptra_mbox_handler_sequence.svh"
+  typedef soc_ifc_env_cptra_mbox_handler_sequence #( .CONFIG_T(soc_ifc_env_configuration_t)) soc_ifc_env_cptra_mbox_handler_sequence_t;
+  /* TODO: If desired in top-level rand sequence, add this to the rand_seq_idx enum/avail_env_seqs_c constraint */
+  `include "sequences/mbox/soc_ifc_env_top_mbox_sequence_base.svh"
+  typedef soc_ifc_env_top_mbox_sequence_base #( .CONFIG_T(soc_ifc_env_configuration_t)) soc_ifc_env_top_mbox_sequence_base_t;
+  /* TODO: If desired in top-level rand sequence, add this to the rand_seq_idx enum/avail_env_seqs_c constraint */
+  `include "sequences/mbox/soc_ifc_env_top_mbox_rand_small_sequence.svh"
+  typedef soc_ifc_env_top_mbox_rand_small_sequence #( .CONFIG_T(soc_ifc_env_configuration_t)) soc_ifc_env_top_mbox_rand_small_sequence_t;
+  /* TODO: If desired in top-level rand sequence, add this to the rand_seq_idx enum/avail_env_seqs_c constraint */
+
   // pragma uvmf custom package_item_additional end
 
 endpackage

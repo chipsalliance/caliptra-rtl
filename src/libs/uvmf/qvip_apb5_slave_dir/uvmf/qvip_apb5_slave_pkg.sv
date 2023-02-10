@@ -27,4 +27,5 @@ package qvip_apb5_slave_pkg;
     
     `include "qvip_apb5_slave_env_configuration.svh"
     `include "qvip_apb5_slave_environment.svh"
+    `include "caliptra_reg2apb_adapter.svh"
 endpackage: qvip_apb5_slave_pkg

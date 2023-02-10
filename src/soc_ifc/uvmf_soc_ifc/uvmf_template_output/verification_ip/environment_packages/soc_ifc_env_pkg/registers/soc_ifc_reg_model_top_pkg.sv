@@ -153,9 +153,47 @@ package soc_ifc_reg_model_top_pkg;
 
     endclass : mbox_csr_ext
 
+    class sha512_acc_csr__intr_block_t_ext extends sha512_acc_csr__intr_block_t;
+        uvm_reg_map sha512_acc_csr_intr_AHB_map;
+        uvm_reg_map sha512_acc_csr_intr_APB_map;
+
+        function new(string name = "sha512_acc_csr__intr_block_t_ext");
+            super.new(name);
+        endfunction : new
+
+        virtual function void build();
+            super.build();
+            this.sha512_acc_csr_intr_AHB_map = create_map("intr_AHB_reg_map", 0, 4, UVM_LITTLE_ENDIAN);
+            this.sha512_acc_csr_intr_APB_map = create_map("intr_APB_reg_map", 0, 4, UVM_LITTLE_ENDIAN);
+        endfunction
+
+        virtual function void build_ext_maps();
+            uvm_reg regs[$];
+
+            this.default_map.get_registers(regs, UVM_NO_HIER);
+            foreach(regs[c_reg]) begin
+                this.sha512_acc_csr_intr_AHB_map.add_reg(regs[c_reg], regs[c_reg].get_offset(this.default_map));
+                this.sha512_acc_csr_intr_APB_map.add_reg(regs[c_reg], regs[c_reg].get_offset(this.default_map));
+            end
+        endfunction
+
+    endclass : sha512_acc_csr__intr_block_t_ext
+
     class sha512_acc_csr_ext extends sha512_acc_csr;
+        // default_map_ext has intr_block_rf_ext.default_map as a submap; the
+        // native this.default_map adds intr_block_rf.default_map as submap
+        // We need this additional map so that the new intr_block_rf_ext can be
+        // initialized, and the default_map assigned to a parent. This allows
+        // get_offset methods to work on member registers, so we can then add
+        // them to the AHB/APB maps
+        uvm_reg_map default_map_ext;
         uvm_reg_map sha512_acc_csr_AHB_map;
         uvm_reg_map sha512_acc_csr_APB_map;
+
+        // This coexists with intr_block_rf (from the parent class), but
+        // intr_block_rf is only added as a submap to default_map and
+        // should never be used in practice
+        rand sha512_acc_csr__intr_block_t_ext intr_block_rf_ext;
 
         function new(string name = "sha512_acc_csr_ext");
             super.new(name);
@@ -163,25 +201,46 @@ package soc_ifc_reg_model_top_pkg;
 
         virtual function void build();
             super.build();
+            this.intr_block_rf_ext = new("intr_block_rf_ext");
+            this.intr_block_rf_ext.configure(this);
+            this.intr_block_rf_ext.build(); // This configures the default_map, which is used to find reg offsets for other maps
+            this.default_map_ext     = create_map("default_map_ext", 0, 4, UVM_LITTLE_ENDIAN);
             this.sha512_acc_csr_AHB_map = create_map("AHB_reg_map", 0, 4, UVM_LITTLE_ENDIAN);
             this.sha512_acc_csr_APB_map = create_map("APB_reg_map", 0, 4, UVM_LITTLE_ENDIAN);
         endfunction
 
         virtual function void build_ext_maps();
             uvm_reg        regs[$];
+            uvm_reg_map    submaps[$];
+            uvm_reg_addr_t intr_block_offset;
 
             this.default_map.get_registers(regs, UVM_NO_HIER);
+            this.default_map.get_submaps  (submaps, UVM_NO_HIER); // <-- these submaps are from this.intr_block_rf.default_map, per the inherited build() method
 
             foreach(regs[c_reg]) begin
+                this.default_map_ext       .add_reg(regs[c_reg], regs[c_reg].get_offset(this.default_map));
                 this.sha512_acc_csr_AHB_map.add_reg(regs[c_reg], regs[c_reg].get_offset(this.default_map));
                 this.sha512_acc_csr_APB_map.add_reg(regs[c_reg], regs[c_reg].get_offset(this.default_map));
             end
 
+            // Find offset used to add intr_block_rf.default_map to this.default_map, so we can
+            // use the same offset to add submaps to intr_block_rf_ext
+            foreach(submaps[c_submap]) begin
+                if (submaps[c_submap].get_name() == "reg_map") begin
+                intr_block_offset = this.default_map.get_submap_offset(submaps[c_submap]);
+                end
+            end
+
+            this.default_map_ext    .add_submap(this.intr_block_rf_ext.default_map, intr_block_offset);
+            this.intr_block_rf_ext.build_ext_maps(); // This configures the AHB/APB maps
+            this.sha512_acc_csr_AHB_map.add_submap(this.intr_block_rf_ext.sha512_acc_csr_intr_AHB_map, intr_block_offset);
+            this.sha512_acc_csr_APB_map.add_submap(this.intr_block_rf_ext.sha512_acc_csr_intr_APB_map, intr_block_offset);
+
         endfunction
 
     endclass : sha512_acc_csr_ext
-// pragma uvmf custom define_register_classes end
 
+// pragma uvmf custom define_register_classes end
 // pragma uvmf custom define_block_map_coverage_class begin
    //--------------------------------------------------------------------
    // Class: soc_ifc_fixme_map_coverage

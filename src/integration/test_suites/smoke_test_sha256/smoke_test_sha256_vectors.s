@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-.data
+.section .dccm
 hw_data:
 // start of input message
 // SHA224 test

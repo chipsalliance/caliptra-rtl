@@ -251,7 +251,8 @@ import uvmf_base_pkg_hdl::*;
     assign uvm_test_top_environment_soc_ifc_subenv_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HWRITE    = caliptra_top_dut.responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hwrite   ;
 //    assign uvm_test_top_environment_soc_ifc_subenv_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HREADYOUT = caliptra_top_dut.responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hreadyout;
 //    assign uvm_test_top_environment_soc_ifc_subenv_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0.ahb_if.HREADYin = caliptra_top_dut.responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hreadyout;
-    assign uvm_test_top_environment_soc_ifc_subenv_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HTRANS    = caliptra_top_dut.responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].htrans   ;
+    assign uvm_test_top_environment_soc_ifc_subenv_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HTRANS    = caliptra_top_dut.responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hsel ? 
+                                                                                                                    caliptra_top_dut.responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].htrans : '0;
     assign uvm_test_top_environment_soc_ifc_subenv_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HSIZE     = caliptra_top_dut.responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hsize    ;
     assign uvm_test_top_environment_soc_ifc_subenv_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HRESP     = caliptra_top_dut.responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hresp    ;
     assign uvm_test_top_environment_soc_ifc_subenv_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HREADY    = caliptra_top_dut.responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hready   ;

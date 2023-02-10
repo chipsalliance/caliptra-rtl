@@ -30,12 +30,8 @@ class soc_ifc_env_cptra_rst_wait_sequence #(
       ) extends soc_ifc_env_sequence_base #(.CONFIG_T(CONFIG_T));
 
 
-  `uvm_object_param_utils( soc_ifc_env_cptra_rst_wait_sequence #(
-                           CONFIG_T
-                           ) );
+  `uvm_object_param_utils( soc_ifc_env_cptra_rst_wait_sequence #( CONFIG_T) );
 
-    typedef cptra_status_responder_sequence  cptra_status_agent_responder_seq_t;
-    cptra_status_agent_responder_seq_t cptra_status_agent_rsp_seq;
 
 
 
@@ -57,7 +53,7 @@ class soc_ifc_env_cptra_rst_wait_sequence #(
     reg_model = configuration.soc_ifc_rm;
 
     if (cptra_status_agent_rsp_seq == null)
-        `uvm_error("CPTRA_RESET_WAIT", "SOC_IFC ENV caliptra reset wait sequence expected a handle to the cptra status agent responder sequence (from bench-level sequence) but got null!")
+        `uvm_fatal("CPTRA_RESET_WAIT", "SOC_IFC ENV caliptra reset wait sequence expected a handle to the cptra status agent responder sequence (from bench-level sequence) but got null!")
     fork
         forever begin
             @(cptra_status_agent_rsp_seq.new_rsp) sts_rsp_count++;

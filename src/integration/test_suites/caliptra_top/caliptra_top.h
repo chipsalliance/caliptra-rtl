@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 
-#ifndef HMAC_DRBG_H
-  #define HMAC_DRBG_H
+#ifndef CALIPTRA_TOP_H
+  #define CALIPTRA_TOP_H
 
 #endif

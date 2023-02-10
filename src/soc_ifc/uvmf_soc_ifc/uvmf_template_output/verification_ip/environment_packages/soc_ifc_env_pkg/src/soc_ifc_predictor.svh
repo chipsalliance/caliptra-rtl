@@ -373,9 +373,10 @@ class soc_ifc_predictor #(
     end
     else if (uvm_reg_data_t'(data_active) != axs_reg.get() && ahb_txn.RnW == AHB_WRITE) begin
         // Leave the un-shifted data in the error message to help with debug
-        `uvm_error("PRED_AHB", $sformatf("AHB transaction to register %s with data: 0x%x (data_active: 0x%x), write: %p, may not match reg model value: %x", axs_reg.get_name(), ahb_txn.data[0], data_active, ahb_txn.RnW, axs_reg.get()))
+        //TODO `uvm_error("PRED_AHB", $sformatf("AHB transaction to register %s with data: 0x%x (data_active: 0x%x), write: %p, may not match reg model value: %x", axs_reg.get_name(), ahb_txn.data[0], data_active, ahb_txn.RnW, axs_reg.get()))
     end
     else begin
+        `uvm_info("PRED_AHB", {"Detected access to register: ", axs_reg.get_name()}, UVM_MEDIUM)
         case (axs_reg.get_name()) inside
             "CPTRA_FUSE_WR_DONE": begin
                 `uvm_error("PRED_AHB", "Unexpected write to CPTRA_FUSE_WR_DONE register on AHB interface")
@@ -392,7 +393,7 @@ class soc_ifc_predictor #(
                         32'h0,[32'h2:32'h5],32'h7F:
                             `uvm_warning("PRED_AHB", $sformatf("Observed write to CPTRA_GENERIC_OUTPUT_WIRES with an unassigned value: 0x%x", data_active))
                         32'h1:
-                            `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES to Kill Simulation with Error!", UVM_LOW)
+                            `uvm_fatal("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES to Kill Simulation with Error!") /* TODO put this in the scoreboard? */
                         [32'h6:32'h7E]:
                             `uvm_info("PRED_AHB", $sformatf("Observed write to CPTRA_GENERIC_OUTPUT_WIRES and translating as ASCII character: %c", data_active[7:0]), UVM_MEDIUM)
                         32'hf8:

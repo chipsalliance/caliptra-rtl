@@ -65,6 +65,7 @@ package caliptra_top_tests_pkg;
    `include "src/register_test.svh"
    `include "src/example_derived_test.svh"
    `include "src/caliptra_top_rand_test.svh"
+   `include "src/caliptra_top_fw_update_test.svh"
 
   // pragma uvmf custom package_item_additional begin
   // UVMF_CHANGE_ME : When adding new tests to the src directory

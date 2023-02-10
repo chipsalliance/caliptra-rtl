@@ -57,13 +57,6 @@ module mbox
 
 localparam DEPTH = (SIZE_KB * 1024 * 8) / DATA_W;
 
-typedef enum logic [1:0] {
-    CMD_BUSY = 2'd0,
-    DATA_READY = 2'd1,
-    CMD_COMPLETE = 2'd2,
-    CMD_FAILURE = 2'd3
-} mbox_status_e;
-
 //this module is used to instantiate a single mailbox instance
 //requests within the address space of this mailbox are routed here from the top level
 

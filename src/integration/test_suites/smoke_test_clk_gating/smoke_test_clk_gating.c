@@ -25,8 +25,8 @@ volatile uint32_t hmac_intr_status = 0;
 
 void main() {
     
-    uint32_t * soc_ifc_flow_status = (uint32_t *) CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS;
-    uint32_t * soc_ifc_clk_gating_en = (uint32_t *) CLP_SOC_IFC_REG_CPTRA_CLK_GATING_EN;
+    volatile uint32_t * soc_ifc_flow_status = (uint32_t *) CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS;
+    volatile uint32_t * soc_ifc_clk_gating_en = (uint32_t *) CLP_SOC_IFC_REG_CPTRA_CLK_GATING_EN;
     uint32_t mitb0 = 0x00000020;
     uint32_t mie_timer0_en = 0x20000000;
     uint32_t mie_machinetimer_en = 0x00000080;
@@ -82,7 +82,7 @@ void main() {
     //Set STDOUT to F8 until all cases below finish running.
     //This is to assert interrupts to the core for testing
     //------------------------------------------------------
-        printf("%c",0xf8); 
+        SEND_STDOUT_CTRL(0xf8); 
 
     //------------------------------------------------------
     //Wake up using software int

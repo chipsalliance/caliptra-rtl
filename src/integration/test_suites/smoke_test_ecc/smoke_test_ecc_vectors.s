@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-.data
+.section .dccm
 TEST_VECTOR:
 // ECC_vector1_keygen
 // start of hashed message

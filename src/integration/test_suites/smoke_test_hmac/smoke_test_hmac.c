@@ -18,15 +18,20 @@
 #include <stdint.h>
 #include "printf.h"
 
+#ifdef CPT_VERBOSITY
+    enum printf_verbosity verbosity_g = CPT_VERBOSITY;
+#else
+    enum printf_verbosity verbosity_g = LOW;
+#endif
 volatile char*    stdout           = (char *)STDOUT;
 volatile uint32_t intr_count       = 0;
 volatile uint32_t hmac_intr_status = 0;
 
 void main() {
-    uint32_t* hmac_key   = (uint32_t*) CLP_HMAC_REG_HMAC384_KEY_0;
-    uint32_t* hmac_block = (uint32_t*) CLP_HMAC_REG_HMAC384_BLOCK_0;
-    uint32_t* hmac_tag   = (uint32_t*) CLP_HMAC_REG_HMAC384_TAG_0;
-    uint32_t* hmac_reg;
+    volatile uint32_t* hmac_key   = (uint32_t*) CLP_HMAC_REG_HMAC384_KEY_0;
+    volatile uint32_t* hmac_block = (uint32_t*) CLP_HMAC_REG_HMAC384_BLOCK_0;
+    volatile uint32_t* hmac_tag   = (uint32_t*) CLP_HMAC_REG_HMAC384_TAG_0;
+    volatile uint32_t* hmac_reg;
 
     //this is the key 384-bit
     uint32_t key_data[] = {0x0b0b0b0b,
@@ -89,29 +94,29 @@ void main() {
 
 
     // Entry message
-    printf("----------------------------------\n");
-    printf(" HMAC smoke test !!\n"               );
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " HMAC smoke test !!\n"               );
+    VPRINTF(LOW, "----------------------------------\n");
 
     // Call interrupt init
     init_interrupts();
 
     // Load key from hw_data and write to HMAC core
-    printf("Load Key data to HMAC\n");
+    VPRINTF(LOW, "Load Key data to HMAC\n");
     offset = 0;
     while (hmac_key <= (uint32_t*) CLP_HMAC_REG_HMAC384_KEY_11) {
         *hmac_key++ = key_data[offset++];
     }
 
     // Load block from hw_data and write to HMAC core
-    printf("Load Block data to HMAC\n");
+    VPRINTF(LOW, "Load Block data to HMAC\n");
     offset = 0;
     while (hmac_block <= (uint32_t*) CLP_HMAC_REG_HMAC384_BLOCK_31) {
         *hmac_block++ = block_data[offset++];
     }
 
     // Enable HMAC core
-    printf("Initiate HMAC operation\n");
+    VPRINTF(LOW, "Initiate HMAC operation\n");
     hmac_reg = (uint32_t *) CLP_HMAC_REG_HMAC384_CTRL;
     *hmac_reg = HMAC_INIT;
 
@@ -123,28 +128,28 @@ void main() {
             __asm__ volatile ("nop"); // Sleep loop as "nop"
         }
     };
-    printf("Received HMAC intr with status = %x\n", hmac_intr_status);
+    VPRINTF(LOW, "Received HMAC intr with status = %x\n", hmac_intr_status);
     hmac_intr_status = 0;
 
     // Read the data back from HMAC register
-    printf("Load Result data from HMAC\n");
+    VPRINTF(LOW, "Load Result data from HMAC\n");
     offset = 0;
     while (hmac_tag <= (uint32_t*) CLP_HMAC_REG_HMAC384_TAG_11) {
         if (*hmac_tag != expected_data[offset]) {
-            printf("At offset [%d], data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", *hmac_tag);
-            printf("Expected data: 0x%x\n", expected_data[offset]);
-            printf("%c", 0x1);
+            VPRINTF(ERROR, "At offset [%d], data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", *hmac_tag);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", expected_data[offset]);
+            SEND_STDOUT_CTRL( 0x1);
             while(1);
         } else {
-            printf("[%d] :: 0x%x matches 0x%x\n", offset, *hmac_tag, expected_data[offset]);
+            VPRINTF(ALL, "[%d] :: 0x%x matches 0x%x\n", offset, *hmac_tag, expected_data[offset]);
         }
         hmac_tag++;
         offset++;
     }
 
     // Write 0xff to STDOUT for TB to terminate test.
-    printf("%c", 0xff);
+    SEND_STDOUT_CTRL( 0xff);
     while(1);
 
 }

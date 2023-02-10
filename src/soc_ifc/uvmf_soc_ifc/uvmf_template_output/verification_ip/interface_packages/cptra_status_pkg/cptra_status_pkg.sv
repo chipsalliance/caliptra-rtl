@@ -82,6 +82,9 @@ package cptra_status_pkg;
    //    be sure to add the sequence file here so that it will be
    //    compiled as part of the interface package.  Be sure to place
    //    the new sequence after any base sequences of the new sequence.
+   typedef cptra_status_sequence_base       cptra_status_agent_seq_base_t;
+   typedef cptra_status_random_sequence     cptra_status_agent_rand_seq_t;
+   typedef cptra_status_responder_sequence  cptra_status_agent_responder_seq_t;
    // pragma uvmf custom package_item_additional end
 
 endpackage

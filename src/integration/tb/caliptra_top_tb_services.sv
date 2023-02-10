@@ -80,7 +80,22 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
    //=========================================================================-
    // Parameters
    //=========================================================================-
+    `ifndef VERILATOR
+    int MAX_CYCLES;
+    initial begin
+        // To use this from the command line, add "+CLP_MAX_CYCLES=<value>"
+        // to override the sim timeout
+        if ($value$plusargs("CLP_MAX_CYCLES=%d", MAX_CYCLES)) begin
+            $info("Received argument +CLP_MAX_CYCLES, with value %d", MAX_CYCLES);
+        end
+        else begin
+            MAX_CYCLES = 20_000_000;
+            $info("No argument provided for CLP_MAX_CYCLES, defaulting to %d", MAX_CYCLES);
+        end
+    end
+    `else
     parameter MAX_CYCLES = 20_000_000;
+    `endif
 
     parameter MEMTYPE_LMEM = 3'h1;
     parameter MEMTYPE_DCCM = 3'h2;
@@ -414,7 +429,11 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
         // console Monitor
         if( mailbox_data_val & mailbox_write) begin
             $fwrite(fd,"%c", WriteData[7:0]);
-            $write("%c", WriteData[7:0]);
+            // Prints get lost in sim.log amidst a flurry of UVM_INFO
+            // messages....  best to just omit and send to console.log
+            if (!UVM_TB) begin
+                $write("%c", WriteData[7:0]);
+            end
             if (WriteData[7:0] inside {8'h0A,8'h0D}) begin // CR/LF
                 $fflush(fd);
             end
@@ -438,7 +457,7 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
             end
         end
         else if(mailbox_write && WriteData[7:0] == 8'h1) begin
-            if (UVM_TB) $warning("WARNING! Detected FW write to manually end the test with FAIL, but Firmware can't do this in UVM.");
+            if (UVM_TB) $info("INFO: Detected FW write to manually end the test with FAIL; ignoring since the UVM environment will handle this.");
             else begin
                 cycleCntKillReq <= cycleCnt;
                 $display("* TESTCASE FAILED");
@@ -550,6 +569,12 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
         abi_reg[30] = "t5";
         abi_reg[31] = "t6";
 
+        `ifndef VERILATOR
+        imem_inst1.ram           = '{default:8'h0};
+        dummy_mbox_preloader.ram = '{default:8'h0};
+        dummy_iccm_preloader.ram = '{default:8'h0};
+        dummy_dccm_preloader.ram = '{default:8'h0};
+        `endif
         hex_file_is_empty = $system("test -s program.hex");
         if (!hex_file_is_empty) $readmemh("program.hex",  imem_inst1.ram,0,32'h00007FFF);
         hex_file_is_empty = $system("test -s mailbox.hex");
@@ -716,21 +741,10 @@ task preload_iccm;
     bit[31:0] data;
     bit[31:0] addr, eaddr, saddr;
 
-    /*
-    addresses:
-     0x00007ff0 - ICCM start address to load
-     0x00007ff4 - ICCM end address to load
-    */
     `ifndef VERILATOR
     init_iccm();
     `endif
-    addr = 'h0000_7ff0;
-    // FIXME hardcoded address indices?
-    saddr = {imem_inst1.ram [addr[14:3]] [{addr[2],2'h3}],
-             imem_inst1.ram [addr[14:3]] [{addr[2],2'h2}],
-             imem_inst1.ram [addr[14:3]] [{addr[2],2'h1}],
-             imem_inst1.ram [addr[14:3]] [{addr[2],2'h0}]};
-    //saddr = {imem_inst1.ram[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
+    saddr = `RV_ICCM_SADR;
     if ( (saddr < `RV_ICCM_SADR) || (saddr > `RV_ICCM_EADR)) return;
     `ifndef RV_ICCM_ENABLE
         $display("********************************************************");
@@ -738,15 +752,10 @@ task preload_iccm;
         $display("********************************************************");
         $finish;
     `endif
-    addr += 4;
-    eaddr = {imem_inst1.ram [addr[14:3]] [{addr[2],2'h3}],
-             imem_inst1.ram [addr[14:3]] [{addr[2],2'h2}],
-             imem_inst1.ram [addr[14:3]] [{addr[2],2'h1}],
-             imem_inst1.ram [addr[14:3]] [{addr[2],2'h0}]};
-    //eaddr = {caliptra_top_dut.imem.mem[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
+    eaddr = `RV_ICCM_EADR;
     $display("ICCM pre-load from %h to %h", saddr, eaddr);
 
-    for(addr= saddr; addr < eaddr; addr+=4) begin
+    for(addr= saddr; addr <= eaddr; addr+=4) begin
         // FIXME hardcoded address indices?
         data = {dummy_iccm_preloader.ram [addr[16:3]] [{addr[2],2'h3}],
                 dummy_iccm_preloader.ram [addr[16:3]] [{addr[2],2'h2}],
@@ -764,20 +773,10 @@ task preload_dccm;
     bit[31:0] data;
     bit[31:0] addr, saddr, eaddr;
 
-    /*
-    addresses:
-     0x0000_7ff8 - DCCM start address to load
-     0x0000_7ffc - DCCM end address to load
-    */
     `ifndef VERILATOR
     init_dccm();
     `endif
-    addr = 'h0000_7ff8;
-    // FIXME hardcoded address indices?
-    saddr = {imem_inst1.ram [addr[14:3]] [{addr[2],2'h3}],
-             imem_inst1.ram [addr[14:3]] [{addr[2],2'h2}],
-             imem_inst1.ram [addr[14:3]] [{addr[2],2'h1}],
-             imem_inst1.ram [addr[14:3]] [{addr[2],2'h0}]};
+    saddr = `RV_DCCM_SADR;
     if (saddr < `RV_DCCM_SADR || saddr > `RV_DCCM_EADR) return;
     `ifndef RV_DCCM_ENABLE
         $display("********************************************************");
@@ -785,14 +784,10 @@ task preload_dccm;
         $display("********************************************************");
         $finish;
     `endif
-    addr += 4;
-    eaddr = {imem_inst1.ram [addr[14:3]] [{addr[2],2'h3}],
-             imem_inst1.ram [addr[14:3]] [{addr[2],2'h2}],
-             imem_inst1.ram [addr[14:3]] [{addr[2],2'h1}],
-             imem_inst1.ram [addr[14:3]] [{addr[2],2'h0}]};
+    eaddr = `RV_DCCM_EADR;
     $display("DCCM pre-load from %h to %h", saddr, eaddr);
 
-    for(addr=saddr; addr < eaddr; addr+=4) begin
+    for(addr=saddr; addr <= eaddr; addr+=4) begin
         // FIXME hardcoded address indices?
         data = {dummy_dccm_preloader.ram [addr[16:3]] [{addr[2],2'h3}],
                 dummy_dccm_preloader.ram [addr[16:3]] [{addr[2],2'h2}],

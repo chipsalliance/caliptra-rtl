@@ -36,6 +36,16 @@ PRINTF_DIR = $(WORKSPACE)/Caliptra/src/integration/test_suites/libs/printf
 #  TEST_DIR = $(TBDIR)/tests/$(TEST)
 #endif
 
+# Libraries providing functionality for each peripheral component in Caliptra
+COMP_LIB_NAMES := aes \
+		  doe \
+		  ecc \
+		  hmac \
+		  keyvault \
+		  sha256 \
+		  sha512 \
+		  soc_ifc
+COMP_LIBS := $(foreach name, $(COMP_LIB_NAMES), $(WORKSPACE)/Caliptra/src/integration/test_suites/libs/$(name))
 HEADER_FILES := $(INCLUDES_DIR)/caliptra_defines.h \
 		$(INCLUDES_DIR)/defines.h \
 		$(WORKSPACE)/Caliptra/src/integration/rtl/caliptra_reg.h  \
@@ -44,20 +54,22 @@ HEADER_FILES := $(INCLUDES_DIR)/caliptra_defines.h \
 		$(PRINTF_DIR)/printf.h \
 		$(ISR_DIR)/riscv-csr.h \
 		$(ISR_DIR)/riscv-interrupts.h \
-		$(ISR_DIR)/swerv-csr.h
+		$(ISR_DIR)/swerv-csr.h \
+		$(foreach comp_lib, $(COMP_LIBS), $(wildcard $(comp_lib)/*.h))
 
+# Separate OFILE variable since this is not used to build remote images
+# (i.e. FMC or RunTime)
 ifeq (0,$(shell test -e $(TEST_DIR)/$(TESTNAME).c && echo $$?))
-	OFILES += crt0.o
+	OFILE_CRT := crt0.o
 endif
 OFILES += $(TESTNAME).o
 ifeq (0,$(shell test -e $(TEST_DIR)/caliptra_isr.h && echo $$?))
 	OFILES += caliptra_isr.o
 endif
-ifeq (0,$(shell test -e $(TEST_DIR)/$(TESTNAME).c && echo $$?))
-	OFILES += printf.o
-else ifeq (0,$(shell test -e $(TEST_DIR)/caliptra_isr.h && echo $$?))
-	OFILES += printf.o
-endif
+# Assume all tests will import our printf lib
+OFILES += printf.o
+# Always compile the lib files - for every target
+OFILES += $(foreach comp_lib_name, $(COMP_LIB_NAMES), $(comp_lib_name).o)
 
 ifdef debug
  DEBUG_PLUS = +dumpon
@@ -76,7 +88,7 @@ else
 	LINK = $(TEST_DIR)/$(TESTNAME).ld
 endif
 
-VPATH = $(TEST_DIR) $(BUILD_DIR) $(TBDIR) $(RISCV_HW_IF_DIR) $(ISR_DIR) $(PRINTF_DIR)
+VPATH = $(TEST_DIR) $(BUILD_DIR) $(TBDIR) $(RISCV_HW_IF_DIR) $(ISR_DIR) $(PRINTF_DIR) $(COMP_LIBS)
 
 # Use eval to expand env variables in the .vf file
 $(eval TBFILES = $(shell cat $(TBDIR)/../config/caliptra_top_tb.vf | grep -v '+incdir+'))
@@ -171,6 +183,7 @@ program.hex:
 	@echo Building $(TESTNAME) via $(TEST_DIR)/$(TESTNAME).makefile
 	$(MAKE) -f $(TEST_DIR)/$(TESTNAME).makefile
 else ifneq (,$(wildcard $(TEST_DIR)/$(TESTNAME)))
+# Build program.hex from RUST executable
 program.hex:
 	@echo "Building program.hex from $(TESTNAME) using Crypto Test rules for pre-compiled RUST executables"
 	-$(GCC_PREFIX)-objcopy -O verilog -R .data -R .rodata -R .bss -R .sbss -R .iccm -R .dccm -R .eh_frame --pad-to 0x8000 --no-change-warnings $(TEST_DIR)/$(TESTNAME) program.hex
@@ -189,15 +202,12 @@ program.hex:
 	$(GCC_PREFIX)-size        $(TEST_DIR)/$(TESTNAME) | tee $(TESTNAME).size
 
 else
-program.hex: $(OFILES) $(LINK)
+# Build program.hex from source (test_suites)
+program.hex: $(OFILE_CRT) $(OFILES) $(LINK)
 	@echo Building $(TESTNAME)
-	$(GCC_PREFIX)-gcc $(ABI) -Wl,-Map=$(TEST).map -lgcc -T$(LINK) -o $(TESTNAME).exe $(OFILES) -nostartfiles  $(TEST_LIBS)
-	-$(GCC_PREFIX)-objcopy -O verilog -R .data -R .rodata -R .sbss -R .bss -R .data_iccm0 -R .data_iccm1 -R .data_iccm2 -R .iccm -R .dccm -R .eh_frame --pad-to 0x8000 --no-change-warnings $(TESTNAME).exe program.hex
-	-$(GCC_PREFIX)-objcopy -O verilog -j .data -j .rodata -j .sbss -j .bss -j .data_iccm0 -j .data_iccm1 -j .data_iccm2 -j .dccm \
-			      --change-section-lma       .data-0x50000000 \
-			      --change-section-lma     .rodata-0x50000000 \
-			      --change-section-lma       .sbss-0x50000000 \
-			      --change-section-lma        .bss-0x50000000 \
+	$(GCC_PREFIX)-gcc $(ABI) -Wl,-Map=$(TESTNAME).map -lgcc -T$(LINK) -o $(TESTNAME).exe $(OFILE_CRT) $(OFILES) -nostartfiles  $(TEST_LIBS)
+	-$(GCC_PREFIX)-objcopy -O verilog -R .data_iccm0 -R .data_iccm1 -R .data_iccm2 -R .iccm -R .dccm -R .eh_frame --pad-to 0x8000 --no-change-warnings $(TESTNAME).exe program.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -j .data_iccm0 -j .data_iccm1 -j .data_iccm2 -j .dccm \
 			      --change-section-lma .data_iccm0-0x50000000 \
 			      --change-section-lma .data_iccm1-0x50000000 \
 			      --change-section-lma .data_iccm2-0x50000000 \
@@ -207,6 +217,16 @@ program.hex: $(OFILES) $(LINK)
 			      $(TESTNAME).exe dccm.hex
 	-$(GCC_PREFIX)-objcopy -O verilog -j .iccm                       --change-section-address .iccm=0 --pad-to 0x20000 --no-change-warnings $(TESTNAME).exe iccm.hex
 	-$(GCC_PREFIX)-objcopy -O verilog -j .mailbox --gap-fill 0x0     --change-section-address .mailbox=0 --pad-to 0x20000 --no-change-warnings $(TESTNAME).exe mailbox.hex
+	$(GCC_PREFIX)-objdump -S  $(TESTNAME).exe > $(TESTNAME).dis
+	$(GCC_PREFIX)-size        $(TESTNAME).exe | tee $(TESTNAME).size
+	@echo Completed building $(TESTNAME)
+
+# Cannot build caliptra_{fmc,rt}.hex and program.hex in the same make invocation (TESTNAME will be invalid, and consequently other dependencies like LINK)
+# Entire image will be loaded into the mailbox, so it must fit the 128KiB memory
+%.hex: $(OFILES) $(LINK)
+	@echo Building $(TESTNAME)
+	$(GCC_PREFIX)-gcc $(ABI) -Wl,-Map=$(TESTNAME).map -lgcc -T$(LINK) -o $(TESTNAME).exe $(OFILES) -nostartfiles  $(TEST_LIBS)
+	-$(GCC_PREFIX)-objcopy -O verilog -R .eh_frame --pad-to 0x20000 --no-change-warnings $(TESTNAME).exe $@
 	$(GCC_PREFIX)-objdump -S  $(TESTNAME).exe > $(TESTNAME).dis
 	$(GCC_PREFIX)-size        $(TESTNAME).exe | tee $(TESTNAME).size
 	@echo Completed building $(TESTNAME)

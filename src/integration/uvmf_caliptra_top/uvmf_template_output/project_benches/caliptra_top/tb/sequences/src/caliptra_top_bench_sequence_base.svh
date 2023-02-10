@@ -43,6 +43,11 @@ typedef caliptra_top_env_sequence_base #(
         )
         caliptra_top_env_sequence_base_t;
 rand caliptra_top_env_sequence_base_t caliptra_top_env_seq;
+typedef soc_ifc_env_sequence_base #(
+        .CONFIG_T(soc_ifc_env_configuration_t)
+        )
+        soc_ifc_env_sequence_base_t;
+rand soc_ifc_env_sequence_base_t soc_ifc_env_seq;
 
 
 

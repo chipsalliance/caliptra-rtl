@@ -30,5 +30,36 @@
 
 
   // pragma uvmf custom additional begin
+  typedef enum logic [4:0] {
+    CPTRA_SUCCESS = 5'b00000,
+    CPTRA_TIMEOUT = 5'b00001,
+    CPTRA_INVALID = 5'b00010,
+    CPTRA_X_VAL   = 5'b00100,
+    CPTRA_FAIL    = 5'b11111
+  } op_sts_e;
+
+  /**
+   * Decode:
+   *   [31]: Firmware command
+   *   [30]: Response required (if set)
+   */
+  typedef enum logic [31:0] {
+      MBOX_CMD_RESP_BASIC = 32'h40000000,
+      MBOX_CMD_FMC_UPDATE = 32'hba5eba11,
+      MBOX_CMD_RT_UPDATE  = 32'hbabecafe
+  } mbox_cmd_e;
+  typedef union packed {
+      mbox_cmd_e cmd_e;
+      struct packed {
+          logic fw;
+          logic resp_reqd;
+          logic [29:0] rsvd;
+      } cmd_s;
+  } mbox_cmd_u;
+
+  typedef struct packed {
+    logic [31:0] dlen;
+    mbox_cmd_u   cmd;
+  } mbox_op_s;
   // pragma uvmf custom additional end
 

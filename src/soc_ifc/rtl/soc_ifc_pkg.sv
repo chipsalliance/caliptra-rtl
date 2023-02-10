@@ -74,6 +74,15 @@ package soc_ifc_pkg;
         MBOX_EXECUTE_SOC  = 3'b100
     } mbox_fsm_state_e;
 
+    //MAILBOX Status
+    typedef enum logic [3:0] {
+        CMD_BUSY      = 4'd0,
+        DATA_READY    = 4'd1,
+        CMD_COMPLETE  = 4'd2,
+        CMD_FAILURE   = 4'd3,
+        DATA_FOR_JTAG = 4'd4
+    } mbox_status_e;
+
     //Any request into soc ifc block
     typedef struct packed {
         logic   [SOC_IFC_ADDR_W-1:0] addr;

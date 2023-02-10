@@ -378,3 +378,9 @@ hello_world:
 .ascii "Hello World from KeyVault       !!\n"
 .ascii "----------------------------------\n"
 .byte 0
+
+.section .dccm
+.global verbosity_g
+verbosity_g: .word 2
+.global stdout
+stdout: .word STDOUT

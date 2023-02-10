@@ -48,6 +48,60 @@ def runBashScript(cmd):
     resultOut, resultErr = result
     return exitCode, resultOut, resultErr
 
+def verilateTB(scratch):
+    verilatedDir = os.path.join(scratch,".verilated_image")
+    os.mkdir(verilatedDir)
+    logfile = os.path.join(verilatedDir, "verilate.log")
+
+    # Create a custom logger for logging run results to a file
+    testlogger = logging.getLogger("verilate_image")
+
+    # Create handlers
+    f_handler = logging.FileHandler(logfile)
+    f_handler.setLevel(logging.INFO)
+
+    # Create formatters and add it to handlers
+    f_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    f_handler.setFormatter(f_format)
+
+    # Add handler to the logger
+    testlogger.addHandler(f_handler)
+    
+    # Invoke makefile for the base verilated image
+    mfile = os.path.join(os.environ.get('WORKSPACE'),"Caliptra/tools/scripts/Makefile")
+    cmd = " ".join(["make", "-C", verilatedDir, "-f", mfile, "verilator-build"])
+    exitcode, resultout, resulterr = runBashScript(cmd)
+
+    # Parse and log the results
+    infoMsg = f"############################################## verilator-build ##############################################"
+    logger.info(infoMsg)
+    if (exitcode is None):
+        errorMsg = f"Running verilator-build in Verilator failed to complete as expected"
+        logger.error(errorMsg)
+        infoMsg = f"Run output logged at: {logfile}"
+        logger.info(infoMsg)
+        testlogger.info(resultout.decode())
+        testlogger.error(resulterr.decode())
+        raise subprocess.CalledProcessError(exitcode, cmd)
+    elif (exitcode == 0):
+        infoMsg = f"Ran verilator-build in Verilator to completion"
+        logger.info(infoMsg)
+        infoMsg = f"Run output logged at: {logfile}"
+        logger.info(infoMsg)
+        testlogger.info(resultout.decode())
+        # TODO: Parse output for status?
+        logger.info(infoMsg)
+    else:
+        logger.error(f"verilator-build failed to run in Verilator")
+        infoMsg = f"Run output logged at: {logfile}"
+        logger.info(infoMsg)
+        testlogger.info(resultout.decode())
+        testlogger.error(resulterr.decode())
+        raise subprocess.CalledProcessError(exitcode, cmd)
+
+    # Return the path to pristine build
+    return verilatedDir
+
 def getTestNames():
     l0_regress_file = os.path.join(os.environ.get('WORKSPACE'), "Caliptra/src/integration/stimulus/L0_regression.yml")
     testPaths = []
@@ -68,9 +122,10 @@ def getTestNames():
 
     return integrationTestSuiteList
 
-def runTest(test, scratch):
+def runTest(test, scratch, verilated):
     testdir = os.path.join(scratch, test)
-    os.mkdir(testdir)
+    # Reuse pristine verilator-build output for each test
+    shutil.copytree(verilated, testdir)
     logfile = os.path.join(testdir, test + ".log")
 
     # Create a custom logger for logging run results to a file
@@ -133,12 +188,14 @@ def main():
         return 1
     # Create a scratch space for run outputs
     scratch = createScratch()
+    # Verilate the code into a single pristine obj folder
+    verilated = verilateTB(scratch)
     # Parse yaml file for test list
     testnames=getTestNames()
     exitcode = 0
     # Run all tests and accumulate error status codes
     for test in testnames:
-        exitcode += runTest(test, scratch)
+        exitcode += runTest(test, scratch, verilated)
     # Ending summary
     infoMsg = f"############################################## SUMMARY ##############################################"
     logger.info(infoMsg)

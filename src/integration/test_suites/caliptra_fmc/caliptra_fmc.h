@@ -13,3 +13,9 @@
 // limitations under the License.
 //
 
+#ifndef CALIPTRA_FMC_H
+  #define CALIPTRA_FMC_H
+
+void caliptra_fmc();
+
+#endif

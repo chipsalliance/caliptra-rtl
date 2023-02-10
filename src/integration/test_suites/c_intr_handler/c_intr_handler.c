@@ -26,38 +26,41 @@
 
 volatile char* stdout = (char *)STDOUT;
 volatile uint32_t intr_count;
+#ifdef CPT_VERBOSITY
+    enum printf_verbosity verbosity_g = CPT_VERBOSITY;
+#else
+    enum printf_verbosity verbosity_g = LOW;
+#endif
 
 
 void main(void) {
         int argc=0;
         char *argv[1];
 
-        char* DCCM = (char *) RV_DCCM_SADR;
-        char* ICCM = (char *) RV_ICCM_SADR;
-        uint32_t * doe_notif_trig        = (uint32_t *) (CLP_DOE_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
-        uint32_t * ecc_notif_trig        = (uint32_t *) (CLP_ECC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
-        uint32_t * hmac_notif_trig       = (uint32_t *) (CLP_HMAC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
-        uint32_t * sha512_notif_trig     = (uint32_t *) (CLP_SHA512_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
-        uint32_t * sha256_notif_trig     = (uint32_t *) (CLP_SHA256_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
-        uint32_t * sha512_acc_notif_trig = (uint32_t *) (CLP_SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
-        uint32_t * soc_ifc_error_trig    = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R);
-        uint32_t * soc_ifc_notif_trig    = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
+        volatile uint32_t * doe_notif_trig        = (uint32_t *) (CLP_DOE_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
+        volatile uint32_t * ecc_notif_trig        = (uint32_t *) (CLP_ECC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
+        volatile uint32_t * hmac_notif_trig       = (uint32_t *) (CLP_HMAC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
+        volatile uint32_t * sha512_notif_trig     = (uint32_t *) (CLP_SHA512_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
+        volatile uint32_t * sha256_notif_trig     = (uint32_t *) (CLP_SHA256_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
+        volatile uint32_t * sha512_acc_notif_trig = (uint32_t *) (CLP_SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
+        volatile uint32_t * soc_ifc_error_trig    = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R);
+        volatile uint32_t * soc_ifc_notif_trig    = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
 
-        uint32_t * sha512_notif_ctr         = (uint32_t *) (CLP_SHA512_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
-        uint32_t * sha256_notif_ctr         = (uint32_t *) (CLP_SHA256_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
-        uint32_t * sha512_acc_notif_ctr     = (uint32_t *) (CLP_SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
-        uint32_t * hmac_notif_ctr           = (uint32_t *) (CLP_HMAC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
-        uint32_t * ecc_notif_ctr            = (uint32_t *) (CLP_ECC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
-        uint32_t * doe_notif_ctr            = (uint32_t *) (CLP_DOE_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
-        uint32_t * soc_ifc_error_internal_ctr     = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R);
-        uint32_t * soc_ifc_error_inv_dev_ctr      = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_R);
-        uint32_t * soc_ifc_error_cmd_fail_ctr     = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_R);
-        uint32_t * soc_ifc_error_bad_fuse_ctr     = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_R);
-        uint32_t * soc_ifc_error_iccm_blocked_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_R);
-        uint32_t * soc_ifc_error_mbox_ecc_unc_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R);
-        uint32_t * soc_ifc_notif_cmd_avail_ctr    = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_R);
-        uint32_t * soc_ifc_notif_mbox_ecc_cor_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R);
-        uint32_t * soc_ifc_notif_debug_locked_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_R);
+        volatile uint32_t * sha512_notif_ctr         = (uint32_t *) (CLP_SHA512_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
+        volatile uint32_t * sha256_notif_ctr         = (uint32_t *) (CLP_SHA256_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
+        volatile uint32_t * sha512_acc_notif_ctr     = (uint32_t *) (CLP_SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
+        volatile uint32_t * hmac_notif_ctr           = (uint32_t *) (CLP_HMAC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
+        volatile uint32_t * ecc_notif_ctr            = (uint32_t *) (CLP_ECC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
+        volatile uint32_t * doe_notif_ctr            = (uint32_t *) (CLP_DOE_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
+        volatile uint32_t * soc_ifc_error_internal_ctr     = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R);
+        volatile uint32_t * soc_ifc_error_inv_dev_ctr      = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_R);
+        volatile uint32_t * soc_ifc_error_cmd_fail_ctr     = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_R);
+        volatile uint32_t * soc_ifc_error_bad_fuse_ctr     = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_R);
+        volatile uint32_t * soc_ifc_error_iccm_blocked_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_R);
+        volatile uint32_t * soc_ifc_error_mbox_ecc_unc_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R);
+        volatile uint32_t * soc_ifc_notif_cmd_avail_ctr    = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_R);
+        volatile uint32_t * soc_ifc_notif_mbox_ecc_cor_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R);
+        volatile uint32_t * soc_ifc_notif_debug_locked_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_R);
 
         uint32_t sha512_intr_count = 0;
         uint32_t sha256_intr_count = 0;
@@ -70,7 +73,7 @@ void main(void) {
         uint32_t soc_ifc_error_intr_count = 0;
         uint32_t soc_ifc_error_intr_count_hw = 0;
 
-        printf("----------------------------------\nDirect ISR Test from SweRV EL2 @WDC !!\n----------------------------------\n");
+        VPRINTF(LOW,"----------------------------------\nCaliptra: Direct ISR Test!!\n----------------------------------\n");
 
         // Setup the interrupt CSR configuration
         init_interrupts();
@@ -118,74 +121,83 @@ void main(void) {
 
         // Print interrupt count from FW/HW trackers
         // SHA512
-        printf("SHA512 fw count: %x\n", sha512_intr_count);
-        printf("SHA512 hw count: %x\n", *sha512_notif_ctr);
+        VPRINTF(MEDIUM, "SHA512 fw count: %x\n", sha512_intr_count);
+        VPRINTF(MEDIUM, "SHA512 hw count: %x\n", *sha512_notif_ctr);
         if (sha512_intr_count != *sha512_notif_ctr) {
-            printf("%c", 0x1); // Kill sim with ERROR
+            VPRINTF(ERROR, "SHA512 count mismatch!\n");
+            SEND_STDOUT_CTRL(0x1); // Kill sim with ERROR
         }
 
         // SHA256
-        printf("SHA256 fw count: %x\n", sha256_intr_count);
-        printf("SHA256 hw count: %x\n", *sha256_notif_ctr);
+        VPRINTF(MEDIUM, "SHA256 fw count: %x\n", sha256_intr_count);
+        VPRINTF(MEDIUM, "SHA256 hw count: %x\n", *sha256_notif_ctr);
         if (sha256_intr_count != *sha256_notif_ctr) {
-            printf("%c", 0x1); // Kill sim with ERROR
+            VPRINTF(ERROR, "SHA256 count mismatch!\n");
+            SEND_STDOUT_CTRL(0x1); // Kill sim with ERROR
         }
 
         // SHA Accelerator
-        printf("SHA Accel fw count: %x\n", sha512_acc_intr_count);
-        printf("SHA Accel hw count: %x\n", *sha512_acc_notif_ctr);
+        VPRINTF(MEDIUM, "SHA Accel fw count: %x\n", sha512_acc_intr_count);
+        VPRINTF(MEDIUM, "SHA Accel hw count: %x\n", *sha512_acc_notif_ctr);
         if (sha512_acc_intr_count != *sha512_acc_notif_ctr) {
-            printf("%c", 0x1); // Kill sim with ERROR
+            VPRINTF(ERROR, "SHA512_acc count mismatch!\n");
+            SEND_STDOUT_CTRL(0x1); // Kill sim with ERROR
         }
 
         // HMAC
-        printf("HMAC fw count: %x\n", hmac_intr_count);
-        printf("HMAC hw count: %x\n", *hmac_notif_ctr);
+        VPRINTF(MEDIUM, "HMAC fw count: %x\n", hmac_intr_count);
+        VPRINTF(MEDIUM, "HMAC hw count: %x\n", *hmac_notif_ctr);
         if (hmac_intr_count != *hmac_notif_ctr) {
-            printf("%c", 0x1); // Kill sim with ERROR
+            VPRINTF(ERROR, "HMAC count mismatch!\n");
+            SEND_STDOUT_CTRL(0x1); // Kill sim with ERROR
         }
 
         // ECC
-        printf("ECC fw count: %x\n", ecc_intr_count);
-        printf("ECC hw count: %x\n", *ecc_notif_ctr);
+        VPRINTF(MEDIUM, "ECC fw count: %x\n", ecc_intr_count);
+        VPRINTF(MEDIUM, "ECC hw count: %x\n", *ecc_notif_ctr);
         if (ecc_intr_count != *ecc_notif_ctr) {
-            printf("%c", 0x1); // Kill sim with ERROR
+            VPRINTF(ERROR, "ECC count mismatch!\n");
+            SEND_STDOUT_CTRL(0x1); // Kill sim with ERROR
         }
 
         // DOE
-        printf("DOE fw count: %x\n", doe_intr_count);
-        printf("DOE hw count: %x\n", *doe_notif_ctr);
+        VPRINTF(MEDIUM, "DOE fw count: %x\n", doe_intr_count);
+        VPRINTF(MEDIUM, "DOE hw count: %x\n", *doe_notif_ctr);
         if (doe_intr_count != *doe_notif_ctr) {
-            printf("%c", 0x1); // Kill sim with ERROR
+            VPRINTF(ERROR, "DOE count mismatch!\n");
+            SEND_STDOUT_CTRL(0x1); // Kill sim with ERROR
         }
 
         // SOC_IFC Error
-        printf("SOC_IFC Err fw count: %x\n", soc_ifc_error_intr_count);
+        VPRINTF(MEDIUM, "SOC_IFC Err fw count: %x\n", soc_ifc_error_intr_count);
         soc_ifc_error_intr_count_hw =  *soc_ifc_error_internal_ctr +
                                        *soc_ifc_error_inv_dev_ctr  +
                                        *soc_ifc_error_cmd_fail_ctr +
                                        *soc_ifc_error_bad_fuse_ctr +
                                        *soc_ifc_error_iccm_blocked_ctr +
                                        *soc_ifc_error_mbox_ecc_unc_ctr;
-        printf("SOC_IFC Err hw count: %x\n", soc_ifc_error_intr_count_hw);
+        VPRINTF(MEDIUM, "SOC_IFC Err hw count: %x\n", soc_ifc_error_intr_count_hw);
         if (soc_ifc_error_intr_count != soc_ifc_error_intr_count_hw) {
-            printf("%c", 0x1); // Kill sim with ERROR
+            VPRINTF(ERROR, "SOC_IFC Error count mismatch!\n");
+            SEND_STDOUT_CTRL(0x1); // Kill sim with ERROR
         }
 
         // SOC_IFC Notif
-        printf("SOC_IFC Notif fw count: %x\n", soc_ifc_notif_intr_count);
+        VPRINTF(MEDIUM, "SOC_IFC Notif fw count: %x\n", soc_ifc_notif_intr_count);
         soc_ifc_notif_intr_count_hw =  *soc_ifc_notif_cmd_avail_ctr +
                                        *soc_ifc_notif_mbox_ecc_cor_ctr +
                                        *soc_ifc_notif_debug_locked_ctr;
-        printf("SOC_IFC Notif hw count: %x\n", soc_ifc_notif_intr_count_hw);
+        VPRINTF(MEDIUM, "SOC_IFC Notif hw count: %x\n", soc_ifc_notif_intr_count_hw);
         if (soc_ifc_notif_intr_count != soc_ifc_notif_intr_count_hw) {
-            printf("%c", 0x1); // Kill sim with ERROR
+            VPRINTF(ERROR, "SOC_IFC Notif count mismatch!\n");
+            SEND_STDOUT_CTRL(0x1); // Kill sim with ERROR
         }
 
         // Print total interrupt count
-        printf("main end - intr_cnt:%x\n", intr_count);
+        VPRINTF(MEDIUM, "main end - intr_cnt:%x\n", intr_count);
         if (intr_count != *sha512_notif_ctr + *sha256_notif_ctr + *sha512_acc_notif_ctr + *hmac_notif_ctr + *ecc_notif_ctr + *doe_notif_ctr + soc_ifc_error_intr_count_hw + soc_ifc_notif_intr_count_hw) {
-            printf("%c", 0x1); // Kill sim with ERROR
+            VPRINTF(ERROR, "TOTAL count mismatch!\n");
+            SEND_STDOUT_CTRL(0x1); // Kill sim with ERROR
         }
 
         return;
