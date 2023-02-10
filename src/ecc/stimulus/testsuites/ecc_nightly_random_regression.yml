@@ -2,14 +2,14 @@ document:
   schema: 1.0
 
 contents:
-  - generator:
+  - generator2:
       tags: ["L1", "ECC",  "random"]
       path: ""
       weight: 100
-      generations: 100
+      generations: 1020
       formats: 
         generate: "reseed {template}.yml -seed {seed}"
         path: "{template_basename}__{seed}.yml"
       templates:
-        $WORKSPACE/Caliptra/src/ecc/uvmf_ecc/uvmf_template_output/project_benches/ECC/tb/tests/src/ECC_otf_reset_test   : { weight 100 }
-        $WORKSPACE/Caliptra/src/ecc/uvmf_ecc/uvmf_template_output/project_benches/ECC/tb/tests/src/ECC_normal_test      : { weight 100 }
+        $WORKSPACE/Caliptra/src/ecc/uvmf_ecc/uvmf_template_output/project_benches/ECC/tb/tests/src/ECC_otf_reset_test   : { weight 2 }
+        $WORKSPACE/Caliptra/src/ecc/uvmf_ecc/uvmf_template_output/project_benches/ECC/tb/tests/src/ECC_normal_test      : { weight 98 }

@@ -1,8 +1,0 @@
-document:
-  schema: 1.0
-
-contents:
-  - tests:
-      tags: ["L1", "soc_ifc_regression"]
-      paths:
-        - ../uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/tests/src/soc_ifc_rand_test.yml

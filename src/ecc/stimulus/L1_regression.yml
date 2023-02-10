@@ -1,9 +1,0 @@
-document:
-  schema: 1.0
-
-contents:
-  - tests:
-      tags: ["L1", "ECC_regression"]
-      paths:
-        - ../uvmf_ecc/uvmf_template_output/project_benches/ECC/tb/tests/src/ECC_otf_reset_test.yml
-        - ../uvmf_ecc/uvmf_template_output/project_benches/ECC/tb/tests/src/ECC_normal_test.yml
