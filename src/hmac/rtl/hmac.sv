@@ -104,6 +104,7 @@ module hmac
   kv_read_ctrl_reg_t kv_block_read_ctrl_reg;
   kv_write_ctrl_reg_t kv_write_ctrl_reg;
   logic core_tag_we;
+  logic core_ready_reg;
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
@@ -156,13 +157,15 @@ module hmac
 
       if (!reset_n)
         begin
-          kv_reg        <= '0;
-          tag_reg       <= '0;
-          tag_valid_reg <= '0;
+          kv_reg          <= '0;
+          tag_reg         <= '0;
+          tag_valid_reg   <= '0;
+          core_ready_reg  <= '0;
         end
       else
         begin
           tag_valid_reg <= core_tag_valid;
+          core_ready_reg <= core_ready; 
 
           //write to sw register
           if (core_tag_we & ~dest_keyvault)
@@ -190,7 +193,7 @@ always_comb begin
   zeroize_reg = hwif_out.HMAC384_CTRL.ZEROIZE.value;
 
   //drive hardware writeable registers from hmac core
-  hwif_in.HMAC384_STATUS.READY.next = core_ready;
+  hwif_in.HMAC384_STATUS.READY.next = core_ready_reg;
   hwif_in.HMAC384_STATUS.VALID.next = tag_valid_reg;
   for (int dword=0; dword < 12; dword++) begin
     hwif_in.HMAC384_TAG[dword].TAG.next = tag_reg[11-dword];

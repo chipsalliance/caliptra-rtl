@@ -33,8 +33,8 @@
 #define HMAC_ADDR_TAG_START       0x10010100
 #define HMAC_ADDR_TAG_END         0x1001012c
 
-#define HMAC_INIT                 0x0000000D
-#define HMAC_NEXT                 0x0000000E
+#define HMAC_INIT                 0x00000001
+#define HMAC_NEXT                 0x00000002
 #define HMAC_VALID                0x00000003
 
 // Code to execute
