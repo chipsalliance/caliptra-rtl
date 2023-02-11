@@ -56,6 +56,7 @@ module mbox
 );
 
 localparam DEPTH = (SIZE_KB * 1024 * 8) / DATA_W;
+localparam MBOX_SIZE_IN_DW = (SIZE_KB*1024)/4;
 
 //this module is used to instantiate a single mailbox instance
 //requests within the address space of this mailbox are routed here from the top level
@@ -148,6 +149,18 @@ always_comb arc_MBOX_EXECUTE_SOC_MBOX_EXECUTE_UC = (mbox_fsm_ps == MBOX_EXECUTE_
 //move back to IDLE and unlock when force unlock is set
 always_comb arc_FORCE_MBOX_UNLOCK = hwif_out.mbox_unlock.unlock.value;
 
+logic [31:0] mbox_dlen_in_dws, mbox_dlen_in_dwsQ;
+logic        rdptr_inc_valid;
+
+always_comb begin
+     mbox_dlen_in_dws = ((hwif_out.mbox_dlen.length.value >> 2) + (hwif_out.mbox_dlen.length.value[0] | hwif_out.mbox_dlen.length.value[1]));
+     mbox_dlen_in_dwsQ = (mbox_dlen_in_dws > MBOX_SIZE_IN_DW) ? MBOX_SIZE_IN_DW : mbox_dlen_in_dws;
+
+     // Restrict mailbox dataout read once the DLEN in "DWORDS" is reached
+     // Increment read pointer only if the mailbox data length in DWORDS is non-zero and the rdptr didnt pass
+     rdptr_inc_valid  =  (|mbox_dlen_in_dwsQ) & ((mbox_rdptr + 'd1) <= mbox_dlen_in_dwsQ);
+
+end
 
 always_comb begin : mbox_fsm_combo
     soc_has_lock_nxt = 0;
@@ -240,7 +253,7 @@ always_comb begin : mbox_fsm_combo
         //Only SoC can write to datain here to respond to uC
         MBOX_EXECUTE_SOC: begin
             soc_mbox_data_avail = 1;
-            inc_rdptr = dmi_inc_rdptr | (hwif_out.mbox_dataout.dataout.swacc & req_data.soc_req & valid_user);
+            inc_rdptr = (dmi_inc_rdptr | (hwif_out.mbox_dataout.dataout.swacc & req_data.soc_req & valid_user));
             inc_wrptr = hwif_out.mbox_datain.datain.swmod & req_data.soc_req & valid_user;
             mbox_protocol_sram_we = hwif_out.mbox_datain.datain.swmod & req_data.soc_req & valid_user;
             if (arc_MBOX_EXECUTE_SOC_MBOX_IDLE) begin
@@ -266,6 +279,11 @@ always_comb begin : mbox_fsm_combo
     endcase
 end
 
+
+//increment read ptr only if its allowed
+logic inc_rdptrQ;
+assign inc_rdptrQ = inc_rdptr & rdptr_inc_valid;
+
 //flops
 always_ff @(posedge clk or negedge rst_b) begin
     if (!rst_b)begin
@@ -282,12 +300,14 @@ always_ff @(posedge clk or negedge rst_b) begin
         soc_has_lock <= arc_MBOX_IDLE_MBOX_RDY_FOR_CMD ? soc_has_lock_nxt : soc_has_lock;
         dir_req_rd_phase <= dir_req_dv_q & ~req_data.write;
         mbox_wrptr <= (inc_wrptr | rst_mbox_wrptr) ? mbox_wrptr_nxt : mbox_wrptr;
-        mbox_rdptr <= (inc_rdptr | rst_mbox_rdptr) ? mbox_rdptr_nxt : mbox_rdptr;
-        inc_rdptr_f <= (inc_rdptr | inc_rdptr_f) ? inc_rdptr : inc_rdptr_f;
+        mbox_rdptr <= (inc_rdptrQ | rst_mbox_rdptr) ? mbox_rdptr_nxt : mbox_rdptr;
+        inc_rdptr_f <= (inc_rdptrQ | inc_rdptr_f) ? inc_rdptrQ : inc_rdptr_f;
         sram_ecc_cor_waddr <= /*dir_req_rd_phase ? sram_ecc_cor_waddr :*/
                                                  sram_rdaddr;
     end
 end
+
+
 
 //need to hold direct read accesses for 1 clock to get response
 //create a qualified direct request signal that is masked during the data phase
@@ -364,7 +384,7 @@ always_comb mbox_wrptr_nxt = rst_mbox_wrptr ? '0 :
 
 //in execute state we increment the pointer each time we write
 always_comb mbox_rdptr_nxt = rst_mbox_rdptr ? '0 :
-                             inc_rdptr ? mbox_rdptr + 'd1 : 
+                             inc_rdptrQ ? mbox_rdptr + 'd1 : 
                                          mbox_rdptr;
 
 always_comb hwif_in.cptra_rst_b = rst_b;
