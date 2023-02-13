@@ -2,7 +2,7 @@ document:
   schema: 1.0
 
 contents:
-  - generator2:
+  - generator:
       tags: ["L1", "ECC",  "random"]
       path: ""
       weight: 100

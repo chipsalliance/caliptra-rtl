@@ -89,4 +89,3 @@ global:
         - '-sv_root $QUESTA_MVC_HOME/questa_mvc_core/linux_x86_64_gcc-6.2.0_vcs'
         - '-sv_lib libahb_IN_SystemVerilog_VCS_full'
         - '-sv_lib libapb3_IN_SystemVerilog_VCS_full'
-        - '+UVM_VERBOSITY=UVM_MEDIUM'
