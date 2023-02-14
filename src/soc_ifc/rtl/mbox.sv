@@ -418,12 +418,12 @@ always_comb hwif_in.mbox_status.soc_has_lock.next = soc_has_lock;
 
 always_comb dmi_reg.MBOX_DLEN = hwif_out.mbox_dlen.length.value;
 always_comb dmi_reg.MBOX_DOUT = hwif_out.mbox_dataout.dataout.value;
-always_comb dmi_reg.MBOX_STATUS = {22'd0,
-                                   hwif_out.mbox_status.status.value,
-                                   hwif_out.mbox_status.ecc_single_error.value,
-                                   hwif_out.mbox_status.ecc_double_error.value,
-                                   hwif_out.mbox_status.mbox_fsm_ps.value,
-                                   hwif_out.mbox_status.soc_has_lock.value
+always_comb dmi_reg.MBOX_STATUS = {22'd0,                                       /* [31:10] */
+                                   hwif_out.mbox_status.soc_has_lock.value,     /* [9] */
+                                   hwif_out.mbox_status.mbox_fsm_ps.value,      /* [8:6] */
+                                   hwif_out.mbox_status.ecc_double_error.value, /* [5] */
+                                   hwif_out.mbox_status.ecc_single_error.value, /* [4] */
+                                   hwif_out.mbox_status.status.value            /* [3:0] */
                                    };
 
 logic s_cpuif_req_stall_wr_nc;

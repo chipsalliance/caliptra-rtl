@@ -97,7 +97,7 @@ addrmap mbox_csr {
             name = "Mailbox Status";
             desc = "Indicates the status of mailbox command
                     [br]Caliptra Access: RW
-                    [br]SOC Access:      RO
+                    [br]SOC Access:      RW
                     [br]TAP Access [in debug/manuf mode]: RO";
 
             enum mbox_status_e {
@@ -113,11 +113,8 @@ addrmap mbox_csr {
                 CMD_FAILURE = 4'd3 {
                     desc = "The requested command experienced a failure.";
                 };
-                DATA_FOR_JTAG = 4'd4 {
-                    desc = "There is data in the mailbox for JTAG to read.";
-                };
             };
-            sw=rw; hw=r; encode = mbox_status_e; hwclr; swwel=soc_req;} status[4]=0;
+            sw=rw; hw=r; encode = mbox_status_e; hwclr;} status[4]=0;
         field {
             name = "Mailbox ECC Single Error";
             desc = "Indicates a correctable ECC single-bit error was

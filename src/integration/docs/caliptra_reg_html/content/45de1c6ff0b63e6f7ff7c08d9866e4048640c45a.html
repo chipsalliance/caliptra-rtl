@@ -154,8 +154,6 @@
             
                 <option value="0x3">CMD_FAILURE</option>
             
-                <option value="0x4">DATA_FOR_JTAG</option>
-            
             </select>
         </td>
         <td>Mailbox Status</td>
@@ -307,7 +305,7 @@ Auto-clears when mbox_execute field is cleared.
 <div id="_Content.status.desc">
 <p>Indicates the status of mailbox command
 <br>Caliptra Access: RW
-<br>SOC Access:      RO
+<br>SOC Access:      RW
 <br>TAP Access [in debug/manuf mode]: RO</p>
 <table border="1">
     <tr>
@@ -332,11 +330,6 @@ Auto-clears when mbox_execute field is cleared.
         <td>CMD_FAILURE</td>
         <td>0x3</td>
         <td><p>The requested command experienced a failure.</p></td>
-    </tr>
-    <tr>
-        <td>DATA_FOR_JTAG</td>
-        <td>0x4</td>
-        <td><p>There is data in the mailbox for JTAG to read.</p></td>
     </tr>
 </table>
 <table border="1">

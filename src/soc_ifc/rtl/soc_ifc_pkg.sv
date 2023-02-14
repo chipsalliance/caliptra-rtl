@@ -79,8 +79,7 @@ package soc_ifc_pkg;
         CMD_BUSY      = 4'd0,
         DATA_READY    = 4'd1,
         CMD_COMPLETE  = 4'd2,
-        CMD_FAILURE   = 4'd3,
-        DATA_FOR_JTAG = 4'd4
+        CMD_FAILURE   = 4'd3
     } mbox_status_e;
 
     //Any request into soc ifc block

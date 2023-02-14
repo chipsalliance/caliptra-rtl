@@ -26,8 +26,7 @@ enum mbox_status_e {
     CMD_BUSY      = 0,
     DATA_READY    = 1,
     CMD_COMPLETE  = 2,
-    CMD_FAILURE   = 3,
-    DATA_FOR_JTAG = 4
+    CMD_FAILURE   = 3
 };
 enum mbox_fsm_e {
     MBOX_IDLE         = 0x0,
