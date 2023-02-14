@@ -70,6 +70,7 @@ module sha512_acc_csr (
         logic EXECUTE;
         logic STATUS;
         logic [16-1:0]DIGEST;
+        logic CONTROL;
         struct packed{
             logic global_intr_en_r;
             logic error_intr_en_r;
@@ -109,6 +110,7 @@ module sha512_acc_csr (
         for(int i0=0; i0<16; i0++) begin
             decoded_reg_strb.DIGEST[i0] = cpuif_req_masked & (cpuif_addr == 'h20 + i0*'h4);
         end
+        decoded_reg_strb.CONTROL = cpuif_req_masked & (cpuif_addr == 'h60);
         decoded_reg_strb.intr_block_rf.global_intr_en_r = cpuif_req_masked & (cpuif_addr == 'h800);
         decoded_reg_strb.intr_block_rf.error_intr_en_r = cpuif_req_masked & (cpuif_addr == 'h804);
         decoded_reg_strb.intr_block_rf.notif_intr_en_r = cpuif_req_masked & (cpuif_addr == 'h808);
@@ -195,6 +197,18 @@ module sha512_acc_csr (
                 logic load_next;
             } VALID;
         } STATUS;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } DIGEST;
+        } [16-1:0]DIGEST;
+        struct packed{
+            struct packed{
+                logic next;
+                logic load_next;
+            } ZEROIZE;
+        } CONTROL;
         struct packed{
             struct packed{
                 struct packed{
@@ -418,6 +432,16 @@ module sha512_acc_csr (
                 logic value;
             } VALID;
         } STATUS;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } DIGEST;
+        } [16-1:0]DIGEST;
+        struct packed{
+            struct packed{
+                logic value;
+            } ZEROIZE;
+        } CONTROL;
         struct packed{
             struct packed{
                 struct packed{
@@ -725,6 +749,51 @@ module sha512_acc_csr (
         end
     end
     assign hwif_out.STATUS.VALID.value = field_storage.STATUS.VALID.value;
+    for(genvar i0=0; i0<16; i0++) begin
+        // Field: sha512_acc_csr.DIGEST[].DIGEST
+        always_comb begin
+            automatic logic [31:0] next_c = field_storage.DIGEST[i0].DIGEST.value;
+            automatic logic load_next_c = '0;
+            if(1) begin // HW Write
+                next_c = hwif_in.DIGEST[i0].DIGEST.next;
+                load_next_c = '1;
+            end else if(hwif_in.DIGEST[i0].DIGEST.hwclr) begin // HW Clear
+                next_c = '0;
+                load_next_c = '1;
+            end
+            field_combo.DIGEST[i0].DIGEST.next = next_c;
+            field_combo.DIGEST[i0].DIGEST.load_next = load_next_c;
+        end
+        always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+            if(~hwif_in.cptra_rst_b) begin
+                field_storage.DIGEST[i0].DIGEST.value <= 'h0;
+            end else if(field_combo.DIGEST[i0].DIGEST.load_next) begin
+                field_storage.DIGEST[i0].DIGEST.value <= field_combo.DIGEST[i0].DIGEST.next;
+            end
+        end
+    end
+    // Field: sha512_acc_csr.CONTROL.ZEROIZE
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.CONTROL.ZEROIZE.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.CONTROL && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[0:0];
+            load_next_c = '1;
+        end else if(1) begin // singlepulse clears back to 0
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.CONTROL.ZEROIZE.next = next_c;
+        field_combo.CONTROL.ZEROIZE.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.CONTROL.ZEROIZE.value <= 'h0;
+        end else if(field_combo.CONTROL.ZEROIZE.load_next) begin
+            field_storage.CONTROL.ZEROIZE.value <= field_combo.CONTROL.ZEROIZE.next;
+        end
+    end
+    assign hwif_out.CONTROL.ZEROIZE.value = field_storage.CONTROL.ZEROIZE.value;
     // Field: sha512_acc_csr.intr_block_rf.global_intr_en_r.error_en
     always_comb begin
         automatic logic [0:0] next_c = field_storage.intr_block_rf.global_intr_en_r.error_en.value;
@@ -1437,7 +1506,7 @@ module sha512_acc_csr (
     logic [31:0] readback_data;
     
     // Assign readback values to a flattened array
-    logic [43-1:0][31:0] readback_array;
+    logic [44-1:0][31:0] readback_array;
     assign readback_array[0][0:0] = (decoded_reg_strb.LOCK && !decoded_req_is_wr) ? field_storage.LOCK.LOCK.value : '0;
     assign readback_array[0][31:1] = '0;
     assign readback_array[1][31:0] = (decoded_reg_strb.USER && !decoded_req_is_wr) ? field_storage.USER.USER.value : '0;
@@ -1452,51 +1521,53 @@ module sha512_acc_csr (
     assign readback_array[7][0:0] = (decoded_reg_strb.STATUS && !decoded_req_is_wr) ? field_storage.STATUS.VALID.value : '0;
     assign readback_array[7][31:1] = '0;
     for(genvar i0=0; i0<16; i0++) begin
-        assign readback_array[i0*1 + 8][31:0] = (decoded_reg_strb.DIGEST[i0] && !decoded_req_is_wr) ? hwif_in.DIGEST[i0].DIGEST.next : '0;
+        assign readback_array[i0*1 + 8][31:0] = (decoded_reg_strb.DIGEST[i0] && !decoded_req_is_wr) ? field_storage.DIGEST[i0].DIGEST.value : '0;
     end
-    assign readback_array[24][0:0] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.error_en.value : '0;
-    assign readback_array[24][1:1] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.notif_en.value : '0;
-    assign readback_array[24][31:2] = '0;
-    assign readback_array[25][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error0_en.value : '0;
-    assign readback_array[25][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error1_en.value : '0;
-    assign readback_array[25][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error2_en.value : '0;
-    assign readback_array[25][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error3_en.value : '0;
-    assign readback_array[25][31:4] = '0;
-    assign readback_array[26][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value : '0;
-    assign readback_array[26][31:1] = '0;
-    assign readback_array[27][0:0] = (decoded_reg_strb.intr_block_rf.error_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_global_intr_r.agg_sts.value : '0;
+    assign readback_array[24][0:0] = (decoded_reg_strb.CONTROL && !decoded_req_is_wr) ? field_storage.CONTROL.ZEROIZE.value : '0;
+    assign readback_array[24][31:1] = '0;
+    assign readback_array[25][0:0] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.error_en.value : '0;
+    assign readback_array[25][1:1] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.notif_en.value : '0;
+    assign readback_array[25][31:2] = '0;
+    assign readback_array[26][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error0_en.value : '0;
+    assign readback_array[26][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error1_en.value : '0;
+    assign readback_array[26][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error2_en.value : '0;
+    assign readback_array[26][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error3_en.value : '0;
+    assign readback_array[26][31:4] = '0;
+    assign readback_array[27][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value : '0;
     assign readback_array[27][31:1] = '0;
-    assign readback_array[28][0:0] = (decoded_reg_strb.intr_block_rf.notif_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value : '0;
+    assign readback_array[28][0:0] = (decoded_reg_strb.intr_block_rf.error_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_global_intr_r.agg_sts.value : '0;
     assign readback_array[28][31:1] = '0;
-    assign readback_array[29][0:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value : '0;
-    assign readback_array[29][1:1] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value : '0;
-    assign readback_array[29][2:2] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value : '0;
-    assign readback_array[29][3:3] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value : '0;
-    assign readback_array[29][31:4] = '0;
-    assign readback_array[30][0:0] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value : '0;
-    assign readback_array[30][31:1] = '0;
-    assign readback_array[31][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value : '0;
-    assign readback_array[31][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value : '0;
-    assign readback_array[31][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value : '0;
-    assign readback_array[31][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value : '0;
-    assign readback_array[31][31:4] = '0;
-    assign readback_array[32][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value : '0;
-    assign readback_array[32][31:1] = '0;
-    assign readback_array[33][31:0] = (decoded_reg_strb.intr_block_rf.error0_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error0_intr_count_r.cnt.value : '0;
-    assign readback_array[34][31:0] = (decoded_reg_strb.intr_block_rf.error1_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error1_intr_count_r.cnt.value : '0;
-    assign readback_array[35][31:0] = (decoded_reg_strb.intr_block_rf.error2_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error2_intr_count_r.cnt.value : '0;
-    assign readback_array[36][31:0] = (decoded_reg_strb.intr_block_rf.error3_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error3_intr_count_r.cnt.value : '0;
-    assign readback_array[37][31:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value : '0;
-    assign readback_array[38][0:0] = (decoded_reg_strb.intr_block_rf.error0_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[38][31:1] = '0;
-    assign readback_array[39][0:0] = (decoded_reg_strb.intr_block_rf.error1_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[29][0:0] = (decoded_reg_strb.intr_block_rf.notif_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value : '0;
+    assign readback_array[29][31:1] = '0;
+    assign readback_array[30][0:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value : '0;
+    assign readback_array[30][1:1] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value : '0;
+    assign readback_array[30][2:2] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value : '0;
+    assign readback_array[30][3:3] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value : '0;
+    assign readback_array[30][31:4] = '0;
+    assign readback_array[31][0:0] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value : '0;
+    assign readback_array[31][31:1] = '0;
+    assign readback_array[32][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value : '0;
+    assign readback_array[32][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value : '0;
+    assign readback_array[32][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value : '0;
+    assign readback_array[32][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value : '0;
+    assign readback_array[32][31:4] = '0;
+    assign readback_array[33][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value : '0;
+    assign readback_array[33][31:1] = '0;
+    assign readback_array[34][31:0] = (decoded_reg_strb.intr_block_rf.error0_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error0_intr_count_r.cnt.value : '0;
+    assign readback_array[35][31:0] = (decoded_reg_strb.intr_block_rf.error1_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error1_intr_count_r.cnt.value : '0;
+    assign readback_array[36][31:0] = (decoded_reg_strb.intr_block_rf.error2_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error2_intr_count_r.cnt.value : '0;
+    assign readback_array[37][31:0] = (decoded_reg_strb.intr_block_rf.error3_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error3_intr_count_r.cnt.value : '0;
+    assign readback_array[38][31:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value : '0;
+    assign readback_array[39][0:0] = (decoded_reg_strb.intr_block_rf.error0_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value : '0;
     assign readback_array[39][31:1] = '0;
-    assign readback_array[40][0:0] = (decoded_reg_strb.intr_block_rf.error2_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[40][0:0] = (decoded_reg_strb.intr_block_rf.error1_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value : '0;
     assign readback_array[40][31:1] = '0;
-    assign readback_array[41][0:0] = (decoded_reg_strb.intr_block_rf.error3_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[41][0:0] = (decoded_reg_strb.intr_block_rf.error2_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value : '0;
     assign readback_array[41][31:1] = '0;
-    assign readback_array[42][0:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[42][0:0] = (decoded_reg_strb.intr_block_rf.error3_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value : '0;
     assign readback_array[42][31:1] = '0;
+    assign readback_array[43][0:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[43][31:1] = '0;
 
 
     // Reduce the array
@@ -1505,7 +1576,7 @@ module sha512_acc_csr (
         readback_done = decoded_req & ~decoded_req_is_wr;
         readback_err = '0;
         readback_data_var = '0;
-        for(int i=0; i<43; i++) readback_data_var |= readback_array[i];
+        for(int i=0; i<44; i++) readback_data_var |= readback_array[i];
         readback_data = readback_data_var;
     end
 

@@ -76,8 +76,10 @@ module sha512_acc_top
   logic [BYTE_OFFSET_W-1:0] num_bytes_data;
   logic extra_pad_block_required;
 
-  logic [MBOX_ADDR_W-1:0] mbox_rdptr;
+  //extra bit for roll over on full read
+  logic [MBOX_ADDR_W:0] mbox_rdptr;
   logic [MBOX_ADDR_W-1:0] mbox_start_addr, mbox_end_addr;
+  logic mbox_read_to_end;
   logic mbox_ptr_round_up;
   logic mbox_read_en;
   logic mbox_read_done;
@@ -125,9 +127,13 @@ module sha512_acc_top
   logic              core_digest_valid;
   logic              core_digest_valid_q;
 
+  logic zeroize_pulse;
+
   assign req_hold = stall_write;
   
   assign err = read_error | write_error;
+
+  assign zeroize_pulse = hwif_out.CONTROL.ZEROIZE.value;
 
   //----------------------------------------------------------------
   // core instantiation.
@@ -135,7 +141,7 @@ module sha512_acc_top
   sha512_core core(
                    .clk(clk),
                    .reset_n(rst_b),
-                   .zeroize(1'b0),
+                   .zeroize(zeroize_pulse),
 
                    .init_cmd(init_reg),
                    .next_cmd(next_reg),
@@ -209,7 +215,7 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   always_comb mbox_read_en = mailbox_mode & ~mbox_read_done & !sha_sram_hold & (~(mbox_mode_last_dword_wr | block_full) | core_ready);
 
   always_comb sha_sram_req_dv = mbox_read_en;
-  always_comb sha_sram_req_addr = mbox_rdptr;
+  always_comb sha_sram_req_addr = mbox_rdptr[MBOX_ADDR_W-1:0];
 
   //stall the write if we are trying to stream datain and it's the end of a block but the core isn't ready
   always_comb stall_write = datain_write & block_full;
@@ -247,7 +253,7 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
                     block_we                                                               ? block_wptr + 'd1 : 
                                                                                              block_wptr;
 
-      mbox_rdptr <= arc_SHA_IDLE_SHA_BLOCK_0 & mailbox_mode ? mbox_start_addr :
+      mbox_rdptr <= arc_SHA_IDLE_SHA_BLOCK_0 & mailbox_mode ? {1'b0,mbox_start_addr} :
                     mbox_read_en                            ? mbox_rdptr + 'd1 :
                                                               mbox_rdptr;
 
@@ -301,11 +307,17 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
     block_reg_nxt = block_reg_nxt_pad;
   end
 
+  //don't let start address start out of range
   always_comb mbox_start_addr = hwif_out.START_ADDRESS.ADDR.value[MBOX_ADDR_W-1:0];
   always_comb mbox_ptr_round_up = (|hwif_out.DLEN.LENGTH.value[1:0]);
-  always_comb mbox_end_addr = mbox_ptr_round_up ?mbox_start_addr + (hwif_out.DLEN.LENGTH.value>>2) + 'd1 : 
-                                                 mbox_start_addr + (hwif_out.DLEN.LENGTH.value>>2);
-  always_comb mbox_read_done = (sha_fsm_ps == SHA_IDLE) | ~mailbox_mode | (mbox_rdptr == mbox_end_addr);
+  //detect overflow of end address to indicate we want to read to the end of the mailbox
+  always_comb {mbox_read_to_end, mbox_end_addr} = mbox_ptr_round_up ? mbox_start_addr + (hwif_out.DLEN.LENGTH.value>>2) + 'd1 : 
+                                                                      mbox_start_addr + (hwif_out.DLEN.LENGTH.value>>2);
+  always_comb mbox_read_done = (sha_fsm_ps == SHA_IDLE) | ~mailbox_mode | 
+                               //If the DLEN overflowed our end address, just read to the end of the mailbox and stop
+                               //Otherwise read until read pointer == end address
+                               (~mbox_read_to_end & mbox_rdptr[MBOX_ADDR_W-1:0] == mbox_end_addr) | 
+                               (mbox_read_to_end & mbox_rdptr[MBOX_ADDR_W]);
 
   //HW API State Machine
   //whenever lock is cleared, go back to idle
@@ -379,6 +391,7 @@ always_comb begin
   hwif_in.EXECUTE.EXECUTE.hwclr = arc_IDLE;
   for (int dword =0; dword < 16; dword++) begin
     hwif_in.DIGEST[dword].DIGEST.next = digest_reg[dword];
+    hwif_in.DIGEST[dword].DIGEST.hwclr = zeroize_pulse;
   end
 end
 

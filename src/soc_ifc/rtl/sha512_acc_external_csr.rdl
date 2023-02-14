@@ -121,6 +121,15 @@ reg {
     default sw = r;
     default hw = w;
     default resetsignal = cptra_rst_b;
-    field {desc = "Output digest field";} DIGEST[32] = 32'b0;
+    field {desc = "Output digest field"; hwclr;} DIGEST[32] = 32'b0;
 
 } DIGEST[16];
+
+reg {
+    name = "SHA Accelerator Control";
+    desc = "SHA Accelerator control flows. 
+            [br]Zeroize the SHA engine internal registers.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RW";
+        field {desc = "Zeroize all internal registers"; sw=rw; hw=r; singlepulse;} ZEROIZE = 1'b0;
+} CONTROL;

@@ -133,6 +133,20 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__DIGEST
 
+    // Reg - sha512_acc_csr::CONTROL
+    class sha512_acc_csr__CONTROL extends uvm_reg;
+        rand uvm_reg_field ZEROIZE;
+
+        function new(string name = "sha512_acc_csr__CONTROL");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.ZEROIZE = new("ZEROIZE");
+            this.ZEROIZE.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : sha512_acc_csr__CONTROL
+
     // Reg - sha512_acc_csr::global_intr_en_t
     class sha512_acc_csr__global_intr_en_t extends uvm_reg;
         rand uvm_reg_field error_en;
@@ -566,6 +580,7 @@ package sha512_acc_csr_uvm;
         rand sha512_acc_csr__EXECUTE EXECUTE;
         rand sha512_acc_csr__STATUS STATUS;
         rand sha512_acc_csr__DIGEST DIGEST[16];
+        rand sha512_acc_csr__CONTROL CONTROL;
         rand sha512_acc_csr__intr_block_t intr_block_rf;
 
         function new(string name = "sha512_acc_csr");
@@ -621,6 +636,11 @@ package sha512_acc_csr_uvm;
                 this.DIGEST[i0].build();
                 this.default_map.add_reg(this.DIGEST[i0], 'h20 + i0*'h4);
             end
+            this.CONTROL = new("CONTROL");
+            this.CONTROL.configure(this);
+
+            this.CONTROL.build();
+            this.default_map.add_reg(this.CONTROL, 'h60);
             this.intr_block_rf = new("intr_block_rf");
             this.intr_block_rf.configure(this);
             this.intr_block_rf.build();

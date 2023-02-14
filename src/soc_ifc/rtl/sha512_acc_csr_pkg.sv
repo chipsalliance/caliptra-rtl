@@ -28,6 +28,7 @@ package sha512_acc_csr_pkg;
 
     typedef struct packed{
         logic [31:0] next;
+        logic hwclr;
     } sha512_acc_csr__DIGEST__DIGEST__in_t;
 
     typedef struct packed{
@@ -155,6 +156,14 @@ package sha512_acc_csr_pkg;
     } sha512_acc_csr__STATUS__out_t;
 
     typedef struct packed{
+        logic value;
+    } sha512_acc_csr__CONTROL__ZEROIZE__out_t;
+
+    typedef struct packed{
+        sha512_acc_csr__CONTROL__ZEROIZE__out_t ZEROIZE;
+    } sha512_acc_csr__CONTROL__out_t;
+
+    typedef struct packed{
         logic intr;
     } sha512_acc_csr__global_intr_t_agg_sts_dd3dcf0a__out_t;
 
@@ -186,6 +195,7 @@ package sha512_acc_csr_pkg;
         sha512_acc_csr__DATAIN__out_t DATAIN;
         sha512_acc_csr__EXECUTE__out_t EXECUTE;
         sha512_acc_csr__STATUS__out_t STATUS;
+        sha512_acc_csr__CONTROL__out_t CONTROL;
         sha512_acc_csr__intr_block_t__out_t intr_block_rf;
     } sha512_acc_csr__out_t;
 
