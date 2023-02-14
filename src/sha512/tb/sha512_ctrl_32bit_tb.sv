@@ -592,12 +592,15 @@ module sha512_ctrl_32bit_tb
                          input [511 : 0]  expected1
                         );
     reg [511 : 0] mask;
+    reg [511 : 0] masked_data0;
     reg [511 : 0] masked_data1;
     reg [31 : 0] start_time;
     reg [31 : 0] end_time;
 
     begin
       $display("*** TC%01d - Double block test started.", tc_ctr);
+
+      mask = get_mask(mode);
 
       // First block
       write_block(block0);
@@ -610,7 +613,8 @@ module sha512_ctrl_32bit_tb
       wait_ready();
       read_digest();
 
-      if (digest_data == expected0)
+      masked_data0 = expected0 & mask;
+      if (digest_data == masked_data0)
         begin
           $display("TC%01d first block: OK.", tc_ctr);
         end
@@ -635,7 +639,7 @@ module sha512_ctrl_32bit_tb
       $display("*** Double block test processing time = %01d cycles", end_time);
       read_digest();
 
-      mask = get_mask(mode);
+      
       masked_data1 = digest_data & mask;
 
       if (masked_data1 == expected1)

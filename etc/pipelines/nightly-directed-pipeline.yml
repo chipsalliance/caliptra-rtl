@@ -92,6 +92,7 @@ stages:
               - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
               - path: '${WORKSPACE}/Caliptra/src/ecc/stimulus/testsuites/ecc_nightly_directed_regression.yml'
               - timeout: 60
+              
         - hmac_ctrl_tb:
           - display_name: 'HMAC_CTRL_TB'
           - enabled: true
@@ -107,20 +108,36 @@ stages:
               - path: '${WORKSPACE}/Caliptra/src/hmac/stimulus/testsuites/hmac_nightly_directed_regression.yml'
               - timeout: 60
 
-# TODO: Add this back once sha512 uvmf project is fixed
-#        - uvmf_sha512:
-#          - display_name: 'UVMF_SHA512'
-#          - enabled: true
-#          - configspec_name: 'integration_lib'
-#          - dut: 'uvmf_sha512'
-#          - args: ''
-#          - testsuites:
-#            - l1_regress:
-#              - enabled: true
-#              - configspec_name: 'integration_lib'
-#              - dut: 'uvmf_sha512'
-#              - path: 'Caliptra/src/sha512/stimulus/L1_regression.yml'
-#              - timeout: 30
+        - sha512_ctrl_32bit_tb:
+          - display_name: 'SHA512_CTRL_TB'
+          - enabled: true
+          - configspec_name: 'integration_lib'
+          - dut: 'sha512_ctrl_32bit_tb'
+          - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/sha512/coverage/config/sha512_cm_hier.cfg --submit-resource-args RAM/28000'
+          - testsuites:
+            - nightly_directed:
+              - enabled: true
+              - configspec_name: 'integration_lib'
+              - dut: 'sha512_ctrl_32bit_tb'
+              - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
+              - path: '${WORKSPACE}/Caliptra/src/sha512/stimulus/testsuites/sha512_nightly_directed_regression.yml'
+              - timeout: 60  
+
+        - sha256_ctrl_tb:
+          - display_name: 'SHA256_CTRL_TB'
+          - enabled: true
+          - configspec_name: 'integration_lib'
+          - dut: 'sha256_ctrl_tb'
+          - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/sha256/coverage/config/sha256_cm_hier.cfg --submit-resource-args RAM/28000'
+          - testsuites:
+            - nightly_directed:
+              - enabled: true
+              - configspec_name: 'integration_lib'
+              - dut: 'sha256_ctrl_tb'
+              - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
+              - path: '${WORKSPACE}/Caliptra/src/sha256/stimulus/testsuites/sha256_nightly_directed_regression.yml'
+              - timeout: 60 
+
         - soc_ifc_tb:
             - display_name: 'SOC_IFC_TB'
             - enabled: true
