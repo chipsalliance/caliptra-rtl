@@ -1,2 +1,2 @@
 # caliptra-fw
-Firmware for Caliptra RoT IP
+RTL and verification for Caliptra RoT IP
