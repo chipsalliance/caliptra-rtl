@@ -1,0 +1,8 @@
+# Copyright lowRISC contributors.
+# Licensed under the Apache License, Version 2.0, see LICENSE for details.
+# SPDX-License-Identifier: Apache-2.0
+#
+# waiver file for entropy_src
+
+waive -rules RESET_MUX    -location {entropy_src.sv} -regexp {Asynchronous reset .*_rst_n' is driven by a multiplexer.*} \
+      -comment "The MUX is needed to control stub mode or not"
