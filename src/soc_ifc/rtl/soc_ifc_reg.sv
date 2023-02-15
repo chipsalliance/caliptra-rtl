@@ -3344,7 +3344,8 @@ module soc_ifc_reg (
     assign readback_array[16][31:2] = '0;
     assign readback_array[17][1:0] = (decoded_reg_strb.CPTRA_SECURITY_STATE && !decoded_req_is_wr) ? hwif_in.CPTRA_SECURITY_STATE.device_lifecycle.next : '0;
     assign readback_array[17][2:2] = (decoded_reg_strb.CPTRA_SECURITY_STATE && !decoded_req_is_wr) ? hwif_in.CPTRA_SECURITY_STATE.debug_locked.next : '0;
-    assign readback_array[17][31:3] = (decoded_reg_strb.CPTRA_SECURITY_STATE && !decoded_req_is_wr) ? 'h0 : '0;
+    assign readback_array[17][3:3] = (decoded_reg_strb.CPTRA_SECURITY_STATE && !decoded_req_is_wr) ? hwif_in.CPTRA_SECURITY_STATE.scan_mode.next : '0;
+    assign readback_array[17][31:4] = (decoded_reg_strb.CPTRA_SECURITY_STATE && !decoded_req_is_wr) ? 'h0 : '0;
     for(genvar i0=0; i0<5; i0++) begin
         assign readback_array[i0*1 + 18][31:0] = (decoded_reg_strb.CPTRA_VALID_PAUSER[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_VALID_PAUSER[i0].PAUSER.value : '0;
     end

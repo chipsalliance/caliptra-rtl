@@ -30,7 +30,7 @@
         <th></th>
     </tr>
     <tr id="rsvd">
-        <td>[31:3]</td>
+        <td>[31:4]</td>
         <td><a href="#rsvd.desc">rsvd</a></td>
         <td>
             <span title='Read-only'>r</span></td>
@@ -47,6 +47,26 @@
                 title="Switch radix" aria-label="Switch radix"
                 data-name="rsvd" onclick="onRadixSwitch(this)">H</button>
             <a class="headerlink" href="#rsvd" title="Permalink to this row"></a>
+        </td>
+    </tr>
+    <tr id="scan_mode">
+        <td>[3]</td>
+        <td><a href="#scan_mode.desc">scan_mode</a></td>
+        <td>
+            <span title='Read-only'>r</span></td>
+        <td>0x0
+        </td>
+        <td>
+            <input id="_FieldValueTesterscan_mode" class="field-value-tester"
+                type="text" autocomplete="off"
+                data-name="scan_mode" oninput="onDecodedFieldInput(this)"/>
+        </td>
+        <td>-</td>
+        <td>
+            <button type="button" id="_RadixButtonscan_mode" class="radix-button"
+                title="Switch radix" aria-label="Switch radix"
+                data-name="scan_mode" onclick="onRadixSwitch(this)">H</button>
+            <a class="headerlink" href="#scan_mode" title="Permalink to this row"></a>
         </td>
     </tr>
     <tr id="debug_locked">
@@ -114,6 +134,25 @@
 </h3>
 <div id="_Content.rsvd.desc">
 <p>Reserved field</p>
+<table border="1">
+    <tr>
+        <th>Property</th>
+        <th>Value</th>
+    </tr>
+    <tr>
+        <td><code>resetsignal</code></td>
+        <td>^.^.cptra_rst_b</td>
+    </tr>
+    
+</table>
+</div>
+
+<h3 id="scan_mode.desc">scan_mode
+    <a class="headerlink" href="#scan_mode.desc" title="Permalink to this headline"></a>
+</h3>
+<div id="_Content.scan_mode.desc">
+<p>scan mode signal observed at caliptra interface - only for debug mode as its used to flush assets - 
+when truly in scan mode, everything will be BROKEN for functional reads!</p>
 <table border="1">
     <tr>
         <th>Property</th>

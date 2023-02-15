@@ -114,7 +114,10 @@ reg {
     };
     field {desc = "Device Lifecycle"; sw=r; hw=w; encode = device_lifecycle_e; resetsignal = cptra_rst_b;} device_lifecycle[2]=0;
     field {desc = "Debug Locked"    ; sw=r; hw=w;                              resetsignal = cptra_rst_b;} debug_locked=0;
-    field {desc = "Reserved field"  ; sw=r;                                    resetsignal = cptra_rst_b;} rsvd[29] = 0;
+    field {desc = "scan mode signal observed at caliptra interface - only for debug mode as its used to flush assets - 
+                   when truly in scan mode, everything will be BROKEN for functional reads!"; 
+                                      sw=r; hw=w;                              resetsignal = cptra_rst_b;} scan_mode=0;
+    field {desc = "Reserved field"  ; sw=r;                                    resetsignal = cptra_rst_b;} rsvd[28] = 0;
 } CPTRA_SECURITY_STATE;
 
 reg {

@@ -29,7 +29,7 @@ module kv
     input logic rst_b,
     input logic cptra_pwrgood,
 
-    input logic debug_locked,
+    input logic debugUnlock_or_scan_mode_switch,
     
     //uC AHB Lite Interface
     //from SLAVES PORT
@@ -112,20 +112,8 @@ kv_ahb_slv1 (
 always_comb uc_req_error = kv_reg_read_error | kv_reg_write_error;
 always_comb uc_req_hold = '0;
 
-always_ff @(posedge clk or negedge rst_b) begin
-    if (!rst_b) begin
-        debug_locked_f <= '1;
-    end
-    else begin
-        debug_locked_f <= debug_locked;
-    end
-end
-
-
-//Edge detect - debug was locked and now it's not
-always_comb debug_unlocked = debug_locked_f & ~debug_locked;
 //Flush the keyvault with the debug value when FW pokes the register or we detect debug mode unlocking
-always_comb flush_keyvault = debug_unlocked | kv_reg_hwif_out.CLEAR_SECRETS.wr_debug_values.value;
+always_comb flush_keyvault = debugUnlock_or_scan_mode_switch | kv_reg_hwif_out.CLEAR_SECRETS.wr_debug_values.value;
 //Pick between keyvault debug mode 0 or 1
 always_comb debug_value = kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value ? CLP_DEBUG_MODE_KV_1 : CLP_DEBUG_MODE_KV_0;
 

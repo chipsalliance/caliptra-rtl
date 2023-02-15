@@ -33,8 +33,13 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__CPTRA_SECURITY_STATE__debug_locked__in_t;
 
     typedef struct packed{
+        logic next;
+    } soc_ifc_reg__CPTRA_SECURITY_STATE__scan_mode__in_t;
+
+    typedef struct packed{
         soc_ifc_reg__CPTRA_SECURITY_STATE__device_lifecycle__in_t device_lifecycle;
         soc_ifc_reg__CPTRA_SECURITY_STATE__debug_locked__in_t debug_locked;
+        soc_ifc_reg__CPTRA_SECURITY_STATE__scan_mode__in_t scan_mode;
     } soc_ifc_reg__CPTRA_SECURITY_STATE__in_t;
 
     typedef struct packed{

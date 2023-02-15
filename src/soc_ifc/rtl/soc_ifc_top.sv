@@ -88,6 +88,7 @@ module soc_ifc_top
 
     //Obfuscated UDS and FE
     input  logic clear_obf_secrets,
+    input  logic scan_mode_f,
     input  logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key,
     output logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg,
     output logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy,
@@ -339,6 +340,7 @@ always_comb soc_ifc_reg_hwif_in.cptra_rst_b = cptra_rst_b;
 always_comb soc_ifc_reg_hwif_in.cptra_pwrgood = cptra_pwrgood;
 always_comb soc_ifc_reg_hwif_in.soc_req = soc_ifc_reg_req_data.soc_req;
 
+
 always_comb begin
     for (int i = 0; i < `CLP_OBF_KEY_DWORDS; i++) begin
         soc_ifc_reg_hwif_in.internal_obf_key[i].key.swwe = '0; //sw can't write to obf key
@@ -362,7 +364,8 @@ always_comb begin
     ready_for_runtime = soc_ifc_reg_hwif_out.CPTRA_FLOW_STATUS.ready_for_runtime.value;
     soc_ifc_reg_hwif_in.CPTRA_FLOW_STATUS.ready_for_fuses.next = ready_for_fuses;
     soc_ifc_reg_hwif_in.CPTRA_SECURITY_STATE.device_lifecycle.next = security_state.device_lifecycle;
-    soc_ifc_reg_hwif_in.CPTRA_SECURITY_STATE.debug_locked.next = security_state.debug_locked;
+    soc_ifc_reg_hwif_in.CPTRA_SECURITY_STATE.debug_locked.next     = security_state.debug_locked;
+    soc_ifc_reg_hwif_in.CPTRA_SECURITY_STATE.scan_mode.next        = scan_mode_f;
     //generic wires
     for (int i = 0; i < 2; i++) begin
         generic_output_wires[i] = soc_ifc_reg_hwif_out.CPTRA_GENERIC_OUTPUT_WIRES[i].generic_wires.value;

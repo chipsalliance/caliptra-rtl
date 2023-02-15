@@ -51,6 +51,7 @@ module caliptra_top_tb (
     logic                       cptra_pwrgood;
     logic                       cptra_rst_b;
     logic                       BootFSM_BrkPoint;
+    logic                       scan_mode;
 
     logic [7:0][31:0]           cptra_obf_key;
     logic [0:7][31:0]           cptra_obf_key_uds, cptra_obf_key_fe;
@@ -171,6 +172,7 @@ module caliptra_top_tb (
         cptra_pwrgood = 1'b0;
         BootFSM_BrkPoint = 1'b1; //Set to 1 even before anything starts
         cptra_rst_b = 1'b0;
+        scan_mode = 1'b0;
         start_apb_fuse_sequence = 1'b0;
         //tie offs
         jtag_tck = 1'b0;    // JTAG clk
@@ -615,7 +617,8 @@ caliptra_top caliptra_top_dut (
     .generic_input_wires(generic_input_wires),
     .generic_output_wires(),
 
-    .security_state(security_state) //FIXME TIE-OFF
+    .security_state(security_state), //FIXME TIE-OFF
+    .scan_mode     (scan_mode) //FIXME TIE-OFF
 );
 
    //=========================================================================-

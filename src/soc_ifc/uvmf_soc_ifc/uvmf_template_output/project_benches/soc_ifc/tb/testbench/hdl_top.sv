@@ -167,6 +167,7 @@ import soc_ifc_pkg::*;
         .mailbox_flow_done (soc_ifc_status_agent_bus.mailbox_flow_done ),
 
         .security_state    (soc_ifc_ctrl_agent_bus.security_state),
+        .scan_mode         (1'b0),
 
         .generic_input_wires (soc_ifc_ctrl_agent_bus.generic_input_wires ),
         .BootFSM_BrkPoint    (soc_ifc_ctrl_agent_bus.BootFSM_BrkPoint),

@@ -163,6 +163,7 @@ package soc_ifc_reg_uvm;
     class soc_ifc_reg__CPTRA_SECURITY_STATE extends uvm_reg;
         rand uvm_reg_field device_lifecycle;
         rand uvm_reg_field debug_locked;
+        rand uvm_reg_field scan_mode;
         rand uvm_reg_field rsvd;
 
         function new(string name = "soc_ifc_reg__CPTRA_SECURITY_STATE");
@@ -174,8 +175,10 @@ package soc_ifc_reg_uvm;
             this.device_lifecycle.configure(this, 2, 0, "RO", 1, 'h0, 1, 1, 0);
             this.debug_locked = new("debug_locked");
             this.debug_locked.configure(this, 1, 2, "RO", 1, 'h0, 1, 1, 0);
+            this.scan_mode = new("scan_mode");
+            this.scan_mode.configure(this, 1, 3, "RO", 1, 'h0, 1, 1, 0);
             this.rsvd = new("rsvd");
-            this.rsvd.configure(this, 29, 3, "RO", 0, 'h0, 1, 1, 0);
+            this.rsvd.configure(this, 28, 4, "RO", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_SECURITY_STATE
 

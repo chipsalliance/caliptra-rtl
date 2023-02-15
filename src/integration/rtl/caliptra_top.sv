@@ -91,7 +91,8 @@ module caliptra_top
     input logic  [63:0]                generic_input_wires,
     output logic [63:0]                generic_output_wires,
 
-    input security_state_t security_state
+    input security_state_t             security_state,
+    input logic                        scan_mode
 );
 
     `include "common_defines.sv"
@@ -504,19 +505,43 @@ el2_swerv_wrapper rvtop (
     always_comb responder_inst[`CALIPTRA_SLAVE_SEL_IDMA].hresp     = responder_inst[`CALIPTRA_SLAVE_SEL_DDMA].hresp;
     always_comb responder_inst[`CALIPTRA_SLAVE_SEL_IDMA].hreadyout = responder_inst[`CALIPTRA_SLAVE_SEL_DDMA].hreadyout;
 
-    logic cptra_security_state_captured;
-
+    logic cptra_security_state_captured, scan_mode_f, scan_mode_ff, scan_mode_switch;
+    logic debugUnlock_or_scan_mode_switch, clear_obf_secrets_debugScanQ, cptra_scan_mode_Latched, debug_lock_to_unlock_switch;
+    var security_state_t security_state_f, security_state_ff;
+    
     // Security State value captured on a Caliptra reset deassertion (0->1 signal transition)
     always_ff @(posedge clk or negedge cptra_rst_b) begin
         if (~cptra_rst_b) begin
             cptra_security_state_Latched <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; //Setting the default value to be debug locked and in production mode
+            security_state_f <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; //Setting the default value to be debug locked and in production mode
             cptra_security_state_captured <= 0;
+            scan_mode_f <= 0;
         end
         else if(!cptra_security_state_captured) begin
             cptra_security_state_Latched <= security_state;
+            cptra_scan_mode_Latched <= scan_mode;
             cptra_security_state_captured <= 1;
         end
+        else begin
+            // Latched State is different than flopped value of security state
+            // Latched State is used if we want to open the JTAG and is
+            // determined to do so only at reset exit time
+            // Asset flushing happens 'anytime' switch happens for safe side
+            security_state_f  <= security_state;
+            security_state_ff  <= security_state_f;
+            scan_mode_f  <= scan_mode;
+            scan_mode_ff <= scan_mode_f;
+        end
     end
+
+    // When scan mode goes from 0->1, generate a pulse to clear the assets
+    // Note that when scan goes to '1, Caliptra state as well as SOC state
+    // gets messed up. So switch to scan is destructive (obvious! Duh!)
+    assign scan_mode_switch = ~scan_mode_ff & scan_mode_f;
+    // 1->0 transition (Debug locked to unlocked)
+    assign debug_lock_to_unlock_switch = security_state_ff.debug_locked & ~security_state_f.debug_locked;
+    assign debugUnlock_or_scan_mode_switch = debug_lock_to_unlock_switch | scan_mode_switch;
+    assign clear_obf_secrets_debugScanQ = clear_obf_secrets | debugUnlock_or_scan_mode_switch;
 
 //=========================================================================-
 // Clock gating instance
@@ -663,11 +688,13 @@ sha256_ctrl #(
 logic [TOTAL_OBF_KEY_BITS-1:0]        cptra_obf_key_dbg;
 logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy_dbg;
 logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed_dbg;
+logic                                 cptra_in_debug_scan_mode;
 
-//override device secrets with debug values in debug mode
-always_comb cptra_obf_key_dbg = ~security_state.debug_locked ? `CLP_DEBUG_MODE_OBF_KEY : cptra_obf_key_reg;
-always_comb obf_uds_seed_dbg = ~security_state.debug_locked ? `CLP_DEBUG_MODE_UDS_SEED : obf_uds_seed;
-always_comb obf_field_entropy_dbg = ~security_state.debug_locked ? `CLP_DEBUG_MODE_FIELD_ENTROPY : obf_field_entropy;
+//override device secrets with debug values in Debug or Scan Mode
+always_comb cptra_in_debug_scan_mode = ~security_state_f.debug_locked | scan_mode_f;
+always_comb cptra_obf_key_dbg     = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_OBF_KEY : cptra_obf_key_reg;
+always_comb obf_uds_seed_dbg      = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_UDS_SEED : obf_uds_seed;
+always_comb obf_field_entropy_dbg = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_FIELD_ENTROPY : obf_field_entropy;
 
 doe_ctrl #(
     .AHB_DATA_WIDTH (64),
@@ -692,7 +719,7 @@ doe_ctrl #(
 
     .error_intr(doe_error_intr),
     .notif_intr(doe_notif_intr),
-    .clear_obf_secrets(clear_obf_secrets),
+    .clear_obf_secrets(clear_obf_secrets), //Output
     .kv_write (kv_write[KV_NUM_WRITE-1]),
     .kv_wr_resp (kv_wr_resp[KV_NUM_WRITE-1])
 
@@ -764,7 +791,6 @@ key_vault1
     .clk           (clk_cg),
     .rst_b         (cptra_noncore_rst_b),
     .cptra_pwrgood (cptra_pwrgood),
-    .debug_locked  (security_state.debug_locked),
     .haddr_i       (responder_inst[`CALIPTRA_SLAVE_SEL_KV].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_KV)-1:0]),
     .hwdata_i      (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hwdata),
     .hsel_i        (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hsel),
@@ -775,6 +801,8 @@ key_vault1
     .hresp_o       (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hresp),
     .hreadyout_o   (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hreadyout),
     .hrdata_o      (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hrdata),
+
+    .debugUnlock_or_scan_mode_switch (debugUnlock_or_scan_mode_switch),
 
     .kv_read       (kv_read),
     .kv_write      (kv_write),
@@ -802,7 +830,7 @@ soc_ifc_top1
     .mailbox_data_avail(mailbox_data_avail),
     .mailbox_flow_done(mailbox_flow_done),
 
-    .security_state(security_state),
+    .security_state(security_state_f),
     
     .BootFSM_BrkPoint (BootFSM_BrkPoint),
     
@@ -844,7 +872,8 @@ soc_ifc_top1
     .sha_error_intr(sha_error_intr),
     .sha_notif_intr(sha_notif_intr),
     //Obfuscated UDS and FE
-    .clear_obf_secrets(clear_obf_secrets),
+    .clear_obf_secrets(clear_obf_secrets_debugScanQ), //input - includes debug & scan modes to do the register clearing
+    .scan_mode_f(scan_mode_f),
     .cptra_obf_key(cptra_obf_key),
     .cptra_obf_key_reg(cptra_obf_key_reg),
     .obf_field_entropy(obf_field_entropy),

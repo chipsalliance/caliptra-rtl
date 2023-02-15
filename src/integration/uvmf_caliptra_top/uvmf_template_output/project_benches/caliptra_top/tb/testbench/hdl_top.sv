@@ -225,6 +225,7 @@ import uvmf_base_pkg_hdl::*;
         .generic_output_wires(soc_ifc_subenv_soc_ifc_status_agent_bus.generic_output_wires),
 
         .security_state(soc_ifc_subenv_soc_ifc_ctrl_agent_bus.security_state)
+        .scan_mode     (1'b0)
     );
     assign uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWUSER           = 0;
     assign uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PRUSER           = 0;
