@@ -31,7 +31,9 @@ class soc_ifc_env_cptra_mbox_handler_sequence #(
       ) extends soc_ifc_env_sequence_base #(.CONFIG_T(CONFIG_T));
 
 
-  `uvm_object_param_utils( soc_ifc_env_cptra_mbox_handler_sequence #( CONFIG_T) );
+  `uvm_object_param_utils_begin( soc_ifc_env_cptra_mbox_handler_sequence #( CONFIG_T) )
+  `uvm_object_utils_end
+  `m_uvm_get_type_name_func    ( soc_ifc_env_cptra_mbox_handler_sequence #( CONFIG_T) )
 
     cptra_status_agent_responder_seq_t cptra_status_agent_rsp_seq;
 
@@ -49,7 +51,6 @@ class soc_ifc_env_cptra_mbox_handler_sequence #(
 
   function new(string name = "" );
     super.new(name);
-
   endfunction
 
   virtual task body();
@@ -167,9 +168,6 @@ task soc_ifc_env_cptra_mbox_handler_sequence::mbox_check_fsm();
 
     fsm_state = mbox_fsm_state_e'(data >> reg_model.mbox_csr_rm.mbox_status.mbox_fsm_ps.get_lsb_pos());
     if (op.cmd.cmd_s.resp_reqd && fsm_state != MBOX_EXECUTE_SOC) begin
-        `uvm_error("MBOX_SEQ", $sformatf("Unexpected mailbox FSM state: %p", fsm_state))
-    end
-    else if (!op.cmd.cmd_s.resp_reqd && fsm_state != MBOX_IDLE) begin
         `uvm_error("MBOX_SEQ", $sformatf("Unexpected mailbox FSM state: %p", fsm_state))
     end
 endtask

@@ -178,9 +178,9 @@ class soc_ifc_scoreboard #(
 
     soc_ifc_expected_hash[t.get_key()] = t;
     //  UVMF_CHANGE_ME: Implement custom scoreboard here.  
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_expected_analysis_export function needs to be completed with custom scoreboard functionality",UVM_NONE)
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_expected_analysis_export function needs to be completed with custom scoreboard functionality",UVM_LOW)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
  
     // pragma uvmf custom expected_analysis_export_scoreboard end
   endfunction
@@ -195,9 +195,9 @@ class soc_ifc_scoreboard #(
 
     cptra_expected_hash[t.get_key()] = t;
     //  UVMF_CHANGE_ME: Implement custom scoreboard here.  
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_expected_cptra_analysis_export function needs to be completed with custom scoreboard functionality",UVM_NONE)
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_expected_cptra_analysis_export function needs to be completed with custom scoreboard functionality",UVM_LOW)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
  
     // pragma uvmf custom expected_cptra_analysis_export_scoreboard end
   endfunction
@@ -211,13 +211,13 @@ class soc_ifc_scoreboard #(
     `uvm_info("SCBD_SOC_IFC_STS", {"            Data: ",t.convert2string()}, UVM_FULL)
 
     if (soc_ifc_expected_hash.exists(t.get_key())) begin
-        `uvm_info("SCBD_SOC_IFC_STS", "Unimplemented write_actual_analysis_export()", UVM_NONE)
+        `uvm_info("SCBD_SOC_IFC_STS", "Unimplemented write_actual_analysis_export()", UVM_LOW)
     end
     else begin
     //  UVMF_CHANGE_ME: Implement custom scoreboard here.  
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_analysis_export function needs to be completed with custom scoreboard functionality",UVM_NONE)
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_analysis_export function needs to be completed with custom scoreboard functionality",UVM_LOW)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
     end
  
     // pragma uvmf custom actual_analysis_export_scoreboard end
@@ -232,13 +232,13 @@ class soc_ifc_scoreboard #(
     `uvm_info("SCBD_CPTRA_STS", {"            Data: ",t.convert2string()}, UVM_FULL)
 
     if (cptra_expected_hash.exists(t.get_key())) begin
-        `uvm_info("SCBD_CPTRA_STS", "Unimplemented write_actual_cptra_analysis_export()", UVM_NONE)
+        `uvm_info("SCBD_CPTRA_STS", "Unimplemented write_actual_cptra_analysis_export()", UVM_LOW)
     end
     else begin
     //  UVMF_CHANGE_ME: Implement custom scoreboard here.  
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_cptra_analysis_export function needs to be completed with custom scoreboard functionality",UVM_NONE)
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_cptra_analysis_export function needs to be completed with custom scoreboard functionality",UVM_LOW)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
     end
  
     // pragma uvmf custom actual_cptra_analysis_export_scoreboard end
@@ -261,9 +261,9 @@ class soc_ifc_scoreboard #(
     ahb_expected_q.push_back(t);
 
     //  UVMF_CHANGE_ME: Implement custom scoreboard here.  
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_expected_ahb_analysis_export function needs to be completed with custom scoreboard functionality",UVM_NONE)
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_expected_ahb_analysis_export function needs to be completed with custom scoreboard functionality",UVM_LOW)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
  
     // pragma uvmf custom expected_ahb_analysis_export_scoreboard end
   endfunction
@@ -284,9 +284,9 @@ class soc_ifc_scoreboard #(
     apb_expected_q.push_back(t);
 
     //  UVMF_CHANGE_ME: Implement custom scoreboard here.  
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_expected_apb_analysis_export function needs to be completed with custom scoreboard functionality",UVM_NONE)
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_expected_apb_analysis_export function needs to be completed with custom scoreboard functionality",UVM_LOW)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
  
     // pragma uvmf custom expected_apb_analysis_export_scoreboard end
   endfunction
@@ -314,9 +314,9 @@ class soc_ifc_scoreboard #(
     end
     else begin
     //  UVMF_CHANGE_ME: Implement custom scoreboard here.  
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_ahb_analysis_export function needs to be completed with custom scoreboard functionality",UVM_NONE)
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_ahb_analysis_export function needs to be completed with custom scoreboard functionality",UVM_LOW)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
     end
  
     // pragma uvmf custom actual_ahb_analysis_export_scoreboard end
@@ -345,9 +345,9 @@ class soc_ifc_scoreboard #(
     end
     else begin
     //  UVMF_CHANGE_ME: Implement custom scoreboard here.  
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_apb_analysis_export function needs to be completed with custom scoreboard functionality",UVM_NONE)
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_apb_analysis_export function needs to be completed with custom scoreboard functionality",UVM_LOW)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
     end
  
     // pragma uvmf custom actual_apb_analysis_export_scoreboard end

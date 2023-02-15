@@ -359,69 +359,75 @@ class soc_ifc_predictor #(
     soc_ifc_sb_apb_ap_output_transaction = soc_ifc_sb_apb_ap_output_transaction_t::type_id::create("soc_ifc_sb_apb_ap_output_transaction");
 
     $cast(ahb_txn, t);
-    axs_reg = p_soc_ifc_AHB_map.get_reg_by_offset(ahb_txn.address);
     // Address must be aligned to the native data width in the SOC IFC! I.e. 4-byte aligned
     address_aligned = ahb_txn.address & ~(SOC_IFC_DATA_W/8 - 1);
     if (ahb_txn.address & ((SOC_IFC_DATA_W/8 - 1))) begin
         `uvm_error("PRED_AHB", "Detected AHB transfer with bad address alignment! Address: 0x%x, expected alignment: 0x%x")
     end
     // Grab the data from the address offset, similar to how it's done in HW
+    // FIXME use bus2reg to do this?
     data_active = SOC_IFC_DATA_W'(ahb_txn.data[0] >> (8*(address_aligned % (ahb_lite_slave_0_params::AHB_WDATA_WIDTH/8))));
 
-    if (axs_reg == null) begin
-        `uvm_error("PRED_AHB", $sformatf("AHB transaction to address: 0x%x decodes to null from soc_ifc_AHB_map", ahb_txn.address))
-    end
-    else if (uvm_reg_data_t'(data_active) != axs_reg.get() && ahb_txn.RnW == AHB_WRITE) begin
-        // Leave the un-shifted data in the error message to help with debug
-        //TODO `uvm_error("PRED_AHB", $sformatf("AHB transaction to register %s with data: 0x%x (data_active: 0x%x), write: %p, may not match reg model value: %x", axs_reg.get_name(), ahb_txn.data[0], data_active, ahb_txn.RnW, axs_reg.get()))
-    end
-    else begin
-        `uvm_info("PRED_AHB", {"Detected access to register: ", axs_reg.get_name()}, UVM_MEDIUM)
-        case (axs_reg.get_name()) inside
-            "CPTRA_FUSE_WR_DONE": begin
-                `uvm_error("PRED_AHB", "Unexpected write to CPTRA_FUSE_WR_DONE register on AHB interface")
-            end
-            "internal_nmi_vector": begin
-                if (ahb_txn.RnW == AHB_WRITE) begin
-                    send_cptra_sts_txn = 1;
-                    nmi_vector = data_active;
+    if (p_soc_ifc_AHB_map.get_mem_by_offset(ahb_txn.address) != null) begin: MEM_AXS
+        `uvm_info("PRED_AHB", $sformatf("Detected access to mailbox at address: 0x%x", ahb_txn.address), UVM_MEDIUM)
+    end// MEM_AXS
+    else begin: REG_AXS
+        axs_reg = p_soc_ifc_AHB_map.get_reg_by_offset(ahb_txn.address);
+        if (axs_reg == null) begin
+            `uvm_error("PRED_AHB", $sformatf("AHB transaction to address: 0x%x decodes to null from soc_ifc_AHB_map", ahb_txn.address))
+        end
+        else if (uvm_reg_data_t'(data_active) != axs_reg.get() && ahb_txn.RnW == AHB_WRITE) begin
+            // Leave the un-shifted data in the error message to help with debug
+            //TODO `uvm_error("PRED_AHB", $sformatf("AHB transaction to register %s with data: 0x%x (data_active: 0x%x), write: %p, may not match reg model value: %x", axs_reg.get_name(), ahb_txn.data[0], data_active, ahb_txn.RnW, axs_reg.get()))
+        end
+        else begin
+            `uvm_info("PRED_AHB", {"Detected access to register: ", axs_reg.get_name()}, UVM_MEDIUM)
+            case (axs_reg.get_name()) inside
+                "CPTRA_FUSE_WR_DONE": begin
+                    `uvm_error("PRED_AHB", "Unexpected write to CPTRA_FUSE_WR_DONE register on AHB interface")
                 end
-            end
-            "CPTRA_GENERIC_OUTPUT_WIRES[0]": begin
-                if (ahb_txn.RnW == AHB_WRITE) begin
-                    case (data_active) inside
-                        32'h0,[32'h2:32'h5],32'h7F:
-                            `uvm_warning("PRED_AHB", $sformatf("Observed write to CPTRA_GENERIC_OUTPUT_WIRES with an unassigned value: 0x%x", data_active))
-                        32'h1:
-                            `uvm_fatal("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES to Kill Simulation with Error!") /* TODO put this in the scoreboard? */
-                        [32'h6:32'h7E]:
-                            `uvm_info("PRED_AHB", $sformatf("Observed write to CPTRA_GENERIC_OUTPUT_WIRES and translating as ASCII character: %c", data_active[7:0]), UVM_MEDIUM)
-                        32'hf8:
-                            `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Assert interrupt flags at fixed intervals to wake up halted core]", UVM_MEDIUM)
-                        32'hf9:
-                            `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Lock debug in security state]", UVM_MEDIUM)
-                        32'hfa:
-                            `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Unlock debug in security state]", UVM_MEDIUM)
-                        32'hfb:
-                            `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Set the isr_active bit]", UVM_MEDIUM)
-                        32'hfc:
-                            `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Clear the isr_active bit]", UVM_MEDIUM)
-                        32'hfd:
-                            `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Toggle random SRAM single bit error injection]", UVM_MEDIUM)
-                        32'hfe:
-                            `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Toggle random SRAM double bit error injection]", UVM_MEDIUM)
-                        32'hff:
-                            `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES to End the simulation with a Success status", UVM_LOW)
-                    endcase
+                "internal_nmi_vector": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        send_cptra_sts_txn = 1;
+                        nmi_vector = data_active;
+                    end
                 end
-            end
-            default: begin
-                `uvm_warning("PRED_AHB", $sformatf("Prediction for accesses to register '%s' unimplemented! Fix soc_ifc_predictor", axs_reg.get_name()))
-            end
-        endcase
-    end
+                "CPTRA_GENERIC_OUTPUT_WIRES[0]": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        case (data_active) inside
+                            32'h0,[32'h2:32'h5],32'h7F:
+                                `uvm_warning("PRED_AHB", $sformatf("Observed write to CPTRA_GENERIC_OUTPUT_WIRES with an unassigned value: 0x%x", data_active))
+                            32'h1:
+                                `uvm_fatal("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES to Kill Simulation with Error!") /* TODO put this in the scoreboard? */
+                            [32'h6:32'h7E]:
+                                `uvm_info("PRED_AHB", $sformatf("Observed write to CPTRA_GENERIC_OUTPUT_WIRES and translating as ASCII character: %c", data_active[7:0]), UVM_MEDIUM)
+                            32'hf8:
+                                `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Assert interrupt flags at fixed intervals to wake up halted core]", UVM_MEDIUM)
+                            32'hf9:
+                                `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Lock debug in security state]", UVM_MEDIUM)
+                            32'hfa:
+                                `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Unlock debug in security state]", UVM_MEDIUM)
+                            32'hfb:
+                                `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Set the isr_active bit]", UVM_MEDIUM)
+                            32'hfc:
+                                `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Clear the isr_active bit]", UVM_MEDIUM)
+                            32'hfd:
+                                `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Toggle random SRAM single bit error injection]", UVM_MEDIUM)
+                            32'hfe:
+                                `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Toggle random SRAM double bit error injection]", UVM_MEDIUM)
+                            32'hff:
+                                `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES to End the simulation with a Success status", UVM_LOW)
+                        endcase
+                    end
+                end
+                default: begin
+                    `uvm_warning("PRED_AHB", $sformatf("Prediction for accesses to register '%s' unimplemented! Fix soc_ifc_predictor", axs_reg.get_name()))
+                end
+            endcase
+        end
+    end// REG_AXS
 
-    `uvm_info("INCOMPLETE_PREDICTOR_MODEL", "UVMF_CHANGE_ME: The soc_ifc_predictor::write_ahb_slave_0_ae function needs to be completed with DUT prediction model",UVM_NONE)
+    `uvm_info("INCOMPLETE_PREDICTOR_MODEL", "UVMF_CHANGE_ME: The soc_ifc_predictor::write_ahb_slave_0_ae function needs to be completed with DUT prediction model",UVM_LOW)
 
     // Code for sending output transaction out through soc_ifc_sb_ap
     // Please note that each broadcasted transaction should be a different object than previously

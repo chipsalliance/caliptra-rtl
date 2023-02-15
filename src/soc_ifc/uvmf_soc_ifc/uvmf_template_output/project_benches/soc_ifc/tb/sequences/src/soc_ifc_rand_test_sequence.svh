@@ -39,7 +39,8 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
   //        - Update avail_env_seqs_c definition
   //        - Add instantiation logic in the RAND_LOOP below
   rand enum int {
-      IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL
+      IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL,
+      IDX_SOC_IFC_ENV_MBOX_TOP_CONTENTION
   } rand_seq_idx;
 
   rand int iteration_count;
@@ -47,9 +48,12 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
   // Choose rand weights for each sequence
   constraint avail_env_seqs_c {
       rand_seq_idx dist {
-          IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL := 1
+          IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL := 1,
+          IDX_SOC_IFC_ENV_MBOX_TOP_CONTENTION := 1
       };
   }
+  // FIXME we're also running multiple iterations of this testcase in the regression.
+  //       What is the criteria for iteration count WITHIN the sequence?
   constraint iter_count_c {
       iteration_count inside {[1:10]};
   }
@@ -126,6 +130,8 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
         case (rand_seq_idx) inside
             IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL:
                 obj = soc_ifc_env_top_mbox_rand_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq[%d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_TOP_CONTENTION:
+                obj = soc_ifc_env_top_mbox_contention_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq[%d]",ii));
             default:
                 `uvm_error("SOC_IFC_RAND_TEST", $sformatf("rand_seq_idx randomized to illegal value: %p", rand_seq_idx))
         endcase

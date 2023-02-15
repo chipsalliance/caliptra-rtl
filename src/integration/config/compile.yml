@@ -1,7 +1,22 @@
 ---
+provides: [caliptra_top_defines]
+schema_version: 2.4.0
+targets:
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/config_defines.svh
+      - $COMPILE_ROOT/rtl/caliptra_reg_defines.svh
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/config_defines.svh
+      - $COMPILE_ROOT/rtl/caliptra_reg_defines.svh
+---
 provides: [caliptra_top]
 schema_version: 2.4.0
 requires:
+  - caliptra_top_defines
   - libs
   - kv_defines_pkg
   - el2_swerv_pkg
@@ -15,16 +30,9 @@ requires:
   - keyvault
   - soc_ifc_top
 targets:
-  tb:
-    directories: [$COMPILE_ROOT/rtl]
-    files:
-      - $COMPILE_ROOT/rtl/config_defines.svh
-      - $COMPILE_ROOT/rtl/caliptra_reg_defines.svh
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/config_defines.svh
-      - $COMPILE_ROOT/rtl/caliptra_reg_defines.svh
       - $COMPILE_ROOT/rtl/caliptra_top.sv
     tops: [caliptra_top]
   rtl_lint:

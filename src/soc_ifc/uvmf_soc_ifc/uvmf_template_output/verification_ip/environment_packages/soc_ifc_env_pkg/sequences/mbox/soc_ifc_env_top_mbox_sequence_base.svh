@@ -15,12 +15,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// pragma uvmf custom header begin
-// pragma uvmf custom header end
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-// DESCRIPTION: Sequence to initiate (and respond) to mailbox command
+// DESCRIPTION: Sequence to initiate (and respond) to mailbox command.
 //              "TOP" sequence because it invokes lower level env sequences
 //              to facilitate the uC/SoC sides of mailbox command handling
 //              and this sequence defines the whole mailbox flow.

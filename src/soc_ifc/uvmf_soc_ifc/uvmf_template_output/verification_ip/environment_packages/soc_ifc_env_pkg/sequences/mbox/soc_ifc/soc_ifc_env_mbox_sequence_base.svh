@@ -47,20 +47,20 @@ class soc_ifc_env_mbox_sequence_base #(
   extern virtual task mbox_set_cmd(input mbox_op_s op);
   extern virtual task mbox_push_datain();
   extern virtual task mbox_execute();
-  extern virtual task mbox_check_status(output uvm_reg_data_t data);
+  extern virtual task mbox_check_status(output mbox_status_e data);
   extern virtual task mbox_read_resp_data();
   extern virtual task mbox_poll_status();
   extern virtual task mbox_clr_execute();
 
   // Constrain size to less than 128KiB for now (mailbox size), but we will
   // recalculate this based on the command being sent
-  constraint mbox_dlen_c { mbox_op_rand.dlen < 32'h0002_0000; }
+  constraint mbox_dlen_max_c { mbox_op_rand.dlen <= 32'h0002_0000; }
   // Minimum 2 dwords to include dlen/mbox_resp_expected_dlen at the beginning
   // IFF the response data is required
-  constraint mbox_dlen_min_c { mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_op_rand.dlen > 32'h8; }
+  constraint mbox_dlen_min_c { mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_op_rand.dlen >= 32'h8; }
   // Response data is only non-zero if a response is requested, and also must
   // be small enough to fit in the mailbox
-  constraint mbox_resp_dlen_c {                                      mbox_resp_expected_dlen < 32'h0002_0000;
+  constraint mbox_resp_dlen_c {                                      mbox_resp_expected_dlen <= 32'h0002_0000;
                                 !mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen == 0;
                                  mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen >  0; }
 
@@ -155,11 +155,16 @@ task soc_ifc_env_mbox_sequence_base::mbox_execute();
         `uvm_error("MBOX_SEQ", "Register access failed (mbox_execute)")
 endtask
 
-task soc_ifc_env_mbox_sequence_base::mbox_check_status(output uvm_reg_data_t data);
-    reg_model.mbox_csr_rm.mbox_status.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
-    data >>= reg_model.mbox_csr_rm.mbox_status.status.get_lsb_pos();
-    if (reg_sts != UVM_IS_OK)
+task soc_ifc_env_mbox_sequence_base::mbox_check_status(output mbox_status_e data);
+    uvm_reg_data_t reg_data;
+    reg_model.mbox_csr_rm.mbox_status.read(reg_sts, reg_data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
+    if (reg_sts != UVM_IS_OK) begin
         `uvm_error("MBOX_SEQ", "Register access failed (mbox_status)")
+        data = CMD_FAILURE;
+    end
+    else begin
+        data = mbox_status_e'(reg_data >> reg_model.mbox_csr_rm.mbox_status.status.get_lsb_pos());
+    end
 endtask
 
 task soc_ifc_env_mbox_sequence_base::mbox_read_resp_data();
@@ -171,30 +176,30 @@ task soc_ifc_env_mbox_sequence_base::mbox_read_resp_data();
 endtask
 
 task soc_ifc_env_mbox_sequence_base::mbox_poll_status();
-    uvm_reg_data_t data;
+    mbox_status_e data;
 
     mbox_check_status(data);
-    while (mbox_status_e'(data) == CMD_BUSY) begin
+    while (data == CMD_BUSY) begin
         configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200);
         mbox_check_status(data);
     end
 
-    if (mbox_status_e'(data) == DATA_READY) begin
+    if (data == DATA_READY) begin
         if (mbox_resp_expected_dlen == 0)
-            `uvm_error("MBOX_SEQ", $sformatf("Received status %p when not expecting any bytes of response data!", mbox_status_e'(data)))
+            `uvm_error("MBOX_SEQ", $sformatf("Received status %p when not expecting any bytes of response data!", data))
         else begin
             mbox_read_resp_data();
         end
     end
-    else if (mbox_status_e'(data) == CMD_FAILURE) begin
-        `uvm_error("MBOX_SEQ", $sformatf("Received unexpected mailbox status %p", mbox_status_e'(data)))
+    else if (data == CMD_FAILURE) begin
+        `uvm_error("MBOX_SEQ", $sformatf("Received unexpected mailbox status %p", data))
     end
-    else if (mbox_status_e'(data) == CMD_COMPLETE) begin
+    else if (data == CMD_COMPLETE) begin
         if (mbox_resp_expected_dlen != 0)
-            `uvm_error("MBOX_SEQ", $sformatf("Received status %p when expecting 0x%x bytes of response data!", mbox_status_e'(data), mbox_resp_expected_dlen))
+            `uvm_error("MBOX_SEQ", $sformatf("Received status %p when expecting 0x%x bytes of response data!", data, mbox_resp_expected_dlen))
     end
     else begin
-        `uvm_error("MBOX_SEQ", $sformatf("Received unexpected mailbox status %p", mbox_status_e'(data)))
+        `uvm_error("MBOX_SEQ", $sformatf("Received unexpected mailbox status %p", data))
     end
 endtask
 

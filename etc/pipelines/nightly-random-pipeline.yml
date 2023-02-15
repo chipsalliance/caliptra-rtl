@@ -126,7 +126,8 @@ stages:
                 - enabled: true
                 - configspec_name: 'integration_lib'
                 - dut: 'uvmf_soc_ifc'
-                - sim_args: '+COVERAGE ${{ variables.coverage_root_args }} +UVM_VERBOSITY=UVM_NONE'
+                # TODO forcibly disable uvm warnings in soc_ifc_predictor and soc_ifc_scoreboard for now. Remove this once they're stabilized.
+                - sim_args: '+COVERAGE ${{ variables.coverage_root_args }} +CLP_REGRESSION'
                 - path: '${WORKSPACE}/Caliptra/src/soc_ifc/stimulus/testsuites/soc_ifc_nightly_random_regression.yml'
                 - timeout: 1440
         - uvmf_caliptra_top:
@@ -140,6 +141,7 @@ stages:
                 - enabled: true
                 - configspec_name: 'integration_lib'
                 - dut: 'uvmf_caliptra_top'
-                - sim_args: '+COVERAGE ${{ variables.coverage_root_args }} +UVM_VERBOSITY=UVM_NONE'
+                # TODO forcibly disable uvm warnings in soc_ifc_predictor and soc_ifc_scoreboard for now. Remove this once they're stabilized.
+                - sim_args: '+COVERAGE ${{ variables.coverage_root_args }} +CLP_REGRESSION'
                 - path: '${WORKSPACE}/Caliptra/src/integration/stimulus/testsuites/caliptra_top_nightly_random_regression.yml'
                 - timeout: 1440
