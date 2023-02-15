@@ -159,8 +159,7 @@ module sha512_ctrl_32bit_tb
   //----------------------------------------------------------------
   sha512_ctrl #(
              .AHB_DATA_WIDTH(32),
-             .AHB_ADDR_WIDTH(32),
-             .BYPASS_HSEL(0)
+             .AHB_ADDR_WIDTH(32)
             )
             dut (
              .clk(clk_tb),
