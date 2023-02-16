@@ -26,7 +26,8 @@ module hmac
        import hmac_reg_pkg::*;
        import kv_defines_pkg::*;      
       #(
-        ADDR_WIDTH = 32
+        ADDR_WIDTH = 32,
+        DATA_WIDTH = 32
       )(
         // Clock and reset.
         input wire           clk,
@@ -39,8 +40,8 @@ module hmac
 
         // Data ports.
         input wire  [ADDR_WIDTH - 1 : 0] address,
-        input wire  [31 : 0] write_data,
-        output wire [31 : 0] read_data,
+        input wire  [DATA_WIDTH - 1 : 0] write_data,
+        output wire [DATA_WIDTH - 1 : 0] read_data,
 
         // KV interface
         output kv_read_t [1:0] kv_read,
@@ -64,10 +65,17 @@ module hmac
   reg ready_reg;
   reg tag_valid_reg;
 
-  reg [31 : 0] key_reg [11 : 0];
+  localparam BLOCK_SIZE   = 1024;
+  localparam KEY_SIZE     = 384;
+  localparam TAG_SIZE     = KEY_SIZE;
+  localparam BLOCK_NUM_DWORDS = BLOCK_SIZE / DATA_WIDTH;
+  localparam KEY_NUM_DWORDS   = KEY_SIZE / DATA_WIDTH;
+  localparam TAG_NUM_DWORDS   = TAG_SIZE / DATA_WIDTH;
+
+  reg [KEY_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0]    key_reg;
   reg          key_we;
 
-  reg [31 : 0] block_reg [31 : 0];
+  reg [BLOCK_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0]  block_reg ;
   reg          block_we;
 
   logic zeroize_reg;
@@ -75,13 +83,13 @@ module hmac
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-  wire [383 : 0] core_key;
+  wire [383 : 0]  core_key;
   wire [1023 : 0] core_block;
-  wire           core_ready;
-  wire [383 : 0] core_tag;
-  wire           core_tag_valid;
-  reg [11:0][31:0] tag_reg;
-  reg [11:0][31:0] kv_reg;
+  wire            core_ready;
+  wire [383 : 0]  core_tag;
+  wire            core_tag_valid;
+  reg [TAG_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0] tag_reg;
+  reg [TAG_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0] kv_reg;
 
   hmac_reg__in_t hwif_in;
   hmac_reg__out_t hwif_out;
@@ -195,17 +203,17 @@ always_comb begin
   //drive hardware writeable registers from hmac core
   hwif_in.HMAC384_STATUS.READY.next = core_ready_reg;
   hwif_in.HMAC384_STATUS.VALID.next = tag_valid_reg;
-  for (int dword=0; dword < 12; dword++) begin
-    hwif_in.HMAC384_TAG[dword].TAG.next = tag_reg[11-dword];
+  for (int dword=0; dword < TAG_NUM_DWORDS; dword++) begin
+    hwif_in.HMAC384_TAG[dword].TAG.next = tag_reg[(TAG_NUM_DWORDS - 1)-dword];
     hwif_in.HMAC384_TAG[dword].TAG.hwclr = zeroize_reg;
   end
   //drive hardware writable registers from key vault
-  for (int dword=0; dword < 32; dword++)begin
+  for (int dword=0; dword < BLOCK_NUM_DWORDS; dword++)begin
     hwif_in.HMAC384_BLOCK[dword].BLOCK.we = kv_block_write_en & (kv_block_write_offset == dword);
     hwif_in.HMAC384_BLOCK[dword].BLOCK.next = kv_block_write_data;
     hwif_in.HMAC384_BLOCK[dword].BLOCK.hwclr = zeroize_reg;
   end
-  for (int dword=0; dword < 12; dword++)begin
+  for (int dword=0; dword < KEY_NUM_DWORDS; dword++)begin
     hwif_in.HMAC384_KEY[dword].KEY.we = kv_key_write_en & (kv_key_write_offset == dword);
     hwif_in.HMAC384_KEY[dword].KEY.next = kv_key_write_data;
     hwif_in.HMAC384_KEY[dword].KEY.hwclr = zeroize_reg;
@@ -231,10 +239,10 @@ always_comb begin
   hwif_in.HMAC384_KV_RD_BLOCK_CTRL.read_en.hwclr = ~kv_block_ready;
   hwif_in.HMAC384_KV_WR_CTRL.write_en.hwclr = ~kv_write_ready;
   //assign hardware readable registers to drive hmac core
-  for (int dword=0; dword < 12; dword++) begin
+  for (int dword=0; dword < KEY_NUM_DWORDS; dword++) begin
     key_reg[dword] = hwif_out.HMAC384_KEY[dword].KEY.value;
   end
-  for (int dword=0; dword < 32; dword++)begin
+  for (int dword=0; dword < BLOCK_NUM_DWORDS; dword++)begin
     block_reg[dword] = hwif_out.HMAC384_BLOCK[dword].BLOCK.value;
   end
 end
@@ -277,7 +285,7 @@ assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
 
 //Read Key
 kv_read_client #(
-  .DATA_WIDTH(384),
+  .DATA_WIDTH(KEY_SIZE),
   .PAD(0)
 )
 hmac_key_kv_read
@@ -304,7 +312,7 @@ hmac_key_kv_read
 
 //Read Block
 kv_read_client #(
-  .DATA_WIDTH(1024),
+  .DATA_WIDTH(BLOCK_SIZE),
   .HMAC(1),
   .PAD(1)
 )
@@ -332,7 +340,7 @@ hmac_block_kv_read
 
 //Write to keyvault
 kv_write_client #(
-  .DATA_WIDTH(384)
+  .DATA_WIDTH(TAG_SIZE)
 )
 hmac_result_kv_write
 (

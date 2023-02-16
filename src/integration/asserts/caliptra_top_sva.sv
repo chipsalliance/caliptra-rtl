@@ -22,12 +22,22 @@
 `define CPTRA_TOP_PATH  caliptra_top_tb.caliptra_top_dut
 `define KEYVAULT_PATH   caliptra_top_tb.caliptra_top_dut.key_vault1
 `define DOE_PATH        caliptra_top_tb.caliptra_top_dut.doe.doe_inst.doe_fsm1
+`define SERVICES_PATH   caliptra_top_tb.tb_services_i
+`define SHA512_PATH     caliptra_top_tb.caliptra_top_dut.sha512.sha512_inst
+`define HMAC_PATH       caliptra_top_tb.caliptra_top_dut.hmac.hmac_inst
+`define ECC_PATH        caliptra_top_tb.caliptra_top_dut.ecc_top1.ecc_dsa_ctrl_i
 
 
 module caliptra_top_sva
   import doe_defines_pkg::*;
   import kv_defines_pkg::*;
   ();
+
+  //TODO: pass these parameters from their architecture into here
+  localparam SHA512_DIG_NUM_DWORDS = 16; //`SHA512_PATH.DIG_NUM_DWORDS;
+  localparam HMAC_KEY_NUM_DWORDS  = 12;  //`HMAC_PATH.KEY_NUM_DWORDS
+  localparam HMAC_TAG_NUM_DWORDS = 12;   //`HMAC_PATH.TAG_NUM_DWORDS
+  localparam ECC_REG_NUM_DWORDS = 12;   // 'ECC_PATH.REG_NUM_DWORDS
 
   //TODO: add disable condition based on doe cmd reg
   DOE_lock_uds_set:        assert property (
@@ -87,6 +97,76 @@ module caliptra_top_sva
                                             `KEYVAULT_PATH.flush_keyvault && (`KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value == 1) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[0][0] == CLP_DEBUG_MODE_KV_1)
                                           )
                             else $display("SVA ERROR: KV not flushed with correct debug values");
+
+  genvar dword;
+  generate
+    for(dword = 0; dword < KV_NUM_DWORDS; dword++) begin
+      kv_sha512_block_r_flow:   assert property (
+                                            @(posedge `KEYVAULT_PATH.clk)
+                                            $fell(`SHA512_PATH.kv_src_write_en) && (dword < `SHA512_PATH.kv_read_ctrl_reg.entry_data_size) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`SHA512_PATH.kv_read.read_entry][dword] == `SHA512_PATH.block_reg[dword])
+                                            )
+                                else $display("SVA ERROR: SHA384 block mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`SHA512_PATH.kv_read.read_entry][dword], `SHA512_PATH.block_reg[dword]);
+
+      if (dword < SHA512_DIG_NUM_DWORDS) begin
+        kv_sha512_digest_w_flow:  assert property (
+                                              @(posedge `KEYVAULT_PATH.clk)
+                                              `SHA512_PATH.kv_dest_done |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`SHA512_PATH.kv_write_ctrl_reg.write_entry][dword] == `SHA512_PATH.kv_reg[(`SHA512_PATH.DIG_NUM_DWORDS-1) - dword])
+                                              )
+                                  else $display("SVA ERROR: SHA384 digest mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`SHA512_PATH.kv_write_ctrl_reg.write_entry][dword], `SHA512_PATH.kv_reg[(`SHA512_PATH.DIG_NUM_DWORDS-1) - dword]);
+      end
+
+      kv_hmac_block_r_flow:     assert property (
+                                            @(posedge `KEYVAULT_PATH.clk)
+                                            $fell(`HMAC_PATH.kv_block_write_en) && (dword < `HMAC_PATH.kv_block_read_ctrl_reg.entry_data_size) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[1].read_entry][dword] == `HMAC_PATH.block_reg[dword])
+                                            )
+                                else $display("SVA ERROR: HMAC384 block mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[1].read_entry][dword], `HMAC_PATH.block_reg[dword]);
+
+      if (dword < HMAC_KEY_NUM_DWORDS) begin
+        //TODO: remove ~`HMAC_PATH.kv_read[0].entry_is_pcr after updating smoke_test_kv
+        kv_hmac_key_r_flow:       assert property (
+                                              @(posedge `KEYVAULT_PATH.clk)
+                                              $fell(`HMAC_PATH.kv_key_write_en) && ~`HMAC_PATH.kv_read[0].entry_is_pcr |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[0].read_entry][dword] == `HMAC_PATH.key_reg[dword])
+                                              )
+                                  else $display("SVA ERROR: HMAC384 key mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[0].read_entry][dword], `HMAC_PATH.key_reg[dword]);
+      end
+
+      if (dword < HMAC_TAG_NUM_DWORDS) begin
+        kv_hmac_tag_w_flow:       assert property (
+                                              @(posedge `KEYVAULT_PATH.clk)
+                                              `HMAC_PATH.kv_write_done |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword] == `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword])
+                                              )
+                                  else $display("SVA ERROR: HMAC384 tag mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword], `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword]);
+      end
+      
+      if (dword < ECC_REG_NUM_DWORDS) begin
+        kv_ecc_privkey_r_flow:    assert property (
+                                              @(posedge `KEYVAULT_PATH.clk)
+                                              $fell(`ECC_PATH.kv_privkey_write_en) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[0].read_entry][dword] == `ECC_PATH.privkey_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
+                                              )
+                                  else $display("SVA ERROR: ECC privkey read mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[0].read_entry][dword], `ECC_PATH.privkey_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
+
+        kv_ecc_msg_r_flow:        assert property (
+                                              @(posedge `KEYVAULT_PATH.clk)
+                                              $fell(`ECC_PATH.kv_msg_write_en) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[2].read_entry][dword] == `ECC_PATH.msg_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
+                                              )
+                                  else $display("SVA ERROR: ECC msg mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[2].read_entry][dword], `ECC_PATH.msg_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
+
+        kv_ecc_seed_r_flow:       assert property (
+                                              @(posedge `KEYVAULT_PATH.clk)
+                                              $fell(`ECC_PATH.kv_seed_write_en) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[1].read_entry][dword] == `ECC_PATH.seed_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
+                                              )
+                                  else $display("SVA ERROR: ECC seed mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[1].read_entry][dword], `ECC_PATH.seed_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
+
+        kv_ecc_privkey_w_flow:    assert property (
+                                              @(posedge `KEYVAULT_PATH.clk)
+                                              `ECC_PATH.kv_write_done |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword] == `ECC_PATH.kv_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
+                                              )
+                                  else $display("SVA ERROR: ECC privkey write mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword], `ECC_PATH.kv_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
+      end
+
+    end
+  endgenerate
+
 
   //TODO: uncomment after fixing fuse_field_entropy bug
   genvar client;

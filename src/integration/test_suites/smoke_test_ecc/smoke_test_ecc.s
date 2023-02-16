@@ -199,9 +199,9 @@ _start:
         sub x1, x1, t3
         bne x1, x0, write_IV0_loop1
 
-    // Load and write ECC_CMD_KEYSIGN to ECC_CORE
+    // Load and write ECC_CMD_SIGNING to ECC_CORE
     li x3, CLP_ECC_REG_ECC_CTRL
-    li x4, ECC_CMD_KEYSIGN
+    li x4, ECC_CMD_SIGNING
     sw x4, 0(x3)
 
     // wait for ECC process
@@ -326,9 +326,9 @@ _start:
         sub x1, x1, t3
         bne x1, x0, write_signs0_loop
 
-    // Load and write ECC_CMD_KEYVERIFY to ECC_CORE
+    // Load and write ECC_CMD_VERIFYING to ECC_CORE
     li x3, CLP_ECC_REG_ECC_CTRL
-    li x4, ECC_CMD_KEYVERIFY
+    li x4, ECC_CMD_VERIFYING
     sw x4, 0(x3)
 
     // wait for ECC process

@@ -38,7 +38,7 @@ uint8_t fail_cmd = 0x1;
     digest = 38742d18bfa6e918b888d68d1034e61f65dec0759172c2dbf08cf1e132b217eaf4ec29e15db7f4b07e08a70cc5662012
 */
 
-void sha384_kvflow_test(uint8_t sha_kv_id, uint8_t store_to_kv, uint32_t expected_digest[12]){
+void sha384_kvflow_test(uint8_t sha_kv_id, uint8_t store_to_kv, uint8_t digest_kv_id, uint32_t expected_digest[12]){
     uint8_t block_inject_cmd;
     volatile uint32_t * reg_ptr;
 
@@ -69,7 +69,8 @@ void sha384_kvflow_test(uint8_t sha_kv_id, uint8_t store_to_kv, uint32_t expecte
                                                                     SHA512_REG_SHA512_KV_WR_CTRL_SHA_BLOCK_DEST_VALID_MASK |
                                                                     SHA512_REG_SHA512_KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK  |
                                                                     SHA512_REG_SHA512_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK  |
-                                                                    SHA512_REG_SHA512_KV_WR_CTRL_ECC_MSG_DEST_VALID_MASK);
+                                                                    SHA512_REG_SHA512_KV_WR_CTRL_ECC_MSG_DEST_VALID_MASK |
+                                                                    ((digest_kv_id & 0x7) << SHA512_REG_SHA512_KV_WR_CTRL_WRITE_ENTRY_LOW));
     }    
 
 
@@ -121,8 +122,9 @@ void main() {
                                     0xc5662012};
 
     uint8_t shablock_kv_id = 0x0;
-    uint8_t store_to_kv = 0x0;
-    sha384_kvflow_test(shablock_kv_id, store_to_kv, expected_digest);
+    uint8_t store_to_kv = 0x1;
+    uint8_t digest_kv_id = 0x0;
+    sha384_kvflow_test(shablock_kv_id, store_to_kv, digest_kv_id, expected_digest);
     
     printf("%c",0xff); //End the test
     

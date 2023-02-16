@@ -39,7 +39,7 @@ uint8_t fail_cmd = 0x1;
     TAG = b6a8d5636f5c6a7224f9977dcf7ee6c7fb6d0c48cbdee9737a959796489bddbc4c5df61d5b3297b4fb68dab9f1b582c2
 */
 
-void hmac_kvflow_test(uint8_t key_kv_id, uint8_t store_to_kv, uint32_t block[], uint32_t expected_tag[12]){
+void hmac_kvflow_test(uint8_t key_kv_id, uint8_t hmacblock_kv_id, uint8_t store_to_kv, uint8_t tag_kv_id, uint32_t block[], uint32_t expected_tag[12]){
     uint8_t key_inject_cmd;
     uint8_t offset;
     volatile uint32_t * reg_ptr;
@@ -56,7 +56,7 @@ void hmac_kvflow_test(uint8_t key_kv_id, uint8_t store_to_kv, uint32_t block[], 
 
     // Program KEY Read with 12 dwords from key_kv_id
     lsu_write_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_RD_KEY_CTRL, HMAC_REG_HMAC384_KV_RD_KEY_CTRL_READ_EN_MASK |
-                                                                   ((key_kv_id & 0x7) << HMAC_REG_HMAC384_KV_RD_KEY_CTRL_READ_ENTRY_LOW) |
+                                                                  ((key_kv_id & 0x7) << HMAC_REG_HMAC384_KV_RD_KEY_CTRL_READ_ENTRY_LOW) |
                                                                   (0xB << HMAC_REG_HMAC384_KV_RD_KEY_CTRL_ENTRY_DATA_SIZE_LOW));
 
     // Check that HMAC KEY is loaded
@@ -64,11 +64,19 @@ void hmac_kvflow_test(uint8_t key_kv_id, uint8_t store_to_kv, uint32_t block[], 
 
     
     // Program HMAC_BLOCK
+    lsu_write_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL, HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL_READ_EN_MASK |
+                                                                    ((hmacblock_kv_id & 0x7) << HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL_READ_ENTRY_LOW) |
+                                                                    (0xB << HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL_ENTRY_DATA_SIZE_LOW));
+
+    // Check that HMAC BLOCK is loaded
+    while((lsu_read_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS) & HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS_VALID_MASK) == 0);
+    /*
     reg_ptr = (uint32_t*) CLP_HMAC_REG_HMAC384_BLOCK_0;
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC384_BLOCK_31) {
         *reg_ptr++ = block[offset++];
     }
+    */
 
     // if we want to store the results into kv
     // set tag DEST to write
@@ -79,7 +87,8 @@ void hmac_kvflow_test(uint8_t key_kv_id, uint8_t store_to_kv, uint32_t block[], 
                                                                 HMAC_REG_HMAC384_KV_WR_CTRL_SHA_BLOCK_DEST_VALID_MASK |
                                                                 HMAC_REG_HMAC384_KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK  |
                                                                 HMAC_REG_HMAC384_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK  |
-                                                                HMAC_REG_HMAC384_KV_WR_CTRL_ECC_MSG_DEST_VALID_MASK);
+                                                                HMAC_REG_HMAC384_KV_WR_CTRL_ECC_MSG_DEST_VALID_MASK   |
+                                                                ((tag_kv_id & 0x7) << HMAC_REG_HMAC384_KV_WR_CTRL_WRITE_ENTRY_LOW));
     }
 
     // Enable HMAC core
@@ -160,9 +169,11 @@ void main() {
                                     0xfb68dab9,
                                     0xf1b582c2};
 
-    uint8_t hmackey_kv_id = 0x2;
-    uint8_t store_to_kv = 0x0;
-    hmac_kvflow_test(hmackey_kv_id, store_to_kv, block, expected_digest);
+    uint8_t hmackey_kv_id       = 0x2;
+    uint8_t hmacblock_kv_id     = 0x1;
+    uint8_t store_to_kv         = 0x1;
+    uint8_t tag_kv_id           = 0x0;
+    hmac_kvflow_test(hmackey_kv_id, hmacblock_kv_id, store_to_kv, tag_kv_id, block, expected_digest);
 
     printf("%c",0xff); //End the test
     

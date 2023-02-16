@@ -27,6 +27,7 @@ addrmap ecc_reg {
     default hw = na;
     signal {activelow; async; cpuif_reset; field_reset;} reset_b;
     signal {activelow; async;} hard_reset_b;
+    signal {} ecc_ready;
 
 
     /* -----------------------
@@ -78,8 +79,8 @@ addrmap ecc_reg {
         default sw = w;
         default hw = r;
         default resetsignal = reset_b;
-        field {desc = "Control command field"; hwclr;} CTRL[2] = 2'b0;
-        field {desc = "Zeroize all internal registers"; singlepulse;} ZEROIZE = 1'b0;
+        field {desc = "Control command field"; swwe = ecc_ready; hwclr;} CTRL[2] = 2'b0;
+        field {desc = "Zeroize all internal registers"; swwe = ecc_ready; singlepulse;} ZEROIZE = 1'b0;
     
     } ECC_CTRL @0x00000010;
 
@@ -119,9 +120,9 @@ addrmap ecc_reg {
         default sw = w;
         default hw = r;
         default resetsignal = reset_b;
-        field {desc = "SCA point randomization field";} POINT_RND_EN = 1'b1;
-        field {desc = "SCA mask signing field";} MASK_SIGN_EN = 1'b1;
-        field {desc = "SCA scalar randomization field";} SCALAR_RND_EN = 1'b1;
+        field {desc = "SCA point randomization field"; swwe = ecc_ready;} POINT_RND_EN = 1'b1;
+        field {desc = "SCA mask signing field"; swwe = ecc_ready;} MASK_SIGN_EN = 1'b1;
+        field {desc = "SCA scalar randomization field"; swwe = ecc_ready;} SCALAR_RND_EN = 1'b1;
     
     } ECC_SCACONFIG @0x00000020;
 
@@ -139,7 +140,7 @@ addrmap ecc_reg {
         default hw = rw;
         default we = true;
         default resetsignal = reset_b;
-        field {desc = "Input seed field"; hwclr;} SEED[32] = 32'b0;
+        field {desc = "Input seed field"; swwe = ecc_ready; hwclr;} SEED[32] = 32'b0;
     
     } ECC_SEED[12] @0x00000080;
 
@@ -158,7 +159,7 @@ addrmap ecc_reg {
         default hw = rw;
         default we = true;
         default resetsignal = reset_b;
-        field {desc = "Input message field"; hwclr;} MSG[32] = 32'b0;
+        field {desc = "Input message field"; swwe = ecc_ready; hwclr;} MSG[32] = 32'b0;
     
     } ECC_MSG[12] @0x00000100;
 
@@ -180,7 +181,7 @@ addrmap ecc_reg {
         default hw = rw;
         default we = true;
         default resetsignal = reset_b;
-        field {desc = "Private key field"; hwclr;} PRIVKEY[32] = 32'b0;
+        field {desc = "Private key field"; swwe = ecc_ready; hwclr;} PRIVKEY[32] = 32'b0;
     
     } ECC_PRIVKEY[12] @0x00000180;
 
@@ -201,7 +202,7 @@ addrmap ecc_reg {
         default hw = rw;
         default we = true;
         default resetsignal = reset_b;
-        field {desc = "Public key x field"; hwclr;} PUBKEY_X[32] = 32'b0;
+        field {desc = "Public key x field"; swwe = ecc_ready; hwclr;} PUBKEY_X[32] = 32'b0;
     
     } ECC_PUBKEY_X[12] @0x00000200;
 
@@ -221,7 +222,7 @@ addrmap ecc_reg {
         default hw = rw;
         default we = true;
         default resetsignal = reset_b;
-        field {desc = "Public key y field"; hwclr;} PUBKEY_Y[32] = 32'b0;
+        field {desc = "Public key y field"; swwe = ecc_ready; hwclr;} PUBKEY_Y[32] = 32'b0;
     
     } ECC_PUBKEY_Y[12] @0x00000280;
 
@@ -245,7 +246,7 @@ addrmap ecc_reg {
         default hw = rw;
         default we = true;
         default resetsignal = reset_b;
-        field {desc = "Signature R field"; hwclr;} SIGN_R[32] = 32'b0;
+        field {desc = "Signature R field"; swwe = ecc_ready; hwclr;} SIGN_R[32] = 32'b0;
     
     } ECC_SIGN_R[12] @0x00000300;
 
@@ -266,7 +267,7 @@ addrmap ecc_reg {
         default hw = rw;
         default we = true;
         default resetsignal = reset_b;
-        field {desc = "Signature S field"; hwclr;} SIGN_S[32] = 32'b0;
+        field {desc = "Signature S field"; swwe = ecc_ready; hwclr;} SIGN_S[32] = 32'b0;
     
     } ECC_SIGN_S[12] @0x00000380;
     
@@ -307,7 +308,7 @@ addrmap ecc_reg {
         default sw = w;
         default hw = r;
         default resetsignal = reset_b;
-        field {desc = "Input IV field"; hwclr;} IV[32] = 32'b0;
+        field {desc = "Input IV field"; swwe = ecc_ready; hwclr;} IV[32] = 32'b0;
     
     } ECC_IV[12] @0x00000480;
 

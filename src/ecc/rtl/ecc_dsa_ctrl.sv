@@ -86,13 +86,13 @@ module ecc_dsa_ctrl
     //----------------------------------------------------------------
 
     localparam [RND_SIZE-1 : 0]  zero_pad               = '0;
-    
+    localparam REG_NUM_DWORDS = REG_SIZE / RADIX;
     //----------------------------------------------------------------
     // Registers including update variables and write enable.
     //----------------------------------------------------------------
     logic [DSA_PROG_ADDR_W-1 : 0]           prog_cntr;
     
-    logic [REG_SIZE-1 : 0]                  read_reg;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0] read_reg;
     logic [(REG_SIZE+RND_SIZE)-1 : 0]       write_reg;
     logic [1 : 0]                           cycle_cnt;
 
@@ -103,7 +103,8 @@ module ecc_dsa_ctrl
     logic pm_busy_o;
     
     logic hw_privkey_we;
-    logic hw_privkey_we_ff;
+    logic privkey_we_reg;
+    logic privkey_we_reg_ff;
     logic hw_pubkeyx_we;
     logic hw_pubkeyy_we;
     logic hw_r_we;
@@ -121,15 +122,15 @@ module ecc_dsa_ctrl
 
     logic [1  : 0]          cmd_reg;
     logic [2  : 0]          pm_cmd_reg;
-    logic [REG_SIZE-1 : 0]  msg_reg;
-    logic [REG_SIZE-1 : 0]  privkey_reg;
-    logic [REG_SIZE-1 : 0]  kv_reg;
-    logic [REG_SIZE-1 : 0]  pubkeyx_reg;
-    logic [REG_SIZE-1 : 0]  pubkeyy_reg;
-    logic [REG_SIZE-1 : 0]  seed_reg;
-    logic [REG_SIZE-1 : 0]  r_reg;
-    logic [REG_SIZE-1 : 0]  s_reg;
-    logic [REG_SIZE-1 : 0]  IV_reg;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  msg_reg;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  privkey_reg;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  kv_reg;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  pubkeyx_reg;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  pubkeyy_reg;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  seed_reg;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  r_reg;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  s_reg;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  IV_reg;
     logic [REG_SIZE-1 : 0]  lambda;
     logic [REG_SIZE-1 : 0]  lambda_reg;
     logic [REG_SIZE-1 : 0]  masking_rnd;
@@ -167,7 +168,6 @@ module ecc_dsa_ctrl
     logic [31:0] kv_msg_write_data;
   
     logic dest_keyvault;
-    logic dest_keyvault_ff;
     kv_error_code_e kv_privkey_error, kv_seed_error, kv_msg_error, kv_write_error;
     logic kv_privkey_ready, kv_privkey_done;
     logic kv_seed_ready, kv_seed_done ;
@@ -276,68 +276,29 @@ module ecc_dsa_ctrl
     //----------------------------------------------------------------
 
     // read the registers written by sw
-    always_ff @(posedge clk or negedge reset_n) 
-    begin : ecc_reg_reading
-        if (!reset_n) begin
-            cmd_reg  <= '0;
-            zeroize_reg <= '0;
-            sca_point_rnd_en  <= 1'b1;
-            sca_mask_sign_en  <= 1'b1;
-            sca_scalar_rnd_en <= 1'b1;
-            pubkeyx_reg <= '0;
-            pubkeyy_reg <= '0;
-            r_reg       <= '0;
-            s_reg       <= '0;
-            IV_reg      <= '0;
-        end
-        else if (dsa_ready_reg) begin
-            cmd_reg <= hwif_out.ECC_CTRL.CTRL.value;
-            zeroize_reg <= hwif_out.ECC_CTRL.ZEROIZE.value;
-            
-            sca_point_rnd_en  <= hwif_out.ECC_SCACONFIG.POINT_RND_EN.value;
-            sca_mask_sign_en  <= hwif_out.ECC_SCACONFIG.MASK_SIGN_EN.value;
-            sca_scalar_rnd_en <= hwif_out.ECC_SCACONFIG.SCALAR_RND_EN.value;
-
-            for(int i0=0; i0<12; i0++) begin
-                pubkeyx_reg[i0*32 +: 32] <= hwif_out.ECC_PUBKEY_X[11-i0].PUBKEY_X.value;
-                pubkeyy_reg[i0*32 +: 32] <= hwif_out.ECC_PUBKEY_Y[11-i0].PUBKEY_Y.value;
-                r_reg[i0*32 +: 32]       <= hwif_out.ECC_SIGN_R[11-i0].SIGN_R.value;
-                s_reg[i0*32 +: 32]       <= hwif_out.ECC_SIGN_S[11-i0].SIGN_S.value;
-                IV_reg[i0*32 +: 32]      <= hwif_out.ECC_IV[11-i0].IV.value;
-            end
-        end
-    end // ecc_reg_reading
-
-    always_ff @(posedge clk or negedge reset_n) 
-    begin : ecc_reg_reading_kv
-        if (!reset_n) begin
-            seed_reg    <= '0;
-            msg_reg     <= '0;
-            privkey_reg <= '0;
-        end
-        //Key Vault has priority if enabled to drive these registers
-        //If keyvault is not enabled, grab the sw value on dsa_ready_reg as usual
-        else begin
-            for(int i0=0; i0<12; i0++) begin
-                privkey_reg[i0*32 +: 32] <= (dsa_ready_reg) ? hwif_out.ECC_PRIVKEY[11-i0].PRIVKEY.value : privkey_reg[i0*32 +: 32];
-                seed_reg[i0*32 +: 32]    <= (dsa_ready_reg) ? hwif_out.ECC_SEED[11-i0].SEED.value : seed_reg[i0*32 +: 32];
-                msg_reg[i0*32 +: 32]     <= (dsa_ready_reg) ? hwif_out.ECC_MSG[11-i0].MSG.value : msg_reg[i0*32 +: 32];
-            end
-        end
+    always_comb begin
+        cmd_reg = hwif_out.ECC_CTRL.CTRL.value;
+        zeroize_reg = hwif_out.ECC_CTRL.ZEROIZE.value;
+        
+        sca_point_rnd_en  = hwif_out.ECC_SCACONFIG.POINT_RND_EN.value;
+        sca_mask_sign_en  = hwif_out.ECC_SCACONFIG.MASK_SIGN_EN.value;
+        sca_scalar_rnd_en = hwif_out.ECC_SCACONFIG.SCALAR_RND_EN.value;
     end
 
+    //there is a clk cycle memory read delay between hw_privkey_we and read_reg
     always_ff @(posedge clk or negedge reset_n) 
     begin : ecc_kv_reg
         if (!reset_n) begin
-            hw_privkey_we_ff <= '0;
-            dest_keyvault_ff <= '0;
+            privkey_we_reg      <= '0;
+            privkey_we_reg_ff   <= '0;
             kv_reg    <= '0;
         end
         //Store private key here before pushing to keyvault
         else begin
-            hw_privkey_we_ff <= hw_privkey_we;
-            dest_keyvault_ff <= dest_keyvault;
-            kv_reg <= (hw_privkey_we & dest_keyvault) ? read_reg : kv_reg;
+            privkey_we_reg <= hw_privkey_we;
+            privkey_we_reg_ff <= privkey_we_reg;
+            if (privkey_we_reg & ~privkey_we_reg_ff & dest_keyvault)
+                kv_reg <= read_reg;
         end
     end
 
@@ -347,6 +308,7 @@ module ecc_dsa_ctrl
     // write the registers by hw
     always_comb hwif_in.reset_b = reset_n;
     always_comb hwif_in.hard_reset_b = cptra_pwrgood;
+    always_comb hwif_in.ecc_ready = dsa_ready_reg;
     always_comb hwif_in.ECC_NAME[0].NAME.next = ECC_CORE_NAME[31 : 0];
     always_comb hwif_in.ECC_NAME[1].NAME.next = ECC_CORE_NAME[63 : 32];
     always_comb hwif_in.ECC_VERSION[0].VERSION.next = ECC_CORE_VERSION[31 : 0];
@@ -358,55 +320,65 @@ module ecc_dsa_ctrl
     
     always_comb begin // ecc_reg_writing
         for (int dword=0; dword < 12; dword++)begin
+            //Key Vault has priority if enabled to drive these registers
+            //If keyvault is not enabled, grab the sw value as usual
+            privkey_reg[dword] = hwif_out.ECC_PRIVKEY[11-dword].PRIVKEY.value;
             //don't store the private key generated in sw accessible register if it's going to keyvault
-            hwif_in.ECC_PRIVKEY[dword].PRIVKEY.we = (kv_privkey_write_en & (kv_privkey_write_offset == dword)) | (hw_privkey_we & ~dest_keyvault_ff);
-            hwif_in.ECC_PRIVKEY[dword].PRIVKEY.next = kv_privkey_write_en? kv_privkey_write_data : read_reg[(11-dword)*32 +: 32];
+            hwif_in.ECC_PRIVKEY[dword].PRIVKEY.we = (kv_privkey_write_en & (kv_privkey_write_offset == dword)) | (privkey_we_reg & ~privkey_we_reg_ff & ~dest_keyvault);
+            hwif_in.ECC_PRIVKEY[dword].PRIVKEY.next = kv_privkey_write_en? kv_privkey_write_data : read_reg[11-dword];
             hwif_in.ECC_PRIVKEY[dword].PRIVKEY.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < 12; dword++)begin
+            seed_reg[dword] = hwif_out.ECC_SEED[11-dword].SEED.value;
             hwif_in.ECC_SEED[dword].SEED.we = kv_seed_write_en & (kv_seed_write_offset == dword);
             hwif_in.ECC_SEED[dword].SEED.next = kv_seed_write_data;
             hwif_in.ECC_SEED[dword].SEED.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < 12; dword++)begin
+            msg_reg[dword] = hwif_out.ECC_MSG[11-dword].MSG.value;
             hwif_in.ECC_MSG[dword].MSG.we = kv_msg_write_en & (kv_msg_write_offset == dword);
             hwif_in.ECC_MSG[dword].MSG.next = kv_msg_write_data;
             hwif_in.ECC_MSG[dword].MSG.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < 12; dword++)begin
+            pubkeyx_reg[dword] = hwif_out.ECC_PUBKEY_X[11-dword].PUBKEY_X.value;
             hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.we = hw_pubkeyx_we;
-            hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.next = read_reg[(11-dword)*32 +: 32];  
+            hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.next = read_reg[11-dword];  
             hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < 12; dword++)begin
+            pubkeyy_reg[dword] = hwif_out.ECC_PUBKEY_Y[11-dword].PUBKEY_Y.value;
             hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.we = hw_pubkeyy_we;
-            hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.next = read_reg[(11-dword)*32 +: 32];
+            hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.next = read_reg[11-dword];
             hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < 12; dword++)begin
+            r_reg[dword] = hwif_out.ECC_SIGN_R[11-dword].SIGN_R.value;
             hwif_in.ECC_SIGN_R[dword].SIGN_R.we = hw_r_we;
-            hwif_in.ECC_SIGN_R[dword].SIGN_R.next = read_reg[(11-dword)*32 +: 32];
+            hwif_in.ECC_SIGN_R[dword].SIGN_R.next = read_reg[11-dword];
             hwif_in.ECC_SIGN_R[dword].SIGN_R.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < 12; dword++)begin
+            s_reg[dword] = hwif_out.ECC_SIGN_S[11-dword].SIGN_S.value;
             hwif_in.ECC_SIGN_S[dword].SIGN_S.we = hw_s_we;
-            hwif_in.ECC_SIGN_S[dword].SIGN_S.next = read_reg[(11-dword)*32 +: 32];
+            hwif_in.ECC_SIGN_S[dword].SIGN_S.next = read_reg[11-dword];
             hwif_in.ECC_SIGN_S[dword].SIGN_S.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < 12; dword++)begin 
             hwif_in.ECC_VERIFY_R[dword].VERIFY_R.we = hw_verify_r_we;       
-            hwif_in.ECC_VERIFY_R[dword].VERIFY_R.next = read_reg[(11-dword)*32 +: 32];
+            hwif_in.ECC_VERIFY_R[dword].VERIFY_R.next = read_reg[11-dword];
             hwif_in.ECC_VERIFY_R[dword].VERIFY_R.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < 12; dword++)begin
+            IV_reg[dword] = hwif_out.ECC_IV[11-dword].IV.value;
             hwif_in.ECC_IV[dword].IV.hwclr = zeroize_reg;
         end
     end
@@ -780,7 +752,7 @@ module ecc_dsa_ctrl
 
         //interface with client
         .dest_keyvault(dest_keyvault),
-        .dest_data_avail(hw_privkey_we_ff),
+        .dest_data_avail(privkey_we_reg & ~privkey_we_reg_ff),
         .dest_data(kv_reg),
 
         .error_code(kv_write_error),

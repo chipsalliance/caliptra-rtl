@@ -186,6 +186,7 @@ package ecc_reg_pkg;
     typedef struct packed{
         logic reset_b;
         logic hard_reset_b;
+        logic ecc_ready;
         ecc_reg__ECC_NAME__in_t [2-1:0]ECC_NAME;
         ecc_reg__ECC_VERSION__in_t [2-1:0]ECC_VERSION;
         ecc_reg__ECC_CTRL__in_t ECC_CTRL;

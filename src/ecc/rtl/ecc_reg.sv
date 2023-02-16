@@ -727,7 +727,7 @@ module ecc_reg (
     always_comb begin
         automatic logic [1:0] next_c = field_storage.ECC_CTRL.CTRL.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.ECC_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.ECC_CTRL && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
             next_c = decoded_wr_data[1:0];
             load_next_c = '1;
         end else if(hwif_in.ECC_CTRL.CTRL.hwclr) begin // HW Clear
@@ -749,7 +749,7 @@ module ecc_reg (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.ECC_CTRL.ZEROIZE.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.ECC_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.ECC_CTRL && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
             next_c = decoded_wr_data[2:2];
             load_next_c = '1;
         end else if(1) begin // singlepulse clears back to 0
@@ -771,7 +771,7 @@ module ecc_reg (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.ECC_SCACONFIG.POINT_RND_EN.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.ECC_SCACONFIG && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.ECC_SCACONFIG && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
             next_c = decoded_wr_data[0:0];
             load_next_c = '1;
         end
@@ -790,7 +790,7 @@ module ecc_reg (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.ECC_SCACONFIG.MASK_SIGN_EN.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.ECC_SCACONFIG && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.ECC_SCACONFIG && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
             next_c = decoded_wr_data[1:1];
             load_next_c = '1;
         end
@@ -809,7 +809,7 @@ module ecc_reg (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.ECC_SCACONFIG.SCALAR_RND_EN.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.ECC_SCACONFIG && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.ECC_SCACONFIG && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
             next_c = decoded_wr_data[2:2];
             load_next_c = '1;
         end
@@ -829,7 +829,7 @@ module ecc_reg (
         always_comb begin
             automatic logic [31:0] next_c = field_storage.ECC_SEED[i0].SEED.value;
             automatic logic load_next_c = '0;
-            if(decoded_reg_strb.ECC_SEED[i0] && decoded_req_is_wr) begin // SW write
+            if(decoded_reg_strb.ECC_SEED[i0] && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
                 next_c = decoded_wr_data[31:0];
                 load_next_c = '1;
             end else if(hwif_in.ECC_SEED[i0].SEED.we) begin // HW Write - we
@@ -856,7 +856,7 @@ module ecc_reg (
         always_comb begin
             automatic logic [31:0] next_c = field_storage.ECC_MSG[i0].MSG.value;
             automatic logic load_next_c = '0;
-            if(decoded_reg_strb.ECC_MSG[i0] && decoded_req_is_wr) begin // SW write
+            if(decoded_reg_strb.ECC_MSG[i0] && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
                 next_c = decoded_wr_data[31:0];
                 load_next_c = '1;
             end else if(hwif_in.ECC_MSG[i0].MSG.we) begin // HW Write - we
@@ -883,7 +883,7 @@ module ecc_reg (
         always_comb begin
             automatic logic [31:0] next_c = field_storage.ECC_PRIVKEY[i0].PRIVKEY.value;
             automatic logic load_next_c = '0;
-            if(decoded_reg_strb.ECC_PRIVKEY[i0] && decoded_req_is_wr) begin // SW write
+            if(decoded_reg_strb.ECC_PRIVKEY[i0] && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
                 next_c = decoded_wr_data[31:0];
                 load_next_c = '1;
             end else if(hwif_in.ECC_PRIVKEY[i0].PRIVKEY.we) begin // HW Write - we
@@ -910,7 +910,7 @@ module ecc_reg (
         always_comb begin
             automatic logic [31:0] next_c = field_storage.ECC_PUBKEY_X[i0].PUBKEY_X.value;
             automatic logic load_next_c = '0;
-            if(decoded_reg_strb.ECC_PUBKEY_X[i0] && decoded_req_is_wr) begin // SW write
+            if(decoded_reg_strb.ECC_PUBKEY_X[i0] && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
                 next_c = decoded_wr_data[31:0];
                 load_next_c = '1;
             end else if(hwif_in.ECC_PUBKEY_X[i0].PUBKEY_X.we) begin // HW Write - we
@@ -937,7 +937,7 @@ module ecc_reg (
         always_comb begin
             automatic logic [31:0] next_c = field_storage.ECC_PUBKEY_Y[i0].PUBKEY_Y.value;
             automatic logic load_next_c = '0;
-            if(decoded_reg_strb.ECC_PUBKEY_Y[i0] && decoded_req_is_wr) begin // SW write
+            if(decoded_reg_strb.ECC_PUBKEY_Y[i0] && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
                 next_c = decoded_wr_data[31:0];
                 load_next_c = '1;
             end else if(hwif_in.ECC_PUBKEY_Y[i0].PUBKEY_Y.we) begin // HW Write - we
@@ -964,7 +964,7 @@ module ecc_reg (
         always_comb begin
             automatic logic [31:0] next_c = field_storage.ECC_SIGN_R[i0].SIGN_R.value;
             automatic logic load_next_c = '0;
-            if(decoded_reg_strb.ECC_SIGN_R[i0] && decoded_req_is_wr) begin // SW write
+            if(decoded_reg_strb.ECC_SIGN_R[i0] && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
                 next_c = decoded_wr_data[31:0];
                 load_next_c = '1;
             end else if(hwif_in.ECC_SIGN_R[i0].SIGN_R.we) begin // HW Write - we
@@ -991,7 +991,7 @@ module ecc_reg (
         always_comb begin
             automatic logic [31:0] next_c = field_storage.ECC_SIGN_S[i0].SIGN_S.value;
             automatic logic load_next_c = '0;
-            if(decoded_reg_strb.ECC_SIGN_S[i0] && decoded_req_is_wr) begin // SW write
+            if(decoded_reg_strb.ECC_SIGN_S[i0] && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
                 next_c = decoded_wr_data[31:0];
                 load_next_c = '1;
             end else if(hwif_in.ECC_SIGN_S[i0].SIGN_S.we) begin // HW Write - we
@@ -1042,7 +1042,7 @@ module ecc_reg (
         always_comb begin
             automatic logic [31:0] next_c = field_storage.ECC_IV[i0].IV.value;
             automatic logic load_next_c = '0;
-            if(decoded_reg_strb.ECC_IV[i0] && decoded_req_is_wr) begin // SW write
+            if(decoded_reg_strb.ECC_IV[i0] && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
                 next_c = decoded_wr_data[31:0];
                 load_next_c = '1;
             end else if(hwif_in.ECC_IV[i0].IV.hwclr) begin // HW Clear

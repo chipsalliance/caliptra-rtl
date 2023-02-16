@@ -84,7 +84,7 @@ void ecc_keygen_kvflow(uint8_t seed_kv_id, uint8_t privkey_kv_id, uint32_t ecc_i
 
     printf("ECC KEYGEN\n");
     // Enable ECC KEYGEN core
-    lsu_write_32((uint32_t *) CLP_ECC_REG_ECC_CTRL, 0x1);
+    lsu_write_32((uint32_t *) CLP_ECC_REG_ECC_CTRL, ECC_CMD_KEYGEN);
 
     printf("Wait for ECC KEYGEN\n");
     // wait for ECC KEYGEN process to be done
@@ -173,7 +173,7 @@ void ecc_signing_kvflow(uint8_t privkey_kv_id, uint32_t ecc_msg[12], uint32_t ec
     }
 
     // Enable ECC SIGNING core
-    lsu_write_32((uint32_t *) CLP_ECC_REG_ECC_CTRL, 0x2);
+    lsu_write_32((uint32_t *) CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING);
     
     // wait for ECC SIGNING process to be done
     while((lsu_read_32((uint32_t *) CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_VALID_MASK) == 0);

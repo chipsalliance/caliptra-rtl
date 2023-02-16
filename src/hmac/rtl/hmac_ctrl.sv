@@ -71,7 +71,8 @@ module hmac_ctrl
     reg  [31 : 0] hmac_read_data;
 
     hmac #(
-        .ADDR_WIDTH (AHB_ADDR_WIDTH)
+        .ADDR_WIDTH (AHB_ADDR_WIDTH),
+        .DATA_WIDTH (32)
         ) hmac_inst
         (
         .clk(clk),

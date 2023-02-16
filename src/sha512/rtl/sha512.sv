@@ -88,12 +88,17 @@ module sha512
   reg [1 : 0] mode_reg;
   logic zeroize_reg;
 
-  localparam BLOCK_NO = 1024 / DATA_WIDTH;
-  reg [DATA_WIDTH-1 : 0] block_reg [BLOCK_NO-1 : 0];
+  localparam BLOCK_SIZE   = 1024;
+  localparam DIG_SIZE     = 512;
 
-  reg [15:0][31:0] digest_reg;
-  reg [511:0]      kv_reg;
-  reg              digest_valid_reg;
+  localparam BLOCK_NUM_DWORDS = BLOCK_SIZE / DATA_WIDTH;
+  localparam DIG_NUM_DWORDS = DIG_SIZE / DATA_WIDTH;
+
+  reg [DATA_WIDTH-1 : 0][BLOCK_NUM_DWORDS-1 : 0]    block_reg ;
+  reg [DIG_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0]      digest_reg;
+  reg [DIG_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0]      kv_reg;
+  reg                                               digest_valid_reg;
+  logic [DIG_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0]    get_mask;
 
   sha512_reg__in_t hwif_in;
   sha512_reg__out_t hwif_out;
@@ -112,14 +117,13 @@ module sha512
   kv_write_ctrl_reg_t kv_write_ctrl_reg;
   kv_read_ctrl_reg_t kv_read_ctrl_reg;
 
-  logic [15:0][31:0] get_mask;
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-  wire              core_ready;
-  wire [1023 : 0]   core_block;
-  wire [15:0][31:0] core_digest;
-  wire              core_digest_valid;
+  wire                                          core_ready;
+  wire [BLOCK_SIZE-1 : 0]                       core_block;
+  wire [DIG_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0] core_digest;
+  wire                                          core_digest_valid;
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
@@ -213,12 +217,12 @@ module sha512
     hwif_in.SHA512_STATUS.VALID.next = digest_valid_reg;
 
     //output comes in big endian
-    for (int dword =0; dword < 16; dword++) begin
+    for (int dword =0; dword < DIG_NUM_DWORDS; dword++) begin
       hwif_in.SHA512_DIGEST[dword].DIGEST.next = digest_reg[15-dword];
       hwif_in.SHA512_DIGEST[dword].DIGEST.hwclr = zeroize_reg;
     end
 
-    for (int dword=0; dword< BLOCK_NO; dword++) begin
+    for (int dword=0; dword< BLOCK_NUM_DWORDS; dword++) begin
       block_reg[dword] = hwif_out.SHA512_BLOCK[dword].BLOCK.value;
       hwif_in.SHA512_BLOCK[dword].BLOCK.we = (kv_src_write_en & (kv_src_write_offset == dword));
       hwif_in.SHA512_BLOCK[dword].BLOCK.next = kv_src_write_data;
@@ -281,7 +285,7 @@ assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
 
 //Read Block
 kv_read_client #(
-    .DATA_WIDTH(1024),
+    .DATA_WIDTH(BLOCK_SIZE),
     .PAD(1)
 )
 sha512_block_kv_read
@@ -307,7 +311,7 @@ sha512_block_kv_read
 );
 
 kv_write_client #(
-  .DATA_WIDTH(512)
+  .DATA_WIDTH(DIG_SIZE)
 )
 sha512_result_kv_write
 (

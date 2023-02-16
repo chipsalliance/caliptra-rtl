@@ -69,8 +69,8 @@
 
 /* ---- ECC ----*/
 #define ECC_CMD_KEYGEN            0x1
-#define ECC_CMD_KEYSIGN           0x2
-#define ECC_CMD_KEYVERIFY         0x3
+#define ECC_CMD_SIGNING           0x2
+#define ECC_CMD_VERIFYING         0x3
 #define STATUS_READY_BIT          0x0
 #define STATUS_VALID_BIT          0x1
 
