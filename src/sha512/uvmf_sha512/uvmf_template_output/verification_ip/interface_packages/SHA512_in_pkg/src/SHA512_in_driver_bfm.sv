@@ -386,10 +386,26 @@ end
       repeat (10) @(posedge clk_i);
       sha512_rst_o <= 1'b1;
       repeat (5) @(posedge clk_i);
+      transaction_flag_in_monitor_o = 1;
     end
   endtask 
 
   // raise the reset for DUT
+    //--------------------
+  //Reset Other signals
+  //--------------------
+  always @( negedge rst_i )
+     begin
+       sha512_rst_o <= 'b0;
+       hadrr_o <= 'bz;
+       hwdata_o <= 'bz;
+       hsel_o <= 'b0;
+       hwrite_o <= 'b0;
+       hready_o <= 'b0;
+       htrans_o <= 'b0;
+       hsize_o <= 3'b011;
+     end
+     
   always @ (posedge rst_i)
   begin
     sha512_rst_o = 1;
@@ -514,9 +530,9 @@ end
       transaction_flag_in_monitor_o = 1'b0;
       op_o = op;
       test_case_sel_o = test_case_sel;
-      $display(" **SHA512_in_driver_bfm** clock count value is: ", clock_cnt);
-      $display(" **SHA512_in_driver_bfm** op value is: ", op);
-      $display(" **SHA512_in_driver_bfm** test_case_sel value is: ", test_case_sel);
+      //$display(" **SHA512_in_driver_bfm** clock count value is: ", clock_cnt);
+      //$display(" **SHA512_in_driver_bfm** op value is: ", op);
+      //$display(" **SHA512_in_driver_bfm** test_case_sel value is: ", test_case_sel);
       
       // initialisation
       cnt_tmp = 0;
@@ -578,8 +594,8 @@ end
       endcase
 
       fd_r = $fopen(file_name,"r");
-      $display(" **SHA512_in_driver_bfm** clock count value is: ", clock_cnt);
-      if(fd_r) $display("**SHA512_in_driver_bfm** file opened successfully!");
+      //$display(" **SHA512_in_driver_bfm** clock count value is: ", clock_cnt);
+      //if(fd_r) $display("**SHA512_in_driver_bfm** file opened successfully!");
 
       while (cnt_tmp <= line_skip) begin
         cnt_tmp = cnt_tmp + 1;
@@ -587,7 +603,7 @@ end
       end
 
       // get the block and its length
-      $display("**SHA512_in_driver_bfm** Getting block length");
+      //$display("**SHA512_in_driver_bfm** Getting block length");
       $sscanf( line_read, "%s %s %d", tmp_str1, tmp_str2, block_len);
       $fgets(line_read,fd_r);
       $sscanf( line_read, "%s %s %h", tmp_str1, tmp_str2, block_all);
@@ -595,11 +611,11 @@ end
       // shift the block text
       block_all = block_all << (102400 - block_len);
       // $display("**SHA512_in_driver_bfm** block_all = %h", block_all);
-      $display(" **SHA512_in_driver_bfm** clock count value is: ", clock_cnt);
-      $display("**SHA512_in_driver_bfm** block_len is: %h", block_len);
+      //$display(" **SHA512_in_driver_bfm** clock count value is: ", clock_cnt);
+      //$display("**SHA512_in_driver_bfm** block_len is: %h", block_len);
 
-      $display(" **SHA512_in_driver_bfm** clock count value is: ", clock_cnt);
-      $display("**SHA512_in_driver_bfm** SHA512 test started");
+      //$display(" **SHA512_in_driver_bfm** clock count value is: ", clock_cnt);
+      //$display("**SHA512_in_driver_bfm** SHA512 test started");
       block_shift = block_len / 1024;
       block_len_res = block_len % 1024;
       block_len_res = 1024 - block_len_res - 1;
@@ -628,8 +644,8 @@ end
           block = block_last;
         end
 
-        $display(" **SHA512_in_driver_bfm** clock count value is: ", clock_cnt);
-        $display("**SHA512_in_driver_bfm** block is: %h", block);
+        //$display(" **SHA512_in_driver_bfm** clock count value is: ", clock_cnt);
+        //$display("**SHA512_in_driver_bfm** block is: %h", block);
         
         // write block
         write_block(block);
@@ -641,8 +657,8 @@ end
         
         if (ctrl_value == 0) ctrl_value = CTRL_INIT_VALUE;
         else ctrl_value = CTRL_NEXT_VALUE;
-        $display(" **SHA512_in_driver_bfm** clock count value is: ", clock_cnt);
-        $display("**SHA512_in_driver_bfm** ctrl_value is: %h", ctrl_value);
+        //$display(" **SHA512_in_driver_bfm** clock count value is: ", clock_cnt);
+        //$display("**SHA512_in_driver_bfm** ctrl_value is: %h", ctrl_value);
         write_single_word(ADDR_CTRL, {28'h0, op[1:0], ctrl_value});
 
         @(posedge clk_i);

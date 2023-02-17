@@ -112,8 +112,8 @@ class SHA512_predictor #(
     // `uvm_info("UNIMPLEMENTED_PREDICTOR_MODEL", "UVMF_CHANGE_ME: The SHA512_predictor::write_SHA512_in_agent_ae function needs to be completed with DUT prediction model",UVM_NONE)
     // `uvm_info("UNIMPLEMENTED_PREDICTOR_MODEL", "******************************************************************************************************",UVM_NONE)
     
-    $display("**SHA512_predictor** t.op= %d",t.op);
-    $display("**SHA512_predictor** t.test_case_sel = %d",t.test_case_sel);
+    //$display("**SHA512_predictor** t.op= %d",t.op);
+    //$display("**SHA512_predictor** t.test_case_sel = %d",t.test_case_sel);
     if (t.op== 3'b000) SHA512_sb_ap_output_transaction.result = 0;
     else begin
       cnt_tmp = 0;
@@ -176,7 +176,7 @@ class SHA512_predictor #(
       endcase
 
       fd_r = $fopen(file_name,"r");
-      if(fd_r) $display("**SHA512_in_driver_bfm** file opened successfully!");
+      //if(fd_r) $display("**SHA512_in_driver_bfm** file opened successfully!");
 
       while (cnt_tmp < line_skip) begin
         cnt_tmp = cnt_tmp + 1;
