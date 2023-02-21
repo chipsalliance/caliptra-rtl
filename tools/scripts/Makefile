@@ -54,7 +54,7 @@ HEADER_FILES := $(INCLUDES_DIR)/caliptra_defines.h \
 		$(PRINTF_DIR)/printf.h \
 		$(ISR_DIR)/riscv-csr.h \
 		$(ISR_DIR)/riscv-interrupts.h \
-		$(ISR_DIR)/swerv-csr.h \
+		$(ISR_DIR)/veer-csr.h \
 		$(foreach comp_lib, $(COMP_LIBS), $(wildcard $(comp_lib)/*.h))
 
 # Separate OFILE variable since this is not used to build remote images
@@ -128,7 +128,7 @@ includes = -I$(BUILD_DIR)
 #                                             |            |               |            |
 #         .------------------------------.    |            |               |            |
 #         | Inherited from ChipsAlliance |    |            |               |            |
-#         | SweRV repository provided    |    |            |               |            |
+#         | VeeR repository provided    |    |            |               |            |
 #         | Makefile                     |    |            |               |            |
 #         '-----+------------+-----------'    |            |               |            |
 #               |            |                |            |               |            |

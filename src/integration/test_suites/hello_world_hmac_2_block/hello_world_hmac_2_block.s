@@ -182,6 +182,6 @@ hw_data:
 .word 0x00000000
 .word 0x00000440
 .ascii "----------------------------------\n"
-.ascii "Hello World from SweRV EL2 @WDC !!\n"
+.ascii "Hello World from VeeR EL2  !!\n"
 .ascii "----------------------------------\n"
 .byte 0

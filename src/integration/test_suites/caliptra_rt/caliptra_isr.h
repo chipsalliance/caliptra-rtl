@@ -63,7 +63,7 @@ extern volatile caliptra_intr_received_s cptra_intr_rcv;
 void init_interrupts(void);
 
 // These inline functions are used to insert event-specific functionality into the
-// otherwise generic ISR that gets laid down by the parameterized macro "nonstd_swerv_isr"
+// otherwise generic ISR that gets laid down by the parameterized macro "nonstd_veer_isr"
 inline void service_doe_error_intr() {return;}
 inline void service_doe_notif_intr() {
     uint32_t * reg = (uint32_t *) (CLP_DOE_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);

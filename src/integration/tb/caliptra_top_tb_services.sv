@@ -134,7 +134,7 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
     logic                       inject_random_data;
 
 // Upwards name referencing per 23.8 of IEEE 1800-2017
-`define DEC caliptra_top_dut.rvtop.swerv.dec
+`define DEC caliptra_top_dut.rvtop.veer.dec
 
 `define LMEM mbox_ram1.ram 
 
@@ -612,7 +612,7 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
    //=========================================================================-
    // SRAM instances
    //=========================================================================-
-caliptra_swerv_sram_export swerv_sram_export_inst (
+caliptra_veer_sram_export veer_sram_export_inst (
     .el2_mem_export(el2_mem_export)
 );
 
@@ -743,7 +743,7 @@ task preload_iccm;
     if ( (saddr < `RV_ICCM_SADR) || (saddr > `RV_ICCM_EADR)) return;
     `ifndef RV_ICCM_ENABLE
         $display("********************************************************");
-        $display("ICCM preload: there is no ICCM in SweRV, terminating !!!");
+        $display("ICCM preload: there is no ICCM in VeeR, terminating !!!");
         $display("********************************************************");
         $finish;
     `endif
@@ -775,7 +775,7 @@ task preload_dccm;
     if (saddr < `RV_DCCM_SADR || saddr > `RV_DCCM_EADR) return;
     `ifndef RV_DCCM_ENABLE
         $display("********************************************************");
-        $display("DCCM preload: there is no DCCM in SweRV, terminating !!!");
+        $display("DCCM preload: there is no DCCM in VeeR, terminating !!!");
         $display("********************************************************");
         $finish;
     `endif
@@ -796,12 +796,12 @@ endtask
 
 
 
-`define ICCM_PATH swerv_sram_export_inst.Gen_iccm_enable
+`define ICCM_PATH veer_sram_export_inst.Gen_iccm_enable
 `ifdef VERILATOR
-`define DRAM(bk) swerv_sram_export_inst.Gen_dccm_enable.dccm_loop[bk].ram.ram_core
+`define DRAM(bk) veer_sram_export_inst.Gen_dccm_enable.dccm_loop[bk].ram.ram_core
 `define IRAM(bk) `ICCM_PATH.iccm_loop[bk].iccm_bank.ram_core
 `else
-`define DRAM(bk) swerv_sram_export_inst.Gen_dccm_enable.dccm_loop[bk].dccm.dccm_bank.ram_core
+`define DRAM(bk) veer_sram_export_inst.Gen_dccm_enable.dccm_loop[bk].dccm.dccm_bank.ram_core
 `define IRAM(bk) `ICCM_PATH.iccm_loop[bk].iccm.iccm_bank.ram_core
 `endif
 

@@ -69,6 +69,6 @@ stdout: .word STDOUT
 verbosity_g: .word 2
 hw_data:
 .ascii "----------------------------------\n"
-.ascii "Hello World from SweRV EL2 @WDC !!\n"
+.ascii "Hello World from VeeR EL2  !!\n"
 .ascii "----------------------------------\n"
 .byte 0

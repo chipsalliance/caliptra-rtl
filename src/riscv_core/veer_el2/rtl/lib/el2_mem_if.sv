@@ -23,7 +23,7 @@
 // Creation Date: 2022/9/16
 //
 // Description:
-//   This file is added to the SweRV-EL2 code-base after
+//   This file is added to the VeeR-EL2 code-base after
 //   the initial download, specifically for the Caliptra
 //   security module project.
 //   This file is used to bring synthesizable memory
@@ -71,14 +71,14 @@ logic [pt.DCCM_NUM_BANKS-1:0] [pt.DCCM_FDATA_WIDTH-1:0]              dccm_bank_d
 
 //////////////////////////////////////////
 // MODPORTS
-modport swerv_iccm (
+modport veer_iccm (
     input clk,
     // ICCM
     output iccm_clken, iccm_wren_bank, iccm_addr_bank, iccm_bank_wr_data,
     input  iccm_bank_dout
 );
 
-modport swerv_dccm (
+modport veer_dccm (
     input clk,
     // DCCM
     output dccm_clken, dccm_wren_bank, dccm_addr_bank, dccm_wr_data_bank,

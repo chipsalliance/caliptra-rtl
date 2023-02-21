@@ -343,35 +343,35 @@ assign uart_notif_intr = 1'b0; // TODO
 assign i3c_error_intr = 1'b0; // TODO
 assign i3c_notif_intr = 1'b0; // TODO
 
-// Vector 0 usage is reserved by SweRV, so bit 0 of the intr wire
+// Vector 0 usage is reserved by VeeR, so bit 0 of the intr wire
 // drive Vector 1
 always_comb begin
-    intr[`SWERV_INTR_VEC_DOE_ERROR    -1]          = doe_error_intr;
-    intr[`SWERV_INTR_VEC_DOE_NOTIF    -1]          = doe_notif_intr;
-    intr[`SWERV_INTR_VEC_ECC_ERROR    -1]          = ecc_error_intr;
-    intr[`SWERV_INTR_VEC_ECC_NOTIF    -1]          = ecc_notif_intr;
-    intr[`SWERV_INTR_VEC_HMAC_ERROR   -1]          = hmac_error_intr;
-    intr[`SWERV_INTR_VEC_HMAC_NOTIF   -1]          = hmac_notif_intr;
-    intr[`SWERV_INTR_VEC_KV_ERROR     -1]          = kv_error_intr;
-    intr[`SWERV_INTR_VEC_KV_NOTIF     -1]          = kv_notif_intr;
-    intr[`SWERV_INTR_VEC_SHA512_ERROR -1]          = sha512_error_intr;
-    intr[`SWERV_INTR_VEC_SHA512_NOTIF -1]          = sha512_notif_intr;
-    intr[`SWERV_INTR_VEC_SHA256_ERROR- 1]          = sha256_error_intr;
-    intr[`SWERV_INTR_VEC_SHA256_NOTIF -1]          = sha256_notif_intr;
-    intr[`SWERV_INTR_VEC_QSPI_ERROR   -1]          = qspi_error_intr;
-    intr[`SWERV_INTR_VEC_QSPI_NOTIF   -1]          = qspi_notif_intr;
-    intr[`SWERV_INTR_VEC_UART_ERROR   -1]          = uart_error_intr;
-    intr[`SWERV_INTR_VEC_UART_NOTIF   -1]          = uart_notif_intr;
-    intr[`SWERV_INTR_VEC_I3C_ERROR    -1]          = i3c_error_intr;
-    intr[`SWERV_INTR_VEC_I3C_NOTIF    -1]          = i3c_notif_intr;
-    intr[`SWERV_INTR_VEC_SOC_IFC_ERROR-1]          = soc_ifc_error_intr;
-    intr[`SWERV_INTR_VEC_SOC_IFC_NOTIF-1]          = soc_ifc_notif_intr;
-    intr[`SWERV_INTR_VEC_SHA_ERROR    -1]          = sha_error_intr;
-    intr[`SWERV_INTR_VEC_SHA_NOTIF    -1]          = sha_notif_intr;
-    intr[NUM_INTR-1:`SWERV_INTR_VEC_MAX_ASSIGNED]  = '0;
+    intr[`VEER_INTR_VEC_DOE_ERROR    -1]          = doe_error_intr;
+    intr[`VEER_INTR_VEC_DOE_NOTIF    -1]          = doe_notif_intr;
+    intr[`VEER_INTR_VEC_ECC_ERROR    -1]          = ecc_error_intr;
+    intr[`VEER_INTR_VEC_ECC_NOTIF    -1]          = ecc_notif_intr;
+    intr[`VEER_INTR_VEC_HMAC_ERROR   -1]          = hmac_error_intr;
+    intr[`VEER_INTR_VEC_HMAC_NOTIF   -1]          = hmac_notif_intr;
+    intr[`VEER_INTR_VEC_KV_ERROR     -1]          = kv_error_intr;
+    intr[`VEER_INTR_VEC_KV_NOTIF     -1]          = kv_notif_intr;
+    intr[`VEER_INTR_VEC_SHA512_ERROR -1]          = sha512_error_intr;
+    intr[`VEER_INTR_VEC_SHA512_NOTIF -1]          = sha512_notif_intr;
+    intr[`VEER_INTR_VEC_SHA256_ERROR- 1]          = sha256_error_intr;
+    intr[`VEER_INTR_VEC_SHA256_NOTIF -1]          = sha256_notif_intr;
+    intr[`VEER_INTR_VEC_QSPI_ERROR   -1]          = qspi_error_intr;
+    intr[`VEER_INTR_VEC_QSPI_NOTIF   -1]          = qspi_notif_intr;
+    intr[`VEER_INTR_VEC_UART_ERROR   -1]          = uart_error_intr;
+    intr[`VEER_INTR_VEC_UART_NOTIF   -1]          = uart_notif_intr;
+    intr[`VEER_INTR_VEC_I3C_ERROR    -1]          = i3c_error_intr;
+    intr[`VEER_INTR_VEC_I3C_NOTIF    -1]          = i3c_notif_intr;
+    intr[`VEER_INTR_VEC_SOC_IFC_ERROR-1]          = soc_ifc_error_intr;
+    intr[`VEER_INTR_VEC_SOC_IFC_NOTIF-1]          = soc_ifc_notif_intr;
+    intr[`VEER_INTR_VEC_SHA_ERROR    -1]          = sha_error_intr;
+    intr[`VEER_INTR_VEC_SHA_NOTIF    -1]          = sha_notif_intr;
+    intr[NUM_INTR-1:`VEER_INTR_VEC_MAX_ASSIGNED]  = '0;
 end
 
-el2_swerv_wrapper rvtop (
+el2_veer_wrapper rvtop (
     .rst_l                  ( cptra_uc_rst_b),
     .dbg_rst_l              ( cptra_pwrgood), 
     .clk                    ( clk      ),

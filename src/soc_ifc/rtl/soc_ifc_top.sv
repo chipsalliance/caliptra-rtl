@@ -198,7 +198,7 @@ soc_ifc_boot_fsm i_soc_ifc_boot_fsm (
     .BootFSM_Continue(soc_ifc_reg_hwif_out.CPTRA_BOOTFSM_GO.GO.value),
 
     .cptra_noncore_rst_b(cptra_noncore_rst_b), //goes to all other blocks
-    .cptra_uc_rst_b(cptra_uc_rst_b), //goes to swerv core
+    .cptra_uc_rst_b(cptra_uc_rst_b), //goes to veer core
     .iccm_unlock(iccm_unlock),
     .fw_upd_rst_executed(fw_upd_rst_executed)
 );

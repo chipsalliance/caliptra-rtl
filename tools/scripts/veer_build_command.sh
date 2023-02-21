@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-# Copyright 2022 Microsoft Corporation or its affiliates.
+# 
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,32 +15,32 @@
 #
 ########################################################################
 # How to run:
-#   1. download the SweRV EL2 repo to some local directory:
+#   1. download the VeeR EL2 repo to some local directory:
 #       mkdir my/local/dir
 #       cd my/local/dir
-#       git clone https://github.com/chipsalliance/Cores-SweRV-EL2
-#       cd Cores-SweRV-EL2
+#       git clone https://github.com/chipsalliance/Cores-VeeR-EL2
+#       cd Cores-VeeR-EL2
 #   2. in the shell, run:
 #       export RV_ROOT=${PWD}
-#   3. edit Cores-SweRV-EL2/configs/swerv.config, line 841
+#   3. edit Cores-VeeR-EL2/configs/veer.config, line 841
 #       change
 #          "reset_vec"             => "0x80000000",                        # Testbench, Overridable
 #       to
 #          "reset_vec"             => "0x00000000",                        # Testbench, Overridable
 #   4. Run this script with 1 argument : name of snapshot to use
-#        source <path/to/script>/swerv_build_command.sh <name_of_snapshot>
+#        source <path/to/script>/veer_build_command.sh <name_of_snapshot>
 #   5. AFTER this script completes, you can merge contents into Caliptra repo
 #      (Output files will be located in $RV_ROOT/snapshots/<name_of_snapshot>)
 ########################################################################
 if [[ -z ${RV_ROOT+"empty"} ]]; then
-    echo "Error! Must define environment variable RV_ROOT to point to swerv repo";
+    echo "Error! Must define environment variable RV_ROOT to point to veer repo";
     exit 1;
 fi
 if [[ $# -ne 1 ]]; then
     echo "Error! Give 1 argument for snapshot name";
     exit 2;
 fi
-$RV_ROOT/configs/swerv.config    \
+$RV_ROOT/configs/veer.config    \
 -target=default_ahb              \
 --iccm_region=0x4                \
 -set=ret_stack_size=8            \

@@ -302,7 +302,7 @@ ee_s32 parseval(char *valstring);
 ee_u8 static_memblk[TOTAL_DATA_SIZE];
 #endif
 char *mem_name[3] = {"Static","Heap","Stack"};
-const char* const print_data = "----------------------------------\nHello World from SweRV EL2 @WDC !!\n----------------------------------\n";
+const char* const print_data = "----------------------------------\nHello World from VeeR EL2  !!\n----------------------------------\n";
 
 #if MAIN_HAS_NOARGC
 MAIN_RETURN_TYPE main(void) {

@@ -64,6 +64,6 @@ _finish:
 .data
 hw_data:
 .ascii "----------------------------------\n"
-.ascii "Hello World from SweRV EL2 @WDC !!\n"
+.ascii "Hello World from VeeR EL2  !!\n"
 .ascii "----------------------------------\n"
 .byte 0

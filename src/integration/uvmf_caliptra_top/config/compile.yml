@@ -28,7 +28,7 @@ targets:
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/caliptra_top/tb/parameters/caliptra_top_parameters_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/caliptra_top/tb/sequences/caliptra_top_sequences_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/caliptra_top/tb/tests/caliptra_top_tests_pkg.sv
-      - ${COMPILE_ROOT}/../tb/caliptra_swerv_sram_export.sv
+      - ${COMPILE_ROOT}/../tb/caliptra_veer_sram_export.sv
       - ${COMPILE_ROOT}/../tb/caliptra_top_tb_pkg.sv
       - ${COMPILE_ROOT}/../tb/caliptra_top_tb_services.sv
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/caliptra_top/tb/testbench/hdl_top.sv

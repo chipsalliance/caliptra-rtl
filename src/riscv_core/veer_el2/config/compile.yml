@@ -1,5 +1,5 @@
 ---
-provides: [el2_swerv_pkg]
+provides: [el2_veer_pkg]
 schema_version: 2.4.0
 requires: [soc_ifc_pkg]
 targets:
@@ -17,9 +17,9 @@ targets:
       - $COMPILE_ROOT/rtl/include/el2_def.sv
       - $COMPILE_ROOT/rtl/common_defines.sv
 ---
-provides: [el2_swerv_wrapper]
+provides: [el2_veer_wrapper]
 schema_version: 2.4.0
-requires: [el2_swerv_pkg]
+requires: [el2_veer_pkg]
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -27,8 +27,8 @@ targets:
       - $COMPILE_ROOT/rtl/el2_mem.sv
       - $COMPILE_ROOT/rtl/el2_dma_ctrl.sv
       - $COMPILE_ROOT/rtl/el2_pic_ctrl.sv
-      - $COMPILE_ROOT/rtl/el2_swerv.sv
-      - $COMPILE_ROOT/rtl/el2_swerv_wrapper.sv
+      - $COMPILE_ROOT/rtl/el2_veer.sv
+      - $COMPILE_ROOT/rtl/el2_veer_wrapper.sv
       - $COMPILE_ROOT/rtl/dbg/el2_dbg.sv
       - $COMPILE_ROOT/rtl/dec/el2_dec_decode_ctl.sv
       - $COMPILE_ROOT/rtl/dec/el2_dec_gpr_ctl.sv
@@ -67,11 +67,11 @@ targets:
       - $COMPILE_ROOT/rtl/lsu/el2_lsu_stbuf.sv
       - $COMPILE_ROOT/rtl/lsu/el2_lsu.sv
       - $COMPILE_ROOT/rtl/lsu/el2_lsu_trigger.sv
-    tops: [el2_swerv_wrapper]
+    tops: [el2_veer_wrapper]
   rtl_lint:
     directories: []
     waiver_files:
-      - $COMPILE_ROOT/config/design_lint/el2_swerv_wrapper/sglint_waivers
+      - $COMPILE_ROOT/config/design_lint/el2_veer_wrapper/sglint_waivers
 global:
   tool:
     vcs:
@@ -79,20 +79,20 @@ global:
         - '-assert svaext'
         #- '-v2k_generate'
 ---
-provides: [el2_swerv_wrapper_tb]  
+provides: [el2_veer_wrapper_tb]  
 schema_version: 2.4.0
 requires: 
-  - el2_swerv_pkg
-  - el2_swerv_wrapper
+  - el2_veer_pkg
+  - el2_veer_wrapper
 targets:
   tb:
     directories: 
       - $COMPILE_ROOT/tb
     files:
       - $COMPILE_ROOT/rtl/ifu/el2_ifu_tb_memread.sv
-      - $COMPILE_ROOT/tb/el2_swerv_wrapper_tb.sv
+      - $COMPILE_ROOT/tb/el2_veer_wrapper_tb.sv
       - $COMPILE_ROOT/tb/ahb_sif.sv
-    tops: [el2_swerv_wrapper_tb]
+    tops: [el2_veer_wrapper_tb]
   sim:
     pre_exec: $TOOLS/scripts/run_test_makefile
 global:

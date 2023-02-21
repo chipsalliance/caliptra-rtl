@@ -14,7 +14,7 @@
 //
 
 import el2_pkg::*;
-module caliptra_swerv_sram_export #(
+module caliptra_veer_sram_export #(
     `include "el2_param.vh"
 ) (
     el2_mem_if.top el2_mem_export

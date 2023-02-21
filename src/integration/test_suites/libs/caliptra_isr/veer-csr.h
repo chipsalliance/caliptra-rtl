@@ -14,57 +14,57 @@
  * limitations under the License.
  */
 
-#ifndef SWERV_CSR_H
-#define SWERV_CSR_H
+#ifndef VEER_CSR_H
+#define VEER_CSR_H
 
 #include "caliptra_defines.h"
 #include "riscv-csr.h" /* for __riscv_xlen */
 
 //////////////////////////////////////////////////////////////////////////////
-// Non-Standard SweRV CSR offset macros
+// Non-Standard VeeR CSR offset macros
 //
-#define SWERV_CSR_MEIVT    0xBC8
-#define SWERV_CSR_MEIPT    0xBC9
-#define SWERV_CSR_MEICPCT  0xBCA
-#define SWERV_CSR_MEICIDPL 0xBCB
-#define SWERV_CSR_MEICURPL 0xBCC
-#define SWERV_CSR_MEIHAP   0xFC8
+#define VEER_CSR_MEIVT    0xBC8
+#define VEER_CSR_MEIPT    0xBC9
+#define VEER_CSR_MEICPCT  0xBCA
+#define VEER_CSR_MEICIDPL 0xBCB
+#define VEER_CSR_MEICURPL 0xBCC
+#define VEER_CSR_MEIHAP   0xFC8
 
 
 //////////////////////////////////////////////////////////////////////////////
-// SweRV PIC Memory Mapped register offset macros
+// VeeR PIC Memory Mapped register offset macros
 //
-// Per the SweRV PRM:
+// Per the VeeR PRM:
 //   Suffix 'S' indicates a discrete register for each unique interrupt source
 //              i.e. 64 interrupts = 64 registers
 //   Suffix 'X' indicates a single bit within a range of registers for each interrupt source
 //              i.e. 64 interrupts = 2 registers (32-bits each)
-#define SWERV_MM_PIC_MEIPLS       (RV_PIC_BASE_ADDR + RV_PIC_MEIPL_OFFSET)
-#define SWERV_MM_PIC_MEIPL(S)     (RV_PIC_BASE_ADDR + RV_PIC_MEIPL_OFFSET + S*4) /* S is 1:255 */
-#define SWERV_MM_PIC_MEIPX        (RV_PIC_BASE_ADDR + RV_PIC_MEIP_OFFSET)
-#define SWERV_MM_PIC_MEIP(X)      (RV_PIC_BASE_ADDR + RV_PIC_MEIP_OFFSET + (X>>5)*4) /* X is 1:255 */
-#define SWERV_MM_PIC_MEIES        (RV_PIC_BASE_ADDR + RV_PIC_MEIE_OFFSET)
-#define SWERV_MM_PIC_MEIE(S)      (RV_PIC_BASE_ADDR + RV_PIC_MEIE_OFFSET + S*4) /* S is 1:255 */
-#define SWERV_MM_PIC_MPICCFG      (RV_PIC_BASE_ADDR + RV_PIC_MPICCFG_OFFSET)
-#define SWERV_MM_PIC_MEIGWCTRLS   (RV_PIC_BASE_ADDR + RV_PIC_MEIGWCTRL_OFFSET)
-#define SWERV_MM_PIC_MEIGWCTRL(S) (RV_PIC_BASE_ADDR + RV_PIC_MEIGWCTRL_OFFSET + S*4) /* S is 1:255 */
-#define SWERV_MM_PIC_MEIGWCLRS    (RV_PIC_BASE_ADDR + RV_PIC_MEIGWCLR_OFFSET)
-#define SWERV_MM_PIC_MEIGWCLR(S)  (RV_PIC_BASE_ADDR + RV_PIC_MEIGWCLR_OFFSET + S*4) /* S is 1:255 */
+#define VEER_MM_PIC_MEIPLS       (RV_PIC_BASE_ADDR + RV_PIC_MEIPL_OFFSET)
+#define VEER_MM_PIC_MEIPL(S)     (RV_PIC_BASE_ADDR + RV_PIC_MEIPL_OFFSET + S*4) /* S is 1:255 */
+#define VEER_MM_PIC_MEIPX        (RV_PIC_BASE_ADDR + RV_PIC_MEIP_OFFSET)
+#define VEER_MM_PIC_MEIP(X)      (RV_PIC_BASE_ADDR + RV_PIC_MEIP_OFFSET + (X>>5)*4) /* X is 1:255 */
+#define VEER_MM_PIC_MEIES        (RV_PIC_BASE_ADDR + RV_PIC_MEIE_OFFSET)
+#define VEER_MM_PIC_MEIE(S)      (RV_PIC_BASE_ADDR + RV_PIC_MEIE_OFFSET + S*4) /* S is 1:255 */
+#define VEER_MM_PIC_MPICCFG      (RV_PIC_BASE_ADDR + RV_PIC_MPICCFG_OFFSET)
+#define VEER_MM_PIC_MEIGWCTRLS   (RV_PIC_BASE_ADDR + RV_PIC_MEIGWCTRL_OFFSET)
+#define VEER_MM_PIC_MEIGWCTRL(S) (RV_PIC_BASE_ADDR + RV_PIC_MEIGWCTRL_OFFSET + S*4) /* S is 1:255 */
+#define VEER_MM_PIC_MEIGWCLRS    (RV_PIC_BASE_ADDR + RV_PIC_MEIGWCLR_OFFSET)
+#define VEER_MM_PIC_MEIGWCLR(S)  (RV_PIC_BASE_ADDR + RV_PIC_MEIGWCLR_OFFSET + S*4) /* S is 1:255 */
 
 
 //////////////////////////////////////////////////////////////////////////////
-// SweRV PIC Gateway Configuration bits
+// VeeR PIC Gateway Configuration bits
 //
 enum {
-  SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL = 0x00000000,
-  SWERV_MEIGWCTRL_ACTIVE_LO_LEVEL = 0x00000001,
-  SWERV_MEIGWCTRL_ACTIVE_HI_EDGE  = 0x00000002,
-  SWERV_MEIGWCTRL_ACTIVE_LO_EDGE  = 0x00000003,
+  VEER_MEIGWCTRL_ACTIVE_HI_LEVEL = 0x00000000,
+  VEER_MEIGWCTRL_ACTIVE_LO_LEVEL = 0x00000001,
+  VEER_MEIGWCTRL_ACTIVE_HI_EDGE  = 0x00000002,
+  VEER_MEIGWCTRL_ACTIVE_LO_EDGE  = 0x00000003,
 };
 
 
 //////////////////////////////////////////////////////////////////////////////
-// SweRV Core-Specific MCAUSE values
+// VeeR Core-Specific MCAUSE values
 //
 #define MCAUSE_NMI_BIT_MASK                     (0xFUL << ((__riscv_xlen-4)))
 #define MCAUSE_NMI_CODE_DBUS_STORE_VALUE        (MCAUSE_NMI_BIT_MASK | 0x0000)
@@ -74,4 +74,4 @@ enum {
 #define MCAUSE_NMI_CODE_FAST_INT_NONDCCM_VALUE  (MCAUSE_NMI_BIT_MASK | 0x1002)
 
 
-#endif // #define SWERV_CSR_H
+#endif // #define VEER_CSR_H

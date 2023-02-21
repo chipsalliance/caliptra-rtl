@@ -16,7 +16,7 @@
 #include "caliptra_defines.h"
 #include <string.h>
 #include "riscv-csr.h"
-#include "swerv-csr.h"
+#include "veer-csr.h"
 #include "riscv-interrupts.h"
 #include "printf.h"
 
@@ -48,107 +48,107 @@ void std_rv_mtvec_ssi(void) __attribute__ ((interrupt ("machine") , aligned(4) ,
 void std_rv_mtvec_sti(void) __attribute__ ((interrupt ("machine") , aligned(4) , weak, alias("std_rv_nop_machine") ));
 
 
-// SweRV Per-Source Vectored ISR functions
-static void nonstd_swerv_isr_doe_error     (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_doe_notif     (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_ecc_error     (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_ecc_notif     (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_hmac_error    (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_hmac_notif    (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_kv_error      (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_kv_notif      (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_sha512_error  (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_sha512_notif  (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_sha256_error  (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_sha256_notif  (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_qspi_error    (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_qspi_notif    (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_uart_error    (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_uart_notif    (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_i3c_error     (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_i3c_notif     (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_soc_ifc_error (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_soc_ifc_notif (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_sha512_acc_error (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_swerv_isr_sha512_acc_notif (void) __attribute__ ((interrupt ("machine")));
+// VeeR Per-Source Vectored ISR functions
+static void nonstd_veer_isr_doe_error     (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_doe_notif     (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_ecc_error     (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_ecc_notif     (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_hmac_error    (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_hmac_notif    (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_kv_error      (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_kv_notif      (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_sha512_error  (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_sha512_notif  (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_sha256_error  (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_sha256_notif  (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_qspi_error    (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_qspi_notif    (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_uart_error    (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_uart_notif    (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_i3c_error     (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_i3c_notif     (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_soc_ifc_error (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_soc_ifc_notif (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_sha512_acc_error (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_sha512_acc_notif (void) __attribute__ ((interrupt ("machine")));
 
 // Could be much more fancy with C preprocessing to pair up the ISR with Vector
 // numbers as defined in caliptra_defines.h.... TODO
-static void          nonstd_swerv_isr_0   (void) __attribute__ ((interrupt ("machine"))); // Empty function instead of function pointer for Vec 0
-static void (* const nonstd_swerv_isr_1 ) (void) = nonstd_swerv_isr_doe_error   ;    // -------.
-static void (* const nonstd_swerv_isr_2 ) (void) = nonstd_swerv_isr_doe_notif   ;    //        |
-static void (* const nonstd_swerv_isr_3 ) (void) = nonstd_swerv_isr_ecc_error   ;    //        |
-static void (* const nonstd_swerv_isr_4 ) (void) = nonstd_swerv_isr_ecc_notif   ;    //        |
-static void (* const nonstd_swerv_isr_5 ) (void) = nonstd_swerv_isr_hmac_error  ;    //        |
-static void (* const nonstd_swerv_isr_6 ) (void) = nonstd_swerv_isr_hmac_notif  ;    //        |
-static void (* const nonstd_swerv_isr_7 ) (void) = nonstd_swerv_isr_kv_error    ;    //        |
-static void (* const nonstd_swerv_isr_8 ) (void) = nonstd_swerv_isr_kv_notif    ;    //        |
-static void (* const nonstd_swerv_isr_9 ) (void) = nonstd_swerv_isr_sha512_error;    // Definitions come
-static void (* const nonstd_swerv_isr_10) (void) = nonstd_swerv_isr_sha512_notif;    // from the param'd
-static void (* const nonstd_swerv_isr_11) (void) = nonstd_swerv_isr_sha256_error;    // macro "nonstd_swerv_isr"
-static void (* const nonstd_swerv_isr_12) (void) = nonstd_swerv_isr_sha256_notif;    // below
-static void (* const nonstd_swerv_isr_13) (void) = nonstd_swerv_isr_qspi_error  ;    //        |
-static void (* const nonstd_swerv_isr_14) (void) = nonstd_swerv_isr_qspi_notif  ;    //        |
-static void (* const nonstd_swerv_isr_15) (void) = nonstd_swerv_isr_uart_error  ;    //        |
-static void (* const nonstd_swerv_isr_16) (void) = nonstd_swerv_isr_uart_notif  ;    //        |
-static void (* const nonstd_swerv_isr_17) (void) = nonstd_swerv_isr_i3c_error   ;    //        |
-static void (* const nonstd_swerv_isr_18) (void) = nonstd_swerv_isr_i3c_notif   ;    //        |
-static void (* const nonstd_swerv_isr_19) (void) = nonstd_swerv_isr_soc_ifc_error;   //        |
-static void (* const nonstd_swerv_isr_20) (void) = nonstd_swerv_isr_soc_ifc_notif;   //        |
-static void (* const nonstd_swerv_isr_21) (void) = nonstd_swerv_isr_sha512_acc_error;//        |
-static void (* const nonstd_swerv_isr_22) (void) = nonstd_swerv_isr_sha512_acc_notif;// -------'
-static void (* const nonstd_swerv_isr_23) (void) = std_rv_nop_machine; // --------|
-static void (* const nonstd_swerv_isr_24) (void) = std_rv_nop_machine; //         |
-static void (* const nonstd_swerv_isr_25) (void) = std_rv_nop_machine; //         |
-static void (* const nonstd_swerv_isr_26) (void) = std_rv_nop_machine; // Unimplemented ISR
-static void (* const nonstd_swerv_isr_27) (void) = std_rv_nop_machine; //         |
-static void (* const nonstd_swerv_isr_28) (void) = std_rv_nop_machine; //         |
-static void (* const nonstd_swerv_isr_29) (void) = std_rv_nop_machine; //         |
-static void (* const nonstd_swerv_isr_30) (void) = std_rv_nop_machine; //         |
-static void (* const nonstd_swerv_isr_31) (void) = std_rv_nop_machine; // --------'
+static void          nonstd_veer_isr_0   (void) __attribute__ ((interrupt ("machine"))); // Empty function instead of function pointer for Vec 0
+static void (* const nonstd_veer_isr_1 ) (void) = nonstd_veer_isr_doe_error   ;    // -------.
+static void (* const nonstd_veer_isr_2 ) (void) = nonstd_veer_isr_doe_notif   ;    //        |
+static void (* const nonstd_veer_isr_3 ) (void) = nonstd_veer_isr_ecc_error   ;    //        |
+static void (* const nonstd_veer_isr_4 ) (void) = nonstd_veer_isr_ecc_notif   ;    //        |
+static void (* const nonstd_veer_isr_5 ) (void) = nonstd_veer_isr_hmac_error  ;    //        |
+static void (* const nonstd_veer_isr_6 ) (void) = nonstd_veer_isr_hmac_notif  ;    //        |
+static void (* const nonstd_veer_isr_7 ) (void) = nonstd_veer_isr_kv_error    ;    //        |
+static void (* const nonstd_veer_isr_8 ) (void) = nonstd_veer_isr_kv_notif    ;    //        |
+static void (* const nonstd_veer_isr_9 ) (void) = nonstd_veer_isr_sha512_error;    // Definitions come
+static void (* const nonstd_veer_isr_10) (void) = nonstd_veer_isr_sha512_notif;    // from the param'd
+static void (* const nonstd_veer_isr_11) (void) = nonstd_veer_isr_sha256_error;    // macro "nonstd_veer_isr"
+static void (* const nonstd_veer_isr_12) (void) = nonstd_veer_isr_sha256_notif;    // below
+static void (* const nonstd_veer_isr_13) (void) = nonstd_veer_isr_qspi_error  ;    //        |
+static void (* const nonstd_veer_isr_14) (void) = nonstd_veer_isr_qspi_notif  ;    //        |
+static void (* const nonstd_veer_isr_15) (void) = nonstd_veer_isr_uart_error  ;    //        |
+static void (* const nonstd_veer_isr_16) (void) = nonstd_veer_isr_uart_notif  ;    //        |
+static void (* const nonstd_veer_isr_17) (void) = nonstd_veer_isr_i3c_error   ;    //        |
+static void (* const nonstd_veer_isr_18) (void) = nonstd_veer_isr_i3c_notif   ;    //        |
+static void (* const nonstd_veer_isr_19) (void) = nonstd_veer_isr_soc_ifc_error;   //        |
+static void (* const nonstd_veer_isr_20) (void) = nonstd_veer_isr_soc_ifc_notif;   //        |
+static void (* const nonstd_veer_isr_21) (void) = nonstd_veer_isr_sha512_acc_error;//        |
+static void (* const nonstd_veer_isr_22) (void) = nonstd_veer_isr_sha512_acc_notif;// -------'
+static void (* const nonstd_veer_isr_23) (void) = std_rv_nop_machine; // --------|
+static void (* const nonstd_veer_isr_24) (void) = std_rv_nop_machine; //         |
+static void (* const nonstd_veer_isr_25) (void) = std_rv_nop_machine; //         |
+static void (* const nonstd_veer_isr_26) (void) = std_rv_nop_machine; // Unimplemented ISR
+static void (* const nonstd_veer_isr_27) (void) = std_rv_nop_machine; //         |
+static void (* const nonstd_veer_isr_28) (void) = std_rv_nop_machine; //         |
+static void (* const nonstd_veer_isr_29) (void) = std_rv_nop_machine; //         |
+static void (* const nonstd_veer_isr_30) (void) = std_rv_nop_machine; //         |
+static void (* const nonstd_veer_isr_31) (void) = std_rv_nop_machine; // --------'
 
-// Table defines the SweRV non-standard vectored entries as an array of
+// Table defines the VeeR non-standard vectored entries as an array of
 // function pointers.
 // The entries in this table are entered depending on the Ext. Interrupt ID
 // E.g., Interrupt ID 2 routes to the ISR defined at offset 2*4 of this table
 //       Interrupt ID 0 is (by definition) not assigned, and routes to an empty ISR
 // Note that each function pointer (i.e. each entry in the vector table) must
-// be 4-byte aligned per the SweRV PRM, and the base address of the table (i.e.
+// be 4-byte aligned per the VeeR PRM, and the base address of the table (i.e.
 // the value of meivt) must be 1024-byte aligned, also per the PRM
 // For support of Fast Interrupt Redirect feature, this should be in DCCM
-static void (* __attribute__ ((aligned(4))) nonstd_swerv_isr_vector_table [RV_PIC_TOTAL_INT_PLUS1]) (void) __attribute__ ((aligned(1024),section (".dccm.nonstd_isr.vec_table"))) = {
-    nonstd_swerv_isr_0,
-    nonstd_swerv_isr_1,
-    nonstd_swerv_isr_2,
-    nonstd_swerv_isr_3,
-    nonstd_swerv_isr_4,
-    nonstd_swerv_isr_5,
-    nonstd_swerv_isr_6,
-    nonstd_swerv_isr_7,
-    nonstd_swerv_isr_8,
-    nonstd_swerv_isr_9,
-    nonstd_swerv_isr_10,
-    nonstd_swerv_isr_11,
-    nonstd_swerv_isr_12,
-    nonstd_swerv_isr_13,
-    nonstd_swerv_isr_14,
-    nonstd_swerv_isr_15,
-    nonstd_swerv_isr_16,
-    nonstd_swerv_isr_17,
-    nonstd_swerv_isr_18,
-    nonstd_swerv_isr_19,
-    nonstd_swerv_isr_20,
-    nonstd_swerv_isr_21,
-    nonstd_swerv_isr_22,
-    nonstd_swerv_isr_23,
-    nonstd_swerv_isr_24,
-    nonstd_swerv_isr_25,
-    nonstd_swerv_isr_26,
-    nonstd_swerv_isr_27,
-    nonstd_swerv_isr_28,
-    nonstd_swerv_isr_29,
-    nonstd_swerv_isr_30,
-    nonstd_swerv_isr_31
+static void (* __attribute__ ((aligned(4))) nonstd_veer_isr_vector_table [RV_PIC_TOTAL_INT_PLUS1]) (void) __attribute__ ((aligned(1024),section (".dccm.nonstd_isr.vec_table"))) = {
+    nonstd_veer_isr_0,
+    nonstd_veer_isr_1,
+    nonstd_veer_isr_2,
+    nonstd_veer_isr_3,
+    nonstd_veer_isr_4,
+    nonstd_veer_isr_5,
+    nonstd_veer_isr_6,
+    nonstd_veer_isr_7,
+    nonstd_veer_isr_8,
+    nonstd_veer_isr_9,
+    nonstd_veer_isr_10,
+    nonstd_veer_isr_11,
+    nonstd_veer_isr_12,
+    nonstd_veer_isr_13,
+    nonstd_veer_isr_14,
+    nonstd_veer_isr_15,
+    nonstd_veer_isr_16,
+    nonstd_veer_isr_17,
+    nonstd_veer_isr_18,
+    nonstd_veer_isr_19,
+    nonstd_veer_isr_20,
+    nonstd_veer_isr_21,
+    nonstd_veer_isr_22,
+    nonstd_veer_isr_23,
+    nonstd_veer_isr_24,
+    nonstd_veer_isr_25,
+    nonstd_veer_isr_26,
+    nonstd_veer_isr_27,
+    nonstd_veer_isr_28,
+    nonstd_veer_isr_29,
+    nonstd_veer_isr_30,
+    nonstd_veer_isr_31
 };
 
 // Table defines the RV standard vectored entries pointed to by mtvec
@@ -160,11 +160,11 @@ static void std_rv_isr_vector_table(void) __attribute__ ((naked));
 // TODO args to control per-component enables
 void init_interrupts(void) {
 
-    volatile uint32_t * const mpiccfg        = (uint32_t*) SWERV_MM_PIC_MPICCFG;
-    volatile uint32_t * const meipls         = (uint32_t*) SWERV_MM_PIC_MEIPLS;     //
-    volatile uint32_t * const meies          = (uint32_t*) SWERV_MM_PIC_MEIES;      // Treat these
-    volatile uint32_t * const meigwctrls     = (uint32_t*) SWERV_MM_PIC_MEIGWCTRLS; // as arrays
-    volatile uint32_t * const meigwclrs      = (uint32_t*) SWERV_MM_PIC_MEIGWCLRS;  //
+    volatile uint32_t * const mpiccfg        = (uint32_t*) VEER_MM_PIC_MPICCFG;
+    volatile uint32_t * const meipls         = (uint32_t*) VEER_MM_PIC_MEIPLS;     //
+    volatile uint32_t * const meies          = (uint32_t*) VEER_MM_PIC_MEIES;      // Treat these
+    volatile uint32_t * const meigwctrls     = (uint32_t*) VEER_MM_PIC_MEIGWCTRLS; // as arrays
+    volatile uint32_t * const meigwclrs      = (uint32_t*) VEER_MM_PIC_MEIGWCLRS;  //
     volatile uint32_t * const soc_ifc_reg    = (uint32_t*) CLP_SOC_IFC_REG_BASE_ADDR;
     volatile uint32_t * const doe_reg        = (uint32_t*) CLP_DOE_REG_BASE_ADDR;
     volatile uint32_t * const ecc_reg        = (uint32_t*) CLP_ECC_REG_BASE_ADDR;
@@ -177,7 +177,7 @@ void init_interrupts(void) {
 
     /* -- Enable standard RISC-V interrupts (mtvec etc.) -- */
 
-    // MSTATUS (disable mie prior to setting up SweRV PIC
+    // MSTATUS (disable mie prior to setting up VeeR PIC
     // Global interrupt disable
     csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
 
@@ -188,13 +188,13 @@ void init_interrupts(void) {
     csr_write_mtvec((uint_xlen_t) std_rv_isr_vector_table | 1);
 
 
-    /* -- Enable non-standard SweRV interrupts (PIC, meivt etc.) -- */
+    /* -- Enable non-standard VeeR interrupts (PIC, meivt etc.) -- */
 
     // MEIVT - write the nonstd vector table base address
     __asm__ volatile ("la t0, %0;\n"
                       "csrw %1, t0;\n"
                       : /* output: none */
-                      : "i" ((uintptr_t) &nonstd_swerv_isr_vector_table), "i" (SWERV_CSR_MEIVT)  /* input : immediate  */
+                      : "i" ((uintptr_t) &nonstd_veer_isr_vector_table), "i" (VEER_CSR_MEIVT)  /* input : immediate  */
                       : "t0"/* clobbers: t0 */);
 
     // MPICCFG
@@ -205,33 +205,33 @@ void init_interrupts(void) {
     // MEIPT - No interrupts masked
     __asm__ volatile ("csrwi    %0, %1" \
                       : /* output: none */        \
-                      : "i" (SWERV_CSR_MEIPT), "i" (0x00)  /* input : immediate  */ \
+                      : "i" (VEER_CSR_MEIPT), "i" (0x00)  /* input : immediate  */ \
                       : /* clobbers: none */);
 
     // MEIPL_S - assign interrupt priorities
-    meipls[SWERV_INTR_VEC_DOE_ERROR       ] = SWERV_INTR_PRIO_DOE_ERROR       ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_DOE_NOTIF       ] = SWERV_INTR_PRIO_DOE_NOTIF       ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_ECC_ERROR       ] = SWERV_INTR_PRIO_ECC_ERROR       ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_ECC_NOTIF       ] = SWERV_INTR_PRIO_ECC_NOTIF       ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_HMAC_ERROR      ] = SWERV_INTR_PRIO_HMAC_ERROR      ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_HMAC_NOTIF      ] = SWERV_INTR_PRIO_HMAC_NOTIF      ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_KV_ERROR        ] = SWERV_INTR_PRIO_KV_ERROR        ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_KV_NOTIF        ] = SWERV_INTR_PRIO_KV_NOTIF        ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_SHA512_ERROR    ] = SWERV_INTR_PRIO_SHA512_ERROR    ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_SHA512_NOTIF    ] = SWERV_INTR_PRIO_SHA512_NOTIF    ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_SHA256_ERROR    ] = SWERV_INTR_PRIO_SHA256_ERROR    ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_SHA256_NOTIF    ] = SWERV_INTR_PRIO_SHA256_NOTIF    ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_QSPI_ERROR      ] = SWERV_INTR_PRIO_QSPI_ERROR      ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_QSPI_NOTIF      ] = SWERV_INTR_PRIO_QSPI_NOTIF      ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_UART_ERROR      ] = SWERV_INTR_PRIO_UART_ERROR      ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_UART_NOTIF      ] = SWERV_INTR_PRIO_UART_NOTIF      ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_I3C_ERROR       ] = SWERV_INTR_PRIO_I3C_ERROR       ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_I3C_NOTIF       ] = SWERV_INTR_PRIO_I3C_NOTIF       ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_SOC_IFC_ERROR   ] = SWERV_INTR_PRIO_SOC_IFC_ERROR   ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_SOC_IFC_NOTIF   ] = SWERV_INTR_PRIO_SOC_IFC_NOTIF   ; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_SHA512_ACC_ERROR] = SWERV_INTR_PRIO_SHA512_ACC_ERROR; __asm__ volatile ("fence");
-    meipls[SWERV_INTR_VEC_SHA512_ACC_NOTIF] = SWERV_INTR_PRIO_SHA512_ACC_NOTIF; __asm__ volatile ("fence");
-    for (uint8_t undef = SWERV_INTR_VEC_MAX_ASSIGNED+1; undef <= RV_PIC_TOTAL_INT; undef++) {
+    meipls[VEER_INTR_VEC_DOE_ERROR       ] = VEER_INTR_PRIO_DOE_ERROR       ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_DOE_NOTIF       ] = VEER_INTR_PRIO_DOE_NOTIF       ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_ECC_ERROR       ] = VEER_INTR_PRIO_ECC_ERROR       ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_ECC_NOTIF       ] = VEER_INTR_PRIO_ECC_NOTIF       ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_HMAC_ERROR      ] = VEER_INTR_PRIO_HMAC_ERROR      ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_HMAC_NOTIF      ] = VEER_INTR_PRIO_HMAC_NOTIF      ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_KV_ERROR        ] = VEER_INTR_PRIO_KV_ERROR        ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_KV_NOTIF        ] = VEER_INTR_PRIO_KV_NOTIF        ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_SHA512_ERROR    ] = VEER_INTR_PRIO_SHA512_ERROR    ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_SHA512_NOTIF    ] = VEER_INTR_PRIO_SHA512_NOTIF    ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_SHA256_ERROR    ] = VEER_INTR_PRIO_SHA256_ERROR    ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_SHA256_NOTIF    ] = VEER_INTR_PRIO_SHA256_NOTIF    ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_QSPI_ERROR      ] = VEER_INTR_PRIO_QSPI_ERROR      ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_QSPI_NOTIF      ] = VEER_INTR_PRIO_QSPI_NOTIF      ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_UART_ERROR      ] = VEER_INTR_PRIO_UART_ERROR      ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_UART_NOTIF      ] = VEER_INTR_PRIO_UART_NOTIF      ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_I3C_ERROR       ] = VEER_INTR_PRIO_I3C_ERROR       ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_I3C_NOTIF       ] = VEER_INTR_PRIO_I3C_NOTIF       ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_SOC_IFC_ERROR   ] = VEER_INTR_PRIO_SOC_IFC_ERROR   ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_SOC_IFC_NOTIF   ] = VEER_INTR_PRIO_SOC_IFC_NOTIF   ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_SHA512_ACC_ERROR] = VEER_INTR_PRIO_SHA512_ACC_ERROR; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_SHA512_ACC_NOTIF] = VEER_INTR_PRIO_SHA512_ACC_NOTIF; __asm__ volatile ("fence");
+    for (uint8_t undef = VEER_INTR_VEC_MAX_ASSIGNED+1; undef <= RV_PIC_TOTAL_INT; undef++) {
         meipls[undef] = 0; __asm__ volatile ("fence"); // Set to 0 meaning NEVER interrupt
     }
 
@@ -239,26 +239,26 @@ void init_interrupts(void) {
     //            to allow nesting interrupts (Per PRM 6.5.1)
     __asm__ volatile ("csrwi    %0, %1" \
                       : /* output: none */        \
-                      : "i" (SWERV_CSR_MEICIDPL), "i" (0x00)  /* input : immediate  */ \
+                      : "i" (VEER_CSR_MEICIDPL), "i" (0x00)  /* input : immediate  */ \
                       : /* clobbers: none */);
 
     // MEICURPL - Initialize the current priority level to 0
     //            to allow all ext intr to preempt
     __asm__ volatile ("csrwi    %0, %1" \
                       : /* output: none */        \
-                      : "i" (SWERV_CSR_MEICURPL), "i" (0x00)  /* input : immediate  */ \
+                      : "i" (VEER_CSR_MEICURPL), "i" (0x00)  /* input : immediate  */ \
                       : /* clobbers: none */);
 
     for (uint8_t vec = 1; vec <= RV_PIC_TOTAL_INT; vec++) {
         // MEIGWCTRL_S
-        meigwctrls[vec] = SWERV_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
+        meigwctrls[vec] = VEER_MEIGWCTRL_ACTIVE_HI_LEVEL;  __asm__ volatile ("fence");
 
         // MEIGWCLRS - Ensure all pending bits are clear in the gateway
         //             NOTE: Any write value clears the pending bit
         meigwclrs[vec]  = 0; __asm__ volatile ("fence");
 
         // MEIE_S - Enable implemented interrupt sources
-        meies[vec]  = (vec <= SWERV_INTR_VEC_MAX_ASSIGNED); __asm__ volatile ("fence");
+        meies[vec]  = (vec <= VEER_INTR_VEC_MAX_ASSIGNED); __asm__ volatile ("fence");
     }
 
     /* -- Re-enable global interrupts -- */
@@ -361,8 +361,8 @@ static void std_rv_isr(void) {
         case RISCV_INT_MASK_MEI :
             // Read MIP register - should have MEIP set
             // Read MEIPX register - should != 0
-            //uint32_t * const meipx      = (uint32_t*) SWERV_MM_PIC_MEIPX;      // FIXME
-            // External Interrupt, branch to the SweRV handler
+            //uint32_t * const meipx      = (uint32_t*) VEER_MM_PIC_MEIPX;      // FIXME
+            // External Interrupt, branch to the VeeR handler
             // (TODO) in a loop until all interrupts at current priority level
             // are handled (aka Interrupt Chaining is supported)
             //   * NOTE: incompatible with Fast Redirect
@@ -370,12 +370,12 @@ static void std_rv_isr(void) {
                 // Capture the priority and ID
                 __asm__ volatile ("csrwi    %0, 0" \
                                   : /* output: none */        \
-                                  : "i" (SWERV_CSR_MEICPCT) /* input : immediate */ \
+                                  : "i" (VEER_CSR_MEICPCT) /* input : immediate */ \
                                   : /* clobbers: none */);
                 // Look up the handler address in MEIHAP
                 __asm__ volatile ("csrr    %0, %1"
                                   : "=r" (isr)  /* output : register */
-                                  : "i" (SWERV_CSR_MEIHAP) /* input : immediate */
+                                  : "i" (VEER_CSR_MEIHAP) /* input : immediate */
                                   : /* clobbers: none */);
                 // Call the ID-specific handler
                 isr(); // ISR here is a function pointer indexed into the mtvec table
@@ -514,7 +514,7 @@ void std_rv_mtvec_exception(void) {
 
 // Non-Standard Vectored Interrupt Handler (vector 0)
 // ISR 0 is, by definition, not implemented and simply returns
-static void nonstd_swerv_isr_0 (void) {
+static void nonstd_veer_isr_0 (void) {
     SEND_STDOUT_CTRL(0xfb); //FIXME
     VPRINTF(MEDIUM, "In:0\n");
     SEND_STDOUT_CTRL(0xfc); //FIXME
@@ -529,7 +529,7 @@ static void nonstd_swerv_isr_0 (void) {
 // context switches (which is critical in an ISR) relative to regular function
 // calls
 #define stringify(text) #text
-#define nonstd_swerv_isr(name) static void nonstd_swerv_isr_##name (void) {                           \
+#define nonstd_veer_isr(name) static void nonstd_veer_isr_##name (void) {                           \
     SEND_STDOUT_CTRL(0xfb); /*FIXME*/                                                                 \
                                                                                                       \
     /* Print msg before enabling nested interrupts so it                                              \
@@ -545,11 +545,11 @@ static void nonstd_swerv_isr_0 (void) {
     uint_xlen_t prev_mie;                                                                             \
     __asm__ volatile ("csrr    %0, %1"                                                                \
                       : "=r" (meicidpl)  /* output : register */                                      \
-                      : "i" (SWERV_CSR_MEICIDPL) /* input : immediate */                              \
+                      : "i" (VEER_CSR_MEICIDPL) /* input : immediate */                              \
                       : /* clobbers: none */);                                                        \
     __asm__ volatile ("csrr    %0, %1"                                                                \
                       : "=r" (prev_meicurpl)  /* output : register */                                 \
-                      : "i" (SWERV_CSR_MEICURPL) /* input : immediate */                              \
+                      : "i" (VEER_CSR_MEICURPL) /* input : immediate */                              \
                       : /* clobbers: none */);                                                        \
     prev_mepc    = csr_read_mepc();                                                                   \
     prev_mstatus = csr_read_mstatus();                                                                \
@@ -558,7 +558,7 @@ static void nonstd_swerv_isr_0 (void) {
     /* Set the priority threshold to current priority */                                              \
     __asm__ volatile ("csrw    %0, %1"                                                                \
                       : /* output: none */                                                            \
-                      : "i" (SWERV_CSR_MEICURPL), "r" (meicidpl)  /* input : immediate  */            \
+                      : "i" (VEER_CSR_MEICURPL), "r" (meicidpl)  /* input : immediate  */            \
                       : /* clobbers: none */);                                                        \
                                                                                                       \
     /* Reenable interrupts (nesting) */                                                               \
@@ -600,7 +600,7 @@ static void nonstd_swerv_isr_0 (void) {
     /* Restore Context from Stack */                                                                  \
     __asm__ volatile ("csrw    %0, %1"                                                                \
                       : /* output: none */                                                            \
-                      : "i" (SWERV_CSR_MEICURPL), "r" (prev_meicurpl)  /* input : immediate  */       \
+                      : "i" (VEER_CSR_MEICURPL), "r" (prev_meicurpl)  /* input : immediate  */       \
                       : /* clobbers: none */);                                                        \
     csr_write_mepc(prev_mepc);                                                                        \
     csr_set_bits_mstatus(prev_mstatus & (MSTATUS_MPIE_BIT_MASK | MSTATUS_MPP_BIT_MASK));              \
@@ -613,50 +613,50 @@ static void nonstd_swerv_isr_0 (void) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Auto define ISR for each interrupt source using a macro
-// Resulting defined functions are, e.g. "nonstd_swerv_isr_doe_error" (for Vector 1)
+// Resulting defined functions are, e.g. "nonstd_veer_isr_doe_error" (for Vector 1)
 
 // Non-Standard Vectored Interrupt Handler (DOE Error = Vector 1)
-nonstd_swerv_isr(doe_error)
+nonstd_veer_isr(doe_error)
 // Non-Standard Vectored Interrupt Handler (DOE Notification = vector 2)
-nonstd_swerv_isr(doe_notif)
+nonstd_veer_isr(doe_notif)
 // Non-Standard Vectored Interrupt Handler (ECC Error = vector 3)
-nonstd_swerv_isr(ecc_error)
+nonstd_veer_isr(ecc_error)
 // Non-Standard Vectored Interrupt Handler (ECC Notification = vector 4)
-nonstd_swerv_isr(ecc_notif)
+nonstd_veer_isr(ecc_notif)
 // Non-Standard Vectored Interrupt Handler (HMAC Error = vector 5)
-nonstd_swerv_isr(hmac_error)
+nonstd_veer_isr(hmac_error)
 // Non-Standard Vectored Interrupt Handler (HMAC Notification = vector 6)
-nonstd_swerv_isr(hmac_notif)
+nonstd_veer_isr(hmac_notif)
 // Non-Standard Vectored Interrupt Handler (KeyVault Error = vector 7)
-nonstd_swerv_isr(kv_error)
+nonstd_veer_isr(kv_error)
 // Non-Standard Vectored Interrupt Handler (KeyVault Notification = vector 8)
-nonstd_swerv_isr(kv_notif)
+nonstd_veer_isr(kv_notif)
 // Non-Standard Vectored Interrupt Handler (SHA512 Error = vector 9)
-nonstd_swerv_isr(sha512_error)
+nonstd_veer_isr(sha512_error)
 // Non-Standard Vectored Interrupt Handler (SHA512 Notification = vector 10)
-nonstd_swerv_isr(sha512_notif)
+nonstd_veer_isr(sha512_notif)
 // Non-Standard Vectored Interrupt Handler (SHA256 Error = vector 11)
-nonstd_swerv_isr(sha256_error)
+nonstd_veer_isr(sha256_error)
 // Non-Standard Vectored Interrupt Handler (SHA256 Notification = vector 12)
-nonstd_swerv_isr(sha256_notif)
+nonstd_veer_isr(sha256_notif)
 // Non-Standard Vectored Interrupt Handler (QSPI Error = vector 13)
-nonstd_swerv_isr(qspi_error)
+nonstd_veer_isr(qspi_error)
 // Non-Standard Vectored Interrupt Handler (QSPI Notification = vector 14)
-nonstd_swerv_isr(qspi_notif)
+nonstd_veer_isr(qspi_notif)
 // Non-Standard Vectored Interrupt Handler (UART Error = vector 15)
-nonstd_swerv_isr(uart_error)
+nonstd_veer_isr(uart_error)
 // Non-Standard Vectored Interrupt Handler (UART Notification = vector 16)
-nonstd_swerv_isr(uart_notif)
+nonstd_veer_isr(uart_notif)
 // Non-Standard Vectored Interrupt Handler (I3C Error = vector 17)
-nonstd_swerv_isr(i3c_error)
+nonstd_veer_isr(i3c_error)
 // Non-Standard Vectored Interrupt Handler (I3C Notification = vector 18)
-nonstd_swerv_isr(i3c_notif)
+nonstd_veer_isr(i3c_notif)
 // Non-Standard Vectored Interrupt Handler (SOC_IFC Error = vector 19)
-nonstd_swerv_isr(soc_ifc_error)
+nonstd_veer_isr(soc_ifc_error)
 // Non-Standard Vectored Interrupt Handler (SOC_IFC Notification = vector 20)
-nonstd_swerv_isr(soc_ifc_notif)
+nonstd_veer_isr(soc_ifc_notif)
 // Non-Standard Vectored Interrupt Handler (SHA Error = vector 21)
-nonstd_swerv_isr(sha512_acc_error)
+nonstd_veer_isr(sha512_acc_error)
 // Non-Standard Vectored Interrupt Handler (SHA Notification = vector 22)
-nonstd_swerv_isr(sha512_acc_notif)
+nonstd_veer_isr(sha512_acc_notif)
 

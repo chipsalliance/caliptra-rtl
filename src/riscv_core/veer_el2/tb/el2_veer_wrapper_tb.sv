@@ -14,9 +14,9 @@
 // limitations under the License.
 //
 `ifndef VERILATOR
-module el2_swerv_wrapper_tb;
+module el2_veer_wrapper_tb;
 `else
-module el2_swerv_wrapper_tb ( input bit core_clk );
+module el2_veer_wrapper_tb ( input bit core_clk );
 `endif
 
 `ifndef VERILATOR
@@ -312,7 +312,7 @@ module el2_swerv_wrapper_tb ( input bit core_clk );
     wire[63:0] WriteData;
     string                      abi_reg[32]; // ABI register names
 
-`define DEC rvtop.swerv.dec
+`define DEC rvtop.veer.dec
 
     assign mailbox_write = lmem.mailbox_write;
     assign WriteData = lmem.WriteData;
@@ -368,11 +368,11 @@ module el2_swerv_wrapper_tb ( input bit core_clk );
         end
         if(`DEC.dec_nonblock_load_wen) begin
             $fwrite (el, "%10d : %32s=%h ; nbL\n", cycleCnt, abi_reg[`DEC.dec_nonblock_load_waddr], `DEC.lsu_nonblock_load_data);
-            el2_swerv_wrapper_tb.gpr[0][`DEC.dec_nonblock_load_waddr] = `DEC.lsu_nonblock_load_data;
+            el2_veer_wrapper_tb.gpr[0][`DEC.dec_nonblock_load_waddr] = `DEC.lsu_nonblock_load_data;
         end
         if(`DEC.exu_div_wren) begin
             $fwrite (el, "%10d : %32s=%h ; nbD\n", cycleCnt, abi_reg[`DEC.div_waddr_wb], `DEC.exu_div_result);
-            el2_swerv_wrapper_tb.gpr[0][`DEC.div_waddr_wb] = `DEC.exu_div_result;
+            el2_veer_wrapper_tb.gpr[0][`DEC.div_waddr_wb] = `DEC.exu_div_result;
         end
     end
 
@@ -441,7 +441,7 @@ module el2_swerv_wrapper_tb ( input bit core_clk );
    //=========================================================================-
    // RTL instance
    //=========================================================================-
-el2_swerv_wrapper rvtop (
+el2_veer_wrapper rvtop (
     .rst_l                  ( rst_l         ),
     .dbg_rst_l              ( porst_l       ),
     .clk                    ( core_clk      ),
@@ -966,7 +966,7 @@ saddr = {lmem.mem[addr+3],lmem.mem[addr+2],lmem.mem[addr+1],lmem.mem[addr]};
 if ( (saddr < `RV_ICCM_SADR) || (saddr > `RV_ICCM_EADR)) return;
 `ifndef RV_ICCM_ENABLE
     $display("********************************************************");
-    $display("ICCM preload: there is no ICCM in SweRV, terminating !!!");
+    $display("ICCM preload: there is no ICCM in VeeR, terminating !!!");
     $display("********************************************************");
     $finish;
 `endif
@@ -999,7 +999,7 @@ saddr = {lmem.mem[addr+3],lmem.mem[addr+2],lmem.mem[addr+1],lmem.mem[addr]};
 if (saddr < `RV_DCCM_SADR || saddr > `RV_DCCM_EADR) return;
 `ifndef RV_DCCM_ENABLE
     $display("********************************************************");
-    $display("DCCM preload: there is no DCCM in SweRV, terminating !!!");
+    $display("DCCM preload: there is no DCCM in VeeR, terminating !!!");
     $display("********************************************************");
     $finish;
 `endif

@@ -5,7 +5,7 @@ contents:
   - tests:
       tags: ["L0", "Lop_regression", "top_regression"]
       paths:
-        - ../test_suites/smoke_test_swerv/smoke_test_swerv.yml
+        - ../test_suites/smoke_test_veer/smoke_test_veer.yml
         #add back for aes
         #- ../test_suites/smoke_test_aes/smoke_test_aes.yml
         - ../test_suites/smoke_test_mbox/smoke_test_mbox.yml

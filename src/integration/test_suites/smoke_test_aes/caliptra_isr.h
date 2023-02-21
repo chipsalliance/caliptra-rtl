@@ -42,7 +42,7 @@ extern volatile uint32_t aes_intr_status;
 void init_interrupts(void);
 
 // These inline functions are used to insert event-specific functionality into the
-// otherwise generic ISR that gets laid down by the parameterized macro "nonstd_swerv_isr"
+// otherwise generic ISR that gets laid down by the parameterized macro "nonstd_veer_isr"
 inline void service_aes_error_intr() {return;}
 inline void service_aes_notif_intr() {
     uint32_t * reg = (uint32_t *) (AES_ADDR_INTR_START + AES_INTR_REGS_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);

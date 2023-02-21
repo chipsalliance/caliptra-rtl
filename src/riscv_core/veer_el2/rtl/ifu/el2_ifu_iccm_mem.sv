@@ -37,7 +37,7 @@ import el2_pkg::*;
    input logic [2:0]                                  iccm_wr_size,                        // ICCM write size
    input logic [77:0]                                 iccm_wr_data,                        // ICCM write data
 
-   el2_mem_if.swerv_iccm iccm_mem_export, // RAM repositioned in testbench and connected by this interface
+   el2_mem_if.veer_iccm iccm_mem_export, // RAM repositioned in testbench and connected by this interface
 
    output logic [63:0]                                iccm_rd_data,                        // ICCM read data
    output logic [77:0]                                iccm_rd_data_ecc,                    // ICCM read ecc

@@ -47,7 +47,7 @@ import el2_pkg::*;
    input logic [pt.DCCM_FDATA_WIDTH-1:0]  dccm_wr_data_lo,              // write data
    input logic [pt.DCCM_FDATA_WIDTH-1:0]  dccm_wr_data_hi,              // write data
 
-   el2_mem_if.swerv_dccm dccm_mem_export, // RAM repositioned in testbench and connected by this interface
+   el2_mem_if.veer_dccm dccm_mem_export, // RAM repositioned in testbench and connected by this interface
 
    output logic [pt.DCCM_FDATA_WIDTH-1:0] dccm_rd_data_lo,              // read data from the lo bank
    output logic [pt.DCCM_FDATA_WIDTH-1:0] dccm_rd_data_hi,              // read data from the hi bank

@@ -42,7 +42,7 @@ extern volatile uint32_t ecc_intr_status;
 void init_interrupts(void);
 
 // These inline functions are used to insert event-specific functionality into the
-// otherwise generic ISR that gets laid down by the parameterized macro "nonstd_swerv_isr"
+// otherwise generic ISR that gets laid down by the parameterized macro "nonstd_veer_isr"
 inline void service_doe_error_intr() {return;}
 inline void service_doe_notif_intr() {printf("ERROR");}
 inline void service_ecc_error_intr   () {printf("ERROR");}

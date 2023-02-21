@@ -31,7 +31,7 @@ module soc_ifc_boot_fsm
     input logic fuse_done,
 
     output logic cptra_noncore_rst_b, //Global rst that goes to all other blocks
-    output logic cptra_uc_rst_b, //Global + fw update rst that goes to SWeRV core only,
+    output logic cptra_uc_rst_b, //Global + fw update rst that goes to VeeR core only,
     output logic iccm_unlock,
     output logic fw_upd_rst_executed
 );

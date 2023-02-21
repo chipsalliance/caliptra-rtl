@@ -15,7 +15,7 @@
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
 #include "riscv-csr.h"
-#include "swerv-csr.h"
+#include "veer-csr.h"
 #include "riscv_hw_if.h"
 #include <string.h>
 #include <stdint.h>
@@ -59,7 +59,7 @@ void main(void) {
         uint32_t * iccm_dest = ICCM;
         void (* iccm_fn) (void) = (void*) ICCM;
 
-        VPRINTF(LOW, "----------------------------------\nICCM Lock Test from SweRV EL2 @WDC !!\n----------------------------------\n");
+        VPRINTF(LOW, "----------------------------------\nICCM Lock Test from VeeR EL2  !!\n----------------------------------\n");
 
         // Setup the interrupt CSR configuration
         init_interrupts();

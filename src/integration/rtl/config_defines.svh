@@ -27,7 +27,7 @@
   `define CALIPTRA_SOC_SEC_STATE_WIDTH 3
 
   // AHB Address Map
-  `define CALIPTRA_SLAVE_NAMES         {"IMEM"       , "SHA256"     , "SWERV_ICCM_DMA", "SWERV_DCCM_DMA" , "SOC_IFC"    , "I3C"        , "UART"       , "QSPI"       , "SHA512"     , "KEYVAULT"   , "HMAC"       , "ECC"        , "DOE_CTRL"   } /* Array of names for peripherals */
+  `define CALIPTRA_SLAVE_NAMES         {"IMEM"       , "SHA256"     , "VEER_ICCM_DMA", "VEER_DCCM_DMA" , "SOC_IFC"    , "I3C"        , "UART"       , "QSPI"       , "SHA512"     , "KEYVAULT"   , "HMAC"       , "ECC"        , "DOE_CTRL"   } /* Array of names for peripherals */
   `define CALIPTRA_SLAVE_BASE_ADDR     {32'h0000_0000, 32'h1002_8000, 32'h4000_0000   , 32'h5000_0000    , 32'h3000_0000, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'h1002_0000, 32'h1001_8000, 32'h1001_0000, 32'h1000_8000, 32'h1000_0000} /* Array with slave base address */
   `define CALIPTRA_SLAVE_MASK_ADDR     {32'h0000_8000, 32'h1002_FFFF, 32'h4001_FFFF   , 32'h5001_FFFF    , 32'h3003_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'hFFFF_FFFF, 32'h1002_7FFF, 32'h1001_FFFF, 32'h1001_0FFF, 32'h1000_FFFF, 32'h1000_7FFF} /* Array with slave offset address */
   `define CALIPTRA_SLAVE_ADDR_MASK     (`CALIPTRA_SLAVE_BASE_ADDR ^ `CALIPTRA_SLAVE_MASK_ADDR) /* Array indicating meaningful address bits for each slave */
@@ -47,31 +47,31 @@
   `define CALIPTRA_SLAVE_SEL_IMEM      12
 
   // Interrupt Assignments
-  // NOTE Vector 0 is reserved by SweRV
-  `define SWERV_INTR_VEC_DOE_ERROR     1
-  `define SWERV_INTR_VEC_DOE_NOTIF     2
-  `define SWERV_INTR_VEC_ECC_ERROR     3
-  `define SWERV_INTR_VEC_ECC_NOTIF     4
-  `define SWERV_INTR_VEC_HMAC_ERROR    5
-  `define SWERV_INTR_VEC_HMAC_NOTIF    6
-  `define SWERV_INTR_VEC_KV_ERROR      7
-  `define SWERV_INTR_VEC_KV_NOTIF      8
-  `define SWERV_INTR_VEC_SHA512_ERROR  9
-  `define SWERV_INTR_VEC_SHA512_NOTIF  10
-  `define SWERV_INTR_VEC_SHA256_ERROR  11
-  `define SWERV_INTR_VEC_SHA256_NOTIF  12
-  `define SWERV_INTR_VEC_QSPI_ERROR    13
-  `define SWERV_INTR_VEC_QSPI_NOTIF    14
-  `define SWERV_INTR_VEC_UART_ERROR    15
-  `define SWERV_INTR_VEC_UART_NOTIF    16
-  `define SWERV_INTR_VEC_I3C_ERROR     17
-  `define SWERV_INTR_VEC_I3C_NOTIF     18
-  `define SWERV_INTR_VEC_SOC_IFC_ERROR 19
-  `define SWERV_INTR_VEC_SOC_IFC_NOTIF 20
-  `define SWERV_INTR_VEC_SHA_ERROR     21
-  `define SWERV_INTR_VEC_SHA_NOTIF     22
+  // NOTE Vector 0 is reserved by VeeR
+  `define VEER_INTR_VEC_DOE_ERROR     1
+  `define VEER_INTR_VEC_DOE_NOTIF     2
+  `define VEER_INTR_VEC_ECC_ERROR     3
+  `define VEER_INTR_VEC_ECC_NOTIF     4
+  `define VEER_INTR_VEC_HMAC_ERROR    5
+  `define VEER_INTR_VEC_HMAC_NOTIF    6
+  `define VEER_INTR_VEC_KV_ERROR      7
+  `define VEER_INTR_VEC_KV_NOTIF      8
+  `define VEER_INTR_VEC_SHA512_ERROR  9
+  `define VEER_INTR_VEC_SHA512_NOTIF  10
+  `define VEER_INTR_VEC_SHA256_ERROR  11
+  `define VEER_INTR_VEC_SHA256_NOTIF  12
+  `define VEER_INTR_VEC_QSPI_ERROR    13
+  `define VEER_INTR_VEC_QSPI_NOTIF    14
+  `define VEER_INTR_VEC_UART_ERROR    15
+  `define VEER_INTR_VEC_UART_NOTIF    16
+  `define VEER_INTR_VEC_I3C_ERROR     17
+  `define VEER_INTR_VEC_I3C_NOTIF     18
+  `define VEER_INTR_VEC_SOC_IFC_ERROR 19
+  `define VEER_INTR_VEC_SOC_IFC_NOTIF 20
+  `define VEER_INTR_VEC_SHA_ERROR     21
+  `define VEER_INTR_VEC_SHA_NOTIF     22
   // Used to tie-off unused upper intr bits
-  `define SWERV_INTR_VEC_MAX_ASSIGNED `SWERV_INTR_VEC_SHA_NOTIF
+  `define VEER_INTR_VEC_MAX_ASSIGNED `VEER_INTR_VEC_SHA_NOTIF
 
   //`define CALIPTRA_KV_NUM_READ 6
   //`define CALIPTRA_KV_NUM_WRITE 4

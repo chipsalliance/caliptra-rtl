@@ -3,7 +3,7 @@ files:
   # Components
   - src/libs/config/compile.yml
   - src/ahb_lite_bus/config/compile.yml
-  - src/riscv_core/swerv_el2/config/compile.yml
+  - src/riscv_core/veer_el2/config/compile.yml
   - src/sha512/config/compile.yml
   - src/sha256/config/compile.yml
   - src/doe/config/compile.yml

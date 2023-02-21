@@ -1,5 +1,5 @@
 _*SPDX-License-Identifier: Apache-2.0<BR>
-Copyright 2022 Microsoft Corporation or its affiliates.<BR>
+<BR>
 <BR>
 Licensed under the Apache License, Version 2.0 (the "License");<BR>
 you may not use this file except in compliance with the License.<BR>
@@ -103,7 +103,7 @@ The "Integration" sub-component contains the top-level fileset for Caliptra. `sr
 `rdl_post_process.py`: Post-processing functionality to make RDL generated SystemVerilog files compatible with lint/Verilator requirements<BR>
 `run_verilator_l0_regression.py`: Wrapper to run the L0 smoke test regression suite using the Makefile flow in Verilator<BR>
 `integration_vector_gen.py`: Generates test vectors for crypto core tests<BR>
-`swerv_build_command.sh`: Shell script used to generate the SweRV-EL2 repository present in `src/riscv_core/swerv_el2`<BR>
+`veer_build_command.sh`: Shell script used to generate the VeeR-EL2 repository present in `src/riscv_core/veer_el2`<BR>
 
 ## **Simulation Flow** ##
 VCS Steps:

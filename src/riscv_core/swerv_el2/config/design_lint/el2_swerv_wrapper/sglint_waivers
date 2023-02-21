@@ -1,2 +1,0 @@
-#TwoStateData-ML: Avoid using two state data type signals in RTL
-waive_lint -tag TwoStateData-ML -add waive_el2_swerv_wrapper_TwoStateData-ML -filter "FileName =~ el2_pdef.vh"

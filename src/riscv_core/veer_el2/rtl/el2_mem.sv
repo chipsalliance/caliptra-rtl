@@ -93,7 +93,7 @@ import el2_pkg::*;
    if (pt.DCCM_ENABLE == 1) begin: Gen_dccm_enable
       el2_lsu_dccm_mem #(.pt(pt)) dccm (
          .clk_override(dccm_clk_override),
-         .dccm_mem_export(mem_export.swerv_dccm),
+         .dccm_mem_export(mem_export.veer_dccm),
          .*
       );
    end else begin: Gen_dccm_disable
@@ -121,7 +121,7 @@ if (pt.ICCM_ENABLE) begin : iccm
                   .clk_override(icm_clk_override),
                   .iccm_rw_addr(iccm_rw_addr[pt.ICCM_BITS-1:1]),
                   .iccm_rd_data(iccm_rd_data[63:0]),
-                  .iccm_mem_export(mem_export.swerv_iccm)
+                  .iccm_mem_export(mem_export.veer_iccm)
                    );
 end
 else  begin

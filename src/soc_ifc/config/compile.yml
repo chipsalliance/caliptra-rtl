@@ -32,7 +32,7 @@ schema_version: 2.4.0
 requires:
   - libs
   # for beh_lib with rvecc_encode/decode
-  - el2_swerv_pkg
+  - el2_veer_pkg
   - soc_ifc_pkg
   - sha512_ctrl
 targets:

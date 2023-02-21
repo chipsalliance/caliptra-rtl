@@ -19,8 +19,8 @@ requires:
   - caliptra_top_defines
   - libs
   - kv_defines_pkg
-  - el2_swerv_pkg
-  - el2_swerv_wrapper
+  - el2_veer_pkg
+  - el2_veer_wrapper
   - ahb_lite_bus
   - sha512_ctrl
   - sha256_ctrl
@@ -39,7 +39,7 @@ targets:
     waiver_files:
       - $COMPILE_ROOT/config/design_lint/sglint_waivers
     black_box:
-      - el2_swerv_wrapper
+      - el2_veer_wrapper
   cdc:
     tcl_files:
       - $COMPILE_ROOT/config/cdc/integration_top.constraints.tcl
@@ -57,13 +57,13 @@ requires:
   - asserts
   - libs
   - caliptra_top
-  - el2_swerv_pkg
-  - el2_swerv_wrapper
+  - el2_veer_pkg
+  - el2_veer_wrapper
 targets:
   tb:
     directories: [$COMPILE_ROOT/tb]
     files:
-      - $COMPILE_ROOT/tb/caliptra_swerv_sram_export.sv
+      - $COMPILE_ROOT/tb/caliptra_veer_sram_export.sv
       - $COMPILE_ROOT/tb/caliptra_top_tb_pkg.sv
       - $COMPILE_ROOT/tb/caliptra_top_tb_services.sv
       - $COMPILE_ROOT/tb/caliptra_top_tb.sv
