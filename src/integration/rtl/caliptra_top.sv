@@ -236,6 +236,15 @@ module caliptra_top
     logic clear_obf_secrets;
     logic clear_secrets;
     
+    logic cptra_security_state_captured, scan_mode_f, scan_mode_ff, scan_mode_switch;
+    logic debugUnlock_or_scan_mode_switch, clear_obf_secrets_debugScanQ, cptra_scan_mode_Latched, debug_lock_to_unlock_switch;
+    var security_state_t security_state_f, security_state_ff;
+    
+    logic [TOTAL_OBF_KEY_BITS-1:0]        cptra_obf_key_dbg;
+    logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy_dbg;
+    logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed_dbg;
+    logic                                 cptra_in_debug_scan_mode;
+
     logic [31:0] imem_haddr;
     logic imem_hsel;
     logic imem_hwrite;
@@ -496,7 +505,7 @@ el2_veer_wrapper rvtop (
 
     .soft_int               (soft_int),
     .core_id                ('0),
-    .scan_mode              ( 1'b0 ),         // To enable scan mode
+    .scan_mode              ( cptra_scan_mode_Latched ), // To enable scan mode
     .mbist_mode             ( 1'b0 )        // to enable mbist
 
 );
@@ -505,10 +514,6 @@ el2_veer_wrapper rvtop (
     always_comb responder_inst[`CALIPTRA_SLAVE_SEL_IDMA].hresp     = responder_inst[`CALIPTRA_SLAVE_SEL_DDMA].hresp;
     always_comb responder_inst[`CALIPTRA_SLAVE_SEL_IDMA].hreadyout = responder_inst[`CALIPTRA_SLAVE_SEL_DDMA].hreadyout;
 
-    logic cptra_security_state_captured, scan_mode_f, scan_mode_ff, scan_mode_switch;
-    logic debugUnlock_or_scan_mode_switch, clear_obf_secrets_debugScanQ, cptra_scan_mode_Latched, debug_lock_to_unlock_switch;
-    var security_state_t security_state_f, security_state_ff;
-    
     // Security State value captured on a Caliptra reset deassertion (0->1 signal transition)
     always_ff @(posedge clk or negedge cptra_rst_b) begin
         if (~cptra_rst_b) begin
@@ -684,11 +689,6 @@ sha256_ctrl #(
     .error_intr(sha256_error_intr),
     .notif_intr(sha256_notif_intr)
 );
-
-logic [TOTAL_OBF_KEY_BITS-1:0]        cptra_obf_key_dbg;
-logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy_dbg;
-logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed_dbg;
-logic                                 cptra_in_debug_scan_mode;
 
 //override device secrets with debug values in Debug or Scan Mode
 always_comb cptra_in_debug_scan_mode = ~security_state_f.debug_locked | scan_mode_f;

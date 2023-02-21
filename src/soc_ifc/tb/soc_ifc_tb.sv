@@ -197,6 +197,7 @@ module soc_ifc_tb
              .mbox_sram_resp(mbox_sram_resp),
 
              .clear_obf_secrets(),
+             .scan_mode_f(1'b0),
              .cptra_obf_key('0),
              .cptra_obf_key_reg(),
              .obf_field_entropy(),
