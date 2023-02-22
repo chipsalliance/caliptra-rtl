@@ -43,6 +43,7 @@ module sha256_core(
                    // Clock and reset.
                    input wire            clk,
                    input wire            reset_n,
+                   input wire            zeroize,
 
                    // Control.
                    input wire            init_cmd,
@@ -175,6 +176,7 @@ module sha256_core(
   sha256_w_mem w_mem_inst(
                           .clk(clk),
                           .reset_n(reset_n),
+                          .zeroize(zeroize),
 
                           .block_msg(block_msg),
 
@@ -204,6 +206,28 @@ module sha256_core(
   always @ (posedge clk or negedge reset_n)
     begin : reg_update
       if (!reset_n)
+        begin
+          a_reg            <= 32'h0;
+          b_reg            <= 32'h0;
+          c_reg            <= 32'h0;
+          d_reg            <= 32'h0;
+          e_reg            <= 32'h0;
+          f_reg            <= 32'h0;
+          g_reg            <= 32'h0;
+          h_reg            <= 32'h0;
+          H0_reg           <= 32'h0;
+          H1_reg           <= 32'h0;
+          H2_reg           <= 32'h0;
+          H3_reg           <= 32'h0;
+          H4_reg           <= 32'h0;
+          H5_reg           <= 32'h0;
+          H6_reg           <= 32'h0;
+          H7_reg           <= 32'h0;
+          digest_valid_reg <= 0;
+          t_ctr_reg        <= 6'h0;
+          sha256_ctrl_reg  <= CTRL_IDLE;
+        end
+      else if (zeroize)
         begin
           a_reg            <= 32'h0;
           b_reg            <= 32'h0;

@@ -102,22 +102,20 @@ module sha512_w_mem(
     begin : reg_update
       integer ii;
 
-      if (!reset_n)
-        begin
+      if (!reset_n) begin
+        for (ii = 0; ii < 16; ii = ii + 1)
+          w_mem[ii] <= 64'h0;
+
+        w_ctr_reg <= 7'h0;
+      end
+      else begin
+        if (zeroize) begin
           for (ii = 0; ii < 16; ii = ii + 1)
             w_mem[ii] <= 64'h0;
 
           w_ctr_reg <= 7'h0;
         end
-      if (zeroize)
-        begin
-          for (ii = 0; ii < 16; ii = ii + 1)
-            w_mem[ii] <= 64'h0;
-
-          w_ctr_reg <= 7'h0;
-        end
-      else
-        begin
+        else begin
           if (w_mem_we)
             begin
               w_mem[00] <= w_mem00_new;
@@ -141,6 +139,7 @@ module sha512_w_mem(
           if (w_ctr_we)
               w_ctr_reg <= w_ctr_new;
         end
+      end
     end // reg_update
 
 

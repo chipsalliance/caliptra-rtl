@@ -163,6 +163,8 @@ module hmac_drbg
   begin
     if (!reset_n)
       HMAC_tag_valid_last <= '0;
+    else if (zeroize)
+      HMAC_tag_valid_last <= '0;
     else 
       HMAC_tag_valid_last <= HMAC_tag_valid;
   end
@@ -171,6 +173,8 @@ module hmac_drbg
   begin
     if (!reset_n)
       ready_reg   <= '0; 
+    else if (zeroize)
+      ready_reg   <= '0; 
     else
       ready_reg   <= (nonce_st_reg == IDLE_ST);
   end
@@ -178,6 +182,10 @@ module hmac_drbg
   always_ff @ (posedge clk or negedge reset_n) 
   begin : valid_nonce_regs_updates
     if (!reset_n) begin
+      valid_reg   <= 0;
+      nonce_reg   <= '0;
+    end
+    else if (zeroize) begin
       valid_reg   <= 0;
       nonce_reg   <= '0;
     end
@@ -205,6 +213,10 @@ module hmac_drbg
   always_ff @ (posedge clk or negedge reset_n) 
   begin : hmac_command_update
     if (!reset_n) begin
+      HMAC_init <= 0;
+      HMAC_next <= 0;
+    end
+    else if (zeroize) begin
       HMAC_init <= 0;
       HMAC_next <= 0;
     end
@@ -236,6 +248,10 @@ module hmac_drbg
   always_ff @ (posedge clk or negedge reset_n) 
   begin : hmac_inputs_update
     if (!reset_n) begin
+      K_reg   <= '0;
+      V_reg   <= '0;
+    end
+    else if (zeroize) begin
       K_reg   <= '0;
       V_reg   <= '0;
     end
@@ -285,6 +301,8 @@ module hmac_drbg
   begin : cnt_reg_update
     if (!reset_n)
       cnt_reg    <= '0;
+    else if (zeroize)
+      cnt_reg    <= '0;
     else begin
       unique casez (nonce_st_reg)
         INIT_ST:      cnt_reg    <= '0;
@@ -299,6 +317,8 @@ module hmac_drbg
   begin : state_update
     if (!reset_n) 
       nonce_st_reg      <= IDLE_ST;
+    else if (zeroize) 
+      nonce_st_reg      <= IDLE_ST;
     else 
       nonce_st_reg      <= nonce_next_st;
   end // state_update
@@ -306,6 +326,8 @@ module hmac_drbg
   always_ff @ (posedge clk or negedge reset_n) 
   begin : ff_state_update
     if (!reset_n) 
+      nonce_st_reg_last <= IDLE_ST;
+    else if (zeroize) 
       nonce_st_reg_last <= IDLE_ST;
     else 
       nonce_st_reg_last <= nonce_st_reg;

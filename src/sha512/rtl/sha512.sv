@@ -177,6 +177,12 @@ module sha512
       digest_valid_reg    <= '0;
       kv_reg              <= '0;
     end
+    else if (zeroize_reg) begin
+      ready_reg           <= '0;
+      digest_reg          <= '0;
+      digest_valid_reg    <= '0;
+      kv_reg              <= '0;
+    end
     else begin
       ready_reg        <= core_ready;
       digest_valid_reg <= core_digest_valid;

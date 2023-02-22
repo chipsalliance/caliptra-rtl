@@ -66,7 +66,7 @@ addrmap sha256_reg {
     /* ---- SHA256 Component Control ---- */
     reg {
         name = "SHA256 component control register type definition";
-        desc = "One 3-bit register including the following flags: 
+        desc = "One 4-bit register including the following flags: 
                 bit #0: INIT : Trigs the SHA256 core to start the 
                                 processing for the first padded message block.
                 bit #1: NEXT: ​Trigs the SHA256 core to start the 
@@ -75,6 +75,7 @@ addrmap sha256_reg {
                                  the type of hashing algorithm. This can be:
                                  0 for SHA256/224
                                  1 for SHA256
+                bit #3: Zeroize all internal registers after SHA process, to avoid SCA leakage.
                 This register is located at SHA256_base_address + 0x0000_0010
                 After each software write, hardware will erase the register.";
 
@@ -84,6 +85,7 @@ addrmap sha256_reg {
         field {desc = "Control init command bit"; singlepulse;} INIT = 1'b0;
         field {desc = "Control next command bit"; singlepulse;} NEXT = 1'b0;
         field {desc = "Control mode command bits";} MODE = 1'b1;
+        field {desc = "Zeroize all internal registers"; singlepulse;} ZEROIZE = 1'b0;
     
     } SHA256_CTRL @0x00000010;
 
@@ -115,7 +117,7 @@ addrmap sha256_reg {
         default sw = w;
         default hw = r;
         default resetsignal = reset_b;
-        field {desc = "Input message block field";} BLOCK[32] = 32'b0;
+        field {desc = "Input message block field"; hwclr;} BLOCK[32] = 32'b0;
     
     } SHA256_BLOCK[16] @0x00000080;
 
@@ -129,7 +131,7 @@ addrmap sha256_reg {
         default sw = r;
         default hw = w;
         default resetsignal = reset_b;
-        field {desc = "Output digest field";} DIGEST[32] = 32'b0;
+        field {desc = "Output digest field"; hwclr;} DIGEST[32] = 32'b0;
     
     } SHA256_DIGEST[8] @0x00000100;
 

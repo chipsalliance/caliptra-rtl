@@ -37,6 +37,7 @@ package sha256_reg_uvm;
         rand uvm_reg_field INIT;
         rand uvm_reg_field NEXT;
         rand uvm_reg_field MODE;
+        rand uvm_reg_field ZEROIZE;
 
         function new(string name = "sha256_reg__SHA256_CTRL");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -49,6 +50,8 @@ package sha256_reg_uvm;
             this.NEXT.configure(this, 1, 1, "WO", 0, 'h0, 1, 1, 0);
             this.MODE = new("MODE");
             this.MODE.configure(this, 1, 2, "WO", 0, 'h1, 1, 1, 0);
+            this.ZEROIZE = new("ZEROIZE");
+            this.ZEROIZE.configure(this, 1, 3, "WO", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : sha256_reg__SHA256_CTRL
 
@@ -79,7 +82,7 @@ package sha256_reg_uvm;
 
         virtual function void build();
             this.BLOCK = new("BLOCK");
-            this.BLOCK.configure(this, 32, 0, "WO", 0, 'h0, 1, 1, 0);
+            this.BLOCK.configure(this, 32, 0, "WO", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : sha256_reg__SHA256_BLOCK
 

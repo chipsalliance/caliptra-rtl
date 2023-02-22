@@ -2543,6 +2543,8 @@
 #define SHA256_REG_SHA256_CTRL_NEXT_MASK                                                            (0x2)
 #define SHA256_REG_SHA256_CTRL_MODE_LOW                                                             (2)
 #define SHA256_REG_SHA256_CTRL_MODE_MASK                                                            (0x4)
+#define SHA256_REG_SHA256_CTRL_ZEROIZE_LOW                                                          (3)
+#define SHA256_REG_SHA256_CTRL_ZEROIZE_MASK                                                         (0x8)
 #define CLP_SHA256_REG_SHA256_STATUS                                                                (0x10028018)
 #define SHA256_REG_SHA256_STATUS                                                                    (0x18)
 #define SHA256_REG_SHA256_STATUS_READY_LOW                                                          (0)

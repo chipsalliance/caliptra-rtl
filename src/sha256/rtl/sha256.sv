@@ -80,6 +80,7 @@ module sha256
   reg next_reg;
   reg mode_reg;
   reg ready_reg;
+  reg zeroize_reg;
 
   localparam BLOCK_NO = 512 / DATA_WIDTH;
   reg [DATA_WIDTH-1 : 0] block_reg [BLOCK_NO-1 : 0];
@@ -116,6 +117,7 @@ module sha256
   sha256_core core(
                    .clk(clk),
                    .reset_n(reset_n),
+                   .zeroize(zeroize_reg),
 
                    .init_cmd(init_reg),
                    .next_cmd(next_reg),
@@ -144,6 +146,11 @@ module sha256
         digest_reg       <= '0;
         digest_valid_reg <= '0;
       end
+      else if (zeroize_reg) begin
+        ready_reg        <= '0;
+        digest_reg       <= '0;
+        digest_valid_reg <= '0;
+      end
       else begin
         ready_reg        <= core_ready;
         digest_valid_reg <= core_digest_valid;
@@ -166,16 +173,19 @@ module sha256
     init_reg = hwif_out.SHA256_CTRL.INIT.value;
     next_reg = hwif_out.SHA256_CTRL.NEXT.value;
     mode_reg = hwif_out.SHA256_CTRL.MODE.value;
+    zeroize_reg = hwif_out.SHA256_CTRL.ZEROIZE.value;
 
     hwif_in.SHA256_STATUS.READY.next = ready_reg;
     hwif_in.SHA256_STATUS.VALID.next = digest_valid_reg;
 
     for (int dword =0; dword < 8; dword++) begin
       hwif_in.SHA256_DIGEST[dword].DIGEST.next = digest_reg[7-dword];
+      hwif_in.SHA256_DIGEST[dword].DIGEST.hwclr = zeroize_reg;
     end
 
     for (int dword=0; dword< BLOCK_NO; dword++) begin
       block_reg[dword] = hwif_out.SHA256_BLOCK[dword].BLOCK.value;
+      hwif_in.SHA256_BLOCK[dword].BLOCK.hwclr = zeroize_reg;
     end
 
   end

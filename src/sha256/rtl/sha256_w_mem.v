@@ -43,6 +43,7 @@ module sha256_w_mem(
                     // Clock and reset.
                     input wire           clk,
                     input wire           reset_n,
+                    input wire           zeroize,
                     // Data port.
                     input wire [511 : 0] block_msg,
                     // Control.
@@ -103,6 +104,13 @@ module sha256_w_mem(
       integer ii;
 
       if (!reset_n)
+        begin
+          for (ii = 0 ; ii < 16 ; ii = ii + 1)
+            w_mem[ii] <= 32'h0;
+
+          w_ctr_reg <= 6'h0;
+        end
+      else if (zeroize)
         begin
           for (ii = 0 ; ii < 16 ; ii = ii + 1)
             w_mem[ii] <= 32'h0;

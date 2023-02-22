@@ -156,6 +156,10 @@ module sha256_reg (
                 logic next;
                 logic load_next;
             } MODE;
+            struct packed{
+                logic next;
+                logic load_next;
+            } ZEROIZE;
         } SHA256_CTRL;
         struct packed{
             struct packed{
@@ -163,6 +167,12 @@ module sha256_reg (
                 logic load_next;
             } BLOCK;
         } [16-1:0]SHA256_BLOCK;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } DIGEST;
+        } [8-1:0]SHA256_DIGEST;
         struct packed{
             struct packed{
                 struct packed{
@@ -353,12 +363,20 @@ module sha256_reg (
             struct packed{
                 logic value;
             } MODE;
+            struct packed{
+                logic value;
+            } ZEROIZE;
         } SHA256_CTRL;
         struct packed{
             struct packed{
                 logic [31:0] value;
             } BLOCK;
         } [16-1:0]SHA256_BLOCK;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } DIGEST;
+        } [8-1:0]SHA256_DIGEST;
         struct packed{
             struct packed{
                 struct packed{
@@ -552,6 +570,28 @@ module sha256_reg (
         end
     end
     assign hwif_out.SHA256_CTRL.MODE.value = field_storage.SHA256_CTRL.MODE.value;
+    // Field: sha256_reg.SHA256_CTRL.ZEROIZE
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.SHA256_CTRL.ZEROIZE.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.SHA256_CTRL && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[3:3];
+            load_next_c = '1;
+        end else if(1) begin // singlepulse clears back to 0
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.SHA256_CTRL.ZEROIZE.next = next_c;
+        field_combo.SHA256_CTRL.ZEROIZE.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.SHA256_CTRL.ZEROIZE.value <= 'h0;
+        end else if(field_combo.SHA256_CTRL.ZEROIZE.load_next) begin
+            field_storage.SHA256_CTRL.ZEROIZE.value <= field_combo.SHA256_CTRL.ZEROIZE.next;
+        end
+    end
+    assign hwif_out.SHA256_CTRL.ZEROIZE.value = field_storage.SHA256_CTRL.ZEROIZE.value;
     for(genvar i0=0; i0<16; i0++) begin
         // Field: sha256_reg.SHA256_BLOCK[].BLOCK
         always_comb begin
@@ -559,6 +599,9 @@ module sha256_reg (
             automatic logic load_next_c = '0;
             if(decoded_reg_strb.SHA256_BLOCK[i0] && decoded_req_is_wr) begin // SW write
                 next_c = decoded_wr_data[31:0];
+                load_next_c = '1;
+            end else if(hwif_in.SHA256_BLOCK[i0].BLOCK.hwclr) begin // HW Clear
+                next_c = '0;
                 load_next_c = '1;
             end
             field_combo.SHA256_BLOCK[i0].BLOCK.next = next_c;
@@ -572,6 +615,29 @@ module sha256_reg (
             end
         end
         assign hwif_out.SHA256_BLOCK[i0].BLOCK.value = field_storage.SHA256_BLOCK[i0].BLOCK.value;
+    end
+    for(genvar i0=0; i0<8; i0++) begin
+        // Field: sha256_reg.SHA256_DIGEST[].DIGEST
+        always_comb begin
+            automatic logic [31:0] next_c = field_storage.SHA256_DIGEST[i0].DIGEST.value;
+            automatic logic load_next_c = '0;
+            if(1) begin // HW Write
+                next_c = hwif_in.SHA256_DIGEST[i0].DIGEST.next;
+                load_next_c = '1;
+            end else if(hwif_in.SHA256_DIGEST[i0].DIGEST.hwclr) begin // HW Clear
+                next_c = '0;
+                load_next_c = '1;
+            end
+            field_combo.SHA256_DIGEST[i0].DIGEST.next = next_c;
+            field_combo.SHA256_DIGEST[i0].DIGEST.load_next = load_next_c;
+        end
+        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+            if(~hwif_in.reset_b) begin
+                field_storage.SHA256_DIGEST[i0].DIGEST.value <= 'h0;
+            end else if(field_combo.SHA256_DIGEST[i0].DIGEST.load_next) begin
+                field_storage.SHA256_DIGEST[i0].DIGEST.value <= field_combo.SHA256_DIGEST[i0].DIGEST.next;
+            end
+        end
     end
     // Field: sha256_reg.intr_block_rf.global_intr_en_r.error_en
     always_comb begin
@@ -1296,7 +1362,7 @@ module sha256_reg (
     assign readback_array[4][1:1] = (decoded_reg_strb.SHA256_STATUS && !decoded_req_is_wr) ? hwif_in.SHA256_STATUS.VALID.next : '0;
     assign readback_array[4][31:2] = '0;
     for(genvar i0=0; i0<8; i0++) begin
-        assign readback_array[i0*1 + 5][31:0] = (decoded_reg_strb.SHA256_DIGEST[i0] && !decoded_req_is_wr) ? hwif_in.SHA256_DIGEST[i0].DIGEST.next : '0;
+        assign readback_array[i0*1 + 5][31:0] = (decoded_reg_strb.SHA256_DIGEST[i0] && !decoded_req_is_wr) ? field_storage.SHA256_DIGEST[i0].DIGEST.value : '0;
     end
     assign readback_array[13][0:0] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.error_en.value : '0;
     assign readback_array[13][1:1] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.notif_en.value : '0;

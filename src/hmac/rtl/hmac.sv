@@ -170,6 +170,13 @@ module hmac
           tag_valid_reg   <= '0;
           core_ready_reg  <= '0;
         end
+      else if (zeroize_reg)
+        begin
+          kv_reg          <= '0;
+          tag_reg         <= '0;
+          tag_valid_reg   <= '0;
+          core_ready_reg  <= '0;
+        end
       else
         begin
           tag_valid_reg <= core_tag_valid;

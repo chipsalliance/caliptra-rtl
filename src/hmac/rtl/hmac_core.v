@@ -155,6 +155,12 @@ module hmac_core
           hmac_ctrl_reg  <= CTRL_IDLE;
           hmac_ctrl_last <= CTRL_IDLE;
         end
+      else if (zeroize)
+        begin
+          digest_valid_reg <= 0;
+          hmac_ctrl_reg  <= CTRL_IDLE;
+          hmac_ctrl_last <= CTRL_IDLE;
+        end
       else
         begin
           hmac_ctrl_last <= hmac_ctrl_reg;

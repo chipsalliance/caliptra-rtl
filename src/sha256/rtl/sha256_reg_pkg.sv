@@ -32,7 +32,16 @@ package sha256_reg_pkg;
     } sha256_reg__SHA256_STATUS__in_t;
 
     typedef struct packed{
+        logic hwclr;
+    } sha256_reg__SHA256_BLOCK__BLOCK__in_t;
+
+    typedef struct packed{
+        sha256_reg__SHA256_BLOCK__BLOCK__in_t BLOCK;
+    } sha256_reg__SHA256_BLOCK__in_t;
+
+    typedef struct packed{
         logic [31:0] next;
+        logic hwclr;
     } sha256_reg__SHA256_DIGEST__DIGEST__in_t;
 
     typedef struct packed{
@@ -81,6 +90,7 @@ package sha256_reg_pkg;
         sha256_reg__SHA256_NAME__in_t [2-1:0]SHA256_NAME;
         sha256_reg__SHA256_VERSION__in_t [2-1:0]SHA256_VERSION;
         sha256_reg__SHA256_STATUS__in_t SHA256_STATUS;
+        sha256_reg__SHA256_BLOCK__in_t [16-1:0]SHA256_BLOCK;
         sha256_reg__SHA256_DIGEST__in_t [8-1:0]SHA256_DIGEST;
         sha256_reg__intr_block_t__in_t intr_block_rf;
     } sha256_reg__in_t;
@@ -98,9 +108,14 @@ package sha256_reg_pkg;
     } sha256_reg__SHA256_CTRL__MODE__out_t;
 
     typedef struct packed{
+        logic value;
+    } sha256_reg__SHA256_CTRL__ZEROIZE__out_t;
+
+    typedef struct packed{
         sha256_reg__SHA256_CTRL__INIT__out_t INIT;
         sha256_reg__SHA256_CTRL__NEXT__out_t NEXT;
         sha256_reg__SHA256_CTRL__MODE__out_t MODE;
+        sha256_reg__SHA256_CTRL__ZEROIZE__out_t ZEROIZE;
     } sha256_reg__SHA256_CTRL__out_t;
 
     typedef struct packed{
