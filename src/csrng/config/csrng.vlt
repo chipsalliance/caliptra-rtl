@@ -1,0 +1,3 @@
+${WORKSPACE}/Caliptra/src/prim/lint/prim_onehot_check.vlt
+${WORKSPACE}/Caliptra/src/prim/lint/prim_arbiter.vlt
+${WORKSPACE}/Caliptra/src/csrng/lint/csrng.vlt
