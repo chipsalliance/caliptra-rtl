@@ -36,8 +36,6 @@
 //
 //======================================================================
 
-`default_nettype none
-
 module sha256_k_constants(
                           input wire  [5 : 0] round,
                           output wire [31 : 0] K_val

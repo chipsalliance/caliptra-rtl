@@ -36,8 +36,6 @@
 //
 //======================================================================
 
-`default_nettype none
-
 module sha512_h_constants(
                           input wire  [1 : 0]  mode,
 

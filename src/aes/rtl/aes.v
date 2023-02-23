@@ -38,8 +38,6 @@
 //
 //======================================================================
 
-`default_nettype none
-
 module aes 
   import aes_param_pkg::*;
   #(

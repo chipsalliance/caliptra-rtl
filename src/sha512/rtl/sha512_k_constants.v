@@ -36,8 +36,6 @@
 //
 //======================================================================
 
-`default_nettype none
-
 module sha512_k_constants(
                           input wire  [6 : 0]  addr,
                           output wire [63 : 0] K_val

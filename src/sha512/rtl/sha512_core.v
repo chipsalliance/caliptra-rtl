@@ -37,8 +37,6 @@
 //
 //======================================================================
 
-`default_nettype none
-
 module sha512_core(
                    // Clock and reset.
                    input wire            clk,

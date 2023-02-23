@@ -38,8 +38,6 @@
 //
 //======================================================================
 
-`default_nettype none
-
 module aes_decipher_block(
                           //Clock and reset.
                           input wire            clk,

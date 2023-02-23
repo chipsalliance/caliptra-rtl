@@ -39,8 +39,6 @@
 //
 //======================================================================
 
-`default_nettype none
-
 module sha512
     import sha512_reg_pkg::*;
     import kv_defines_pkg::*;    

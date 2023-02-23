@@ -38,8 +38,6 @@
 //
 //======================================================================
 
-`default_nettype none
-
 module doe_encipher_block(
                           input wire            clk,
                           input wire            reset_n,

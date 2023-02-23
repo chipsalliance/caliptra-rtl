@@ -43,8 +43,6 @@
 //
 //======================================================================
 
-`default_nettype none
-
 module aes_core_cbc(
                 // Clock and reset.
                 input wire            clk,

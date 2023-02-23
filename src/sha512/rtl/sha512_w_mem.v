@@ -37,8 +37,6 @@
 //
 //======================================================================
 
-`default_nettype none
-
 module sha512_w_mem(
                     input wire            clk,
                     input wire            reset_n,

@@ -37,8 +37,6 @@
 //
 //======================================================================
 
-`default_nettype none
-
 module aes_core(
                 // Clock and reset.
                 input wire            clk,

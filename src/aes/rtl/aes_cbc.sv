@@ -31,8 +31,6 @@
 // 
 //==============================================================================
 
-`default_nettype none
-
 module aes_cbc 
   import aes_param_pkg::*;
   import kv_defines_pkg::*;
