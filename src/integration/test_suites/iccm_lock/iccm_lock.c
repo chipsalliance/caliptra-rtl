@@ -195,7 +195,7 @@ void execute_first_pass_from_iccm (void) {
         } else {
             VPRINTF(LOW, "At the end of first pass through ICCM LOCK test: resetting the core!\n");
             persistent_is_second_pass = 1;
-            lsu_write_32((uint32_t*) CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET, SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK);
+            lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET, SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK);
             while(1);
         }
     }

@@ -49,7 +49,7 @@ void sha384_kvflow_test(uint8_t sha_kv_id, uint8_t store_to_kv, uint8_t digest_k
     printf("%c", block_inject_cmd);
 
     // wait for SHA to be ready
-    while((lsu_read_32((uint32_t *) CLP_SHA512_REG_SHA512_STATUS) & SHA512_REG_SHA512_STATUS_READY_MASK) == 0);
+    while((lsu_read_32(CLP_SHA512_REG_SHA512_STATUS) & SHA512_REG_SHA512_STATUS_READY_MASK) == 0);
 
 
     // Program block Read with 12 dwords from sha_kv_id
@@ -62,7 +62,7 @@ void sha384_kvflow_test(uint8_t sha_kv_id, uint8_t store_to_kv, uint8_t digest_k
     // if we want to store the results into kv 
     if (store_to_kv) {
         // set digest DEST to write
-        lsu_write_32((uint32_t*) CLP_SHA512_REG_SHA512_KV_WR_CTRL,  SHA512_REG_SHA512_KV_WR_CTRL_WRITE_EN_MASK |
+        lsu_write_32(CLP_SHA512_REG_SHA512_KV_WR_CTRL,  SHA512_REG_SHA512_KV_WR_CTRL_WRITE_EN_MASK |
                                                                     SHA512_REG_SHA512_KV_WR_CTRL_HMAC_KEY_DEST_VALID_MASK  |
                                                                     SHA512_REG_SHA512_KV_WR_CTRL_HMAC_BLOCK_DEST_VALID_MASK|
                                                                     SHA512_REG_SHA512_KV_WR_CTRL_SHA_BLOCK_DEST_VALID_MASK |
@@ -82,7 +82,7 @@ void sha384_kvflow_test(uint8_t sha_kv_id, uint8_t store_to_kv, uint8_t digest_k
     printf("check digest\n");
     if (store_to_kv) {
         // wait for SHA process - check dest done
-        while((lsu_read_32((uint32_t*) CLP_SHA512_REG_SHA512_KV_WR_STATUS) & SHA512_REG_SHA512_KV_WR_STATUS_VALID_MASK) == 0);
+        while((lsu_read_32(CLP_SHA512_REG_SHA512_KV_WR_STATUS) & SHA512_REG_SHA512_KV_WR_STATUS_VALID_MASK) == 0);
     }
     else{
         reg_ptr = (uint32_t *) CLP_SHA512_REG_SHA512_DIGEST_0;

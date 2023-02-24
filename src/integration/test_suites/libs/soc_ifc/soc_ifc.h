@@ -74,7 +74,7 @@ typedef struct {
 /* --------------- Function Prototypes --------------- */
 // Simple reg accesses
 inline uint32_t soc_ifc_mbox_read_dataout_single() {
-    return lsu_read_32((uint32_t*) CLP_MBOX_CSR_MBOX_DATAOUT);
+    return lsu_read_32(CLP_MBOX_CSR_MBOX_DATAOUT);
 }
 void soc_ifc_clear_execute_reg();
 void soc_ifc_set_mbox_status_field(enum mbox_status_e field);
@@ -82,7 +82,7 @@ void soc_ifc_set_flow_status_field(uint32_t field);
 void soc_ifc_clr_flow_status_field(uint32_t field);
 void soc_ifc_set_fw_update_reset();
 inline void soc_ifc_set_iccm_lock() {
-    lsu_write_32((uint32_t *) (CLP_SOC_IFC_REG_INTERNAL_ICCM_LOCK), SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK);
+    lsu_write_32((CLP_SOC_IFC_REG_INTERNAL_ICCM_LOCK), SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK);
 }
 // Mailbox command flows
 mbox_op_s soc_ifc_read_mbox_cmd();

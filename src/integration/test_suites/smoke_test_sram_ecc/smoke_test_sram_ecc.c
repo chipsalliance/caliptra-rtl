@@ -42,7 +42,7 @@ uint32_t test_mbox_sram_ecc() {
     volatile uint32_t * soc_ifc_notif_mbox_ecc_cor_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R);
 
     // Acquire the mailbox lock
-    while((lsu_read_32((uint32_t*) CLP_MBOX_CSR_MBOX_LOCK) & MBOX_CSR_MBOX_LOCK_LOCK_MASK) != 0);
+    while((lsu_read_32(CLP_MBOX_CSR_MBOX_LOCK) & MBOX_CSR_MBOX_LOCK_LOCK_MASK) != 0);
 
     // Allocate a large array in Mailbox SRAM
     volatile uint32_t* myarray = (uint32_t*) MBOX_DIR_BASE_ADDR;
@@ -87,7 +87,7 @@ uint32_t test_mbox_sram_ecc() {
     }
 
     // Unlock Mailbox
-    lsu_write_32((uint32_t*) CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+    lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
 
     return sts;
 }
