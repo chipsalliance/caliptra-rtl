@@ -1,5 +1,4 @@
 _*SPDX-License-Identifier: Apache-2.0<BR>
-Copyright 2022 Microsoft Corporation or its affiliates.<BR>
 <BR>
 Licensed under the Apache License, Version 2.0 (the "License");<BR>
 you may not use this file except in compliance with the License.<BR>
