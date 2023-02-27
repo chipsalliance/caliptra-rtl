@@ -1,0 +1,34 @@
+# Release_notes.txt
+# Stores revision information for rtl-caliptra
+
+Rev rtl-caliptra_rtl_0.5
+-	CHIPALLIANCE RISC-V Core - https://github.com/chipsalliance/Cores-VeeR-EL2
+    - ICCM, DCCM enabled w/ 128KB each; Instruction Cache disabled; fast interrupt redirect enabled
+-	Cryptos (please see the spec for NIST compliance algorithms followed)
+    - HMAC384 – Caliptra consortium provided (built based on SHA384 block below)
+    - ECC384 – Based on secp384, Caliptra consortium provided
+    - HMAC-DRBG – Caliptra consortium provided (but built using HMAC384 above)
+    - Key Vault & PCR Vault – Caliptra consortium provided
+    - SHA384/SHA512 – https://github.com/secworks/sha512
+    - Deobfuscation block – Built on https://github.com/secworks/aes but NOT ROM/FW accessible
+    - SHA256 – https://github.com/secworks/sha256
+    - Side channel attack analysis and solutions where applicable  (Plz see Caliptra IP specification for details)
+-	AHB-lite internal fabric
+    - Please see spec for decoding details of various blocks
+-   Interrupts from all peripherals (Cryptos, SOC mailbox, IOs, timers etc.)
+-	ICCM locking
+-	SOC interface (APB, mailbox, architectural registers, fuse registers, TRNG REQ protocol) – Caliptra Consortium provided
+-	Lint clean up is partially done
+-	HTML (generated from RDLs) for all registers (internal registers, external facing architectural registers, fuse registers)
+-	Stable IP interface (pending TRNG interface wires that is a new feature)
+-	Validation Notes:
+    - DUT per crypto block and associated checkers
+    - Nightly regression on crypto blocks on-going
+    - Smoke tests for all of the above passing including bring up/boot of the caliptra IP (KV testing for ECC & SHA are pending)
+    - UVMF for multiple DUT blocks and SOC interface
+    - NOTE: 0p8 release will have stress validation on SOC interface with random resets, clock gating, impactless update crossed with mailbox protocol etc.
+
+Rev rtl-caliptra_rtl_0.5.1
+-   Add missing printf/ and includes/ directories to src/integration/test_suites which are required to run the tests
+-   Updated Version.txt and tar.gz
+

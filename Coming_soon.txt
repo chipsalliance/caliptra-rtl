@@ -1,0 +1,6 @@
+# Coming_soon.txt
+# Stores information on  upcoming releases
+
+RTL 0p8 pending/Coming soon:
+-	New Changes to Fuses, TAP interface, Timers, TRNG integration w/ Caliptra, SPI integration w/ Caliptra, Other Peripherals, Clock gating, Impactless update reset, Mailbox SRAM ECC, Error domain logic, Security Asset Flushing on various policy changes, few more updates to ICCM lock register settings
+-	Full val
