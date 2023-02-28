@@ -25,13 +25,9 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-class soc_ifc_env_mbox_rand_fw_sequence #(
-      type CONFIG_T
-      ) extends soc_ifc_env_mbox_sequence_base #(.CONFIG_T(CONFIG_T));
+class soc_ifc_env_mbox_rand_fw_sequence extends soc_ifc_env_mbox_sequence_base;
 
-  `uvm_object_param_utils_begin( soc_ifc_env_mbox_rand_fw_sequence #( CONFIG_T) )
-  `uvm_object_utils_end
-  `m_uvm_get_type_name_func    ( soc_ifc_env_mbox_rand_fw_sequence #( CONFIG_T) )
+  `uvm_object_utils( soc_ifc_env_mbox_rand_fw_sequence )
 
   extern virtual task mbox_push_datain();
 

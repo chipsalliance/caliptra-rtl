@@ -32,8 +32,10 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
   `uvm_object_utils( caliptra_top_rand_sequence );
 
   rand soc_ifc_env_bringup_sequence_t soc_ifc_env_bringup_seq;
+  rand soc_ifc_env_pauser_init_sequence_t soc_ifc_env_pauser_init_seq;
   rand soc_ifc_env_mbox_rand_fw_sequence_t soc_ifc_env_mbox_fmc_seq;
   rand soc_ifc_env_mbox_rand_fw_sequence_t soc_ifc_env_mbox_rt_seq;
+  rand soc_ifc_env_sequence_base_t soc_ifc_env_seq_ii[];
   // Local handle to register model for convenience
   soc_ifc_reg_model_top reg_model;
 
@@ -44,7 +46,9 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
   rand enum int {
       IDX_SOC_IFC_ENV_MBOX_RAND_FW,
       IDX_SOC_IFC_ENV_MBOX_RAND_SMALL,
-      IDX_SOC_IFC_ENV_MBOX_RAND_LARGE
+      IDX_SOC_IFC_ENV_MBOX_RAND_MEDIUM,
+      IDX_SOC_IFC_ENV_MBOX_RAND_LARGE,
+      IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_MEDIUM
   } rand_seq_idx;
 
   rand int iteration_count;
@@ -52,9 +56,11 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
   // Choose rand weights for each sequence to determine run frequency
   constraint avail_env_seqs_c {
       rand_seq_idx dist {
-          IDX_SOC_IFC_ENV_MBOX_RAND_FW    := 10,
-          IDX_SOC_IFC_ENV_MBOX_RAND_SMALL := 1000,
-          IDX_SOC_IFC_ENV_MBOX_RAND_LARGE := 1
+          IDX_SOC_IFC_ENV_MBOX_RAND_FW            := 10,
+          IDX_SOC_IFC_ENV_MBOX_RAND_SMALL         := 1000,
+          IDX_SOC_IFC_ENV_MBOX_RAND_MEDIUM        := 100,
+          IDX_SOC_IFC_ENV_MBOX_RAND_LARGE         := 1,
+          IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_MEDIUM := 100
       };
   }
   constraint iter_count_c {
@@ -72,8 +78,9 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
         if (!this.randomize(iteration_count))
             `uvm_fatal("CALIPTRA_TOP_RAND_TEST", "Failed to randomize iteration_count after receiving no command line override")
         else
-            `uvm_info("CALIPTRA_TOP_RAND_TEST", $sformatf("Did not receive Command Line Iteration Count Argument, defaulting to %d", iteration_count), UVM_LOW);
+            `uvm_info("CALIPTRA_TOP_RAND_TEST", $sformatf("Did not receive Command Line Iteration Count Argument with +CALIPTRA_TOP_RAND_ITER, defaulting to %d", iteration_count), UVM_LOW);
     end
+    soc_ifc_env_seq_ii = new[iteration_count];
   endfunction
 
   // ****************************************************************************
@@ -83,11 +90,13 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
     int sts_rsp_count = 0;
     bit ready_for_fw = 0;
     bit ready_for_rt = 0;
+    bit pauser_valid_initialized = 1'b0;
     uvm_object obj;
     int ii;
 
     caliptra_top_env_seq = caliptra_top_env_sequence_base_t::type_id::create("caliptra_top_env_seq");
     soc_ifc_env_bringup_seq = soc_ifc_env_bringup_sequence_t::type_id::create("soc_ifc_env_bringup_seq");
+    soc_ifc_env_pauser_init_seq = soc_ifc_env_pauser_init_sequence_t::type_id::create("soc_ifc_env_pauser_init_seq");
     soc_ifc_env_mbox_fmc_seq = soc_ifc_env_mbox_rand_fw_sequence_t::type_id::create("soc_ifc_env_mbox_fmc_seq");
     soc_ifc_env_mbox_rt_seq = soc_ifc_env_mbox_rand_fw_sequence_t::type_id::create("soc_ifc_env_mbox_rt_seq");
 
@@ -96,6 +105,7 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
 
     // Handle to the responder sequence for getting response transactions
     soc_ifc_env_bringup_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
+    soc_ifc_env_pauser_init_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
     soc_ifc_env_mbox_fmc_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
     soc_ifc_env_mbox_rt_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
 
@@ -154,22 +164,35 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
         // Create a new sequence instance of the randomized type
         case (rand_seq_idx) inside
             IDX_SOC_IFC_ENV_MBOX_RAND_FW:
-                obj = soc_ifc_env_mbox_rand_fw_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq[%d]",ii));
+                obj = soc_ifc_env_mbox_rand_fw_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%d]",ii));
             IDX_SOC_IFC_ENV_MBOX_RAND_SMALL:
-                obj = soc_ifc_env_mbox_rand_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq[%d]",ii));
+                obj = soc_ifc_env_mbox_rand_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_RAND_MEDIUM:
+                obj = soc_ifc_env_mbox_rand_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%d]",ii));
             IDX_SOC_IFC_ENV_MBOX_RAND_LARGE:
-                obj = soc_ifc_env_mbox_rand_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq[%d]",ii));
+                obj = soc_ifc_env_mbox_rand_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_MEDIUM: begin
+                if (!pauser_valid_initialized) begin
+                    if(!soc_ifc_env_pauser_init_seq.randomize())
+                        `uvm_fatal("CALIPTRA_TOP_RAND_TEST", "caliptra_top_rand_sequence::body() - soc_ifc_env_pauser_init_seq randomization failed")
+                    soc_ifc_env_pauser_init_seq.start(top_configuration.soc_ifc_subenv_config.vsqr);
+
+                    `uvm_info("CALIPTRA_TOP_RAND_TEST", "SoC completed PAUSER VALID initialization", UVM_LOW)
+                    pauser_valid_initialized = 1'b1;
+                end
+                obj = soc_ifc_env_mbox_rand_pauser_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%d]",ii));
+            end
             default:
                 `uvm_error("CALIPTRA_TOP_RAND_TEST", $sformatf("rand_seq_idx randomized to illegal value: %p", rand_seq_idx))
         endcase
 
         // Randomize and run the sequence
-        if(!$cast(soc_ifc_env_seq,obj)) `uvm_fatal("CALIPTRA_TOP_RAND_TEST", "caliptra_top_rand_sequence::body() - <seq_type>.create_object() failed")
-        `uvm_info("CALIPTRA_TOP_RAND_TEST", $sformatf("rand_seq randomized to: %s", soc_ifc_env_seq.get_type_name()), UVM_LOW)
-        if(!soc_ifc_env_seq.randomize())
-            `uvm_fatal("CALIPTRA_TOP_RAND_TEST", $sformatf("caliptra_top_rand_sequence::body() - %s randomization failed", soc_ifc_env_seq.get_type_name()));
-        soc_ifc_env_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
-        soc_ifc_env_seq.start(top_configuration.soc_ifc_subenv_config.vsqr);
+        if(!$cast(soc_ifc_env_seq_ii[ii],obj)) `uvm_fatal("CALIPTRA_TOP_RAND_TEST", "caliptra_top_rand_sequence::body() - <seq_type>.create_object() failed")
+        `uvm_info("CALIPTRA_TOP_RAND_TEST", $sformatf("rand_seq randomized to: %s", soc_ifc_env_seq_ii[ii].get_type_name()), UVM_LOW)
+        if(!soc_ifc_env_seq_ii[ii].randomize())
+            `uvm_fatal("CALIPTRA_TOP_RAND_TEST", $sformatf("caliptra_top_rand_sequence::body() - %s randomization failed", soc_ifc_env_seq_ii[ii].get_type_name()));
+        soc_ifc_env_seq_ii[ii].soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
+        soc_ifc_env_seq_ii[ii].start(top_configuration.soc_ifc_subenv_config.vsqr);
     end
 
     // UVMF_CHANGE_ME : Extend the simulation XXX number of clocks after 

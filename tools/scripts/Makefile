@@ -128,7 +128,7 @@ includes = -I$(BUILD_DIR)
 #                                             |            |               |            |
 #         .------------------------------.    |            |               |            |
 #         | Inherited from ChipsAlliance |    |            |               |            |
-#         | VeeR repository provided    |    |            |               |            |
+#         | VeeR repository provided     |    |            |               |            |
 #         | Makefile                     |    |            |               |            |
 #         '-----+------------+-----------'    |            |               |            |
 #               |            |                |            |               |            |

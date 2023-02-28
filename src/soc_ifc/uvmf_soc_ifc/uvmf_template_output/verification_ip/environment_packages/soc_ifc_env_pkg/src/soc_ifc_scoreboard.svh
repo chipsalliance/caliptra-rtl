@@ -212,6 +212,7 @@ class soc_ifc_scoreboard #(
 
     if (soc_ifc_expected_hash.exists(t.get_key())) begin
         `uvm_info("SCBD_SOC_IFC_STS", "Unimplemented write_actual_analysis_export()", UVM_LOW)
+        soc_ifc_expected_hash.delete(t.get_key()); // FIXME
     end
     else begin
     //  UVMF_CHANGE_ME: Implement custom scoreboard here.  
@@ -233,6 +234,7 @@ class soc_ifc_scoreboard #(
 
     if (cptra_expected_hash.exists(t.get_key())) begin
         `uvm_info("SCBD_CPTRA_STS", "Unimplemented write_actual_cptra_analysis_export()", UVM_LOW)
+        cptra_expected_hash.delete(t.get_key()); // FIXME
     end
     else begin
     //  UVMF_CHANGE_ME: Implement custom scoreboard here.  

@@ -25,14 +25,10 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-class soc_ifc_env_bringup_sequence #(
-      type CONFIG_T
-      ) extends soc_ifc_env_sequence_base #(.CONFIG_T(CONFIG_T));
+class soc_ifc_env_bringup_sequence extends soc_ifc_env_sequence_base #(.CONFIG_T(soc_ifc_env_configuration_t));
 
 
-  `uvm_object_param_utils_begin( soc_ifc_env_bringup_sequence #( CONFIG_T) )
-  `uvm_object_utils_end
-  `m_uvm_get_type_name_func    ( soc_ifc_env_bringup_sequence #( CONFIG_T) )
+  `uvm_object_utils( soc_ifc_env_bringup_sequence )
 
     typedef soc_ifc_ctrl_poweron_sequence soc_ifc_ctrl_agent_poweron_sequence_t;
     soc_ifc_ctrl_agent_poweron_sequence_t soc_ifc_ctrl_agent_poweron_seq;

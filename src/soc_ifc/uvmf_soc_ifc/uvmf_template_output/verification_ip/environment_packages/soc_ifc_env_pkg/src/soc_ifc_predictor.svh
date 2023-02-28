@@ -150,9 +150,16 @@ class soc_ifc_predictor #(
   bit [31:0] nmi_vector = 32'h0;
   security_state_t security_state = '{debug_locked: 1'b1, device_lifecycle: DEVICE_UNPROVISIONED};
   bit bootfsm_breakpoint = 1'b0;
+
+  bit [4:0] [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users        = '{default: '1};
+  bit [4:0]                                          mbox_valid_users_locked = 5'b00000;
+
   soc_ifc_reg_model_top  p_soc_ifc_rm;
   uvm_reg_map p_soc_ifc_APB_map; // Block map
   uvm_reg_map p_soc_ifc_AHB_map; // Block map
+
+  int unsigned soc_ifc_status_txn_key = 0;
+  int unsigned cptra_status_txn_key = 0;
 
   extern function void populate_expected_soc_ifc_status_txn(ref soc_ifc_sb_ap_output_transaction_t txn);
   extern function void populate_expected_cptra_status_txn(ref cptra_sb_ap_output_transaction_t txn);
@@ -376,10 +383,10 @@ class soc_ifc_predictor #(
         if (axs_reg == null) begin
             `uvm_error("PRED_AHB", $sformatf("AHB transaction to address: 0x%x decodes to null from soc_ifc_AHB_map", ahb_txn.address))
         end
-        else if (uvm_reg_data_t'(data_active) != axs_reg.get() && ahb_txn.RnW == AHB_WRITE) begin
-            // Leave the un-shifted data in the error message to help with debug
-            //TODO `uvm_error("PRED_AHB", $sformatf("AHB transaction to register %s with data: 0x%x (data_active: 0x%x), write: %p, may not match reg model value: %x", axs_reg.get_name(), ahb_txn.data[0], data_active, ahb_txn.RnW, axs_reg.get()))
-        end
+//        else if (uvm_reg_data_t'(data_active) != axs_reg.get() && ahb_txn.RnW == AHB_WRITE) begin
+//            // Leave the un-shifted data in the error message to help with debug
+//            //TODO `uvm_error("PRED_AHB", $sformatf("AHB transaction to register %s with data: 0x%x (data_active: 0x%x), write: %p, may not match reg model value: %x", axs_reg.get_name(), ahb_txn.data[0], data_active, ahb_txn.RnW, axs_reg.get()))
+//        end
         else begin
             `uvm_info("PRED_AHB", {"Detected access to register: ", axs_reg.get_name()}, UVM_MEDIUM)
             case (axs_reg.get_name()) inside
@@ -505,6 +512,26 @@ class soc_ifc_predictor #(
     else begin
         `uvm_info("PRED_APB", {"Detected access to register: ", axs_reg.get_name()}, UVM_MEDIUM)
         case (axs_reg.get_name()) inside
+            ["CPTRA_VALID_PAUSER[0]":"CPTRA_VALID_PAUSER[4]"]: begin
+                byte idx = axs_reg.get_offset(p_soc_ifc_APB_map) - p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_VALID_PAUSER[0].get_offset(p_soc_ifc_APB_map);
+                idx /= 4;
+                if (mbox_valid_users_locked[idx] && apb_txn.read_or_write == APB3_TRANS_WRITE) begin
+                    `uvm_error("PRED_APB", {"Write attempted to locked register: ", axs_reg.get_name()})
+                end
+                else begin
+                    mbox_valid_users[idx] = apb_txn.wr_data;
+                end
+            end
+            ["CPTRA_PAUSER_LOCK[0]":"CPTRA_PAUSER_LOCK[4]"]: begin
+                byte idx = axs_reg.get_offset(p_soc_ifc_APB_map) - p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_PAUSER_LOCK[0].get_offset(p_soc_ifc_APB_map);
+                idx /= 4;
+                if (mbox_valid_users_locked[idx] && apb_txn.read_or_write == APB3_TRANS_WRITE) begin
+                    `uvm_error("PRED_APB", {"Write attempted to locked register: ", axs_reg.get_name()})
+                end
+                else begin
+                    mbox_valid_users_locked[idx] |= apb_txn.wr_data[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_PAUSER_LOCK[idx].LOCK.get_lsb_pos()];
+                end
+            end
             "CPTRA_FUSE_WR_DONE": begin
                 if (apb_txn.wr_data != axs_reg.get() && apb_txn.read_or_write == APB3_TRANS_WRITE)
                     `uvm_error("PRED_APB", $sformatf("APB transaction with data: 0x%x, write: %p, may not match reg model value: %x", apb_txn.wr_data, apb_txn.read_or_write, axs_reg.get()))
@@ -583,6 +610,7 @@ function void soc_ifc_predictor::populate_expected_soc_ifc_status_txn(ref soc_if
     txn.cptra_error_non_fatal_intr_pending = 1'b0; // FIXME
     txn.trng_req_pending                   = 1'b0; // FIXME
     txn.generic_output_val                 = 64'b0; // FIXME
+    txn.set_key(soc_ifc_status_txn_key++);
 endfunction
 
 function void soc_ifc_predictor::populate_expected_cptra_status_txn(ref cptra_sb_ap_output_transaction_t txn);
@@ -597,6 +625,7 @@ function void soc_ifc_predictor::populate_expected_cptra_status_txn(ref cptra_sb
     txn.obf_uds_seed               = '0; // TODO
     txn.nmi_vector                 = this.nmi_vector;
     txn.iccm_locked                = '0; // TODO
+    txn.set_key(cptra_status_txn_key++);
 endfunction
 // pragma uvmf custom external end
 

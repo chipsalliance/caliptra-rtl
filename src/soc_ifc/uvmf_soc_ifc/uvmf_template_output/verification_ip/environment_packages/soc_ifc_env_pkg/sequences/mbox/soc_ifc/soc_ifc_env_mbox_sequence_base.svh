@@ -25,14 +25,10 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-class soc_ifc_env_mbox_sequence_base #(
-      type CONFIG_T
-      ) extends soc_ifc_env_sequence_base #(.CONFIG_T(CONFIG_T));
+class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG_T(soc_ifc_env_configuration_t));
 
 
-  `uvm_object_param_utils_begin( soc_ifc_env_mbox_sequence_base #( CONFIG_T) )
-  `uvm_object_utils_end
-  `m_uvm_get_type_name_func    ( soc_ifc_env_mbox_sequence_base #( CONFIG_T) )
+  `uvm_object_utils( soc_ifc_env_mbox_sequence_base )
 
 
 
@@ -68,6 +64,10 @@ class soc_ifc_env_mbox_sequence_base #(
     super.new(name);
 
   endfunction
+
+  virtual task pre_start();
+    `uvm_info(this.get_type_name(), "In: pre_start() for sequence", UVM_MEDIUM)
+  endtask
 
   virtual task body();
 
@@ -110,10 +110,14 @@ task soc_ifc_env_mbox_sequence_base::mbox_acquire_lock(output op_sts_e op_sts);
     uvm_reg_data_t data;
     op_sts = CPTRA_TIMEOUT;
     reg_model.mbox_csr_rm.mbox_lock.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
+    if (reg_sts != UVM_IS_OK)
+        `uvm_error("MBOX_SEQ", "Register access failed (mbox_lock)")
     // Wait for read data to return with '0', indicating no other agent has lock
     while (data[reg_model.mbox_csr_rm.mbox_lock.lock.get_lsb_pos()]) begin
         configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200);
         reg_model.mbox_csr_rm.mbox_lock.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
+        if (reg_sts != UVM_IS_OK)
+            `uvm_error("MBOX_SEQ", "Register access failed (mbox_lock)")
     end
     op_sts = CPTRA_SUCCESS;
 endtask

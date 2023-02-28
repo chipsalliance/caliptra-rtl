@@ -34,13 +34,15 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
 
   rand soc_ifc_env_bringup_sequence_t soc_ifc_env_bringup_seq;
   rand soc_ifc_env_cptra_rst_wait_sequence_t soc_ifc_env_cptra_rst_wait_seq;
+  rand soc_ifc_env_sequence_base_t soc_ifc_env_seq_ii[];
   // TODO: To add new sequences to the randomized portion of this test:
   //        - Update rand_seq_idx enum definition
   //        - Update avail_env_seqs_c definition
   //        - Add instantiation logic in the RAND_LOOP below
   rand enum int {
       IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL,
-      IDX_SOC_IFC_ENV_MBOX_TOP_CONTENTION
+      IDX_SOC_IFC_ENV_MBOX_TOP_CONTENTION,
+      IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM
   } rand_seq_idx;
 
   rand int iteration_count;
@@ -48,8 +50,9 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
   // Choose rand weights for each sequence
   constraint avail_env_seqs_c {
       rand_seq_idx dist {
-          IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL := 1,
-          IDX_SOC_IFC_ENV_MBOX_TOP_CONTENTION := 1
+          IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL         := 1,
+          IDX_SOC_IFC_ENV_MBOX_TOP_CONTENTION         := 1,
+          IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM := 1
       };
   }
   // FIXME we're also running multiple iterations of this testcase in the regression.
@@ -70,6 +73,7 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
         else
             `uvm_info("SOC_IFC_RAND_TEST", $sformatf("Did not receive Command Line Iteration Count Argument, defaulting to %d", iteration_count), UVM_LOW);
     end
+    soc_ifc_env_seq_ii = new[iteration_count];
   endfunction
 
   // ****************************************************************************
@@ -103,12 +107,8 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
         soc_ifc_status_agent_responder_seq.start(soc_ifc_status_agent_sequencer);
         cptra_status_agent_responder_seq.start(cptra_status_agent_sequencer);
     join_none
-//    // Start INITIATOR sequences here
-//    fork
-//      repeat (25) soc_ifc_ctrl_agent_random_seq.start(soc_ifc_ctrl_agent_sequencer);
-//      repeat (25) cptra_ctrl_agent_random_seq.start(cptra_ctrl_agent_sequencer);
-//    join
 
+    // Start INITIATOR sequences here
     fork
     begin
         // Bringup (set pwrgood, deassert cptra_rst_b, write fuses)
@@ -129,21 +129,24 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
         // Create a new sequence instance of the randomized type
         case (rand_seq_idx) inside
             IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL:
-                obj = soc_ifc_env_top_mbox_rand_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq[%d]",ii));
+                obj = soc_ifc_env_top_mbox_rand_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%d]",ii));
             IDX_SOC_IFC_ENV_MBOX_TOP_CONTENTION:
-                obj = soc_ifc_env_top_mbox_contention_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq[%d]",ii));
+                obj = soc_ifc_env_top_mbox_contention_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM:
+                obj = soc_ifc_env_top_mbox_rand_pauser_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%d]",ii));
             default:
                 `uvm_error("SOC_IFC_RAND_TEST", $sformatf("rand_seq_idx randomized to illegal value: %p", rand_seq_idx))
         endcase
 
         // Randomize and run the sequence
-        if(!$cast(soc_ifc_env_seq,obj)) `uvm_fatal("SOC_IFC_RAND_TEST", "soc_ifc_rand_test_sequence::body() - <seq_type>.create_object() failed")
-        `uvm_info("SOC_IFC_RAND_TEST", $sformatf("rand_seq randomized to: %s", soc_ifc_env_seq.get_type_name()), UVM_MEDIUM)
-        if(!soc_ifc_env_seq.randomize())
-            `uvm_fatal("SOC_IFC_RAND_TEST", $sformatf("soc_ifc_rand_test_sequence::body() - %s randomization failed", soc_ifc_env_seq.get_type_name()));
-        soc_ifc_env_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_status_agent_responder_seq;
-        soc_ifc_env_seq.cptra_status_agent_rsp_seq   = cptra_status_agent_responder_seq;
-        soc_ifc_env_seq.start(top_configuration.vsqr);
+        if(!$cast(soc_ifc_env_seq_ii[ii],obj))
+            `uvm_fatal("SOC_IFC_RAND_TEST", "soc_ifc_rand_test_sequence::body() - <seq_type>.create_object() failed")
+        `uvm_info("SOC_IFC_RAND_TEST", $sformatf("rand_seq randomized to: %s", soc_ifc_env_seq_ii[ii].get_type_name()), UVM_MEDIUM)
+        if(!soc_ifc_env_seq_ii[ii].randomize())
+            `uvm_fatal("SOC_IFC_RAND_TEST", $sformatf("soc_ifc_rand_test_sequence::body() - %s randomization failed", soc_ifc_env_seq_ii[ii].get_type_name()));
+        soc_ifc_env_seq_ii[ii].soc_ifc_status_agent_rsp_seq = soc_ifc_status_agent_responder_seq;
+        soc_ifc_env_seq_ii[ii].cptra_status_agent_rsp_seq   = cptra_status_agent_responder_seq;
+        soc_ifc_env_seq_ii[ii].start(top_configuration.vsqr);
     end
 
     // UVMF_CHANGE_ME : Extend the simulation XXX number of clocks after 

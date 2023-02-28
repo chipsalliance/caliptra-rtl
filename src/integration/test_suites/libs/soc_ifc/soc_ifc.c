@@ -25,6 +25,14 @@ void soc_ifc_clear_execute_reg() {
     lsu_write_32((uint32_t*) CLP_MBOX_CSR_MBOX_EXECUTE,reg);
 }
 
+void soc_ifc_set_mbox_status_field(enum mbox_status_e field) {
+    VPRINTF(MEDIUM,"SOC_IFC: Set mbox_status field: 0x%x\n", field);
+    uint32_t reg;
+    reg = lsu_read_32((uint32_t*) CLP_MBOX_CSR_MBOX_STATUS);
+    reg = (reg & ~MBOX_CSR_MBOX_STATUS_STATUS_MASK) | (field << MBOX_CSR_MBOX_STATUS_STATUS_LOW);
+    lsu_write_32((uint32_t*) CLP_MBOX_CSR_MBOX_STATUS,reg);
+}
+
 void soc_ifc_set_flow_status_field(uint32_t field) {
     VPRINTF(MEDIUM,"SOC_IFC: Set flow_status field: 0x%x\n", field);
     uint32_t reg;
@@ -140,8 +148,8 @@ void soc_ifc_mbox_fw_flow(mbox_op_s op) {
         dccm[offset++] = soc_ifc_mbox_read_dataout_single();
     }
 
-    // Unlock the mailbox
-    soc_ifc_clear_execute_reg();
+    // Set the command complete status
+    soc_ifc_set_mbox_status_field(CMD_COMPLETE);
 
 }
 

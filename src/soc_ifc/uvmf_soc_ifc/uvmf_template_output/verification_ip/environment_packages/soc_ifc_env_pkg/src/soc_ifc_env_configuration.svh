@@ -70,6 +70,17 @@ extends uvmf_environment_configuration_base;
   soc_ifc_vsqr_t vsqr;
 
   // pragma uvmf custom class_item_additional begin
+   typedef apb3_host_apb3_transaction #(apb5_master_0_params::APB3_SLAVE_COUNT,
+                                        apb5_master_0_params::APB3_PADDR_BIT_WIDTH,
+                                        apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
+                                        apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) apb_reg_transfer_t;
+
+   typedef caliptra_reg2apb_adapter #(apb_reg_transfer_t,
+                             apb5_master_0_params::APB3_SLAVE_COUNT,
+                             apb5_master_0_params::APB3_PADDR_BIT_WIDTH,
+                             apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
+                             apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) apb_reg_adapter_t;
+   apb_reg_adapter_t apb_reg_adapter_h;
   // pragma uvmf custom class_item_additional end
 
 // ****************************************************************************
@@ -203,6 +214,7 @@ extends uvmf_environment_configuration_base;
 
 
   // pragma uvmf custom initialize begin
+     qvip_apb5_slave_subenv_config.apb5_master_0_cfg.agent_cfg.en_sb = 1'b0; /* FIXME -- apb scoreboard flags ERRORs when read_data != write_data to a given address, which happens frequently (non-erroneously) in this environment */
     // Add analysis ports to send Bus traffic to the scoreboard, so that the predictor/scoreboard can check read transfer data
     void'(qvip_ahb_lite_slave_subenv_config.ahb_lite_slave_0_cfg.set_monitor_item( "burst_transfer_sb" , ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
                                                                                                                                      ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,

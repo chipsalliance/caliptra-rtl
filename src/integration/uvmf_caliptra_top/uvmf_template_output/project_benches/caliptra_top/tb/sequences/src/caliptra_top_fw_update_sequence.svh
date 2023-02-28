@@ -31,11 +31,7 @@ class caliptra_top_fw_update_sequence extends caliptra_top_bench_sequence_base;
 
   `uvm_object_utils( caliptra_top_fw_update_sequence );
 
-  typedef soc_ifc_env_configuration  soc_ifc_env_configuration_t;
-  typedef soc_ifc_env_bringup_sequence #(
-          .CONFIG_T(soc_ifc_env_configuration_t)
-          )
-          soc_ifc_env_bringup_sequence_t;
+  typedef soc_ifc_env_bringup_sequence soc_ifc_env_bringup_sequence_t;
   rand soc_ifc_env_bringup_sequence_t soc_ifc_env_bringup_seq;
   // Local handle to register model for convenience
   soc_ifc_reg_model_top reg_model;

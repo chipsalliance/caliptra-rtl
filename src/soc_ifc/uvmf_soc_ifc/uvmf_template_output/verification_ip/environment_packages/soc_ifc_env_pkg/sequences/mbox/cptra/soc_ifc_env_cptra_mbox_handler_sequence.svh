@@ -26,14 +26,10 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-class soc_ifc_env_cptra_mbox_handler_sequence #(
-      type CONFIG_T
-      ) extends soc_ifc_env_sequence_base #(.CONFIG_T(CONFIG_T));
+class soc_ifc_env_cptra_mbox_handler_sequence extends soc_ifc_env_sequence_base #(.CONFIG_T(soc_ifc_env_configuration_t));
 
 
-  `uvm_object_param_utils_begin( soc_ifc_env_cptra_mbox_handler_sequence #( CONFIG_T) )
-  `uvm_object_utils_end
-  `m_uvm_get_type_name_func    ( soc_ifc_env_cptra_mbox_handler_sequence #( CONFIG_T) )
+  `uvm_object_utils( soc_ifc_env_cptra_mbox_handler_sequence )
 
     cptra_status_agent_responder_seq_t cptra_status_agent_rsp_seq;
 
@@ -88,6 +84,7 @@ class soc_ifc_env_cptra_mbox_handler_sequence #(
     mbox_set_status();
 
     // Check FSM status
+    configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(2); // Takes a few cycles for FSM update to propagate into register
     mbox_check_fsm();
 
     // Check new responses (might be an interrupt? Nothing else expected)

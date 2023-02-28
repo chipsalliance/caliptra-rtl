@@ -179,14 +179,24 @@ void caliptra_rt() {
                 cptra_intr_rcv.soc_ifc_notif &= ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK;
                 //read the mbox command
                 op = soc_ifc_read_mbox_cmd();
-                if (op.cmd != MBOX_CMD_RT_UPDATE) {
-                    VPRINTF(FATAL, "Received invalid mailbox command from SOC! Expected 0x%x, got 0x%x\n", MBOX_CMD_RT_UPDATE, op.cmd);
+                if (op.cmd & MBOX_CMD_FIELD_FW_MASK) {
+                    VPRINTF(LOW, "Received mailbox firmware command from SOC! Got 0x%x\n", op.cmd);
+                    if (op.cmd & MBOX_CMD_FIELD_RESP_MASK) {
+                        VPRINTF(ERROR, "Mailbox firmware command unexpectedly has response expected field set!\n");
+                    }
+                    VPRINTF(MEDIUM, "Triggering FW update reset\n");
+                    //Trigger firmware update reset, new fw will get copied over from ROM
+                    soc_ifc_set_fw_update_reset();
+                }
+                else if (op.cmd & MBOX_CMD_FIELD_RESP_MASK) {
+                    VPRINTF(FATAL, "Received unexpected mailbox command (expecting RESP) from SOC! Got 0x%x\n", op.cmd);
                     SEND_STDOUT_CTRL(0x1);
                     while(1);
                 }
                 else {
-                    //Trigger firmware update reset, new fw will get copied over from ROM
-                    soc_ifc_set_fw_update_reset();
+                    VPRINTF(FATAL, "Received unexpected mailbox command (no expected RESP) from SOC! Got 0x%x\n", op.cmd);
+                    SEND_STDOUT_CTRL(0x1);
+                    while(1);
                 }
             }
             if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_MBOX_ECC_COR_STS_MASK) {

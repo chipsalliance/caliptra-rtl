@@ -42,6 +42,16 @@ enum mbox_fsm_e {
 *   [31]: Firmware command
 *   [30]: Response required (if set)
 */
+enum {
+    MBOX_CMD_FIELD_FW_LOW   = 31,
+    MBOX_CMD_FIELD_RESP_LOW = 30
+};
+
+enum {
+    MBOX_CMD_FIELD_FW_MASK   = 1 << MBOX_CMD_FIELD_FW_LOW  ,
+    MBOX_CMD_FIELD_RESP_MASK = 1 << MBOX_CMD_FIELD_RESP_LOW
+};
+
 enum mbox_cmd_e {
     MBOX_CMD_RESP_BASIC = 0x40000000,
     MBOX_CMD_FMC_UPDATE = 0xba5eba11,
@@ -67,6 +77,7 @@ inline uint32_t soc_ifc_mbox_read_dataout_single() {
     return lsu_read_32((uint32_t*) CLP_MBOX_CSR_MBOX_DATAOUT);
 }
 void soc_ifc_clear_execute_reg();
+void soc_ifc_set_mbox_status_field(enum mbox_status_e field);
 void soc_ifc_set_flow_status_field(uint32_t field);
 void soc_ifc_clr_flow_status_field(uint32_t field);
 void soc_ifc_set_fw_update_reset();

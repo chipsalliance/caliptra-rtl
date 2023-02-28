@@ -43,6 +43,7 @@ class cptra_status_monitor  extends uvmf_monitor_base #(
 `cptra_status_MONITOR_STRUCT
 
   // pragma uvmf custom class_item_additional begin
+  int unsigned txn_key = 0;
   // pragma uvmf custom class_item_additional end
   
 // ****************************************************************************
@@ -86,6 +87,9 @@ class cptra_status_monitor  extends uvmf_monitor_base #(
  
  
     trans = new("trans");
+// pragma uvmf custom notify_transaction begin
+    trans.set_key(txn_key++);
+// pragma uvmf custom notify_transaction end
     trans.from_monitor_struct(cptra_status_monitor_struct);
     trans.start_time = time_stamp;                                                          
     trans.end_time = $time;                                                                 

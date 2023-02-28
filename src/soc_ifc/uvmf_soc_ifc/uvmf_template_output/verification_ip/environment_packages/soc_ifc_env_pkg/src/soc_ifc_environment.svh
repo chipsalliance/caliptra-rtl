@@ -160,6 +160,7 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     soc_ifc_pred.configuration = configuration;
     soc_ifc_sb = soc_ifc_sb_t::type_id::create("soc_ifc_sb",this);
     soc_ifc_sb.configuration = configuration;
+    soc_ifc_sb.enable_wait_for_scoreboard_empty();
 // pragma uvmf custom reg_model_build_phase begin
   // Build register model predictor if prediction is enabled
   if (configuration.enable_reg_prediction) begin
@@ -212,6 +213,7 @@ class soc_ifc_environment  extends uvmf_environment_base #(
       ahb_reg_adapter.en_n_bits = 1; // This is to allow the adapter to generate addresses
                                      // that are not aligned to 64-bit width (the native AHB interface width)
       apb_reg_adapter = apb_reg_adapter_t::type_id::create("caliptra_reg2apb_adapter");
+      configuration.apb_reg_adapter_h = apb_reg_adapter;
     end
     // Set sequencer and adapter in register model map
     if ((configuration.enable_reg_adaptation) && (qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.m_sequencer != null ))

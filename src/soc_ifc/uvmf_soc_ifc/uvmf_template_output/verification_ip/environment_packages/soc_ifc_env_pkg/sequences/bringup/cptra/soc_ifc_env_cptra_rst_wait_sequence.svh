@@ -25,12 +25,10 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-class soc_ifc_env_cptra_rst_wait_sequence #(
-      type CONFIG_T
-      ) extends soc_ifc_env_sequence_base #(.CONFIG_T(CONFIG_T));
+class soc_ifc_env_cptra_rst_wait_sequence extends soc_ifc_env_sequence_base #(.CONFIG_T(soc_ifc_env_configuration_t));
 
 
-  `uvm_object_param_utils( soc_ifc_env_cptra_rst_wait_sequence #( CONFIG_T) );
+  `uvm_object_utils( soc_ifc_env_cptra_rst_wait_sequence );
 
 
 
