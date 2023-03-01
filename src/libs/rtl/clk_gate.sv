@@ -68,18 +68,13 @@ always_comb begin
     disable_soc_ifc_clk     = clk_gate_en && (cpu_halt_status && !psel && !change_in_generic_wires);
 end
 
-//Latch disable for both clk and soc_ifc clk
-always_latch begin
-    if(!clk) begin
-        disable_clk_lat = disable_clk;
-        disable_soc_ifc_clk_lat = disable_soc_ifc_clk;
-    end
-end
 
-//Gate clk
-always_comb begin
-    clk_cg = clk && !disable_clk_lat;
-    soc_ifc_clk_cg = clk && !disable_soc_ifc_clk_lat;
-end
+`ifdef TECH_SPECIFIC_ICG
+    `USER_ICG user_icg (.clk(clk), .en(!disable_clk), .clk_cg(clk_cg));
+    `USER_ICG user_soc_ifc_icg (.clk(clk), .en(!disable_soc_ifc_clk), .clk_cg(soc_ifc_clk_cg));
+`else
+    `CALIPTRA_ICG caliptra_icg (.clk(clk), .en(!disable_clk), .clk_cg(clk_cg));
+    `CALIPTRA_ICG caliptra_soc_ifc_icg (.clk(clk), .en(!disable_soc_ifc_clk), .clk_cg(soc_ifc_clk_cg));
+`endif
 
 endmodule

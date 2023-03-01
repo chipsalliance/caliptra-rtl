@@ -86,6 +86,8 @@
   `define CALIPTRA_RV_TOP     `CALIPTRA_TOP.caliptra_top_dut
 
   `define RV_TOP              `CALIPTRA_RV_TOP.rvtop
+
+  `define CALIPTRA_ICG           cptra_clk_gate
   
 `endif
 

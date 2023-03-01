@@ -22,6 +22,8 @@ ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_sram.sv
 ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_ahb_srom.sv
 ${WORKSPACE}/Caliptra/src/libs/rtl/apb_slv_sif.sv
 ${WORKSPACE}/Caliptra/src/libs/rtl/ahb_slv_sif.sv
+${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_icg.sv
+${WORKSPACE}/Caliptra/src/libs/rtl/clk_gate.sv
 ${WORKSPACE}/Caliptra/src/integration/rtl/config_defines.svh
 ${WORKSPACE}/Caliptra/src/integration/rtl/caliptra_reg_defines.svh
 ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/soc_ifc_pkg.sv
@@ -32,7 +34,6 @@ ${WORKSPACE}/Caliptra/src/integration/tb/caliptra_veer_sram_export.sv
 ${WORKSPACE}/Caliptra/src/integration/tb/caliptra_top_tb_pkg.sv
 ${WORKSPACE}/Caliptra/src/integration/tb/caliptra_top_tb_services.sv
 ${WORKSPACE}/Caliptra/src/integration/tb/caliptra_top_tb.sv
-${WORKSPACE}/Caliptra/src/libs/rtl/clk_gate.sv
 ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/mbox_csr_pkg.sv
 ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/sha512_acc_csr_pkg.sv
 ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/soc_ifc_reg_pkg.sv

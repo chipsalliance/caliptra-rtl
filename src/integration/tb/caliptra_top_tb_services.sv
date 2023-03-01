@@ -63,6 +63,7 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
 
     //Interrupt flags
     output logic int_flag,
+    output logic cycleCnt_smpl_en,
 
     //Reset flags
     output logic assert_hard_rst_flag,
@@ -153,6 +154,7 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
     //         8'h80: 8'h87 - Inject ECC_SEED to kv_key register
     //         8'h88: 8'h8f - Inject HMAC_KEY to kv_key register
     //         8'h90: 8'h97 - Inject SHA_BLOCK to kv_key register
+    //         8'hf2        - Force clk_gating_en (to use in smoke_test only)
     //         8'hf3        - Make two clients write to KV
     //         8'hf4        - Write random data to KV entry0
     //         8'hf5        - Issue cold reset
@@ -277,6 +279,12 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
     end
 
     always@(negedge clk) begin
+        if((WriteData == 'hf2) && mailbox_write) begin
+            force caliptra_top_dut.soc_ifc_top1.clk_gating_en = 1;
+        end
+    end
+
+    always@(negedge clk) begin
         if((WriteData[7:0] == 8'hf3) && mailbox_write) begin
             force caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_en = 1;
             force caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.entry_is_pcr = 0;
@@ -372,10 +380,15 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
     end
 
     always @(negedge clk or negedge cptra_rst_b) begin
-        if (!cptra_rst_b) int_flag <= 'b0;
+        if (!cptra_rst_b) begin
+            int_flag <= 'b0;
+            cycleCnt_smpl_en <= 'b0;
+        end
         else if((WriteData[7:0] == 8'hf8) && mailbox_write) begin
             int_flag <= 1'b1;
+            cycleCnt_smpl_en <= 'b1;
         end
+        else cycleCnt_smpl_en <= 'b0;
     end
 
 

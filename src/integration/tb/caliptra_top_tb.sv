@@ -123,6 +123,8 @@ module caliptra_top_tb (
     //logic soft_int;
     //logic timer_int;
     logic int_flag;
+    logic cycleCnt_smpl_en;
+    int cycleCnt_ff;
 
     //Reset flags
     logic assert_hard_rst_flag;
@@ -144,19 +146,25 @@ module caliptra_top_tb (
 `endif
     
     always@(negedge core_clk) begin
-        if((cycleCnt == 'h3000) && int_flag) begin
+        if(!cptra_rst_b) cycleCnt_ff <= 'h0;
+        else if(cycleCnt_smpl_en) cycleCnt_ff <= cycleCnt;
+    end
+
+    always@(negedge core_clk) begin
+        if((cycleCnt == cycleCnt_ff + 2000) && int_flag) begin
             force caliptra_top_dut.soft_int = 'b1;
         end
         
-        else if((cycleCnt == 'h4000) && int_flag) begin
+        else if((cycleCnt == cycleCnt_ff + 7000) && int_flag) begin
             force caliptra_top_dut.timer_int = 'b1;
         end
         
-        else if((cycleCnt == 'h5000) && int_flag) begin
+        else if((c_state_apb == S_APB_WR_EXEC) && apb_xfer_end && int_flag) begin
+            //Wait for APB flow to be done before toggling generic_input_wires
             generic_input_wires <= 'h4001; //Toggle wires
         end
         
-        else if((cycleCnt == 'h6000) && int_flag) begin
+        else if((cycleCnt == cycleCnt_ff + 15000) && int_flag) begin
             force caliptra_top_dut.soft_int = 'b1;
         end
         
@@ -654,6 +662,7 @@ caliptra_top_tb_services #(
 
     //Interrupt flags
     .int_flag(int_flag),
+    .cycleCnt_smpl_en(cycleCnt_smpl_en),
 
     //Reset flags
     .assert_hard_rst_flag(assert_hard_rst_flag),

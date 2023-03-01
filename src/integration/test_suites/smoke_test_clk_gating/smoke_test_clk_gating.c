@@ -23,6 +23,12 @@ volatile char*    stdout           = (char *)STDOUT;
 volatile uint32_t intr_count       = 0;
 volatile uint32_t hmac_intr_status = 0;
 
+#ifdef CPT_VERBOSITY
+    enum printf_verbosity verbosity_g = CPT_VERBOSITY;
+#else
+    enum printf_verbosity verbosity_g = LOW;
+#endif
+
 void main() {
     
     volatile uint32_t * soc_ifc_flow_status = (uint32_t *) CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS;
@@ -42,7 +48,9 @@ void main() {
     //----------------------------------------------------
     //Wake up using internal timer0
     //----------------------------------------------------
+        SEND_STDOUT_CTRL(0xf2); 
         //Set internal timer0 counter to 0
+        printf("Wake up core using internal timer0\n");
         __asm__ volatile ("csrwi    %0, %1" \
                       : /* output: none */        \
                       : "i" (0x7d2), "i" (0x00)  /* input : immediate  */ \
@@ -87,6 +95,7 @@ void main() {
     //------------------------------------------------------
     //Wake up using software int
     //------------------------------------------------------
+        printf("Wake up core using software interrupt\n");
         //Set machine intr enable reg (mie) - enable soft intr
         __asm__ volatile ("csrwi    %0, %1" \
                       : /* output: none */        \
@@ -102,6 +111,7 @@ void main() {
     //------------------------------------------------------
     //Wake SOC up for APB tx and core using timer int later
     //------------------------------------------------------
+        printf("Wake up SOC clk on APB txns and later wake up core using timer interrupt\n");
         //Machine intr enable reg (mie) - enable timer int 
         __asm__ volatile ("csrw    %0, %1" \
                       : /* output: none */        \
@@ -117,8 +127,9 @@ void main() {
                       : /* clobbers: none */);
 
     //------------------------------------------------------
-    //Wake up using generic input wires and using soft intr later
+    //Wake up using generic input wires and then soft intr
     //------------------------------------------------------
+        printf("Wake up clks on change in generic_input_wires and later wake up core using software interrupt\n");
         //Set machine intr enable reg (mie) - enable soft intr
         __asm__ volatile ("csrwi    %0, %1" \
                       : /* output: none */        \

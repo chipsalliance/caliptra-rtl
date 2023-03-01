@@ -98,6 +98,7 @@ import uvmf_base_pkg_hdl::*;
 
     int                         cycleCnt;
     bit                         int_flag;
+    bit                         cycleCnt_smpl_en;
 
     //jtag interface
     logic                       jtag_tck    = '0; // JTAG clk
@@ -300,6 +301,7 @@ import uvmf_base_pkg_hdl::*;
 
         // TB Controls
         .cycleCnt(cycleCnt),
+        .cycleCnt_smpl_en(cycleCnt_smpl_en),
 
         //Interrupt flags
         .int_flag(int_flag)
