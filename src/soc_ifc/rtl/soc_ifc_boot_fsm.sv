@@ -98,7 +98,7 @@ always_comb begin
             fsm_synch_uc_rst_b = '1;
             fsm_iccm_unlock = '0;
             wait_count_decr = 0;
-            wait_count_rst = 1;
+            wait_count_rst = 0;
         end
         BOOT_FUSE: begin
             if (arc_BOOT_FUSE_BOOT_DONE) begin
@@ -115,7 +115,7 @@ always_comb begin
             fsm_synch_uc_rst_b = '0;
             fsm_iccm_unlock = '0;
             wait_count_decr = 0;
-            wait_count_rst = 1;
+            wait_count_rst = 0;
         end
         BOOT_FW_RST: begin
             boot_fsm_ns = BOOT_WAIT;
@@ -125,8 +125,8 @@ always_comb begin
             //Keep ICCM locked until end of fw rst
             fsm_iccm_unlock = '0;
             //Start timer
-            wait_count_decr = 1;
-            wait_count_rst = 0;
+            wait_count_decr = 0;
+            wait_count_rst = 1;
         end
         BOOT_WAIT: begin
             if (arc_BOOT_WAIT_BOOT_DONE) begin
@@ -162,7 +162,7 @@ always_comb begin
             fsm_synch_uc_rst_b = '1;
             fsm_iccm_unlock = '0;
             //Timer re-init
-            wait_count_rst = 1;
+            wait_count_rst = 0;
             wait_count_decr = 0;
         end
         default: begin
@@ -170,7 +170,7 @@ always_comb begin
             fsm_synch_uc_rst_b = '1;
             fsm_iccm_unlock = '0;
             wait_count_decr = 0;
-            wait_count_rst = 1;
+            wait_count_rst = 0;
         end
     endcase
 end
@@ -196,7 +196,7 @@ always_ff @(posedge clk or negedge cptra_rst_b) begin
         cptra_noncore_rst_b <= fsm_synch_noncore_rst_b;
         cptra_uc_rst_b <= fsm_synch_noncore_rst_b && fsm_synch_uc_rst_b && synch_uc_rst_b; //uc comes out of rst only when both global and fw rsts are deasserted (through 2FF sync)
 
-        wait_count <= wait_count_decr ? wait_count - 1
+        wait_count <= (wait_count_decr && (wait_count != '0)) ? wait_count - 1
                                       : wait_count_rst ? fw_update_rst_wait_cycles
                                                         : wait_count ;
         iccm_unlock <= fsm_iccm_unlock;
