@@ -13,8 +13,8 @@
 // limitations under the License.
 //
 
-`ifndef AES_PARAM_PKG
-`define AES_PARAM_PKG
+`ifndef CALIPTRA_AES_PARAM_PKG
+`define CALIPTRA_AES_PARAM_PKG
 
 package aes_param_pkg;
 
@@ -62,6 +62,7 @@ package aes_param_pkg;
 
   `define AES_CBC_MODE
 
+endpackage
+
 `endif
 
-endpackage

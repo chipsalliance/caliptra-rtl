@@ -250,8 +250,8 @@ module sha512
 
   end
 
-  `KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, SHA512_KV_WR_CTRL)
-  `KV_READ_CTRL_REG2STRUCT(kv_read_ctrl_reg, SHA512_KV_RD_CTRL)
+  `CALIPTRA_KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, SHA512_KV_WR_CTRL)
+  `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_read_ctrl_reg, SHA512_KV_RD_CTRL)
 
 
 // Register Block

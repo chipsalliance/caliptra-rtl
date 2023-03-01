@@ -344,7 +344,8 @@ always_comb soc_ifc_reg_hwif_in.soc_req = soc_ifc_reg_req_data.soc_req;
 always_comb begin
     for (int i = 0; i < `CLP_OBF_KEY_DWORDS; i++) begin
         soc_ifc_reg_hwif_in.internal_obf_key[i].key.swwe = '0; //sw can't write to obf key
-        soc_ifc_reg_hwif_in.internal_obf_key[i].key.wel = cptra_pwrgood; //capture value during pwrgood de-assertion
+        //Sample only if its a pwrgood cycle, in debug locked state and scan mode is not asserted (as in do not sample if it was a warm reset or debug or scan mode)
+        soc_ifc_reg_hwif_in.internal_obf_key[i].key.wel = soc_ifc_reg_hwif_out.CPTRA_RESET_REASON.WARM_RESET.value | ~security_state.debug_locked | scan_mode_f;
         soc_ifc_reg_hwif_in.internal_obf_key[i].key.next = cptra_obf_key[i];
         soc_ifc_reg_hwif_in.internal_obf_key[i].key.hwclr = clear_obf_secrets;
         cptra_obf_key_reg[i] = soc_ifc_reg_hwif_out.internal_obf_key[i].key.value;
@@ -674,7 +675,7 @@ always_ff @(posedge clk or negedge cptra_pwrgood) begin
     end
 end
 
-`ASSERT_KNOWN(ERR_AHB_INF_X, {hreadyout_o,hresp_o}, soc_ifc_clk_cg, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(ERR_AHB_INF_X, {hreadyout_o,hresp_o}, soc_ifc_clk_cg, cptra_rst_b)
 //this generates an NMI in the core, but we don't have a handler so it just hangs
-`ASSERT_NEVER(ERR_SOC_IFC_AHB_ERR, hresp_o, soc_ifc_clk_cg, cptra_rst_b)
+`CALIPTRA_ASSERT_NEVER(ERR_SOC_IFC_AHB_ERR, hresp_o, soc_ifc_clk_cg, cptra_rst_b)
 endmodule

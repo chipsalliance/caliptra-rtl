@@ -2,6 +2,7 @@
 ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_sva.svh
 ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_macros.svh
 ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_sram.sv
+${WORKSPACE}/Caliptra/src/libs/rtl/ahb_defines_pkg.sv
 ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_ahb_srom.sv
 ${WORKSPACE}/Caliptra/src/libs/rtl/apb_slv_sif.sv
 ${WORKSPACE}/Caliptra/src/libs/rtl/ahb_slv_sif.sv

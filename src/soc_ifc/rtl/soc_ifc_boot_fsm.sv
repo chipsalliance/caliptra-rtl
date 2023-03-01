@@ -203,12 +203,12 @@ always_ff @(posedge clk or negedge cptra_rst_b) begin
     end
 end
 
-`ASSERT_KNOWN(ERR_FSM_ARC_X, {arc_BOOT_FUSE_BOOT_DONE, arc_BOOT_DONE_BOOT_FWRST, arc_BOOT_WAIT_BOOT_DONE}, clk, cptra_rst_b)
-`ASSERT_KNOWN(ERR_FSM_STATE_X, boot_fsm_ps, clk, cptra_rst_b)
-`ASSERT_KNOWN(ERR_UC_RST_X, cptra_noncore_rst_b, clk, cptra_rst_b)
-`ASSERT_KNOWN(ERR_UC_FWRST_X, cptra_uc_rst_b, clk, cptra_rst_b)
-`ASSERT_NEVER(ERR_UC_RST_ASSERT_AND_BOOT_NOT_DONE, cptra_noncore_rst_b && ((boot_fsm_ps == BOOT_IDLE) || (boot_fsm_ps == BOOT_FUSE)), clk, cptra_rst_b)
-`ASSERT(ERR_UC_RST_ASSERT_AND_BOOT_NOT_DONE2, ~cptra_noncore_rst_b || (boot_fsm_ps == BOOT_DONE) || (boot_fsm_ps == BOOT_FW_RST) || (boot_fsm_ps == BOOT_WAIT), clk, cptra_rst_b)
-`ASSERT_NEVER(ERR_UC_FWRST_ASSERT_AND_BOOT_NOT_DONE, cptra_uc_rst_b && (boot_fsm_ps == BOOT_WAIT), clk, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(ERR_FSM_ARC_X, {arc_BOOT_FUSE_BOOT_DONE, arc_BOOT_DONE_BOOT_FWRST, arc_BOOT_WAIT_BOOT_DONE}, clk, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(ERR_FSM_STATE_X, boot_fsm_ps, clk, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(ERR_UC_RST_X, cptra_noncore_rst_b, clk, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(ERR_UC_FWRST_X, cptra_uc_rst_b, clk, cptra_rst_b)
+`CALIPTRA_ASSERT_NEVER(ERR_UC_RST_ASSERT_AND_BOOT_NOT_DONE, cptra_noncore_rst_b && ((boot_fsm_ps == BOOT_IDLE) || (boot_fsm_ps == BOOT_FUSE)), clk, cptra_rst_b)
+`CALIPTRA_ASSERT(ERR_UC_RST_ASSERT_AND_BOOT_NOT_DONE2, ~cptra_noncore_rst_b || (boot_fsm_ps == BOOT_DONE) || (boot_fsm_ps == BOOT_FW_RST) || (boot_fsm_ps == BOOT_WAIT), clk, cptra_rst_b)
+`CALIPTRA_ASSERT_NEVER(ERR_UC_FWRST_ASSERT_AND_BOOT_NOT_DONE, cptra_uc_rst_b && (boot_fsm_ps == BOOT_WAIT), clk, cptra_rst_b)
 
 endmodule

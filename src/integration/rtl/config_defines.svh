@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-`ifndef CFG_SV
-`define CFG_SV
+`ifndef CALIPTRA_CFG_SV
+`define CALIPTRA_CFG_SV
 
   `define CALIPTRA_AHB_SLAVES_NUM      4'd13 // Number of slaves AHB
   `define CALIPTRA_AHB_MASTERS_NUM     4'd1 // Number of masters AHB

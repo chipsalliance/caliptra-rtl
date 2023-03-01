@@ -270,7 +270,7 @@ end
     // Slave 0: LMEM
     // Slave 1: DMA Slave port
     //========================================================================
-    AHB_LITE_BUS_INF #(
+    CALIPTRA_AHB_LITE_BUS_INF #(
         .AHB_LITE_ADDR_WIDTH(`CALIPTRA_AHB_HADDR_SIZE),
         .AHB_LITE_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE)
     )
@@ -279,7 +279,7 @@ end
     //========================================================================
     // AHB Master ports
     //========================================================================
-    AHB_LITE_BUS_INF #(
+    CALIPTRA_AHB_LITE_BUS_INF #(
         .AHB_LITE_ADDR_WIDTH(`CALIPTRA_AHB_HADDR_SIZE),
         .AHB_LITE_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE)
     )
@@ -914,27 +914,27 @@ genvar sva_i;
 generate
   for(sva_i= 0; sva_i<`CALIPTRA_AHB_SLAVES_NUM; sva_i=sva_i+1)
   begin: gen_caliptra_asserts
-    `ASSERT_KNOWN(AHB_SLAVE_HADDR_X,        responder_inst[sva_i].haddr,       clk, cptra_noncore_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HWDATA_X,       responder_inst[sva_i].hwdata,      clk, cptra_noncore_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HSEL_X,         responder_inst[sva_i].hsel,        clk, cptra_noncore_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HWRITE_X,       responder_inst[sva_i].hwrite,      clk, cptra_noncore_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HREADY_X,       responder_inst[sva_i].hready,      clk, cptra_noncore_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HTRANS_X,       responder_inst[sva_i].htrans,      clk, cptra_noncore_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HSIZE_X,        responder_inst[sva_i].hsize,       clk, cptra_noncore_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HRESP_X,        responder_inst[sva_i].hresp,       clk, cptra_noncore_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HREADYOUT_X,    responder_inst[sva_i].hreadyout,   clk, cptra_noncore_rst_b)
-    `ASSERT_KNOWN(AHB_SLAVE_HRDATA_X,       responder_inst[sva_i].hreadyout ? responder_inst[sva_i].hrdata : '0,      clk, cptra_noncore_rst_b)
+    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HADDR_X,        responder_inst[sva_i].haddr,       clk, cptra_noncore_rst_b)
+    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HWDATA_X,       responder_inst[sva_i].hwdata,      clk, cptra_noncore_rst_b)
+    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HSEL_X,         responder_inst[sva_i].hsel,        clk, cptra_noncore_rst_b)
+    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HWRITE_X,       responder_inst[sva_i].hwrite,      clk, cptra_noncore_rst_b)
+    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HREADY_X,       responder_inst[sva_i].hready,      clk, cptra_noncore_rst_b)
+    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HTRANS_X,       responder_inst[sva_i].htrans,      clk, cptra_noncore_rst_b)
+    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HSIZE_X,        responder_inst[sva_i].hsize,       clk, cptra_noncore_rst_b)
+    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HRESP_X,        responder_inst[sva_i].hresp,       clk, cptra_noncore_rst_b)
+    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HREADYOUT_X,    responder_inst[sva_i].hreadyout,   clk, cptra_noncore_rst_b)
+    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HRDATA_X,       responder_inst[sva_i].hreadyout ? responder_inst[sva_i].hrdata : '0,      clk, cptra_noncore_rst_b)
   end
 endgenerate
 
-`ASSERT_KNOWN(AHB_MASTER_HADDR_X,        initiator_inst.haddr,       clk, cptra_noncore_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HWDATA_X,       initiator_inst.hwdata,      clk, cptra_noncore_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HWRITE_X,       initiator_inst.hwrite,      clk, cptra_noncore_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HREADY_X,       initiator_inst.hready,      clk, cptra_noncore_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HTRANS_X,       initiator_inst.htrans,      clk, cptra_noncore_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HSIZE_X,        initiator_inst.hsize,       clk, cptra_noncore_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HRESP_X,        initiator_inst.hresp,       clk, cptra_noncore_rst_b)
-`ASSERT_KNOWN(AHB_MASTER_HRDATA_X,       initiator_inst.hready ? initiator_inst.hrdata : '0,      clk, cptra_noncore_rst_b)
-`ASSERT_NEVER(AHB_MASTER_HTRANS_BUSY,    initiator_inst.htrans == 2'b01, clk, cptra_noncore_rst_b)
+`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HADDR_X,        initiator_inst.haddr,       clk, cptra_noncore_rst_b)
+`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HWDATA_X,       initiator_inst.hwdata,      clk, cptra_noncore_rst_b)
+`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HWRITE_X,       initiator_inst.hwrite,      clk, cptra_noncore_rst_b)
+`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HREADY_X,       initiator_inst.hready,      clk, cptra_noncore_rst_b)
+`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HTRANS_X,       initiator_inst.htrans,      clk, cptra_noncore_rst_b)
+`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HSIZE_X,        initiator_inst.hsize,       clk, cptra_noncore_rst_b)
+`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HRESP_X,        initiator_inst.hresp,       clk, cptra_noncore_rst_b)
+`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HRDATA_X,       initiator_inst.hready ? initiator_inst.hrdata : '0,      clk, cptra_noncore_rst_b)
+`CALIPTRA_ASSERT_NEVER(AHB_MASTER_HTRANS_BUSY,    initiator_inst.htrans == 2'b01, clk, cptra_noncore_rst_b)
 
 endmodule

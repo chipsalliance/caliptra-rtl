@@ -22,8 +22,8 @@
 //======================================================================
 
 
-`ifndef ECC_PM_UOP_PKG
-`define ECC_PM_UOP_PKG
+`ifndef CALIPTRA_ECC_PM_UOP_PKG
+`define CALIPTRA_ECC_PM_UOP_PKG
 
 package ecc_pm_uop_pkg;
 

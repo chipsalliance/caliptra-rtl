@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-`include "ahb_defines.svh"
 
-module caliptra_ahb_srom #(
+module caliptra_ahb_srom 
+ import ahb_defines_pkg::*;
+ #(
     parameter AHB_DATA_WIDTH    = 64,
     parameter AHB_ADDR_WIDTH    = 32,
     parameter CLIENT_ADDR_WIDTH = 32
@@ -63,14 +64,14 @@ assign hrdata_o = rdata;
 
 always_comb begin : response_block
     hreadyout_o = 1'b1;
-    hresp_o = `H_OKAY;
+    hresp_o = H_OKAY;
     //first error cycle, de-assert ready and drive error
     if (sram_error) begin
         hreadyout_o = 1'b0;
-        hresp_o = `H_ERROR;
+        hresp_o = H_ERROR;
     end else if (sram_error_f) begin
         hreadyout_o = 1'b1;
-        hresp_o = `H_ERROR;
+        hresp_o = H_ERROR;
     end
 end
 

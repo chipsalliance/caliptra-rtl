@@ -31,12 +31,12 @@ module ahb_lite_bus #(
     // ---------------------------------------
     // Initiator Interface Port
     // ---------------------------------------
-    AHB_LITE_BUS_INF.Initiator_Interface_Ports ahb_lite_initiator,
+    CALIPTRA_AHB_LITE_BUS_INF.Initiator_Interface_Ports ahb_lite_initiator,
 
     // --------------------------------------
     // Responder Interface Port
     // --------------------------------------
-    AHB_LITE_BUS_INF.Responder_Interface_Ports ahb_lite_responders[NUM_RESPONDERS-1:0],
+    CALIPTRA_AHB_LITE_BUS_INF.Responder_Interface_Ports ahb_lite_responders[NUM_RESPONDERS-1:0],
 
     // ----------------------------------------------
     // Respnder Disable

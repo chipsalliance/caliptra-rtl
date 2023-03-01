@@ -255,9 +255,9 @@ always_comb begin
 end
 
 //keyvault control reg macros for assigning to struct
-`KV_READ_CTRL_REG2STRUCT(kv_key_read_ctrl_reg, HMAC384_KV_RD_KEY_CTRL)
-`KV_READ_CTRL_REG2STRUCT(kv_block_read_ctrl_reg, HMAC384_KV_RD_BLOCK_CTRL)
-`KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, HMAC384_KV_WR_CTRL)
+`CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_key_read_ctrl_reg, HMAC384_KV_RD_KEY_CTRL)
+`CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_block_read_ctrl_reg, HMAC384_KV_RD_BLOCK_CTRL)
+`CALIPTRA_KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, HMAC384_KV_WR_CTRL)
 
 // Register block
 hmac_reg i_hmac_reg (

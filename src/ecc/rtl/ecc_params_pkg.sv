@@ -20,8 +20,8 @@
 //
 //======================================================================
 
-`ifndef ECC_PARAMS_PKG
-`define ECC_PARAMS_PKG
+`ifndef CALIPTRA_ECC_PARAMS_PKG
+`define CALIPTRA_ECC_PARAMS_PKG
 
 package ecc_params_pkg;
 

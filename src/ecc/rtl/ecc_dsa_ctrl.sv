@@ -419,10 +419,10 @@ module ecc_dsa_ctrl
     end
 
     //keyvault control reg macros for assigning to struct
-    `KV_READ_CTRL_REG2STRUCT(kv_privkey_read_ctrl_reg, ecc_kv_rd_pkey_ctrl)
-    `KV_READ_CTRL_REG2STRUCT(kv_seed_read_ctrl_reg, ecc_kv_rd_seed_ctrl)
-    `KV_READ_CTRL_REG2STRUCT(kv_msg_read_ctrl_reg, ecc_kv_rd_msg_ctrl)
-    `KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, ecc_kv_wr_pkey_ctrl)
+    `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_privkey_read_ctrl_reg, ecc_kv_rd_pkey_ctrl)
+    `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_seed_read_ctrl_reg, ecc_kv_rd_seed_ctrl)
+    `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_msg_read_ctrl_reg, ecc_kv_rd_msg_ctrl)
+    `CALIPTRA_KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, ecc_kv_wr_pkey_ctrl)
 
     //----------------------------------------------------------------
     // register updates

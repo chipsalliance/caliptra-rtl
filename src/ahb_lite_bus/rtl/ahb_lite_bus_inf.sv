@@ -17,10 +17,10 @@
 // AHB Lite Interface
 // -------------------------------------------------------------
 
-`ifndef AHB_LITE_BUS_INF
-`define AHB_LITE_BUS_INF
+`ifndef CALIPTRA_AHB_LITE_BUS_INF
+`define CALIPTRA_AHB_LITE_BUS_INF
 
-interface AHB_LITE_BUS_INF
+interface CALIPTRA_AHB_LITE_BUS_INF
 #(
     parameter AHB_LITE_ADDR_WIDTH = 32,
     parameter AHB_LITE_DATA_WIDTH = 32
@@ -58,4 +58,4 @@ interface AHB_LITE_BUS_INF
 
 endinterface
 
-`endif //AHB_LITE_BUS_INF
+`endif //CALIPTRA_AHB_LITE_BUS_INF

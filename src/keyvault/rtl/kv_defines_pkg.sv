@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-`ifndef KV_DEFINES_PKG
-`define KV_DEFINES_PKG
+`ifndef CALIPTRA_KV_DEFINES_PKG
+`define CALIPTRA_KV_DEFINES_PKG
 
 package kv_defines_pkg;
 

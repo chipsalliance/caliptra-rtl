@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-`ifndef KV_MACROS
-`define KV_MACROS
+`ifndef CALIPTRA_KV_MACROS
+`define CALIPTRA_KV_MACROS
 
 
 
-`define KV_WRITE_CTRL_REG2STRUCT(struct_name, ctrl_reg_name)\
+`define CALIPTRA_KV_WRITE_CTRL_REG2STRUCT(struct_name, ctrl_reg_name)\
 assign struct_name.rsvd = '0;\
 assign struct_name.write_dest_vld[0] = hwif_out.``ctrl_reg_name.hmac_key_dest_valid.value;\
 assign struct_name.write_dest_vld[1] = hwif_out.``ctrl_reg_name.hmac_block_dest_valid.value;\
@@ -29,7 +29,7 @@ assign struct_name.entry_is_pcr = hwif_out.``ctrl_reg_name.entry_is_pcr.value;\
 assign struct_name.write_entry = hwif_out.``ctrl_reg_name.write_entry.value;\
 assign struct_name.write_en = hwif_out.``ctrl_reg_name.write_en.value;
 
-`define KV_READ_CTRL_REG2STRUCT(struct_name, ctrl_reg_name)\
+`define CALIPTRA_KV_READ_CTRL_REG2STRUCT(struct_name, ctrl_reg_name)\
 assign struct_name.rsvd = '0;\
 assign struct_name.entry_data_size = hwif_out.``ctrl_reg_name.entry_data_size.value;\
 assign struct_name.entry_is_pcr = hwif_out.``ctrl_reg_name.entry_is_pcr.value;\

@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-`include "ahb_defines.svh"
-
-module ahb_slv_sif #(
+module ahb_slv_sif 
+  import ahb_defines_pkg::*; 
+  #(
     parameter AHB_DATA_WIDTH = 64
    ,parameter CLIENT_DATA_WIDTH = 32
    ,parameter AHB_ADDR_WIDTH = 32
@@ -133,17 +133,17 @@ endgenerate
 
 always_comb begin : response_block
     hreadyout_o = 1'b1;
-    hresp_o = `H_OKAY
+    hresp_o = H_OKAY;
     //first err cycle, de-assert ready and drive err
     if (err) begin
         hreadyout_o = 1'b0;
-        hresp_o = `H_ERROR
+        hresp_o = H_ERROR;
     end else if (hld) begin
         hreadyout_o = 1'b0;
-        hresp_o = `H_OKAY
+        hresp_o = H_OKAY;
     end else if (err_f) begin
         hreadyout_o = 1'b1;
-        hresp_o = `H_ERROR
+        hresp_o = H_ERROR;
     end
 end
 

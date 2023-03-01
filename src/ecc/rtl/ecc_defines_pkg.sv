@@ -20,8 +20,8 @@
 //
 //======================================================================
 
-`ifndef ECC_DEFINES
-`define ECC_DEFINES
+`ifndef CALIPTRA_ECC_DEFINES
+`define CALIPTRA_ECC_DEFINES
 
 package ecc_defines_pkg;
 

@@ -12,10 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-`ifndef AHB_DEFINES
-`define AHB_DEFINES
+`ifndef CALIPTRA_AHB_DEFINES_PKG
+`define CALIPTRA_AHB_DEFINES_PKG
 
-`define H_OKAY 1'b0;
-`define H_ERROR 1'b1;
+package ahb_defines_pkg;
+
+parameter H_OKAY=1'b0;
+parameter H_ERROR=1'b1;
+
+endpackage
 
 `endif
