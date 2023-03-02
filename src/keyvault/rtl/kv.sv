@@ -27,6 +27,7 @@ module kv
     (
     input logic clk,
     input logic rst_b,
+    input logic core_only_rst_b,
     input logic cptra_pwrgood,
 
     input logic debugUnlock_or_scan_mode_switch,
@@ -290,6 +291,7 @@ end
 
 always_comb kv_reg_hwif_in.hard_reset_b = cptra_pwrgood;
 always_comb kv_reg_hwif_in.reset_b = rst_b;
+always_comb kv_reg_hwif_in.core_only_rst_b = core_only_rst_b; //Note that this signal will also reset when rst_b is asserted
 
 kv_reg kv_reg1 (
     .clk(clk),

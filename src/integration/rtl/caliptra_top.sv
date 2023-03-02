@@ -788,26 +788,27 @@ kv #(
 )
 key_vault1
 (
-    .clk           (clk_cg),
-    .rst_b         (cptra_noncore_rst_b),
-    .cptra_pwrgood (cptra_pwrgood),
-    .haddr_i       (responder_inst[`CALIPTRA_SLAVE_SEL_KV].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_KV)-1:0]),
-    .hwdata_i      (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hwdata),
-    .hsel_i        (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hsel),
-    .hwrite_i      (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hwrite),
-    .hready_i      (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hready),
-    .htrans_i      (responder_inst[`CALIPTRA_SLAVE_SEL_KV].htrans),
-    .hsize_i       (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hsize),
-    .hresp_o       (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hresp),
-    .hreadyout_o   (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hreadyout),
-    .hrdata_o      (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hrdata),
+    .clk              (clk_cg),
+    .rst_b            (cptra_noncore_rst_b),
+    .core_only_rst_b  (cptra_uc_rst_b),
+    .cptra_pwrgood    (cptra_pwrgood),
+    .haddr_i          (responder_inst[`CALIPTRA_SLAVE_SEL_KV].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_KV)-1:0]),
+    .hwdata_i         (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hwdata),
+    .hsel_i           (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hsel),
+    .hwrite_i         (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hwrite),
+    .hready_i         (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hready),
+    .htrans_i         (responder_inst[`CALIPTRA_SLAVE_SEL_KV].htrans),
+    .hsize_i          (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hsize),
+    .hresp_o          (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hresp),
+    .hreadyout_o      (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hreadyout),
+    .hrdata_o         (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hrdata),
 
     .debugUnlock_or_scan_mode_switch (debugUnlock_or_scan_mode_switch),
 
-    .kv_read       (kv_read),
-    .kv_write      (kv_write),
-    .kv_rd_resp    (kv_rd_resp),
-    .kv_wr_resp    (kv_wr_resp)
+    .kv_read          (kv_read),
+    .kv_write         (kv_write),
+    .kv_rd_resp       (kv_rd_resp),
+    .kv_wr_resp       (kv_wr_resp)
 );
 
 soc_ifc_top #(

@@ -412,8 +412,8 @@ module kv_reg (
             field_combo.PCR_CTRL[i0].lock_wr.next = next_c;
             field_combo.PCR_CTRL[i0].lock_wr.load_next = load_next_c;
         end
-        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-            if(~hwif_in.reset_b) begin
+        always_ff @(posedge clk or negedge hwif_in.core_only_rst_b) begin
+            if(~hwif_in.core_only_rst_b) begin
                 field_storage.PCR_CTRL[i0].lock_wr.value <= 'h0;
             end else if(field_combo.PCR_CTRL[i0].lock_wr.load_next) begin
                 field_storage.PCR_CTRL[i0].lock_wr.value <= field_combo.PCR_CTRL[i0].lock_wr.next;
@@ -434,8 +434,8 @@ module kv_reg (
             field_combo.PCR_CTRL[i0].lock_use.next = next_c;
             field_combo.PCR_CTRL[i0].lock_use.load_next = load_next_c;
         end
-        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-            if(~hwif_in.reset_b) begin
+        always_ff @(posedge clk or negedge hwif_in.core_only_rst_b) begin
+            if(~hwif_in.core_only_rst_b) begin
                 field_storage.PCR_CTRL[i0].lock_use.value <= 'h0;
             end else if(field_combo.PCR_CTRL[i0].lock_use.load_next) begin
                 field_storage.PCR_CTRL[i0].lock_use.value <= field_combo.PCR_CTRL[i0].lock_use.next;
@@ -586,8 +586,8 @@ module kv_reg (
             field_combo.KEY_CTRL[i0].lock_wr.next = next_c;
             field_combo.KEY_CTRL[i0].lock_wr.load_next = load_next_c;
         end
-        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-            if(~hwif_in.reset_b) begin
+        always_ff @(posedge clk or negedge hwif_in.core_only_rst_b) begin
+            if(~hwif_in.core_only_rst_b) begin
                 field_storage.KEY_CTRL[i0].lock_wr.value <= 'h0;
             end else if(field_combo.KEY_CTRL[i0].lock_wr.load_next) begin
                 field_storage.KEY_CTRL[i0].lock_wr.value <= field_combo.KEY_CTRL[i0].lock_wr.next;
@@ -608,8 +608,8 @@ module kv_reg (
             field_combo.KEY_CTRL[i0].lock_use.next = next_c;
             field_combo.KEY_CTRL[i0].lock_use.load_next = load_next_c;
         end
-        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-            if(~hwif_in.reset_b) begin
+        always_ff @(posedge clk or negedge hwif_in.core_only_rst_b) begin
+            if(~hwif_in.core_only_rst_b) begin
                 field_storage.KEY_CTRL[i0].lock_use.value <= 'h0;
             end else if(field_combo.KEY_CTRL[i0].lock_use.load_next) begin
                 field_storage.KEY_CTRL[i0].lock_use.value <= field_combo.KEY_CTRL[i0].lock_use.next;

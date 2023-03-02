@@ -15,6 +15,7 @@
 addrmap kv_reg {
     desc="address map for keyvault";
     signal {activelow; async; cpuif_reset; field_reset;} reset_b;
+    signal {activelow; async;} core_only_rst_b;
     signal {activelow; async;} hard_reset_b;
 
     //keys are not accessible by sw
@@ -37,10 +38,10 @@ addrmap kv_reg {
     //controls
     reg kvCtrl {
         desc="Controls for each keyvault and pcr entry";
-        field {desc="Lock writes to this entry. Writes will be suppressed and an error will be recorded.";
-               sw=rw; swwel=true; hw=r; hwclr;} lock_wr=0; //warm reset
-        field {desc="Lock use of this entry. Reads will be suppressed and an error will be recorded.";
-               sw=rw; swwel=true; hw=r; hwclr;} lock_use=0; //warm reset
+        field {desc="Lock writes to this entry. Writes will be suppressed and an error will be recorded. Lock must be cleared when there is a FW update reset => core only reset => warm reset will naturally unlock as its deeper";
+               sw=rw; swwel=true; hw=r; hwclr; resetsignal=core_only_rst_b;} lock_wr=0;
+        field {desc="Lock use of this entry. Reads will be suppressed and an error will be recorded. Lock must be cleared when there is a FW update reset => core only reset => warm reset will naturally unlock as its deeper. ";
+               sw=rw; swwel=true; hw=r; hwclr; resetsignal=core_only_rst_b;} lock_use=0; //warm reset
         field {desc="Clear the data stored in this entry. Lock write will prevent this clear.";
                sw=rw; hw=r; singlepulse;} clear=0;
         field {desc="Reserved";

@@ -236,13 +236,35 @@
     <a class="headerlink" href="#lock_use.desc" title="Permalink to this headline"></a>
 </h3>
 <div id="_Content.lock_use.desc">
-<p>Lock use of this entry. Reads will be suppressed and an error will be recorded.</p>
+<p>Lock use of this entry. Reads will be suppressed and an error will be recorded. Lock must be cleared when there is a FW update reset =&gt; core only reset =&gt; warm reset will naturally unlock as its deeper.</p>
+<table border="1">
+    <tr>
+        <th>Property</th>
+        <th>Value</th>
+    </tr>
+    <tr>
+        <td><code>resetsignal</code></td>
+        <td>^.^.core_only_rst_b</td>
+    </tr>
+    
+</table>
 </div>
 
 <h3 id="lock_wr.desc">lock_wr
     <a class="headerlink" href="#lock_wr.desc" title="Permalink to this headline"></a>
 </h3>
 <div id="_Content.lock_wr.desc">
-<p>Lock writes to this entry. Writes will be suppressed and an error will be recorded.</p>
+<p>Lock writes to this entry. Writes will be suppressed and an error will be recorded. Lock must be cleared when there is a FW update reset =&gt; core only reset =&gt; warm reset will naturally unlock as its deeper</p>
+<table border="1">
+    <tr>
+        <th>Property</th>
+        <th>Value</th>
+    </tr>
+    <tr>
+        <td><code>resetsignal</code></td>
+        <td>^.^.core_only_rst_b</td>
+    </tr>
+    
+</table>
 </div>
 </div>

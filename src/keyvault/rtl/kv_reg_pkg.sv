@@ -117,6 +117,7 @@ package kv_reg_pkg;
 
     typedef struct packed{
         logic reset_b;
+        logic core_only_rst_b;
         logic hard_reset_b;
         kv_reg__kvCtrl__in_t [8-1:0]PCR_CTRL;
         kv_reg__pcrReg__in_t [8-1:0][16-1:0]PCR_ENTRY;
