@@ -59,8 +59,6 @@ addrmap sha512_reg {
         
     } SHA512_VERSION[2] @0x00000008;
 
-
-
     /* ---- SHA512 Component Control ---- */
     reg {
         name = "SHA512 component control register type definition";
@@ -86,6 +84,8 @@ addrmap sha512_reg {
         field {desc = "Control next command bit"; singlepulse;} NEXT = 1'b0;
         field {desc = "Control mode command bits";} MODE[2] = 2'b10;
         field {desc = "Zeroize all internal registers"; singlepulse;} ZEROIZE = 1'b0;
+        field {desc = "Indicates last iteration for hash extend function. 
+                       Result of this INIT or NEXT cycle will be written back to PCR"; hwclr;} LAST = 1'b0;
     
     } SHA512_CTRL @0x00000010;
 
@@ -118,11 +118,9 @@ addrmap sha512_reg {
         default hw = rw;
         default we = true;
         default resetsignal = reset_b;
-        field {desc = "Input message block field"; hwclr;} BLOCK[32] = 32'b0;
+        field {desc = "Input message block field"; hwclr; swwel;} BLOCK[32] = 32'b0;
     
     } SHA512_BLOCK[32] @0x00000080;
-
-    
 
     /* ---- SHA512 Component Output Digest ---- */
     reg {
@@ -139,10 +137,23 @@ addrmap sha512_reg {
     } SHA512_DIGEST[16] @0x00000100;
 
     /* ---- SHA512 Key Vault Control Reg ---- */
-    kv_read_ctrl_reg SHA512_KV_RD_CTRL @0x00000600;
-    kv_status_reg SHA512_KV_RD_STATUS;
+    kv_read_ctrl_reg SHA512_VAULT_RD_CTRL @0x00000600;
+    kv_status_reg SHA512_VAULT_RD_STATUS;
     kv_write_ctrl_reg SHA512_KV_WR_CTRL;
     kv_status_reg SHA512_KV_WR_STATUS;
+
+    /* ---- SHA512 Generate PCR Hash ---- */
+    reg {
+        name = "Generate PCR Hash";
+        desc = "Enables the HW controlled function to generate a hash of all PCR registers.
+                [br]Sends all PCRs through SHA384 and stores the result in a dedicated register for signing.";
+
+        default sw = rw;
+        default hw = r;
+        default resetsignal = reset_b;
+        field {desc = "Setting this register starts the flow."; singlepulse;} FLOW_EN = 0;
+    
+    } SHA512_GEN_PCR_HASH;
 
     /* ---- Global Interrupt Enable ---- */
     reg global_intr_en_t {

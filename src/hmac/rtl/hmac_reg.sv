@@ -197,19 +197,15 @@ module hmac_reg (
                 logic load_next;
             } read_en;
             struct packed{
-                logic [2:0] next;
+                logic [4:0] next;
                 logic load_next;
             } read_entry;
             struct packed{
                 logic next;
                 logic load_next;
-            } entry_is_pcr;
+            } pcr_hash_extend;
             struct packed{
-                logic [4:0] next;
-                logic load_next;
-            } entry_data_size;
-            struct packed{
-                logic [19:0] next;
+                logic [24:0] next;
                 logic load_next;
             } rsvd;
         } HMAC384_KV_RD_KEY_CTRL;
@@ -225,19 +221,15 @@ module hmac_reg (
                 logic load_next;
             } read_en;
             struct packed{
-                logic [2:0] next;
+                logic [4:0] next;
                 logic load_next;
             } read_entry;
             struct packed{
                 logic next;
                 logic load_next;
-            } entry_is_pcr;
+            } pcr_hash_extend;
             struct packed{
-                logic [4:0] next;
-                logic load_next;
-            } entry_data_size;
-            struct packed{
-                logic [19:0] next;
+                logic [24:0] next;
                 logic load_next;
             } rsvd;
         } HMAC384_KV_RD_BLOCK_CTRL;
@@ -253,13 +245,9 @@ module hmac_reg (
                 logic load_next;
             } write_en;
             struct packed{
-                logic [2:0] next;
+                logic [4:0] next;
                 logic load_next;
             } write_entry;
-            struct packed{
-                logic next;
-                logic load_next;
-            } entry_is_pcr;
             struct packed{
                 logic next;
                 logic load_next;
@@ -285,7 +273,7 @@ module hmac_reg (
                 logic load_next;
             } ecc_msg_dest_valid;
             struct packed{
-                logic [18:0] next;
+                logic [19:0] next;
                 logic load_next;
             } rsvd;
         } HMAC384_KV_WR_CTRL;
@@ -506,16 +494,13 @@ module hmac_reg (
                 logic value;
             } read_en;
             struct packed{
-                logic [2:0] value;
+                logic [4:0] value;
             } read_entry;
             struct packed{
                 logic value;
-            } entry_is_pcr;
+            } pcr_hash_extend;
             struct packed{
-                logic [4:0] value;
-            } entry_data_size;
-            struct packed{
-                logic [19:0] value;
+                logic [24:0] value;
             } rsvd;
         } HMAC384_KV_RD_KEY_CTRL;
         struct packed{
@@ -528,16 +513,13 @@ module hmac_reg (
                 logic value;
             } read_en;
             struct packed{
-                logic [2:0] value;
+                logic [4:0] value;
             } read_entry;
             struct packed{
                 logic value;
-            } entry_is_pcr;
+            } pcr_hash_extend;
             struct packed{
-                logic [4:0] value;
-            } entry_data_size;
-            struct packed{
-                logic [19:0] value;
+                logic [24:0] value;
             } rsvd;
         } HMAC384_KV_RD_BLOCK_CTRL;
         struct packed{
@@ -550,11 +532,8 @@ module hmac_reg (
                 logic value;
             } write_en;
             struct packed{
-                logic [2:0] value;
+                logic [4:0] value;
             } write_entry;
-            struct packed{
-                logic value;
-            } entry_is_pcr;
             struct packed{
                 logic value;
             } hmac_key_dest_valid;
@@ -574,7 +553,7 @@ module hmac_reg (
                 logic value;
             } ecc_msg_dest_valid;
             struct packed{
-                logic [18:0] value;
+                logic [19:0] value;
             } rsvd;
         } HMAC384_KV_WR_CTRL;
         struct packed{
@@ -879,10 +858,10 @@ module hmac_reg (
     assign hwif_out.HMAC384_KV_RD_KEY_CTRL.read_en.value = field_storage.HMAC384_KV_RD_KEY_CTRL.read_en.value;
     // Field: hmac_reg.HMAC384_KV_RD_KEY_CTRL.read_entry
     always_comb begin
-        automatic logic [2:0] next_c = field_storage.HMAC384_KV_RD_KEY_CTRL.read_entry.value;
+        automatic logic [4:0] next_c = field_storage.HMAC384_KV_RD_KEY_CTRL.read_entry.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.HMAC384_KV_RD_KEY_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[3:1];
+            next_c = decoded_wr_data[5:1];
             load_next_c = '1;
         end
         field_combo.HMAC384_KV_RD_KEY_CTRL.read_entry.next = next_c;
@@ -896,50 +875,31 @@ module hmac_reg (
         end
     end
     assign hwif_out.HMAC384_KV_RD_KEY_CTRL.read_entry.value = field_storage.HMAC384_KV_RD_KEY_CTRL.read_entry.value;
-    // Field: hmac_reg.HMAC384_KV_RD_KEY_CTRL.entry_is_pcr
+    // Field: hmac_reg.HMAC384_KV_RD_KEY_CTRL.pcr_hash_extend
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.HMAC384_KV_RD_KEY_CTRL.entry_is_pcr.value;
+        automatic logic [0:0] next_c = field_storage.HMAC384_KV_RD_KEY_CTRL.pcr_hash_extend.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.HMAC384_KV_RD_KEY_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[4:4];
+            next_c = decoded_wr_data[6:6];
             load_next_c = '1;
         end
-        field_combo.HMAC384_KV_RD_KEY_CTRL.entry_is_pcr.next = next_c;
-        field_combo.HMAC384_KV_RD_KEY_CTRL.entry_is_pcr.load_next = load_next_c;
+        field_combo.HMAC384_KV_RD_KEY_CTRL.pcr_hash_extend.next = next_c;
+        field_combo.HMAC384_KV_RD_KEY_CTRL.pcr_hash_extend.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.HMAC384_KV_RD_KEY_CTRL.entry_is_pcr.value <= 'h0;
-        end else if(field_combo.HMAC384_KV_RD_KEY_CTRL.entry_is_pcr.load_next) begin
-            field_storage.HMAC384_KV_RD_KEY_CTRL.entry_is_pcr.value <= field_combo.HMAC384_KV_RD_KEY_CTRL.entry_is_pcr.next;
+            field_storage.HMAC384_KV_RD_KEY_CTRL.pcr_hash_extend.value <= 'h0;
+        end else if(field_combo.HMAC384_KV_RD_KEY_CTRL.pcr_hash_extend.load_next) begin
+            field_storage.HMAC384_KV_RD_KEY_CTRL.pcr_hash_extend.value <= field_combo.HMAC384_KV_RD_KEY_CTRL.pcr_hash_extend.next;
         end
     end
-    assign hwif_out.HMAC384_KV_RD_KEY_CTRL.entry_is_pcr.value = field_storage.HMAC384_KV_RD_KEY_CTRL.entry_is_pcr.value;
-    // Field: hmac_reg.HMAC384_KV_RD_KEY_CTRL.entry_data_size
-    always_comb begin
-        automatic logic [4:0] next_c = field_storage.HMAC384_KV_RD_KEY_CTRL.entry_data_size.value;
-        automatic logic load_next_c = '0;
-        if(decoded_reg_strb.HMAC384_KV_RD_KEY_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[9:5];
-            load_next_c = '1;
-        end
-        field_combo.HMAC384_KV_RD_KEY_CTRL.entry_data_size.next = next_c;
-        field_combo.HMAC384_KV_RD_KEY_CTRL.entry_data_size.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
-            field_storage.HMAC384_KV_RD_KEY_CTRL.entry_data_size.value <= 'h0;
-        end else if(field_combo.HMAC384_KV_RD_KEY_CTRL.entry_data_size.load_next) begin
-            field_storage.HMAC384_KV_RD_KEY_CTRL.entry_data_size.value <= field_combo.HMAC384_KV_RD_KEY_CTRL.entry_data_size.next;
-        end
-    end
-    assign hwif_out.HMAC384_KV_RD_KEY_CTRL.entry_data_size.value = field_storage.HMAC384_KV_RD_KEY_CTRL.entry_data_size.value;
+    assign hwif_out.HMAC384_KV_RD_KEY_CTRL.pcr_hash_extend.value = field_storage.HMAC384_KV_RD_KEY_CTRL.pcr_hash_extend.value;
     // Field: hmac_reg.HMAC384_KV_RD_KEY_CTRL.rsvd
     always_comb begin
-        automatic logic [19:0] next_c = field_storage.HMAC384_KV_RD_KEY_CTRL.rsvd.value;
+        automatic logic [24:0] next_c = field_storage.HMAC384_KV_RD_KEY_CTRL.rsvd.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.HMAC384_KV_RD_KEY_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[29:10];
+            next_c = decoded_wr_data[31:7];
             load_next_c = '1;
         end
         field_combo.HMAC384_KV_RD_KEY_CTRL.rsvd.next = next_c;
@@ -998,10 +958,10 @@ module hmac_reg (
     assign hwif_out.HMAC384_KV_RD_BLOCK_CTRL.read_en.value = field_storage.HMAC384_KV_RD_BLOCK_CTRL.read_en.value;
     // Field: hmac_reg.HMAC384_KV_RD_BLOCK_CTRL.read_entry
     always_comb begin
-        automatic logic [2:0] next_c = field_storage.HMAC384_KV_RD_BLOCK_CTRL.read_entry.value;
+        automatic logic [4:0] next_c = field_storage.HMAC384_KV_RD_BLOCK_CTRL.read_entry.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.HMAC384_KV_RD_BLOCK_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[3:1];
+            next_c = decoded_wr_data[5:1];
             load_next_c = '1;
         end
         field_combo.HMAC384_KV_RD_BLOCK_CTRL.read_entry.next = next_c;
@@ -1015,50 +975,31 @@ module hmac_reg (
         end
     end
     assign hwif_out.HMAC384_KV_RD_BLOCK_CTRL.read_entry.value = field_storage.HMAC384_KV_RD_BLOCK_CTRL.read_entry.value;
-    // Field: hmac_reg.HMAC384_KV_RD_BLOCK_CTRL.entry_is_pcr
+    // Field: hmac_reg.HMAC384_KV_RD_BLOCK_CTRL.pcr_hash_extend
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.HMAC384_KV_RD_BLOCK_CTRL.entry_is_pcr.value;
+        automatic logic [0:0] next_c = field_storage.HMAC384_KV_RD_BLOCK_CTRL.pcr_hash_extend.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.HMAC384_KV_RD_BLOCK_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[4:4];
+            next_c = decoded_wr_data[6:6];
             load_next_c = '1;
         end
-        field_combo.HMAC384_KV_RD_BLOCK_CTRL.entry_is_pcr.next = next_c;
-        field_combo.HMAC384_KV_RD_BLOCK_CTRL.entry_is_pcr.load_next = load_next_c;
+        field_combo.HMAC384_KV_RD_BLOCK_CTRL.pcr_hash_extend.next = next_c;
+        field_combo.HMAC384_KV_RD_BLOCK_CTRL.pcr_hash_extend.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.HMAC384_KV_RD_BLOCK_CTRL.entry_is_pcr.value <= 'h0;
-        end else if(field_combo.HMAC384_KV_RD_BLOCK_CTRL.entry_is_pcr.load_next) begin
-            field_storage.HMAC384_KV_RD_BLOCK_CTRL.entry_is_pcr.value <= field_combo.HMAC384_KV_RD_BLOCK_CTRL.entry_is_pcr.next;
+            field_storage.HMAC384_KV_RD_BLOCK_CTRL.pcr_hash_extend.value <= 'h0;
+        end else if(field_combo.HMAC384_KV_RD_BLOCK_CTRL.pcr_hash_extend.load_next) begin
+            field_storage.HMAC384_KV_RD_BLOCK_CTRL.pcr_hash_extend.value <= field_combo.HMAC384_KV_RD_BLOCK_CTRL.pcr_hash_extend.next;
         end
     end
-    assign hwif_out.HMAC384_KV_RD_BLOCK_CTRL.entry_is_pcr.value = field_storage.HMAC384_KV_RD_BLOCK_CTRL.entry_is_pcr.value;
-    // Field: hmac_reg.HMAC384_KV_RD_BLOCK_CTRL.entry_data_size
-    always_comb begin
-        automatic logic [4:0] next_c = field_storage.HMAC384_KV_RD_BLOCK_CTRL.entry_data_size.value;
-        automatic logic load_next_c = '0;
-        if(decoded_reg_strb.HMAC384_KV_RD_BLOCK_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[9:5];
-            load_next_c = '1;
-        end
-        field_combo.HMAC384_KV_RD_BLOCK_CTRL.entry_data_size.next = next_c;
-        field_combo.HMAC384_KV_RD_BLOCK_CTRL.entry_data_size.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
-            field_storage.HMAC384_KV_RD_BLOCK_CTRL.entry_data_size.value <= 'h0;
-        end else if(field_combo.HMAC384_KV_RD_BLOCK_CTRL.entry_data_size.load_next) begin
-            field_storage.HMAC384_KV_RD_BLOCK_CTRL.entry_data_size.value <= field_combo.HMAC384_KV_RD_BLOCK_CTRL.entry_data_size.next;
-        end
-    end
-    assign hwif_out.HMAC384_KV_RD_BLOCK_CTRL.entry_data_size.value = field_storage.HMAC384_KV_RD_BLOCK_CTRL.entry_data_size.value;
+    assign hwif_out.HMAC384_KV_RD_BLOCK_CTRL.pcr_hash_extend.value = field_storage.HMAC384_KV_RD_BLOCK_CTRL.pcr_hash_extend.value;
     // Field: hmac_reg.HMAC384_KV_RD_BLOCK_CTRL.rsvd
     always_comb begin
-        automatic logic [19:0] next_c = field_storage.HMAC384_KV_RD_BLOCK_CTRL.rsvd.value;
+        automatic logic [24:0] next_c = field_storage.HMAC384_KV_RD_BLOCK_CTRL.rsvd.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.HMAC384_KV_RD_BLOCK_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[29:10];
+            next_c = decoded_wr_data[31:7];
             load_next_c = '1;
         end
         field_combo.HMAC384_KV_RD_BLOCK_CTRL.rsvd.next = next_c;
@@ -1117,10 +1058,10 @@ module hmac_reg (
     assign hwif_out.HMAC384_KV_WR_CTRL.write_en.value = field_storage.HMAC384_KV_WR_CTRL.write_en.value;
     // Field: hmac_reg.HMAC384_KV_WR_CTRL.write_entry
     always_comb begin
-        automatic logic [2:0] next_c = field_storage.HMAC384_KV_WR_CTRL.write_entry.value;
+        automatic logic [4:0] next_c = field_storage.HMAC384_KV_WR_CTRL.write_entry.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.HMAC384_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[3:1];
+            next_c = decoded_wr_data[5:1];
             load_next_c = '1;
         end
         field_combo.HMAC384_KV_WR_CTRL.write_entry.next = next_c;
@@ -1134,31 +1075,12 @@ module hmac_reg (
         end
     end
     assign hwif_out.HMAC384_KV_WR_CTRL.write_entry.value = field_storage.HMAC384_KV_WR_CTRL.write_entry.value;
-    // Field: hmac_reg.HMAC384_KV_WR_CTRL.entry_is_pcr
-    always_comb begin
-        automatic logic [0:0] next_c = field_storage.HMAC384_KV_WR_CTRL.entry_is_pcr.value;
-        automatic logic load_next_c = '0;
-        if(decoded_reg_strb.HMAC384_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[4:4];
-            load_next_c = '1;
-        end
-        field_combo.HMAC384_KV_WR_CTRL.entry_is_pcr.next = next_c;
-        field_combo.HMAC384_KV_WR_CTRL.entry_is_pcr.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
-            field_storage.HMAC384_KV_WR_CTRL.entry_is_pcr.value <= 'h0;
-        end else if(field_combo.HMAC384_KV_WR_CTRL.entry_is_pcr.load_next) begin
-            field_storage.HMAC384_KV_WR_CTRL.entry_is_pcr.value <= field_combo.HMAC384_KV_WR_CTRL.entry_is_pcr.next;
-        end
-    end
-    assign hwif_out.HMAC384_KV_WR_CTRL.entry_is_pcr.value = field_storage.HMAC384_KV_WR_CTRL.entry_is_pcr.value;
     // Field: hmac_reg.HMAC384_KV_WR_CTRL.hmac_key_dest_valid
     always_comb begin
         automatic logic [0:0] next_c = field_storage.HMAC384_KV_WR_CTRL.hmac_key_dest_valid.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.HMAC384_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[5:5];
+            next_c = decoded_wr_data[6:6];
             load_next_c = '1;
         end
         field_combo.HMAC384_KV_WR_CTRL.hmac_key_dest_valid.next = next_c;
@@ -1177,7 +1099,7 @@ module hmac_reg (
         automatic logic [0:0] next_c = field_storage.HMAC384_KV_WR_CTRL.hmac_block_dest_valid.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.HMAC384_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[6:6];
+            next_c = decoded_wr_data[7:7];
             load_next_c = '1;
         end
         field_combo.HMAC384_KV_WR_CTRL.hmac_block_dest_valid.next = next_c;
@@ -1196,7 +1118,7 @@ module hmac_reg (
         automatic logic [0:0] next_c = field_storage.HMAC384_KV_WR_CTRL.sha_block_dest_valid.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.HMAC384_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[7:7];
+            next_c = decoded_wr_data[8:8];
             load_next_c = '1;
         end
         field_combo.HMAC384_KV_WR_CTRL.sha_block_dest_valid.next = next_c;
@@ -1215,7 +1137,7 @@ module hmac_reg (
         automatic logic [0:0] next_c = field_storage.HMAC384_KV_WR_CTRL.ecc_pkey_dest_valid.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.HMAC384_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[8:8];
+            next_c = decoded_wr_data[9:9];
             load_next_c = '1;
         end
         field_combo.HMAC384_KV_WR_CTRL.ecc_pkey_dest_valid.next = next_c;
@@ -1234,7 +1156,7 @@ module hmac_reg (
         automatic logic [0:0] next_c = field_storage.HMAC384_KV_WR_CTRL.ecc_seed_dest_valid.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.HMAC384_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[9:9];
+            next_c = decoded_wr_data[10:10];
             load_next_c = '1;
         end
         field_combo.HMAC384_KV_WR_CTRL.ecc_seed_dest_valid.next = next_c;
@@ -1253,7 +1175,7 @@ module hmac_reg (
         automatic logic [0:0] next_c = field_storage.HMAC384_KV_WR_CTRL.ecc_msg_dest_valid.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.HMAC384_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[10:10];
+            next_c = decoded_wr_data[11:11];
             load_next_c = '1;
         end
         field_combo.HMAC384_KV_WR_CTRL.ecc_msg_dest_valid.next = next_c;
@@ -1269,10 +1191,10 @@ module hmac_reg (
     assign hwif_out.HMAC384_KV_WR_CTRL.ecc_msg_dest_valid.value = field_storage.HMAC384_KV_WR_CTRL.ecc_msg_dest_valid.value;
     // Field: hmac_reg.HMAC384_KV_WR_CTRL.rsvd
     always_comb begin
-        automatic logic [18:0] next_c = field_storage.HMAC384_KV_WR_CTRL.rsvd.value;
+        automatic logic [19:0] next_c = field_storage.HMAC384_KV_WR_CTRL.rsvd.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.HMAC384_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[29:11];
+            next_c = decoded_wr_data[31:12];
             load_next_c = '1;
         end
         field_combo.HMAC384_KV_WR_CTRL.rsvd.next = next_c;
@@ -2033,36 +1955,30 @@ module hmac_reg (
         assign readback_array[i0*1 + 5][31:0] = (decoded_reg_strb.HMAC384_TAG[i0] && !decoded_req_is_wr) ? field_storage.HMAC384_TAG[i0].TAG.value : '0;
     end
     assign readback_array[17][0:0] = (decoded_reg_strb.HMAC384_KV_RD_KEY_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_KEY_CTRL.read_en.value : '0;
-    assign readback_array[17][3:1] = (decoded_reg_strb.HMAC384_KV_RD_KEY_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_KEY_CTRL.read_entry.value : '0;
-    assign readback_array[17][4:4] = (decoded_reg_strb.HMAC384_KV_RD_KEY_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_KEY_CTRL.entry_is_pcr.value : '0;
-    assign readback_array[17][9:5] = (decoded_reg_strb.HMAC384_KV_RD_KEY_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_KEY_CTRL.entry_data_size.value : '0;
-    assign readback_array[17][29:10] = (decoded_reg_strb.HMAC384_KV_RD_KEY_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_KEY_CTRL.rsvd.value : '0;
-    assign readback_array[17][31:30] = '0;
+    assign readback_array[17][5:1] = (decoded_reg_strb.HMAC384_KV_RD_KEY_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_KEY_CTRL.read_entry.value : '0;
+    assign readback_array[17][6:6] = (decoded_reg_strb.HMAC384_KV_RD_KEY_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_KEY_CTRL.pcr_hash_extend.value : '0;
+    assign readback_array[17][31:7] = (decoded_reg_strb.HMAC384_KV_RD_KEY_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_KEY_CTRL.rsvd.value : '0;
     assign readback_array[18][0:0] = (decoded_reg_strb.HMAC384_KV_RD_KEY_STATUS && !decoded_req_is_wr) ? hwif_in.HMAC384_KV_RD_KEY_STATUS.READY.next : '0;
     assign readback_array[18][1:1] = (decoded_reg_strb.HMAC384_KV_RD_KEY_STATUS && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_KEY_STATUS.VALID.value : '0;
     assign readback_array[18][9:2] = (decoded_reg_strb.HMAC384_KV_RD_KEY_STATUS && !decoded_req_is_wr) ? hwif_in.HMAC384_KV_RD_KEY_STATUS.ERROR.next : '0;
     assign readback_array[18][31:10] = '0;
     assign readback_array[19][0:0] = (decoded_reg_strb.HMAC384_KV_RD_BLOCK_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_BLOCK_CTRL.read_en.value : '0;
-    assign readback_array[19][3:1] = (decoded_reg_strb.HMAC384_KV_RD_BLOCK_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_BLOCK_CTRL.read_entry.value : '0;
-    assign readback_array[19][4:4] = (decoded_reg_strb.HMAC384_KV_RD_BLOCK_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_BLOCK_CTRL.entry_is_pcr.value : '0;
-    assign readback_array[19][9:5] = (decoded_reg_strb.HMAC384_KV_RD_BLOCK_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_BLOCK_CTRL.entry_data_size.value : '0;
-    assign readback_array[19][29:10] = (decoded_reg_strb.HMAC384_KV_RD_BLOCK_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_BLOCK_CTRL.rsvd.value : '0;
-    assign readback_array[19][31:30] = '0;
+    assign readback_array[19][5:1] = (decoded_reg_strb.HMAC384_KV_RD_BLOCK_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_BLOCK_CTRL.read_entry.value : '0;
+    assign readback_array[19][6:6] = (decoded_reg_strb.HMAC384_KV_RD_BLOCK_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_BLOCK_CTRL.pcr_hash_extend.value : '0;
+    assign readback_array[19][31:7] = (decoded_reg_strb.HMAC384_KV_RD_BLOCK_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_BLOCK_CTRL.rsvd.value : '0;
     assign readback_array[20][0:0] = (decoded_reg_strb.HMAC384_KV_RD_BLOCK_STATUS && !decoded_req_is_wr) ? hwif_in.HMAC384_KV_RD_BLOCK_STATUS.READY.next : '0;
     assign readback_array[20][1:1] = (decoded_reg_strb.HMAC384_KV_RD_BLOCK_STATUS && !decoded_req_is_wr) ? field_storage.HMAC384_KV_RD_BLOCK_STATUS.VALID.value : '0;
     assign readback_array[20][9:2] = (decoded_reg_strb.HMAC384_KV_RD_BLOCK_STATUS && !decoded_req_is_wr) ? hwif_in.HMAC384_KV_RD_BLOCK_STATUS.ERROR.next : '0;
     assign readback_array[20][31:10] = '0;
     assign readback_array[21][0:0] = (decoded_reg_strb.HMAC384_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_CTRL.write_en.value : '0;
-    assign readback_array[21][3:1] = (decoded_reg_strb.HMAC384_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_CTRL.write_entry.value : '0;
-    assign readback_array[21][4:4] = (decoded_reg_strb.HMAC384_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_CTRL.entry_is_pcr.value : '0;
-    assign readback_array[21][5:5] = (decoded_reg_strb.HMAC384_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_CTRL.hmac_key_dest_valid.value : '0;
-    assign readback_array[21][6:6] = (decoded_reg_strb.HMAC384_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_CTRL.hmac_block_dest_valid.value : '0;
-    assign readback_array[21][7:7] = (decoded_reg_strb.HMAC384_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_CTRL.sha_block_dest_valid.value : '0;
-    assign readback_array[21][8:8] = (decoded_reg_strb.HMAC384_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_CTRL.ecc_pkey_dest_valid.value : '0;
-    assign readback_array[21][9:9] = (decoded_reg_strb.HMAC384_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_CTRL.ecc_seed_dest_valid.value : '0;
-    assign readback_array[21][10:10] = (decoded_reg_strb.HMAC384_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_CTRL.ecc_msg_dest_valid.value : '0;
-    assign readback_array[21][29:11] = (decoded_reg_strb.HMAC384_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_CTRL.rsvd.value : '0;
-    assign readback_array[21][31:30] = '0;
+    assign readback_array[21][5:1] = (decoded_reg_strb.HMAC384_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_CTRL.write_entry.value : '0;
+    assign readback_array[21][6:6] = (decoded_reg_strb.HMAC384_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_CTRL.hmac_key_dest_valid.value : '0;
+    assign readback_array[21][7:7] = (decoded_reg_strb.HMAC384_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_CTRL.hmac_block_dest_valid.value : '0;
+    assign readback_array[21][8:8] = (decoded_reg_strb.HMAC384_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_CTRL.sha_block_dest_valid.value : '0;
+    assign readback_array[21][9:9] = (decoded_reg_strb.HMAC384_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_CTRL.ecc_pkey_dest_valid.value : '0;
+    assign readback_array[21][10:10] = (decoded_reg_strb.HMAC384_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_CTRL.ecc_seed_dest_valid.value : '0;
+    assign readback_array[21][11:11] = (decoded_reg_strb.HMAC384_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_CTRL.ecc_msg_dest_valid.value : '0;
+    assign readback_array[21][31:12] = (decoded_reg_strb.HMAC384_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_CTRL.rsvd.value : '0;
     assign readback_array[22][0:0] = (decoded_reg_strb.HMAC384_KV_WR_STATUS && !decoded_req_is_wr) ? hwif_in.HMAC384_KV_WR_STATUS.READY.next : '0;
     assign readback_array[22][1:1] = (decoded_reg_strb.HMAC384_KV_WR_STATUS && !decoded_req_is_wr) ? field_storage.HMAC384_KV_WR_STATUS.VALID.value : '0;
     assign readback_array[22][9:2] = (decoded_reg_strb.HMAC384_KV_WR_STATUS && !decoded_req_is_wr) ? hwif_in.HMAC384_KV_WR_STATUS.ERROR.next : '0;

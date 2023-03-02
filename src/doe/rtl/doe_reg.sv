@@ -143,7 +143,7 @@ module doe_reg (
                 logic load_next;
             } CMD;
             struct packed{
-                logic [2:0] next;
+                logic [4:0] next;
                 logic load_next;
             } DEST;
         } DOE_CTRL;
@@ -351,7 +351,7 @@ module doe_reg (
                 logic [1:0] value;
             } CMD;
             struct packed{
-                logic [2:0] value;
+                logic [4:0] value;
             } DEST;
         } DOE_CTRL;
         struct packed{
@@ -542,10 +542,10 @@ module doe_reg (
     assign hwif_out.DOE_CTRL.CMD.swmod = decoded_reg_strb.DOE_CTRL && decoded_req_is_wr;
     // Field: doe_reg.DOE_CTRL.DEST
     always_comb begin
-        automatic logic [2:0] next_c = field_storage.DOE_CTRL.DEST.value;
+        automatic logic [4:0] next_c = field_storage.DOE_CTRL.DEST.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.DOE_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[4:2];
+            next_c = decoded_wr_data[6:2];
             load_next_c = '1;
         end
         field_combo.DOE_CTRL.DEST.next = next_c;
@@ -1336,8 +1336,8 @@ module doe_reg (
         assign readback_array[i0*1 + 0][31:0] = (decoded_reg_strb.DOE_IV[i0] && !decoded_req_is_wr) ? field_storage.DOE_IV[i0].IV.value : '0;
     end
     assign readback_array[4][1:0] = (decoded_reg_strb.DOE_CTRL && !decoded_req_is_wr) ? field_storage.DOE_CTRL.CMD.value : '0;
-    assign readback_array[4][4:2] = (decoded_reg_strb.DOE_CTRL && !decoded_req_is_wr) ? field_storage.DOE_CTRL.DEST.value : '0;
-    assign readback_array[4][31:5] = '0;
+    assign readback_array[4][6:2] = (decoded_reg_strb.DOE_CTRL && !decoded_req_is_wr) ? field_storage.DOE_CTRL.DEST.value : '0;
+    assign readback_array[4][31:7] = '0;
     assign readback_array[5][0:0] = (decoded_reg_strb.DOE_STATUS && !decoded_req_is_wr) ? field_storage.DOE_STATUS.READY.value : '0;
     assign readback_array[5][1:1] = (decoded_reg_strb.DOE_STATUS && !decoded_req_is_wr) ? field_storage.DOE_STATUS.VALID.value : '0;
     assign readback_array[5][2:2] = (decoded_reg_strb.DOE_STATUS && !decoded_req_is_wr) ? hwif_in.DOE_STATUS.UDS_FLOW_DONE.next : '0;

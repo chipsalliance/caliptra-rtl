@@ -19,6 +19,7 @@
 
 module caliptra_top 
     import kv_defines_pkg::*;
+    import pv_defines_pkg::*;
     import soc_ifc_pkg::*;
     (
     input logic                        clk,
@@ -229,6 +230,11 @@ module caliptra_top
     kv_rd_resp_t [KV_NUM_READ-1:0] kv_rd_resp;
     kv_wr_resp_t [KV_NUM_READ-1:0] kv_wr_resp;
 
+    pv_read_t [PV_NUM_READ-1:0]  pv_read;
+    pv_write_t [PV_NUM_WRITE-1:0]  pv_write;
+    pv_rd_resp_t [PV_NUM_READ-1:0] pv_rd_resp;
+    pv_wr_resp_t [PV_NUM_READ-1:0] pv_wr_resp;
+
     //mailbox sram gasket
     mbox_sram_req_t mbox_sram_req;
     mbox_sram_resp_t mbox_sram_resp;
@@ -313,6 +319,8 @@ end
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_ECC]     = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_HMAC]    = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_KV]      = 1'b0;
+    always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_PV]      = 1'b0;
+    always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_DV]      = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_SHA512]  = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_QSPI]    = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_UART]    = 1'b0;
@@ -663,6 +671,10 @@ sha512_ctrl #(
     .kv_write       (kv_write[1]),
     .kv_rd_resp     (kv_rd_resp[2]),
     .kv_wr_resp     (kv_wr_resp[1]),
+    .pv_read        (pv_read),
+    .pv_write       (pv_write),
+    .pv_rd_resp     (pv_rd_resp),
+    .pv_wr_resp     (pv_wr_resp),
 
     .error_intr(sha512_error_intr),
     .notif_intr(sha512_notif_intr)
@@ -809,6 +821,53 @@ key_vault1
     .kv_write         (kv_write),
     .kv_rd_resp       (kv_rd_resp),
     .kv_wr_resp       (kv_wr_resp)
+);
+
+pv #(
+    .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_PV)),
+    .AHB_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE)
+)
+pcr_vault1
+(
+    .clk           (clk_cg),
+    .rst_b         (cptra_noncore_rst_b),
+    .cptra_pwrgood (cptra_pwrgood),
+    .haddr_i       (responder_inst[`CALIPTRA_SLAVE_SEL_PV].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_PV)-1:0]),
+    .hwdata_i      (responder_inst[`CALIPTRA_SLAVE_SEL_PV].hwdata),
+    .hsel_i        (responder_inst[`CALIPTRA_SLAVE_SEL_PV].hsel),
+    .hwrite_i      (responder_inst[`CALIPTRA_SLAVE_SEL_PV].hwrite),
+    .hready_i      (responder_inst[`CALIPTRA_SLAVE_SEL_PV].hready),
+    .htrans_i      (responder_inst[`CALIPTRA_SLAVE_SEL_PV].htrans),
+    .hsize_i       (responder_inst[`CALIPTRA_SLAVE_SEL_PV].hsize),
+    .hresp_o       (responder_inst[`CALIPTRA_SLAVE_SEL_PV].hresp),
+    .hreadyout_o   (responder_inst[`CALIPTRA_SLAVE_SEL_PV].hreadyout),
+    .hrdata_o      (responder_inst[`CALIPTRA_SLAVE_SEL_PV].hrdata),
+
+    .pv_read       (pv_read),
+    .pv_write      (pv_write),
+    .pv_rd_resp    (pv_rd_resp),
+    .pv_wr_resp    (pv_wr_resp)
+);
+
+dv #(
+    .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_DV)),
+    .AHB_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE)
+)
+data_vault1
+(
+    .clk           (clk_cg),
+    .rst_b         (cptra_noncore_rst_b),
+    .cptra_pwrgood (cptra_pwrgood),
+    .haddr_i       (responder_inst[`CALIPTRA_SLAVE_SEL_DV].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_DV)-1:0]),
+    .hwdata_i      (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hwdata),
+    .hsel_i        (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hsel),
+    .hwrite_i      (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hwrite),
+    .hready_i      (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hready),
+    .htrans_i      (responder_inst[`CALIPTRA_SLAVE_SEL_DV].htrans),
+    .hsize_i       (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hsize),
+    .hresp_o       (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hresp),
+    .hreadyout_o   (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hreadyout),
+    .hrdata_o      (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hrdata)
 );
 
 soc_ifc_top #(

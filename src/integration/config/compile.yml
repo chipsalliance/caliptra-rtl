@@ -19,6 +19,8 @@ requires:
   - caliptra_top_defines
   - libs
   - kv_defines_pkg
+  - pv_defines_pkg
+  - dv_defines_pkg
   - el2_veer_pkg
   - el2_veer_wrapper
   - ahb_lite_bus
@@ -28,6 +30,8 @@ requires:
   - hmac_ctrl
   - ecc_top
   - keyvault
+  - pcrvault
+  - datavault
   - soc_ifc_top
 targets:
   rtl:

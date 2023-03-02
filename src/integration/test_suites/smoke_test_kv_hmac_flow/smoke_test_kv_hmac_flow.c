@@ -56,8 +56,7 @@ void hmac_kvflow_test(uint8_t key_kv_id, uint8_t hmacblock_kv_id, uint8_t store_
 
     // Program KEY Read with 12 dwords from key_kv_id
     lsu_write_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_RD_KEY_CTRL, HMAC_REG_HMAC384_KV_RD_KEY_CTRL_READ_EN_MASK |
-                                                                  ((key_kv_id & 0x7) << HMAC_REG_HMAC384_KV_RD_KEY_CTRL_READ_ENTRY_LOW) |
-                                                                  (0xB << HMAC_REG_HMAC384_KV_RD_KEY_CTRL_ENTRY_DATA_SIZE_LOW));
+                                                                   ((key_kv_id & 0x7) << HMAC_REG_HMAC384_KV_RD_KEY_CTRL_READ_ENTRY_LOW));
 
     // Check that HMAC KEY is loaded
     while((lsu_read_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_RD_KEY_STATUS) & HMAC_REG_HMAC384_KV_RD_KEY_STATUS_VALID_MASK) == 0);
@@ -65,8 +64,7 @@ void hmac_kvflow_test(uint8_t key_kv_id, uint8_t hmacblock_kv_id, uint8_t store_
     
     // Program HMAC_BLOCK
     lsu_write_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL, HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL_READ_EN_MASK |
-                                                                    ((hmacblock_kv_id & 0x7) << HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL_READ_ENTRY_LOW) |
-                                                                    (0xB << HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL_ENTRY_DATA_SIZE_LOW));
+                                                                    ((hmacblock_kv_id & 0x7) << HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL_READ_ENTRY_LOW));
 
     // Check that HMAC BLOCK is loaded
     while((lsu_read_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS) & HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS_VALID_MASK) == 0);
@@ -87,8 +85,7 @@ void hmac_kvflow_test(uint8_t key_kv_id, uint8_t hmacblock_kv_id, uint8_t store_
                                                                 HMAC_REG_HMAC384_KV_WR_CTRL_SHA_BLOCK_DEST_VALID_MASK |
                                                                 HMAC_REG_HMAC384_KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK  |
                                                                 HMAC_REG_HMAC384_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK  |
-                                                                HMAC_REG_HMAC384_KV_WR_CTRL_ECC_MSG_DEST_VALID_MASK   |
-                                                                ((tag_kv_id & 0x7) << HMAC_REG_HMAC384_KV_WR_CTRL_WRITE_ENTRY_LOW));
+                                                                HMAC_REG_HMAC384_KV_WR_CTRL_ECC_MSG_DEST_VALID_MASK);
     }
 
     // Enable HMAC core

@@ -99,7 +99,7 @@ package doe_reg_pkg;
     } doe_reg__DOE_CTRL__CMD__out_t;
 
     typedef struct packed{
-        logic [2:0] value;
+        logic [4:0] value;
     } doe_reg__DOE_CTRL__DEST__out_t;
 
     typedef struct packed{

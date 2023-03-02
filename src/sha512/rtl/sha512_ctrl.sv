@@ -25,6 +25,7 @@
 
 module sha512_ctrl 
     import kv_defines_pkg::*;
+    import pv_defines_pkg::*;
     #(
     parameter AHB_DATA_WIDTH = 32,
     parameter AHB_ADDR_WIDTH = 32
@@ -53,6 +54,12 @@ module sha512_ctrl
     output kv_write_t kv_write,
     input kv_rd_resp_t kv_rd_resp,
     input kv_wr_resp_t kv_wr_resp,
+
+    // pcr vault interface
+    output pv_read_t pv_read,
+    output pv_write_t pv_write,
+    input pv_rd_resp_t pv_rd_resp,
+    input pv_wr_resp_t pv_wr_resp,
 
     // Interrupt
     output logic error_intr,
@@ -87,6 +94,10 @@ module sha512_ctrl
         .kv_write(kv_write),
         .kv_rd_resp(kv_rd_resp),
         .kv_wr_resp(kv_wr_resp),
+        .pv_read(pv_read),
+        .pv_write(pv_write),
+        .pv_rd_resp(pv_rd_resp),
+        .pv_wr_resp(pv_wr_resp),
         .error_intr(error_intr),
         .notif_intr(notif_intr)
     );

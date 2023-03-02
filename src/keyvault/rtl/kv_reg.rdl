@@ -20,107 +20,43 @@ addrmap kv_reg {
 
     //keys are not accessible by sw
     field key {desc="Key Entries are not accessible by software"; sw=w; swwel=true; hw=rw; we=true; hwclr; resetsignal = hard_reset_b;};
-    //PCR are sw accessible
-    field pcr {desc="PCR Entries"; sw=rw; swwel=true; hw=rw; we=true; hwclr; resetsignal = hard_reset_b;};
-
-    reg pcrReg {pcr data[32]=0;}; //generic reg for pcr
     reg keyReg {desc="Key Entries are not readable or writeable by software"; key data[32]=0;}; //generic reg for keys
-
-    // Sticky DataVault registers
-    field StickyDataVaultEntry    {desc="DataVault Entry"; sw=rw; hw=na; swwel=true; resetsignal = hard_reset_b;};
-    reg StickyDataVaultReg    {StickyDataVaultEntry data[32]=0;}; //generic reg for DataVault
-
-    // NonSticky DataVault registers (reset on warm reset)
-    field NonStickyDataVaultEntry {desc="DataVault Entry"; sw=rw; hw=na; swwel=true; resetsignal = reset_b;};
-    reg NonStickyDataVaultReg {NonStickyDataVaultEntry data[32]=0;}; //generic reg for DataVault
-
 
     //controls
     reg kvCtrl {
-        desc="Controls for each keyvault and pcr entry";
-        field {desc="Lock writes to this entry. Writes will be suppressed and an error will be recorded. Lock must be cleared when there is a FW update reset => core only reset => warm reset will naturally unlock as its deeper";
-               sw=rw; swwel=true; hw=r; hwclr; resetsignal=core_only_rst_b;} lock_wr=0;
-        field {desc="Lock use of this entry. Reads will be suppressed and an error will be recorded. Lock must be cleared when there is a FW update reset => core only reset => warm reset will naturally unlock as its deeper. ";
-               sw=rw; swwel=true; hw=r; hwclr; resetsignal=core_only_rst_b;} lock_use=0; //warm reset
-        field {desc="Clear the data stored in this entry. Lock write will prevent this clear.";
-               sw=rw; hw=r; singlepulse;} clear=0;
-        field {desc="Reserved";
-               sw=rw; hw=r; hwclr;} rsvd0; //copy enhancement
-        field {desc="Reserved";
-               sw=rw; hw=r;} rsvd1[7:4]; //copy_dest enhancement
-        field {desc="Destination valid bits stored as an array for ease of use in RTL.
-
-                     dest_valid[0] = hmac_key_dest_valid
-
-                     dest_valid[1] = hmac_block_dest_valid
-
-                     dest_valid[2] = sha_block_dest_valid
-
-                     dest_valid[3] = ecc_pkey_dest_valid
-
-                     dest_valid[4] = ecc_seed_dest_valid
-
-                     dest_valid[5] = ecc_msg_dest_valid";
-               sw=r; hw=rw; we=true; hwclr; resetsignal = hard_reset_b;} dest_valid[13:8]=0; //allocate extra bits here, enumerate these bits, sticky also
-        field {desc="Reserved bits";
-               sw=rw; hw=na;} rsvd[31:14]=0;
+       desc="Controls for each keyvault and pcr entry";
+       field {desc="Lock writes to this entry. Writes will be suppressed and an error will be recorded.";
+              sw=rw; swwel=true; hw=r; resetsignal=core_only_rst_b;} lock_wr=0; //warm reset
+       field {desc="Lock use of this entry. Reads will be suppressed and an error will be recorded.";
+              sw=rw; swwel=true; hw=r; resetsignal=core_only_rst_b;} lock_use=0; //warm reset
+       field {desc="Clear the data stored in this entry. Lock write will prevent this clear.";
+              sw=rw; hw=r; singlepulse;} clear=0;
+       field {desc="Reserved";
+              sw=rw; hw=r; hwclr;} rsvd0=0; //copy enhancement
+       field {desc="Reserved";
+              sw=rw; hw=r;} rsvd1[5]=0; //copy_dest enhancement
+       field {desc="Destination valid bits stored as an array for ease of use in RTL.
+              [br]dest_valid[0] = hmac_key_dest_valid
+              [br]dest_valid[1] = hmac_block_dest_valid
+              [br]dest_valid[2] = sha_block_dest_valid
+              [br]dest_valid[3] = ecc_pkey_dest_valid
+              [br]dest_valid[4] = ecc_seed_dest_valid
+              [br]dest_valid[5] = ecc_msg_dest_valid
+              [br]dest_valid[6] = rsvd
+              [br]dest_valid[7] = rsvd";
+              sw=r; hw=rw; we=true; hwclr; resetsignal = hard_reset_b;} dest_valid[6]=0;
+       field {desc = "Stores the offset of the last valid dword, used to indicate last cycle on reads.";
+              sw=r; hw=rw; we=true; hwclr; resetsignal = hard_reset_b;} last_dword[4]=0;
     };
 
-    // Implies we have KV_NUM_PCR entries of each 64B of width
-    kvCtrl PCR_CTRL[8]; //Shoud reflect KV_NUM_PCR from kv_defines_pkg.sv
-    pcrReg PCR_ENTRY[8][16] @0x00000200;//Shoud reflect KV_NUM_PCR from kv_defines_pkg.sv
-
     // Implies we have KV_NUM_KEYS entries of each 64B of width
-    kvCtrl KEY_CTRL[8] @0x00000400;//Shoud reflect KV_NUM_KEYS from kv_defines_pkg.sv
+    kvCtrl KEY_CTRL[32] @0x00000000;//Shoud reflect KV_NUM_KEYS from kv_defines_pkg.sv
     //stick these at the end since sw won't actually address them ever
-    keyReg KEY_ENTRY[8][16] @0x00000600;//Shoud reflect KV_NUM_KEYS from kv_defines_pkg.sv
+    keyReg KEY_ENTRY[32][12] @0x00000600;//Shoud reflect KV_NUM_KEYS from kv_defines_pkg.sv
 
     reg {
         field {desc="Fill the keyvault with debug values"; sw=rw; hw=r; singlepulse;} wr_debug_values=0;
         field {desc="Selects between debug value 0 or 1 parameter to write to keyvault"; sw=rw; hw=r;} sel_debug_value=0;
-    } CLEAR_SECRETS @0x00000800;
-
-
-    // ============== Data Vault Registers ===========================
-    reg {
-        desc="Controls for the Sticky Data Vault Entries";
-        field {desc="Lock writes to this entry. Writes will be suppressed when locked.";
-               sw=rw; swwel=true; hw=r; resetsignal=hard_reset_b;} lock_entry=0; //Shoud reflect NONSTICKY_DV_NUM_ENTRIES from kv_defines_pkg.sv
-    } StickyDataVaultCtrl[10] @0x00000804;
-
-    StickyDataVaultReg     STICKY_DATA_VAULT_ENTRY[10][12] @0x00000900;//Shoud reflect STICKY_DV_NUM_ENTRIES and DV_NUM_DWORDS from kv_defines_pkg.sv
-
-    reg {
-        desc="Controls for the Non-Sticky Data Vault Entries";
-        field {desc="Lock writes to this entry. Writes will be suppressed when locked.";
-               sw=rw; swwel=true; hw=r; resetsignal=reset_b;} lock_entry=0; //Shoud reflect STICKY_DV_NUM_ENTRIES and DV_NUM_DWORDS from kv_defines_pkg.sv
-    } NonStickyDataVaultCtrl[10] @0x0000082C;// CAREFUL with the address extensions
-
-    NonStickyDataVaultReg  NONSTICKY_DATA_VAULT_ENTRY[10][12] @0x00000C00;//Shoud reflect NONSTICKY_DV_NUM_ENTRIES and DV_NUM_DWORDS from kv_defines_pkg.sv
-
-    reg {
-        desc="Non-Sticky Scratch Register Controls";
-        field {desc="Lock writes to the Scratch registers. Writes will be suppressed when locked.";
-               sw=rw; swwel=true; hw=r; resetsignal=reset_b;} lock_entry=0;
-    } NonStickyLockableScratchRegCtrl[10] @0x00000854; //Shoud reflect NONSTICKY_SCRATCH_NUM_ENTRIES from kv_defines_pkg.sv & CAREFUL with the address extensions
-
-    reg {
-       field {sw=rw; swwel=true; hw=na; resetsignal=reset_b;} data[32]=0;
-    } NonStickyLockableScratchReg[10] @0x00000F00; //Shoud reflect NONSTICKY_LOCKQ_SCRATCH_NUM_ENTRIES from kv_defines_pkg.sv
-
-    reg {
-       field {sw=rw; hw=na; resetsignal=reset_b;} data[32]=0;
-    } NonStickyGenericScratchReg[8] @0x00000F28; //Shoud reflect NONSTICKY_SCRATCH_NUM_ENTRIES from kv_defines_pkg.sv & CAREFUL with the address extensions
-
-    reg {
-        desc="Sticky Scratch Register Controls";
-        field {desc="Lock writes to the Scratch registers. Writes will be suppressed when locked.";
-               sw=rw; swwel=true; hw=r; resetsignal=hard_reset_b;} lock_entry=0;
-    } StickyLockableScratchRegCtrl[8] @0x00000F48; //should reflect STICKY_LOCKQ_SCRATCH_NUM_ENTRIES
-
-    reg {
-       field {sw=rw; swwel=true; hw=na; resetsignal=hard_reset_b;} data[32]=0;
-    } StickyLockableScratchReg[8] @0x00000F68; //should reflect STICKY_LOCKQ_SCRATCH_NUM_ENTRIES
-
+    } CLEAR_SECRETS @0x00000C00;
         
 };

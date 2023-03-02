@@ -38,6 +38,7 @@ package sha512_reg_uvm;
         rand uvm_reg_field NEXT;
         rand uvm_reg_field MODE;
         rand uvm_reg_field ZEROIZE;
+        rand uvm_reg_field LAST;
 
         function new(string name = "sha512_reg__SHA512_CTRL");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -52,6 +53,8 @@ package sha512_reg_uvm;
             this.MODE.configure(this, 2, 2, "WO", 0, 'h2, 1, 1, 0);
             this.ZEROIZE = new("ZEROIZE");
             this.ZEROIZE.configure(this, 1, 4, "WO", 0, 'h0, 1, 1, 0);
+            this.LAST = new("LAST");
+            this.LAST.configure(this, 1, 5, "WO", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : sha512_reg__SHA512_CTRL
 
@@ -104,8 +107,7 @@ package sha512_reg_uvm;
     class kv_read_ctrl_reg extends uvm_reg;
         rand uvm_reg_field read_en;
         rand uvm_reg_field read_entry;
-        rand uvm_reg_field entry_is_pcr;
-        rand uvm_reg_field entry_data_size;
+        rand uvm_reg_field pcr_hash_extend;
         rand uvm_reg_field rsvd;
 
         function new(string name = "kv_read_ctrl_reg");
@@ -116,13 +118,11 @@ package sha512_reg_uvm;
             this.read_en = new("read_en");
             this.read_en.configure(this, 1, 0, "RW", 1, 'h0, 1, 1, 0);
             this.read_entry = new("read_entry");
-            this.read_entry.configure(this, 3, 1, "RW", 0, 'h0, 1, 1, 0);
-            this.entry_is_pcr = new("entry_is_pcr");
-            this.entry_is_pcr.configure(this, 1, 4, "RW", 0, 'h0, 1, 1, 0);
-            this.entry_data_size = new("entry_data_size");
-            this.entry_data_size.configure(this, 5, 5, "RW", 0, 'h0, 1, 1, 0);
+            this.read_entry.configure(this, 5, 1, "RW", 0, 'h0, 1, 1, 0);
+            this.pcr_hash_extend = new("pcr_hash_extend");
+            this.pcr_hash_extend.configure(this, 1, 6, "RW", 0, 'h0, 1, 1, 0);
             this.rsvd = new("rsvd");
-            this.rsvd.configure(this, 20, 10, "RW", 0, 'h0, 1, 1, 0);
+            this.rsvd.configure(this, 25, 7, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : kv_read_ctrl_reg
 
@@ -150,7 +150,6 @@ package sha512_reg_uvm;
     class kv_write_ctrl_reg extends uvm_reg;
         rand uvm_reg_field write_en;
         rand uvm_reg_field write_entry;
-        rand uvm_reg_field entry_is_pcr;
         rand uvm_reg_field hmac_key_dest_valid;
         rand uvm_reg_field hmac_block_dest_valid;
         rand uvm_reg_field sha_block_dest_valid;
@@ -167,25 +166,37 @@ package sha512_reg_uvm;
             this.write_en = new("write_en");
             this.write_en.configure(this, 1, 0, "RW", 1, 'h0, 1, 1, 0);
             this.write_entry = new("write_entry");
-            this.write_entry.configure(this, 3, 1, "RW", 0, 'h0, 1, 1, 0);
-            this.entry_is_pcr = new("entry_is_pcr");
-            this.entry_is_pcr.configure(this, 1, 4, "RW", 0, 'h0, 1, 1, 0);
+            this.write_entry.configure(this, 5, 1, "RW", 0, 'h0, 1, 1, 0);
             this.hmac_key_dest_valid = new("hmac_key_dest_valid");
-            this.hmac_key_dest_valid.configure(this, 1, 5, "RW", 0, 'h0, 1, 1, 0);
+            this.hmac_key_dest_valid.configure(this, 1, 6, "RW", 0, 'h0, 1, 1, 0);
             this.hmac_block_dest_valid = new("hmac_block_dest_valid");
-            this.hmac_block_dest_valid.configure(this, 1, 6, "RW", 0, 'h0, 1, 1, 0);
+            this.hmac_block_dest_valid.configure(this, 1, 7, "RW", 0, 'h0, 1, 1, 0);
             this.sha_block_dest_valid = new("sha_block_dest_valid");
-            this.sha_block_dest_valid.configure(this, 1, 7, "RW", 0, 'h0, 1, 1, 0);
+            this.sha_block_dest_valid.configure(this, 1, 8, "RW", 0, 'h0, 1, 1, 0);
             this.ecc_pkey_dest_valid = new("ecc_pkey_dest_valid");
-            this.ecc_pkey_dest_valid.configure(this, 1, 8, "RW", 0, 'h0, 1, 1, 0);
+            this.ecc_pkey_dest_valid.configure(this, 1, 9, "RW", 0, 'h0, 1, 1, 0);
             this.ecc_seed_dest_valid = new("ecc_seed_dest_valid");
-            this.ecc_seed_dest_valid.configure(this, 1, 9, "RW", 0, 'h0, 1, 1, 0);
+            this.ecc_seed_dest_valid.configure(this, 1, 10, "RW", 0, 'h0, 1, 1, 0);
             this.ecc_msg_dest_valid = new("ecc_msg_dest_valid");
-            this.ecc_msg_dest_valid.configure(this, 1, 10, "RW", 0, 'h0, 1, 1, 0);
+            this.ecc_msg_dest_valid.configure(this, 1, 11, "RW", 0, 'h0, 1, 1, 0);
             this.rsvd = new("rsvd");
-            this.rsvd.configure(this, 19, 11, "RW", 0, 'h0, 1, 1, 0);
+            this.rsvd.configure(this, 20, 12, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : kv_write_ctrl_reg
+
+    // Reg - sha512_reg::SHA512_GEN_PCR_HASH
+    class sha512_reg__SHA512_GEN_PCR_HASH extends uvm_reg;
+        rand uvm_reg_field FLOW_EN;
+
+        function new(string name = "sha512_reg__SHA512_GEN_PCR_HASH");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.FLOW_EN = new("FLOW_EN");
+            this.FLOW_EN.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : sha512_reg__SHA512_GEN_PCR_HASH
 
     // Reg - sha512_reg::global_intr_en_t
     class sha512_reg__global_intr_en_t extends uvm_reg;
@@ -617,10 +628,11 @@ package sha512_reg_uvm;
         rand sha512_reg__SHA512_STATUS SHA512_STATUS;
         rand sha512_reg__SHA512_BLOCK SHA512_BLOCK[32];
         rand sha512_reg__SHA512_DIGEST SHA512_DIGEST[16];
-        rand kv_read_ctrl_reg SHA512_KV_RD_CTRL;
-        rand kv_status_reg SHA512_KV_RD_STATUS;
+        rand kv_read_ctrl_reg SHA512_VAULT_RD_CTRL;
+        rand kv_status_reg SHA512_VAULT_RD_STATUS;
         rand kv_write_ctrl_reg SHA512_KV_WR_CTRL;
         rand kv_status_reg SHA512_KV_WR_STATUS;
+        rand sha512_reg__SHA512_GEN_PCR_HASH SHA512_GEN_PCR_HASH;
         rand sha512_reg__intr_block_t intr_block_rf;
 
         function new(string name = "sha512_reg");
@@ -667,16 +679,16 @@ package sha512_reg_uvm;
                 this.SHA512_DIGEST[i0].build();
                 this.default_map.add_reg(this.SHA512_DIGEST[i0], 'h100 + i0*'h4);
             end
-            this.SHA512_KV_RD_CTRL = new("SHA512_KV_RD_CTRL");
-            this.SHA512_KV_RD_CTRL.configure(this);
+            this.SHA512_VAULT_RD_CTRL = new("SHA512_VAULT_RD_CTRL");
+            this.SHA512_VAULT_RD_CTRL.configure(this);
 
-            this.SHA512_KV_RD_CTRL.build();
-            this.default_map.add_reg(this.SHA512_KV_RD_CTRL, 'h600);
-            this.SHA512_KV_RD_STATUS = new("SHA512_KV_RD_STATUS");
-            this.SHA512_KV_RD_STATUS.configure(this);
+            this.SHA512_VAULT_RD_CTRL.build();
+            this.default_map.add_reg(this.SHA512_VAULT_RD_CTRL, 'h600);
+            this.SHA512_VAULT_RD_STATUS = new("SHA512_VAULT_RD_STATUS");
+            this.SHA512_VAULT_RD_STATUS.configure(this);
 
-            this.SHA512_KV_RD_STATUS.build();
-            this.default_map.add_reg(this.SHA512_KV_RD_STATUS, 'h604);
+            this.SHA512_VAULT_RD_STATUS.build();
+            this.default_map.add_reg(this.SHA512_VAULT_RD_STATUS, 'h604);
             this.SHA512_KV_WR_CTRL = new("SHA512_KV_WR_CTRL");
             this.SHA512_KV_WR_CTRL.configure(this);
 
@@ -687,6 +699,11 @@ package sha512_reg_uvm;
 
             this.SHA512_KV_WR_STATUS.build();
             this.default_map.add_reg(this.SHA512_KV_WR_STATUS, 'h60c);
+            this.SHA512_GEN_PCR_HASH = new("SHA512_GEN_PCR_HASH");
+            this.SHA512_GEN_PCR_HASH.configure(this);
+
+            this.SHA512_GEN_PCR_HASH.build();
+            this.default_map.add_reg(this.SHA512_GEN_PCR_HASH, 'h610);
             this.intr_block_rf = new("intr_block_rf");
             this.intr_block_rf.configure(this);
             this.intr_block_rf.build();

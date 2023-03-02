@@ -102,6 +102,7 @@ logic mbox_protocol_sram_we;
 logic sram_ecc_cor_we;
 logic [$clog2(DEPTH)-1:0] sram_ecc_cor_waddr;
 logic dir_req_dv_q, dir_req_rd_phase;
+logic dir_req_wr_ph;
 logic mask_rdata;
 logic [$clog2(DEPTH)-1:0] dir_req_addr;
 
@@ -298,7 +299,7 @@ always_ff @(posedge clk or negedge rst_b) begin
     else begin
         mbox_fsm_ps <= mbox_fsm_ns;
         soc_has_lock <= arc_MBOX_IDLE_MBOX_RDY_FOR_CMD ? soc_has_lock_nxt : soc_has_lock;
-        dir_req_rd_phase <= dir_req_dv_q & ~req_data.write;
+        dir_req_rd_phase <= dir_req_dv_q & ~sha_sram_req_dv & ~req_data.write;
         mbox_wrptr <= (inc_wrptr | rst_mbox_wrptr) ? mbox_wrptr_nxt : mbox_wrptr;
         mbox_rdptr <= (inc_rdptrQ | rst_mbox_rdptr) ? mbox_rdptr_nxt : mbox_rdptr;
         inc_rdptr_f <= (inc_rdptrQ | inc_rdptr_f) ? inc_rdptrQ : inc_rdptr_f;
@@ -316,7 +317,7 @@ end
 //hold when a read to dataout is coming and we haven't updated the data yet
 always_comb dir_req_dv_q = (dir_req_dv & ~dir_req_rd_phase & hwif_out.mbox_lock.lock.value & (~soc_has_lock | (mbox_fsm_ps == MBOX_EXECUTE_UC))) | 
                             sha_sram_req_dv;
-
+always_comb dir_req_wr_ph = dir_req_dv_q & ~sha_sram_req_dv & req_data.write;
 always_comb dir_req_addr = sha_sram_req_dv ? sha_sram_req_addr : req_data.addr[$clog2(DEPTH)+1:2];
 
 always_comb req_hold = (dir_req_dv_q & ~req_data.write) | 
@@ -327,7 +328,7 @@ always_comb sha_sram_hold = sram_single_ecc_error/* || sram_ecc_cor_we*/;
 
 //SRAM interface
 always_comb sram_ecc_cor_we = sram_single_ecc_error; // TODO we probably want this to be a reg-stage to reduce combo logic SRAM -> rdata -> wdata -> SRAM
-always_comb sram_we = (dir_req_dv_q & req_data.write) | mbox_protocol_sram_we | sram_ecc_cor_we;
+always_comb sram_we = dir_req_wr_ph | mbox_protocol_sram_we | sram_ecc_cor_we;
 //align the direct address to a word
 always_comb sram_rdaddr = dir_req_dv_q ? dir_req_addr : mbox_rdptr;
 always_comb sram_waddr = sram_ecc_cor_we ? sram_ecc_cor_waddr :
@@ -339,8 +340,8 @@ always_comb rdata = dir_req_rd_phase ? sram_rdata_cor : ({DATA_W{~mask_rdata}} &
 always_comb begin: mbox_sram_inf
     //read live on direct access, or when pointer has been incremented, or if write was made to same address as rdptr
     mbox_sram_req.cs = dir_req_dv_q | mbox_protocol_sram_we | inc_rdptr | sram_ecc_cor_we;
-    mbox_sram_req.we = sram_we & ~sha_sram_req_dv; //TODO why is this qualified?
-    mbox_sram_req.addr = sram_we & ~sha_sram_req_dv ? sram_waddr : sram_rdaddr;
+    mbox_sram_req.we = sram_we;
+    mbox_sram_req.addr = sram_we ? sram_waddr : sram_rdaddr;
     mbox_sram_req.wdata.data = sram_ecc_cor_we ? sram_rdata_cor     : sram_wdata;
     mbox_sram_req.wdata.ecc  = sram_ecc_cor_we ? sram_rdata_cor_ecc : sram_wdata_ecc;
 

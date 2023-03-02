@@ -44,9 +44,9 @@ volatile uint32_t * doe_status = (uint32_t *) CLP_DOE_REG_DOE_STATUS;
 
 volatile uint32_t * soc_ifc_fw_update_reset = (uint32_t *) (CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET);
 
-volatile uint32_t * pcr_ctrl0 = (uint32_t *) CLP_KV_REG_PCR_CTRL_0;
-volatile uint32_t * pcr_ctrl2 = (uint32_t *) CLP_KV_REG_PCR_CTRL_2;
-volatile uint32_t * pcr_ctrl5 = (uint32_t *) CLP_KV_REG_PCR_CTRL_5;
+volatile uint32_t * pcr_ctrl0 = (uint32_t *) CLP_PV_REG_PCR_CTRL_0;
+volatile uint32_t * pcr_ctrl2 = (uint32_t *) CLP_PV_REG_PCR_CTRL_2;
+volatile uint32_t * pcr_ctrl5 = (uint32_t *) CLP_PV_REG_PCR_CTRL_5;
 
 volatile uint32_t * key_ctrl1 = (uint32_t *) CLP_KV_REG_KEY_CTRL_1;
 volatile uint32_t * key_ctrl4 = (uint32_t *) CLP_KV_REG_KEY_CTRL_4;
@@ -142,14 +142,14 @@ void main() {
         }
         printf("DOE Status %d \n", doe_status_int);
 
-        //Set KV and PCR locks
+        //Set KV locks
         *key_ctrl1 = 0x00000003;
         *key_ctrl4 = 0x00000001;
         *key_ctrl7 = 0x00000003;
-
+        //Set PCR lock bit
         *pcr_ctrl0 = 0x00000001;
-        *pcr_ctrl2 = 0x00000003;
-        *pcr_ctrl5 = 0x00000003;
+        *pcr_ctrl2 = 0x00000001;
+        *pcr_ctrl5 = 0x00000001;
 
         //Issue fw update reset
         rst_count++;

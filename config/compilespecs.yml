@@ -12,6 +12,8 @@ files:
   - src/hmac_drbg/config/compile.yml
   - src/ecc/config/compile.yml
   - src/keyvault/config/compile.yml
+  - src/pcrvault/config/compile.yml
+  - src/datavault/config/compile.yml
   - src/integration/asserts/config/compile.yml
   # UVMF TBs
   - src/aes_secworks/uvmf_cbc_AllKAT/config/compile.yml

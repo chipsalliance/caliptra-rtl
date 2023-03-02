@@ -80,7 +80,7 @@ addrmap doe_reg {
                 };
             };
             encode = doe_cmd_e; hwclr; swmod;} CMD[2]=0;
-        field {desc = "Key Vault entry to store the result.";} DEST[3] = 0;
+        field {desc = "Key Vault entry to store the result.";} DEST[5] = 0;
 
     } DOE_CTRL;
 

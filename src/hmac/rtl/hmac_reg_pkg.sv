@@ -188,26 +188,21 @@ package hmac_reg_pkg;
     } kv_read_ctrl_reg__read_en__out_t;
 
     typedef struct packed{
-        logic [2:0] value;
+        logic [4:0] value;
     } kv_read_ctrl_reg__read_entry__out_t;
 
     typedef struct packed{
         logic value;
-    } kv_read_ctrl_reg__entry_is_pcr__out_t;
+    } kv_read_ctrl_reg__pcr_hash_extend__out_t;
 
     typedef struct packed{
-        logic [4:0] value;
-    } kv_read_ctrl_reg__entry_data_size__out_t;
-
-    typedef struct packed{
-        logic [19:0] value;
+        logic [24:0] value;
     } kv_read_ctrl_reg__rsvd__out_t;
 
     typedef struct packed{
         kv_read_ctrl_reg__read_en__out_t read_en;
         kv_read_ctrl_reg__read_entry__out_t read_entry;
-        kv_read_ctrl_reg__entry_is_pcr__out_t entry_is_pcr;
-        kv_read_ctrl_reg__entry_data_size__out_t entry_data_size;
+        kv_read_ctrl_reg__pcr_hash_extend__out_t pcr_hash_extend;
         kv_read_ctrl_reg__rsvd__out_t rsvd;
     } __kv_read_ctrl_reg__out_t;
 
@@ -216,12 +211,8 @@ package hmac_reg_pkg;
     } kv_write_ctrl_reg__write_en__out_t;
 
     typedef struct packed{
-        logic [2:0] value;
+        logic [4:0] value;
     } kv_write_ctrl_reg__write_entry__out_t;
-
-    typedef struct packed{
-        logic value;
-    } kv_write_ctrl_reg__entry_is_pcr__out_t;
 
     typedef struct packed{
         logic value;
@@ -248,13 +239,12 @@ package hmac_reg_pkg;
     } kv_write_ctrl_reg__ecc_msg_dest_valid__out_t;
 
     typedef struct packed{
-        logic [18:0] value;
+        logic [19:0] value;
     } kv_write_ctrl_reg__rsvd__out_t;
 
     typedef struct packed{
         kv_write_ctrl_reg__write_en__out_t write_en;
         kv_write_ctrl_reg__write_entry__out_t write_entry;
-        kv_write_ctrl_reg__entry_is_pcr__out_t entry_is_pcr;
         kv_write_ctrl_reg__hmac_key_dest_valid__out_t hmac_key_dest_valid;
         kv_write_ctrl_reg__hmac_block_dest_valid__out_t hmac_block_dest_valid;
         kv_write_ctrl_reg__sha_block_dest_valid__out_t sha_block_dest_valid;

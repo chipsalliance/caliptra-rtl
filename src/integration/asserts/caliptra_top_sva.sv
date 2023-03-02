@@ -103,29 +103,28 @@ module caliptra_top_sva
     for(dword = 0; dword < KV_NUM_DWORDS; dword++) begin
       kv_sha512_block_r_flow:   assert property (
                                             @(posedge `KEYVAULT_PATH.clk)
-                                            $fell(`SHA512_PATH.kv_src_write_en) && (dword < `SHA512_PATH.kv_read_ctrl_reg.entry_data_size) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`SHA512_PATH.kv_read.read_entry][dword] == `SHA512_PATH.block_reg[dword])
+                                            $rose(`SHA512_PATH.kv_src_done) && (dword < `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`SHA512_PATH.kv_read.read_entry].last_dword) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`SHA512_PATH.kv_read.read_entry][dword] == `SHA512_PATH.block_reg[dword])
                                             )
                                 else $display("SVA ERROR: SHA384 block mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`SHA512_PATH.kv_read.read_entry][dword], `SHA512_PATH.block_reg[dword]);
 
       if (dword < SHA512_DIG_NUM_DWORDS) begin
         kv_sha512_digest_w_flow:  assert property (
                                               @(posedge `KEYVAULT_PATH.clk)
-                                              `SHA512_PATH.kv_dest_done |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`SHA512_PATH.kv_write_ctrl_reg.write_entry][dword] == `SHA512_PATH.kv_reg[(`SHA512_PATH.DIG_NUM_DWORDS-1) - dword])
+                                              `SHA512_PATH.kv_dest_done & ~`SHA512_PATH.pcr_hash_extend_ip |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`SHA512_PATH.kv_write_ctrl_reg.write_entry][dword] == `SHA512_PATH.kv_reg[(KV_NUM_DWORDS-1) - dword])
                                               )
-                                  else $display("SVA ERROR: SHA384 digest mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`SHA512_PATH.kv_write_ctrl_reg.write_entry][dword], `SHA512_PATH.kv_reg[(`SHA512_PATH.DIG_NUM_DWORDS-1) - dword]);
+                                  else $display("SVA ERROR: SHA384 digest mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`SHA512_PATH.kv_write_ctrl_reg.write_entry][dword], `SHA512_PATH.kv_reg[(KV_NUM_DWORDS-1) - dword]);
       end
 
       kv_hmac_block_r_flow:     assert property (
                                             @(posedge `KEYVAULT_PATH.clk)
-                                            $fell(`HMAC_PATH.kv_block_write_en) && (dword < `HMAC_PATH.kv_block_read_ctrl_reg.entry_data_size) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[1].read_entry][dword] == `HMAC_PATH.block_reg[dword])
+                                            $rose(`HMAC_PATH.kv_block_done) && (dword < `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`HMAC_PATH.kv_read[1].read_entry].last_dword) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[1].read_entry][dword] == `HMAC_PATH.block_reg[dword])
                                             )
                                 else $display("SVA ERROR: HMAC384 block mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[1].read_entry][dword], `HMAC_PATH.block_reg[dword]);
 
       if (dword < HMAC_KEY_NUM_DWORDS) begin
-        //TODO: remove ~`HMAC_PATH.kv_read[0].entry_is_pcr after updating smoke_test_kv
         kv_hmac_key_r_flow:       assert property (
                                               @(posedge `KEYVAULT_PATH.clk)
-                                              $fell(`HMAC_PATH.kv_key_write_en) && ~`HMAC_PATH.kv_read[0].entry_is_pcr |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[0].read_entry][dword] == `HMAC_PATH.key_reg[dword])
+                                              $fell(`HMAC_PATH.kv_key_write_en) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[0].read_entry][dword] == `HMAC_PATH.key_reg[dword])
                                               )
                                   else $display("SVA ERROR: HMAC384 key mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[0].read_entry][dword], `HMAC_PATH.key_reg[dword]);
       end

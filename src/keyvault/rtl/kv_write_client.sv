@@ -59,8 +59,9 @@ kv_dest_write_fsm
 (
     .clk(clk),
     .rst_b(rst_b),
-    .pad_data_size('0),
     .start(dest_data_avail & write_ctrl_reg.write_en),
+    .last('0),
+    .pcr_hash_extend(1'b0),
     .read_offset(dest_read_offset),
     .write_en(dest_write_en),
     .write_offset(dest_write_offset),
@@ -72,7 +73,6 @@ kv_dest_write_fsm
 
 always_comb dest_keyvault = write_ctrl_reg.write_en;
 
-always_comb kv_write.entry_is_pcr = write_ctrl_reg.entry_is_pcr;
 always_comb kv_write.write_entry = write_ctrl_reg.write_entry;
 always_comb kv_write.write_offset = dest_write_offset;
 always_comb kv_write.write_en = dest_write_en;

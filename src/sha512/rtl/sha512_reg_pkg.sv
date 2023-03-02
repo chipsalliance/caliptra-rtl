@@ -19,6 +19,14 @@ package sha512_reg_pkg;
     } sha512_reg__SHA512_VERSION__in_t;
 
     typedef struct packed{
+        logic hwclr;
+    } sha512_reg__SHA512_CTRL__LAST__in_t;
+
+    typedef struct packed{
+        sha512_reg__SHA512_CTRL__LAST__in_t LAST;
+    } sha512_reg__SHA512_CTRL__in_t;
+
+    typedef struct packed{
         logic next;
     } sha512_reg__SHA512_STATUS__READY__in_t;
 
@@ -34,6 +42,7 @@ package sha512_reg_pkg;
     typedef struct packed{
         logic [31:0] next;
         logic we;
+        logic swwel;
         logic hwclr;
     } sha512_reg__SHA512_BLOCK__BLOCK__in_t;
 
@@ -126,11 +135,12 @@ package sha512_reg_pkg;
         logic error_reset_b;
         sha512_reg__SHA512_NAME__in_t [2-1:0]SHA512_NAME;
         sha512_reg__SHA512_VERSION__in_t [2-1:0]SHA512_VERSION;
+        sha512_reg__SHA512_CTRL__in_t SHA512_CTRL;
         sha512_reg__SHA512_STATUS__in_t SHA512_STATUS;
         sha512_reg__SHA512_BLOCK__in_t [32-1:0]SHA512_BLOCK;
         sha512_reg__SHA512_DIGEST__in_t [16-1:0]SHA512_DIGEST;
-        __kv_read_ctrl_reg__in_t SHA512_KV_RD_CTRL;
-        __kv_status_reg__in_t SHA512_KV_RD_STATUS;
+        __kv_read_ctrl_reg__in_t SHA512_VAULT_RD_CTRL;
+        __kv_status_reg__in_t SHA512_VAULT_RD_STATUS;
         __kv_write_ctrl_reg__in_t SHA512_KV_WR_CTRL;
         __kv_status_reg__in_t SHA512_KV_WR_STATUS;
         sha512_reg__intr_block_t__in_t intr_block_rf;
@@ -153,10 +163,15 @@ package sha512_reg_pkg;
     } sha512_reg__SHA512_CTRL__ZEROIZE__out_t;
 
     typedef struct packed{
+        logic value;
+    } sha512_reg__SHA512_CTRL__LAST__out_t;
+
+    typedef struct packed{
         sha512_reg__SHA512_CTRL__INIT__out_t INIT;
         sha512_reg__SHA512_CTRL__NEXT__out_t NEXT;
         sha512_reg__SHA512_CTRL__MODE__out_t MODE;
         sha512_reg__SHA512_CTRL__ZEROIZE__out_t ZEROIZE;
+        sha512_reg__SHA512_CTRL__LAST__out_t LAST;
     } sha512_reg__SHA512_CTRL__out_t;
 
     typedef struct packed{
@@ -185,26 +200,21 @@ package sha512_reg_pkg;
     } kv_read_ctrl_reg__read_en__out_t;
 
     typedef struct packed{
-        logic [2:0] value;
+        logic [4:0] value;
     } kv_read_ctrl_reg__read_entry__out_t;
 
     typedef struct packed{
         logic value;
-    } kv_read_ctrl_reg__entry_is_pcr__out_t;
+    } kv_read_ctrl_reg__pcr_hash_extend__out_t;
 
     typedef struct packed{
-        logic [4:0] value;
-    } kv_read_ctrl_reg__entry_data_size__out_t;
-
-    typedef struct packed{
-        logic [19:0] value;
+        logic [24:0] value;
     } kv_read_ctrl_reg__rsvd__out_t;
 
     typedef struct packed{
         kv_read_ctrl_reg__read_en__out_t read_en;
         kv_read_ctrl_reg__read_entry__out_t read_entry;
-        kv_read_ctrl_reg__entry_is_pcr__out_t entry_is_pcr;
-        kv_read_ctrl_reg__entry_data_size__out_t entry_data_size;
+        kv_read_ctrl_reg__pcr_hash_extend__out_t pcr_hash_extend;
         kv_read_ctrl_reg__rsvd__out_t rsvd;
     } __kv_read_ctrl_reg__out_t;
 
@@ -213,12 +223,8 @@ package sha512_reg_pkg;
     } kv_write_ctrl_reg__write_en__out_t;
 
     typedef struct packed{
-        logic [2:0] value;
+        logic [4:0] value;
     } kv_write_ctrl_reg__write_entry__out_t;
-
-    typedef struct packed{
-        logic value;
-    } kv_write_ctrl_reg__entry_is_pcr__out_t;
 
     typedef struct packed{
         logic value;
@@ -245,13 +251,12 @@ package sha512_reg_pkg;
     } kv_write_ctrl_reg__ecc_msg_dest_valid__out_t;
 
     typedef struct packed{
-        logic [18:0] value;
+        logic [19:0] value;
     } kv_write_ctrl_reg__rsvd__out_t;
 
     typedef struct packed{
         kv_write_ctrl_reg__write_en__out_t write_en;
         kv_write_ctrl_reg__write_entry__out_t write_entry;
-        kv_write_ctrl_reg__entry_is_pcr__out_t entry_is_pcr;
         kv_write_ctrl_reg__hmac_key_dest_valid__out_t hmac_key_dest_valid;
         kv_write_ctrl_reg__hmac_block_dest_valid__out_t hmac_block_dest_valid;
         kv_write_ctrl_reg__sha_block_dest_valid__out_t sha_block_dest_valid;
@@ -260,6 +265,14 @@ package sha512_reg_pkg;
         kv_write_ctrl_reg__ecc_msg_dest_valid__out_t ecc_msg_dest_valid;
         kv_write_ctrl_reg__rsvd__out_t rsvd;
     } __kv_write_ctrl_reg__out_t;
+
+    typedef struct packed{
+        logic value;
+    } sha512_reg__SHA512_GEN_PCR_HASH__FLOW_EN__out_t;
+
+    typedef struct packed{
+        sha512_reg__SHA512_GEN_PCR_HASH__FLOW_EN__out_t FLOW_EN;
+    } sha512_reg__SHA512_GEN_PCR_HASH__out_t;
 
     typedef struct packed{
         logic intr;
@@ -288,8 +301,9 @@ package sha512_reg_pkg;
         sha512_reg__SHA512_CTRL__out_t SHA512_CTRL;
         sha512_reg__SHA512_STATUS__out_t SHA512_STATUS;
         sha512_reg__SHA512_BLOCK__out_t [32-1:0]SHA512_BLOCK;
-        __kv_read_ctrl_reg__out_t SHA512_KV_RD_CTRL;
+        __kv_read_ctrl_reg__out_t SHA512_VAULT_RD_CTRL;
         __kv_write_ctrl_reg__out_t SHA512_KV_WR_CTRL;
+        sha512_reg__SHA512_GEN_PCR_HASH__out_t SHA512_GEN_PCR_HASH;
         sha512_reg__intr_block_t__out_t intr_block_rf;
     } sha512_reg__out_t;
 

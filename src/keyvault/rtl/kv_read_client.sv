@@ -58,8 +58,9 @@ kv_read_fsm
 (
     .clk(clk),
     .rst_b(rst_b),
-    .pad_data_size(read_ctrl_reg.entry_data_size),
     .start(read_ctrl_reg.read_en),
+    .last (kv_resp.last),
+    .pcr_hash_extend(read_ctrl_reg.pcr_hash_extend),
     .read_offset(read_offset),
     .write_en(write_en),
     .write_offset(write_offset),
@@ -69,8 +70,7 @@ kv_read_fsm
     .done(read_done)
 );
 
-always_comb kv_read.entry_is_pcr = read_ctrl_reg.entry_is_pcr;
-always_comb kv_read.read_entry = (PAD == 1) ? read_ctrl_reg.read_entry + read_offset[DATA_OFFSET_W-1] : read_ctrl_reg.read_entry;
+always_comb kv_read.read_entry = read_ctrl_reg.read_entry;
 always_comb kv_read.read_offset = read_offset[3:0];
 
 always_comb write_data = write_pad ? pad_data : kv_resp.read_data;

@@ -41,7 +41,8 @@
 
 module sha512
     import sha512_reg_pkg::*;
-    import kv_defines_pkg::*;    
+    import kv_defines_pkg::*;  
+    import pv_defines_pkg::*;    
     #(
         parameter ADDR_WIDTH = 32,
         parameter DATA_WIDTH = 64
@@ -67,6 +68,12 @@ module sha512
         input kv_rd_resp_t kv_rd_resp,
         input kv_wr_resp_t kv_wr_resp,
 
+        // PV interface
+        output pv_read_t pv_read,
+        output pv_write_t pv_write,
+        input pv_rd_resp_t pv_rd_resp,
+        input pv_wr_resp_t pv_wr_resp,
+
         // Interrupts
         output wire error_intr,
         output wire notif_intr
@@ -85,6 +92,7 @@ module sha512
   reg ready_reg;
   reg [1 : 0] mode_reg;
   logic zeroize_reg;
+  logic last_reg;
 
   localparam BLOCK_SIZE   = 1024;
   localparam DIG_SIZE     = 512;
@@ -94,13 +102,19 @@ module sha512
 
   reg [DATA_WIDTH-1 : 0][BLOCK_NUM_DWORDS-1 : 0]    block_reg ;
   reg [DIG_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0]      digest_reg;
-  reg [DIG_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0]      kv_reg;
+  reg [KV_NUM_DWORDS -1 : 0][DATA_WIDTH-1 : 0]      kv_reg;
   reg                                               digest_valid_reg;
   logic [DIG_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0]    get_mask;
 
   sha512_reg__in_t hwif_in;
   sha512_reg__out_t hwif_out;
   logic read_error, write_error;
+
+  //KV/PV Gasket
+  kv_read_t vault_read;
+  kv_write_t vault_write;
+  kv_rd_resp_t vault_rd_resp;
+  kv_wr_resp_t vault_wr_resp;
 
   //interface with client
   logic kv_src_write_en;
@@ -113,7 +127,15 @@ module sha512
 
   logic dest_keyvault;
   kv_write_ctrl_reg_t kv_write_ctrl_reg;
+  kv_write_ctrl_reg_t kv_write_ctrl_reg_q;
   kv_read_ctrl_reg_t kv_read_ctrl_reg;
+
+  //PCR Hash Extend Function
+  logic pcr_hash_extend_ip;
+  logic pcr_hash_extend_set, pcr_hash_extend_reset;
+  logic [KV_ENTRY_ADDR_W-1:0] hash_extend_entry;
+  logic dest_data_avail; 
+  logic [31:0] block_reg_lock,block_reg_lock_nxt;
 
   //----------------------------------------------------------------
   // Wires.
@@ -174,6 +196,9 @@ module sha512
       digest_reg          <= '0;
       digest_valid_reg    <= '0;
       kv_reg              <= '0;
+      block_reg_lock      <= '0;
+      pcr_hash_extend_ip  <= '0;
+      hash_extend_entry   <= '0;
     end
     else if (zeroize_reg) begin
       ready_reg           <= '0;
@@ -188,8 +213,12 @@ module sha512
       if (core_digest_valid & ~digest_valid_reg & ~dest_keyvault)
         digest_reg <= core_digest & get_mask;
       if (core_digest_valid & ~digest_valid_reg & dest_keyvault)
-        kv_reg <= core_digest & get_mask;
+        kv_reg <= core_digest[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-KV_NUM_DWORDS] & get_mask[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-KV_NUM_DWORDS];
 
+      block_reg_lock <= block_reg_lock_nxt;
+      pcr_hash_extend_ip <= pcr_hash_extend_set ? '1 :
+                            pcr_hash_extend_reset ? '0 : pcr_hash_extend_ip;
+      hash_extend_entry <= pcr_hash_extend_set ? kv_read_ctrl_reg.read_entry : hash_extend_entry;
     end
   end // reg_update
 
@@ -216,6 +245,8 @@ module sha512
     next_reg = hwif_out.SHA512_CTRL.NEXT.value;
     mode_reg = hwif_out.SHA512_CTRL.MODE.value;
     zeroize_reg = hwif_out.SHA512_CTRL.ZEROIZE.value;
+    last_reg = hwif_out.SHA512_CTRL.LAST.value;
+    hwif_in.SHA512_CTRL.LAST.hwclr = core_digest_valid & ~digest_valid_reg;
 
     hwif_in.SHA512_STATUS.READY.next = ready_reg;
     hwif_in.SHA512_STATUS.VALID.next = digest_valid_reg;
@@ -231,28 +262,45 @@ module sha512
       hwif_in.SHA512_BLOCK[dword].BLOCK.we = (kv_src_write_en & (kv_src_write_offset == dword));
       hwif_in.SHA512_BLOCK[dword].BLOCK.next = kv_src_write_data;
       hwif_in.SHA512_BLOCK[dword].BLOCK.hwclr = zeroize_reg;
+      hwif_in.SHA512_BLOCK[dword].BLOCK.swwel = block_reg_lock[dword];
     end
     //Set valid when fsm is done
-    hwif_in.SHA512_KV_RD_STATUS.ERROR.next = kv_src_error;
+    hwif_in.SHA512_VAULT_RD_STATUS.ERROR.next = kv_src_error;
     hwif_in.SHA512_KV_WR_STATUS.ERROR.next = kv_dest_error;
     //Set valid when fsm is done
-    hwif_in.SHA512_KV_RD_STATUS.READY.next = kv_src_ready;
+    hwif_in.SHA512_VAULT_RD_STATUS.READY.next = kv_src_ready;
     hwif_in.SHA512_KV_WR_STATUS.READY.next = kv_dest_ready;
     //Set valid when fsm is done
-    hwif_in.SHA512_KV_RD_STATUS.VALID.hwset = kv_src_done;
+    hwif_in.SHA512_VAULT_RD_STATUS.VALID.hwset = kv_src_done;
     hwif_in.SHA512_KV_WR_STATUS.VALID.hwset = kv_dest_done;
     //reset valid when fsm is started
-    hwif_in.SHA512_KV_RD_STATUS.VALID.hwclr = kv_read_ctrl_reg.read_en;
+    hwif_in.SHA512_VAULT_RD_STATUS.VALID.hwclr = kv_read_ctrl_reg.read_en;
     hwif_in.SHA512_KV_WR_STATUS.VALID.hwclr = kv_write_ctrl_reg.write_en;
     //clear en when busy
-    hwif_in.SHA512_KV_RD_CTRL.read_en.hwclr = ~kv_src_ready;
+    hwif_in.SHA512_VAULT_RD_CTRL.read_en.hwclr = ~kv_src_ready;
     hwif_in.SHA512_KV_WR_CTRL.write_en.hwclr = ~kv_dest_ready;
 
   end
 
   `CALIPTRA_KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, SHA512_KV_WR_CTRL)
-  `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_read_ctrl_reg, SHA512_KV_RD_CTRL)
+  `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_read_ctrl_reg, SHA512_VAULT_RD_CTRL)
 
+//Hash extend logic
+  always_comb pcr_hash_extend_set = kv_read_ctrl_reg.read_en & kv_read_ctrl_reg.pcr_hash_extend;
+  always_comb pcr_hash_extend_reset = pcr_hash_extend_ip & kv_dest_done;
+
+//set the lock for the part of the block being written by KV logic during PCR hash extend
+//release the lock once init has been seen
+always_comb begin
+  for (int dword=0; dword< BLOCK_NUM_DWORDS; dword++) begin
+    if (init_reg) begin
+      block_reg_lock_nxt[dword] = '0;
+    end
+    else begin
+      block_reg_lock_nxt[dword] = (pcr_hash_extend_ip & kv_src_write_en & (kv_src_write_offset == dword)) ? '1 : block_reg_lock[dword];
+    end
+  end
+end
 
 // Register Block
 sha512_reg i_sha512_reg (
@@ -262,7 +310,7 @@ sha512_reg i_sha512_reg (
     .s_cpuif_req         (cs),
     .s_cpuif_req_is_wr   (we),
     .s_cpuif_addr        (address[SHA512_REG_ADDR_WIDTH-1:0]),
-    .s_cpuif_wr_data     (write_data                              ),
+    .s_cpuif_wr_data     (write_data),
     .s_cpuif_req_stall_wr( ),
     .s_cpuif_req_stall_rd( ),
     .s_cpuif_rd_ack      ( ),
@@ -288,6 +336,10 @@ assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
 assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
 
 //Read Block
+always_comb kv_read = ~pcr_hash_extend_ip ? vault_read : '0;
+always_comb pv_read =  pcr_hash_extend_ip ? vault_read : '0;
+always_comb vault_rd_resp = pcr_hash_extend_ip ? pv_rd_resp : kv_rd_resp;
+
 kv_read_client #(
     .DATA_WIDTH(BLOCK_SIZE),
     .PAD(1)
@@ -301,8 +353,8 @@ sha512_block_kv_read
     .read_ctrl_reg(kv_read_ctrl_reg),
 
     //interface with kv
-    .kv_read(kv_read),
-    .kv_resp(kv_rd_resp),
+    .kv_read(vault_read),
+    .kv_resp(vault_rd_resp),
 
     //interface with client
     .write_en(kv_src_write_en),
@@ -314,8 +366,29 @@ sha512_block_kv_read
     .read_done(kv_src_done)
 );
 
+
+always_comb kv_write = ~pcr_hash_extend_ip ? vault_write : '0;
+always_comb begin
+  pv_write.write_data = pcr_hash_extend_ip ? vault_write.write_data : '0;
+  pv_write.write_en = pcr_hash_extend_ip ? vault_write.write_en : '0;
+  pv_write.write_entry = pcr_hash_extend_ip ? vault_write.write_entry : '0;
+  pv_write.write_offset = pcr_hash_extend_ip ? vault_write.write_offset : '0;
+end
+always_comb vault_wr_resp = pcr_hash_extend_ip ? pv_wr_resp : kv_wr_resp;
+
+//during PCR hash extend overload write control
+//force write enable and always write to the source address that we read from
+always_comb begin
+  kv_write_ctrl_reg_q = kv_write_ctrl_reg;
+  kv_write_ctrl_reg_q.write_en = ~pcr_hash_extend_ip ? kv_write_ctrl_reg.write_en : '1;
+  kv_write_ctrl_reg_q.write_entry = ~pcr_hash_extend_ip ? kv_write_ctrl_reg.write_entry : hash_extend_entry;
+end
+
+//write out the dest data to KV or PCR on last iteration of SHA
+always_comb dest_data_avail = core_digest_valid & ~digest_valid_reg & last_reg;
+
 kv_write_client #(
-  .DATA_WIDTH(DIG_SIZE)
+  .DATA_WIDTH(384)
 )
 sha512_result_kv_write
 (
@@ -323,15 +396,15 @@ sha512_result_kv_write
   .rst_b(reset_n),
 
   //client control register
-  .write_ctrl_reg(kv_write_ctrl_reg),
+  .write_ctrl_reg(kv_write_ctrl_reg_q),
 
   //interface with kv
-  .kv_write(kv_write),
-  .kv_resp(kv_wr_resp),
+  .kv_write(vault_write),
+  .kv_resp(vault_wr_resp),
 
   //interface with client
   .dest_keyvault(dest_keyvault),
-  .dest_data_avail(core_digest_valid & ~digest_valid_reg),
+  .dest_data_avail(dest_data_avail),
   .dest_data(kv_reg),
 
   .error_code(kv_dest_error),

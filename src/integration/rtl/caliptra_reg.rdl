@@ -24,6 +24,10 @@ addrmap clp {
 
     kv_reg kv_reg @ 0x1001_8000;
 
+    pv_reg pv_reg @ 0x1001_A000;
+
+    dv_reg dv_reg @ 0x1001_C000;
+
     sha512_reg sha512_reg @ 0x1002_0000;
 
     sha256_reg sha256_reg @ 0x1002_8000;

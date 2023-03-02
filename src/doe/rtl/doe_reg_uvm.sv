@@ -31,7 +31,7 @@ package doe_reg_uvm;
             this.CMD = new("CMD");
             this.CMD.configure(this, 2, 0, "RW", 1, 'h0, 1, 1, 0);
             this.DEST = new("DEST");
-            this.DEST.configure(this, 3, 2, "RW", 0, 'h0, 1, 1, 0);
+            this.DEST.configure(this, 5, 2, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : doe_reg__DOE_CTRL
 

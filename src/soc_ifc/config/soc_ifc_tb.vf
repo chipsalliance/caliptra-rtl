@@ -2,6 +2,7 @@
 +incdir+${WORKSPACE}/Caliptra/src/soc_ifc/rtl
 +incdir+${WORKSPACE}/Caliptra/src/riscv_core/veer_el2/rtl
 +incdir+${WORKSPACE}/Caliptra/src/keyvault/rtl
++incdir+${WORKSPACE}/Caliptra/src/pcrvault/rtl
 +incdir+${WORKSPACE}/Caliptra/src/soc_ifc/tb
 +incdir+${WORKSPACE}/Caliptra/src/sha512/rtl
 ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_sva.svh
@@ -19,6 +20,8 @@ ${WORKSPACE}/Caliptra/src/riscv_core/veer_el2/rtl/include/el2_def.sv
 ${WORKSPACE}/Caliptra/src/riscv_core/veer_el2/rtl/common_defines.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_defines_pkg.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_macros.svh
+${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_defines_pkg.sv
+${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_macros.svh
 ${WORKSPACE}/Caliptra/src/soc_ifc/tb/soc_ifc_tb.sv
 ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/mbox_csr_pkg.sv
 ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/sha512_acc_csr_pkg.sv
@@ -30,6 +33,9 @@ ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_fsm.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_read_client.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_write_client.sv
+${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_reg_pkg.sv
+${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_reg.sv
+${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv.sv
 ${WORKSPACE}/Caliptra/src/sha512/rtl/sha512_reg_pkg.sv
 ${WORKSPACE}/Caliptra/src/sha512/rtl/sha512_ctrl.sv
 ${WORKSPACE}/Caliptra/src/sha512/rtl/sha512.sv

@@ -1,0 +1,4 @@
++incdir+${WORKSPACE}/Caliptra/src/pcrvault/rtl
+${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_defines_pkg.sv
+${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_macros.svh
+${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_macros.svh

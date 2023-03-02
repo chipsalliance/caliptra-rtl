@@ -63,8 +63,7 @@ void ecc_keygen_kvflow(uint8_t seed_kv_id, uint8_t privkey_kv_id, uint32_t ecc_i
 
     // Program ECC_SEED Read with 12 dwords from seed_kv_id
     lsu_write_32((uint32_t *) CLP_ECC_REG_ECC_KV_RD_SEED_CTRL, (ECC_REG_ECC_KV_RD_SEED_CTRL_READ_EN_MASK |
-                                                                ((seed_kv_id & 0x7) << ECC_REG_ECC_KV_RD_SEED_CTRL_READ_ENTRY_LOW) |
-                                                                (0xB << ECC_REG_ECC_KV_RD_SEED_CTRL_ENTRY_DATA_SIZE_LOW)));
+                                                                ((seed_kv_id & 0x7) << ECC_REG_ECC_KV_RD_SEED_CTRL_READ_ENTRY_LOW)));
 
     // Check that ECC SEED is loaded
     while((lsu_read_32((uint32_t *) CLP_ECC_REG_ECC_KV_RD_SEED_STATUS) & ECC_REG_ECC_KV_RD_SEED_STATUS_VALID_MASK) == 0);
@@ -150,8 +149,7 @@ void ecc_signing_kvflow(uint8_t privkey_kv_id, uint32_t ecc_msg[12], uint32_t ec
 
     // Program ECC_PRIVKEY Read with 12 dwords from privkey_kv_id
     lsu_write_32((uint32_t *) CLP_ECC_REG_ECC_KV_RD_PKEY_CTRL, (ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_EN_MASK |
-                                                                ((privkey_kv_id & 0x7) << ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_LOW) |
-                                                                (0xB << ECC_REG_ECC_KV_RD_PKEY_CTRL_ENTRY_DATA_SIZE_LOW)));
+                                                                ((privkey_kv_id & 0x7) << ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_LOW)));
 
     // Check that ECC PRIVKEY is loaded
     while((lsu_read_32((uint32_t *) CLP_ECC_REG_ECC_KV_RD_PKEY_STATUS) & ECC_REG_ECC_KV_RD_PKEY_STATUS_VALID_MASK) == 0);

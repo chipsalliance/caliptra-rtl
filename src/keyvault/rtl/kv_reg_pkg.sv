@@ -4,12 +4,10 @@
 package kv_reg_pkg;
     typedef struct packed{
         logic swwel;
-        logic hwclr;
     } kv_reg__kvCtrl__lock_wr__in_t;
 
     typedef struct packed{
         logic swwel;
-        logic hwclr;
     } kv_reg__kvCtrl__lock_use__in_t;
 
     typedef struct packed{
@@ -23,22 +21,18 @@ package kv_reg_pkg;
     } kv_reg__kvCtrl__dest_valid__in_t;
 
     typedef struct packed{
+        logic [3:0] next;
+        logic we;
+        logic hwclr;
+    } kv_reg__kvCtrl__last_dword__in_t;
+
+    typedef struct packed{
         kv_reg__kvCtrl__lock_wr__in_t lock_wr;
         kv_reg__kvCtrl__lock_use__in_t lock_use;
         kv_reg__kvCtrl__rsvd0__in_t rsvd0;
         kv_reg__kvCtrl__dest_valid__in_t dest_valid;
+        kv_reg__kvCtrl__last_dword__in_t last_dword;
     } kv_reg__kvCtrl__in_t;
-
-    typedef struct packed{
-        logic [31:0] next;
-        logic we;
-        logic swwel;
-        logic hwclr;
-    } kv_reg__pcr_w32__in_t;
-
-    typedef struct packed{
-        kv_reg__pcr_w32__in_t data;
-    } kv_reg__pcrReg__in_t;
 
     typedef struct packed{
         logic [31:0] next;
@@ -52,85 +46,11 @@ package kv_reg_pkg;
     } kv_reg__keyReg__in_t;
 
     typedef struct packed{
-        logic swwel;
-    } kv_reg__StickyDataVaultCtrl__lock_entry__in_t;
-
-    typedef struct packed{
-        kv_reg__StickyDataVaultCtrl__lock_entry__in_t lock_entry;
-    } kv_reg__StickyDataVaultCtrl__in_t;
-
-    typedef struct packed{
-        logic swwel;
-    } kv_reg__NonStickyDataVaultCtrl__lock_entry__in_t;
-
-    typedef struct packed{
-        kv_reg__NonStickyDataVaultCtrl__lock_entry__in_t lock_entry;
-    } kv_reg__NonStickyDataVaultCtrl__in_t;
-
-    typedef struct packed{
-        logic swwel;
-    } kv_reg__NonStickyLockableScratchRegCtrl__lock_entry__in_t;
-
-    typedef struct packed{
-        kv_reg__NonStickyLockableScratchRegCtrl__lock_entry__in_t lock_entry;
-    } kv_reg__NonStickyLockableScratchRegCtrl__in_t;
-
-    typedef struct packed{
-        logic swwel;
-    } kv_reg__StickyDataVaultEntry_w32__in_t;
-
-    typedef struct packed{
-        kv_reg__StickyDataVaultEntry_w32__in_t data;
-    } kv_reg__StickyDataVaultReg__in_t;
-
-    typedef struct packed{
-        logic swwel;
-    } kv_reg__NonStickyDataVaultEntry_w32__in_t;
-
-    typedef struct packed{
-        kv_reg__NonStickyDataVaultEntry_w32__in_t data;
-    } kv_reg__NonStickyDataVaultReg__in_t;
-
-    typedef struct packed{
-        logic swwel;
-    } kv_reg__NonStickyLockableScratchReg__data__in_t;
-
-    typedef struct packed{
-        kv_reg__NonStickyLockableScratchReg__data__in_t data;
-    } kv_reg__NonStickyLockableScratchReg__in_t;
-
-    typedef struct packed{
-        logic swwel;
-    } kv_reg__StickyLockableScratchRegCtrl__lock_entry__in_t;
-
-    typedef struct packed{
-        kv_reg__StickyLockableScratchRegCtrl__lock_entry__in_t lock_entry;
-    } kv_reg__StickyLockableScratchRegCtrl__in_t;
-
-    typedef struct packed{
-        logic swwel;
-    } kv_reg__StickyLockableScratchReg__data__in_t;
-
-    typedef struct packed{
-        kv_reg__StickyLockableScratchReg__data__in_t data;
-    } kv_reg__StickyLockableScratchReg__in_t;
-
-    typedef struct packed{
         logic reset_b;
         logic core_only_rst_b;
         logic hard_reset_b;
-        kv_reg__kvCtrl__in_t [8-1:0]PCR_CTRL;
-        kv_reg__pcrReg__in_t [8-1:0][16-1:0]PCR_ENTRY;
-        kv_reg__kvCtrl__in_t [8-1:0]KEY_CTRL;
-        kv_reg__keyReg__in_t [8-1:0][16-1:0]KEY_ENTRY;
-        kv_reg__StickyDataVaultCtrl__in_t [10-1:0]StickyDataVaultCtrl;
-        kv_reg__NonStickyDataVaultCtrl__in_t [10-1:0]NonStickyDataVaultCtrl;
-        kv_reg__NonStickyLockableScratchRegCtrl__in_t [10-1:0]NonStickyLockableScratchRegCtrl;
-        kv_reg__StickyDataVaultReg__in_t [10-1:0][12-1:0]STICKY_DATA_VAULT_ENTRY;
-        kv_reg__NonStickyDataVaultReg__in_t [10-1:0][12-1:0]NONSTICKY_DATA_VAULT_ENTRY;
-        kv_reg__NonStickyLockableScratchReg__in_t [10-1:0]NonStickyLockableScratchReg;
-        kv_reg__StickyLockableScratchRegCtrl__in_t [8-1:0]StickyLockableScratchRegCtrl;
-        kv_reg__StickyLockableScratchReg__in_t [8-1:0]StickyLockableScratchReg;
+        kv_reg__kvCtrl__in_t [32-1:0]KEY_CTRL;
+        kv_reg__keyReg__in_t [32-1:0][12-1:0]KEY_ENTRY;
     } kv_reg__in_t;
 
     typedef struct packed{
@@ -150,12 +70,16 @@ package kv_reg_pkg;
     } kv_reg__kvCtrl__rsvd0__out_t;
 
     typedef struct packed{
-        logic [3:0] value;
+        logic [4:0] value;
     } kv_reg__kvCtrl__rsvd1__out_t;
 
     typedef struct packed{
         logic [5:0] value;
     } kv_reg__kvCtrl__dest_valid__out_t;
+
+    typedef struct packed{
+        logic [3:0] value;
+    } kv_reg__kvCtrl__last_dword__out_t;
 
     typedef struct packed{
         kv_reg__kvCtrl__lock_wr__out_t lock_wr;
@@ -164,15 +88,8 @@ package kv_reg_pkg;
         kv_reg__kvCtrl__rsvd0__out_t rsvd0;
         kv_reg__kvCtrl__rsvd1__out_t rsvd1;
         kv_reg__kvCtrl__dest_valid__out_t dest_valid;
+        kv_reg__kvCtrl__last_dword__out_t last_dword;
     } kv_reg__kvCtrl__out_t;
-
-    typedef struct packed{
-        logic [31:0] value;
-    } kv_reg__pcr_w32__out_t;
-
-    typedef struct packed{
-        kv_reg__pcr_w32__out_t data;
-    } kv_reg__pcrReg__out_t;
 
     typedef struct packed{
         logic [31:0] value;
@@ -196,47 +113,9 @@ package kv_reg_pkg;
     } kv_reg__CLEAR_SECRETS__out_t;
 
     typedef struct packed{
-        logic value;
-    } kv_reg__StickyDataVaultCtrl__lock_entry__out_t;
-
-    typedef struct packed{
-        kv_reg__StickyDataVaultCtrl__lock_entry__out_t lock_entry;
-    } kv_reg__StickyDataVaultCtrl__out_t;
-
-    typedef struct packed{
-        logic value;
-    } kv_reg__NonStickyDataVaultCtrl__lock_entry__out_t;
-
-    typedef struct packed{
-        kv_reg__NonStickyDataVaultCtrl__lock_entry__out_t lock_entry;
-    } kv_reg__NonStickyDataVaultCtrl__out_t;
-
-    typedef struct packed{
-        logic value;
-    } kv_reg__NonStickyLockableScratchRegCtrl__lock_entry__out_t;
-
-    typedef struct packed{
-        kv_reg__NonStickyLockableScratchRegCtrl__lock_entry__out_t lock_entry;
-    } kv_reg__NonStickyLockableScratchRegCtrl__out_t;
-
-    typedef struct packed{
-        logic value;
-    } kv_reg__StickyLockableScratchRegCtrl__lock_entry__out_t;
-
-    typedef struct packed{
-        kv_reg__StickyLockableScratchRegCtrl__lock_entry__out_t lock_entry;
-    } kv_reg__StickyLockableScratchRegCtrl__out_t;
-
-    typedef struct packed{
-        kv_reg__kvCtrl__out_t [8-1:0]PCR_CTRL;
-        kv_reg__pcrReg__out_t [8-1:0][16-1:0]PCR_ENTRY;
-        kv_reg__kvCtrl__out_t [8-1:0]KEY_CTRL;
-        kv_reg__keyReg__out_t [8-1:0][16-1:0]KEY_ENTRY;
+        kv_reg__kvCtrl__out_t [32-1:0]KEY_CTRL;
+        kv_reg__keyReg__out_t [32-1:0][12-1:0]KEY_ENTRY;
         kv_reg__CLEAR_SECRETS__out_t CLEAR_SECRETS;
-        kv_reg__StickyDataVaultCtrl__out_t [10-1:0]StickyDataVaultCtrl;
-        kv_reg__NonStickyDataVaultCtrl__out_t [10-1:0]NonStickyDataVaultCtrl;
-        kv_reg__NonStickyLockableScratchRegCtrl__out_t [10-1:0]NonStickyLockableScratchRegCtrl;
-        kv_reg__StickyLockableScratchRegCtrl__out_t [8-1:0]StickyLockableScratchRegCtrl;
     } kv_reg__out_t;
 
     localparam KV_REG_ADDR_WIDTH = 32'd12;

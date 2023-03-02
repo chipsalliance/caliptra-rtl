@@ -15,6 +15,8 @@
 #
 
 python tools/scripts/reg_gen.py src/keyvault/rtl/kv_reg.rdl
+python tools/scripts/reg_gen.py src/pcrvault/rtl/pv_reg.rdl
+python tools/scripts/reg_gen.py src/datavault/rtl/dv_reg.rdl
 python tools/scripts/reg_gen.py src/ecc/rtl/ecc_reg.rdl
 python tools/scripts/reg_gen.py src/sha512/rtl/sha512_reg.rdl
 python tools/scripts/reg_gen.py src/sha256/rtl/sha256_reg.rdl

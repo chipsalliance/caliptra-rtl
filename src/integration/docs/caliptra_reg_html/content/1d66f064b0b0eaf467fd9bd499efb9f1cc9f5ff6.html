@@ -27,17 +27,8 @@
         <th>Name</th>
         <th></th>
     </tr>
-    <tr class="reserved-field">
-    <td>[31:30]</td>
-    <td>-</td>
-    <td>-</td>
-    <td>-</td>
-    <td></td>
-    <td>-</td>
-    <td></td>
-</tr>
     <tr id="rsvd">
-        <td>[29:10]</td>
+        <td>[31:7]</td>
         <td><a href="#rsvd.desc">rsvd</a></td>
         <td>
             <span title='Readable and Writable'>rw</span></td>
@@ -56,48 +47,28 @@
             <a class="headerlink" href="#rsvd" title="Permalink to this row"></a>
         </td>
     </tr>
-    <tr id="entry_data_size">
-        <td>[9:5]</td>
-        <td><a href="#entry_data_size.desc">entry_data_size</a></td>
+    <tr id="pcr_hash_extend">
+        <td>[6]</td>
+        <td><a href="#pcr_hash_extend.desc">pcr_hash_extend</a></td>
         <td>
             <span title='Readable and Writable'>rw</span></td>
         <td>0x0
         </td>
         <td>
-            <input id="_FieldValueTesterentry_data_size" class="field-value-tester"
+            <input id="_FieldValueTesterpcr_hash_extend" class="field-value-tester"
                 type="text" autocomplete="off"
-                data-name="entry_data_size" oninput="onDecodedFieldInput(this)"/>
+                data-name="pcr_hash_extend" oninput="onDecodedFieldInput(this)"/>
         </td>
         <td>-</td>
         <td>
-            <button type="button" id="_RadixButtonentry_data_size" class="radix-button"
+            <button type="button" id="_RadixButtonpcr_hash_extend" class="radix-button"
                 title="Switch radix" aria-label="Switch radix"
-                data-name="entry_data_size" onclick="onRadixSwitch(this)">H</button>
-            <a class="headerlink" href="#entry_data_size" title="Permalink to this row"></a>
-        </td>
-    </tr>
-    <tr id="entry_is_pcr">
-        <td>[4]</td>
-        <td><a href="#entry_is_pcr.desc">entry_is_pcr</a></td>
-        <td>
-            <span title='Readable and Writable'>rw</span></td>
-        <td>0x0
-        </td>
-        <td>
-            <input id="_FieldValueTesterentry_is_pcr" class="field-value-tester"
-                type="text" autocomplete="off"
-                data-name="entry_is_pcr" oninput="onDecodedFieldInput(this)"/>
-        </td>
-        <td>-</td>
-        <td>
-            <button type="button" id="_RadixButtonentry_is_pcr" class="radix-button"
-                title="Switch radix" aria-label="Switch radix"
-                data-name="entry_is_pcr" onclick="onRadixSwitch(this)">H</button>
-            <a class="headerlink" href="#entry_is_pcr" title="Permalink to this row"></a>
+                data-name="pcr_hash_extend" onclick="onRadixSwitch(this)">H</button>
+            <a class="headerlink" href="#pcr_hash_extend" title="Permalink to this row"></a>
         </td>
     </tr>
     <tr id="read_entry">
-        <td>[3:1]</td>
+        <td>[5:1]</td>
         <td><a href="#read_entry.desc">read_entry</a></td>
         <td>
             <span title='Readable and Writable'>rw</span></td>
@@ -153,25 +124,11 @@
 <p>Reserved field</p>
 </div>
 
-<h3 id="entry_data_size.desc">entry_data_size
-    <a class="headerlink" href="#entry_data_size.desc" title="Permalink to this headline"></a>
+<h3 id="pcr_hash_extend.desc">pcr_hash_extend
+    <a class="headerlink" href="#pcr_hash_extend.desc" title="Permalink to this headline"></a>
 </h3>
-<div id="_Content.entry_data_size.desc">
-<p>Size of the source data for SHA512 and HMAC384 Block only.
-This field is ignored for all other reads.
-Size is encoded as N-1 dwords.
-KV flow will pad the 1024 Block data and append the length for values 0-26.
-All 0 data and Length must be appended in the next Block for values 27-31.</p>
-<p>5'd7 - 256b of data</p>
-<p>5'd11 - 384b of data</p>
-<p>5'd15 - 512b of data</p>
-</div>
-
-<h3 id="entry_is_pcr.desc">entry_is_pcr
-    <a class="headerlink" href="#entry_is_pcr.desc" title="Permalink to this headline"></a>
-</h3>
-<div id="_Content.entry_is_pcr.desc">
-<p>Entry selected is a PCR slot</p>
+<div id="_Content.pcr_hash_extend.desc">
+<p>Requested entry is a PCR. This is used only for SHA to hash extend, it's NOP in all other engines</p>
 </div>
 
 <h3 id="read_entry.desc">read_entry

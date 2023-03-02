@@ -4,6 +4,7 @@ schema_version: 2.4.0
 requires:
   - libs
   - keyvault
+  - pcrvault
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]

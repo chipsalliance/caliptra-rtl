@@ -17,24 +17,15 @@
 
 package kv_defines_pkg;
 
-parameter KV_NUM_DWORDS = 16; //number of dwords per key
-parameter KV_NUM_KEYS = 8;
-parameter KV_NUM_PCR = 8;
-parameter KV_ADDR_W = 15;
+parameter KV_NUM_DWORDS = 12; //number of dwords per key
+parameter KV_NUM_KEYS = 32;
+parameter KV_ADDR_W = 13;
 parameter KV_DATA_W = 32;
-parameter MAX_KV_MACRO_ENTRIES= (KV_NUM_PCR > KV_NUM_KEYS) ? KV_NUM_PCR : KV_NUM_KEYS; 
-parameter KV_MACRO_ENTRY_ADDRESS_WIDTH = $clog2(MAX_KV_MACRO_ENTRIES);
-parameter KV_ENTRY_SIZE = 512;
-parameter KV_ENTRY_SIZE_WIDTH = $clog2(KV_NUM_DWORDS);
+parameter KV_ENTRY_ADDR_W = $clog2(KV_NUM_KEYS);
+parameter KV_ENTRY_SIZE_W = $clog2(KV_NUM_DWORDS);
 parameter KV_NUM_READ=6;
 parameter KV_NUM_WRITE=4;
 
-parameter STICKY_DV_NUM_ENTRIES = 10;
-parameter NONSTICKY_DV_NUM_ENTRIES = 10;
-parameter NONSTICKY_LOCKQ_SCRATCH_NUM_ENTRIES = 10;
-parameter STICKY_LOCKQ_SCRATCH_NUM_ENTRIES = 8;
-parameter NONSTICKY_SCRATCH_NUM_ENTRIES = 8;
-parameter DV_NUM_DWORDS = 12;
 
 typedef struct packed {
     logic   [KV_ADDR_W-1:0] addr;
@@ -43,18 +34,16 @@ typedef struct packed {
 } kv_uc_req_t;
 
 typedef struct packed {
-    logic                                       entry_is_pcr;
-    logic   [KV_MACRO_ENTRY_ADDRESS_WIDTH-1:0]  read_entry;
-    logic   [KV_ENTRY_SIZE_WIDTH-1:0]           read_offset;
+    logic   [KV_ENTRY_ADDR_W-1:0] read_entry;
+    logic   [KV_ENTRY_SIZE_W-1:0] read_offset;
 } kv_read_t;
 
 typedef struct packed {
-    logic                                       write_en;
-    logic                                       entry_is_pcr;
-    logic   [KV_MACRO_ENTRY_ADDRESS_WIDTH-1:0]  write_entry;
-    logic   [KV_ENTRY_SIZE_WIDTH-1:0]           write_offset;
-    logic   [KV_DATA_W-1:0]                     write_data;
-    logic   [KV_NUM_READ-1:0]                   write_dest_valid;
+    logic                         write_en;
+    logic   [KV_ENTRY_ADDR_W-1:0] write_entry;
+    logic   [KV_ENTRY_SIZE_W-1:0] write_offset;
+    logic   [KV_DATA_W-1:0]       write_data;
+    logic   [KV_NUM_READ-1:0]     write_dest_valid;
 } kv_write_t;
 
 typedef struct packed {
@@ -63,44 +52,25 @@ typedef struct packed {
 
 typedef struct packed {
     logic                   error;
+    logic                   last;
     logic   [KV_DATA_W-1:0] read_data;
 } kv_rd_resp_t;
 
-typedef struct packed {
-    logic dest_done;
-    logic src_done;
-    logic key_done;
-    logic [1:0] rsvd1;
-    logic [2:0] dest_valid;
-    logic [2:0] rsvd_dest_sel;
-    logic dest_sel_pcr;
-    logic [2:0] dest_sel;
-    logic dest_sel_en;
-    logic [2:0] src_data_size;
-    logic src_sel_pcr;
-    logic [2:0] src_sel;
-    logic src_sel_en;
-    logic [2:0] rsvd_key_sel;
-    logic key_sel_pcr;
-    logic [2:0] key_sel;
-    logic key_sel_en;
-} kv_reg_t;
-
 //control register for KV reads
+localparam KV_READ_CTRL_RSVD_MSB = 32 - KV_ENTRY_SIZE_W - 1 - 1;
 typedef struct packed {
-    logic [21:0] rsvd;
-    logic [4:0] entry_data_size; //FIXME
-    logic entry_is_pcr;
-    logic [KV_MACRO_ENTRY_ADDRESS_WIDTH-1:0] read_entry;
+    logic [KV_READ_CTRL_RSVD_MSB:0] rsvd;
+    logic [KV_ENTRY_ADDR_W-1:0] read_entry;
+    logic pcr_hash_extend;
     logic read_en;
 } kv_read_ctrl_reg_t;
 
 //control register for KV writes
+localparam KV_WRITE_CTRL_RSVD_MSB = 32 - KV_NUM_READ - KV_ENTRY_ADDR_W - 1;
 typedef struct packed {
-    logic [20:0] rsvd; //FIXME 
+    logic [KV_WRITE_CTRL_RSVD_MSB:0] rsvd;
     logic [KV_NUM_READ-1:0] write_dest_vld;
-    logic entry_is_pcr;
-    logic [KV_MACRO_ENTRY_ADDRESS_WIDTH-1:0] write_entry;
+    logic [KV_ENTRY_ADDR_W-1:0] write_entry;
     logic write_en;
 } kv_write_ctrl_reg_t;
 

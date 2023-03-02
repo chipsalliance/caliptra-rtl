@@ -12,7 +12,7 @@ package kv_reg_uvm;
         rand uvm_reg_field rsvd0;
         rand uvm_reg_field rsvd1;
         rand uvm_reg_field dest_valid;
-        rand uvm_reg_field rsvd;
+        rand uvm_reg_field last_dword;
 
         function new(string name = "kv_reg__kvCtrl");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -20,35 +20,21 @@ package kv_reg_uvm;
 
         virtual function void build();
             this.lock_wr = new("lock_wr");
-            this.lock_wr.configure(this, 1, 0, "RW", 1, 'h0, 1, 1, 0);
+            this.lock_wr.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
             this.lock_use = new("lock_use");
-            this.lock_use.configure(this, 1, 1, "RW", 1, 'h0, 1, 1, 0);
+            this.lock_use.configure(this, 1, 1, "RW", 0, 'h0, 1, 1, 0);
             this.clear = new("clear");
             this.clear.configure(this, 1, 2, "RW", 0, 'h0, 1, 1, 0);
             this.rsvd0 = new("rsvd0");
-            this.rsvd0.configure(this, 1, 3, "RW", 1, 'h0, 0, 1, 0);
+            this.rsvd0.configure(this, 1, 3, "RW", 1, 'h0, 1, 1, 0);
             this.rsvd1 = new("rsvd1");
-            this.rsvd1.configure(this, 4, 4, "RW", 0, 'h0, 0, 1, 0);
+            this.rsvd1.configure(this, 5, 4, "RW", 0, 'h0, 1, 1, 0);
             this.dest_valid = new("dest_valid");
-            this.dest_valid.configure(this, 6, 8, "RO", 1, 'h0, 1, 1, 0);
-            this.rsvd = new("rsvd");
-            this.rsvd.configure(this, 18, 14, "RW", 0, 'h0, 1, 1, 0);
+            this.dest_valid.configure(this, 6, 9, "RO", 1, 'h0, 1, 1, 0);
+            this.last_dword = new("last_dword");
+            this.last_dword.configure(this, 4, 15, "RO", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : kv_reg__kvCtrl
-
-    // Reg - kv_reg::pcrReg
-    class kv_reg__pcrReg extends uvm_reg;
-        rand uvm_reg_field data;
-
-        function new(string name = "kv_reg__pcrReg");
-            super.new(name, 32, UVM_NO_COVERAGE);
-        endfunction : new
-
-        virtual function void build();
-            this.data = new("data");
-            this.data.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
-        endfunction : build
-    endclass : kv_reg__pcrReg
 
     // Reg - kv_reg::keyReg
     class kv_reg__keyReg extends uvm_reg;
@@ -81,148 +67,11 @@ package kv_reg_uvm;
         endfunction : build
     endclass : kv_reg__CLEAR_SECRETS
 
-    // Reg - kv_reg::StickyDataVaultCtrl
-    class kv_reg__StickyDataVaultCtrl extends uvm_reg;
-        rand uvm_reg_field lock_entry;
-
-        function new(string name = "kv_reg__StickyDataVaultCtrl");
-            super.new(name, 32, UVM_NO_COVERAGE);
-        endfunction : new
-
-        virtual function void build();
-            this.lock_entry = new("lock_entry");
-            this.lock_entry.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
-        endfunction : build
-    endclass : kv_reg__StickyDataVaultCtrl
-
-    // Reg - kv_reg::NonStickyDataVaultCtrl
-    class kv_reg__NonStickyDataVaultCtrl extends uvm_reg;
-        rand uvm_reg_field lock_entry;
-
-        function new(string name = "kv_reg__NonStickyDataVaultCtrl");
-            super.new(name, 32, UVM_NO_COVERAGE);
-        endfunction : new
-
-        virtual function void build();
-            this.lock_entry = new("lock_entry");
-            this.lock_entry.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
-        endfunction : build
-    endclass : kv_reg__NonStickyDataVaultCtrl
-
-    // Reg - kv_reg::NonStickyLockableScratchRegCtrl
-    class kv_reg__NonStickyLockableScratchRegCtrl extends uvm_reg;
-        rand uvm_reg_field lock_entry;
-
-        function new(string name = "kv_reg__NonStickyLockableScratchRegCtrl");
-            super.new(name, 32, UVM_NO_COVERAGE);
-        endfunction : new
-
-        virtual function void build();
-            this.lock_entry = new("lock_entry");
-            this.lock_entry.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
-        endfunction : build
-    endclass : kv_reg__NonStickyLockableScratchRegCtrl
-
-    // Reg - kv_reg::StickyDataVaultReg
-    class kv_reg__StickyDataVaultReg extends uvm_reg;
-        rand uvm_reg_field data;
-
-        function new(string name = "kv_reg__StickyDataVaultReg");
-            super.new(name, 32, UVM_NO_COVERAGE);
-        endfunction : new
-
-        virtual function void build();
-            this.data = new("data");
-            this.data.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
-        endfunction : build
-    endclass : kv_reg__StickyDataVaultReg
-
-    // Reg - kv_reg::NonStickyDataVaultReg
-    class kv_reg__NonStickyDataVaultReg extends uvm_reg;
-        rand uvm_reg_field data;
-
-        function new(string name = "kv_reg__NonStickyDataVaultReg");
-            super.new(name, 32, UVM_NO_COVERAGE);
-        endfunction : new
-
-        virtual function void build();
-            this.data = new("data");
-            this.data.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
-        endfunction : build
-    endclass : kv_reg__NonStickyDataVaultReg
-
-    // Reg - kv_reg::NonStickyLockableScratchReg
-    class kv_reg__NonStickyLockableScratchReg extends uvm_reg;
-        rand uvm_reg_field data;
-
-        function new(string name = "kv_reg__NonStickyLockableScratchReg");
-            super.new(name, 32, UVM_NO_COVERAGE);
-        endfunction : new
-
-        virtual function void build();
-            this.data = new("data");
-            this.data.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
-        endfunction : build
-    endclass : kv_reg__NonStickyLockableScratchReg
-
-    // Reg - kv_reg::NonStickyGenericScratchReg
-    class kv_reg__NonStickyGenericScratchReg extends uvm_reg;
-        rand uvm_reg_field data;
-
-        function new(string name = "kv_reg__NonStickyGenericScratchReg");
-            super.new(name, 32, UVM_NO_COVERAGE);
-        endfunction : new
-
-        virtual function void build();
-            this.data = new("data");
-            this.data.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
-        endfunction : build
-    endclass : kv_reg__NonStickyGenericScratchReg
-
-    // Reg - kv_reg::StickyLockableScratchRegCtrl
-    class kv_reg__StickyLockableScratchRegCtrl extends uvm_reg;
-        rand uvm_reg_field lock_entry;
-
-        function new(string name = "kv_reg__StickyLockableScratchRegCtrl");
-            super.new(name, 32, UVM_NO_COVERAGE);
-        endfunction : new
-
-        virtual function void build();
-            this.lock_entry = new("lock_entry");
-            this.lock_entry.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
-        endfunction : build
-    endclass : kv_reg__StickyLockableScratchRegCtrl
-
-    // Reg - kv_reg::StickyLockableScratchReg
-    class kv_reg__StickyLockableScratchReg extends uvm_reg;
-        rand uvm_reg_field data;
-
-        function new(string name = "kv_reg__StickyLockableScratchReg");
-            super.new(name, 32, UVM_NO_COVERAGE);
-        endfunction : new
-
-        virtual function void build();
-            this.data = new("data");
-            this.data.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
-        endfunction : build
-    endclass : kv_reg__StickyLockableScratchReg
-
     // Addrmap - kv_reg
     class kv_reg extends uvm_reg_block;
-        rand kv_reg__kvCtrl PCR_CTRL[8];
-        rand kv_reg__pcrReg PCR_ENTRY[8][16];
-        rand kv_reg__kvCtrl KEY_CTRL[8];
-        rand kv_reg__keyReg KEY_ENTRY[8][16];
+        rand kv_reg__kvCtrl KEY_CTRL[32];
+        rand kv_reg__keyReg KEY_ENTRY[32][12];
         rand kv_reg__CLEAR_SECRETS CLEAR_SECRETS;
-        rand kv_reg__StickyDataVaultCtrl StickyDataVaultCtrl[10];
-        rand kv_reg__NonStickyDataVaultCtrl NonStickyDataVaultCtrl[10];
-        rand kv_reg__NonStickyLockableScratchRegCtrl NonStickyLockableScratchRegCtrl[10];
-        rand kv_reg__StickyDataVaultReg STICKY_DATA_VAULT_ENTRY[10][12];
-        rand kv_reg__NonStickyDataVaultReg NONSTICKY_DATA_VAULT_ENTRY[10][12];
-        rand kv_reg__NonStickyLockableScratchReg NonStickyLockableScratchReg[10];
-        rand kv_reg__NonStickyGenericScratchReg NonStickyGenericScratchReg[8];
-        rand kv_reg__StickyLockableScratchRegCtrl StickyLockableScratchRegCtrl[8];
-        rand kv_reg__StickyLockableScratchReg StickyLockableScratchReg[8];
 
         function new(string name = "kv_reg");
             super.new(name);
@@ -230,102 +79,25 @@ package kv_reg_uvm;
 
         virtual function void build();
             this.default_map = create_map("reg_map", 0, 4, UVM_NO_ENDIAN);
-            foreach(this.PCR_CTRL[i0]) begin
-                this.PCR_CTRL[i0] = new($sformatf("PCR_CTRL[%0d]", i0));
-                this.PCR_CTRL[i0].configure(this);
-                
-                this.PCR_CTRL[i0].build();
-                this.default_map.add_reg(this.PCR_CTRL[i0], 'h0 + i0*'h4);
-            end
-            foreach(this.PCR_ENTRY[i0, i1]) begin
-                this.PCR_ENTRY[i0][i1] = new($sformatf("PCR_ENTRY[%0d][%0d]", i0, i1));
-                this.PCR_ENTRY[i0][i1].configure(this);
-                
-                this.PCR_ENTRY[i0][i1].build();
-                this.default_map.add_reg(this.PCR_ENTRY[i0][i1], 'h200 + i0*'h40 + i1*'h4);
-            end
             foreach(this.KEY_CTRL[i0]) begin
                 this.KEY_CTRL[i0] = new($sformatf("KEY_CTRL[%0d]", i0));
                 this.KEY_CTRL[i0].configure(this);
                 
                 this.KEY_CTRL[i0].build();
-                this.default_map.add_reg(this.KEY_CTRL[i0], 'h400 + i0*'h4);
+                this.default_map.add_reg(this.KEY_CTRL[i0], 'h0 + i0*'h4);
             end
             foreach(this.KEY_ENTRY[i0, i1]) begin
                 this.KEY_ENTRY[i0][i1] = new($sformatf("KEY_ENTRY[%0d][%0d]", i0, i1));
                 this.KEY_ENTRY[i0][i1].configure(this);
                 
                 this.KEY_ENTRY[i0][i1].build();
-                this.default_map.add_reg(this.KEY_ENTRY[i0][i1], 'h600 + i0*'h40 + i1*'h4);
+                this.default_map.add_reg(this.KEY_ENTRY[i0][i1], 'h600 + i0*'h30 + i1*'h4);
             end
             this.CLEAR_SECRETS = new("CLEAR_SECRETS");
             this.CLEAR_SECRETS.configure(this);
 
             this.CLEAR_SECRETS.build();
-            this.default_map.add_reg(this.CLEAR_SECRETS, 'h800);
-            foreach(this.StickyDataVaultCtrl[i0]) begin
-                this.StickyDataVaultCtrl[i0] = new($sformatf("StickyDataVaultCtrl[%0d]", i0));
-                this.StickyDataVaultCtrl[i0].configure(this);
-                
-                this.StickyDataVaultCtrl[i0].build();
-                this.default_map.add_reg(this.StickyDataVaultCtrl[i0], 'h804 + i0*'h4);
-            end
-            foreach(this.NonStickyDataVaultCtrl[i0]) begin
-                this.NonStickyDataVaultCtrl[i0] = new($sformatf("NonStickyDataVaultCtrl[%0d]", i0));
-                this.NonStickyDataVaultCtrl[i0].configure(this);
-                
-                this.NonStickyDataVaultCtrl[i0].build();
-                this.default_map.add_reg(this.NonStickyDataVaultCtrl[i0], 'h82c + i0*'h4);
-            end
-            foreach(this.NonStickyLockableScratchRegCtrl[i0]) begin
-                this.NonStickyLockableScratchRegCtrl[i0] = new($sformatf("NonStickyLockableScratchRegCtrl[%0d]", i0));
-                this.NonStickyLockableScratchRegCtrl[i0].configure(this);
-                
-                this.NonStickyLockableScratchRegCtrl[i0].build();
-                this.default_map.add_reg(this.NonStickyLockableScratchRegCtrl[i0], 'h854 + i0*'h4);
-            end
-            foreach(this.STICKY_DATA_VAULT_ENTRY[i0, i1]) begin
-                this.STICKY_DATA_VAULT_ENTRY[i0][i1] = new($sformatf("STICKY_DATA_VAULT_ENTRY[%0d][%0d]", i0, i1));
-                this.STICKY_DATA_VAULT_ENTRY[i0][i1].configure(this);
-                
-                this.STICKY_DATA_VAULT_ENTRY[i0][i1].build();
-                this.default_map.add_reg(this.STICKY_DATA_VAULT_ENTRY[i0][i1], 'h900 + i0*'h30 + i1*'h4);
-            end
-            foreach(this.NONSTICKY_DATA_VAULT_ENTRY[i0, i1]) begin
-                this.NONSTICKY_DATA_VAULT_ENTRY[i0][i1] = new($sformatf("NONSTICKY_DATA_VAULT_ENTRY[%0d][%0d]", i0, i1));
-                this.NONSTICKY_DATA_VAULT_ENTRY[i0][i1].configure(this);
-                
-                this.NONSTICKY_DATA_VAULT_ENTRY[i0][i1].build();
-                this.default_map.add_reg(this.NONSTICKY_DATA_VAULT_ENTRY[i0][i1], 'hc00 + i0*'h30 + i1*'h4);
-            end
-            foreach(this.NonStickyLockableScratchReg[i0]) begin
-                this.NonStickyLockableScratchReg[i0] = new($sformatf("NonStickyLockableScratchReg[%0d]", i0));
-                this.NonStickyLockableScratchReg[i0].configure(this);
-                
-                this.NonStickyLockableScratchReg[i0].build();
-                this.default_map.add_reg(this.NonStickyLockableScratchReg[i0], 'hf00 + i0*'h4);
-            end
-            foreach(this.NonStickyGenericScratchReg[i0]) begin
-                this.NonStickyGenericScratchReg[i0] = new($sformatf("NonStickyGenericScratchReg[%0d]", i0));
-                this.NonStickyGenericScratchReg[i0].configure(this);
-                
-                this.NonStickyGenericScratchReg[i0].build();
-                this.default_map.add_reg(this.NonStickyGenericScratchReg[i0], 'hf28 + i0*'h4);
-            end
-            foreach(this.StickyLockableScratchRegCtrl[i0]) begin
-                this.StickyLockableScratchRegCtrl[i0] = new($sformatf("StickyLockableScratchRegCtrl[%0d]", i0));
-                this.StickyLockableScratchRegCtrl[i0].configure(this);
-                
-                this.StickyLockableScratchRegCtrl[i0].build();
-                this.default_map.add_reg(this.StickyLockableScratchRegCtrl[i0], 'hf48 + i0*'h4);
-            end
-            foreach(this.StickyLockableScratchReg[i0]) begin
-                this.StickyLockableScratchReg[i0] = new($sformatf("StickyLockableScratchReg[%0d]", i0));
-                this.StickyLockableScratchReg[i0].configure(this);
-                
-                this.StickyLockableScratchReg[i0].build();
-                this.default_map.add_reg(this.StickyLockableScratchReg[i0], 'hf68 + i0*'h4);
-            end
+            this.default_map.add_reg(this.CLEAR_SECRETS, 'hc00);
         endfunction : build
     endclass : kv_reg
 

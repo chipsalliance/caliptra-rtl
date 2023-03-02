@@ -1,0 +1,3 @@
++incdir+${WORKSPACE}/Caliptra/src/datavault/rtl
+${WORKSPACE}/Caliptra/src/datavault/rtl/dv_defines_pkg.sv
+${WORKSPACE}/Caliptra/src/datavault/rtl/dv_defines_pkg.sv

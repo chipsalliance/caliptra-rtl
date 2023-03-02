@@ -7,11 +7,11 @@
 <dl class="node-info">
     <dt>Absolute Address:</dt><dd id="_AbsAddr" class="address"></dd>
     <div id="_AbsAddrDetails"></div>
-    <dt>Base Offset:</dt><dd class="address">0x400</dd>
+    <dt>Base Offset:</dt><dd class="address">0x0</dd>
     <dt>Size:</dt><dd class="address">0x4</dd>
-    <dt>Array Dimensions:</dt><dd>[8]</dd>
+    <dt>Array Dimensions:</dt><dd>[32]</dd>
     <dt>Array Stride:</dt><dd>+0x4</dd>
-    <dt>Total Size:</dt><dd class="address">0x20</dd>
+    <dt>Total Size:</dt><dd class="address">0x80</dd>
     
 </dl>
 <h2>Description</h2>
@@ -30,28 +30,37 @@
         <th>Name</th>
         <th></th>
     </tr>
-    <tr id="rsvd">
-        <td>[31:14]</td>
-        <td><a href="#rsvd.desc">rsvd</a></td>
+    <tr class="reserved-field">
+    <td>[31:19]</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td></td>
+    <td>-</td>
+    <td></td>
+</tr>
+    <tr id="last_dword">
+        <td>[18:15]</td>
+        <td><a href="#last_dword.desc">last_dword</a></td>
         <td>
-            <span title='Readable and Writable'>rw</span></td>
+            <span title='Read-only'>r</span></td>
         <td>0x0
         </td>
         <td>
-            <input id="_FieldValueTesterrsvd" class="field-value-tester"
+            <input id="_FieldValueTesterlast_dword" class="field-value-tester"
                 type="text" autocomplete="off"
-                data-name="rsvd" oninput="onDecodedFieldInput(this)"/>
+                data-name="last_dword" oninput="onDecodedFieldInput(this)"/>
         </td>
         <td>-</td>
         <td>
-            <button type="button" id="_RadixButtonrsvd" class="radix-button"
+            <button type="button" id="_RadixButtonlast_dword" class="radix-button"
                 title="Switch radix" aria-label="Switch radix"
-                data-name="rsvd" onclick="onRadixSwitch(this)">H</button>
-            <a class="headerlink" href="#rsvd" title="Permalink to this row"></a>
+                data-name="last_dword" onclick="onRadixSwitch(this)">H</button>
+            <a class="headerlink" href="#last_dword" title="Permalink to this row"></a>
         </td>
     </tr>
     <tr id="dest_valid">
-        <td>[13:8]</td>
+        <td>[14:9]</td>
         <td><a href="#dest_valid.desc">dest_valid</a></td>
         <td>
             <span title='Read-only'>r</span></td>
@@ -71,11 +80,11 @@
         </td>
     </tr>
     <tr id="rsvd1">
-        <td>[7:4]</td>
+        <td>[8:4]</td>
         <td><a href="#rsvd1.desc">rsvd1</a></td>
         <td>
             <span title='Readable and Writable'>rw</span></td>
-        <td>-
+        <td>0x0
         </td>
         <td>
             <input id="_FieldValueTesterrsvd1" class="field-value-tester"
@@ -95,7 +104,7 @@
         <td><a href="#rsvd0.desc">rsvd0</a></td>
         <td>
             <span title='Readable and Writable'>rw</span></td>
-        <td>-
+        <td>0x0
         </td>
         <td>
             <input id="_FieldValueTesterrsvd0" class="field-value-tester"
@@ -180,24 +189,37 @@
 </p>
 <hr/><h2>Field Descriptions</h2>
 
-<h3 id="rsvd.desc">rsvd
-    <a class="headerlink" href="#rsvd.desc" title="Permalink to this headline"></a>
+<h3 id="last_dword.desc">last_dword
+    <a class="headerlink" href="#last_dword.desc" title="Permalink to this headline"></a>
 </h3>
-<div id="_Content.rsvd.desc">
-<p>Reserved bits</p>
+<div id="_Content.last_dword.desc">
+<p>Stores the offset of the last valid dword, used to indicate last cycle on reads.</p>
+<table border="1">
+    <tr>
+        <th>Property</th>
+        <th>Value</th>
+    </tr>
+    <tr>
+        <td><code>resetsignal</code></td>
+        <td>^.^.hard_reset_b</td>
+    </tr>
+    
+</table>
 </div>
 
 <h3 id="dest_valid.desc">dest_valid
     <a class="headerlink" href="#dest_valid.desc" title="Permalink to this headline"></a>
 </h3>
 <div id="_Content.dest_valid.desc">
-<p>Destination valid bits stored as an array for ease of use in RTL.</p>
-<p>dest_valid[0] = hmac_key_dest_valid</p>
-<p>dest_valid[1] = hmac_block_dest_valid</p>
-<p>dest_valid[2] = sha_block_dest_valid</p>
-<p>dest_valid[3] = ecc_pkey_dest_valid</p>
-<p>dest_valid[4] = ecc_seed_dest_valid</p>
-<p>dest_valid[5] = ecc_msg_dest_valid</p>
+<p>Destination valid bits stored as an array for ease of use in RTL.
+<br>dest_valid[0] = hmac_key_dest_valid
+<br>dest_valid[1] = hmac_block_dest_valid
+<br>dest_valid[2] = sha_block_dest_valid
+<br>dest_valid[3] = ecc_pkey_dest_valid
+<br>dest_valid[4] = ecc_seed_dest_valid
+<br>dest_valid[5] = ecc_msg_dest_valid
+<br>dest_valid[6] = rsvd
+<br>dest_valid[7] = rsvd</p>
 <table border="1">
     <tr>
         <th>Property</th>
@@ -236,7 +258,7 @@
     <a class="headerlink" href="#lock_use.desc" title="Permalink to this headline"></a>
 </h3>
 <div id="_Content.lock_use.desc">
-<p>Lock use of this entry. Reads will be suppressed and an error will be recorded. Lock must be cleared when there is a FW update reset =&gt; core only reset =&gt; warm reset will naturally unlock as its deeper.</p>
+<p>Lock use of this entry. Reads will be suppressed and an error will be recorded.</p>
 <table border="1">
     <tr>
         <th>Property</th>
@@ -254,7 +276,7 @@
     <a class="headerlink" href="#lock_wr.desc" title="Permalink to this headline"></a>
 </h3>
 <div id="_Content.lock_wr.desc">
-<p>Lock writes to this entry. Writes will be suppressed and an error will be recorded. Lock must be cleared when there is a FW update reset =&gt; core only reset =&gt; warm reset will naturally unlock as its deeper</p>
+<p>Lock writes to this entry. Writes will be suppressed and an error will be recorded.</p>
 <table border="1">
     <tr>
         <th>Property</th>

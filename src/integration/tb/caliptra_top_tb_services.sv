@@ -214,6 +214,8 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
                         if (((WriteData[7:0] & 8'h07) == slot_id)) begin
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 6'b10000;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = ecc_seed_tb[dword_i][31 : 0];
                         end
@@ -224,6 +226,8 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
                         if (((WriteData[7:0] & 8'h07) == slot_id)) begin
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 6'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = hmac_key_tb[dword_i][31 : 0];
                         end
@@ -234,6 +238,8 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
                         if (((WriteData[7:0] & 8'h07) == slot_id)) begin
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 6'b100;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = sha_block_tb[dword_i][31 : 0];
                         end
@@ -243,6 +249,8 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
                         if (slot_id == 0) begin
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = (32'b10000 << `KV_REG_KEY_CTRL_0_DEST_VALID_LOW);
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = $urandom();
                         end
@@ -254,6 +262,8 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
                         inject_random_data <= '0;
                         release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we;
                         release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next;
+                        release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we;
+                        release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next;
                         release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we;
                         release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next;
                     end
@@ -287,26 +297,22 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
     always@(negedge clk) begin
         if((WriteData[7:0] == 8'hf3) && mailbox_write) begin
             force caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_en = 1;
-            force caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.entry_is_pcr = 0;
             force caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_entry = 6;
             force caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_offset = 3;
             force caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_data = 'hABCD_EF01;
 
             force caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_en = 1;
-            force caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.entry_is_pcr = 0;
             force caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_entry = 6;
             force caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_offset = 3;
             force caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_data = 'h2233_4455;
         end
         else begin
             release caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_en;
-            release caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.entry_is_pcr;
             release caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_entry;
             release caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_offset;
             release caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_data;
 
             release caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_en;
-            release caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.entry_is_pcr;
             release caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_entry;
             release caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_offset;
             release caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_data;

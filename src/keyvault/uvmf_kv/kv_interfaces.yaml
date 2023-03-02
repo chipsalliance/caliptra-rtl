@@ -88,18 +88,14 @@ uvmf:
         type: logic
         iscompare: 'False'
         isrand: 'False'
-      - name: entry_is_pcr
-        type: logic          
-        iscompare: 'True'
-        isrand: 'True'
       - name: write_entry
-        type: logic   [2:0]  
+        type: logic   [4:0]  
         iscompare: 'True'
         isrand: 'True'
-     - name: write_offset
-       type: logic   [3:0]  
-       iscompare: 'False'
-       isrand: 'False'
+      - name: write_offset
+        type: logic   [3:0]  
+        iscompare: 'False'
+        isrand: 'False'
       - name: write_data
         type: logic   [31:0] 
         iscompare: 'True'
@@ -142,12 +138,8 @@ uvmf:
 
       transaction_vars:
       # KV Read
-      - name: entry_is_pcr
-        type: logic
-        iscompare: 'False'
-        isrand: 'True'
       - name: read_entry
-        type: logic [2:0]
+        type: logic [4:0]
         iscompare: 'True'
         isrand: 'True'
       # KV Resp

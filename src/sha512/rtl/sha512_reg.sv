@@ -67,10 +67,11 @@ module sha512_reg (
         logic SHA512_STATUS;
         logic [32-1:0]SHA512_BLOCK;
         logic [16-1:0]SHA512_DIGEST;
-        logic SHA512_KV_RD_CTRL;
-        logic SHA512_KV_RD_STATUS;
+        logic SHA512_VAULT_RD_CTRL;
+        logic SHA512_VAULT_RD_STATUS;
         logic SHA512_KV_WR_CTRL;
         logic SHA512_KV_WR_STATUS;
+        logic SHA512_GEN_PCR_HASH;
         struct packed{
             logic global_intr_en_r;
             logic error_intr_en_r;
@@ -113,10 +114,11 @@ module sha512_reg (
         for(int i0=0; i0<16; i0++) begin
             decoded_reg_strb.SHA512_DIGEST[i0] = cpuif_req_masked & (cpuif_addr == 'h100 + i0*'h4);
         end
-        decoded_reg_strb.SHA512_KV_RD_CTRL = cpuif_req_masked & (cpuif_addr == 'h600);
-        decoded_reg_strb.SHA512_KV_RD_STATUS = cpuif_req_masked & (cpuif_addr == 'h604);
+        decoded_reg_strb.SHA512_VAULT_RD_CTRL = cpuif_req_masked & (cpuif_addr == 'h600);
+        decoded_reg_strb.SHA512_VAULT_RD_STATUS = cpuif_req_masked & (cpuif_addr == 'h604);
         decoded_reg_strb.SHA512_KV_WR_CTRL = cpuif_req_masked & (cpuif_addr == 'h608);
         decoded_reg_strb.SHA512_KV_WR_STATUS = cpuif_req_masked & (cpuif_addr == 'h60c);
+        decoded_reg_strb.SHA512_GEN_PCR_HASH = cpuif_req_masked & (cpuif_addr == 'h610);
         decoded_reg_strb.intr_block_rf.global_intr_en_r = cpuif_req_masked & (cpuif_addr == 'h800);
         decoded_reg_strb.intr_block_rf.error_intr_en_r = cpuif_req_masked & (cpuif_addr == 'h804);
         decoded_reg_strb.intr_block_rf.notif_intr_en_r = cpuif_req_masked & (cpuif_addr == 'h808);
@@ -168,6 +170,10 @@ module sha512_reg (
                 logic next;
                 logic load_next;
             } ZEROIZE;
+            struct packed{
+                logic next;
+                logic load_next;
+            } LAST;
         } SHA512_CTRL;
         struct packed{
             struct packed{
@@ -197,41 +203,33 @@ module sha512_reg (
                 logic load_next;
             } read_en;
             struct packed{
-                logic [2:0] next;
+                logic [4:0] next;
                 logic load_next;
             } read_entry;
             struct packed{
                 logic next;
                 logic load_next;
-            } entry_is_pcr;
+            } pcr_hash_extend;
             struct packed{
-                logic [4:0] next;
-                logic load_next;
-            } entry_data_size;
-            struct packed{
-                logic [19:0] next;
+                logic [24:0] next;
                 logic load_next;
             } rsvd;
-        } SHA512_KV_RD_CTRL;
+        } SHA512_VAULT_RD_CTRL;
         struct packed{
             struct packed{
                 logic next;
                 logic load_next;
             } VALID;
-        } SHA512_KV_RD_STATUS;
+        } SHA512_VAULT_RD_STATUS;
         struct packed{
             struct packed{
                 logic next;
                 logic load_next;
             } write_en;
             struct packed{
-                logic [2:0] next;
+                logic [4:0] next;
                 logic load_next;
             } write_entry;
-            struct packed{
-                logic next;
-                logic load_next;
-            } entry_is_pcr;
             struct packed{
                 logic next;
                 logic load_next;
@@ -257,7 +255,7 @@ module sha512_reg (
                 logic load_next;
             } ecc_msg_dest_valid;
             struct packed{
-                logic [18:0] next;
+                logic [19:0] next;
                 logic load_next;
             } rsvd;
         } SHA512_KV_WR_CTRL;
@@ -267,6 +265,12 @@ module sha512_reg (
                 logic load_next;
             } VALID;
         } SHA512_KV_WR_STATUS;
+        struct packed{
+            struct packed{
+                logic next;
+                logic load_next;
+            } FLOW_EN;
+        } SHA512_GEN_PCR_HASH;
         struct packed{
             struct packed{
                 struct packed{
@@ -460,6 +464,9 @@ module sha512_reg (
             struct packed{
                 logic value;
             } ZEROIZE;
+            struct packed{
+                logic value;
+            } LAST;
         } SHA512_CTRL;
         struct packed{
             struct packed{
@@ -484,33 +491,27 @@ module sha512_reg (
                 logic value;
             } read_en;
             struct packed{
-                logic [2:0] value;
+                logic [4:0] value;
             } read_entry;
             struct packed{
                 logic value;
-            } entry_is_pcr;
+            } pcr_hash_extend;
             struct packed{
-                logic [4:0] value;
-            } entry_data_size;
-            struct packed{
-                logic [19:0] value;
+                logic [24:0] value;
             } rsvd;
-        } SHA512_KV_RD_CTRL;
+        } SHA512_VAULT_RD_CTRL;
         struct packed{
             struct packed{
                 logic value;
             } VALID;
-        } SHA512_KV_RD_STATUS;
+        } SHA512_VAULT_RD_STATUS;
         struct packed{
             struct packed{
                 logic value;
             } write_en;
             struct packed{
-                logic [2:0] value;
+                logic [4:0] value;
             } write_entry;
-            struct packed{
-                logic value;
-            } entry_is_pcr;
             struct packed{
                 logic value;
             } hmac_key_dest_valid;
@@ -530,7 +531,7 @@ module sha512_reg (
                 logic value;
             } ecc_msg_dest_valid;
             struct packed{
-                logic [18:0] value;
+                logic [19:0] value;
             } rsvd;
         } SHA512_KV_WR_CTRL;
         struct packed{
@@ -538,6 +539,11 @@ module sha512_reg (
                 logic value;
             } VALID;
         } SHA512_KV_WR_STATUS;
+        struct packed{
+            struct packed{
+                logic value;
+            } FLOW_EN;
+        } SHA512_GEN_PCR_HASH;
         struct packed{
             struct packed{
                 struct packed{
@@ -753,6 +759,28 @@ module sha512_reg (
         end
     end
     assign hwif_out.SHA512_CTRL.ZEROIZE.value = field_storage.SHA512_CTRL.ZEROIZE.value;
+    // Field: sha512_reg.SHA512_CTRL.LAST
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.SHA512_CTRL.LAST.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.SHA512_CTRL && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[5:5];
+            load_next_c = '1;
+        end else if(hwif_in.SHA512_CTRL.LAST.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.SHA512_CTRL.LAST.next = next_c;
+        field_combo.SHA512_CTRL.LAST.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.SHA512_CTRL.LAST.value <= 'h0;
+        end else if(field_combo.SHA512_CTRL.LAST.load_next) begin
+            field_storage.SHA512_CTRL.LAST.value <= field_combo.SHA512_CTRL.LAST.next;
+        end
+    end
+    assign hwif_out.SHA512_CTRL.LAST.value = field_storage.SHA512_CTRL.LAST.value;
     // Field: sha512_reg.SHA512_STATUS.READY
     always_comb begin
         automatic logic [0:0] next_c = field_storage.SHA512_STATUS.READY.value;
@@ -796,7 +824,7 @@ module sha512_reg (
         always_comb begin
             automatic logic [31:0] next_c = field_storage.SHA512_BLOCK[i0].BLOCK.value;
             automatic logic load_next_c = '0;
-            if(decoded_reg_strb.SHA512_BLOCK[i0] && decoded_req_is_wr) begin // SW write
+            if(decoded_reg_strb.SHA512_BLOCK[i0] && decoded_req_is_wr && !(hwif_in.SHA512_BLOCK[i0].BLOCK.swwel)) begin // SW write
                 next_c = decoded_wr_data[31:0];
                 load_next_c = '1;
             end else if(hwif_in.SHA512_BLOCK[i0].BLOCK.we) begin // HW Write - we
@@ -841,123 +869,104 @@ module sha512_reg (
             end
         end
     end
-    // Field: sha512_reg.SHA512_KV_RD_CTRL.read_en
+    // Field: sha512_reg.SHA512_VAULT_RD_CTRL.read_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.SHA512_KV_RD_CTRL.read_en.value;
+        automatic logic [0:0] next_c = field_storage.SHA512_VAULT_RD_CTRL.read_en.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.SHA512_KV_RD_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.SHA512_VAULT_RD_CTRL && decoded_req_is_wr) begin // SW write
             next_c = decoded_wr_data[0:0];
             load_next_c = '1;
-        end else if(hwif_in.SHA512_KV_RD_CTRL.read_en.hwclr) begin // HW Clear
+        end else if(hwif_in.SHA512_VAULT_RD_CTRL.read_en.hwclr) begin // HW Clear
             next_c = '0;
             load_next_c = '1;
         end
-        field_combo.SHA512_KV_RD_CTRL.read_en.next = next_c;
-        field_combo.SHA512_KV_RD_CTRL.read_en.load_next = load_next_c;
+        field_combo.SHA512_VAULT_RD_CTRL.read_en.next = next_c;
+        field_combo.SHA512_VAULT_RD_CTRL.read_en.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.SHA512_KV_RD_CTRL.read_en.value <= 'h0;
-        end else if(field_combo.SHA512_KV_RD_CTRL.read_en.load_next) begin
-            field_storage.SHA512_KV_RD_CTRL.read_en.value <= field_combo.SHA512_KV_RD_CTRL.read_en.next;
+            field_storage.SHA512_VAULT_RD_CTRL.read_en.value <= 'h0;
+        end else if(field_combo.SHA512_VAULT_RD_CTRL.read_en.load_next) begin
+            field_storage.SHA512_VAULT_RD_CTRL.read_en.value <= field_combo.SHA512_VAULT_RD_CTRL.read_en.next;
         end
     end
-    assign hwif_out.SHA512_KV_RD_CTRL.read_en.value = field_storage.SHA512_KV_RD_CTRL.read_en.value;
-    // Field: sha512_reg.SHA512_KV_RD_CTRL.read_entry
+    assign hwif_out.SHA512_VAULT_RD_CTRL.read_en.value = field_storage.SHA512_VAULT_RD_CTRL.read_en.value;
+    // Field: sha512_reg.SHA512_VAULT_RD_CTRL.read_entry
     always_comb begin
-        automatic logic [2:0] next_c = field_storage.SHA512_KV_RD_CTRL.read_entry.value;
+        automatic logic [4:0] next_c = field_storage.SHA512_VAULT_RD_CTRL.read_entry.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.SHA512_KV_RD_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[3:1];
+        if(decoded_reg_strb.SHA512_VAULT_RD_CTRL && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[5:1];
             load_next_c = '1;
         end
-        field_combo.SHA512_KV_RD_CTRL.read_entry.next = next_c;
-        field_combo.SHA512_KV_RD_CTRL.read_entry.load_next = load_next_c;
+        field_combo.SHA512_VAULT_RD_CTRL.read_entry.next = next_c;
+        field_combo.SHA512_VAULT_RD_CTRL.read_entry.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.SHA512_KV_RD_CTRL.read_entry.value <= 'h0;
-        end else if(field_combo.SHA512_KV_RD_CTRL.read_entry.load_next) begin
-            field_storage.SHA512_KV_RD_CTRL.read_entry.value <= field_combo.SHA512_KV_RD_CTRL.read_entry.next;
+            field_storage.SHA512_VAULT_RD_CTRL.read_entry.value <= 'h0;
+        end else if(field_combo.SHA512_VAULT_RD_CTRL.read_entry.load_next) begin
+            field_storage.SHA512_VAULT_RD_CTRL.read_entry.value <= field_combo.SHA512_VAULT_RD_CTRL.read_entry.next;
         end
     end
-    assign hwif_out.SHA512_KV_RD_CTRL.read_entry.value = field_storage.SHA512_KV_RD_CTRL.read_entry.value;
-    // Field: sha512_reg.SHA512_KV_RD_CTRL.entry_is_pcr
+    assign hwif_out.SHA512_VAULT_RD_CTRL.read_entry.value = field_storage.SHA512_VAULT_RD_CTRL.read_entry.value;
+    // Field: sha512_reg.SHA512_VAULT_RD_CTRL.pcr_hash_extend
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.SHA512_KV_RD_CTRL.entry_is_pcr.value;
+        automatic logic [0:0] next_c = field_storage.SHA512_VAULT_RD_CTRL.pcr_hash_extend.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.SHA512_KV_RD_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[4:4];
+        if(decoded_reg_strb.SHA512_VAULT_RD_CTRL && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[6:6];
             load_next_c = '1;
         end
-        field_combo.SHA512_KV_RD_CTRL.entry_is_pcr.next = next_c;
-        field_combo.SHA512_KV_RD_CTRL.entry_is_pcr.load_next = load_next_c;
+        field_combo.SHA512_VAULT_RD_CTRL.pcr_hash_extend.next = next_c;
+        field_combo.SHA512_VAULT_RD_CTRL.pcr_hash_extend.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.SHA512_KV_RD_CTRL.entry_is_pcr.value <= 'h0;
-        end else if(field_combo.SHA512_KV_RD_CTRL.entry_is_pcr.load_next) begin
-            field_storage.SHA512_KV_RD_CTRL.entry_is_pcr.value <= field_combo.SHA512_KV_RD_CTRL.entry_is_pcr.next;
+            field_storage.SHA512_VAULT_RD_CTRL.pcr_hash_extend.value <= 'h0;
+        end else if(field_combo.SHA512_VAULT_RD_CTRL.pcr_hash_extend.load_next) begin
+            field_storage.SHA512_VAULT_RD_CTRL.pcr_hash_extend.value <= field_combo.SHA512_VAULT_RD_CTRL.pcr_hash_extend.next;
         end
     end
-    assign hwif_out.SHA512_KV_RD_CTRL.entry_is_pcr.value = field_storage.SHA512_KV_RD_CTRL.entry_is_pcr.value;
-    // Field: sha512_reg.SHA512_KV_RD_CTRL.entry_data_size
+    assign hwif_out.SHA512_VAULT_RD_CTRL.pcr_hash_extend.value = field_storage.SHA512_VAULT_RD_CTRL.pcr_hash_extend.value;
+    // Field: sha512_reg.SHA512_VAULT_RD_CTRL.rsvd
     always_comb begin
-        automatic logic [4:0] next_c = field_storage.SHA512_KV_RD_CTRL.entry_data_size.value;
+        automatic logic [24:0] next_c = field_storage.SHA512_VAULT_RD_CTRL.rsvd.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.SHA512_KV_RD_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[9:5];
+        if(decoded_reg_strb.SHA512_VAULT_RD_CTRL && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[31:7];
             load_next_c = '1;
         end
-        field_combo.SHA512_KV_RD_CTRL.entry_data_size.next = next_c;
-        field_combo.SHA512_KV_RD_CTRL.entry_data_size.load_next = load_next_c;
+        field_combo.SHA512_VAULT_RD_CTRL.rsvd.next = next_c;
+        field_combo.SHA512_VAULT_RD_CTRL.rsvd.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.SHA512_KV_RD_CTRL.entry_data_size.value <= 'h0;
-        end else if(field_combo.SHA512_KV_RD_CTRL.entry_data_size.load_next) begin
-            field_storage.SHA512_KV_RD_CTRL.entry_data_size.value <= field_combo.SHA512_KV_RD_CTRL.entry_data_size.next;
+            field_storage.SHA512_VAULT_RD_CTRL.rsvd.value <= 'h0;
+        end else if(field_combo.SHA512_VAULT_RD_CTRL.rsvd.load_next) begin
+            field_storage.SHA512_VAULT_RD_CTRL.rsvd.value <= field_combo.SHA512_VAULT_RD_CTRL.rsvd.next;
         end
     end
-    assign hwif_out.SHA512_KV_RD_CTRL.entry_data_size.value = field_storage.SHA512_KV_RD_CTRL.entry_data_size.value;
-    // Field: sha512_reg.SHA512_KV_RD_CTRL.rsvd
+    assign hwif_out.SHA512_VAULT_RD_CTRL.rsvd.value = field_storage.SHA512_VAULT_RD_CTRL.rsvd.value;
+    // Field: sha512_reg.SHA512_VAULT_RD_STATUS.VALID
     always_comb begin
-        automatic logic [19:0] next_c = field_storage.SHA512_KV_RD_CTRL.rsvd.value;
+        automatic logic [0:0] next_c = field_storage.SHA512_VAULT_RD_STATUS.VALID.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.SHA512_KV_RD_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[29:10];
-            load_next_c = '1;
-        end
-        field_combo.SHA512_KV_RD_CTRL.rsvd.next = next_c;
-        field_combo.SHA512_KV_RD_CTRL.rsvd.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
-            field_storage.SHA512_KV_RD_CTRL.rsvd.value <= 'h0;
-        end else if(field_combo.SHA512_KV_RD_CTRL.rsvd.load_next) begin
-            field_storage.SHA512_KV_RD_CTRL.rsvd.value <= field_combo.SHA512_KV_RD_CTRL.rsvd.next;
-        end
-    end
-    assign hwif_out.SHA512_KV_RD_CTRL.rsvd.value = field_storage.SHA512_KV_RD_CTRL.rsvd.value;
-    // Field: sha512_reg.SHA512_KV_RD_STATUS.VALID
-    always_comb begin
-        automatic logic [0:0] next_c = field_storage.SHA512_KV_RD_STATUS.VALID.value;
-        automatic logic load_next_c = '0;
-        if(hwif_in.SHA512_KV_RD_STATUS.VALID.hwset) begin // HW Set
+        if(hwif_in.SHA512_VAULT_RD_STATUS.VALID.hwset) begin // HW Set
             next_c = '1;
             load_next_c = '1;
-        end else if(hwif_in.SHA512_KV_RD_STATUS.VALID.hwclr) begin // HW Clear
+        end else if(hwif_in.SHA512_VAULT_RD_STATUS.VALID.hwclr) begin // HW Clear
             next_c = '0;
             load_next_c = '1;
         end
-        field_combo.SHA512_KV_RD_STATUS.VALID.next = next_c;
-        field_combo.SHA512_KV_RD_STATUS.VALID.load_next = load_next_c;
+        field_combo.SHA512_VAULT_RD_STATUS.VALID.next = next_c;
+        field_combo.SHA512_VAULT_RD_STATUS.VALID.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.SHA512_KV_RD_STATUS.VALID.value <= 'h0;
-        end else if(field_combo.SHA512_KV_RD_STATUS.VALID.load_next) begin
-            field_storage.SHA512_KV_RD_STATUS.VALID.value <= field_combo.SHA512_KV_RD_STATUS.VALID.next;
+            field_storage.SHA512_VAULT_RD_STATUS.VALID.value <= 'h0;
+        end else if(field_combo.SHA512_VAULT_RD_STATUS.VALID.load_next) begin
+            field_storage.SHA512_VAULT_RD_STATUS.VALID.value <= field_combo.SHA512_VAULT_RD_STATUS.VALID.next;
         end
     end
     // Field: sha512_reg.SHA512_KV_WR_CTRL.write_en
@@ -984,10 +993,10 @@ module sha512_reg (
     assign hwif_out.SHA512_KV_WR_CTRL.write_en.value = field_storage.SHA512_KV_WR_CTRL.write_en.value;
     // Field: sha512_reg.SHA512_KV_WR_CTRL.write_entry
     always_comb begin
-        automatic logic [2:0] next_c = field_storage.SHA512_KV_WR_CTRL.write_entry.value;
+        automatic logic [4:0] next_c = field_storage.SHA512_KV_WR_CTRL.write_entry.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[3:1];
+            next_c = decoded_wr_data[5:1];
             load_next_c = '1;
         end
         field_combo.SHA512_KV_WR_CTRL.write_entry.next = next_c;
@@ -1001,31 +1010,12 @@ module sha512_reg (
         end
     end
     assign hwif_out.SHA512_KV_WR_CTRL.write_entry.value = field_storage.SHA512_KV_WR_CTRL.write_entry.value;
-    // Field: sha512_reg.SHA512_KV_WR_CTRL.entry_is_pcr
-    always_comb begin
-        automatic logic [0:0] next_c = field_storage.SHA512_KV_WR_CTRL.entry_is_pcr.value;
-        automatic logic load_next_c = '0;
-        if(decoded_reg_strb.SHA512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[4:4];
-            load_next_c = '1;
-        end
-        field_combo.SHA512_KV_WR_CTRL.entry_is_pcr.next = next_c;
-        field_combo.SHA512_KV_WR_CTRL.entry_is_pcr.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
-            field_storage.SHA512_KV_WR_CTRL.entry_is_pcr.value <= 'h0;
-        end else if(field_combo.SHA512_KV_WR_CTRL.entry_is_pcr.load_next) begin
-            field_storage.SHA512_KV_WR_CTRL.entry_is_pcr.value <= field_combo.SHA512_KV_WR_CTRL.entry_is_pcr.next;
-        end
-    end
-    assign hwif_out.SHA512_KV_WR_CTRL.entry_is_pcr.value = field_storage.SHA512_KV_WR_CTRL.entry_is_pcr.value;
     // Field: sha512_reg.SHA512_KV_WR_CTRL.hmac_key_dest_valid
     always_comb begin
         automatic logic [0:0] next_c = field_storage.SHA512_KV_WR_CTRL.hmac_key_dest_valid.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[5:5];
+            next_c = decoded_wr_data[6:6];
             load_next_c = '1;
         end
         field_combo.SHA512_KV_WR_CTRL.hmac_key_dest_valid.next = next_c;
@@ -1044,7 +1034,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.SHA512_KV_WR_CTRL.hmac_block_dest_valid.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[6:6];
+            next_c = decoded_wr_data[7:7];
             load_next_c = '1;
         end
         field_combo.SHA512_KV_WR_CTRL.hmac_block_dest_valid.next = next_c;
@@ -1063,7 +1053,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.SHA512_KV_WR_CTRL.sha_block_dest_valid.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[7:7];
+            next_c = decoded_wr_data[8:8];
             load_next_c = '1;
         end
         field_combo.SHA512_KV_WR_CTRL.sha_block_dest_valid.next = next_c;
@@ -1082,7 +1072,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.SHA512_KV_WR_CTRL.ecc_pkey_dest_valid.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[8:8];
+            next_c = decoded_wr_data[9:9];
             load_next_c = '1;
         end
         field_combo.SHA512_KV_WR_CTRL.ecc_pkey_dest_valid.next = next_c;
@@ -1101,7 +1091,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.SHA512_KV_WR_CTRL.ecc_seed_dest_valid.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[9:9];
+            next_c = decoded_wr_data[10:10];
             load_next_c = '1;
         end
         field_combo.SHA512_KV_WR_CTRL.ecc_seed_dest_valid.next = next_c;
@@ -1120,7 +1110,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.SHA512_KV_WR_CTRL.ecc_msg_dest_valid.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[10:10];
+            next_c = decoded_wr_data[11:11];
             load_next_c = '1;
         end
         field_combo.SHA512_KV_WR_CTRL.ecc_msg_dest_valid.next = next_c;
@@ -1136,10 +1126,10 @@ module sha512_reg (
     assign hwif_out.SHA512_KV_WR_CTRL.ecc_msg_dest_valid.value = field_storage.SHA512_KV_WR_CTRL.ecc_msg_dest_valid.value;
     // Field: sha512_reg.SHA512_KV_WR_CTRL.rsvd
     always_comb begin
-        automatic logic [18:0] next_c = field_storage.SHA512_KV_WR_CTRL.rsvd.value;
+        automatic logic [19:0] next_c = field_storage.SHA512_KV_WR_CTRL.rsvd.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[29:11];
+            next_c = decoded_wr_data[31:12];
             load_next_c = '1;
         end
         field_combo.SHA512_KV_WR_CTRL.rsvd.next = next_c;
@@ -1174,6 +1164,28 @@ module sha512_reg (
             field_storage.SHA512_KV_WR_STATUS.VALID.value <= field_combo.SHA512_KV_WR_STATUS.VALID.next;
         end
     end
+    // Field: sha512_reg.SHA512_GEN_PCR_HASH.FLOW_EN
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.SHA512_GEN_PCR_HASH.FLOW_EN.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.SHA512_GEN_PCR_HASH && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[0:0];
+            load_next_c = '1;
+        end else if(1) begin // singlepulse clears back to 0
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.SHA512_GEN_PCR_HASH.FLOW_EN.next = next_c;
+        field_combo.SHA512_GEN_PCR_HASH.FLOW_EN.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.SHA512_GEN_PCR_HASH.FLOW_EN.value <= 'h0;
+        end else if(field_combo.SHA512_GEN_PCR_HASH.FLOW_EN.load_next) begin
+            field_storage.SHA512_GEN_PCR_HASH.FLOW_EN.value <= field_combo.SHA512_GEN_PCR_HASH.FLOW_EN.next;
+        end
+    end
+    assign hwif_out.SHA512_GEN_PCR_HASH.FLOW_EN.value = field_storage.SHA512_GEN_PCR_HASH.FLOW_EN.value;
     // Field: sha512_reg.intr_block_rf.global_intr_en_r.error_en
     always_comb begin
         automatic logic [0:0] next_c = field_storage.intr_block_rf.global_intr_en_r.error_en.value;
@@ -1886,7 +1898,7 @@ module sha512_reg (
     logic [31:0] readback_data;
     
     // Assign readback values to a flattened array
-    logic [44-1:0][31:0] readback_array;
+    logic [45-1:0][31:0] readback_array;
     for(genvar i0=0; i0<2; i0++) begin
         assign readback_array[i0*1 + 0][31:0] = (decoded_reg_strb.SHA512_NAME[i0] && !decoded_req_is_wr) ? hwif_in.SHA512_NAME[i0].NAME.next : '0;
     end
@@ -1899,74 +1911,72 @@ module sha512_reg (
     for(genvar i0=0; i0<16; i0++) begin
         assign readback_array[i0*1 + 5][31:0] = (decoded_reg_strb.SHA512_DIGEST[i0] && !decoded_req_is_wr) ? field_storage.SHA512_DIGEST[i0].DIGEST.value : '0;
     end
-    assign readback_array[21][0:0] = (decoded_reg_strb.SHA512_KV_RD_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_RD_CTRL.read_en.value : '0;
-    assign readback_array[21][3:1] = (decoded_reg_strb.SHA512_KV_RD_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_RD_CTRL.read_entry.value : '0;
-    assign readback_array[21][4:4] = (decoded_reg_strb.SHA512_KV_RD_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_RD_CTRL.entry_is_pcr.value : '0;
-    assign readback_array[21][9:5] = (decoded_reg_strb.SHA512_KV_RD_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_RD_CTRL.entry_data_size.value : '0;
-    assign readback_array[21][29:10] = (decoded_reg_strb.SHA512_KV_RD_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_RD_CTRL.rsvd.value : '0;
-    assign readback_array[21][31:30] = '0;
-    assign readback_array[22][0:0] = (decoded_reg_strb.SHA512_KV_RD_STATUS && !decoded_req_is_wr) ? hwif_in.SHA512_KV_RD_STATUS.READY.next : '0;
-    assign readback_array[22][1:1] = (decoded_reg_strb.SHA512_KV_RD_STATUS && !decoded_req_is_wr) ? field_storage.SHA512_KV_RD_STATUS.VALID.value : '0;
-    assign readback_array[22][9:2] = (decoded_reg_strb.SHA512_KV_RD_STATUS && !decoded_req_is_wr) ? hwif_in.SHA512_KV_RD_STATUS.ERROR.next : '0;
+    assign readback_array[21][0:0] = (decoded_reg_strb.SHA512_VAULT_RD_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_VAULT_RD_CTRL.read_en.value : '0;
+    assign readback_array[21][5:1] = (decoded_reg_strb.SHA512_VAULT_RD_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_VAULT_RD_CTRL.read_entry.value : '0;
+    assign readback_array[21][6:6] = (decoded_reg_strb.SHA512_VAULT_RD_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_VAULT_RD_CTRL.pcr_hash_extend.value : '0;
+    assign readback_array[21][31:7] = (decoded_reg_strb.SHA512_VAULT_RD_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_VAULT_RD_CTRL.rsvd.value : '0;
+    assign readback_array[22][0:0] = (decoded_reg_strb.SHA512_VAULT_RD_STATUS && !decoded_req_is_wr) ? hwif_in.SHA512_VAULT_RD_STATUS.READY.next : '0;
+    assign readback_array[22][1:1] = (decoded_reg_strb.SHA512_VAULT_RD_STATUS && !decoded_req_is_wr) ? field_storage.SHA512_VAULT_RD_STATUS.VALID.value : '0;
+    assign readback_array[22][9:2] = (decoded_reg_strb.SHA512_VAULT_RD_STATUS && !decoded_req_is_wr) ? hwif_in.SHA512_VAULT_RD_STATUS.ERROR.next : '0;
     assign readback_array[22][31:10] = '0;
     assign readback_array[23][0:0] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.write_en.value : '0;
-    assign readback_array[23][3:1] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.write_entry.value : '0;
-    assign readback_array[23][4:4] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.entry_is_pcr.value : '0;
-    assign readback_array[23][5:5] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.hmac_key_dest_valid.value : '0;
-    assign readback_array[23][6:6] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.hmac_block_dest_valid.value : '0;
-    assign readback_array[23][7:7] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.sha_block_dest_valid.value : '0;
-    assign readback_array[23][8:8] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.ecc_pkey_dest_valid.value : '0;
-    assign readback_array[23][9:9] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.ecc_seed_dest_valid.value : '0;
-    assign readback_array[23][10:10] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.ecc_msg_dest_valid.value : '0;
-    assign readback_array[23][29:11] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.rsvd.value : '0;
-    assign readback_array[23][31:30] = '0;
+    assign readback_array[23][5:1] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.write_entry.value : '0;
+    assign readback_array[23][6:6] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.hmac_key_dest_valid.value : '0;
+    assign readback_array[23][7:7] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.hmac_block_dest_valid.value : '0;
+    assign readback_array[23][8:8] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.sha_block_dest_valid.value : '0;
+    assign readback_array[23][9:9] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.ecc_pkey_dest_valid.value : '0;
+    assign readback_array[23][10:10] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.ecc_seed_dest_valid.value : '0;
+    assign readback_array[23][11:11] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.ecc_msg_dest_valid.value : '0;
+    assign readback_array[23][31:12] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.rsvd.value : '0;
     assign readback_array[24][0:0] = (decoded_reg_strb.SHA512_KV_WR_STATUS && !decoded_req_is_wr) ? hwif_in.SHA512_KV_WR_STATUS.READY.next : '0;
     assign readback_array[24][1:1] = (decoded_reg_strb.SHA512_KV_WR_STATUS && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_STATUS.VALID.value : '0;
     assign readback_array[24][9:2] = (decoded_reg_strb.SHA512_KV_WR_STATUS && !decoded_req_is_wr) ? hwif_in.SHA512_KV_WR_STATUS.ERROR.next : '0;
     assign readback_array[24][31:10] = '0;
-    assign readback_array[25][0:0] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.error_en.value : '0;
-    assign readback_array[25][1:1] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.notif_en.value : '0;
-    assign readback_array[25][31:2] = '0;
-    assign readback_array[26][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error0_en.value : '0;
-    assign readback_array[26][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error1_en.value : '0;
-    assign readback_array[26][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error2_en.value : '0;
-    assign readback_array[26][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error3_en.value : '0;
-    assign readback_array[26][31:4] = '0;
-    assign readback_array[27][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value : '0;
-    assign readback_array[27][31:1] = '0;
-    assign readback_array[28][0:0] = (decoded_reg_strb.intr_block_rf.error_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_global_intr_r.agg_sts.value : '0;
+    assign readback_array[25][0:0] = (decoded_reg_strb.SHA512_GEN_PCR_HASH && !decoded_req_is_wr) ? field_storage.SHA512_GEN_PCR_HASH.FLOW_EN.value : '0;
+    assign readback_array[25][31:1] = '0;
+    assign readback_array[26][0:0] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.error_en.value : '0;
+    assign readback_array[26][1:1] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.notif_en.value : '0;
+    assign readback_array[26][31:2] = '0;
+    assign readback_array[27][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error0_en.value : '0;
+    assign readback_array[27][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error1_en.value : '0;
+    assign readback_array[27][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error2_en.value : '0;
+    assign readback_array[27][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error3_en.value : '0;
+    assign readback_array[27][31:4] = '0;
+    assign readback_array[28][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value : '0;
     assign readback_array[28][31:1] = '0;
-    assign readback_array[29][0:0] = (decoded_reg_strb.intr_block_rf.notif_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value : '0;
+    assign readback_array[29][0:0] = (decoded_reg_strb.intr_block_rf.error_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_global_intr_r.agg_sts.value : '0;
     assign readback_array[29][31:1] = '0;
-    assign readback_array[30][0:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value : '0;
-    assign readback_array[30][1:1] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value : '0;
-    assign readback_array[30][2:2] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value : '0;
-    assign readback_array[30][3:3] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value : '0;
-    assign readback_array[30][31:4] = '0;
-    assign readback_array[31][0:0] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value : '0;
-    assign readback_array[31][31:1] = '0;
-    assign readback_array[32][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value : '0;
-    assign readback_array[32][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value : '0;
-    assign readback_array[32][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value : '0;
-    assign readback_array[32][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value : '0;
-    assign readback_array[32][31:4] = '0;
-    assign readback_array[33][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value : '0;
-    assign readback_array[33][31:1] = '0;
-    assign readback_array[34][31:0] = (decoded_reg_strb.intr_block_rf.error0_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error0_intr_count_r.cnt.value : '0;
-    assign readback_array[35][31:0] = (decoded_reg_strb.intr_block_rf.error1_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error1_intr_count_r.cnt.value : '0;
-    assign readback_array[36][31:0] = (decoded_reg_strb.intr_block_rf.error2_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error2_intr_count_r.cnt.value : '0;
-    assign readback_array[37][31:0] = (decoded_reg_strb.intr_block_rf.error3_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error3_intr_count_r.cnt.value : '0;
-    assign readback_array[38][31:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value : '0;
-    assign readback_array[39][0:0] = (decoded_reg_strb.intr_block_rf.error0_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[39][31:1] = '0;
-    assign readback_array[40][0:0] = (decoded_reg_strb.intr_block_rf.error1_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[30][0:0] = (decoded_reg_strb.intr_block_rf.notif_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value : '0;
+    assign readback_array[30][31:1] = '0;
+    assign readback_array[31][0:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value : '0;
+    assign readback_array[31][1:1] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value : '0;
+    assign readback_array[31][2:2] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value : '0;
+    assign readback_array[31][3:3] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value : '0;
+    assign readback_array[31][31:4] = '0;
+    assign readback_array[32][0:0] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value : '0;
+    assign readback_array[32][31:1] = '0;
+    assign readback_array[33][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value : '0;
+    assign readback_array[33][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value : '0;
+    assign readback_array[33][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value : '0;
+    assign readback_array[33][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value : '0;
+    assign readback_array[33][31:4] = '0;
+    assign readback_array[34][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value : '0;
+    assign readback_array[34][31:1] = '0;
+    assign readback_array[35][31:0] = (decoded_reg_strb.intr_block_rf.error0_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error0_intr_count_r.cnt.value : '0;
+    assign readback_array[36][31:0] = (decoded_reg_strb.intr_block_rf.error1_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error1_intr_count_r.cnt.value : '0;
+    assign readback_array[37][31:0] = (decoded_reg_strb.intr_block_rf.error2_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error2_intr_count_r.cnt.value : '0;
+    assign readback_array[38][31:0] = (decoded_reg_strb.intr_block_rf.error3_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error3_intr_count_r.cnt.value : '0;
+    assign readback_array[39][31:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value : '0;
+    assign readback_array[40][0:0] = (decoded_reg_strb.intr_block_rf.error0_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value : '0;
     assign readback_array[40][31:1] = '0;
-    assign readback_array[41][0:0] = (decoded_reg_strb.intr_block_rf.error2_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[41][0:0] = (decoded_reg_strb.intr_block_rf.error1_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value : '0;
     assign readback_array[41][31:1] = '0;
-    assign readback_array[42][0:0] = (decoded_reg_strb.intr_block_rf.error3_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[42][0:0] = (decoded_reg_strb.intr_block_rf.error2_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value : '0;
     assign readback_array[42][31:1] = '0;
-    assign readback_array[43][0:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[43][0:0] = (decoded_reg_strb.intr_block_rf.error3_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value : '0;
     assign readback_array[43][31:1] = '0;
+    assign readback_array[44][0:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[44][31:1] = '0;
 
 
     // Reduce the array
@@ -1975,7 +1985,7 @@ module sha512_reg (
         readback_done = decoded_req & ~decoded_req_is_wr;
         readback_err = '0;
         readback_data_var = '0;
-        for(int i=0; i<44; i++) readback_data_var |= readback_array[i];
+        for(int i=0; i<45; i++) readback_data_var |= readback_array[i];
         readback_data = readback_data_var;
     end
 

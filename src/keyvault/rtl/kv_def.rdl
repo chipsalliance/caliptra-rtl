@@ -36,7 +36,7 @@
             sw=r; hw=w; encode = kv_error_e;} ERROR[8]=0;
     };
 
-    reg kv_read_ctrl_reg #(longint unsigned KV_MACRO_ENTRY_ADDRESS_WIDTH = 3) {
+    reg kv_read_ctrl_reg #(longint unsigned KV_ENTRY_ADDRESS_W = 5) {
         name = "Key Vault Read Control Register";
         desc = "Controls the Key Vault read access for this engine";
 
@@ -45,24 +45,13 @@
 
         field {desc = "Indicates that the read data is to come from the key vault.
                        Setting this bit to 1 initiates copying of data from the key vault."; hwclr;} read_en = 0;
-        field {desc = "Key Vault entry to retrieve the read data from for the engine";} read_entry[KV_MACRO_ENTRY_ADDRESS_WIDTH] = 0;
-        field {desc = "Entry selected is a PCR slot";} entry_is_pcr = 0;        
-        field {desc = "Size of the source data for SHA512 and HMAC384 Block only.
-                       This field is ignored for all other reads.
-                       Size is encoded as N-1 dwords.
-                       KV flow will pad the 1024 Block data and append the length for values 0-26.
-                       All 0 data and Length must be appended in the next Block for values 27-31.
-                       
-                       5'd7 - 256b of data
-                       
-                       5'd11 - 384b of data
-                       
-                       5'd15 - 512b of data";} entry_data_size[5] = 0;
-        field {desc = "Reserved field";} rsvd[20] = 0;
+        field {desc = "Key Vault entry to retrieve the read data from for the engine";} read_entry[KV_ENTRY_ADDRESS_W] = 0;    
+        field {desc = "Requested entry is a PCR. This is used only for SHA to hash extend, it's NOP in all other engines";} pcr_hash_extend = 0;
+        field {desc = "Reserved field";} rsvd[25] = 0;
 
     };
 
-    reg kv_write_ctrl_reg {
+    reg kv_write_ctrl_reg #(longint unsigned KV_ENTRY_ADDRESS_W = 5) {
         name = "Key Vault Write Control Register";
         desc = "Controls the Key Vault write access for this engine";
 
@@ -71,14 +60,13 @@
 
         field {desc = "Indicates that the result is to be stored in the key vault.
                        Setting this bit to 1 will copy the result to the keyvault when it is ready."; hwclr;} write_en = 0;
-        field {desc = "Key Vault entry to store the result";} write_entry[3] = 0;
-        field {desc = "Destination selected is a PCR slot";} entry_is_pcr = 0;
+        field {desc = "Key Vault entry to store the result";} write_entry[KV_ENTRY_ADDRESS_W] = 0;
         field {desc = "HMAC KEY is a valid destination";} hmac_key_dest_valid = 0;
         field {desc = "HMAC BLOCK is a valid destination";} hmac_block_dest_valid = 0;
         field {desc = "SHA BLOCK is a valid destination";} sha_block_dest_valid = 0;
         field {desc = "ECC PKEY is a valid destination";} ecc_pkey_dest_valid = 0;
         field {desc = "ECC SEED is a valid destination";} ecc_seed_dest_valid = 0;
         field {desc = "ECC MSG is a valid destination";} ecc_msg_dest_valid = 0;
-        field {desc = "Reserved field";} rsvd[19] = 0;
+        field {desc = "Reserved field";} rsvd[20] = 0;
 
     };

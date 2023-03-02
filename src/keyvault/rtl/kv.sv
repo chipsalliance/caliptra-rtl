@@ -66,13 +66,10 @@ logic [31:0] debug_value;
 
 //intermediate signals to make verilator happy
 logic [KV_NUM_KEYS-1:0][KV_NUM_DWORDS-1:0] key_entry_we;
-logic [KV_NUM_PCR-1:0][KV_NUM_DWORDS-1:0] pcr_entry_we;
-logic [KV_NUM_KEYS-1:0] key_entry_dest_valid_we;
-logic [KV_NUM_PCR-1:0] pcr_entry_dest_valid_we;
+logic [KV_NUM_KEYS-1:0] key_entry_ctrl_we;
 logic [KV_NUM_KEYS-1:0][KV_NUM_DWORDS-1:0][31:0] key_entry_next;
-logic [KV_NUM_PCR-1:0][KV_NUM_DWORDS-1:0][31:0] pcr_entry_next;
 logic [KV_NUM_KEYS-1:0][KV_NUM_READ-1:0] key_entry_dest_valid_next;
-logic [KV_NUM_PCR-1:0][KV_NUM_READ-1:0] pcr_entry_dest_valid_next;
+logic [KV_NUM_KEYS-1:0][KV_ENTRY_SIZE_W-1:0] key_entry_last_dword_next;
 
 kv_reg__in_t kv_reg_hwif_in;
 kv_reg__out_t kv_reg_hwif_out;
@@ -118,39 +115,6 @@ always_comb flush_keyvault = debugUnlock_or_scan_mode_switch | kv_reg_hwif_out.C
 //Pick between keyvault debug mode 0 or 1
 always_comb debug_value = kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value ? CLP_DEBUG_MODE_KV_1 : CLP_DEBUG_MODE_KV_0;
 
-// Sticky (when lock is set, locked until cold reset) & Non-sticky (when lock is set, locked until warm reset) Generic DataVault registers.
-always_comb begin: datavault
-
-   //Sticky Data Vault Regs & Controls
-   for (int entry = 0; entry < STICKY_DV_NUM_ENTRIES; entry++) begin
-      kv_reg_hwif_in.StickyDataVaultCtrl[entry].lock_entry.swwel = kv_reg_hwif_out.StickyDataVaultCtrl[entry].lock_entry.value;
-      for (int dword = 0; dword < DV_NUM_DWORDS; dword++) begin
-          kv_reg_hwif_in.STICKY_DATA_VAULT_ENTRY[entry][dword].data.swwel = kv_reg_hwif_out.StickyDataVaultCtrl[entry].lock_entry.value;
-      end
-   end
-
-   //Non-Sticky Data Vault Regs & Controls
-   for (int entry = 0; entry < NONSTICKY_DV_NUM_ENTRIES; entry++) begin
-      kv_reg_hwif_in.NonStickyDataVaultCtrl[entry].lock_entry.swwel = kv_reg_hwif_out.NonStickyDataVaultCtrl[entry].lock_entry.value;
-      for (int dword = 0; dword < DV_NUM_DWORDS; dword++) begin
-          kv_reg_hwif_in.NONSTICKY_DATA_VAULT_ENTRY[entry][dword].data.swwel = kv_reg_hwif_out.NonStickyDataVaultCtrl[entry].lock_entry.value;
-      end
-   end
-
-   //Non-Sticky Generic Lockable Registers in the Data Vault
-   for (int entry = 0; entry < NONSTICKY_LOCKQ_SCRATCH_NUM_ENTRIES; entry++) begin
-      kv_reg_hwif_in.NonStickyLockableScratchRegCtrl[entry].lock_entry.swwel = kv_reg_hwif_out.NonStickyLockableScratchRegCtrl[entry].lock_entry.value;
-      kv_reg_hwif_in.NonStickyLockableScratchReg[entry].data.swwel  = kv_reg_hwif_out.NonStickyDataVaultCtrl[entry].lock_entry.value;
-   end
-
-   //Sticky Generic Lockable Registers in the Data Vault
-   for (int entry = 0; entry < STICKY_LOCKQ_SCRATCH_NUM_ENTRIES; entry++) begin
-      kv_reg_hwif_in.StickyLockableScratchRegCtrl[entry].lock_entry.swwel = kv_reg_hwif_out.StickyLockableScratchRegCtrl[entry].lock_entry.value;
-      kv_reg_hwif_in.StickyLockableScratchReg[entry].data.swwel  = kv_reg_hwif_out.StickyDataVaultCtrl[entry].lock_entry.value;
-   end
-
-
-end
 
 always_comb begin : keyvault_ctrl
     //keyvault control registers
@@ -158,38 +122,23 @@ always_comb begin : keyvault_ctrl
         //once lock is set, only reset can unset it
         kv_reg_hwif_in.KEY_CTRL[entry].lock_wr.swwel = kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value;
         kv_reg_hwif_in.KEY_CTRL[entry].lock_use.swwel = kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value;
-        //clear control clears the locks
-        kv_reg_hwif_in.KEY_CTRL[entry].lock_wr.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value;
-        kv_reg_hwif_in.KEY_CTRL[entry].lock_use.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value;
-        kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value;
+        //clear dest valid and last dword
+        kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value & ~kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value;
+        kv_reg_hwif_in.KEY_CTRL[entry].last_dword.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value & ~kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value;
         //init for AND-OR
-        key_entry_dest_valid_we[entry] = '0;
+        key_entry_ctrl_we[entry] = '0;
         key_entry_dest_valid_next[entry] = '0; 
+        key_entry_last_dword_next[entry] = '0;
         for (int client = 0; client < KV_NUM_WRITE; client++) begin
-            key_entry_dest_valid_we[entry] |= (kv_write[client].write_entry == entry) & ~kv_write[client].entry_is_pcr & kv_write[client].write_en; 
-            key_entry_dest_valid_next[entry] |= kv_write[client].write_en ? kv_write[client].write_dest_valid : '0; 
+            key_entry_ctrl_we[entry] |= (kv_write[client].write_entry == entry) & kv_write[client].write_en; 
+            key_entry_dest_valid_next[entry] |= kv_write[client].write_en ? kv_write[client].write_dest_valid : '0;
+            //store the final offset on the last write cycle, we'll use that to signal last dword on reads
+            key_entry_last_dword_next[entry] |= kv_write[client].write_en ? kv_write[client].write_offset : '0;
         end 
-        kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.we = key_entry_dest_valid_we[entry];
+        kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.we = key_entry_ctrl_we[entry];
         kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.next = key_entry_dest_valid_next[entry];
-    end
-
-    for (int entry = 0; entry < KV_NUM_PCR; entry++) begin
-        //once lock is set, only reset can unset it
-        kv_reg_hwif_in.PCR_CTRL[entry].lock_wr.swwel = kv_reg_hwif_out.PCR_CTRL[entry].lock_wr.value;
-        kv_reg_hwif_in.PCR_CTRL[entry].lock_use.swwel = kv_reg_hwif_out.PCR_CTRL[entry].lock_use.value;
-        //clear control clears the locks
-        kv_reg_hwif_in.PCR_CTRL[entry].lock_wr.hwclr = kv_reg_hwif_out.PCR_CTRL[entry].clear.value;
-        kv_reg_hwif_in.PCR_CTRL[entry].lock_use.hwclr = kv_reg_hwif_out.PCR_CTRL[entry].clear.value;
-        kv_reg_hwif_in.PCR_CTRL[entry].dest_valid.hwclr = kv_reg_hwif_out.PCR_CTRL[entry].clear.value;
-        //init for AND-OR
-        pcr_entry_dest_valid_we[entry] = '0; 
-        pcr_entry_dest_valid_next[entry] = '0; 
-        for (int client = 0; client < KV_NUM_WRITE; client++) begin
-            pcr_entry_dest_valid_we[entry] |= (kv_write[client].write_entry == entry) & kv_write[client].entry_is_pcr & kv_write[client].write_en; 
-            pcr_entry_dest_valid_next[entry] |= kv_write[client].write_en? kv_write[client].write_dest_valid : '0; 
-        end 
-        kv_reg_hwif_in.PCR_CTRL[entry].dest_valid.we = pcr_entry_dest_valid_we[entry];
-        kv_reg_hwif_in.PCR_CTRL[entry].dest_valid.next = pcr_entry_dest_valid_next[entry];
+        kv_reg_hwif_in.KEY_CTRL[entry].last_dword.we = key_entry_ctrl_we[entry];
+        kv_reg_hwif_in.KEY_CTRL[entry].last_dword.next = key_entry_last_dword_next[entry];
     end
 
     //keyvault storage
@@ -203,59 +152,37 @@ always_comb begin : keyvault_ctrl
             key_entry_next[entry][dword] = '0;
             for (int client = 0; client < KV_NUM_WRITE; client++) begin
                 key_entry_we[entry][dword] |= (((kv_write[client].write_entry == entry) & (kv_write[client].write_offset == dword) & 
-                                               ~kv_write[client].entry_is_pcr & kv_write[client].write_en) | flush_keyvault) & 
+                                                kv_write[client].write_en) | flush_keyvault) & 
                                                ~kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value;
                 key_entry_next[entry][dword] |= flush_keyvault ? debug_value :
                                                 kv_write[client].write_en ? kv_write[client].write_data : '0;
             end
             kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.we = key_entry_we[entry][dword];
             kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.next = key_entry_next[entry][dword];
-            kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value;
-        end
-    end
-    for (int entry = 0; entry < KV_NUM_PCR; entry++) begin
-        for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
-            kv_reg_hwif_in.PCR_ENTRY[entry][dword].data.swwel = kv_reg_hwif_out.PCR_CTRL[entry].lock_wr.value; //disable sw writes if locked
-            //initialize to 0 for AND-OR mux
-            pcr_entry_we[entry][dword] = '0; 
-            pcr_entry_next[entry][dword] = '0; 
-            for (int client = 0; client < KV_NUM_WRITE; client++) begin
-                pcr_entry_we[entry][dword] |= (kv_write[client].write_entry == entry) & (kv_write[client].write_offset == dword) & 
-                                                                   kv_write[client].entry_is_pcr & kv_write[client].write_en &
-                                                                   ~kv_reg_hwif_out.PCR_CTRL[entry].lock_wr.value;
-                pcr_entry_next[entry][dword] |= kv_write[client].write_en ? kv_write[client].write_data : '0;
-            end 
-            kv_reg_hwif_in.PCR_ENTRY[entry][dword].data.we = pcr_entry_we[entry][dword];
-            kv_reg_hwif_in.PCR_ENTRY[entry][dword].data.next = pcr_entry_next[entry][dword];
-            kv_reg_hwif_in.PCR_ENTRY[entry][dword].data.hwclr = kv_reg_hwif_out.PCR_CTRL[entry].clear.value;
+            //don't clear when writes are locked
+            kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value & ~kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value;
         end
     end
 end
 
 //read mux for keyvault
-//qualify with selected entry, offset, and pcr flag
+//qualify with selected entry, offset
 //qualify with lock use bit to ensure that locked values aren't read
 //qualify with dest valid to ensure requesting client has permission to read this entry
 always_comb begin : keyvault_readmux
     for (int client = 0; client < KV_NUM_READ; client++) begin  
         kv_rd_resp[client].read_data = '0;
         kv_rd_resp[client].error = '0;
+        kv_rd_resp[client].last = '0;
         for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
             for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
-                kv_rd_resp[client].read_data |= ~kv_read[client].entry_is_pcr & (kv_read[client].read_entry == entry) & (kv_read[client].read_offset == dword) &
+                kv_rd_resp[client].read_data |= (kv_read[client].read_entry == entry) & (kv_read[client].read_offset == dword) &
                                                 ~kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value & kv_reg_hwif_out.KEY_CTRL[entry].dest_valid.value[client] ? 
                                                  kv_reg_hwif_out.KEY_ENTRY[entry][dword].data.value : '0;
             end
-        kv_rd_resp[client].error |= ~kv_read[client].entry_is_pcr & (kv_read[client].read_entry == entry) & 
-                                    (kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value | ~kv_reg_hwif_out.KEY_CTRL[entry].dest_valid.value[client]);
-        end
-        for (int entry = 0; entry < KV_NUM_PCR; entry++) begin
-            for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
-                kv_rd_resp[client].read_data |= kv_read[client].entry_is_pcr & (kv_read[client].read_entry == entry) & (kv_read[client].read_offset == dword) &
-                                                ~kv_reg_hwif_out.PCR_CTRL[entry].lock_use.value & kv_reg_hwif_out.PCR_CTRL[entry].dest_valid.value[client] ? 
-                                                 kv_reg_hwif_out.PCR_ENTRY[entry][dword].data.value : '0;
-            end
-        kv_rd_resp[client].error |= kv_read[client].entry_is_pcr & (kv_read[client].read_entry == entry) & 
+        //signal last when reading the last dword
+        kv_rd_resp[client].last |= (kv_read[client].read_entry == entry) & (kv_read[client].read_offset == kv_reg_hwif_out.KEY_CTRL[entry].last_dword);
+        kv_rd_resp[client].error |= (kv_read[client].read_entry == entry) & 
                                     (kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value | ~kv_reg_hwif_out.KEY_CTRL[entry].dest_valid.value[client]);
         end
     end
@@ -263,17 +190,11 @@ end
 
 //Write error when attempting to write to entry that is locked for writes
 always_comb begin : keyvault_write_resp
-    for (int client = 0 ; client < KV_NUM_WRITE; client++) begin
+    for (int client = 0 ; client < KV_NUM_READ; client++) begin
         kv_wr_resp[client].error = '0;
-        for (int entry = 0; entry < KV_NUM_PCR; entry++) begin
-            kv_wr_resp[client].error |= (kv_write[client].write_entry == entry) & 
-                                        kv_write[client].entry_is_pcr & kv_write[client].write_en &
-                                        kv_reg_hwif_out.PCR_CTRL[entry].lock_wr.value;
-        end
         for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
-            kv_wr_resp[client].error |= (kv_write[client].write_entry == entry) & 
-                                        ~kv_write[client].entry_is_pcr & kv_write[client].write_en &
-                                        kv_reg_hwif_out.PCR_CTRL[entry].lock_wr.value;
+            kv_wr_resp[client].error |= (kv_write[client].write_entry == entry) & kv_write[client].write_en &
+                                        kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value;
         end
     end
 end
@@ -282,9 +203,6 @@ end
 always_comb begin
     for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
         kv_reg_hwif_in.KEY_CTRL[entry].rsvd0.hwclr = '0;
-    end
-    for (int entry = 0; entry < KV_NUM_PCR; entry++) begin
-        kv_reg_hwif_in.PCR_CTRL[entry].rsvd0.hwclr = '0;
     end
 end
 
@@ -297,7 +215,7 @@ kv_reg kv_reg1 (
     .clk(clk),
     .rst('0),
     //qualify request so no addresses alias
-    .s_cpuif_req(uc_req_dv & (uc_req.addr[KV_ADDR_W-1:KV_REG_ADDR_WIDTH] == '0)),
+    .s_cpuif_req(uc_req_dv),
     .s_cpuif_req_is_wr(uc_req.write),
     .s_cpuif_addr(uc_req.addr[KV_REG_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data(uc_req.wdata),

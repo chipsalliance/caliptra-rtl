@@ -70,9 +70,9 @@ _start:
         addi x3, x3, 4
         ble x3, x1, write_fe_IV_loop
 
-    //start FE and store in KV6/7
+    //start FE and store in KV7
     li x3, CLP_DOE_REG_DOE_CTRL
-    li x1, 0x0000001A
+    li x1, 0x0000001E
     sw x1, 0(x3)
 
     // Check that FE flow is done
@@ -91,36 +91,27 @@ _start:
     //-------
     //CDI IDEVID
     //-------
-
-    // Load key from hw_data and write to PCR
-    li x3, CLP_KV_REG_PCR_ENTRY_0_0
-    li x2, HMAC_KEY_NUM_DWORDS
-    li x1, 0x00000000
-    la x4, hw_data
-    write_key_loop:
-        lw x5, 0(x4)
-        sw x5, 0(x3)
-        addi x4, x4, 4
-        addi x3, x3, 4
-        addi x1, x1, 1
-        bne x2, x1, write_key_loop
+    //inject hmac_key to kv key reg (in RTL)
+    li x3, STDOUT
+    li x5, 0x89
+    sb x5, 0(x3)
 
     // Program CLP_HMAC_REG_HMAC384_KV_RD_KEY_CTRL
-    // Read key from PCR 0
+    // Read key from KEY 1
     li x3, CLP_HMAC_REG_HMAC384_KV_RD_KEY_CTRL
-    li x4, 0x00000011
+    li x4, 0x00000003
     sw x4, 0(x3)
 
     // Program CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL
-    // Read block from Key 0
+    // Read block from Key 7
     li x3, CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL
-    li x4, 0x00000161
+    li x4, 0x00000001
     sw x4, 0(x3)
 
     // Program CLP_HMAC_REG_HMAC384_KV_WR_CTRL
     // Write to key 0 with all dest valid
     li x3, CLP_HMAC_REG_HMAC384_KV_WR_CTRL
-    li x4, 0x000007e1
+    li x4, 0x00000fc1
     sw x4, 0(x3)
 
     // Check that HMAC KEY and BLOCK are loaded
@@ -157,15 +148,15 @@ _start:
     sw x4, 0(x3)
 
     // Program CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL
-    // Read block from Key slot 6/7
+    // Read block from Key slot 7
     li x3, CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL
-    li x4, 0x000003ed
+    li x4, 0x0000000f
     sw x4, 0(x3)
 
     // Program CLP_HMAC_REG_HMAC384_KV_WR_CTRL
-    // Write result to entry 0, all dest valid
+    // Write result to entry 11, all dest valid
     li x3, CLP_HMAC_REG_HMAC384_KV_WR_CTRL
-    li x4, 0x000007e1
+    li x4, 0x00000fd7
     sw x4, 0(x3)
 
     // Check that HMAC KEY and BLOCK are loaded
@@ -189,24 +180,6 @@ _start:
         and x5, x5, x1
         bne x5, x1, ready_loop
 
-    // Write PAD for 1024 size block
-    // FE is 1024 so we did init with the full data
-    // Now we need to do next with a full pad and size 
-    li x3, CLP_HMAC_REG_HMAC384_BLOCK_0
-    li x1, CLP_HMAC_REG_HMAC384_BLOCK_31
-    la x4, pad_block
-    write_block_loop:
-        lw x5, 0(x4)
-        sw x5, 0(x3)
-        addi x4, x4, 4
-        addi x3, x3, 4
-        blt x3, x1, write_block_loop
-
-    // Give the next command to HMAC core
-    li x3, CLP_HMAC_REG_HMAC384_CTRL
-    li x4, HMAC_REG_HMAC384_CTRL_NEXT_MASK
-    sw x4, 0(x3)
-
     // wait for HMAC process - check dest done
     li x3, CLP_HMAC_REG_HMAC384_KV_WR_STATUS
     li x1, HMAC_REG_HMAC384_KV_WR_STATUS_VALID_MASK
@@ -214,60 +187,19 @@ _start:
         lw x5, 0(x3)
         and x5, x5, x1
         bne x5, x1, dest_done2_loop
-
-    //write to PCR
-    li x3, CLP_KV_REG_PCR_ENTRY_0_0
-    li x6, KV_NUM_PCR
-    li x7, 0x00000000
-    li x8, KV_NUM_DWORDS
-    write_pcr_reg_loop:
-    la x4, kv_data
-    li x9, 0x00000000
-    write_pcr_dword_loop:
-        lw x5, 0(x4)
-        sw x5, 0(x3)
-        addi x3, x3, 4
-        addi x4, x4, 4
-        addi x9, x9, 1
-        bne x9, x8, write_pcr_dword_loop
-        addi x7, x7, 1
-        bne x7, x6, write_pcr_reg_loop
-
-    //read back PCR and check
-    li x3, CLP_KV_REG_PCR_ENTRY_0_0
-    li x6, KV_NUM_PCR
-    li x7, 0x00000000
-    li x8, KV_NUM_DWORDS
-    read_pcr_reg_loop:
-    la x4, kv_data
-    li x9, 0x00000000
-    read_pcr_dword_loop:
-        lw x5, 0(x3)
-        nop
-        lw x10, 0(x4)
-        bne x5, x10, _finish_fail
-        addi x3, x3, 4
-        addi x4, x4, 4
-        addi x9, x9, 1
-        bne x9, x8, read_pcr_dword_loop
-        addi x7, x7, 1
-        bne x7, x6, read_pcr_reg_loop       
-        
+  
     //clear FE 
-    li x3, CLP_KV_REG_KEY_CTRL_6
-    addi x3, x3, 24
-    li x5, KV_REG_KEY_CTRL_6_CLEAR_MASK
-    sw x5, 0(x3)
     li x3, CLP_KV_REG_KEY_CTRL_7
+    addi x3, x3, 24
+    li x5, KV_REG_KEY_CTRL_7_CLEAR_MASK
     sw x5, 0(x3)
 
-    // Load string from hw_data
-    // and write to stdout address
+    // unlock debug mode
     li x3, STDOUT
     li x5, 0xfa
     sb x5, 0(x3)
 
-    // Load string from hw_data
+    // Load string from hello_world
     // and write to stdout address
     li x3, STDOUT
     la x4, hello_world
@@ -298,23 +230,6 @@ _finish_pass:
 .endr
 
 .align 4
-kv_data:
-.word 0x00000000    
-.word 0x11111111
-.word 0x22222222
-.word 0x33333333
-.word 0x44444444
-.word 0x55555555
-.word 0x66666666
-.word 0x77777777
-.word 0x88888888
-.word 0x99999999
-.word 0xAAAAAAAA
-.word 0xBBBBBBBB
-.word 0xCCCCCCCC
-.word 0xDDDDDDDD
-.word 0xEEEEEEEE
-.word 0xFFFFFFFF
 iv_data_uds:
 .word 0x2eb94297
 .word 0x77285196
@@ -326,53 +241,6 @@ iv_data_fe:
 .word 0x9056d884
 .word 0xdaf3c89d
 hw_data:
-//this is the key 384-bit
-.word 0x0b0b0b0b
-.word 0x0b0b0b0b
-.word 0x0b0b0b0b
-.word 0x0b0b0b0b
-.word 0x0b0b0b0b
-.word 0x0b0b0b0b
-.word 0x0b0b0b0b
-.word 0x0b0b0b0b
-.word 0x0b0b0b0b
-.word 0x0b0b0b0b
-.word 0x0b0b0b0b
-.word 0x0b0b0b0b
-//this is the pad block 1024-bit
-pad_block:
-.word 0x80000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000800
 hello_world:
 .ascii "----------------------------------\n"
 .ascii "Hello World from KeyVault       !!\n"
