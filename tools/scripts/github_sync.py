@@ -14,6 +14,11 @@
 # limitations under the License.
 #
 
+#################################################
+#        REQUIRES Python Version >= 3.8         #
+#################################################
+
+
 #######################################################################################
 #                              !!IMPORTANT!!                                          #
 # You need to be in the PB enviroment to run this script                              #
@@ -31,6 +36,33 @@ import subprocess
 import logging
 import codecs
 
+###############
+# Global Variables
+
+global prepADORepoScript
+global prepGitHubRepoScript
+global commitAndPushScript
+
+global blacklistRepoDirsFiles
+global blacklistIpDirsFiles
+global blacklistScriptsDirsFiles
+global blacklistConfigDirsFiles
+global integrationTestSuiteList
+
+prepADORepoScript = "prepADORepo.sh"
+prepGitHubRepoScript = "prepGitHubRepo.sh"
+commitAndPushScript = "commitChangesToGitHub.sh"
+
+blacklistRepoDirsFiles = ["etc", "config", "dvt_build.log"]
+blacklistIpDirsFiles = ["sim_irq_gen", "syn", "aes_secworks"]
+blacklistScriptsDirsFiles = ["gen_pb_file_lists.sh", "README.md", "sim_config_parse.py", "github_sync.py", "prepADORepo.sh", "prepGitHubRepo.sh", "commitChangesToGitHub.sh", "run_test_makefile", "syn"]
+blacklistConfigDirsFiles = ["design_lint"]
+integrationTestSuiteList = ['caliptra_top', 'caliptra_demo', 'caliptra_fmc', 'caliptra_rt', 'includes', 'libs']
+
+# End global variables
+#######################
+
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 console_handler = logging.StreamHandler()
@@ -38,7 +70,12 @@ formatter = logging.Formatter('%(asctime)s | %(levelname)s: %(message)s', '%Y-%m
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
-# Run command and wait for it to complete before returning the results
+#########################################################################
+# Function:     runBashScript                                           #
+# Description:  Run command and wait for it to complete before          #
+#               returning the results                                   #
+#########################################################################
+
 def runBashScript(cmd):
     p = subprocess.Popen(cmd, stdin=None, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
     stdout, stderr = p.communicate()
@@ -46,39 +83,91 @@ def runBashScript(cmd):
     return exitCode, stdout, stderr
     #return os.popen(cmd).read()
 
-def prepDestRepo(inDestWS, inDestRepo, inDestBranch):
+#########################################################################
+# Function:     prepDestRepo                                            #
+# Description:  Prepare destination repository for syncing all changes  #
+#########################################################################
+
+def prepDestRepo(inDestWS, inDestRepo, inDestBranch, ignoreReadme,syncADO2GitHub):
     scriptsDir = get_script_dir()
-    prepRepoScript = os.path.join(scriptsDir, "prepDestRepo.sh")
-    cmd = ". {} -dw {} -dr {} -db {}".format(prepRepoScript, inDestWS, inDestRepo, inDestBranch)
+    if ignoreReadme == True:
+        ignoreOpt = "-ir"
+    else:
+        ignoreOpt = ""
+    if syncADO2GitHub == True:
+        prepRepoScript = os.path.join(scriptsDir, prepGitHubRepoScript)
+        cmd = ". {} -ws {} -db {} -a2g".format(prepRepoScript, inDestWS, inDestBranch)
+    else:
+        prepRepoScript = os.path.join(scriptsDir, prepADORepoScript)
+        cmd = ". {} -ws {} -db {} {}".format(prepRepoScript, inDestWS, inDestBranch, ignoreOpt)
     exitcode, prepRepoStdout, prepRepoStderr = runBashScript(cmd)
     if (exitcode == 0):
         infoMsg = "Destination repo {} setup with branch {}.".format(inDestRepo, inDestBranch)
         logger.info(infoMsg)
+        for line in prepRepoStdout.decode().splitlines():
+            logger.info(line)
     else:
-        errorMsg = f"prepDestRepo.sh failed with code: {exitcode}"
+        errorMsg = f"{prepRepoScript} failed with code: {exitcode}"
         logger.error(errorMsg)
         for line in prepRepoStderr.decode().splitlines():
             logger.error(line)
     return exitcode
 
-def prepPBSrcRepo(inSrcWS, inSrcRepo, ignoreReadme):
+#########################################################################
+# Function:     prepSrcRepo                                             #
+# Description:  Prepare source repository for syncing all changes  #
+#########################################################################
+
+def prepSrcRepo(inSrcWS, inSrcRepo, inSrcBranch, ignoreReadme, syncADO2GitHub):
     scriptsDir = get_script_dir()
-    prepRepoScript = os.path.join(scriptsDir, "prepPBSrcRepo.sh")
     if ignoreReadme == True:
         ignoreOpt = "-ir"
     else:
         ignoreOpt = ""
-    cmd = ". {} -sw {} -sr {} {}".format(prepRepoScript, inSrcWS, inSrcRepo, ignoreOpt)
+    if syncADO2GitHub == True:
+        prepRepoScript = os.path.join(scriptsDir, prepADORepoScript)
+        cmd = ". {} -ws {} -a2g {}".format(prepRepoScript, inSrcWS, ignoreOpt)
+    else:
+        prepRepoScript = os.path.join(scriptsDir, prepGitHubRepoScript)
+        cmd = ". {} -ws {}".format(prepRepoScript, inSrcWS)
     exitcode, prepRepoStdout, prepRepoStderr = runBashScript(cmd)
     if (exitcode == 0):
-        infoMsg = "Source repo {} setup with branch {}.".format(inSrcRepo, "master")
+        infoMsg = "Source repo {} setup with branch {}.".format(inSrcRepo, inSrcBranch)
         logger.info(infoMsg)
+        for line in prepRepoStdout.decode().splitlines():
+            logger.info(line)
     else:
-        errorMsg = f"prepPBSrcRepo.sh failed with code: {exitcode}"
+        errorMsg = f"{prepRepoScript} failed with code: {exitcode}"
         logger.error(errorMsg)
         for line in prepRepoStderr.decode().splitlines():
             logger.error(line)
     return exitcode
+
+#########################################################################
+# Function:     commitChangesAndPushBranch                              #
+# Description:  Commits all changes in the destination repo/branch      #
+#               and pushes branch to remote                             #
+#########################################################################
+
+def commitChangesAndPushBranch(inDestWS, inDestRepo, inDestBranch):
+    scriptsDir = get_script_dir()
+    commitScript = os.path.join(scriptsDir, commitAndPushScript)
+    
+    cmd = ". {} -ws {} -db {}".format(commitScript, inDestWS, inDestRepo, inDestBranch)
+    exitcode, commitStdout, commitStderr = runBashScript(cmd)
+    if (exitcode == 0):
+        infoMsg = f"Successfully commited all changes to Repo: {inDestRepo} Branch: {inDestBranch}"
+        logger.info(infoMsg)
+    else:
+        errorMsg = f"{commitScript} failed with code: {exitcode}"
+        logger.error(errorMsg)
+        for line in commitStderr.decode().splitlines():
+            logger.error(line)
+    return exitcode
+
+#########################################################################
+# Helper Functions                                                      #
+#########################################################################
 
 def get_script_dir():
     return os.path.dirname(os.path.realpath(__file__))
@@ -97,7 +186,7 @@ def listdir_nohidden(dirpath):
 
 def copy_tree(src, dest):
     if (os.path.exists(dest)):
-        infoMsg = "Copying directory {}".format(src)
+        infoMsg = "Copying directory {} to {}".format(src, dest)
         logger.info(infoMsg)
         shutil.rmtree(dest)
         shutil.copytree(src,dest)
@@ -114,18 +203,16 @@ def create_directory(dest):
 def copy_file(file, srcDir,destDir):
     src = os.path.join(srcDir, file)
     dest = os.path.join(destDir, file)
-    infoMsg = "Copying file {}".format(src)
+    infoMsg = "Copying file {} to {}".format(src, dest)
     logger.info(infoMsg)
     shutil.copy(src, dest)
 
+#########################################################################
+# Function:     copyFilesADOToGitHub                                    #
+# Description:  Copies files from ADO to GitHub                         #
+#########################################################################
 
-def copyFilesSrcToDest(sWorkspace, sRepo, dWorkspace, dRepo):
-    blacklistRepoDirsFiles = ["etc", "config", "dvt_build.log"]
-    blacklistIpDirsFiles = ["aes", "sim_irq_gen", "syn"]
-    blacklistScriptsDirsFiles = ["gen_pb_file_lists.sh", "README.md", "sim_config_parse.py", "github_sync.py", "prepDestRepo.sh", "prepPBSrcRepo.sh", "run_test_makefile", "syn"]
-    blacklistConfigDirsFiles = ["design_lint"]
-    integrationTestSuiteList = ['caliptra_top', 'caliptra_demo', 'includes', 'libs']
-
+def copyFilesADOToGitHub(sWorkspace, sRepo, dWorkspace, dRepo):
     srcCaliptraDir = os.path.join(sWorkspace, sRepo)
     destCaliptraDir = os.path.join(dWorkspace, dRepo)
     repoFiles, repoDirs = listdir_nohidden(srcCaliptraDir)
@@ -211,21 +298,120 @@ def copyFilesSrcToDest(sWorkspace, sRepo, dWorkspace, dRepo):
         if (not test in integrationTestSuiteList):
                 shutil.rmtree(test)
 
+#########################################################################
+# Function:     copyFilesGitHubToADO                                    #
+# Description:  Copies files from GitHub to ADO                         #
+#########################################################################
+
+def copyFilesGitHubToADO(sWorkspace, sRepo, dWorkspace, dRepo):
+    srcCaliptraDir = os.path.join(sWorkspace, sRepo)
+    destCaliptraDir = os.path.join(dWorkspace, dRepo)
+    repoFiles, repoDirs = listdir_nohidden(srcCaliptraDir)
+
+    ipList = []
+    for f in repoFiles:
+        copy_file(f, srcCaliptraDir, destCaliptraDir)
+
+    for dir in repoDirs:
+        srcDir_FullPath = os.path.join(srcCaliptraDir, dir)
+        destDir_FullPath = os.path.join(destCaliptraDir, dir)
+        shutil.copytree(srcDir_FullPath, destDir_FullPath, dirs_exist_ok=True)
+
+#########################################################################
+# Function:     cleanUpBlackListFilesDirsFromGitHub                     #
+# Description:  This is run after ADO to GitHub copy has been           #
+#               completed. This deletes any blacklisted files and       #
+#               directories that may be present in GitHub repo from     #
+#               a previous sync that did not originally blacklist       #
+#               the same files and/or directories.                      #
+#########################################################################
+
+def cleanUpBlackListFilesDirsFromGitHub(dWorkspace, dRepo):
+    infoMsg = "Cleaning up blacklisted files and directories in GitHub Repository"
+    logger.info(infoMsg)
+    destCaliptraDir = os.path.join(dWorkspace, dRepo)
+    os.chdir(destCaliptraDir)
+    repoFiles, repoDirs = listdir_nohidden(destCaliptraDir)
+
+    for f in repoFiles:
+        if (f in blacklistRepoDirsFiles):
+            file_path = os.path.join(destCaliptraDir, f)
+            infoMsg = "Removing {}".format(file_path)
+            logger.info(infoMsg)
+            os.remove(file_path)
+
+    for dir in repoDirs:
+        destDir_FullPath = os.path.join(destCaliptraDir, dir)
+        if (dir in blacklistRepoDirsFiles):
+            infoMsg = "Removing {}".format(dir)
+            logger.info(infoMsg)
+            shutil.rmtree(dir)
+        elif (dir == 'src'):
+            ipFileList, ipDirList = listdir_nohidden(destDir_FullPath)
+            for ipDir in ipDirList:
+                if (ipDir in blacklistIpDirsFiles):
+                    infoMsg = "Removing {}".format(dir)
+                    logger.info(infoMsg)
+                    shutil.rmtree(ipDir)
+        elif (dir == 'tools'):
+            toolsDir_Full_Path = os.path.join(destDir_FullPath, dir)
+            toolsFileList, toolsDirList = listdir_nohidden(destDir_FullPath)
+            for dir in toolsDirList:
+                if (dir == 'scripts'):
+                    scriptsDestDir_Full_Path = os.path.join(destDir_FullPath, dir)
+                    scriptsFileList, scriptsDirList = listdir_nohidden(scriptsDestDir_Full_Path)
+                    for f in scriptsFileList:
+                        if (f in blacklistScriptsDirsFiles):
+                            file_path = os.path.join(scriptsDestDir_Full_Path, f)
+                            infoMsg = "Removing {}".format(file_path)
+                            logger.info(infoMsg)
+                            os.remove(file_path)
+                    for d in scriptsDirList:
+                        if (d in blacklistScriptsDirsFiles):
+                            infoMsg = "Removing {}".format(dir)
+                            logger.info(infoMsg)
+                            shutil.rmtree(d)
+                elif (dir == 'config'):
+                    configDestDir_Full_Path = os.path.join(destDir_FullPath, dir)
+                    configFileList, configDirList = listdir_nohidden(configDestDir_Full_Path)
+                    for f in configFileList:
+                        if (f in blacklistConfigDirsFiles):
+                            file_path = os.path.join(configDestDir_Full_Path, f)
+                            infoMsg = "Removing {}".format(file_path)
+                            logger.info(infoMsg)
+                            os.remove(file_path)
+                        for d in configDirList:
+                            if (d in blacklistConfigDirsFiles):
+                                infoMsg = "Removing {}".format(dir)
+                                logger.info(infoMsg)
+                                shutil.rmtree(d)
+            for f in toolsFileList:
+                if (f in blacklistScriptsDirsFiles):
+                    file_path = os.path.join(toolsDir_Full_Path, f)
+                    infoMsg = "Removing {}".format(file_path)
+                    logger.info(infoMsg)
+                    os.remove(file_path)
+
+#########################################################################
+# Function:     main                                                    #
+# Description:  Main Function :)                                        #
+#########################################################################
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-sw", "--srcWorkspace",
+    groupSyncDir = parser.add_mutually_exclusive_group()
+    groupSyncDir.add_argument("-a2g", "--ado_to_github",
+                        action="store_true",
+                        help="Sets sync direction to sync from internal ADO repo to external GitHub Repo" )
+    groupSyncDir.add_argument("-g2a", "--github_to_ado",
+                        action="store_true",
+                        help="Set sync direction to sync from external GitHub repo to ADO repo")
+    parser.add_argument("-aw", "--adoWorkspace",
                         action="store",
-                        help="path to internal Caliptra repo workspace")
-    parser.add_argument("-sr", "--srcRepo",
+                        help="path to source repo workspace")
+    parser.add_argument("-gw", "--githubWorkspace",
                         action="store",
-                        help="src repository name")
-    parser.add_argument("-dw", "--destWorkspace",
-                        action="store",
-                        help="path to external Caliptra repo workspace")
-    parser.add_argument("-dr", "--destRepo",
-                        action="store",
-                        help="destination repository name") 
+                        help="path to destination repo workspace")
     parser.add_argument("-db", "--destBranch",
                         action="store",
                         help="destination repo branch for updates")                   
@@ -234,30 +420,79 @@ def main():
                         help="Ignore README timestamp check in source repo")                   
     args = parser.parse_args()
 
-    sWorkspace = args.srcWorkspace
-    sRepo = args.srcRepo
-    dWorkspace = args.destWorkspace
-    dRepo = args.destRepo
+    if args.ado_to_github:
+        syncADO2GitHub = True
+    elif args.github_to_ado:
+        syncADO2GitHub = False
+
+    adoWorkspace = args.adoWorkspace
+    githubWorkspace = args.githubWorkspace
     dBranch = args.destBranch
     ignoreReadme = args.ignoreReadme
 
-    infoMsg = "Command: {} {} {} {} {} {} {} {} {} {} {} {}".format(sys.argv[0], sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9], sys.argv[10], sys.argv[11])
-    logger.info(infoMsg)
+    adoRepo = "Caliptra"
+    adoRootBranch = "master"
 
-    logger.info("Prepping Dest Repo")
-    if prepDestRepo(dWorkspace, dRepo, dBranch) != 0:
-        return 1
-    logger.info("Prepping Src Repo")
+    githubRepo = "rtl-caliptra"
+    githubRootBranch = "development"
+
+    if syncADO2GitHub == True:
+        sWorkspace = adoWorkspace
+        sRepo = adoRepo
+        sBranch = adoRootBranch
+        dWorkspace = githubWorkspace
+        dRepo = githubRepo
+    else:
+        sWorkspace =githubWorkspace
+        sRepo = githubRepo
+        sBranch = githubRootBranch
+        dWorkspace = adoWorkspace
+        dRepo = adoRepo   
+
+    print(len(sys.argv))
+    infoMsg = "Command: {} {} {} {} {} {} {} {} ".format(sys.argv[0], sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7])
+    if len(sys.argv) == 9:
+        infoMsg += "{}".format(sys.argv[8])
+    logger.info(infoMsg)
+    
+    if syncADO2GitHub:
+        infoMsg = "Syncing internal ADO repo {} 'master' branch to external GitHub repo {} {} branch)".format(sRepo, dRepo, dBranch)
+    else:
+        infoMsg = "Syncing external GitHub repo {} 'development' branch to internal ADO repo {} {} branch".format(sRepo, dRepo, dBranch)
+    logger.info(infoMsg)
+    
     # Kill the operation when README is out of date for syncs to
     # GitHub repo, but allow an exception for periodic development updates
     # when automated syncs won't be updating README
-    if prepPBSrcRepo(sWorkspace, sRepo, ignoreReadme) != 0:
+
+    # Prep destination repository
+    logger.info("Prepping Destination repository for syncing.")
+    if prepDestRepo(dWorkspace, dRepo, dBranch, ignoreReadme, syncADO2GitHub) != 0:
         return 1
-    logger.info("Copying files")
-    copyFilesSrcToDest(sWorkspace, sRepo, dWorkspace, dRepo)
-    logger.info("Done copying files")
+
+    # Prep source repository
+    logger.info("Prepping Source repository for syncing")
+    if prepSrcRepo(sWorkspace, sRepo, sBranch, ignoreReadme, syncADO2GitHub) != 0:
+        return 1
+    
+    # Copy files from source to destination repository
+    if syncADO2GitHub == True:
+        logger.info("Syncing files from ADO Repository to GitHub Respository")
+        copyFilesADOToGitHub(sWorkspace, sRepo, dWorkspace, dRepo)
+        cleanUpBlackListFilesDirsFromGitHub(dWorkspace, dRepo)
+        logger.info("Sync Complete")
+    else:
+        logger.info("Syncing files from GitHub Repository to ADO Respository")
+        copyFilesGitHubToADO(sWorkspace, sRepo, dWorkspace, dRepo)
+        logger.info("Sync complete")
+
+    # Commit changes and push destination branch    
+    infoMsg = f"Commiting all changes in {dBranch} of {dRepo}"
+    logger.info(infoMsg)
+    commitChangesAndPushBranch(dWorkspace, dRepo, dBranch)
+
     return 0
 
-    
+
 if __name__ == "__main__":
     sys.exit(main())

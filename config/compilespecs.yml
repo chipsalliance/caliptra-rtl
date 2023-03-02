@@ -14,7 +14,7 @@ files:
   - src/keyvault/config/compile.yml
   - src/integration/asserts/config/compile.yml
   # UVMF TBs
-  - src/aes/uvmf_cbc_AllKAT/config/compile.yml
+  - src/aes_secworks/uvmf_cbc_AllKAT/config/compile.yml
   - src/ecc/uvmf_ecc/config/compile.yml
   - src/hmac/uvmf_2022/config/compile.yml
   - src/keyvault/uvmf_kv/config/compile.yml
