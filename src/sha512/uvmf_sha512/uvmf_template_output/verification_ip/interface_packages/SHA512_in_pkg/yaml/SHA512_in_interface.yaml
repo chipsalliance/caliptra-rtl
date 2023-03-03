@@ -1,0 +1,101 @@
+uvmf:
+  interfaces:
+    SHA512_in:
+      clock: clk
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      gen_inbound_streaming_driver: 'False'
+      hdl_pkg_parameters: []
+      hdl_typedefs:
+      - name: sha512_in_op_transactions
+        type: enum bit[2:0] {reset_op = 3'b000, sha224_op = 3'b100, sha256_op = 3'b101, sha384_op = 3'b110, sha512_op = 3'b111}
+      hvl_pkg_parameters: []
+      hvl_typedefs: []
+      parameters:
+      - name: AHB_DATA_WIDTH
+        type: int
+        value: '32'
+      - name: AHB_ADDR_WIDTH
+        type: int
+        value: '32'
+      - name: BYPASS_HSEL
+        type: bit
+        value: '0'
+      ports:
+      - dir: output
+        name: sha512_rst
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: hadrr
+        reset_value: '''bz'
+        width: AHB_ADDR_WIDTH
+      - dir: output
+        name: hwdata
+        reset_value: '''bz'
+        width: AHB_DATA_WIDTH
+      - dir: output
+        name: hsel
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: hwrite
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: hmastlock
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: hready
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: htrans
+        reset_value: '''bz'
+        width: '2'
+      - dir: output
+        name: hprot
+        reset_value: '''bz'
+        width: '4'
+      - dir: output
+        name: hburst
+        reset_value: '''bz'
+        width: '3'
+      - dir: output
+        name: hsize
+        reset_value: '''bz'
+        width: '3'
+      - dir: output
+        name: transaction_flag_in_monitor
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: op
+        reset_value: '''bz'
+        width: '3'
+      - dir: output
+        name: test_case_sel
+        reset_value: '''bz'
+        width: '8'
+      reset: rst
+      reset_assertion_level: 'False'
+      transaction_constraints:
+      - comment: ''
+        name: sha512_valid_op_constraints
+        value: '{ op inside {sha224_op, sha256_op, sha384_op, sha512_op}; }'
+      transaction_vars:
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'True'
+        name: op
+        type: sha512_in_op_transactions
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'True'
+        name: test_case_sel
+        type: bit [7:0]
+        unpacked_dimension: ''
+      use_dpi_link: 'False'

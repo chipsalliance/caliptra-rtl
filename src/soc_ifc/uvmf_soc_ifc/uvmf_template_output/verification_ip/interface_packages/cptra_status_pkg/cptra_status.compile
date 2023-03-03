@@ -1,0 +1,3 @@
+needs:
+  - cptra_status_hvl.compile
+  - cptra_status_hdl.compile

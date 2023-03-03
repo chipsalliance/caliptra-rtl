@@ -1,0 +1,2 @@
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.vinfo
+soc_ifc_ctrl_pkg_hdl.sv

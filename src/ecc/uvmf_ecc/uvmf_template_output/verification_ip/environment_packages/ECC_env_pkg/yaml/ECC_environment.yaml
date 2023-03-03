@@ -1,0 +1,38 @@
+uvmf:
+  environments:
+    ECC:
+      agents:
+      - initiator_responder: INITIATOR
+        name: ECC_in_agent
+        type: ECC_in
+      - initiator_responder: RESPONDER
+        name: ECC_out_agent
+        type: ECC_out
+      analysis_components:
+      - name: ECC_pred
+        parameters: []
+        type: ECC_predictor
+      analysis_exports: []
+      analysis_ports: []
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      hvl_pkg_parameters: []
+      non_uvmf_components: []
+      parameters: []
+      qvip_memory_agents: []
+      scoreboards:
+      - name: ECC_sb
+        sb_type: uvmf_in_order_scoreboard
+        trans_type: ECC_out_transaction
+      subenvs: []
+      tlm_connections:
+      - driver: ECC_in_agent.monitored_ap
+        receiver: ECC_pred.ECC_in_agent_ae
+        validate: 'True'
+      - driver: ECC_pred.ECC_sb_ap
+        receiver: ECC_sb.expected_analysis_export
+        validate: 'True'
+      - driver: ECC_out_agent.monitored_ap
+        receiver: ECC_sb.actual_analysis_export
+        validate: 'True'

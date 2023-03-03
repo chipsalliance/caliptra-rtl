@@ -1,0 +1,8 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.compile
+  - ../../interface_packages/SHA512_in_pkg/SHA512_in_hvl.compile
+  - ../../interface_packages/SHA512_out_pkg/SHA512_out_hvl.compile
+
+src:
+  - SHA512_env_pkg.sv
+

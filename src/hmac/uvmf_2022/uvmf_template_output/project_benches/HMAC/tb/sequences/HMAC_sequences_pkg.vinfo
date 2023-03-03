@@ -1,0 +1,7 @@
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/HMAC_in_pkg/HMAC_in_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/HMAC_out_pkg/HMAC_out_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/environment_packages/HMAC_env_pkg/HMAC_env_pkg.vinfo
+@use $UVMF_PROJECT_DIR/tb/parameters/HMAC_parameters_pkg.vinfo
++incdir+@vinfodir
+HMAC_sequences_pkg.sv

@@ -1,0 +1,1 @@
+$UVMF_VIP_LIBRARY_HOME/interface_packages/soc_ifc_status_pkg/soc_ifc_status_pkg.sv

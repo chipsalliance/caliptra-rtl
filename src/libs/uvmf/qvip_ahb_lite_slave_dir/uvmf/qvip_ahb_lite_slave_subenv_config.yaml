@@ -1,0 +1,14 @@
+## To instantiate this subenv in a higher level, use this structure:
+##  qvip_subenvs :
+##    - { name: "<instance_name_of_subenv>", type: "qvip_ahb_lite_slave" }
+uvmf:
+  qvip_library:
+    version: '2022.2'
+    date: '04/20/2022:16:06'
+  qvip_environments:
+     "qvip_ahb_lite_slave":
+        agents:
+          - name: 'ahb_lite_slave_0'
+            imports:
+              - "mvc_pkg"
+              - "mgc_ahb_v2_0_pkg"

@@ -1,0 +1,6 @@
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.vinfo
+@use ECC_in_pkg_hdl.vinfo
++incdir+@vinfodir
+src/ECC_in_if.sv
+src/ECC_in_driver_bfm.sv
+src/ECC_in_monitor_bfm.sv

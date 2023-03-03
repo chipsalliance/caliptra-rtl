@@ -1,0 +1,88 @@
+uvmf:
+  interfaces:
+    ECC_out:
+      clock: clk
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      gen_inbound_streaming_driver: 'False'
+      hdl_pkg_parameters: []
+      hdl_typedefs: []
+      hvl_pkg_parameters: []
+      hvl_typedefs: []
+      parameters:
+      - name: AHB_ADDR_WIDTH
+        type: int
+        value: '32'
+      - name: AHB_DATA_WIDTH
+        type: int
+        value: '32'
+      - name: OUTPUT_TEXT_WIDTH
+        type: int
+        value: '384'
+      ports:
+      - dir: input
+        name: hresp
+        reset_value: '''bz'
+        width: '1'
+      - dir: input
+        name: hreadyout
+        reset_value: '''bz'
+        width: '1'
+      - dir: input
+        name: hrdata
+        reset_value: '''bz'
+        width: AHB_DATA_WIDTH
+      - dir: input
+        name: transaction_flag_out_monitor
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: test
+        reset_value: '''bz'
+        width: '3'
+      - dir: output
+        name: op
+        reset_value: '''bz'
+        width: '2'
+      reset: rst_n
+      reset_assertion_level: 'False'
+      transaction_constraints: []
+      transaction_vars:
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: result_privkey
+        type: bit [OUTPUT_TEXT_WIDTH-1:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: result_pubkey_x
+        type: bit [OUTPUT_TEXT_WIDTH-1:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: result_pubkey_y
+        type: bit [OUTPUT_TEXT_WIDTH-1:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: result_R
+        type: bit [OUTPUT_TEXT_WIDTH-1:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: result_S
+        type: bit [OUTPUT_TEXT_WIDTH-1:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: result_verify_R
+        type: bit [OUTPUT_TEXT_WIDTH-1:0]
+        unpacked_dimension: ''
+      use_dpi_link: 'False'

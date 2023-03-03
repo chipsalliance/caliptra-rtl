@@ -1,0 +1,16 @@
+uvmf:
+  benches:
+    SHA512:
+      active_passive:
+      - bfm_name: SHA512_in_agent
+        value: ACTIVE
+      - bfm_name: SHA512_out_agent
+        value: PASSIVE
+      clock_half_period: 5ns
+      clock_phase_offset: 0ns
+      existing_library_component: 'True'
+      interface_params: []
+      reset_assertion_level: 'False'
+      reset_duration: 200ns
+      top_env: SHA512
+      use_dpi_link: 'False'

@@ -1,0 +1,6 @@
+---
+# Random seed desired...
+seed: ${PLAYBOOK_RANDOM_SEED}
+plusargs:
+- '+UVM_TESTNAME=ECC_normal_test'
+testname: ECC_normal_test

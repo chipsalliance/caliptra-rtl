@@ -1,0 +1,223 @@
+# //  Questa Sim
+# //  Version 2022.2_1 linux May 19 2022
+# //
+# //  Copyright 1991-2022 Mentor Graphics Corporation
+# //  All Rights Reserved.
+# //
+# //  QuestaSim and its associated documentation contain trade
+# //  secrets and commercial or financial information that are the property of
+# //  Mentor Graphics Corporation and are privileged, confidential,
+# //  and exempt from disclosure under the Freedom of Information Act,
+# //  5 U.S.C. Section 552. Furthermore, this information
+# //  is prohibited from disclosure under the Trade Secrets Act,
+# //  18 U.S.C. Section 1905.
+# //
+# vsim -i -sv_seed random "+UVM_TESTNAME=HMAC_random_test" -permit_unmatched_virtual_intf "+notimingchecks" -suppress 8887 -solvefaildebug -solvefailtestcase -assertdebug -uvmcontrol=all "+uvm_set_config_int=*,enable_transaction_viewing,1" -classdebug -msgmode tran -do " set NoQuitOnFinish 1; run 0; do wave.do " optimized_debug_top_tb 
+# Start time: 15:54:21 on Aug 16,2022
+# Loading sv_std.std
+# Loading work.HMAC_out_driver_bfm(fast)
+# Loading work.HMAC_out_monitor_bfm(fast)
+# Loading work.uvmf_base_pkg_hdl(fast)
+# Loading work.HMAC_out_pkg_hdl(fast)
+# Loading work.HMAC_in_driver_bfm(fast)
+# Loading work.HMAC_in_monitor_bfm(fast)
+# Loading mtiUvm.uvm_pkg(fast)
+# Loading work.uvmf_base_pkg(fast)
+# Loading work.HMAC_out_pkg(fast)
+# Loading work.HMAC_in_pkg_hdl(fast)
+# Loading work.HMAC_in_pkg(fast)
+# Loading work.HMAC_env_pkg(fast)
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$fgets'.
+#    Time: 0 ns  Iteration: 0  Region: /HMAC_env_pkg::HMAC_predictor::HMAC_predictor__1::write_HMAC_in_agent_ae File: /home/kupadhyayula/caliptra/ws1/Caliptra/src/hmac/uvmf_2022/uvmf_template_output/project_benches/HMAC/sim/../../../verification_ip/environment_packages/HMAC_env_pkg/src/HMAC_predictor.svh Line: 134
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$sscanf'.
+#    Time: 0 ns  Iteration: 0  Region: /HMAC_env_pkg::HMAC_predictor::HMAC_predictor__1::write_HMAC_in_agent_ae File: /home/kupadhyayula/caliptra/ws1/Caliptra/src/hmac/uvmf_2022/uvmf_template_output/project_benches/HMAC/sim/../../../verification_ip/environment_packages/HMAC_env_pkg/src/HMAC_predictor.svh Line: 138
+# Loading work.HMAC_parameters_pkg(fast)
+# Loading work.HMAC_sequences_pkg(fast)
+# Loading work.HMAC_tests_pkg(fast)
+# Loading mtiUvm.questa_uvm_pkg(fast)
+# Loading work.hvl_top(fast)
+# Loading work.hdl_top(fast)
+# Loading work.HMAC_in_if_sv_unit(fast)
+# Loading work.HMAC_in_if(fast__1)
+# Loading work.HMAC_out_if_sv_unit(fast)
+# Loading work.HMAC_out_if(fast__1)
+# Loading work.HMAC_in_monitor_bfm_sv_unit(fast)
+# Loading work.HMAC_in_monitor_bfm(fast__1)
+# Loading work.HMAC_out_monitor_bfm_sv_unit(fast)
+# Loading work.HMAC_out_monitor_bfm(fast__1)
+# Loading work.HMAC_in_driver_bfm_sv_unit(fast)
+# Loading work.HMAC_in_driver_bfm(fast__1)
+# Loading work.hmac_ctrl(fast)
+# Loading work.hmac(fast)
+# Loading work.hmac_core(fast)
+# Loading work.sha512_core(fast)
+# Loading work.sha512_k_constants(fast)
+# Loading work.sha512_h_constants(fast)
+# Loading work.sha512_w_mem(fast)
+# Loading work.ahb_slv_sif(fast)
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$fgets'.
+#    Time: 0 ns  Iteration: 0  Region: /hdl_top/HMAC_in_agent_drv_bfm/single_block_test File: /home/kupadhyayula/caliptra/ws1/Caliptra/src/hmac/uvmf_2022/uvmf_template_output/project_benches/HMAC/sim/../../../verification_ip/interface_packages/HMAC_in_pkg/src/HMAC_in_driver_bfm.sv Line: 678
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$sscanf'.
+#    Time: 0 ns  Iteration: 0  Region: /hdl_top/HMAC_in_agent_drv_bfm/single_block_test File: /home/kupadhyayula/caliptra/ws1/Caliptra/src/hmac/uvmf_2022/uvmf_template_output/project_benches/HMAC/sim/../../../verification_ip/interface_packages/HMAC_in_pkg/src/HMAC_in_driver_bfm.sv Line: 682
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$fgets'.
+#    Time: 0 ns  Iteration: 0  Region: /hdl_top/HMAC_in_agent_drv_bfm/single_block_test File: /home/kupadhyayula/caliptra/ws1/Caliptra/src/hmac/uvmf_2022/uvmf_template_output/project_benches/HMAC/sim/../../../verification_ip/interface_packages/HMAC_in_pkg/src/HMAC_in_driver_bfm.sv Line: 683
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$sscanf'.
+#    Time: 0 ns  Iteration: 0  Region: /hdl_top/HMAC_in_agent_drv_bfm/single_block_test File: /home/kupadhyayula/caliptra/ws1/Caliptra/src/hmac/uvmf_2022/uvmf_template_output/project_benches/HMAC/sim/../../../verification_ip/interface_packages/HMAC_in_pkg/src/HMAC_in_driver_bfm.sv Line: 684
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$fgets'.
+#    Time: 0 ns  Iteration: 0  Region: /hdl_top/HMAC_in_agent_drv_bfm/single_block_test File: /home/kupadhyayula/caliptra/ws1/Caliptra/src/hmac/uvmf_2022/uvmf_template_output/project_benches/HMAC/sim/../../../verification_ip/interface_packages/HMAC_in_pkg/src/HMAC_in_driver_bfm.sv Line: 685
+# ** Warning: (vsim-PLI-3691) Expected a system task, not a system function '$sscanf'.
+#    Time: 0 ns  Iteration: 0  Region: /hdl_top/HMAC_in_agent_drv_bfm/single_block_test File: /home/kupadhyayula/caliptra/ws1/Caliptra/src/hmac/uvmf_2022/uvmf_template_output/project_benches/HMAC/sim/../../../verification_ip/interface_packages/HMAC_in_pkg/src/HMAC_in_driver_bfm.sv Line: 686
+# ** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'work_factor'. The port definition is at: /home/kupadhyayula/caliptra/ws1/Caliptra/src/hmac/uvmf_2022/uvmf_template_output/project_benches/HMAC/sim/../../../../../../sha512/rtl/sha512_core.v(51).
+#    Time: 0 ns  Iteration: 0  Instance: /hdl_top/dut/hmac_inst/core/H1 File: /home/kupadhyayula/caliptra/ws1/Caliptra/src/hmac/uvmf_2022/uvmf_template_output/project_benches/HMAC/sim/../../../../../rtl/hmac_core.v Line: 123
+# ** Warning: (vsim-3015) [PCDPC] - Port size (1) does not match connection size (32) for port 'work_factor'. The port definition is at: /home/kupadhyayula/caliptra/ws1/Caliptra/src/hmac/uvmf_2022/uvmf_template_output/project_benches/HMAC/sim/../../../../../../sha512/rtl/sha512_core.v(51).
+#    Time: 0 ns  Iteration: 0  Instance: /hdl_top/dut/hmac_inst/core/H2 File: /home/kupadhyayula/caliptra/ws1/Caliptra/src/hmac/uvmf_2022/uvmf_template_output/project_benches/HMAC/sim/../../../../../rtl/hmac_core.v Line: 141
+# Loading /home/cad/tools/mentor/questa/2022.2_1/questasim/uvm-1.1d/linux/uvm_dpi.so
+# Sv_Seed = 2206561351
+#  set NoQuitOnFinish 1
+# 1
+#  run 0
+# ----------------------------------------------------------------
+# UVM-1.1d
+# (C) 2007-2013 Mentor Graphics Corporation
+# (C) 2007-2013 Cadence Design Systems, Inc.
+# (C) 2006-2013 Synopsys, Inc.
+# (C) 2011-2013 Cypress Semiconductor Corp.
+# ----------------------------------------------------------------
+# 
+#   ***********       IMPORTANT RELEASE NOTES         ************
+# 
+#   You are using a version of the UVM library that has been compiled
+#   with `UVM_NO_DEPRECATED undefined.
+#   See http://www.eda.org/svdb/view.php?id=3313 for more details.
+# 
+#   You are using a version of the UVM library that has been compiled
+#   with `UVM_OBJECT_MUST_HAVE_CONSTRUCTOR undefined.
+#   See http://www.eda.org/svdb/view.php?id=3770 for more details.
+# 
+#       (Specify +UVM_NO_RELNOTES to turn off this notice)
+# 
+# ----------------------------------------------------------------
+# //  UVM Framework 
+# //  Version 2022.3
+# //  (C) 2013-2022 Siemens Corporation
+# //  Digital Industries Software
+# //  Siemens EDA
+# //  All Rights Reserved.
+# ----------------------------------------------------------------
+# 
+# 
+# UVM_INFO verilog_src/questa_uvm_pkg-1.2/src/questa_uvm_pkg.sv(277) @ 0: reporter [Questa UVM] QUESTA_UVM-1.2.3
+# UVM_INFO verilog_src/questa_uvm_pkg-1.2/src/questa_uvm_pkg.sv(278) @ 0: reporter [Questa UVM]  questa_uvm::init(all)
+# UVM_INFO @ 0.000ns: reporter [RNTST] Running test HMAC_random_test...
+# UVM_INFO @ 0.000ns: reporter [UVM_CMDLINE_PROC] Applying config setting from the command line: +uvm_set_config_int=*,enable_transaction_viewing,1
+# UVM_WARNING @ 0.000ns: reporter [COVERAGE_MODEL_REVIEW] A covergroup has been constructed which may need review because of either generation or re-generation with merging.  Please note that configuration variables added as a result of re-generation and merging are not automatically added to the covergroup.  Remove this warning after the covergroup has been reviewed.
+# UVM_WARNING @ 0.000ns: uvm_test_top.environment.HMAC_pred [PREDICTOR_REVIEW] This predictor has been created either through generation or re-generation with merging.  Remove this warning after the predictor has been reviewed.
+#  do wave.do 
+log -r /*
+run -all
+# KNU: do monitor: hmac_rst_i = 1, tx_flag = 0
+# KNU: do monitor: hmac_rst_i = 1, tx_flag = 0
+# UVM_INFO @ 210.000ns: uvm_test_top.environment.HMAC_pred [PRED] Transaction Received through HMAC_in_agent_ae
+# UVM_INFO @ 250.000ns: uvm_test_top.environment.HMAC_sb [SCBD] MATCH! - EXPECTED: result:0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# **************************************************************************
+# * Questa UVM Transaction Recording Turned ON.                            *
+# * recording_detail has been set.                                         *
+# *  To turn off, set 'recording_detail' to off:                           *
+# * uvm_config_db#(int)            ::set(null, "", "recording_detail", 0); *
+# * uvm_config_db#(uvm_bitstream_t)::set(null, "", "recording_detail", 0); *
+# **************************************************************************
+# UVM_INFO @ 3420.000ns: uvm_test_top.environment.HMAC_pred [PRED] Transaction Received through HMAC_in_agent_ae
+# UVM_INFO @ 3420.000ns: uvm_test_top.environment.HMAC_pred [PREDICT] HMAC_OUT: result:0x5b540085c6e6358096532b2493609ed1cb298f774f87bb5c2ebf182c83cc7428707fb92eab2536a5812258228bc96687 
+# UVM_INFO @ 3660.000ns: uvm_test_top.environment.HMAC_in_agent.sequencer@@HMAC_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# UVM_INFO @ 3680.000ns: uvm_test_top.environment.HMAC_sb [SCBD] MATCH! - EXPECTED: result:0x5b540085c6e6358096532b2493609ed1cb298f774f87bb5c2ebf182c83cc7428707fb92eab2536a5812258228bc96687 ACTUAL: result:0x5b540085c6e6358096532b2493609ed1cb298f774f87bb5c2ebf182c83cc7428707fb92eab2536a5812258228bc96687 
+# UVM_INFO @ 6770.000ns: uvm_test_top.environment.HMAC_pred [PRED] Transaction Received through HMAC_in_agent_ae
+# UVM_INFO @ 6770.000ns: uvm_test_top.environment.HMAC_pred [PREDICT] HMAC_OUT: result:0x5b540085c6e6358096532b2493609ed1cb298f774f87bb5c2ebf182c83cc7428707fb92eab2536a5812258228bc96687 
+# UVM_INFO @ 7010.000ns: uvm_test_top.environment.HMAC_in_agent.sequencer@@HMAC_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# UVM_INFO @ 7030.000ns: uvm_test_top.environment.HMAC_sb [SCBD] MATCH! - EXPECTED: result:0x5b540085c6e6358096532b2493609ed1cb298f774f87bb5c2ebf182c83cc7428707fb92eab2536a5812258228bc96687 ACTUAL: result:0x5b540085c6e6358096532b2493609ed1cb298f774f87bb5c2ebf182c83cc7428707fb92eab2536a5812258228bc96687 
+# UVM_INFO @ 10120.000ns: uvm_test_top.environment.HMAC_pred [PRED] Transaction Received through HMAC_in_agent_ae
+# UVM_INFO @ 10120.000ns: uvm_test_top.environment.HMAC_pred [PREDICT] HMAC_OUT: result:0xb6a8d5636f5c6a7224f9977dcf7ee6c7fb6d0c48cbdee9737a959796489bddbc4c5df61d5b3297b4fb68dab9f1b582c2 
+# UVM_INFO @ 10360.000ns: uvm_test_top.environment.HMAC_in_agent.sequencer@@HMAC_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# UVM_INFO @ 10380.000ns: uvm_test_top.environment.HMAC_sb [SCBD] MATCH! - EXPECTED: result:0xb6a8d5636f5c6a7224f9977dcf7ee6c7fb6d0c48cbdee9737a959796489bddbc4c5df61d5b3297b4fb68dab9f1b582c2 ACTUAL: result:0xb6a8d5636f5c6a7224f9977dcf7ee6c7fb6d0c48cbdee9737a959796489bddbc4c5df61d5b3297b4fb68dab9f1b582c2 
+# UVM_INFO @ 13470.000ns: uvm_test_top.environment.HMAC_pred [PRED] Transaction Received through HMAC_in_agent_ae
+# UVM_INFO @ 13470.000ns: uvm_test_top.environment.HMAC_pred [PREDICT] HMAC_OUT: result:0x6eb242bdbb582ca17bebfa481b1e23211464d2b7f8c20b9ff2201637b93646af5ae9ac316e98db45d9cae773675eeed0 
+# UVM_INFO @ 13710.000ns: uvm_test_top.environment.HMAC_in_agent.sequencer@@HMAC_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# UVM_INFO @ 13730.000ns: uvm_test_top.environment.HMAC_sb [SCBD] MATCH! - EXPECTED: result:0x6eb242bdbb582ca17bebfa481b1e23211464d2b7f8c20b9ff2201637b93646af5ae9ac316e98db45d9cae773675eeed0 ACTUAL: result:0x6eb242bdbb582ca17bebfa481b1e23211464d2b7f8c20b9ff2201637b93646af5ae9ac316e98db45d9cae773675eeed0 
+# UVM_INFO @ 16820.000ns: uvm_test_top.environment.HMAC_pred [PRED] Transaction Received through HMAC_in_agent_ae
+# UVM_INFO @ 16820.000ns: uvm_test_top.environment.HMAC_pred [PREDICT] HMAC_OUT: result:0x5b540085c6e6358096532b2493609ed1cb298f774f87bb5c2ebf182c83cc7428707fb92eab2536a5812258228bc96687 
+# UVM_INFO @ 17060.000ns: uvm_test_top.environment.HMAC_in_agent.sequencer@@HMAC_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# UVM_INFO @ 17080.000ns: uvm_test_top.environment.HMAC_sb [SCBD] MATCH! - EXPECTED: result:0x5b540085c6e6358096532b2493609ed1cb298f774f87bb5c2ebf182c83cc7428707fb92eab2536a5812258228bc96687 ACTUAL: result:0x5b540085c6e6358096532b2493609ed1cb298f774f87bb5c2ebf182c83cc7428707fb92eab2536a5812258228bc96687 
+# UVM_INFO @ 20170.000ns: uvm_test_top.environment.HMAC_pred [PRED] Transaction Received through HMAC_in_agent_ae
+# UVM_INFO @ 20170.000ns: uvm_test_top.environment.HMAC_pred [PREDICT] HMAC_OUT: result:0x809f439be00274321d4a538652164b53554a508184a0c3160353e3428597003d35914a18770f9443987054944b7c4b4a 
+# UVM_INFO @ 20410.000ns: uvm_test_top.environment.HMAC_in_agent.sequencer@@HMAC_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# UVM_INFO @ 20430.000ns: uvm_test_top.environment.HMAC_sb [SCBD] MATCH! - EXPECTED: result:0x809f439be00274321d4a538652164b53554a508184a0c3160353e3428597003d35914a18770f9443987054944b7c4b4a ACTUAL: result:0x809f439be00274321d4a538652164b53554a508184a0c3160353e3428597003d35914a18770f9443987054944b7c4b4a 
+# UVM_INFO @ 23520.000ns: uvm_test_top.environment.HMAC_pred [PRED] Transaction Received through HMAC_in_agent_ae
+# UVM_INFO @ 23520.000ns: uvm_test_top.environment.HMAC_pred [PREDICT] HMAC_OUT: result:0x809f439be00274321d4a538652164b53554a508184a0c3160353e3428597003d35914a18770f9443987054944b7c4b4a 
+# UVM_INFO @ 23760.000ns: uvm_test_top.environment.HMAC_in_agent.sequencer@@HMAC_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# UVM_INFO @ 23780.000ns: uvm_test_top.environment.HMAC_sb [SCBD] MATCH! - EXPECTED: result:0x809f439be00274321d4a538652164b53554a508184a0c3160353e3428597003d35914a18770f9443987054944b7c4b4a ACTUAL: result:0x809f439be00274321d4a538652164b53554a508184a0c3160353e3428597003d35914a18770f9443987054944b7c4b4a 
+# UVM_INFO @ 26870.000ns: uvm_test_top.environment.HMAC_pred [PRED] Transaction Received through HMAC_in_agent_ae
+# UVM_INFO @ 26870.000ns: uvm_test_top.environment.HMAC_pred [PREDICT] HMAC_OUT: result:0x2c7353974f1842fd66d53c452ca42122b28c0b594cfb184da86a368e9b8e16f5349524ca4e82400cbde0686d403371c9 
+# UVM_INFO @ 27110.000ns: uvm_test_top.environment.HMAC_in_agent.sequencer@@HMAC_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# UVM_INFO @ 27130.000ns: uvm_test_top.environment.HMAC_sb [SCBD] MATCH! - EXPECTED: result:0x2c7353974f1842fd66d53c452ca42122b28c0b594cfb184da86a368e9b8e16f5349524ca4e82400cbde0686d403371c9 ACTUAL: result:0x2c7353974f1842fd66d53c452ca42122b28c0b594cfb184da86a368e9b8e16f5349524ca4e82400cbde0686d403371c9 
+# UVM_INFO @ 30220.000ns: uvm_test_top.environment.HMAC_pred [PRED] Transaction Received through HMAC_in_agent_ae
+# UVM_INFO @ 30220.000ns: uvm_test_top.environment.HMAC_pred [PREDICT] HMAC_OUT: result:0x2c7353974f1842fd66d53c452ca42122b28c0b594cfb184da86a368e9b8e16f5349524ca4e82400cbde0686d403371c9 
+# UVM_INFO @ 30460.000ns: uvm_test_top.environment.HMAC_in_agent.sequencer@@HMAC_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# UVM_INFO @ 30480.000ns: uvm_test_top.environment.HMAC_sb [SCBD] MATCH! - EXPECTED: result:0x2c7353974f1842fd66d53c452ca42122b28c0b594cfb184da86a368e9b8e16f5349524ca4e82400cbde0686d403371c9 ACTUAL: result:0x2c7353974f1842fd66d53c452ca42122b28c0b594cfb184da86a368e9b8e16f5349524ca4e82400cbde0686d403371c9 
+# UVM_INFO @ 33570.000ns: uvm_test_top.environment.HMAC_pred [PRED] Transaction Received through HMAC_in_agent_ae
+# UVM_INFO @ 33570.000ns: uvm_test_top.environment.HMAC_pred [PREDICT] HMAC_OUT: result:0x6eb242bdbb582ca17bebfa481b1e23211464d2b7f8c20b9ff2201637b93646af5ae9ac316e98db45d9cae773675eeed0 
+# UVM_INFO @ 33810.000ns: uvm_test_top.environment.HMAC_in_agent.sequencer@@HMAC_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# UVM_INFO @ 33830.000ns: uvm_test_top.environment.HMAC_sb [SCBD] MATCH! - EXPECTED: result:0x6eb242bdbb582ca17bebfa481b1e23211464d2b7f8c20b9ff2201637b93646af5ae9ac316e98db45d9cae773675eeed0 ACTUAL: result:0x6eb242bdbb582ca17bebfa481b1e23211464d2b7f8c20b9ff2201637b93646af5ae9ac316e98db45d9cae773675eeed0 
+#                33830 ***************   Starting Reset
+# KNU: do monitor: hmac_rst_i = 1, tx_flag = 1
+# KNU: do monitor: hmac_rst_i = 1, tx_flag = 0
+# UVM_INFO @ 33940.000ns: uvm_test_top.environment.HMAC_pred [PRED] Transaction Received through HMAC_in_agent_ae
+#                33980 ***************   Ending Reset
+# UVM_INFO @ 33980.000ns: uvm_test_top.environment.HMAC_in_agent.sequencer@@HMAC_in_reset_s [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# UVM_INFO @ 34260.000ns: uvm_test_top.environment.HMAC_sb [SCBD] MATCH! - EXPECTED: result:0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 ACTUAL: result:0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 
+# UVM_INFO @ 37090.000ns: uvm_test_top.environment.HMAC_pred [PRED] Transaction Received through HMAC_in_agent_ae
+# UVM_INFO @ 37090.000ns: uvm_test_top.environment.HMAC_pred [PREDICT] HMAC_OUT: result:0xb6a8d5636f5c6a7224f9977dcf7ee6c7fb6d0c48cbdee9737a959796489bddbc4c5df61d5b3297b4fb68dab9f1b582c2 
+# UVM_INFO @ 37330.000ns: uvm_test_top.environment.HMAC_in_agent.sequencer@@HMAC_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# UVM_INFO @ 37350.000ns: uvm_test_top.environment.HMAC_sb [SCBD] MATCH! - EXPECTED: result:0xb6a8d5636f5c6a7224f9977dcf7ee6c7fb6d0c48cbdee9737a959796489bddbc4c5df61d5b3297b4fb68dab9f1b582c2 ACTUAL: result:0xb6a8d5636f5c6a7224f9977dcf7ee6c7fb6d0c48cbdee9737a959796489bddbc4c5df61d5b3297b4fb68dab9f1b582c2 
+# UVM_INFO @ 40440.000ns: uvm_test_top.environment.HMAC_pred [PRED] Transaction Received through HMAC_in_agent_ae
+# UVM_INFO @ 40440.000ns: uvm_test_top.environment.HMAC_pred [PREDICT] HMAC_OUT: result:0x6eb242bdbb582ca17bebfa481b1e23211464d2b7f8c20b9ff2201637b93646af5ae9ac316e98db45d9cae773675eeed0 
+# UVM_INFO @ 40680.000ns: uvm_test_top.environment.HMAC_in_agent.sequencer@@HMAC_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# UVM_INFO @ 40700.000ns: uvm_test_top.environment.HMAC_sb [SCBD] MATCH! - EXPECTED: result:0x6eb242bdbb582ca17bebfa481b1e23211464d2b7f8c20b9ff2201637b93646af5ae9ac316e98db45d9cae773675eeed0 ACTUAL: result:0x6eb242bdbb582ca17bebfa481b1e23211464d2b7f8c20b9ff2201637b93646af5ae9ac316e98db45d9cae773675eeed0 
+# UVM_INFO @ 43790.000ns: uvm_test_top.environment.HMAC_pred [PRED] Transaction Received through HMAC_in_agent_ae
+# UVM_INFO @ 43790.000ns: uvm_test_top.environment.HMAC_pred [PREDICT] HMAC_OUT: result:0xb6a8d5636f5c6a7224f9977dcf7ee6c7fb6d0c48cbdee9737a959796489bddbc4c5df61d5b3297b4fb68dab9f1b582c2 
+# UVM_INFO @ 44030.000ns: uvm_test_top.environment.HMAC_in_agent.sequencer@@HMAC_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# UVM_INFO @ 44050.000ns: uvm_test_top.environment.HMAC_sb [SCBD] MATCH! - EXPECTED: result:0xb6a8d5636f5c6a7224f9977dcf7ee6c7fb6d0c48cbdee9737a959796489bddbc4c5df61d5b3297b4fb68dab9f1b582c2 ACTUAL: result:0xb6a8d5636f5c6a7224f9977dcf7ee6c7fb6d0c48cbdee9737a959796489bddbc4c5df61d5b3297b4fb68dab9f1b582c2 
+# UVM_INFO @ 47140.000ns: uvm_test_top.environment.HMAC_pred [PRED] Transaction Received through HMAC_in_agent_ae
+# UVM_INFO @ 47140.000ns: uvm_test_top.environment.HMAC_pred [PREDICT] HMAC_OUT: result:0xb6a8d5636f5c6a7224f9977dcf7ee6c7fb6d0c48cbdee9737a959796489bddbc4c5df61d5b3297b4fb68dab9f1b582c2 
+# UVM_INFO @ 47380.000ns: uvm_test_top.environment.HMAC_in_agent.sequencer@@HMAC_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# UVM_INFO @ 47400.000ns: uvm_test_top.environment.HMAC_sb [SCBD] MATCH! - EXPECTED: result:0xb6a8d5636f5c6a7224f9977dcf7ee6c7fb6d0c48cbdee9737a959796489bddbc4c5df61d5b3297b4fb68dab9f1b582c2 ACTUAL: result:0xb6a8d5636f5c6a7224f9977dcf7ee6c7fb6d0c48cbdee9737a959796489bddbc4c5df61d5b3297b4fb68dab9f1b582c2 
+# UVM_INFO @ 50490.000ns: uvm_test_top.environment.HMAC_pred [PRED] Transaction Received through HMAC_in_agent_ae
+# UVM_INFO @ 50490.000ns: uvm_test_top.environment.HMAC_pred [PREDICT] HMAC_OUT: result:0x5b540085c6e6358096532b2493609ed1cb298f774f87bb5c2ebf182c83cc7428707fb92eab2536a5812258228bc96687 
+# UVM_INFO @ 50730.000ns: uvm_test_top.environment.HMAC_in_agent.sequencer@@HMAC_in_agent_random_seq [SEQ] Response:op:0x0 key_len:0x0 test_case_sel:0x000 
+# UVM_INFO @ 50750.000ns: uvm_test_top.environment.HMAC_sb [SCBD] MATCH! - EXPECTED: result:0x5b540085c6e6358096532b2493609ed1cb298f774f87bb5c2ebf182c83cc7428707fb92eab2536a5812258228bc96687 ACTUAL: result:0x5b540085c6e6358096532b2493609ed1cb298f774f87bb5c2ebf182c83cc7428707fb92eab2536a5812258228bc96687 
+# UVM_INFO verilog_src/uvm-1.1d/src/base/uvm_objection.svh(1267) @ 51230.000ns: reporter [TEST_DONE] 'run' phase is ready to proceed to the 'extract' phase
+# UVM_INFO @ 51230.000ns: uvm_test_top.environment.HMAC_sb [SCBD] SCOREBOARD_RESULTS:  PREDICTED_TRANSACTIONS=17 MATCHES=17 MISMATCHES=0
+# 
+# --- UVM Report Summary ---
+# 
+# ** Report counts by severity
+# UVM_INFO :   71
+# UVM_WARNING :    2
+# UVM_ERROR :    0
+# UVM_FATAL :    0
+# ** Report counts by id
+# [COVERAGE_MODEL_REVIEW]     1
+# [PRED]    17
+# [PREDICT]    15
+# [PREDICTOR_REVIEW]     1
+# [Questa UVM]     2
+# [RNTST]     1
+# [SCBD]    18
+# [SEQ]    16
+# [TEST_DONE]     1
+# [UVM_CMDLINE_PROC]     1
+# ** Note: $finish    : /home/cad/tools/mentor/questa/2022.2_1/questasim/linux/../verilog_src/uvm-1.1d/src/base/uvm_root.svh(430)
+#    Time: 51230 ns  Iteration: 60  Instance: /hvl_top
+# Break in Task uvm_pkg/uvm_root::run_test at /home/cad/tools/mentor/questa/2022.2_1/questasim/linux/../verilog_src/uvm-1.1d/src/base/uvm_root.svh line 430
+# couldn't load file "/home/cad/tools/mentor/questa/2022.2_1/questasim/linux/ScintillaTk/libScintillaTk1.14.so": libstdc++.so.6: wrong ELF class: ELFCLASS64
+# list element in quotes followed by ":" instead of space
+# End time: 15:55:07 on Aug 16,2022, Elapsed time: 0:00:46
+# Errors: 0, Warnings: 10

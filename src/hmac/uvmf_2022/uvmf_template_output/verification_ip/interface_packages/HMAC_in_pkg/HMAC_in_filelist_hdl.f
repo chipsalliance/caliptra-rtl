@@ -1,0 +1,1 @@
+$UVMF_VIP_LIBRARY_HOME/interface_packages/HMAC_in_pkg/HMAC_in_pkg_hdl.sv

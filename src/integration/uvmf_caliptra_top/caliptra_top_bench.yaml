@@ -1,0 +1,37 @@
+uvmf:
+  benches:
+    caliptra_top:
+
+      active_passive:
+      - bfm_name: soc_ifc_subenv_soc_ifc_ctrl_agent
+        value: ACTIVE
+        # STATUS agent is configured as a responder and only has inputs
+        # from the DUT. It must still be considered ACTIVE so that the
+        # driver is instantiated, which is used to create sequences that
+        # report activity to the environment/bench virtual sequence
+        # Response packets from the status agent are not bundled with
+        # the ctrl agent because SOC IFC status output wires generate
+        # activity based on signals other than just those in the ctrl if.
+      - bfm_name: soc_ifc_subenv_soc_ifc_status_agent
+        value: ACTIVE
+      #TODO ADD JTAG, QSPI, UART, I3C agents
+        # Internal agents from block-level benches still exist in
+        # caliptra_top as passive monitors even though the drivers are
+        # not pushing activity to the respective interface
+      - bfm_name: soc_ifc_subenv_cptra_ctrl_agent
+        value: PASSIVE
+      - bfm_name: soc_ifc_subenv_cptra_status_agent
+        value: PASSIVE
+      - bfm_name: soc_ifc_subenv_qvip_ahb_lite_slave_subenv_ahb_lite_slave_0
+        value: PASSIVE
+
+      clock_half_period: 5ns
+      clock_phase_offset: 0ns
+
+      interface_params: []
+
+      reset_assertion_level: 'False'
+      reset_duration: 200ns
+
+      top_env: caliptra_top
+

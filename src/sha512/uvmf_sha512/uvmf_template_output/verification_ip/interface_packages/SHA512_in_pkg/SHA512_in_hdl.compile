@@ -1,0 +1,9 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.compile
+  - ./SHA512_in_common.compile
+incdir:
+  - .
+src:
+  - src/SHA512_in_if.sv
+  - src/SHA512_in_monitor_bfm.sv
+  - src/SHA512_in_driver_bfm.sv
