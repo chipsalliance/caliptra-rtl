@@ -48,16 +48,18 @@ global blacklistIpDirsFiles
 global blacklistScriptsDirsFiles
 global blacklistConfigDirsFiles
 global integrationTestSuiteList
+global ignoreFiles 
 
 prepADORepoScript = "prepADORepo.sh"
 prepGitHubRepoScript = "prepGitHubRepo.sh"
 commitAndPushScript = "commitChangesToGitHub.sh"
 
 blacklistRepoDirsFiles = ["etc", "config", "dvt_build.log"]
-blacklistIpDirsFiles = ["sim_irq_gen", "syn", "aes_secworks"]
-blacklistScriptsDirsFiles = ["gen_pb_file_lists.sh", "README.md", "sim_config_parse.py", "github_sync.py", "prepADORepo.sh", "prepGitHubRepo.sh", "commitChangesToGitHub.sh", "run_test_makefile", "syn"]
+blacklistIpDirsFiles = ["sim_irq_gen", "syn", "aes_secworks", "uvmf_kv"]
+blacklistScriptsDirsFiles = ["licenseHeaderCheck.sh", "gen_pb_file_lists.sh", "README.md", "sim_config_parse.py", "github_sync.py", "prepADORepo.sh", "prepGitHubRepo.sh", "commitChangesToGitHub.sh", "run_test_makefile", "syn"]
 blacklistConfigDirsFiles = ["design_lint"]
 integrationTestSuiteList = ['caliptra_top', 'caliptra_demo', 'caliptra_fmc', 'caliptra_rt', 'includes', 'libs']
+ignoreFiles = [".dvt", "dvt_build.log", ".git", ".git-comodules", ".gitignore"]
 
 # End global variables
 #######################
@@ -88,18 +90,22 @@ def runBashScript(cmd):
 # Description:  Prepare destination repository for syncing all changes  #
 #########################################################################
 
-def prepDestRepo(inDestWS, inDestRepo, inDestBranch, ignoreReadme,syncADO2GitHub):
+def prepDestRepo(inDestWS, inDestRepo, inDestBranch, ignoreReadme, ignoreReleaseNotes, syncADO2GitHub):
     scriptsDir = get_script_dir()
     if ignoreReadme == True:
         ignoreOpt = "-ir"
     else:
         ignoreOpt = ""
+    if ignoreReleaseNotes == True:
+        ignoreRelOpt = "-in"
+    else:
+        ignoreRelOpt = ""
     if syncADO2GitHub == True:
         prepRepoScript = os.path.join(scriptsDir, prepGitHubRepoScript)
         cmd = ". {} -ws {} -db {} -a2g".format(prepRepoScript, inDestWS, inDestBranch)
     else:
         prepRepoScript = os.path.join(scriptsDir, prepADORepoScript)
-        cmd = ". {} -ws {} -db {} {}".format(prepRepoScript, inDestWS, inDestBranch, ignoreOpt)
+        cmd = ". {} -ws {} -db {} {} {}".format(prepRepoScript, inDestWS, inDestBranch, ignoreOpt, ignoreRelOpt)
     exitcode, prepRepoStdout, prepRepoStderr = runBashScript(cmd)
     if (exitcode == 0):
         infoMsg = "Destination repo {} setup with branch {}.".format(inDestRepo, inDestBranch)
@@ -118,15 +124,19 @@ def prepDestRepo(inDestWS, inDestRepo, inDestBranch, ignoreReadme,syncADO2GitHub
 # Description:  Prepare source repository for syncing all changes  #
 #########################################################################
 
-def prepSrcRepo(inSrcWS, inSrcRepo, inSrcBranch, ignoreReadme, syncADO2GitHub):
+def prepSrcRepo(inSrcWS, inSrcRepo, inSrcBranch, ignoreReadme, ignoreReleaseNotes, syncADO2GitHub):
     scriptsDir = get_script_dir()
     if ignoreReadme == True:
         ignoreOpt = "-ir"
     else:
         ignoreOpt = ""
+    if ignoreReleaseNotes == True:
+        ignoreRelOpt = "-in"
+    else:
+        ignoreRelOpt = ""
     if syncADO2GitHub == True:
         prepRepoScript = os.path.join(scriptsDir, prepADORepoScript)
-        cmd = ". {} -ws {} -a2g {}".format(prepRepoScript, inSrcWS, ignoreOpt)
+        cmd = ". {} -ws {} -a2g {} {}".format(prepRepoScript, inSrcWS, ignoreOpt, ignoreRelOpt)
     else:
         prepRepoScript = os.path.join(scriptsDir, prepGitHubRepoScript)
         cmd = ". {} -ws {}".format(prepRepoScript, inSrcWS)
@@ -208,11 +218,15 @@ def copy_file(file, srcDir,destDir):
     shutil.copy(src, dest)
 
 #########################################################################
-# Function:     copyFilesADOToGitHub                                    #
+# Function:     copyFilesADOToGitHub               #for ipDir in ipDirList:
+                #    if (not ipDir in blacklistIpDirsFiles):
+                #        src = os.path.join(srcDir_FullPath, str(ipDir))
+                #        dest = os.path.join(destDir_FullPath, str(ipDir))
+                #        copy_tree(src, dest)                     #
 # Description:  Copies files from ADO to GitHub                         #
-#########################################################################
+#########################################################LICENSE################
 
-def copyFilesADOToGitHub(sWorkspace, sRepo, dWorkspace, dRepo):
+def copyFilesADOToGitHub_old(sWorkspace, sRepo, dWorkspace, dRepo):
     srcCaliptraDir = os.path.join(sWorkspace, sRepo)
     destCaliptraDir = os.path.join(dWorkspace, dRepo)
     repoFiles, repoDirs = listdir_nohidden(srcCaliptraDir)
@@ -268,6 +282,45 @@ def copyFilesADOToGitHub(sWorkspace, sRepo, dWorkspace, dRepo):
                     if (not f in blacklistScriptsDirsFiles):
                         copy_file(f, srcDir_FullPath, destDir_FullPath)
 
+    #Remove tests not in the regression suite
+    os.chdir(os.path.join(destCaliptraDir, "src/integration"))
+    curDir = os.getcwd()
+    l0_regress_file = os.path.join(curDir, "stimulus/L0_regression.yml")
+    testPaths = []
+    x = ''
+
+    with open (l0_regress_file) as f:
+        dict = yaml.load(f, Loader=yaml.FullLoader)
+        for item in dict["contents"]:
+            for key in item.keys():
+                for testKey in item[key].keys():
+                    if (testKey == 'paths'):
+                        testPaths = item[key][testKey]
+
+    for testYml in testPaths:
+        x = re.search(r'../test_suites/(\S+)/\S+.yml', testYml)
+        integrationTestSuiteList.append(x.groups()[0])
+
+    infoMsg = "Cleaning up integration/test_suites directory"
+    logger.info(infoMsg)
+
+    os.chdir("test_suites")
+    curDir = os.getcwd()
+    testfiles, testdirs = listdir_nohidden(curDir)
+
+    for test in testdirs:
+        if (not test in integrationTestSuiteList):
+                shutil.rmtree(test)
+
+def copyFilesADOToGitHub(sWorkspace, sRepo, dWorkspace, dRepo):
+    srcCaliptraDir = os.path.join(sWorkspace, sRepo)
+    destCaliptraDir = os.path.join(dWorkspace, dRepo)
+    # NOTE: blacklistRepoDirsFiles is not included in ignore_patterns option as that causes
+    # all directories named 'config' to be excluded. 
+    # Instead, repo level config directory is removedi in the cleanup stage that runs
+    # after all files have been copied to GitHub
+    shutil.copytree(srcCaliptraDir, destCaliptraDir, ignore=shutil.ignore_patterns(*ignoreFiles,*blacklistConfigDirsFiles,*blacklistIpDirsFiles,*blacklistScriptsDirsFiles), dirs_exist_ok=True)
+    
     #Remove tests not in the regression suite
     os.chdir(os.path.join(destCaliptraDir, "src/integration"))
     curDir = os.getcwd()
@@ -418,6 +471,9 @@ def main():
     parser.add_argument("-ir", "--ignoreReadme",
                         action="store_true",
                         help="Ignore README timestamp check in source repo")                   
+    parser.add_argument("-in", "--ignoreReleaseNotes",
+                        action="store_true",
+                        help="Ignore ReleaseNotes.txt timestamp check in source repo")                   
     args = parser.parse_args()
 
     if args.ado_to_github:
@@ -429,12 +485,13 @@ def main():
     githubWorkspace = args.githubWorkspace
     dBranch = args.destBranch
     ignoreReadme = args.ignoreReadme
+    ignoreReleaseNotes = args.ignoreReleaseNotes
 
     adoRepo = "Caliptra"
     adoRootBranch = "master"
 
-    githubRepo = "rtl-caliptra"
-    githubRootBranch = "development"
+    githubRepo = "caliptra-rtl"
+    githubRootBranch = "dev-msft"
 
     if syncADO2GitHub == True:
         sWorkspace = adoWorkspace
@@ -454,11 +511,16 @@ def main():
     if len(sys.argv) == 9:
         infoMsg += "{}".format(sys.argv[8])
     logger.info(infoMsg)
+
+    if len(sys.argv) == 10:
+        infoMsg += "{}".format(sys.argv[9])
+    logger.info(infoMsg)
+
     
     if syncADO2GitHub:
-        infoMsg = "Syncing internal ADO repo {} 'master' branch to external GitHub repo {} {} branch)".format(sRepo, dRepo, dBranch)
+        infoMsg = "Syncing internal ADO repo {} {} branch to external GitHub repo {} {} branch)".format(sRepo, sBranch, dRepo, dBranch)
     else:
-        infoMsg = "Syncing external GitHub repo {} 'development' branch to internal ADO repo {} {} branch".format(sRepo, dRepo, dBranch)
+        infoMsg = "Syncing external GitHub repo {} {} branch to internal ADO repo {} {} branch".format(sRepo, sBranch, dRepo, dBranch)
     logger.info(infoMsg)
     
     # Kill the operation when README is out of date for syncs to
@@ -467,12 +529,12 @@ def main():
 
     # Prep destination repository
     logger.info("Prepping Destination repository for syncing.")
-    if prepDestRepo(dWorkspace, dRepo, dBranch, ignoreReadme, syncADO2GitHub) != 0:
+    if prepDestRepo(dWorkspace, dRepo, dBranch, ignoreReadme, ignoreReleaseNotes, syncADO2GitHub) != 0:
         return 1
 
     # Prep source repository
     logger.info("Prepping Source repository for syncing")
-    if prepSrcRepo(sWorkspace, sRepo, sBranch, ignoreReadme, syncADO2GitHub) != 0:
+    if prepSrcRepo(sWorkspace, sRepo, sBranch, ignoreReadme, ignoreReleaseNotes, syncADO2GitHub) != 0:
         return 1
     
     # Copy files from source to destination repository
@@ -487,9 +549,9 @@ def main():
         logger.info("Sync complete")
 
     # Commit changes and push destination branch    
-    infoMsg = f"Commiting all changes in {dBranch} of {dRepo}"
-    logger.info(infoMsg)
-    commitChangesAndPushBranch(dWorkspace, dRepo, dBranch)
+    #infoMsg = f"Commiting all changes in {dBranch} of {dRepo}"
+    #logger.info(infoMsg)
+    #commitChangesAndPushBranch(dWorkspace, dRepo, dBranch)
 
     return 0
 

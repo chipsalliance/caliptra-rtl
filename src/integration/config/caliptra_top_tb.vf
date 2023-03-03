@@ -1,8 +1,8 @@
 +incdir+${WORKSPACE}/Caliptra/src/keyvault/rtl
 +incdir+${WORKSPACE}/Caliptra/src/doe/rtl
 +incdir+${WORKSPACE}/Caliptra/src/integration/asserts
-+incdir+${WORKSPACE}/Caliptra/src/libs/rtl
 +incdir+${WORKSPACE}/Caliptra/src/integration/rtl
++incdir+${WORKSPACE}/Caliptra/src/libs/rtl
 +incdir+${WORKSPACE}/Caliptra/src/pcrvault/rtl
 +incdir+${WORKSPACE}/Caliptra/src/datavault/rtl
 +incdir+${WORKSPACE}/Caliptra/src/soc_ifc/rtl
@@ -18,6 +18,8 @@ ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_defines_pkg.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_macros.svh
 ${WORKSPACE}/Caliptra/src/doe/rtl/doe_defines_pkg.sv
 ${WORKSPACE}/Caliptra/src/integration/asserts/caliptra_top_sva.sv
+${WORKSPACE}/Caliptra/src/integration/rtl/config_defines.svh
+${WORKSPACE}/Caliptra/src/integration/rtl/caliptra_reg_defines.svh
 ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_sva.svh
 ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_macros.svh
 ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_sram.sv
@@ -27,8 +29,6 @@ ${WORKSPACE}/Caliptra/src/libs/rtl/apb_slv_sif.sv
 ${WORKSPACE}/Caliptra/src/libs/rtl/ahb_slv_sif.sv
 ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_icg.sv
 ${WORKSPACE}/Caliptra/src/libs/rtl/clk_gate.sv
-${WORKSPACE}/Caliptra/src/integration/rtl/config_defines.svh
-${WORKSPACE}/Caliptra/src/integration/rtl/caliptra_reg_defines.svh
 ${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_defines_pkg.sv
 ${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_macros.svh
 ${WORKSPACE}/Caliptra/src/datavault/rtl/dv_defines_pkg.sv

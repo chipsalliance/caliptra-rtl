@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Caliptra Hands-On Guide** #
-_*Last Update: 2023/01/23*_
+_*Last Update: 2023/03/02*_
 
 [[_TOC_]]
 
@@ -65,11 +65,14 @@ Required for Firmware (i.e. Test suites) makefile:<BR>
 Caliptra
 |-- LICENSE
 |-- README.md
-|-- VERSION.txt
 |-- Release_notes.txt
-|-- Coming_soon.txt
+|-- docs
+|   |-- Caliptra_Integration_Specification.pdf
+|   |-- Caliptra_Hardware_Spec.pdf
+|   |-- Caliptra_TestPlan_L1.pdf
 |-- src
 |   |-- ahb_lite_bus
+|   |-- datavault
 |   |-- doe
 |   |-- ecc
 |   |-- hmac
@@ -77,6 +80,7 @@ Caliptra
 |   |-- integration
 |   |-- keyvault
 |   |-- libs
+|   |-- pcrvault
 |   |-- riscv_core
 |   |-- sha256
 |   |-- sha512

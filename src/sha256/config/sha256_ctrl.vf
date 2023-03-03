@@ -1,5 +1,8 @@
++incdir+${WORKSPACE}/Caliptra/src/integration/rtl
 +incdir+${WORKSPACE}/Caliptra/src/libs/rtl
 +incdir+${WORKSPACE}/Caliptra/src/sha256/rtl
+${WORKSPACE}/Caliptra/src/integration/rtl/config_defines.svh
+${WORKSPACE}/Caliptra/src/integration/rtl/caliptra_reg_defines.svh
 ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_sva.svh
 ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_macros.svh
 ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_sram.sv

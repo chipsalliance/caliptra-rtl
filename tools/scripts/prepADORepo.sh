@@ -30,7 +30,6 @@ return 0
 }
 
 while [ ! -z "$1" ]; do
-    echo "Now parsing $1"
     if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
         show_usage
     elif [[ "$1" == "-ws" ]] || [[ "$1" == "--adoWS" ]]; then
@@ -47,6 +46,9 @@ while [ ! -z "$1" ]; do
     elif [[ $1 == "-ir" ]] || [[ "$1" == "--ignoreReadme" ]]; then
         IGNORE_README="true"
         echo "Ignore README is enabled"
+    elif [[ $1 == "-in" ]] || [[ "$1" == "--ignoreReleaseNotes" ]]; then
+        IGNORE_RELEASE_NOTES="true"
+        echo "Ignore Release_notes.txt is enabled"
     else
         echo "Incorrect input provided $1"
         show_usage
@@ -110,7 +112,7 @@ if [[ ( $gitstat =~ $matchStr1 ) && ( $gitstat =~ $matchStr2 ) ]]; then
     #Get today's date
     today=$(date +%F)
     # Get date from README.md and convert to yyyy-mm-dd format
-    readmeDate=$(grep -oP "_\*Last Update: \d{4}\/\d{2}\/\d{2}\*_" README.md | sed 's/Last Update: //g' | sed 's/_//g' | sed 's/\*//g' | sed 's/\//-/g')
+    readmeDate=$(grep -oP "_\*Last Update: \d{4}\/\d{2}\/\d{2}\*_" Release_notes.md | sed 's/Last Update: //g' | sed 's/_//g' | sed 's/\*//g' | sed 's/\//-/g')
     #Check if dates match
     if [[ "$readmeDate" != "$today" ]]; then
         echo $IGNORE_README
@@ -118,6 +120,18 @@ if [[ ( $gitstat =~ $matchStr1 ) && ( $gitstat =~ $matchStr2 ) ]]; then
             echo "Warning - README.md is out of date. Not returning error code per script runtime options"
         else
             echo "README.md is out of date. Update file and timestamp and try again!!" 1>&2
+            exit 1
+        fi
+    fi
+    # Get date from Release_notes.txt timestamp and fail if timestamp is not today
+    releaseNotesDate=$(grep -oP "_\*Last Update: \d{4}\/\d{2}\/\d{2}\*_" Release_notes.txt | sed 's/Last Update: //g' | sed 's/_//g' | sed 's/\*//g' | sed 's/\//-/g')
+    #Check if dates match
+    if [[ "$releaseNotesDate" != "$today" ]]; then
+        echo $IGNORE_RELEASE_NOTES
+        if [[ ${IGNORE_RELEASE_NOTES} == "true" ]]; then
+            echo "Warning - RELEASE_NOTES.txt is out of date. Not returning error code per script runtime options"
+        else
+            echo "RELEASE_NOTES.txt is out of date. Update file and timestamp and try again!!" 1>&2
             exit 1
         fi
     fi

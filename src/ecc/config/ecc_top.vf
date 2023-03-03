@@ -1,3 +1,4 @@
++incdir+${WORKSPACE}/Caliptra/src/integration/rtl
 +incdir+${WORKSPACE}/Caliptra/src/libs/rtl
 +incdir+${WORKSPACE}/Caliptra/src/keyvault/rtl
 +incdir+${WORKSPACE}/Caliptra/src/pcrvault/rtl
@@ -5,6 +6,8 @@
 +incdir+${WORKSPACE}/Caliptra/src/hmac/rtl
 +incdir+${WORKSPACE}/Caliptra/src/hmac_drbg/rtl
 +incdir+${WORKSPACE}/Caliptra/src/ecc/rtl
+${WORKSPACE}/Caliptra/src/integration/rtl/config_defines.svh
+${WORKSPACE}/Caliptra/src/integration/rtl/caliptra_reg_defines.svh
 ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_sva.svh
 ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_macros.svh
 ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_sram.sv

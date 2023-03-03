@@ -52,8 +52,8 @@ done
 
 A2G=${A2G:-"false"}
 
-GITHUB_REPO="rtl-caliptra"
-GITHUB_ROOT_BR="development"
+GITHUB_REPO="caliptra-rtl"
+GITHUB_ROOT_BR="dev-msft"
 
 # Set Source and Destination repositories based on $A2G
 if [[ $A2G == "true" ]]; then
@@ -93,7 +93,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 gitstat=$(git status)
-matchStrGitHub="On branch development"
+matchStrGitHub="On branch $GITHUB_ROOT_BR"
 matchStr2="Your branch is up to date"
 echo $gitstat
 if [[ ( $gitstat =~ $matchStrGitHub )  && ( $gitstat =~ $matchStr2 ) ]]; then
