@@ -268,10 +268,10 @@ function void soc_ifc_env_mbox_rand_pauser_sequence::report_reg_sts(uvm_status_e
     // Ergo, use pauser_override_in_valid_list instead of pauser_override_is_valid.
     if (reg_sts != UVM_IS_OK && pauser_override_in_valid_list())
         `uvm_error("MBOX_SEQ",
-                   $sformatf("Register access failed unexpectedly with valid PAUSER! (%s)", name))
+                   $sformatf("Register access failed unexpectedly with valid PAUSER! 0x%x (%s)", this.pauser_override, name))
     else if (reg_sts == UVM_IS_OK && !pauser_override_in_valid_list()/*!pauser_override_is_valid()*/)
         `uvm_error("MBOX_SEQ",
-                   $sformatf("Register access passed unexpectedly with invalid PAUSER! (%s)", name))
+                   $sformatf("Register access passed unexpectedly with invalid PAUSER! 0x%x (%s)", this.pauser_override, name))
     else
         `uvm_info("MBOX_SEQ",
                   $sformatf("Register access to (%s) with pauser_override_is_valid: %b and reg_sts: %p", name, pauser_override_is_valid(), reg_sts),

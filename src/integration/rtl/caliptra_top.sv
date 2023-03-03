@@ -855,19 +855,20 @@ dv #(
 )
 data_vault1
 (
-    .clk           (clk_cg),
-    .rst_b         (cptra_noncore_rst_b),
+    .clk             (clk_cg),
+    .rst_b           (cptra_noncore_rst_b),
+    .core_only_rst_b (cptra_uc_rst_b),
     .cptra_pwrgood (cptra_pwrgood),
-    .haddr_i       (responder_inst[`CALIPTRA_SLAVE_SEL_DV].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_DV)-1:0]),
-    .hwdata_i      (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hwdata),
-    .hsel_i        (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hsel),
-    .hwrite_i      (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hwrite),
-    .hready_i      (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hready),
-    .htrans_i      (responder_inst[`CALIPTRA_SLAVE_SEL_DV].htrans),
-    .hsize_i       (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hsize),
-    .hresp_o       (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hresp),
-    .hreadyout_o   (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hreadyout),
-    .hrdata_o      (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hrdata)
+    .haddr_i         (responder_inst[`CALIPTRA_SLAVE_SEL_DV].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_DV)-1:0]),
+    .hwdata_i        (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hwdata),
+    .hsel_i          (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hsel),
+    .hwrite_i        (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hwrite),
+    .hready_i        (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hready),
+    .htrans_i        (responder_inst[`CALIPTRA_SLAVE_SEL_DV].htrans),
+    .hsize_i         (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hsize),
+    .hresp_o         (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hresp),
+    .hreadyout_o     (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hreadyout),
+    .hrdata_o        (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hrdata)
 );
 
 soc_ifc_top #(

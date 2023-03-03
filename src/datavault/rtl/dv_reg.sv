@@ -284,8 +284,8 @@ module dv_reg (
             field_combo.NonStickyDataVaultCtrl[i0].lock_entry.next = next_c;
             field_combo.NonStickyDataVaultCtrl[i0].lock_entry.load_next = load_next_c;
         end
-        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-            if(~hwif_in.reset_b) begin
+        always_ff @(posedge clk or negedge hwif_in.core_only_rst_b) begin
+            if(~hwif_in.core_only_rst_b) begin
                 field_storage.NonStickyDataVaultCtrl[i0].lock_entry.value <= 'h0;
             end else if(field_combo.NonStickyDataVaultCtrl[i0].lock_entry.load_next) begin
                 field_storage.NonStickyDataVaultCtrl[i0].lock_entry.value <= field_combo.NonStickyDataVaultCtrl[i0].lock_entry.next;
@@ -327,8 +327,8 @@ module dv_reg (
             field_combo.NonStickyLockableScratchRegCtrl[i0].lock_entry.next = next_c;
             field_combo.NonStickyLockableScratchRegCtrl[i0].lock_entry.load_next = load_next_c;
         end
-        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-            if(~hwif_in.reset_b) begin
+        always_ff @(posedge clk or negedge hwif_in.core_only_rst_b) begin
+            if(~hwif_in.core_only_rst_b) begin
                 field_storage.NonStickyLockableScratchRegCtrl[i0].lock_entry.value <= 'h0;
             end else if(field_combo.NonStickyLockableScratchRegCtrl[i0].lock_entry.load_next) begin
                 field_storage.NonStickyLockableScratchRegCtrl[i0].lock_entry.value <= field_combo.NonStickyLockableScratchRegCtrl[i0].lock_entry.next;

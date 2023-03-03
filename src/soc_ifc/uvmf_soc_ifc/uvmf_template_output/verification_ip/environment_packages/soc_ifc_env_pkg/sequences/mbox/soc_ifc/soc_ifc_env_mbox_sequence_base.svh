@@ -48,6 +48,9 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   extern virtual task mbox_poll_status();
   extern virtual task mbox_clr_execute();
 
+  // Constrain command to not be firmware
+  constraint mbox_cmd_c { mbox_op_rand.cmd.cmd_s.fw == 1'b0; }
+
   // Constrain size to less than 128KiB for now (mailbox size), but we will
   // recalculate this based on the command being sent
   constraint mbox_dlen_max_c { mbox_op_rand.dlen <= 32'h0002_0000; }

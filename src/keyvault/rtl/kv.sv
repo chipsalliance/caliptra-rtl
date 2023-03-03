@@ -131,9 +131,9 @@ always_comb begin : keyvault_ctrl
         key_entry_last_dword_next[entry] = '0;
         for (int client = 0; client < KV_NUM_WRITE; client++) begin
             key_entry_ctrl_we[entry] |= (kv_write[client].write_entry == entry) & kv_write[client].write_en; 
-            key_entry_dest_valid_next[entry] |= kv_write[client].write_en ? kv_write[client].write_dest_valid : '0;
+            key_entry_dest_valid_next[entry] |= kv_write[client].write_en & (kv_write[client].write_entry == entry) ? kv_write[client].write_dest_valid : '0;
             //store the final offset on the last write cycle, we'll use that to signal last dword on reads
-            key_entry_last_dword_next[entry] |= kv_write[client].write_en ? kv_write[client].write_offset : '0;
+            key_entry_last_dword_next[entry] |= kv_write[client].write_en & (kv_write[client].write_entry == entry) ? kv_write[client].write_offset : '0;
         end 
         kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.we = key_entry_ctrl_we[entry];
         kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.next = key_entry_dest_valid_next[entry];
@@ -155,7 +155,7 @@ always_comb begin : keyvault_ctrl
                                                 kv_write[client].write_en) | flush_keyvault) & 
                                                ~kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value;
                 key_entry_next[entry][dword] |= flush_keyvault ? debug_value :
-                                                kv_write[client].write_en ? kv_write[client].write_data : '0;
+                                                kv_write[client].write_en & (kv_write[client].write_entry == entry) ? kv_write[client].write_data : '0;
             end
             kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.we = key_entry_we[entry][dword];
             kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.next = key_entry_next[entry][dword];
