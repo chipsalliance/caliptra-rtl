@@ -1,0 +1,3 @@
+needs:
+  - SHA512_out_hvl.compile
+  - SHA512_out_hdl.compile

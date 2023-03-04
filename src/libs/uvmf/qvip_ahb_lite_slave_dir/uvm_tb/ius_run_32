@@ -1,0 +1,22 @@
+#!/bin/bash
+
+LD_LIBRARY_PATH=${QUESTA_MVC_HOME}/questa_mvc_core/linux_gcc-6.3_ius:${IUS_HOME}/tools/cdsgcc/gcc/6.3/install/lib:${LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH
+
+xrun -sv -uvm -quiet -access +rwc -timescale 1ns/1ns \
+    +incdir+${QUESTA_MVC_HOME}/questa_mvc_src/sv \
+    ${QUESTA_MVC_HOME}/include/questa_mvc_svapi.sv \
+    +define+MAP_PROT_ATTR ${QUESTA_MVC_HOME}/questa_mvc_src/sv/mvc_pkg.sv \
+    +incdir+${QUESTA_MVC_HOME}/questa_mvc_src/sv/ahb ${QUESTA_MVC_HOME}/questa_mvc_src/sv/ahb/mgc_ahb_v2_0_pkg.sv \
+    +incdir+../config_policies \
+    ../config_policies/qvip_ahb_lite_slave_params_pkg.sv \
+    qvip_ahb_lite_slave_pkg.sv \
+    +incdir+${QUESTA_MVC_HOME}/questa_mvc_src/sv/ahb/modules ${QUESTA_MVC_HOME}/questa_mvc_src/sv/ahb/modules/ahb_lite_slave.sv \
+    default_clk_gen.sv \
+    default_reset_gen.sv \
+    hdl_qvip_ahb_lite_slave.sv \
+    hvl_qvip_ahb_lite_slave.sv \
+    -sv_root ${QUESTA_MVC_HOME}/questa_mvc_core/linux_gcc-6.3_ius \
+    -sv_lib libahb_IN_SystemVerilog_IUS_full \
+    +UVM_TESTNAME=qvip_ahb_lite_slave_test_base \
+    +SEQ=qvip_ahb_lite_slave_example_vseq

@@ -1,0 +1,13 @@
+export QVIP_AHB_LITE_SLAVE_DIR_NAME=$(pwd)/../uvmf
+
+echo "Setting up work directory"
+vlib work
+
+vlog -f qvip_ahb_lite_slave_test_filelist.f +incdir+${QUESTA_MVC_HOME}/questa_mvc_src/sv \
+    ../uvmf/hdl_qvip_ahb_lite_slave.sv \
+    ../uvmf/hvl_qvip_ahb_lite_slave.sv 
+echo "Optimisation step"
+vopt -o top_opt hdl_qvip_ahb_lite_slave hvl_qvip_ahb_lite_slave -debug -designfile design.bin
+
+echo "Running test"
+vsim -c -mvchome ${QUESTA_MVC_HOME} top_opt +nowarnTSCALE -t 1ns -do "run -all; quit" +UVM_TESTNAME=qvip_ahb_lite_slave_test_base +SEQ=qvip_ahb_lite_slave_example_vseq -qwavedb=+signal+transaction+class+uvm_schematic

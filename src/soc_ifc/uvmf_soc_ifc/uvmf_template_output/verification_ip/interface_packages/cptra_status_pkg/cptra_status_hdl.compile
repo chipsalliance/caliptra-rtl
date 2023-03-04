@@ -1,0 +1,9 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.compile
+  - ./cptra_status_common.compile
+incdir:
+  - .
+src:
+  - src/cptra_status_if.sv
+  - src/cptra_status_monitor_bfm.sv
+  - src/cptra_status_driver_bfm.sv

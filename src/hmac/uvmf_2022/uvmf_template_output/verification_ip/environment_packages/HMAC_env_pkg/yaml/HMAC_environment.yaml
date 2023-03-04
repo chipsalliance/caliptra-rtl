@@ -1,0 +1,38 @@
+uvmf:
+  environments:
+    HMAC:
+      agents:
+      - initiator_responder: INITIATOR
+        name: HMAC_in_agent
+        type: HMAC_in
+      - initiator_responder: RESPONDER
+        name: HMAC_out_agent
+        type: HMAC_out
+      analysis_components:
+      - name: HMAC_pred
+        parameters: []
+        type: HMAC_predictor
+      analysis_exports: []
+      analysis_ports: []
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      hvl_pkg_parameters: []
+      non_uvmf_components: []
+      parameters: []
+      qvip_memory_agents: []
+      scoreboards:
+      - name: HMAC_sb
+        sb_type: uvmf_in_order_scoreboard
+        trans_type: HMAC_out_transaction
+      subenvs: []
+      tlm_connections:
+      - driver: HMAC_in_agent.monitored_ap
+        receiver: HMAC_pred.HMAC_in_agent_ae
+        validate: 'True'
+      - driver: HMAC_pred.HMAC_sb_ap
+        receiver: HMAC_sb.expected_analysis_export
+        validate: 'True'
+      - driver: HMAC_out_agent.monitored_ap
+        receiver: HMAC_sb.actual_analysis_export
+        validate: 'True'

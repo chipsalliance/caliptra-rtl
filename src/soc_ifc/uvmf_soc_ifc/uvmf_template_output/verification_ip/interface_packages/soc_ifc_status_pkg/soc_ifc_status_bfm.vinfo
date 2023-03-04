@@ -1,0 +1,6 @@
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.vinfo
+@use soc_ifc_status_pkg_hdl.vinfo
++incdir+@vinfodir
+src/soc_ifc_status_if.sv
+src/soc_ifc_status_driver_bfm.sv
+src/soc_ifc_status_monitor_bfm.sv

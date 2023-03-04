@@ -1,0 +1,4 @@
++incdir+${WORKSPACE}/Caliptra/src/integration/rtl
+${WORKSPACE}/Caliptra/src/integration/rtl/config_defines.svh
+${WORKSPACE}/Caliptra/src/integration/rtl/caliptra_reg_defines.svh
+${WORKSPACE}/Caliptra/src/integration/rtl/caliptra_reg_defines.svh

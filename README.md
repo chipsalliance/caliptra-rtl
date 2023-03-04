@@ -1,5 +1,6 @@
 _*SPDX-License-Identifier: Apache-2.0<BR>
 <BR>
+<BR>
 Licensed under the Apache License, Version 2.0 (the "License");<BR>
 you may not use this file except in compliance with the License.<BR>
 You may obtain a copy of the License at<BR>
@@ -12,13 +13,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.<BR>
 See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
-# **Caliptra RTL Hands-On Guide** #
-_*Last Update: 2023/01/23*_
+# **Caliptra Hands-On Guide** #
+_*Last Update: 2023/03/02*_
 
 [[_TOC_]]
-
-## **Overview** ##
-RTL and Verification for Caliptra RoT IP.
 
 ## **Tools Used** ##
 
@@ -67,11 +65,14 @@ Required for Firmware (i.e. Test suites) makefile:<BR>
 Caliptra
 |-- LICENSE
 |-- README.md
-|-- VERSION.txt
 |-- Release_notes.txt
-|-- Coming_soon.txt
+|-- docs
+|   |-- Caliptra_Integration_Specification.pdf
+|   |-- Caliptra_Hardware_Spec.pdf
+|   |-- Caliptra_TestPlan_L1.pdf
 |-- src
 |   |-- ahb_lite_bus
+|   |-- datavault
 |   |-- doe
 |   |-- ecc
 |   |-- hmac
@@ -79,6 +80,7 @@ Caliptra
 |   |-- integration
 |   |-- keyvault
 |   |-- libs
+|   |-- pcrvault
 |   |-- riscv_core
 |   |-- sha256
 |   |-- sha512
@@ -105,7 +107,7 @@ The "Integration" sub-component contains the top-level fileset for Caliptra. `sr
 `rdl_post_process.py`: Post-processing functionality to make RDL generated SystemVerilog files compatible with lint/Verilator requirements<BR>
 `run_verilator_l0_regression.py`: Wrapper to run the L0 smoke test regression suite using the Makefile flow in Verilator<BR>
 `integration_vector_gen.py`: Generates test vectors for crypto core tests<BR>
-`swerv_build_command.sh`: Shell script used to generate the SweRV-EL2 repository present in `src/riscv_core/swerv_el2`<BR>
+`veer_build_command.sh`: Shell script used to generate the VeeR-EL2 repository present in `src/riscv_core/veer_el2`<BR>
 
 ## **Simulation Flow** ##
 VCS Steps:

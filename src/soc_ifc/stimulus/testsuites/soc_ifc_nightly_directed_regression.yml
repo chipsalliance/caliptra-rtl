@@ -1,0 +1,8 @@
+document:
+  schema: 1.0
+
+contents:
+  - tests:
+      tags: ["L0", "directed", "nightly", "SOC_IFC"]
+      paths:
+        - ${WORKSPACE}/Caliptra/src/soc_ifc/stimulus/tests/directed/soc_ifc_test.yml

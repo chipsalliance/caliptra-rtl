@@ -1,0 +1,3 @@
+needs:
+  - soc_ifc_status_hvl.compile
+  - soc_ifc_status_hdl.compile
