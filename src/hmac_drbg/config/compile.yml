@@ -1,0 +1,35 @@
+---
+provides: [hmac_drbg]
+schema_version: 2.4.0
+requires:
+  - libs
+  - hmac_ctrl
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/hmac_drbg.sv
+    tops: [hmac_drbg]
+---
+provides: [hmac_drbg_tb]  
+schema_version: 2.4.0
+requires: 
+  - hmac_drbg
+targets:
+  tb:
+    directories: 
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/tb/hmac_drbg_tb.sv
+    tops: [hmac_drbg_tb]
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        #- '-v2k_generate'
+        #- '-timescale=1ns/1ps'
+        - '-noinherit_timescale=1ns/1ps'
+        #- '-ucli -i dump.ucli'
+      #sim:
+        #- '-ucli -i dump.ucli'

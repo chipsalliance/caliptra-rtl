@@ -1,0 +1,9 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.compile
+  - ./HMAC_in_common.compile
+incdir:
+  - .
+src:
+  - src/HMAC_in_if.sv
+  - src/HMAC_in_monitor_bfm.sv
+  - src/HMAC_in_driver_bfm.sv

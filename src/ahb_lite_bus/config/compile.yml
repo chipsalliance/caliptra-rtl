@@ -1,0 +1,17 @@
+---
+provides: [ahb_lite_bus]
+schema_version: 2.4.0
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/ahb_lite_bus_inf.sv
+      - $COMPILE_ROOT/rtl/ahb_lite_address_decoder.sv
+      - $COMPILE_ROOT/rtl/ahb_lite_bus.sv
+      - $COMPILE_ROOT/rtl/ahb_lite_2to1_mux.sv
+    tops: [ahb_lite_bus]
+  rtl_lint:
+    directories: []
+    waiver_files: 
+    - $COMPILE_ROOT/config/design_lint/ahb_lite_bus/sglint_waivers
+

@@ -1,0 +1,87 @@
+uvmf:
+  interfaces:
+    "ECC_in":
+      clock: "clk"
+      reset: "rst_n"
+      reset_assertion_level: "False"
+
+      parameters:
+      - name: AHB_ADDR_WIDTH
+        type: int
+        value: '32'
+      - name: AHB_DATA_WIDTH
+        type: int
+        value: '32'
+
+      hdl_typedefs:
+      - name: ecc_in_test_transactions
+        type: enum bit[1:0] {ecc_reset_test = 2'b00, ecc_normal_test = 2'b01, ecc_otf_reset_test = 2'b10}
+      - name: ecc_in_op_transactions
+        type: enum bit[1:0] {key_gen = 2'b00, key_sign = 2'b01, key_verify = 2'b10 }
+
+      ports:
+      - name: ecc_rst_n
+        dir: output
+        width: '1'
+      - name: haddr
+        dir: output
+        width: AHB_ADDR_WIDTH
+      - name: hwdata
+        dir: output
+        width: AHB_DATA_WIDTH
+      - name: hsel
+        dir: output
+        width: '1'
+      - name: hwrite
+        dir: output
+        width: '1'
+      - name: hready
+        dir: output
+        width: '1'
+      - name: htrans
+        dir: output
+        width: '2'
+      - name: hsize
+        dir: output
+        width: '3'
+      - name: hrdata
+        dir: input
+        width: AHB_DATA_WIDTH
+      - name: hreadyout
+        dir: input
+        width: '1'
+      - name: transaction_flag_out_monitor
+        dir: output
+        width: '1'
+      - name: test
+        dir: output
+        width: '3'
+      - name: op
+        dir: output
+        width: '2'
+
+      response_info:
+        data: []
+        operation: 1'b0
+
+      transaction_vars:
+      - comment: ''
+        name: test
+        type: ecc_in_test_transactions
+        iscompare: 'True'
+        isrand: 'True'
+        unpacked_dimension: ''
+      - comment: ''
+        name: op
+        type: ecc_in_op_transactions
+        iscompare: 'True'
+        isrand: 'True'
+        unpacked_dimension: ''
+
+
+      transaction_constraints:
+      - name: ecc_valid_test_constraints
+        value: '{ test inside {ecc_normal_test, ecc_otf_reset_test, ecc_openssl_test}; }'
+      - name: ecc_valid_op_constraints
+        value: '{ op inside {key_gen, key_sign, key_verify}; }'
+

@@ -1,0 +1,7 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.compile
+  - ./soc_ifc_status_common.compile
+incdir:
+  - .
+src:
+  - soc_ifc_status_pkg.sv

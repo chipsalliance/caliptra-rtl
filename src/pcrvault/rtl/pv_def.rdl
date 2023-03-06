@@ -1,0 +1,45 @@
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+   reg pv_status_reg {
+        name = "PCR Vault Hash Extend Status Register";
+        desc = "Reports the PCR Vault Hash Extend Status";
+
+        field {desc = "Hash extend function is ready for use"; sw=r; hw=w;} READY = 1'b0;
+        field {desc = "Hash extend is done. "; sw=r; hw=na; hwset; hwclr;} VALID = 1'b0;
+        field {
+            name = "Pcr Vault Error";
+            desc = "Indicates the error status of a pcr vault flow";
+
+            enum pv_error_e {
+                SUCCESS = 8'h00 {
+                    desc = "Pcr Vault flow was successful";
+                };
+                PV_READ_FAIL = 8'h01 {
+                    desc = "Pcr Vault Read flow failed";
+                };
+                PV_WRITE_FAIL = 8'h02 {
+                    desc = "Pcr Vault Write flow failed";
+                };
+            };
+            sw=r; hw=w; encode = pv_error_e;} ERROR[8]=0;
+    };
+
+    reg pv_hash_extend_reg #(longint unsigned PV_ENTRY_ADDRESS_W = 5) {
+        name = "PCR Vault Hash Extend Control";
+        desc = "Control the Hash Extend function for PCRs";
+
+        field {desc = "Starts the hash extend function, first reading the source PCR."; hwclr;} hash_ext_en = 0;
+        field {desc = "PCR source and destination for hash extend function";} read_entry[PV_ENTRY_ADDRESS_W] = 0; 
+    };

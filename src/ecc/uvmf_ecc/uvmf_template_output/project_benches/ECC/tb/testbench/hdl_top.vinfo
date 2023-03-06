@@ -1,0 +1,6 @@
+@use $UVMF_PROJECT_DIR/rtl/verilog/verilog_dut.vinfo
+@use $UVMF_PROJECT_DIR/tb/parameters/ECC_parameters_pkg.vinfo
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/ECC_in_pkg/ECC_in_bfm.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/ECC_out_pkg/ECC_out_bfm.vinfo
+hdl_top.sv

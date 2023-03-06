@@ -1,0 +1,4 @@
++incdir+${WORKSPACE}/Caliptra/src/ahb_lite_bus/rtl
+${WORKSPACE}/Caliptra/src/ahb_lite_bus/rtl/ahb_bus.sv
+${WORKSPACE}/Caliptra/src/ahb_lite_bus/rtl/ahb_node.sv
+${WORKSPACE}/Caliptra/src/ahb_lite_bus/rtl/ahb_node_wrap.sv

@@ -1,0 +1,47 @@
+provides: [dv_defines_pkg]
+schema_version: 2.4.0
+requires: []
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files: 
+      - $COMPILE_ROOT/rtl/dv_defines_pkg.sv
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/dv_defines_pkg.sv
+---
+provides: [dv_uvm_pkg]
+schema_version: 2.4.0
+targets:
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/dv_reg_uvm.sv
+---
+provides: [datavault]
+schema_version: 2.4.0
+requires: 
+  - libs
+  - dv_defines_pkg
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/dv_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/dv_reg.sv
+      - $COMPILE_ROOT/rtl/dv_defines_pkg.sv
+      - $COMPILE_ROOT/rtl/dv.sv
+    tops: [dv]
+  rtl_lint:
+    directories: []
+    waiver_files:
+      - $COMPILE_ROOT/config/design_lint/datavault/sglint_waivers
+    black_box:
+      - dv_reg
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        #- '-v2k_generate'

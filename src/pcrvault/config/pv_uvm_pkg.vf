@@ -1,0 +1,2 @@
++incdir+${WORKSPACE}/Caliptra/src/pcrvault/rtl
+${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_reg_uvm.sv

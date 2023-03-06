@@ -1,0 +1,17 @@
+uvmf:
+  benches:
+    HMAC:
+      active_passive:
+      - bfm_name: HMAC_in_agent
+        value: ACTIVE
+      - bfm_name: HMAC_out_agent
+        value: PASSIVE
+      active_passive_default: ACTIVE
+      clock_half_period: 5ns
+      clock_phase_offset: 0ns
+      existing_library_component: 'True'
+      interface_params: []
+      reset_assertion_level: 'False'
+      reset_duration: 200ns
+      top_env: HMAC
+      use_dpi_link: 'False'

@@ -1,0 +1,8 @@
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/SHA512_in_pkg/SHA512_in_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/SHA512_out_pkg/SHA512_out_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/environment_packages/SHA512_env_pkg/SHA512_env_pkg.vinfo
+@use $UVMF_PROJECT_DIR/tb/parameters/SHA512_parameters_pkg.vinfo
+@use $UVMF_PROJECT_DIR/tb/sequences/SHA512_sequences_pkg.vinfo
++incdir+@vinfodir
+SHA512_tests_pkg.sv

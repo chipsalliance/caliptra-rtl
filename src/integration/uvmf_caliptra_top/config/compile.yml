@@ -1,0 +1,74 @@
+---
+provides: [uvmf_caliptra_top_vip]
+schema_version: 2.4.0
+requires:
+  - uvmf_lib
+  - uvmf_soc_ifc_vip
+targets:
+  tb:
+    directories:
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/caliptra_top_env_pkg
+    files:
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/caliptra_top_env_pkg/caliptra_top_env_pkg.sv
+---
+provides: [uvmf_caliptra_top]
+schema_version: 2.4.0
+requires:
+  - uvmf_caliptra_top_vip
+  - caliptra_top
+targets:
+  tb:
+    directories:
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/caliptra_top/tb/parameters
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/caliptra_top/tb/sequences
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/caliptra_top/tb/tests
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/caliptra_top/tb/testbench
+      - ${COMPILE_ROOT}/../tb
+    files:
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/caliptra_top/tb/parameters/caliptra_top_parameters_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/caliptra_top/tb/sequences/caliptra_top_sequences_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/caliptra_top/tb/tests/caliptra_top_tests_pkg.sv
+      - ${COMPILE_ROOT}/../tb/caliptra_veer_sram_export.sv
+      - ${COMPILE_ROOT}/../tb/caliptra_top_tb_pkg.sv
+      - ${COMPILE_ROOT}/../tb/caliptra_top_tb_services.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/caliptra_top/tb/testbench/hdl_top.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/caliptra_top/tb/testbench/hvl_top.sv
+    tops:
+      - hdl_top
+      - hvl_top
+  sim:
+    # TODO: Eventually we will load caliptra_fmc/rt hexfiles to mailbox in the TB logic instead
+    #       of preloading here with this rename approach
+    pre_exec: |
+        make -f ${AHA_POC_REPO}/tools/scripts/Makefile TESTNAME=caliptra_top program.hex &&
+        make -f ${AHA_POC_REPO}/tools/scripts/Makefile TESTNAME=caliptra_fmc caliptra_fmc.hex &&
+        make -f ${AHA_POC_REPO}/tools/scripts/Makefile TESTNAME=caliptra_rt  caliptra_rt.hex &&
+        cp caliptra_fmc.hex mailbox.hex
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        #- '-v2k_generate'
+        #- '-timescale=1ns/1ps'
+        - '-noinherit_timescale=1ns/1ps'
+        #- '-ucli -i dump.ucli'
+      #sim:
+        #- '-ucli -i dump.ucli'
+        # Suppress a warning due to calling $fgets as task instead of function
+        # i.e. discarding the return value. This is in auto-generated code.
+        - '+warn=noRVOSFD'
+        # Suppress NOTE about repeated package imports within the same
+        # package (each .svh file included in the auto-generated UVM _pkg.sv
+        # files imports the same dependencies)
+        - '-suppress=SV-LCM-PPWI'
+      elab:
+        # Suppress warnings about too few port connections - auto-generated interfaces
+        # declare all signals as inout, but are driven at a lower layer than the
+        # instantiation, so they will always flag this
+        - '-suppress=TFIPC'
+      sim:
+        - '-sv_root $QUESTA_MVC_HOME/questa_mvc_core/linux_x86_64_gcc-6.2.0_vcs'
+        - '-sv_lib libahb_IN_SystemVerilog_VCS_full'
+        - '-sv_lib libapb3_IN_SystemVerilog_VCS_full'

@@ -1,0 +1,37 @@
+uvmf:
+  environments:
+    ECC:
+    
+      agents:
+      - name: ECC_in_agent
+        type: ECC_in
+        initiator_responder: "INITIATOR"
+      - name: ECC_out_agent
+        type: ECC_out
+        initiator_responder: "RESPONDER"
+    
+      analysis_components:
+      - name: ECC_pred
+        type: ECC_predictor
+      analysis_exports: []
+      analysis_ports: []
+    
+      config_constraints: []
+      config_vars: []
+    
+      parameters: []
+    
+      scoreboards:
+      - name: ECC_sb
+        sb_type: uvmf_in_order_scoreboard
+        trans_type: ECC_out_transaction
+    
+      subenvs: []
+    
+      tlm_connections:
+      - driver: ECC_in_agent.monitored_ap            # connection 00
+        receiver: ECC_pred.ECC_in_agent_ae
+      - driver: ECC_pred.ECC_sb_ap                   # connection 01
+        receiver: ECC_sb.expected_analysis_export
+      - driver: ECC_out_agent.monitored_ap           # connection 02
+        receiver: ECC_sb.actual_analysis_export

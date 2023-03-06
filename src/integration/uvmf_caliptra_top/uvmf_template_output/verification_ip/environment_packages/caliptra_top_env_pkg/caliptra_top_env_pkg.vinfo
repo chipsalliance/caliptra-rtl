@@ -1,0 +1,4 @@
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/environment_packages/soc_ifc_subenv_pkg/soc_ifc_subenv_pkg.vinfo
++incdir+@vinfodir
+caliptra_top_env_pkg.sv

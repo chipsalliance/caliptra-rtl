@@ -1,0 +1,68 @@
+---
+provides: [uvmf_sha512]
+schema_version: 2.4.0
+requires:
+  - uvmf_lib
+  - sha512_ctrl
+targets:
+  tb:
+    directories:
+      - ${COMPILE_ROOT}/../rtl
+      - ${COMPILE_ROOT}/../../libs/rtl
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/SHA512_in_pkg
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/SHA512_in_pkg/src
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/SHA512_out_pkg
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/SHA512_out_pkg/src
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/SHA512_env_pkg
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/SHA512/tb/parameters
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/SHA512/tb/sequences
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/SHA512/tb/tests
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/SHA512/tb/testbench
+    files:
+#      - ${COMPILE_ROOT}/../rtl/sha512_intr_regs_uvm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/SHA512_in_pkg/SHA512_in_pkg_hdl.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/SHA512_in_pkg/SHA512_in_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/SHA512_in_pkg/src/SHA512_in_driver_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/SHA512_in_pkg/src/SHA512_in_if.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/SHA512_in_pkg/src/SHA512_in_monitor_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/SHA512_out_pkg/SHA512_out_pkg_hdl.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/SHA512_out_pkg/SHA512_out_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/SHA512_out_pkg/src/SHA512_out_driver_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/SHA512_out_pkg/src/SHA512_out_if.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/SHA512_out_pkg/src/SHA512_out_monitor_bfm.sv
+#      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/SHA512_env_pkg/registers/SHA512_reg_model_top_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/SHA512_env_pkg/SHA512_env_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/SHA512/tb/parameters/SHA512_parameters_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/SHA512/tb/sequences/SHA512_sequences_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/SHA512/tb/tests/SHA512_tests_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/SHA512/tb/testbench/hdl_top.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/SHA512/tb/testbench/hvl_top.sv
+    tops:
+      - hdl_top
+      - hvl_top
+  sim:
+    pre_exec: 'echo "[PRE-EXEC] Copying SHA512 Vectors to $(pwd)" && cp $COMPILE_ROOT/../tb/vectors/SHA*.rsp .'
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        #- '-v2k_generate'
+        #- '-timescale=1ns/1ps'
+        - '-noinherit_timescale=1ns/1ps'
+        #- '-ucli -i dump.ucli'
+      #sim:
+        #- '-ucli -i dump.ucli'
+        # Suppress a warning due to calling $fgets as task instead of function
+        # i.e. discarding the return value. This is in auto-generated code.
+        - '+warn=noRVOSFD'
+        # Suppress NOTE about repeated package imports within the same
+        # package (each .svh file included in the auto-generated UVM _pkg.sv
+        # files imports the same dependencies)
+        - '-suppress=SV-LCM-PPWI'
+      elab:
+        # Suppress warnings about too few port connections - auto-generated interfaces
+        # declare all signals as inout, but are driven at a lower layer than the
+        # instantiation, so they will always flag this
+        - '-suppress=TFIPC'

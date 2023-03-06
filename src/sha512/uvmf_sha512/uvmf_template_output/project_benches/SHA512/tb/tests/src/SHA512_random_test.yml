@@ -1,0 +1,6 @@
+---
+# Random seed desired...
+seed: ${PLAYBOOK_RANDOM_SEED}
+plusargs:
+- '+UVM_TESTNAME=SHA512_random_test'
+testname: SHA512_random_test
