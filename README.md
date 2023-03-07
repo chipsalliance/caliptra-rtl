@@ -14,9 +14,8 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Caliptra Hands-On Guide** #
-_*Last Update: 2023/03/02*_
+_*Last Update: 2023/03/06*_
 
-[[_TOC_]]
 
 ## **Tools Used** ##
 
@@ -110,7 +109,8 @@ The "Integration" sub-component contains the top-level fileset for Caliptra. `sr
 `veer_build_command.sh`: Shell script used to generate the VeeR-EL2 repository present in `src/riscv_core/veer_el2`<BR>
 
 ## **Simulation Flow** ##
-VCS Steps:
+
+### VCS Steps: ###
 1. Setup tools, add to PATH (ensure riscv64-unknown-elf-gcc is also available)
 1. Define all environment variables above
     - For the initial test run after downloading repository, `iccm_lock` is recommended for TESTNAME
@@ -120,7 +120,7 @@ VCS Steps:
 1. Compile complete project using `src/integration/config/caliptra_top_tb.vf` as a compilation target in VCS. When running the `vcs` command to generate simv, users should ensure that `caliptra_top_tb` is explicitly specified as the top-level component in their command to ensure this is the sole "top" that gets simulated.
 1. Simulate project with `caliptra_top_tb` as the top target
 
-Verilator Steps:
+### Verilator Steps: ###
 1. Setup tools, add to PATH (ensure Verilator, GCC, and riscv64-unknown-elf-gcc are available)
 1. Define all environment variables above
     - For the initial test run after downloading repository, `iccm_lock` is recommended for TESTNAME
@@ -140,11 +140,12 @@ Verilator Steps:
     1. NOTE: The script automatically creates run output folders at `${WORKSPACE}/scratch/$USER/verilator/<timestamp>/<testname>` for each test run
     1. NOTE: The output folder is populated with a run log that reports the run results and pass/fail status
 
-UVM Testbench Steps for `caliptra_top`:<BR>
-Description:<BR>
+### UVM Testbench Steps for `caliptra_top`: <BR>
+
+**Description**:<BR>
 The UVM Framework generation tool was used to create the baseline UVM testbench for verification of the top-level Caliptra image. The top-level bench leverages the `soc_ifc_top` testbench as a subenvironment, to reuse environment level sequences, agents, register models, and predictors.
 
-Prerequisites:<BR>
+**Prerequisites**:<BR>
 - QVIP 2021.2.1 for Mentor Graphics (provides the AHB/APB VIP)
 - UVM 1.1d installation
 
@@ -159,3 +160,7 @@ Steps:<BR>
 1. Provide `+UVM_TESTNAME=<test>` argument to simulation
 
 ## **NOTES** ##
+
+* The internal registers are auto rendered at the [github
+  page](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs)
+* So are the [external registers](https://chipsalliance.github.io/caliptra-rtl/main/external-regs)
