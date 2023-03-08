@@ -87,7 +87,7 @@ package sha512_acc_csr_uvm;
 
         virtual function void build();
             this.DATAIN = new("DATAIN");
-            this.DATAIN.configure(this, 32, 0, "RW", 0, 'h0, 0, 1, 0);
+            this.DATAIN.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : sha512_acc_csr__DATAIN
 

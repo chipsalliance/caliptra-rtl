@@ -57,7 +57,7 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
   constraint avail_env_seqs_c {
       rand_seq_idx dist {
           //IDX_SOC_IFC_ENV_MBOX_RAND_FW            := 0,
-          IDX_SOC_IFC_ENV_MBOX_RAND_SMALL         := 1000,
+          IDX_SOC_IFC_ENV_MBOX_RAND_SMALL         := 500,
           IDX_SOC_IFC_ENV_MBOX_RAND_MEDIUM        := 100,
           IDX_SOC_IFC_ENV_MBOX_RAND_LARGE         := 1,
           IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_MEDIUM := 100
@@ -73,6 +73,7 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
     if ($value$plusargs("CALIPTRA_TOP_RAND_ITER=%d", iteration_count)) begin
         `uvm_info("CALIPTRA_TOP_RAND_TEST", $sformatf("Received Command Line Iteration Count Argument of %d", iteration_count), UVM_LOW);
         iteration_count.rand_mode(0);
+        this.iter_count_c.constraint_mode(0);
     end
     else begin
         if (!this.randomize(iteration_count))

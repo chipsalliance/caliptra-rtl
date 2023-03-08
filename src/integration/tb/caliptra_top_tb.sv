@@ -90,7 +90,7 @@ module caliptra_top_tb (
     logic                       jtag_tdo;    // JTAG TDO
     //APB Interface
     logic [`CALIPTRA_APB_ADDR_WIDTH-1:0] PADDR;
-    logic [3:0]                          PPROT;
+    logic [2:0]                          PPROT;
     logic                                PSEL;
     logic                                PENABLE;
     logic                                PWRITE;
@@ -583,7 +583,7 @@ caliptra_top caliptra_top_dut (
     .jtag_tdo(jtag_tdo),
     
     .PADDR(PADDR),
-    .PPROT(),
+    .PPROT(PPROT),
     .PAUSER(PAUSER),
     .PENABLE(PENABLE),
     .PRDATA(PRDATA),

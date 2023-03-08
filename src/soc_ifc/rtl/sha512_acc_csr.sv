@@ -702,8 +702,10 @@ module sha512_acc_csr (
         field_combo.DATAIN.DATAIN.next = next_c;
         field_combo.DATAIN.DATAIN.load_next = load_next_c;
     end
-    always_ff @(posedge clk) begin
-        if(field_combo.DATAIN.DATAIN.load_next) begin
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.DATAIN.DATAIN.value <= 'h0;
+        end else if(field_combo.DATAIN.DATAIN.load_next) begin
             field_storage.DATAIN.DATAIN.value <= field_combo.DATAIN.DATAIN.next;
         end
     end

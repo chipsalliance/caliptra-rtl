@@ -38,15 +38,15 @@ module caliptra_top
 
     //APB Interface
     input  logic [`CALIPTRA_APB_ADDR_WIDTH-1:0] PADDR,
-    input  logic [2:0]                 PPROT,
-    input  logic                       PSEL,
-    input  logic                       PENABLE,
-    input  logic                       PWRITE,
+    input  logic [2:0]                          PPROT,
+    input  logic                                PSEL,
+    input  logic                                PENABLE,
+    input  logic                                PWRITE,
     input  logic [`CALIPTRA_APB_DATA_WIDTH-1:0] PWDATA,
     input  logic [`CALIPTRA_APB_USER_WIDTH-1:0] PAUSER,
 
-    output logic                       PREADY,
-    output logic                       PSLVERR,
+    output logic                                PREADY,
+    output logic                                PSLVERR,
     output logic [`CALIPTRA_APB_DATA_WIDTH-1:0] PRDATA,
 
     //QSPI Interface
@@ -997,5 +997,18 @@ endgenerate
 `CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HRESP_X,        initiator_inst.hresp,       clk, cptra_noncore_rst_b)
 `CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HRDATA_X,       initiator_inst.hready ? initiator_inst.hrdata : '0,      clk, cptra_noncore_rst_b)
 `CALIPTRA_ASSERT_NEVER(AHB_MASTER_HTRANS_BUSY,    initiator_inst.htrans == 2'b01, clk, cptra_noncore_rst_b)
+
+`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PADDR_X,        PADDR,                clk, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PWDATA_X,       PWDATA,               clk, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PWRITE_X,       PWRITE,               clk, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PREADY_X,       PREADY,               clk, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PENABLE_X,      PENABLE,              clk, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PSEL_X,         PSEL,                 clk, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PPROT_X,        PPROT,                clk, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PAUSER_X,       PAUSER,               clk, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PSLVERR_X,      PSLVERR,              clk, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PRDATA_X,       PREADY ? PRDATA : '0, clk, cptra_rst_b)
+
+`CALIPTRA_ASSERT_NEVER(APB_MASTER_PPROT_ACTIVE,   PPROT !== 3'b000, clk, cptra_rst_b)
 
 endmodule

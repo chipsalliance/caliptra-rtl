@@ -39,6 +39,7 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   int sts_rsp_count;
   uvm_status_e reg_sts;
 
+  extern virtual task mbox_setup();
   extern virtual task mbox_acquire_lock(output op_sts_e op_sts);
   extern virtual task mbox_set_cmd(input mbox_op_s op);
   extern virtual task mbox_push_datain();
@@ -47,6 +48,7 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   extern virtual task mbox_read_resp_data();
   extern virtual task mbox_poll_status();
   extern virtual task mbox_clr_execute();
+  extern virtual task mbox_teardown();
 
   // Constrain command to not be firmware
   constraint mbox_cmd_c { mbox_op_rand.cmd.cmd_s.fw == 1'b0; }
@@ -68,15 +70,8 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
 
   endfunction
 
-  virtual task pre_start();
-    `uvm_info(this.get_type_name(), "In: pre_start() for sequence", UVM_MEDIUM)
-  endtask
-
-  virtual task body();
-
-    op_sts_e op_sts;
-
-    sts_rsp_count = 0;
+  virtual task pre_body();
+    super.pre_body();
     reg_model = configuration.soc_ifc_rm;
 
     if (soc_ifc_status_agent_rsp_seq == null)
@@ -86,6 +81,13 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
     // from the configuration object (which is not set until pre_body())
     assert(mbox_op_rand.dlen <= (reg_model.mbox_mem_rm.get_size() * reg_model.mbox_mem_rm.get_n_bytes())) else
         `uvm_error("MBOX_SEQ", $sformatf("Randomized SOC_IFC environment mailbox base sequence with bad dlen. Max: [0x%x] Got: [0x%x]. Cmd randomized to %p", (reg_model.mbox_mem_rm.get_size() * reg_model.mbox_mem_rm.get_n_bytes()), mbox_op_rand.dlen, mbox_op_rand.cmd.cmd_e))
+  endtask
+
+  virtual task body();
+
+    op_sts_e op_sts;
+
+    sts_rsp_count = 0;
 
     fork
         forever begin
@@ -95,12 +97,14 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
 
     `uvm_info("MBOX_SEQ", $sformatf("Initiating command sequence to mailbox with cmd: [%p] dlen: [%p] resp_dlen: [%p]", mbox_op_rand.cmd.cmd_e, mbox_op_rand.dlen, mbox_resp_expected_dlen), UVM_MEDIUM)
 
+    mbox_setup();
     mbox_acquire_lock(op_sts);
     mbox_set_cmd(mbox_op_rand);
     mbox_push_datain();
     mbox_execute();
     mbox_poll_status();
     mbox_clr_execute();
+    mbox_teardown();
 //    if (sts_rsp_count) `uvm_warning("MBOX_SEQ", $sformatf("Unhandled status responses received! Count: %d", sts_rsp_count))
 
   endtask
@@ -109,6 +113,10 @@ endclass
 
 // TODO these functions are all intended to be overridden by inheriting sequence
 //      although some (acquire lock) are simple and may not need any modification
+task soc_ifc_env_mbox_sequence_base::mbox_setup();
+    // placeholder
+endtask
+
 task soc_ifc_env_mbox_sequence_base::mbox_acquire_lock(output op_sts_e op_sts);
     uvm_reg_data_t data;
     op_sts = CPTRA_TIMEOUT;
@@ -214,4 +222,8 @@ task soc_ifc_env_mbox_sequence_base::mbox_clr_execute();
     reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, uvm_reg_data_t'(0), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
     if (reg_sts != UVM_IS_OK)
         `uvm_error("MBOX_SEQ", "Register access failed (mbox_execute)")
+endtask
+
+task soc_ifc_env_mbox_sequence_base::mbox_teardown();
+    // placeholder
 endtask
