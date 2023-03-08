@@ -32,20 +32,25 @@
 //
 class kv_write_monitor #(
       string KV_WRITE_REQUESTOR = "HMAC"
-      ) extends uvmf_monitor_base #(
+      )
+ extends uvmf_monitor_base #(
                     .CONFIG_T(kv_write_configuration  #(
                              .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-                             )),
+                             )
+),
                     .BFM_BIND_T(virtual kv_write_monitor_bfm  #(
                              .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-                             )),
+                             )
+),
                     .TRANS_T(kv_write_transaction  #(
                              .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-                             )));
+                             )
+));
 
   `uvm_component_param_utils( kv_write_monitor #(
                               KV_WRITE_REQUESTOR
-                              ))
+                              )
+)
 
 // Structure used to pass data from monitor BFM to monitor class in agent.
 // Use to_monitor_struct function to pack transaction variables into structure.

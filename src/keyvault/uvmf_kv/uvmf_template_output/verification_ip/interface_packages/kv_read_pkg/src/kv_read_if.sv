@@ -34,7 +34,7 @@
 // This template can be used to connect a DUT to these signals
 //
 // .dut_signal_port(kv_read_bus.kv_read), // Agent output 
-// .dut_signal_port(kv_read_bus.kv_resp), // Agent input 
+// .dut_signal_port(kv_read_bus.kv_rd_resp), // Agent input 
 
 import uvmf_base_pkg_hdl::*;
 import kv_read_pkg_hdl::*;
@@ -48,7 +48,7 @@ interface  kv_read_if #(
   input tri clk, 
   input tri dummy,
   inout tri [$bits(kv_defines_pkg::kv_read_t)-1:0] kv_read,
-  inout tri [$bits(kv_defines_pkg::kv_rd_resp_t)-1:0] kv_resp
+  inout tri [$bits(kv_defines_pkg::kv_rd_resp_t)-1:0] kv_rd_resp
   );
 
 modport monitor_port 
@@ -56,7 +56,7 @@ modport monitor_port
   input clk,
   input dummy,
   input kv_read,
-  input kv_resp
+  input kv_rd_resp
   );
 
 modport initiator_port 
@@ -64,7 +64,7 @@ modport initiator_port
   input clk,
   input dummy,
   output kv_read,
-  input kv_resp
+  input kv_rd_resp
   );
 
 modport responder_port 
@@ -72,7 +72,7 @@ modport responder_port
   input clk,
   input dummy,  
   input kv_read,
-  output kv_resp
+  output kv_rd_resp
   );
   
 

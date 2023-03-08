@@ -32,20 +32,25 @@
 //
 class kv_read_monitor #(
       string KV_READ_REQUESTOR = "HMAC_KEY"
-      ) extends uvmf_monitor_base #(
+      )
+ extends uvmf_monitor_base #(
                     .CONFIG_T(kv_read_configuration  #(
                              .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-                             )),
+                             )
+),
                     .BFM_BIND_T(virtual kv_read_monitor_bfm  #(
                              .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-                             )),
+                             )
+),
                     .TRANS_T(kv_read_transaction  #(
                              .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-                             )));
+                             )
+));
 
   `uvm_component_param_utils( kv_read_monitor #(
                               KV_READ_REQUESTOR
-                              ))
+                              )
+)
 
 // Structure used to pass data from monitor BFM to monitor class in agent.
 // Use to_monitor_struct function to pack transaction variables into structure.

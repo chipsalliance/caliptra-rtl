@@ -75,6 +75,10 @@ package kv_rst_pkg;
    `include "src/kv_rst_responder_sequence.svh"
    `include "src/kv_rst2reg_adapter.svh"
    `include "src/kv_rst_poweron_sequence.svh"
+   `include "src/kv_rst_warm_rst_sequence.svh"
+   `include "src/kv_rst_cold_rst_sequence.svh"
+   `include "src/kv_rst_core_rst_sequence.svh"
+   `include "src/kv_rst_debug_sequence.svh"
 
    `include "src/kv_rst_agent.svh"
 

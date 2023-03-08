@@ -41,31 +41,31 @@ uvmf:
       - comment: ''
         iscompare: 'True'
         isrand: 'True'
-        name: entry_is_pcr
-        type: logic
-        unpacked_dimension: ''
-      - comment: ''
-        iscompare: 'True'
-        isrand: 'True'
         name: write_entry
-        type: logic   [2:0]
+        type: logic   [KV_ENTRY_ADDR_W-1:0]
         unpacked_dimension: ''
       - comment: ''
         iscompare: 'True'
         isrand: 'True'
         name: write_offset
-        type: logic   [3:0]
+        type: logic   [KV_ENTRY_SIZE_W-1:0]
         unpacked_dimension: ''
       - comment: ''
         iscompare: 'True'
         isrand: 'True'
         name: write_data
-        type: logic   [31:0]
+        type: logic   [KV_DATA_W-1:0]
         unpacked_dimension: ''
       - comment: ''
         iscompare: 'True'
         isrand: 'True'
         name: write_dest_valid
-        type: logic   [5:0]
+        type: logic   [KV_NUM_READ-1:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'True'
+        name: error
+        type: logic
         unpacked_dimension: ''
       use_dpi_link: 'False'

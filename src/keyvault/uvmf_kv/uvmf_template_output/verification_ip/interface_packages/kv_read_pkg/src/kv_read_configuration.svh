@@ -29,23 +29,28 @@
 //
 class kv_read_configuration #(
       string KV_READ_REQUESTOR = "HMAC_KEY"
-      ) extends uvmf_parameterized_agent_configuration_base #(
+      )
+ extends uvmf_parameterized_agent_configuration_base #(
       .DRIVER_BFM_BIND_T(virtual kv_read_driver_bfm #(
                           .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-                          )),
+                          )
+),
       .MONITOR_BFM_BIND_T( virtual kv_read_monitor_bfm #(
                           .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-                          )));
+                          )
+));
 
   `uvm_object_param_utils( kv_read_configuration #(
                            KV_READ_REQUESTOR
-                           ))
+                           )
+)
 
 
   // Sequencer handle populated by agent
   uvm_sequencer #(kv_read_transaction #(
        .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-       ) ) sequencer;
+       )
+ ) sequencer;
 
   //Constraints for the configuration variables:
 
@@ -136,6 +141,7 @@ class kv_read_configuration #(
     uvm_config_db #( kv_read_configuration  #(
                              .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
                              )
+
                     )::set( null ,agent_path,UVMF_AGENT_CONFIG, this );
 
     // This configuration also places itself in the config db using the same identifier used by the interface.  This allows users to access
@@ -144,6 +150,7 @@ class kv_read_configuration #(
     uvm_config_db #( kv_read_configuration  #(
                              .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
                              )
+
                     )::set( null ,UVMF_CONFIGURATIONS, interface_name, this );
 
     kv_read_configuration_cg.set_inst_name($sformatf("kv_read_configuration_cg_%s",get_full_name()));
@@ -198,7 +205,8 @@ class kv_read_configuration #(
   // FUNCTION: get_sequencer
   function uvm_sequencer #(kv_read_transaction#(
        .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-       )) get_sequencer();
+       )
+) get_sequencer();
     return sequencer;
   endfunction
 

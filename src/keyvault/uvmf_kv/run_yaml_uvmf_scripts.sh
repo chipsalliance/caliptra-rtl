@@ -4,6 +4,7 @@ python ${UVMF_HOME}/scripts/yaml2uvmf.py --merge_source uvmf_template_output \
                                          kv_global.yaml \
                                          kv_interfaces.yaml \
                                          kv_util_comp_predictor.yaml \
+                                         kv_util_comp_scoreboard.yaml \
                                          ../../libs/uvmf/qvip_ahb_lite_slave_dir/uvmf/qvip_ahb_lite_slave_subenv_config.yaml \
                                          kv_environment.yaml \
                                          kv_bench.yaml \

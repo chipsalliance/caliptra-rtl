@@ -63,17 +63,21 @@ typedef struct packed  { \
 //      and from_monitor_struct methods of the kv_read_transaction class.
 //
   `define kv_read_MONITOR_STRUCT typedef struct packed  { \
-  logic entry_is_pcr ; \
-  logic [2:0] read_entry ; \
-  logic [31:0] read_data ; \
+  logic [KV_ENTRY_ADDR_W-1:0] read_entry ; \
+  logic [KV_ENTRY_SIZE_W-1:0] read_offset ; \
+  logic error ; \
+  logic last ; \
+  logic [KV_DATA_W-1:0] read_data ; \
      } kv_read_monitor_s;
 
   `define kv_read_TO_MONITOR_STRUCT_FUNCTION \
   virtual function kv_read_monitor_s to_monitor_struct();\
     kv_read_monitor_struct = \
             { \
-            this.entry_is_pcr , \
             this.read_entry , \
+            this.read_offset , \
+            this.error , \
+            this.last , \
             this.read_data  \
             };\
     return ( kv_read_monitor_struct);\
@@ -82,8 +86,10 @@ typedef struct packed  { \
   `define kv_read_FROM_MONITOR_STRUCT_FUNCTION \
   virtual function void from_monitor_struct(kv_read_monitor_s kv_read_monitor_struct);\
             {\
-            this.entry_is_pcr , \
             this.read_entry , \
+            this.read_offset , \
+            this.error , \
+            this.last , \
             this.read_data  \
             } = kv_read_monitor_struct;\
   endfunction
@@ -94,17 +100,21 @@ typedef struct packed  { \
 //      Also update the comments in the driver BFM.
 //
   `define kv_read_INITIATOR_STRUCT typedef struct packed  { \
-  logic entry_is_pcr ; \
-  logic [2:0] read_entry ; \
-  logic [31:0] read_data ; \
+  logic [KV_ENTRY_ADDR_W-1:0] read_entry ; \
+  logic [KV_ENTRY_SIZE_W-1:0] read_offset ; \
+  logic error ; \
+  logic last ; \
+  logic [KV_DATA_W-1:0] read_data ; \
      } kv_read_initiator_s;
 
   `define kv_read_TO_INITIATOR_STRUCT_FUNCTION \
   virtual function kv_read_initiator_s to_initiator_struct();\
     kv_read_initiator_struct = \
            {\
-           this.entry_is_pcr , \
            this.read_entry , \
+           this.read_offset , \
+           this.error , \
+           this.last , \
            this.read_data  \
            };\
     return ( kv_read_initiator_struct);\
@@ -113,8 +123,10 @@ typedef struct packed  { \
   `define kv_read_FROM_INITIATOR_STRUCT_FUNCTION \
   virtual function void from_initiator_struct(kv_read_initiator_s kv_read_initiator_struct);\
            {\
-           this.entry_is_pcr , \
            this.read_entry , \
+           this.read_offset , \
+           this.error , \
+           this.last , \
            this.read_data  \
            } = kv_read_initiator_struct;\
   endfunction
@@ -125,17 +137,21 @@ typedef struct packed  { \
 //      Also update the comments in the driver BFM.
 //
   `define kv_read_RESPONDER_STRUCT typedef struct packed  { \
-  logic entry_is_pcr ; \
-  logic [2:0] read_entry ; \
-  logic [31:0] read_data ; \
+  logic [KV_ENTRY_ADDR_W-1:0] read_entry ; \
+  logic [KV_ENTRY_SIZE_W-1:0] read_offset ; \
+  logic error ; \
+  logic last ; \
+  logic [KV_DATA_W-1:0] read_data ; \
      } kv_read_responder_s;
 
   `define kv_read_TO_RESPONDER_STRUCT_FUNCTION \
   virtual function kv_read_responder_s to_responder_struct();\
     kv_read_responder_struct = \
            {\
-           this.entry_is_pcr , \
            this.read_entry , \
+           this.read_offset , \
+           this.error , \
+           this.last , \
            this.read_data  \
            };\
     return ( kv_read_responder_struct);\
@@ -144,8 +160,10 @@ typedef struct packed  { \
   `define kv_read_FROM_RESPONDER_STRUCT_FUNCTION \
   virtual function void from_responder_struct(kv_read_responder_s kv_read_responder_struct);\
            {\
-           this.entry_is_pcr , \
            this.read_entry , \
+           this.read_offset , \
+           this.error , \
+           this.last , \
            this.read_data  \
            } = kv_read_responder_struct;\
   endfunction

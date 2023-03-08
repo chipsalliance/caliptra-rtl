@@ -44,12 +44,14 @@
 //
 import uvmf_base_pkg_hdl::*;
 import kv_read_pkg_hdl::*;
+import kv_defines_pkg::*;
 `include "src/kv_read_macros.svh"
 
 
 interface kv_read_monitor_bfm #(
   string KV_READ_REQUESTOR = "HMAC_KEY"
   )
+
   ( kv_read_if  bus );
   // The pragma below and additional ones in-lined further down are for running this BFM on Veloce
   // pragma attribute kv_read_monitor_bfm partition_interface_xif                                  
@@ -86,19 +88,34 @@ end
   tri clk_i;
   tri dummy_i;
   tri [$bits(kv_defines_pkg::kv_read_t)-1:0] kv_read_i;
-  tri [$bits(kv_defines_pkg::kv_rd_resp_t)-1:0] kv_resp_i;
+  tri [$bits(kv_defines_pkg::kv_rd_resp_t)-1:0] kv_rd_resp_i;
   assign clk_i = bus.clk;
   assign dummy_i = bus.dummy;
   assign kv_read_i = bus.kv_read;
-  assign kv_resp_i = bus.kv_resp;
+  assign kv_rd_resp_i = bus.kv_rd_resp;
 
   // Proxy handle to UVM monitor
   kv_read_pkg::kv_read_monitor #(
     .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-    ) proxy;
+    )
+ proxy;
   // pragma tbx oneway proxy.notify_transaction                 
 
   // pragma uvmf custom interface_item_additional begin
+ reg [KV_ENTRY_ADDR_W-1:0] read_entry_o = 'h0;
+ reg [KV_ENTRY_SIZE_W-1:0] read_offset_o = 'h0;
+ reg error_o = 'h0;
+ reg last_o = 'h0;
+ reg [KV_DATA_W-1:0] read_data_o = 'h0;
+  function bit any_signal_changed();
+
+    return  |(kv_read_i[8:4] ^ read_entry_o ) ||
+            |(kv_read_i[3:0] ^ read_offset_o) ||
+            |(kv_rd_resp_i[33] ^ error_o    ) ||
+            |(kv_rd_resp_i[32] ^ last_o    ) ||
+            |(kv_rd_resp_i[31:0] ^ read_data_o);
+
+  endfunction
   // pragma uvmf custom interface_item_additional end
   
   //******************************************************************                         
@@ -162,8 +179,10 @@ end
   task do_monitor(output kv_read_monitor_s kv_read_monitor_struct);
     //
     // Available struct members:
-    //     //    kv_read_monitor_struct.entry_is_pcr
     //     //    kv_read_monitor_struct.read_entry
+    //     //    kv_read_monitor_struct.read_offset
+    //     //    kv_read_monitor_struct.error
+    //     //    kv_read_monitor_struct.last
     //     //    kv_read_monitor_struct.read_data
     //     //
     // Reference code;
@@ -173,7 +192,7 @@ end
     //    How to assign a struct member, named xyz, from a signal.   
     //    All available input signals listed.
     //      kv_read_monitor_struct.xyz = kv_read_i;  //    [$bits(kv_defines_pkg::kv_read_t)-1:0] 
-    //      kv_read_monitor_struct.xyz = kv_resp_i;  //    [$bits(kv_defines_pkg::kv_rd_resp_t)-1:0] 
+    //      kv_read_monitor_struct.xyz = kv_rd_resp_i;  //    [$bits(kv_defines_pkg::kv_rd_resp_t)-1:0] 
     // pragma uvmf custom do_monitor begin
     // UVMF_CHANGE_ME : Implement protocol monitoring.  The commented reference code 
     // below are examples of how to capture signal values and assign them to 
@@ -182,10 +201,26 @@ end
     // task should return when a complete transfer has been observed.  Once this task is
     // exited with captured values, it is then called again to wait for and observe 
     // the next transfer. One clock cycle is consumed between calls to do_monitor.
-    @(posedge clk_i);
-    @(posedge clk_i);
-    @(posedge clk_i);
-    @(posedge clk_i);
+    while (!any_signal_changed()) @(posedge clk_i);
+
+    // read_entry_o <= kv_read_i[3:1];
+    // read_offset_o <= kv_read_i[7:4];
+    read_entry_o <= kv_read_i[8:4];
+    read_offset_o <= kv_read_i[3:0];
+    
+    error_o <= kv_rd_resp_i[33];
+    last_o <= kv_rd_resp_i[32];
+    read_data_o <= kv_rd_resp_i[31:0];
+
+    
+    // kv_read_monitor_struct.read_entry   = kv_read_i[3:1];
+    // kv_read_monitor_struct.read_offset  = kv_read_i[7:4];
+    kv_read_monitor_struct.read_entry   = kv_read_i[8:4];
+    kv_read_monitor_struct.read_offset  = kv_read_i[3:0];
+
+    kv_read_monitor_struct.error        = kv_rd_resp_i[33];
+    kv_read_monitor_struct.last        = kv_rd_resp_i[32];
+    kv_read_monitor_struct.read_data    = kv_rd_resp_i[31:0];
     // pragma uvmf custom do_monitor end
   endtask         
   

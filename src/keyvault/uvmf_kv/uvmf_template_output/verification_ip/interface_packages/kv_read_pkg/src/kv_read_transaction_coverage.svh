@@ -30,13 +30,16 @@
 //
 class kv_read_transaction_coverage #(
       string KV_READ_REQUESTOR = "HMAC_KEY"
-      ) extends uvm_subscriber #(.T(kv_read_transaction #(
+      )
+ extends uvm_subscriber #(.T(kv_read_transaction #(
                                             .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-                                            )));
+                                            )
+));
 
   `uvm_component_param_utils( kv_read_transaction_coverage #(
                               KV_READ_REQUESTOR
-                              ))
+                              )
+)
 
   T coverage_trans;
 
@@ -49,8 +52,10 @@ class kv_read_transaction_coverage #(
     // UVMF_CHANGE_ME : Add coverage bins, crosses, exclusions, etc. according to coverage needs.
     option.auto_bin_max=1024;
     option.per_instance=1;
-    entry_is_pcr: coverpoint coverage_trans.entry_is_pcr;
     read_entry: coverpoint coverage_trans.read_entry;
+    read_offset: coverpoint coverage_trans.read_offset;
+    error: coverpoint coverage_trans.error;
+    last: coverpoint coverage_trans.last;
     read_data: coverpoint coverage_trans.read_data;
     // pragma uvmf custom covergroup end
   endgroup

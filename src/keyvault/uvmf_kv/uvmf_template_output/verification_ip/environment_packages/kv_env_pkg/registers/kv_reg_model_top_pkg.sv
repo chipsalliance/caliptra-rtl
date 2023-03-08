@@ -30,12 +30,89 @@ package kv_reg_model_top_pkg;
 
    import uvm_pkg::*;
 // pragma uvmf custom additional_imports begin
+   import kv_reg_uvm::*;
 // pragma uvmf custom additional_imports end
 
    `include "uvm_macros.svh"
 
    /* DEFINE REGISTER CLASSES */
 // pragma uvmf custom define_register_classes begin
+
+   class kv_reg_ext extends kv_reg;
+      uvm_reg_map default_map_ext;
+
+      //Write Interface
+      uvm_reg_map kv_reg_hmac_write_map;
+      uvm_reg_map kv_reg_sha512_write_map;
+      uvm_reg_map kv_reg_ecc_write_map;
+      uvm_reg_map kv_reg_doe_write_map;
+
+      //AHB Interface
+      uvm_reg_map kv_reg_AHB_map;
+
+      //Read Interface
+      uvm_reg_map kv_reg_hmac_key_read_map;
+      uvm_reg_map kv_reg_hmac_block_read_map;
+      uvm_reg_map kv_reg_sha512_block_read_map;
+      uvm_reg_map kv_reg_ecc_privkey_read_map;
+      uvm_reg_map kv_reg_ecc_seed_read_map;
+      uvm_reg_map kv_reg_ecc_msg_read_map;
+
+      function new(string name = "kv_reg_ext");
+         super.new(name);
+      endfunction : new
+
+      virtual function void build();
+         super.build();
+         this.default_map_ext                = create_map("default_map_ext", 0, 4, UVM_LITTLE_ENDIAN);
+
+         //Write Interface
+         this.kv_reg_hmac_write_map          = create_map("keyvault_reg_hmac_write_map", 0, 4, UVM_LITTLE_ENDIAN);
+         this.kv_reg_sha512_write_map        = create_map("keyvault_reg_sha512_write_map", 0, 4, UVM_LITTLE_ENDIAN);
+         this.kv_reg_ecc_write_map           = create_map("keyvault_reg_ecc_write_map", 0, 4, UVM_LITTLE_ENDIAN);
+         this.kv_reg_doe_write_map           = create_map("keyvault_reg_doe_write_map", 0, 4, UVM_LITTLE_ENDIAN);
+
+         //AHB Interface
+         this.kv_reg_AHB_map                 = create_map("keyvault_AHB_reg_map", 0, 4, UVM_LITTLE_ENDIAN);
+
+         //Read Interface
+         this.kv_reg_hmac_key_read_map       = create_map("keyvault_reg_hmac_key_read_map", 0, 4, UVM_LITTLE_ENDIAN);
+         this.kv_reg_hmac_block_read_map     = create_map("keyvault_reg_hmac_block_read_map", 0, 4, UVM_LITTLE_ENDIAN);
+         this.kv_reg_sha512_block_read_map   = create_map("keyvault_reg_sha512_block_read_map", 0, 4, UVM_LITTLE_ENDIAN);
+         this.kv_reg_ecc_privkey_read_map    = create_map("keyvault_reg_ecc_privkey_read_map", 0, 4, UVM_LITTLE_ENDIAN);
+         this.kv_reg_ecc_seed_read_map       = create_map("keyvault_reg_ecc_seed_read_map", 0, 4, UVM_LITTLE_ENDIAN);
+         this.kv_reg_ecc_msg_read_map        = create_map("keyvault_reg_ecc_msg_read_map", 0, 4, UVM_LITTLE_ENDIAN);
+      endfunction
+
+      virtual function void build_ext_maps();
+         uvm_reg regs[$];
+
+         this.default_map.get_registers(regs, UVM_NO_HIER);
+         foreach(regs[c_reg]) begin
+            this.default_map_ext.add_reg                (regs[c_reg], regs[c_reg].get_offset(this.default_map));
+
+            //Write Interface
+            this.kv_reg_hmac_write_map.add_reg          (regs[c_reg], regs[c_reg].get_offset(this.default_map));
+            this.kv_reg_sha512_write_map.add_reg        (regs[c_reg], regs[c_reg].get_offset(this.default_map));
+            this.kv_reg_ecc_write_map.add_reg           (regs[c_reg], regs[c_reg].get_offset(this.default_map));
+            this.kv_reg_doe_write_map.add_reg           (regs[c_reg], regs[c_reg].get_offset(this.default_map));
+
+            //AHB Interface
+            this.kv_reg_AHB_map.add_reg                 (regs[c_reg], regs[c_reg].get_offset(this.default_map));
+
+            //Read Interface
+            this.kv_reg_hmac_key_read_map.add_reg       (regs[c_reg], regs[c_reg].get_offset(this.default_map));
+            this.kv_reg_hmac_block_read_map.add_reg     (regs[c_reg], regs[c_reg].get_offset(this.default_map));
+            this.kv_reg_sha512_block_read_map.add_reg   (regs[c_reg], regs[c_reg].get_offset(this.default_map));
+            this.kv_reg_ecc_privkey_read_map.add_reg    (regs[c_reg], regs[c_reg].get_offset(this.default_map));
+            this.kv_reg_ecc_seed_read_map.add_reg       (regs[c_reg], regs[c_reg].get_offset(this.default_map));
+            this.kv_reg_ecc_msg_read_map.add_reg        (regs[c_reg], regs[c_reg].get_offset(this.default_map));
+         end
+
+      endfunction
+
+   endclass : kv_reg_ext
+
    //--------------------------------------------------------------------
    // Class: kv_example_reg0
    // 
@@ -83,6 +160,38 @@ package kv_reg_model_top_pkg;
          example_field.configure(this, 8, 0, "RW", 0, 8'h00, 1, 1, 1);
       endfunction
    endclass
+
+   //--------------------------------------------------------------------
+   // Class: kv_val_reg
+   // 1. Keeps track of when debug mode is unlocked in design so that writes 
+   // to other regs can be blocked in reg model
+   // 2. Strictly for UVM purposes. This reg is not in design!
+   //--------------------------------------------------------------------
+   class kv_val_reg extends uvm_reg;
+      `uvm_object_utils(kv_val_reg)
+
+      rand uvm_reg_field debug_mode_unlocked;
+      rand uvm_reg_field clear;
+      rand uvm_reg_field clear_secrets_bit;
+
+      // Function: new
+      // 
+      function new(string name = "kv_val_reg");
+         super.new(name, 3, UVM_NO_COVERAGE);
+      endfunction
+
+
+      // Function: build
+      // 
+      virtual function void build();
+         debug_mode_unlocked = uvm_reg_field::type_id::create("debug_mode_unlocked");
+         debug_mode_unlocked.configure(this, 1, 0, "RW", 0, 1'b0, 1, 1, 1);
+         clear = uvm_reg_field::type_id::create("clear");
+         clear.configure(this, 1, 1, "RW", 0, 1'b0, 1, 1, 1);
+         clear_secrets_bit = uvm_reg_field::type_id::create("clear_secrets_bit");
+         clear_secrets_bit.configure(this, 1, 2, "RW", 0, 1'b0, 1, 1, 1);
+      endfunction
+   endclass
 // pragma uvmf custom define_register_classes end
 
 // pragma uvmf custom define_block_map_coverage_class begin
@@ -124,6 +233,8 @@ package kv_reg_model_top_pkg;
    endclass: kv_ahb_map_coverage
 // pragma uvmf custom define_block_map_coverage_class end
 
+   //TODO: Add coverage classes for each of the maps
+
    //--------------------------------------------------------------------
    // Class: kv_reg_model_top
    // 
@@ -131,16 +242,39 @@ package kv_reg_model_top_pkg;
    class kv_reg_model_top extends uvm_reg_block;
       `uvm_object_utils(kv_reg_model_top)
 // pragma uvmf custom instantiate_registers_within_block begin
+      rand kv_reg_ext kv_reg_rm;
+
       rand kv_example_reg0 example_reg0;
       rand kv_example_reg1 example_reg1;
-// pragma uvmf custom instantiate_registers_within_block end
 
-      uvm_reg_map ahb_map; 
+      rand kv_val_reg val_reg;
+// pragma uvmf custom instantiate_registers_within_block end
+      uvm_reg_map default_map;
+
+      //Write Interface
+      uvm_reg_map kv_hmac_write_map;
+      uvm_reg_map kv_sha512_write_map;
+      uvm_reg_map kv_ecc_write_map;
+      uvm_reg_map kv_doe_write_map;
+
+      //AHB Interface
+      uvm_reg_map kv_AHB_map; 
+      uvm_reg_map ahb_map; //TODO: needed?
+
+      //Read Interface
+      uvm_reg_map kv_hmac_key_read_map;
+      uvm_reg_map kv_hmac_block_read_map;
+      uvm_reg_map kv_sha512_block_read_map;
+      uvm_reg_map kv_ecc_privkey_read_map;
+      uvm_reg_map kv_ecc_seed_read_map;
+      uvm_reg_map kv_ecc_msg_read_map;
+
+      //TODO add coverage for the other maps
       kv_ahb_map_coverage ahb_map_cg;
 
       // Function: new
       // 
-      function new(string name = "");
+      function new(string name = "kv_reg_model_top");
          super.new(name, build_coverage(UVM_CVR_ALL));
       endfunction
 
@@ -162,13 +296,82 @@ package kv_reg_model_top_pkg;
       example_reg1 = kv_example_reg1::type_id::create("example_reg1");
       example_reg1.configure(this, null, "example_reg1");
       example_reg1.build();
+
+      val_reg = kv_val_reg::type_id::create("val_reg");
+      val_reg.configure(this,null,"val_reg");
+      val_reg.build();
 // pragma uvmf custom construct_configure_build_registers_within_block end
 // pragma uvmf custom add_registers_to_block_map begin
-      ahb_map.add_reg(example_reg0, 'h0, "RW");
-      ahb_map.add_reg(example_reg1, 'h1, "RW");
+      //ahb_map.add_reg(example_reg0, 'h0, "RW");
+      //ahb_map.add_reg(example_reg1, 'h1, "RW");
 // pragma uvmf custom add_registers_to_block_map end
 
+      //---------------------------------
+      this.kv_reg_rm = new("kv_reg_rm");
+      this.kv_reg_rm.configure(this);
+      this.kv_reg_rm.build();
+
+      this.default_map = create_map("kv_default_map", 0, 4, UVM_LITTLE_ENDIAN);
+      this.default_map.add_submap(this.kv_reg_rm.default_map, 0);
+      
+      //Write Interface
+      this.kv_hmac_write_map   = create_map("kv_hmac_write_map", 0, 4, UVM_LITTLE_ENDIAN);
+      this.kv_sha512_write_map = create_map("kv_sha512_write_map", 0, 4, UVM_LITTLE_ENDIAN);
+      this.kv_ecc_write_map    = create_map("kv_ecc_write_map", 0, 4, UVM_LITTLE_ENDIAN);
+      this.kv_doe_write_map    = create_map("kv_doe_write_map", 0, 4, UVM_LITTLE_ENDIAN);
+
+      //AHB Interface
+      this.kv_AHB_map = create_map("kv_AHB_map", 0, 4, UVM_LITTLE_ENDIAN);
+
+      //Read Interface
+      this.kv_hmac_key_read_map     = create_map("kv_hmac_key_read_map", 0, 4, UVM_LITTLE_ENDIAN);
+      this.kv_hmac_block_read_map   = create_map("kv_hmac_block_read_map", 0, 4, UVM_LITTLE_ENDIAN);
+      this.kv_sha512_block_read_map = create_map("kv_sha512_block_read_map", 0, 4, UVM_LITTLE_ENDIAN);
+      this.kv_ecc_privkey_read_map  = create_map("kv_ecc_privkey_read_map", 0, 4, UVM_LITTLE_ENDIAN);
+      this.kv_ecc_seed_read_map     = create_map("kv_ecc_seed_read_map", 0, 4, UVM_LITTLE_ENDIAN);
+      this.kv_ecc_msg_read_map      = create_map("kv_ecc_msg_read_map", 0, 4, UVM_LITTLE_ENDIAN);
+
+      //Add debug_mode reg to all maps (only for TB purposes)
+      default_map.add_reg(val_reg, 'h1_0000, "RW");
+
+      kv_hmac_write_map.add_reg(val_reg, 'h1_0000, "RW");
+      kv_sha512_write_map.add_reg(val_reg, 'h1_0000, "RW");
+      kv_ecc_write_map.add_reg(val_reg, 'h1_0000, "RW");
+      kv_doe_write_map.add_reg(val_reg, 'h1_0000, "RW");
+
+      kv_AHB_map.add_reg(val_reg, 'h1_0000, "RW");
+      
+      kv_hmac_key_read_map.add_reg(val_reg, 'h1_0000, "RW");
+      kv_hmac_block_read_map.add_reg(val_reg, 'h1_0000, "RW");
+      kv_sha512_block_read_map.add_reg(val_reg, 'h1_0000, "RW");
+      kv_ecc_privkey_read_map.add_reg(val_reg, 'h1_0000, "RW");
+      kv_ecc_seed_read_map.add_reg(val_reg, 'h1_0000, "RW");
+      kv_ecc_msg_read_map.add_reg(val_reg, 'h1_0000, "RW");
  
+      endfunction
+
+      //Called after lock_model in kv_env_configuration
+      virtual function void build_ext_maps();
+         this.kv_reg_rm.build_ext_maps();
+
+         //top register model AHB map
+         //Write
+         this.kv_hmac_write_map.add_submap(this.kv_reg_rm.kv_reg_hmac_write_map, 'h0);
+         this.kv_sha512_write_map.add_submap(this.kv_reg_rm.kv_reg_sha512_write_map, 'h0);
+         this.kv_ecc_write_map.add_submap(this.kv_reg_rm.kv_reg_ecc_write_map, 'h0);
+         this.kv_doe_write_map.add_submap(this.kv_reg_rm.kv_reg_doe_write_map, 'h0);
+
+         //AHB
+         this.kv_AHB_map.add_submap(this.kv_reg_rm.kv_reg_AHB_map, 'h0);
+
+         //Read
+         this.kv_hmac_key_read_map.add_submap      (this.kv_reg_rm.kv_reg_hmac_key_read_map, 'h0);
+         this.kv_hmac_block_read_map.add_submap    (this.kv_reg_rm.kv_reg_hmac_block_read_map, 'h0);
+         this.kv_sha512_block_read_map.add_submap  (this.kv_reg_rm.kv_reg_sha512_block_read_map, 'h0);
+         this.kv_ecc_privkey_read_map.add_submap   (this.kv_reg_rm.kv_reg_ecc_privkey_read_map, 'h0);
+         this.kv_ecc_seed_read_map.add_submap      (this.kv_reg_rm.kv_reg_ecc_seed_read_map, 'h0);
+         this.kv_ecc_msg_read_map.add_submap       (this.kv_reg_rm.kv_reg_ecc_msg_read_map, 'h0);
+
       endfunction
 
       // Function: sample

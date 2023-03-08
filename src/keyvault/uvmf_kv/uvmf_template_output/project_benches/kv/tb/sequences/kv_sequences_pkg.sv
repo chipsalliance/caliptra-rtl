@@ -57,6 +57,9 @@ package kv_sequences_pkg;
   `include "src/register_test_sequence.svh"
   `include "src/example_derived_test_sequence.svh"
   `include "src/kv_rand_test_sequence.svh"
+  `include "src/kv_rand_wr_rd_test_sequence.svh"
+  `include "src/kv_rand_debug_test_sequence.svh"
+  `include "src/kv_rand_lock_test_sequence.svh"
 
   // pragma uvmf custom package_item_additional begin
   // UVMF_CHANGE_ME : When adding new sequences to the src directory

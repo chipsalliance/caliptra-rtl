@@ -51,11 +51,11 @@ class kv_rst_poweron_sequence extends kv_rst_sequence_base;
     start_item(req);
     // Randomize the transaction
     if(!req.randomize()) `uvm_fatal("KV_RST_POWERON", "kv_rst_poweron_sequence::body()-kv_rst_transaction randomization failed")
-    $display(">>>>>> 1st tx");
+    `uvm_info("KV_RST_POWERON", "Asserting reset, pwrgood low", UVM_MEDIUM)
     req.set_pwrgood = 1'b0;
     req.assert_rst = 1'b1;
-    req.debug_mode = 1'b0; //TODO: make this 1 everywhere (once bug 439478 is fixed) //TODO: make another seq to cover debug mode
-    // Send the transaction to the soc_ifc_ctrl_driver_bfm via the sequencer and soc_ifc_ctrl_driver.
+    req.assert_core_rst = 1'b1;
+    req.debug_mode = 1'b0;
     finish_item(req);
     `uvm_info("KV_RST_POWERON", {"Response:",req.convert2string()},UVM_MEDIUM)
     
@@ -64,11 +64,11 @@ class kv_rst_poweron_sequence extends kv_rst_sequence_base;
     start_item(req);
     // Randomize the transaction
     if(!req.randomize()) `uvm_fatal("KV_RST_POWERON", "kv_rst_poweron_sequence::body()-kv_rst_transaction randomization failed")
-    $display(">>>>>> 2nd tx");
+    `uvm_info("KV_RST_POWERON", "Asserting reset, pwrgood high", UVM_MEDIUM)
     req.set_pwrgood = 1'b1;
     req.assert_rst = 1'b1;
+    req.assert_core_rst = 1'b1;
     req.debug_mode = 1'b0;
-    // Send the transaction to the soc_ifc_ctrl_driver_bfm via the sequencer and soc_ifc_ctrl_driver.
     finish_item(req);
     `uvm_info("KV_RST_POWERON", {"Response:",req.convert2string()},UVM_MEDIUM)
 
@@ -77,11 +77,11 @@ class kv_rst_poweron_sequence extends kv_rst_sequence_base;
     start_item(req);
     // Randomize the transaction
     if(!req.randomize()) `uvm_fatal("KV_RST_POWERON", "kv_rst_poweron_sequence::body()-kv_rst_transaction randomization failed")
-    $display(">>>>>> 3rd tx");
+    `uvm_info("KV_RST_POWERON", "Deasserting reset, reset phase done", UVM_MEDIUM)
     req.set_pwrgood = 1'b1;
     req.assert_rst = 1'b0;
+    req.assert_core_rst = 1'b0;
     req.debug_mode = 1'b0;
-    // Send the transaction to the soc_ifc_ctrl_driver_bfm via the sequencer and soc_ifc_ctrl_driver.
     finish_item(req);
     `uvm_info("KV_RST_POWERON", {"Response:",req.convert2string()},UVM_MEDIUM)
 

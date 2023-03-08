@@ -27,27 +27,34 @@
 //
 class kv_write_agent #(
      string KV_WRITE_REQUESTOR = "HMAC"
-     ) extends uvmf_parameterized_agent #(
+     )
+ extends uvmf_parameterized_agent #(
                     .CONFIG_T(kv_write_configuration #(
                               .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-                              )),
+                              )
+),
                     .DRIVER_T(kv_write_driver #(
                               .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-                              )),
+                              )
+),
                     .MONITOR_T(kv_write_monitor #(
                                .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-                               )),
+                               )
+),
                     .COVERAGE_T(kv_write_transaction_coverage #(
                                 .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-                                )),
+                                )
+),
                     .TRANS_T(kv_write_transaction #(
                              .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-                             ))
+                             )
+)
                     );
 
   `uvm_component_param_utils( kv_write_agent #(
                               KV_WRITE_REQUESTOR
-                              ))
+                              )
+)
 
 // pragma uvmf custom class_item_additional begin
 // pragma uvmf custom class_item_additional end

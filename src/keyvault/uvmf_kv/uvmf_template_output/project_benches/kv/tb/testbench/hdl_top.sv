@@ -166,8 +166,9 @@ import uvmf_base_pkg_hdl::*;
 
   import kv_defines_pkg::*;
   kv_defines_pkg::kv_read_t  [kv_defines_pkg::KV_NUM_READ-1:0]  kv_read ;
-  kv_defines_pkg::kv_rd_resp_t  [kv_defines_pkg::KV_NUM_READ-1:0]  kv_resp ;
+  kv_defines_pkg::kv_rd_resp_t  [kv_defines_pkg::KV_NUM_READ-1:0]  kv_rd_resp ;
   kv_defines_pkg::kv_write_t [kv_defines_pkg::KV_NUM_WRITE-1:0]  kv_write;
+  kv_defines_pkg::kv_wr_resp_t [kv_defines_pkg::KV_NUM_WRITE-1:0]  kv_wr_resp;
   localparam HMAC_WRITE_IDX   = 0;
   localparam SHA512_WRITE_IDX = 1;
   localparam ECC_WRITE_IDX    = 2;
@@ -190,24 +191,28 @@ import uvmf_base_pkg_hdl::*;
     kv_read[ECC_SEED_READ_IDX    ] = kv_ecc_seed_read_agent_bus.kv_read;
     kv_read[ECC_MSG_READ_IDX     ] = kv_ecc_msg_read_agent_bus.kv_read;
   end
-  assign kv_hmac_key_read_agent_bus.kv_resp     = kv_resp[HMAC_KEY_READ_IDX    ];
-  assign kv_hmac_block_read_agent_bus.kv_resp   = kv_resp[HMAC_BLOCK_READ_IDX  ];
-  assign kv_sha512_block_read_agent_bus.kv_resp = kv_resp[SHA512_BLOCK_READ_IDX];
-  assign kv_ecc_privkey_read_agent_bus.kv_resp  = kv_resp[ECC_PRIVKEY_READ_IDX ];
-  assign kv_ecc_seed_read_agent_bus.kv_resp     = kv_resp[ECC_SEED_READ_IDX    ];
-  assign kv_ecc_msg_read_agent_bus.kv_resp      = kv_resp[ECC_MSG_READ_IDX     ];
+  assign kv_hmac_key_read_agent_bus.kv_rd_resp     = kv_rd_resp[HMAC_KEY_READ_IDX    ];
+  assign kv_hmac_block_read_agent_bus.kv_rd_resp   = kv_rd_resp[HMAC_BLOCK_READ_IDX  ];
+  assign kv_sha512_block_read_agent_bus.kv_rd_resp = kv_rd_resp[SHA512_BLOCK_READ_IDX];
+  assign kv_ecc_privkey_read_agent_bus.kv_rd_resp  = kv_rd_resp[ECC_PRIVKEY_READ_IDX ];
+  assign kv_ecc_seed_read_agent_bus.kv_rd_resp     = kv_rd_resp[ECC_SEED_READ_IDX    ];
+  assign kv_ecc_msg_read_agent_bus.kv_rd_resp      = kv_rd_resp[ECC_MSG_READ_IDX     ];
+
+  assign kv_hmac_write_agent_bus.kv_wr_resp        = kv_wr_resp[HMAC_WRITE_IDX       ];
+  assign kv_sha512_write_agent_bus.kv_wr_resp      = kv_wr_resp[SHA512_WRITE_IDX     ];
+  assign kv_ecc_write_agent_bus.kv_wr_resp         = kv_wr_resp[ECC_WRITE_IDX        ];
+  assign kv_doe_write_agent_bus.kv_wr_resp         = kv_wr_resp[DOE_WRITE_IDX        ];
 
   kv #(
-      //.KV_NUM_READ   (6        ),
-      //.KV_NUM_WRITE  (4        ),
       .AHB_ADDR_WIDTH(15       ),
       .AHB_DATA_WIDTH(64       )
   ) dut (
-      .clk          (clk          ),
-      .rst_b        (kv_rst_agent_bus.rst_b        ),
-      .cptra_pwrgood(kv_rst_agent_bus.cptra_pwrgood),
+      .clk              (clk          ),
+      .rst_b            (kv_rst_agent_bus.rst_b        ),
+      .core_only_rst_b  (kv_rst_agent_bus.core_only_rst_b),
+      .cptra_pwrgood    (kv_rst_agent_bus.cptra_pwrgood),
 
-      .debug_locked (kv_rst_agent_bus.debug_locked),
+      .debugUnlock_or_scan_mode_switch (kv_rst_agent_bus.debug_locked),
 
       //uC AHB Lite Interface
       //from SLAVES PORT
@@ -225,8 +230,8 @@ import uvmf_base_pkg_hdl::*;
 
       .kv_read (kv_read ),
       .kv_write(kv_write),
-      .kv_rd_resp (kv_resp ),
-      .kv_wr_resp() //TODO
+      .kv_rd_resp(kv_rd_resp),
+      .kv_wr_resp(kv_wr_resp)
   );
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HBURST    = 3'b0;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HPROT     = 7'b0;

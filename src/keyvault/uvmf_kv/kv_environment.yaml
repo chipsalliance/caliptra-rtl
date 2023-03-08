@@ -42,6 +42,8 @@ uvmf:
       analysis_components:
       - name: kv_pred
         type: kv_predictor
+      - name: kv_sb
+        type: kv_scoreboard
 
 #      analysis_exports :
 #        - name: "ahb_master_0_export"
@@ -58,10 +60,10 @@ uvmf:
 
       parameters: []
 
-      scoreboards:
-      - name: kv_sb
-        sb_type: uvmf_in_order_scoreboard
-        trans_type: kv_read_transaction
+      scoreboards: []
+      # - name: kv_sb
+      #   sb_type: uvmf_in_order_scoreboard
+      #   trans_type: kv_read_transaction
 
       subenvs: []
 

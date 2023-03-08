@@ -29,23 +29,28 @@
 //
 class kv_write_configuration #(
       string KV_WRITE_REQUESTOR = "HMAC"
-      ) extends uvmf_parameterized_agent_configuration_base #(
+      )
+ extends uvmf_parameterized_agent_configuration_base #(
       .DRIVER_BFM_BIND_T(virtual kv_write_driver_bfm #(
                           .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-                          )),
+                          )
+),
       .MONITOR_BFM_BIND_T( virtual kv_write_monitor_bfm #(
                           .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-                          )));
+                          )
+));
 
   `uvm_object_param_utils( kv_write_configuration #(
                            KV_WRITE_REQUESTOR
-                           ))
+                           )
+)
 
 
   // Sequencer handle populated by agent
   uvm_sequencer #(kv_write_transaction #(
        .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-       ) ) sequencer;
+       )
+ ) sequencer;
 
   //Constraints for the configuration variables:
 
@@ -136,6 +141,7 @@ class kv_write_configuration #(
     uvm_config_db #( kv_write_configuration  #(
                              .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
                              )
+
                     )::set( null ,agent_path,UVMF_AGENT_CONFIG, this );
 
     // This configuration also places itself in the config db using the same identifier used by the interface.  This allows users to access
@@ -144,6 +150,7 @@ class kv_write_configuration #(
     uvm_config_db #( kv_write_configuration  #(
                              .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
                              )
+
                     )::set( null ,UVMF_CONFIGURATIONS, interface_name, this );
 
     kv_write_configuration_cg.set_inst_name($sformatf("kv_write_configuration_cg_%s",get_full_name()));
@@ -198,7 +205,8 @@ class kv_write_configuration #(
   // FUNCTION: get_sequencer
   function uvm_sequencer #(kv_write_transaction#(
        .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-       )) get_sequencer();
+       )
+) get_sequencer();
     return sequencer;
   endfunction
 

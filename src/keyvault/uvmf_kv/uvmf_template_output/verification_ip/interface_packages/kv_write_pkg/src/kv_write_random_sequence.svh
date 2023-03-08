@@ -59,7 +59,6 @@ class kv_write_random_sequence #(
       req=kv_write_transaction#(
                 .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
                 )::type_id::create("req");
-      req.entry_is_pcr = 1'b0; //TODO: make another seq for PCR
       req.write_en = 1'b1; //Tie write en to 1 for entire write seq
       start_item(req);
       // Randomize the transaction

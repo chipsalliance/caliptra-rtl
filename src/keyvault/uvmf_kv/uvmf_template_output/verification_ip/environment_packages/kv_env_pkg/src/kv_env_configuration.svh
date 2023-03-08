@@ -233,6 +233,7 @@ extends uvmf_environment_configuration_base;
       kv_rm = kv_reg_model_top::type_id::create("kv_rm");
       kv_rm.build();
       kv_rm.lock_model();
+      kv_rm.build_ext_maps();
       enable_reg_adaptation = 1;
       enable_reg_prediction = 1;
     end else begin
@@ -246,6 +247,13 @@ extends uvmf_environment_configuration_base;
 
 
   // pragma uvmf custom initialize begin
+    // Add analysis ports to send Bus traffic to the scoreboard, so that the predictor/scoreboard can check read transfer data
+     void'(qvip_ahb_lite_slave_subenv_config.ahb_lite_slave_0_cfg.set_monitor_item( "burst_transfer_sb" , ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
+     ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,
+     ahb_lite_slave_0_params::AHB_NUM_SLAVES,
+     ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
+     ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
+     ahb_lite_slave_0_params::AHB_RDATA_WIDTH)::type_id::get() ));
   // pragma uvmf custom initialize end
 
   endfunction

@@ -31,23 +31,29 @@
 //
 class kv_read_driver  #(
       string KV_READ_REQUESTOR = "HMAC_KEY"
-      ) extends uvmf_driver_base #(
+      )
+ extends uvmf_driver_base #(
                    .CONFIG_T(kv_read_configuration  #(
                              .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-                             ) ),
+                             )
+ ),
                    .BFM_BIND_T(virtual kv_read_driver_bfm  #(
                              .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-                             ) ),
+                             )
+ ),
                    .REQ(kv_read_transaction  #(
                              .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-                             ) ),
+                             )
+ ),
                    .RSP(kv_read_transaction  #(
                              .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-                             ) ));
+                             )
+ ));
 
   `uvm_component_param_utils( kv_read_driver #(
                               KV_READ_REQUESTOR
-                              ))
+                              )
+)
 //*******************************************************************
 // Macros that define structs located in kv_read_macros.svh
 //*******************************************************************

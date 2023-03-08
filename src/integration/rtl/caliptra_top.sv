@@ -228,12 +228,12 @@ module caliptra_top
     kv_read_t [KV_NUM_READ-1:0]  kv_read;
     kv_write_t [KV_NUM_WRITE-1:0]  kv_write;
     kv_rd_resp_t [KV_NUM_READ-1:0] kv_rd_resp;
-    kv_wr_resp_t [KV_NUM_READ-1:0] kv_wr_resp;
+    kv_wr_resp_t [KV_NUM_WRITE-1:0] kv_wr_resp;
 
     pv_read_t [PV_NUM_READ-1:0]  pv_read;
     pv_write_t [PV_NUM_WRITE-1:0]  pv_write;
     pv_rd_resp_t [PV_NUM_READ-1:0] pv_rd_resp;
-    pv_wr_resp_t [PV_NUM_READ-1:0] pv_wr_resp;
+    pv_wr_resp_t [PV_NUM_WRITE-1:0] pv_wr_resp;
 
     //mailbox sram gasket
     mbox_sram_req_t mbox_sram_req;

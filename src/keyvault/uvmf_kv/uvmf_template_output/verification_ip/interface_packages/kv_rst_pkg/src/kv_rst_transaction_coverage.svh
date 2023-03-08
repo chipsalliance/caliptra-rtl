@@ -45,6 +45,7 @@ class kv_rst_transaction_coverage  extends uvm_subscriber #(.T(kv_rst_transactio
     option.per_instance=1;
     set_pwrgood: coverpoint coverage_trans.set_pwrgood;
     assert_rst: coverpoint coverage_trans.assert_rst;
+    assert_core_rst: coverpoint coverage_trans.assert_core_rst;
     wait_cycles: coverpoint coverage_trans.wait_cycles;
     debug_mode: coverpoint coverage_trans.debug_mode;
     // pragma uvmf custom covergroup end

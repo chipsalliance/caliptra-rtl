@@ -64,11 +64,11 @@ typedef struct packed  { \
 //
   `define kv_write_MONITOR_STRUCT typedef struct packed  { \
   logic write_en ; \
-  logic entry_is_pcr ; \
-  logic   [2:0] write_entry ; \
-  logic   [3:0] write_offset ; \
-  logic   [31:0] write_data ; \
-  logic   [5:0] write_dest_valid ; \
+  logic   [KV_ENTRY_ADDR_W-1:0] write_entry ; \
+  logic   [KV_ENTRY_SIZE_W-1:0] write_offset ; \
+  logic   [KV_DATA_W-1:0] write_data ; \
+  logic   [KV_NUM_READ-1:0] write_dest_valid ; \
+  logic error ; \
      } kv_write_monitor_s;
 
   `define kv_write_TO_MONITOR_STRUCT_FUNCTION \
@@ -76,11 +76,11 @@ typedef struct packed  { \
     kv_write_monitor_struct = \
             { \
             this.write_en , \
-            this.entry_is_pcr , \
             this.write_entry , \
             this.write_offset , \
             this.write_data , \
-            this.write_dest_valid  \
+            this.write_dest_valid , \
+            this.error  \
             };\
     return ( kv_write_monitor_struct);\
   endfunction\
@@ -89,11 +89,11 @@ typedef struct packed  { \
   virtual function void from_monitor_struct(kv_write_monitor_s kv_write_monitor_struct);\
             {\
             this.write_en , \
-            this.entry_is_pcr , \
             this.write_entry , \
             this.write_offset , \
             this.write_data , \
-            this.write_dest_valid  \
+            this.write_dest_valid , \
+            this.error  \
             } = kv_write_monitor_struct;\
   endfunction
 
@@ -104,11 +104,11 @@ typedef struct packed  { \
 //
   `define kv_write_INITIATOR_STRUCT typedef struct packed  { \
   logic write_en ; \
-  logic entry_is_pcr ; \
-  logic   [2:0] write_entry ; \
-  logic   [3:0] write_offset ; \
-  logic   [31:0] write_data ; \
-  logic   [5:0] write_dest_valid ; \
+  logic   [KV_ENTRY_ADDR_W-1:0] write_entry ; \
+  logic   [KV_ENTRY_SIZE_W-1:0] write_offset ; \
+  logic   [KV_DATA_W-1:0] write_data ; \
+  logic   [KV_NUM_READ-1:0] write_dest_valid ; \
+  logic error ; \
      } kv_write_initiator_s;
 
   `define kv_write_TO_INITIATOR_STRUCT_FUNCTION \
@@ -116,11 +116,11 @@ typedef struct packed  { \
     kv_write_initiator_struct = \
            {\
            this.write_en , \
-           this.entry_is_pcr , \
            this.write_entry , \
            this.write_offset , \
            this.write_data , \
-           this.write_dest_valid  \
+           this.write_dest_valid , \
+           this.error  \
            };\
     return ( kv_write_initiator_struct);\
   endfunction
@@ -129,11 +129,11 @@ typedef struct packed  { \
   virtual function void from_initiator_struct(kv_write_initiator_s kv_write_initiator_struct);\
            {\
            this.write_en , \
-           this.entry_is_pcr , \
            this.write_entry , \
            this.write_offset , \
            this.write_data , \
-           this.write_dest_valid  \
+           this.write_dest_valid , \
+           this.error  \
            } = kv_write_initiator_struct;\
   endfunction
 
@@ -144,11 +144,11 @@ typedef struct packed  { \
 //
   `define kv_write_RESPONDER_STRUCT typedef struct packed  { \
   logic write_en ; \
-  logic entry_is_pcr ; \
-  logic   [2:0] write_entry ; \
-  logic   [3:0] write_offset ; \
-  logic   [31:0] write_data ; \
-  logic   [5:0] write_dest_valid ; \
+  logic   [KV_ENTRY_ADDR_W-1:0] write_entry ; \
+  logic   [KV_ENTRY_SIZE_W-1:0] write_offset ; \
+  logic   [KV_DATA_W-1:0] write_data ; \
+  logic   [KV_NUM_READ-1:0] write_dest_valid ; \
+  logic error ; \
      } kv_write_responder_s;
 
   `define kv_write_TO_RESPONDER_STRUCT_FUNCTION \
@@ -156,11 +156,11 @@ typedef struct packed  { \
     kv_write_responder_struct = \
            {\
            this.write_en , \
-           this.entry_is_pcr , \
            this.write_entry , \
            this.write_offset , \
            this.write_data , \
-           this.write_dest_valid  \
+           this.write_dest_valid , \
+           this.error  \
            };\
     return ( kv_write_responder_struct);\
   endfunction
@@ -169,11 +169,11 @@ typedef struct packed  { \
   virtual function void from_responder_struct(kv_write_responder_s kv_write_responder_struct);\
            {\
            this.write_en , \
-           this.entry_is_pcr , \
            this.write_entry , \
            this.write_offset , \
            this.write_data , \
-           this.write_dest_valid  \
+           this.write_dest_valid , \
+           this.error  \
            } = kv_write_responder_struct;\
   endfunction
 // pragma uvmf custom additional begin

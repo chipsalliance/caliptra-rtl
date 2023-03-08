@@ -5,6 +5,7 @@ requires:
   - uvmf_lib
   - kv_uvm_pkg
   - keyvault
+  - caliptra_top_defines
 targets:
   tb:
     directories:
@@ -20,6 +21,7 @@ targets:
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/kv/tb/tests
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/kv/tb/testbench
     files:
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/kv_env_pkg/registers/kv_reg_adapter_functions_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/kv_rst_pkg/kv_rst_pkg_hdl.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/kv_rst_pkg/kv_rst_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/kv_rst_pkg/src/kv_rst_driver_bfm.sv

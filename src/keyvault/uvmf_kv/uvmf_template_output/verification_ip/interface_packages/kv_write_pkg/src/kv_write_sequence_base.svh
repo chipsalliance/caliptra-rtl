@@ -29,26 +29,32 @@
 //
 class kv_write_sequence_base #(
       string KV_WRITE_REQUESTOR = "HMAC"
-      )   extends uvmf_sequence_base #(
+      )
+   extends uvmf_sequence_base #(
                              .REQ(kv_write_transaction  #(
                                  .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-                                 )),
+                                 )
+),
                              .RSP(kv_write_transaction  #(
                                  .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-                                 )));
+                                 )
+));
 
   `uvm_object_param_utils( kv_write_sequence_base #(
                            KV_WRITE_REQUESTOR
-                           ))
+                           )
+)
 
   // variables
   typedef kv_write_transaction #(
                      .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-                     ) kv_write_transaction_req_t;
+                     )
+ kv_write_transaction_req_t;
   kv_write_transaction_req_t req;
   typedef kv_write_transaction #(
                      .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-                     ) kv_write_transaction_rsp_t;
+                     )
+ kv_write_transaction_rsp_t;
   kv_write_transaction_rsp_t rsp;
 
   // Event for identifying when a response was received from the sequencer

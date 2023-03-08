@@ -20,9 +20,9 @@ uvmf:
         type: 'kv_read_transaction'
       - name: kv_hmac_block_read_agent_ae
         type: 'kv_read_transaction'
-      - name: kv_hmac_sha512_read_agent_ae
+      - name: kv_sha512_block_read_agent_ae
         type: 'kv_read_transaction'
-      - name: kv_hmac_ecc_privkey_read_agent_ae
+      - name: kv_ecc_privkey_read_agent_ae
         type: 'kv_read_transaction'
       - name: kv_ecc_seed_read_agent_ae
         type: 'kv_read_transaction'

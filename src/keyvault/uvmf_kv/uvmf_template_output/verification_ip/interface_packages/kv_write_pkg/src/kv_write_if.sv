@@ -34,6 +34,7 @@
 // This template can be used to connect a DUT to these signals
 //
 // .dut_signal_port(kv_write_bus.kv_write), // Agent output 
+// .dut_signal_port(kv_write_bus.kv_wr_resp), // Agent input 
 
 import uvmf_base_pkg_hdl::*;
 import kv_write_pkg_hdl::*;
@@ -42,31 +43,36 @@ interface  kv_write_if #(
   string KV_WRITE_REQUESTOR = "HMAC"
   )
 
+
   (
   input tri clk, 
   input tri dummy,
-  inout tri [$bits(kv_defines_pkg::kv_write_t)-1:0] kv_write
+  inout tri [$bits(kv_defines_pkg::kv_write_t)-1:0] kv_write,
+  inout tri [$bits(kv_defines_pkg::kv_wr_resp_t)-1:0] kv_wr_resp
   );
 
 modport monitor_port 
   (
   input clk,
   input dummy,
-  input kv_write
+  input kv_write,
+  input kv_wr_resp
   );
 
 modport initiator_port 
   (
   input clk,
   input dummy,
-  output kv_write
+  output kv_write,
+  input kv_wr_resp
   );
 
 modport responder_port 
   (
   input clk,
   input dummy,  
-  input kv_write
+  input kv_write,
+  output kv_wr_resp
   );
   
 

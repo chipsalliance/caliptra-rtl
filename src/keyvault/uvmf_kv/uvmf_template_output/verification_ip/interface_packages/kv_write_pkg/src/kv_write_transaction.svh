@@ -36,16 +36,17 @@ class kv_write_transaction #(
                            KV_WRITE_REQUESTOR
                            ))
 
-  logic write_en ;
-  rand logic entry_is_pcr ;
-  rand logic   [2:0] write_entry ;
-  rand logic   [3:0] write_offset;
-  rand logic   [31:0] write_data ;
-  rand logic   [5:0] write_dest_valid ;
+  rand logic write_en ;
+  rand logic   [KV_ENTRY_ADDR_W-1:0] write_entry ;
+  rand logic   [KV_ENTRY_SIZE_W-1:0] write_offset;
+  rand logic   [KV_DATA_W-1:0] write_data ;
+  rand logic   [KV_NUM_READ-1:0] write_dest_valid ;
+  logic error;
 
   //Constraints for the transaction variables:
   constraint dest_valid_c { if (KV_WRITE_REQUESTOR inside {"ECC", "HMAC", "DOE", "SHA512"}) write_dest_valid == 63; }
-
+  constraint write_en_c {write_en == 1'b1;}
+  constraint write_offset_c {write_offset >= 0; write_offset < 12;}
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end
 
@@ -125,7 +126,7 @@ class kv_write_transaction #(
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("write_en:0x%x entry_is_pcr:0x%x write_entry:0x%x write_offset: 0x%x write_data:0x%x write_dest_valid:0x%x ",write_en,entry_is_pcr,write_entry,write_offset,write_data,write_dest_valid);
+    return $sformatf("write_en:0x%x write_entry:0x%x write_offset: 0x%x write_data:0x%x write_dest_valid:0x%x error:0x%x",write_en,write_entry,write_offset,write_data,write_dest_valid,error);
     // pragma uvmf custom convert2string end
   endfunction
 
@@ -155,11 +156,11 @@ class kv_write_transaction #(
     // pragma uvmf custom do_compare begin
     // UVMF_CHANGE_ME : Eliminate comparison of variables not to be used for compare
     return (super.do_compare(rhs,comparer)
-            &&(this.entry_is_pcr == RHS.entry_is_pcr)
             &&(this.write_entry == RHS.write_entry)
             &&(this.write_offset == RHS.write_offset)
             &&(this.write_data == RHS.write_data)
             &&(this.write_dest_valid == RHS.write_dest_valid)
+            &&(this.error == RHS.error)
             );
     // pragma uvmf custom do_compare end
   endfunction
@@ -177,11 +178,11 @@ class kv_write_transaction #(
     // pragma uvmf custom do_copy begin
     super.do_copy(rhs);
     this.write_en = RHS.write_en;
-    this.entry_is_pcr = RHS.entry_is_pcr;
     this.write_entry = RHS.write_entry;
     this.write_offset = RHS.write_offset;
     this.write_data = RHS.write_data;
     this.write_dest_valid = RHS.write_dest_valid;
+    this.error = RHS.error;
     // pragma uvmf custom do_copy end
   endfunction
 
@@ -206,11 +207,11 @@ class kv_write_transaction #(
     // endcase
     // UVMF_CHANGE_ME : Eliminate transaction variables not wanted in transaction viewing in the waveform viewer
     $add_attribute(transaction_view_h,write_en,"write_en");
-    $add_attribute(transaction_view_h,entry_is_pcr,"entry_is_pcr");
     $add_attribute(transaction_view_h,write_entry,"write_entry");
     $add_attribute(transaction_view_h,write_offset,"write_offset");
     $add_attribute(transaction_view_h,write_data,"write_data");
     $add_attribute(transaction_view_h,write_dest_valid,"write_dest_valid");
+    $add_attribute(transaction_view_h,error,"error");
     // pragma uvmf custom add_to_wave end
     $end_transaction(transaction_view_h,end_time);
     $free_transaction(transaction_view_h);

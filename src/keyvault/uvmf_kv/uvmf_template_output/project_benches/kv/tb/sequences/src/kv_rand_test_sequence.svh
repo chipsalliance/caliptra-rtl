@@ -35,50 +35,85 @@ class kv_rand_test_sequence extends kv_bench_sequence_base;
     typedef kv_rst_poweron_sequence kv_rst_poweron_sequence_t;
     rand kv_rst_poweron_sequence_t kv_rst_poweron_seq;
 
+    typedef kv_wr_rd_sequence #(.CONFIG_T(kv_env_configuration_t))kv_wr_rd_sequence_t;
+    rand kv_wr_rd_sequence_t kv_wr_rd_seq;
+
+    typedef kv_key_wr_rd_basic_sequence #(.CONFIG_T(kv_env_configuration_t))kv_key_wr_rd_basic_sequence_t;
+    rand kv_key_wr_rd_basic_sequence_t kv_key_wr_rd_basic_seq;
+
+    typedef kv_wr_rd_rst_sequence #(.CONFIG_T(kv_env_configuration_t))kv_wr_rd_rst_sequence_t;
+    rand kv_wr_rd_rst_sequence_t kv_wr_rd_rst_seq;
+
+    typedef kv_wr_rd_cold_rst_sequence #(.CONFIG_T(kv_env_configuration_t))kv_wr_rd_cold_rst_sequence_t;
+    rand kv_wr_rd_cold_rst_sequence_t kv_wr_rd_cold_rst_seq;
+
+    typedef kv_wr_rd_lock_sequence #(.CONFIG_T(kv_env_configuration_t)) kv_wr_rd_lock_sequence_t;
+    rand kv_wr_rd_lock_sequence_t kv_wr_rd_lock_seq;
+    
+    typedef kv_wr_rd_lock_warm_rst_sequence #(.CONFIG_T(kv_env_configuration_t)) kv_wr_rd_lock_warm_rst_sequence_t;
+    rand kv_wr_rd_lock_warm_rst_sequence_t kv_wr_rd_lock_warm_rst_seq;
+
+    typedef kv_wr_rd_lock_cold_rst_sequence #(.CONFIG_T(kv_env_configuration_t)) kv_wr_rd_lock_cold_rst_sequence_t;
+    rand kv_wr_rd_lock_cold_rst_sequence_t kv_wr_rd_lock_cold_rst_seq;
+
+    typedef kv_wr_rd_lock_core_rst_sequence #(.CONFIG_T(kv_env_configuration_t)) kv_wr_rd_lock_core_rst_sequence_t;
+    rand kv_wr_rd_lock_core_rst_sequence_t kv_wr_rd_lock_core_rst_seq;
+
+    typedef kv_wr_rd_debug_sequence #(.CONFIG_T(kv_env_configuration_t)) kv_wr_rd_debug_sequence_t;
+    rand kv_wr_rd_debug_sequence_t kv_wr_rd_debug_seq;
+
+    typedef kv_wr_rd_debug_lock_sequence #(.CONFIG_T(kv_env_configuration_t)) kv_wr_rd_debug_lock_sequence_t;
+    rand kv_wr_rd_debug_lock_sequence_t kv_wr_rd_debug_lock_seq;
+
+    typedef kv_wr_rd_debug_warm_rst_sequence #(.CONFIG_T(kv_env_configuration_t)) kv_wr_rd_debug_warm_rst_sequence_t;
+    rand kv_wr_rd_debug_warm_rst_sequence_t kv_wr_rd_debug_warm_rst_seq;
+
+    typedef kv_wr_rd_debug_cold_rst_sequence #(.CONFIG_T(kv_env_configuration_t)) kv_wr_rd_debug_cold_rst_sequence_t;
+    rand kv_wr_rd_debug_cold_rst_sequence_t kv_wr_rd_debug_cold_rst_seq;
+
+    typedef kv_wr_rd_debug_core_rst_sequence #(.CONFIG_T(kv_env_configuration_t)) kv_wr_rd_debug_core_rst_sequence_t;
+    rand kv_wr_rd_debug_core_rst_sequence_t kv_wr_rd_debug_core_rst_seq;
+
+    //Responder sequences:
+    typedef kv_read_responder_sequence kv_hmac_key_read_agent_responder_seq_t;
+    kv_hmac_key_read_agent_responder_seq_t kv_hmac_key_read_agent_responder_seq;
+
     function new(string name = "" );
         super.new(name);
     endfunction
 
     virtual task body();
 
-        kv_rst_poweron_seq = kv_rst_poweron_sequence_t::type_id::create("kv_rst_poweron_seq");
-        kv_hmac_write_agent_random_seq = kv_hmac_write_agent_random_seq_t::type_id::create("kv_hmac_write_agent_random_seq");
-        kv_sha512_write_agent_random_seq = kv_sha512_write_agent_random_seq_t::type_id::create("kv_sha512_write_agent_random_seq");
-        kv_ecc_write_agent_random_seq = kv_ecc_write_agent_random_seq_t::type_id::create("kv_ecc_write_agent_random_seq");
-        kv_doe_write_agent_random_seq = kv_doe_write_agent_random_seq_t::type_id::create("kv_doe_write_agent_random_seq");
+        kv_wr_rd_seq = kv_wr_rd_sequence_t::type_id::create("kv_wr_rd_seq");
+        kv_wr_rd_rst_seq = kv_wr_rd_rst_sequence_t::type_id::create("kv_wr_rd_rst_seq");
+        kv_wr_rd_cold_rst_seq = kv_wr_rd_cold_rst_sequence_t::type_id::create("kv_wr_rd_cold_rst_seq");
+        kv_key_wr_rd_basic_seq = kv_key_wr_rd_basic_sequence_t::type_id::create("kv_key_wr_rd_basic_seq");
+        kv_wr_rd_lock_seq = kv_wr_rd_lock_sequence_t::type_id::create("kv_wr_rd_lock_seq");
+        kv_wr_rd_lock_warm_rst_seq = kv_wr_rd_lock_warm_rst_sequence_t::type_id::create("kv_wr_rd_lock_warm_rst_seq");
+        kv_wr_rd_lock_cold_rst_seq = kv_wr_rd_lock_cold_rst_sequence_t::type_id::create("kv_wr_rd_lock_cold_rst_seq");
+        kv_wr_rd_lock_core_rst_seq = kv_wr_rd_lock_core_rst_sequence_t::type_id::create("kv_wr_rd_lock_core_rst_seq");
+        kv_wr_rd_debug_seq = kv_wr_rd_debug_sequence_t::type_id::create("kv_wr_rd_debug_seq");
+        kv_wr_rd_debug_lock_seq = kv_wr_rd_debug_lock_sequence_t::type_id::create("kv_wr_rd_debug_lock_seq");
+        kv_wr_rd_debug_warm_rst_seq = kv_wr_rd_debug_warm_rst_sequence_t::type_id::create("kv_wr_rd_debug_warm_rst_seq");
+        kv_wr_rd_debug_cold_rst_seq = kv_wr_rd_debug_cold_rst_sequence_t::type_id::create("kv_wr_rd_debug_cold_rst_seq");
+        kv_wr_rd_debug_core_rst_seq = kv_wr_rd_debug_core_rst_sequence_t::type_id::create("kv_wr_rd_debug_core_rst_seq");
 
-        if(!kv_rst_poweron_seq.randomize())
-            `uvm_fatal("SEQ", "kv_rand_test_sequence::body() - kv_rst_poweron_seq randomization failed");
-        if(!kv_hmac_write_agent_random_seq.randomize())
-            `uvm_fatal("SEQ", "kv_rand_test_sequence::body() - kv_hmac_write_agent_random_seq randomization failed");
-        if(!kv_sha512_write_agent_random_seq.randomize())
-            `uvm_fatal("SEQ", "kv_rand_test_sequence::body() - kv_sha512_write_agent_random_seq randomization failed");
-        if(!kv_ecc_write_agent_random_seq.randomize())
-            `uvm_fatal("SEQ", "kv_rand_test_sequence::body() - kv_ecc_write_agent_random_seq randomization failed");
-        if(!kv_doe_write_agent_random_seq.randomize())
-            `uvm_fatal("SEQ", "kv_rand_test_sequence::body() - kv_doe_write_agent_random_seq randomization failed");
+        if(!kv_wr_rd_seq.randomize())
+            `uvm_fatal("KV WR RD SEQ", "kv_rand_test_sequence::body() - kv_wr_rd_seq randomization failed");
+        if(!kv_key_wr_rd_basic_seq.randomize())
+            `uvm_fatal("KV BASIC WR RD SEQ", "kv_rand_test_sequence::body() - kv_key_wr_rd_basic_seq randomization failed");
+        if(!kv_wr_rd_rst_seq.randomize())
+            `uvm_fatal("KV WR RD RST SEQ", "kv_rand_test_sequence::body() - kv_wr_rd_rst_seq randomization failed");
+        if(!kv_wr_rd_cold_rst_seq.randomize())
+            `uvm_fatal("KV WR RD COLD RST SEQ", "kv_rand_test_sequence::body() - kv_wr_rd_cold_rst_seq randomization failed");
+        if(!kv_wr_rd_lock_seq.randomize())
+            `uvm_fatal("KV_WR_RD_LOCK_SEQ", "kv_rand_test_sequence::body() - kv_wr_rd_lock_seq randomization failed");
 
         reg_model.reset();
-
-        kv_rst_agent_config.wait_for_reset();
-        kv_hmac_write_agent_config.wait_for_reset();
-        kv_sha512_write_agent_config.wait_for_reset();
-        kv_ecc_write_agent_config.wait_for_reset();
-        kv_doe_write_agent_config.wait_for_reset();
-
-        kv_rst_agent_config.wait_for_num_clocks(10);
-        kv_rst_poweron_seq.start(kv_rst_agent_sequencer);
-
         
-        kv_hmac_write_agent_config.wait_for_num_clocks(10);
-        kv_hmac_write_agent_random_seq.start(kv_hmac_write_agent_sequencer);
-
-        kv_sha512_write_agent_random_seq.start(kv_sha512_write_agent_sequencer);
+        `uvm_info("TOP", "WR RD sequence",UVM_MEDIUM);
+        kv_wr_rd_seq.start(top_configuration.vsqr);
         
-        kv_ecc_write_agent_random_seq.start(kv_ecc_write_agent_sequencer);
-        
-        kv_doe_write_agent_random_seq.start(kv_doe_write_agent_sequencer);
-        kv_doe_write_agent_config.wait_for_num_clocks(400);
 
         if(1) $display("** TESTCASE PASSED");
         else  $display("** TESTCASE FAILED");

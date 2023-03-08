@@ -27,27 +27,34 @@
 //
 class kv_read_agent #(
      string KV_READ_REQUESTOR = "HMAC_KEY"
-     ) extends uvmf_parameterized_agent #(
+     )
+ extends uvmf_parameterized_agent #(
                     .CONFIG_T(kv_read_configuration #(
                               .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-                              )),
+                              )
+),
                     .DRIVER_T(kv_read_driver #(
                               .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-                              )),
+                              )
+),
                     .MONITOR_T(kv_read_monitor #(
                                .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-                               )),
+                               )
+),
                     .COVERAGE_T(kv_read_transaction_coverage #(
                                 .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-                                )),
+                                )
+),
                     .TRANS_T(kv_read_transaction #(
                              .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-                             ))
+                             )
+)
                     );
 
   `uvm_component_param_utils( kv_read_agent #(
                               KV_READ_REQUESTOR
-                              ))
+                              )
+)
 
 // pragma uvmf custom class_item_additional begin
 // pragma uvmf custom class_item_additional end

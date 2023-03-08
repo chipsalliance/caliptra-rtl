@@ -21,6 +21,10 @@ uvmf:
         reset_value: '''bz'
         width: '1'
       - dir: output
+        name: core_only_rst_b
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
         name: debug_locked
         reset_value: '''bz'
         width: '1'
@@ -41,6 +45,12 @@ uvmf:
         iscompare: 'False'
         isrand: 'False'
         name: assert_rst
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: assert_core_rst
         type: bit
         unpacked_dimension: ''
       - comment: ''

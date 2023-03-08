@@ -106,7 +106,8 @@ end
   // directionality in the config file was from the point-of-view of the INITIATOR
 
   // INITIATOR mode input signals
-
+  tri [$bits(kv_defines_pkg::kv_wr_resp_t)-1:0] kv_wr_resp_i;
+  reg [$bits(kv_defines_pkg::kv_wr_resp_t)-1:0] kv_wr_resp_o = 'b0;
   // INITIATOR mode output signals
   tri [$bits(kv_defines_pkg::kv_write_t)-1:0] kv_write_i;
   reg [$bits(kv_defines_pkg::kv_write_t)-1:0] kv_write_o = 'b0;
@@ -119,7 +120,8 @@ end
 
   // These are signals marked as 'input' by the config file, but the signals will be
   // driven by this BFM if put into RESPONDER mode (flipping all signal directions around)
-
+  assign kv_wr_resp_i = bus.kv_wr_resp;
+  assign bus.kv_wr_resp = (initiator_responder == RESPONDER) ? kv_wr_resp_o : 'bz;
 
   // These are signals marked as 'output' by the config file, but the outputs will
   // not be driven by this BFM unless placed in INITIATOR mode.
@@ -158,8 +160,9 @@ end
   always @( negedge dummy_i )
      begin
        // RESPONDER mode output signals
+       kv_wr_resp_o <= 'bz;
        // INITIATOR mode output signals
-       kv_write_o <= 'b0;
+       kv_write_o <= 'bz;
        // Bi-directional signals
  
      end    
@@ -200,18 +203,18 @@ end
        // 
        // Members within the kv_write_initiator_struct:
        //   logic write_en ;
-       //   logic entry_is_pcr ;
-       //   logic   [2:0] write_entry ;
+       //   logic   [4:0] write_entry ;
        //   logic   [3:0] write_offset;
        //   logic   [31:0] write_data ;
        //   logic   [5:0] write_dest_valid ;
+       //   logic error ;
        // Members within the kv_write_responder_struct:
        //   logic write_en ;
-       //   logic entry_is_pcr ;
-       //   logic   [2:0] write_entry ;
+       //   logic   [4:0] write_entry ;
        //   logic   [3:0] write_offset;
        //   logic   [31:0] write_data ;
        //   logic   [5:0] write_dest_valid ;
+       //   logic error ;
        initiator_struct = kv_write_initiator_struct;
        //
        // Reference code;
@@ -221,6 +224,7 @@ end
        //    How to assign a responder struct member, named xyz, from a signal.   
        //    All available initiator input and inout signals listed.
        //    Initiator input signals
+       //      kv_write_responder_struct.xyz = kv_wr_resp_i; //    [$bits(kv_defines::kv_wr_resp_t)-1:0]
        //    Initiator inout signals
        //    How to assign a signal from an initiator struct member named xyz.   
        //    All available initiator output and inout signals listed.
@@ -229,48 +233,30 @@ end
        //      kv_write_o <= kv_write_initiator_struct.xyz;  //    [$bits(kv_defines::kv_write_t)-1:0] 
        //    Initiator inout signals
     // Initiate a transfer using the data received.
-        $display("INIT_RESP = %s", initiator_responder);
     //@(posedge clk_i);
     //@(posedge clk_i);
     // Wait for the responder to complete the transfer then place the responder data into 
     // kv_write_responder_struct.
-    // kv_write_o.write_en <= initiator_struct.write_en;
-    // kv_write_o.entry_is_pcr <= initiator_struct.entry_is_pcr;
-    // kv_write_o.write_entry <= initiator_struct.write_entry;
-    // kv_write_o.write_offset <= initiator_struct.write_offset;
-    // kv_write_o.write_data <= initiator_struct.write_data;
-    // kv_write_o.write_dest_valid <= initiator_struct.write_dest_valid;
 
-    // kv_write_o <= {
-    //                 kv_write_initiator_struct.write_dest_valid,
-    //                 kv_write_initiator_struct.write_data,
-    //                 kv_write_initiator_struct.write_offset,
-    //                 kv_write_initiator_struct.write_entry,
-    //                 1'b0, /*kv_write_initiator_struct.entry_is_pcr,*/
-    //                 kv_write_initiator_struct.write_en
-    //               };
 
     kv_write_o <= {
-                    kv_write_initiator_struct.write_en, /*1'b1*/
-                    kv_write_initiator_struct.entry_is_pcr, /*1'b0*/
-                    kv_write_initiator_struct.write_entry,
-                    kv_write_initiator_struct.write_offset,
-                    kv_write_initiator_struct.write_data,
-                    kv_write_initiator_struct.write_dest_valid
+                    initiator_struct.write_en,
+                    initiator_struct.write_entry,
+                    initiator_struct.write_offset,
+                    initiator_struct.write_data,
+                    initiator_struct.write_dest_valid
     };
 
-    //@(posedge clk_i);
-    @(posedge clk_i);
-    kv_write_o[46] <= 1'b0;
-    //Note: here, entry_is_pcr might also need to be reset to 0 (ask Michael Norris if this bit is expected to be a single pulse)
-    //Need to clarify this and add the line here - holding off for now since PCR usage is still being discussed
 
-    kv_write_responder_struct.write_en = kv_write_i[0];
-    kv_write_responder_struct.entry_is_pcr = kv_write_i[1];
-    kv_write_responder_struct.write_entry = kv_write_i[4:2];
-    kv_write_responder_struct.write_offset = kv_write_i[8:5];
-    kv_write_responder_struct.write_data = kv_write_i[40:9];
-    kv_write_responder_struct.write_dest_valid = kv_write_i[46:41];
+    @(posedge clk_i);
+    kv_write_o[47] <= 1'b0; //Set write_en to 0 after txn is complete
+    //kv_write_o[45] <= 1'b0; //Set entry_is_pcr to 0 after txn is complete
+
+    kv_write_responder_struct.write_en          = kv_write_i[47];//kv_write_i[0];
+    kv_write_responder_struct.write_entry       = kv_write_i[46:42];//kv_write_i[4:2];
+    kv_write_responder_struct.write_offset      = kv_write_i[41:38];//kv_write_i[8:5];
+    kv_write_responder_struct.write_data        = kv_write_i[37:6];//kv_write_i[40:9];
+    kv_write_responder_struct.write_dest_valid  = kv_write_i[5:0];//kv_write_i[46:41];
 
     responder_struct = kv_write_responder_struct;
   endtask        
@@ -296,15 +282,13 @@ bit first_transfer=1;
        );// pragma tbx xtf   
   // Variables within the kv_write_initiator_struct:
   //   logic write_en ;
-  //   logic entry_is_pcr ;
-  //   logic   [2:0] write_entry ;
+  //   logic   [4:0] write_entry ;
   //   logic   [3:0] write_offset;
   //   logic   [31:0] write_data ;
   //   logic   [5:0] write_dest_valid ;
   // Variables within the kv_write_responder_struct:
   //   logic write_en ;
-  //   logic entry_is_pcr ;
-  //   logic   [2:0] write_entry ;
+  //   logic   [4:0] write_entry ;
   //   logic   [3:0] write_offset;
   //   logic   [31:0] write_data ;
   //   logic   [5:0] write_dest_valid ;
@@ -321,6 +305,7 @@ bit first_transfer=1;
        //    All available responder output and inout signals listed.
        //    Notice the _o.  Those are storage variables that allow for procedural assignment.
        //    Responder output signals
+       //      kv_wr_resp_o <= kv_write_initiator_struct.xyz;  //    [$bits(kv_defines::kv_wr_resp_t)-1:0] 
        //    Responder inout signals
     
   @(posedge clk_i);

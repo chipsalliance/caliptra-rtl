@@ -110,6 +110,8 @@ end
   reg  cptra_pwrgood_o = 'bz;
   tri  rst_b_i;
   reg  rst_b_o = 'bz;
+  tri  core_only_rst_b_i;
+  reg  core_only_rst_b_o = 'bz;
   tri  debug_locked_i;
   reg  debug_locked_o = 'bz;
 
@@ -129,6 +131,8 @@ end
   assign cptra_pwrgood_i = bus.cptra_pwrgood;
   assign bus.rst_b = (initiator_responder == INITIATOR) ? rst_b_o : 'bz;
   assign rst_b_i = bus.rst_b;
+  assign bus.core_only_rst_b = (initiator_responder == INITIATOR) ? core_only_rst_b_o : 'bz;
+  assign core_only_rst_b_i = bus.core_only_rst_b;
   assign bus.debug_locked = (initiator_responder == INITIATOR) ? debug_locked_o : 'bz;
   assign debug_locked_i = bus.debug_locked;
 
@@ -164,7 +168,8 @@ end
        // INITIATOR mode output signals
        cptra_pwrgood_o <= 'bz;
        rst_b_o <= 'bz;
-       debug_locked_o <= 'bz;
+       core_only_rst_b_o <= 'bz;
+       debug_locked_o <= 'b1;
        // Bi-directional signals
  
      end    
@@ -206,11 +211,13 @@ end
        // Members within the kv_rst_initiator_struct:
        //   bit set_pwrgood ;
        //   bit assert_rst ;
+       //   bit assert_core_rst ;
        //   int unsigned wait_cycles ;
        //   bit debug_mode;
        // Members within the kv_rst_responder_struct:
        //   bit set_pwrgood ;
        //   bit assert_rst ;
+       //   bit assert_core_rst ;
        //   int unsigned wait_cycles ;
        //   bit debug_mode;
        initiator_struct = kv_rst_initiator_struct;
@@ -229,13 +236,16 @@ end
        //    Initiator output signals
        //      cptra_pwrgood_o <= kv_rst_initiator_struct.xyz;  //     
        //      rst_b_o <= kv_rst_initiator_struct.xyz;  //     
+       //      core_rst_b_o <= kv_rst_initiator_struct.xyz;  //     
        //    Initiator inout signals
     // Initiate a transfer using the data received.
     @(posedge clk_i);
     @(posedge clk_i);
-    $display(">>>>>>>> In rst driver bfm, assert rst = %d", initiator_struct.assert_rst);
+    
     if (initiator_struct.assert_rst)
       rst_b_o <= 1'b0;
+    if (initiator_struct.assert_core_rst)
+      core_only_rst_b_o <= 1'b0;
     if (!initiator_struct.set_pwrgood)
       cptra_pwrgood_o <= 1'b0;
     if (initiator_struct.debug_mode)
@@ -247,15 +257,18 @@ end
     @(posedge clk_i);
     if (!initiator_struct.assert_rst)
       rst_b_o <= 1'b1;
+    if (!initiator_struct.assert_core_rst)
+      core_only_rst_b_o <= 1'b1;
     if (initiator_struct.set_pwrgood)
       cptra_pwrgood_o <= 1'b1;
     if (!initiator_struct.debug_mode)
-      debug_locked_o <= 1'b0; //TODO: make this 1 (once bug 439478 is fixed)
+      debug_locked_o <= 1'b0;
 
     repeat(initiator_struct.wait_cycles)
       @(posedge clk_i);
     kv_rst_responder_struct.set_pwrgood = cptra_pwrgood_i;
     kv_rst_responder_struct.assert_rst = !rst_b_i;
+    kv_rst_responder_struct.assert_core_rst = !core_only_rst_b_i;
     kv_rst_responder_struct.debug_mode = debug_locked_i;
     responder_struct = kv_rst_responder_struct;
   endtask        
@@ -282,11 +295,13 @@ bit first_transfer=1;
   // Variables within the kv_rst_initiator_struct:
   //   bit set_pwrgood ;
   //   bit assert_rst ;
+  //   bit assert_core_rst ;
   //   int unsigned wait_cycles ;
   //   bit debug_mode;
   // Variables within the kv_rst_responder_struct:
   //   bit set_pwrgood ;
   //   bit assert_rst ;
+  //   bit assert_core_rst ;
   //   int unsigned wait_cycles ;
   //   bit debug_mode;
        // Reference code;
@@ -298,6 +313,7 @@ bit first_transfer=1;
        //    Responder input signals
        //      kv_rst_responder_struct.xyz = cptra_pwrgood_i;  //     
        //      kv_rst_responder_struct.xyz = rst_b_i;  //     
+       //      kv_rst_responder_struct.xyz = core_rst_b_i;  //     
        //    Responder inout signals
        //    How to assign a signal, named xyz, from an initiator struct member.   
        //    All available responder output and inout signals listed.

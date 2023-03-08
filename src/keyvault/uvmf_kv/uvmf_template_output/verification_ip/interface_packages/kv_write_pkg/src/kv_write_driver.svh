@@ -31,23 +31,29 @@
 //
 class kv_write_driver  #(
       string KV_WRITE_REQUESTOR = "HMAC"
-      ) extends uvmf_driver_base #(
+      )
+ extends uvmf_driver_base #(
                    .CONFIG_T(kv_write_configuration  #(
                              .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-                             ) ),
+                             )
+ ),
                    .BFM_BIND_T(virtual kv_write_driver_bfm  #(
                              .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-                             ) ),
+                             )
+ ),
                    .REQ(kv_write_transaction  #(
                              .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-                             ) ),
+                             )
+ ),
                    .RSP(kv_write_transaction  #(
                              .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-                             ) ));
+                             )
+ ));
 
   `uvm_component_param_utils( kv_write_driver #(
                               KV_WRITE_REQUESTOR
-                              ))
+                              )
+)
 //*******************************************************************
 // Macros that define structs located in kv_write_macros.svh
 //*******************************************************************

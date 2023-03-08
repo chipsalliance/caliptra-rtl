@@ -72,6 +72,7 @@ package kv_read_pkg;
    `include "src/kv_read_transaction_coverage.svh"
    `include "src/kv_read_sequence_base.svh"
    `include "src/kv_read_random_sequence.svh"
+   `include "src/kv_read_key_entry_sequence.svh"
 
    `include "src/kv_read_responder_sequence.svh"
    `include "src/kv_read2reg_adapter.svh"

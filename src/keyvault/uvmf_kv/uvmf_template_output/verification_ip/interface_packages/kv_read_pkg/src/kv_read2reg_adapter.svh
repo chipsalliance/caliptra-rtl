@@ -26,13 +26,16 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
+import kv_reg_adapter_functions_pkg::*;
 class kv_read2reg_adapter #(
       string KV_READ_REQUESTOR = "HMAC_KEY"
-      ) extends uvm_reg_adapter;
+      )
+ extends uvm_reg_adapter;
 
   `uvm_object_param_utils( kv_read2reg_adapter #(
                            KV_READ_REQUESTOR
-                           ))
+                           )
+)
   
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end
@@ -67,19 +70,29 @@ class kv_read2reg_adapter #(
 
     kv_read_transaction #(
                     .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-                    ) trans_h = kv_read_transaction #(
+                    )
+ trans_h = kv_read_transaction #(
                              .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-                             )::type_id::create("trans_h");
+                             )
+::type_id::create("trans_h");
     
-    // pragma uvmf custom reg2bus begin
-    // UVMF_CHANGE_ME : Fill in the reg2bus adapter mapping registe fields to protocol fields.
+    // // pragma uvmf custom reg2bus begin
+    // // UVMF_CHANGE_ME : Fill in the reg2bus adapter mapping registe fields to protocol fields.
+     uvm_reg_addr_t rd_addr;
+     reg [KV_ENTRY_ADDR_W-1:0] rd_entry;
+     reg [KV_ENTRY_SIZE_W-1:0] rd_offset;
 
-    //Adapt the following for your sequence item type
-    // trans_h.op = (rw.kind == UVM_READ) ? WB_READ : WB_WRITE;
-    //Copy over address
-    // trans_h.addr = rw.addr;
-    //Copy over write data
-    // trans_h.data = rw.data;
+    // //Calculate KV entry and offset based on reg model address
+    rd_addr = rw.addr;
+
+    {rd_offset, rd_entry} = convert_addr_to_kv(rd_addr);
+
+    trans_h.read_entry = rd_entry;
+    trans_h.read_offset = rd_offset;
+    trans_h.error = rw.status; //TODO - confirm?
+    trans_h.last = 0; //TODO - add function in adapter_functions to calculate last dword
+    trans_h.read_data = rw.data;
+
 
     // pragma uvmf custom reg2bus end
     
@@ -95,22 +108,19 @@ class kv_read2reg_adapter #(
                                 ref uvm_reg_bus_op rw);
     kv_read_transaction #(
         .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-        ) trans_h;
+        )
+ trans_h;
     if (!$cast(trans_h, bus_item)) begin
       `uvm_fatal("ADAPT","Provided bus_item is not of the correct type")
       return;
     end
     // pragma uvmf custom bus2reg begin
-    // UVMF_CHANGE_ME : Fill in the bus2reg adapter mapping protocol fields to register fields.
-    //Adapt the following for your sequence item type
-    //Copy over instruction type 
-    // rw.kind = (trans_h.op == WB_WRITE) ? UVM_WRITE : UVM_READ;
-    //Copy over address
-    // rw.addr = trans_h.addr;
+    rw.kind = UVM_READ;
+    
+    rw.addr = convert_kv_to_addr({trans_h.read_offset, trans_h.read_entry});
     //Copy over read data
-    // rw.data = trans_h.data;
-    //Check for errors on the bus and return UVM_NOT_OK if there is an error
-    // rw.status = UVM_IS_OK;
+    rw.data = trans_h.read_data;
+
     // pragma uvmf custom bus2reg end
 
   endfunction: bus2reg

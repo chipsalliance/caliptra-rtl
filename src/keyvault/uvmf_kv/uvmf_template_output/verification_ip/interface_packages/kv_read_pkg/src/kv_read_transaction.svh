@@ -36,11 +36,14 @@ class kv_read_transaction #(
                            KV_READ_REQUESTOR
                            ))
 
-  rand logic entry_is_pcr ;
-  rand logic [2:0] read_entry ;
-  logic [31:0] read_data ;
+  rand logic [KV_ENTRY_ADDR_W-1:0] read_entry ;
+  rand logic [KV_ENTRY_SIZE_W-1:0] read_offset ;
+  logic error;
+  logic last;
+  logic [KV_DATA_W-1:0] read_data ;
 
   //Constraints for the transaction variables:
+  constraint read_offset_c {read_offset >= 0; read_offset < 12;}
 
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end
@@ -121,7 +124,7 @@ class kv_read_transaction #(
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("entry_is_pcr:0x%x read_entry:0x%x read_data:0x%x ",entry_is_pcr,read_entry,read_data);
+    return $sformatf("read_entry:0x%x read_offset:0x%x error: 0x%x last_dword: 0x%x read_data:0x%x ",read_entry,read_offset,error,last,read_data);
     // pragma uvmf custom convert2string end
   endfunction
 
@@ -151,8 +154,11 @@ class kv_read_transaction #(
     // pragma uvmf custom do_compare begin
     // UVMF_CHANGE_ME : Eliminate comparison of variables not to be used for compare
     return (super.do_compare(rhs,comparer)
-            &&(this.read_entry == RHS.read_entry)
-            &&(this.read_data == RHS.read_data)
+            &&(this.read_entry === RHS.read_entry)
+            &&(this.read_offset === RHS.read_offset)
+            &&(this.error === RHS.error)
+            &&(this.last === RHS.last)
+            &&(this.read_data === RHS.read_data)
             );
     // pragma uvmf custom do_compare end
   endfunction
@@ -169,8 +175,10 @@ class kv_read_transaction #(
     assert($cast(RHS,rhs));
     // pragma uvmf custom do_copy begin
     super.do_copy(rhs);
-    this.entry_is_pcr = RHS.entry_is_pcr;
     this.read_entry = RHS.read_entry;
+    this.read_offset = RHS.read_offset;
+    this.error = RHS.error;
+    this.last = RHS.last;
     this.read_data = RHS.read_data;
     // pragma uvmf custom do_copy end
   endfunction
@@ -195,8 +203,10 @@ class kv_read_transaction #(
     //   default : $add_color(transaction_view_h,"grey");
     // endcase
     // UVMF_CHANGE_ME : Eliminate transaction variables not wanted in transaction viewing in the waveform viewer
-    $add_attribute(transaction_view_h,entry_is_pcr,"entry_is_pcr");
     $add_attribute(transaction_view_h,read_entry,"read_entry");
+    $add_attribute(transaction_view_h,read_offset,"read_offset");
+    $add_attribute(transaction_view_h,error,"error");
+    $add_attribute(transaction_view_h,last,"last");
     $add_attribute(transaction_view_h,read_data,"read_data");
     // pragma uvmf custom add_to_wave end
     $end_transaction(transaction_view_h,end_time);

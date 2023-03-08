@@ -39,6 +39,12 @@ uvmf:
       - name: kv_pred
         parameters: []
         type: kv_predictor
+      # - name: kv_reg_pred
+      #   parameters: []
+      #   type: kv_reg_predictor
+      - name: kv_sb
+        parameters: []
+        type: kv_scoreboard
       analysis_exports: []
       analysis_ports: []
       config_constraints: []
@@ -69,10 +75,7 @@ uvmf:
         reg_model_package: kv_reg_model_top_pkg
         use_adapter: 'True'
         use_explicit_prediction: 'True'
-      scoreboards:
-      - name: kv_sb
-        sb_type: uvmf_in_order_scoreboard
-        trans_type: kv_read_transaction
+      scoreboards: []
       subenvs: []
       tlm_connections:
       - driver: kv_rst_agent.monitored_ap

@@ -22,6 +22,9 @@ uvmf:
       - name: rst_b
         dir: output
         width: '1'
+      - name: core_only_rst_b
+        dir: output
+        width: '1'
       - name: debug_locked
         dir: output
         width: '1'
@@ -36,6 +39,10 @@ uvmf:
         iscompare: 'False'
         isrand: 'False'
       - name: assert_rst
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+      - name: assert_core_rst
         type: bit
         iscompare: 'False'
         isrand: 'False'
@@ -89,19 +96,23 @@ uvmf:
         iscompare: 'False'
         isrand: 'False'
       - name: write_entry
-        type: logic   [4:0]  
+        type: logic   [KV_ENTRY_ADDR_W-1:0]  
         iscompare: 'True'
         isrand: 'True'
       - name: write_offset
-        type: logic   [3:0]  
+        type: logic   [KV_ENTRY_SIZE_W-1:0]  
         iscompare: 'False'
         isrand: 'False'
       - name: write_data
-        type: logic   [31:0] 
+        type: logic   [KV_DATA_W-1:0] 
         iscompare: 'True'
         isrand: 'True'
       - name: write_dest_valid
-        type: logic   [5:0]  
+        type: logic   [KV_NUM_READ-1:0]  
+        iscompare: 'True'
+        isrand: 'True'
+      - name: error
+        type: logic  
         iscompare: 'True'
         isrand: 'True'
 
@@ -139,11 +150,23 @@ uvmf:
       transaction_vars:
       # KV Read
       - name: read_entry
-        type: logic [4:0]
+        type: logic [KV_ENTRY_ADDR_W-1:0]
         iscompare: 'True'
         isrand: 'True'
-      # KV Resp
+      - name: read_offset
+        type: logic [KV_ENTRY_SIZE_W-1:0]
+        iscompare: 'True'
+        isrand: 'True'
+      # KV Read Resp
+      - name: error
+        type: logic
+        iscompare: 'True'
+        isrand: 'True'
+      - name: last 
+        type: logic
+        iscompare: 'True'
+        isrand: 'True'
       - name: read_data
-        type: logic [31:0]
+        type: logic [KV_DATA_W-1:0]
         iscompare: 'True'
         isrand: 'False'

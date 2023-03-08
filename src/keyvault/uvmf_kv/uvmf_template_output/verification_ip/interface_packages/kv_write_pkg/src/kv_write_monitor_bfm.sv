@@ -50,6 +50,7 @@ import kv_write_pkg_hdl::*;
 interface kv_write_monitor_bfm #(
   string KV_WRITE_REQUESTOR = "HMAC"
   )
+
   ( kv_write_if  bus );
   // The pragma below and additional ones in-lined further down are for running this BFM on Veloce
   // pragma attribute kv_write_monitor_bfm partition_interface_xif                                  
@@ -86,17 +87,50 @@ end
   tri clk_i;
   tri dummy_i;
   tri [$bits(kv_defines_pkg::kv_write_t)-1:0] kv_write_i;
+  tri [$bits(kv_defines_pkg::kv_wr_resp_t)-1:0] kv_wr_resp_i;
+    reg write_en_i          ;
+    reg [KV_ENTRY_ADDR_W-1:0] write_entry_i ;
+    reg [KV_ENTRY_SIZE_W-1:0] write_offset_i;
+    reg [KV_DATA_W-1:0] write_data_i ;
+    reg [KV_NUM_READ-1:0] write_dest_valid_i ;
+    reg error_i;
   assign clk_i = bus.clk;
   assign dummy_i = bus.dummy;
   assign kv_write_i = bus.kv_write;
+  assign kv_wr_resp_i = bus.kv_wr_resp;
+  assign write_en_i          = kv_write_i[47]; //[0];
+  assign write_entry_i       = kv_write_i[46:42]; //[4:2];
+  assign write_offset_i      = kv_write_i[41:38]; //[8:5];
+  assign write_data_i        = kv_write_i[37:6]; //[40:9];
+  assign write_dest_valid_i  = kv_write_i[5:0]; //[46:41];
+  assign error_i             = kv_wr_resp_i[0];
 
   // Proxy handle to UVM monitor
   kv_write_pkg::kv_write_monitor #(
     .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-    ) proxy;
+    )
+ proxy;
   // pragma tbx oneway proxy.notify_transaction                 
 
   // pragma uvmf custom interface_item_additional begin
+ reg write_en_o               = 'h0; 
+ reg [KV_ENTRY_ADDR_W-1:0] write_entry_o      = 'h0; 
+ reg [KV_ENTRY_SIZE_W-1:0] write_offset_o     = 'h0; 
+ reg [KV_DATA_W-1:0] write_data_o      = 'h0; 
+ reg [KV_NUM_READ-1:0] write_dest_valid_o = 'h0; 
+ reg error_o = 'h0;
+
+  function any_signal_changed();
+
+    return |(write_en_i ^ write_en_o) ||
+           |(write_entry_i ^ write_entry_o) ||
+           |(write_offset_i ^ write_offset_o) ||
+           |(write_data_i ^ write_data_o) ||
+           |(write_dest_valid_i ^ write_dest_valid_o) ||
+           |(error_i ^ error_o);
+
+  endfunction
+
   // pragma uvmf custom interface_item_additional end
   
   //******************************************************************                         
@@ -131,7 +165,7 @@ end
   initial begin                                                                             
     @go;                                                                                   
     forever begin                                                                        
-      @(posedge clk_i);  
+      //@(posedge clk_i);  
       do_monitor( kv_write_monitor_struct );
                                                                  
  
@@ -161,12 +195,11 @@ end
     //
     // Available struct members:
     //     //    kv_write_monitor_struct.write_en
-    //     //    kv_write_monitor_struct.entry_is_pcr
     //     //    kv_write_monitor_struct.write_entry
     //     //    kv_write_monitor_struct.write_offset
     //     //    kv_write_monitor_struct.write_data
     //     //    kv_write_monitor_struct.write_dest_valid
-    //     //
+    //     //    kv_write_monitor_struct.error
     // Reference code;
     //    How to wait for signal value
     //      while (control_signal === 1'b1) @(posedge clk_i);
@@ -174,6 +207,7 @@ end
     //    How to assign a struct member, named xyz, from a signal.   
     //    All available input signals listed.
     //      kv_write_monitor_struct.xyz = kv_write_i;  //    [$bits(kv_defines_pkg::kv_write_t)-1:0] 
+    //      kv_write_monitor_struct.xyz = kv_wr_resp_i;  //    [$bits(kv_defines_pkg::kv_wr_resp_t)-1:0] 
     // pragma uvmf custom do_monitor begin
     // UVMF_CHANGE_ME : Implement protocol monitoring.  The commented reference code 
     // below are examples of how to capture signal values and assign them to 
@@ -182,10 +216,25 @@ end
     // task should return when a complete transfer has been observed.  Once this task is
     // exited with captured values, it is then called again to wait for and observe 
     // the next transfer. One clock cycle is consumed between calls to do_monitor.
-    @(posedge clk_i);
-    @(posedge clk_i);
-    @(posedge clk_i);
-    @(posedge clk_i);
+
+    while(!any_signal_changed()) @(posedge clk_i);
+    write_en_o          <= write_en_i; //kv_write_i[0];
+    write_entry_o       <= write_entry_i; //kv_write_i[4:2];
+    write_offset_o      <= write_offset_i; //kv_write_i[8:5];
+    write_data_o        <= write_data_i; //kv_write_i[40:9];
+    write_dest_valid_o  <= write_dest_valid_i; //kv_write_i[46:41];
+    error_o             <= error_i;
+
+    @(posedge clk_i); //Delay write txn to monitor by 1 clk to mimic design
+    //(regs are updated in the next clk and reg model should follow the same)
+    kv_write_monitor_struct.write_en          = write_en_o; //kv_write_i[0];
+    kv_write_monitor_struct.write_entry       = write_entry_o; //kv_write_i[4:2];
+    kv_write_monitor_struct.write_offset      = write_offset_o; //kv_write_i[8:5];
+    kv_write_monitor_struct.write_data        = write_data_o; //kv_write_i[40:9];
+    kv_write_monitor_struct.write_dest_valid  = write_dest_valid_o; //kv_write_i[46:41];
+    kv_write_monitor_struct.error             = error_o;
+
+
     // pragma uvmf custom do_monitor end
   endtask         
   

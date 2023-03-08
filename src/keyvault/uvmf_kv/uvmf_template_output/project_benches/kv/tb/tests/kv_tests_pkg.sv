@@ -61,6 +61,9 @@ package kv_tests_pkg;
    `include "src/register_test.svh"
    `include "src/example_derived_test.svh"
    `include "src/kv_rand_test.svh"
+   `include "src/kv_rand_wr_rd_test.svh"
+   `include "src/kv_rand_debug_test.svh"
+   `include "src/kv_rand_lock_test.svh"
 
   // pragma uvmf custom package_item_additional begin
   // UVMF_CHANGE_ME : When adding new tests to the src directory

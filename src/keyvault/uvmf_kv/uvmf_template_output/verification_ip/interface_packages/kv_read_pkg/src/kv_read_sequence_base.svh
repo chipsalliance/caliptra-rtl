@@ -29,26 +29,32 @@
 //
 class kv_read_sequence_base #(
       string KV_READ_REQUESTOR = "HMAC_KEY"
-      )   extends uvmf_sequence_base #(
+      )
+   extends uvmf_sequence_base #(
                              .REQ(kv_read_transaction  #(
                                  .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-                                 )),
+                                 )
+),
                              .RSP(kv_read_transaction  #(
                                  .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-                                 )));
+                                 )
+));
 
   `uvm_object_param_utils( kv_read_sequence_base #(
                            KV_READ_REQUESTOR
-                           ))
+                           )
+)
 
   // variables
   typedef kv_read_transaction #(
                      .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-                     ) kv_read_transaction_req_t;
+                     )
+ kv_read_transaction_req_t;
   kv_read_transaction_req_t req;
   typedef kv_read_transaction #(
                      .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-                     ) kv_read_transaction_rsp_t;
+                     )
+ kv_read_transaction_rsp_t;
   kv_read_transaction_rsp_t rsp;
 
   // Event for identifying when a response was received from the sequencer

@@ -65,6 +65,7 @@ typedef struct packed  { \
   `define kv_rst_MONITOR_STRUCT typedef struct packed  { \
   bit set_pwrgood ; \
   bit assert_rst ; \
+  bit assert_core_rst ; \
   int unsigned wait_cycles ; \
   bit debug_mode ; \
      } kv_rst_monitor_s;
@@ -75,6 +76,7 @@ typedef struct packed  { \
             { \
             this.set_pwrgood , \
             this.assert_rst , \
+            this.assert_core_rst , \
             this.wait_cycles , \
             this.debug_mode  \
             };\
@@ -86,6 +88,7 @@ typedef struct packed  { \
             {\
             this.set_pwrgood , \
             this.assert_rst , \
+            this.assert_core_rst , \
             this.wait_cycles , \
             this.debug_mode  \
             } = kv_rst_monitor_struct;\
@@ -99,6 +102,7 @@ typedef struct packed  { \
   `define kv_rst_INITIATOR_STRUCT typedef struct packed  { \
   bit set_pwrgood ; \
   bit assert_rst ; \
+  bit assert_core_rst ; \
   int unsigned wait_cycles ; \
   bit debug_mode ; \
      } kv_rst_initiator_s;
@@ -109,6 +113,7 @@ typedef struct packed  { \
            {\
            this.set_pwrgood , \
            this.assert_rst , \
+           this.assert_core_rst , \
            this.wait_cycles , \
            this.debug_mode  \
            };\
@@ -120,6 +125,7 @@ typedef struct packed  { \
            {\
            this.set_pwrgood , \
            this.assert_rst , \
+           this.assert_core_rst , \
            this.wait_cycles , \
            this.debug_mode  \
            } = kv_rst_initiator_struct;\
@@ -133,6 +139,7 @@ typedef struct packed  { \
   `define kv_rst_RESPONDER_STRUCT typedef struct packed  { \
   bit set_pwrgood ; \
   bit assert_rst ; \
+  bit assert_core_rst ; \
   int unsigned wait_cycles ; \
   bit debug_mode ; \
      } kv_rst_responder_s;
@@ -143,6 +150,7 @@ typedef struct packed  { \
            {\
            this.set_pwrgood , \
            this.assert_rst , \
+           this.assert_core_rst , \
            this.wait_cycles , \
            this.debug_mode  \
            };\
@@ -154,6 +162,7 @@ typedef struct packed  { \
            {\
            this.set_pwrgood , \
            this.assert_rst , \
+           this.assert_core_rst , \
            this.wait_cycles , \
            this.debug_mode  \
            } = kv_rst_responder_struct;\

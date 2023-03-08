@@ -31,13 +31,16 @@
 class kv_write_responder_sequence #(
       string KV_WRITE_REQUESTOR = "HMAC"
       )
+
   extends kv_write_sequence_base #(
       .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-      );
+      )
+;
 
   `uvm_object_param_utils( kv_write_responder_sequence #(
                            KV_WRITE_REQUESTOR
-                           ))
+                           )
+)
 
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end
@@ -49,7 +52,8 @@ class kv_write_responder_sequence #(
   task body();
     req=kv_write_transaction#(
                 .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-                )::type_id::create("req");
+                )
+::type_id::create("req");
     forever begin
       start_item(req);
       finish_item(req);

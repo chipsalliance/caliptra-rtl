@@ -30,13 +30,16 @@
 //
 class kv_write_transaction_coverage #(
       string KV_WRITE_REQUESTOR = "HMAC"
-      ) extends uvm_subscriber #(.T(kv_write_transaction #(
+      )
+ extends uvm_subscriber #(.T(kv_write_transaction #(
                                             .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-                                            )));
+                                            )
+));
 
   `uvm_component_param_utils( kv_write_transaction_coverage #(
                               KV_WRITE_REQUESTOR
-                              ))
+                              )
+)
 
   T coverage_trans;
 
@@ -50,11 +53,11 @@ class kv_write_transaction_coverage #(
     option.auto_bin_max=1024;
     option.per_instance=1;
     write_en: coverpoint coverage_trans.write_en;
-    entry_is_pcr: coverpoint coverage_trans.entry_is_pcr;
     write_entry: coverpoint coverage_trans.write_entry;
     write_data: coverpoint coverage_trans.write_data;
     write_offset: coverpoint coverage_trans.write_offset;
     write_dest_valid: coverpoint coverage_trans.write_dest_valid;
+    error: coverpoint coverage_trans.error;
     // pragma uvmf custom covergroup end
   endgroup
 

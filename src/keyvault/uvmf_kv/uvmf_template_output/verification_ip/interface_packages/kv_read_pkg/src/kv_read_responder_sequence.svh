@@ -31,13 +31,16 @@
 class kv_read_responder_sequence #(
       string KV_READ_REQUESTOR = "HMAC_KEY"
       )
+
   extends kv_read_sequence_base #(
       .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-      );
+      )
+;
 
   `uvm_object_param_utils( kv_read_responder_sequence #(
                            KV_READ_REQUESTOR
-                           ))
+                           )
+)
 
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end
@@ -49,7 +52,8 @@ class kv_read_responder_sequence #(
   task body();
     req=kv_read_transaction#(
                 .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-                )::type_id::create("req");
+                )
+::type_id::create("req");
     forever begin
       start_item(req);
       finish_item(req);

@@ -69,6 +69,7 @@
 //
 import uvmf_base_pkg_hdl::*;
 import kv_read_pkg_hdl::*;
+import kv_defines_pkg::*;
 `include "src/kv_read_macros.svh"
 
 interface kv_read_driver_bfm #(
@@ -107,8 +108,8 @@ end
   // directionality in the config file was from the point-of-view of the INITIATOR
 
   // INITIATOR mode input signals
-  tri [$bits(kv_defines_pkg::kv_rd_resp_t)-1:0] kv_resp_i;
-  reg [$bits(kv_defines_pkg::kv_rd_resp_t)-1:0] kv_resp_o = 'bz;
+  tri [$bits(kv_defines_pkg::kv_rd_resp_t)-1:0] kv_rd_resp_i;
+  reg [$bits(kv_defines_pkg::kv_rd_resp_t)-1:0] kv_rd_resp_o = 'bz;
 
   // INITIATOR mode output signals
   tri [$bits(kv_defines_pkg::kv_read_t)-1:0] kv_read_i;
@@ -122,8 +123,8 @@ end
 
   // These are signals marked as 'input' by the config file, but the signals will be
   // driven by this BFM if put into RESPONDER mode (flipping all signal directions around)
-  assign kv_resp_i = bus.kv_resp;
-  assign bus.kv_resp = (initiator_responder == RESPONDER) ? kv_resp_o : 'bz;
+  assign kv_rd_resp_i = bus.kv_rd_resp;
+  assign bus.kv_rd_resp = (initiator_responder == RESPONDER) ? kv_rd_resp_o : 'bz;
 
 
   // These are signals marked as 'output' by the config file, but the outputs will
@@ -162,7 +163,7 @@ end
   always @( negedge dummy_i )
      begin
        // RESPONDER mode output signals
-       kv_resp_o <= 'bz;
+       kv_rd_resp_o <= 'bz;
        // INITIATOR mode output signals
        kv_read_o <= 'bz;
        // Bi-directional signals
@@ -204,12 +205,16 @@ end
        );// pragma tbx xtf  
        // 
        // Members within the kv_read_initiator_struct:
-       //   logic entry_is_pcr ;
-       //   logic [2:0] read_entry ;
+       //   logic [4:0] read_entry ;
+       //   logic [3:0] read_offset ;
+       //   logic error ;
+       //   logic last ;
        //   logic [31:0] read_data ;
        // Members within the kv_read_responder_struct:
-       //   logic entry_is_pcr ;
-       //   logic [2:0] read_entry ;
+       //   logic [4:0] read_entry ;
+       //   logic [3:0] read_offset ;
+       //   logic error ;
+       //   logic last ;
        //   logic [31:0] read_data ;
        initiator_struct = kv_read_initiator_struct;
        //
@@ -220,7 +225,7 @@ end
        //    How to assign a responder struct member, named xyz, from a signal.   
        //    All available initiator input and inout signals listed.
        //    Initiator input signals
-       //      kv_read_responder_struct.xyz = kv_resp_i;  //    [$bits(kv_defines::kv_rd_resp_t)-1:0] 
+       //      kv_read_responder_struct.xyz = kv_rd_resp_i;  //    [$bits(kv_defines::kv_rd_resp_t)-1:0] 
        //    Initiator inout signals
        //    How to assign a signal from an initiator struct member named xyz.   
        //    All available initiator output and inout signals listed.
@@ -229,12 +234,19 @@ end
        //      kv_read_o <= kv_read_initiator_struct.xyz;  //    [$bits(kv_defines::kv_read_t)-1:0] 
        //    Initiator inout signals
     // Initiate a transfer using the data received.
+    kv_read_o <= {
+                    initiator_struct.read_entry,
+                    initiator_struct.read_offset
+    };
     @(posedge clk_i);
-    @(posedge clk_i);
+
     // Wait for the responder to complete the transfer then place the responder data into 
     // kv_read_responder_struct.
-    @(posedge clk_i);
-    @(posedge clk_i);
+    // kv_read_responder_struct.entry_is_pcr = kv_read_i[0];
+    // kv_read_responder_struct.read_entry = kv_read_i[3:1];
+    // kv_read_responder_struct.read_offset = kv_read_i[7:4];
+    kv_read_responder_struct.read_entry = kv_read_i[8:4];
+    kv_read_responder_struct.read_offset = kv_read_i[3:0];
     responder_struct = kv_read_responder_struct;
   endtask        
 // pragma uvmf custom initiate_and_get_response end
@@ -258,12 +270,16 @@ bit first_transfer=1;
        input kv_read_responder_s kv_read_responder_struct 
        );// pragma tbx xtf   
   // Variables within the kv_read_initiator_struct:
-  //   logic entry_is_pcr ;
-  //   logic [2:0] read_entry ;
+  //   logic [4:0] read_entry ;
+  //   logic [3:0] read_offset ;
+  //   logic error ;
+  //   logic last ;
   //   logic [31:0] read_data ;
   // Variables within the kv_read_responder_struct:
-  //   logic entry_is_pcr ;
-  //   logic [2:0] read_entry ;
+  //   logic [4:0] read_entry ;
+  //   logic [3:0] read_offset ;
+  //   logic error ;
+  //   logic last ;
   //   logic [31:0] read_data ;
        // Reference code;
        //    How to wait for signal value
@@ -278,7 +294,7 @@ bit first_transfer=1;
        //    All available responder output and inout signals listed.
        //    Notice the _o.  Those are storage variables that allow for procedural assignment.
        //    Responder output signals
-       //      kv_resp_o <= kv_read_initiator_struct.xyz;  //    [$bits(kv_defines::kv_rd_resp_t)-1:0] 
+       //      kv_rd_resp_o <= kv_read_initiator_struct.xyz;  //    [$bits(kv_defines::kv_rd_resp_t)-1:0] 
        //    Responder inout signals
     
   @(posedge clk_i);
