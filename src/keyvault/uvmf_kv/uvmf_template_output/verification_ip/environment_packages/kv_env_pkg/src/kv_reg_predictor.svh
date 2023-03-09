@@ -130,7 +130,9 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
 
             //TODO: how can writes be delayed by a clock to mimic design?
             //If lock_wr, lock_use, debug mode or clear secrets is enabled, do not write to reg model
-            if (!lock_wr && !lock_use && !clear_secrets_data[0] && !val_reg_data[0] && !val_reg_data[1]) begin
+
+            //TODO: Revisit lock and clear condition
+            if (!lock_wr && !lock_use && !clear_secrets_data[0] && !val_reg_data[0])begin // && !val_reg_data[1]) begin
                 super.write(tr);
             end
             

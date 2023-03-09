@@ -21,8 +21,8 @@
 //
 //----------------------------------------------------------------------
 //
-// DESCRIPTION: This file contains the top level sequence used in  kv_rand_test.
-// It is derived from the example_derived_test_sequence
+// DESCRIPTION: Executes sequences that cover following cases
+// KV write/read
 //
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------

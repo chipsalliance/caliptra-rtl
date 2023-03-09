@@ -21,9 +21,12 @@
 //
 //----------------------------------------------------------------------
 //
-// DESCRIPTION: This file contains the top level sequence used in  kv_rand_test.
-// It is derived from the example_derived_test_sequence
-//
+// DESCRIPTION: Executes sequences that cover following cases
+// KV write/read + debug mode/CLEAR_SECRETS
+// KV write/read + debug mode/CLEAR_SECRETS + lock wr/use/clear
+// KV write/read + debug mode/CLEAR_SECRETS + warm reset
+// KV write/read + debug mode/CLEAR_SECRETS + cold reset
+// KV write/read + debug mode/CLEAR_SECRETS + core reset
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
@@ -111,23 +114,6 @@ class kv_rand_debug_test_sequence extends kv_bench_sequence_base;
 
         reg_model.reset();
         
-        //First write to all regs with random values
-        // `uvm_info("TOP", "Basic sequence",UVM_MEDIUM);
-        // kv_key_wr_rd_basic_seq.start(top_configuration.vsqr);
-        // `uvm_info("TOP", "WR RD sequence",UVM_MEDIUM);
-        // kv_wr_rd_seq.start(top_configuration.vsqr);
-        // `uvm_info("TOP", "wr rd warm rst sequence",UVM_MEDIUM);
-        // kv_wr_rd_rst_seq.start(top_configuration.vsqr);
-        // `uvm_info("TOP", "wr rd cold rst sequence",UVM_MEDIUM);
-        // kv_wr_rd_cold_rst_seq.start(top_configuration.vsqr);
-        // `uvm_info("TOP", "LOCK sequence",UVM_MEDIUM);
-        // kv_wr_rd_lock_seq.start(top_configuration.vsqr); //TODO: figure out how to stall reads or stall lock_wr updates in reg model
-        // `uvm_info("TOP", "LOCK warm rst sequence",UVM_MEDIUM);
-        // kv_wr_rd_lock_warm_rst_seq.start(top_configuration.vsqr);
-        // `uvm_info("TOP", "LOCK cold rst sequence",UVM_MEDIUM);
-        // kv_wr_rd_lock_cold_rst_seq.start(top_configuration.vsqr);
-        // `uvm_info("TOP", "LOCK core rst sequence",UVM_MEDIUM);
-        // kv_wr_rd_lock_core_rst_seq.start(top_configuration.vsqr);
         `uvm_info("TOP", "DEBUG sequence",UVM_MEDIUM);
         kv_wr_rd_debug_seq.start(top_configuration.vsqr);
         `uvm_info("TOP", "DEBUG lock sequence",UVM_MEDIUM);

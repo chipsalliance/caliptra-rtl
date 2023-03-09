@@ -21,8 +21,11 @@
 //
 //----------------------------------------------------------------------
 //
-// DESCRIPTION: This file contains the top level sequence used in  kv_rand_test.
-// It is derived from the example_derived_test_sequence
+// DESCRIPTION: Executes sequences that cover following cases
+// In order KV write/read
+// Random KV write/read
+// Random KV write/read + warm reset
+// Random KV write/read + cold reset
 //
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
@@ -120,24 +123,6 @@ class kv_rand_wr_rd_test_sequence extends kv_bench_sequence_base;
         kv_wr_rd_rst_seq.start(top_configuration.vsqr);
         `uvm_info("TOP", "wr rd cold rst sequence",UVM_MEDIUM);
         kv_wr_rd_cold_rst_seq.start(top_configuration.vsqr);
-        // `uvm_info("TOP", "LOCK sequence",UVM_MEDIUM);
-        // kv_wr_rd_lock_seq.start(top_configuration.vsqr); //TODO: figure out how to stall reads or stall lock_wr updates in reg model
-        // `uvm_info("TOP", "LOCK warm rst sequence",UVM_MEDIUM);
-        // kv_wr_rd_lock_warm_rst_seq.start(top_configuration.vsqr);
-        // `uvm_info("TOP", "LOCK cold rst sequence",UVM_MEDIUM);
-        // kv_wr_rd_lock_cold_rst_seq.start(top_configuration.vsqr);
-        // `uvm_info("TOP", "LOCK core rst sequence",UVM_MEDIUM);
-        // kv_wr_rd_lock_core_rst_seq.start(top_configuration.vsqr);
-        // `uvm_info("TOP", "DEBUG sequence",UVM_MEDIUM);
-        // kv_wr_rd_debug_seq.start(top_configuration.vsqr);
-        // `uvm_info("TOP", "DEBUG lock sequence",UVM_MEDIUM);
-        // kv_wr_rd_debug_lock_seq.start(top_configuration.vsqr);
-        // `uvm_info("TOP", "DEBUG warm rst sequence",UVM_MEDIUM);
-        // kv_wr_rd_debug_warm_rst_seq.start(top_configuration.vsqr);
-        // `uvm_info("TOP", "DEBUG cold rst sequence",UVM_MEDIUM);
-        // kv_wr_rd_debug_cold_rst_seq.start(top_configuration.vsqr);
-        // `uvm_info("TOP", "DEBUG core rst sequence",UVM_MEDIUM);
-        // kv_wr_rd_debug_core_rst_seq.start(top_configuration.vsqr);
         
 
         if(1) $display("** TESTCASE PASSED");

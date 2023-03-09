@@ -20,8 +20,9 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-// DESCRIPTION: Simple KV write/read sequence
-//
+// DESCRIPTION: Executes random writes and reads on a random clients 
+// and then issues a cold reset before continuing to write and read on
+// other clients
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
@@ -68,31 +69,31 @@ class kv_wr_rd_cold_rst_sequence #(
     function new(string name = "");
         super.new(name);
         kv_rst_agent_poweron_seq = kv_rst_agent_poweron_sequence_t::type_id::create("kv_rst_agent_poweron_seq");
-        assert(this.randomize()) else `uvm_error("KV WR RD", "Failed to randomize KV RST poweron seq");
+        if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV RST poweron seq");
         kv_rst_agent_cold_rst_seq = kv_rst_cold_rst_sequence_t::type_id::create("kv_rst_agent_cold_rst_seq");
-        assert(this.randomize()) else `uvm_error("KV WR RD", "Failed to randomize KV RST poweron seq");
+        if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV RST poweron seq");
         
         hmac_write_seq = kv_write_agent_key_entry_sequence_t::type_id::create("hmac_write_seq");
-        assert(this.randomize()) else `uvm_error("KV WR RD", "Failed to randomize KV WRITE seq");
+        if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV WRITE seq");
         sha512_write_seq = kv_write_agent_key_entry_sequence_t::type_id::create("sha512_write_seq");
-        assert(this.randomize()) else `uvm_error("KV WR RD", "Failed to randomize KV WRITE seq");
+        if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV WRITE seq");
         ecc_write_seq = kv_write_agent_key_entry_sequence_t::type_id::create("ecc_write_seq");
-        assert(this.randomize()) else `uvm_error("KV WR RD", "Failed to randomize KV WRITE seq");
+        if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV WRITE seq");
         doe_write_seq = kv_write_agent_key_entry_sequence_t::type_id::create("doe_write_seq");
-        assert(this.randomize()) else `uvm_error("KV WR RD", "Failed to randomize KV WRITE seq");
+        if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV WRITE seq");
         
         hmac_key_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("hmac_key_read_seq");
-        assert(this.randomize()) else `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
+        if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         hmac_block_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("hmac_block_read_seq");
-        assert(this.randomize()) else `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
+        if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         sha512_block_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("sha512_block_read_seq");
-        assert(this.randomize()) else `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
+        if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         ecc_privkey_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("ecc_privkey_read_seq");
-        assert(this.randomize()) else `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
+        if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         ecc_seed_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("ecc_seed_read_seq");
-        assert(this.randomize()) else `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
+        if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         ecc_msg_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("ecc_msg_read_seq");
-        assert(this.randomize()) else `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
+        if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         
     endfunction
 

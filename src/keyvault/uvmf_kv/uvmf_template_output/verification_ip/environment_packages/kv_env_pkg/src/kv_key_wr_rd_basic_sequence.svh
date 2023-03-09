@@ -17,8 +17,8 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-// DESCRIPTION: Simple KV write/read sequence
-//
+// DESCRIPTION: Simple KV write/read sequence that writes random data
+// to all entries and all dwords in order and then reads from them in order
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
@@ -35,7 +35,8 @@ class kv_key_wr_rd_basic_sequence #(
     function new(string name = "");
         super.new(name);
         kv_rst_agent_poweron_seq = kv_rst_agent_poweron_sequence_t::type_id::create("kv_rst_agent_poweron_seq");
-        assert(this.randomize()) else `uvm_error("KV KEY WR RD BASIC", "Failed to randomize KV RST poweron seq");
+        //assert(this.randomize()) else `uvm_error("KV KEY WR RD BASIC", "Failed to randomize KV RST poweron seq");
+        if(!this.randomize()) `uvm_error("KV KEY WR RD BASIC", "Failed to randomize KV RST poweron seq");
     endfunction
 
     virtual task body();

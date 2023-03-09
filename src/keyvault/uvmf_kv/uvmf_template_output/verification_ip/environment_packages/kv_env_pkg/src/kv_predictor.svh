@@ -669,7 +669,7 @@ class kv_predictor #(
 
         //If clear is set and lock_wr is being set to 0, set the val_reg [1] to let kv_reg_predictor know
         if(data_active[2] && !kv_reg_data[0] && !kv_reg_data[1]) begin
-          p_kv_rm.val_reg.clear.set(1'b1); //In design, clear is a single pulse reg. This val_reg[2] will be reset in kv_reg_predictor
+          p_kv_rm.val_reg.clear.set(1'b1); //In design, clear is a single pulse reg. This val_reg[1] will be reset in kv_reg_predictor
           
           //Clear the entry that is being accessed
           {offset, entry} = convert_addr_to_kv(ahb_txn.address);
