@@ -456,6 +456,22 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic [31:0] value;
+    } soc_ifc_reg__CPTRA_HW_REV_ID__REV_ID__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_HW_REV_ID__REV_ID__out_t REV_ID;
+    } soc_ifc_reg__CPTRA_HW_REV_ID__out_t;
+
+    typedef struct packed{
+        logic [31:0] value;
+    } soc_ifc_reg__CPTRA_FW_REV_ID__REV_ID__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_FW_REV_ID__REV_ID__out_t REV_ID;
+    } soc_ifc_reg__CPTRA_FW_REV_ID__out_t;
+
+    typedef struct packed{
+        logic [31:0] value;
     } soc_ifc_reg__secret_w32__out_t;
 
     typedef struct packed{
@@ -599,6 +615,8 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_CLK_GATING_EN__out_t CPTRA_CLK_GATING_EN;
         soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES__out_t [2-1:0]CPTRA_GENERIC_INPUT_WIRES;
         soc_ifc_reg__CPTRA_GENERIC_OUTPUT_WIRES__out_t [2-1:0]CPTRA_GENERIC_OUTPUT_WIRES;
+        soc_ifc_reg__CPTRA_HW_REV_ID__out_t CPTRA_HW_REV_ID;
+        soc_ifc_reg__CPTRA_FW_REV_ID__out_t [2-1:0]CPTRA_FW_REV_ID;
         soc_ifc_reg__fuse_uds_seed__out_t [12-1:0]fuse_uds_seed;
         soc_ifc_reg__fuse_field_entropy__out_t [8-1:0]fuse_field_entropy;
         soc_ifc_reg__fuse_key_manifest_pk_hash__out_t [12-1:0]fuse_key_manifest_pk_hash;
