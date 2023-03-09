@@ -128,6 +128,7 @@ module ecc_dsa_ctrl
     logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  pubkeyx_reg;
     logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  pubkeyy_reg;
     logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  seed_reg;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  nonce_reg;
     logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  r_reg;
     logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  s_reg;
     logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  IV_reg;
@@ -149,7 +150,7 @@ module ecc_dsa_ctrl
     logic                   hmac_mode;
     logic                   hmac_init;
     logic                   hmac_ready;
-    logic [REG_SIZE-1 : 0]  hmac_nonce;
+    logic [REG_SIZE-1 : 0]  hmac_drbg_result;
     logic                   hmac_busy;
 
     logic                   sca_point_rnd_en;
@@ -168,7 +169,7 @@ module ecc_dsa_ctrl
     logic [31:0] kv_msg_write_data;
   
     logic dest_keyvault;
-    kv_error_code_e kv_privkey_error, kv_seed_error, kv_msg_error, kv_write_error;
+    kv_error_code_e kv_privkey_error, kv_seed_error, kv_nonce_error, kv_msg_error, kv_write_error;
     logic kv_privkey_ready, kv_privkey_done;
     logic kv_seed_ready, kv_seed_done ;
     logic kv_msg_ready, kv_msg_done;
@@ -222,7 +223,6 @@ module ecc_dsa_ctrl
 
     ecc_hmac_drbg_interface #(
         .REG_SIZE(REG_SIZE),
-        .SEED_SIZE(REG_SIZE),
         .GROUP_ORDER(GROUP_ORDER)
         )    
         ecc_hmac_drbg_interface_i (
@@ -232,14 +232,15 @@ module ecc_dsa_ctrl
         .keygen_sign(hmac_mode),
         .en(hmac_init),
         .ready(hmac_ready),
-        .seed(seed_reg),
+        .keygen_seed(seed_reg),
+        .keygen_nonce(nonce_reg),
         .privKey(privkey_reg),
-        .IV(IV_reg),
         .hashed_msg(msg_reg),
+        .IV(IV_reg),
         .lambda(lambda),
         .scalar_rnd(scalar_rnd_reg),
         .masking_rnd(masking_rnd),
-        .nonce(hmac_nonce)
+        .drbg(hmac_drbg_result)
         );
 
     ecc_scalar_blinding #(
@@ -334,6 +335,11 @@ module ecc_dsa_ctrl
             hwif_in.ECC_SEED[dword].SEED.we = kv_seed_write_en & (kv_seed_write_offset == dword);
             hwif_in.ECC_SEED[dword].SEED.next = kv_seed_write_data;
             hwif_in.ECC_SEED[dword].SEED.hwclr = zeroize_reg;
+        end
+
+        for (int dword=0; dword < 12; dword++)begin
+            nonce_reg[dword] = hwif_out.ECC_NONCE[11-dword].NONCE.value;
+            hwif_in.ECC_NONCE[dword].NONCE.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < 12; dword++)begin
@@ -437,7 +443,7 @@ module ecc_dsa_ctrl
         end
         else begin
             if (!scalar_G_sel)
-                scalar_G_reg <= hmac_nonce;
+                scalar_G_reg <= hmac_drbg_result;
             else if (hw_scalar_G_we)
                 scalar_G_reg <= read_reg;
             

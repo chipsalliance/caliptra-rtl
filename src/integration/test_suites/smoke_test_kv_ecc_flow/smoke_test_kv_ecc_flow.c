@@ -33,17 +33,18 @@ volatile uint32_t intr_count = 0;
 uint8_t fail_cmd = 0x1;
 
 /* ECC test vector:
-    MSG      = A5E390D7271F2A323851FC869E7AAA9EF8F42FBF49D88D37E6CCF5968F14852CAC76E9519AFBFD37C611709549172AE9
-    PRIVKEY  = 4726C8664D2058CECD9826C54E8DF046AAF35131199B8169F96DBB87EE7F2D6E2B7DD5BC9CD68E926773F62D4D4F0772
-    PUBKEY_X = 0C66B5F38178FCFC1F41F8E0715FB25DC819BBF0B378C70CB9C9119EC13B86B13766A7C79C5299EF0B89D8F269CD4FE9
-    PUBKEY_Y = E4A1E6C8E4F7FECD8FDBC01AC87DC4F71BA5F3271C6AFEF30866F08B0EBF4CA5A424636C93D66C70F5978CC21B95DBB1
-    SEED     = 7F3654EFC470468CB14662D5B27C588758C68F3065623694C34A57405AE03CF401786957C5B89983293586D28F12482B
-    Sign_R   = 2C13C633B28A53CB46AB6C8BCA5ADE24EE2F6E9BF81634944E458F838FD620C0DB2B19157C47BA87E9602C4E69FCA51D
-    SIGN_S   = 070013921E4051308A47457CE14FC33392330A87456B3F542CCA42A0DE04E15F4A0D7C6C0B7FC91DA9FF028949B031BE
-    IV       = 9A2FF93FA143DC40AF213DF8F9F622CE596AE0CE1C5D8A8D5D0AE1CDC97FBFB700698B307BD85798E24DE0566DE1B892
+    MSG      = C8F518D4F3AA1BD46ED56C1C3C9E16FB800AF504DB98843548C5F623EE115F73D4C62ABC06D303B5D90D9A175087290D
+    PRIVKEY  = F274F69D163B0C9F1FC3EBF4292AD1C4EB3CEC1C5A7DDE6F80C14292934C2055E087748D0A169C772483ADEE5EE70E17
+    PUBKEY_X = D79C6D972B34A1DFC916A7B6E0A99B6B5387B34DA2187607C1AD0A4D1A8C2E4172AB5FA5D9AB58FE45E43F56BBB66BA4
+    PUBKEY_Y = 5A7363932B06B4F223BEF0B60A6390265112DBBD0AAE67FEF26B465BE935B48E451E68D16F1118F2B32B4C28608749ED
+    SEED     = 8FA8541C82A392CA74F23ED1DBFD73541C5966391B97EA73D744B0E34B9DF59ED0158063E39C09A5A055371EDF7A5441
+    NONCE    = 1B7EC5E548E8AAA92EC77097CA9551C9783CE682CA18FB1EDBD9F1E50BC382DB8AB39496C8EE423F8CA105CBBA7B6588
+    Sign_R   = 871E6EA4DDC5432CDDAA60FD7F055472D3C4DD41A5BFB26709E88C311A97093599A7C8F55B3974C19E4F5A7BFC1DD2AC
+    SIGN_S   = 3E5552DE6403350EE70AD74E4B854D2DC4126BBF9C153A5D7A07BD4B85D06E45F850920E898FB7D34F80796DAE29365C
+    IV       = 3401CEFAE20A737649073AC1A351E32926DB9ED0DB6B1CFFAB0493DAAFB93DDDD83EDEA28A803D0D003B2633B9D0F1BF
 */
 
-void ecc_keygen_kvflow(uint8_t seed_kv_id, uint8_t privkey_kv_id, uint32_t ecc_iv[12], uint32_t expected_pubkey_x[12], uint32_t expected_pubkey_y[12]){
+void ecc_keygen_kvflow(uint8_t seed_kv_id, uint8_t privkey_kv_id, uint32_t ecc_nonce[12], uint32_t ecc_iv[12], uint32_t expected_pubkey_x[12], uint32_t expected_pubkey_y[12]){
     uint8_t seed_inject_cmd;
     uint8_t offset;
     volatile uint32_t * reg_ptr;
@@ -74,6 +75,13 @@ void ecc_keygen_kvflow(uint8_t seed_kv_id, uint8_t privkey_kv_id, uint32_t ecc_i
                                                                 ((privkey_kv_id & 0x7) << ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_LOW)));
 
     
+    // Write ECC nonce
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_NONCE_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_NONCE_11) {
+        *reg_ptr++ = ecc_nonce[offset++];
+    }
+
     // Write ECC IV
     reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
     offset = 0;
@@ -215,85 +223,99 @@ void ecc_signing_kvflow(uint8_t privkey_kv_id, uint32_t ecc_msg[12], uint32_t ec
 }
 
 void ecc_kvflow_test(uint8_t seed_kv_id, uint32_t privkey_kv_id){
-    uint32_t ecc_msg[] =   {0xA5E390D7,
-                            0X271F2A32,
-                            0X3851FC86,
-                            0X9E7AAA9E,
-                            0XF8F42FBF,
-                            0X49D88D37,
-                            0XE6CCF596,
-                            0X8F14852C,
-                            0XAC76E951,
-                            0X9AFBFD37,
-                            0XC6117095,
-                            0X49172AE9};
+    uint32_t ecc_msg[] =           {0xC8F518D4,
+                                    0xF3AA1BD4,
+                                    0x6ED56C1C,
+                                    0x3C9E16FB,
+                                    0x800AF504,
+                                    0xDB988435,
+                                    0x48C5F623,
+                                    0xEE115F73,
+                                    0xD4C62ABC,
+                                    0x06D303B5,
+                                    0xD90D9A17,
+                                    0x5087290D};
+
+    uint32_t expected_pubkey_x[] = {0xD79C6D97,
+                                    0x2B34A1DF,
+                                    0xC916A7B6,
+                                    0xE0A99B6B,
+                                    0x5387B34D,
+                                    0xA2187607,
+                                    0xC1AD0A4D,
+                                    0x1A8C2E41,
+                                    0x72AB5FA5,
+                                    0xD9AB58FE,
+                                    0x45E43F56,
+                                    0xBBB66BA4};
+
+    uint32_t expected_pubkey_y[] = {0x5A736393,
+                                    0x2B06B4F2,
+                                    0x23BEF0B6,
+                                    0x0A639026,
+                                    0x5112DBBD,
+                                    0x0AAE67FE,
+                                    0xF26B465B,
+                                    0xE935B48E,
+                                    0x451E68D1,
+                                    0x6F1118F2,
+                                    0xB32B4C28,
+                                    0x608749ED};
+
+    uint32_t ecc_nonce[] =         {0x1B7EC5E5,
+                                    0x48E8AAA9,
+                                    0x2EC77097,
+                                    0xCA9551C9,
+                                    0x783CE682,
+                                    0xCA18FB1E,
+                                    0xDBD9F1E5,
+                                    0x0BC382DB,
+                                    0x8AB39496,
+                                    0xC8EE423F,
+                                    0x8CA105CB,
+                                    0xBA7B6588};
+
+    uint32_t expected_sign_r[] =   {0x871E6EA4,
+                                    0xDDC5432C,
+                                    0xDDAA60FD,
+                                    0x7F055472,
+                                    0xD3C4DD41,
+                                    0xA5BFB267,
+                                    0x09E88C31,
+                                    0x1A970935,
+                                    0x99A7C8F5,
+                                    0x5B3974C1,
+                                    0x9E4F5A7B,
+                                    0xFC1DD2AC};
+
+    uint32_t expected_sign_s[] =   {0x3E5552DE,
+                                    0x6403350E,
+                                    0xE70AD74E,
+                                    0x4B854D2D,
+                                    0xC4126BBF,
+                                    0x9C153A5D,
+                                    0x7A07BD4B,
+                                    0x85D06E45,
+                                    0xF850920E,
+                                    0x898FB7D3,
+                                    0x4F80796D,
+                                    0xAE29365C};
+
     
-    uint32_t ecc_iv[] =    {0x9A2FF93F,
-                            0xA143DC40,
-                            0xAF213DF8,
-                            0xF9F622CE,
-                            0x596AE0CE,
-                            0x1C5D8A8D,
-                            0x5D0AE1CD,
-                            0xC97FBFB7,
-                            0x00698B30,
-                            0x7BD85798,
-                            0xE24DE056,
-                            0x6DE1B892};
+    uint32_t ecc_iv[] =            {0x3401CEFA,
+                                    0xE20A7376,
+                                    0x49073AC1,
+                                    0xA351E329,
+                                    0x26DB9ED0,
+                                    0xDB6B1CFF,
+                                    0xAB0493DA,
+                                    0xAFB93DDD,
+                                    0xD83EDEA2,
+                                    0x8A803D0D,
+                                    0x003B2633,
+                                    0xB9D0F1BF};
 
-    uint32_t expected_pubkey_x[] = {0x0C66B5F3,
-                                    0x8178FCFC,
-                                    0x1F41F8E0,
-                                    0x715FB25D,
-                                    0xC819BBF0,
-                                    0xB378C70C,
-                                    0xB9C9119E,
-                                    0xC13B86B1,
-                                    0x3766A7C7,
-                                    0x9C5299EF,
-                                    0x0B89D8F2,
-                                    0x69CD4FE9};
-
-    uint32_t expected_pubkey_y[] = {0xE4A1E6C8,
-                                    0xE4F7FECD,
-                                    0x8FDBC01A,
-                                    0xC87DC4F7,
-                                    0x1BA5F327,
-                                    0x1C6AFEF3,
-                                    0x0866F08B,
-                                    0x0EBF4CA5,
-                                    0xA424636C,
-                                    0x93D66C70,
-                                    0xF5978CC2,
-                                    0x1B95DBB1};
-
-    uint32_t expected_sign_r[] =   {0x2C13C633,
-                                    0xB28A53CB,
-                                    0x46AB6C8B,
-                                    0xCA5ADE24,
-                                    0xEE2F6E9B,
-                                    0xF8163494,
-                                    0x4E458F83,
-                                    0x8FD620C0,
-                                    0xDB2B1915,
-                                    0x7C47BA87,
-                                    0xE9602C4E,
-                                    0x69FCA51D};
-
-    uint32_t expected_sign_s[] =   {0x07001392,
-                                    0x1E405130,
-                                    0x8A47457C,
-                                    0xE14FC333,
-                                    0x92330A87,
-                                    0x456B3F54,
-                                    0x2CCA42A0,
-                                    0xDE04E15F,
-                                    0x4A0D7C6C,
-                                    0x0B7FC91D,
-                                    0xA9FF0289,
-                                    0x49B031BE};
-
-    ecc_keygen_kvflow(seed_kv_id, privkey_kv_id, ecc_iv, expected_pubkey_x, expected_pubkey_y);
+    ecc_keygen_kvflow(seed_kv_id, privkey_kv_id, ecc_nonce, ecc_iv, expected_pubkey_x, expected_pubkey_y);
 
     ecc_signing_kvflow(privkey_kv_id, ecc_msg, ecc_iv, expected_sign_r, expected_sign_s);
 }

@@ -199,7 +199,7 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
 
     //keyvault injection hooks
     //Inject data to KV key reg
-    logic [0:11][31:0]   ecc_seed_tb    = 384'h7F3654EFC470468CB14662D5B27C588758C68F3065623694C34A57405AE03CF401786957C5B89983293586D28F12482B;
+    logic [0:11][31:0]   ecc_seed_tb    = 384'h8FA8541C82A392CA74F23ED1DBFD73541C5966391B97EA73D744B0E34B9DF59ED0158063E39C09A5A055371EDF7A5441;
     logic [0:11][31:0]   hmac_key_tb    = 384'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b;
     logic [0:11][31:0]   sha_block_tb   = 384'hb1eeef324b499f19eba322215fe3ce19c9f000b698d2b2dab7145015046cc86d049ee15ad59dcd1564f30112e06444cb;
     genvar dword_i, slot_id;

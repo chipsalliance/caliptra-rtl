@@ -144,6 +144,22 @@ addrmap ecc_reg {
     
     } ECC_SEED[12] @0x00000080;
 
+    
+    /* ---- ECC Component Input NONCE ---- */
+    reg {
+        name = "ECC component nonce register type definition";
+        desc = "12 32-bit registers storing the 384-bit nonce for keygen.
+                The nonce can be any 384-bit value in [0 : 2^384-1].
+                These registers are located at ECC_base_address + 
+                0x0000_0500 to 0x0000_052C in big-endian representation.";
+
+        default sw = w;
+        default hw = r;
+        default resetsignal = reset_b;
+        field {desc = "Input nonce field"; swwe = ecc_ready; hwclr;} NONCE[32] = 32'b0;
+    
+    } ECC_NONCE[12] @0x00000500;
+
 
 
     /* ---- ECC Component Input Message ---- */
