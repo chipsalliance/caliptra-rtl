@@ -129,7 +129,8 @@ module prim_mubi8_sync
       end
       `CALIPTRA_ASSERT(OutputDelay_A,
               rst_ni |-> ##3 (mubi_o == {NumCopies{$past(mubi_in_sva_q, 2)}} ||
-                              $past(mubi_in_sva_q, 2) != $past(mubi_in_sva_q, 1)))
+                             ($past(mubi_in_sva_q, 2) != $past(mubi_in_sva_q, 1)) ||
+                             !rst_ni))
 `endif
     end
   end else begin : gen_no_flops

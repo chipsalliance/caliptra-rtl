@@ -1,0 +1,6 @@
+${WORKSPACE}/Caliptra/src/prim/lint/prim_onehot_check.vlt
+${WORKSPACE}/Caliptra/src/prim/lint/prim_arbiter.vlt
+${WORKSPACE}/Caliptra/src/csrng/lint/csrng.vlt
+${WORKSPACE}/Caliptra/src/prim/lint/prim_max_tree.vlt
+${WORKSPACE}/Caliptra/src/prim/lint/prim_sum_tree.vlt
+${WORKSPACE}/Caliptra/src/prim/lint/prim_onehot_check.vlt

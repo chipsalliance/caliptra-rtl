@@ -69,7 +69,8 @@ module prim_lc_sync #(
       end
     `CALIPTRA_ASSERT(OutputDelay_A,
             rst_ni |-> ##3 lc_en_o == {NumCopies{$past(lc_en_in_sva_q, 2)}} ||
-                           ($past(lc_en_in_sva_q, 2) != $past(lc_en_in_sva_q, 1)))
+                           ($past(lc_en_in_sva_q, 2) != $past(lc_en_in_sva_q, 1)) ||
+                           !rst_ni)
 `endif
   end else begin : gen_no_flops
     //VCS coverage off

@@ -220,7 +220,11 @@ import uvmf_base_pkg_hdl::*;
         //SoC Interrupts
         .cptra_error_fatal    (soc_ifc_subenv_soc_ifc_status_agent_bus.cptra_error_fatal),
         .cptra_error_non_fatal(soc_ifc_subenv_soc_ifc_status_agent_bus.cptra_error_non_fatal),
-        .trng_req             (soc_ifc_subenv_soc_ifc_status_agent_bus.trng_req),
+        // External TRNG
+        .etrng_req             (soc_ifc_subenv_soc_ifc_status_agent_bus.trng_req),
+        // Internal TRNG
+        .itrng_data            (4'h0),  // TODO
+        .itrng_valid           (1'b0),  // TODO
 
         .generic_input_wires (soc_ifc_subenv_soc_ifc_ctrl_agent_bus.generic_input_wires),
         .generic_output_wires(soc_ifc_subenv_soc_ifc_status_agent_bus.generic_output_wires),

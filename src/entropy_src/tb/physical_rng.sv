@@ -51,13 +51,13 @@ module physical_rng #(
       // Generate random data
       if (pulse) begin
         if (UseInitialSeed &&
-           (pulse_count <= $bits(InitialSeed)/$bits(data))) begin
+           (pulse_count < $bits(InitialSeed)/$bits(data))) begin
+	  pulse_count  <= pulse_count + 1'b1;
           random_data[3:0] <= InitialSeed[pulse_count * $bits(data) +:$bits(data)];
         end else begin
           random_data <= $urandom();
         end
 
-        pulse_count  <= pulse_count + 1'b1;
         valid <= 1'b1;
         count <= '0;
       end

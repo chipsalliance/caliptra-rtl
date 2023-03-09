@@ -15,6 +15,10 @@
 `ifndef CALIPTRA_SVA
 `define CALIPTRA_SVA
 
+// Default clk and reset signals used by assertion macros below.
+`define ASSERT_DEFAULT_CLK clk_i
+`define ASSERT_DEFAULT_RST !rst_ni
+
 // Converts an arbitrary block of code into a Verilog string
 `define STRINGIFY(__x) `"__x`"
 
@@ -28,7 +32,7 @@
 `endif
 
 // Assert a concurrent property directly.
-`define CALIPTRA_ASSERT(assert_name, prop, clk, rst_b)                                  \
+`define CALIPTRA_ASSERT(assert_name, prop, clk = `ASSERT_DEFAULT_CLK, rst_b = `ASSERT_DEFAULT_RST)                                  \
 `ifdef CLP_ASSERT_ON                                                           \
   assert_name: assert property (@(posedge clk) disable iff (~rst_b) (prop))    \
     else begin                                                                 \
@@ -37,7 +41,7 @@
 `endif
 
 // Assert a concurrent property NEVER happens
-`define CALIPTRA_ASSERT_NEVER(assert_name, prop, clk, rst_b)                             \
+`define CALIPTRA_ASSERT_NEVER(assert_name, prop, clk = `ASSERT_DEFAULT_CLK, rst_b = `ASSERT_DEFAULT_RST)                             \
 `ifdef CLP_ASSERT_ON                                                            \
   assert_name: assert property (@(posedge clk) disable iff (~rst_b) not (prop)) \
     else begin                                                                  \
@@ -46,11 +50,11 @@
 `endif
 
 // Assert that signal is not x
-`define CALIPTRA_ASSERT_KNOWN(assert_name, sig, clk, rst_b)     \
+`define CALIPTRA_ASSERT_KNOWN(assert_name, sig, clk = `ASSERT_DEFAULT_CLK, rst_b = `ASSERT_DEFAULT_RST)     \
   `CALIPTRA_ASSERT(assert_name, !$isunknown(sig), clk, rst_b)
 
 // Assert that a vector of signals is mutually exclusive
-`define CALIPTRA_ASSERT_MUTEX(assert_name, sig, clk, rst_b)     \
+`define CALIPTRA_ASSERT_MUTEX(assert_name, sig, clk = `ASSERT_DEFAULT_CLK, rst_b = `ASSERT_DEFAULT_RST)     \
     `CALIPTRA_ASSERT(assert_name, $onehot0(sig), clk, rst_b)
 
 `endif

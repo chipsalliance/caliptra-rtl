@@ -27,7 +27,9 @@ src/soc_ifc/rtl/sha512_acc_csr.rdl \
 src/soc_ifc/rtl/soc_ifc_reg.rdl \
 src/hmac/rtl/hmac_reg.rdl \
 src/doe/rtl/doe_reg.rdl \
-src/keyvault/rtl/kv_def.rdl
+src/keyvault/rtl/kv_def.rdl \
+src/entropy_src/data/entropy_src.rdl \
+src/csrng/data/csrng.rdl
 
 python tools/scripts/reg_doc_gen.py \
 src/soc_ifc/rtl/caliptra_top_reg.rdl \
