@@ -242,9 +242,9 @@ module caliptra_top
     logic clear_obf_secrets;
     logic clear_secrets;
     
-    logic cptra_security_state_captured, scan_mode_f, scan_mode_ff, scan_mode_switch;
+    logic cptra_security_state_captured, scan_mode_f, scan_mode_switch;
     logic debugUnlock_or_scan_mode_switch, clear_obf_secrets_debugScanQ, cptra_scan_mode_Latched, debug_lock_to_unlock_switch;
-    var security_state_t security_state_f, security_state_ff;
+    var security_state_t security_state_f;
     
     logic [TOTAL_OBF_KEY_BITS-1:0]        cptra_obf_key_dbg;
     logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy_dbg;
@@ -540,19 +540,18 @@ el2_veer_wrapper rvtop (
             // Latched State is used if we want to open the JTAG and is
             // determined to do so only at reset exit time
             // Asset flushing happens 'anytime' switch happens for safe side
+            //security_state_f  <= security_state;
             security_state_f  <= security_state;
-            security_state_ff  <= security_state_f;
             scan_mode_f  <= scan_mode;
-            scan_mode_ff <= scan_mode_f;
         end
     end
 
     // When scan mode goes from 0->1, generate a pulse to clear the assets
     // Note that when scan goes to '1, Caliptra state as well as SOC state
     // gets messed up. So switch to scan is destructive (obvious! Duh!)
-    assign scan_mode_switch = ~scan_mode_ff & scan_mode_f;
+    assign scan_mode_switch = ~scan_mode_f & scan_mode;
     // 1->0 transition (Debug locked to unlocked)
-    assign debug_lock_to_unlock_switch = security_state_ff.debug_locked & ~security_state_f.debug_locked;
+    assign debug_lock_to_unlock_switch = security_state_f.debug_locked & ~security_state.debug_locked;
     assign debugUnlock_or_scan_mode_switch = debug_lock_to_unlock_switch | scan_mode_switch;
     assign clear_obf_secrets_debugScanQ = clear_obf_secrets | debugUnlock_or_scan_mode_switch;
 
@@ -703,7 +702,7 @@ sha256_ctrl #(
 );
 
 //override device secrets with debug values in Debug or Scan Mode
-always_comb cptra_in_debug_scan_mode = ~security_state_f.debug_locked | scan_mode_f;
+always_comb cptra_in_debug_scan_mode = ~security_state.debug_locked | scan_mode;
 always_comb cptra_obf_key_dbg     = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_OBF_KEY : cptra_obf_key_reg;
 always_comb obf_uds_seed_dbg      = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_UDS_SEED : obf_uds_seed;
 always_comb obf_field_entropy_dbg = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_FIELD_ENTROPY : obf_field_entropy;
@@ -891,7 +890,7 @@ soc_ifc_top1
     .mailbox_data_avail(mailbox_data_avail),
     .mailbox_flow_done(mailbox_flow_done),
 
-    .security_state(security_state_f),
+    .security_state(security_state),
     
     .BootFSM_BrkPoint (BootFSM_BrkPoint),
     

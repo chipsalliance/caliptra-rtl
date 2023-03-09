@@ -185,7 +185,7 @@ reg {
     desc = "Writes to fuse registers are completed. After the done bit is set, any subsequent writes to a fuse register will be dropped unless there is a power cycle or a warm reset or caliptra FW allows a write (negotiated through a mailbox command).
              [br]Caliptra Access: RO
              [br]SOC Access:      RW1-S";
-     field {sw=rw; hw=r; swwe=soc_req; resetsignal=cptra_pwrgood;} done[1]=0;
+     field {sw=rw; hw=r; swmod=true; swwe; resetsignal=cptra_pwrgood;} done[1]=0;
 } CPTRA_FUSE_WR_DONE;
 
 reg {

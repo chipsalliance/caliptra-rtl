@@ -168,6 +168,7 @@ logic sram_double_ecc_error;
 
 logic iccm_unlock;
 logic fw_upd_rst_executed;
+logic fuse_wr_done_reg_write_observed;
 
 logic BootFSM_BrkPoint_Latched;
 logic BootFSM_BrkPoint_Flag;
@@ -193,6 +194,7 @@ soc_ifc_boot_fsm i_soc_ifc_boot_fsm (
     .ready_for_fuses(ready_for_fuses),
 
     .fuse_done(soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value),
+    .fuse_wr_done_observed(fuse_wr_done_reg_write_observed),
 
     .BootFSM_BrkPoint(BootFSM_BrkPoint_Latched),
     .BootFSM_Continue(soc_ifc_reg_hwif_out.CPTRA_BOOTFSM_GO.GO.value),
@@ -398,7 +400,6 @@ end
 
 logic pwrgood_toggle_hint;
 logic Warm_Reset_Capture_Flag;
-logic fuse_write_done_sticky;
 
 // pwrgood_hint informs if the powergood toggled
 always_ff @(posedge clk or negedge cptra_pwrgood) begin
@@ -467,16 +468,16 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_PAUSER_LOCK.LOCK.swwel = soc_ifc_reg_
 // Can't write to RW-able fuses once fuse_done is set (implies the register is being locked using the fuse_wr_done)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//always_ff @(posedge clk or negedge cptra_pwrgood) begin
-//    if(~cptra_pwrgood) begin
-//        fuse_write_done_sticky <= 0;
-//    end
-//    else begin
-//        if(!fuse_write_done_sticky) begin
-//            fuse_write_done_sticky <= soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
-//        end
-//    end
-//end
+always_ff @(posedge clk or negedge cptra_rst_b) begin
+    if(~cptra_rst_b) begin
+        fuse_wr_done_reg_write_observed <= 0;
+    end
+    else begin
+        if(!fuse_wr_done_reg_write_observed) begin
+            fuse_wr_done_reg_write_observed <= soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.swmod;
+        end
+    end
+end
 
 // Make the relevant fuses sticky on fuse_wr_done
 always_comb begin
@@ -510,8 +511,8 @@ always_comb soc_ifc_reg_hwif_in.fuse_fmc_key_manifest_svn.svn.swwel        = soc
 always_comb soc_ifc_reg_hwif_in.fuse_anti_rollback_disable.dis.swwel       = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.fuse_life_cycle.life_cycle.swwel           = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 
-// Fuse write done can be written by SOC if it is already NOT '1. uController can only read this bit. The bit gets reset on warm reset
-//always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_WR_DONE.done.swwe = (soc_ifc_reg_req_data.soc_req & ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value);
+// Fuse write done can be written by SOC if it is already NOT '1. uController can only read this bit. The bit gets reset on cold reset
+always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_WR_DONE.done.swwe = soc_ifc_reg_req_data.soc_req & ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //only allow valid users to write to TRNG

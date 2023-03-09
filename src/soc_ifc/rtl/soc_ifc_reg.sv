@@ -1637,7 +1637,7 @@ module soc_ifc_reg (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.CPTRA_FUSE_WR_DONE.done.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.CPTRA_FUSE_WR_DONE && decoded_req_is_wr && hwif_in.soc_req) begin // SW write
+        if(decoded_reg_strb.CPTRA_FUSE_WR_DONE && decoded_req_is_wr && hwif_in.CPTRA_FUSE_WR_DONE.done.swwe) begin // SW write
             next_c = decoded_wr_data[0:0];
             load_next_c = '1;
         end
@@ -1652,6 +1652,7 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.CPTRA_FUSE_WR_DONE.done.value = field_storage.CPTRA_FUSE_WR_DONE.done.value;
+    assign hwif_out.CPTRA_FUSE_WR_DONE.done.swmod = decoded_reg_strb.CPTRA_FUSE_WR_DONE && decoded_req_is_wr;
     // Field: soc_ifc_reg.CPTRA_TIMER_CONFIG.clk_period
     always_comb begin
         automatic logic [31:0] next_c = field_storage.CPTRA_TIMER_CONFIG.clk_period.value;
