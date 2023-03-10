@@ -51,3 +51,10 @@ void sha_next_last(enum sha512_mode_e mode) {
           SHA512_REG_SHA512_CTRL_LAST_MASK;
     lsu_write_32((uint32_t*) CLP_SHA512_REG_SHA512_CTRL,reg);
 }
+
+void sha_gen_hash_start() {
+    VPRINTF(MEDIUM,"SHA512: Set START for gen hash func\n");
+    uint32_t reg;
+    reg = SHA512_REG_SHA512_GEN_PCR_HASH_CTRL_START_MASK;
+    lsu_write_32((uint32_t*) CLP_SHA512_REG_SHA512_GEN_PCR_HASH_CTRL,reg);
+}

@@ -95,6 +95,29 @@ package sha512_reg_pkg;
     } __kv_write_ctrl_reg__in_t;
 
     typedef struct packed{
+        logic next;
+    } sha512_reg__SHA512_GEN_PCR_HASH_STATUS__READY__in_t;
+
+    typedef struct packed{
+        logic hwclr;
+        logic hwset;
+    } sha512_reg__SHA512_GEN_PCR_HASH_STATUS__VALID__in_t;
+
+    typedef struct packed{
+        sha512_reg__SHA512_GEN_PCR_HASH_STATUS__READY__in_t READY;
+        sha512_reg__SHA512_GEN_PCR_HASH_STATUS__VALID__in_t VALID;
+    } sha512_reg__SHA512_GEN_PCR_HASH_STATUS__in_t;
+
+    typedef struct packed{
+        logic [31:0] next;
+        logic hwclr;
+    } sha512_reg__SHA512_GEN_PCR_HASH_DIGEST__DIGEST__in_t;
+
+    typedef struct packed{
+        sha512_reg__SHA512_GEN_PCR_HASH_DIGEST__DIGEST__in_t DIGEST;
+    } sha512_reg__SHA512_GEN_PCR_HASH_DIGEST__in_t;
+
+    typedef struct packed{
         logic hwset;
     } sha512_reg__error_intr_t__error0_sts_enable_528ccada_next_b1018582_resetsignal_939e99d4__in_t;
 
@@ -143,6 +166,8 @@ package sha512_reg_pkg;
         __kv_status_reg__in_t SHA512_VAULT_RD_STATUS;
         __kv_write_ctrl_reg__in_t SHA512_KV_WR_CTRL;
         __kv_status_reg__in_t SHA512_KV_WR_STATUS;
+        sha512_reg__SHA512_GEN_PCR_HASH_STATUS__in_t SHA512_GEN_PCR_HASH_STATUS;
+        sha512_reg__SHA512_GEN_PCR_HASH_DIGEST__in_t [12-1:0]SHA512_GEN_PCR_HASH_DIGEST;
         sha512_reg__intr_block_t__in_t intr_block_rf;
     } sha512_reg__in_t;
 
@@ -267,12 +292,20 @@ package sha512_reg_pkg;
     } __kv_write_ctrl_reg__out_t;
 
     typedef struct packed{
-        logic value;
-    } sha512_reg__SHA512_GEN_PCR_HASH__FLOW_EN__out_t;
+        logic [31:0] value;
+    } sha512_reg__SHA512_GEN_PCR_HASH_NONCE__NONCE__out_t;
 
     typedef struct packed{
-        sha512_reg__SHA512_GEN_PCR_HASH__FLOW_EN__out_t FLOW_EN;
-    } sha512_reg__SHA512_GEN_PCR_HASH__out_t;
+        sha512_reg__SHA512_GEN_PCR_HASH_NONCE__NONCE__out_t NONCE;
+    } sha512_reg__SHA512_GEN_PCR_HASH_NONCE__out_t;
+
+    typedef struct packed{
+        logic value;
+    } sha512_reg__SHA512_GEN_PCR_HASH_CTRL__START__out_t;
+
+    typedef struct packed{
+        sha512_reg__SHA512_GEN_PCR_HASH_CTRL__START__out_t START;
+    } sha512_reg__SHA512_GEN_PCR_HASH_CTRL__out_t;
 
     typedef struct packed{
         logic intr;
@@ -303,7 +336,8 @@ package sha512_reg_pkg;
         sha512_reg__SHA512_BLOCK__out_t [32-1:0]SHA512_BLOCK;
         __kv_read_ctrl_reg__out_t SHA512_VAULT_RD_CTRL;
         __kv_write_ctrl_reg__out_t SHA512_KV_WR_CTRL;
-        sha512_reg__SHA512_GEN_PCR_HASH__out_t SHA512_GEN_PCR_HASH;
+        sha512_reg__SHA512_GEN_PCR_HASH_NONCE__out_t SHA512_GEN_PCR_HASH_NONCE;
+        sha512_reg__SHA512_GEN_PCR_HASH_CTRL__out_t SHA512_GEN_PCR_HASH_CTRL;
         sha512_reg__intr_block_t__out_t intr_block_rf;
     } sha512_reg__out_t;
 

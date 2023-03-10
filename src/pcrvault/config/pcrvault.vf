@@ -14,6 +14,7 @@ ${WORKSPACE}/Caliptra/src/libs/rtl/caliptra_icg.sv
 ${WORKSPACE}/Caliptra/src/libs/rtl/clk_gate.sv
 ${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_defines_pkg.sv
 ${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_macros.svh
+${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_gen_hash.sv
 ${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_reg_pkg.sv
 ${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_reg.sv
 ${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv.sv

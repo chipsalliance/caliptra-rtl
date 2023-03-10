@@ -235,6 +235,8 @@ module caliptra_top
     pv_rd_resp_t [PV_NUM_READ-1:0] pv_rd_resp;
     pv_wr_resp_t [PV_NUM_WRITE-1:0] pv_wr_resp;
 
+    pcr_signing_t pcr_signing_data;
+
     //mailbox sram gasket
     mbox_sram_req_t mbox_sram_req;
     mbox_sram_resp_t mbox_sram_resp;
@@ -674,6 +676,7 @@ sha512_ctrl #(
     .pv_write       (pv_write),
     .pv_rd_resp     (pv_rd_resp),
     .pv_wr_resp     (pv_wr_resp),
+    .pcr_signing_hash(pcr_signing_data.pcr_hash),
 
     .error_intr(sha512_error_intr),
     .notif_intr(sha512_notif_intr)
@@ -743,27 +746,28 @@ ecc_top #(
 )
 ecc_top1
 (
-    .clk           (clk_cg),
-    .reset_n       (cptra_noncore_rst_b),
-    .cptra_pwrgood (cptra_pwrgood),
-    .haddr_i       (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_ECC)-1:0]),
-    .hwdata_i      (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hwdata),
-    .hsel_i        (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hsel),
-    .hwrite_i      (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hwrite),
-    .hready_i      (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hready),
-    .htrans_i      (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].htrans),
-    .hsize_i       (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hsize),
-    .hresp_o       (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hresp),
-    .hreadyout_o   (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hreadyout),
-    .hrdata_o      (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hrdata),
+    .clk             (clk_cg),
+    .reset_n         (cptra_noncore_rst_b),
+    .cptra_pwrgood   (cptra_pwrgood),
+    .haddr_i         (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_ECC)-1:0]),
+    .hwdata_i        (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hwdata),
+    .hsel_i          (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hsel),
+    .hwrite_i        (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hwrite),
+    .hready_i        (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hready),
+    .htrans_i        (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].htrans),
+    .hsize_i         (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hsize),
+    .hresp_o         (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hresp),
+    .hreadyout_o     (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hreadyout),
+    .hrdata_o        (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hrdata),
 
-    .kv_read        (kv_read[5:3]),
-    .kv_rd_resp     (kv_rd_resp[5:3]),
-    .kv_write       (kv_write[2]),
-    .kv_wr_resp     (kv_wr_resp[2]),
+    .kv_read         (kv_read[5:3]),
+    .kv_rd_resp      (kv_rd_resp[5:3]),
+    .kv_write        (kv_write[2]),
+    .kv_wr_resp      (kv_wr_resp[2]),
+    .pcr_signing_data(pcr_signing_data),
 
-    .error_intr    (ecc_error_intr),
-    .notif_intr    (ecc_notif_intr)
+    .error_intr      (ecc_error_intr),
+    .notif_intr      (ecc_notif_intr)
 );
 
 hmac_ctrl #(
@@ -819,7 +823,8 @@ key_vault1
     .kv_read          (kv_read),
     .kv_write         (kv_write),
     .kv_rd_resp       (kv_rd_resp),
-    .kv_wr_resp       (kv_wr_resp)
+    .kv_wr_resp       (kv_wr_resp),
+    .pcr_signing_key  (pcr_signing_data.pcr_signing_privkey)
 );
 
 pv #(

@@ -13,14 +13,15 @@
 </dl>
 <h2>Description</h2>
 <div id="_Content.desc">
-<p>One 3-bit register to set the type of ECC operations.
-bit #[1:0]: This can be: 
-            00 for NONE
-            01 for KEYGEN
-            10 for SIGNING
-            11 for VERIFYING
-bit #2: Zeroize all internal registers after ECC process, to avoid SCA leakage.
-This register is located at ECC_base_address + 0x0000_0010.</p>
+<p>One 4-bit register to set the type of ECC operations.
+<br> bit #[1:0]: This can be: 
+<br>             00 for NONE
+<br>             01 for KEYGEN
+<br>             10 for SIGNING
+<br>             11 for VERIFYING
+<br> bit #2: Zeroize all internal registers after ECC process, to avoid SCA leakage.
+<br> bit #3: Run ECC Signing flow to sign PCRs.
+<br> This register is located at ECC_base_address + 0x0000_0010.</p>
 </div>
 
 <h2>Contents</h2>
@@ -35,7 +36,7 @@ This register is located at ECC_base_address + 0x0000_0010.</p>
         <th></th>
     </tr>
     <tr class="reserved-field">
-    <td>[31:3]</td>
+    <td>[31:4]</td>
     <td>-</td>
     <td>-</td>
     <td>-</td>
@@ -43,6 +44,26 @@ This register is located at ECC_base_address + 0x0000_0010.</p>
     <td>-</td>
     <td></td>
 </tr>
+    <tr id="PCR_SIGN">
+        <td>[3]</td>
+        <td><a href="#PCR_SIGN.desc">PCR_SIGN</a></td>
+        <td>
+            <span title='Write-only'>w</span></td>
+        <td>0x0
+        </td>
+        <td>
+            <input id="_FieldValueTesterPCR_SIGN" class="field-value-tester"
+                type="text" autocomplete="off"
+                data-name="PCR_SIGN" oninput="onDecodedFieldInput(this)"/>
+        </td>
+        <td>-</td>
+        <td>
+            <button type="button" id="_RadixButtonPCR_SIGN" class="radix-button"
+                title="Switch radix" aria-label="Switch radix"
+                data-name="PCR_SIGN" onclick="onRadixSwitch(this)">H</button>
+            <a class="headerlink" href="#PCR_SIGN" title="Permalink to this row"></a>
+        </td>
+    </tr>
     <tr id="ZEROIZE">
         <td>[2]</td>
         <td><a href="#ZEROIZE.desc">ZEROIZE</a></td>
@@ -92,6 +113,24 @@ This register is located at ECC_base_address + 0x0000_0010.</p>
     </label>
 </p>
 <hr/><h2>Field Descriptions</h2>
+
+<h3 id="PCR_SIGN.desc">PCR_SIGN
+    <a class="headerlink" href="#PCR_SIGN.desc" title="Permalink to this headline"></a>
+</h3>
+<div id="_Content.PCR_SIGN.desc">
+<p>Run PCR Signing flow</p>
+<table border="1">
+    <tr>
+        <th>Property</th>
+        <th>Value</th>
+    </tr>
+    <tr>
+        <td><code>resetsignal</code></td>
+        <td>^.^.reset_b</td>
+    </tr>
+    
+</table>
+</div>
 
 <h3 id="ZEROIZE.desc">ZEROIZE
     <a class="headerlink" href="#ZEROIZE.desc" title="Permalink to this headline"></a>

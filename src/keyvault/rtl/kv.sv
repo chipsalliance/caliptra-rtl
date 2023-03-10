@@ -49,7 +49,8 @@ module kv
     input kv_read_t [KV_NUM_READ-1:0]     kv_read,
     input kv_write_t [KV_NUM_WRITE-1:0]   kv_write,
     output kv_rd_resp_t [KV_NUM_READ-1:0] kv_rd_resp,
-    output kv_wr_resp_t [KV_NUM_WRITE-1:0] kv_wr_resp
+    output kv_wr_resp_t [KV_NUM_WRITE-1:0] kv_wr_resp,
+    output logic [KV_NUM_DWORDS-1:0][31:0] pcr_signing_key
 
 );
 
@@ -117,6 +118,11 @@ always_comb flush_keyvault = debugUnlock_or_scan_mode_switch | kv_reg_hwif_out.C
 //Pick between keyvault debug mode 0 or 1
 always_comb debug_value = kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value ? CLP_DEBUG_MODE_KV_1 : CLP_DEBUG_MODE_KV_0;
 
+always_comb begin : keyvault_pcr_signing
+    for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
+        pcr_signing_key[dword] = kv_reg_hwif_out.KEY_ENTRY[KV_ENTRY_FOR_SIGNING][dword].data.value;
+    end 
+end
 
 always_comb begin : keyvault_ctrl
     //keyvault control registers

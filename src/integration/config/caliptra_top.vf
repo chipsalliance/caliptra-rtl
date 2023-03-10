@@ -27,6 +27,7 @@ ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_defines_pkg.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_macros.svh
 ${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_defines_pkg.sv
 ${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_macros.svh
+${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_gen_hash.sv
 ${WORKSPACE}/Caliptra/src/datavault/rtl/dv_defines_pkg.sv
 ${WORKSPACE}/Caliptra/src/soc_ifc/rtl/soc_ifc_pkg.sv
 ${WORKSPACE}/Caliptra/src/riscv_core/veer_el2/rtl/el2_pdef.vh

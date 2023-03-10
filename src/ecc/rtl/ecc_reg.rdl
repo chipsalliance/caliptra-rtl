@@ -67,20 +67,22 @@ addrmap ecc_reg {
     /* ---- ECC Component Control ---- */
     reg {
         name = "ECC component control register type definition";
-        desc = "One 3-bit register to set the type of ECC operations.
-                bit #[1:0]: This can be: 
-                            00 for NONE
-                            01 for KEYGEN
-                            10 for SIGNING
-                            11 for VERIFYING
-                bit #2: Zeroize all internal registers after ECC process, to avoid SCA leakage.
-                This register is located at ECC_base_address + 0x0000_0010.";
+        desc = "One 4-bit register to set the type of ECC operations.
+                [br] bit #[1:0]: This can be: 
+                [br]             00 for NONE
+                [br]             01 for KEYGEN
+                [br]             10 for SIGNING
+                [br]             11 for VERIFYING
+                [br] bit #2: Zeroize all internal registers after ECC process, to avoid SCA leakage.
+                [br] bit #3: Run ECC Signing flow to sign PCRs.
+                [br] This register is located at ECC_base_address + 0x0000_0010.";
 
         default sw = w;
         default hw = r;
         default resetsignal = reset_b;
         field {desc = "Control command field"; swwe = ecc_ready; hwclr;} CTRL[2] = 2'b0;
         field {desc = "Zeroize all internal registers"; swwe = ecc_ready; singlepulse;} ZEROIZE = 1'b0;
+        field {desc = "Run PCR Signing flow"; swwe = ecc_ready; hwclr;} PCR_SIGN = 1'b0;
     
     } ECC_CTRL @0x00000010;
 

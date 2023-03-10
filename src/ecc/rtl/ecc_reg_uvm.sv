@@ -36,6 +36,7 @@ package ecc_reg_uvm;
     class ecc_reg__ECC_CTRL extends uvm_reg;
         rand uvm_reg_field CTRL;
         rand uvm_reg_field ZEROIZE;
+        rand uvm_reg_field PCR_SIGN;
 
         function new(string name = "ecc_reg__ECC_CTRL");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -46,6 +47,8 @@ package ecc_reg_uvm;
             this.CTRL.configure(this, 2, 0, "WO", 1, 'h0, 1, 1, 0);
             this.ZEROIZE = new("ZEROIZE");
             this.ZEROIZE.configure(this, 1, 2, "WO", 0, 'h0, 1, 1, 0);
+            this.PCR_SIGN = new("PCR_SIGN");
+            this.PCR_SIGN.configure(this, 1, 3, "WO", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : ecc_reg__ECC_CTRL
 

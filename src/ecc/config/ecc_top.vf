@@ -21,6 +21,7 @@ ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_defines_pkg.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_macros.svh
 ${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_defines_pkg.sv
 ${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_macros.svh
+${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_gen_hash.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_reg_pkg.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_reg.sv
 ${WORKSPACE}/Caliptra/src/keyvault/rtl/kv.sv

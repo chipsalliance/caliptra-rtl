@@ -14,4 +14,4 @@
 #
 ---
 seed: 1
-testname: kv_pcr_hash_extend
+testname: pv_hash_and_sign
