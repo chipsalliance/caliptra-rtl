@@ -161,6 +161,6 @@ Steps:<BR>
 
 ## **NOTES** ##
 
-* The internal registers are auto rendered at the [github
+* The internal registers are auto rendered at the [GitHub
   page](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs)
 * So are the [external registers](https://chipsalliance.github.io/caliptra-rtl/main/external-regs)
