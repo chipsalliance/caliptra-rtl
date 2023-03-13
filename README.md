@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Caliptra Hands-On Guide** #
-_*Last Update: 2023/03/02*_
+_*Last Update: 2023/03/13*_
 
 [[_TOC_]]
 
@@ -54,10 +54,10 @@ Other:
 
 ## **ENVIRONMENT VARIABLES** ##
 Required for simulation:<BR>
-`WORKSPACE`: Defines the absolute path to the directory that contains the Project repository root (called "Caliptra")<BR>
+`CALIPTRA_WORKSPACE`: Defines the absolute path to the directory that contains the Project repository root (called "Caliptra" or "caliptra-rtl")<BR>
+`CALIPTRA_ROOT`: Defines the absolute path to the Project repository root (called "Caliptra" or "caliptra-rtl"). Equivalent to `${CALIPTRA_WORKSPACE}/Caliptra`.<BR>
 
 Required for Firmware (i.e. Test suites) makefile:<BR>
-  `SIM_TOOLS_TOP_COMPILE_ROOT`: Absolute path pointing to the folder `src/integration` inside the repository<BR>
   `TESTNAME`: Contains the name of one of the tests listed inside the `src/integration/test_suites` folder<BR>
 
 ## **Repository Overview** ##
@@ -92,7 +92,7 @@ Caliptra
 ```
 The root of the repository is structured as shown above, to a depth of 2 layers.<BR>
 Each sub-component is accompanied by a file list summary (located in src/<component>/config/<name>.vf) that comprises all the filenames required to compile the component, and an optional testbench filelist for unit-level simulation. <BR>
-VF files provide absolute filepaths (prefixed by the WORKSPACE environment variable) to each compile target for the associated component.<BR>
+VF files provide absolute filepaths (prefixed by the `CALIPTRA_ROOT` environment variable) to each compile target for the associated component.<BR>
 The "Integration" sub-component contains the top-level fileset for Caliptra. `src/integration/config/compile.yml` defines the required filesets and sub-component dependencies for this build target. All of the files/dependencies are explicitly listed in `src/integration/config/caliptra_top_tb.vf`. Users may compile the entire design using only this VF filelist.<BR>
 
 
@@ -115,8 +115,8 @@ VCS Steps:
 1. Define all environment variables above
     - For the initial test run after downloading repository, `iccm_lock` is recommended for TESTNAME
 1. Create a run folder for build outputs (and cd to it)
-1. Invoke `${WORKSPACE}/Caliptra/tools/scripts/Makefile` with target 'program.hex' to produce SRAM initialization files from the firmware found in `src/integration/test_suites/${TESTNAME}`
-    - E.g.: `make -f ${WORKSPACE}/Caliptra/tools/scripts/Makefile program.hex`
+1. Invoke `${CALIPTRA_ROOT}/tools/scripts/Makefile` with target 'program.hex' to produce SRAM initialization files from the firmware found in `src/integration/test_suites/${TESTNAME}`
+    - E.g.: `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile program.hex`
 1. Compile complete project using `src/integration/config/caliptra_top_tb.vf` as a compilation target in VCS. When running the `vcs` command to generate simv, users should ensure that `caliptra_top_tb` is explicitly specified as the top-level component in their command to ensure this is the sole "top" that gets simulated.
 1. Simulate project with `caliptra_top_tb` as the top target
 
@@ -125,10 +125,10 @@ Verilator Steps:
 1. Define all environment variables above
     - For the initial test run after downloading repository, `iccm_lock` is recommended for TESTNAME
 1. Create a run folder for build outputs
-    - Recommended to place run folder under `${WORKSPACE}/scratch/$USER/verilator/<date>`
+    - Recommended to place run folder under `${CALIPTRA_WORKSPACE}/scratch/$USER/verilator/<date>`
 1. Run Caliptra/tools/scripts/Makefile, which provides steps to run a top-level simulation in Verilator
     - Example command:
-        `make -C <path/to/run/folder> -f ${WORKSPACE}/Caliptra/tools/scripts/Makefile TESTNAME=${TESTNAME} debug=1 verilator`
+        `make -C <path/to/run/folder> -f ${CALIPTRA_ROOT}/tools/scripts/Makefile TESTNAME=${TESTNAME} debug=1 verilator`
     - NOTE: `debug=1` is optional; if provided, the verilator run will produce a .vcd file with waveform information
     - NOTE: `TESTNAME=${TESTNAME}` is optional; if not provided, test defaults to value of TESTNAME environment variable, then to `iccm_lock`
     - NOTE: Users may wish to produce a run log by piping the make command to a tee command, e.g.:
@@ -137,7 +137,7 @@ Verilator Steps:
     1. Ensure Python 3.9.2 is available by adding to the $PATH variable
     1. Run the script with:
         `python3 run_verilator_l0_regression.py`
-    1. NOTE: The script automatically creates run output folders at `${WORKSPACE}/scratch/$USER/verilator/<timestamp>/<testname>` for each test run
+    1. NOTE: The script automatically creates run output folders at `${CALIPTRA_WORKSPACE}/scratch/$USER/verilator/<timestamp>/<testname>` for each test run
     1. NOTE: The output folder is populated with a run log that reports the run results and pass/fail status
 
 UVM Testbench Steps for `caliptra_top`:<BR>

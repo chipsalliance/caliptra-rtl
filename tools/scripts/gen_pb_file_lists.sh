@@ -33,8 +33,8 @@ for i in ${cpt_ymls}; do
         if [[ $j == "uvmf_lib" || $j == "uvm_lib" || $j == "mvc_lib" ]]; then continue; fi
         echo "Generating File List for lib [${j}] in [${cpt_vf_file}]";
         pb fe file_list --tb integration_lib::${j} +def-target 'tb' --flat --dir-fmt=+incdir+{directory} --file ${cpt_vf_file};
-        # Replace leading portion of path with ${WORKSPACE}
-        sed 's/\/home.*Caliptra\/src/\${WORKSPACE}\/Caliptra\/src/' -i ${cpt_vf_file}
+        # Replace leading portion of path with ${CALIPTRA_ROOT}
+        sed 's/\/home.*Caliptra\/src/\${CALIPTRA_ROOT}\/src/' -i ${cpt_vf_file}
         # Remove duplicate entries from the file
         perl -i -ne 'print if ! $a{$_}++' ${cpt_vf_file}
     done

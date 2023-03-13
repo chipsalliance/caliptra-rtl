@@ -1,8 +1,8 @@
-+incdir+${WORKSPACE}/Caliptra/src/keyvault/rtl
-+incdir+${WORKSPACE}/Caliptra/src/doe/rtl
-+incdir+${WORKSPACE}/Caliptra/src/integration/asserts
-${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_defines_pkg.sv
-${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_macros.svh
-${WORKSPACE}/Caliptra/src/doe/rtl/doe_defines_pkg.sv
-${WORKSPACE}/Caliptra/src/integration/asserts/caliptra_top_sva.sv
-${WORKSPACE}/Caliptra/src/doe/rtl/doe_defines_pkg.sv
++incdir+${CALIPTRA_ROOT}/src/keyvault/rtl
++incdir+${CALIPTRA_ROOT}/src/doe/rtl
++incdir+${CALIPTRA_ROOT}/src/integration/asserts
+${CALIPTRA_ROOT}/src/keyvault/rtl/kv_defines_pkg.sv
+${CALIPTRA_ROOT}/src/keyvault/rtl/kv_macros.svh
+${CALIPTRA_ROOT}/src/doe/rtl/doe_defines_pkg.sv
+${CALIPTRA_ROOT}/src/integration/asserts/caliptra_top_sva.sv
+${CALIPTRA_ROOT}/src/doe/rtl/doe_defines_pkg.sv

@@ -1,2 +1,2 @@
-+incdir+${WORKSPACE}/Caliptra/src/pcrvault/rtl
-${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_reg_uvm.sv
++incdir+${CALIPTRA_ROOT}/src/pcrvault/rtl
+${CALIPTRA_ROOT}/src/pcrvault/rtl/pv_reg_uvm.sv
