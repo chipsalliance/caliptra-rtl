@@ -1,0 +1,367 @@
+addrmap spi_host {
+    reg {
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "Error-related interrupts, see !!ERROR_ENABLE register for more
+            information.";
+        } ERROR[0:0];
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "Event-related interrupts, see !!EVENT_ENABLE register for more
+            information.";
+        } SPI_EVENT[1:1];
+    } INTERRUPT_STATE @ 0x0;
+    reg {
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "Enable interrupt when error is set.";
+        } ERROR[0:0];
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "Enable interrupt when spi_event is set.";
+        } SPI_EVENT[1:1];
+    } INTERRUPT_ENABLE @ 0x4;
+    reg {
+        field {
+            sw = w;
+            desc = "Write 1 to force error to 1.";
+        } ERROR[0:0];
+        field {
+            sw = w;
+            desc = "Write 1 to force spi_event to 1.";
+        } SPI_EVENT[1:1];
+    } INTERRUPT_TEST @ 0x8;
+    reg {
+        field {
+            sw = w;
+            desc = "Write 1 to trigger one alert event of this kind.";
+        } FATAL_FAULT[0:0];
+    } ALERT_TEST @ 0xC;
+    reg {
+        field {
+            desc = "If !!EVENT_ENABLE.RXWM is set, the IP will send
+            an interrupt when the depth of the RX FIFO reaches
+            RX_WATERMARK words (32b each).";
+            sw = rw;
+        } RX_WATERMARK[7:0] = 0x7F;
+        field {
+            desc = "If !!EVENT_ENABLE.TXWM is set, the IP will send
+            an interrupt when the depth of the TX FIFO drops below
+            TX_WATERMARK words (32b each).";
+            sw = rw;
+        } TX_WATERMARK[15:8] = 0x0;
+        field {
+            desc = "Enable the SPI host output buffers for the sck, csb, and sd lines.  This allows
+            the SPI_HOST IP to connect to the same bus as other SPI controllers without
+            interference.";
+            sw = rw;
+        } OUTPUT_EN[29:29] = 0x0;
+        field {
+            desc = "Clears the entire IP to the reset state when set to 1, including
+            the FIFOs, the CDC's, the core state machine and the shift register.
+            In the current implementation, the CDC FIFOs are drained not reset.
+            Therefore software must confirm that both FIFO's empty before releasing
+            the IP from reset.";
+            sw = rw;
+        } SW_RST[30:30] = 0x0;
+        field {
+            desc = "Enables the SPI host.  On reset, this field is 0, meaning
+            that no transactions can proceed.";
+            sw = rw;
+        } SPIEN[31:31] = 0x0;
+    } CONTROL @ 0x10;
+    reg {
+        field {
+            desc = "Transmit queue depth. Indicates how many unsent 32-bit words
+            are currently in the TX FIFO.  When active, this result may
+            be an overestimate due to synchronization delays,";
+            sw = r;
+        } TXQD[7:0] = 0x0;
+        field {
+            desc = "Receive queue depth. Indicates how many unread 32-bit words are
+            currently in the RX FIFO.  When active, this result may an
+            underestimate due to synchronization delays.";
+            sw = r;
+        } RXQD[15:8] = 0x0;
+        field {
+            desc = "Command queue depth. Indicates how many unread 32-bit words are
+            currently in the command segment queue.";
+            sw = r;
+        } CMDQD[19:16] = 0x0;
+        field {
+            desc = "If high, the number of 32-bits in the RX FIFO now exceeds the
+            !!CONTROL.RX_WATERMARK entries (32b each).";
+            sw = r;
+        } RXWM[20:20] = 0x0;
+        field {
+            desc = "The value of the ByteOrder parameter, provided so that firmware
+            can confirm proper IP configuration.";
+            sw = r;
+        } BYTEORDER[22:22];
+        field {
+            desc = "If high, signifies that an ongoing transaction has stalled
+            due to lack of available space in the RX FIFO";
+            sw = r;
+        } RXSTALL[23:23] = 0x0;
+        field {
+            desc = "When high, indicates that the receive fifo is empty.
+            Any reads from RX FIFO will cause an error interrupt.";
+            sw = r;
+        } RXEMPTY[24:24] = 0x0;
+        field {
+            desc = "When high, indicates that the receive fifo is full.  Any
+            ongoing transactions will stall until firmware reads some
+            data from !!RXDATA.";
+            sw = r;
+        } RXFULL[25:25] = 0x0;
+        field {
+            desc = "If high, the amount of data in the TX FIFO has fallen below the
+            level of !!CONTROL.TX_WATERMARK words (32b each).";
+            sw = r;
+        } TXWM[26:26] = 0x0;
+        field {
+            desc = "If high, signifies that an ongoing transaction has stalled
+            due to lack of data in the TX FIFO";
+            sw = r;
+        } TXSTALL[27:27] = 0x0;
+        field {
+            desc = "When high, indicates that the transmit data fifo is empty.";
+            sw = r;
+        } TXEMPTY[28:28] = 0x0;
+        field {
+            desc = "When high, indicates that the transmit data fifo is full.
+            Any further writes to !!RXDATA will create an error interrupt.";
+            sw = r;
+        } TXFULL[29:29] = 0x0;
+        field {
+            desc = "When high, indicates the SPI host is processing a previously
+            issued command.";
+            sw = r;
+        } ACTIVE[30:30] = 0x0;
+        field {
+            desc = "When high, indicates the SPI host is ready to receive
+            commands. Writing to COMMAND when READY is low is
+            an error, and will trigger an interrupt.";
+            sw = r;
+        } READY[31:31] = 0x0;
+    } STATUS @ 0x14;
+    reg {
+        field {
+            desc = "Core clock divider.  Slows down subsequent SPI transactions by a
+            factor of (CLKDIV+1) relative to the core clock frequency.  The
+            period of sck, T(sck) then becomes `2*(CLK_DIV+1)*T(core)`";
+            sw = rw;
+        } CLKDIV[15:0] = 0x0;
+        field {
+            desc = "Minimum idle time between commands. Indicates the minimum
+            number of sck half-cycles to hold cs_n high between commands.
+            Setting this register to zero creates a minimally-wide CS_N-high
+            pulse of one-half sck cycle.";
+            sw = rw;
+        } CSNIDLE[19:16] = 0x0;
+        field {
+            desc = "CS_N Trailing Time.  Indicates the number of half sck cycles,
+            CSNTRAIL+1, to leave between last edge of sck and the rising
+            edge of cs_n. Setting this register to zero corresponds
+            to the minimum delay of one-half sck cycle.";
+            sw = rw;
+        } CSNTRAIL[23:20] = 0x0;
+        field {
+            desc = "CS_N Leading Time.  Indicates the number of half sck cycles,
+            CSNLEAD+1, to leave between the falling edge of cs_n and
+            the first edge of sck.  Setting this register to zero
+            corresponds to the minimum delay of one-half sck cycle";
+            sw = rw;
+        } CSNLEAD[27:24] = 0x0;
+        field {
+            desc = "Full cycle.  Modifies the CPHA sampling behaviour to allow
+            for longer device logic setup times.  Rather than sampling the SD
+            bus a half cycle after shifting out data, the data is sampled
+            a full cycle after shifting data out.  This means that if
+            CPHA = 0, data is shifted out on the trailing edge, and
+            sampled a full cycle later.  If CPHA = 1, data is shifted and
+            sampled with the trailing edge, also separated by a
+            full cycle.";
+            sw = rw;
+        } FULLCYC[29:29] = 0x0;
+        field {
+            desc = "The phase of the sck clock signal relative to the data. When
+            CPHA = 0, the data changes on the trailing edge of sck
+            and is typically sampled on the leading edge.  Conversely
+            if CPHA = 1 high, data lines change on the leading edge of
+            sck and are typically sampled on the trailing edge.
+            CPHA should be chosen to match the phase of the selected
+            device.  The sampling behavior is modified by the
+            !!CONFIGOPTS.FULLCYC bit.";
+            sw = rw;
+        } CPHA[30:30] = 0x0;
+        field {
+            desc = "The polarity of the sck clock signal.  When CPOL is 0,
+            sck is low when idle, and emits high pulses.   When CPOL
+            is low, sck is high when idle, and emits a series of low
+            pulses.";
+            sw = rw;
+        } CPOL[31:31] = 0x0;
+    } CONFIGOPTS[2] @ 0x18 += 0x4;
+    reg {
+        field {
+            desc = "Chip Select ID";
+            sw = rw;
+        } CSID[31:0] = 0x0;
+    } CSID @ 0x20;
+    reg {
+        field {
+            desc = "Segment Length.
+
+            For read or write segments, this field controls the
+            number of 1-byte bursts to transmit and or receive in
+            this command segment.  The number of cyles required
+            to send or received a byte will depend on !!COMMAND.SPEED.
+            For dummy segments, (!!COMMAND.DIRECTION == 0), this register
+            controls the number of dummy cycles to issue.
+            The number of bytes (or dummy cycles) in the segment will be
+            equal to !!COMMAND.LEN + 1.";
+            sw = w;
+        } LEN[8:0] = 0x0;
+        field {
+            desc = "Chip select active after transaction.  If CSAAT = 0, the
+            chip select line is raised immediately at the end of the
+            command segment.   If !!COMMAND.CSAAT = 1, the chip select
+            line is left low at the end of the current transaction
+            segment.  This allows the creation longer, more
+            complete SPI transactions, consisting of several separate
+            segments for issuing instructions, pausing for dummy cycles,
+            and transmitting or receiving data from the device.";
+            sw = w;
+        } CSAAT[9:9] = 0x0;
+        field {
+            desc = "The speed for this command segment: \"0\" = Standard SPI. \"1\" = Dual SPI.
+            \"2\"=Quad SPI,  \"3\": RESERVED.";
+            sw = w;
+        } SPEED[11:10] = 0x0;
+        field {
+            desc = "The direction for the following command: \"0\" = Dummy cycles
+            (no TX/RX). \"1\" = Rx only, \"2\" = Tx only, \"3\" = Bidirectional
+            Tx/Rx (Standard SPI mode only).";
+            sw = w;
+        } DIRECTION[13:12] = 0x0;
+    } COMMAND @ 0x24;
+    reg {
+        field {
+            desc = "SPI Receive Data";
+            sw = r;
+        } RXDATA[31:0] = 0x0;
+    } RXDATA @ 0x28;
+    reg {
+        field {
+            desc = "SPI Transmit Data";
+            sw = w;
+        } TXDATA[31:0] = 0x0;
+    } TXDATA @ 0x2C;
+    reg {
+        field {
+            desc = "Command Error: If this bit is set, the block sends an error
+            interrupt whenever a command is issued while busy (i.e. a 1 is
+            when !!STATUS.READY is not asserted.)";
+            sw = rw;
+        } CMDBUSY[0:0] = 0x1;
+        field {
+            desc = "Overflow Errors: If this bit is set, the block sends an
+            error interrupt whenever the TX FIFO overflows.";
+            sw = rw;
+        } OVERFLOW[1:1] = 0x1;
+        field {
+            desc = "Underflow Errors: If this bit is set, the block sends an
+            error interrupt whenever there is a read from !!RXDATA
+            but the RX FIFO is empty.";
+            sw = rw;
+        } UNDERFLOW[2:2] = 0x1;
+        field {
+            desc = "Invalid Command Errors: If this bit is set, the block sends an
+            error interrupt whenever a command is sent with invalid values for
+            !!COMMAND.SPEED or !!COMMAND.DIRECTION.";
+            sw = rw;
+        } CMDINVAL[3:3] = 0x1;
+        field {
+            desc = "Invalid CSID: If this bit is set, the block sends an error interrupt whenever
+            a command is submitted, but CSID exceeds NumCS.";
+            sw = rw;
+        } CSIDINVAL[4:4] = 0x1;
+    } ERROR_ENABLE @ 0x30;
+    reg {
+        field {
+            desc = "Indicates a write to !!COMMAND when !!STATUS.READY = 0.";
+            sw = rw;
+            onwrite = woclr;
+        } CMDBUSY[0:0] = 0x0;
+        field {
+            desc = "Indicates that firmware has overflowed the TX FIFO";
+            sw = rw;
+            onwrite = woclr;
+        } OVERFLOW[1:1] = 0x0;
+        field {
+            desc = "Indicates that firmware has attempted to read from
+            !!RXDATA when the RX FIFO is empty.";
+            sw = rw;
+            onwrite = woclr;
+        } UNDERFLOW[2:2] = 0x0;
+        field {
+            desc = "Indicates an invalid command segment, meaning either an invalid value of
+            !!COMMAND.SPEED or a request for bidirectional data transfer at dual or quad
+            speed";
+            sw = rw;
+            onwrite = woclr;
+        } CMDINVAL[3:3] = 0x0;
+        field {
+            desc = "Indicates a command was attempted with an invalid value for !!CSID.";
+            sw = rw;
+            onwrite = woclr;
+        } CSIDINVAL[4:4] = 0x0;
+        field {
+            desc = "Indicates that TLUL attempted to write to TXDATA with no bytes enabled. Such
+            'zero byte' writes are not supported.";
+            sw = rw;
+            onwrite = woclr;
+        } ACCESSINVAL[5:5] = 0x0;
+    } ERROR_STATUS @ 0x34;
+    reg {
+        field {
+            desc = "Assert to send a spi_event interrupt whenever !!STATUS.RXFULL
+            goes high";
+            sw = rw;
+        } RXFULL[0:0] = 0x0;
+        field {
+            desc = "Assert to send a spi_event interrupt whenever !!STATUS.TXEMPTY
+            goes high";
+            sw = rw;
+        } TXEMPTY[1:1] = 0x0;
+        field {
+            desc = "Assert to send a spi_event interrupt whenever the number of 32-bit words in
+            the RX FIFO is greater than !!CONTROL.RX_WATERMARK. To prevent the
+            reassertion of this interrupt, read more data from the RX FIFO, or
+            increase !!CONTROL.RX_WATERMARK.";
+            sw = rw;
+        } RXWM[2:2] = 0x0;
+        field {
+            desc = "Assert to send a spi_event interrupt whenever the number of 32-bit words in
+            the TX FIFO is less than !!CONTROL.TX_WATERMARK.  To prevent the
+            reassertion of this interrupt add more data to the TX FIFO, or
+            reduce !!CONTROL.TX_WATERMARK.";
+            sw = rw;
+        } TXWM[3:3] = 0x0;
+        field {
+            desc = "Assert to send a spi_event interrupt whenever !!STATUS.READY
+            goes high";
+            sw = rw;
+        } READY[4:4] = 0x0;
+        field {
+            desc = "Assert to send a spi_event interrupt whenever !!STATUS.ACTIVE
+            goes low";
+            sw = rw;
+        } IDLE[5:5] = 0x0;
+    } EVENT_ENABLE @ 0x38;
+};
