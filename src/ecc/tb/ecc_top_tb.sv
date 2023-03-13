@@ -153,6 +153,7 @@ module ecc_top_tb
   kv_write_t kv_write_tb;
   kv_rd_resp_t [2:0] kv_rd_resp_tb;
   kv_wr_resp_t kv_wr_resp_tb;
+  pcr_signing_t pcr_signing_data_tb;
 
   wire error_intr_tb;
   wire notif_intr_tb;
@@ -206,6 +207,7 @@ module ecc_top_tb
              .kv_write(kv_write_tb),
              .kv_rd_resp(kv_rd_resp_tb),
              .kv_wr_resp(kv_wr_resp_tb),
+             .pcr_signing_data(pcr_signing_data_tb),
 
              .error_intr(error_intr_tb),
              .notif_intr(notif_intr_tb)
@@ -311,6 +313,7 @@ module ecc_top_tb
 
       kv_rd_resp_tb   = '0;
       kv_wr_resp_tb   = '0;
+      pcr_signing_data_tb = '0;
     end
   endtask // init_dut
 
