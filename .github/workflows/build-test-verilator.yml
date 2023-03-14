@@ -123,4 +123,4 @@ jobs:
           # Running a simple test to make sure that there aren't any elaboration issues
           WORKSPACE=$(pwd)
           cd tools/scripts
-          make verilator-action WORKSPACE=$WORKSPACE TESTNAME=smoke_test_kv_uds_reset
+          make verilator WORKSPACE=$WORKSPACE TESTNAME=smoke_test_kv_uds_reset

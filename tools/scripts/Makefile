@@ -156,7 +156,7 @@ clean:
 
 ############ Model Builds ###############################
 
-verilator-base: $(TBFILES) $(INCLUDES_DIR)/defines.h test_caliptra_top_tb.cpp
+verilator-build: $(TBFILES) $(INCLUDES_DIR)/defines.h test_caliptra_top_tb.cpp
 	$(VERILATOR)  --cc -CFLAGS $(CFLAGS) \
 	  +libext+.v+.sv +define+RV_OPENSOURCE \
 	  --timescale 1ns/1ps \
@@ -165,22 +165,12 @@ verilator-base: $(TBFILES) $(INCLUDES_DIR)/defines.h test_caliptra_top_tb.cpp
 	  -f $(TBDIR)/../config/caliptra_top_tb.vf --top-module caliptra_top_tb \
 	  -exe test_caliptra_top_tb.cpp --autoflush $(VERILATOR_DEBUG)
 	cp $(TBDIR)/test_caliptra_top_tb.cpp obj_dir/
-
-verilator-build: verilator-base
-	$(MAKE) -j -e -C obj_dir -f Vcaliptra_top_tb.mk $(VERILATOR_MAKE_FLAGS) VM_PARALLEL_BUILDS=1
-	touch verilator-build
-
-verilator-build-action: verilator-base
-	# verilator breaks with the '-j' option when running on github actions
-	$(MAKE) -e -C obj_dir -f Vcaliptra_top_tb.mk $(VERILATOR_MAKE_FLAGS) VM_PARALLEL_BUILDS=1
+	$(MAKE) -j -e -C obj_dir/ -f Vcaliptra_top_tb.mk $(VERILATOR_MAKE_FLAGS) VM_PARALLEL_BUILDS=1
 	touch verilator-build
 
 ############ TEST Simulation ###############################
 
 verilator: program.hex verilator-build
-	./obj_dir/Vcaliptra_top_tb
-
-verilator-action: program.hex verilator-build-action
 	./obj_dir/Vcaliptra_top_tb
 
 ############ TEST build ###############################
