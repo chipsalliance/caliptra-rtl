@@ -17,7 +17,9 @@ jobs:
     env:
       CARGO_INCREMENTAL: 0
       SCCACHE_VERSION: 0.3.3
-      VERILATOR_VERSION: v5.006
+      RISCV_VERSION: v12.1.0
+      # TODO: To update to 5.006, clean up lint errors
+      VERILATOR_VERSION: v4.228
       PKG_CONFIG_PATH: /opt/verilator/share/pkgconfig
       SCCACHE_GHA_CACHE_TO: sccache-verilator-10000
       SCCACHE_GHA_CACHE_FROM: sccache-verilator-
