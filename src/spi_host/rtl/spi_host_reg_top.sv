@@ -2210,11 +2210,11 @@ module spi_host_reg_top #(
   assign unused_be = ^reg_be;
 
   // Assertions for Register Interface
-  `ASSERT_PULSE(wePulse, reg_we, clk_i, !rst_ni)
-  `ASSERT_PULSE(rePulse, reg_re, clk_i, !rst_ni)
+  `CALIPTRA_ASSERT_PULSE(wePulse, reg_we, clk_i, !rst_ni)
+  `CALIPTRA_ASSERT_PULSE(rePulse, reg_re, clk_i, !rst_ni)
 
-  `ASSERT(reAfterRv, $rose(reg_re || reg_we) |=> hreadyout_o, clk_i, !rst_ni)
+  `CALIPTRA_ASSERT(reAfterRv, $rose(reg_re || reg_we) |=> hreadyout_o, clk_i, !rst_ni)
 
-  `ASSERT(en2addrHit, (reg_we || reg_re) |-> $onehot0(addr_hit), clk_i, !rst_ni)
+  `CALIPTRA_ASSERT(en2addrHit, (reg_we || reg_re) |-> $onehot0(addr_hit), clk_i, !rst_ni)
 
 endmodule

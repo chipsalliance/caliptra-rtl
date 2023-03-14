@@ -562,18 +562,18 @@ module spi_host
   );
 
   // Outputs should have a known value after reset
-  `ASSERT_KNOWN(AHBRespKnownO_A, hresp_o)
-  `ASSERT_KNOWN(AHBReadyKnownO_A, hreadyout_o)
+  `CALIPTRA_ASSERT_KNOWN(AHBRespKnownO_A, hresp_o)
+  `CALIPTRA_ASSERT_KNOWN(AHBReadyKnownO_A, hreadyout_o)
 
-  `ASSERT_KNOWN(AlertKnownO_A, alert_tx_o)
-  `ASSERT_KNOWN(CioSckKnownO_A, cio_sck_o)
-  `ASSERT_KNOWN(CioSckEnKnownO_A, cio_sck_en_o)
-  `ASSERT_KNOWN(CioCsbKnownO_A, cio_csb_o)
-  `ASSERT_KNOWN(CioCsbEnKnownO_A, cio_csb_en_o)
-  `ASSERT_KNOWN(CioSdEnKnownO_A, cio_sd_en_o)
-  `ASSERT_KNOWN(IntrSpiEventKnownO_A, intr_spi_event_o)
-  `ASSERT_KNOWN(IntrErrorKnownO_A, intr_error_o)
+  `CALIPTRA_ASSERT_KNOWN(AlertKnownO_A, alert_tx_o)
+  `CALIPTRA_ASSERT_KNOWN(CioSckKnownO_A, cio_sck_o)
+  `CALIPTRA_ASSERT_KNOWN(CioSckEnKnownO_A, cio_sck_en_o)
+  `CALIPTRA_ASSERT_KNOWN(CioCsbKnownO_A, cio_csb_o)
+  `CALIPTRA_ASSERT_KNOWN(CioCsbEnKnownO_A, cio_csb_en_o)
+  `CALIPTRA_ASSERT_KNOWN(CioSdEnKnownO_A, cio_sd_en_o)
+  `CALIPTRA_ASSERT_KNOWN(IntrSpiEventKnownO_A, intr_spi_event_o)
+  `CALIPTRA_ASSERT_KNOWN(IntrErrorKnownO_A, intr_error_o)
 
   // Alert assertions for reg_we onehot check
-  `ASSERT_PRIM_REG_WE_ONEHOT_ERROR_TRIGGER_ALERT(RegWeOnehotCheck_A, u_reg, alert_tx_o[0])
+  `CALIPTRA_ASSERT_PRIM_REG_WE_ONEHOT_ERROR_TRIGGER_ALERT(RegWeOnehotCheck_A, u_reg, alert_tx_o[0])
 endmodule : spi_host
