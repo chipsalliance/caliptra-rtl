@@ -68,6 +68,7 @@ module hmac_reg (
         logic [12-1:0]HMAC384_KEY;
         logic [32-1:0]HMAC384_BLOCK;
         logic [12-1:0]HMAC384_TAG;
+        logic [5-1:0]HMAC384_LFSR_SEED;
         logic HMAC384_KV_RD_KEY_CTRL;
         logic HMAC384_KV_RD_KEY_STATUS;
         logic HMAC384_KV_RD_BLOCK_CTRL;
@@ -118,6 +119,9 @@ module hmac_reg (
         end
         for(int i0=0; i0<12; i0++) begin
             decoded_reg_strb.HMAC384_TAG[i0] = cpuif_req_masked & (cpuif_addr == 'h100 + i0*'h4);
+        end
+        for(int i0=0; i0<5; i0++) begin
+            decoded_reg_strb.HMAC384_LFSR_SEED[i0] = cpuif_req_masked & (cpuif_addr == 'h130 + i0*'h4);
         end
         decoded_reg_strb.HMAC384_KV_RD_KEY_CTRL = cpuif_req_masked & (cpuif_addr == 'h600);
         decoded_reg_strb.HMAC384_KV_RD_KEY_STATUS = cpuif_req_masked & (cpuif_addr == 'h604);
@@ -191,6 +195,12 @@ module hmac_reg (
                 logic load_next;
             } TAG;
         } [12-1:0]HMAC384_TAG;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } LFSR_SEED;
+        } [5-1:0]HMAC384_LFSR_SEED;
         struct packed{
             struct packed{
                 logic next;
@@ -489,6 +499,11 @@ module hmac_reg (
                 logic [31:0] value;
             } TAG;
         } [12-1:0]HMAC384_TAG;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } LFSR_SEED;
+        } [5-1:0]HMAC384_LFSR_SEED;
         struct packed{
             struct packed{
                 logic value;
@@ -833,6 +848,27 @@ module hmac_reg (
                 field_storage.HMAC384_TAG[i0].TAG.value <= field_combo.HMAC384_TAG[i0].TAG.next;
             end
         end
+    end
+    for(genvar i0=0; i0<5; i0++) begin
+        // Field: hmac_reg.HMAC384_LFSR_SEED[].LFSR_SEED
+        always_comb begin
+            automatic logic [31:0] next_c = field_storage.HMAC384_LFSR_SEED[i0].LFSR_SEED.value;
+            automatic logic load_next_c = '0;
+            if(decoded_reg_strb.HMAC384_LFSR_SEED[i0] && decoded_req_is_wr) begin // SW write
+                next_c = decoded_wr_data[31:0];
+                load_next_c = '1;
+            end
+            field_combo.HMAC384_LFSR_SEED[i0].LFSR_SEED.next = next_c;
+            field_combo.HMAC384_LFSR_SEED[i0].LFSR_SEED.load_next = load_next_c;
+        end
+        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+            if(~hwif_in.reset_b) begin
+                field_storage.HMAC384_LFSR_SEED[i0].LFSR_SEED.value <= 'h3cabffb0;
+            end else if(field_combo.HMAC384_LFSR_SEED[i0].LFSR_SEED.load_next) begin
+                field_storage.HMAC384_LFSR_SEED[i0].LFSR_SEED.value <= field_combo.HMAC384_LFSR_SEED[i0].LFSR_SEED.next;
+            end
+        end
+        assign hwif_out.HMAC384_LFSR_SEED[i0].LFSR_SEED.value = field_storage.HMAC384_LFSR_SEED[i0].LFSR_SEED.value;
     end
     // Field: hmac_reg.HMAC384_KV_RD_KEY_CTRL.read_en
     always_comb begin

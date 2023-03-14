@@ -154,6 +154,21 @@ addrmap hmac_reg {
     
     } HMAC384_TAG[12] @0x00000100;
 
+
+    /* ---- HMAC384 Component Input LFSR Seed ---- */
+    reg {
+        name = "HMAC384 component lfsr seed register type definition";
+        desc = "5 32-bit registers storing the 160-bit lfsr seed input.
+                These registers are located at HMAC384_base_address + 
+                0x0000_0130 to 0x0000_0140 in big-endian representation.";
+
+        default sw = w;
+        default hw = r;
+        default resetsignal = reset_b;
+        field {desc = "Input lfsr seed field";} LFSR_SEED[32] = 32'h3CAB_FFB0; // a random value
+    
+    } HMAC384_LFSR_SEED[5] @0x00000130;
+
     /* ---- HMAC Key Vault Control Reg ---- */
     kv_read_ctrl_reg HMAC384_KV_RD_KEY_CTRL @0x00000600;
     kv_status_reg HMAC384_KV_RD_KEY_STATUS;

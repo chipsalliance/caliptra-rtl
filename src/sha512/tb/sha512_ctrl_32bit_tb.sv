@@ -265,6 +265,8 @@ module sha512_ctrl_32bit_tb
 
       kv_rd_resp_tb   = '0;
       kv_wr_resp_tb   = '0;
+      pv_wr_resp_tb   = '0;
+      pv_rd_resp_tb   = '0;
     end
   endtask // init_dut
 

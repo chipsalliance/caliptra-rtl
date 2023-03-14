@@ -33,7 +33,8 @@
 module hmac_drbg  
 #(
   parameter                  REG_SIZE        = 384,
-  parameter [REG_SIZE-1 : 0] HMAC_DRBG_PRIME = 384'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC7634D81F4372DDF581A0DB248B0A77AECEC196ACCC52973
+  parameter [REG_SIZE-1 : 0] HMAC_DRBG_PRIME = 384'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC7634D81F4372DDF581A0DB248B0A77AECEC196ACCC52973,
+  parameter [147 : 0]        LFSR_INIT_SEED  = 148'h5_60DE_54E3_6AC0_807B_2396_8E54_5475_3CAB_FFB0 // a random value
 )    
 (
   // Clock and reset.
@@ -48,6 +49,7 @@ module hmac_drbg
   output wire                       valid,
 
   //Data
+  input wire   [147 : 0]            lfsr_seed,
   input wire   [REG_SIZE-1 : 0]     entropy,
   input wire   [REG_SIZE-1 : 0]     nonce,
 
@@ -114,22 +116,42 @@ module hmac_drbg
   wire                  HMAC_tag_valid;
   wire [REG_SIZE-1:0]   HMAC_tag;
 
+  reg [147 : 0]         HMAC_lfsr_seed;
+
   //----------------------------------------------------------------
   // HMAC module instantiation.
   //----------------------------------------------------------------
-  hmac_core HMAC_K
-  (
-   .clk(clk),
-   .reset_n(reset_n),
-   .zeroize(zeroize),
-   .init_cmd(HMAC_init),
-   .next_cmd(HMAC_next),
-   .key(HMAC_key),
-   .block_msg(HMAC_block),
-   .ready(HMAC_ready),
-   .tag(HMAC_tag),
-   .tag_valid(HMAC_tag_valid)
-  );
+  hmac_core #(
+    .LFSR_INIT_SEED(LFSR_INIT_SEED)
+    ) 
+    HMAC_K 
+    (
+    .clk(clk),
+    .reset_n(reset_n),
+    .zeroize(zeroize),
+    .init_cmd(HMAC_init),
+    .next_cmd(HMAC_next),
+    .lfsr_seed(HMAC_lfsr_seed),
+    .key(HMAC_key),
+    .block_msg(HMAC_block),
+    .ready(HMAC_ready),
+    .tag(HMAC_tag),
+    .tag_valid(HMAC_tag_valid)
+    );
+
+  hmac_drbg_lfsr #(
+    .REG_SIZE(148),
+    .INIT_SEED(LFSR_INIT_SEED)
+    )
+    lfsr_inst
+    (
+    .clk(clk),
+    .reset_n(reset_n),
+    .zeroize(zeroize),
+    .en(init_cmd),
+    .seed(lfsr_seed),
+    .rnd(HMAC_lfsr_seed)
+    );
 
   //----------------------------------------------------------------
   // reg_update

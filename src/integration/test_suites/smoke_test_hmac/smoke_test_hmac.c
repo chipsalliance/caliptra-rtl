@@ -28,9 +28,10 @@ volatile uint32_t intr_count       = 0;
 volatile uint32_t hmac_intr_status = 0;
 
 void main() {
-    volatile uint32_t* hmac_key   = (uint32_t*) CLP_HMAC_REG_HMAC384_KEY_0;
-    volatile uint32_t* hmac_block = (uint32_t*) CLP_HMAC_REG_HMAC384_BLOCK_0;
-    volatile uint32_t* hmac_tag   = (uint32_t*) CLP_HMAC_REG_HMAC384_TAG_0;
+    volatile uint32_t* hmac_key         = (uint32_t*) CLP_HMAC_REG_HMAC384_KEY_0;
+    volatile uint32_t* hmac_block       = (uint32_t*) CLP_HMAC_REG_HMAC384_BLOCK_0;
+    volatile uint32_t* hmac_tag         = (uint32_t*) CLP_HMAC_REG_HMAC384_TAG_0;
+    volatile uint32_t* hmac_lfsr_seed   = (uint32_t*) CLP_HMAC_REG_HMAC384_LFSR_SEED_0;
     volatile uint32_t* hmac_reg;
 
     //this is the key 384-bit
@@ -90,6 +91,12 @@ void main() {
                                 0x5b3297b4,
                                 0xfb68dab9,
                                 0xf1b582c2};
+    //this is a random lfsr_seed 160-bit
+    uint32_t lfsr_seed_data[] = {0xC8F518D4,
+                                 0xF3AA1BD4,
+                                 0x6ED56C1C,
+                                 0x3C9E16FB,
+                                 0x800AF504};                               
     uint8_t offset;
 
 
@@ -106,6 +113,13 @@ void main() {
     offset = 0;
     while (hmac_key <= (uint32_t*) CLP_HMAC_REG_HMAC384_KEY_11) {
         *hmac_key++ = key_data[offset++];
+    }
+
+    // Load lfsr_seed from hw_data and write to HMAC core
+    VPRINTF(LOW, "Load LFSR_seed data to HMAC\n");
+    offset = 0;
+    while (hmac_lfsr_seed <= (uint32_t*) CLP_HMAC_REG_HMAC384_LFSR_SEED_4) {
+        *hmac_lfsr_seed++ = lfsr_seed_data[offset++];
     }
 
     // Load block from hw_data and write to HMAC core

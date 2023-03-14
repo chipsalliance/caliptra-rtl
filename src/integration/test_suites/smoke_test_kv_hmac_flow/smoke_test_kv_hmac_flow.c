@@ -36,10 +36,11 @@ uint8_t fail_cmd = 0x1;
 /* HMAC384 test vector
     KEY = 0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b
     BLOCK = 4869205468657265800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000440
+    LFSR_SEED = C8F518D4F3AA1BD46ED56C1C3C9E16FB800AF504
     TAG = b6a8d5636f5c6a7224f9977dcf7ee6c7fb6d0c48cbdee9737a959796489bddbc4c5df61d5b3297b4fb68dab9f1b582c2
 */
 
-void hmac_kvflow_test(uint8_t key_kv_id, uint8_t hmacblock_kv_id, uint8_t store_to_kv, uint8_t tag_kv_id, uint32_t block[], uint32_t expected_tag[12]){
+void hmac_kvflow_test(uint8_t key_kv_id, uint8_t hmacblock_kv_id, uint8_t store_to_kv, uint8_t tag_kv_id, uint32_t block[], uint32_t lfsr_seed[], uint32_t expected_tag[12]){
     uint8_t key_inject_cmd;
     uint8_t offset;
     volatile uint32_t * reg_ptr;
@@ -75,6 +76,13 @@ void hmac_kvflow_test(uint8_t key_kv_id, uint8_t hmacblock_kv_id, uint8_t store_
         *reg_ptr++ = block[offset++];
     }
     */
+
+    // Program LFSR_SEED
+    reg_ptr = (uint32_t*) CLP_HMAC_REG_HMAC384_LFSR_SEED_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC384_LFSR_SEED_4) {
+        *reg_ptr++ = lfsr_seed[offset++];
+    }
 
     // if we want to store the results into kv
     // set tag DEST to write
@@ -153,6 +161,13 @@ void main() {
                             0x00000000,
                             0x00000440};
 
+    //this is a random lfsr_seed 160-bit
+    uint32_t lfsr_seed_data[] = {0xC8F518D4,
+                                 0xF3AA1BD4,
+                                 0x6ED56C1C,
+                                 0x3C9E16FB,
+                                 0x800AF504}; 
+
     uint32_t expected_digest[] =   {0xb6a8d563,
                                     0x6f5c6a72,
                                     0x24f9977d,
@@ -164,13 +179,13 @@ void main() {
                                     0x4c5df61d,
                                     0x5b3297b4,
                                     0xfb68dab9,
-                                    0xf1b582c2};
+                                    0xf1b582c2}; 
 
     uint8_t hmackey_kv_id       = 0x2;
     uint8_t hmacblock_kv_id     = 0x1;
     uint8_t store_to_kv         = 0x1;
     uint8_t tag_kv_id           = 0x0;
-    hmac_kvflow_test(hmackey_kv_id, hmacblock_kv_id, store_to_kv, tag_kv_id, block, expected_digest);
+    hmac_kvflow_test(hmackey_kv_id, hmacblock_kv_id, store_to_kv, tag_kv_id, block, lfsr_seed_data, expected_digest);
 
     printf("%c",0xff); //End the test
     

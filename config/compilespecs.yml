@@ -15,6 +15,7 @@ files:
   - src/pcrvault/config/compile.yml
   - src/datavault/config/compile.yml
   - src/integration/asserts/config/compile.yml
+  - src/sha512_masked/config/compile.yml
   # UVMF TBs
   - src/aes_secworks/uvmf_cbc_AllKAT/config/compile.yml
   - src/ecc/uvmf_ecc/config/compile.yml

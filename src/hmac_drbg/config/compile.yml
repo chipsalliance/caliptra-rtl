@@ -9,6 +9,7 @@ targets:
     directories: [$COMPILE_ROOT/rtl]
     files:
       - $COMPILE_ROOT/rtl/hmac_drbg.sv
+      - $COMPILE_ROOT/rtl/hmac_drbg_lfsr.sv
     tops: [hmac_drbg]
 ---
 provides: [hmac_drbg_tb]  
