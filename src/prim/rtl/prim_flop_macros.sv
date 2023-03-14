@@ -56,7 +56,7 @@
       .state_o (         )                            \
     );                                                \
     `PRIM_FLOP_A(__d, __q, __resval, __clk, __rst_n)  \
-    `ASSERT(``__name``_A, __q === ``__name``.state_o) \
+    `CALIPTRA_ASSERT(``__name``_A, __q === ``__name``.state_o) \
   `else                                               \
     prim_sparse_fsm_flop #(                           \
       .StateEnumT(__type),                            \

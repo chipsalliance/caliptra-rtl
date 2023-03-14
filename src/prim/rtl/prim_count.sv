@@ -151,20 +151,20 @@ module prim_count #(
   // pragma coverage on
 
   // Cnt next
-  `ASSERT(CntNext_A,
+  `CALIPTRA_ASSERT(CntNext_A,
       rst_ni
       |=>
       cnt_o == $past(cnt_next_o),
       clk_i, err_o || fpv_err_present || !rst_ni)
 
   // Clear
-  `ASSERT(ClrFwd_A,
+  `CALIPTRA_ASSERT(ClrFwd_A,
       rst_ni && clr_i
       |=>
       (cnt_o == ResetValue) &&
       (cnt_q[1] == ({Width{1'b1}} - ResetValue)),
       clk_i, err_o || fpv_err_present || !rst_ni)
-  `ASSERT(ClrBkwd_A,
+  `CALIPTRA_ASSERT(ClrBkwd_A,
       rst_ni && !(incr_en_i || decr_en_i || set_i) ##1
       $changed(cnt_o) && $changed(cnt_q[1])
       |->
@@ -172,13 +172,13 @@ module prim_count #(
       clk_i, err_o || fpv_err_present || !rst_ni)
 
   // Set
-  `ASSERT(SetFwd_A,
+  `CALIPTRA_ASSERT(SetFwd_A,
       rst_ni && set_i && !clr_i
       |=>
       (cnt_o == $past(set_cnt_i)) &&
       (cnt_q[1] == ({Width{1'b1}} - $past(set_cnt_i))),
       clk_i, err_o || fpv_err_present || !rst_ni)
-  `ASSERT(SetBkwd_A,
+  `CALIPTRA_ASSERT(SetBkwd_A,
       rst_ni && !(incr_en_i || decr_en_i || clr_i) ##1
       $changed(cnt_o) && $changed(cnt_q[1])
       |->
@@ -186,30 +186,30 @@ module prim_count #(
       clk_i, err_o || fpv_err_present || !rst_ni)
 
   // Do not count if both increment and decrement are asserted.
-  `ASSERT(IncrDecrUpDnCnt_A,
+  `CALIPTRA_ASSERT(IncrDecrUpDnCnt_A,
       rst_ni && incr_en_i && decr_en_i && !(clr_i || set_i)
       |=>
       $stable(cnt_o) && $stable(cnt_q[1]),
       clk_i, err_o || fpv_err_present || !rst_ni)
 
   // Up counter
-  `ASSERT(IncrUpCnt_A,
+  `CALIPTRA_ASSERT(IncrUpCnt_A,
       rst_ni && incr_en_i && !(clr_i || set_i || decr_en_i)
       |=>
       cnt_o == min($past(cnt_o) + $past({2'b0, step_i}), {2'b0, {Width{1'b1}}}),
       clk_i, err_o || fpv_err_present || !rst_ni)
-  `ASSERT(IncrDnCnt_A,
+  `CALIPTRA_ASSERT(IncrDnCnt_A,
       rst_ni && incr_en_i && !(clr_i || set_i || decr_en_i)
       |=>
       cnt_q[1] == max($past(signed'({2'b0, cnt_q[1]})) - $past({2'b0, step_i}), '0),
       clk_i, err_o || fpv_err_present || !rst_ni)
-  `ASSERT(UpCntIncrStable_A,
+  `CALIPTRA_ASSERT(UpCntIncrStable_A,
       incr_en_i && !(clr_i || set_i || decr_en_i) &&
       cnt_o == {Width{1'b1}}
       |=>
       $stable(cnt_o),
       clk_i, err_o || fpv_err_present || !rst_ni)
-  `ASSERT(UpCntDecrStable_A,
+  `CALIPTRA_ASSERT(UpCntDecrStable_A,
       decr_en_i && !(clr_i || set_i || incr_en_i) &&
       cnt_o == '0
       |=>
@@ -217,23 +217,23 @@ module prim_count #(
       clk_i, err_o || fpv_err_present || !rst_ni)
 
   // Down counter
-  `ASSERT(DecrUpCnt_A,
+  `CALIPTRA_ASSERT(DecrUpCnt_A,
       rst_ni && decr_en_i && !(clr_i || set_i || incr_en_i)
       |=>
       cnt_o == max($past(signed'({2'b0, cnt_o})) - $past({2'b0, step_i}), '0),
       clk_i, err_o || fpv_err_present || !rst_ni)
-  `ASSERT(DecrDnCnt_A,
+  `CALIPTRA_ASSERT(DecrDnCnt_A,
       rst_ni && decr_en_i && !(clr_i || set_i || incr_en_i)
       |=>
       cnt_q[1] == min($past(cnt_q[1]) + $past({2'b0, step_i}), {2'b0, {Width{1'b1}}}),
       clk_i, err_o || fpv_err_present || !rst_ni)
-  `ASSERT(DnCntIncrStable_A,
+  `CALIPTRA_ASSERT(DnCntIncrStable_A,
       rst_ni && incr_en_i && !(clr_i || set_i || decr_en_i) &&
       cnt_q[1] == '0
       |=>
       $stable(cnt_q[1]),
       clk_i, err_o || fpv_err_present || !rst_ni)
-  `ASSERT(DnCntDecrStable_A,
+  `CALIPTRA_ASSERT(DnCntDecrStable_A,
       rst_ni && decr_en_i && !(clr_i || set_i || incr_en_i) &&
       cnt_q[1] == {Width{1'b1}}
       |=>
@@ -241,21 +241,21 @@ module prim_count #(
       clk_i, err_o || fpv_err_present || !rst_ni)
 
   // Error
-  `ASSERT(CntErrForward_A,
+  `CALIPTRA_ASSERT(CntErrForward_A,
       (cnt_q[1] + cnt_q[0]) != {Width{1'b1}}
       |->
       err_o)
-  `ASSERT(CntErrBackward_A,
+  `CALIPTRA_ASSERT(CntErrBackward_A,
       err_o
       |->
       (cnt_q[1] + cnt_q[0]) != {Width{1'b1}})
 
   // This logic that will be assign to one, when user adds macro
-  // ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT to check the error with alert, in case that prim_count
+  // CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT to check the error with alert, in case that prim_count
   // is used in design without adding this assertion check.
   logic unused_assert_connected;
 
-  `ASSERT_INIT_NET(AssertConnected_A, unused_assert_connected === 1'b1 || !EnableAlertTriggerSVA)
+  `CALIPTRA_ASSERT_INIT_NET(AssertConnected_A, unused_assert_connected === 1'b1 || !EnableAlertTriggerSVA)
 `endif
 
 endmodule // prim_count

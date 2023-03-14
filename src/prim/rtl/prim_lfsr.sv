@@ -323,14 +323,14 @@ module prim_lfsr #(
     initial begin : p_randomize_default_seed
       if (!$value$plusargs("prim_lfsr_use_default_seed=%0d", prim_lfsr_use_default_seed)) begin
         // 30% of the time, use the DefaultSeed parameter; 70% of the time, randomize it.
-        `ASSERT_I(UseDefaultSeedRandomizeCheck_A, std::randomize(prim_lfsr_use_default_seed) with {
+        `CALIPTRA_ASSERT_I(UseDefaultSeedRandomizeCheck_A, std::randomize(prim_lfsr_use_default_seed) with {
                                                   prim_lfsr_use_default_seed dist {0:/7, 1:/3};})
       end
       if (prim_lfsr_use_default_seed) begin
         DefaultSeedLocal = DefaultSeed;
       end else begin
         // Randomize the DefaultSeedLocal ensuring its not all 0s or all 1s.
-        `ASSERT_I(DefaultSeedLocalRandomizeCheck_A, std::randomize(DefaultSeedLocal) with {
+        `CALIPTRA_ASSERT_I(DefaultSeedLocalRandomizeCheck_A, std::randomize(DefaultSeedLocal) with {
                                                     !(DefaultSeedLocal inside {'0, '1});})
       end
       $display("%m: DefaultSeed = 0x%0h, DefaultSeedLocal = 0x%0h", DefaultSeed, DefaultSeedLocal);
@@ -353,8 +353,8 @@ module prim_lfsr #(
     end else begin : gen_lut
       assign coeffs = GAL_XOR_COEFFS[LfsrDw-GAL_XOR_LUT_OFF][LfsrDw-1:0];
       // check that the most significant bit of polynomial is 1
-      `ASSERT_INIT(MinLfsrWidth_A, LfsrDw >= $low(GAL_XOR_COEFFS)+GAL_XOR_LUT_OFF)
-      `ASSERT_INIT(MaxLfsrWidth_A, LfsrDw <= $high(GAL_XOR_COEFFS)+GAL_XOR_LUT_OFF)
+      `CALIPTRA_ASSERT_INIT(MinLfsrWidth_A, LfsrDw >= $low(GAL_XOR_COEFFS)+GAL_XOR_LUT_OFF)
+      `CALIPTRA_ASSERT_INIT(MaxLfsrWidth_A, LfsrDw <= $high(GAL_XOR_COEFFS)+GAL_XOR_LUT_OFF)
     end
 
     // calculate next state using internal XOR feedback and entropy input
@@ -364,7 +364,7 @@ module prim_lfsr #(
     assign lockup = ~(|lfsr_q);
 
     // check that seed is not all-zero
-    `ASSERT_INIT(DefaultSeedNzCheck_A, |DefaultSeedLocal)
+    `CALIPTRA_ASSERT_INIT(DefaultSeedNzCheck_A, |DefaultSeedLocal)
 
 
   ////////////////////
@@ -378,8 +378,8 @@ module prim_lfsr #(
     end else begin : gen_lut
       assign coeffs = FIB_XNOR_COEFFS[LfsrDw-FIB_XNOR_LUT_OFF][LfsrDw-1:0];
       // check that the most significant bit of polynomial is 1
-      `ASSERT_INIT(MinLfsrWidth_A, LfsrDw >= $low(FIB_XNOR_COEFFS)+FIB_XNOR_LUT_OFF)
-      `ASSERT_INIT(MaxLfsrWidth_A, LfsrDw <= $high(FIB_XNOR_COEFFS)+FIB_XNOR_LUT_OFF)
+      `CALIPTRA_ASSERT_INIT(MinLfsrWidth_A, LfsrDw >= $low(FIB_XNOR_COEFFS)+FIB_XNOR_LUT_OFF)
+      `CALIPTRA_ASSERT_INIT(MaxLfsrWidth_A, LfsrDw <= $high(FIB_XNOR_COEFFS)+FIB_XNOR_LUT_OFF)
     end
 
     // calculate next state using external XNOR feedback and entropy input
@@ -389,7 +389,7 @@ module prim_lfsr #(
     assign lockup = &lfsr_q;
 
     // check that seed is not all-ones
-    `ASSERT_INIT(DefaultSeedNzCheck_A, !(&DefaultSeedLocal))
+    `CALIPTRA_ASSERT_INIT(DefaultSeedNzCheck_A, !(&DefaultSeedLocal))
 
 
   /////////////
@@ -399,7 +399,7 @@ module prim_lfsr #(
     assign coeffs = '0;
     assign next_lfsr_state = '0;
     assign lockup = 1'b0;
-    `ASSERT_INIT(UnknownLfsrType_A, 0)
+    `CALIPTRA_ASSERT_INIT(UnknownLfsrType_A, 0)
   end
 
 
@@ -490,7 +490,7 @@ module prim_lfsr #(
         end
       end
       // All bit positions must be marked with 1.
-      `ASSERT(SboxPermutationCheck_A, &sbox_perm_test)
+      `CALIPTRA_ASSERT(SboxPermutationCheck_A, &sbox_perm_test)
 `endif
 
 `ifdef FPV_ON
@@ -499,10 +499,10 @@ module prim_lfsr #(
       // offsets.
       int shift;
       int unsigned sk, sj;
-      `ASSUME(SjSkRange_M, (sj < NumSboxes) && (sk < NumSboxes))
-      `ASSUME(SjSkDifferent_M, sj != sk)
-      `ASSUME(SjSkStable_M, ##1 $stable(sj) && $stable(sk) && $stable(shift))
-      `ASSERT(SboxInputIndexGroupIsUnique_A,
+      `CALIPTRA_ASSUME(SjSkRange_M, (sj < NumSboxes) && (sk < NumSboxes))
+      `CALIPTRA_ASSUME(SjSkDifferent_M, sj != sk)
+      `CALIPTRA_ASSUME(SjSkStable_M, ##1 $stable(sj) && $stable(sk) && $stable(shift))
+      `CALIPTRA_ASSERT(SboxInputIndexGroupIsUnique_A,
           !((((sbox_in_indices[sj * 4 + 0] + shift) % LfsrDw) == sbox_in_indices[sk * 4 + 0]) &&
             (((sbox_in_indices[sj * 4 + 1] + shift) % LfsrDw) == sbox_in_indices[sk * 4 + 1]) &&
             (((sbox_in_indices[sj * 4 + 2] + shift) % LfsrDw) == sbox_in_indices[sk * 4 + 2]) &&
@@ -512,9 +512,9 @@ module prim_lfsr #(
       // i.e. no two neighboring bits are mapped to neighboring bit positions.
       int y;
       int unsigned ik;
-      `ASSUME(IkYRange_M, (ik < LfsrDw) && (y == 1 || y == -1))
-      `ASSUME(IkStable_M, ##1 $stable(ik) && $stable(y))
-      `ASSERT(IndicesNotAdjacent_A, (sbox_in_indices[ik] - sbox_in_indices[(ik + y) % LfsrDw]) != 1)
+      `CALIPTRA_ASSUME(IkYRange_M, (ik < LfsrDw) && (y == 1 || y == -1))
+      `CALIPTRA_ASSUME(IkStable_M, ##1 $stable(ik) && $stable(y))
+      `CALIPTRA_ASSERT(IndicesNotAdjacent_A, (sbox_in_indices[ik] - sbox_in_indices[(ik + y) % LfsrDw]) != 1)
 `endif
 
     // Use the permutation indices to create the SBox layer
@@ -561,7 +561,7 @@ module prim_lfsr #(
   // shared assertions //
   ///////////////////////
 
-  `ASSERT_KNOWN(DataKnownO_A, state_o)
+  `CALIPTRA_ASSERT_KNOWN(DataKnownO_A, state_o)
 
 // the code below is not meant to be synthesized,
 // but it is intended to be used in simulation and FPV
@@ -608,7 +608,7 @@ module prim_lfsr #(
   // this can happen since the disable_iff evaluates using unsampled values,
   // meaning that the assertion may already read rst_ni == 1 on an active
   // clock edge while the flops in the design have not yet changed state.
-  `ASSERT(NextStateCheck_A, ##1 lfsr_en_i && !seed_en_i |=> lfsr_q ==
+  `CALIPTRA_ASSERT(NextStateCheck_A, ##1 lfsr_en_i && !seed_en_i |=> lfsr_q ==
       compute_next_state(coeffs, $past(entropy_i), $past(lfsr_q)))
 
   // Only check this if enabled.
@@ -621,33 +621,33 @@ module prim_lfsr #(
         lfsr_perm_test[StatePerm[k]] = 1'b1;
       end
       // All bit positions must be marked with 1.
-      `ASSERT_I(PermutationCheck_A, &lfsr_perm_test)
+      `CALIPTRA_ASSERT_I(PermutationCheck_A, &lfsr_perm_test)
     end
   end
 
 `endif
 
-  `ASSERT_INIT(InputWidth_A, LfsrDw >= EntropyDw)
-  `ASSERT_INIT(OutputWidth_A, LfsrDw >= StateOutDw)
+  `CALIPTRA_ASSERT_INIT(InputWidth_A, LfsrDw >= EntropyDw)
+  `CALIPTRA_ASSERT_INIT(OutputWidth_A, LfsrDw >= StateOutDw)
 
   // MSB must be one in any case
-  `ASSERT(CoeffCheck_A, coeffs[LfsrDw-1])
+  `CALIPTRA_ASSERT(CoeffCheck_A, coeffs[LfsrDw-1])
 
   // output check
-  `ASSERT_KNOWN(OutputKnown_A, state_o)
+  `CALIPTRA_ASSERT_KNOWN(OutputKnown_A, state_o)
   if (!StatePermEn && !NonLinearOut) begin : gen_output_sva
-    `ASSERT(OutputCheck_A, state_o == StateOutDw'(lfsr_q))
+    `CALIPTRA_ASSERT(OutputCheck_A, state_o == StateOutDw'(lfsr_q))
   end
   // if no external input changes the lfsr state, a lockup must not occur (by design)
-  //`ASSERT(NoLockups_A, (!entropy_i) && (!seed_en_i) |=> !lockup, clk_i, !rst_ni)
-  `ASSERT(NoLockups_A, lfsr_en_i && !entropy_i && !seed_en_i |=> !lockup)
+  //`CALIPTRA_ASSERT(NoLockups_A, (!entropy_i) && (!seed_en_i) |=> !lockup, clk_i, !rst_ni)
+  `CALIPTRA_ASSERT(NoLockups_A, lfsr_en_i && !entropy_i && !seed_en_i |=> !lockup)
 
   // this can be disabled if unused in order to not distort coverage
   if (ExtSeedSVA) begin : gen_ext_seed_sva
     // check that external seed is correctly loaded into the state
     // rst_ni is used directly as part of the pre-condition since the usage of rst_ni
     // in disable_iff is unsampled.  See #1985 for more details
-    `ASSERT(ExtDefaultSeedInputCheck_A, (seed_en_i && rst_ni) |=> lfsr_q == $past(seed_i))
+    `CALIPTRA_ASSERT(ExtDefaultSeedInputCheck_A, (seed_en_i && rst_ni) |=> lfsr_q == $past(seed_i))
   end
 
   // if the external seed mechanism is not used,
@@ -655,12 +655,12 @@ module prim_lfsr #(
   // in order to not distort coverage, this SVA can be disabled in such cases
   if (LockupSVA) begin : gen_lockup_mechanism_sva
     // check that a stuck LFSR is correctly reseeded
-    `ASSERT(LfsrLockupCheck_A, lfsr_en_i && lockup && !seed_en_i |=> !lockup)
+    `CALIPTRA_ASSERT(LfsrLockupCheck_A, lfsr_en_i && lockup && !seed_en_i |=> !lockup)
   end
 
   // If non-linear output requested, the LFSR width must be a power of 2 and greater than 16.
   if(NonLinearOut) begin : gen_nonlinear_align_check_sva
-    `ASSERT_INIT(SboxByteAlign_A, 2**$clog2(LfsrDw) == LfsrDw && LfsrDw >= 16)
+    `CALIPTRA_ASSERT_INIT(SboxByteAlign_A, 2**$clog2(LfsrDw) == LfsrDw && LfsrDw >= 16)
   end
 
   if (MaxLenSVA) begin : gen_max_len_sva
@@ -689,9 +689,9 @@ module prim_lfsr #(
       end
     end
 
-    `ASSERT(MaximalLengthCheck0_A, cnt_q == 0 |-> lfsr_q == DefaultSeedLocal,
+    `CALIPTRA_ASSERT(MaximalLengthCheck0_A, cnt_q == 0 |-> lfsr_q == DefaultSeedLocal,
         clk_i, !rst_ni || perturbed_q)
-    `ASSERT(MaximalLengthCheck1_A, cnt_q != 0 |-> lfsr_q != DefaultSeedLocal,
+    `CALIPTRA_ASSERT(MaximalLengthCheck1_A, cnt_q != 0 |-> lfsr_q != DefaultSeedLocal,
         clk_i, !rst_ni || perturbed_q)
 `endif
   end

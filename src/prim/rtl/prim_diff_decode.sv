@@ -211,38 +211,38 @@ module prim_diff_decode #(
   // shared assertions
   // sigint -> level stays the same during sigint
   // $isunknown is needed to avoid false assertion in first clock cycle
-  `ASSERT(SigintLevelCheck_A, ##1 sigint_o |-> $stable(level_o))
+  `CALIPTRA_ASSERT(SigintLevelCheck_A, ##1 sigint_o |-> $stable(level_o))
   // sigint -> no additional events asserted at output
-  `ASSERT(SigintEventCheck_A, sigint_o |-> !event_o)
-  `ASSERT(SigintRiseCheck_A,  sigint_o |-> !rise_o)
-  `ASSERT(SigintFallCheck_A,  sigint_o |-> !fall_o)
+  `CALIPTRA_ASSERT(SigintEventCheck_A, sigint_o |-> !event_o)
+  `CALIPTRA_ASSERT(SigintRiseCheck_A,  sigint_o |-> !rise_o)
+  `CALIPTRA_ASSERT(SigintFallCheck_A,  sigint_o |-> !fall_o)
 
   if (AsyncOn) begin : gen_async_assert
     // assertions for asynchronous case
 `ifdef INC_ASSERT
   `ifndef FPV_ALERT_NO_SIGINT_ERR
     // correctly detect sigint issue (only one transition cycle of permissible due to skew)
-    `ASSERT(SigintCheck0_A, gen_async.diff_pd == gen_async.diff_nd [*2] |-> sigint_o)
+    `CALIPTRA_ASSERT(SigintCheck0_A, gen_async.diff_pd == gen_async.diff_nd [*2] |-> sigint_o)
     // the synchronizer adds 2 cycles of latency with respect to input signals.
-    `ASSERT(SigintCheck1_A,
+    `CALIPTRA_ASSERT(SigintCheck1_A,
         ##1 (gen_async.diff_pd ^ gen_async.diff_nd) &&
         $stable(gen_async.diff_pd) && $stable(gen_async.diff_nd) ##1
         $rose(gen_async.diff_pd) && $stable(gen_async.diff_nd) ##1
         $stable(gen_async.diff_pd) && $fell(gen_async.diff_nd)
         |-> rise_o)
-    `ASSERT(SigintCheck2_A,
+    `CALIPTRA_ASSERT(SigintCheck2_A,
         ##1 (gen_async.diff_pd ^ gen_async.diff_nd) &&
         $stable(gen_async.diff_pd) && $stable(gen_async.diff_nd) ##1
         $fell(gen_async.diff_pd) && $stable(gen_async.diff_nd) ##1
         $stable(gen_async.diff_pd) && $rose(gen_async.diff_nd)
         |-> fall_o)
-    `ASSERT(SigintCheck3_A,
+    `CALIPTRA_ASSERT(SigintCheck3_A,
         ##1 (gen_async.diff_pd ^ gen_async.diff_nd) &&
         $stable(gen_async.diff_pd) && $stable(gen_async.diff_nd) ##1
         $rose(gen_async.diff_nd) && $stable(gen_async.diff_pd) ##1
         $stable(gen_async.diff_nd) && $fell(gen_async.diff_pd)
         |-> fall_o)
-    `ASSERT(SigintCheck4_A,
+    `CALIPTRA_ASSERT(SigintCheck4_A,
         ##1 (gen_async.diff_pd ^ gen_async.diff_nd) &&
         $stable(gen_async.diff_pd) && $stable(gen_async.diff_nd) ##1
         $fell(gen_async.diff_nd) && $stable(gen_async.diff_pd) ##1
@@ -251,17 +251,17 @@ module prim_diff_decode #(
   `endif
 
     // correctly detect edges
-    `ASSERT(RiseCheck_A,
+    `CALIPTRA_ASSERT(RiseCheck_A,
         !sigint_o ##1 $rose(gen_async.diff_pd) && (gen_async.diff_pd ^ gen_async.diff_nd) |->
         ##[0:1] rise_o,  clk_i, !rst_ni || sigint_o)
-    `ASSERT(FallCheck_A,
+    `CALIPTRA_ASSERT(FallCheck_A,
         !sigint_o ##1 $fell(gen_async.diff_pd) && (gen_async.diff_pd ^ gen_async.diff_nd) |->
         ##[0:1] fall_o,  clk_i, !rst_ni || sigint_o)
-    `ASSERT(EventCheck_A,
+    `CALIPTRA_ASSERT(EventCheck_A,
         !sigint_o ##1 $changed(gen_async.diff_pd) && (gen_async.diff_pd ^ gen_async.diff_nd) |->
         ##[0:1] event_o, clk_i, !rst_ni || sigint_o)
     // correctly detect level
-    `ASSERT(LevelCheck0_A,
+    `CALIPTRA_ASSERT(LevelCheck0_A,
         !sigint_o && (gen_async.diff_pd ^ gen_async.diff_nd) [*2] |->
         gen_async.diff_pd == level_o,
         clk_i, !rst_ni || sigint_o)
@@ -271,15 +271,15 @@ module prim_diff_decode #(
 
   `ifndef FPV_ALERT_NO_SIGINT_ERR
     // correctly detect sigint issue
-    `ASSERT(SigintCheck_A, diff_pi == diff_ni |-> sigint_o)
+    `CALIPTRA_ASSERT(SigintCheck_A, diff_pi == diff_ni |-> sigint_o)
   `endif
 
     // correctly detect edges
-    `ASSERT(RiseCheck_A,  ##1 $rose(diff_pi)    && (diff_pi ^ diff_ni) |->  rise_o)
-    `ASSERT(FallCheck_A,  ##1 $fell(diff_pi)    && (diff_pi ^ diff_ni) |->  fall_o)
-    `ASSERT(EventCheck_A, ##1 $changed(diff_pi) && (diff_pi ^ diff_ni) |-> event_o)
+    `CALIPTRA_ASSERT(RiseCheck_A,  ##1 $rose(diff_pi)    && (diff_pi ^ diff_ni) |->  rise_o)
+    `CALIPTRA_ASSERT(FallCheck_A,  ##1 $fell(diff_pi)    && (diff_pi ^ diff_ni) |->  fall_o)
+    `CALIPTRA_ASSERT(EventCheck_A, ##1 $changed(diff_pi) && (diff_pi ^ diff_ni) |-> event_o)
     // correctly detect level
-    `ASSERT(LevelCheck_A, (diff_pi ^ diff_ni) |-> diff_pi == level_o)
+    `CALIPTRA_ASSERT(LevelCheck_A, (diff_pi ^ diff_ni) |-> diff_pi == level_o)
   end
 
 endmodule : prim_diff_decode
