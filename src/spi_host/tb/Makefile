@@ -1,7 +1,7 @@
 VERILATOR = verilator
 
 IPNAME = spi_host
-IPDIR = $(WORKSPACE)/Caliptra/src/$(IPNAME)
+IPDIR = $(WORKSPACE)/src/$(IPNAME)
 TBFILES = $(IPDIR)/config/$(IPNAME).vf
 VERILATOR_LINT_FILES = $(IPDIR)/config/$(IPNAME).vlt
 
