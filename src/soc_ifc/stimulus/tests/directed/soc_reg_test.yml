@@ -13,5 +13,8 @@
 # limitations under the License.
 #
 ---
-seed: 1
-testname: kv_pcr_hash_extend
+plusargs:
+  - +SOC_IFC_TEST='soc_reg_test'
+
+testname: soc_reg_test
+seed: ${PLAYBOOK_RANDOM_SEED}

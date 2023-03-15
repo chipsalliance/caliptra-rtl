@@ -1,0 +1,16 @@
+---
+provides: [uart]
+schema_version: 2.4.0
+requires:
+  - prim_generic
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/uart_tx.sv
+      - $COMPILE_ROOT/rtl/uart_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/uart_reg_top.sv
+      - $COMPILE_ROOT/rtl/uart_rx.sv
+      - $COMPILE_ROOT/rtl/uart.sv
+      - $COMPILE_ROOT/rtl/uart_core.sv
+    tops: [uart]

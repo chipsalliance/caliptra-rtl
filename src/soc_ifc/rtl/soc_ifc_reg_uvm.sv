@@ -367,6 +367,54 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_GENERIC_OUTPUT_WIRES
 
+    // Reg - soc_ifc_reg::CPTRA_HW_REV_ID
+    class soc_ifc_reg__CPTRA_HW_REV_ID extends uvm_reg;
+        rand uvm_reg_field REV_ID;
+
+        function new(string name = "soc_ifc_reg__CPTRA_HW_REV_ID");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.REV_ID = new("REV_ID");
+            this.REV_ID.configure(this, 32, 0, "RO", 0, 'h1, 1, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__CPTRA_HW_REV_ID
+
+    // Reg - soc_ifc_reg::CPTRA_FW_REV_ID
+    class soc_ifc_reg__CPTRA_FW_REV_ID extends uvm_reg;
+        rand uvm_reg_field REV_ID;
+
+        function new(string name = "soc_ifc_reg__CPTRA_FW_REV_ID");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.REV_ID = new("REV_ID");
+            this.REV_ID.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__CPTRA_FW_REV_ID
+
+    // Reg - soc_ifc_reg::CPTRA_HW_CONFIG
+    class soc_ifc_reg__CPTRA_HW_CONFIG extends uvm_reg;
+        rand uvm_reg_field iTRNG_en;
+        rand uvm_reg_field QSPI_en;
+        rand uvm_reg_field I3C_en;
+
+        function new(string name = "soc_ifc_reg__CPTRA_HW_CONFIG");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.iTRNG_en = new("iTRNG_en");
+            this.iTRNG_en.configure(this, 1, 0, "RO", 1, 'h0, 0, 1, 0);
+            this.QSPI_en = new("QSPI_en");
+            this.QSPI_en.configure(this, 1, 1, "RO", 1, 'h0, 0, 1, 0);
+            this.I3C_en = new("I3C_en");
+            this.I3C_en.configure(this, 1, 2, "RO", 1, 'h0, 0, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__CPTRA_HW_CONFIG
+
     // Reg - soc_ifc_reg::fuse_uds_seed
     class soc_ifc_reg__fuse_uds_seed extends uvm_reg;
         rand uvm_reg_field seed;
@@ -1235,6 +1283,9 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__CPTRA_CLK_GATING_EN CPTRA_CLK_GATING_EN;
         rand soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES CPTRA_GENERIC_INPUT_WIRES[2];
         rand soc_ifc_reg__CPTRA_GENERIC_OUTPUT_WIRES CPTRA_GENERIC_OUTPUT_WIRES[2];
+        rand soc_ifc_reg__CPTRA_HW_REV_ID CPTRA_HW_REV_ID;
+        rand soc_ifc_reg__CPTRA_FW_REV_ID CPTRA_FW_REV_ID[2];
+        rand soc_ifc_reg__CPTRA_HW_CONFIG CPTRA_HW_CONFIG;
         rand soc_ifc_reg__fuse_uds_seed fuse_uds_seed[12];
         rand soc_ifc_reg__fuse_field_entropy fuse_field_entropy[8];
         rand soc_ifc_reg__fuse_key_manifest_pk_hash fuse_key_manifest_pk_hash[12];
@@ -1391,6 +1442,23 @@ package soc_ifc_reg_uvm;
                 this.CPTRA_GENERIC_OUTPUT_WIRES[i0].build();
                 this.default_map.add_reg(this.CPTRA_GENERIC_OUTPUT_WIRES[i0], 'hc8 + i0*'h4);
             end
+            this.CPTRA_HW_REV_ID = new("CPTRA_HW_REV_ID");
+            this.CPTRA_HW_REV_ID.configure(this);
+
+            this.CPTRA_HW_REV_ID.build();
+            this.default_map.add_reg(this.CPTRA_HW_REV_ID, 'hd0);
+            foreach(this.CPTRA_FW_REV_ID[i0]) begin
+                this.CPTRA_FW_REV_ID[i0] = new($sformatf("CPTRA_FW_REV_ID[%0d]", i0));
+                this.CPTRA_FW_REV_ID[i0].configure(this);
+                
+                this.CPTRA_FW_REV_ID[i0].build();
+                this.default_map.add_reg(this.CPTRA_FW_REV_ID[i0], 'hd4 + i0*'h4);
+            end
+            this.CPTRA_HW_CONFIG = new("CPTRA_HW_CONFIG");
+            this.CPTRA_HW_CONFIG.configure(this);
+
+            this.CPTRA_HW_CONFIG.build();
+            this.default_map.add_reg(this.CPTRA_HW_CONFIG, 'hdc);
             foreach(this.fuse_uds_seed[i0]) begin
                 this.fuse_uds_seed[i0] = new($sformatf("fuse_uds_seed[%0d]", i0));
                 this.fuse_uds_seed[i0].configure(this);

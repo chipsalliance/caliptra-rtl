@@ -273,30 +273,30 @@ module prim_alert_receiver
 `endif
 
   // check whether all outputs have a good known state after reset
-  `ASSERT_KNOWN(PingOkKnownO_A, ping_ok_o)
-  `ASSERT_KNOWN(IntegFailKnownO_A, integ_fail_o)
-  `ASSERT_KNOWN(AlertKnownO_A, alert_o)
-  `ASSERT_KNOWN(PingPKnownO_A, alert_rx_o)
+  `CALIPTRA_ASSERT_KNOWN(PingOkKnownO_A, ping_ok_o)
+  `CALIPTRA_ASSERT_KNOWN(IntegFailKnownO_A, integ_fail_o)
+  `CALIPTRA_ASSERT_KNOWN(AlertKnownO_A, alert_o)
+  `CALIPTRA_ASSERT_KNOWN(PingPKnownO_A, alert_rx_o)
 
   // check encoding of outgoing diffpairs. note that during init, the outgoing diffpairs are
   // supposed to be incorrectly encoded on purpose.
   // shift sequence two cycles to the right to avoid reset effects.
-  `ASSERT(PingDiffOk_A, alert_rx_o.ping_p ^ alert_rx_o.ping_n)
-  `ASSERT(AckDiffOk_A, ##2 $past(send_init) ^ alert_rx_o.ack_p ^ alert_rx_o.ack_n)
-  `ASSERT(InitReq_A, mubi4_test_true_strict(init_trig_i) &&
+  `CALIPTRA_ASSERT(PingDiffOk_A, alert_rx_o.ping_p ^ alert_rx_o.ping_n)
+  `CALIPTRA_ASSERT(AckDiffOk_A, ##2 $past(send_init) ^ alert_rx_o.ack_p ^ alert_rx_o.ack_n)
+  `CALIPTRA_ASSERT(InitReq_A, mubi4_test_true_strict(init_trig_i) &&
           !(state_q inside {InitReq, InitAckWait}) |=> send_init)
 
   // ping request at input -> need to see encoded ping request
-  `ASSERT(PingRequest0_A, ##1 $rose(ping_req_i) && !state_q inside {InitReq, InitAckWait}
+  `CALIPTRA_ASSERT(PingRequest0_A, ##1 $rose(ping_req_i) && !state_q inside {InitReq, InitAckWait}
       |=> $changed(alert_rx_o.ping_p))
   // ping response implies it has been requested
-  `ASSERT(PingResponse0_A, ping_ok_o |-> ping_pending_q)
+  `CALIPTRA_ASSERT(PingResponse0_A, ping_ok_o |-> ping_pending_q)
   // correctly latch ping request
-  `ASSERT(PingPending_A, ##1 $rose(ping_req_i) |=> ping_pending_q)
+  `CALIPTRA_ASSERT(PingPending_A, ##1 $rose(ping_req_i) |=> ping_pending_q)
 
   if (AsyncOn) begin : gen_async_assert
     // signal integrity check propagation
-    `ASSERT(SigInt_A,
+    `CALIPTRA_ASSERT(SigInt_A,
         alert_tx_i.alert_p == alert_tx_i.alert_n [*2] ##2
         !(state_q inside {InitReq, InitAckWait}) &&
         mubi4_test_false_loose(init_trig_i)
@@ -304,7 +304,7 @@ module prim_alert_receiver
         integ_fail_o)
     // TODO: need to add skewed cases as well, the assertions below assume no skew at the moment
     // ping response
-    `ASSERT(PingResponse1_A,
+    `CALIPTRA_ASSERT(PingResponse1_A,
         ##1 $rose(alert_tx_i.alert_p) &&
         (alert_tx_i.alert_p ^ alert_tx_i.alert_n) ##2
         state_q == Idle && ping_pending_q
@@ -312,7 +312,7 @@ module prim_alert_receiver
         ping_ok_o,
         clk_i, !rst_ni || integ_fail_o || mubi4_test_true_strict(init_trig_i))
     // alert
-    `ASSERT(Alert_A,
+    `CALIPTRA_ASSERT(Alert_A,
         ##1 $rose(alert_tx_i.alert_p) &&
         (alert_tx_i.alert_p ^ alert_tx_i.alert_n) ##2
         state_q == Idle &&
@@ -322,14 +322,14 @@ module prim_alert_receiver
         clk_i, !rst_ni || integ_fail_o || mubi4_test_true_strict(init_trig_i))
   end else begin : gen_sync_assert
     // signal integrity check propagation
-    `ASSERT(SigInt_A,
+    `CALIPTRA_ASSERT(SigInt_A,
         alert_tx_i.alert_p == alert_tx_i.alert_n &&
         !(state_q inside {InitReq, InitAckWait}) &&
         mubi4_test_false_loose(init_trig_i)
         |->
         integ_fail_o)
     // ping response
-    `ASSERT(PingResponse1_A,
+    `CALIPTRA_ASSERT(PingResponse1_A,
         ##1 $rose(alert_tx_i.alert_p) &&
         state_q == Idle &&
         ping_pending_q
@@ -337,7 +337,7 @@ module prim_alert_receiver
         ping_ok_o,
         clk_i, !rst_ni || integ_fail_o || mubi4_test_true_strict(init_trig_i))
     // alert
-    `ASSERT(Alert_A,
+    `CALIPTRA_ASSERT(Alert_A,
         ##1 $rose(alert_tx_i.alert_p) &&
         state_q == Idle &&
         !ping_pending_q
@@ -347,13 +347,13 @@ module prim_alert_receiver
   end
 
   // check in-band init request is always accepted
-  `ASSERT(InBandInitRequest_A,
+  `CALIPTRA_ASSERT(InBandInitRequest_A,
       mubi4_test_true_strict(init_trig_i) &&
       state_q != InitAckWait
       |=>
       state_q == InitReq)
   // check in-band init sequence moves FSM into IDLE state
-  `ASSERT(InBandInitSequence_A,
+  `CALIPTRA_ASSERT(InBandInitSequence_A,
       (state_q == InitReq &&
       mubi4_test_true_strict(init_trig_i)) ##1
       (alert_sigint &&
@@ -363,20 +363,20 @@ module prim_alert_receiver
       |=>
       state_q == Idle)
   // check there are no spurious alerts during init
-  `ASSERT(NoSpuriousAlertsDuringInit_A,
+  `CALIPTRA_ASSERT(NoSpuriousAlertsDuringInit_A,
       mubi4_test_true_strict(init_trig_i) ||
       (state_q inside {InitReq, InitAckWait})
       |->
       !alert_o)
   // check that there are no spurious ping OKs
-  `ASSERT(NoSpuriousPingOksDuringInit_A,
+  `CALIPTRA_ASSERT(NoSpuriousPingOksDuringInit_A,
       (mubi4_test_true_strict(init_trig_i) ||
       (state_q inside {InitReq, InitAckWait})) &&
       !ping_pending_q
       |->
       !ping_ok_o)
   // check ping request is bypassed when in init state
-  `ASSERT(PingOkBypassDuringInit_A,
+  `CALIPTRA_ASSERT(PingOkBypassDuringInit_A,
       $rose(ping_req_i) ##1
       state_q == InitReq &&
       mubi4_test_true_strict(init_trig_i)

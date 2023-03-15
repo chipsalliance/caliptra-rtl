@@ -114,7 +114,7 @@ always_comb begin : keyvault_ctrl
                 pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.hwclr = pv_reg_hwif_out.PCR_CTRL[entry].clear.value;
                 pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.we |= pv_write[client].write_en &(pv_write[client].write_entry == entry) & 
                                                                   (pv_write[client].write_offset == dword);
-                pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.next |= pv_write[client].write_en ? pv_write[client].write_data : '0;
+                pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.next |= pv_write[client].write_en & (pv_write[client].write_entry == entry) ? pv_write[client].write_data : '0;
             end 
         end
     end

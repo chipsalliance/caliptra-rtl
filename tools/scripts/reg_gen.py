@@ -27,7 +27,7 @@ import rdl_post_process
 
 #output directory for dumping files
 rtl_output_dir = os.path.abspath(os.path.dirname(sys.argv[1]))
-workspace = os.environ.get('WORKSPACE')
+repo_root = os.environ.get('CALIPTRA_ROOT')
 
 # Listener to retrieve the address width at the CPU IF and write as a param to the pkg
 class SVPkgAppendingListener(RDLListener):
@@ -60,7 +60,7 @@ rdlc = RDLCompiler()
 try:
     # Compile your RDL files
     #compile the kv defines so that rdl files including kv controls have the definition
-    rdlc.compile_file(workspace + "/Caliptra/src/keyvault/rtl/kv_def.rdl") 
+    rdlc.compile_file(os.path.join(repo_root, "src/keyvault/rtl/kv_def.rdl")) 
     rdlc.compile_file(sys.argv[1])
 
     # Elaborate the design

@@ -70,7 +70,7 @@ addrmap mbox_csr {
         desc="Data in register, write the next data to mailbox
         [br]Caliptra Access: RW
         [br]SOC Access:      RW";
-        field {sw=rw; hw=na; swwe=valid_user; swmod=true;} datain[32];
+        field {sw=rw; hw=na; swwe=valid_user; swmod=true;} datain[32]=0;
     } mbox_datain;
 
     reg {
@@ -79,7 +79,7 @@ addrmap mbox_csr {
         [br]Caliptra Access: RO
         [br]SOC Access:      RO
         [br]TAP Access [in debug/manuf mode]: RO";
-        field {sw=rw; hw=rw; we; swwe; swacc=true;} dataout[32];
+        field {sw=rw; hw=rw; we; swwe; swacc=true;} dataout[32]=0;
     } mbox_dataout;
 
     reg {

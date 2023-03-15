@@ -75,6 +75,7 @@ module ecc_reg (
         logic [12-1:0]ECC_SIGN_S;
         logic [12-1:0]ECC_VERIFY_R;
         logic [12-1:0]ECC_IV;
+        logic [12-1:0]ECC_NONCE;
         logic ecc_kv_rd_pkey_ctrl;
         logic ecc_kv_rd_pkey_status;
         logic ecc_kv_rd_seed_ctrl;
@@ -141,6 +142,9 @@ module ecc_reg (
         for(int i0=0; i0<12; i0++) begin
             decoded_reg_strb.ECC_IV[i0] = cpuif_req_masked & (cpuif_addr == 'h480 + i0*'h4);
         end
+        for(int i0=0; i0<12; i0++) begin
+            decoded_reg_strb.ECC_NONCE[i0] = cpuif_req_masked & (cpuif_addr == 'h500 + i0*'h4);
+        end
         decoded_reg_strb.ecc_kv_rd_pkey_ctrl = cpuif_req_masked & (cpuif_addr == 'h600);
         decoded_reg_strb.ecc_kv_rd_pkey_status = cpuif_req_masked & (cpuif_addr == 'h604);
         decoded_reg_strb.ecc_kv_rd_seed_ctrl = cpuif_req_masked & (cpuif_addr == 'h608);
@@ -186,6 +190,10 @@ module ecc_reg (
                 logic next;
                 logic load_next;
             } ZEROIZE;
+            struct packed{
+                logic next;
+                logic load_next;
+            } PCR_SIGN;
         } ECC_CTRL;
         struct packed{
             struct packed{
@@ -255,6 +263,12 @@ module ecc_reg (
                 logic load_next;
             } IV;
         } [12-1:0]ECC_IV;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } NONCE;
+        } [12-1:0]ECC_NONCE;
         struct packed{
             struct packed{
                 logic next;
@@ -474,6 +488,9 @@ module ecc_reg (
             struct packed{
                 logic value;
             } ZEROIZE;
+            struct packed{
+                logic value;
+            } PCR_SIGN;
         } ECC_CTRL;
         struct packed{
             struct packed{
@@ -531,6 +548,11 @@ module ecc_reg (
                 logic [31:0] value;
             } IV;
         } [12-1:0]ECC_IV;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } NONCE;
+        } [12-1:0]ECC_NONCE;
         struct packed{
             struct packed{
                 logic value;
@@ -739,6 +761,28 @@ module ecc_reg (
         end
     end
     assign hwif_out.ECC_CTRL.ZEROIZE.value = field_storage.ECC_CTRL.ZEROIZE.value;
+    // Field: ecc_reg.ECC_CTRL.PCR_SIGN
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.ECC_CTRL.PCR_SIGN.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ECC_CTRL && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
+            next_c = decoded_wr_data[3:3];
+            load_next_c = '1;
+        end else if(hwif_in.ECC_CTRL.PCR_SIGN.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.ECC_CTRL.PCR_SIGN.next = next_c;
+        field_combo.ECC_CTRL.PCR_SIGN.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ECC_CTRL.PCR_SIGN.value <= 'h0;
+        end else if(field_combo.ECC_CTRL.PCR_SIGN.load_next) begin
+            field_storage.ECC_CTRL.PCR_SIGN.value <= field_combo.ECC_CTRL.PCR_SIGN.next;
+        end
+    end
+    assign hwif_out.ECC_CTRL.PCR_SIGN.value = field_storage.ECC_CTRL.PCR_SIGN.value;
     // Field: ecc_reg.ECC_SCACONFIG.POINT_RND_EN
     always_comb begin
         automatic logic [0:0] next_c = field_storage.ECC_SCACONFIG.POINT_RND_EN.value;
@@ -1032,6 +1076,30 @@ module ecc_reg (
             end
         end
         assign hwif_out.ECC_IV[i0].IV.value = field_storage.ECC_IV[i0].IV.value;
+    end
+    for(genvar i0=0; i0<12; i0++) begin
+        // Field: ecc_reg.ECC_NONCE[].NONCE
+        always_comb begin
+            automatic logic [31:0] next_c = field_storage.ECC_NONCE[i0].NONCE.value;
+            automatic logic load_next_c = '0;
+            if(decoded_reg_strb.ECC_NONCE[i0] && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
+                next_c = decoded_wr_data[31:0];
+                load_next_c = '1;
+            end else if(hwif_in.ECC_NONCE[i0].NONCE.hwclr) begin // HW Clear
+                next_c = '0;
+                load_next_c = '1;
+            end
+            field_combo.ECC_NONCE[i0].NONCE.next = next_c;
+            field_combo.ECC_NONCE[i0].NONCE.load_next = load_next_c;
+        end
+        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+            if(~hwif_in.reset_b) begin
+                field_storage.ECC_NONCE[i0].NONCE.value <= 'h0;
+            end else if(field_combo.ECC_NONCE[i0].NONCE.load_next) begin
+                field_storage.ECC_NONCE[i0].NONCE.value <= field_combo.ECC_NONCE[i0].NONCE.next;
+            end
+        end
+        assign hwif_out.ECC_NONCE[i0].NONCE.value = field_storage.ECC_NONCE[i0].NONCE.value;
     end
     // Field: ecc_reg.ecc_kv_rd_pkey_ctrl.read_en
     always_comb begin

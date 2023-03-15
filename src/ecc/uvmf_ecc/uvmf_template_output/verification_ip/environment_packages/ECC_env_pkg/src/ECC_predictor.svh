@@ -164,6 +164,8 @@ class ECC_predictor #(
       $fgets(line_read, fd_r);
       $sscanf(line_read, "%h", tmp_data); // seed, not used by predictor
       $fgets(line_read, fd_r);
+      $sscanf(line_read, "%h", tmp_data); // nonce, not used by predictor
+      $fgets(line_read, fd_r);
       $sscanf(line_read, "%h", R);
       $fgets(line_read, fd_r); 
       $sscanf(line_read, "%h", S);

@@ -60,12 +60,12 @@ class soc_ifc_env_pauser_init_sequence extends soc_ifc_env_sequence_base #(.CONF
     `uvm_info("SOC_IFC_PAUSER_INIT", "Configuring valid users in soc_ifc", UVM_MEDIUM)
     for (ii=0; ii < 5; ii++) begin: VALID_USER_LOOP
         reg_model.soc_ifc_reg_rm.CPTRA_VALID_PAUSER[ii].write(sts, mbox_valid_users[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
-        assert(sts == UVM_IS_OK) else `uvm_error("SOC_IFC_PAUSER_INIT", $sformatf("Failed when writing to CPTRA_VALID_PAUSER index %d", ii))
+        if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_PAUSER_INIT", $sformatf("Failed when writing to CPTRA_VALID_PAUSER index %d", ii))
     end
     `uvm_info("SOC_IFC_PAUSER_INIT", "Locking valid users in soc_ifc", UVM_MEDIUM)
     for (ii=0; ii < 5; ii++) begin: USER_LOCK_LOOP
         reg_model.soc_ifc_reg_rm.CPTRA_PAUSER_LOCK[ii].write(sts, `UVM_REG_DATA_WIDTH'(1), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
-        assert(sts == UVM_IS_OK) else `uvm_error("SOC_IFC_PAUSER_INIT", $sformatf("Failed when writing to CPTRA_PAUSER_LOCK index %d", ii))
+        if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_PAUSER_INIT", $sformatf("Failed when writing to CPTRA_PAUSER_LOCK index %d", ii))
     end
     `uvm_info("SOC_IFC_PAUSER_INIT", "Completed VALID PAUSER setup and lock", UVM_MEDIUM)
     `uvm_info("SOC_IFC_PAUSER_INIT", $sformatf("Valid PAUSER: 0x%x 0x%x 0x%x 0x%x 0x%x", mbox_valid_users[0], mbox_valid_users[1], mbox_valid_users[2], mbox_valid_users[3], mbox_valid_users[4]), UVM_MEDIUM)

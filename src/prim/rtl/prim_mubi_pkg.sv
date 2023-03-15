@@ -25,7 +25,7 @@ package prim_mubi_pkg;
   } mubi4_t;
 
   // This is a prerequisite for the multibit functions below to work.
-  `ASSERT_STATIC_IN_PACKAGE(CheckMuBi4ValsComplementary_A, MuBi4True == ~MuBi4False)
+  `CALIPTRA_ASSERT_STATIC_IN_PACKAGE(CheckMuBi4ValsComplementary_A, MuBi4True == ~MuBi4False)
 
   // Test whether the value is supplied is one of the valid enumerations
   function automatic logic mubi4_test_invalid(mubi4_t val);
@@ -157,7 +157,7 @@ package prim_mubi_pkg;
   } mubi8_t;
 
   // This is a prerequisite for the multibit functions below to work.
-  `ASSERT_STATIC_IN_PACKAGE(CheckMuBi8ValsComplementary_A, MuBi8True == ~MuBi8False)
+  `CALIPTRA_ASSERT_STATIC_IN_PACKAGE(CheckMuBi8ValsComplementary_A, MuBi8True == ~MuBi8False)
 
   // Test whether the value is supplied is one of the valid enumerations
   function automatic logic mubi8_test_invalid(mubi8_t val);
@@ -289,7 +289,7 @@ package prim_mubi_pkg;
   } mubi12_t;
 
   // This is a prerequisite for the multibit functions below to work.
-  `ASSERT_STATIC_IN_PACKAGE(CheckMuBi12ValsComplementary_A, MuBi12True == ~MuBi12False)
+  `CALIPTRA_ASSERT_STATIC_IN_PACKAGE(CheckMuBi12ValsComplementary_A, MuBi12True == ~MuBi12False)
 
   // Test whether the value is supplied is one of the valid enumerations
   function automatic logic mubi12_test_invalid(mubi12_t val);
@@ -421,7 +421,7 @@ package prim_mubi_pkg;
   } mubi16_t;
 
   // This is a prerequisite for the multibit functions below to work.
-  `ASSERT_STATIC_IN_PACKAGE(CheckMuBi16ValsComplementary_A, MuBi16True == ~MuBi16False)
+  `CALIPTRA_ASSERT_STATIC_IN_PACKAGE(CheckMuBi16ValsComplementary_A, MuBi16True == ~MuBi16False)
 
   // Test whether the value is supplied is one of the valid enumerations
   function automatic logic mubi16_test_invalid(mubi16_t val);

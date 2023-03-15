@@ -87,10 +87,10 @@ void init_doe() {
     }
 
     //start UDS and store in KV0
-    lsu_write_32((uint32_t*) CLP_DOE_REG_DOE_CTRL, DOE_UDS);
+    lsu_write_32(CLP_DOE_REG_DOE_CTRL, DOE_UDS);
 
     // Check that UDS flow is done
-    while((lsu_read_32((uint32_t*) CLP_DOE_REG_DOE_STATUS) & DOE_REG_DOE_STATUS_VALID_MASK) == 0);
+    while((lsu_read_32(CLP_DOE_REG_DOE_STATUS) & DOE_REG_DOE_STATUS_VALID_MASK) == 0);
 
     // Write IV
     reg_ptr = (uint32_t*) CLP_DOE_REG_DOE_IV_0;
@@ -100,13 +100,13 @@ void init_doe() {
     }
 
     //start FE and store in KV6/7
-    lsu_write_32((uint32_t*) CLP_DOE_REG_DOE_CTRL, DOE_FE | (0x6 << DOE_REG_DOE_CTRL_DEST_LOW)); // TODO replace 0x6 with entry indicators
+    lsu_write_32(CLP_DOE_REG_DOE_CTRL, DOE_FE | (0x6 << DOE_REG_DOE_CTRL_DEST_LOW)); // TODO replace 0x6 with entry indicators
 
     // Check that FE flow is done
-    while((lsu_read_32((uint32_t*) CLP_DOE_REG_DOE_STATUS) & DOE_REG_DOE_STATUS_VALID_MASK) == 0);
+    while((lsu_read_32(CLP_DOE_REG_DOE_STATUS) & DOE_REG_DOE_STATUS_VALID_MASK) == 0);
 
     // Clear Secrets
-    lsu_write_32((uint32_t*) CLP_DOE_REG_DOE_CTRL, DOE_CLEAR_OBF_SECRETS);
+    lsu_write_32(CLP_DOE_REG_DOE_CTRL, DOE_CLEAR_OBF_SECRETS);
 
 }
 
@@ -135,22 +135,22 @@ void idevid() {
     }
 
     // Program KEY Read
-    lsu_write_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_RD_KEY_CTRL, HMAC_REG_HMAC384_KV_RD_KEY_CTRL_READ_EN_MASK |
+    lsu_write_32(CLP_HMAC_REG_HMAC384_KV_RD_KEY_CTRL, HMAC_REG_HMAC384_KV_RD_KEY_CTRL_READ_EN_MASK |
                                                                   HMAC_REG_HMAC384_KV_RD_KEY_CTRL_ENTRY_IS_PCR_MASK |
                                                                   (0xB << HMAC_REG_HMAC384_KV_RD_KEY_CTRL_ENTRY_DATA_SIZE_LOW));
 
     // Check that HMAC KEY is loaded
-    while((lsu_read_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_RD_KEY_STATUS) & HMAC_REG_HMAC384_KV_RD_KEY_STATUS_VALID_MASK) == 0);
+    while((lsu_read_32(CLP_HMAC_REG_HMAC384_KV_RD_KEY_STATUS) & HMAC_REG_HMAC384_KV_RD_KEY_STATUS_VALID_MASK) == 0);
 
     // Program BLOCK read
-    lsu_write_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL, HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL_READ_EN_MASK |
+    lsu_write_32(CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL, HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL_READ_EN_MASK |
                                                                     (0xB << HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL_ENTRY_DATA_SIZE_LOW));
 
     // Check that HMAC BLOCK is loaded
-    while((lsu_read_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS) & HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS_VALID_MASK) == 0);
+    while((lsu_read_32(CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS) & HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS_VALID_MASK) == 0);
 
     // Program DEST write
-    lsu_write_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_WR_CTRL, HMAC_REG_HMAC384_KV_WR_CTRL_WRITE_EN_MASK |
+    lsu_write_32(CLP_HMAC_REG_HMAC384_KV_WR_CTRL, HMAC_REG_HMAC384_KV_WR_CTRL_WRITE_EN_MASK |
                                                               HMAC_REG_HMAC384_KV_WR_CTRL_HMAC_KEY_DEST_VALID_MASK  |
                                                               HMAC_REG_HMAC384_KV_WR_CTRL_HMAC_BLOCK_DEST_VALID_MASK|
                                                               HMAC_REG_HMAC384_KV_WR_CTRL_SHA_BLOCK_DEST_VALID_MASK |
@@ -159,10 +159,10 @@ void idevid() {
                                                               HMAC_REG_HMAC384_KV_WR_CTRL_ECC_MSG_DEST_VALID_MASK);
 
     // Enable HMAC core
-    lsu_write_32((uint32_t*) CLP_HMAC_REG_HMAC384_CTRL, HMAC_REG_HMAC384_CTRL_INIT_MASK);
+    lsu_write_32(CLP_HMAC_REG_HMAC384_CTRL, HMAC_REG_HMAC384_CTRL_INIT_MASK);
 
     // wait for HMAC process - check dest done
-    while((lsu_read_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_WR_STATUS) & HMAC_REG_HMAC384_KV_WR_STATUS_VALID_MASK) == 0);
+    while((lsu_read_32(CLP_HMAC_REG_HMAC384_KV_WR_STATUS) & HMAC_REG_HMAC384_KV_WR_STATUS_VALID_MASK) == 0);
 
     //ecc stuff would be here
 
@@ -206,22 +206,22 @@ void ldevid() {
                             0x00000800};
 
     // Program KEY to come from idevid in entry 0 of keyvault
-    lsu_write_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_RD_KEY_CTRL, HMAC_REG_HMAC384_KV_RD_KEY_CTRL_READ_EN_MASK |
+    lsu_write_32(CLP_HMAC_REG_HMAC384_KV_RD_KEY_CTRL, HMAC_REG_HMAC384_KV_RD_KEY_CTRL_READ_EN_MASK |
                                                                   (0xB << HMAC_REG_HMAC384_KV_RD_KEY_CTRL_ENTRY_DATA_SIZE_LOW));
 
     // Check that HMAC KEY is loaded
-    while((lsu_read_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_RD_KEY_STATUS) & HMAC_REG_HMAC384_KV_RD_KEY_STATUS_VALID_MASK) == 0);
+    while((lsu_read_32(CLP_HMAC_REG_HMAC384_KV_RD_KEY_STATUS) & HMAC_REG_HMAC384_KV_RD_KEY_STATUS_VALID_MASK) == 0);
 
     // Program BLOCK to come from FE in entry 6/7 of keyvault
-    lsu_write_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL, HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL_READ_EN_MASK |
+    lsu_write_32(CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL, HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL_READ_EN_MASK |
                                                                     (0x6 << HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL_READ_ENTRY_LOW) | /* TODO replace 0x6 with entry indicators */
                                                                     (0x1F << HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL_ENTRY_DATA_SIZE_LOW));
 
     // Check that HMAC BLOCK is loaded
-    while((lsu_read_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS) & HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS_VALID_MASK) == 0);
+    while((lsu_read_32(CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS) & HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS_VALID_MASK) == 0);
 
     // Program DEST write
-    lsu_write_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_WR_CTRL, HMAC_REG_HMAC384_KV_WR_CTRL_WRITE_EN_MASK |
+    lsu_write_32(CLP_HMAC_REG_HMAC384_KV_WR_CTRL, HMAC_REG_HMAC384_KV_WR_CTRL_WRITE_EN_MASK |
                                                               (0x1 << HMAC_REG_HMAC384_KV_WR_CTRL_WRITE_ENTRY_LOW)  | /* TODO replace 0x1 with entry indicators */
                                                               HMAC_REG_HMAC384_KV_WR_CTRL_HMAC_KEY_DEST_VALID_MASK  |
                                                               HMAC_REG_HMAC384_KV_WR_CTRL_HMAC_BLOCK_DEST_VALID_MASK|
@@ -231,10 +231,10 @@ void ldevid() {
                                                               HMAC_REG_HMAC384_KV_WR_CTRL_ECC_MSG_DEST_VALID_MASK);
 
     // Enable HMAC core
-    lsu_write_32((uint32_t*) CLP_HMAC_REG_HMAC384_CTRL, HMAC_REG_HMAC384_CTRL_INIT_MASK);
+    lsu_write_32(CLP_HMAC_REG_HMAC384_CTRL, HMAC_REG_HMAC384_CTRL_INIT_MASK);
 
     // wait for HMAC process
-    while((lsu_read_32((uint32_t*) CLP_HMAC_REG_HMAC384_STATUS) & HMAC_REG_HMAC384_STATUS_VALID_MASK) == 0);
+    while((lsu_read_32(CLP_HMAC_REG_HMAC384_STATUS) & HMAC_REG_HMAC384_STATUS_VALID_MASK) == 0);
 
     // Write PAD for 1024 size block
     // FE is 1024 so we did init with the full data
@@ -246,7 +246,7 @@ void ldevid() {
     }
 
     // Program DEST write
-    lsu_write_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_WR_CTRL, HMAC_REG_HMAC384_KV_WR_CTRL_WRITE_EN_MASK |
+    lsu_write_32(CLP_HMAC_REG_HMAC384_KV_WR_CTRL, HMAC_REG_HMAC384_KV_WR_CTRL_WRITE_EN_MASK |
                                                               (0x1 << HMAC_REG_HMAC384_KV_WR_CTRL_WRITE_ENTRY_LOW)  | /* TODO replace 0x1 with entry indicators */
                                                               HMAC_REG_HMAC384_KV_WR_CTRL_HMAC_KEY_DEST_VALID_MASK  |
                                                               HMAC_REG_HMAC384_KV_WR_CTRL_HMAC_BLOCK_DEST_VALID_MASK|
@@ -256,10 +256,10 @@ void ldevid() {
                                                               HMAC_REG_HMAC384_KV_WR_CTRL_ECC_MSG_DEST_VALID_MASK);
 
     // Give the next command to HMAC core
-    lsu_write_32((uint32_t*) CLP_HMAC_REG_HMAC384_CTRL, HMAC_REG_HMAC384_CTRL_NEXT_MASK);
+    lsu_write_32(CLP_HMAC_REG_HMAC384_CTRL, HMAC_REG_HMAC384_CTRL_NEXT_MASK);
 
     // wait for HMAC process - check dest done
-    while((lsu_read_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_WR_STATUS) & HMAC_REG_HMAC384_KV_WR_STATUS_VALID_MASK) == 0);
+    while((lsu_read_32(CLP_HMAC_REG_HMAC384_KV_WR_STATUS) & HMAC_REG_HMAC384_KV_WR_STATUS_VALID_MASK) == 0);
 }
 
 void mbox_fw() {
@@ -267,7 +267,7 @@ void mbox_fw() {
     uint32_t data;
 
     //set ready for FW
-    lsu_write_32((uint32_t*) CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS, SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK);
+    lsu_write_32(CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS, SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK);
 
     // Roughly equivalent to .rept 99 "nop" since the loop requires 3 (5?) ops each iteration
     // nop
@@ -278,25 +278,25 @@ void mbox_fw() {
     }
 
     //poll for mbox data avail
-    while((lsu_read_32((uint32_t*) CLP_MBOX_CSR_MBOX_EXECUTE) & MBOX_CSR_MBOX_EXECUTE_EXECUTE_MASK) == 0);
+    while((lsu_read_32(CLP_MBOX_CSR_MBOX_EXECUTE) & MBOX_CSR_MBOX_EXECUTE_EXECUTE_MASK) == 0);
 
     //read mbox command
-    data = lsu_read_32((volatile uint32_t*) CLP_MBOX_CSR_MBOX_CMD);
+    data = lsu_read_32(CLP_MBOX_CSR_MBOX_CMD);
     /* then drop it on the ground... */
 
     //read mbox dlen
-    dlen = lsu_read_32((uint32_t*) CLP_MBOX_CSR_MBOX_DLEN);
+    dlen = lsu_read_32(CLP_MBOX_CSR_MBOX_DLEN);
 
     //read from mbox
     for (uint32_t byt_cnt=0; byt_cnt < dlen; byt_cnt += 4) {
-        data = lsu_read_32((volatile uint32_t*) CLP_MBOX_CSR_MBOX_DATAOUT);
+        data = lsu_read_32(CLP_MBOX_CSR_MBOX_DATAOUT);
         /* then drop it on the ground... */
     }
 
     //clear FE 
-    lsu_write_32((uint32_t*) CLP_KV_REG_KEY_CTRL_6, KV_REG_KEY_CTRL_6_CLEAR_MASK);
-    lsu_write_32((uint32_t*) CLP_KV_REG_KEY_CTRL_7, KV_REG_KEY_CTRL_7_CLEAR_MASK);
+    lsu_write_32(CLP_KV_REG_KEY_CTRL_6, KV_REG_KEY_CTRL_6_CLEAR_MASK);
+    lsu_write_32(CLP_KV_REG_KEY_CTRL_7, KV_REG_KEY_CTRL_7_CLEAR_MASK);
 
     //set ready for runtime
-    lsu_write_32((uint32_t*) CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS, SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_RUNTIME_MASK);
+    lsu_write_32(CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS, SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_RUNTIME_MASK);
 }

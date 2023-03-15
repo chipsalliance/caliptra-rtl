@@ -37,7 +37,7 @@ module prim_max_tree #(
   ///////////////////////
 
   // This only works with 2 or more sources.
-  `ASSERT_INIT(NumSources_A, NumSrc >= 2)
+  `CALIPTRA_ASSERT_INIT(NumSources_A, NumSrc >= 2)
 
   // Align to powers of 2 for simplicity.
   // A full binary tree with N levels has 2**N + 2**N-1 nodes.
@@ -141,12 +141,12 @@ module prim_max_tree #(
   // pragma coverage on
 
   // TODO(10588): Below syntax is not supported in xcelium, track xcelium cases #46591452.
-  // `ASSERT(ValidInImpliesValidOut_A, |valid_i <-> max_valid_o)
-  `ASSERT(ValidInImpliesValidOut_A, |valid_i === max_valid_o)
-  `ASSERT(MaxComputation_A, max_valid_o |-> max_value_o == max_value_exp)
-  `ASSERT(MaxComputationInvalid_A, !max_valid_o |-> max_value_o == values_i[0])
-  `ASSERT(MaxIndexComputation_A, max_valid_o |-> max_idx_o == max_idx_exp)
-  `ASSERT(MaxIndexComputationInvalid_A, !max_valid_o |-> max_idx_o == '0)
+  // `CALIPTRA_ASSERT(ValidInImpliesValidOut_A, |valid_i <-> max_valid_o)
+  `CALIPTRA_ASSERT(ValidInImpliesValidOut_A, |valid_i === max_valid_o)
+  `CALIPTRA_ASSERT(MaxComputation_A, max_valid_o |-> max_value_o == max_value_exp)
+  `CALIPTRA_ASSERT(MaxComputationInvalid_A, !max_valid_o |-> max_value_o == values_i[0])
+  `CALIPTRA_ASSERT(MaxIndexComputation_A, max_valid_o |-> max_idx_o == max_idx_exp)
+  `CALIPTRA_ASSERT(MaxIndexComputationInvalid_A, !max_valid_o |-> max_idx_o == '0)
 `endif
 
 endmodule : prim_max_tree

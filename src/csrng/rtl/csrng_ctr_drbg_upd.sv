@@ -617,11 +617,11 @@ module csrng_ctr_drbg_upd #(
 
   // Make sure that the two state machines have a stable error state. This means that after the
   // error state is entered it will not exit it unless a reset signal is received.
-  `ASSERT(CsrngDrbgUpdBlkEncErrorStStable_A,
+  `CALIPTRA_ASSERT(CsrngDrbgUpdBlkEncErrorStStable_A,
           blk_enc_state_q == BEError |=> $stable(blk_enc_state_q))
-  `ASSERT(CsrngDrbgUpdOutBlkErrorStStable_A,
+  `CALIPTRA_ASSERT(CsrngDrbgUpdOutBlkErrorStStable_A,
           outblk_state_q  == OBError |=> $stable(outblk_state_q))
   // If in error state, the error output must be high.
-  `ASSERT(CsrngDrbgUpdBlkEncErrorOutput_A, blk_enc_state_q == BEError |-> ctr_drbg_updbe_sm_err_o)
-  `ASSERT(CsrngDrbgUpdOutBlkErrorOutput_A, outblk_state_q  == OBError |-> ctr_drbg_updob_sm_err_o)
+  `CALIPTRA_ASSERT(CsrngDrbgUpdBlkEncErrorOutput_A, blk_enc_state_q == BEError |-> ctr_drbg_updbe_sm_err_o)
+  `CALIPTRA_ASSERT(CsrngDrbgUpdOutBlkErrorOutput_A, outblk_state_q  == OBError |-> ctr_drbg_updob_sm_err_o)
 endmodule

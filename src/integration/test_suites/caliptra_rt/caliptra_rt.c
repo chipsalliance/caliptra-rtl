@@ -189,14 +189,12 @@ void caliptra_rt() {
                     soc_ifc_set_fw_update_reset();
                 }
                 else if (op.cmd & MBOX_CMD_FIELD_RESP_MASK) {
-                    VPRINTF(FATAL, "Received unexpected mailbox command (expecting RESP) from SOC! Got 0x%x\n", op.cmd);
-                    SEND_STDOUT_CTRL(0x1);
-                    while(1);
+                    VPRINTF(MEDIUM, "Received mailbox command (expecting RESP) from SOC! Got 0x%x\n", op.cmd);
+                    soc_ifc_set_mbox_status_field(DATA_READY);
                 }
                 else {
-                    VPRINTF(FATAL, "Received unexpected mailbox command (no expected RESP) from SOC! Got 0x%x\n", op.cmd);
-                    SEND_STDOUT_CTRL(0x1);
-                    while(1);
+                    VPRINTF(MEDIUM, "Received mailbox command (no expected RESP) from SOC! Got 0x%x\n", op.cmd);
+                    soc_ifc_set_mbox_status_field(CMD_COMPLETE);
                 }
             }
             if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_MBOX_ECC_COR_STS_MASK) {

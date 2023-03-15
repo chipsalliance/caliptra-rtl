@@ -36,6 +36,7 @@ package ecc_reg_uvm;
     class ecc_reg__ECC_CTRL extends uvm_reg;
         rand uvm_reg_field CTRL;
         rand uvm_reg_field ZEROIZE;
+        rand uvm_reg_field PCR_SIGN;
 
         function new(string name = "ecc_reg__ECC_CTRL");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -46,6 +47,8 @@ package ecc_reg_uvm;
             this.CTRL.configure(this, 2, 0, "WO", 1, 'h0, 1, 1, 0);
             this.ZEROIZE = new("ZEROIZE");
             this.ZEROIZE.configure(this, 1, 2, "WO", 0, 'h0, 1, 1, 0);
+            this.PCR_SIGN = new("PCR_SIGN");
+            this.PCR_SIGN.configure(this, 1, 3, "WO", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : ecc_reg__ECC_CTRL
 
@@ -211,6 +214,20 @@ package ecc_reg_uvm;
             this.IV.configure(this, 32, 0, "WO", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : ecc_reg__ECC_IV
+
+    // Reg - ecc_reg::ECC_NONCE
+    class ecc_reg__ECC_NONCE extends uvm_reg;
+        rand uvm_reg_field NONCE;
+
+        function new(string name = "ecc_reg__ECC_NONCE");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.NONCE = new("NONCE");
+            this.NONCE.configure(this, 32, 0, "WO", 1, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : ecc_reg__ECC_NONCE
 
     // Reg - kv_read_ctrl_reg
     class kv_read_ctrl_reg extends uvm_reg;
@@ -584,6 +601,7 @@ package ecc_reg_uvm;
         rand ecc_reg__ECC_SIGN_S ECC_SIGN_S[12];
         rand ecc_reg__ECC_VERIFY_R ECC_VERIFY_R[12];
         rand ecc_reg__ECC_IV ECC_IV[12];
+        rand ecc_reg__ECC_NONCE ECC_NONCE[12];
         rand kv_read_ctrl_reg ecc_kv_rd_pkey_ctrl;
         rand kv_status_reg ecc_kv_rd_pkey_status;
         rand kv_read_ctrl_reg ecc_kv_rd_seed_ctrl;
@@ -691,6 +709,13 @@ package ecc_reg_uvm;
                 
                 this.ECC_IV[i0].build();
                 this.default_map.add_reg(this.ECC_IV[i0], 'h480 + i0*'h4);
+            end
+            foreach(this.ECC_NONCE[i0]) begin
+                this.ECC_NONCE[i0] = new($sformatf("ECC_NONCE[%0d]", i0));
+                this.ECC_NONCE[i0].configure(this);
+                
+                this.ECC_NONCE[i0].build();
+                this.default_map.add_reg(this.ECC_NONCE[i0], 'h500 + i0*'h4);
             end
             this.ecc_kv_rd_pkey_ctrl = new("ecc_kv_rd_pkey_ctrl");
             this.ecc_kv_rd_pkey_ctrl.configure(this);

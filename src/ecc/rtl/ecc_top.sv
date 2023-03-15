@@ -52,7 +52,9 @@ module ecc_top
     output kv_read_t [2:0] kv_read,
     output kv_write_t kv_write,
     input kv_rd_resp_t [2:0] kv_rd_resp,
-    input kv_wr_resp_t kv_wr_resp,
+    input kv_wr_resp_t kv_wr_resp,   
+    //PCR Signing
+    input pcr_signing_t pcr_signing_data,
 
     output logic error_intr,
     output logic notif_intr
@@ -142,7 +144,8 @@ module ecc_top
         .kv_rd_resp(kv_rd_resp),
         .kv_write(kv_write),
         .kv_wr_resp(kv_wr_resp),
-
+        .pcr_signing_data(pcr_signing_data),
+        
         .error_intr(error_intr),
         .notif_intr(notif_intr)
     );
