@@ -1,6 +1,6 @@
 # docs: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions
 
-name: Verilator Hardware Model
+name: Verilator
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
 
 jobs:
   build_and_test:
-    name: Verilator Build and Test
+    name: Verilator Smoke Test
     runs-on: ubuntu-22.04
 
     env:
@@ -121,6 +121,8 @@ jobs:
         run: |
           # TODO: Add the run_verilator_l0_regression.py script.
           # Running a simple test to make sure that there aren't any elaboration issues
-          WORKSPACE=$(pwd)
+          WORKSPACE=$(pwd)/..
+          # TODO: Remove this symbolic link when the Caliptra directory is removed from Makefile
+          ln -s caliptra-rtl Caliptra
           cd tools/scripts
           make verilator WORKSPACE=$WORKSPACE TESTNAME=smoke_test_kv_uds_reset
