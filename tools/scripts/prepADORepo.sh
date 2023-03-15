@@ -38,7 +38,7 @@ while [ ! -z "$1" ]; do
         shift
     elif [[ $1 == "-db" ]] || [[ "$1" == "--destBranch" ]]; then
         DEST_BRANCH="$2"
-        echo "Destinaton branch is $DEST_BRANCH"A
+        echo "Destinaton branch is $DEST_BRANCH"
         shift
     elif [[ $1 == "-a2g" ]] || [[  "$1" == "--ado2github" ]]; then
         A2G="true"
@@ -93,19 +93,19 @@ if [[ $(pwd) == $ADO_WS ]]; then
     fi
 fi 
 
-# Check out master and pull, verify that master is up-to-date
+# Check out ADO_ROOT_BR and pull, verify that ADO_ROOT_BR is up-to-date
 git checkout $ADO_ROOT_BR
 if [ $? -ne 0 ]; then
-    echo "Verify you can change to master branch of source repo and try again" 1>&2
+    echo "Verify you can change to $ADO_ROOT_BR branch of source repo and try again" 1>&2
     exit 1
 fi
 git pull --ff-only
 if [ $? -ne 0 ]; then
-    echo "Verify you can pull source repo master branch and try again" 1>&2
+    echo "Verify you can pull source repo $ADO_ROOT_BR branch and try again" 1>&2
     exit 1
 fi
 gitstat=$(git status)
-matchStr1="On branch master"
+matchStr1="On branch $ADO_ROOT_BR"
 matchStr2="Your branch is up to date"
 if [[ ( $gitstat =~ $matchStr1 ) && ( $gitstat =~ $matchStr2 ) ]]; then
     #Check README.md update timestamp and fail if timestamp is not today
@@ -148,6 +148,6 @@ if [[ ( $gitstat =~ $matchStr1 ) && ( $gitstat =~ $matchStr2 ) ]]; then
         fi
     fi
 else
-    echo "Check master branch and try again!!!" 1>&2
+    echo "Check $ADO_ROOT_BR branch and try again!!!" 1>&2
     exit 1
 fi

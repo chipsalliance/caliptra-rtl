@@ -61,7 +61,6 @@ unset -f _module_raw
 
 #cmd="make -f $COMPILE_ROOT/test_suites/$TESTNAME/Makefile program.hex"
 cmd="make -f $SCRIPTS_DIR/Makefile program.hex"
-
 echo "$cmd"
 $cmd
 

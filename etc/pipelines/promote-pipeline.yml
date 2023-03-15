@@ -36,6 +36,23 @@ stages:
           - timeout: 40
           - path: 'Caliptra/src/integration/stimulus/L0_regression.yml'
 
+    - integration_top_trng_vcs:
+      - display_name: 'Build integration_lib with VCS and enable TRNG'
+      - enabled: true
+      # Run after L0 regression finishes since we rebuild the lib
+      - depends_on: 'Regress_integration_top_vcs_l0_regress'
+      - configspec_name: 'integration_lib'
+      - dut: 'caliptra_top_tb'
+      - args: '--analyze-args="+define+CALIPTRA_INTERNAL_TRNG"'
+      - timeout: 30
+      - testsuites:
+        - l0_trng_regress:
+          - enabled: true
+          - configspec_name: 'integration_lib'
+          - dut: 'caliptra_top_tb'
+          - timeout: 40
+          - path: 'Caliptra/src/integration/stimulus/L0_trng_regression.yml'
+
     - integration_top_ius:
       - display_name: 'Build integration_lib with IUS/Xcelium'
       - enabled: false
@@ -80,42 +97,6 @@ stages:
                  echo \"Regenerating VF file lists produced some file changes:\";
                  git status -s --untracked-files=all --ignored=traditional | grep \"\\.vf\";
                  git diff;
-                 echo \"*****************************************\";
-                 echo \"Review above changes locally and resubmit pipeline\";
-                 echo \"(Hint: Check \$AHA_POC_REPO for the above changes)\";
-                 echo \"*****************************************\";
-                 exit 1;
-               fi'
-      - html_doc_check:
-        - display_name: 'HTML DOC CHECK'
-        - enabled: true
-        - run_in_workspace: True
-        - timeout: 5
-        - commands:
-            - 'set -e'
-            - 'module load tools/python/python3/3.9.2'
-            - 'cd \$AHA_POC_REPO'
-
-            # Run the HTML Doc generator script
-            - 'bash \$AHA_POC_REPO/tools/scripts/reg_doc_gen.sh'
-
-            # Timestamp is always updated in index.html, resulting in 3 line changes, so ignore it
-            # Cleanup repo by clobbering the timestamp changes to index.html
-            - 'if [[ \$(git diff --numstat -- \$AHA_POC_REPO/src/integration/docs/caliptra_reg_html/index.html | sed \"s/^\(\w\+\).*/\1/\") -eq 3 ]]; then
-                 echo \"index.html has only 3 changes after regeneration, which means only the timestamp was updated. Reverting changes.\";
-                 git restore \$AHA_POC_REPO/src/integration/docs/caliptra_reg_html/index.html;
-               fi'
-
-            - 'if [[ \$(git diff --numstat -- \$AHA_POC_REPO/src/soc_ifc/docs/caliptra_top_reg_html/index.html | sed \"s/^\(\w\+\).*/\1/\") -eq 3 ]]; then
-                 echo \"index.html has only 3 changes after regeneration, which means only the timestamp was updated. Reverting changes.\";
-                 git restore \$AHA_POC_REPO/src/soc_ifc/docs/caliptra_top_reg_html/index.html;
-               fi'
-
-            # Check for any file changes
-            - 'if [[ \$(git status -s --untracked-files=all --ignored=traditional -- \$AHA_POC_REPO/src/integration/ \$AHA_POC_REPO/src/soc_ifc/  | wc -l) -gt 0 ]]; then
-                 echo \"Regenerating HTML Reg documentation produced some file changes:\";
-                 git status -s --untracked-files=all --ignored=traditional -- \$AHA_POC_REPO/src/integration/ \$AHA_POC_REPO/src/soc_ifc;
-                 git diff -- \$AHA_POC_REPO/src/integration/ \$AHA_POC_REPO/src/soc_ifc;
                  echo \"*****************************************\";
                  echo \"Review above changes locally and resubmit pipeline\";
                  echo \"(Hint: Check \$AHA_POC_REPO for the above changes)\";

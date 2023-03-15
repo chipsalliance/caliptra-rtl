@@ -53,11 +53,13 @@ done
 A2G=${A2G:-"false"}
 
 GITHUB_REPO="caliptra-rtl"
-GITHUB_ROOT_BR="dev-msft"
 
 # Set Source and Destination repositories based on $A2G
 if [[ $A2G == "true" ]]; then
+    GITHUB_ROOT_BR="dev-msft"
     GITHUB_DEST_BR=$DEST_BRANCH
+else
+    GITHUB_ROOT_BR="main"
 fi
 
 ###############################################################

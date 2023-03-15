@@ -58,7 +58,7 @@ blacklistRepoDirsFiles = ["etc", "config", "dvt_build.log"]
 blacklistIpDirsFiles = ["sim_irq_gen", "syn", "aes_secworks", "uvmf_kv"]
 blacklistScriptsDirsFiles = ["licenseHeaderCheck.sh", "gen_pb_file_lists.sh", "README.md", "sim_config_parse.py", "github_sync.py", "prepADORepo.sh", "prepGitHubRepo.sh", "commitChangesToGitHub.sh", "run_test_makefile", "syn"]
 blacklistConfigDirsFiles = ["design_lint"]
-integrationTestSuiteList = ['caliptra_top', 'caliptra_demo', 'caliptra_fmc', 'caliptra_rt', 'includes', 'libs']
+integrationTestSuiteList = ['caliptra_top', 'caliptra_demo', 'caliptra_fmc', 'caliptra_rt', 'smoke_test_trng', 'includes', 'libs']
 ignoreFiles = [".dvt", "dvt_build.log", ".git", ".git-comodules", ".gitignore"]
 
 # End global variables
@@ -142,6 +142,7 @@ def prepSrcRepo(inSrcWS, inSrcRepo, inSrcBranch, ignoreReadme, ignoreReleaseNote
         cmd = ". {} -ws {}".format(prepRepoScript, inSrcWS)
     exitcode, prepRepoStdout, prepRepoStderr = runBashScript(cmd)
     if (exitcode == 0):
+        # FIXME inSrcBranch unused
         infoMsg = "Source repo {} setup with branch {}.".format(inSrcRepo, inSrcBranch)
         logger.info(infoMsg)
         for line in prepRepoStdout.decode().splitlines():
@@ -402,10 +403,17 @@ def cleanUpBlackListFilesDirsFromGitHub(dWorkspace, dRepo):
         elif (dir == 'src'):
             ipFileList, ipDirList = listdir_nohidden(destDir_FullPath)
             for ipDir in ipDirList:
+                ipDir_FullPath = os.path.join(destDir_FullPath, ipDir)
+                docs_path = os.path.join(ipDir_FullPath, "docs")
                 if (ipDir in blacklistIpDirsFiles):
-                    infoMsg = "Removing {}".format(dir)
+                    infoMsg = "Removing {}".format(ipDir_FullPath)
                     logger.info(infoMsg)
-                    shutil.rmtree(ipDir)
+                    shutil.rmtree(ipDir_FullPath)
+                # FIXME hardcoded 'docs' folder as a blacklist entry.
+                elif (os.path.exists(docs_path)):
+                    infoMsg = "Removing {}".format(docs_path)
+                    logger.info(infoMsg)
+                    shutil.rmtree(docs_path)
         elif (dir == 'tools'):
             toolsDir_Full_Path = os.path.join(destDir_FullPath, dir)
             toolsFileList, toolsDirList = listdir_nohidden(destDir_FullPath)
@@ -421,9 +429,10 @@ def cleanUpBlackListFilesDirsFromGitHub(dWorkspace, dRepo):
                             os.remove(file_path)
                     for d in scriptsDirList:
                         if (d in blacklistScriptsDirsFiles):
-                            infoMsg = "Removing {}".format(dir)
+                            dir_path = os.path.join(scriptsDestDir_Full_Path, d)
+                            infoMsg = "Removing {}".format(dir_path)
                             logger.info(infoMsg)
-                            shutil.rmtree(d)
+                            shutil.rmtree(dir_path)
                 elif (dir == 'config'):
                     configDestDir_Full_Path = os.path.join(destDir_FullPath, dir)
                     configFileList, configDirList = listdir_nohidden(configDestDir_Full_Path)
@@ -433,11 +442,13 @@ def cleanUpBlackListFilesDirsFromGitHub(dWorkspace, dRepo):
                             infoMsg = "Removing {}".format(file_path)
                             logger.info(infoMsg)
                             os.remove(file_path)
-                        for d in configDirList:
-                            if (d in blacklistConfigDirsFiles):
-                                infoMsg = "Removing {}".format(dir)
-                                logger.info(infoMsg)
-                                shutil.rmtree(d)
+                    for d in configDirList:
+                        if (d in blacklistConfigDirsFiles):
+                            dir_path = os.path.join(configDestDir_Full_Path, d)
+                            infoMsg = "Removing {}".format(dir_path)
+                            logger.info(infoMsg)
+                            shutil.rmtree(dir_path)
+            # FIXME this doesn't match anything - incorrect usage of blacklistScriptsDirsFiles?
             for f in toolsFileList:
                 if (f in blacklistScriptsDirsFiles):
                     file_path = os.path.join(toolsDir_Full_Path, f)
@@ -507,16 +518,11 @@ def main():
         dRepo = adoRepo   
 
     print(len(sys.argv))
-    infoMsg = "Command: {} {} {} {} {} {} {} {} ".format(sys.argv[0], sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7])
-    if len(sys.argv) == 9:
-        infoMsg += "{}".format(sys.argv[8])
+    infoMsg = "Command:"
+    for idx in range(len(sys.argv)):
+        infoMsg += " {}".format(sys.argv[idx])
     logger.info(infoMsg)
 
-    if len(sys.argv) == 10:
-        infoMsg += "{}".format(sys.argv[9])
-    logger.info(infoMsg)
-
-    
     if syncADO2GitHub:
         infoMsg = "Syncing internal ADO repo {} {} branch to external GitHub repo {} {} branch)".format(sRepo, sBranch, dRepo, dBranch)
     else:

@@ -38,6 +38,7 @@ def createScratch():
         logger.warning("Clobbering existing verilator scratch folder")
         shutil.rmtree(scratch)
     os.makedirs(scratch)
+    os.system(f"ln -snf {scratch} {os.path.join(scratch, '../latest')}")
     return scratch
 
 # Run command and wait for it to complete before returning the results

@@ -68,7 +68,7 @@ void main() {
     // TODO other init tasks? (interrupts later)
 
     //Check the reset reason FIXME (as soc_ifc fn)
-    reset_reason = lsu_read_32( (uint32_t*) CLP_SOC_IFC_REG_CPTRA_RESET_REASON);
+    reset_reason = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_RESET_REASON);
 
     //Cold Boot, run DOE flows, wait for FW image
     if (reset_reason == 0x0) {
@@ -78,11 +78,11 @@ void main() {
 
         // Wait for FW available (FMC)
         do {
-            intr_sts = lsu_read_32( (uint32_t*) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+            intr_sts = lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
             intr_sts &= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK;
         } while (!intr_sts);
         //clear the interrupt
-        lsu_write_32((uint32_t*) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK);
+        lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK);
 
         op = soc_ifc_read_mbox_cmd();
         if (op.cmd != MBOX_CMD_FMC_UPDATE) {
@@ -97,11 +97,11 @@ void main() {
 
         // Wait for FW available (RT)
         do {
-            intr_sts = lsu_read_32( (uint32_t*) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+            intr_sts = lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
             intr_sts &= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK;
         } while (!intr_sts);
         //clear the interrupt
-        lsu_write_32((uint32_t*) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK);
+        lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK);
         //read the mbox command
         op = soc_ifc_read_mbox_cmd();
         if (op.cmd != MBOX_CMD_RT_UPDATE) {

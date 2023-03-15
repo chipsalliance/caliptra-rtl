@@ -1,0 +1,10 @@
++incdir+${CALIPTRA_ROOT}/src/prim_generic/rtl
++incdir+${CALIPTRA_ROOT}/src/uart/rtl
+${CALIPTRA_ROOT}/src/prim_generic/rtl/prim_generic_flop.sv
+${CALIPTRA_ROOT}/src/prim_generic/rtl/prim_generic_buf.sv
+${CALIPTRA_ROOT}/src/uart/rtl/uart_tx.sv
+${CALIPTRA_ROOT}/src/uart/rtl/uart_reg_pkg.sv
+${CALIPTRA_ROOT}/src/uart/rtl/uart_reg_top.sv
+${CALIPTRA_ROOT}/src/uart/rtl/uart_rx.sv
+${CALIPTRA_ROOT}/src/uart/rtl/uart.sv
+${CALIPTRA_ROOT}/src/uart/rtl/uart_core.sv

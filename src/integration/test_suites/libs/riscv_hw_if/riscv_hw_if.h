@@ -14,16 +14,23 @@
 //
 
 #ifndef RISCV_HW_IF_H
-    #define RISCV_HW_IF_H
+#define RISCV_HW_IF_H
 
 #include <stdint.h>
 
-inline void lsu_write_32 (volatile uint32_t* ptr, uint32_t data) {
-    *ptr = data;
+// lsu_write_32 writes data to a given address pointer.  The uintptr_t is tied
+// to the address width of the architeture and defines an appropriately sized
+// value that can be cast to a void* and back indefinitely without losing
+// information.  We cast to uint32_t since the value pointed to is definitively
+// coded as a 32-bit register (uint32_t).
+inline void lsu_write_32(uintptr_t addr, uint32_t data) {
+  volatile uint32_t *ptr = (volatile uint32_t *)addr;
+  *ptr = data;
 }
 
-inline uint32_t lsu_read_32 (volatile uint32_t* ptr) {
-    return *ptr;
+// lsu_read_32 returns data from a given a address pointer.
+inline uint32_t lsu_read_32(uintptr_t addr) {
+  return *(volatile uint32_t *)addr;
 }
 
 #endif /* RISCV_HW_IF_H */

@@ -20,6 +20,7 @@ ${CALIPTRA_ROOT}/src/libs/rtl/clk_gate.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_defines_pkg.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_macros.svh
 ${CALIPTRA_ROOT}/src/ecc/tb/ecc_top_tb.sv
+${CALIPTRA_ROOT}/src/libs/rtl/ahb_to_reg_adapter.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_reg.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv.sv

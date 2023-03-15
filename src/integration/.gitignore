@@ -1,0 +1,6 @@
+# This file tells git which files and/or directories to ignore in the repo
+# Read the docs here: https://git-scm.com/docs/gitignore
+
+# Explicitly ignore html docs folder after removing it
+# since it is now maintained in GitHub automatically
+docs

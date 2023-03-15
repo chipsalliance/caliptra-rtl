@@ -17,10 +17,14 @@
 `include "caliptra_macros.svh"
 `include "caliptra_sva.svh"
 
-module caliptra_top 
+module caliptra_top
     import kv_defines_pkg::*;
     import pv_defines_pkg::*;
     import soc_ifc_pkg::*;
+`ifdef CALIPTRA_INTERNAL_TRNG
+    import entropy_src_pkg::*;
+    import csrng_pkg::*;
+`endif
     (
     input logic                        clk,
 
@@ -87,7 +91,13 @@ module caliptra_top
     //SoC Interrupts
     output logic             cptra_error_fatal,
     output logic             cptra_error_non_fatal,
-    output logic             trng_req,
+
+    // TRNG Interface
+    // External Request
+    output logic             etrng_req,
+    // Physical Source for Internal TRNG
+    input  logic [3:0]       itrng_data,
+    input  logic             itrng_valid,
 
     input logic  [63:0]                generic_input_wires,
     output logic [63:0]                generic_output_wires,
@@ -332,7 +342,8 @@ end
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_IDMA]    = iccm_lock & responder_inst[`CALIPTRA_SLAVE_SEL_IDMA].hwrite;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_SHA256]  = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_IMEM]    = 1'b0;
-
+    always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_CSRNG]       = 1'b0;
+    always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC] = 1'b0;
 
    //=========================================================================-
    // RTL instance
@@ -652,7 +663,7 @@ caliptra_ahb_srom #(
 );
 
 sha512_ctrl #(
-    .AHB_DATA_WIDTH (64),
+    .AHB_DATA_WIDTH (`CALIPTRA_AHB_HDATA_SIZE),
     .AHB_ADDR_WIDTH (`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SHA512))
 ) sha512 (
     .clk            (clk_cg),
@@ -683,7 +694,7 @@ sha512_ctrl #(
 );
 
 sha256_ctrl #(
-    .AHB_DATA_WIDTH (64),
+    .AHB_DATA_WIDTH (`CALIPTRA_AHB_HDATA_SIZE),
     .AHB_ADDR_WIDTH (`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SHA256))
 ) sha256 (
     .clk            (clk_cg),
@@ -711,7 +722,7 @@ always_comb obf_uds_seed_dbg      = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_U
 always_comb obf_field_entropy_dbg = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_FIELD_ENTROPY : obf_field_entropy;
 
 doe_ctrl #(
-    .AHB_DATA_WIDTH (64),
+    .AHB_DATA_WIDTH (`CALIPTRA_AHB_HDATA_SIZE),
     .AHB_ADDR_WIDTH (`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_DOE))
 ) doe (
     .clk               (clk_cg),
@@ -875,6 +886,106 @@ data_vault1
     .hrdata_o        (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hrdata)
 );
 
+`ifdef CALIPTRA_INTERNAL_TRNG
+entropy_src_hw_if_req_t entropy_src_hw_if_req;
+entropy_src_hw_if_rsp_t entropy_src_hw_if_rsp;
+cs_aes_halt_req_t       csrng_cs_aes_halt_req;
+cs_aes_halt_rsp_t       csrng_cs_aes_halt_rsp;
+entropy_src_rng_req_t   entropy_src_rng_req;
+entropy_src_rng_rsp_t   entropy_src_rng_rsp;
+
+assign etrng_req = entropy_src_rng_req.rng_enable;
+assign entropy_src_rng_rsp.rng_valid = itrng_valid;
+assign entropy_src_rng_rsp.rng_b = itrng_data;
+
+// TODO: Revisit ports and verify connectivity
+
+csrng #(
+    .AHBDataWidth(`CALIPTRA_AHB_HDATA_SIZE),
+    .AHBAddrWidth(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_CSRNG))
+) csrng (
+    // Clock and reset connections
+    .clk_i                  (clk_cg),
+    .rst_ni                 (cptra_noncore_rst_b),
+    // AMBA AHB Lite Interface
+    .haddr_i                (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_CSRNG)-1:0]),
+    .hwdata_i               (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hwdata),
+    .hsel_i                 (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hsel),
+    .hwrite_i               (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hwrite),
+    .hready_i               (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hready),
+    .htrans_i               (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].htrans),
+    .hsize_i                (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hsize),
+    .hresp_o                (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hresp),
+    .hreadyout_o            (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hreadyout),
+    .hrdata_o               (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hrdata),
+     // OTP Interface
+    .otp_en_csrng_sw_app_read_i(prim_mubi_pkg::MuBi8True),
+    // Lifecycle broadcast inputs
+    .lc_hw_debug_en_i       (lc_ctrl_pkg::On),
+    // Entropy Interface
+    .entropy_src_hw_if_o    (entropy_src_hw_if_req),
+    .entropy_src_hw_if_i    (entropy_src_hw_if_rsp),
+    .cs_aes_halt_i          (csrng_cs_aes_halt_req),
+    .cs_aes_halt_o          (csrng_cs_aes_halt_rsp),
+    // Application Interfaces
+    .csrng_cmd_i            ('0),
+    .csrng_cmd_o            (),
+    // Alerts
+    .alert_tx_o             (),
+    .alert_rx_i             ({prim_alert_pkg::ALERT_RX_DEFAULT, prim_alert_pkg::ALERT_RX_DEFAULT}),
+    // Interrupt
+    .intr_cs_cmd_req_done_o (),
+    .intr_cs_entropy_req_o  (),
+    .intr_cs_hw_inst_exc_o  (),
+    .intr_cs_fatal_err_o    ()
+  );
+
+entropy_src #(
+    .AHBDataWidth(`CALIPTRA_AHB_HDATA_SIZE),
+    .AHBAddrWidth(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_ENTROPY_SRC))
+) entropy_src (
+    .clk_i                  (clk_cg),
+    .rst_ni                 (cptra_noncore_rst_b),
+    // AMBA AHB Lite Interface
+    .haddr_i                (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_ENTROPY_SRC)-1:0]),
+    .hwdata_i               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hwdata),
+    .hsel_i                 (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hsel),
+    .hwrite_i               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hwrite),
+    .hready_i               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hready),
+    .htrans_i               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].htrans),
+    .hsize_i                (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hsize),
+    .hresp_o                (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hresp),
+    .hreadyout_o            (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hreadyout),
+    .hrdata_o               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hrdata),
+    // OTP Interface
+    .otp_en_entropy_src_fw_read_i(prim_mubi_pkg::MuBi8True),
+    .otp_en_entropy_src_fw_over_i(prim_mubi_pkg::MuBi8True),
+    // RNG Interface
+    .rng_fips_o                       (),
+    // Entropy Interface
+    .entropy_src_hw_if_i              (entropy_src_hw_if_req),
+    .entropy_src_hw_if_o              (entropy_src_hw_if_rsp),
+    // RNG Interface
+    .entropy_src_rng_o                (entropy_src_rng_req),
+    .entropy_src_rng_i                (entropy_src_rng_rsp),
+    // CSRNG Interface
+    .cs_aes_halt_o                    (csrng_cs_aes_halt_req),
+    .cs_aes_halt_i                    (csrng_cs_aes_halt_rsp),
+    // External Health Test Interface
+    .entropy_src_xht_o                (),
+    .entropy_src_xht_i                (entropy_src_xht_rsp_t'('0)),
+    // Alerts
+    .alert_rx_i                       ({prim_alert_pkg::ALERT_RX_DEFAULT, prim_alert_pkg::ALERT_RX_DEFAULT}),
+    .alert_tx_o                       (),
+    // Interrupts
+    .intr_es_entropy_valid_o          (),
+    .intr_es_health_test_failed_o     (),
+    .intr_es_observe_fifo_ready_o     (),
+    .intr_es_fatal_err_o              ()
+    );
+
+`endif
+
 soc_ifc_top #(
     .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)),
     .AHB_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE),
@@ -930,7 +1041,11 @@ soc_ifc_top1
     //SoC Interrupts
     .cptra_error_fatal    (cptra_error_fatal),
     .cptra_error_non_fatal(cptra_error_non_fatal),
-    .trng_req             (trng_req),
+`ifdef CALIPTRA_INTERNAL_TRNG
+    .trng_req             (),
+`else
+    .trng_req             (etrng_req),
+`endif
     // uC Interrupts
     .soc_ifc_error_intr(soc_ifc_error_intr),
     .soc_ifc_notif_intr(soc_ifc_notif_intr),
@@ -973,7 +1088,16 @@ always_comb begin: tie_off_slaves
     responder_inst[`CALIPTRA_SLAVE_SEL_I3C].hresp = '0;
     responder_inst[`CALIPTRA_SLAVE_SEL_I3C].hreadyout = '0;
     responder_inst[`CALIPTRA_SLAVE_SEL_I3C].hrdata = '0;
-end 
+
+`ifndef CALIPTRA_INTERNAL_TRNG
+    responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hresp = '0;
+    responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hreadyout = '0;
+    responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hrdata = '0;
+    responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hresp = '0;
+    responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hreadyout = '0;
+    responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hrdata = '0;
+`endif
+end
 
 genvar sva_i;
 generate

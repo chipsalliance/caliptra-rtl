@@ -160,7 +160,7 @@ void main() {
     reg_ptr = (uint32_t*) CLP_PV_REG_PCR_ENTRY_31_0;
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_PV_REG_PCR_ENTRY_31_11) {
-        read_data = lsu_read_32(reg_ptr++);
+        read_data = *reg_ptr++;
         if (exp1[offset] != read_data) {
             VPRINTF(FATAL,"SHA Result Mismatch - EXP: 0x%x RECVD: 0x%x\n", exp1[offset], read_data);
             SEND_STDOUT_CTRL( 0x01);
@@ -209,7 +209,7 @@ void main() {
     reg_ptr = (uint32_t*) CLP_PV_REG_PCR_ENTRY_31_0;
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_PV_REG_PCR_ENTRY_31_11) {
-        read_data = lsu_read_32(reg_ptr++);
+        read_data = *reg_ptr++;
         if (exp2[offset] != read_data) {
             VPRINTF(FATAL,"SHA Result Mismatch - EXP: 0x%x RECVD: 0x%x\n", exp2[offset], read_data);
             SEND_STDOUT_CTRL( 0x01);
@@ -250,7 +250,7 @@ void main() {
     reg_ptr = (uint32_t*) CLP_SHA512_REG_SHA512_DIGEST_0;
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_SHA512_REG_SHA512_DIGEST_11) {
-        read_data = lsu_read_32(reg_ptr++);
+        read_data = *reg_ptr++;
         if (exp1[offset] != read_data) {
             VPRINTF(FATAL,"SHA Result Mismatch - EXP: 0x%x RECVD: 0x%x\n", exp1[offset], read_data);
             SEND_STDOUT_CTRL( 0x01);
@@ -259,7 +259,7 @@ void main() {
     }
 
     sha_poll_gen_hash_ready();
-    lsu_write_32((uint32_t*) CLP_SHA512_REG_SHA512_GEN_PCR_HASH_NONCE,0x12345678);
+    lsu_write_32(CLP_SHA512_REG_SHA512_GEN_PCR_HASH_NONCE,0x12345678);
     sha_gen_hash_start();
     sha_poll_gen_hash_valid();
 
@@ -267,7 +267,7 @@ void main() {
     reg_ptr = (uint32_t*) CLP_SHA512_REG_SHA512_GEN_PCR_HASH_DIGEST_0;
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_SHA512_REG_SHA512_GEN_PCR_HASH_DIGEST_11) {
-        read_data = lsu_read_32(reg_ptr++);
+        read_data = *reg_ptr++;
         if (exp3[offset] != read_data) {
             VPRINTF(FATAL,"SHA Result Mismatch - EXP: 0x%x RECVD: 0x%x\n", exp3[offset], read_data);
             SEND_STDOUT_CTRL( 0x01);
@@ -280,17 +280,17 @@ void main() {
     reg = ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK) |
           ((2 << ECC_REG_ECC_CTRL_CTRL_LOW) & ECC_REG_ECC_CTRL_CTRL_MASK) |
           ((0 << ECC_REG_ECC_CTRL_ZEROIZE_LOW) & ECC_REG_ECC_CTRL_ZEROIZE_MASK);
-    lsu_write_32((uint32_t*) CLP_ECC_REG_ECC_CTRL,reg);
+    lsu_write_32(CLP_ECC_REG_ECC_CTRL,reg);
 
     VPRINTF(MEDIUM,"ECC: Polling for PCR Sign to be complete\n");
     // wait for ECC SIGNING process to be done
-    while((lsu_read_32((uint32_t *) CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_VALID_MASK) == 0);
+    while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_VALID_MASK) == 0);
 
     //check expected output from sign r
     reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_0;
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_11) {
-        read_data = lsu_read_32(reg_ptr++);
+        read_data = *reg_ptr++;
         if (exp_sign_r[offset] != read_data) {
             VPRINTF(FATAL,"ECC SIGN R Result Mismatch - EXP: 0x%x RECVD: 0x%x\n", exp_sign_r[offset], read_data);
             SEND_STDOUT_CTRL( 0x01);
@@ -302,7 +302,7 @@ void main() {
     reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_0;
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_11) {
-        read_data = lsu_read_32(reg_ptr++);
+        read_data = *reg_ptr++;
         if (exp_sign_s[offset] != read_data) {
             VPRINTF(FATAL,"ECC SIGN S Result Mismatch - EXP: 0x%x RECVD: 0x%x\n", exp_sign_s[offset], read_data);
             SEND_STDOUT_CTRL( 0x01);

@@ -1,0 +1,28 @@
+---
+provides: [csrng]
+schema_version: 2.4.0
+requires:
+  - libs
+  - prim_generic
+  - prim
+  - lc_ctrl_pkg
+  - entropy_src_pkg
+  - aes
+  - edn_pkg
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/csrng_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/csrng_pkg.sv
+      - $COMPILE_ROOT/rtl/csrng_core.sv
+      - $COMPILE_ROOT/rtl/csrng_main_sm.sv
+      - $COMPILE_ROOT/rtl/csrng_ctr_drbg_upd.sv
+      - $COMPILE_ROOT/rtl/csrng_ctr_drbg_cmd.sv
+      - $COMPILE_ROOT/rtl/csrng_reg_top.sv
+      - $COMPILE_ROOT/rtl/csrng_ctr_drbg_gen.sv
+      - $COMPILE_ROOT/rtl/csrng_block_encrypt.sv
+      - $COMPILE_ROOT/rtl/csrng_state_db.sv
+      - $COMPILE_ROOT/rtl/csrng_cmd_stage.sv
+      - $COMPILE_ROOT/rtl/csrng.sv
+    tops: [csrng]

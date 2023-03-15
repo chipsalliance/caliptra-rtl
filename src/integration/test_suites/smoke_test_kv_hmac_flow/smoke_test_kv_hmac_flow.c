@@ -52,23 +52,23 @@ void hmac_kvflow_test(uint8_t key_kv_id, uint8_t hmacblock_kv_id, uint8_t store_
     printf("%c", key_inject_cmd);
 
     // wait for HMAC to be ready
-    while((lsu_read_32((uint32_t *) CLP_HMAC_REG_HMAC384_STATUS) & HMAC_REG_HMAC384_STATUS_READY_MASK) == 0);
+    while((lsu_read_32(CLP_HMAC_REG_HMAC384_STATUS) & HMAC_REG_HMAC384_STATUS_READY_MASK) == 0);
 
 
     // Program KEY Read with 12 dwords from key_kv_id
-    lsu_write_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_RD_KEY_CTRL, HMAC_REG_HMAC384_KV_RD_KEY_CTRL_READ_EN_MASK |
-                                                                   ((key_kv_id & 0x7) << HMAC_REG_HMAC384_KV_RD_KEY_CTRL_READ_ENTRY_LOW));
+    lsu_write_32(CLP_HMAC_REG_HMAC384_KV_RD_KEY_CTRL, HMAC_REG_HMAC384_KV_RD_KEY_CTRL_READ_EN_MASK |
+                                                      ((key_kv_id & 0x7) << HMAC_REG_HMAC384_KV_RD_KEY_CTRL_READ_ENTRY_LOW));
 
     // Check that HMAC KEY is loaded
-    while((lsu_read_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_RD_KEY_STATUS) & HMAC_REG_HMAC384_KV_RD_KEY_STATUS_VALID_MASK) == 0);
+    while((lsu_read_32(CLP_HMAC_REG_HMAC384_KV_RD_KEY_STATUS) & HMAC_REG_HMAC384_KV_RD_KEY_STATUS_VALID_MASK) == 0);
 
     
     // Program HMAC_BLOCK
-    lsu_write_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL, HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL_READ_EN_MASK |
-                                                                    ((hmacblock_kv_id & 0x7) << HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL_READ_ENTRY_LOW));
+    lsu_write_32(CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL, HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL_READ_EN_MASK |
+                                                        ((hmacblock_kv_id & 0x7) << HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL_READ_ENTRY_LOW));
 
     // Check that HMAC BLOCK is loaded
-    while((lsu_read_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS) & HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS_VALID_MASK) == 0);
+    while((lsu_read_32(CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS) & HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS_VALID_MASK) == 0);
     /*
     reg_ptr = (uint32_t*) CLP_HMAC_REG_HMAC384_BLOCK_0;
     offset = 0;
@@ -87,22 +87,22 @@ void hmac_kvflow_test(uint8_t key_kv_id, uint8_t hmacblock_kv_id, uint8_t store_
     // if we want to store the results into kv
     // set tag DEST to write
     if (store_to_kv){
-        lsu_write_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_WR_CTRL, HMAC_REG_HMAC384_KV_WR_CTRL_WRITE_EN_MASK |
-                                                                HMAC_REG_HMAC384_KV_WR_CTRL_HMAC_KEY_DEST_VALID_MASK  |
-                                                                HMAC_REG_HMAC384_KV_WR_CTRL_HMAC_BLOCK_DEST_VALID_MASK|
-                                                                HMAC_REG_HMAC384_KV_WR_CTRL_SHA_BLOCK_DEST_VALID_MASK |
-                                                                HMAC_REG_HMAC384_KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK  |
-                                                                HMAC_REG_HMAC384_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK  |
-                                                                HMAC_REG_HMAC384_KV_WR_CTRL_ECC_MSG_DEST_VALID_MASK);
+        lsu_write_32(CLP_HMAC_REG_HMAC384_KV_WR_CTRL, HMAC_REG_HMAC384_KV_WR_CTRL_WRITE_EN_MASK |
+                                                      HMAC_REG_HMAC384_KV_WR_CTRL_HMAC_KEY_DEST_VALID_MASK  |
+                                                      HMAC_REG_HMAC384_KV_WR_CTRL_HMAC_BLOCK_DEST_VALID_MASK|
+                                                      HMAC_REG_HMAC384_KV_WR_CTRL_SHA_BLOCK_DEST_VALID_MASK |
+                                                      HMAC_REG_HMAC384_KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK  |
+                                                      HMAC_REG_HMAC384_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK  |
+                                                      HMAC_REG_HMAC384_KV_WR_CTRL_ECC_MSG_DEST_VALID_MASK);
     }
 
     // Enable HMAC core
-    lsu_write_32((uint32_t*) CLP_HMAC_REG_HMAC384_CTRL, HMAC_REG_HMAC384_CTRL_INIT_MASK);
+    lsu_write_32(CLP_HMAC_REG_HMAC384_CTRL, HMAC_REG_HMAC384_CTRL_INIT_MASK);
 
     printf("check tag\n");
     if (store_to_kv){
         // wait for HMAC process - check dest done
-        while((lsu_read_32((uint32_t*) CLP_HMAC_REG_HMAC384_KV_WR_STATUS) & HMAC_REG_HMAC384_KV_WR_STATUS_VALID_MASK) == 0);
+        while((lsu_read_32(CLP_HMAC_REG_HMAC384_KV_WR_STATUS) & HMAC_REG_HMAC384_KV_WR_STATUS_VALID_MASK) == 0);
     }
     else{
         reg_ptr = (uint32_t *) CLP_HMAC_REG_HMAC384_TAG_0;

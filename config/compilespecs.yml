@@ -16,6 +16,17 @@ files:
   - src/datavault/config/compile.yml
   - src/integration/asserts/config/compile.yml
   - src/sha512_masked/config/compile.yml
+  - src/uart/config/compile.yml
+  # -- Start RNG --
+  - src/prim_generic/config/compile.yml
+  - src/prim/config/compile.yml
+  - src/lc_ctrl/config/compile.yml
+  - src/aes/config/compile.yml
+  - src/edn/config/compile.yml
+  - src/kmac/config/compile.yml
+  - src/entropy_src/config/compile.yml
+  - src/csrng/config/compile.yml
+  # -- End RNG --
   # UVMF TBs
   - src/aes_secworks/uvmf_cbc_AllKAT/config/compile.yml
   - src/ecc/uvmf_ecc/config/compile.yml
