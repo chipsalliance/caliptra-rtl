@@ -1,0 +1,3 @@
+${WORKSPACE}/src/prim/lint/prim_max_tree.vlt
+${WORKSPACE}/src/prim/lint/prim_sum_tree.vlt
+${WORKSPACE}/src/prim/lint/prim_onehot_check.vlt
