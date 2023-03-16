@@ -32,6 +32,7 @@ files:
   - src/ecc/uvmf_ecc/config/compile.yml
   - src/hmac/uvmf_2022/config/compile.yml
   - src/keyvault/uvmf_kv/config/compile.yml
+  - src/pcrvault/uvmf_pv/config/compile.yml
   #- src/sha256/uvmf_sha256/config/compile.yml
   - src/sha512/uvmf_sha512/config/compile.yml
   - src/soc_ifc/uvmf_soc_ifc/config/compile.yml

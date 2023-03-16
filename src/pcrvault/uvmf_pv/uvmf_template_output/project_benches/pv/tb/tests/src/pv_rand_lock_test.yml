@@ -1,0 +1,6 @@
+---
+# Random seed desired...
+seed: ${PLAYBOOK_RANDOM_SEED}
+plusargs:
+- '+UVM_TESTNAME=pv_rand_lock_test'
+testname: pv_rand_lock_test

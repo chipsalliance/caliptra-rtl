@@ -120,10 +120,9 @@ class kv_wr_rd_debug_core_rst_sequence #(
         else
             `uvm_error("KV WR RD", "kv_rst_agent_config.sequencer is null!")
         
-        fork
-            begin
+        
                 //Unlock debug mode or clear secrets randomly
-                repeat(5) begin
+                
                     std::randomize(debug_type); //0 - security state, 1 - clear secrets
                     
                     std::randomize(wait_cycles_from_seq) with {
@@ -146,9 +145,7 @@ class kv_wr_rd_debug_core_rst_sequence #(
                             assert(sts == UVM_IS_OK) else `uvm_error("AHB_CLEAR_SECRETS_SET", "Failed when writing to CLEAR_SECRETS reg!")
                         end
                     endcase
-                end
-            end
-            begin
+                
                 //Write to all entries
                 for (write_entry = 0; write_entry < KV_NUM_KEYS; write_entry++) begin
                     for(write_offset = 0; write_offset < KV_NUM_DWORDS; write_offset++) begin
@@ -157,8 +154,6 @@ class kv_wr_rd_debug_core_rst_sequence #(
                         sha512_write_seq.start(configuration.kv_sha512_write_agent_config.sequencer);
                     end
                 end
-            end
-        join            
             
             //Issue core reset before reading
             kv_rst_agent_core_rst_seq.start(configuration.kv_rst_agent_config.sequencer);

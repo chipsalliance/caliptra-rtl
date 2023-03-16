@@ -1,0 +1,6 @@
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.vinfo
+@use pv_write_pkg_hdl.vinfo
++incdir+@vinfodir
+src/pv_write_if.sv
+src/pv_write_driver_bfm.sv
+src/pv_write_monitor_bfm.sv
