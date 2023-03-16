@@ -113,14 +113,14 @@ always_ff @(posedge hclk or negedge hreset_n) begin
     end
     else begin
         //Capture the address during the address phase for each initiator
-        initiator0_pend_haddr <= initiator0_address_ph ? haddr_i_0 : initiator0_pend_haddr;
-        initiator1_pend_haddr <= initiator1_address_ph ? haddr_i_1 : initiator1_pend_haddr;
-        initiator0_pend_htrans <= initiator0_address_ph ? htrans_i_0 : initiator0_pend_htrans;
-        initiator1_pend_htrans <= initiator1_address_ph ? htrans_i_1 : initiator1_pend_htrans;
-        initiator0_pend_hsize <= initiator0_address_ph ? hsize_i_0 : initiator0_pend_hsize;
-        initiator1_pend_hsize <= initiator1_address_ph ? hsize_i_1 : initiator1_pend_hsize;
-        initiator0_pend_hwrite <= initiator0_address_ph ? hwrite_i_0 : initiator0_pend_hwrite;
-        initiator1_pend_hwrite <= initiator1_address_ph ? hwrite_i_1 : initiator1_pend_hwrite;
+        initiator0_pend_haddr <= initiator0_address_ph & ~initiator0_pend_addr_ph ? haddr_i_0 : initiator0_pend_haddr;
+        initiator1_pend_haddr <= initiator1_address_ph & ~initiator1_pend_addr_ph ? haddr_i_1 : initiator1_pend_haddr;
+        initiator0_pend_htrans <= initiator0_address_ph & ~initiator0_pend_addr_ph ? htrans_i_0 : initiator0_pend_htrans;
+        initiator1_pend_htrans <= initiator1_address_ph & ~initiator1_pend_addr_ph ? htrans_i_1 : initiator1_pend_htrans;
+        initiator0_pend_hsize <= initiator0_address_ph & ~initiator0_pend_addr_ph ? hsize_i_0 : initiator0_pend_hsize;
+        initiator1_pend_hsize <= initiator1_address_ph & ~initiator1_pend_addr_ph ? hsize_i_1 : initiator1_pend_hsize;
+        initiator0_pend_hwrite <= initiator0_address_ph & ~initiator0_pend_addr_ph ? hwrite_i_0 : initiator0_pend_hwrite;
+        initiator1_pend_hwrite <= initiator1_address_ph & ~initiator1_pend_addr_ph ? hwrite_i_1 : initiator1_pend_hwrite;
 
         //Capture pending address phase when initiators collide
         initiator0_pend_addr_ph <= (initiator0_address_ph | initiator0_pend_addr_ph) & ~initiator0_gnt;
