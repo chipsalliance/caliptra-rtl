@@ -10,3 +10,9 @@ targets:
       - $COMPILE_ROOT/rtl/lc_ctrl_reg_pkg.sv
       - $COMPILE_ROOT/rtl/lc_ctrl_state_pkg.sv
       - $COMPILE_ROOT/rtl/lc_ctrl_pkg.sv
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/lc_ctrl_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/lc_ctrl_state_pkg.sv
+      - $COMPILE_ROOT/rtl/lc_ctrl_pkg.sv

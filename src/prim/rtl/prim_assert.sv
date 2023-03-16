@@ -13,6 +13,7 @@
 // Helper macros //
 ///////////////////
 
+`include "caliptra_sva.svh"
 `ifndef CALIPTRA_SVA
 // Default clk and reset signals used by assertion macros below.
 `define CALIPTRA_ASSERT_DEFAULT_CLK clk_i

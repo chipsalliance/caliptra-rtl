@@ -13,9 +13,5 @@
 # limitations under the License.
 #
 ---
-plusargs:
-  - +ECC_TEST_VECTOR_FILE='${CALIPTRA_ROOT}/src/ecc/tb/test_vectors/ecc_drbg_mbedtls.hex'
-  - +ECC_TEST='ECC_otf_reset_test'
-
-testname: ecc_otf_reset_test
-seed: 1
+testname: csrng_test
+seed: ${PLAYBOOK_RANDOM_SEED}

@@ -3,6 +3,8 @@ provides: [uart]
 schema_version: 2.4.0
 requires:
   - prim_generic
+  - prim
+  - libs
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -14,3 +16,25 @@ targets:
       - $COMPILE_ROOT/rtl/uart.sv
       - $COMPILE_ROOT/rtl/uart_core.sv
     tops: [uart]
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/uart_reg_pkg.sv
+---
+provides: [uart_tb]
+schema_version: 2.4.0
+requires:
+  - uart
+targets:
+  tb:
+    directories: [$COMPILE_ROOT/tb]
+    files:
+      - $COMPILE_ROOT/tb/uart_tb.sv
+    tops: [uart_tb]
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        - '-noinherit_timescale=1ns/1ps'

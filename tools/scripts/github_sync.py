@@ -321,6 +321,10 @@ def copyFilesADOToGitHub(sWorkspace, sRepo, dWorkspace, dRepo):
     # Instead, repo level config directory is removedi in the cleanup stage that runs
     # after all files have been copied to GitHub
     shutil.copytree(srcCaliptraDir, destCaliptraDir, ignore=shutil.ignore_patterns(*ignoreFiles,*blacklistConfigDirsFiles,*blacklistIpDirsFiles,*blacklistScriptsDirsFiles), dirs_exist_ok=True)
+    # Manually copy README.md because it is in the blacklist, but
+    # we want to keep it in the blacklist to clobber a whole bunch of
+    # other README files
+    shutil.copy(os.path.join(srcCaliptraDir, "README.md"), destCaliptraDir)
     
     #Remove tests not in the regression suite
     os.chdir(os.path.join(destCaliptraDir, "src/integration"))

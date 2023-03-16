@@ -212,7 +212,7 @@ module entropy_src_tb
   // Generates a cycle counter and displays information about
   // the dut as needed.
   //----------------------------------------------------------------
-  always_ff @(posedge clk_tb) begin : sys_monitor
+  always @(posedge clk_tb) begin : sys_monitor
       cycle_ctr = cycle_ctr + 1;
     end
 

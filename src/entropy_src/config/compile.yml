@@ -9,6 +9,13 @@ targets:
       - $COMPILE_ROOT/rtl/entropy_src_ack_sm_pkg.sv
       - $COMPILE_ROOT/rtl/entropy_src_reg_pkg.sv
       - $COMPILE_ROOT/rtl/entropy_src_pkg.sv
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/entropy_src_main_sm_pkg.sv
+      - $COMPILE_ROOT/rtl/entropy_src_ack_sm_pkg.sv
+      - $COMPILE_ROOT/rtl/entropy_src_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/entropy_src_pkg.sv
 ---
 provides: [entropy_src]
 schema_version: 2.4.0
@@ -17,7 +24,7 @@ requires:
   - libs
   - kmac
   - prim_generic
-  - prim_pkg
+  - prim
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -40,3 +47,21 @@ targets:
     directories: [$COMPILE_ROOT/tb]
     files:
       - $COMPILE_ROOT/tb/physical_rng.sv
+---
+provides: [entropy_src_tb]
+schema_version: 2.4.0
+requires:
+  - entropy_src
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/tb]
+    files:
+      - $COMPILE_ROOT/tb/entropy_src_tb.sv
+    tops: [entropy_src_tb]
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        - '-noinherit_timescale=1ns/1ps'
