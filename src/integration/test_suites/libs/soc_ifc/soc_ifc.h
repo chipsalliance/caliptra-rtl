@@ -54,6 +54,7 @@ enum {
 
 enum mbox_cmd_e {
     MBOX_CMD_RESP_BASIC = 0x40000000,
+    MBOX_CMD_REG_ACCESS = 0x40000001,
     MBOX_CMD_FMC_UPDATE = 0xba5eba11,
     MBOX_CMD_RT_UPDATE  = 0xbabecafe
 };

@@ -127,6 +127,9 @@ package soc_ifc_env_pkg;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_pauser_medium_sequence.svh"
   typedef soc_ifc_env_mbox_rand_pauser_medium_sequence soc_ifc_env_mbox_rand_pauser_medium_sequence_t;
   /* TODO: If desired in top-level rand sequence, add this to the rand_seq_idx enum/avail_env_seqs_c constraint */
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_uc_reg_access_sequence.svh"
+  typedef soc_ifc_env_mbox_uc_reg_access_sequence soc_ifc_env_mbox_uc_reg_access_sequence_t;
+  /* TODO: If desired in top-level rand sequence, add this to the rand_seq_idx enum/avail_env_seqs_c constraint */
 
   ///////////////////// Sequences usable from soc_ifc bench only /////////////////////
   // These sequences include stimulus for the internal/caliptra-side of the

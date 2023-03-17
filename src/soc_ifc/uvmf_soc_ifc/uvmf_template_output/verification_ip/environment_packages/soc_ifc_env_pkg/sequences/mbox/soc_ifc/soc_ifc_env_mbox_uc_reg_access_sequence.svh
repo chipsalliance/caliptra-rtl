@@ -15,52 +15,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// pragma uvmf custom header begin
-// pragma uvmf custom header end
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
-//     
-// DESCRIPTION: 
-// This file contains defines and typedefs to be compiled for use in
-// the environment package.
+//
+// DESCRIPTION: Extended from mbox_base sequence to provide additional
+//              functionality that emulates the expected format of a
+//              FW update transfer.
 //
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
+class soc_ifc_env_mbox_uc_reg_access_sequence extends soc_ifc_env_mbox_sequence_base;
+
+  `uvm_object_utils( soc_ifc_env_mbox_uc_reg_access_sequence )
+
+  extern virtual task mbox_push_datain();
+
+  // This shouldn't be randomized, specify it
+  constraint mbox_cmd_c { mbox_op_rand.cmd.cmd_e == MBOX_CMD_REG_ACCESS; }
+  // maxing dlen, should be getting this from fw image
+  constraint mbox_dlen_c { mbox_op_rand.dlen == 32'h0000_0008; }
 
 
-  // pragma uvmf custom additional begin
-  typedef enum logic [4:0] {
-    CPTRA_SUCCESS = 5'b00000,
-    CPTRA_TIMEOUT = 5'b00001,
-    CPTRA_INVALID = 5'b00010,
-    CPTRA_X_VAL   = 5'b00100,
-    CPTRA_FAIL    = 5'b11111
-  } op_sts_e;
+endclass
 
-  /**
-   * Decode:
-   *   [31]: Firmware command
-   *   [30]: Response required (if set)
-   */
-  typedef enum logic [31:0] {
-      MBOX_CMD_RESP_BASIC = 32'h40000000,
-      MBOX_CMD_REG_ACCESS = 32'h40000001,
-      MBOX_CMD_FMC_UPDATE = 32'hba5eba11,
-      MBOX_CMD_RT_UPDATE  = 32'hbabecafe
-  } mbox_cmd_e;
-  typedef union packed {
-      mbox_cmd_e cmd_e;
-      struct packed {
-          logic fw;
-          logic resp_reqd;
-          logic [29:0] rsvd;
-      } cmd_s;
-  } mbox_cmd_u;
+// This should be overridden with real data to write
+task soc_ifc_env_mbox_uc_reg_access_sequence::mbox_push_datain();
 
-  typedef struct packed {
-    logic [31:0] dlen;
-    mbox_cmd_u   cmd;
-  } mbox_op_s;
-  // pragma uvmf custom additional end
+    uvm_reg_data_t data;
+
+    data = uvm_reg_data_t'(32'h30030010);
+    reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
+    if (reg_sts != UVM_IS_OK)
+        `uvm_error("MBOX_SEQ", "Register access failed (mbox_datain)")
+
+endtask
 
