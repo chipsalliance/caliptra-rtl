@@ -1,0 +1,7 @@
++incdir+${CALIPTRA_ROOT}/src/sha512_masked/rtl
+${CALIPTRA_ROOT}/src/sha512_masked/rtl/sha512_masked_defines_pkg.sv
+${CALIPTRA_ROOT}/src/sha512_masked/rtl/sha512_masked_core.sv
+${CALIPTRA_ROOT}/src/sha512_masked/rtl/sha512_masked_lfsr.sv
+${CALIPTRA_ROOT}/src/sha512_masked/rtl/sha512_masked_w_mem.sv
+${CALIPTRA_ROOT}/src/sha512_masked/rtl/sha512_masked_h_constants.sv
+${CALIPTRA_ROOT}/src/sha512_masked/rtl/sha512_masked_k_constants.sv

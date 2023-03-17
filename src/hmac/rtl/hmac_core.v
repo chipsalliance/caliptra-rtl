@@ -22,6 +22,9 @@
 //======================================================================
 
 module hmac_core
+#(
+      parameter [147 : 0]   LFSR_INIT_SEED  = 148'h5_60DE_54E3_6AC0_807B_2396_8E54_5475_3CAB_FFB0 // a random value
+)
 (
       // Clock and reset.
       input wire            clk,
@@ -35,8 +38,10 @@ module hmac_core
       output wire           tag_valid,
 
       // Data ports.
+      input wire [147 : 0]  lfsr_seed,
+
       input wire [383 : 0]  key,
-      input wire [1023 : 0]  block_msg,
+      input wire [1023 : 0] block_msg,
       output wire [383 : 0] tag
     );
 
@@ -53,6 +58,9 @@ module hmac_core
   localparam [2 : 0] CTRL_OPAD   = 3'd2;
   localparam [2 : 0] CTRL_HMAC   = 3'd3;
   localparam [2 : 0] CTRL_DONE   = 3'd4;
+
+  localparam [73 : 0] LFSR_INIT_SEED0 = LFSR_INIT_SEED[73  :  0];
+  localparam [73 : 0] LFSR_INIT_SEED1 = LFSR_INIT_SEED[147 : 74];
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
@@ -102,7 +110,11 @@ module hmac_core
   //----------------------------------------------------------------
   // core instantiation.
   //----------------------------------------------------------------
-  sha512_core u_sha512_core_h1 (
+  sha512_masked_core #(
+                     .LFSR_INIT_SEED(LFSR_INIT_SEED0)
+                     )
+                     u_sha512_core_h1 
+                     (
                      .clk(clk),
                      .reset_n(reset_n),
                      .zeroize(zeroize),
@@ -111,8 +123,7 @@ module hmac_core
                      .next_cmd(H1_next),
                      .mode(2'h2),
 
-                     .work_factor(1'b0),
-                     .work_factor_num(32'h0),
+                     .lfsr_seed(lfsr_seed[73 : 0]),
 
                      .block_msg(H1_block),
 
@@ -121,7 +132,11 @@ module hmac_core
                      .digest_valid(H1_digest_valid)
                     );
 
-  sha512_core u_sha512_core_h2 (
+  sha512_masked_core #(
+                     .LFSR_INIT_SEED(LFSR_INIT_SEED1)
+                     )
+                     u_sha512_core_h2 
+                     (
                      .clk(clk),
                      .reset_n(reset_n),
                      .zeroize(zeroize),
@@ -130,8 +145,7 @@ module hmac_core
                      .next_cmd(H2_next),
                      .mode(2'h2),
 
-                     .work_factor(1'b0),
-                     .work_factor_num(32'h0),
+                     .lfsr_seed(lfsr_seed[147 : 74]),
 
                      .block_msg(H2_block),
 

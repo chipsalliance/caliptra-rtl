@@ -1,0 +1,19 @@
+uvmf:
+  util_components:
+    pv_predictor:
+      analysis_exports:
+      - name: pv_rst_agent_ae
+        type: pv_rst_transaction
+      - name: pv_sha512_write_agent_ae
+        type: pv_write_transaction
+      - name: pv_sha512_block_read_agent_ae
+        type: pv_read_transaction
+      - name: ahb_slave_0_ae
+        type: mvc_sequence_item_base
+      analysis_ports:
+      - name: pv_sha512_write_sb_ap
+        type: pv_write_transaction
+      - name: pv_sha512_block_read_sb_ap
+        type: pv_read_transaction
+      existing_library_component: 'True'
+      type: predictor

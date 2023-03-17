@@ -1,0 +1,77 @@
+uvmf:
+  environments:
+    pv:
+      imports:
+      - name: "rw_txn_pkg"
+
+      agents:
+      - name: pv_rst_agent
+        type: pv_rst
+        initiator_responder: "INITIATOR"
+      - name: pv_sha512_write_agent
+        type: pv_write
+        initiator_responder: "INITIATOR"
+      - name: pv_sha512_block_read_agent
+        type: pv_read
+        initiator_responder: "INITIATOR"
+
+      analysis_components:
+      - name: pv_pred
+        type: pv_predictor
+      - name: pv_sb
+        type: pv_scoreboard
+
+#      analysis_exports :
+#        - name: "ahb_master_0_export"
+#          trans_type: "rw_txn"
+#          connected_to: "pv_pred.ahb_master_0_ae"
+#        - name: "apb5_master_0_export"
+#          trans_type: "rw_txn"
+#          connected_to: "pv_pred.apb5_master_0_ae"
+
+      analysis_ports: []
+
+      config_constraints: []
+      config_vars: []
+
+      parameters: []
+
+      scoreboards: []
+      # - name: pv_sb
+      #   sb_type: uvmf_in_order_scoreboard
+      #   trans_type: pv_read_transaction
+
+      subenvs: []
+
+      qvip_subenvs :
+        - { name: "qvip_ahb_lite_slave_subenv", type: "qvip_ahb_lite_slave" }
+
+      qvip_connections :
+        - driver: "qvip_ahb_lite_slave_subenv.ahb_lite_slave_0"
+          ap_key: "burst_transfer"
+          receiver: "pv_pred.ahb_slave_0_ae"
+          validate: "false"
+
+      tlm_connections:
+      ############# Predictor connections ############
+      - driver: pv_rst_agent.monitored_ap             # PcrVault Reset
+        receiver: pv_pred.pv_rst_agent_ae             #
+      ############# Scoreboard connections ############
+      - driver: pv_pred.pv_sha512_write_sb_ap                          #
+        receiver: pv_sb.expected_sha512_write_analysis_export          #
+      - driver: pv_sha512_write_agent.monitored_ap   #
+        receiver: pv_sb.actual_sha512_write_analysis_export 
+      - driver: pv_pred.pv_sha512_block_read_sb_ap                          #
+        receiver: pv_sb.expected_sha512_block_read_analysis_export          #
+      - driver: pv_sha512_block_read_agent.monitored_ap   #
+        receiver: pv_sb.actual_sha512_block_read_analysis_export            #
+
+      register_model:
+        use_adapter: "True"
+        use_explicit_prediction: "True"
+        reg_block_class: pv_reg_model_top
+        reg_model_package: pv_reg_model_top_pkg
+        maps:
+          - name: "ahb_map"
+            interface: "qvip_ahb_lite_slave_subenv.ahb_lite_slave_0"
+            qvip_agent: "True"

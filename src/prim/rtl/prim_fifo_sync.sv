@@ -36,7 +36,7 @@ module prim_fifo_sync #(
 
   // FIFO is in complete passthrough mode
   if (Depth == 0) begin : gen_passthru_fifo
-    `ASSERT_INIT(paramCheckPass, Pass == 1)
+    `CALIPTRA_ASSERT_INIT(paramCheckPass, Pass == 1)
 
     assign depth_o = 1'b0; //output is meaningless
 
@@ -182,7 +182,7 @@ module prim_fifo_sync #(
       assign rdata_o = rdata_int;
     end
 
-    `ASSERT(depthShallNotExceedParamDepth, !empty |-> depth_o <= DepthW'(Depth))
+    `CALIPTRA_ASSERT(depthShallNotExceedParamDepth, !empty |-> depth_o <= DepthW'(Depth))
   end // block: gen_normal_fifo
 
 
@@ -190,9 +190,9 @@ module prim_fifo_sync #(
   // Known Assertions //
   //////////////////////
 
-  `ASSERT(DataKnown_A, rvalid_o |-> !$isunknown(rdata_o))
-  `ASSERT_KNOWN(DepthKnown_A, depth_o)
-  `ASSERT_KNOWN(RvalidKnown_A, rvalid_o)
-  `ASSERT_KNOWN(WreadyKnown_A, wready_o)
+  `CALIPTRA_ASSERT(DataKnown_A, rvalid_o |-> !$isunknown(rdata_o))
+  `CALIPTRA_ASSERT_KNOWN(DepthKnown_A, depth_o)
+  `CALIPTRA_ASSERT_KNOWN(RvalidKnown_A, rvalid_o)
+  `CALIPTRA_ASSERT_KNOWN(WreadyKnown_A, wready_o)
 
 endmodule

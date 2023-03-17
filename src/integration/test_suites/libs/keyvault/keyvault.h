@@ -74,11 +74,11 @@ void pv_hash_extend(uint32_t pcr_entry);
 
 //polls until kv control is ready to be used
 inline void kv_poll_ready(uint32_t reg_addr) {
-    while((lsu_read_32((uint32_t*) reg_addr) & KV_RD_STATUS_READY_MASK) == 0);
+    while((lsu_read_32(reg_addr) & KV_RD_STATUS_READY_MASK) == 0);
 }
 //polls until kv control is done and valid is set
 inline void kv_poll_valid(uint32_t reg_addr) {
-    while((lsu_read_32((uint32_t*) reg_addr) & KV_RD_STATUS_VALID_MASK) == 0);
+    while((lsu_read_32(reg_addr) & KV_RD_STATUS_VALID_MASK) == 0);
 }
 
 

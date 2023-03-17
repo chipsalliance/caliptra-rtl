@@ -34,6 +34,7 @@ class soc_ifc_env_sequence_base #(
   `uvm_object_param_utils( soc_ifc_env_sequence_base #(
                            CONFIG_T
                            ) );
+  `m_uvm_get_type_name_func(soc_ifc_env_sequence_base)
 
   // Handle to the environments register model
 // This handle needs to be set before use.
@@ -79,6 +80,10 @@ class soc_ifc_env_sequence_base #(
 
 
   endfunction
+
+  virtual task pre_start();
+    `uvm_info(this.get_type_name(), "In: pre_start() for sequence", UVM_NONE)
+  endtask
 
   virtual task body();
 

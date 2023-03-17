@@ -1,4 +1,5 @@
-+incdir+${WORKSPACE}/Caliptra/src/pcrvault/rtl
-${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_defines_pkg.sv
-${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_macros.svh
-${WORKSPACE}/Caliptra/src/pcrvault/rtl/pv_macros.svh
++incdir+${CALIPTRA_ROOT}/src/pcrvault/rtl
+${CALIPTRA_ROOT}/src/pcrvault/rtl/pv_defines_pkg.sv
+${CALIPTRA_ROOT}/src/pcrvault/rtl/pv_macros.svh
+${CALIPTRA_ROOT}/src/pcrvault/rtl/pv_gen_hash.sv
+${CALIPTRA_ROOT}/src/pcrvault/rtl/pv_gen_hash.sv

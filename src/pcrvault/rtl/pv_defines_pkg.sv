@@ -17,15 +17,15 @@
 
 package pv_defines_pkg;
 
-parameter PV_NUM_DWORDS = 12; //number of dwords per key
+parameter PV_NUM_DWORDS = 12; //number of dwords per pcr
 parameter PV_NUM_PCR = 32;
 parameter PV_ADDR_W = 13;
 parameter PV_DATA_W = 32;
 parameter PV_ENTRY_ADDR_W = $clog2(PV_NUM_PCR);
-parameter PV_ENTRY_SIZE = 512;
 parameter PV_ENTRY_SIZE_WIDTH = $clog2(PV_NUM_DWORDS);
-parameter PV_NUM_READ=1;
-parameter PV_NUM_WRITE=1;
+parameter PV_NUM_READ = 1;
+parameter PV_NUM_WRITE = 1;
+parameter PV_SIZE_OF_NONCE = 32;
 
 
 typedef struct packed {

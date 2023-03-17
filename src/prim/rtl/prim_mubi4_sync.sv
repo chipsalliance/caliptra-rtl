@@ -38,7 +38,7 @@ module prim_mubi4_sync
   output mubi4_t [NumCopies-1:0] mubi_o
 );
 
-  `ASSERT_INIT(NumCopiesMustBeGreaterZero_A, NumCopies > 0)
+  `CALIPTRA_ASSERT_INIT(NumCopiesMustBeGreaterZero_A, NumCopies > 0)
 
   logic [MuBi4Width-1:0] mubi;
   if (AsyncOn) begin : gen_flops
@@ -116,8 +116,8 @@ module prim_mubi4_sync
       always_ff @(posedge clk_i) begin
         mubi_in_sva_q <= mubi_i;
       end
-      `ASSERT(OutputIfUnstable_A, sig_unstable |-> mubi_o == {NumCopies{reset_value}})
-      `ASSERT(OutputDelay_A,
+      `CALIPTRA_ASSERT(OutputIfUnstable_A, sig_unstable |-> mubi_o == {NumCopies{reset_value}})
+      `CALIPTRA_ASSERT(OutputDelay_A,
               rst_ni |-> ##[3:4] sig_unstable || mubi_o == {NumCopies{$past(mubi_in_sva_q, 2)}})
 `endif
     end else begin : gen_no_stable_chks
@@ -127,7 +127,7 @@ module prim_mubi4_sync
       always_ff @(posedge clk_i) begin
         mubi_in_sva_q <= mubi_i;
       end
-      `ASSERT(OutputDelay_A,
+      `CALIPTRA_ASSERT(OutputDelay_A,
               rst_ni |-> ##3 (mubi_o == {NumCopies{$past(mubi_in_sva_q, 2)}} ||
                               $past(mubi_in_sva_q, 2) != $past(mubi_in_sva_q, 1)))
 `endif
@@ -154,7 +154,7 @@ module prim_mubi4_sync
 
     assign mubi = MuBi4Width'(mubi_i);
 
-    `ASSERT(OutputDelay_A, mubi_o == {NumCopies{mubi_i}})
+    `CALIPTRA_ASSERT(OutputDelay_A, mubi_o == {NumCopies{mubi_i}})
   end
 
   for (genvar j = 0; j < NumCopies; j++) begin : gen_buffs
@@ -173,6 +173,6 @@ module prim_mubi4_sync
   ////////////////
 
   // The outputs should be known at all times.
-  `ASSERT_KNOWN(OutputsKnown_A, mubi_o)
+  `CALIPTRA_ASSERT_KNOWN(OutputsKnown_A, mubi_o)
 
 endmodule : prim_mubi4_sync

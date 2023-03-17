@@ -1,0 +1,48 @@
+uvmf:
+  interfaces:
+    pv_rst:
+      clock: clk
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      gen_inbound_streaming_driver: 'False'
+      hdl_pkg_parameters: []
+      hdl_typedefs: []
+      hvl_pkg_parameters: []
+      hvl_typedefs: []
+      parameters: []
+      ports:
+      - dir: output
+        name: cptra_pwrgood
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: rst_b
+        reset_value: '''bz'
+        width: '1'
+      reset: dummy
+      reset_assertion_level: 'False'
+      transaction_constraints:
+      - comment: ''
+        name: wait_cycles_c
+        value: '{ wait_cycles dist {[1:25] := 80, [25:100] := 15, [100:500] := 5}; }'
+      transaction_vars:
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: set_pwrgood
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: assert_rst
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'True'
+        name: wait_cycles
+        type: int unsigned
+        unpacked_dimension: ''
+      use_dpi_link: 'False'

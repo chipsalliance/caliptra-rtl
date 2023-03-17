@@ -22,10 +22,10 @@
 `ifndef VERILATOR
 module caliptra_top_tb;
 `else
-module caliptra_top_tb ( 
+module caliptra_top_tb (
     input bit core_clk,
     input bit rst_l
-    ); 
+    );
 `endif
 
     import caliptra_top_tb_pkg::*;
@@ -90,7 +90,7 @@ module caliptra_top_tb (
     logic                       jtag_tdo;    // JTAG TDO
     //APB Interface
     logic [`CALIPTRA_APB_ADDR_WIDTH-1:0] PADDR;
-    logic [3:0]                          PPROT;
+    logic [2:0]                          PPROT;
     logic                                PSEL;
     logic                                PENABLE;
     logic                                PWRITE;
@@ -117,6 +117,9 @@ module caliptra_top_tb (
     security_state_t security_state;
 
     logic [63:0] generic_input_wires;
+    logic        etrng_req;
+    logic  [3:0] itrng_data;
+    logic        itrng_valid;
 
     //Interrupt flags
     //logic nmi_int;
@@ -583,7 +586,7 @@ caliptra_top caliptra_top_dut (
     .jtag_tdo(jtag_tdo),
     
     .PADDR(PADDR),
-    .PPROT(),
+    .PPROT(PPROT),
     .PAUSER(PAUSER),
     .PENABLE(PENABLE),
     .PRDATA(PRDATA),
@@ -620,7 +623,16 @@ caliptra_top caliptra_top_dut (
     //SoC Interrupts
     .cptra_error_fatal    (),
     .cptra_error_non_fatal(),
-    .trng_req             (),
+
+`ifdef CALIPTRA_INTERNAL_TRNG
+    .etrng_req             (etrng_req),
+    .itrng_data            (itrng_data),
+    .itrng_valid           (itrng_valid),
+`else
+    .etrng_req             (),
+    .itrng_data            (4'b0),
+    .itrng_valid           (1'b0),
+`endif
 
     .generic_input_wires(generic_input_wires),
     .generic_output_wires(),
@@ -628,6 +640,19 @@ caliptra_top caliptra_top_dut (
     .security_state(security_state), //FIXME TIE-OFF
     .scan_mode     (scan_mode) //FIXME TIE-OFF
 );
+
+
+`ifdef CALIPTRA_INTERNAL_TRNG
+    //=========================================================================-
+    // Physical RNG used for Internal TRNG
+    //=========================================================================-
+physical_rng physical_rng (
+    .clk    (core_clk),
+    .enable (etrng_req),
+    .data   (itrng_data),
+    .valid  (itrng_valid)
+);
+`endif
 
    //=========================================================================-
    // Services for SRAM exports, STDOUT, etc

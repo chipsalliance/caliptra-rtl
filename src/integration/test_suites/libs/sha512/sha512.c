@@ -23,7 +23,7 @@ void sha_init(enum sha512_mode_e mode) {
     uint32_t reg;
     reg = ((1 << SHA512_REG_SHA512_CTRL_INIT_LOW) & SHA512_REG_SHA512_CTRL_INIT_MASK) |
           ((mode << SHA512_REG_SHA512_CTRL_MODE_LOW) & SHA512_REG_SHA512_CTRL_MODE_MASK);
-    lsu_write_32((uint32_t*) CLP_SHA512_REG_SHA512_CTRL,reg);
+    lsu_write_32(CLP_SHA512_REG_SHA512_CTRL,reg);
 }
 
 void sha_next(enum sha512_mode_e mode) {
@@ -31,7 +31,7 @@ void sha_next(enum sha512_mode_e mode) {
     uint32_t reg;
     reg = ((1 << SHA512_REG_SHA512_CTRL_NEXT_LOW) & SHA512_REG_SHA512_CTRL_NEXT_MASK) |
           ((mode << SHA512_REG_SHA512_CTRL_MODE_LOW) & SHA512_REG_SHA512_CTRL_MODE_MASK);
-    lsu_write_32((uint32_t*) CLP_SHA512_REG_SHA512_CTRL,reg);
+    lsu_write_32(CLP_SHA512_REG_SHA512_CTRL,reg);
 }
 
 void sha_init_last(enum sha512_mode_e mode) {
@@ -40,7 +40,7 @@ void sha_init_last(enum sha512_mode_e mode) {
     reg = ((1 << SHA512_REG_SHA512_CTRL_INIT_LOW) & SHA512_REG_SHA512_CTRL_INIT_MASK) |
           ((mode << SHA512_REG_SHA512_CTRL_MODE_LOW) & SHA512_REG_SHA512_CTRL_MODE_MASK) |
           SHA512_REG_SHA512_CTRL_LAST_MASK;
-    lsu_write_32((uint32_t*) CLP_SHA512_REG_SHA512_CTRL,reg);
+    lsu_write_32(CLP_SHA512_REG_SHA512_CTRL,reg);
 }
 
 void sha_next_last(enum sha512_mode_e mode) {
@@ -49,5 +49,12 @@ void sha_next_last(enum sha512_mode_e mode) {
     reg = ((1 << SHA512_REG_SHA512_CTRL_NEXT_LOW) & SHA512_REG_SHA512_CTRL_NEXT_MASK) |
           ((mode << SHA512_REG_SHA512_CTRL_MODE_LOW) & SHA512_REG_SHA512_CTRL_MODE_MASK) |
           SHA512_REG_SHA512_CTRL_LAST_MASK;
-    lsu_write_32((uint32_t*) CLP_SHA512_REG_SHA512_CTRL,reg);
+    lsu_write_32(CLP_SHA512_REG_SHA512_CTRL,reg);
+}
+
+void sha_gen_hash_start() {
+    VPRINTF(MEDIUM,"SHA512: Set START for gen hash func\n");
+    uint32_t reg;
+    reg = SHA512_REG_SHA512_GEN_PCR_HASH_CTRL_START_MASK;
+    lsu_write_32(CLP_SHA512_REG_SHA512_GEN_PCR_HASH_CTRL,reg);
 }

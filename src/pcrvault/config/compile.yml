@@ -7,11 +7,13 @@ targets:
     files: 
       - $COMPILE_ROOT/rtl/pv_defines_pkg.sv
       - $COMPILE_ROOT/rtl/pv_macros.svh
+      - $COMPILE_ROOT/rtl/pv_gen_hash.sv
   tb:
     directories: [$COMPILE_ROOT/rtl]
     files:
       - $COMPILE_ROOT/rtl/pv_defines_pkg.sv
       - $COMPILE_ROOT/rtl/pv_macros.svh
+      - $COMPILE_ROOT/rtl/pv_gen_hash.sv
 ---
 provides: [pv_uvm_pkg]
 schema_version: 2.4.0

@@ -33,6 +33,8 @@ requires:
   - pcrvault
   - datavault
   - soc_ifc_top
+  - entropy_src
+  - csrng
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -53,6 +55,7 @@ global:
     vcs:
       default:
         - '-assert svaext'
+#        - '+define+CALIPTRA_INTERNAL_TRNG'
         #- '-v2k_generate'
 ---
 provides: [caliptra_top_tb]
@@ -79,6 +82,7 @@ global:
     vcs:
       default:
         - '-assert svaext'
+#        - '+define+CALIPTRA_INTERNAL_TRNG'
         - +define+CLP_ASSERT_ON
         #- '-v2k_generate'
         #- '-timescale=1ns/1ps'

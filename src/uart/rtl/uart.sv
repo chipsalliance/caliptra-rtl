@@ -9,14 +9,25 @@
 module uart
     import uart_reg_pkg::*;
 #(
-  parameter logic [NumAlerts-1:0] AlertAsyncOn = {NumAlerts{1'b1}}
+  parameter logic [NumAlerts-1:0] AlertAsyncOn = {NumAlerts{1'b1}},
+  parameter AHBDataWidth = 64,
+  parameter AHBAddrWidth = 32
 ) (
-  input           clk_i,
-  input           rst_ni,
+  input logic clk_i,
+  input logic rst_ni,
 
-  // Bus Interface
-  input  tlul_pkg::tl_h2d_t tl_i,
-  output tlul_pkg::tl_d2h_t tl_o,
+  // AMBA AHB Lite Interface
+  input logic [AHBAddrWidth-1:0]  haddr_i,
+  input logic [AHBDataWidth-1:0]  hwdata_i,
+  input logic                     hsel_i,
+  input logic                     hwrite_i,
+  input logic                     hready_i,
+  input logic [1:0]               htrans_i,
+  input logic [2:0]               hsize_i,
+
+  output logic                    hresp_o,
+  output logic                    hreadyout_o,
+  output logic [AHBDataWidth-1:0] hrdata_o,
 
   // Alerts
   input  prim_alert_pkg::alert_rx_t [NumAlerts-1:0] alert_rx_i,
@@ -42,11 +53,22 @@ module uart
   uart_reg2hw_t reg2hw;
   uart_hw2reg_t hw2reg;
 
-  uart_reg_top u_reg (
+  uart_reg_top #(
+    .AHBDataWidth(AHBDataWidth),
+    .AHBAddrWidth(AHBAddrWidth)
+  ) u_reg (
     .clk_i,
     .rst_ni,
-    .tl_i,
-    .tl_o,
+    .haddr_i,
+    .hwdata_i,
+    .hsel_i,
+    .hwrite_i,
+    .hready_i,
+    .htrans_i,
+    .hsize_i,
+    .hresp_o,
+    .hreadyout_o,
+    .hrdata_o,
     .reg2hw,
     .hw2reg,
     // SEC_CM: BUS.INTEGRITY
@@ -98,23 +120,27 @@ module uart
   // always enable the driving out of TX
   assign cio_tx_en_o = 1'b1;
 
+  // Outputs should have a known value after reset
+  `CALIPTRA_ASSERT_KNOWN(AHBRespKnownO_A, hresp_o)
+  `CALIPTRA_ASSERT_KNOWN(AHBReadyKnownO_A, hreadyout_o)
+
   // Assert Known for outputs
-  `ASSERT(TxEnIsOne_A, cio_tx_en_o === 1'b1)
-  `ASSERT_KNOWN(TxKnown_A, cio_tx_o, clk_i, !rst_ni || !cio_tx_en_o)
+  `CALIPTRA_ASSERT(TxEnIsOne_A, cio_tx_en_o === 1'b1)
+  `CALIPTRA_ASSERT_KNOWN(TxKnown_A, cio_tx_o, clk_i, !rst_ni || !cio_tx_en_o)
 
   // Assert Known for alerts
-  `ASSERT_KNOWN(AlertsKnown_A, alert_tx_o)
+  `CALIPTRA_ASSERT_KNOWN(AlertsKnown_A, alert_tx_o)
 
   // Assert Known for interrupts
-  `ASSERT_KNOWN(TxWatermarkKnown_A, intr_tx_watermark_o)
-  `ASSERT_KNOWN(RxWatermarkKnown_A, intr_rx_watermark_o)
-  `ASSERT_KNOWN(TxEmptyKnown_A, intr_tx_empty_o)
-  `ASSERT_KNOWN(RxOverflowKnown_A, intr_rx_overflow_o)
-  `ASSERT_KNOWN(RxFrameErrKnown_A, intr_rx_frame_err_o)
-  `ASSERT_KNOWN(RxBreakErrKnown_A, intr_rx_break_err_o)
-  `ASSERT_KNOWN(RxTimeoutKnown_A, intr_rx_timeout_o)
-  `ASSERT_KNOWN(RxParityErrKnown_A, intr_rx_parity_err_o)
+  `CALIPTRA_ASSERT_KNOWN(TxWatermarkKnown_A, intr_tx_watermark_o)
+  `CALIPTRA_ASSERT_KNOWN(RxWatermarkKnown_A, intr_rx_watermark_o)
+  `CALIPTRA_ASSERT_KNOWN(TxEmptyKnown_A, intr_tx_empty_o)
+  `CALIPTRA_ASSERT_KNOWN(RxOverflowKnown_A, intr_rx_overflow_o)
+  `CALIPTRA_ASSERT_KNOWN(RxFrameErrKnown_A, intr_rx_frame_err_o)
+  `CALIPTRA_ASSERT_KNOWN(RxBreakErrKnown_A, intr_rx_break_err_o)
+  `CALIPTRA_ASSERT_KNOWN(RxTimeoutKnown_A, intr_rx_timeout_o)
+  `CALIPTRA_ASSERT_KNOWN(RxParityErrKnown_A, intr_rx_parity_err_o)
 
   // Alert assertions for reg_we onehot check
-  `ASSERT_PRIM_REG_WE_ONEHOT_ERROR_TRIGGER_ALERT(RegWeOnehotCheck_A, u_reg, alert_tx_o[0])
+  `CALIPTRA_ASSERT_PRIM_REG_WE_ONEHOT_ERROR_TRIGGER_ALERT(RegWeOnehotCheck_A, u_reg, alert_tx_o[0])
 endmodule

@@ -121,8 +121,6 @@ jobs:
         run: |
           # TODO: Add the run_verilator_l0_regression.py script.
           # Running a simple test to make sure that there aren't any elaboration issues
-          WORKSPACE=$(pwd)
-          # TODO: Remove this sed command when the Caliptra directory is removed from caliptra_top_tb.vf
-          sed -i 's/Caliptra\///g' src/integration/config/caliptra_top_tb.vf
+          CALIPTRA_ROOT=$(pwd)
           cd tools/scripts
-          make verilator WORKSPACE=$WORKSPACE TESTNAME=smoke_test_kv_uds_reset
+          make verilator CALIPTRA_ROOT=$CALIPTRA_ROOT TESTNAME=smoke_test_kv_uds_reset

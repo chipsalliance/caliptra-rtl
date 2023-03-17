@@ -1,0 +1,45 @@
+---
+provides: [sha512_masked_core]
+schema_version: 2.4.0
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/sha512_masked_defines_pkg.sv
+      - $COMPILE_ROOT/rtl/sha512_masked_core.sv
+      - $COMPILE_ROOT/rtl/sha512_masked_lfsr.sv
+      - $COMPILE_ROOT/rtl/sha512_masked_w_mem.sv
+      - $COMPILE_ROOT/rtl/sha512_masked_h_constants.sv
+      - $COMPILE_ROOT/rtl/sha512_masked_k_constants.sv
+    tops: [sha512_masked_core]
+  #rtl_lint:
+    #directories: []
+    #waiver_files: 
+      #- $COMPILE_ROOT/config/rtl_lint/sha512.waiver
+      #- $COMPILE_ROOT/config/design_lint/sha512_ctrl/sglint_waivers
+    #black_box:
+      #- sha512_reg
+---
+provides: [sha512_masked_core_tb]  
+schema_version: 2.4.0
+requires: 
+  - sha512_masked_core
+targets:
+  tb:
+    directories: 
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/tb/sha512_masked_core_tb.sv
+    tops: [sha512_masked_core_tb]
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        #- '-v2k_generate'
+        #- '-timescale=1ns/1ps'
+        - '-noinherit_timescale=1ns/1ps'
+        #- '-ucli -i dump.ucli'
+      #sim:
+        #- '-ucli -i dump.ucli'

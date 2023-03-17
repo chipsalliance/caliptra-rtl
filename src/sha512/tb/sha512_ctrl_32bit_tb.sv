@@ -22,7 +22,8 @@
 //======================================================================
 
 module sha512_ctrl_32bit_tb 
-  import kv_defines_pkg::*; 
+  import kv_defines_pkg::*;
+  import pv_defines_pkg::*;
   ();
 
 //----------------------------------------------------------------
@@ -147,6 +148,11 @@ module sha512_ctrl_32bit_tb
   kv_write_t kv_write_tb;
   kv_rd_resp_t kv_rd_resp_tb;
   kv_wr_resp_t kv_wr_resp_tb;
+  pv_read_t pv_read_tb;
+  pv_write_t pv_write_tb;
+  pv_rd_resp_t pv_rd_resp_tb;
+  pv_wr_resp_t pv_wr_resp_tb;
+  logic [KV_NUM_DWORDS-1:0][31:0] pcr_signing_hash_tb;
 
   wire error_intr_tb;
   wire notif_intr_tb;
@@ -182,6 +188,11 @@ module sha512_ctrl_32bit_tb
              .kv_write(kv_write_tb),
              .kv_rd_resp(kv_rd_resp_tb),
              .kv_wr_resp(kv_wr_resp_tb),
+             .pcr_signing_hash(pcr_signing_hash_tb),
+             .pv_read(pv_read_tb),
+             .pv_rd_resp(pv_rd_resp_tb),
+             .pv_write(pv_write_tb),
+             .pv_wr_resp(pv_wr_resp_tb),
 
              .error_intr(error_intr_tb),
              .notif_intr(notif_intr_tb)
@@ -254,6 +265,8 @@ module sha512_ctrl_32bit_tb
 
       kv_rd_resp_tb   = '0;
       kv_wr_resp_tb   = '0;
+      pv_wr_resp_tb   = '0;
+      pv_rd_resp_tb   = '0;
     end
   endtask // init_dut
 

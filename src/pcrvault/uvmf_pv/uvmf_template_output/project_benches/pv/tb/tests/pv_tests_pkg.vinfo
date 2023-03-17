@@ -1,0 +1,9 @@
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/pv_rst_pkg/pv_rst_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/pv_write_pkg/pv_write_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/pv_read_pkg/pv_read_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/environment_packages/pv_env_pkg/pv_env_pkg.vinfo
+@use $UVMF_PROJECT_DIR/tb/parameters/pv_parameters_pkg.vinfo
+@use $UVMF_PROJECT_DIR/tb/sequences/pv_sequences_pkg.vinfo
++incdir+@vinfodir
+pv_tests_pkg.sv

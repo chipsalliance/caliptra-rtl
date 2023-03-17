@@ -374,6 +374,12 @@ end
   parameter ADDR_TAG10       =  BASE_ADDR + 32'h00000128;
   parameter ADDR_TAG11       =  BASE_ADDR + 32'h0000012C;
 
+  parameter ADDR_SEED0       =  BASE_ADDR + 32'h00000130;
+  parameter ADDR_SEED1       =  BASE_ADDR + 32'h00000134;
+  parameter ADDR_SEED2       =  BASE_ADDR + 32'h00000138;
+  parameter ADDR_SEED3       =  BASE_ADDR + 32'h0000013C;
+  parameter ADDR_SEED4       =  BASE_ADDR + 32'h00000140;
+
   parameter AHB_HTRANS_IDLE     = 0;
   parameter AHB_HTRANS_BUSY     = 1;
   parameter AHB_HTRANS_NONSEQ   = 2;
@@ -524,6 +530,19 @@ task write_single_word(input [31 : 0]  address,
   endtask // write_key
 
   //----------------------------------------------------------------
+  // Write the given seed to the dut.
+  //----------------------------------------------------------------
+  task write_seed(input [159 : 0] seed);
+    begin
+      write_single_word(ADDR_SEED0, seed[159: 128]);
+      write_single_word(ADDR_SEED1, seed[127: 96 ]);
+      write_single_word(ADDR_SEED2, seed[95 : 64 ]);
+      write_single_word(ADDR_SEED3, seed[63 : 32 ]);
+      write_single_word(ADDR_SEED4, seed[31 : 0  ]);
+    end
+  endtask // write_seed
+
+  //----------------------------------------------------------------
   // Read a data word from the given address in the DUT.
   // the word read will be available in the global variable
   // read_data.
@@ -614,10 +633,11 @@ task gen_test_vector (
   reg [1023:0] rand_block;
   reg [1023:0] msg_array [int];
 
-  reg [383:0] key;
+  reg [383:0]  key;
   reg [1023:0] block;
+  reg [159:0]  seed;
   reg [1023:0] last_padding;
-  reg [127:0] msg_size;
+  reg [127:0]  msg_size;
 
   int fd_w, fd_all_a;
   string file_name, file_name_bak;
@@ -648,6 +668,12 @@ task gen_test_vector (
   write_key(key);
   $fdisplay(fd_w, "KEY = %h", key);
   $fdisplay(fd_all_a, "KEY = %h", key);
+
+  //Generate random seed and write to DUT
+  std::randomize(seed);
+  write_seed(seed);
+  $fdisplay(fd_w, "SEED = %h", seed);
+  $fdisplay(fd_all_a, "SEED = %h", seed);
 
   //Write 1st block to DUT
   block = msg_array[0];
