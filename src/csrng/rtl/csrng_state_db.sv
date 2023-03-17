@@ -219,6 +219,6 @@ module csrng_state_db import csrng_pkg::*; #(
 
 
   // Assertions
-  `ASSERT_KNOWN(IntStOutSelOneHot_A, $onehot(int_st_out_sel))
+  `CALIPTRA_ASSERT_KNOWN(IntStOutSelOneHot_A, $onehot(int_st_out_sel))
 
 endmodule

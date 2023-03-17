@@ -71,13 +71,28 @@ _start:
         sub x1, x1, t3
         bne x1, x0, write_seed0_loop
 
+    // Load the nonce and write to ECC core
+    li x3, CLP_ECC_REG_ECC_NONCE_0
+    // 12 words or 384-bit nonce
+    li x1, 0xc
+    li t3, 0x1
+    la x4, TEST_VECTOR
+    addi x4, x4, 240
+    write_nonce0_loop:
+        lw x5, 0(x4)
+        sw x5, 0(x3)
+        addi x4, x4, 4
+        addi x3, x3, 4
+        sub x1, x1, t3
+        bne x1, x0, write_nonce0_loop
+
     // Load IV0 and write to ECC core
     li x3, CLP_ECC_REG_ECC_IV_0 
     // 12 words or 384-bit IV0   
     li x1, 0xc
     li t3, 0x1
     la x4, TEST_VECTOR
-    addi x4, x4, 336
+    addi x4, x4, 384
     write_IV0_loop:
         lw x5, 0(x4)
         sw x5, 0(x3)
@@ -190,7 +205,7 @@ _start:
     li x1, 0xc
     li t3, 0x1
     la x4, TEST_VECTOR
-    addi x4, x4, 336
+    addi x4, x4, 384
     write_IV0_loop1:
         lw x5, 0(x4)
         sw x5, 0(x3)
@@ -215,7 +230,7 @@ _start:
     // Read R0 back from ECC Register
     li x3, CLP_ECC_REG_ECC_SIGN_R_0 
     la x4, TEST_VECTOR
-    addi x4, x4, 240
+    addi x4, x4, 288
     read_signr0_loop:
         lw x5, 0(x3)
         lw t3, 0(x4)
@@ -231,7 +246,7 @@ _start:
     // Read S0 back from ECC Register
     li x3, CLP_ECC_REG_ECC_SIGN_S_0 
     la x4, TEST_VECTOR
-    addi x4, x4, 288
+    addi x4, x4, 336
     read_signs0_loop:
         lw x5, 0(x3)
         lw t3, 0(x4)
@@ -302,7 +317,7 @@ _start:
     li x1, 0xc
     li t3, 0x1
     la x4, TEST_VECTOR
-    addi x4, x4, 240
+    addi x4, x4, 288
     write_signr0_loop:
         lw x5, 0(x4)
         sw x5, 0(x3)
@@ -317,7 +332,7 @@ _start:
     li x1, 0xc
     li t3, 0x1
     la x4, TEST_VECTOR
-    addi x4, x4, 288
+    addi x4, x4, 336
     write_signs0_loop:
         lw x5, 0(x4)
         sw x5, 0(x3)
@@ -342,7 +357,7 @@ _start:
     // Read VERIFYR0 back from ECC Register
     li x3, CLP_ECC_REG_ECC_VERIFY_R_0 
     la x4, TEST_VECTOR
-    addi x4, x4, 240
+    addi x4, x4, 288
     read_verifyr0_loop:
         lw x5, 0(x3)
         lw t3, 0(x4)

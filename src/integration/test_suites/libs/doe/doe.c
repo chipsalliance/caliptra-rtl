@@ -39,10 +39,10 @@ void doe_init(uint32_t * iv_data_uds, uint32_t * iv_data_fe, uint32_t kv_dest_fe
 
     //start UDS and store in KV0
     VPRINTF(MEDIUM,"DOE: Starting UDS Deobfuscation flow\n");
-    lsu_write_32((uint32_t*) CLP_DOE_REG_DOE_CTRL, DOE_UDS << DOE_REG_DOE_CTRL_CMD_LOW);
+    lsu_write_32(CLP_DOE_REG_DOE_CTRL, DOE_UDS << DOE_REG_DOE_CTRL_CMD_LOW);
 
     // Check that UDS flow is done
-    while((lsu_read_32((uint32_t*) CLP_DOE_REG_DOE_STATUS) & DOE_REG_DOE_STATUS_VALID_MASK) == 0);
+    while((lsu_read_32(CLP_DOE_REG_DOE_STATUS) & DOE_REG_DOE_STATUS_VALID_MASK) == 0);
     VPRINTF(MEDIUM,"DOE: UDS Deobfuscation flow complete\n");
 
     // Write IV
@@ -55,11 +55,11 @@ void doe_init(uint32_t * iv_data_uds, uint32_t * iv_data_fe, uint32_t kv_dest_fe
 
     //start FE and store in KV6/7
     VPRINTF(MEDIUM,"DOE: Starting Field Entropy Deobfuscation flow\n");
-    lsu_write_32((uint32_t*) CLP_DOE_REG_DOE_CTRL, (DOE_FE << DOE_REG_DOE_CTRL_CMD_LOW) |
-                                                   (kv_dest_fe << DOE_REG_DOE_CTRL_DEST_LOW));
+    lsu_write_32(CLP_DOE_REG_DOE_CTRL, (DOE_FE << DOE_REG_DOE_CTRL_CMD_LOW) |
+                                       (kv_dest_fe << DOE_REG_DOE_CTRL_DEST_LOW));
 
     // Check that FE flow is done
-    while((lsu_read_32((uint32_t*) CLP_DOE_REG_DOE_STATUS) & DOE_REG_DOE_STATUS_VALID_MASK) == 0);
+    while((lsu_read_32(CLP_DOE_REG_DOE_STATUS) & DOE_REG_DOE_STATUS_VALID_MASK) == 0);
     VPRINTF(MEDIUM,"DOE: Field Entropy Deobfuscation flow complete\n");
 
 }
@@ -67,5 +67,5 @@ void doe_init(uint32_t * iv_data_uds, uint32_t * iv_data_fe, uint32_t kv_dest_fe
 void doe_clear_secrets() {
     // Clear Secrets
     VPRINTF(MEDIUM,"DOE: Clear secrets\n");
-    lsu_write_32((uint32_t*) CLP_DOE_REG_DOE_CTRL, DOE_CLEAR_OBF_SECRETS);
+    lsu_write_32(CLP_DOE_REG_DOE_CTRL, DOE_CLEAR_OBF_SECRETS);
 }

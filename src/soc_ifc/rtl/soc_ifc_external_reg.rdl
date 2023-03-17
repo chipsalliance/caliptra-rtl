@@ -185,7 +185,7 @@ reg {
     desc = "Writes to fuse registers are completed. After the done bit is set, any subsequent writes to a fuse register will be dropped unless there is a power cycle or a warm reset or caliptra FW allows a write (negotiated through a mailbox command).
              [br]Caliptra Access: RO
              [br]SOC Access:      RW1-S";
-     field {sw=rw; hw=r; swwe=soc_req; resetsignal=cptra_pwrgood;} done[1]=0;
+     field {sw=rw; hw=r; swmod=true; swwe; resetsignal=cptra_pwrgood;} done[1]=0;
 } CPTRA_FUSE_WR_DONE;
 
 reg {
@@ -238,3 +238,27 @@ reg {
             [br]SOC Access:      RO";
     field {sw=rw; hw=r; swwel = soc_req; resetsignal = cptra_rst_b;} generic_wires[32]=0;
 } CPTRA_GENERIC_OUTPUT_WIRES[2];
+reg {
+    name = "Caliptra HW RevID";
+    desc = "Caliptra HW revision ID that matches the official final release milestone
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RO";
+    field {sw=r; hw=r; swwel = soc_req; resetsignal = cptra_rst_b;} REV_ID[32]=1;
+} CPTRA_HW_REV_ID;
+reg {
+    name = "Caliptra FW RevID";
+    desc = "Caliptra FW revision ID
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";
+    field {sw=rw; hw=r; swwel = soc_req; resetsignal = cptra_rst_b;} REV_ID[32]=0;
+} CPTRA_FW_REV_ID[2];
+reg {
+    name = "Caliptra HW Config";
+    desc = "Caliptra HW Configuration
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RO";
+    // No storage, i.e. no resetsignal
+    field {sw=r; hw=w;} iTRNG_en;
+    field {sw=r; hw=w;} QSPI_en;
+    field {sw=r; hw=w;} I3C_en;
+} CPTRA_HW_CONFIG;

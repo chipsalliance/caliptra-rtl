@@ -1,0 +1,149 @@
+uvmf:
+  interfaces:
+    #################### RST ####################
+    pv_rst:
+      clock: clk
+      reset: dummy
+      reset_assertion_level: 'False'
+
+      config_constraints: []
+      config_vars: []
+
+      hdl_typedefs: []
+      hvl_typedefs: []
+
+      parameters: []
+
+      ports:
+      #boot signals
+      - name: cptra_pwrgood
+        dir: output
+        width: '1'
+      - name: rst_b
+        dir: output
+        width: '1'
+
+      transaction_constraints:
+      - name: wait_cycles_c
+        value: '{ wait_cycles dist {[1:25] := 80, [25:100] := 15, [100:500] := 5}; }'
+
+      transaction_vars:
+      - name: set_pwrgood
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+      - name: assert_rst
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+      - name: wait_cycles
+        type: 'int unsigned'
+        iscompare: 'False'
+        isrand: 'True'
+
+    #################### WRITE ####################
+    pv_write:
+      clock: clk
+      reset: dummy
+      reset_assertion_level: 'False'
+
+      imports:
+      - name: "pv_defines_pkg"
+
+      config_constraints: []
+      config_vars: []
+
+      hdl_typedefs: []
+      hvl_typedefs: []
+
+      parameters:
+      - name: "PV_WRITE_REQUESTOR"
+        type: "string"
+        # Can be SHA512
+        value: '"SHA512"'
+
+      ports:
+      - name: pv_write
+        dir: output
+        width: '$bits(pv_defines_pkg::pv_write_t)'
+      - name: pv_wr_resp
+        dir: input
+        width: '$bits(pv_defines_pkg::pv_wr_resp_t)'
+
+      transaction_vars:
+      # PV Write
+      - name: write_en
+        type: logic
+        iscompare: 'False'
+        isrand: 'False'
+      - name: write_entry
+        type: logic   [PV_ENTRY_ADDR_W-1:0]  
+        iscompare: 'True'
+        isrand: 'True'
+      - name: write_offset
+        type: logic   [PV_ENTRY_SIZE_WIDTH-1:0]  
+        iscompare: 'False'
+        isrand: 'False'
+      - name: write_data
+        type: logic   [PV_DATA_W-1:0] 
+        iscompare: 'True'
+        isrand: 'True'
+      - name: error
+        type: logic  
+        iscompare: 'True'
+        isrand: 'True'
+
+    #################### READ ####################
+    pv_read:
+      clock: clk
+      reset: dummy
+      reset_assertion_level: 'False'
+
+      imports:
+      - name: "pv_defines_pkg"
+
+      config_constraints: []
+      config_vars: []
+
+      hdl_typedefs: []
+      hvl_typedefs: []
+
+      parameters:
+      - name: "PV_READ_REQUESTOR"
+        type: "string"
+        # Can be SHA512_BLOCK
+        value: '"SHA512_BLOCK"'
+
+      ports:
+      - name: pv_read
+        dir: output
+        width: '$bits(pv_defines_pkg::pv_read_t)'
+      - name: pv_rd_resp
+        dir: input
+        width: '$bits(pv_defines_pkg::pv_rd_resp_t)'
+
+      transaction_constraints: []
+
+      transaction_vars:
+      # PV Read
+      - name: read_entry
+        type: logic [PV_ENTRY_ADDR_W-1:0]
+        iscompare: 'True'
+        isrand: 'True'
+      - name: read_offset
+        type: logic [PV_ENTRY_SIZE_WIDTH-1:0]
+        iscompare: 'True'
+        isrand: 'True'
+      # PV Read Resp
+      - name: error
+        type: logic
+        iscompare: 'True'
+        isrand: 'True'
+      - name: last 
+        type: logic
+        iscompare: 'True'
+        isrand: 'True'
+      - name: read_data
+        type: logic [PV_DATA_W-1:0]
+        iscompare: 'True'
+        isrand: 'False'

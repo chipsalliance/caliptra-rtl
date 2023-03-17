@@ -29,6 +29,7 @@ module soc_ifc_boot_fsm
     output logic ready_for_fuses,
 
     input logic fuse_done,
+    input logic fuse_wr_done_observed,
 
     output logic cptra_noncore_rst_b, //Global rst that goes to all other blocks
     output logic cptra_uc_rst_b, //Global + fw update rst that goes to VeeR core only,
@@ -62,8 +63,9 @@ logic wait_count_decr;
 
 //move to fuse state when SoC de-asserts reset
 
-//move from fuse state to done when fuse done register is set
-always_comb arc_BOOT_FUSE_BOOT_DONE = fuse_done;
+//move from fuse state to done when fuse done register is set OR
+//if it was already set (since its locked across warm reset), that the write was observed from SOC
+always_comb arc_BOOT_FUSE_BOOT_DONE = fuse_done & fuse_wr_done_observed;
 
 // Hold the bootFSM from bringing uC out of reset if the breakpoint is set after fuse writes are done
 always_comb arc_BOOT_FUSE_BOOT_WAIT = BootFSM_BrkPoint;

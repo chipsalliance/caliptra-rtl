@@ -1,0 +1,4 @@
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.vinfo
+@use pv_write_pkg_hdl.vinfo
++incdir+@vinfodir
+pv_write_pkg.sv

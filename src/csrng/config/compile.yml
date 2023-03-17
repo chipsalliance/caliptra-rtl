@@ -1,0 +1,59 @@
+---
+provides: [csrng_pkg]
+schema_version: 2.4.0
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/csrng_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/csrng_pkg.sv
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/csrng_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/csrng_pkg.sv
+---
+provides: [csrng]
+schema_version: 2.4.0
+requires:
+  - libs
+  - prim_generic
+  - prim
+  - lc_ctrl_pkg
+  - entropy_src_pkg
+  - edn_pkg
+  - csrng_pkg
+  - aes
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/csrng_core.sv
+      - $COMPILE_ROOT/rtl/csrng_main_sm.sv
+      - $COMPILE_ROOT/rtl/csrng_ctr_drbg_upd.sv
+      - $COMPILE_ROOT/rtl/csrng_ctr_drbg_cmd.sv
+      - $COMPILE_ROOT/rtl/csrng_reg_top.sv
+      - $COMPILE_ROOT/rtl/csrng_ctr_drbg_gen.sv
+      - $COMPILE_ROOT/rtl/csrng_block_encrypt.sv
+      - $COMPILE_ROOT/rtl/csrng_state_db.sv
+      - $COMPILE_ROOT/rtl/csrng_cmd_stage.sv
+      - $COMPILE_ROOT/rtl/csrng.sv
+    tops: [csrng]
+---
+provides: [csrng_tb]
+schema_version: 2.4.0
+requires:
+  - csrng
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/tb]
+    files:
+      - $COMPILE_ROOT/tb/csrng_tb.sv
+    tops: [csrng_tb]
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        - '-noinherit_timescale=1ns/1ps'

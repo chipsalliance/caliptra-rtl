@@ -17,6 +17,8 @@
 // AHB Lite 2:1 Mux
 // -------------------------------------------------------------
 
+`include "caliptra_sva.svh"
+
 module ahb_lite_2to1_mux #(
     parameter AHB_LITE_ADDR_WIDTH   = 32,
     parameter AHB_LITE_DATA_WIDTH   = 32

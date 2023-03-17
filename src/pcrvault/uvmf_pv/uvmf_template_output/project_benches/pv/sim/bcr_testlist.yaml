@@ -1,0 +1,44 @@
+
+
+
+# YAML test list for use by RMDB file
+# File syntax is
+# uvmf_testlist:
+#   testbenches:
+#     - name: <tb_name>
+#       extra_build_options: <extra options for compile of testbench>
+#       extra_run_options: <extra options for running testbench>
+#     - name: <tb2_name>
+#        ...
+#     - name: <tbN_name>
+#   tests:
+#     - name: <test_name>
+#       uvm_testname: <uvm test name> (defaults to test_name)
+#       testbench: <tb_name> (defaults to last tb name seen)
+#       repeat: <num> (defaults to 1)
+#       seeds: [<seed1>,<seed2>,...,<seedN>]  (defaults to all random)
+#       extra_test_options: <extra options for this test>
+#     - name: <test2_name>
+#      ...
+#     - name: <testN_name>
+#   include:
+#     - <include yaml file path> (relative path reference is to the including YAML file)
+#     - <include yaml file2 path>
+#       ...
+#     - <include yaml fileN path>
+
+uvmf_testlist:
+  testbenches:
+# pragma uvmf custom tb_info begin
+    - name: pv
+      extra_build_options: ""
+      extra_run_options: ""
+# pragma uvmf custom tb_info end
+  tests:
+    - testbench: pv
+# pragma uvmf custom regression_suite begin
+    - name: test_top
+      repeat: 3
+# pragma uvmf custom regression_suite end
+
+

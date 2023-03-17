@@ -79,7 +79,7 @@ module aes_prng_masking import aes_pkg::*;
   // which prevents meaningful SCA resistance evaluations.
 
   // Create a lint error to reduce the risk of accidentally enabling this feature.
-  `ASSERT_STATIC_LINT_ERROR(AesSecAllowForcingMasksNonDefault, SecAllowForcingMasks == 0)
+  `CALIPTRA_ASSERT_STATIC_LINT_ERROR(AesSecAllowForcingMasksNonDefault, SecAllowForcingMasks == 0)
 
   if (SecAllowForcingMasks == 0) begin : gen_unused_force_masks
     logic unused_force_masks;
@@ -90,7 +90,7 @@ module aes_prng_masking import aes_pkg::*;
   assign prng_en = (SecAllowForcingMasks && force_masks_i) ? 1'b0 : data_update_i;
 
   // Create a lint error to reduce the risk of accidentally enabling this feature.
-  `ASSERT_STATIC_LINT_ERROR(AesSecSkipPRNGReseedingNonDefault, SecSkipPRNGReseeding == 0)
+  `CALIPTRA_ASSERT_STATIC_LINT_ERROR(AesSecSkipPRNGReseedingNonDefault, SecSkipPRNGReseeding == 0)
 
   // Width adaption for reseeding interface. We get EntropyWidth bits at a time.
   if (ChunkSize == EntropyWidth) begin : gen_counter
@@ -209,9 +209,9 @@ module aes_prng_masking import aes_pkg::*;
   /////////////////
 
   // Width must be divisible by ChunkSize
-  `ASSERT_INIT(AesPrngMaskingWidthByChunk, Width % ChunkSize == 0)
+  `CALIPTRA_ASSERT_INIT(AesPrngMaskingWidthByChunk, Width % ChunkSize == 0)
   // Width must be divisible by 8
-  `ASSERT_INIT(AesPrngMaskingWidthBy8, Width % 8 == 0)
+  `CALIPTRA_ASSERT_INIT(AesPrngMaskingWidthBy8, Width % 8 == 0)
 
 // the code below is not meant to be synthesized,
 // but it is intended to be used in simulation and FPV
@@ -224,7 +224,7 @@ module aes_prng_masking import aes_pkg::*;
       perm_test[RndCnstLfsrPerm[k]] = 1'b1;
     end
     // All bit positions must be marked with 1.
-    `ASSERT_I(PermutationCheck_A, &perm_test)
+    `CALIPTRA_ASSERT_I(PermutationCheck_A, &perm_test)
   end
 `endif
 

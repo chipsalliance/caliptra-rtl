@@ -20,35 +20,35 @@
 void soc_ifc_clear_execute_reg() {
     VPRINTF(MEDIUM,"SOC_IFC: Clear execute reg");
     uint32_t reg;
-    reg = lsu_read_32((uint32_t*) CLP_MBOX_CSR_MBOX_EXECUTE);
+    reg = lsu_read_32(CLP_MBOX_CSR_MBOX_EXECUTE);
     reg = (reg & ~MBOX_CSR_MBOX_EXECUTE_EXECUTE_MASK);
-    lsu_write_32((uint32_t*) CLP_MBOX_CSR_MBOX_EXECUTE,reg);
+    lsu_write_32(CLP_MBOX_CSR_MBOX_EXECUTE,reg);
 }
 
 void soc_ifc_set_mbox_status_field(enum mbox_status_e field) {
     VPRINTF(MEDIUM,"SOC_IFC: Set mbox_status field: 0x%x\n", field);
     uint32_t reg;
-    reg = lsu_read_32((uint32_t*) CLP_MBOX_CSR_MBOX_STATUS);
+    reg = lsu_read_32(CLP_MBOX_CSR_MBOX_STATUS);
     reg = (reg & ~MBOX_CSR_MBOX_STATUS_STATUS_MASK) | (field << MBOX_CSR_MBOX_STATUS_STATUS_LOW);
-    lsu_write_32((uint32_t*) CLP_MBOX_CSR_MBOX_STATUS,reg);
+    lsu_write_32(CLP_MBOX_CSR_MBOX_STATUS,reg);
 }
 
 void soc_ifc_set_flow_status_field(uint32_t field) {
     VPRINTF(MEDIUM,"SOC_IFC: Set flow_status field: 0x%x\n", field);
     uint32_t reg;
-    reg = lsu_read_32((uint32_t*) CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS);
+    reg = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS);
     if (field & SOC_IFC_REG_CPTRA_FLOW_STATUS_STATUS_MASK) {
         reg = (reg & ~SOC_IFC_REG_CPTRA_FLOW_STATUS_STATUS_MASK) | field;
     } else {
         reg |= field;
     }
-    lsu_write_32((uint32_t*) CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS,reg);
+    lsu_write_32(CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS,reg);
 }
 
 void soc_ifc_clr_flow_status_field(uint32_t field) {
     VPRINTF(MEDIUM,"SOC_IFC: Clear flow_status field: 0x%x\n", field);
     uint32_t reg;
-    reg = lsu_read_32((uint32_t*) CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS);
+    reg = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS);
     // Clear entire multi-bit status field if any constituent bit is set in arg
     // and also clear other 1-bit values
     if (field & SOC_IFC_REG_CPTRA_FLOW_STATUS_STATUS_MASK) {
@@ -59,18 +59,18 @@ void soc_ifc_clr_flow_status_field(uint32_t field) {
     else {
         reg &= ~field;
     }
-    lsu_write_32((uint32_t*) CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS,reg);
+    lsu_write_32(CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS,reg);
 }
 
 mbox_op_s soc_ifc_read_mbox_cmd() {
     mbox_op_s op;
 
     //read mbox command
-    op.cmd = lsu_read_32((uint32_t*) CLP_MBOX_CSR_MBOX_CMD);
+    op.cmd = lsu_read_32(CLP_MBOX_CSR_MBOX_CMD);
     VPRINTF(MEDIUM,"SOC_IFC: CMD from mailbox: 0x%x\n", op.cmd);
 
     //read mbox dlen
-    op.dlen = lsu_read_32((uint32_t*) CLP_MBOX_CSR_MBOX_DLEN);
+    op.dlen = lsu_read_32(CLP_MBOX_CSR_MBOX_DLEN);
     VPRINTF(MEDIUM,"SOC_IFC: DLEN from mailbox: 0x%x\n", op.dlen);
 
     return op;
@@ -170,7 +170,7 @@ void soc_ifc_fw_update(mbox_op_s op) {
 void soc_ifc_set_fw_update_reset() {
     VPRINTF(MEDIUM,"SOC_IFC: Set fw update reset\n");
     uint32_t reg;
-    reg = lsu_read_32((uint32_t*) CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET);
+    reg = lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET);
     reg = (reg | SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK);
-    lsu_write_32((uint32_t*) CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET,reg);
+    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET,reg);
 }

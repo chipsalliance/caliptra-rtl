@@ -308,6 +308,7 @@ module csrng_core import csrng_pkg::*; #(
   logic [AppCmdWidth-1:0]    cmd_stage_bus[NApps];
   logic [NApps-1:0]          cmd_stage_rdy;
   logic [NApps-1:0]          cmd_arb_req;
+  logic [0:0]                cmd_arb_di [NApps];
   logic [NApps-1:0]          cmd_arb_gnt;
   logic [$clog2(NApps)-1:0]  cmd_arb_idx;
   logic [NApps-1:0]          cmd_arb_sop;
@@ -1011,6 +1012,9 @@ module csrng_core import csrng_pkg::*; #(
   assign acmd_eop = cmd_arb_eop[cmd_arb_idx_q];
   assign acmd_bus = cmd_arb_bus[cmd_arb_idx_q];
 
+  // Can't be fed directly to port-list per Synthesis failure
+  assign cmd_arb_di = '{1'b0, 1'b0, 1'b0};
+
   prim_arbiter_ppc #(
     .EnDataPort(0),    // Ignore data port
     .N(NApps),  // Number of request ports
@@ -1020,7 +1024,7 @@ module csrng_core import csrng_pkg::*; #(
     .rst_ni   (rst_ni),
     .req_chk_i(cs_enable_fo[1]),
     .req_i    (cmd_arb_req),
-    .data_i   ('{default: 1'b0}),
+    .data_i   (cmd_arb_di),
     .gnt_o    (cmd_arb_gnt),
     .idx_o    (cmd_arb_idx),
     .valid_o  (acmd_avail), // 1 req

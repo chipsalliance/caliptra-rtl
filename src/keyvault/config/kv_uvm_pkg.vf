@@ -1,2 +1,2 @@
-+incdir+${WORKSPACE}/Caliptra/src/keyvault/rtl
-${WORKSPACE}/Caliptra/src/keyvault/rtl/kv_reg_uvm.sv
++incdir+${CALIPTRA_ROOT}/src/keyvault/rtl
+${CALIPTRA_ROOT}/src/keyvault/rtl/kv_reg_uvm.sv

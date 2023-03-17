@@ -1,0 +1,966 @@
+addrmap entropy_src {
+    reg {
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "Asserted when entropy source bits are available.";
+        } ES_ENTROPY_VALID[0:0];
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "Asserted when the alert count has been met.";
+        } ES_HEALTH_TEST_FAILED[1:1];
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "Asserted when the observe FIFO has filled to the threshold level.";
+        } ES_OBSERVE_FIFO_READY[2:2];
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "Asserted when a FIFO error occurs, or if an illegal state machine state is reached.";
+        } ES_FATAL_ERR[3:3];
+    } INTERRUPT_STATE @ 0x0;
+    reg {
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "Enable interrupt when es_entropy_valid is set.";
+        } ES_ENTROPY_VALID[0:0];
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "Enable interrupt when es_health_test_failed is set.";
+        } ES_HEALTH_TEST_FAILED[1:1];
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "Enable interrupt when es_observe_fifo_ready is set.";
+        } ES_OBSERVE_FIFO_READY[2:2];
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "Enable interrupt when es_fatal_err is set.";
+        } ES_FATAL_ERR[3:3];
+    } INTERRUPT_ENABLE @ 0x4;
+    reg {
+        field {
+            sw = w;
+            desc = "Write 1 to force es_entropy_valid to 1.";
+        } ES_ENTROPY_VALID[0:0];
+        field {
+            sw = w;
+            desc = "Write 1 to force es_health_test_failed to 1.";
+        } ES_HEALTH_TEST_FAILED[1:1];
+        field {
+            sw = w;
+            desc = "Write 1 to force es_observe_fifo_ready to 1.";
+        } ES_OBSERVE_FIFO_READY[2:2];
+        field {
+            sw = w;
+            desc = "Write 1 to force es_fatal_err to 1.";
+        } ES_FATAL_ERR[3:3];
+    } INTERRUPT_TEST @ 0x8;
+    reg {
+        field {
+            sw = w;
+            desc = "Write 1 to trigger one alert event of this kind.";
+        } RECOV_ALERT[0:0];
+        field {
+            sw = w;
+            desc = "Write 1 to trigger one alert event of this kind.";
+        } FATAL_ALERT[1:1];
+    } ALERT_TEST @ 0xC;
+    reg {
+        field {
+            desc = "When true, the !!MODULE_ENABLE register can be modified.
+            When false, it becomes read-only.";
+            sw = rw;
+            onwrite = woclr;
+        } ME_REGWEN[0:0] = 0x1;
+    } ME_REGWEN @ 0x10;
+    reg {
+        field {
+            desc = "When this bit true and the MODULE_ENABLE field is false,
+            the REGWEN write enable bit read as true, and is distributed to
+            all associated control and threshold registers.
+            When false, these registers become read-only.";
+            sw = rw;
+            onwrite = woclr;
+        } SW_REGUPD[0:0] = 0x1;
+    } SW_REGUPD @ 0x14;
+    reg {
+        field {
+            desc = "This read-only write enable bit will allow write access
+            to control and theshold registers that are associated with this bit,
+            but only when the MODULE_ENABLE field is set to kMultiBitBool4False and the
+            SW_REGUPD write enable bit is set to true.
+            When read as false, these registers become read-only.";
+            sw = r;
+        } REGWEN[0:0] = 0x1;
+    } REGWEN @ 0x18;
+    reg {
+        field {
+            desc = "Read of this register shows the ABI of this block.";
+            sw = r;
+        } ABI_REVISION[7:0] = 0x3;
+        field {
+            desc = "Read of this register shows the revision of this block.";
+            sw = r;
+        } HW_REVISION[15:8] = 0x3;
+        field {
+            desc = "Read of this register shows the type of chip using this block.";
+            sw = r;
+        } CHIP_TYPE[23:16] = 0x1;
+    } REV @ 0x1C;
+    reg {
+        field {
+            desc = "Setting this field to kMultiBitBool4True will enable the ENTROPY_SRC module. Setting
+            this field to kMultiBitBool4False will effectively reset the module. The modules of
+            the entropy complex may only be enabled and disabled in a specific order, see
+            Programmers Guide for details.";
+            sw = rw;
+        } MODULE_ENABLE[3:0] = 0x9;
+    } MODULE_ENABLE @ 0x20;
+    reg {
+        field {
+            desc = "Setting this field to kMultiBitBool4True will enable FIPS qualified entropy to be
+            generated.";
+            sw = rw;
+        } FIPS_ENABLE[3:0] = 0x9;
+        field {
+            desc = "Setting this field to kMultiBitBool4True will enable reading entropy values from the
+            ENTROPY_DATA register. This function also requires that the otp_en_entropy_src_fw_read
+            input vector is set to the enable encoding.";
+            sw = rw;
+        } ENTROPY_DATA_REG_ENABLE[7:4] = 0x9;
+        field {
+            desc = "This field controls the scope (either by-line or by-sum) of the health checks.
+            If set to kMultiBitBool4True, the Adaptive Proportion and Markov Tests will accumulate all
+            RNG input lines into a single score, and thresholds will be applied to the sum all
+            the entropy input lines.  If set to kMultiBitBool4False, the RNG input lines are all scored
+            individually.  A statistical deviation in any one input line, be it due to
+            coincidence or failure, will force rejection of the sample, and count toward the
+            total alert count.";
+            sw = rw;
+        } THRESHOLD_SCOPE[15:12] = 0x9;
+        field {
+            desc = "Setting this field to kMultiBitBool4True enables the single RNG bit mode, where only
+            one bit is sampled.";
+            sw = rw;
+        } RNG_BIT_ENABLE[23:20] = 0x9;
+        field {
+            desc = "When the above bit iset, this field selects which bit from the RNG bus will
+            be processed when in single RNG bit mode.
+            This two bit field selects the RNG bit stream:
+            0b00: RNG bit 0
+            0b01: RNG bit 1
+            0b10: RNG bit 2
+            0b11: RNG bit 3";
+            sw = rw;
+        } RNG_BIT_SEL[25:24];
+    } CONF @ 0x24;
+    reg {
+        field {
+            desc = "Setting this field to kMultiBitBool4True routes the generated entropy value to the ENTROPY_DATA
+            register to be read by firmware. When this field is kMultiBitBool4False, the generated
+            entropy will be forwarded out of this module to the hardware interface.";
+            sw = rw;
+        } ES_ROUTE[3:0] = 0x9;
+        field {
+            desc = "Setting this field to kMultiBitBool4True will bypass the conditioning logic and bring raw entropy
+            data to the ENTROPY_DATA register. When kMultiBitBool4False, FIPS compliant entropy
+            will be brought the ENTROPY_DATA register, after being conditioned.";
+            sw = rw;
+        } ES_TYPE[7:4] = 0x9;
+    } ENTROPY_CONTROL @ 0x28;
+    reg {
+        field {
+            desc = "A read of this register provides generated entropy bits to firmware.";
+            sw = r;
+        } ENTROPY_DATA[31:0];
+    } ENTROPY_DATA @ 0x2C;
+    reg {
+        field {
+            desc = "This is the window size for all health tests. This value is used in normal mode
+            when entropy is being tested in FIPS/CC compliance mode.
+            The default value is (2048 bits * 1 clock/4 bits);";
+            sw = rw;
+        } FIPS_WINDOW[15:0] = 0x200;
+        field {
+            desc = "This is the window size for all health tests when running in bypass mode. This mode
+            is active after reset for the first and only test run, or when this mode is
+            programmed by firmware.
+            The default value is (384 bits * 1 clock/4 bits);
+
+            Note that currently only a window size of 384 is supported and tested (this
+            corresponds to the register default value 0x60). Do not use any other values,
+            unless you know what you are doing.";
+            sw = rw;
+        } BYPASS_WINDOW[31:16] = 0x60;
+    } HEALTH_TEST_WINDOWS @ 0x30;
+    reg {
+        field {
+            desc = "This is the threshold size for the repetition count health test.
+            This value is used in normal mode when entropy is being tested in
+            FIPS/CC compliance mode.
+            This register must be written before the module is enabled.
+            Writing to this register will only update the register if the
+            written value is less than the current value of this register.
+            A read from this register always reflects the current value.";
+            sw = rw;
+        } FIPS_THRESH[15:0] = 0xFFFF;
+        field {
+            desc = "This is the threshold size for the repetition count health test
+            running in bypass mode. This mode is active after reset for the
+            first and only test run, or when this mode is programmed by firmware.
+            This register must be written before the module is enabled.
+            Writing to this register will only update the register if the
+            written value is less than the current value of this register.
+            A read from this register always reflects the current value.";
+            sw = rw;
+        } BYPASS_THRESH[31:16] = 0xFFFF;
+    } REPCNT_THRESHOLDS @ 0x34;
+    reg {
+        field {
+            desc = "This is the threshold size for the repetition count symbol health test.
+            This value is used in normal mode when entropy is being tested in
+            FIPS/CC compliance mode.
+            This register must be written before the module is enabled.
+            Writing to this register will only update the register if the
+            written value is less than the current value of this register.
+            A read from this register always reflects the current value.";
+            sw = rw;
+        } FIPS_THRESH[15:0] = 0xFFFF;
+        field {
+            desc = "This is the threshold size for the repetition count symbol health test
+            running in bypass mode. This mode is active after reset for the
+            first and only test run, or when this mode is programmed by firmware.
+            This register must be written before the module is enabled.
+            Writing to this register will only update the register if the
+            written value is less than the current value of this register.
+            A read from this register always reflects the current value.";
+            sw = rw;
+        } BYPASS_THRESH[31:16] = 0xFFFF;
+    } REPCNTS_THRESHOLDS @ 0x38;
+    reg {
+        field {
+            desc = "This is the threshold size for the adaptive proportion health test.
+            This value is used in normal mode when entropy is being tested in
+            FIPS/CC compliance mode.
+            This register must be written before the module is enabled.
+            Writing to this register will only update the register if the
+            written value is less than the current value of this register.
+            A read from this register always reflects the current value.";
+            sw = rw;
+        } FIPS_THRESH[15:0] = 0xFFFF;
+        field {
+            desc = "This is the threshold size for the adaptive proportion health test
+            running in bypass mode. This mode is active after reset for the
+            first and only test run, or when this mode is programmed by firmware.
+            This register must be written before the module is enabled.
+            Writing to this register will only update the register if the
+            written value is less than the current value of this register.
+            A read from this register always reflects the current value.";
+            sw = rw;
+        } BYPASS_THRESH[31:16] = 0xFFFF;
+    } ADAPTP_HI_THRESHOLDS @ 0x3C;
+    reg {
+        field {
+            desc = "This is the threshold size for the adaptive proportion health test.
+            This value is used in normal mode when entropy is being tested in
+            FIPS/CC compliance mode.
+            This register must be written before the module is enabled.
+            Writing to this register will only update the register if the
+            written value is greater than the current value of this register.
+            A read from this register always reflects the current value.";
+            sw = rw;
+        } FIPS_THRESH[15:0] = 0x0;
+        field {
+            desc = "This is the threshold size for the adaptive proportion health test
+            running in bypass mode. This mode is active after reset for the
+            first and only test run, or when this mode is programmed by firmware.
+            This register must be written before the module is enabled.
+            Writing to this register will only update the register if the
+            written value is greater than the current value of this register.
+            A read from this register always reflects the current value.";
+            sw = rw;
+        } BYPASS_THRESH[31:16] = 0x0;
+    } ADAPTP_LO_THRESHOLDS @ 0x40;
+    reg {
+        field {
+            desc = "This is the threshold size for the bucket health test.
+            This value is used in normal mode when entropy is being tested in
+            FIPS/CC compliance mode.
+            This register must be written before the module is enabled.
+            Writing to this register will only update the register if the
+            written value is less than the current value of this register.
+            A read from this register always reflects the current value.";
+            sw = rw;
+        } FIPS_THRESH[15:0] = 0xFFFF;
+        field {
+            desc = "This is the threshold size for the bucket health test
+            running in bypass mode. This mode is active after reset for the
+            first and only test run, or when this mode is programmed by firmware.
+            This register must be written before the module is enabled.
+            Writing to this register will only update the register if the
+            written value is less than the current value of this register.
+            A read from this register always reflects the current value.";
+            sw = rw;
+        } BYPASS_THRESH[31:16] = 0xFFFF;
+    } BUCKET_THRESHOLDS @ 0x44;
+    reg {
+        field {
+            desc = "This is the threshold size for the Markov health test.
+            This value is used in normal mode when entropy is being tested in
+            FIPS/CC compliance mode.
+            This register must be written before the module is enabled.
+            Writing to this register will only update the register if the
+            written value is less than the current value of this register.
+            A read from this register always reflects the current value.";
+            sw = rw;
+        } FIPS_THRESH[15:0] = 0xFFFF;
+        field {
+            desc = "This is the threshold size for the Markov health test
+            running in bypass mode. This mode is active after reset for the
+            first and only test run, or when this mode is programmed by firmware.
+            This register must be written before the module is enabled.
+            Writing to this register will only update the register if the
+            written value is less than the current value of this register.
+            A read from this register always reflects the current value.";
+            sw = rw;
+        } BYPASS_THRESH[31:16] = 0xFFFF;
+    } MARKOV_HI_THRESHOLDS @ 0x48;
+    reg {
+        field {
+            desc = "This is the threshold size for the Markov health test.
+            This value is used in normal mode when entropy is being tested in
+            FIPS/CC compliance mode.
+            This register must be written before the module is enabled.
+            Writing to this register will only update the register if the
+            written value is greater than the current value of this register.
+            A read from this register always reflects the current value.";
+            sw = rw;
+        } FIPS_THRESH[15:0] = 0x0;
+        field {
+            desc = "This is the threshold size for the Markov health test
+            running in bypass mode. This mode is active after reset for the
+            first and only test run, or when this mode is programmed by firmware.
+            This register must be written before the module is enabled.
+            Writing to this register will only update the register if the
+            written value is greater than the current value of this register.
+            A read from this register always reflects the current value.";
+            sw = rw;
+        } BYPASS_THRESH[31:16] = 0x0;
+    } MARKOV_LO_THRESHOLDS @ 0x4C;
+    reg {
+        field {
+            desc = "This is the threshold size for the external health test.
+            This value is used in normal mode when entropy is being tested in
+            FIPS/CC compliance mode.
+            This register must be written before the module is enabled.
+            Writing to this register will only update the register if the
+            written value is less than the current value of this register.
+            A read from this register always reflects the current value.";
+            sw = rw;
+        } FIPS_THRESH[15:0] = 0xFFFF;
+        field {
+            desc = "This is the threshold size for the external health test
+            running in bypass mode. This mode is active after reset for the
+            first and only test run, or when this mode is programmed by firmware.
+            This register must be written before the module is enabled.
+            Writing to this register will only update the register if the
+            written value is less than the current value of this register.
+            A read from this register always reflects the current value.";
+            sw = rw;
+        } BYPASS_THRESH[31:16] = 0xFFFF;
+    } EXTHT_HI_THRESHOLDS @ 0x50;
+    reg {
+        field {
+            desc = "This is the threshold size for the external health test.
+            This value is used in normal mode when entropy is being tested in
+            FIPS/CC compliance mode.
+            This register must be written before the module is enabled.
+            Writing to this register will only update the register if the
+            written value is greater than the current value of this register.
+            A read from this register always reflects the current value.";
+            sw = rw;
+        } FIPS_THRESH[15:0] = 0x0;
+        field {
+            desc = "This is the threshold size for the external health test
+            running in bypass mode. This mode is active after reset for the
+            first and only test run, or when this mode is programmed by firmware.
+            This register must be written before the module is enabled.
+            Writing to this register will only update the register if the
+            written value is greater than the current value of this register.
+            A read from this register always reflects the current value.";
+            sw = rw;
+        } BYPASS_THRESH[31:16] = 0x0;
+    } EXTHT_LO_THRESHOLDS @ 0x54;
+    reg {
+        field {
+            desc = "High watermark value of the REPCNT test in FIPS mode.";
+            sw = r;
+        } FIPS_WATERMARK[15:0];
+        field {
+            desc = "High watermark value of the REPCNT test in bypass mode.";
+            sw = r;
+        } BYPASS_WATERMARK[31:16];
+    } REPCNT_HI_WATERMARKS @ 0x58;
+    reg {
+        field {
+            desc = "High watermark value of the REPCNTS test in FIPS mode.";
+            sw = r;
+        } FIPS_WATERMARK[15:0];
+        field {
+            desc = "High watermark value of the REPCNTS test in bypass mode.";
+            sw = r;
+        } BYPASS_WATERMARK[31:16];
+    } REPCNTS_HI_WATERMARKS @ 0x5C;
+    reg {
+        field {
+            desc = "High watermark value of the adaptive proportion test in FIPS mode.";
+            sw = r;
+        } FIPS_WATERMARK[15:0];
+        field {
+            desc = "High watermark value of the adaptive proportion test in bypass mode.";
+            sw = r;
+        } BYPASS_WATERMARK[31:16];
+    } ADAPTP_HI_WATERMARKS @ 0x60;
+    reg {
+        field {
+            desc = "Low watermark value of the adaptive proportion test in FIPS mode.";
+            sw = r;
+        } FIPS_WATERMARK[15:0] = 0xFFFF;
+        field {
+            desc = "Low watermark value of the adaptive proportion test in bypass mode.";
+            sw = r;
+        } BYPASS_WATERMARK[31:16] = 0xFFFF;
+    } ADAPTP_LO_WATERMARKS @ 0x64;
+    reg {
+        field {
+            desc = "High watermark value of the external health test in FIPS mode.";
+            sw = r;
+        } FIPS_WATERMARK[15:0];
+        field {
+            desc = "High watermark value of the external health test in bypass mode.";
+            sw = r;
+        } BYPASS_WATERMARK[31:16];
+    } EXTHT_HI_WATERMARKS @ 0x68;
+    reg {
+        field {
+            desc = "Low watermark value of the external health test in FIPS mode.";
+            sw = r;
+        } FIPS_WATERMARK[15:0] = 0xFFFF;
+        field {
+            desc = "Low watermark value of the external health test in bypass mode.";
+            sw = r;
+        } BYPASS_WATERMARK[31:16] = 0xFFFF;
+    } EXTHT_LO_WATERMARKS @ 0x6C;
+    reg {
+        field {
+            desc = "High watermark value of the bucket test in FIPS mode.";
+            sw = r;
+        } FIPS_WATERMARK[15:0];
+        field {
+            desc = "High watermark value of the bucket test in bypass mode.";
+            sw = r;
+        } BYPASS_WATERMARK[31:16];
+    } BUCKET_HI_WATERMARKS @ 0x70;
+    reg {
+        field {
+            desc = "High watermark value of the Markov test in FIPS mode.";
+            sw = r;
+        } FIPS_WATERMARK[15:0];
+        field {
+            desc = "High watermark value of the Markov test in bypass mode.";
+            sw = r;
+        } BYPASS_WATERMARK[31:16];
+    } MARKOV_HI_WATERMARKS @ 0x74;
+    reg {
+        field {
+            desc = "Low watermark value of the Markov test in FIPS mode.";
+            sw = r;
+        } FIPS_WATERMARK[15:0] = 0xFFFF;
+        field {
+            desc = "Low watermark value of the Markov test in bypass mode.";
+            sw = r;
+        } BYPASS_WATERMARK[31:16] = 0xFFFF;
+    } MARKOV_LO_WATERMARKS @ 0x78;
+    reg {
+        field {
+            desc = "This register will hold a running count of test failures observed
+            during normal operation. It will persist until cleared.";
+            sw = r;
+        } REPCNT_TOTAL_FAILS[31:0];
+    } REPCNT_TOTAL_FAILS @ 0x7C;
+    reg {
+        field {
+            desc = "This register will hold a running count of test failures observed
+            during normal operation. It will persist until cleared.";
+            sw = r;
+        } REPCNTS_TOTAL_FAILS[31:0];
+    } REPCNTS_TOTAL_FAILS @ 0x80;
+    reg {
+        field {
+            desc = "This register will hold a running count of test failures observed
+            during normal operation. It will persist until cleared.";
+            sw = r;
+        } ADAPTP_HI_TOTAL_FAILS[31:0];
+    } ADAPTP_HI_TOTAL_FAILS @ 0x84;
+    reg {
+        field {
+            desc = "This register will hold a running count of test failures observed
+            during normal operation. It will persist until cleared.";
+            sw = r;
+        } ADAPTP_LO_TOTAL_FAILS[31:0];
+    } ADAPTP_LO_TOTAL_FAILS @ 0x88;
+    reg {
+        field {
+            desc = "This register will hold a running count of test failures observed
+            during normal operation. It will persist until cleared.";
+            sw = r;
+        } BUCKET_TOTAL_FAILS[31:0];
+    } BUCKET_TOTAL_FAILS @ 0x8C;
+    reg {
+        field {
+            desc = "This register will hold a running count of test failures observed
+            during normal operation. It will persist until cleared.";
+            sw = r;
+        } MARKOV_HI_TOTAL_FAILS[31:0];
+    } MARKOV_HI_TOTAL_FAILS @ 0x90;
+    reg {
+        field {
+            desc = "This register will hold a running count of test failures observed
+            during normal operation. It will persist until cleared.";
+            sw = r;
+        } MARKOV_LO_TOTAL_FAILS[31:0];
+    } MARKOV_LO_TOTAL_FAILS @ 0x94;
+    reg {
+        field {
+            desc = "This register will hold a running count of test failures observed
+            during normal operation. It will persist until cleared.";
+            sw = r;
+        } EXTHT_HI_TOTAL_FAILS[31:0];
+    } EXTHT_HI_TOTAL_FAILS @ 0x98;
+    reg {
+        field {
+            desc = "This register will hold a running count of test failures observed
+            during normal operation. It will persist until cleared.";
+            sw = r;
+        } EXTHT_LO_TOTAL_FAILS[31:0];
+    } EXTHT_LO_TOTAL_FAILS @ 0x9C;
+    reg {
+        field {
+            desc = "This is the threshold size that will signal an alert when
+            value is reached. A value of zero will disable alerts.
+            The default value is 2.";
+            sw = rw;
+        } ALERT_THRESHOLD[15:0] = 0x2;
+        field {
+            desc = "This should be set to the value above, but inverted.";
+            sw = rw;
+        } ALERT_THRESHOLD_INV[31:16] = 0xFFFD;
+    } ALERT_THRESHOLD @ 0xA0;
+    reg {
+        field {
+            desc = "This field will hold a running count of
+            the total alert count, which is a sum of all of the other
+            counters in the !!ALERT_FAIL_COUNTS register.
+            It will be reset after every
+            passing test sequence. If an alert is signaled, this value
+            will persist until it is cleared.";
+            sw = r;
+        } ANY_FAIL_COUNT[15:0];
+    } ALERT_SUMMARY_FAIL_COUNTS @ 0xA4;
+    reg {
+        field {
+            desc = "This field will hold a running count of test failures that
+            contribute to the total alert count. It will be reset after every
+            passing test sequence. If an alert is signaled, this value
+            will persist until it is cleared.";
+            sw = r;
+        } REPCNT_FAIL_COUNT[7:4];
+        field {
+            desc = "This field will hold a running count of test failures that
+            contribute to the total alert count. It will be reset after every
+            passing test sequence. If an alert is signaled, this value
+            will persist until it is cleared.";
+            sw = r;
+        } ADAPTP_HI_FAIL_COUNT[11:8];
+        field {
+            desc = "This field will hold a running count of test failures that
+            contribute to the total alert count. It will be reset after every
+            passing test sequence. If an alert is signaled, this value
+            will persist until it is cleared.";
+            sw = r;
+        } ADAPTP_LO_FAIL_COUNT[15:12];
+        field {
+            desc = "This field will hold a running count of test failures that
+            contribute to the total alert count. It will be reset after every
+            passing test sequence. If an alert is signaled, this value
+            will persist until it is cleared.";
+            sw = r;
+        } BUCKET_FAIL_COUNT[19:16];
+        field {
+            desc = "This field will hold a running count of test failures that
+            contribute to the total alert count. It will be reset after every
+            passing test sequence. If an alert is signaled, this value
+            will persist until it is cleared.";
+            sw = r;
+        } MARKOV_HI_FAIL_COUNT[23:20];
+        field {
+            desc = "This field will hold a running count of test failures that
+            contribute to the total alert count. It will be reset after every
+            passing test sequence. If an alert is signaled, this value
+            will persist until it is cleared.";
+            sw = r;
+        } MARKOV_LO_FAIL_COUNT[27:24];
+        field {
+            desc = "This field will hold a running count of test failures that
+            contribute to the total alert count. It will be reset after every
+            passing test sequence. If an alert is signaled, this value
+            will persist until it is cleared.";
+            sw = r;
+        } REPCNTS_FAIL_COUNT[31:28];
+    } ALERT_FAIL_COUNTS @ 0xA8;
+    reg {
+        field {
+            desc = "This field will hold a running count of test failures that
+            contribute to the total alert count. It will be reset after every
+            passing test sequence. If an alert is signaled, this value
+            will persist until it is cleared.";
+            sw = r;
+        } EXTHT_HI_FAIL_COUNT[3:0];
+        field {
+            desc = "This field will hold a running count of test failures that
+            contribute to the total alert count. It will be reset after every
+            passing test sequence. If an alert is signaled, this value
+            will persist until it is cleared.";
+            sw = r;
+        } EXTHT_LO_FAIL_COUNT[7:4];
+    } EXTHT_FAIL_COUNTS @ 0xAC;
+    reg {
+        field {
+            desc = "Setting this field to kMultiBitBool4True will put the entropy flow in firmware override mode.
+            In this mode, firmware can monitor the post-health test entropy by reading
+            the observe FIFO. This function also requires that the otp_en_entropy_src_fw_over
+            input vector is set to the enable encoding.";
+            sw = rw;
+        } FW_OV_MODE[3:0] = 0x9;
+        field {
+            desc = "Setting this field to kMultiBitBool4True will switch the input into the pre-conditioner
+            packer FIFO. Firmware can directly write into the packer FIFO, enabling
+            the ability to insert entropy bits back into the hardware flow. Firmware
+            can read data from the health check packer FIFO, then do optional health
+            checks or optional conditioning, then insert the results back into the flow.
+            Also, the !!FW_OV_CONTROL.FW_OV_MODE bit must be set.";
+            sw = rw;
+        } FW_OV_ENTROPY_INSERT[7:4] = 0x9;
+    } FW_OV_CONTROL @ 0xB0;
+    reg {
+        field {
+            desc = "Setting this field to kMultiBitBool4True will instruct the ENTROPY_SRC main state machine
+            to start the SHA3 process and be ready to accept entropy data. This field should
+            be set prior to writting the FW_OV_WR_DATA register. Once all data has been written,
+            this field should be set to kMultiBitBool4False. Once that happened, the SHA3 block will finish
+            processing and push the result into the ESFINAL FIFO.
+
+            Note that clearing this bit to kMultiBitBool4False while there is still unprocessed
+            entropy in the !!FW_OV_WR_DATA will start the SHA3 engine before data can be added
+            to the input message, and will also signal a recoverable alert in
+            !!RECOV_ALERT_STS.ES_FW_OV_DISABLE_ALERT.  To avoid this, check that
+            !!FW_OV_WR_FIFO_FULL is clear before setting this field to kMultiBitBool4False.";
+            sw = rw;
+        } FW_OV_INSERT_START[3:0] = 0x9;
+    } FW_OV_SHA3_START @ 0xB4;
+    reg {
+        field {
+            desc = "\"When this bit is clear, writes to the FW_OV_WR_DATA register are allowed.
+            If this bit is set, it is the equivalent to a FIFO full condition, and writes
+            to the FW_OV_WR_DATA register must be delayed until this bit is reset.";
+            sw = r;
+        } FW_OV_WR_FIFO_FULL[0:0];
+    } FW_OV_WR_FIFO_FULL @ 0xB8;
+    reg {
+        field {
+            desc = "This bit is set by hardware whenever RNG data is lost due to an overflow condition
+            in the Observe FIFO. The RNG data rate is slow enough that firmware should always
+            be able to keep up. This register meanwhile provides an additional check to confirm
+            that bytes read from the !!FW_OV_RD_DATA register represent contiguous RNG samples.
+            If an overflow event occurs, this bit must be cleared by software.";
+            sw = rw;
+            onwrite = woclr;
+        } FW_OV_RD_FIFO_OVERFLOW[0:0];
+    } FW_OV_RD_FIFO_OVERFLOW @ 0xBC;
+    reg {
+        field {
+            desc = "A read of this register pops and returns the top of the Observe FIFO.";
+            sw = r;
+        } FW_OV_RD_DATA[31:0];
+    } FW_OV_RD_DATA @ 0xC0;
+    reg {
+        field {
+            desc = "A write to  this register will insert entropy back into the entropy source
+            module flow. Both !!FW_OV_CONTROL.FW_OV_MODE and !!FW_OV_CONTROL.FW_OV_ENTROPY_INSERT bits need to be set
+            to enable the insertion.";
+            sw = w;
+        } FW_OV_WR_DATA[31:0];
+    } FW_OV_WR_DATA @ 0xC4;
+    reg {
+        field {
+            desc = "This field will set the threshold that the depth of the Observe FIFO
+            will be compared with when setting the interrupt status bit.
+            Note: a value of zero is reserved and not to be used.";
+            sw = rw;
+        } OBSERVE_FIFO_THRESH[6:0] = 0x20;
+    } OBSERVE_FIFO_THRESH @ 0xC8;
+    reg {
+        field {
+            desc = "This field will hold the current depth of the Observe FIFO.";
+            sw = r;
+        } OBSERVE_FIFO_DEPTH[6:0];
+    } OBSERVE_FIFO_DEPTH @ 0xCC;
+    reg {
+        field {
+            desc = "This is the depth of the entropy source FIFO.";
+            sw = r;
+        } ENTROPY_FIFO_DEPTH[2:0];
+        field {
+            desc = "This is the SHA3 finite state machine current state.";
+            sw = r;
+        } SHA3_FSM[5:3];
+        field {
+            desc = "This is the SHA3 block processed signal current state.";
+            sw = r;
+        } SHA3_BLOCK_PR[6:6];
+        field {
+            desc = "This is the SHA3 squeezing signal current state.";
+            sw = r;
+        } SHA3_SQUEEZING[7:7];
+        field {
+            desc = "This is the SHA3 absorbed signal current state.";
+            sw = r;
+        } SHA3_ABSORBED[8:8];
+        field {
+            desc = "This is a logic-or of all of the SHA3 error signals.";
+            sw = r;
+        } SHA3_ERR[9:9];
+        field {
+            desc = "The entropy_src main state machine is in the idle state.";
+            sw = r;
+        } MAIN_SM_IDLE[16:16] = 0x1;
+        field {
+            desc = "The entropy_src main state machine is in the boot phase done state.";
+            sw = r;
+        } MAIN_SM_BOOT_DONE[17:17];
+    } DEBUG_STATUS @ 0xD0;
+    reg {
+        field {
+            desc = "This bit is set when the FIPS_ENABLE field in the !!CONF register is set to
+            a value other than kMultiBitBool4False or kMultiBitBool4True.
+            Writing a zero resets this status bit.";
+            sw = rw;
+            onwrite = woclr;
+        } FIPS_ENABLE_FIELD_ALERT[0:0];
+        field {
+            desc = "This bit is set when the ENTROPY_DATA_REG_ENABLE field in the !!CONF register is set to
+            a value other than kMultiBitBool4False or kMultiBitBool4True.
+            Writing a zero resets this status bit.";
+            sw = rw;
+            onwrite = woclr;
+        } ENTROPY_DATA_REG_EN_FIELD_ALERT[1:1];
+        field {
+            desc = "This bit is set when the MODULE_ENABLE field in the !!MODULE_ENABLE register is set to
+            a value other than kMultiBitBool4False or kMultiBitBool4True.
+            Writing a zero resets this status bit.";
+            sw = rw;
+            onwrite = woclr;
+        } MODULE_ENABLE_FIELD_ALERT[2:2];
+        field {
+            desc = "This bit is set when the THRESHOLD_SCOPE field in the !!CONF register is set to
+            a value other than kMultiBitBool4False or kMultiBitBool4True.
+            Writing a zero resets this status bit.";
+            sw = rw;
+            onwrite = woclr;
+        } THRESHOLD_SCOPE_FIELD_ALERT[3:3];
+        field {
+            desc = "This bit is set when the RNG_BIT_ENABLE field in the !!CONF register is set to
+            a value other than kMultiBitBool4False or kMultiBitBool4True.
+            Writing a zero resets this status bit.";
+            sw = rw;
+            onwrite = woclr;
+        } RNG_BIT_ENABLE_FIELD_ALERT[5:5];
+        field {
+            desc = "This bit is set when the FW_OV_SHA3_START field in the !!FW_OV_SHA3_START register is set to
+            a value other than kMultiBitBool4False or kMultiBitBool4True.
+            Writing a zero resets this status bit.";
+            sw = rw;
+            onwrite = woclr;
+        } FW_OV_SHA3_START_FIELD_ALERT[7:7];
+        field {
+            desc = "This bit is set when the FW_OV_MODE field in the !!FW_OV_CONTROL register is set to
+            a value other than kMultiBitBool4False or kMultiBitBool4True.
+            Writing a zero resets this status bit.";
+            sw = rw;
+            onwrite = woclr;
+        } FW_OV_MODE_FIELD_ALERT[8:8];
+        field {
+            desc = "This bit is set when the FW_OV_ENTROPY_INSERT field in the !!FW_OV_CONTROL register is set to
+            a value other than kMultiBitBool4False or kMultiBitBool4True.
+            Writing a zero resets this status bit.";
+            sw = rw;
+            onwrite = woclr;
+        } FW_OV_ENTROPY_INSERT_FIELD_ALERT[9:9];
+        field {
+            desc = "This bit is set when the ES_ROUTE field in the !!ENTROPY_CONTROL register is set to
+            a value other than kMultiBitBool4False or kMultiBitBool4True.
+            Writing a zero resets this status bit.";
+            sw = rw;
+            onwrite = woclr;
+        } ES_ROUTE_FIELD_ALERT[10:10];
+        field {
+            desc = "This bit is set when the ES_TYPE field in the !!ENTROPY_CONTROL register is set to
+            a value other than kMultiBitBool4False or kMultiBitBool4True.
+            Writing a zero resets this status bit.";
+            sw = rw;
+            onwrite = woclr;
+        } ES_TYPE_FIELD_ALERT[11:11];
+        field {
+            desc = "This bit is set when the main state machine detects a threshhold failure state.
+            Writing a zero resets this status bit.";
+            sw = rw;
+            onwrite = woclr;
+        } ES_MAIN_SM_ALERT[12:12];
+        field {
+            desc = "This bit is set when the interal entropy bus value is equal to the prior
+            valid value on the bus, indicating a possible attack.
+            Writing a zero resets this status bit.";
+            sw = rw;
+            onwrite = woclr;
+        } ES_BUS_CMP_ALERT[13:13];
+        field {
+            desc = "This bit is set when the !!ALERT_THRESHOLD register is not configured properly.
+            The upper field must be the exact inverse of the lower field.
+            Writing a zero resets this status bit.";
+            sw = rw;
+            onwrite = woclr;
+        } ES_THRESH_CFG_ALERT[14:14];
+        field {
+            desc = "This bit is set when the packer FIFO has been written but was full at the time,
+            and in both FW_OV_MODE and FW_OV_ENTROPY_INSERT modes.
+            This alert would normally be the result of not monitoring the !!FW_OV_WR_FIFO_FULL
+            register before each write to the !!FW_OV_WR_DATA register.
+            Writing a zero resets this status bit.";
+            sw = rw;
+            onwrite = woclr;
+        } ES_FW_OV_WR_ALERT[15:15];
+        field {
+            desc = "This bit is set when !!FW_OV_SHA3_START has been set to MuBi4 False, without
+            waiting for the FW_OV packer FIFO to clear.  The final entropy entry in the FIFO
+            will not be included in the SHA3 digest. (Rather it will be added to the
+            subsequent SHA3 digest.) To avoid this alert, monitor !!FW_OV_WR_FIFO_FULL before
+            clearing !!FW_OV_SHA3_START. This alert only applies when both FW_OV_MODE and
+            FW_OV_ENTROPY_INSERT are set to MuBi4True.
+            Writing a zero resets this status bit.";
+            sw = rw;
+            onwrite = woclr;
+        } ES_FW_OV_DISABLE_ALERT[16:16];
+    } RECOV_ALERT_STS @ 0xD4;
+    reg {
+        field {
+            desc = "This bit will be set to one when an error has been detected for the
+            esrng FIFO. The type of error is reflected in the type status
+            bits (bits 28 through 30 of this register).
+            This bit will stay set until the next reset.";
+            sw = r;
+        } SFIFO_ESRNG_ERR[0:0];
+        field {
+            desc = "This bit will be set to one when an error has been detected for the
+            observe FIFO. The type of error is reflected in the type status
+            bits (bits 28 through 30 of this register).
+            This bit will stay set until the next reset.";
+            sw = r;
+        } SFIFO_OBSERVE_ERR[1:1];
+        field {
+            desc = "This bit will be set to one when an error has been detected for the
+            esfinal FIFO. The type of error is reflected in the type status
+            bits (bits 28 through 30 of this register).
+            This bit will stay set until the next reset.";
+            sw = r;
+        } SFIFO_ESFINAL_ERR[2:2];
+        field {
+            desc = "This bit will be set to one when an illegal state has been detected for the
+            ES ack stage state machine. This error will signal a fatal alert, and also
+            an interrupt if enabled.
+            This bit will stay set until the next reset.";
+            sw = r;
+        } ES_ACK_SM_ERR[20:20];
+        field {
+            desc = "This bit will be set to one when an illegal state has been detected for the
+            ES main stage state machine. This error will signal a fatal alert, and also
+            an interrupt if enabled.
+            This bit will stay set until the next reset.";
+            sw = r;
+        } ES_MAIN_SM_ERR[21:21];
+        field {
+            desc = "This bit will be set to one when a hardened counter has detected an error
+            condition. This error will signal a fatal alert, and also
+            an interrupt if enabled.
+            This bit will stay set until the next reset.";
+            sw = r;
+        } ES_CNTR_ERR[22:22];
+        field {
+            desc = "This bit will be set to one when a SHA3 state error has been detected.
+            This error will signal a fatal alert, and also an interrupt if enabled.
+            This bit will stay set until the next reset.";
+            sw = r;
+        } SHA3_STATE_ERR[23:23];
+        field {
+            desc = "This bit will be set to one when a SHA3_RST_STORAGE_ERR signal being
+            active has been detected.
+            This error will signal a fatal alert, and also an interrupt if enabled.
+            This bit will stay set until the next reset.";
+            sw = r;
+        } SHA3_RST_STORAGE_ERR[24:24];
+        field {
+            desc = "This bit will be set to one when any of the source bits (bits 0 through 1 of this
+            this register) are asserted as a result of an error pulse generated from
+            any full FIFO that has been recieved a write pulse.
+            This bit will stay set until the next reset.";
+            sw = r;
+        } FIFO_WRITE_ERR[28:28];
+        field {
+            desc = "This bit will be set to one when any of the source bits (bits 0 through 1 of this
+            this register) are asserted as a result of an error pulse generated from
+            any empty FIFO that has recieved a read pulse.
+            This bit will stay set until the next reset.";
+            sw = r;
+        } FIFO_READ_ERR[29:29];
+        field {
+            desc = "This bit will be set to one when any of the source bits (bits 0 through 1 of this
+            this register) are asserted as a result of an error pulse generated from
+            any FIFO where both the empty and full status bits are set.
+            This bit will stay set until the next reset.";
+            sw = r;
+        } FIFO_STATE_ERR[30:30];
+    } ERR_CODE @ 0xD8;
+    reg {
+        field {
+            desc = "Setting this field will set the bit number for which an error
+            will be forced in the hardware. This bit number is that same one
+            found in the !!ERR_CODE register. The action of writing this
+            register will force an error pulse. The sole purpose of this
+            register is to test that any error properly propagates to either
+            an interrupt or an alert.";
+            sw = rw;
+        } ERR_CODE_TEST[4:0];
+    } ERR_CODE_TEST @ 0xDC;
+    reg {
+        field {
+            desc = "This is the state of the ENTROPY_SRC main state machine.
+            See the RTL file `entropy_src_main_sm` for the meaning of the values.";
+            sw = r;
+        } MAIN_SM_STATE[8:0] = 0xF5;
+    } MAIN_SM_STATE @ 0xE0;
+};

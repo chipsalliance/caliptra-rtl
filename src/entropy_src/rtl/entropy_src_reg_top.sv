@@ -6,11 +6,25 @@
 
 `include "prim_assert.sv"
 
-module entropy_src_reg_top (
+module entropy_src_reg_top #(
+    parameter AHBDataWidth = 64,
+    parameter AHBAddrWidth = 32
+  ) (
   input clk_i,
   input rst_ni,
-  input  tlul_pkg::tl_h2d_t tl_i,
-  output tlul_pkg::tl_d2h_t tl_o,
+  // AMBA AHB Lite Interface
+  input logic [AHBAddrWidth-1:0]  haddr_i,
+  input logic [AHBDataWidth-1:0]  hwdata_i,
+  input logic                     hsel_i,
+  input logic                     hwrite_i,
+  input logic                     hready_i,
+  input logic [1:0]               htrans_i,
+  input logic [2:0]               hsize_i,
+
+  output logic                    hresp_o,
+  output logic                    hreadyout_o,
+  output logic [AHBDataWidth-1:0] hrdata_o,
+
   // To HW
   output entropy_src_reg_pkg::entropy_src_reg2hw_t reg2hw, // Write
   input  entropy_src_reg_pkg::entropy_src_hw2reg_t hw2reg, // Read
@@ -22,12 +36,20 @@ module entropy_src_reg_top (
   input devmode_i // If 1, explicit error return for unmapped register access
 );
 
-  import entropy_src_reg_pkg::* ;
+  import entropy_src_reg_pkg::*;
 
   localparam int AW = 8;
   localparam int DW = 32;
   localparam int DBW = DW/8;                    // Byte Width
 
+  // ahb interface register signals
+  logic           ahb_reg_dv;
+  logic           ahb_reg_hld;
+  logic           ahb_reg_err;
+  logic           ahb_reg_write;
+  logic [DW-1:0]  ahb_reg_wdata;
+  logic [AW-1:0]  ahb_reg_addr;
+  logic [DW-1:0]  ahb_reg_rdata;
   // register signals
   logic           reg_we;
   logic           reg_re;
@@ -41,17 +63,6 @@ module entropy_src_reg_top (
 
   logic [DW-1:0] reg_rdata_next;
   logic reg_busy;
-
-  tlul_pkg::tl_h2d_t tl_reg_h2d;
-  tlul_pkg::tl_d2h_t tl_reg_d2h;
-
-
-  // incoming payload check
-  logic intg_err;
-  tlul_cmd_intg_chk u_chk (
-    .tl_i(tl_i),
-    .err_o(intg_err)
-  );
 
   // also check for spurious write enables
   logic reg_we_err;
@@ -70,56 +81,70 @@ module entropy_src_reg_top (
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
       err_q <= '0;
-    end else if (intg_err || reg_we_err) begin
+    end else if (reg_we_err) begin
       err_q <= 1'b1;
     end
   end
 
   // integrity error output is permanent and should be used for alert generation
   // register errors are transactional
-  assign intg_err_o = err_q | intg_err | reg_we_err;
+  assign intg_err_o = err_q | reg_we_err;
 
-  // outgoing integrity generation
-  tlul_pkg::tl_d2h_t tl_o_pre;
-  tlul_rsp_intg_gen #(
-    .EnableRspIntgGen(1),
-    .EnableDataIntgGen(1)
-  ) u_rsp_intg_gen (
-    .tl_i(tl_o_pre),
-    .tl_o(tl_o)
+  ahb_slv_sif #(
+    .AHB_DATA_WIDTH    (AHBDataWidth),
+    .AHB_ADDR_WIDTH    (AHBAddrWidth),
+    .CLIENT_DATA_WIDTH (DW),
+    .CLIENT_ADDR_WIDTH (AW)
+  ) u_ahb_slv_sif (
+    .hclk        (clk_i),
+    .hreset_n    (rst_ni),
+    .haddr_i     (haddr_i),
+    .hwdata_i    (hwdata_i),
+    .hsel_i      (hsel_i),
+    .hwrite_i    (hwrite_i),
+    .hready_i    (hready_i),
+    .htrans_i    (htrans_i),
+    .hsize_i     (hsize_i),
+    .hresp_o     (hresp_o),
+    .hreadyout_o (hreadyout_o),
+    .hrdata_o    (hrdata_o),
+    //component inf
+    .dv          (ahb_reg_dv),
+    .hld         (ahb_reg_hld),
+    .err         (ahb_reg_err),
+    .write       (ahb_reg_write),
+    .wdata       (ahb_reg_wdata),
+    .addr        (ahb_reg_addr),
+    .rdata       (ahb_reg_rdata)
   );
 
-  assign tl_reg_h2d = tl_i;
-  assign tl_o_pre   = tl_reg_d2h;
-
-  tlul_adapter_reg #(
-    .RegAw(AW),
-    .RegDw(DW),
-    .EnableDataIntgGen(0)
-  ) u_reg_if (
-    .clk_i  (clk_i),
-    .rst_ni (rst_ni),
-
-    .tl_i (tl_reg_h2d),
-    .tl_o (tl_reg_d2h),
-
-    .en_ifetch_i(prim_mubi_pkg::MuBi4False),
-    .intg_error_o(),
-
-    .we_o    (reg_we),
-    .re_o    (reg_re),
-    .addr_o  (reg_addr),
-    .wdata_o (reg_wdata),
-    .be_o    (reg_be),
-    .busy_i  (reg_busy),
-    .rdata_i (reg_rdata),
-    .error_i (reg_error)
+  ahb_to_reg_adapter #(
+    .DATA_WIDTH (DW),
+    .ADDR_WIDTH (AW)
+  ) u_ahb_to_reg_adapter (
+    .clk           (clk_i),
+    .rst_n         (rst_ni),
+    .ahb_reg_dv    (ahb_reg_dv),
+    .ahb_reg_hld   (ahb_reg_hld),
+    .ahb_reg_err   (ahb_reg_err),
+    .ahb_reg_write (ahb_reg_write),
+    .ahb_reg_wdata (ahb_reg_wdata),
+    .ahb_reg_addr  (ahb_reg_addr),
+    .ahb_reg_rdata (ahb_reg_rdata),
+    .reg_we        (reg_we),
+    .reg_re        (reg_re),
+    .reg_addr      (reg_addr),
+    .reg_wdata     (reg_wdata),
+    .reg_be        (reg_be),
+    .reg_rdata     (reg_rdata),
+    .reg_error     (reg_error),
+    .reg_busy      (reg_busy)
   );
 
   // cdc oversampling signals
 
-  assign reg_rdata = reg_rdata_next ;
-  assign reg_error = (devmode_i & addrmiss) | wr_err | intg_err;
+  assign reg_rdata = reg_rdata_next;
+  assign reg_error = (devmode_i & addrmiss) | wr_err;
 
   // Define SW related signals
   // Format: <reg>_<field>_{wd|we|qs}
@@ -3234,7 +3259,7 @@ module entropy_src_reg_top (
     addr_hit[56] = (reg_addr == ENTROPY_SRC_MAIN_SM_STATE_OFFSET);
   end
 
-  assign addrmiss = (reg_re || reg_we) ? ~|addr_hit : 1'b0 ;
+  assign addrmiss = (reg_re || reg_we) ? ~|addr_hit : 1'b0;
 
   // Check sub-word write is permitted
   always_comb begin
@@ -3891,15 +3916,11 @@ module entropy_src_reg_top (
   assign unused_be = ^reg_be;
 
   // Assertions for Register Interface
-  `ASSERT_PULSE(wePulse, reg_we, clk_i, !rst_ni)
-  `ASSERT_PULSE(rePulse, reg_re, clk_i, !rst_ni)
+  `CALIPTRA_ASSERT_PULSE(wePulse, reg_we, clk_i, !rst_ni)
+  `CALIPTRA_ASSERT_PULSE(rePulse, reg_re, clk_i, !rst_ni)
 
-  `ASSERT(reAfterRv, $rose(reg_re || reg_we) |=> tl_o_pre.d_valid, clk_i, !rst_ni)
+  `CALIPTRA_ASSERT(reAfterRv, $rose(reg_re || reg_we) |=> hreadyout_o, clk_i, !rst_ni)
 
-  `ASSERT(en2addrHit, (reg_we || reg_re) |-> $onehot0(addr_hit), clk_i, !rst_ni)
-
-  // this is formulated as an assumption such that the FPV testbenches do disprove this
-  // property by mistake
-  //`ASSUME(reqParity, tl_reg_h2d.a_valid |-> tl_reg_h2d.a_user.chk_en == tlul_pkg::CheckDis)
+  `CALIPTRA_ASSERT(en2addrHit, (reg_we || reg_re) |-> $onehot0(addr_hit), clk_i, !rst_ni)
 
 endmodule

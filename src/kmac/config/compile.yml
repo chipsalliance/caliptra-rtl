@@ -1,0 +1,24 @@
+---
+provides: [kmac_pkg]
+schema_version: 2.4.0
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/sha3_pkg.sv
+---
+provides: [kmac]
+schema_version: 2.4.0
+requires:
+  - kmac_pkg
+  - prim_pkg
+  - lc_ctrl_pkg
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/keccak_round.sv
+      - $COMPILE_ROOT/rtl/keccak_2share.sv
+      - $COMPILE_ROOT/rtl/sha3pad.sv
+      - $COMPILE_ROOT/rtl/sha3.sv
+    tops: [sha3]

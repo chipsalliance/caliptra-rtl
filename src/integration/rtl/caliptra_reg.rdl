@@ -15,7 +15,7 @@
 
 addrmap clp {
     desc="Address Map for Caliptra Register Space";
-    
+
     doe_reg doe_reg @ 0x1000_0000;
 
     ecc_reg ecc_reg @ 0x1000_8000;
@@ -32,10 +32,14 @@ addrmap clp {
 
     sha256_reg sha256_reg @ 0x1002_8000;
 
+    csrng csrng_reg @ 0x2000_2000;
+
+    entropy_src entropy_src_reg @ 0x2000_3000;
+
     mbox_csr mbox_csr @ 0x3002_0000;
 
     sha512_acc_csr sha512_acc_csr @ 0x3002_1000;
-    
+
     soc_ifc_reg soc_ifc_reg @ 0x3003_0000;
 
 };

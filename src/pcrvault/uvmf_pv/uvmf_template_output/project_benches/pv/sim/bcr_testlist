@@ -1,0 +1,19 @@
+
+
+
+# Test list for use by RMDB file
+# File syntax is
+# TB_INFO <tb_name> { <special args for build command> } { <special args for run command > }
+# TB <tb_name> ## All subsequent tests will run on this bench until a different "TB" line is seen
+# TEST <testname> <repeat_count> <1st_seed> ... <nth seed>
+# If not enough seeds are provided then random seeds are used to pad
+# If no repeat count is given, default is 1
+# pragma uvmf custom tb_info begin
+TB_INFO pv { } { }  
+# pragma uvmf custom tb_info end
+TB pv
+# pragma uvmf custom regression_suite begin
+TEST test_top 3
+# pragma uvmf custom regression_suite end
+
+

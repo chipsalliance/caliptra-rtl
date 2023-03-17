@@ -70,7 +70,7 @@ package mbox_csr_uvm;
 
         virtual function void build();
             this.datain = new("datain");
-            this.datain.configure(this, 32, 0, "RW", 0, 'h0, 0, 1, 0);
+            this.datain.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : mbox_csr__mbox_datain
 
@@ -84,7 +84,7 @@ package mbox_csr_uvm;
 
         virtual function void build();
             this.dataout = new("dataout");
-            this.dataout.configure(this, 32, 0, "RW", 1, 'h0, 0, 1, 0);
+            this.dataout.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : mbox_csr__mbox_dataout
 

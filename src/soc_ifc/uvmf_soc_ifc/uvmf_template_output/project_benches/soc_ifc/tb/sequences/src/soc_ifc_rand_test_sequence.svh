@@ -66,6 +66,7 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
     if ($value$plusargs("SOC_IFC_RAND_ITER=%d", iteration_count)) begin
         `uvm_info("SOC_IFC_RAND_TEST", $sformatf("Received Command Line Iteration Count Argument of %d", iteration_count), UVM_LOW);
         iteration_count.rand_mode(0);
+        this.iter_count_c.constraint_mode(0);
     end
     else begin
         if (!this.randomize(iteration_count))

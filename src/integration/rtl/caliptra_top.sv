@@ -17,10 +17,14 @@
 `include "caliptra_macros.svh"
 `include "caliptra_sva.svh"
 
-module caliptra_top 
+module caliptra_top
     import kv_defines_pkg::*;
     import pv_defines_pkg::*;
     import soc_ifc_pkg::*;
+`ifdef CALIPTRA_INTERNAL_TRNG
+    import entropy_src_pkg::*;
+    import csrng_pkg::*;
+`endif
     (
     input logic                        clk,
 
@@ -38,15 +42,15 @@ module caliptra_top
 
     //APB Interface
     input  logic [`CALIPTRA_APB_ADDR_WIDTH-1:0] PADDR,
-    input  logic [2:0]                 PPROT,
-    input  logic                       PSEL,
-    input  logic                       PENABLE,
-    input  logic                       PWRITE,
+    input  logic [2:0]                          PPROT,
+    input  logic                                PSEL,
+    input  logic                                PENABLE,
+    input  logic                                PWRITE,
     input  logic [`CALIPTRA_APB_DATA_WIDTH-1:0] PWDATA,
     input  logic [`CALIPTRA_APB_USER_WIDTH-1:0] PAUSER,
 
-    output logic                       PREADY,
-    output logic                       PSLVERR,
+    output logic                                PREADY,
+    output logic                                PSLVERR,
     output logic [`CALIPTRA_APB_DATA_WIDTH-1:0] PRDATA,
 
     //QSPI Interface
@@ -87,7 +91,13 @@ module caliptra_top
     //SoC Interrupts
     output logic             cptra_error_fatal,
     output logic             cptra_error_non_fatal,
-    output logic             trng_req,
+
+    // TRNG Interface
+    // External Request
+    output logic             etrng_req,
+    // Physical Source for Internal TRNG
+    input  logic [3:0]       itrng_data,
+    input  logic             itrng_valid,
 
     input logic  [63:0]                generic_input_wires,
     output logic [63:0]                generic_output_wires,
@@ -228,12 +238,14 @@ module caliptra_top
     kv_read_t [KV_NUM_READ-1:0]  kv_read;
     kv_write_t [KV_NUM_WRITE-1:0]  kv_write;
     kv_rd_resp_t [KV_NUM_READ-1:0] kv_rd_resp;
-    kv_wr_resp_t [KV_NUM_READ-1:0] kv_wr_resp;
+    kv_wr_resp_t [KV_NUM_WRITE-1:0] kv_wr_resp;
 
     pv_read_t [PV_NUM_READ-1:0]  pv_read;
     pv_write_t [PV_NUM_WRITE-1:0]  pv_write;
     pv_rd_resp_t [PV_NUM_READ-1:0] pv_rd_resp;
-    pv_wr_resp_t [PV_NUM_READ-1:0] pv_wr_resp;
+    pv_wr_resp_t [PV_NUM_WRITE-1:0] pv_wr_resp;
+
+    pcr_signing_t pcr_signing_data;
 
     //mailbox sram gasket
     mbox_sram_req_t mbox_sram_req;
@@ -242,9 +254,9 @@ module caliptra_top
     logic clear_obf_secrets;
     logic clear_secrets;
     
-    logic cptra_security_state_captured, scan_mode_f, scan_mode_ff, scan_mode_switch;
+    logic cptra_security_state_captured, scan_mode_f, scan_mode_switch;
     logic debugUnlock_or_scan_mode_switch, clear_obf_secrets_debugScanQ, cptra_scan_mode_Latched, debug_lock_to_unlock_switch;
-    var security_state_t security_state_f, security_state_ff;
+    var security_state_t security_state_f;
     
     logic [TOTAL_OBF_KEY_BITS-1:0]        cptra_obf_key_dbg;
     logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy_dbg;
@@ -330,7 +342,8 @@ end
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_IDMA]    = iccm_lock & responder_inst[`CALIPTRA_SLAVE_SEL_IDMA].hwrite;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_SHA256]  = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_IMEM]    = 1'b0;
-
+    always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_CSRNG]       = 1'b0;
+    always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC] = 1'b0;
 
    //=========================================================================-
    // RTL instance
@@ -540,19 +553,18 @@ el2_veer_wrapper rvtop (
             // Latched State is used if we want to open the JTAG and is
             // determined to do so only at reset exit time
             // Asset flushing happens 'anytime' switch happens for safe side
+            //security_state_f  <= security_state;
             security_state_f  <= security_state;
-            security_state_ff  <= security_state_f;
             scan_mode_f  <= scan_mode;
-            scan_mode_ff <= scan_mode_f;
         end
     end
 
     // When scan mode goes from 0->1, generate a pulse to clear the assets
     // Note that when scan goes to '1, Caliptra state as well as SOC state
     // gets messed up. So switch to scan is destructive (obvious! Duh!)
-    assign scan_mode_switch = ~scan_mode_ff & scan_mode_f;
+    assign scan_mode_switch = ~scan_mode_f & scan_mode;
     // 1->0 transition (Debug locked to unlocked)
-    assign debug_lock_to_unlock_switch = security_state_ff.debug_locked & ~security_state_f.debug_locked;
+    assign debug_lock_to_unlock_switch = security_state_f.debug_locked & ~security_state.debug_locked;
     assign debugUnlock_or_scan_mode_switch = debug_lock_to_unlock_switch | scan_mode_switch;
     assign clear_obf_secrets_debugScanQ = clear_obf_secrets | debugUnlock_or_scan_mode_switch;
 
@@ -651,7 +663,7 @@ caliptra_ahb_srom #(
 );
 
 sha512_ctrl #(
-    .AHB_DATA_WIDTH (64),
+    .AHB_DATA_WIDTH (`CALIPTRA_AHB_HDATA_SIZE),
     .AHB_ADDR_WIDTH (`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SHA512))
 ) sha512 (
     .clk            (clk_cg),
@@ -675,13 +687,14 @@ sha512_ctrl #(
     .pv_write       (pv_write),
     .pv_rd_resp     (pv_rd_resp),
     .pv_wr_resp     (pv_wr_resp),
+    .pcr_signing_hash(pcr_signing_data.pcr_hash),
 
     .error_intr(sha512_error_intr),
     .notif_intr(sha512_notif_intr)
 );
 
 sha256_ctrl #(
-    .AHB_DATA_WIDTH (64),
+    .AHB_DATA_WIDTH (`CALIPTRA_AHB_HDATA_SIZE),
     .AHB_ADDR_WIDTH (`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SHA256))
 ) sha256 (
     .clk            (clk_cg),
@@ -703,13 +716,13 @@ sha256_ctrl #(
 );
 
 //override device secrets with debug values in Debug or Scan Mode
-always_comb cptra_in_debug_scan_mode = ~security_state_f.debug_locked | scan_mode_f;
+always_comb cptra_in_debug_scan_mode = ~security_state.debug_locked | scan_mode;
 always_comb cptra_obf_key_dbg     = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_OBF_KEY : cptra_obf_key_reg;
 always_comb obf_uds_seed_dbg      = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_UDS_SEED : obf_uds_seed;
 always_comb obf_field_entropy_dbg = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_FIELD_ENTROPY : obf_field_entropy;
 
 doe_ctrl #(
-    .AHB_DATA_WIDTH (64),
+    .AHB_DATA_WIDTH (`CALIPTRA_AHB_HDATA_SIZE),
     .AHB_ADDR_WIDTH (`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_DOE))
 ) doe (
     .clk               (clk_cg),
@@ -744,27 +757,28 @@ ecc_top #(
 )
 ecc_top1
 (
-    .clk           (clk_cg),
-    .reset_n       (cptra_noncore_rst_b),
-    .cptra_pwrgood (cptra_pwrgood),
-    .haddr_i       (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_ECC)-1:0]),
-    .hwdata_i      (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hwdata),
-    .hsel_i        (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hsel),
-    .hwrite_i      (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hwrite),
-    .hready_i      (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hready),
-    .htrans_i      (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].htrans),
-    .hsize_i       (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hsize),
-    .hresp_o       (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hresp),
-    .hreadyout_o   (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hreadyout),
-    .hrdata_o      (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hrdata),
+    .clk             (clk_cg),
+    .reset_n         (cptra_noncore_rst_b),
+    .cptra_pwrgood   (cptra_pwrgood),
+    .haddr_i         (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_ECC)-1:0]),
+    .hwdata_i        (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hwdata),
+    .hsel_i          (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hsel),
+    .hwrite_i        (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hwrite),
+    .hready_i        (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hready),
+    .htrans_i        (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].htrans),
+    .hsize_i         (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hsize),
+    .hresp_o         (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hresp),
+    .hreadyout_o     (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hreadyout),
+    .hrdata_o        (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hrdata),
 
-    .kv_read        (kv_read[5:3]),
-    .kv_rd_resp     (kv_rd_resp[5:3]),
-    .kv_write       (kv_write[2]),
-    .kv_wr_resp     (kv_wr_resp[2]),
+    .kv_read         (kv_read[5:3]),
+    .kv_rd_resp      (kv_rd_resp[5:3]),
+    .kv_write        (kv_write[2]),
+    .kv_wr_resp      (kv_wr_resp[2]),
+    .pcr_signing_data(pcr_signing_data),
 
-    .error_intr    (ecc_error_intr),
-    .notif_intr    (ecc_notif_intr)
+    .error_intr      (ecc_error_intr),
+    .notif_intr      (ecc_notif_intr)
 );
 
 hmac_ctrl #(
@@ -820,7 +834,8 @@ key_vault1
     .kv_read          (kv_read),
     .kv_write         (kv_write),
     .kv_rd_resp       (kv_rd_resp),
-    .kv_wr_resp       (kv_wr_resp)
+    .kv_wr_resp       (kv_wr_resp),
+    .pcr_signing_key  (pcr_signing_data.pcr_signing_privkey)
 );
 
 pv #(
@@ -855,20 +870,121 @@ dv #(
 )
 data_vault1
 (
-    .clk           (clk_cg),
-    .rst_b         (cptra_noncore_rst_b),
+    .clk             (clk_cg),
+    .rst_b           (cptra_noncore_rst_b),
+    .core_only_rst_b (cptra_uc_rst_b),
     .cptra_pwrgood (cptra_pwrgood),
-    .haddr_i       (responder_inst[`CALIPTRA_SLAVE_SEL_DV].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_DV)-1:0]),
-    .hwdata_i      (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hwdata),
-    .hsel_i        (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hsel),
-    .hwrite_i      (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hwrite),
-    .hready_i      (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hready),
-    .htrans_i      (responder_inst[`CALIPTRA_SLAVE_SEL_DV].htrans),
-    .hsize_i       (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hsize),
-    .hresp_o       (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hresp),
-    .hreadyout_o   (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hreadyout),
-    .hrdata_o      (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hrdata)
+    .haddr_i         (responder_inst[`CALIPTRA_SLAVE_SEL_DV].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_DV)-1:0]),
+    .hwdata_i        (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hwdata),
+    .hsel_i          (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hsel),
+    .hwrite_i        (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hwrite),
+    .hready_i        (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hready),
+    .htrans_i        (responder_inst[`CALIPTRA_SLAVE_SEL_DV].htrans),
+    .hsize_i         (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hsize),
+    .hresp_o         (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hresp),
+    .hreadyout_o     (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hreadyout),
+    .hrdata_o        (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hrdata)
 );
+
+`ifdef CALIPTRA_INTERNAL_TRNG
+entropy_src_hw_if_req_t entropy_src_hw_if_req;
+entropy_src_hw_if_rsp_t entropy_src_hw_if_rsp;
+cs_aes_halt_req_t       csrng_cs_aes_halt_req;
+cs_aes_halt_rsp_t       csrng_cs_aes_halt_rsp;
+entropy_src_rng_req_t   entropy_src_rng_req;
+entropy_src_rng_rsp_t   entropy_src_rng_rsp;
+
+assign etrng_req = entropy_src_rng_req.rng_enable;
+assign entropy_src_rng_rsp.rng_valid = itrng_valid;
+assign entropy_src_rng_rsp.rng_b = itrng_data;
+
+// TODO: Revisit ports and verify connectivity
+
+csrng #(
+    .AHBDataWidth(`CALIPTRA_AHB_HDATA_SIZE),
+    .AHBAddrWidth(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_CSRNG))
+) csrng (
+    // Clock and reset connections
+    .clk_i                  (clk_cg),
+    .rst_ni                 (cptra_noncore_rst_b),
+    // AMBA AHB Lite Interface
+    .haddr_i                (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_CSRNG)-1:0]),
+    .hwdata_i               (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hwdata),
+    .hsel_i                 (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hsel),
+    .hwrite_i               (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hwrite),
+    .hready_i               (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hready),
+    .htrans_i               (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].htrans),
+    .hsize_i                (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hsize),
+    .hresp_o                (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hresp),
+    .hreadyout_o            (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hreadyout),
+    .hrdata_o               (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hrdata),
+     // OTP Interface
+    .otp_en_csrng_sw_app_read_i(prim_mubi_pkg::MuBi8True),
+    // Lifecycle broadcast inputs
+    .lc_hw_debug_en_i       (lc_ctrl_pkg::On),
+    // Entropy Interface
+    .entropy_src_hw_if_o    (entropy_src_hw_if_req),
+    .entropy_src_hw_if_i    (entropy_src_hw_if_rsp),
+    .cs_aes_halt_i          (csrng_cs_aes_halt_req),
+    .cs_aes_halt_o          (csrng_cs_aes_halt_rsp),
+    // Application Interfaces
+    .csrng_cmd_i            ('0),
+    .csrng_cmd_o            (),
+    // Alerts
+    .alert_tx_o             (),
+    .alert_rx_i             ({prim_alert_pkg::ALERT_RX_DEFAULT, prim_alert_pkg::ALERT_RX_DEFAULT}),
+    // Interrupt
+    .intr_cs_cmd_req_done_o (),
+    .intr_cs_entropy_req_o  (),
+    .intr_cs_hw_inst_exc_o  (),
+    .intr_cs_fatal_err_o    ()
+  );
+
+entropy_src #(
+    .AHBDataWidth(`CALIPTRA_AHB_HDATA_SIZE),
+    .AHBAddrWidth(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_ENTROPY_SRC))
+) entropy_src (
+    .clk_i                  (clk_cg),
+    .rst_ni                 (cptra_noncore_rst_b),
+    // AMBA AHB Lite Interface
+    .haddr_i                (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_ENTROPY_SRC)-1:0]),
+    .hwdata_i               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hwdata),
+    .hsel_i                 (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hsel),
+    .hwrite_i               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hwrite),
+    .hready_i               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hready),
+    .htrans_i               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].htrans),
+    .hsize_i                (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hsize),
+    .hresp_o                (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hresp),
+    .hreadyout_o            (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hreadyout),
+    .hrdata_o               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hrdata),
+    // OTP Interface
+    .otp_en_entropy_src_fw_read_i(prim_mubi_pkg::MuBi8True),
+    .otp_en_entropy_src_fw_over_i(prim_mubi_pkg::MuBi8True),
+    // RNG Interface
+    .rng_fips_o                       (),
+    // Entropy Interface
+    .entropy_src_hw_if_i              (entropy_src_hw_if_req),
+    .entropy_src_hw_if_o              (entropy_src_hw_if_rsp),
+    // RNG Interface
+    .entropy_src_rng_o                (entropy_src_rng_req),
+    .entropy_src_rng_i                (entropy_src_rng_rsp),
+    // CSRNG Interface
+    .cs_aes_halt_o                    (csrng_cs_aes_halt_req),
+    .cs_aes_halt_i                    (csrng_cs_aes_halt_rsp),
+    // External Health Test Interface
+    .entropy_src_xht_o                (),
+    .entropy_src_xht_i                (entropy_src_xht_rsp_t'('0)),
+    // Alerts
+    .alert_rx_i                       ({prim_alert_pkg::ALERT_RX_DEFAULT, prim_alert_pkg::ALERT_RX_DEFAULT}),
+    .alert_tx_o                       (),
+    // Interrupts
+    .intr_es_entropy_valid_o          (),
+    .intr_es_health_test_failed_o     (),
+    .intr_es_observe_fifo_ready_o     (),
+    .intr_es_fatal_err_o              ()
+    );
+
+`endif
 
 soc_ifc_top #(
     .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)),
@@ -890,7 +1006,7 @@ soc_ifc_top1
     .mailbox_data_avail(mailbox_data_avail),
     .mailbox_flow_done(mailbox_flow_done),
 
-    .security_state(security_state_f),
+    .security_state(security_state),
     
     .BootFSM_BrkPoint (BootFSM_BrkPoint),
     
@@ -925,7 +1041,11 @@ soc_ifc_top1
     //SoC Interrupts
     .cptra_error_fatal    (cptra_error_fatal),
     .cptra_error_non_fatal(cptra_error_non_fatal),
-    .trng_req             (trng_req),
+`ifdef CALIPTRA_INTERNAL_TRNG
+    .trng_req             (),
+`else
+    .trng_req             (etrng_req),
+`endif
     // uC Interrupts
     .soc_ifc_error_intr(soc_ifc_error_intr),
     .soc_ifc_notif_intr(soc_ifc_notif_intr),
@@ -968,7 +1088,16 @@ always_comb begin: tie_off_slaves
     responder_inst[`CALIPTRA_SLAVE_SEL_I3C].hresp = '0;
     responder_inst[`CALIPTRA_SLAVE_SEL_I3C].hreadyout = '0;
     responder_inst[`CALIPTRA_SLAVE_SEL_I3C].hrdata = '0;
-end 
+
+`ifndef CALIPTRA_INTERNAL_TRNG
+    responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hresp = '0;
+    responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hreadyout = '0;
+    responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hrdata = '0;
+    responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hresp = '0;
+    responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hreadyout = '0;
+    responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hrdata = '0;
+`endif
+end
 
 genvar sva_i;
 generate
@@ -996,5 +1125,18 @@ endgenerate
 `CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HRESP_X,        initiator_inst.hresp,       clk, cptra_noncore_rst_b)
 `CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HRDATA_X,       initiator_inst.hready ? initiator_inst.hrdata : '0,      clk, cptra_noncore_rst_b)
 `CALIPTRA_ASSERT_NEVER(AHB_MASTER_HTRANS_BUSY,    initiator_inst.htrans == 2'b01, clk, cptra_noncore_rst_b)
+
+`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PADDR_X,        PADDR,                clk, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PWDATA_X,       PWDATA,               clk, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PWRITE_X,       PWRITE,               clk, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PREADY_X,       PREADY,               clk, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PENABLE_X,      PENABLE,              clk, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PSEL_X,         PSEL,                 clk, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PPROT_X,        PPROT,                clk, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PAUSER_X,       PAUSER,               clk, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PSLVERR_X,      PSLVERR,              clk, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PRDATA_X,       PREADY ? PRDATA : '0, clk, cptra_rst_b)
+
+`CALIPTRA_ASSERT_NEVER(APB_MASTER_PPROT_ACTIVE,   PPROT !== 3'b000, clk, cptra_rst_b)
 
 endmodule

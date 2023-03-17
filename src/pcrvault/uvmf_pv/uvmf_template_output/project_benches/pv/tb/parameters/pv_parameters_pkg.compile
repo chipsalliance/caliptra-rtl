@@ -1,0 +1,4 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.compile
+src:
+  - pv_parameters_pkg.sv

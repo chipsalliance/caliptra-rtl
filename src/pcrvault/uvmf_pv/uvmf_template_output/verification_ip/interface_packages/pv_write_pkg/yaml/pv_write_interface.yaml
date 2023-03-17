@@ -1,0 +1,62 @@
+uvmf:
+  interfaces:
+    pv_write:
+      clock: clk
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      gen_inbound_streaming_driver: 'False'
+      hdl_pkg_parameters: []
+      hdl_typedefs: []
+      hvl_pkg_parameters: []
+      hvl_typedefs: []
+      imports:
+      - name: pv_defines_pkg
+      parameters:
+      - name: PV_WRITE_REQUESTOR
+        type: string
+        value: '"SHA512"'
+      ports:
+      - dir: output
+        name: pv_write
+        reset_value: '''bz'
+        width: $bits(pv_defines_pkg::pv_write_t)
+      - dir: input
+        name: pv_wr_resp
+        reset_value: '''bz'
+        width: $bits(pv_defines_pkg::pv_wr_resp_t)
+      reset: dummy
+      reset_assertion_level: 'False'
+      transaction_constraints: []
+      transaction_vars:
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: write_en
+        type: logic
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'True'
+        name: write_entry
+        type: logic   [PV_ENTRY_ADDR_W-1:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: write_offset
+        type: logic   [PV_ENTRY_SIZE_WIDTH-1:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'True'
+        name: write_data
+        type: logic   [PV_DATA_W-1:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'True'
+        name: error
+        type: logic
+        unpacked_dimension: ''
+      use_dpi_link: 'False'
