@@ -79,6 +79,8 @@ void caliptra_rt() {
                       : /* clobbers */);
 
     mbox_op_s op;
+    uint32_t reg_addr;
+    uint32_t read_data;
 
     VPRINTF(LOW, "----------------------------------\n");
     VPRINTF(LOW, " Caliptra Validation RT!!\n"         );
@@ -190,6 +192,11 @@ void caliptra_rt() {
                 }
                 else if (op.cmd & MBOX_CMD_FIELD_RESP_MASK) {
                     VPRINTF(MEDIUM, "Received mailbox command (expecting RESP) from SOC! Got 0x%x\n", op.cmd);
+                    if (op.cmd == MBOX_CMD_REG_ACCESS) {
+                        reg_addr = soc_ifc_mbox_read_dataout_single();
+                        read_data = lsu_read_32((uint32_t *) reg_addr);
+                        lsu_write_32((uint32_t *) (CLP_MBOX_CSR_MBOX_DATAIN), read_data);
+                    }
                     soc_ifc_set_mbox_status_field(DATA_READY);
                 }
                 else {
