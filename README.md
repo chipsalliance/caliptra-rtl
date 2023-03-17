@@ -53,8 +53,8 @@ Other:
 
 ## **ENVIRONMENT VARIABLES** ##
 Required for simulation:<BR>
-`CALIPTRA_WORKSPACE`: Defines the absolute path to the directory that contains the Project repository root (called "Caliptra" or "caliptra-rtl")<BR>
-`CALIPTRA_ROOT`: Defines the absolute path to the Project repository root (called "Caliptra" or "caliptra-rtl"). Equivalent to `${CALIPTRA_WORKSPACE}/Caliptra`.<BR>
+`CALIPTRA_WORKSPACE`: Defines the absolute path to the directory where the Verilator "scratch" output directory will be created. Recommended to define as the absolute path to the directory that contains the Project repository root (called "Caliptra" or "caliptra-rtl")<BR>
+`CALIPTRA_ROOT`: Defines the absolute path to the Project repository root (called "Caliptra" or "caliptra-rtl"). Recommended to define as `${CALIPTRA_WORKSPACE}/Caliptra`.<BR>
 
 Required for Firmware (i.e. Test suites) makefile:<BR>
   `TESTNAME`: Contains the name of one of the tests listed inside the `src/integration/test_suites` folder<BR>
