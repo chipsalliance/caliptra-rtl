@@ -1,0 +1,11 @@
+incdir:
+  - ${uvm_path}/src
+  - .
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.compile
+  - ../parameters/pv_parameters_pkg.compile
+  - ../../../../verification_ip/interface_packages/pv_rst_pkg/pv_rst_hdl.compile
+  - ../../../../verification_ip/interface_packages/pv_write_pkg/pv_write_hdl.compile
+  - ../../../../verification_ip/interface_packages/pv_read_pkg/pv_read_hdl.compile
+src:
+  - hdl_top.sv

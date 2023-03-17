@@ -1,0 +1,9 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.compile
+  - ./pv_write_common.compile
+incdir:
+  - .
+src:
+  - src/pv_write_if.sv
+  - src/pv_write_monitor_bfm.sv
+  - src/pv_write_driver_bfm.sv

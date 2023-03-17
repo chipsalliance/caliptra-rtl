@@ -27,7 +27,8 @@ class soc_ifc_env_mbox_rand_pauser_sequence extends soc_ifc_env_mbox_sequence_ba
 
   `uvm_object_utils( soc_ifc_env_mbox_rand_pauser_sequence )
 
-  bit [4:0] [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users = '{5{32'hFFFF_FFFF}};
+  bit [4:0] [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users;
+  bit mbox_valid_users_initialized = 1'b0;
   rand bit [apb5_master_0_params::PAUSER_WIDTH-1:0] pauser_override;
   bit [31:0] hit_invalid_pauser_count = '0;
   struct packed {
@@ -51,6 +52,7 @@ class soc_ifc_env_mbox_rand_pauser_sequence extends soc_ifc_env_mbox_sequence_ba
   extern virtual function bit  pauser_override_in_valid_list();
   extern virtual function bit  pauser_override_is_valid();
   extern virtual function void report_reg_sts(uvm_status_e reg_sts, string name);
+  extern virtual task mbox_setup();
   extern virtual task mbox_acquire_lock(output op_sts_e op_sts);
   extern virtual task mbox_set_cmd(input mbox_op_s op);
   extern virtual task mbox_push_datain();
@@ -63,6 +65,20 @@ endclass
 
 // TODO these functions are all intended to be overridden by inheriting sequence
 //      although some (acquire lock) are simple and may not need any modification
+task soc_ifc_env_mbox_rand_pauser_sequence::mbox_setup();
+    // Read the valid PAUSER fields from registers via APB if the local array
+    // has not already been overridden from default values
+    byte ii;
+    uvm_status_e sts;
+    if (!mbox_valid_users_initialized) begin
+        for (ii=0; ii < 5; ii++) begin: VALID_USER_LOOP
+            reg_model.soc_ifc_reg_rm.CPTRA_VALID_PAUSER[ii].read(sts, mbox_valid_users[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
+            if (sts != UVM_IS_OK) `uvm_error("MBOX_PAUSER", $sformatf("Failed when reading CPTRA_VALID_PAUSER index %d", ii))
+        end
+        mbox_valid_users_initialized = 1'b1;
+    end
+endtask
+
 task soc_ifc_env_mbox_rand_pauser_sequence::mbox_acquire_lock(output op_sts_e op_sts);
     uvm_reg_data_t data;
     bit soc_has_lock;
@@ -268,10 +284,10 @@ function void soc_ifc_env_mbox_rand_pauser_sequence::report_reg_sts(uvm_status_e
     // Ergo, use pauser_override_in_valid_list instead of pauser_override_is_valid.
     if (reg_sts != UVM_IS_OK && pauser_override_in_valid_list())
         `uvm_error("MBOX_SEQ",
-                   $sformatf("Register access failed unexpectedly with valid PAUSER! (%s)", name))
+                   $sformatf("Register access failed unexpectedly with valid PAUSER! 0x%x (%s)", this.pauser_override, name))
     else if (reg_sts == UVM_IS_OK && !pauser_override_in_valid_list()/*!pauser_override_is_valid()*/)
         `uvm_error("MBOX_SEQ",
-                   $sformatf("Register access passed unexpectedly with invalid PAUSER! (%s)", name))
+                   $sformatf("Register access passed unexpectedly with invalid PAUSER! 0x%x (%s)", this.pauser_override, name))
     else
         `uvm_info("MBOX_SEQ",
                   $sformatf("Register access to (%s) with pauser_override_is_valid: %b and reg_sts: %p", name, pauser_override_is_valid(), reg_sts),

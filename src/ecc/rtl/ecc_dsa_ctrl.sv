@@ -76,6 +76,9 @@ module ecc_dsa_ctrl
     input kv_rd_resp_t [2:0] kv_rd_resp,
     input kv_wr_resp_t kv_wr_resp,
 
+    //PCR Signing
+    input pcr_signing_t pcr_signing_data,
+
     // Interrupts (from ecc_reg)
     output logic error_intr,
     output logic notif_intr
@@ -128,6 +131,7 @@ module ecc_dsa_ctrl
     logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  pubkeyx_reg;
     logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  pubkeyy_reg;
     logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  seed_reg;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  nonce_reg;
     logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  r_reg;
     logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  s_reg;
     logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  IV_reg;
@@ -149,7 +153,7 @@ module ecc_dsa_ctrl
     logic                   hmac_mode;
     logic                   hmac_init;
     logic                   hmac_ready;
-    logic [REG_SIZE-1 : 0]  hmac_nonce;
+    logic [REG_SIZE-1 : 0]  hmac_drbg_result;
     logic                   hmac_busy;
 
     logic                   sca_point_rnd_en;
@@ -168,7 +172,7 @@ module ecc_dsa_ctrl
     logic [31:0] kv_msg_write_data;
   
     logic dest_keyvault;
-    kv_error_code_e kv_privkey_error, kv_seed_error, kv_msg_error, kv_write_error;
+    kv_error_code_e kv_privkey_error, kv_seed_error, kv_nonce_error, kv_msg_error, kv_write_error;
     logic kv_privkey_ready, kv_privkey_done;
     logic kv_seed_ready, kv_seed_done ;
     logic kv_msg_ready, kv_msg_done;
@@ -179,6 +183,8 @@ module ecc_dsa_ctrl
     kv_read_ctrl_reg_t kv_msg_read_ctrl_reg;
     kv_write_ctrl_reg_t kv_write_ctrl_reg;
 
+    logic pcr_sign_mode;
+    
     instr_struct_t prog_instr;
     //----------------------------------------------------------------
     // Module instantiantions.
@@ -222,7 +228,6 @@ module ecc_dsa_ctrl
 
     ecc_hmac_drbg_interface #(
         .REG_SIZE(REG_SIZE),
-        .SEED_SIZE(REG_SIZE),
         .GROUP_ORDER(GROUP_ORDER)
         )    
         ecc_hmac_drbg_interface_i (
@@ -232,14 +237,15 @@ module ecc_dsa_ctrl
         .keygen_sign(hmac_mode),
         .en(hmac_init),
         .ready(hmac_ready),
-        .seed(seed_reg),
+        .keygen_seed(seed_reg),
+        .keygen_nonce(nonce_reg),
         .privKey(privkey_reg),
-        .IV(IV_reg),
         .hashed_msg(msg_reg),
+        .IV(IV_reg),
         .lambda(lambda),
         .scalar_rnd(scalar_rnd_reg),
         .masking_rnd(masking_rnd),
-        .nonce(hmac_nonce)
+        .drbg(hmac_drbg_result)
         );
 
     ecc_scalar_blinding #(
@@ -324,8 +330,8 @@ module ecc_dsa_ctrl
             //If keyvault is not enabled, grab the sw value as usual
             privkey_reg[dword] = hwif_out.ECC_PRIVKEY[11-dword].PRIVKEY.value;
             //don't store the private key generated in sw accessible register if it's going to keyvault
-            hwif_in.ECC_PRIVKEY[dword].PRIVKEY.we = (kv_privkey_write_en & (kv_privkey_write_offset == dword)) | (privkey_we_reg & ~privkey_we_reg_ff & ~dest_keyvault);
-            hwif_in.ECC_PRIVKEY[dword].PRIVKEY.next = kv_privkey_write_en? kv_privkey_write_data : read_reg[11-dword];
+            hwif_in.ECC_PRIVKEY[dword].PRIVKEY.we = pcr_sign_mode | (kv_privkey_write_en & (kv_privkey_write_offset == dword)) | (privkey_we_reg & ~privkey_we_reg_ff & ~dest_keyvault);
+            hwif_in.ECC_PRIVKEY[dword].PRIVKEY.next = pcr_sign_mode ? pcr_signing_data.pcr_signing_privkey[11-dword] : kv_privkey_write_en? kv_privkey_write_data : read_reg[11-dword];
             hwif_in.ECC_PRIVKEY[dword].PRIVKEY.hwclr = zeroize_reg;
         end
 
@@ -337,9 +343,14 @@ module ecc_dsa_ctrl
         end
 
         for (int dword=0; dword < 12; dword++)begin
+            nonce_reg[dword] = hwif_out.ECC_NONCE[11-dword].NONCE.value;
+            hwif_in.ECC_NONCE[dword].NONCE.hwclr = zeroize_reg;
+        end
+
+        for (int dword=0; dword < 12; dword++)begin
             msg_reg[dword] = hwif_out.ECC_MSG[11-dword].MSG.value;
-            hwif_in.ECC_MSG[dword].MSG.we = kv_msg_write_en & (kv_msg_write_offset == dword);
-            hwif_in.ECC_MSG[dword].MSG.next = kv_msg_write_data;
+            hwif_in.ECC_MSG[dword].MSG.we = pcr_sign_mode | (kv_msg_write_en & (kv_msg_write_offset == dword));
+            hwif_in.ECC_MSG[dword].MSG.next = pcr_sign_mode ? pcr_signing_data.pcr_hash[11-dword] : kv_msg_write_data;
             hwif_in.ECC_MSG[dword].MSG.hwclr = zeroize_reg;
         end
 
@@ -385,6 +396,8 @@ module ecc_dsa_ctrl
     
 
     always_comb hwif_in.ECC_CTRL.CTRL.hwclr = |hwif_out.ECC_CTRL.CTRL.value;
+    always_comb hwif_in.ECC_CTRL.PCR_SIGN.hwclr = hwif_out.ECC_CTRL.PCR_SIGN.value;
+    
     // TODO add other interrupt hwset signals (errors)
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset = 1'b0;
     always_comb hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = ecc_status_done_p;
@@ -424,6 +437,8 @@ module ecc_dsa_ctrl
     `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_msg_read_ctrl_reg, ecc_kv_rd_msg_ctrl)
     `CALIPTRA_KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, ecc_kv_wr_pkey_ctrl)
 
+    always_comb pcr_sign_mode = hwif_out.ECC_CTRL.PCR_SIGN.value;
+
     //----------------------------------------------------------------
     // register updates
     //
@@ -437,7 +452,7 @@ module ecc_dsa_ctrl
         end
         else begin
             if (!scalar_G_sel)
-                scalar_G_reg <= hmac_nonce;
+                scalar_G_reg <= hmac_drbg_result;
             else if (hw_scalar_G_we)
                 scalar_G_reg <= read_reg;
             

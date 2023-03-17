@@ -65,29 +65,30 @@ module hmac
   reg ready_reg;
   reg tag_valid_reg;
 
-  localparam BLOCK_SIZE   = 1024;
-  localparam KEY_SIZE     = 384;
-  localparam TAG_SIZE     = KEY_SIZE;
+  localparam BLOCK_SIZE       = 1024;
+  localparam KEY_SIZE         = 384;
+  localparam TAG_SIZE         = KEY_SIZE;
+  localparam LFSR_SEED_SIZE   = 148;  // 2 * 74_bit lfsr_seed for each SHA512 core
   localparam BLOCK_NUM_DWORDS = BLOCK_SIZE / DATA_WIDTH;
   localparam KEY_NUM_DWORDS   = KEY_SIZE / DATA_WIDTH;
   localparam TAG_NUM_DWORDS   = TAG_SIZE / DATA_WIDTH;
+  localparam SEED_NUM_DWORDS  = ((LFSR_SEED_SIZE - 1) / DATA_WIDTH) + 1; 
 
   reg [KEY_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0]    key_reg;
-  reg          key_we;
-
-  reg [BLOCK_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0]  block_reg ;
-  reg          block_we;
+  reg [BLOCK_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0]  block_reg;
+  reg [SEED_NUM_DWORDS- 1 : 0][DATA_WIDTH - 1 : 0]    lfsr_seed_reg;
 
   logic zeroize_reg;
 
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-  wire [383 : 0]  core_key;
-  wire [1023 : 0] core_block;
-  wire            core_ready;
-  wire [383 : 0]  core_tag;
-  wire            core_tag_valid;
+  wire [KEY_SIZE-1 : 0]         core_key;
+  wire [BLOCK_SIZE-1 : 0]       core_block;
+  wire                          core_ready;
+  wire [TAG_SIZE-1 : 0]         core_tag;
+  wire                          core_tag_valid;
+  wire [LFSR_SEED_SIZE-1 : 0]   core_lfsr_seed;
   reg [TAG_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0] tag_reg;
   reg [TAG_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0] kv_reg;
 
@@ -128,6 +129,8 @@ module hmac
   assign core_key = {key_reg[00], key_reg[01], key_reg[02], key_reg[03], key_reg[04], key_reg[05],
                      key_reg[06], key_reg[07], key_reg[08], key_reg[09], key_reg[10], key_reg[11]};
 
+  assign core_lfsr_seed = {lfsr_seed_reg[00][19 : 0], lfsr_seed_reg[01], lfsr_seed_reg[02], lfsr_seed_reg[03], lfsr_seed_reg[04]};
+  
   //rising edge detect on core tag valid
   assign core_tag_we = core_tag_valid & ~tag_valid_reg;
 
@@ -141,6 +144,8 @@ module hmac
 
                  .init_cmd(init_reg),
                  .next_cmd(next_reg),
+
+                 .lfsr_seed(core_lfsr_seed),
 
                  .key(core_key),
 
@@ -251,6 +256,10 @@ always_comb begin
   end
   for (int dword=0; dword < BLOCK_NUM_DWORDS; dword++)begin
     block_reg[dword] = hwif_out.HMAC384_BLOCK[dword].BLOCK.value;
+  end
+
+  for (int dword=0; dword < SEED_NUM_DWORDS; dword++)begin
+    lfsr_seed_reg[dword] = hwif_out.HMAC384_LFSR_SEED[dword].LFSR_SEED.value;
   end
 end
 

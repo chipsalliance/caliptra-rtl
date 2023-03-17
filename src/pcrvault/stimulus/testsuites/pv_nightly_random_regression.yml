@@ -1,0 +1,15 @@
+document:
+  schema: 1.0
+
+contents:
+  - generator:
+      tags: ["L1", "PV",  "random"]
+      path: ""
+      weight: 100
+      generations: 100
+      formats: 
+        generate: "reseed {template}.yml -seed {seed}"
+        path: "{template_basename}__{seed}.yml"
+      templates:
+        $CALIPTRA_ROOT/src/pcrvault/uvmf_pv/uvmf_template_output/project_benches/pv/tb/tests/src/pv_rand_wr_rd_test   : { weight 50 }
+        $CALIPTRA_ROOT/src/pcrvault/uvmf_pv/uvmf_template_output/project_benches/pv/tb/tests/src/pv_rand_lock_test    : { weight 50 }

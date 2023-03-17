@@ -33,11 +33,12 @@ logger.addHandler(console_handler)
 def createScratch():
     now = datetime.datetime.now()
     latestdir = now.date().strftime("%Y%m%d") + now.time().strftime("%H%M%S")
-    scratch=os.path.join(os.environ.get('WORKSPACE'), "scratch", os.environ.get('USER'), "verilator", latestdir)
+    scratch=os.path.join(os.environ.get('CALIPTRA_WORKSPACE'), "scratch", os.environ.get('USER'), "verilator", latestdir)
     if os.path.isdir(scratch):
         logger.warning("Clobbering existing verilator scratch folder")
         shutil.rmtree(scratch)
     os.makedirs(scratch)
+    os.system(f"ln -snf {scratch} {os.path.join(scratch, '../latest')}")
     return scratch
 
 # Run command and wait for it to complete before returning the results
@@ -68,7 +69,7 @@ def verilateTB(scratch):
     testlogger.addHandler(f_handler)
     
     # Invoke makefile for the base verilated image
-    mfile = os.path.join(os.environ.get('WORKSPACE'),"Caliptra/tools/scripts/Makefile")
+    mfile = os.path.join(os.environ.get('CALIPTRA_ROOT'),"tools/scripts/Makefile")
     cmd = " ".join(["make", "-C", verilatedDir, "-f", mfile, "verilator-build"])
     exitcode, resultout, resulterr = runBashScript(cmd)
 
@@ -103,7 +104,7 @@ def verilateTB(scratch):
     return verilatedDir
 
 def getTestNames():
-    l0_regress_file = os.path.join(os.environ.get('WORKSPACE'), "Caliptra/src/integration/stimulus/L0_regression.yml")
+    l0_regress_file = os.path.join(os.environ.get('CALIPTRA_ROOT'), "src/integration/stimulus/L0_regression.yml")
     testPaths = []
     x = ''
     integrationTestSuiteList = []
@@ -143,7 +144,7 @@ def runTest(test, scratch, verilated):
     testlogger.addHandler(f_handler)
     
     # Invoke makefile for the current test
-    mfile = os.path.join(os.environ.get('WORKSPACE'),"Caliptra/tools/scripts/Makefile")
+    mfile = os.path.join(os.environ.get('CALIPTRA_ROOT'),"tools/scripts/Makefile")
     testname = "TESTNAME=" + test
     cmd = " ".join(["make", "-C", testdir, "-f", mfile, testname, "verilator"])
     exitcode, resultout, resulterr = runBashScript(cmd)
@@ -182,9 +183,16 @@ def runTest(test, scratch, verilated):
     return teststatus
 
 def main():
-    # Env var $WORKSPACE must be set/present
-    if (os.environ.get('WORKSPACE') is None):
-        logger.error("WORKSPACE not defined!")
+    # Env vars $CALIPTRA_WORKSPACE and $CALIPTRA_ROOT must be set/present
+    if (os.environ.get('CALIPTRA_WORKSPACE') is None):
+        logger.error("CALIPTRA_WORKSPACE not defined!")
+        return 1
+    if (os.environ.get('CALIPTRA_ROOT') is None):
+        logger.error("CALIPTRA_ROOT not defined!")
+        return 1
+    elif ((os.environ.get('CALIPTRA_ROOT') != os.path.join(os.environ.get('CALIPTRA_WORKSPACE'), "Caliptra"    )) and
+          (os.environ.get('CALIPTRA_ROOT') != os.path.join(os.environ.get('CALIPTRA_WORKSPACE'), "caliptra-rtl"))):
+        logger.error(f"CALIPTRA_ROOT definition [{os.environ.get('CALIPTRA_ROOT')}] is invalid! Expected [{os.path.join(os.environ.get('CALIPTRA_WORKSPACE', 'Caliptra'))}] or [{os.path.join(os.environ.get('CALIPTRA_WORKSPACE', 'caliptra-rtl'))}]")
         return 1
     # Create a scratch space for run outputs
     scratch = createScratch()

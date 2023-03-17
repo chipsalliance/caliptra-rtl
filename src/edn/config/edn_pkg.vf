@@ -1,0 +1,2 @@
++incdir+${CALIPTRA_ROOT}/src/edn/rtl
+${CALIPTRA_ROOT}/src/edn/rtl/edn_pkg.sv

@@ -1,0 +1,7 @@
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/pv_rst_pkg/pv_rst_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/pv_write_pkg/pv_write_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/pv_read_pkg/pv_read_pkg.vinfo
+registers/pv_reg_model_top_pkg.sv
++incdir+@vinfodir
+pv_env_pkg.sv

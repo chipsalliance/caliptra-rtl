@@ -20,17 +20,16 @@ ABI = -mabi=ilp32 -march=rv32imac
 VERILATOR = verilator
 GCC_PREFIX = riscv64-unknown-elf
 BUILD_DIR = $(CURDIR)
-WORKSPACE = $(shell echo ${PWD\/caliptra-rtl*/\/caliptra-rtl}) 
 
 # Define test name
 TESTNAME ?= iccm_lock
-TEST_DIR = $(WORKSPACE)/src/integration/test_suites/$(TESTNAME)
-HEX_DIR = $(WORKSPACE)/src/integration/test_suites/hex
-INCLUDES_DIR = $(WORKSPACE)/src/integration/test_suites/includes
-TBDIR = $(WORKSPACE)/src/integration/tb
-RISCV_HW_IF_DIR = $(WORKSPACE)/src/integration/test_suites/libs/riscv_hw_if
-ISR_DIR    = $(WORKSPACE)/src/integration/test_suites/libs/caliptra_isr
-PRINTF_DIR = $(WORKSPACE)/src/integration/test_suites/libs/printf
+TEST_DIR = $(CALIPTRA_ROOT)/src/integration/test_suites/$(TESTNAME)
+HEX_DIR = $(CALIPTRA_ROOT)/src/integration/test_suites/hex
+INCLUDES_DIR = $(CALIPTRA_ROOT)/src/integration/test_suites/includes
+TBDIR = $(CALIPTRA_ROOT)/src/integration/tb
+RISCV_HW_IF_DIR = $(CALIPTRA_ROOT)/src/integration/test_suites/libs/riscv_hw_if
+ISR_DIR    = $(CALIPTRA_ROOT)/src/integration/test_suites/libs/caliptra_isr
+PRINTF_DIR = $(CALIPTRA_ROOT)/src/integration/test_suites/libs/printf
 
 # Determine test directory
 #ifneq (,$(wildcard $(TBDIR)/tests/$(TEST)))
@@ -46,10 +45,10 @@ COMP_LIB_NAMES := aes \
 		  sha256 \
 		  sha512 \
 		  soc_ifc
-COMP_LIBS := $(foreach name, $(COMP_LIB_NAMES), $(WORKSPACE)/src/integration/test_suites/libs/$(name))
+COMP_LIBS := $(foreach name, $(COMP_LIB_NAMES), $(CALIPTRA_ROOT)/src/integration/test_suites/libs/$(name))
 HEADER_FILES := $(INCLUDES_DIR)/caliptra_defines.h \
 		$(INCLUDES_DIR)/defines.h \
-		$(WORKSPACE)/src/integration/rtl/caliptra_reg.h  \
+		$(CALIPTRA_ROOT)/src/integration/rtl/caliptra_reg.h  \
 		$(RISCV_HW_IF_DIR)/riscv_hw_if.h \
 		$(wildcard $(TEST_DIR)/*.h) \
 		$(PRINTF_DIR)/printf.h \
@@ -163,15 +162,27 @@ verilator-build: $(TBFILES) $(INCLUDES_DIR)/defines.h test_caliptra_top_tb.cpp
 	  $(includes) \
 	  $(suppress) \
 	  -f $(TBDIR)/../config/caliptra_top_tb.vf --top-module caliptra_top_tb \
+	  -f $(TBDIR)/../config/caliptra_top_tb.vlt \
 	  -exe test_caliptra_top_tb.cpp --autoflush $(VERILATOR_DEBUG)
+	  #+define+CALIPTRA_INTERNAL_TRNG
 	cp $(TBDIR)/test_caliptra_top_tb.cpp obj_dir/
 	$(MAKE) -j -e -C obj_dir/ -f Vcaliptra_top_tb.mk $(VERILATOR_MAKE_FLAGS) VM_PARALLEL_BUILDS=1
 	touch verilator-build
+
+vcs-build: $(TBFILES) $(INCLUDES_DIR)/defines.h
+	vlogan -full64 -sverilog -kdb -incr_vlogan +lint=IA_CHECKFAIL -assert svaext \
+	  +define+CLP_ASSERT_ON -noinherit_timescale=1ns/1ps \
+	  -f $(TBDIR)/../config/caliptra_top_tb.vf
+	vcs -full64 -kdb -lca -debug_access+all -j8 +vcs+lic+wait -partcomp -fastpartcomp=j8 \
+	  -assert enable_hier caliptra_top_tb -o simv.caliptra_top_tb
 
 ############ TEST Simulation ###############################
 
 verilator: program.hex verilator-build
 	./obj_dir/Vcaliptra_top_tb
+
+vcs: program.hex vcs-build
+	./simv.caliptra_top_tb
 
 ############ TEST build ###############################
 
@@ -187,7 +198,7 @@ else ifneq (,$(wildcard $(TEST_DIR)/$(TESTNAME)))
 # Build program.hex from RUST executable
 program.hex:
 	@echo "Building program.hex from $(TESTNAME) using Crypto Test rules for pre-compiled RUST executables"
-	-$(GCC_PREFIX)-objcopy -O verilog -R .data -R .rodata -R .bss -R .sbss -R .iccm -R .dccm -R .eh_frame --pad-to 0x8000 --no-change-warnings $(TEST_DIR)/$(TESTNAME) program.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -R .data -R .rodata -R .bss -R .sbss -R .iccm -R .dccm -R .eh_frame --pad-to 0x8000 --gap-fill 0xFF --no-change-warnings $(TEST_DIR)/$(TESTNAME) program.hex
 	-$(GCC_PREFIX)-objcopy -O verilog -j .data -j .rodata -j .bss -j .sbss -j .dccm \
 			      --change-section-lma       .data-0x50000000 \
 			      --change-section-lma     .rodata-0x50000000 \

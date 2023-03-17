@@ -20,7 +20,7 @@
 
 void kv_error_check(uint32_t reg_addr) {
     VPRINTF(MEDIUM,"KV: checking for errors\n");
-    if ((lsu_read_32((uint32_t*) reg_addr) & KV_RD_STATUS_ERROR_MASK) != 0) {
+    if ((lsu_read_32(reg_addr) & KV_RD_STATUS_ERROR_MASK) != 0) {
         VPRINTF(FATAL,"KV ERROR\n");
         SEND_STDOUT_CTRL( 0x01);
     }
@@ -35,7 +35,7 @@ void kv_read_ctrl(uint32_t reg_addr, uint32_t read_entry) {
               ((read_entry << KV_RD_CTRL_READ_ENTRY_LOW) & KV_RD_CTRL_READ_ENTRY_MASK);
 
     //write to the appropriate read control register
-    lsu_write_32((uint32_t*) reg_addr, wr_data);
+    lsu_write_32(reg_addr, wr_data);
 }
 
 void kv_write_ctrl(uint32_t reg_addr, uint32_t write_entry, dest_valid_t dest_valid) {
@@ -53,7 +53,7 @@ void kv_write_ctrl(uint32_t reg_addr, uint32_t write_entry, dest_valid_t dest_va
               ((dest_valid.ecc_msg << KV_WR_CTRL_ECC_MSG_DEST_VALID_LOW) & KV_WR_CTRL_ECC_MSG_DEST_VALID_MASK);
 
     //write to the appropriate read control register
-    lsu_write_32((uint32_t*) reg_addr, wr_data);
+    lsu_write_32(reg_addr, wr_data);
 
 }
 
@@ -68,6 +68,6 @@ void pv_hash_extend(uint32_t pcr_entry) {
 
 
     //write to the appropriate read control register
-    lsu_write_32((uint32_t*) CLP_SHA512_REG_SHA512_VAULT_RD_CTRL, wr_data);
+    lsu_write_32(CLP_SHA512_REG_SHA512_VAULT_RD_CTRL, wr_data);
 
 }

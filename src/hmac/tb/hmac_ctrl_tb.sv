@@ -106,6 +106,12 @@ module hmac_ctrl_tb();
   parameter ADDR_TAG10       =  BASE_ADDR + 32'h00000128;
   parameter ADDR_TAG11       =  BASE_ADDR + 32'h0000012C;
 
+  parameter ADDR_LFSR_SEED0  =  BASE_ADDR + 32'h00000130;
+  parameter ADDR_LFSR_SEED1  =  BASE_ADDR + 32'h00000134;
+  parameter ADDR_LFSR_SEED2  =  BASE_ADDR + 32'h00000138;
+  parameter ADDR_LFSR_SEED3  =  BASE_ADDR + 32'h0000013C;
+  parameter ADDR_LFSR_SEED4  =  BASE_ADDR + 32'h00000140;
+
   parameter AHB_HTRANS_IDLE     = 0;
   parameter AHB_HTRANS_BUSY     = 1;
   parameter AHB_HTRANS_NONSEQ   = 2;
@@ -197,6 +203,14 @@ module hmac_ctrl_tb();
       cycle_ctr = cycle_ctr + 1;
     end
 
+  //----------------------------------------------------------------
+  // Randomize function
+  //
+  // 
+  //----------------------------------------------------------------
+  function logic [159 : 0] random_gen();
+    return { $random, $random, $random, $random, $random};
+  endfunction
 
   //----------------------------------------------------------------
   // reset_dut()
@@ -381,6 +395,21 @@ module hmac_ctrl_tb();
   endtask // write_key
 
   //----------------------------------------------------------------
+  // write_seed()
+  //
+  // Write the given seed to the dut.
+  //----------------------------------------------------------------
+  task write_seed(input [159 : 0] seed);
+    begin
+      write_single_word(ADDR_LFSR_SEED0, seed[159: 128]);
+      write_single_word(ADDR_LFSR_SEED1, seed[127: 96 ]);
+      write_single_word(ADDR_LFSR_SEED2, seed[95 : 64 ]);
+      write_single_word(ADDR_LFSR_SEED3, seed[63 : 32 ]);
+      write_single_word(ADDR_LFSR_SEED4, seed[31 : 0  ]);
+    end
+  endtask // write_seed
+
+  //----------------------------------------------------------------
   // read_single_word()
   //
   // Read a data word from the given address in the DUT.
@@ -478,6 +507,7 @@ module hmac_ctrl_tb();
   //----------------------------------------------------------------
   task single_block_test(input [383 : 0] key,
                          input [1023: 0] block,
+                         input [159: 0]  seed,
                          input [383 : 0] expected
                         );
     begin
@@ -492,6 +522,8 @@ module hmac_ctrl_tb();
       write_key(key);
 
       write_block(block);
+
+      write_seed(seed);
 
       data_in_time = cycle_ctr - start_time;
       $display("***       DATA IN processing time = %01d cycles", data_in_time);
@@ -537,6 +569,7 @@ module hmac_ctrl_tb();
   task double_block_test(input [383 : 0] key,
                          input [1023: 0] block0,
                          input [1023: 0] block1,
+                         input [159: 0]  seed,
                          input [383 : 0] expected
                         );
     begin
@@ -550,6 +583,8 @@ module hmac_ctrl_tb();
 
       // First block
       write_block(block0);
+
+      write_seed(seed);
 
       write_single_word(ADDR_CTRL, CTRL_INIT_VALUE);
       #CLK_PERIOD;
@@ -601,58 +636,69 @@ module hmac_ctrl_tb();
     begin : hmac_tests_block
       reg [383 : 0] key0;
       reg [1023: 0] data0;
+      reg [159 : 0] seed0;
       reg [383 : 0] expected0;
 
       reg [383 : 0] key1;
       reg [1023: 0] data1;
+      reg [159 : 0] seed1;
       reg [383 : 0] expected1;
 
       reg [383 : 0] key2;
       reg [1023: 0] data2;
+      reg [159 : 0] seed2;
       reg [383 : 0] expected2;
 
       reg [383 : 0] key3;
       reg [1023: 0] data3;
+      reg [159 : 0] seed3;
       reg [383 : 0] expected3;
 
       reg [383 : 0] key4;
       reg [1023: 0] data40;
       reg [1023: 0] data41;
+      reg [159 : 0] seed4;
       reg [383 : 0] expected4;
+
+      
 
       $display("*** Testcases for PRF-HMAC-SHA-384 functionality started.");
 
       key0 = 384'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b;
       data0 = 1024'h4869205468657265800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000440;
       expected0 = 384'hb6a8d5636f5c6a7224f9977dcf7ee6c7fb6d0c48cbdee9737a959796489bddbc4c5df61d5b3297b4fb68dab9f1b582c2;
+      seed0 = random_gen();
 
       key1      = 384'h4a6566654a6566654a6566654a6566654a6566654a6566654a6566654a6566654a6566654a6566654a6566654a656665  ;
       data1 = 1024'h7768617420646f2079612077616e7420666f72206e6f7468696e673f800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004e0;
       expected1 = 384'h2c7353974f1842fd66d53c452ca42122b28c0b594cfb184da86a368e9b8e16f5349524ca4e82400cbde0686d403371c9;
+      seed1 = random_gen();
 
       key2      = 384'haaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa;
       data2 = 1024'hdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000590;
       expected2 = 384'h809f439be00274321d4a538652164b53554a508184a0c3160353e3428597003d35914a18770f9443987054944b7c4b4a;
+      seed2 = random_gen();
 
       key3      = 384'h0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f200a0b0c0d0e0f10111213141516171819;
       data3     = 1024'hcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000590;
       expected3 = 384'h5b540085c6e6358096532b2493609ed1cb298f774f87bb5c2ebf182c83cc7428707fb92eab2536a5812258228bc96687;
-      
+      seed3 = random_gen();
+            
+      single_block_test(key0, data0, seed0, expected0);
 
-      single_block_test(key0, data0, expected0);
+      single_block_test(key1, data1, seed1, expected1);
 
-      single_block_test(key1, data1, expected1);
+      single_block_test(key2, data2, seed2, expected2);
 
-      single_block_test(key2, data2, expected2);
-
-      single_block_test(key3, data3, expected3);
+      single_block_test(key3, data3, seed3, expected3);
 
       key4   = 384'h1e6a3e8998be7c36c5a511c4f03fcfba543d678f1000e2f6a61c2a95f79bb006fc782a679a0b890e3374b20df710f6c2;
       data40 = 1024'hdbf031b43f84bcf3cc9339e65c3659151d3061dd2d5fb0b2d37fbe4fca4ea373b567ae3513ea095013efc7b19f6851ad73c26176034964999c2c3cf2fd58561a9f791839a2199f2a9405edd0478ac64a9557aec86940d465d90364489e4d32f168ce2eefec74eb7e653f8da640308f72f0bd7b1a698c683870c7439869b969ae;
       data41 = 1024'hbea9f4f6bacdc04d4ec4f6bcc17874940336c7899553800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008b0;
       expected4 = 384'h8aba65c07793e1d8a709fbda35ae71804dc0741166dda5746fb3b1c0e91957bbd0d539a469c2ea3577b75d5c0f150ce7;
+      seed4 = random_gen();
 
-      double_block_test(key4, data40, data41, expected4);
+      double_block_test(key4, data40, data41, seed4, expected4);
       
       $display("*** Testcases for PRF-HMAC-SHA-384 functionality completed.");
     end

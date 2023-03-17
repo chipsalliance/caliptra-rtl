@@ -1,0 +1,3 @@
+needs:
+  - pv_rst_hvl.compile
+  - pv_rst_hdl.compile

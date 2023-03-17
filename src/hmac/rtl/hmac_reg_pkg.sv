@@ -184,6 +184,14 @@ package hmac_reg_pkg;
     } hmac_reg__HMAC384_BLOCK__out_t;
 
     typedef struct packed{
+        logic [31:0] value;
+    } hmac_reg__HMAC384_LFSR_SEED__LFSR_SEED__out_t;
+
+    typedef struct packed{
+        hmac_reg__HMAC384_LFSR_SEED__LFSR_SEED__out_t LFSR_SEED;
+    } hmac_reg__HMAC384_LFSR_SEED__out_t;
+
+    typedef struct packed{
         logic value;
     } kv_read_ctrl_reg__read_en__out_t;
 
@@ -281,6 +289,7 @@ package hmac_reg_pkg;
         hmac_reg__HMAC384_CTRL__out_t HMAC384_CTRL;
         hmac_reg__HMAC384_KEY__out_t [12-1:0]HMAC384_KEY;
         hmac_reg__HMAC384_BLOCK__out_t [32-1:0]HMAC384_BLOCK;
+        hmac_reg__HMAC384_LFSR_SEED__out_t [5-1:0]HMAC384_LFSR_SEED;
         __kv_read_ctrl_reg__out_t HMAC384_KV_RD_KEY_CTRL;
         __kv_read_ctrl_reg__out_t HMAC384_KV_RD_BLOCK_CTRL;
         __kv_write_ctrl_reg__out_t HMAC384_KV_WR_CTRL;

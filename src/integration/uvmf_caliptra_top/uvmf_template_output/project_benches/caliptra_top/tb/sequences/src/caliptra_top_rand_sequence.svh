@@ -33,8 +33,8 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
 
   rand soc_ifc_env_bringup_sequence_t soc_ifc_env_bringup_seq;
   rand soc_ifc_env_pauser_init_sequence_t soc_ifc_env_pauser_init_seq;
-  rand soc_ifc_env_mbox_rand_fw_sequence_t soc_ifc_env_mbox_fmc_seq;
-  rand soc_ifc_env_mbox_rand_fw_sequence_t soc_ifc_env_mbox_rt_seq;
+  rand soc_ifc_env_mbox_real_fw_sequence_t soc_ifc_env_mbox_fmc_seq;
+  rand soc_ifc_env_mbox_real_fw_sequence_t soc_ifc_env_mbox_rt_seq;
   rand soc_ifc_env_sequence_base_t soc_ifc_env_seq_ii[];
   // Local handle to register model for convenience
   soc_ifc_reg_model_top reg_model;
@@ -44,7 +44,7 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
   //        - Update avail_env_seqs_c definition
   //        - Add instantiation logic in the RAND_LOOP below
   rand enum int {
-      IDX_SOC_IFC_ENV_MBOX_RAND_FW,
+      //IDX_SOC_IFC_ENV_MBOX_RAND_FW,
       IDX_SOC_IFC_ENV_MBOX_RAND_SMALL,
       IDX_SOC_IFC_ENV_MBOX_RAND_MEDIUM,
       IDX_SOC_IFC_ENV_MBOX_RAND_LARGE,
@@ -56,8 +56,8 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
   // Choose rand weights for each sequence to determine run frequency
   constraint avail_env_seqs_c {
       rand_seq_idx dist {
-          IDX_SOC_IFC_ENV_MBOX_RAND_FW            := 10,
-          IDX_SOC_IFC_ENV_MBOX_RAND_SMALL         := 1000,
+          //IDX_SOC_IFC_ENV_MBOX_RAND_FW            := 0,
+          IDX_SOC_IFC_ENV_MBOX_RAND_SMALL         := 500,
           IDX_SOC_IFC_ENV_MBOX_RAND_MEDIUM        := 100,
           IDX_SOC_IFC_ENV_MBOX_RAND_LARGE         := 1,
           IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_MEDIUM := 100
@@ -73,6 +73,7 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
     if ($value$plusargs("CALIPTRA_TOP_RAND_ITER=%d", iteration_count)) begin
         `uvm_info("CALIPTRA_TOP_RAND_TEST", $sformatf("Received Command Line Iteration Count Argument of %d", iteration_count), UVM_LOW);
         iteration_count.rand_mode(0);
+        this.iter_count_c.constraint_mode(0);
     end
     else begin
         if (!this.randomize(iteration_count))
@@ -97,8 +98,8 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
     caliptra_top_env_seq = caliptra_top_env_sequence_base_t::type_id::create("caliptra_top_env_seq");
     soc_ifc_env_bringup_seq = soc_ifc_env_bringup_sequence_t::type_id::create("soc_ifc_env_bringup_seq");
     soc_ifc_env_pauser_init_seq = soc_ifc_env_pauser_init_sequence_t::type_id::create("soc_ifc_env_pauser_init_seq");
-    soc_ifc_env_mbox_fmc_seq = soc_ifc_env_mbox_rand_fw_sequence_t::type_id::create("soc_ifc_env_mbox_fmc_seq");
-    soc_ifc_env_mbox_rt_seq = soc_ifc_env_mbox_rand_fw_sequence_t::type_id::create("soc_ifc_env_mbox_rt_seq");
+    soc_ifc_env_mbox_fmc_seq = soc_ifc_env_mbox_real_fw_sequence_t::type_id::create("soc_ifc_env_mbox_fmc_seq");
+    soc_ifc_env_mbox_rt_seq = soc_ifc_env_mbox_real_fw_sequence_t::type_id::create("soc_ifc_env_mbox_rt_seq");
 
     soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq     = soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq_t::type_id::create("soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq");
     soc_ifc_subenv_soc_ifc_status_agent_responder_seq  = soc_ifc_subenv_soc_ifc_status_agent_responder_seq_t::type_id::create("soc_ifc_subenv_soc_ifc_status_agent_responder_seq");
@@ -163,8 +164,8 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
 
         // Create a new sequence instance of the randomized type
         case (rand_seq_idx) inside
-            IDX_SOC_IFC_ENV_MBOX_RAND_FW:
-                obj = soc_ifc_env_mbox_rand_fw_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%d]",ii));
+            //IDX_SOC_IFC_ENV_MBOX_RAND_FW:
+                //obj = soc_ifc_env_mbox_rand_fw_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%d]",ii));
             IDX_SOC_IFC_ENV_MBOX_RAND_SMALL:
                 obj = soc_ifc_env_mbox_rand_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%d]",ii));
             IDX_SOC_IFC_ENV_MBOX_RAND_MEDIUM:

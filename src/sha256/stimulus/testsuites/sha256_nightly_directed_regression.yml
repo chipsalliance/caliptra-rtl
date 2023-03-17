@@ -5,4 +5,4 @@ contents:
   - tests:
       tags: ["L0", "directed", "nightly", "SHA256"]
       paths:
-        - ${WORKSPACE}/Caliptra/src/sha256/stimulus/tests/directed/sha256_normal_test.yml
+        - ${CALIPTRA_ROOT/src/sha256/stimulus/tests/directed/sha256_normal_test.yml

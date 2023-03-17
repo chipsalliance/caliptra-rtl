@@ -23,11 +23,14 @@ def generate_expected_tag():
     h = open("expected_tags_all.txt", "a")
     msg_str = ""
     key_str = ""
+    seed_str = ""
     tag_str = ""
 
     for line in f:
         if(line[0:6] == "KEY = "):
-            key_str = line.strip()[6:]    
+            key_str = line.strip()[6:]  
+        elif(line[0:7] == "SEED = "):
+            seed_str = line.strip()[7:]   
         else:
             msg_str = msg_str + line.strip()[8:]
 

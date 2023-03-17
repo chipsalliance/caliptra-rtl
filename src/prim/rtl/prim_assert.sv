@@ -13,43 +13,46 @@
 // Helper macros //
 ///////////////////
 
+`include "caliptra_sva.svh"
+`ifndef CALIPTRA_SVA
 // Default clk and reset signals used by assertion macros below.
-`define ASSERT_DEFAULT_CLK clk_i
-`define ASSERT_DEFAULT_RST !rst_ni
+`define CALIPTRA_ASSERT_DEFAULT_CLK clk_i
+`define CALIPTRA_ASSERT_DEFAULT_RST !rst_ni
+`endif
 
 // Converts an arbitrary block of code into a Verilog string
 `define PRIM_STRINGIFY(__x) `"__x`"
 
-// ASSERT_ERROR logs an error message with either `uvm_error or with $error.
+// CALIPTRA_ASSERT_ERROR logs an error message with either `uvm_error or with $error.
 //
 // This somewhat duplicates `DV_ERROR macro defined in hw/dv/sv/dv_utils/dv_macros.svh. The reason
 // for redefining it here is to avoid creating a dependency.
-`define ASSERT_ERROR(__name)                                                             \
-`ifdef UVM                                                                               \
-  uvm_pkg::uvm_report_error("ASSERT FAILED", `PRIM_STRINGIFY(__name), uvm_pkg::UVM_NONE, \
-                            `__FILE__, `__LINE__, "", 1);                                \
-`else                                                                                    \
-  $error("%0t: (%0s:%0d) [%m] [ASSERT FAILED] %0s", $time, `__FILE__, `__LINE__,         \
-         `PRIM_STRINGIFY(__name));                                                       \
+`define CALIPTRA_ASSERT_ERROR(__name)                                                             \
+`ifdef UVM                                                                                        \
+  uvm_pkg::uvm_report_error("CALIPTRA_ASSERT FAILED", `PRIM_STRINGIFY(__name), uvm_pkg::UVM_NONE, \
+                            `__FILE__, `__LINE__, "", 1);                                         \
+`else                                                                                             \
+  $error("%0t: (%0s:%0d) [%m] [CALIPTRA_ASSERT FAILED] %0s", $time, `__FILE__, `__LINE__,         \
+         `PRIM_STRINGIFY(__name));                                                                \
 `endif
 
 // This macro is suitable for conditionally triggering lint errors, e.g., if a Sec parameter takes
 // on a non-default value. This may be required for pre-silicon/FPGA evaluation but we don't want
 // to allow this for tapeout.
-`define ASSERT_STATIC_LINT_ERROR(__name, __prop)     \
-  localparam int __name = (__prop) ? 1 : 2;          \
-  always_comb begin                                  \
-    logic unused_assert_static_lint_error;           \
-    unused_assert_static_lint_error = __name'(1'b1); \
+`define CALIPTRA_ASSERT_STATIC_LINT_ERROR(__name, __prop)     \
+  localparam int __name = (__prop) ? 1 : 2;                   \
+  always_comb begin                                           \
+    logic unused_assert_static_lint_error;                    \
+    unused_assert_static_lint_error = __name'(1'b1);          \
   end
 
 // Static assertions for checks inside SV packages. If the conditions is not true, this will
 // trigger an error during elaboration.
-`define ASSERT_STATIC_IN_PACKAGE(__name, __prop)              \
-  function automatic bit assert_static_in_package_``__name(); \
-    bit unused_bit [((__prop) ? 1 : -1)];                     \
-    unused_bit = '{default: 1'b0};                            \
-    return unused_bit[0];                                     \
+`define CALIPTRA_ASSERT_STATIC_IN_PACKAGE(__name, __prop)              \
+  function automatic bit assert_static_in_package_``__name();          \
+    bit unused_bit [((__prop) ? 1 : -1)];                              \
+    unused_bit = '{default: 1'b0};                                     \
+    return unused_bit[0];                                              \
   endfunction
 
 // The basic helper macros are actually defined in "implementation headers". The macros should do
@@ -61,34 +64,34 @@
 //
 // The list of basic macros supported is:
 //
-//  ASSERT_I:     Immediate assertion. Note that immediate assertions are sensitive to simulation
-//                glitches.
+//  CALIPTRA_ASSERT_I:     Immediate assertion. Note that immediate assertions are sensitive to simulation
+//                         glitches.
 //
-//  ASSERT_INIT:  Assertion in initial block. Can be used for things like parameter checking.
+//  CALIPTRA_ASSERT_INIT:  Assertion in initial block. Can be used for things like parameter checking.
 //
-//  ASSERT_INIT_NET: Assertion in initial block. Can be used for initial value of a net.
+//  CALIPTRA_ASSERT_INIT_NET: Assertion in initial block. Can be used for initial value of a net.
 //
-//  ASSERT_FINAL: Assertion in final block. Can be used for things like queues being empty at end of
-//                sim, all credits returned at end of sim, state machines in idle at end of sim.
+//  CALIPTRA_ASSERT_FINAL: Assertion in final block. Can be used for things like queues being empty at end of
+//                         sim, all credits returned at end of sim, state machines in idle at end of sim.
 //
-//  ASSERT:       Assert a concurrent property directly. It can be called as a module (or
-//                interface) body item.
+//  CALIPTRA_ASSERT:       Assert a concurrent property directly. It can be called as a module (or
+//                         interface) body item.
 //
-//                Note: We use (__rst !== '0) in the disable iff statements instead of (__rst ==
-//                '1). This properly disables the assertion in cases when reset is X at the
-//                beginning of a simulation. For that case, (reset == '1) does not disable the
-//                assertion.
+//                         Note: We use (__rst !== '0) in the disable iff statements instead of (__rst ==
+//                         '1). This properly disables the assertion in cases when reset is X at the
+//                         beginning of a simulation. For that case, (reset == '1) does not disable the
+//                         assertion.
 //
-//  ASSERT_NEVER: Assert a concurrent property NEVER happens
+//  CALIPTRA_ASSERT_NEVER: Assert a concurrent property NEVER happens
 //
-//  ASSERT_KNOWN: Assert that signal has a known value (each bit is either '0' or '1') after reset.
-//                It can be called as a module (or interface) body item.
+//  CALIPTRA_ASSERT_KNOWN: Assert that signal has a known value (each bit is either '0' or '1') after reset.
+//                         It can be called as a module (or interface) body item.
 //
-//  COVER:        Cover a concurrent property
+//  CALIPTRA_COVER:        Cover a concurrent property
 //
-//  ASSUME:       Assume a concurrent property
+//  CALIPTRA_ASSUME:       Assume a concurrent property
 //
-//  ASSUME_I:     Assume an immediate property
+//  CALIPTRA_ASSUME_I:     Assume an immediate property
 
 `ifdef VERILATOR
  `include "prim_assert_dummy_macros.svh"
@@ -107,46 +110,46 @@
 //////////////////////////////
 
 // Assert that signal is an active-high pulse with pulse length of 1 clock cycle
-`define ASSERT_PULSE(__name, __sig, __clk = `ASSERT_DEFAULT_CLK, __rst = `ASSERT_DEFAULT_RST) \
-  `ASSERT(__name, $rose(__sig) |=> !(__sig), __clk, __rst)
+`define CALIPTRA_ASSERT_PULSE(__name, __sig, __clk = `CALIPTRA_ASSERT_DEFAULT_CLK, __rst = `CALIPTRA_ASSERT_DEFAULT_RST) \
+  `CALIPTRA_ASSERT(__name, $rose(__sig) |=> !(__sig), __clk, __rst)
 
 // Assert that a property is true only when an enable signal is set.  It can be called as a module
 // (or interface) body item.
-`define ASSERT_IF(__name, __prop, __enable, __clk = `ASSERT_DEFAULT_CLK, __rst = `ASSERT_DEFAULT_RST) \
-  `ASSERT(__name, (__enable) |-> (__prop), __clk, __rst)
+`define CALIPTRA_ASSERT_IF(__name, __prop, __enable, __clk = `CALIPTRA_ASSERT_DEFAULT_CLK, __rst = `CALIPTRA_ASSERT_DEFAULT_RST) \
+  `CALIPTRA_ASSERT(__name, (__enable) |-> (__prop), __clk, __rst)
 
 // Assert that signal has a known value (each bit is either '0' or '1') after reset if enable is
 // set.  It can be called as a module (or interface) body item.
-`define ASSERT_KNOWN_IF(__name, __sig, __enable, __clk = `ASSERT_DEFAULT_CLK, __rst = `ASSERT_DEFAULT_RST) \
-  `ASSERT_KNOWN(__name``KnownEnable, __enable, __clk, __rst)                                               \
-  `ASSERT_IF(__name, !$isunknown(__sig), __enable, __clk, __rst)
+`define CALIPTRA_ASSERT_KNOWN_IF(__name, __sig, __enable, __clk = `CALIPTRA_ASSERT_DEFAULT_CLK, __rst = `CALIPTRA_ASSERT_DEFAULT_RST) \
+  `CALIPTRA_ASSERT_KNOWN(__name``KnownEnable, __enable, __clk, __rst)                                               \
+  `CALIPTRA_ASSERT_IF(__name, !$isunknown(__sig), __enable, __clk, __rst)
 
 //////////////////////////////////
 // For formal verification only //
 //////////////////////////////////
 
-// Note that the existing set of ASSERT macros specified above shall be used for FPV,
+// Note that the existing set of CALIPTRA_ASSERT macros specified above shall be used for FPV,
 // thereby ensuring that the assertions are evaluated during DV simulations as well.
 
-// ASSUME_FPV
+// CALIPTRA_ASSUME_FPV
 // Assume a concurrent property during formal verification only.
-`define ASSUME_FPV(__name, __prop, __clk = `ASSERT_DEFAULT_CLK, __rst = `ASSERT_DEFAULT_RST) \
+`define CALIPTRA_ASSUME_FPV(__name, __prop, __clk = `CALIPTRA_ASSERT_DEFAULT_CLK, __rst = `CALIPTRA_ASSERT_DEFAULT_RST) \
 `ifdef FPV_ON                                                                                \
-   `ASSUME(__name, __prop, __clk, __rst)                                                     \
+   `CALIPTRA_ASSUME(__name, __prop, __clk, __rst)                                                     \
 `endif
 
-// ASSUME_I_FPV
+// CALIPTRA_ASSUME_I_FPV
 // Assume a concurrent property during formal verification only.
-`define ASSUME_I_FPV(__name, __prop) \
+`define CALIPTRA_ASSUME_I_FPV(__name, __prop) \
 `ifdef FPV_ON                        \
-   `ASSUME_I(__name, __prop)         \
+   `CALIPTRA_ASSUME_I(__name, __prop)         \
 `endif
 
-// COVER_FPV
+// CALIPTRA_COVER_FPV
 // Cover a concurrent property during formal verification
-`define COVER_FPV(__name, __prop, __clk = `ASSERT_DEFAULT_CLK, __rst = `ASSERT_DEFAULT_RST) \
+`define CALIPTRA_COVER_FPV(__name, __prop, __clk = `CALIPTRA_ASSERT_DEFAULT_CLK, __rst = `CALIPTRA_ASSERT_DEFAULT_RST) \
 `ifdef FPV_ON                                                                               \
-   `COVER(__name, __prop, __clk, __rst)                                                     \
+   `CALIPTRA_COVER(__name, __prop, __clk, __rst)                                                     \
 `endif
 
 // FPV assertion that proves that the FSM control flow is linear (no loops)
@@ -155,7 +158,7 @@
 // It is possible for the reset to release ahead of the clock.
 // Create a small "gray" window beyond the usual rst time to avoid
 // checking.
-`define ASSERT_FPV_LINEAR_FSM(__name, __state, __type, __clk = `ASSERT_DEFAULT_CLK, __rst = `ASSERT_DEFAULT_RST) \
+`define CALIPTRA_ASSERT_FPV_LINEAR_FSM(__name, __state, __type, __clk = `CALIPTRA_ASSERT_DEFAULT_CLK, __rst = `CALIPTRA_ASSERT_DEFAULT_RST) \
   `ifdef INC_ASSERT                                                                                              \
      bit __name``_cond;                                                                                          \
      always_ff @(posedge __clk or posedge __rst) begin                                                           \
@@ -170,7 +173,7 @@
        (!$stable(__state) & __name``_cond, initial_state = $past(__state)) |->                                   \
            (__state != initial_state) until (__rst == 1'b1);                                                     \
      endproperty                                                                                                 \
-   `ASSERT(__name, __name``_p, __clk, __rst)                                                                     \
+   `CALIPTRA_ASSERT(__name, __name``_p, __clk, __rst)                                                                     \
   `endif
 
 `include "prim_assert_sec_cm.svh"

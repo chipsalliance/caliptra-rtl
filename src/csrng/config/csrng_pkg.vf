@@ -1,0 +1,4 @@
++incdir+${CALIPTRA_ROOT}/src/csrng/rtl
+${CALIPTRA_ROOT}/src/csrng/rtl/csrng_reg_pkg.sv
+${CALIPTRA_ROOT}/src/csrng/rtl/csrng_pkg.sv
+${CALIPTRA_ROOT}/src/csrng/rtl/csrng_pkg.sv

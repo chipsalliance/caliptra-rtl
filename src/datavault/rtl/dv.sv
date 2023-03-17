@@ -27,6 +27,7 @@ module dv
     (
     input logic clk,
     input logic rst_b,
+    input logic core_only_rst_b,
     input logic cptra_pwrgood,
 
     
@@ -126,6 +127,7 @@ end
 
 always_comb dv_reg_hwif_in.hard_reset_b = cptra_pwrgood;
 always_comb dv_reg_hwif_in.reset_b = rst_b;
+always_comb dv_reg_hwif_in.core_only_rst_b = core_only_rst_b; //Note that this signal will also reset when rst_b is asserted
 
 dv_reg dv_reg1 (
     .clk(clk),

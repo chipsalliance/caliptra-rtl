@@ -327,8 +327,10 @@ module mbox_csr (
         field_combo.mbox_datain.datain.next = next_c;
         field_combo.mbox_datain.datain.load_next = load_next_c;
     end
-    always_ff @(posedge clk) begin
-        if(field_combo.mbox_datain.datain.load_next) begin
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.mbox_datain.datain.value <= 'h0;
+        end else if(field_combo.mbox_datain.datain.load_next) begin
             field_storage.mbox_datain.datain.value <= field_combo.mbox_datain.datain.next;
         end
     end
@@ -347,8 +349,10 @@ module mbox_csr (
         field_combo.mbox_dataout.dataout.next = next_c;
         field_combo.mbox_dataout.dataout.load_next = load_next_c;
     end
-    always_ff @(posedge clk) begin
-        if(field_combo.mbox_dataout.dataout.load_next) begin
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.mbox_dataout.dataout.value <= 'h0;
+        end else if(field_combo.mbox_dataout.dataout.load_next) begin
             field_storage.mbox_dataout.dataout.value <= field_combo.mbox_dataout.dataout.next;
         end
     end

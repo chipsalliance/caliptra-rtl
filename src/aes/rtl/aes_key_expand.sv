@@ -438,10 +438,10 @@ module aes_key_expand import aes_pkg::*;
   ////////////////
 
   // Create a lint error to reduce the risk of accidentally disabling the masking.
-  `ASSERT_STATIC_LINT_ERROR(AesKeyExpandSecMaskingNonDefault, SecMasking == 1)
+  `CALIPTRA_ASSERT_STATIC_LINT_ERROR(AesKeyExpandSecMaskingNonDefault, SecMasking == 1)
 
   // Cipher core masking requires a masked SBox and vice versa.
-  `ASSERT_INIT(AesMaskedCoreAndSBox,
+  `CALIPTRA_ASSERT_INIT(AesMaskedCoreAndSBox,
       (SecMasking &&
       (SecSBoxImpl == SBoxImplCanrightMasked ||
        SecSBoxImpl == SBoxImplCanrightMaskedNoreuse ||
@@ -451,11 +451,11 @@ module aes_key_expand import aes_pkg::*;
        SecSBoxImpl == SBoxImplCanright)))
 
   // Selectors must be known/valid
-  `ASSERT(AesCiphOpValid, cfg_valid_i |-> op_i inside {
+  `CALIPTRA_ASSERT(AesCiphOpValid, cfg_valid_i |-> op_i inside {
       CIPH_FWD,
       CIPH_INV
       })
-  `ASSERT(AesKeyLenValid, cfg_valid_i |-> key_len_i inside {
+  `CALIPTRA_ASSERT(AesKeyLenValid, cfg_valid_i |-> key_len_i inside {
       AES_128,
       AES_192,
       AES_256

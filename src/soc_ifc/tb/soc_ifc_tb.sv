@@ -22,9 +22,27 @@
 // Probably should be deprecated and utilize UVMF environment only
 //======================================================================
 
+/*
+`define PRINT_TESTNAME(_SOC_IFC_TESTNAME) \ 
+    string tmpstr = `"_SOC_IFC_TESTNAME`";
+    $display(`"Executing test: _SOC_IFC_TESTNAME`"); 
+    $display({{tmpstr.len(){`"-`"}});
+//----------------------------------------------------------------
+*/
+
+
 module soc_ifc_tb
   import soc_ifc_pkg::*;
+  import soc_ifc_tb_pkg::*;
   ();
+
+  // Strings for plusargs
+  string soc_ifc_testname; 
+  string socreg_method_name = ""; 
+  string security_state_testname; 
+
+
+  enum logic {DEBUG_UNLOCKED = 1'b0, DEBUG_LOCKED = 1'b1} debug_state_e;
 
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
@@ -118,8 +136,9 @@ module soc_ifc_tb
   mbox_sram_req_t mbox_sram_req;
   mbox_sram_resp_t mbox_sram_resp;
 
-  //TIE-OFF device lifecycle
-  security_state_t security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1};
+
+  //MH. Initialize to default device lifecycle later rather than TIE OFF
+  security_state_t security_state, tmp_ss;  // '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED};
 
   always_comb begin
     mbox_sram_cs = mbox_sram_req.cs;
@@ -239,6 +258,12 @@ module soc_ifc_tb
   );
 
 
+  RegScoreboard sb = new();  // scoreboard for checking register operations 
+
+  SocRegisters socregs = new(); // allows for initialization of soc-registers 
+
+
+
   //----------------------------------------------------------------
   // clk_gen
   //
@@ -283,6 +308,24 @@ module soc_ifc_tb
       
       cptra_rst_b_tb = 1;
       $display("");
+    end
+  endtask // reset_dut
+
+
+  //----------------------------------------------------------------
+  // warm_reset_dut()
+  //
+  // Warm reset DUT into a well known state.
+  //----------------------------------------------------------------
+  task warm_reset_dut;
+    begin
+      $display("*** Perform warm reset. ***");
+      cptra_rst_b_tb = 0;
+
+      repeat (5) @(posedge clk_tb);
+      
+      cptra_rst_b_tb = 1;
+      $display("** Warm reset complete **");
     end
   endtask // reset_dut
 
@@ -582,6 +625,22 @@ module soc_ifc_tb
     end
   endtask // wait_unlock_apb
 
+
+  //----------------------------------------------------------------
+  // set_security_state()
+  //
+  // sets the security state explicily to any valid value 
+  //----------------------------------------------------------------
+  task set_security_state(input security_state_t ss);
+
+      begin
+          security_state = '{device_lifecycle: ss.device_lifecycle, debug_locked: ss.debug_locked};
+
+          set_initval("CPTRA_SECURITY_STATE", ss & 32'h0000_0007);  
+      end
+  endtask
+
+
   //----------------------------------------------------------------
   // mbox_ahb_test()
   //
@@ -725,32 +784,266 @@ module soc_ifc_tb
 
 
   //----------------------------------------------------------------
+  // sim_dut_init();
+  // 
+  // common sim and dut initialization routines for register tests 
+  //----------------------------------------------------------------
+  task sim_dut_init;
+
+    int sscode = -1;
+
+    begin
+      sscode = int'(security_state);
+      if (!((sscode >= 0)  || (sscode <= 7))) 
+        $error("Have to explictily set security_state for soc_ifc_top for test to run!");
+
+      else begin
+        init_sim();
+        reset_dut();
+
+        wait (ready_for_fuses == 1'b1);
+        update_exp_regval(socregs.get_addr("CPTRA_FLOW_STATUS"), 32'h4000_0000, SET_DIRECT); // , sscode);     
+
+        repeat (5) @(posedge clk_tb);
+      end
+    end
+
+  endtask // sim_dut_init
+
+  
+  //----------------------------------------------------------------
+  // simulate_caliptra_boot();
+  //
+  // Set boot fuse write and boot status over APB 
+  //----------------------------------------------------------------
+
+  task simulate_caliptra_boot;
+      // Enable release of Caliptra core from reset & simulate FW boot
+      write_single_word_apb(socregs.get_addr("CPTRA_FUSE_WR_DONE"), 32'h1); 
+      update_exp_regval(socregs.get_addr("CPTRA_FUSE_WR_DONE"), 32'h1, SET_APB);
+      socregs.lock_fuses();
+
+      repeat (3) @(posedge clk_tb); 
+      write_single_word_apb(socregs.get_addr("CPTRA_BOOTFSM_GO"), 32'h1); 
+      update_exp_regval(socregs.get_addr("CPTRA_BOOTFSM_GO"), 32'h1, SET_APB);
+
+      repeat (20) @(posedge clk_tb); // simulate FW boot
+
+  endtask // simulate_caliptra_boot
+
+
+  //----------------------------------------------------------------
+  // write_regs()
+  //
+  // Utility for tracking/writing to list of registers over APB/AHB
+  //----------------------------------------------------------------
+  task write_regs(input access_t modifier, strq_t reglist, int tid, int wait_cycles);
+    string rname;
+    word_addr_t addr;
+    WordTransaction wrtrans;
+
+    int tid_autoinc; 
+
+    begin
+      wrtrans = new();
+
+      if (tid < 0) begin
+        tid_autoinc = 1;
+        tid = 0;
+      end 
+
+      $display("");
+
+      foreach (reglist[i]) begin 
+        rname = reglist[i];
+        addr = socregs.get_addr(rname); 
+        if (tid_autoinc) 
+          tid += 1;
+        wrtrans.update(addr, 0, tid); 
+        wrtrans.randomize();
+        if (modifier == SET_AHB) begin
+          write_single_word_ahb(addr, wrtrans.data); 
+          $display("Write over AHB: addr = %30s (0x%08x), data = 0x%08x", rname, addr, wrtrans.data);
+        end else if (modifier == SET_APB) begin
+          write_single_word_apb(addr, wrtrans.data); 
+          $display("Write over APB: addr = %30s (0x%08x), data = 0x%08x", rname, addr, wrtrans.data);
+        end else 
+          $error("TB ERROR. Unsupported access modifier %s", modifier.name()); 
+
+        sb.record_entry(wrtrans, modifier);
+        if (wait_cycles == 0)
+          @(posedge clk_tb);
+        else
+          repeat (wait_cycles) @(posedge clk_tb);
+      end
+    end
+  endtask
+
+
+  //----------------------------------------------------------------
+  // read_regs()
+  //
+  // Utility for tracking/reading from list of registers over APB/AHB
+  //----------------------------------------------------------------
+  task read_regs(input access_t modifier, strq_t reglist, int tid, int wait_cycles);
+    string rname;
+    word_addr_t addr;
+    WordTransaction rdtrans;
+
+    int tid_autoinc; 
+
+    begin
+      rdtrans = new();
+
+      if (tid < 0) begin
+        tid_autoinc = 1;
+        tid = 0;
+      end 
+
+      $display("");
+
+      foreach (reglist[i]) begin 
+        rname = reglist[i];
+        addr = socregs.get_addr(rname); 
+        if (tid_autoinc) 
+          tid += 1;
+
+        if (modifier == GET_AHB) begin
+          read_single_word_ahb(addr);
+          $display("Read over AHB:  addr = %30s (0x%08x), data = 0x%08x", rname, addr, hrdata_o_tb); 
+          rdtrans.update(addr, hrdata_o_tb, tid); 
+        end else if (modifier == GET_APB) begin
+          read_single_word_apb(addr);
+          $display("Read over APB:  addr = %30s (0x%08x), data = 0x%08x", rname, addr, prdata_o_tb); 
+          rdtrans.update(addr, prdata_o_tb, tid); 
+        end else 
+          $error("TB ERROR. Unsupported access modifier %s", modifier.name()); 
+
+        sb.check_entry(rdtrans);
+        if (wait_cycles == 0)
+          @(posedge clk_tb);
+        else
+          repeat (wait_cycles) @(posedge clk_tb);
+
+      end
+    end
+  endtask
+
+
+//----------------------------------------------------------------
+// Following tests in include files should ideally be in packages 
+// or as programs. For now, this is the only modularization for 
+// directed tests planned.
+//----------------------------------------------------------------
+//
+  `include "fuse_reg_lifecycle_test.svh"   
+  `include "fuse_reg_perm_test.svh"     
+  `include "fuse_reg_test.svh"     
+  `include "single_soc_reg_test.svh"   
+  `include "soc_reg_reset_test.svh"     
+  `include "soc_reg_test.svh"     
+//----------------------------------------------------------------
+
+
+
+  //----------------------------------------------------------------
   // main
   //
   // The main test functionality.
-  //----------------------------------------------------------------
-  initial
-    begin : main
-      $display("    ==============================");
-      $display("   -= Testbench for MBOX started =-");
-      $display("    ==============================");
-      $display("");
+  //----------------------------------------------------------------        
 
-      init_sim();
-      reset_dut();
 
-      wait (ready_for_fuses == 1'b1);
-      //load_fuses();
-      write_single_word_apb(MBOX_FUSE_DONE_ADDR, 32'h00000001);
-      repeat (5) @(posedge clk_tb);
-      
-      mbox_test();
+ 
+  initial begin : main
 
-      display_test_results();
-      
-      $display("");
-      $display("*** MBOX simulation done. ***");
-      $finish;
-    end // main
+    // common initialization steps for all tests 
 
-endmodule // mbox_tb
+    // set_security_state(DEVICE_PRODUCTION, DEBUG_LOCKED);
+    // update_exp_regval(socregs.get_addr("CPTRA_SECURITY_STATE"), dword_t'(security_state), SET_DIRECT);
+
+
+    if ($value$plusargs("SOC_IFC_TEST=%s", soc_ifc_testname)) 
+      begin : alternate_test
+        $display("    =================================================================");
+        $display("    Running SOC_IFC_TEST = %s", soc_ifc_testname);
+        $display("    =================================================================");
+
+        // TODO. Push boiler-plate into task
+        if (soc_ifc_testname == "soc_reg_pwron_test") begin 
+          set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
+          sim_dut_init();
+          soc_reg_pwron_test();
+
+        end else if (soc_ifc_testname == "soc_reg_wrmrst_test") begin 
+          set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
+          sim_dut_init();
+          soc_reg_wrmrst_test();
+
+
+        end else if (soc_ifc_testname == "fuse_reg_prod_test") begin 
+          set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
+          sim_dut_init();
+          fuse_reg_test();
+
+        end else if (soc_ifc_testname == "fuse_reg_lifecycle_test") begin 
+          // sim_dut_init() rolled into fuse_reg_lifecycle_test
+          if ($value$plusargs("SECURITY_STATE=%s", security_state_testname)) 
+            fuse_reg_lifecycle_test(security_state_testname);
+          else
+            fuse_reg_lifecycle_test("ALL");
+ 
+        end else if (soc_ifc_testname == "soc_reg_test") begin 
+          set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
+          sim_dut_init();
+          soc_reg_test();
+
+        end else if (soc_ifc_testname == "single_socreg_test") begin 
+          if (!($value$plusargs("SOCREG_METHOD_NAME=%s", socreg_method_name))) 
+            $display("ERROR with testing one soc_register; must provide method & name for +scoreg_method_name,eg. APB.CPTRA_TIMER_CONFIG");
+          else begin
+            set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
+            sim_dut_init();
+            single_socreg_test(socreg_method_name);
+          end
+
+        end else if (soc_ifc_testname == "fuse_reg_perm_test") begin 
+          set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
+          sim_dut_init();
+          fuse_reg_perm_test();
+
+        end 
+   
+        @(posedge clk_tb);
+        display_test_results();
+
+        $display("\n*** '%s' test simulation done. ***", soc_ifc_testname);
+        $finish;
+      end  // alternate_test
+
+    else 
+      begin : default_test  // Keeping original default test structure 
+        $display("    ==============================");
+        $display("   -= Testbench for MBOX started =-");
+        $display("    ==============================");
+        $display("");
+
+        set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
+
+        init_sim();
+        reset_dut();
+
+        wait (ready_for_fuses == 1'b1);
+        //load_fuses();
+        write_single_word_apb(MBOX_FUSE_DONE_ADDR, 32'h00000001);
+        repeat (5) @(posedge clk_tb);
+        
+        mbox_test();
+
+        display_test_results();
+        
+        $display("");
+        $display("*** MBOX simulation done. ***");
+        $finish;
+      end // default_test 
+  end // main
+endmodule // soc_ifc_tb
