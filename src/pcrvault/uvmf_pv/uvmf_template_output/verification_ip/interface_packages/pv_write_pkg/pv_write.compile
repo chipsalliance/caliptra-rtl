@@ -1,0 +1,3 @@
+needs:
+  - pv_write_hvl.compile
+  - pv_write_hdl.compile

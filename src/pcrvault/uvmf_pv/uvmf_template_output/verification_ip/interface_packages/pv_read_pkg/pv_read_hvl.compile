@@ -1,0 +1,7 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.compile
+  - ./pv_read_common.compile
+incdir:
+  - .
+src:
+  - pv_read_pkg.sv

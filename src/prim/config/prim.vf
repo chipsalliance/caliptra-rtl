@@ -1,6 +1,19 @@
++incdir+${CALIPTRA_ROOT}/src/integration/rtl
++incdir+${CALIPTRA_ROOT}/src/libs/rtl
 +incdir+${CALIPTRA_ROOT}/src/prim/rtl
 +incdir+${CALIPTRA_ROOT}/src/lc_ctrl/rtl
 +incdir+${CALIPTRA_ROOT}/src/prim_generic/rtl
+${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_defines.svh
+${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sva.svh
+${CALIPTRA_ROOT}/src/libs/rtl/caliptra_macros.svh
+${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sram.sv
+${CALIPTRA_ROOT}/src/libs/rtl/ahb_defines_pkg.sv
+${CALIPTRA_ROOT}/src/libs/rtl/caliptra_ahb_srom.sv
+${CALIPTRA_ROOT}/src/libs/rtl/apb_slv_sif.sv
+${CALIPTRA_ROOT}/src/libs/rtl/ahb_slv_sif.sv
+${CALIPTRA_ROOT}/src/libs/rtl/caliptra_icg.sv
+${CALIPTRA_ROOT}/src/libs/rtl/clk_gate.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_util_pkg.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_alert_pkg.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_subreg_pkg.sv
@@ -10,6 +23,7 @@ ${CALIPTRA_ROOT}/src/prim/rtl/prim_pkg.sv
 ${CALIPTRA_ROOT}/src/lc_ctrl/rtl/lc_ctrl_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/lc_ctrl/rtl/lc_ctrl_state_pkg.sv
 ${CALIPTRA_ROOT}/src/lc_ctrl/rtl/lc_ctrl_pkg.sv
+${CALIPTRA_ROOT}/src/libs/rtl/ahb_to_reg_adapter.sv
 ${CALIPTRA_ROOT}/src/prim_generic/rtl/prim_generic_flop.sv
 ${CALIPTRA_ROOT}/src/prim_generic/rtl/prim_generic_buf.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_flop_2sync.sv

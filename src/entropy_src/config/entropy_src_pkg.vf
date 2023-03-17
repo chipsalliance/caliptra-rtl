@@ -3,3 +3,4 @@ ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_main_sm_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_ack_sm_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_pkg.sv
+${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_pkg.sv

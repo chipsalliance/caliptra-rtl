@@ -17,7 +17,7 @@
 VERILATOR = verilator
 
 IPNAME = csrng
-IPDIR = $(WORKSPACE)/Caliptra/src/$(IPNAME)
+IPDIR = $(CALIPTRA_ROOT)/src/$(IPNAME)
 CONFIGDIR = $(IPDIR)/config
 VERILATOR_LINT_FILES = $(IPDIR)/config/$(IPNAME).vlt
 

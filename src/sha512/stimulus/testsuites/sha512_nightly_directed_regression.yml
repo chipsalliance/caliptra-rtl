@@ -5,4 +5,4 @@ contents:
   - tests:
       tags: ["L0", "directed", "nightly", "SHA512"]
       paths:
-        - ${WORKSPACE}/Caliptra/src/sha512/stimulus/tests/directed/sha512_normal_test.yml
+        - ${CALIPTRA_ROOT}/src/sha512/stimulus/tests/directed/sha512_normal_test.yml

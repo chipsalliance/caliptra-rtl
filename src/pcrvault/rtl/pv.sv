@@ -54,6 +54,7 @@ logic uc_req_dv, uc_req_hold;
 logic uc_req_error;
 logic [31:0] uc_req_rdata;
 logic pv_reg_read_error, pv_reg_write_error;
+logic [AHB_ADDR_WIDTH-1:0] uc_req_addr;
 pv_uc_req_t uc_req;
 
 pv_reg__in_t pv_reg_hwif_in;
@@ -87,11 +88,12 @@ pv_ahb_slv1 (
     .err(uc_req_error),
     .write(uc_req.write),
     .wdata(uc_req.wdata),
-    .addr(uc_req.addr),
+    .addr(uc_req_addr),
 
     .rdata(uc_req_rdata)
 );
 
+always_comb uc_req.addr = uc_req_addr[PV_ADDR_W-1:0];
 always_comb uc_req_error = pv_reg_read_error | pv_reg_write_error;
 always_comb uc_req_hold = '0;
 

@@ -1,0 +1,22 @@
+uvmf:
+  benches:
+    pv:
+      active_passive:
+      - bfm_name: pv_rst_agent
+        value: ACTIVE
+      - bfm_name: pv_sha512_write_agent
+        value: ACTIVE
+      - bfm_name: pv_sha512_block_read_agent
+        value: ACTIVE
+      active_passive_default: ACTIVE
+      clock_half_period: 5ns
+      clock_phase_offset: 0ns
+      existing_library_component: 'True'
+      imports:
+      - name: mvc_pkg
+      - name: mgc_ahb_v2_0_pkg
+      interface_params: []
+      reset_assertion_level: 'False'
+      reset_duration: 200ns
+      top_env: pv
+      use_dpi_link: 'False'

@@ -11,4 +11,4 @@ contents:
         generate: "reseed {template}.yml -seed {seed}"
         path: "{template_basename}__{seed}.yml"
       templates:
-        $WORKSPACE/Caliptra/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/tests/src/soc_ifc_rand_test   : { weight 100 }
+        $CALIPTRA_ROOT/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/tests/src/soc_ifc_rand_test   : { weight 100 }

@@ -5,3 +5,4 @@ ${CALIPTRA_ROOT}/src/prim/rtl/prim_subreg_pkg.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_mubi_pkg.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_cipher_pkg.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_pkg.sv
+${CALIPTRA_ROOT}/src/prim/rtl/prim_pkg.sv

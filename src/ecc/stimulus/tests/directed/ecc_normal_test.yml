@@ -14,7 +14,7 @@
 #
 ---
 plusargs:
-  - +ECC_TEST_VECTOR_FILE='${WORKSPACE}/Caliptra/src/ecc/tb/test_vectors/ecc_drbg_mbedtls.hex'
+  - +ECC_TEST_VECTOR_FILE='${CALIPTRA_ROOT}/src/ecc/tb/test_vectors/ecc_drbg_mbedtls.hex'
   - +ECC_TEST='ECC_normal_test'
 
 testname: ecc_normal_test

@@ -1,6 +1,6 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
-${WORKSPACE}/Caliptra/src/prim/lint/prim_onehot_check.vlt
-${WORKSPACE}/Caliptra/src/prim/lint/prim_arbiter.vlt
-${WORKSPACE}/Caliptra/src/csrng/lint/csrng.vlt
+${CALIPTRA_ROOT}/src/prim/lint/prim_onehot_check.vlt
+${CALIPTRA_ROOT}/src/prim/lint/prim_arbiter.vlt
+${CALIPTRA_ROOT}/src/csrng/lint/csrng.vlt

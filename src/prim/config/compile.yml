@@ -11,10 +11,20 @@ targets:
       - $COMPILE_ROOT/rtl/prim_mubi_pkg.sv
       - $COMPILE_ROOT/rtl/prim_cipher_pkg.sv
       - $COMPILE_ROOT/rtl/prim_pkg.sv
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/prim_util_pkg.sv
+      - $COMPILE_ROOT/rtl/prim_alert_pkg.sv
+      - $COMPILE_ROOT/rtl/prim_subreg_pkg.sv
+      - $COMPILE_ROOT/rtl/prim_mubi_pkg.sv
+      - $COMPILE_ROOT/rtl/prim_cipher_pkg.sv
+      - $COMPILE_ROOT/rtl/prim_pkg.sv
 ---
 provides: [prim]
 schema_version: 2.4.0
 requires:
+  - libs
   - lc_ctrl_pkg
   - prim_pkg
   - prim_generic

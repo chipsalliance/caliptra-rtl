@@ -5,4 +5,4 @@ contents:
   - tests:
       tags: ["L0", "directed", "nightly", "HMAC"]
       paths:
-        - ${WORKSPACE}/Caliptra/src/hmac/stimulus/tests/directed/hmac_normal_test.yml
+        - ${CALIPTRA_ROOT}/src/hmac/stimulus/tests/directed/hmac_normal_test.yml
