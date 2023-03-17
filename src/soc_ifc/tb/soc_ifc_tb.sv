@@ -31,18 +31,20 @@
 */
 
 
+
 module soc_ifc_tb
   import soc_ifc_pkg::*;
   import soc_ifc_tb_pkg::*;
   ();
+
+
+  enum logic {DEBUG_UNLOCKED = 1'b0, DEBUG_LOCKED = 1'b1} debug_state_e;
 
   // Strings for plusargs
   string soc_ifc_testname; 
   string socreg_method_name = ""; 
   string security_state_testname; 
 
-
-  enum logic {DEBUG_UNLOCKED = 1'b0, DEBUG_LOCKED = 1'b1} debug_state_e;
 
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
@@ -121,6 +123,8 @@ module soc_ifc_tb
 
   reg [127 : 0] result_data;
   logic ready_for_fuses;
+  logic [31:0]  generic_input_wires0; 
+  logic [31:0]  generic_input_wires1; 
 
   //SRAM interface for mbox
   logic mbox_sram_cs;
@@ -177,7 +181,7 @@ module soc_ifc_tb
 
              .security_state(security_state),
 
-             .generic_input_wires('x),
+             .generic_input_wires({generic_input_wires1, generic_input_wires0}),
              .BootFSM_BrkPoint(1'b0), // TODO
              .generic_output_wires(),
 
@@ -297,10 +301,15 @@ module soc_ifc_tb
   task reset_dut;
     begin
       $display("*** Toggle reset.");
+
+      set_generic_input_wires(-1, -1);
+
       cptra_pwrgood_tb = '0;
       cptra_rst_b_tb = 0;
 
       repeat (5) @(posedge clk_tb);
+
+      socregs.unlock_fuses();
 
       cptra_pwrgood_tb = 1;
 
@@ -320,12 +329,15 @@ module soc_ifc_tb
   task warm_reset_dut;
     begin
       $display("*** Perform warm reset. ***");
+
+      set_generic_input_wires(-1, -1);
+
       cptra_rst_b_tb = 0;
 
       repeat (5) @(posedge clk_tb);
-      
+
       cptra_rst_b_tb = 1;
-      $display("** Warm reset complete **");
+      $display("");
     end
   endtask // reset_dut
 
@@ -636,10 +648,30 @@ module soc_ifc_tb
       begin
           security_state = '{device_lifecycle: ss.device_lifecycle, debug_locked: ss.debug_locked};
 
-          set_initval("CPTRA_SECURITY_STATE", ss & 32'h0000_0007);  
+          set_initval("CPTRA_SECURITY_STATE", ss & 32'h7);  
+          update_exp_regval(socregs.get_addr("CPTRA_SECURITY_STATE"), ss & 32'h7, SET_DIRECT); 
       end
   endtask
 
+
+
+  //----------------------------------------------------------------
+  // set_generic_input_wires()
+  //
+  // sets the generic_input_wires to a predetermined or random value
+  //----------------------------------------------------------------
+  task set_generic_input_wires(input int v0, int v1);
+
+    begin
+      generic_input_wires0 = (v0 < 0) ? $urandom() : v0;
+      generic_input_wires1 = (v1 < 0) ? $urandom() : v1;
+      set_initval("CPTRA_GENERIC_INPUT_WIRES0", generic_input_wires0); 
+      set_initval("CPTRA_GENERIC_INPUT_WIRES1", generic_input_wires1); 
+
+      @(posedge clk_tb);
+    end
+
+  endtask
 
   //----------------------------------------------------------------
   // mbox_ahb_test()
@@ -802,7 +834,8 @@ module soc_ifc_tb
         reset_dut();
 
         wait (ready_for_fuses == 1'b1);
-        update_exp_regval(socregs.get_addr("CPTRA_FLOW_STATUS"), 32'h4000_0000, SET_DIRECT); // , sscode);     
+        update_exp_regval(socregs.get_addr("CPTRA_FLOW_STATUS"), 32'h4000_0000, SET_DIRECT); 
+        set_initval("CPTRA_FLOW_STATUS", 32'h4000_0000); 
 
         repeat (5) @(posedge clk_tb);
       end
@@ -970,8 +1003,8 @@ module soc_ifc_tb
 
         // TODO. Push boiler-plate into task
         if (soc_ifc_testname == "soc_reg_pwron_test") begin 
-          set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
-          sim_dut_init();
+          // set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
+          // sim_dut_init();
           soc_reg_pwron_test();
 
         end else if (soc_ifc_testname == "soc_reg_wrmrst_test") begin 
@@ -979,18 +1012,16 @@ module soc_ifc_tb
           sim_dut_init();
           soc_reg_wrmrst_test();
 
-
         end else if (soc_ifc_testname == "fuse_reg_prod_test") begin 
           set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
           sim_dut_init();
           fuse_reg_test();
 
         end else if (soc_ifc_testname == "fuse_reg_lifecycle_test") begin 
-          // sim_dut_init() rolled into fuse_reg_lifecycle_test
           if ($value$plusargs("SECURITY_STATE=%s", security_state_testname)) 
             fuse_reg_lifecycle_test(security_state_testname);
           else
-            fuse_reg_lifecycle_test("ALL");
+            fuse_reg_lifecycle_test("RANDOM"); // 'ALL' is the other option that isn't working fully 
  
         end else if (soc_ifc_testname == "soc_reg_test") begin 
           set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
