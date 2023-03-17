@@ -51,58 +51,80 @@ any subsequent writes to a fuse register will be dropped unless
     init_sim();
     reset_dut();
 
+    // -----------------------------------------------------------------
     // PHASE 1. Normal sequence 
-    $display ("1a. APB write to registers, lock fuses and attempt to modify\n");
+    // -----------------------------------------------------------------
+    $display ("1a. APB write twice to registers, lock fuses and attempt to modify\n");
 
-    write_regs(SET_APB, fuse_regnames, 0, 3); 
+    write_regs(SET_APB, fuse_regnames, 0, 3);  // effect changes
+    repeat (5) @(posedge clk_tb);
 
-    simulate_caliptra_boot();
-    socregs.lock_fuses(); // fuses locked "latched" internally regardless of reg status
+    write_regs(SET_APB, fuse_regnames, 1, 3);  // effect changes
+
+    simulate_caliptra_boot(); 
+
+    write_regs(SET_APB, fuse_regnames, 2, 3);  // ineffectual 
+
+    // expect everything from TID=1 
+    read_regs(GET_APB, fuse_regnames, 1, 3);   
+    read_regs(GET_AHB, fuse_regnames, 1, 3); 
 
     repeat (5) @(posedge clk_tb);
 
-    write_regs(SET_APB, fuse_regnames, 1, 3);
-    read_regs(GET_APB, fuse_regnames, 1, 3);
-    read_regs(GET_AHB, fuse_regnames, 1, 3);
+    $display ("\n1b. Following writes should have no effect on locked state -- which is still set!\n");
 
     sb.del_all();
 
-    $display ("\n1b. Following writes should have no effect on locked state -- which is still set!\n");
-
     write_single_word_apb(socregs.get_addr("CPTRA_FUSE_WR_DONE"), 32'h0); 
 
-    write_regs(SET_APB, fuse_regnames, 0, 3);
-    read_regs(GET_APB, fuse_regnames, 0, 3);
-    read_regs(GET_AHB, fuse_regnames, 0, 3);
+    write_regs(SET_APB, fuse_regnames, 3, 3);
+    read_regs(GET_APB, fuse_regnames, 1, 3);
+    read_regs(GET_AHB, fuse_regnames, 1, 3);
 
-/* Commenting out until TB has correct checks 
+    repeat (10) @(posedge clk_tb);
+
+    // -----------------------------------------------------------------
     // PHASE 2. Perform Cold Reset and Repeat APB Write & Read from 1a  
+    // -----------------------------------------------------------------
     reset_dut(); // expect to be clearing CPTRA_FUSE_WR_DONE effect 
-    socregs.unlock_fuses();
-
+    reset_exp_data();
     sb.del_all();
 
     $display ("\n2a. Write to registers after cold boot and check back writes");
 
     write_regs(SET_APB, fuse_regnames, 0, 3);
+    read_regs(GET_APB, fuse_regnames, 0, 3);
+
+    simulate_caliptra_boot();
+
     read_regs(GET_AHB, fuse_regnames, 0, 3);
 
-    write_single_word_apb(socregs.get_addr("CPTRA_FUSE_WR_DONE"), 32'h1); 
-    // no point in recording TB fuse_locked state since it will be cleared anyway
+    repeat (10) @(posedge clk_tb);
 
+    // -----------------------------------------------------------------
+    // PHASE 3. Perform Warm Reset, read values & Repeat APB Write & Read from 1a  
+    // -----------------------------------------------------------------
     $display ("\n3a. Perform a warm reset then repeat steps 1a (just APB)"); 
 
-    warm_reset_dut(); // expect to be clearing CPTRA_FUSE_WR_DONE effect 
-    socregs.unlock_fuses();
+    warm_reset_dut(); 
+    warm_reset_exp_data();
+
+    read_regs(GET_APB, fuse_regnames, 0, 3);      // should be old sticky values
     sb.del_all();
 
+    // These writes should fail to write again  
     write_regs(SET_APB, fuse_regnames, 0, 3);
+    read_regs(GET_APB, fuse_regnames, 0, 3);
+
+    simulate_caliptra_boot();
+
     read_regs(GET_AHB, fuse_regnames, 0, 3);
-*/
+
 
     error_ctr = sb.err_count;
 
   end
+
 endtask // fuse_reg_perm_test
 
 

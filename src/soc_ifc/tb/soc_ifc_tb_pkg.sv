@@ -206,10 +206,16 @@ package soc_ifc_tb_pkg;
 
 
   // Only non-zero power-on values are stored; also populated by SocRegisters instantiation 
-  word_addr_t soc_register_initval_dict [string] = {
+  dword_t soc_register_initval_dict [string] = {
     "CPTRA_VALID_PAUSER"                   : 32'hffff_ffff,
     "CPTRA_TRNG_VALID_PAUSER"              : 32'hffff_ffff,
     "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES" : 32'h5
+  };
+
+  // Sticky registers preserve values across warm reset -- groups of regs might be populated by code
+  // mask of all bits to be protected in case of warm reset
+  word_addr_t sticky_register_prefix_dict [string] = {
+    "FUSE_": 32'hffff_ffff 
   };
 
   // holds addr -> name inverse map of soc_register_dict - populated by SocRegisters instantiation 
@@ -246,13 +252,6 @@ package soc_ifc_tb_pkg;
   endfunction
 
 
-  function int str_startswith(string s1, string s2);
-
-    return (s2 == s1.substr(0, s2.len() - 1));
-
-  endfunction  
-  
-
   function dword_t get_initval(string addr_name);
 
     return soc_register_initval_dict.exists(addr_name) ? soc_register_initval_dict[addr_name] : '0; 
@@ -263,7 +262,10 @@ package soc_ifc_tb_pkg;
   function void set_initval(string addr_name, dword_t value); 
 
     if (soc_register_initval_dict.exists(addr_name))
-      soc_register_initval_dict[addr_name] = value;
+      $display("TB INFO. Overwriting register init value for %s with value 0x%08x", addr_name, value);
+    else
+      $display("TB INFO. Adding new register init value for %s with value 0x%08x", addr_name, value);
+    soc_register_initval_dict[addr_name] = value;
     
   endfunction
 
@@ -450,13 +452,6 @@ package soc_ifc_tb_pkg;
   endfunction // update_exp_regval
 
 
-  function void warm_reset_exp_data();
-    // Unlike reset_exp_data which assumes cold boot, this preserves sticky bits 
-    $display ("** Updating expected reg values for warm reset **");
-    // <PLACEHOLDER>
-    // for stick
-  endfunction 
-
 
   function strq_t get_fuse_regnames();
 
@@ -503,12 +498,65 @@ package soc_ifc_tb_pkg;
   function void reset_exp_data();
     // this peforms update for power-on reset
 
-    foreach (soc_register_dict[rname]) 
-      exp_reg_data_dict[rname] = get_initval(rname); 
-
+    begin
+      $display ("** Clearing all expected reg values for cold reset **");
+      foreach (soc_register_dict[rname]) 
+        exp_reg_data_dict[rname] = get_initval(rname); 
+    end
   endfunction 
 
 
+  function void warm_reset_exp_data();
+    // Unlike reset_exp_data which assumes cold boot, this preserves sticky bits 
+
+    string warm_reset_prefixes [$];
+
+    begin
+      $display ("** Updating expected reg values for warm reset **");
+
+      foreach (soc_register_dict[rname]) begin
+        foreach (sticky_register_prefix_dict[sticky_rname]) 
+            exp_reg_data_dict[rname] = (str_startswith(rname, sticky_rname)) ?
+              exp_reg_data_dict[rname] & sticky_register_prefix_dict[sticky_rname] : 
+              get_initval(rname);
+      end
+    end 
+  endfunction 
+
+
+
+  // ---------------------------------------------------------------------------
+  // -- Generic Utility functions that have less to do with custom data types
+  // ---------------------------------------------------------------------------
+  function int str_startswith(string s1, string s2);
+
+    return (s2 == s1.substr(0, s2.len() - 1));
+
+  endfunction  
+  
+
+  // NOTE. This would nomrally be a templated type (eg, T1, T2) in both 
+  // directions that could be used generically. Could make this a macro.
+  /*
+  function strq_t get_keys(htable_t htable); 
+    string strq [$];
+
+    begin
+      foreach (htable[str_index]) strq.push_back(str_index);
+      return strq;
+    end
+  endfunction  
+
+
+  function word_addrq_t get_values(htable_t htable); 
+    word_addr_t  word_addrq [$];
+
+    begin
+      foreach (htable[str_index]) word_addrq.push_back((htable[str_index]); 
+      return word_addrq;
+    end
+  endfunction  
+  */ 
 
   // ================================================================================ 
   // Class definitions 
@@ -605,6 +653,7 @@ package soc_ifc_tb_pkg;
       word_addr_t start_addr;
       int i;
       string istr;
+      dword_t initval;
 
       if (widereg_expanded) 
         return;
@@ -625,14 +674,17 @@ package soc_ifc_tb_pkg;
       // Names that don't exist in soc_register_initval_dict assume "0" values
       foreach (wide_register_dict[rname]) begin 
         if (soc_register_initval_dict.exists(rname)) begin 
-          start_addr = soc_register_initval_dict[rname];
+          initval = soc_register_initval_dict[rname];
           for (i = 0; i < wide_register_dict[rname]; i++) begin
             istr.itoa(i);
-            soc_register_initval_dict[{rname, istr}] = start_addr + 4*i; 
+            soc_register_initval_dict[{rname, istr}] = initval;
           end
           soc_register_initval_dict.delete(rname);
         end
       end
+
+      // foreach (soc_register_initval_dict[rname]) 
+      //   $display ("-- INIT VAL %30s <= 0x%08x", rname, soc_register_initval_dict[rname]);
 
     endfunction
 
@@ -695,12 +747,14 @@ package soc_ifc_tb_pkg;
       transaction_t new_trans; 
       dword_t sscode;
 
-      if ((modify != COLD_RESET) && (modify != WARM_RESET)) begin
+      if (modify == COLD_RESET)
+        reset_exp_data();
+      else if (modify == WARM_RESET)
+        warm_reset_exp_data();
+      else begin
         $display ("TB ERROR. Mass update of registers unsupported w/access type %s", modify.name());
         return;
       end
-
-      update_exp_regval('0, '0, modify);
 
       foreach (soc_register_dict[rname]) begin
      

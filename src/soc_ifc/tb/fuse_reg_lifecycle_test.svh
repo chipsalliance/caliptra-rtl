@@ -29,33 +29,51 @@
     begin 
       if (ss_name == "ALL") begin 
 
-        for (int i=0; i < 8; i++) begin
-          set_security_state(security_state_t'(i));
-          init_sim();
+        init_sim();
+
+        for (ss_code=0; ss_code < 8; ss_code++) begin
+          $display ("** Executing fuse register test for security state %s **", get_ss_name(ss_code));
+          set_security_state(security_state_t'(ss_code));
+
+          // sim_dut_init();
+          repeat (2) @(posedge clk_tb);
           reset_dut();
 
           wait (ready_for_fuses == 1'b1);
-          update_exp_regval(socregs.get_addr("CPTRA_FLOW_STATUS"), 32'h4000_0000, SET_DIRECT);     
+          update_exp_regval(socregs.get_addr("CPTRA_FLOW_STATUS"), 32'h4000_0000, SET_DIRECT); 
+          set_initval("CPTRA_FLOW_STATUS", 32'h4000_0000); 
+
+
+          sb.del_all();
 
           repeat (5) @(posedge clk_tb);
           fuse_reg_test();
           repeat (5) @(posedge clk_tb);
         end 
 
+      end else if (ss_name == "RANDOM") begin 
+
+        ss_code = $urandom_range(0, 7); 
+        $display ("** Executing fuse register test for security state %s **", get_ss_name(ss_code));
+        set_security_state(security_state_t'(ss_code));
+
+        sim_dut_init();
+        repeat (5) @(posedge clk_tb);
+        fuse_reg_test();
+        repeat (5) @(posedge clk_tb);
+
       end else begin
 
         ss_code = get_ss_code(ss_name);
+        $display ("** Executing fuse register test for security state %s **", ss_name); 
+
         if (ss_code < 0) 
-          $error("Invalid security state; must be:\n  ALL or <DEBUG_LOCKED|DEBUG_UNLOCKED>_<UNPROVISIONED|MANUFACTURING|PRODUCTION");
+          $error("Invalid security state; must be:\n  RANDOM, ALL or <DEBUG_LOCKED|DEBUG_UNLOCKED>_<UNPROVISIONED|MANUFACTURING|PRODUCTION");
         else begin  
 
           set_security_state(security_state_t'(ss_code));
-          init_sim();
-          reset_dut();
 
-          wait (ready_for_fuses == 1'b1);
-          update_exp_regval(socregs.get_addr("CPTRA_FLOW_STATUS"), 32'h4000_0000, SET_DIRECT);     
-
+          sim_dut_init();
           repeat (5) @(posedge clk_tb);
           fuse_reg_test();
           repeat (5) @(posedge clk_tb);

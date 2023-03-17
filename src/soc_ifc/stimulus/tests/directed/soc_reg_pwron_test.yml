@@ -14,11 +14,7 @@
 #
 ---
 plusargs:
-  - +SOC_IFC_TEST='fuse_reg_lifecycle_test'
-  - +SECURITY_STATE='RANDOM'  
-# RANDOM is default if SECURITY_STATE is not provided 
-# - +SECURITY_STATE='DEBUG_LOCKED_PRODUCTION'
-# - +SECURITY_STATE='ALL'
+  - +SOC_IFC_TEST='soc_reg_pwron_test'
 
-testname: fuse_reg_lifecycle_test 
+testname: soc_reg_pwron_test
 seed: ${PLAYBOOK_RANDOM_SEED}
