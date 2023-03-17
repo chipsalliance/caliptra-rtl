@@ -1,0 +1,76 @@
+---
+provides: [uvmf_pv]
+schema_version: 2.4.0
+requires:
+  - uvmf_lib
+  - pv_uvm_pkg
+  - pcrvault
+  - caliptra_top_defines
+targets:
+  tb:
+    directories:
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/pv_rst_pkg
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/pv_rst_pkg/src
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/pv_read_pkg
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/pv_read_pkg/src
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/pv_write_pkg
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/pv_write_pkg/src
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/pv_env_pkg
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/pv/tb/parameters
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/pv/tb/sequences
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/pv/tb/tests
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/pv/tb/testbench
+    files:
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/pv_env_pkg/registers/pv_reg_adapter_functions_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/pv_rst_pkg/pv_rst_pkg_hdl.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/pv_rst_pkg/pv_rst_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/pv_rst_pkg/src/pv_rst_driver_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/pv_rst_pkg/src/pv_rst_if.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/pv_rst_pkg/src/pv_rst_monitor_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/pv_read_pkg/pv_read_pkg_hdl.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/pv_read_pkg/pv_read_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/pv_read_pkg/src/pv_read_driver_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/pv_read_pkg/src/pv_read_if.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/pv_read_pkg/src/pv_read_monitor_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/pv_write_pkg/pv_write_pkg_hdl.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/pv_write_pkg/pv_write_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/pv_write_pkg/src/pv_write_driver_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/pv_write_pkg/src/pv_write_if.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/pv_write_pkg/src/pv_write_monitor_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/pv_env_pkg/registers/pv_reg_model_top_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/pv_env_pkg/pv_env_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/pv/tb/parameters/pv_parameters_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/pv/tb/sequences/pv_sequences_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/pv/tb/tests/pv_tests_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/pv/tb/testbench/hdl_top.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/pv/tb/testbench/hvl_top.sv
+    tops:
+      - hdl_top
+      - hvl_top
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        #- '-v2k_generate'
+        #- '-timescale=1ns/1ps'
+        - '-noinherit_timescale=1ns/1ps'
+        #- '-ucli -i dump.ucli'
+      #sim:
+        #- '-ucli -i dump.ucli'
+        # Suppress a warning due to calling $fgets as task instead of function
+        # i.e. discarding the return value. This is in auto-generated code.
+        - '+warn=noRVOSFD'
+        # Suppress NOTE about repeated package imports within the same
+        # package (each .svh file included in the auto-generated UVM _pkg.sv
+        # files imports the same dependencies)
+        - '-suppress=SV-LCM-PPWI'
+      elab:
+        # Suppress warnings about too few port connections - auto-generated interfaces
+        # declare all signals as inout, but are driven at a lower layer than the
+        # instantiation, so they will always flag this
+        - '-suppress=TFIPC'
+      sim:
+        - '-sv_root $QUESTA_MVC_HOME/questa_mvc_core/linux_x86_64_gcc-6.2.0_vcs'
+        - '-sv_lib libahb_IN_SystemVerilog_VCS_full'
+        - '+UVM_VERBOSITY=UVM_MEDIUM'

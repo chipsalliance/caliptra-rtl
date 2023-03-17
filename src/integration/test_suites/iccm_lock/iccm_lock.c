@@ -126,22 +126,22 @@ void main(void) {
         iccm_dest = ICCM;
         if (persistent_is_second_pass) {
             code_word = (uint32_t *) &iccm_code1_start;
-            printf("Comparing second pass of the copy code from %x [through %x] to %x\n", (uintptr_t) code_word, &iccm_code1_end, (uintptr_t) iccm_dest);
+            VPRINTF(LOW,"Comparing second pass of the copy code from %x [through %x] to %x\n", (uintptr_t) code_word, &iccm_code1_end, (uintptr_t) iccm_dest);
             while (code_word < (uint32_t *) &iccm_code1_end) {
-                printf("at %x: %x\n", (uintptr_t) iccm_dest, *iccm_dest);
+                VPRINTF(ALL,"at %x: %x\n", (uintptr_t) iccm_dest, *iccm_dest);
                 if(*iccm_dest++ != *code_word++) {
-                    printf("ERROR: Reads mismatched on second pass\n");
-                    printf("%c", 0x1);
+                    VPRINTF(ERROR,"ERROR: Reads mismatched on second pass\n");
+                    SEND_STDOUT_CTRL( 0x1);
                 }
             }
         } else {
             code_word = (uint32_t *) &iccm_code0_start;
-            printf("Comparing first pass of the copy code from %x [through %x] to %x\n", (uintptr_t) code_word, &iccm_code0_end, (uintptr_t) iccm_dest);
+            VPRINTF(LOW,"Comparing first pass of the copy code from %x [through %x] to %x\n", (uintptr_t) code_word, &iccm_code0_end, (uintptr_t) iccm_dest);
             while (code_word < (uint32_t *) &iccm_code0_end) {
-                printf("at %x: %x\n", (uintptr_t) iccm_dest, *iccm_dest);
+                VPRINTF(ALL,"at %x: %x\n", (uintptr_t) iccm_dest, *iccm_dest);
                 if(*iccm_dest++ != *code_word++) {
-                    printf("ERROR: Reads mismatched on first pass\n");
-                    printf("%c", 0x1);
+                    VPRINTF(ERROR,"ERROR: Reads mismatched on first pass\n");
+                    SEND_STDOUT_CTRL( 0x1);
                 }
             }
         }
@@ -195,7 +195,7 @@ void execute_first_pass_from_iccm (void) {
         } else {
             VPRINTF(LOW, "At the end of first pass through ICCM LOCK test: resetting the core!\n");
             persistent_is_second_pass = 1;
-            lsu_write_32((uint32_t*) CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET, SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK);
+            lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET, SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK);
             while(1);
         }
     }

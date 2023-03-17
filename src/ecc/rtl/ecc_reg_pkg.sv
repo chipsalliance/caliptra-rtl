@@ -23,7 +23,12 @@ package ecc_reg_pkg;
     } ecc_reg__ECC_CTRL__CTRL__in_t;
 
     typedef struct packed{
+        logic hwclr;
+    } ecc_reg__ECC_CTRL__PCR_SIGN__in_t;
+
+    typedef struct packed{
         ecc_reg__ECC_CTRL__CTRL__in_t CTRL;
+        ecc_reg__ECC_CTRL__PCR_SIGN__in_t PCR_SIGN;
     } ecc_reg__ECC_CTRL__in_t;
 
     typedef struct packed{
@@ -129,6 +134,14 @@ package ecc_reg_pkg;
 
     typedef struct packed{
         logic hwclr;
+    } ecc_reg__ECC_NONCE__NONCE__in_t;
+
+    typedef struct packed{
+        ecc_reg__ECC_NONCE__NONCE__in_t NONCE;
+    } ecc_reg__ECC_NONCE__in_t;
+
+    typedef struct packed{
+        logic hwclr;
     } kv_read_ctrl_reg__read_en__in_t;
 
     typedef struct packed{
@@ -200,6 +213,7 @@ package ecc_reg_pkg;
         ecc_reg__ECC_SIGN_S__in_t [12-1:0]ECC_SIGN_S;
         ecc_reg__ECC_VERIFY_R__in_t [12-1:0]ECC_VERIFY_R;
         ecc_reg__ECC_IV__in_t [12-1:0]ECC_IV;
+        ecc_reg__ECC_NONCE__in_t [12-1:0]ECC_NONCE;
         __kv_read_ctrl_reg__in_t ecc_kv_rd_pkey_ctrl;
         __kv_status_reg__in_t ecc_kv_rd_pkey_status;
         __kv_read_ctrl_reg__in_t ecc_kv_rd_seed_ctrl;
@@ -220,8 +234,13 @@ package ecc_reg_pkg;
     } ecc_reg__ECC_CTRL__ZEROIZE__out_t;
 
     typedef struct packed{
+        logic value;
+    } ecc_reg__ECC_CTRL__PCR_SIGN__out_t;
+
+    typedef struct packed{
         ecc_reg__ECC_CTRL__CTRL__out_t CTRL;
         ecc_reg__ECC_CTRL__ZEROIZE__out_t ZEROIZE;
+        ecc_reg__ECC_CTRL__PCR_SIGN__out_t PCR_SIGN;
     } ecc_reg__ECC_CTRL__out_t;
 
     typedef struct packed{
@@ -313,6 +332,14 @@ package ecc_reg_pkg;
     typedef struct packed{
         ecc_reg__ECC_IV__IV__out_t IV;
     } ecc_reg__ECC_IV__out_t;
+
+    typedef struct packed{
+        logic [31:0] value;
+    } ecc_reg__ECC_NONCE__NONCE__out_t;
+
+    typedef struct packed{
+        ecc_reg__ECC_NONCE__NONCE__out_t NONCE;
+    } ecc_reg__ECC_NONCE__out_t;
 
     typedef struct packed{
         logic value;
@@ -420,6 +447,7 @@ package ecc_reg_pkg;
         ecc_reg__ECC_SIGN_S__out_t [12-1:0]ECC_SIGN_S;
         ecc_reg__ECC_VERIFY_R__out_t [12-1:0]ECC_VERIFY_R;
         ecc_reg__ECC_IV__out_t [12-1:0]ECC_IV;
+        ecc_reg__ECC_NONCE__out_t [12-1:0]ECC_NONCE;
         __kv_read_ctrl_reg__out_t ecc_kv_rd_pkey_ctrl;
         __kv_read_ctrl_reg__out_t ecc_kv_rd_seed_ctrl;
         __kv_read_ctrl_reg__out_t ecc_kv_rd_msg_ctrl;

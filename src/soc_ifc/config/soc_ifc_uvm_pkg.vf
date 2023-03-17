@@ -1,5 +1,5 @@
-+incdir+${WORKSPACE}/Caliptra/src/soc_ifc/rtl
-${WORKSPACE}/Caliptra/src/soc_ifc/rtl/soc_ifc_pkg.sv
-${WORKSPACE}/Caliptra/src/soc_ifc/rtl/mbox_csr_uvm.sv
-${WORKSPACE}/Caliptra/src/soc_ifc/rtl/sha512_acc_csr_uvm.sv
-${WORKSPACE}/Caliptra/src/soc_ifc/rtl/soc_ifc_reg_uvm.sv
++incdir+${CALIPTRA_ROOT}/src/soc_ifc/rtl
+${CALIPTRA_ROOT}/src/soc_ifc/rtl/soc_ifc_pkg.sv
+${CALIPTRA_ROOT}/src/soc_ifc/rtl/mbox_csr_uvm.sv
+${CALIPTRA_ROOT}/src/soc_ifc/rtl/sha512_acc_csr_uvm.sv
+${CALIPTRA_ROOT}/src/soc_ifc/rtl/soc_ifc_reg_uvm.sv

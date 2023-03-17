@@ -86,12 +86,12 @@ always_comb PSLVERR = (dv & access_phase) ? slverr :
 
 
 
-//TODO ASSERTS
+//TODO CALIPTRA_ASSERTS
 //assert that PADDR, PWRITE, PWDATA, PAUSER are constant while in access_phase
-//`ASSERT(ERR_PADDR_NOT_CONST, (addr == PADDR), PCLK, PRESETn | ~access_phase)
+//`CALIPTRA_ASSERT(ERR_PADDR_NOT_CONST, (addr == PADDR), PCLK, PRESETn | ~access_phase)
 //assert that access_phase always follows a setup_phase
-//`ASSERT_NEVER(ERR_ACCESS_PHASE_WO_SETUP, access_phase & ~dv, PCLK, PRESETn)
+//`CALIPTRA_ASSERT_NEVER(ERR_ACCESS_PHASE_WO_SETUP, access_phase & ~dv, PCLK, PRESETn)
 //assert that access_phase is de-asserted the clock after ready is asserted
-//`ASSERT(ERR_ACCESS_PHASE_NOT_COMPLETING, (dv & access_phase & PREADY) |-> ##1 ~access_phase, PCLK, PRESETn)
+//`CALIPTRA_ASSERT(ERR_ACCESS_PHASE_NOT_COMPLETING, (dv & access_phase & PREADY) |-> ##1 ~access_phase, PCLK, PRESETn)
 
 endmodule

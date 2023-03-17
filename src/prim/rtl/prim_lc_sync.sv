@@ -33,7 +33,7 @@ module prim_lc_sync #(
   localparam lc_ctrl_pkg::lc_tx_t LcResetValue = (ResetValueIsOn) ? lc_ctrl_pkg::On :
                                                                   lc_ctrl_pkg::Off;
 
-  `ASSERT_INIT(NumCopiesMustBeGreaterZero_A, NumCopies > 0)
+  `CALIPTRA_ASSERT_INIT(NumCopiesMustBeGreaterZero_A, NumCopies > 0)
 
   logic [lc_ctrl_pkg::TxWidth-1:0] lc_en;
   if (AsyncOn) begin : gen_flops
@@ -67,9 +67,10 @@ module prim_lc_sync #(
       always_ff @(posedge clk_i) begin
         lc_en_in_sva_q <= lc_en_i;
       end
-    `ASSERT(OutputDelay_A,
+    `CALIPTRA_ASSERT(OutputDelay_A,
             rst_ni |-> ##3 lc_en_o == {NumCopies{$past(lc_en_in_sva_q, 2)}} ||
-                           ($past(lc_en_in_sva_q, 2) != $past(lc_en_in_sva_q, 1)))
+                           ($past(lc_en_in_sva_q, 2) != $past(lc_en_in_sva_q, 1)) ||
+                           !rst_ni)
 `endif
   end else begin : gen_no_flops
     //VCS coverage off
@@ -92,7 +93,7 @@ module prim_lc_sync #(
 
     assign lc_en = lc_en_i;
 
-    `ASSERT(OutputDelay_A, lc_en_o == {NumCopies{lc_en_i}})
+    `CALIPTRA_ASSERT(OutputDelay_A, lc_en_o == {NumCopies{lc_en_i}})
   end
 
   for (genvar j = 0; j < NumCopies; j++) begin : gen_buffs
@@ -111,6 +112,6 @@ module prim_lc_sync #(
   ////////////////
 
   // The outputs should be known at all times.
-  `ASSERT_KNOWN(OutputsKnown_A, lc_en_o)
+  `CALIPTRA_ASSERT_KNOWN(OutputsKnown_A, lc_en_o)
 
 endmodule : prim_lc_sync

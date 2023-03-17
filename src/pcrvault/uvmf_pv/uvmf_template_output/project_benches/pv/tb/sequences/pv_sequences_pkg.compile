@@ -1,0 +1,9 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.compile
+  - ../../../../verification_ip/interface_packages/pv_rst_pkg/pv_rst.compile
+  - ../../../../verification_ip/interface_packages/pv_write_pkg/pv_write.compile
+  - ../../../../verification_ip/interface_packages/pv_read_pkg/pv_read.compile
+  - ../../../../verification_ip/environment_packages/pv_env_pkg/pv_env_pkg.compile
+  - ../parameters/pv_parameters_pkg.compile
+src:
+  - pv_sequences_pkg.sv

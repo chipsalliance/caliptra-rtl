@@ -14,14 +14,27 @@ module csrng
   parameter logic [NumAlerts-1:0] AlertAsyncOn = {NumAlerts{1'b1}},
   parameter int NHwApps = 2,
   parameter cs_keymgr_div_t RndCnstCsKeymgrDivNonProduction = CsKeymgrDivWidth'(0),
-  parameter cs_keymgr_div_t RndCnstCsKeymgrDivProduction = CsKeymgrDivWidth'(0)
+  parameter cs_keymgr_div_t RndCnstCsKeymgrDivProduction = CsKeymgrDivWidth'(0),
+  parameter AHBDataWidth = 64,
+  parameter AHBAddrWidth = 32
 ) (
   input logic         clk_i,
   input logic         rst_ni,
 
-  // Tilelink Bus Interface
-  input  tlul_pkg::tl_h2d_t tl_i,
-  output tlul_pkg::tl_d2h_t tl_o,
+  // AMBA AHB Lite Interface
+  input logic [AHBAddrWidth-1:0]  haddr_i,
+  input logic [AHBDataWidth-1:0]  hwdata_i,
+  input logic                     hsel_i,
+  input logic                     hwrite_i,
+  input logic                     hready_i,
+  input logic [1:0]               htrans_i,
+  input logic [2:0]               hsize_i,
+
+  output logic                    hresp_o,
+  output logic                    hreadyout_o,
+  output logic [AHBDataWidth-1:0] hrdata_o,
+
+
 
    // OTP Interface
   // SEC_CM: INTERSIG.MUBI
@@ -65,11 +78,22 @@ module csrng
   // SEC_CM: CONFIG.REGWEN
   // SEC_CM: TILE_LINK.BUS.INTEGRITY
 
-  csrng_reg_top u_reg (
+  csrng_reg_top #(
+    .AHBDataWidth(AHBDataWidth),
+    .AHBAddrWidth(AHBAddrWidth)
+  ) u_reg (
     .clk_i,
     .rst_ni,
-    .tl_i,
-    .tl_o,
+    .haddr_i,
+    .hwdata_i,
+    .hsel_i,
+    .hwrite_i,
+    .hready_i,
+    .htrans_i,
+    .hsize_i,
+    .hresp_o,
+    .hreadyout_o,
+    .hrdata_o,
     .reg2hw,
     .hw2reg,
     .intg_err_o(intg_err_alert[1]),
@@ -126,82 +150,82 @@ module csrng
     ) u_prim_alert_sender (
       .clk_i,
       .rst_ni,
-      .alert_test_i  ( alert_test[i]                 ),
-      .alert_req_i   ( alert[i] || intg_err_alert[i] ),
-      .alert_ack_o   (                               ),
-      .alert_state_o (                               ),
-      .alert_rx_i    ( alert_rx_i[i]                 ),
-      .alert_tx_o    ( alert_tx_o[i]                 )
+      .alert_test_i  (alert_test[i]                 ),
+      .alert_req_i   (alert[i] || intg_err_alert[i] ),
+      .alert_ack_o   (),
+      .alert_state_o (),
+      .alert_rx_i    (alert_rx_i[i]                 ),
+      .alert_tx_o    (alert_tx_o[i]                 )
     );
   end
 
 
   // Assertions
 
-  `ASSERT_KNOWN(TlDValidKnownO_A, tl_o.d_valid)
-  `ASSERT_KNOWN(TlAReadyKnownO_A, tl_o.a_ready)
-  `ASSERT_KNOWN(EsReqKnownO_A, entropy_src_hw_if_o.es_req)
+  `CALIPTRA_ASSERT_KNOWN(AHBRespKnownO_A, hresp_o)
+  `CALIPTRA_ASSERT_KNOWN(AHBReadyKnownO_A, hreadyout_o)
+  `CALIPTRA_ASSERT_KNOWN(EsReqKnownO_A, entropy_src_hw_if_o.es_req)
 
   // Application Interface Asserts
   for (genvar i = 0; i < NHwApps; i = i+1) begin : gen_app_if_asserts
-    `ASSERT_KNOWN(CsrngReqReadyKnownO_A, csrng_cmd_o[i].csrng_req_ready)
-    `ASSERT_KNOWN(CsrngRspAckKnownO_A, csrng_cmd_o[i].csrng_rsp_ack)
-    `ASSERT_KNOWN(CsrngRspStsKnownO_A, csrng_cmd_o[i].csrng_rsp_sts)
-    `ASSERT_KNOWN(CsrngGenbitsValidKnownO_A, csrng_cmd_o[i].genbits_valid)
-    `ASSERT_KNOWN(CsrngGenbitsFipsKnownO_A, csrng_cmd_o[i].genbits_fips)
-    `ASSERT_KNOWN(CsrngGenbitsBusKnownO_A, csrng_cmd_o[i].genbits_bus)
+    `CALIPTRA_ASSERT_KNOWN(CsrngReqReadyKnownO_A, csrng_cmd_o[i].csrng_req_ready)
+    `CALIPTRA_ASSERT_KNOWN(CsrngRspAckKnownO_A, csrng_cmd_o[i].csrng_rsp_ack)
+    `CALIPTRA_ASSERT_KNOWN(CsrngRspStsKnownO_A, csrng_cmd_o[i].csrng_rsp_sts)
+    `CALIPTRA_ASSERT_KNOWN(CsrngGenbitsValidKnownO_A, csrng_cmd_o[i].genbits_valid)
+    `CALIPTRA_ASSERT_KNOWN(CsrngGenbitsFipsKnownO_A, csrng_cmd_o[i].genbits_fips)
+    `CALIPTRA_ASSERT_KNOWN(CsrngGenbitsBusKnownO_A, csrng_cmd_o[i].genbits_bus)
   end : gen_app_if_asserts
 
   // Alerts
-  `ASSERT_KNOWN(AlertTxKnownO_A, alert_tx_o)
+  `CALIPTRA_ASSERT_KNOWN(AlertTxKnownO_A, alert_tx_o)
 
-  `ASSERT_KNOWN(IntrCsCmdReqDoneKnownO_A, intr_cs_cmd_req_done_o)
-  `ASSERT_KNOWN(IntrCsEntropyReqKnownO_A, intr_cs_entropy_req_o)
-  `ASSERT_KNOWN(IntrCsHwInstExcKnownO_A, intr_cs_hw_inst_exc_o)
-  `ASSERT_KNOWN(IntrCsFatalErrKnownO_A, intr_cs_fatal_err_o)
+  `CALIPTRA_ASSERT_KNOWN(IntrCsCmdReqDoneKnownO_A, intr_cs_cmd_req_done_o)
+  `CALIPTRA_ASSERT_KNOWN(IntrCsEntropyReqKnownO_A, intr_cs_entropy_req_o)
+  `CALIPTRA_ASSERT_KNOWN(IntrCsHwInstExcKnownO_A, intr_cs_hw_inst_exc_o)
+  `CALIPTRA_ASSERT_KNOWN(IntrCsFatalErrKnownO_A, intr_cs_fatal_err_o)
 
-  `ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CtrDrbgUpdAlertCheck_A,
+  `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CtrDrbgUpdAlertCheck_A,
     u_csrng_core.u_csrng_ctr_drbg_upd.u_prim_count_ctr_drbg,
     alert_tx_o[1])
 
-  `ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CtrDrbgGenAlertCheck_A,
+  `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CtrDrbgGenAlertCheck_A,
     u_csrng_core.u_csrng_ctr_drbg_gen.u_prim_count_ctr_drbg,
     alert_tx_o[1])
 
   for (genvar i = 0; i < NHwApps + 1; i++) begin : gen_cnt_asserts
-    `ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck_A,
+    `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck_A,
       u_csrng_core.gen_cmd_stage[i].u_csrng_cmd_stage.u_prim_count_cmd_gen_cntr,
       alert_tx_o[1])
 
-    `ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(DrbgCmdFsmCheck_A,
+    `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(DrbgCmdFsmCheck_A,
       u_csrng_core.gen_cmd_stage[i].u_csrng_cmd_stage.u_state_regs,
       alert_tx_o[1])
   end
 
-  `ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(CtrlMainFsmCheck_A,
+  `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(CtrlMainFsmCheck_A,
     u_csrng_core.u_csrng_main_sm.u_state_regs,
     alert_tx_o[1])
 
-  `ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(DrbgGenFsmCheck_A,
+  `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(DrbgGenFsmCheck_A,
     u_csrng_core.u_csrng_ctr_drbg_gen.u_state_regs,
     alert_tx_o[1])
 
-  `ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(DrbgUpdBlkEncFsmCheck_A,
+  `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(DrbgUpdBlkEncFsmCheck_A,
     u_csrng_core.u_csrng_ctr_drbg_upd.u_blk_enc_state_regs,
     alert_tx_o[1])
 
-  `ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(DrbgUpdOutBlkFsmCheck_A,
+  `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(DrbgUpdOutBlkFsmCheck_A,
     u_csrng_core.u_csrng_ctr_drbg_upd.u_outblk_state_regs,
     alert_tx_o[1])
 
   for (genvar i = 0; i < aes_pkg::Sp2VWidth; i++) begin : gen_aes_cipher_control_fsm_svas
     if (aes_pkg::SP2V_LOGIC_HIGH[i] == 1'b1) begin : gen_aes_cipher_control_fsm_svas_p
-      `ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(AesCipherControlFsmCheck_A,
+      `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(AesCipherControlFsmCheck_A,
           u_csrng_core.u_csrng_block_encrypt.u_aes_cipher_core.u_aes_cipher_control.gen_fsm[i].
               gen_fsm_p.u_aes_cipher_control_fsm_i.u_aes_cipher_control_fsm.u_state_regs,
           alert_tx_o[1])
     end else begin : gen_aes_cipher_control_fsm_svas_n
-      `ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(AesCipherControlFsmCheck_A,
+      `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(AesCipherControlFsmCheck_A,
           u_csrng_core.u_csrng_block_encrypt.u_aes_cipher_core.u_aes_cipher_control.gen_fsm[i].
               gen_fsm_n.u_aes_cipher_control_fsm_i.u_aes_cipher_control_fsm.u_state_regs,
           alert_tx_o[1])
@@ -209,5 +233,5 @@ module csrng
   end
 
   // Alert assertions for reg_we onehot check
-  `ASSERT_PRIM_REG_WE_ONEHOT_ERROR_TRIGGER_ALERT(RegWeOnehotCheck_A, u_reg, alert_tx_o[1])
+  `CALIPTRA_ASSERT_PRIM_REG_WE_ONEHOT_ERROR_TRIGGER_ALERT(RegWeOnehotCheck_A, u_reg, alert_tx_o[1])
 endmodule

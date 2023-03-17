@@ -1,0 +1,24 @@
+uvmf:
+  benches:
+    pv:
+
+      active_passive:
+      - bfm_name: pv_rst_agent
+        value: ACTIVE
+      ########## WRITE Agents ##########
+      - bfm_name: pv_sha512_write_agent
+        value: ACTIVE
+      ########## READ Agents ##########
+      - bfm_name: pv_sha512_block_read_agent
+        value: ACTIVE
+
+      clock_half_period: 5ns
+      clock_phase_offset: 0ns
+
+      interface_params: []
+
+      reset_assertion_level: 'False'
+      reset_duration: 200ns
+
+      top_env: pv
+

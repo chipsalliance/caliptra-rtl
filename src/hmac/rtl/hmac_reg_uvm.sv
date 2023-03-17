@@ -111,6 +111,20 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__HMAC384_TAG
 
+    // Reg - hmac_reg::HMAC384_LFSR_SEED
+    class hmac_reg__HMAC384_LFSR_SEED extends uvm_reg;
+        rand uvm_reg_field LFSR_SEED;
+
+        function new(string name = "hmac_reg__HMAC384_LFSR_SEED");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.LFSR_SEED = new("LFSR_SEED");
+            this.LFSR_SEED.configure(this, 32, 0, "WO", 0, 'h3cabffb0, 1, 1, 0);
+        endfunction : build
+    endclass : hmac_reg__HMAC384_LFSR_SEED
+
     // Reg - kv_read_ctrl_reg
     class kv_read_ctrl_reg extends uvm_reg;
         rand uvm_reg_field read_en;
@@ -623,6 +637,7 @@ package hmac_reg_uvm;
         rand hmac_reg__HMAC384_KEY HMAC384_KEY[12];
         rand hmac_reg__HMAC384_BLOCK HMAC384_BLOCK[32];
         rand hmac_reg__HMAC384_TAG HMAC384_TAG[12];
+        rand hmac_reg__HMAC384_LFSR_SEED HMAC384_LFSR_SEED[5];
         rand kv_read_ctrl_reg HMAC384_KV_RD_KEY_CTRL;
         rand kv_status_reg HMAC384_KV_RD_KEY_STATUS;
         rand kv_read_ctrl_reg HMAC384_KV_RD_BLOCK_CTRL;
@@ -681,6 +696,13 @@ package hmac_reg_uvm;
                 
                 this.HMAC384_TAG[i0].build();
                 this.default_map.add_reg(this.HMAC384_TAG[i0], 'h100 + i0*'h4);
+            end
+            foreach(this.HMAC384_LFSR_SEED[i0]) begin
+                this.HMAC384_LFSR_SEED[i0] = new($sformatf("HMAC384_LFSR_SEED[%0d]", i0));
+                this.HMAC384_LFSR_SEED[i0].configure(this);
+                
+                this.HMAC384_LFSR_SEED[i0].build();
+                this.default_map.add_reg(this.HMAC384_LFSR_SEED[i0], 'h130 + i0*'h4);
             end
             this.HMAC384_KV_RD_KEY_CTRL = new("HMAC384_KV_RD_KEY_CTRL");
             this.HMAC384_KV_RD_KEY_CTRL.configure(this);

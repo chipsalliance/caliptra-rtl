@@ -5,8 +5,8 @@ contents:
   - tests:
       tags: ["directed", "nightly", "firmware"]
       paths:
-        - ${WORKSPACE}/Caliptra/src/integration/test_suites/fw_test_doe/fw_test_doe.yml
-        - ${WORKSPACE}/Caliptra/src/integration/test_suites/fw_test_ecc384/fw_test_ecc384.yml
-        - ${WORKSPACE}/Caliptra/src/integration/test_suites/fw_test_hmac384/fw_test_hmac384.yml
-        - ${WORKSPACE}/Caliptra/src/integration/test_suites/fw_test_sha256/fw_test_sha256.yml
-        - ${WORKSPACE}/Caliptra/src/integration/test_suites/fw_test_sha384/fw_test_sha384.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_doe/fw_test_doe.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_ecc384/fw_test_ecc384.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_hmac384/fw_test_hmac384.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_sha256/fw_test_sha256.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_sha384/fw_test_sha384.yml

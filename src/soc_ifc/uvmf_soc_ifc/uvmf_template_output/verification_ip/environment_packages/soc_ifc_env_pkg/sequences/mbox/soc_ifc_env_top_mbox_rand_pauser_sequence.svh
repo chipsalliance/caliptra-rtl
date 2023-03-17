@@ -68,10 +68,34 @@ function soc_ifc_env_top_mbox_rand_pauser_sequence::randomize_seqs();
 endfunction
 
 task soc_ifc_env_top_mbox_rand_pauser_sequence::start_seqs();
-    soc_ifc_env_pauser_init_seq.start(configuration.vsqr);
+    bit mbox_valid_users_initialized = 1'b0;
+    uvm_status_e sts;
+    uvm_reg_data_t data;
+    byte ii;
+
+    for (ii=0; ii < 5; ii++) begin: PAUSER_CHECK_LOOP
+        reg_model.soc_ifc_reg_rm.CPTRA_PAUSER_LOCK[ii].read(sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
+        if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_MBOX_TOP", $sformatf("Failed when reading CPTRA_PAUSER_LOCK index %d", ii))
+        if (data[reg_model.soc_ifc_reg_rm.CPTRA_PAUSER_LOCK[ii].LOCK.get_lsb_pos()]) begin
+            reg_model.soc_ifc_reg_rm.CPTRA_VALID_PAUSER[ii].read(sts, mbox_valid_users[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
+            if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_MBOX_TOP", $sformatf("Failed when reading CPTRA_VALID_PAUSER index %d", ii))
+            mbox_valid_users_initialized = 1'b1;
+        end
+        else begin
+            mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_VALID_PAUSER[ii].PAUSER.get_reset();
+        end
+    end
+
+    if (!mbox_valid_users_initialized) begin
+        soc_ifc_env_pauser_init_seq.start(configuration.vsqr);
+        mbox_valid_users_initialized = 1'b1;
+        mbox_valid_users = soc_ifc_env_pauser_init_seq.mbox_valid_users;
+    end
+
     // Cast to the PAUSER specialization of mailbox sequence to expose the mbox_valid_users member for override
     if(!$cast(soc_ifc_env_mbox_pauser_seq,soc_ifc_env_mbox_seq)) `uvm_fatal("SOC_IFC_TOP_MBOX_RAND_PAUSER", "soc_ifc_env_top_mbox_rand_pauser_sequence::start_seqs() - cast to soc_ifc_env_mbox_pauser_seq failed")
-    soc_ifc_env_mbox_pauser_seq.mbox_valid_users = soc_ifc_env_pauser_init_seq.mbox_valid_users;
+    soc_ifc_env_mbox_pauser_seq.mbox_valid_users = mbox_valid_users;
+    soc_ifc_env_mbox_pauser_seq.mbox_valid_users_initialized = 1'b1;
     fork
         soc_ifc_env_mbox_pauser_seq.start(configuration.vsqr);
         soc_ifc_env_cptra_handler_seq.start(configuration.vsqr);

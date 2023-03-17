@@ -103,6 +103,7 @@ import soc_ifc_pkg::*;
         
         .rdata_o(mbox_sram_resp.rdata)
     );
+    initial i_mbox_ram.ram = '{default:8'h0};
   // pragma uvmf custom module_item_additional end
 
   // Instantiate the signal bundle, monitor bfm and driver bfm for each interface.
