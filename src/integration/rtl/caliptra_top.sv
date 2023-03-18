@@ -986,6 +986,61 @@ entropy_src #(
 
 `endif
 
+
+`ifdef CALIPTRA_INTERNAL_QSPI
+
+  logic                               cio_sck_o;
+  logic                               cio_sck_en_o;
+  logic [`CALIPTRA_QSPI_CS_WIDTH-1:0] cio_csb_o;
+  logic [`CALIPTRA_QSPI_CS_WIDTH-1:0] cio_csb_en_o;
+  logic [`CALIPTRA_QSPI_IO_WIDTH-1:0] cio_sd_o;
+  logic [`CALIPTRA_QSPI_IO_WIDTH-1:0] cio_sd_en_o;
+  logic [`CALIPTRA_QSPI_IO_WIDTH-1:0] cio_sd_i;
+
+  assign qspi_clk_o = cio_sck_en_o ? cio_sck_o : 1'b0;
+  for (genvar ii = 0; ii < `CALIPTRA_QSPI_CS_WIDTH; ii += 1) begin : gen_qspi_cs
+    assign qspi_cs_no[ii] = cio_csb_en_o[ii] ? cio_csb_o[ii] : 1'b1;
+  end
+  for (genvar ii = 0; ii < `CALIPTRA_QSPI_IO_WIDTH; ii += 1) begin : gen_qspi_io
+    assign qspi_d_io[ii] = cio_sd_en_o[ii] ? cio_sd_o[ii] : 1'bz;
+    assign cio_sd_i[ii]  = cio_sd_en_o[ii] ? 1'bz : qspi_d_io[ii];
+  end
+
+spi_host #(
+    .AHBDataWidth(`CALIPTRA_AHB_HDATA_SIZE),
+    .AHBAddrWidth(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_CSRNG))
+) spi_host (
+    // Clock and reset connections
+    .clk_i                  (clk_cg),
+    .rst_ni                 (cptra_noncore_rst_b),
+    // AMBA AHB Lite Interface
+    .haddr_i                (responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_QSPI)-1:0]),
+    .hwdata_i               (responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hwdata),
+    .hsel_i                 (responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hsel),
+    .hwrite_i               (responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hwrite),
+    .hready_i               (responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hready),
+    .htrans_i               (responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].htrans),
+    .hsize_i                (responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hsize),
+    .hresp_o                (responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hresp),
+    .hreadyout_o            (responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hreadyout),
+    .hrdata_o               (responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hrdata),
+    // Alerts
+    .alert_rx_i(prim_alert_pkg::ALERT_RX_DEFAULT),
+    .alert_tx_o(),
+    // SPI Interface
+    .cio_sck_o    (cio_sck_o),
+    .cio_sck_en_o (cio_sck_en_o),
+    .cio_csb_o    (cio_csb_o),
+    .cio_csb_en_o (cio_csb_en_o),
+    .cio_sd_o     (cio_sd_o),
+    .cio_sd_en_o  (cio_sd_en_o),
+    .cio_sd_i     (cio_sd_i),
+    .intr_error_o(),
+    .intr_spi_event_o()
+  );
+
+`endif
+
 soc_ifc_top #(
     .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)),
     .AHB_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE),
@@ -1079,9 +1134,11 @@ soc_ifc_top1
 
 //TIE OFF slaves
 always_comb begin: tie_off_slaves
+`ifndef CALIPTRA_INTERNAL_QSPI
     responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hresp = '0;
     responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hreadyout = '0;
     responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hrdata = '0;
+`endif
     responder_inst[`CALIPTRA_SLAVE_SEL_UART].hresp = '0;
     responder_inst[`CALIPTRA_SLAVE_SEL_UART].hreadyout = '0;
     responder_inst[`CALIPTRA_SLAVE_SEL_UART].hrdata = '0;
