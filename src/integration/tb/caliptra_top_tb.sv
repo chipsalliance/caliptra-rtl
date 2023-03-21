@@ -101,6 +101,11 @@ module caliptra_top_tb (
     logic                                PSLVERR;
     logic [`CALIPTRA_APB_DATA_WIDTH-1:0] PRDATA;
 
+    // QSPI Interface
+    logic                                qspi_clk;
+    logic [`CALIPTRA_QSPI_CS_WIDTH-1:0]  qspi_cs_n;
+    wire  [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_data;
+
     logic ready_for_fuses;
     logic ready_for_fw_push;
     logic mbox_sram_cs;
@@ -596,9 +601,9 @@ caliptra_top caliptra_top_dut (
     .PWDATA(PWDATA),
     .PWRITE(PWRITE),
 
-    .qspi_clk_o(),
-    .qspi_cs_no(),
-    .qspi_d_io(),
+    .qspi_clk_o(qspi_clk),
+    .qspi_cs_no(qspi_cs_n),
+    .qspi_d_io(qspi_data),
 
     .el2_mem_export(el2_mem_export),
 
@@ -652,6 +657,33 @@ physical_rng physical_rng (
     .data   (itrng_data),
     .valid  (itrng_valid)
 );
+`endif
+
+`ifdef CALIPTRA_INTERNAL_QSPI
+    //=========================================================================-
+    // SPI Flash
+    //=========================================================================-
+localparam logic [15:0] DeviceId0 = 16'hF10A;
+localparam logic [15:0] DeviceId1 = 16'hF10B;
+
+spiflash #(
+  .DeviceId(DeviceId0),
+  .SpiFlashRandomData(0) // fixed pattern for smoke test
+) spiflash0 (
+  .sck (qspi_clk),
+  .csb (qspi_cs_n[0]),
+  .sd  (qspi_data)
+);
+
+spiflash #(
+  .DeviceId(DeviceId1),
+  .SpiFlashRandomData(0) // fixed pattern for smoke test
+) spiflash1 (
+  .sck (qspi_clk),
+  .csb (qspi_cs_n[1]),
+  .sd  (qspi_data)
+);
+
 `endif
 
    //=========================================================================-
