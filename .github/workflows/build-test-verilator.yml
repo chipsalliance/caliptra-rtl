@@ -124,3 +124,5 @@ jobs:
           CALIPTRA_ROOT=$(pwd)
           cd tools/scripts
           make verilator CALIPTRA_ROOT=$CALIPTRA_ROOT TESTNAME=smoke_test_kv_uds_reset
+          make verilator CALIPTRA_ROOT=$CALIPTRA_ROOT TESTNAME=smoke_test_trng
+          make verilator CALIPTRA_ROOT=$CALIPTRA_ROOT TESTNAME=smoke_test_qspi
