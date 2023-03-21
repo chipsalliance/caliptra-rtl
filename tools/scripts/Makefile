@@ -20,17 +20,16 @@ ABI = -mabi=ilp32 -march=rv32imac
 VERILATOR = verilator
 GCC_PREFIX = riscv64-unknown-elf
 BUILD_DIR = $(CURDIR)
-WORKSPACE = $(shell echo ${PWD\/caliptra-rtl*/\/caliptra-rtl}) 
 
 # Define test name
 TESTNAME ?= iccm_lock
-TEST_DIR = $(WORKSPACE)/src/integration/test_suites/$(TESTNAME)
-HEX_DIR = $(WORKSPACE)/src/integration/test_suites/hex
-INCLUDES_DIR = $(WORKSPACE)/src/integration/test_suites/includes
-TBDIR = $(WORKSPACE)/src/integration/tb
-RISCV_HW_IF_DIR = $(WORKSPACE)/src/integration/test_suites/libs/riscv_hw_if
-ISR_DIR    = $(WORKSPACE)/src/integration/test_suites/libs/caliptra_isr
-PRINTF_DIR = $(WORKSPACE)/src/integration/test_suites/libs/printf
+TEST_DIR = $(WORKSPACE)/Caliptra/src/integration/test_suites/$(TESTNAME)
+HEX_DIR = $(WORKSPACE)/Caliptra/src/integration/test_suites/hex
+INCLUDES_DIR = $(WORKSPACE)/Caliptra/src/integration/test_suites/includes
+TBDIR = $(WORKSPACE)/Caliptra/src/integration/tb
+RISCV_HW_IF_DIR = $(WORKSPACE)/Caliptra/src/integration/test_suites/libs/riscv_hw_if
+ISR_DIR    = $(WORKSPACE)/Caliptra/src/integration/test_suites/libs/caliptra_isr
+PRINTF_DIR = $(WORKSPACE)/Caliptra/src/integration/test_suites/libs/printf
 
 # Determine test directory
 #ifneq (,$(wildcard $(TBDIR)/tests/$(TEST)))
@@ -46,10 +45,10 @@ COMP_LIB_NAMES := aes \
 		  sha256 \
 		  sha512 \
 		  soc_ifc
-COMP_LIBS := $(foreach name, $(COMP_LIB_NAMES), $(WORKSPACE)/src/integration/test_suites/libs/$(name))
+COMP_LIBS := $(foreach name, $(COMP_LIB_NAMES), $(WORKSPACE)/Caliptra/src/integration/test_suites/libs/$(name))
 HEADER_FILES := $(INCLUDES_DIR)/caliptra_defines.h \
 		$(INCLUDES_DIR)/defines.h \
-		$(WORKSPACE)/src/integration/rtl/caliptra_reg.h  \
+		$(WORKSPACE)/Caliptra/src/integration/rtl/caliptra_reg.h  \
 		$(RISCV_HW_IF_DIR)/riscv_hw_if.h \
 		$(wildcard $(TEST_DIR)/*.h) \
 		$(PRINTF_DIR)/printf.h \
