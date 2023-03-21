@@ -49,15 +49,17 @@ int read_and_compare(uint32_t addr, uint32_t exp_data) {
   return 0;
 }
 
-// poll a register until value read back matches expected value
-void poll_reg(uint32_t addr, uint32_t expected_data) {
-  uint32_t read_data;
-
-  printf("  - Polling addr=%x until it reads back %x...\n", addr,
-         expected_data);
-  do {
-    read_data = lsu_read_32(addr);
-  } while (read_data != expected_data);
+void end_sim_if_qspi_disabled() {
+  uint32_t hw_cfg;
+  hw_cfg = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG);
+  if (hw_cfg & SOC_IFC_REG_CPTRA_HW_CONFIG_QSPI_EN_MASK) {
+    VPRINTF(LOW, "Internal QSPI is enabled, running QSPI smoke test\n");
+  } else {
+    VPRINTF(FATAL, "Internal QSPI is not enabled, skipping QSPI smoke test\n");
+    SEND_STDOUT_CTRL(0xFF);
+    while (1)
+      ;
+  }
 }
 
 void set_spi_csid(int host) { lsu_write_32(CLP_SPI_HOST_REG_CSID, host); }
@@ -276,6 +278,7 @@ void main() {
   printf(" QSPI Smoke Test \n");
   printf("---------------------------\n");
 
+  end_sim_if_qspi_disabled();
   enable_spi_host();
 
   for (int host = 0; host < NUM_QSPI; host++) {

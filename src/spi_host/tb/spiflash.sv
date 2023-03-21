@@ -479,7 +479,7 @@ module spiflash #(
       if (SpiFlashRandomData == 1) begin
         random_data = $urandom_range(255,0);
       end else begin
-        random_data = spi_addr;
+        random_data = {12'h0, spi_addr};
       end
       if (storage.exists(spi_addr) == 0) storage[spi_addr] = random_data[0+:8];
       return_byte(storage[spi_addr], io_mode);
