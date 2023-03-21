@@ -38,7 +38,6 @@ ${CALIPTRA_ROOT}/src/prim/rtl/prim_sec_anchor_buf.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_slicer.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_count.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_sparse_fsm_flop.sv
-${CALIPTRA_ROOT}/src/prim/rtl/prim_dom_and_2share.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_sec_anchor_flop.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_reg_we_check.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_packer_fifo.sv

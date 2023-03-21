@@ -4,15 +4,17 @@
 
 `include "prim_assert.sv"
 
-module prim_sparse_fsm_flop #(
+module prim_sparse_fsm_flop
+  import prim_sparse_fsm_pkg::*;
+#(
   parameter int               Width      = 1,
-  parameter type              StateEnumT = logic [Width-1:0],
+  parameter type              StateEnumT = state_t,
   parameter logic [Width-1:0] ResetValue = '0,
   // This should only be disabled in special circumstances, for example
   // in non-comportable IPs where an error does not trigger an alert.
   parameter bit               EnableAlertTriggerSVA = 1
 `ifdef SIMULATION
-  ,
+,
   // In case this parameter is set to a non-empty string, the
   // prim_sparse_fsm_flop_if will also force the signal with this name
   // in the parent module that instantiates prim_sparse_fsm_flop.
