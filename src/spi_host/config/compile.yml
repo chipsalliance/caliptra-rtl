@@ -2,8 +2,8 @@
 provides: [spi_host]
 schema_version: 2.4.0
 requires:
-  - ahb
-  - prim_pkg
+  - libs
+  - prim
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]

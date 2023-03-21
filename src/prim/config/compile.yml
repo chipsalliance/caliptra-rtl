@@ -33,6 +33,7 @@ targets:
     directories: [$COMPILE_ROOT/rtl]
     files:
 #      - $COMPILE_ROOT/rtl/prim_flop_macros.sv
+      - $COMPILE_ROOT/rtl/prim_flop_en.sv
       - $COMPILE_ROOT/rtl/prim_flop_2sync.sv
       - $COMPILE_ROOT/rtl/prim_lfsr.sv
       - $COMPILE_ROOT/rtl/prim_mubi4_sync.sv
