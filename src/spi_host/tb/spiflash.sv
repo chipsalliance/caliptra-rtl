@@ -43,7 +43,10 @@ module spiflash #(
   // Dummy Cycle
   parameter int unsigned DummySizeNormal = 8,
   parameter int unsigned DummySizeDual   = 4,
-  parameter int unsigned DummySizeQuad   = 2
+  parameter int unsigned DummySizeQuad   = 2,
+
+  // SPIFlash Default Contents - Random by default
+  parameter int unsigned SpiFlashRandomData = 1
 ) (
   input logic sck,
   input logic csb,
@@ -416,7 +419,8 @@ module spiflash #(
 
     // fetch data and return
     forever begin
-      return_byte(sfdp[address++], IoSingle);
+      return_byte(sfdp[address], IoSingle);
+      address += 1;
       if (csb) begin
         break;
       end
@@ -471,10 +475,15 @@ module spiflash #(
 
     // fetch from storage and return
     while (address <= FlashSize && !csb) begin
-      // Check if exists, if not fill with random data
-      random_data = $urandom_range(255,0);
+      // Fill with random data or addr
+      if (SpiFlashRandomData == 1) begin
+        random_data = $urandom_range(255,0);
+      end else begin
+        random_data = {12'h0, spi_addr};
+      end
       if (storage.exists(spi_addr) == 0) storage[spi_addr] = random_data[0+:8];
-      return_byte(storage[spi_addr++], io_mode);
+      return_byte(storage[spi_addr], io_mode);
+      spi_addr += 1;
     end
 
     $display("read completed");

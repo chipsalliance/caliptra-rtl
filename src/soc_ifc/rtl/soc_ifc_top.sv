@@ -347,7 +347,11 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.iTRNG_en.next = 1'b1;
 `else
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.iTRNG_en.next = 1'b0;
 `endif
+`ifdef CALIPTRA_INTERNAL_QSPI
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.QSPI_en.next = 1'b1;
+`else
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.QSPI_en.next = 1'b0;
+`endif
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.I3C_en.next = 1'b0;
 
 always_comb begin

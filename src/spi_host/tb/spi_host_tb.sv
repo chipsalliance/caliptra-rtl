@@ -109,17 +109,16 @@ module spi_host_tb
   logic [3:0]       cio_sd_en_o;
   logic [3:0]       cio_sd_i;
 
-  assign spi_flash_sck = cio_sck_o;
-  assign spi_flash_csb = cio_csb_o;
-  assign spi_flash_sd[3] = cio_sd_en_o[3] ? cio_sd_o[3] : 1'bz;
-  assign spi_flash_sd[2] = cio_sd_en_o[2] ? cio_sd_o[2] : 1'bz;
-  assign spi_flash_sd[1] = cio_sd_en_o[1] ? cio_sd_o[1] : 1'bz;
-  assign spi_flash_sd[0] = cio_sd_en_o[0] ? cio_sd_o[0] : 1'bz;
+  assign spi_flash_sck = cio_sck_en_o ? cio_sck_o : 1'b0;
 
-  assign cio_sd_i[3] = cio_sd_en_o[3] ? 1'bz : spi_flash_sd[3];
-  assign cio_sd_i[2] = cio_sd_en_o[2] ? 1'bz : spi_flash_sd[2];
-  assign cio_sd_i[1] = cio_sd_en_o[1] ? 1'bz : spi_flash_sd[1];
-  assign cio_sd_i[0] = cio_sd_en_o[0] ? 1'bz : spi_flash_sd[0];
+  for (genvar ii = 0; ii < NumCS; ii += 1) begin : gen_qspi_csb
+    assign spi_flash_csb[ii] = cio_csb_en_o[ii] ? cio_csb_o[ii] : 1'b1;  // leave all high
+  end
+
+  for (genvar ii = 0; ii < 4; ii += 1 ) begin : gen_qspi_sd
+    assign spi_flash_sd[ii] = cio_sd_en_o[ii] ? cio_sd_o[ii] : 1'bz;
+    assign cio_sd_i[ii] = cio_sd_en_o[ii] ? 1'bz : spi_flash_sd[ii];
+  end
 
   spi_host #(
     .AHBDataWidth(32),
@@ -491,9 +490,7 @@ module spi_host_tb
   // run_read_test()
   //
   // Configures the spi_host to request data from the spi flash
-  // discoverable parameters (read)
-  // The spiflash device will return 7 bytes of continuous code ('h7f)
-  // followed by the JedecId ('h1f) and the DeviceId ('h1234)
+  // The spiflash device will return data at the requested addresses
   //----------------------------------------------------------------
   task run_read_test(input int host);
     logic [31:0] rx_data;
