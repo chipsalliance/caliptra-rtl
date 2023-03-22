@@ -15,8 +15,7 @@
 `ifndef CALIPTRA_CFG_SV
 `define CALIPTRA_CFG_SV
 
-// Uncomment to enable Caliptra Internal TRNG
-//`define CALIPTRA_INTERNAL_TRNG
+  `define CALIPTRA_INTERNAL_TRNG
 
   `define CALIPTRA_AHB_SLAVES_NUM      5'd17 // Number of slaves AHB
   `define CALIPTRA_AHB_MASTERS_NUM     4'd1 // Number of masters AHB
