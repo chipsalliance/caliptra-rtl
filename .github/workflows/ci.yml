@@ -6,19 +6,21 @@ on:
 
 jobs:
 
-  Test:
+  verilator:
+    name: Build Verilator
     runs-on: ubuntu-latest
     env:
       CCACHE_DIR: "/opt/caliptra-rtl/.cache/"
+      DEBIAN_FRONTEND: "noninteractive"
 
     steps:
-      - name: Install utils
+      - name: Install prerequisities
         run: |
           sudo apt -qqy update && sudo apt -qqy --no-install-recommends install \
             git autoconf automake autotools-dev curl python3 python3-pip \
             libmpc-dev libmpfr-dev libgmp-dev gawk build-essential bison flex \
             texinfo gperf libtool patchutils bc zlib1g zlib1g-dev libexpat-dev \
-            ninja-build ccache libfl2 libfl-dev gcc-riscv64-unknown-elf
+            ninja-build ccache libfl2 libfl-dev
 
       - name: Create Cache Timestamp
         id: cache_timestamp
@@ -45,7 +47,63 @@ jobs:
             make -j `nproc`
             make install
           popd
- 
+          cd /opt && tar -czvf verilator.tar.gz verilator/
+
+      - name: Store Verilator binaries
+        uses: actions/upload-artifact@v3
+        with:
+          name: verilator
+          path: /opt/*.tar.gz
+
+  tests:
+    name: L0 regression tests
+    runs-on: ubuntu-latest
+    needs: verilator
+
+    strategy:
+      fail-fast: false
+      matrix:
+        test:
+          - name: smoke_test_veer
+          - name: smoke_test_mbox
+          - name: smoke_test_sha512
+          - name: smoke_test_sha256
+          - name: smoke_test_sha_accel
+          - name: smoke_test_ecc
+          - name: smoke_test_hmac
+          - name: smoke_test_kv
+          - name: smoke_test_sram_ecc
+          - name: smoke_test_kv_uds_reset
+          - name: smoke_test_kv_securitystate
+          - name: smoke_test_kv_ecc_flow
+          - name: smoke_test_kv_hmac_flow
+          - name: smoke_test_kv_sha512_flow
+          - name: memCpy_ROM_to_dccm
+          - name: memCpy_dccm_to_iccm
+          - name: hello_world_iccm
+          - name: iccm_lock
+          - name: c_intr_handler
+          - name: kv_pcr_hash_extend
+    env:
+      DEBIAN_FRONTEND: "noninteractive"
+
+    steps:
+      - name: Install utils
+        run: |
+          sudo apt -qqy update && sudo apt -qqy --no-install-recommends install \
+            git python3 python3-pip build-essential ninja-build ccache \
+            gcc-riscv64-unknown-elf
+
+      - name: Download verilator binaries
+        uses: actions/download-artifact@v3
+        with:
+          name: verilator
+          path: /opt
+
+      - name: Unpack verilator binaries
+        run: |
+          cd /opt && tar -zxvf verilator.tar.gz 
+
       - name: Setup repository
         uses: actions/checkout@v2
         with:
@@ -60,4 +118,6 @@ jobs:
         run: |
           export PATH=/opt/verilator/bin:$PATH
           export WORKSPACE=$GITHUB_WORKSPACE
-          python3 Caliptra/tools/scripts/run_verilator_l0_regression.py
+          make -f Caliptra/tools/scripts/Makefile \
+               TESTNAME=${{ matrix.test.name }} \
+               verilator
