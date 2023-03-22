@@ -210,7 +210,7 @@ else
 # Build program.hex from source (test_suites)
 program.hex: $(OFILE_CRT) $(OFILES) $(LINK)
 	@echo Building $(TESTNAME)
-	$(GCC_PREFIX)-gcc $(ABI) -Wl,-Map=$(TESTNAME).map -lc -T$(LINK) -o $(TESTNAME).exe $(OFILE_CRT) $(OFILES) -nostartfiles -nostdlib -L$(PICOLIBC_DIR)/build $(TEST_LIBS)
+	$(GCC_PREFIX)-gcc $(ABI) -Wl,-Map=$(TESTNAME).map -T$(LINK) -o $(TESTNAME).exe $(OFILE_CRT) $(OFILES) -nostartfiles -nostdlib -fno-builtin -L$(PICOLIBC_DIR)/build -lc $(TEST_LIBS)
 	-$(GCC_PREFIX)-objcopy -O verilog -R .data_iccm0 -R .data_iccm1 -R .data_iccm2 -R .iccm -R .dccm -R .eh_frame --pad-to 0x8000 --no-change-warnings $(TESTNAME).exe program.hex
 	-$(GCC_PREFIX)-objcopy -O verilog -j .data_iccm0 -j .data_iccm1 -j .data_iccm2 -j .dccm \
 			      --change-section-lma .data_iccm0-0x50000000 \
@@ -230,7 +230,7 @@ program.hex: $(OFILE_CRT) $(OFILES) $(LINK)
 # Entire image will be loaded into the mailbox, so it must fit the 128KiB memory
 %.hex: $(OFILES) $(LINK)
 	@echo Building $(TESTNAME)
-	$(GCC_PREFIX)-gcc $(ABI) -Wl,-Map=$(TESTNAME).map -lc -T$(LINK) -o $(TESTNAME).exe $(OFILES) -nostartfiles -nostdlib -L$(PICOLIBC_DIR)/build  $(TEST_LIBS)
+	$(GCC_PREFIX)-gcc $(ABI) -Wl,-Map=$(TESTNAME).map,--verbose -T$(LINK) -o $(TESTNAME).exe $(OFILES) -nostartfiles -nostdlib -fno-builtin -L$(PICOLIBC_DIR)/build -lc $(TEST_LIBS)
 	-$(GCC_PREFIX)-objcopy -O verilog -R .eh_frame --pad-to 0x20000 --no-change-warnings $(TESTNAME).exe $@
 	$(GCC_PREFIX)-objdump -S  $(TESTNAME).exe > $(TESTNAME).dis
 	$(GCC_PREFIX)-size        $(TESTNAME).exe | tee $(TESTNAME).size
@@ -238,12 +238,12 @@ program.hex: $(OFILE_CRT) $(OFILES) $(LINK)
 
 %.o : %.s $(HEADER_FILES)
 	cp $(HEADER_FILES) $(BUILD_DIR)
-	$(GCC_PREFIX)-cpp $(includes) -I$(TEST_DIR) -nostdlib $<  > $*.cpp.s
+	$(GCC_PREFIX)-cpp $(includes) -I$(TEST_DIR) -nostdlib -fno-builtin $<  > $*.cpp.s
 	$(GCC_PREFIX)-as $(ABI) $*.cpp.s -o $@
 
 %.o : %.c $(HEADER_FILES)
 	cp $(HEADER_FILES) $(BUILD_DIR)
-	$(GCC_PREFIX)-gcc $(includes) $(TEST_CFLAGS) -I$(PICOLIBC_DIR)/newlib/libc/include -I$(PICOLIBC_DIR)/build -DCOMPILER_FLAGS="\"$(TEST_CFLAGS)\"" $(ABI) -nostdlib -c $< -o $@
+	$(GCC_PREFIX)-gcc $(includes) $(TEST_CFLAGS) -I$(PICOLIBC_DIR)/newlib/libc/include -I$(PICOLIBC_DIR)/build -DCOMPILER_FLAGS="\"$(TEST_CFLAGS)\"" $(ABI) -nostdlib -fno-builtin -c $< -o $@
 
 endif
 
