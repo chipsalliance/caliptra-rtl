@@ -8,6 +8,8 @@ jobs:
 
   Test:
     runs-on: ubuntu-latest
+    env:
+      CCACHE_DIR: "/opt/caliptra-rtl/.cache/"
 
     steps:
       - name: Install utils
@@ -17,7 +19,21 @@ jobs:
             libmpc-dev libmpfr-dev libgmp-dev gawk build-essential bison flex \
             texinfo gperf libtool patchutils bc zlib1g zlib1g-dev libexpat-dev \
             ninja-build ccache libfl2 libfl-dev gcc-riscv64-unknown-elf
-          pip install pyyaml
+
+      - name: Create Cache Timestamp
+        id: cache_timestamp
+        uses: nanzm/get-time-action@v1.1
+        with:
+          format: 'YYYY-MM-DD-HH-mm-ss'
+
+      - name: Setup cache
+        uses: actions/cache@v2
+        timeout-minutes: 3
+        continue-on-error: true
+        with:
+          path: "/opt/caliptra-rtl/.cache/"
+          key: cache_${{ steps.cache_timestamp.outputs.time }}
+          restore-keys: cache_
 
       - name: Build Verilator
         run: |
@@ -35,6 +51,10 @@ jobs:
         with:
           submodules: recursive
           path: Caliptra
+
+      - name: Install Python dependencies
+        run: |
+          cd Caliptra && pip install -r requirements.txt
 
       - name: Run L0 smoke test regression suite
         run: |
