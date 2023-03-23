@@ -46,9 +46,11 @@
   typedef enum logic [31:0] {
       MBOX_CMD_RESP_BASIC = 32'h40000000,
       MBOX_CMD_REG_ACCESS = 32'h40000001,
+      MBOX_CMD_OOB_ACCESS = 32'h40000002,
       MBOX_CMD_FMC_UPDATE = 32'hba5eba11,
       MBOX_CMD_RT_UPDATE  = 32'hbabecafe
   } mbox_cmd_e;
+  
   typedef union packed {
       mbox_cmd_e cmd_e;
       struct packed {

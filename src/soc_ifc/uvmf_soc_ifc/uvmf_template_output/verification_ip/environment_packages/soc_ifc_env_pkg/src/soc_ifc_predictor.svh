@@ -395,8 +395,10 @@ class soc_ifc_predictor #(
                 end
                 "internal_nmi_vector": begin
                     if (ahb_txn.RnW == AHB_WRITE) begin
-                        send_cptra_sts_txn = 1;
-                        nmi_vector = data_active;
+                        if (nmi_vector != data_active) begin
+                            send_cptra_sts_txn = 1;
+                            nmi_vector = data_active;
+                        end
                     end
                 end
                 "CPTRA_GENERIC_OUTPUT_WIRES[0]": begin

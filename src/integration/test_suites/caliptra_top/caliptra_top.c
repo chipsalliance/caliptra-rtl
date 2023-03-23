@@ -35,7 +35,7 @@ volatile char* stdout = (char *)STDOUT;
 #ifdef CPT_VERBOSITY
     enum printf_verbosity verbosity_g = CPT_VERBOSITY;
 #else
-    enum printf_verbosity verbosity_g = WARNING;
+    enum printf_verbosity verbosity_g = LOW;
 #endif
 
 
