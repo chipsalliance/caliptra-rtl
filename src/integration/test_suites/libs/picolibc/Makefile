@@ -19,13 +19,15 @@ strip = '$(GCC_PREFIX)-strip'
 
 [host_machine]
 system     = 'unknown'
-cpu_family = 'riscv'
+cpu_family = 'riscv64'
 cpu        = 'riscv'
 endian     = 'little'
 
-[built-in options]
-c_args      = [ $(foreach flag,$(filter-out $(DEPFLAGS) -flto,$(CFLAGS)),'$(flag)',) ]
-c_link_args = [ $(foreach flag,$(filter-out -flto,$(LDFLAGS)),'$(flag)',) ]
+[properties]
+# this uses shorter but slower function entry code
+c_args = [ '-msave-restore' ]
+# default multilib is 64 bit
+c_args_ = [ '-mcmodel=medany' ]
 endef
 
 export CROSSFILE
@@ -39,7 +41,8 @@ $(BUILD_PATH)/cross.txt: | $(BUILD_PATH)
 $(BUILD_PATH)/libc.a: $(BUILD_PATH)/cross.txt | $(BUILD_PATH)
 
 	cd $(PICOLIBC_PATH) && meson $(BUILD_PATH) \
-		-Dmultilib=false \
+		-Dmultilib=true \
+		-Dmultilib-list=rv32imac/ilp32 \
 		-Dpicocrt=false \
 		-Datomic-ungetc=false \
 		-Dthread-local-storage=false \
@@ -50,8 +53,11 @@ $(BUILD_PATH)/libc.a: $(BUILD_PATH)/cross.txt | $(BUILD_PATH)
 		--cross-file $(BUILD_PATH)/cross.txt
 
 	cd $(BUILD_PATH) && meson compile
-	cp $(BUILD_PATH)/newlib/libc.a $@
+	cp $(BUILD_PATH)/newlib/librv32imac_ilp32/*.a $(BUILD_PATH)/
 
 all: $(BUILD_PATH)/libc.a | $(BUILD_PATH)
 
-.PHONY: all
+clean:
+	rm -rf $(BUILD_PATH)
+
+.PHONY: all clean
