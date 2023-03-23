@@ -65,19 +65,20 @@ void caliptra_fmc() {
 
     //read the mbox command
     op = soc_ifc_read_mbox_cmd();
-    if (op.cmd != MBOX_CMD_RT_UPDATE) {
+    if (op.cmd == MBOX_CMD_RT_UPDATE) {
+        //TODO: Enhancement - Check the integrity of the firmware
+
+        // Load RT FW from mailbox
+        soc_ifc_mbox_fw_flow(op);
+
+        // Lock ICCM
+        soc_ifc_set_iccm_lock();
+    }
+    else {
         VPRINTF(FATAL, "Received invalid mailbox command from SOC! Expected 0x%x, got 0x%x\n", MBOX_CMD_RT_UPDATE, op.cmd);
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
-
-    //TODO: Enhancement - Check the integrity of the firmware
-
-    // Load RT FW from mailbox
-    soc_ifc_mbox_fw_flow(op);
-
-    // Lock ICCM
-    soc_ifc_set_iccm_lock();
 
     // Jump to ICCM (this is the Runtime image, a.k.a. Section 1)
     iccm_fn();
