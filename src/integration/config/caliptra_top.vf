@@ -48,6 +48,7 @@ ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_main_sm_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_ack_sm_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_pkg.sv
+${CALIPTRA_ROOT}/src/prim/rtl/prim_sparse_fsm_pkg.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_util_pkg.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_alert_pkg.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_subreg_pkg.sv
