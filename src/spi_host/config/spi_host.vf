@@ -3,6 +3,7 @@
 ${CALIPTRA_ROOT}/src/libs/rtl/ahb_defines_pkg.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/ahb_slv_sif.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/ahb_to_reg_adapter.sv
+${CALIPTRA_ROOT}/src/prim/rtl/prim_sparse_fsm_pkg.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_util_pkg.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_alert_pkg.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_subreg_pkg.sv

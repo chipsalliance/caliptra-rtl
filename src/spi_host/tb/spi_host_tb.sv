@@ -195,7 +195,7 @@ module spi_host_tb
   // the dut as needed.
   //----------------------------------------------------------------
   always_ff @(posedge clk_tb) begin : sys_monitor
-      cycle_ctr = cycle_ctr + 1;
+      cycle_ctr = (~reset_n_tb) ? 0 : cycle_ctr + 1;
     end
 
 
@@ -228,7 +228,6 @@ module spi_host_tb
   task init_sim;
     begin
       generate_rng = '0;
-      cycle_ctr    = '0;
       error_ctr    = '0;
       tc_ctr       = '0;
 `ifndef VERILATOR
@@ -494,7 +493,7 @@ module spi_host_tb
   //----------------------------------------------------------------
   task run_read_test(input int host);
     logic [31:0] rx_data;
-    logic [7:0]  rx_bytes[$] = {};
+    automatic logic [7:0]  rx_bytes[$] = {};
     spi_host_status_t status;
     logic [7:0]  spi_data;
     logic [19:0] spi_offset;
