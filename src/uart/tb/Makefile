@@ -44,7 +44,7 @@ verilator-build: $(TBFILES) $(VERILATOR_LINT_FILES) test_$(IPNAME)_tb.cpp
 	$(VERILATOR) --cc \
 		--timing \
 		--timescale 1ns/1ps \
-		-f $(CONFIGDIR)/$(IPNAME).vf --top-module $(IPNAME)_tb \
+		-f $(CONFIGDIR)/$(IPNAME)_tb.vf --top-module $(IPNAME)_tb \
     -f $(VERILATOR_LINT_FILES) \
 		-exe test_$(IPNAME)_tb.cpp \
 		--trace
