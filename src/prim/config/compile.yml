@@ -17,6 +17,7 @@ targets:
   tb:
     directories: [$COMPILE_ROOT/rtl]
     files:
+      - $COMPILE_ROOT/rtl/prim_sparse_fsm_pkg.sv
       - $COMPILE_ROOT/rtl/prim_util_pkg.sv
       - $COMPILE_ROOT/rtl/prim_alert_pkg.sv
       - $COMPILE_ROOT/rtl/prim_subreg_pkg.sv
@@ -69,4 +70,4 @@ targets:
       - $COMPILE_ROOT/rtl/prim_sum_tree.sv
       - $COMPILE_ROOT/rtl/prim_subreg_ext.sv
       - $COMPILE_ROOT/rtl/prim_edge_detector.sv
-    tops: [prim]
+    tops: [prim_flop]

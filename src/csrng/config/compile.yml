@@ -1,6 +1,8 @@
 ---
 provides: [csrng_pkg]
 schema_version: 2.4.0
+requires:
+  - entropy_src_pkg
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]

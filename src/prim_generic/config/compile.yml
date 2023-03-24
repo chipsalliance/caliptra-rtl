@@ -1,5 +1,7 @@
 ---
 provides: [prim_generic]
+requires:
+  - prim_pkg
 schema_version: 2.4.0
 targets:
   rtl:
