@@ -79,6 +79,8 @@ module caliptra_top_tb (
         S_APB_ERROR
     } n_state_apb, c_state_apb;
 
+    parameter FW_NUM_DWORDS         = 256;
+
     logic [$clog2(FW_NUM_DWORDS)-1:0] apb_wr_count, apb_wr_count_nxt;
     logic apb_enable_ph;
     logic apb_xfer_end;
@@ -148,8 +150,6 @@ module caliptra_top_tb (
     logic deassert_rst_flag;
 
     el2_mem_if el2_mem_export ();
-
-    parameter FW_NUM_DWORDS         = 256;
 
     logic [FW_NUM_DWORDS-1:0][31:0] fw_blob;
 

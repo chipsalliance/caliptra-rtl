@@ -39,23 +39,23 @@ module caliptra_top_tb_services
 #(
     parameter UVM_TB = 0
 ) (
-    input logic                        clk,
+    input wire logic                   clk,
 
-    input logic                        cptra_rst_b,
+    input wire logic                   cptra_rst_b,
 
     // Caliptra Memory Export Interface
     el2_mem_if.top                     el2_mem_export,
 
     //SRAM interface for mbox
-    input  logic mbox_sram_cs,
-    input  logic mbox_sram_we,
-    input  logic [MBOX_ADDR_W-1:0] mbox_sram_addr,
-    input  logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata,
-    output logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_rdata,
+    input  wire logic mbox_sram_cs,
+    input  wire logic mbox_sram_we,
+    input  wire logic [MBOX_ADDR_W-1:0] mbox_sram_addr,
+    input  wire logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata,
+    output wire logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_rdata,
 
     //SRAM interface for imem
-    input  logic imem_cs,
-    input  logic [`CALIPTRA_IMEM_ADDR_WIDTH-1:0] imem_addr,
+    input  wire logic imem_cs,
+    input  wire logic [`CALIPTRA_IMEM_ADDR_WIDTH-1:0] imem_addr,
     output logic [`CALIPTRA_IMEM_DATA_WIDTH-1:0] imem_rdata,
 
     // Security State
@@ -454,7 +454,7 @@ module caliptra_top_tb_services
 
     `ifndef VERILATOR
         initial begin
-            bitflip_mask_generator #(MBOX_DATA_AND_ECC_W) bitflip_gen = new();
+            automatic bitflip_mask_generator #(MBOX_DATA_AND_ECC_W) bitflip_gen = new();
             forever begin
                 @(posedge clk)
                 if (~|inject_rand_sram_error) begin
