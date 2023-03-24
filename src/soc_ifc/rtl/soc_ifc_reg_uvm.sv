@@ -400,6 +400,7 @@ package soc_ifc_reg_uvm;
         rand uvm_reg_field iTRNG_en;
         rand uvm_reg_field QSPI_en;
         rand uvm_reg_field I3C_en;
+        rand uvm_reg_field UART_en;
 
         function new(string name = "soc_ifc_reg__CPTRA_HW_CONFIG");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -412,6 +413,8 @@ package soc_ifc_reg_uvm;
             this.QSPI_en.configure(this, 1, 1, "RO", 1, 'h0, 0, 1, 0);
             this.I3C_en = new("I3C_en");
             this.I3C_en.configure(this, 1, 2, "RO", 1, 'h0, 0, 1, 0);
+            this.UART_en = new("UART_en");
+            this.UART_en.configure(this, 1, 3, "RO", 1, 'h0, 0, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_HW_CONFIG
 

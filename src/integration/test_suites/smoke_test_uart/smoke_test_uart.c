@@ -32,17 +32,16 @@ enum printf_verbosity verbosity_g = LOW;
 #endif
 
 void end_sim_if_uart_disabled() {
-  printf(
-      "TODO: Uncomment this when the soc rdl has been updated with UART_EN\n");
-  //  uint32_t hw_cfg;
-  //  hw_cfg = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG);
-  //  if (hw_cfg & SOC_IFC_REG_CPTRA_HW_CONFIG_UART_EN_MASK) {
-  //    VPRINTF(LOW, "Internal UART is enabled, running UART smoke test\n");
-  //  } else {
-  //    VPRINTF(FATAL, "Internal UART is not enabled, skipping UART smoke
-  //    test\n"); SEND_STDOUT_CTRL(0xFF); while (1)
-  //      ;
-  //  }
+  uint32_t hw_cfg;
+  hw_cfg = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG);
+  if (hw_cfg & SOC_IFC_REG_CPTRA_HW_CONFIG_UART_EN_MASK) {
+    VPRINTF(LOW, "Internal UART is enabled, running UART smoke test\n");
+  } else {
+    VPRINTF(FATAL, "Internal UART is not enabled, skipping UART smoke test\n");
+    SEND_STDOUT_CTRL(0xFF);
+    while (1)
+      ;
+  }
 }
 
 void uart_tx(uint8_t data) {

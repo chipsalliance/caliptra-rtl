@@ -278,6 +278,8 @@
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_QSPI_EN_MASK                                           (0x2)
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_I3C_EN_LOW                                             (2)
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_I3C_EN_MASK                                            (0x4)
+#define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_UART_EN_LOW                                            (3)
+#define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_UART_EN_MASK                                           (0x8)
 #define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_UDS_SEED_0                                       (0x30030200)
 #define GENERIC_AND_FUSE_REG_FUSE_UDS_SEED_0                                                        (0x200)
 #define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_UDS_SEED_1                                       (0x30030204)

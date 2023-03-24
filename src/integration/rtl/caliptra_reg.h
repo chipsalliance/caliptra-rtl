@@ -5486,6 +5486,8 @@
 #define SOC_IFC_REG_CPTRA_HW_CONFIG_QSPI_EN_MASK                                                    (0x2)
 #define SOC_IFC_REG_CPTRA_HW_CONFIG_I3C_EN_LOW                                                      (2)
 #define SOC_IFC_REG_CPTRA_HW_CONFIG_I3C_EN_MASK                                                     (0x4)
+#define SOC_IFC_REG_CPTRA_HW_CONFIG_UART_EN_LOW                                                     (3)
+#define SOC_IFC_REG_CPTRA_HW_CONFIG_UART_EN_MASK                                                    (0x8)
 #define CLP_SOC_IFC_REG_FUSE_UDS_SEED_0                                                             (0x30030200)
 #define SOC_IFC_REG_FUSE_UDS_SEED_0                                                                 (0x200)
 #define CLP_SOC_IFC_REG_FUSE_UDS_SEED_1                                                             (0x30030204)
