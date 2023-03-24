@@ -54,12 +54,16 @@ module caliptra_top
     output logic [`CALIPTRA_APB_DATA_WIDTH-1:0] PRDATA,
 
     //QSPI Interface
-    output logic                       qspi_clk_o,
+    output logic                                qspi_clk_o,
     output logic [`CALIPTRA_QSPI_CS_WIDTH-1:0]  qspi_cs_no,
     inout  wire  [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_d_io,
 
     //UART Interface
-    //TODO update with UART interface signals
+    // TODO: Determine if this should be set behind a ifdef
+`ifdef CALIPTRA_INTERNAL_UART
+    output logic                                uart_tx,
+    input  logic                                uart_rx,
+`endif
 
     //I3C Interface
     //TODO update with I3C interface signals
@@ -1039,6 +1043,43 @@ spi_host #(
     .intr_spi_event_o()
   );
 
+`endif
+
+`ifdef CALIPTRA_INTERNAL_UART
+uart #(
+    .AHBDataWidth(`CALIPTRA_AHB_HDATA_SIZE),
+    .AHBAddrWidth(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_UART))
+) uart (
+    .clk_i       (clk_cg),
+    .rst_ni      (cptra_noncore_rst_b),
+    // AMBA AHB Lite Interface
+    .haddr_i     (responder_inst[`CALIPTRA_SLAVE_SEL_UART].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_UART)-1:0]),
+    .hwdata_i    (responder_inst[`CALIPTRA_SLAVE_SEL_UART].hwdata),
+    .hsel_i      (responder_inst[`CALIPTRA_SLAVE_SEL_UART].hsel),
+    .hwrite_i    (responder_inst[`CALIPTRA_SLAVE_SEL_UART].hwrite),
+    .hready_i    (responder_inst[`CALIPTRA_SLAVE_SEL_UART].hready),
+    .htrans_i    (responder_inst[`CALIPTRA_SLAVE_SEL_UART].htrans),
+    .hsize_i     (responder_inst[`CALIPTRA_SLAVE_SEL_UART].hsize),
+    .hresp_o     (responder_inst[`CALIPTRA_SLAVE_SEL_UART].hresp),
+    .hreadyout_o (responder_inst[`CALIPTRA_SLAVE_SEL_UART].hreadyout),
+    .hrdata_o    (responder_inst[`CALIPTRA_SLAVE_SEL_UART].hrdata),
+    // Alerts
+    .alert_rx_i  (),
+    .alert_tx_o  (),
+    // Generic IO
+    .cio_rx_i(uart_rx),
+    .cio_tx_o(uart_tx),
+    .cio_tx_en_o(),
+    // Interrupts
+    .intr_tx_watermark_o(),
+    .intr_rx_watermark_o(),
+    .intr_tx_empty_o(),
+    .intr_rx_overflow_o(),
+    .intr_rx_frame_err_o(),
+    .intr_rx_break_err_o(),
+    .intr_rx_timeout_o(),
+    .intr_rx_parity_err_o()
+  );
 `endif
 
 soc_ifc_top #(

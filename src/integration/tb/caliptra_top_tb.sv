@@ -106,6 +106,10 @@ module caliptra_top_tb (
     logic [`CALIPTRA_QSPI_CS_WIDTH-1:0]  qspi_cs_n;
     wire  [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_data;
 
+`ifdef CALIPTRA_INTERNAL_UART
+    logic uart_loopback;
+`endif
+
     logic ready_for_fuses;
     logic ready_for_fw_push;
     logic mbox_sram_cs;
@@ -604,6 +608,11 @@ caliptra_top caliptra_top_dut (
     .qspi_clk_o(qspi_clk),
     .qspi_cs_no(qspi_cs_n),
     .qspi_d_io(qspi_data),
+
+`ifdef CALIPTRA_INTERNAL_UART
+    .uart_tx(uart_loopback),
+    .uart_rx(uart_loopback),
+`endif
 
     .el2_mem_export(el2_mem_export),
 
