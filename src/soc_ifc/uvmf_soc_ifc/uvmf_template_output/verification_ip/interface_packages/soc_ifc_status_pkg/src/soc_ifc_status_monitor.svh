@@ -44,6 +44,7 @@ class soc_ifc_status_monitor  extends uvmf_monitor_base #(
 
   // pragma uvmf custom class_item_additional begin
   int unsigned txn_key = 0;
+  extern task handle_reset(string kind = "HARD");
   // pragma uvmf custom class_item_additional end
   
 // ****************************************************************************
@@ -101,5 +102,8 @@ class soc_ifc_status_monitor  extends uvmf_monitor_base #(
 endclass
 
 // pragma uvmf custom external begin
+task soc_ifc_status_monitor::handle_reset(string kind = "HARD");
+    txn_key = 0;
+endtask
 // pragma uvmf custom external end
 

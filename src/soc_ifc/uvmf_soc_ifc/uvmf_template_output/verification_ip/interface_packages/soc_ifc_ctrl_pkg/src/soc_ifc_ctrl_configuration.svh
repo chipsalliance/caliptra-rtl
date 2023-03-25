@@ -40,6 +40,15 @@ class soc_ifc_ctrl_configuration  extends uvmf_parameterized_agent_configuration
   //Constraints for the configuration variables:
 
   // pragma uvmf custom class_item_additional begin
+
+  // ****************************************************************************
+  // TASK: wait_for_reset_assertion
+  // *[Required]*  Blocks until reset is asserted.  The wait_for_reset_assertion
+  // operation is performed by a task in the monitor bfm.
+  // This is used by the environment to detect system-level reset events.
+  virtual task wait_for_reset_assertion(output string kind);
+    monitor_bfm.wait_for_reset_assertion(kind);
+  endtask
   // pragma uvmf custom class_item_additional end
   
   covergroup soc_ifc_ctrl_configuration_cg;

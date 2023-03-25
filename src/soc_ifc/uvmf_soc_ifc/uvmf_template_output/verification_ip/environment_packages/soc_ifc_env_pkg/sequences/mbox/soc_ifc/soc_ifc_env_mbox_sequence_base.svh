@@ -70,6 +70,11 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
 
   endfunction
 
+  virtual function void do_kill();
+    // FIXME gracefully terminate any APB requests pending?
+    reg_model.soc_ifc_APB_map.get_sequencer().stop_sequences(); // Kill any pending APB transfers
+  endfunction
+
   virtual task pre_body();
     super.pre_body();
     reg_model = configuration.soc_ifc_rm;

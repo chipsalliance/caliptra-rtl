@@ -42,7 +42,11 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
   rand enum int {
       IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL,
       IDX_SOC_IFC_ENV_MBOX_TOP_CONTENTION,
-      IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM
+      IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM,
+      IDX_SOC_IFC_ENV_RST_WARM,
+      IDX_SOC_IFC_ENV_RST_COLD,
+      IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM,
+      IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM
   } rand_seq_idx;
 
   rand int iteration_count;
@@ -50,9 +54,13 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
   // Choose rand weights for each sequence
   constraint avail_env_seqs_c {
       rand_seq_idx dist {
-          IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL         := 1,
-          IDX_SOC_IFC_ENV_MBOX_TOP_CONTENTION         := 1,
-          IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM := 1
+          IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL         := 25,
+          IDX_SOC_IFC_ENV_MBOX_TOP_CONTENTION         := 25,
+          IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM := 25,
+          IDX_SOC_IFC_ENV_RST_WARM                    := 1,
+          IDX_SOC_IFC_ENV_RST_COLD                    := 1,
+          IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM   := 5,
+          IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM   := 5
       };
   }
   // FIXME we're also running multiple iterations of this testcase in the regression.
@@ -135,6 +143,14 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
                 obj = soc_ifc_env_top_mbox_contention_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%d]",ii));
             IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM:
                 obj = soc_ifc_env_top_mbox_rand_pauser_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%d]",ii));
+            IDX_SOC_IFC_ENV_RST_WARM:
+                obj = soc_ifc_env_top_reset_warm_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%d]",ii));
+            IDX_SOC_IFC_ENV_RST_COLD:
+                obj = soc_ifc_env_top_reset_cold_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM:
+                obj = soc_ifc_env_top_mbox_rst_warm_rand_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM:
+                obj = soc_ifc_env_top_mbox_rst_cold_rand_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%d]",ii));
             default:
                 `uvm_error("SOC_IFC_RAND_TEST", $sformatf("rand_seq_idx randomized to illegal value: %p", rand_seq_idx))
         endcase

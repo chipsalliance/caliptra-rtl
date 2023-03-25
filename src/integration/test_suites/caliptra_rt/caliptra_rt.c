@@ -105,9 +105,9 @@ void caliptra_rt() {
     uint32_t read_data;
     uint32_t loop_iter;
 
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " Caliptra Validation RT!!\n"         );
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(MEDIUM, "----------------------------------\n");
+    VPRINTF(LOW,    "- Caliptra Validation RT!!\n"        );
+    VPRINTF(MEDIUM, "----------------------------------\n");
 
     //set NMI vector
     lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_NMI_VECTOR, nmi_handler);

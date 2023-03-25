@@ -126,6 +126,11 @@ class soc_ifc_environment  extends uvmf_environment_base #(
   soc_ifc_vsqr_t vsqr;
 
   // pragma uvmf custom class_item_additional begin
+  bit can_handle_reset = 1'b1;
+  extern task          detect_reset();
+  extern function void set_can_handle_reset(bit en = 1'b1);
+  extern task          handle_reset(string kind = "HARD");
+  extern task          run_phase(uvm_phase phase);
   // pragma uvmf custom class_item_additional end
  
 // ****************************************************************************
@@ -264,5 +269,43 @@ class soc_ifc_environment  extends uvmf_environment_base #(
 endclass
 
 // pragma uvmf custom external begin
+task soc_ifc_environment::detect_reset();
+    string kind = "SOFT";
+
+    // Detect reset assertion from soc_ifc_ctrl_agent
+    this.configuration.soc_ifc_ctrl_agent_config.wait_for_reset_assertion(kind);
+
+    // Handle
+    this.handle_reset(kind);
+endtask
+
+// Called by a super-environment, if present, to bubble reset responsibility up
+function void soc_ifc_environment::set_can_handle_reset(bit en = 1'b1);
+    this.can_handle_reset = en;
+endfunction
+
+task soc_ifc_environment::handle_reset(string kind = "HARD");
+    // Reset status agents (needed to reset monitor transaction keys)
+    this.cptra_status_agent.handle_reset(kind);
+    this.soc_ifc_status_agent.handle_reset(kind);
+
+    // Reset scoreboard according to kind
+    this.soc_ifc_sb.handle_reset(kind);
+
+    // Reset predictor according to kind
+    this.soc_ifc_pred.handle_reset(kind);
+
+    // TODO does this happen naturally from hdl_top driving reset?
+    // Reset APB
+    // Reset AHB
+endtask
+
+task soc_ifc_environment::run_phase(uvm_phase phase);
+    if (this.can_handle_reset) begin
+        fork
+            forever detect_reset();
+        join
+    end
+endtask
 // pragma uvmf custom external end
 
