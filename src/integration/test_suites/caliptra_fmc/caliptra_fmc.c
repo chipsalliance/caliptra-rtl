@@ -56,9 +56,9 @@ void caliptra_fmc() {
     mbox_op_s op;
     void (* iccm_fn) (void) = (void*) RV_ICCM_SADR + MBOX_ICCM_OFFSET_RT;
 
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " Caliptra Validation FMC!!\n"        );
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(MEDIUM, "----------------------------------\n");
+    VPRINTF(LOW,    "- Caliptra Validation FMC!!\n"       );
+    VPRINTF(MEDIUM, "----------------------------------\n");
 
     // TODO
     // Do other stuff before jumping immediately to Runtime image?

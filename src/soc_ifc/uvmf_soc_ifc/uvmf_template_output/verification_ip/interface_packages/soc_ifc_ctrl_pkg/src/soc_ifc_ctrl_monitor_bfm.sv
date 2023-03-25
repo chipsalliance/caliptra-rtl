@@ -104,17 +104,19 @@ end
   // pragma tbx oneway proxy.notify_transaction                 
 
   // pragma uvmf custom interface_item_additional begin
-  logic  cptra_pwrgood_r = 1'b0;
-  logic  cptra_rst_b_r = 1'b0;
+  logic  cptra_pwrgood_r = 1'bx;
+  logic  cptra_rst_b_r = 1'bx;
   logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_r;
   logic [63:0] generic_input_wires_r;
   security_state_t security_state_r;
   logic BootFSM_BrkPoint_r;
+  // Returns 1 on first transaction that sets any value to cptra_pwrgood_i or cptra_rst_b_i
+  // Also returns 1 anytime any other signal transitions, outside of a reset
   function bit any_signal_changed();
-      if (!cptra_pwrgood_r)
-          return cptra_pwrgood_i;
-      else if (!cptra_rst_b_r)
-          return cptra_rst_b_i;
+      if (cptra_pwrgood_r !== 1'b1)
+          return (cptra_pwrgood_i !== cptra_pwrgood_r);
+      else if (cptra_rst_b_r !== 1'b1)
+          return (cptra_rst_b_i !== cptra_rst_b_r);
       else
           return |(cptra_pwrgood_i       ^  cptra_pwrgood_r      ) ||
                  |(cptra_rst_b_i         ^  cptra_rst_b_r        ) ||
@@ -123,6 +125,43 @@ end
                  |(BootFSM_BrkPoint_i    ^  BootFSM_BrkPoint_r   ) ||
                  |(generic_input_wires_i ^  generic_input_wires_r);
   endfunction
+  
+  //******************************************************************                         
+  task wait_for_reset_assertion(output string kind);
+    bit soft_rst, hard_rst;
+    soft_rst = 1'b0;
+    hard_rst = 1'b0;
+    @(posedge clk_i) ;
+    fork
+        begin
+        do_wait_for_hard_reset_assertion();
+        hard_rst = 1'b1;
+        end
+        begin
+        do_wait_for_soft_reset_assertion();
+        soft_rst = 1'b1;
+        hard_rst = !cptra_pwrgood_i;
+        end
+    join_any
+    disable fork;
+    if (hard_rst) kind = "HARD";
+    else          kind = "SOFT";
+  endtask                                                                                   
+
+  // ****************************************************************************              
+  task do_wait_for_soft_reset_assertion(); 
+    // Catch the edge of any transition to 0 (assertion)
+    wait ( (cptra_rst_b_r !== 1'b0) && (cptra_rst_b_i === 1'b0) ) ;                                                              
+    @(posedge clk_i) ;                                                                    
+  endtask    
+
+  // ****************************************************************************              
+  task do_wait_for_hard_reset_assertion(); 
+    // Catch the edge of any transition to 0 (assertion)
+    wait ( (cptra_pwrgood_r !== 1'b0) && (cptra_pwrgood_i === 1'b0) ) ;                                                              
+    @(posedge clk_i) ;                                                                    
+  endtask    
+
   // pragma uvmf custom interface_item_additional end
   
   //******************************************************************                         

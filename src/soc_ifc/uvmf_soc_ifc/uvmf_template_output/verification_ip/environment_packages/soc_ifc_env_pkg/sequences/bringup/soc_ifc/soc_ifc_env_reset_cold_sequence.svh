@@ -20,18 +20,17 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-// DESCRIPTION: Bringup sequence for the SOC_IFC environment
-//              (essentially just a cold-reset sequence)
+// DESCRIPTION: Issue a cold reset in the soc_ifc environment
 //
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-class soc_ifc_env_bringup_sequence extends soc_ifc_env_reset_sequence_base;
+class soc_ifc_env_reset_cold_sequence extends soc_ifc_env_reset_sequence_base;
 
 
-  `uvm_object_utils( soc_ifc_env_bringup_sequence )
+  `uvm_object_utils( soc_ifc_env_reset_cold_sequence )
 
-  typedef soc_ifc_ctrl_poweron_sequence soc_ifc_ctrl_agent_poweron_sequence_t;
+  typedef soc_ifc_ctrl_reset_cold_sequence soc_ifc_ctrl_reset_cold_sequence_t;
 
   constraint always_set_uds_c { this.fuses_to_set.uds == 1'b1; }
   constraint always_set_fe_c  { this.fuses_to_set.field_entropy == 1'b1; }
@@ -39,9 +38,9 @@ class soc_ifc_env_bringup_sequence extends soc_ifc_env_reset_sequence_base;
   function new(string name = "" );
     uvm_object obj;
     super.new(name);
-    obj = soc_ifc_ctrl_agent_poweron_sequence_t::get_type().create_object("soc_ifc_ctrl_agent_poweron_seq");
+    obj = soc_ifc_ctrl_reset_cold_sequence_t::get_type().create_object("soc_ifc_ctrl_reset_cold_seq");
     if (!$cast(soc_ifc_ctrl_seq,obj))
-        `uvm_fatal("SOC_IFC_BRINGUP", "Failed to cast object as poweron sequence!")
+        `uvm_fatal("SOC_IFC_RST_COLD", "Failed to create cold reset sequence!")
   endfunction
 
 endclass

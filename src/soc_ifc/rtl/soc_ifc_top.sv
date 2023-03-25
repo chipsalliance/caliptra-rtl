@@ -170,6 +170,9 @@ logic iccm_unlock;
 logic fw_upd_rst_executed;
 logic fuse_wr_done_reg_write_observed;
 
+logic pwrgood_toggle_hint;
+logic Warm_Reset_Capture_Flag;
+
 logic BootFSM_BrkPoint_Latched;
 logic BootFSM_BrkPoint_Flag;
 
@@ -354,7 +357,7 @@ always_comb begin
     for (int i = 0; i < `CLP_OBF_KEY_DWORDS; i++) begin
         soc_ifc_reg_hwif_in.internal_obf_key[i].key.swwe = '0; //sw can't write to obf key
         //Sample only if its a pwrgood cycle, in debug locked state and scan mode is not asserted (as in do not sample if it was a warm reset or debug or scan mode)
-        soc_ifc_reg_hwif_in.internal_obf_key[i].key.wel = soc_ifc_reg_hwif_out.CPTRA_RESET_REASON.WARM_RESET.value | ~security_state.debug_locked | scan_mode_f;
+        soc_ifc_reg_hwif_in.internal_obf_key[i].key.wel = ~pwrgood_toggle_hint || ~security_state.debug_locked || scan_mode_f;
         soc_ifc_reg_hwif_in.internal_obf_key[i].key.next = cptra_obf_key[i];
         soc_ifc_reg_hwif_in.internal_obf_key[i].key.hwclr = clear_obf_secrets;
         cptra_obf_key_reg[i] = soc_ifc_reg_hwif_out.internal_obf_key[i].key.value;
@@ -404,9 +407,6 @@ always_ff @(posedge clk or negedge cptra_rst_b) begin
         BootFSM_BrkPoint_Flag <= 1;
     end
 end
-
-logic pwrgood_toggle_hint;
-logic Warm_Reset_Capture_Flag;
 
 // pwrgood_hint informs if the powergood toggled
 always_ff @(posedge clk or negedge cptra_pwrgood) begin

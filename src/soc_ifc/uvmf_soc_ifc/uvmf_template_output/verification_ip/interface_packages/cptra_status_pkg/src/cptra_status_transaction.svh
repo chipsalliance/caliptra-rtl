@@ -153,6 +153,15 @@ class cptra_status_transaction  extends uvmf_transaction_base;
     // pragma uvmf custom do_compare begin
     // UVMF_CHANGE_ME : Eliminate comparison of variables not to be used for compare
     return (super.do_compare(rhs,comparer)
+            &&(this.soc_ifc_err_intr_pending == RHS.soc_ifc_err_intr_pending)
+            &&(this.soc_ifc_notif_intr_pending == RHS.soc_ifc_notif_intr_pending)
+            &&(this.sha_err_intr_pending == RHS.sha_err_intr_pending)
+            &&(this.sha_notif_intr_pending == RHS.sha_notif_intr_pending)
+            &&(this.noncore_rst_asserted == RHS.noncore_rst_asserted)
+            &&(this.uc_rst_asserted == RHS.uc_rst_asserted)
+            &&(this.cptra_obf_key_reg == RHS.cptra_obf_key_reg)
+            &&(this.obf_field_entropy == RHS.obf_field_entropy)
+            &&(this.obf_uds_seed == RHS.obf_uds_seed)
             &&(this.nmi_vector == RHS.nmi_vector)
             &&(this.iccm_locked == RHS.iccm_locked)
             );

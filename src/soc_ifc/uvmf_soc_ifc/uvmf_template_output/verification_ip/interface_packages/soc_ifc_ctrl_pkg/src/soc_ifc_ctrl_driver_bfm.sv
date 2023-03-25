@@ -261,12 +261,12 @@ end
     cptra_obf_key_o <= initiator_struct.cptra_obf_key_rand;
     security_state_o <= initiator_struct.security_state;
     BootFSM_BrkPoint_o <= initiator_struct.set_bootfsm_breakpoint;
-    // Asynchronously assert reset
-    if (initiator_struct.assert_rst)
-        cptra_rst_b_o <= 1'b0;
     // Asynchronously drop pwrgood
     if (!initiator_struct.set_pwrgood)
         cptra_pwrgood_o <= 1'b0;
+    // Asynchronously assert reset
+    if (initiator_struct.assert_rst)
+        cptra_rst_b_o <= 1'b0;
     @(posedge clk_i);
     // Synchronously deassert reset
     if (!initiator_struct.assert_rst)

@@ -20,28 +20,24 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-// DESCRIPTION: Bringup sequence for the SOC_IFC environment
-//              (essentially just a cold-reset sequence)
+// DESCRIPTION:
+// This sequences randomizes the soc_ifc_ctrl transaction and sends it
+// to the UVM driver.
+//
+// This sequence constructs and randomizes a soc_ifc_ctrl_transaction.
 //
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-class soc_ifc_env_bringup_sequence extends soc_ifc_env_reset_sequence_base;
+class soc_ifc_ctrl_reset_warm_sequence
+  extends soc_ifc_ctrl_reset_sequence_base ;
 
+  `uvm_object_utils( soc_ifc_ctrl_reset_warm_sequence )
 
-  `uvm_object_utils( soc_ifc_env_bringup_sequence )
-
-  typedef soc_ifc_ctrl_poweron_sequence soc_ifc_ctrl_agent_poweron_sequence_t;
-
-  constraint always_set_uds_c { this.fuses_to_set.uds == 1'b1; }
-  constraint always_set_fe_c  { this.fuses_to_set.field_entropy == 1'b1; }
-
-  function new(string name = "" );
-    uvm_object obj;
+  //*****************************************************************
+  function new(string name = "");
     super.new(name);
-    obj = soc_ifc_ctrl_agent_poweron_sequence_t::get_type().create_object("soc_ifc_ctrl_agent_poweron_seq");
-    if (!$cast(soc_ifc_ctrl_seq,obj))
-        `uvm_fatal("SOC_IFC_BRINGUP", "Failed to cast object as poweron sequence!")
-  endfunction
+    warm_reset_only = 1'b1;
+  endfunction: new
 
-endclass
+endclass: soc_ifc_ctrl_reset_warm_sequence

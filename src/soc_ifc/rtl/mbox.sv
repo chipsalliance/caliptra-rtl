@@ -455,9 +455,7 @@ mbox_csr1(
     .hwif_out(hwif_out)
 );
 
-`ifdef CLP_ASSERT_ON
 `CALIPTRA_ASSERT_MUTEX(ERR_MBOX_ACCESS_MUTEX, {dir_req_dv_q, mbox_protocol_sram_we, inc_rdptr}, clk, rst_b)
 `CALIPTRA_ASSERT_MUTEX(ERR_MBOX_DIR_SHA_COLLISION, {dir_req_dv, sha_sram_req_dv}, clk, rst_b)
-`endif
 
 endmodule

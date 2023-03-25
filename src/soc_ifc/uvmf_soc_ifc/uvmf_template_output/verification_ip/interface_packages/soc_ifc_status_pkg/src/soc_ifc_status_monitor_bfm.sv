@@ -120,13 +120,13 @@ end
   reg [63:0] generic_output_wires_o = 'b0;
   function bit any_signal_changed();
       return |(ready_for_fuses_i       ^  ready_for_fuses_o          ) ||
-             |(ready_for_fw_push_i     & !ready_for_fw_push_o        ) ||
-             |(ready_for_runtime_i     & !ready_for_runtime_o        ) ||
-             |(mailbox_data_avail_i    & !mailbox_data_avail_o       ) ||
-             |(mailbox_flow_done_i     & !mailbox_flow_done_o        ) ||
+             |(ready_for_fw_push_i     ^  ready_for_fw_push_o        ) ||
+             |(ready_for_runtime_i     ^  ready_for_runtime_o        ) ||
+             |(mailbox_data_avail_i    ^  mailbox_data_avail_o       ) ||
+             |(mailbox_flow_done_i     ^  mailbox_flow_done_o        ) ||
              |(cptra_error_fatal_i     & !cptra_error_fatal_o        ) ||
              |(cptra_error_non_fatal_i & !cptra_error_non_fatal_o    ) ||
-             |(trng_req_i              & !trng_req_o                 ) ||
+             |(trng_req_i              ^  trng_req_o                 ) ||
              |(generic_output_wires_i  ^  generic_output_wires_o     );
   endfunction
   // pragma uvmf custom interface_item_additional end
@@ -228,7 +228,7 @@ end
 
     // Wait for next transfer then gather info from intiator about the transfer.
     // Place the data into the soc_ifc_status_initiator_struct.
-    while (!any_signal_changed()) @(posedge clk_i);
+    do @(posedge clk_i); while (!any_signal_changed());
     ready_for_fuses_o              <= ready_for_fuses_i     ;
     ready_for_fw_push_o            <= ready_for_fw_push_i   ;
     ready_for_runtime_o            <= ready_for_runtime_i   ;

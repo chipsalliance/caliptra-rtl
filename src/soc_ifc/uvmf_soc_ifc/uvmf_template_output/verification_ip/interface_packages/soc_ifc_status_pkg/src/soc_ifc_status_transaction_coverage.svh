@@ -48,6 +48,9 @@ class soc_ifc_status_transaction_coverage  extends uvm_subscriber #(.T(soc_ifc_s
     ready_for_runtime: coverpoint coverage_trans.ready_for_runtime;
     mailbox_data_avail: coverpoint coverage_trans.mailbox_data_avail;
     mailbox_flow_done: coverpoint coverage_trans.mailbox_flow_done;
+    cptra_error_fatal_intr_pending: coverpoint coverage_trans.cptra_error_fatal_intr_pending;
+    cptra_error_non_fatal_intr_pending: coverpoint coverage_trans.cptra_error_non_fatal_intr_pending;
+    trng_req_pending: coverpoint coverage_trans.trng_req_pending;
     generic_output_val: coverpoint coverage_trans.generic_output_val;
     // pragma uvmf custom covergroup end
   endgroup
