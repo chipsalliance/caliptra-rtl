@@ -32,7 +32,7 @@ class soc_ifc_env_mbox_rand_medium_interference_sequence extends soc_ifc_env_mbo
 
   rand uvm_reg_data_t data;
   rand int reg_select;
-  rand ahb_rnw_e RnW;
+  rand apb3_rw_e RnW;
   rand byte xfers;
   rand byte cycles;
 
@@ -54,14 +54,15 @@ task soc_ifc_env_mbox_rand_medium_interference_sequence::mbox_poll_status();
             for (ii=0; ii<xfers; ii++) begin: XFER_LOOP
                 // Do random access to mailbox to trigger arb logic as cptra sequence reads command data
                 // and writes response data
-                // TODO also mix in some reg accesses?
-                if(!this.randomize(RnW, reg_select, data, cycles) with {reg_select < regs.size();
+                // TODO also mix in some reg writes?
+                if(!this.randomize(RnW, reg_select, data, cycles) with {RnW == APB3_TRANS_READ;
+                                                                        reg_select < regs.size();
                                                                         cycles inside {[1:200]}; }) begin
-                    `uvm_error("MBOX_SEQ", "Failed to randomize memory AHB transfer in mbox_wait_for_command")
+                    `uvm_error("MBOX_SEQ", "Failed to randomize memory APB transfer in mbox_wait_for_command")
                 end
                 else begin
-                    if (RnW == AHB_READ) regs[reg_select].read (reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
-                    else                 regs[reg_select].write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
+                    if (RnW == APB3_TRANS_READ) regs[reg_select].read (reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
+                    else                        regs[reg_select].write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
                 end
             end
         end

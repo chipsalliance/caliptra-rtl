@@ -1,0 +1,62 @@
+uvmf:
+  interfaces:
+    pv_read:
+      clock: clk
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      gen_inbound_streaming_driver: 'False'
+      hdl_pkg_parameters: []
+      hdl_typedefs: []
+      hvl_pkg_parameters: []
+      hvl_typedefs: []
+      imports:
+      - name: pv_defines_pkg
+      parameters:
+      - name: PV_READ_REQUESTOR
+        type: string
+        value: '"SHA512_BLOCK"'
+      ports:
+      - dir: output
+        name: pv_read
+        reset_value: '''bz'
+        width: $bits(pv_defines_pkg::pv_read_t)
+      - dir: input
+        name: pv_rd_resp
+        reset_value: '''bz'
+        width: $bits(pv_defines_pkg::pv_rd_resp_t)
+      reset: dummy
+      reset_assertion_level: 'False'
+      transaction_constraints: []
+      transaction_vars:
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'True'
+        name: read_entry
+        type: logic [PV_ENTRY_ADDR_W-1:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'True'
+        name: read_offset
+        type: logic [PV_ENTRY_SIZE_WIDTH-1:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'True'
+        name: error
+        type: logic
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'True'
+        name: last
+        type: logic
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: read_data
+        type: logic [PV_DATA_W-1:0]
+        unpacked_dimension: ''
+      use_dpi_link: 'False'

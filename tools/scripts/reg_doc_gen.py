@@ -20,6 +20,7 @@ from peakrdl_regblock import RegblockExporter
 from peakrdl_uvm import UVMExporter
 from peakrdl_html import HTMLExporter
 from peakrdl_regblock.cpuif.passthrough import PassthroughCpuif
+from reg_json import JsonImporter
 from math import log, ceil
 import sys
 import os
@@ -107,10 +108,17 @@ input_files = sys.argv[1:]
 
 # Create an instance of the compiler
 rdlc = RDLCompiler()
+# Attach importer to rdlc instance
+json_importer = JsonImporter(rdlc)
 
 try:
     # Compile your RDL files, dependencies first
     for input_file in reversed(input_files):
+      # compile or import based on the file extension
+      ext = os.path.splitext(input_file)[1]
+      if ext == ".json":
+        json_importer.import_file(input_file)
+      else:
         rdlc.compile_file(input_file)
 
     # Elaborate the design

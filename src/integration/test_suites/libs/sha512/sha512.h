@@ -34,13 +34,21 @@ void sha_next(enum sha512_mode_e mode);
 void sha_init_last(enum sha512_mode_e mode);
 void sha_next_last(enum sha512_mode_e mode);
 
-//polls until kv control is ready to be used
+//polls until sha512 is ready to be used
 inline void sha512_poll_ready() {
-    while((lsu_read_32((uint32_t*) CLP_SHA512_REG_SHA512_STATUS) & SHA512_REG_SHA512_STATUS_READY_MASK) == 0);
+    while((lsu_read_32(CLP_SHA512_REG_SHA512_STATUS) & SHA512_REG_SHA512_STATUS_READY_MASK) == 0);
 }
-//polls until kv control is done and valid is set
+//polls until sha512 is done and valid is set
 inline void sha512_poll_valid() {
-    while((lsu_read_32((uint32_t*) CLP_SHA512_REG_SHA512_STATUS) & SHA512_REG_SHA512_STATUS_VALID_MASK) == 0);
+    while((lsu_read_32(CLP_SHA512_REG_SHA512_STATUS) & SHA512_REG_SHA512_STATUS_VALID_MASK) == 0);
+}
+//Gen hash functions
+void sha_gen_hash_start();
+inline void sha_poll_gen_hash_ready() {
+    while((lsu_read_32(CLP_SHA512_REG_SHA512_GEN_PCR_HASH_STATUS) & SHA512_REG_SHA512_GEN_PCR_HASH_STATUS_READY_MASK) == 0);
+}
+inline void sha_poll_gen_hash_valid() {
+    while((lsu_read_32(CLP_SHA512_REG_SHA512_GEN_PCR_HASH_STATUS) & SHA512_REG_SHA512_GEN_PCR_HASH_STATUS_VALID_MASK) == 0);
 }
 
 #endif

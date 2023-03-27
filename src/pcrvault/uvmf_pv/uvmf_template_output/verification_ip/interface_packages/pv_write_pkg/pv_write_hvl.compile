@@ -1,0 +1,7 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.compile
+  - ./pv_write_common.compile
+incdir:
+  - .
+src:
+  - pv_write_pkg.sv

@@ -1,0 +1,6 @@
++incdir+${CALIPTRA_ROOT}/src/edn/rtl
++incdir+${CALIPTRA_ROOT}/src/aes/rtl
+${CALIPTRA_ROOT}/src/edn/rtl/edn_pkg.sv
+${CALIPTRA_ROOT}/src/aes/rtl/aes_reg_pkg.sv
+${CALIPTRA_ROOT}/src/aes/rtl/aes_pkg.sv
+${CALIPTRA_ROOT}/src/aes/rtl/aes_sbox_canright_pkg.sv

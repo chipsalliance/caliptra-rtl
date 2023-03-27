@@ -1,0 +1,7 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.compile
+incdir:
+  - .
+  - ${uvm_path}/src
+src:
+  - pv_rst_pkg_hdl.sv

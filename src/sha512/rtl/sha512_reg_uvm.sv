@@ -184,19 +184,64 @@ package sha512_reg_uvm;
         endfunction : build
     endclass : kv_write_ctrl_reg
 
-    // Reg - sha512_reg::SHA512_GEN_PCR_HASH
-    class sha512_reg__SHA512_GEN_PCR_HASH extends uvm_reg;
-        rand uvm_reg_field FLOW_EN;
+    // Reg - sha512_reg::SHA512_GEN_PCR_HASH_NONCE
+    class sha512_reg__SHA512_GEN_PCR_HASH_NONCE extends uvm_reg;
+        rand uvm_reg_field NONCE;
 
-        function new(string name = "sha512_reg__SHA512_GEN_PCR_HASH");
+        function new(string name = "sha512_reg__SHA512_GEN_PCR_HASH_NONCE");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
         virtual function void build();
-            this.FLOW_EN = new("FLOW_EN");
-            this.FLOW_EN.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.NONCE = new("NONCE");
+            this.NONCE.configure(this, 32, 0, "WO", 0, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : sha512_reg__SHA512_GEN_PCR_HASH
+    endclass : sha512_reg__SHA512_GEN_PCR_HASH_NONCE
+
+    // Reg - sha512_reg::SHA512_GEN_PCR_HASH_CTRL
+    class sha512_reg__SHA512_GEN_PCR_HASH_CTRL extends uvm_reg;
+        rand uvm_reg_field START;
+
+        function new(string name = "sha512_reg__SHA512_GEN_PCR_HASH_CTRL");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.START = new("START");
+            this.START.configure(this, 1, 0, "WO", 0, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : sha512_reg__SHA512_GEN_PCR_HASH_CTRL
+
+    // Reg - sha512_reg::SHA512_GEN_PCR_HASH_STATUS
+    class sha512_reg__SHA512_GEN_PCR_HASH_STATUS extends uvm_reg;
+        rand uvm_reg_field READY;
+        rand uvm_reg_field VALID;
+
+        function new(string name = "sha512_reg__SHA512_GEN_PCR_HASH_STATUS");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.READY = new("READY");
+            this.READY.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            this.VALID = new("VALID");
+            this.VALID.configure(this, 1, 1, "RO", 1, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : sha512_reg__SHA512_GEN_PCR_HASH_STATUS
+
+    // Reg - sha512_reg::SHA512_GEN_PCR_HASH_DIGEST
+    class sha512_reg__SHA512_GEN_PCR_HASH_DIGEST extends uvm_reg;
+        rand uvm_reg_field DIGEST;
+
+        function new(string name = "sha512_reg__SHA512_GEN_PCR_HASH_DIGEST");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.DIGEST = new("DIGEST");
+            this.DIGEST.configure(this, 32, 0, "RO", 1, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : sha512_reg__SHA512_GEN_PCR_HASH_DIGEST
 
     // Reg - sha512_reg::global_intr_en_t
     class sha512_reg__global_intr_en_t extends uvm_reg;
@@ -632,7 +677,10 @@ package sha512_reg_uvm;
         rand kv_status_reg SHA512_VAULT_RD_STATUS;
         rand kv_write_ctrl_reg SHA512_KV_WR_CTRL;
         rand kv_status_reg SHA512_KV_WR_STATUS;
-        rand sha512_reg__SHA512_GEN_PCR_HASH SHA512_GEN_PCR_HASH;
+        rand sha512_reg__SHA512_GEN_PCR_HASH_NONCE SHA512_GEN_PCR_HASH_NONCE;
+        rand sha512_reg__SHA512_GEN_PCR_HASH_CTRL SHA512_GEN_PCR_HASH_CTRL;
+        rand sha512_reg__SHA512_GEN_PCR_HASH_STATUS SHA512_GEN_PCR_HASH_STATUS;
+        rand sha512_reg__SHA512_GEN_PCR_HASH_DIGEST SHA512_GEN_PCR_HASH_DIGEST[12];
         rand sha512_reg__intr_block_t intr_block_rf;
 
         function new(string name = "sha512_reg");
@@ -699,11 +747,28 @@ package sha512_reg_uvm;
 
             this.SHA512_KV_WR_STATUS.build();
             this.default_map.add_reg(this.SHA512_KV_WR_STATUS, 'h60c);
-            this.SHA512_GEN_PCR_HASH = new("SHA512_GEN_PCR_HASH");
-            this.SHA512_GEN_PCR_HASH.configure(this);
+            this.SHA512_GEN_PCR_HASH_NONCE = new("SHA512_GEN_PCR_HASH_NONCE");
+            this.SHA512_GEN_PCR_HASH_NONCE.configure(this);
 
-            this.SHA512_GEN_PCR_HASH.build();
-            this.default_map.add_reg(this.SHA512_GEN_PCR_HASH, 'h610);
+            this.SHA512_GEN_PCR_HASH_NONCE.build();
+            this.default_map.add_reg(this.SHA512_GEN_PCR_HASH_NONCE, 'h610);
+            this.SHA512_GEN_PCR_HASH_CTRL = new("SHA512_GEN_PCR_HASH_CTRL");
+            this.SHA512_GEN_PCR_HASH_CTRL.configure(this);
+
+            this.SHA512_GEN_PCR_HASH_CTRL.build();
+            this.default_map.add_reg(this.SHA512_GEN_PCR_HASH_CTRL, 'h614);
+            this.SHA512_GEN_PCR_HASH_STATUS = new("SHA512_GEN_PCR_HASH_STATUS");
+            this.SHA512_GEN_PCR_HASH_STATUS.configure(this);
+
+            this.SHA512_GEN_PCR_HASH_STATUS.build();
+            this.default_map.add_reg(this.SHA512_GEN_PCR_HASH_STATUS, 'h618);
+            foreach(this.SHA512_GEN_PCR_HASH_DIGEST[i0]) begin
+                this.SHA512_GEN_PCR_HASH_DIGEST[i0] = new($sformatf("SHA512_GEN_PCR_HASH_DIGEST[%0d]", i0));
+                this.SHA512_GEN_PCR_HASH_DIGEST[i0].configure(this);
+                
+                this.SHA512_GEN_PCR_HASH_DIGEST[i0].build();
+                this.default_map.add_reg(this.SHA512_GEN_PCR_HASH_DIGEST[i0], 'h61c + i0*'h4);
+            end
             this.intr_block_rf = new("intr_block_rf");
             this.intr_block_rf.configure(this);
             this.intr_block_rf.build();

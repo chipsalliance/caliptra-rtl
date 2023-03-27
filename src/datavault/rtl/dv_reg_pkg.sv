@@ -68,6 +68,7 @@ package dv_reg_pkg;
 
     typedef struct packed{
         logic reset_b;
+        logic core_only_rst_b;
         logic hard_reset_b;
         dv_reg__StickyDataVaultCtrl__in_t [10-1:0]StickyDataVaultCtrl;
         dv_reg__StickyDataVaultReg__in_t [10-1:0][12-1:0]STICKY_DATA_VAULT_ENTRY;

@@ -1,0 +1,68 @@
+uvmf:
+  environments:
+    pv:
+      agents:
+      - initiator_responder: INITIATOR
+        name: pv_rst_agent
+        type: pv_rst
+      - initiator_responder: INITIATOR
+        name: pv_sha512_write_agent
+        type: pv_write
+      - initiator_responder: INITIATOR
+        name: pv_sha512_block_read_agent
+        type: pv_read
+      analysis_components:
+      - name: pv_pred
+        parameters: []
+        type: pv_predictor
+      - name: pv_sb
+        parameters: []
+        type: pv_scoreboard
+      analysis_exports: []
+      analysis_ports: []
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      hvl_pkg_parameters: []
+      imports:
+      - name: mvc_pkg
+      - name: mgc_ahb_v2_0_pkg
+      - name: rw_txn_pkg
+      non_uvmf_components: []
+      parameters: []
+      qvip_connections:
+      - ap_key: burst_transfer
+        driver: qvip_ahb_lite_slave_subenv_ahb_lite_slave_0
+        receiver: pv_pred.ahb_slave_0_ae
+        validate: 'false'
+      qvip_memory_agents: []
+      qvip_subenvs:
+      - name: qvip_ahb_lite_slave_subenv
+        type: qvip_ahb_lite_slave
+      register_model:
+        maps:
+        - interface: qvip_ahb_lite_slave_subenv.ahb_lite_slave_0
+          name: ahb_map
+          qvip_agent: 'True'
+        reg_block_class: pv_reg_model_top
+        reg_model_package: pv_reg_model_top_pkg
+        use_adapter: 'True'
+        use_explicit_prediction: 'True'
+      scoreboards: []
+      subenvs: []
+      tlm_connections:
+      - driver: pv_rst_agent.monitored_ap
+        receiver: pv_pred.pv_rst_agent_ae
+        validate: 'True'
+      - driver: pv_pred.pv_sha512_write_sb_ap
+        receiver: pv_sb.expected_sha512_write_analysis_export
+        validate: 'True'
+      - driver: pv_sha512_write_agent.monitored_ap
+        receiver: pv_sb.actual_sha512_write_analysis_export
+        validate: 'True'
+      - driver: pv_pred.pv_sha512_block_read_sb_ap
+        receiver: pv_sb.expected_sha512_block_read_analysis_export
+        validate: 'True'
+      - driver: pv_sha512_block_read_agent.monitored_ap
+        receiver: pv_sb.actual_sha512_block_read_analysis_export
+        validate: 'True'

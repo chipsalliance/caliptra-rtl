@@ -49,40 +49,40 @@ void sha384_kvflow_test(uint8_t sha_kv_id, uint8_t store_to_kv, uint8_t digest_k
     printf("%c", block_inject_cmd);
 
     // wait for SHA to be ready
-    while((lsu_read_32((uint32_t *) CLP_SHA512_REG_SHA512_STATUS) & SHA512_REG_SHA512_STATUS_READY_MASK) == 0);
+    while((lsu_read_32(CLP_SHA512_REG_SHA512_STATUS) & SHA512_REG_SHA512_STATUS_READY_MASK) == 0);
 
 
     // Program block Read with 12 dwords from sha_kv_id
-    lsu_write_32((uint32_t*) CLP_SHA512_REG_SHA512_VAULT_RD_CTRL, SHA512_REG_SHA512_VAULT_RD_CTRL_READ_EN_MASK |
-                                                                ((sha_kv_id & 0x7) << SHA512_REG_SHA512_VAULT_RD_CTRL_READ_ENTRY_LOW));
+    lsu_write_32(CLP_SHA512_REG_SHA512_VAULT_RD_CTRL, SHA512_REG_SHA512_VAULT_RD_CTRL_READ_EN_MASK |
+                                                   ((sha_kv_id & 0x7) << SHA512_REG_SHA512_VAULT_RD_CTRL_READ_ENTRY_LOW));
 
     // Check that SHA BLOCK is loaded
-    while((lsu_read_32((uint32_t*) CLP_SHA512_REG_SHA512_VAULT_RD_STATUS) & SHA512_REG_SHA512_VAULT_RD_STATUS_VALID_MASK) == 0);
+    while((lsu_read_32(CLP_SHA512_REG_SHA512_VAULT_RD_STATUS) & SHA512_REG_SHA512_VAULT_RD_STATUS_VALID_MASK) == 0);
 
     // if we want to store the results into kv 
     if (store_to_kv) {
         // set digest DEST to write
-        lsu_write_32((uint32_t*) CLP_SHA512_REG_SHA512_KV_WR_CTRL,  SHA512_REG_SHA512_KV_WR_CTRL_WRITE_EN_MASK |
-                                                                    SHA512_REG_SHA512_KV_WR_CTRL_HMAC_KEY_DEST_VALID_MASK  |
-                                                                    SHA512_REG_SHA512_KV_WR_CTRL_HMAC_BLOCK_DEST_VALID_MASK|
-                                                                    SHA512_REG_SHA512_KV_WR_CTRL_SHA_BLOCK_DEST_VALID_MASK |
-                                                                    SHA512_REG_SHA512_KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK  |
-                                                                    SHA512_REG_SHA512_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK  |
-                                                                    SHA512_REG_SHA512_KV_WR_CTRL_ECC_MSG_DEST_VALID_MASK |
-                                                                    ((digest_kv_id & 0x7) << SHA512_REG_SHA512_KV_WR_CTRL_WRITE_ENTRY_LOW));
+        lsu_write_32(CLP_SHA512_REG_SHA512_KV_WR_CTRL,  SHA512_REG_SHA512_KV_WR_CTRL_WRITE_EN_MASK |
+                                                        SHA512_REG_SHA512_KV_WR_CTRL_HMAC_KEY_DEST_VALID_MASK  |
+                                                        SHA512_REG_SHA512_KV_WR_CTRL_HMAC_BLOCK_DEST_VALID_MASK|
+                                                        SHA512_REG_SHA512_KV_WR_CTRL_SHA_BLOCK_DEST_VALID_MASK |
+                                                        SHA512_REG_SHA512_KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK  |
+                                                        SHA512_REG_SHA512_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK  |
+                                                        SHA512_REG_SHA512_KV_WR_CTRL_ECC_MSG_DEST_VALID_MASK |
+                                                        ((digest_kv_id & 0x7) << SHA512_REG_SHA512_KV_WR_CTRL_WRITE_ENTRY_LOW));
     }    
 
 
     // Enable SHA core in SHA384 MODE
-    lsu_write_32((uint32_t*) CLP_SHA512_REG_SHA512_CTRL, SHA512_REG_SHA512_CTRL_INIT_MASK | 
-                                                        (0x2 << SHA512_REG_SHA512_CTRL_MODE_LOW) | 
-                                                         SHA512_REG_SHA512_CTRL_LAST_MASK);
+    lsu_write_32(CLP_SHA512_REG_SHA512_CTRL, SHA512_REG_SHA512_CTRL_INIT_MASK | 
+                                            (0x2 << SHA512_REG_SHA512_CTRL_MODE_LOW) |
+                                             SHA512_REG_SHA512_CTRL_LAST_MASK);
 
     // if we want to store the results into kv
     printf("check digest\n");
     if (store_to_kv) {
         // wait for SHA process - check dest done
-        while((lsu_read_32((uint32_t*) CLP_SHA512_REG_SHA512_KV_WR_STATUS) & SHA512_REG_SHA512_KV_WR_STATUS_VALID_MASK) == 0);
+        while((lsu_read_32(CLP_SHA512_REG_SHA512_KV_WR_STATUS) & SHA512_REG_SHA512_KV_WR_STATUS_VALID_MASK) == 0);
     }
     else{
         reg_ptr = (uint32_t *) CLP_SHA512_REG_SHA512_DIGEST_0;

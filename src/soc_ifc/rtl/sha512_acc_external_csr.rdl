@@ -86,7 +86,7 @@ reg {
     desc="Data in register for SHA Streaming function
           [br]Caliptra Access: RW
           [br]SOC Access:      RW";
-    field {sw=rw; hw=na; swwe=valid_user; swmod=true;} DATAIN[32];
+    field {sw=rw; hw=na; swwe=valid_user; swmod=true;} DATAIN[32]=0;
 } DATAIN;
 
 reg {
