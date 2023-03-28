@@ -34,6 +34,8 @@ addrmap clp {
 
     spi_host spi_host_reg @ 0x2000_0000;
 
+    uart uart @ 0x2000_1000;
+
     csrng csrng_reg @ 0x2000_2000;
 
     entropy_src entropy_src_reg @ 0x2000_3000;

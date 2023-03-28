@@ -1,0 +1,269 @@
+addrmap uart {
+    reg {
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "raised if the transmit FIFO is past the high-water mark.";
+        } TX_WATERMARK[0:0];
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "raised if the receive FIFO is past the high-water mark.";
+        } RX_WATERMARK[1:1];
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "raised if the transmit FIFO has emptied and no transmit is ongoing.";
+        } TX_EMPTY[2:2];
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "raised if the receive FIFO has overflowed.";
+        } RX_OVERFLOW[3:3];
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "raised if a framing error has been detected on receive.";
+        } RX_FRAME_ERR[4:4];
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "raised if break condition has been detected on receive.";
+        } RX_BREAK_ERR[5:5];
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "raised if RX FIFO has characters remaining in the FIFO without being
+            retrieved for the programmed time period.";
+        } RX_TIMEOUT[6:6];
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "raised if the receiver has detected a parity error.";
+        } RX_PARITY_ERR[7:7];
+    } INTERRUPT_STATE @ 0x0;
+    reg {
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "Enable interrupt when tx_watermark is set.";
+        } TX_WATERMARK[0:0];
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "Enable interrupt when rx_watermark is set.";
+        } RX_WATERMARK[1:1];
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "Enable interrupt when tx_empty is set.";
+        } TX_EMPTY[2:2];
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "Enable interrupt when rx_overflow is set.";
+        } RX_OVERFLOW[3:3];
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "Enable interrupt when rx_frame_err is set.";
+        } RX_FRAME_ERR[4:4];
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "Enable interrupt when rx_break_err is set.";
+        } RX_BREAK_ERR[5:5];
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "Enable interrupt when rx_timeout is set.";
+        } RX_TIMEOUT[6:6];
+        field {
+            sw = rw;
+            onwrite = woclr;
+            desc = "Enable interrupt when rx_parity_err is set.";
+        } RX_PARITY_ERR[7:7];
+    } INTERRUPT_ENABLE @ 0x4;
+    reg {
+        field {
+            sw = w;
+            desc = "Write 1 to force tx_watermark to 1.";
+        } TX_WATERMARK[0:0];
+        field {
+            sw = w;
+            desc = "Write 1 to force rx_watermark to 1.";
+        } RX_WATERMARK[1:1];
+        field {
+            sw = w;
+            desc = "Write 1 to force tx_empty to 1.";
+        } TX_EMPTY[2:2];
+        field {
+            sw = w;
+            desc = "Write 1 to force rx_overflow to 1.";
+        } RX_OVERFLOW[3:3];
+        field {
+            sw = w;
+            desc = "Write 1 to force rx_frame_err to 1.";
+        } RX_FRAME_ERR[4:4];
+        field {
+            sw = w;
+            desc = "Write 1 to force rx_break_err to 1.";
+        } RX_BREAK_ERR[5:5];
+        field {
+            sw = w;
+            desc = "Write 1 to force rx_timeout to 1.";
+        } RX_TIMEOUT[6:6];
+        field {
+            sw = w;
+            desc = "Write 1 to force rx_parity_err to 1.";
+        } RX_PARITY_ERR[7:7];
+    } INTERRUPT_TEST @ 0x8;
+    reg {
+        field {
+            sw = w;
+            desc = "Write 1 to trigger one alert event of this kind.";
+        } FATAL_FAULT[0:0];
+    } ALERT_TEST @ 0xC;
+    reg {
+        field {
+            desc = "TX enable";
+            sw = rw;
+        } TX[0:0];
+        field {
+            desc = "RX enable";
+            sw = rw;
+        } RX[1:1];
+        field {
+            desc = "RX noise filter enable.
+            If the noise filter is enabled, RX line goes through the 3-tap
+            repetition code. It ignores single IP clock period noise.";
+            sw = rw;
+        } NF[2:2];
+        field {
+            desc = "System loopback enable.
+
+            If this bit is turned on, any outgoing bits to TX are received through RX.
+            See Block Diagram. Note that the TX line goes 1 if System loopback is enabled.";
+            sw = rw;
+        } SLPBK[4:4];
+        field {
+            desc = "Line loopback enable.
+
+            If this bit is turned on, incoming bits are forwarded to TX for testing purpose.
+            See Block Diagram. Note that the internal design sees RX value as 1 always if line
+            loopback is enabled.";
+            sw = rw;
+        } LLPBK[5:5];
+        field {
+            desc = "If true, parity is enabled in both RX and TX directions.";
+            sw = rw;
+        } PARITY_EN[6:6];
+        field {
+            desc = "If PARITY_EN is true, this determines the type, 1 for odd parity, 0 for even.";
+            sw = rw;
+        } PARITY_ODD[7:7];
+        field {
+            desc = "Trigger level for RX break detection. Sets the number of character
+            times the line must be low to detect a break.";
+            sw = rw;
+        } RXBLVL[9:8];
+        field {
+            desc = "BAUD clock rate control.";
+            sw = rw;
+        } NCO[31:16];
+    } CTRL @ 0x10;
+    reg {
+        field {
+            desc = "TX buffer is full";
+            sw = r;
+        } TXFULL[0:0];
+        field {
+            desc = "RX buffer is full";
+            sw = r;
+        } RXFULL[1:1];
+        field {
+            desc = "TX FIFO is empty";
+            sw = r;
+        } TXEMPTY[2:2] = 0x1;
+        field {
+            desc = "TX FIFO is empty and all bits have been transmitted";
+            sw = r;
+        } TXIDLE[3:3] = 0x1;
+        field {
+            desc = "RX is idle";
+            sw = r;
+        } RXIDLE[4:4] = 0x1;
+        field {
+            desc = "RX FIFO is empty";
+            sw = r;
+        } RXEMPTY[5:5] = 0x1;
+    } STATUS @ 0x14;
+    reg {
+        field {
+            desc = "UART read data";
+            sw = r;
+        } RDATA[7:0];
+    } RDATA @ 0x18;
+    reg {
+        field {
+            desc = "UART write data";
+            sw = w;
+        } WDATA[7:0];
+    } WDATA @ 0x1C;
+    reg {
+        field {
+            desc = "RX fifo reset. Write 1 to the register resets RX_FIFO. Read returns 0";
+            sw = rw;
+        } RXRST[0:0];
+        field {
+            desc = "TX fifo reset. Write 1 to the register resets TX_FIFO. Read returns 0";
+            sw = rw;
+        } TXRST[1:1];
+        field {
+            desc = "Trigger level for RX interrupts. If the FIFO depth is greater than or equal to
+            the setting, it raises rx_watermark interrupt.";
+            sw = rw;
+        } RXILVL[4:2];
+        field {
+            desc = "Trigger level for TX interrupts. If the FIFO depth is less than the setting, it
+            raises tx_watermark interrupt.";
+            sw = rw;
+        } TXILVL[6:5];
+    } FIFO_CTRL @ 0x20;
+    reg {
+        field {
+            desc = "Current fill level of TX fifo";
+            sw = r;
+        } TXLVL[5:0];
+        field {
+            desc = "Current fill level of RX fifo";
+            sw = r;
+        } RXLVL[21:16];
+    } FIFO_STATUS @ 0x24;
+    reg {
+        field {
+            desc = "Enable TX pin override control";
+            sw = rw;
+        } TXEN[0:0];
+        field {
+            desc = "Write to set the value of the TX pin";
+            sw = rw;
+        } TXVAL[1:1];
+    } OVRD @ 0x28;
+    reg {
+        field {
+            desc = "Last 16 oversampled values of RX. Most recent bit is bit 0, oldest 15.";
+            sw = r;
+        } RX[15:0];
+    } VAL @ 0x2C;
+    reg {
+        field {
+            desc = "RX timeout value in UART bit times";
+            sw = rw;
+        } VAL[23:0];
+        field {
+            desc = "Enable RX timeout feature";
+            sw = rw;
+        } EN[31:31];
+    } TIMEOUT_CTRL @ 0x30;
+};
