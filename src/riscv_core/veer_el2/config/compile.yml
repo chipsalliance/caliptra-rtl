@@ -24,6 +24,8 @@ targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
+      - $COMPILE_ROOT/rtl/pic_map_auto.h
+      - $COMPILE_ROOT/rtl/el2_param.vh
       - $COMPILE_ROOT/rtl/el2_mem.sv
       - $COMPILE_ROOT/rtl/el2_dma_ctrl.sv
       - $COMPILE_ROOT/rtl/el2_pic_ctrl.sv
