@@ -28,6 +28,7 @@ module ecc_ram_tdp_file #(
     (      
     input  wire                      clk,
     input  wire                      reset_n,
+    input  wire                      zeroize,
     
     input  wire                      ena,
     input  wire                      wea,
@@ -52,6 +53,10 @@ module ecc_ram_tdp_file #(
             douta <= '0;
             doutb <= '0;
         end
+        else if (zeroize) begin
+            douta <= '0;
+            doutb <= '0;
+        end
         else begin
             if (ena)
                 douta <= mem[addra];
@@ -64,6 +69,10 @@ module ecc_ram_tdp_file #(
     always_ff @ (posedge clk or negedge reset_n) 
     begin : writing_memory
         if (!reset_n) begin
+            for (int i0 = 0; i0 < ADDR_LENGTH; i0++)
+                mem[i0] <= '0;
+        end
+        else if (zeroize) begin
             for (int i0 = 0; i0 < ADDR_LENGTH; i0++)
                 mem[i0] <= '0;
         end

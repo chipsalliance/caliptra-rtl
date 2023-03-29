@@ -29,6 +29,7 @@ module ecc_pe_final #(
     // Clock and reset.
     input  wire              clk,
     input  wire              reset_n,
+    input  wire              zeroize,
 
     input  wire              start_in,
     // DATA PORT
@@ -100,6 +101,9 @@ module ecc_pe_final #(
         if (~reset_n) begin
             c_out <= 'b0;
         end
+        else if (zeroize) begin
+            c_out <= 'b0;
+        end
         else if (start_in) begin
             c_out <= 'b0;
         end else begin
@@ -109,6 +113,9 @@ module ecc_pe_final #(
 
     always_ff @(posedge clk or negedge reset_n) begin
         if (~reset_n) begin
+            s_out <= 'b0;
+        end
+        else if (zeroize) begin
             s_out <= 'b0;
         end
         else if (start_in) begin

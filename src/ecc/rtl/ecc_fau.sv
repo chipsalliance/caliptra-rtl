@@ -29,6 +29,7 @@ module ecc_fau #(
     // Clock and reset.
     input wire           clk,
     input wire           reset_n,
+    input wire           zeroize,
 
     // DATA PORT
     input  wire                 add_en_i,
@@ -72,6 +73,7 @@ module ecc_fau #(
         // Clock and reset.
         .clk(clk),
         .reset_n(reset_n),
+        .zeroize(zeroize),
 
         // DATA PORT
         .start_i(mult_start_edge),
@@ -93,6 +95,7 @@ module ecc_fau #(
         i_ADDER_SUBTRACTOR (
         .clk(clk),
         .reset_n(reset_n),
+        .zeroize(zeroize),
 
         .add_en_i(add_en),
         .sub_i(sub),
@@ -114,6 +117,11 @@ module ecc_fau #(
             add_en <= '0;
             sub <= '0;
         end
+        else if (zeroize) begin
+            mult_start <= '0;
+            add_en <= '0;
+            sub <= '0;
+        end
         else begin
             mult_start <= mult_en_i;
             add_en <= add_en_i;
@@ -123,6 +131,8 @@ module ecc_fau #(
 
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n)
+            mult_start_dly <= '0;
+        else if (zeroize)
             mult_start_dly <= '0;
         else
             mult_start_dly <= mult_start;

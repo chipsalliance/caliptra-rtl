@@ -44,6 +44,7 @@ module ecc_scalar_blinding #(
     // Clock and reset.
     input wire           clk,
     input wire           reset_n,
+    input wire           zeroize,
 
     // DATA PORT
     input  wire                             en_i,
@@ -124,7 +125,12 @@ module ecc_scalar_blinding #(
 
     always_ff @(posedge clk or negedge reset_n) 
     begin : input_reg
-        if (~reset_n) begin
+        if (!reset_n) begin
+            a_reg <= '0;
+            b_reg <= '0;
+            scalar_reg <= '0;
+        end
+        else if (zeroize) begin
             a_reg <= '0;
             b_reg <= '0;
             scalar_reg <= '0;
@@ -201,6 +207,8 @@ module ecc_scalar_blinding #(
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n)
             accu_reg      <= '0;
+        else if (zeroize)
+            accu_reg      <= '0;
         else if (en_i)
             accu_reg      <= '0;
         else begin
@@ -217,6 +225,13 @@ module ecc_scalar_blinding #(
     
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
+            product_idx_reg <= FULL_DIG_NUM[P_ARR_WIDTH-1 : 0] - 1;
+            operand_idx_reg <= '0;
+            shift_state     <= 0;
+            add1_cin        <= 0;
+            carry_garbage_bits0 <= '0;
+        end
+        else if (zeroize) begin
             product_idx_reg <= FULL_DIG_NUM[P_ARR_WIDTH-1 : 0] - 1;
             operand_idx_reg <= '0;
             shift_state     <= 0;
@@ -284,7 +299,9 @@ module ecc_scalar_blinding #(
     generate 
         for (t0=0; t0 < FULL_DIG_NUM; t0++) begin : gen_t_reg
             always_ff @(posedge clk or negedge reset_n) begin
-                if (~reset_n)
+                if (!reset_n)
+                    p_array[t0] <= '0;
+                else if (zeroize)
                     p_array[t0] <= '0;
                 else if (accu_shift & (t0 == product_idx))
                     p_array[t0] <= add1_out;
