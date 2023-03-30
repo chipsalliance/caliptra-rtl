@@ -1180,7 +1180,7 @@ always_comb begin: tie_off_slaves
     responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hreadyout = '0;
     responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hrdata = '0;
 `endif
-`ifdef CALIPTRA_INTERNAL_UART
+`ifndef CALIPTRA_INTERNAL_UART
     responder_inst[`CALIPTRA_SLAVE_SEL_UART].hresp = '0;
     responder_inst[`CALIPTRA_SLAVE_SEL_UART].hreadyout = '0;
     responder_inst[`CALIPTRA_SLAVE_SEL_UART].hrdata = '0;
