@@ -281,7 +281,7 @@ module mbox_csr (
     always_comb begin
         automatic logic [31:0] next_c = field_storage.mbox_cmd.command.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.mbox_cmd && decoded_req_is_wr && hwif_in.valid_user) begin // SW write
+        if(decoded_reg_strb.mbox_cmd && decoded_req_is_wr && hwif_in.valid_requester) begin // SW write
             next_c = decoded_wr_data[31:0];
             load_next_c = '1;
         end
@@ -300,7 +300,7 @@ module mbox_csr (
     always_comb begin
         automatic logic [31:0] next_c = field_storage.mbox_dlen.length.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.mbox_dlen && decoded_req_is_wr && hwif_in.valid_user) begin // SW write
+        if(decoded_reg_strb.mbox_dlen && decoded_req_is_wr && hwif_in.valid_requester) begin // SW write
             next_c = decoded_wr_data[31:0];
             load_next_c = '1;
         end
@@ -320,7 +320,7 @@ module mbox_csr (
     always_comb begin
         automatic logic [31:0] next_c = field_storage.mbox_datain.datain.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.mbox_datain && decoded_req_is_wr && hwif_in.valid_user) begin // SW write
+        if(decoded_reg_strb.mbox_datain && decoded_req_is_wr && hwif_in.valid_requester) begin // SW write
             next_c = decoded_wr_data[31:0];
             load_next_c = '1;
         end
@@ -362,7 +362,7 @@ module mbox_csr (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.mbox_execute.execute.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.mbox_execute && decoded_req_is_wr && hwif_in.valid_user) begin // SW write
+        if(decoded_reg_strb.mbox_execute && decoded_req_is_wr && hwif_in.valid_requester) begin // SW write
             next_c = decoded_wr_data[0:0];
             load_next_c = '1;
         end
@@ -381,7 +381,7 @@ module mbox_csr (
     always_comb begin
         automatic logic [3:0] next_c = field_storage.mbox_status.status.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.mbox_status && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.mbox_status && decoded_req_is_wr && hwif_in.valid_receiver) begin // SW write
             next_c = decoded_wr_data[3:0];
             load_next_c = '1;
         end else if(hwif_in.mbox_status.status.hwclr) begin // HW Clear

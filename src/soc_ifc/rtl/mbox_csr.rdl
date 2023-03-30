@@ -25,7 +25,8 @@ addrmap mbox_csr {
     //signal to indicate request is coming from soc side
     signal {} soc_req;
     signal {} lock_set;
-    signal {} valid_user;
+    signal {} valid_requester;
+    signal {} valid_receiver;
 
     // lock register
     // set on read, indicate to mailbox when modified
@@ -53,7 +54,7 @@ addrmap mbox_csr {
         desc="Command requested for data in mailbox
         [br]Caliptra Access: RW
         [br]SOC Access:      RW";
-        field {sw=rw; hw=na; swwe=valid_user; swmod=true;} command[32]=0;
+        field {sw=rw; hw=na; swwe=valid_requester; swmod=true;} command[32]=0;
     } mbox_cmd;
 
     reg {
@@ -62,7 +63,7 @@ addrmap mbox_csr {
         [br]Caliptra Access: RW
         [br]SOC Access:      RW
         [br]TAP Access [in debug/manuf mode]: RO";
-        field {sw=rw; hw=r; swwe=valid_user; swmod=true;} length[32]=0;
+        field {sw=rw; hw=r; swwe=valid_requester; swmod=true;} length[32]=0;
     } mbox_dlen;
 
     reg {
@@ -70,7 +71,7 @@ addrmap mbox_csr {
         desc="Data in register, write the next data to mailbox
         [br]Caliptra Access: RW
         [br]SOC Access:      RW";
-        field {sw=rw; hw=na; swwe=valid_user; swmod=true;} datain[32]=0;
+        field {sw=rw; hw=na; swwe=valid_requester; swmod=true;} datain[32]=0;
     } mbox_datain;
 
     reg {
@@ -87,7 +88,7 @@ addrmap mbox_csr {
         desc="Mailbox execute register indicates to receiver that the sender is done
         [br]Caliptra Access: RW
         [br]SOC Access:      RW";
-        field {sw=rw; hw=r; swwe=valid_user;} execute=0;
+        field {sw=rw; hw=r; swwe=valid_requester;} execute=0;
     } mbox_execute;
 
     reg {
@@ -114,7 +115,7 @@ addrmap mbox_csr {
                     desc = "The requested command experienced a failure.";
                 };
             };
-            sw=rw; hw=r; encode = mbox_status_e; hwclr;} status[4]=0;
+            sw=rw; hw=r; swwe=valid_receiver; encode = mbox_status_e; hwclr;} status[4]=0;
         field {
             name = "Mailbox ECC Single Error";
             desc = "Indicates a correctable ECC single-bit error was

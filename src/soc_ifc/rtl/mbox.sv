@@ -109,7 +109,8 @@ logic mask_rdata;
 logic [$clog2(DEPTH)-1:0] dir_req_addr;
 
 logic soc_has_lock, soc_has_lock_nxt;
-logic valid_user;
+logic valid_requester;
+logic valid_receiver;
 
 //csr
 logic [DATA_W-1:0] csr_rdata;
@@ -121,24 +122,32 @@ mbox_csr__out_t hwif_out;
 
 assign mbox_error = read_error | write_error;
 
-//determine if the request is coming from a valid user
-//1) uC requests are valid if uc has lock or if we're in execute uc
-//2) SoC requests are valid if soc has lock and it's the user that locked it or we're in execute SOC 
-always_comb valid_user = hwif_out.mbox_lock.lock.value & 
-                        ((~req_data.soc_req & (~soc_has_lock | (mbox_fsm_ps == MBOX_EXECUTE_UC))) |
-                         ( req_data.soc_req & ((soc_has_lock & (req_data.user == hwif_out.mbox_user.user.value)) | (mbox_fsm_ps == MBOX_EXECUTE_SOC))));
+//Determine if this is a valid request from the requester side
+//1) uC requests are valid if uc has lock
+//2) SoC requests are valid if soc has lock and it's the user that locked it 
+always_comb valid_requester = hwif_out.mbox_lock.lock.value & 
+                              ((~req_data.soc_req & (~soc_has_lock || (mbox_fsm_ps == MBOX_EXECUTE_UC))) |
+                               ( req_data.soc_req & soc_has_lock & (req_data.user == hwif_out.mbox_user.user.value)));
+
+//Determine if this is a valid request from the receiver side
+always_comb valid_receiver = hwif_out.mbox_lock.lock.value &
+                             //Receiver is valid when they don't have the lock
+                             ((~req_data.soc_req & soc_has_lock) | (req_data.soc_req & ~soc_has_lock) |
+                             //Receiver is valid when they are reading a response to their request
+                             (valid_requester & ((soc_has_lock & (mbox_fsm_ps == MBOX_EXECUTE_SOC)) |
+                                                 (~soc_has_lock & (mbox_fsm_ps == MBOX_EXECUTE_UC)))));
 
 //We want to mask read data when
-//1) Invalid user is trying to access the mailbox data, or we're not in execute state
-always_comb mask_rdata = hwif_out.mbox_dataout.dataout.swacc & (~valid_user | ~(mbox_fsm_ps inside {MBOX_EXECUTE_UC, MBOX_EXECUTE_SOC}));
+//Invalid user is trying to access the mailbox data, or we're not in execute state
+always_comb mask_rdata = hwif_out.mbox_dataout.dataout.swacc & ~valid_receiver;
 
 //move from idle to rdy for command when lock is acquired
 //we have a valid read, to the lock register, and it's not currently locked
 always_comb arc_MBOX_IDLE_MBOX_RDY_FOR_CMD = ~hwif_out.mbox_lock.lock.value & hwif_out.mbox_lock.lock.swmod;
 //move from rdy for cmd to rdy for dlen when cmd is written
-always_comb arc_MBOX_RDY_FOR_CMD_MBOX_RDY_FOR_DLEN = hwif_out.mbox_cmd.command.swmod & valid_user;
+always_comb arc_MBOX_RDY_FOR_CMD_MBOX_RDY_FOR_DLEN = hwif_out.mbox_cmd.command.swmod & valid_requester;
 //move from rdy for dlen to rdy for data when dlen is written
-always_comb arc_MBOX_RDY_FOR_DLEN_MBOX_RDY_FOR_DATA = hwif_out.mbox_dlen.length.swmod & valid_user;
+always_comb arc_MBOX_RDY_FOR_DLEN_MBOX_RDY_FOR_DATA = hwif_out.mbox_dlen.length.swmod & valid_requester;
 //move from rdy for data to execute uc when SoC sets execute bit
 always_comb arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC = hwif_out.mbox_execute.execute.value & soc_has_lock;
 //move from rdy for data to execute soc when uc writes to execute
@@ -204,8 +213,8 @@ always_comb begin : mbox_fsm_combo
         end
         MBOX_RDY_FOR_DATA: begin
             //update the write pointers to sram when accessing datain register
-            inc_wrptr = hwif_out.mbox_datain.datain.swmod & valid_user;
-            mbox_protocol_sram_we = hwif_out.mbox_datain.datain.swmod & valid_user;
+            inc_wrptr = hwif_out.mbox_datain.datain.swmod & valid_requester;
+            mbox_protocol_sram_we = hwif_out.mbox_datain.datain.swmod & valid_requester;
             if (arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC) begin
                 mbox_fsm_ns = MBOX_EXECUTE_UC;
                 //reset wrptr so receiver can write response
@@ -256,9 +265,7 @@ always_comb begin : mbox_fsm_combo
         //Only SoC can write to datain here to respond to uC
         MBOX_EXECUTE_SOC: begin
             soc_mbox_data_avail = 1;
-            inc_rdptr = (dmi_inc_rdptr | (hwif_out.mbox_dataout.dataout.swacc & req_data.soc_req & valid_user));
-            inc_wrptr = hwif_out.mbox_datain.datain.swmod & req_data.soc_req & valid_user;
-            mbox_protocol_sram_we = hwif_out.mbox_datain.datain.swmod & req_data.soc_req & valid_user;
+            inc_rdptr = (dmi_inc_rdptr | (hwif_out.mbox_dataout.dataout.swacc & req_data.soc_req & valid_receiver));
             if (arc_MBOX_EXECUTE_SOC_MBOX_IDLE) begin
                 mbox_fsm_ns = MBOX_IDLE;
                 rst_mbox_wrptr = 1;
@@ -399,7 +406,8 @@ always_comb hwif_in.soc_req = req_data.soc_req;
 //don't update mailbox data if lock hasn't been acquired
 //if uc has the lock, check that this request is from uc
 //if soc has the lock, check that this request is from soc and user attributes match
-always_comb hwif_in.valid_user = valid_user;
+always_comb hwif_in.valid_requester = valid_requester;
+always_comb hwif_in.valid_receiver = valid_receiver;
 
 //indicate that requesting user is setting the lock
 always_comb hwif_in.lock_set = arc_MBOX_IDLE_MBOX_RDY_FOR_CMD;
