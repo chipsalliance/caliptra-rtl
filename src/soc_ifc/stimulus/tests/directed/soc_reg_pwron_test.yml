@@ -15,6 +15,7 @@
 ---
 plusargs:
   - +SOC_IFC_TEST='soc_reg_pwron_test'
+  - +SECURITY_STATE='DEBUG_LOCKED_PRODUCTION'
 
 testname: soc_reg_pwron_test
 seed: ${PLAYBOOK_RANDOM_SEED}
