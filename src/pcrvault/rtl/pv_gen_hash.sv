@@ -108,7 +108,7 @@ assign block_offset = block_offset_i[BLOCK_OFFSET_W-1:0];
 
   always_comb block_we = ~(gen_hash_fsm_ps inside {GEN_HASH_IDLE,GEN_HASH_WT_LAST,GEN_HASH_DONE}) & ~block_full;
   always_comb block_offset_nxt = (gen_hash_fsm_ps != GEN_HASH_IDLE) & block_full & core_ready ? '0 :
-                                 (gen_hash_fsm_ps != GEN_HASH_IDLE) & ~block_full ? block_offset_i + 'd1 : block_offset_i;
+                                 (block_we ? block_offset_i + 'd1 : block_offset_i);
   
   always_comb block_full = block_offset_i == BLOCK_NO;
   always_comb last_dword_wr = (read_offset == PV_NUM_DWORDS-1) & (read_entry == PV_NUM_PCR-1);
