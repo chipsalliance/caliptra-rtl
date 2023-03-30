@@ -71,6 +71,7 @@ logic arc_KV_ZERO_KV_LENGTH;
 logic arc_KV_LENGTH_KV_DONE;
 
 logic offset_en;
+logic offset_rst;
 logic [KV_NUM_DWORDS_W:0] offset, offset_nxt;
 
 //data width is in bits, divide by 32 to get dwords
@@ -92,6 +93,8 @@ always_comb arc_KV_PAD_KV_ZERO = kv_fsm_ps == KV_PAD;
 always_comb arc_KV_ZERO_KV_LENGTH = (offset_nxt == 'd31); //jump to length when it's time to append length in the last dword
 always_comb arc_KV_LENGTH_KV_DONE = kv_fsm_ps == KV_LENGTH; 
 always_comb arc_KV_DONE_KV_IDLE = '1;
+
+always_comb offset_rst = arc_KV_RW_KV_DONE | arc_KV_LENGTH_KV_DONE;
 
 always_comb begin : kv_fsm_comb
     kv_fsm_ns = kv_fsm_ps;
@@ -138,9 +141,6 @@ always_comb begin : kv_fsm_comb
         end
         KV_DONE: begin
             if (arc_KV_DONE_KV_IDLE) kv_fsm_ns = KV_IDLE;
-            write_en = '0;
-            offset_en = '1;
-            offset_nxt = '0;
             done = '1;
         end
         default: begin
@@ -156,7 +156,8 @@ always_ff @(posedge clk or negedge rst_b) begin
     end
     else begin
         kv_fsm_ps <= kv_fsm_ns;
-        offset <= offset_en ? offset_nxt : offset;
+        offset <= offset_rst ? '0 :
+                  offset_en ? offset_nxt : offset;
         //store the offset_nxt on the last cycle of valid data, this is the number of dwords of valid data
         num_dwords_data <= arc_KV_RW_KV_PAD ? offset_nxt : num_dwords_data;
     end
