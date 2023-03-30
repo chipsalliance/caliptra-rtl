@@ -335,7 +335,6 @@ assign jtag_id[31:28] = 4'b1;
 assign jtag_id[27:12] = '0;
 assign jtag_id[11:1]  = 11'h45;
 assign reset_vector = `RV_RESET_VEC;
-assign nmi_int      = 1'b0;
 assign soft_int     = 1'b0;
 assign timer_int    = 1'b0;
 
@@ -1039,6 +1038,7 @@ soc_ifc_top1
     .obf_uds_seed(obf_uds_seed),
     // NMI Vector 
     .nmi_vector(nmi_vector),
+    .nmi_intr(nmi_int),
     // ICCM Lock
     .iccm_lock       (iccm_lock                                    ),
     .iccm_axs_blocked(ahb_lite_resp_access_blocked[`CALIPTRA_SLAVE_SEL_IDMA]),

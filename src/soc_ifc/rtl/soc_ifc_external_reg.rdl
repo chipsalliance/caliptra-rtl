@@ -262,3 +262,64 @@ reg {
     field {sw=r; hw=w;} QSPI_en;
     field {sw=r; hw=w;} I3C_en;
 } CPTRA_HW_CONFIG;
+
+//Timer1
+reg {
+    name = "Caliptra WDT Timer1 EN register";
+    desc = "Caliptra watchdog timer1 enable register
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";
+    field {desc = "WDT timer1 enable"; hw = r; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;} timer1_en = 1'b0;
+} CPTRA_WDT_TIMER1_EN;
+
+reg {
+    name = "Caliptra WDT Timer1 CTRL register";
+    desc = "Caliptra watchdog timer1 control register
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";
+    field {desc = "WDT timer1 restart"; hw = r; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b; singlepulse;} timer1_restart = 1'b0;
+} CPTRA_WDT_TIMER1_CTRL;
+
+reg {
+    name = "Caliptra WDT Timer1 Timeout Period register";
+    desc = "Caliptra watchdog timer1 timeout register
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";
+    field {desc = "WDT timer1 timeout period"; hw = r; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;} timer1_timeout_period[32] = 32'hFFFFFFFF;
+} CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[2]; //This reflects WDT_TIMEOUT_PERIOD_NUM_DWORDS in soc_ifc_pkg
+
+//Timer2
+reg {
+    name = "Caliptra WDT Timer2 EN register";
+    desc = "Caliptra watchdog timer2 enable register. Note: Setting this to 1 will disable the default cascaded mode and will have both timers count independently.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO
+            ";
+    field {desc = "WDT timer2 enable"; hw = r; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;} timer2_en = 1'b0;
+} CPTRA_WDT_TIMER2_EN;
+
+reg {
+    name = "Caliptra WDT Timer2 CTRL register";
+    desc = "Caliptra watchdog timer2 control register
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";
+    field {desc = "WDT timer2 restart"; hw = r; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b; singlepulse;} timer2_restart = 1'b0;
+} CPTRA_WDT_TIMER2_CTRL;
+
+reg {
+    name = "Caliptra WDT Timer2 Timeout Period register";
+    desc = "Caliptra watchdog timer2 timeout register
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";
+    field {desc = "WDT timer2 timeout period"; hw = r; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;} timer2_timeout_period[32] = 32'hFFFFFFFF;
+} CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[2]; //This reflects WDT_TIMEOUT_PERIOD_NUM_DWORDS in soc_ifc_pkg
+
+//Status
+reg {
+    name = "Caliptra WDT STATUS register";
+    desc = "Caliptra watchdog timer status register
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RO";
+    field {desc = "Timer1 timed out, timer2 enabled"; hw = rw; sw = r; swwel = soc_req; resetsignal = cptra_rst_b;} t1_timeout = 1'b0;
+    field {desc = "Timer2 timed out"; hw = rw; sw = r; swwel = soc_req; resetsignal = cptra_rst_b;} t2_timeout = 1'b0;
+} CPTRA_WDT_STATUS;
