@@ -96,6 +96,7 @@ module soc_ifc_top
 
     // NMI Vector 
     output logic [31:0] nmi_vector,
+    output logic nmi_intr,
 
     // ICCM Lock
     output logic iccm_lock,
@@ -183,6 +184,23 @@ logic [31:0] cptra_uncore_dmi_reg_rdata_in;
 
 soc_ifc_reg__in_t soc_ifc_reg_hwif_in;
 soc_ifc_reg__out_t soc_ifc_reg_hwif_out;
+
+//WDT signals
+logic [WDT_TIMEOUT_PERIOD_NUM_DWORDS-1:0][31:0] timer1_timeout_period;
+logic [WDT_TIMEOUT_PERIOD_NUM_DWORDS-1:0][31:0] timer2_timeout_period;
+logic timer1_en;
+logic timer2_en;
+logic timer1_restart;
+logic timer2_restart;
+logic t1_timeout;
+logic t1_timeout_f; //To generate interrupt pulse
+logic t1_timeout_p;
+logic t2_timeout;
+logic t2_timeout_f; //To generate interrupt pulse
+logic t2_timeout_p;
+logic wdt_notif_t1_intr_serviced;
+logic wdt_notif_t2_intr_serviced;
+logic soc_ifc_notif_intr_f;
 
 //Boot FSM
 //This module contains the logic required to control the Caliptra Boot Flow
@@ -553,6 +571,8 @@ always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_mbox_e
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.hwset    = uc_cmd_avail_p; // TODO confirm signal correctness
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.hwset = sram_single_ecc_error;
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_debug_locked_sts.hwset = security_state_debug_locked_p; // Any transition results in interrupt
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_wdt_timer1_timeout_sts.hwset = t1_timeout_p;
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_wdt_timer2_timeout_sts.hwset = t2_timeout_p && timer2_en;
 
 always_comb soc_ifc_reg_hwif_in.internal_iccm_lock.lock.hwclr    = iccm_unlock;
 
@@ -588,9 +608,10 @@ assign soc_ifc_notif_intr = soc_ifc_reg_hwif_out.intr_block_rf.notif_global_intr
 assign nmi_vector = soc_ifc_reg_hwif_out.internal_nmi_vector.vec.value;
 assign iccm_lock  = soc_ifc_reg_hwif_out.internal_iccm_lock.lock.value;
 assign clk_gating_en = soc_ifc_reg_hwif_out.CPTRA_CLK_GATING_EN.clk_gating_en.value;
+assign nmi_intr = t2_timeout && !timer2_en;             //Only issue nmi if WDT timers are cascaded and t2 times out
+assign cptra_error_fatal = t2_timeout && !timer2_en;    //Only issue fatal error if WDT timers are cascaded and t2 times out
 
 // TODO
-assign cptra_error_fatal = 1'b0; // FIXME
 assign cptra_error_non_fatal = 1'b0; // FIXME
 assign trng_req = soc_ifc_reg_hwif_out.CPTRA_TRNG_STATUS.DATA_REQ.value;
 
@@ -650,6 +671,82 @@ i_mbox (
     .dmi_reg(mbox_dmi_reg)
 );
 
+//-------------------------
+//Watchdog timer
+//-------------------------
+assign timer1_en = soc_ifc_reg_hwif_out.CPTRA_WDT_TIMER1_EN.timer1_en;
+assign timer2_en = soc_ifc_reg_hwif_out.CPTRA_WDT_TIMER2_EN.timer2_en;
+assign timer1_restart = soc_ifc_reg_hwif_out.CPTRA_WDT_TIMER1_CTRL.timer1_restart;
+assign timer2_restart = soc_ifc_reg_hwif_out.CPTRA_WDT_TIMER2_CTRL.timer2_restart;
+
+always_comb begin
+    for (int i = 0; i < WDT_TIMEOUT_PERIOD_NUM_DWORDS; i++) begin
+        timer1_timeout_period[i] = soc_ifc_reg_hwif_out.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[i].timer1_timeout_period.value;
+        timer2_timeout_period[i] = soc_ifc_reg_hwif_out.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[i].timer2_timeout_period.value;
+    end
+end
+
+//Set WDT status reg
+always_comb begin
+    soc_ifc_reg_hwif_in.CPTRA_WDT_STATUS.t1_timeout.next = t1_timeout;
+    soc_ifc_reg_hwif_in.CPTRA_WDT_STATUS.t2_timeout.next = t2_timeout;
+end
+
+//Generate t1 and t2 timeout interrupt pulse
+always_ff @(posedge clk or negedge cptra_rst_b) begin
+    if(!cptra_rst_b) begin
+        t1_timeout_f <= 'b0;
+        t2_timeout_f <= 'b0;
+    end
+    else begin
+        t1_timeout_f <= t1_timeout;
+        t2_timeout_f <= t2_timeout;
+    end
+end
+
+always_comb t1_timeout_p = t1_timeout & ~t1_timeout_f;
+always_comb t2_timeout_p = t2_timeout & ~t2_timeout_f;
+
+//Detect falling edge on soc_ifc_error_intr to indicate that the interrupt has been serviced
+always_ff @(posedge clk or negedge cptra_rst_b) begin
+    if(!cptra_rst_b) begin
+        soc_ifc_notif_intr_f <= 'b0;
+    end
+    else begin
+        soc_ifc_notif_intr_f <= soc_ifc_notif_intr;
+    end
+end
+assign wdt_notif_t1_intr_serviced = !soc_ifc_notif_intr && soc_ifc_notif_intr_f && t1_timeout;
+assign wdt_notif_t2_intr_serviced = !soc_ifc_notif_intr && soc_ifc_notif_intr_f && t2_timeout && timer2_en;
+
+//Set HW FATAL ERROR reg when timer2 times out in cascaded mode
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.error_code.we = cptra_error_fatal;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.error_code.next = {31'b0, cptra_error_fatal}; //bit 0 will indicate if timer2 has timed out
+
+//TIE-OFFS
+always_comb begin
+    soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.error_code.we = 'b0;
+    soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.error_code.next = 'h0;
+    soc_ifc_reg_hwif_in.CPTRA_FW_ERROR_FATAL.error_code.we = 'b0;
+    soc_ifc_reg_hwif_in.CPTRA_FW_ERROR_FATAL.error_code.next = 'h0;
+    soc_ifc_reg_hwif_in.CPTRA_FW_ERROR_NON_FATAL.error_code.we = 'b0;
+    soc_ifc_reg_hwif_in.CPTRA_FW_ERROR_NON_FATAL.error_code.next = 'h0;
+end
+
+wdt i_wdt (
+    .clk(clk),
+    .cptra_rst_b(cptra_noncore_rst_b),
+    .timer1_en(timer1_en),
+    .timer2_en(timer2_en),
+    .timer1_restart(timer1_restart),
+    .timer2_restart(timer2_restart),
+    .timer1_timeout_period(timer1_timeout_period),
+    .timer2_timeout_period(timer2_timeout_period),
+    .wdt_timer1_timeout_serviced(wdt_notif_t1_intr_serviced),
+    .wdt_timer2_timeout_serviced(wdt_notif_t2_intr_serviced),
+    .t1_timeout(t1_timeout),
+    .t2_timeout(t2_timeout)
+);
 //DMI register writes
 always_comb soc_ifc_reg_hwif_in.CPTRA_BOOTFSM_GO.GO.we = cptra_uncore_dmi_reg_wr_en & cptra_uncore_dmi_reg_en & 
                                                          (cptra_uncore_dmi_reg_addr == DMI_REG_BOOTFSM_GO);

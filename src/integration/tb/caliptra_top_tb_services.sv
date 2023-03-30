@@ -134,6 +134,10 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
     logic                       inject_sha_block;
     logic                       inject_random_data;
 
+    logic                       set_wdt_timer1_period;
+    logic                       set_wdt_timer2_period;
+    logic                       reset_wdt_timer_period;
+
 // Upwards name referencing per 23.8 of IEEE 1800-2017
 `define DEC caliptra_top_dut.rvtop.veer.dec
 
@@ -154,6 +158,7 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
     //         8'h80: 8'h87 - Inject ECC_SEED to kv_key register
     //         8'h88: 8'h8f - Inject HMAC_KEY to kv_key register
     //         8'h90: 8'h97 - Inject SHA_BLOCK to kv_key register
+    //         8'hf1        - Release WDT timer periods so they can be set by the test
     //         8'hf2        - Force clk_gating_en (to use in smoke_test only)
     //         8'hf3        - Make two clients write to KV
     //         8'hf4        - Write random data to KV entry0
@@ -397,6 +402,50 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
         else cycleCnt_smpl_en <= 'b0;
     end
 
+    //WDT assist logic
+    always @(negedge clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b) begin
+            reset_wdt_timer_period <= 'b0;
+        end
+        else if((WriteData[7:0] == 8'hf1) && mailbox_write) begin
+            reset_wdt_timer_period <= 'b1;
+        end
+    end
+
+    always @(negedge clk or negedge cptra_rst_b) begin
+        if(!cptra_rst_b) begin
+            set_wdt_timer1_period <= 'b0;
+            set_wdt_timer2_period <= 'b0;
+        end
+        else begin
+            if(caliptra_top_dut.soc_ifc_top1.i_wdt.wdt_timer1_timeout_serviced) begin
+                set_wdt_timer1_period <= 'b1;
+            end
+            if(caliptra_top_dut.soc_ifc_top1.i_wdt.wdt_timer2_timeout_serviced) begin
+                set_wdt_timer2_period <= 'b1;
+            end
+            if(reset_wdt_timer_period) begin
+                set_wdt_timer1_period <= 'b0;
+                set_wdt_timer2_period <= 'b0;
+            end
+        end
+    end
+
+    always @(negedge clk) begin
+        if(set_wdt_timer1_period) begin
+            force caliptra_top_dut.soc_ifc_top1.timer1_timeout_period = 64'hFFFFFFFF_FFFFFFFF;
+        end
+        else begin
+            release caliptra_top_dut.soc_ifc_top1.timer1_timeout_period;
+        end
+        if(set_wdt_timer2_period) begin
+            force caliptra_top_dut.soc_ifc_top1.timer2_timeout_period = 64'hFFFFFFFF_FFFFFFFF;
+        end
+        else begin
+            release caliptra_top_dut.soc_ifc_top1.timer2_timeout_period;
+        end
+    end
+
 
     `ifndef VERILATOR
         initial begin
@@ -634,6 +683,8 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
         warm_rst = 0;
         timed_warm_rst = 0;
         cold_rst_done = 0;
+
+        set_wdt_timer1_period = 0;
     end
 
    //=========================================================================-

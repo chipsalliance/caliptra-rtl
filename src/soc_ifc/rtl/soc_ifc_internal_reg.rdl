@@ -144,6 +144,8 @@ regfile intr_block_t {
         field {desc = "Enable bit for Command Available";                         } notif_cmd_avail_en = 1'b0;
         field {desc = "Enable bit for Mailbox ECC Single-bit Error (correctable)";} notif_mbox_ecc_cor_en = 1'b0;
         field {desc = "Enable bit for Security State, Debug Locked transition";   } notif_debug_locked_en = 1'b0;
+        field {desc = "Enable bit for WDT Timer1 timeout";                        } notif_wdt_timer1_timeout_en = 1'b0;
+        field {desc = "Enable bit for WDT Timer2 timeout, applicable if timer2 is enabled as an independent timer";} notif_wdt_timer2_timeout_en = 1'b0;
     };
 
     /* ---- Error Interrupt Status ---- */
@@ -183,6 +185,8 @@ regfile intr_block_t {
         field {desc = "Command Available status bit";} notif_cmd_avail_sts = 1'b0;
         field {desc = "Mailbox ECC Single-bit Error (correctable) status bit";} notif_mbox_ecc_cor_sts = 1'b0;
         field {desc = "Security State, Debug Locked transition status bit";   } notif_debug_locked_sts = 1'b0;
+        field {desc = "WDT Timer1 timeout status bit";                        } notif_wdt_timer1_timeout_sts = 1'b0;
+        field {desc = "WDT Timer2 timeout status bit";                        } notif_wdt_timer2_timeout_sts = 1'b0;
     };
 
     /* ---- Aggregated Interrupt Status ---- */
@@ -242,6 +246,8 @@ regfile intr_block_t {
         field {desc = "Command Available trigger bit";                         } notif_cmd_avail_trig = 1'b0;
         field {desc = "Mailbox ECC Single-bit Error (correctable) trigger bit";} notif_mbox_ecc_cor_trig = 1'b0;
         field {desc = "Security State, Debug Locked transition trigger bit";   } notif_debug_locked_trig = 1'b0;
+        field {desc = "WDT Timer1 timeout trigger bit";                        } notif_wdt_timer1_timeout_trig = 1'b0;
+        field {desc = "WDT Timer2 timeout trigger bit";                        } notif_wdt_timer2_timeout_trig = 1'b0;
     };
 
     /* ---- Interrupt Statistics Counter Incrementor ---- */
@@ -304,6 +310,8 @@ regfile intr_block_t {
     intr_count_t      notif_cmd_avail_intr_count_r @0x180; /* Per notification */                                    //
     intr_count_t      notif_mbox_ecc_cor_intr_count_r;     /* Per notification */                                    //
     intr_count_t      notif_debug_locked_intr_count_r;     /* Per notification */                                    //
+    intr_count_t      notif_wdt_timer1_timeout_intr_count_r; /* Per notification */                                  //
+    intr_count_t      notif_wdt_timer2_timeout_intr_count_r; /* Per notification */                                  //
                                                                                                                      //
     // These registers should be treated by SW as reserved, and ignored.                                             //
     // Offset at 0x200 gives enough space for 32 Errors and 32 Notifications                                         //
@@ -319,6 +327,8 @@ regfile intr_block_t {
     intr_count_incr_t notif_cmd_avail_intr_count_incr_r;       /* Per notification count incrementor pulse */        //
     intr_count_incr_t notif_mbox_ecc_cor_intr_count_incr_r;    /* Per notification count incrementor pulse */        //
     intr_count_incr_t notif_debug_locked_intr_count_incr_r;    /* Per notification count incrementor pulse */        //
+    intr_count_incr_t notif_wdt_timer1_timeout_intr_count_incr_r; /* Per notification count incrementor pulse */     //
+    intr_count_incr_t notif_wdt_timer2_timeout_intr_count_incr_r; /* Per notification count incrementor pulse */     //
     /* ------------------------------------------------------------------------------------------------------------- */
 
     /* ---- Reset assignment for Error Events ---- */
@@ -346,6 +356,8 @@ regfile intr_block_t {
     notif_internal_intr_r.notif_cmd_avail_sts    -> enable = notif_intr_en_r.notif_cmd_avail_en;
     notif_internal_intr_r.notif_mbox_ecc_cor_sts -> enable = notif_intr_en_r.notif_mbox_ecc_cor_en;
     notif_internal_intr_r.notif_debug_locked_sts -> enable = notif_intr_en_r.notif_debug_locked_en;
+    notif_internal_intr_r.notif_wdt_timer1_timeout_sts -> enable = notif_intr_en_r.notif_wdt_timer1_timeout_en;
+    notif_internal_intr_r.notif_wdt_timer2_timeout_sts -> enable = notif_intr_en_r.notif_wdt_timer2_timeout_en;
 
     error_internal_intr_r.error_internal_sts     -> next   = error_intr_trig_r.error_internal_trig;
     error_internal_intr_r.error_inv_dev_sts      -> next   = error_intr_trig_r.error_inv_dev_trig;
@@ -356,6 +368,8 @@ regfile intr_block_t {
     notif_internal_intr_r.notif_cmd_avail_sts    -> next   = notif_intr_trig_r.notif_cmd_avail_trig;
     notif_internal_intr_r.notif_mbox_ecc_cor_sts -> next   = notif_intr_trig_r.notif_mbox_ecc_cor_trig;
     notif_internal_intr_r.notif_debug_locked_sts -> next   = notif_intr_trig_r.notif_debug_locked_trig;
+    notif_internal_intr_r.notif_wdt_timer1_timeout_sts -> next   = notif_intr_trig_r.notif_wdt_timer1_timeout_trig;
+    notif_internal_intr_r.notif_wdt_timer2_timeout_sts -> next   = notif_intr_trig_r.notif_wdt_timer2_timeout_trig;
 
     // NOTE: hwset for events is implicitly defined as module input
 
@@ -426,6 +440,17 @@ regfile intr_block_t {
     notif_debug_locked_intr_count_incr_r.pulse -> decr  = notif_debug_locked_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
     notif_debug_locked_intr_count_r.cnt        -> incr  = notif_debug_locked_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
+    notif_wdt_timer1_timeout_intr_count_incr_r.pulse -> hwset    = notif_internal_intr_r.notif_wdt_timer1_timeout_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+    notif_wdt_timer1_timeout_intr_count_incr_r.pulse -> next     = notif_internal_intr_r.notif_wdt_timer1_timeout_sts -> next;  // /      as a pulse to increment the intr_count_r register
+    notif_wdt_timer1_timeout_intr_count_incr_r.pulse -> we       = notif_internal_intr_r.notif_wdt_timer1_timeout_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+    notif_wdt_timer1_timeout_intr_count_incr_r.pulse -> decr     = notif_wdt_timer1_timeout_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+    notif_wdt_timer1_timeout_intr_count_r.cnt        -> incr     = notif_wdt_timer1_timeout_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+    notif_wdt_timer2_timeout_intr_count_incr_r.pulse -> hwset    = notif_internal_intr_r.notif_wdt_timer2_timeout_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+    notif_wdt_timer2_timeout_intr_count_incr_r.pulse -> next     = notif_internal_intr_r.notif_wdt_timer2_timeout_sts -> next;  // /      as a pulse to increment the intr_count_r register
+    notif_wdt_timer2_timeout_intr_count_incr_r.pulse -> we       = notif_internal_intr_r.notif_wdt_timer2_timeout_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+    notif_wdt_timer2_timeout_intr_count_incr_r.pulse -> decr     = notif_wdt_timer2_timeout_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+    notif_wdt_timer2_timeout_intr_count_r.cnt        -> incr     = notif_wdt_timer2_timeout_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
 };
 
