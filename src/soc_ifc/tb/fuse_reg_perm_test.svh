@@ -120,7 +120,6 @@ any subsequent writes to a fuse register will be dropped unless
 
     read_regs(GET_AHB, fuse_regnames, 0, 3);
 
-
     error_ctr = sb.err_count;
 
   end

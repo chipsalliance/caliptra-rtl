@@ -46,7 +46,7 @@ package soc_ifc_tb_pkg;
     int         tid;    
   } transaction_t;
 
-  typedef transaction_t tidq_t [$];  
+  typedef transaction_t transq_t [$];  
 
   typedef string strq_t [$];  
 
@@ -58,13 +58,16 @@ package soc_ifc_tb_pkg;
 
 
   // ================================================================================ 
-  // Constants & Global Data Structures
+  // Constants & Global Data Structures (Private)
   // ================================================================================ 
 
-  int _fuses_locked = 0; // TODO. This is a crutch; should be static var inside a class
+  // TODO. These are crutches; should be static var inside a class
+  int _fuses_locked = 0; 
+  realtime _exp_update_time = 0; 
+  int _clk_period = 0;
 
   // typedef enum logic [2:0] { 
-  logic [2:0] security_state_dict [string] = {
+  logic [2:0] _security_state_dict [string] = {
     "DEBUG_UNLOCKED_UNPROVISIONED" : 3'b000, // {DEBUG_UNLOCKED, UNPROVISIONED},     
     "DEBUG_LOCKED_UNPROVISIONED"   : 3'b100, // {DEBUG_LOCKED, UNPROVISIONED},       
     "DEBUG_UNLOCKED_MANUFACTURING" : 3'b001, // {DEBUG_UNLOCKED, MANUFACTURING},     
@@ -80,12 +83,14 @@ package soc_ifc_tb_pkg;
   // are easier to use and lookup stuff. To be updated if overhead is too high. 
 
   // TODO. This will be merged into register dict at some point as a pair 
-  word_addr_t wide_register_dict [string] = {
+  word_addr_t _wide_register_dict [string] = {
     "CPTRA_FW_EXTENDED_ERROR_INFO"          : 8, 
     "CPTRA_VALID_PAUSER"                    : 5,  
     "CPTRA_PAUSER_LOCK"                     : 5,  
+    "CPTRA_TRNG_DATA"                       : 12,
     "CPTRA_GENERIC_INPUT_WIRES"             : 2,  
     "CPTRA_GENERIC_OUTPUT_WIRES"            : 2,  
+    "CPTRA_FW_REV_ID"                       : 2,
     "FUSE_UDS_SEED"                         : 12,
     "FUSE_FIELD_ENTROPY"                    : 8,
     "FUSE_KEY_MANIFEST_PK_HASH"             : 12,
@@ -97,132 +102,169 @@ package soc_ifc_tb_pkg;
   };
 
 
-  // Identifier                              Base Addr        Offset                                     // Offset    Description
-  word_addr_t soc_register_dict [string] = {
-    "CPTRA_HW_ERROR_FATAL"                  : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_HW_ERROR_FATAL,           // 0x000    Hardware Error Fatal 
-    "CPTRA_HW_ERROR_NON_FATAL"              : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL,       // 0x004    Hardware Error Non-Fatal 
-    "CPTRA_FW_ERROR_FATAL"                  : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FW_ERROR_FATAL,           // 0x008    Firmware Error Fatal 
-    "CPTRA_FW_ERROR_NON_FATAL"              : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FW_ERROR_NON_FATAL,       // 0x00C    Firmware Error Non-Fatal 
-    "CPTRA_HW_ERROR_ENC"                    : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_HW_ERROR_ENC,             // 0x010    Hardware Error Encoding 
-    "CPTRA_FW_ERROR_ENC"                    : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FW_ERROR_ENC,             // 0x014    Firmware Error Encoding 
-    "CPTRA_FW_EXTENDED_ERROR_INFO"          : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FW_EXTENDED_ERROR_INFO_0, // 0x018    [8]  Firmware Extended Error Information 
-    "CPTRA_BOOT_STATUS"                     : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_BOOT_STATUS,              // 0x038    Boot Status 
-    "CPTRA_FLOW_STATUS"                     : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FLOW_STATUS,              // 0x03C    Flow Status 
-    "CPTRA_RESET_REASON"                    : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_RESET_REASON,             // 0x040    Reset Reason 
-    "CPTRA_SECURITY_STATE"                  : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_SECURITY_STATE,           // 0x044    Security State 
-    "CPTRA_VALID_PAUSER"                    : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_VALID_PAUSER_0,           // 0x048    [5]  Valid User Registers 
-    "CPTRA_PAUSER_LOCK"                     : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_PAUSER_LOCK_0,            // 0x05C    [5]  Valid User Register Lock 
-    "CPTRA_TRNG_VALID_PAUSER"               : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_TRNG_VALID_PAUSER,        // 0x070    Valid User for TRNG 
-    "CPTRA_TRNG_PAUSER_LOCK"                : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_TRNG_PAUSER_LOCK,         // 0x074    Valid User for TRNG PAUSER Lock 
-    "CPTRA_TRNG_DATA"                       : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_TRNG_DATA_0,              // 0x078    [12] TRNG Data 
-    "CPTRA_TRNG_STATUS"                     : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_TRNG_STATUS,              // 0x0A8    TRNG Status 
-    "CPTRA_FUSE_WR_DONE"                    : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FUSE_WR_DONE,             // 0x0AC    Fuse Write Done 
-    "CPTRA_TIMER_CONFIG"                    : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_TIMER_CONFIG,             // 0x0B0    Timer Config 
-    "CPTRA_BOOTFSM_GO"                      : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_BOOTFSM_GO,               // 0x0B4    BOOTFSM GO 
-
-    "CPTRA_CLK_GATING_EN"                   : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_CLK_GATING_EN,            // 0x0BC    Global Caliptra Clk gating enable 
-    "CPTRA_GENERIC_INPUT_WIRES"             : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0,    // 0x0C0    [2]  Generic Input Wires 
-    "CPTRA_GENERIC_OUTPUT_WIRES"            : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_GENERIC_OUTPUT_WIRES_0,   // 0x0C8    [2]  Generic Output Wires 
-                                                                                                         // 0x0D0    -    - 
-    "FUSE_UDS_SEED"                         : SOCIFC_BASE + `SOC_IFC_REG_FUSE_UDS_SEED_0,                // 0x200    [12] Unique Device Secret 
-    "FUSE_FIELD_ENTROPY"                    : SOCIFC_BASE + `SOC_IFC_REG_FUSE_FIELD_ENTROPY_0,           // 0x230    [8]  Field Entropy 
-    "FUSE_KEY_MANIFEST_PK_HASH"             : SOCIFC_BASE + `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_0,    // 0x250    [12] - 
-    "FUSE_KEY_MANIFEST_PK_HASH_MASK"        : SOCIFC_BASE + `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK, // 0x280    - 
-    "FUSE_OWNER_PK_HASH"                    : SOCIFC_BASE + `SOC_IFC_REG_FUSE_OWNER_PK_HASH_0,           // 0x284    [12] - 
-    "FUSE_FMC_KEY_MANIFEST_SVN"             : SOCIFC_BASE + `SOC_IFC_REG_FUSE_FMC_KEY_MANIFEST_SVN,      // 0x2B4    - 
-    "FUSE_RUNTIME_SVN"                      : SOCIFC_BASE + `SOC_IFC_REG_FUSE_RUNTIME_SVN_0,             // 0x2B8    [4]  - 
-    "FUSE_ANTI_ROLLBACK_DISABLE"            : SOCIFC_BASE + `SOC_IFC_REG_FUSE_ANTI_ROLLBACK_DISABLE,     // 0x2C8         - 
-    "FUSE_IDEVID_CERT_ATTR"                 : SOCIFC_BASE + `SOC_IFC_REG_FUSE_IDEVID_CERT_ATTR_0,        // 0x2CC    [24] - 
-    "FUSE_IDEVID_MANUF_HSM_ID"              : SOCIFC_BASE + `SOC_IFC_REG_FUSE_IDEVID_MANUF_HSM_ID_0,     // 0x32C    [4]  - 
-    "FUSE_LIFE_CYCLE"                       : SOCIFC_BASE + `SOC_IFC_REG_FUSE_LIFE_CYCLE,                // 0x33C         - 
-            
-    "INTERNAL_OBF_KEY"                      : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_OBF_KEY_0,             // 0x600    [8]  De-Obfuscation Key 
-    "INTERNAL_ICCM_LOCK"                    : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_ICCM_LOCK,             // 0x620    ICCM Lock 
-    "INTERNAL_FW_UPDATE_RESET"              : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET,       // 0x624    FW Update Reset 
-    "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES"  : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES,// 0x628   FW Update Reset Wait Cycles 
-    "INTERNAL_NMI_VECTOR"                   : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_NMI_VECTOR             // 0x62C    NMI Vector 
-                                                                                                         // 0x630..0x7fc    
+  // Identifier                                       Base Addr      Offset                                      // Offset   Description
+  word_addr_t _soc_register_dict [string] = {
+    "CPTRA_HW_ERROR_FATAL"                          : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_HW_ERROR_FATAL,           // 0x000    Hardware Error Fatal 
+    "CPTRA_HW_ERROR_NON_FATAL"                      : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL,       // 0x004    Hardware Error Non-Fatal 
+    "CPTRA_FW_ERROR_FATAL"                          : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FW_ERROR_FATAL,           // 0x008    Firmware Error Fatal 
+    "CPTRA_FW_ERROR_NON_FATAL"                      : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FW_ERROR_NON_FATAL,       // 0x00c    Firmware Error Non-Fatal 
+    "CPTRA_HW_ERROR_ENC"                            : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_HW_ERROR_ENC,             // 0x010    Hardware Error Encoding 
+    "CPTRA_FW_ERROR_ENC"                            : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FW_ERROR_ENC,             // 0x014    Firmware Error Encoding 
+    "CPTRA_FW_EXTENDED_ERROR_INFO"                  : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FW_EXTENDED_ERROR_INFO_0, // 0x018    [8]  Firmware Extended Error Information 
+    "CPTRA_BOOT_STATUS"                             : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_BOOT_STATUS,              // 0x038    Boot Status 
+    "CPTRA_FLOW_STATUS"                             : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FLOW_STATUS,              // 0x03c    Flow Status 
+    "CPTRA_RESET_REASON"                            : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_RESET_REASON,             // 0x040    Reset Reason 
+    "CPTRA_SECURITY_STATE"                          : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_SECURITY_STATE,           // 0x044    Security State 
+    "CPTRA_VALID_PAUSER"                            : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_VALID_PAUSER_0,           // 0x048    [5]  Valid User Registers 
+    "CPTRA_PAUSER_LOCK"                             : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_PAUSER_LOCK_0,            // 0x05c    [5]  Valid User Register Lock 
+    "CPTRA_TRNG_VALID_PAUSER"                       : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_TRNG_VALID_PAUSER,        // 0x070    Valid User for TRNG 
+    "CPTRA_TRNG_PAUSER_LOCK"                        : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_TRNG_PAUSER_LOCK,         // 0x074    Valid User for TRNG PAUSER Lock 
+    "CPTRA_TRNG_DATA"                               : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_TRNG_DATA_0,              // 0x078    [12] TRNG Data 
+    "CPTRA_TRNG_STATUS"                             : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_TRNG_STATUS,              // 0x0a8    TRNG Status 
+    "CPTRA_FUSE_WR_DONE"                            : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FUSE_WR_DONE,             // 0x0ac    Fuse Write Done 
+    "CPTRA_TIMER_CONFIG"                            : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_TIMER_CONFIG,             // 0x0b0    Timer Config 
+    "CPTRA_BOOTFSM_GO"                              : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_BOOTFSM_GO,               // 0x0b4    BOOTFSM GO 
+    "CPTRA_DBG_MANUF_SERVICE_REG"                   : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_DBG_MANUF_SERVICE_REG,    // 0x0b8
+    "CPTRA_CLK_GATING_EN"                           : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_CLK_GATING_EN,            // 0x0bc    Global Caliptra Clk gating enable 
+    "CPTRA_GENERIC_INPUT_WIRES"                     : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0,    // 0x0c0    [2]  Generic Input Wires 
+    "CPTRA_GENERIC_OUTPUT_WIRES"                    : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_GENERIC_OUTPUT_WIRES_0,   // 0x0c8    [2]  Generic Output Wires 
+    "CPTRA_HW_REV_ID"                               : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_HW_REV_ID,                // 0x0d0   
+    "CPTRA_FW_REV_ID"                               : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FW_REV_ID_0,              // 0x0d4   
+    // 0x0dc..0x1fc
+    "FUSE_UDS_SEED"                                 : SOCIFC_BASE + `SOC_IFC_REG_FUSE_UDS_SEED_0,                // 0x200    [12] Unique Device Secret 
+    "FUSE_FIELD_ENTROPY"                            : SOCIFC_BASE + `SOC_IFC_REG_FUSE_FIELD_ENTROPY_0,           // 0x230    [8]  Field Entropy 
+    "FUSE_KEY_MANIFEST_PK_HASH"                     : SOCIFC_BASE + `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_0,    // 0x250    [12] - 
+    "FUSE_KEY_MANIFEST_PK_HASH_MASK"                : SOCIFC_BASE + `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK, // 0x280    - 
+    "FUSE_OWNER_PK_HASH"                            : SOCIFC_BASE + `SOC_IFC_REG_FUSE_OWNER_PK_HASH_0,           // 0x284    [12] - 
+    "FUSE_FMC_KEY_MANIFEST_SVN"                     : SOCIFC_BASE + `SOC_IFC_REG_FUSE_FMC_KEY_MANIFEST_SVN,      // 0x2b4    - 
+    "FUSE_RUNTIME_SVN"                              : SOCIFC_BASE + `SOC_IFC_REG_FUSE_RUNTIME_SVN_0,             // 0x2b8    [4]  - 
+    "FUSE_ANTI_ROLLBACK_DISABLE"                    : SOCIFC_BASE + `SOC_IFC_REG_FUSE_ANTI_ROLLBACK_DISABLE,     // 0x2c8         - 
+    "FUSE_IDEVID_CERT_ATTR"                         : SOCIFC_BASE + `SOC_IFC_REG_FUSE_IDEVID_CERT_ATTR_0,        // 0x2cc    [24] - 
+    "FUSE_IDEVID_MANUF_HSM_ID"                      : SOCIFC_BASE + `SOC_IFC_REG_FUSE_IDEVID_MANUF_HSM_ID_0,     // 0x32c    [4]  - 
+    "FUSE_LIFE_CYCLE"                               : SOCIFC_BASE + `SOC_IFC_REG_FUSE_LIFE_CYCLE,                // 0x33c         - 
+    // 0x340..0x5fc           
+    "INTERNAL_OBF_KEY"                              : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_OBF_KEY_0,             // 0x600    [8]  De-Obfuscation Key 
+    "INTERNAL_ICCM_LOCK"                            : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_ICCM_LOCK,             // 0x620    ICCM Lock 
+    "INTERNAL_FW_UPDATE_RESET"                      : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET,       // 0x624    FW Update Reset 
+    "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES"          : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES,// 0x628   FW Update Reset Wait Cycles 
+    "INTERNAL_NMI_VECTOR"                           : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_NMI_VECTOR,            // 0x62c    NMI Vector 
+                                                                                                                 // 0x630..0x7fc    
+    // "intr_block_rf"                         
+    "INTR_BRF_GLOBAL_INTR_EN_R"                     : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R,                      // 0x800
+    "INTR_BRF_ERROR_INTR_EN_R"                      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R,                       // 0x804
+    "INTR_BRF_NOTIF_INTR_EN_R"                      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R,                       // 0x808
+    "INTR_BRF_ERROR_GLOBAL_INTR_R"                  : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R,                   // 0x80c
+    "INTR_BRF_NOTIF_GLOBAL_INTR_R"                  : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R,                   // 0x810
+    "INTR_BRF_ERROR_INTERNAL_INTR_R"                : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R,                 // 0x814
+    "INTR_BRF_NOTIF_INTERNAL_INTR_R"                : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R,                 // 0x818
+    "INTR_BRF_ERROR_INTR_TRIG_R"                    : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R,                     // 0x81c
+    "INTR_BRF_NOTIF_INTR_TRIG_R"                    : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R,                     // 0x820
+    // 0x824..0x8fc
+    "INTR_BRF_ERROR_INTERNAL_INTR_COUNT_R"          : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R,           // 0x900
+    "INTR_BRF_ERROR_INV_DEV_INTR_COUNT_R"           : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_R,            // 0x904
+    "INTR_BRF_ERROR_CMD_FAIL_INTR_COUNT_R"          : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_R,           // 0x908
+    "INTR_BRF_ERROR_BAD_FUSE_INTR_COUNT_R"          : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_R,           // 0x90c
+    "INTR_BRF_ERROR_ICCM_BLOCKED_INTR_COUNT_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_R,       // 0x910
+    "INTR_BRF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R,       // 0x914
+    // 0x918..0x97c
+    "INTR_BRF_NOTIF_CMD_AVAIL_INTR_COUNT_R"         : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_R,          // 0x980
+    "INTR_BRF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R,       // 0x984
+    "INTR_BRF_NOTIF_DEBUG_LOCKED_INTR_COUNT_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_R,       // 0x988
+    // 0x98c..0x9fc 
+    "INTR_BRF_ERROR_INTERNAL_INTR_COUNT_INCR_R"     : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R,      // 0xa00
+    "INTR_BRF_ERROR_INV_DEV_INTR_COUNT_INCR_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_INCR_R,       // 0xa04
+    "INTR_BRF_ERROR_CMD_FAIL_INTR_COUNT_INCR_R"     : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_INCR_R,      // 0xa08
+    "INTR_BRF_ERROR_BAD_FUSE_INTR_COUNT_INCR_R"     : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_INCR_R,      // 0xa0c
+    "INTR_BRF_ERROR_ICCM_BLOCKED_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_INCR_R,  // 0xa10
+    "INTR_BRF_ERROR_MBOX_ECC_UNC_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_INCR_R,  // 0xa14
+    "INTR_BRF_NOTIF_CMD_AVAIL_INTR_COUNT_INCR_R"    : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_INCR_R,     // 0xa18
+    "INTR_BRF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R,  // 0xa1c
+    "INTR_BRF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R   // 0xa20
   };
-    // Following needs to be added into the block 
-    // "intr_block_rf"                         : `SOCIFC_BASE + ... 
-
-/*
-    "INTR_BLOCK_RF_GLOBAL_INTR_EN_R"                       : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R,                      // 0x800
-    "INTR_BLOCK_RF_ERROR_INTR_EN_R"                        : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R,                       // 0x804
-    "INTR_BLOCK_RF_NOTIF_INTR_EN_R"                        : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R,                       // 0x808
-    "INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R"                    : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R,                   // 0x80c
-    "INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R"                    : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R,                   // 0x810
-    "INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R"                  : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R,                 // 0x814
-    "INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R"                  : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R,                 // 0x818
-    "INTR_BLOCK_RF_ERROR_INTR_TRIG_R"                      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R,                     // 0x81c
-    "INTR_BLOCK_RF_NOTIF_INTR_TRIG_R"                      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R,                     // 0x820
-    // - 0x824..0x8fc
-    "INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R"            : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R,           // 0x900
-    "INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_R"             : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_R,            // 0x904
-    "INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_R"            : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_R,           // 0x908
-    "INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_R"            : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_R,           // 0x90c
-    "INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_R"        : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_R,       // 0x910
-    "INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R"        : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R,       // 0x914
-    // - 0x914..0x97c
-    "INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_R"           : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_R,          // 0x980
-    "INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R"        : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R,       // 0x984
-    "INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_R"        : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_R,       // 0x988
-    // - 0x98c..0x9fc 
-    "INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R"       : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R,      // 0xa00
-    "INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_INCR_R"        : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_INCR_R,       // 0xa04
-    "INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_INCR_R"       : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_INCR_R,      // 0xa08
-    "INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_INCR_R"       : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_INCR_R,      // 0xa0c
-    "INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_INCR_R"   : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_INCR_R,  // 0xa10
-    "INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_INCR_R"   : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_INCR_R,  // 0xa14
-    "INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_INCR_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_INCR_R,     // 0xa18
-    "INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R"   : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R,  // 0xa1c
-    "INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R"   : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R,  // 0xa20
-
-
-
-  // Check these MASK bits
-    "INTR_BLOCK_RF_GLOBAL_INTR_EN_R"                       : exp_data = curr_data & apb_wr_mask | indata & ahb_wr_mask & `SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R,                      // 0x800
-    "INTR_BLOCK_RF_ERROR_INTR_EN_R"                        : exp_data = curr_data & apb_wr_mask | indata & ahb_wr_mask & `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R,                       // 0x804
-    "INTR_BLOCK_RF_NOTIF_INTR_EN_R"                        : exp_data = curr_data & apb_wr_mask | indata & ahb_wr_mask & `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R,                       // 0x808
-    "INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R"                    : exp_data = curr_data & apb_wr_mask | indata & ahb_wr_mask & `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R,                   // 0x80c
-    "INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R"                    : exp_data = curr_data & apb_wr_mask | indata & ahb_wr_mask & `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R,                   // 0x810
-    "INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R"                  : exp_data = curr_data & apb_wr_mask | indata & ahb_wr_mask & `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R,                 // 0x814
-    "INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R"                  : exp_data = curr_data & apb_wr_mask | indata & ahb_wr_mask & `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R,                 // 0x818
-    "INTR_BLOCK_RF_ERROR_INTR_TRIG_R"                      : exp_data = curr_data & apb_wr_mask | indata & ahb_wr_mask & `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R,                     // 0x81c
-    "INTR_BLOCK_RF_NOTIF_INTR_TRIG_R"                      : exp_data = curr_data & apb_wr_mask | indata & ahb_wr_mask & `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R,                     // 0x820
- 
-
-  // 1-bit count increment
-    "INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R"         : exp_data = curr_data & apb_wr_mask | indata & ahb_wr_mask & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R_PULSE_MASK    
-    "INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_INCR_R"          : exp_data = curr_data & apb_wr_mask | indata & ahb_wr_mask & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_INCR_R_PULSE_MASK     
-    "INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_INCR_R"         : exp_data = curr_data & apb_wr_mask | indata & ahb_wr_mask & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_INCR_R_PULSE_MASK    
-    "INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_INCR_R"         : exp_data = curr_data & apb_wr_mask | indata & ahb_wr_mask & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_INCR_R_PULSE_MASK    
-    "INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_INCR_R"     : exp_data = curr_data & apb_wr_mask | indata & ahb_wr_mask & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_INCR_R_PULSE_MASK
-    "INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_INCR_R"     : exp_data = curr_data & apb_wr_mask | indata & ahb_wr_mask & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_INCR_R_PULSE_MASK
-    "INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_INCR_R"        : exp_data = curr_data & apb_wr_mask | indata & ahb_wr_mask & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_INCR_R_PULSE_MASK   
-    "INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R"     : exp_data = curr_data & apb_wr_mask | indata & ahb_wr_mask & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R_PULSE_MASK
-    "INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R"     : exp_data = curr_data & apb_wr_mask | indata & ahb_wr_mask & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R_PULSE_MASK
-*/
 
 
   // Only non-zero power-on values are stored; also populated by SocRegisters instantiation 
-  dword_t soc_register_initval_dict [string] = {
+  dword_t _soc_register_initval_dict [string] = {
     "CPTRA_VALID_PAUSER"                   : 32'hffff_ffff,
     "CPTRA_TRNG_VALID_PAUSER"              : 32'hffff_ffff,
-    "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES" : 32'h5
+    "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES" : 32'h5,
+    "CPTRA_HW_REV_ID"                      : 32'h1 
   };
+
 
   // Sticky registers preserve values across warm reset -- groups of regs might be populated by code
   // mask of all bits to be protected in case of warm reset
-  word_addr_t sticky_register_prefix_dict [string] = {
-    "FUSE_": 32'hffff_ffff 
+  word_addr_t _sticky_register_prefix_dict [string] = {
+    "FUSE_":                                         32'hffff_ffff, 
+    "CPTRA_HW_ERROR_":                               32'hffff_ffff, // FATAL, NON_FATAL, ENC                          
+    "CPTRA_FW_ERROR_":                               32'hffff_ffff, // FATAL, NON_FATAL, ENC                          
+    "CPTRA_FW_EXTENDED_ERROR_INFO":                  32'hffff_ffff,
+    "CPTRA_RESET_REASON":                            32'h2, // field WARM_RESET 
+    "CPTRA_FUSE_WR_DONE":                            32'h1, // field 0 
+    "CPTRA_TIMER_CONFIG":                            32'hffff_ffff,                           
+    "INTR_BRF_ERROR_INTERNAL_INTR_R":                32'h3f, // fields 5:0
+    "INTR_BRF_ERROR_INTERNAL_INTR_COUNT_R":          32'hffff_ffff,          
+    "INTR_BRF_ERROR_INV_DEV_INTR_COUNT_R":           32'hffff_ffff,
+    "INTR_BRF_ERROR_CMD_FAIL_INTR_COUNT_R":          32'hffff_ffff,
+    "INTR_BRF_ERROR_BAD_FUSE_INTR_COUNT_R":          32'hffff_ffff,
+    "INTR_BRF_ERROR_ICCM_BLOCKED_INTR_COUNT_R":      32'hffff_ffff,
+    "INTR_BRF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R":      32'hffff_ffff
   };
 
-  // holds addr -> name inverse map of soc_register_dict - populated by SocRegisters instantiation 
-  string imap_soc_register_dict [word_addr_t]; 
+
+  // mask bits that reflect which fields can be modified  
+  dword_t _soc_register_mask_dict [string] = {
+    "CPTRA_HW_CONFIG"                                  : (`SOC_IFC_REG_CPTRA_HW_CONFIG_ITRNG_EN_MASK |
+                                                          `SOC_IFC_REG_CPTRA_HW_CONFIG_QSPI_EN_MASK  |                                                  
+                                                          `SOC_IFC_REG_CPTRA_HW_CONFIG_I3C_EN_MASK),
+    "FUSE_ANTI_ROLLBACK_DISABLE"                       : `SOC_IFC_REG_FUSE_ANTI_ROLLBACK_DISABLE_DIS_MASK, 
+    "FUSE_KEY_MANIFEST_PK_HASH_MASK"                   : `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_MASK_MASK,
+    "FUSE_LIFE_CYCLE"                                  : `SOC_IFC_REG_FUSE_LIFE_CYCLE_LIFE_CYCLE_MASK, 
+    "CPTRA_FLOW_STATUS"                                : (`SOC_IFC_REG_CPTRA_FLOW_STATUS_STATUS_MASK              |
+                                                           `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK       |
+                                                           `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_RUNTIME_MASK  |
+                                                           `SOC_IFC_REG_CPTRA_FLOW_STATUS_MAILBOX_FLOW_DONE_MASK), 
+    "CPTRA_PAUSER_LOCK"                                : `SOC_IFC_REG_CPTRA_PAUSER_LOCK_0_LOCK_MASK,   // same for all 5 pausers
+    "CPTRA_TRNG_PAUSER_LOCK"                           : `SOC_IFC_REG_CPTRA_TRNG_PAUSER_LOCK_LOCK_MASK,
+    "CPTRA_TRNG_STATUS.APB"                            : `SOC_IFC_REG_CPTRA_TRNG_STATUS_DATA_WR_DONE_MASK, 
+    "CPTRA_TRNG_STATUS.AHB"                            : `SOC_IFC_REG_CPTRA_TRNG_STATUS_DATA_REQ_MASK,     
+    "CPTRA_FUSE_WR_DONE"                               : `SOC_IFC_REG_CPTRA_FUSE_WR_DONE_DONE_MASK,
+    "CPTRA_BOOTFSM_GO"                                 : `SOC_IFC_REG_CPTRA_BOOTFSM_GO_GO_MASK, 
+    "CPTRA_CLK_GATING_EN"                              : `SOC_IFC_REG_CPTRA_CLK_GATING_EN_CLK_GATING_EN_MASK ,
+    "INTERNAL_ICCM_LOCK"                               : `SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK, 
+    "INTERNAL_FW_UPDATE_RESET"                         : `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK ,
+    "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES"             : `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES_WAIT_CYCLES_MASK,
+
+    "INTR_BRF_ERROR_INTERNAL_INTR_COUNT_INCR_R"        : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R_PULSE_MASK    ,   
+    "INTR_BRF_ERROR_INV_DEV_INTR_COUNT_INCR_R"         : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_INCR_R_PULSE_MASK     ,
+    "INTR_BRF_ERROR_CMD_FAIL_INTR_COUNT_INCR_R"        : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_INCR_R_PULSE_MASK    ,
+    "INTR_BRF_ERROR_BAD_FUSE_INTR_COUNT_INCR_R"        : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_INCR_R_PULSE_MASK    ,
+    "INTR_BRF_ERROR_ICCM_BLOCKED_INTR_COUNT_INCR_R"    : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_INCR_R_PULSE_MASK,
+    "INTR_BRF_ERROR_MBOX_ECC_UNC_INTR_COUNT_INCR_R"    : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_INCR_R_PULSE_MASK,
+    "INTR_BRF_NOTIF_CMD_AVAIL_INTR_COUNT_INCR_R"       : `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_INCR_R_PULSE_MASK   ,
+    "INTR_BRF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R"    : `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R_PULSE_MASK,
+    "INTR_BRF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R"    : `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R_PULSE_MASK 
+  };  
+
+  // holds addr -> name inverse map of _soc_register_dict - populated by SocRegisters instantiation 
+  string _imap_soc_register_dict [word_addr_t]; 
 
   // Populated by SocRegisters instantiation
-  word_addr_t exp_reg_data_dict [string]; 
+  word_addr_t _exp_register_data_dict [string]; 
+
+  // pulsed registers - includes self-clearing bits
+  string _pulsed_regnames [] = {
+    "INTERNAL_FW_UPDATE_RESET",
+    "INTR_BRF_ERROR_INTERNAL_INTR_COUNT_INCR_R"      ,        
+    "INTR_BRF_ERROR_INV_DEV_INTR_COUNT_INCR_R"       ,
+    "INTR_BRF_ERROR_CMD_FAIL_INTR_COUNT_INCR_R"      ,
+    "INTR_BRF_ERROR_BAD_FUSE_INTR_COUNT_INCR_R"      ,
+    "INTR_BRF_ERROR_ICCM_BLOCKED_INTR_COUNT_INCR_R"  ,
+    "INTR_BRF_ERROR_MBOX_ECC_UNC_INTR_COUNT_INCR_R"  ,
+    "INTR_BRF_NOTIF_CMD_AVAIL_INTR_COUNT_INCR_R"     ,
+    "INTR_BRF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R"  ,
+    "INTR_BRF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R" 
+  }; 
 
 
   // ================================================================================ 
@@ -231,8 +273,8 @@ package soc_ifc_tb_pkg;
 
   function int get_ss_code(input string ss_name);
 
-    if (security_state_dict.exists(ss_name)) 
-      return int'(security_state_dict[ss_name]);
+    if (_security_state_dict.exists(ss_name)) 
+      return int'(_security_state_dict[ss_name]);
     else 
       return -1;
 
@@ -243,8 +285,8 @@ package soc_ifc_tb_pkg;
 
     logic [2:0] ss_code_3bit; 
 
-    foreach (security_state_dict[ss_name]) begin
-      if (security_state_dict[ss_name] == ss_code[2:0]) 
+    foreach (_security_state_dict[ss_name]) begin
+      if (_security_state_dict[ss_name] == ss_code[2:0]) 
         return ss_name; 
     end
     return "";
@@ -252,213 +294,301 @@ package soc_ifc_tb_pkg;
   endfunction
 
 
+  function dword_t get_mask(string addr_name);
+
+    return _soc_register_mask_dict.exists(addr_name) ? _soc_register_mask_dict[addr_name] : 32'hffff_ffff; 
+
+  endfunction
+
+
+
   function dword_t get_initval(string addr_name);
 
-    return soc_register_initval_dict.exists(addr_name) ? soc_register_initval_dict[addr_name] : '0; 
+    return _soc_register_initval_dict.exists(addr_name) ? _soc_register_initval_dict[addr_name] : '0; 
 
   endfunction
 
 
   function void set_initval(string addr_name, dword_t value); 
 
-    if (soc_register_initval_dict.exists(addr_name))
+    if (_soc_register_initval_dict.exists(addr_name))
       $display("TB INFO. Overwriting register init value for %s with value 0x%08x", addr_name, value);
     else
       $display("TB INFO. Adding new register init value for %s with value 0x%08x", addr_name, value);
-    soc_register_initval_dict[addr_name] = value;
+    _soc_register_initval_dict[addr_name] = value;
     
   endfunction
 
 
+  // Needs RMW of register without APB or AHB writes 
+  function dword_t update_CPTRA_SECURITY_STATE(logic scan_mode, logic debug_state, logic [1:0] lifecycle); 
+
+    begin
+      update_exp_regval("CPTRA_SECURITY_STATE", 
+        mask_shifted(lifecycle, `SOC_IFC_REG_CPTRA_SECURITY_STATE_DEVICE_LIFECYCLE_MASK) |   
+        mask_shifted(debug_state, `SOC_IFC_REG_CPTRA_SECURITY_STATE_DEBUG_LOCKED_MASK) |   
+        mask_shifted(scan_mode, `SOC_IFC_REG_CPTRA_SECURITY_STATE_SCAN_MODE_MASK),
+        SET_DIRECT);          
+
+      $display ("TB INFO. Fields for CPTRA_SECURITY_STATE changed to 0x%08x", _exp_register_data_dict["CPTRA_SECURITY_STATE"]); 
+      return _exp_register_data_dict["CPTRA_SECURITY_STATE"];
+    end 
+
+  endfunction 
 
 
-  function void update_exp_regval(word_addr_t addr, dword_t indata, access_t modify);
-    // Find out what was attempted to be modified 
-    // Look at existing regval
-    // Update regval state 
+  // Needs RMW of register without APB or AHB writes 
+  function logic [63:0] update_CPTRA_GENERIC_INPUT_WIRES(logic [31:0] wires1, logic [31:0] wires0);
+
+    begin
+      update_exp_regval("CPTRA_GENERIC_INPUT_WIRES0", wires0, SET_DIRECT);
+      update_exp_regval("CPTRA_GENERIC_INPUT_WIRES1", wires1, SET_DIRECT);
+
+      $display ("TB INFO. Fields for CPTRA_GENERIC_INPUT_WIRES0 changed to 0x%08x", _exp_register_data_dict["CPTRA_GENERIC_INPUT_WIRES0"]); 
+      $display ("TB INFO. Fields for CPTRA_GENERIC_INPUT_WIRES1 changed to 0x%08x", _exp_register_data_dict["CPTRA_GENERIC_INPUT_WIRES1"]); 
+      return {_exp_register_data_dict["CPTRA_GENERIC_INPUT_WIRES1"], _exp_register_data_dict["CPTRA_GENERIC_INPUT_WIRES0"]};
+    end
+
+  endfunction
+
+
+  // Needs RMW of register without APB or AHB writes 
+  function dword_t update_CPTRA_FLOW_STATUS(int fuse_ready_val);
+
+    dword_t tmp_data;
+
+    begin
+      tmp_data = _exp_register_data_dict["CPTRA_FLOW_STATUS"];
+      tmp_data = tmp_data & (32'hffff_ffff ^ `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FUSES_MASK);
+      tmp_data = tmp_data | mask_shifted(fuse_ready_val, `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FUSES_MASK);
+      // $display( "TB INFO. update_CPTRA_FLOW_STATUS(%d) at time %t. new tmp_data = 0x%08x", fuse_ready_val, $realtime, tmp_data); 
+
+      update_exp_regval("CPTRA_FLOW_STATUS", tmp_data, SET_DIRECT); 
+
+      $display( "TB INFO. Updated expected value of CPTRA_FLOW_STATUS = 0x%08x", _exp_register_data_dict["CPTRA_FLOW_STATUS"]);
+      return _exp_register_data_dict["CPTRA_FLOW_STATUS"];
+    end 
+
+  endfunction 
+
+
+  // Needs RMW of register without APB or AHB writes 
+  function dword_t update_CPTRA_RESET_REASON(int wrm_rst, int fw_upd);
+
+    begin
+      update_exp_regval("CPTRA_RESET_REASON", 
+        mask_shifted(wrm_rst, `SOC_IFC_REG_CPTRA_RESET_REASON_WARM_RESET_MASK) | 
+        mask_shifted(fw_upd, `SOC_IFC_REG_CPTRA_RESET_REASON_FW_UPD_RESET_MASK), 
+        SET_DIRECT);
+
+      $display ("TB INFO. Fields for CPTRA_RESET_REASON changed to 0x%08x", _exp_register_data_dict["CPTRA_RESET_REASON"]); 
+      return _exp_register_data_dict["CPTRA_RESET_REASON"];
+    end 
+
+  endfunction 
+
+
+  function void update_exp_regval(string addr_name, dword_t indata, access_t modify);
+    // "expected" model of register. Read-modify-write model 
    
-    string addr_name;
-    dword_t curr_data, exp_data, apb_wr_mask, ahb_wr_mask;
-
-    // NOTE. (apb|ahb)_wr_mask => if set, that particular bit CAN be written over (apb|ahb). 
+    word_addr_t addr; 
+    dword_t curr_data, exp_data;
+    dword_t ahb_indata, apb_indata, apb_rodata, ahb_rodata;
 
     string tmpstr; 
     string pauser_suffix; 
     string pauser_lock_regname; 
-    int pauser_locked, fuses_locked; 
+    int pauser_locked, fuses_locked, lock_mask, iccm_locked; 
 
     dword_t sscode;
+    dword_t tmp_data;
 
     begin
 
-      sscode = soc_register_initval_dict["CPTRA_SECURITY_STATE"];
+      addr = _soc_register_dict[addr_name];
+      sscode = _soc_register_initval_dict["CPTRA_SECURITY_STATE"];
+      _exp_update_time = $realtime; 
 
       if (modify == COLD_RESET) begin
         reset_exp_data();
         return;
-
-      end else if (modify == WARM_RESET) begin
-        warm_reset_exp_data();
-        return;
-
-      end else if (!imap_soc_register_dict.exists(addr)) begin
-        $display ("TB ERROR.  Address 0x%08x not found in inverse address map!", addr);
-        return;
-      
       end
 
-      addr_name = imap_soc_register_dict[addr];  
-
-      if (modify == SET_DIRECT) begin
-        exp_reg_data_dict[addr_name] = indata;
+      if (modify == WARM_RESET) begin
+        warm_reset_exp_data();
         return;
+      end
 
+      if (!_imap_soc_register_dict.exists(addr)) begin
+        $display ("TB ERROR.  Address 0x%08x not found in inverse address map!", addr);
+        return;
+      end
+
+      addr_name = _imap_soc_register_dict[addr];  
+
+      // With direct modification responsibility is on caller to ensure mask fields are respected!!  
+      if (modify == SET_DIRECT) begin
+        _exp_register_data_dict[addr_name] = indata;
+        if ((addr_name == "INTERNAL_FW_UPDATE_RESET") &  (indata[0] == 1'b1)) begin
+            _exp_register_data_dict["INTERNAL_ICCM_LOCK"] = '0;  
+            $display ("TB INFO: Cross modification - Writing '1' to INTERNAL_FW_UPDATE_RESET also reset INTERNAL_ICCM_LOCK"); 
+
+            tmp_data = _exp_register_data_dict["CPTRA_RESET_REASON"]; 
+            tmp_data = tmp_data & (32'hffff_ffff ^ `SOC_IFC_REG_CPTRA_RESET_REASON_FW_UPD_RESET_MASK)  |
+                        tmp_data & mask_shifted(1'b1, `SOC_IFC_REG_CPTRA_RESET_REASON_FW_UPD_RESET_MASK); 
+            $display ("TB INFO: Cross modification - Writing '1' to INTERNAL_FW_UPDATE_RESET also sets CPTRA_RESET_REASON"); 
+        end
+        return;
       end 
 
-      curr_data = exp_reg_data_dict[addr_name];
-      apb_wr_mask = {32{(modify == SET_APB)}}; 
-      ahb_wr_mask = {32{(modify == SET_AHB)}}; 
 
-      // handle wide registers first, then normal sized ones
-      //  RW access => indata & a?b_wr_mask
-      //  RO access => curr_data & a?b_wr_mask
-
-      // fuses_locked = (exp_reg_data_dict["CPTRA_FUSE_WR_DONE"]);
       fuses_locked = _fuses_locked; 
 
-      if (str_startswith(addr_name, "FUSE_UDS_SEED"))                    
+      curr_data = _exp_register_data_dict[addr_name];
+
+      apb_indata = indata & {32{(modify == SET_APB)}}; // apb_mutable;
+      ahb_indata = indata & {32{(modify == SET_AHB)}}; // ahb_mutable;
+
+      apb_rodata = curr_data & {32{(modify == SET_APB)}}; // apb_readonly;
+      ahb_rodata = curr_data & {32{(modify == SET_AHB)}}; // ahb_readonly;
+
+      // handle wide registers first, then normal sized ones
+
+      // if (is_pulsed_reg(addr_name)) begin
+        // realtime t = $realtime; 
+        // exp_data = 0; // TODO. fix this properly outside of this function within "check_entry"
+      //   $display("TB WARNING. Pulsed reg check implmentation needs to be solidified");
+
+      if (str_startswith(addr_name, "CPTRA_TRNG_DATA"))
+        exp_data = ahb_rodata | apb_indata;  // ahb-RO
+
+      else if (str_startswith(addr_name, "CPTRA_FW_REV_ID")) begin
+        exp_data = ahb_indata | apb_rodata; // apb-RO
+        // $display( "TB DEBUG. CPTRA_FW_REV_ID: addr %-30s, exp_data 0x%08x", addr_name, exp_data); 
+      
+      end else if ((str_startswith(addr_name, "FUSE_UDS_SEED")) || (str_startswith(addr_name, "FUSE_FIELD_ENTROPY")))
         exp_data = '0; // not accessible over APB or AHB 
 
-      else if (str_startswith(addr_name, "FUSE_FIELD_ENTROPY"))          
-        exp_data = '0; // not accessible over APB or AHB 
-
-      else if ((str_startswith(addr_name, "FUSE_KEY_MANIFEST_PK_HASH"))  && (addr_name != "FUSE_KEY_MANIFEST_PK_HASH_MASK"))
-        exp_data = fuses_locked ? curr_data : (indata & apb_wr_mask | curr_data & ahb_wr_mask); // ahb-RO 
-
-      else if (str_startswith(addr_name, "FUSE_OWNER_PK_HASH"))                    
-        exp_data = fuses_locked ? curr_data : (indata & apb_wr_mask | curr_data & ahb_wr_mask); // ahb-RO 
-
-      else if (str_startswith(addr_name, "FUSE_RUNTIME_SVN"))
-        exp_data = fuses_locked ? curr_data : (indata & apb_wr_mask | curr_data & ahb_wr_mask); // ahb-RO 
-
-      else if (str_startswith(addr_name, "FUSE_IDEVID_CERT_ATTR"))                 
-        exp_data = fuses_locked ? curr_data : (indata & apb_wr_mask | curr_data & ahb_wr_mask); // ahb-RO 
-
-      else if (str_startswith(addr_name, "FUSE_IDEVID_MANUF_HSM_ID"))
-        exp_data = fuses_locked ? curr_data : (indata & apb_wr_mask | curr_data & ahb_wr_mask); // ahb-RO 
+      else if (str_startswith(addr_name, "FUSE_"))
+        exp_data = fuses_locked ? curr_data : (ahb_rodata | apb_indata & get_mask(addr_name)); // ahb-RO 
 
       else if (str_startswith(addr_name, "CPTRA_VALID_PAUSER")) begin    // find equivalent pauser lock & if set, apb-RO 
         tmpstr = "CPTRA_VALID_PAUSER";
         pauser_suffix = addr_name.substr(tmpstr.len(), addr_name.len()-1);
         pauser_lock_regname = {"CPTRA_PAUSER_LOCK", pauser_suffix};
-        pauser_locked = exp_reg_data_dict[pauser_lock_regname]; 
-        exp_data = indata & ahb_wr_mask | ((pauser_locked ? curr_data : indata) & apb_wr_mask);
+        pauser_locked = _exp_register_data_dict[pauser_lock_regname]; 
+        exp_data = pauser_locked ? curr_data : (ahb_indata | apb_indata); 
 
-      end else if (str_startswith(addr_name, "CPTRA_PAUSER_LOCK")) begin 
-        pauser_locked = exp_reg_data_dict[addr_name];
-        exp_data = indata & `SOC_IFC_REG_CPTRA_PAUSER_LOCK_0_LOCK_MASK & ahb_wr_mask | 
-                  ((pauser_locked ? curr_data : indata) & apb_wr_mask); //  32'h0000_0001; if pauser locked, apb-RO
+      end else if (str_startswith(addr_name, "CPTRA_PAUSER_LOCK")) begin //  if pauser locked, apb-RO
+        tmpstr = "CPTRA_PAUSER_LOCK";
+        pauser_locked = _exp_register_data_dict[addr_name];
+        exp_data = pauser_locked ? curr_data & get_mask(tmpstr) :  (ahb_indata | apb_indata) & get_mask(tmpstr); 
 
       end else if (str_startswith(addr_name, "CPTRA_GENERIC_INPUT_WIRES")) 
         exp_data = curr_data; // all bits are RO 
 
       else if (str_startswith(addr_name, "CPTRA_GENERIC_OUTPUT_WIRES"))  
-        exp_data = curr_data & apb_wr_mask | indata & ahb_wr_mask; // all bits are apb-RO 
+        exp_data = ahb_indata | apb_rodata; // all bits are apb-RO 
+
+      else if (str_startswith(addr_name, "CPTRA_HW_CONFIG"))
+        exp_data = curr_data & get_mask("CPTRA_HW_CONFIG"); // all bits are RO 
 
       else if (str_startswith(addr_name, "INTERNAL_OBF_KEY"))            
         exp_data = '0;  // not accessible over APB or AHB 
 
+      else if (str_startswith(addr_name, "INTR_BRF_")) 
+        exp_data = ahb_indata & get_mask(addr_name) | apb_rodata;
+
       else begin    
         
         case (addr_name)
-          "FUSE_ANTI_ROLLBACK_DISABLE"           : exp_data = fuses_locked ? curr_data : (
-                                                              indata    & apb_wr_mask & `SOC_IFC_REG_FUSE_ANTI_ROLLBACK_DISABLE_DIS_MASK | 
-                                                              curr_data & ahb_wr_mask); // 32'h0000_0001; ahb-RO
 
-          "FUSE_KEY_MANIFEST_PK_HASH_MASK"       : exp_data = fuses_locked ? curr_data : ( 
-                                                              indata    & apb_wr_mask & `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_MASK_MASK | 
-                                                              curr_data & ahb_wr_mask); // 32'h0000_000f; ahb-RO
-
-          "FUSE_FMC_KEY_MANIFEST_SVN"            : exp_data = fuses_locked ? curr_data : ( 
-                                                              indata    & apb_wr_mask | curr_data & ahb_wr_mask);  // ahb-RO
-
-          "FUSE_LIFE_CYCLE"                      : exp_data = fuses_locked ? curr_data : (
-                                                              indata    & apb_wr_mask & `SOC_IFC_REG_FUSE_LIFE_CYCLE_LIFE_CYCLE_MASK |
-                                                              curr_data & ahb_wr_mask); // 32'h0000_0003; // ahb-RO
-
-          "CPTRA_FLOW_STATUS"                    : exp_data = indata    & ahb_wr_mask & (`SOC_IFC_REG_CPTRA_FLOW_STATUS_STATUS_MASK  |
-                                                                          `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK       |
-                                                                          `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_RUNTIME_MASK  |
-                                                                          `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FUSES_MASK    |
-                                                                          `SOC_IFC_REG_CPTRA_FLOW_STATUS_MAILBOX_FLOW_DONE_MASK) | 
-                                                              curr_data & apb_wr_mask;  //  32'hbfff_ffff; // apb-RO 
-
-          "CPTRA_RESET_REASON"                   : exp_data = curr_data & (`SOC_IFC_REG_CPTRA_RESET_REASON_FW_UPD_RESET_MASK | 
-                                                                          `SOC_IFC_REG_CPTRA_RESET_REASON_WARM_RESET_MASK); //  bit 1:0 is apb-RO 
-
-          "CPTRA_SECURITY_STATE"                 : exp_data = curr_data & (`SOC_IFC_REG_CPTRA_SECURITY_STATE_DEVICE_LIFECYCLE_MASK |
-                                                                          `SOC_IFC_REG_CPTRA_SECURITY_STATE_DEBUG_LOCKED_MASK      |
-                                                                          `SOC_IFC_REG_CPTRA_SECURITY_STATE_SCAN_MODE_MASK) & sscode; //  bit 3:0 is RO 
+          "CPTRA_FLOW_STATUS"                    : exp_data = ahb_indata & get_mask(addr_name) | apb_rodata; //  32'hbfff_ffff; // apb-RO 
+          "CPTRA_RESET_REASON"                   : exp_data = ahb_rodata | apb_rodata; //  bit 1:0 is RO 
+          "CPTRA_SECURITY_STATE"                 : exp_data = curr_data & get_mask(addr_name); // & sscode;  //  bit 3:0 is RO 
 
           "CPTRA_TRNG_VALID_PAUSER" : begin // find equivalent pauser lock & if set, apb-RO 
-            pauser_locked = exp_reg_data_dict["CPTRA_TRNG_PAUSER_LOCK"]; 
-            exp_data = indata & ahb_wr_mask | ((pauser_locked ? curr_data : indata) & apb_wr_mask);
+            pauser_locked = _exp_register_data_dict["CPTRA_TRNG_PAUSER_LOCK"]; 
+            exp_data = pauser_locked ? curr_data : (ahb_indata | apb_indata); 
           end
 
           "CPTRA_TRNG_PAUSER_LOCK": begin
-            // pauser_locked = exp_reg_data_dict["CPTRA_TRNG_PAUSER_LOCK"]; 
-            pauser_locked = curr_data & `SOC_IFC_REG_CPTRA_TRNG_PAUSER_LOCK_LOCK_MASK;   // FIXME. Is it?
-            exp_data = indata & ahb_wr_mask & `SOC_IFC_REG_CPTRA_TRNG_PAUSER_LOCK_LOCK_MASK  | 
-                       (pauser_locked ? curr_data : indata) 
-                              & apb_wr_mask & `SOC_IFC_REG_CPTRA_TRNG_PAUSER_LOCK_LOCK_MASK; // 32'h1 
+            lock_mask = get_mask(addr_name); 
+            pauser_locked = curr_data & get_mask(addr_name); // FIXME. Is it?
+            exp_data = pauser_locked ? curr_data & lock_mask :  (ahb_indata | apb_indata) & lock_mask;  
           end
 
-          "CPTRA_TRNG_STATUS"                    :                                                      //                   WR_DONE        REQ
-            exp_data = (indata    & `SOC_IFC_REG_CPTRA_TRNG_STATUS_DATA_WR_DONE_MASK | 
-                        curr_data & `SOC_IFC_REG_CPTRA_TRNG_STATUS_DATA_REQ_MASK)     & apb_wr_mask |   //  Caliptra Access:      RO         RW
-                      (indata     & `SOC_IFC_REG_CPTRA_TRNG_STATUS_DATA_REQ_MASK  | 
-                        curr_data & `SOC_IFC_REG_CPTRA_TRNG_STATUS_DATA_WR_DONE_MASK) & ahb_wr_mask;    //  SOC Access:           RW         RO
+          "CPTRA_TRNG_STATUS": begin                                        //                   WR_DONE        REQ
+            dword_t ahb_mask = get_mask("CPTRA_TRNG_STATUS.AHB"); 
+            dword_t apb_mask = get_mask("CPTRA_TRNG_STATUS.APB"); 
+            exp_data = (ahb_rodata & ~ahb_mask | ahb_indata & ahb_mask) |   // Caliptra Access:       RO         RW 
+                       (apb_rodata & ~apb_mask | apb_indata & apb_mask) ;   // SOC Access:            RW         RO
+          end
 
-          "CPTRA_FUSE_WR_DONE"                   : exp_data = indata    & apb_wr_mask & `SOC_IFC_REG_CPTRA_FUSE_WR_DONE_DONE_MASK |
-                                                              curr_data & ahb_wr_mask; // 32'h0000_0001; 
+          "CPTRA_HW_REV_ID"                                 : exp_data = curr_data;  
+          "CPTRA_FUSE_WR_DONE"                              : exp_data = fuses_locked ? curr_data : (ahb_rodata | apb_indata & get_mask(addr_name)); 
+          "CPTRA_BOOTFSM_GO"                                : exp_data = ahb_rodata | apb_indata & get_mask(addr_name) ; 
+          "CPTRA_BOOT_STATUS"                               : exp_data = ahb_indata | apb_rodata; 
+          "CPTRA_CLK_GATING_EN"                             : exp_data = ahb_rodata | apb_indata & get_mask(addr_name) ; 
 
-          "CPTRA_BOOTFSM_GO"                     : exp_data = indata    & apb_wr_mask & `SOC_IFC_REG_CPTRA_BOOTFSM_GO_GO_MASK |
-                                                              curr_data & ahb_wr_mask;  // 32'h0000_0001;  // bit 0 is ahb-RO 
+          "INTERNAL_ICCM_LOCK"                              : begin
+            iccm_locked = curr_data & get_mask(addr_name); 
+            exp_data = iccm_locked ? curr_data : (ahb_indata & get_mask(addr_name) | apb_rodata); 
+          end 
 
-          "CPTRA_BOOT_STATUS"                    : exp_data = indata    & ahb_wr_mask | curr_data & apb_wr_mask; // apb-RO
+          "INTERNAL_FW_UPDATE_RESET"                        : begin
+            exp_data = ahb_indata & get_mask(addr_name) | apb_rodata; 
 
-          "CPTRA_CLK_GATING_EN"                  : exp_data = indata    & apb_wr_mask & `SOC_IFC_REG_CPTRA_CLK_GATING_EN_CLK_GATING_EN_MASK |
-                                                              curr_data & ahb_wr_mask; // 32'h0000_0001;  
+            $display ("TB DEBUG: ahb_indata = 0x%x and exp_data for INTERNAL_FW_UPDATE_RESET = 0x%x", ahb_indata, exp_data); 
+            //TODO. Remove hardcoded fields and use bit masks instead
+            if (exp_data[0]) begin 
+              _exp_register_data_dict["INTERNAL_ICCM_LOCK"] = '0;  
+              $display ("TB INFO: Cross modification - Writing '1' to INTERNAL_FW_UPDATE_RESET also reset INTERNAL_ICCM_LOCK"); 
 
-          "INTERNAL_ICCM_LOCK"                   : exp_data = indata    & ahb_wr_mask & `SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK |
-                                                              curr_data & apb_wr_mask; // 32'h0000_0001;   apb-RO     
+              _exp_register_data_dict["CPTRA_RESET_REASON"] = 32'h1;  //FIXME. Ignoring warm reset for now 
+              /*
+              tmp_data = _exp_register_data_dict["CPTRA_RESET_REASON"]; 
+              tmp_data = tmp_data & (32'hffff_ffff ^ `SOC_IFC_REG_CPTRA_RESET_REASON_FW_UPD_RESET_MASK)  |
+                         tmp_data & mask_shifted(1'b1, `SOC_IFC_REG_CPTRA_RESET_REASON_FW_UPD_RESET_MASK); 
+              _exp_register_data_dict["CPTRA_RESET_REASON"] = tmp_data; 
+              */
+              $display ("-- CPTRA_RESET_REASON is now %d", _exp_register_data_dict["CPTRA_RESET_REASON"]); 
+              $display ("TB INFO: Cross modification - Writing '1' to INTERNAL_FW_UPDATE_RESET also sets CPTRA_RESET_REASON"); 
+            end
+          end
 
-          "INTERNAL_FW_UPDATE_RESET"             : exp_data = indata    & ahb_wr_mask & `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK | 
-                                                              curr_data & apb_wr_mask; // only bit-0 valid  apb-RO
-
-          "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES" : exp_data = indata    & ahb_wr_mask & `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES_WAIT_CYCLES_MASK |  
-                                                              curr_data & apb_wr_mask;  // 32'h0000_00ff;  apb-RO 
-
-          "INTERNAL_NMI_VECTOR"                  : exp_data = indata    & ahb_wr_mask | curr_data & apb_wr_mask;  //  all bits are apb-RO 
+          "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES"            : exp_data = ahb_indata & get_mask(addr_name) | apb_rodata;  
+          "INTERNAL_NMI_VECTOR"                             : exp_data = ahb_indata | apb_rodata;  
 
           default: exp_data = indata;
+
         endcase
 
       end 
-      exp_reg_data_dict[addr_name] = exp_data;
-      // $display ("Expected data for addr_name %s (addr 0x%08x) = 0x%08x", addr_name, addr, exp_data); 
+      _exp_register_data_dict[addr_name] = exp_data;
+      // $display ("TB DEBUG: Expected data for addr_name %s (addr 0x%08x) = 0x%08x", addr_name, addr, exp_data); 
     end
 
   endfunction // update_exp_regval
 
 
+  function strq_t get_soc_regnames();
+
+    strq_t soc_regs; 
+
+    foreach (_soc_register_dict[rkey]) 
+      soc_regs.push_back(rkey); 
+
+    return soc_regs;
+
+  endfunction
+
 
   function strq_t get_fuse_regnames();
 
-    string rkey;
     strq_t fuse_regs; 
 
-    foreach (soc_register_dict[rkey]) begin
+    foreach (_soc_register_dict[rkey]) begin
       if (rkey.substr(0,3) == "FUSE")
         fuse_regs.push_back(rkey); 
     end 
@@ -468,12 +598,25 @@ package soc_ifc_tb_pkg;
   endfunction
 
 
+  function strq_t get_intr_block_regnames();
+
+    strq_t intr_regs; 
+
+    foreach (_soc_register_dict[rkey]) begin
+      if (rkey.substr(0,7) == "INTR_BRF")
+        intr_regs.push_back(rkey); 
+    end 
+
+    return intr_regs;
+
+  endfunction
+
+
   function strq_t get_soc_regnames_minus_fuse();
 
-    string rkey;
     strq_t soc_regs; 
 
-    foreach (soc_register_dict[rkey]) begin
+    foreach (_soc_register_dict[rkey]) begin
       if (rkey.substr(0,3) != "FUSE")
         soc_regs.push_back(rkey); 
     end 
@@ -483,12 +626,29 @@ package soc_ifc_tb_pkg;
   endfunction
 
 
-  function strq_t get_soc_regnames();
+  function strq_t get_soc_regnames_minus_intr();
 
     strq_t soc_regs; 
 
-    foreach (soc_register_dict[rkey]) 
-      soc_regs.push_back(rkey); 
+    foreach (_soc_register_dict[rkey]) begin
+      if (rkey.substr(0,7) != "INTR_BRF") 
+        soc_regs.push_back(rkey); 
+    end 
+
+    return soc_regs;
+
+  endfunction
+
+
+
+  function strq_t get_soc_regnames_minus_fuse_intr();
+
+    strq_t soc_regs; 
+
+    foreach (_soc_register_dict[rkey]) begin
+      if ((rkey.substr(0,7) != "INTR_BRF") && (rkey.substr(0,3) != "FUSE"))
+        soc_regs.push_back(rkey); 
+    end 
 
     return soc_regs;
 
@@ -500,8 +660,8 @@ package soc_ifc_tb_pkg;
 
     begin
       $display ("** Clearing all expected reg values for cold reset **");
-      foreach (soc_register_dict[rname]) 
-        exp_reg_data_dict[rname] = get_initval(rname); 
+      foreach (_soc_register_dict[rname]) 
+        _exp_register_data_dict[rname] = get_initval(rname); 
     end
   endfunction 
 
@@ -509,20 +669,52 @@ package soc_ifc_tb_pkg;
   function void warm_reset_exp_data();
     // Unlike reset_exp_data which assumes cold boot, this preserves sticky bits 
 
-    string warm_reset_prefixes [$];
-
+    int wrmrst_pfx_match = 0;
+    string sticky_rname;
+    
     begin
       $display ("** Updating expected reg values for warm reset **");
 
-      foreach (soc_register_dict[rname]) begin
-        foreach (sticky_register_prefix_dict[sticky_rname]) 
-            exp_reg_data_dict[rname] = (str_startswith(rname, sticky_rname)) ?
-              exp_reg_data_dict[rname] & sticky_register_prefix_dict[sticky_rname] : 
-              get_initval(rname);
+      foreach (_soc_register_dict[rname]) begin
+        wrmrst_pfx_match = 0;
+
+        foreach (_sticky_register_prefix_dict[sticky_rname]) begin
+          if (str_startswith(rname, sticky_rname)) begin
+            wrmrst_pfx_match = 1;
+            _exp_register_data_dict[rname] = _exp_register_data_dict[rname] & _sticky_register_prefix_dict[sticky_rname];
+            // $display("assigning sticky value _exp_register_data_dict[%-30s] = 0x%08x", rname, _exp_register_data_dict[rname]); 
+            break;
+          end
+        end
+
+        if (!wrmrst_pfx_match) begin
+          _exp_register_data_dict[rname] = get_initval(rname);
+          // $display("assigning init value   _exp_register_data_dict[%-30s] = 0x%08x", rname, _exp_register_data_dict[rname]); 
+        end
+
       end
     end 
+
   endfunction 
 
+
+  function int is_pulsed_reg(string rname);
+
+    string tmplist [$];
+
+    begin
+      tmplist = _pulsed_regnames.find_first with (item == rname);
+      return (tmplist.size() > 0);
+    end 
+
+  endfunction
+
+
+  /* Placeholder. Implement if we have multiple registers
+  function void handle_cross_reg_mods (string rname, dword_t wr_data, access_t wr_modifier);
+
+  endfunction
+  */ 
 
 
   // ---------------------------------------------------------------------------
@@ -533,30 +725,31 @@ package soc_ifc_tb_pkg;
     return (s2 == s1.substr(0, s2.len() - 1));
 
   endfunction  
-  
 
-  // NOTE. This would nomrally be a templated type (eg, T1, T2) in both 
-  // directions that could be used generically. Could make this a macro.
-  /*
-  function strq_t get_keys(htable_t htable); 
-    string strq [$];
+
+  function automatic dword_t mask_shifted(dword_t v, dword_t n);
+  /* Shift val by number of bits that mask n has zeros on right, eg:
+    mask_shifted(32'h1, 32'h100) -> 0x100 // 8-bit shift ;
+    mask_shifted(32'h1, 32'h8000_0000); -> 0x8000_0000 // 31-bit shift
+    mask_shifted(32'h2, 32'h0003_0000) -> 0x0002_0000 // 16 bit shift
+    mask_shifted(32'h2, 32'h0006_0000) -> 0x0004_0000 // 17 bit shift */
+
+    int k;
+    int ones = $countones(n); 
+    dword_t a = {ones{1'b1}};
 
     begin
-      foreach (htable[str_index]) strq.push_back(str_index);
-      return strq;
-    end
+      for (k = 0; k < (32 - ones + 1); k++) begin
+        if ((a << k) == n) 
+          break;
+      end
+
+      return (v << k);
+    end 
+
   endfunction  
 
 
-  function word_addrq_t get_values(htable_t htable); 
-    word_addr_t  word_addrq [$];
-
-    begin
-      foreach (htable[str_index]) word_addrq.push_back((htable[str_index]); 
-      return word_addrq;
-    end
-  endfunction  
-  */ 
 
   // ================================================================================ 
   // Class definitions 
@@ -576,7 +769,32 @@ package soc_ifc_tb_pkg;
 
     endfunction 
 
-  
+
+    function void update_byname(string addr_name, dword_t data, int tid);    
+
+      word_addr_t addr;
+
+      this.addr = _soc_register_dict[addr_name];  //TODO. Consider checks
+      this.data = data;
+      this.tid = tid;    
+
+    endfunction 
+
+
+    function void update_tid(int tid);    
+
+      this.tid = tid; 
+
+    endfunction 
+
+
+    function void update_data(dword_t data);
+
+      this.data = data; 
+
+    endfunction 
+
+
     function void display(); 
 
       $display("Addr: 0x%08x, Data: 0x%08x, TID: %03d", addr, data, tid); 
@@ -590,7 +808,9 @@ package soc_ifc_tb_pkg;
 
     endfunction 
 
+
   endclass // WordTransaction
+
 
 
   // ================================================================================ //
@@ -639,14 +859,14 @@ package soc_ifc_tb_pkg;
       if (imap_built) 
         return;
 
-      foreach (soc_register_dict[tmpstr]) 
-        imap_soc_register_dict[soc_register_dict[tmpstr]] = tmpstr;   
+      foreach (_soc_register_dict[tmpstr]) 
+        _imap_soc_register_dict[_soc_register_dict[tmpstr]] = tmpstr;   
 
-    endfunction 
+    endfunction  // build_inverse_addr_map
 
 
     function void init_regs();
-      // The default soc_register_dict only has root addr name-value mappings for 
+      // The default _soc_register_dict only has root addr name-value mappings for 
       // simple 32-bit registers. Wider registers implemented as array need to be 
       // populated w/a function
 
@@ -658,77 +878,93 @@ package soc_ifc_tb_pkg;
       if (widereg_expanded) 
         return;
 
-      foreach (wide_register_dict[rname]) begin 
-        if (soc_register_dict.exists(rname)) begin 
-          start_addr = soc_register_dict[rname];
-          for (i = 0; i < wide_register_dict[rname]; i++) begin
+      foreach (_wide_register_dict[rname]) begin 
+        if (_soc_register_dict.exists(rname)) begin 
+          start_addr = _soc_register_dict[rname];
+          for (i = 0; i < _wide_register_dict[rname]; i++) begin
             istr.itoa(i);
-            soc_register_dict[{rname, istr}] = start_addr + 4*i; 
+            _soc_register_dict[{rname, istr}] = start_addr + 4*i; 
           end
-          soc_register_dict.delete(rname);
+          _soc_register_dict.delete(rname);
         end else 
           $display ("TB ERROR. Soc register and wide register data structures incomplete!");
       end 
 
       // The same is done for 'reset' values of registers 
-      // Names that don't exist in soc_register_initval_dict assume "0" values
-      foreach (wide_register_dict[rname]) begin 
-        if (soc_register_initval_dict.exists(rname)) begin 
-          initval = soc_register_initval_dict[rname];
-          for (i = 0; i < wide_register_dict[rname]; i++) begin
+      // Names that don't exist in _soc_register_initval_dict assume "0" values
+      foreach (_wide_register_dict[rname]) begin 
+        if (_soc_register_initval_dict.exists(rname)) begin 
+          initval = _soc_register_initval_dict[rname];
+          for (i = 0; i < _wide_register_dict[rname]; i++) begin
             istr.itoa(i);
-            soc_register_initval_dict[{rname, istr}] = initval;
+            _soc_register_initval_dict[{rname, istr}] = initval;
           end
-          soc_register_initval_dict.delete(rname);
+          _soc_register_initval_dict.delete(rname);
         end
       end
 
-      // foreach (soc_register_initval_dict[rname]) 
-      //   $display ("-- INIT VAL %30s <= 0x%08x", rname, soc_register_initval_dict[rname]);
+      // foreach (_soc_register_initval_dict[rname]) 
+      //   $display ("-- INIT VAL %30s <= 0x%08x", rname, _soc_register_initval_dict[rname]);
 
-    endfunction
+    endfunction  // init_regs
 
  
     function word_addr_t get_addr(string name);
 
-      if (soc_register_dict.exists(name))
-        return soc_register_dict[name];
+      if (_soc_register_dict.exists(name))
+        return _soc_register_dict[name];
       else begin
         $display("TB WARNING. Address %s not found in reg name->addr map. Returning 0", name); 
         return '0; 
       end
 
-    endfunction
+    endfunction // get_addr
 
 
     function string get_name(word_addr_t addr);
 
-      if (imap_soc_register_dict.exists(addr))
-        return imap_soc_register_dict[addr];
+      if (_imap_soc_register_dict.exists(addr))
+        return _imap_soc_register_dict[addr];
       else begin
         $display("TB WARNING. Address 0x%08x not found in reg addr->name map. Returning empty str", addr); 
         return ""; 
       end
 
-    endfunction
+    endfunction // get_name
 
+
+    // TODO. Separate into byname version:
+    //  function void update_security_state_byname(string ssname);
+    //  function void update_security_state(int sscode);
 
     function void update_security_state(string ssname);
 
       security_state_name = ssname; 
 
-    endfunction
+    endfunction 
 
+
+    function void display_exp_regs();      
+
+      $display ("\n\n-- Current state of expected register values --\n");
+      foreach (_exp_register_data_dict[rname]) begin
+        $display (" -- expected value of addr %-40s (0x%08x) = 0x%08x", 
+          rname, get_addr(rname), _exp_register_data_dict[rname]);
+      end
+      $display (" ---------------------------------------------\n "); 
+
+    endfunction // displaY_exp_regs
 
 
   endclass // SocRegisters
+
 
 
   // ================================================================================ //
   class RegScoreboard;
 
     int err_count;
-    tidq_t addr_table [word_addr_t];      // store a queue of transactions for each address
+    transq_t addr_table [word_addr_t];      // store a queue of transactions for each address
 
     function new();
 
@@ -756,10 +992,10 @@ package soc_ifc_tb_pkg;
         return;
       end
 
-      foreach (soc_register_dict[rname]) begin
+      foreach (_soc_register_dict[rname]) begin
      
-        addr = soc_register_dict[rname];
-        new_trans = {addr: addr, data: exp_reg_data_dict[rname], tid: tid};
+        addr = _soc_register_dict[rname];
+        new_trans = {addr: addr, data: _exp_register_data_dict[rname], tid: tid};
 
         if (addr_table.exists(addr)) 
           addr_table[addr].push_back(new_trans); 
@@ -784,9 +1020,9 @@ package soc_ifc_tb_pkg;
       dword_t exp_data; 
       string addr_name;
 
-      update_exp_regval(addr, data, modify);
-      addr_name = imap_soc_register_dict[addr];
-      exp_data = exp_reg_data_dict[addr_name];
+      addr_name = _imap_soc_register_dict[addr];
+      update_exp_regval(addr_name, data, modify);
+      exp_data = _exp_register_data_dict[addr_name];
 
       new_trans = {addr: addr, data: exp_data, tid: tid};
       
@@ -801,8 +1037,8 @@ package soc_ifc_tb_pkg;
     endfunction
 
 
-    // TODO. Need to implement deletion
     function int check_anddel_entry(WordTransaction transaction);
+      // TODO. Need to implement deletion
       // returns cumulative (object.)error count
       // don't check tid if only one transaction
 
@@ -823,31 +1059,42 @@ package soc_ifc_tb_pkg;
 
       transaction_t temp_trans; 
 
-      tidq_t qr; 
+      transq_t qr; 
       int err_found = 0;
 
       if (!addr_table.exists(addr)) 
         $display ("TB fault. Address %x does not exist", addr);
       else begin
         qr = addr_table[addr];
-        if (qr.size() == 0)
-          $display ("TB fault. qr size is %d", qr.size()); 
-        else if (qr.size() == 1) begin
+        if (qr.size() == 0) begin
+          $display ("TB fault. qr size is 0 for addr %x", addr); 
+          err_found = 1; 
+        end else if (qr.size() == 1) begin
           temp_trans = qr[0]; 
-          err_found = int'(temp_trans.data != data);
+          // FIXME. This needs a better change. If a write to a register modified register model
+          // (_exp_register_data_dict) and then some other reg operation modified that, this 
+          // transaction's entry in scoreboard is no longer valid!  
+          // err_found = int'(temp_trans.data != data);
+          err_found = int'(_exp_register_data_dict[_imap_soc_register_dict[addr]] != data);
         end else begin
           qr = addr_table[addr].find_first with(item.tid == tid); 
-          if (qr.size() == 0) 
-            $display ("TB fault. No transaction with id %d found", tid);
-          else begin
+          if (qr.size() == 0)  begin
+            $display ("TB fault. No transaction with id %d found for addr %x", tid, addr);
+            err_found = 1; 
+          end else if (qr.size() == 0) begin
+            $display ("TB fault. Multiple transactions with id %d found for addr %x", tid, addr);
+            err_found = 1; 
+        end else begin
             temp_trans = qr[0];
-            err_found = int'(temp_trans.data != data);
+            // Same issue related to FIXME above.
+            // err_found = int'(temp_trans.data != data);
+            err_found = int'(_exp_register_data_dict[_imap_soc_register_dict[addr]] != data);
           end
         end
 
         if (err_found) 
-            $display("ERROR from Reg Scoreboard for addr = %s(0x%08x); checking data = 0x%08x | expected data = 0x%08x",
-              imap_soc_register_dict[addr], addr, data, qr[0].data); 
+            $display("ERROR from Reg Scoreboard for addr = %s(0x%08x); observed data = 0x%08x | expected data = 0x%08x",
+              _imap_soc_register_dict[addr], addr, data, qr[0].data); 
       end
 
       err_count += err_found;   
@@ -856,13 +1103,55 @@ package soc_ifc_tb_pkg;
     endfunction 
 
 
-    function void del_entry_withtid(word_addr_t addr, int tid);
+    function transq_t get_entries (string addr_name);
+
+      word_addr_t addr; 
+      transq_t entries; // queue of transactions 
+
+      addr = _soc_register_dict[addr_name]; 
+
+      if (addr_table.exists(addr)) begin
+        entries = addr_table[addr];  
+        // if entries.size() == 0:
+        //   $display("TB INFO. No entries for addr (0x%08x) found in scoreboard", addr);
+      end else 
+        $display("TB WARNING. get_entries: No addr %s (0x%08x) found in scoreboard", addr_name, addr);
+
+      return entries;
+
+    endfunction 
+
+
+    function transq_t get_entries_withtid (string addr_name, int tid);
+
+      word_addr_t addr; 
+      transq_t entries; // queue of transactions 
+
+      addr = _soc_register_dict[addr_name]; 
+
+      if (addr_table.exists(addr)) begin
+        entries = addr_table[addr].find with(item.tid == tid); 
+        // if entries.size() == 0:
+        //   $display("TB INFO. No entries for addr (0x%08x) found in scoreboard", addr);
+      end else 
+        $display("TB WARNING. get_entries_withtid: No addr %s (0x%08x) found in scoreboard", addr_name, addr);
+
+      return entries;
+
+    endfunction 
+
+
+    function void del_entry_withtid(string addr_name, int tid);
 
       int qi [$]; 
       int err_found = 0;
 
+      word_addr_t addr; 
+
+      addr = _soc_register_dict[addr_name]; 
+
       if (!(addr_table.exists(addr))) begin
-        $display("TB WARNING. No addr (0x%08x) found in scoreboard", addr);
+        $display("TB WARNING. del_entry_withtid: No addr %s (0x%08x) found in scoreboard", addr_name, addr);
         return;
       end 
 
@@ -880,12 +1169,16 @@ package soc_ifc_tb_pkg;
     endfunction 
 
 
-    function void del_entry(word_addr_t addr);
+    function void del_entries(string addr_name);
+    
+      word_addr_t addr;
+
+      addr = _soc_register_dict[addr_name]; 
 
       if (addr_table.exists(addr)) 
         addr_table.delete(addr);
       else   
-        $display("TB WARNING. No addr (0x%08x) found in scoreboard", addr);
+        $display("TB WARNING. del_entries: No addr %s (0x%08x) found in scoreboard", addr_name, addr);
 
     endfunction 
 
@@ -903,7 +1196,7 @@ package soc_ifc_tb_pkg;
       int i;
       word_addr_t tmpkey;
       transaction_t tmptrans; 
-      tidq_t tmpq; 
+      transq_t tmpq; 
 
       $display ("\n\n-- Current state of scoreboard --\n");
       foreach (addr_table[tmpkey]) begin

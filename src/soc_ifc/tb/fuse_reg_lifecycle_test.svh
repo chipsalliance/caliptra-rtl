@@ -40,7 +40,7 @@
           reset_dut();
 
           wait (ready_for_fuses == 1'b1);
-          update_exp_regval(socregs.get_addr("CPTRA_FLOW_STATUS"), 32'h4000_0000, SET_DIRECT); 
+          update_exp_regval("CPTRA_FLOW_STATUS", 32'h4000_0000, SET_DIRECT); 
           set_initval("CPTRA_FLOW_STATUS", 32'h4000_0000); 
 
 

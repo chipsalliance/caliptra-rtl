@@ -19,27 +19,34 @@
   // 
   // Test power-on reset values of ALL soc registers 
   //----------------------------------------------------------------
-  task soc_reg_pwron_test;    
+  task soc_reg_pwron_test(input string ss_name="RANDOM");    
 
     int tid = 0; // TID is to be updated ONLY if multiple writes to an address 
     strq_t soc_regnames;
 
     logic [2:0] random_security_state; 
 
+
     begin
+
       $display("\nExecuting task soc_reg_pwron_test"); 
       $display("---------------------------------\n");
 
       // set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
-      random_security_state = $urandom_range(1, 7); 
-      set_security_state(security_state_t'(random_security_state)); 
+      if (ss_name == "RANDOM") begin
+        random_security_state = $urandom_range(0, 7); 
+        set_security_state(security_state_t'(random_security_state)); 
+      end else begin
+        random_security_state = get_ss_code(ss_name);
+        set_security_state(security_state_t'(random_security_state)); 
+      end
       sim_dut_init();
 
       tc_ctr = tc_ctr + 1;
 
       $display("Current security state = 0b%03b", security_state);
 
-      soc_regnames = get_soc_regnames(); 
+      soc_regnames = get_soc_regnames_minus_intr();
 
       $display ("0a. Checking Power-on values\n"); 
 
@@ -82,32 +89,44 @@
   //
   // Test warm reset warm reset values of ALL soc registers 
   //----------------------------------------------------------------
-  task soc_reg_wrmrst_test;
+  task soc_reg_wrmrst_test(input string ss_name="RANDOM");    
 
     int tid = 0; // TID is to be updated ONLY if multiple writes to an address 
     strq_t soc_regnames;
 
     logic [2:0] random_security_state; 
 
+    dword_t flow_status; 
+    dword_t reset_reason; 
+
+    WordTransaction transaction; 
+
     begin
       $display("\nExecuting task soc_reg_wrmrst_test"); 
       $display("----------------------------------\n");
+
+      transaction = new(); 
 
       // ---------------------------------------------------------------
       // Phase 1. Inialize soc_regs ON COLD BOOT, overwrite w/new values 
       // ---------------------------------------------------------------
 
-      random_security_state = $urandom_range(1, 7); 
-      set_security_state(security_state_t'(random_security_state)); 
+      if (ss_name == "RANDOM") begin 
+        random_security_state = $urandom_range(0, 7); 
+        set_security_state(security_state_t'(random_security_state)); 
+      end else begin
+        random_security_state = get_ss_code(ss_name);
+        set_security_state(security_state_t'(random_security_state)); 
+      end
+
       sim_dut_init();
 
       tc_ctr = tc_ctr + 1;
 
       $display ("\n1a. Write to registers after cold boot and check back writes");
 
-      // FIXME. Using get_soc_regnames() doesn't work yet.  Using just 
-      // get_fuse_regnames() first.
-      soc_regnames = get_fuse_regnames(); // get_soc_regnames();  
+      soc_regnames = get_soc_regnames_minus_intr();  
+
       foreach (soc_regnames[ix]) begin
         if (soc_regnames[ix] == "CPTRA_FUSE_WR_DONE") begin
           soc_regnames.delete(ix);  // can cause problem downstream if fuse_wr_done == True 
@@ -115,7 +134,6 @@
         end
       end
 
-      // update_exp_regval("CPTRA_GENERIC_INPUT_WIRES*", ... SET_DIRECT) -- TODO. 
       write_regs(SET_APB, soc_regnames, 0, 3);
       read_regs(GET_APB, soc_regnames, 0, 3); // just so we see what was written
 
@@ -133,11 +151,38 @@
       warm_reset_dut(); 
 
       sb.record_reset_values(0, WARM_RESET);
+      wait (ready_for_fuses == 1'b1);
+
+      // Some registers need update for specific fields
+      flow_status = update_CPTRA_FLOW_STATUS(ready_for_fuses); 
+      reset_reason = update_CPTRA_RESET_REASON(1, 0);
+
+      sb.del_entries("CPTRA_FLOW_STATUS");
+      transaction.update_byname("CPTRA_FLOW_STATUS", flow_status, 0);    
+      sb.record_entry(transaction, SET_DIRECT); 
+
+      sb.del_entries("CPTRA_RESET_REASON");
+      transaction.update_byname("CPTRA_RESET_REASON", reset_reason, 0);    
+      sb.record_entry(transaction, SET_DIRECT); 
+
 
       // expect old sticky values which are different from power-on values
       read_regs(GET_APB, soc_regnames, 0, 3);      
 
       simulate_caliptra_boot();
+
+      $display ("WRM_RST_TEST: After caliptra boot, Ready for fuses = %d, Flow status value is %x", ready_for_fuses, flow_status);  // DEBUG
+
+      sb.del_entries("CPTRA_FLOW_STATUS");
+      flow_status = update_CPTRA_FLOW_STATUS(ready_for_fuses); 
+      transaction.update_byname("CPTRA_FLOW_STATUS", flow_status, 0);    
+      transaction.display(); // DEBUG
+
+
+      // task above updates bootfsm_go so need to update scoreboard accordingly 
+      sb.del_entries("CPTRA_BOOTFSM_GO");
+      transaction.update_byname("CPTRA_BOOTFSM_GO", 32'h1, 0);    
+      sb.record_entry(transaction, SET_APB);
 
       read_regs(GET_AHB, soc_regnames, 0, 3);
 
