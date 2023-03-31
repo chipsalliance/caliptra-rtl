@@ -166,6 +166,7 @@ logic security_state_debug_locked_d;
 logic security_state_debug_locked_p;
 logic sram_single_ecc_error;
 logic sram_double_ecc_error;
+logic soc_req_mbox_lock;
 
 logic iccm_unlock;
 logic fw_upd_rst_executed;
@@ -571,6 +572,7 @@ always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_mbox_e
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.hwset    = uc_cmd_avail_p; // TODO confirm signal correctness
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.hwset = sram_single_ecc_error;
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_debug_locked_sts.hwset = security_state_debug_locked_p; // Any transition results in interrupt
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_soc_req_lock_sts.hwset = soc_req_mbox_lock;
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_wdt_timer1_timeout_sts.hwset = t1_timeout_p;
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_wdt_timer2_timeout_sts.hwset = t2_timeout_p && timer2_en;
 
@@ -667,6 +669,7 @@ i_mbox (
     .sram_double_ecc_error(sram_double_ecc_error),
     .soc_mbox_data_avail(mailbox_data_avail),
     .uc_mbox_data_avail(uc_mbox_data_avail),
+    .soc_req_mbox_lock(soc_req_mbox_lock),
     .dmi_inc_rdptr(dmi_inc_rdptr),
     .dmi_reg(mbox_dmi_reg)
 );

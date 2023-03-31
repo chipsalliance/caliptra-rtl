@@ -50,6 +50,7 @@ module mbox
     //interrupts
     output logic uc_mbox_data_avail,
     output logic soc_mbox_data_avail,
+    output logic soc_req_mbox_lock,
 
     //DMI reg access
     input logic dmi_inc_rdptr,
@@ -396,6 +397,10 @@ always_comb mbox_wrptr_nxt = rst_mbox_wrptr ? '0 :
 always_comb mbox_rdptr_nxt = rst_mbox_rdptr ? '0 :
                              inc_rdptrQ ? mbox_rdptr + 'd1 : 
                                          mbox_rdptr;
+
+//Intterupts
+//Notify uC when it has the lock and SoC is requesting the lock
+always_comb soc_req_mbox_lock = hwif_out.mbox_lock.lock.value & ~soc_has_lock & hwif_out.mbox_lock.lock.swmod & req_data.soc_req;
 
 always_comb hwif_in.cptra_rst_b = rst_b;
 always_comb hwif_in.mbox_user.user.next = req_data.user;
