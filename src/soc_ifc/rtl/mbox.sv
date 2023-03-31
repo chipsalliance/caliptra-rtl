@@ -163,18 +163,22 @@ always_comb arc_MBOX_EXECUTE_SOC_MBOX_EXECUTE_UC = (mbox_fsm_ps == MBOX_EXECUTE_
 //move back to IDLE and unlock when force unlock is set
 always_comb arc_FORCE_MBOX_UNLOCK = hwif_out.mbox_unlock.unlock.value;
 
-logic [31:0] mbox_dlen_in_dws, mbox_dlen_in_dwsQ;
-logic        rdptr_inc_valid;
+logic [31:0] mbox_dlen_in_dws_nxt, mbox_dlen_in_dws;
+logic [31:0] mbox_dlen_in_dws_q;
+logic latch_dlen_in_dws;
+logic rdptr_inc_valid;
 
-always_comb begin
-     mbox_dlen_in_dws = ((hwif_out.mbox_dlen.length.value >> 2) + (hwif_out.mbox_dlen.length.value[0] | hwif_out.mbox_dlen.length.value[1]));
-     mbox_dlen_in_dwsQ = (mbox_dlen_in_dws > MBOX_SIZE_IN_DW) ? MBOX_SIZE_IN_DW : mbox_dlen_in_dws;
+//capture the dlen when we change to execute states, this ensures that only the dlen programmed
+//by the client filling the mailbox is used for masking the data
+always_comb latch_dlen_in_dws = arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC | arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC | arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_SOC;
+always_comb mbox_dlen_in_dws_nxt = ((hwif_out.mbox_dlen.length.value >> 2) + (hwif_out.mbox_dlen.length.value[0] | hwif_out.mbox_dlen.length.value[1]));
+always_comb mbox_dlen_in_dws_q = (mbox_dlen_in_dws > MBOX_SIZE_IN_DW) ? MBOX_SIZE_IN_DW : mbox_dlen_in_dws; 
 
-     // Restrict mailbox dataout read once the DLEN in "DWORDS" is reached
-     // Increment read pointer only if the mailbox data length in DWORDS is non-zero and the rdptr didnt pass
-     rdptr_inc_valid  =  (|mbox_dlen_in_dwsQ) & ((mbox_rdptr + 'd1) <= mbox_dlen_in_dwsQ);
+ // Restrict mailbox dataout read once the DLEN in "DWORDS" is reached
+ // Increment read pointer only if the mailbox data length in DWORDS is non-zero and the rdptr didnt pass
+always_comb rdptr_inc_valid  =  (|mbox_dlen_in_dws_q) & ((mbox_rdptr + 'd1) <= mbox_dlen_in_dws_q);
 
-end
+
 
 always_comb begin : mbox_fsm_combo
     soc_has_lock_nxt = 0;
@@ -301,6 +305,7 @@ always_ff @(posedge clk or negedge rst_b) begin
         mbox_rdptr <= '0;
         mbox_protocol_sram_rd_f <= '0;
         sram_ecc_cor_waddr <= '0;
+        mbox_dlen_in_dws <= '0;
     end
     else begin
         mbox_fsm_ps <= mbox_fsm_ns;
@@ -311,6 +316,8 @@ always_ff @(posedge clk or negedge rst_b) begin
         mbox_protocol_sram_rd_f <= (mbox_protocol_sram_rd | mbox_protocol_sram_rd_f) ? (mbox_protocol_sram_rd) : mbox_protocol_sram_rd_f;
         sram_ecc_cor_waddr <= /*dir_req_rd_phase ? sram_ecc_cor_waddr :*/
                                                  sram_rdaddr;
+                             
+        mbox_dlen_in_dws <= latch_dlen_in_dws ? mbox_dlen_in_dws_nxt : mbox_dlen_in_dws;                    
     end
 end
 
