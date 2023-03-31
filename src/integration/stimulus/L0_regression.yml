@@ -31,6 +31,7 @@ contents:
         - ../test_suites/smoke_test_kv_ecc_flow/smoke_test_kv_ecc_flow.yml
         - ../test_suites/smoke_test_kv_hmac_flow/smoke_test_kv_hmac_flow.yml
         - ../test_suites/smoke_test_kv_sha512_flow/smoke_test_kv_sha512_flow.yml
+        - ../test_suites/smoke_test_kv_crypto_flow/smoke_test_kv_crypto_flow.yml
         - ../test_suites/pv_hash_and_sign/pv_hash_and_sign.yml
         - ../test_suites/smoke_test_ahb_mux/smoke_test_ahb_mux.yml
         #smoke test icc locking

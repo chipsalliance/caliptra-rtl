@@ -65,10 +65,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     IV       = 3401CEFAE20A737649073AC1A351E32926DB9ED0DB6B1CFFAB0493DAAFB93DDDD83EDEA28A803D0D003B2633B9D0F1BF
 */
 
-void main(){
-
+void main() {
     printf("----------------------------------\n");
-    printf(" KV Smoke Test With ECC flow !!\n");
+    printf(" Running ECC Smoke Test !!\n");
     printf("----------------------------------\n");
 
     uint32_t ecc_msg[] =           {0xC8F518D4,
@@ -83,8 +82,21 @@ void main(){
                                     0x06D303B5,
                                     0xD90D9A17,
                                     0x5087290D};
+    
+    uint32_t ecc_privkey[] =       {0xF274F69D,
+                                    0x163B0C9F,
+                                    0x1FC3EBF4,
+                                    0x292AD1C4,
+                                    0xEB3CEC1C,
+                                    0x5A7DDE6F,
+                                    0x80C14292,
+                                    0x934C2055,
+                                    0xE087748D,
+                                    0x0A169C77,
+                                    0x2483ADEE,
+                                    0x5EE70E17};
 
-    uint32_t expected_pubkey_x[] = {0xD79C6D97,
+    uint32_t ecc_pubkey_x[] =      {0xD79C6D97,
                                     0x2B34A1DF,
                                     0xC916A7B6,
                                     0xE0A99B6B,
@@ -97,7 +109,7 @@ void main(){
                                     0x45E43F56,
                                     0xBBB66BA4};
 
-    uint32_t expected_pubkey_y[] = {0x5A736393,
+    uint32_t ecc_pubkey_y[] =      {0x5A736393,
                                     0x2B06B4F2,
                                     0x23BEF0B6,
                                     0x0A639026,
@@ -109,6 +121,19 @@ void main(){
                                     0x6F1118F2,
                                     0xB32B4C28,
                                     0x608749ED};
+
+    uint32_t ecc_seed[] =          {0x8FA8541C,
+                                    0x82A392CA,
+                                    0x74F23ED1,
+                                    0xDBFD7354,
+                                    0x1C596639,
+                                    0x1B97EA73,
+                                    0xD744B0E3,
+                                    0x4B9DF59E,
+                                    0xD0158063,
+                                    0xE39C09A5,
+                                    0xA055371E,
+                                    0xDF7A5441};
 
     uint32_t ecc_nonce[] =         {0x1B7EC5E5,
                                     0x48E8AAA9,
@@ -123,7 +148,7 @@ void main(){
                                     0x8CA105CB,
                                     0xBA7B6588};
 
-    uint32_t expected_sign_r[] =   {0x871E6EA4,
+    uint32_t ecc_sign_r[] =        {0x871E6EA4,
                                     0xDDC5432C,
                                     0xDDAA60FD,
                                     0x7F055472,
@@ -136,7 +161,7 @@ void main(){
                                     0x9E4F5A7B,
                                     0xFC1DD2AC};
 
-    uint32_t expected_sign_s[] =   {0x3E5552DE,
+    uint32_t ecc_sign_s[] =        {0x3E5552DE,
                                     0x6403350E,
                                     0xE70AD74E,
                                     0x4B854D2D,
@@ -165,9 +190,6 @@ void main(){
     //Call interrupt init
     init_interrupts();
 
-    uint8_t seed_kv_id = 0x1;
-    uint8_t privkey_kv_id = 0x2;
-
     ecc_io seed;
     ecc_io nonce;
     ecc_io iv;
@@ -178,8 +200,9 @@ void main(){
     ecc_io sign_r;
     ecc_io sign_s;
 
-    seed.kv_intf = TRUE;
-    seed.kv_id = seed_kv_id;
+    seed.kv_intf = FALSE;
+    for (int i = 0; i < 12; i++)
+        seed.data[i] = ecc_seed[i];
 
     nonce.kv_intf = FALSE;
     for (int i = 0; i < 12; i++)
@@ -192,30 +215,26 @@ void main(){
     msg.kv_intf = FALSE;
     for (int i = 0; i < 12; i++)
         msg.data[i] = ecc_msg[i];
-
-    privkey.kv_intf = TRUE;
-    privkey.kv_id = privkey_kv_id;
+    
+    privkey.kv_intf = FALSE;
+    for (int i = 0; i < 12; i++)
+        privkey.data[i] = ecc_privkey[i];
 
     pubkey_x.kv_intf = FALSE;
     for (int i = 0; i < 12; i++)
-        pubkey_x.data[i] = expected_pubkey_x[i];
+        pubkey_x.data[i] = ecc_pubkey_x[i];
     
     pubkey_y.kv_intf = FALSE;
     for (int i = 0; i < 12; i++)
-        pubkey_y.data[i] = expected_pubkey_y[i];
+        pubkey_y.data[i] = ecc_pubkey_y[i];
     
     sign_r.kv_intf = FALSE;
     for (int i = 0; i < 12; i++)
-        sign_r.data[i] = expected_sign_r[i];
+        sign_r.data[i] = ecc_sign_r[i];
     
     sign_s.kv_intf = FALSE;
     for (int i = 0; i < 12; i++)
-        sign_s.data[i] = expected_sign_s[i];
-
-    //inject seed to kv key reg (in RTL)
-    printf("Inject SEED into KV\n");
-    uint8_t seed_inject_cmd = 0x80 + (seed_kv_id & 0x1f);
-    printf("%c", seed_inject_cmd);
+        sign_s.data[i] = ecc_sign_s[i];
 
     ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y);
     cptra_intr_rcv.ecc_notif = 0;
@@ -223,5 +242,11 @@ void main(){
     ecc_signing_flow(privkey, msg, iv, sign_r, sign_s);
     cptra_intr_rcv.ecc_notif = 0;
 
+    ecc_verifying_flow(msg, pubkey_x, pubkey_y, sign_r, sign_s);
+    cptra_intr_rcv.ecc_notif = 0;
+
     printf("%c",0xff); //End the test
+    
 }
+
+

@@ -33,7 +33,7 @@ stages:
           - enabled: true
           - configspec_name: 'integration_lib'
           - dut: 'caliptra_top_tb'
-          - timeout: 40
+          - timeout: 150
           - path: 'Caliptra/src/integration/stimulus/L0_regression.yml'
 
     - integration_top_trng_vcs:
@@ -50,7 +50,7 @@ stages:
           - enabled: true
           - configspec_name: 'integration_lib'
           - dut: 'caliptra_top_tb'
-          - timeout: 40
+          - timeout: 150
           - path: 'Caliptra/src/integration/stimulus/L0_trng_regression.yml'
 
     - integration_top_ius:
@@ -119,7 +119,7 @@ stages:
         - display_name: 'Verilator Smoke Test'
         - enabled: true
         - run_in_workspace: True
-        - timeout: 45
+        - timeout: 60
         - commands:
             - 'set -e'
             - 'module load tools/python/python3/3.9.2'
