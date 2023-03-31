@@ -186,7 +186,6 @@ module caliptra_top_tb (
         cptra_pwrgood = 1'b0;
         BootFSM_BrkPoint = 1'b1; //Set to 1 even before anything starts
         cptra_rst_b = 1'b0;
-        scan_mode = 1'b0;
         start_apb_fuse_sequence = 1'b0;
         //tie offs
         jtag_tck = 1'b0;    // JTAG clk
@@ -715,6 +714,9 @@ caliptra_top_tb_services #(
 
     // Security State
     .security_state(security_state),
+
+    //Scan mode
+    .scan_mode(scan_mode),
 
     // TB Controls
     .cycleCnt(cycleCnt),

@@ -14,4 +14,4 @@
 #
 ---
 seed: ${PLAYBOOK_RANDOM_SEED}
-testname: smoke_test_kv_securitystate
+testname: pv_hash_reset

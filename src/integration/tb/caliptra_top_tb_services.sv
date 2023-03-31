@@ -61,6 +61,9 @@ module caliptra_top_tb_services
     // Security State
     output var security_state_t security_state,
 
+    //Scan mode
+    output logic scan_mode,
+
     // TB Controls
     output int   cycleCnt,
 
@@ -126,10 +129,12 @@ module caliptra_top_tb_services
     int cycleCntKillReq;
 
     int                         rst_cyclecnt = 0;
+    int                         wait_time_to_rst;
 
     logic                       cold_rst; 
     logic                       warm_rst; 
-    logic                       timed_warm_rst; 
+    logic                       timed_warm_rst;
+    logic                       prandom_warm_rst; 
     logic                       cold_rst_done;
 
     logic                       inject_hmac_key;
@@ -161,6 +166,9 @@ module caliptra_top_tb_services
     //         8'h80: 8'h9f - Inject ECC_SEED to kv_key register
     //         8'ha0: 8'hbf - Inject HMAC_KEY to kv_key register
     //         8'hc0: 8'hdf - Inject SHA_BLOCK to kv_key register
+    //         8'hee        - Issue random warm reset
+    //         8'hef        - Enable scan mode
+    //         8'hf0        - Disable scan mode
     //         8'hf1        - Release WDT timer periods so they can be set by the test
     //         8'hf2        - Force clk_gating_en (to use in smoke_test only)
     //         8'hf3        - Make two clients write to KV
@@ -296,40 +304,52 @@ module caliptra_top_tb_services
         end
     end
 
+    always @(negedge clk) begin
+        //Enable scan mode
+        if ((WriteData[7:0] == 8'hef) && mailbox_write) begin
+            scan_mode <= 1'b1;
+        end
+        //Disable scan mode
+        else if ((WriteData[7:0] == 8'hf0) && mailbox_write) begin
+            scan_mode <= 1'b0;
+        end
+    end
+    
+    
     always@(negedge clk) begin
         if((WriteData == 'hf2) && mailbox_write) begin
             force caliptra_top_dut.soc_ifc_top1.clk_gating_en = 1;
         end
     end
-    
-    /*
-    always@(negedge clk) begin
-        if((WriteData[7:0] == 8'hf3) && mailbox_write) begin
-            force caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_en = 1;
-            force caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_entry = 6;
-            force caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_offset = 3;
-            force caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_data = 'hABCD_EF01;
 
-            force caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_en = 1;
-            force caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_entry = 6;
-            force caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_offset = 3;
-            force caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_data = 'h2233_4455;
+    logic [0:11][31:0] pv_hash_value = {32'h11143121,
+    32'hbeb365e6,
+    32'h3826e7de,
+    32'h89f9c76a,
+    32'he1100411,
+    32'hfb9643d1,
+    32'h98e730b7,
+    32'h603a83a4,
+    32'h977c76ee,
+    32'he6ddf74f,
+    32'ha0b43fbf,
+    32'h49897978};
+
+    generate 
+        for (genvar dword = 0; dword < 12; dword++) begin
+            always@(posedge clk) begin
+                if((WriteData[7:0] == 8'hf3) && mailbox_write) begin
+                    force caliptra_top_dut.pcr_vault1.pv_reg_hwif_in.PCR_ENTRY[31][dword].data.we = 1'b1;
+                    force caliptra_top_dut.pcr_vault1.pv_reg_hwif_in.PCR_ENTRY[31][dword].data.next = pv_hash_value[dword];
+                end
+                else begin
+                    release caliptra_top_dut.pcr_vault1.pv_reg_hwif_in.PCR_ENTRY[31][dword].data.we;
+                    release caliptra_top_dut.pcr_vault1.pv_reg_hwif_in.PCR_ENTRY[31][dword].data.next;
+                end
+            end
         end
-        else begin
-            release caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_en;
-            release caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_entry;
-            release caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_offset;
-            release caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_data;
+    endgenerate
 
-            release caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_en;
-            release caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_entry;
-            release caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_offset;
-            release caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_data;
-
-        end
-    end
-    */
-    
     always@(negedge clk) begin
 
         if((WriteData == 'hf5) && mailbox_write) begin 
@@ -342,6 +362,11 @@ module caliptra_top_tb_services
         end
         else if((WriteData == 'hf7) && mailbox_write) begin
             timed_warm_rst <= 'b1;
+        end
+        else if((WriteData == 'hee) && mailbox_write) begin
+            wait_time_to_rst =$urandom_range(5,1000);
+            prandom_warm_rst <= 'b1;
+            rst_cyclecnt <= cycleCnt;
         end
 
 
@@ -387,6 +412,17 @@ module caliptra_top_tb_services
                 assert_rst_flag <= 0;
                 deassert_rst_flag <= 1;
                 timed_warm_rst <= 'b0;
+            end
+        end
+        else if(prandom_warm_rst) begin
+            if(cycleCnt == rst_cyclecnt + wait_time_to_rst) begin
+                assert_rst_flag <= 'b1;
+                deassert_rst_flag <= 'b0;
+            end
+            else if(assert_rst_flag) begin //prandom rst was already issued, so deassert rst now
+                assert_rst_flag <= 'b0;
+                deassert_rst_flag <= 'b1;
+                prandom_warm_rst <= 'b0;
             end
         end
         else begin
@@ -688,6 +724,10 @@ module caliptra_top_tb_services
         warm_rst = 0;
         timed_warm_rst = 0;
         cold_rst_done = 0;
+        prandom_warm_rst = 0;
+
+        scan_mode = 0;
+        wait_time_to_rst = 0;
 
         set_wdt_timer1_period = 0;
     end
