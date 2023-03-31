@@ -33,7 +33,10 @@
 `include "caliptra_reg_defines.svh"
 
 
-module caliptra_top_tb_services import soc_ifc_pkg::*; #(
+module caliptra_top_tb_services 
+    import soc_ifc_pkg::*; 
+    import kv_defines_pkg::*;
+#(
     parameter UVM_TB = 0
 ) (
     input logic                        clk,
@@ -155,9 +158,9 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
     //         8'h2 : 8'h5  - Do nothing
     //         8'h6 : 8'h7E - WriteData is an ASCII character - dump to console.log
     //         8'h7F        - Do nothing
-    //         8'h80: 8'h87 - Inject ECC_SEED to kv_key register
-    //         8'h88: 8'h8f - Inject HMAC_KEY to kv_key register
-    //         8'h90: 8'h97 - Inject SHA_BLOCK to kv_key register
+    //         8'h80: 8'h9f - Inject ECC_SEED to kv_key register
+    //         8'ha0: 8'hbf - Inject HMAC_KEY to kv_key register
+    //         8'hc0: 8'hdf - Inject SHA_BLOCK to kv_key register
     //         8'hf1        - Release WDT timer periods so they can be set by the test
     //         8'hf2        - Force clk_gating_en (to use in smoke_test only)
     //         8'hf3        - Make two clients write to KV
@@ -213,10 +216,10 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
             for (dword_i=0; dword_i < 12; dword_i++) begin : inject_dword_loop
                 always @(negedge clk) begin
                     //inject valid seed dest and seed value to key reg
-                    if(((WriteData[7:0] & 8'hf8) == 8'h80) && mailbox_write) begin
+                    if(((WriteData[7:0] & 8'hE0) == 8'h80) && mailbox_write) begin
                         //$system("/home/mojtabab/workspace_aha_poc/ws1/Caliptra/src/ecc/tb/ecdsa_secp384r1.exe");
                         inject_ecc_seed <= 1'b1;
-                        if (((WriteData[7:0] & 8'h07) == slot_id)) begin
+                        if (((WriteData[7:0] & 8'h1f) == slot_id)) begin
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 6'b10000;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
@@ -226,9 +229,9 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
                         end
                     end
                     //inject valid hmac_key dest and hmac_key value to key reg
-                    else if(((WriteData[7:0] & 8'hf8) == 8'h88) && mailbox_write) begin
+                    else if(((WriteData[7:0] & 8'hE0) == 8'ha0) && mailbox_write) begin
                         inject_hmac_key <= 1'b1;
-                        if (((WriteData[7:0] & 8'h07) == slot_id)) begin
+                        if (((WriteData[7:0] & 8'h1f) == slot_id)) begin
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 6'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
@@ -238,9 +241,9 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
                         end
                     end
                     //inject valid sha dest and sha_block value to key reg
-                    else if(((WriteData[7:0] & 8'hf8) == 8'h90) && mailbox_write) begin
+                    else if(((WriteData[7:0] & 8'hE0) == 8'hc0) && mailbox_write) begin
                         inject_sha_block <= 1'b1;
-                        if (((WriteData[7:0] & 8'h07) == slot_id)) begin
+                        if (((WriteData[7:0] & 8'h1f) == slot_id)) begin
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 6'b100;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
@@ -298,7 +301,8 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
             force caliptra_top_dut.soc_ifc_top1.clk_gating_en = 1;
         end
     end
-
+    
+    /*
     always@(negedge clk) begin
         if((WriteData[7:0] == 8'hf3) && mailbox_write) begin
             force caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_en = 1;
@@ -324,7 +328,8 @@ module caliptra_top_tb_services import soc_ifc_pkg::*; #(
 
         end
     end
-
+    */
+    
     always@(negedge clk) begin
 
         if((WriteData == 'hf5) && mailbox_write) begin 

@@ -17,6 +17,7 @@
 #include <string.h>
 #include <stdint.h>
 #include "printf.h"
+#include "hmac.h"
 
 #ifdef CPT_VERBOSITY
     enum printf_verbosity verbosity_g = CPT_VERBOSITY;
@@ -25,14 +26,34 @@
 #endif
 volatile char*    stdout           = (char *)STDOUT;
 volatile uint32_t intr_count       = 0;
-volatile uint32_t hmac_intr_status = 0;
+
+volatile caliptra_intr_received_s cptra_intr_rcv = {
+    .doe_error        = 0,
+    .doe_notif        = 0,
+    .ecc_error        = 0,
+    .ecc_notif        = 0,
+    .hmac_error       = 0,
+    .hmac_notif       = 0,
+    .kv_error         = 0,
+    .kv_notif         = 0,
+    .sha512_error     = 0,
+    .sha512_notif     = 0,
+    .sha256_error     = 0,
+    .sha256_notif     = 0,
+    .qspi_error       = 0,
+    .qspi_notif       = 0,
+    .uart_error       = 0,
+    .uart_notif       = 0,
+    .i3c_error        = 0,
+    .i3c_notif        = 0,
+    .soc_ifc_error    = 0,
+    .soc_ifc_notif    = 0,
+    .sha512_acc_error = 0,
+    .sha512_acc_notif = 0,
+};
+
 
 void main() {
-    volatile uint32_t* hmac_key         = (uint32_t*) CLP_HMAC_REG_HMAC384_KEY_0;
-    volatile uint32_t* hmac_block       = (uint32_t*) CLP_HMAC_REG_HMAC384_BLOCK_0;
-    volatile uint32_t* hmac_tag         = (uint32_t*) CLP_HMAC_REG_HMAC384_TAG_0;
-    volatile uint32_t* hmac_lfsr_seed   = (uint32_t*) CLP_HMAC_REG_HMAC384_LFSR_SEED_0;
-    volatile uint32_t* hmac_reg;
 
     //this is the key 384-bit
     uint32_t key_data[] = {0x0b0b0b0b,
@@ -79,7 +100,7 @@ void main() {
                              0x00000000,
                              0x00000000,
                              0x00000440};
-    uint32_t expected_data[] = {0xb6a8d563,
+    uint32_t expected_tag[] = {0xb6a8d563,
                                 0x6f5c6a72,
                                 0x24f9977d,
                                 0xcf7ee6c7,
@@ -97,7 +118,6 @@ void main() {
                                  0x6ED56C1C,
                                  0x3C9E16FB,
                                  0x800AF504};                               
-    uint8_t offset;
 
 
     // Entry message
@@ -108,59 +128,33 @@ void main() {
     // Call interrupt init
     init_interrupts();
 
-    // Load key from hw_data and write to HMAC core
-    VPRINTF(LOW, "Load Key data to HMAC\n");
-    offset = 0;
-    while (hmac_key <= (uint32_t*) CLP_HMAC_REG_HMAC384_KEY_11) {
-        *hmac_key++ = key_data[offset++];
-    }
+    hmac_io hmac_key;
+    hmac_io hmac_block;
+    hmac_io hmac_lfsr_seed;
+    hmac_io hmac_tag;
 
-    // Load lfsr_seed from hw_data and write to HMAC core
-    VPRINTF(LOW, "Load LFSR_seed data to HMAC\n");
-    offset = 0;
-    while (hmac_lfsr_seed <= (uint32_t*) CLP_HMAC_REG_HMAC384_LFSR_SEED_4) {
-        *hmac_lfsr_seed++ = lfsr_seed_data[offset++];
-    }
+    hmac_key.kv_intf = FALSE;
+    hmac_key.data_size = 12;
+    for (int i = 0; i < hmac_key.data_size; i++)
+        hmac_key.data[i] = key_data[i];
 
-    // Load block from hw_data and write to HMAC core
-    VPRINTF(LOW, "Load Block data to HMAC\n");
-    offset = 0;
-    while (hmac_block <= (uint32_t*) CLP_HMAC_REG_HMAC384_BLOCK_31) {
-        *hmac_block++ = block_data[offset++];
-    }
+    hmac_block.kv_intf = FALSE;
+    hmac_block.data_size = 32;
+    for (int i = 0; i < hmac_block.data_size; i++)
+        hmac_block.data[i] = block_data[i];
 
-    // Enable HMAC core
-    VPRINTF(LOW, "Initiate HMAC operation\n");
-    hmac_reg = (uint32_t *) CLP_HMAC_REG_HMAC384_CTRL;
-    *hmac_reg = HMAC_INIT;
+    hmac_lfsr_seed.kv_intf = FALSE;
+    hmac_lfsr_seed.data_size = 5;
+    for (int i = 0; i < hmac_lfsr_seed.data_size; i++)
+        hmac_lfsr_seed.data[i] = lfsr_seed_data[i];
 
-    // wait for HMAC process (poll interrupt flag)
-    while(hmac_intr_status != HMAC_VALID) {
-        __asm__ volatile ("wfi"); // "Wait for interrupt"
-        // Sleep during HMAC operation to allow ISR to execute and show idle time in sims
-        for (uint16_t slp = 0; slp < 100; slp++) {
-            __asm__ volatile ("nop"); // Sleep loop as "nop"
-        }
-    };
-    VPRINTF(LOW, "Received HMAC intr with status = %x\n", hmac_intr_status);
-    hmac_intr_status = 0;
+    hmac_tag.kv_intf = FALSE;
+    hmac_tag.data_size = 12;
+    for (int i = 0; i < hmac_tag.data_size; i++)
+        hmac_tag.data[i] = expected_tag[i];
 
-    // Read the data back from HMAC register
-    VPRINTF(LOW, "Load Result data from HMAC\n");
-    offset = 0;
-    while (hmac_tag <= (uint32_t*) CLP_HMAC_REG_HMAC384_TAG_11) {
-        if (*hmac_tag != expected_data[offset]) {
-            VPRINTF(ERROR, "At offset [%d], data mismatch!\n", offset);
-            VPRINTF(ERROR, "Actual   data: 0x%x\n", *hmac_tag);
-            VPRINTF(ERROR, "Expected data: 0x%x\n", expected_data[offset]);
-            SEND_STDOUT_CTRL( 0x1);
-            while(1);
-        } else {
-            VPRINTF(ALL, "[%d] :: 0x%x matches 0x%x\n", offset, *hmac_tag, expected_data[offset]);
-        }
-        hmac_tag++;
-        offset++;
-    }
+
+    hmac_flow(hmac_key, hmac_block, hmac_lfsr_seed, hmac_tag);
 
     // Write 0xff to STDOUT for TB to terminate test.
     SEND_STDOUT_CTRL( 0xff);

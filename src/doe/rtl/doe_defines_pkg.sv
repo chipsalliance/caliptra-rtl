@@ -17,6 +17,7 @@
 `define DOE_DEFINES_PKG
 
 package doe_defines_pkg;
+  import kv_defines_pkg::*;
 
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
@@ -66,7 +67,7 @@ typedef enum logic [1:0] {
 } doe_cmd_e;
 
 typedef struct packed {
-    logic [2:0] dest_sel;
+    logic [KV_ENTRY_ADDR_W-1:0] dest_sel;
     doe_cmd_e cmd;
 } doe_cmd_reg_t;
 
