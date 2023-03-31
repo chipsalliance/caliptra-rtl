@@ -30,6 +30,14 @@ package mbox_csr_pkg;
 
     typedef struct packed{
         logic hwclr;
+    } mbox_csr__mbox_execute__execute__in_t;
+
+    typedef struct packed{
+        mbox_csr__mbox_execute__execute__in_t execute;
+    } mbox_csr__mbox_execute__in_t;
+
+    typedef struct packed{
+        logic hwclr;
     } mbox_csr__mbox_status__status__in_t;
 
     typedef struct packed{
@@ -65,6 +73,7 @@ package mbox_csr_pkg;
         mbox_csr__mbox_lock__in_t mbox_lock;
         mbox_csr__mbox_user__in_t mbox_user;
         mbox_csr__mbox_dataout__in_t mbox_dataout;
+        mbox_csr__mbox_execute__in_t mbox_execute;
         mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__in_t mbox_status;
     } mbox_csr__in_t;
 

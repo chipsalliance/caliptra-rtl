@@ -365,6 +365,9 @@ module mbox_csr (
         if(decoded_reg_strb.mbox_execute && decoded_req_is_wr && hwif_in.valid_requester) begin // SW write
             next_c = decoded_wr_data[0:0];
             load_next_c = '1;
+        end else if(hwif_in.mbox_execute.execute.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
         end
         field_combo.mbox_execute.execute.next = next_c;
         field_combo.mbox_execute.execute.load_next = load_next_c;

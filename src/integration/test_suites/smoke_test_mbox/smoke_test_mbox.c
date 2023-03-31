@@ -42,6 +42,7 @@ void main () {
                              0x55555555,
                              0x66666666,
                              0x77777777 };
+    uint32_t read_data;
 
     // Message
     VPRINTF(LOW, "----------------------------------\n");
@@ -94,4 +95,40 @@ void main () {
         VPRINTF(LOW, "FW: Mailbox in expected state, MBOX_EXECUTE_SOC, ending test with success\n");
     }
 
+    //Force unlock
+    lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+
+    //poll for mbox lock
+    while((lsu_read_32(CLP_MBOX_CSR_MBOX_LOCK) & MBOX_CSR_MBOX_LOCK_LOCK_MASK) == 1);
+
+    //write command
+    lsu_write_32(CLP_MBOX_CSR_MBOX_CMD,0x12345678);
+
+    //write dlen
+    lsu_write_32(CLP_MBOX_CSR_MBOX_DLEN,MBOX_DLEN_VAL);
+
+    //write datain
+    VPRINTF(LOW, "FW: Writing %d bytes to mailbox\n", MBOX_DLEN_VAL);
+    for (ii = 0; ii < MBOX_DLEN_VAL/4; ii++) {
+        VPRINTF(HIGH, "  datain: 0x%x\n", mbox_data[ii]);
+        lsu_write_32(CLP_MBOX_CSR_MBOX_DATAIN,mbox_data[ii]);
+    }
+
+    //set execute
+    lsu_write_32(CLP_MBOX_CSR_MBOX_EXECUTE, MBOX_CSR_MBOX_EXECUTE_EXECUTE_MASK);
+
+    //Poll status until data ready is set
+    while((lsu_read_32(CLP_MBOX_CSR_MBOX_STATUS) & MBOX_CSR_MBOX_STATUS_STATUS_MASK) != DATA_READY);
+
+    //check data 
+    VPRINTF(LOW, "FW: Checking %d bytes from mailbox as if return data\n", MBOX_DLEN_VAL);
+    for (ii = 0; ii < MBOX_DLEN_VAL/4; ii++) {
+        VPRINTF(HIGH, "  datain: 0x%x\n", mbox_data[ii]);
+        read_data = lsu_read_32(CLP_MBOX_CSR_MBOX_DATAOUT);
+        if (read_data != mbox_data[ii]) {
+            VPRINTF(ERROR, "ERROR: mailbox data mismatch actual (0x%x) expected (0x%x)\n", read_data, mbox_data[ii]);
+            SEND_STDOUT_CTRL( 0x1);
+            while(1);
+        };
+    }
 }
