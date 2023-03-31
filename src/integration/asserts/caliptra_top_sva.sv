@@ -85,18 +85,25 @@ module caliptra_top_sva
                                           )
                             else $display("SVA ERROR: AHB address not valid in keyvault");
 
+  generate 
+    for(genvar entry=0; entry < KV_NUM_KEYS; entry++) begin
+      for(genvar dword = 0; dword < KV_NUM_DWORDS; dword++) begin
+        KV_debug_value0:         assert property (
+                                                  @(posedge `KEYVAULT_PATH.clk)
+                                                  disable iff(!`KEYVAULT_PATH.cptra_pwrgood)
+                                                  `KEYVAULT_PATH.flush_keyvault && (`KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value == 0) && `KEYVAULT_PATH.cptra_pwrgood |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword] == CLP_DEBUG_MODE_KV_0)
+                                                )
+                                  else $display("SVA ERROR: KV not flushed with correct debug values");
 
-  KV_debug_value0:         assert property (
-                                            @(posedge `KEYVAULT_PATH.clk)
-                                            `KEYVAULT_PATH.flush_keyvault && (`KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value == 0) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[0][0] == CLP_DEBUG_MODE_KV_0)
-                                          )
-                            else $display("SVA ERROR: KV not flushed with correct debug values");
-
-  KV_debug_value1:         assert property (
-                                            @(posedge `KEYVAULT_PATH.clk)
-                                            `KEYVAULT_PATH.flush_keyvault && (`KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value == 1) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[0][0] == CLP_DEBUG_MODE_KV_1)
-                                          )
-                            else $display("SVA ERROR: KV not flushed with correct debug values");
+        KV_debug_value1:         assert property (
+                                                  @(posedge `KEYVAULT_PATH.clk)
+                                                  disable iff(!`KEYVAULT_PATH.cptra_pwrgood)
+                                                  `KEYVAULT_PATH.flush_keyvault && (`KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value == 1) && `KEYVAULT_PATH.cptra_pwrgood |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword] == CLP_DEBUG_MODE_KV_1)
+                                                )
+                                  else $display("SVA ERROR: KV not flushed with correct debug values");
+      end
+    end
+  endgenerate
 
   genvar dword;
   generate
@@ -174,7 +181,6 @@ module caliptra_top_sva
   endgenerate
 
 
-  //TODO: uncomment after fixing fuse_field_entropy bug
   genvar client;
   generate
     for(client = 0; client < KV_NUM_WRITE; client++) begin
@@ -182,6 +188,15 @@ module caliptra_top_sva
                                                     @(posedge `KEYVAULT_PATH.clk)
                                                     disable iff (!`KEYVAULT_PATH.kv_write[client].write_en || !`KEYVAULT_PATH.rst_b)
                                                     `KEYVAULT_PATH.kv_write[client].write_en |-> !$isunknown(`KEYVAULT_PATH.kv_write[client].write_data)
+                                                  )
+                                    else $display("SVA ERROR: KV client %0d data is unknown", client);
+    end
+
+    for(client = 0; client < KV_NUM_READ; client++) begin
+      KV_client_rddata_not_unknown: assert property (
+                                                    @(posedge `KEYVAULT_PATH.clk)
+                                                    disable iff (!`KEYVAULT_PATH.rst_b)
+                                                    !$isunknown(`KEYVAULT_PATH.kv_rd_resp[client].read_data)
                                                   )
                                     else $display("SVA ERROR: KV client %0d data is unknown", client);
     end
