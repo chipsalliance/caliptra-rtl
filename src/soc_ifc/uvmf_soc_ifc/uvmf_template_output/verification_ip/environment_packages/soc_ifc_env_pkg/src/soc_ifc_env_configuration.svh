@@ -75,12 +75,6 @@ extends uvmf_environment_configuration_base;
                                         apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
                                         apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) apb_reg_transfer_t;
 
-   typedef caliptra_reg2apb_adapter #(apb_reg_transfer_t,
-                             apb5_master_0_params::APB3_SLAVE_COUNT,
-                             apb5_master_0_params::APB3_PADDR_BIT_WIDTH,
-                             apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
-                             apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) apb_reg_adapter_t;
-   apb_reg_adapter_t apb_reg_adapter_h;
   // pragma uvmf custom class_item_additional end
 
 // ****************************************************************************

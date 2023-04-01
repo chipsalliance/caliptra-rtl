@@ -61,8 +61,8 @@ task soc_ifc_env_mbox_rand_medium_interference_sequence::mbox_poll_status();
                     `uvm_error("MBOX_SEQ", "Failed to randomize memory APB transfer in mbox_wait_for_command")
                 end
                 else begin
-                    if (RnW == APB3_TRANS_READ) regs[reg_select].read (reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
-                    else                        regs[reg_select].write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
+                    if (RnW == APB3_TRANS_READ) regs[reg_select].read (reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_STATUS)));
+                    else                        regs[reg_select].write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_STATUS)));
                 end
             end
         end

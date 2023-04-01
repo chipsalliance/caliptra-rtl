@@ -130,6 +130,18 @@ class soc_ifc_scoreboard #(
                                apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
                                apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) apb_expected_q       [$]; // FIXME
 
+  // Use an soc_ifc_status_monitor_struct to track the expected state of the
+  // soc_ifc_status interface.
+  // This definition comes from soc_ifc_status_pkg (specifically, from
+  // soc_ifc_status_macros).
+  // This scoreboard allows transaction aggregation on this interface, but if
+  // any member bit is detected transitioning more than once in between received
+  // 'actual' transactions, it suggests that the DUT signal failed to mirror the
+  // rise/fall behavior that was predicted.
+  `soc_ifc_status_MONITOR_STRUCT
+    soc_ifc_status_monitor_s soc_ifc_status_monitor_struct, soc_ifc_status_monitor_struct_prev;
+  bit [1:0] soc_ifc_status_monitor_toggle_count [$bits(soc_ifc_status_monitor_s)-1:0] = '{default: 0};
+
   // Variables used to report transaction matches and mismatches
   int match_count; // FIXME report this
   int mismatch_count; // FIXME report this
@@ -190,10 +202,28 @@ class soc_ifc_scoreboard #(
   // This function performs prediction of DUT output values based on DUT input, configuration and state
   virtual function void write_expected_analysis_export(soc_ifc_status_transaction t);
     // pragma uvmf custom expected_analysis_export_scoreboard begin
-    `uvm_info("SCBD_SOC_IFC_STS", $sformatf("Transaction Received through expected_analysis_export with key: [%d]", t.get_key()), UVM_MEDIUM)
+    bit multiple_missed_txn_error = 1'b0;
+    soc_ifc_status_monitor_s soc_ifc_status_monitor_struct_rpt = '{default:0};
+
+    `uvm_info("SCBD_SOC_IFC_STS", $sformatf("Transaction Received through expected_analysis_export with key: [%0d]", t.get_key()), UVM_MEDIUM)
     `uvm_info("SCBD_SOC_IFC_STS", {"            Data: ",t.convert2string()}, UVM_FULL)
 
     soc_ifc_expected_hash[t.get_key()] = t;
+    soc_ifc_status_monitor_struct_prev = soc_ifc_status_monitor_struct;
+    soc_ifc_status_monitor_struct = t.to_monitor_struct();
+    foreach (soc_ifc_status_monitor_toggle_count[sts_bit]) begin
+        // If a bit has toggled on the status interface since last predicted transaction
+        // increment our toggle counter. But don't exceed a count of 2'b10, because
+        // we don't want to roll over
+        if ((soc_ifc_status_monitor_struct[sts_bit] ^ soc_ifc_status_monitor_struct_prev[sts_bit]) && (soc_ifc_status_monitor_toggle_count[sts_bit] <= 1))
+            soc_ifc_status_monitor_toggle_count[sts_bit] += 1;
+        if (soc_ifc_status_monitor_toggle_count[sts_bit] > 1) begin
+            multiple_missed_txn_error = 1'b1;
+            soc_ifc_status_monitor_struct_rpt[sts_bit] = 1'b1;
+        end
+    end
+    if (multiple_missed_txn_error)
+        `uvm_error("SCBD_SOC_IFC_STS",$sformatf("Received multiple expected transactions without corresponding actual transaction. Problem fields: %p", soc_ifc_status_monitor_struct_rpt))
     -> entry_received;
  
     // pragma uvmf custom expected_analysis_export_scoreboard end
@@ -204,7 +234,7 @@ class soc_ifc_scoreboard #(
   // This function performs prediction of DUT output values based on DUT input, configuration and state
   virtual function void write_expected_cptra_analysis_export(cptra_status_transaction t);
     // pragma uvmf custom expected_cptra_analysis_export_scoreboard begin
-    `uvm_info("SCBD_CPTRA_STS", $sformatf("Transaction Received through expected_cptra_analysis_export with key: [%d]", t.get_key()), UVM_MEDIUM)
+    `uvm_info("SCBD_CPTRA_STS", $sformatf("Transaction Received through expected_cptra_analysis_export with key: [%0d]", t.get_key()), UVM_MEDIUM)
     `uvm_info("SCBD_CPTRA_STS", {"            Data: ",t.convert2string()}, UVM_FULL)
 
     cptra_expected_hash[t.get_key()] = t;
@@ -226,7 +256,7 @@ class soc_ifc_scoreboard #(
     soc_ifc_status_transaction t_exp;
     bit txn_eq;
 
-    `uvm_info("SCBD_SOC_IFC_STS", $sformatf("Transaction Received through actual_analysis_export with key: [%d]", t.get_key()), UVM_MEDIUM)
+    `uvm_info("SCBD_SOC_IFC_STS", $sformatf("Transaction Received through actual_analysis_export with key: [%0d]", t.get_key()), UVM_MEDIUM)
     `uvm_info("SCBD_SOC_IFC_STS", {"            Data: ",t.convert2string()}, UVM_FULL)
 
     // Check for expected analysis port to receive first transaction after a reset before proceeding with the actual check
@@ -234,7 +264,81 @@ class soc_ifc_scoreboard #(
     // event for soc_ifc_status_if, if applicable
     if (reset_handled.is_on())
         `uvm_error("SCBD_SOC_IFC_STS", "Received actual soc_ifc_status_transaction after a reset event, but prior to receiving the expected transaction!")
-    if (soc_ifc_expected_hash.exists(t.get_key())) begin
+
+    // If there are multiple expected transactions, see if they can be aggregated
+    if ((soc_ifc_expected_hash.size() > 1) && soc_ifc_expected_hash.exists(t.get_key())) begin
+        int unsigned txn_agg_count;
+        int unsigned greatest_matching_key;
+        soc_ifc_status_monitor sts_mon_h;
+        uvm_component comp_h = this.get_parent().lookup("soc_ifc_status_agent.soc_ifc_status_agent_monitor");
+
+        // Find the latest expected transaction that perfectly matches
+        // current actual transaction
+        if (!soc_ifc_expected_hash.last(greatest_matching_key))
+            `uvm_fatal("SCBD_SOC_IFC_STS", "Failed to run last() when soc_ifc_expected_hash is not empty!")
+        t_exp = soc_ifc_expected_hash[greatest_matching_key];
+        txn_eq = t.compare(t_exp);
+        while(!txn_eq) begin
+            if (!soc_ifc_expected_hash.prev(greatest_matching_key)) begin
+                txn_eq = 0;
+                break;
+            end
+            else begin
+                t_exp = soc_ifc_expected_hash[greatest_matching_key];
+                txn_eq = t.compare(t_exp);
+            end
+        end
+
+        // Based on comparison results, proceed with updating scoreboard state
+        if (txn_eq) begin
+
+            `uvm_info("SCBD_SOC_IFC_STS", "write_actual_analysis_export() received transaction matching multiple aggregated expected transactions!", UVM_HIGH)
+            match_count++;
+
+            // This is a 0's-based count of how many expected transactions
+            // were aggregated to the current actual
+            txn_agg_count = greatest_matching_key - t.get_key();
+
+            // Reset the toggle counter
+            soc_ifc_status_monitor_toggle_count = '{default:2'b00};
+            soc_ifc_status_monitor_struct = soc_ifc_expected_hash[greatest_matching_key].to_monitor_struct();
+
+            // Recalculate toggle count and flush aggregated entries
+            foreach (soc_ifc_expected_hash[idx]) begin
+                // Clear aggregated entries from the table
+                if (idx <= greatest_matching_key)
+                    soc_ifc_expected_hash.delete(idx);
+
+                // Rebuild the toggle counter based on entries that remain in
+                // the expected txn hash
+                else begin
+                    soc_ifc_status_monitor_struct_prev = soc_ifc_status_monitor_struct;
+                    soc_ifc_status_monitor_struct = soc_ifc_expected_hash[idx].to_monitor_struct();
+                    foreach (soc_ifc_status_monitor_toggle_count[sts_bit]) begin
+                        // If a bit has toggled on the status interface since last predicted transaction
+                        // increment our toggle counter. But don't exceed a count of 2'b10, because
+                        // we don't want to roll over
+                        if (soc_ifc_status_monitor_struct[sts_bit] ^ soc_ifc_status_monitor_struct_prev[sts_bit])
+                            soc_ifc_status_monitor_toggle_count[sts_bit] += ~soc_ifc_status_monitor_toggle_count[sts_bit][1];
+                    end
+                end
+            end
+
+            // Synchronize the monitor txn_key with the value in the env predictor
+            if (!$cast(sts_mon_h, comp_h))
+                `uvm_fatal("SCBD_SOC_IFC_STS",$sformatf("Failed to get soc_ifc_status_agent_monitor from %s.lookup()", this.get_parent().get_name()))
+            else
+                sts_mon_h.force_advance_txn_key(txn_agg_count);
+        end
+        else begin
+            `uvm_error("SCBD_SOC_IFC_STS", $sformatf("write_actual_analysis_export() failed to find matching transaction in soc_ifc_expected_hash while attempting aggregated transaction analysis!\nActual:   %s", t.convert2string()))
+            mismatch_count++;
+            // Just delete 1 entry from the hash to prevent the hash from exploding
+            // in size over the simulation - we've already reported the error
+            soc_ifc_expected_hash.delete(t.get_key());
+        end
+    end
+    else if (soc_ifc_expected_hash.exists(t.get_key())) begin
         t_exp = soc_ifc_expected_hash[t.get_key()];
         txn_eq = t.compare(t_exp);
         if (txn_eq) begin
@@ -246,13 +350,15 @@ class soc_ifc_scoreboard #(
             mismatch_count++;
         end
         soc_ifc_expected_hash.delete(t.get_key());
+        // Reset the toggle counter
+        soc_ifc_status_monitor_toggle_count = '{default:2'b00};
     end
     else begin
         //  UVMF_CHANGE_ME: Implement custom scoreboard here.  
         `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
         `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_analysis_export function needs to be completed with custom scoreboard functionality",UVM_LOW)
         `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
-        `uvm_error("SCBD_SOC_IFC_STS",$sformatf("NO PREDICTED ENTRY TO COMPARE AGAINST:%s",t.convert2string()))
+        `uvm_error("SCBD_SOC_IFC_STS",$sformatf("NO PREDICTED ENTRY WITH KEY [%0d] TO COMPARE AGAINST:%s", t.get_key(), t.convert2string()))
         nothing_to_compare_against_count++;
     end
     -> entry_received;
@@ -268,7 +374,7 @@ class soc_ifc_scoreboard #(
     cptra_status_transaction t_exp;
     bit txn_eq;
 
-    `uvm_info("SCBD_CPTRA_STS", $sformatf("Transaction Received through actual_cptra_analysis_export with key: [%d]", t.get_key()), UVM_MEDIUM)
+    `uvm_info("SCBD_CPTRA_STS", $sformatf("Transaction Received through actual_cptra_analysis_export with key: [%0d]", t.get_key()), UVM_MEDIUM)
     `uvm_info("SCBD_CPTRA_STS", {"            Data: ",t.convert2string()}, UVM_FULL)
 
     // Check for expected analysis port to receive first transaction after a reset before proceeding with the actual check
@@ -292,7 +398,7 @@ class soc_ifc_scoreboard #(
         `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
         `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_cptra_analysis_export function needs to be completed with custom scoreboard functionality",UVM_LOW)
         `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
-        `uvm_error("SCBD_CPTRA_STS",$sformatf("NO PREDICTED ENTRY TO COMPARE AGAINST:%s",t.convert2string()))
+        `uvm_error("SCBD_CPTRA_STS",$sformatf("NO PREDICTED ENTRY WITH KEY [%0d] TO COMPARE AGAINST:%s", t.get_key(), t.convert2string()))
         nothing_to_compare_against_count++;
     end
     -> entry_received;
@@ -455,6 +561,11 @@ endclass
       cptra_expected_hash  .delete();
       ahb_expected_q.delete();
       apb_expected_q.delete();
+
+      // Clear toggle counter
+      soc_ifc_status_monitor_struct      = '{default:0};
+      soc_ifc_status_monitor_struct_prev = '{default:0};
+      soc_ifc_status_monitor_toggle_count = '{default:2'b00};
 
       // Event trigger
       reset_handled.trigger(kind_handled);

@@ -66,13 +66,12 @@ task soc_ifc_env_mbox_real_fw_sequence::mbox_push_datain();
     //firmware end is after ICCM, DCCM and the two lines (16 bytes) of length encodings
     firmware_end = firmware_iccm_end + firmware_dccm_length + 32'd16;
 
-    `uvm_info("MBOX_SEQ", $sformatf("Starting FW push_datain, will inject dlen at ii= [0] and at [%d]", 16 + first_size), UVM_LOW)
+    `uvm_info("MBOX_SEQ", $sformatf("Starting FW push_datain, will inject dlen at ii= [0] and at [%0d]", 16 + first_size), UVM_LOW)
     for (ii=0; ii < firmware_end; ii++) begin
         data = uvm_reg_data_t'({fw_img[ii][3],fw_img[ii][2],fw_img[ii][1],fw_img[ii][0]});
-        `uvm_info("MBOX_SEQ", $sformatf("[Iteration: %d] Sending datain: 0x%x", ii/4, data), UVM_DEBUG)
-        reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
-        if (reg_sts != UVM_IS_OK)
-            `uvm_error("MBOX_SEQ", "Register access failed (mbox_datain)")
+        `uvm_info("MBOX_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", ii/4, data), UVM_DEBUG)
+        reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
+        report_reg_sts(reg_sts, "mbox_datain");
     end
 endtask
 

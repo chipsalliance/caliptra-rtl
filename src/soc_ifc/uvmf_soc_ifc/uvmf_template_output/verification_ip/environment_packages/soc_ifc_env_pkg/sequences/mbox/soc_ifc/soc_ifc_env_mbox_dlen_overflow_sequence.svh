@@ -19,48 +19,49 @@
 //----------------------------------------------------------------------
 //
 // DESCRIPTION: Extended from mbox_base sequence to provide additional
-//              functionality that emulates the expected format of a
-//              FW update transfer.
+//              functionality in a test that sends small mailbox commands.
 //
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-class soc_ifc_env_mbox_rand_fw_sequence extends soc_ifc_env_mbox_sequence_base;
+class soc_ifc_env_mbox_dlen_overflow_sequence extends soc_ifc_env_mbox_sequence_base;
 
-  `uvm_object_utils( soc_ifc_env_mbox_rand_fw_sequence )
+  `uvm_object_utils( soc_ifc_env_mbox_dlen_overflow_sequence )
 
   extern virtual task mbox_push_datain();
 
-  // Constrain command to be firmware
-  constraint mbox_cmd_c { mbox_op_rand.cmd.cmd_s.fw == 1'b1; }
-  // Constrain dlen to be a fw command
-  // Max. size: 4096B
-  constraint mbox_dlen_max_fw_c { mbox_op_rand.dlen <= 32'h0000_1000; }
-  // Minimum 10 dwords to include dlen at the beginning of both ICCM/DCCM sections
-  constraint mbox_dlen_min_fw_c { mbox_op_rand.dlen > 32'h28; }
+  function new(string name = "" );
+    super.new(name);
+  endfunction
 
 endclass
 
-// This should be overridden with real data to write
-task soc_ifc_env_mbox_rand_fw_sequence::mbox_push_datain();
+task soc_ifc_env_mbox_dlen_overflow_sequence::mbox_push_datain();
     int ii;
     uvm_reg_data_t data;
-    uvm_reg_data_t first_size;
-    first_size = uvm_reg_data_t'((mbox_op_rand.dlen - 32 - (mbox_op_rand.dlen%8))/2);
-    `uvm_info("MBOX_SEQ", $sformatf("Starting FW push_datain, will inject dlen at ii= [0] and at [%0d]", 16 + first_size), UVM_LOW)
-    for (ii=0; ii < this.mbox_op_rand.dlen; ii+=4) begin
+    int overflow_bytes;
+
+    // Still fits inside the mailbox
+    if (!std::randomize(overflow_bytes) with {overflow_bytes + mbox_op_rand.dlen <= (reg_model.mbox_mem_rm.get_size() * reg_model.mbox_mem_rm.get_n_bytes());})
+        `uvm_error("MBOX_OVERFLOW_SEQ", "Failed to randomize overflow bytes")
+
+    for (ii=0; ii < this.mbox_op_rand.dlen+overflow_bytes; ii+=4) begin
         if (ii == 0) begin
-            data = first_size;
+            data = uvm_reg_data_t'(mbox_op_rand.dlen - 8);
         end
-        else if (ii == (16 + first_size)) begin
-            data = uvm_reg_data_t'(mbox_op_rand.dlen - first_size);
+        else if (ii == 4) begin
+            data = uvm_reg_data_t'(mbox_resp_expected_dlen);
         end
         else begin
             if (!std::randomize(data)) `uvm_error("MBOX_SEQ", "Failed to randomize data")
         end
         `uvm_info("MBOX_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", ii/4, data), UVM_DEBUG)
-        reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
-        if (reg_sts != UVM_IS_OK)
-            `uvm_error("MBOX_SEQ", "Register access failed (mbox_datain)")
+        reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
+        report_reg_sts(reg_sts, "mbox_datain");
+        if (!pauser_used_is_valid() && retry_failed_reg_axs) begin
+            `uvm_info("MBOX_SEQ", "Re-do datain write with valid PAUSER", UVM_HIGH)
+            reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
+            report_reg_sts(reg_sts, "mbox_datain");
+        end
     end
 endtask

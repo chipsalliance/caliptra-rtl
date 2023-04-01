@@ -102,11 +102,13 @@ endclass
 task soc_ifc_env_cptra_mbox_handler_sequence::mbox_wait_for_command(output op_sts_e op_sts);
     uvm_reg_data_t data;
     op_sts = CPTRA_TIMEOUT;
-    reg_model.mbox_csr_rm.mbox_execute.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
-    while (!data[reg_model.mbox_csr_rm.mbox_execute.execute.get_lsb_pos()]) begin
+    reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+    while (!data[reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_cmd_avail_sts.get_lsb_pos()]) begin
         configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200);
-        reg_model.mbox_csr_rm.mbox_execute.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+        reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
     end
+    data &= uvm_reg_data_t'(1) << reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_cmd_avail_sts.get_lsb_pos();
+    reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
     op_sts = CPTRA_SUCCESS;
 endtask
 
