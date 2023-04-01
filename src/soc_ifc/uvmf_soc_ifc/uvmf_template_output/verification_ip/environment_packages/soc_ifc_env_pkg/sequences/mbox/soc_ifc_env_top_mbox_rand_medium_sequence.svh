@@ -26,18 +26,18 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-class soc_ifc_env_top_mbox_rand_small_sequence extends soc_ifc_env_top_mbox_sequence_base;
+class soc_ifc_env_top_mbox_rand_medium_sequence extends soc_ifc_env_top_mbox_sequence_base;
 
 
-  `uvm_object_utils( soc_ifc_env_top_mbox_rand_small_sequence )
+  `uvm_object_utils( soc_ifc_env_top_mbox_rand_medium_sequence )
 
   extern virtual function create_seqs();
 
 endclass
 
-function soc_ifc_env_top_mbox_rand_small_sequence::create_seqs();
+function soc_ifc_env_top_mbox_rand_medium_sequence::create_seqs();
     uvm_object obj;
-    obj = soc_ifc_env_mbox_rand_small_sequence_t::get_type().create_object("soc_ifc_env_mbox_seq");
-    if(!$cast(soc_ifc_env_mbox_seq,obj)) `uvm_fatal("SOC_IFC_TOP_MBOX_RAND_SMALL", "soc_ifc_env_top_mbox_rand_small_sequence::create_seqs() - <seq_type>.create_object() failed")
+    obj = soc_ifc_env_mbox_rand_medium_sequence_t::get_type().create_object("soc_ifc_env_mbox_seq");
+    if(!$cast(soc_ifc_env_mbox_seq,obj)) `uvm_fatal("SOC_IFC_TOP_MBOX_RAND_MEDIUM", "soc_ifc_env_top_mbox_rand_medium_sequence::create_seqs() - <seq_type>.create_object() failed")
     soc_ifc_env_cptra_handler_seq = soc_ifc_env_cptra_mbox_handler_sequence_t::type_id::create("soc_ifc_env_cptra_handler_seq");
 endfunction

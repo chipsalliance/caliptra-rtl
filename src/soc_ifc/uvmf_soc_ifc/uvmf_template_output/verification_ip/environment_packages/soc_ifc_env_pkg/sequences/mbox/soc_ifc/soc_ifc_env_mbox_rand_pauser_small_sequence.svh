@@ -18,26 +18,21 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-// DESCRIPTION: Sequence to initiate (and respond) to mailbox command
-//              "TOP" sequence because it invokes lower level env sequences
-//              to facilitate the uC/SoC sides of mailbox command handling
-//              and this sequence defines the whole mailbox flow.
+// DESCRIPTION: Extended from mbox pauser sequence to exercise PAUSER filtering.
+//              Tests small sized mailbox commands with PAUSER randomization.
 //
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-class soc_ifc_env_top_mbox_rand_small_sequence extends soc_ifc_env_top_mbox_sequence_base;
+class soc_ifc_env_mbox_rand_pauser_small_sequence extends soc_ifc_env_mbox_rand_pauser_sequence;
 
+  `uvm_object_utils( soc_ifc_env_mbox_rand_pauser_small_sequence )
 
-  `uvm_object_utils( soc_ifc_env_top_mbox_rand_small_sequence )
-
-  extern virtual function create_seqs();
+  // Constrain dlen to be a small command
+  // Max. size: 512B
+  constraint mbox_dlen_max_small_c { mbox_op_rand.dlen <= 32'h0000_0200; }
+  // Constrain response data size to also be small
+  // Max. size: 128B
+  constraint mbox_resp_dlen_max_small_c { mbox_resp_expected_dlen < 32'h0000_0080; }
 
 endclass
-
-function soc_ifc_env_top_mbox_rand_small_sequence::create_seqs();
-    uvm_object obj;
-    obj = soc_ifc_env_mbox_rand_small_sequence_t::get_type().create_object("soc_ifc_env_mbox_seq");
-    if(!$cast(soc_ifc_env_mbox_seq,obj)) `uvm_fatal("SOC_IFC_TOP_MBOX_RAND_SMALL", "soc_ifc_env_top_mbox_rand_small_sequence::create_seqs() - <seq_type>.create_object() failed")
-    soc_ifc_env_cptra_handler_seq = soc_ifc_env_cptra_mbox_handler_sequence_t::type_id::create("soc_ifc_env_cptra_handler_seq");
-endfunction

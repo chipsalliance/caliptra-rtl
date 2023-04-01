@@ -38,6 +38,26 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   rand int mbox_resp_expected_dlen; // Number of response data bytes to expect
   int sts_rsp_count;
   uvm_status_e reg_sts;
+  rand bit do_apb_lock_check;
+  rand bit retry_failed_reg_axs;
+
+  // PAUSER tracking/override
+  bit [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users [5];
+  bit mbox_valid_users_initialized = 1'b0;
+  caliptra_apb_user apb_user_obj; // Handle to the most recently generated user object
+  struct packed {
+      bit [apb5_master_0_params::PAUSER_WIDTH-1:0] pauser; /* Value of PAUSER when mbox lock acquired */
+      bit                                          locked;
+  } pauser_locked = '{pauser: '1, locked: 1'b0};
+  int hit_invalid_pauser_count = '0;
+
+  localparam FORCE_VALID_PAUSER = 0;
+  int PAUSER_PROB_LOCK   ;
+  int PAUSER_PROB_CMD    ;
+  int PAUSER_PROB_DATAIN ;
+  int PAUSER_PROB_EXECUTE;
+  int PAUSER_PROB_STATUS ;
+  int PAUSER_PROB_DATAOUT;
 
   extern virtual task mbox_setup();
   extern virtual task mbox_acquire_lock(output op_sts_e op_sts);
@@ -49,6 +69,11 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   extern virtual task mbox_poll_status();
   extern virtual task mbox_clr_execute();
   extern virtual task mbox_teardown();
+
+  extern virtual function void              set_pauser_prob_vals();
+  extern virtual function bit               pauser_used_is_valid();
+  extern virtual function caliptra_apb_user get_rand_user(int invalid_prob = FORCE_VALID_PAUSER);
+  extern virtual function void              report_reg_sts(uvm_status_e reg_sts, string name);
 
   // Constrain command to not be firmware
   constraint mbox_cmd_c { mbox_op_rand.cmd.cmd_s.fw == 1'b0; }
@@ -65,9 +90,16 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
                                 !mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen == 0;
                                  mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen >  0; }
 
+  // After acquiring the lock, it is informative to read from the mbox_status
+  // and mbox_user registers to confirm that lock acquisition had the intended
+  // side-effects. But doing register reads on APB actually affects the
+  // system - so we get more interesting coverage by skipping it sometimes
+  constraint apb_reg_check_c {do_apb_lock_check dist {0:/1, 1:/1};}
+  constraint retry_failed_reg_c {retry_failed_reg_axs == 1'b1;}
+
   function new(string name = "" );
     super.new(name);
-
+    set_pauser_prob_vals();
   endfunction
 
   virtual function void do_kill();
@@ -110,41 +142,155 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
     mbox_poll_status();
     mbox_clr_execute();
     mbox_teardown();
-//    if (sts_rsp_count) `uvm_warning("MBOX_SEQ", $sformatf("Unhandled status responses received! Count: %d", sts_rsp_count))
 
   endtask
 
 endclass
 
 // TODO these functions are all intended to be overridden by inheriting sequence
-//      although some (acquire lock) are simple and may not need any modification
+//      although some are simple and may not need any modification
 task soc_ifc_env_mbox_sequence_base::mbox_setup();
-    // placeholder
+    // Read the valid PAUSER fields from register mirrored value if the local array
+    // has not already been overridden from default values
+    byte ii;
+    uvm_status_e sts;
+    if (!mbox_valid_users_initialized) begin
+        for (ii=0; ii < $size(reg_model.soc_ifc_reg_rm.CPTRA_PAUSER_LOCK); ii++) begin: VALID_USER_LOOP
+            if (reg_model.soc_ifc_reg_rm.CPTRA_PAUSER_LOCK[ii].LOCK.get_mirrored_value())
+                mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_VALID_PAUSER[ii].get_mirrored_value();
+            else
+                mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_VALID_PAUSER[ii].get_reset("HARD");
+        end
+        mbox_valid_users_initialized = 1'b1;
+    end
+    else begin
+        for (ii=0; ii < $size(reg_model.soc_ifc_reg_rm.CPTRA_PAUSER_LOCK); ii++) begin: VALID_USER_CHECK_LOOP
+            if (reg_model.soc_ifc_reg_rm.CPTRA_PAUSER_LOCK[ii].LOCK.get_mirrored_value() &&
+                mbox_valid_users[ii] != reg_model.soc_ifc_reg_rm.CPTRA_VALID_PAUSER[ii].get_mirrored_value())
+                `uvm_warning("MBOX_SEQ", "mbox_valid_users initialized with a value that does not match mirrored value in register model!")
+        end
+    end
 endtask
 
 task soc_ifc_env_mbox_sequence_base::mbox_acquire_lock(output op_sts_e op_sts);
     uvm_reg_data_t data;
+    bit soc_has_lock;
+
     op_sts = CPTRA_TIMEOUT;
-    reg_model.mbox_csr_rm.mbox_lock.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
-    if (reg_sts != UVM_IS_OK)
-        `uvm_error("MBOX_SEQ", "Register access failed (mbox_lock)")
+    reg_model.mbox_csr_rm.mbox_lock.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_LOCK)));
+    report_reg_sts(reg_sts, "mbox_lock");
     // Wait for read data to return with '0', indicating no other agent has lock
     while (data[reg_model.mbox_csr_rm.mbox_lock.lock.get_lsb_pos()]) begin
-        configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200);
-        reg_model.mbox_csr_rm.mbox_lock.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
-        if (reg_sts != UVM_IS_OK)
-            `uvm_error("MBOX_SEQ", "Register access failed (mbox_lock)")
+        configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200); // FIXME add more randomization on delay
+        reg_model.mbox_csr_rm.mbox_lock.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_LOCK)));
+        report_reg_sts(reg_sts, "mbox_lock");
+    end
+
+    if (do_apb_lock_check || reg_sts != UVM_IS_OK) begin
+        // Check if we actually got the lock and if we expected to or not
+        reg_model.mbox_csr_rm.mbox_status.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(this.apb_user_obj));
+        report_reg_sts(reg_sts, "mbox_status");
+        soc_has_lock = data[reg_model.mbox_csr_rm.mbox_status.soc_has_lock.get_lsb_pos()] && reg_sts == UVM_IS_OK;
+        if (!soc_has_lock && pauser_used_is_valid()) begin
+            `uvm_error("MBOX_SEQ", "Failed to acquire lock when using valid PAUSER!")
+            op_sts = CPTRA_INVALID;
+        end
+        else if (soc_has_lock && !pauser_used_is_valid()) begin
+            `uvm_error("MBOX_SEQ", "Acquired lock unexpectedly when using invalid PAUSER!")
+        end
+
+        // Check latest value of mbox_user
+        reg_model.mbox_csr_rm.mbox_user.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(this.apb_user_obj));
+        report_reg_sts(reg_sts, "mbox_user");
+        if (soc_has_lock && (data != this.apb_user_obj.get_addr_user())) begin
+            `uvm_error("MBOX_SEQ", "mbox_user does not match PAUSER used when lock was acquired!")
+            op_sts = CPTRA_INVALID;
+        end
+        else if (!soc_has_lock && (data == this.apb_user_obj.get_addr_user())) begin
+            `uvm_error("MBOX_SEQ", "mbox_user unexpectedly updated when lock was not acquired!")
+            op_sts = CPTRA_INVALID;
+        end
+        else begin
+            `uvm_info("MBOX_SEQ", $sformatf("mbox_user matches expected value [0x%x] based on result of attempt to acquire lock", this.apb_user_obj.get_addr_user()), UVM_HIGH)
+        end
+
+        // If we don't already have the lock, acquire it using a valid PAUSER
+        if (!soc_has_lock && retry_failed_reg_axs) begin
+            reg_model.mbox_csr_rm.mbox_lock.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
+            report_reg_sts(reg_sts, "mbox_lock");
+            // Wait for read data to return with '0', indicating no other agent has lock
+            while (data[reg_model.mbox_csr_rm.mbox_lock.lock.get_lsb_pos()]) begin
+                configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200);
+                reg_model.mbox_csr_rm.mbox_lock.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(this.apb_user_obj));
+                report_reg_sts(reg_sts, "mbox_lock");
+            end
+            this.pauser_locked.pauser = this.apb_user_obj.get_addr_user();
+
+            // Check if we actually got the lock
+            reg_model.mbox_csr_rm.mbox_status.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(this.apb_user_obj));
+            report_reg_sts(reg_sts, "mbox_status");
+            soc_has_lock = data[reg_model.mbox_csr_rm.mbox_status.soc_has_lock.get_lsb_pos()] && reg_sts == UVM_IS_OK;
+            if (!pauser_used_is_valid())
+                `uvm_error("MBOX_SEQ", "PAUSER value used is not valid even after attempt to force it to a valid value!")
+            else if (!soc_has_lock)
+                `uvm_error("MBOX_SEQ", "Failed to acquire lock when using valid PAUSER!")
+            else
+                this.pauser_locked.locked = 1'b1;
+
+            // Check latest value of mbox_user
+            reg_model.mbox_csr_rm.mbox_user.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(this.apb_user_obj));
+            report_reg_sts(reg_sts, "mbox_user");
+            if (soc_has_lock && (data != this.apb_user_obj.get_addr_user())) begin
+                `uvm_error("MBOX_SEQ", "mbox_user does not match PAUSER used when lock was acquired!")
+            end
+            else if (!soc_has_lock && (data == this.apb_user_obj.get_addr_user())) begin
+                `uvm_error("MBOX_SEQ", "mbox_user unexpectedly updated when using invalid PAUSER!")
+            end
+            else begin
+                `uvm_info("MBOX_SEQ", $sformatf("mbox_user matches expected value [0x%x] based on result of attempt to acquire lock", this.apb_user_obj.get_addr_user()), UVM_HIGH)
+            end
+
+        end
+        else if (soc_has_lock) begin
+            this.pauser_locked.pauser = this.apb_user_obj.get_addr_user();
+            this.pauser_locked.locked = 1'b1;
+        end
+    end
+    else begin
+        this.pauser_locked.pauser = this.apb_user_obj.get_addr_user();
+        this.pauser_locked.locked = 1'b1;
     end
     op_sts = CPTRA_SUCCESS;
 endtask
 
 task soc_ifc_env_mbox_sequence_base::mbox_set_cmd(input mbox_op_s op);
-    reg_model.mbox_csr_rm.mbox_cmd.write(reg_sts, uvm_reg_data_t'(op.cmd), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
-    if (reg_sts != UVM_IS_OK)
-        `uvm_error("MBOX_SEQ", "Register access failed (mbox_cmd)")
-    reg_model.mbox_csr_rm.mbox_dlen.write(reg_sts, uvm_reg_data_t'(op.dlen), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
-    if (reg_sts != UVM_IS_OK)
-        `uvm_error("MBOX_SEQ", "Register access failed (mbox_dlen)")
+    uvm_reg_data_t data;
+
+    reg_model.mbox_csr_rm.mbox_cmd.write(reg_sts, uvm_reg_data_t'(op.cmd), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_CMD)));
+    report_reg_sts(reg_sts, "mbox_cmd");
+    if (!pauser_used_is_valid()) begin
+        reg_model.mbox_csr_rm.mbox_cmd.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
+        report_reg_sts(reg_sts, "mbox_cmd");
+        if (mbox_cmd_u'(data) == op.cmd)
+            `uvm_error("MBOX_SEQ", "Write to mbox_cmd succeeded unexpectedly with invalid PAUSER!")
+        else if (retry_failed_reg_axs) begin
+            reg_model.mbox_csr_rm.mbox_cmd.write(reg_sts, uvm_reg_data_t'(op.cmd), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
+            report_reg_sts(reg_sts, "mbox_cmd");
+        end
+    end
+
+    reg_model.mbox_csr_rm.mbox_dlen.write(reg_sts, uvm_reg_data_t'(op.dlen), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_CMD)));
+    report_reg_sts(reg_sts, "mbox_dlen");
+    if (!pauser_used_is_valid()) begin
+        reg_model.mbox_csr_rm.mbox_dlen.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
+        report_reg_sts(reg_sts, "mbox_dlen");
+        if (32'(data) == op.dlen)
+            `uvm_error("MBOX_SEQ", "Write to mbox_dlen succeeded unexpectedly with invalid PAUSER!")
+        else if (retry_failed_reg_axs)  begin
+            reg_model.mbox_csr_rm.mbox_dlen.write(reg_sts, uvm_reg_data_t'(op.dlen), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
+            report_reg_sts(reg_sts, "mbox_dlen");
+        end
+    end
 endtask
 
 // This should be overridden with real data to write
@@ -161,25 +307,38 @@ task soc_ifc_env_mbox_sequence_base::mbox_push_datain();
         else begin
             if (!std::randomize(data)) `uvm_error("MBOX_SEQ", "Failed to randomize data")
         end
-        `uvm_info("MBOX_SEQ", $sformatf("[Iteration: %d] Sending datain: 0x%x", ii/4, data), UVM_DEBUG)
-        reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
-        if (reg_sts != UVM_IS_OK)
-            `uvm_error("MBOX_SEQ", "Register access failed (mbox_datain)")
+        `uvm_info("MBOX_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", ii/4, data), UVM_DEBUG)
+        reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
+        report_reg_sts(reg_sts, "mbox_datain");
+        if (!pauser_used_is_valid() && retry_failed_reg_axs) begin
+            `uvm_info("MBOX_SEQ", "Re-do datain write with valid PAUSER", UVM_HIGH)
+            reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
+            report_reg_sts(reg_sts, "mbox_datain");
+        end
     end
 endtask
 
 task soc_ifc_env_mbox_sequence_base::mbox_execute();
     uvm_reg_data_t data = uvm_reg_data_t'(1) << reg_model.mbox_csr_rm.mbox_execute.execute.get_lsb_pos();
-    reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
-    if (reg_sts != UVM_IS_OK)
-        `uvm_error("MBOX_SEQ", "Register access failed (mbox_execute)")
+    reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_EXECUTE)));
+    report_reg_sts(reg_sts, "mbox_execute");
+    if (!pauser_used_is_valid() && retry_failed_reg_axs) begin
+        reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
+        report_reg_sts(reg_sts, "mbox_execute");
+    end
 endtask
 
 task soc_ifc_env_mbox_sequence_base::mbox_check_status(output mbox_status_e data);
     uvm_reg_data_t reg_data;
-    reg_model.mbox_csr_rm.mbox_status.read(reg_sts, reg_data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
+    reg_model.mbox_csr_rm.mbox_status.read(reg_sts, reg_data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_STATUS)));
+    report_reg_sts(reg_sts, "mbox_status");
+
+    if (!pauser_used_is_valid() && retry_failed_reg_axs) begin
+        reg_model.mbox_csr_rm.mbox_status.read(reg_sts, reg_data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
+        report_reg_sts(reg_sts, "mbox_status");
+    end
+
     if (reg_sts != UVM_IS_OK) begin
-        `uvm_error("MBOX_SEQ", "Register access failed (mbox_status)")
         data = CMD_FAILURE;
     end
     else begin
@@ -191,7 +350,13 @@ task soc_ifc_env_mbox_sequence_base::mbox_read_resp_data();
     uvm_reg_data_t data;
     int ii;
     for (ii=0; ii < mbox_resp_expected_dlen; ii+=4) begin
-        reg_model.mbox_csr_rm.mbox_dataout.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
+        reg_model.mbox_csr_rm.mbox_dataout.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAOUT)));
+        report_reg_sts(reg_sts, "mbox_dataout");
+        if (!pauser_used_is_valid() && retry_failed_reg_axs) begin
+            `uvm_info("MBOX_SEQ", "Re-do dataout read with valid PAUSER", UVM_HIGH)
+            reg_model.mbox_csr_rm.mbox_dataout.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
+            report_reg_sts(reg_sts, "mbox_dataout");
+        end
     end
 endtask
 
@@ -224,11 +389,78 @@ task soc_ifc_env_mbox_sequence_base::mbox_poll_status();
 endtask
 
 task soc_ifc_env_mbox_sequence_base::mbox_clr_execute();
-    reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, uvm_reg_data_t'(0), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
-    if (reg_sts != UVM_IS_OK)
-        `uvm_error("MBOX_SEQ", "Register access failed (mbox_execute)")
+    reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, uvm_reg_data_t'(0), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_EXECUTE)));
+    report_reg_sts(reg_sts, "mbox_execute");
+    if (!pauser_used_is_valid() && retry_failed_reg_axs) begin
+        reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, uvm_reg_data_t'(0), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
+        report_reg_sts(reg_sts, "mbox_execute");
+    end
 endtask
 
 task soc_ifc_env_mbox_sequence_base::mbox_teardown();
-    // placeholder
+    // Summary at sequence end
+    `uvm_info("MBOX_SEQ", $sformatf("Count of mailbox accesses performed with invalid PAUSER: %0d", hit_invalid_pauser_count), UVM_MEDIUM)
 endtask
+
+function void soc_ifc_env_mbox_sequence_base::set_pauser_prob_vals();
+  this.PAUSER_PROB_LOCK    = FORCE_VALID_PAUSER;
+  this.PAUSER_PROB_CMD     = FORCE_VALID_PAUSER;
+  this.PAUSER_PROB_DATAIN  = FORCE_VALID_PAUSER;
+  this.PAUSER_PROB_EXECUTE = FORCE_VALID_PAUSER;
+  this.PAUSER_PROB_STATUS  = FORCE_VALID_PAUSER;
+  this.PAUSER_PROB_DATAOUT = FORCE_VALID_PAUSER;
+endfunction
+
+// Return a caliptra_apb_user object populated with some value of
+// addr_user (with which to override PAUSER in the reg adapter).
+// The likelihood that the generated addr_user is a invalid value
+// is given by the supplied argument.
+// The supplied argument is normalized against the value 1000 (the probability
+// of getting a valid value). I.e.:
+//  - invalid_prob == 0   : returned addr_user is guaranteed to be valid
+//  - invalid_prob <  1000: returned addr_user is most likely to be valid
+//  - invalid_prob >  1000: returned addr_user is most likely to be invalid
+// A legal addr_user is defined as:
+//  - A random selection from valid_users if the mbox_lock has yet to be acquired
+//  - The value in mbox_user if mbox_lock has been acquired already
+function caliptra_apb_user soc_ifc_env_mbox_sequence_base::get_rand_user(int invalid_prob = FORCE_VALID_PAUSER);
+    apb_user_obj = new();
+    if (!this.apb_user_obj.randomize() with {if (pauser_locked.locked)
+                                                 (addr_user == pauser_locked.pauser) dist
+                                                 {1 :/ 1000,
+                                                  0 :/ invalid_prob};
+                                             else
+                                                 (addr_user inside {mbox_valid_users}) dist
+                                                 {1 :/ 1000,
+                                                  0 :/ invalid_prob}; })
+        `uvm_error("MBOX_SEQ", "Failed to randomize APB PAUSER override value")
+    else
+        `uvm_info("MBOX_SEQ", $sformatf("Randomized APB PAUSER override value to 0x%x", this.apb_user_obj.addr_user), UVM_HIGH)
+    this.hit_invalid_pauser_count += pauser_used_is_valid() ? 0 : 1;
+    return this.apb_user_obj;
+endfunction
+
+function bit soc_ifc_env_mbox_sequence_base::pauser_used_is_valid();
+    if (this.pauser_locked.locked)
+        return this.apb_user_obj.get_addr_user() == this.pauser_locked.pauser;
+    else 
+        return this.apb_user_obj.get_addr_user() inside mbox_valid_users;
+endfunction
+
+function void soc_ifc_env_mbox_sequence_base::report_reg_sts(uvm_status_e reg_sts, string name);
+    // APB error is flagged only for PAUSER that doesn't match the registered
+    // values, it does not check that PAUSER matches the exact value in
+    // mbox_user that was stored when lock was acquired (this results in a
+    // silent error but a successful reg read).
+    // Ergo, check against mbox_valid_users instead of pauser_locked.
+    if (reg_sts != UVM_IS_OK && this.apb_user_obj.get_addr_user() inside mbox_valid_users)
+        `uvm_error("MBOX_SEQ",
+                   $sformatf("Register access failed unexpectedly with valid PAUSER! 0x%x (%s)", this.apb_user_obj.get_addr_user(), name))
+    else if (reg_sts == UVM_IS_OK && !(this.apb_user_obj.get_addr_user() inside mbox_valid_users))
+        `uvm_error("MBOX_SEQ",
+                   $sformatf("Register access passed unexpectedly with invalid PAUSER! 0x%x (%s)", this.apb_user_obj.get_addr_user(), name))
+    else
+        `uvm_info("MBOX_SEQ",
+                  $sformatf("Register access to (%s) with pauser_used_is_valid: %b and reg_sts: %p", name, this.pauser_used_is_valid(), reg_sts),
+                  UVM_HIGH)
+endfunction

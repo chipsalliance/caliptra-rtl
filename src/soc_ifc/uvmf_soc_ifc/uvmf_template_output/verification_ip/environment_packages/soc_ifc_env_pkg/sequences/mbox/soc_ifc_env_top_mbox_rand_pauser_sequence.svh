@@ -34,7 +34,8 @@ class soc_ifc_env_top_mbox_rand_pauser_sequence extends soc_ifc_env_top_mbox_seq
   soc_ifc_env_pauser_init_sequence_t          soc_ifc_env_pauser_init_seq;
   soc_ifc_env_mbox_rand_pauser_sequence_t     soc_ifc_env_mbox_pauser_seq;
 
-  bit [4:0] [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users;
+  bit [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users [5];
+  caliptra_apb_user apb_user_obj;
 
   extern virtual function      create_seqs();
   extern virtual function void connect_extra_soc_ifc_resp_seqs();
@@ -56,10 +57,7 @@ function void soc_ifc_env_top_mbox_rand_pauser_sequence::connect_extra_soc_ifc_r
 endfunction
 
 function soc_ifc_env_top_mbox_rand_pauser_sequence::randomize_seqs();
-    if(!soc_ifc_env_mbox_seq.randomize() with { mbox_op_rand.dlen <= 32'h0000_1000;
-                                                mbox_op_rand.dlen >= 32'h0000_0200;
-                                                mbox_resp_expected_dlen <= 32'h0000_0400;
-                                                mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen >= 32'h0000_0080; })
+    if(!soc_ifc_env_mbox_seq.randomize())
         `uvm_fatal("SOC_IFC_MBOX_TOP", $sformatf("soc_ifc_env_top_mbox_rand_pauser_sequence::body() - %s randomization failed", soc_ifc_env_mbox_seq.get_type_name()));
     if(!soc_ifc_env_cptra_handler_seq.randomize())
         `uvm_fatal("SOC_IFC_MBOX_TOP", $sformatf("soc_ifc_env_top_mbox_rand_pauser_sequence::body() - %s randomization failed", soc_ifc_env_cptra_handler_seq.get_type_name()));
@@ -73,12 +71,15 @@ task soc_ifc_env_top_mbox_rand_pauser_sequence::start_seqs();
     uvm_reg_data_t data;
     byte ii;
 
+    apb_user_obj = new();
+    apb_user_obj.set_addr_user(32'hFFFF_FFFF); // FIXME hardcoded value - where to get this from?
+
     for (ii=0; ii < 5; ii++) begin: PAUSER_CHECK_LOOP
-        reg_model.soc_ifc_reg_rm.CPTRA_PAUSER_LOCK[ii].read(sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
-        if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_MBOX_TOP", $sformatf("Failed when reading CPTRA_PAUSER_LOCK index %d", ii))
+        reg_model.soc_ifc_reg_rm.CPTRA_PAUSER_LOCK[ii].read(sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+        if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_MBOX_TOP", $sformatf("Failed when reading CPTRA_PAUSER_LOCK index %0d", ii))
         if (data[reg_model.soc_ifc_reg_rm.CPTRA_PAUSER_LOCK[ii].LOCK.get_lsb_pos()]) begin
-            reg_model.soc_ifc_reg_rm.CPTRA_VALID_PAUSER[ii].read(sts, mbox_valid_users[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
-            if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_MBOX_TOP", $sformatf("Failed when reading CPTRA_VALID_PAUSER index %d", ii))
+            reg_model.soc_ifc_reg_rm.CPTRA_VALID_PAUSER[ii].read(sts, mbox_valid_users[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+            if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_MBOX_TOP", $sformatf("Failed when reading CPTRA_VALID_PAUSER index %0d", ii))
             mbox_valid_users_initialized = 1'b1;
         end
         else begin

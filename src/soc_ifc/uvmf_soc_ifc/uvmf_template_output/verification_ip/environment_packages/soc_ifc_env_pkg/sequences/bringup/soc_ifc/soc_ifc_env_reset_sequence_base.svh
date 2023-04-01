@@ -33,6 +33,7 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     typedef soc_ifc_ctrl_reset_sequence_base soc_ifc_ctrl_sequence_t;
     soc_ifc_ctrl_sequence_t soc_ifc_ctrl_seq;
 
+  caliptra_apb_user apb_user_obj;
 
   typedef struct packed {
       bit set_bootfsm_breakpoint;
@@ -53,6 +54,10 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
   function new(string name = "" );
     super.new(name);
     soc_ifc_ctrl_seq = soc_ifc_ctrl_sequence_t::type_id::create("soc_ifc_ctrl_seq");
+
+    // Setup a User object to override PAUSER
+    apb_user_obj = new();
+
   endfunction
 
 
@@ -100,8 +105,8 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     if (this.fuses_to_set.uds) begin
         `uvm_info("SOC_IFC_RST", "Writing obfuscated UDS to fuse bank", UVM_LOW)
         for (int ii = 0; ii < $size(reg_model.soc_ifc_reg_rm.fuse_uds_seed); ii++) begin
-            reg_model.soc_ifc_reg_rm.fuse_uds_seed[ii].write(sts, uds_seed_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
-            if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", $sformatf("Failed when writing to fuse_uds_seed index %d", ii))
+            reg_model.soc_ifc_reg_rm.fuse_uds_seed[ii].write(sts, uds_seed_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+            if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", $sformatf("Failed when writing to fuse_uds_seed index %0d", ii))
         end
     end
 
@@ -109,13 +114,13 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     if (this.fuses_to_set.field_entropy) begin
         `uvm_info("SOC_IFC_RST", "Writing obfuscated Field Entropy to fuse bank", UVM_LOW)
         for (int ii = 0; ii < $size(reg_model.soc_ifc_reg_rm.fuse_field_entropy); ii++) begin
-            reg_model.soc_ifc_reg_rm.fuse_field_entropy[ii].write(sts, field_entropy_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
-            if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", $sformatf("Failed when writing to field_entropy index %d", ii))
+            reg_model.soc_ifc_reg_rm.fuse_field_entropy[ii].write(sts, field_entropy_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+            if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", $sformatf("Failed when writing to field_entropy index %0d", ii))
         end
     end
 
     // Set Fuse Done
-    reg_model.soc_ifc_reg_rm.CPTRA_FUSE_WR_DONE.write(sts, `UVM_REG_DATA_WIDTH'(1), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
+    reg_model.soc_ifc_reg_rm.CPTRA_FUSE_WR_DONE.write(sts, `UVM_REG_DATA_WIDTH'(1), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
     `uvm_info("SOC_IFC_RST", $sformatf("Fuse download completed, status: %p", sts), UVM_MEDIUM)
   endtask
 
@@ -130,7 +135,7 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     // If set_bootfsm_breakpoint is randomized to 1, we need to release bootfsm by writing GO
     if (ctrl_rst_ctx.set_bootfsm_breakpoint) begin
         `uvm_info("SOC_IFC_RST", "BootFSM Breakpoint is set, writing GO", UVM_MEDIUM)
-        reg_model.soc_ifc_reg_rm.CPTRA_BOOTFSM_GO.write(sts, `UVM_REG_DATA_WIDTH'(1), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
+        reg_model.soc_ifc_reg_rm.CPTRA_BOOTFSM_GO.write(sts, `UVM_REG_DATA_WIDTH'(1), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
         `uvm_info("SOC_IFC_RST", $sformatf("Write to BootFSM GO completed, status: %p", sts), UVM_MEDIUM)
     end
     else begin
@@ -151,6 +156,7 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     reg_model = configuration.soc_ifc_rm;
     if (soc_ifc_status_agent_rsp_seq == null)
         `uvm_fatal("SOC_IFC_RST", "SOC_IFC ENV reset sequence expected a handle to the soc_ifc status agent responder sequence (from bench-level sequence) but got null!")
+    apb_user_obj.set_addr_user(reg_model.soc_ifc_reg_rm.CPTRA_VALID_PAUSER[0].PAUSER.get_reset("HARD"));
   endtask
 
 
@@ -164,10 +170,6 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
 
     // Run ctrl seq
     run_ctrl_reset_seq(ctrl_rst_ctx);
-
-    // Reset the PAUSER override in the reg adapter so the first APB transfer
-    // after a reset uses default PAUSER (but can be overridden later)
-    configuration.apb_reg_adapter_h.pauser_override = configuration.soc_ifc_rm.soc_ifc_reg_rm.CPTRA_VALID_PAUSER[0].PAUSER.get_reset();
 
     // Download Fuses when ready
     download_fuses();
