@@ -50,6 +50,11 @@ class caliptra_top_environment  extends uvmf_environment_base #(
   caliptra_top_vsqr_t vsqr;
 
   // pragma uvmf custom class_item_additional begin
+  bit can_handle_reset = 1'b1;
+  extern task          detect_reset();
+  extern function void set_can_handle_reset(bit en = 1'b1);
+  extern task          handle_reset(string kind = "HARD");
+  extern task          run_phase(uvm_phase phase);
   // pragma uvmf custom class_item_additional end
  
 // ****************************************************************************
@@ -70,6 +75,7 @@ class caliptra_top_environment  extends uvmf_environment_base #(
     super.build_phase(phase);
     soc_ifc_subenv = soc_ifc_subenv_t::type_id::create("soc_ifc_subenv",this);
     soc_ifc_subenv.set_config(configuration.soc_ifc_subenv_config);
+    soc_ifc_subenv.set_can_handle_reset(1'b0);
 
     vsqr = caliptra_top_vsqr_t::type_id::create("vsqr", this);
     vsqr.set_config(configuration);
@@ -111,5 +117,36 @@ class caliptra_top_environment  extends uvmf_environment_base #(
 endclass
 
 // pragma uvmf custom external begin
+task caliptra_top_environment::detect_reset();
+    string kind = "SOFT";
+
+    // Detect reset assertion from soc_ifc_ctrl_agent
+    this.configuration.soc_ifc_subenv_config.soc_ifc_ctrl_agent_config.wait_for_reset_assertion(kind);
+
+    // Handle
+    this.handle_reset(kind);
+endtask
+
+// Called by a super-environment, if present, to bubble reset responsibility up
+function void caliptra_top_environment::set_can_handle_reset(bit en = 1'b1);
+    this.can_handle_reset = en;
+endfunction
+
+task caliptra_top_environment::handle_reset(string kind = "HARD");
+    // Reset soc_ifc_environment
+    this.soc_ifc_subenv.handle_reset(kind);
+
+    // Reset any other agents (needed to reset monitor transaction keys)
+    // Reset scoreboard according to kind
+    // Reset predictor according to kind
+endtask
+
+task caliptra_top_environment::run_phase(uvm_phase phase);
+    if (this.can_handle_reset) begin
+        fork
+            forever detect_reset();
+        join
+    end
+endtask
 // pragma uvmf custom external end
 

@@ -56,3 +56,4 @@ ${CALIPTRA_ROOT}/src/soc_ifc/rtl/mbox.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/mbox_csr.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/sha512_acc_top.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/sha512_acc_csr.sv
+${CALIPTRA_ROOT}/src/soc_ifc/rtl/wdt.sv

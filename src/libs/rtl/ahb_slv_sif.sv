@@ -135,7 +135,7 @@ always_comb begin : response_block
     hreadyout_o = 1'b1;
     hresp_o = H_OKAY;
     //first err cycle, de-assert ready and drive err
-    if (err) begin
+    if (err & ~err_f) begin
         hreadyout_o = 1'b0;
         hresp_o = H_ERROR;
     end else if (hld) begin

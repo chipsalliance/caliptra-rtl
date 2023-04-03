@@ -52,6 +52,7 @@ class cptra_status_transaction_coverage  extends uvm_subscriber #(.T(cptra_statu
     cptra_obf_key_reg: coverpoint coverage_trans.cptra_obf_key_reg;
     obf_field_entropy: coverpoint coverage_trans.obf_field_entropy;
     obf_uds_seed: coverpoint coverage_trans.obf_uds_seed;
+    nmi_vector: coverpoint coverage_trans.nmi_vector;
     iccm_locked: coverpoint coverage_trans.iccm_locked;
     // pragma uvmf custom covergroup end
   endgroup

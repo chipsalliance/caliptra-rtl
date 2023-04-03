@@ -60,6 +60,7 @@ class soc_ifc_env_mbox_rand_pauser_sequence extends soc_ifc_env_mbox_sequence_ba
   extern virtual task mbox_check_status(output mbox_status_e data);
   extern virtual task mbox_read_resp_data();
   extern virtual task mbox_clr_execute();
+  extern virtual task mbox_teardown();
 
 endclass
 
@@ -107,6 +108,19 @@ task soc_ifc_env_mbox_rand_pauser_sequence::mbox_acquire_lock(output op_sts_e op
         `uvm_error("MBOX_PAUSER", "Acquired lock unexpectedly when using invalid PAUSER!")
     end
 
+    // Check latest value of mbox_user
+    reg_model.mbox_csr_rm.mbox_user.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
+    report_reg_sts(reg_sts, "mbox_user");
+    if (soc_has_lock && (data != this.pauser_override)) begin
+        `uvm_error("MBOX_PAUSER", "mbox_user does not match pauser_override used when lock was acquired!")
+    end
+    else if (!soc_has_lock && (data == this.pauser_override)) begin
+        `uvm_error("MBOX_PAUSER", "mbox_user unexpectedly updated when using invalid PAUSER!")
+    end
+    else begin
+        `uvm_info("MBOX_PAUSER", "mbox_user matches expected value based on result of initial attempt to acquire lock", UVM_HIGH)
+    end
+
     // If we don't already have the lock, acquire it using a valid PAUSER
     if (!soc_has_lock && retry_failed_reg_axs) begin
         adapter_set_pauser_valid();
@@ -128,6 +142,20 @@ task soc_ifc_env_mbox_rand_pauser_sequence::mbox_acquire_lock(output op_sts_e op
             `uvm_error("MBOX_PAUSER", "Failed to acquire lock when using valid PAUSER!")
         else
             this.pauser_locked.locked = 1'b1;
+
+        // Check latest value of mbox_user
+        reg_model.mbox_csr_rm.mbox_user.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
+        report_reg_sts(reg_sts, "mbox_user");
+        if (soc_has_lock && (data != this.pauser_override)) begin
+            `uvm_error("MBOX_PAUSER", "mbox_user does not match pauser_override used when lock was acquired!")
+        end
+        else if (!soc_has_lock && (data == this.pauser_override)) begin
+            `uvm_error("MBOX_PAUSER", "mbox_user unexpectedly updated when using invalid PAUSER!")
+        end
+        else begin
+            `uvm_info("MBOX_PAUSER", "mbox_user matches expected value based on result of initial attempt to acquire lock", UVM_HIGH)
+        end
+
     end
     else if (soc_has_lock) begin
         this.pauser_locked.pauser = this.pauser_override;
@@ -256,7 +284,9 @@ task soc_ifc_env_mbox_rand_pauser_sequence::mbox_clr_execute();
         reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, uvm_reg_data_t'(0), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
         report_reg_sts(reg_sts, "mbox_execute");
     end
+endtask
 
+task soc_ifc_env_mbox_rand_pauser_sequence::mbox_teardown();
     // Summary at sequence end
     `uvm_info("MBOX_PAUSER", $sformatf("Count of mailbox accesses performed with invalid PAUSER: %d", hit_invalid_pauser_count), UVM_MEDIUM)
 endtask

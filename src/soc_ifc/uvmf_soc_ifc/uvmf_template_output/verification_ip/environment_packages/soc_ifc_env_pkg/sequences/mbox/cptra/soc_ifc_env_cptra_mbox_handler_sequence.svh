@@ -49,6 +49,11 @@ class soc_ifc_env_cptra_mbox_handler_sequence extends soc_ifc_env_sequence_base 
     super.new(name);
   endfunction
 
+  virtual function void do_kill();
+    // FIXME gracefully terminate any AHB requests pending?
+    reg_model.soc_ifc_AHB_map.get_sequencer().stop_sequences(); // Kill any pending AHB transfers
+  endfunction
+
   virtual task body();
 
     int sts_rsp_count = 0;

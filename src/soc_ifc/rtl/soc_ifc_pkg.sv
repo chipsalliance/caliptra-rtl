@@ -28,6 +28,9 @@ package soc_ifc_pkg;
     parameter MBOX_DEPTH = (MBOX_SIZE_KB * 1024 * 8) / MBOX_DATA_W;
     parameter MBOX_ADDR_W = $clog2(MBOX_DEPTH);
 
+    parameter WDT_TIMEOUT_PERIOD_NUM_DWORDS = 2;
+    parameter WDT_TIMEOUT_PERIOD_W = WDT_TIMEOUT_PERIOD_NUM_DWORDS * 32;
+
     //memory map
     parameter MBOX_DIR_START_ADDR    = 18'h0_0000;
     parameter MBOX_DIR_END_ADDR      = 18'h1_FFFF;

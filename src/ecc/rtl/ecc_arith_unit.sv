@@ -42,6 +42,7 @@ module ecc_arith_unit
     // Clock and reset.
     input wire           clk,
     input wire           reset_n,
+    input wire           zeroize,
 
     // DATA PORT
     input  wire [2 : 0]                     ecc_cmd_i,
@@ -98,6 +99,7 @@ module ecc_arith_unit
         ecc_pm_ctrl_i(
         .clk(clk),
         .reset_n(reset_n),
+        .zeroize(zeroize),
         .ecc_cmd_i(ecc_cmd_i),
         .sca_en_i(sca_en_i),
         .digit_i(digit_in),
@@ -118,6 +120,7 @@ module ecc_arith_unit
         ram_tdp_file_i(
         .clk(clk),
         .reset_n(reset_n),
+        .zeroize(zeroize),
         .ena(1'b1),
         .wea(ecc_instr_s.opcode.add_we),
         .addra(ecc_instr_s.opa_addr),
@@ -149,6 +152,7 @@ module ecc_arith_unit
         // Clock and reset.
         .clk(clk),
         .reset_n(reset_n),
+        .zeroize(zeroize),
 
         // DATA PORT
         .add_en_i(ecc_instr_s.opcode.add_en),
@@ -171,6 +175,13 @@ module ecc_arith_unit
     always_ff @(posedge clk or negedge reset_n) 
     begin :reg_update
         if (!reset_n) begin
+            reg_dinb_r      <= '0;
+            reg_addr_r      <= '0;
+            reg_web_r       <= 0;
+            secret_key      <= '0;
+            d_o             <= '0;
+        end
+        else if (zeroize) begin
             reg_dinb_r      <= '0;
             reg_addr_r      <= '0;
             reg_web_r       <= 0;

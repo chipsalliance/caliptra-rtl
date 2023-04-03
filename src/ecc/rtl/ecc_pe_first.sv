@@ -29,6 +29,7 @@ module ecc_pe_first #(
     // Clock and reset.
     input  wire              clk,
     input  wire              reset_n,
+    input  wire              zeroize,
 
     input  wire              start_in,
     // DATA PORT
@@ -150,6 +151,13 @@ module ecc_pe_first #(
             s_reg <= 'b0;
             a_reg <= 'b0;
         end
+        else if (zeroize) begin
+            c_0_reg <= 'b0;
+            sum_0_reg <= 'b0;
+            m_temp_reg <= 'b0;
+            s_reg <= 'b0;
+            a_reg <= 'b0;
+        end
         else if (start_in) begin
             c_0_reg <= 'b0;
             sum_0_reg <= 'b0;
@@ -169,6 +177,9 @@ module ecc_pe_first #(
         if (~reset_n) begin
             a_out <= 'b0;
         end
+        else if (zeroize) begin
+            a_out <= 'b0;
+        end
         else if (start_in) begin
             a_out <= 'b0;
         end else begin
@@ -178,6 +189,9 @@ module ecc_pe_first #(
 
     always_ff @(posedge clk or negedge reset_n) begin
         if (~reset_n) begin
+            m_out <= 'b0;
+        end
+        else if (zeroize) begin
             m_out <= 'b0;
         end
         else if (start_in) begin

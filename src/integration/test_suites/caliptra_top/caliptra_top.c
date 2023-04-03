@@ -35,7 +35,7 @@ volatile char* stdout = (char *)STDOUT;
 #ifdef CPT_VERBOSITY
     enum printf_verbosity verbosity_g = CPT_VERBOSITY;
 #else
-    enum printf_verbosity verbosity_g = WARNING;
+    enum printf_verbosity verbosity_g = LOW;
 #endif
 
 
@@ -61,9 +61,9 @@ void main() {
                              0x9056d884,
                              0xdaf3c89d};
 
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " Caliptra Validation ROM!!\n"        );
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(MEDIUM, "----------------------------------\n");
+    VPRINTF(LOW,    "- Caliptra Validation ROM!!\n"       );
+    VPRINTF(MEDIUM, "----------------------------------\n");
 
     // TODO other init tasks? (interrupts later)
 
@@ -131,11 +131,53 @@ void main() {
     }
     //Warm Reset
     else if (reset_reason == 0x2) {
+        // TODO: Check for NMI Cause?
         VPRINTF(LOW, "Beginning Warm Reset flow\n");
-        //FIXME - things to do only on Warm Reset
-        VPRINTF(FATAL, "----------------------------------\n");
-        VPRINTF(FATAL, " Encountered Warm Reset unexpectedly! \n");
-        VPRINTF(FATAL, "----------------------------------\n");
+
+        // skip doe_init
+
+        // Ready for FW (need to reload the FMC)
+        soc_ifc_set_flow_status_field(SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK);
+
+        // Wait for FW available (FMC)
+        do {
+            intr_sts = lsu_read_32( (uint32_t*) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+            intr_sts &= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK;
+        } while (!intr_sts);
+        //clear the interrupt
+        lsu_write_32((uint32_t*) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK);
+
+        op = soc_ifc_read_mbox_cmd();
+        if (op.cmd != MBOX_CMD_FMC_UPDATE) {
+            VPRINTF(FATAL, "Received invalid mailbox command from SOC! Expected 0x%x, got 0x%x\n", MBOX_CMD_FMC_UPDATE, op.cmd);
+            SEND_STDOUT_CTRL(0x1);
+            while(1);
+        }
+        //TODO: Enhancement - Check the integrity of the firmware
+
+        // Load FMC from mailbox
+        soc_ifc_mbox_fw_flow(op);
+
+        // Wait for FW available (RT)
+        do {
+            intr_sts = lsu_read_32( (uint32_t*) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+            intr_sts &= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK;
+        } while (!intr_sts);
+        //clear the interrupt
+        lsu_write_32((uint32_t*) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK);
+        //read the mbox command
+        op = soc_ifc_read_mbox_cmd();
+        if (op.cmd != MBOX_CMD_RT_UPDATE) {
+            VPRINTF(FATAL, "Received invalid mailbox command from SOC! Expected 0x%x, got 0x%x\n", MBOX_CMD_RT_UPDATE, op.cmd);
+            SEND_STDOUT_CTRL(0x1);
+            while(1);
+        }
+
+        // Clear 'ready for fw'
+        soc_ifc_clr_flow_status_field(SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK);
+
+        // Jump to ICCM (this is the FMC image, a.k.a. Section 0)
+        iccm_fmc();
     }
 
 

@@ -36,19 +36,27 @@ class soc_ifc_env_cptra_rst_wait_sequence extends soc_ifc_env_sequence_base #(.C
 
 
   // pragma uvmf custom class_item_additional begin
+  bit wait_for_noncore_rst_assert   = 1'b0;
+  bit wait_for_core_rst_assert      = 1'b0;
+  bit wait_for_noncore_rst_deassert = 1'b1; // Default is to only do this
+  bit wait_for_core_rst_deassert    = 1'b0;
   // pragma uvmf custom class_item_additional end
 
   function new(string name = "" );
     super.new(name);
-
 
   endfunction
 
   virtual task body();
 
     int sts_rsp_count = 0;
-    bit noncore_rst_asserted = 1;
+    bit noncore_rst_asserted = wait_for_noncore_rst_assert ? 1'b0 : wait_for_noncore_rst_deassert;
+    bit core_rst_asserted    = wait_for_core_rst_assert    ? 1'b0 : wait_for_core_rst_deassert;
     reg_model = configuration.soc_ifc_rm;
+
+    if ((wait_for_noncore_rst_assert   && wait_for_core_rst_assert  ) ||
+        (wait_for_noncore_rst_deassert && wait_for_core_rst_deassert)   )
+        `uvm_fatal("CPTRA_RESET_WAIT", "Invalid use-case: cannot intermix multiple wait-for-assert or multiple wait-for-deassert invocations")
 
     if (cptra_status_agent_rsp_seq == null)
         `uvm_fatal("CPTRA_RESET_WAIT", "SOC_IFC ENV caliptra reset wait sequence expected a handle to the cptra status agent responder sequence (from bench-level sequence) but got null!")
@@ -58,8 +66,36 @@ class soc_ifc_env_cptra_rst_wait_sequence extends soc_ifc_env_sequence_base #(.C
         end
     join_none
 
+    // Poll new responses to detect reset assertion
+    while (wait_for_noncore_rst_assert && !noncore_rst_asserted) begin
+        wait(sts_rsp_count > 0);
+        `uvm_info("CPTRA_RESET_WAIT", "Received response from status agent", UVM_MEDIUM)
+        if (sts_rsp_count > 1)
+            `uvm_error("CPTRA_RESET_WAIT", "Did not expect to receive multiple status response transactions")
+        noncore_rst_asserted = cptra_status_agent_rsp_seq.rsp.noncore_rst_asserted;
+        core_rst_asserted = cptra_status_agent_rsp_seq.rsp.uc_rst_asserted;
+        sts_rsp_count--;
+        if (!noncore_rst_asserted || !core_rst_asserted)
+            `uvm_error("CPTRA_RESET_WAIT", "Unexpected status transition, with noncore/core resets deasserted, while waiting for noncore reset to assert")
+        else
+            `uvm_info("CPTRA_RESET_WAIT", "Detected Caliptra noncore reset assertion", UVM_LOW)
+    end
+    while (wait_for_core_rst_assert && !core_rst_asserted) begin
+        wait(sts_rsp_count > 0);
+        `uvm_info("CPTRA_RESET_WAIT", "Received response from status agent", UVM_MEDIUM)
+        if (sts_rsp_count > 1)
+            `uvm_error("CPTRA_RESET_WAIT", "Did not expect to receive multiple status response transactions")
+        noncore_rst_asserted = cptra_status_agent_rsp_seq.rsp.noncore_rst_asserted;
+        core_rst_asserted = cptra_status_agent_rsp_seq.rsp.uc_rst_asserted;
+        sts_rsp_count--;
+        if (!core_rst_asserted)
+            `uvm_error("CPTRA_RESET_WAIT", "Unexpected status transition, with core reset deasserted, while waiting for core reset to assert")
+        else
+            `uvm_info("CPTRA_RESET_WAIT", "Detected Caliptra core reset assertion", UVM_LOW)
+    end
+
     // Poll new responses to detect reset deassertion
-    while (noncore_rst_asserted) begin
+    while (wait_for_noncore_rst_deassert && noncore_rst_asserted) begin
         wait(sts_rsp_count > 0);
         `uvm_info("CPTRA_RESET_WAIT", "Received response from status agent", UVM_MEDIUM)
         if (sts_rsp_count > 1)
@@ -67,9 +103,26 @@ class soc_ifc_env_cptra_rst_wait_sequence extends soc_ifc_env_sequence_base #(.C
         noncore_rst_asserted = cptra_status_agent_rsp_seq.rsp.noncore_rst_asserted;
         sts_rsp_count--;
         if (noncore_rst_asserted)
-            `uvm_error("CPTRA_RESET_WAIT", "Unexpected status transition, with noncore reset asserted, while waiting for noncore reset to deassert")
+            `uvm_info("CPTRA_RESET_WAIT", "Detected status transition, with noncore reset asserted, while waiting for noncore reset to deassert", UVM_MEDIUM)
         else
             `uvm_info("CPTRA_RESET_WAIT", "Detected Caliptra noncore reset deassertion", UVM_LOW)
+    end
+    while (wait_for_core_rst_deassert && core_rst_asserted) begin
+        wait(sts_rsp_count > 0);
+        `uvm_info("CPTRA_RESET_WAIT", "Received response from status agent", UVM_MEDIUM)
+        if (sts_rsp_count > 1)
+            `uvm_error("CPTRA_RESET_WAIT", "Did not expect to receive multiple status response transactions")
+        sts_rsp_count--;
+        noncore_rst_asserted = cptra_status_agent_rsp_seq.rsp.noncore_rst_asserted;
+        core_rst_asserted = cptra_status_agent_rsp_seq.rsp.uc_rst_asserted;
+        // If noncore_rst asserted since entering this sequence, noncore_rst
+        // will deassert before (or simultaneous to) core_rst deassertion
+        if (wait_for_noncore_rst_assert && noncore_rst_asserted && !core_rst_asserted)
+            `uvm_error("CPTRA_RESET_WAIT", "Unexpected status transition, with noncore reset asserted, after detecting core reset deassertion")
+        else if (core_rst_asserted)
+            `uvm_info("CPTRA_RESET_WAIT", "Caliptra core reset is still asserted, continuing to poll...", UVM_MEDIUM)
+        else
+            `uvm_info("CPTRA_RESET_WAIT", "Detected Caliptra core reset deassertion", UVM_LOW)
     end
 
 
