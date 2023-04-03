@@ -196,6 +196,7 @@ module ecc_dsa_ctrl
         ecc_dsa_sequencer_i(
         .clka(clk),
         .reset_n(reset_n),
+        .zeroize(zeroize_reg),
         .ena(1'b1),
         .addra(prog_cntr),
         .douta(prog_instr)
@@ -214,6 +215,7 @@ module ecc_dsa_ctrl
         ecc_arith_unit_i (
         .clk(clk),
         .reset_n(reset_n),
+        .zeroize(zeroize_reg),
         .ecc_cmd_i(pm_cmd_reg),
         .sca_en_i(sca_scalar_rnd_en),
         .addr_i(prog_instr.mem_addr),
@@ -257,6 +259,7 @@ module ecc_dsa_ctrl
         ecc_scalar_blinding_i(
         .clk(clk),
         .reset_n(reset_n),
+        .zeroize(zeroize_reg),
         .en_i(scalar_sca_en),
         .data_i(scalar_in_reg),
         .rnd_i(scalar_rnd_reg[RND_SIZE-1 : 0]),
@@ -295,6 +298,11 @@ module ecc_dsa_ctrl
     always_ff @(posedge clk or negedge reset_n) 
     begin : ecc_kv_reg
         if (!reset_n) begin
+            privkey_we_reg      <= '0;
+            privkey_we_reg_ff   <= '0;
+            kv_reg    <= '0;
+        end
+        else if (zeroize_reg) begin
             privkey_we_reg      <= '0;
             privkey_we_reg_ff   <= '0;
             kv_reg    <= '0;
@@ -450,6 +458,10 @@ module ecc_dsa_ctrl
             scalar_G_reg <= '0;
             scalar_PK_reg <= '0;
         end
+        else if(zeroize_reg) begin
+            scalar_G_reg <= '0;
+            scalar_PK_reg <= '0;
+        end
         else begin
             if (!scalar_G_sel)
                 scalar_G_reg <= hmac_drbg_result;
@@ -544,6 +556,9 @@ module ecc_dsa_ctrl
         if(!reset_n) begin
             scalar_in_reg <= '0;
         end
+        else if(zeroize_reg) begin
+            scalar_in_reg <= '0;
+        end
         else begin
             if (prog_instr.opcode == DSA_UOP_SCALAR_SCA) begin
                 scalar_in_reg <= scalar_G_reg;
@@ -564,6 +579,16 @@ module ecc_dsa_ctrl
     always_ff @(posedge clk or negedge reset_n) 
     begin : ECDSA_FSM
         if(!reset_n) begin
+            prog_cntr       <= DSA_RESET;
+            cycle_cnt       <= '0;
+            pm_cmd_reg      <= '0;
+            dsa_valid_reg   <= 0;
+            scalar_G_sel    <= 0;
+            hmac_mode       <= 0;
+            hmac_init       <= 0;
+            scalar_sca_en   <= 0;
+        end
+        else if(zeroize_reg) begin
             prog_cntr       <= DSA_RESET;
             cycle_cnt       <= '0;
             pm_cmd_reg      <= '0;
@@ -658,6 +683,8 @@ module ecc_dsa_ctrl
     // Generate a pulse to trig the interupt after finishing the operation
     always_ff @(posedge clk or negedge reset_n)
         if (!reset_n)
+            ecc_status_done_d <= 1'b0;
+        else if (zeroize_reg)
             ecc_status_done_d <= 1'b0;
         else
             ecc_status_done_d <= hwif_in.ECC_STATUS.VALID.next;

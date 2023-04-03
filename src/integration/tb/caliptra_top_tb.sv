@@ -73,6 +73,7 @@ module caliptra_top_tb (
         S_APB_WR_CMD,
         S_APB_WR_DLEN,
         S_APB_WR_DATAIN,
+        S_APB_WR_STATUS,
         S_APB_WR_EXEC,
         S_APB_DONE,
         S_APB_ERROR
@@ -103,6 +104,8 @@ module caliptra_top_tb (
 
     logic ready_for_fuses;
     logic ready_for_fw_push;
+    logic mailbox_data_avail;
+    logic status_set;
     logic mbox_sram_cs;
     logic mbox_sram_we;
     logic [14:0] mbox_sram_addr;
@@ -296,6 +299,9 @@ module caliptra_top_tb (
                 S_APB_WR_EXEC: begin
                     $display ("SoC: Setting the Execute Register\n");
                 end
+                S_APB_WR_STATUS: begin
+                    $display ("SoC: Writing the Mbox Status Register\n");
+                end
                 S_APB_DONE: begin
                 end
                 default: begin
@@ -438,8 +444,18 @@ module caliptra_top_tb (
                 else
                     n_state_apb = S_APB_WR_EXEC;
             end
+            // status
+            S_APB_WR_STATUS: begin
+                if (apb_xfer_end)
+                    n_state_apb = S_APB_DONE;
+                else
+                    n_state_apb = S_APB_WR_STATUS;
+            end
             S_APB_DONE: begin
                 apb_wr_count_nxt = '0;
+                if (mailbox_data_avail & ~status_set)
+                    n_state_apb = S_APB_WR_STATUS;
+                else
                 n_state_apb = S_APB_DONE;
             end
             default: begin
@@ -449,6 +465,15 @@ module caliptra_top_tb (
         endcase
     end
     
+    always@(posedge core_clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b) begin
+            status_set  <= '0;
+        end else begin
+            status_set <= ~mailbox_data_avail ? '0 :
+                          (c_state_apb == S_APB_WR_STATUS) ? '1 : status_set;
+        end
+    end
+
     assign apb_xfer_end = PSEL && PENABLE && PREADY;
     always@(posedge core_clk) begin
         if ((n_state_apb == S_APB_WR_DATAIN) && apb_xfer_end)
@@ -490,6 +515,10 @@ module caliptra_top_tb (
             end
             S_APB_WR_EXEC: begin
                 PADDR      = `CLP_MBOX_CSR_MBOX_EXECUTE;
+                PWDATA     = 32'h00000001;
+            end
+            S_APB_WR_STATUS: begin
+                PADDR      = `CLP_MBOX_CSR_MBOX_STATUS;
                 PWDATA     = 32'h00000001;
             end
             S_APB_DONE: begin
@@ -555,6 +584,11 @@ module caliptra_top_tb (
                 PWRITE     = 1;
                 PAUSER     = '1;
             end
+            S_APB_WR_STATUS: begin
+                PSEL       = 1;
+                PWRITE     = 1;
+                PAUSER     = '1;
+            end
             S_APB_DONE: begin
                 PSEL       = 0;
                 PWRITE     = 0;
@@ -616,7 +650,7 @@ caliptra_top caliptra_top_dut (
     .imem_addr(imem_addr),
     .imem_rdata(imem_rdata),
 
-    .mailbox_data_avail(),
+    .mailbox_data_avail(mailbox_data_avail),
     .mailbox_flow_done(),
     .BootFSM_BrkPoint(BootFSM_BrkPoint),
 

@@ -51,14 +51,14 @@ module caliptra_ahb_srom
 
 /////////////////////////////////
 // Signals
-logic                       sram_error,sram_error_f;
+logic                       sram_error, sram_error_data_ph, sram_error_data_ph_f;
 
 /////////////////////////////////
 // Assignments/Shim logic
 assign cs = hready_i & hsel_i & htrans_i inside {2'b10, 2'b11};
 assign addr = haddr_i >> $clog2(AHB_DATA_WIDTH/8);
 
-assign sram_error = hsel_i && hwrite_i; // Error if trying to write to ROM
+assign sram_error = cs & hwrite_i; // Error if trying to write to ROM
 
 assign hrdata_o = rdata;
 
@@ -66,10 +66,10 @@ always_comb begin : response_block
     hreadyout_o = 1'b1;
     hresp_o = H_OKAY;
     //first error cycle, de-assert ready and drive error
-    if (sram_error) begin
+    if (sram_error_data_ph & ~sram_error_data_ph_f) begin
         hreadyout_o = 1'b0;
         hresp_o = H_ERROR;
-    end else if (sram_error_f) begin
+    end else if (sram_error_data_ph_f) begin
         hreadyout_o = 1'b1;
         hresp_o = H_ERROR;
     end
@@ -77,8 +77,13 @@ end
 
 //flop error to indicate second cycle of error
 always_ff @(posedge hclk or negedge hreset_n) begin
-    if (~hreset_n) sram_error_f <= '0;
-    else sram_error_f <= sram_error;
+    if (~hreset_n) begin
+        sram_error_data_ph <= '0;
+        sram_error_data_ph_f <= '0;
+    end else begin
+        sram_error_data_ph <= sram_error;
+        sram_error_data_ph_f <= sram_error_data_ph;
+    end
 end
 
 endmodule

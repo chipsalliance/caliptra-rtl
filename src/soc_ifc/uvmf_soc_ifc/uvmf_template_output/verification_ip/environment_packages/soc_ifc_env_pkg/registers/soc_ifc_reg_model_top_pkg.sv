@@ -47,8 +47,42 @@ package soc_ifc_reg_model_top_pkg;
             super.new(name);
         endfunction : new
 
+        // FIXME Manually maintaining a list here of registers that are configured
+        //       as soft-resettable (i.e. cptra_rst_b instead of cptra_pwrgood)
+        //       Ideally would be auto-generated.
+        virtual function void set_soft_reset_values();
+            if ( this.global_intr_en_r                      .has_reset("HARD"   )) this.global_intr_en_r                      .set_reset(this.global_intr_en_r                    .get_reset("HARD"), "SOFT");
+            if ( this.error_intr_en_r                       .has_reset("HARD"   )) this.error_intr_en_r                       .set_reset(this.error_intr_en_r                     .get_reset("HARD"), "SOFT");
+            if ( this.notif_intr_en_r                       .has_reset("HARD"   )) this.notif_intr_en_r                       .set_reset(this.notif_intr_en_r                     .get_reset("HARD"), "SOFT");
+            if ( this.error_global_intr_r                   .has_reset("HARD"   )) this.error_global_intr_r                   .set_reset(this.error_global_intr_r                 .get_reset("HARD"), "SOFT");
+            if ( this.notif_global_intr_r                   .has_reset("HARD"   )) this.notif_global_intr_r                   .set_reset(this.notif_global_intr_r                 .get_reset("HARD"), "SOFT");
+//            this.error_internal_intr_r                 .set_reset(this.error_internal_intr_r               .get_reset("HARD"), "SOFT");
+            if ( this.notif_internal_intr_r                 .has_reset("HARD"   )) this.notif_internal_intr_r                 .set_reset(this.notif_internal_intr_r               .get_reset("HARD"), "SOFT");
+            if ( this.error_intr_trig_r                     .has_reset("HARD"   )) this.error_intr_trig_r                     .set_reset(this.error_intr_trig_r                   .get_reset("HARD"), "SOFT");
+            if ( this.notif_intr_trig_r                     .has_reset("HARD"   )) this.notif_intr_trig_r                     .set_reset(this.notif_intr_trig_r                   .get_reset("HARD"), "SOFT");
+//            if ( this.error_internal_intr_count_r           .has_reset("HARD"   )) this.error_internal_intr_count_r           .set_reset(this.error_internal_intr_count_r         .get_reset("HARD"), "SOFT");
+//            if ( this.error_inv_dev_intr_count_r            .has_reset("HARD"   )) this.error_inv_dev_intr_count_r            .set_reset(this.error_inv_dev_intr_count_r          .get_reset("HARD"), "SOFT");
+//            if ( this.error_cmd_fail_intr_count_r           .has_reset("HARD"   )) this.error_cmd_fail_intr_count_r           .set_reset(this.error_cmd_fail_intr_count_r         .get_reset("HARD"), "SOFT");
+//            if ( this.error_bad_fuse_intr_count_r           .has_reset("HARD"   )) this.error_bad_fuse_intr_count_r           .set_reset(this.error_bad_fuse_intr_count_r         .get_reset("HARD"), "SOFT");
+//            if ( this.error_iccm_blocked_intr_count_r       .has_reset("HARD"   )) this.error_iccm_blocked_intr_count_r       .set_reset(this.error_iccm_blocked_intr_count_r     .get_reset("HARD"), "SOFT");
+//            if ( this.error_mbox_ecc_unc_intr_count_r       .has_reset("HARD"   )) this.error_mbox_ecc_unc_intr_count_r       .set_reset(this.error_mbox_ecc_unc_intr_count_r     .get_reset("HARD"), "SOFT");
+            if ( this.notif_cmd_avail_intr_count_r          .has_reset("HARD"   )) this.notif_cmd_avail_intr_count_r          .set_reset(this.notif_cmd_avail_intr_count_r        .get_reset("HARD"), "SOFT");
+            if ( this.notif_mbox_ecc_cor_intr_count_r       .has_reset("HARD"   )) this.notif_mbox_ecc_cor_intr_count_r       .set_reset(this.notif_mbox_ecc_cor_intr_count_r     .get_reset("HARD"), "SOFT");
+            if ( this.notif_debug_locked_intr_count_r       .has_reset("HARD"   )) this.notif_debug_locked_intr_count_r       .set_reset(this.notif_debug_locked_intr_count_r     .get_reset("HARD"), "SOFT");
+            if ( this.error_internal_intr_count_incr_r      .has_reset("HARD"   )) this.error_internal_intr_count_incr_r      .set_reset(this.error_internal_intr_count_incr_r    .get_reset("HARD"), "SOFT");
+            if ( this.error_inv_dev_intr_count_incr_r       .has_reset("HARD"   )) this.error_inv_dev_intr_count_incr_r       .set_reset(this.error_inv_dev_intr_count_incr_r     .get_reset("HARD"), "SOFT");
+            if ( this.error_cmd_fail_intr_count_incr_r      .has_reset("HARD"   )) this.error_cmd_fail_intr_count_incr_r      .set_reset(this.error_cmd_fail_intr_count_incr_r    .get_reset("HARD"), "SOFT");
+            if ( this.error_bad_fuse_intr_count_incr_r      .has_reset("HARD"   )) this.error_bad_fuse_intr_count_incr_r      .set_reset(this.error_bad_fuse_intr_count_incr_r    .get_reset("HARD"), "SOFT");
+            if ( this.error_iccm_blocked_intr_count_incr_r  .has_reset("HARD"   )) this.error_iccm_blocked_intr_count_incr_r  .set_reset(this.error_iccm_blocked_intr_count_incr_r.get_reset("HARD"), "SOFT");
+            if ( this.error_mbox_ecc_unc_intr_count_incr_r  .has_reset("HARD"   )) this.error_mbox_ecc_unc_intr_count_incr_r  .set_reset(this.error_mbox_ecc_unc_intr_count_incr_r.get_reset("HARD"), "SOFT");
+            if ( this.notif_cmd_avail_intr_count_incr_r     .has_reset("HARD"   )) this.notif_cmd_avail_intr_count_incr_r     .set_reset(this.notif_cmd_avail_intr_count_incr_r   .get_reset("HARD"), "SOFT");
+            if ( this.notif_mbox_ecc_cor_intr_count_incr_r  .has_reset("HARD"   )) this.notif_mbox_ecc_cor_intr_count_incr_r  .set_reset(this.notif_mbox_ecc_cor_intr_count_incr_r.get_reset("HARD"), "SOFT");
+            if ( this.notif_debug_locked_intr_count_incr_r  .has_reset("HARD"   )) this.notif_debug_locked_intr_count_incr_r  .set_reset(this.notif_debug_locked_intr_count_incr_r.get_reset("HARD"), "SOFT");
+        endfunction
+
         virtual function void build();
             super.build();
+            this.set_soft_reset_values();
             this.soc_ifc_reg_intr_AHB_map = create_map("intr_AHB_reg_map", 0, 4, UVM_LITTLE_ENDIAN);
             this.soc_ifc_reg_intr_APB_map = create_map("intr_APB_reg_map", 0, 4, UVM_LITTLE_ENDIAN);
         endfunction
@@ -85,8 +119,89 @@ package soc_ifc_reg_model_top_pkg;
             super.new(name);
         endfunction : new
 
+        // FIXME Manually maintaining a list here of registers that are configured
+        //       as soft-resettable (i.e. cptra_rst_b instead of cptra_pwrgood)
+        //       Ideally would be auto-generated.
+        virtual function void set_soft_reset_values();
+            byte ii;
+//            this.CPTRA_HW_ERROR_FATAL.                 set_reset(this.CPTRA_HW_ERROR_FATAL.                 get_reset("HARD"), "SOFT");
+//            this.CPTRA_HW_ERROR_NON_FATAL.             set_reset(this.CPTRA_HW_ERROR_NON_FATAL.             get_reset("HARD"), "SOFT");
+//            this.CPTRA_FW_ERROR_FATAL.                 set_reset(this.CPTRA_FW_ERROR_FATAL.                 get_reset("HARD"), "SOFT");
+//            this.CPTRA_FW_ERROR_NON_FATAL.             set_reset(this.CPTRA_FW_ERROR_NON_FATAL.             get_reset("HARD"), "SOFT");
+//            this.CPTRA_HW_ERROR_ENC.                   set_reset(this.CPTRA_HW_ERROR_ENC.                   get_reset("HARD"), "SOFT");
+//            this.CPTRA_FW_ERROR_ENC.                   set_reset(this.CPTRA_FW_ERROR_ENC.                   get_reset("HARD"), "SOFT");
+//            this.CPTRA_FW_EXTENDED_ERROR_INFO[8].      set_reset(this.CPTRA_FW_EXTENDED_ERROR_INFO[8].      get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_BOOT_STATUS.                    has_reset("HARD"   )) this.CPTRA_BOOT_STATUS.                    set_reset(this.CPTRA_BOOT_STATUS.                    get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_FLOW_STATUS.status.             has_reset("HARD"   )) this.CPTRA_FLOW_STATUS.status.             set_reset(this.CPTRA_FLOW_STATUS.status.             get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_FLOW_STATUS.ready_for_fw.       has_reset("HARD"   )) this.CPTRA_FLOW_STATUS.ready_for_fw.       set_reset(this.CPTRA_FLOW_STATUS.ready_for_fw.       get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_FLOW_STATUS.ready_for_runtime.  has_reset("HARD"   )) this.CPTRA_FLOW_STATUS.ready_for_runtime.  set_reset(this.CPTRA_FLOW_STATUS.ready_for_runtime.  get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_FLOW_STATUS.ready_for_fuses.    has_reset("HARD"   )) this.CPTRA_FLOW_STATUS.ready_for_fuses.    set_reset(this.CPTRA_FLOW_STATUS.ready_for_fuses.    get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_FLOW_STATUS.mailbox_flow_done.  has_reset("HARD"   )) this.CPTRA_FLOW_STATUS.mailbox_flow_done.  set_reset(this.CPTRA_FLOW_STATUS.mailbox_flow_done.  get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_RESET_REASON.FW_UPD_RESET.      has_reset("HARD"   )) this.CPTRA_RESET_REASON.FW_UPD_RESET.      set_reset(this.CPTRA_RESET_REASON.FW_UPD_RESET.      get_reset("HARD"), "SOFT");
+//            this.CPTRA_RESET_REASON.WARM_RESET.        set_reset(this.CPTRA_RESET_REASON.WARM_RESET.        get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_SECURITY_STATE.device_lifecycle.has_reset("HARD"   )) this.CPTRA_SECURITY_STATE.device_lifecycle.set_reset(this.CPTRA_SECURITY_STATE.device_lifecycle.get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_SECURITY_STATE.debug_locked.    has_reset("HARD"   )) this.CPTRA_SECURITY_STATE.debug_locked.    set_reset(this.CPTRA_SECURITY_STATE.debug_locked.    get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_SECURITY_STATE.scan_mode.       has_reset("HARD"   )) this.CPTRA_SECURITY_STATE.scan_mode.       set_reset(this.CPTRA_SECURITY_STATE.scan_mode.       get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_SECURITY_STATE.rsvd.            has_reset("HARD"   )) this.CPTRA_SECURITY_STATE.rsvd.            set_reset(this.CPTRA_SECURITY_STATE.rsvd.            get_reset("HARD"), "SOFT");
+            for (ii=0; ii<$size(this.CPTRA_VALID_PAUSER); ii++) begin
+                if ( this.CPTRA_VALID_PAUSER[ii].                has_reset("HARD"   )) this.CPTRA_VALID_PAUSER[ii].                set_reset(this.CPTRA_VALID_PAUSER[ii].                get_reset("HARD"), "SOFT");
+                if ( this.CPTRA_PAUSER_LOCK[ii].                 has_reset("HARD"   )) this.CPTRA_PAUSER_LOCK[ii].                 set_reset(this.CPTRA_PAUSER_LOCK[ii].                 get_reset("HARD"), "SOFT");
+            end
+            if ( this.CPTRA_TRNG_VALID_PAUSER.              has_reset("HARD"   )) this.CPTRA_TRNG_VALID_PAUSER.              set_reset(this.CPTRA_TRNG_VALID_PAUSER.              get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_TRNG_PAUSER_LOCK.               has_reset("HARD"   )) this.CPTRA_TRNG_PAUSER_LOCK.               set_reset(this.CPTRA_TRNG_PAUSER_LOCK.               get_reset("HARD"), "SOFT");
+            for (ii=0; ii<$size(this.CPTRA_TRNG_DATA); ii++) begin
+                if ( this.CPTRA_TRNG_DATA[ii].                  has_reset("HARD"   )) this.CPTRA_TRNG_DATA[ii].                  set_reset(this.CPTRA_TRNG_DATA[ii].                  get_reset("HARD"), "SOFT");
+            end
+            if ( this.CPTRA_TRNG_STATUS.DATA_REQ.           has_reset("HARD"   )) this.CPTRA_TRNG_STATUS.DATA_REQ.           set_reset(this.CPTRA_TRNG_STATUS.DATA_REQ.           get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_TRNG_STATUS.DATA_WR_DONE.       has_reset("HARD"   )) this.CPTRA_TRNG_STATUS.DATA_WR_DONE.       set_reset(this.CPTRA_TRNG_STATUS.DATA_WR_DONE.       get_reset("HARD"), "SOFT");
+//            this.CPTRA_FUSE_WR_DONE.                   set_reset(this.CPTRA_FUSE_WR_DONE.                   get_reset("HARD"), "SOFT");
+//            this.CPTRA_TIMER_CONFIG.                   set_reset(this.CPTRA_TIMER_CONFIG.                   get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_BOOTFSM_GO.                     has_reset("HARD"   )) this.CPTRA_BOOTFSM_GO.                     set_reset(this.CPTRA_BOOTFSM_GO.                     get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_DBG_MANUF_SERVICE_REG.          has_reset("HARD"   )) this.CPTRA_DBG_MANUF_SERVICE_REG.          set_reset(this.CPTRA_DBG_MANUF_SERVICE_REG.          get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_CLK_GATING_EN.                  has_reset("HARD"   )) this.CPTRA_CLK_GATING_EN.                  set_reset(this.CPTRA_CLK_GATING_EN.                  get_reset("HARD"), "SOFT");
+            for (ii=0; ii<$size(this.CPTRA_GENERIC_INPUT_WIRES); ii++) begin
+                if ( this.CPTRA_GENERIC_INPUT_WIRES[ii].         has_reset("HARD"   )) this.CPTRA_GENERIC_INPUT_WIRES[ii].         set_reset(this.CPTRA_GENERIC_INPUT_WIRES[ii].         get_reset("HARD"), "SOFT");
+            end
+            for (ii=0; ii<$size(this.CPTRA_GENERIC_OUTPUT_WIRES); ii++) begin
+                if ( this.CPTRA_GENERIC_OUTPUT_WIRES[ii].        has_reset("HARD"   )) this.CPTRA_GENERIC_OUTPUT_WIRES[ii].        set_reset(this.CPTRA_GENERIC_OUTPUT_WIRES[ii].        get_reset("HARD"), "SOFT");
+            end
+//            for (ii=0; ii<$size(this.fuse_uds_seed); ii++) begin
+//            if ( this.fuse_uds_seed[ii].                    has_reset("HARD"   )) this.fuse_uds_seed[ii].                    set_reset(this.fuse_uds_seed[ii].                    get_reset("HARD"), "SOFT");
+//            end
+//            for (ii=0; ii<$size(this.fuse_field_entropy); ii++) begin
+//            if ( this.fuse_field_entropy[ii].                has_reset("HARD"   )) this.fuse_field_entropy[ii].                set_reset(this.fuse_field_entropy[ii].                get_reset("HARD"), "SOFT");
+//            end
+//            for (ii=0; ii<$size(this.fuse_key_manifest_pk_hash); ii++) begin
+//            if ( this.fuse_key_manifest_pk_hash[ii].        has_reset("HARD"   )) this.fuse_key_manifest_pk_hash[ii].        set_reset(this.fuse_key_manifest_pk_hash[ii].        get_reset("HARD"), "SOFT");
+//            end
+//            if ( this.fuse_key_manifest_pk_hash_mask.       has_reset("HARD"   )) this.fuse_key_manifest_pk_hash_mask.       set_reset(this.fuse_key_manifest_pk_hash_mask.       get_reset("HARD"), "SOFT");
+//            for (ii=0; ii<$size(this.fuse_owner_pk_hash); ii++) begin
+//            if ( this.fuse_owner_pk_hash[ii].               has_reset("HARD"   )) this.fuse_owner_pk_hash[ii].               set_reset(this.fuse_owner_pk_hash[ii].               get_reset("HARD"), "SOFT");
+//            end
+//            if ( this.fuse_fmc_key_manifest_svn.            has_reset("HARD"   )) this.fuse_fmc_key_manifest_svn.            set_reset(this.fuse_fmc_key_manifest_svn.            get_reset("HARD"), "SOFT");
+//            for (ii=0; ii<$size(this.fuse_runtime_svn); ii++) begin
+//            if ( this.fuse_runtime_svn[ii].                  has_reset("HARD"   )) this.fuse_runtime_svn[ii].                  set_reset(this.fuse_runtime_svn[ii].                  get_reset("HARD"), "SOFT");
+//            end
+//            if ( this.fuse_anti_rollback_disable.           has_reset("HARD"   )) this.fuse_anti_rollback_disable.           set_reset(this.fuse_anti_rollback_disable.           get_reset("HARD"), "SOFT");
+//            for (ii=0; ii<$size(this.fuse_idevid_cert_attr); ii++) begin
+//            if ( this.fuse_idevid_cert_attr[ii].            has_reset("HARD"   )) this.fuse_idevid_cert_attr[ii].            set_reset(this.fuse_idevid_cert_attr[ii].            get_reset("HARD"), "SOFT");
+//            end
+//            for (ii=0; ii<$size(this.fuse_idevid_manuf_hsm_id); ii++) begin
+//            if ( this.fuse_idevid_manuf_hsm_id[ii].          has_reset("HARD"   )) this.fuse_idevid_manuf_hsm_id[ii].          set_reset(this.fuse_idevid_manuf_hsm_id[ii].          get_reset("HARD"), "SOFT");
+//            end
+//            if ( this.fuse_life_cycle.                      has_reset("HARD"   )) this.fuse_life_cycle.                      set_reset(this.fuse_life_cycle.                      get_reset("HARD"), "SOFT");
+//            for (ii=0; ii<$size(this.internal_obf_key); ii++) begin
+//            if ( this.internal_obf_key[ii].                  has_reset("HARD"   )) this.internal_obf_key[ii].                  set_reset(this.internal_obf_key[ii].                  get_reset("HARD"), "SOFT"); /* requires manual prediction based on a set of reset conditions */
+//            end
+            if ( this.internal_iccm_lock.                   has_reset("HARD"   )) this.internal_iccm_lock.                   set_reset(this.internal_iccm_lock.                   get_reset("HARD"), "SOFT"); /* TODO also FW reset */
+            if ( this.internal_fw_update_reset.             has_reset("HARD"   )) this.internal_fw_update_reset.             set_reset(this.internal_fw_update_reset.             get_reset("HARD"), "SOFT");
+            if ( this.internal_fw_update_reset_wait_cycles. has_reset("HARD"   )) this.internal_fw_update_reset_wait_cycles. set_reset(this.internal_fw_update_reset_wait_cycles. get_reset("HARD"), "SOFT");
+            if ( this.internal_nmi_vector.                  has_reset("HARD"   )) this.internal_nmi_vector.                  set_reset(this.internal_nmi_vector.                  get_reset("HARD"), "SOFT");
+        endfunction
+
         virtual function void build();
             super.build();
+            this.set_soft_reset_values();
             this.intr_block_rf_ext = new("intr_block_rf_ext");
             this.intr_block_rf_ext.configure(this);
             this.intr_block_rf_ext.build(); // This configures the default_map, which is used to find reg offsets for other maps
@@ -133,8 +248,24 @@ package soc_ifc_reg_model_top_pkg;
             super.new(name);
         endfunction : new
 
+        // FIXME Manually maintaining a list here of registers that are configured
+        //       as soft-resettable (i.e. cptra_rst_b instead of cptra_pwrgood)
+        //       Ideally would be auto-generated.
+        virtual function void set_soft_reset_values();
+            if ( this.mbox_lock   .has_reset("HARD"   )) this.mbox_lock   .set_reset(this.mbox_lock   .get_reset("HARD"), "SOFT");
+            if ( this.mbox_user   .has_reset("HARD"   )) this.mbox_user   .set_reset(this.mbox_user   .get_reset("HARD"), "SOFT");
+            if ( this.mbox_cmd    .has_reset("HARD"   )) this.mbox_cmd    .set_reset(this.mbox_cmd    .get_reset("HARD"), "SOFT");
+            if ( this.mbox_dlen   .has_reset("HARD"   )) this.mbox_dlen   .set_reset(this.mbox_dlen   .get_reset("HARD"), "SOFT");
+            if ( this.mbox_datain .has_reset("HARD"   )) this.mbox_datain .set_reset(this.mbox_datain .get_reset("HARD"), "SOFT");
+            if ( this.mbox_dataout.has_reset("HARD"   )) this.mbox_dataout.set_reset(this.mbox_dataout.get_reset("HARD"), "SOFT");
+            if ( this.mbox_execute.has_reset("HARD"   )) this.mbox_execute.set_reset(this.mbox_execute.get_reset("HARD"), "SOFT");
+            if ( this.mbox_status .has_reset("HARD"   )) this.mbox_status .set_reset(this.mbox_status .get_reset("HARD"), "SOFT");
+            if ( this.mbox_unlock .has_reset("HARD"   )) this.mbox_unlock .set_reset(this.mbox_unlock .get_reset("HARD"), "SOFT");
+        endfunction
+
         virtual function void build();
             super.build();
+            this.set_soft_reset_values();
             this.mbox_csr_AHB_map = create_map("AHB_reg_map", 0, 4, UVM_LITTLE_ENDIAN);
             this.mbox_csr_APB_map = create_map("APB_reg_map", 0, 4, UVM_LITTLE_ENDIAN);
         endfunction
@@ -161,8 +292,34 @@ package soc_ifc_reg_model_top_pkg;
             super.new(name);
         endfunction : new
 
+        // FIXME Manually maintaining a list here of registers that are configured
+        //       as soft-resettable (i.e. cptra_rst_b instead of cptra_pwrgood)
+        //       Ideally would be auto-generated.
+        virtual function void set_soft_reset_values();
+            if ( this.global_intr_en_r                      .has_reset("HARD"   )) this.global_intr_en_r                      .set_reset(this.global_intr_en_r                    .get_reset("HARD"), "SOFT");
+            if ( this.error_intr_en_r                       .has_reset("HARD"   )) this.error_intr_en_r                       .set_reset(this.error_intr_en_r                     .get_reset("HARD"), "SOFT");
+            if ( this.notif_intr_en_r                       .has_reset("HARD"   )) this.notif_intr_en_r                       .set_reset(this.notif_intr_en_r                     .get_reset("HARD"), "SOFT");
+            if ( this.error_global_intr_r                   .has_reset("HARD"   )) this.error_global_intr_r                   .set_reset(this.error_global_intr_r                 .get_reset("HARD"), "SOFT");
+            if ( this.notif_global_intr_r                   .has_reset("HARD"   )) this.notif_global_intr_r                   .set_reset(this.notif_global_intr_r                 .get_reset("HARD"), "SOFT");
+//            this.error_internal_intr_r                 .set_reset(this.error_internal_intr_r               .get_reset("HARD"), "SOFT");
+            if ( this.notif_internal_intr_r                 .has_reset("HARD"   )) this.notif_internal_intr_r                 .set_reset(this.notif_internal_intr_r               .get_reset("HARD"), "SOFT");
+            if ( this.error_intr_trig_r                     .has_reset("HARD"   )) this.error_intr_trig_r                     .set_reset(this.error_intr_trig_r                   .get_reset("HARD"), "SOFT");
+            if ( this.notif_intr_trig_r                     .has_reset("HARD"   )) this.notif_intr_trig_r                     .set_reset(this.notif_intr_trig_r                   .get_reset("HARD"), "SOFT");
+//            if ( this.error0_intr_count_r                   .has_reset("HARD"   )) this.error0_intr_count_r                   .set_reset(this.error0_intr_count_r                 .get_reset("HARD"), "SOFT");
+//            if ( this.error1_intr_count_r                   .has_reset("HARD"   )) this.error1_intr_count_r                   .set_reset(this.error1_intr_count_r                 .get_reset("HARD"), "SOFT");
+//            if ( this.error2_intr_count_r                   .has_reset("HARD"   )) this.error2_intr_count_r                   .set_reset(this.error2_intr_count_r                 .get_reset("HARD"), "SOFT");
+//            if ( this.error3_intr_count_r                   .has_reset("HARD"   )) this.error3_intr_count_r                   .set_reset(this.error3_intr_count_r                 .get_reset("HARD"), "SOFT");
+            if ( this.notif_cmd_done_intr_count_r           .has_reset("HARD"   )) this.notif_cmd_done_intr_count_r           .set_reset(this.notif_cmd_done_intr_count_r         .get_reset("HARD"), "SOFT");
+            if ( this.error0_intr_count_incr_r              .has_reset("HARD"   )) this.error0_intr_count_incr_r              .set_reset(this.error0_intr_count_incr_r            .get_reset("HARD"), "SOFT");
+            if ( this.error1_intr_count_incr_r              .has_reset("HARD"   )) this.error1_intr_count_incr_r              .set_reset(this.error1_intr_count_incr_r            .get_reset("HARD"), "SOFT");
+            if ( this.error2_intr_count_incr_r              .has_reset("HARD"   )) this.error2_intr_count_incr_r              .set_reset(this.error2_intr_count_incr_r            .get_reset("HARD"), "SOFT");
+            if ( this.error3_intr_count_incr_r              .has_reset("HARD"   )) this.error3_intr_count_incr_r              .set_reset(this.error3_intr_count_incr_r            .get_reset("HARD"), "SOFT");
+            if ( this.notif_cmd_done_intr_count_incr_r      .has_reset("HARD"   )) this.notif_cmd_done_intr_count_incr_r      .set_reset(this.notif_cmd_done_intr_count_incr_r    .get_reset("HARD"), "SOFT");
+        endfunction
+
         virtual function void build();
             super.build();
+            this.set_soft_reset_values();
             this.sha512_acc_csr_intr_AHB_map = create_map("intr_AHB_reg_map", 0, 4, UVM_LITTLE_ENDIAN);
             this.sha512_acc_csr_intr_APB_map = create_map("intr_APB_reg_map", 0, 4, UVM_LITTLE_ENDIAN);
         endfunction
@@ -199,8 +356,28 @@ package soc_ifc_reg_model_top_pkg;
             super.new(name);
         endfunction : new
 
+        // FIXME Manually maintaining a list here of registers that are configured
+        //       as soft-resettable (i.e. cptra_rst_b instead of cptra_pwrgood)
+        //       Ideally would be auto-generated.
+        virtual function void set_soft_reset_values();
+            byte ii;
+            if ( this.LOCK          .has_reset("HARD"   )) this.LOCK          .set_reset(this.LOCK          .get_reset("HARD"), "SOFT");
+            if ( this.USER          .has_reset("HARD"   )) this.USER          .set_reset(this.USER          .get_reset("HARD"), "SOFT");
+            if ( this.MODE          .has_reset("HARD"   )) this.MODE          .set_reset(this.MODE          .get_reset("HARD"), "SOFT");
+            if ( this.START_ADDRESS .has_reset("HARD"   )) this.START_ADDRESS .set_reset(this.START_ADDRESS .get_reset("HARD"), "SOFT");
+            if ( this.DLEN          .has_reset("HARD"   )) this.DLEN          .set_reset(this.DLEN          .get_reset("HARD"), "SOFT");
+            if ( this.DATAIN        .has_reset("HARD"   )) this.DATAIN        .set_reset(this.DATAIN        .get_reset("HARD"), "SOFT");
+            if ( this.EXECUTE       .has_reset("HARD"   )) this.EXECUTE       .set_reset(this.EXECUTE       .get_reset("HARD"), "SOFT");
+            if ( this.STATUS        .has_reset("HARD"   )) this.STATUS        .set_reset(this.STATUS        .get_reset("HARD"), "SOFT");
+            for (ii=0; ii<$size(this.DIGEST); ii++) begin
+                if ( this.DIGEST[ii]    .has_reset("HARD"   )) this.DIGEST[ii]    .set_reset(this.DIGEST[ii]    .get_reset("HARD"), "SOFT");
+            end
+            if ( this.CONTROL       .has_reset("HARD"   )) this.CONTROL       .set_reset(this.CONTROL       .get_reset("HARD"), "SOFT");
+        endfunction
+
         virtual function void build();
             super.build();
+            this.set_soft_reset_values();
             this.intr_block_rf_ext = new("intr_block_rf_ext");
             this.intr_block_rf_ext.configure(this);
             this.intr_block_rf_ext.build(); // This configures the default_map, which is used to find reg offsets for other maps

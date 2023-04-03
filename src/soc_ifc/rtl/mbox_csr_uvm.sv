@@ -98,7 +98,7 @@ package mbox_csr_uvm;
 
         virtual function void build();
             this.execute = new("execute");
-            this.execute.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.execute.configure(this, 1, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : mbox_csr__mbox_execute
 

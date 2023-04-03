@@ -28,6 +28,7 @@ module ecc_add_sub_mod_alter #(
     // Clock and reset.
     input wire           clk,
     input wire           reset_n,
+    input wire           zeroize,
 
     // DATA PORT
     input  wire                 add_en_i,
@@ -81,6 +82,11 @@ module ecc_add_sub_mod_alter #(
     always_ff @(posedge clk or negedge reset_n) 
     begin
         if(!reset_n) begin
+            r0_reg <= '0;
+            carry0_reg <= '0;
+            ready_o <= 1'b0;
+        end
+        else if (zeroize) begin
             r0_reg <= '0;
             carry0_reg <= '0;
             ready_o <= 1'b0;

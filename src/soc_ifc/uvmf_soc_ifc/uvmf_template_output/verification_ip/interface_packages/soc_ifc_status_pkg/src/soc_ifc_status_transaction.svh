@@ -151,6 +151,15 @@ class soc_ifc_status_transaction  extends uvmf_transaction_base;
     // pragma uvmf custom do_compare begin
     // UVMF_CHANGE_ME : Eliminate comparison of variables not to be used for compare
     return (super.do_compare(rhs,comparer)
+            &&(this.ready_for_fuses == RHS.ready_for_fuses)
+            &&(this.ready_for_fw_push == RHS.ready_for_fw_push)
+            &&(this.ready_for_runtime == RHS.ready_for_runtime)
+            &&(this.mailbox_data_avail == RHS.mailbox_data_avail)
+            &&(this.mailbox_flow_done == RHS.mailbox_flow_done)
+            &&(this.cptra_error_fatal_intr_pending == RHS.cptra_error_fatal_intr_pending)
+            &&(this.cptra_error_non_fatal_intr_pending == RHS.cptra_error_non_fatal_intr_pending)
+            &&(this.trng_req_pending == RHS.trng_req_pending)
+            &&(this.generic_output_val == RHS.generic_output_val)
             );
     // pragma uvmf custom do_compare end
   endfunction
