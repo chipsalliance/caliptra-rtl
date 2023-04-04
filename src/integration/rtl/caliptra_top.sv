@@ -350,10 +350,6 @@ assign uart_error_intr = 1'b0; // TODO
 assign uart_notif_intr = 1'b0; // TODO
 assign i3c_error_intr = 1'b0; // TODO
 assign i3c_notif_intr = 1'b0; // TODO
-//QSPI Tie Off
-assign qspi_clk_o = '0;
-assign qspi_cs_no = '0;
-assign qspi_d_io = '0;
 
 // Vector 0 usage is reserved by VeeR, so bit 0 of the intr wire
 // drive Vector 1
@@ -1020,7 +1016,11 @@ spi_host #(
     .intr_error_o(),
     .intr_spi_event_o()
   );
-
+`else
+//QSPI Tie Off
+assign qspi_clk_o = '0;
+assign qspi_cs_no = '0;
+assign qspi_d_io = '0;
 `endif
 
 `ifdef CALIPTRA_INTERNAL_UART
