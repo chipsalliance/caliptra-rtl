@@ -149,9 +149,9 @@ module ecc_top_tb
   wire          hreadyout_o_tb;
   wire [AHB_DATA_WIDTH-1:0] hrdata_o_tb;
 
-  kv_read_t [2:0] kv_read_tb;
+  kv_read_t [1:0] kv_read_tb;
   kv_write_t kv_write_tb;
-  kv_rd_resp_t [2:0] kv_rd_resp_tb;
+  kv_rd_resp_t [1:0] kv_rd_resp_tb;
   kv_wr_resp_t kv_wr_resp_tb;
   pcr_signing_t pcr_signing_data_tb;
 
