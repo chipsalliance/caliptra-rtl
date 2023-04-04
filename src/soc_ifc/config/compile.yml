@@ -48,6 +48,7 @@ targets:
       - $COMPILE_ROOT/rtl/mbox_csr.sv
       - $COMPILE_ROOT/rtl/sha512_acc_top.sv
       - $COMPILE_ROOT/rtl/sha512_acc_csr.sv
+      - $COMPILE_ROOT/rtl/wdt.sv
     tops: [soc_ifc_top]
   rtl_lint:
     directories: [$COMPILE_ROOT/config/design_lint]

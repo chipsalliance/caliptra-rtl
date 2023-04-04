@@ -200,24 +200,33 @@ module ecc_hmac_drbg_interface#(
             drbg_reg <= '0;
             lfsr_seed_reg <= LFSR_INIT_SEED;
         end
-        else
-        if (hmac_done_edge) begin
-            /* verilator lint_off CASEINCOMPLETE */
-            unique case (state_reg) inside
-                LFSR_ST:        lfsr_seed_reg   <= hmac_drbg_result[147 : 0];
-                LAMBDA_ST:      lambda_reg      <= hmac_drbg_result;
-                SCALAR_RND_ST:  scalar_rnd_reg  <= hmac_drbg_result;
-                MASKING_RND_ST: masking_rnd_reg <= hmac_drbg_result;
-                KEYGEN_ST:      drbg_reg        <= hmac_drbg_result;
-                SIGN_ST:        drbg_reg        <= hmac_drbg_result;
-            endcase
-            /* verilator lint_on CASEINCOMPLETE */
+        else if (zeroize) begin
+            lambda_reg <= '0;
+            scalar_rnd_reg <= '0;
+            masking_rnd_reg <= '0;
+            drbg_reg <= '0;
+            lfsr_seed_reg <= LFSR_INIT_SEED;
         end
+        else
+            if (hmac_done_edge) begin
+                /* verilator lint_off CASEINCOMPLETE */
+                unique case (state_reg) inside
+                    LFSR_ST:        lfsr_seed_reg   <= hmac_drbg_result[147 : 0];
+                    LAMBDA_ST:      lambda_reg      <= hmac_drbg_result;
+                    SCALAR_RND_ST:  scalar_rnd_reg  <= hmac_drbg_result;
+                    MASKING_RND_ST: masking_rnd_reg <= hmac_drbg_result;
+                    KEYGEN_ST:      drbg_reg        <= hmac_drbg_result;
+                    SIGN_ST:        drbg_reg        <= hmac_drbg_result;
+                endcase
+                /* verilator lint_on CASEINCOMPLETE */
+            end
     end //reg_update
 
     always_ff @(posedge clk or negedge reset_n) 
     begin : state_reg_update
         if (!reset_n)
+            state_reg       <= IDLE_ST;
+        else if (zeroize)
             state_reg       <= IDLE_ST;
         else
             state_reg       <= state_next;
@@ -227,6 +236,8 @@ module ecc_hmac_drbg_interface#(
     begin : ff_state_reg
         if (!reset_n)
             state_reg_last  <= IDLE_ST;
+        else if (zeroize)
+            state_reg_last  <= IDLE_ST;
         else 
             state_reg_last  <= state_reg;
     end // ff_state_reg
@@ -234,6 +245,8 @@ module ecc_hmac_drbg_interface#(
     always_ff @(posedge clk or negedge reset_n) 
     begin : ff_hamc_valid
         if (!reset_n)
+            hmac_drbg_valid_last <= '0;
+        else if (zeroize)
             hmac_drbg_valid_last <= '0;
         else
             hmac_drbg_valid_last <= hmac_drbg_valid;
@@ -243,6 +256,8 @@ module ecc_hmac_drbg_interface#(
     begin : counter_reg_update
         if (!reset_n)
             counter_reg       <= '0;
+        else if (zeroize)
+            counter_reg       <= '0;
         else
             counter_reg       <= counter_reg + 1;
     end // counter_reg_update
@@ -250,6 +265,8 @@ module ecc_hmac_drbg_interface#(
     always_ff @(posedge clk or negedge reset_n) 
     begin : counter_nonce_update
         if (!reset_n)
+            counter_nonce_reg       <= '0;
+        else if (zeroize)
             counter_nonce_reg       <= '0;
         else if (en) begin
             counter_nonce_reg       <= counter_nonce;

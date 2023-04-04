@@ -39,6 +39,7 @@ module ecc_pm_sequencer
     (      
     input  wire                      clka,
     input  wire                      reset_n,
+    input  wire                      zeroize,
     input  wire                      ena,
     input  wire  [ADDR_WIDTH-1 : 0]  addra,
     output logic [DATA_WIDTH-1 : 0]  douta
@@ -51,6 +52,9 @@ module ecc_pm_sequencer
     always_ff @(posedge clka or negedge reset_n) 
     begin : prog_rom
         if (!reset_n) begin
+            douta <= '0;
+        end
+        else if (zeroize) begin
             douta <= '0;
         end
         else begin

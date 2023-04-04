@@ -54,8 +54,6 @@ class soc_ifc_env_top_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CO
   virtual task body();
 
     int sts_rsp_count = 0;
-    bit fuse_ready = 1'b0;
-    bit set_bootfsm_breakpoint;
     uvm_status_e sts;
     reg_model = configuration.soc_ifc_rm;
 

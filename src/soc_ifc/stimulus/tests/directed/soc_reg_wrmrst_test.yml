@@ -14,7 +14,7 @@
 #
 ---
 plusargs:
-  - +SOC_IFC_TEST='soc_reg_reset_test'
+  - +SOC_IFC_TEST='soc_reg_wrmrst_test'
 
-testname: soc_reg_reset_test
+testname: soc_reg_wrmrst_test
 seed: ${PLAYBOOK_RANDOM_SEED}

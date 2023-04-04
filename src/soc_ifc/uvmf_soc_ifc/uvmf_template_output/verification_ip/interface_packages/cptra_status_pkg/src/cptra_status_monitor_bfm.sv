@@ -126,7 +126,10 @@ end
   reg  iccm_lock_o = 'b0;
   function bit any_signal_changed();
       if (!cptra_noncore_rst_b_o)
-          return cptra_noncore_rst_b_i;
+          return cptra_noncore_rst_b_i ||
+                 |(cptra_obf_key_reg_i    ^  cptra_obf_key_reg_o        ) || /* NOTE:             */
+                 |(obf_field_entropy_i    ^  obf_field_entropy_o        ) || /*   These are reset */
+                 |(obf_uds_seed_i         ^  obf_uds_seed_o             ) ;  /*   by pwrgood      */
       else
           return |(cptra_noncore_rst_b_i  ^  cptra_noncore_rst_b_o      ) ||
                  |(cptra_uc_rst_b_i       ^  cptra_uc_rst_b_o           ) ||

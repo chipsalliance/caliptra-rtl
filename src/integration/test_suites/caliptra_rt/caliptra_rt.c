@@ -19,9 +19,11 @@
 //   mailbox firmware update.
 //   Firmware defined here will execute from ICCM.
 
+#include "caliptra_rt.h"
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
 #include "riscv_hw_if.h"
+#include "veer-csr.h"
 #include "aes.h"
 #include "doe.h"
 #include "ecc.h"
@@ -71,6 +73,26 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
 };
 
 /* --------------- Function Definitions --------------- */
+void nmi_handler() {
+    mbox_op_s op;
+    //Confirm this was the expected
+    if ((csr_read_mcause() & MCAUSE_NMI_CODE_DBUS_LOAD_VALUE) == MCAUSE_NMI_CODE_DBUS_LOAD_VALUE) {
+        csr_write_mcause(0x0);
+        csr_write_mdeau(0x0);
+        //mailbox command should be OOB ACCESS
+        op = soc_ifc_read_mbox_cmd();
+        if (op.cmd == MBOX_CMD_OOB_ACCESS) {
+            //Recovering from expected NMI
+            soc_ifc_set_mbox_status_field(CMD_FAILURE);
+            caliptra_rt();
+        }
+        else {
+            VPRINTF(FATAL, "Unexpected NMI\n");
+            SEND_STDOUT_CTRL(0x1);
+        }
+    }
+}
+
 void caliptra_rt() {
     // Set stack pointer value pointed in linker script
     __asm__ volatile ("la sp, %0"
@@ -79,10 +101,16 @@ void caliptra_rt() {
                       : /* clobbers */);
 
     mbox_op_s op;
+    uint32_t reg_addr;
+    uint32_t read_data;
+    uint32_t loop_iter;
 
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " Caliptra Validation RT!!\n"         );
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(MEDIUM, "----------------------------------\n");
+    VPRINTF(LOW,    "- Caliptra Validation RT!!\n"        );
+    VPRINTF(MEDIUM, "----------------------------------\n");
+
+    //set NMI vector
+    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_NMI_VECTOR, nmi_handler);
 
     // Runtime flow -- set ready for RT
     soc_ifc_set_flow_status_field(SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_RUNTIME_MASK);
@@ -180,7 +208,7 @@ void caliptra_rt() {
                 //read the mbox command
                 op = soc_ifc_read_mbox_cmd();
                 if (op.cmd & MBOX_CMD_FIELD_FW_MASK) {
-                    VPRINTF(LOW, "Received mailbox firmware command from SOC! Got 0x%x\n", op.cmd);
+                    VPRINTF(MEDIUM, "Received mailbox firmware command from SOC! Got 0x%x\n", op.cmd);
                     if (op.cmd & MBOX_CMD_FIELD_RESP_MASK) {
                         VPRINTF(ERROR, "Mailbox firmware command unexpectedly has response expected field set!\n");
                     }
@@ -190,6 +218,25 @@ void caliptra_rt() {
                 }
                 else if (op.cmd & MBOX_CMD_FIELD_RESP_MASK) {
                     VPRINTF(MEDIUM, "Received mailbox command (expecting RESP) from SOC! Got 0x%x\n", op.cmd);
+                    if (op.cmd == MBOX_CMD_REG_ACCESS) {
+                        for (loop_iter = 0; loop_iter<op.dlen; loop_iter+=4) {
+                            reg_addr = soc_ifc_mbox_read_dataout_single();
+                            VPRINTF(MEDIUM, "Reading reg addr 0x%x from mailbox req\n", reg_addr);
+                            read_data = lsu_read_32((uint32_t *) reg_addr);
+                            lsu_write_32((uint32_t *) (CLP_MBOX_CSR_MBOX_DATAIN), read_data);
+                        }
+                    }
+                    else if (op.cmd == MBOX_CMD_OOB_ACCESS) {
+                        //set the ERROR FATAL register to indicate the expected error
+                        lsu_write_32((uint32_t *) CLP_SOC_IFC_REG_CPTRA_FW_ERROR_FATAL, 0xF0000001);
+                        //just read one address, it's going to trigger NMI by going OOB
+                        reg_addr = soc_ifc_mbox_read_dataout_single();
+                        VPRINTF(MEDIUM, "Reading reg addr 0x%x from mailbox req\n", reg_addr);
+                        read_data = lsu_read_32((uint32_t *) reg_addr);
+                        VPRINTF(FATAL, "Received MBOX_CMD_OOB_ACCESS but didn't trigger NMI\n");
+                        SEND_STDOUT_CTRL(0x1);
+                    }
+
                     soc_ifc_set_mbox_status_field(DATA_READY);
                 }
                 else {
@@ -203,9 +250,21 @@ void caliptra_rt() {
             if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_DEBUG_LOCKED_STS_MASK) {
                 cptra_intr_rcv.soc_ifc_notif &= ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_DEBUG_LOCKED_STS_MASK;
             }
+            if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SOC_REQ_LOCK_STS_MASK) {
+                cptra_intr_rcv.soc_ifc_notif &= ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SOC_REQ_LOCK_STS_MASK;
+            }
+            if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_WDT_TIMER1_TIMEOUT_STS_MASK) {
+                cptra_intr_rcv.soc_ifc_notif &= ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_WDT_TIMER1_TIMEOUT_STS_MASK;
+            }
+            if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_WDT_TIMER2_TIMEOUT_STS_MASK) {
+                cptra_intr_rcv.soc_ifc_notif &= ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_WDT_TIMER2_TIMEOUT_STS_MASK;
+            }
             if (cptra_intr_rcv.soc_ifc_notif & (~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK &
                                                 ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_MBOX_ECC_COR_STS_MASK &
-                                                ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_DEBUG_LOCKED_STS_MASK)) {
+                                                ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_DEBUG_LOCKED_STS_MASK &
+                                                ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SOC_REQ_LOCK_STS_MASK &
+                                                ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_WDT_TIMER1_TIMEOUT_STS_MASK &
+                                                ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_WDT_TIMER2_TIMEOUT_STS_MASK)) {
                 VPRINTF(FATAL, "Intr received: unsupported soc_ifc_notif (0x%x)\n", cptra_intr_rcv.soc_ifc_notif);
                 SEND_STDOUT_CTRL(0x1);
                 while(1);

@@ -161,7 +161,7 @@ import uvmf_base_pkg_hdl::*;
   // pragma uvmf custom dut_instantiation begin
   // AHB Clock/reset
   assign uvm_test_top_environment_soc_ifc_subenv_qvip_ahb_lite_slave_subenv_qvip_hdl.default_clk_gen_CLK     = clk;
-  assign uvm_test_top_environment_soc_ifc_subenv_qvip_ahb_lite_slave_subenv_qvip_hdl.default_reset_gen_RESET = soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_rst_b;
+  assign uvm_test_top_environment_soc_ifc_subenv_qvip_ahb_lite_slave_subenv_qvip_hdl.default_reset_gen_RESET = caliptra_top_dut.cptra_noncore_rst_b;
   assign uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.default_clk_gen_CLK         = clk;
   assign uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.default_reset_gen_RESET     = soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_rst_b;
 
@@ -285,6 +285,7 @@ import uvmf_base_pkg_hdl::*;
     assign soc_ifc_subenv_cptra_status_agent_bus.sha_error_intr = caliptra_top_dut.sha_error_intr;
     assign soc_ifc_subenv_cptra_status_agent_bus.sha_notif_intr = caliptra_top_dut.sha_notif_intr;
     assign soc_ifc_subenv_cptra_status_agent_bus.soc_ifc_error_intr = caliptra_top_dut.soc_ifc_error_intr;
+    assign soc_ifc_subenv_cptra_status_agent_bus.soc_ifc_notif_intr = caliptra_top_dut.soc_ifc_notif_intr;
 
     assign soc_ifc_subenv_cptra_ctrl_agent_bus.clear_obf_secrets = caliptra_top_dut.clear_obf_secrets_debugScanQ;
     assign soc_ifc_subenv_cptra_ctrl_agent_bus.iccm_axs_blocked = caliptra_top_dut.ahb_lite_resp_access_blocked[`CALIPTRA_SLAVE_SEL_IDMA];

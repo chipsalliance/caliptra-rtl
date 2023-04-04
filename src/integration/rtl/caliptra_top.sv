@@ -135,31 +135,6 @@ module caliptra_top
     logic                       ic_hready       ;
     logic                       ic_hresp        ;
 
-    logic        [31:0]         lsu_haddr       ;
-    logic        [2:0]          lsu_hburst      ;
-    logic                       lsu_hmastlock   ;
-    logic        [3:0]          lsu_hprot       ;
-    logic        [2:0]          lsu_hsize       ;
-    logic        [1:0]          lsu_htrans      ;
-    logic                       lsu_hwrite      ;
-    logic        [63:0]         lsu_hrdata      ;
-    logic        [63:0]         lsu_hwdata      ;
-    logic                       lsu_hready      ;
-    logic                       lsu_hresp       ;
-
-    logic        [31:0]         sb_haddr        ;
-    logic        [2:0]          sb_hburst       ;
-    logic                       sb_hmastlock    ;
-    logic        [3:0]          sb_hprot        ;
-    logic        [2:0]          sb_hsize        ;
-    logic        [1:0]          sb_htrans       ;
-    logic                       sb_hwrite       ;
-
-    logic        [63:0]         sb_hrdata       ;
-    logic        [63:0]         sb_hwdata       ;
-    logic                       sb_hready       ;
-    logic                       sb_hresp        ;
-
     logic        [31:0]         trace_rv_i_insn_ip;
     logic        [31:0]         trace_rv_i_address_ip;
     logic                       trace_rv_i_valid_ip;
@@ -364,7 +339,6 @@ assign jtag_id[31:28] = 4'b1;
 assign jtag_id[27:12] = '0;
 assign jtag_id[11:1]  = 11'h45;
 assign reset_vector = `RV_RESET_VEC;
-assign nmi_int      = 1'b0;
 assign soft_int     = 1'b0;
 assign timer_int    = 1'b0;
 
@@ -376,6 +350,10 @@ assign uart_error_intr = 1'b0; // TODO
 assign uart_notif_intr = 1'b0; // TODO
 assign i3c_error_intr = 1'b0; // TODO
 assign i3c_notif_intr = 1'b0; // TODO
+//QSPI Tie Off
+assign qspi_clk_o = '0;
+assign qspi_cs_no = '0;
+assign qspi_d_io = '0;
 
 // Vector 0 usage is reserved by VeeR, so bit 0 of the intr wire
 // drive Vector 1
@@ -429,18 +407,18 @@ el2_veer_wrapper rvtop (
     //---------------------------------------------------------------
     // Debug AHB Master
     //---------------------------------------------------------------
-    .sb_haddr               ( sb_haddr      ),
-    .sb_hburst              ( sb_hburst     ),
-    .sb_hmastlock           ( sb_hmastlock  ),
-    .sb_hprot               ( sb_hprot      ),
-    .sb_hsize               ( sb_hsize      ),
-    .sb_htrans              ( sb_htrans     ),
-    .sb_hwrite              ( sb_hwrite     ),
-    .sb_hwdata              ( sb_hwdata     ),
+    .sb_haddr               (),
+    .sb_hburst              (),
+    .sb_hmastlock           (),
+    .sb_hprot               (),
+    .sb_hsize               (),
+    .sb_htrans              (),
+    .sb_hwrite              (),
+    .sb_hwdata              (),
 
-    .sb_hrdata              ( sb_hrdata     ),
-    .sb_hready              ( sb_hready     ),
-    .sb_hresp               ( sb_hresp      ),
+    .sb_hrdata              ('0),
+    .sb_hready              ('0),
+    .sb_hresp               ('0),
 
     //---------------------------------------------------------------
     // LSU AHB Master
@@ -1156,6 +1134,7 @@ soc_ifc_top1
     .obf_uds_seed(obf_uds_seed),
     // NMI Vector 
     .nmi_vector(nmi_vector),
+    .nmi_intr(nmi_int),
     // ICCM Lock
     .iccm_lock       (iccm_lock                                    ),
     .iccm_axs_blocked(ahb_lite_resp_access_blocked[`CALIPTRA_SLAVE_SEL_IDMA]),

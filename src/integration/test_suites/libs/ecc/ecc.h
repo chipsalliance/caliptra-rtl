@@ -16,7 +16,22 @@
 #ifndef ECC_H
   #define ECC_H
 
-//void ecc_keygen_kvflow(uint8_t seed_kv_id, uint8_t privkey_kv_id, uint32_t ecc_iv[12], uint32_t expected_pubkey_x[12], uint32_t expected_pubkey_y[12]);
-//void ecc_signing_kvflow(uint8_t privkey_kv_id, uint32_t ecc_msg[12], uint32_t ecc_iv[12], uint32_t expected_sign_r[12], uint32_t expected_sign_s[12]);
+#include "caliptra_defines.h"
+#include "caliptra_reg.h"
+#include "riscv_hw_if.h"
+
+typedef uint8_t BOOL;
+#define FALSE 0u
+#define TRUE 1u
+
+typedef struct {
+    BOOL      kv_intf;
+    uint8_t   kv_id;
+    uint32_t  data[12];
+}ecc_io;
+
+void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubkey_y);
+void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_io sign_s);
+void ecc_verifying_flow(ecc_io msg, ecc_io pubkey_x, ecc_io pubkey_y, ecc_io sign_r, ecc_io sign_s);
 
 #endif

@@ -56,28 +56,29 @@ void caliptra_fmc() {
     mbox_op_s op;
     void (* iccm_fn) (void) = (void*) RV_ICCM_SADR + MBOX_ICCM_OFFSET_RT;
 
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " Caliptra Validation FMC!!\n"        );
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(MEDIUM, "----------------------------------\n");
+    VPRINTF(LOW,    "- Caliptra Validation FMC!!\n"       );
+    VPRINTF(MEDIUM, "----------------------------------\n");
 
     // TODO
     // Do other stuff before jumping immediately to Runtime image?
 
     //read the mbox command
     op = soc_ifc_read_mbox_cmd();
-    if (op.cmd != MBOX_CMD_RT_UPDATE) {
+    if (op.cmd == MBOX_CMD_RT_UPDATE) {
+        //TODO: Enhancement - Check the integrity of the firmware
+
+        // Load RT FW from mailbox
+        soc_ifc_mbox_fw_flow(op);
+
+        // Lock ICCM
+        soc_ifc_set_iccm_lock();
+    }
+    else {
         VPRINTF(FATAL, "Received invalid mailbox command from SOC! Expected 0x%x, got 0x%x\n", MBOX_CMD_RT_UPDATE, op.cmd);
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
-
-    //TODO: Enhancement - Check the integrity of the firmware
-
-    // Load RT FW from mailbox
-    soc_ifc_mbox_fw_flow(op);
-
-    // Lock ICCM
-    soc_ifc_set_iccm_lock();
 
     // Jump to ICCM (this is the Runtime image, a.k.a. Section 1)
     iccm_fn();

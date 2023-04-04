@@ -16,4 +16,21 @@
 #ifndef HMAC_H
   #define HMAC_H
 
+#include "caliptra_defines.h"
+#include "caliptra_reg.h"
+#include "riscv_hw_if.h"
+
+typedef uint8_t BOOL;
+#define FALSE 0u
+#define TRUE 1u
+
+typedef struct {
+    BOOL      kv_intf;
+    uint8_t   kv_id;
+    uint8_t   data_size;
+    uint32_t  data[32];
+}hmac_io;
+
+void hmac_flow(hmac_io hmac_key, hmac_io block, hmac_io lfsr_seed, hmac_io tag);
+
 #endif
