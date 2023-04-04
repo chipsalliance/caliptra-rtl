@@ -152,16 +152,6 @@ class kv_scoreboard #(
                               )
   ) actual_ecc_seed_read_analysis_export;
 
-  uvm_analysis_imp_expected_ecc_msg_read_analysis_export #(kv_read_transaction, kv_scoreboard #(
-                              .CONFIG_T(CONFIG_T),
-                              .BASE_T(BASE_T)
-                              )
-  ) expected_ecc_msg_read_analysis_export;
-  uvm_analysis_imp_actual_ecc_msg_read_analysis_export #(kv_read_transaction, kv_scoreboard #(
-                              .CONFIG_T(CONFIG_T),
-                              .BASE_T(BASE_T)
-                              )
-  ) actual_ecc_msg_read_analysis_export;
 
  
   // Instantiate QVIP analysis exports
@@ -190,7 +180,6 @@ class kv_scoreboard #(
     kv_read_transaction kv_sha512_block_read_expected_hash [int unsigned]; //FIXME
     kv_read_transaction kv_ecc_privkey_read_expected_hash [int unsigned]; //FIXME
     kv_read_transaction kv_ecc_seed_read_expected_hash [int unsigned]; //FIXME
-    kv_read_transaction kv_ecc_msg_read_expected_hash [int unsigned]; //FIXME
 
     //Use queues for AHB txns since there is no get_key() method
     ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
@@ -260,9 +249,6 @@ class kv_scoreboard #(
     
     expected_ecc_seed_read_analysis_export = new("expected_ecc_seed_read_analysis_export", this);
     actual_ecc_seed_read_analysis_export = new("actual_ecc_seed_read_analysis_export", this);
-    
-    expected_ecc_msg_read_analysis_export = new("expected_ecc_msg_read_analysis_export", this);
-    actual_ecc_msg_read_analysis_export = new("actual_ecc_msg_read_analysis_export", this);
     
     expected_ahb_analysis_export = new("expected_ahb_analysis_export", this);
     actual_ahb_analysis_export = new("actual_ahb_analysis_export", this);
@@ -627,40 +613,6 @@ class kv_scoreboard #(
 
   //-----------------------------------------------
 
-  virtual function void write_expected_ecc_msg_read_analysis_export(kv_read_transaction t);
-    // pragma uvmf custom expected_analysis_export_scoreboard begin
-    `uvm_info("SCBD_KV_READ", "Transaction Received through expected_ecc_msg_read_analysis_export", UVM_MEDIUM)
-    `uvm_info("SCBD_KV_READ", {"            Data: ",t.convert2string()}, UVM_FULL)
-
-    kv_ecc_msg_read_expected_hash[t.get_key()] = t;
-    `uvm_info("SCBD_KV_READ", $sformatf("EXPECTED txn is {Read entry: 0x%x}, {Read offset: 0x%x}, {Read Data: 0x%x}, {Read last dword: 0x%x}, {Read resp err: %h}", t.read_entry,t.read_offset,t.read_data,t.last,t.error ), UVM_MEDIUM)
-    
-    // pragma uvmf custom expected_analysis_export_scoreboard end
-  endfunction
-
-  virtual function void write_actual_ecc_msg_read_analysis_export(kv_read_transaction t);
-    // pragma uvmf custom actual_analysis_export_scoreboard begin
-    kv_read_transaction t_expected;
-    bit txn_eq;
-
-    `uvm_info("SCBD_KV_READ", "Transaction Received through actual_ecc_msg_read_analysis_export", UVM_MEDIUM)
-    `uvm_info("SCBD_KV_READ", {"            Data: ",t.convert2string()}, UVM_FULL)
-
-    if (kv_ecc_msg_read_expected_hash.exists(t.get_key())) begin
-        t_expected = kv_ecc_msg_read_expected_hash[t.get_key()];
-        txn_eq = t.compare(t_expected);
-
-        if(txn_eq) `uvm_info("SCBD_KV_READ", $sformatf("Actual txn with {Read entry: 0x%x}, {Read offset: 0x%x}, {Read Data: 0x%x}, {Read last dword: 0x%x}, {Read resp err: %h} matches expected!", t.read_entry,t.read_offset,t.read_data,t.last,t.error ), UVM_HIGH)
-        else       `uvm_error("SCBD_KV_READ", $sformatf("Actual txn with {Read entry: 0x%x}, {Read offset: 0x%x}, {Read Data: 0x%x}, {Read last dword: 0x%x}, {Read resp err: %h} does not match expected txn with {Read entry: 0x%x}, {Read offset: 0x%x}, {Read data: 0x%x}, {Read last dword: 0x%x}, {Read resp err: %h}", t.read_entry,t.read_offset,t.read_data,t.last,t.error, t_expected.read_entry,t_expected.read_offset,t_expected.read_data,t_expected.last,t_expected.error ))
-
-        if(t.error) `uvm_info("SCBD_KV_READ", "Trying to read a locked reg or reg with dest_valid = 0 will return 0s", UVM_MEDIUM);
-    end
-    else begin
-        `uvm_error("SCBD_KV_READ", "Received unmatched read transaction. Cannot find corresponding expected txn!");
-    end
- 
-    // pragma uvmf custom actual_analysis_export_scoreboard end
-  endfunction
 
   // FUNCTION: write_expected_ahb_analysis_export
   // QVIP transactions received through expected_ahb_analysis_export initiate the execution of this function.
@@ -763,7 +715,6 @@ function void kv_scoreboard::disable_wait_for_scoreboard_empty();
      if (kv_sha512_block_read_expected_hash.size() != 0) entries_remaining |= 1;
      if (kv_ecc_privkey_read_expected_hash.size() != 0) entries_remaining |= 1;
      if (kv_ecc_seed_read_expected_hash.size() != 0) entries_remaining |= 1;
-     if (kv_ecc_msg_read_expected_hash.size() != 0) entries_remaining |= 1;
      if (ahb_expected_q.size() != 0)        entries_remaining |= 1;
      while (entries_remaining) begin : while_entries_remaining
          @entry_received; // FIXME
@@ -773,7 +724,6 @@ function void kv_scoreboard::disable_wait_for_scoreboard_empty();
          if (kv_sha512_block_read_expected_hash.size() != 0) entries_remaining |= 1;
          if (kv_ecc_privkey_read_expected_hash.size() != 0) entries_remaining |= 1;
          if (kv_ecc_seed_read_expected_hash.size() != 0) entries_remaining |= 1;
-         if (kv_ecc_msg_read_expected_hash.size() != 0) entries_remaining |= 1;
          if (ahb_expected_q.size() != 0)        entries_remaining |= 1;
     end : while_entries_remaining
  endtask

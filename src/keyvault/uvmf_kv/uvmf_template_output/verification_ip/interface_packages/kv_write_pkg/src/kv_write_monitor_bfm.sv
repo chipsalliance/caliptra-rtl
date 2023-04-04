@@ -98,11 +98,11 @@ end
   assign dummy_i = bus.dummy;
   assign kv_write_i = bus.kv_write;
   assign kv_wr_resp_i = bus.kv_wr_resp;
-  assign write_en_i          = kv_write_i[47]; //[0];
-  assign write_entry_i       = kv_write_i[46:42]; //[4:2];
-  assign write_offset_i      = kv_write_i[41:38]; //[8:5];
-  assign write_data_i        = kv_write_i[37:6]; //[40:9];
-  assign write_dest_valid_i  = kv_write_i[5:0]; //[46:41];
+  assign write_en_i          = kv_write_i[46]; //[0];
+  assign write_entry_i       = kv_write_i[45:41]; //[4:2];
+  assign write_offset_i      = kv_write_i[40:37]; //[8:5];
+  assign write_data_i        = kv_write_i[36:5]; //[40:9];
+  assign write_dest_valid_i  = kv_write_i[4:0]; //[46:41];
   assign error_i             = kv_wr_resp_i[0];
 
   // Proxy handle to UVM monitor

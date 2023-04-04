@@ -41,7 +41,7 @@ addrmap kv_reg {
               [br]dest_valid[2] = sha_block_dest_valid
               [br]dest_valid[3] = ecc_pkey_dest_valid
               [br]dest_valid[4] = ecc_seed_dest_valid
-              [br]dest_valid[5] = ecc_msg_dest_valid
+              [br]dest_valid[5] = rsvd
               [br]dest_valid[6] = rsvd
               [br]dest_valid[7] = rsvd";
               sw=r; hw=rw; we=true; hwclr; resetsignal = hard_reset_b;} dest_valid[6]=0;

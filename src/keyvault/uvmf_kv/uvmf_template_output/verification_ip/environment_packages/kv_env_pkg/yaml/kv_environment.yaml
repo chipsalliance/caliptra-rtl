@@ -32,9 +32,6 @@ uvmf:
       - initiator_responder: INITIATOR
         name: kv_ecc_seed_read_agent
         type: kv_read
-      - initiator_responder: INITIATOR
-        name: kv_ecc_msg_read_agent
-        type: kv_read
       analysis_components:
       - name: kv_pred
         parameters: []
@@ -97,8 +94,5 @@ uvmf:
         receiver: kv_sb.actual_analysis_export
         validate: 'True'
       - driver: kv_ecc_seed_read_agent.monitored_ap
-        receiver: kv_sb.actual_analysis_export
-        validate: 'True'
-      - driver: kv_ecc_msg_read_agent.monitored_ap
         receiver: kv_sb.actual_analysis_export
         validate: 'True'

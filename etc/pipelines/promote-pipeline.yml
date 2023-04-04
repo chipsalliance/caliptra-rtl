@@ -33,7 +33,7 @@ stages:
           - enabled: true
           - configspec_name: 'integration_lib'
           - dut: 'caliptra_top_tb'
-          - timeout: 150
+          - timeout: 60
           - path: 'Caliptra/src/integration/stimulus/L0_regression.yml'
 
     - integration_top_trng_vcs:
@@ -50,7 +50,7 @@ stages:
           - enabled: true
           - configspec_name: 'integration_lib'
           - dut: 'caliptra_top_tb'
-          - timeout: 150
+          - timeout: 60
           - path: 'Caliptra/src/integration/stimulus/L0_trng_regression.yml'
 
     - integration_top_ius:

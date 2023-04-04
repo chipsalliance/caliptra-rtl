@@ -56,7 +56,6 @@ package kv_reg_model_top_pkg;
       uvm_reg_map kv_reg_sha512_block_read_map;
       uvm_reg_map kv_reg_ecc_privkey_read_map;
       uvm_reg_map kv_reg_ecc_seed_read_map;
-      uvm_reg_map kv_reg_ecc_msg_read_map;
 
       function new(string name = "kv_reg_ext");
          super.new(name);
@@ -81,7 +80,6 @@ package kv_reg_model_top_pkg;
          this.kv_reg_sha512_block_read_map   = create_map("keyvault_reg_sha512_block_read_map", 0, 4, UVM_LITTLE_ENDIAN);
          this.kv_reg_ecc_privkey_read_map    = create_map("keyvault_reg_ecc_privkey_read_map", 0, 4, UVM_LITTLE_ENDIAN);
          this.kv_reg_ecc_seed_read_map       = create_map("keyvault_reg_ecc_seed_read_map", 0, 4, UVM_LITTLE_ENDIAN);
-         this.kv_reg_ecc_msg_read_map        = create_map("keyvault_reg_ecc_msg_read_map", 0, 4, UVM_LITTLE_ENDIAN);
       endfunction
 
       virtual function void build_ext_maps();
@@ -106,7 +104,6 @@ package kv_reg_model_top_pkg;
             this.kv_reg_sha512_block_read_map.add_reg   (regs[c_reg], regs[c_reg].get_offset(this.default_map));
             this.kv_reg_ecc_privkey_read_map.add_reg    (regs[c_reg], regs[c_reg].get_offset(this.default_map));
             this.kv_reg_ecc_seed_read_map.add_reg       (regs[c_reg], regs[c_reg].get_offset(this.default_map));
-            this.kv_reg_ecc_msg_read_map.add_reg        (regs[c_reg], regs[c_reg].get_offset(this.default_map));
          end
 
       endfunction
@@ -267,7 +264,6 @@ package kv_reg_model_top_pkg;
       uvm_reg_map kv_sha512_block_read_map;
       uvm_reg_map kv_ecc_privkey_read_map;
       uvm_reg_map kv_ecc_seed_read_map;
-      uvm_reg_map kv_ecc_msg_read_map;
 
       //TODO add coverage for the other maps
       kv_ahb_map_coverage ahb_map_cg;
@@ -329,7 +325,6 @@ package kv_reg_model_top_pkg;
       this.kv_sha512_block_read_map = create_map("kv_sha512_block_read_map", 0, 4, UVM_LITTLE_ENDIAN);
       this.kv_ecc_privkey_read_map  = create_map("kv_ecc_privkey_read_map", 0, 4, UVM_LITTLE_ENDIAN);
       this.kv_ecc_seed_read_map     = create_map("kv_ecc_seed_read_map", 0, 4, UVM_LITTLE_ENDIAN);
-      this.kv_ecc_msg_read_map      = create_map("kv_ecc_msg_read_map", 0, 4, UVM_LITTLE_ENDIAN);
 
       //Add debug_mode reg to all maps (only for TB purposes)
       default_map.add_reg(val_reg, 'h1_0000, "RW");
@@ -346,7 +341,6 @@ package kv_reg_model_top_pkg;
       kv_sha512_block_read_map.add_reg(val_reg, 'h1_0000, "RW");
       kv_ecc_privkey_read_map.add_reg(val_reg, 'h1_0000, "RW");
       kv_ecc_seed_read_map.add_reg(val_reg, 'h1_0000, "RW");
-      kv_ecc_msg_read_map.add_reg(val_reg, 'h1_0000, "RW");
  
       endfunction
 
@@ -370,7 +364,6 @@ package kv_reg_model_top_pkg;
          this.kv_sha512_block_read_map.add_submap  (this.kv_reg_rm.kv_reg_sha512_block_read_map, 'h0);
          this.kv_ecc_privkey_read_map.add_submap   (this.kv_reg_rm.kv_reg_ecc_privkey_read_map, 'h0);
          this.kv_ecc_seed_read_map.add_submap      (this.kv_reg_rm.kv_reg_ecc_seed_read_map, 'h0);
-         this.kv_ecc_msg_read_map.add_submap       (this.kv_reg_rm.kv_reg_ecc_msg_read_map, 'h0);
 
       endfunction
 

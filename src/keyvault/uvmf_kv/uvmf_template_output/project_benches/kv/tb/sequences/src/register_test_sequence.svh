@@ -61,7 +61,6 @@ class register_test_sequence extends kv_bench_sequence_base;
       kv_sha512_block_read_agent_config.wait_for_reset();
       kv_ecc_privkey_read_agent_config.wait_for_reset();
       kv_ecc_seed_read_agent_config.wait_for_reset();
-      kv_ecc_msg_read_agent_config.wait_for_reset();
       // pragma uvmf custom register_test_reset end
     join
 

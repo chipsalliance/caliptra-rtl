@@ -249,14 +249,14 @@ end
 
 
     @(posedge clk_i);
-    kv_write_o[47] <= 1'b0; //Set write_en to 0 after txn is complete
+    kv_write_o[46] <= 1'b0; //Set write_en to 0 after txn is complete
     //kv_write_o[45] <= 1'b0; //Set entry_is_pcr to 0 after txn is complete
 
-    kv_write_responder_struct.write_en          = kv_write_i[47];//kv_write_i[0];
-    kv_write_responder_struct.write_entry       = kv_write_i[46:42];//kv_write_i[4:2];
-    kv_write_responder_struct.write_offset      = kv_write_i[41:38];//kv_write_i[8:5];
-    kv_write_responder_struct.write_data        = kv_write_i[37:6];//kv_write_i[40:9];
-    kv_write_responder_struct.write_dest_valid  = kv_write_i[5:0];//kv_write_i[46:41];
+    kv_write_responder_struct.write_en          = kv_write_i[46];//kv_write_i[0];
+    kv_write_responder_struct.write_entry       = kv_write_i[45:41];//kv_write_i[4:2];
+    kv_write_responder_struct.write_offset      = kv_write_i[40:37];//kv_write_i[8:5];
+    kv_write_responder_struct.write_data        = kv_write_i[36:5];//kv_write_i[40:9];
+    kv_write_responder_struct.write_dest_valid  = kv_write_i[4:0];//kv_write_i[46:41];
 
     responder_struct = kv_write_responder_struct;
   endtask        

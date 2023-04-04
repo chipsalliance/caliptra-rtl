@@ -58,7 +58,6 @@ class kv_env_sequence_base #(
     // configuration.kv_sha512_block_read_agent_config.sequencer
     // configuration.kv_ecc_privkey_read_agent_config.sequencer
     // configuration.kv_ecc_seed_read_agent_config.sequencer
-    // configuration.kv_ecc_msg_read_agent_config.sequencer
 
   // Responder agent sequencers in kv_environment:
 
@@ -93,9 +92,6 @@ class kv_env_sequence_base #(
     typedef kv_read_random_sequence kv_ecc_seed_read_agent_random_sequence_t;
     kv_ecc_seed_read_agent_random_sequence_t kv_ecc_seed_read_agent_rand_seq;
 
-    typedef kv_read_random_sequence kv_ecc_msg_read_agent_random_sequence_t;
-    kv_ecc_msg_read_agent_random_sequence_t kv_ecc_msg_read_agent_rand_seq;
-
 
 
 
@@ -114,7 +110,6 @@ class kv_env_sequence_base #(
     kv_sha512_block_read_agent_rand_seq = kv_sha512_block_read_agent_random_sequence_t::type_id::create("kv_sha512_block_read_agent_rand_seq");
     kv_ecc_privkey_read_agent_rand_seq = kv_ecc_privkey_read_agent_random_sequence_t::type_id::create("kv_ecc_privkey_read_agent_rand_seq");
     kv_ecc_seed_read_agent_rand_seq = kv_ecc_seed_read_agent_random_sequence_t::type_id::create("kv_ecc_seed_read_agent_rand_seq");
-    kv_ecc_msg_read_agent_rand_seq = kv_ecc_msg_read_agent_random_sequence_t::type_id::create("kv_ecc_msg_read_agent_rand_seq");
 
 
   endfunction
@@ -141,8 +136,6 @@ class kv_env_sequence_base #(
        repeat (25) kv_ecc_privkey_read_agent_rand_seq.start(configuration.kv_ecc_privkey_read_agent_config.sequencer);
     if ( configuration.kv_ecc_seed_read_agent_config.sequencer != null )
        repeat (25) kv_ecc_seed_read_agent_rand_seq.start(configuration.kv_ecc_seed_read_agent_config.sequencer);
-    if ( configuration.kv_ecc_msg_read_agent_config.sequencer != null )
-       repeat (25) kv_ecc_msg_read_agent_rand_seq.start(configuration.kv_ecc_msg_read_agent_config.sequencer);
 
 
   endtask

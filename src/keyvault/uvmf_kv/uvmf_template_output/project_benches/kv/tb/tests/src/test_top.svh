@@ -57,8 +57,7 @@ qvip_memory_message_handler message_handler;
     kv_hmac_block_read_agent_BFM /* kv_hmac_block_read_agent     [7] */ , 
     kv_sha512_block_read_agent_BFM /* kv_sha512_block_read_agent     [8] */ , 
     kv_ecc_privkey_read_agent_BFM /* kv_ecc_privkey_read_agent     [9] */ , 
-    kv_ecc_seed_read_agent_BFM /* kv_ecc_seed_read_agent     [10] */ , 
-    kv_ecc_msg_read_agent_BFM /* kv_ecc_msg_read_agent     [11] */ 
+    kv_ecc_seed_read_agent_BFM /* kv_ecc_seed_read_agent     [10] */ 
 };
 
 uvmf_active_passive_t interface_activities[] = { 
@@ -72,8 +71,8 @@ uvmf_active_passive_t interface_activities[] = {
     ACTIVE /* kv_hmac_block_read_agent     [7] */ , 
     ACTIVE /* kv_sha512_block_read_agent     [8] */ , 
     ACTIVE /* kv_ecc_privkey_read_agent     [9] */ , 
-    ACTIVE /* kv_ecc_seed_read_agent     [10] */ , 
-    ACTIVE /* kv_ecc_msg_read_agent     [11] */   };
+    ACTIVE /* kv_ecc_seed_read_agent     [10] */
+};
 
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end

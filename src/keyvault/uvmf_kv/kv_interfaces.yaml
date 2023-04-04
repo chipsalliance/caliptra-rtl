@@ -134,7 +134,7 @@ uvmf:
       parameters:
       - name: "KV_READ_REQUESTOR"
         type: "string"
-        # Can be HMAC_KEY, HMAC_BLOCK, SHA512_BLOCK, ECC_PRIVKEY, ECC_SEED, ECC_MSG
+        # Can be HMAC_KEY, HMAC_BLOCK, SHA512_BLOCK, ECC_PRIVKEY, ECC_SEED
         value: '"HMAC_KEY"'
 
       ports:

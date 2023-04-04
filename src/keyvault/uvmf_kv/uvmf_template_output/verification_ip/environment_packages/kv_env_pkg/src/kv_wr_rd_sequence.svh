@@ -48,7 +48,6 @@ class kv_wr_rd_sequence #(
     kv_read_agent_key_entry_sequence_t sha512_block_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_privkey_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_seed_read_seq;
-    kv_read_agent_key_entry_sequence_t ecc_msg_read_seq;
 
     rand reg [KV_ENTRY_ADDR_W-1:0] hmac_write_entry, sha512_write_entry, ecc_write_entry, doe_write_entry;    
     //constraint valid_entry {hmac_write_entry != sha512_write_entry != ecc_write_entry != doe_write_entry;}
@@ -82,8 +81,6 @@ class kv_wr_rd_sequence #(
         ecc_privkey_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("ecc_privkey_read_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         ecc_seed_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("ecc_seed_read_seq");
-        if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
-        ecc_msg_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("ecc_msg_read_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         //kv_rst_agent_poweron_seq_2 = kv_rst_agent_poweron_sequence_t::type_id::create("kv_rst_agent_poweron_seq_2");
         
@@ -187,12 +184,6 @@ class kv_wr_rd_sequence #(
                     repeat(10) hmac_key_read_seq.start(configuration.kv_hmac_key_read_agent_config.sequencer);
                 else
                     `uvm_error("KV WR RD", "kv_hmac_key_read_agent_config.sequencer is null!");
-            end
-            begin
-                if(configuration.kv_ecc_msg_read_agent_config.sequencer != null)
-                    repeat(10) ecc_msg_read_seq.start(configuration.kv_ecc_msg_read_agent_config.sequencer);
-                else
-                    `uvm_error("KV WR RD", "kv_ecc_msg_read_agent_config.sequencer is null!");
             end
             begin
                 if(configuration.kv_ecc_seed_read_agent_config.sequencer != null)

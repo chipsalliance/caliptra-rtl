@@ -37,7 +37,6 @@
 //   kv_sha512_block_read_agent_ae receives transactions of type  kv_read_transaction
 //   kv_ecc_privkey_read_agent_ae receives transactions of type  kv_read_transaction
 //   kv_ecc_seed_read_agent_ae receives transactions of type  kv_read_transaction
-//   kv_ecc_msg_read_agent_ae receives transactions of type  kv_read_transaction
 //   ahb_slave_0_ae receives transactions of type  mvc_sequence_item_base
 //
 //   This analysis component has the following analysis_ports that can broadcast 
@@ -121,11 +120,6 @@ class kv_predictor #(
                               .BASE_T(BASE_T)
                               )
 ) kv_ecc_seed_read_agent_ae;
-  uvm_analysis_imp_kv_ecc_msg_read_agent_ae #(kv_read_transaction, kv_predictor #(
-                              .CONFIG_T(CONFIG_T),
-                              .BASE_T(BASE_T)
-                              )
-) kv_ecc_msg_read_agent_ae;
   uvm_analysis_imp_ahb_slave_0_ae #(mvc_sequence_item_base, kv_predictor #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
@@ -145,7 +139,6 @@ class kv_predictor #(
   uvm_analysis_port #(kv_read_transaction) kv_sha512_block_read_sb_ap;
   uvm_analysis_port #(kv_read_transaction) kv_ecc_privkey_read_sb_ap;
   uvm_analysis_port #(kv_read_transaction) kv_ecc_seed_read_sb_ap;
-  uvm_analysis_port #(kv_read_transaction) kv_ecc_msg_read_sb_ap;
   uvm_analysis_port #(mvc_sequence_item_base) kv_sb_ahb_ap;
 
   // Transaction variable for predicted values to be sent out kv_sb_ap
@@ -184,7 +177,6 @@ class kv_predictor #(
   kv_read_transaction kv_sha512_block_read_agent_ae_debug;
   kv_read_transaction kv_ecc_privkey_read_agent_ae_debug;
   kv_read_transaction kv_ecc_seed_read_agent_ae_debug;
-  kv_read_transaction kv_ecc_msg_read_agent_ae_debug;
 
   mvc_sequence_item_base ahb_slave_0_ae_debug;
 
@@ -207,7 +199,6 @@ class kv_predictor #(
   uvm_reg_map p_kv_sha512_block_read_map;
   uvm_reg_map p_kv_ecc_privkey_read_map;
   uvm_reg_map p_kv_ecc_seed_read_map;
-  uvm_reg_map p_kv_ecc_msg_read_map;
 
   uvm_reg clear_secrets_reg;
   uvm_reg_data_t clear_secrets_data;
@@ -238,7 +229,6 @@ class kv_predictor #(
     kv_sha512_block_read_agent_ae = new("kv_sha512_block_read_agent_ae", this);
     kv_ecc_privkey_read_agent_ae  = new("kv_ecc_privkey_read_agent_ae", this);
     kv_ecc_seed_read_agent_ae     = new("kv_ecc_seed_read_agent_ae", this);
-    kv_ecc_msg_read_agent_ae      = new("kv_ecc_msg_read_agent_ae", this);
     ahb_slave_0_ae                = new("ahb_slave_0_ae", this);
 
     kv_hmac_write_sb_ap           = new("kv_hmac_write_sb_ap",this);
@@ -252,7 +242,6 @@ class kv_predictor #(
     kv_sha512_block_read_sb_ap    = new("kv_sha512_block_read_sb_ap", this );
     kv_ecc_privkey_read_sb_ap     = new("kv_ecc_privkey_read_sb_ap", this );
     kv_ecc_seed_read_sb_ap        = new("kv_ecc_seed_read_sb_ap", this );
-    kv_ecc_msg_read_sb_ap         = new("kv_ecc_msg_read_sb_ap", this );
     kv_sb_ahb_ap                  = new("kv_sb_ahb_ap", this);
 
   // pragma uvmf custom build_phase begin
@@ -273,7 +262,6 @@ class kv_predictor #(
     p_kv_sha512_block_read_map  = p_kv_rm.get_map_by_name("kv_sha512_block_read_map");
     p_kv_ecc_privkey_read_map   = p_kv_rm.get_map_by_name("kv_ecc_privkey_read_map");
     p_kv_ecc_seed_read_map      = p_kv_rm.get_map_by_name("kv_ecc_seed_read_map");
-    p_kv_ecc_msg_read_map       = p_kv_rm.get_map_by_name("kv_ecc_msg_read_map");
   // pragma uvmf custom build_phase end
   endfunction
 
@@ -579,29 +567,6 @@ class kv_predictor #(
     // pragma uvmf custom kv_ecc_seed_read_agent_ae_predictor end
   endfunction
 
-  // FUNCTION: write_kv_ecc_msg_read_agent_ae
-  // Transactions received through kv_ecc_msg_read_agent_ae initiate the execution of this function.
-  // This function performs prediction of DUT output values based on DUT input, configuration and state
-  virtual function void write_kv_ecc_msg_read_agent_ae(kv_read_transaction t);
-    // pragma uvmf custom kv_ecc_msg_read_agent_ae_predictor begin
-    kv_ecc_msg_read_agent_ae_debug = t;
-    `uvm_info("PRED", "Transaction Received through kv_ecc_msg_read_agent_ae", UVM_MEDIUM)
-    `uvm_info("PRED", {"            Data: ",t.convert2string()}, UVM_FULL)
-    // Construct one of each output transaction type.
-    kv_sb_ap_output_transaction = kv_sb_ap_output_transaction_t::type_id::create("kv_sb_ap_output_transaction");
-    
-    client = "ecc_msg_read";
-    populate_expected_kv_read_txn(kv_sb_ap_output_transaction, t, client);
-
- 
-    // Code for sending output transaction out through kv_sb_ap
-    // Please note that each broadcasted transaction should be a different object than previously 
-    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
-    // using either new() or create().  Broadcasting a transaction object more than once to either the 
-    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
-    kv_ecc_msg_read_sb_ap.write(kv_sb_ap_output_transaction);
-    // pragma uvmf custom kv_ecc_msg_read_agent_ae_predictor end
-  endfunction
 
   // FUNCTION: write_ahb_slave_0_ae
   // Transactions received through ahb_slave_0_ae initiate the execution of this function.
@@ -712,7 +677,7 @@ endclass
     uvm_reg kv_reg;
     uvm_reg_data_t kv_reg_data;
     logic lock_use;
-    logic [5:0] dest_valid;
+    logic [4:0] dest_valid;
     logic client_dest_valid;
 
 /*
@@ -728,7 +693,7 @@ endclass
       kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_ENTRY[%0d][%0d]",t_received.read_entry,t_received.read_offset));
     //end
     lock_use = kv_reg_data[1];
-    dest_valid = kv_reg_data[14:9];
+    dest_valid = kv_reg_data[13:9];
     
     case(client) inside
 
@@ -737,7 +702,6 @@ endclass
       "sha512_block_read" : client_dest_valid = dest_valid[2];
       "ecc_privkey_read"  : client_dest_valid = dest_valid[3];
       "ecc_seed_read"     : client_dest_valid = dest_valid[4];
-      "ecc_msg_read"      : client_dest_valid = dest_valid[5];
       default: begin
         client_dest_valid = 0;
       end

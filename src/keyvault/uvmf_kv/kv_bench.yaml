@@ -25,8 +25,6 @@ uvmf:
         value: ACTIVE
       - bfm_name: kv_ecc_seed_read_agent
         value: ACTIVE
-      - bfm_name: kv_ecc_msg_read_agent
-        value: ACTIVE
 
       clock_half_period: 5ns
       clock_phase_offset: 0ns

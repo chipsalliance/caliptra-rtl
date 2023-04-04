@@ -26,8 +26,6 @@ uvmf:
         type: 'kv_read_transaction'
       - name: kv_ecc_seed_read_agent_ae
         type: 'kv_read_transaction'
-      - name: kv_ecc_msg_read_agent_ae
-        type: 'kv_read_transaction'
       # AHB QVIP
       - name: ahb_slave_0_ae
         type: 'mvc_sequence_item_base'

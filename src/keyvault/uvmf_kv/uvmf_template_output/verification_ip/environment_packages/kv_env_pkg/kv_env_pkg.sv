@@ -62,7 +62,6 @@ package kv_env_pkg;
   `uvm_analysis_imp_decl(_kv_sha512_block_read_agent_ae)
   `uvm_analysis_imp_decl(_kv_ecc_privkey_read_agent_ae)
   `uvm_analysis_imp_decl(_kv_ecc_seed_read_agent_ae)
-  `uvm_analysis_imp_decl(_kv_ecc_msg_read_agent_ae)
   `uvm_analysis_imp_decl(_ahb_slave_0_ae)
   // `uvm_analysis_imp_decl(_expected_analysis_export)
   // `uvm_analysis_imp_decl(_actual_analysis_export)
@@ -92,9 +91,6 @@ package kv_env_pkg;
 
   `uvm_analysis_imp_decl(_expected_ecc_seed_read_analysis_export)
   `uvm_analysis_imp_decl(_actual_ecc_seed_read_analysis_export)
-
-  `uvm_analysis_imp_decl(_expected_ecc_msg_read_analysis_export)
-  `uvm_analysis_imp_decl(_actual_ecc_msg_read_analysis_export)
 
   `uvm_analysis_imp_decl(_expected_ahb_analysis_export)
   `uvm_analysis_imp_decl(_actual_ahb_analysis_export)

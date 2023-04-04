@@ -75,9 +75,6 @@ extends uvmf_environment_configuration_base;
     typedef kv_read_configuration kv_ecc_seed_read_agent_config_t;
     rand kv_ecc_seed_read_agent_config_t kv_ecc_seed_read_agent_config;
 
-    typedef kv_read_configuration kv_ecc_msg_read_agent_config_t;
-    rand kv_ecc_msg_read_agent_config_t kv_ecc_msg_read_agent_config;
-
 
 
     qvip_ahb_lite_slave_env_configuration     qvip_ahb_lite_slave_subenv_config;
@@ -109,7 +106,6 @@ extends uvmf_environment_configuration_base;
     kv_sha512_block_read_agent_config = kv_sha512_block_read_agent_config_t::type_id::create("kv_sha512_block_read_agent_config");
     kv_ecc_privkey_read_agent_config = kv_ecc_privkey_read_agent_config_t::type_id::create("kv_ecc_privkey_read_agent_config");
     kv_ecc_seed_read_agent_config = kv_ecc_seed_read_agent_config_t::type_id::create("kv_ecc_seed_read_agent_config");
-    kv_ecc_msg_read_agent_config = kv_ecc_msg_read_agent_config_t::type_id::create("kv_ecc_msg_read_agent_config");
 
     qvip_ahb_lite_slave_subenv_config = qvip_ahb_lite_slave_env_configuration::type_id::create("qvip_ahb_lite_slave_subenv_config");
 
@@ -158,7 +154,6 @@ extends uvmf_environment_configuration_base;
      "\n", kv_sha512_block_read_agent_config.convert2string,
      "\n", kv_ecc_privkey_read_agent_config.convert2string,
      "\n", kv_ecc_seed_read_agent_config.convert2string,
-     "\n", kv_ecc_msg_read_agent_config.convert2string,
 
      "\n", qvip_ahb_lite_slave_subenv_config.convert2string
        };
@@ -223,9 +218,6 @@ extends uvmf_environment_configuration_base;
      kv_ecc_seed_read_agent_config.initialize( interface_activity[10], {environment_path,".kv_ecc_seed_read_agent"}, interface_names[10]);
      kv_ecc_seed_read_agent_config.initiator_responder = INITIATOR;
      // kv_ecc_seed_read_agent_config.has_coverage = 1;
-     kv_ecc_msg_read_agent_config.initialize( interface_activity[11], {environment_path,".kv_ecc_msg_read_agent"}, interface_names[11]);
-     kv_ecc_msg_read_agent_config.initiator_responder = INITIATOR;
-     // kv_ecc_msg_read_agent_config.has_coverage = 1;
 
     // pragma uvmf custom reg_model_config_initialize begin
     // Register model creation and configuation
