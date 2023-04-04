@@ -157,13 +157,6 @@ module caliptra_top_sva
                                               $fell(`ECC_PATH.kv_privkey_write_en) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[0].read_entry][dword] == `ECC_PATH.privkey_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
                                               )
                                   else $display("SVA ERROR: ECC privkey read mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[0].read_entry][dword], `ECC_PATH.privkey_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
-        //ecc message read
-        kv_ecc_msg_r_flow:        assert property (
-                                              @(posedge `KEYVAULT_PATH.clk)
-                                              $fell(`ECC_PATH.kv_msg_write_en) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[2].read_entry][dword] == `ECC_PATH.msg_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
-                                              )
-                                  else $display("SVA ERROR: ECC msg mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[2].read_entry][dword], `ECC_PATH.msg_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
-        //ecc seed read
         kv_ecc_seed_r_flow:       assert property (
                                               @(posedge `KEYVAULT_PATH.clk)
                                               $fell(`ECC_PATH.kv_seed_write_en) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[1].read_entry][dword] == `ECC_PATH.seed_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])

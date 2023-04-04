@@ -194,21 +194,11 @@ void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_
     }
     
 
-    if (msg.kv_intf){
-        // Program ECC_MSG Read with 12 dwords from msg_kv_id
-        lsu_write_32(CLP_ECC_REG_ECC_KV_RD_MSG_CTRL, (ECC_REG_ECC_KV_RD_MSG_CTRL_READ_EN_MASK |
-                                                    ((msg.kv_id << ECC_REG_ECC_KV_RD_MSG_CTRL_READ_ENTRY_LOW) & ECC_REG_ECC_KV_RD_MSG_CTRL_READ_ENTRY_MASK)));
-
-        // Check that ECC PRIVKEY is loaded
-        while((lsu_read_32(CLP_ECC_REG_ECC_KV_RD_MSG_STATUS) & ECC_REG_ECC_KV_RD_MSG_STATUS_VALID_MASK) == 0);
-    }
-    else{
-        // Program ECC MSG
-        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_MSG_0;
-        offset = 0;
-        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_MSG_11) {
-            *reg_ptr++ = msg.data[offset++];
-        }
+    // Program ECC MSG
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_MSG_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_MSG_11) {
+        *reg_ptr++ = msg.data[offset++];
     }
 
     // Program ECC IV
@@ -270,21 +260,11 @@ void ecc_verifying_flow(ecc_io msg, ecc_io pubkey_x, ecc_io pubkey_y, ecc_io sig
     // wait for ECC to be ready
     while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
     
-    if (msg.kv_intf){
-        // Program ECC_MSG Read with 12 dwords from msg_kv_id
-        lsu_write_32(CLP_ECC_REG_ECC_KV_RD_MSG_CTRL, (ECC_REG_ECC_KV_RD_MSG_CTRL_READ_EN_MASK |
-                                                    ((msg.kv_id << ECC_REG_ECC_KV_RD_MSG_CTRL_READ_ENTRY_LOW) & ECC_REG_ECC_KV_RD_MSG_CTRL_READ_ENTRY_MASK)));
-
-        // Check that ECC PRIVKEY is loaded
-        while((lsu_read_32(CLP_ECC_REG_ECC_KV_RD_MSG_STATUS) & ECC_REG_ECC_KV_RD_MSG_STATUS_VALID_MASK) == 0);
-    }
-    else{
-        // Program ECC MSG
-        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_MSG_0;
-        offset = 0;
-        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_MSG_11) {
-            *reg_ptr++ = msg.data[offset++];
-        }
+    // Program ECC MSG
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_MSG_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_MSG_11) {
+        *reg_ptr++ = msg.data[offset++];
     }
 
     // Program ECC PUBKEY_X
