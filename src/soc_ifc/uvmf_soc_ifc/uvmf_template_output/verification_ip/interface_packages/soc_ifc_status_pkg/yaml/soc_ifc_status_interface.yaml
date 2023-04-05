@@ -53,55 +53,55 @@ uvmf:
       transaction_constraints: []
       transaction_vars:
       - comment: ''
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
         name: ready_for_fuses
         type: bit
         unpacked_dimension: ''
       - comment: ''
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
         name: ready_for_fw_push
         type: bit
         unpacked_dimension: ''
       - comment: ''
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
         name: ready_for_runtime
         type: bit
         unpacked_dimension: ''
       - comment: ''
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
         name: mailbox_data_avail
         type: bit
         unpacked_dimension: ''
       - comment: ''
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
         name: mailbox_flow_done
         type: bit
         unpacked_dimension: ''
       - comment: ''
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
         name: cptra_error_fatal_intr_pending
         type: bit
         unpacked_dimension: ''
       - comment: ''
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
         name: cptra_error_non_fatal_intr_pending
         type: bit
         unpacked_dimension: ''
       - comment: ''
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
         name: trng_req_pending
         type: bit
         unpacked_dimension: ''
       - comment: ''
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
         name: generic_output_val
         type: bit [63:0]

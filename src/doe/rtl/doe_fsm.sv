@@ -77,7 +77,7 @@ typedef enum logic [2:0] {
 
 logic running_uds, running_fe;
 
-logic [2:0] dest_addr, dest_addr_nxt;
+logic [KV_ENTRY_ADDR_W-1:0] dest_addr, dest_addr_nxt;
 logic dest_addr_en;
 logic [DEST_WR_OFFSET_W-1:0] dest_write_offset, dest_write_offset_nxt;
 logic dest_write_offset_en;

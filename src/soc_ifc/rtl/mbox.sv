@@ -50,6 +50,7 @@ module mbox
     //interrupts
     output logic uc_mbox_data_avail,
     output logic soc_mbox_data_avail,
+    output logic soc_req_mbox_lock,
 
     //DMI reg access
     input logic dmi_inc_rdptr,
@@ -92,7 +93,7 @@ logic [$clog2(DEPTH)-1:0] mbox_wrptr, mbox_wrptr_nxt;
 logic inc_wrptr;
 logic [$clog2(DEPTH)-1:0] sram_rdaddr;
 logic [$clog2(DEPTH)-1:0] mbox_rdptr, mbox_rdptr_nxt;
-logic inc_rdptr,inc_rdptr_f;
+logic inc_rdptr;
 logic rst_mbox_rdptr;
 logic rst_mbox_wrptr;
 logic [DATA_W-1:0] sram_rdata;
@@ -101,6 +102,7 @@ logic [DATA_W-1:0] sram_rdata_cor;
 logic [MBOX_ECC_DATA_W-1:0] sram_rdata_cor_ecc;
 logic sram_we;
 logic mbox_protocol_sram_we;
+logic mbox_protocol_sram_rd, mbox_protocol_sram_rd_f;
 logic sram_ecc_cor_we;
 logic [$clog2(DEPTH)-1:0] sram_ecc_cor_waddr;
 logic dir_req_dv_q, dir_req_rd_phase;
@@ -109,7 +111,8 @@ logic mask_rdata;
 logic [$clog2(DEPTH)-1:0] dir_req_addr;
 
 logic soc_has_lock, soc_has_lock_nxt;
-logic valid_user;
+logic valid_requester;
+logic valid_receiver;
 
 //csr
 logic [DATA_W-1:0] csr_rdata;
@@ -121,24 +124,32 @@ mbox_csr__out_t hwif_out;
 
 assign mbox_error = read_error | write_error;
 
-//determine if the request is coming from a valid user
-//1) uC requests are valid if uc has lock or if we're in execute uc
-//2) SoC requests are valid if soc has lock and it's the user that locked it or we're in execute SOC 
-always_comb valid_user = hwif_out.mbox_lock.lock.value & 
-                        ((~req_data.soc_req & (~soc_has_lock | (mbox_fsm_ps == MBOX_EXECUTE_UC))) |
-                         ( req_data.soc_req & ((soc_has_lock & (req_data.user == hwif_out.mbox_user.user.value)) | (mbox_fsm_ps == MBOX_EXECUTE_SOC))));
+//Determine if this is a valid request from the requester side
+//1) uC requests are valid if uc has lock
+//2) SoC requests are valid if soc has lock and it's the user that locked it 
+always_comb valid_requester = hwif_out.mbox_lock.lock.value & 
+                              ((~req_data.soc_req & (~soc_has_lock || (mbox_fsm_ps == MBOX_EXECUTE_UC))) |
+                               ( req_data.soc_req & soc_has_lock & (req_data.user == hwif_out.mbox_user.user.value)));
+
+//Determine if this is a valid request from the receiver side
+always_comb valid_receiver = hwif_out.mbox_lock.lock.value &
+                             //Receiver is valid when they don't have the lock
+                             ((~req_data.soc_req & soc_has_lock) | (req_data.soc_req & ~soc_has_lock) |
+                             //Receiver is valid when they are reading a response to their request
+                             (valid_requester & ((soc_has_lock & (mbox_fsm_ps == MBOX_EXECUTE_SOC)) |
+                                                 (~soc_has_lock & (mbox_fsm_ps == MBOX_EXECUTE_UC)))));
 
 //We want to mask read data when
-//1) Invalid user is trying to access the mailbox data, or we're not in execute state
-always_comb mask_rdata = hwif_out.mbox_dataout.dataout.swacc & (~valid_user | ~(mbox_fsm_ps inside {MBOX_EXECUTE_UC, MBOX_EXECUTE_SOC}));
+//Invalid user is trying to access the mailbox data, or we're not in execute state
+always_comb mask_rdata = hwif_out.mbox_dataout.dataout.swacc & ~valid_receiver;
 
 //move from idle to rdy for command when lock is acquired
 //we have a valid read, to the lock register, and it's not currently locked
 always_comb arc_MBOX_IDLE_MBOX_RDY_FOR_CMD = ~hwif_out.mbox_lock.lock.value & hwif_out.mbox_lock.lock.swmod;
 //move from rdy for cmd to rdy for dlen when cmd is written
-always_comb arc_MBOX_RDY_FOR_CMD_MBOX_RDY_FOR_DLEN = hwif_out.mbox_cmd.command.swmod & valid_user;
+always_comb arc_MBOX_RDY_FOR_CMD_MBOX_RDY_FOR_DLEN = hwif_out.mbox_cmd.command.swmod & valid_requester;
 //move from rdy for dlen to rdy for data when dlen is written
-always_comb arc_MBOX_RDY_FOR_DLEN_MBOX_RDY_FOR_DATA = hwif_out.mbox_dlen.length.swmod & valid_user;
+always_comb arc_MBOX_RDY_FOR_DLEN_MBOX_RDY_FOR_DATA = hwif_out.mbox_dlen.length.swmod & valid_requester;
 //move from rdy for data to execute uc when SoC sets execute bit
 always_comb arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC = hwif_out.mbox_execute.execute.value & soc_has_lock;
 //move from rdy for data to execute soc when uc writes to execute
@@ -152,25 +163,28 @@ always_comb arc_MBOX_EXECUTE_SOC_MBOX_EXECUTE_UC = (mbox_fsm_ps == MBOX_EXECUTE_
 //move back to IDLE and unlock when force unlock is set
 always_comb arc_FORCE_MBOX_UNLOCK = hwif_out.mbox_unlock.unlock.value;
 
-logic [31:0] mbox_dlen_in_dws, mbox_dlen_in_dwsQ;
-logic        rdptr_inc_valid;
+logic [31:0] mbox_dlen_in_dws_nxt, mbox_dlen_in_dws;
+logic [31:0] mbox_dlen_in_dws_q;
+logic latch_dlen_in_dws;
+logic rdptr_inc_valid;
 
-always_comb begin
-     mbox_dlen_in_dws = ((hwif_out.mbox_dlen.length.value >> 2) + (hwif_out.mbox_dlen.length.value[0] | hwif_out.mbox_dlen.length.value[1]));
-     mbox_dlen_in_dwsQ = (mbox_dlen_in_dws > MBOX_SIZE_IN_DW) ? MBOX_SIZE_IN_DW : mbox_dlen_in_dws;
+//capture the dlen when we change to execute states, this ensures that only the dlen programmed
+//by the client filling the mailbox is used for masking the data
+always_comb latch_dlen_in_dws = arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC | arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC | arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_SOC;
+always_comb mbox_dlen_in_dws_nxt = ((hwif_out.mbox_dlen.length.value >> 2) + (hwif_out.mbox_dlen.length.value[0] | hwif_out.mbox_dlen.length.value[1]));
+always_comb mbox_dlen_in_dws_q = (mbox_dlen_in_dws > MBOX_SIZE_IN_DW) ? MBOX_SIZE_IN_DW : mbox_dlen_in_dws; 
 
-     // Restrict mailbox dataout read once the DLEN in "DWORDS" is reached
-     // Increment read pointer only if the mailbox data length in DWORDS is non-zero and the rdptr didnt pass
-     rdptr_inc_valid  =  (|mbox_dlen_in_dwsQ) & ((mbox_rdptr + 'd1) <= mbox_dlen_in_dwsQ);
+ // Restrict mailbox dataout read once the DLEN in "DWORDS" is reached
+ // Increment read pointer only if the mailbox data length in DWORDS is non-zero and the rdptr didnt pass
+always_comb rdptr_inc_valid  =  (|mbox_dlen_in_dws_q) & ((mbox_rdptr + 'd1) <= mbox_dlen_in_dws_q);
 
-end
+
 
 always_comb begin : mbox_fsm_combo
     soc_has_lock_nxt = 0;
-    rst_mbox_rdptr = 0;
+    rst_mbox_rdptr = 0; //resetting the read pointer will pre-load dataout
     rst_mbox_wrptr = 0;
     inc_rdptr = 0; inc_wrptr = 0;
-    mbox_protocol_sram_we = '0;
     uc_mbox_data_avail = 0;
     soc_mbox_data_avail = 0;
     mbox_fsm_ns = mbox_fsm_ps;
@@ -204,21 +218,18 @@ always_comb begin : mbox_fsm_combo
         end
         MBOX_RDY_FOR_DATA: begin
             //update the write pointers to sram when accessing datain register
-            inc_wrptr = hwif_out.mbox_datain.datain.swmod & valid_user;
-            mbox_protocol_sram_we = hwif_out.mbox_datain.datain.swmod & valid_user;
+            inc_wrptr = hwif_out.mbox_datain.datain.swmod & valid_requester;
             if (arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC) begin
                 mbox_fsm_ns = MBOX_EXECUTE_UC;
                 //reset wrptr so receiver can write response
-                rst_mbox_wrptr = 1'b1;
-                //load the first dword when we move to execute
-                inc_rdptr = 1'b1;
+                rst_mbox_wrptr = 1;
+                rst_mbox_rdptr = 1;
             end
             else if (arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC) begin
                 mbox_fsm_ns = MBOX_EXECUTE_SOC;
                 //reset wrptr so receiver can write response
-                rst_mbox_wrptr = 1'b1;
-                //load the first dword when we move to execute
-                inc_rdptr = 1'b1;
+                rst_mbox_wrptr = 1;
+                rst_mbox_rdptr = 1;
             end
             if (arc_FORCE_MBOX_UNLOCK) begin
                 mbox_fsm_ns = MBOX_IDLE;
@@ -233,7 +244,6 @@ always_comb begin : mbox_fsm_combo
             uc_mbox_data_avail = 1;
             inc_rdptr = dmi_inc_rdptr | (hwif_out.mbox_dataout.dataout.swacc & ~req_data.soc_req);
             inc_wrptr = hwif_out.mbox_datain.datain.swmod & ~req_data.soc_req;
-            mbox_protocol_sram_we = hwif_out.mbox_datain.datain.swmod & ~req_data.soc_req;
             if (arc_MBOX_EXECUTE_UC_MBOX_IDLE) begin
                 mbox_fsm_ns = MBOX_IDLE;
                 rst_mbox_wrptr = 1;
@@ -256,9 +266,7 @@ always_comb begin : mbox_fsm_combo
         //Only SoC can write to datain here to respond to uC
         MBOX_EXECUTE_SOC: begin
             soc_mbox_data_avail = 1;
-            inc_rdptr = (dmi_inc_rdptr | (hwif_out.mbox_dataout.dataout.swacc & req_data.soc_req & valid_user));
-            inc_wrptr = hwif_out.mbox_datain.datain.swmod & req_data.soc_req & valid_user;
-            mbox_protocol_sram_we = hwif_out.mbox_datain.datain.swmod & req_data.soc_req & valid_user;
+            inc_rdptr = (dmi_inc_rdptr | (hwif_out.mbox_dataout.dataout.swacc & req_data.soc_req & valid_receiver));
             if (arc_MBOX_EXECUTE_SOC_MBOX_IDLE) begin
                 mbox_fsm_ns = MBOX_IDLE;
                 rst_mbox_wrptr = 1;
@@ -284,8 +292,8 @@ end
 
 
 //increment read ptr only if its allowed
-logic inc_rdptrQ;
-assign inc_rdptrQ = inc_rdptr & rdptr_inc_valid;
+always_comb mbox_protocol_sram_rd = (inc_rdptr & rdptr_inc_valid) | rst_mbox_rdptr;
+always_comb mbox_protocol_sram_we = inc_wrptr;
 
 //flops
 always_ff @(posedge clk or negedge rst_b) begin
@@ -295,18 +303,21 @@ always_ff @(posedge clk or negedge rst_b) begin
         dir_req_rd_phase <= '0;
         mbox_wrptr <= '0;
         mbox_rdptr <= '0;
-        inc_rdptr_f <= '0;
+        mbox_protocol_sram_rd_f <= '0;
         sram_ecc_cor_waddr <= '0;
+        mbox_dlen_in_dws <= '0;
     end
     else begin
         mbox_fsm_ps <= mbox_fsm_ns;
         soc_has_lock <= arc_MBOX_IDLE_MBOX_RDY_FOR_CMD ? soc_has_lock_nxt : soc_has_lock;
         dir_req_rd_phase <= dir_req_dv_q & ~sha_sram_req_dv & ~req_data.write;
         mbox_wrptr <= (inc_wrptr | rst_mbox_wrptr) ? mbox_wrptr_nxt : mbox_wrptr;
-        mbox_rdptr <= (inc_rdptrQ | rst_mbox_rdptr) ? mbox_rdptr_nxt : mbox_rdptr;
-        inc_rdptr_f <= (inc_rdptrQ | inc_rdptr_f) ? inc_rdptrQ : inc_rdptr_f;
+        mbox_rdptr <= (mbox_protocol_sram_rd) ? mbox_rdptr_nxt : mbox_rdptr;
+        mbox_protocol_sram_rd_f <= (mbox_protocol_sram_rd | mbox_protocol_sram_rd_f) ? (mbox_protocol_sram_rd) : mbox_protocol_sram_rd_f;
         sram_ecc_cor_waddr <= /*dir_req_rd_phase ? sram_ecc_cor_waddr :*/
                                                  sram_rdaddr;
+                             
+        mbox_dlen_in_dws <= latch_dlen_in_dws ? mbox_dlen_in_dws_nxt : mbox_dlen_in_dws;                    
     end
 end
 
@@ -324,7 +335,7 @@ always_comb dir_req_addr = sha_sram_req_dv ? sha_sram_req_addr : req_data.addr[$
 
 always_comb req_hold = (dir_req_dv_q & ~req_data.write) | 
                        (dir_req_dv & sha_sram_req_dv) |
-                       (hwif_out.mbox_dataout.dataout.swacc & inc_rdptr_f);
+                       (hwif_out.mbox_dataout.dataout.swacc & mbox_protocol_sram_rd_f);
 
 always_comb sha_sram_hold = sram_single_ecc_error/* || sram_ecc_cor_we*/;
 
@@ -332,7 +343,8 @@ always_comb sha_sram_hold = sram_single_ecc_error/* || sram_ecc_cor_we*/;
 always_comb sram_ecc_cor_we = sram_single_ecc_error; // TODO we probably want this to be a reg-stage to reduce combo logic SRAM -> rdata -> wdata -> SRAM
 always_comb sram_we = dir_req_wr_ph | mbox_protocol_sram_we | sram_ecc_cor_we;
 //align the direct address to a word
-always_comb sram_rdaddr = dir_req_dv_q ? dir_req_addr : mbox_rdptr;
+always_comb sram_rdaddr = dir_req_dv_q ? dir_req_addr : 
+                          rst_mbox_rdptr ? 'd0 : mbox_rdptr;
 always_comb sram_waddr = sram_ecc_cor_we ? sram_ecc_cor_waddr :
                          dir_req_dv_q    ? dir_req_addr : mbox_wrptr;
 //data phase after request for direct access
@@ -340,8 +352,8 @@ always_comb sram_waddr = sram_ecc_cor_we ? sram_ecc_cor_waddr :
 always_comb rdata = dir_req_rd_phase ? sram_rdata_cor : ({DATA_W{~mask_rdata}} & csr_rdata);
 
 always_comb begin: mbox_sram_inf
-    //read live on direct access, or when pointer has been incremented, or if write was made to same address as rdptr
-    mbox_sram_req.cs = dir_req_dv_q | mbox_protocol_sram_we | inc_rdptr | sram_ecc_cor_we;
+    //read live on direct access, or when pointer has been incremented, for pre-load on read pointer reset, or ecc correction
+    mbox_sram_req.cs = dir_req_dv_q | mbox_protocol_sram_we | mbox_protocol_sram_rd | sram_ecc_cor_we;
     mbox_sram_req.we = sram_we;
     mbox_sram_req.addr = sram_we ? sram_waddr : sram_rdaddr;
     mbox_sram_req.wdata.data = sram_ecc_cor_we ? sram_rdata_cor     : sram_wdata;
@@ -364,7 +376,7 @@ initial assert(DATA_W == 32) else
     $error("%m::rvecc_encode supports 32-bit data width; must change SRAM ECC implementation to support DATA_W = %d", DATA_W);
 // synthesis translate_on
 rvecc_decode ecc_decode (
-    .en              (dir_req_rd_phase | inc_rdptr_f),
+    .en              (dir_req_rd_phase | mbox_protocol_sram_rd_f),
     .sed_ded         ( 1'b0                ),    // 1 : means only detection
     .din             (sram_rdata           ),
     .ecc_in          (sram_rdata_ecc       ),
@@ -386,9 +398,13 @@ always_comb mbox_wrptr_nxt = rst_mbox_wrptr ? '0 :
 
 
 //in execute state we increment the pointer each time we write
-always_comb mbox_rdptr_nxt = rst_mbox_rdptr ? '0 :
-                             inc_rdptrQ ? mbox_rdptr + 'd1 : 
-                                         mbox_rdptr;
+always_comb mbox_rdptr_nxt = rst_mbox_rdptr ? 'd1 :
+                             mbox_protocol_sram_rd ? mbox_rdptr + 'd1 : 
+                                                     mbox_rdptr;
+
+//Intterupts
+//Notify uC when it has the lock and SoC is requesting the lock
+always_comb soc_req_mbox_lock = hwif_out.mbox_lock.lock.value & ~soc_has_lock & hwif_out.mbox_lock.lock.swmod & req_data.soc_req;
 
 always_comb hwif_in.cptra_rst_b = rst_b;
 always_comb hwif_in.mbox_user.user.next = req_data.user;
@@ -399,7 +415,8 @@ always_comb hwif_in.soc_req = req_data.soc_req;
 //don't update mailbox data if lock hasn't been acquired
 //if uc has the lock, check that this request is from uc
 //if soc has the lock, check that this request is from soc and user attributes match
-always_comb hwif_in.valid_user = valid_user;
+always_comb hwif_in.valid_requester = valid_requester;
+always_comb hwif_in.valid_receiver = valid_receiver;
 
 //indicate that requesting user is setting the lock
 always_comb hwif_in.lock_set = arc_MBOX_IDLE_MBOX_RDY_FOR_CMD;
@@ -408,12 +425,14 @@ always_comb hwif_in.lock_set = arc_MBOX_IDLE_MBOX_RDY_FOR_CMD;
 always_comb hwif_in.mbox_dataout.dataout.swwe = '0; //no sw write enable, but need the storage element
 //update dataout whenever we read from the sram for a dataout access
 //we load the first entry on the arc to execute
-always_comb hwif_in.mbox_dataout.dataout.we = inc_rdptr_f;
+always_comb hwif_in.mbox_dataout.dataout.we = mbox_protocol_sram_rd_f;
 always_comb hwif_in.mbox_dataout.dataout.next = sram_rdata_cor;
 //clear the lock when moving from execute to idle
 always_comb hwif_in.mbox_lock.lock.hwclr = arc_MBOX_EXECUTE_SOC_MBOX_IDLE | arc_MBOX_EXECUTE_UC_MBOX_IDLE | arc_FORCE_MBOX_UNLOCK;
 //clear the mailbox status when we go back to IDLE
 always_comb hwif_in.mbox_status.status.hwclr = arc_MBOX_EXECUTE_SOC_MBOX_IDLE | arc_MBOX_EXECUTE_UC_MBOX_IDLE | arc_FORCE_MBOX_UNLOCK;
+//clear the execute register when we force unlock
+always_comb hwif_in.mbox_execute.execute.hwclr = arc_FORCE_MBOX_UNLOCK;
 // Set mbox_csr status fields in response to ECC errors
 always_comb hwif_in.mbox_status.ecc_single_error.hwset = sram_single_ecc_error;
 always_comb hwif_in.mbox_status.ecc_double_error.hwset = sram_double_ecc_error;
@@ -455,9 +474,7 @@ mbox_csr1(
     .hwif_out(hwif_out)
 );
 
-`ifdef CLP_ASSERT_ON
 `CALIPTRA_ASSERT_MUTEX(ERR_MBOX_ACCESS_MUTEX, {dir_req_dv_q, mbox_protocol_sram_we, inc_rdptr}, clk, rst_b)
 `CALIPTRA_ASSERT_MUTEX(ERR_MBOX_DIR_SHA_COLLISION, {dir_req_dv, sha_sram_req_dv}, clk, rst_b)
-`endif
 
 endmodule

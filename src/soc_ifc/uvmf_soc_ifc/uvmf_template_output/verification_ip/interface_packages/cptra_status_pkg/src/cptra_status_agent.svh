@@ -36,6 +36,7 @@ class cptra_status_agent  extends uvmf_parameterized_agent #(
   `uvm_component_utils( cptra_status_agent )
 
 // pragma uvmf custom class_item_additional begin
+  extern task handle_reset(string kind = "HARD");
 // pragma uvmf custom class_item_additional end
 
 // ****************************************************************************
@@ -63,5 +64,8 @@ class cptra_status_agent  extends uvmf_parameterized_agent #(
 endclass
 
 // pragma uvmf custom external begin
+task cptra_status_agent::handle_reset(string kind = "HARD");
+    monitor.handle_reset(kind);
+endtask
 // pragma uvmf custom external end
 

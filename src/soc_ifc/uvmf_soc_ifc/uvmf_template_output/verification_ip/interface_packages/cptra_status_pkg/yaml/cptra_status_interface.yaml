@@ -27,11 +27,11 @@ uvmf:
       - dir: output
         name: obf_field_entropy
         reset_value: '''bz'
-        width: '[''8'', ''32'']'
+        width: '[''`CLP_OBF_FE_DWORDS'', ''32'']'
       - dir: output
         name: obf_uds_seed
         reset_value: '''bz'
-        width: '[''12'', ''32'']'
+        width: '[''`CLP_OBF_UDS_DWORDS'', ''32'']'
       - dir: output
         name: soc_ifc_error_intr
         reset_value: '''bz'
@@ -61,58 +61,58 @@ uvmf:
       transaction_constraints: []
       transaction_vars:
       - comment: ''
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
         name: soc_ifc_err_intr_pending
         type: bit
         unpacked_dimension: ''
       - comment: ''
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
         name: soc_ifc_notif_intr_pending
         type: bit
         unpacked_dimension: ''
       - comment: ''
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
         name: sha_err_intr_pending
         type: bit
         unpacked_dimension: ''
       - comment: ''
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
         name: sha_notif_intr_pending
         type: bit
         unpacked_dimension: ''
       - comment: ''
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
         name: noncore_rst_asserted
         type: bit
         unpacked_dimension: ''
       - comment: ''
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
         name: uc_rst_asserted
         type: bit
         unpacked_dimension: ''
       - comment: ''
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
         name: cptra_obf_key_reg
         type: bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0]
         unpacked_dimension: ''
       - comment: ''
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
         name: obf_field_entropy
-        type: bit [7:0] [31:0]
+        type: bit [`CLP_OBF_FE_DWORDS-1:0] [31:0]
         unpacked_dimension: ''
       - comment: ''
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
         name: obf_uds_seed
-        type: bit [11:0] [31:0]
+        type: bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0]
         unpacked_dimension: ''
       - comment: ''
         iscompare: 'True'

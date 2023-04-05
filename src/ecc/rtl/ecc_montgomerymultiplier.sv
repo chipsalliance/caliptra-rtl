@@ -45,6 +45,7 @@ module ecc_montgomerymultiplier #(
     // Clock and reset.
     input  wire                  clk,
     input  wire                  reset_n,
+    input  wire                  zeroize,
 
     // DATA PORT
     input  wire                  start_i,
@@ -110,6 +111,7 @@ module ecc_montgomerymultiplier #(
         (
         .clk(clk),
         .reset_n(reset_n),
+        .zeroize(zeroize),
         .start_in(start_i),
         .a_in(a_array[0]),
         .b_in(b_array[0]),
@@ -133,6 +135,7 @@ module ecc_montgomerymultiplier #(
                 (
                 .clk(clk),
                 .reset_n(reset_n),
+                .zeroize(zeroize),
                 .start_in(start_i),
                 .a_in(a_array[i0+1]),
                 .b_in(b_array[i0+1]),
@@ -157,6 +160,7 @@ module ecc_montgomerymultiplier #(
         (
         .clk(clk),
         .reset_n(reset_n),
+        .zeroize(zeroize),
         .start_in(start_i),
         .a_in(a_array[PE_UNITS+1]),
         .b_in(b_array[PE_UNITS+1]),
@@ -176,6 +180,8 @@ module ecc_montgomerymultiplier #(
     begin
         if (~reset_n)
             last_s_reg <= 'b0;
+        else if (zeroize)
+            last_s_reg <= 'b0;
         else if (start_i)
             last_s_reg <= 'b0;
         else
@@ -187,6 +193,8 @@ module ecc_montgomerymultiplier #(
     begin
         if (~reset_n)
             odd <= 0;
+        else if (zeroize)
+            odd <= 0;
         else if (start_i)
             odd <= 1'b1;
         else
@@ -196,6 +204,12 @@ module ecc_montgomerymultiplier #(
     always_ff @(posedge clk or negedge reset_n) 
     begin : input_reg
         if (~reset_n) begin
+            a_reg <= 'b0;
+            b_reg <= 'b0;
+            p_reg <= 'b0;
+            n_prime_reg <= 'b0;
+        end
+        else if (zeroize) begin
             a_reg <= 'b0;
             b_reg <= 'b0;
             p_reg <= 'b0;
@@ -245,6 +259,8 @@ module ecc_montgomerymultiplier #(
                 always_ff @(posedge clk or negedge reset_n) begin
                     if (~reset_n)
                         t_reg[t0] <= '0;
+                    else if (zeroize)
+                        t_reg[t0] <= '0;
                     else if (push_reg[(2*(PE_UNITS+1)) - t0])
                         t_reg[t0] <= s_array[0];
                     else
@@ -256,6 +272,8 @@ module ecc_montgomerymultiplier #(
                 localparam bit [t0_WIDTH-1:0] t0_unsigned = t0[t0_WIDTH-1:0];
                 always_ff @(posedge clk or negedge reset_n) begin
                     if (~reset_n)
+                        t_reg[t0] <= '0;
+                    else if (zeroize)
                         t_reg[t0] <= '0;
                     else if (push_reg[(2*(PE_UNITS+1)) - t0])
                         t_reg[t0] <= s_array[t0_unsigned >> 1];
@@ -300,6 +318,8 @@ module ecc_montgomerymultiplier #(
             always_ff @(posedge clk or negedge reset_n) begin
                 if (~reset_n)
                     t_subtracted_reg[t3] <= '0;
+                else if (zeroize)
+                    t_subtracted_reg[t3] <= '0;
                 else if (push_reg[(2*(PE_UNITS+1)) - t3])
                     t_subtracted_reg[t3] <= sub_res[t3][RADIX-1 : 0];
                 else 
@@ -323,6 +343,8 @@ module ecc_montgomerymultiplier #(
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n)
             push_reg <= 'b0;
+        else if (zeroize)
+            push_reg <= 'b0;
         else if (start_i)
             push_reg[(3*S_NUM)-1] <= 1'b1;
         else // one shift to right
@@ -331,6 +353,8 @@ module ecc_montgomerymultiplier #(
     
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n)
+            push_reg_eq_zero_ff <= '0;
+        else if (zeroize)
             push_reg_eq_zero_ff <= '0;
         else
             push_reg_eq_zero_ff <= push_reg_eq_zero;

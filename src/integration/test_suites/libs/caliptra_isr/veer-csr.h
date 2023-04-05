@@ -73,5 +73,31 @@ enum {
 #define MCAUSE_NMI_CODE_FAST_INT_DCCM_VALUE     (MCAUSE_NMI_BIT_MASK | 0x1001)
 #define MCAUSE_NMI_CODE_FAST_INT_NONDCCM_VALUE  (MCAUSE_NMI_BIT_MASK | 0x1002)
 
+/*******************************************
+ * mdeau - MRW - Data base register.
+ */
+static inline uint_xlen_t csr_read_mdeau(void) {
+    uint_xlen_t value;
+    __asm__ volatile ("csrr    %0, 0xbc0"
+                      : "=r" (value)  /* output : register */
+                      : /* input : none */
+                      : /* clobbers: none */);
+    return value;
+}
+static inline void csr_write_mdeau(uint_xlen_t value) {
+    __asm__ volatile ("csrw    0xbc0, %0"
+                      : /* output: none */
+                      : "r" (value) /* input : from register */
+                      : /* clobbers: none */);
+}
+static inline uint_xlen_t csr_read_write_mdeau(uint_xlen_t new_value) {
+    uint_xlen_t prev_value;
+    __asm__ volatile ("csrrw    %0, 0xbc0, %1"
+                      : "=r" (prev_value) /* output: register %0 */
+                      : "r" (new_value)  /* input : register */
+                      : /* clobbers: none */);
+    return prev_value;
+}
+
 
 #endif // #define VEER_CSR_H

@@ -203,13 +203,13 @@ end
   // pragma uvmf custom interface_item_additional begin
   function bit any_signal_changed();
       return |(ready_for_fuses_i       ^  ready_for_fuses_o          ) ||
-             |(ready_for_fw_push_i     & !ready_for_fw_push_o        ) ||
-             |(ready_for_runtime_i     & !ready_for_runtime_o        ) ||
-             |(mailbox_data_avail_i    & !mailbox_data_avail_o       ) ||
-             |(mailbox_flow_done_i     & !mailbox_flow_done_o        ) ||
+             |(ready_for_fw_push_i     ^  ready_for_fw_push_o        ) ||
+             |(ready_for_runtime_i     ^  ready_for_runtime_o        ) ||
+             |(mailbox_data_avail_i    ^  mailbox_data_avail_o       ) ||
+             |(mailbox_flow_done_i     ^  mailbox_flow_done_o        ) ||
              |(cptra_error_fatal_i     & !cptra_error_fatal_o        ) ||
              |(cptra_error_non_fatal_i & !cptra_error_non_fatal_o    ) ||
-             |(trng_req_i              & !trng_req_o                 ) ||
+             |(trng_req_i              ^  trng_req_o                 ) ||
              |(generic_output_wires_i  ^  generic_output_wires_o     );
   endfunction
   // pragma uvmf custom interface_item_additional end
@@ -282,10 +282,10 @@ end
        //      ready_for_fw_push_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //      ready_for_runtime_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //      mailbox_data_avail_o <= soc_ifc_status_initiator_struct.xyz;  //     
+       //      mailbox_flow_done_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //      cptra_error_fatal_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //      cptra_error_non_fatal_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //      trng_req_o <= soc_ifc_status_initiator_struct.xyz;  //     
-       //      mailbox_flow_done_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //      generic_output_wires_o <= soc_ifc_status_initiator_struct.xyz;  //    [63:0] 
        //    Initiator inout signals
     // Initiate a transfer using the data received.
@@ -370,7 +370,7 @@ bit first_transfer=1;
 //  end
     // Wait for next transfer then gather info from intiator about the transfer.
     // Place the data into the soc_ifc_status_initiator_struct.
-    while (!any_signal_changed()) @(posedge clk_i);
+    do @(posedge clk_i); while (!any_signal_changed());
     ready_for_fuses_o              <= ready_for_fuses_i      ;
     ready_for_fw_push_o            <= ready_for_fw_push_i    ;
     ready_for_runtime_o            <= ready_for_runtime_i    ;

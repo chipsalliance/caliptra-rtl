@@ -16,6 +16,7 @@
 #ifndef CALIPTRA_RT_H
   #define CALIPTRA_RT_H
 
+void nmi_handler();
 void caliptra_rt();
 
 #endif

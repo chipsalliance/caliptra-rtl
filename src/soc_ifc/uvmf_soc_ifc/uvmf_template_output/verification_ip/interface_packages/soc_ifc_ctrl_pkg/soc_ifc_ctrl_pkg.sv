@@ -83,7 +83,10 @@ package soc_ifc_ctrl_pkg;
    //    be sure to add the sequence file here so that it will be
    //    compiled as part of the interface package.  Be sure to place
    //    the new sequence after any base sequences of the new sequence.
+   `include "src/soc_ifc_ctrl_reset_sequence_base.svh"
    `include "src/soc_ifc_ctrl_poweron_sequence.svh"
+   `include "src/soc_ifc_ctrl_reset_warm_sequence.svh"
+   `include "src/soc_ifc_ctrl_reset_cold_sequence.svh"
    // pragma uvmf custom package_item_additional end
 
 endpackage
