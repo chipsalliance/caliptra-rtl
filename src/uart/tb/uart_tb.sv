@@ -324,7 +324,7 @@ module uart_tb
   task run_test;
     logic [31:0] random_data;
     logic [7:0]  exp_data, act_data;
-    logic [31:0] ctrl = '0;
+    logic [31:0] ctrl;
     logic [63:0] nco;
 
     repeat (1000) @(posedge clk_tb);
@@ -347,6 +347,7 @@ module uart_tb
     nco = nco / 64'd100_000_000;
 
     $display("nco = %d", nco);
+    ctrl = '0;
     ctrl[31:16] = nco[15:0];
     ctrl[1:0] = 2'b11;
     write_single_word(ADDR_CTRL, ctrl);  // Enable RX/TX
