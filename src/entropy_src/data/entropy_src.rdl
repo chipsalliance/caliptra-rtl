@@ -558,76 +558,75 @@ addrmap entropy_src {
             desc = "This field will hold a running count of
             the total alert count, which is a sum of all of the other
             counters in the !!ALERT_FAIL_COUNTS register.
-            It will be reset after every
-            passing test sequence. If an alert is signaled, this value
-            will persist until it is cleared.";
+            It will be reset after every passing test sequence unless in firmware override mode (extract and insert only).
+            If an alert is signaled, this value will persist until it is cleared.";
             sw = r;
         } ANY_FAIL_COUNT[15:0];
     } ALERT_SUMMARY_FAIL_COUNTS @ 0xA4;
     reg {
         field {
             desc = "This field will hold a running count of test failures that
-            contribute to the total alert count. It will be reset after every
-            passing test sequence. If an alert is signaled, this value
-            will persist until it is cleared.";
+            contribute to the total alert count.
+            It will be reset after every passing test sequence unless in firmware override mode (extract and insert only).
+            If an alert is signaled, this value will persist until it is cleared.";
             sw = r;
         } REPCNT_FAIL_COUNT[7:4];
         field {
             desc = "This field will hold a running count of test failures that
-            contribute to the total alert count. It will be reset after every
-            passing test sequence. If an alert is signaled, this value
-            will persist until it is cleared.";
+            contribute to the total alert count.
+            It will be reset after every passing test sequence unless in firmware override mode (extract and insert only).
+            If an alert is signaled, this value will persist until it is cleared.";
             sw = r;
         } ADAPTP_HI_FAIL_COUNT[11:8];
         field {
             desc = "This field will hold a running count of test failures that
-            contribute to the total alert count. It will be reset after every
-            passing test sequence. If an alert is signaled, this value
-            will persist until it is cleared.";
+            contribute to the total alert count.
+            It will be reset after every passing test sequence unless in firmware override mode (extract and insert only).
+            If an alert is signaled, this value will persist until it is cleared.";
             sw = r;
         } ADAPTP_LO_FAIL_COUNT[15:12];
         field {
             desc = "This field will hold a running count of test failures that
-            contribute to the total alert count. It will be reset after every
-            passing test sequence. If an alert is signaled, this value
-            will persist until it is cleared.";
+            contribute to the total alert count.
+            It will be reset after every passing test sequence unless in firmware override mode (extract and insert only).
+            If an alert is signaled, this value will persist until it is cleared.";
             sw = r;
         } BUCKET_FAIL_COUNT[19:16];
         field {
             desc = "This field will hold a running count of test failures that
-            contribute to the total alert count. It will be reset after every
-            passing test sequence. If an alert is signaled, this value
-            will persist until it is cleared.";
+            contribute to the total alert count.
+            It will be reset after every passing test sequence unless in firmware override mode (extract and insert only).
+            If an alert is signaled, this value will persist until it is cleared.";
             sw = r;
         } MARKOV_HI_FAIL_COUNT[23:20];
         field {
             desc = "This field will hold a running count of test failures that
-            contribute to the total alert count. It will be reset after every
-            passing test sequence. If an alert is signaled, this value
-            will persist until it is cleared.";
+            contribute to the total alert count.
+            It will be reset after every passing test sequence unless in firmware override mode (extract and insert only).
+            If an alert is signaled, this value will persist until it is cleared.";
             sw = r;
         } MARKOV_LO_FAIL_COUNT[27:24];
         field {
             desc = "This field will hold a running count of test failures that
-            contribute to the total alert count. It will be reset after every
-            passing test sequence. If an alert is signaled, this value
-            will persist until it is cleared.";
+            contribute to the total alert count.
+            It will be reset after every passing test sequence unless in firmware override mode (extract and insert only).
+            If an alert is signaled, this value will persist until it is cleared.";
             sw = r;
         } REPCNTS_FAIL_COUNT[31:28];
     } ALERT_FAIL_COUNTS @ 0xA8;
     reg {
         field {
             desc = "This field will hold a running count of test failures that
-            contribute to the total alert count. It will be reset after every
-            passing test sequence. If an alert is signaled, this value
-            will persist until it is cleared.";
+            contribute to the total alert count.
+            It will be reset after every passing test sequence unless in firmware override mode (extract and insert only).
+            If an alert is signaled, this value will persist until it is cleared.";
             sw = r;
         } EXTHT_HI_FAIL_COUNT[3:0];
         field {
             desc = "This field will hold a running count of test failures that
-            contribute to the total alert count. It will be reset after every
-            passing test sequence. If an alert is signaled, this value
-            will persist until it is cleared.";
+            contribute to the total alert count.
+            It will be reset after every passing test sequence unless in firmware override mode (extract and insert only).
+            If an alert is signaled, this value will persist until it is cleared.";
             sw = r;
         } EXTHT_LO_FAIL_COUNT[7:4];
     } EXTHT_FAIL_COUNTS @ 0xAC;
