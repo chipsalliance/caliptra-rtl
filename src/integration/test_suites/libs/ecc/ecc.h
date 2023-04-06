@@ -33,5 +33,5 @@ typedef struct {
 void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubkey_y);
 void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_io sign_s);
 void ecc_verifying_flow(ecc_io msg, ecc_io pubkey_x, ecc_io pubkey_y, ecc_io sign_r, ecc_io sign_s);
-
+void ecc_pcr_signing_flow(ecc_io iv, ecc_io sign_r, ecc_io sign_s);
 #endif

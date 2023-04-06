@@ -139,6 +139,7 @@ module caliptra_top_tb_services
 
     logic                       inject_hmac_key;
     logic                       inject_ecc_seed;
+    logic                       inject_ecc_privkey;
     logic                       inject_sha_block;
     logic                       inject_random_data;
 
@@ -163,9 +164,11 @@ module caliptra_top_tb_services
     //         8'h2 : 8'h5  - Do nothing
     //         8'h6 : 8'h7E - WriteData is an ASCII character - dump to console.log
     //         8'h7F        - Do nothing
-    //         8'h80: 8'h9f - Inject ECC_SEED to kv_key register
-    //         8'ha0: 8'hbf - Inject HMAC_KEY to kv_key register
-    //         8'hc0: 8'hdf - Inject SHA_BLOCK to kv_key register
+    //         8'h80: 8'h87 - Inject ECC_SEED to kv_key register
+    //         8'h88: 8'h8f - Inject ECC_SEED to kv_key register
+    //         8'h90        - Issue PCR singing    
+    //         8'ha0: 8'ha7 - Inject HMAC_KEY to kv_key register
+    //         8'hc0: 8'hc7 - Inject SHA_BLOCK to kv_key register
     //         8'hee        - Issue random warm reset
     //         8'hef        - Enable scan mode
     //         8'hf0        - Disable scan mode
@@ -216,6 +219,7 @@ module caliptra_top_tb_services
     //keyvault injection hooks
     //Inject data to KV key reg
     logic [0:11][31:0]   ecc_seed_tb    = 384'h8FA8541C82A392CA74F23ED1DBFD73541C5966391B97EA73D744B0E34B9DF59ED0158063E39C09A5A055371EDF7A5441;
+    logic [0:11][31:0]   ecc_privkey_tb = 384'hF274F69D163B0C9F1FC3EBF4292AD1C4EB3CEC1C5A7DDE6F80C14292934C2055E087748D0A169C772483ADEE5EE70E17;
     logic [0:11][31:0]   hmac_key_tb    = 384'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b;
     logic [0:11][31:0]   sha_block_tb   = 384'hb1eeef324b499f19eba322215fe3ce19c9f000b698d2b2dab7145015046cc86d049ee15ad59dcd1564f30112e06444cb;
     genvar dword_i, slot_id;
@@ -224,24 +228,36 @@ module caliptra_top_tb_services
             for (dword_i=0; dword_i < 12; dword_i++) begin : inject_dword_loop
                 always @(negedge clk) begin
                     //inject valid seed dest and seed value to key reg
-                    if(((WriteData[7:0] & 8'hE0) == 8'h80) && mailbox_write) begin
+                    if(((WriteData[7:0] & 8'hf8) == 8'h80) && mailbox_write) begin
                         //$system("/home/mojtabab/workspace_aha_poc/ws1/Caliptra/src/ecc/tb/ecdsa_secp384r1.exe");
                         inject_ecc_seed <= 1'b1;
-                        if (((WriteData[7:0] & 8'h1f) == slot_id)) begin
+                        if (((WriteData[7:0] & 8'h07) == slot_id)) begin
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 6'b10000;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b10000;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = ecc_seed_tb[dword_i][31 : 0];
                         end
                     end
-                    //inject valid hmac_key dest and hmac_key value to key reg
-                    else if(((WriteData[7:0] & 8'hE0) == 8'ha0) && mailbox_write) begin
-                        inject_hmac_key <= 1'b1;
-                        if (((WriteData[7:0] & 8'h1f) == slot_id)) begin
+                    //inject privkey value to key reg
+                    else if(((WriteData[7:0] & 8'hf8) == 8'h88) && mailbox_write) begin
+                        inject_ecc_privkey <= 1'b1;
+                        if (((WriteData[7:0] & 8'h07) == slot_id)) begin
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 6'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b1000;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = ecc_privkey_tb[dword_i][31 : 0];
+                        end
+                    end
+                    //inject valid hmac_key dest and hmac_key value to key reg
+                    else if(((WriteData[7:0] & 8'hf8) == 8'ha0) && mailbox_write) begin
+                        inject_hmac_key <= 1'b1;
+                        if (((WriteData[7:0] & 8'h07) == slot_id)) begin
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
@@ -249,11 +265,11 @@ module caliptra_top_tb_services
                         end
                     end
                     //inject valid sha dest and sha_block value to key reg
-                    else if(((WriteData[7:0] & 8'hE0) == 8'hc0) && mailbox_write) begin
+                    else if(((WriteData[7:0] & 8'hf8) == 8'hc0) && mailbox_write) begin
                         inject_sha_block <= 1'b1;
-                        if (((WriteData[7:0] & 8'h1f) == slot_id)) begin
+                        if (((WriteData[7:0] & 8'h07) == slot_id)) begin
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 6'b100;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b100;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
@@ -273,6 +289,7 @@ module caliptra_top_tb_services
                     end
                     else begin
                         inject_ecc_seed <= '0;
+                        inject_ecc_privkey <= '0;
                         inject_hmac_key <= '0;
                         inject_sha_block <= '0;
                         inject_random_data <= '0;
@@ -349,6 +366,23 @@ module caliptra_top_tb_services
             end
         end
     endgenerate
+
+    logic [0:11][31:0]   ecc_msg_tb    = 384'hC8F518D4F3AA1BD46ED56C1C3C9E16FB800AF504DB98843548C5F623EE115F73D4C62ABC06D303B5D90D9A175087290D;
+    generate 
+        for (genvar dword = 0; dword < 12; dword++) begin
+            always@(posedge clk) begin
+                if((WriteData[7:0] == 8'h90) && mailbox_write) begin
+                    force caliptra_top_dut.sha512.sha512_inst.pcr_sign_we = 1'b1;
+                    force caliptra_top_dut.sha512.sha512_inst.pcr_sign[dword] = ecc_msg_tb[11-dword][31 : 0];
+                end
+                else begin
+                    release caliptra_top_dut.sha512.sha512_inst.pcr_sign_we;
+                    release caliptra_top_dut.sha512.sha512_inst.pcr_sign[dword];
+                end
+            end
+        end
+    endgenerate
+
 
     always@(negedge clk) begin
 

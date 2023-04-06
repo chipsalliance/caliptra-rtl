@@ -104,10 +104,13 @@ module sha512
   reg [DATA_WIDTH-1 : 0][BLOCK_NUM_DWORDS-1 : 0]    block_reg ;
   reg [DIG_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0]      digest_reg;
   reg [KV_NUM_DWORDS -1 : 0][DATA_WIDTH-1 : 0]      kv_reg;
+  
   reg [KV_NUM_DWORDS -1 : 0][DATA_WIDTH-1 : 0]      pcr_sign_reg;
+  logic [KV_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0]     pcr_sign;
+  logic                                             pcr_sign_we;
   reg                                               digest_valid_reg;
   logic [DIG_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0]    get_mask;
-
+  
   sha512_reg__in_t hwif_in;
   sha512_reg__out_t hwif_out;
   logic read_error, write_error;
@@ -171,7 +174,11 @@ module sha512
   
   assign err = read_error | write_error;
 
-  assign pcr_signing_hash = pcr_sign_reg;
+  always_comb begin // ecc_reg_writing
+      for (int dword=0; dword < KV_NUM_DWORDS; dword++)begin
+        pcr_signing_hash[dword] = pcr_sign_reg[(KV_NUM_DWORDS-1)-dword];
+      end
+  end
 
   //----------------------------------------------------------------
   // core instantiation.
@@ -230,8 +237,8 @@ module sha512
         digest_reg <= core_digest & get_mask;
       if (core_digest_valid & ~digest_valid_reg & dest_keyvault)
         kv_reg <= core_digest[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-KV_NUM_DWORDS] & get_mask[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-KV_NUM_DWORDS];
-      if (dest_data_avail & gen_hash_ip)
-        pcr_sign_reg <= core_digest[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-KV_NUM_DWORDS] & get_mask[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-KV_NUM_DWORDS];
+      if (pcr_sign_we)
+        pcr_sign_reg <= pcr_sign;
 
       block_reg_lock <= block_reg_lock_nxt;
       pcr_hash_extend_ip <= pcr_hash_extend_set ? '1 :
@@ -249,6 +256,11 @@ module sha512
     endcase
   end
 
+
+  always_comb begin
+    pcr_sign_we = (dest_data_avail & gen_hash_ip);
+    pcr_sign = core_digest[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-KV_NUM_DWORDS] & get_mask[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-KV_NUM_DWORDS];
+  end
 
   //register hw interface
   always_comb begin
