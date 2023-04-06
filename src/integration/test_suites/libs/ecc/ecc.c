@@ -320,3 +320,64 @@ void ecc_verifying_flow(ecc_io msg, ecc_io pubkey_x, ecc_io pubkey_y, ecc_io sig
     }
 
 }
+
+void ecc_pcr_signing_flow(ecc_io iv, ecc_io sign_r, ecc_io sign_s){
+    uint8_t offset;
+    volatile uint32_t * reg_ptr;
+    uint8_t fail_cmd = 0x1;
+
+    uint32_t ecc_sign_r [12];
+    uint32_t ecc_sign_s [12];
+
+    // wait for ECC to be ready
+    while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
+
+    // Program ECC IV
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_IV_11) {
+        *reg_ptr++ = iv.data[offset++];
+    }
+
+    // Enable ECC PCR SIGNING core
+    printf("\nECC PCR SIGNING\n");
+    lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
+                ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
+    
+    // wait for ECC SIGNING process to be done
+    wait_for_ecc_intr();
+    
+    // Read the data back from ECC register
+    printf("Load SIGN_R data from ECC\n");
+    reg_ptr = (uint32_t *) CLP_ECC_REG_ECC_SIGN_R_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_11) {
+        ecc_sign_r[offset] = *reg_ptr;
+        if (ecc_sign_r[offset] != sign_r.data[offset]) {
+            printf("At offset [%d], ecc_sign_r data mismatch!\n", offset);
+            printf("Actual   data: 0x%x\n", ecc_sign_r[offset]);
+            printf("Expected data: 0x%x\n", sign_r.data[offset]);
+            printf("%c", fail_cmd);
+            while(1);
+        }
+        reg_ptr++;
+        offset++;
+    }
+
+    printf("Load SIGN_S data from ECC\n");
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_11) {
+        ecc_sign_s[offset] = *reg_ptr;
+        if (ecc_sign_s[offset] != sign_s.data[offset]) {
+            printf("At offset [%d], ecc_sign_s data mismatch!\n", offset);
+            printf("Actual   data: 0x%x\n", ecc_sign_s[offset]);
+            printf("Expected data: 0x%x\n", sign_s.data[offset]);
+            printf("%c", fail_cmd);
+            while(1);
+        } 
+        reg_ptr++;
+        offset++;
+    }
+
+}

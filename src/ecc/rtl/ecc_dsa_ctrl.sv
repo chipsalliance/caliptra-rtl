@@ -334,7 +334,7 @@ module ecc_dsa_ctrl
             privkey_reg[dword] = hwif_out.ECC_PRIVKEY[11-dword].PRIVKEY.value;
             //don't store the private key generated in sw accessible register if it's going to keyvault
             hwif_in.ECC_PRIVKEY[dword].PRIVKEY.we = pcr_sign_mode | (kv_privkey_write_en & (kv_privkey_write_offset == dword)) | (privkey_we_reg & ~privkey_we_reg_ff & ~dest_keyvault);
-            hwif_in.ECC_PRIVKEY[dword].PRIVKEY.next = pcr_sign_mode ? pcr_signing_data.pcr_signing_privkey[11-dword] : kv_privkey_write_en? kv_privkey_write_data : read_reg[11-dword];
+            hwif_in.ECC_PRIVKEY[dword].PRIVKEY.next = pcr_sign_mode ? pcr_signing_data.pcr_signing_privkey[dword] : kv_privkey_write_en? kv_privkey_write_data : read_reg[11-dword];
             hwif_in.ECC_PRIVKEY[dword].PRIVKEY.hwclr = zeroize_reg;
         end
 
@@ -353,7 +353,7 @@ module ecc_dsa_ctrl
         for (int dword=0; dword < 12; dword++)begin
             msg_reg[dword] = hwif_out.ECC_MSG[11-dword].MSG.value;
             hwif_in.ECC_MSG[dword].MSG.we = pcr_sign_mode;
-            hwif_in.ECC_MSG[dword].MSG.next = pcr_signing_data.pcr_hash[11-dword];
+            hwif_in.ECC_MSG[dword].MSG.next = pcr_signing_data.pcr_hash[dword];
             hwif_in.ECC_MSG[dword].MSG.hwclr = zeroize_reg;
         end
 
