@@ -120,7 +120,7 @@ always_comb begin: datavault
     //Sticky Generic Lockable Registers in the Data Vault
     for (int entry = 0; entry < STICKY_LOCKQ_SCRATCH_NUM_ENTRIES; entry++) begin
        dv_reg_hwif_in.StickyLockableScratchRegCtrl[entry].lock_entry.swwel = dv_reg_hwif_out.StickyLockableScratchRegCtrl[entry].lock_entry.value;
-       dv_reg_hwif_in.StickyLockableScratchReg[entry].data.swwel  = dv_reg_hwif_out.StickyDataVaultCtrl[entry].lock_entry.value;
+       dv_reg_hwif_in.StickyLockableScratchReg[entry].data.swwel  = dv_reg_hwif_out.StickyLockableScratchRegCtrl[entry].lock_entry.value;
     end
     
 end
