@@ -307,8 +307,8 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
     block_reg_nxt = block_reg_nxt_pad;
   end
 
-  //don't let start address start out of range
-  always_comb mbox_start_addr = hwif_out.START_ADDRESS.ADDR.value[MBOX_ADDR_W-1:0];
+  //byte address aligning to mailbox read pointer
+  always_comb mbox_start_addr = hwif_out.START_ADDRESS.ADDR.value[MBOX_ADDR_W+1:2];
   always_comb mbox_ptr_round_up = (|hwif_out.DLEN.LENGTH.value[1:0]);
   //detect overflow of end address to indicate we want to read to the end of the mailbox
   always_comb {mbox_read_to_end, mbox_end_addr} = mbox_ptr_round_up ? mbox_start_addr + (hwif_out.DLEN.LENGTH.value>>2) + 'd1 : 
