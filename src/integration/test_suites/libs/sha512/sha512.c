@@ -68,7 +68,7 @@ void sha384_kvflow(uint8_t sha_kv_id, uint8_t store_to_kv, uint8_t digest_kv_id,
     uint32_t sha_digest [12];
 
     //inject sha block to kv key reg (in RTL)
-    block_inject_cmd = 0xc0 + (sha_kv_id & 0x1f);
+    block_inject_cmd = 0xc0 + (sha_kv_id & 0x7);
     printf("%c", block_inject_cmd);
 
     // wait for SHA to be ready
@@ -77,7 +77,7 @@ void sha384_kvflow(uint8_t sha_kv_id, uint8_t store_to_kv, uint8_t digest_kv_id,
 
     // Program block Read with 12 dwords from sha_kv_id
     lsu_write_32(CLP_SHA512_REG_SHA512_VAULT_RD_CTRL, SHA512_REG_SHA512_VAULT_RD_CTRL_READ_EN_MASK |
-                                                   ((sha_kv_id & 0x1f) << SHA512_REG_SHA512_VAULT_RD_CTRL_READ_ENTRY_LOW));
+                                                   ((sha_kv_id << SHA512_REG_SHA512_VAULT_RD_CTRL_READ_ENTRY_LOW) & SHA512_REG_SHA512_VAULT_RD_CTRL_READ_ENTRY_MASK));
 
     // Check that SHA BLOCK is loaded
     while((lsu_read_32(CLP_SHA512_REG_SHA512_VAULT_RD_STATUS) & SHA512_REG_SHA512_VAULT_RD_STATUS_VALID_MASK) == 0);
@@ -91,8 +91,7 @@ void sha384_kvflow(uint8_t sha_kv_id, uint8_t store_to_kv, uint8_t digest_kv_id,
                                                         SHA512_REG_SHA512_KV_WR_CTRL_SHA_BLOCK_DEST_VALID_MASK |
                                                         SHA512_REG_SHA512_KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK  |
                                                         SHA512_REG_SHA512_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK  |
-                                                        SHA512_REG_SHA512_KV_WR_CTRL_ECC_MSG_DEST_VALID_MASK |
-                                                        ((digest_kv_id & 0x1f) << SHA512_REG_SHA512_KV_WR_CTRL_WRITE_ENTRY_LOW));
+                                                        ((digest_kv_id << SHA512_REG_SHA512_KV_WR_CTRL_WRITE_ENTRY_LOW) & SHA512_REG_SHA512_KV_WR_CTRL_WRITE_ENTRY_MASK));
     }    
 
 

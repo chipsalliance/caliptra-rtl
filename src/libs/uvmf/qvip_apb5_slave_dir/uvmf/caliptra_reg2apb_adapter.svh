@@ -47,22 +47,32 @@ class caliptra_reg2apb_adapter #(
                              RDATA_WIDTH) this_t; 
   `uvm_object_param_utils(this_t)
 
-  bit unsigned [apb5_master_0_params::PAUSER_WIDTH-1:0] pauser_override = '1;
+  function new(string name = "reg2apb_adapter");
+    super.new(name);
+  endfunction
 
   // Function: reg2bus
   //
   // This converts the reg items to APB bus specific items. 
-  // Only difference from APB VIP is overriding addr_user with pauser_override
+  // Only difference from APB VIP is overriding addr_user using item.extension
   //
   virtual function uvm_sequence_item reg2bus(const ref uvm_reg_bus_op rw);
     int bus_width;
     int slv_id;
     addr_map_entry_s entry;
+    bit unsigned [apb5_master_0_params::PAUSER_WIDTH-1:0] addr_user = '1; // FIXME default val
+    caliptra_apb_user user_obj;
 
     T apb = T::type_id::create("apb");
 
     uvm_reg_item       item = get_item();
     uvm_sequencer_base seqr = item.map.get_sequencer();
+    if (item.extension == null)
+        `uvm_error("reg2bus", "uvm_reg_item provided to caliptra_reg2apb_adapter contains null extension object, which is needed to derive the PAUSER field")
+    else if (!$cast(user_obj, item.extension))
+        `uvm_error("reg2bus", "uvm_reg_item provided to caliptra_reg2apb_adapter contains invalid extension object, which is needed to derive the PAUSER field")
+    else
+        addr_user = user_obj.get_addr_user();
 
     apb.set_sequencer(seqr);
     cfg = cfg_t::get_config(seqr);
@@ -72,7 +82,7 @@ class caliptra_reg2apb_adapter #(
     if ((rw.kind == UVM_WRITE) || (rw.kind == UVM_BURST_WRITE)) begin
       if (!apb.randomize() with {apb.slave_id         == slv_id;
                                  apb.addr             == rw.addr;
-                                 apb.addr_user        == pauser_override;
+                                 apb.addr_user        == local::addr_user;
                                  apb.prot             == 3'b000;
                                  apb.read_or_write    == APB3_TRANS_WRITE;
                                  apb.wr_data          == rw.data;
@@ -93,7 +103,7 @@ class caliptra_reg2apb_adapter #(
     end else begin
       if (!apb.randomize() with {apb.slave_id         == slv_id;
                                  apb.addr             == rw.addr;
-                                 apb.addr_user        == pauser_override;
+                                 apb.addr_user        == local::addr_user;
                                  apb.prot             == 3'b000;
                                  apb.read_or_write    == APB3_TRANS_READ;
                                  apb.strb             == '0;} )

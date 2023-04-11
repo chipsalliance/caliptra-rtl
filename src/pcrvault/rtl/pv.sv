@@ -46,7 +46,7 @@ module pv
     input pv_read_t [PV_NUM_READ-1:0]     pv_read,
     input pv_write_t [PV_NUM_WRITE-1:0]   pv_write,
     output pv_rd_resp_t [PV_NUM_READ-1:0] pv_rd_resp,
-    output pv_wr_resp_t [PV_NUM_READ-1:0] pv_wr_resp
+    output pv_wr_resp_t [PV_NUM_WRITE-1:0] pv_wr_resp
 
 );
 
@@ -56,6 +56,10 @@ logic [31:0] uc_req_rdata;
 logic pv_reg_read_error, pv_reg_write_error;
 logic [AHB_ADDR_WIDTH-1:0] uc_req_addr;
 pv_uc_req_t uc_req;
+
+//intermediate signals to make verilator happy
+logic [PV_NUM_PCR-1:0][PV_NUM_DWORDS-1:0] pv_entry_we;
+logic [PV_NUM_PCR-1:0][PV_NUM_DWORDS-1:0][31:0] pv_entry_next;
 
 pv_reg__in_t pv_reg_hwif_in;
 pv_reg__out_t pv_reg_hwif_out;
@@ -110,14 +114,17 @@ always_comb begin : keyvault_ctrl
     for (int entry = 0; entry < PV_NUM_PCR; entry++) begin
         for (int dword = 0; dword < PV_NUM_DWORDS; dword++) begin
             //initialize to 0 for AND-OR mux
-            pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.next = '0; //hook up the next data to write from crypto writing to this key
-            pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.we = '0; //hook up the write enable from crypto writing to this key
+            pv_entry_we[entry][dword] = '0;
+            pv_entry_next[entry][dword] = '0;
+            
             for (int client = 0; client < PV_NUM_WRITE; client++) begin
-                pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.hwclr = pv_reg_hwif_out.PCR_CTRL[entry].clear.value;
-                pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.we |= pv_write[client].write_en &(pv_write[client].write_entry == entry) & 
-                                                                  (pv_write[client].write_offset == dword);
-                pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.next |= pv_write[client].write_en & (pv_write[client].write_entry == entry) ? pv_write[client].write_data : '0;
+                pv_entry_we[entry][dword] |= pv_write[client].write_en &(pv_write[client].write_entry == entry) & 
+                                             (pv_write[client].write_offset == dword);
+                pv_entry_next[entry][dword] |= pv_write[client].write_en & (pv_write[client].write_entry == entry) ? pv_write[client].write_data : '0;
             end 
+            pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.we = pv_entry_we[entry][dword];
+            pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.next =  pv_entry_next[entry][dword];
+            pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.hwclr = pv_reg_hwif_out.PCR_CTRL[entry].clear.value;
         end
     end
 end

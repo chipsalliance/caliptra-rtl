@@ -66,7 +66,6 @@
         field {desc = "SHA BLOCK is a valid destination";} sha_block_dest_valid = 0;
         field {desc = "ECC PKEY is a valid destination";} ecc_pkey_dest_valid = 0;
         field {desc = "ECC SEED is a valid destination";} ecc_seed_dest_valid = 0;
-        field {desc = "ECC MSG is a valid destination";} ecc_msg_dest_valid = 0;
-        field {desc = "Reserved field";} rsvd[20] = 0;
+        field {desc = "Reserved field";} rsvd[21] = 0;
 
     };

@@ -370,13 +370,18 @@ bit first_transfer=1;
 //  end
     // Wait for next transfer then gather info from intiator about the transfer.
     // Place the data into the soc_ifc_status_initiator_struct.
-    do @(posedge clk_i); while (!any_signal_changed());
+    do begin
+        cptra_error_fatal_o            <= cptra_error_fatal_i    ;
+        cptra_error_non_fatal_o        <= cptra_error_non_fatal_i;
+        @(posedge clk_i);
+    end
+    while (!any_signal_changed());
     ready_for_fuses_o              <= ready_for_fuses_i      ;
     ready_for_fw_push_o            <= ready_for_fw_push_i    ;
     ready_for_runtime_o            <= ready_for_runtime_i    ;
     mailbox_data_avail_o           <= mailbox_data_avail_i   ;
     mailbox_flow_done_o            <= mailbox_flow_done_i    ;
-    cptra_error_fatal_o            <= mailbox_flow_done_i    ;
+    cptra_error_fatal_o            <= cptra_error_fatal_i    ;
     cptra_error_non_fatal_o        <= cptra_error_non_fatal_i;
     trng_req_o                     <= trng_req_i             ;
     generic_output_wires_o         <= generic_output_wires_i ;
