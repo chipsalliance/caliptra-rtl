@@ -765,6 +765,8 @@ package soc_ifc_reg_uvm;
         rand uvm_reg_field error_bad_fuse_en;
         rand uvm_reg_field error_iccm_blocked_en;
         rand uvm_reg_field error_mbox_ecc_unc_en;
+        rand uvm_reg_field error_wdt_timer1_timeout_en;
+        rand uvm_reg_field error_wdt_timer2_timeout_en;
 
         function new(string name = "soc_ifc_reg__intr_block_t__error_intr_en_t");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -783,6 +785,10 @@ package soc_ifc_reg_uvm;
             this.error_iccm_blocked_en.configure(this, 1, 4, "RW", 0, 'h0, 1, 1, 0);
             this.error_mbox_ecc_unc_en = new("error_mbox_ecc_unc_en");
             this.error_mbox_ecc_unc_en.configure(this, 1, 5, "RW", 0, 'h0, 1, 1, 0);
+            this.error_wdt_timer1_timeout_en = new("error_wdt_timer1_timeout_en");
+            this.error_wdt_timer1_timeout_en.configure(this, 1, 6, "RW", 0, 'h0, 1, 1, 0);
+            this.error_wdt_timer2_timeout_en = new("error_wdt_timer2_timeout_en");
+            this.error_wdt_timer2_timeout_en.configure(this, 1, 7, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__error_intr_en_t
 
@@ -792,8 +798,6 @@ package soc_ifc_reg_uvm;
         rand uvm_reg_field notif_mbox_ecc_cor_en;
         rand uvm_reg_field notif_debug_locked_en;
         rand uvm_reg_field notif_soc_req_lock_en;
-        rand uvm_reg_field notif_wdt_timer1_timeout_en;
-        rand uvm_reg_field notif_wdt_timer2_timeout_en;
 
         function new(string name = "soc_ifc_reg__intr_block_t__notif_intr_en_t");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -808,10 +812,6 @@ package soc_ifc_reg_uvm;
             this.notif_debug_locked_en.configure(this, 1, 2, "RW", 0, 'h0, 1, 1, 0);
             this.notif_soc_req_lock_en = new("notif_soc_req_lock_en");
             this.notif_soc_req_lock_en.configure(this, 1, 3, "RW", 0, 'h0, 1, 1, 0);
-            this.notif_wdt_timer1_timeout_en = new("notif_wdt_timer1_timeout_en");
-            this.notif_wdt_timer1_timeout_en.configure(this, 1, 4, "RW", 0, 'h0, 1, 1, 0);
-            this.notif_wdt_timer2_timeout_en = new("notif_wdt_timer2_timeout_en");
-            this.notif_wdt_timer2_timeout_en.configure(this, 1, 5, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__notif_intr_en_t
 
@@ -843,16 +843,18 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a
 
-    // Reg - soc_ifc_reg::intr_block_t::error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330
-    class soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330 extends uvm_reg;
+    // Reg - soc_ifc_reg::intr_block_t::error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f
+    class soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f extends uvm_reg;
         rand uvm_reg_field error_internal_sts;
         rand uvm_reg_field error_inv_dev_sts;
         rand uvm_reg_field error_cmd_fail_sts;
         rand uvm_reg_field error_bad_fuse_sts;
         rand uvm_reg_field error_iccm_blocked_sts;
         rand uvm_reg_field error_mbox_ecc_unc_sts;
+        rand uvm_reg_field error_wdt_timer1_timeout_sts;
+        rand uvm_reg_field error_wdt_timer2_timeout_sts;
 
-        function new(string name = "soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330");
+        function new(string name = "soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -869,19 +871,21 @@ package soc_ifc_reg_uvm;
             this.error_iccm_blocked_sts.configure(this, 1, 4, "W1C", 1, 'h0, 1, 1, 0);
             this.error_mbox_ecc_unc_sts = new("error_mbox_ecc_unc_sts");
             this.error_mbox_ecc_unc_sts.configure(this, 1, 5, "W1C", 1, 'h0, 1, 1, 0);
+            this.error_wdt_timer1_timeout_sts = new("error_wdt_timer1_timeout_sts");
+            this.error_wdt_timer1_timeout_sts.configure(this, 1, 6, "W1C", 1, 'h0, 1, 1, 0);
+            this.error_wdt_timer2_timeout_sts = new("error_wdt_timer2_timeout_sts");
+            this.error_wdt_timer2_timeout_sts.configure(this, 1, 7, "W1C", 1, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330
+    endclass : soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f
 
-    // Reg - soc_ifc_reg::intr_block_t::notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_mbox_ecc_cor_sts_5c3d26bb_notif_soc_req_lock_sts_deddde70_notif_wdt_timer1_timeout_sts_87f05d3f_notif_wdt_timer2_timeout_sts_856a4ba8
-    class soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_mbox_ecc_cor_sts_5c3d26bb_notif_soc_req_lock_sts_deddde70_notif_wdt_timer1_timeout_sts_87f05d3f_notif_wdt_timer2_timeout_sts_856a4ba8 extends uvm_reg;
+    // Reg - soc_ifc_reg::intr_block_t::notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_mbox_ecc_cor_sts_5c3d26bb_notif_soc_req_lock_sts_deddde70
+    class soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_mbox_ecc_cor_sts_5c3d26bb_notif_soc_req_lock_sts_deddde70 extends uvm_reg;
         rand uvm_reg_field notif_cmd_avail_sts;
         rand uvm_reg_field notif_mbox_ecc_cor_sts;
         rand uvm_reg_field notif_debug_locked_sts;
         rand uvm_reg_field notif_soc_req_lock_sts;
-        rand uvm_reg_field notif_wdt_timer1_timeout_sts;
-        rand uvm_reg_field notif_wdt_timer2_timeout_sts;
 
-        function new(string name = "soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_mbox_ecc_cor_sts_5c3d26bb_notif_soc_req_lock_sts_deddde70_notif_wdt_timer1_timeout_sts_87f05d3f_notif_wdt_timer2_timeout_sts_856a4ba8");
+        function new(string name = "soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_mbox_ecc_cor_sts_5c3d26bb_notif_soc_req_lock_sts_deddde70");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -894,12 +898,8 @@ package soc_ifc_reg_uvm;
             this.notif_debug_locked_sts.configure(this, 1, 2, "W1C", 1, 'h0, 1, 1, 0);
             this.notif_soc_req_lock_sts = new("notif_soc_req_lock_sts");
             this.notif_soc_req_lock_sts.configure(this, 1, 3, "W1C", 1, 'h0, 1, 1, 0);
-            this.notif_wdt_timer1_timeout_sts = new("notif_wdt_timer1_timeout_sts");
-            this.notif_wdt_timer1_timeout_sts.configure(this, 1, 4, "W1C", 1, 'h0, 1, 1, 0);
-            this.notif_wdt_timer2_timeout_sts = new("notif_wdt_timer2_timeout_sts");
-            this.notif_wdt_timer2_timeout_sts.configure(this, 1, 5, "W1C", 1, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_mbox_ecc_cor_sts_5c3d26bb_notif_soc_req_lock_sts_deddde70_notif_wdt_timer1_timeout_sts_87f05d3f_notif_wdt_timer2_timeout_sts_856a4ba8
+    endclass : soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_mbox_ecc_cor_sts_5c3d26bb_notif_soc_req_lock_sts_deddde70
 
     // Reg - soc_ifc_reg::intr_block_t::error_intr_trig_t
     class soc_ifc_reg__intr_block_t__error_intr_trig_t extends uvm_reg;
@@ -909,6 +909,8 @@ package soc_ifc_reg_uvm;
         rand uvm_reg_field error_bad_fuse_trig;
         rand uvm_reg_field error_iccm_blocked_trig;
         rand uvm_reg_field error_mbox_ecc_unc_trig;
+        rand uvm_reg_field error_wdt_timer1_timeout_trig;
+        rand uvm_reg_field error_wdt_timer2_timeout_trig;
 
         function new(string name = "soc_ifc_reg__intr_block_t__error_intr_trig_t");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -927,6 +929,10 @@ package soc_ifc_reg_uvm;
             this.error_iccm_blocked_trig.configure(this, 1, 4, "W1S", 0, 'h0, 1, 1, 0);
             this.error_mbox_ecc_unc_trig = new("error_mbox_ecc_unc_trig");
             this.error_mbox_ecc_unc_trig.configure(this, 1, 5, "W1S", 0, 'h0, 1, 1, 0);
+            this.error_wdt_timer1_timeout_trig = new("error_wdt_timer1_timeout_trig");
+            this.error_wdt_timer1_timeout_trig.configure(this, 1, 6, "W1S", 0, 'h0, 1, 1, 0);
+            this.error_wdt_timer2_timeout_trig = new("error_wdt_timer2_timeout_trig");
+            this.error_wdt_timer2_timeout_trig.configure(this, 1, 7, "W1S", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__error_intr_trig_t
 
@@ -936,8 +942,6 @@ package soc_ifc_reg_uvm;
         rand uvm_reg_field notif_mbox_ecc_cor_trig;
         rand uvm_reg_field notif_debug_locked_trig;
         rand uvm_reg_field notif_soc_req_lock_trig;
-        rand uvm_reg_field notif_wdt_timer1_timeout_trig;
-        rand uvm_reg_field notif_wdt_timer2_timeout_trig;
 
         function new(string name = "soc_ifc_reg__intr_block_t__notif_intr_trig_t");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -952,10 +956,6 @@ package soc_ifc_reg_uvm;
             this.notif_debug_locked_trig.configure(this, 1, 2, "W1S", 0, 'h0, 1, 1, 0);
             this.notif_soc_req_lock_trig = new("notif_soc_req_lock_trig");
             this.notif_soc_req_lock_trig.configure(this, 1, 3, "W1S", 0, 'h0, 1, 1, 0);
-            this.notif_wdt_timer1_timeout_trig = new("notif_wdt_timer1_timeout_trig");
-            this.notif_wdt_timer1_timeout_trig.configure(this, 1, 4, "W1S", 0, 'h0, 1, 1, 0);
-            this.notif_wdt_timer2_timeout_trig = new("notif_wdt_timer2_timeout_trig");
-            this.notif_wdt_timer2_timeout_trig.configure(this, 1, 5, "W1S", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__notif_intr_trig_t
 
@@ -1043,6 +1043,34 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_26b97e39
 
+    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_a2f61f82
+    class soc_ifc_reg__intr_block_t__intr_count_t_cnt_a2f61f82 extends uvm_reg;
+        rand uvm_reg_field cnt;
+
+        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_a2f61f82");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.cnt = new("cnt");
+            this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_a2f61f82
+
+    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_d46457cd
+    class soc_ifc_reg__intr_block_t__intr_count_t_cnt_d46457cd extends uvm_reg;
+        rand uvm_reg_field cnt;
+
+        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_d46457cd");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.cnt = new("cnt");
+            this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_d46457cd
+
     // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_a06f0954
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_a06f0954 extends uvm_reg;
         rand uvm_reg_field cnt;
@@ -1098,34 +1126,6 @@ package soc_ifc_reg_uvm;
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_b9bddabe
-
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_752106fb
-    class soc_ifc_reg__intr_block_t__intr_count_t_cnt_752106fb extends uvm_reg;
-        rand uvm_reg_field cnt;
-
-        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_752106fb");
-            super.new(name, 32, UVM_NO_COVERAGE);
-        endfunction : new
-
-        virtual function void build();
-            this.cnt = new("cnt");
-            this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
-        endfunction : build
-    endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_752106fb
-
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_f95785da
-    class soc_ifc_reg__intr_block_t__intr_count_t_cnt_f95785da extends uvm_reg;
-        rand uvm_reg_field cnt;
-
-        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_f95785da");
-            super.new(name, 32, UVM_NO_COVERAGE);
-        endfunction : new
-
-        virtual function void build();
-            this.cnt = new("cnt");
-            this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
-        endfunction : build
-    endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_f95785da
 
     // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_15e6ed7e
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_15e6ed7e extends uvm_reg;
@@ -1211,6 +1211,34 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_9f1632fd
 
+    // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_aa999fdc
+    class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_aa999fdc extends uvm_reg;
+        rand uvm_reg_field pulse;
+
+        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_aa999fdc");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.pulse = new("pulse");
+            this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_aa999fdc
+
+    // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_404e12db
+    class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_404e12db extends uvm_reg;
+        rand uvm_reg_field pulse;
+
+        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_404e12db");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.pulse = new("pulse");
+            this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_404e12db
+
     // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_90d52137
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_90d52137 extends uvm_reg;
         rand uvm_reg_field pulse;
@@ -1267,34 +1295,6 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_246489bd
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_54cd86e8
-    class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_54cd86e8 extends uvm_reg;
-        rand uvm_reg_field pulse;
-
-        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_54cd86e8");
-            super.new(name, 32, UVM_NO_COVERAGE);
-        endfunction : new
-
-        virtual function void build();
-            this.pulse = new("pulse");
-            this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
-        endfunction : build
-    endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_54cd86e8
-
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_de4a94b6
-    class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_de4a94b6 extends uvm_reg;
-        rand uvm_reg_field pulse;
-
-        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_de4a94b6");
-            super.new(name, 32, UVM_NO_COVERAGE);
-        endfunction : new
-
-        virtual function void build();
-            this.pulse = new("pulse");
-            this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
-        endfunction : build
-    endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_de4a94b6
-
     // Regfile - soc_ifc_reg::intr_block_t
     class soc_ifc_reg__intr_block_t extends uvm_reg_block;
         rand soc_ifc_reg__intr_block_t__global_intr_en_t global_intr_en_r;
@@ -1302,8 +1302,8 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__intr_block_t__notif_intr_en_t notif_intr_en_r;
         rand soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a error_global_intr_r;
         rand soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a notif_global_intr_r;
-        rand soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330 error_internal_intr_r;
-        rand soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_mbox_ecc_cor_sts_5c3d26bb_notif_soc_req_lock_sts_deddde70_notif_wdt_timer1_timeout_sts_87f05d3f_notif_wdt_timer2_timeout_sts_856a4ba8 notif_internal_intr_r;
+        rand soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f error_internal_intr_r;
+        rand soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_mbox_ecc_cor_sts_5c3d26bb_notif_soc_req_lock_sts_deddde70 notif_internal_intr_r;
         rand soc_ifc_reg__intr_block_t__error_intr_trig_t error_intr_trig_r;
         rand soc_ifc_reg__intr_block_t__notif_intr_trig_t notif_intr_trig_r;
         rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_608f1141 error_internal_intr_count_r;
@@ -1312,24 +1312,24 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_fb7d2433 error_bad_fuse_intr_count_r;
         rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_25e76b6f error_iccm_blocked_intr_count_r;
         rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_26b97e39 error_mbox_ecc_unc_intr_count_r;
+        rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_a2f61f82 error_wdt_timer1_timeout_intr_count_r;
+        rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_d46457cd error_wdt_timer2_timeout_intr_count_r;
         rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_a06f0954 notif_cmd_avail_intr_count_r;
         rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_00e49272 notif_mbox_ecc_cor_intr_count_r;
         rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_ee53ded8 notif_debug_locked_intr_count_r;
         rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_b9bddabe notif_soc_req_lock_intr_count_r;
-        rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_752106fb notif_wdt_timer1_timeout_intr_count_r;
-        rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_f95785da notif_wdt_timer2_timeout_intr_count_r;
         rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_15e6ed7e error_internal_intr_count_incr_r;
         rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f762ea9c error_inv_dev_intr_count_incr_r;
         rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_aa8718c6 error_cmd_fail_intr_count_incr_r;
         rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_26fa5955 error_bad_fuse_intr_count_incr_r;
         rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_3e43d258 error_iccm_blocked_intr_count_incr_r;
         rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_9f1632fd error_mbox_ecc_unc_intr_count_incr_r;
+        rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_aa999fdc error_wdt_timer1_timeout_intr_count_incr_r;
+        rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_404e12db error_wdt_timer2_timeout_intr_count_incr_r;
         rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_90d52137 notif_cmd_avail_intr_count_incr_r;
         rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_a6db6fff notif_mbox_ecc_cor_intr_count_incr_r;
         rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_51891fb1 notif_debug_locked_intr_count_incr_r;
         rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_246489bd notif_soc_req_lock_intr_count_incr_r;
-        rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_54cd86e8 notif_wdt_timer1_timeout_intr_count_incr_r;
-        rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_de4a94b6 notif_wdt_timer2_timeout_intr_count_incr_r;
 
         function new(string name = "soc_ifc_reg__intr_block_t");
             super.new(name);
@@ -1412,6 +1412,16 @@ package soc_ifc_reg_uvm;
 
             this.error_mbox_ecc_unc_intr_count_r.build();
             this.default_map.add_reg(this.error_mbox_ecc_unc_intr_count_r, 'h114);
+            this.error_wdt_timer1_timeout_intr_count_r = new("error_wdt_timer1_timeout_intr_count_r");
+            this.error_wdt_timer1_timeout_intr_count_r.configure(this);
+
+            this.error_wdt_timer1_timeout_intr_count_r.build();
+            this.default_map.add_reg(this.error_wdt_timer1_timeout_intr_count_r, 'h118);
+            this.error_wdt_timer2_timeout_intr_count_r = new("error_wdt_timer2_timeout_intr_count_r");
+            this.error_wdt_timer2_timeout_intr_count_r.configure(this);
+
+            this.error_wdt_timer2_timeout_intr_count_r.build();
+            this.default_map.add_reg(this.error_wdt_timer2_timeout_intr_count_r, 'h11c);
             this.notif_cmd_avail_intr_count_r = new("notif_cmd_avail_intr_count_r");
             this.notif_cmd_avail_intr_count_r.configure(this);
 
@@ -1432,16 +1442,6 @@ package soc_ifc_reg_uvm;
 
             this.notif_soc_req_lock_intr_count_r.build();
             this.default_map.add_reg(this.notif_soc_req_lock_intr_count_r, 'h18c);
-            this.notif_wdt_timer1_timeout_intr_count_r = new("notif_wdt_timer1_timeout_intr_count_r");
-            this.notif_wdt_timer1_timeout_intr_count_r.configure(this);
-
-            this.notif_wdt_timer1_timeout_intr_count_r.build();
-            this.default_map.add_reg(this.notif_wdt_timer1_timeout_intr_count_r, 'h190);
-            this.notif_wdt_timer2_timeout_intr_count_r = new("notif_wdt_timer2_timeout_intr_count_r");
-            this.notif_wdt_timer2_timeout_intr_count_r.configure(this);
-
-            this.notif_wdt_timer2_timeout_intr_count_r.build();
-            this.default_map.add_reg(this.notif_wdt_timer2_timeout_intr_count_r, 'h194);
             this.error_internal_intr_count_incr_r = new("error_internal_intr_count_incr_r");
             this.error_internal_intr_count_incr_r.configure(this);
 
@@ -1472,36 +1472,36 @@ package soc_ifc_reg_uvm;
 
             this.error_mbox_ecc_unc_intr_count_incr_r.build();
             this.default_map.add_reg(this.error_mbox_ecc_unc_intr_count_incr_r, 'h214);
+            this.error_wdt_timer1_timeout_intr_count_incr_r = new("error_wdt_timer1_timeout_intr_count_incr_r");
+            this.error_wdt_timer1_timeout_intr_count_incr_r.configure(this);
+
+            this.error_wdt_timer1_timeout_intr_count_incr_r.build();
+            this.default_map.add_reg(this.error_wdt_timer1_timeout_intr_count_incr_r, 'h218);
+            this.error_wdt_timer2_timeout_intr_count_incr_r = new("error_wdt_timer2_timeout_intr_count_incr_r");
+            this.error_wdt_timer2_timeout_intr_count_incr_r.configure(this);
+
+            this.error_wdt_timer2_timeout_intr_count_incr_r.build();
+            this.default_map.add_reg(this.error_wdt_timer2_timeout_intr_count_incr_r, 'h21c);
             this.notif_cmd_avail_intr_count_incr_r = new("notif_cmd_avail_intr_count_incr_r");
             this.notif_cmd_avail_intr_count_incr_r.configure(this);
 
             this.notif_cmd_avail_intr_count_incr_r.build();
-            this.default_map.add_reg(this.notif_cmd_avail_intr_count_incr_r, 'h218);
+            this.default_map.add_reg(this.notif_cmd_avail_intr_count_incr_r, 'h220);
             this.notif_mbox_ecc_cor_intr_count_incr_r = new("notif_mbox_ecc_cor_intr_count_incr_r");
             this.notif_mbox_ecc_cor_intr_count_incr_r.configure(this);
 
             this.notif_mbox_ecc_cor_intr_count_incr_r.build();
-            this.default_map.add_reg(this.notif_mbox_ecc_cor_intr_count_incr_r, 'h21c);
+            this.default_map.add_reg(this.notif_mbox_ecc_cor_intr_count_incr_r, 'h224);
             this.notif_debug_locked_intr_count_incr_r = new("notif_debug_locked_intr_count_incr_r");
             this.notif_debug_locked_intr_count_incr_r.configure(this);
 
             this.notif_debug_locked_intr_count_incr_r.build();
-            this.default_map.add_reg(this.notif_debug_locked_intr_count_incr_r, 'h220);
+            this.default_map.add_reg(this.notif_debug_locked_intr_count_incr_r, 'h228);
             this.notif_soc_req_lock_intr_count_incr_r = new("notif_soc_req_lock_intr_count_incr_r");
             this.notif_soc_req_lock_intr_count_incr_r.configure(this);
 
             this.notif_soc_req_lock_intr_count_incr_r.build();
-            this.default_map.add_reg(this.notif_soc_req_lock_intr_count_incr_r, 'h224);
-            this.notif_wdt_timer1_timeout_intr_count_incr_r = new("notif_wdt_timer1_timeout_intr_count_incr_r");
-            this.notif_wdt_timer1_timeout_intr_count_incr_r.configure(this);
-
-            this.notif_wdt_timer1_timeout_intr_count_incr_r.build();
-            this.default_map.add_reg(this.notif_wdt_timer1_timeout_intr_count_incr_r, 'h228);
-            this.notif_wdt_timer2_timeout_intr_count_incr_r = new("notif_wdt_timer2_timeout_intr_count_incr_r");
-            this.notif_wdt_timer2_timeout_intr_count_incr_r.configure(this);
-
-            this.notif_wdt_timer2_timeout_intr_count_incr_r.build();
-            this.default_map.add_reg(this.notif_wdt_timer2_timeout_intr_count_incr_r, 'h22c);
+            this.default_map.add_reg(this.notif_soc_req_lock_intr_count_incr_r, 'h22c);
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t
 
