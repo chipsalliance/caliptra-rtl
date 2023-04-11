@@ -199,9 +199,9 @@ logic t1_timeout_p;
 logic t2_timeout;
 logic t2_timeout_f; //To generate interrupt pulse
 logic t2_timeout_p;
-logic wdt_notif_t1_intr_serviced;
-logic wdt_notif_t2_intr_serviced;
-logic soc_ifc_notif_intr_f;
+logic wdt_error_t1_intr_serviced;
+logic wdt_error_t2_intr_serviced;
+logic soc_ifc_error_intr_f;
 
 //Boot FSM
 //This module contains the logic required to control the Caliptra Boot Flow
@@ -573,8 +573,8 @@ always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_av
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.hwset = sram_single_ecc_error;
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_debug_locked_sts.hwset = security_state_debug_locked_p; // Any transition results in interrupt
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_soc_req_lock_sts.hwset = soc_req_mbox_lock;
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_wdt_timer1_timeout_sts.hwset = t1_timeout_p;
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_wdt_timer2_timeout_sts.hwset = t2_timeout_p && timer2_en;
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_wdt_timer1_timeout_sts.hwset = t1_timeout_p;
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_wdt_timer2_timeout_sts.hwset = t2_timeout_p && timer2_en;
 
 always_comb soc_ifc_reg_hwif_in.internal_iccm_lock.lock.hwclr    = iccm_unlock;
 
@@ -713,14 +713,14 @@ always_comb t2_timeout_p = t2_timeout & ~t2_timeout_f;
 //Detect falling edge on soc_ifc_error_intr to indicate that the interrupt has been serviced
 always_ff @(posedge clk or negedge cptra_rst_b) begin
     if(!cptra_rst_b) begin
-        soc_ifc_notif_intr_f <= 'b0;
+        soc_ifc_error_intr_f <= 'b0;
     end
     else begin
-        soc_ifc_notif_intr_f <= soc_ifc_notif_intr;
+        soc_ifc_error_intr_f <= soc_ifc_error_intr;
     end
 end
-assign wdt_notif_t1_intr_serviced = !soc_ifc_notif_intr && soc_ifc_notif_intr_f && t1_timeout;
-assign wdt_notif_t2_intr_serviced = !soc_ifc_notif_intr && soc_ifc_notif_intr_f && t2_timeout && timer2_en;
+assign wdt_error_t1_intr_serviced = !soc_ifc_error_intr && soc_ifc_error_intr_f && t1_timeout;
+assign wdt_error_t2_intr_serviced = !soc_ifc_error_intr && soc_ifc_error_intr_f && t2_timeout && timer2_en;
 
 //Set HW FATAL ERROR reg when timer2 times out in cascaded mode
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.error_code.we = cptra_error_fatal;
@@ -745,8 +745,8 @@ wdt i_wdt (
     .timer2_restart(timer2_restart),
     .timer1_timeout_period(timer1_timeout_period),
     .timer2_timeout_period(timer2_timeout_period),
-    .wdt_timer1_timeout_serviced(wdt_notif_t1_intr_serviced),
-    .wdt_timer2_timeout_serviced(wdt_notif_t2_intr_serviced),
+    .wdt_timer1_timeout_serviced(wdt_error_t1_intr_serviced),
+    .wdt_timer2_timeout_serviced(wdt_error_t2_intr_serviced),
     .t1_timeout(t1_timeout),
     .t2_timeout(t2_timeout)
 );
