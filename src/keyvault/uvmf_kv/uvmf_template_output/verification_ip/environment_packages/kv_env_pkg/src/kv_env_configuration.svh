@@ -190,34 +190,34 @@ extends uvmf_environment_configuration_base;
   // Interface initialization for local agents
      kv_rst_agent_config.initialize( interface_activity[1], {environment_path,".kv_rst_agent"}, interface_names[1]);
      kv_rst_agent_config.initiator_responder = INITIATOR;
-     // kv_rst_agent_config.has_coverage = 1;
+     kv_rst_agent_config.has_coverage = 1;
      kv_hmac_write_agent_config.initialize( interface_activity[2], {environment_path,".kv_hmac_write_agent"}, interface_names[2]);
      kv_hmac_write_agent_config.initiator_responder = INITIATOR;
-     // kv_hmac_write_agent_config.has_coverage = 1;
+     kv_hmac_write_agent_config.has_coverage = 1;
      kv_sha512_write_agent_config.initialize( interface_activity[3], {environment_path,".kv_sha512_write_agent"}, interface_names[3]);
      kv_sha512_write_agent_config.initiator_responder = INITIATOR;
-     // kv_sha512_write_agent_config.has_coverage = 1;
+     kv_sha512_write_agent_config.has_coverage = 1;
      kv_ecc_write_agent_config.initialize( interface_activity[4], {environment_path,".kv_ecc_write_agent"}, interface_names[4]);
      kv_ecc_write_agent_config.initiator_responder = INITIATOR;
-     // kv_ecc_write_agent_config.has_coverage = 1;
+     kv_ecc_write_agent_config.has_coverage = 1;
      kv_doe_write_agent_config.initialize( interface_activity[5], {environment_path,".kv_doe_write_agent"}, interface_names[5]);
      kv_doe_write_agent_config.initiator_responder = INITIATOR;
-     // kv_doe_write_agent_config.has_coverage = 1;
+     kv_doe_write_agent_config.has_coverage = 1;
      kv_hmac_key_read_agent_config.initialize( interface_activity[6], {environment_path,".kv_hmac_key_read_agent"}, interface_names[6]);
      kv_hmac_key_read_agent_config.initiator_responder = INITIATOR;
-     // kv_hmac_key_read_agent_config.has_coverage = 1;
+     kv_hmac_key_read_agent_config.has_coverage = 1;
      kv_hmac_block_read_agent_config.initialize( interface_activity[7], {environment_path,".kv_hmac_block_read_agent"}, interface_names[7]);
      kv_hmac_block_read_agent_config.initiator_responder = INITIATOR;
-     // kv_hmac_block_read_agent_config.has_coverage = 1;
+     kv_hmac_block_read_agent_config.has_coverage = 1;
      kv_sha512_block_read_agent_config.initialize( interface_activity[8], {environment_path,".kv_sha512_block_read_agent"}, interface_names[8]);
      kv_sha512_block_read_agent_config.initiator_responder = INITIATOR;
-     // kv_sha512_block_read_agent_config.has_coverage = 1;
+     kv_sha512_block_read_agent_config.has_coverage = 1;
      kv_ecc_privkey_read_agent_config.initialize( interface_activity[9], {environment_path,".kv_ecc_privkey_read_agent"}, interface_names[9]);
      kv_ecc_privkey_read_agent_config.initiator_responder = INITIATOR;
-     // kv_ecc_privkey_read_agent_config.has_coverage = 1;
+     kv_ecc_privkey_read_agent_config.has_coverage = 1;
      kv_ecc_seed_read_agent_config.initialize( interface_activity[10], {environment_path,".kv_ecc_seed_read_agent"}, interface_names[10]);
      kv_ecc_seed_read_agent_config.initiator_responder = INITIATOR;
-     // kv_ecc_seed_read_agent_config.has_coverage = 1;
+     kv_ecc_seed_read_agent_config.has_coverage = 1;
 
     // pragma uvmf custom reg_model_config_initialize begin
     // Register model creation and configuation
