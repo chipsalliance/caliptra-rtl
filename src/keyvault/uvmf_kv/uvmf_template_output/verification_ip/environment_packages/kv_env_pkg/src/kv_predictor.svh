@@ -204,6 +204,7 @@ class kv_predictor #(
   uvm_reg_data_t clear_secrets_data;
 
   string client;
+  logic [KV_ENTRY_SIZE_W-1:0]last_dword_written[0:KV_NUM_KEYS-1];
 
   extern function void populate_expected_kv_read_txn(ref kv_sb_ap_output_transaction_t t_expected, kv_read_transaction t_received, string client);
   extern function void populate_expected_kv_write_txn(ref kv_sb_ap_output_transaction_write_t t_expected, kv_write_transaction t_received);
@@ -262,6 +263,12 @@ class kv_predictor #(
     p_kv_sha512_block_read_map  = p_kv_rm.get_map_by_name("kv_sha512_block_read_map");
     p_kv_ecc_privkey_read_map   = p_kv_rm.get_map_by_name("kv_ecc_privkey_read_map");
     p_kv_ecc_seed_read_map      = p_kv_rm.get_map_by_name("kv_ecc_seed_read_map");
+
+    //Init last dword array
+    for(int entry = 0; entry < KV_NUM_KEYS; entry++) begin
+      last_dword_written[entry] = 'h0;
+    end
+
   // pragma uvmf custom build_phase end
   endfunction
 
@@ -290,6 +297,9 @@ class kv_predictor #(
       kv_sb_ap_output_transaction.last = 'h0;
       kv_sb_ap_output_transaction.read_data = 'h0;
       p_kv_rm.reset(); //all regs cleared on hard rst
+      for(entry = 0; entry < KV_NUM_KEYS; entry++) begin
+        last_dword_written[entry] = 'h0; //Clear last dword on hard rst
+      end
     end
     else if (t.debug_mode) begin
       //Set val_reg to 1 for use in reg predictor
@@ -593,7 +603,6 @@ class kv_predictor #(
     address_aligned = ahb_txn.address & ~(KV_DATA_W/8 - 1);
     data_active = KV_DATA_W'(ahb_txn.data[0] >> (8*(address_aligned % (ahb_lite_slave_0_params::AHB_WDATA_WIDTH/8))));
     
-    //TODO: look into moving this logic into kv_reg_predictor later
     if(ahb_txn.RnW == AHB_WRITE) begin
       //Copy txn and modify required fields later
       kv_sb_ahb_ap_output_transaction.copy(ahb_txn);
@@ -680,18 +689,10 @@ endclass
     logic [4:0] dest_valid;
     logic client_dest_valid;
 
-/*
-    if(t_received.entry_is_pcr) begin
-      kv_reg = p_kv_rm.get_reg_by_name($sformatf("PCR_CTRL[%0d]",t_received.read_entry));
-      kv_reg_data = kv_reg.get_mirrored_value();
-      kv_reg = p_kv_rm.get_reg_by_name($sformatf("PCR_ENTRY[%0d][%0d]",t_received.read_entry,t_received.read_offset));
-    end
-    else begin */
-      kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_CTRL[%0d]",t_received.read_entry));
-      kv_reg_data = kv_reg.get_mirrored_value();
+    kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_CTRL[%0d]",t_received.read_entry));
+    kv_reg_data = kv_reg.get_mirrored_value();
+    kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_ENTRY[%0d][%0d]",t_received.read_entry,t_received.read_offset));
 
-      kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_ENTRY[%0d][%0d]",t_received.read_entry,t_received.read_offset));
-    //end
     lock_use = kv_reg_data[1];
     dest_valid = kv_reg_data[13:9];
     
@@ -717,8 +718,8 @@ endclass
       t_expected.read_data = kv_reg_data[31:0]; //Data from KEY entry
       t_expected.error = 'b0;
     end
-    //TODO: fix last flag logic (actually look at offset)
-    t_expected.last = t_received.last; 
+
+    t_expected.last = (last_dword_written[t_received.read_entry] == t_received.read_offset); 
     t_expected.read_entry = t_received.read_entry;
     t_expected.read_offset = t_received.read_offset;
   endfunction
@@ -744,6 +745,9 @@ endclass
     //Error should be set when writing to locked regs
     if(lock_wr || lock_use)
       t_expected.error = 'b1;
+
+    //Keep track of last dword written
+    last_dword_written[t_received.write_entry] = t_received.write_offset;
     
       
   endfunction

@@ -51,7 +51,7 @@ class kv_rst_warm_rst_sequence extends kv_rst_sequence_base;
     start_item(req);
     // Randomize the transaction
     if(!req.randomize()) `uvm_fatal("KV_RST_WARM_RST", "kv_rst_warm_rst_sequence::body()-kv_rst_transaction randomization failed")
-    `uvm_info("KV_RST_WARM_RST", "Asserting reset, pwrgood low", UVM_MEDIUM)
+    `uvm_info("KV_RST_WARM_RST", "Asserting reset", UVM_MEDIUM)
     req.set_pwrgood = 1'b1;
     req.assert_rst = 1'b1;
     req.assert_core_rst = 1'b1;
@@ -65,11 +65,11 @@ class kv_rst_warm_rst_sequence extends kv_rst_sequence_base;
     start_item(req);
     // Randomize the transaction
     if(!req.randomize()) `uvm_fatal("KV_RST_WARM_RST", "kv_rst_warm_rst_sequence::body()-kv_rst_transaction randomization failed")
-    `uvm_info("KV_RST_WARM_RST", "Asserting reset, pwrgood high", UVM_MEDIUM)
+    `uvm_info("KV_RST_WARM_RST", "Deasserting reset", UVM_MEDIUM)
     req.set_pwrgood = 1'b1;
     req.assert_rst = 1'b0;
     req.assert_core_rst = 1'b0;
-    req.debug_mode = 1'b0;
+    //req.debug_mode = 1'b0;
 
     finish_item(req);
     `uvm_info("KV_RST_WARM_RST", {"Response:",req.convert2string()},UVM_MEDIUM)

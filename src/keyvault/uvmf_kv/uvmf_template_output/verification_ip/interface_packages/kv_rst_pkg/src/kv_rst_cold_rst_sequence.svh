@@ -84,7 +84,7 @@ class kv_rst_cold_rst_sequence extends kv_rst_sequence_base;
     req.set_pwrgood = 1'b1;
     req.assert_rst = 1'b0;
     req.assert_core_rst = 1'b0;
-    req.debug_mode = 1'b0;
+    //req.debug_mode = 1'b0;
 
     finish_item(req);
     `uvm_info("KV_RST_COLD_RST", {"Response:",req.convert2string()},UVM_MEDIUM)
