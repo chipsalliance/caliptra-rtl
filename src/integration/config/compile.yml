@@ -76,7 +76,7 @@ targets:
       - $COMPILE_ROOT/tb/caliptra_top_tb.sv
     tops: [caliptra_top_tb]
   sim:
-    pre_exec: $TOOLS/scripts/run_test_makefile
+    pre_exec: '$TOOLS/scripts/run_test_makefile && echo "[PRE-EXEC] Copying ECC vector generator to $(pwd)" && cp $COMPILE_ROOT/../ecc/tb/ecdsa_secp384r1.exe .'
 global:
   tool:
     vcs:
