@@ -45,6 +45,11 @@ void wait_for_ecc_intr(){
     */
 }
 
+void ecc_zeroize(){
+    printf("ECC zeroize flow.\n");
+    lsu_write_32(CLP_ECC_REG_ECC_CTRL, (1 << ECC_REG_ECC_CTRL_ZEROIZE_LOW) & ECC_REG_ECC_CTRL_ZEROIZE_MASK);
+}
+
 void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubkey_y){
     uint8_t offset;
     volatile uint32_t * reg_ptr;

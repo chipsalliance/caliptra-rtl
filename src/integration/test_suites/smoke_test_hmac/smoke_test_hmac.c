@@ -155,6 +155,7 @@ void main() {
 
 
     hmac_flow(hmac_key, hmac_block, hmac_lfsr_seed, hmac_tag);
+    hmac_zeroize();
 
     // Write 0xff to STDOUT for TB to terminate test.
     SEND_STDOUT_CTRL( 0xff);

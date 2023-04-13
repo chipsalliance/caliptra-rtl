@@ -84,5 +84,7 @@ void main(){
 
     cptra_intr_rcv.ecc_notif = 0;
 
+    ecc_zeroize();
+
     printf("%c",0xff); //End the test
 }
