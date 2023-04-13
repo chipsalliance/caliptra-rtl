@@ -22,6 +22,7 @@
 `define CPTRA_TOP_PATH  caliptra_top_tb.caliptra_top_dut
 `define KEYVAULT_PATH   caliptra_top_tb.caliptra_top_dut.key_vault1
 `define DOE_PATH        caliptra_top_tb.caliptra_top_dut.doe.doe_inst.doe_fsm1
+`define DOE_REG_PATH    caliptra_top_tb.caliptra_top_dut.doe.doe_inst.i_doe_reg
 `define SERVICES_PATH   caliptra_top_tb.tb_services_i
 `define SHA512_PATH     caliptra_top_tb.caliptra_top_dut.sha512.sha512_inst
 `define HMAC_PATH       caliptra_top_tb.caliptra_top_dut.hmac.hmac_inst
@@ -84,6 +85,12 @@ module caliptra_top_sva
                                             ~`DOE_PATH.rst_b |-> $past(`DOE_PATH.lock_fe_flow) == `DOE_PATH.lock_fe_flow
                                           )
                             else $display("SVA ERROR: lock_fe_flow toggled after warm reset");
+
+  DOE_clear_obf_status_valid: assert property (
+                                            @(posedge `CPTRA_TOP_PATH.clk)
+                                            `CPTRA_TOP_PATH.clear_obf_secrets |=> (`DOE_REG_PATH.field_storage.DOE_STATUS.VALID.value && `DOE_REG_PATH.field_storage.DOE_STATUS.DEOBF_SECRETS_CLEARED.value)
+                                          )
+                            else $display("SVA ERROR: DOE STATUS valid bit not set after clear obf secrets cmd");
 
   KV_haddr_valid:          assert property (
                                             @(posedge `CPTRA_TOP_PATH.clk)
