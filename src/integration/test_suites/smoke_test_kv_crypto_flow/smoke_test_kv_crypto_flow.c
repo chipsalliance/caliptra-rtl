@@ -20,6 +20,8 @@
 #include "printf.h"
 #include "ecc.h"
 #include "hmac.h"
+#include "sha512.h"
+#include "sha256.h"
 #include "doe.h"
 #include <stdlib.h>
 
@@ -277,6 +279,12 @@ void main(){
         
         kv_doe(doe_fe_dest_id);
         
+        //issue zeroize
+        ecc_zeroize();
+        hmac_zeroize();
+        sha512_zeroize();
+        sha256_zeroize();
+
         //Issue warm reset
         rst_count++;
         printf("%c",0xf6);
@@ -305,7 +313,13 @@ void main(){
         kv_ecc(uds_key_id, idevid_privkey_id);
 
         kv_hmac(uds_key_id, doe_fe_dest_id, cdi_ldevid_id);
-        
+
+        //issue zeroize
+        ecc_zeroize();
+        hmac_zeroize();
+        sha512_zeroize();
+        sha256_zeroize();
+
         printf("%c",0xff); //End the test
     }
 }

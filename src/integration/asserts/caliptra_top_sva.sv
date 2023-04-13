@@ -26,6 +26,8 @@
 `define SHA512_PATH     caliptra_top_tb.caliptra_top_dut.sha512.sha512_inst
 `define HMAC_PATH       caliptra_top_tb.caliptra_top_dut.hmac.hmac_inst
 `define ECC_PATH        caliptra_top_tb.caliptra_top_dut.ecc_top1.ecc_dsa_ctrl_i
+`define SHA256_PATH     caliptra_top_tb.caliptra_top_dut.sha256.sha256_inst
+`define SHA512_MASKED_PATH caliptra_top_tb.caliptra_top_dut.ecc_top1.ecc_dsa_ctrl_i.ecc_hmac_drbg_interface_i.hmac_drbg_i.HMAC_K.u_sha512_core_h1
 
 
 module caliptra_top_sva
@@ -34,10 +36,15 @@ module caliptra_top_sva
   ();
 
   //TODO: pass these parameters from their architecture into here
-  localparam SHA512_DIG_NUM_DWORDS = 16; //`SHA512_PATH.DIG_NUM_DWORDS;
-  localparam HMAC_KEY_NUM_DWORDS  = 12;  //`HMAC_PATH.KEY_NUM_DWORDS
-  localparam HMAC_TAG_NUM_DWORDS = 12;   //`HMAC_PATH.TAG_NUM_DWORDS
-  localparam ECC_REG_NUM_DWORDS = 12;   // 'ECC_PATH.REG_NUM_DWORDS
+  localparam SHA512_DIG_NUM_DWORDS    = 16;   //`SHA512_PATH.DIG_NUM_DWORDS;
+  localparam SHA512_BLOCK_NUM_DWORDS  = 32;   //`SHA512_PATH.BLOCK_NUM_DWORDS;
+  localparam HMAC_KEY_NUM_DWORDS      = 12;   //`HMAC_PATH.KEY_NUM_DWORDS
+  localparam HMAC_TAG_NUM_DWORDS      = 12;   //`HMAC_PATH.TAG_NUM_DWORDS
+  localparam HMAC_BLOCK_NUM_DWORDS    = 32;   //`HMAC_PATH.BLOCK_NUM_DWORDS
+  localparam ECC_REG_NUM_DWORDS       = 12;   //'ECC_PATH.REG_NUM_DWORDS
+  localparam ECC_MEM_ADDR             = 2**6; //'ECC_PATH.ecc_arith_unit_i.ram_tdp_file_i.mem.ADDR_LENGTH
+  localparam SHA256_DIG_NUM_DWORDS    = 8;    //`SHA256_PATH.DIG_NUM_DWORDS;
+  localparam SHA256_BLOCK_NUM_DWORDS  = 16;   //`SHA256_PATH.BLOCK_NUM_DWORDS;
 
   //TODO: add disable condition based on doe cmd reg
   DOE_lock_uds_set:        assert property (
@@ -105,9 +112,8 @@ module caliptra_top_sva
     end
   endgenerate
 
-  genvar dword;
   generate
-    for(dword = 0; dword < KV_NUM_DWORDS; dword++) begin
+    for(genvar dword = 0; dword < KV_NUM_DWORDS; dword++) begin
       //sha512 block read
       kv_sha512_block_r_flow:   assert property (
                                             @(posedge `KEYVAULT_PATH.clk)
@@ -146,7 +152,7 @@ module caliptra_top_sva
                                               @(posedge `KEYVAULT_PATH.clk)
                                               `HMAC_PATH.kv_write_done |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword] == `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword])
                                               )
-                                  else $display("SVA ERROR: HMAC384 tag mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword], `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword]);
+                                  else $display("SVA ERROR: HMAC384 tag mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword], `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword]);                    
       end
       
       // ECC
@@ -187,6 +193,90 @@ module caliptra_top_sva
 
     end
   endgenerate
+
+  //ZEROIZE SVA
+  generate
+    for(genvar dword = 0; dword < SHA256_BLOCK_NUM_DWORDS; dword++) begin
+        sha256_block_zeroize:       assert property (
+                                              @(posedge `SHA256_PATH.clk)
+                                              `SHA256_PATH.hwif_out.SHA256_CTRL.ZEROIZE.value |=> (`SHA256_PATH.hwif_out.SHA256_BLOCK[dword].BLOCK.value == 0)
+                                              )
+                                  else $display("SVA ERROR: SHA256 block zeroize mismatch!");
+    end
+
+    for(genvar dword = 0; dword < SHA256_DIG_NUM_DWORDS; dword++) begin
+        sha256_digest_zeroize:       assert property (
+                                              @(posedge `SHA256_PATH.clk)
+                                              `SHA256_PATH.hwif_out.SHA256_CTRL.ZEROIZE.value |=> (`SHA256_PATH.digest_reg[dword] == 0) & (`SHA256_PATH.i_sha256_reg.decoded_reg_strb.SHA256_DIGEST[dword] == 0)
+                                              )
+                                  else $display("SVA ERROR: SHA256 digest zeroize mismatch!");                                
+    end
+
+    for(genvar dword = 0; dword < SHA512_BLOCK_NUM_DWORDS; dword++) begin
+        sha512_block_zeroize:       assert property (
+                                              @(posedge `SHA512_PATH.clk)
+                                              `SHA512_PATH.hwif_out.SHA512_CTRL.ZEROIZE.value |=> (`SHA512_PATH.hwif_out.SHA512_BLOCK[dword].BLOCK.value == 0)
+                                              )
+                                  else $display("SVA ERROR: SHA512 block zeroize mismatch!");
+    end
+
+    for(genvar dword = 0; dword < SHA512_DIG_NUM_DWORDS; dword++) begin
+        sha512_digest_zeroize:       assert property (
+                                              @(posedge `SHA512_PATH.clk)
+                                              `SHA512_PATH.hwif_out.SHA512_CTRL.ZEROIZE.value |=> (`SHA512_PATH.digest_reg[dword] == 0) & (`SHA512_PATH.i_sha512_reg.decoded_reg_strb.SHA512_DIGEST[dword] == 0)
+                                              )
+                                  else $display("SVA ERROR: SHA512 digest zeroize mismatch!");                                
+    end
+
+    for(genvar dword = 0; dword < HMAC_KEY_NUM_DWORDS; dword++) begin
+        hmac_key_zeroize:       assert property (
+                                              @(posedge `HMAC_PATH.clk)
+                                              `HMAC_PATH.hwif_out.HMAC384_CTRL.ZEROIZE.value |=> (`HMAC_PATH.hwif_out.HMAC384_KEY[dword].KEY.value == 0)
+                                              )
+                                  else $display("SVA ERROR: HMAC384 key zeroize mismatch!");
+    end
+    
+    for(genvar dword = 0; dword < HMAC_BLOCK_NUM_DWORDS; dword++) begin
+        hmac_block_zeroize:       assert property (
+                                              @(posedge `HMAC_PATH.clk)
+                                              `HMAC_PATH.hwif_out.HMAC384_CTRL.ZEROIZE.value |=> (`HMAC_PATH.hwif_out.HMAC384_BLOCK[dword].BLOCK.value == 0)
+                                              )
+                                  else $display("SVA ERROR: HMAC384 block zeroize mismatch!");
+    end
+
+    for(genvar dword = 0; dword < HMAC_TAG_NUM_DWORDS; dword++) begin
+        hmac_tag_zeroize:       assert property (
+                                              @(posedge `HMAC_PATH.clk)
+                                              `HMAC_PATH.hwif_out.HMAC384_CTRL.ZEROIZE.value |=> (`HMAC_PATH.tag_reg[dword] == 0) & (`HMAC_PATH.i_hmac_reg.decoded_reg_strb.HMAC384_TAG[dword] == 0)
+                                              )
+                                  else $display("SVA ERROR: HMAC384 tag zeroize mismatch!");                      
+    end
+
+
+    for(genvar dword = 0; dword < ECC_REG_NUM_DWORDS; dword++) begin
+        ecc_reg_zeroize:        assert property (
+                                              @(posedge `ECC_PATH.clk)
+                                              `ECC_PATH.hwif_out.ECC_CTRL.ZEROIZE.value |=> (`ECC_PATH.hwif_out.ECC_SEED[dword].SEED.value == 0) & (`ECC_PATH.hwif_out.ECC_NONCE[dword].NONCE.value == 0) & (`ECC_PATH.hwif_out.ECC_PRIVKEY[dword].PRIVKEY.value == 0) &
+                                              (`ECC_PATH.hwif_out.ECC_MSG[dword].MSG.value == 0) & (`ECC_PATH.hwif_out.ECC_PUBKEY_X[dword].PUBKEY_X.value == 0) & (`ECC_PATH.hwif_out.ECC_PUBKEY_Y[dword].PUBKEY_Y.value == 0) &
+                                              (`ECC_PATH.hwif_out.ECC_SIGN_R[dword].SIGN_R.value == 0) & (`ECC_PATH.hwif_out.ECC_SIGN_S[dword].SIGN_S.value == 0) & (`ECC_PATH.hwif_out.ECC_VERIFY_R[dword].VERIFY_R.value == 0) & (`ECC_PATH.hwif_out.ECC_IV[dword].IV.value == 0)
+                                              )
+                                  else $display("SVA ERROR: ECC reg zeroize mismatch!"); 
+      end
+    
+    for(genvar addr = 0; addr < ECC_MEM_ADDR; addr++) begin
+        ecc_mem_zeroize:        assert property (
+                                              @(posedge `ECC_PATH.clk)
+                                              `ECC_PATH.hwif_out.ECC_CTRL.ZEROIZE.value |=> (`ECC_PATH.ecc_arith_unit_i.ram_tdp_file_i.mem[addr] == 0)
+                                              )
+                                  else $display("SVA ERROR: ECC mem zeroize mismatch!"); 
+      end
+  endgenerate
+
+  sha512_masked_core_digest_zeroize:       assert property (
+                                      @(posedge `ECC_PATH.clk)
+                                      `ECC_PATH.hwif_out.ECC_CTRL.ZEROIZE.value |=> (`SHA512_MASKED_PATH.digest == 0) & (`SHA512_MASKED_PATH.a_reg == 0) & (`SHA512_MASKED_PATH.b_reg == 0) & (`SHA512_MASKED_PATH.c_reg == 0) & (`SHA512_MASKED_PATH.d_reg == 0) & (`SHA512_MASKED_PATH.e_reg == 0) & (`SHA512_MASKED_PATH.f_reg == 0) & (`SHA512_MASKED_PATH.g_reg == 0) & (`SHA512_MASKED_PATH.h_reg == 0)
+                                      )
+                          else $display("SVA ERROR: SHA512_masked_core digest zeroize mismatch!");  
 
 
   genvar client;
