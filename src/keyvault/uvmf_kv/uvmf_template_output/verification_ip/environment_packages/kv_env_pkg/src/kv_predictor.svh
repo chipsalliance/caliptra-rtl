@@ -331,6 +331,8 @@ class kv_predictor #(
       end
     end
     else if(t.assert_rst) begin
+      //Reset clear_secrets on warm reset
+      clear_secrets_reg.reset();
       kv_sb_ap_output_transaction.read_entry = 'h0;
       kv_sb_ap_output_transaction.read_offset = 'h0;
       kv_sb_ap_output_transaction.error = 'h0;
