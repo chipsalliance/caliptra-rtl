@@ -33,6 +33,18 @@ package soc_ifc_reg_model_top_pkg;
     import soc_ifc_reg_uvm::*;
     import mbox_csr_uvm::*;
     import sha512_acc_csr_uvm::*;
+    import soc_ifc_pkg::*;
+
+    typedef struct packed {
+        bit mbox_idle;
+        bit uc_send_stage;
+        bit uc_receive_stage;
+        bit uc_done_stage;
+        bit soc_send_stage;
+        bit soc_receive_stage;
+        bit soc_done_stage;
+    } mbox_fn_state_s;
+
 // pragma uvmf custom additional_imports end
 
    `include "uvm_macros.svh"
@@ -244,8 +256,21 @@ package soc_ifc_reg_model_top_pkg;
         uvm_reg_map mbox_csr_AHB_map;
         uvm_reg_map mbox_csr_APB_map;
 
+        // This tracks expected functionality of the mailbox in a way that is
+        // agnostic to the internal state machine implementation and strictly
+        // observes the mailbox specification. This is what a more rigorous
+        // verification approach should look like.
+        // These are used in soc_ifc_predictor to perform calculations of
+        // valid_requester/valid_receiver
+        mbox_fn_state_s mbox_fn_state_sigs;
+
+        uvm_reg_data_t mbox_data_q [$];
+        uvm_reg_data_t mbox_resp_q [$];
+
+        extern virtual function void reset(string kind = "HARD");
         function new(string name = "mbox_csr_ext");
             super.new(name);
+            mbox_fn_state_sigs = '{mbox_idle: 1'b1, default: 1'b0};
         endfunction : new
 
         // FIXME Manually maintaining a list here of registers that are configured
@@ -283,6 +308,17 @@ package soc_ifc_reg_model_top_pkg;
         endfunction
 
     endclass : mbox_csr_ext
+
+    function void mbox_csr_ext::reset(string kind = "HARD");
+        super.reset(kind);
+        mbox_data_q.delete();
+        mbox_resp_q.delete();
+
+        // Mailbox State Changes
+        // TODO what to do for FW update?
+        mbox_fn_state_sigs = '{mbox_idle: 1'b1, default: 1'b0};
+
+    endfunction
 
     class sha512_acc_csr__intr_block_t_ext extends sha512_acc_csr__intr_block_t;
         uvm_reg_map sha512_acc_csr_intr_AHB_map;
@@ -417,6 +453,24 @@ package soc_ifc_reg_model_top_pkg;
 
     endclass : sha512_acc_csr_ext
 
+    // Callbacks for predicting reg-field updates
+    `include "soc_ifc_reg_cbs_mbox_csr.svh"
+    `include "soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock.svh"
+    `include "soc_ifc_reg_cbs_mbox_csr_mbox_cmd_command.svh"
+    `include "soc_ifc_reg_cbs_mbox_csr_mbox_dlen_length.svh"
+    `include "soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain.svh"
+    `include "soc_ifc_reg_cbs_mbox_csr_mbox_dataout_dataout.svh"
+    `include "soc_ifc_reg_cbs_mbox_csr_mbox_status_status.svh"
+    `include "soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute.svh"
+    `include "soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock.svh"
+    `include "soc_ifc_reg_cbs_intr_block_rf_ext_global_intr_en_r_base.svh"
+    `include "soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base.svh"
+    `include "soc_ifc_reg_cbs_intr_block_rf_ext_error_intr_en_r_base.svh"
+    `include "soc_ifc_reg_cbs_intr_block_rf_ext_error_intr_trig_r_base.svh"
+    `include "soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base.svh"
+    `include "soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_en_r_base.svh"
+    `include "soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_trig_r_base.svh"
+
 // pragma uvmf custom define_register_classes end
 // pragma uvmf custom define_block_map_coverage_class begin
    //--------------------------------------------------------------------
@@ -472,6 +526,39 @@ package soc_ifc_reg_model_top_pkg;
         uvm_reg_map default_map; // Block map
         uvm_reg_map soc_ifc_APB_map; // Block map
         uvm_reg_map soc_ifc_AHB_map; // Block map
+
+        soc_ifc_reg_cbs_intr_block_rf_ext_global_intr_en_r_base      soc_ifc_reg_intr_block_rf_ext_global_intr_en_r_base_cb;
+        soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base soc_ifc_reg_intr_block_rf_ext_error_internal_intr_r_base_cb;
+        soc_ifc_reg_cbs_intr_block_rf_ext_error_intr_en_r_base       soc_ifc_reg_intr_block_rf_ext_error_intr_en_r_base_cb;
+        soc_ifc_reg_cbs_intr_block_rf_ext_error_intr_trig_r_base     soc_ifc_reg_intr_block_rf_ext_error_intr_trig_r_base_cb;
+        soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base soc_ifc_reg_intr_block_rf_ext_notif_internal_intr_r_base_cb;
+        soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_en_r_base       soc_ifc_reg_intr_block_rf_ext_notif_intr_en_r_base_cb;
+        soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_trig_r_base     soc_ifc_reg_intr_block_rf_ext_notif_intr_trig_r_base_cb;
+
+        soc_ifc_reg_cbs_intr_block_rf_ext_global_intr_en_r_base      sha512_acc_csr_intr_block_rf_ext_global_intr_en_r_base_cb;
+        soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base sha512_acc_csr_intr_block_rf_ext_error_internal_intr_r_base_cb;
+        soc_ifc_reg_cbs_intr_block_rf_ext_error_intr_en_r_base       sha512_acc_csr_intr_block_rf_ext_error_intr_en_r_base_cb;
+        soc_ifc_reg_cbs_intr_block_rf_ext_error_intr_trig_r_base     sha512_acc_csr_intr_block_rf_ext_error_intr_trig_r_base_cb;
+        soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base sha512_acc_csr_intr_block_rf_ext_notif_internal_intr_r_base_cb;
+        soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_en_r_base       sha512_acc_csr_intr_block_rf_ext_notif_intr_en_r_base_cb;
+        soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_trig_r_base     sha512_acc_csr_intr_block_rf_ext_notif_intr_trig_r_base_cb;
+
+        soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock       mbox_csr_mbox_lock_lock_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_cmd_command     mbox_csr_mbox_cmd_command_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_dlen_length     mbox_csr_mbox_dlen_length_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain   mbox_csr_mbox_datain_datain_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_dataout_dataout mbox_csr_mbox_dataout_dataout_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_status_status   mbox_csr_mbox_status_status_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute mbox_csr_mbox_execute_execute_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock   mbox_csr_mbox_unlock_unlock_cb;
+
+        uvm_reg_field error_en_flds[$];
+        uvm_reg_field notif_en_flds[$];
+        uvm_reg_field error_sts_flds[$];
+        uvm_reg_field notif_sts_flds[$];
+        uvm_reg_field error_trig_flds[$];
+        uvm_reg_field notif_trig_flds[$];
+
 // pragma uvmf custom instantiate_registers_within_block end
 
       soc_ifc_fixme_map_coverage fixme_map_cg;
@@ -513,6 +600,84 @@ package soc_ifc_reg_model_top_pkg;
         this.soc_ifc_reg_rm = new("soc_ifc_reg_rm");
         this.soc_ifc_reg_rm.configure(this);
         this.soc_ifc_reg_rm.build();
+
+        soc_ifc_reg_intr_block_rf_ext_global_intr_en_r_base_cb      = soc_ifc_reg_cbs_intr_block_rf_ext_global_intr_en_r_base     ::type_id::create("soc_ifc_reg_intr_block_rf_ext_global_intr_en_r_base_cb"     );
+        soc_ifc_reg_intr_block_rf_ext_error_internal_intr_r_base_cb = soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base::type_id::create("soc_ifc_reg_intr_block_rf_ext_error_internal_intr_r_base_cb");
+        soc_ifc_reg_intr_block_rf_ext_error_intr_en_r_base_cb       = soc_ifc_reg_cbs_intr_block_rf_ext_error_intr_en_r_base      ::type_id::create("soc_ifc_reg_intr_block_rf_ext_error_intr_en_r_base_cb"      );
+        soc_ifc_reg_intr_block_rf_ext_error_intr_trig_r_base_cb     = soc_ifc_reg_cbs_intr_block_rf_ext_error_intr_trig_r_base    ::type_id::create("soc_ifc_reg_intr_block_rf_ext_error_intr_trig_r_base_cb"    );
+        soc_ifc_reg_intr_block_rf_ext_notif_internal_intr_r_base_cb = soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base::type_id::create("soc_ifc_reg_intr_block_rf_ext_notif_internal_intr_r_base_cb");
+        soc_ifc_reg_intr_block_rf_ext_notif_intr_en_r_base_cb       = soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_en_r_base      ::type_id::create("soc_ifc_reg_intr_block_rf_ext_notif_intr_en_r_base_cb"      );
+        soc_ifc_reg_intr_block_rf_ext_notif_intr_trig_r_base_cb     = soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_trig_r_base    ::type_id::create("soc_ifc_reg_intr_block_rf_ext_notif_intr_trig_r_base_cb"    );
+
+        sha512_acc_csr_intr_block_rf_ext_global_intr_en_r_base_cb      = soc_ifc_reg_cbs_intr_block_rf_ext_global_intr_en_r_base     ::type_id::create("sha512_acc_csr_intr_block_rf_ext_global_intr_en_r_base_cb"     );
+        sha512_acc_csr_intr_block_rf_ext_error_internal_intr_r_base_cb = soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base::type_id::create("sha512_acc_csr_intr_block_rf_ext_error_internal_intr_r_base_cb");
+        sha512_acc_csr_intr_block_rf_ext_error_intr_en_r_base_cb       = soc_ifc_reg_cbs_intr_block_rf_ext_error_intr_en_r_base      ::type_id::create("sha512_acc_csr_intr_block_rf_ext_error_intr_en_r_base_cb"      );
+        sha512_acc_csr_intr_block_rf_ext_error_intr_trig_r_base_cb     = soc_ifc_reg_cbs_intr_block_rf_ext_error_intr_trig_r_base    ::type_id::create("sha512_acc_csr_intr_block_rf_ext_error_intr_trig_r_base_cb"    );
+        sha512_acc_csr_intr_block_rf_ext_notif_internal_intr_r_base_cb = soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base::type_id::create("sha512_acc_csr_intr_block_rf_ext_notif_internal_intr_r_base_cb");
+        sha512_acc_csr_intr_block_rf_ext_notif_intr_en_r_base_cb       = soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_en_r_base      ::type_id::create("sha512_acc_csr_intr_block_rf_ext_notif_intr_en_r_base_cb"      );
+        sha512_acc_csr_intr_block_rf_ext_notif_intr_trig_r_base_cb     = soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_trig_r_base    ::type_id::create("sha512_acc_csr_intr_block_rf_ext_notif_intr_trig_r_base_cb"    );
+
+        mbox_csr_mbox_lock_lock_cb       = soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock      ::type_id::create("mbox_csr_mbox_lock_lock_cb"      );
+        mbox_csr_mbox_cmd_command_cb     = soc_ifc_reg_cbs_mbox_csr_mbox_cmd_command    ::type_id::create("mbox_csr_mbox_cmd_command_cb"    );
+        mbox_csr_mbox_dlen_length_cb     = soc_ifc_reg_cbs_mbox_csr_mbox_dlen_length    ::type_id::create("mbox_csr_mbox_dlen_length_cb"    );
+        mbox_csr_mbox_datain_datain_cb   = soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain  ::type_id::create("mbox_csr_mbox_datain_datain_cb"  );
+        mbox_csr_mbox_dataout_dataout_cb = soc_ifc_reg_cbs_mbox_csr_mbox_dataout_dataout::type_id::create("mbox_csr_mbox_dataout_dataout_cb");
+        mbox_csr_mbox_status_status_cb   = soc_ifc_reg_cbs_mbox_csr_mbox_status_status  ::type_id::create("mbox_csr_mbox_status_status_cb"  );
+        mbox_csr_mbox_execute_execute_cb = soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute::type_id::create("mbox_csr_mbox_execute_execute_cb");
+        mbox_csr_mbox_unlock_unlock_cb   = soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock  ::type_id::create("mbox_csr_mbox_unlock_unlock_cb"  );
+
+        // Callbacks compute side-effects to other registers in the reg-model
+        // in response to 'do_predict'.
+        // 'do_predict' is invoked by the reg_predictor after receiving a transaction
+        // from the soc_ifc_predictor.
+
+        /* -- soc_ifc_reg interrupts -- */
+        uvm_reg_field_cb::add(soc_ifc_reg_rm.intr_block_rf_ext.global_intr_en_r.error_en, soc_ifc_reg_intr_block_rf_ext_global_intr_en_r_base_cb     );
+        uvm_reg_field_cb::add(soc_ifc_reg_rm.intr_block_rf_ext.global_intr_en_r.notif_en, soc_ifc_reg_intr_block_rf_ext_global_intr_en_r_base_cb     );
+        this.soc_ifc_reg_rm.intr_block_rf_ext.error_intr_en_r      .get_fields(error_en_flds  );
+        this.soc_ifc_reg_rm.intr_block_rf_ext.notif_intr_en_r      .get_fields(notif_en_flds  );
+        this.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.get_fields(error_sts_flds );
+        this.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.get_fields(notif_sts_flds );
+        this.soc_ifc_reg_rm.intr_block_rf_ext.error_intr_trig_r    .get_fields(error_trig_flds);
+        this.soc_ifc_reg_rm.intr_block_rf_ext.notif_intr_trig_r    .get_fields(notif_trig_flds);
+        foreach (error_en_flds  [ii]) uvm_reg_field_cb::add(error_en_flds  [ii], soc_ifc_reg_intr_block_rf_ext_error_intr_en_r_base_cb      );
+        foreach (notif_en_flds  [ii]) uvm_reg_field_cb::add(notif_en_flds  [ii], soc_ifc_reg_intr_block_rf_ext_notif_intr_en_r_base_cb      );
+        foreach (error_sts_flds [ii]) uvm_reg_field_cb::add(error_sts_flds [ii], soc_ifc_reg_intr_block_rf_ext_error_internal_intr_r_base_cb);
+        foreach (notif_sts_flds [ii]) uvm_reg_field_cb::add(notif_sts_flds [ii], soc_ifc_reg_intr_block_rf_ext_notif_internal_intr_r_base_cb);
+        foreach (error_trig_flds[ii]) uvm_reg_field_cb::add(error_trig_flds[ii], soc_ifc_reg_intr_block_rf_ext_error_intr_trig_r_base_cb    );
+        foreach (notif_trig_flds[ii]) uvm_reg_field_cb::add(notif_trig_flds[ii], soc_ifc_reg_intr_block_rf_ext_notif_intr_trig_r_base_cb    );
+
+        /* -- sha512_acc_csr interrupts -- */
+        uvm_reg_field_cb::add(sha512_acc_csr_rm.intr_block_rf_ext.global_intr_en_r.error_en, sha512_acc_csr_intr_block_rf_ext_global_intr_en_r_base_cb     );
+        uvm_reg_field_cb::add(sha512_acc_csr_rm.intr_block_rf_ext.global_intr_en_r.notif_en, sha512_acc_csr_intr_block_rf_ext_global_intr_en_r_base_cb     );
+        error_en_flds  .delete(); 
+        notif_en_flds  .delete(); 
+        error_sts_flds .delete(); 
+        notif_sts_flds .delete(); 
+        error_trig_flds.delete(); 
+        notif_trig_flds.delete(); 
+        this.sha512_acc_csr_rm.intr_block_rf_ext.error_intr_en_r      .get_fields(error_en_flds  );
+        this.sha512_acc_csr_rm.intr_block_rf_ext.notif_intr_en_r      .get_fields(notif_en_flds  );
+        this.sha512_acc_csr_rm.intr_block_rf_ext.error_internal_intr_r.get_fields(error_sts_flds );
+        this.sha512_acc_csr_rm.intr_block_rf_ext.notif_internal_intr_r.get_fields(notif_sts_flds );
+        this.sha512_acc_csr_rm.intr_block_rf_ext.error_intr_trig_r    .get_fields(error_trig_flds);
+        this.sha512_acc_csr_rm.intr_block_rf_ext.notif_intr_trig_r    .get_fields(notif_trig_flds);
+        foreach (error_en_flds  [ii]) uvm_reg_field_cb::add(error_en_flds  [ii], sha512_acc_csr_intr_block_rf_ext_error_intr_en_r_base_cb      );
+        foreach (notif_en_flds  [ii]) uvm_reg_field_cb::add(notif_en_flds  [ii], sha512_acc_csr_intr_block_rf_ext_notif_intr_en_r_base_cb      );
+        foreach (error_sts_flds [ii]) uvm_reg_field_cb::add(error_sts_flds [ii], sha512_acc_csr_intr_block_rf_ext_error_internal_intr_r_base_cb);
+        foreach (notif_sts_flds [ii]) uvm_reg_field_cb::add(notif_sts_flds [ii], sha512_acc_csr_intr_block_rf_ext_notif_internal_intr_r_base_cb);
+        foreach (error_trig_flds[ii]) uvm_reg_field_cb::add(error_trig_flds[ii], sha512_acc_csr_intr_block_rf_ext_error_intr_trig_r_base_cb    );
+        foreach (notif_trig_flds[ii]) uvm_reg_field_cb::add(notif_trig_flds[ii], sha512_acc_csr_intr_block_rf_ext_notif_intr_trig_r_base_cb    );
+
+        /* -- mbox_csr -- */
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_lock   .lock      , mbox_csr_mbox_lock_lock_cb       );
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_cmd    .command   , mbox_csr_mbox_cmd_command_cb     );
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_dlen   .length    , mbox_csr_mbox_dlen_length_cb     );
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_datain .datain    , mbox_csr_mbox_datain_datain_cb   );
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_dataout.dataout   , mbox_csr_mbox_dataout_dataout_cb );
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_status .status    , mbox_csr_mbox_status_status_cb   );
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_execute.execute   , mbox_csr_mbox_execute_execute_cb );
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_unlock .unlock    , mbox_csr_mbox_unlock_unlock_cb   );
 
 // pragma uvmf custom construct_configure_build_registers_within_block end
 // pragma uvmf custom add_registers_to_block_map begin

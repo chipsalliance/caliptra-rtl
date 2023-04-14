@@ -28,6 +28,9 @@ class soc_ifc_env_mbox_rand_small_sequence extends soc_ifc_env_mbox_sequence_bas
 
   `uvm_object_utils( soc_ifc_env_mbox_rand_small_sequence )
 
+  // Constrain command to undefined opcode
+  constraint mbox_cmd_undef_c { !(mbox_op_rand.cmd.cmd_s inside {defined_cmds}); }
+
   // Constrain dlen to be a small command
   // Max. size: 512B
   constraint mbox_dlen_max_small_c { mbox_op_rand.dlen <= 32'h0000_0200; }

@@ -36,8 +36,8 @@ class soc_ifc_env_cptra_mbox_interference_handler_sequence extends soc_ifc_env_c
   rand uvm_reg_data_t data;
   rand uvm_reg_addr_t mem_offset;
   rand ahb_rnw_e RnW;
-  rand byte xfers;
-  rand byte cycles;
+  rand byte unsigned xfers;
+  rand byte unsigned cycles;
 
 endclass
 

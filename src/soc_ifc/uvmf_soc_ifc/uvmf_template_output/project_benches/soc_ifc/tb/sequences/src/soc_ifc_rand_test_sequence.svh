@@ -205,10 +205,6 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
       cptra_status_agent_config.wait_for_num_clocks(400);
     join
 
-    if (1) // TODO -- how to properly choose which to print?
-        $display("* TESTCASE PASSED");
-    else
-        $display("* TESTCASE FAILED");
     // pragma uvmf custom body end
   endtask
 

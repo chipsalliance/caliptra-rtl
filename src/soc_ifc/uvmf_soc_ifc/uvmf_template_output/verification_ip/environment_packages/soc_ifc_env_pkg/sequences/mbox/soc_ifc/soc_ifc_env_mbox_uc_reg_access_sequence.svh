@@ -115,11 +115,15 @@ endtask
 task soc_ifc_env_mbox_uc_reg_access_sequence::mbox_poll_status();
   mbox_status_e data;
 
-  mbox_check_status(data);
-  while (data == CMD_BUSY) begin
+  // If we read status immediately, the mbox_fsm_ps will not have transitioned
+  // yet and will predict the prior value in the reg-model, missing the transition.
+  // This affects valid_requester/valid_receiver logic in soc_ifc_predictor,
+  // which results in false error reporting.
+  // Maybe we need a better way to predict mbox_fsm_ps field changes?
+  do begin
       configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200);
       mbox_check_status(data);
-  end
+  end while (data == CMD_BUSY);
 
   if (data == DATA_READY) begin
       if (mbox_resp_expected_dlen == 0)

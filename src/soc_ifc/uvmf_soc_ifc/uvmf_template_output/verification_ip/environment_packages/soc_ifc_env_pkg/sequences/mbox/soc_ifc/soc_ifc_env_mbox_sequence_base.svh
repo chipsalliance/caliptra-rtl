@@ -40,6 +40,12 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   uvm_status_e reg_sts;
   rand bit do_apb_lock_check;
   rand bit retry_failed_reg_axs;
+  // Certain random sequences force the command to be outside of the defined
+  // options from mbox_cmd_e, such that truly random behavior does not violate
+  // expected activity for the command opcode. To do this, we need to be able
+  // to build a constraint to exclude the enum values, which requires this
+  // array of all possible enumerated values.
+  mbox_cmd_e defined_cmds[];
 
   // PAUSER tracking/override
   bit [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users [5];
@@ -97,16 +103,44 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   constraint apb_reg_check_c {do_apb_lock_check dist {0:/1, 1:/1};}
   constraint retry_failed_reg_c {retry_failed_reg_axs == 1'b1;}
 
+  //==========================================
+  // Function:    new
+  // Description: Constructor
+  //==========================================
   function new(string name = "" );
     super.new(name);
+    // Create an array of all defined mbox cmd values.
+    // This can be used in constraints as appropriate
+    defined_cmds = new[mbox_op_rand.cmd.cmd_e.num()];
+    foreach (defined_cmds[idx]) begin
+        if (idx == 0)
+            defined_cmds[idx] = mbox_op_rand.cmd.cmd_e.first();
+        else
+            defined_cmds[idx] = defined_cmds[idx-1].next();
+    end
+
+    // Assign probabilties of generating invalid PAUSER at different stages
     set_pauser_prob_vals();
   endfunction
 
+  //==========================================
+  // Function:    do_kill
+  // Description: Called as part of sequencer.stop_sequences
+  //              when invoked on the sequencer that is running
+  //              this sequence.
+  //==========================================
   virtual function void do_kill();
     // FIXME gracefully terminate any APB requests pending?
     reg_model.soc_ifc_APB_map.get_sequencer().stop_sequences(); // Kill any pending APB transfers
   endfunction
 
+  //==========================================
+  // Task:        pre_body
+  // Description: Setup tasks to:
+  //               - get a reg model handle
+  //               - check for a valid responder handle
+  //               - check valid dlen value
+  //==========================================
   virtual task pre_body();
     super.pre_body();
     reg_model = configuration.soc_ifc_rm;
@@ -120,6 +154,11 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
         `uvm_error("MBOX_SEQ", $sformatf("Randomized SOC_IFC environment mailbox base sequence with bad dlen. Max: [0x%x] Got: [0x%x]. Cmd randomized to %p", (reg_model.mbox_mem_rm.get_size() * reg_model.mbox_mem_rm.get_n_bytes()), mbox_op_rand.dlen, mbox_op_rand.cmd.cmd_e))
   endtask
 
+  //==========================================
+  // Task:        body
+  // Description: Implement main functionality for
+  //              SOC-side transmission of mailbox request.
+  //==========================================
   virtual task body();
 
     op_sts_e op_sts;
@@ -149,11 +188,17 @@ endclass
 
 // TODO these functions are all intended to be overridden by inheriting sequence
 //      although some are simple and may not need any modification
+//==========================================
+// Task:        mbox_setup
+// Description: Setup tasks to:
+//               - Grab configured mbox_valid_users from reg model
+//               - Any other functionality implemented in derived classes
+//==========================================
 task soc_ifc_env_mbox_sequence_base::mbox_setup();
-    // Read the valid PAUSER fields from register mirrored value if the local array
-    // has not already been overridden from default values
     byte ii;
     uvm_status_e sts;
+    // Read the valid PAUSER fields from register mirrored value if the local array
+    // has not already been overridden from default values
     if (!mbox_valid_users_initialized) begin
         for (ii=0; ii < $size(reg_model.soc_ifc_reg_rm.CPTRA_PAUSER_LOCK); ii++) begin: VALID_USER_LOOP
             if (reg_model.soc_ifc_reg_rm.CPTRA_PAUSER_LOCK[ii].LOCK.get_mirrored_value())
@@ -172,6 +217,10 @@ task soc_ifc_env_mbox_sequence_base::mbox_setup();
     end
 endtask
 
+//==========================================
+// Task:        mbox_acquire_lock
+// Description: Poll mbox_lock to gain control over mailbox
+//==========================================
 task soc_ifc_env_mbox_sequence_base::mbox_acquire_lock(output op_sts_e op_sts);
     uvm_reg_data_t data;
     bit soc_has_lock;
@@ -263,6 +312,11 @@ task soc_ifc_env_mbox_sequence_base::mbox_acquire_lock(output op_sts_e op_sts);
     op_sts = CPTRA_SUCCESS;
 endtask
 
+//==========================================
+// Task:        mbox_set_cmd
+// Description: Submit randomized command and dlen to
+//              mbox_cmd and mbox_dlen registers
+//==========================================
 task soc_ifc_env_mbox_sequence_base::mbox_set_cmd(input mbox_op_s op);
     uvm_reg_data_t data;
 
@@ -293,7 +347,11 @@ task soc_ifc_env_mbox_sequence_base::mbox_set_cmd(input mbox_op_s op);
     end
 endtask
 
-// This should be overridden with real data to write
+//==========================================
+// Task:        mbox_set_cmd
+// Description: Write data in a loop to mbox_datain register
+// NOTE:        This should be overridden with real data to write
+//==========================================
 task soc_ifc_env_mbox_sequence_base::mbox_push_datain();
     int ii;
     uvm_reg_data_t data;
@@ -318,6 +376,11 @@ task soc_ifc_env_mbox_sequence_base::mbox_push_datain();
     end
 endtask
 
+//==========================================
+// Task:        mbox_execute
+// Description: Submit command to Caliptra by writing
+//              1 to mbox_execute register
+//==========================================
 task soc_ifc_env_mbox_sequence_base::mbox_execute();
     uvm_reg_data_t data = uvm_reg_data_t'(1) << reg_model.mbox_csr_rm.mbox_execute.execute.get_lsb_pos();
     reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_EXECUTE)));
@@ -328,6 +391,10 @@ task soc_ifc_env_mbox_sequence_base::mbox_execute();
     end
 endtask
 
+//==========================================
+// Task:        mbox_check_status
+// Description: Read mbox_status
+//==========================================
 task soc_ifc_env_mbox_sequence_base::mbox_check_status(output mbox_status_e data);
     uvm_reg_data_t reg_data;
     reg_model.mbox_csr_rm.mbox_status.read(reg_sts, reg_data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_STATUS)));
@@ -346,6 +413,10 @@ task soc_ifc_env_mbox_sequence_base::mbox_check_status(output mbox_status_e data
     end
 endtask
 
+//==========================================
+// Task:        mbox_check_status
+// Description: Fetch all response data from uC in a loop
+//==========================================
 task soc_ifc_env_mbox_sequence_base::mbox_read_resp_data();
     uvm_reg_data_t data;
     int ii;
@@ -360,14 +431,26 @@ task soc_ifc_env_mbox_sequence_base::mbox_read_resp_data();
     end
 endtask
 
+//==========================================
+// Task:        mbox_poll_status
+// Description: Issue calls to mbox_check_status
+//              until status change indicates control is
+//              returned to SOC.
+//              Upon reclaiming control, read any available
+//              response data from mbox_dataout.
+//==========================================
 task soc_ifc_env_mbox_sequence_base::mbox_poll_status();
     mbox_status_e data;
 
-    mbox_check_status(data);
-    while (data == CMD_BUSY) begin
+    // If we read status immediately, the mbox_fsm_ps will not have transitioned
+    // yet and will predict the prior value in the reg-model, missing the transition.
+    // This affects valid_requester/valid_receiver logic in soc_ifc_predictor,
+    // which results in false error reporting.
+    // Maybe we need a better way to predict mbox_fsm_ps field changes?
+    do begin
         configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200);
         mbox_check_status(data);
-    end
+    end while (data == CMD_BUSY);
 
     if (data == DATA_READY) begin
         if (mbox_resp_expected_dlen == 0)
@@ -388,6 +471,11 @@ task soc_ifc_env_mbox_sequence_base::mbox_poll_status();
     end
 endtask
 
+//==========================================
+// Task:        mbox_clr_execute
+// Description: End the mailbox flow by writing
+//              0 to mbox_execute register
+//==========================================
 task soc_ifc_env_mbox_sequence_base::mbox_clr_execute();
     reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, uvm_reg_data_t'(0), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_EXECUTE)));
     report_reg_sts(reg_sts, "mbox_execute");
@@ -397,11 +485,24 @@ task soc_ifc_env_mbox_sequence_base::mbox_clr_execute();
     end
 endtask
 
+//==========================================
+// Task:        mbox_teardown
+// Description: Placeholder task to allow derived classes
+//              to add any end-of-sequence functionality.
+//              Currently just reports PAUSER violation count.
+//==========================================
 task soc_ifc_env_mbox_sequence_base::mbox_teardown();
     // Summary at sequence end
     `uvm_info("MBOX_SEQ", $sformatf("Count of mailbox accesses performed with invalid PAUSER: %0d", hit_invalid_pauser_count), UVM_MEDIUM)
 endtask
 
+//==========================================
+// Function:    set_pauser_prob_vals
+// Description: Assign values to class variables
+//              that control the likelihood of APB transfers
+//              using an illegal PAUSER value at all stages
+//              of the mailbox flow.
+//==========================================
 function void soc_ifc_env_mbox_sequence_base::set_pauser_prob_vals();
   this.PAUSER_PROB_LOCK    = FORCE_VALID_PAUSER;
   this.PAUSER_PROB_CMD     = FORCE_VALID_PAUSER;
@@ -411,18 +512,21 @@ function void soc_ifc_env_mbox_sequence_base::set_pauser_prob_vals();
   this.PAUSER_PROB_DATAOUT = FORCE_VALID_PAUSER;
 endfunction
 
-// Return a caliptra_apb_user object populated with some value of
-// addr_user (with which to override PAUSER in the reg adapter).
-// The likelihood that the generated addr_user is a invalid value
-// is given by the supplied argument.
-// The supplied argument is normalized against the value 1000 (the probability
-// of getting a valid value). I.e.:
-//  - invalid_prob == 0   : returned addr_user is guaranteed to be valid
-//  - invalid_prob <  1000: returned addr_user is most likely to be valid
-//  - invalid_prob >  1000: returned addr_user is most likely to be invalid
-// A legal addr_user is defined as:
-//  - A random selection from valid_users if the mbox_lock has yet to be acquired
-//  - The value in mbox_user if mbox_lock has been acquired already
+//==========================================
+// Function:    get_rand_user
+// Description: Return a caliptra_apb_user object populated with some value of
+//              addr_user (with which to override PAUSER in the reg adapter).
+//              The likelihood that the generated addr_user is a invalid value
+//              is given by the supplied argument.
+//              The supplied argument is normalized against the value 1000 (the probability
+//              of getting a valid value). I.e.:
+//               - invalid_prob == 0   : returned addr_user is guaranteed to be valid
+//               - invalid_prob <  1000: returned addr_user is most likely to be valid
+//               - invalid_prob >  1000: returned addr_user is most likely to be invalid
+//              A legal addr_user is defined as:
+//               - A random selection from valid_users if the mbox_lock has yet to be acquired
+//               - The value in mbox_user if mbox_lock has been acquired already
+//==========================================
 function caliptra_apb_user soc_ifc_env_mbox_sequence_base::get_rand_user(int invalid_prob = FORCE_VALID_PAUSER);
     apb_user_obj = new();
     if (!this.apb_user_obj.randomize() with {if (pauser_locked.locked)
@@ -440,6 +544,11 @@ function caliptra_apb_user soc_ifc_env_mbox_sequence_base::get_rand_user(int inv
     return this.apb_user_obj;
 endfunction
 
+//==========================================
+// Function:    pauser_used_is_valid
+// Description: Assess whether the most recent APB
+//              transfer used a valid PAUSER or not
+//==========================================
 function bit soc_ifc_env_mbox_sequence_base::pauser_used_is_valid();
     if (this.pauser_locked.locked)
         return this.apb_user_obj.get_addr_user() == this.pauser_locked.pauser;
@@ -447,6 +556,12 @@ function bit soc_ifc_env_mbox_sequence_base::pauser_used_is_valid();
         return this.apb_user_obj.get_addr_user() inside mbox_valid_users;
 endfunction
 
+//==========================================
+// Function:    report_reg_sts
+// Description: Generate informative messages about the result
+//              of the most recent APB transfer, accounting for
+//              the PAUSER value that was used.
+//==========================================
 function void soc_ifc_env_mbox_sequence_base::report_reg_sts(uvm_status_e reg_sts, string name);
     // APB error is flagged only for PAUSER that doesn't match the registered
     // values, it does not check that PAUSER matches the exact value in

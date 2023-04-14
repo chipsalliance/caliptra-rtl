@@ -148,12 +148,11 @@ function soc_ifc_env_mbox_rand_multi_agent_sequence::randomize_seqs();
 endfunction
 
 task soc_ifc_env_mbox_rand_multi_agent_sequence::start_seqs();
-    int ii;
-    int delay_clks[]; // Delay prior to system reset
+    int unsigned delay_clks[]; // Delay prior to system reset
     delay_clks = new[agents];
 
     `uvm_info("SOC_IFC_MBOX", $sformatf("Initiating [%0d] mailbox sequences in parallel", agents), UVM_LOW)
-    for (ii=0; ii<agents; ii++) begin
+    foreach (soc_ifc_env_mbox_multi_agent_seq[ii]) begin
         if (!std::randomize(delay_clks[ii]) with {delay_clks[ii] < 4*soc_ifc_env_mbox_multi_agent_seq[ii].mbox_op_rand.dlen;}) begin
             `uvm_fatal("SOC_IFC_MBOX", $sformatf("soc_ifc_env_mbox_rand_multi_agent_sequence::body() - %s randomization failed", "delay_clks"));
         end
@@ -163,11 +162,12 @@ task soc_ifc_env_mbox_rand_multi_agent_sequence::start_seqs();
             automatic int ii_val = ii;
             begin
                 configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(delay_clks[ii_val]);
-                `uvm_info("SOC_IFC_MBOX", $sformatf("Initiating sequence [%0d]/[%0d] in multi-agent flow", ii, agents), UVM_MEDIUM)
+                `uvm_info("SOC_IFC_MBOX", $sformatf("Initiating sequence [%0d]/[%0d] in multi-agent flow", ii_val, agents), UVM_MEDIUM)
                 soc_ifc_env_mbox_multi_agent_seq[ii_val].start(configuration.vsqr);
             end
         join_none
     end
-    wait fork;
+    foreach (soc_ifc_env_mbox_multi_agent_seq[ii])
+        soc_ifc_env_mbox_multi_agent_seq[ii].wait_for_sequence_state(STOPPED|FINISHED);
 
 endtask

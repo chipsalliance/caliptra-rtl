@@ -33,20 +33,24 @@ class soc_ifc_env_mbox_rand_medium_interference_sequence extends soc_ifc_env_mbo
   rand uvm_reg_data_t data;
   rand int reg_select;
   rand apb3_rw_e RnW;
-  rand byte xfers;
-  rand byte cycles;
+  rand byte unsigned xfers;
+  rand byte unsigned cycles;
 
 endclass
 
 task soc_ifc_env_mbox_rand_medium_interference_sequence::mbox_poll_status();
     mbox_status_e sts;
     uvm_reg regs[$];
-    byte ii;
+    byte unsigned ii;
 
     reg_model.soc_ifc_APB_map.get_registers(regs, UVM_HIER);
 
-    mbox_check_status(sts);
-    while (sts == CMD_BUSY) begin
+    // If we read status immediately, the mbox_fsm_ps will not have transitioned
+    // yet and will predict the prior value in the reg-model, missing the transition.
+    // This affects valid_requester/valid_receiver logic in soc_ifc_predictor,
+    // which results in false error reporting.
+    // Maybe we need a better way to predict mbox_fsm_ps field changes?
+    do begin
         if(!this.randomize(xfers) with {xfers inside {[1:20]}; }) begin
             `uvm_error("MBOX_SEQ", "Failed to randomize APB reg transfer count in mbox_poll_status")
         end
@@ -68,7 +72,7 @@ task soc_ifc_env_mbox_rand_medium_interference_sequence::mbox_poll_status();
         end
         configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(cycles);
         mbox_check_status(sts);
-    end
+    end while (sts == CMD_BUSY);
 
     if (sts == DATA_READY) begin
         if (mbox_resp_expected_dlen == 0)

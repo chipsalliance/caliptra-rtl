@@ -45,15 +45,31 @@ class soc_ifc_env_cptra_mbox_handler_sequence extends soc_ifc_env_sequence_base 
   extern virtual task mbox_check_fsm();
 
 
+  //==========================================
+  // Function:    new
+  // Description: Constructor
+  //==========================================
   function new(string name = "" );
     super.new(name);
   endfunction
 
+  //==========================================
+  // Function:    do_kill
+  // Description: Called as part of sequencer.stop_sequences
+  //              when invoked on the sequencer that is running
+  //              this sequence.
+  //==========================================
   virtual function void do_kill();
     // FIXME gracefully terminate any AHB requests pending?
     reg_model.soc_ifc_AHB_map.get_sequencer().stop_sequences(); // Kill any pending AHB transfers
   endfunction
 
+  //==========================================
+  // Task:        body
+  // Description: Implement main functionality for
+  //              Caliptra-side handling of received
+  //              mailbox request.
+  //==========================================
   virtual task body();
 
     int sts_rsp_count = 0;
@@ -99,6 +115,13 @@ class soc_ifc_env_cptra_mbox_handler_sequence extends soc_ifc_env_sequence_base 
 
 endclass
 
+//==========================================
+// Task:        mbox_wait_for_command
+// Description: Poll for availability of new
+//              mailbox request, indicated by:
+//                - mbox_execute = 1
+//                - intr status = 1
+//==========================================
 task soc_ifc_env_cptra_mbox_handler_sequence::mbox_wait_for_command(output op_sts_e op_sts);
     uvm_reg_data_t data;
     op_sts = CPTRA_TIMEOUT;
@@ -112,6 +135,10 @@ task soc_ifc_env_cptra_mbox_handler_sequence::mbox_wait_for_command(output op_st
     op_sts = CPTRA_SUCCESS;
 endtask
 
+//==========================================
+// Task:        mbox_get_command
+// Description: Read the mbox_cmd and mbox_dlen registers
+//==========================================
 task soc_ifc_env_cptra_mbox_handler_sequence::mbox_get_command();
     uvm_reg_data_t data;
     reg_model.mbox_csr_rm.mbox_cmd.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
@@ -124,6 +151,11 @@ task soc_ifc_env_cptra_mbox_handler_sequence::mbox_get_command();
     op.dlen = data;
 endtask
 
+//==========================================
+// Task:        mbox_pop_dataout
+// Description: Read the mbox_dataout register
+//              in a loop until all data is received
+//==========================================
 task soc_ifc_env_cptra_mbox_handler_sequence::mbox_pop_dataout();
     int ii;
     uvm_reg_data_t data;
@@ -138,12 +170,19 @@ task soc_ifc_env_cptra_mbox_handler_sequence::mbox_pop_dataout();
     end
 endtask
 
+//==========================================
+// Task:        mbox_push_datain
+// Description: Write data to mbox_datain register
+//              to provide any requested response data for
+//              the mailbox flow
+//==========================================
 task soc_ifc_env_cptra_mbox_handler_sequence::mbox_push_datain();
     uvm_reg_data_t data;
     int ii;
     if (mbox_resp_expected_dlen == 0) begin
         `uvm_error("MBOX_SEQ", "Command received with response data requested, but size of expected response data is 0!")
     end
+    // Write random datain
     for (ii=0; ii < mbox_resp_expected_dlen; ii+=4) begin
         if (!std::randomize(data)) `uvm_error("MBOX_SEQ", "Failed to randomize data")
         reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
@@ -152,9 +191,17 @@ task soc_ifc_env_cptra_mbox_handler_sequence::mbox_push_datain();
     end
 endtask
 
+//==========================================
+// Task:        mbox_set_status
+// Description: Write a new value to mbox_status.status
+//              to transfer control back to SOC to finalize operation.
+//==========================================
 task soc_ifc_env_cptra_mbox_handler_sequence::mbox_set_status();
     mbox_status_e status;
     uvm_reg_data_t data;
+    // Set mbox_dlen to resp size
+    reg_model.mbox_csr_rm.mbox_dlen.write(reg_sts, mbox_resp_expected_dlen, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+    // Determine which status to set and perform the write
     status = op.cmd.cmd_s.resp_reqd ? DATA_READY : CMD_COMPLETE;
     data = uvm_reg_data_t'(status) << reg_model.mbox_csr_rm.mbox_status.status.get_lsb_pos();
     reg_model.mbox_csr_rm.mbox_status.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
@@ -162,6 +209,11 @@ task soc_ifc_env_cptra_mbox_handler_sequence::mbox_set_status();
         `uvm_error("MBOX_SEQ", "Register access failed (mbox_status)")
 endtask
 
+//==========================================
+// Task:        mbox_check_fsm
+// Description: Read mbox_status.mbox_fsm_ps to confirm
+//              state changed as expected.
+//==========================================
 task soc_ifc_env_cptra_mbox_handler_sequence::mbox_check_fsm();
     uvm_reg_data_t data;
     mbox_fsm_state_e fsm_state;
