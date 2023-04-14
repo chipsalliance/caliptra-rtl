@@ -42,7 +42,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.error_code = new("error_code");
-            this.error_code.configure(this, 32, 0, "W1C", 1, 'h0, 1, 1, 0);
+            this.error_code.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_FW_ERROR_FATAL
 
@@ -56,7 +56,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.error_code = new("error_code");
-            this.error_code.configure(this, 32, 0, "W1C", 1, 'h0, 1, 1, 0);
+            this.error_code.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_FW_ERROR_NON_FATAL
 

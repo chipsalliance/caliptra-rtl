@@ -1538,8 +1538,8 @@ module soc_ifc_reg (
     always_comb begin
         automatic logic [31:0] next_c = field_storage.CPTRA_FW_ERROR_FATAL.error_code.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.CPTRA_FW_ERROR_FATAL && decoded_req_is_wr) begin // SW write 1 clear
-            next_c = field_storage.CPTRA_FW_ERROR_FATAL.error_code.value & ~decoded_wr_data[31:0];
+        if(decoded_reg_strb.CPTRA_FW_ERROR_FATAL && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[31:0];
             load_next_c = '1;
         end else if(hwif_in.CPTRA_FW_ERROR_FATAL.error_code.we) begin // HW Write - we
             next_c = hwif_in.CPTRA_FW_ERROR_FATAL.error_code.next;
@@ -1560,8 +1560,8 @@ module soc_ifc_reg (
     always_comb begin
         automatic logic [31:0] next_c = field_storage.CPTRA_FW_ERROR_NON_FATAL.error_code.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.CPTRA_FW_ERROR_NON_FATAL && decoded_req_is_wr) begin // SW write 1 clear
-            next_c = field_storage.CPTRA_FW_ERROR_NON_FATAL.error_code.value & ~decoded_wr_data[31:0];
+        if(decoded_reg_strb.CPTRA_FW_ERROR_NON_FATAL && decoded_req_is_wr) begin // SW write
+            next_c = decoded_wr_data[31:0];
             load_next_c = '1;
         end else if(hwif_in.CPTRA_FW_ERROR_NON_FATAL.error_code.we) begin // HW Write - we
             next_c = hwif_in.CPTRA_FW_ERROR_NON_FATAL.error_code.next;
