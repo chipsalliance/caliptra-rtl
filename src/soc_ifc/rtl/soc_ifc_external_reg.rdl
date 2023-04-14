@@ -19,14 +19,14 @@ reg {
     desc = "Indicates fatal hardware error.
             [br]Caliptra Access: RW
             [br]SOC Access:      RW";
-    rw_rw_sticky error_code[32]=0; 
+    rw_rw_sticky_hw error_code[32]=0; 
 } CPTRA_HW_ERROR_FATAL;
 reg {
     name = "Hardware Error Non-Fatal";
     desc = "Indicates non-fatal hardware error.
             [br]Caliptra Access: RW
             [br]SOC Access:      RW";
-    rw_rw_sticky error_code[32]=0; 
+    rw_rw_sticky_hw error_code[32]=0; 
 } CPTRA_HW_ERROR_NON_FATAL;
 reg {
     name = "Firmware Error Fatal";
