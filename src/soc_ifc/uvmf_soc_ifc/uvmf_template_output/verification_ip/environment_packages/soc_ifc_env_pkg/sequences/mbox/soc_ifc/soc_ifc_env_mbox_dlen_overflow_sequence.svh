@@ -28,6 +28,9 @@ class soc_ifc_env_mbox_dlen_overflow_sequence extends soc_ifc_env_mbox_sequence_
 
   `uvm_object_utils( soc_ifc_env_mbox_dlen_overflow_sequence )
 
+  // Constrain command to undefined opcode
+  constraint mbox_cmd_undef_c { !(mbox_op_rand.cmd.cmd_s inside {defined_cmds}); }
+
   extern virtual task mbox_push_datain();
 
   function new(string name = "" );

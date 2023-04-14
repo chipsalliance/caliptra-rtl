@@ -24,15 +24,15 @@
 //    changes to test_top using the UVM factory type_override:
 //
 //    Test scenario:
-//      Randomized activity to Caliptra
+//      Command-line prompted activity to Caliptra
 //
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
 
-class caliptra_top_rand_test extends test_top;
+class caliptra_top_cmdline_test extends test_top;
 
-  `uvm_component_utils( caliptra_top_rand_test );
+  `uvm_component_utils( caliptra_top_cmdline_test );
 
   function new( string name = "", uvm_component parent = null );
     super.new( name, parent );
@@ -41,7 +41,7 @@ class caliptra_top_rand_test extends test_top;
   virtual function void build_phase(uvm_phase phase);
     // The factory override below is an example of how to replace the caliptra_top_bench_sequence_base
     // sequence with the example_derived_test_sequence.
-    caliptra_top_bench_sequence_base::type_id::set_type_override(caliptra_top_rand_sequence::get_type());
+    caliptra_top_bench_sequence_base::type_id::set_type_override(caliptra_top_cmdline_sequence::get_type());
     // Execute the build_phase of test_top AFTER all factory overrides have been created.
     super.build_phase(phase);
     // pragma uvmf custom configuration_settings_post_randomize begin
@@ -65,8 +65,3 @@ class caliptra_top_rand_test extends test_top;
   endfunction
 
 endclass
-
-// pragma uvmf custom external begin
-// pragma uvmf custom external end
-
-

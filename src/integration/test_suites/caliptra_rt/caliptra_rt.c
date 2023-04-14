@@ -34,6 +34,7 @@
 #include "soc_ifc.h"
 #include <string.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include "printf.h"
 
 /* --------------- Global symbols/typedefs --------------- */
@@ -104,6 +105,7 @@ void caliptra_rt() {
     uint32_t reg_addr;
     uint32_t read_data;
     uint32_t loop_iter;
+    uint32_t temp; // multi-purpose variable
 
     VPRINTF(MEDIUM, "----------------------------------\n");
     VPRINTF(LOW,    "- Caliptra Validation RT!!\n"        );
@@ -233,6 +235,7 @@ void caliptra_rt() {
                             read_data = lsu_read_32((uint32_t *) reg_addr);
                             lsu_write_32((uint32_t *) (CLP_MBOX_CSR_MBOX_DATAIN), read_data);
                         }
+                        lsu_write_32(CLP_MBOX_CSR_MBOX_DLEN, op.dlen);
                     }
                     else if (op.cmd == MBOX_CMD_OOB_ACCESS) {
                         //set the ERROR FATAL register to indicate the expected error
@@ -244,11 +247,31 @@ void caliptra_rt() {
                         VPRINTF(FATAL, "Received MBOX_CMD_OOB_ACCESS but didn't trigger NMI\n");
                         SEND_STDOUT_CTRL(0x1);
                     }
+                    else {
+                        // Read provided data
+                        for (loop_iter = 0; loop_iter<op.dlen; loop_iter+=4) {
+                            read_data = soc_ifc_mbox_read_dataout_single();
+                            if (loop_iter == 4) {
+                                temp = read_data; // Capture resp dlen
+                            }
+                        }
+
+                        // Set resp dlen
+                        lsu_write_32(CLP_MBOX_CSR_MBOX_DLEN, temp);
+
+                        // Write response data
+                        srand((uint32_t) (op.cmd ^ read_data)); // Initialize rand num generator
+                        for (loop_iter = 0; loop_iter<temp; loop_iter+=4) {
+                            lsu_write_32((uint32_t *) (CLP_MBOX_CSR_MBOX_DATAIN), rand());
+                        }
+
+                    }
 
                     soc_ifc_set_mbox_status_field(DATA_READY);
                 }
                 else {
                     VPRINTF(MEDIUM, "Received mailbox command (no expected RESP) from SOC! Got 0x%x\n", op.cmd);
+                    lsu_write_32(CLP_MBOX_CSR_MBOX_DLEN, 0);
                     soc_ifc_set_mbox_status_field(CMD_COMPLETE);
                 }
             }

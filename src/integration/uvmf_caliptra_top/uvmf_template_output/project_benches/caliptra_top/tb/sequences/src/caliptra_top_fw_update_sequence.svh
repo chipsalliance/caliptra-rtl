@@ -193,10 +193,6 @@ class caliptra_top_fw_update_sequence extends caliptra_top_bench_sequence_base;
       soc_ifc_subenv_cptra_status_agent_config.wait_for_num_clocks(80000);
     join
 
-    if (1) // TODO -- Move to Scoreboard
-        $display("* TESTCASE PASSED");
-    else
-        $display("* TESTCASE FAILED");
     // pragma uvmf custom body end
   endtask
 

@@ -28,6 +28,9 @@ class soc_ifc_env_mbox_dlen_underflow_sequence extends soc_ifc_env_mbox_sequence
 
   `uvm_object_utils( soc_ifc_env_mbox_dlen_underflow_sequence )
 
+  // Constrain command to undefined opcode
+  constraint mbox_cmd_undef_c { !(mbox_op_rand.cmd.cmd_s inside {defined_cmds}); }
+
   extern virtual task mbox_push_datain();
 
   function new(string name = "" );

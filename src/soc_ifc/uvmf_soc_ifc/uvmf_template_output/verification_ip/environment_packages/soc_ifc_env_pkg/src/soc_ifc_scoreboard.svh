@@ -146,10 +146,11 @@ class soc_ifc_scoreboard #(
   int match_count; // FIXME report this
   int mismatch_count; // FIXME report this
   int nothing_to_compare_against_count; // FIXME check this and report
+  bit testcase_passed = 1'b0;
 
   // Variables used for report_phase summary output formatting using report_message()
-  int report_variables[]; // FIXME
-  string report_hdr = "SCOREBOARD_RESULTS: "; // FIXME
+  int report_variables[];
+  string report_hdr = "SCOREBOARD_RESULTS: ";
 
   // Variable used to enable end of test scoreboard empty check
   bit end_of_test_empty_check=1; // FIXME
@@ -224,6 +225,7 @@ class soc_ifc_scoreboard #(
     end
     if (multiple_missed_txn_error)
         `uvm_error("SCBD_SOC_IFC_STS",$sformatf("Received multiple expected transactions without corresponding actual transaction. Problem fields: %p", soc_ifc_status_monitor_struct_rpt))
+    transaction_count++;
     -> entry_received;
  
     // pragma uvmf custom expected_analysis_export_scoreboard end
@@ -243,6 +245,7 @@ class soc_ifc_scoreboard #(
             `uvm_error("SCBD_CPTRA_STS", $sformatf("Unexpected transaction! soc_ifc_scoreboard was reset, but the reset signals in this transaction are not asserted. noncore_rst_asserted: [%d] uc_rst_asserted: [%d]", t.noncore_rst_asserted, t.uc_rst_asserted))
         reset_handled.reset();
     end
+    transaction_count++;
     -> entry_received;
  
     // pragma uvmf custom expected_cptra_analysis_export_scoreboard end
@@ -292,7 +295,7 @@ class soc_ifc_scoreboard #(
         // Based on comparison results, proceed with updating scoreboard state
         if (txn_eq) begin
 
-            `uvm_info("SCBD_SOC_IFC_STS", "write_actual_analysis_export() received transaction matching multiple aggregated expected transactions!", UVM_HIGH)
+            `uvm_info("SCBD_SOC_IFC_STS", "write_actual_analysis_export() received transaction matching multiple aggregated expected transactions!", UVM_MEDIUM)
             match_count++;
 
             // This is a 0's-based count of how many expected transactions
@@ -318,8 +321,8 @@ class soc_ifc_scoreboard #(
                         // If a bit has toggled on the status interface since last predicted transaction
                         // increment our toggle counter. But don't exceed a count of 2'b10, because
                         // we don't want to roll over
-                        if (soc_ifc_status_monitor_struct[sts_bit] ^ soc_ifc_status_monitor_struct_prev[sts_bit])
-                            soc_ifc_status_monitor_toggle_count[sts_bit] += ~soc_ifc_status_monitor_toggle_count[sts_bit][1];
+                        if ((soc_ifc_status_monitor_struct[sts_bit] ^ soc_ifc_status_monitor_struct_prev[sts_bit]) && (soc_ifc_status_monitor_toggle_count[sts_bit] <= 1))
+                            soc_ifc_status_monitor_toggle_count[sts_bit] += 1;
                     end
                 end
             end
@@ -338,6 +341,7 @@ class soc_ifc_scoreboard #(
             soc_ifc_expected_hash.delete(t.get_key());
         end
     end
+    // 1:1 match of incoming actual transaction with an expected transaction
     else if (soc_ifc_expected_hash.exists(t.get_key())) begin
         t_exp = soc_ifc_expected_hash[t.get_key()];
         txn_eq = t.compare(t_exp);
@@ -422,6 +426,7 @@ class soc_ifc_scoreboard #(
 
     ahb_expected_q.push_back(t);
 
+    transaction_count++;
     -> entry_received;
  
     // pragma uvmf custom expected_ahb_analysis_export_scoreboard end
@@ -442,6 +447,7 @@ class soc_ifc_scoreboard #(
 
     apb_expected_q.push_back(t);
 
+    transaction_count++;
     -> entry_received;
  
     // pragma uvmf custom expected_apb_analysis_export_scoreboard end
@@ -465,8 +471,14 @@ class soc_ifc_scoreboard #(
     if (ahb_expected_q.size() > 0) begin
         t_exp = ahb_expected_q.pop_front();
         txn_eq = t.compare(t_exp);
-        if (txn_eq) `uvm_info ("SCBD_AHB", $sformatf("Actual AHB txn with {Address: 0x%x} {Data: 0x%x} {RnW: %p} matches expected",t.address,t.data[0],t.RnW), UVM_HIGH)
-        else        `uvm_error("SCBD_AHB", $sformatf("Actual AHB txn with {Address: 0x%x} {Data: 0x%x} {RnW: %p} {Resp: %p} does not match expected: {Address: 0x%x} {Data: 0x%x} {RnW: %p} {Resp: %p}",t.address,t.data[0],t.RnW,t.resp[0],t_exp.address,t_exp.data[0],t_exp.RnW,t_exp.resp[0]))
+        if (txn_eq) begin
+            match_count++;
+            `uvm_info ("SCBD_AHB", $sformatf("Actual AHB txn with {Address: 0x%x} {Data: 0x%x} {RnW: %p} matches expected",t.address,t.data[0],t.RnW), UVM_HIGH)
+        end
+        else begin
+            mismatch_count++;
+            `uvm_error("SCBD_AHB", $sformatf("Actual AHB txn with {Address: 0x%x} {Data: 0x%x} {RnW: %p} {Resp: %p} does not match expected: {Address: 0x%x} {Data: 0x%x} {RnW: %p} {Resp: %p}",t.address,t.data[0],t.RnW,t.resp[0],t_exp.address,t_exp.data[0],t_exp.RnW,t_exp.resp[0]))
+        end
     end
     else begin
         //  UVMF_CHANGE_ME: Implement custom scoreboard here.  
@@ -499,8 +511,14 @@ class soc_ifc_scoreboard #(
     if (apb_expected_q.size() > 0) begin
         t_exp = apb_expected_q.pop_front();
         txn_eq = t.compare(t_exp);
-        if (txn_eq) `uvm_info ("SCBD_APB", $sformatf("Actual APB txn with {Address: 0x%x} {Data: 0x%x} {read_or_write: %p} matches expected",t.addr,t.read_or_write == mgc_apb3_v1_0_pkg::APB3_TRANS_READ ? t.rd_data : t.wr_data,t.read_or_write), UVM_HIGH)
-        else        `uvm_error("SCBD_APB", $sformatf("Actual APB txn with {Address: 0x%x} {Data: 0x%x} {read_or_write: %p} {Error: %p} does not match expected: {Address: 0x%x} {Data: 0x%x} {RnW: %p} {Error: %p}",t.addr,t.read_or_write == mgc_apb3_v1_0_pkg::APB3_TRANS_READ ? t.rd_data : t.wr_data,t.read_or_write,t.slave_err,t_exp.addr,t_exp.read_or_write == mgc_apb3_v1_0_pkg::APB3_TRANS_READ ? t_exp.rd_data : t_exp.wr_data,t_exp.read_or_write,t_exp.slave_err))
+        if (txn_eq) begin
+            match_count++;
+            `uvm_info ("SCBD_APB", $sformatf("Actual APB txn with {Address: 0x%x} {Data: 0x%x} {read_or_write: %p} matches expected",t.addr,t.read_or_write == mgc_apb3_v1_0_pkg::APB3_TRANS_READ ? t.rd_data : t.wr_data,t.read_or_write), UVM_HIGH)
+        end
+        else begin
+            mismatch_count++;
+            `uvm_error("SCBD_APB", $sformatf("Actual APB txn with {Address: 0x%x} {Data: 0x%x} {read_or_write: %p} {Error: %p} does not match expected: {Address: 0x%x} {Data: 0x%x} {RnW: %p} {Error: %p}",t.addr,t.read_or_write == mgc_apb3_v1_0_pkg::APB3_TRANS_READ ? t.rd_data : t.wr_data,t.read_or_write,t.slave_err,t_exp.addr,t_exp.read_or_write == mgc_apb3_v1_0_pkg::APB3_TRANS_READ ? t_exp.rd_data : t_exp.wr_data,t_exp.read_or_write,t_exp.slave_err))
+        end
     end
     else begin
         //  UVMF_CHANGE_ME: Implement custom scoreboard here.  
@@ -516,24 +534,40 @@ class soc_ifc_scoreboard #(
   endfunction
   
 
-  // FUNCTION: extract_phase TODO
+  // FUNCTION: extract_phase
   virtual function void extract_phase(uvm_phase phase);
 // pragma uvmf custom extract_phase begin
      super.extract_phase(phase);
+     report_variables = {transaction_count, match_count, mismatch_count, nothing_to_compare_against_count};
 // pragma uvmf custom extract_phase end
   endfunction
 
-  // FUNCTION: check_phase TODO
+  // FUNCTION: check_phase
   virtual function void check_phase(uvm_phase phase);
 // pragma uvmf custom check_phase begin
      super.check_phase(phase);
+     if (transaction_count == 0) `uvm_error("SCBD","No Transactions Scoreboarded")
+     if ((match_count > 0) && (mismatch_count == 0) && (nothing_to_compare_against_count == 0))
+        testcase_passed = 1'b1;
 // pragma uvmf custom check_phase end
   endfunction
 
-  // FUNCTION: report_phase TODO
+  // FUNCTION: report_message
+  // Builds the report_phase message printed for scoreboards derived from this base 
+  // Provides for customization of output formatting
+  virtual function string report_message(string header, int variables [] );
+        return {$sformatf("%s PREDICTED_TRANSACTIONS=%0d MATCHES=%0d MISMATCHES=%0d NO_COMPARISON_TXN=%0d", header, variables[0], variables[1], variables[2], variables[3])}; 
+  endfunction
+
+  // FUNCTION: report_phase
   virtual function void report_phase(uvm_phase phase);
 // pragma uvmf custom report_phase begin
-     super.report_phase(phase);
+      super.report_phase(phase);
+      `uvm_info("SCBD", report_message(report_hdr, report_variables),UVM_LOW)
+      if (testcase_passed)
+          $display("* TESTCASE PASSED");
+      else
+          $display("* TESTCASE FAILED");
 // pragma uvmf custom report_phase end
   endfunction
 

@@ -230,8 +230,8 @@ class soc_ifc_environment  extends uvmf_environment_base #(
       apb_reg_predictor.map     = configuration.soc_ifc_rm.soc_ifc_APB_map;
       ahb_reg_predictor.adapter = ahb_reg_adapter;
       apb_reg_predictor.adapter = apb_reg_adapter;
-      configuration.soc_ifc_rm.soc_ifc_AHB_map.set_auto_predict(1);
-      configuration.soc_ifc_rm.soc_ifc_APB_map.set_auto_predict(1);
+//      configuration.soc_ifc_rm.soc_ifc_AHB_map.set_auto_predict(1);
+//      configuration.soc_ifc_rm.soc_ifc_APB_map.set_auto_predict(1);
       // The connection between the agent analysis_port and uvm_reg_predictor 
       // analysis_export could cause problems due to a uvm register package bug,
       // if this environment is used as a sub-environment at a higher level.
@@ -244,8 +244,10 @@ class soc_ifc_environment  extends uvmf_environment_base #(
       // package constructs the top level register map.  The call fails when the 
       // register map associated with this environment is a sub-map.  Construction
       // of the sub-maps must be done manually.
-      qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.ap["burst_transfer"].connect(ahb_reg_predictor.bus_in);
-      qvip_apb5_slave_subenv.apb5_master_0.ap["trans_ap"].connect(apb_reg_predictor.bus_in);
+      soc_ifc_pred.soc_ifc_ahb_reg_ap.connect(ahb_reg_predictor.bus_item_export);
+      soc_ifc_pred.soc_ifc_apb_reg_ap.connect(apb_reg_predictor.bus_item_export);
+//      qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer"].connect(ahb_reg_predictor.bus_item_export);
+//      qvip_apb5_slave_subenv_apb5_master_0_ap["trans_ap"].connect(apb_reg_predictor.bus_item_export);
     end
     // pragma uvmf custom reg_model_connect_phase end
   endfunction

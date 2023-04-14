@@ -115,6 +115,12 @@ void soc_ifc_mbox_fw_flow(mbox_op_s op) {
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
+    // Add a dword to compensate for truncation, below, which clobbers the
+    // extra unaligned byte-count
+    if (iccm_cp_size & 0x3) {
+        iccm_cp_size += 4;
+    }
+    iccm_cp_size >>= 2; // Align to dword for comparison with offset (which is in dwords)
     // Next 3 dwords are 0 (per linker) - discard
     iccm[0] = soc_ifc_mbox_read_dataout_single();
     iccm[0] = soc_ifc_mbox_read_dataout_single();
@@ -123,18 +129,23 @@ void soc_ifc_mbox_fw_flow(mbox_op_s op) {
 
     //  2. Copy from mailbox into ICCM
     VPRINTF(LOW, "SOC_IFC: Cp to ICCM\n");
-    iccm_cp_size >>= 2; // Align to dword for comparison with offset (which is in dwords)
     while(offset < iccm_cp_size) {
         iccm[offset++] = soc_ifc_mbox_read_dataout_single();
     }
 
     //  3. Get size of the data section for DCCM
     dccm_cp_size = soc_ifc_mbox_read_dataout_single();
-    if (dccm_cp_size == 0x0 || (iccm_cp_size + dccm_cp_size + 0x20) > op.dlen) { // 0x20 fudge factor for linker offsets that contain iccm/dccm copy size
+    if (dccm_cp_size == 0x0 || ((iccm_cp_size<<2) + dccm_cp_size + 0x20) > op.dlen) { // 0x20 fudge factor for linker offsets that contain iccm/dccm copy size
         VPRINTF(FATAL, "Found invalid dccm size in firmware image received from SOC! Max expected 0x%x, got 0x%x\n", op.dlen - iccm_cp_size - 0x20, dccm_cp_size);
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
+    // Add a dword to compensate for truncation, below, which clobbers the
+    // extra unaligned byte-count
+    if (dccm_cp_size & 0x3) {
+        dccm_cp_size += 4;
+    }
+    dccm_cp_size >>= 2; // Align to dword for comparison with offset (which is in dwords)
     // Next 3 dwords are 0 (per linker) - discard
     dccm[0] = soc_ifc_mbox_read_dataout_single();
     dccm[0] = soc_ifc_mbox_read_dataout_single();
@@ -143,10 +154,12 @@ void soc_ifc_mbox_fw_flow(mbox_op_s op) {
 
     //  4. Copy from mailbox to DCCM
     VPRINTF(LOW, "SOC_IFC: Cp to DCCM\n");
-    dccm_cp_size >>= 2; // Align to dword for comparison with offset (which is in dwords)
     while(offset < dccm_cp_size) {
         dccm[offset++] = soc_ifc_mbox_read_dataout_single();
     }
+
+    // Write DLEN to 0 (since there is no response)
+    lsu_write_32(CLP_MBOX_CSR_MBOX_DLEN, 0);
 
     // Set the command complete status
     soc_ifc_set_mbox_status_field(CMD_COMPLETE);
