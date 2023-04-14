@@ -5,15 +5,20 @@ package soc_ifc_reg_pkg;
     typedef struct packed{
         logic [31:0] next;
         logic we;
-    } soc_ifc_reg__rw_rw_sticky_w32__in_t;
+    } soc_ifc_reg__rw_rw_sticky_hw_w32__in_t;
 
     typedef struct packed{
-        soc_ifc_reg__rw_rw_sticky_w32__in_t error_code;
+        soc_ifc_reg__rw_rw_sticky_hw_w32__in_t error_code;
     } soc_ifc_reg__CPTRA_HW_ERROR_FATAL__in_t;
 
     typedef struct packed{
-        soc_ifc_reg__rw_rw_sticky_w32__in_t error_code;
+        soc_ifc_reg__rw_rw_sticky_hw_w32__in_t error_code;
     } soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL__in_t;
+
+    typedef struct packed{
+        logic [31:0] next;
+        logic we;
+    } soc_ifc_reg__rw_rw_sticky_w32__in_t;
 
     typedef struct packed{
         soc_ifc_reg__rw_rw_sticky_w32__in_t error_code;
@@ -372,15 +377,19 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic [31:0] value;
-    } soc_ifc_reg__rw_rw_sticky_w32__out_t;
+    } soc_ifc_reg__rw_rw_sticky_hw_w32__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__rw_rw_sticky_w32__out_t error_code;
+        soc_ifc_reg__rw_rw_sticky_hw_w32__out_t error_code;
     } soc_ifc_reg__CPTRA_HW_ERROR_FATAL__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__rw_rw_sticky_w32__out_t error_code;
+        soc_ifc_reg__rw_rw_sticky_hw_w32__out_t error_code;
     } soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL__out_t;
+
+    typedef struct packed{
+        logic [31:0] value;
+    } soc_ifc_reg__rw_rw_sticky_w32__out_t;
 
     typedef struct packed{
         soc_ifc_reg__rw_rw_sticky_w32__out_t error_code;
