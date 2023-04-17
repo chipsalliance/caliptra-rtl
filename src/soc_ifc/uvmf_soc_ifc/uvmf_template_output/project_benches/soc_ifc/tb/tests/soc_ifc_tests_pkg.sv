@@ -72,6 +72,7 @@ package soc_ifc_tests_pkg;
   //    the new test after any base tests of the new test.
    `include "src/soc_ifc_rand_test.svh"
    `include "src/soc_ifc_cmdline_test.svh"
+   `include "src/soc_ifc_trng_test.svh"
   // pragma uvmf custom package_item_additional end
 
 endpackage

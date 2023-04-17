@@ -179,6 +179,9 @@ class soc_ifc_predictor #(
   bit [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users [5]    = '{default: '1};
   bit [4:0]                                    mbox_valid_users_locked = 5'b00000;
 
+  bit trng_data_req = 1'b0;
+  bit [apb5_master_0_params::APB3_PWDATA_BIT_WIDTH-1:0] trng_data [12]       = '{default: '0};
+
   soc_ifc_reg_model_top  p_soc_ifc_rm;
   uvm_reg_map p_soc_ifc_APB_map; // Block map
   uvm_reg_map p_soc_ifc_AHB_map; // Block map
@@ -216,6 +219,7 @@ class soc_ifc_predictor #(
 
   // FUNCTION: build_phase
   virtual function void build_phase (uvm_phase phase);
+
 
     soc_ifc_ctrl_agent_ae = new("soc_ifc_ctrl_agent_ae", this);
     cptra_ctrl_agent_ae = new("cptra_ctrl_agent_ae", this);
@@ -615,6 +619,15 @@ class soc_ifc_predictor #(
                         // "Expected" read data is 0
                         soc_ifc_sb_ahb_ap_output_transaction.data[0] = 0;
                     end
+                end
+            end
+            "CPTRA_TRNG_STATUS": begin
+                if (ahb_txn.RnW == AHB_WRITE && (data_active[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.DATA_REQ.get_lsb_pos()] != this.trng_data_req)) begin
+                    this.trng_data_req = data_active[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.DATA_REQ.get_lsb_pos()];
+                    send_cptra_sts_txn = 1'b1;
+                end
+                else if (ahb_txn.RnW == AHB_READ) begin
+                    send_cptra_sts_txn = 1'b0;
                 end
             end
             default: begin
@@ -1199,6 +1212,27 @@ class soc_ifc_predictor #(
 //                if (!data[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FUSE_WR_DONE.done.get_lsb_pos()]) begin
                 if (fuse_update_enabled) begin
                     send_cptra_sts_txn       = 1'b1;
+                end
+            end
+            ["CPTRA_TRNG_DATA[0]" : "CPTRA_TRNG_DATA[9]"],
+            ["CPTRA_TRNG_DATA[10]" : "CPTRA_TRNG_DATA[11]"]: begin
+                int idx = axs_reg.get_offset(p_soc_ifc_APB_map) - p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_TRNG_DATA[0].get_offset(p_soc_ifc_APB_map);
+                idx /= 12;
+                if (apb_txn.read_or_write == APB3_TRANS_WRITE) begin
+                    trng_data[idx] = apb_txn.wr_data;
+                    send_soc_ifc_sts_txn = 1'b1;
+                end
+                else if (apb_txn.read_or_write == APB3_TRANS_READ) begin
+                    send_soc_ifc_sts_txn = 1'b0;
+                end
+            end
+            "CPTRA_TRNG_STATUS": begin
+                uvm_reg_data_t trng_data_wr_done = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.get();
+                if (apb_txn.read_or_write == APB3_TRANS_WRITE && trng_data_wr_done[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.DATA_WR_DONE.get_lsb_pos()]) begin
+                    send_soc_ifc_sts_txn = 1'b1;
+                end
+                else if (apb_txn.read_or_write == APB3_TRANS_READ) begin
+                    send_soc_ifc_sts_txn = 1'b0;
                 end
             end
             default: begin
