@@ -142,6 +142,11 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_mbox_rst_cold_rand_medium_sequence soc_ifc_env_mbox_rst_cold_rand_medium_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_uc_reg_access_sequence.svh"
   typedef soc_ifc_env_mbox_uc_reg_access_sequence soc_ifc_env_mbox_uc_reg_access_sequence_t;
+  /* TODO: If desired in top-level rand sequence, add this to the rand_seq_idx enum/avail_env_seqs_c constraint */
+  `include "sequences/trng/soc_ifc/soc_ifc_env_trng_write_data_sequence.svh"
+  typedef soc_ifc_env_trng_write_data_sequence soc_ifc_env_trng_write_data_sequence_t;
+  /* TODO: If desired in top-level rand sequence, add this to the rand_seq_idx enum/avail_env_seqs_c constraint */
+
 
   ///////////////////// Sequences usable from soc_ifc bench only /////////////////////
   // These sequences include stimulus for the internal/caliptra-side of the
@@ -171,6 +176,15 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_top_mbox_contention_sequence soc_ifc_env_top_mbox_contention_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_rand_pauser_sequence.svh"
   typedef soc_ifc_env_top_mbox_rand_pauser_sequence soc_ifc_env_top_mbox_rand_pauser_sequence_t;
+  /* TODO: If desired in top-level rand sequence, add this to the rand_seq_idx enum/avail_env_seqs_c constraint */
+  `include "sequences/trng/cptra/soc_ifc_env_cptra_trng_data_req_sequence.svh"
+  typedef soc_ifc_env_cptra_trng_data_req_sequence soc_ifc_env_cptra_trng_data_req_sequence_t;
+  /* TODO: If desired in top-level rand sequence, add this to the rand_seq_idx enum/avail_env_seqs_c constraint */
+  `include "sequences/trng/soc_ifc_env_top_trng_sequence.svh"
+  typedef soc_ifc_env_top_trng_sequence soc_ifc_env_top_trng_sequence_t;
+  `include "sequences/trng/soc_ifc_env_top_trng_reset_sequence.svh"
+  typedef soc_ifc_env_top_trng_reset_sequence soc_ifc_env_top_trng_reset_sequence_t;
+  /* TODO: If desired in top-level rand sequence, add this to the rand_seq_idx enum/avail_env_seqs_c constraint */
   `include "sequences/mbox/soc_ifc_env_top_mbox_rand_pauser_small_sequence.svh"
   typedef soc_ifc_env_top_mbox_rand_pauser_small_sequence soc_ifc_env_top_mbox_rand_pauser_small_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_rand_pauser_medium_sequence.svh"
@@ -189,7 +203,6 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_top_mbox_rst_cold_rand_medium_sequence soc_ifc_env_top_mbox_rst_cold_rand_medium_sequence_t;
 
   // pragma uvmf custom package_item_additional end
-
 endpackage
 
 // pragma uvmf custom external begin
