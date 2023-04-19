@@ -68,7 +68,7 @@ module ecc_reg (
         logic ECC_SCACONFIG;
         logic [12-1:0]ECC_SEED;
         logic [12-1:0]ECC_MSG;
-        logic [12-1:0]ECC_PRIVKEY;
+        logic [12-1:0]ECC_PRIVKEY_OUT;
         logic [12-1:0]ECC_PUBKEY_X;
         logic [12-1:0]ECC_PUBKEY_Y;
         logic [12-1:0]ECC_SIGN_R;
@@ -76,6 +76,7 @@ module ecc_reg (
         logic [12-1:0]ECC_VERIFY_R;
         logic [12-1:0]ECC_IV;
         logic [12-1:0]ECC_NONCE;
+        logic [12-1:0]ECC_PRIVKEY_IN;
         logic ecc_kv_rd_pkey_ctrl;
         logic ecc_kv_rd_pkey_status;
         logic ecc_kv_rd_seed_ctrl;
@@ -120,7 +121,7 @@ module ecc_reg (
             decoded_reg_strb.ECC_MSG[i0] = cpuif_req_masked & (cpuif_addr == 'h100 + i0*'h4);
         end
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.ECC_PRIVKEY[i0] = cpuif_req_masked & (cpuif_addr == 'h180 + i0*'h4);
+            decoded_reg_strb.ECC_PRIVKEY_OUT[i0] = cpuif_req_masked & (cpuif_addr == 'h180 + i0*'h4);
         end
         for(int i0=0; i0<12; i0++) begin
             decoded_reg_strb.ECC_PUBKEY_X[i0] = cpuif_req_masked & (cpuif_addr == 'h200 + i0*'h4);
@@ -142,6 +143,9 @@ module ecc_reg (
         end
         for(int i0=0; i0<12; i0++) begin
             decoded_reg_strb.ECC_NONCE[i0] = cpuif_req_masked & (cpuif_addr == 'h500 + i0*'h4);
+        end
+        for(int i0=0; i0<12; i0++) begin
+            decoded_reg_strb.ECC_PRIVKEY_IN[i0] = cpuif_req_masked & (cpuif_addr == 'h580 + i0*'h4);
         end
         decoded_reg_strb.ecc_kv_rd_pkey_ctrl = cpuif_req_masked & (cpuif_addr == 'h600);
         decoded_reg_strb.ecc_kv_rd_pkey_status = cpuif_req_masked & (cpuif_addr == 'h604);
@@ -221,8 +225,8 @@ module ecc_reg (
             struct packed{
                 logic [31:0] next;
                 logic load_next;
-            } PRIVKEY;
-        } [12-1:0]ECC_PRIVKEY;
+            } PRIVKEY_OUT;
+        } [12-1:0]ECC_PRIVKEY_OUT;
         struct packed{
             struct packed{
                 logic [31:0] next;
@@ -265,6 +269,12 @@ module ecc_reg (
                 logic load_next;
             } NONCE;
         } [12-1:0]ECC_NONCE;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } PRIVKEY_IN;
+        } [12-1:0]ECC_PRIVKEY_IN;
         struct packed{
             struct packed{
                 logic next;
@@ -343,11 +353,7 @@ module ecc_reg (
                 logic load_next;
             } ecc_seed_dest_valid;
             struct packed{
-                logic next;
-                logic load_next;
-            } ecc_msg_dest_valid;
-            struct packed{
-                logic [19:0] next;
+                logic [20:0] next;
                 logic load_next;
             } rsvd;
         } ecc_kv_wr_pkey_ctrl;
@@ -488,8 +494,8 @@ module ecc_reg (
         struct packed{
             struct packed{
                 logic [31:0] value;
-            } PRIVKEY;
-        } [12-1:0]ECC_PRIVKEY;
+            } PRIVKEY_OUT;
+        } [12-1:0]ECC_PRIVKEY_OUT;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -525,6 +531,11 @@ module ecc_reg (
                 logic [31:0] value;
             } NONCE;
         } [12-1:0]ECC_NONCE;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } PRIVKEY_IN;
+        } [12-1:0]ECC_PRIVKEY_IN;
         struct packed{
             struct packed{
                 logic value;
@@ -586,10 +597,7 @@ module ecc_reg (
                 logic value;
             } ecc_seed_dest_valid;
             struct packed{
-                logic value;
-            } ecc_msg_dest_valid;
-            struct packed{
-                logic [19:0] value;
+                logic [20:0] value;
             } rsvd;
         } ecc_kv_wr_pkey_ctrl;
         struct packed{
@@ -848,31 +856,27 @@ module ecc_reg (
         assign hwif_out.ECC_MSG[i0].MSG.value = field_storage.ECC_MSG[i0].MSG.value;
     end
     for(genvar i0=0; i0<12; i0++) begin
-        // Field: ecc_reg.ECC_PRIVKEY[].PRIVKEY
+        // Field: ecc_reg.ECC_PRIVKEY_OUT[].PRIVKEY_OUT
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.ECC_PRIVKEY[i0].PRIVKEY.value;
+            automatic logic [31:0] next_c = field_storage.ECC_PRIVKEY_OUT[i0].PRIVKEY_OUT.value;
             automatic logic load_next_c = '0;
-            if(decoded_reg_strb.ECC_PRIVKEY[i0] && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
-                next_c = decoded_wr_data[31:0];
+            if(hwif_in.ECC_PRIVKEY_OUT[i0].PRIVKEY_OUT.we) begin // HW Write - we
+                next_c = hwif_in.ECC_PRIVKEY_OUT[i0].PRIVKEY_OUT.next;
                 load_next_c = '1;
-            end else if(hwif_in.ECC_PRIVKEY[i0].PRIVKEY.we) begin // HW Write - we
-                next_c = hwif_in.ECC_PRIVKEY[i0].PRIVKEY.next;
-                load_next_c = '1;
-            end else if(hwif_in.ECC_PRIVKEY[i0].PRIVKEY.hwclr) begin // HW Clear
+            end else if(hwif_in.ECC_PRIVKEY_OUT[i0].PRIVKEY_OUT.hwclr) begin // HW Clear
                 next_c = '0;
                 load_next_c = '1;
             end
-            field_combo.ECC_PRIVKEY[i0].PRIVKEY.next = next_c;
-            field_combo.ECC_PRIVKEY[i0].PRIVKEY.load_next = load_next_c;
+            field_combo.ECC_PRIVKEY_OUT[i0].PRIVKEY_OUT.next = next_c;
+            field_combo.ECC_PRIVKEY_OUT[i0].PRIVKEY_OUT.load_next = load_next_c;
         end
         always_ff @(posedge clk or negedge hwif_in.reset_b) begin
             if(~hwif_in.reset_b) begin
-                field_storage.ECC_PRIVKEY[i0].PRIVKEY.value <= 'h0;
-            end else if(field_combo.ECC_PRIVKEY[i0].PRIVKEY.load_next) begin
-                field_storage.ECC_PRIVKEY[i0].PRIVKEY.value <= field_combo.ECC_PRIVKEY[i0].PRIVKEY.next;
+                field_storage.ECC_PRIVKEY_OUT[i0].PRIVKEY_OUT.value <= 'h0;
+            end else if(field_combo.ECC_PRIVKEY_OUT[i0].PRIVKEY_OUT.load_next) begin
+                field_storage.ECC_PRIVKEY_OUT[i0].PRIVKEY_OUT.value <= field_combo.ECC_PRIVKEY_OUT[i0].PRIVKEY_OUT.next;
             end
         end
-        assign hwif_out.ECC_PRIVKEY[i0].PRIVKEY.value = field_storage.ECC_PRIVKEY[i0].PRIVKEY.value;
     end
     for(genvar i0=0; i0<12; i0++) begin
         // Field: ecc_reg.ECC_PUBKEY_X[].PUBKEY_X
@@ -1053,6 +1057,33 @@ module ecc_reg (
             end
         end
         assign hwif_out.ECC_NONCE[i0].NONCE.value = field_storage.ECC_NONCE[i0].NONCE.value;
+    end
+    for(genvar i0=0; i0<12; i0++) begin
+        // Field: ecc_reg.ECC_PRIVKEY_IN[].PRIVKEY_IN
+        always_comb begin
+            automatic logic [31:0] next_c = field_storage.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.value;
+            automatic logic load_next_c = '0;
+            if(decoded_reg_strb.ECC_PRIVKEY_IN[i0] && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
+                next_c = decoded_wr_data[31:0];
+                load_next_c = '1;
+            end else if(hwif_in.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.we) begin // HW Write - we
+                next_c = hwif_in.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.next;
+                load_next_c = '1;
+            end else if(hwif_in.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.hwclr) begin // HW Clear
+                next_c = '0;
+                load_next_c = '1;
+            end
+            field_combo.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.next = next_c;
+            field_combo.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.load_next = load_next_c;
+        end
+        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+            if(~hwif_in.reset_b) begin
+                field_storage.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.value <= 'h0;
+            end else if(field_combo.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.load_next) begin
+                field_storage.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.value <= field_combo.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.next;
+            end
+        end
+        assign hwif_out.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.value = field_storage.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.value;
     end
     // Field: ecc_reg.ecc_kv_rd_pkey_ctrl.read_en
     always_comb begin
@@ -1390,31 +1421,12 @@ module ecc_reg (
         end
     end
     assign hwif_out.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.value = field_storage.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.value;
-    // Field: ecc_reg.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid
-    always_comb begin
-        automatic logic [0:0] next_c = field_storage.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid.value;
-        automatic logic load_next_c = '0;
-        if(decoded_reg_strb.ecc_kv_wr_pkey_ctrl && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[11:11];
-            load_next_c = '1;
-        end
-        field_combo.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid.next = next_c;
-        field_combo.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
-            field_storage.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid.value <= 'h0;
-        end else if(field_combo.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid.load_next) begin
-            field_storage.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid.next;
-        end
-    end
-    assign hwif_out.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid.value = field_storage.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid.value;
     // Field: ecc_reg.ecc_kv_wr_pkey_ctrl.rsvd
     always_comb begin
-        automatic logic [19:0] next_c = field_storage.ecc_kv_wr_pkey_ctrl.rsvd.value;
+        automatic logic [20:0] next_c = field_storage.ecc_kv_wr_pkey_ctrl.rsvd.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.ecc_kv_wr_pkey_ctrl && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[31:12];
+            next_c = decoded_wr_data[31:11];
             load_next_c = '1;
         end
         field_combo.ecc_kv_wr_pkey_ctrl.rsvd.next = next_c;
@@ -1797,7 +1809,7 @@ module ecc_reg (
     assign readback_array[4][1:1] = (decoded_reg_strb.ECC_STATUS && !decoded_req_is_wr) ? hwif_in.ECC_STATUS.VALID.next : '0;
     assign readback_array[4][31:2] = '0;
     for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 5][31:0] = (decoded_reg_strb.ECC_PRIVKEY[i0] && !decoded_req_is_wr) ? field_storage.ECC_PRIVKEY[i0].PRIVKEY.value : '0;
+        assign readback_array[i0*1 + 5][31:0] = (decoded_reg_strb.ECC_PRIVKEY_OUT[i0] && !decoded_req_is_wr) ? field_storage.ECC_PRIVKEY_OUT[i0].PRIVKEY_OUT.value : '0;
     end
     for(genvar i0=0; i0<12; i0++) begin
         assign readback_array[i0*1 + 17][31:0] = (decoded_reg_strb.ECC_PUBKEY_X[i0] && !decoded_req_is_wr) ? field_storage.ECC_PUBKEY_X[i0].PUBKEY_X.value : '0;
@@ -1837,8 +1849,7 @@ module ecc_reg (
     assign readback_array[81][8:8] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.sha_block_dest_valid.value : '0;
     assign readback_array[81][9:9] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.value : '0;
     assign readback_array[81][10:10] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.value : '0;
-    assign readback_array[81][11:11] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.ecc_msg_dest_valid.value : '0;
-    assign readback_array[81][31:12] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.rsvd.value : '0;
+    assign readback_array[81][31:11] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.rsvd.value : '0;
     assign readback_array[82][0:0] = (decoded_reg_strb.ecc_kv_wr_pkey_status && !decoded_req_is_wr) ? hwif_in.ecc_kv_wr_pkey_status.READY.next : '0;
     assign readback_array[82][1:1] = (decoded_reg_strb.ecc_kv_wr_pkey_status && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_status.VALID.value : '0;
     assign readback_array[82][9:2] = (decoded_reg_strb.ecc_kv_wr_pkey_status && !decoded_req_is_wr) ? hwif_in.ecc_kv_wr_pkey_status.ERROR.next : '0;
