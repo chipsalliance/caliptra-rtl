@@ -27,6 +27,7 @@
 `define SHA512_PATH     caliptra_top_tb.caliptra_top_dut.sha512.sha512_inst
 `define HMAC_PATH       caliptra_top_tb.caliptra_top_dut.hmac.hmac_inst
 `define ECC_PATH        caliptra_top_tb.caliptra_top_dut.ecc_top1.ecc_dsa_ctrl_i
+`define ECC_REG_PATH    caliptra_top_tb.caliptra_top_dut.ecc_top1.ecc_reg1
 `define SHA256_PATH     caliptra_top_tb.caliptra_top_dut.sha256.sha256_inst
 `define SHA512_MASKED_PATH caliptra_top_tb.caliptra_top_dut.ecc_top1.ecc_dsa_ctrl_i.ecc_hmac_drbg_interface_i.hmac_drbg_i.HMAC_K.u_sha512_core_h1
 
@@ -263,9 +264,10 @@ module caliptra_top_sva
     for(genvar dword = 0; dword < ECC_REG_NUM_DWORDS; dword++) begin
         ecc_reg_zeroize:        assert property (
                                               @(posedge `ECC_PATH.clk)
-                                              `ECC_PATH.hwif_out.ECC_CTRL.ZEROIZE.value |=> (`ECC_PATH.hwif_out.ECC_SEED[dword].SEED.value == 0) & (`ECC_PATH.hwif_out.ECC_NONCE[dword].NONCE.value == 0) & (`ECC_PATH.hwif_out.ECC_PRIVKEY[dword].PRIVKEY.value == 0) &
+                                              `ECC_PATH.hwif_out.ECC_CTRL.ZEROIZE.value |=> (`ECC_PATH.hwif_out.ECC_SEED[dword].SEED.value == 0) & (`ECC_PATH.hwif_out.ECC_NONCE[dword].NONCE.value == 0) & (`ECC_PATH.hwif_out.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.value == 0) &
                                               (`ECC_PATH.hwif_out.ECC_MSG[dword].MSG.value == 0) & (`ECC_PATH.hwif_out.ECC_PUBKEY_X[dword].PUBKEY_X.value == 0) & (`ECC_PATH.hwif_out.ECC_PUBKEY_Y[dword].PUBKEY_Y.value == 0) &
-                                              (`ECC_PATH.hwif_out.ECC_SIGN_R[dword].SIGN_R.value == 0) & (`ECC_PATH.hwif_out.ECC_SIGN_S[dword].SIGN_S.value == 0) & (`ECC_PATH.hwif_out.ECC_VERIFY_R[dword].VERIFY_R.value == 0) & (`ECC_PATH.hwif_out.ECC_IV[dword].IV.value == 0)
+                                              (`ECC_PATH.hwif_out.ECC_SIGN_R[dword].SIGN_R.value == 0) & (`ECC_PATH.hwif_out.ECC_SIGN_S[dword].SIGN_S.value == 0) & (`ECC_PATH.hwif_out.ECC_VERIFY_R[dword].VERIFY_R.value == 0) & (`ECC_PATH.hwif_out.ECC_IV[dword].IV.value == 0) &
+                                              (`ECC_REG_PATH.decoded_reg_strb.ECC_PRIVKEY_OUT[dword] == 0)
                                               )
                                   else $display("SVA ERROR: ECC reg zeroize mismatch!"); 
       end

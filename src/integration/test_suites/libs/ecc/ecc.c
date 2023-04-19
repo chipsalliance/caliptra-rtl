@@ -114,9 +114,9 @@ void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_i
     else{
         // Read the data back from ECC register
         printf("Load PRIVKEY data from ECC\n");
-        reg_ptr = (uint32_t *) CLP_ECC_REG_ECC_PRIVKEY_0;
+        reg_ptr = (uint32_t *) CLP_ECC_REG_ECC_PRIVKEY_OUT_0;
         offset = 0;
-        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_11) {
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_OUT_11) {
             ecc_privkey[offset] = *reg_ptr;
             if (ecc_privkey[offset] != privkey.data[offset]) {
                 printf("At offset [%d], ecc_privkey data mismatch!\n", offset);
@@ -191,9 +191,9 @@ void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_
     }
     else{
         // Program ECC PRIVKEY
-        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_0;
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_0;
         offset = 0;
-        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_11) {
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_11) {
             *reg_ptr++ = privkey.data[offset++];
         }
     }

@@ -183,26 +183,41 @@ addrmap ecc_reg {
 
 
 
-
-    /* ---- ECC Component Private Key ---- */
+    /* ---- ECC Component Private Key OUT---- */
     reg {
-        name = "ECC component private key register type definition";
-        desc = "12 32-bit registers storing the private key. These registers
-                is read by ECC user after keygen operation, or be set before 
-                signing operation.
-                The private key should be in [1 : q-1] while q is the group
+        name = "ECC component private key output register type definition";
+        desc = "12 32-bit registers storing the private key for keygen.
+                These registers is read by ECC user after keygen operation.
+                The private key is in [1 : q-1] while q is the group
                 order of the Secp384r1 curve.
                 These registers are located at ECC_base_address + 
                 0x0000_0180 to 0x0000_01AC in big-endian representation.";
 
-        default sw = rw;
+        default sw = r;
+        default hw = w;
+        default we = true;
+        default resetsignal = reset_b;
+        field {desc = "Private key field"; swwe = ecc_ready; hwclr;} PRIVKEY_OUT[32] = 32'b0;
+    
+    } ECC_PRIVKEY_OUT[12] @0x00000180;
+
+    /* ---- ECC Component Private Key IN---- */
+    reg {
+        name = "ECC component private key input register type definition";
+        desc = "12 32-bit registers storing the private key for signing. 
+                These registers is set before signing operation.
+                The private key should be in [1 : q-1] while q is the group
+                order of the Secp384r1 curve.
+                These registers are located at ECC_base_address + 
+                0x0000_0580 to 0x0000_05AC in big-endian representation.";
+
+        default sw = w;
         default hw = rw;
         default we = true;
         default resetsignal = reset_b;
-        field {desc = "Private key field"; swwe = ecc_ready; hwclr;} PRIVKEY[32] = 32'b0;
+        field {desc = "Private key field"; swwe = ecc_ready; hwclr;} PRIVKEY_IN[32] = 32'b0;
     
-    } ECC_PRIVKEY[12] @0x00000180;
-
+    } ECC_PRIVKEY_IN[12] @0x00000580;
 
 
     /* ---- ECC Component Public Key x ---- */
