@@ -77,7 +77,7 @@ module csrng_core
   localparam logic [31:0] MaxClen = 12;
   localparam logic [31:0] ADataDepthWidth = SeedLen/AppCmdWidth;
   localparam logic [31:0] ADataDepthClog = $clog2(ADataDepthWidth)+1;
-  localparam logic [31:0] CsEnableCopies = 53;
+  localparam logic [31:0] CsEnableCopies = 51;
   localparam logic [31:0] LcHwDebugCopies = 1;
   localparam logic [31:0] Flag0Copies = 3;
 
@@ -1251,16 +1251,13 @@ module csrng_core
 
   // Capture entropy from entropy_src
   assign entropy_src_seed_d =
-         ~cs_enable_fo[51] ? '0 :
-         cmd_req_dly_q ? '0 :                  // reset after every cmd
-         (cmd_entropy_avail && flag0_fo[1]) ? '0 : // special case where zero is used
-         cmd_entropy_avail ? (entropy_src_hw_if_i.es_bits ^ seed_diversification) :
+         flag0_fo[1] ? '0 : // special case where zero is used
+         cmd_entropy_req && cmd_entropy_avail ?
+            (entropy_src_hw_if_i.es_bits ^ seed_diversification) :
          entropy_src_seed_q;
   assign entropy_src_fips_d =
-         ~cs_enable_fo[52] ? '0 :
-         cmd_req_dly_q ? '0 :                  // reset after every cmd
-         (cmd_entropy_avail && flag0_fo[2]) ? '0 : // special case where zero is used
-         cmd_entropy_avail ? entropy_src_hw_if_i.es_fips :
+         flag0_fo[2] ? '0 : // special case where zero is used
+         cmd_entropy_req && cmd_entropy_avail ? entropy_src_hw_if_i.es_fips :
          entropy_src_fips_q;
 
   assign cmd_entropy = entropy_src_seed_q;
