@@ -65,7 +65,7 @@ module soc_ifc_tb
   parameter MBOX_ADDR_DATAIN      = MBOX_ADDR_BASE + 32'h00000010;
   parameter MBOX_ADDR_DATAOUT     = MBOX_ADDR_BASE + 32'h00000014;
   parameter MBOX_ADDR_EXECUTE     = MBOX_ADDR_BASE + 32'h00000018;
-  
+  parameter MBOX_ADDR_STATUS      = MBOX_ADDR_BASE + 32'h0000001c;
 
   parameter MBOX_DLEN_VAL         = 32'h0000001C;
 
@@ -796,8 +796,11 @@ module soc_ifc_tb
       $display("*** Single block test processing time = %01d cycles", end_time);
       read_result_apb(result_data);
 
+      //set status
+      write_single_word_apb(MBOX_ADDR_STATUS, 32'h00000002);
+
       // reset excecute
-      write_single_word_apb(MBOX_ADDR_EXECUTE, 32'h00000000);
+      write_single_word_ahb(MBOX_ADDR_EXECUTE, 32'h00000000);
 
       if (result_data == block)
         begin
@@ -855,8 +858,11 @@ module soc_ifc_tb
       $display("*** Single block test processing time = %01d cycles", end_time);
       read_result_ahb(result_data);
 
+      //set status
+      write_single_word_ahb(MBOX_ADDR_STATUS, 32'h00000002);
+
       // reset excecute
-      write_single_word_ahb(MBOX_ADDR_EXECUTE, 32'h00000000);
+      write_single_word_apb(MBOX_ADDR_EXECUTE, 32'h00000000);
 
       if (result_data == block)
         begin
