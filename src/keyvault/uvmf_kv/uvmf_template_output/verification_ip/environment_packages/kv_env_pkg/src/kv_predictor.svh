@@ -307,25 +307,18 @@ class kv_predictor #(
       
       if (clear_secrets_data[1] == 'h1) begin
         for(entry = 0; entry < KV_NUM_KEYS; entry++) begin
-          kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_CTRL[%0d]",entry));
-          kv_reg_data = kv_reg.get_mirrored_value();
-          if(kv_reg_data[1:0] == 2'b00) begin
-            for(offset = 0; offset < KV_NUM_DWORDS; offset++) begin
-              p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].predict(CLP_DEBUG_MODE_KV_1);
-              p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].set(CLP_DEBUG_MODE_KV_1);
-            end
+          //Debug mode should flush all regs inspite of locks
+          for(offset = 0; offset < KV_NUM_DWORDS; offset++) begin
+            p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].predict(CLP_DEBUG_MODE_KV_1);
+            p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].set(CLP_DEBUG_MODE_KV_1);
           end
         end
       end
       else begin
         for(entry = 0; entry < KV_NUM_KEYS; entry++) begin
-          kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_CTRL[%0d]",entry));
-          kv_reg_data = kv_reg.get_mirrored_value();
-          if(kv_reg_data[1:0] == 2'b00) begin
-            for(offset = 0; offset < KV_NUM_DWORDS; offset++) begin
-              p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].predict(CLP_DEBUG_MODE_KV_0);
-              p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].set(CLP_DEBUG_MODE_KV_0);
-            end
+          for(offset = 0; offset < KV_NUM_DWORDS; offset++) begin
+            p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].predict(CLP_DEBUG_MODE_KV_0);
+            p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].set(CLP_DEBUG_MODE_KV_0);
           end
         end
       end
@@ -593,6 +586,8 @@ class kv_predictor #(
     string reg_name;
     reg [KV_DATA_W-1:0] data_active;
     reg [ahb_lite_slave_0_params::AHB_WDATA_WIDTH-1:0] address_aligned;
+    uvm_reg val_ctrl;
+    uvm_reg_data_t val_ctrl_data;
 
     ahb_slave_0_ae_debug = t;
     `uvm_info("PRED", "Transaction Received through ahb_slave_0_ae", UVM_MEDIUM)
@@ -613,7 +608,7 @@ class kv_predictor #(
         p_kv_rm.val_reg.clear_secrets_bit.set(1'b1);
         if (data_active[1:0] == 'h1) begin
           for(entry = 0; entry < KV_NUM_KEYS; entry++) begin
-            //Read locks before clearing
+            //Read locks before clearing - do not clear if locked
             kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_CTRL[%0d]",entry));
             kv_reg_data = kv_reg.get_mirrored_value();
             if(kv_reg_data[1:0] == 2'b00) begin
@@ -643,12 +638,17 @@ class kv_predictor #(
         reg_name = kv_reg.get_full_name();
         kv_reg_data = kv_reg.get_mirrored_value();
 
-        //If clear is set and lock_wr is being set to 0, set the val_reg [1] to let kv_reg_predictor know
+        {offset, entry} = convert_addr_to_kv(ahb_txn.address);
+
+        //If clear is set and lock_wr/use is 0, set the val_ctrl [1] to let kv_reg_predictor know
+        val_ctrl = p_kv_rm.get_reg_by_name("val_ctrl");
+        val_ctrl_data = val_ctrl.get();
+
         if(data_active[2] && !kv_reg_data[0] && !kv_reg_data[1]) begin
-          p_kv_rm.val_reg.clear.set(1'b1); //In design, clear is a single pulse reg. This val_reg[1] will be reset in kv_reg_predictor
-          
+          val_ctrl_data[entry] = 'b1; //In design, clear is a single pulse reg. This val_ctrl[*] will be reset in kv_reg_predictor
+          //p_kv_rm.kv_reg_rm.kv_val_ctrl.predict(val_ctrl_data);
+          p_kv_rm.val_ctrl.set(val_ctrl_data);
           //Clear the entry that is being accessed
-          {offset, entry} = convert_addr_to_kv(ahb_txn.address);
           for(offset = 0; offset < KV_NUM_DWORDS; offset++) begin
             p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].predict('h0);
             p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].set('h0);
@@ -687,16 +687,21 @@ endclass
 
     uvm_reg kv_reg;
     uvm_reg_data_t kv_reg_data;
+    uvm_reg val_ctrl;
+    uvm_reg_data_t val_ctrl_data;
     logic lock_use;
-    logic [4:0] dest_valid;
+    logic [KV_NUM_READ-1:0] dest_valid;
     logic client_dest_valid;
+
+    val_ctrl = p_kv_rm.get_reg_by_name("val_ctrl");
+    val_ctrl_data = val_ctrl.get();
 
     kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_CTRL[%0d]",t_received.read_entry));
     kv_reg_data = kv_reg.get_mirrored_value();
     kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_ENTRY[%0d][%0d]",t_received.read_entry,t_received.read_offset));
 
     lock_use = kv_reg_data[1];
-    dest_valid = kv_reg_data[13:9];
+    dest_valid = kv_reg_data[13:9]; //[16:14] are rsvd
     
     case(client) inside
 
@@ -711,7 +716,14 @@ endclass
 
     endcase
 
-    if (lock_use || !client_dest_valid) begin
+    //Scenario: When KEY_CTRL.clear is set, following things happen:
+    //1. KEY_ENTRY is cleared
+    //2. last_dword is cleared
+    //3. dest_valid is cleared
+    //kv_predictor takes care of #1. #2 and #3 should be done is custom AHB reg predictor which we don't have
+    //As a workaround, setting a val_ctrl reg when clear happens. Until a write occurs on that entry, this bit will remain set
+    //During every read, we check val_ctrl[entry] bit. If 1, return 0s, resp.err = 1 and last dword = 0 to mimic design
+    if (lock_use || !client_dest_valid || val_ctrl_data[t_received.read_entry]) begin
       t_expected.read_data = 'h0;
       t_expected.error = 'b1;
     end
@@ -720,6 +732,9 @@ endclass
       t_expected.read_data = kv_reg_data[31:0]; //Data from KEY entry
       t_expected.error = 'b0;
     end
+
+    if (val_ctrl_data[t_received.read_entry])
+      last_dword_written[t_received.read_entry] = 'h0;
 
     t_expected.last = (last_dword_written[t_received.read_entry] == t_received.read_offset); 
     t_expected.read_entry = t_received.read_entry;

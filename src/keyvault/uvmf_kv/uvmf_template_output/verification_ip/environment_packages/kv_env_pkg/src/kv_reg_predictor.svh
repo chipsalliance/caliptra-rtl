@@ -63,6 +63,10 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
         uvm_reg_data_t val_reg_data;
         uvm_reg_item val_reg_item;
 
+        uvm_reg val_ctrl;
+        uvm_reg_data_t val_ctrl_data;
+        uvm_reg_item val_ctrl_item;
+
         logic lock_wr;
         logic lock_use;
         logic clear;
@@ -89,7 +93,15 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
             //Build rw_ctrl (reg model txn for CTRL reg)
             rw_ctrl = rw;
             rw_ctrl.addr = uvm_reg_addr_t'(addr); 
+
+            //-----------------------------------------------
+            //Read val reg first
+            //-----------------------------------------------
+            val_reg = map.get_reg_by_offset('h1_0000);
+            val_reg_data = val_reg.get();
             
+            val_ctrl = map.get_reg_by_offset('h1_0004);
+            val_ctrl_data = val_ctrl.get();
             //-----------------------------------------------
             //Below steps are to read CTRL reg data from reg model
             //and append dest valid to it (we want to keep lock bits same)
@@ -101,7 +113,7 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
             //Read CTRL reg data
             kv_reg_ctrl_data = kv_reg_ctrl.get_mirrored_value();
             //Append dest valid to it
-            kv_reg_ctrl_data = {kv_reg_ctrl_data[31:15], 6'h3F, kv_reg_ctrl_data[8:0]};
+            kv_reg_ctrl_data = {kv_reg_ctrl_data[31:14], 5'h1F, kv_reg_ctrl_data[8:0]};
             rw_ctrl.data = kv_reg_ctrl_data;
             //-----------------------------------------------
             //Predict ctrl reg data so it gets updated in reg model
@@ -114,7 +126,24 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
             kv_reg_ctrl_item.kind = UVM_WRITE;
             kv_reg_ctrl_item.value[0] |= kv_reg_ctrl_data;
 
+            //Update CTRL reg 
             kv_reg_ctrl.do_predict(kv_reg_ctrl_item, UVM_PREDICT_DIRECT);
+            
+            //-----------------------------------------------
+            //Update val_ctrl reg to reset clear bit for the entry that is being written
+            //-----------------------------------------------
+            val_ctrl_data[entry_offset[8:4]] = 'b0; //Reset clear bit of current entry
+
+            val_ctrl_item = new;
+            val_ctrl_item.element_kind = UVM_REG;
+            val_ctrl_item.element = val_ctrl;
+            val_ctrl_item.path = UVM_PREDICT;
+            val_ctrl_item.map = map;
+            val_ctrl_item.kind = UVM_WRITE;
+            val_ctrl_item.value[0] |= val_ctrl_data;
+
+            //Update CTRL reg 
+            val_ctrl.do_predict(val_ctrl_item, UVM_PREDICT_DIRECT);
 
             //-----------------------------------------------
             //Check clear secrets and lock_wr/use before writing
@@ -122,8 +151,6 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
             clear_secrets_reg = map.get_reg_by_offset(`KV_REG_CLEAR_SECRETS);
             clear_secrets_data = clear_secrets_reg.get_mirrored_value();
 
-            val_reg = map.get_reg_by_offset('h1_0000);
-            val_reg_data = val_reg.get();
 
             lock_wr = kv_reg_ctrl_data[0];
             lock_use = kv_reg_ctrl_data[1];
@@ -139,7 +166,7 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
             //-----------------------------------------------
             //Clear secrets wren bit back to 0 (single pulse behv) - do this if clear_secrets reg is not being written to in the same cycle
             //-----------------------------------------------
-            if(val_reg_data[2]) begin
+            if(val_reg_data[1]) begin
                 clear_secrets_item = new;
                 clear_secrets_item.element_kind = UVM_REG;
                 clear_secrets_item.element = clear_secrets_reg;
@@ -159,7 +186,7 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
             val_reg_item.path = UVM_PREDICT;
             val_reg_item.map = map;
             val_reg_item.kind = UVM_WRITE;
-            val_reg_item.value[0] |= {2'b0,val_reg_data[0]}; //Clear and clear_secrets_bit are single pulse, so make them 0. Keep debug_mode as is
+            val_reg_item.value[0] |= {1'b0,val_reg_data[0]}; //Clear and clear_secrets_bit are single pulse, so make them 0. Keep debug_mode as is
 
             val_reg.do_predict(val_reg_item, UVM_PREDICT_DIRECT);
             

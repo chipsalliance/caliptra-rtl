@@ -117,7 +117,7 @@ module kv_reg (
                 logic load_next;
             } rsvd1;
             struct packed{
-                logic [5:0] next;
+                logic [7:0] next;
                 logic load_next;
             } dest_valid;
             struct packed{
@@ -162,7 +162,7 @@ module kv_reg (
                 logic [4:0] value;
             } rsvd1;
             struct packed{
-                logic [5:0] value;
+                logic [7:0] value;
             } dest_valid;
             struct packed{
                 logic [3:0] value;
@@ -288,7 +288,7 @@ module kv_reg (
         assign hwif_out.KEY_CTRL[i0].rsvd1.value = field_storage.KEY_CTRL[i0].rsvd1.value;
         // Field: kv_reg.KEY_CTRL[].dest_valid
         always_comb begin
-            automatic logic [5:0] next_c = field_storage.KEY_CTRL[i0].dest_valid.value;
+            automatic logic [7:0] next_c = field_storage.KEY_CTRL[i0].dest_valid.value;
             automatic logic load_next_c = '0;
             if(hwif_in.KEY_CTRL[i0].dest_valid.we) begin // HW Write - we
                 next_c = hwif_in.KEY_CTRL[i0].dest_valid.next;
@@ -417,9 +417,9 @@ module kv_reg (
         assign readback_array[i0*1 + 0][2:2] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].clear.value : '0;
         assign readback_array[i0*1 + 0][3:3] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].rsvd0.value : '0;
         assign readback_array[i0*1 + 0][8:4] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].rsvd1.value : '0;
-        assign readback_array[i0*1 + 0][14:9] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].dest_valid.value : '0;
-        assign readback_array[i0*1 + 0][18:15] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].last_dword.value : '0;
-        assign readback_array[i0*1 + 0][31:19] = '0;
+        assign readback_array[i0*1 + 0][16:9] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].dest_valid.value : '0;
+        assign readback_array[i0*1 + 0][20:17] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].last_dword.value : '0;
+        assign readback_array[i0*1 + 0][31:21] = '0;
     end
     assign readback_array[32][0:0] = (decoded_reg_strb.CLEAR_SECRETS && !decoded_req_is_wr) ? field_storage.CLEAR_SECRETS.wr_debug_values.value : '0;
     assign readback_array[32][1:1] = (decoded_reg_strb.CLEAR_SECRETS && !decoded_req_is_wr) ? field_storage.CLEAR_SECRETS.sel_debug_value.value : '0;

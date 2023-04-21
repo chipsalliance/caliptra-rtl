@@ -131,8 +131,8 @@ always_comb begin : keyvault_ctrl
         kv_reg_hwif_in.KEY_CTRL[entry].lock_wr.swwel = kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value;
         kv_reg_hwif_in.KEY_CTRL[entry].lock_use.swwel = kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value;
         //clear dest valid and last dword
-        kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value & ~kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value;
-        kv_reg_hwif_in.KEY_CTRL[entry].last_dword.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value & ~kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value;
+        kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value & ~kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value & ~kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value;
+        kv_reg_hwif_in.KEY_CTRL[entry].last_dword.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value & ~kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value & ~kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value;
         //init for AND-OR
         key_entry_ctrl_we[entry] = '0;
         key_entry_dest_valid_next[entry] = '0; 
@@ -159,10 +159,10 @@ always_comb begin : keyvault_ctrl
             key_entry_we[entry][dword] = '0;
             key_entry_next[entry][dword] = '0;
             for (int client = 0; client < KV_NUM_WRITE; client++) begin
-                key_entry_we[entry][dword] |= (((kv_write[client].write_entry == entry) & (kv_write[client].write_offset == dword) & 
+                key_entry_we[entry][dword] |= ((((kv_write[client].write_entry == entry) & (kv_write[client].write_offset == dword) & 
                                                 kv_write[client].write_en) | flush_keyvault) & 
                                                ~kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value &
-                                               ~kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value;
+                                               ~kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value | debugUnlock_or_scan_mode_switch);
                 key_entry_next[entry][dword] |= flush_keyvault ? debug_value :
                                                 kv_write[client].write_en & (kv_write[client].write_entry == entry) ? kv_write[client].write_data : '0;
             end

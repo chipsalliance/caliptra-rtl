@@ -168,13 +168,12 @@ package kv_reg_model_top_pkg;
       `uvm_object_utils(kv_val_reg)
 
       rand uvm_reg_field debug_mode_unlocked;
-      rand uvm_reg_field clear;
       rand uvm_reg_field clear_secrets_bit;
 
       // Function: new
       // 
       function new(string name = "kv_val_reg");
-         super.new(name, 3, UVM_NO_COVERAGE);
+         super.new(name, 2, UVM_NO_COVERAGE);
       endfunction
 
 
@@ -183,10 +182,35 @@ package kv_reg_model_top_pkg;
       virtual function void build();
          debug_mode_unlocked = uvm_reg_field::type_id::create("debug_mode_unlocked");
          debug_mode_unlocked.configure(this, 1, 0, "RW", 0, 1'b0, 1, 1, 1);
-         clear = uvm_reg_field::type_id::create("clear");
-         clear.configure(this, 1, 1, "RW", 0, 1'b0, 1, 1, 1);
+
          clear_secrets_bit = uvm_reg_field::type_id::create("clear_secrets_bit");
-         clear_secrets_bit.configure(this, 1, 2, "RW", 0, 1'b0, 1, 1, 1);
+         clear_secrets_bit.configure(this, 1, 1, "RW", 0, 1'b0, 1, 1, 1);
+      endfunction
+   endclass
+
+   //--------------------------------------------------------------------
+   // Class: kv_val_ctrl
+   // 1. Keeps track of when clear is set in design so that dest_valid and last_dword
+   // reset can be emulated in uvm
+   // 2. Strictly for UVM purposes. This reg is not in design!
+   //--------------------------------------------------------------------
+   class kv_val_ctrl extends uvm_reg;
+      `uvm_object_utils(kv_val_ctrl)
+
+      rand uvm_reg_field clear; //32 bits, one for each KEY_CTRL
+
+      // Function: new
+      // 
+      function new(string name = "kv_val_ctrl");
+         super.new(name, 32, UVM_NO_COVERAGE);
+      endfunction
+
+
+      // Function: build
+      // 
+      virtual function void build();
+         clear = uvm_reg_field::type_id::create("clear");
+         clear.configure(this, 32, 0, "RW", 0, 32'b0, 1, 1, 1);
       endfunction
    endclass
 // pragma uvmf custom define_register_classes end
@@ -245,6 +269,7 @@ package kv_reg_model_top_pkg;
       rand kv_example_reg1 example_reg1;
 
       rand kv_val_reg val_reg;
+      rand kv_val_ctrl val_ctrl;
 // pragma uvmf custom instantiate_registers_within_block end
       uvm_reg_map default_map;
 
@@ -296,6 +321,10 @@ package kv_reg_model_top_pkg;
       val_reg = kv_val_reg::type_id::create("val_reg");
       val_reg.configure(this,null,"val_reg");
       val_reg.build();
+
+      val_ctrl = kv_val_ctrl::type_id::create("val_ctrl");
+      val_ctrl.configure(this,null,"val_ctrl");
+      val_ctrl.build();
 // pragma uvmf custom construct_configure_build_registers_within_block end
 // pragma uvmf custom add_registers_to_block_map begin
       //ahb_map.add_reg(example_reg0, 'h0, "RW");
@@ -328,19 +357,32 @@ package kv_reg_model_top_pkg;
 
       //Add debug_mode reg to all maps (only for TB purposes)
       default_map.add_reg(val_reg, 'h1_0000, "RW");
+      default_map.add_reg(val_ctrl, 'h1_0004, "RW");
 
       kv_hmac_write_map.add_reg(val_reg, 'h1_0000, "RW");
       kv_sha512_write_map.add_reg(val_reg, 'h1_0000, "RW");
       kv_ecc_write_map.add_reg(val_reg, 'h1_0000, "RW");
       kv_doe_write_map.add_reg(val_reg, 'h1_0000, "RW");
+      
+      kv_hmac_write_map.add_reg  (val_ctrl, 'h1_0004, "RW");
+      kv_sha512_write_map.add_reg(val_ctrl, 'h1_0004, "RW");
+      kv_ecc_write_map.add_reg   (val_ctrl, 'h1_0004, "RW");
+      kv_doe_write_map.add_reg   (val_ctrl, 'h1_0004, "RW");
 
       kv_AHB_map.add_reg(val_reg, 'h1_0000, "RW");
+      kv_AHB_map.add_reg(val_ctrl, 'h1_0004, "RW");
       
       kv_hmac_key_read_map.add_reg(val_reg, 'h1_0000, "RW");
       kv_hmac_block_read_map.add_reg(val_reg, 'h1_0000, "RW");
       kv_sha512_block_read_map.add_reg(val_reg, 'h1_0000, "RW");
       kv_ecc_privkey_read_map.add_reg(val_reg, 'h1_0000, "RW");
       kv_ecc_seed_read_map.add_reg(val_reg, 'h1_0000, "RW");
+
+      kv_hmac_key_read_map.add_reg    (val_ctrl, 'h1_0004, "RW");
+      kv_hmac_block_read_map.add_reg  (val_ctrl, 'h1_0004, "RW");
+      kv_sha512_block_read_map.add_reg(val_ctrl, 'h1_0004, "RW");
+      kv_ecc_privkey_read_map.add_reg (val_ctrl, 'h1_0004, "RW");
+      kv_ecc_seed_read_map.add_reg    (val_ctrl, 'h1_0004, "RW");
  
       endfunction
 
