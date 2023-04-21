@@ -267,14 +267,17 @@ module entropy_src
 
   // Entropy Interface
   `CALIPTRA_ASSERT_KNOWN(EsHwIfEsAckKnownO_A, entropy_src_hw_if_o.es_ack)
-  `CALIPTRA_ASSERT_KNOWN(EsHwIfEsBitsKnownO_A, entropy_src_hw_if_o.es_bits)
-  `CALIPTRA_ASSERT_KNOWN(EsHwIfEsFipsKnownO_A, entropy_src_hw_if_o.es_fips)
+  `CALIPTRA_ASSERT_KNOWN_IF(EsHwIfEsBitsKnownO_A, entropy_src_hw_if_o.es_bits,
+      entropy_src_hw_if_o.es_ack)
+  `CALIPTRA_ASSERT_KNOWN_IF(EsHwIfEsFipsKnownO_A, entropy_src_hw_if_o.es_fips,
+      entropy_src_hw_if_o.es_ack)
 
   // RNG Interface
   `CALIPTRA_ASSERT_KNOWN(EsRngEnableKnownO_A, entropy_src_rng_o.rng_enable)
 
   // External Health Test Interface
-  `CALIPTRA_ASSERT_KNOWN(EsXhtEntropyBitKnownO_A, entropy_src_xht_o.entropy_bit)
+  `CALIPTRA_ASSERT_KNOWN_IF(EsXhtEntropyBitKnownO_A, entropy_src_xht_o.entropy_bit,
+      entropy_src_xht_o.entropy_bit_valid)
   `CALIPTRA_ASSERT_KNOWN(EsXhtEntropyBitValidKnownO_A, entropy_src_xht_o.entropy_bit_valid)
   `CALIPTRA_ASSERT_KNOWN(EsXhtClearKnownO_A, entropy_src_xht_o.clear)
   `CALIPTRA_ASSERT_KNOWN(EsXhtActiveKnownO_A, entropy_src_xht_o.active)
