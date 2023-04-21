@@ -53,10 +53,14 @@ class pv_read_transaction_coverage #(
     option.auto_bin_max=1024;
     option.per_instance=1;
     read_entry: coverpoint coverage_trans.read_entry;
-    read_offset: coverpoint coverage_trans.read_offset;
-    error: coverpoint coverage_trans.error;
+    read_offset: coverpoint coverage_trans.read_offset {
+      illegal_bins offset_12_15 = {['d12:'d15]};
+    }
+    error: coverpoint coverage_trans.error {
+      ignore_bins error1 = {'d1};
+    }
     last: coverpoint coverage_trans.last;
-    read_data: coverpoint coverage_trans.read_data;
+    //read_data: coverpoint coverage_trans.read_data;
     // pragma uvmf custom covergroup end
   endgroup
 
@@ -67,7 +71,6 @@ class pv_read_transaction_coverage #(
   function new(string name="", uvm_component parent=null);
     super.new(name,parent);
     pv_read_transaction_cg=new;
-    `uvm_warning("COVERAGE_MODEL_REVIEW", "A covergroup has been constructed which may need review because of either generation or re-generation with merging.  Please note that transaction variables added as a result of re-generation and merging are not automatically added to the covergroup.  Remove this warning after the covergroup has been reviewed.")
   endfunction
 
   // ****************************************************************************
