@@ -709,6 +709,16 @@ class soc_ifc_predictor #(
                 "mbox_unlock": begin
                     `uvm_warning("PRED_AHB", {"FIXME at ", axs_reg.get_name()})
                 end
+                //SHA Accelerator Functions
+                "EXECUTE": begin
+                    // Expect a status transition on sha_notif_intr_pending
+                    // whenever an AHB write changes the value of SHA Accelerator Execute
+                    if (sha_notif_intr_pending ^ p_soc_ifc_rm.sha512_acc_csr_rm.EXECUTE.EXECUTE.get_mirrored_value()) begin
+                        `uvm_info("PRED_AHB", "Write to SHA512 Accel Execute triggers soc_ifc_notif_intr_pending transition", UVM_LOW)
+                        send_cptra_sts_txn = 1'b1;
+                        sha_notif_intr_pending = p_soc_ifc_rm.sha512_acc_csr_rm.EXECUTE.EXECUTE.get_mirrored_value();
+                    end
+                end
                 "CPTRA_FLOW_STATUS": begin
                     if (ahb_txn.RnW == AHB_WRITE &&
                         ((data_active[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fw.get_lsb_pos()     ] != this.ready_for_fw_push) ||

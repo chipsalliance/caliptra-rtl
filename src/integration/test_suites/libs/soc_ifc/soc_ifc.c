@@ -187,3 +187,23 @@ void soc_ifc_set_fw_update_reset() {
     reg = (reg | SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK);
     lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET,reg);
 }
+
+//SHA Accelerator
+void soc_ifc_sha_accel_acquire_lock() {
+    while((lsu_read_32(CLP_SHA512_ACC_CSR_LOCK) & SHA512_ACC_CSR_LOCK_LOCK_MASK) == 1);
+}
+
+void soc_ifc_sha_accel_wr_mode(enum sha_accel_mode_e mode) {
+    uint32_t reg;
+    reg = ((mode << SHA512_ACC_CSR_MODE_MODE_LOW) & SHA512_ACC_CSR_MODE_MODE_MASK) | 
+            SHA512_ACC_CSR_MODE_ENDIAN_TOGGLE_MASK; //set endian toggle so we read from the mailbox as is
+    lsu_write_32(CLP_SHA512_ACC_CSR_MODE,reg);
+}
+
+void soc_ifc_sha_accel_poll_status() {
+    while((lsu_read_32(CLP_SHA512_ACC_CSR_STATUS) & SHA512_ACC_CSR_STATUS_VALID_MASK) == 0);
+}
+
+void soc_ifc_sha_accel_clr_lock() {
+    lsu_write_32((CLP_SHA512_ACC_CSR_LOCK), 0);
+}   

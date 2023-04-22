@@ -62,6 +62,8 @@ targets:
     tops:
       - hdl_top
       - hvl_top
+  sim:
+    pre_exec: 'echo "[PRE-EXEC] Copying SHA512 Vectors to $(pwd)" && cp ${COMPILE_ROOT}/../tb/vectors/SHA*.rsp .'
 global:
   tool:
     vcs:

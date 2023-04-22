@@ -112,7 +112,7 @@ void caliptra_rt() {
     VPRINTF(MEDIUM, "----------------------------------\n");
 
     //set NMI vector
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_NMI_VECTOR, nmi_handler);
+    lsu_write_32((uintptr_t) (CLP_SOC_IFC_REG_INTERNAL_NMI_VECTOR), (uint32_t) (nmi_handler));
 
     // Runtime flow -- set ready for RT
     soc_ifc_set_flow_status_field(SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_RUNTIME_MASK);
@@ -232,20 +232,54 @@ void caliptra_rt() {
                         for (loop_iter = 0; loop_iter<op.dlen; loop_iter+=4) {
                             reg_addr = soc_ifc_mbox_read_dataout_single();
                             VPRINTF(MEDIUM, "Reading reg addr 0x%x from mailbox req\n", reg_addr);
-                            read_data = lsu_read_32((uint32_t *) reg_addr);
-                            lsu_write_32((uint32_t *) (CLP_MBOX_CSR_MBOX_DATAIN), read_data);
+                            read_data = lsu_read_32((uintptr_t) reg_addr);
+                            lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DATAIN), read_data);
                         }
-                        lsu_write_32(CLP_MBOX_CSR_MBOX_DLEN, op.dlen);
+                        lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DLEN), op.dlen);
                     }
                     else if (op.cmd == MBOX_CMD_OOB_ACCESS) {
                         //set the ERROR FATAL register to indicate the expected error
-                        lsu_write_32((uint32_t *) CLP_SOC_IFC_REG_CPTRA_FW_ERROR_FATAL, 0xF0000001);
+                        lsu_write_32((uintptr_t) CLP_SOC_IFC_REG_CPTRA_FW_ERROR_FATAL, 0xF0000001);
                         //just read one address, it's going to trigger NMI by going OOB
                         reg_addr = soc_ifc_mbox_read_dataout_single();
                         VPRINTF(MEDIUM, "Reading reg addr 0x%x from mailbox req\n", reg_addr);
-                        read_data = lsu_read_32((uint32_t *) reg_addr);
+                        read_data = lsu_read_32((uintptr_t) reg_addr);
                         VPRINTF(FATAL, "Received MBOX_CMD_OOB_ACCESS but didn't trigger NMI\n");
                         SEND_STDOUT_CTRL(0x1);
+                    }
+                    else if ((op.cmd == MBOX_CMD_SHA384_REQ) | (op.cmd == MBOX_CMD_SHA512_REQ)) {
+                        enum sha_accel_mode_e mode;
+                        mode = (op.cmd == MBOX_CMD_SHA384_REQ) ? SHA_MBOX_384 : SHA_MBOX_512;
+                        //Find the start of the valid data by searching for the first dword with non-zero data
+                        temp = 0;
+                        read_data = soc_ifc_mbox_read_dataout_single();
+                        while ((read_data == 0) && (temp < 32767)) {
+                            temp++;
+                            read_data = soc_ifc_mbox_read_dataout_single();
+                        }
+                        //start addr in bytes
+                        temp = temp << 2;
+                        //dlen in bytes
+                        read_data = lsu_read_32(CLP_MBOX_CSR_MBOX_DLEN);
+                        read_data = read_data - temp;
+                        //Acquire SHA Accel lock
+                        soc_ifc_sha_accel_acquire_lock();
+                        soc_ifc_sha_accel_wr_mode(mode);
+                        //write start addr in bytes
+                        lsu_write_32((uintptr_t) (CLP_SHA512_ACC_CSR_START_ADDRESS), temp);
+                        //write dlen in bytes
+                        lsu_write_32((uintptr_t) (CLP_SHA512_ACC_CSR_DLEN), read_data);
+                        soc_ifc_sha_accel_execute();
+                        soc_ifc_sha_accel_poll_status();
+                        lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DLEN), (mode == SHA_MBOX_384) ? 48 : 64);
+                        //read the digest and write it back to the mailbox
+                        reg_addr = (uint32_t *) CLP_SHA512_ACC_CSR_DIGEST_0;
+                        while (reg_addr <= (uint32_t*) ((mode == SHA_MBOX_384) ? CLP_SHA512_ACC_CSR_DIGEST_11 : CLP_SHA512_ACC_CSR_DIGEST_15)) {
+                            read_data = lsu_read_32(reg_addr);
+                            lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DATAIN), read_data);
+                            reg_addr = reg_addr + 4;
+                        }
+                        soc_ifc_sha_accel_clr_lock();
                     }
                     else {
                         // Read provided data
@@ -257,12 +291,12 @@ void caliptra_rt() {
                         }
 
                         // Set resp dlen
-                        lsu_write_32(CLP_MBOX_CSR_MBOX_DLEN, temp);
+                        lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DLEN), temp);
 
                         // Write response data
                         srand((uint32_t) (op.cmd ^ read_data)); // Initialize rand num generator
                         for (loop_iter = 0; loop_iter<temp; loop_iter+=4) {
-                            lsu_write_32((uint32_t *) (CLP_MBOX_CSR_MBOX_DATAIN), rand());
+                            lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DATAIN), rand());
                         }
 
                     }
@@ -271,7 +305,7 @@ void caliptra_rt() {
                 }
                 else {
                     VPRINTF(MEDIUM, "Received mailbox command (no expected RESP) from SOC! Got 0x%x\n", op.cmd);
-                    lsu_write_32(CLP_MBOX_CSR_MBOX_DLEN, 0);
+                    lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DLEN), 0);
                     soc_ifc_set_mbox_status_field(CMD_COMPLETE);
                 }
             }

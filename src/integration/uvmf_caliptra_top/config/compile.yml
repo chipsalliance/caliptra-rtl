@@ -39,7 +39,9 @@ targets:
   sim:
     # TODO: Eventually we will load caliptra_fmc/rt hexfiles to mailbox in the TB logic instead
     #       of preloading here with this rename approach
-    pre_exec: |
+    pre_exec:
+        echo "[PRE-EXEC] Copying SHA512 Vectors to $(pwd)" && 
+        cp ${COMPILE_ROOT}/../tb/vectors/SHA*.rsp . &&
         make -f ${AHA_POC_REPO}/tools/scripts/Makefile TESTNAME=caliptra_top program.hex &&
         make -f ${AHA_POC_REPO}/tools/scripts/Makefile TESTNAME=caliptra_fmc caliptra_fmc.hex &&
         make -f ${AHA_POC_REPO}/tools/scripts/Makefile TESTNAME=caliptra_rt  caliptra_rt.hex &&

@@ -57,7 +57,9 @@ enum mbox_cmd_e {
     MBOX_CMD_REG_ACCESS = 0x40000001,
     MBOX_CMD_OOB_ACCESS = 0x40000002,
     MBOX_CMD_FMC_UPDATE = 0xba5eba11,
-    MBOX_CMD_RT_UPDATE  = 0xbabecafe
+    MBOX_CMD_RT_UPDATE  = 0xbabecafe,
+    MBOX_CMD_SHA384_REQ = 0x40C0FFEE,
+    MBOX_CMD_SHA512_REQ = 0x41C0FFEE
 };
 
 // Boundaries against which the incoming remote FW images are aligned
@@ -72,6 +74,13 @@ typedef struct {
     uint32_t dlen;
     enum mbox_cmd_e cmd;
 } mbox_op_s;
+
+enum sha_accel_mode_e {
+    SHA_STREAM_384 = 0x0,
+    SHA_STREAM_512 = 0x1,
+    SHA_MBOX_384   = 0x2,
+    SHA_MBOX_512   = 0x3,
+};
 
 /* --------------- Function Prototypes --------------- */
 // Simple reg accesses
@@ -90,5 +99,14 @@ inline void soc_ifc_set_iccm_lock() {
 mbox_op_s soc_ifc_read_mbox_cmd();
 void soc_ifc_mbox_fw_flow(mbox_op_s op);
 void soc_ifc_fw_update(mbox_op_s op);
+
+// SHA Accelerator Functions
+void soc_ifc_sha_accel_acquire_lock();
+void soc_ifc_sha_accel_wr_mode(enum sha_accel_mode_e mode);
+inline void soc_ifc_sha_accel_execute() {
+    lsu_write_32((CLP_SHA512_ACC_CSR_EXECUTE), SHA512_ACC_CSR_EXECUTE_EXECUTE_MASK);
+}
+void soc_ifc_sha_accel_poll_status();
+void soc_ifc_sha_accel_clr_lock();
 
 #endif
