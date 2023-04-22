@@ -409,7 +409,7 @@ module caliptra_top_tb_services
         $system("./ecdsa_secp384r1.exe");
 
         file_name = "secp384_testvector.hex";
-        ecc_read_test_vectors(file_name);
+        if (!UVM_TB) ecc_read_test_vectors(file_name);
         end
     endtask // ecc_test
 

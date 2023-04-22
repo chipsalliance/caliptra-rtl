@@ -142,6 +142,10 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_mbox_rst_cold_rand_medium_sequence soc_ifc_env_mbox_rst_cold_rand_medium_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_uc_reg_access_sequence.svh"
   typedef soc_ifc_env_mbox_uc_reg_access_sequence soc_ifc_env_mbox_uc_reg_access_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_sha_accel_sequence.svh"
+  typedef  soc_ifc_env_mbox_sha_accel_sequence soc_ifc_env_mbox_sha_accel_sequence_t;
+  `include "sequences/sha_accel/soc_ifc_env_sha_accel_sequence.svh"
+  typedef soc_ifc_env_sha_accel_sequence soc_ifc_env_sha_accel_sequence_t;
   /* TODO: If desired in top-level rand sequence, add this to the rand_seq_idx enum/avail_env_seqs_c constraint */
   `include "sequences/trng/soc_ifc/soc_ifc_env_trng_write_data_sequence.svh"
   typedef soc_ifc_env_trng_write_data_sequence soc_ifc_env_trng_write_data_sequence_t;

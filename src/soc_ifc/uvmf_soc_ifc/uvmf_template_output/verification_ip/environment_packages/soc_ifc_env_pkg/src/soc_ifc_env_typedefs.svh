@@ -48,7 +48,9 @@
       MBOX_CMD_REG_ACCESS = 32'h40000001,
       MBOX_CMD_OOB_ACCESS = 32'h40000002,
       MBOX_CMD_FMC_UPDATE = 32'hba5eba11,
-      MBOX_CMD_RT_UPDATE  = 32'hbabecafe
+      MBOX_CMD_RT_UPDATE  = 32'hbabecafe,
+      MBOX_CMD_SHA384_REQ = 32'h40C0FFEE,
+      MBOX_CMD_SHA512_REQ = 32'h41C0FFEE
   } mbox_cmd_e;
   
   typedef union packed {
@@ -64,5 +66,11 @@
     logic [31:0] dlen;
     mbox_cmd_u   cmd;
   } mbox_op_s;
+
+  typedef struct packed {
+    logic mailbox_mode;
+    logic sha512_mode;
+  } sha_accel_op_s;
+
   // pragma uvmf custom additional end
 
