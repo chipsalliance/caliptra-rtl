@@ -155,9 +155,9 @@ package soc_ifc_reg_model_top_pkg;
             if ( this.CPTRA_SECURITY_STATE.debug_locked.    has_reset("HARD"   )) this.CPTRA_SECURITY_STATE.debug_locked.    set_reset(this.CPTRA_SECURITY_STATE.debug_locked.    get_reset("HARD"), "SOFT");
             if ( this.CPTRA_SECURITY_STATE.scan_mode.       has_reset("HARD"   )) this.CPTRA_SECURITY_STATE.scan_mode.       set_reset(this.CPTRA_SECURITY_STATE.scan_mode.       get_reset("HARD"), "SOFT");
             if ( this.CPTRA_SECURITY_STATE.rsvd.            has_reset("HARD"   )) this.CPTRA_SECURITY_STATE.rsvd.            set_reset(this.CPTRA_SECURITY_STATE.rsvd.            get_reset("HARD"), "SOFT");
-            for (ii=0; ii<$size(this.CPTRA_VALID_PAUSER); ii++) begin
-                if ( this.CPTRA_VALID_PAUSER[ii].                has_reset("HARD"   )) this.CPTRA_VALID_PAUSER[ii].                set_reset(this.CPTRA_VALID_PAUSER[ii].                get_reset("HARD"), "SOFT");
-                if ( this.CPTRA_PAUSER_LOCK[ii].                 has_reset("HARD"   )) this.CPTRA_PAUSER_LOCK[ii].                 set_reset(this.CPTRA_PAUSER_LOCK[ii].                 get_reset("HARD"), "SOFT");
+            for (ii=0; ii<$size(this.CPTRA_MBOX_VALID_PAUSER); ii++) begin
+                if ( this.CPTRA_MBOX_VALID_PAUSER[ii].                has_reset("HARD"   )) this.CPTRA_MBOX_VALID_PAUSER[ii].                set_reset(this.CPTRA_MBOX_VALID_PAUSER[ii].                get_reset("HARD"), "SOFT");
+                if ( this.CPTRA_MBOX_PAUSER_LOCK[ii].                 has_reset("HARD"   )) this.CPTRA_MBOX_PAUSER_LOCK[ii].                 set_reset(this.CPTRA_MBOX_PAUSER_LOCK[ii].                 get_reset("HARD"), "SOFT");
             end
             if ( this.CPTRA_TRNG_VALID_PAUSER.              has_reset("HARD"   )) this.CPTRA_TRNG_VALID_PAUSER.              set_reset(this.CPTRA_TRNG_VALID_PAUSER.              get_reset("HARD"), "SOFT");
             if ( this.CPTRA_TRNG_PAUSER_LOCK.               has_reset("HARD"   )) this.CPTRA_TRNG_PAUSER_LOCK.               set_reset(this.CPTRA_TRNG_PAUSER_LOCK.               get_reset("HARD"), "SOFT");

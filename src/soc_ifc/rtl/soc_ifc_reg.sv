@@ -72,8 +72,8 @@ module soc_ifc_reg (
         logic CPTRA_FLOW_STATUS;
         logic CPTRA_RESET_REASON;
         logic CPTRA_SECURITY_STATE;
-        logic [5-1:0]CPTRA_VALID_PAUSER;
-        logic [5-1:0]CPTRA_PAUSER_LOCK;
+        logic [5-1:0]CPTRA_MBOX_VALID_PAUSER;
+        logic [5-1:0]CPTRA_MBOX_PAUSER_LOCK;
         logic CPTRA_TRNG_VALID_PAUSER;
         logic CPTRA_TRNG_PAUSER_LOCK;
         logic [12-1:0]CPTRA_TRNG_DATA;
@@ -167,10 +167,10 @@ module soc_ifc_reg (
         decoded_reg_strb.CPTRA_RESET_REASON = cpuif_req_masked & (cpuif_addr == 'h40);
         decoded_reg_strb.CPTRA_SECURITY_STATE = cpuif_req_masked & (cpuif_addr == 'h44);
         for(int i0=0; i0<5; i0++) begin
-            decoded_reg_strb.CPTRA_VALID_PAUSER[i0] = cpuif_req_masked & (cpuif_addr == 'h48 + i0*'h4);
+            decoded_reg_strb.CPTRA_MBOX_VALID_PAUSER[i0] = cpuif_req_masked & (cpuif_addr == 'h48 + i0*'h4);
         end
         for(int i0=0; i0<5; i0++) begin
-            decoded_reg_strb.CPTRA_PAUSER_LOCK[i0] = cpuif_req_masked & (cpuif_addr == 'h5c + i0*'h4);
+            decoded_reg_strb.CPTRA_MBOX_PAUSER_LOCK[i0] = cpuif_req_masked & (cpuif_addr == 'h5c + i0*'h4);
         end
         decoded_reg_strb.CPTRA_TRNG_VALID_PAUSER = cpuif_req_masked & (cpuif_addr == 'h70);
         decoded_reg_strb.CPTRA_TRNG_PAUSER_LOCK = cpuif_req_masked & (cpuif_addr == 'h74);
@@ -370,13 +370,13 @@ module soc_ifc_reg (
                 logic [31:0] next;
                 logic load_next;
             } PAUSER;
-        } [5-1:0]CPTRA_VALID_PAUSER;
+        } [5-1:0]CPTRA_MBOX_VALID_PAUSER;
         struct packed{
             struct packed{
                 logic next;
                 logic load_next;
             } LOCK;
-        } [5-1:0]CPTRA_PAUSER_LOCK;
+        } [5-1:0]CPTRA_MBOX_PAUSER_LOCK;
         struct packed{
             struct packed{
                 logic [31:0] next;
@@ -1040,12 +1040,12 @@ module soc_ifc_reg (
             struct packed{
                 logic [31:0] value;
             } PAUSER;
-        } [5-1:0]CPTRA_VALID_PAUSER;
+        } [5-1:0]CPTRA_MBOX_VALID_PAUSER;
         struct packed{
             struct packed{
                 logic value;
             } LOCK;
-        } [5-1:0]CPTRA_PAUSER_LOCK;
+        } [5-1:0]CPTRA_MBOX_PAUSER_LOCK;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -1787,46 +1787,46 @@ module soc_ifc_reg (
     end
     assign hwif_out.CPTRA_RESET_REASON.WARM_RESET.value = field_storage.CPTRA_RESET_REASON.WARM_RESET.value;
     for(genvar i0=0; i0<5; i0++) begin
-        // Field: soc_ifc_reg.CPTRA_VALID_PAUSER[].PAUSER
+        // Field: soc_ifc_reg.CPTRA_MBOX_VALID_PAUSER[].PAUSER
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.CPTRA_VALID_PAUSER[i0].PAUSER.value;
+            automatic logic [31:0] next_c = field_storage.CPTRA_MBOX_VALID_PAUSER[i0].PAUSER.value;
             automatic logic load_next_c = '0;
-            if(decoded_reg_strb.CPTRA_VALID_PAUSER[i0] && decoded_req_is_wr && !(hwif_in.CPTRA_VALID_PAUSER[i0].PAUSER.swwel)) begin // SW write
+            if(decoded_reg_strb.CPTRA_MBOX_VALID_PAUSER[i0] && decoded_req_is_wr && !(hwif_in.CPTRA_MBOX_VALID_PAUSER[i0].PAUSER.swwel)) begin // SW write
                 next_c = decoded_wr_data[31:0];
                 load_next_c = '1;
             end
-            field_combo.CPTRA_VALID_PAUSER[i0].PAUSER.next = next_c;
-            field_combo.CPTRA_VALID_PAUSER[i0].PAUSER.load_next = load_next_c;
+            field_combo.CPTRA_MBOX_VALID_PAUSER[i0].PAUSER.next = next_c;
+            field_combo.CPTRA_MBOX_VALID_PAUSER[i0].PAUSER.load_next = load_next_c;
         end
         always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
             if(~hwif_in.cptra_rst_b) begin
-                field_storage.CPTRA_VALID_PAUSER[i0].PAUSER.value <= 'hffffffff;
-            end else if(field_combo.CPTRA_VALID_PAUSER[i0].PAUSER.load_next) begin
-                field_storage.CPTRA_VALID_PAUSER[i0].PAUSER.value <= field_combo.CPTRA_VALID_PAUSER[i0].PAUSER.next;
+                field_storage.CPTRA_MBOX_VALID_PAUSER[i0].PAUSER.value <= 'h0;
+            end else if(field_combo.CPTRA_MBOX_VALID_PAUSER[i0].PAUSER.load_next) begin
+                field_storage.CPTRA_MBOX_VALID_PAUSER[i0].PAUSER.value <= field_combo.CPTRA_MBOX_VALID_PAUSER[i0].PAUSER.next;
             end
         end
-        assign hwif_out.CPTRA_VALID_PAUSER[i0].PAUSER.value = field_storage.CPTRA_VALID_PAUSER[i0].PAUSER.value;
+        assign hwif_out.CPTRA_MBOX_VALID_PAUSER[i0].PAUSER.value = field_storage.CPTRA_MBOX_VALID_PAUSER[i0].PAUSER.value;
     end
     for(genvar i0=0; i0<5; i0++) begin
-        // Field: soc_ifc_reg.CPTRA_PAUSER_LOCK[].LOCK
+        // Field: soc_ifc_reg.CPTRA_MBOX_PAUSER_LOCK[].LOCK
         always_comb begin
-            automatic logic [0:0] next_c = field_storage.CPTRA_PAUSER_LOCK[i0].LOCK.value;
+            automatic logic [0:0] next_c = field_storage.CPTRA_MBOX_PAUSER_LOCK[i0].LOCK.value;
             automatic logic load_next_c = '0;
-            if(decoded_reg_strb.CPTRA_PAUSER_LOCK[i0] && decoded_req_is_wr && !(hwif_in.CPTRA_PAUSER_LOCK[i0].LOCK.swwel)) begin // SW write
+            if(decoded_reg_strb.CPTRA_MBOX_PAUSER_LOCK[i0] && decoded_req_is_wr && !(hwif_in.CPTRA_MBOX_PAUSER_LOCK[i0].LOCK.swwel)) begin // SW write
                 next_c = decoded_wr_data[0:0];
                 load_next_c = '1;
             end
-            field_combo.CPTRA_PAUSER_LOCK[i0].LOCK.next = next_c;
-            field_combo.CPTRA_PAUSER_LOCK[i0].LOCK.load_next = load_next_c;
+            field_combo.CPTRA_MBOX_PAUSER_LOCK[i0].LOCK.next = next_c;
+            field_combo.CPTRA_MBOX_PAUSER_LOCK[i0].LOCK.load_next = load_next_c;
         end
         always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
             if(~hwif_in.cptra_rst_b) begin
-                field_storage.CPTRA_PAUSER_LOCK[i0].LOCK.value <= 'h0;
-            end else if(field_combo.CPTRA_PAUSER_LOCK[i0].LOCK.load_next) begin
-                field_storage.CPTRA_PAUSER_LOCK[i0].LOCK.value <= field_combo.CPTRA_PAUSER_LOCK[i0].LOCK.next;
+                field_storage.CPTRA_MBOX_PAUSER_LOCK[i0].LOCK.value <= 'h0;
+            end else if(field_combo.CPTRA_MBOX_PAUSER_LOCK[i0].LOCK.load_next) begin
+                field_storage.CPTRA_MBOX_PAUSER_LOCK[i0].LOCK.value <= field_combo.CPTRA_MBOX_PAUSER_LOCK[i0].LOCK.next;
             end
         end
-        assign hwif_out.CPTRA_PAUSER_LOCK[i0].LOCK.value = field_storage.CPTRA_PAUSER_LOCK[i0].LOCK.value;
+        assign hwif_out.CPTRA_MBOX_PAUSER_LOCK[i0].LOCK.value = field_storage.CPTRA_MBOX_PAUSER_LOCK[i0].LOCK.value;
     end
     // Field: soc_ifc_reg.CPTRA_TRNG_VALID_PAUSER.PAUSER
     always_comb begin
@@ -1841,7 +1841,7 @@ module soc_ifc_reg (
     end
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
-            field_storage.CPTRA_TRNG_VALID_PAUSER.PAUSER.value <= 'hffffffff;
+            field_storage.CPTRA_TRNG_VALID_PAUSER.PAUSER.value <= 'h0;
         end else if(field_combo.CPTRA_TRNG_VALID_PAUSER.PAUSER.load_next) begin
             field_storage.CPTRA_TRNG_VALID_PAUSER.PAUSER.value <= field_combo.CPTRA_TRNG_VALID_PAUSER.PAUSER.next;
         end
@@ -4197,10 +4197,10 @@ module soc_ifc_reg (
     assign readback_array[17][3:3] = (decoded_reg_strb.CPTRA_SECURITY_STATE && !decoded_req_is_wr) ? hwif_in.CPTRA_SECURITY_STATE.scan_mode.next : '0;
     assign readback_array[17][31:4] = (decoded_reg_strb.CPTRA_SECURITY_STATE && !decoded_req_is_wr) ? 'h0 : '0;
     for(genvar i0=0; i0<5; i0++) begin
-        assign readback_array[i0*1 + 18][31:0] = (decoded_reg_strb.CPTRA_VALID_PAUSER[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_VALID_PAUSER[i0].PAUSER.value : '0;
+        assign readback_array[i0*1 + 18][31:0] = (decoded_reg_strb.CPTRA_MBOX_VALID_PAUSER[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_MBOX_VALID_PAUSER[i0].PAUSER.value : '0;
     end
     for(genvar i0=0; i0<5; i0++) begin
-        assign readback_array[i0*1 + 23][0:0] = (decoded_reg_strb.CPTRA_PAUSER_LOCK[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_PAUSER_LOCK[i0].LOCK.value : '0;
+        assign readback_array[i0*1 + 23][0:0] = (decoded_reg_strb.CPTRA_MBOX_PAUSER_LOCK[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_MBOX_PAUSER_LOCK[i0].LOCK.value : '0;
         assign readback_array[i0*1 + 23][31:1] = '0;
     end
     assign readback_array[28][31:0] = (decoded_reg_strb.CPTRA_TRNG_VALID_PAUSER && !decoded_req_is_wr) ? field_storage.CPTRA_TRNG_VALID_PAUSER.PAUSER.value : '0;

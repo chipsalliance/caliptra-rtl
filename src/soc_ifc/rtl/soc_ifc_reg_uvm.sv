@@ -182,25 +182,25 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_SECURITY_STATE
 
-    // Reg - soc_ifc_reg::CPTRA_VALID_PAUSER
-    class soc_ifc_reg__CPTRA_VALID_PAUSER extends uvm_reg;
+    // Reg - soc_ifc_reg::CPTRA_MBOX_VALID_PAUSER
+    class soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER extends uvm_reg;
         rand uvm_reg_field PAUSER;
 
-        function new(string name = "soc_ifc_reg__CPTRA_VALID_PAUSER");
+        function new(string name = "soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
         virtual function void build();
             this.PAUSER = new("PAUSER");
-            this.PAUSER.configure(this, 32, 0, "RW", 0, 'hffffffff, 1, 1, 0);
+            this.PAUSER.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : soc_ifc_reg__CPTRA_VALID_PAUSER
+    endclass : soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER
 
-    // Reg - soc_ifc_reg::CPTRA_PAUSER_LOCK
-    class soc_ifc_reg__CPTRA_PAUSER_LOCK extends uvm_reg;
+    // Reg - soc_ifc_reg::CPTRA_MBOX_PAUSER_LOCK
+    class soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK extends uvm_reg;
         rand uvm_reg_field LOCK;
 
-        function new(string name = "soc_ifc_reg__CPTRA_PAUSER_LOCK");
+        function new(string name = "soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
@@ -208,7 +208,7 @@ package soc_ifc_reg_uvm;
             this.LOCK = new("LOCK");
             this.LOCK.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : soc_ifc_reg__CPTRA_PAUSER_LOCK
+    endclass : soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK
 
     // Reg - soc_ifc_reg::CPTRA_TRNG_VALID_PAUSER
     class soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER extends uvm_reg;
@@ -220,7 +220,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.PAUSER = new("PAUSER");
-            this.PAUSER.configure(this, 32, 0, "RW", 0, 'hffffffff, 1, 1, 0);
+            this.PAUSER.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER
 
@@ -1518,8 +1518,8 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__CPTRA_FLOW_STATUS CPTRA_FLOW_STATUS;
         rand soc_ifc_reg__CPTRA_RESET_REASON CPTRA_RESET_REASON;
         rand soc_ifc_reg__CPTRA_SECURITY_STATE CPTRA_SECURITY_STATE;
-        rand soc_ifc_reg__CPTRA_VALID_PAUSER CPTRA_VALID_PAUSER[5];
-        rand soc_ifc_reg__CPTRA_PAUSER_LOCK CPTRA_PAUSER_LOCK[5];
+        rand soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER CPTRA_MBOX_VALID_PAUSER[5];
+        rand soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK CPTRA_MBOX_PAUSER_LOCK[5];
         rand soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER CPTRA_TRNG_VALID_PAUSER;
         rand soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK CPTRA_TRNG_PAUSER_LOCK;
         rand soc_ifc_reg__CPTRA_TRNG_DATA CPTRA_TRNG_DATA[12];
@@ -1622,19 +1622,19 @@ package soc_ifc_reg_uvm;
 
             this.CPTRA_SECURITY_STATE.build();
             this.default_map.add_reg(this.CPTRA_SECURITY_STATE, 'h44);
-            foreach(this.CPTRA_VALID_PAUSER[i0]) begin
-                this.CPTRA_VALID_PAUSER[i0] = new($sformatf("CPTRA_VALID_PAUSER[%0d]", i0));
-                this.CPTRA_VALID_PAUSER[i0].configure(this);
+            foreach(this.CPTRA_MBOX_VALID_PAUSER[i0]) begin
+                this.CPTRA_MBOX_VALID_PAUSER[i0] = new($sformatf("CPTRA_MBOX_VALID_PAUSER[%0d]", i0));
+                this.CPTRA_MBOX_VALID_PAUSER[i0].configure(this);
                 
-                this.CPTRA_VALID_PAUSER[i0].build();
-                this.default_map.add_reg(this.CPTRA_VALID_PAUSER[i0], 'h48 + i0*'h4);
+                this.CPTRA_MBOX_VALID_PAUSER[i0].build();
+                this.default_map.add_reg(this.CPTRA_MBOX_VALID_PAUSER[i0], 'h48 + i0*'h4);
             end
-            foreach(this.CPTRA_PAUSER_LOCK[i0]) begin
-                this.CPTRA_PAUSER_LOCK[i0] = new($sformatf("CPTRA_PAUSER_LOCK[%0d]", i0));
-                this.CPTRA_PAUSER_LOCK[i0].configure(this);
+            foreach(this.CPTRA_MBOX_PAUSER_LOCK[i0]) begin
+                this.CPTRA_MBOX_PAUSER_LOCK[i0] = new($sformatf("CPTRA_MBOX_PAUSER_LOCK[%0d]", i0));
+                this.CPTRA_MBOX_PAUSER_LOCK[i0].configure(this);
                 
-                this.CPTRA_PAUSER_LOCK[i0].build();
-                this.default_map.add_reg(this.CPTRA_PAUSER_LOCK[i0], 'h5c + i0*'h4);
+                this.CPTRA_MBOX_PAUSER_LOCK[i0].build();
+                this.default_map.add_reg(this.CPTRA_MBOX_PAUSER_LOCK[i0], 'h5c + i0*'h4);
             end
             this.CPTRA_TRNG_VALID_PAUSER = new("CPTRA_TRNG_VALID_PAUSER");
             this.CPTRA_TRNG_VALID_PAUSER.configure(this);

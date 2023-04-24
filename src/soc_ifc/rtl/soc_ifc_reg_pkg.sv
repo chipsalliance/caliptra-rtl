@@ -70,19 +70,19 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic swwel;
-    } soc_ifc_reg__CPTRA_VALID_PAUSER__PAUSER__in_t;
+    } soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER__PAUSER__in_t;
 
     typedef struct packed{
-        soc_ifc_reg__CPTRA_VALID_PAUSER__PAUSER__in_t PAUSER;
-    } soc_ifc_reg__CPTRA_VALID_PAUSER__in_t;
+        soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER__PAUSER__in_t PAUSER;
+    } soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER__in_t;
 
     typedef struct packed{
         logic swwel;
-    } soc_ifc_reg__CPTRA_PAUSER_LOCK__LOCK__in_t;
+    } soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK__LOCK__in_t;
 
     typedef struct packed{
-        soc_ifc_reg__CPTRA_PAUSER_LOCK__LOCK__in_t LOCK;
-    } soc_ifc_reg__CPTRA_PAUSER_LOCK__in_t;
+        soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK__LOCK__in_t LOCK;
+    } soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK__in_t;
 
     typedef struct packed{
         logic swwel;
@@ -347,8 +347,8 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_FLOW_STATUS__in_t CPTRA_FLOW_STATUS;
         soc_ifc_reg__CPTRA_RESET_REASON__in_t CPTRA_RESET_REASON;
         soc_ifc_reg__CPTRA_SECURITY_STATE__in_t CPTRA_SECURITY_STATE;
-        soc_ifc_reg__CPTRA_VALID_PAUSER__in_t [5-1:0]CPTRA_VALID_PAUSER;
-        soc_ifc_reg__CPTRA_PAUSER_LOCK__in_t [5-1:0]CPTRA_PAUSER_LOCK;
+        soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER__in_t [5-1:0]CPTRA_MBOX_VALID_PAUSER;
+        soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK__in_t [5-1:0]CPTRA_MBOX_PAUSER_LOCK;
         soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER__in_t CPTRA_TRNG_VALID_PAUSER;
         soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK__in_t CPTRA_TRNG_PAUSER_LOCK;
         soc_ifc_reg__CPTRA_TRNG_DATA__in_t [12-1:0]CPTRA_TRNG_DATA;
@@ -469,19 +469,19 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic [31:0] value;
-    } soc_ifc_reg__CPTRA_VALID_PAUSER__PAUSER__out_t;
+    } soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER__PAUSER__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__CPTRA_VALID_PAUSER__PAUSER__out_t PAUSER;
-    } soc_ifc_reg__CPTRA_VALID_PAUSER__out_t;
+        soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER__PAUSER__out_t PAUSER;
+    } soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER__out_t;
 
     typedef struct packed{
         logic value;
-    } soc_ifc_reg__CPTRA_PAUSER_LOCK__LOCK__out_t;
+    } soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK__LOCK__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__CPTRA_PAUSER_LOCK__LOCK__out_t LOCK;
-    } soc_ifc_reg__CPTRA_PAUSER_LOCK__out_t;
+        soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK__LOCK__out_t LOCK;
+    } soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK__out_t;
 
     typedef struct packed{
         logic [31:0] value;
@@ -771,8 +771,8 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_BOOT_STATUS__out_t CPTRA_BOOT_STATUS;
         soc_ifc_reg__CPTRA_FLOW_STATUS__out_t CPTRA_FLOW_STATUS;
         soc_ifc_reg__CPTRA_RESET_REASON__out_t CPTRA_RESET_REASON;
-        soc_ifc_reg__CPTRA_VALID_PAUSER__out_t [5-1:0]CPTRA_VALID_PAUSER;
-        soc_ifc_reg__CPTRA_PAUSER_LOCK__out_t [5-1:0]CPTRA_PAUSER_LOCK;
+        soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER__out_t [5-1:0]CPTRA_MBOX_VALID_PAUSER;
+        soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK__out_t [5-1:0]CPTRA_MBOX_PAUSER_LOCK;
         soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER__out_t CPTRA_TRNG_VALID_PAUSER;
         soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK__out_t CPTRA_TRNG_PAUSER_LOCK;
         soc_ifc_reg__CPTRA_TRNG_STATUS__out_t CPTRA_TRNG_STATUS;
