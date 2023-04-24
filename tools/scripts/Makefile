@@ -15,7 +15,7 @@
 #
 
 TEST_CFLAGS = -g -O3
-ABI = -mabi=ilp32 -march=rv32imac
+ABI = -mabi=ilp32 -march=rv32imc
 
 VERILATOR = verilator
 GCC_PREFIX = riscv64-unknown-elf
