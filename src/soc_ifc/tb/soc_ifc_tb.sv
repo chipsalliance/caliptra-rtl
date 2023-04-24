@@ -237,6 +237,7 @@ module soc_ifc_tb
              .obf_uds_seed(obf_uds_seed),
 
              .nmi_vector(),
+             .nmi_intr(),
 
              .iccm_lock(),
              .iccm_axs_blocked(1'b0), // MH. Tie off here unless need control
@@ -1103,9 +1104,7 @@ module soc_ifc_tb
         // TODO. Make sure this is superfluous (implemented in package) before deleting
         // Currently only pulsed register assumed to have cross-register modifications
         if (is_pulsed_reg(rname)) begin
-          // $display ("-- Working on regname %s", rname);
           sb.record_entry(wrtrans, wr_modifier);
-          // handle_cross_reg_mods(rname, wrtrans.data, wr_modifier);
           pulse_trig_trans.copy_from(wrtrans);
           pulse_trig_struct = '{
             reg_name: rname, 
@@ -1155,6 +1154,7 @@ module soc_ifc_tb
   `include "single_soc_reg_test.svh"   
   `include "soc_reg_reset_test.svh"     
   `include "soc_reg_test.svh"     
+  `include "soc_reg_invalid_test.svh"     
 //----------------------------------------------------------------
 
 
@@ -1209,6 +1209,11 @@ module soc_ifc_tb
           set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
           sim_dut_init();
           soc_reg_test();
+
+        end else if (soc_ifc_testname == "soc_reg_invalid_test") begin 
+          set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
+          sim_dut_init();
+          soc_reg_invalid_test();
 
         end else if (soc_ifc_testname == "single_socreg_test") begin 
           if (!($value$plusargs("SOCREG_METHOD_NAME=%s", socreg_method_name))) 
