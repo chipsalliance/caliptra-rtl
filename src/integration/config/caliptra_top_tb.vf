@@ -310,4 +310,5 @@ ${CALIPTRA_ROOT}/src/uart/rtl/uart_reg_top.sv
 ${CALIPTRA_ROOT}/src/uart/rtl/uart_rx.sv
 ${CALIPTRA_ROOT}/src/uart/rtl/uart.sv
 ${CALIPTRA_ROOT}/src/uart/rtl/uart_core.sv
+${CALIPTRA_ROOT}/src/integration/test_suites/libs/jtagdpi/jtagdpi.sv
 ${CALIPTRA_ROOT}/src/integration/rtl/caliptra_top.sv
