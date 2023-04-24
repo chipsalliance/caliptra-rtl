@@ -122,41 +122,43 @@ reg {
 
 reg {
     name = "Valid User Registers";
-     desc = "Valid PAUSER attributes for requests from SoC APB Interface.
+     desc = "Valid PAUSER attributes for requests from SoC APB Interface. Only valid once LOCK is set.
              [br]Caliptra Access: RW
              [br]SOC Access:      RW
              Read-Only once locked by PAUSER_LOCK.";
      field {sw=rw; hw=r; swwel;resetsignal = cptra_rst_b;} PAUSER[32]=0xFFFF_FFFF;
- } CPTRA_VALID_PAUSER[5];
+ } CPTRA_MBOX_VALID_PAUSER[5];
 
 //FIXME: Should LOCK be W1 here?
 reg {
     name = "Valid User Register Lock";
      desc = "Valid PAUSER attributes for requests from SoC APB Interface.
-             Each bit corresponds to locking the associated  VALID_PAUSER register.
+             [br]Each bit corresponds to locking the associated MBOX_VALID_PAUSER register.
+             [br]Associated MBOX_VALID_PAUSER register is only valid once locked by this bit.
              [br]Caliptra Access: RW
              [br]SOC Access:      RW
-             Read-Only once locked.";
+             [br]Read-Only once locked.";
      field {sw=rw; hw=r; swwel; resetsignal = cptra_rst_b;} LOCK=0;
- } CPTRA_PAUSER_LOCK[5];
+ } CPTRA_MBOX_PAUSER_LOCK[5];
 
 reg {
     name = "Valid User for TRNG";
-    desc = "Valid PAUSER attributes for TRNG on SoC APB Interface.
+    desc = "Valid PAUSER attributes for TRNG on SoC APB Interface. Only valid once LOCK is set.
             [br]Caliptra Access: RW
             [br]SOC Access:      RW
-            Read-Only once locked by TRNG_PAUSER_LOCK.";
+            [br]Read-Only once locked by TRNG_PAUSER_LOCK.";
     field {sw=rw; hw=r; swwel; resetsignal = cptra_rst_b;} PAUSER[32]=0xFFFF_FFFF;
  } CPTRA_TRNG_VALID_PAUSER;
 
 reg {
     name = "Valid User for TRNG PAUSER Lock";
     desc = "Valid PAUSER attributes for requests from SoC APB Interface.
-            Each bit corresponds to locking the associated VALID_PAUSER register.
-            Caliptra FW RW access for survivability but cannot unlock once locked
+            [br]Each bit corresponds to locking the associated TRNG_VALID_PAUSER register.
+            [br]Associated TRNG_VALID_PAUSER register is only valid once locked by this bit.
+            [br]Caliptra FW RW access for survivability but cannot unlock once locked
             [br]Caliptra Access: RW
             [br]SOC Access:      RW
-            Read-Only once locked.";
+            [br]Read-Only once locked.";
     field {sw=rw; hw=r; swwel; resetsignal=cptra_rst_b;} LOCK=0;
  } CPTRA_TRNG_PAUSER_LOCK;
 
@@ -171,7 +173,7 @@ reg {
 reg {
     name = "TRNG Status";
     desc = "TRNG Status register to indicate request and done";
-    field {desc = "Indicates that the requests TRNG Data is done and stored in the TRNG Data register.
+    field {desc = "Indicates that there is a request for TRNG Data.
             [br]Caliptra Access: RW
             [br]SOC Access:      RO";  sw=rw; hw=r; swwel=soc_req; resetsignal=cptra_rst_b;} DATA_REQ=0;
 

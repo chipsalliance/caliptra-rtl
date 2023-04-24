@@ -43,9 +43,10 @@ package soc_ifc_pkg;
 
     //Valid PAUSER
     //Lock the PAUSER values from integration time
-    parameter [4:0] CLP_SET_PAUSER_INTEG = { 1'b0,          1'b0,          1'b0,          1'b0,          1'b0};
-    parameter [4:0][31:0] CLP_VALID_PAUSER = {32'h4444_4444, 32'h3333_3333, 32'h2222_2222, 32'h1111_1111, 32'h0000_0000};
-  
+    parameter [4:0] CPTRA_SET_MBOX_PAUSER_INTEG   = { 1'b0,          1'b0,          1'b0,          1'b0,          1'b0};
+    parameter [4:0][31:0] CPTRA_MBOX_VALID_PAUSER = {32'h4444_4444, 32'h3333_3333, 32'h2222_2222, 32'h1111_1111, 32'h0000_0000};
+    parameter [31:0] CPTRA_DEF_MBOX_VALID_PAUSER  = 32'hFFFF_FFFF;
+
     //DMI Register encodings
     //Read only registers
     parameter DMI_REG_MBOX_DLEN = 7'h50;

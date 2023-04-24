@@ -479,11 +479,13 @@ always_comb security_state_debug_locked_p = security_state.debug_locked ^ securi
 always_comb begin
     for (int i=0; i<5; i++) begin
         //once locked, can't be cleared until reset
-        soc_ifc_reg_hwif_in.CPTRA_PAUSER_LOCK[i].LOCK.swwel = soc_ifc_reg_hwif_out.CPTRA_PAUSER_LOCK[i].LOCK.value;
+        soc_ifc_reg_hwif_in.CPTRA_MBOX_PAUSER_LOCK[i].LOCK.swwel = soc_ifc_reg_hwif_out.CPTRA_MBOX_PAUSER_LOCK[i].LOCK.value;
         //lock the writes to valid user field once lock is set
-        soc_ifc_reg_hwif_in.CPTRA_VALID_PAUSER[i].PAUSER.swwel = soc_ifc_reg_hwif_out.CPTRA_PAUSER_LOCK[i].LOCK.value;
+        soc_ifc_reg_hwif_in.CPTRA_MBOX_VALID_PAUSER[i].PAUSER.swwel = soc_ifc_reg_hwif_out.CPTRA_MBOX_PAUSER_LOCK[i].LOCK.value;
         //If integrator set PAUSER values at integration time, pick it up from the define
-        valid_mbox_users[i] = CLP_SET_PAUSER_INTEG[i] ? CLP_VALID_PAUSER[i][APB_USER_WIDTH-1:0] : soc_ifc_reg_hwif_out.CPTRA_VALID_PAUSER[i].PAUSER.value[APB_USER_WIDTH-1:0];
+        valid_mbox_users[i] = CPTRA_SET_MBOX_PAUSER_INTEG[i] ? CPTRA_MBOX_VALID_PAUSER[i][APB_USER_WIDTH-1:0] : 
+                              soc_ifc_reg_hwif_out.CPTRA_MBOX_PAUSER_LOCK[i].LOCK.value ? 
+                              soc_ifc_reg_hwif_out.CPTRA_MBOX_VALID_PAUSER[i].PAUSER.value[APB_USER_WIDTH-1:0] : CPTRA_DEF_MBOX_VALID_PAUSER;
     end
 end
 //can't write to trng valid user after it is locked
@@ -542,12 +544,12 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_WR_DONE.done.swwe = soc_ifc_reg_req_d
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //only allow valid users to write to TRNG
-always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_STATUS.DATA_WR_DONE.swwe = soc_ifc_reg_req_data.soc_req & 
-                                                            (soc_ifc_reg_req_data.user == soc_ifc_reg_hwif_out.CPTRA_TRNG_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]);
+always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_STATUS.DATA_WR_DONE.swwe = soc_ifc_reg_req_data.soc_req & soc_ifc_reg_hwif_out.CPTRA_TRNG_PAUSER_LOCK.LOCK.value & 
+                                                                     (soc_ifc_reg_req_data.user == soc_ifc_reg_hwif_out.CPTRA_TRNG_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]);
 always_comb begin 
     for (int i = 0; i < 12; i++) begin
-        soc_ifc_reg_hwif_in.CPTRA_TRNG_DATA[i].DATA.swwe = soc_ifc_reg_req_data.soc_req & 
-                                                      (soc_ifc_reg_req_data.user == soc_ifc_reg_hwif_out.CPTRA_TRNG_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]);
+        soc_ifc_reg_hwif_in.CPTRA_TRNG_DATA[i].DATA.swwe = soc_ifc_reg_req_data.soc_req & soc_ifc_reg_hwif_out.CPTRA_TRNG_PAUSER_LOCK.LOCK.value & 
+                                                          (soc_ifc_reg_req_data.user == soc_ifc_reg_hwif_out.CPTRA_TRNG_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]);
     end
 end
 
