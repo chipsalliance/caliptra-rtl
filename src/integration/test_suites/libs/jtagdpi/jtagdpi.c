@@ -1,4 +1,5 @@
 // Copyright lowRISC contributors.
+// Copyright 2023 Antmicro.
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -12,10 +13,11 @@
 
 #include "tcp_server.h"
 
-struct jtagdpi_ctx {
-  // Server context
-  struct tcp_server_ctx *sock;
-  // Signals
+// Uncomment to enable JTAG DPI debugging. The code will print vertically
+// oriented waveform for all JTAG signals.
+//#define JTAGDPI_DEBUG
+
+struct jtagdpi_signals {
   uint8_t tck;
   uint8_t tms;
   uint8_t tdi;
@@ -24,21 +26,35 @@ struct jtagdpi_ctx {
   uint8_t srst_n;
 };
 
+struct jtagdpi_ctx {
+  // Server context
+  struct tcp_server_ctx *sock;
+  // Signals
+  struct jtagdpi_signals curr;
+#ifdef JTAGDPI_DEBUG
+  struct jtagdpi_signals prev;
+  uint8_t init;
+#endif
+};
+
 /**
  * Reset the JTAG signals to a "dongle unplugged" state
  */
 static void reset_jtag_signals(struct jtagdpi_ctx *ctx) {
   assert(ctx);
 
-  ctx->tck = 0;
-  ctx->tms = 0;
-  ctx->tdi = 0;
+  // Set all to zero
+  memset(&ctx->curr, 0, sizeof(struct jtagdpi_signals));
+#ifdef JTAGDPI_DEBUG
+  memset(&ctx->prev, 0, sizeof(struct jtagdpi_signals));
+#endif
 
   // trst_n is pulled down (reset active) by default
-  ctx->trst_n = 0;
-
   // srst_n is pulled up (reset not active) by default
-  ctx->srst_n = 1;
+  ctx->curr.srst_n = 1;
+#ifdef JTAGDPI_DEBUG
+  ctx->prev.srst_n = 1;
+#endif
 }
 
 /**
@@ -67,14 +83,14 @@ static void update_jtag_signals(struct jtagdpi_ctx *ctx) {
   if (cmd >= '0' && cmd <= '7') {
     // JTAG write
     char cmd_bit = cmd - '0';
-    ctx->tdi = (cmd_bit >> 0) & 0x1;
-    ctx->tms = (cmd_bit >> 1) & 0x1;
-    ctx->tck = (cmd_bit >> 2) & 0x1;
+    ctx->curr.tdi = (cmd_bit >> 0) & 0x1;
+    ctx->curr.tms = (cmd_bit >> 1) & 0x1;
+    ctx->curr.tck = (cmd_bit >> 2) & 0x1;
   } else if (cmd >= 'r' && cmd <= 'u') {
     // JTAG reset (active high from OpenOCD)
     char cmd_bit = cmd - 'r';
-    ctx->srst_n = !((cmd_bit >> 0) & 0x1);
-    ctx->trst_n = !((cmd_bit >> 1) & 0x1);
+    ctx->curr.srst_n = !((cmd_bit >> 0) & 0x1);
+    ctx->curr.trst_n = !((cmd_bit >> 1) & 0x1);
   } else if (cmd == 'R') {
     // JTAG read
     act_send_resp = true;
@@ -94,7 +110,7 @@ static void update_jtag_signals(struct jtagdpi_ctx *ctx) {
 
   // send tdo as response
   if (act_send_resp) {
-    char tdo_ascii = ctx->tdo + '0';
+    char tdo_ascii = ctx->curr.tdo + '0';
     tcp_server_write(ctx->sock, tdo_ascii);
   }
 
@@ -111,6 +127,9 @@ void *jtagdpi_create(const char *display_name, int listen_port) {
 
   // Create socket
   ctx->sock = tcp_server_create(display_name, listen_port);
+#ifdef JTAGDPI_DEBUG
+  ctx->init = 1;
+#endif
 
   reset_jtag_signals(ctx);
 
@@ -135,20 +154,57 @@ void jtagdpi_close(void *ctx_void) {
   free(ctx);
 }
 
+#ifdef JTAGDPI_DEBUG
+static void jtagdpi_dbg(struct jtagdpi_ctx *ctx) {
+
+    uint8_t* curr = (uint8_t*)&ctx->curr;
+    uint8_t* prev = (uint8_t*)&ctx->prev;
+
+    if (ctx->init) {
+        fprintf(stderr, "tck  tms  tdi  tdo trst srst\n");
+        ctx->init = 0;
+    }
+
+    for (int i=0; i<6; ++i) {
+        if (!prev[i] &&  curr[i]) {
+            fprintf(stderr, "\\    ");
+        }
+        if ( prev[i] &&  curr[i]) {
+            fprintf(stderr, " |   ");
+        }
+        if ( prev[i] && !curr[i]) {
+            fprintf(stderr, "/    ");
+        }
+        if (!prev[i] && !curr[i]) {
+            fprintf(stderr, "|    ");
+        }
+    }
+    fprintf(stderr, "\n");
+}
+#endif
+
 void jtagdpi_tick(void *ctx_void, svBit *tck, svBit *tms, svBit *tdi,
                   svBit *trst_n, svBit *srst_n, const svBit tdo) {
   struct jtagdpi_ctx *ctx = (struct jtagdpi_ctx *)ctx_void;
 
-  ctx->tdo = tdo;
+  // Get TDO
+  ctx->curr.tdo = tdo;
 
   // TODO: Evaluate moving this functionality into a separate thread
   if (ctx) {
     update_jtag_signals(ctx);
   }
 
-  *tdi = ctx->tdi;
-  *tms = ctx->tms;
-  *tck = ctx->tck;
-  *srst_n = ctx->srst_n;
-  *trst_n = ctx->trst_n;
+#ifdef JTAGDPI_DEBUG
+  if (memcmp(&ctx->curr, &ctx->prev, sizeof(struct jtagdpi_signals))) {
+    jtagdpi_dbg(ctx);
+    memcpy(&ctx->prev, &ctx->curr, sizeof(struct jtagdpi_signals));
+  }
+#endif
+
+  *tdi = ctx->curr.tdi;
+  *tms = ctx->curr.tms;
+  *tck = ctx->curr.tck;
+  *srst_n = ctx->curr.srst_n;
+  *trst_n = ctx->curr.trst_n;
 }
