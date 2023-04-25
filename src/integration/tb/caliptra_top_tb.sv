@@ -142,6 +142,7 @@ module caliptra_top_tb (
 
     //device lifecycle
     security_state_t security_state;
+    assign security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b0}; // DebugUnlocked & Production
 
     ras_test_ctrl_t ras_test_ctrl;
     logic [63:0] generic_input_wires;
