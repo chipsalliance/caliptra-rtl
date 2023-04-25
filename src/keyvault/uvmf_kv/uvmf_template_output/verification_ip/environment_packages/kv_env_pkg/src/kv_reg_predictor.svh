@@ -132,7 +132,7 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
             //-----------------------------------------------
             //Update val_ctrl reg to reset clear bit for the entry that is being written
             //-----------------------------------------------
-            val_ctrl_data[entry_offset[8:4]] = 'b0; //Reset clear bit of current entry
+            val_ctrl_data[entry_offset[4:0]] = 'b0; //Reset clear bit of current entry
 
             val_ctrl_item = new;
             val_ctrl_item.element_kind = UVM_REG;
