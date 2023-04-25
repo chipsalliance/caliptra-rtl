@@ -144,6 +144,19 @@ jobs:
       matrix:
         test_name: ${{fromJSON(needs.build_matrix.outputs.test_names)}}
 
+    env:
+      # TODO: is there a way to grab these from build_tools?
+      CARGO_INCREMENTAL: 0
+      SCCACHE_VERSION: 0.3.3
+      RISCV_VERSION: v12.1.0
+      # TODO: To update to 5.006, clean up lint errors
+      VERILATOR_VERSION: v5.002
+      PKG_CONFIG_PATH: /opt/verilator/share/pkgconfig
+      SCCACHE_GHA_CACHE_TO: sccache-verilator-10000
+      SCCACHE_GHA_CACHE_FROM: sccache-verilator-
+      # Change this to a new random value if you suspect the cache is corrupted
+      SCCACHE_C_CUSTOM_CACHE_BUSTER: f3e6951f0c1d
+
     steps:
       - uses: actions/checkout@v3
         with:
