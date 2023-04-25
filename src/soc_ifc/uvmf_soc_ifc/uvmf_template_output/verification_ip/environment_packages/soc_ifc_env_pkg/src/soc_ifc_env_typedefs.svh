@@ -42,8 +42,10 @@
    * Decode:
    *   [31]: Firmware command
    *   [30]: Response required (if set)
+   *   [29]: uC->SoC command
    */
   typedef enum logic [31:0] {
+      MBOX_CMD_UC_BASIC   = 32'h20000000,
       MBOX_CMD_RESP_BASIC = 32'h40000000,
       MBOX_CMD_REG_ACCESS = 32'h40000001,
       MBOX_CMD_OOB_ACCESS = 32'h40000002,
@@ -58,7 +60,8 @@
       struct packed {
           logic fw;
           logic resp_reqd;
-          logic [29:0] rsvd;
+          logic uc_to_soc;
+          logic [28:0] rsvd;
       } cmd_s;
   } mbox_cmd_u;
 

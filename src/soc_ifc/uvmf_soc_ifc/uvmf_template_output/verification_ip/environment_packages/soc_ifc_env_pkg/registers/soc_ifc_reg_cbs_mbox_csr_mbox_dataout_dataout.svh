@@ -38,14 +38,21 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_dataout_dataout extends soc_ifc_reg_cbs_mbox
         if (!$cast(rm,blk)) `uvm_fatal ("SOC_IFC_REG_CBS", "Failed to get valid class handle")
         if ((map.get_name() == this.AHB_map_name) ||
             (map.get_name() == this.APB_map_name)) begin
+            // Flag unexpected accesses based on system state, leaving an exception
+            // for UVM_PREDICT calls via writes to mbox_datain
+            // (This winds up being an exception for _any_ READ from dataout,
+            // because this method is only called from the apb_reg_predictor
+            // with UVM_PREDICT. So this is not going to catch bad reads.)
             case (map.get_name()) inside
                 this.AHB_map_name: begin
-                    if (!rm.mbox_fn_state_sigs.uc_receive_stage)
-                        `uvm_error("SOC_IFC_REG_CBS", $sformatf("Read from dataout is unexpected on map [%s]! Mailbox state tracker: %p", map.get_name(), rm.mbox_fn_state_sigs))
+                    if (!rm.mbox_fn_state_sigs.uc_receive_stage &&
+                        (path != UVM_PREDICT || kind != UVM_PREDICT_READ))
+                        `uvm_error("SOC_IFC_REG_CBS", $sformatf("Access to dataout of kind [%p] is unexpected on map [%s]! Mailbox state tracker: %p", kind, map.get_name(), rm.mbox_fn_state_sigs))
                 end
                 this.APB_map_name: begin
-                    if (!rm.mbox_fn_state_sigs.soc_receive_stage && !rm.mbox_fn_state_sigs.soc_done_stage)
-                        `uvm_error("SOC_IFC_REG_CBS", $sformatf("Read from dataout is unexpected on map [%s]! Mailbox state tracker: %p", map.get_name(), rm.mbox_fn_state_sigs))
+                    if (!rm.mbox_fn_state_sigs.soc_receive_stage && !rm.mbox_fn_state_sigs.soc_done_stage &&
+                        (path != UVM_PREDICT || kind != UVM_PREDICT_READ))
+                        `uvm_error("SOC_IFC_REG_CBS", $sformatf("Access to dataout of kind [%p] is unexpected on map [%s]! Mailbox state tracker: %p", kind, map.get_name(), rm.mbox_fn_state_sigs))
                 end
             endcase
             case (kind) inside
@@ -56,13 +63,14 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_dataout_dataout extends soc_ifc_reg_cbs_mbox
                     end
                 end
                 UVM_PREDICT_READ: begin
-                    // Current entry at front of Queue should match 'value' i.e.
+                    // Current entry at front of Queue should match 'previous' i.e.
                     // the mirrored value of mbox_dataout.
                     // Next entry in the queue is the predicted value for the
                     // subsequent access
                     if (rm.mbox_data_q.size() > 0) begin
-                        if (previous != rm.mbox_data_q.pop_front())
-                            `uvm_error("SOC_IFC_REG_CBS", $sformatf("Current mirrored value in %s does not match the element at the front of the mailbox data queue!", fld.get_full_name()))
+                        if (previous != rm.mbox_data_q[0])
+                            `uvm_error("SOC_IFC_REG_CBS", $sformatf("Current mirrored value [0x%x] in %s does not match the element at the front of the mailbox data queue [0x%x]!", previous, fld.get_full_name(), rm.mbox_data_q[0]))
+                        rm.mbox_data_q.pop_front();
                         // New value (for next read) will be the next queued entry
                         // instead of the current read value
                         if (rm.mbox_data_q.size() > 0) begin
@@ -76,7 +84,6 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_dataout_dataout extends soc_ifc_reg_cbs_mbox
                         // TODO escalate to uvm_warning?
                         // Some tests do this deliberately, we don't want those to fail
                         `uvm_info("SOC_IFC_REG_CBS", "Attempted read from mbox_dataout when mailbox_data_q is empty!", UVM_MEDIUM)
-                        value = 0;
                     end
                 end
                 default: begin

@@ -33,8 +33,9 @@ class soc_ifc_env_cptra_trng_data_req_sequence extends soc_ifc_env_sequence_base
   rand bit trng_req_data; 
 
   extern virtual task soc_ifc_ext_trng_req_data(input trng_req_data);
-  extern virtual task soc_ifc_ext_trng_data_wr_done_check_status(output uvm_status_e data_wr_done);
+  extern virtual task soc_ifc_ext_trng_data_wr_done_check_status(output bit data_wr_done);
   extern virtual task soc_ifc_ext_trng_data_wr_done_poll_status();
+  extern virtual task soc_ifc_ext_trng_clear_req();
 
   constraint trng_req { trng_req_data == 1; }
 
@@ -67,30 +68,31 @@ class soc_ifc_env_cptra_trng_data_req_sequence extends soc_ifc_env_sequence_base
 
     soc_ifc_ext_trng_req_data(trng_req_data);
     soc_ifc_ext_trng_data_wr_done_poll_status();
+    soc_ifc_ext_trng_clear_req();
 
   endtask
 
 endclass
 
 task soc_ifc_env_cptra_trng_data_req_sequence::soc_ifc_ext_trng_req_data(input trng_req_data);
-  reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.DATA_REQ.write(reg_sts, uvm_reg_data_t'(trng_req_data), UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+  reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.write(reg_sts, uvm_reg_data_t'(trng_req_data) << reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.DATA_REQ.get_lsb_pos(), UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
   if (reg_sts != UVM_IS_OK)
     `uvm_error("TRNG_REQ_SEQ", "Register access failed to write TRNG_STATUS register")
 endtask
 
-task soc_ifc_env_cptra_trng_data_req_sequence::soc_ifc_ext_trng_data_wr_done_check_status(output uvm_status_e data_wr_done);
+task soc_ifc_env_cptra_trng_data_req_sequence::soc_ifc_ext_trng_data_wr_done_check_status(output bit data_wr_done);
   uvm_reg_data_t reg_data;
   reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.read(reg_sts, reg_data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
   if (reg_sts != UVM_IS_OK) begin
      `uvm_error("TRNG_REQ_SEQ", "Register access failed (CPTRA_TRNG_STATUS)")
   end
   else begin
-    data_wr_done = uvm_status_e'(reg_data >> reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.DATA_WR_DONE.get_lsb_pos());
+    data_wr_done = reg_data[reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.DATA_WR_DONE.get_lsb_pos()];
   end
 endtask
 
 task soc_ifc_env_cptra_trng_data_req_sequence::soc_ifc_ext_trng_data_wr_done_poll_status();
-  uvm_status_e data_wr_done;
+  bit data_wr_done;
 
   soc_ifc_ext_trng_data_wr_done_check_status(data_wr_done);
   while (data_wr_done == 1'b0) begin
@@ -100,4 +102,11 @@ task soc_ifc_env_cptra_trng_data_req_sequence::soc_ifc_ext_trng_data_wr_done_pol
 endtask
 
 
-
+task soc_ifc_env_cptra_trng_data_req_sequence::soc_ifc_ext_trng_clear_req();
+    uvm_reg_data_t mask;
+    mask = uvm_reg_data_t'(1) << reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.DATA_REQ    .get_lsb_pos() |
+           uvm_reg_data_t'(1) << reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.DATA_WR_DONE.get_lsb_pos();
+    reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.write(reg_sts, mask, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+    if (reg_sts != UVM_IS_OK)
+        `uvm_error("TRNG_REQ_SEQ", "Register access failed to write TRNG_STATUS register")
+endtask

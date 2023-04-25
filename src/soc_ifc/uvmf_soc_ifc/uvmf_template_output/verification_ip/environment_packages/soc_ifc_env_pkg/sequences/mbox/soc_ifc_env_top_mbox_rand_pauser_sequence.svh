@@ -34,7 +34,7 @@ class soc_ifc_env_top_mbox_rand_pauser_sequence extends soc_ifc_env_top_mbox_seq
   soc_ifc_env_pauser_init_sequence_t          soc_ifc_env_pauser_init_seq;
   soc_ifc_env_mbox_rand_pauser_sequence_t     soc_ifc_env_mbox_pauser_seq;
 
-  bit [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users [5];
+  bit [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users [6];
   caliptra_apb_user apb_user_obj;
 
   extern virtual function      create_seqs();
@@ -86,11 +86,12 @@ task soc_ifc_env_top_mbox_rand_pauser_sequence::start_seqs();
             mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[ii].PAUSER.get_reset();
         end
     end
+    mbox_valid_users[5] = 32'hFFFF_FFFF; // FIXME hardcoded default valid PAUSER
 
     if (!mbox_valid_users_initialized) begin
         soc_ifc_env_pauser_init_seq.start(configuration.vsqr);
         mbox_valid_users_initialized = 1'b1;
-        mbox_valid_users = soc_ifc_env_pauser_init_seq.mbox_valid_users;
+        mbox_valid_users = {soc_ifc_env_pauser_init_seq.mbox_valid_users, 32'hFFFF_FFFF}; // FIXME hardcoded
     end
 
     // Cast to the PAUSER specialization of mailbox sequence to expose the mbox_valid_users member for override

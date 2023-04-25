@@ -1800,7 +1800,7 @@ module soc_ifc_reg (
         end
         always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
             if(~hwif_in.cptra_rst_b) begin
-                field_storage.CPTRA_MBOX_VALID_PAUSER[i0].PAUSER.value <= 'h0;
+                field_storage.CPTRA_MBOX_VALID_PAUSER[i0].PAUSER.value <= 'hffffffff;
             end else if(field_combo.CPTRA_MBOX_VALID_PAUSER[i0].PAUSER.load_next) begin
                 field_storage.CPTRA_MBOX_VALID_PAUSER[i0].PAUSER.value <= field_combo.CPTRA_MBOX_VALID_PAUSER[i0].PAUSER.next;
             end
@@ -1841,7 +1841,7 @@ module soc_ifc_reg (
     end
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
-            field_storage.CPTRA_TRNG_VALID_PAUSER.PAUSER.value <= 'h0;
+            field_storage.CPTRA_TRNG_VALID_PAUSER.PAUSER.value <= 'hffffffff;
         end else if(field_combo.CPTRA_TRNG_VALID_PAUSER.PAUSER.load_next) begin
             field_storage.CPTRA_TRNG_VALID_PAUSER.PAUSER.value <= field_combo.CPTRA_TRNG_VALID_PAUSER.PAUSER.next;
         end

@@ -18,15 +18,15 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-// DESCRIPTION: Extended from mbox pauser sequence to exercise PAUSER filtering.
-//              Tests medium sized mailbox commands with PAUSER randomization.
+// DESCRIPTION: Extended from mbox_base sequence to provide additional
+//              functionality in a test that sends medium-sized mailbox commands.
 //
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-class soc_ifc_env_mbox_rand_pauser_medium_sequence extends soc_ifc_env_mbox_rand_pauser_sequence;
+class soc_ifc_env_mbox_dlen_overflow_medium_sequence extends soc_ifc_env_mbox_dlen_overflow_sequence;
 
-  `uvm_object_utils( soc_ifc_env_mbox_rand_pauser_medium_sequence )
+  `uvm_object_utils( soc_ifc_env_mbox_dlen_overflow_medium_sequence )
 
   // Constrain dlen to be a medium command
   // Max. size: 4096B

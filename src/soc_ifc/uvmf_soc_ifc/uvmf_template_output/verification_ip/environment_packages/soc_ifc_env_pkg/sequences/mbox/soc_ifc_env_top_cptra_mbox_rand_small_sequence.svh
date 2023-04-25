@@ -18,25 +18,26 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-// DESCRIPTION: Extended from mbox pauser sequence to exercise PAUSER filtering.
-//              Tests medium sized mailbox commands with PAUSER randomization.
+// DESCRIPTION: Sequence to initiate (and respond) to mailbox command
+//              "TOP" sequence because it invokes lower level env sequences
+//              to facilitate the uC/SoC sides of mailbox command handling
+//              and this sequence defines the whole mailbox flow.
 //
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-class soc_ifc_env_mbox_rand_pauser_medium_sequence extends soc_ifc_env_mbox_rand_pauser_sequence;
+class soc_ifc_env_top_cptra_mbox_rand_small_sequence extends soc_ifc_env_top_cptra_mbox_sequence_base;
 
-  `uvm_object_utils( soc_ifc_env_mbox_rand_pauser_medium_sequence )
 
-  // Constrain dlen to be a medium command
-  // Max. size: 4096B
-  constraint mbox_dlen_max_medium_c { mbox_op_rand.dlen <= 32'h0000_1000; }
-  // Minimum 512B
-  constraint mbox_dlen_min_medium_c { mbox_op_rand.dlen >= 32'h0000_0200; }
-  // Constrain response data size to also be medium
-  // Max. size: 4096B
-  // Min. size: 512B
-  constraint mbox_resp_dlen_max_medium_c { mbox_resp_expected_dlen <= 32'h0000_1000; }
-  constraint mbox_resp_dlen_min_medium_c { mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen >= 32'h0000_0200; }
+  `uvm_object_utils( soc_ifc_env_top_cptra_mbox_rand_small_sequence )
+
+  extern virtual function create_seqs();
 
 endclass
+
+function soc_ifc_env_top_cptra_mbox_rand_small_sequence::create_seqs();
+    uvm_object obj;
+    obj = soc_ifc_env_cptra_mbox_req_rand_small_sequence_t::get_type().create_object("soc_ifc_env_cptra_mbox_seq");
+    if(!$cast(soc_ifc_env_cptra_mbox_seq,obj)) `uvm_fatal("SOC_IFC_TOP_MBOX_RAND_SMALL", "soc_ifc_env_top_cptra_mbox_rand_small_sequence::create_seqs() - <seq_type>.create_object() failed")
+    soc_ifc_env_soc_handler_seq = soc_ifc_env_soc_mbox_handler_sequence_t::type_id::create("soc_ifc_env_soc_handler_seq");
+endfunction

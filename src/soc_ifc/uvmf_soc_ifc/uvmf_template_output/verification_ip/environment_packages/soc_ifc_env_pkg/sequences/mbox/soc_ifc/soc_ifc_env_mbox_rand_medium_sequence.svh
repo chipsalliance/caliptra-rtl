@@ -37,9 +37,9 @@ class soc_ifc_env_mbox_rand_medium_sequence extends soc_ifc_env_mbox_sequence_ba
   // Minimum 512B
   constraint mbox_dlen_min_medium_c { mbox_op_rand.dlen >= 32'h0000_0200; }
   // Constrain response data size to also be medium
-  // Max. size: 1024B
-  // Min. size: 128B
-  constraint mbox_resp_dlen_max_medium_c { mbox_resp_expected_dlen <= 32'h0000_0400; }
-  constraint mbox_resp_dlen_min_medium_c { mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen >= 32'h0000_0080; }
+  // Max. size: 4096B
+  // Min. size: 512B
+  constraint mbox_resp_dlen_max_medium_c { mbox_resp_expected_dlen <= 32'h0000_1000; }
+  constraint mbox_resp_dlen_min_medium_c { mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen >= 32'h0000_0200; }
 
 endclass

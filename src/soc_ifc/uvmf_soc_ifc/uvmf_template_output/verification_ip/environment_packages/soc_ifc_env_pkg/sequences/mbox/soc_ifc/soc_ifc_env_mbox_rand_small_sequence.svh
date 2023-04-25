@@ -35,7 +35,7 @@ class soc_ifc_env_mbox_rand_small_sequence extends soc_ifc_env_mbox_sequence_bas
   // Max. size: 512B
   constraint mbox_dlen_max_small_c { mbox_op_rand.dlen <= 32'h0000_0200; }
   // Constrain response data size to also be small
-  // Max. size: 128B
-  constraint mbox_resp_dlen_max_small_c { mbox_resp_expected_dlen < 32'h0000_0080; }
+  // Max. size: 512B
+  constraint mbox_resp_dlen_max_small_c { mbox_resp_expected_dlen < 32'h0000_0200; }
 
 endclass

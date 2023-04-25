@@ -114,18 +114,18 @@ endtask
 
 task soc_ifc_env_mbox_uc_reg_access_sequence::mbox_poll_status();
   mbox_status_e data;
+  mbox_fsm_state_e state;
 
-  // If we read status immediately, the mbox_fsm_ps will not have transitioned
-  // yet and will predict the prior value in the reg-model, missing the transition.
-  // This affects valid_requester/valid_receiver logic in soc_ifc_predictor,
-  // which results in false error reporting.
-  // Maybe we need a better way to predict mbox_fsm_ps field changes?
+  // A force-unlock would cause state->MBOX_IDLE, so we exit the polling loop
   do begin
       configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200);
-      mbox_check_status(data);
-  end while (data == CMD_BUSY);
+      mbox_check_status(data, state);
+  end while (data == CMD_BUSY && state != MBOX_IDLE);
 
-  if (data == DATA_READY) begin
+  if (state == MBOX_IDLE) begin
+        `uvm_info("MBOX_SEQ", "Detected mailbox state transition to IDLE - was mbox_unlock expected?", UVM_HIGH)
+  end
+  else if (data == DATA_READY) begin
       if (mbox_resp_expected_dlen == 0)
           `uvm_error("MBOX_SEQ", $sformatf("Received status %p when not expecting any bytes of response data!", data))
       else begin
