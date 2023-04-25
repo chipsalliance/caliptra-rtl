@@ -60,7 +60,7 @@ class soc_ifc_env_pauser_init_sequence extends soc_ifc_env_sequence_base #(.CONF
     reg_model = configuration.soc_ifc_rm;
     if (soc_ifc_status_agent_rsp_seq == null)
         `uvm_fatal("SOC_IFC_PAUSER_INIT", "SOC_IFC ENV bringup sequence expected a handle to the soc_ifc status agent responder sequence (from bench-level sequence) but got null!")
-    apb_user_obj.set_addr_user(reg_model.soc_ifc_reg_rm.CPTRA_VALID_PAUSER[0].PAUSER.get_reset("HARD")); // FIXME use param?
+    apb_user_obj.set_addr_user(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[0].PAUSER.get_reset("HARD")); // FIXME use param?
   endtask
 
 
@@ -81,17 +81,17 @@ class soc_ifc_env_pauser_init_sequence extends soc_ifc_env_sequence_base #(.CONF
     join_none
 
     `uvm_info("SOC_IFC_PAUSER_INIT", "Configuring valid users in soc_ifc", UVM_MEDIUM)
-    for (ii=0; ii < $size(reg_model.soc_ifc_reg_rm.CPTRA_VALID_PAUSER); ii++) begin: VALID_USER_LOOP
+    for (ii=0; ii < $size(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER); ii++) begin: VALID_USER_LOOP
         reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[ii].write(sts, mbox_valid_users[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
-        if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_PAUSER_INIT", $sformatf("Failed when writing to CPTRA_VALID_PAUSER index %0d", ii))
+        if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_PAUSER_INIT", $sformatf("Failed when writing to CPTRA_MBOX_VALID_PAUSER index %0d", ii))
     end
     `uvm_info("SOC_IFC_PAUSER_INIT", "Locking valid users in soc_ifc", UVM_MEDIUM)
-    for (ii=0; ii < $size(reg_model.soc_ifc_reg_rm.CPTRA_PAUSER_LOCK); ii++) begin: USER_LOCK_LOOP
+    for (ii=0; ii < $size(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK); ii++) begin: USER_LOCK_LOOP
         if (reg_model.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[ii].LOCK.get_mirrored_value())
-            `uvm_warning("SOC_IFC_PAUSER_INIT", "Found CPTRA_PAUSER_LOCK that is already set while running PAUSER init sequence!")
+            `uvm_warning("SOC_IFC_PAUSER_INIT", "Found CPTRA_MBOX_PAUSER_LOCK that is already set while running PAUSER init sequence!")
         else begin
             reg_model.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[ii].write(sts, `UVM_REG_DATA_WIDTH'(1), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
-            if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_PAUSER_INIT", $sformatf("Failed when writing to CPTRA_PAUSER_LOCK index %0d", ii))
+            if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_PAUSER_INIT", $sformatf("Failed when writing to CPTRA_MBOX_PAUSER_LOCK index %0d", ii))
         end
     end
     `uvm_info("SOC_IFC_PAUSER_INIT", "Completed VALID PAUSER setup and lock", UVM_MEDIUM)

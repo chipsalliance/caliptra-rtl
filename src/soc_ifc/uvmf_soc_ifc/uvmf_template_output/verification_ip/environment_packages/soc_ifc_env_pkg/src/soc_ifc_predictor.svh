@@ -1382,7 +1382,7 @@ function bit soc_ifc_predictor::valid_receiver(input uvm_transaction txn);
             valid_receiver = p_soc_ifc_rm.mbox_csr_rm.mbox_user.get_mirrored_value() == apb_txn.addr_user &&
                              p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_done_stage;
         else
-            valid_receiver = apb_txn.addr_user inside {p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_VALID_PAUSER[0].PAUSER.get_reset("HARD"),mbox_valid_users} &&
+            valid_receiver = apb_txn.addr_user inside {p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[0].PAUSER.get_reset("HARD"),mbox_valid_users} &&
                              p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_receive_stage;
         if (!valid_receiver) begin
             string msg = $sformatf("valid_receiver is false!\nmbox_lock: %d\nmbox_status.soc_has_lock: %d\nmbox_fn_state_sigs: %p\naddr_user: 0x%x\nvalid_users: 0x%x %p",
@@ -1390,7 +1390,7 @@ function bit soc_ifc_predictor::valid_receiver(input uvm_transaction txn);
                                    p_soc_ifc_rm.mbox_csr_rm.mbox_status.soc_has_lock.get_mirrored_value(),
                                    p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs,
                                    apb_txn.addr_user,
-                                   p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_VALID_PAUSER[0].PAUSER.get_reset("HARD"), mbox_valid_users);
+                                   p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[0].PAUSER.get_reset("HARD"), mbox_valid_users);
             `uvm_info("PRED_VALID_RCV", msg, UVM_FULL)
         end
         else begin

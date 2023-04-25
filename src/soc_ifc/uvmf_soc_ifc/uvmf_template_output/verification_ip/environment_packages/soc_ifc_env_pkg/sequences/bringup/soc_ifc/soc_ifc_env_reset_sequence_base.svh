@@ -156,7 +156,7 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     reg_model = configuration.soc_ifc_rm;
     if (soc_ifc_status_agent_rsp_seq == null)
         `uvm_fatal("SOC_IFC_RST", "SOC_IFC ENV reset sequence expected a handle to the soc_ifc status agent responder sequence (from bench-level sequence) but got null!")
-    apb_user_obj.set_addr_user(reg_model.soc_ifc_reg_rm.CPTRA_VALID_PAUSER[0].PAUSER.get_reset("HARD"));
+    apb_user_obj.set_addr_user(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[0].PAUSER.get_reset("HARD"));
   endtask
 
 
