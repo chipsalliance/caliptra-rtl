@@ -10,31 +10,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_matrix:
-    name: Build Smoke Test matrix
+  build_tools:
+    name: Build Tools
     runs-on: ubuntu-22.04
-    outputs:
-      test_names: ${{ steps.output-matrix.outputs.test_names  }}
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install deps
-        run: |
-          sudo apt-get update -qy && sudo apt-get install -qy --no-install-recommends \
-            python3-minimal python3-yaml
-      - name: Build matrix
-        id: output-matrix
-        run: |
-          echo "test_names=$(python3 .github/scripts/build_tests_matrix.py)" >> $GITHUB_OUTPUT
-
-  build_and_test:
-    name: Verilator Smoke Test
-    runs-on: ubuntu-22.04
-    needs: build_matrix
-
-    strategy:
-      fail-fast: false
-      matrix:
-        test_name: ${{fromJSON(needs.build_matrix.outputs.test_names)}}
 
     env:
       CARGO_INCREMENTAL: 0
@@ -139,10 +117,40 @@ jobs:
         run: |
           echo /opt/riscv/bin >> $GITHUB_PATH
 
+  build_matrix:
+    name: Build Smoke Test matrix
+    runs-on: ubuntu-22.04
+    needs: build_tools
+    outputs:
+      test_names: ${{ steps.output-matrix.outputs.test_names  }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install deps
+        run: |
+          sudo apt-get update -qy && sudo apt-get install -qy --no-install-recommends \
+            python3-minimal python3-yaml
+      - name: Build matrix
+        id: output-matrix
+        run: |
+          echo "test_names=$(python3 .github/scripts/build_tests_matrix.py)" >> $GITHUB_OUTPUT
+
+  build_and_test:
+    name: Verilator Smoke Test
+    runs-on: ubuntu-22.04
+    needs: build_matrix
+
+    strategy:
+      fail-fast: false
+      matrix:
+        test_name: ${{fromJSON(needs.build_matrix.outputs.test_names)}}
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+
       - name: Run Caliptra Verilator Smoke Test
         run: |
-          # TODO: Add the run_verilator_l0_regression.py script.
-          # Running a simple test to make sure that there aren't any elaboration issues
           CALIPTRA_ROOT=$(pwd)
           cd tools/scripts
           make verilator CALIPTRA_ROOT=$CALIPTRA_ROOT TESTNAME=${{ matrix.test_name  }}
