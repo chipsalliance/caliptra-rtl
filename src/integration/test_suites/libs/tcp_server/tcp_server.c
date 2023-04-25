@@ -21,7 +21,8 @@
 /**
  * Simple buffer for passing data between TCP sockets and DPI modules
  */
-#define BUFSIZE_BYTE 256
+#define BUFSIZE_BYTE 1024 // FIXME: This must be larger than the remote_bitbang
+                          // buffer in OpenOCD. Otherwise deadlock occurs.
 
 struct tcp_buf {
   unsigned int rptr;
