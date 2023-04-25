@@ -103,6 +103,13 @@
       "desc": "Stub out the core of entropy_src logic",
       "local": "false",
       "expose": "true"
+    },
+    {
+      "name": "ObserveFifoDepth",
+      "type": "int unsigned",
+      "default": "64",
+      "desc": " Number of 32-bit entries in the observe FIFO.\n Note that upon changing this parameter, the bit widths of the !!OBSERVE_FIFO_THRESH and !!OBSERVE_FIFO_DEPTH registers have to be manually adjusted.\n ",
+      "local": "true"
     }
   ],
   "alert_list": [
