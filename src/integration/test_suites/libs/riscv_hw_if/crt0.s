@@ -31,7 +31,8 @@ _start:
     csrw minstreth, zero
 
     // MRAC
-    // Disable Caches on all regions
+    // Disable Caches on all regions except...
+    //  - Set cacheable for ROM to improve perf
     // Set side-effects (SE) at peripheral address regions:
     //  - imem       @ 0x0000_0000: no SE
     //  - crypto     @ 0x1000_0000:    SE
@@ -43,7 +44,7 @@ _start:
     //  - [UNMAPPED] @ 0x7000_0000:    SE
     //  - ...
     //  - [UNMAPPED] @ 0xF000_0000:    SE
-    li t0, 0xAAAAA0A8
+    li t0, 0xAAAAA0A9
     csrw mrac, t0
 
     li  t0, 4
