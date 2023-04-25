@@ -91,8 +91,8 @@ package soc_ifc_tb_pkg;
   // TODO. This will be merged into register dict at some point as a pair 
   word_addr_t _wide_register_dict [string] = {
     "CPTRA_FW_EXTENDED_ERROR_INFO"          : 8, 
-    "CPTRA_VALID_PAUSER"                    : 5,  
-    "CPTRA_PAUSER_LOCK"                     : 5,  
+    "CPTRA_MBOX_VALID_PAUSER"               : 5,  
+    "CPTRA_MBOX_PAUSER_LOCK"                : 5,  
     "CPTRA_TRNG_DATA"                       : 12,
     "CPTRA_GENERIC_INPUT_WIRES"             : 2,  
     "CPTRA_GENERIC_OUTPUT_WIRES"            : 2,  
@@ -123,8 +123,8 @@ package soc_ifc_tb_pkg;
     "CPTRA_FLOW_STATUS"                             : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FLOW_STATUS,                                  // 0x03c      Flow Status 
     "CPTRA_RESET_REASON"                            : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_RESET_REASON,                                 // 0x040      Reset Reason 
     "CPTRA_SECURITY_STATE"                          : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_SECURITY_STATE,                               // 0x044      Security State 
-    "CPTRA_VALID_PAUSER"                            : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_VALID_PAUSER_0,                               // 0x048 [5]  Valid User Registers 
-    "CPTRA_PAUSER_LOCK"                             : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_PAUSER_LOCK_0,                                // 0x05c [5]  Valid User Register Lock 
+    "CPTRA_MBOX_VALID_PAUSER"                       : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_MBOX_VALID_PAUSER_0,                          // 0x048 [5]  Valid User Registers 
+    "CPTRA_MBOX_PAUSER_LOCK"                        : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_MBOX_PAUSER_LOCK_0,                           // 0x05c [5]  Valid User Register Lock 
     "CPTRA_TRNG_VALID_PAUSER"                       : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_TRNG_VALID_PAUSER,                            // 0x070      Valid User for TRNG 
     "CPTRA_TRNG_PAUSER_LOCK"                        : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_TRNG_PAUSER_LOCK,                             // 0x074      Valid User for TRNG PAUSER Lock 
     "CPTRA_TRNG_DATA"                               : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_TRNG_DATA_0,                                  // 0x078 [12] TRNG Data 
@@ -218,7 +218,7 @@ package soc_ifc_tb_pkg;
 
   // Only non-zero power-on values are stored; also populated by SocRegisters instantiation 
   dword_t _soc_register_initval_dict [string] = {
-    "CPTRA_VALID_PAUSER"                   : 32'hffff_ffff,
+    "CPTRA_MBOX_VALID_PAUSER"              : 32'hffff_ffff,
     "CPTRA_TRNG_VALID_PAUSER"              : 32'hffff_ffff,
     "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES" : 32'h5,
     "CPTRA_HW_REV_ID"                      : 32'h1,
@@ -261,7 +261,7 @@ package soc_ifc_tb_pkg;
                                                            `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK       |
                                                            `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_RUNTIME_MASK  |
                                                            `SOC_IFC_REG_CPTRA_FLOW_STATUS_MAILBOX_FLOW_DONE_MASK), 
-    "CPTRA_PAUSER_LOCK"                                : `SOC_IFC_REG_CPTRA_PAUSER_LOCK_0_LOCK_MASK,   // same for all 5 pausers
+    "CPTRA_MBOX_PAUSER_LOCK"                           : `SOC_IFC_REG_CPTRA_MBOX_PAUSER_LOCK_0_LOCK_MASK,   // same for all 5 pausers
     "CPTRA_TRNG_PAUSER_LOCK"                           : `SOC_IFC_REG_CPTRA_TRNG_PAUSER_LOCK_LOCK_MASK,
     "CPTRA_TRNG_STATUS.APB"                            : `SOC_IFC_REG_CPTRA_TRNG_STATUS_DATA_WR_DONE_MASK, 
     "CPTRA_TRNG_STATUS.AHB"                            : `SOC_IFC_REG_CPTRA_TRNG_STATUS_DATA_REQ_MASK,     
@@ -516,15 +516,15 @@ package soc_ifc_tb_pkg;
       else if (str_startswith(addr_name, "FUSE_"))
         exp_data = fuses_locked ? curr_data : (ahb_rodata | apb_indata & get_mask(addr_name)); // ahb-RO 
 
-      else if (str_startswith(addr_name, "CPTRA_VALID_PAUSER")) begin    // find equivalent pauser lock & if set, apb-RO 
-        tmpstr = "CPTRA_VALID_PAUSER";
+      else if (str_startswith(addr_name, "CPTRA_MBOX_VALID_PAUSER")) begin    // find equivalent pauser lock & if set, apb-RO 
+        tmpstr = "CPTRA_MBOX_VALID_PAUSER";
         pauser_suffix = addr_name.substr(tmpstr.len(), addr_name.len()-1);
-        pauser_lock_regname = {"CPTRA_PAUSER_LOCK", pauser_suffix};
+        pauser_lock_regname = {"CPTRA_MBOX_PAUSER_LOCK", pauser_suffix};
         pauser_locked = _exp_register_data_dict[pauser_lock_regname]; 
         exp_data = pauser_locked ? curr_data : (ahb_indata | apb_indata); 
 
-      end else if (str_startswith(addr_name, "CPTRA_PAUSER_LOCK")) begin //  if pauser locked, apb-RO
-        tmpstr = "CPTRA_PAUSER_LOCK";
+      end else if (str_startswith(addr_name, "CPTRA_MBOX_PAUSER_LOCK")) begin //  if pauser locked, apb-RO
+        tmpstr = "CPTRA_MBOX_PAUSER_LOCK";
         pauser_locked = _exp_register_data_dict[addr_name];
         exp_data = pauser_locked ? curr_data & get_mask(tmpstr) :  (ahb_indata | apb_indata) & get_mask(tmpstr); 
 

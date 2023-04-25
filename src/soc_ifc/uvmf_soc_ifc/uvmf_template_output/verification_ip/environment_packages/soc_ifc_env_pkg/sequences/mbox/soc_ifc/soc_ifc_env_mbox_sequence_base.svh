@@ -200,18 +200,18 @@ task soc_ifc_env_mbox_sequence_base::mbox_setup();
     // Read the valid PAUSER fields from register mirrored value if the local array
     // has not already been overridden from default values
     if (!mbox_valid_users_initialized) begin
-        for (ii=0; ii < $size(reg_model.soc_ifc_reg_rm.CPTRA_PAUSER_LOCK); ii++) begin: VALID_USER_LOOP
-            if (reg_model.soc_ifc_reg_rm.CPTRA_PAUSER_LOCK[ii].LOCK.get_mirrored_value())
-                mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_VALID_PAUSER[ii].get_mirrored_value();
+        for (ii=0; ii < $size(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK); ii++) begin: VALID_USER_LOOP
+            if (reg_model.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[ii].LOCK.get_mirrored_value())
+                mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[ii].get_mirrored_value();
             else
-                mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_VALID_PAUSER[ii].get_reset("HARD");
+                mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[ii].get_reset("HARD");
         end
         mbox_valid_users_initialized = 1'b1;
     end
     else begin
-        for (ii=0; ii < $size(reg_model.soc_ifc_reg_rm.CPTRA_PAUSER_LOCK); ii++) begin: VALID_USER_CHECK_LOOP
-            if (reg_model.soc_ifc_reg_rm.CPTRA_PAUSER_LOCK[ii].LOCK.get_mirrored_value() &&
-                mbox_valid_users[ii] != reg_model.soc_ifc_reg_rm.CPTRA_VALID_PAUSER[ii].get_mirrored_value())
+        for (ii=0; ii < $size(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK); ii++) begin: VALID_USER_CHECK_LOOP
+            if (reg_model.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[ii].LOCK.get_mirrored_value() &&
+                mbox_valid_users[ii] != reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[ii].get_mirrored_value())
                 `uvm_warning("MBOX_SEQ", "mbox_valid_users initialized with a value that does not match mirrored value in register model!")
         end
     end
