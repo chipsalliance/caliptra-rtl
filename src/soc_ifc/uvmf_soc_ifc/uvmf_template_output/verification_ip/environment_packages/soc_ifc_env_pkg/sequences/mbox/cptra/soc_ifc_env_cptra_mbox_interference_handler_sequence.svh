@@ -46,9 +46,10 @@ task soc_ifc_env_cptra_mbox_interference_handler_sequence::mbox_wait_for_command
 
     op_sts = CPTRA_TIMEOUT;
     reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+    report_reg_sts(reg_sts, "notif_internal_intr_r");
     while (!data[reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_cmd_avail_sts.get_lsb_pos()]) begin
         if(!this.randomize(xfers) with {xfers inside {[1:20]}; }) begin
-            `uvm_error("MBOX_SEQ", "Failed to randomize memory AHB transfer count in mbox_wait_for_command")
+            `uvm_error("CPTRA_MBOX_HANDLER", "Failed to randomize memory AHB transfer count in mbox_wait_for_command")
         end
         else begin
             for (ii=0; ii<xfers; ii++) begin: XFER_LOOP
@@ -56,22 +57,26 @@ task soc_ifc_env_cptra_mbox_interference_handler_sequence::mbox_wait_for_command
                 // TODO also mix in some reg accesses?
                 if(!this.randomize(RnW, mem_offset, data, cycles) with {mem_offset inside {[0:reg_model.mbox_mem_rm.get_size()-1]};
                                                                         cycles inside {[1:200]}; }) begin
-                    `uvm_error("MBOX_SEQ", "Failed to randomize memory AHB transfer in mbox_wait_for_command")
+                    `uvm_error("CPTRA_MBOX_HANDLER", "Failed to randomize memory AHB transfer in mbox_wait_for_command")
                 end
                 else begin
                     if (RnW == AHB_READ) begin
                         reg_model.mbox_mem_rm.read (reg_sts, mem_offset, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+                        report_reg_sts(reg_sts, $sformatf("mbox_mem_rm, offset 0x%x", mem_offset));
                     end
                     else begin
                         reg_model.mbox_mem_rm.write(reg_sts, mem_offset, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+                        report_reg_sts(reg_sts, $sformatf("mbox_mem_rm, offset 0x%x", mem_offset));
                     end
                 end
             end
         end
         configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(cycles);
         reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+        report_reg_sts(reg_sts, "notif_internal_intr_r");
     end
     data &= uvm_reg_data_t'(1) << reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_cmd_avail_sts.get_lsb_pos();
     reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+    report_reg_sts(reg_sts, "notif_internal_intr_r");
     op_sts = CPTRA_SUCCESS;
 endtask

@@ -192,7 +192,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.PAUSER = new("PAUSER");
-            this.PAUSER.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.PAUSER.configure(this, 32, 0, "RW", 0, 'hffffffff, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER
 
@@ -220,7 +220,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.PAUSER = new("PAUSER");
-            this.PAUSER.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.PAUSER.configure(this, 32, 0, "RW", 0, 'hffffffff, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER
 

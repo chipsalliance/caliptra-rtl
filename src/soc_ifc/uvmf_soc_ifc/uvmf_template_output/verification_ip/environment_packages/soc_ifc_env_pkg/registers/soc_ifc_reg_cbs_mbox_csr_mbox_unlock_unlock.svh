@@ -14,6 +14,21 @@
 // limitations under the License.
 //----------------------------------------------------------------------
 
+// Reg predictions that will be scheduled on AHB write to mbox_unlock
+class soc_ifc_reg_delay_job_mbox_csr_mbox_unlock_unlock extends soc_ifc_reg_delay_job;
+    `uvm_object_utils( soc_ifc_reg_delay_job_mbox_csr_mbox_unlock_unlock )
+    mbox_csr_ext rm; /* mbox_csr_rm */
+    virtual task do_job();
+        `uvm_info("SOC_IFC_REG_DELAY_JOB", "Running delayed job for mbox_csr.mbox_unlock.unlock", UVM_HIGH)
+        rm.mbox_lock.lock.predict(1'b0);
+        rm.mbox_execute.execute.predict(1'b0);
+        rm.mbox_status.status.predict(CMD_BUSY);
+        rm.mbox_status.mbox_fsm_ps.predict(MBOX_IDLE);
+        rm.mbox_status.soc_has_lock.predict(1'b0);
+        rm.mbox_fn_state_sigs = '{mbox_idle: 1'b1, default: 1'b0};
+    endtask
+endclass
+
 class soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock extends soc_ifc_reg_cbs_mbox_csr;
 
     `uvm_object_utils(soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock)
@@ -33,6 +48,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock extends soc_ifc_reg_cbs_mbox_c
                                        input uvm_predict_e  kind,
                                        input uvm_path_e     path,
                                        input uvm_reg_map    map);
+        soc_ifc_reg_delay_job_mbox_csr_mbox_unlock_unlock delay_job;
         mbox_csr_ext rm; /* mbox_csr_rm */
         uvm_reg_block blk = fld.get_parent().get_parent(); /* mbox_csr_rm */
         if (!$cast(rm,blk)) `uvm_fatal ("SOC_IFC_REG_CBS", "Failed to get valid class handle")
@@ -40,8 +56,14 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock extends soc_ifc_reg_cbs_mbox_c
             case (kind) inside
                 UVM_PREDICT_WRITE: begin
                     if (value) begin
-                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to mbox_unlock on map [%s] with value [%x] clears mbox_lock and auto-clears", map.get_name(), value), UVM_HIGH)
-                        rm.mbox_lock.lock.predict(1'b0);
+                        uvm_queue #(soc_ifc_reg_delay_job) delay_jobs;
+                        if (!uvm_config_db#(uvm_queue#(soc_ifc_reg_delay_job))::get(null, "soc_ifc_reg_model_top", "delay_jobs", delay_jobs))
+                            `uvm_error("SOC_IFC_REG_CBS", "Failed to get handle for 'delay_jobs' queue from config database!")
+                        delay_job = soc_ifc_reg_delay_job_mbox_csr_mbox_unlock_unlock::type_id::create("delay_job");
+                        delay_job.rm = rm;
+                        delay_job.set_delay_cycles(1);
+                        delay_jobs.push_back(delay_job);
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to mbox_unlock on map [%s] with value [%x] clears mbox_lock and auto-clears. Delay job is queued to update DUT model.", map.get_name(), value), UVM_HIGH)
                         value = previous;
                     end
                     else begin
@@ -53,7 +75,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock extends soc_ifc_reg_cbs_mbox_c
                 end
             endcase
         end
-        if ((map.get_name() == this.APB_map_name)) begin
+        else if ((map.get_name() == this.APB_map_name)) begin
             case (kind) inside
                 UVM_PREDICT_WRITE: begin
                     `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to mbox_unlock on map [%s] has no effect and is discarded", map.get_name()), UVM_FULL)
@@ -65,7 +87,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock extends soc_ifc_reg_cbs_mbox_c
             endcase
         end
         else begin
-            `uvm_error("SOC_IFC_REG_CBS", "post_predict called through unsupported reg map!")
+            `uvm_error("SOC_IFC_REG_CBS", {"post_predict called through unsupported reg map! ", map.get_name()})
         end
     endfunction
 

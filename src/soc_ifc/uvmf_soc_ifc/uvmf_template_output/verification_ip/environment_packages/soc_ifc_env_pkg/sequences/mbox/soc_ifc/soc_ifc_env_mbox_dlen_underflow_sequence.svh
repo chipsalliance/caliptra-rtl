@@ -42,11 +42,13 @@ endclass
 task soc_ifc_env_mbox_dlen_underflow_sequence::mbox_push_datain();
     int ii;
     uvm_reg_data_t data;
-    int underflow_bytes;
+    int unsigned underflow_bytes;
 
     // Push less data than dlen requires - randomize how much less
-    if (!std::randomize(underflow_bytes) with {mbox_op_rand.dlen - underflow_bytes >= 8;})
+    if (!std::randomize(underflow_bytes) with {underflow_bytes <= mbox_op_rand.dlen - 8;})
         `uvm_error("MBOX_UNDERFLOW_SEQ", "Failed to randomize underflow bytes")
+    else
+        `uvm_info("MBOX_UNDERFLOW_SEQ", $sformatf("Randomized underflow bytes to %0d", underflow_bytes), UVM_MEDIUM)
 
     for (ii=0; ii < this.mbox_op_rand.dlen-underflow_bytes; ii+=4) begin
         if (ii == 0) begin

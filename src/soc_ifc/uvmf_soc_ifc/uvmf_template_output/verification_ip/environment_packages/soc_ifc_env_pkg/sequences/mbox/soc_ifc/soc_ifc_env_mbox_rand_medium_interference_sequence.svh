@@ -40,16 +40,23 @@ endclass
 
 task soc_ifc_env_mbox_rand_medium_interference_sequence::mbox_poll_status();
     mbox_status_e sts;
+    mbox_fsm_state_e state;
     uvm_reg regs[$];
     byte unsigned ii;
+    uvm_reg blocklist[];
+    int del_idx[$];
 
     reg_model.soc_ifc_APB_map.get_registers(regs, UVM_HIER);
 
-    // If we read status immediately, the mbox_fsm_ps will not have transitioned
-    // yet and will predict the prior value in the reg-model, missing the transition.
-    // This affects valid_requester/valid_receiver logic in soc_ifc_predictor,
-    // which results in false error reporting.
-    // Maybe we need a better way to predict mbox_fsm_ps field changes?
+    // Registers we won't randomly access due to side-effects
+    blocklist = '{reg_model.mbox_csr_rm.mbox_lock,
+                  reg_model.mbox_csr_rm.mbox_dataout};
+    foreach (blocklist[idx]) begin
+        del_idx = regs.find_first_index(found_reg) with (found_reg == blocklist[idx]);
+        regs.delete(del_idx.pop_front());
+    end
+
+    // A force-unlock would cause state->MBOX_IDLE, so we exit the polling loop
     do begin
         if(!this.randomize(xfers) with {xfers inside {[1:20]}; }) begin
             `uvm_error("MBOX_SEQ", "Failed to randomize APB reg transfer count in mbox_poll_status")
@@ -71,10 +78,13 @@ task soc_ifc_env_mbox_rand_medium_interference_sequence::mbox_poll_status();
             end
         end
         configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(cycles);
-        mbox_check_status(sts);
-    end while (sts == CMD_BUSY);
+        mbox_check_status(sts, state);
+    end while (sts == CMD_BUSY && state != MBOX_IDLE);
 
-    if (sts == DATA_READY) begin
+    if (state == MBOX_IDLE) begin
+        `uvm_info("MBOX_SEQ", "Detected mailbox state transition to IDLE - was mbox_unlock expected?", UVM_HIGH)
+    end
+    else if (sts == DATA_READY) begin
         if (mbox_resp_expected_dlen == 0)
             `uvm_error("MBOX_SEQ", $sformatf("Received status %p when not expecting any bytes of response data!", sts))
         else begin

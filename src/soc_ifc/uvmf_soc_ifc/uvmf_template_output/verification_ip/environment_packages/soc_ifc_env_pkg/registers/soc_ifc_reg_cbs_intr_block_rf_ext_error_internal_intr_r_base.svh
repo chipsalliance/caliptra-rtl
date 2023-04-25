@@ -56,7 +56,10 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base extends uvm_r
         cnt_fld    = rm.get_reg_by_name({event_name, "_intr_count_r"}).get_field_by_name("cnt");
 
         if (map.get_name() == this.APB_map_name) begin
-            `uvm_warning("SOC_IFC_REG_CBS", "Unexpected access to interrupt register through APB interface!")
+            if (kind == UVM_PREDICT_WRITE)
+                `uvm_warning("SOC_IFC_REG_CBS", "Unexpected write to interrupt register through APB interface!")
+            else
+                `uvm_info("SOC_IFC_REG_CBS", "Unexpected read to interrupt register through APB interface!", UVM_LOW)
         end
         `uvm_info("SOC_IFC_REG_CBS", $sformatf("Access to %s with path %p", fld.get_full_name(), path), UVM_FULL)
 

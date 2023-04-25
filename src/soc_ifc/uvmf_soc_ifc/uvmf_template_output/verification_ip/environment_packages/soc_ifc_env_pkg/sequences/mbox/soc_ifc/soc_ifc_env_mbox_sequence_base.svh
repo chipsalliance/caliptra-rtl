@@ -48,8 +48,10 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   mbox_cmd_e defined_cmds[];
 
   // PAUSER tracking/override
-  bit [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users [5];
+  bit [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users [6];
   bit mbox_valid_users_initialized = 1'b0;
+  bit [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_user_override_val;
+  bit override_mbox_user = 1'b0;
   caliptra_apb_user apb_user_obj; // Handle to the most recently generated user object
   struct packed {
       bit [apb5_master_0_params::PAUSER_WIDTH-1:0] pauser; /* Value of PAUSER when mbox lock acquired */
@@ -58,19 +60,19 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   int hit_invalid_pauser_count = '0;
 
   localparam FORCE_VALID_PAUSER = 0;
-  int PAUSER_PROB_LOCK   ;
-  int PAUSER_PROB_CMD    ;
-  int PAUSER_PROB_DATAIN ;
-  int PAUSER_PROB_EXECUTE;
-  int PAUSER_PROB_STATUS ;
-  int PAUSER_PROB_DATAOUT;
+  int unsigned PAUSER_PROB_LOCK   ;
+  int unsigned PAUSER_PROB_CMD    ;
+  int unsigned PAUSER_PROB_DATAIN ;
+  int unsigned PAUSER_PROB_EXECUTE;
+  int unsigned PAUSER_PROB_STATUS ;
+  int unsigned PAUSER_PROB_DATAOUT;
 
   extern virtual task mbox_setup();
   extern virtual task mbox_acquire_lock(output op_sts_e op_sts);
   extern virtual task mbox_set_cmd(input mbox_op_s op);
   extern virtual task mbox_push_datain();
   extern virtual task mbox_execute();
-  extern virtual task mbox_check_status(output mbox_status_e data);
+  extern virtual task mbox_check_status(output mbox_status_e data, output mbox_fsm_state_e state);
   extern virtual task mbox_read_resp_data();
   extern virtual task mbox_poll_status();
   extern virtual task mbox_clr_execute();
@@ -78,11 +80,12 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
 
   extern virtual function void              set_pauser_prob_vals();
   extern virtual function bit               pauser_used_is_valid();
-  extern virtual function caliptra_apb_user get_rand_user(int invalid_prob = FORCE_VALID_PAUSER);
+  extern virtual function caliptra_apb_user get_rand_user(int unsigned invalid_prob = FORCE_VALID_PAUSER);
   extern virtual function void              report_reg_sts(uvm_status_e reg_sts, string name);
 
-  // Constrain command to not be firmware
-  constraint mbox_cmd_c { mbox_op_rand.cmd.cmd_s.fw == 1'b0; }
+  // Constrain command to not be firmware or uC-initiated
+  constraint mbox_cmd_c { mbox_op_rand.cmd.cmd_s.fw        == 1'b0;
+                          mbox_op_rand.cmd.cmd_s.uc_to_soc == 1'b0; }
 
   // Constrain size to less than 128KiB for now (mailbox size), but we will
   // recalculate this based on the command being sent
@@ -196,7 +199,6 @@ endclass
 //==========================================
 task soc_ifc_env_mbox_sequence_base::mbox_setup();
     byte ii;
-    uvm_status_e sts;
     // Read the valid PAUSER fields from register mirrored value if the local array
     // has not already been overridden from default values
     if (!mbox_valid_users_initialized) begin
@@ -206,6 +208,8 @@ task soc_ifc_env_mbox_sequence_base::mbox_setup();
             else
                 mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[ii].get_reset("HARD");
         end
+        // FIXME hardcoded default value of 32'hFFFF_FFFF
+        mbox_valid_users[5] = '1;
         mbox_valid_users_initialized = 1'b1;
     end
     else begin
@@ -214,6 +218,12 @@ task soc_ifc_env_mbox_sequence_base::mbox_setup();
                 mbox_valid_users[ii] != reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[ii].get_mirrored_value())
                 `uvm_warning("MBOX_SEQ", "mbox_valid_users initialized with a value that does not match mirrored value in register model!")
         end
+        if (~&mbox_valid_users[5]) begin
+            `uvm_warning("MBOX_SEQ", $sformatf("mbox_valid_users initialized with a value that does not match the default valid user of 0x%x", 32'hFFFF_FFFF))
+        end
+    end
+    if (override_mbox_user && !(mbox_user_override_val inside mbox_valid_users)) begin
+        `uvm_info("MBOX_SEQ", $sformatf("mbox_user overridden to 0x%x which is not in mbox_valid_users [%p]!", mbox_user_override_val, mbox_valid_users), UVM_LOW)
     end
 endtask
 
@@ -348,7 +358,7 @@ task soc_ifc_env_mbox_sequence_base::mbox_set_cmd(input mbox_op_s op);
 endtask
 
 //==========================================
-// Task:        mbox_set_cmd
+// Task:        mbox_push_datain
 // Description: Write data in a loop to mbox_datain register
 // NOTE:        This should be overridden with real data to write
 //==========================================
@@ -395,7 +405,7 @@ endtask
 // Task:        mbox_check_status
 // Description: Read mbox_status
 //==========================================
-task soc_ifc_env_mbox_sequence_base::mbox_check_status(output mbox_status_e data);
+task soc_ifc_env_mbox_sequence_base::mbox_check_status(output mbox_status_e data, output mbox_fsm_state_e state);
     uvm_reg_data_t reg_data;
     reg_model.mbox_csr_rm.mbox_status.read(reg_sts, reg_data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_STATUS)));
     report_reg_sts(reg_sts, "mbox_status");
@@ -410,11 +420,12 @@ task soc_ifc_env_mbox_sequence_base::mbox_check_status(output mbox_status_e data
     end
     else begin
         data = mbox_status_e'(reg_data >> reg_model.mbox_csr_rm.mbox_status.status.get_lsb_pos());
+        state = mbox_fsm_state_e'(reg_data >> reg_model.mbox_csr_rm.mbox_status.mbox_fsm_ps.get_lsb_pos());
     end
 endtask
 
 //==========================================
-// Task:        mbox_check_status
+// Task:        mbox_read_resp_data
 // Description: Fetch all response data from uC in a loop
 //==========================================
 task soc_ifc_env_mbox_sequence_base::mbox_read_resp_data();
@@ -441,18 +452,18 @@ endtask
 //==========================================
 task soc_ifc_env_mbox_sequence_base::mbox_poll_status();
     mbox_status_e data;
+    mbox_fsm_state_e state;
 
-    // If we read status immediately, the mbox_fsm_ps will not have transitioned
-    // yet and will predict the prior value in the reg-model, missing the transition.
-    // This affects valid_requester/valid_receiver logic in soc_ifc_predictor,
-    // which results in false error reporting.
-    // Maybe we need a better way to predict mbox_fsm_ps field changes?
+    // A force-unlock would cause state->MBOX_IDLE, so we exit the polling loop
     do begin
         configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200);
-        mbox_check_status(data);
-    end while (data == CMD_BUSY);
+        mbox_check_status(data, state);
+    end while (data == CMD_BUSY && state != MBOX_IDLE);
 
-    if (data == DATA_READY) begin
+    if (state == MBOX_IDLE) begin
+        `uvm_info("MBOX_SEQ", "Detected mailbox state transition to IDLE - was mbox_unlock expected?", UVM_HIGH)
+    end
+    else if (data == DATA_READY) begin
         if (mbox_resp_expected_dlen == 0)
             `uvm_error("MBOX_SEQ", $sformatf("Received status %p when not expecting any bytes of response data!", data))
         else begin
@@ -527,12 +538,15 @@ endfunction
 //               - A random selection from valid_users if the mbox_lock has yet to be acquired
 //               - The value in mbox_user if mbox_lock has been acquired already
 //==========================================
-function caliptra_apb_user soc_ifc_env_mbox_sequence_base::get_rand_user(int invalid_prob = FORCE_VALID_PAUSER);
+function caliptra_apb_user soc_ifc_env_mbox_sequence_base::get_rand_user(int unsigned invalid_prob = FORCE_VALID_PAUSER);
     apb_user_obj = new();
     if (!this.apb_user_obj.randomize() with {if (pauser_locked.locked)
                                                  (addr_user == pauser_locked.pauser) dist
                                                  {1 :/ 1000,
                                                   0 :/ invalid_prob};
+                                             // Override only applies to user value used to acquire lock
+                                             else if (override_mbox_user)
+                                                 addr_user == mbox_user_override_val;
                                              else
                                                  (addr_user inside {mbox_valid_users}) dist
                                                  {1 :/ 1000,

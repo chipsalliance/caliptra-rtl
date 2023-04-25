@@ -54,7 +54,10 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_en_r_base extends uvm_reg_cbs
         sts_glb = rm.get_reg_by_name("notif_global_intr_r").get_field_by_name("agg_sts");
 
         if (map.get_name() == this.APB_map_name) begin
-            `uvm_warning("SOC_IFC_REG_CBS", "Unexpected access to interrupt register through APB interface!")
+            if (kind == UVM_PREDICT_WRITE)
+                `uvm_warning("SOC_IFC_REG_CBS", "Unexpected write to interrupt register through APB interface!")
+            else
+                `uvm_info("SOC_IFC_REG_CBS", "Unexpected read to interrupt register through APB interface!", UVM_LOW)
         end
         `uvm_info("SOC_IFC_REG_CBS", $sformatf("Access to %s with path %p", fld.get_full_name(), path), UVM_FULL)
 

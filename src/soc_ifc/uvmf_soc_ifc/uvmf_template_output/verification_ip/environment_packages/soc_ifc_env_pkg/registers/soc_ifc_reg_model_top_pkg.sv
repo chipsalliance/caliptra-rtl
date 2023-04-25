@@ -453,6 +453,9 @@ package soc_ifc_reg_model_top_pkg;
 
     endclass : sha512_acc_csr_ext
 
+    // Scheduling helper class for delayed callback tasks
+    `include "soc_ifc_reg_delay_job.svh"
+
     // Callbacks for predicting reg-field updates
     `include "soc_ifc_reg_cbs_mbox_csr.svh"
     `include "soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock.svh"
@@ -559,6 +562,8 @@ package soc_ifc_reg_model_top_pkg;
         uvm_reg_field error_trig_flds[$];
         uvm_reg_field notif_trig_flds[$];
 
+        uvm_queue #(soc_ifc_reg_delay_job) delay_jobs;
+
 // pragma uvmf custom instantiate_registers_within_block end
 
       soc_ifc_fixme_map_coverage fixme_map_cg;
@@ -580,6 +585,8 @@ package soc_ifc_reg_model_top_pkg;
 
 
 // pragma uvmf custom construct_configure_build_registers_within_block begin
+        delay_jobs = new("delay_jobs");
+        uvm_config_db#(uvm_queue#(soc_ifc_reg_delay_job))::set(null, "soc_ifc_reg_model_top", "delay_jobs", delay_jobs);
 
         // inst all soc_ifc register blocks and memory model as single reg block
         /*mbox_mem_ahb_apb*/

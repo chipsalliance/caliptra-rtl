@@ -18,25 +18,21 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-// DESCRIPTION: Extended from mbox pauser sequence to exercise PAUSER filtering.
-//              Tests medium sized mailbox commands with PAUSER randomization.
+// DESCRIPTION: Extended from mbox_base sequence to provide additional
+//              functionality in a test that sends large commands.
 //
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-class soc_ifc_env_mbox_rand_pauser_medium_sequence extends soc_ifc_env_mbox_rand_pauser_sequence;
+class soc_ifc_env_mbox_dlen_underflow_large_sequence extends soc_ifc_env_mbox_dlen_underflow_sequence;
 
-  `uvm_object_utils( soc_ifc_env_mbox_rand_pauser_medium_sequence )
+  `uvm_object_utils( soc_ifc_env_mbox_dlen_underflow_large_sequence )
 
-  // Constrain dlen to be a medium command
-  // Max. size: 4096B
-  constraint mbox_dlen_max_medium_c { mbox_op_rand.dlen <= 32'h0000_1000; }
-  // Minimum 512B
-  constraint mbox_dlen_min_medium_c { mbox_op_rand.dlen >= 32'h0000_0200; }
-  // Constrain response data size to also be medium
-  // Max. size: 4096B
-  // Min. size: 512B
-  constraint mbox_resp_dlen_max_medium_c { mbox_resp_expected_dlen <= 32'h0000_1000; }
-  constraint mbox_resp_dlen_min_medium_c { mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen >= 32'h0000_0200; }
+  // Constrain size to a large command
+  // Min. size: 16KiB
+  constraint mbox_dlen_min_large_c { mbox_op_rand.dlen > 32'h0000_4000; }
+  // Constrain response data size to also be large
+  // Min. size: 16KiB
+  constraint mbox_resp_dlen_min_large_c { mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen >= 32'h0000_4000; }
 
 endclass

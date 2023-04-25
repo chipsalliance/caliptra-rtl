@@ -44,9 +44,12 @@ class soc_ifc_env_mbox_rand_multi_agent_sequence extends soc_ifc_env_sequence_ba
   `uvm_object_utils( soc_ifc_env_mbox_rand_multi_agent_sequence )
 
   rand int agents;
+  bit [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users [6];
+  bit [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users_uniq [$];
   soc_ifc_env_mbox_sequence_base_t      soc_ifc_env_mbox_multi_agent_seq[];
 
-  constraint agents_c { agents inside {[1:5]}; }
+  // Max agents is equal to number of supported PAUSER values
+  constraint agents_c { agents inside {[1:6]}; }
 
   extern virtual function      create_seqs();
   extern virtual function      randomize_seqs();
@@ -56,24 +59,48 @@ class soc_ifc_env_mbox_rand_multi_agent_sequence extends soc_ifc_env_sequence_ba
     super.new(name);
   endfunction
 
+  virtual task pre_body();
+    super.pre_body();
+    reg_model = configuration.soc_ifc_rm;
+
+    // Check responder handle
+    if (soc_ifc_status_agent_rsp_seq == null) begin
+        `uvm_fatal("SOC_IFC_MBOX", "SOC_IFC ENV mailbox sequence expected a handle to the soc_ifc status agent responder sequence (from bench-level sequence) but got null!")
+    end
+
+    // Find unique configured valid_users (PAUSER) in mailbox and use this to
+    // cull agent count
+    foreach(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[ii]) begin: VALID_USER_LOOP
+        if (reg_model.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[ii].LOCK.get_mirrored_value())
+            mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[ii].get_mirrored_value();
+        else
+            mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[ii].get_reset("HARD");
+    end
+    mbox_valid_users[5] = '1; // FIXME hardcoded to reflect default PAUSER valid value
+    mbox_valid_users.shuffle;
+    mbox_valid_users_uniq = mbox_valid_users.unique;
+    `uvm_info("SOC_IFC_MBOX", $sformatf("Unique mbox_valid_users found: %p", mbox_valid_users_uniq), UVM_MEDIUM) // FIXME increase verbosity
+    // Each agent must have a unique PAUSER.
+    // If insufficient PAUSER values have been setup, limit number of parallel
+    // sequences.
+    if (mbox_valid_users_uniq.size() < agents) begin
+        agents = mbox_valid_users_uniq.size();
+        `uvm_info("SOC_IFC_MBOX", $sformatf("Found %d unique valid PAUSER values initialized. Restricting parallel agent count to %d", mbox_valid_users_uniq.size(), agents), UVM_MEDIUM)
+    end
+  endtask
+
   virtual task body();
 
     int ii;
     int sts_rsp_count = 0;
     uvm_status_e sts;
-    reg_model = configuration.soc_ifc_rm;
 
     // Create the sequence array after randomize call has completed
     create_seqs();
 
     // Response sequences catch 'status' transactions
-    if (soc_ifc_status_agent_rsp_seq == null) begin
-        `uvm_fatal("SOC_IFC_MBOX", "SOC_IFC ENV mailbox sequence expected a handle to the soc_ifc status agent responder sequence (from bench-level sequence) but got null!")
-    end
-    else begin
-        for (ii=0; ii<agents; ii++) begin
-            soc_ifc_env_mbox_multi_agent_seq[ii].soc_ifc_status_agent_rsp_seq = soc_ifc_status_agent_rsp_seq;
-        end
+    for (ii=0; ii<agents; ii++) begin
+        soc_ifc_env_mbox_multi_agent_seq[ii].soc_ifc_status_agent_rsp_seq = soc_ifc_status_agent_rsp_seq;
     end
 
     fork
@@ -144,11 +171,14 @@ function soc_ifc_env_mbox_rand_multi_agent_sequence::randomize_seqs();
     for (ii=0; ii<agents; ii++) begin
         if(!soc_ifc_env_mbox_multi_agent_seq[ii].randomize())
             `uvm_fatal("SOC_IFC_MBOX", $sformatf("soc_ifc_env_mbox_rand_multi_agent_sequence::body() - %s randomization failed", soc_ifc_env_mbox_multi_agent_seq[ii].get_type_name()));
+        // Each sequence (aka "agent") has a unique PAUSER
+        soc_ifc_env_mbox_multi_agent_seq[ii].mbox_user_override_val = mbox_valid_users_uniq.pop_front();
+        soc_ifc_env_mbox_multi_agent_seq[ii].override_mbox_user = 1'b1;
     end
 endfunction
 
 task soc_ifc_env_mbox_rand_multi_agent_sequence::start_seqs();
-    int unsigned delay_clks[]; // Delay prior to system reset
+    int unsigned delay_clks[]; // Delay prior to running start
     delay_clks = new[agents];
 
     `uvm_info("SOC_IFC_MBOX", $sformatf("Initiating [%0d] mailbox sequences in parallel", agents), UVM_LOW)
@@ -162,7 +192,7 @@ task soc_ifc_env_mbox_rand_multi_agent_sequence::start_seqs();
             automatic int ii_val = ii;
             begin
                 configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(delay_clks[ii_val]);
-                `uvm_info("SOC_IFC_MBOX", $sformatf("Initiating sequence [%0d]/[%0d] in multi-agent flow", ii_val, agents), UVM_MEDIUM)
+                `uvm_info("SOC_IFC_MBOX", $sformatf("Initiating sequence [%0d]/[%0d] in multi-agent flow", ii_val, agents-1), UVM_MEDIUM)
                 soc_ifc_env_mbox_multi_agent_seq[ii_val].start(configuration.vsqr);
             end
         join_none

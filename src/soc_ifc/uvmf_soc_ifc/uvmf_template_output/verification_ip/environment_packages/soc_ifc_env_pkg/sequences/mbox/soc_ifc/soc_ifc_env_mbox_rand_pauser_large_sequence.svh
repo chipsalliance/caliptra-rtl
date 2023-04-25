@@ -32,7 +32,7 @@ class soc_ifc_env_mbox_rand_pauser_large_sequence extends soc_ifc_env_mbox_rand_
   // Min. size: 16KiB
   constraint mbox_dlen_min_large_c { mbox_op_rand.dlen > 32'h0000_4000; }
   // Constrain response data size to also be large
-  // Min. size: 1024B
-  constraint mbox_resp_dlen_min_medium_c { mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen >= 32'h0000_0400; }
+  // Min. size: 16KiB
+  constraint mbox_resp_dlen_min_large_c { mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen >= 32'h0000_4000; }
 
 endclass
