@@ -127,7 +127,6 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute extends soc_ifc_reg_cbs_mbox
                         if (!rm.mbox_fn_state_sigs.soc_send_stage)
                             `uvm_error("SOC_IFC_REG_CBS", $sformatf("mbox_execute is set by SOC when in an unexpected state [%p]!", rm.mbox_fn_state_sigs))
                         rm.mbox_status.mbox_fsm_ps.predict(MBOX_EXECUTE_UC);
-                        rm.mbox_status.soc_has_lock.predict(1'b1);
                         rm.mbox_fn_state_sigs = '{uc_receive_stage: 1'b1, default: 1'b0};
                         // Predict intr sts register is set
                         //  - Use UVM_PREDICT_READ kind so that all the callbacks associated with

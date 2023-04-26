@@ -176,7 +176,7 @@ class soc_ifc_predictor #(
 
   bit [63:0] generic_output_wires = 64'h0;
 
-  bit [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users [5]    = '{default: '1};
+  bit [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users [6]    = '{default: '1};
   bit [4:0]                                    mbox_valid_users_locked = 5'b00000;
 
   bit trng_data_req = 1'b0;
@@ -1198,7 +1198,7 @@ class soc_ifc_predictor #(
                     `uvm_error("PRED_APB", {"Write attempted to locked register: ", axs_reg.get_name()})
                 end
                 else if (apb_txn.read_or_write == APB3_TRANS_WRITE) begin
-                    mbox_valid_users[idx] = apb_txn.wr_data;
+//                    mbox_valid_users[idx] = apb_txn.wr_data;
                 end
             end
             ["CPTRA_MBOX_PAUSER_LOCK[0]":"CPTRA_MBOX_PAUSER_LOCK[4]"]: begin
@@ -1208,6 +1208,7 @@ class soc_ifc_predictor #(
                     `uvm_error("PRED_APB", {"Write attempted to locked register: ", axs_reg.get_name()})
                 end
                 else if (apb_txn.read_or_write == APB3_TRANS_WRITE) begin
+                    mbox_valid_users[idx] = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[idx].get_mirrored_value(); // VALID_PAUSER field is only applied when locked
                     mbox_valid_users_locked[idx] |= apb_txn.wr_data[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[idx].LOCK.get_lsb_pos()];
                     `uvm_info("PRED_APB", $sformatf("mbox_valid_users_locked[%d] set to 0x%x, mbox_valid_users[%d] has value: 0x%x", idx, mbox_valid_users_locked[idx], idx, mbox_valid_users[idx]), UVM_MEDIUM)
                 end
@@ -1491,15 +1492,15 @@ function bit soc_ifc_predictor::valid_receiver(input uvm_transaction txn);
             valid_receiver = p_soc_ifc_rm.mbox_csr_rm.mbox_user.get_mirrored_value() == apb_txn.addr_user &&
                              p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_done_stage;
         else
-            valid_receiver = apb_txn.addr_user inside {p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[0].PAUSER.get_reset("HARD"),mbox_valid_users} &&
+            valid_receiver = apb_txn.addr_user inside {mbox_valid_users} &&
                              p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_receive_stage;
         if (!valid_receiver) begin
-            string msg = $sformatf("valid_receiver is false!\nmbox_lock: %d\nmbox_status.soc_has_lock: %d\nmbox_fn_state_sigs: %p\naddr_user: 0x%x\nvalid_users: 0x%x %p",
+            string msg = $sformatf("valid_receiver is false!\nmbox_lock: %d\nmbox_status.soc_has_lock: %d\nmbox_fn_state_sigs: %p\naddr_user: 0x%x\nvalid_users: %p",
                                    p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_mirrored_value(),
                                    p_soc_ifc_rm.mbox_csr_rm.mbox_status.soc_has_lock.get_mirrored_value(),
                                    p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs,
                                    apb_txn.addr_user,
-                                   p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[0].PAUSER.get_reset("HARD"), mbox_valid_users);
+                                   mbox_valid_users);
             `uvm_info("PRED_VALID_RCV", msg, UVM_FULL)
         end
         else begin
@@ -1554,16 +1555,17 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
     generic_output_wires = '0;
 
     // FIXME get rid of this variable?
-    mbox_valid_users        = '{p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[4].PAUSER.get_reset(kind),
-                                p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[3].PAUSER.get_reset(kind),
-                                p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[2].PAUSER.get_reset(kind),
+    mbox_valid_users        = '{p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[0].PAUSER.get_reset(kind),
                                 p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[1].PAUSER.get_reset(kind),
-                                p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[0].PAUSER.get_reset(kind)};
-    mbox_valid_users_locked =  {p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[4].LOCK.get_reset(kind),
-                                p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[3].LOCK.get_reset(kind),
-                                p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[2].LOCK.get_reset(kind),
+                                p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[2].PAUSER.get_reset(kind),
+                                p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[3].PAUSER.get_reset(kind),
+                                p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[4].PAUSER.get_reset(kind),
+                                p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[0].PAUSER.get_reset(kind)/*This entry is for the non-programmable default value */};
+    mbox_valid_users_locked =  {p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[0].LOCK.get_reset(kind),
                                 p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[1].LOCK.get_reset(kind),
-                                p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[0].LOCK.get_reset(kind)};
+                                p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[2].LOCK.get_reset(kind),
+                                p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[3].LOCK.get_reset(kind),
+                                p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[4].LOCK.get_reset(kind)};
 
     trng_data_req = 1'b0;
 
