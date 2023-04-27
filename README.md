@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Caliptra Hands-On Guide** #
-_*Last Update: 2023/04/11*_
+_*Last Update: 2023/05/01*_
 
 
 ## **Tools Used** ##
@@ -22,7 +22,7 @@ _*Last Update: 2023/04/11*_
 OS:
  - Build instructions assume a Linux environment
 
-Lint:
+Lin
  - Synopsys Spyglass
    - `Version S-2021.09-1`
  - Real Intent AscentLint
