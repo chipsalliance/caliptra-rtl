@@ -606,8 +606,6 @@ package ecc_reg_uvm;
         rand kv_status_reg ecc_kv_rd_pkey_status;
         rand kv_read_ctrl_reg ecc_kv_rd_seed_ctrl;
         rand kv_status_reg ecc_kv_rd_seed_status;
-        rand kv_read_ctrl_reg ecc_kv_rd_msg_ctrl;
-        rand kv_status_reg ecc_kv_rd_msg_status;
         rand kv_write_ctrl_reg ecc_kv_wr_pkey_ctrl;
         rand kv_status_reg ecc_kv_wr_pkey_status;
         rand ecc_reg__intr_block_t intr_block_rf;
@@ -737,26 +735,16 @@ package ecc_reg_uvm;
 
             this.ecc_kv_rd_seed_status.build();
             this.default_map.add_reg(this.ecc_kv_rd_seed_status, 'h60c);
-            this.ecc_kv_rd_msg_ctrl = new("ecc_kv_rd_msg_ctrl");
-            this.ecc_kv_rd_msg_ctrl.configure(this);
-
-            this.ecc_kv_rd_msg_ctrl.build();
-            this.default_map.add_reg(this.ecc_kv_rd_msg_ctrl, 'h610);
-            this.ecc_kv_rd_msg_status = new("ecc_kv_rd_msg_status");
-            this.ecc_kv_rd_msg_status.configure(this);
-
-            this.ecc_kv_rd_msg_status.build();
-            this.default_map.add_reg(this.ecc_kv_rd_msg_status, 'h614);
             this.ecc_kv_wr_pkey_ctrl = new("ecc_kv_wr_pkey_ctrl");
             this.ecc_kv_wr_pkey_ctrl.configure(this);
 
             this.ecc_kv_wr_pkey_ctrl.build();
-            this.default_map.add_reg(this.ecc_kv_wr_pkey_ctrl, 'h618);
+            this.default_map.add_reg(this.ecc_kv_wr_pkey_ctrl, 'h610);
             this.ecc_kv_wr_pkey_status = new("ecc_kv_wr_pkey_status");
             this.ecc_kv_wr_pkey_status.configure(this);
 
             this.ecc_kv_wr_pkey_status.build();
-            this.default_map.add_reg(this.ecc_kv_wr_pkey_status, 'h61c);
+            this.default_map.add_reg(this.ecc_kv_wr_pkey_status, 'h614);
             this.intr_block_rf = new("intr_block_rf");
             this.intr_block_rf.configure(this);
             this.intr_block_rf.build();

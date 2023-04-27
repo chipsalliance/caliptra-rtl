@@ -13,5 +13,5 @@
 # limitations under the License.
 #
 ---
-seed: 1
+seed: ${PLAYBOOK_RANDOM_SEED}
 testname: smoke_test_kv_securitystate

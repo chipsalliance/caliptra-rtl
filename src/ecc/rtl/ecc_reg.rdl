@@ -334,8 +334,6 @@ addrmap ecc_reg {
     kv_status_reg ecc_kv_rd_pkey_status;
     kv_read_ctrl_reg ecc_kv_rd_seed_ctrl;
     kv_status_reg ecc_kv_rd_seed_status;
-    kv_read_ctrl_reg ecc_kv_rd_msg_ctrl;
-    kv_status_reg ecc_kv_rd_msg_status;
     kv_write_ctrl_reg ecc_kv_wr_pkey_ctrl;
     kv_status_reg ecc_kv_wr_pkey_status;
 

@@ -749,8 +749,8 @@ ecc_top1
     .hreadyout_o     (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hreadyout),
     .hrdata_o        (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hrdata),
 
-    .kv_read         (kv_read[5:3]),
-    .kv_rd_resp      (kv_rd_resp[5:3]),
+    .kv_read         (kv_read[4:3]),
+    .kv_rd_resp      (kv_rd_resp[4:3]),
     .kv_write        (kv_write[2]),
     .kv_wr_resp      (kv_wr_resp[2]),
     .pcr_signing_data(pcr_signing_data),

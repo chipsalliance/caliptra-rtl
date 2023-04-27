@@ -400,17 +400,24 @@ bit first_transfer=1;
 //  end
     // Wait for next transfer then gather info from intiator about the transfer.
     // Place the data into the cptra_status_initiator_struct.
-    while (!any_signal_changed()) @(posedge clk_i);
-    cptra_noncore_rst_b_o          <= cptra_noncore_rst_b_i      ;
-    cptra_uc_rst_b_o               <= cptra_uc_rst_b_i   ;
+    do begin
+        soc_ifc_error_intr_o           <= soc_ifc_error_intr_i;
+        soc_ifc_notif_intr_o           <= soc_ifc_notif_intr_i;
+        sha_error_intr_o               <= sha_error_intr_i    ;
+        sha_notif_intr_o               <= sha_notif_intr_i    ;
+        @(posedge clk_i);
+    end
+    while (!any_signal_changed());
+    cptra_noncore_rst_b_o          <= cptra_noncore_rst_b_i ;
+    cptra_uc_rst_b_o               <= cptra_uc_rst_b_i      ;
     cptra_obf_key_reg_o            <= cptra_obf_key_reg_i   ;
     obf_field_entropy_o            <= obf_field_entropy_i   ;
     obf_uds_seed_o                 <= obf_uds_seed_i        ;
-    soc_ifc_error_intr_o           <= soc_ifc_error_intr_i          ;
-    soc_ifc_notif_intr_o           <= soc_ifc_notif_intr_i          ;
-    sha_error_intr_o               <= sha_error_intr_i          ;
-    sha_notif_intr_o               <= sha_notif_intr_i          ;
-    nmi_vector_o                   <= nmi_vector_i           ;
+    soc_ifc_error_intr_o           <= soc_ifc_error_intr_i  ;
+    soc_ifc_notif_intr_o           <= soc_ifc_notif_intr_i  ;
+    sha_error_intr_o               <= sha_error_intr_i      ;
+    sha_notif_intr_o               <= sha_notif_intr_i      ;
+    nmi_vector_o                   <= nmi_vector_i          ;
     iccm_lock_o                    <= iccm_lock_i           ;
 //    @(posedge clk_i);
     first_transfer = 0;

@@ -32,7 +32,6 @@ class soc_ifc_env_top_mbox_rand_small_sequence extends soc_ifc_env_top_mbox_sequ
   `uvm_object_utils( soc_ifc_env_top_mbox_rand_small_sequence )
 
   extern virtual function create_seqs();
-  extern virtual function randomize_seqs();
 
 endclass
 
@@ -41,11 +40,4 @@ function soc_ifc_env_top_mbox_rand_small_sequence::create_seqs();
     obj = soc_ifc_env_mbox_rand_small_sequence_t::get_type().create_object("soc_ifc_env_mbox_seq");
     if(!$cast(soc_ifc_env_mbox_seq,obj)) `uvm_fatal("SOC_IFC_TOP_MBOX_RAND_SMALL", "soc_ifc_env_top_mbox_rand_small_sequence::create_seqs() - <seq_type>.create_object() failed")
     soc_ifc_env_cptra_handler_seq = soc_ifc_env_cptra_mbox_handler_sequence_t::type_id::create("soc_ifc_env_cptra_handler_seq");
-endfunction
-
-function soc_ifc_env_top_mbox_rand_small_sequence::randomize_seqs();
-    if(!soc_ifc_env_mbox_seq.randomize())
-        `uvm_fatal("SOC_IFC_MBOX_TOP", $sformatf("soc_ifc_env_top_mbox_rand_small_sequence::body() - %s randomization failed", soc_ifc_env_mbox_seq.get_type_name()));
-    if(!soc_ifc_env_cptra_handler_seq.randomize())
-        `uvm_fatal("SOC_IFC_MBOX_TOP", $sformatf("soc_ifc_env_top_mbox_rand_small_sequence::body() - %s randomization failed", soc_ifc_env_cptra_handler_seq.get_type_name()));
 endfunction

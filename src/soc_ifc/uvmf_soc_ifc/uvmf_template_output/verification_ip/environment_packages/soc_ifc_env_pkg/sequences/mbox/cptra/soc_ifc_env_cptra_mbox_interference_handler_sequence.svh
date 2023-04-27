@@ -45,8 +45,8 @@ task soc_ifc_env_cptra_mbox_interference_handler_sequence::mbox_wait_for_command
     byte ii;
 
     op_sts = CPTRA_TIMEOUT;
-    reg_model.mbox_csr_rm.mbox_execute.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
-    while (!data[reg_model.mbox_csr_rm.mbox_execute.execute.get_lsb_pos()]) begin
+    reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+    while (!data[reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_cmd_avail_sts.get_lsb_pos()]) begin
         if(!this.randomize(xfers) with {xfers inside {[1:20]}; }) begin
             `uvm_error("MBOX_SEQ", "Failed to randomize memory AHB transfer count in mbox_wait_for_command")
         end
@@ -69,7 +69,9 @@ task soc_ifc_env_cptra_mbox_interference_handler_sequence::mbox_wait_for_command
             end
         end
         configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(cycles);
-        reg_model.mbox_csr_rm.mbox_execute.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+        reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
     end
+    data &= uvm_reg_data_t'(1) << reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_cmd_avail_sts.get_lsb_pos();
+    reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
     op_sts = CPTRA_SUCCESS;
 endtask

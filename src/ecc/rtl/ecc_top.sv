@@ -49,9 +49,9 @@ module ecc_top
     output logic [AHB_DATA_WIDTH-1:0] hrdata_o,
 
     // KV interface
-    output kv_read_t [2:0] kv_read,
+    output kv_read_t [1:0] kv_read,
     output kv_write_t kv_write,
-    input kv_rd_resp_t [2:0] kv_rd_resp,
+    input kv_rd_resp_t [1:0] kv_rd_resp,
     input kv_wr_resp_t kv_wr_resp,   
     //PCR Signing
     input pcr_signing_t pcr_signing_data,
