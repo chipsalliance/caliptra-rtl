@@ -40,7 +40,7 @@ rules:
           - argdict:
               method:  append
               key:     elab-args
-              value:   '-cm line+cond+fsm+tgl+branch'
+              value:   '-cm line+cond+fsm+tgl+branch+assert'
 
   - name:       func_coverage
     run_in:     postsubmit

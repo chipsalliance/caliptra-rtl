@@ -1,0 +1,27 @@
+reference_delimiter:  "$"
+variable_delimiter:   "{"
+variable_endlimiter:  "}"
+
+$default_policy:    last
+
+conditions:
+
+  - name:           COVERAGE
+    type:           cli_key
+    list:           unknown
+    accepts_value:  forbidden
+    key:            +COVERAGE
+    consume:        true
+    eval_in:        postsubmit
+
+rules:
+
+  - name:       coverage
+    run_in:     postsubmit
+    conditions:
+      - if: COVERAGE
+        actions:
+          - cli:
+              params:  
+                - '-cg_coverage_control=1'
+                - '-cm line+cond+fsm+tgl+branch+assert'
