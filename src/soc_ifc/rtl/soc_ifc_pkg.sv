@@ -22,6 +22,7 @@ package soc_ifc_pkg;
     parameter SOC_IFC_USER_W = 32;
     
     parameter MBOX_SIZE_KB = 128;
+    parameter MBOX_SIZE_BYTES = 128 * 1024;
     parameter MBOX_DATA_W = 32;
     parameter MBOX_ECC_DATA_W = 7;
     parameter MBOX_DATA_AND_ECC_W = MBOX_DATA_W + MBOX_ECC_DATA_W;

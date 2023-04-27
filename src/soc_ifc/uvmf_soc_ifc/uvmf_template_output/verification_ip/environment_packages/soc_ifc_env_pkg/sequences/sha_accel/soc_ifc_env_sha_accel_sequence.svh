@@ -143,10 +143,12 @@ class soc_ifc_env_sha_accel_sequence extends soc_ifc_env_sequence_base #(.CONFIG
     //dlen is in bytes
     this.dlen = block_len >> 3;
 
+
     byte_shift = 'd4 - this.dlen[1:0];
     sha_block_data = sha_block_data << (byte_shift * 8);
 
-    `uvm_info("SHA_ACCEL_SEQ", $sformatf("sha_block_data: %x", sha_block_data), UVM_LOW)
+    `uvm_info("SHA_ACCEL_SEQ", $sformatf("Block Data: %x", sha_block_data), UVM_LOW)
+    `uvm_info("SHA_ACCEL_SEQ", $sformatf("Block Len: %x", block_len), UVM_LOW)
 
     sha_accel_setup();
     sha_accel_acquire_lock(op_sts);
