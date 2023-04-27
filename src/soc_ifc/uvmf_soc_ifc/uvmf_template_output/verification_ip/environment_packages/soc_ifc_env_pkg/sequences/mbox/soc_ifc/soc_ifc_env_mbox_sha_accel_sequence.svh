@@ -117,7 +117,7 @@ task soc_ifc_env_mbox_sha_accel_sequence::mbox_setup();
     
     $fclose(fd_r);
 
-    `uvm_info("SHA_ACCEL_SEQ", $sformatf("Pre Shift sha_block_data: %x", sha_block_data), UVM_LOW)
+    `uvm_info("SHA_ACCEL_SEQ", $sformatf("Block Data: %x", sha_block_data), UVM_LOW)
     `uvm_info("SHA_ACCEL_SEQ", $sformatf("Block Len: %x", block_len), UVM_LOW)
 
     //dlen is in bytes
@@ -126,12 +126,12 @@ task soc_ifc_env_mbox_sha_accel_sequence::mbox_setup();
     byte_shift = 'd4 - this.dlen[1:0];
     sha_block_data = sha_block_data << (byte_shift * 8);
 
-    `uvm_info("SHA_ACCEL_SEQ", $sformatf("sha_block_data: %x", sha_block_data), UVM_LOW)
-
     // Restrict the start addr so that we don't overflow the mailbox
-    if ( (this.start_addr + this.dlen) > 'h20000 ) begin
+    if ( (this.start_addr + this.dlen) > MBOX_SIZE_BYTES ) begin
         //if we would have overflowed, just lower start address so the data fits in the mailbox at the end
-        this.start_addr = 'h20000 - (this.dlen);
+        this.start_addr = MBOX_SIZE_BYTES - (this.dlen);
+        //round it down to match the alignment of the data
+        this.start_addr[1:0] = '0;
     end
     // Override dlen to reflect the size of the SHA data
     this.mbox_op_rand.dlen = this.start_addr + this.dlen;
