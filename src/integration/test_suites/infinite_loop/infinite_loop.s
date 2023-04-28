@@ -30,23 +30,28 @@ _start:
     li      x3, 4
     csrw    mfdc, x3        // disable store merging
 
-loop:
-    jal     x0, loop
+    // Set some register values
+    li      x1,  0x12345678
+    li      x2,  0xABCDEF00
+    li      x3,  0xCAFEBABA
+    li      x4,  0xDEADBEEF
+    li      x5,  0x05050505
+    li      x6,  0xA0A0A0A0
+    li      x7,  0x00FF00FF
+    li      x8,  0xCC00CC00
 
-// Write 0xff to STDOUT for TB to termiate test.
-_finish:
-    li      x3, STDOUT
-    addi    x5, x0, 0xff
-    sb      x5, 0(x3)
-    beq     x0, x0, _finish
-.rept 100
-    nop
-.endr
+    // Simple infinite loop program with inner and outer loop
+    li      t3,  0
+outer:
+    addi    t3, t3, 1
+    li      t4, 123
+inner:
+    addi    t4, t4, -1
+    bne     t4, zero, inner
+    jal     x0, outer
 
 .section .dccm
 .global stdout
 stdout: .word STDOUT
 .global verbosity_g
 verbosity_g: .word 2
-
-//.section .data_iccm0, "ax"
