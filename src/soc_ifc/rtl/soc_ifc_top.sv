@@ -595,6 +595,7 @@ soc_ifc_reg i_soc_ifc_reg (
     .s_cpuif_req_is_wr(soc_ifc_reg_req_data.write),
     .s_cpuif_addr(soc_ifc_reg_req_data.addr[SOC_IFC_REG_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data(soc_ifc_reg_req_data.wdata),
+    .s_cpuif_wr_biten('1),
     .s_cpuif_req_stall_wr(s_cpuif_req_stall_wr_nc),
     .s_cpuif_req_stall_rd(s_cpuif_req_stall_rd_nc),
     .s_cpuif_rd_ack(s_cpuif_rd_ack_nc),
