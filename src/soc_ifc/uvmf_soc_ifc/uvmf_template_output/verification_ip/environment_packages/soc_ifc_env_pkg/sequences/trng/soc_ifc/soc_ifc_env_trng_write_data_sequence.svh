@@ -42,6 +42,7 @@ class soc_ifc_env_trng_write_data_sequence extends soc_ifc_env_sequence_base #(.
   extern virtual task soc_ifc_env_trng_check_data_req(output bit data_req);
   extern virtual task soc_ifc_env_trng_write_data();
   extern virtual task soc_ifc_env_trng_write_done();
+  extern virtual task soc_ifc_env_trng_wait_idle();
 
   // Constrain trng_write_done to be 1
   constraint trng_write_done_1 { trng_write_done == 1; }  
@@ -68,12 +69,14 @@ class soc_ifc_env_trng_write_data_sequence extends soc_ifc_env_sequence_base #(.
 
   virtual task body();
 
+    soc_ifc_env_trng_setup();
     `uvm_info("TRNG_REQ_SEQ", $sformatf("Responding to TRNG_DATA_REQ with %0d dwords", trng_num_dwords), UVM_DEBUG)
     if (this.trng_data_req == 1'b0) 
       soc_ifc_env_trng_poll_data_req();
     if (this.trng_data_req) begin
       soc_ifc_env_trng_write_data();
       soc_ifc_env_trng_write_done();
+      soc_ifc_env_trng_wait_idle();
     end
 
   endtask
@@ -90,10 +93,11 @@ task soc_ifc_env_trng_write_data_sequence::soc_ifc_env_trng_setup();
     // Read the valid PAUSER fields from register mirrored value if the local array
     // has not already been overridden from default values
     if (!trng_valid_user_initialized) begin
+        // If PAUSER is locked, we must use the exact value programmed.
         if (reg_model.soc_ifc_reg_rm.CPTRA_TRNG_PAUSER_LOCK.LOCK.get_mirrored_value())
             trng_valid_user = reg_model.soc_ifc_reg_rm.CPTRA_TRNG_VALID_PAUSER.PAUSER.get_mirrored_value();
-        else
-            trng_valid_user = reg_model.soc_ifc_reg_rm.CPTRA_TRNG_VALID_PAUSER.PAUSER.get_reset("HARD");
+        else if (!std::randomize(this.trng_valid_user))
+            `uvm_error("TRNG_REQ_SEQ", "Failed to generate random value for trng_valid_user")
         trng_valid_user_initialized = 1'b1;
     end
     else begin
@@ -122,6 +126,10 @@ task soc_ifc_env_trng_write_data_sequence::soc_ifc_env_trng_poll_data_req();
   this.trng_data_req = data_req;
 endtask
 
+//==========================================
+// Task:        soc_ifc_env_trng_check_data_req
+// Description: Read TRNG status register for new data request
+//==========================================
 task soc_ifc_env_trng_write_data_sequence::soc_ifc_env_trng_check_data_req(output bit data_req);
   uvm_status_e reg_sts;
   uvm_reg_data_t reg_data;
@@ -134,6 +142,10 @@ task soc_ifc_env_trng_write_data_sequence::soc_ifc_env_trng_check_data_req(outpu
   end
 endtask
 
+//==========================================
+// Task:        soc_ifc_env_trng_write_data
+// Description: Write TRNG data
+//==========================================
 task soc_ifc_env_trng_write_data_sequence::soc_ifc_env_trng_write_data();
   int ii;
   uvm_status_e reg_sts;
@@ -147,6 +159,10 @@ task soc_ifc_env_trng_write_data_sequence::soc_ifc_env_trng_write_data();
   end
 endtask
 
+//==========================================
+// Task:        soc_ifc_env_trng_write_done
+// Description: Set TRNG status done bit
+//==========================================
 task soc_ifc_env_trng_write_data_sequence::soc_ifc_env_trng_write_done();
   uvm_status_e reg_sts;
   `uvm_info("TRNG_REQ_SEQ", "Sending TRNG_DONE", UVM_DEBUG)
@@ -155,4 +171,24 @@ task soc_ifc_env_trng_write_data_sequence::soc_ifc_env_trng_write_done();
     `uvm_error("TRNG_REQ_SEQ", "Register access failed (TRNG_DONE)")
 endtask
 
+//==========================================
+// Task:        soc_ifc_env_trng_wait_idle
+// Description: Wait for the TRNG status done bit to be cleared
+//              (indicating the TRNG data was consumed by the requestor)
+//==========================================
+task soc_ifc_env_trng_write_data_sequence::soc_ifc_env_trng_wait_idle();
+  uvm_status_e reg_sts;
+  uvm_reg_data_t data;
 
+  `uvm_info("TRNG_REQ_SEQ", "Waiting for TRNG_DONE to clear", UVM_HIGH)
+
+  reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+  if (reg_sts != UVM_IS_OK) 
+    `uvm_error("TRNG_REQ_SEQ", "Register access failed (CPTRA_TRNG_STATUS)")
+  while (data[reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.DATA_WR_DONE.get_lsb_pos()]) begin
+      configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200);
+      reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+      if (reg_sts != UVM_IS_OK) 
+        `uvm_error("TRNG_REQ_SEQ", "Register access failed (CPTRA_TRNG_STATUS)")
+  end
+endtask

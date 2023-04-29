@@ -46,9 +46,18 @@ class caliptra_reg2apb_adapter #(
                              WDATA_WIDTH, 
                              RDATA_WIDTH) this_t; 
   `uvm_object_param_utils(this_t)
+   `m_uvm_get_type_name_func(this_t)
+
+    // Stores the addr_user value captured from the most
+    // recent call to bus2reg.
+    // This allows us to capture PAUSER during calls to 'write' of
+    // apb_reg_predictor, and access this value in the prediction
+    // callbacks for each reg field.
+    caliptra_apb_user bus2reg_user_obj;
 
   function new(string name = "reg2apb_adapter");
     super.new(name);
+    bus2reg_user_obj = new();
   endfunction
 
   // Function: reg2bus
@@ -113,5 +122,25 @@ class caliptra_reg2apb_adapter #(
     `uvm_info("reg2bus",$sformatf("do register access: %p",rw),UVM_MEDIUM)
     return apb;
   endfunction: reg2bus
+
+  // Function: bus2reg
+  //
+  // This converts the APB bus specific items to reg items. 
+  // Only difference from APB VIP is grabbing addr_user and storing to local var
+  //
+  virtual function void bus2reg(uvm_sequence_item bus_item,
+                                ref uvm_reg_bus_op rw);
+    T apb;
+    if (!$cast(apb, bus_item))
+    begin
+      `uvm_fatal("NOT_APB_TYPE","Provided bus_item is not of the correct type")
+      return;
+    end
+
+    super.bus2reg(bus_item,rw);
+
+    bus2reg_user_obj.set_addr_user(apb.addr_user);
+
+  endfunction: bus2reg
 
 endclass

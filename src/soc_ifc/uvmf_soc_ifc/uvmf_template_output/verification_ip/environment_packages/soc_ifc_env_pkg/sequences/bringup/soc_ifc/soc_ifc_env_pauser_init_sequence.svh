@@ -36,6 +36,7 @@ class soc_ifc_env_pauser_init_sequence extends soc_ifc_env_sequence_base #(.CONF
   caliptra_apb_user apb_user_obj;
 
   rand bit [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users [5] = '{default: '1};
+  rand bit [apb5_master_0_params::PAUSER_WIDTH-1:0] trng_valid_user      = '{default: '1};
 
   constraint unique_valid_pauser_c { unique {mbox_valid_users}; }
   // pragma uvmf custom class_item_additional end
@@ -80,12 +81,13 @@ class soc_ifc_env_pauser_init_sequence extends soc_ifc_env_sequence_base #(.CONF
         end
     join_none
 
-    `uvm_info("SOC_IFC_PAUSER_INIT", "Configuring valid users in soc_ifc", UVM_MEDIUM)
+    // MBOX
+    `uvm_info("SOC_IFC_PAUSER_INIT", "Configuring MBOX valid users in soc_ifc", UVM_MEDIUM)
     for (ii=0; ii < $size(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER); ii++) begin: VALID_USER_LOOP
         reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[ii].write(sts, mbox_valid_users[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
         if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_PAUSER_INIT", $sformatf("Failed when writing to CPTRA_MBOX_VALID_PAUSER index %0d", ii))
     end
-    `uvm_info("SOC_IFC_PAUSER_INIT", "Locking valid users in soc_ifc", UVM_MEDIUM)
+    `uvm_info("SOC_IFC_PAUSER_INIT", "Locking MBOX valid users in soc_ifc", UVM_MEDIUM)
     for (ii=0; ii < $size(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK); ii++) begin: USER_LOCK_LOOP
         if (reg_model.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[ii].LOCK.get_mirrored_value())
             `uvm_warning("SOC_IFC_PAUSER_INIT", "Found CPTRA_MBOX_PAUSER_LOCK that is already set while running PAUSER init sequence!")
@@ -94,8 +96,23 @@ class soc_ifc_env_pauser_init_sequence extends soc_ifc_env_sequence_base #(.CONF
             if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_PAUSER_INIT", $sformatf("Failed when writing to CPTRA_MBOX_PAUSER_LOCK index %0d", ii))
         end
     end
+
+    // TRNG
+    `uvm_info("SOC_IFC_PAUSER_INIT", "Configuring TRNG valid user in soc_ifc", UVM_MEDIUM)
+    reg_model.soc_ifc_reg_rm.CPTRA_TRNG_VALID_PAUSER.write(sts, trng_valid_user, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_PAUSER_INIT", $sformatf("Failed when writing to CPTRA_TRNG_VALID_PAUSER"))
+    `uvm_info("SOC_IFC_PAUSER_INIT", "Locking TRNG valid user in soc_ifc", UVM_MEDIUM)
+    if (reg_model.soc_ifc_reg_rm.CPTRA_TRNG_PAUSER_LOCK.LOCK.get_mirrored_value())
+        `uvm_warning("SOC_IFC_PAUSER_INIT", "Found CPTRA_TRNG_PAUSER_LOCK that is already set while running PAUSER init sequence!")
+    else begin
+        reg_model.soc_ifc_reg_rm.CPTRA_TRNG_PAUSER_LOCK.write(sts, uvm_reg_data_t'(1) << reg_model.soc_ifc_reg_rm.CPTRA_TRNG_PAUSER_LOCK.LOCK.get_lsb_pos(), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+        if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_PAUSER_INIT", $sformatf("Failed when writing to CPTRA_TRNG_PAUSER_LOCK"))
+    end
+
+    // Ending report
     `uvm_info("SOC_IFC_PAUSER_INIT", "Completed VALID PAUSER setup and lock", UVM_MEDIUM)
-    `uvm_info("SOC_IFC_PAUSER_INIT", $sformatf("Valid PAUSER: %p", mbox_valid_users), UVM_MEDIUM)
+    `uvm_info("SOC_IFC_PAUSER_INIT", $sformatf("Valid MBOX PAUSER: %p", mbox_valid_users), UVM_HIGH)
+    `uvm_info("SOC_IFC_PAUSER_INIT", $sformatf("Valid TRNG PAUSER: 0x%x", trng_valid_user), UVM_HIGH)
 
   endtask
 

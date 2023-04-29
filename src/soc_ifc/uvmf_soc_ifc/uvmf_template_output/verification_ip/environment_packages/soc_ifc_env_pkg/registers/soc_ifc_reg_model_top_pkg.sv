@@ -34,6 +34,20 @@ package soc_ifc_reg_model_top_pkg;
     import mbox_csr_uvm::*;
     import sha512_acc_csr_uvm::*;
     import soc_ifc_pkg::*;
+    import mgc_apb3_v1_0_pkg::*; /* for apb3_host_apb3_transaction definition */
+    import qvip_apb5_slave_params_pkg::*;
+    import qvip_apb5_slave_pkg::*; /* for reg adapter definition used in callbacks */
+
+    typedef apb3_host_apb3_transaction #(apb5_master_0_params::APB3_SLAVE_COUNT,
+                                         apb5_master_0_params::APB3_PADDR_BIT_WIDTH,
+                                         apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
+                                         apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) apb_reg_transfer_t;
+
+    typedef caliptra_reg2apb_adapter #(apb_reg_transfer_t,
+                              apb5_master_0_params::APB3_SLAVE_COUNT,
+                              apb5_master_0_params::APB3_PADDR_BIT_WIDTH,
+                              apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
+                              apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) apb_reg_adapter_t;
 
     typedef struct packed {
         bit mbox_idle;
@@ -473,6 +487,11 @@ package soc_ifc_reg_model_top_pkg;
     `include "soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base.svh"
     `include "soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_en_r_base.svh"
     `include "soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_trig_r_base.svh"
+    `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_DATA_DATA.svh"
+    `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK.svh"
+    `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ.svh"
+    `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE.svh"
+    `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER.svh"
 
 // pragma uvmf custom define_register_classes end
 // pragma uvmf custom define_block_map_coverage_class begin
@@ -555,6 +574,12 @@ package soc_ifc_reg_model_top_pkg;
         soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute mbox_csr_mbox_execute_execute_cb;
         soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock   mbox_csr_mbox_unlock_unlock_cb;
 
+        soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_DATA_DATA              soc_ifc_reg_CPTRA_TRNG_DATA_DATA_cb;
+        soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK       soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK_cb;
+        soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ        soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ_cb;
+        soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE    soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE_cb;
+        soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER    soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER_cb;
+
         uvm_reg_field error_en_flds[$];
         uvm_reg_field notif_en_flds[$];
         uvm_reg_field error_sts_flds[$];
@@ -633,6 +658,12 @@ package soc_ifc_reg_model_top_pkg;
         mbox_csr_mbox_execute_execute_cb = soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute::type_id::create("mbox_csr_mbox_execute_execute_cb");
         mbox_csr_mbox_unlock_unlock_cb   = soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock  ::type_id::create("mbox_csr_mbox_unlock_unlock_cb"  );
 
+        soc_ifc_reg_CPTRA_TRNG_DATA_DATA_cb            = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_DATA_DATA          ::type_id::create("soc_ifc_reg_CPTRA_TRNG_DATA_DATA_cb"          );
+        soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK_cb     = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK   ::type_id::create("soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK_cb"   );
+        soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ_cb      = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ    ::type_id::create("soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ_cb"    );
+        soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE_cb  = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE::type_id::create("soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE_cb");
+        soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER_cb  = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER::type_id::create("soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER_cb");
+
         // Callbacks compute side-effects to other registers in the reg-model
         // in response to 'do_predict'.
         // 'do_predict' is invoked by the reg_predictor after receiving a transaction
@@ -685,6 +716,13 @@ package soc_ifc_reg_model_top_pkg;
         uvm_reg_field_cb::add(mbox_csr_rm.mbox_status .status    , mbox_csr_mbox_status_status_cb   );
         uvm_reg_field_cb::add(mbox_csr_rm.mbox_execute.execute   , mbox_csr_mbox_execute_execute_cb );
         uvm_reg_field_cb::add(mbox_csr_rm.mbox_unlock .unlock    , mbox_csr_mbox_unlock_unlock_cb   );
+
+        /* -- soc_ifc_reg -- */
+        foreach (soc_ifc_reg_rm.CPTRA_TRNG_DATA[ii]) uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_DATA[ii].DATA, soc_ifc_reg_CPTRA_TRNG_DATA_DATA_cb);
+        uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_PAUSER_LOCK  .LOCK        , soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK_cb    );
+        uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_STATUS       .DATA_REQ    , soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ_cb     );
+        uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_STATUS       .DATA_WR_DONE, soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE_cb );
+        uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_VALID_PAUSER .PAUSER      , soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER_cb );
 
 // pragma uvmf custom construct_configure_build_registers_within_block end
 // pragma uvmf custom add_registers_to_block_map begin
