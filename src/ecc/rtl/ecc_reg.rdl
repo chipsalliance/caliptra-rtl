@@ -197,7 +197,7 @@ addrmap ecc_reg {
         default hw = w;
         default we = true;
         default resetsignal = reset_b;
-        field {desc = "Private key field"; swwe = ecc_ready; hwclr;} PRIVKEY_OUT[32] = 32'b0;
+        field {desc = "Private key field"; hwclr;} PRIVKEY_OUT[32] = 32'b0;
     
     } ECC_PRIVKEY_OUT[12] @0x00000180;
 

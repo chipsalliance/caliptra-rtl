@@ -510,9 +510,9 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.t1_timeout = new("t1_timeout");
-            this.t1_timeout.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            this.t1_timeout.configure(this, 1, 0, "RW", 1, 'h0, 1, 1, 0);
             this.t2_timeout = new("t2_timeout");
-            this.t2_timeout.configure(this, 1, 1, "RO", 1, 'h0, 1, 1, 0);
+            this.t2_timeout.configure(this, 1, 1, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_WDT_STATUS
 

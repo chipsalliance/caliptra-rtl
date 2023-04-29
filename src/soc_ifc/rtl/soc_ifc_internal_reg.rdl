@@ -208,7 +208,7 @@ regfile intr_block_t {
         default sw = r;
         default nonsticky intr;
 
-        field {desc = "Interrupt Event Aggregation status bit";} agg_sts = 1'b0;
+        field {desc = "Interrupt Event Aggregation status bit"; swwel = false;} agg_sts = 1'b0;
     };
 
     /* ---- Error Interrupt Trigger ---- */
@@ -271,7 +271,7 @@ regfile intr_block_t {
         default decrvalue = 1;
         default counter;
 
-        field {desc = "Pulse mirrors interrupt event occurrence";} pulse = 1'b0;
+        field {desc = "Pulse mirrors interrupt event occurrence"; swwel = false;} pulse = 1'b0;
     };
 
     /* ---- Interrupt Statistics Counter ---- */

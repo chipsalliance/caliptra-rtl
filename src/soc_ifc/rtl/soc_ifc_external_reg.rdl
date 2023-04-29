@@ -245,7 +245,7 @@ reg {
     desc = "Caliptra HW revision ID that matches the official final release milestone
             [br]Caliptra Access: RO
             [br]SOC Access:      RO";
-    field {sw=r; hw=r; swwel = soc_req; resetsignal = cptra_rst_b;} REV_ID[32]=1;
+    field {sw=r; hw=r; resetsignal = cptra_rst_b;} REV_ID[32]=1;
 } CPTRA_HW_REV_ID;
 reg {
     name = "Caliptra FW RevID";
@@ -322,6 +322,6 @@ reg {
     desc = "Caliptra watchdog timer status register
             [br]Caliptra Access: RO
             [br]SOC Access:      RO";
-    field {desc = "Timer1 timed out, timer2 enabled"; hw = rw; sw = r; swwel = soc_req; resetsignal = cptra_rst_b;} t1_timeout = 1'b0;
-    field {desc = "Timer2 timed out"; hw = rw; sw = r; swwel = soc_req; resetsignal = cptra_rst_b;} t2_timeout = 1'b0;
+    field {desc = "Timer1 timed out, timer2 enabled"; hw = rw; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;} t1_timeout = 1'b0;
+    field {desc = "Timer2 timed out"; hw = rw; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;} t2_timeout = 1'b0;
 } CPTRA_WDT_STATUS;

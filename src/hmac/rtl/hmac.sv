@@ -277,6 +277,7 @@ hmac_reg i_hmac_reg (
     .s_cpuif_req_is_wr   (we),
     .s_cpuif_addr        (address[HMAC_REG_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data     (write_data),
+    .s_cpuif_wr_biten    ('1),
     .s_cpuif_req_stall_wr(),
     .s_cpuif_req_stall_rd(),
     .s_cpuif_rd_ack      (),

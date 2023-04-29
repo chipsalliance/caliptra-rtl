@@ -463,6 +463,7 @@ mbox_csr1(
     .s_cpuif_req_is_wr(req_data.write),
     .s_cpuif_addr(req_data.addr[MBOX_CSR_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data(req_data.wdata),
+    .s_cpuif_wr_biten('1),
     .s_cpuif_req_stall_wr(s_cpuif_req_stall_wr_nc),
     .s_cpuif_req_stall_rd(s_cpuif_req_stall_rd_nc),
     .s_cpuif_rd_ack(s_cpuif_rd_ack_nc),
