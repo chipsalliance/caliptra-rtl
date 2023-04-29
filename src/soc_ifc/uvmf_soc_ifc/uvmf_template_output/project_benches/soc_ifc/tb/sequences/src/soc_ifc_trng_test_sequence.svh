@@ -21,7 +21,7 @@
 //
 //----------------------------------------------------------------------
 //
-// DESCRIPTION: This file contains the top level sequence used in  soc_ifc_rand_test.
+// DESCRIPTION: This file contains the top level sequence used in soc_ifc_trng_test.
 // It is derived from the example_derived_test_sequence
 //
 //----------------------------------------------------------------------
@@ -34,7 +34,7 @@ class soc_ifc_trng_test_sequence extends soc_ifc_bench_sequence_base;
 
     rand soc_ifc_env_bringup_sequence_t soc_ifc_env_bringup_seq;
     rand soc_ifc_env_cptra_rst_wait_sequence_t soc_ifc_env_cptra_rst_wait_seq; 
-    rand soc_ifc_env_top_trng_sequence_t trng_top_test_seq;
+    rand soc_ifc_env_pauser_init_sequence_t soc_ifc_env_pauser_init_seq;
     rand soc_ifc_env_sequence_base_t soc_ifc_env_seq_ii[];
 
     rand enum int {
@@ -83,6 +83,8 @@ class soc_ifc_trng_test_sequence extends soc_ifc_bench_sequence_base;
     soc_ifc_env_bringup_seq        = soc_ifc_env_bringup_sequence_t::type_id::create("soc_ifc_env_bringup_seq");
     soc_ifc_env_cptra_rst_wait_seq = soc_ifc_env_cptra_rst_wait_sequence_t::type_id::create("soc_ifc_env_cptra_rst_wait_seq");
 
+    soc_ifc_env_pauser_init_seq        = soc_ifc_env_pauser_init_sequence_t::type_id::create("soc_ifc_env_pauser_init_seq");
+
     soc_ifc_ctrl_agent_random_seq      = soc_ifc_ctrl_agent_random_seq_t::type_id::create("soc_ifc_ctrl_agent_random_seq");
     cptra_ctrl_agent_random_seq        = cptra_ctrl_agent_random_seq_t::type_id::create("cptra_ctrl_agent_random_seq");
     soc_ifc_status_agent_responder_seq = soc_ifc_status_agent_responder_seq_t::type_id::create("soc_ifc_status_agent_responder_seq");
@@ -91,6 +93,7 @@ class soc_ifc_trng_test_sequence extends soc_ifc_bench_sequence_base;
     // Handle to the responder sequence for getting response transactions
     soc_ifc_env_bringup_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_status_agent_responder_seq;
     soc_ifc_env_cptra_rst_wait_seq.cptra_status_agent_rsp_seq = cptra_status_agent_responder_seq;
+    soc_ifc_env_pauser_init_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_status_agent_responder_seq;
 
     reg_model.reset();
     // Start RESPONDER sequences here
@@ -114,8 +117,12 @@ class soc_ifc_trng_test_sequence extends soc_ifc_bench_sequence_base;
     end
     join
 
-    // Start randome TRNG test sequence
+    // Initialize/lock PAUSER valid values
+    if(!soc_ifc_env_pauser_init_seq.randomize())
+        `uvm_fatal("SOC_IFC_TRNG_TEST", "soc_ifc_trng_test_sequence::body() - soc_ifc_env_pauser_init_seq randomization failed");
+    soc_ifc_env_pauser_init_seq.start(top_configuration.vsqr);
 
+    // Start random TRNG test sequence
     for (ii = 0; ii < iteration_count; ii++) begin: RAND_LOOP
         if(!this.randomize(rand_seq_idx)) `uvm_fatal("SOC_IFC_TRNG_TEST", "Failed to randomize rand_seq_idx");
 

@@ -75,7 +75,10 @@ class soc_ifc_env_cptra_trng_data_req_sequence extends soc_ifc_env_sequence_base
 endclass
 
 task soc_ifc_env_cptra_trng_data_req_sequence::soc_ifc_ext_trng_req_data(input trng_req_data);
-  reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.write(reg_sts, uvm_reg_data_t'(trng_req_data) << reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.DATA_REQ.get_lsb_pos(), UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+  uvm_reg_data_t data;
+  // NOTE: This also clears DATA_WR_DONE (or _should_, if it is writable via AHB)
+  data = uvm_reg_data_t'(trng_req_data) << reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.DATA_REQ.get_lsb_pos();
+  reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
   if (reg_sts != UVM_IS_OK)
     `uvm_error("TRNG_REQ_SEQ", "Register access failed to write TRNG_STATUS register")
 endtask
@@ -103,10 +106,12 @@ endtask
 
 
 task soc_ifc_env_cptra_trng_data_req_sequence::soc_ifc_ext_trng_clear_req();
-    uvm_reg_data_t mask;
-    mask = uvm_reg_data_t'(1) << reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.DATA_REQ    .get_lsb_pos() |
-           uvm_reg_data_t'(1) << reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.DATA_WR_DONE.get_lsb_pos();
-    reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.write(reg_sts, mask, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+    uvm_reg_data_t mask, data;
+    mask = ~(uvm_reg_data_t'(1) << reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.DATA_REQ    .get_lsb_pos() |
+             uvm_reg_data_t'(1) << reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.DATA_WR_DONE.get_lsb_pos());
+    data = reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.get_mirrored_value();
+    data &= mask;
+    reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
     if (reg_sts != UVM_IS_OK)
         `uvm_error("TRNG_REQ_SEQ", "Register access failed to write TRNG_STATUS register")
 endtask

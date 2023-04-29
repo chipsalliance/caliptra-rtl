@@ -757,6 +757,13 @@ class soc_ifc_predictor #(
                     if (ahb_txn.RnW == AHB_WRITE)
                         `uvm_info("PRED_AHB", {"Write to ", axs_reg.get_name(), " has no effect"}, UVM_DEBUG)
                 end
+                "CPTRA_TRNG_VALID_PAUSER",
+                "CPTRA_TRNG_PAUSER_LOCK",
+                ["CPTRA_TRNG_DATA[0]" : "CPTRA_TRNG_DATA[9]"],
+                ["CPTRA_TRNG_DATA[10]" : "CPTRA_TRNG_DATA[11]"]: begin
+                    // Handled in callbacks via reg predictor
+                    `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                end
                 "CPTRA_TRNG_STATUS": begin
                     if (ahb_txn.RnW == AHB_WRITE) begin
                         if (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.DATA_REQ.get_mirrored_value() != this.trng_data_req) begin
@@ -1228,8 +1235,11 @@ class soc_ifc_predictor #(
 //                    send_soc_ifc_sts_txn = 1'b0;
 //                end
             end
+            "CPTRA_TRNG_VALID_PAUSER",
+            "CPTRA_TRNG_PAUSER_LOCK",
             "CPTRA_TRNG_STATUS": begin
-                `uvm_info("PRED_APB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_FULL)
+                // Handled in callbacks via reg predictor
+                `uvm_info("PRED_APB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
 //                if (apb_txn.read_or_write == APB3_TRANS_WRITE && p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.DATA_WR_DONE.get_mirrored_value()) begin
 //                    send_soc_ifc_sts_txn = 1'b1;
 //                end
