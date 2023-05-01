@@ -55,7 +55,9 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
       IDX_SOC_IFC_ENV_RST_WARM,
       IDX_SOC_IFC_ENV_RST_COLD,
       IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM,
-      IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM
+      IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM,
+      IDX_SOC_IFC_ENV_MBOX_SHA_ACCEL,
+      IDX_SOC_IFC_ENV_SHA_ACCEL
   } rand_seq_idx;
 
   rand int iteration_count;
@@ -65,16 +67,18 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
   constraint avail_env_seqs_c {
       rand_seq_idx dist {
           //IDX_SOC_IFC_ENV_MBOX_RAND_FW            := 0,
-          IDX_SOC_IFC_ENV_MBOX_RAND_SMALL           := 500,
+          IDX_SOC_IFC_ENV_MBOX_RAND_SMALL           := 125,
           IDX_SOC_IFC_ENV_MBOX_RAND_MEDIUM          := 100,
           IDX_SOC_IFC_ENV_MBOX_RAND_LARGE           := 1,
-          IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_SMALL    := 100,
+          IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_SMALL    := 125,
           IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_MEDIUM   := 100,
-          IDX_SOC_IFC_ENV_MBOX_MULTI_AGENT          := 50,
+          IDX_SOC_IFC_ENV_MBOX_MULTI_AGENT          := 100,
           IDX_SOC_IFC_ENV_RST_WARM                  := 100,
-          IDX_SOC_IFC_ENV_RST_COLD                  := 50,
-          IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM := 50,
-          IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM := 50
+          IDX_SOC_IFC_ENV_RST_COLD                  := 100,
+          IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM := 100,
+          IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM := 100,
+          IDX_SOC_IFC_ENV_MBOX_SHA_ACCEL            := 100,
+          IDX_SOC_IFC_ENV_SHA_ACCEL                 := 100
       };
   }
   constraint iter_count_c {
@@ -222,6 +226,10 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
                 obj = soc_ifc_env_mbox_rst_warm_rand_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM:
                 obj = soc_ifc_env_mbox_rst_cold_rand_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_SHA_ACCEL:
+                obj = soc_ifc_env_mbox_sha_accel_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_SHA_ACCEL:
+                obj = soc_ifc_env_sha_accel_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             default:
                 `uvm_error("CALIPTRA_TOP_RAND_TEST", $sformatf("rand_seq_idx randomized to illegal value: %p", rand_seq_idx))
         endcase
@@ -265,10 +273,6 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
       soc_ifc_subenv_cptra_status_agent_config.wait_for_num_clocks(400);
     join
 
-    if (1) // TODO -- Move to Scoreboard
-        $display("* TESTCASE PASSED");
-    else
-        $display("* TESTCASE FAILED");
     // pragma uvmf custom body end
   endtask
 

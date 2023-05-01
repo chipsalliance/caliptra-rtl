@@ -54,9 +54,11 @@ class kv_write_transaction_coverage #(
     option.per_instance=1;
     write_en: coverpoint coverage_trans.write_en;
     write_entry: coverpoint coverage_trans.write_entry;
-    write_data: coverpoint coverage_trans.write_data;
-    write_offset: coverpoint coverage_trans.write_offset;
-    write_dest_valid: coverpoint coverage_trans.write_dest_valid;
+    //write_data: coverpoint coverage_trans.write_data;
+    write_offset: coverpoint coverage_trans.write_offset {
+      illegal_bins wr_offset_12_15 = {['d12:'d15]};
+    }
+    //write_dest_valid: coverpoint coverage_trans.write_dest_valid; //TODO
     error: coverpoint coverage_trans.error;
     // pragma uvmf custom covergroup end
   endgroup
@@ -68,7 +70,7 @@ class kv_write_transaction_coverage #(
   function new(string name="", uvm_component parent=null);
     super.new(name,parent);
     kv_write_transaction_cg=new;
-    `uvm_warning("COVERAGE_MODEL_REVIEW", "A covergroup has been constructed which may need review because of either generation or re-generation with merging.  Please note that transaction variables added as a result of re-generation and merging are not automatically added to the covergroup.  Remove this warning after the covergroup has been reviewed.")
+    //`uvm_warning("COVERAGE_MODEL_REVIEW", "A covergroup has been constructed which may need review because of either generation or re-generation with merging.  Please note that transaction variables added as a result of re-generation and merging are not automatically added to the covergroup.  Remove this warning after the covergroup has been reviewed.")
   endfunction
 
   // ****************************************************************************

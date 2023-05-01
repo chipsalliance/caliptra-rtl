@@ -42,12 +42,14 @@ endclass
 
 task soc_ifc_env_cptra_mbox_dlen_underread_handler_sequence::mbox_pop_dataout();
     int ii;
-    int underrun_bytes;
+    int unsigned underrun_bytes;
     uvm_reg_data_t data;
 
     // minimum 5 bytes so we can grab the resp dlen
-    if (!std::randomize(underrun_bytes) with {op.dlen - underrun_bytes > 4;})
+    if (!std::randomize(underrun_bytes) with {underrun_bytes < op.dlen - 4;})
         `uvm_error("CPTRA_MBOX_HANDLER", "Failed to randomize overrun bytes")
+    else
+        `uvm_info("CPTRA_MBOX_HANDLER", $sformatf("Randomized underrun bytes to %d", underrun_bytes), UVM_MEDIUM)
 
     for (ii=0; ii < op.dlen-underrun_bytes; ii+=4) begin
         reg_model.mbox_csr_rm.mbox_dataout.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);

@@ -64,6 +64,8 @@ void main() {
     uint8_t store_to_kv = 0x1;
     uint8_t digest_kv_id = 0x0;
     sha384_kvflow(shablock_kv_id, store_to_kv, digest_kv_id, expected_digest);
+
+    sha512_zeroize();
     
     printf("%c",0xff); //End the test
     

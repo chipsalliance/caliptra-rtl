@@ -165,6 +165,7 @@ void main() {
     printf("%c", key_inject_cmd);
 
     hmac_flow(hmac_key, hmac_block, hmac_lfsr_seed, hmac_tag);
+    hmac_zeroize();
 
     printf("%c",0xff); //End the test
     

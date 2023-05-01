@@ -143,11 +143,13 @@ always_comb soc_sha_req = (soc_req_dv & (soc_req_data.addr inside {[SHA_REG_STAR
 
 //Check if SoC request is coming from a valid user
 //There are 5 valid pauser registers, check if user attribute matches any of them
+//Check if user matches Default Valid User parameter - this user value is always valid
 always_comb begin
     valid_mbox_req = '0;
     for (int i=0; i < 5; i++) begin
         valid_mbox_req |= soc_req_dv & (soc_req_data.user == valid_mbox_users[i]);
     end
+    valid_mbox_req |= soc_req_dv & (soc_req_data.user == CPTRA_DEF_MBOX_VALID_PAUSER);
 end
 
 //check for collisions

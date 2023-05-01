@@ -55,8 +55,8 @@ module ecc_top_tb
   localparam ADDR_MSG_START       = BASE_ADDR + 32'h00000100;
   localparam ADDR_MSG_END         = BASE_ADDR + 32'h0000012C;
 
-  localparam ADDR_PRIVKEY_START   = BASE_ADDR + 32'h00000180;
-  localparam ADDR_PRIVKEY_END     = BASE_ADDR + 32'h000001AC;
+  localparam ADDR_PRIVKEY_OUT_START   = BASE_ADDR + 32'h00000180;
+  localparam ADDR_PRIVKEY_OUT_END     = BASE_ADDR + 32'h000001AC;
 
   localparam ADDR_PUBKEYX_START   = BASE_ADDR + 32'h00000200;
   localparam ADDR_PUBKEYX_END     = BASE_ADDR + 32'h0000022C;
@@ -78,6 +78,9 @@ module ecc_top_tb
   
   localparam ADDR_NONCE_START     = BASE_ADDR + 32'h00000500;
   localparam ADDR_NONCE_END       = BASE_ADDR + 32'h0000052C;
+
+  localparam ADDR_PRIVKEY_IN_START   = BASE_ADDR + 32'h00000580;
+  localparam ADDR_PRIVKEY_IN_END     = BASE_ADDR + 32'h000005AC;
   
   parameter           R_WIDTH                   = 384;
   typedef bit         [R_WIDTH-1:0]             r_t;
@@ -534,7 +537,7 @@ module ecc_top_tb
       wait_ready();
 
       $display("*** TC %0d reading PRIVATE KEY", tc_number);
-      read_block(ADDR_PRIVKEY_START);
+      read_block(ADDR_PRIVKEY_OUT_START);
       privkey = reg_read_data;
 
       $display("*** TC %0d reading PUBLIC KEY X", tc_number);
@@ -594,7 +597,7 @@ module ecc_top_tb
       $display("*** TC %0d writing message value %0h", tc_number, test_vector.hashed_msg);
       write_block(ADDR_MSG_START, test_vector.hashed_msg);
       $display("*** TC %0d writing private key value %0h", tc_number, test_vector.privkey);
-      write_block(ADDR_PRIVKEY_START, test_vector.privkey);
+      write_block(ADDR_PRIVKEY_IN_START, test_vector.privkey);
       $display("*** TC %0d writing IV value %0h", tc_number, test_vector.IV);
       write_block(ADDR_IV_START, test_vector.IV);
 
@@ -804,7 +807,7 @@ module ecc_top_tb
       
       wait_ready();
 
-      read_block(ADDR_PRIVKEY_START);
+      read_block(ADDR_PRIVKEY_OUT_START);
       privkey = reg_read_data;
 
       read_block(ADDR_PUBKEYX_START);
@@ -944,7 +947,7 @@ module ecc_top_tb
       tc_ctr = tc_ctr + 1;
 
       write_block(ADDR_MSG_START, test_vector.hashed_msg);
-      write_block(ADDR_PRIVKEY_START, test_vector.privkey);
+      write_block(ADDR_PRIVKEY_IN_START, test_vector.privkey);
       write_block(ADDR_IV_START, test_vector.IV);
 
       trig_ECC(SIGN);
@@ -959,7 +962,7 @@ module ecc_top_tb
       read_block(ADDR_SIGNS_START);
       S = reg_read_data;
 
-      read_block(ADDR_PRIVKEY_START);
+      read_block(ADDR_PRIVKEY_OUT_START);
       privkey = reg_read_data;
 
       read_block(ADDR_PUBKEYX_START);

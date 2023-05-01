@@ -309,7 +309,8 @@ always_ff @(posedge clk or negedge rst_b) begin
     end
     else begin
         mbox_fsm_ps <= mbox_fsm_ns;
-        soc_has_lock <= arc_MBOX_IDLE_MBOX_RDY_FOR_CMD ? soc_has_lock_nxt : soc_has_lock;
+        soc_has_lock <= arc_MBOX_IDLE_MBOX_RDY_FOR_CMD ? soc_has_lock_nxt : 
+                        hwif_out.mbox_lock.lock.value ? soc_has_lock : '0;
         dir_req_rd_phase <= dir_req_dv_q & ~sha_sram_req_dv & ~req_data.write;
         mbox_wrptr <= (inc_wrptr | rst_mbox_wrptr) ? mbox_wrptr_nxt : mbox_wrptr;
         mbox_rdptr <= (mbox_protocol_sram_rd) ? mbox_rdptr_nxt : mbox_rdptr;
@@ -462,6 +463,7 @@ mbox_csr1(
     .s_cpuif_req_is_wr(req_data.write),
     .s_cpuif_addr(req_data.addr[MBOX_CSR_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data(req_data.wdata),
+    .s_cpuif_wr_biten('1),
     .s_cpuif_req_stall_wr(s_cpuif_req_stall_wr_nc),
     .s_cpuif_req_stall_rd(s_cpuif_req_stall_rd_nc),
     .s_cpuif_rd_ack(s_cpuif_rd_ack_nc),

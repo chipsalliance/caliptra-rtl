@@ -33,6 +33,9 @@ class soc_ifc_env_mbox_rand_pauser_sequence extends soc_ifc_env_mbox_sequence_ba
   constraint apb_reg_check_c {do_apb_lock_check == 1;}
   constraint retry_failed_reg_c {retry_failed_reg_axs == 1'b1;}
 
+  // Constrain command to undefined opcode
+  constraint mbox_cmd_undef_c { !(mbox_op_rand.cmd.cmd_s inside {defined_cmds}); }
+
   function new(string name = "" );
     super.new(name);
   endfunction
@@ -41,18 +44,18 @@ endclass
 
 function void soc_ifc_env_mbox_rand_pauser_sequence::set_pauser_prob_vals();
   // ============ OVERRIDES for rand probability members ============
-  // Slightly more likely to randomly generate a valid PAUSER override
+  // Make it slightly more likely to randomly generate a valid PAUSER override
   // for earlier calls, so the first occurrence of invalid PAUSER is later
   // on (or, very rarely, never happens).
   // We want to stimulate the bad-actor scenario, but at varying points
   // throughout the sequence.
   // It is occasionally interesting to let invalid PAUSER be generated on the
   // first attempt though.
-  this.PAUSER_PROB_LOCK    = 250;
+  this.PAUSER_PROB_LOCK    = 350;
   this.PAUSER_PROB_CMD     = PAUSER_PROB_LOCK;
   // Wildly more likely to generate a valid PAUSER, since we do so many accesses
   // against datain it is almost certain at _some_ point to be invalid
-  this.PAUSER_PROB_DATAIN  = 5;
+  this.PAUSER_PROB_DATAIN  = 25;
   this.PAUSER_PROB_EXECUTE = PAUSER_PROB_LOCK;
   // More likely to generate a valid PAUSER, since we do so many accesses
   // against mbox_status while polling

@@ -36,7 +36,7 @@ class kv_rst_transaction  extends uvmf_transaction_base;
   bit assert_rst ;
   bit assert_core_rst ;
   rand int unsigned wait_cycles ;
-  bit debug_mode ;
+  rand bit debug_mode ;
 
   //Constraints for the transaction variables:
   constraint wait_cycles_c { wait_cycles dist {[1:25] := 80, [25:100] := 15, [100:500] := 5}; }

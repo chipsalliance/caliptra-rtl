@@ -253,6 +253,7 @@ doe_reg i_doe_reg (
         .s_cpuif_req_is_wr   (we),
         .s_cpuif_addr        (address[DOE_REG_ADDR_WIDTH-1:0]),
         .s_cpuif_wr_data     (write_data[31:0]),
+        .s_cpuif_wr_biten    ('1),
 
         .s_cpuif_req_stall_wr(),
         .s_cpuif_req_stall_rd(),

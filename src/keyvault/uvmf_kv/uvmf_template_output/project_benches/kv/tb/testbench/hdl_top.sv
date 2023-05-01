@@ -223,7 +223,8 @@ import uvmf_base_pkg_hdl::*;
       .kv_read (kv_read ),
       .kv_write(kv_write),
       .kv_rd_resp(kv_rd_resp),
-      .kv_wr_resp(kv_wr_resp)
+      .kv_wr_resp(kv_wr_resp),
+      .pcr_signing_key() //TODO
   );
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HBURST    = 3'b0;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HPROT     = 7'b0;

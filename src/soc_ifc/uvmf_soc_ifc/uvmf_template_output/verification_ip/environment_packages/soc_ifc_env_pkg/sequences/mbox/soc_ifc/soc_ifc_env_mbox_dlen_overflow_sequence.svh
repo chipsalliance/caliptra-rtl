@@ -28,6 +28,9 @@ class soc_ifc_env_mbox_dlen_overflow_sequence extends soc_ifc_env_mbox_sequence_
 
   `uvm_object_utils( soc_ifc_env_mbox_dlen_overflow_sequence )
 
+  // Constrain command to undefined opcode
+  constraint mbox_cmd_undef_c { !(mbox_op_rand.cmd.cmd_s inside {defined_cmds}); }
+
   extern virtual task mbox_push_datain();
 
   function new(string name = "" );
@@ -39,11 +42,13 @@ endclass
 task soc_ifc_env_mbox_dlen_overflow_sequence::mbox_push_datain();
     int ii;
     uvm_reg_data_t data;
-    int overflow_bytes;
+    int unsigned overflow_bytes;
 
     // Still fits inside the mailbox
-    if (!std::randomize(overflow_bytes) with {overflow_bytes + mbox_op_rand.dlen <= (reg_model.mbox_mem_rm.get_size() * reg_model.mbox_mem_rm.get_n_bytes());})
+    if (!std::randomize(overflow_bytes) with {overflow_bytes <= (reg_model.mbox_mem_rm.get_size() * reg_model.mbox_mem_rm.get_n_bytes()) - mbox_op_rand.dlen; overflow_bytes < mbox_op_rand.dlen * 4;})
         `uvm_error("MBOX_OVERFLOW_SEQ", "Failed to randomize overflow bytes")
+    else
+        `uvm_info("MBOX_OVERFLOW_SEQ", $sformatf("Randomized overflow bytes to %0d", overflow_bytes), UVM_MEDIUM)
 
     for (ii=0; ii < this.mbox_op_rand.dlen+overflow_bytes; ii+=4) begin
         if (ii == 0) begin

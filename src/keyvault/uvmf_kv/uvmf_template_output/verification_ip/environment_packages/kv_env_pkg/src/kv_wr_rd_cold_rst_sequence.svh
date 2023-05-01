@@ -132,7 +132,7 @@ class kv_wr_rd_cold_rst_sequence #(
         // std::randomize(write_id) with {write_id inside [0:3]};
         // std::randomize(read_id) with {read_id inside [0:5]};
         write_id = $urandom_range(0,3);
-        read_id = $urandom_range(0,5);
+        read_id = $urandom_range(0,4);
 
         fork
             begin

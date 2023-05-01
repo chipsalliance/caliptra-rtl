@@ -106,6 +106,7 @@ module ecc_dsa_ctrl
     logic pm_busy_o;
     
     logic hw_privkey_we;
+    logic privkey_out_we;
     logic privkey_we_reg;
     logic privkey_we_reg_ff;
     logic hw_pubkeyx_we;
@@ -306,10 +307,12 @@ module ecc_dsa_ctrl
         else begin
             privkey_we_reg <= hw_privkey_we;
             privkey_we_reg_ff <= privkey_we_reg;
-            if (privkey_we_reg & ~privkey_we_reg_ff & dest_keyvault)
+            if (privkey_out_we & dest_keyvault)
                 kv_reg <= read_reg;
         end
     end
+
+    always_comb privkey_out_we = privkey_we_reg & ~privkey_we_reg_ff;
 
     assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
     assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
@@ -330,12 +333,18 @@ module ecc_dsa_ctrl
     always_comb begin // ecc_reg_writing
         for (int dword=0; dword < 12; dword++)begin
             //Key Vault has priority if enabled to drive these registers
-            //If keyvault is not enabled, grab the sw value as usual
-            privkey_reg[dword] = hwif_out.ECC_PRIVKEY[11-dword].PRIVKEY.value;
             //don't store the private key generated in sw accessible register if it's going to keyvault
-            hwif_in.ECC_PRIVKEY[dword].PRIVKEY.we = pcr_sign_mode | (kv_privkey_write_en & (kv_privkey_write_offset == dword)) | (privkey_we_reg & ~privkey_we_reg_ff & ~dest_keyvault);
-            hwif_in.ECC_PRIVKEY[dword].PRIVKEY.next = pcr_sign_mode ? pcr_signing_data.pcr_signing_privkey[dword] : kv_privkey_write_en? kv_privkey_write_data : read_reg[11-dword];
-            hwif_in.ECC_PRIVKEY[dword].PRIVKEY.hwclr = zeroize_reg;
+            privkey_reg[dword] = hwif_out.ECC_PRIVKEY_IN[11-dword].PRIVKEY_IN.value;
+            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.we = pcr_sign_mode | (kv_privkey_write_en & (kv_privkey_write_offset == dword));
+            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.next = pcr_sign_mode ? pcr_signing_data.pcr_signing_privkey[dword] : kv_privkey_write_en? kv_privkey_write_data : read_reg[11-dword];
+            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.hwclr = zeroize_reg;
+        end 
+
+        for (int dword=0; dword < 12; dword++)begin
+            //If keyvault is not enabled, grab the sw value as usual
+            hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.we = privkey_out_we & ~dest_keyvault;
+            hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.next = read_reg[11-dword];
+            hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < 12; dword++)begin
@@ -756,7 +765,7 @@ module ecc_dsa_ctrl
 
         //interface with client
         .dest_keyvault(dest_keyvault),
-        .dest_data_avail(privkey_we_reg & ~privkey_we_reg_ff),
+        .dest_data_avail(privkey_out_we),
         .dest_data(kv_reg),
 
         .error_code(kv_write_error),
