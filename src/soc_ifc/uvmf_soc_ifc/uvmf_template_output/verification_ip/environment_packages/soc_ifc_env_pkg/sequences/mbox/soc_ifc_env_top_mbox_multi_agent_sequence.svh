@@ -34,6 +34,8 @@ class soc_ifc_env_top_mbox_multi_agent_sequence extends soc_ifc_env_sequence_bas
   soc_ifc_env_mbox_rand_multi_agent_sequence_t soc_ifc_env_mbox_seq;
   soc_ifc_env_cptra_mbox_handler_sequence_t    soc_ifc_env_cptra_multi_agent_handler_seq[];
 
+  event pre_do_called;
+
 
 
   extern virtual function      create_and_randomize_seqs();
@@ -43,6 +45,11 @@ class soc_ifc_env_top_mbox_multi_agent_sequence extends soc_ifc_env_sequence_bas
     super.new(name);
     create_and_randomize_seqs();
   endfunction
+
+  virtual task pre_do(bit is_item);
+    super.pre_do(is_item);
+    -> pre_do_called;
+  endtask
 
   virtual task body();
 
@@ -92,6 +99,9 @@ function soc_ifc_env_top_mbox_multi_agent_sequence::create_and_randomize_seqs();
     soc_ifc_env_mbox_seq          = soc_ifc_env_mbox_rand_multi_agent_sequence_t::type_id::create("soc_ifc_env_mbox_seq");
     if(!soc_ifc_env_mbox_seq.randomize())
         `uvm_fatal("SOC_IFC_MBOX_TOP", $sformatf("soc_ifc_env_top_mbox_multi_agent_sequence::body() - %s randomization failed", soc_ifc_env_mbox_seq.get_type_name()));
+    // Some of these might not be run if the sub multi_agent sequence detects
+    // restricted number of valid_mbox_users and reduces 'agents' from the
+    // randomized value
     soc_ifc_env_cptra_multi_agent_handler_seq = new[soc_ifc_env_mbox_seq.agents];
     for (ii=0; ii<soc_ifc_env_cptra_multi_agent_handler_seq.size(); ii++) begin
         soc_ifc_env_cptra_multi_agent_handler_seq[ii] = soc_ifc_env_cptra_mbox_handler_sequence_t::type_id::create($sformatf("soc_ifc_env_cptra_multi_agent_handler_seq[%0d]", ii));
@@ -103,9 +113,20 @@ endfunction
 task soc_ifc_env_top_mbox_multi_agent_sequence::start_seqs();
     int ii;
     fork
-        soc_ifc_env_mbox_seq.start(configuration.vsqr);
-        for (ii=0; ii < soc_ifc_env_cptra_multi_agent_handler_seq.size(); ii++) begin
-            soc_ifc_env_cptra_multi_agent_handler_seq[ii].start(configuration.vsqr);
+        // Giving 'this' as the parent sequence causes local pre_do to be
+        // called after mbox seq's pre_body
+        soc_ifc_env_mbox_seq.start(configuration.vsqr, this);
+        begin
+            // 'agents' might be modified by soc_ifc_env_mbox_seq.pre_body()
+            wait(pre_do_called.triggered);
+            for (ii=0; ii < soc_ifc_env_mbox_seq.agents; ii++) begin
+                soc_ifc_env_cptra_multi_agent_handler_seq[ii].start(configuration.vsqr);
+            end
+            `uvm_info("SOC_IFC_MBOX_TOP",
+                      $sformatf("Done running all cptra handler sequences through index [%0d]. Handlers not run due to agent count restriction: [%0d]",
+                                soc_ifc_env_mbox_seq.agents-1,
+                                soc_ifc_env_cptra_multi_agent_handler_seq.size()-soc_ifc_env_mbox_seq.agents),
+                      UVM_MEDIUM)
         end
     join
 endtask

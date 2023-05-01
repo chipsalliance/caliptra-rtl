@@ -100,6 +100,9 @@ void sha384_kvflow(uint8_t sha_kv_id, uint8_t store_to_kv, uint8_t digest_kv_id,
                                             (0x2 << SHA512_REG_SHA512_CTRL_MODE_LOW) |
                                              SHA512_REG_SHA512_CTRL_LAST_MASK);
 
+    // wait for SHA to be valid
+    while((lsu_read_32(CLP_SHA512_REG_SHA512_STATUS) & SHA512_REG_SHA512_STATUS_VALID_MASK) == 0);
+
     // if we want to store the results into kv
     printf("check digest\n");
     if (store_to_kv) {
@@ -124,4 +127,9 @@ void sha384_kvflow(uint8_t sha_kv_id, uint8_t store_to_kv, uint8_t digest_kv_id,
         }
     }
 
+}
+
+void sha512_zeroize(){
+    printf("SHA512 zeroize flow.\n");
+    lsu_write_32(CLP_SHA512_REG_SHA512_CTRL, (1 << SHA512_REG_SHA512_CTRL_ZEROIZE_LOW) & SHA512_REG_SHA512_CTRL_ZEROIZE_MASK);
 }

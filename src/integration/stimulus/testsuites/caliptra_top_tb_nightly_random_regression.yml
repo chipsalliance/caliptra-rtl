@@ -1,0 +1,8 @@
+document:
+  schema: 1.0
+
+contents:
+  - tests:
+      tags: ["random", "nightly", "firmware"]
+      paths:
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/randomized_pcr_signing/randomized_pcr_signing.yml

@@ -117,19 +117,19 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__ECC_MSG
 
-    // Reg - ecc_reg::ECC_PRIVKEY
-    class ecc_reg__ECC_PRIVKEY extends uvm_reg;
-        rand uvm_reg_field PRIVKEY;
+    // Reg - ecc_reg::ECC_PRIVKEY_OUT
+    class ecc_reg__ECC_PRIVKEY_OUT extends uvm_reg;
+        rand uvm_reg_field PRIVKEY_OUT;
 
-        function new(string name = "ecc_reg__ECC_PRIVKEY");
+        function new(string name = "ecc_reg__ECC_PRIVKEY_OUT");
             super.new(name, 32, UVM_NO_COVERAGE);
         endfunction : new
 
         virtual function void build();
-            this.PRIVKEY = new("PRIVKEY");
-            this.PRIVKEY.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            this.PRIVKEY_OUT = new("PRIVKEY_OUT");
+            this.PRIVKEY_OUT.configure(this, 32, 0, "RO", 1, 'h0, 1, 1, 0);
         endfunction : build
-    endclass : ecc_reg__ECC_PRIVKEY
+    endclass : ecc_reg__ECC_PRIVKEY_OUT
 
     // Reg - ecc_reg::ECC_PUBKEY_X
     class ecc_reg__ECC_PUBKEY_X extends uvm_reg;
@@ -229,6 +229,20 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__ECC_NONCE
 
+    // Reg - ecc_reg::ECC_PRIVKEY_IN
+    class ecc_reg__ECC_PRIVKEY_IN extends uvm_reg;
+        rand uvm_reg_field PRIVKEY_IN;
+
+        function new(string name = "ecc_reg__ECC_PRIVKEY_IN");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.PRIVKEY_IN = new("PRIVKEY_IN");
+            this.PRIVKEY_IN.configure(this, 32, 0, "WO", 1, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : ecc_reg__ECC_PRIVKEY_IN
+
     // Reg - kv_read_ctrl_reg
     class kv_read_ctrl_reg extends uvm_reg;
         rand uvm_reg_field read_en;
@@ -281,7 +295,6 @@ package ecc_reg_uvm;
         rand uvm_reg_field sha_block_dest_valid;
         rand uvm_reg_field ecc_pkey_dest_valid;
         rand uvm_reg_field ecc_seed_dest_valid;
-        rand uvm_reg_field ecc_msg_dest_valid;
         rand uvm_reg_field rsvd;
 
         function new(string name = "kv_write_ctrl_reg");
@@ -303,10 +316,8 @@ package ecc_reg_uvm;
             this.ecc_pkey_dest_valid.configure(this, 1, 9, "RW", 0, 'h0, 1, 1, 0);
             this.ecc_seed_dest_valid = new("ecc_seed_dest_valid");
             this.ecc_seed_dest_valid.configure(this, 1, 10, "RW", 0, 'h0, 1, 1, 0);
-            this.ecc_msg_dest_valid = new("ecc_msg_dest_valid");
-            this.ecc_msg_dest_valid.configure(this, 1, 11, "RW", 0, 'h0, 1, 1, 0);
             this.rsvd = new("rsvd");
-            this.rsvd.configure(this, 20, 12, "RW", 0, 'h0, 1, 1, 0);
+            this.rsvd.configure(this, 21, 11, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : kv_write_ctrl_reg
 
@@ -594,7 +605,7 @@ package ecc_reg_uvm;
         rand ecc_reg__ECC_SCACONFIG ECC_SCACONFIG;
         rand ecc_reg__ECC_SEED ECC_SEED[12];
         rand ecc_reg__ECC_MSG ECC_MSG[12];
-        rand ecc_reg__ECC_PRIVKEY ECC_PRIVKEY[12];
+        rand ecc_reg__ECC_PRIVKEY_OUT ECC_PRIVKEY_OUT[12];
         rand ecc_reg__ECC_PUBKEY_X ECC_PUBKEY_X[12];
         rand ecc_reg__ECC_PUBKEY_Y ECC_PUBKEY_Y[12];
         rand ecc_reg__ECC_SIGN_R ECC_SIGN_R[12];
@@ -602,6 +613,7 @@ package ecc_reg_uvm;
         rand ecc_reg__ECC_VERIFY_R ECC_VERIFY_R[12];
         rand ecc_reg__ECC_IV ECC_IV[12];
         rand ecc_reg__ECC_NONCE ECC_NONCE[12];
+        rand ecc_reg__ECC_PRIVKEY_IN ECC_PRIVKEY_IN[12];
         rand kv_read_ctrl_reg ecc_kv_rd_pkey_ctrl;
         rand kv_status_reg ecc_kv_rd_pkey_status;
         rand kv_read_ctrl_reg ecc_kv_rd_seed_ctrl;
@@ -659,12 +671,12 @@ package ecc_reg_uvm;
                 this.ECC_MSG[i0].build();
                 this.default_map.add_reg(this.ECC_MSG[i0], 'h100 + i0*'h4);
             end
-            foreach(this.ECC_PRIVKEY[i0]) begin
-                this.ECC_PRIVKEY[i0] = new($sformatf("ECC_PRIVKEY[%0d]", i0));
-                this.ECC_PRIVKEY[i0].configure(this);
+            foreach(this.ECC_PRIVKEY_OUT[i0]) begin
+                this.ECC_PRIVKEY_OUT[i0] = new($sformatf("ECC_PRIVKEY_OUT[%0d]", i0));
+                this.ECC_PRIVKEY_OUT[i0].configure(this);
                 
-                this.ECC_PRIVKEY[i0].build();
-                this.default_map.add_reg(this.ECC_PRIVKEY[i0], 'h180 + i0*'h4);
+                this.ECC_PRIVKEY_OUT[i0].build();
+                this.default_map.add_reg(this.ECC_PRIVKEY_OUT[i0], 'h180 + i0*'h4);
             end
             foreach(this.ECC_PUBKEY_X[i0]) begin
                 this.ECC_PUBKEY_X[i0] = new($sformatf("ECC_PUBKEY_X[%0d]", i0));
@@ -714,6 +726,13 @@ package ecc_reg_uvm;
                 
                 this.ECC_NONCE[i0].build();
                 this.default_map.add_reg(this.ECC_NONCE[i0], 'h500 + i0*'h4);
+            end
+            foreach(this.ECC_PRIVKEY_IN[i0]) begin
+                this.ECC_PRIVKEY_IN[i0] = new($sformatf("ECC_PRIVKEY_IN[%0d]", i0));
+                this.ECC_PRIVKEY_IN[i0].configure(this);
+                
+                this.ECC_PRIVKEY_IN[i0].build();
+                this.default_map.add_reg(this.ECC_PRIVKEY_IN[i0], 'h580 + i0*'h4);
             end
             this.ecc_kv_rd_pkey_ctrl = new("ecc_kv_rd_pkey_ctrl");
             this.ecc_kv_rd_pkey_ctrl.configure(this);

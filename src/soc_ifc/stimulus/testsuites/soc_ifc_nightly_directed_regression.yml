@@ -5,7 +5,11 @@ contents:
   - tests:
       tags: ["L0", "directed", "nightly", "SOC_IFC"]
       paths:
-        - ${CALIPTRA_ROOT}/src/soc_ifc/stimulus/tests/directed/soc_ifc_test.yml
-        - ${CALIPTRA_ROOT}/src/soc_ifc/stimulus/tests/directed/fuse_reg_prod_test.yml
+        - ${CALIPTRA_ROOT}/src/soc_ifc/stimulus/tests/directed/soc_ifc_test.yml 
+        - ${CALIPTRA_ROOT}/src/soc_ifc/stimulus/tests/directed/fuse_reg_prod_test.yml 
         - ${CALIPTRA_ROOT}/src/soc_ifc/stimulus/tests/directed/fuse_reg_perm_test.yml
+        - ${CALIPTRA_ROOT}/src/soc_ifc/stimulus/tests/directed/fuse_reg_lifecycle_test.yml
+        - ${CALIPTRA_ROOT}/src/soc_ifc/stimulus/tests/directed/soc_reg_test.yml
         - ${CALIPTRA_ROOT}/src/soc_ifc/stimulus/tests/directed/soc_reg_pwron_test.yml
+        - ${CALIPTRA_ROOT}/src/soc_ifc/stimulus/tests/directed/soc_reg_wrmrst_test.yml
+        - ${CALIPTRA_ROOT}/src/soc_ifc/stimulus/tests/directed/soc_reg_invalid_test.yml

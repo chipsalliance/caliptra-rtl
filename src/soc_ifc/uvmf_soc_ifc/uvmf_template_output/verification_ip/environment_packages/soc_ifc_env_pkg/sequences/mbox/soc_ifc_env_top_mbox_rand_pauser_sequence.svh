@@ -34,7 +34,7 @@ class soc_ifc_env_top_mbox_rand_pauser_sequence extends soc_ifc_env_top_mbox_seq
   soc_ifc_env_pauser_init_sequence_t          soc_ifc_env_pauser_init_seq;
   soc_ifc_env_mbox_rand_pauser_sequence_t     soc_ifc_env_mbox_pauser_seq;
 
-  bit [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users [5];
+  bit [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users [6];
   caliptra_apb_user apb_user_obj;
 
   extern virtual function      create_seqs();
@@ -75,22 +75,23 @@ task soc_ifc_env_top_mbox_rand_pauser_sequence::start_seqs();
     apb_user_obj.set_addr_user(32'hFFFF_FFFF); // FIXME hardcoded value - where to get this from?
 
     for (ii=0; ii < 5; ii++) begin: PAUSER_CHECK_LOOP
-        reg_model.soc_ifc_reg_rm.CPTRA_PAUSER_LOCK[ii].read(sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+        reg_model.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[ii].read(sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
         if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_MBOX_TOP", $sformatf("Failed when reading CPTRA_PAUSER_LOCK index %0d", ii))
-        if (data[reg_model.soc_ifc_reg_rm.CPTRA_PAUSER_LOCK[ii].LOCK.get_lsb_pos()]) begin
-            reg_model.soc_ifc_reg_rm.CPTRA_VALID_PAUSER[ii].read(sts, mbox_valid_users[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
-            if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_MBOX_TOP", $sformatf("Failed when reading CPTRA_VALID_PAUSER index %0d", ii))
+        if (data[reg_model.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[ii].LOCK.get_lsb_pos()]) begin
+            reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[ii].read(sts, mbox_valid_users[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+            if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_MBOX_TOP", $sformatf("Failed when reading CPTRA_MBOX_VALID_PAUSER index %0d", ii))
             mbox_valid_users_initialized = 1'b1;
         end
         else begin
-            mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_VALID_PAUSER[ii].PAUSER.get_reset();
+            mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[ii].PAUSER.get_reset();
         end
     end
+    mbox_valid_users[5] = 32'hFFFF_FFFF; // FIXME hardcoded default valid PAUSER
 
     if (!mbox_valid_users_initialized) begin
         soc_ifc_env_pauser_init_seq.start(configuration.vsqr);
         mbox_valid_users_initialized = 1'b1;
-        mbox_valid_users = soc_ifc_env_pauser_init_seq.mbox_valid_users;
+        mbox_valid_users = {soc_ifc_env_pauser_init_seq.mbox_valid_users, 32'hFFFF_FFFF}; // FIXME hardcoded
     end
 
     // Cast to the PAUSER specialization of mailbox sequence to expose the mbox_valid_users member for override

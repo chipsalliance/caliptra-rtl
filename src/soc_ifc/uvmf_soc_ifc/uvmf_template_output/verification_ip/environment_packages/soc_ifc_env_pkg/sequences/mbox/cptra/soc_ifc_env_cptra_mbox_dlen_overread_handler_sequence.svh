@@ -42,11 +42,13 @@ endclass
 
 task soc_ifc_env_cptra_mbox_dlen_overread_handler_sequence::mbox_pop_dataout();
     int ii;
-    int overrun_bytes;
+    int unsigned overrun_bytes;
     uvm_reg_data_t data;
 
-    if (!std::randomize(overrun_bytes) with {overrun_bytes + op.dlen <= (reg_model.mbox_mem_rm.get_size() * reg_model.mbox_mem_rm.get_n_bytes());})
+    if (!std::randomize(overrun_bytes) with {overrun_bytes + op.dlen <= (reg_model.mbox_mem_rm.get_size() * reg_model.mbox_mem_rm.get_n_bytes()); overrun_bytes < op.dlen * 4;})
         `uvm_error("CPTRA_MBOX_HANDLER", "Failed to randomize overrun bytes")
+    else
+        `uvm_info("CPTRA_MBOX_HANDLER", $sformatf("Randomized overrun bytes to %d", overrun_bytes), UVM_MEDIUM)
 
     for (ii=0; ii < op.dlen+overrun_bytes; ii+=4) begin
         reg_model.mbox_csr_rm.mbox_dataout.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
