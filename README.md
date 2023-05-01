@@ -70,20 +70,31 @@ Caliptra
 |   |-- Caliptra_Hardware_Spec.pdf
 |   |-- Caliptra_TestPlan_L1.pdf
 |-- src
+|   |-- aes
 |   |-- ahb_lite_bus
+|   |-- csrng
 |   |-- datavault
 |   |-- doe
 |   |-- ecc
+|   |-- edn
+|   |-- entropy_src
 |   |-- hmac
 |   |-- hmac_drbg
 |   |-- integration
 |   |-- keyvault
+|   |-- kmac
+|   |-- lc_ctrl
 |   |-- libs
 |   |-- pcrvault
+|   |-- prim
+|   |-- prim_generic
 |   |-- riscv_core
 |   |-- sha256
 |   |-- sha512
+|   |-- sha512_masked
 |   |-- soc_ifc
+|   |-- spi_host
+|   |-- uart
 `-- tools
     |-- config
     |-- README
@@ -97,12 +108,13 @@ The "Integration" sub-component contains the top-level fileset for Caliptra. `sr
 
 ## **Scripts Description** ##
 
+`demo.rdl`:Sample RDL file<BR>
 `Makefile`: Makefile to generate SRAM initialization files from test firmware and to run Verilator simulation<BR>
-`run_test_makefile`: Wrapper used in Microsoft internal build flow to invoke Makefile for mem init file generation<BR>
 `reg_gen.py`: Used to compile/export RDL files to register source code<BR>
 `reg_gen.sh`: Wrapper used to call `reg_gen.py` for all IP cores in Caliptra<BR>
 `reg_doc_gen.py`: Used to compile/export top-level RDL address map to register source code, defining complete Caliptra address space, and produces HTML documentation<BR>
 `reg_doc_gen.sh`: Wrapper to invoke `reg_doc_gen.py`<BR>
+`reg_json.py`:Used to import JSON register definition from OpenTitan and generate SystemRDL model<BR>
 `rdl_post_process.py`: Post-processing functionality to make RDL generated SystemVerilog files compatible with lint/Verilator requirements<BR>
 `run_verilator_l0_regression.py`: Wrapper to run the L0 smoke test regression suite using the Makefile flow in Verilator<BR>
 `integration_vector_gen.py`: Generates test vectors for crypto core tests<BR>
