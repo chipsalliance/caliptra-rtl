@@ -13,68 +13,40 @@
 // limitations under the License.
 //
 
-#ifndef _DV_COMMON_H
-
-#define _DV_COMMON_H
-
-#define DV_ONES 0xffffffff
-
-enum ctrl_type {STICKY_2D, NONSTICKY_2D, STICKY_1D, NONSTICKY_1D};
+#include "datavault.h"
 
 
-typedef struct {
-    char * pfx; 
-    volatile uint32_t * addr;
-    int width; 
-    uint32_t sticky_mask;   
-    uint32_t rstval; 
-} widereg_t;
-
-typedef struct  {
-    int index;                  // dv_reg
-    enum ctrl_type influence;
-    int entries;                // entries per set
-    int set [10];               // set of dv_reg indices
-} ctrl_reg_t;
-
-
-
-#ifdef _DV_DEBUG
-
-// Smaller test set for DEBUG
-#define DV_PFX_COUNT    10 
-#define DV_MAXWIDTH     3 
+#ifdef DV_SMALLSET    // Smaller test set for DEBUG
 
 widereg_t dv_regs [DV_PFX_COUNT] = {
     { "STICKYDATAVAULTCTRL",                 (uint32_t *) CLP_DV_REG_STICKYDATAVAULTCTRL_0,             2,  0x1,     0x0 }, //  0. (0x1001c000) 
     { "STICKY_DATA_VAULT_ENTRY_0",           (uint32_t *) CLP_DV_REG_STICKY_DATA_VAULT_ENTRY_0_0,       3,  DV_ONES, 0x0 }, //  1. (0x1001c028) 
     { "STICKY_DATA_VAULT_ENTRY_1",           (uint32_t *) CLP_DV_REG_STICKY_DATA_VAULT_ENTRY_1_0,       3,  DV_ONES, 0x0 }, //  2. (0x1001c058) 
-    { "NONSTICKYDATAVAULTCTRL",              (uint32_t *) CLP_DV_REG_NONSTICKYDATAVAULTCTRL_0,          2,  0x0,     0x0 }, // 11. (0x1001c208) 
-    { "NONSTICKY_DATA_VAULT_ENTRY_0",        (uint32_t *) CLP_DV_REG_NONSTICKY_DATA_VAULT_ENTRY_0_0,    3,  0x0,     0x0 }, // 12. (0x1001c230) 
-    { "NONSTICKY_DATA_VAULT_ENTRY_1",        (uint32_t *) CLP_DV_REG_NONSTICKY_DATA_VAULT_ENTRY_1_0,    3,  0x0,     0x0 }, // 13. (0x1001c260) 
-    { "NONSTICKY_LOCKABLE_SCRATCHREG_CTRL",  (uint32_t *) CLP_DV_REG_NONSTICKYLOCKABLESCRATCHREGCTRL_0, 2,  0x0,     0x0 }, // 22. (0x1001c410)
-    { "NONSTICKY_LOCKABLE_SCRATCHREG",       (uint32_t *) CLP_DV_REG_NONSTICKYLOCKABLESCRATCHREG_0,     2,  0x0,     0x0 }, // 23. (0x1001c438) 
-    { "STICKY_LOCKABLE_SCRATCHREGCTRL",      (uint32_t *) CLP_DV_REG_STICKYLOCKABLESCRATCHREGCTRL_0,    2,  0x1,     0x0 }, // 25. (0x1001c480) 
-    { "STICKY_LOCKABLE_SCRATCHREG",          (uint32_t *) CLP_DV_REG_STICKYLOCKABLESCRATCHREG_0,        2,  DV_ONES, 0x0 }  // 26. (0x1001c4a0) 
+    { "NONSTICKYDATAVAULTCTRL",              (uint32_t *) CLP_DV_REG_NONSTICKYDATAVAULTCTRL_0,          2,  0x0,     0x0 }, //  3. (0x1001c208) 
+    { "NONSTICKY_DATA_VAULT_ENTRY_0",        (uint32_t *) CLP_DV_REG_NONSTICKY_DATA_VAULT_ENTRY_0_0,    3,  0x0,     0x0 }, //  4. (0x1001c230) 
+    { "NONSTICKY_DATA_VAULT_ENTRY_1",        (uint32_t *) CLP_DV_REG_NONSTICKY_DATA_VAULT_ENTRY_1_0,    3,  0x0,     0x0 }, //  5. (0x1001c260) 
+    { "NONSTICKY_LOCKABLE_SCRATCHREG_CTRL",  (uint32_t *) CLP_DV_REG_NONSTICKYLOCKABLESCRATCHREGCTRL_0, 2,  0x0,     0x0 }, //  6. (0x1001c410)
+    { "NONSTICKY_LOCKABLE_SCRATCHREG",       (uint32_t *) CLP_DV_REG_NONSTICKYLOCKABLESCRATCHREG_0,     2,  0x0,     0x0 }, //  7. (0x1001c438) 
+    { "STICKY_LOCKABLE_SCRATCHREGCTRL",      (uint32_t *) CLP_DV_REG_STICKYLOCKABLESCRATCHREGCTRL_0,    2,  0x1,     0x0 }, //  8. (0x1001c480) 
+    { "STICKY_LOCKABLE_SCRATCHREG",          (uint32_t *) CLP_DV_REG_STICKYLOCKABLESCRATCHREG_0,        2,  DV_ONES, 0x0 }  //  9. (0x1001c4a0) 
 };
 
-const int CTRL1 = 0;
-const int CTRL2 = 3; 
-const int CTRL3 = 6; 
-const int CTRL4 = 8;
+enum ctrl_index {CTRL1 = 0, CTRL2 = 3, CTRL3 = 6, CTRL4 = 8, IXNA = -1};
 
 ctrl_reg_t dv_ctrl_regids [] = {
     // dv_regs[j][0] locks: dv_regs[j+1][0], dv_regs[j+1][1], dv_regs[j+1][2]
     // dv_regs[j][1] locks: dv_regs[j+2][1], dv_regs[j+2][2], dv_regs[j+2][2]
     // dv_regs[j][3] locks: dv_regs[j+3][1], dv_regs[j+3][2], dv_regs[j+3][2]
     // ...
-    {CTRL1, STICKY_2D,      3, {CTRL1+1, CTRL1+2, -1, -2, -3, -4, -5, -6, -7, -8}},      // 2 sets 
-    {CTRL2, NONSTICKY_2D,   3, {CTRL2+1, CTRL2+2, -1, -2, -3, -4, -5, -6, -7, -8}},      // 2 sets
+    {CTRL1, STICKY_2D,      3, {CTRL1+1, CTRL1+2, IXNA, IXNA, IXNA, IXNA, IXNA, IXNA, IXNA, IXNA}},      // 2 sets x 3 slots
+    {CTRL2, NONSTICKY_2D,   3, {CTRL2+1, CTRL2+2, IXNA, IXNA, IXNA, IXNA, IXNA, IXNA, IXNA, IXNA}},      // 2 sets x 3 slots
 
     // dv_regs[j][0] locks: dv_regs[j+1][0], dv_regs[j+1][1], dv_regs[j+1][2]
-    {CTRL3, NONSTICKY_1D,   1, {CTRL3+1, CTRL3+1, -2, -3, -4, -5, -6, -7, -8, -9}},      // 1 set but twice 
-    {CTRL4, STICKY_1D,      1, {CTRL4+1, CTRL4+1, -2, -3, -4, -5, -6, -7, -8, -9}}       // 1 set but twice
+    {CTRL3, NONSTICKY_1D,   1, {CTRL3+1, CTRL3+1, IXNA, IXNA, IXNA, IXNA, IXNA, IXNA, IXNA, IXNA}},      // 2 x 1 set x 1 slot 
+    {CTRL4, STICKY_1D,      1, {CTRL4+1, CTRL4+1, IXNA, IXNA, IXNA, IXNA, IXNA, IXNA, IXNA, IXNA}}       // 2 x 1 set x 1 slot 
 };
+
+int lock_status_bitmap [DV_PFX_COUNT] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };  // each entry corresponds to a row in dv_regs
 
 
 // Interpreting the tables above 
@@ -112,13 +84,10 @@ ctrl_reg_t dv_ctrl_regids [] = {
         STICKY_LOCKABLE_SCRATCHREG[1]
 */
 
-#else 
 
-#define DV_PFX_COUNT    27  
-#define DV_MAXWIDTH     12
+#else               // Default larger set 
 
-
-widereg_t dv_regs [] = {
+widereg_t dv_regs [DV_PFX_COUNT] = {
     { "STICKYDATAVAULTCTRL",                 (uint32_t *) CLP_DV_REG_STICKYDATAVAULTCTRL_0,             10,  0x1,     0x0 }, //  0. (0x1001c000) 
     { "STICKY_DATA_VAULT_ENTRY_0",           (uint32_t *) CLP_DV_REG_STICKY_DATA_VAULT_ENTRY_0_0,       12,  DV_ONES, 0x0 }, //  1. (0x1001c028) 
     { "STICKY_DATA_VAULT_ENTRY_1",           (uint32_t *) CLP_DV_REG_STICKY_DATA_VAULT_ENTRY_1_0,       12,  DV_ONES, 0x0 }, //  2. (0x1001c058) 
@@ -148,39 +117,33 @@ widereg_t dv_regs [] = {
     { "STICKY_LOCKABLE_SCRATCHREG",          (uint32_t *) CLP_DV_REG_STICKYLOCKABLESCRATCHREG_0,        8 ,  DV_ONES, 0x0 }  // 26. (0x1001c4a0) 
 };
 
-const int CTRL1 =  0;
-const int CTRL2 = 11; 
-const int CTRL3 = 22; 
-const int CTRL4 = 25;
+
+enum ctrl_index {CTRL1 = 0, CTRL2 = 11, CTRL3 = 22, CTRL4 = 25, IXNA = -1};
+
 
 ctrl_reg_t dv_ctrl_regids [] = {
     // dv_regs[j][0] locks: dv_regs[j+1][0], dv_regs[j+1][1], dv_regs[j+1][2]
     // dv_regs[j][1] locks: dv_regs[j+2][1], dv_regs[j+2][2], dv_regs[j+2][2]
     // dv_regs[j][3] locks: dv_regs[j+3][1], dv_regs[j+3][2], dv_regs[j+3][2]
     // ...
-    {CTRL1,  STICKY_2D,     12,   {CTRL1+1, CTRL1+2, CTRL1+3, CTRL1+4, CTRL1+5, CTRL1+6, CTRL1+7, CTRL1+8, CTRL1+9, CTRL1+10}},  // 10 sets 
-    {CTRL2,  NONSTICKY_2D,  12,   {CTRL2+1, CTRL2+2, CTRL2+3, CTRL2+4, CTRL2+5, CTRL2+6, CTRL2+7, CTRL2+8, CTRL2+9, CTRL2+10}},  // 10 sets 
+    {CTRL1,  STICKY_2D,     12,   {CTRL1+1, CTRL1+2, CTRL1+3, CTRL1+4, CTRL1+5, CTRL1+6, CTRL1+7, CTRL1+8, CTRL1+9, CTRL1+10}},  // 10 sets x 12 slots
+    {CTRL2,  NONSTICKY_2D,  12,   {CTRL2+1, CTRL2+2, CTRL2+3, CTRL2+4, CTRL2+5, CTRL2+6, CTRL2+7, CTRL2+8, CTRL2+9, CTRL2+10}},  // 10 sets x 12 slots
 
     // dv_regs[j][0] locks: dv_regs[j+1][0], dv_regs[j+1][1], dv_regs[j+1][2]
-    {CTRL3,  NONSTICKY_1D,  1,    {CTRL3+1, CTRL3+1, CTRL3+1, CTRL3+1, CTRL3+1, CTRL3+1, CTRL3+1, CTRL3+1, -1,      -1}},  // 1 set but 8 times 
-    {CTRL4,  STICKY_1D,     1,    {CTRL4+1, CTRL4+1, CTRL4+1, CTRL4+1, CTRL4+1, CTRL4+1, CTRL4+1, CTRL4+1, -1,      -1}}   // 1 set but 8 times
+    {CTRL3,  NONSTICKY_1D,  1,    {CTRL3+1, CTRL3+1, CTRL3+1, CTRL3+1, CTRL3+1, CTRL3+1, CTRL3+1, CTRL3+1, CTRL3+1, CTRL3+1}},  // 1 set x 1 slot x 10 time
+    {CTRL4,  STICKY_1D,     1,    {CTRL4+1, CTRL4+1, CTRL4+1, CTRL4+1, CTRL4+1, CTRL4+1, CTRL4+1, CTRL4+1, IXNA,    IXNA}}   // 1 set x 1 slot x 8 time
 };
 
-#endif // _DV_DEBUG
-
-// int dv_ctrl_reg_ix [] = {CTRL1, CTRL2, CTRL3, CTRL4}
-
-int is_ctrl_reg(widereg_t *dv_reg); 
-widereg_t *find_dv_reg(volatile uint32_t *reg_addr); 
-int find_dv_index_by_pfx(char * c);
-int str_contains(char *b, char *a); 
-void shuffle(int *ptr, int N);
+int lock_status_bitmap [DV_PFX_COUNT] =    { 0, 0, 0, 0, 0, 0, 0, 0,
+                                             0, 0, 0, 0, 0, 0, 0, 0,
+                                             0, 0, 0, 0, 0, 0, 0, 0, 
+                                             0, 0, 0 
+};  // each entry corresponds to a row in dv_regs
 
 
-// -- DV register specific functions -- 
+#endif  // DV_SMALLSET
 
-//  NOTE. For func that return widereg_t, consider changing to return an index; 
-//  slightly easier to manipulate.
+
 
 int is_ctrl_reg(widereg_t *dv_reg) {
     return (str_contains((*dv_reg).pfx, "CTRL"));
@@ -206,6 +169,34 @@ widereg_t *find_dv_reg_by_pfx(char * c) {
 
 
 
+int get_datset_len(ctrl_reg_t *dv_ctrl_ptr) {
+
+    int *ptr = dv_ctrl_ptr->set; 
+
+    for (int i = 0; i < 10; i++, ptr++) {
+        if (*ptr < 0) 
+            return i;
+    }
+    return 10;
+}
+
+
+void update_bitmap( int ix, int j ) {
+    int curr = lock_status_bitmap[ix];
+    lock_status_bitmap[ix] = curr | (1 << j); 
+}
+
+
+void print_bitmap() {
+    VPRINTF (LOW, "-------------------------------\n");
+    for (int i = 0; i < DV_PFX_COUNT; i++) 
+        VPRINTF (LOW, "  %40s: 0x%-3x\n", dv_regs[i].pfx, lock_status_bitmap[i]);
+    VPRINTF (LOW, "-------------------------------\n");
+}
+
+
+
+
 // -- Standard lib util functions --
 
 int str_contains(char *b, char *a) {
@@ -224,7 +215,3 @@ void shuffle(int *ptr, int N) {
         ptr[j] = tmp; 
     } 
 }  
-
-#endif // _DV_COMMON_H
-
-
