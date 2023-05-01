@@ -15,4 +15,4 @@
 ---
 seed: 17
 # seed: ${PLAYBOOK_RANDOM_SEED} # No impact yet
-testname: smoke_test_dv_lock
+testname: smoke_test_datavault_mini
