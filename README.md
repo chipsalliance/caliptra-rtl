@@ -22,7 +22,7 @@ _*Last Update: 2023/05/01*_
 OS:
  - Build instructions assume a Linux environment
 
-Lin
+Lint:
  - Synopsys Spyglass
    - `Version S-2021.09-1`
  - Real Intent AscentLint
