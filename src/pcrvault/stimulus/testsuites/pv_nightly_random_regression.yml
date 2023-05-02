@@ -11,5 +11,5 @@ contents:
         generate: "reseed {template}.yml -seed {seed}"
         path: "{template_basename}__{seed}.yml"
       templates:
-        $CALIPTRA_ROOT/../chipsalliance/caliptra-rtl-mirror/src/pcrvault/uvmf_pv/uvmf_template_output/project_benches/pv/tb/tests/src/pv_rand_wr_rd_test   : { weight 50 }
-        $CALIPTRA_ROOT/../chipsalliance/caliptra-rtl-mirror/src/pcrvault/uvmf_pv/uvmf_template_output/project_benches/pv/tb/tests/src/pv_rand_lock_test    : { weight 50 }
+        $CALIPTRA_ROOT/src/pcrvault/uvmf_pv/uvmf_template_output/project_benches/pv/tb/tests/src/pv_rand_wr_rd_test   : { weight 50 }
+        $CALIPTRA_ROOT/src/pcrvault/uvmf_pv/uvmf_template_output/project_benches/pv/tb/tests/src/pv_rand_lock_test    : { weight 50 }
