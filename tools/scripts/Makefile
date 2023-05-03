@@ -17,7 +17,7 @@
 TEST_CFLAGS = -g -O3
 ABI = -mabi=ilp32 -march=rv32imc
 
-VERILATOR = verilator
+VERILATOR = /usr/local/bin/verilator-v5.002/bin/verilator
 GCC_PREFIX = riscv64-unknown-elf
 BUILD_DIR = $(CURDIR)
 
@@ -133,7 +133,7 @@ includes = -I$(BUILD_DIR)
 #         '-----+------------+-----------'    |            |               |            |
 #               |            |                |            |               |            |
 #               v            v                v            v               v            v
-suppress = -Wno-WIDTH -Wno-UNOPTFLAT -Wno-LITENDIAN -Wno-CMPCONST -Wno-MULTIDRIVEN -Wno-UNPACKED -Wno-IMPLICITSTATIC
+suppress = -Wno-WIDTH -Wno-UNOPTFLAT -Wno-LITENDIAN -Wno-CMPCONST -Wno-MULTIDRIVEN -Wno-UNPACKED
 
 # CFLAGS for verilator generated Makefiles. Without -std=c++11 it
 # complains for `auto` variables
