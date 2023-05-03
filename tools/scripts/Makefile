@@ -17,7 +17,7 @@
 TEST_CFLAGS = -g -O3
 ABI = -mabi=ilp32 -march=rv32imc
 
-VERILATOR = /usr/local/bin/verilator-v5.002/bin/verilator
+VERILATOR = verilator
 GCC_PREFIX = riscv64-unknown-elf
 BUILD_DIR = $(CURDIR)
 
