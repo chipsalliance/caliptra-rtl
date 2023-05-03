@@ -133,7 +133,7 @@ includes = -I$(BUILD_DIR)
 #         '-----+------------+-----------'    |            |               |            |
 #               |            |                |            |               |            |
 #               v            v                v            v               v            v
-suppress = -Wno-WIDTH -Wno-UNOPTFLAT -Wno-LITENDIAN -Wno-CMPCONST -Wno-MULTIDRIVEN -Wno-UNPACKED
+suppress = -Wno-WIDTH -Wno-UNOPTFLAT -Wno-LITENDIAN -Wno-CMPCONST -Wno-MULTIDRIVEN -Wno-UNPACKED -Wno-IMPLICITSTATIC
 
 # CFLAGS for verilator generated Makefiles. Without -std=c++11 it
 # complains for `auto` variables
