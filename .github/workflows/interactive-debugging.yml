@@ -225,8 +225,9 @@ jobs:
         run: |
           export CALIPTRA_ROOT=$(pwd)
           mkdir run
-          make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile verilator-build program.hex TESTNAME=infinite_loop \
+          make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile verilator-build TESTNAME=infinite_loop \
             OBJCACHE="" CC=gcc CXX=g++ LINK=g++
+          make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile program.hex TESTNAME=infinite_loop
 
       - name: Run interactive debugging test
         run: |
