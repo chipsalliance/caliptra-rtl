@@ -52,7 +52,11 @@ if [[ -f "$sim_config_file" ]]; then
     parse_sim_config $sim_config_file
 fi
 
-echo "[$SCRIPT] Building TEST=$TESTNAME for CONFIG=${CONFIG}"
+#remove random SEED from TESTNAME after "__" characters
+baseTestName=$(echo "$TESTNAME" | sed 's/\__.*//')
+
+echo "[$SCRIPT] Building TEST=$baseTestName from TESTNAME=$TESTNAME for CONFIG=${CONFIG}"
+TESTNAME=$baseTestName
 
 # These bash functions cause the Makefile to not work, because it resets env vars and it chokes on the bash functions
 unset -f module

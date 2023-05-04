@@ -1,3 +1,4 @@
 ---
+# Random seed desired...
 seed: 1
 testname: smoke_test_pcr_signing

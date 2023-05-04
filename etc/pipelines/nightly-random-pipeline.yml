@@ -114,6 +114,20 @@ stages:
               - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
               - path: '${WORKSPACE}/Caliptra/src/sha512/stimulus/testsuites/sha512_nightly_random_regression.yml'
               - timeout: 1440
+        - sha256_random_test:
+          - display_name: 'SHA256_RANDOM_TEST'
+          - enabled: true
+          - configspec_name: 'integration_lib'
+          - dut: 'sha256_random_test'
+          #- args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/sha256/coverage/config/sha256_cm_hier.cfg --submit-resource-args RAM/28000'
+          - testsuites:
+            - l1_regress:
+              - enabled: true
+              - configspec_name: 'integration_lib'
+              - dut: 'sha256_random_test'
+              #- sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
+              - path: '${WORKSPACE}/Caliptra/src/sha256/stimulus/testsuites/sha256_nightly_random_regression.yml'
+              - timeout: 1440 
         - uvmf_soc_ifc:
             - display_name: 'UVMF_SOC_IFC'
             - enabled: true
