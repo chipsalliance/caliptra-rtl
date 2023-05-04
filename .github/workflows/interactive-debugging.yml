@@ -233,5 +233,6 @@ jobs:
         run: |
           export CALIPTRA_ROOT=$(pwd)
           cd run
-          ${CALIPTRA_ROOT}/.github/scripts/gdb_test.sh riscv64-unknown-elf-gdb -n --batch -x \
-            ${CALIPTRA_ROOT}/src/integration/test_suites/infinite_loop/dump_registers.gdb
+          ${CALIPTRA_ROOT}/.github/scripts/gdb_test.sh \
+            /bin/bash -c 'cd ${CALIPTRA_ROOT}/src/integration/test_suites/infinite_loop && ./dump_and_compare.sh'
+
