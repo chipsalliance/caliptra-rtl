@@ -192,9 +192,6 @@ module sha512
                    .next_cmd(next_reg),
                    .mode(mode_reg),
 
-                   .work_factor(1'b0),
-                   .work_factor_num(32'b0),
-
                    .block_msg(core_block),
 
                    .ready(core_ready),
