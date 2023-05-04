@@ -19,8 +19,11 @@
 #include <string>
 #include "Vcaliptra_top_tb.h"
 #include "verilated.h"
+#if VM_TRACE_VCD
 #include "verilated_vcd_c.h"
-
+#elif VM_TRACE_FST
+#include "verilated_fst_c.h"
+#endif
 
 vluint64_t main_time = 0;
 
@@ -37,13 +40,17 @@ int main(int argc, char** argv) {
   Vcaliptra_top_tb* tb = new Vcaliptra_top_tb;
 
   // init trace dump
-  VerilatedVcdC* tfp = NULL;
-
 #if VM_TRACE
   Verilated::traceEverOn(true);
-  tfp = new VerilatedVcdC;
-  tb->trace (tfp, 24);
-  tfp->open ("sim.vcd");
+  #if VM_TRACE_VCD
+    VerilatedVcdC* tfp = new VerilatedVcdC;
+    tb->trace (tfp, 24);
+    tfp->open ("sim.vcd");
+  #elif VM_TRACE_FST
+    VerilatedFstC* tfp = new VerilatedFstC;
+    tb->trace (tfp, 24);
+    tfp->open ("sim.fst");
+  #endif
 #endif
   // Simulate
   while(!Verilated::gotFinish()){

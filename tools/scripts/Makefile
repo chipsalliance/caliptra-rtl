@@ -83,12 +83,21 @@ OFILES += printf.o
 # Always compile the lib files - for every target
 OFILES += $(foreach comp_lib_name, $(COMP_LIB_NAMES), $(comp_lib_name).o)
 
+# Verilator trace format
+VERILATOR_TRACE=vcd
+
 ifdef debug
  DEBUG_PLUS = +dumpon
  IRUN_DEBUG = -access +rc
  IRUN_DEBUG_RUN = -input $(RV_ROOT)/testbench/input.tcl
  VCS_DEBUG = -debug_access
- VERILATOR_DEBUG = --trace --trace-structs
+ ifeq ($(VERILATOR_TRACE), vcd)
+  VERILATOR_DEBUG = --trace --trace-structs
+ else ifeq ($(VERILATOR_TRACE), fst)
+  VERILATOR_DEBUG = --trace-fst --trace-structs --trace-threads 2
+ else
+  $(error Unsupported Verilator trace format '$(VERILATOR_TRACE)')
+ endif
  RIVIERA_DEBUG = +access +r
 endif
 
