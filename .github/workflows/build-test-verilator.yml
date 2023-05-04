@@ -144,19 +144,6 @@ jobs:
       matrix:
         test_name: ${{fromJSON(needs.build_matrix.outputs.test_names)}}
 
-    env:
-      # TODO: is there a way to grab these from build_tools?
-      CARGO_INCREMENTAL: 0
-      SCCACHE_VERSION: 0.3.3
-      RISCV_VERSION: v12.1.0
-      # TODO: To update to 5.006, clean up lint errors
-      VERILATOR_VERSION: v5.002
-      PKG_CONFIG_PATH: /opt/verilator/share/pkgconfig
-      SCCACHE_GHA_CACHE_TO: sccache-verilator-10000
-      SCCACHE_GHA_CACHE_FROM: sccache-verilator-
-      # Change this to a new random value if you suspect the cache is corrupted
-      SCCACHE_C_CUSTOM_CACHE_BUSTER: f3e6951f0c1d
-
     steps:
       - uses: actions/checkout@v3
         with:
@@ -167,28 +154,28 @@ jobs:
         id: cargo_index_restore
         with:
           path: ~/.cargo/registry/index
-          key: cargo-index-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}-${{ hashFiles('Cargo.lock') }}
+          key: cargo-index-${{ matrix.jobs.build_tools.env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}-${{ hashFiles('Cargo.lock') }}
 
       - name: Restore sccache binary
         uses: actions/cache/restore@v3
         id: sccache_bin_restore
         with:
           path: ~/.cargo/bin/sccache
-          key: sccache-bin-${{ env.SCCACHE_VERSION }}-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
+          key: sccache-bin-${{ matrix.jobs.build_tools.env.SCCACHE_VERSION }}-${{ matrix.jobs.build_tools.env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
 
       - name: Restore verilator dir
         uses: actions/cache/restore@v3
         id: verilator_restore
         with:
           path: /opt/verilator
-          key: verilator-${{ env.VERILATOR_VERSION }}-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
+          key: verilator-${{ matrix.jobs.build_tools.env.VERILATOR_VERSION }}-${{ matrix.jobs.build_tools.env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
 
       - name: Restore Risc V Toolchain
         uses: actions/cache/restore@v3
         id: riscv_restore
         with:
           path: /opt/riscv
-          key: riscv-${{ env.RISCV_VERSION }}-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
+          key: riscv-${{ matrix.jobs.build_tools.env.RISCV_VERSION }}-${{ matrix.jobs.build_tools.env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
 
       - name: Setup verilator path
         run: |
@@ -204,7 +191,7 @@ jobs:
           cd tools/scripts
           make verilator CALIPTRA_ROOT=$CALIPTRA_ROOT TESTNAME=${{ matrix.test_name  }} | tee output.log
           # Search the last 30 lines of the output for "TESTCASE PASSED"
-          tail -n 30 | grep "TESTCASE PASSED"
+          tail -n 30 output.log | grep "TESTCASE PASSED"
           # grep will return 0 if the search term is found, and 1 otherwise
           # A non-zero value will cause the github action to fail.
           exit $?
