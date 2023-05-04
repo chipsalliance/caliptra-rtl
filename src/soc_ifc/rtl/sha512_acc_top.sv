@@ -147,9 +147,6 @@ module sha512_acc_top
                    .next_cmd(next_reg),
                    .mode(sha_mode),
 
-                   .work_factor(1'b0),
-                   .work_factor_num(32'b0),
-
                    .block_msg(block_reg),
 
                    .ready(core_ready),
