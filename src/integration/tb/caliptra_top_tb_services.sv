@@ -488,7 +488,7 @@ module caliptra_top_tb_services
         cycleCnt <= cycleCnt+1;
         // Test timeout monitor
         if(cycleCnt == MAX_CYCLES && !UVM_TB) begin
-            $display ("Hit max cycle count (%0d) .. stopping",cycleCnt);
+            $error("Hit max cycle count (%0d) .. stopping",cycleCnt);
             dump_memory_contents(MEMTYPE_LMEM, 32'h8000_0110, 32'h8000_0180);
             dump_memory_contents(MEMTYPE_DCCM, `RV_DCCM_SADR, `RV_DCCM_EADR);
             dump_memory_contents(MEMTYPE_ICCM, `RV_ICCM_SADR, `RV_ICCM_EADR);
@@ -528,12 +528,12 @@ module caliptra_top_tb_services
             if (UVM_TB) $info("INFO: Detected FW write to manually end the test with FAIL; ignoring since the UVM environment will handle this.");
             else begin
                 cycleCntKillReq <= cycleCnt;
-                $display("* TESTCASE FAILED");
+                $error("* TESTCASE FAILED");
                 $display(" -- Extending simulation for 100 clock cycles to capture ending waveform");
             end
         end
         if (|cycleCntKillReq && (cycleCnt == (cycleCntKillReq + 100))) begin
-                $display("Dumping memory contents at simulation end due to FAILURE");
+                $error("Dumping memory contents at simulation end due to FAILURE");
                 dump_memory_contents(MEMTYPE_LMEM, 32'h0000_0000, 32'h001_FFFF);
                 dump_memory_contents(MEMTYPE_DCCM, `RV_DCCM_SADR, `RV_DCCM_EADR);
                 dump_memory_contents(MEMTYPE_ICCM, `RV_ICCM_SADR, `RV_ICCM_EADR);
