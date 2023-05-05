@@ -9,22 +9,22 @@ on:
 
   workflow_dispatch:
 
+env:
+  CARGO_INCREMENTAL: 0
+  SCCACHE_VERSION: 0.3.3
+  RISCV_VERSION: v12.1.0
+  # TODO: To update to 5.006, clean up lint errors
+  VERILATOR_VERSION: v5.002
+  PKG_CONFIG_PATH: /opt/verilator/share/pkgconfig
+  SCCACHE_GHA_CACHE_TO: sccache-verilator-10000
+  SCCACHE_GHA_CACHE_FROM: sccache-verilator-
+  # Change this to a new random value if you suspect the cache is corrupted
+  SCCACHE_C_CUSTOM_CACHE_BUSTER: f3e6951f0c1d
+
 jobs:
   build_tools:
     name: Build Tools
     runs-on: ubuntu-22.04
-
-    env:
-      CARGO_INCREMENTAL: 0
-      SCCACHE_VERSION: 0.3.3
-      RISCV_VERSION: v12.1.0
-      # TODO: To update to 5.006, clean up lint errors
-      VERILATOR_VERSION: v5.002
-      PKG_CONFIG_PATH: /opt/verilator/share/pkgconfig
-      SCCACHE_GHA_CACHE_TO: sccache-verilator-10000
-      SCCACHE_GHA_CACHE_FROM: sccache-verilator-
-      # Change this to a new random value if you suspect the cache is corrupted
-      SCCACHE_C_CUSTOM_CACHE_BUSTER: f3e6951f0c1d
 
     steps:
       - uses: actions/checkout@v3
@@ -144,19 +144,6 @@ jobs:
       matrix:
         test_name: ${{fromJSON(needs.build_matrix.outputs.test_names)}}
 
-    env:
-      # TODO: is there a way to grab these from build_tools?
-      CARGO_INCREMENTAL: 0
-      SCCACHE_VERSION: 0.3.3
-      RISCV_VERSION: v12.1.0
-      # TODO: To update to 5.006, clean up lint errors
-      VERILATOR_VERSION: v5.002
-      PKG_CONFIG_PATH: /opt/verilator/share/pkgconfig
-      SCCACHE_GHA_CACHE_TO: sccache-verilator-10000
-      SCCACHE_GHA_CACHE_FROM: sccache-verilator-
-      # Change this to a new random value if you suspect the cache is corrupted
-      SCCACHE_C_CUSTOM_CACHE_BUSTER: f3e6951f0c1d
-
     steps:
       - uses: actions/checkout@v3
         with:
@@ -202,4 +189,9 @@ jobs:
         run: |
           CALIPTRA_ROOT=$(pwd)
           cd tools/scripts
-          make verilator CALIPTRA_ROOT=$CALIPTRA_ROOT TESTNAME=${{ matrix.test_name  }}
+          make verilator CALIPTRA_ROOT=$CALIPTRA_ROOT TESTNAME=${{ matrix.test_name  }} | tee output.log
+          # Search the last 30 lines of the output for "TESTCASE PASSED"
+          tail -n 30 output.log | grep "TESTCASE PASSED"
+          # grep will return 0 if the search term is found, and 1 otherwise
+          # A non-zero value will cause the github action to fail.
+          exit $?
