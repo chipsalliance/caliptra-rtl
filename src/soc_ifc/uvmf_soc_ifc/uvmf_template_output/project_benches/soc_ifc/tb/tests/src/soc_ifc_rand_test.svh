@@ -52,12 +52,13 @@ class soc_ifc_rand_test extends test_top;
 
   // FIXME this disables uvm_warning messages! We should fix the warnings, but for
   //       now this reduces sim.log (for regressions) to a manageable level
+  // NOTE: UVM_WARNING now re-enabled, need to clean this up after some regression cycles
   virtual function void start_of_simulation_phase(uvm_phase phase);
       super.start_of_simulation_phase(phase);
       if ($test$plusargs("CLP_REGRESSION")) begin
           uvm_top.set_report_verbosity_level_hier(UVM_NONE);
-          this.environment.soc_ifc_pred.set_report_severity_action(UVM_WARNING,UVM_NO_ACTION);
-          this.environment.soc_ifc_sb.set_report_severity_action(UVM_WARNING,UVM_NO_ACTION);
+//          this.environment.soc_ifc_pred.set_report_severity_action(UVM_WARNING,UVM_NO_ACTION);
+//          this.environment.soc_ifc_sb.set_report_severity_action(UVM_WARNING,UVM_NO_ACTION);
           // Since en_sb is recently set to 0, this is unavailable and gives null-object
           //this.environment.qvip_apb5_slave_subenv.apb5_master_0.get_analysis_component("checker").set_report_severity_id_action(UVM_WARNING,"scoreboard_debug",UVM_NO_ACTION);
       end

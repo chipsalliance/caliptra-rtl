@@ -182,6 +182,7 @@ module sha512_masked_core
   masked_reg_t a_new_a2b;
   masked_reg_t e_new_a2b;
 
+  wire [63 : 0] w_val;
   wire [63 : 0] k_data;
 
   reg           w_init;
@@ -215,13 +216,13 @@ module sha512_masked_core
       .rnd(lfsr_rnd)
       );
 
-  sha512_masked_k_constants k_constants_inst(
+  sha512_k_constants k_constants_inst(
       .addr(round_ctr_reg),
       .K_val(k_data)
       );
 
 
-  sha512_masked_h_constants h_constants_inst(
+  sha512_h_constants h_constants_inst(
       .mode(mode),
 
       .H0(H0_0),
@@ -235,17 +236,16 @@ module sha512_masked_core
       );
 
 
-  sha512_masked_w_mem w_mem_inst(
+  sha512_w_mem w_mem_inst(
       .clk(clk),
       .reset_n(reset_n),
       .zeroize(zeroize),
 
-      .rw_masking_rnd(rw_masking_rnd),
       .block_msg(block_msg),
 
       .init_cmd(w_init),
       .next_cmd(w_next),
-      .w_val(w_data)
+      .w_val(w_val)
       );
 
   //----------------------------------------------------------------
@@ -490,6 +490,15 @@ module sha512_masked_core
         end
     end // digest_logic
 
+
+  //----------------------------------------------------------------
+  // Mask the w_data
+  //
+  // 
+  //----------------------------------------------------------------
+  always @* begin : w_data_logic
+     w_data = {w_val ^ rw_masking_rnd, rw_masking_rnd};
+  end
 
   //----------------------------------------------------------------
   // t1_logic

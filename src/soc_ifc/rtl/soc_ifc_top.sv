@@ -199,9 +199,9 @@ logic t1_timeout_p;
 logic t2_timeout;
 logic t2_timeout_f; //To generate interrupt pulse
 logic t2_timeout_p;
-logic wdt_notif_t1_intr_serviced;
-logic wdt_notif_t2_intr_serviced;
-logic soc_ifc_notif_intr_f;
+logic wdt_error_t1_intr_serviced;
+logic wdt_error_t2_intr_serviced;
+logic soc_ifc_error_intr_f;
 
 //Boot FSM
 //This module contains the logic required to control the Caliptra Boot Flow
@@ -488,11 +488,13 @@ always_comb security_state_debug_locked_p = security_state.debug_locked ^ securi
 always_comb begin
     for (int i=0; i<5; i++) begin
         //once locked, can't be cleared until reset
-        soc_ifc_reg_hwif_in.CPTRA_PAUSER_LOCK[i].LOCK.swwel = soc_ifc_reg_hwif_out.CPTRA_PAUSER_LOCK[i].LOCK.value;
+        soc_ifc_reg_hwif_in.CPTRA_MBOX_PAUSER_LOCK[i].LOCK.swwel = soc_ifc_reg_hwif_out.CPTRA_MBOX_PAUSER_LOCK[i].LOCK.value;
         //lock the writes to valid user field once lock is set
-        soc_ifc_reg_hwif_in.CPTRA_VALID_PAUSER[i].PAUSER.swwel = soc_ifc_reg_hwif_out.CPTRA_PAUSER_LOCK[i].LOCK.value;
+        soc_ifc_reg_hwif_in.CPTRA_MBOX_VALID_PAUSER[i].PAUSER.swwel = soc_ifc_reg_hwif_out.CPTRA_MBOX_PAUSER_LOCK[i].LOCK.value;
         //If integrator set PAUSER values at integration time, pick it up from the define
-        valid_mbox_users[i] = CLP_SET_PAUSER_INTEG[i] ? CLP_VALID_PAUSER[i][APB_USER_WIDTH-1:0] : soc_ifc_reg_hwif_out.CPTRA_VALID_PAUSER[i].PAUSER.value[APB_USER_WIDTH-1:0];
+        valid_mbox_users[i] = CPTRA_SET_MBOX_PAUSER_INTEG[i] ? CPTRA_MBOX_VALID_PAUSER[i][APB_USER_WIDTH-1:0] : 
+                              soc_ifc_reg_hwif_out.CPTRA_MBOX_PAUSER_LOCK[i].LOCK.value ? 
+                              soc_ifc_reg_hwif_out.CPTRA_MBOX_VALID_PAUSER[i].PAUSER.value[APB_USER_WIDTH-1:0] : CPTRA_DEF_MBOX_VALID_PAUSER;
     end
 end
 //can't write to trng valid user after it is locked
@@ -551,12 +553,12 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_WR_DONE.done.swwe = soc_ifc_reg_req_d
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //only allow valid users to write to TRNG
-always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_STATUS.DATA_WR_DONE.swwe = soc_ifc_reg_req_data.soc_req & 
-                                                            (soc_ifc_reg_req_data.user == soc_ifc_reg_hwif_out.CPTRA_TRNG_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]);
+always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_STATUS.DATA_WR_DONE.swwe = soc_ifc_reg_req_data.soc_req & soc_ifc_reg_hwif_out.CPTRA_TRNG_PAUSER_LOCK.LOCK.value & 
+                                                                     (soc_ifc_reg_req_data.user == soc_ifc_reg_hwif_out.CPTRA_TRNG_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]);
 always_comb begin 
     for (int i = 0; i < 12; i++) begin
-        soc_ifc_reg_hwif_in.CPTRA_TRNG_DATA[i].DATA.swwe = soc_ifc_reg_req_data.soc_req & 
-                                                      (soc_ifc_reg_req_data.user == soc_ifc_reg_hwif_out.CPTRA_TRNG_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]);
+        soc_ifc_reg_hwif_in.CPTRA_TRNG_DATA[i].DATA.swwe = soc_ifc_reg_req_data.soc_req & soc_ifc_reg_hwif_out.CPTRA_TRNG_PAUSER_LOCK.LOCK.value & 
+                                                          (soc_ifc_reg_req_data.user == soc_ifc_reg_hwif_out.CPTRA_TRNG_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]);
     end
 end
 
@@ -582,8 +584,8 @@ always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_av
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.hwset = sram_single_ecc_error;
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_debug_locked_sts.hwset = security_state_debug_locked_p; // Any transition results in interrupt
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_soc_req_lock_sts.hwset = soc_req_mbox_lock;
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_wdt_timer1_timeout_sts.hwset = t1_timeout_p;
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_wdt_timer2_timeout_sts.hwset = t2_timeout_p && timer2_en;
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_wdt_timer1_timeout_sts.hwset = t1_timeout_p;
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_wdt_timer2_timeout_sts.hwset = t2_timeout_p && timer2_en;
 
 always_comb soc_ifc_reg_hwif_in.internal_iccm_lock.lock.hwclr    = iccm_unlock;
 
@@ -602,6 +604,7 @@ soc_ifc_reg i_soc_ifc_reg (
     .s_cpuif_req_is_wr(soc_ifc_reg_req_data.write),
     .s_cpuif_addr(soc_ifc_reg_req_data.addr[SOC_IFC_REG_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data(soc_ifc_reg_req_data.wdata),
+    .s_cpuif_wr_biten('1),
     .s_cpuif_req_stall_wr(s_cpuif_req_stall_wr_nc),
     .s_cpuif_req_stall_rd(s_cpuif_req_stall_rd_nc),
     .s_cpuif_rd_ack(s_cpuif_rd_ack_nc),
@@ -720,14 +723,14 @@ always_comb t2_timeout_p = t2_timeout & ~t2_timeout_f;
 //Detect falling edge on soc_ifc_error_intr to indicate that the interrupt has been serviced
 always_ff @(posedge clk or negedge cptra_rst_b) begin
     if(!cptra_rst_b) begin
-        soc_ifc_notif_intr_f <= 'b0;
+        soc_ifc_error_intr_f <= 'b0;
     end
     else begin
-        soc_ifc_notif_intr_f <= soc_ifc_notif_intr;
+        soc_ifc_error_intr_f <= soc_ifc_error_intr;
     end
 end
-assign wdt_notif_t1_intr_serviced = !soc_ifc_notif_intr && soc_ifc_notif_intr_f && t1_timeout;
-assign wdt_notif_t2_intr_serviced = !soc_ifc_notif_intr && soc_ifc_notif_intr_f && t2_timeout && timer2_en;
+assign wdt_error_t1_intr_serviced = !soc_ifc_error_intr && soc_ifc_error_intr_f && t1_timeout;
+assign wdt_error_t2_intr_serviced = !soc_ifc_error_intr && soc_ifc_error_intr_f && t2_timeout && timer2_en;
 
 //Set HW FATAL ERROR reg when timer2 times out in cascaded mode
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.error_code.we = cptra_error_fatal;
@@ -752,8 +755,8 @@ wdt i_wdt (
     .timer2_restart(timer2_restart),
     .timer1_timeout_period(timer1_timeout_period),
     .timer2_timeout_period(timer2_timeout_period),
-    .wdt_timer1_timeout_serviced(wdt_notif_t1_intr_serviced),
-    .wdt_timer2_timeout_serviced(wdt_notif_t2_intr_serviced),
+    .wdt_timer1_timeout_serviced(wdt_error_t1_intr_serviced),
+    .wdt_timer2_timeout_serviced(wdt_error_t2_intr_serviced),
     .t1_timeout(t1_timeout),
     .t2_timeout(t2_timeout)
 );

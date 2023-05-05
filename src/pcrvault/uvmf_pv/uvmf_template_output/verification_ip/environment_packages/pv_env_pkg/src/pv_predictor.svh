@@ -278,12 +278,10 @@ class pv_predictor #(
         val_reg = p_pv_AHB_map.get_reg_by_offset('h1_0000);
         val_reg_data = val_reg.get();
 
-        `uvm_info("PV_PREDICTOR", $sformatf("CTRL write, addr = %h, data = %h, val_reg_data = %h, pv_reg_data = %h",ahb_txn.address, data_active, val_reg_data, pv_reg_data),UVM_MEDIUM);
         
         //Two possible scenarios: lock = 0 and clear = 1
         //lock = 1 and clear = 1 (transition from lock = 0 so this clear would still go through)
         if(pv_reg_data[1:0] inside {'h2, 'h3}) begin
-          `uvm_info("PV_PREDICTOR", "Clear being set",UVM_MEDIUM);
           
           //Clear the entry that is being accessed
           {offset, entry} = convert_addr_to_pv(ahb_txn.address);

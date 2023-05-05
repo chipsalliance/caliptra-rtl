@@ -155,7 +155,6 @@ package sha512_reg_uvm;
         rand uvm_reg_field sha_block_dest_valid;
         rand uvm_reg_field ecc_pkey_dest_valid;
         rand uvm_reg_field ecc_seed_dest_valid;
-        rand uvm_reg_field ecc_msg_dest_valid;
         rand uvm_reg_field rsvd;
 
         function new(string name = "kv_write_ctrl_reg");
@@ -177,10 +176,8 @@ package sha512_reg_uvm;
             this.ecc_pkey_dest_valid.configure(this, 1, 9, "RW", 0, 'h0, 1, 1, 0);
             this.ecc_seed_dest_valid = new("ecc_seed_dest_valid");
             this.ecc_seed_dest_valid.configure(this, 1, 10, "RW", 0, 'h0, 1, 1, 0);
-            this.ecc_msg_dest_valid = new("ecc_msg_dest_valid");
-            this.ecc_msg_dest_valid.configure(this, 1, 11, "RW", 0, 'h0, 1, 1, 0);
             this.rsvd = new("rsvd");
-            this.rsvd.configure(this, 20, 12, "RW", 0, 'h0, 1, 1, 0);
+            this.rsvd.configure(this, 21, 11, "RW", 0, 'h0, 1, 1, 0);
         endfunction : build
     endclass : kv_write_ctrl_reg
 
