@@ -265,7 +265,7 @@ package soc_ifc_reg_uvm;
             this.DATA_REQ = new("DATA_REQ");
             this.DATA_REQ.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
             this.DATA_WR_DONE = new("DATA_WR_DONE");
-            this.DATA_WR_DONE.configure(this, 1, 1, "RW", 0, 'h0, 1, 1, 0);
+            this.DATA_WR_DONE.configure(this, 1, 1, "RW", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_TRNG_STATUS
 

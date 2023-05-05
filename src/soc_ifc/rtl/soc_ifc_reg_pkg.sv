@@ -110,6 +110,7 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic swwe;
+        logic hwclr;
     } soc_ifc_reg__CPTRA_TRNG_STATUS__DATA_WR_DONE__in_t;
 
     typedef struct packed{
@@ -500,6 +501,14 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK__out_t;
 
     typedef struct packed{
+        logic swacc;
+    } soc_ifc_reg__CPTRA_TRNG_DATA__DATA__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_TRNG_DATA__DATA__out_t DATA;
+    } soc_ifc_reg__CPTRA_TRNG_DATA__out_t;
+
+    typedef struct packed{
         logic value;
     } soc_ifc_reg__CPTRA_TRNG_STATUS__DATA_REQ__out_t;
 
@@ -775,6 +784,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK__out_t [5-1:0]CPTRA_MBOX_PAUSER_LOCK;
         soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER__out_t CPTRA_TRNG_VALID_PAUSER;
         soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK__out_t CPTRA_TRNG_PAUSER_LOCK;
+        soc_ifc_reg__CPTRA_TRNG_DATA__out_t [12-1:0]CPTRA_TRNG_DATA;
         soc_ifc_reg__CPTRA_TRNG_STATUS__out_t CPTRA_TRNG_STATUS;
         soc_ifc_reg__CPTRA_FUSE_WR_DONE__out_t CPTRA_FUSE_WR_DONE;
         soc_ifc_reg__CPTRA_BOOTFSM_GO__out_t CPTRA_BOOTFSM_GO;

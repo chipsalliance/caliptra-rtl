@@ -1890,6 +1890,7 @@ module soc_ifc_reg (
                 field_storage.CPTRA_TRNG_DATA[i0].DATA.value <= field_combo.CPTRA_TRNG_DATA[i0].DATA.next;
             end
         end
+        assign hwif_out.CPTRA_TRNG_DATA[i0].DATA.swacc = decoded_reg_strb.CPTRA_TRNG_DATA[i0];
     end
     // Field: soc_ifc_reg.CPTRA_TRNG_STATUS.DATA_REQ
     always_comb begin
@@ -1916,6 +1917,9 @@ module soc_ifc_reg (
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.CPTRA_TRNG_STATUS && decoded_req_is_wr && hwif_in.CPTRA_TRNG_STATUS.DATA_WR_DONE.swwe) begin // SW write
             next_c = (field_storage.CPTRA_TRNG_STATUS.DATA_WR_DONE.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
+            load_next_c = '1;
+        end else if(hwif_in.CPTRA_TRNG_STATUS.DATA_WR_DONE.hwclr) begin // HW Clear
+            next_c = '0;
             load_next_c = '1;
         end
         field_combo.CPTRA_TRNG_STATUS.DATA_WR_DONE.next = next_c;
