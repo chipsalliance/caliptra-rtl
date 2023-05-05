@@ -250,15 +250,8 @@ void caliptra_rt() {
                     else if ((op.cmd == MBOX_CMD_SHA384_REQ) | (op.cmd == MBOX_CMD_SHA512_REQ)) {
                         enum sha_accel_mode_e mode;
                         mode = (op.cmd == MBOX_CMD_SHA384_REQ) ? SHA_MBOX_384 : SHA_MBOX_512;
-                        //Find the start of the valid data by searching for the first dword with non-zero data
-                        temp = 0;
-                        read_data = soc_ifc_mbox_read_dataout_single();
-                        while ((read_data == 0) && (temp < 32767)) {
-                            temp++;
-                            read_data = soc_ifc_mbox_read_dataout_single();
-                        }
-                        //start addr in bytes
-                        temp = temp << 2;
+                        //First dword contains the start address
+                        temp = soc_ifc_mbox_read_dataout_single();
                         //dlen in bytes
                         read_data = lsu_read_32(CLP_MBOX_CSR_MBOX_DLEN);
                         read_data = read_data - temp;

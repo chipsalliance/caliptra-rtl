@@ -167,7 +167,7 @@ reg {
     desc = "Storage for the requested TRNG Data.
             [br]Caliptra Access: RO
             [br]SOC Access:      RW";
-    field {sw=rw; hw=na; swwe; resetsignal=cptra_rst_b;} DATA[32]=0;
+    field {sw=rw; hw=na; swwe; swacc; resetsignal=cptra_rst_b;} DATA[32]=0;
  } CPTRA_TRNG_DATA[12];
 
 reg {
@@ -179,7 +179,8 @@ reg {
 
     field {desc = "Indicates that the requests TRNG Data is done and stored in the TRNG Data register.
             [br]Caliptra Access: RO
-            [br]SOC Access:      RW";  sw=rw; hw=na; swwe; resetsignal=cptra_rst_b;} DATA_WR_DONE=0;
+            [br]SOC Access:      RW
+            [br]When DATA_REQ is 0 DATA_WR_DONE will also be 0";  sw=rw; hw=na; swwe; hwclr; resetsignal=cptra_rst_b;} DATA_WR_DONE=0;
  } CPTRA_TRNG_STATUS;
 
 reg {

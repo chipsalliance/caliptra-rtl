@@ -148,8 +148,9 @@ logic sha_error;
 logic soc_ifc_reg_req_dv;
 logic soc_ifc_reg_req_hold;
 soc_ifc_req_t soc_ifc_reg_req_data;
-logic [SOC_IFC_DATA_W-1:0] soc_ifc_reg_rdata;
+logic [SOC_IFC_DATA_W-1:0] soc_ifc_reg_rdata_pre, soc_ifc_reg_rdata;
 logic soc_ifc_reg_error, soc_ifc_reg_read_error, soc_ifc_reg_write_error;
+logic soc_ifc_reg_rdata_mask;
 
 logic sha_sram_req_dv;
 logic [MBOX_ADDR_W-1:0] sha_sram_req_addr;
@@ -202,6 +203,8 @@ logic t2_timeout_p;
 logic wdt_error_t1_intr_serviced;
 logic wdt_error_t2_intr_serviced;
 logic soc_ifc_error_intr_f;
+
+logic valid_trng_user;
 
 //Boot FSM
 //This module contains the logic required to control the Caliptra Boot Flow
@@ -543,15 +546,21 @@ always_comb soc_ifc_reg_hwif_in.fuse_life_cycle.life_cycle.swwel           = soc
 always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_WR_DONE.done.swwe = soc_ifc_reg_req_data.soc_req & ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//only allow valid users to write to TRNG
-always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_STATUS.DATA_WR_DONE.swwe = soc_ifc_reg_req_data.soc_req & soc_ifc_reg_hwif_out.CPTRA_TRNG_PAUSER_LOCK.LOCK.value & 
-                                                                     (soc_ifc_reg_req_data.user == soc_ifc_reg_hwif_out.CPTRA_TRNG_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]);
+//When TRNG_PAUSER_LOCK is one only allow valid users to write to TRNG
+//If TRNG_PAUSER_LOCK is zero allow any user to write to TRNG
+always_comb valid_trng_user = soc_ifc_reg_req_data.soc_req & (~soc_ifc_reg_hwif_out.CPTRA_TRNG_PAUSER_LOCK.LOCK.value | 
+                             (soc_ifc_reg_req_data.user == soc_ifc_reg_hwif_out.CPTRA_TRNG_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]));
+
+always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_STATUS.DATA_WR_DONE.swwe = valid_trng_user;
+
 always_comb begin 
     for (int i = 0; i < 12; i++) begin
-        soc_ifc_reg_hwif_in.CPTRA_TRNG_DATA[i].DATA.swwe = soc_ifc_reg_req_data.soc_req & soc_ifc_reg_hwif_out.CPTRA_TRNG_PAUSER_LOCK.LOCK.value & 
-                                                          (soc_ifc_reg_req_data.user == soc_ifc_reg_hwif_out.CPTRA_TRNG_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]);
+        soc_ifc_reg_hwif_in.CPTRA_TRNG_DATA[i].DATA.swwe = valid_trng_user;
     end
 end
+
+//Clear the DATA_WR_DONE when FW clears the req bit
+always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_STATUS.DATA_WR_DONE.hwclr = ~soc_ifc_reg_hwif_out.CPTRA_TRNG_STATUS.DATA_REQ.value;
 
 // Generate a pulse to set the interrupt bit
 always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
@@ -582,6 +591,7 @@ always_comb soc_ifc_reg_hwif_in.internal_iccm_lock.lock.hwclr    = iccm_unlock;
 
 
 
+
 logic s_cpuif_req_stall_wr_nc;
 logic s_cpuif_req_stall_rd_nc;
 logic s_cpuif_rd_ack_nc;
@@ -600,13 +610,25 @@ soc_ifc_reg i_soc_ifc_reg (
     .s_cpuif_req_stall_rd(s_cpuif_req_stall_rd_nc),
     .s_cpuif_rd_ack(s_cpuif_rd_ack_nc),
     .s_cpuif_rd_err(soc_ifc_reg_read_error),
-    .s_cpuif_rd_data(soc_ifc_reg_rdata),
+    .s_cpuif_rd_data(soc_ifc_reg_rdata_pre),
     .s_cpuif_wr_ack(s_cpuif_wr_ack_nc),
     .s_cpuif_wr_err(soc_ifc_reg_write_error),
 
     .hwif_in(soc_ifc_reg_hwif_in),
     .hwif_out(soc_ifc_reg_hwif_out)
 );
+
+//Mask read data to TRNG DATA when TRNG PAUSER is locked and the requester isn't the correct PAUSER
+always_comb begin
+    soc_ifc_reg_rdata_mask = 0;
+    for (int i = 0; i < 12; i++) begin
+        soc_ifc_reg_rdata_mask |= soc_ifc_reg_req_data.soc_req & soc_ifc_reg_hwif_out.CPTRA_TRNG_DATA[i].DATA.swacc & 
+                                  soc_ifc_reg_hwif_out.CPTRA_TRNG_PAUSER_LOCK.LOCK.value &
+                                  (soc_ifc_reg_req_data.user != soc_ifc_reg_hwif_out.CPTRA_TRNG_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]);
+    end
+end
+
+always_comb soc_ifc_reg_rdata = soc_ifc_reg_rdata_pre & {SOC_IFC_DATA_W{~soc_ifc_reg_rdata_mask}};
 
 assign soc_ifc_error_intr = soc_ifc_reg_hwif_out.intr_block_rf.error_global_intr_r.intr;
 assign soc_ifc_notif_intr = soc_ifc_reg_hwif_out.intr_block_rf.notif_global_intr_r.intr;

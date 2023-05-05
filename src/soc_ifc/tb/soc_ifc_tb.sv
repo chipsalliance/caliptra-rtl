@@ -164,6 +164,9 @@ module soc_ifc_tb
 
   assign hready_i_tb = hreadyout_o_tb;
 
+  //bind coverage file
+  soc_ifc_cov_bind i_soc_ifc_cov_bind();
+
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------

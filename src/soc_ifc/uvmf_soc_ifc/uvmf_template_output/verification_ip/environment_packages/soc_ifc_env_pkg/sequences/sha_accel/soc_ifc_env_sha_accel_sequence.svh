@@ -249,7 +249,10 @@ task soc_ifc_env_sha_accel_sequence::sha_accel_read_result(reg [15:0][31:0] sha_
 endtask
 
 task soc_ifc_env_sha_accel_sequence::sha_accel_clr_lock();
-    reg_model.sha512_acc_csr_rm.LOCK.write(reg_sts, uvm_reg_data_t'(0), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    uvm_reg_data_t data = 0;
+    data[reg_model.sha512_acc_csr_rm.LOCK.LOCK.get_lsb_pos()] = 1'b1;
+    //write one to clear lock
+    reg_model.sha512_acc_csr_rm.LOCK.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
     report_reg_sts(reg_sts, "LOCK");
 endtask
 
