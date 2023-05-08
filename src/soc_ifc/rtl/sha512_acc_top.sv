@@ -272,8 +272,8 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   //padding logic
   //this is how many bytes of data are in the last block
   assign num_bytes_data = hwif_out.DLEN.LENGTH.value[BYTE_OFFSET_W-1:0];
-  //when there are >= 111 bytes of data in the block we can't fit the length
-  assign extra_pad_block_required = (num_bytes_data >= 'd111);
+  //when there are >= 112 bytes of data in the block we can't fit the length
+  assign extra_pad_block_required = (num_bytes_data >= 'd112);
 
   always_comb begin : sha_padding_logic
     pad_mask = '1;
