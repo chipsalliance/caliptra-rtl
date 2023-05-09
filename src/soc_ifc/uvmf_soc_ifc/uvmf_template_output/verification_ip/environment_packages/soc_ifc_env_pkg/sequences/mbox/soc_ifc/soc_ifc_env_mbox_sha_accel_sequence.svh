@@ -60,7 +60,8 @@ class soc_ifc_env_mbox_sha_accel_sequence extends soc_ifc_env_mbox_sequence_base
     constraint mbox_resp_dlen_c {sha_accel_op_rand.sha512_mode == 1'b0 -> mbox_resp_expected_dlen == 32'd48;
                                  sha_accel_op_rand.sha512_mode == 1'b1 -> mbox_resp_expected_dlen == 32'd64; 
                                  solve sha_accel_op_rand before mbox_resp_expected_dlen; }
-    constraint test_case_c {test_case inside { [0:255] }; }
+    //don't run the "empty" test case
+    constraint test_case_c {test_case inside { [1:255] }; }
     //Start address can be anywhere from entry 0 to the final mailbox address
     //Must be aligned to dword
     constraint start_addr_c {start_addr inside { [4:131068] }; 
