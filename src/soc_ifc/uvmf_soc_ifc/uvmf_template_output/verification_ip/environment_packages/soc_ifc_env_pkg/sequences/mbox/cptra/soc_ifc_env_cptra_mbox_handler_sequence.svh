@@ -38,7 +38,8 @@ class soc_ifc_env_cptra_mbox_handler_sequence extends soc_ifc_env_sequence_base 
   rand longint unsigned force_unlock_delay_cycles;
 
   bit unlock_proc_active = 1'b0;
-  event in_report_reg_sts;
+  bit seq_done = 1'b0;
+  uvm_event in_report_reg_sts;
 
   extern virtual task mbox_wait_for_command(output op_sts_e op_sts);
   extern virtual task mbox_get_command();
@@ -47,7 +48,7 @@ class soc_ifc_env_cptra_mbox_handler_sequence extends soc_ifc_env_sequence_base 
   extern virtual task mbox_set_status();
   extern virtual task mbox_check_fsm();
   extern virtual task mbox_wait_and_force_unlock();
-  extern virtual function void report_reg_sts(uvm_status_e reg_sts, string name);
+  extern virtual task report_reg_sts(uvm_status_e reg_sts, string name);
 
   // Constrain force_unlock to be a rare event, but it might occur at any time
   constraint mbox_force_unlock_dist_c { inject_force_unlock dist {1:/1, 0:/500}; }
@@ -68,6 +69,7 @@ class soc_ifc_env_cptra_mbox_handler_sequence extends soc_ifc_env_sequence_base 
   //==========================================
   function new(string name = "" );
     super.new(name);
+    in_report_reg_sts = new("in_report_reg_sts");
   endfunction
 
   //==========================================
@@ -128,20 +130,23 @@ class soc_ifc_env_cptra_mbox_handler_sequence extends soc_ifc_env_sequence_base 
             mbox_check_fsm();
 
             // Wait for the command to complete.
-            // Either we clear the lock, or the SOC requestor does.
+            // Either we clear the lock (via force_unlock), or the SOC requestor does.
             while (reg_model.mbox_csr_rm.mbox_lock.lock.get_mirrored_value()) begin
                 configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
             end
+            seq_done = 1;
         end: ALL_TIME_CONSUMING_TASKS
         begin: DO_FORCE_UNLOCK
             mbox_wait_and_force_unlock();
             // After forcibly unlocking mailbox, kill any remaining activity.
             // If force unlock is randomized to "off" for this run
             // of the sequence, this won't ever run.
+            in_report_reg_sts.wait_on(); /* Wait for pending bus transfers (in ALL_TIME_CONSUMING_TASKS) to finish to avoid deadlock */
             disable ALL_TIME_CONSUMING_TASKS;
+            `uvm_info("CPTRA_MBOX_HANDLER", "Disabled ALL_TIME_CONSUMING_TASKS", UVM_HIGH)
         end: DO_FORCE_UNLOCK
     join_any
-    if (unlock_proc_active) wait(in_report_reg_sts.triggered); /* Wait for pending bus transfers to finish to avoid deadlock */
+    if (unlock_proc_active) in_report_reg_sts.wait_trigger(); /* Wait for pending bus transfers (in DO_FORCE_UNLOCK) to finish to avoid deadlock */
     disable DO_FORCE_UNLOCK;
 
     // Check new responses (might be an interrupt? Nothing else expected)
@@ -273,12 +278,17 @@ endtask
 //==========================================
 task soc_ifc_env_cptra_mbox_handler_sequence::mbox_wait_and_force_unlock();
     uvm_reg_data_t data;
+
+    // Wait...
     if (!inject_force_unlock) begin
         // This task never exits if force unlock is disabled
         forever configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1000);
     end
     configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(force_unlock_delay_cycles);
+
+    // Start the unlock proc
     unlock_proc_active = 1'b1;
+
     // After waiting the requisite number of cycles, check mbox_status.
     // If SOC doesn't currently have the lock, doing a force-unlock has no
     // effect. Poll until soc_has_lock is set.
@@ -291,15 +301,22 @@ task soc_ifc_env_cptra_mbox_handler_sequence::mbox_wait_and_force_unlock();
         reg_model.mbox_csr_rm.mbox_status.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
         report_reg_sts(reg_sts, "mbox_status");
     end
+
+    // Write unlock reg
     `uvm_info("CPTRA_MBOX_HANDLER","Executing force unlock of mailbox. CPTRA mbox flow handler will exit after unlock.", UVM_MEDIUM)
     reg_model.mbox_csr_rm.mbox_unlock.write(reg_sts, uvm_reg_data_t'(1) << reg_model.mbox_csr_rm.mbox_unlock.unlock.get_lsb_pos(), UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
     report_reg_sts(reg_sts, "mbox_unlock");
+
     // Clear any interrupts as well, if they weren't cleared before unlock
     data = uvm_reg_data_t'(1) << reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_cmd_avail_sts.get_lsb_pos();
     `uvm_info("CPTRA_MBOX_HANDLER", "Doing clear notif intr", UVM_LOW)
     reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
     report_reg_sts(reg_sts, "notif_internal_intr_r");
+    in_report_reg_sts.reset(); /* Clear the trigger from report_reg_sts so that DO_FORCE_UNLOCK can catch the end of a reg-write from ALL_TIME_CONSUMING_TASKS */
+
+    // End
     unlock_proc_active = 1'b0;
+    seq_done = 1'b1;
     `uvm_info("CPTRA_MBOX_HANDLER", "Done clearing notif intr", UVM_LOW)
 endtask
 
@@ -311,12 +328,21 @@ endtask
 //              used to indicate the end of a reg access and trigger
 //              mbox force unlock (if enabled)
 //==========================================
-function void soc_ifc_env_cptra_mbox_handler_sequence::report_reg_sts(uvm_status_e reg_sts, string name);
+task soc_ifc_env_cptra_mbox_handler_sequence::report_reg_sts(uvm_status_e reg_sts, string name);
     if (reg_sts != UVM_IS_OK)
         `uvm_error("CPTRA_MBOX_HANDLER", $sformatf("Register access failed (%s)", name))
     else
         `uvm_info("CPTRA_MBOX_HANDLER",
                   $sformatf("Register access to (%s), reg_sts: %p", name, reg_sts),
                   UVM_HIGH)
-    -> in_report_reg_sts;
-endfunction
+    in_report_reg_sts.trigger();
+    // seq_done is set by either force_unlock or normal flow termination.
+    if (seq_done) begin
+        // Effectively stall forever in this function since this uvm_event is
+        // not reset outside of the unlock proc.
+        // This prevents further bus transfers from being initiated, so the AHB
+        // sequencer is in a clean state when we kill the ALL_TIME_CONSUMING_TASKS
+        // process.
+        in_report_reg_sts.wait_off();
+    end
+endtask
