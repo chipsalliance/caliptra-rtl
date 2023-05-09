@@ -319,8 +319,6 @@ end
   parameter STATUS_READY_BIT = 0;
   parameter STATUS_VALID_BIT = 1;
 
-  parameter ADDR_SCACONFIG       = BASE_ADDR + 32'h00000020;
-
   parameter ADDR_SEED_START      = BASE_ADDR + 32'h00000080;
   parameter ADDR_SEED_END        = BASE_ADDR + 32'h000000AC;
 
@@ -651,7 +649,6 @@ end
 
       
       start_time = cycle_ctr;
-      write_block(ADDR_SCACONFIG, 4'b0111); // enable hmac_drbg
       write_block(ADDR_SEED_START, test_vector.seed);
       write_block(ADDR_NONCE_START, test_vector.nonce);
       write_block(ADDR_IV_START, test_vector.IV);
@@ -726,7 +723,6 @@ end
       
       start_time = cycle_ctr;
 
-      write_block(ADDR_SCACONFIG, 4'b0111); // enable hmac_drbg
       write_block(ADDR_MSG_START, test_vector.hashed_msg);
       write_block(ADDR_PRIVKEY_IN_START, test_vector.privkey);
       write_block(ADDR_IV_START, test_vector.IV);
@@ -796,7 +792,6 @@ end
 
       start_time = cycle_ctr;
 
-      write_block(ADDR_SCACONFIG, 4'b0111); // enable hmac_drbg
       write_block(ADDR_MSG_START, test_vector.hashed_msg);
       write_block(ADDR_PUBKEYX_START, test_vector.pubkey.x);
       write_block(ADDR_PUBKEYY_START, test_vector.pubkey.y);

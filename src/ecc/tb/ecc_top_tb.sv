@@ -21,6 +21,9 @@
 //
 //======================================================================
 
+`default_nettype none
+`include "caliptra_reg_defines.svh"
+
 module ecc_top_tb 
     import kv_defines_pkg::*;
 #(
@@ -29,58 +32,11 @@ module ecc_top_tb
 ();
 
   string      ecc_test_vector_file; // Input test vector file
-  string      ecc_test_to_run;      // ECC tests - default, ECC_normal_test, ECC_otf_reset_test, ECC_sca_config_test
+  string      ecc_test_to_run;      // ECC tests - default, ECC_normal_test, ECC_otf_reset_test
 
-  localparam BASE_ADDR        = 32'h00000000;
-
-  localparam ADDR_NAME0       = BASE_ADDR + 32'h00000000;
-  localparam ADDR_NAME1       = BASE_ADDR + 32'h00000004;
-  localparam ADDR_VERSION0    = BASE_ADDR + 32'h00000008;
-  localparam ADDR_VERSION1    = BASE_ADDR + 32'h0000000C;
-
-  localparam ADDR_CTRL        = BASE_ADDR + 32'h00000010;
-  localparam KEYGEN           = 2'b01;
-  localparam SIGN             = 2'b10;
-  localparam VERIFY           = 2'b11;
-
-  localparam ADDR_STATUS          = BASE_ADDR + 32'h00000018;
-  localparam STATUS_READY_BIT = 0;
-  localparam STATUS_VALID_BIT = 1;
-
-  localparam ADDR_SCACONFIG       = BASE_ADDR + 32'h00000020;
-
-  localparam ADDR_SEED_START      = BASE_ADDR + 32'h00000080;
-  localparam ADDR_SEED_END        = BASE_ADDR + 32'h000000AC;
-
-  localparam ADDR_MSG_START       = BASE_ADDR + 32'h00000100;
-  localparam ADDR_MSG_END         = BASE_ADDR + 32'h0000012C;
-
-  localparam ADDR_PRIVKEY_OUT_START   = BASE_ADDR + 32'h00000180;
-  localparam ADDR_PRIVKEY_OUT_END     = BASE_ADDR + 32'h000001AC;
-
-  localparam ADDR_PUBKEYX_START   = BASE_ADDR + 32'h00000200;
-  localparam ADDR_PUBKEYX_END     = BASE_ADDR + 32'h0000022C;
-
-  localparam ADDR_PUBKEYY_START   = BASE_ADDR + 32'h00000280;
-  localparam ADDR_PUBKEYY_END     = BASE_ADDR + 32'h000002AC;
-
-  localparam ADDR_SIGNR_START     = BASE_ADDR + 32'h00000300;
-  localparam ADDR_SIGNR_END       = BASE_ADDR + 32'h0000032C;
-
-  localparam ADDR_SIGNS_START     = BASE_ADDR + 32'h00000380;
-  localparam ADDR_SIGNS_END       = BASE_ADDR + 32'h000003AC;
-
-  localparam ADDR_VERIFY_R_START  = BASE_ADDR + 32'h00000400;
-  localparam ADDR_VERIFY_R_END    = BASE_ADDR + 32'h0000042C;
-
-  localparam ADDR_IV_START        = BASE_ADDR + 32'h00000480;
-  localparam ADDR_IV_END          = BASE_ADDR + 32'h000004AC;
-  
-  localparam ADDR_NONCE_START     = BASE_ADDR + 32'h00000500;
-  localparam ADDR_NONCE_END       = BASE_ADDR + 32'h0000052C;
-
-  localparam ADDR_PRIVKEY_IN_START   = BASE_ADDR + 32'h00000580;
-  localparam ADDR_PRIVKEY_IN_END     = BASE_ADDR + 32'h000005AC;
+  localparam ECC_CMD_KEYGEN              = 2'b01;
+  localparam ECC_CMD_SIGNING             = 2'b10;
+  localparam ECC_CMD_VERIFYING           = 2'b11;
   
   parameter           R_WIDTH                   = 384;
   typedef bit         [R_WIDTH-1:0]             r_t;
@@ -333,10 +289,10 @@ module ecc_top_tb
   //----------------------------------------------------------------
   task wait_ready;
     begin
-      read_single_word(ADDR_STATUS);
+      read_single_word(`ECC_REG_ECC_STATUS);
       while (hrdata_o_tb == 0)
         begin
-          read_single_word(ADDR_STATUS);
+          read_single_word(`ECC_REG_ECC_STATUS);
         end
     end
   endtask // wait_ready
@@ -469,13 +425,13 @@ module ecc_top_tb
     reg [31 : 0] version1;
     begin
 
-      read_single_word(ADDR_NAME0);
+      read_single_word(`ECC_REG_ECC_NAME_0);
       name0 = hrdata_o_tb;
-      read_single_word(ADDR_NAME1);
+      read_single_word(`ECC_REG_ECC_NAME_1);
       name1 = hrdata_o_tb;
-      read_single_word(ADDR_VERSION0);
+      read_single_word(`ECC_REG_ECC_VERSION_0);
       version0 = hrdata_o_tb;
-      read_single_word(ADDR_VERSION1);
+      read_single_word(`ECC_REG_ECC_VERSION_1);
       version1 = hrdata_o_tb;
 
       $display("DUT name: %c%c%c%c%c%c%c%c",
@@ -499,7 +455,7 @@ module ecc_top_tb
   //----------------------------------------------------------------
   task trig_ECC(input [2 : 0] cmd);
     begin
-      write_single_word(ADDR_CTRL  , cmd);
+      write_single_word(`ECC_REG_ECC_CTRL  , cmd);
     end
   endtask // trig_ECC
 
@@ -524,28 +480,28 @@ module ecc_top_tb
       start_time = cycle_ctr;
 
       $display("*** TC %0d writing seed value %0h", tc_number, test_vector.seed);
-      write_block(ADDR_SEED_START, test_vector.seed);
+      write_block(`ECC_REG_ECC_SEED_0, test_vector.seed);
       $display("*** TC %0d writing nonce value %0h", tc_number, test_vector.nonce);
-      write_block(ADDR_NONCE_START, test_vector.nonce);
+      write_block(`ECC_REG_ECC_NONCE_0, test_vector.nonce);
       $display("*** TC %0d writing IV value %0h", tc_number, test_vector.IV);
-      write_block(ADDR_IV_START, test_vector.IV);
+      write_block(`ECC_REG_ECC_IV_0, test_vector.IV);
 
       $display("*** TC %0d starting ECC keygen flow", tc_number);
-      trig_ECC(KEYGEN);
+      trig_ECC(ECC_CMD_KEYGEN);
       #(CLK_PERIOD);
       
       wait_ready();
 
       $display("*** TC %0d reading PRIVATE KEY", tc_number);
-      read_block(ADDR_PRIVKEY_OUT_START);
+      read_block(`ECC_REG_ECC_PRIVKEY_OUT_0);
       privkey = reg_read_data;
 
       $display("*** TC %0d reading PUBLIC KEY X", tc_number);
-      read_block(ADDR_PUBKEYX_START);
+      read_block(`ECC_REG_ECC_PUBKEY_X_0);
       pubkey.x = reg_read_data;
 
       $display("*** TC %0d reading PUBLIC KEY Y", tc_number);
-      read_block(ADDR_PUBKEYY_START);
+      read_block(`ECC_REG_ECC_PUBKEY_Y_0);
       pubkey.y = reg_read_data;
       
       end_time = cycle_ctr - start_time;
@@ -595,24 +551,24 @@ module ecc_top_tb
       start_time = cycle_ctr;
 
       $display("*** TC %0d writing message value %0h", tc_number, test_vector.hashed_msg);
-      write_block(ADDR_MSG_START, test_vector.hashed_msg);
+      write_block(`ECC_REG_ECC_MSG_0, test_vector.hashed_msg);
       $display("*** TC %0d writing private key value %0h", tc_number, test_vector.privkey);
-      write_block(ADDR_PRIVKEY_IN_START, test_vector.privkey);
+      write_block(`ECC_REG_ECC_PRIVKEY_IN_0, test_vector.privkey);
       $display("*** TC %0d writing IV value %0h", tc_number, test_vector.IV);
-      write_block(ADDR_IV_START, test_vector.IV);
+      write_block(`ECC_REG_ECC_IV_0, test_vector.IV);
 
       $display("*** TC %0d starting ECC signing flow", tc_number);
-      trig_ECC(SIGN);
+      trig_ECC(ECC_CMD_SIGNING);
       #(CLK_PERIOD);
 
       wait_ready();
 
       $display("*** TC %0d reading R value", tc_number);
-      read_block(ADDR_SIGNR_START);
+      read_block(`ECC_REG_ECC_SIGN_R_0);
       R = reg_read_data;
 
       $display("*** TC %0d reading S value", tc_number);
-      read_block(ADDR_SIGNS_START);
+      read_block(`ECC_REG_ECC_SIGN_S_0);
       S = reg_read_data;
       
       end_time = cycle_ctr - start_time;
@@ -659,24 +615,24 @@ module ecc_top_tb
       start_time = cycle_ctr;
 
       $display("*** TC %0d writing message value %0h", tc_number, test_vector.hashed_msg);
-      write_block(ADDR_MSG_START, test_vector.hashed_msg);
+      write_block(`ECC_REG_ECC_MSG_0, test_vector.hashed_msg);
       $display("*** TC %0d writing PUBLIC KEY X value %0h", tc_number, test_vector.pubkey.x);
-      write_block(ADDR_PUBKEYX_START, test_vector.pubkey.x);
+      write_block(`ECC_REG_ECC_PUBKEY_X_0, test_vector.pubkey.x);
       $display("*** TC %0d writing PUBLIC KEY Y value %0h", tc_number, test_vector.pubkey.y);
-      write_block(ADDR_PUBKEYY_START, test_vector.pubkey.y);
+      write_block(`ECC_REG_ECC_PUBKEY_Y_0, test_vector.pubkey.y);
       $display("*** TC %0d writing R value %0h", tc_number, test_vector.R);
-      write_block(ADDR_SIGNR_START, test_vector.R);
+      write_block(`ECC_REG_ECC_SIGN_R_0, test_vector.R);
       $display("*** TC %0d writing S value %0h", tc_number, test_vector.S);
-      write_block(ADDR_SIGNS_START, test_vector.S);
+      write_block(`ECC_REG_ECC_SIGN_S_0, test_vector.S);
 
       $display("*** TC %0d starting ECC verify flow", tc_number);
-      trig_ECC(VERIFY);
+      trig_ECC(ECC_CMD_VERIFYING);
       #(CLK_PERIOD);
 
       wait_ready();
 
-      $display("*** TC %0d reading VERIFY R value", tc_number);
-      read_block(ADDR_VERIFY_R_START);
+      $display("*** TC %0d reading ECC_CMD_VERIFYING R value", tc_number);
+      read_block(`ECC_REG_ECC_VERIFY_R_0);
       verify_r = reg_read_data;
       
       end_time = cycle_ctr - start_time;
@@ -702,84 +658,6 @@ module ecc_top_tb
 
 
   //----------------------------------------------------------------
-  // ecc_sca_config_test()
-  //
-  // Perform different sca configuration tests.
-  //----------------------------------------------------------------
-  task ecc_sca_config_test();
-    
-    begin
-      wait_ready();
-
-      $display("*** ECC SCA configuration test started.");
-      
-      // with all countermeasures by default
-      $display("\ntest with all countermeasures by default");
-      ecc_keygen_test(1, test_vectors[1]);
-      ecc_signing_test(8, test_vectors[8]);
-      ecc_verifying_test(8, test_vectors[8]);
-
-      // without any protection
-      $display("\ntest without any protection");
-      write_block(ADDR_SCACONFIG, 3'b000);  
-      ecc_keygen_test(1, test_vectors[1]);
-      ecc_signing_test(8, test_vectors[8]);
-      ecc_verifying_test(8, test_vectors[8]);
-
-      // with only point randomization
-      $display("\ntest with only point randomization");
-      write_block(ADDR_SCACONFIG, 3'b001);  
-      ecc_keygen_test(1, test_vectors[1]);
-      ecc_signing_test(8, test_vectors[8]);
-      ecc_verifying_test(8, test_vectors[8]);
-
-      // with only masking sign
-      $display("\ntest with only masking sign");
-      write_block(ADDR_SCACONFIG, 3'b010);  
-      ecc_keygen_test(1, test_vectors[1]);
-      ecc_signing_test(8, test_vectors[8]);
-      ecc_verifying_test(8, test_vectors[8]);
-
-      // with only scalar blinding
-      $display("\ntest with only scalar blinding");
-      write_block(ADDR_SCACONFIG, 3'b100);  
-      ecc_keygen_test(1, test_vectors[1]);
-      ecc_signing_test(8, test_vectors[8]);
-      ecc_verifying_test(8, test_vectors[8]);
-
-      // with point randomization and masking sign
-      $display("\ntest with point randomization and masking sign");
-      write_block(ADDR_SCACONFIG, 3'b011);  
-      ecc_keygen_test(1, test_vectors[1]);
-      ecc_signing_test(8, test_vectors[8]);
-      ecc_verifying_test(8, test_vectors[8]);
-
-      // with point randomization and scalar blinding
-      $display("\ntest with point randomization and scalar blinding");
-      write_block(ADDR_SCACONFIG, 3'b101);  
-      ecc_keygen_test(1, test_vectors[1]);
-      ecc_signing_test(8, test_vectors[8]);
-      ecc_verifying_test(8, test_vectors[8]);
-
-      // with masking sign and scalar blinding
-      $display("\ntest with masking sign and scalar blinding");
-      write_block(ADDR_SCACONFIG, 3'b110);  
-      ecc_keygen_test(1, test_vectors[1]);
-      ecc_signing_test(8, test_vectors[8]);
-      ecc_verifying_test(8, test_vectors[8]);
-
-      // with all countermeasures
-      $display("\ntest with all countermeasures");
-      write_block(ADDR_SCACONFIG, 3'b111);  
-      ecc_keygen_test(1, test_vectors[1]);
-      ecc_signing_test(8, test_vectors[8]);
-      ecc_verifying_test(8, test_vectors[8]);
-
-    end
-  endtask // ecc_signing_test
-
-
-  //----------------------------------------------------------------
   // ecc_openssl_keygen_test()
   //
   // Perform a single point multiplication block test without hmac-drbg.
@@ -798,22 +676,21 @@ module ecc_top_tb
     
       start_time = cycle_ctr;
 
-      write_block(ADDR_SCACONFIG, 4'b1111); // disabled hmac-drbg
-      write_block(ADDR_SEED_START, test_vector.privkey);
-      write_block(ADDR_IV_START, test_vector.IV);
+      write_block(`ECC_REG_ECC_SEED_0, test_vector.privkey);
+      write_block(`ECC_REG_ECC_IV_0, test_vector.IV);
 
-      trig_ECC(KEYGEN);
+      trig_ECC(ECC_CMD_KEYGEN);
       #(CLK_PERIOD);
       
       wait_ready();
 
-      read_block(ADDR_PRIVKEY_OUT_START);
+      read_block(`ECC_REG_ECC_PRIVKEY_OUT_0);
       privkey = reg_read_data;
 
-      read_block(ADDR_PUBKEYX_START);
+      read_block(`ECC_REG_ECC_PUBKEY_X_0);
       pubkey.x = reg_read_data;
 
-      read_block(ADDR_PUBKEYY_START);
+      read_block(`ECC_REG_ECC_PUBKEY_Y_0);
       pubkey.y = reg_read_data;
       
       end_time = cycle_ctr - start_time;
@@ -870,7 +747,6 @@ module ecc_top_tb
         ecc_onthefly_reset_test(i, test_vectors[i]);
         ecc_openssl_keygen_test(i, test_vectors[i]);
       end
-      write_block(ADDR_SCACONFIG, 4'b0111); // enabled hmac-drbg
     end
   endtask // ecc_openssl_test
 
@@ -946,29 +822,29 @@ module ecc_top_tb
       $display("*** TC %0d on the fly reset test started.", tc_number);
       tc_ctr = tc_ctr + 1;
 
-      write_block(ADDR_MSG_START, test_vector.hashed_msg);
-      write_block(ADDR_PRIVKEY_IN_START, test_vector.privkey);
-      write_block(ADDR_IV_START, test_vector.IV);
+      write_block(`ECC_REG_ECC_MSG_0, test_vector.hashed_msg);
+      write_block(`ECC_REG_ECC_PRIVKEY_IN_0, test_vector.privkey);
+      write_block(`ECC_REG_ECC_IV_0, test_vector.IV);
 
-      trig_ECC(SIGN);
+      trig_ECC(ECC_CMD_SIGNING);
       #(500 * CLK_PERIOD);
 
       reset_dut();
       wait_ready();
 
-      read_block(ADDR_SIGNR_START);
+      read_block(`ECC_REG_ECC_SIGN_R_0);
       R = reg_read_data;
 
-      read_block(ADDR_SIGNS_START);
+      read_block(`ECC_REG_ECC_SIGN_S_0);
       S = reg_read_data;
 
-      read_block(ADDR_PRIVKEY_OUT_START);
+      read_block(`ECC_REG_ECC_PRIVKEY_OUT_0);
       privkey = reg_read_data;
 
-      read_block(ADDR_PUBKEYX_START);
+      read_block(`ECC_REG_ECC_PUBKEY_X_0);
       pubkey_x = reg_read_data;
 
-      read_block(ADDR_PUBKEYY_START);
+      read_block(`ECC_REG_ECC_PUBKEY_Y_0);
       pubkey_y = reg_read_data;
       
       if (R == 0 & S == 0 & privkey == 0 & pubkey_x ==0 & pubkey_y == 0)
@@ -1010,12 +886,8 @@ module ecc_top_tb
 
       //ecc_openssl_test();
 
-      if ((ecc_test_to_run == "default") || (ecc_test_to_run == "ECC_normal_test") || (ecc_test_to_run == "ECC_otf_reset_test")) begin
-        ecc_test(); 
-      end
-      else if (ecc_test_to_run == "ECC_sca_config_test") begin
-        ecc_sca_config_test();
-      end
+      
+      ecc_test(); 
 
       display_test_results();
       
