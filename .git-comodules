@@ -44,5 +44,12 @@
         "name": "caliptra_config",
         "version": "promote_caliptra_config_6",
         "populate": "when_top"
+    },
+    {
+        "description": "Caliptra RTL From GitHub",
+        "url": "origin://AHA_POC/58dea2a3-6b98-4cac-9b7d-c500aa351324",
+        "dest": "chipsalliance",
+        "name": "caliptra-rtl-mirror",
+        "version": "dev-msft"
     }
 ]
