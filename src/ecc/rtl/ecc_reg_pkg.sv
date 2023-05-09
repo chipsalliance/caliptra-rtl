@@ -253,24 +253,6 @@ package ecc_reg_pkg;
     } ecc_reg__ECC_CTRL__out_t;
 
     typedef struct packed{
-        logic value;
-    } ecc_reg__ECC_SCACONFIG__POINT_RND_EN__out_t;
-
-    typedef struct packed{
-        logic value;
-    } ecc_reg__ECC_SCACONFIG__MASK_SIGN_EN__out_t;
-
-    typedef struct packed{
-        logic value;
-    } ecc_reg__ECC_SCACONFIG__SCALAR_RND_EN__out_t;
-
-    typedef struct packed{
-        ecc_reg__ECC_SCACONFIG__POINT_RND_EN__out_t POINT_RND_EN;
-        ecc_reg__ECC_SCACONFIG__MASK_SIGN_EN__out_t MASK_SIGN_EN;
-        ecc_reg__ECC_SCACONFIG__SCALAR_RND_EN__out_t SCALAR_RND_EN;
-    } ecc_reg__ECC_SCACONFIG__out_t;
-
-    typedef struct packed{
         logic [31:0] value;
     } ecc_reg__ECC_SEED__SEED__out_t;
 
@@ -441,7 +423,6 @@ package ecc_reg_pkg;
 
     typedef struct packed{
         ecc_reg__ECC_CTRL__out_t ECC_CTRL;
-        ecc_reg__ECC_SCACONFIG__out_t ECC_SCACONFIG;
         ecc_reg__ECC_SEED__out_t [12-1:0]ECC_SEED;
         ecc_reg__ECC_MSG__out_t [12-1:0]ECC_MSG;
         ecc_reg__ECC_PUBKEY_X__out_t [12-1:0]ECC_PUBKEY_X;

@@ -49,6 +49,7 @@ schema_version: 2.4.0
 requires: 
   - ecc_top
   - keyvault
+  - caliptra_top_defines
 targets:
   tb:
     directories: 
