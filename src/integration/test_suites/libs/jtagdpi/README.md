@@ -1,7 +1,7 @@
 JTAG DPI module for OpenOCD remote_bitbang driver
 =================================================
 
-This DPI module provides a "virtual" JTAG connection between an simulated chip
+This DPI module provides a "virtual" JTAG connection between a simulated chip
 and [OpenOCD](http://openocd.org/). It makes use of the `remote_bitbang` JTAG
 driver shipped with OpenOCD, which forwards JTAG requests over TCP to a remote
 server. The `jtagdpi` module is instantiated in the hardware simulation to
