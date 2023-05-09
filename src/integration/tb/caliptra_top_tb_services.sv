@@ -387,14 +387,21 @@ module caliptra_top_tb_services
     32'ha0b43fbf,
     32'h49897978};
 
+    logic pcr_vault_needs_release;
+
     generate 
         for (genvar dword = 0; dword < 12; dword++) begin
-            always@(posedge clk) begin
-                if((WriteData[7:0] == 8'hf3) && mailbox_write) begin
+            always@(posedge clk or negedge cptra_rst_b) begin
+                if (~cptra_rst_b) begin
+                    pcr_vault_needs_release <= 1'b0;
+                end
+                else if((WriteData[7:0] == 8'hf3) && mailbox_write) begin
+                    pcr_vault_needs_release <= 1'b1;
                     force caliptra_top_dut.pcr_vault1.pv_reg_hwif_in.PCR_ENTRY[31][dword].data.we = 1'b1;
                     force caliptra_top_dut.pcr_vault1.pv_reg_hwif_in.PCR_ENTRY[31][dword].data.next = pv_hash_value[dword];
                 end
-                else begin
+                else if (pcr_vault_needs_release) begin
+                    pcr_vault_needs_release <= 1'b0;
                     release caliptra_top_dut.pcr_vault1.pv_reg_hwif_in.PCR_ENTRY[31][dword].data.we;
                     release caliptra_top_dut.pcr_vault1.pv_reg_hwif_in.PCR_ENTRY[31][dword].data.next;
                 end

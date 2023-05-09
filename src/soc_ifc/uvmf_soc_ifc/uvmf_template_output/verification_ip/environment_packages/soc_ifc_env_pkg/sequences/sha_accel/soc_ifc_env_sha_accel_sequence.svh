@@ -49,7 +49,8 @@ class soc_ifc_env_sha_accel_sequence extends soc_ifc_env_sequence_base #(.CONFIG
   extern virtual function void report_reg_sts(uvm_status_e reg_sts, string name);
 
   constraint sha_accel_mailbox_mode_c { sha_accel_op_rand.mailbox_mode == 1'b0; }
-  constraint test_case_c {test_case inside { [0:255] }; }
+  //don't run the "empty" test case
+  constraint test_case_c {test_case inside { [1:255] }; }
 
   virtual function void do_kill();
     // FIXME gracefully terminate any APB requests pending?
