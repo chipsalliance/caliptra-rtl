@@ -53,7 +53,10 @@
 #define SHA512_INIT                 0x0000000D
 #define SHA512_NEXT                 0x0000000E
 #define SHA512_VALID                0x00000003
-
+#define MODE_SHA_512_224            0x0
+#define MODE_SHA_512_256            0x1
+#define MODE_SHA_384                0x2
+#define MODE_SHA_512                0x3
 
 
 /* ---- SHA256 ---- */
@@ -61,6 +64,8 @@
 #define SHA256_INIT                 (SHA256_REG_SHA256_CTRL_INIT_MASK | SHA256_REG_SHA256_CTRL_MODE_MASK)
 #define SHA256_NEXT                 (SHA256_REG_SHA256_CTRL_NEXT_MASK | SHA256_REG_SHA256_CTRL_MODE_MASK)
 #define SHA256_VALID                (SHA256_REG_SHA256_STATUS_READY_MASK | SHA256_REG_SHA256_STATUS_VALID_MASK)
+#define SHA256_MODE_SHA_224         0x0
+#define SHA256_MODE_SHA_256         0x1
 
 /* ---- Mailbox ---- */
 #define MBOX_DIR_BASE_ADDR        0x30000000

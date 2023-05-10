@@ -126,6 +126,11 @@ class soc_ifc_environment  extends uvmf_environment_base #(
   soc_ifc_vsqr_t vsqr;
 
   // pragma uvmf custom class_item_additional begin
+  bit can_handle_reset = 1'b1;
+  extern task          detect_reset();
+  extern function void set_can_handle_reset(bit en = 1'b1);
+  extern task          handle_reset(string kind = "HARD");
+  extern task          run_phase(uvm_phase phase);
   // pragma uvmf custom class_item_additional end
  
 // ****************************************************************************
@@ -213,7 +218,6 @@ class soc_ifc_environment  extends uvmf_environment_base #(
       ahb_reg_adapter.en_n_bits = 1; // This is to allow the adapter to generate addresses
                                      // that are not aligned to 64-bit width (the native AHB interface width)
       apb_reg_adapter = apb_reg_adapter_t::type_id::create("caliptra_reg2apb_adapter");
-      configuration.apb_reg_adapter_h = apb_reg_adapter;
     end
     // Set sequencer and adapter in register model map
     if ((configuration.enable_reg_adaptation) && (qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.m_sequencer != null ))
@@ -226,8 +230,8 @@ class soc_ifc_environment  extends uvmf_environment_base #(
       apb_reg_predictor.map     = configuration.soc_ifc_rm.soc_ifc_APB_map;
       ahb_reg_predictor.adapter = ahb_reg_adapter;
       apb_reg_predictor.adapter = apb_reg_adapter;
-      configuration.soc_ifc_rm.soc_ifc_AHB_map.set_auto_predict(1);
-      configuration.soc_ifc_rm.soc_ifc_APB_map.set_auto_predict(1);
+//      configuration.soc_ifc_rm.soc_ifc_AHB_map.set_auto_predict(1);
+//      configuration.soc_ifc_rm.soc_ifc_APB_map.set_auto_predict(1);
       // The connection between the agent analysis_port and uvm_reg_predictor 
       // analysis_export could cause problems due to a uvm register package bug,
       // if this environment is used as a sub-environment at a higher level.
@@ -240,8 +244,10 @@ class soc_ifc_environment  extends uvmf_environment_base #(
       // package constructs the top level register map.  The call fails when the 
       // register map associated with this environment is a sub-map.  Construction
       // of the sub-maps must be done manually.
-      qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.ap["burst_transfer"].connect(ahb_reg_predictor.bus_in);
-      qvip_apb5_slave_subenv.apb5_master_0.ap["trans_ap"].connect(apb_reg_predictor.bus_in);
+      soc_ifc_pred.soc_ifc_ahb_reg_ap.connect(ahb_reg_predictor.bus_item_export);
+      soc_ifc_pred.soc_ifc_apb_reg_ap.connect(apb_reg_predictor.bus_item_export);
+//      qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer"].connect(ahb_reg_predictor.bus_item_export);
+//      qvip_apb5_slave_subenv_apb5_master_0_ap["trans_ap"].connect(apb_reg_predictor.bus_item_export);
     end
     // pragma uvmf custom reg_model_connect_phase end
   endfunction
@@ -264,5 +270,43 @@ class soc_ifc_environment  extends uvmf_environment_base #(
 endclass
 
 // pragma uvmf custom external begin
+task soc_ifc_environment::detect_reset();
+    string kind = "SOFT";
+
+    // Detect reset assertion from soc_ifc_ctrl_agent
+    this.configuration.soc_ifc_ctrl_agent_config.wait_for_reset_assertion(kind);
+
+    // Handle
+    this.handle_reset(kind);
+endtask
+
+// Called by a super-environment, if present, to bubble reset responsibility up
+function void soc_ifc_environment::set_can_handle_reset(bit en = 1'b1);
+    this.can_handle_reset = en;
+endfunction
+
+task soc_ifc_environment::handle_reset(string kind = "HARD");
+    // Reset status agents (needed to reset monitor transaction keys)
+    this.cptra_status_agent.handle_reset(kind);
+    this.soc_ifc_status_agent.handle_reset(kind);
+
+    // Reset scoreboard according to kind
+    this.soc_ifc_sb.handle_reset(kind);
+
+    // Reset predictor according to kind
+    this.soc_ifc_pred.handle_reset(kind);
+
+    // TODO does this happen naturally from hdl_top driving reset?
+    // Reset APB
+    // Reset AHB
+endtask
+
+task soc_ifc_environment::run_phase(uvm_phase phase);
+    if (this.can_handle_reset) begin
+        fork
+            forever detect_reset();
+        join
+    end
+endtask
 // pragma uvmf custom external end
 

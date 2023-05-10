@@ -30,7 +30,7 @@ task fuse_reg_test;
   string rname;
 
   begin
-    $display("Executing task fuse_reg_test"); 
+    $display("\nExecuting task fuse_reg_test"); 
     $display("----------------------------\n");
 
     $display("Current security state = 0b%03b", security_state);

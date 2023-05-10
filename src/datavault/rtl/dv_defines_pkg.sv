@@ -22,8 +22,8 @@ package dv_defines_pkg;
 
     parameter STICKY_DV_NUM_ENTRIES = 10;
     parameter NONSTICKY_DV_NUM_ENTRIES = 10;
-    parameter NONSTICKY_LOCKQ_SCRATCH_NUM_ENTRIES = 10;
-    parameter STICKY_LOCKQ_SCRATCH_NUM_ENTRIES = 8;
+    parameter NONSTICKY_LOCK_SCRATCH_NUM_ENTRIES = 10;
+    parameter STICKY_LOCK_SCRATCH_NUM_ENTRIES = 8;
     parameter NONSTICKY_SCRATCH_NUM_ENTRIES = 8;
     parameter DV_NUM_DWORDS = 12;
 

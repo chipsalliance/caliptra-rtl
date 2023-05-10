@@ -50,6 +50,7 @@ module ecc_pm_ctrl
     // Clock and reset.
     input  wire           clk,
     input  wire           reset_n,
+    input  wire           zeroize,
 
     // from arith_unit
     input  wire  [2  :   0]                 ecc_cmd_i,
@@ -101,6 +102,7 @@ module ecc_pm_ctrl
         i_ecc_pm_sequencer(
         .clka(clk),
         .reset_n(reset_n),
+        .zeroize(zeroize),
         .ena(1'b1),
         .addra(prog_addr),
         .douta(prog_instr)
@@ -109,6 +111,8 @@ module ecc_pm_ctrl
     always_ff @(posedge clk or negedge reset_n) 
     begin : ff_stalled_reg
         if(!reset_n) 
+            stalled_pipe1 <= '0;
+        else if (zeroize) 
             stalled_pipe1 <= '0;
         else
             stalled_pipe1 <= stalled;
@@ -124,6 +128,15 @@ module ecc_pm_ctrl
     always_ff @(posedge clk or negedge reset_n) 
     begin : pm_fsm
         if(!reset_n) begin
+            prog_cntr   <= '0;
+            mont_cntr   <= '0;
+            stall_cntr  <= '0;
+            stalled     <= '0;
+            req_digit_o <= '0;
+            mont_ladder <= '0;
+            ecc_cmd_reg <= '0;
+        end
+        else if (zeroize) begin
             prog_cntr   <= '0;
             mont_cntr   <= '0;
             stall_cntr  <= '0;
@@ -296,6 +309,8 @@ module ecc_pm_ctrl
     begin : sequencer_pipeline1
         if (!reset_n) 
             prog_instr_pipe1 <= '{UOP_NOP, '0, '0};
+        else if (zeroize) 
+            prog_instr_pipe1 <= '{UOP_NOP, '0, '0};
         else begin
             if (stalled_pipe1) 
                 prog_instr_pipe1 <= prog_instr_pipe1;
@@ -307,6 +322,8 @@ module ecc_pm_ctrl
     always_ff @(posedge clk or negedge reset_n) 
     begin : sequencer_pipeline2
         if (!reset_n) 
+            prog_instr_pipe2 <= '{UOP_NOP, '0, '0};
+        else if (zeroize) 
             prog_instr_pipe2 <= '{UOP_NOP, '0, '0};
         else begin
             if (stalled_pipe1) 
@@ -338,6 +355,8 @@ module ecc_pm_ctrl
     always_ff @(posedge clk or negedge reset_n) 
     begin : instruction_out
         if (!reset_n)
+            instr_o <= '{UOP_NOP, '0, '0};
+        else if (zeroize)
             instr_o <= '{UOP_NOP, '0, '0};
         else begin
             instr_o.opcode <= prog_instr_pipe2.opcode;

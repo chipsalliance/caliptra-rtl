@@ -17,10 +17,8 @@
 #include "caliptra_isr.h"
 #include "riscv_hw_if.h"
 #include "riscv-csr.h"
-#include <string.h>
-#include <stdint.h>
-#include <stdlib.h>
 #include "printf.h"
+#include "ecc.h"
 
 volatile char*    stdout           = (char *)STDOUT;
 volatile uint32_t intr_count = 0;
@@ -30,7 +28,30 @@ volatile uint32_t intr_count = 0;
     enum printf_verbosity verbosity_g = LOW;
 #endif
 
-uint8_t fail_cmd = 0x1;
+volatile caliptra_intr_received_s cptra_intr_rcv = {
+    .doe_error        = 0,
+    .doe_notif        = 0,
+    .ecc_error        = 0,
+    .ecc_notif        = 0,
+    .hmac_error       = 0,
+    .hmac_notif       = 0,
+    .kv_error         = 0,
+    .kv_notif         = 0,
+    .sha512_error     = 0,
+    .sha512_notif     = 0,
+    .sha256_error     = 0,
+    .sha256_notif     = 0,
+    .qspi_error       = 0,
+    .qspi_notif       = 0,
+    .uart_error       = 0,
+    .uart_notif       = 0,
+    .i3c_error        = 0,
+    .i3c_notif        = 0,
+    .soc_ifc_error    = 0,
+    .soc_ifc_notif    = 0,
+    .sha512_acc_error = 0,
+    .sha512_acc_notif = 0,
+};
 
 /* ECC test vector:
     MSG      = C8F518D4F3AA1BD46ED56C1C3C9E16FB800AF504DB98843548C5F623EE115F73D4C62ABC06D303B5D90D9A175087290D
@@ -44,185 +65,12 @@ uint8_t fail_cmd = 0x1;
     IV       = 3401CEFAE20A737649073AC1A351E32926DB9ED0DB6B1CFFAB0493DAAFB93DDDD83EDEA28A803D0D003B2633B9D0F1BF
 */
 
-void ecc_keygen_kvflow(uint8_t seed_kv_id, uint8_t privkey_kv_id, uint32_t ecc_nonce[12], uint32_t ecc_iv[12], uint32_t expected_pubkey_x[12], uint32_t expected_pubkey_y[12]){
-    uint8_t seed_inject_cmd;
-    uint8_t offset;
-    volatile uint32_t * reg_ptr;
-    volatile uint32_t * pubkey_x_reg_ptr = (uint32_t *) CLP_ECC_REG_ECC_PUBKEY_X_0;
-    volatile uint32_t * pubkey_y_reg_ptr = (uint32_t *) CLP_ECC_REG_ECC_PUBKEY_Y_0;
+void main(){
 
-    uint32_t ecc_pubkey_x [12];
-    uint32_t ecc_pubkey_y [12];
+    printf("----------------------------------\n");
+    printf(" KV Smoke Test With ECC flow !!\n");
+    printf("----------------------------------\n");
 
-    //inject seed to kv key reg (in RTL)
-    printf("Inject SEED into ECC\n");
-    seed_inject_cmd = 0x80 + (seed_kv_id & 0x7);
-    printf("%c", seed_inject_cmd);
-
-    // wait for ECC to be ready
-    while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
-
-    // Program ECC_SEED Read with 12 dwords from seed_kv_id
-    lsu_write_32(CLP_ECC_REG_ECC_KV_RD_SEED_CTRL, (ECC_REG_ECC_KV_RD_SEED_CTRL_READ_EN_MASK |
-                                                  ((seed_kv_id & 0x7) << ECC_REG_ECC_KV_RD_SEED_CTRL_READ_ENTRY_LOW)));
-
-    // Check that ECC SEED is loaded
-    while((lsu_read_32(CLP_ECC_REG_ECC_KV_RD_SEED_STATUS) & ECC_REG_ECC_KV_RD_SEED_STATUS_VALID_MASK) == 0);
-
-    // set privkey DEST to write
-    lsu_write_32(CLP_ECC_REG_ECC_KV_WR_PKEY_CTRL, (ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_EN_MASK |
-                                                  ECC_REG_ECC_KV_WR_PKEY_CTRL_ECC_PKEY_DEST_VALID_MASK |
-                                                  ((privkey_kv_id & 0x7) << ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_LOW)));
-
-    
-    // Write ECC nonce
-    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_NONCE_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_NONCE_11) {
-        *reg_ptr++ = ecc_nonce[offset++];
-    }
-
-    // Write ECC IV
-    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_IV_11) {
-        *reg_ptr++ = ecc_iv[offset++];
-    }
-
-    printf("ECC KEYGEN\n");
-    // Enable ECC KEYGEN core
-    lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_KEYGEN);
-
-    printf("Wait for ECC KEYGEN\n");
-    // wait for ECC KEYGEN process to be done
-    while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_VALID_MASK) == 0);
-        
-    printf("Wait for KV write\n");
-    // check dest done
-    while((lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_STATUS) & ECC_REG_ECC_KV_WR_PKEY_STATUS_VALID_MASK) == 0);
-
-    reg_ptr = (uint32_t *) CLP_ECC_REG_ECC_PUBKEY_X_0;
-    // Read the data back from ECC register
-    printf("Load PUBKEY_X data from ECC\n");
-    offset = 0;
-    while (pubkey_x_reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_11) {
-        ecc_pubkey_x[offset] = *pubkey_x_reg_ptr;
-        if (ecc_pubkey_x[offset] != expected_pubkey_x[offset]) {
-            printf("At offset [%d], ecc_pubkey_x data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", ecc_pubkey_x[offset]);
-            printf("Expected data: 0x%x\n", expected_pubkey_x[offset]);
-            printf("%c", fail_cmd);
-            while(1);
-        } /*else {
-            printf("[%d] :: 0x%x matches 0x%x\n", offset, ecc_pubkey_x[offset], expected_pubkey_x[offset]);
-        }*/
-        pubkey_x_reg_ptr++;
-        offset++;
-    }
-
-    printf("Load PUBKEY_Y data from ECC\n");
-    offset = 0;
-    while (pubkey_y_reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_Y_11) {
-        ecc_pubkey_y[offset] = *pubkey_y_reg_ptr;
-        if (ecc_pubkey_y[offset] != expected_pubkey_y[offset]) {
-            printf("At offset [%d], ecc_pubkey_y data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", ecc_pubkey_y[offset]);
-            printf("Expected data: 0x%x\n", expected_pubkey_y[offset]);
-            printf("%c", fail_cmd);
-            while(1);
-        } /*else {
-            printf("[%d] :: 0x%x matches 0x%x\n", offset, ecc_pubkey_y[offset], expected_pubkey_y[offset]);
-        }*/
-        pubkey_y_reg_ptr++;
-        offset++;
-    }
-    
-}
-
-
-void ecc_signing_kvflow(uint8_t privkey_kv_id, uint32_t ecc_msg[12], uint32_t ecc_iv[12], uint32_t expected_sign_r[12], uint32_t expected_sign_s[12]){
-    uint8_t offset;
-    volatile uint32_t * reg_ptr;
-    volatile uint32_t * sign_r_reg_ptr = (uint32_t *) CLP_ECC_REG_ECC_SIGN_R_0;
-    volatile uint32_t * sign_s_reg_ptr = (uint32_t *) CLP_ECC_REG_ECC_SIGN_S_0;
-
-    uint32_t ecc_sign_r [12];
-    uint32_t ecc_sign_s [12];
-
-    //inject privkey to kv key reg
-    //suppose privkey is stored by ecc_keygen
-
-    // wait for ECC to be ready
-    while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
-
-    // Program ECC_PRIVKEY Read with 12 dwords from privkey_kv_id
-    lsu_write_32(CLP_ECC_REG_ECC_KV_RD_PKEY_CTRL, (ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_EN_MASK |
-                                                  ((privkey_kv_id & 0x7) << ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_LOW)));
-
-    // Check that ECC PRIVKEY is loaded
-    while((lsu_read_32(CLP_ECC_REG_ECC_KV_RD_PKEY_STATUS) & ECC_REG_ECC_KV_RD_PKEY_STATUS_VALID_MASK) == 0);
-    
-
-    
-    // Program ECC MSG
-    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_MSG_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_MSG_11) {
-        *reg_ptr++ = ecc_msg[offset++];
-    }
-
-    // Program ECC IV
-    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_IV_11) {
-        *reg_ptr++ = ecc_iv[offset++];
-    }
-
-    // Enable ECC SIGNING core
-    lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING);
-    
-    // wait for ECC SIGNING process to be done
-    while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_VALID_MASK) == 0);
-    
-    reg_ptr = (uint32_t *) CLP_ECC_REG_ECC_SIGN_R_0;
-    // Read the data back from ECC register
-    printf("Load SIGN_R data from ECC\n");
-    offset = 0;
-    while (sign_r_reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_11) {
-        ecc_sign_r[offset] = *sign_r_reg_ptr;
-        if (ecc_sign_r[offset] != expected_sign_r[offset]) {
-            printf("At offset [%d], ecc_sign_r data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", ecc_sign_r[offset]);
-            printf("Expected data: 0x%x\n", expected_sign_r[offset]);
-            printf("%c", fail_cmd);
-            while(1);
-        } /*else {
-            printf("[%d] :: 0x%x matches 0x%x\n", offset, ecc_sign_r[offset], expected_sign_r[offset]);
-        }*/
-        sign_r_reg_ptr++;
-        offset++;
-    }
-
-    printf("Load SIGN_S data from ECC\n");
-    offset = 0;
-    while (sign_s_reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_11) {
-        ecc_sign_s[offset] = *sign_s_reg_ptr;
-        if (ecc_sign_s[offset] != expected_sign_s[offset]) {
-            printf("At offset [%d], ecc_sign_s data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", ecc_sign_s[offset]);
-            printf("Expected data: 0x%x\n", expected_sign_s[offset]);
-            printf("%c", fail_cmd);
-            while(1);
-        } /*else {
-            printf("[%d] :: 0x%x matches 0x%x\n", offset, ecc_sign_s[offset], expected_sign_s[offset]);
-        }*/
-        sign_s_reg_ptr++;
-        offset++;
-    }
-
-}
-
-void ecc_kvflow_test(uint8_t seed_kv_id, uint32_t privkey_kv_id){
     uint32_t ecc_msg[] =           {0xC8F518D4,
                                     0xF3AA1BD4,
                                     0x6ED56C1C,
@@ -314,29 +162,68 @@ void ecc_kvflow_test(uint8_t seed_kv_id, uint32_t privkey_kv_id){
                                     0x8A803D0D,
                                     0x003B2633,
                                     0xB9D0F1BF};
-
-    ecc_keygen_kvflow(seed_kv_id, privkey_kv_id, ecc_nonce, ecc_iv, expected_pubkey_x, expected_pubkey_y);
-
-    ecc_signing_kvflow(privkey_kv_id, ecc_msg, ecc_iv, expected_sign_r, expected_sign_s);
-}
-
-
-void main() {
-    printf("----------------------------------\n");
-    printf(" KV Smoke Test With ECC flow !!\n");
-    printf("----------------------------------\n");
-
     //Call interrupt init
-    //init_interrupts();
+    init_interrupts();
 
     uint8_t seed_kv_id = 0x1;
     uint8_t privkey_kv_id = 0x2;
-    
-    //privkey_kv_id = rand() % 8;
 
-    ecc_kvflow_test(seed_kv_id, privkey_kv_id);
+    ecc_io seed;
+    ecc_io nonce;
+    ecc_io iv;
+    ecc_io privkey;
+    ecc_io pubkey_x;
+    ecc_io pubkey_y;
+    ecc_io msg;
+    ecc_io sign_r;
+    ecc_io sign_s;
+
+    seed.kv_intf = TRUE;
+    seed.kv_id = seed_kv_id;
+
+    nonce.kv_intf = FALSE;
+    for (int i = 0; i < 12; i++)
+        nonce.data[i] = ecc_nonce[i];
     
+    iv.kv_intf = FALSE;
+    for (int i = 0; i < 12; i++)
+        iv.data[i] = ecc_iv[i];
+    
+    msg.kv_intf = FALSE;
+    for (int i = 0; i < 12; i++)
+        msg.data[i] = ecc_msg[i];
+
+    privkey.kv_intf = TRUE;
+    privkey.kv_id = privkey_kv_id;
+
+    pubkey_x.kv_intf = FALSE;
+    for (int i = 0; i < 12; i++)
+        pubkey_x.data[i] = expected_pubkey_x[i];
+    
+    pubkey_y.kv_intf = FALSE;
+    for (int i = 0; i < 12; i++)
+        pubkey_y.data[i] = expected_pubkey_y[i];
+    
+    sign_r.kv_intf = FALSE;
+    for (int i = 0; i < 12; i++)
+        sign_r.data[i] = expected_sign_r[i];
+    
+    sign_s.kv_intf = FALSE;
+    for (int i = 0; i < 12; i++)
+        sign_s.data[i] = expected_sign_s[i];
+
+    //inject seed to kv key reg (in RTL)
+    printf("Inject SEED into KV\n");
+    uint8_t seed_inject_cmd = 0x80 + (seed_kv_id & 0x7);
+    printf("%c", seed_inject_cmd);
+
+    ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y);
+    cptra_intr_rcv.ecc_notif = 0;
+
+    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s);
+    cptra_intr_rcv.ecc_notif = 0;
+
+    ecc_zeroize();
 
     printf("%c",0xff); //End the test
-    
 }

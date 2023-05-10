@@ -23,7 +23,7 @@ parameter KV_ADDR_W = 13;
 parameter KV_DATA_W = 32;
 parameter KV_ENTRY_ADDR_W = $clog2(KV_NUM_KEYS);
 parameter KV_ENTRY_SIZE_W = $clog2(KV_NUM_DWORDS);
-parameter KV_NUM_READ=6;
+parameter KV_NUM_READ=5;
 parameter KV_NUM_WRITE=4;
 
 parameter KV_ENTRY_FOR_SIGNING = 7;

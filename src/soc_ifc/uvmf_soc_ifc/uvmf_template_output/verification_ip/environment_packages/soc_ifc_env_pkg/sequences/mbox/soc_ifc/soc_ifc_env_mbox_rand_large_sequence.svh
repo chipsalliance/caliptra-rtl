@@ -28,8 +28,14 @@ class soc_ifc_env_mbox_rand_large_sequence extends soc_ifc_env_mbox_sequence_bas
 
   `uvm_object_utils( soc_ifc_env_mbox_rand_large_sequence )
 
+  // Constrain command to undefined opcode
+  constraint mbox_cmd_undef_c { !(mbox_op_rand.cmd.cmd_s inside {defined_cmds}); }
+
   // Constrain size to a large command
   // Min. size: 16KiB
   constraint mbox_dlen_min_large_c { mbox_op_rand.dlen > 32'h0000_4000; }
+  // Constrain response data size to also be large
+  // Min. size: 16KiB
+  constraint mbox_resp_dlen_min_large_c { mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen >= 32'h0000_4000; }
 
 endclass

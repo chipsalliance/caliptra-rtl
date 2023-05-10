@@ -126,7 +126,10 @@ end
   reg  iccm_lock_o = 'b0;
   function bit any_signal_changed();
       if (!cptra_noncore_rst_b_o)
-          return cptra_noncore_rst_b_i;
+          return cptra_noncore_rst_b_i ||
+                 |(cptra_obf_key_reg_i    ^  cptra_obf_key_reg_o        ) || /* NOTE:             */
+                 |(obf_field_entropy_i    ^  obf_field_entropy_o        ) || /*   These are reset */
+                 |(obf_uds_seed_i         ^  obf_uds_seed_o             ) ;  /*   by pwrgood      */
       else
           return |(cptra_noncore_rst_b_i  ^  cptra_noncore_rst_b_o      ) ||
                  |(cptra_uc_rst_b_i       ^  cptra_uc_rst_b_o           ) ||
@@ -243,7 +246,15 @@ end
 
     // Wait for next transfer then gather info from intiator about the transfer.
     // Place the data into the cptra_status_initiator_struct.
-    while (!any_signal_changed()) @(posedge clk_i);
+    while (!any_signal_changed()) begin
+        // These only trigger a transaction on rising edge. This assignment uses
+        // the falling edge to reset the detection logic.
+        soc_ifc_error_intr_o           <= soc_ifc_error_intr_i  ;
+        soc_ifc_notif_intr_o           <= soc_ifc_notif_intr_i  ;
+        sha_error_intr_o               <= sha_error_intr_i      ;
+        sha_notif_intr_o               <= sha_notif_intr_i      ;
+        @(posedge clk_i);
+    end
     cptra_noncore_rst_b_o          <= cptra_noncore_rst_b_i ;
     cptra_uc_rst_b_o               <= cptra_uc_rst_b_i      ;
     cptra_obf_key_reg_o            <= cptra_obf_key_reg_i   ;

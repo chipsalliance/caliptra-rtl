@@ -14,7 +14,9 @@
 # limitations under the License.
 #
 
-TEST_CFLAGS = -g -O3
+PLAYBOOK_RANDOM_SEED ?= $(shell date +%s)
+TEST_CFLAGS = -g -O3 -DMY_RANDOM_SEED=$(PLAYBOOK_RANDOM_SEED)
+
 ABI = -mabi=ilp32 -march=rv32imc
 
 VERILATOR = verilator
@@ -42,6 +44,7 @@ COMP_LIB_NAMES := aes \
 		  ecc \
 		  hmac \
 		  keyvault \
+		  datavault \
 		  sha256 \
 		  sha512 \
 		  soc_ifc
@@ -159,12 +162,13 @@ verilator-build: $(TBFILES) $(INCLUDES_DIR)/defines.h test_caliptra_top_tb.cpp
 	$(VERILATOR)  --cc -CFLAGS $(CFLAGS) \
 	  +libext+.v+.sv +define+RV_OPENSOURCE \
 	  --timescale 1ns/1ps \
+		--timing \
 	  $(includes) \
 	  $(suppress) \
 	  -f $(TBDIR)/../config/caliptra_top_tb.vf --top-module caliptra_top_tb \
 	  -f $(TBDIR)/../config/caliptra_top_tb.vlt \
-	  -exe test_caliptra_top_tb.cpp --autoflush $(VERILATOR_DEBUG)
-	  #+define+CALIPTRA_INTERNAL_TRNG
+	  -exe test_caliptra_top_tb.cpp --autoflush $(VERILATOR_DEBUG) \
+		+define+CALIPTRA_INTERNAL_QSPI+CALIPTRA_INTERNAL_TRNG+CALIPTRA_INTERNAL_UART
 	cp $(TBDIR)/test_caliptra_top_tb.cpp obj_dir/
 	$(MAKE) -j -e -C obj_dir/ -f Vcaliptra_top_tb.mk $(VERILATOR_MAKE_FLAGS) VM_PARALLEL_BUILDS=1
 	touch verilator-build

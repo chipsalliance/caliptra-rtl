@@ -22,11 +22,15 @@ package soc_ifc_pkg;
     parameter SOC_IFC_USER_W = 32;
     
     parameter MBOX_SIZE_KB = 128;
+    parameter MBOX_SIZE_BYTES = 128 * 1024;
     parameter MBOX_DATA_W = 32;
     parameter MBOX_ECC_DATA_W = 7;
     parameter MBOX_DATA_AND_ECC_W = MBOX_DATA_W + MBOX_ECC_DATA_W;
     parameter MBOX_DEPTH = (MBOX_SIZE_KB * 1024 * 8) / MBOX_DATA_W;
     parameter MBOX_ADDR_W = $clog2(MBOX_DEPTH);
+
+    parameter WDT_TIMEOUT_PERIOD_NUM_DWORDS = 2;
+    parameter WDT_TIMEOUT_PERIOD_W = WDT_TIMEOUT_PERIOD_NUM_DWORDS * 32;
 
     //memory map
     parameter MBOX_DIR_START_ADDR    = 18'h0_0000;
@@ -40,9 +44,10 @@ package soc_ifc_pkg;
 
     //Valid PAUSER
     //Lock the PAUSER values from integration time
-    parameter [4:0] CLP_SET_PAUSER_INTEG = { 1'b0,          1'b0,          1'b0,          1'b0,          1'b0};
-    parameter [4:0][31:0] CLP_VALID_PAUSER = {32'h4444_4444, 32'h3333_3333, 32'h2222_2222, 32'h1111_1111, 32'h0000_0000};
-  
+    parameter [4:0] CPTRA_SET_MBOX_PAUSER_INTEG   = { 1'b0,          1'b0,          1'b0,          1'b0,          1'b0};
+    parameter [4:0][31:0] CPTRA_MBOX_VALID_PAUSER = {32'h4444_4444, 32'h3333_3333, 32'h2222_2222, 32'h1111_1111, 32'h0000_0000};
+    parameter [31:0] CPTRA_DEF_MBOX_VALID_PAUSER  = 32'hFFFF_FFFF;
+
     //DMI Register encodings
     //Read only registers
     parameter DMI_REG_MBOX_DLEN = 7'h50;

@@ -97,7 +97,9 @@ always_comb begin
             boot_fsm_ns = BOOT_FUSE;
 
             //reset flags in IDLE
-            fsm_synch_uc_rst_b = '1;
+            // NOTE: FSM is only in BOOT_IDLE when system reset is asserted, so
+            //       also assert the internal core/noncore resets
+            fsm_synch_uc_rst_b = '0;
             fsm_iccm_unlock = '0;
             wait_count_decr = 0;
             wait_count_rst = 0;

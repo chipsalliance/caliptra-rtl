@@ -56,7 +56,7 @@ void doe_init(uint32_t * iv_data_uds, uint32_t * iv_data_fe, uint32_t kv_dest_fe
     //start FE and store in KV6/7
     VPRINTF(MEDIUM,"DOE: Starting Field Entropy Deobfuscation flow\n");
     lsu_write_32(CLP_DOE_REG_DOE_CTRL, (DOE_FE << DOE_REG_DOE_CTRL_CMD_LOW) |
-                                       (kv_dest_fe << DOE_REG_DOE_CTRL_DEST_LOW));
+                                       ((kv_dest_fe << DOE_REG_DOE_CTRL_DEST_LOW) & DOE_REG_DOE_CTRL_DEST_MASK));
 
     // Check that FE flow is done
     while((lsu_read_32(CLP_DOE_REG_DOE_STATUS) & DOE_REG_DOE_STATUS_VALID_MASK) == 0);

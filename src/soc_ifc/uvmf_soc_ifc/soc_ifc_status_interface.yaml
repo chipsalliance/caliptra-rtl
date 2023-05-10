@@ -57,45 +57,45 @@ uvmf:
       # Ready indicators
       - name: ready_for_fuses
         type: bit
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
       - name: ready_for_fw_push
         type: bit
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
       - name: ready_for_runtime
         type: bit
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
 
       # Command indicators
       - name: mailbox_data_avail
         type: bit
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
       - name: mailbox_flow_done
         type: bit
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
 
       # Caliptra Internal Interrupts
       - name: cptra_error_fatal_intr_pending
         type: bit
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
       - name: cptra_error_non_fatal_intr_pending
         type: bit
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
       - name: trng_req_pending
         type: bit
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
 
       # Generic signals
       - name: generic_output_val
         type: bit [63:0]
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
 
     ############## Caliptra Internal Status Interface ##############
@@ -163,43 +163,43 @@ uvmf:
       # Caliptra Internal Interrupts
       - name: soc_ifc_err_intr_pending
         type: bit
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
       - name: soc_ifc_notif_intr_pending
         type: bit
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
       - name: sha_err_intr_pending
         type: bit
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
       - name: sha_notif_intr_pending
         type: bit
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
 
       # Subsystem reset
       - name: noncore_rst_asserted
         type: bit
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
       - name: uc_rst_asserted
         type: bit
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
 
       #Obfuscated UDS and FE
       - name: cptra_obf_key_reg
         type: bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0]
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
       - name: obf_field_entropy
         type: bit [`CLP_OBF_FE_DWORDS-1:0] [31:0]
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
       - name: obf_uds_seed
         type: bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0]
-        iscompare: 'False'
+        iscompare: 'True'
         isrand: 'False'
 
       # NMI Vector

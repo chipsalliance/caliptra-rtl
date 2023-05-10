@@ -73,6 +73,7 @@ module caliptra_top_tb (
         S_APB_WR_CMD,
         S_APB_WR_DLEN,
         S_APB_WR_DATAIN,
+        S_APB_WR_STATUS,
         S_APB_WR_EXEC,
         S_APB_DONE,
         S_APB_ERROR
@@ -101,8 +102,19 @@ module caliptra_top_tb (
     logic                                PSLVERR;
     logic [`CALIPTRA_APB_DATA_WIDTH-1:0] PRDATA;
 
+    // QSPI Interface
+    logic                                qspi_clk;
+    logic [`CALIPTRA_QSPI_CS_WIDTH-1:0]  qspi_cs_n;
+    wire  [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_data;
+
+`ifdef CALIPTRA_INTERNAL_UART
+    logic uart_loopback;
+`endif
+
     logic ready_for_fuses;
     logic ready_for_fw_push;
+    logic mailbox_data_avail;
+    logic status_set;
     logic mbox_sram_cs;
     logic mbox_sram_we;
     logic [14:0] mbox_sram_addr;
@@ -183,7 +195,6 @@ module caliptra_top_tb (
         cptra_pwrgood = 1'b0;
         BootFSM_BrkPoint = 1'b1; //Set to 1 even before anything starts
         cptra_rst_b = 1'b0;
-        scan_mode = 1'b0;
         start_apb_fuse_sequence = 1'b0;
         //tie offs
         jtag_tck = 1'b0;    // JTAG clk
@@ -295,6 +306,9 @@ module caliptra_top_tb (
                 end
                 S_APB_WR_EXEC: begin
                     $display ("SoC: Setting the Execute Register\n");
+                end
+                S_APB_WR_STATUS: begin
+                    $display ("SoC: Writing the Mbox Status Register\n");
                 end
                 S_APB_DONE: begin
                 end
@@ -438,8 +452,18 @@ module caliptra_top_tb (
                 else
                     n_state_apb = S_APB_WR_EXEC;
             end
+            // status
+            S_APB_WR_STATUS: begin
+                if (apb_xfer_end)
+                    n_state_apb = S_APB_DONE;
+                else
+                    n_state_apb = S_APB_WR_STATUS;
+            end
             S_APB_DONE: begin
                 apb_wr_count_nxt = '0;
+                if (mailbox_data_avail & ~status_set)
+                    n_state_apb = S_APB_WR_STATUS;
+                else
                 n_state_apb = S_APB_DONE;
             end
             default: begin
@@ -449,6 +473,15 @@ module caliptra_top_tb (
         endcase
     end
     
+    always@(posedge core_clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b) begin
+            status_set  <= '0;
+        end else begin
+            status_set <= ~mailbox_data_avail ? '0 :
+                          (c_state_apb == S_APB_WR_STATUS) ? '1 : status_set;
+        end
+    end
+
     assign apb_xfer_end = PSEL && PENABLE && PREADY;
     always@(posedge core_clk) begin
         if ((n_state_apb == S_APB_WR_DATAIN) && apb_xfer_end)
@@ -490,6 +523,10 @@ module caliptra_top_tb (
             end
             S_APB_WR_EXEC: begin
                 PADDR      = `CLP_MBOX_CSR_MBOX_EXECUTE;
+                PWDATA     = 32'h00000001;
+            end
+            S_APB_WR_STATUS: begin
+                PADDR      = `CLP_MBOX_CSR_MBOX_STATUS;
                 PWDATA     = 32'h00000001;
             end
             S_APB_DONE: begin
@@ -555,6 +592,11 @@ module caliptra_top_tb (
                 PWRITE     = 1;
                 PAUSER     = '1;
             end
+            S_APB_WR_STATUS: begin
+                PSEL       = 1;
+                PWRITE     = 1;
+                PAUSER     = '1;
+            end
             S_APB_DONE: begin
                 PSEL       = 0;
                 PWRITE     = 0;
@@ -596,9 +638,14 @@ caliptra_top caliptra_top_dut (
     .PWDATA(PWDATA),
     .PWRITE(PWRITE),
 
-    .qspi_clk_o(),
-    .qspi_cs_no(),
-    .qspi_d_io(),
+    .qspi_clk_o(qspi_clk),
+    .qspi_cs_no(qspi_cs_n),
+    .qspi_d_io(qspi_data),
+
+`ifdef CALIPTRA_INTERNAL_UART
+    .uart_tx(uart_loopback),
+    .uart_rx(uart_loopback),
+`endif
 
     .el2_mem_export(el2_mem_export),
 
@@ -616,7 +663,7 @@ caliptra_top caliptra_top_dut (
     .imem_addr(imem_addr),
     .imem_rdata(imem_rdata),
 
-    .mailbox_data_avail(),
+    .mailbox_data_avail(mailbox_data_avail),
     .mailbox_flow_done(),
     .BootFSM_BrkPoint(BootFSM_BrkPoint),
 
@@ -654,6 +701,33 @@ physical_rng physical_rng (
 );
 `endif
 
+`ifdef CALIPTRA_INTERNAL_QSPI
+    //=========================================================================-
+    // SPI Flash
+    //=========================================================================-
+localparam logic [15:0] DeviceId0 = 16'hF10A;
+localparam logic [15:0] DeviceId1 = 16'hF10B;
+
+spiflash #(
+  .DeviceId(DeviceId0),
+  .SpiFlashRandomData(0) // fixed pattern for smoke test
+) spiflash0 (
+  .sck (qspi_clk),
+  .csb (qspi_cs_n[0]),
+  .sd  (qspi_data)
+);
+
+spiflash #(
+  .DeviceId(DeviceId1),
+  .SpiFlashRandomData(0) // fixed pattern for smoke test
+) spiflash1 (
+  .sck (qspi_clk),
+  .csb (qspi_cs_n[1]),
+  .sd  (qspi_data)
+);
+
+`endif
+
    //=========================================================================-
    // Services for SRAM exports, STDOUT, etc
    //=========================================================================-
@@ -682,6 +756,9 @@ caliptra_top_tb_services #(
     // Security State
     .security_state(security_state),
 
+    //Scan mode
+    .scan_mode(scan_mode),
+
     // TB Controls
     .cycleCnt(cycleCnt),
 
@@ -699,5 +776,8 @@ caliptra_top_tb_services #(
 
 caliptra_top_sva sva();
 
+`ifndef VERILATOR
+soc_ifc_cov_bind i_soc_ifc_cov_bind();
+`endif
 
 endmodule

@@ -9,6 +9,7 @@ module sha512_reg (
         input wire s_cpuif_req_is_wr,
         input wire [11:0] s_cpuif_addr,
         input wire [31:0] s_cpuif_wr_data,
+        input wire [31:0] s_cpuif_wr_biten,
         output wire s_cpuif_req_stall_wr,
         output wire s_cpuif_req_stall_rd,
         output wire s_cpuif_rd_ack,
@@ -28,6 +29,7 @@ module sha512_reg (
     logic cpuif_req_is_wr;
     logic [11:0] cpuif_addr;
     logic [31:0] cpuif_wr_data;
+    logic [31:0] cpuif_wr_biten;
     logic cpuif_req_stall_wr;
     logic cpuif_req_stall_rd;
 
@@ -42,6 +44,7 @@ module sha512_reg (
     assign cpuif_req_is_wr = s_cpuif_req_is_wr;
     assign cpuif_addr = s_cpuif_addr;
     assign cpuif_wr_data = s_cpuif_wr_data;
+    assign cpuif_wr_biten = s_cpuif_wr_biten;
     assign s_cpuif_req_stall_wr = cpuif_req_stall_wr;
     assign s_cpuif_req_stall_rd = cpuif_req_stall_rd;
     assign s_cpuif_rd_ack = cpuif_rd_ack;
@@ -101,6 +104,7 @@ module sha512_reg (
     logic decoded_req;
     logic decoded_req_is_wr;
     logic [31:0] decoded_wr_data;
+    logic [31:0] decoded_wr_biten;
 
     always_comb begin
         for(int i0=0; i0<2; i0++) begin
@@ -152,11 +156,12 @@ module sha512_reg (
     assign decoded_req = cpuif_req_masked;
     assign decoded_req_is_wr = cpuif_req_is_wr;
     assign decoded_wr_data = cpuif_wr_data;
+    assign decoded_wr_biten = cpuif_wr_biten;
+
 
     // Writes are always granted with no error response
     assign cpuif_wr_ack = decoded_req & decoded_req_is_wr;
     assign cpuif_wr_err = '0;
-
     //--------------------------------------------------------------------------
     // Field logic
     //--------------------------------------------------------------------------
@@ -259,11 +264,7 @@ module sha512_reg (
                 logic load_next;
             } ecc_seed_dest_valid;
             struct packed{
-                logic next;
-                logic load_next;
-            } ecc_msg_dest_valid;
-            struct packed{
-                logic [19:0] next;
+                logic [20:0] next;
                 logic load_next;
             } rsvd;
         } SHA512_KV_WR_CTRL;
@@ -554,10 +555,7 @@ module sha512_reg (
                 logic value;
             } ecc_seed_dest_valid;
             struct packed{
-                logic value;
-            } ecc_msg_dest_valid;
-            struct packed{
-                logic [19:0] value;
+                logic [20:0] value;
             } rsvd;
         } SHA512_KV_WR_CTRL;
         struct packed{
@@ -720,7 +718,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.SHA512_CTRL.INIT.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[0:0];
+            next_c = (field_storage.SHA512_CTRL.INIT.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end else if(1) begin // singlepulse clears back to 0
             next_c = '0;
@@ -742,7 +740,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.SHA512_CTRL.NEXT.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[1:1];
+            next_c = (field_storage.SHA512_CTRL.NEXT.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
         end else if(1) begin // singlepulse clears back to 0
             next_c = '0;
@@ -764,7 +762,7 @@ module sha512_reg (
         automatic logic [1:0] next_c = field_storage.SHA512_CTRL.MODE.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[3:2];
+            next_c = (field_storage.SHA512_CTRL.MODE.value & ~decoded_wr_biten[3:2]) | (decoded_wr_data[3:2] & decoded_wr_biten[3:2]);
             load_next_c = '1;
         end
         field_combo.SHA512_CTRL.MODE.next = next_c;
@@ -783,7 +781,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.SHA512_CTRL.ZEROIZE.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[4:4];
+            next_c = (field_storage.SHA512_CTRL.ZEROIZE.value & ~decoded_wr_biten[4:4]) | (decoded_wr_data[4:4] & decoded_wr_biten[4:4]);
             load_next_c = '1;
         end else if(1) begin // singlepulse clears back to 0
             next_c = '0;
@@ -805,7 +803,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.SHA512_CTRL.LAST.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[5:5];
+            next_c = (field_storage.SHA512_CTRL.LAST.value & ~decoded_wr_biten[5:5]) | (decoded_wr_data[5:5] & decoded_wr_biten[5:5]);
             load_next_c = '1;
         end else if(hwif_in.SHA512_CTRL.LAST.hwclr) begin // HW Clear
             next_c = '0;
@@ -866,7 +864,7 @@ module sha512_reg (
             automatic logic [31:0] next_c = field_storage.SHA512_BLOCK[i0].BLOCK.value;
             automatic logic load_next_c = '0;
             if(decoded_reg_strb.SHA512_BLOCK[i0] && decoded_req_is_wr && !(hwif_in.SHA512_BLOCK[i0].BLOCK.swwel)) begin // SW write
-                next_c = decoded_wr_data[31:0];
+                next_c = (field_storage.SHA512_BLOCK[i0].BLOCK.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
             end else if(hwif_in.SHA512_BLOCK[i0].BLOCK.we) begin // HW Write - we
                 next_c = hwif_in.SHA512_BLOCK[i0].BLOCK.next;
@@ -915,7 +913,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.SHA512_VAULT_RD_CTRL.read_en.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_VAULT_RD_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[0:0];
+            next_c = (field_storage.SHA512_VAULT_RD_CTRL.read_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end else if(hwif_in.SHA512_VAULT_RD_CTRL.read_en.hwclr) begin // HW Clear
             next_c = '0;
@@ -937,7 +935,7 @@ module sha512_reg (
         automatic logic [4:0] next_c = field_storage.SHA512_VAULT_RD_CTRL.read_entry.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_VAULT_RD_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[5:1];
+            next_c = (field_storage.SHA512_VAULT_RD_CTRL.read_entry.value & ~decoded_wr_biten[5:1]) | (decoded_wr_data[5:1] & decoded_wr_biten[5:1]);
             load_next_c = '1;
         end
         field_combo.SHA512_VAULT_RD_CTRL.read_entry.next = next_c;
@@ -956,7 +954,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.SHA512_VAULT_RD_CTRL.pcr_hash_extend.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_VAULT_RD_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[6:6];
+            next_c = (field_storage.SHA512_VAULT_RD_CTRL.pcr_hash_extend.value & ~decoded_wr_biten[6:6]) | (decoded_wr_data[6:6] & decoded_wr_biten[6:6]);
             load_next_c = '1;
         end
         field_combo.SHA512_VAULT_RD_CTRL.pcr_hash_extend.next = next_c;
@@ -975,7 +973,7 @@ module sha512_reg (
         automatic logic [24:0] next_c = field_storage.SHA512_VAULT_RD_CTRL.rsvd.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_VAULT_RD_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[31:7];
+            next_c = (field_storage.SHA512_VAULT_RD_CTRL.rsvd.value & ~decoded_wr_biten[31:7]) | (decoded_wr_data[31:7] & decoded_wr_biten[31:7]);
             load_next_c = '1;
         end
         field_combo.SHA512_VAULT_RD_CTRL.rsvd.next = next_c;
@@ -1015,7 +1013,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.SHA512_KV_WR_CTRL.write_en.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[0:0];
+            next_c = (field_storage.SHA512_KV_WR_CTRL.write_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end else if(hwif_in.SHA512_KV_WR_CTRL.write_en.hwclr) begin // HW Clear
             next_c = '0;
@@ -1037,7 +1035,7 @@ module sha512_reg (
         automatic logic [4:0] next_c = field_storage.SHA512_KV_WR_CTRL.write_entry.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[5:1];
+            next_c = (field_storage.SHA512_KV_WR_CTRL.write_entry.value & ~decoded_wr_biten[5:1]) | (decoded_wr_data[5:1] & decoded_wr_biten[5:1]);
             load_next_c = '1;
         end
         field_combo.SHA512_KV_WR_CTRL.write_entry.next = next_c;
@@ -1056,7 +1054,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.SHA512_KV_WR_CTRL.hmac_key_dest_valid.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[6:6];
+            next_c = (field_storage.SHA512_KV_WR_CTRL.hmac_key_dest_valid.value & ~decoded_wr_biten[6:6]) | (decoded_wr_data[6:6] & decoded_wr_biten[6:6]);
             load_next_c = '1;
         end
         field_combo.SHA512_KV_WR_CTRL.hmac_key_dest_valid.next = next_c;
@@ -1075,7 +1073,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.SHA512_KV_WR_CTRL.hmac_block_dest_valid.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[7:7];
+            next_c = (field_storage.SHA512_KV_WR_CTRL.hmac_block_dest_valid.value & ~decoded_wr_biten[7:7]) | (decoded_wr_data[7:7] & decoded_wr_biten[7:7]);
             load_next_c = '1;
         end
         field_combo.SHA512_KV_WR_CTRL.hmac_block_dest_valid.next = next_c;
@@ -1094,7 +1092,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.SHA512_KV_WR_CTRL.sha_block_dest_valid.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[8:8];
+            next_c = (field_storage.SHA512_KV_WR_CTRL.sha_block_dest_valid.value & ~decoded_wr_biten[8:8]) | (decoded_wr_data[8:8] & decoded_wr_biten[8:8]);
             load_next_c = '1;
         end
         field_combo.SHA512_KV_WR_CTRL.sha_block_dest_valid.next = next_c;
@@ -1113,7 +1111,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.SHA512_KV_WR_CTRL.ecc_pkey_dest_valid.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[9:9];
+            next_c = (field_storage.SHA512_KV_WR_CTRL.ecc_pkey_dest_valid.value & ~decoded_wr_biten[9:9]) | (decoded_wr_data[9:9] & decoded_wr_biten[9:9]);
             load_next_c = '1;
         end
         field_combo.SHA512_KV_WR_CTRL.ecc_pkey_dest_valid.next = next_c;
@@ -1132,7 +1130,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.SHA512_KV_WR_CTRL.ecc_seed_dest_valid.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[10:10];
+            next_c = (field_storage.SHA512_KV_WR_CTRL.ecc_seed_dest_valid.value & ~decoded_wr_biten[10:10]) | (decoded_wr_data[10:10] & decoded_wr_biten[10:10]);
             load_next_c = '1;
         end
         field_combo.SHA512_KV_WR_CTRL.ecc_seed_dest_valid.next = next_c;
@@ -1146,31 +1144,12 @@ module sha512_reg (
         end
     end
     assign hwif_out.SHA512_KV_WR_CTRL.ecc_seed_dest_valid.value = field_storage.SHA512_KV_WR_CTRL.ecc_seed_dest_valid.value;
-    // Field: sha512_reg.SHA512_KV_WR_CTRL.ecc_msg_dest_valid
-    always_comb begin
-        automatic logic [0:0] next_c = field_storage.SHA512_KV_WR_CTRL.ecc_msg_dest_valid.value;
-        automatic logic load_next_c = '0;
-        if(decoded_reg_strb.SHA512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[11:11];
-            load_next_c = '1;
-        end
-        field_combo.SHA512_KV_WR_CTRL.ecc_msg_dest_valid.next = next_c;
-        field_combo.SHA512_KV_WR_CTRL.ecc_msg_dest_valid.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
-            field_storage.SHA512_KV_WR_CTRL.ecc_msg_dest_valid.value <= 'h0;
-        end else if(field_combo.SHA512_KV_WR_CTRL.ecc_msg_dest_valid.load_next) begin
-            field_storage.SHA512_KV_WR_CTRL.ecc_msg_dest_valid.value <= field_combo.SHA512_KV_WR_CTRL.ecc_msg_dest_valid.next;
-        end
-    end
-    assign hwif_out.SHA512_KV_WR_CTRL.ecc_msg_dest_valid.value = field_storage.SHA512_KV_WR_CTRL.ecc_msg_dest_valid.value;
     // Field: sha512_reg.SHA512_KV_WR_CTRL.rsvd
     always_comb begin
-        automatic logic [19:0] next_c = field_storage.SHA512_KV_WR_CTRL.rsvd.value;
+        automatic logic [20:0] next_c = field_storage.SHA512_KV_WR_CTRL.rsvd.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[31:12];
+            next_c = (field_storage.SHA512_KV_WR_CTRL.rsvd.value & ~decoded_wr_biten[31:11]) | (decoded_wr_data[31:11] & decoded_wr_biten[31:11]);
             load_next_c = '1;
         end
         field_combo.SHA512_KV_WR_CTRL.rsvd.next = next_c;
@@ -1210,7 +1189,7 @@ module sha512_reg (
         automatic logic [31:0] next_c = field_storage.SHA512_GEN_PCR_HASH_NONCE.NONCE.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_GEN_PCR_HASH_NONCE && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[31:0];
+            next_c = (field_storage.SHA512_GEN_PCR_HASH_NONCE.NONCE.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
         end
         field_combo.SHA512_GEN_PCR_HASH_NONCE.NONCE.next = next_c;
@@ -1229,7 +1208,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.SHA512_GEN_PCR_HASH_CTRL.START.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.SHA512_GEN_PCR_HASH_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[0:0];
+            next_c = (field_storage.SHA512_GEN_PCR_HASH_CTRL.START.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end else if(1) begin // singlepulse clears back to 0
             next_c = '0;
@@ -1295,7 +1274,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.intr_block_rf.global_intr_en_r.error_en.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.global_intr_en_r && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[0:0];
+            next_c = (field_storage.intr_block_rf.global_intr_en_r.error_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end
         field_combo.intr_block_rf.global_intr_en_r.error_en.next = next_c;
@@ -1313,7 +1292,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.intr_block_rf.global_intr_en_r.notif_en.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.global_intr_en_r && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[1:1];
+            next_c = (field_storage.intr_block_rf.global_intr_en_r.notif_en.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
         end
         field_combo.intr_block_rf.global_intr_en_r.notif_en.next = next_c;
@@ -1331,7 +1310,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error0_en.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[0:0];
+            next_c = (field_storage.intr_block_rf.error_intr_en_r.error0_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end
         field_combo.intr_block_rf.error_intr_en_r.error0_en.next = next_c;
@@ -1349,7 +1328,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error1_en.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[1:1];
+            next_c = (field_storage.intr_block_rf.error_intr_en_r.error1_en.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
         end
         field_combo.intr_block_rf.error_intr_en_r.error1_en.next = next_c;
@@ -1367,7 +1346,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error2_en.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[2:2];
+            next_c = (field_storage.intr_block_rf.error_intr_en_r.error2_en.value & ~decoded_wr_biten[2:2]) | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
         end
         field_combo.intr_block_rf.error_intr_en_r.error2_en.next = next_c;
@@ -1385,7 +1364,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error3_en.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[3:3];
+            next_c = (field_storage.intr_block_rf.error_intr_en_r.error3_en.value & ~decoded_wr_biten[3:3]) | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
             load_next_c = '1;
         end
         field_combo.intr_block_rf.error_intr_en_r.error3_en.next = next_c;
@@ -1403,7 +1382,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_en_r && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[0:0];
+            next_c = (field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end
         field_combo.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.next = next_c;
@@ -1467,7 +1446,7 @@ module sha512_reg (
             next_c = '1;
             load_next_c = '1;
         end else if(decoded_reg_strb.intr_block_rf.error_internal_intr_r && decoded_req_is_wr) begin // SW write 1 clear
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value & ~decoded_wr_data[0:0];
+            next_c = field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value & ~(decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end
         field_combo.intr_block_rf.error_internal_intr_r.error0_sts.next = next_c;
@@ -1491,7 +1470,7 @@ module sha512_reg (
             next_c = '1;
             load_next_c = '1;
         end else if(decoded_reg_strb.intr_block_rf.error_internal_intr_r && decoded_req_is_wr) begin // SW write 1 clear
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value & ~decoded_wr_data[1:1];
+            next_c = field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value & ~(decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
         end
         field_combo.intr_block_rf.error_internal_intr_r.error1_sts.next = next_c;
@@ -1515,7 +1494,7 @@ module sha512_reg (
             next_c = '1;
             load_next_c = '1;
         end else if(decoded_reg_strb.intr_block_rf.error_internal_intr_r && decoded_req_is_wr) begin // SW write 1 clear
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value & ~decoded_wr_data[2:2];
+            next_c = field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value & ~(decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
         end
         field_combo.intr_block_rf.error_internal_intr_r.error2_sts.next = next_c;
@@ -1539,7 +1518,7 @@ module sha512_reg (
             next_c = '1;
             load_next_c = '1;
         end else if(decoded_reg_strb.intr_block_rf.error_internal_intr_r && decoded_req_is_wr) begin // SW write 1 clear
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value & ~decoded_wr_data[3:3];
+            next_c = field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value & ~(decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
             load_next_c = '1;
         end
         field_combo.intr_block_rf.error_internal_intr_r.error3_sts.next = next_c;
@@ -1568,7 +1547,7 @@ module sha512_reg (
             next_c = '1;
             load_next_c = '1;
         end else if(decoded_reg_strb.intr_block_rf.notif_internal_intr_r && decoded_req_is_wr) begin // SW write 1 clear
-            next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value & ~decoded_wr_data[0:0];
+            next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value & ~(decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end
         field_combo.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.next = next_c;
@@ -1588,7 +1567,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
-            next_c = field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value | decoded_wr_data[0:0];
+            next_c = field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end else if(1) begin // singlepulse clears back to 0
             next_c = '0;
@@ -1609,7 +1588,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
-            next_c = field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value | decoded_wr_data[1:1];
+            next_c = field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
         end else if(1) begin // singlepulse clears back to 0
             next_c = '0;
@@ -1630,7 +1609,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
-            next_c = field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value | decoded_wr_data[2:2];
+            next_c = field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
         end else if(1) begin // singlepulse clears back to 0
             next_c = '0;
@@ -1651,7 +1630,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
-            next_c = field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value | decoded_wr_data[3:3];
+            next_c = field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
             load_next_c = '1;
         end else if(1) begin // singlepulse clears back to 0
             next_c = '0;
@@ -1672,7 +1651,7 @@ module sha512_reg (
         automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
-            next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value | decoded_wr_data[0:0];
+            next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end else if(1) begin // singlepulse clears back to 0
             next_c = '0;
@@ -1693,7 +1672,7 @@ module sha512_reg (
         automatic logic [31:0] next_c = field_storage.intr_block_rf.error0_intr_count_r.cnt.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error0_intr_count_r && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[31:0];
+            next_c = (field_storage.intr_block_rf.error0_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
         end
         if(field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value) begin // increment
@@ -1725,7 +1704,7 @@ module sha512_reg (
         automatic logic [31:0] next_c = field_storage.intr_block_rf.error1_intr_count_r.cnt.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error1_intr_count_r && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[31:0];
+            next_c = (field_storage.intr_block_rf.error1_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
         end
         if(field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value) begin // increment
@@ -1757,7 +1736,7 @@ module sha512_reg (
         automatic logic [31:0] next_c = field_storage.intr_block_rf.error2_intr_count_r.cnt.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error2_intr_count_r && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[31:0];
+            next_c = (field_storage.intr_block_rf.error2_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
         end
         if(field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value) begin // increment
@@ -1789,7 +1768,7 @@ module sha512_reg (
         automatic logic [31:0] next_c = field_storage.intr_block_rf.error3_intr_count_r.cnt.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error3_intr_count_r && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[31:0];
+            next_c = (field_storage.intr_block_rf.error3_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
         end
         if(field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value) begin // increment
@@ -1821,7 +1800,7 @@ module sha512_reg (
         automatic logic [31:0] next_c = field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_r && decoded_req_is_wr) begin // SW write
-            next_c = decoded_wr_data[31:0];
+            next_c = (field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
         end
         if(field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value) begin // increment
@@ -1993,7 +1972,6 @@ module sha512_reg (
             field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.next;
         end
     end
-
     //--------------------------------------------------------------------------
     // Readback
     //--------------------------------------------------------------------------
@@ -2030,8 +2008,7 @@ module sha512_reg (
     assign readback_array[23][8:8] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.sha_block_dest_valid.value : '0;
     assign readback_array[23][9:9] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.ecc_pkey_dest_valid.value : '0;
     assign readback_array[23][10:10] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.ecc_seed_dest_valid.value : '0;
-    assign readback_array[23][11:11] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.ecc_msg_dest_valid.value : '0;
-    assign readback_array[23][31:12] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.rsvd.value : '0;
+    assign readback_array[23][31:11] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.rsvd.value : '0;
     assign readback_array[24][0:0] = (decoded_reg_strb.SHA512_KV_WR_STATUS && !decoded_req_is_wr) ? hwif_in.SHA512_KV_WR_STATUS.READY.next : '0;
     assign readback_array[24][1:1] = (decoded_reg_strb.SHA512_KV_WR_STATUS && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_STATUS.VALID.value : '0;
     assign readback_array[24][9:2] = (decoded_reg_strb.SHA512_KV_WR_STATUS && !decoded_req_is_wr) ? hwif_in.SHA512_KV_WR_STATUS.ERROR.next : '0;
@@ -2086,7 +2063,6 @@ module sha512_reg (
     assign readback_array[56][0:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value : '0;
     assign readback_array[56][31:1] = '0;
 
-
     // Reduce the array
     always_comb begin
         automatic logic [31:0] readback_data_var;
@@ -2097,10 +2073,7 @@ module sha512_reg (
         readback_data = readback_data_var;
     end
 
-
     assign cpuif_rd_ack = readback_done;
     assign cpuif_rd_data = readback_data;
     assign cpuif_rd_err = readback_err;
-
-
 endmodule

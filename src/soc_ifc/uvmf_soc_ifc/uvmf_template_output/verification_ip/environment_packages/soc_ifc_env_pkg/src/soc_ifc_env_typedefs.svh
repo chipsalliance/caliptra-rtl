@@ -42,18 +42,26 @@
    * Decode:
    *   [31]: Firmware command
    *   [30]: Response required (if set)
+   *   [29]: uC->SoC command
    */
   typedef enum logic [31:0] {
+      MBOX_CMD_UC_BASIC   = 32'h20000000,
       MBOX_CMD_RESP_BASIC = 32'h40000000,
+      MBOX_CMD_REG_ACCESS = 32'h40000001,
+      MBOX_CMD_OOB_ACCESS = 32'h40000002,
       MBOX_CMD_FMC_UPDATE = 32'hba5eba11,
-      MBOX_CMD_RT_UPDATE  = 32'hbabecafe
+      MBOX_CMD_RT_UPDATE  = 32'hbabecafe,
+      MBOX_CMD_SHA384_REQ = 32'h40C0FFEE,
+      MBOX_CMD_SHA512_REQ = 32'h41C0FFEE
   } mbox_cmd_e;
+  
   typedef union packed {
       mbox_cmd_e cmd_e;
       struct packed {
           logic fw;
           logic resp_reqd;
-          logic [29:0] rsvd;
+          logic uc_to_soc;
+          logic [28:0] rsvd;
       } cmd_s;
   } mbox_cmd_u;
 
@@ -61,5 +69,11 @@
     logic [31:0] dlen;
     mbox_cmd_u   cmd;
   } mbox_op_s;
+
+  typedef struct packed {
+    logic mailbox_mode;
+    logic sha512_mode;
+  } sha_accel_op_s;
+
   // pragma uvmf custom additional end
 

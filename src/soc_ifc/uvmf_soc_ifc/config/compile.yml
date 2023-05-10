@@ -17,6 +17,7 @@ targets:
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_status_pkg
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_status_pkg/src
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/registers
     files:
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_ctrl_pkg/soc_ifc_ctrl_pkg_hdl.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_ctrl_pkg/soc_ifc_ctrl_pkg.sv
@@ -61,6 +62,8 @@ targets:
     tops:
       - hdl_top
       - hvl_top
+  sim:
+    pre_exec: 'echo "[PRE-EXEC] Copying SHA512 Vectors to $(pwd)" && cp ${COMPILE_ROOT}/../tb/vectors/SHA*.rsp .'
 global:
   tool:
     vcs:
@@ -89,3 +92,5 @@ global:
         - '-sv_root $QUESTA_MVC_HOME/questa_mvc_core/linux_x86_64_gcc-6.2.0_vcs'
         - '-sv_lib libahb_IN_SystemVerilog_VCS_full'
         - '-sv_lib libapb3_IN_SystemVerilog_VCS_full'
+        # Report "MVC_ERROR" as "UVM_ERROR"
+        - '+QVIP_UVM_REPORTING'

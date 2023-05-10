@@ -46,9 +46,6 @@ module sha512_core(
                    input wire            init_cmd,
                    input wire            next_cmd,
                    input wire [1 : 0]    mode,
-
-                   input wire            work_factor,
-                   input wire [31 : 0]   work_factor_num,
                    
                    // Data port.
                    input wire [1023 : 0] block_msg,
@@ -113,12 +110,6 @@ module sha512_core(
   reg          round_ctr_we;
   reg          round_ctr_inc;
   reg          round_ctr_rst;
-
-  reg [31 : 0] work_factor_ctr_reg;
-  reg [31 : 0] work_factor_ctr_new;
-  reg          work_factor_ctr_rst;
-  reg          work_factor_ctr_inc;
-  reg          work_factor_ctr_we;
 
   reg          ready_reg;
   reg          ready_new;
@@ -236,7 +227,6 @@ module sha512_core(
           H5_reg              <= 64'h0;
           H6_reg              <= 64'h0;
           H7_reg              <= 64'h0;
-          work_factor_ctr_reg <= 32'h0;
           ready_reg           <= 1'b1;
           digest_valid_reg    <= 1'b0;
           round_ctr_reg       <= 7'h0;
@@ -261,7 +251,6 @@ module sha512_core(
           H5_reg              <= 64'h0;
           H6_reg              <= 64'h0;
           H7_reg              <= 64'h0;
-          work_factor_ctr_reg <= 32'h0;
           ready_reg           <= 1'b1;
           digest_valid_reg    <= 1'b0;
           round_ctr_reg       <= 7'h0;
@@ -296,9 +285,6 @@ module sha512_core(
 
           if (round_ctr_we)
             round_ctr_reg <= round_ctr_new;
-
-          if (work_factor_ctr_we)
-            work_factor_ctr_reg <= work_factor_ctr_new;
 
           if (ready_we)
             ready_reg <= ready_new;
@@ -484,30 +470,6 @@ module sha512_core(
 
 
   //----------------------------------------------------------------
-  // work_factor_ctr
-  //
-  // Work factor counter logic.
-  //----------------------------------------------------------------
-  always @*
-    begin : work_factor_ctr
-      work_factor_ctr_new  = 32'h0;
-      work_factor_ctr_we   = 0;
-
-      if (work_factor_ctr_rst)
-        begin
-          work_factor_ctr_new = 32'h0;
-          work_factor_ctr_we  = 1;
-        end
-
-      if (work_factor_ctr_inc)
-        begin
-          work_factor_ctr_new = work_factor_ctr_reg + 1'b1;
-          work_factor_ctr_we  = 1;
-        end
-    end // work_factor_ctr
-
-
-  //----------------------------------------------------------------
   // sha512_ctrl_fsm
   //
   // Logic for the state machine controlling the core behaviour.
@@ -525,8 +487,6 @@ module sha512_core(
       round_ctr_rst       = 1'b0;
       digest_valid_new    = 1'b0;
       digest_valid_we     = 1'b0;
-      work_factor_ctr_rst = 1'b0;
-      work_factor_ctr_inc = 1'b0;
       ready_new           = 1'b0;
       ready_we            = 1'b0;
       sha512_ctrl_new     = CTRL_IDLE;
@@ -539,7 +499,6 @@ module sha512_core(
               begin
                 ready_new           = 1'b0;
                 ready_we            = 1'b1;
-                work_factor_ctr_rst = 1;
                 digest_init         = 1;
                 w_init              = 1;
                 state_init          = 1;
@@ -555,7 +514,6 @@ module sha512_core(
               begin
                 ready_new           = 1'b0;
                 ready_we            = 1'b1;
-                work_factor_ctr_rst = 1;
                 w_init              = 1;
                 state_init          = 1;
                 round_ctr_rst       = 1;
@@ -575,7 +533,6 @@ module sha512_core(
 
             if (round_ctr_reg == SHA512_ROUNDS)
               begin
-                work_factor_ctr_inc = 1;
                 sha512_ctrl_new     = CTRL_DONE;
                 sha512_ctrl_we      = 1;
               end
@@ -584,37 +541,13 @@ module sha512_core(
 
         CTRL_DONE:
           begin
-            if (work_factor)
-              begin
-                if (work_factor_ctr_reg < work_factor_num)
-                  begin
-                    w_init              = 1'b1;
-                    state_init          = 1'b1;
-                    round_ctr_rst       = 1'b1;
-                    sha512_ctrl_new     = CTRL_ROUNDS;
-                    sha512_ctrl_we      = 1'b1;
-                  end
-                else
-                  begin
-                    ready_new        = 1'b1;
-                    ready_we         = 1'b1;
-                    digest_update    = 1'b1;
-                    digest_valid_new = 1'b1;
-                    digest_valid_we  = 1'b1;
-                    sha512_ctrl_new  = CTRL_IDLE;
-                    sha512_ctrl_we   = 1'b1;
-                  end
-              end
-            else
-              begin
-                ready_new        = 1'b1;
-                ready_we         = 1'b1;
-                digest_update    = 1'b1;
-                digest_valid_new = 1'b1;
-                digest_valid_we  = 1'b1;
-                sha512_ctrl_new  = CTRL_IDLE;
-                sha512_ctrl_we   = 1'b1;
-              end
+            ready_new        = 1'b1;
+            ready_we         = 1'b1;
+            digest_update    = 1'b1;
+            digest_valid_new = 1'b1;
+            digest_valid_we  = 1'b1;
+            sha512_ctrl_new  = CTRL_IDLE;
+            sha512_ctrl_we   = 1'b1;
           end
 
 
@@ -631,8 +564,6 @@ module sha512_core(
             round_ctr_rst       = 1'b0;
             digest_valid_new    = 1'b0;
             digest_valid_we     = 1'b0;
-            work_factor_ctr_rst = 1'b0;
-            work_factor_ctr_inc = 1'b0;
             ready_new           = 1'b0;
             ready_we            = 1'b0;
             sha512_ctrl_new     = CTRL_IDLE;
