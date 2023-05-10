@@ -15,7 +15,7 @@
 #
 PLAYBOOK_RANDOM_SEED ?= $(shell date +%s)
 TEST_CFLAGS = -g -O3 -DMY_RANDOM_SEED=$(PLAYBOOK_RANDOM_SEED)
-ABI = -mabi=ilp32 -march=rv32imac
+ABI = -mabi=ilp32 -march=rv32imc
 
 VERILATOR = verilator
 GCC_PREFIX = riscv64-unknown-elf
