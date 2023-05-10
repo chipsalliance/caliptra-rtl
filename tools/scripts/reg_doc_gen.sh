@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-# 
+#
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,7 +29,9 @@ src/hmac/rtl/hmac_reg.rdl \
 src/doe/rtl/doe_reg.rdl \
 src/keyvault/rtl/kv_def.rdl \
 src/entropy_src/data/entropy_src.rdl \
-src/csrng/data/csrng.rdl
+src/csrng/data/csrng.rdl \
+src/spi_host/data/spi_host.rdl \
+src/uart/data/uart.rdl
 
 python tools/scripts/reg_doc_gen.py \
 src/soc_ifc/rtl/caliptra_top_reg.rdl \

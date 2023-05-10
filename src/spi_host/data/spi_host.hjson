@@ -32,7 +32,7 @@
     { name: "NumCS",
       desc: "The number of active-low chip select (cs_n) lines to create.",
       type: "int",
-      default: "1"
+      default: "2"
     },
     { name: "TxDepth",
       desc: "The size of the Tx FIFO (in words)",
@@ -381,56 +381,66 @@
              // Exclude from RW tests
              "excl:CsrAllTests:CsrExclWrite"]
     },
-    { window: {
-        name: "RXDATA",
-        items: "1",
-        validbits: "32",
-        desc: '''SPI Receive Data.
 
-                 Reads from this window pull data from the RXFIFO.
+    { name: "RXDATA",
+      desc: '''SPI Receive Data
 
-                 The serial order of bit transmission
-                 is chosen to match SPI flash devices. Individual bytes
-                 are always transmitted with the most significant bit first.
-                 Only four-bute reads are supported. If ByteOrder = 0,
-                 the first byte received is packed in the MSB of !!RXDATA.
-                 For some processor architectures, this could lead to shuffling
-                 of flash data as compared to how it is written in memory.
-                 In which case, choosing ByteOrder = 1 can reverse the
-                 byte-order of each data read, causing the first byte
-                 received to be packed into the LSB of !!RXDATA. (Though within
-                 each byte the most significant bit is always pulled
-                 from the bus first.)
-                 '''
-        swaccess: "ro",
-      }
+               Reads from this window pull data from the RXFIFO.
+
+               The serial order of bit transmission
+               is chosen to match SPI flash devices. Individual bytes
+               are always transmitted with the most significant bit first.
+               Only four-bute reads are supported. If ByteOrder = 0,
+               the first byte received is packed in the MSB of !!RXDATA.
+               For some processor architectures, this could lead to shuffling
+               of flash data as compared to how it is written in memory.
+               In which case, choosing ByteOrder = 1 can reverse the
+               byte-order of each data read, causing the first byte
+               received to be packed into the LSB of !!RXDATA. (Though within
+               each byte the most significant bit is always pulled
+               from the bus first.)
+               '''
+      swaccess: "ro",
+      hwaccess: "hwo",
+      fields: [
+        { bits: "31:0",
+          name: "RXDATA",
+          desc: "SPI Receive Data",
+          resval: "0x0"
+        }
+      ]
     },
-    { window: {
-        name: "TXDATA",
-        items: "1",
-        validbits: "32",
-        byte-write: "true",
-        desc: '''SPI Transmit Data.
 
-                 Data written to this window is placed into the TXFIFO.
-                 Byte-enables are supported for writes.
+    { name: "TXDATA",
+      desc: '''SPI Transmit Data
+               Data written to this window is placed into the TXFIFO.
+               Byte-enables are supported for writes.
 
-                 The serial order of bit transmission
-                 is chosen to match SPI flash devices. Individual bytes
-                 are always transmitted with the most significant bit first.
-                 Multi-byte writes are also supported, and if ByteOrder = 0,
-                 the bits of !!TXDATA are transmitted strictly in order of
-                 decreasing signficance (i.e. most signicant bit first).
-                 For some processor architectures, this could lead to shuffling
-                 of flash data as compared to how it is written in memory.
-                 In which case, choosing ByteOrder = 1 can reverse the
-                 byte-order of multi-byte data writes.  (Though within
-                 each byte the most significant bit is always sent first.)
-                 '''
-        swaccess: "wo",
-        unusual: "false"
-      }
+               The serial order of bit transmission
+               is chosen to match SPI flash devices. Individual bytes
+               are always transmitted with the most significant bit first.
+               Multi-byte writes are also supported, and if ByteOrder = 0,
+               the bits of !!TXDATA are transmitted strictly in order of
+               decreasing signficance (i.e. most signicant bit first).
+               For some processor architectures, this could lead to shuffling
+               of flash data as compared to how it is written in memory.
+               In which case, choosing ByteOrder = 1 can reverse the
+               byte-order of multi-byte data writes.  (Though within
+               each byte the most significant bit is always sent first.)
+               '''
+      swaccess: "wo",
+      hwaccess: "hro",
+      hwext: "true",
+      hwqe: "true",
+      fields: [
+        { bits: "31:0",
+          name: "TXDATA",
+          desc: "SPI Transmit Data",
+          resval: "0x0"
+        }
+      ]
     },
+
     { name: "ERROR_ENABLE",
       desc: "Controls which classes of errors raise an interrupt."
       swaccess: "rw",

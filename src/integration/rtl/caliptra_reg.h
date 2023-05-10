@@ -15,7 +15,6 @@
 #ifndef CALIPTRA_REG_HEADER
 #define CALIPTRA_REG_HEADER
 
-
 #define CLP_BASE_ADDR                                                                               (0x0)
 #define CLP_DOE_REG_BASE_ADDR                                                                       (0x10000000)
 #define CLP_DOE_REG_DOE_IV_0                                                                        (0x10000000)
