@@ -19,14 +19,14 @@ reg {
     desc = "Indicates fatal hardware error.
             [br]Caliptra Access: RW
             [br]SOC Access:      RW";
-    rw_rw_sticky error_code[32]=0; 
+    rw_rw_sticky_hw error_code[32]=0; 
 } CPTRA_HW_ERROR_FATAL;
 reg {
     name = "Hardware Error Non-Fatal";
     desc = "Indicates non-fatal hardware error.
             [br]Caliptra Access: RW
             [br]SOC Access:      RW";
-    rw_rw_sticky error_code[32]=0; 
+    rw_rw_sticky_hw error_code[32]=0; 
 } CPTRA_HW_ERROR_NON_FATAL;
 reg {
     name = "Firmware Error Fatal";
@@ -122,41 +122,43 @@ reg {
 
 reg {
     name = "Valid User Registers";
-     desc = "Valid PAUSER attributes for requests from SoC APB Interface.
+     desc = "Valid PAUSER attributes for requests from SoC APB Interface. Only valid once LOCK is set.
              [br]Caliptra Access: RW
              [br]SOC Access:      RW
              Read-Only once locked by PAUSER_LOCK.";
      field {sw=rw; hw=r; swwel;resetsignal = cptra_rst_b;} PAUSER[32]=0xFFFF_FFFF;
- } CPTRA_VALID_PAUSER[5];
+ } CPTRA_MBOX_VALID_PAUSER[5];
 
 //FIXME: Should LOCK be W1 here?
 reg {
     name = "Valid User Register Lock";
      desc = "Valid PAUSER attributes for requests from SoC APB Interface.
-             Each bit corresponds to locking the associated  VALID_PAUSER register.
+             [br]Each bit corresponds to locking the associated MBOX_VALID_PAUSER register.
+             [br]Associated MBOX_VALID_PAUSER register is only valid once locked by this bit.
              [br]Caliptra Access: RW
              [br]SOC Access:      RW
-             Read-Only once locked.";
+             [br]Read-Only once locked.";
      field {sw=rw; hw=r; swwel; resetsignal = cptra_rst_b;} LOCK=0;
- } CPTRA_PAUSER_LOCK[5];
+ } CPTRA_MBOX_PAUSER_LOCK[5];
 
 reg {
     name = "Valid User for TRNG";
-    desc = "Valid PAUSER attributes for TRNG on SoC APB Interface.
+    desc = "Valid PAUSER attributes for TRNG on SoC APB Interface. Only valid once LOCK is set.
             [br]Caliptra Access: RW
             [br]SOC Access:      RW
-            Read-Only once locked by TRNG_PAUSER_LOCK.";
+            [br]Read-Only once locked by TRNG_PAUSER_LOCK.";
     field {sw=rw; hw=r; swwel; resetsignal = cptra_rst_b;} PAUSER[32]=0xFFFF_FFFF;
  } CPTRA_TRNG_VALID_PAUSER;
 
 reg {
     name = "Valid User for TRNG PAUSER Lock";
     desc = "Valid PAUSER attributes for requests from SoC APB Interface.
-            Each bit corresponds to locking the associated VALID_PAUSER register.
-            Caliptra FW RW access for survivability but cannot unlock once locked
+            [br]Each bit corresponds to locking the associated TRNG_VALID_PAUSER register.
+            [br]Associated TRNG_VALID_PAUSER register is only valid once locked by this bit.
+            [br]Caliptra FW RW access for survivability but cannot unlock once locked
             [br]Caliptra Access: RW
             [br]SOC Access:      RW
-            Read-Only once locked.";
+            [br]Read-Only once locked.";
     field {sw=rw; hw=r; swwel; resetsignal=cptra_rst_b;} LOCK=0;
  } CPTRA_TRNG_PAUSER_LOCK;
 
@@ -165,19 +167,20 @@ reg {
     desc = "Storage for the requested TRNG Data.
             [br]Caliptra Access: RO
             [br]SOC Access:      RW";
-    field {sw=rw; hw=na; swwe; resetsignal=cptra_rst_b;} DATA[32]=0;
+    field {sw=rw; hw=na; swwe; swacc; resetsignal=cptra_rst_b;} DATA[32]=0;
  } CPTRA_TRNG_DATA[12];
 
 reg {
     name = "TRNG Status";
     desc = "TRNG Status register to indicate request and done";
-    field {desc = "Indicates that the requests TRNG Data is done and stored in the TRNG Data register.
+    field {desc = "Indicates that there is a request for TRNG Data.
             [br]Caliptra Access: RW
             [br]SOC Access:      RO";  sw=rw; hw=r; swwel=soc_req; resetsignal=cptra_rst_b;} DATA_REQ=0;
 
     field {desc = "Indicates that the requests TRNG Data is done and stored in the TRNG Data register.
             [br]Caliptra Access: RO
-            [br]SOC Access:      RW";  sw=rw; hw=na; swwe; resetsignal=cptra_rst_b;} DATA_WR_DONE=0;
+            [br]SOC Access:      RW
+            [br]When DATA_REQ is 0 DATA_WR_DONE will also be 0";  sw=rw; hw=na; swwe; hwclr; resetsignal=cptra_rst_b;} DATA_WR_DONE=0;
  } CPTRA_TRNG_STATUS;
 
 reg {
@@ -243,7 +246,7 @@ reg {
     desc = "Caliptra HW revision ID that matches the official final release milestone
             [br]Caliptra Access: RO
             [br]SOC Access:      RO";
-    field {sw=r; hw=r; swwel = soc_req; resetsignal = cptra_rst_b;} REV_ID[32]=1;
+    field {sw=r; hw=r; resetsignal = cptra_rst_b;} REV_ID[32]=1;
 } CPTRA_HW_REV_ID;
 reg {
     name = "Caliptra FW RevID";
@@ -320,6 +323,6 @@ reg {
     desc = "Caliptra watchdog timer status register
             [br]Caliptra Access: RO
             [br]SOC Access:      RO";
-    field {desc = "Timer1 timed out, timer2 enabled"; hw = rw; sw = r; swwel = soc_req; resetsignal = cptra_rst_b;} t1_timeout = 1'b0;
-    field {desc = "Timer2 timed out"; hw = rw; sw = r; swwel = soc_req; resetsignal = cptra_rst_b;} t2_timeout = 1'b0;
+    field {desc = "Timer1 timed out, timer2 enabled"; hw = rw; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;} t1_timeout = 1'b0;
+    field {desc = "Timer2 timed out"; hw = rw; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;} t2_timeout = 1'b0;
 } CPTRA_WDT_STATUS;

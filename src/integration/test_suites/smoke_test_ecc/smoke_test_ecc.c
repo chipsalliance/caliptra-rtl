@@ -245,6 +245,8 @@ void main() {
     ecc_verifying_flow(msg, pubkey_x, pubkey_y, sign_r, sign_s);
     cptra_intr_rcv.ecc_notif = 0;
 
+    ecc_zeroize();
+
     printf("%c",0xff); //End the test
     
 }

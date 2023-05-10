@@ -56,6 +56,12 @@ package soc_ifc_tb_pkg;
     GET_APB, GET_AHB, GET_DIRECT
   } access_t; 
 
+  typedef struct {
+    word_addr_t addr_min;
+    word_addr_t addr_max;
+  } extent_t;
+
+  typedef word_addr_t word_addrq_t [$];  
 
   // ================================================================================ 
   // Constants & Global Data Structures (Private)
@@ -63,7 +69,7 @@ package soc_ifc_tb_pkg;
 
   // TODO. These are crutches; should be static var inside a class
   int _fuses_locked = 0; 
-  realtime _exp_update_time = 0; 
+  // realtime _exp_update_time = 0; 
   int _clk_period = 0;
 
   // typedef enum logic [2:0] { 
@@ -85,8 +91,8 @@ package soc_ifc_tb_pkg;
   // TODO. This will be merged into register dict at some point as a pair 
   word_addr_t _wide_register_dict [string] = {
     "CPTRA_FW_EXTENDED_ERROR_INFO"          : 8, 
-    "CPTRA_VALID_PAUSER"                    : 5,  
-    "CPTRA_PAUSER_LOCK"                     : 5,  
+    "CPTRA_MBOX_VALID_PAUSER"               : 5,  
+    "CPTRA_MBOX_PAUSER_LOCK"                : 5,  
     "CPTRA_TRNG_DATA"                       : 12,
     "CPTRA_GENERIC_INPUT_WIRES"             : 2,  
     "CPTRA_GENERIC_OUTPUT_WIRES"            : 2,  
@@ -102,113 +108,144 @@ package soc_ifc_tb_pkg;
   };
 
 
-  // Identifier                                       Base Addr      Offset                                      // Offset   Description
+  // ** NOTE. INTR_BRF (== INTR_BLOCK_RF) registers are NOT explictly tested. Only provided to check for undefined ranges, and for future **
+  //  
+  // Identifier                                       Base Addr      Offset                                                          // Offset   Description
   word_addr_t _soc_register_dict [string] = {
-    "CPTRA_HW_ERROR_FATAL"                          : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_HW_ERROR_FATAL,           // 0x000    Hardware Error Fatal 
-    "CPTRA_HW_ERROR_NON_FATAL"                      : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL,       // 0x004    Hardware Error Non-Fatal 
-    "CPTRA_FW_ERROR_FATAL"                          : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FW_ERROR_FATAL,           // 0x008    Firmware Error Fatal 
-    "CPTRA_FW_ERROR_NON_FATAL"                      : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FW_ERROR_NON_FATAL,       // 0x00c    Firmware Error Non-Fatal 
-    "CPTRA_HW_ERROR_ENC"                            : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_HW_ERROR_ENC,             // 0x010    Hardware Error Encoding 
-    "CPTRA_FW_ERROR_ENC"                            : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FW_ERROR_ENC,             // 0x014    Firmware Error Encoding 
-    "CPTRA_FW_EXTENDED_ERROR_INFO"                  : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FW_EXTENDED_ERROR_INFO_0, // 0x018    [8]  Firmware Extended Error Information 
-    "CPTRA_BOOT_STATUS"                             : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_BOOT_STATUS,              // 0x038    Boot Status 
-    "CPTRA_FLOW_STATUS"                             : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FLOW_STATUS,              // 0x03c    Flow Status 
-    "CPTRA_RESET_REASON"                            : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_RESET_REASON,             // 0x040    Reset Reason 
-    "CPTRA_SECURITY_STATE"                          : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_SECURITY_STATE,           // 0x044    Security State 
-    "CPTRA_VALID_PAUSER"                            : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_VALID_PAUSER_0,           // 0x048    [5]  Valid User Registers 
-    "CPTRA_PAUSER_LOCK"                             : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_PAUSER_LOCK_0,            // 0x05c    [5]  Valid User Register Lock 
-    "CPTRA_TRNG_VALID_PAUSER"                       : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_TRNG_VALID_PAUSER,        // 0x070    Valid User for TRNG 
-    "CPTRA_TRNG_PAUSER_LOCK"                        : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_TRNG_PAUSER_LOCK,         // 0x074    Valid User for TRNG PAUSER Lock 
-    "CPTRA_TRNG_DATA"                               : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_TRNG_DATA_0,              // 0x078    [12] TRNG Data 
-    "CPTRA_TRNG_STATUS"                             : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_TRNG_STATUS,              // 0x0a8    TRNG Status 
-    "CPTRA_FUSE_WR_DONE"                            : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FUSE_WR_DONE,             // 0x0ac    Fuse Write Done 
-    "CPTRA_TIMER_CONFIG"                            : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_TIMER_CONFIG,             // 0x0b0    Timer Config 
-    "CPTRA_BOOTFSM_GO"                              : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_BOOTFSM_GO,               // 0x0b4    BOOTFSM GO 
-    "CPTRA_DBG_MANUF_SERVICE_REG"                   : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_DBG_MANUF_SERVICE_REG,    // 0x0b8
-    "CPTRA_CLK_GATING_EN"                           : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_CLK_GATING_EN,            // 0x0bc    Global Caliptra Clk gating enable 
-    "CPTRA_GENERIC_INPUT_WIRES"                     : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0,    // 0x0c0    [2]  Generic Input Wires 
-    "CPTRA_GENERIC_OUTPUT_WIRES"                    : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_GENERIC_OUTPUT_WIRES_0,   // 0x0c8    [2]  Generic Output Wires 
-    "CPTRA_HW_REV_ID"                               : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_HW_REV_ID,                // 0x0d0   
-    "CPTRA_FW_REV_ID"                               : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FW_REV_ID_0,              // 0x0d4   
-    // 0x0dc..0x1fc
-    "FUSE_UDS_SEED"                                 : SOCIFC_BASE + `SOC_IFC_REG_FUSE_UDS_SEED_0,                // 0x200    [12] Unique Device Secret 
-    "FUSE_FIELD_ENTROPY"                            : SOCIFC_BASE + `SOC_IFC_REG_FUSE_FIELD_ENTROPY_0,           // 0x230    [8]  Field Entropy 
-    "FUSE_KEY_MANIFEST_PK_HASH"                     : SOCIFC_BASE + `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_0,    // 0x250    [12] - 
-    "FUSE_KEY_MANIFEST_PK_HASH_MASK"                : SOCIFC_BASE + `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK, // 0x280    - 
-    "FUSE_OWNER_PK_HASH"                            : SOCIFC_BASE + `SOC_IFC_REG_FUSE_OWNER_PK_HASH_0,           // 0x284    [12] - 
-    "FUSE_FMC_KEY_MANIFEST_SVN"                     : SOCIFC_BASE + `SOC_IFC_REG_FUSE_FMC_KEY_MANIFEST_SVN,      // 0x2b4    - 
-    "FUSE_RUNTIME_SVN"                              : SOCIFC_BASE + `SOC_IFC_REG_FUSE_RUNTIME_SVN_0,             // 0x2b8    [4]  - 
-    "FUSE_ANTI_ROLLBACK_DISABLE"                    : SOCIFC_BASE + `SOC_IFC_REG_FUSE_ANTI_ROLLBACK_DISABLE,     // 0x2c8         - 
-    "FUSE_IDEVID_CERT_ATTR"                         : SOCIFC_BASE + `SOC_IFC_REG_FUSE_IDEVID_CERT_ATTR_0,        // 0x2cc    [24] - 
-    "FUSE_IDEVID_MANUF_HSM_ID"                      : SOCIFC_BASE + `SOC_IFC_REG_FUSE_IDEVID_MANUF_HSM_ID_0,     // 0x32c    [4]  - 
-    "FUSE_LIFE_CYCLE"                               : SOCIFC_BASE + `SOC_IFC_REG_FUSE_LIFE_CYCLE,                // 0x33c         - 
+    "CPTRA_HW_ERROR_FATAL"                          : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_HW_ERROR_FATAL,                               // 0x000      Hardware Error Fatal 
+    "CPTRA_HW_ERROR_NON_FATAL"                      : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL,                           // 0x004      Hardware Error Non-Fatal 
+    "CPTRA_FW_ERROR_FATAL"                          : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FW_ERROR_FATAL,                               // 0x008      Firmware Error Fatal 
+    "CPTRA_FW_ERROR_NON_FATAL"                      : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FW_ERROR_NON_FATAL,                           // 0x00c      Firmware Error Non-Fatal 
+    "CPTRA_HW_ERROR_ENC"                            : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_HW_ERROR_ENC,                                 // 0x010      Hardware Error Encoding 
+    "CPTRA_FW_ERROR_ENC"                            : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FW_ERROR_ENC,                                 // 0x014      Firmware Error Encoding 
+    "CPTRA_FW_EXTENDED_ERROR_INFO"                  : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FW_EXTENDED_ERROR_INFO_0,                     // 0x018 [8]  Firmware Extended Error Information 
+    "CPTRA_BOOT_STATUS"                             : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_BOOT_STATUS,                                  // 0x038      Boot Status 
+    "CPTRA_FLOW_STATUS"                             : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FLOW_STATUS,                                  // 0x03c      Flow Status 
+    "CPTRA_RESET_REASON"                            : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_RESET_REASON,                                 // 0x040      Reset Reason 
+    "CPTRA_SECURITY_STATE"                          : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_SECURITY_STATE,                               // 0x044      Security State 
+    "CPTRA_MBOX_VALID_PAUSER"                       : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_MBOX_VALID_PAUSER_0,                          // 0x048 [5]  Valid User Registers 
+    "CPTRA_MBOX_PAUSER_LOCK"                        : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_MBOX_PAUSER_LOCK_0,                           // 0x05c [5]  Valid User Register Lock 
+    "CPTRA_TRNG_VALID_PAUSER"                       : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_TRNG_VALID_PAUSER,                            // 0x070      Valid User for TRNG 
+    "CPTRA_TRNG_PAUSER_LOCK"                        : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_TRNG_PAUSER_LOCK,                             // 0x074      Valid User for TRNG PAUSER Lock 
+    "CPTRA_TRNG_DATA"                               : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_TRNG_DATA_0,                                  // 0x078 [12] TRNG Data 
+    "CPTRA_TRNG_STATUS"                             : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_TRNG_STATUS,                                  // 0x0a8      TRNG Status 
+    "CPTRA_FUSE_WR_DONE"                            : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FUSE_WR_DONE,                                 // 0x0ac      Fuse Write Done 
+    "CPTRA_TIMER_CONFIG"                            : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_TIMER_CONFIG,                                 // 0x0b0      Timer Config 
+    "CPTRA_BOOTFSM_GO"                              : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_BOOTFSM_GO,                                   // 0x0b4      BOOTFSM GO 
+    "CPTRA_DBG_MANUF_SERVICE_REG"                   : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_DBG_MANUF_SERVICE_REG,                        // 0x0b8      DEBUG & MANUF SERVICE REG
+    "CPTRA_CLK_GATING_EN"                           : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_CLK_GATING_EN,                                // 0x0bc      Global Caliptra Clk gating enable 
+    "CPTRA_GENERIC_INPUT_WIRES"                     : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0,                        // 0x0c0 [2]  Generic Input Wires 
+    "CPTRA_GENERIC_OUTPUT_WIRES"                    : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_GENERIC_OUTPUT_WIRES_0,                       // 0x0c8 [2]  Generic Output Wires 
+    "CPTRA_HW_REV_ID"                               : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_HW_REV_ID,                                    // 0x0d0      Caliptra HW RevID 
+    "CPTRA_FW_REV_ID"                               : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FW_REV_ID_0,                                  // 0x0d4      Caliptra FW RevID
+    "CPTRA_HW_CONFIG" 	                            : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_HW_CONFIG,                                    // 0x0dc      Caliptra HW Config
+    "CPTRA_WDT_TIMER1_EN"                           : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_TIMER1_EN,                                // 0x0e0      Caliptra WDT Timer1 EN register 	
+    "CPTRA_WDT_TIMER1_CTRL"                         : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL,                              // 0x0e4      Caliptra WDT Timer1 CTRL register 	
+    "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD"               : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_0,                  // 0x0e8 [2]  Caliptra WDT Timer1 Timeout Period register 	
+    "CPTRA_WDT_TIMER2_EN"                           : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_TIMER2_EN,                                // 0x0f0      Caliptra WDT Timer2 EN register 	
+    "CPTRA_WDT_TIMER2_CTRL"                         : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL,                              // 0x0f4      Caliptra WDT Timer2 CTRL register 	
+    "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD"               : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_0,                  // 0x0f8 [2]  Caliptra WDT Timer2 Timeout Period register 	
+    "CPTRA_WDT_STATUS"                              : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_STATUS,                                   // 0x100      Caliptra WDT STATUS register
+    // 0x104..0x1fc
+    "FUSE_UDS_SEED"                                 : SOCIFC_BASE + `SOC_IFC_REG_FUSE_UDS_SEED_0,                                    // 0x200 [12] Unique Device Secret 
+    "FUSE_FIELD_ENTROPY"                            : SOCIFC_BASE + `SOC_IFC_REG_FUSE_FIELD_ENTROPY_0,                               // 0x230 [8]  Field Entropy 
+    "FUSE_KEY_MANIFEST_PK_HASH"                     : SOCIFC_BASE + `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_0,                        // 0x250 [12] - 
+    "FUSE_KEY_MANIFEST_PK_HASH_MASK"                : SOCIFC_BASE + `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK,                     // 0x280      - 
+    "FUSE_OWNER_PK_HASH"                            : SOCIFC_BASE + `SOC_IFC_REG_FUSE_OWNER_PK_HASH_0,                               // 0x284 [12] - 
+    "FUSE_FMC_KEY_MANIFEST_SVN"                     : SOCIFC_BASE + `SOC_IFC_REG_FUSE_FMC_KEY_MANIFEST_SVN,                          // 0x2b4      - 
+    "FUSE_RUNTIME_SVN"                              : SOCIFC_BASE + `SOC_IFC_REG_FUSE_RUNTIME_SVN_0,                                 // 0x2b8 [4]  - 
+    "FUSE_ANTI_ROLLBACK_DISABLE"                    : SOCIFC_BASE + `SOC_IFC_REG_FUSE_ANTI_ROLLBACK_DISABLE,                         // 0x2c8      - 
+    "FUSE_IDEVID_CERT_ATTR"                         : SOCIFC_BASE + `SOC_IFC_REG_FUSE_IDEVID_CERT_ATTR_0,                            // 0x2cc [24] - 
+    "FUSE_IDEVID_MANUF_HSM_ID"                      : SOCIFC_BASE + `SOC_IFC_REG_FUSE_IDEVID_MANUF_HSM_ID_0,                         // 0x32c [4]  - 
+    "FUSE_LIFE_CYCLE"                               : SOCIFC_BASE + `SOC_IFC_REG_FUSE_LIFE_CYCLE,                                    // 0x33c      - 
     // 0x340..0x5fc           
-    "INTERNAL_OBF_KEY"                              : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_OBF_KEY_0,             // 0x600    [8]  De-Obfuscation Key 
-    "INTERNAL_ICCM_LOCK"                            : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_ICCM_LOCK,             // 0x620    ICCM Lock 
-    "INTERNAL_FW_UPDATE_RESET"                      : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET,       // 0x624    FW Update Reset 
-    "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES"          : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES,// 0x628   FW Update Reset Wait Cycles 
-    "INTERNAL_NMI_VECTOR"                           : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_NMI_VECTOR,            // 0x62c    NMI Vector 
-                                                                                                                 // 0x630..0x7fc    
+    "INTERNAL_OBF_KEY"                              : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_OBF_KEY_0,                                 // 0x600 [8]  De-Obfuscation Key 
+    "INTERNAL_ICCM_LOCK"                            : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_ICCM_LOCK,                                 // 0x620      ICCM Lock 
+    "INTERNAL_FW_UPDATE_RESET"                      : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET,                           // 0x624      FW Update Reset 
+    "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES"          : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES,               // 0x628      FW Update Reset Wait Cycles 
+    "INTERNAL_NMI_VECTOR"                           : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_NMI_VECTOR,                                // 0x62c      NMI Vector 
+    // 0x630..0x7fc    
     // "intr_block_rf"                         
-    "INTR_BRF_GLOBAL_INTR_EN_R"                     : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R,                      // 0x800
-    "INTR_BRF_ERROR_INTR_EN_R"                      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R,                       // 0x804
-    "INTR_BRF_NOTIF_INTR_EN_R"                      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R,                       // 0x808
-    "INTR_BRF_ERROR_GLOBAL_INTR_R"                  : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R,                   // 0x80c
-    "INTR_BRF_NOTIF_GLOBAL_INTR_R"                  : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R,                   // 0x810
-    "INTR_BRF_ERROR_INTERNAL_INTR_R"                : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R,                 // 0x814
-    "INTR_BRF_NOTIF_INTERNAL_INTR_R"                : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R,                 // 0x818
-    "INTR_BRF_ERROR_INTR_TRIG_R"                    : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R,                     // 0x81c
-    "INTR_BRF_NOTIF_INTR_TRIG_R"                    : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R,                     // 0x820
+    "INTR_BRF_GLOBAL_INTR_EN_R"                     : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R,                     // 0x800
+    "INTR_BRF_ERROR_INTR_EN_R"                      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R,                      // 0x804
+    "INTR_BRF_NOTIF_INTR_EN_R"                      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R,                      // 0x808
+    "INTR_BRF_ERROR_GLOBAL_INTR_R"                  : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R,                  // 0x80c
+    "INTR_BRF_NOTIF_GLOBAL_INTR_R"                  : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R,                  // 0x810
+    "INTR_BRF_ERROR_INTERNAL_INTR_R"                : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R,                // 0x814
+    "INTR_BRF_NOTIF_INTERNAL_INTR_R"                : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R,                // 0x818
+    "INTR_BRF_ERROR_INTR_TRIG_R"                    : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R,                    // 0x81c
+    "INTR_BRF_NOTIF_INTR_TRIG_R"                    : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R,                    // 0x820
     // 0x824..0x8fc
-    "INTR_BRF_ERROR_INTERNAL_INTR_COUNT_R"          : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R,           // 0x900
-    "INTR_BRF_ERROR_INV_DEV_INTR_COUNT_R"           : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_R,            // 0x904
-    "INTR_BRF_ERROR_CMD_FAIL_INTR_COUNT_R"          : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_R,           // 0x908
-    "INTR_BRF_ERROR_BAD_FUSE_INTR_COUNT_R"          : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_R,           // 0x90c
-    "INTR_BRF_ERROR_ICCM_BLOCKED_INTR_COUNT_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_R,       // 0x910
-    "INTR_BRF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R,       // 0x914
-    // 0x918..0x97c
-    "INTR_BRF_NOTIF_CMD_AVAIL_INTR_COUNT_R"         : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_R,          // 0x980
-    "INTR_BRF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R,       // 0x984
-    "INTR_BRF_NOTIF_DEBUG_LOCKED_INTR_COUNT_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_R,       // 0x988
-    // 0x98c..0x9fc 
-    "INTR_BRF_ERROR_INTERNAL_INTR_COUNT_INCR_R"     : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R,      // 0xa00
-    "INTR_BRF_ERROR_INV_DEV_INTR_COUNT_INCR_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_INCR_R,       // 0xa04
-    "INTR_BRF_ERROR_CMD_FAIL_INTR_COUNT_INCR_R"     : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_INCR_R,      // 0xa08
-    "INTR_BRF_ERROR_BAD_FUSE_INTR_COUNT_INCR_R"     : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_INCR_R,      // 0xa0c
-    "INTR_BRF_ERROR_ICCM_BLOCKED_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_INCR_R,  // 0xa10
-    "INTR_BRF_ERROR_MBOX_ECC_UNC_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_INCR_R,  // 0xa14
-    "INTR_BRF_NOTIF_CMD_AVAIL_INTR_COUNT_INCR_R"    : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_INCR_R,     // 0xa18
-    "INTR_BRF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R,  // 0xa1c
-    "INTR_BRF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R   // 0xa20
+    "INTR_BRF_ERROR_INTERNAL_INTR_COUNT_R"          : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R,          // 0x900
+    "INTR_BRF_ERROR_INV_DEV_INTR_COUNT_R"           : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_R,           // 0x904
+    "INTR_BRF_ERROR_CMD_FAIL_INTR_COUNT_R"          : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_R,          // 0x908
+    "INTR_BRF_ERROR_BAD_FUSE_INTR_COUNT_R"          : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_R,          // 0x90c
+    "INTR_BRF_ERROR_ICCM_BLOCKED_INTR_COUNT_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_R,      // 0x910
+    "INTR_BRF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R,      // 0x914
+    "INTR_BRF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_R": SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_R,// 0x918 	
+    "INTR_BRF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_R": SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_R,// 0x91c 	
+    // 0x920..0x97c
+    "INTR_BRF_NOTIF_CMD_AVAIL_INTR_COUNT_R"         : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_R,         // 0x980
+    "INTR_BRF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R,      // 0x984
+    "INTR_BRF_NOTIF_DEBUG_LOCKED_INTR_COUNT_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_R,      // 0x988
+	  "INTR_BRF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_R" 	    : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_R,      // 0x98c 
+    // 0x990..0x9fc 
+    "INTR_BRF_ERROR_INTERNAL_INTR_COUNT_INCR_R"     : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R,     // 0xa00
+    "INTR_BRF_ERROR_INV_DEV_INTR_COUNT_INCR_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_INCR_R,      // 0xa04
+    "INTR_BRF_ERROR_CMD_FAIL_INTR_COUNT_INCR_R"     : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_INCR_R,     // 0xa08
+    "INTR_BRF_ERROR_BAD_FUSE_INTR_COUNT_INCR_R"     : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_INCR_R,     // 0xa0c
+    "INTR_BRF_ERROR_ICCM_BLOCKED_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_INCR_R, // 0xa10
+    "INTR_BRF_ERROR_MBOX_ECC_UNC_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_INCR_R, // 0xa14
+    "INTR_BRF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_INCR_R,  // 0xa18 	
+    "INTR_BRF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_INCR_R,  // 0xa1c 	
+    "INTR_BRF_NOTIF_CMD_AVAIL_INTR_COUNT_INCR_R"    : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_INCR_R,    // 0xa20
+    "INTR_BRF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R, // 0xa24 	
+    "INTR_BRF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R, // 0xa28 
+    "INTR_BRF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_INCR_R  //  0xa2c
   };
 
 
+  // These address ranges (inclusive) in each extent have no definition 
+  extent_t _undefined_addr_ranges [$] = {
+    '{addr_min: SOCIFC_BASE + 16'h0104, addr_max: SOCIFC_BASE + 16'h01fc},
+    '{addr_min: SOCIFC_BASE + 16'h0340, addr_max: SOCIFC_BASE + 16'h05fc},
+    '{addr_min: SOCIFC_BASE + 16'h0630, addr_max: SOCIFC_BASE + 16'h07fc},
+    '{addr_min: SOCIFC_BASE + 16'h0824, addr_max: SOCIFC_BASE + 16'h08fc},
+    '{addr_min: SOCIFC_BASE + 16'h0920, addr_max: SOCIFC_BASE + 16'h097c},
+    '{addr_min: SOCIFC_BASE + 16'h0990, addr_max: SOCIFC_BASE + 16'h09fc}
+  };
+ 
+
   // Only non-zero power-on values are stored; also populated by SocRegisters instantiation 
   dword_t _soc_register_initval_dict [string] = {
-    "CPTRA_VALID_PAUSER"                   : 32'hffff_ffff,
+    "CPTRA_MBOX_VALID_PAUSER"              : 32'hffff_ffff,
     "CPTRA_TRNG_VALID_PAUSER"              : 32'hffff_ffff,
     "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES" : 32'h5,
-    "CPTRA_HW_REV_ID"                      : 32'h1 
+    "CPTRA_HW_REV_ID"                      : 32'h1,
+    "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD"      : 32'hffff_ffff,
+    "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD"      : 32'hffff_ffff
   };
 
 
   // Sticky registers preserve values across warm reset -- groups of regs might be populated by code
   // mask of all bits to be protected in case of warm reset
   word_addr_t _sticky_register_prefix_dict [string] = {
-    "FUSE_":                                         32'hffff_ffff, 
-    "CPTRA_HW_ERROR_":                               32'hffff_ffff, // FATAL, NON_FATAL, ENC                          
-    "CPTRA_FW_ERROR_":                               32'hffff_ffff, // FATAL, NON_FATAL, ENC                          
-    "CPTRA_FW_EXTENDED_ERROR_INFO":                  32'hffff_ffff,
-    "CPTRA_RESET_REASON":                            32'h2, // field WARM_RESET 
-    "CPTRA_FUSE_WR_DONE":                            32'h1, // field 0 
-    "CPTRA_TIMER_CONFIG":                            32'hffff_ffff,                           
-    "INTR_BRF_ERROR_INTERNAL_INTR_R":                32'h3f, // fields 5:0
-    "INTR_BRF_ERROR_INTERNAL_INTR_COUNT_R":          32'hffff_ffff,          
-    "INTR_BRF_ERROR_INV_DEV_INTR_COUNT_R":           32'hffff_ffff,
-    "INTR_BRF_ERROR_CMD_FAIL_INTR_COUNT_R":          32'hffff_ffff,
-    "INTR_BRF_ERROR_BAD_FUSE_INTR_COUNT_R":          32'hffff_ffff,
-    "INTR_BRF_ERROR_ICCM_BLOCKED_INTR_COUNT_R":      32'hffff_ffff,
-    "INTR_BRF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R":      32'hffff_ffff
+    "FUSE_":                                           32'hffff_ffff, 
+    "CPTRA_HW_ERROR_":                                 32'hffff_ffff, // FATAL, NON_FATAL, ENC                          
+    "CPTRA_FW_ERROR_":                                 32'hffff_ffff, // FATAL, NON_FATAL, ENC                          
+    "CPTRA_FW_EXTENDED_ERROR_INFO":                    32'hffff_ffff,
+    "CPTRA_RESET_REASON":                              32'h2,         // field WARM_RESET 
+    "CPTRA_FUSE_WR_DONE":                              32'h1,         // field 0 
+    "CPTRA_TIMER_CONFIG":                              32'hffff_ffff,                           
+    "INTR_BRF_ERROR_INTERNAL_INTR_R":                  32'h3f,        // fields 5:0
+    "INTR_BRF_ERROR_INTERNAL_INTR_COUNT_R":            32'hffff_ffff,          
+    "INTR_BRF_ERROR_INV_DEV_INTR_COUNT_R":             32'hffff_ffff,
+    "INTR_BRF_ERROR_CMD_FAIL_INTR_COUNT_R":            32'hffff_ffff,
+    "INTR_BRF_ERROR_BAD_FUSE_INTR_COUNT_R":            32'hffff_ffff,
+    "INTR_BRF_ERROR_ICCM_BLOCKED_INTR_COUNT_R":        32'hffff_ffff,
+    "INTR_BRF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R":        32'hffff_ffff,
+    "INTR_BRF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_R":  32'hffff_ffff,
+    "INTR_BRF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_R":  32'hffff_ffff
   };
 
 
@@ -224,26 +261,35 @@ package soc_ifc_tb_pkg;
                                                            `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK       |
                                                            `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_RUNTIME_MASK  |
                                                            `SOC_IFC_REG_CPTRA_FLOW_STATUS_MAILBOX_FLOW_DONE_MASK), 
-    "CPTRA_PAUSER_LOCK"                                : `SOC_IFC_REG_CPTRA_PAUSER_LOCK_0_LOCK_MASK,   // same for all 5 pausers
+    "CPTRA_MBOX_PAUSER_LOCK"                           : `SOC_IFC_REG_CPTRA_MBOX_PAUSER_LOCK_0_LOCK_MASK,   // same for all 5 pausers
     "CPTRA_TRNG_PAUSER_LOCK"                           : `SOC_IFC_REG_CPTRA_TRNG_PAUSER_LOCK_LOCK_MASK,
     "CPTRA_TRNG_STATUS.APB"                            : `SOC_IFC_REG_CPTRA_TRNG_STATUS_DATA_WR_DONE_MASK, 
     "CPTRA_TRNG_STATUS.AHB"                            : `SOC_IFC_REG_CPTRA_TRNG_STATUS_DATA_REQ_MASK,     
     "CPTRA_FUSE_WR_DONE"                               : `SOC_IFC_REG_CPTRA_FUSE_WR_DONE_DONE_MASK,
     "CPTRA_BOOTFSM_GO"                                 : `SOC_IFC_REG_CPTRA_BOOTFSM_GO_GO_MASK, 
+
     "CPTRA_CLK_GATING_EN"                              : `SOC_IFC_REG_CPTRA_CLK_GATING_EN_CLK_GATING_EN_MASK ,
+    "CPTRA_WDT_TIMER1_EN"                              : `SOC_IFC_REG_CPTRA_WDT_TIMER1_EN_TIMER1_EN_MASK,
+    "CPTRA_WDT_TIMER1_CTRL"                            : `SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL_TIMER1_RESTART_MASK,
+    "CPTRA_WDT_TIMER2_EN"                              : `SOC_IFC_REG_CPTRA_WDT_TIMER2_EN_TIMER2_EN_MASK,
+    "CPTRA_WDT_TIMER2_CTRL"                            : `SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL_TIMER2_RESTART_MASK,
+    "CPTRA_WDT_STATUS"                                 : (`SOC_IFC_REG_CPTRA_WDT_STATUS_T1_TIMEOUT_MASK | 
+                                                           `SOC_IFC_REG_CPTRA_WDT_STATUS_T2_TIMEOUT_MASK),
     "INTERNAL_ICCM_LOCK"                               : `SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK, 
     "INTERNAL_FW_UPDATE_RESET"                         : `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK ,
     "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES"             : `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES_WAIT_CYCLES_MASK,
-
     "INTR_BRF_ERROR_INTERNAL_INTR_COUNT_INCR_R"        : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R_PULSE_MASK    ,   
     "INTR_BRF_ERROR_INV_DEV_INTR_COUNT_INCR_R"         : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_INCR_R_PULSE_MASK     ,
     "INTR_BRF_ERROR_CMD_FAIL_INTR_COUNT_INCR_R"        : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_INCR_R_PULSE_MASK    ,
     "INTR_BRF_ERROR_BAD_FUSE_INTR_COUNT_INCR_R"        : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_INCR_R_PULSE_MASK    ,
     "INTR_BRF_ERROR_ICCM_BLOCKED_INTR_COUNT_INCR_R"    : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_INCR_R_PULSE_MASK,
     "INTR_BRF_ERROR_MBOX_ECC_UNC_INTR_COUNT_INCR_R"    : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_INCR_R_PULSE_MASK,
+    "INTR_BRF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_INCR_R" : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_INCR_R_PULSE_MASK,
+    "INTR_BRF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_INCR_R" : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_INCR_R_PULSE_MASK,
     "INTR_BRF_NOTIF_CMD_AVAIL_INTR_COUNT_INCR_R"       : `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_INCR_R_PULSE_MASK   ,
     "INTR_BRF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R"    : `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R_PULSE_MASK,
-    "INTR_BRF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R"    : `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R_PULSE_MASK 
+    "INTR_BRF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R"    : `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R_PULSE_MASK, 
+    "INTR_BRF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_INCR_R"       : `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_INCR_R_PULSE_MASK 
   };  
 
   // holds addr -> name inverse map of _soc_register_dict - populated by SocRegisters instantiation 
@@ -261,9 +307,12 @@ package soc_ifc_tb_pkg;
     "INTR_BRF_ERROR_BAD_FUSE_INTR_COUNT_INCR_R"      ,
     "INTR_BRF_ERROR_ICCM_BLOCKED_INTR_COUNT_INCR_R"  ,
     "INTR_BRF_ERROR_MBOX_ECC_UNC_INTR_COUNT_INCR_R"  ,
+    "INTR_BRF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_INCR_R" ,
+    "INTR_BRF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_INCR_R" , 
     "INTR_BRF_NOTIF_CMD_AVAIL_INTR_COUNT_INCR_R"     ,
     "INTR_BRF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R"  ,
-    "INTR_BRF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R" 
+    "INTR_BRF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R"  , 
+    "INTR_BRF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_INCR_R"       
   }; 
 
 
@@ -407,7 +456,7 @@ package soc_ifc_tb_pkg;
 
       addr = _soc_register_dict[addr_name];
       sscode = _soc_register_initval_dict["CPTRA_SECURITY_STATE"];
-      _exp_update_time = $realtime; 
+      // _exp_update_time = $realtime; 
 
       if (modify == COLD_RESET) begin
         reset_exp_data();
@@ -454,11 +503,6 @@ package soc_ifc_tb_pkg;
 
       // handle wide registers first, then normal sized ones
 
-      // if (is_pulsed_reg(addr_name)) begin
-        // realtime t = $realtime; 
-        // exp_data = 0; // TODO. fix this properly outside of this function within "check_entry"
-      //   $display("TB WARNING. Pulsed reg check implmentation needs to be solidified");
-
       if (str_startswith(addr_name, "CPTRA_TRNG_DATA"))
         exp_data = ahb_rodata | apb_indata;  // ahb-RO
 
@@ -472,15 +516,15 @@ package soc_ifc_tb_pkg;
       else if (str_startswith(addr_name, "FUSE_"))
         exp_data = fuses_locked ? curr_data : (ahb_rodata | apb_indata & get_mask(addr_name)); // ahb-RO 
 
-      else if (str_startswith(addr_name, "CPTRA_VALID_PAUSER")) begin    // find equivalent pauser lock & if set, apb-RO 
-        tmpstr = "CPTRA_VALID_PAUSER";
+      else if (str_startswith(addr_name, "CPTRA_MBOX_VALID_PAUSER")) begin    // find equivalent pauser lock & if set, apb-RO 
+        tmpstr = "CPTRA_MBOX_VALID_PAUSER";
         pauser_suffix = addr_name.substr(tmpstr.len(), addr_name.len()-1);
-        pauser_lock_regname = {"CPTRA_PAUSER_LOCK", pauser_suffix};
+        pauser_lock_regname = {"CPTRA_MBOX_PAUSER_LOCK", pauser_suffix};
         pauser_locked = _exp_register_data_dict[pauser_lock_regname]; 
         exp_data = pauser_locked ? curr_data : (ahb_indata | apb_indata); 
 
-      end else if (str_startswith(addr_name, "CPTRA_PAUSER_LOCK")) begin //  if pauser locked, apb-RO
-        tmpstr = "CPTRA_PAUSER_LOCK";
+      end else if (str_startswith(addr_name, "CPTRA_MBOX_PAUSER_LOCK")) begin //  if pauser locked, apb-RO
+        tmpstr = "CPTRA_MBOX_PAUSER_LOCK";
         pauser_locked = _exp_register_data_dict[addr_name];
         exp_data = pauser_locked ? curr_data & get_mask(tmpstr) :  (ahb_indata | apb_indata) & get_mask(tmpstr); 
 
@@ -492,6 +536,12 @@ package soc_ifc_tb_pkg;
 
       else if (str_startswith(addr_name, "CPTRA_HW_CONFIG"))
         exp_data = curr_data & get_mask("CPTRA_HW_CONFIG"); // all bits are RO 
+
+      else if (str_startswith(addr_name, "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD"))
+        exp_data = ahb_indata | apb_rodata; 
+
+      else if (str_startswith(addr_name, "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD"))
+        exp_data = ahb_indata | apb_rodata; 
 
       else if (str_startswith(addr_name, "INTERNAL_OBF_KEY"))            
         exp_data = '0;  // not accessible over APB or AHB 
@@ -526,6 +576,11 @@ package soc_ifc_tb_pkg;
           end
 
           "CPTRA_HW_REV_ID"                                 : exp_data = curr_data;  
+          "CPTRA_WDT_TIMER1_EN"                             : exp_data = ahb_indata & get_mask(addr_name) | apb_rodata;
+          "CPTRA_WDT_TIMER1_CTRL"                           : exp_data = ahb_indata & get_mask(addr_name) | apb_rodata;
+          "CPTRA_WDT_TIMER2_EN"                             : exp_data = ahb_indata & get_mask(addr_name) | apb_rodata;
+          "CPTRA_WDT_TIMER2_CTRL"                           : exp_data = ahb_indata & get_mask(addr_name) | apb_rodata;
+          "CPTRA_WDT_STATUS"                                : exp_data = curr_data; 
           "CPTRA_FUSE_WR_DONE"                              : exp_data = fuses_locked ? curr_data : (ahb_rodata | apb_indata & get_mask(addr_name)); 
           "CPTRA_BOOTFSM_GO"                                : exp_data = ahb_rodata | apb_indata & get_mask(addr_name) ; 
           "CPTRA_BOOT_STATUS"                               : exp_data = ahb_indata | apb_rodata; 
@@ -546,12 +601,6 @@ package soc_ifc_tb_pkg;
               $display ("TB INFO: Cross modification - Writing '1' to INTERNAL_FW_UPDATE_RESET also reset INTERNAL_ICCM_LOCK"); 
 
               _exp_register_data_dict["CPTRA_RESET_REASON"] = 32'h1;  //FIXME. Ignoring warm reset for now 
-              /*
-              tmp_data = _exp_register_data_dict["CPTRA_RESET_REASON"]; 
-              tmp_data = tmp_data & (32'hffff_ffff ^ `SOC_IFC_REG_CPTRA_RESET_REASON_FW_UPD_RESET_MASK)  |
-                         tmp_data & mask_shifted(1'b1, `SOC_IFC_REG_CPTRA_RESET_REASON_FW_UPD_RESET_MASK); 
-              _exp_register_data_dict["CPTRA_RESET_REASON"] = tmp_data; 
-              */
               $display ("-- CPTRA_RESET_REASON is now %d", _exp_register_data_dict["CPTRA_RESET_REASON"]); 
               $display ("TB INFO: Cross modification - Writing '1' to INTERNAL_FW_UPDATE_RESET also sets CPTRA_RESET_REASON"); 
             end
@@ -576,8 +625,9 @@ package soc_ifc_tb_pkg;
 
     strq_t soc_regs; 
 
-    foreach (_soc_register_dict[rkey]) 
+    foreach (_soc_register_dict[rkey]) begin
       soc_regs.push_back(rkey); 
+    end
 
     return soc_regs;
 
@@ -655,6 +705,31 @@ package soc_ifc_tb_pkg;
   endfunction
 
 
+  function word_addrq_t get_undef_regs();
+   // Just flattens and expands the extent ranges into a single queue 
+
+    word_addrq_t undef_addrs; 
+    word_addr_t addr; 
+    word_addr_t addr_min, addr_max; 
+    int i;
+
+    for (i = 0; i < _undefined_addr_ranges.size(); i++) begin 
+
+        addr_min = _undefined_addr_ranges[i].addr_min; 
+        addr_max = _undefined_addr_ranges[i].addr_max;
+        addr = addr_min;
+        while (addr <= addr_max) begin
+            // $display ("Adding to undefined registers list 0x%x", addr);
+            undef_addrs.push_back(addr); 
+            addr += 32'h4;
+        end
+    end  
+
+    return undef_addrs;
+
+  endfunction 
+        
+
   function void reset_exp_data();
     // this peforms update for power-on reset
 
@@ -728,11 +803,13 @@ package soc_ifc_tb_pkg;
 
 
   function automatic dword_t mask_shifted(dword_t v, dword_t n);
-  /* Shift val by number of bits that mask n has zeros on right, eg:
+  /* 
+    Shift val by number of bits that mask n has zeros on right, eg:
     mask_shifted(32'h1, 32'h100) -> 0x100 // 8-bit shift ;
     mask_shifted(32'h1, 32'h8000_0000); -> 0x8000_0000 // 31-bit shift
     mask_shifted(32'h2, 32'h0003_0000) -> 0x0002_0000 // 16 bit shift
-    mask_shifted(32'h2, 32'h0006_0000) -> 0x0004_0000 // 17 bit shift */
+    mask_shifted(32'h2, 32'h0006_0000) -> 0x0004_0000 // 17 bit shift 
+  */
 
     int k;
     int ones = $countones(n); 
@@ -774,7 +851,7 @@ package soc_ifc_tb_pkg;
 
       word_addr_t addr;
 
-      this.addr = _soc_register_dict[addr_name];  //TODO. Consider checks
+      this.addr = _soc_register_dict[addr_name];  
       this.data = data;
       this.tid = tid;    
 
@@ -821,6 +898,7 @@ package soc_ifc_tb_pkg;
     static int imap_built = 0; 
     // static int fuses_locked = 0; 
     static string security_state_name = "UNDEFINED2"; 
+    static int undef_addr_built = 0; 
 
     function new();
       if (!widereg_expanded) begin
@@ -834,6 +912,7 @@ package soc_ifc_tb_pkg;
       end 
 
       reset_exp_data();
+   
     endfunction   
 
 
@@ -908,7 +987,7 @@ package soc_ifc_tb_pkg;
 
     endfunction  // init_regs
 
- 
+
     function word_addr_t get_addr(string name);
 
       if (_soc_register_dict.exists(name))
@@ -1037,16 +1116,10 @@ package soc_ifc_tb_pkg;
     endfunction
 
 
-    function int check_anddel_entry(WordTransaction transaction);
-      // TODO. Need to implement deletion
-      // returns cumulative (object.)error count
-      // don't check tid if only one transaction
-
-      err_count = check_entry(transaction);
-      // Need to check if addr match and tid matched, else not  
-      return err_count;
-
-    endfunction
+    // TODO. Consider implementing deletion along with checking
+    //      returns cumulative (object.)error count
+    //      don't check tid if only one transaction
+    // function int check_anddel_entry(WordTransaction transaction);
 
 
     function int check_entry(WordTransaction transaction);
@@ -1112,8 +1185,6 @@ package soc_ifc_tb_pkg;
 
       if (addr_table.exists(addr)) begin
         entries = addr_table[addr];  
-        // if entries.size() == 0:
-        //   $display("TB INFO. No entries for addr (0x%08x) found in scoreboard", addr);
       end else 
         $display("TB WARNING. get_entries: No addr %s (0x%08x) found in scoreboard", addr_name, addr);
 
@@ -1131,8 +1202,6 @@ package soc_ifc_tb_pkg;
 
       if (addr_table.exists(addr)) begin
         entries = addr_table[addr].find with(item.tid == tid); 
-        // if entries.size() == 0:
-        //   $display("TB INFO. No entries for addr (0x%08x) found in scoreboard", addr);
       end else 
         $display("TB WARNING. get_entries_withtid: No addr %s (0x%08x) found in scoreboard", addr_name, addr);
 

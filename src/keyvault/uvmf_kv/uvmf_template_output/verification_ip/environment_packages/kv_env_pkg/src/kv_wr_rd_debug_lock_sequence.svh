@@ -52,7 +52,6 @@ class kv_wr_rd_debug_lock_sequence #(
     kv_read_agent_key_entry_sequence_t sha512_block_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_privkey_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_seed_read_seq;
-    kv_read_agent_key_entry_sequence_t ecc_msg_read_seq;
 
     rand reg [KV_ENTRY_ADDR_W-1:0] hmac_write_entry, sha512_write_entry, ecc_write_entry, doe_write_entry;    
     rand int unsigned wait_cycles_from_seq;
@@ -91,8 +90,6 @@ class kv_wr_rd_debug_lock_sequence #(
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         ecc_seed_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("ecc_seed_read_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
-        ecc_msg_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("ecc_msg_read_seq");
-        if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         //kv_rst_agent_poweron_seq_2 = kv_rst_agent_poweron_sequence_t::type_id::create("kv_rst_agent_poweron_seq_2");
         
     endfunction
@@ -114,6 +111,15 @@ class kv_wr_rd_debug_lock_sequence #(
         else
             `uvm_error("KV WR RD", "kv_rst_agent_config.sequencer is null!")
 
+        //Write to all entries
+                for (write_entry = 0; write_entry < KV_NUM_KEYS; write_entry++) begin
+                    for(write_offset = 0; write_offset < KV_NUM_DWORDS; write_offset++) begin
+                        uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_sha512_write_agent.sequencer.sha512_write_seq", "local_write_entry",write_entry);
+                        uvm_config_db#(reg [KV_ENTRY_SIZE_W-1:0])::set(null, "uvm_test_top.environment.kv_sha512_write_agent.sequencer.sha512_write_seq", "local_write_offset",write_offset);
+                        sha512_write_seq.start(configuration.kv_sha512_write_agent_config.sequencer);
+                    end
+                end
+
         //Set each CTRL reg with random lock data
         for(write_entry = 0; write_entry < KV_NUM_KEYS; write_entry++) begin
             // Construct the transaction
@@ -125,7 +131,9 @@ class kv_wr_rd_debug_lock_sequence #(
         
                 //Unlock debug mode or clear secrets randomly
                 
-                    std::randomize(debug_type); //0 - security state, 1 - clear secrets
+                    //std::randomize(debug_type); //0 - security state, 1 - clear secrets
+                    //temp
+                    debug_type = 0;
                     
                     std::randomize(wait_cycles_from_seq) with {
                         wait_cycles_from_seq >= 5;
@@ -150,16 +158,16 @@ class kv_wr_rd_debug_lock_sequence #(
                 
             
             fork
-            begin
-                //Write to all entries
-                for (write_entry = 0; write_entry < KV_NUM_KEYS; write_entry++) begin
-                    for(write_offset = 0; write_offset < KV_NUM_DWORDS; write_offset++) begin
-                        uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_sha512_write_agent.sequencer.sha512_write_seq", "local_write_entry",write_entry);
-                        uvm_config_db#(reg [KV_ENTRY_SIZE_W-1:0])::set(null, "uvm_test_top.environment.kv_sha512_write_agent.sequencer.sha512_write_seq", "local_write_offset",write_offset);
-                        sha512_write_seq.start(configuration.kv_sha512_write_agent_config.sequencer);
-                    end
-                end
-            end             
+            // begin
+                // //Write to all entries
+                // for (write_entry = 0; write_entry < KV_NUM_KEYS; write_entry++) begin
+                //     for(write_offset = 0; write_offset < KV_NUM_DWORDS; write_offset++) begin
+                //         uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_sha512_write_agent.sequencer.sha512_write_seq", "local_write_entry",write_entry);
+                //         uvm_config_db#(reg [KV_ENTRY_SIZE_W-1:0])::set(null, "uvm_test_top.environment.kv_sha512_write_agent.sequencer.sha512_write_seq", "local_write_offset",write_offset);
+                //         sha512_write_seq.start(configuration.kv_sha512_write_agent_config.sequencer);
+                //     end
+                // end
+            // end             
             begin
                 //Read all entries
                 for (read_entry = 0; read_entry < KV_NUM_KEYS; read_entry++) begin

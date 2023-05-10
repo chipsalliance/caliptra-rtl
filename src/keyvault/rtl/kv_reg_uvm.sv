@@ -30,9 +30,9 @@ package kv_reg_uvm;
             this.rsvd1 = new("rsvd1");
             this.rsvd1.configure(this, 5, 4, "RW", 0, 'h0, 1, 1, 0);
             this.dest_valid = new("dest_valid");
-            this.dest_valid.configure(this, 6, 9, "RO", 1, 'h0, 1, 1, 0);
+            this.dest_valid.configure(this, 8, 9, "RO", 1, 'h0, 1, 1, 0);
             this.last_dword = new("last_dword");
-            this.last_dword.configure(this, 4, 15, "RO", 1, 'h0, 1, 1, 0);
+            this.last_dword.configure(this, 4, 17, "RO", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : kv_reg__kvCtrl
 

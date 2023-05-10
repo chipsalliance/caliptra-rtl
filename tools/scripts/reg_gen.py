@@ -19,6 +19,7 @@ from systemrdl.node import FieldNode
 from peakrdl_regblock import RegblockExporter
 from peakrdl_uvm import UVMExporter
 from peakrdl_html import HTMLExporter
+from peakrdl_regblock.udps import ALL_UDPS
 from peakrdl_regblock.cpuif.passthrough import PassthroughCpuif
 from math import log, ceil, floor
 import sys
@@ -57,6 +58,11 @@ class SVPkgAppendingListener(RDLListener):
 
 # Create an instance of the compiler
 rdlc = RDLCompiler()
+
+# Register all UDPs that 'regblock' requires
+for udp in ALL_UDPS:
+    rdlc.register_udp(udp)
+
 try:
     # Compile your RDL files
     #compile the kv defines so that rdl files including kv controls have the definition

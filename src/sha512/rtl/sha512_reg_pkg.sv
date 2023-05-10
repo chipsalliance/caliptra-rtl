@@ -272,11 +272,7 @@ package sha512_reg_pkg;
     } kv_write_ctrl_reg__ecc_seed_dest_valid__out_t;
 
     typedef struct packed{
-        logic value;
-    } kv_write_ctrl_reg__ecc_msg_dest_valid__out_t;
-
-    typedef struct packed{
-        logic [19:0] value;
+        logic [20:0] value;
     } kv_write_ctrl_reg__rsvd__out_t;
 
     typedef struct packed{
@@ -287,7 +283,6 @@ package sha512_reg_pkg;
         kv_write_ctrl_reg__sha_block_dest_valid__out_t sha_block_dest_valid;
         kv_write_ctrl_reg__ecc_pkey_dest_valid__out_t ecc_pkey_dest_valid;
         kv_write_ctrl_reg__ecc_seed_dest_valid__out_t ecc_seed_dest_valid;
-        kv_write_ctrl_reg__ecc_msg_dest_valid__out_t ecc_msg_dest_valid;
         kv_write_ctrl_reg__rsvd__out_t rsvd;
     } __kv_write_ctrl_reg__out_t;
 

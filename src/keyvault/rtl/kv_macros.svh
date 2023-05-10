@@ -24,7 +24,6 @@ assign struct_name.write_dest_vld[1] = hwif_out.``ctrl_reg_name.hmac_block_dest_
 assign struct_name.write_dest_vld[2] = hwif_out.``ctrl_reg_name.sha_block_dest_valid.value;\
 assign struct_name.write_dest_vld[3] = hwif_out.``ctrl_reg_name.ecc_pkey_dest_valid.value;\
 assign struct_name.write_dest_vld[4] = hwif_out.``ctrl_reg_name.ecc_seed_dest_valid.value;\
-assign struct_name.write_dest_vld[5] = hwif_out.``ctrl_reg_name.ecc_msg_dest_valid.value;\
 assign struct_name.write_entry = hwif_out.``ctrl_reg_name.write_entry.value;\
 assign struct_name.write_en = hwif_out.``ctrl_reg_name.write_en.value;
 

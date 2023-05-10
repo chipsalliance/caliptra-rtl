@@ -96,7 +96,7 @@ class soc_ifc_env_mbox_uc_reg_access_sequence extends soc_ifc_env_mbox_sequence_
     for (int i = 0; i < num_reg; i++) begin
       `uvm_info("MBOX_SEQ", $sformatf("Constraints for reg access [%x] - out_of_bounds: [%x] slave_sel: [%x] reg_addr: [%x]", i, out_of_bounds, slave_sel[i], reg_addr[i]), UVM_MEDIUM)
     end
-    endfunction
+  endfunction
   
 endclass
 
@@ -106,23 +106,26 @@ task soc_ifc_env_mbox_uc_reg_access_sequence::mbox_push_datain();
     uvm_reg_data_t data;
     for (int i = 0; i < num_reg; i++) begin
       data = uvm_reg_data_t'(reg_addr[i]);
-      reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
-      if (reg_sts != UVM_IS_OK)
-        `uvm_error("MBOX_SEQ", "Register access failed (mbox_datain)")
+      reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
+      report_reg_sts(reg_sts, "mbox_datain");
     end
 
 endtask
 
 task soc_ifc_env_mbox_uc_reg_access_sequence::mbox_poll_status();
   mbox_status_e data;
+  mbox_fsm_state_e state;
 
-  mbox_check_status(data);
-  while (data == CMD_BUSY) begin
+  // A force-unlock would cause state->MBOX_IDLE, so we exit the polling loop
+  do begin
       configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200);
-      mbox_check_status(data);
-  end
+      mbox_check_status(data, state);
+  end while (data == CMD_BUSY && state != MBOX_IDLE);
 
-  if (data == DATA_READY) begin
+  if (state == MBOX_IDLE) begin
+        `uvm_info("MBOX_SEQ", "Detected mailbox state transition to IDLE - was mbox_unlock expected?", UVM_HIGH)
+  end
+  else if (data == DATA_READY) begin
       if (mbox_resp_expected_dlen == 0)
           `uvm_error("MBOX_SEQ", $sformatf("Received status %p when not expecting any bytes of response data!", data))
       else begin
