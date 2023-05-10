@@ -14,7 +14,9 @@
 # limitations under the License.
 #
 
-TEST_CFLAGS = -g -O3
+PLAYBOOK_RANDOM_SEED ?= $(shell date +%s)
+TEST_CFLAGS = -g -O3 -DMY_RANDOM_SEED=$(PLAYBOOK_RANDOM_SEED)
+
 ABI = -mabi=ilp32 -march=rv32imc
 
 VERILATOR = verilator
@@ -42,6 +44,7 @@ COMP_LIB_NAMES := aes \
 		  ecc \
 		  hmac \
 		  keyvault \
+		  datavault \
 		  sha256 \
 		  sha512 \
 		  soc_ifc

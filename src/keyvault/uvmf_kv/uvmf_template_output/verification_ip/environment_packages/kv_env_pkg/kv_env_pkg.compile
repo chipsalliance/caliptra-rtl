@@ -1,0 +1,10 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.compile
+  - ../../../verification_ip/interface_packages/kv_rst_pkg/kv_rst_hvl.compile
+  - ../../../verification_ip/interface_packages/kv_write_pkg/kv_write_hvl.compile
+  - ../../../verification_ip/interface_packages/kv_read_pkg/kv_read_hvl.compile
+
+src:
+  - registers/kv_reg_model_top_pkg.sv
+  - kv_env_pkg.sv
+

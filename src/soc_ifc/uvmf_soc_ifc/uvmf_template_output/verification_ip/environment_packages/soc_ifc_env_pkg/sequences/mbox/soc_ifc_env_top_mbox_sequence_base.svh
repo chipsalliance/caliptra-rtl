@@ -92,7 +92,6 @@ class soc_ifc_env_top_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CO
 
 endclass
 
-// pragma uvmf custom external begin
 function soc_ifc_env_top_mbox_sequence_base::create_seqs();
     soc_ifc_env_mbox_seq          = soc_ifc_env_mbox_sequence_base_t::type_id::create("soc_ifc_env_mbox_seq");
     soc_ifc_env_cptra_handler_seq = soc_ifc_env_cptra_mbox_handler_sequence_t::type_id::create("soc_ifc_env_cptra_handler_seq");
@@ -117,5 +116,3 @@ task soc_ifc_env_top_mbox_sequence_base::start_seqs();
         soc_ifc_env_cptra_handler_seq.start(configuration.vsqr);
     join
 endtask
-// pragma uvmf custom external end
-

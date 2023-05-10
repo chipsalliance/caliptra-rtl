@@ -61,6 +61,9 @@ module caliptra_top_tb_services
     // Security State
     output var security_state_t security_state,
 
+    //Scan mode
+    output logic scan_mode,
+
     // TB Controls
     output int   cycleCnt,
 
@@ -126,20 +129,50 @@ module caliptra_top_tb_services
     int cycleCntKillReq;
 
     int                         rst_cyclecnt = 0;
+    int                         wait_time_to_rst;
 
     logic                       cold_rst; 
     logic                       warm_rst; 
-    logic                       timed_warm_rst; 
+    logic                       timed_warm_rst;
+    logic                       prandom_warm_rst; 
     logic                       cold_rst_done;
 
     logic                       inject_hmac_key;
     logic                       inject_ecc_seed;
+    logic                       inject_ecc_privkey;
     logic                       inject_sha_block;
     logic                       inject_random_data;
+    logic                       check_pcr_signing;
 
     logic                       set_wdt_timer1_period;
     logic                       set_wdt_timer2_period;
     logic                       reset_wdt_timer_period;
+
+    typedef bit  [0:11][31:0]   operand_t;
+
+    typedef struct packed {
+        operand_t   x;
+        operand_t   y;
+    } affn_point_t;
+
+    typedef struct packed {
+        operand_t   X;
+        operand_t   Y;
+        operand_t   Z;
+    } proj_point_t;
+
+    typedef struct packed {
+        operand_t     hashed_msg;
+        operand_t     privkey;
+        affn_point_t  pubkey;
+        operand_t     R;
+        operand_t     S;
+        operand_t     seed;
+        operand_t     nonce;
+        operand_t     IV;
+    } test_vector_t;
+
+    test_vector_t test_vector;
 
 // Upwards name referencing per 23.8 of IEEE 1800-2017
 `define DEC caliptra_top_dut.rvtop.veer.dec
@@ -158,9 +191,15 @@ module caliptra_top_tb_services
     //         8'h2 : 8'h5  - Do nothing
     //         8'h6 : 8'h7E - WriteData is an ASCII character - dump to console.log
     //         8'h7F        - Do nothing
-    //         8'h80: 8'h9f - Inject ECC_SEED to kv_key register
-    //         8'ha0: 8'hbf - Inject HMAC_KEY to kv_key register
-    //         8'hc0: 8'hdf - Inject SHA_BLOCK to kv_key register
+    //         8'h80: 8'h87 - Inject ECC_SEED to kv_key register
+    //         8'h90        - Issue PCR singing with fixed vector   
+    //         8'h91        - Issue PCR singing with randomized vector
+    //         8'h92        - Check PCR singing with randomized vector   
+    //         8'ha0: 8'ha7 - Inject HMAC_KEY to kv_key register
+    //         8'hc0: 8'hc7 - Inject SHA_BLOCK to kv_key register
+    //         8'hee        - Issue random warm reset
+    //         8'hef        - Enable scan mode
+    //         8'hf0        - Disable scan mode
     //         8'hf1        - Release WDT timer periods so they can be set by the test
     //         8'hf2        - Force clk_gating_en (to use in smoke_test only)
     //         8'hf3        - Make two clients write to KV
@@ -208,6 +247,7 @@ module caliptra_top_tb_services
     //keyvault injection hooks
     //Inject data to KV key reg
     logic [0:11][31:0]   ecc_seed_tb    = 384'h8FA8541C82A392CA74F23ED1DBFD73541C5966391B97EA73D744B0E34B9DF59ED0158063E39C09A5A055371EDF7A5441;
+    logic [0:11][31:0]   ecc_privkey_tb = 384'hF274F69D163B0C9F1FC3EBF4292AD1C4EB3CEC1C5A7DDE6F80C14292934C2055E087748D0A169C772483ADEE5EE70E17;
     logic [0:11][31:0]   hmac_key_tb    = 384'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b;
     logic [0:11][31:0]   sha_block_tb   = 384'hb1eeef324b499f19eba322215fe3ce19c9f000b698d2b2dab7145015046cc86d049ee15ad59dcd1564f30112e06444cb;
     genvar dword_i, slot_id;
@@ -216,24 +256,43 @@ module caliptra_top_tb_services
             for (dword_i=0; dword_i < 12; dword_i++) begin : inject_dword_loop
                 always @(negedge clk) begin
                     //inject valid seed dest and seed value to key reg
-                    if(((WriteData[7:0] & 8'hE0) == 8'h80) && mailbox_write) begin
+                    if(((WriteData[7:0] & 8'hf8) == 8'h80) && mailbox_write) begin
                         //$system("/home/mojtabab/workspace_aha_poc/ws1/Caliptra/src/ecc/tb/ecdsa_secp384r1.exe");
                         inject_ecc_seed <= 1'b1;
-                        if (((WriteData[7:0] & 8'h1f) == slot_id)) begin
+                        if (((WriteData[7:0] & 8'h07) == slot_id)) begin
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 6'b10000;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b10000;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = ecc_seed_tb[dword_i][31 : 0];
                         end
                     end
+                    //inject privkey value to key reg
+                    else if((WriteData[7:0] == 8'h90) && mailbox_write) begin
+                        inject_ecc_privkey <= 1'b1;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_SIGNING].dest_valid.we = 1'b1;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_SIGNING].dest_valid.next = 5'b1000;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_SIGNING].last_dword.we = 1'b1;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_SIGNING].last_dword.next = 'd11;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_SIGNING][dword_i].data.we = 1'b1;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_SIGNING][dword_i].data.next = ecc_privkey_tb[dword_i][31 : 0];
+                    end
+                    else if((WriteData[7:0] == 8'h91) && mailbox_write) begin
+                        inject_ecc_privkey <= 1'b1;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_SIGNING].dest_valid.we = 1'b1;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_SIGNING].dest_valid.next = 5'b1000;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_SIGNING].last_dword.we = 1'b1;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_SIGNING].last_dword.next = 'd11;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_SIGNING][dword_i].data.we = 1'b1;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_SIGNING][dword_i].data.next = test_vector.privkey[dword_i][31 : 0];
+                    end
                     //inject valid hmac_key dest and hmac_key value to key reg
-                    else if(((WriteData[7:0] & 8'hE0) == 8'ha0) && mailbox_write) begin
+                    else if(((WriteData[7:0] & 8'hf8) == 8'ha0) && mailbox_write) begin
                         inject_hmac_key <= 1'b1;
-                        if (((WriteData[7:0] & 8'h1f) == slot_id)) begin
+                        if (((WriteData[7:0] & 8'h07) == slot_id)) begin
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 6'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
@@ -241,11 +300,11 @@ module caliptra_top_tb_services
                         end
                     end
                     //inject valid sha dest and sha_block value to key reg
-                    else if(((WriteData[7:0] & 8'hE0) == 8'hc0) && mailbox_write) begin
+                    else if(((WriteData[7:0] & 8'hf8) == 8'hc0) && mailbox_write) begin
                         inject_sha_block <= 1'b1;
-                        if (((WriteData[7:0] & 8'h1f) == slot_id)) begin
+                        if (((WriteData[7:0] & 8'h07) == slot_id)) begin
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 6'b100;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b100;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
@@ -265,6 +324,7 @@ module caliptra_top_tb_services
                     end
                     else begin
                         inject_ecc_seed <= '0;
+                        inject_ecc_privkey <= '0;
                         inject_hmac_key <= '0;
                         inject_sha_block <= '0;
                         inject_random_data <= '0;
@@ -296,40 +356,137 @@ module caliptra_top_tb_services
         end
     end
 
+    always @(negedge clk) begin
+        //Enable scan mode
+        if ((WriteData[7:0] == 8'hef) && mailbox_write) begin
+            scan_mode <= 1'b1;
+        end
+        //Disable scan mode
+        else if ((WriteData[7:0] == 8'hf0) && mailbox_write) begin
+            scan_mode <= 1'b0;
+        end
+    end
+    
+    
     always@(negedge clk) begin
         if((WriteData == 'hf2) && mailbox_write) begin
             force caliptra_top_dut.soc_ifc_top1.clk_gating_en = 1;
         end
     end
-    
-    /*
-    always@(negedge clk) begin
-        if((WriteData[7:0] == 8'hf3) && mailbox_write) begin
-            force caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_en = 1;
-            force caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_entry = 6;
-            force caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_offset = 3;
-            force caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_data = 'hABCD_EF01;
 
-            force caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_en = 1;
-            force caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_entry = 6;
-            force caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_offset = 3;
-            force caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_data = 'h2233_4455;
+    logic [0:11][31:0] pv_hash_value = {32'h11143121,
+    32'hbeb365e6,
+    32'h3826e7de,
+    32'h89f9c76a,
+    32'he1100411,
+    32'hfb9643d1,
+    32'h98e730b7,
+    32'h603a83a4,
+    32'h977c76ee,
+    32'he6ddf74f,
+    32'ha0b43fbf,
+    32'h49897978};
+
+    logic pcr_vault_needs_release;
+
+    generate 
+        for (genvar dword = 0; dword < 12; dword++) begin
+            always@(posedge clk or negedge cptra_rst_b) begin
+                if (~cptra_rst_b) begin
+                    pcr_vault_needs_release <= 1'b0;
+                end
+                else if((WriteData[7:0] == 8'hf3) && mailbox_write) begin
+                    pcr_vault_needs_release <= 1'b1;
+                    force caliptra_top_dut.pcr_vault1.pv_reg_hwif_in.PCR_ENTRY[31][dword].data.we = 1'b1;
+                    force caliptra_top_dut.pcr_vault1.pv_reg_hwif_in.PCR_ENTRY[31][dword].data.next = pv_hash_value[dword];
+                end
+                else if (pcr_vault_needs_release) begin
+                    pcr_vault_needs_release <= 1'b0;
+                    release caliptra_top_dut.pcr_vault1.pv_reg_hwif_in.PCR_ENTRY[31][dword].data.we;
+                    release caliptra_top_dut.pcr_vault1.pv_reg_hwif_in.PCR_ENTRY[31][dword].data.next;
+                end
+            end
         end
-        else begin
-            release caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_en;
-            release caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_entry;
-            release caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_offset;
-            release caliptra_top_dut.hmac.hmac_inst.hmac_result_kv_write.kv_write.write_data;
+    endgenerate
 
-            release caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_en;
-            release caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_entry;
-            release caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_offset;
-            release caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_write.write_data;
+    task ecc_testvector_generator ();
+        string    file_name;
+        begin
+
+        $system("./ecdsa_secp384r1.exe");
+
+        file_name = "secp384_testvector.hex";
+        if (!UVM_TB) ecc_read_test_vectors(file_name);
+        end
+    endtask // ecc_test
+
+    task ecc_read_test_vectors (input string fname);
+        integer values_per_test_vector;
+        int fd_r;
+        string line_read;
+        begin
+
+            // ATTN: Must match the number of fields generated by gen_mm_test_vectors.py script
+            values_per_test_vector = 9;
+
+            fd_r = $fopen(fname, "r");
+            if (fd_r == 0)
+                $error("Can't open file %s", fname);
+
+
+            // Get hashed message, private key, public key x, public key y, k and R
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", test_vector.hashed_msg));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", test_vector.privkey));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", test_vector.pubkey.x));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", test_vector.pubkey.y));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", test_vector.seed));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", test_vector.nonce));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", test_vector.R));
+            void'($fgets(line_read, fd_r)); 
+            void'($sscanf(line_read, "%h", test_vector.S));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", test_vector.IV));
+
+            $fclose(fd_r);
 
         end
+    endtask
+
+    logic [0:11][31:0]   ecc_msg_tb    = 384'hC8F518D4F3AA1BD46ED56C1C3C9E16FB800AF504DB98843548C5F623EE115F73D4C62ABC06D303B5D90D9A175087290D;
+    generate 
+        for (genvar dword = 0; dword < 12; dword++) begin
+            always@(posedge clk) begin
+                if((WriteData[7:0] == 8'h90) && mailbox_write) begin
+                    force caliptra_top_dut.sha512.sha512_inst.pcr_sign_we = 1'b1;
+                    force caliptra_top_dut.sha512.sha512_inst.pcr_sign[dword] = ecc_msg_tb[11-dword][31 : 0];
+                end
+                else if((WriteData[7:0] == 8'h91) && mailbox_write) begin
+                    force caliptra_top_dut.sha512.sha512_inst.pcr_sign_we = 1'b1;
+                    force caliptra_top_dut.sha512.sha512_inst.pcr_sign[dword] = test_vector.hashed_msg[11-dword][31 : 0];
+                end
+                else begin
+                    release caliptra_top_dut.sha512.sha512_inst.pcr_sign_we;
+                    release caliptra_top_dut.sha512.sha512_inst.pcr_sign[dword];
+                end
+            end
+        end
+    endgenerate
+
+    always @(negedge clk) begin
+        if((WriteData[7:0] == 8'h92) && mailbox_write)
+            check_pcr_signing <= 1'b1;
+        else
+            check_pcr_signing <= 1'b0;
     end
-    */
-    
+
+
     always@(negedge clk) begin
 
         if((WriteData == 'hf5) && mailbox_write) begin 
@@ -342,6 +499,11 @@ module caliptra_top_tb_services
         end
         else if((WriteData == 'hf7) && mailbox_write) begin
             timed_warm_rst <= 'b1;
+        end
+        else if((WriteData == 'hee) && mailbox_write) begin
+            wait_time_to_rst =$urandom_range(5,1000);
+            prandom_warm_rst <= 'b1;
+            rst_cyclecnt <= cycleCnt;
         end
 
 
@@ -387,6 +549,17 @@ module caliptra_top_tb_services
                 assert_rst_flag <= 0;
                 deassert_rst_flag <= 1;
                 timed_warm_rst <= 'b0;
+            end
+        end
+        else if(prandom_warm_rst) begin
+            if(cycleCnt == rst_cyclecnt + wait_time_to_rst) begin
+                assert_rst_flag <= 'b1;
+                deassert_rst_flag <= 'b0;
+            end
+            else if(assert_rst_flag) begin //prandom rst was already issued, so deassert rst now
+                assert_rst_flag <= 'b0;
+                deassert_rst_flag <= 'b1;
+                prandom_warm_rst <= 'b0;
             end
         end
         else begin
@@ -688,8 +861,16 @@ module caliptra_top_tb_services
         warm_rst = 0;
         timed_warm_rst = 0;
         cold_rst_done = 0;
+        prandom_warm_rst = 0;
+
+        scan_mode = 0;
+        wait_time_to_rst = 0;
 
         set_wdt_timer1_period = 0;
+
+        `ifndef VERILATOR
+        ecc_testvector_generator();
+        `endif
     end
 
    //=========================================================================-

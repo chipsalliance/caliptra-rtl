@@ -155,13 +155,13 @@ extends uvmf_environment_configuration_base;
   // Interface initialization for local agents
      pv_rst_agent_config.initialize( interface_activity[1], {environment_path,".pv_rst_agent"}, interface_names[1]);
      pv_rst_agent_config.initiator_responder = INITIATOR;
-     // pv_rst_agent_config.has_coverage = 1;
+     pv_rst_agent_config.has_coverage = 1;
      pv_sha512_write_agent_config.initialize( interface_activity[2], {environment_path,".pv_sha512_write_agent"}, interface_names[2]);
      pv_sha512_write_agent_config.initiator_responder = INITIATOR;
-     // pv_sha512_write_agent_config.has_coverage = 1;
+     pv_sha512_write_agent_config.has_coverage = 1;
      pv_sha512_block_read_agent_config.initialize( interface_activity[3], {environment_path,".pv_sha512_block_read_agent"}, interface_names[3]);
      pv_sha512_block_read_agent_config.initiator_responder = INITIATOR;
-     // pv_sha512_block_read_agent_config.has_coverage = 1;
+     pv_sha512_block_read_agent_config.has_coverage = 1;
 
     // pragma uvmf custom reg_model_config_initialize begin
     // Register model creation and configuation

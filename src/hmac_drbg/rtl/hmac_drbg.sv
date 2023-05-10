@@ -369,7 +369,7 @@ module hmac_drbg
 
       CHCK_ST:
       begin
-        if ((HMAC_tag==0) || (HMAC_tag > HMAC_DRBG_PRIME))
+        if ((HMAC_tag==0) || (HMAC_tag >= HMAC_DRBG_PRIME))
           drbg_next_st    = K3_ST;
         else
           drbg_next_st    = DONE_ST;

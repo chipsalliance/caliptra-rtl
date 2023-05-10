@@ -1,0 +1,6 @@
+---
+# random seed desired...
+seed: ${PLAYBOOK_RANDOM_SEED}
+plusargs:
+- '+UVM_TESTNAME=soc_ifc_trng_test'
+testname: soc_ifc_trng_test
