@@ -50,7 +50,8 @@ task soc_ifc_env_mbox_rand_medium_interference_sequence::mbox_poll_status();
 
     // Registers we won't randomly access due to side-effects
     blocklist = '{reg_model.mbox_csr_rm.mbox_lock,
-                  reg_model.mbox_csr_rm.mbox_dataout};
+                  reg_model.mbox_csr_rm.mbox_dataout,
+                  reg_model.sha512_acc_csr_rm.LOCK};
     foreach (blocklist[idx]) begin
         del_idx = regs.find_first_index(found_reg) with (found_reg == blocklist[idx]);
         regs.delete(del_idx.pop_front());

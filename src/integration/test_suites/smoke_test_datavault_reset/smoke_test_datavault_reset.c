@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 
+// -- Begin Boilerplate --
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
 #include "riscv-csr.h"
@@ -20,6 +21,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "printf.h"
+#include "datavault.h"
 
 volatile char*    stdout           = (char *)STDOUT;
 volatile uint32_t intr_count = 0;
@@ -31,14 +33,14 @@ volatile uint32_t err_count __attribute__((section(".dccm.persistent"))) = 0;
 #else
     enum printf_verbosity verbosity_g = LOW;
 #endif
+
+
+#ifndef MY_RANDOM_SEED
+#define MY_RANDOM_SEED 17
+#endif // MY_RANDOM_SEED
 // -- End Boilerplate --
 
-
-// #define _DV_DEBUG
-#include "smoke_test_datavault_common.h"
-
-
-const long seed = 17; 
+const long seed = MY_RANDOM_SEED; 
 
 const int DV_WARM_RESET   = 0;
 const int DV_COLD_RESET   = 1;
@@ -49,14 +51,17 @@ uint32_t survived_values [DV_PFX_COUNT] [DV_MAXWIDTH];
 
 void populate_wr_exp_values(uint32_t init_val) { 
 
+    widereg_t *dvregs_ptr;
     uint32_t curr = init_val; 
 
     VPRINTF(LOW, "\n-- Populating write data and expected values into arrays starting w/0x%x--\n", init_val);
 
-    for (int i = 0; i < DV_PFX_COUNT; i++) {
-        for (int j = 0; j < dv_regs[i].width; j++) {
+    dvregs_ptr = dv_regs;
+    
+    for (int i = 0; i < DV_PFX_COUNT; i++, dvregs_ptr++) {
+        for (int j = 0; j < dvregs_ptr->width; j++) {
             wdata_values[i][j] = curr;  
-            survived_values[i][j] = wdata_values[i][j] & dv_regs[i].sticky_mask; 
+            survived_values[i][j] = wdata_values[i][j] & dvregs_ptr->sticky_mask; 
             curr += 0x10;
         }
     }
@@ -66,23 +71,25 @@ void populate_wr_exp_values(uint32_t init_val) {
 
 void write_dv_regs() {
 
+    widereg_t *dvregs_ptr;
     volatile uint32_t * tmpreg;
-    int pfx_count = sizeof(dv_regs)/sizeof(widereg_t);
 
     VPRINTF(LOW,"\n** Performing a WRITE to all registers (reporting once per prefix)**\n\n");
 
     // First write to non-control registers 
-    for (int i = 0; i < pfx_count; i++) {
-        if (is_ctrl_reg( &dv_regs[i] )) 
+    dvregs_ptr = dv_regs;
+
+    for (int i = 0; i < DV_PFX_COUNT; i++, dvregs_ptr++) {
+        if (is_ctrl_reg( dvregs_ptr )) 
             continue;
 
-        for (int j = 0; j < dv_regs[i].width; j++) {
-            tmpreg = dv_regs[i].addr + j; 
+        for (int j = 0; j < dvregs_ptr->width; j++) {
+            tmpreg = dvregs_ptr->addr + j; 
             *tmpreg = wdata_values[i][j];
 
             if (j == 0) {
                 VPRINTF(LOW,"\nINFO. For addr 0x%x (%s), attempting to write 0x%08x, expected survived value 0x%08x", 
-                    tmpreg, dv_regs[i].pfx, wdata_values[i][j], survived_values[i][j]); 
+                    tmpreg, dvregs_ptr->pfx, wdata_values[i][j], survived_values[i][j]); 
             } else {
                 VPRINTF(LOW,"."); 
             }
@@ -90,40 +97,43 @@ void write_dv_regs() {
     }
 
     // Then write only to control registers 
-    for (int i = 0; i < pfx_count; i++) {
-        if ( !is_ctrl_reg( &dv_regs[i] ) ) 
+    dvregs_ptr = dv_regs;
+
+    for (int i = 0; i < DV_PFX_COUNT; i++, dvregs_ptr++) {
+        if ( !is_ctrl_reg( dvregs_ptr )) 
             continue;
-        for (int j = 0; j < dv_regs[i].width; j++) {
-            tmpreg = dv_regs[i].addr + j; 
+
+        for (int j = 0; j < dvregs_ptr->width; j++) {
+            tmpreg = dvregs_ptr->addr + j; 
             *tmpreg = wdata_values[i][j];
 
             if (j == 0) {
                 VPRINTF(LOW,"\nINFO. For addr 0x%x (%s), attempting to write 0x%08x, expected survived value 0x%08x", 
-                    tmpreg, dv_regs[i].pfx, wdata_values[i][j], survived_values[i][j]); 
+                    tmpreg, dvregs_ptr->pfx, wdata_values[i][j], survived_values[i][j]); 
             } else {
                 VPRINTF(LOW,"."); 
             }
         }
     }
 
-    VPRINTF(LOW, "\n-- Done writing dat to registers --\n");
+    VPRINTF(LOW, "\n-- Done writing data to registers --\n");
 }
 
 
 int check_reset_values(int rst_type) {
 
     volatile uint32_t * tmpreg;
-    int pfx_count = sizeof(dv_regs)/sizeof(widereg_t);
+    widereg_t *dvregs_ptr = dv_regs;
 
-    for (int i = 0; i < pfx_count; i++) {                   
-        for (int j = 0; j < dv_regs[i].width; j++) {      
-            tmpreg = dv_regs[i].addr + j; 
+    for (int i = 0; i < DV_PFX_COUNT; i++, dvregs_ptr++) {                   
+        for (int j = 0; j < dvregs_ptr->width; j++) {      
+            tmpreg = dvregs_ptr->addr + j; 
 
-            if (rst_type == DV_COLD_RESET) {
+            if (rst_type == DV_COLD_RESET) { // All reset values are 0x0
                 if(*tmpreg != 0) { 
                     err_count++; 
-                    VPRINTF(ERROR,"\nERROR. incorrect power-on value for addr 0x%x (%s)= 0x%08x (expected 0x%08x)\n", 
-                        tmpreg, dv_regs[i].pfx, *tmpreg, dv_regs[i].rstval); 
+                    VPRINTF(ERROR,"\nERROR. incorrect power-on value for addr 0x%x (%s)= 0x%08x (expected 0x0)\n", 
+                        tmpreg, dvregs_ptr->pfx, *tmpreg); 
                 } else {
                     VPRINTF(LOW,".");
                 }
@@ -131,7 +141,7 @@ int check_reset_values(int rst_type) {
                 if (*tmpreg != survived_values[i][j]) { 
                     err_count++; 
                     VPRINTF(ERROR,"\nERROR. incorrect warm-reset value for addr 0x%x (%s)= 0x%08x (expected 0x%08x)\n", 
-                        tmpreg, dv_regs[i].pfx, *tmpreg, survived_values[i][j]);
+                        tmpreg, dvregs_ptr->pfx, *tmpreg, survived_values[i][j]);
                 } else {
                     VPRINTF(LOW,".");
                 }
@@ -148,7 +158,6 @@ int check_reset_values(int rst_type) {
 
 void main() {
 
-    // long seed = atoi(getenv("PLAYBOOK_RANDOM_SEED")); // FIXME. Currently always 0
 
     if (rst_count == 0) {
 

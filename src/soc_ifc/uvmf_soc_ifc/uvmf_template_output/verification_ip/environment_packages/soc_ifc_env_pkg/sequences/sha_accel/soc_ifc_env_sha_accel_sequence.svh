@@ -49,7 +49,8 @@ class soc_ifc_env_sha_accel_sequence extends soc_ifc_env_sequence_base #(.CONFIG
   extern virtual function void report_reg_sts(uvm_status_e reg_sts, string name);
 
   constraint sha_accel_mailbox_mode_c { sha_accel_op_rand.mailbox_mode == 1'b0; }
-  constraint test_case_c {test_case inside { [0:255] }; }
+  //don't run the "empty" test case
+  constraint test_case_c {test_case inside { [1:255] }; }
 
   virtual function void do_kill();
     // FIXME gracefully terminate any APB requests pending?
@@ -249,7 +250,10 @@ task soc_ifc_env_sha_accel_sequence::sha_accel_read_result(reg [15:0][31:0] sha_
 endtask
 
 task soc_ifc_env_sha_accel_sequence::sha_accel_clr_lock();
-    reg_model.sha512_acc_csr_rm.LOCK.write(reg_sts, uvm_reg_data_t'(0), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    uvm_reg_data_t data = 0;
+    data[reg_model.sha512_acc_csr_rm.LOCK.LOCK.get_lsb_pos()] = 1'b1;
+    //write one to clear lock
+    reg_model.sha512_acc_csr_rm.LOCK.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
     report_reg_sts(reg_sts, "LOCK");
 endtask
 

@@ -68,7 +68,6 @@ module ecc_reg (
         logic [2-1:0]ECC_VERSION;
         logic ECC_CTRL;
         logic ECC_STATUS;
-        logic ECC_SCACONFIG;
         logic [12-1:0]ECC_SEED;
         logic [12-1:0]ECC_MSG;
         logic [12-1:0]ECC_PRIVKEY_OUT;
@@ -117,7 +116,6 @@ module ecc_reg (
         end
         decoded_reg_strb.ECC_CTRL = cpuif_req_masked & (cpuif_addr == 'h10);
         decoded_reg_strb.ECC_STATUS = cpuif_req_masked & (cpuif_addr == 'h18);
-        decoded_reg_strb.ECC_SCACONFIG = cpuif_req_masked & (cpuif_addr == 'h20);
         for(int i0=0; i0<12; i0++) begin
             decoded_reg_strb.ECC_SEED[i0] = cpuif_req_masked & (cpuif_addr == 'h80 + i0*'h4);
         end
@@ -200,20 +198,6 @@ module ecc_reg (
                 logic load_next;
             } PCR_SIGN;
         } ECC_CTRL;
-        struct packed{
-            struct packed{
-                logic next;
-                logic load_next;
-            } POINT_RND_EN;
-            struct packed{
-                logic next;
-                logic load_next;
-            } MASK_SIGN_EN;
-            struct packed{
-                logic next;
-                logic load_next;
-            } SCALAR_RND_EN;
-        } ECC_SCACONFIG;
         struct packed{
             struct packed{
                 logic [31:0] next;
@@ -477,17 +461,6 @@ module ecc_reg (
         } ECC_CTRL;
         struct packed{
             struct packed{
-                logic value;
-            } POINT_RND_EN;
-            struct packed{
-                logic value;
-            } MASK_SIGN_EN;
-            struct packed{
-                logic value;
-            } SCALAR_RND_EN;
-        } ECC_SCACONFIG;
-        struct packed{
-            struct packed{
                 logic [31:0] value;
             } SEED;
         } [12-1:0]ECC_SEED;
@@ -749,63 +722,6 @@ module ecc_reg (
         end
     end
     assign hwif_out.ECC_CTRL.PCR_SIGN.value = field_storage.ECC_CTRL.PCR_SIGN.value;
-    // Field: ecc_reg.ECC_SCACONFIG.POINT_RND_EN
-    always_comb begin
-        automatic logic [0:0] next_c = field_storage.ECC_SCACONFIG.POINT_RND_EN.value;
-        automatic logic load_next_c = '0;
-        if(decoded_reg_strb.ECC_SCACONFIG && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
-            next_c = (field_storage.ECC_SCACONFIG.POINT_RND_EN.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
-            load_next_c = '1;
-        end
-        field_combo.ECC_SCACONFIG.POINT_RND_EN.next = next_c;
-        field_combo.ECC_SCACONFIG.POINT_RND_EN.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
-            field_storage.ECC_SCACONFIG.POINT_RND_EN.value <= 'h1;
-        end else if(field_combo.ECC_SCACONFIG.POINT_RND_EN.load_next) begin
-            field_storage.ECC_SCACONFIG.POINT_RND_EN.value <= field_combo.ECC_SCACONFIG.POINT_RND_EN.next;
-        end
-    end
-    assign hwif_out.ECC_SCACONFIG.POINT_RND_EN.value = field_storage.ECC_SCACONFIG.POINT_RND_EN.value;
-    // Field: ecc_reg.ECC_SCACONFIG.MASK_SIGN_EN
-    always_comb begin
-        automatic logic [0:0] next_c = field_storage.ECC_SCACONFIG.MASK_SIGN_EN.value;
-        automatic logic load_next_c = '0;
-        if(decoded_reg_strb.ECC_SCACONFIG && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
-            next_c = (field_storage.ECC_SCACONFIG.MASK_SIGN_EN.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
-            load_next_c = '1;
-        end
-        field_combo.ECC_SCACONFIG.MASK_SIGN_EN.next = next_c;
-        field_combo.ECC_SCACONFIG.MASK_SIGN_EN.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
-            field_storage.ECC_SCACONFIG.MASK_SIGN_EN.value <= 'h1;
-        end else if(field_combo.ECC_SCACONFIG.MASK_SIGN_EN.load_next) begin
-            field_storage.ECC_SCACONFIG.MASK_SIGN_EN.value <= field_combo.ECC_SCACONFIG.MASK_SIGN_EN.next;
-        end
-    end
-    assign hwif_out.ECC_SCACONFIG.MASK_SIGN_EN.value = field_storage.ECC_SCACONFIG.MASK_SIGN_EN.value;
-    // Field: ecc_reg.ECC_SCACONFIG.SCALAR_RND_EN
-    always_comb begin
-        automatic logic [0:0] next_c = field_storage.ECC_SCACONFIG.SCALAR_RND_EN.value;
-        automatic logic load_next_c = '0;
-        if(decoded_reg_strb.ECC_SCACONFIG && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
-            next_c = (field_storage.ECC_SCACONFIG.SCALAR_RND_EN.value & ~decoded_wr_biten[2:2]) | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
-            load_next_c = '1;
-        end
-        field_combo.ECC_SCACONFIG.SCALAR_RND_EN.next = next_c;
-        field_combo.ECC_SCACONFIG.SCALAR_RND_EN.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
-            field_storage.ECC_SCACONFIG.SCALAR_RND_EN.value <= 'h1;
-        end else if(field_combo.ECC_SCACONFIG.SCALAR_RND_EN.load_next) begin
-            field_storage.ECC_SCACONFIG.SCALAR_RND_EN.value <= field_combo.ECC_SCACONFIG.SCALAR_RND_EN.next;
-        end
-    end
-    assign hwif_out.ECC_SCACONFIG.SCALAR_RND_EN.value = field_storage.ECC_SCACONFIG.SCALAR_RND_EN.value;
     for(genvar i0=0; i0<12; i0++) begin
         // Field: ecc_reg.ECC_SEED[].SEED
         always_comb begin

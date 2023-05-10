@@ -69,26 +69,6 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__ECC_STATUS
 
-    // Reg - ecc_reg::ECC_SCACONFIG
-    class ecc_reg__ECC_SCACONFIG extends uvm_reg;
-        rand uvm_reg_field POINT_RND_EN;
-        rand uvm_reg_field MASK_SIGN_EN;
-        rand uvm_reg_field SCALAR_RND_EN;
-
-        function new(string name = "ecc_reg__ECC_SCACONFIG");
-            super.new(name, 32, UVM_NO_COVERAGE);
-        endfunction : new
-
-        virtual function void build();
-            this.POINT_RND_EN = new("POINT_RND_EN");
-            this.POINT_RND_EN.configure(this, 1, 0, "WO", 0, 'h1, 1, 1, 0);
-            this.MASK_SIGN_EN = new("MASK_SIGN_EN");
-            this.MASK_SIGN_EN.configure(this, 1, 1, "WO", 0, 'h1, 1, 1, 0);
-            this.SCALAR_RND_EN = new("SCALAR_RND_EN");
-            this.SCALAR_RND_EN.configure(this, 1, 2, "WO", 0, 'h1, 1, 1, 0);
-        endfunction : build
-    endclass : ecc_reg__ECC_SCACONFIG
-
     // Reg - ecc_reg::ECC_SEED
     class ecc_reg__ECC_SEED extends uvm_reg;
         rand uvm_reg_field SEED;
@@ -602,7 +582,6 @@ package ecc_reg_uvm;
         rand ecc_reg__ECC_VERSION ECC_VERSION[2];
         rand ecc_reg__ECC_CTRL ECC_CTRL;
         rand ecc_reg__ECC_STATUS ECC_STATUS;
-        rand ecc_reg__ECC_SCACONFIG ECC_SCACONFIG;
         rand ecc_reg__ECC_SEED ECC_SEED[12];
         rand ecc_reg__ECC_MSG ECC_MSG[12];
         rand ecc_reg__ECC_PRIVKEY_OUT ECC_PRIVKEY_OUT[12];
@@ -652,11 +631,6 @@ package ecc_reg_uvm;
 
             this.ECC_STATUS.build();
             this.default_map.add_reg(this.ECC_STATUS, 'h18);
-            this.ECC_SCACONFIG = new("ECC_SCACONFIG");
-            this.ECC_SCACONFIG.configure(this);
-
-            this.ECC_SCACONFIG.build();
-            this.default_map.add_reg(this.ECC_SCACONFIG, 'h20);
             foreach(this.ECC_SEED[i0]) begin
                 this.ECC_SEED[i0] = new($sformatf("ECC_SEED[%0d]", i0));
                 this.ECC_SEED[i0].configure(this);

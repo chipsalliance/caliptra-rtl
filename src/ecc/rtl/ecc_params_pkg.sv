@@ -28,46 +28,9 @@ package ecc_params_pkg;
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter ECC_BASE_ADDR        = 32'h00000000;
-
-  parameter ECC_ADDR_NAME        = ECC_BASE_ADDR + 32'h00000000;
-  parameter ECC_ADDR_VERSION     = ECC_BASE_ADDR + 32'h00000008;
-
-  parameter ECC_ADDR_CTRL        = ECC_BASE_ADDR + 32'h00000010;
   parameter KEYGEN               = 2'b01;
   parameter SIGN                 = 2'b10;
   parameter VERIFY               = 2'b11;
-
-  parameter ECC_ADDR_STATUS         = ECC_BASE_ADDR + 32'h00000018;
-
-  parameter ECC_ADDR_VERIFY         = ECC_BASE_ADDR + 32'h00000020;
-
-  parameter ECC_ADDR_SEED_START     = ECC_BASE_ADDR + 32'h00000080;
-  parameter ECC_ADDR_SEED_END       = ECC_BASE_ADDR + 32'h000000AC;
-
-  parameter ECC_ADDR_MSG_START      = ECC_BASE_ADDR + 32'h00000100;
-  parameter ECC_ADDR_MSG_END        = ECC_BASE_ADDR + 32'h0000012C;
-
-  parameter ECC_ADDR_PRIVKEY_START  = ECC_BASE_ADDR + 32'h00000180;
-  parameter ECC_ADDR_PRIVKEY_END    = ECC_BASE_ADDR + 32'h000001AC;
-
-  parameter ECC_ADDR_PUBKEYX_START  = ECC_BASE_ADDR + 32'h00000200;
-  parameter ECC_ADDR_PUBKEYX_END    = ECC_BASE_ADDR + 32'h0000022C;
-
-  parameter ECC_ADDR_PUBKEYY_START  = ECC_BASE_ADDR + 32'h00000280;
-  parameter AECC_DDR_PUBKEYY_END    = ECC_BASE_ADDR + 32'h000002AC;
-
-  parameter ECC_ADDR_SIGNR_START    = ECC_BASE_ADDR + 32'h00000300;
-  parameter ECC_ADDR_SIGNR_END      = ECC_BASE_ADDR + 32'h0000032C;
-
-  parameter ECC_ADDR_SIGNS_START    = ECC_BASE_ADDR + 32'h00000380;
-  parameter ECC_ADDR_SIGNS_END      = ECC_BASE_ADDR + 32'h000003AC;
-
-  parameter ECC_ADDR_VERIFYR_START  = ECC_BASE_ADDR + 32'h00000400;
-  parameter ECC_ADDR_VERIFYR_END    = ECC_BASE_ADDR + 32'h0000042C;
-
-  parameter ECC_ADDR_IV_START       = ECC_BASE_ADDR + 32'h00000480;
-  parameter ECC_ADDR_IV_END         = ECC_BASE_ADDR + 32'h000004AC;
 
   parameter [63  : 0] ECC_CORE_NAME        = 64'h38342D33_63707365; // "secp-384"
   parameter [63  : 0] ECC_CORE_VERSION     = 64'h00000000_3030312e; // "1.00"

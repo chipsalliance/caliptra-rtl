@@ -1,6 +1,7 @@
 +incdir+${CALIPTRA_ROOT}/src/integration/rtl
 +incdir+${CALIPTRA_ROOT}/src/libs/rtl
 +incdir+${CALIPTRA_ROOT}/src/soc_ifc/rtl
++incdir+${CALIPTRA_ROOT}/src/soc_ifc/coverage
 +incdir+${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl
 +incdir+${CALIPTRA_ROOT}/src/keyvault/rtl
 +incdir+${CALIPTRA_ROOT}/src/pcrvault/rtl
@@ -17,6 +18,9 @@ ${CALIPTRA_ROOT}/src/libs/rtl/ahb_slv_sif.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_icg.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/clk_gate.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/soc_ifc_pkg.sv
+${CALIPTRA_ROOT}/src/soc_ifc/rtl/soc_ifc_reg_pkg.sv
+${CALIPTRA_ROOT}/src/soc_ifc/coverage/soc_ifc_cov_if.sv
+${CALIPTRA_ROOT}/src/soc_ifc/coverage/soc_ifc_cov_bind.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_pdef.vh
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/include/el2_def.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/common_defines.sv
@@ -28,7 +32,6 @@ ${CALIPTRA_ROOT}/src/pcrvault/rtl/pv_gen_hash.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/ahb_to_reg_adapter.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/mbox_csr_pkg.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/sha512_acc_csr_pkg.sv
-${CALIPTRA_ROOT}/src/soc_ifc/rtl/soc_ifc_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/lib/beh_lib.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_reg.sv

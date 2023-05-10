@@ -35,6 +35,21 @@ targets:
     files:
       - $COMPILE_ROOT/tb/sha256_ctrl_tb.sv
     tops: [sha256_ctrl_tb]
+---
+provides: [sha256_random_test]  
+schema_version: 2.4.0
+requires: 
+  - sha256_ctrl
+  - caliptra_top_defines
+targets:
+  tb:
+    directories: 
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/tb/sha256_random_test.sv
+    tops: [sha256_random_test]
+  sim:
+    pre_exec: 'echo "[PRE-EXEC] Copying SHA256 test vector gen script to $PWD" && cp $COMPILE_ROOT/tb/sha256_test_gen.py .'
 global:
   tool:
     vcs:

@@ -11,30 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
-`ifndef DV_DEFINES_PKG
-`define DV_DEFINES_PKG
-
-package dv_defines_pkg;
-
-    parameter DV_ADDR_W = 13;
-    parameter DV_DATA_W = 32;
-
-    parameter STICKY_DV_NUM_ENTRIES = 10;
-    parameter NONSTICKY_DV_NUM_ENTRIES = 10;
-    parameter NONSTICKY_LOCK_SCRATCH_NUM_ENTRIES = 10;
-    parameter STICKY_LOCK_SCRATCH_NUM_ENTRIES = 8;
-    parameter NONSTICKY_SCRATCH_NUM_ENTRIES = 8;
-    parameter DV_NUM_DWORDS = 12;
-
-typedef struct packed {
-    logic   [DV_ADDR_W-1:0] addr;
-    logic   [DV_DATA_W-1:0] wdata;
-    logic                   write;
-} dv_uc_req_t;
-
-endpackage
-
-`endif
 
 
+module soc_ifc_cov_bind;
+    `ifdef FCOV
+    bind soc_ifc_top soc_ifc_cov_if i_soc_ifc_cov_if(.*);
+    `endif
+endmodule

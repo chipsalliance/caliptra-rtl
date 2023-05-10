@@ -285,9 +285,9 @@ module ecc_dsa_ctrl
         cmd_reg = hwif_out.ECC_CTRL.CTRL.value;
         zeroize_reg = hwif_out.ECC_CTRL.ZEROIZE.value;
         
-        sca_point_rnd_en  = hwif_out.ECC_SCACONFIG.POINT_RND_EN.value;
-        sca_mask_sign_en  = hwif_out.ECC_SCACONFIG.MASK_SIGN_EN.value;
-        sca_scalar_rnd_en = hwif_out.ECC_SCACONFIG.SCALAR_RND_EN.value;
+        sca_point_rnd_en  = 1'b1;
+        sca_mask_sign_en  = 1'b1;
+        sca_scalar_rnd_en = 1'b1;
     end
 
     //there is a clk cycle memory read delay between hw_privkey_we and read_reg

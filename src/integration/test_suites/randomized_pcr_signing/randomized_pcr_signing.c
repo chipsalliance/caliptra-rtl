@@ -55,6 +55,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
 
 
 void main(){
+    volatile uint32_t * reg_ptr;
 
     printf("----------------------------------\n");
     printf(" Randomized PCR Signing flow !!\n");
@@ -77,6 +78,23 @@ void main(){
     // wait for ECC SIGNING process to be done
     printf("ECC flow in progress...\n");
     while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_VALID_MASK) == 0);
+    
+    // Read the data back from ECC register
+    printf("Load SIGN_R data from ECC\n");
+    reg_ptr = (uint32_t *) CLP_ECC_REG_ECC_SIGN_R_0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_11) {
+        printf("%x", *reg_ptr);
+        reg_ptr++;
+    }
+    printf("\n");
+
+    printf("Load SIGN_S data from ECC\n");
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_11) {
+        printf("%x", *reg_ptr); 
+        reg_ptr++;
+    }
+    printf("\n");
     
     //inject seed to kv key reg (in RTL)
     printf("Check the signing results\n");

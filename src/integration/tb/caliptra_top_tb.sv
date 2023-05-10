@@ -735,5 +735,8 @@ caliptra_top_tb_services #(
 
 caliptra_top_sva sva();
 
+`ifndef VERILATOR
+soc_ifc_cov_bind i_soc_ifc_cov_bind();
+`endif
 
 endmodule

@@ -106,29 +106,6 @@ addrmap ecc_reg {
     
     } ECC_STATUS @0x00000018;
 
-    /* ---- ECC Component Side-Channel Countermeasure Configuration ---- */
-    reg {
-        name = "ECC component SCA configuration register type definition";
-        desc = "One 3-bit register to enable/disable the ECC SCA countermeasures.
-                bit #0: POINT_RND_EN : ​Indicates if the base point randomization 
-                                       countermeasure is enabled.
-                bit #1: MASK_SIGN_EN: ​Indicates if the mask countermeasure in SIGNING
-                                      is enabled.
-                bit #2: SCALAR_RND_EN: ​Indicates if the scalar ransomization countermeasure
-                                      is enabled.
-                                
-                This register is located at ECC_base_address + 0x0000_0020.";
-
-        default sw = w;
-        default hw = r;
-        default resetsignal = reset_b;
-        field {desc = "SCA point randomization field"; swwe = ecc_ready;} POINT_RND_EN = 1'b1;
-        field {desc = "SCA mask signing field"; swwe = ecc_ready;} MASK_SIGN_EN = 1'b1;
-        field {desc = "SCA scalar randomization field"; swwe = ecc_ready;} SCALAR_RND_EN = 1'b1;
-    
-    } ECC_SCACONFIG @0x00000020;
-
-
 
     /* ---- ECC Component Input SEED ---- */
     reg {

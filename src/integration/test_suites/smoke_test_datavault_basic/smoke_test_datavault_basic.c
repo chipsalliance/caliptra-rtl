@@ -13,14 +13,16 @@
 // limitations under the License.
 //
 
+
+// -- Begin Boilerplate --
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
 #include "riscv-csr.h"
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
-// #include <time.h>
 #include "printf.h"
+#include "datavault.h"
 
 volatile char*    stdout           = (char *)STDOUT;
 volatile uint32_t intr_count = 0;
@@ -32,11 +34,14 @@ volatile uint32_t err_count __attribute__((section(".dccm.persistent"))) = 0;
 #else
     enum printf_verbosity verbosity_g = LOW;
 #endif
+
+
+#ifndef MY_RANDOM_SEED
+#define MY_RANDOM_SEED 17
+#endif // MY_RANDOM_SEED
 // -- End Boilerplate --
 
-// #define _DV_DEBUG
-#include "smoke_test_datavault_common.h"
-
+const long seed = MY_RANDOM_SEED; 
 
 
 int wr_regs_per_pfx(widereg_t *dv_reg, uint32_t rmask) {
@@ -62,8 +67,6 @@ int wr_regs_per_pfx(widereg_t *dv_reg, uint32_t rmask) {
         expdata = wdata & rmask; 
 
         if (j == 0) {
-            // VPRINTF(LOW,"INFO. For addr 0x%x (%s[%d]), attempting to write 0x%08x, read back 0x%08x\n",  
-            //     tmpreg, dv_reg->pfx, j, wdata, rdata);
             VPRINTF(LOW,"INFO. For addr 0x%x, attempting to write 0x%08x, read back 0x%08x\n", tmpreg, wdata, rdata);
         } else {
             VPRINTF(LOW,".");
@@ -88,8 +91,6 @@ void main() {
     VPRINTF(LOW," DV Smoke Test With Basic Read/Write!!\n");
     VPRINTF(LOW,"--------------------------------------\n");
 
-    // time_t seed = time(NULL);  // causes seg fault  
-    long int seed = 17; // replace with hardwired value during debug
 
     VPRINTF(LOW,"\nINFO. Using random seed = %d\n", seed);
     srand(seed);
@@ -103,12 +104,6 @@ void main() {
         // Write data entry registers only - skipping control 
         VPRINTF(LOW,"\n-- Performing WR followed by RD to data (non-control) registers only; printing once per prefix --\n\n"); 
 
-
-        // for (int i = 0; i < DV_PFX_COUNT; i++) {
-            // if (str_contains(dv_regs[i].pfx, "CTRL"))
-            //    continue; 
-            // err_count += wr_regs_per_pfx(&dv_regs[i], DV_ONES);
-
         dvreg_ptr = dv_regs; 
         for (int i = 0; i < DV_PFX_COUNT; i++, dvreg_ptr++) {
             if (!str_contains(dvreg_ptr->pfx, "CTRL"))
@@ -117,11 +112,6 @@ void main() {
 
         // Write only control registers 
         VPRINTF(LOW,"\n\n-- Performing WR followed by RD to control (non-data) registers only; printing once per prefix --\n\n"); 
-
-        // for (int i = 0; i < DV_PFX_COUNT; i++) {
-            // if (!str_contains(dv_regs[i].pfx, "CTRL"))
-            //     continue; 
-            // err_count += wr_regs_per_pfx(&dv_regs[i], 0x1);
 
         dvreg_ptr = dv_regs; 
         for (int i = 0; i < DV_PFX_COUNT; i++, dvreg_ptr++) {

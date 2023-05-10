@@ -94,7 +94,7 @@ targets:
       - $COMPILE_ROOT/tb/ahb_sif.sv
     tops: [el2_veer_wrapper_tb]
   sim:
-    pre_exec: $TOOLS/scripts/run_test_makefile
+    pre_exec: $MSFT_TOOLS/scripts/run_test_makefile
 global:
   tool:
     vcs:

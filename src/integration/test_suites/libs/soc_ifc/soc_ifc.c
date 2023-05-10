@@ -205,5 +205,6 @@ void soc_ifc_sha_accel_poll_status() {
 }
 
 void soc_ifc_sha_accel_clr_lock() {
-    lsu_write_32((CLP_SHA512_ACC_CSR_LOCK), 0);
+    //Write one to clear
+    lsu_write_32((CLP_SHA512_ACC_CSR_LOCK), SHA512_ACC_CSR_LOCK_LOCK_MASK);
 }   

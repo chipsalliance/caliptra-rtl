@@ -2,7 +2,13 @@ document:
   schema: 1.0
 
 contents:
-  - tests:
-      tags: ["random", "nightly", "firmware"]
-      paths:
-        - ${CALIPTRA_ROOT}/src/integration/test_suites/randomized_pcr_signing/randomized_pcr_signing.yml
+  - generator:
+      tags: ["L1", "CALIPTRA_TOP_TB",  "random", "randomized_pcr_signing"]
+      path: ""
+      weight: 100
+      generations: 1000
+      formats: 
+        generate: "reseed {template}.yml -seed {seed}"
+        path: "{template_basename}__{seed}.yml"
+      templates:
+        $CALIPTRA_ROOT/src/integration/test_suites/randomized_pcr_signing/randomized_pcr_signing   : { weight 100 }
