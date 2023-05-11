@@ -1243,7 +1243,8 @@ module soc_ifc_tb
 
     else 
       begin : default_test  // Keeping original default test structure 
-        $display("    ==============================");
+
+        $display("    ==============================");  
         $display("   -= Testbench for MBOX started =-");
         $display("    ==============================");
         $display("");

@@ -128,9 +128,9 @@
       soc_regnames = get_soc_regnames_minus_intr();  
 
       foreach (soc_regnames[ix]) begin
-        if (soc_regnames[ix] == "CPTRA_FUSE_WR_DONE") begin
+        if ((soc_regnames[ix] == "CPTRA_FUSE_WR_DONE") || (soc_regnames[ix] == "CPTRA_TRNG_STATUS")) begin
           soc_regnames.delete(ix);  // can cause problem downstream if fuse_wr_done == True 
-          break;
+          continue; // break; Missing registers? 
         end
       end
 
