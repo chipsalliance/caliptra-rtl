@@ -23,7 +23,12 @@ package sha512_acc_csr_pkg;
     } sha512_acc_csr__STATUS__VALID__in_t;
 
     typedef struct packed{
+        logic next;
+    } sha512_acc_csr__STATUS__SOC_HAS_LOCK__in_t;
+
+    typedef struct packed{
         sha512_acc_csr__STATUS__VALID__in_t VALID;
+        sha512_acc_csr__STATUS__SOC_HAS_LOCK__in_t SOC_HAS_LOCK;
     } sha512_acc_csr__STATUS__in_t;
 
     typedef struct packed{
@@ -152,7 +157,12 @@ package sha512_acc_csr_pkg;
     } sha512_acc_csr__STATUS__VALID__out_t;
 
     typedef struct packed{
+        logic value;
+    } sha512_acc_csr__STATUS__SOC_HAS_LOCK__out_t;
+
+    typedef struct packed{
         sha512_acc_csr__STATUS__VALID__out_t VALID;
+        sha512_acc_csr__STATUS__SOC_HAS_LOCK__out_t SOC_HAS_LOCK;
     } sha512_acc_csr__STATUS__out_t;
 
     typedef struct packed{
