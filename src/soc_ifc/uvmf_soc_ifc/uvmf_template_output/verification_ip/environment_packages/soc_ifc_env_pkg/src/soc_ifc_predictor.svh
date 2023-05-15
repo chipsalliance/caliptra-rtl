@@ -196,6 +196,7 @@ class soc_ifc_predictor #(
   reset_flag soft_reset_flag;
 
   extern task          poll_and_run_delay_jobs();
+  extern function void send_delayed_expected_transactions();
   extern function bit  valid_requester(input uvm_transaction txn);
   extern function bit  valid_receiver(input uvm_transaction txn);
   extern function bit  sha_valid_user(input uvm_transaction txn);
@@ -615,11 +616,14 @@ class soc_ifc_predictor #(
                 if (ahb_txn.RnW == AHB_WRITE) begin
                     if (!valid_receiver(ahb_txn) || ahb_txn.resp[0] != AHB_OKAY) begin
                         do_reg_prediction = 1'b0;
-                        `uvm_warning("PRED_AHB", $sformatf("Write to mbox_status in state [%p] is unexpected! mbox_lock.lock: %0d, soc_has_lock: %0d, valid_receiver: %0d",
-                                                           p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs,
-                                                           p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_mirrored_value(),
-                                                           p_soc_ifc_rm.mbox_csr_rm.mbox_status.soc_has_lock.get_mirrored_value(),
-                                                           valid_receiver(ahb_txn)))
+                        // NOTE: This might happen if a force-unlock is in progress when the mbox_status write is initiated
+                        `uvm_info("PRED_AHB",
+                                  $sformatf("Write to mbox_status in state [%p] is unexpected! mbox_lock.lock: %0d, soc_has_lock: %0d, valid_receiver: %0d",
+                                            p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs,
+                                            p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_mirrored_value(),
+                                            p_soc_ifc_rm.mbox_csr_rm.mbox_status.soc_has_lock.get_mirrored_value(),
+                                            valid_receiver(ahb_txn)),
+                                  UVM_LOW)
                     end
                 end
                 else begin
@@ -743,45 +747,11 @@ class soc_ifc_predictor #(
                 "mbox_dataout": begin
                     `uvm_info("PRED_AHB", $sformatf("Access to mailbox dataout, read count: %d", dataout_count), UVM_FULL)
                 end
-                "mbox_execute": begin
-                    // Expect a status transition on mailbox_data_avail
-                    // whenever an AHB write changes the value of mbox_execute
-                    if (mailbox_data_avail ^ p_soc_ifc_rm.mbox_csr_rm.mbox_execute.execute.get_mirrored_value()) begin
-                        `uvm_info("PRED_AHB", "Write to mbox_execute triggers mailbox_data_avail transition", UVM_LOW)
-                        send_soc_ifc_sts_txn = 1'b1;
-                        mailbox_data_avail = p_soc_ifc_rm.mbox_csr_rm.mbox_execute.execute.get_mirrored_value();
-                    end
-                end
-                "mbox_status": begin
-                    // Write to mbox_status hands control back to SOC
-                    if (ahb_txn.RnW == AHB_WRITE && !mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_done_stage) begin
-                        mailbox_data_avail = 1'b1;
-                        send_soc_ifc_sts_txn = 1'b1;
-                    end
-                end
+                "mbox_execute",
+                "mbox_status",
                 "mbox_unlock": begin
-                    // Reg prediction handled in callback
+                    // Reg prediction handled in callback/Delay job
                     `uvm_info("PRED_AHB", $sformatf("Handling access to %s.", axs_reg.get_name()), UVM_HIGH)
-                    if (data_active[p_soc_ifc_rm.mbox_csr_rm.mbox_unlock.unlock.get_lsb_pos()]) begin
-// NOTE: This is all delayed now...
-//                        if (p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_mirrored_value()) begin
-//                            `uvm_error("PRED_AHB", "Write to mbox_unlock with value 1 failed to update the predicted value on mbox_lock of 0!")
-//                        end
-//                        if (p_soc_ifc_rm.mbox_csr_rm.mbox_execute.execute.get_mirrored_value()) begin
-//                            `uvm_error("PRED_AHB", "Write to mbox_unlock with value 1 failed to update the predicted value on mbox_execute of 0!")
-//                        end
-//                        if (!p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_idle) begin
-//                            `uvm_error("PRED_AHB", "Write to mbox_unlock with value 1 failed to update the predicted value on state signals back to mbox_idle!")
-//                        end
-                        // Force unlock will reset mailbox_data_avail, if set, but
-                        // will not reset any pending interrupts to uC because those
-                        // are sticky
-                        if (mailbox_data_avail) begin
-                            `uvm_info("PRED_AHB", $sformatf("Resetting mailbox_data_avail"), UVM_MEDIUM)
-                            mailbox_data_avail = 1'b0;
-                            send_soc_ifc_sts_txn = 1'b1;
-                        end
-                    end
                 end
                 //SHA Accelerator Functions
                 "LOCK": begin
@@ -1298,27 +1268,6 @@ class soc_ifc_predictor #(
                 end
             end
             "mbox_execute": begin
-                // Clearing 'execute' - Expect sts pin change
-                if (mailbox_data_avail && !p_soc_ifc_rm.mbox_csr_rm.mbox_execute.execute.get_mirrored_value()) begin
-                    send_soc_ifc_sts_txn = 1;
-                    mailbox_data_avail = 1'b0;
-                end
-                // Setting 'execute' - Expect a uC interrupt if enabled
-                if (!soc_ifc_notif_intr_pending && p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value()) begin
-                    `uvm_info("PRED_APB", "Write to mbox_execute triggers interrupt output", UVM_LOW)
-                    soc_ifc_notif_intr_pending = 1'b1;
-                    send_cptra_sts_txn = 1;
-                end
-                else begin
-                    if (apb_txn.read_or_write == APB3_TRANS_WRITE) begin
-                        `uvm_info("PRED_APB",
-                                  $sformatf("Write to mbox_execute does not trigger interrupt output due to global_intr_en: [%x] notif_cmd_avail_en: [%x] soc_ifc_notif_intr_pending: [%x]",
-                                            p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.global_intr_en_r.notif_en.get_mirrored_value(),
-                                            p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.notif_intr_en_r.notif_cmd_avail_en.get_mirrored_value(),
-                                            soc_ifc_notif_intr_pending),
-                                  UVM_HIGH)
-                    end
-                end
             end
             "mbox_datain": begin
                 `uvm_info("PRED_APB", $sformatf("Access to mailbox datain, write count: %d", datain_count), UVM_FULL)
@@ -1328,13 +1277,7 @@ class soc_ifc_predictor #(
             end
             "mbox_cmd",
             "mbox_dlen",
-            "mbox_status": begin
-                // Write to mbox_status hands control back to uC
-                if (apb_txn.read_or_write == APB3_TRANS_WRITE && mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.uc_done_stage) begin
-                    mailbox_data_avail = 1'b0;
-                    send_soc_ifc_sts_txn = 1'b1;
-                end
-            end
+            "mbox_status",
             "mbox_unlock": begin
                 // Handled in callback
                 `uvm_info("PRED_APB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_FULL)
@@ -1580,18 +1523,96 @@ endclass
 
 // pragma uvmf custom external begin
 
+// After delay jobs run and update the mailbox model state, calculate
+// any transactions that are newly expected and send to the scoreboard.
+function void soc_ifc_predictor::send_delayed_expected_transactions();
+    bit send_soc_ifc_sts_txn = 0;
+    bit send_cptra_sts_txn = 0;
+
+    //////////////////////////////////////////////////
+    // Construct one of each output transaction type.
+    //
+    soc_ifc_sb_ap_output_transaction = soc_ifc_sb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ap_output_transaction");
+    cptra_sb_ap_output_transaction = cptra_sb_ap_output_transaction_t::type_id::create("cptra_sb_ap_output_transaction");
+
+    //////////////////////////////////////////////////
+    // Check for any updates that may occur as a result of delayed jobs
+    // from the mailbox model
+    //
+    // === mailbox_data_avail ===
+    if (!mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_execute.execute.get_mirrored_value() && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_receive_stage) begin
+        `uvm_info("PRED_DLY", "Observed mbox_execute being set after delay job, triggering mailbox_data_avail transition", UVM_LOW)
+        send_soc_ifc_sts_txn = 1'b1;
+        mailbox_data_avail = p_soc_ifc_rm.mbox_csr_rm.mbox_execute.execute.get_mirrored_value();
+    end
+    // Clearing 'execute' - Expect sts pin change
+    // Force unlock will also reset mailbox_data_avail, if set, but
+    // will not reset any pending interrupts to uC because those
+    // are sticky
+    else if (mailbox_data_avail && (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_idle || !p_soc_ifc_rm.mbox_csr_rm.mbox_execute.execute.get_mirrored_value())) begin
+        `uvm_info("PRED_DLY", $sformatf("Resetting mailbox_data_avail"), UVM_MEDIUM)
+        send_soc_ifc_sts_txn = 1'b1;
+        mailbox_data_avail = 1'b0;
+    end
+    // Write to mbox_status hands control back to SOC
+    // if the status field is updated, the mbox flow has not been
+    // interrupted by an unlock, and system is in
+    // the expected state
+    else if (!mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_done_stage &&
+        p_soc_ifc_rm.mbox_csr_rm.mbox_status.status.get_mirrored_value() != CMD_BUSY &&
+        !p_soc_ifc_rm.mbox_csr_rm.mbox_unlock.unlock.get_mirrored_value() && p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_mirrored_value()) begin
+        mailbox_data_avail = 1'b1;
+        send_soc_ifc_sts_txn = 1'b1;
+    end
+    // Write to mbox_status hands control back to uC
+    else if (mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.uc_done_stage &&
+             p_soc_ifc_rm.mbox_csr_rm.mbox_status.status.get_mirrored_value() != CMD_BUSY &&
+             !p_soc_ifc_rm.mbox_csr_rm.mbox_unlock.unlock.get_mirrored_value() && p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_mirrored_value()) begin
+        mailbox_data_avail = 1'b0;
+        send_soc_ifc_sts_txn = 1'b1;
+    end
+    // === soc_ifc_notif_intr_pending ===
+    // Setting 'execute' - Expect a uC interrupt if enabled
+    if (!soc_ifc_notif_intr_pending && p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value()) begin
+        `uvm_info("PRED_DLY", "Delay job triggers interrupt output", UVM_LOW)
+        soc_ifc_notif_intr_pending = 1'b1;
+        send_cptra_sts_txn = 1'b1;
+    end
+
+    // mbox protocol violations TODO
+
+    //////////////////////////////////////////////////
+    // Send expected transactions to Scoreboard
+    //
+    if (send_soc_ifc_sts_txn) begin
+        populate_expected_soc_ifc_status_txn(soc_ifc_sb_ap_output_transaction);
+        soc_ifc_sb_ap.write(soc_ifc_sb_ap_output_transaction);
+        `uvm_info("PRED_DLY", "Transaction submitted through soc_ifc_sb_ap", UVM_MEDIUM)
+    end
+    if (send_cptra_sts_txn) begin
+        populate_expected_cptra_status_txn(cptra_sb_ap_output_transaction);
+        cptra_sb_ap.write(cptra_sb_ap_output_transaction);
+        `uvm_info("PRED_DLY", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
+    end
+endfunction
+
 // Time-delay jobs may be scheduled in the register model by a callback if
 // it requires some time to elapse before e.g. updating mirror values.
 // This task detects those scheduled jobs and runs them after waiting for
 // the specified delay.
 task soc_ifc_predictor::poll_and_run_delay_jobs();
+    // FIXME reset!
     forever begin
         while (p_soc_ifc_rm.delay_jobs.size() > 0) begin
             fork
                 soc_ifc_reg_delay_job job = p_soc_ifc_rm.delay_jobs.pop_front();
                 begin
-                    configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(job.get_delay_cycles());
+                    // delay cycles reported as 0's based value, since 1-cycle delay
+                    // is inherent to this forever loop
+                    if (job.get_delay_cycles()) configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(job.get_delay_cycles());
+                    uvm_wait_for_nba_region();
                     job.do_job();
+                    send_delayed_expected_transactions();
                 end
             join_none
         end

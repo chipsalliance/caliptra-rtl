@@ -28,6 +28,7 @@ class soc_ifc_reg_delay_job extends uvm_object;
 
     `uvm_object_utils( soc_ifc_reg_delay_job )
 
+    // 0's based value (1-cycle delay minimum imposed in soc_ifc_predictor)
     int unsigned delay_cycles = 0;
 
     virtual function void set_delay_cycles(int unsigned value);

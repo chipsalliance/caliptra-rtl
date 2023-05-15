@@ -14,6 +14,23 @@
 // limitations under the License.
 //----------------------------------------------------------------------
 
+// Reg predictions that will be scheduled on AHB write to mbox_dlen
+class soc_ifc_reg_delay_job_mbox_csr_mbox_dlen_length extends soc_ifc_reg_delay_job;
+    `uvm_object_utils( soc_ifc_reg_delay_job_mbox_csr_mbox_dlen_length )
+    mbox_csr_ext rm; /* mbox_csr_rm */
+    mbox_fsm_state_e state_nxt;
+    uvm_reg_map map;
+    virtual task do_job();
+        `uvm_info("SOC_IFC_REG_DELAY_JOB", "Running delayed job for mbox_csr.mbox_dlen.length", UVM_HIGH)
+        // Check mbox_unlock before predicting FSM change, since a force unlock
+        // has priority over normal flow
+        if (rm.mbox_lock.lock.get_mirrored_value() && !rm.mbox_unlock.unlock.get_mirrored_value() && rm.mbox_status.mbox_fsm_ps.get_mirrored_value() == MBOX_RDY_FOR_DLEN) begin
+            rm.mbox_status.mbox_fsm_ps.predict(state_nxt, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
+            `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%p] on mbox_dlen results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
+        end
+    endtask
+endclass
+
 class soc_ifc_reg_cbs_mbox_csr_mbox_dlen_length extends soc_ifc_reg_cbs_mbox_csr;
 
     `uvm_object_utils(soc_ifc_reg_cbs_mbox_csr_mbox_dlen_length)
@@ -34,14 +51,24 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_dlen_length extends soc_ifc_reg_cbs_mbox_csr
                                        input uvm_path_e     path,
                                        input uvm_reg_map    map);
         mbox_csr_ext rm; /* mbox_csr_rm */
+        soc_ifc_reg_delay_job_mbox_csr_mbox_dlen_length delay_job;
+        uvm_queue #(soc_ifc_reg_delay_job) delay_jobs;
         uvm_reg_block blk = fld.get_parent().get_parent(); /* mbox_csr_rm */
         if (!$cast(rm,blk)) `uvm_fatal ("SOC_IFC_REG_CBS", "Failed to get valid class handle")
+        if (!uvm_config_db#(uvm_queue#(soc_ifc_reg_delay_job))::get(null, "soc_ifc_reg_model_top", "delay_jobs", delay_jobs))
+            `uvm_error("SOC_IFC_REG_CBS", "Failed to get handle for 'delay_jobs' queue from config database!")
+        delay_job = soc_ifc_reg_delay_job_mbox_csr_mbox_dlen_length::type_id::create("delay_job");
+        delay_job.rm = rm;
+        delay_job.map = map;
+        delay_job.set_delay_cycles(0);
         if (map.get_name() == this.AHB_map_name) begin
             case (kind) inside
                 UVM_PREDICT_WRITE: begin
                     if (rm.mbox_fn_state_sigs.uc_send_stage) begin
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("Predicting mbox_fsm_ps transition to [%p] on write to mbox_dlen", MBOX_RDY_FOR_DATA), UVM_HIGH)
-                        rm.mbox_status.mbox_fsm_ps.predict(MBOX_RDY_FOR_DATA);
+                        delay_job.state_nxt = MBOX_RDY_FOR_DATA;
+                        delay_jobs.push_back(delay_job);
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to mbox_dlen on map [%s] with value [%x] predicts a state change. Delay job is queued to update DUT model.", map.get_name(), value), UVM_HIGH)
                     end
                     // uC updates mbox_dlen to reflect size of response data
                     else if (rm.mbox_fn_state_sigs.uc_receive_stage) begin
@@ -61,7 +88,9 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_dlen_length extends soc_ifc_reg_cbs_mbox_csr
                 UVM_PREDICT_WRITE: begin
                     if (rm.mbox_fn_state_sigs.soc_send_stage) begin
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("Predicting mbox_fsm_ps transition to [%p] on write to mbox_dlen", MBOX_RDY_FOR_DATA), UVM_HIGH)
-                        rm.mbox_status.mbox_fsm_ps.predict(MBOX_RDY_FOR_DATA);
+                        delay_job.state_nxt = MBOX_RDY_FOR_DATA;
+                        delay_jobs.push_back(delay_job);
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to mbox_dlen on map [%s] with value [%x] predicts a state change. Delay job is queued to update DUT model.", map.get_name(), value), UVM_HIGH)
                     end
                     else begin
                         `uvm_warning("SOC_IFC_REG_CBS", $sformatf("DLEN written during unexpected mailbox state [%p]!", rm.mbox_fn_state_sigs))
