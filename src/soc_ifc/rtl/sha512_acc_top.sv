@@ -189,7 +189,8 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   always_comb hwif_in.valid_user = hwif_out.LOCK.LOCK.value & ((~soc_has_lock & ~req_data.soc_req) |
                                                                 (soc_has_lock & req_data.soc_req & (req_data.user == hwif_out.USER.USER.value)));
   always_comb hwif_in.soc_req = req_data.soc_req;
-
+  always_comb hwif_in.STATUS.SOC_HAS_LOCK.next = soc_has_lock;
+  
   always_comb mode = hwif_out.MODE.MODE.value;
   //mode encoding bit 0 determines 512 or 384.
   always_comb sha_mode = mode[0] ? MODE_SHA_512 : MODE_SHA_384;

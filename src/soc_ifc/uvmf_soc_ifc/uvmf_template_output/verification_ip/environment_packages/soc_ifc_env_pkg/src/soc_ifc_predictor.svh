@@ -198,6 +198,7 @@ class soc_ifc_predictor #(
   extern task          poll_and_run_delay_jobs();
   extern function bit  valid_requester(input uvm_transaction txn);
   extern function bit  valid_receiver(input uvm_transaction txn);
+  extern function bit  sha_valid_user(input uvm_transaction txn);
   extern task          handle_reset(input string kind = "HARD");
   extern function void predict_reset(input string kind = "HARD");
   extern function bit  soc_ifc_status_txn_expected_after_warm_reset();
@@ -629,6 +630,59 @@ class soc_ifc_predictor #(
                     end
                 end
             end
+            //SHA Accelerator Functions
+            "LOCK",
+            "USER": begin
+                if (ahb_txn.RnW == AHB_READ && ahb_txn.resp[0] != AHB_OKAY) begin
+                    do_reg_prediction = 1'b0;
+                    // "Expected" read data is 0
+                    soc_ifc_sb_ahb_ap_output_transaction.data[0] = 0;
+                end
+            end
+            "MODE",
+            "START_ADDRESS",
+            "DLEN": begin
+                if (ahb_txn.RnW == AHB_WRITE) begin
+                    do_reg_prediction = sha_valid_user(ahb_txn) && (ahb_txn.resp[0] == AHB_OKAY);
+                end
+                else begin
+                    if (ahb_txn.resp[0] != AHB_OKAY) begin
+                        do_reg_prediction = 1'b0;
+                        // "Expected" read data is 0
+                        soc_ifc_sb_ahb_ap_output_transaction.data[0] = 0;
+                    end
+                end
+            end
+            "DATAIN": begin
+                if (ahb_txn.resp[0] != AHB_OKAY) begin
+                    do_reg_prediction = 1'b0;
+                    // "Expected" read data is 0
+                    soc_ifc_sb_ahb_ap_output_transaction.data[0] = 0;
+                end
+            end
+            "EXECUTE": begin
+                if (ahb_txn.RnW == AHB_WRITE) begin
+                    do_reg_prediction = sha_valid_user(ahb_txn) && (ahb_txn.resp[0] == AHB_OKAY);
+                end
+                else begin
+                    if (ahb_txn.resp[0] != AHB_OKAY) begin
+                        do_reg_prediction = 1'b0;
+                        // "Expected" read data is 0
+                        soc_ifc_sb_ahb_ap_output_transaction.data[0] = 0;
+                    end
+                end
+            end
+            "STATUS",
+            ["DIGEST[0]":"DIGEST[9]"],
+            ["DIGEST[10]":"DIGEST[15]"]: begin
+                if (ahb_txn.resp[0] != AHB_OKAY) begin
+                    do_reg_prediction = 1'b0;
+                    // "Expected" read data is 0
+                    soc_ifc_sb_ahb_ap_output_transaction.data[0] = 0;
+                end
+            end
+            "CONTROL": begin
+            end
             default: begin
                 `uvm_info("PRED_AHB", {"Enable reg prediction on access to ", axs_reg.get_name()}, UVM_FULL)
             end
@@ -730,6 +784,38 @@ class soc_ifc_predictor #(
                     end
                 end
                 //SHA Accelerator Functions
+                "LOCK": begin
+                    // Reading sha_lock when it is already locked has no effect, so
+                    // only calculate predictions on acquiring lock (rdata == 0)
+                    // which requires that the AHB transfer was successful in
+                    // performing the access
+                    if (~data_active[p_soc_ifc_rm.sha512_acc_csr_rm.LOCK.LOCK.get_lsb_pos()] &&
+                        p_soc_ifc_rm.sha512_acc_csr_rm.LOCK.LOCK.get_mirrored_value() &&
+                        do_reg_prediction)
+                    begin
+                        // Cannot put this inside the reg callback because the post_predict
+                        // method has no way to access the addr_user value
+                        `uvm_info("PRED_AHB", $sformatf("Predicting new value [0x%x] for sha_user as AHB agent acquires lock",p_soc_ifc_rm.sha512_acc_csr_rm.USER.get_reset("HARD")), UVM_HIGH)
+                        p_soc_ifc_rm.sha512_acc_csr_rm.USER.predict(p_soc_ifc_rm.sha512_acc_csr_rm.USER.get_reset("HARD"));
+                    end
+                    else begin
+                        `uvm_info("PRED_AHB", $sformatf("Access to sha_lock of type %p has no effect", ahb_txn.RnW), UVM_MEDIUM)
+                    end
+                end
+                "USER": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_warning("PRED_AHB", {"Write to RO register: ", axs_reg.get_name(), " has no effect on system"})
+                    end
+                    else begin
+                        `uvm_info("PRED_AHB", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
+                    end
+                end
+                "MODE",
+                "START_ADDRESS",
+                "DLEN",
+                "DATAIN": begin
+                    `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_FULL)
+                end
                 "EXECUTE": begin
                     // Expect a status transition on sha_notif_intr_pending
                     // whenever an AHB write changes the value of SHA Accelerator Execute
@@ -738,6 +824,12 @@ class soc_ifc_predictor #(
                         send_cptra_sts_txn = 1'b1;
                         sha_notif_intr_pending = p_soc_ifc_rm.sha512_acc_csr_rm.EXECUTE.EXECUTE.get_mirrored_value();
                     end
+                end
+                "STATUS",
+                ["DIGEST[0]":"DIGEST[9]"],
+                ["DIGEST[10]":"DIGEST[15]"],
+                "CONTROL": begin
+                    `uvm_info("PRED_APB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_FULL)
                 end
                 "CPTRA_FLOW_STATUS": begin
                     if (ahb_txn.RnW == AHB_WRITE &&
@@ -1099,6 +1191,59 @@ class soc_ifc_predictor #(
                     end
                 end
             end
+            //SHA Accelerator Functions
+            "LOCK",
+            "USER": begin
+                if (apb_txn.read_or_write == APB3_TRANS_READ && apb_txn.slave_err) begin
+                    do_reg_prediction = 1'b0;
+                    // "Expected" read data is 0
+                    soc_ifc_sb_ahb_ap_output_transaction.data[0] = 0;
+                end
+            end
+            "MODE",
+            "START_ADDRESS",
+            "DLEN": begin
+                if (apb_txn.read_or_write == APB3_TRANS_WRITE) begin
+                    do_reg_prediction = sha_valid_user(apb_txn) && (!apb_txn.slave_err);
+                end
+                else begin
+                    if (apb_txn.slave_err) begin
+                        do_reg_prediction = 1'b0;
+                        // "Expected" read data is 0
+                        soc_ifc_sb_ahb_ap_output_transaction.data[0] = 0;
+                    end
+                end
+            end
+            "DATAIN": begin
+                if (apb_txn.slave_err) begin
+                    do_reg_prediction = 1'b0;
+                    // "Expected" read data is 0
+                    soc_ifc_sb_ahb_ap_output_transaction.data[0] = 0;
+                end
+            end
+            "EXECUTE": begin
+                if (apb_txn.read_or_write == APB3_TRANS_WRITE) begin
+                    do_reg_prediction = sha_valid_user(apb_txn) && (!apb_txn.slave_err);
+                end
+                else begin
+                    if (apb_txn.slave_err) begin
+                        do_reg_prediction = 1'b0;
+                        // "Expected" read data is 0
+                        soc_ifc_sb_ahb_ap_output_transaction.data[0] = 0;
+                    end
+                end
+            end
+            "STATUS",
+            ["DIGEST[0]":"DIGEST[9]"],
+            ["DIGEST[10]":"DIGEST[15]"]:begin
+                if (apb_txn.slave_err) begin
+                    do_reg_prediction = 1'b0;
+                    // "Expected" read data is 0
+                    soc_ifc_sb_ahb_ap_output_transaction.data[0] = 0;
+                end
+            end
+            "CONTROL": begin
+            end
             default: begin
                 `uvm_info("PRED_APB", {"Enable reg prediction on access to ", axs_reg.get_name()}, UVM_FULL)
             end
@@ -1192,6 +1337,44 @@ class soc_ifc_predictor #(
             end
             "mbox_unlock": begin
                 // Handled in callback
+                `uvm_info("PRED_APB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_FULL)
+            end
+            //SHA Accelerator Functions
+            "LOCK": begin 
+                // Reading sha_lock when it is already locked has no effect, so
+                // only calculate predictions on acquiring lock (rdata == 0)
+                // which requires that the AHB transfer was successful in
+                // performing the access
+                if (do_reg_prediction &&
+                    ~apb_txn.rd_data[p_soc_ifc_rm.sha512_acc_csr_rm.LOCK.LOCK.get_lsb_pos()] &&
+                    p_soc_ifc_rm.sha512_acc_csr_rm.LOCK.LOCK.get_mirrored_value())
+                begin
+                    // Cannot put this inside the reg callback because the post_predict
+                    // method has no way to access the addr_user value
+                    `uvm_info("PRED_APB", $sformatf("Predicting new value [0x%x] for sha_user as AHB agent acquires lock",apb_txn.addr_user), UVM_HIGH)
+                    p_soc_ifc_rm.sha512_acc_csr_rm.USER.predict(uvm_reg_data_t'(apb_txn.addr_user));
+                end
+                else begin
+                    `uvm_info("PRED_APB", $sformatf("Access to sha_lock of type %p has no effect", apb_txn.read_or_write), UVM_MEDIUM)
+                end
+            end
+            "USER": begin
+                if (apb_txn.read_or_write == APB3_TRANS_WRITE) begin
+                    `uvm_warning("PRED_APB", {"Write to RO register: ", axs_reg.get_name(), " has no effect on system"})
+                end
+                else begin
+                    `uvm_info("PRED_APB", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
+                end
+            end
+            "MODE",
+            "START_ADDRESS",
+            "DLEN",
+            "DATAIN",
+            "EXECUTE",
+            "STATUS",
+            ["DIGEST[0]":"DIGEST[9]"],
+            ["DIGEST[10]":"DIGEST[15]"],
+            "CONTROL": begin
                 `uvm_info("PRED_APB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_FULL)
             end
             "CPTRA_RESET_REASON": begin
@@ -1522,6 +1705,47 @@ function bit soc_ifc_predictor::valid_receiver(input uvm_transaction txn);
         `uvm_error("PRED", "valid_receiver received invalid transaction - cannot cast as AHB or APB!")
         valid_receiver = 0;
         return valid_receiver;
+    end
+endfunction
+
+function bit soc_ifc_predictor::sha_valid_user(input uvm_transaction txn);
+    soc_ifc_sb_ahb_ap_output_transaction_t ahb_txn;
+    soc_ifc_sb_apb_ap_output_transaction_t apb_txn;
+    if ($cast(ahb_txn,txn)) begin
+        sha_valid_user = p_soc_ifc_rm.sha512_acc_csr_rm.LOCK.LOCK.get_mirrored_value() &&
+                        !p_soc_ifc_rm.sha512_acc_csr_rm.STATUS.SOC_HAS_LOCK.get_mirrored_value();
+        if (!sha_valid_user) begin
+            string msg = $sformatf("sha_valid_user is false!\nsha_lock: %d\nsha_accel_status.soc_has_lock: %d",
+                                   p_soc_ifc_rm.sha512_acc_csr_rm.LOCK.LOCK.get_mirrored_value(),
+                                   p_soc_ifc_rm.sha512_acc_csr_rm.STATUS.SOC_HAS_LOCK.get_mirrored_value());
+            `uvm_info("PRED_VALID_SHA", msg, UVM_HIGH)
+        end
+        else begin
+            `uvm_info("PRED_VALID_SHA", "sha_valid_user is true", UVM_DEBUG)
+        end
+        return sha_valid_user;
+    end
+    else if ($cast(apb_txn,txn)) begin
+        sha_valid_user = p_soc_ifc_rm.sha512_acc_csr_rm.LOCK.LOCK.get_mirrored_value() &&
+                         p_soc_ifc_rm.sha512_acc_csr_rm.STATUS.SOC_HAS_LOCK.get_mirrored_value() &&
+                         p_soc_ifc_rm.sha512_acc_csr_rm.USER.get_mirrored_value() == apb_txn.addr_user;
+        if (!sha_valid_user) begin
+            string msg = $sformatf("sha_valid_user is false!\nsha_lock: %d\nsha_status.soc_has_lock: %d\naddr_user: 0x%x\nsha_user: 0x%x",
+                                   p_soc_ifc_rm.sha512_acc_csr_rm.LOCK.LOCK.get_mirrored_value(),
+                                   p_soc_ifc_rm.sha512_acc_csr_rm.STATUS.SOC_HAS_LOCK.get_mirrored_value(),
+                                   apb_txn.addr_user,
+                                   p_soc_ifc_rm.sha512_acc_csr_rm.USER.get_mirrored_value());
+            `uvm_info("PRED_VALID_SHA", msg, UVM_HIGH)
+        end
+        else begin
+            `uvm_info("PRED_VALID_SHA", "sha_valid_user is true", UVM_DEBUG)
+        end
+        return sha_valid_user;
+    end
+    else begin
+        `uvm_error("PRED", "sha_valid_user received invalid transaction - cannot cast as AHB or APB!")
+        sha_valid_user = 0;
+        return sha_valid_user;
     end
 endfunction
 

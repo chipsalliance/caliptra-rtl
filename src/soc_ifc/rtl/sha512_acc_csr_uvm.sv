@@ -108,6 +108,7 @@ package sha512_acc_csr_uvm;
     // Reg - sha512_acc_csr::STATUS
     class sha512_acc_csr__STATUS extends uvm_reg;
         rand uvm_reg_field VALID;
+        rand uvm_reg_field SOC_HAS_LOCK;
 
         function new(string name = "sha512_acc_csr__STATUS");
             super.new(name, 32, UVM_NO_COVERAGE);
@@ -116,6 +117,8 @@ package sha512_acc_csr_uvm;
         virtual function void build();
             this.VALID = new("VALID");
             this.VALID.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            this.SOC_HAS_LOCK = new("SOC_HAS_LOCK");
+            this.SOC_HAS_LOCK.configure(this, 1, 1, "RO", 1, 'h0, 1, 1, 0);
         endfunction : build
     endclass : sha512_acc_csr__STATUS
 
