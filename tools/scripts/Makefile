@@ -23,6 +23,14 @@ VERILATOR = verilator
 GCC_PREFIX = riscv64-unknown-elf
 BUILD_DIR = $(CURDIR)
 
+rv_gcc_version = $(strip $(shell $(GCC_PREFIX)-gcc --version | head -1 | sed "s/$(GCC_PREFIX)-gcc (\w\+) //"))
+$(info rv_gcc_version is $(rv_gcc_version))
+ifeq (12.2.0, $(rv_gcc_version))
+ABI = -mabi=ilp32 -march=rv32imc_zicsr_zifencei
+else
+ABI = -mabi=ilp32 -march=rv32imc
+endif
+
 # Define test name
 TESTNAME ?= iccm_lock
 TEST_DIR = $(CALIPTRA_ROOT)/src/integration/test_suites/$(TESTNAME)
