@@ -36,7 +36,7 @@ addrmap mbox_csr {
         desc="Mailbox lock register for mailbox access, reading 0 will set the lock
         [br]Caliptra Access: RO
         [br]SOC Access:      RO";
-        field {rset; sw=r; hw=r; hwclr=true; swmod=true;} lock=0;
+        field {rset; sw=r; hw=r; hwclr=true; precedence=hw; swmod=true;} lock=0;
     } mbox_lock;
 
     // user register
@@ -88,7 +88,7 @@ addrmap mbox_csr {
         desc="Mailbox execute register indicates to receiver that the sender is done
         [br]Caliptra Access: RW
         [br]SOC Access:      RW";
-        field {sw=rw; hw=r; swwe=valid_requester; hwclr;} execute=0;
+        field {sw=rw; hw=r; swwe=valid_requester; hwclr; precedence=hw;} execute=0;
     } mbox_execute;
 
     reg {
@@ -115,7 +115,7 @@ addrmap mbox_csr {
                     desc = "The requested command experienced a failure.";
                 };
             };
-            sw=rw; hw=r; swwe=valid_receiver; encode = mbox_status_e; hwclr;} status[4]=0;
+            sw=rw; hw=r; swwe=valid_receiver; encode = mbox_status_e; hwclr; precedence=hw;} status[4]=0;
         field {
             name = "Mailbox ECC Single Error";
             desc = "Indicates a correctable ECC single-bit error was

@@ -131,9 +131,12 @@ class soc_ifc_env_cptra_mbox_handler_sequence extends soc_ifc_env_sequence_base 
 
             // Wait for the command to complete.
             // Either we clear the lock (via force_unlock), or the SOC requestor does.
+            `uvm_info("CPTRA_MBOX_HANDLER", "Waiting for mbox_lock to deassert, indicating end of mailbox flow", UVM_MEDIUM)
             while (reg_model.mbox_csr_rm.mbox_lock.lock.get_mirrored_value()) begin
                 configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
             end
+
+            `uvm_info("CPTRA_MBOX_HANDLER", "Observed mbox_lock deassertion, indicating end of mailbox flow", UVM_MEDIUM)
             seq_done = 1;
         end: ALL_TIME_CONSUMING_TASKS
         begin: DO_FORCE_UNLOCK
@@ -146,7 +149,10 @@ class soc_ifc_env_cptra_mbox_handler_sequence extends soc_ifc_env_sequence_base 
             `uvm_info("CPTRA_MBOX_HANDLER", "Disabled ALL_TIME_CONSUMING_TASKS", UVM_HIGH)
         end: DO_FORCE_UNLOCK
     join_any
-    if (unlock_proc_active) in_report_reg_sts.wait_trigger(); /* Wait for pending bus transfers (in DO_FORCE_UNLOCK) to finish to avoid deadlock */
+    if (unlock_proc_active) begin
+        `uvm_info("CPTRA_MBOX_HANDLER", "Detected force-unlock in progress, waiting for current bus transfer to finish before continuing", UVM_MEDIUM)
+        in_report_reg_sts.wait_trigger(); /* Wait for pending bus transfers (in DO_FORCE_UNLOCK) to finish to avoid deadlock */
+    end
     disable DO_FORCE_UNLOCK;
 
     // Check new responses (might be an interrupt? Nothing else expected)

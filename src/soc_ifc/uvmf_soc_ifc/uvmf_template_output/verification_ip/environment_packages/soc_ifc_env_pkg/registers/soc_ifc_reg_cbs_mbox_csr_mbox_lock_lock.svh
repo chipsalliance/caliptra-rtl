@@ -14,6 +14,29 @@
 // limitations under the License.
 //----------------------------------------------------------------------
 
+// Reg predictions that will be scheduled on AHB write to mbox_lock
+class soc_ifc_reg_delay_job_mbox_csr_mbox_lock_lock extends soc_ifc_reg_delay_job;
+    `uvm_object_utils( soc_ifc_reg_delay_job_mbox_csr_mbox_lock_lock )
+    mbox_csr_ext rm; /* mbox_csr_rm */
+    mbox_fsm_state_e state_nxt;
+    uvm_reg_map map;
+    virtual task do_job();
+        `uvm_info("SOC_IFC_REG_DELAY_JOB", "Running delayed job for mbox_csr.mbox_lock.lock", UVM_HIGH)
+        if (rm.mbox_lock.lock.get_mirrored_value() && rm.mbox_status.mbox_fsm_ps.get_mirrored_value() == MBOX_IDLE) begin
+            rm.mbox_status.mbox_fsm_ps.predict(state_nxt, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
+            if (map.get_name() == "soc_ifc_AHB_map") begin
+                rm.mbox_status.soc_has_lock.predict(uvm_reg_data_t'(0), .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
+                rm.mbox_fn_state_sigs = '{uc_send_stage: 1'b1, default: 1'b0};
+            end
+            else if (map.get_name() == "soc_ifc_APB_map") begin
+                rm.mbox_status.soc_has_lock.predict(uvm_reg_data_t'(1), .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
+                rm.mbox_fn_state_sigs = '{soc_send_stage: 1'b1, default: 1'b0};
+            end
+            `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%p] on mbox_lock results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
+        end
+    endtask
+endclass
+
 class soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock extends soc_ifc_reg_cbs_mbox_csr;
 
     `uvm_object_utils(soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock)
@@ -34,8 +57,16 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock extends soc_ifc_reg_cbs_mbox_csr;
                                        input uvm_path_e     path,
                                        input uvm_reg_map    map);
         mbox_csr_ext rm; /* mbox_csr_rm */
+        soc_ifc_reg_delay_job_mbox_csr_mbox_lock_lock delay_job;
+        uvm_queue #(soc_ifc_reg_delay_job) delay_jobs;
         uvm_reg_block blk = fld.get_parent().get_parent(); /* mbox_csr_rm */
         if (!$cast(rm,blk)) `uvm_fatal ("SOC_IFC_REG_CBS", "Failed to get valid class handle")
+        if (!uvm_config_db#(uvm_queue#(soc_ifc_reg_delay_job))::get(null, "soc_ifc_reg_model_top", "delay_jobs", delay_jobs))
+            `uvm_error("SOC_IFC_REG_CBS", "Failed to get handle for 'delay_jobs' queue from config database!")
+        delay_job = soc_ifc_reg_delay_job_mbox_csr_mbox_lock_lock::type_id::create("delay_job");
+        delay_job.rm = rm;
+        delay_job.map = map;
+        delay_job.set_delay_cycles(0);
         if (map.get_name() == this.AHB_map_name) begin
             case (kind) inside
                 UVM_PREDICT_READ: begin
@@ -43,10 +74,10 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock extends soc_ifc_reg_cbs_mbox_csr;
                     // Reading mbox_lock when it is already locked has no effect, so
                     // only calculate predictions on acquiring lock
                     if (value & ~previous) begin
-                        rm.mbox_status.soc_has_lock.predict(uvm_reg_data_t'(0));
                         if (rm.mbox_fn_state_sigs.mbox_idle) begin
-                            rm.mbox_status.mbox_fsm_ps.predict(MBOX_RDY_FOR_CMD);
-                            rm.mbox_fn_state_sigs = '{uc_send_stage: 1'b1, default: 1'b0};
+                            delay_job.state_nxt = MBOX_RDY_FOR_CMD;
+                            delay_jobs.push_back(delay_job);
+                            `uvm_info("SOC_IFC_REG_CBS", $sformatf("Read from mbox_lock on map [%s] with value [%x] predicts a state change. Delay job is queued to update DUT model.", map.get_name(), value), UVM_HIGH)
                         end
                         else begin
                             `uvm_warning("SOC_IFC_REG_CBS", $sformatf("Lock acquired during unexpected mailbox state [%p]!", rm.mbox_fn_state_sigs))
@@ -70,10 +101,10 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock extends soc_ifc_reg_cbs_mbox_csr;
                     // Reading mbox_lock when it is already locked has no effect, so
                     // only calculate predictions on acquiring lock
                     if (value & ~previous) begin
-                        rm.mbox_status.soc_has_lock.predict(uvm_reg_data_t'(1));
                         if (rm.mbox_fn_state_sigs.mbox_idle) begin
-                            rm.mbox_status.mbox_fsm_ps.predict(MBOX_RDY_FOR_CMD);
-                            rm.mbox_fn_state_sigs = '{soc_send_stage: 1'b1, default: 1'b0};
+                            delay_job.state_nxt = MBOX_RDY_FOR_CMD;
+                            delay_jobs.push_back(delay_job);
+                            `uvm_info("SOC_IFC_REG_CBS", $sformatf("Read from mbox_lock on map [%s] with value [%x] predicts a state change. Delay job is queued to update DUT model.", map.get_name(), value), UVM_HIGH)
                         end
                         else begin
                             `uvm_warning("SOC_IFC_REG_CBS", $sformatf("Lock acquired during unexpected mailbox state [%p]!", rm.mbox_fn_state_sigs))

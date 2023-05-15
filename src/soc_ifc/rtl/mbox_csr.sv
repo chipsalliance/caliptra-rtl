@@ -244,11 +244,11 @@ module mbox_csr (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.mbox_lock.lock.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.mbox_lock && !decoded_req_is_wr) begin // SW set on read
-            next_c = '1;
-            load_next_c = '1;
-        end else if(hwif_in.mbox_lock.lock.hwclr) begin // HW Clear
+        if(hwif_in.mbox_lock.lock.hwclr) begin // HW Clear
             next_c = '0;
+            load_next_c = '1;
+        end else if(decoded_reg_strb.mbox_lock && !decoded_req_is_wr) begin // SW set on read
+            next_c = '1;
             load_next_c = '1;
         end
         field_combo.mbox_lock.lock.next = next_c;
@@ -367,11 +367,11 @@ module mbox_csr (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.mbox_execute.execute.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.mbox_execute && decoded_req_is_wr && hwif_in.valid_requester) begin // SW write
-            next_c = (field_storage.mbox_execute.execute.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
-            load_next_c = '1;
-        end else if(hwif_in.mbox_execute.execute.hwclr) begin // HW Clear
+        if(hwif_in.mbox_execute.execute.hwclr) begin // HW Clear
             next_c = '0;
+            load_next_c = '1;
+        end else if(decoded_reg_strb.mbox_execute && decoded_req_is_wr && hwif_in.valid_requester) begin // SW write
+            next_c = (field_storage.mbox_execute.execute.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end
         field_combo.mbox_execute.execute.next = next_c;
@@ -389,11 +389,11 @@ module mbox_csr (
     always_comb begin
         automatic logic [3:0] next_c = field_storage.mbox_status.status.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.mbox_status && decoded_req_is_wr && hwif_in.valid_receiver) begin // SW write
-            next_c = (field_storage.mbox_status.status.value & ~decoded_wr_biten[3:0]) | (decoded_wr_data[3:0] & decoded_wr_biten[3:0]);
-            load_next_c = '1;
-        end else if(hwif_in.mbox_status.status.hwclr) begin // HW Clear
+        if(hwif_in.mbox_status.status.hwclr) begin // HW Clear
             next_c = '0;
+            load_next_c = '1;
+        end else if(decoded_reg_strb.mbox_status && decoded_req_is_wr && hwif_in.valid_receiver) begin // SW write
+            next_c = (field_storage.mbox_status.status.value & ~decoded_wr_biten[3:0]) | (decoded_wr_data[3:0] & decoded_wr_biten[3:0]);
             load_next_c = '1;
         end
         field_combo.mbox_status.status.next = next_c;
