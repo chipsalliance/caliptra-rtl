@@ -11,14 +11,25 @@
 module spi_host
   import spi_host_reg_pkg::*;
 #(
-  parameter logic [NumAlerts-1:0] AlertAsyncOn = {NumAlerts{1'b1}}
+  parameter logic [NumAlerts-1:0] AlertAsyncOn = {NumAlerts{1'b1}},
+  parameter AHBDataWidth = 64,
+  parameter AHBAddrWidth = 32
 ) (
   input              clk_i,
   input              rst_ni,
 
-  // Register interface
-  input              tlul_pkg::tl_h2d_t tl_i,
-  output             tlul_pkg::tl_d2h_t tl_o,
+  // AMBA AHB Lite Interface
+  input logic [AHBAddrWidth-1:0]  haddr_i,
+  input logic [AHBDataWidth-1:0]  hwdata_i,
+  input logic                     hsel_i,
+  input logic                     hwrite_i,
+  input logic                     hready_i,
+  input logic [1:0]               htrans_i,
+  input logic [2:0]               hsize_i,
+
+  output logic                    hresp_o,
+  output logic                    hreadyout_o,
+  output logic [AHBDataWidth-1:0] hrdata_o,
 
   // Alerts
   input  prim_alert_pkg::alert_rx_t [NumAlerts-1:0] alert_rx_i,
@@ -33,10 +44,6 @@ module spi_host
   output logic [3:0]       cio_sd_en_o,
   input        [3:0]       cio_sd_i,
 
-  // Passthrough interface
-  input  spi_device_pkg::passthrough_req_t passthrough_i,
-  output spi_device_pkg::passthrough_rsp_t passthrough_o,
-
   output logic             intr_error_o,
   output logic             intr_spi_event_o
 );
@@ -46,18 +53,27 @@ module spi_host
   spi_host_reg2hw_t reg2hw;
   spi_host_hw2reg_t hw2reg;
 
-  tlul_pkg::tl_h2d_t fifo_win_h2d [2];
-  tlul_pkg::tl_d2h_t fifo_win_d2h [2];
+  logic fifo_rx_re;
 
   // Register module
   logic [NumAlerts-1:0] alert_test, alerts;
-  spi_host_reg_top u_reg (
+  spi_host_reg_top #(
+    .AHBDataWidth(AHBDataWidth),
+    .AHBAddrWidth(AHBAddrWidth)
+  ) u_reg (
     .clk_i,
     .rst_ni,
-    .tl_i       (tl_i),
-    .tl_o       (tl_o),
-    .tl_win_o   (fifo_win_h2d),
-    .tl_win_i   (fifo_win_d2h),
+    .haddr_i,
+    .hwdata_i,
+    .hsel_i,
+    .hwrite_i,
+    .hready_i,
+    .htrans_i,
+    .hsize_i,
+    .hresp_o,
+    .hreadyout_o,
+    .hrdata_o,
+    .fifo_rx_re,
     .reg2hw,
     .hw2reg,
     // SEC_CM: BUS.INTEGRITY
@@ -78,12 +94,12 @@ module spi_host
     ) u_prim_alert_sender (
       .clk_i,
       .rst_ni,
-      .alert_test_i  ( alert_test[i] ),
-      .alert_req_i   ( alerts[0]     ),
-      .alert_ack_o   (               ),
-      .alert_state_o (               ),
-      .alert_rx_i    ( alert_rx_i[i] ),
-      .alert_tx_o    ( alert_tx_o[i] )
+      .alert_test_i  (alert_test[i] ),
+      .alert_req_i   (alerts[0]     ),
+      .alert_ack_o   (),
+      .alert_state_o (),
+      .alert_rx_i    (alert_rx_i[i] ),
+      .alert_tx_o    (alert_tx_o[i] )
     );
   end
 
@@ -98,62 +114,13 @@ module spi_host
 
   assign sd_en     = output_en ? sd_en_core : 4'h0;
 
-  if (NumCS == 1) begin : gen_passthrough_implementation
-    logic passthrough_en;
-    assign passthrough_en  = passthrough_i.passthrough_en;
+  assign cio_sck_o    = sck;
+  assign cio_sck_en_o = output_en;
+  assign cio_csb_o    = csb;
+  assign cio_csb_en_o = {NumCS{output_en}};
+  assign cio_sd_o     = sd_out;
+  assign cio_sd_en_o  = sd_en;
 
-    logic        pt_sck;
-    logic        pt_sck_en;
-    logic [0:0]  pt_csb;
-    logic [0:0]  pt_csb_en;
-    logic [3:0]  pt_sd_out;
-    logic [3:0]  pt_sd_en;
-
-    assign pt_sck       = passthrough_i.sck;
-    assign pt_sck_en    = passthrough_i.sck_en;
-    assign pt_csb[0]    = passthrough_i.csb;
-    assign pt_csb_en[0] = passthrough_i.csb_en;
-    assign pt_sd_out    = passthrough_i.s;
-    assign pt_sd_en     = passthrough_i.s_en;
-
-    assign cio_sck_o    = passthrough_en ? pt_sck    : sck;
-    assign cio_sck_en_o = passthrough_en ? pt_sck_en : output_en;
-    assign cio_csb_o    = passthrough_en ? pt_csb    : csb;
-    assign cio_csb_en_o = passthrough_en ? pt_csb_en : output_en;
-    assign cio_sd_o     = passthrough_en ? pt_sd_out : sd_out;
-    assign cio_sd_en_o  = passthrough_en ? pt_sd_en  : sd_en;
-
-  end                   : gen_passthrough_implementation
-  else begin            : gen_passthrough_ignore
-     // Passthrough only supported for instances with one CSb line
-    `ASSERT(PassthroughNumCSCompat_A, !passthrough_i.passthrough_en, clk_i, rst_ni)
-
-    assign cio_sck_o    = sck;
-    assign cio_sck_en_o = output_en;
-    assign cio_csb_o    = csb;
-    assign cio_csb_en_o = {NumCS{output_en}};
-    assign cio_sd_o     = sd_out;
-    assign cio_sd_en_o  = sd_en;
-
-    logic       unused_pt_en;
-    logic       unused_pt_sck;
-    logic       unused_pt_sck_en;
-    logic       unused_pt_csb;
-    logic       unused_pt_csb_en;
-    logic [3:0] unused_pt_sd_out;
-    logic [3:0] unused_pt_sd_en;
-
-    assign unused_pt_en     = passthrough_i.passthrough_en;
-    assign unused_pt_sck    = passthrough_i.sck;
-    assign unused_pt_sck_en = passthrough_i.sck_en;
-    assign unused_pt_csb    = passthrough_i.csb;
-    assign unused_pt_csb_en = passthrough_i.csb_en;
-    assign unused_pt_sd_out = passthrough_i.s;
-    assign unused_pt_sd_en  = passthrough_i.s_en;
-
-  end                   : gen_passthrough_ignore
-
-  assign passthrough_o.s = cio_sd_i;
   assign sd_i            = cio_sd_i;
 
   assign hw2reg.status.byteorder.d  = ByteOrder;
@@ -295,20 +262,6 @@ module spi_host
   logic        rx_valid;
   logic        rx_ready;
 
-  spi_host_window u_window (
-    .clk_i,
-    .rst_ni,
-    .rx_win_i   (fifo_win_h2d[0]),
-    .rx_win_o   (fifo_win_d2h[0]),
-    .tx_win_i   (fifo_win_h2d[1]),
-    .tx_win_o   (fifo_win_d2h[1]),
-    .tx_data_o  (tx_data),
-    .tx_be_o    (tx_be),
-    .tx_valid_o (tx_valid),
-    .rx_data_i  (rx_data),
-    .rx_ready_o (rx_ready)
-  );
-
   logic [31:0] core_tx_data;
   logic [3:0]  core_tx_be;
   logic        core_tx_valid;
@@ -325,6 +278,14 @@ module spi_host
 
   logic        tx_empty, tx_full, tx_wm;
   logic        rx_empty, rx_full, rx_wm;
+
+  assign tx_data  = reg2hw.txdata.q;
+  assign tx_be    = '1;  // all ones
+  assign tx_valid = reg2hw.txdata.qe;
+
+  assign hw2reg.rxdata.d  = rx_data;
+  assign hw2reg.rxdata.de = rx_valid;
+  assign rx_ready         = fifo_rx_re;
 
   assign rx_watermark = reg2hw.control.rx_watermark.q;
   assign tx_watermark = reg2hw.control.tx_watermark.q;
@@ -600,26 +561,19 @@ module spi_host
     .intr_o                 (intr_spi_event_o)
   );
 
+  // Outputs should have a known value after reset
+  `CALIPTRA_ASSERT_KNOWN(AHBRespKnownO_A, hresp_o)
+  `CALIPTRA_ASSERT_KNOWN(AHBReadyKnownO_A, hreadyout_o)
 
-  `ASSERT_KNOWN(TlDValidKnownO_A, tl_o.d_valid)
-  `ASSERT_KNOWN(TlAReadyKnownO_A, tl_o.a_ready)
-  `ASSERT_KNOWN(AlertKnownO_A, alert_tx_o)
-  `ASSERT_KNOWN(CioSckKnownO_A, cio_sck_o)
-  `ASSERT_KNOWN(CioSckEnKnownO_A, cio_sck_en_o)
-  `ASSERT_KNOWN(CioCsbKnownO_A, cio_csb_o)
-  `ASSERT_KNOWN(CioCsbEnKnownO_A, cio_csb_en_o)
-  `ASSERT_KNOWN_IF(CioSdKnownO_A, cio_sd_o, !passthrough_i.passthrough_en |
-    (passthrough_i.passthrough_en && passthrough_i.csb_en && !passthrough_i.csb),
-    passthrough_i.sck_en & passthrough_i.sck)
-  `ASSERT_KNOWN(CioSdEnKnownO_A, cio_sd_en_o)
-  `ASSERT_KNOWN(IntrSpiEventKnownO_A, intr_spi_event_o)
-  `ASSERT_KNOWN(IntrErrorKnownO_A, intr_error_o)
-
-  // passthrough_o.s is passed through to spi_device, it may contain unknown data,
-  // but the unknown data won't be used based on the SPI protocol.
-  // Hence, instead of checking known data, here does a connectivity check.
-  `ASSERT(PassthroughConn_A, passthrough_o.s === cio_sd_i)
+  `CALIPTRA_ASSERT_KNOWN(AlertKnownO_A, alert_tx_o)
+  `CALIPTRA_ASSERT_KNOWN(CioSckKnownO_A, cio_sck_o)
+  `CALIPTRA_ASSERT_KNOWN(CioSckEnKnownO_A, cio_sck_en_o)
+  `CALIPTRA_ASSERT_KNOWN(CioCsbKnownO_A, cio_csb_o)
+  `CALIPTRA_ASSERT_KNOWN(CioCsbEnKnownO_A, cio_csb_en_o)
+  `CALIPTRA_ASSERT_KNOWN(CioSdEnKnownO_A, cio_sd_en_o)
+  `CALIPTRA_ASSERT_KNOWN(IntrSpiEventKnownO_A, intr_spi_event_o)
+  `CALIPTRA_ASSERT_KNOWN(IntrErrorKnownO_A, intr_error_o)
 
   // Alert assertions for reg_we onehot check
-  `ASSERT_PRIM_REG_WE_ONEHOT_ERROR_TRIGGER_ALERT(RegWeOnehotCheck_A, u_reg, alert_tx_o[0])
+  `CALIPTRA_ASSERT_PRIM_REG_WE_ONEHOT_ERROR_TRIGGER_ALERT(RegWeOnehotCheck_A, u_reg, alert_tx_o[0])
 endmodule : spi_host

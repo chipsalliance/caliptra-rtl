@@ -13,3 +13,53 @@
 // limitations under the License.
 //
 
+#include "caliptra_defines.h"
+#include "printf.h"
+#include "sha256.h"
+
+void sha256_zeroize(){
+    printf("SHA256 zeroize flow.\n");
+    lsu_write_32(CLP_SHA256_REG_SHA256_CTRL, (1 << SHA256_REG_SHA256_CTRL_ZEROIZE_LOW) & SHA256_REG_SHA256_CTRL_ZEROIZE_MASK);
+}
+
+void sha256_flow(sha256_io block, uint8_t mode, sha256_io digest){
+    volatile uint32_t * reg_ptr;
+    uint8_t offset;
+    uint8_t fail_cmd = 0x1;
+    uint32_t sha256_digest [8];
+
+    // wait for SHA to be ready
+    while((lsu_read_32(CLP_SHA256_REG_SHA256_STATUS) & SHA256_REG_SHA256_STATUS_READY_MASK) == 0);
+
+    // Write SHA256 block
+    reg_ptr = (uint32_t*) CLP_SHA256_REG_SHA256_BLOCK_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_SHA256_REG_SHA256_BLOCK_15) {
+        *reg_ptr++ = block.data[offset++];
+    }
+
+    // Enable SHA256 core 
+    VPRINTF(LOW, "Enable SHA256\n");
+    lsu_write_32(CLP_SHA256_REG_SHA256_CTRL, SHA256_REG_SHA256_CTRL_INIT_MASK | 
+                                            (mode << SHA256_REG_SHA256_CTRL_MODE_LOW) & SHA256_REG_SHA256_CTRL_MODE_MASK);
+    
+    // wait for SHA to be valid
+    while((lsu_read_32(CLP_SHA256_REG_SHA256_STATUS) & SHA256_REG_SHA256_STATUS_VALID_MASK) == 0);
+
+    reg_ptr = (uint32_t *) CLP_SHA256_REG_SHA256_DIGEST_0;
+    printf("Load DIGEST data from SHA256\n");
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_SHA256_REG_SHA256_DIGEST_7) {
+        sha256_digest[offset] = *reg_ptr;
+        if (sha256_digest[offset] != digest.data[offset]) {
+            printf("At offset [%d], sha_digest data mismatch!\n", offset);
+            printf("Actual   data: 0x%x\n", sha256_digest[offset]);
+            printf("Expected data: 0x%x\n", digest.data[offset]);
+            printf("%c", fail_cmd);
+            while(1);
+        }
+        reg_ptr++;
+        offset++;
+    }
+
+}

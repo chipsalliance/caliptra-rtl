@@ -134,6 +134,19 @@ module sha512_h_constants(
             tmp_H6 = 64'h1f83d9abfb41bd6b;
             tmp_H7 = 64'h5be0cd19137e2179;
           end
+
+        default:
+          begin
+            // SHA-384
+            tmp_H0 = 64'hcbbb9d5dc1059ed8;
+            tmp_H1 = 64'h629a292a367cd507;
+            tmp_H2 = 64'h9159015a3070dd17;
+            tmp_H3 = 64'h152fecd8f70e5939;
+            tmp_H4 = 64'h67332667ffc00b31;
+            tmp_H5 = 64'h8eb44a8768581511;
+            tmp_H6 = 64'hdb0c2e0d64f98fa7;
+            tmp_H7 = 64'h47b5481dbefa4fa4;
+          end
       endcase // case (addr)
     end // block: mode_mux
 endmodule // sha512_h_constants

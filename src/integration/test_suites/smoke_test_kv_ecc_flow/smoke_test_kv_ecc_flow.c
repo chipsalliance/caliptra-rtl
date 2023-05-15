@@ -214,7 +214,7 @@ void main(){
 
     //inject seed to kv key reg (in RTL)
     printf("Inject SEED into KV\n");
-    uint8_t seed_inject_cmd = 0x80 + (seed_kv_id & 0x1f);
+    uint8_t seed_inject_cmd = 0x80 + (seed_kv_id & 0x7);
     printf("%c", seed_inject_cmd);
 
     ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y);
@@ -222,6 +222,8 @@ void main(){
 
     ecc_signing_flow(privkey, msg, iv, sign_r, sign_s);
     cptra_intr_rcv.ecc_notif = 0;
+
+    ecc_zeroize();
 
     printf("%c",0xff); //End the test
 }

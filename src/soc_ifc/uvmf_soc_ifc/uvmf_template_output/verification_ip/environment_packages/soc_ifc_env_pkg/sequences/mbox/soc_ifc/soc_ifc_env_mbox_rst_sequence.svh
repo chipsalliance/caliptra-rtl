@@ -100,7 +100,7 @@ function soc_ifc_env_mbox_rst_sequence::randomize_seqs();
 endfunction
 
 task soc_ifc_env_mbox_rst_sequence::start_seqs();
-    int delay_clks; // Delay prior to system reset
+    int unsigned delay_clks; // Delay prior to system reset
     if (!std::randomize(delay_clks) with {delay_clks < 4*soc_ifc_env_mbox_seq.mbox_op_rand.dlen;}) begin
         `uvm_fatal("SOC_IFC_MBOX", $sformatf("soc_ifc_env_mbox_rst_sequence::body() - %s randomization failed", "delay_clks"));
     end

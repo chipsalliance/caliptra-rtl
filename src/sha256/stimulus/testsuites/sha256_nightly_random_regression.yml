@@ -6,10 +6,10 @@ contents:
       tags: ["L1", "SHA256",  "random"]
       path: ""
       weight: 100
-      generations: 1020
+      generations: 1000
       formats: 
         generate: "reseed {template}.yml -seed {seed}"
         path: "{template_basename}__{seed}.yml"
       templates:
-        #$CALIPTRA_ROOT/src/sha256/uvmf_sha256/uvmf_template_output/project_benches/SHA256/tb/tests/src/SHA256_otf_reset_test   : { weight 2 }
+        $CALIPTRA_ROOT/src/sha256/stimulus/tests/random/sha256_random_test   : { weight 100 }
         #$CALIPTRA_ROOT/src/sha256/uvmf_sha256/uvmf_template_output/project_benches/SHA256/tb/tests/src/SHA256_random_test      : { weight 98 }

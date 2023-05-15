@@ -44,6 +44,7 @@ class soc_ifc_status_monitor  extends uvmf_monitor_base #(
 
   // pragma uvmf custom class_item_additional begin
   int unsigned txn_key = 0;
+  extern function void force_advance_txn_key(int unsigned incr);
   extern task handle_reset(string kind = "HARD");
   // pragma uvmf custom class_item_additional end
   
@@ -102,6 +103,13 @@ class soc_ifc_status_monitor  extends uvmf_monitor_base #(
 endclass
 
 // pragma uvmf custom external begin
+// This allows the scoreboard to force txn_key to be synchronized with
+// soc_ifc_predictor in the case where multiple expected txn's are aggregated
+// as a single actual txn
+function void soc_ifc_status_monitor::force_advance_txn_key(int unsigned incr);
+    txn_key+=incr;
+endfunction
+
 task soc_ifc_status_monitor::handle_reset(string kind = "HARD");
     txn_key = 0;
 endtask

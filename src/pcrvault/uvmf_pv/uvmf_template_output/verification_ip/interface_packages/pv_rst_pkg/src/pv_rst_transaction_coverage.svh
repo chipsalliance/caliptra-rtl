@@ -45,7 +45,7 @@ class pv_rst_transaction_coverage  extends uvm_subscriber #(.T(pv_rst_transactio
     option.per_instance=1;
     set_pwrgood: coverpoint coverage_trans.set_pwrgood;
     assert_rst: coverpoint coverage_trans.assert_rst;
-    wait_cycles: coverpoint coverage_trans.wait_cycles;
+    //wait_cycles: coverpoint coverage_trans.wait_cycles;
     // pragma uvmf custom covergroup end
   endgroup
 
@@ -56,7 +56,6 @@ class pv_rst_transaction_coverage  extends uvm_subscriber #(.T(pv_rst_transactio
   function new(string name="", uvm_component parent=null);
     super.new(name,parent);
     pv_rst_transaction_cg=new;
-    `uvm_warning("COVERAGE_MODEL_REVIEW", "A covergroup has been constructed which may need review because of either generation or re-generation with merging.  Please note that transaction variables added as a result of re-generation and merging are not automatically added to the covergroup.  Remove this warning after the covergroup has been reviewed.")
   endfunction
 
   // ****************************************************************************

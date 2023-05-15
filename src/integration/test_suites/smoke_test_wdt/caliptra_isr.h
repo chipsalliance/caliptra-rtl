@@ -61,19 +61,19 @@ inline void service_uart_error_intr  () {printf("ERROR");}
 inline void service_uart_notif_intr  () {printf("ERROR");}
 inline void service_i3c_error_intr   () {printf("ERROR");}
 inline void service_i3c_notif_intr   () {printf("ERROR");}
-inline void service_soc_ifc_error_intr  () {printf("ERROR");}
-inline void service_soc_ifc_notif_intr  () {
-    uint32_t * reg = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+inline void service_soc_ifc_error_intr  () {
+    uint32_t * reg = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
     uint32_t sts = *reg;
     //Write 1 to clear pending interrupt
-    if (sts & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_WDT_TIMER1_TIMEOUT_STS_MASK) {
-        *reg = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_WDT_TIMER1_TIMEOUT_STS_MASK;
+    if (sts & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK) {
+        *reg = SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK;
     }
     //Write 1 to clear pending interrupt
-    if (sts & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_WDT_TIMER2_TIMEOUT_STS_MASK) {
-        *reg = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_WDT_TIMER2_TIMEOUT_STS_MASK;
+    if (sts & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_MASK) {
+        *reg = SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_MASK;
     }
 }
+inline void service_soc_ifc_notif_intr  () {printf("ERROR");}
 inline void service_sha512_acc_error_intr() {printf("ERROR");}
 inline void service_sha512_acc_notif_intr() {printf("ERROR");}
 

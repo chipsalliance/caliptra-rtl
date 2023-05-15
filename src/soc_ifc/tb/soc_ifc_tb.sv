@@ -65,7 +65,7 @@ module soc_ifc_tb
   parameter MBOX_ADDR_DATAIN      = MBOX_ADDR_BASE + 32'h00000010;
   parameter MBOX_ADDR_DATAOUT     = MBOX_ADDR_BASE + 32'h00000014;
   parameter MBOX_ADDR_EXECUTE     = MBOX_ADDR_BASE + 32'h00000018;
-  
+  parameter MBOX_ADDR_STATUS      = MBOX_ADDR_BASE + 32'h0000001c;
 
   parameter MBOX_DLEN_VAL         = 32'h0000001C;
 
@@ -164,6 +164,9 @@ module soc_ifc_tb
 
   assign hready_i_tb = hreadyout_o_tb;
 
+  //bind coverage file
+  soc_ifc_cov_bind i_soc_ifc_cov_bind();
+
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
@@ -237,6 +240,7 @@ module soc_ifc_tb
              .obf_uds_seed(obf_uds_seed),
 
              .nmi_vector(),
+             .nmi_intr(),
 
              .iccm_lock(),
              .iccm_axs_blocked(1'b0), // MH. Tie off here unless need control
@@ -796,8 +800,11 @@ module soc_ifc_tb
       $display("*** Single block test processing time = %01d cycles", end_time);
       read_result_apb(result_data);
 
+      //set status
+      write_single_word_apb(MBOX_ADDR_STATUS, 32'h00000002);
+
       // reset excecute
-      write_single_word_apb(MBOX_ADDR_EXECUTE, 32'h00000000);
+      write_single_word_ahb(MBOX_ADDR_EXECUTE, 32'h00000000);
 
       if (result_data == block)
         begin
@@ -855,8 +862,11 @@ module soc_ifc_tb
       $display("*** Single block test processing time = %01d cycles", end_time);
       read_result_ahb(result_data);
 
+      //set status
+      write_single_word_ahb(MBOX_ADDR_STATUS, 32'h00000002);
+
       // reset excecute
-      write_single_word_ahb(MBOX_ADDR_EXECUTE, 32'h00000000);
+      write_single_word_apb(MBOX_ADDR_EXECUTE, 32'h00000000);
 
       if (result_data == block)
         begin
@@ -1097,9 +1107,7 @@ module soc_ifc_tb
         // TODO. Make sure this is superfluous (implemented in package) before deleting
         // Currently only pulsed register assumed to have cross-register modifications
         if (is_pulsed_reg(rname)) begin
-          // $display ("-- Working on regname %s", rname);
           sb.record_entry(wrtrans, wr_modifier);
-          // handle_cross_reg_mods(rname, wrtrans.data, wr_modifier);
           pulse_trig_trans.copy_from(wrtrans);
           pulse_trig_struct = '{
             reg_name: rname, 
@@ -1149,6 +1157,7 @@ module soc_ifc_tb
   `include "single_soc_reg_test.svh"   
   `include "soc_reg_reset_test.svh"     
   `include "soc_reg_test.svh"     
+  `include "soc_reg_invalid_test.svh"     
 //----------------------------------------------------------------
 
 
@@ -1203,6 +1212,11 @@ module soc_ifc_tb
           set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
           sim_dut_init();
           soc_reg_test();
+
+        end else if (soc_ifc_testname == "soc_reg_invalid_test") begin 
+          set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
+          sim_dut_init();
+          soc_reg_invalid_test();
 
         end else if (soc_ifc_testname == "single_socreg_test") begin 
           if (!($value$plusargs("SOCREG_METHOD_NAME=%s", socreg_method_name))) 

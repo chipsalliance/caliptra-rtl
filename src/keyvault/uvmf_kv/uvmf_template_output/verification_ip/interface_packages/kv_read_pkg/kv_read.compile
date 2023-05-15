@@ -1,0 +1,3 @@
+needs:
+  - kv_read_hvl.compile
+  - kv_read_hdl.compile

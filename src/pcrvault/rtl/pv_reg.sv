@@ -9,6 +9,7 @@ module pv_reg (
         input wire s_cpuif_req_is_wr,
         input wire [11:0] s_cpuif_addr,
         input wire [31:0] s_cpuif_wr_data,
+        input wire [31:0] s_cpuif_wr_biten,
         output wire s_cpuif_req_stall_wr,
         output wire s_cpuif_req_stall_rd,
         output wire s_cpuif_rd_ack,
@@ -28,6 +29,7 @@ module pv_reg (
     logic cpuif_req_is_wr;
     logic [11:0] cpuif_addr;
     logic [31:0] cpuif_wr_data;
+    logic [31:0] cpuif_wr_biten;
     logic cpuif_req_stall_wr;
     logic cpuif_req_stall_rd;
 
@@ -42,6 +44,7 @@ module pv_reg (
     assign cpuif_req_is_wr = s_cpuif_req_is_wr;
     assign cpuif_addr = s_cpuif_addr;
     assign cpuif_wr_data = s_cpuif_wr_data;
+    assign cpuif_wr_biten = s_cpuif_wr_biten;
     assign s_cpuif_req_stall_wr = cpuif_req_stall_wr;
     assign s_cpuif_req_stall_rd = cpuif_req_stall_rd;
     assign s_cpuif_rd_ack = cpuif_rd_ack;
@@ -68,6 +71,7 @@ module pv_reg (
     logic decoded_req;
     logic decoded_req_is_wr;
     logic [31:0] decoded_wr_data;
+    logic [31:0] decoded_wr_biten;
 
     always_comb begin
         for(int i0=0; i0<32; i0++) begin
@@ -84,11 +88,12 @@ module pv_reg (
     assign decoded_req = cpuif_req_masked;
     assign decoded_req_is_wr = cpuif_req_is_wr;
     assign decoded_wr_data = cpuif_wr_data;
+    assign decoded_wr_biten = cpuif_wr_biten;
+
 
     // Writes are always granted with no error response
     assign cpuif_wr_ack = decoded_req & decoded_req_is_wr;
     assign cpuif_wr_err = '0;
-
     //--------------------------------------------------------------------------
     // Field logic
     //--------------------------------------------------------------------------
@@ -149,7 +154,7 @@ module pv_reg (
             automatic logic [0:0] next_c = field_storage.PCR_CTRL[i0].lock.value;
             automatic logic load_next_c = '0;
             if(decoded_reg_strb.PCR_CTRL[i0] && decoded_req_is_wr && !(hwif_in.PCR_CTRL[i0].lock.swwel)) begin // SW write
-                next_c = decoded_wr_data[0:0];
+                next_c = (field_storage.PCR_CTRL[i0].lock.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
                 load_next_c = '1;
             end
             field_combo.PCR_CTRL[i0].lock.next = next_c;
@@ -168,7 +173,7 @@ module pv_reg (
             automatic logic [0:0] next_c = field_storage.PCR_CTRL[i0].clear.value;
             automatic logic load_next_c = '0;
             if(decoded_reg_strb.PCR_CTRL[i0] && decoded_req_is_wr && !(hwif_in.PCR_CTRL[i0].clear.swwel)) begin // SW write
-                next_c = decoded_wr_data[1:1];
+                next_c = (field_storage.PCR_CTRL[i0].clear.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
                 load_next_c = '1;
             end else if(1) begin // singlepulse clears back to 0
                 next_c = '0;
@@ -190,7 +195,7 @@ module pv_reg (
             automatic logic [0:0] next_c = field_storage.PCR_CTRL[i0].rsvd0.value;
             automatic logic load_next_c = '0;
             if(decoded_reg_strb.PCR_CTRL[i0] && decoded_req_is_wr) begin // SW write
-                next_c = decoded_wr_data[2:2];
+                next_c = (field_storage.PCR_CTRL[i0].rsvd0.value & ~decoded_wr_biten[2:2]) | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
                 load_next_c = '1;
             end else if(hwif_in.PCR_CTRL[i0].rsvd0.hwclr) begin // HW Clear
                 next_c = '0;
@@ -212,7 +217,7 @@ module pv_reg (
             automatic logic [4:0] next_c = field_storage.PCR_CTRL[i0].rsvd1.value;
             automatic logic load_next_c = '0;
             if(decoded_reg_strb.PCR_CTRL[i0] && decoded_req_is_wr) begin // SW write
-                next_c = decoded_wr_data[7:3];
+                next_c = (field_storage.PCR_CTRL[i0].rsvd1.value & ~decoded_wr_biten[7:3]) | (decoded_wr_data[7:3] & decoded_wr_biten[7:3]);
                 load_next_c = '1;
             end
             field_combo.PCR_CTRL[i0].rsvd1.next = next_c;
@@ -253,7 +258,6 @@ module pv_reg (
             assign hwif_out.PCR_ENTRY[i0][i1].data.value = field_storage.PCR_ENTRY[i0][i1].data.value;
         end
     end
-
     //--------------------------------------------------------------------------
     // Readback
     //--------------------------------------------------------------------------
@@ -276,7 +280,6 @@ module pv_reg (
         end
     end
 
-
     // Reduce the array
     always_comb begin
         automatic logic [31:0] readback_data_var;
@@ -287,10 +290,7 @@ module pv_reg (
         readback_data = readback_data_var;
     end
 
-
     assign cpuif_rd_ack = readback_done;
     assign cpuif_rd_data = readback_data;
     assign cpuif_rd_err = readback_err;
-
-
 endmodule

@@ -71,9 +71,9 @@ module ecc_dsa_ctrl
     output ecc_reg__in_t hwif_in,
 
     // KV interface
-    output kv_read_t [2:0] kv_read,
+    output kv_read_t [1:0] kv_read,
     output kv_write_t kv_write,
-    input kv_rd_resp_t [2:0] kv_rd_resp,
+    input kv_rd_resp_t [1:0] kv_rd_resp,
     input kv_wr_resp_t kv_wr_resp,
 
     //PCR Signing
@@ -106,6 +106,7 @@ module ecc_dsa_ctrl
     logic pm_busy_o;
     
     logic hw_privkey_we;
+    logic privkey_out_we;
     logic privkey_we_reg;
     logic privkey_we_reg_ff;
     logic hw_pubkeyx_we;
@@ -167,20 +168,15 @@ module ecc_dsa_ctrl
     logic kv_seed_write_en;
     logic [REG_OFFSET_W-1:0] kv_seed_write_offset;
     logic [31:0] kv_seed_write_data;
-    logic kv_msg_write_en;
-    logic [REG_OFFSET_W-1:0] kv_msg_write_offset;
-    logic [31:0] kv_msg_write_data;
   
     logic dest_keyvault;
-    kv_error_code_e kv_privkey_error, kv_seed_error, kv_nonce_error, kv_msg_error, kv_write_error;
+    kv_error_code_e kv_privkey_error, kv_seed_error, kv_nonce_error, kv_write_error;
     logic kv_privkey_ready, kv_privkey_done;
     logic kv_seed_ready, kv_seed_done ;
-    logic kv_msg_ready, kv_msg_done;
     logic kv_write_ready, kv_write_done;
   
     kv_read_ctrl_reg_t kv_privkey_read_ctrl_reg;
     kv_read_ctrl_reg_t kv_seed_read_ctrl_reg;
-    kv_read_ctrl_reg_t kv_msg_read_ctrl_reg;
     kv_write_ctrl_reg_t kv_write_ctrl_reg;
 
     logic pcr_sign_mode;
@@ -289,9 +285,9 @@ module ecc_dsa_ctrl
         cmd_reg = hwif_out.ECC_CTRL.CTRL.value;
         zeroize_reg = hwif_out.ECC_CTRL.ZEROIZE.value;
         
-        sca_point_rnd_en  = hwif_out.ECC_SCACONFIG.POINT_RND_EN.value;
-        sca_mask_sign_en  = hwif_out.ECC_SCACONFIG.MASK_SIGN_EN.value;
-        sca_scalar_rnd_en = hwif_out.ECC_SCACONFIG.SCALAR_RND_EN.value;
+        sca_point_rnd_en  = 1'b1;
+        sca_mask_sign_en  = 1'b1;
+        sca_scalar_rnd_en = 1'b1;
     end
 
     //there is a clk cycle memory read delay between hw_privkey_we and read_reg
@@ -311,10 +307,12 @@ module ecc_dsa_ctrl
         else begin
             privkey_we_reg <= hw_privkey_we;
             privkey_we_reg_ff <= privkey_we_reg;
-            if (privkey_we_reg & ~privkey_we_reg_ff & dest_keyvault)
+            if (privkey_out_we & dest_keyvault)
                 kv_reg <= read_reg;
         end
     end
+
+    always_comb privkey_out_we = privkey_we_reg & ~privkey_we_reg_ff;
 
     assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
     assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
@@ -335,12 +333,18 @@ module ecc_dsa_ctrl
     always_comb begin // ecc_reg_writing
         for (int dword=0; dword < 12; dword++)begin
             //Key Vault has priority if enabled to drive these registers
-            //If keyvault is not enabled, grab the sw value as usual
-            privkey_reg[dword] = hwif_out.ECC_PRIVKEY[11-dword].PRIVKEY.value;
             //don't store the private key generated in sw accessible register if it's going to keyvault
-            hwif_in.ECC_PRIVKEY[dword].PRIVKEY.we = pcr_sign_mode | (kv_privkey_write_en & (kv_privkey_write_offset == dword)) | (privkey_we_reg & ~privkey_we_reg_ff & ~dest_keyvault);
-            hwif_in.ECC_PRIVKEY[dword].PRIVKEY.next = pcr_sign_mode ? pcr_signing_data.pcr_signing_privkey[11-dword] : kv_privkey_write_en? kv_privkey_write_data : read_reg[11-dword];
-            hwif_in.ECC_PRIVKEY[dword].PRIVKEY.hwclr = zeroize_reg;
+            privkey_reg[dword] = hwif_out.ECC_PRIVKEY_IN[11-dword].PRIVKEY_IN.value;
+            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.we = pcr_sign_mode | (kv_privkey_write_en & (kv_privkey_write_offset == dword));
+            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.next = pcr_sign_mode ? pcr_signing_data.pcr_signing_privkey[dword] : kv_privkey_write_en? kv_privkey_write_data : read_reg[11-dword];
+            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.hwclr = zeroize_reg;
+        end 
+
+        for (int dword=0; dword < 12; dword++)begin
+            //If keyvault is not enabled, grab the sw value as usual
+            hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.we = privkey_out_we & ~dest_keyvault;
+            hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.next = read_reg[11-dword];
+            hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < 12; dword++)begin
@@ -357,8 +361,8 @@ module ecc_dsa_ctrl
 
         for (int dword=0; dword < 12; dword++)begin
             msg_reg[dword] = hwif_out.ECC_MSG[11-dword].MSG.value;
-            hwif_in.ECC_MSG[dword].MSG.we = pcr_sign_mode | (kv_msg_write_en & (kv_msg_write_offset == dword));
-            hwif_in.ECC_MSG[dword].MSG.next = pcr_sign_mode ? pcr_signing_data.pcr_hash[11-dword] : kv_msg_write_data;
+            hwif_in.ECC_MSG[dword].MSG.we = pcr_sign_mode;
+            hwif_in.ECC_MSG[dword].MSG.next = pcr_signing_data.pcr_hash[dword];
             hwif_in.ECC_MSG[dword].MSG.hwclr = zeroize_reg;
         end
 
@@ -415,34 +419,28 @@ module ecc_dsa_ctrl
         //ready when fsm is not busy
         hwif_in.ecc_kv_rd_pkey_status.ERROR.next = kv_privkey_error;
         hwif_in.ecc_kv_rd_seed_status.ERROR.next = kv_seed_error;
-        hwif_in.ecc_kv_rd_msg_status.ERROR.next = kv_msg_error;
         hwif_in.ecc_kv_wr_pkey_status.ERROR.next = kv_write_error;
         //ready when fsm is not busy
         hwif_in.ecc_kv_rd_pkey_status.READY.next = kv_privkey_ready;
         hwif_in.ecc_kv_rd_seed_status.READY.next = kv_seed_ready;
-        hwif_in.ecc_kv_rd_msg_status.READY.next = kv_msg_ready;
         hwif_in.ecc_kv_wr_pkey_status.READY.next = kv_write_ready;
         //set valid when fsm is done
         hwif_in.ecc_kv_rd_pkey_status.VALID.hwset = kv_privkey_done;
         hwif_in.ecc_kv_rd_seed_status.VALID.hwset = kv_seed_done;
-        hwif_in.ecc_kv_rd_msg_status.VALID.hwset = kv_msg_done;
         hwif_in.ecc_kv_wr_pkey_status.VALID.hwset = kv_write_done;
         //clear valid when new request is made
         hwif_in.ecc_kv_rd_pkey_status.VALID.hwclr = kv_privkey_read_ctrl_reg.read_en;
         hwif_in.ecc_kv_rd_seed_status.VALID.hwclr = kv_seed_read_ctrl_reg.read_en;
-        hwif_in.ecc_kv_rd_msg_status.VALID.hwclr = kv_msg_read_ctrl_reg.read_en;
         hwif_in.ecc_kv_wr_pkey_status.VALID.hwclr = kv_write_ctrl_reg.write_en;
         //clear enable when busy
         hwif_in.ecc_kv_rd_pkey_ctrl.read_en.hwclr = ~kv_privkey_ready;
         hwif_in.ecc_kv_rd_seed_ctrl.read_en.hwclr = ~kv_seed_ready;
-        hwif_in.ecc_kv_rd_msg_ctrl.read_en.hwclr = ~kv_msg_ready;
         hwif_in.ecc_kv_wr_pkey_ctrl.write_en.hwclr = ~kv_write_ready;
     end
 
     //keyvault control reg macros for assigning to struct
     `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_privkey_read_ctrl_reg, ecc_kv_rd_pkey_ctrl)
     `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_seed_read_ctrl_reg, ecc_kv_rd_seed_ctrl)
-    `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_msg_read_ctrl_reg, ecc_kv_rd_msg_ctrl)
     `CALIPTRA_KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, ecc_kv_wr_pkey_ctrl)
 
     always_comb pcr_sign_mode = hwif_out.ECC_CTRL.PCR_SIGN.value;
@@ -749,33 +747,6 @@ module ecc_dsa_ctrl
         .read_done(kv_seed_done)
     );
 
-    //Read MSG
-    kv_read_client #(
-        .DATA_WIDTH(REG_SIZE),
-        .PAD(0)
-    )
-    ecc_msg_kv_read
-    (
-        .clk(clk),
-        .rst_b(reset_n),
-
-        //client control register
-        .read_ctrl_reg(kv_msg_read_ctrl_reg),
-
-        //interface with kv
-        .kv_read(kv_read[2]),
-        .kv_resp(kv_rd_resp[2]),
-
-        //interface with client
-        .write_en(kv_msg_write_en),
-        .write_offset(kv_msg_write_offset),
-        .write_data(kv_msg_write_data),
-
-        .error_code(kv_msg_error),
-        .kv_ready(kv_msg_ready),
-        .read_done(kv_msg_done)
-    );
-
     //Write to keyvault
     kv_write_client #(
         .DATA_WIDTH(REG_SIZE)
@@ -794,7 +765,7 @@ module ecc_dsa_ctrl
 
         //interface with client
         .dest_keyvault(dest_keyvault),
-        .dest_data_avail(privkey_we_reg & ~privkey_we_reg_ff),
+        .dest_data_avail(privkey_out_we),
         .dest_data(kv_reg),
 
         .error_code(kv_write_error),

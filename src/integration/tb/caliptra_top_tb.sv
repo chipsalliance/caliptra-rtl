@@ -102,6 +102,15 @@ module caliptra_top_tb (
     logic                                PSLVERR;
     logic [`CALIPTRA_APB_DATA_WIDTH-1:0] PRDATA;
 
+    // QSPI Interface
+    logic                                qspi_clk;
+    logic [`CALIPTRA_QSPI_CS_WIDTH-1:0]  qspi_cs_n;
+    wire  [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_data;
+
+`ifdef CALIPTRA_INTERNAL_UART
+    logic uart_loopback;
+`endif
+
     logic ready_for_fuses;
     logic ready_for_fw_push;
     logic mailbox_data_avail;
@@ -186,7 +195,6 @@ module caliptra_top_tb (
         cptra_pwrgood = 1'b0;
         BootFSM_BrkPoint = 1'b1; //Set to 1 even before anything starts
         cptra_rst_b = 1'b0;
-        scan_mode = 1'b0;
         start_apb_fuse_sequence = 1'b0;
         //tie offs
         jtag_tck = 1'b0;    // JTAG clk
@@ -630,9 +638,14 @@ caliptra_top caliptra_top_dut (
     .PWDATA(PWDATA),
     .PWRITE(PWRITE),
 
-    .qspi_clk_o(),
-    .qspi_cs_no(),
-    .qspi_d_io(),
+    .qspi_clk_o(qspi_clk),
+    .qspi_cs_no(qspi_cs_n),
+    .qspi_d_io(qspi_data),
+
+`ifdef CALIPTRA_INTERNAL_UART
+    .uart_tx(uart_loopback),
+    .uart_rx(uart_loopback),
+`endif
 
     .el2_mem_export(el2_mem_export),
 
@@ -688,6 +701,33 @@ physical_rng physical_rng (
 );
 `endif
 
+`ifdef CALIPTRA_INTERNAL_QSPI
+    //=========================================================================-
+    // SPI Flash
+    //=========================================================================-
+localparam logic [15:0] DeviceId0 = 16'hF10A;
+localparam logic [15:0] DeviceId1 = 16'hF10B;
+
+spiflash #(
+  .DeviceId(DeviceId0),
+  .SpiFlashRandomData(0) // fixed pattern for smoke test
+) spiflash0 (
+  .sck (qspi_clk),
+  .csb (qspi_cs_n[0]),
+  .sd  (qspi_data)
+);
+
+spiflash #(
+  .DeviceId(DeviceId1),
+  .SpiFlashRandomData(0) // fixed pattern for smoke test
+) spiflash1 (
+  .sck (qspi_clk),
+  .csb (qspi_cs_n[1]),
+  .sd  (qspi_data)
+);
+
+`endif
+
    //=========================================================================-
    // Services for SRAM exports, STDOUT, etc
    //=========================================================================-
@@ -716,6 +756,9 @@ caliptra_top_tb_services #(
     // Security State
     .security_state(security_state),
 
+    //Scan mode
+    .scan_mode(scan_mode),
+
     // TB Controls
     .cycleCnt(cycleCnt),
 
@@ -733,5 +776,8 @@ caliptra_top_tb_services #(
 
 caliptra_top_sva sva();
 
+`ifndef VERILATOR
+soc_ifc_cov_bind i_soc_ifc_cov_bind();
+`endif
 
 endmodule

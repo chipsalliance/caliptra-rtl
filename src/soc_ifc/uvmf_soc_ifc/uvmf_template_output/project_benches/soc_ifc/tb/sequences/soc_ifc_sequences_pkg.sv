@@ -68,6 +68,7 @@ package soc_ifc_sequences_pkg;
   //    the new sequence after any base sequences of the new sequence.
   `include "src/soc_ifc_rand_test_sequence.svh"
   `include "src/soc_ifc_cmdline_test_sequence.svh"
+  `include "src/soc_ifc_trng_test_sequence.svh"
   // pragma uvmf custom package_item_additional end
 
 endpackage

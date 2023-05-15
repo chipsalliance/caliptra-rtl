@@ -30,7 +30,8 @@
     //defined fields by access type
     //first is uc access type, second is soc access type
     field rw_ro {swwel = soc_req;}; //writes enabled only for uc
-    field rw_rw_sticky {hw = rw; sw = rw; we = true; woclr = true; resetsignal = cptra_pwrgood;}; //writes enabled for both uc and soc
+    field rw_rw_sticky_hw {hw = rw; sw = rw; we = true; woclr = true; resetsignal = cptra_pwrgood;}; //writes enabled for both uc and soc - used by HW ERROR regs
+    field rw_rw_sticky {hw = rw; sw = rw; we = true; resetsignal = cptra_pwrgood;}; //writes enabled for both uc and soc - used by FW ERROR regs
     field ro_rw {swwe  = soc_req;}; //writes enabled only for soc
     field ro_ro {sw = r;};
     field rw_rw { };

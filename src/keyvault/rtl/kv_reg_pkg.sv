@@ -15,7 +15,7 @@ package kv_reg_pkg;
     } kv_reg__kvCtrl__rsvd0__in_t;
 
     typedef struct packed{
-        logic [5:0] next;
+        logic [7:0] next;
         logic we;
         logic hwclr;
     } kv_reg__kvCtrl__dest_valid__in_t;
@@ -74,7 +74,7 @@ package kv_reg_pkg;
     } kv_reg__kvCtrl__rsvd1__out_t;
 
     typedef struct packed{
-        logic [5:0] value;
+        logic [7:0] value;
     } kv_reg__kvCtrl__dest_valid__out_t;
 
     typedef struct packed{

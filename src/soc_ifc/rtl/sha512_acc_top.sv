@@ -101,9 +101,9 @@ module sha512_acc_top
   logic stream_mode_block_we;
   logic block_we;
   logic mbox_mode_last_dword_wr;
-  logic stream_mode_last_dword_wr;
-  logic last_dword_wr;
   logic block_full;
+  logic pad_last_block;
+  logic [31:0] num_bytes_wr;
   logic [BLOCK_OFFSET_W:0] block_wptr;
   logic [DATA_NUM_BYTES-1:0][7:0] mbox_rdata;
   logic [DATA_WIDTH-1:0] block_wdata;
@@ -146,9 +146,6 @@ module sha512_acc_top
                    .init_cmd(init_reg),
                    .next_cmd(next_reg),
                    .mode(sha_mode),
-
-                   .work_factor(1'b0),
-                   .work_factor_num(32'b0),
 
                    .block_msg(block_reg),
 
@@ -201,18 +198,20 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   //Detect writes to datain register
   always_comb datain_write = hwif_in.valid_user & hwif_out.DATAIN.DATAIN.swmod;
   always_comb execute_set = hwif_out.EXECUTE.EXECUTE.value;
+  //flag to indicate that our last block will need the padding added to it
+  always_comb pad_last_block = (|hwif_out.DLEN.LENGTH.value[1:0]);
 
   //When we reach the end of a block we indicate block full
-  always_comb block_full = block_wptr[BLOCK_OFFSET_W];
+  //If this is also the end of the entire DLEN, mask block full so that we properly pad the last dword
+  //We don't want to mask this if num bytes wr is == dlen. This means we wrote a full dword and no padding goes here
+  always_comb block_full = block_wptr[BLOCK_OFFSET_W] & ~(num_bytes_wr > hwif_out.DLEN.LENGTH.value);
   always_comb mbox_mode_last_dword_wr = mbox_mode_block_we & (block_wptr == (BLOCK_NO-1));
-  always_comb stream_mode_last_dword_wr = stream_mode_block_we & (block_wptr == (BLOCK_NO-1));
-  always_comb last_dword_wr = block_we & (block_wptr == (BLOCK_NO-1));
 
   //read from mbox is one clock ahead of writes
   //stall reads based on hold signal from mbox (which is asserted during ECC write-back)
   //don't read the next dword if we are writing the last dword of a block and core isn't ready
   //keep stalling the read once the block is full until core is ready - this will reset the block pointer and start the next one
-  always_comb mbox_read_en = mailbox_mode & ~mbox_read_done & !sha_sram_hold & (~(mbox_mode_last_dword_wr | block_full) | core_ready);
+  always_comb mbox_read_en = mailbox_mode & ~mbox_read_done & !sha_sram_hold & ~(mbox_mode_last_dword_wr | block_full);
 
   always_comb sha_sram_req_dv = mbox_read_en;
   always_comb sha_sram_req_addr = mbox_rdptr[MBOX_ADDR_W-1:0];
@@ -244,10 +243,12 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
       mbox_rdptr    <= '0;
       mbox_block_we <= '0;
       block_reg     <= '0;
+      num_bytes_wr  <= '0;
     end
     else begin
       sha_fsm_ps   <= sha_fsm_ns;
-      soc_has_lock <= (hwif_in.lock_set & req_data.soc_req) ? '1 : '0;
+      soc_has_lock <= (hwif_in.lock_set & req_data.soc_req) ? '1 : 
+                       hwif_out.LOCK.LOCK.value ? soc_has_lock : '0;
 
       block_wptr <= (arc_SHA_BLOCK_0_SHA_BLOCK_N | arc_SHA_BLOCK_N_SHA_BLOCK_N | arc_IDLE) ? '0 :
                     block_we                                                               ? block_wptr + 'd1 : 
@@ -259,6 +260,9 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
 
       mbox_block_we <= mbox_read_en;
 
+      num_bytes_wr <= arc_IDLE ? '0 :
+                      block_we ? num_bytes_wr + 'd4 : num_bytes_wr;
+
       for (int dword = 0; dword < BLOCK_NO; dword++) begin
         block_reg[dword] <= block_we & (block_wptr[BLOCK_OFFSET_W-1:0] == dword) ? block_wdata : block_reg_nxt[dword];
       end
@@ -268,8 +272,8 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   //padding logic
   //this is how many bytes of data are in the last block
   assign num_bytes_data = hwif_out.DLEN.LENGTH.value[BYTE_OFFSET_W-1:0];
-  //when there are >= 111 bytes of data in the block we can't fit the length
-  assign extra_pad_block_required = (num_bytes_data >= 'd111);
+  //when there are >= 112 bytes of data in the block we can't fit the length
+  assign extra_pad_block_required = (num_bytes_data >= 'd112);
 
   always_comb begin : sha_padding_logic
     pad_mask = '1;
@@ -307,8 +311,8 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
     block_reg_nxt = block_reg_nxt_pad;
   end
 
-  //don't let start address start out of range
-  always_comb mbox_start_addr = hwif_out.START_ADDRESS.ADDR.value[MBOX_ADDR_W-1:0];
+  //byte address aligning to mailbox read pointer
+  always_comb mbox_start_addr = hwif_out.START_ADDRESS.ADDR.value[MBOX_ADDR_W+1:2];
   always_comb mbox_ptr_round_up = (|hwif_out.DLEN.LENGTH.value[1:0]);
   //detect overflow of end address to indicate we want to read to the end of the mailbox
   always_comb {mbox_read_to_end, mbox_end_addr} = mbox_ptr_round_up ? mbox_start_addr + (hwif_out.DLEN.LENGTH.value>>2) + 'd1 : 
@@ -328,17 +332,17 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
                                          (streaming_mode & datain_write) |
                                          (mailbox_mode & execute_set));
   //When a full block is complete, send INIT and move to BLOCK_N state
-  always_comb arc_SHA_BLOCK_0_SHA_BLOCK_N = (sha_fsm_ps == SHA_BLOCK_0) & (last_dword_wr | block_full) & core_ready_q;
-  always_comb arc_SHA_BLOCK_N_SHA_BLOCK_N = (sha_fsm_ps == SHA_BLOCK_N) & (last_dword_wr | block_full) & core_ready_q;
+  always_comb arc_SHA_BLOCK_0_SHA_BLOCK_N = (sha_fsm_ps == SHA_BLOCK_0) & block_full & core_ready_q;
+  always_comb arc_SHA_BLOCK_N_SHA_BLOCK_N = (sha_fsm_ps == SHA_BLOCK_N) & block_full & core_ready_q;
   //When execute is set for streaming, OR we reach the end of the mailbox region, move to PAD0
   //If a block ends on 1024 bit boundary, we can't move to PAD until that block is processed
   //so we give priority to the end of block arcs, and move to PAD only after core is ready for the pad block
   always_comb arc_SHA_BLOCK_0_SHA_PAD0 = (sha_fsm_ps == SHA_BLOCK_0) & ~arc_SHA_BLOCK_0_SHA_BLOCK_N &
                                          (streaming_mode & (execute_set & core_ready_q) |
-                                          mailbox_mode & (mbox_read_done & core_ready_q));
+                                          mailbox_mode & (mbox_read_done & ~block_we & core_ready_q));
   always_comb arc_SHA_BLOCK_N_SHA_PAD0 = (sha_fsm_ps == SHA_BLOCK_N) & ~arc_SHA_BLOCK_N_SHA_BLOCK_N &
                                          (streaming_mode & (execute_set & core_ready_q) |
-                                          mailbox_mode & (mbox_read_done & core_ready_q)); 
+                                          mailbox_mode & (mbox_read_done & ~block_we & core_ready_q)); 
   //Moving to PAD0 fills in the padding for the current block and sends NEXT command
   //If we can't fit the length into the current block we'll need another block to pad and write the length in
   //So go to PAD1 after PAD0 in this case
@@ -404,6 +408,7 @@ sha512_acc_csr i_sha512_acc_csr (
     .s_cpuif_req_is_wr   (req_data.write),
     .s_cpuif_addr        (req_data.addr[SHA512_ACC_CSR_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data     (req_data.wdata),
+    .s_cpuif_wr_biten    ('1),
     .s_cpuif_req_stall_wr( ),
     .s_cpuif_req_stall_rd( ),
     .s_cpuif_rd_ack      ( ),
@@ -424,7 +429,7 @@ always_comb mailbox_address_err = (mbox_end_addr < mbox_start_addr); //calculate
 //interrupt register hw interface
 assign hwif_in.cptra_rst_b = rst_b;
 assign hwif_in.cptra_pwrgood = cptra_pwrgood;
-assign hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = (arc_SHA_PAD0_SHA_DONE | arc_SHA_PAD1_SHA_DONE);
+assign hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = ~soc_has_lock & (arc_SHA_PAD0_SHA_DONE | arc_SHA_PAD1_SHA_DONE);
 assign hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = 1'b0; // TODO
 assign hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = 1'b0; // TODO
 assign hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = 1'b0; // TODO

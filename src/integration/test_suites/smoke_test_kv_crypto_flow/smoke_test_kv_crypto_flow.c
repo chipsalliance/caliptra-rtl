@@ -20,6 +20,8 @@
 #include "printf.h"
 #include "ecc.h"
 #include "hmac.h"
+#include "sha512.h"
+#include "sha256.h"
 #include "doe.h"
 #include <stdlib.h>
 
@@ -239,19 +241,19 @@ void random_generator(uint8_t *fe_id, uint8_t *uds_id, uint8_t *privkey_id, uint
     srand(time);
 
     do {
-        *fe_id = rand() & 0x7;   // FE kv id
+        *fe_id = rand() & 0x1f;   // FE kv id
     } while(*fe_id == 0);
 
     do {
-        *uds_id = rand() & 0x7; 
+        *uds_id = rand() & 0x1f; 
     } while((*uds_id == 0) | (*uds_id == *fe_id));
     
     do {
-        *cdi_id = rand() & 0x7;
+        *cdi_id = rand() & 0x1f;
     } while((*cdi_id == 0) | (*cdi_id == *fe_id) | (*cdi_id == *uds_id));
 
     do {
-        *privkey_id = rand() & 0x7;
+        *privkey_id = rand() & 0x1f;
     } while((*privkey_id == 0) | (*privkey_id == *fe_id) | (*privkey_id == *uds_id) | (*privkey_id == *cdi_id));
 }
 
@@ -277,6 +279,12 @@ void main(){
         
         kv_doe(doe_fe_dest_id);
         
+        //issue zeroize
+        ecc_zeroize();
+        hmac_zeroize();
+        sha512_zeroize();
+        sha256_zeroize();
+
         //Issue warm reset
         rst_count++;
         printf("%c",0xf6);
@@ -305,7 +313,13 @@ void main(){
         kv_ecc(uds_key_id, idevid_privkey_id);
 
         kv_hmac(uds_key_id, doe_fe_dest_id, cdi_ldevid_id);
-        
+
+        //issue zeroize
+        ecc_zeroize();
+        hmac_zeroize();
+        sha512_zeroize();
+        sha256_zeroize();
+
         printf("%c",0xff); //End the test
     }
 }
