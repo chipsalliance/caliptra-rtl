@@ -174,10 +174,15 @@ module ecc_dsa_ctrl
     logic kv_privkey_ready, kv_privkey_done;
     logic kv_seed_ready, kv_seed_done ;
     logic kv_write_ready, kv_write_done;
-  
+    //KV Read Data Present
+    logic kv_read_data_present;
+    logic kv_read_data_present_set, kv_read_data_present_reset;
+    
     kv_read_ctrl_reg_t kv_privkey_read_ctrl_reg;
     kv_read_ctrl_reg_t kv_seed_read_ctrl_reg;
     kv_write_ctrl_reg_t kv_write_ctrl_reg;
+
+
 
     logic pcr_sign_mode;
     
@@ -297,18 +302,23 @@ module ecc_dsa_ctrl
             privkey_we_reg      <= '0;
             privkey_we_reg_ff   <= '0;
             kv_reg    <= '0;
+            kv_read_data_present <= '0;
         end
         else if (zeroize_reg) begin
             privkey_we_reg      <= '0;
             privkey_we_reg_ff   <= '0;
             kv_reg    <= '0;
+            kv_read_data_present <= '0;
         end
         //Store private key here before pushing to keyvault
         else begin
             privkey_we_reg <= hw_privkey_we;
             privkey_we_reg_ff <= privkey_we_reg;
-            if (privkey_out_we & dest_keyvault)
+            if (privkey_out_we & (dest_keyvault | kv_read_data_present))
                 kv_reg <= read_reg;
+
+            kv_read_data_present <= kv_read_data_present_set ? '1 :
+                                    kv_read_data_present_reset ? '0 : kv_read_data_present;
         end
     end
 
@@ -342,7 +352,7 @@ module ecc_dsa_ctrl
 
         for (int dword=0; dword < 12; dword++)begin
             //If keyvault is not enabled, grab the sw value as usual
-            hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.we = privkey_out_we & ~dest_keyvault;
+            hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.we = privkey_out_we & ~(dest_keyvault | kv_read_data_present);
             hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.next = read_reg[11-dword];
             hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.hwclr = zeroize_reg;
         end
@@ -351,7 +361,7 @@ module ecc_dsa_ctrl
             seed_reg[dword] = hwif_out.ECC_SEED[11-dword].SEED.value;
             hwif_in.ECC_SEED[dword].SEED.we = kv_seed_write_en & (kv_seed_write_offset == dword);
             hwif_in.ECC_SEED[dword].SEED.next = kv_seed_write_data;
-            hwif_in.ECC_SEED[dword].SEED.hwclr = zeroize_reg;
+            hwif_in.ECC_SEED[dword].SEED.hwclr = zeroize_reg | kv_read_data_present_reset;
         end
 
         for (int dword=0; dword < 12; dword++)begin
@@ -442,6 +452,10 @@ module ecc_dsa_ctrl
     `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_privkey_read_ctrl_reg, ecc_kv_rd_pkey_ctrl)
     `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_seed_read_ctrl_reg, ecc_kv_rd_seed_ctrl)
     `CALIPTRA_KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, ecc_kv_wr_pkey_ctrl)
+
+    //Force result into KV reg whenever source came from KV
+    always_comb kv_read_data_present_set = kv_seed_read_ctrl_reg.read_en;
+    always_comb kv_read_data_present_reset = kv_read_data_present & privkey_out_we;
 
     always_comb pcr_sign_mode = hwif_out.ECC_CTRL.PCR_SIGN.value;
 
