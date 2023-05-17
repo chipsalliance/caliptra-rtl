@@ -84,8 +84,8 @@ addrmap sha512_reg {
         field {desc = "Control next command bit"; singlepulse;} NEXT = 1'b0;
         field {desc = "Control mode command bits";} MODE[2] = 2'b10;
         field {desc = "Zeroize all internal registers"; singlepulse;} ZEROIZE = 1'b0;
-        field {desc = "Indicates last iteration for hash extend function. 
-                       Result of this INIT or NEXT cycle will be written back to PCR"; hwclr;} LAST = 1'b0;
+        field {desc = "Indicates last iteration for keyvault or hash extend function. 
+                       Result of this INIT or NEXT cycle will be written back to the appropriate vault"; hwclr;} LAST = 1'b0;
     
     } SHA512_CTRL @0x00000010;
 
