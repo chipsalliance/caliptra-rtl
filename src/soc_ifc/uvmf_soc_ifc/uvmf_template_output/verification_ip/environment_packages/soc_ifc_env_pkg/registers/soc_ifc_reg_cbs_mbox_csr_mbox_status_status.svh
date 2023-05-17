@@ -123,7 +123,6 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_status_status extends soc_ifc_reg_cbs_mbox_c
                             `uvm_warning("SOC_IFC_REG_CBS", $sformatf("Write to mbox_status in state [%p] on map [%s] is unexpected!", rm.mbox_fn_state_sigs, map.get_name()))
                         end
                         else begin
-                            uvm_queue #(soc_ifc_reg_delay_job) delay_jobs;
                             if (rm.mbox_data_q.size() > 0) begin
                                 `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to mbox_status transfers control back to uC, but mbox_data_q is not empty! Size: %0d", rm.mbox_data_q.size()), UVM_LOW) /* TODO: Make a warning that can be disabled for DLEN violation cases? */
                             end

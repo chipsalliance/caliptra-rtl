@@ -34,10 +34,44 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_execute_execute extends soc_ifc_reg_de
                 MBOX_IDLE: begin
                     rm.mbox_fn_state_sigs = '{mbox_idle: 1'b1, default: 1'b0};
                     rm.mbox_status.soc_has_lock.predict(1'b0, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
-                    rm.mbox_lock.lock.predict(0);
+                    `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%p] on mbox_execute results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
+                    if (rm.mbox_lock.is_busy()) begin
+                        `uvm_info("SOC_IFC_REG_DELAY_JOB", "Delay job for mbox_execute attempted to clear mbox_lock, but hit access collision! Flagging clear event in reg-model for mbox_lock callback to handle", UVM_LOW)
+                        rm.mbox_lock_clr_miss.trigger(null);
+                        uvm_wait_for_nba_region();
+                        // If the bus transfer is still in progress (it didn't terminate on the same
+                        // falling clock edge as when this delay job was run), then just override the 
+                        // mirrored value immediately. Clear is_busy to avoid a UVM_WARNING.
+                        // This use-case is definitely a hack, but it is necessary to synchronize
+                        // the mbox_lock mirror with the design, chronologically.
+                        if (rm.mbox_lock.is_busy()) begin
+                            rm.mbox_lock.Xset_busyX(0);
+                            rm.mbox_lock.lock.predict(0);
+                            rm.mbox_lock.Xset_busyX(1);
+                        end
+                        else begin
+                            fork
+                                begin
+                                    rm.mbox_lock_clr_miss.wait_off();
+                                    disable MBOX_CLR_TIMEOUT;
+                                end
+                                begin: MBOX_CLR_TIMEOUT
+                                    // If it takes any amount of time for the pending lock to be cleared, that
+                                    // means we've encountered some environment bug (since the accessing i/f
+                                    // completed it's transfer, the reg prediction should be instantaneous)
+                                    uvm_wait_for_nba_region();
+                                    `uvm_error("SOC_IFC_REG_DELAY_JOB", $sformatf("mbox_lock clear activity, originally requested by mbox_execute callback but unserviceable, was scheduled to be completed during mbox_lock callback but took longer than expected to finish!"))
+                                end
+                            join_any
+                        end
+                    end
+                    else begin
+                        rm.mbox_lock.lock.predict(0);
+                    end
                 end
                 MBOX_EXECUTE_SOC: begin
                     rm.mbox_fn_state_sigs = '{soc_receive_stage: 1'b1, default: 1'b0};
+                    `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%p] on mbox_execute results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
                 end
                 MBOX_EXECUTE_UC: begin
                     rm.mbox_fn_state_sigs = '{uc_receive_stage: 1'b1, default: 1'b0};
@@ -48,11 +82,13 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_execute_execute extends soc_ifc_reg_de
                     //    "do_predict" bypasses the access-check and does not enforce W1C
                     //    behavior on this attempt to set interrupt status to 1
                     intr_fld.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, rm_top.get_map_by_name("soc_ifc_AHB_map")); /* Intr reg access expected only via AHB i/f */
+                    `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%p] on mbox_execute results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
                 end
                 default: begin
+                    `uvm_warning("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%p] on mbox_execute results in unexpected state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt))
                 end
             endcase
-            `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%p] on mbox_execute results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
+            `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%p] on mbox_execute finished processing", map.get_name()), UVM_FULL)
         end
         else begin
             `uvm_info("SOC_IFC_REG_CBS",
