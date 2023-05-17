@@ -67,6 +67,21 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock extends soc_ifc_reg_cbs_mbox_csr;
         delay_job.rm = rm;
         delay_job.map = map;
         delay_job.set_delay_cycles(0);
+
+        // If a scheduled job wanted to predict mbox_lock to 0, but couldn't (because
+        // of the active bus access that led to this callback being called), that job
+        // will trigger an event. Service that here.
+        // This happens when mbox_execute or mbox_unlock is accessed and the result
+        // is a prediction for mbox_lock to be cleared, but a bus access to mbox_lock is
+        // active. See the callbacks for those registers.
+        if (rm.mbox_lock_clr_miss.is_on()) begin
+            previous = 0;
+            if (kind == UVM_PREDICT_WRITE)
+                value = previous;
+            `uvm_info("SOC_IFC_REG_CBS", "Completed mbox_lock deassert prediction (scheduled by mbox_execute) prior to performing mbox_lock reg prediction due to bus access", UVM_MEDIUM)
+            rm.mbox_lock_clr_miss.reset(0);
+        end
+
         if (map.get_name() == this.AHB_map_name) begin
             case (kind) inside
                 UVM_PREDICT_READ: begin

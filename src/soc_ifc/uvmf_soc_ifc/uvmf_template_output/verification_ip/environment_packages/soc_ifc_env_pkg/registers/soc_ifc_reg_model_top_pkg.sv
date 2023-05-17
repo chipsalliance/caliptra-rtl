@@ -270,6 +270,8 @@ package soc_ifc_reg_model_top_pkg;
         uvm_reg_map mbox_csr_AHB_map;
         uvm_reg_map mbox_csr_APB_map;
 
+        uvm_event mbox_lock_clr_miss;
+
         // This tracks expected functionality of the mailbox in a way that is
         // agnostic to the internal state machine implementation and strictly
         // observes the mailbox specification. This is what a more rigorous
@@ -285,6 +287,7 @@ package soc_ifc_reg_model_top_pkg;
         function new(string name = "mbox_csr_ext");
             super.new(name);
             mbox_fn_state_sigs = '{mbox_idle: 1'b1, default: 1'b0};
+            mbox_lock_clr_miss = new("mbox_lock_clr_miss");
         endfunction : new
 
         // FIXME Manually maintaining a list here of registers that are configured
@@ -327,6 +330,7 @@ package soc_ifc_reg_model_top_pkg;
         super.reset(kind);
         mbox_data_q.delete();
         mbox_resp_q.delete();
+        mbox_lock_clr_miss.reset();
 
         // Mailbox State Changes
         // TODO what to do for FW update?

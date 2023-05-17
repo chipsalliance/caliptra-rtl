@@ -6,7 +6,7 @@ contents:
       tags: ["L1", "CALIPTRA_TOP",  "random"]
       path: ""
       weight: 100
-      generations: 100
+      generations: 500
       formats: 
         generate: "reseed {template}.yml -seed {seed}"
         path: "{template_basename}__{seed}.yml"

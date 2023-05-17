@@ -547,7 +547,19 @@ class soc_ifc_predictor #(
     else if (axs_reg != null) begin
         // Mailbox accesses are discarded based on valid_requester/valid_receiver
         case (axs_reg.get_name()) inside
-            "mbox_lock",
+            "mbox_lock": begin
+                if (ahb_txn.RnW == AHB_READ && ahb_txn.resp[0] != AHB_OKAY) begin
+                    do_reg_prediction = 1'b0;
+                    // "Expected" read data is 0
+                    soc_ifc_sb_ahb_ap_output_transaction.data[0] = 0;
+                    // Complete any scheduled predictions to 0 (due to other delay jobs)
+                    if (p_soc_ifc_rm.mbox_csr_rm.mbox_lock_clr_miss.is_on()) begin
+                        p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.predict(0);
+                        `uvm_info("PRED_AHB", "Completed mbox_lock deassert prediction (scheduled by mbox_execute) since mbox_lock reg prediction is disabled, due to failed AHB transfer", UVM_MEDIUM)
+                        p_soc_ifc_rm.mbox_csr_rm.mbox_lock_clr_miss.reset(0);
+                    end
+                end
+            end
             "mbox_user": begin
                 if (ahb_txn.RnW == AHB_READ && ahb_txn.resp[0] != AHB_OKAY) begin
                     do_reg_prediction = 1'b0;
@@ -799,7 +811,7 @@ class soc_ifc_predictor #(
                 ["DIGEST[0]":"DIGEST[9]"],
                 ["DIGEST[10]":"DIGEST[15]"],
                 "CONTROL": begin
-                    `uvm_info("PRED_APB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_FULL)
+                    `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_FULL)
                 end
                 "CPTRA_FLOW_STATUS": begin
                     if (ahb_txn.RnW == AHB_WRITE &&
@@ -1081,7 +1093,22 @@ class soc_ifc_predictor #(
         // Mailbox accesses are discarded based on valid_requester/valid_receiver
         // (i.e. PAUSER + state info)
         case (axs_reg.get_name()) inside
-            "mbox_lock",
+            "mbox_lock": begin
+                // RS access policy wants to update lock to 1 on a read, but if the PAUSER value is invalid
+                // lock will not be set. It will hold the previous value.
+                if (!(apb_txn.addr_user inside mbox_valid_users) || apb_txn.slave_err) begin
+                    // Access to mbox_lock is dropped if PAUSER is not valid
+                    do_reg_prediction = 1'b0;
+                    // "Expected" read data is 0
+                    soc_ifc_sb_apb_ap_output_transaction.rd_data = 0;
+                    // Complete any scheduled predictions to 0 (due to other delay jobs)
+                    if (p_soc_ifc_rm.mbox_csr_rm.mbox_lock_clr_miss.is_on()) begin
+                        p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.predict(0);
+                        `uvm_info("PRED_APB", "Completed mbox_lock deassert prediction (scheduled by mbox_execute) since mbox_lock reg prediction is disabled, due to failed APB transfer", UVM_MEDIUM)
+                        p_soc_ifc_rm.mbox_csr_rm.mbox_lock_clr_miss.reset(0);
+                    end
+                end
+            end
             "mbox_user",
             "mbox_unlock": begin
                 // RS access policy wants to update lock to 1 on a read, but if the PAUSER value is invalid

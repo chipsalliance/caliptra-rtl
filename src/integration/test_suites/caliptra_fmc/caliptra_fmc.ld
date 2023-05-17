@@ -40,7 +40,7 @@ SECTIONS {
   . = _text_lma_end + 0x10; /* . (location counter) points to 0x0, force it back to next LMA here */
   _data_vma_start = 0x50000000;
   _data_lma_start = .; /* After this, . (location counter) goes back to holding VMA value */
-  .data _data_vma_start :  AT(_data_lma_start) { *(.*data) *(.rodata*) ; . = ALIGN(4); } =0x0000,
+  .data _data_vma_start :  AT(_data_lma_start) { *(.*data) *(.sdata*) *(.rodata*) *(.srodata*) ; . = ALIGN(4); } =0x0000,
   _data_lma_end = _data_lma_start + SIZEOF(.data);
 
   _bss_vma_start = .;
