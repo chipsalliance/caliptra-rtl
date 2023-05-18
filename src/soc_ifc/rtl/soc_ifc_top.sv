@@ -205,6 +205,7 @@ logic wdt_error_t2_intr_serviced;
 logic soc_ifc_error_intr_f;
 
 logic valid_trng_user;
+logic valid_fuse_user;
 
 //Boot FSM
 //This module contains the logic required to control the Caliptra Boot Flow
@@ -322,6 +323,7 @@ soc_ifc_arb #(
     .clk(soc_ifc_clk_cg),
     .rst_b(cptra_rst_b),
     .valid_mbox_users(valid_mbox_users),
+    .valid_fuse_user(valid_fuse_user),
     //UC inf
     .uc_req_dv(uc_req_dv), 
     .uc_req_hold(uc_req_hold), 
@@ -491,9 +493,14 @@ always_comb begin
                               soc_ifc_reg_hwif_out.CPTRA_MBOX_VALID_PAUSER[i].PAUSER.value[APB_USER_WIDTH-1:0] : CPTRA_DEF_MBOX_VALID_PAUSER;
     end
 end
+
 //can't write to trng valid user after it is locked
 always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_VALID_PAUSER.PAUSER.swwel = soc_ifc_reg_hwif_out.CPTRA_TRNG_PAUSER_LOCK.LOCK.value;
 always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_PAUSER_LOCK.LOCK.swwel = soc_ifc_reg_hwif_out.CPTRA_TRNG_PAUSER_LOCK.LOCK.value;
+
+//fuse register pauser fields
+always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_VALID_PAUSER.PAUSER.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_PAUSER_LOCK.LOCK.value;
+always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_PAUSER_LOCK.LOCK.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_PAUSER_LOCK.LOCK.value;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Can't write to RW-able fuses once fuse_done is set (implies the register is being locked using the fuse_wr_done)
@@ -562,6 +569,14 @@ end
 //Clear the DATA_WR_DONE when FW clears the req bit
 always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_STATUS.DATA_WR_DONE.hwclr = ~soc_ifc_reg_hwif_out.CPTRA_TRNG_STATUS.DATA_REQ.value;
 
+generate
+    if (CPTRA_SET_FUSE_PAUSER_INTEG) begin
+        always_comb valid_fuse_user = soc_req_dv & (soc_req.user == CPTRA_FUSE_VALID_PAUSER);
+    end else begin
+        always_comb valid_fuse_user = soc_req_dv & (~soc_ifc_reg_hwif_out.CPTRA_FUSE_PAUSER_LOCK.LOCK.value | 
+                                     (soc_req.user == soc_ifc_reg_hwif_out.CPTRA_FUSE_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]));
+    end
+endgenerate
 // Generate a pulse to set the interrupt bit
 always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
     if (~cptra_noncore_rst_b) begin

@@ -326,3 +326,24 @@ reg {
     field {desc = "Timer1 timed out, timer2 enabled"; hw = rw; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;} t1_timeout = 1'b0;
     field {desc = "Timer2 timed out"; hw = rw; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;} t2_timeout = 1'b0;
 } CPTRA_WDT_STATUS;
+
+reg {
+    name = "Valid User for FUSE";
+    desc = "Valid PAUSER attributes for FUSE on SoC APB Interface. Only valid once LOCK is set.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RW
+            [br]Read-Only once locked by FUSE_PAUSER_LOCK.";
+    field {sw=rw; hw=r; swwel; resetsignal = cptra_rst_b;} PAUSER[32]=0xFFFF_FFFF;
+ } CPTRA_FUSE_VALID_PAUSER;
+
+reg {
+    name = "Valid User for FUSE PAUSER Lock";
+    desc = "Valid PAUSER attributes for requests from SoC APB Interface.
+            [br]Each bit corresponds to locking the associated FUSE_VALID_PAUSER register.
+            [br]Associated FUSE_VALID_PAUSER register is only valid once locked by this bit.
+            [br]Caliptra FW RW access for survivability but cannot unlock once locked
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RW
+            [br]Read-Only once locked.";
+    field {sw=rw; hw=r; swwel; resetsignal=cptra_rst_b;} LOCK=0;
+ } CPTRA_FUSE_PAUSER_LOCK;
