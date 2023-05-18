@@ -189,6 +189,22 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic swwel;
+    } soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER__PAUSER__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER__PAUSER__in_t PAUSER;
+    } soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK__LOCK__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK__LOCK__in_t LOCK;
+    } soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK__in_t;
+
+    typedef struct packed{
+        logic swwel;
         logic hwclr;
     } soc_ifc_reg__secret_w32__in_t;
 
@@ -365,6 +381,8 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES__in_t [2-1:0]CPTRA_GENERIC_INPUT_WIRES;
         soc_ifc_reg__CPTRA_HW_CONFIG__in_t CPTRA_HW_CONFIG;
         soc_ifc_reg__CPTRA_WDT_STATUS__in_t CPTRA_WDT_STATUS;
+        soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER__in_t CPTRA_FUSE_VALID_PAUSER;
+        soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK__in_t CPTRA_FUSE_PAUSER_LOCK;
         soc_ifc_reg__fuse_uds_seed__in_t [12-1:0]fuse_uds_seed;
         soc_ifc_reg__fuse_field_entropy__in_t [8-1:0]fuse_field_entropy;
         soc_ifc_reg__fuse_key_manifest_pk_hash__in_t [12-1:0]fuse_key_manifest_pk_hash;
@@ -649,6 +667,22 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic [31:0] value;
+    } soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER__PAUSER__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER__PAUSER__out_t PAUSER;
+    } soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK__LOCK__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK__LOCK__out_t LOCK;
+    } soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK__out_t;
+
+    typedef struct packed{
+        logic [31:0] value;
     } soc_ifc_reg__secret_w32__out_t;
 
     typedef struct packed{
@@ -806,6 +840,8 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_WDT_TIMER2_CTRL__out_t CPTRA_WDT_TIMER2_CTRL;
         soc_ifc_reg__CPTRA_WDT_TIMER2_TIMEOUT_PERIOD__out_t [2-1:0]CPTRA_WDT_TIMER2_TIMEOUT_PERIOD;
         soc_ifc_reg__CPTRA_WDT_STATUS__out_t CPTRA_WDT_STATUS;
+        soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER__out_t CPTRA_FUSE_VALID_PAUSER;
+        soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK__out_t CPTRA_FUSE_PAUSER_LOCK;
         soc_ifc_reg__fuse_uds_seed__out_t [12-1:0]fuse_uds_seed;
         soc_ifc_reg__fuse_field_entropy__out_t [8-1:0]fuse_field_entropy;
         soc_ifc_reg__fuse_key_manifest_pk_hash__out_t [12-1:0]fuse_key_manifest_pk_hash;

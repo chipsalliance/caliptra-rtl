@@ -519,6 +519,34 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_WDT_STATUS
 
+    // Reg - soc_ifc_reg::CPTRA_FUSE_VALID_PAUSER
+    class soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER extends uvm_reg;
+        rand uvm_reg_field PAUSER;
+
+        function new(string name = "soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.PAUSER = new("PAUSER");
+            this.PAUSER.configure(this, 32, 0, "RW", 0, 'hffffffff, 1, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER
+
+    // Reg - soc_ifc_reg::CPTRA_FUSE_PAUSER_LOCK
+    class soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK extends uvm_reg;
+        rand uvm_reg_field LOCK;
+
+        function new(string name = "soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK");
+            super.new(name, 32, UVM_NO_COVERAGE);
+        endfunction : new
+
+        virtual function void build();
+            this.LOCK = new("LOCK");
+            this.LOCK.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+        endfunction : build
+    endclass : soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK
+
     // Reg - soc_ifc_reg::fuse_uds_seed
     class soc_ifc_reg__fuse_uds_seed extends uvm_reg;
         rand uvm_reg_field seed;
@@ -1544,6 +1572,8 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__CPTRA_WDT_TIMER2_CTRL CPTRA_WDT_TIMER2_CTRL;
         rand soc_ifc_reg__CPTRA_WDT_TIMER2_TIMEOUT_PERIOD CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[2];
         rand soc_ifc_reg__CPTRA_WDT_STATUS CPTRA_WDT_STATUS;
+        rand soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER CPTRA_FUSE_VALID_PAUSER;
+        rand soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK CPTRA_FUSE_PAUSER_LOCK;
         rand soc_ifc_reg__fuse_uds_seed fuse_uds_seed[12];
         rand soc_ifc_reg__fuse_field_entropy fuse_field_entropy[8];
         rand soc_ifc_reg__fuse_key_manifest_pk_hash fuse_key_manifest_pk_hash[12];
@@ -1756,6 +1786,16 @@ package soc_ifc_reg_uvm;
 
             this.CPTRA_WDT_STATUS.build();
             this.default_map.add_reg(this.CPTRA_WDT_STATUS, 'h100);
+            this.CPTRA_FUSE_VALID_PAUSER = new("CPTRA_FUSE_VALID_PAUSER");
+            this.CPTRA_FUSE_VALID_PAUSER.configure(this);
+
+            this.CPTRA_FUSE_VALID_PAUSER.build();
+            this.default_map.add_reg(this.CPTRA_FUSE_VALID_PAUSER, 'h104);
+            this.CPTRA_FUSE_PAUSER_LOCK = new("CPTRA_FUSE_PAUSER_LOCK");
+            this.CPTRA_FUSE_PAUSER_LOCK.configure(this);
+
+            this.CPTRA_FUSE_PAUSER_LOCK.build();
+            this.default_map.add_reg(this.CPTRA_FUSE_PAUSER_LOCK, 'h108);
             foreach(this.fuse_uds_seed[i0]) begin
                 this.fuse_uds_seed[i0] = new($sformatf("fuse_uds_seed[%0d]", i0));
                 this.fuse_uds_seed[i0].configure(this);

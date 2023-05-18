@@ -191,6 +191,8 @@ package soc_ifc_reg_model_top_pkg;
             for (ii=0; ii<$size(this.CPTRA_GENERIC_OUTPUT_WIRES); ii++) begin
                 if ( this.CPTRA_GENERIC_OUTPUT_WIRES[ii].        has_reset("HARD"   )) this.CPTRA_GENERIC_OUTPUT_WIRES[ii].        set_reset(this.CPTRA_GENERIC_OUTPUT_WIRES[ii].        get_reset("HARD"), "SOFT");
             end
+            if ( this.CPTRA_FUSE_VALID_PAUSER.              has_reset("HARD"   )) this.CPTRA_FUSE_VALID_PAUSER.              set_reset(this.CPTRA_FUSE_VALID_PAUSER.              get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_FUSE_PAUSER_LOCK.               has_reset("HARD"   )) this.CPTRA_FUSE_PAUSER_LOCK.               set_reset(this.CPTRA_FUSE_PAUSER_LOCK.               get_reset("HARD"), "SOFT");
 //            for (ii=0; ii<$size(this.fuse_uds_seed); ii++) begin
 //            if ( this.fuse_uds_seed[ii].                    has_reset("HARD"   )) this.fuse_uds_seed[ii].                    set_reset(this.fuse_uds_seed[ii].                    get_reset("HARD"), "SOFT");
 //            end

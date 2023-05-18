@@ -21,6 +21,7 @@ module soc_ifc_arb
     input  logic rst_b,
 
     input logic [4:0][APB_USER_WIDTH-1:0] valid_mbox_users,
+    input logic valid_fuse_user,
     //UC inf
     input  logic uc_req_dv,
     output logic uc_req_hold,
@@ -135,8 +136,11 @@ always_comb uc_mbox_dir_req = (uc_req_dv & (uc_req_data.addr inside {[MBOX_DIR_S
 //SoC requests to mailbox
 always_comb soc_mbox_req = (valid_mbox_req & (soc_req_data.addr inside {[MBOX_REG_START_ADDR:MBOX_REG_END_ADDR]}));
 //Requests to arch/fuse register block
+//Ensure that requests to fuse block match the appropriate user value
 always_comb uc_reg_req = (uc_req_dv & (uc_req_data.addr inside {[SOC_IFC_REG_START_ADDR:SOC_IFC_REG_END_ADDR]}));
-always_comb soc_reg_req = (soc_req_dv & (soc_req_data.addr inside {[SOC_IFC_REG_START_ADDR:SOC_IFC_REG_END_ADDR]}));
+always_comb soc_reg_req = (soc_req_dv & (soc_req_data.addr inside {[SOC_IFC_REG_START_ADDR:SOC_IFC_REG_END_ADDR]}) &
+                                        (~(soc_req_data.addr inside {[SOC_IFC_FUSE_START_ADDR:SOC_IFC_FUSE_END_ADDR]}) | valid_fuse_user));
+
 //Requests to SHA
 always_comb uc_sha_req = (uc_req_dv & (uc_req_data.addr inside {[SHA_REG_START_ADDR:SHA_REG_END_ADDR]}));
 always_comb soc_sha_req = (soc_req_dv & (soc_req_data.addr inside {[SHA_REG_START_ADDR:SHA_REG_END_ADDR]}));
