@@ -153,19 +153,21 @@ always_comb begin
 end
 
 //check for collisions
-always_comb req_collision = (uc_mbox_req & soc_mbox_req) |
-                            (uc_reg_req & soc_reg_req) |
-                            (uc_sha_req & soc_sha_req);
+//don't toggle priority if the request was held
+always_comb req_collision = (uc_mbox_req & soc_mbox_req & ~mbox_req_hold) |
+                            (uc_reg_req & soc_reg_req & ~soc_ifc_reg_req_hold) |
+                            (uc_sha_req & soc_sha_req & ~sha_req_hold);
 
 //drive the dv to the appropriate destination if either client is trying to 
 always_comb mbox_req_dv = uc_mbox_reg_req | soc_mbox_req;
-always_comb mbox_dir_req_dv = uc_mbox_dir_req;
+always_comb mbox_dir_req_dv = uc_mbox_dir_req & uc_mbox_gnt;
 always_comb soc_ifc_reg_req_dv = uc_reg_req | soc_reg_req;
 always_comb sha_req_dv = uc_sha_req | soc_sha_req;
 
 //determine which requests get granted
 //if a request is colliding with another, grant the one with priority
 //ignore priority if one of the requests was already in progress
+//this prevents the "priority" request from interrupting an in progress request
 always_comb soc_mbox_gnt = soc_mbox_req & (~uc_mbox_req | soc_has_priority) & ~uc_mbox_req_ip;
 always_comb soc_reg_gnt  = soc_reg_req  & (~uc_reg_req | soc_has_priority)  & ~uc_reg_req_ip;
 always_comb soc_sha_gnt  = soc_sha_req  & (~uc_sha_req | soc_has_priority)  & ~uc_sha_req_ip;
