@@ -136,11 +136,12 @@ includes = -I$(BUILD_DIR)
 #         '-----+------------+-----------'    |            |               |            |
 #               |            |                |            |               |            |
 #               v            v                v            v               v            v
-suppress = -Wno-WIDTH -Wno-UNOPTFLAT -Wno-LITENDIAN -Wno-CMPCONST -Wno-MULTIDRIVEN -Wno-UNPACKED
+suppress = -Wno-WIDTH -Wno-UNOPTFLAT -Wno-LITENDIAN -Wno-CMPCONST -Wno-MULTIDRIVEN -Wno-UNPACKED \
+           -Wno-IMPLICITSTATIC # dasm.svi contains implicit task lifetime
 
 # CFLAGS for verilator generated Makefiles. Without -std=c++11 it
 # complains for `auto` variables
-CFLAGS += "-std=c++11"
+CFLAGS += "-std=c++17"
 
 # Optimization for better performance; alternative is nothing for
 # slower runtime (faster compiles) -O2 for faster runtime (slower
