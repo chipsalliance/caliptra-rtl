@@ -25,7 +25,9 @@ interface soc_ifc_cov_if
     input logic ready_for_runtime
 );
 
-    logic req_collision = i_soc_ifc_arb.req_collision;
+    logic req_collision;
+    
+    assign req_collision = i_soc_ifc_arb.req_collision;
 
     covergroup soc_ifc_top_cov_grp @(posedge clk);
         trng_req_cp: coverpoint trng_req;

@@ -175,4 +175,42 @@ always_comb hready_o_1 = initiator1_pend_addr_ph ? '0 :
 
 `CALIPTRA_ASSERT_MUTEX(ERR_2TO1MUX_MUTEX_DATA_PH, {initiator0_data_ph,initiator1_data_ph}, hclk, hreset_n)
 `CALIPTRA_ASSERT_NEVER(ERR_2TO1MUX_BAD_HTRANS, (htrans_o == 2'b01), hclk, hreset_n)
+
+//Coverage
+`ifndef VERILATOR
+`ifdef FCOV
+
+covergroup ahb_lite_2to1_mux_cov_grp @(posedge hclk);
+    option.per_instance = 1;
+    
+    init0_addr_cp: coverpoint initiator0_address_ph;
+    init0_pend_addr_cp: coverpoint initiator0_pend_addr_ph;
+    init0_data_cp: coverpoint initiator0_data_ph;
+    init0_gnt_cp : coverpoint initiator0_gnt;
+
+    init1_addr_cp: coverpoint initiator1_address_ph;
+    init1_pend_addr_cp: coverpoint initiator1_pend_addr_ph;
+    init1_data_cp: coverpoint initiator1_data_ph;
+    init1_gnt_cp : coverpoint initiator1_gnt;
+
+    init0_pend_addr_not_ready: coverpoint initiator0_pend_addr_ph & ~hreadyout_i;
+    init1_pend_addr_not_ready: coverpoint initiator1_pend_addr_ph & ~hreadyout_i;
+
+    init0_data_not_ready: coverpoint initiator0_data_ph & ~hreadyout_i;
+    init1_data_not_ready: coverpoint initiator1_data_ph & ~hreadyout_i;
+
+    init0_dataXinit1_gnt: cross  init0_data_cp, init1_gnt_cp;
+    init1_dataXinit0_gnt: cross  init1_data_cp, init0_gnt_cp;
+
+    init0_addrXpend: cross init0_addr_cp, init0_pend_addr_cp;
+    init1_addrXpend: cross init1_addr_cp, init1_pend_addr_cp;
+    init0Xinit1_addr: cross init0_addr_cp, init1_addr_cp;
+    init0Xinit1_pend_addr: cross init0_pend_addr_cp, init1_pend_addr_cp;
+
+endgroup
+
+    ahb_lite_2to1_mux_cov_grp ahb_lite_2to1_mux_cov_grp1 = new();
+
+`endif
+`endif              
 endmodule
