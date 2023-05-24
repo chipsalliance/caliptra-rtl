@@ -1350,6 +1350,10 @@ function int get_iccm_bank(input[31:0] addr,  output int bank_idx);
     `endif
 endfunction
 
+`ifndef VERILATOR
+soc_ifc_cov_bind i_soc_ifc_cov_bind();
+`endif
+
 /* verilator lint_off CASEINCOMPLETE */
 `include "dasm.svi"
 /* verilator lint_on CASEINCOMPLETE */
