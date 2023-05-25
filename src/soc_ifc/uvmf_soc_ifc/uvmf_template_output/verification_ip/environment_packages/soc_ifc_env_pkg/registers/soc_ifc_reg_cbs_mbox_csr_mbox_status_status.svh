@@ -108,6 +108,9 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_status_status extends soc_ifc_reg_cbs_mbox_c
                             `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to mbox_status on map [%s] with value [%x] predicts a state change. Delay job is queued to update DUT model.", map.get_name(), value), UVM_HIGH)
                         end
                     end
+                    else begin
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to mbox_status on map [%s] with value [%x] does not update the status field (previous value [%x]), so no state change is predicted", map.get_name(), mbox_status_e'(value), mbox_status_e'(previous)), UVM_MEDIUM)
+                    end
                 end
                 default: begin
                     `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] has no effect", kind), UVM_FULL)
