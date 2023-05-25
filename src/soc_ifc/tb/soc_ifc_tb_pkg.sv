@@ -88,7 +88,6 @@ package soc_ifc_tb_pkg;
   // The whole thing could probably be done slickly using enums but dictionaries 
   // are easier to use and lookup stuff. To be updated if overhead is too high. 
 
-  // TODO. This will be merged into register dict at some point as a pair 
   word_addr_t _wide_register_dict [string] = {
     "CPTRA_FW_EXTENDED_ERROR_INFO"          : 8, 
     "CPTRA_MBOX_VALID_PAUSER"               : 5,  
@@ -146,7 +145,9 @@ package soc_ifc_tb_pkg;
     "CPTRA_WDT_TIMER2_CTRL"                         : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL,                              // 0x0f4      Caliptra WDT Timer2 CTRL register 	
     "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD"               : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_0,                  // 0x0f8 [2]  Caliptra WDT Timer2 Timeout Period register 	
     "CPTRA_WDT_STATUS"                              : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_STATUS,                                   // 0x100      Caliptra WDT STATUS register
-    // 0x104..0x1fc
+    "CPTRA_FUSE_VALID_PAUSER"                       : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FUSE_VALID_PAUSER,                            // 0x104      Valid User for FUSE 
+    "CPTRA_FUSE_PAUSER_LOCK"                        : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FUSE_PAUSER_LOCK,                             // 0x108      Valid User for FUSE PAUSER Lock
+    // 0x10c..0x1fc
     "FUSE_UDS_SEED"                                 : SOCIFC_BASE + `SOC_IFC_REG_FUSE_UDS_SEED_0,                                    // 0x200 [12] Unique Device Secret 
     "FUSE_FIELD_ENTROPY"                            : SOCIFC_BASE + `SOC_IFC_REG_FUSE_FIELD_ENTROPY_0,                               // 0x230 [8]  Field Entropy 
     "FUSE_KEY_MANIFEST_PK_HASH"                     : SOCIFC_BASE + `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_0,                        // 0x250 [12] - 
@@ -207,7 +208,7 @@ package soc_ifc_tb_pkg;
 
   // These address ranges (inclusive) in each extent have no definition 
   extent_t _undefined_addr_ranges [$] = {
-    '{addr_min: SOCIFC_BASE + 16'h0104, addr_max: SOCIFC_BASE + 16'h01fc},
+    '{addr_min: SOCIFC_BASE + 16'h010c, addr_max: SOCIFC_BASE + 16'h01fc},
     '{addr_min: SOCIFC_BASE + 16'h0340, addr_max: SOCIFC_BASE + 16'h05fc},
     '{addr_min: SOCIFC_BASE + 16'h0630, addr_max: SOCIFC_BASE + 16'h07fc},
     '{addr_min: SOCIFC_BASE + 16'h0824, addr_max: SOCIFC_BASE + 16'h08fc},
@@ -223,7 +224,8 @@ package soc_ifc_tb_pkg;
     "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES" : 32'h5,
     "CPTRA_HW_REV_ID"                      : 32'h1,
     "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD"      : 32'hffff_ffff,
-    "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD"      : 32'hffff_ffff
+    "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD"      : 32'hffff_ffff,
+    "CPTRA_FUSE_VALID_PAUSER"              : 32'hffff_ffff
   };
 
 
@@ -275,6 +277,7 @@ package soc_ifc_tb_pkg;
     "CPTRA_WDT_TIMER2_CTRL"                            : `SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL_TIMER2_RESTART_MASK,
     "CPTRA_WDT_STATUS"                                 : (`SOC_IFC_REG_CPTRA_WDT_STATUS_T1_TIMEOUT_MASK | 
                                                            `SOC_IFC_REG_CPTRA_WDT_STATUS_T2_TIMEOUT_MASK),
+    "CPTRA_FUSE_PAUSER_LOCK"                           : `SOC_IFC_REG_CPTRA_FUSE_PAUSER_LOCK_LOCK_MASK, 
     "INTERNAL_ICCM_LOCK"                               : `SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK, 
     "INTERNAL_FW_UPDATE_RESET"                         : `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK ,
     "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES"             : `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES_WAIT_CYCLES_MASK,
@@ -291,6 +294,7 @@ package soc_ifc_tb_pkg;
     "INTR_BRF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R"    : `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R_PULSE_MASK, 
     "INTR_BRF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_INCR_R"       : `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_INCR_R_PULSE_MASK 
   };  
+
 
   // holds addr -> name inverse map of _soc_register_dict - populated by SocRegisters instantiation 
   string _imap_soc_register_dict [word_addr_t]; 
@@ -586,6 +590,17 @@ package soc_ifc_tb_pkg;
           "CPTRA_BOOT_STATUS"                               : exp_data = ahb_indata | apb_rodata; 
           "CPTRA_CLK_GATING_EN"                             : exp_data = ahb_rodata | apb_indata & get_mask(addr_name) ; 
 
+          "CPTRA_FUSE_VALID_PAUSER" : begin // find equivalent pauser lock & if set, apb-RO 
+            pauser_locked = _exp_register_data_dict["CPTRA_FUSE_PAUSER_LOCK"]; 
+            exp_data = pauser_locked ? curr_data : (ahb_indata | apb_indata); 
+          end
+
+          "CPTRA_FUSE_PAUSER_LOCK": begin
+            lock_mask = get_mask(addr_name); 
+            pauser_locked = curr_data & get_mask(addr_name); 
+            exp_data = pauser_locked ? curr_data & lock_mask :  (ahb_indata | apb_indata) & lock_mask;  
+          end 
+
           "INTERNAL_ICCM_LOCK"                              : begin
             iccm_locked = curr_data & get_mask(addr_name); 
             exp_data = iccm_locked ? curr_data : (ahb_indata & get_mask(addr_name) | apb_rodata); 
@@ -794,7 +809,7 @@ package soc_ifc_tb_pkg;
   // ---------------------------------------------------------------------------
   // -- Generic Utility functions that have less to do with custom data types
   // ---------------------------------------------------------------------------
-  function int str_startswith(string s1, string s2);
+  function automatic int str_startswith(string s1, string s2);
 
     return (s2 == s1.substr(0, s2.len() - 1));
 
