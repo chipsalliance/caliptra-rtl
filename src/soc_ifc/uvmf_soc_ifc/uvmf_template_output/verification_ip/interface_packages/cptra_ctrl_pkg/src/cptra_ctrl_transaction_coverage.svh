@@ -45,6 +45,7 @@ class cptra_ctrl_transaction_coverage  extends uvm_subscriber #(.T(cptra_ctrl_tr
     option.per_instance=1;
     assert_clear_secrets: coverpoint coverage_trans.assert_clear_secrets;
     iccm_axs_blocked: coverpoint coverage_trans.iccm_axs_blocked;
+    pulse_rv_ecc_error: coverpoint coverage_trans.pulse_rv_ecc_error;
     // pragma uvmf custom covergroup end
   endgroup
 

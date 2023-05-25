@@ -17,16 +17,22 @@
 reg {
     name = "Hardware Error Fatal";
     desc = "Indicates fatal hardware error.
-            [br]Caliptra Access: RW
-            [br]SOC Access:      RW";
-    rw_rw_sticky_hw error_code[32]=0; 
+            [br]Caliptra Access: RW1C
+            [br]SOC Access:      RW1C";
+    rw_rw_sticky_hw iccm_ecc_unc=0;     /* Uncorrectable double-bit error in ICCM */
+    rw_rw_sticky_hw dccm_ecc_unc=0;     /* Uncorrectable double-bit error in DCCM */
+    rw_rw_sticky_hw nmi_pin=0;          /* Non-Maskable Interrupt due to WDT timeout */
+    rw_rw_sticky_hw rsvd[29]=0; 
 } CPTRA_HW_ERROR_FATAL;
 reg {
     name = "Hardware Error Non-Fatal";
     desc = "Indicates non-fatal hardware error.
-            [br]Caliptra Access: RW
-            [br]SOC Access:      RW";
-    rw_rw_sticky_hw error_code[32]=0; 
+            [br]Caliptra Access: RW1C
+            [br]SOC Access:      RW1C";
+    rw_rw_sticky_hw mbox_prot_no_lock=0; /* SOC access while not locked */
+    rw_rw_sticky_hw mbox_prot_ooo=0;     /* Register access out-of-order */
+    rw_rw_sticky_hw mbox_ecc_unc=0;      /* Uncorrectable double-bit error in DCCM */
+    rw_rw_sticky_hw rsvd[29]=0; 
 } CPTRA_HW_ERROR_NON_FATAL;
 reg {
     name = "Firmware Error Fatal";
@@ -322,7 +328,7 @@ reg {
 reg {
     name = "Caliptra WDT STATUS register";
     desc = "Caliptra watchdog timer status register
-            [br]Caliptra Access: RO
+            [br]Caliptra Access: RW
             [br]SOC Access:      RO";
     field {desc = "Timer1 timed out, timer2 enabled"; hw = rw; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;} t1_timeout = 1'b0;
     field {desc = "Timer2 timed out"; hw = rw; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;} t2_timeout = 1'b0;

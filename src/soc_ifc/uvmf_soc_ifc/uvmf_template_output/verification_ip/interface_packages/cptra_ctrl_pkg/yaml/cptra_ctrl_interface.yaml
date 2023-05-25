@@ -20,6 +20,10 @@ uvmf:
         name: iccm_axs_blocked
         reset_value: '''bz'
         width: '1'
+      - dir: output
+        name: rv_ecc_sts
+        reset_value: '''bz'
+        width: '4'
       reset: dummy
       reset_assertion_level: 'False'
       transaction_constraints: []
@@ -35,5 +39,11 @@ uvmf:
         isrand: 'False'
         name: iccm_axs_blocked
         type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: pulse_rv_ecc_error
+        type: rv_ecc_sts_t
         unpacked_dimension: ''
       use_dpi_link: 'False'

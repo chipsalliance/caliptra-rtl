@@ -131,7 +131,6 @@ void main(void) {
         sts = test_mbox_sram_ecc();
 
         // Enable Random ECC double-bit error injection
-        SEND_STDOUT_CTRL( 0xfd);
         SEND_STDOUT_CTRL( 0xfe);
         ecc_error_mode = DOUBLE;
 
@@ -142,7 +141,7 @@ void main(void) {
         // TODO Test SRAM single-bit errors corrected during a mailbox protocol operation
 
         // Disable Random ECC double-bit error injection
-        SEND_STDOUT_CTRL( 0xfe);
+        SEND_STDOUT_CTRL( 0x0);
         ecc_error_mode = NONE;
 
         // Disable interrutps

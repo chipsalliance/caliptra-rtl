@@ -85,7 +85,8 @@ package soc_ifc_pkg;
         MBOX_RDY_FOR_DLEN = 3'b011,
         MBOX_RDY_FOR_DATA = 3'b010,
         MBOX_EXECUTE_UC   = 3'b110,
-        MBOX_EXECUTE_SOC  = 3'b100
+        MBOX_EXECUTE_SOC  = 3'b100,
+        MBOX_ERROR        = 3'b111
     } mbox_fsm_state_e;
 
     //MAILBOX Status
@@ -120,6 +121,18 @@ package soc_ifc_pkg;
     typedef struct packed {
         mbox_sram_data_t rdata;
     } mbox_sram_resp_t;
+
+    typedef struct packed {
+        logic cptra_iccm_ecc_single_error;
+        logic cptra_iccm_ecc_double_error;
+        logic cptra_dccm_ecc_single_error;
+        logic cptra_dccm_ecc_double_error;
+    } rv_ecc_sts_t;
+
+    typedef struct packed {
+        logic axs_without_lock;
+        logic axs_incorrect_order;
+    } mbox_protocol_error_t;
 
     typedef enum logic [1:0] {
         DEVICE_UNPROVISIONED = 2'b00,
