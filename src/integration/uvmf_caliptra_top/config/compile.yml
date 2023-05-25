@@ -28,8 +28,8 @@ targets:
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/caliptra_top/tb/parameters/caliptra_top_parameters_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/caliptra_top/tb/sequences/caliptra_top_sequences_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/caliptra_top/tb/tests/caliptra_top_tests_pkg.sv
-      - ${COMPILE_ROOT}/../tb/caliptra_veer_sram_export.sv
       - ${COMPILE_ROOT}/../tb/caliptra_top_tb_pkg.sv
+      - ${COMPILE_ROOT}/../tb/caliptra_veer_sram_export.sv
       - ${COMPILE_ROOT}/../tb/caliptra_top_tb_services.sv
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/caliptra_top/tb/testbench/hdl_top.sv
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/caliptra_top/tb/testbench/hvl_top.sv
@@ -37,15 +37,12 @@ targets:
       - hdl_top
       - hvl_top
   sim:
-    # TODO: Eventually we will load caliptra_fmc/rt hexfiles to mailbox in the TB logic instead
-    #       of preloading here with this rename approach
     pre_exec: |
         echo "[PRE-EXEC] Copying SHA512 Vectors to $(pwd)"
         cp ${COMPILE_ROOT}/../tb/vectors/SHA*.rsp .
         make -f ${AHA_POC_REPO}/tools/scripts/Makefile TESTNAME=caliptra_top program.hex
         make -f ${AHA_POC_REPO}/tools/scripts/Makefile TESTNAME=caliptra_fmc caliptra_fmc.hex
         make -f ${AHA_POC_REPO}/tools/scripts/Makefile TESTNAME=caliptra_rt  caliptra_rt.hex
-        cp caliptra_fmc.hex mailbox.hex
 global:
   tool:
     vcs:

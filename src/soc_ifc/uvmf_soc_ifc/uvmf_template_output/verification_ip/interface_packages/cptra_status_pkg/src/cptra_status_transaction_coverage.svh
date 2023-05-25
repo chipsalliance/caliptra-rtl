@@ -47,12 +47,14 @@ class cptra_status_transaction_coverage  extends uvm_subscriber #(.T(cptra_statu
     soc_ifc_notif_intr_pending: coverpoint coverage_trans.soc_ifc_notif_intr_pending;
     sha_err_intr_pending: coverpoint coverage_trans.sha_err_intr_pending;
     sha_notif_intr_pending: coverpoint coverage_trans.sha_notif_intr_pending;
+    timer_intr_pending: coverpoint coverage_trans.timer_intr_pending;
     noncore_rst_asserted: coverpoint coverage_trans.noncore_rst_asserted;
     uc_rst_asserted: coverpoint coverage_trans.uc_rst_asserted;
     cptra_obf_key_reg: coverpoint coverage_trans.cptra_obf_key_reg;
     obf_field_entropy: coverpoint coverage_trans.obf_field_entropy;
     obf_uds_seed: coverpoint coverage_trans.obf_uds_seed;
     nmi_vector: coverpoint coverage_trans.nmi_vector;
+    nmi_intr_pending: coverpoint coverage_trans.nmi_intr_pending;
     iccm_locked: coverpoint coverage_trans.iccm_locked;
     // pragma uvmf custom covergroup end
   endgroup

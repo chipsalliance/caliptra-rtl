@@ -88,7 +88,7 @@ addrmap mbox_csr {
         desc="Mailbox execute register indicates to receiver that the sender is done
         [br]Caliptra Access: RW
         [br]SOC Access:      RW";
-        field {sw=rw; hw=r; swwe=valid_requester; hwclr; precedence=hw;} execute=0;
+        field {sw=rw; hw=r; swwe=valid_requester; hwclr; precedence=hw; swmod=true;} execute=0;
     } mbox_execute;
 
     reg {
@@ -115,7 +115,7 @@ addrmap mbox_csr {
                     desc = "The requested command experienced a failure.";
                 };
             };
-            sw=rw; hw=r; swwe=valid_receiver; encode = mbox_status_e; hwclr; precedence=hw;} status[4]=0;
+            sw=rw; hw=r; swwe=valid_receiver; encode = mbox_status_e; hwclr; precedence=hw; swmod=true;} status[4]=0;
         field {
             name = "Mailbox ECC Single Error";
             desc = "Indicates a correctable ECC single-bit error was
@@ -163,6 +163,9 @@ addrmap mbox_csr {
                 };
                 MBOX_EXECUTE_SOC = 3'b100 {
                     desc = "Mailbox has data for SoC";
+                };
+                MBOX_ERROR = 3'b111 {
+                    desc = "Mailbox Protocol Error detected";
                 };
             };
             sw=r; hw=rw; encode = mbox_fsm_e;

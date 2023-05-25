@@ -65,6 +65,95 @@ reg {
     field {desc = "NMI Vector"; hw = r; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;} vec[32] = 32'h0;
 } internal_nmi_vector;
 
+reg {
+    name = "Hardware Error Fatal Mask";
+    desc = "Bit mask for the register CPTRA_HW_ERROR_FATAL to determine
+            which bits are disabled for interrupt generation on the
+            cptra_error_fatal output signal.
+            A value of 1 in a field of this register means the corresponding bit
+            position in CPTRA_HW_ERROR_FATAL will not produce an interrupt
+            output assertion.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";
+    rw_ro_hw mask_iccm_ecc_unc=0;     /* Uncorrectable double-bit error in ICCM */
+    rw_ro_hw mask_dccm_ecc_unc=0;     /* Uncorrectable double-bit error in DCCM */
+    rw_ro_hw mask_nmi_pin=0;          /* Non-Maskable Interrupt due to WDT timeout */
+    rw_ro_hw mask_rsvd[29]=0; 
+} internal_hw_error_fatal_mask;
+reg {
+    name = "Hardware Error Non-Fatal Mask";
+    desc = "Bit mask for the register CPTRA_HW_ERROR_NON_FATAL to determine
+            which bits are disabled for interrupt generation on the
+            cptra_error_non_fatal output signal.
+            A value of 1 in a field of this register means the corresponding bit
+            position in CPTRA_HW_ERROR_NON_FATAL will not produce an interrupt
+            output assertion.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";
+    rw_ro_hw mask_mbox_prot_no_lock=0; /* SOC access while not locked */
+    rw_ro_hw mask_mbox_prot_ooo=0;     /* Register access out-of-order */
+    rw_ro_hw mask_mbox_ecc_unc=0;      /* Uncorrectable double-bit error in DCCM */
+    rw_ro_hw mask_rsvd[29]=0; 
+} internal_hw_error_non_fatal_mask;
+reg {
+    name = "Firmware Error Fatal Mask";
+    desc = "Bit mask for the register CPTRA_FW_ERROR_FATAL to determine
+            which bits are disabled for interrupt generation on the
+            cptra_error_fatal output signal.
+            A value of 1 in a field of this register means the corresponding bit
+            position in CPTRA_FW_ERROR_FATAL will not produce an interrupt
+            output assertion.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";
+    rw_ro_hw mask[32]=0; 
+} internal_fw_error_fatal_mask;
+reg {
+    name = "Firmware Error Non-Fatal Mask";
+    desc = "Bit mask for the register CPTRA_FW_ERROR_NON_FATAL to determine
+            which bits are disabled for interrupt generation on the
+            cptra_error_non_fatal output signal.
+            A value of 1 in a field of this register means the corresponding bit
+            position in CPTRA_FW_ERROR_NON_FATAL will not produce an interrupt
+            output assertion.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";
+    rw_ro_hw mask[32]=0; 
+} internal_fw_error_non_fatal_mask;
+
+reg {
+    name = "mtime low";
+    desc = "RISC-V Standard Machine-mode Time Counter, lower 32-bits.
+            [br]Frequency of counter is indicated in CPTRA_TIMER_CONFIG.clk_period.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";
+    field {desc = "Counter Low" ; sw = rw; precedence = sw; swmod = true; hw = r; swwel = soc_req; counter = true; incrvalue = 1; overflow = true; resetsignal = cptra_pwrgood;} count_l[32] = 32'h0;
+} internal_rv_mtime_l;
+
+reg {
+    name = "mtime high";
+    desc = "RISC-V Standard Machine-mode Time Counter, upper 32-bits.
+            [br]Frequency of counter is indicated in CPTRA_TIMER_CONFIG.clk_period.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";
+    field {desc = "Counter High"; sw = rw; precedence = sw; swmod = true; hw = r; swwel = soc_req; counter = true; incrvalue = 1;                  resetsignal = cptra_pwrgood;} count_h[32] = 32'h0;
+} internal_rv_mtime_h;
+
+reg {
+    name = "mtimecmp low";
+    desc = "RISC-V Standard Machine-mode Time Counter Compare Value, lower 32-bits.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";
+    field {desc = "Count Compare Low" ; sw = rw; hw = r; swwel = soc_req; resetsignal = cptra_pwrgood;} compare_l[32] = 32'h0;
+} internal_rv_mtimecmp_l;
+
+reg {
+    name = "mtimecmp high";
+    desc = "RISC-V Standard Machine-mode Time Counter Compare Value, upper 32-bits.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";
+    field {desc = "Count Compare High"; sw = rw; hw = r; swwel = soc_req; resetsignal = cptra_pwrgood;} compare_h[32] = 32'h0;
+} internal_rv_mtimecmp_h;
+
 
 ////////////////////////////////////////////////////////////////
 // Interrupts
@@ -123,13 +212,13 @@ regfile intr_block_t {
 
         // Specific enables for the events defined in this
         // event type in the instantiating peripheral.
-        field {desc = "Enable bit for Internal Errors";                             } error_internal_en = 1'b0;
-        field {desc = "Enable bit for Invalid Device in Pauser field";              } error_inv_dev_en  = 1'b0;
-        field {desc = "Enable bit for Failed Commands";                             } error_cmd_fail_en = 1'b0;
-        field {desc = "Enable bit for Bad Fuse received from SoC";                  } error_bad_fuse_en = 1'b0;
-        field {desc = "Enable bit for ICCM access blocked by lock";                 } error_iccm_blocked_en = 1'b0;
-        field {desc = "Enable bit for Mailbox ECC Double-bit Error (uncorrectable)";} error_mbox_ecc_unc_en = 1'b0;
-        field {desc = "Enable bit for WDT Timer1 timeout";                          } error_wdt_timer1_timeout_en = 1'b0;
+        field {desc = "Enable bit for Internal Errors";                                                            } error_internal_en = 1'b0;
+        field {desc = "Enable bit for Invalid Device in Pauser field";                                             } error_inv_dev_en  = 1'b0;
+        field {desc = "Enable bit for Failed Commands (invalid protocol or FW Fail Status)";                       } error_cmd_fail_en = 1'b0;
+        field {desc = "Enable bit for Bad Fuse received from SoC";                                                 } error_bad_fuse_en = 1'b0;
+        field {desc = "Enable bit for ICCM access blocked by lock";                                                } error_iccm_blocked_en = 1'b0;
+        field {desc = "Enable bit for Mailbox ECC Double-bit Error (uncorrectable)";                               } error_mbox_ecc_unc_en = 1'b0;
+        field {desc = "Enable bit for WDT Timer1 timeout";                                                         } error_wdt_timer1_timeout_en = 1'b0;
         field {desc = "Enable bit for WDT Timer2 timeout, applicable if timer2 is enabled as an independent timer";} error_wdt_timer2_timeout_en = 1'b0;
     };
 
@@ -147,6 +236,7 @@ regfile intr_block_t {
         field {desc = "Enable bit for Mailbox ECC Single-bit Error (correctable)";} notif_mbox_ecc_cor_en = 1'b0;
         field {desc = "Enable bit for Security State, Debug Locked transition";   } notif_debug_locked_en = 1'b0;
         field {desc = "Enable bit for SoC requested the mailbox while locked";    } notif_soc_req_lock_en = 1'b0;
+        field {desc = "Enable bit for Generic Input Wires Toggle";                } notif_gen_in_toggle_en = 1'b0;
     };
 
     /* ---- Error Interrupt Status ---- */
@@ -162,14 +252,14 @@ regfile intr_block_t {
         default woclr = true;
         default level intr;
 
-        field {desc = "Internal Errors status bit";                             } error_internal_sts = 1'b0;
-        field {desc = "Invalid Device in Pauser field status bit";              } error_inv_dev_sts = 1'b0;
-        field {desc = "Failed Commands status bit";                             } error_cmd_fail_sts = 1'b0;
-        field {desc = "Bad Fuse received from SoC status bit";                  } error_bad_fuse_sts = 1'b0;
-        field {desc = "ICCM access blocked by lock status bit";                 } error_iccm_blocked_sts = 1'b0;
-        field {desc = "Mailbox ECC Double-bit Error (uncorrectable) status bit";} error_mbox_ecc_unc_sts = 1'b0;
-        field {desc = "WDT Timer1 timeout status bit";                          } error_wdt_timer1_timeout_sts = 1'b0;
-        field {desc = "WDT Timer2 timeout status bit";                          } error_wdt_timer2_timeout_sts = 1'b0;
+        field {desc = "Internal Errors status bit";                                      } error_internal_sts = 1'b0;
+        field {desc = "Invalid Device in Pauser field status bit";                       } error_inv_dev_sts = 1'b0;
+        field {desc = "Failed Commands status bit (invalid protocol or FW Fail Status)"; } error_cmd_fail_sts = 1'b0;
+        field {desc = "Bad Fuse received from SoC status bit";                           } error_bad_fuse_sts = 1'b0;
+        field {desc = "ICCM access blocked by lock status bit";                          } error_iccm_blocked_sts = 1'b0;
+        field {desc = "Mailbox ECC Double-bit Error (uncorrectable) status bit";         } error_mbox_ecc_unc_sts = 1'b0;
+        field {desc = "WDT Timer1 timeout status bit";                                   } error_wdt_timer1_timeout_sts = 1'b0;
+        field {desc = "WDT Timer2 timeout status bit";                                   } error_wdt_timer2_timeout_sts = 1'b0;
     };
 
     /* ---- Notification Interrupt Status ---- */
@@ -185,10 +275,11 @@ regfile intr_block_t {
         default woclr = true;
         default level intr;
 
-        field {desc = "Command Available status bit";} notif_cmd_avail_sts = 1'b0;
+        field {desc = "Command Available status bit";                         } notif_cmd_avail_sts = 1'b0;
         field {desc = "Mailbox ECC Single-bit Error (correctable) status bit";} notif_mbox_ecc_cor_sts = 1'b0;
         field {desc = "Security State, Debug Locked transition status bit";   } notif_debug_locked_sts = 1'b0;
         field {desc = "SoC requested the mailbox while locked status bit";    } notif_soc_req_lock_sts = 1'b0;
+        field {desc = "Generic Input Wires Toggle status bit";                } notif_gen_in_toggle_sts = 1'b0;
     };
 
     /* ---- Aggregated Interrupt Status ---- */
@@ -251,6 +342,7 @@ regfile intr_block_t {
         field {desc = "Mailbox ECC Single-bit Error (correctable) trigger bit";} notif_mbox_ecc_cor_trig = 1'b0;
         field {desc = "Security State, Debug Locked transition trigger bit";   } notif_debug_locked_trig = 1'b0;
         field {desc = "SoC requested the mailbox while locked trigger bit";    } notif_soc_req_lock_trig = 1'b0;
+        field {desc = "Generic Input Wires Toggle trigger bit";                } notif_gen_in_toggle_trig = 1'b0;
     };
 
     /* ---- Interrupt Statistics Counter Incrementor ---- */
@@ -316,6 +408,7 @@ regfile intr_block_t {
     intr_count_t      notif_mbox_ecc_cor_intr_count_r;     /* Per notification */                                    //
     intr_count_t      notif_debug_locked_intr_count_r;     /* Per notification */                                    //
     intr_count_t      notif_soc_req_lock_intr_count_r;     /* Per notification */                                    //
+    intr_count_t      notif_gen_in_toggle_intr_count_r;    /* Per notification */                                    //
                                                                                                                      //
     // These registers should be treated by SW as reserved, and ignored.                                             //
     // Offset at 0x200 gives enough space for 32 Errors and 32 Notifications                                         //
@@ -334,6 +427,7 @@ regfile intr_block_t {
     intr_count_incr_t notif_mbox_ecc_cor_intr_count_incr_r;    /* Per notification count incrementor pulse */        //
     intr_count_incr_t notif_debug_locked_intr_count_incr_r;    /* Per notification count incrementor pulse */        //
     intr_count_incr_t notif_soc_req_lock_intr_count_incr_r;    /* Per notification count incrementor pulse */        //
+    intr_count_incr_t notif_gen_in_toggle_intr_count_incr_r;   /* Per notification count incrementor pulse */        //
     /* ------------------------------------------------------------------------------------------------------------- */
 
     /* ---- Reset assignment for Error Events ---- */
@@ -364,10 +458,11 @@ regfile intr_block_t {
     error_internal_intr_r.error_mbox_ecc_unc_sts -> enable = error_intr_en_r.error_mbox_ecc_unc_en;
     error_internal_intr_r.error_wdt_timer1_timeout_sts -> enable = error_intr_en_r.error_wdt_timer1_timeout_en;
     error_internal_intr_r.error_wdt_timer2_timeout_sts -> enable = error_intr_en_r.error_wdt_timer2_timeout_en;
-    notif_internal_intr_r.notif_cmd_avail_sts    -> enable = notif_intr_en_r.notif_cmd_avail_en;
-    notif_internal_intr_r.notif_mbox_ecc_cor_sts -> enable = notif_intr_en_r.notif_mbox_ecc_cor_en;
-    notif_internal_intr_r.notif_debug_locked_sts -> enable = notif_intr_en_r.notif_debug_locked_en;
-    notif_internal_intr_r.notif_soc_req_lock_sts -> enable = notif_intr_en_r.notif_soc_req_lock_en;
+    notif_internal_intr_r.notif_cmd_avail_sts     -> enable = notif_intr_en_r.notif_cmd_avail_en;
+    notif_internal_intr_r.notif_mbox_ecc_cor_sts  -> enable = notif_intr_en_r.notif_mbox_ecc_cor_en;
+    notif_internal_intr_r.notif_debug_locked_sts  -> enable = notif_intr_en_r.notif_debug_locked_en;
+    notif_internal_intr_r.notif_soc_req_lock_sts  -> enable = notif_intr_en_r.notif_soc_req_lock_en;
+    notif_internal_intr_r.notif_gen_in_toggle_sts -> enable = notif_intr_en_r.notif_gen_in_toggle_en;
 
     error_internal_intr_r.error_internal_sts     -> next   = error_intr_trig_r.error_internal_trig;
     error_internal_intr_r.error_inv_dev_sts      -> next   = error_intr_trig_r.error_inv_dev_trig;
@@ -377,10 +472,11 @@ regfile intr_block_t {
     error_internal_intr_r.error_mbox_ecc_unc_sts -> next   = error_intr_trig_r.error_mbox_ecc_unc_trig;
     error_internal_intr_r.error_wdt_timer1_timeout_sts -> next   = error_intr_trig_r.error_wdt_timer1_timeout_trig;
     error_internal_intr_r.error_wdt_timer2_timeout_sts -> next   = error_intr_trig_r.error_wdt_timer2_timeout_trig;
-    notif_internal_intr_r.notif_cmd_avail_sts    -> next   = notif_intr_trig_r.notif_cmd_avail_trig;
-    notif_internal_intr_r.notif_mbox_ecc_cor_sts -> next   = notif_intr_trig_r.notif_mbox_ecc_cor_trig;
-    notif_internal_intr_r.notif_debug_locked_sts -> next   = notif_intr_trig_r.notif_debug_locked_trig;
-    notif_internal_intr_r.notif_soc_req_lock_sts -> next   = notif_intr_trig_r.notif_soc_req_lock_trig;
+    notif_internal_intr_r.notif_cmd_avail_sts     -> next   = notif_intr_trig_r.notif_cmd_avail_trig;
+    notif_internal_intr_r.notif_mbox_ecc_cor_sts  -> next   = notif_intr_trig_r.notif_mbox_ecc_cor_trig;
+    notif_internal_intr_r.notif_debug_locked_sts  -> next   = notif_intr_trig_r.notif_debug_locked_trig;
+    notif_internal_intr_r.notif_soc_req_lock_sts  -> next   = notif_intr_trig_r.notif_soc_req_lock_trig;
+    notif_internal_intr_r.notif_gen_in_toggle_sts -> next   = notif_intr_trig_r.notif_gen_in_toggle_trig;
 
     // NOTE: hwset for events is implicitly defined as module input
 
@@ -468,6 +564,12 @@ regfile intr_block_t {
     notif_soc_req_lock_intr_count_incr_r.pulse -> we    = notif_internal_intr_r.notif_soc_req_lock_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
     notif_soc_req_lock_intr_count_incr_r.pulse -> decr  = notif_soc_req_lock_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
     notif_soc_req_lock_intr_count_r.cnt        -> incr  = notif_soc_req_lock_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+    notif_gen_in_toggle_intr_count_incr_r.pulse -> hwset = notif_internal_intr_r.notif_gen_in_toggle_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+    notif_gen_in_toggle_intr_count_incr_r.pulse -> next  = notif_internal_intr_r.notif_gen_in_toggle_sts -> next;  // /      as a pulse to increment the intr_count_r register
+    notif_gen_in_toggle_intr_count_incr_r.pulse -> we    = notif_internal_intr_r.notif_gen_in_toggle_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+    notif_gen_in_toggle_intr_count_incr_r.pulse -> decr  = notif_gen_in_toggle_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+    notif_gen_in_toggle_intr_count_r.cnt        -> incr  = notif_gen_in_toggle_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
 
 };

@@ -21,6 +21,7 @@ contents:
         - ../test_suites/smoke_test_hmac/smoke_test_hmac.yml
         - ../test_suites/smoke_test_kv/smoke_test_kv.yml
         - ../test_suites/smoke_test_sram_ecc/smoke_test_sram_ecc.yml
+        - ../test_suites/smoke_test_ras/smoke_test_ras.yml
         # smoke_test_trng requires Caliptra to be built using the
         # +define+CALIPTRA_INTERNAL_TRNG argument, which is not the
         # default build config

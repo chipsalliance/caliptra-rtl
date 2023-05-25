@@ -70,8 +70,8 @@ targets:
   tb:
     directories: [$COMPILE_ROOT/tb]
     files:
-      - $COMPILE_ROOT/tb/caliptra_veer_sram_export.sv
       - $COMPILE_ROOT/tb/caliptra_top_tb_pkg.sv
+      - $COMPILE_ROOT/tb/caliptra_veer_sram_export.sv
       - $COMPILE_ROOT/tb/caliptra_top_tb_services.sv
       - $COMPILE_ROOT/tb/caliptra_top_tb.sv
     tops: [caliptra_top_tb]

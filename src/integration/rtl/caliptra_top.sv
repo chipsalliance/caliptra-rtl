@@ -181,6 +181,9 @@ module caliptra_top
     logic [31:0]                cptra_uncore_dmi_reg_wdata;
     security_state_t            cptra_security_state_Latched;
     
+    // Caliptra ECC status signals
+    rv_ecc_sts_t rv_ecc_sts;
+
 
     logic iccm_lock;
 
@@ -336,7 +339,6 @@ assign jtag_id[27:12] = '0;
 assign jtag_id[11:1]  = 11'h45;
 assign reset_vector = `RV_RESET_VEC;
 assign soft_int     = 1'b0;
-assign timer_int    = 1'b0;
 
 assign kv_error_intr = 1'b0; // TODO
 assign kv_notif_intr = 1'b0; // TODO
@@ -502,6 +504,12 @@ el2_veer_wrapper rvtop (
     // Caliptra Memory Export Interface
     .el2_mem_export         (el2_mem_export),
 
+    // Caliptra ECC status signals
+    .cptra_iccm_ecc_single_error(rv_ecc_sts.cptra_iccm_ecc_single_error),
+    .cptra_iccm_ecc_double_error(rv_ecc_sts.cptra_iccm_ecc_double_error),
+    .cptra_dccm_ecc_single_error(rv_ecc_sts.cptra_dccm_ecc_single_error),
+    .cptra_dccm_ecc_double_error(rv_ecc_sts.cptra_dccm_ecc_double_error),
+
     .soft_int               (soft_int),
     .core_id                ('0),
     .scan_mode              ( cptra_scan_mode_Latched ), // To enable scan mode
@@ -544,7 +552,7 @@ el2_veer_wrapper rvtop (
     // 1->0 transition (Debug locked to unlocked)
     assign debug_lock_to_unlock_switch = security_state_f.debug_locked & ~security_state.debug_locked;
     assign debugUnlock_or_scan_mode_switch = debug_lock_to_unlock_switch | scan_mode_switch;
-    assign clear_obf_secrets_debugScanQ = clear_obf_secrets | debugUnlock_or_scan_mode_switch;
+    assign clear_obf_secrets_debugScanQ = clear_obf_secrets | debugUnlock_or_scan_mode_switch | cptra_error_fatal;
 
 //=========================================================================-
 // Clock gating instance
@@ -807,7 +815,7 @@ key_vault1
     .hreadyout_o      (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hreadyout),
     .hrdata_o         (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hrdata),
 
-    .debugUnlock_or_scan_mode_switch (debugUnlock_or_scan_mode_switch),
+    .debugUnlock_or_scan_mode_switch (debugUnlock_or_scan_mode_switch | cptra_error_fatal),
 
     .kv_read          (kv_read),
     .kv_write         (kv_write),
@@ -995,6 +1003,9 @@ soc_ifc_top1
     .mbox_sram_req(mbox_sram_req),
     .mbox_sram_resp(mbox_sram_resp),
 
+    // RV ECC Status Interface
+    .rv_ecc_sts(rv_ecc_sts),
+
     //APB Interface with SoC
     .paddr_i(PADDR[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)-1:0]),
     .psel_i(PSEL),
@@ -1029,6 +1040,7 @@ soc_ifc_top1
     .soc_ifc_notif_intr(soc_ifc_notif_intr),
     .sha_error_intr(sha_error_intr),
     .sha_notif_intr(sha_notif_intr),
+    .timer_intr(timer_int),
     //Obfuscated UDS and FE
     .clear_obf_secrets(clear_obf_secrets_debugScanQ), //input - includes debug & scan modes to do the register clearing
     .scan_mode_f(scan_mode_f),

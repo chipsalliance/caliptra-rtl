@@ -228,9 +228,12 @@ module soc_ifc_tb
              .soc_ifc_notif_intr(),
              .sha_error_intr(),
              .sha_notif_intr(),
+             .timer_intr(),
 
              .mbox_sram_req(mbox_sram_req),
              .mbox_sram_resp(mbox_sram_resp),
+
+             .rv_ecc_sts(rv_ecc_sts_t'{default:1'b0}),
 
              .clear_obf_secrets(clear_obf_secrets), 
              .scan_mode_f(scan_mode_f), 

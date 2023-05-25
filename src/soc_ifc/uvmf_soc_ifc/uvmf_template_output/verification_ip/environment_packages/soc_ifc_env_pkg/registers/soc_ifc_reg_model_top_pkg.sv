@@ -225,6 +225,14 @@ package soc_ifc_reg_model_top_pkg;
             if ( this.internal_fw_update_reset.             has_reset("HARD"   )) this.internal_fw_update_reset.             set_reset(this.internal_fw_update_reset.             get_reset("HARD"), "SOFT");
             if ( this.internal_fw_update_reset_wait_cycles. has_reset("HARD"   )) this.internal_fw_update_reset_wait_cycles. set_reset(this.internal_fw_update_reset_wait_cycles. get_reset("HARD"), "SOFT");
             if ( this.internal_nmi_vector.                  has_reset("HARD"   )) this.internal_nmi_vector.                  set_reset(this.internal_nmi_vector.                  get_reset("HARD"), "SOFT");
+            if ( this.internal_hw_error_fatal_mask.         has_reset("HARD"   )) this.internal_hw_error_fatal_mask.         set_reset(this.internal_hw_error_fatal_mask.         get_reset("HARD"), "SOFT");
+            if ( this.internal_hw_error_non_fatal_mask.     has_reset("HARD"   )) this.internal_hw_error_non_fatal_mask.     set_reset(this.internal_hw_error_non_fatal_mask.     get_reset("HARD"), "SOFT");
+            if ( this.internal_fw_error_fatal_mask.         has_reset("HARD"   )) this.internal_fw_error_fatal_mask.         set_reset(this.internal_fw_error_fatal_mask.         get_reset("HARD"), "SOFT");
+            if ( this.internal_fw_error_non_fatal_mask.     has_reset("HARD"   )) this.internal_fw_error_non_fatal_mask.     set_reset(this.internal_fw_error_non_fatal_mask.     get_reset("HARD"), "SOFT");
+//            if ( this.internal_mtime_l.                     has_reset("HARD"   )) this.internal_mtime_l.                     set_reset(this.internal_mtime_l.                     get_reset("HARD"), "SOFT");
+//            if ( this.internal_mtime_h.                     has_reset("HARD"   )) this.internal_mtime_h.                     set_reset(this.internal_mtime_h.                     get_reset("HARD"), "SOFT");
+//            if ( this.internal_mtimecmp_l.                  has_reset("HARD"   )) this.internal_mtimecmp_l.                  set_reset(this.internal_mtimecmp_l.                  get_reset("HARD"), "SOFT");
+//            if ( this.internal_mtimecmp_h.                  has_reset("HARD"   )) this.internal_mtimecmp_h.                  set_reset(this.internal_mtimecmp_h.                  get_reset("HARD"), "SOFT");
         endfunction
 
         virtual function void build();

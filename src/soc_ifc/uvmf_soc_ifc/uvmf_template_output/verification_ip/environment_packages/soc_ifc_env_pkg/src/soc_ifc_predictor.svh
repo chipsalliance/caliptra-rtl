@@ -158,6 +158,7 @@ class soc_ifc_predictor #(
   bit soc_ifc_notif_intr_pending = 1'b0;
   bit sha_err_intr_pending = 1'b0; // TODO
   bit sha_notif_intr_pending = 1'b0; // TODO
+  bit timer_intr_pending = 1'b1;
   bit fuse_update_enabled = 1'b1;
   bit ready_for_fw_push = 1'b0; // TODO
   bit ready_for_runtime = 1'b0; // TODO
@@ -446,6 +447,9 @@ class soc_ifc_predictor #(
     end
     if (t.assert_clear_secrets) begin
         `uvm_error("PRED_CPTRA_CTRL", "Unimplemented predictor for clearing secrets")
+    end
+    if (t.pulse_rv_ecc_error) begin
+        `uvm_error("PRED_CPTRA_CTRL", "Unimplemented predictor for signaling RISCV SRAM ECC Errors")
     end
 
     // Code for sending output transaction out through soc_ifc_sb_ap
@@ -1834,6 +1838,7 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
     soc_ifc_notif_intr_pending = 1'b0;
     sha_err_intr_pending = 1'b0;
     sha_notif_intr_pending = 1'b0;
+    timer_intr_pending = 1'b1; // FIXME
     generic_output_wires = '0;
 
     // FIXME get rid of this variable?
@@ -1924,10 +1929,12 @@ function void soc_ifc_predictor::populate_expected_cptra_status_txn(ref cptra_sb
     txn.soc_ifc_notif_intr_pending = this.soc_ifc_notif_intr_pending;
     txn.sha_err_intr_pending       = this.sha_err_intr_pending;
     txn.sha_notif_intr_pending     = this.sha_notif_intr_pending;
+    txn.timer_intr_pending         = this.timer_intr_pending/*FIXME*/;
     txn.cptra_obf_key_reg          = this.cptra_obf_key_reg;
     txn.obf_field_entropy          = this.get_expected_obf_field_entropy();
     txn.obf_uds_seed               = this.get_expected_obf_uds_seed();
     txn.nmi_vector                 = this.nmi_vector;
+    txn.nmi_intr_pending           = 1'b0/*FIXME*/;
     txn.iccm_locked                = this.iccm_locked;
     txn.set_key(cptra_status_txn_key++);
 endfunction

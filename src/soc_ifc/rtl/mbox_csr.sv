@@ -385,6 +385,7 @@ module mbox_csr (
         end
     end
     assign hwif_out.mbox_execute.execute.value = field_storage.mbox_execute.execute.value;
+    assign hwif_out.mbox_execute.execute.swmod = decoded_reg_strb.mbox_execute && decoded_req_is_wr;
     // Field: mbox_csr.mbox_status.status
     always_comb begin
         automatic logic [3:0] next_c = field_storage.mbox_status.status.value;
@@ -407,6 +408,7 @@ module mbox_csr (
         end
     end
     assign hwif_out.mbox_status.status.value = field_storage.mbox_status.status.value;
+    assign hwif_out.mbox_status.status.swmod = decoded_reg_strb.mbox_status && decoded_req_is_wr;
     // Field: mbox_csr.mbox_status.ecc_single_error
     always_comb begin
         automatic logic [0:0] next_c = field_storage.mbox_status.ecc_single_error.value;

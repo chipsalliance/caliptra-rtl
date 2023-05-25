@@ -86,6 +86,7 @@ import uvmf_base_pkg_hdl::*;
    // Custom Signal Declarations
    //=========================================================================-
     import soc_ifc_pkg::*;
+    import caliptra_top_tb_pkg::*;
 
     `include "config_defines.svh"
 
@@ -99,6 +100,7 @@ import uvmf_base_pkg_hdl::*;
     int                         cycleCnt;
     bit                         int_flag;
     bit                         cycleCnt_smpl_en;
+    ras_test_ctrl_t             ras_test_ctrl;
 
     //jtag interface
     logic                       jtag_tck    = '0; // JTAG clk
@@ -280,15 +282,18 @@ import uvmf_base_pkg_hdl::*;
     assign soc_ifc_subenv_cptra_status_agent_bus.cptra_uc_rst_b = caliptra_top_dut.cptra_uc_rst_b;
     assign soc_ifc_subenv_cptra_status_agent_bus.iccm_lock = caliptra_top_dut.iccm_lock;
     assign soc_ifc_subenv_cptra_status_agent_bus.nmi_vector = caliptra_top_dut.nmi_vector;
+    assign soc_ifc_subenv_cptra_status_agent_bus.nmi_intr = caliptra_top_dut.nmi_int;
     assign soc_ifc_subenv_cptra_status_agent_bus.obf_field_entropy = caliptra_top_dut.obf_field_entropy;
     assign soc_ifc_subenv_cptra_status_agent_bus.obf_uds_seed = caliptra_top_dut.obf_uds_seed;
     assign soc_ifc_subenv_cptra_status_agent_bus.sha_error_intr = caliptra_top_dut.sha_error_intr;
     assign soc_ifc_subenv_cptra_status_agent_bus.sha_notif_intr = caliptra_top_dut.sha_notif_intr;
     assign soc_ifc_subenv_cptra_status_agent_bus.soc_ifc_error_intr = caliptra_top_dut.soc_ifc_error_intr;
     assign soc_ifc_subenv_cptra_status_agent_bus.soc_ifc_notif_intr = caliptra_top_dut.soc_ifc_notif_intr;
+    assign soc_ifc_subenv_cptra_status_agent_bus.timer_intr = caliptra_top_dut.timer_int;
 
     assign soc_ifc_subenv_cptra_ctrl_agent_bus.clear_obf_secrets = caliptra_top_dut.clear_obf_secrets_debugScanQ;
     assign soc_ifc_subenv_cptra_ctrl_agent_bus.iccm_axs_blocked = caliptra_top_dut.ahb_lite_resp_access_blocked[`CALIPTRA_SLAVE_SEL_IDMA];
+    assign soc_ifc_subenv_cptra_ctrl_agent_bus.rv_ecc_sts = caliptra_top_dut.rv_ecc_sts;
 
     //=========================================================================-
     // Services for SRAM exports, STDOUT, etc
@@ -319,6 +324,7 @@ import uvmf_base_pkg_hdl::*;
         .security_state(security_state_stub_inactive),
 
         // TB Controls
+        .ras_test_ctrl(ras_test_ctrl),
         .cycleCnt(cycleCnt),
         .cycleCnt_smpl_en(cycleCnt_smpl_en),
 

@@ -15,6 +15,7 @@
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
 #include "riscv-csr.h"
+#include "riscv_hw_if.h"
 #include <string.h>
 #include <stdint.h>
 #include "printf.h"
@@ -60,10 +61,11 @@ void main(void) {
         volatile uint32_t * soc_ifc_error_mbox_ecc_unc_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R);
         volatile uint32_t * soc_ifc_error_wdt_timer1_timeout_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_R);
         volatile uint32_t * soc_ifc_error_wdt_timer2_timeout_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_R);
-        volatile uint32_t * soc_ifc_notif_cmd_avail_ctr    = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_R);
-        volatile uint32_t * soc_ifc_notif_mbox_ecc_cor_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R);
-        volatile uint32_t * soc_ifc_notif_debug_locked_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_R);
-        volatile uint32_t * soc_ifc_notif_soc_req_lock_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_R);
+        volatile uint32_t * soc_ifc_notif_cmd_avail_ctr     = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_R);
+        volatile uint32_t * soc_ifc_notif_mbox_ecc_cor_ctr  = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R);
+        volatile uint32_t * soc_ifc_notif_debug_locked_ctr  = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_R);
+        volatile uint32_t * soc_ifc_notif_soc_req_lock_ctr  = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_R);
+        volatile uint32_t * soc_ifc_notif_gen_in_toggle_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_GEN_IN_TOGGLE_INTR_COUNT_R);
 
         uint32_t sha512_intr_count = 0;
         uint32_t sha256_intr_count = 0;
@@ -75,6 +77,7 @@ void main(void) {
         uint32_t soc_ifc_notif_intr_count_hw = 0;
         uint32_t soc_ifc_error_intr_count = 0;
         uint32_t soc_ifc_error_intr_count_hw = 0;
+        uint64_t mtime = 0;
 
         VPRINTF(LOW,"----------------------------------\nCaliptra: Direct ISR Test!!\n----------------------------------\n");
 
@@ -87,26 +90,26 @@ void main(void) {
         // Busy loop
         while (intr_count < 64) {
             // Trigger interrupt manually
-            if ((intr_count % 0x12) >= 0x11) {
+            if ((intr_count % 0x13) >= 0x12) {
                 *sha512_notif_trig = SHA512_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK;
                 sha512_intr_count++;
-            } else if ((intr_count % 0x12) >= 0x10) {
+            } else if ((intr_count % 0x13) >= 0x11) {
                 *sha256_notif_trig = SHA256_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK;
                 sha256_intr_count++;
-            } else if ((intr_count % 0x12) >= 0x0F) {
+            } else if ((intr_count % 0x13) >= 0x10) {
                 *sha512_acc_notif_trig = SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK;
                 sha512_acc_intr_count++;
-            } else if ((intr_count % 0x12) >= 0x0E) {
+            } else if ((intr_count % 0x13) >= 0x0F) {
                 *hmac_notif_trig = HMAC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK;
                 hmac_intr_count++;
-            } else if ((intr_count % 0x12) >= 0x0D) {
+            } else if ((intr_count % 0x13) >= 0x0E) {
                 *ecc_notif_trig = ECC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK;
                 ecc_intr_count++;
-            } else if ((intr_count % 0x12) >= 0x0C) {
+            } else if ((intr_count % 0x13) >= 0x0D) {
                 *doe_notif_trig = DOE_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK;
                 doe_intr_count++;
-            } else if ((intr_count % 0x12) >= 0x08) { //8-B
-                *soc_ifc_notif_trig = 1 << (intr_count % 0x4);
+            } else if ((intr_count % 0x13) >= 0x08) { //8-C
+                *soc_ifc_notif_trig = 1 << (intr_count % 0x5);
                 soc_ifc_notif_intr_count++;
             } else { //0-7
                 *soc_ifc_error_trig = 1 << (intr_count % 0x8);
@@ -192,7 +195,8 @@ void main(void) {
         soc_ifc_notif_intr_count_hw =  *soc_ifc_notif_cmd_avail_ctr +
                                        *soc_ifc_notif_mbox_ecc_cor_ctr +
                                        *soc_ifc_notif_debug_locked_ctr +
-                                       *soc_ifc_notif_soc_req_lock_ctr;
+                                       *soc_ifc_notif_soc_req_lock_ctr +
+                                       *soc_ifc_notif_gen_in_toggle_ctr;
         VPRINTF(MEDIUM, "SOC_IFC Notif hw count: %x\n", soc_ifc_notif_intr_count_hw);
         if (soc_ifc_notif_intr_count != soc_ifc_notif_intr_count_hw) {
             VPRINTF(ERROR, "SOC_IFC Notif count mismatch!\n");
@@ -204,6 +208,32 @@ void main(void) {
         if (intr_count != *sha512_notif_ctr + *sha256_notif_ctr + *sha512_acc_notif_ctr + *hmac_notif_ctr + *ecc_notif_ctr + *doe_notif_ctr + soc_ifc_error_intr_count_hw + soc_ifc_notif_intr_count_hw) {
             VPRINTF(ERROR, "TOTAL count mismatch!\n");
             SEND_STDOUT_CTRL(0x1); // Kill sim with ERROR
+        }
+
+        // Now test timer interrupts
+        mtime = (lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_RV_MTIME_H) << 32) | lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_RV_MTIME_L);
+        // Did we just rollover? Maybe the value read from MTIME_H was stale after reading MTIME_L.
+        // Reread.
+        if ((mtime & 0xFFFFFFFF) < 0x40) {
+            mtime = (lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_RV_MTIME_H) << 32) | lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_RV_MTIME_L);
+        }
+
+        // Setup a wait time of 1000 clock cycles = 10us
+        mtime += 1000;
+        lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_RV_MTIMECMP_L, mtime & 0xFFFFFFFF);
+        lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_RV_MTIMECMP_H, mtime >> 32       );
+
+        // Re-enable interrupts (but not external interrupts)
+        csr_clr_bits_mie(MIE_MEI_BIT_MASK);
+        csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
+
+        // Poll for Timer Interrupt Handler to complete processing.
+        // Timer ISR simply sets mtimecmp back to max values, so poll for that.
+        while (lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_RV_MTIMECMP_H) != 0xFFFFFFFF) {
+            // Sleep in between triggers to allow ISR to execute and show idle time in sims
+            for (uint16_t slp = 0; slp < 100; slp++) {
+                __asm__ volatile ("nop"); // Sleep loop as "nop"
+            }
         }
 
         return;

@@ -36,6 +36,7 @@
 module caliptra_top_tb_services 
     import soc_ifc_pkg::*; 
     import kv_defines_pkg::*;
+    import caliptra_top_tb_pkg::*;
 #(
     parameter UVM_TB = 0
 ) (
@@ -65,6 +66,7 @@ module caliptra_top_tb_services
     output logic scan_mode,
 
     // TB Controls
+    output var   ras_test_ctrl_t ras_test_ctrl,
     output int   cycleCnt,
 
     //Interrupt flags
@@ -82,7 +84,6 @@ module caliptra_top_tb_services
    //=========================================================================-
    // Imports
    //=========================================================================-
-    import caliptra_top_tb_pkg::*;
 
    //=========================================================================-
    // Parameters
@@ -144,6 +145,17 @@ module caliptra_top_tb_services
     logic                       inject_random_data;
     logic                       check_pcr_signing;
 
+    // Decode:
+    //  [0] - Single bit, ICCM Error Injection
+    //  [1] - Double bit, ICCM Error Injection
+    //  [2] - Single bit, DCCM Error Injection
+    //  [3] - Double bit, DCCM Error Injection
+    veer_sram_error_injection_mode_t sram_error_injection_mode;
+    // Decode:
+    //  [0] - Single bit, Mailbox Error Injection
+    //  [1] - Double bit, Mailbox Error Injection
+    logic [1:0]                 inject_mbox_sram_error = 2'b0;
+
     logic                       set_wdt_timer1_period;
     logic                       set_wdt_timer2_period;
     logic                       reset_wdt_timer_period;
@@ -197,6 +209,13 @@ module caliptra_top_tb_services
     //         8'h92        - Check PCR singing with randomized vector   
     //         8'ha0: 8'ha7 - Inject HMAC_KEY to kv_key register
     //         8'hc0: 8'hc7 - Inject SHA_BLOCK to kv_key register
+    //         8'he0        - Set random ICCM SRAM single bit error injection
+    //         8'he1        - Set random ICCM SRAM double bit error injection
+    //         8'he2        - Set random DCCM SRAM single bit error injection
+    //         8'he3        - Set random DCCM SRAM double bit error injection
+    //         8'he4        - Disable all SRAM error injection (Mailbox, ICCM, DCCM)
+    //         8'he5        - Request TB to initiate Mailbox flow without lock (violation) TODO
+    //         8'he6        - Request TB to initiate Mailbox flow with out-of-order accesses (violation) TODO
     //         8'hee        - Issue random warm reset
     //         8'hef        - Enable scan mode
     //         8'hf0        - Disable scan mode
@@ -212,8 +231,8 @@ module caliptra_top_tb_services
     //         8'hfa        - Unlock debug in security state
     //         8'hfb        - Set the isr_active bit
     //         8'hfc        - Clear the isr_active bit
-    //         8'hfd        - Toggle random SRAM single bit error injection
-    //         8'hfe        - Toggle random SRAM double bit error injection
+    //         8'hfd        - Set random Mailbox SRAM single bit error injection
+    //         8'hfe        - Set random Mailbox SRAM double bit error injection
     //         8'hff        - End the simulation with a Success status
     assign mailbox_write = caliptra_top_dut.soc_ifc_top1.i_soc_ifc_reg.field_combo.CPTRA_GENERIC_OUTPUT_WIRES[0].generic_wires.load_next;
     assign WriteData = caliptra_top_dut.soc_ifc_top1.i_soc_ifc_reg.field_combo.CPTRA_GENERIC_OUTPUT_WIRES[0].generic_wires.next;
@@ -234,14 +253,32 @@ module caliptra_top_tb_services
             isr_active++;
         end
     end
-    logic [1:0] inject_rand_sram_error = 2'b0;
+    always @(negedge clk or negedge cptra_rst_b) begin
+        if      (!cptra_rst_b)                               inject_mbox_sram_error <= 2'b00;
+        else if ((WriteData[7:0] == 8'hfd) && mailbox_write) inject_mbox_sram_error <= 2'b01;
+        else if ((WriteData[7:0] == 8'hfe) && mailbox_write) inject_mbox_sram_error <= 2'b10;
+        else if ((WriteData[7:0] == 8'he4) && mailbox_write) inject_mbox_sram_error <= 2'b00;
+    end
+    always @(negedge clk or negedge cptra_rst_b) begin
+        if      (!cptra_rst_b)                               sram_error_injection_mode                       <= '{default: 1'b0};
+        else if ((WriteData[7:0] == 8'he0) && mailbox_write) sram_error_injection_mode.iccm_single_bit_error <= 1'b1;
+        else if ((WriteData[7:0] == 8'he1) && mailbox_write) sram_error_injection_mode.iccm_double_bit_error <= 1'b1;
+        else if ((WriteData[7:0] == 8'he2) && mailbox_write) sram_error_injection_mode.dccm_single_bit_error <= 1'b1;
+        else if ((WriteData[7:0] == 8'he3) && mailbox_write) sram_error_injection_mode.dccm_double_bit_error <= 1'b1;
+        else if ((WriteData[7:0] == 8'he4) && mailbox_write) sram_error_injection_mode                       <= '{default: 1'b0};
+    end
+
+    initial ras_test_ctrl.error_injection_seen = 1'b0;
     always @(negedge clk) begin
-        if ((WriteData[7:0] == 8'hfd) && mailbox_write) begin
-            inject_rand_sram_error ^= 2'b01;
+        if (mailbox_write && WriteData[7:0] == 8'hfd) begin
+            ras_test_ctrl.error_injection_seen <= 1'b1;
         end
-        else if ((WriteData[7:0] == 8'hfe) && mailbox_write) begin
-            inject_rand_sram_error ^= 2'b10;
-        end
+    end
+    // When starting a new error injection test, reset generic_input wires to the idle value.
+    // New values will be loaded to reflect the result of the RAS test.
+    initial ras_test_ctrl.reset_generic_input_wires = 1'b0;
+    always@(negedge clk) begin
+        ras_test_ctrl.reset_generic_input_wires <= mailbox_write && (WriteData[7:0] inside {8'he0, 8'he1, 8'he2, 8'he3, 8'hfd, 8'hfe});
     end
 
     //keyvault injection hooks
@@ -630,13 +667,13 @@ module caliptra_top_tb_services
             bitflip_mask_generator #(MBOX_DATA_AND_ECC_W) bitflip_gen = new();
             forever begin
                 @(posedge clk)
-                if (~|inject_rand_sram_error) begin
+                if (~|inject_mbox_sram_error) begin
                     mbox_sram_wdata_bitflip <= '0;
                 end
                 else if (mbox_sram_cs & mbox_sram_we) begin
                     // Corrupt 10% of the writes
                     flip_bit = $urandom_range(0,99) < 10;
-                    mbox_sram_wdata_bitflip <= flip_bit ? bitflip_gen.get_mask(inject_rand_sram_error[1]) : '0;
+                    mbox_sram_wdata_bitflip <= flip_bit ? bitflip_gen.get_mask(inject_mbox_sram_error[1]) : '0;
 //                    if (flip_bit) $display("%t Injecting bit flips", $realtime);
 //                    else          $display("%t No bit flips injected", $realtime);
                 end
@@ -646,11 +683,11 @@ module caliptra_top_tb_services
         always @(posedge clk) begin
             // Corrupt 10% of the writes
             flip_bit <= ($urandom % 100) < 10;
-            if (~|inject_rand_sram_error) begin
+            if (~|inject_mbox_sram_error) begin
                 mbox_sram_wdata_bitflip <= '0;
             end
             else if (mbox_sram_cs & mbox_sram_we) begin
-                mbox_sram_wdata_bitflip <= flip_bit ? get_bitflip_mask(inject_rand_sram_error[1]) : '0;
+                mbox_sram_wdata_bitflip <= flip_bit ? get_bitflip_mask(inject_mbox_sram_error[1]) : '0;
             end
         end
     `endif
@@ -877,6 +914,7 @@ module caliptra_top_tb_services
    // SRAM instances
    //=========================================================================-
 caliptra_veer_sram_export veer_sram_export_inst (
+    .sram_error_injection_mode(sram_error_injection_mode),
     .el2_mem_export(el2_mem_export)
 );
 
