@@ -26,4 +26,3 @@ s10            0x0	0
 s11            0x0	0
 t5             0x0	0
 t6             0x0	0
-$1 = 0xdeadbeef

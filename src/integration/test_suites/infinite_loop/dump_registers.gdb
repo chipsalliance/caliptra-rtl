@@ -8,8 +8,3 @@ shell sleep 30s
 
 echo Dumping registers...\n
 info registers
-
-echo Writing data to DCCM...\n
-monitor write_memory 0x50000000 32 0xdeadbeef
-monitor read_memory 0x50000000 32 1
-print/x *(0x50000000)

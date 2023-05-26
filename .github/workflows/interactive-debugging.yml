@@ -229,10 +229,23 @@ jobs:
             OBJCACHE="" CC=gcc CXX=g++ LINK=g++
           make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile program.hex TESTNAME=infinite_loop
 
-      - name: Run interactive debugging test
+      - name: Test core register access
         run: |
           export CALIPTRA_ROOT=$(pwd)
           cd run
           ${CALIPTRA_ROOT}/.github/scripts/gdb_test.sh \
             /bin/bash -c 'cd ${CALIPTRA_ROOT}/src/integration/test_suites/infinite_loop && ./dump_and_compare.sh'
 
+      - name: Test memory access
+        run: |
+          export CALIPTRA_ROOT=$(pwd)
+          cd run
+          ${CALIPTRA_ROOT}/.github/scripts/gdb_test.sh \
+            /bin/bash -c 'cd ${CALIPTRA_ROOT}/src/integration/test_suites/infinite_loop && ./mem_access.sh'
+
+      - name: Test peripheral access
+        run: |
+          export CALIPTRA_ROOT=$(pwd)
+          cd run
+          ${CALIPTRA_ROOT}/.github/scripts/gdb_test.sh \
+            /bin/bash -c 'cd ${CALIPTRA_ROOT}/src/integration/test_suites/infinite_loop && ./peripheral_access.sh'
