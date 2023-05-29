@@ -32,7 +32,7 @@ Simulation:
  - Synopsys VCS with Verdi
    - `Version R-2020.12-SP2-7_Full64`
  - Verilator
-   - `Version 4.228`
+   - `Version 5.010`
  - Mentor Graphics QVIP
    - `Version 2021.2.1` of AHB/APB models
  - UVM installation
