@@ -1,0 +1,57 @@
+# Copyright (C) Microsoft Corporation. All rights reserved.
+
+# Repo/Bench config specific settings
+# For repo-specific file, common settings like retention policy, additional merge options etc can be specified
+#
+# https://dev.azure.com/ms-tsd/Base_Verification/_wiki/wikis/Base_Verification.wiki/34333/Coverage-merge-YAML
+#
+
+variables:
+  COV_DISK: ${PRJ_COV_DISK}/dbgwrap
+  MERGE_DIR_NAME: dbgwrap_tb_merge_bench_cov_cfg
+  MERGE_SAMPLE_CNT: 7
+  MERGE_SAMPLE_RETAIN_CNT: 30
+  MERGE_PIPELINE_ID: ${SYSTEM_DEFINITIONID}
+
+project: Base_IP
+
+merge:
+
+  merge_opts: -flex_merge reference -flex_merge tgl -merge_across_libs
+
+  search_dir:
+    ${COV_DISK}/${SYSTEM_DEFINITIONID}/aes_caliptra_tb: ${MERGE_SAMPLE_CNT}
+    ${COV_DISK}/${SYSTEM_DEFINITIONID}/csrng_caliptra_tb: ${MERGE_SAMPLE_CNT}
+    ${COV_DISK}/${SYSTEM_DEFINITIONID}/datavault_caliptra_tb: ${MERGE_SAMPLE_CNT}
+    ${COV_DISK}/${SYSTEM_DEFINITIONID}/doe_caliptra_tb: ${MERGE_SAMPLE_CNT}
+    ${COV_DISK}/${SYSTEM_DEFINITIONID}/ecc_caliptra_tb: ${MERGE_SAMPLE_CNT}
+    ${COV_DISK}/${SYSTEM_DEFINITIONID}/edn_caliptra_tb: ${MERGE_SAMPLE_CNT}
+    ${COV_DISK}/${SYSTEM_DEFINITIONID}/entropy_src_caliptra_tb: ${MERGE_SAMPLE_CNT}
+    ${COV_DISK}/${SYSTEM_DEFINITIONID}/hmac_caliptra_tb: ${MERGE_SAMPLE_CNT}
+    ${COV_DISK}/${SYSTEM_DEFINITIONID}/hmac_drbg_caliptra_tb: ${MERGE_SAMPLE_CNT}
+    ${COV_DISK}/${SYSTEM_DEFINITIONID}/keyvault_caliptra_tb: ${MERGE_SAMPLE_CNT}
+    ${COV_DISK}/${SYSTEM_DEFINITIONID}/kmac_caliptra_tb: ${MERGE_SAMPLE_CNT}
+    ${COV_DISK}/${SYSTEM_DEFINITIONID}/lc_ctrl_caliptra_tb: ${MERGE_SAMPLE_CNT}
+    ${COV_DISK}/${SYSTEM_DEFINITIONID}/pcrvault_caliptra_tb: ${MERGE_SAMPLE_CNT}
+    ${COV_DISK}/${SYSTEM_DEFINITIONID}/prim_caliptra_tb: ${MERGE_SAMPLE_CNT}
+    ${COV_DISK}/${SYSTEM_DEFINITIONID}/prim_generic_caliptra_tb: ${MERGE_SAMPLE_CNT}
+    ${COV_DISK}/${SYSTEM_DEFINITIONID}/sha256_caliptra_tb: ${MERGE_SAMPLE_CNT}
+    ${COV_DISK}/${SYSTEM_DEFINITIONID}/sha512_caliptra_tb: ${MERGE_SAMPLE_CNT}
+    ${COV_DISK}/${SYSTEM_DEFINITIONID}/sha512_masked_caliptra_tb: ${MERGE_SAMPLE_CNT}
+    ${COV_DISK}/${SYSTEM_DEFINITIONID}/soc_ifc_caliptra_tb: ${MERGE_SAMPLE_CNT}
+    ${COV_DISK}/${SYSTEM_DEFINITIONID}/uart_caliptra_tb: ${MERGE_SAMPLE_CNT}
+
+  target_dir: ${COV_DISK}/${SYSTEM_DEFINITIONID}/${MERGE_DIR_NAME}/nightly_merge_${BUILD_BUILDID}_${PIPELINE_START_TIME}
+
+publish:
+  name_scope:
+  - caliptra_top
+
+report:
+  ellist:
+  - ${CALIPTRA_ROOT}/coverage/exclusions/caliptra_top.ellist
+
+  hvp: ${CALIPTRA_ROOT}/src/integration/testplan/caliptra_top.hvp
+
+retention:
+  ${COV_DISK}/${MERGE_PIPELINE_ID}/${MERGE_DIR_NAME}: ${MERGE_SAMPLE_RETAIN_CNT}

@@ -1,0 +1,33 @@
+# Copyright (C) Microsoft Corporation. All rights reserved.
+
+trigger: none
+
+pr: none
+
+# Scheduled run for 04:19(EST)/01:19(PST), time in UTC
+# * * * * * CMD
+# | | | | |
+# | | | | +------> Day of the week (0-6)
+# | | | +--------> Month of the year (1-12)
+# | | +----------> Day of the month (1-31)
+# | +------------> Hour (0-23)
+# +--------------> Minute (0-59)
+
+schedules:
+  - cron: 19 20 * * *
+    displayName: CALIPTRA Coverage Merges
+    branches:
+      include:
+        - master
+    always: true
+
+parameters:
+  - name: skip_db_update
+    displayName: Skip merged coverage summary upload to Kusto
+    type: boolean
+    default: false
+
+extends:
+  template: coverage-pipeline.yml
+  parameters:
+    skip_db_update: ${{ parameters.skip_db_update }}  

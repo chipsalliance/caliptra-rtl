@@ -1,0 +1,16 @@
+
+plan "CAPI Coverage";
+
+
+    feature "Design coverage";
+        measure Line, Cond, FSM, Toggle, Branch, Assert CodeCov;
+            source = "tree: *";
+        endmeasure
+    endfeature
+    feature "Functional Coverage";
+        measure Group, Group.count, Group.covered_count, Group.uncovered_count FuncCov;
+            source = "group: *", "group instance: *";
+        endmeasure
+    endfeature
+endplan
+
