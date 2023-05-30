@@ -173,6 +173,15 @@ VERILATOR_TB_LIBS = jtagdpi/jtagdpi.c \
 VERILATOR_TB_SRCS = $(TBDIR)/test_caliptra_top_tb.cpp \
                     $(addprefix $(CALIPTRA_ROOT)/src/integration/test_suites/libs/,$(VERILATOR_TB_LIBS))
 
+# Testbench defs
+VERILATOR_TB_DEFS = +define+CALIPTRA_INTERNAL_QSPI+CALIPTRA_INTERNAL_TRNG+CALIPTRA_INTERNAL_UART
+
+# By default debugging (JTAG) is locked in Caliptra. Add "DEBUG_UNLOCKED=1" to
+# enable it.
+ifdef DEBUG_UNLOCKED
+    VERILATOR_TB_DEFS += +define+CALIPTRA_DEBUG_UNLOCKED
+endif
+
 # Add testbench lib include paths
 CFLAGS += $(addprefix -I$(CALIPTRA_ROOT)/src/integration/test_suites/libs/,$(dir $(VERILATOR_TB_LIBS)))
 
@@ -197,8 +206,7 @@ verilator-build: $(TBFILES) $(INCLUDES_DIR)/defines.h $(VERILATOR_TB_SRCS)
 	  -f $(TBDIR)/../config/caliptra_top_tb.vf --top-module caliptra_top_tb \
 	  -f $(TBDIR)/../config/caliptra_top_tb.vlt \
 	  -exe test_caliptra_top_tb.cpp --autoflush $(VERILATOR_DEBUG) \
-		+define+CALIPTRA_INTERNAL_QSPI+CALIPTRA_INTERNAL_TRNG+CALIPTRA_INTERNAL_UART
-	  #+define+CALIPTRA_INTERNAL_TRNG
+	  $(VERILATOR_TB_DEFS)
 	$(MAKE) -j`nproc` -e -C obj_dir/ -f Vcaliptra_top_tb.mk $(VERILATOR_MAKE_FLAGS) VM_PARALLEL_BUILDS=1
 	touch verilator-build
 
