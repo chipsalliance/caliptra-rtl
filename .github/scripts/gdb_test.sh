@@ -46,8 +46,22 @@ wait_for_phrase () {
 }
 
 terminate () {
-    /bin/kill -s SIGTERM ${SIM_PID}     || true
-    /bin/kill -s SIGTERM ${OPENOCD_PID} || true
+
+    # Gently interrupt, wait some time and then kill
+    /bin/kill -s SIGINT ${SIM_PID}     || true
+    /bin/kill -s SIGINT ${OPENOCD_PID} || true
+
+    sleep 10s
+
+    /bin/kill -s SIGKILL ${SIM_PID}     || true
+    /bin/kill -s SIGKILL ${OPENOCD_PID} || true
+}
+
+print_logs () {
+    echo -e "${COLOR_WHITE}======== Simulation log ========${COLOR_OFF}"
+    cat ${SIM_LOG} || true
+    echo -e "${COLOR_WHITE}======== OpenOCD log ========${COLOR_OFF}"
+    cat ${OPENOCD_LOG} || true
 }
 
 echo -e "${COLOR_WHITE}======== Launching interactive simulation ========${COLOR_OFF}"
@@ -61,7 +75,7 @@ SIM_PID=$!
 wait_for_phrase "${SIM_LOG}" "CLP: ROM Flow in progress..."
 if [ $? -ne 0 ]; then
     echo -e "${COLOR_RED}Failed to start the simulation!${COLOR_OFF}"
-    cat "${SIM_LOG}" || true
+    print_logs
     terminate; exit -1
 fi
 echo -e "Simulation running and ready (pid=${SIM_PID})"
@@ -75,7 +89,7 @@ OPENOCD_PID=$!
 wait_for_phrase "${OPENOCD_LOG}" "Listening on port 3333 for gdb connections"
 if [ $? -ne 0 ]; then
     echo -e "${COLOR_RED}Failed to start OpenOCD!${COLOR_OFF}"
-    cat "${OPENOCD_LOG}" || true
+    print_logs
     terminate; exit -1
 fi
 echo -e "OpenOCD running and ready (pid=${OPENOCD_PID})"
@@ -102,11 +116,7 @@ echo -e "${COLOR_WHITE}Terminating...${COLOR_OFF}"
 terminate
 
 # Display logs
-echo -e "${COLOR_WHITE}======== Simulation log ========${COLOR_OFF}"
-cat ${SIM_LOG}
-
-echo -e "${COLOR_WHITE}======== OpenOCD log ========${COLOR_OFF}"
-cat ${OPENOCD_LOG}
+print_logs
 
 # Honor the exitcode
 exit ${EXITCODE}
