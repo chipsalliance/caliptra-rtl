@@ -18,7 +18,7 @@
         "url": "origin://Base_Verification/5ac83406-f158-474c-81a6-6cf6e5f07514",
         "dest": "common/verif/src",
         "name": "tools",
-        "version": "promote_verif_tools_196",
+        "version": "promote_verif_tools_269",
         "has_submodules": "True"
     },
     {
@@ -50,6 +50,6 @@
         "url": "origin://AHA_POC/58dea2a3-6b98-4cac-9b7d-c500aa351324",
         "dest": "chipsalliance",
         "name": "caliptra-rtl-mirror",
-        "version": "dev-msft"
+        "version": "integrate_1"
     }
 ]
