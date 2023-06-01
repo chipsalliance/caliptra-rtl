@@ -409,7 +409,7 @@ module caliptra_top_tb_services
         end
     endgenerate
 
-    task ecc_testvector_generator ();
+    task static ecc_testvector_generator ();
         string    file_name;
         begin
 
@@ -420,7 +420,7 @@ module caliptra_top_tb_services
         end
     endtask // ecc_test
 
-    task ecc_read_test_vectors (input string fname);
+    task static ecc_read_test_vectors (input string fname);
         integer values_per_test_vector;
         int fd_r;
         string line_read;
@@ -969,7 +969,7 @@ caliptra_sram #(
    //=========================================================================-
    // SRAM preload services
    //=========================================================================-
-task preload_mbox;
+task static preload_mbox;
     // Variables
     mbox_sram_data_t      ecc_data;
     bit [MBOX_ADDR_W  :0] addr;
@@ -996,7 +996,7 @@ task preload_mbox;
     $display("MBOX pre-load completed");
 endtask
 
-task preload_iccm;
+task static preload_iccm;
     bit[31:0] data;
     bit[31:0] addr, eaddr, saddr;
 
@@ -1028,7 +1028,7 @@ task preload_iccm;
 endtask
 
 
-task preload_dccm;
+task static preload_dccm;
     bit[31:0] data;
     bit[31:0] addr, saddr, eaddr;
 
@@ -1070,7 +1070,7 @@ endtask
 `endif
 
 
-task slam_dccm_ram(input [31:0] addr, input[38:0] data);
+task static slam_dccm_ram(input [31:0] addr, input[38:0] data);
     int bank, indx;
     bank = get_dccm_bank(addr, indx);
     `ifdef RV_DCCM_ENABLE
@@ -1095,7 +1095,7 @@ task slam_dccm_ram(input [31:0] addr, input[38:0] data);
 endtask
 
 
-task slam_iccm_ram( input[31:0] addr, input[38:0] data);
+task static slam_iccm_ram( input[31:0] addr, input[38:0] data);
     int bank, idx;
 
     bank = get_iccm_bank(addr, idx);
@@ -1136,7 +1136,7 @@ task slam_iccm_ram( input[31:0] addr, input[38:0] data);
     `endif
 endtask
 
-task init_iccm;
+task static init_iccm;
     `ifdef RV_ICCM_ENABLE
         `IRAM(0) = '{default:39'h0};
         `IRAM(1) = '{default:39'h0};
@@ -1168,7 +1168,7 @@ task init_iccm;
     `endif
 endtask
 
-task init_dccm;
+task static init_dccm;
     `ifdef RV_DCCM_ENABLE
         `DRAM(0) = '{default:39'h0};
         `DRAM(1) = '{default:39'h0};
@@ -1185,7 +1185,7 @@ task init_dccm;
     `endif
 endtask
 
-task dump_memory_contents;
+task static dump_memory_contents;
     input [2:0] mem_type;
     input [31:0] start_addr;
     input [31:0] end_addr;
