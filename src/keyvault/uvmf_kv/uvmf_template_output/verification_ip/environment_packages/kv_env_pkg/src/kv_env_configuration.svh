@@ -222,6 +222,7 @@ extends uvmf_environment_configuration_base;
     // pragma uvmf custom reg_model_config_initialize begin
     // Register model creation and configuation
     if (register_model == null) begin
+      uvm_reg::include_coverage("*", UVM_CVR_ALL); // Register coverage config with resource DB, used later by build_coverage()
       kv_rm = kv_reg_model_top::type_id::create("kv_rm");
       kv_rm.build();
       kv_rm.lock_model();

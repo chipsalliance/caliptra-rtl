@@ -3,130 +3,274 @@
 package dv_reg_uvm;
     `include "uvm_macros.svh"
     import uvm_pkg::*;
-    
+    `include "dv_reg_covergroups.svh"
     // Reg - dv_reg::StickyDataVaultCtrl
     class dv_reg__StickyDataVaultCtrl extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        dv_reg__StickyDataVaultCtrl_bit_cg lock_entry_bit_cg[1];
+        dv_reg__StickyDataVaultCtrl_fld_cg fld_cg;
         rand uvm_reg_field lock_entry;
 
         function new(string name = "dv_reg__StickyDataVaultCtrl");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.lock_entry = new("lock_entry");
             this.lock_entry.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(lock_entry_bit_cg[bt]) lock_entry_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : dv_reg__StickyDataVaultCtrl
 
     // Reg - dv_reg::StickyDataVaultReg
     class dv_reg__StickyDataVaultReg extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        dv_reg__StickyDataVaultReg_bit_cg data_bit_cg[32];
+        dv_reg__StickyDataVaultReg_fld_cg fld_cg;
         rand uvm_reg_field data;
 
         function new(string name = "dv_reg__StickyDataVaultReg");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.data = new("data");
             this.data.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(data_bit_cg[bt]) data_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : dv_reg__StickyDataVaultReg
 
     // Reg - dv_reg::NonStickyDataVaultCtrl
     class dv_reg__NonStickyDataVaultCtrl extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        dv_reg__NonStickyDataVaultCtrl_bit_cg lock_entry_bit_cg[1];
+        dv_reg__NonStickyDataVaultCtrl_fld_cg fld_cg;
         rand uvm_reg_field lock_entry;
 
         function new(string name = "dv_reg__NonStickyDataVaultCtrl");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.lock_entry = new("lock_entry");
             this.lock_entry.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(lock_entry_bit_cg[bt]) lock_entry_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : dv_reg__NonStickyDataVaultCtrl
 
     // Reg - dv_reg::NonStickyDataVaultReg
     class dv_reg__NonStickyDataVaultReg extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        dv_reg__NonStickyDataVaultReg_bit_cg data_bit_cg[32];
+        dv_reg__NonStickyDataVaultReg_fld_cg fld_cg;
         rand uvm_reg_field data;
 
         function new(string name = "dv_reg__NonStickyDataVaultReg");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.data = new("data");
             this.data.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(data_bit_cg[bt]) data_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : dv_reg__NonStickyDataVaultReg
 
     // Reg - dv_reg::NonStickyLockableScratchRegCtrl
     class dv_reg__NonStickyLockableScratchRegCtrl extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        dv_reg__NonStickyLockableScratchRegCtrl_bit_cg lock_entry_bit_cg[1];
+        dv_reg__NonStickyLockableScratchRegCtrl_fld_cg fld_cg;
         rand uvm_reg_field lock_entry;
 
         function new(string name = "dv_reg__NonStickyLockableScratchRegCtrl");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.lock_entry = new("lock_entry");
             this.lock_entry.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(lock_entry_bit_cg[bt]) lock_entry_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : dv_reg__NonStickyLockableScratchRegCtrl
 
     // Reg - dv_reg::NonStickyLockableScratchReg
     class dv_reg__NonStickyLockableScratchReg extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        dv_reg__NonStickyLockableScratchReg_bit_cg data_bit_cg[32];
+        dv_reg__NonStickyLockableScratchReg_fld_cg fld_cg;
         rand uvm_reg_field data;
 
         function new(string name = "dv_reg__NonStickyLockableScratchReg");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.data = new("data");
             this.data.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(data_bit_cg[bt]) data_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : dv_reg__NonStickyLockableScratchReg
 
     // Reg - dv_reg::NonStickyGenericScratchReg
     class dv_reg__NonStickyGenericScratchReg extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        dv_reg__NonStickyGenericScratchReg_bit_cg data_bit_cg[32];
+        dv_reg__NonStickyGenericScratchReg_fld_cg fld_cg;
         rand uvm_reg_field data;
 
         function new(string name = "dv_reg__NonStickyGenericScratchReg");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.data = new("data");
             this.data.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(data_bit_cg[bt]) data_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : dv_reg__NonStickyGenericScratchReg
 
     // Reg - dv_reg::StickyLockableScratchRegCtrl
     class dv_reg__StickyLockableScratchRegCtrl extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        dv_reg__StickyLockableScratchRegCtrl_bit_cg lock_entry_bit_cg[1];
+        dv_reg__StickyLockableScratchRegCtrl_fld_cg fld_cg;
         rand uvm_reg_field lock_entry;
 
         function new(string name = "dv_reg__StickyLockableScratchRegCtrl");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.lock_entry = new("lock_entry");
             this.lock_entry.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(lock_entry_bit_cg[bt]) lock_entry_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : dv_reg__StickyLockableScratchRegCtrl
 
     // Reg - dv_reg::StickyLockableScratchReg
     class dv_reg__StickyLockableScratchReg extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        dv_reg__StickyLockableScratchReg_bit_cg data_bit_cg[32];
+        dv_reg__StickyLockableScratchReg_fld_cg fld_cg;
         rand uvm_reg_field data;
 
         function new(string name = "dv_reg__StickyLockableScratchReg");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.data = new("data");
             this.data.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(data_bit_cg[bt]) data_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : dv_reg__StickyLockableScratchReg
 
@@ -214,4 +358,5 @@ package dv_reg_uvm;
         endfunction : build
     endclass : dv_reg
 
+    `include "dv_reg_sample.svh"
 endpackage: dv_reg_uvm

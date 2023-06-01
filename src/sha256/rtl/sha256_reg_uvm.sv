@@ -3,45 +3,91 @@
 package sha256_reg_uvm;
     `include "uvm_macros.svh"
     import uvm_pkg::*;
-    
+    `include "sha256_reg_covergroups.svh"
     // Reg - sha256_reg::SHA256_NAME
     class sha256_reg__SHA256_NAME extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__SHA256_NAME_bit_cg NAME_bit_cg[32];
+        sha256_reg__SHA256_NAME_fld_cg fld_cg;
         rand uvm_reg_field NAME;
 
         function new(string name = "sha256_reg__SHA256_NAME");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.NAME = new("NAME");
             this.NAME.configure(this, 32, 0, "RO", 1, 'h0, 0, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(NAME_bit_cg[bt]) NAME_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__SHA256_NAME
 
     // Reg - sha256_reg::SHA256_VERSION
     class sha256_reg__SHA256_VERSION extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__SHA256_VERSION_bit_cg VERSION_bit_cg[32];
+        sha256_reg__SHA256_VERSION_fld_cg fld_cg;
         rand uvm_reg_field VERSION;
 
         function new(string name = "sha256_reg__SHA256_VERSION");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.VERSION = new("VERSION");
             this.VERSION.configure(this, 32, 0, "RO", 1, 'h0, 0, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(VERSION_bit_cg[bt]) VERSION_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__SHA256_VERSION
 
     // Reg - sha256_reg::SHA256_CTRL
     class sha256_reg__SHA256_CTRL extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__SHA256_CTRL_bit_cg INIT_bit_cg[1];
+        sha256_reg__SHA256_CTRL_bit_cg NEXT_bit_cg[1];
+        sha256_reg__SHA256_CTRL_bit_cg MODE_bit_cg[1];
+        sha256_reg__SHA256_CTRL_bit_cg ZEROIZE_bit_cg[1];
+        sha256_reg__SHA256_CTRL_fld_cg fld_cg;
         rand uvm_reg_field INIT;
         rand uvm_reg_field NEXT;
         rand uvm_reg_field MODE;
         rand uvm_reg_field ZEROIZE;
 
         function new(string name = "sha256_reg__SHA256_CTRL");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.INIT = new("INIT");
@@ -52,81 +98,171 @@ package sha256_reg_uvm;
             this.MODE.configure(this, 1, 2, "WO", 0, 'h1, 1, 1, 0);
             this.ZEROIZE = new("ZEROIZE");
             this.ZEROIZE.configure(this, 1, 3, "WO", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(INIT_bit_cg[bt]) INIT_bit_cg[bt] = new();
+                foreach(NEXT_bit_cg[bt]) NEXT_bit_cg[bt] = new();
+                foreach(MODE_bit_cg[bt]) MODE_bit_cg[bt] = new();
+                foreach(ZEROIZE_bit_cg[bt]) ZEROIZE_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__SHA256_CTRL
 
     // Reg - sha256_reg::SHA256_STATUS
     class sha256_reg__SHA256_STATUS extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__SHA256_STATUS_bit_cg READY_bit_cg[1];
+        sha256_reg__SHA256_STATUS_bit_cg VALID_bit_cg[1];
+        sha256_reg__SHA256_STATUS_fld_cg fld_cg;
         rand uvm_reg_field READY;
         rand uvm_reg_field VALID;
 
         function new(string name = "sha256_reg__SHA256_STATUS");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.READY = new("READY");
             this.READY.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
             this.VALID = new("VALID");
             this.VALID.configure(this, 1, 1, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(READY_bit_cg[bt]) READY_bit_cg[bt] = new();
+                foreach(VALID_bit_cg[bt]) VALID_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__SHA256_STATUS
 
     // Reg - sha256_reg::SHA256_BLOCK
     class sha256_reg__SHA256_BLOCK extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__SHA256_BLOCK_bit_cg BLOCK_bit_cg[32];
+        sha256_reg__SHA256_BLOCK_fld_cg fld_cg;
         rand uvm_reg_field BLOCK;
 
         function new(string name = "sha256_reg__SHA256_BLOCK");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.BLOCK = new("BLOCK");
             this.BLOCK.configure(this, 32, 0, "WO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(BLOCK_bit_cg[bt]) BLOCK_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__SHA256_BLOCK
 
     // Reg - sha256_reg::SHA256_DIGEST
     class sha256_reg__SHA256_DIGEST extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__SHA256_DIGEST_bit_cg DIGEST_bit_cg[32];
+        sha256_reg__SHA256_DIGEST_fld_cg fld_cg;
         rand uvm_reg_field DIGEST;
 
         function new(string name = "sha256_reg__SHA256_DIGEST");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.DIGEST = new("DIGEST");
             this.DIGEST.configure(this, 32, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(DIGEST_bit_cg[bt]) DIGEST_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__SHA256_DIGEST
 
     // Reg - sha256_reg::global_intr_en_t
     class sha256_reg__global_intr_en_t extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__global_intr_en_t_bit_cg error_en_bit_cg[1];
+        sha256_reg__global_intr_en_t_bit_cg notif_en_bit_cg[1];
+        sha256_reg__global_intr_en_t_fld_cg fld_cg;
         rand uvm_reg_field error_en;
         rand uvm_reg_field notif_en;
 
         function new(string name = "sha256_reg__global_intr_en_t");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.error_en = new("error_en");
             this.error_en.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
             this.notif_en = new("notif_en");
             this.notif_en.configure(this, 1, 1, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(error_en_bit_cg[bt]) error_en_bit_cg[bt] = new();
+                foreach(notif_en_bit_cg[bt]) notif_en_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__global_intr_en_t
 
     // Reg - sha256_reg::error_intr_en_t
     class sha256_reg__error_intr_en_t extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__error_intr_en_t_bit_cg error0_en_bit_cg[1];
+        sha256_reg__error_intr_en_t_bit_cg error1_en_bit_cg[1];
+        sha256_reg__error_intr_en_t_bit_cg error2_en_bit_cg[1];
+        sha256_reg__error_intr_en_t_bit_cg error3_en_bit_cg[1];
+        sha256_reg__error_intr_en_t_fld_cg fld_cg;
         rand uvm_reg_field error0_en;
         rand uvm_reg_field error1_en;
         rand uvm_reg_field error2_en;
         rand uvm_reg_field error3_en;
 
         function new(string name = "sha256_reg__error_intr_en_t");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.error0_en = new("error0_en");
@@ -137,61 +273,131 @@ package sha256_reg_uvm;
             this.error2_en.configure(this, 1, 2, "RW", 0, 'h0, 1, 1, 0);
             this.error3_en = new("error3_en");
             this.error3_en.configure(this, 1, 3, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(error0_en_bit_cg[bt]) error0_en_bit_cg[bt] = new();
+                foreach(error1_en_bit_cg[bt]) error1_en_bit_cg[bt] = new();
+                foreach(error2_en_bit_cg[bt]) error2_en_bit_cg[bt] = new();
+                foreach(error3_en_bit_cg[bt]) error3_en_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__error_intr_en_t
 
     // Reg - sha256_reg::notif_intr_en_t
     class sha256_reg__notif_intr_en_t extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__notif_intr_en_t_bit_cg notif_cmd_done_en_bit_cg[1];
+        sha256_reg__notif_intr_en_t_fld_cg fld_cg;
         rand uvm_reg_field notif_cmd_done_en;
 
         function new(string name = "sha256_reg__notif_intr_en_t");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.notif_cmd_done_en = new("notif_cmd_done_en");
             this.notif_cmd_done_en.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(notif_cmd_done_en_bit_cg[bt]) notif_cmd_done_en_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__notif_intr_en_t
 
     // Reg - sha256_reg::global_intr_t_agg_sts_dd3dcf0a
     class sha256_reg__global_intr_t_agg_sts_dd3dcf0a extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__global_intr_t_agg_sts_dd3dcf0a_bit_cg agg_sts_bit_cg[1];
+        sha256_reg__global_intr_t_agg_sts_dd3dcf0a_fld_cg fld_cg;
         rand uvm_reg_field agg_sts;
 
         function new(string name = "sha256_reg__global_intr_t_agg_sts_dd3dcf0a");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.agg_sts = new("agg_sts");
             this.agg_sts.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(agg_sts_bit_cg[bt]) agg_sts_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__global_intr_t_agg_sts_dd3dcf0a
 
     // Reg - sha256_reg::global_intr_t_agg_sts_e6399b4a
     class sha256_reg__global_intr_t_agg_sts_e6399b4a extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__global_intr_t_agg_sts_e6399b4a_bit_cg agg_sts_bit_cg[1];
+        sha256_reg__global_intr_t_agg_sts_e6399b4a_fld_cg fld_cg;
         rand uvm_reg_field agg_sts;
 
         function new(string name = "sha256_reg__global_intr_t_agg_sts_e6399b4a");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.agg_sts = new("agg_sts");
             this.agg_sts.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(agg_sts_bit_cg[bt]) agg_sts_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__global_intr_t_agg_sts_e6399b4a
 
     // Reg - sha256_reg::error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378
     class sha256_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_bit_cg error0_sts_bit_cg[1];
+        sha256_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_bit_cg error1_sts_bit_cg[1];
+        sha256_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_bit_cg error2_sts_bit_cg[1];
+        sha256_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_bit_cg error3_sts_bit_cg[1];
+        sha256_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_fld_cg fld_cg;
         rand uvm_reg_field error0_sts;
         rand uvm_reg_field error1_sts;
         rand uvm_reg_field error2_sts;
         rand uvm_reg_field error3_sts;
 
         function new(string name = "sha256_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.error0_sts = new("error0_sts");
@@ -202,33 +408,71 @@ package sha256_reg_uvm;
             this.error2_sts.configure(this, 1, 2, "W1C", 1, 'h0, 1, 1, 0);
             this.error3_sts = new("error3_sts");
             this.error3_sts.configure(this, 1, 3, "W1C", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(error0_sts_bit_cg[bt]) error0_sts_bit_cg[bt] = new();
+                foreach(error1_sts_bit_cg[bt]) error1_sts_bit_cg[bt] = new();
+                foreach(error2_sts_bit_cg[bt]) error2_sts_bit_cg[bt] = new();
+                foreach(error3_sts_bit_cg[bt]) error3_sts_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378
 
     // Reg - sha256_reg::notif_intr_t_notif_cmd_done_sts_1c68637e
     class sha256_reg__notif_intr_t_notif_cmd_done_sts_1c68637e extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__notif_intr_t_notif_cmd_done_sts_1c68637e_bit_cg notif_cmd_done_sts_bit_cg[1];
+        sha256_reg__notif_intr_t_notif_cmd_done_sts_1c68637e_fld_cg fld_cg;
         rand uvm_reg_field notif_cmd_done_sts;
 
         function new(string name = "sha256_reg__notif_intr_t_notif_cmd_done_sts_1c68637e");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.notif_cmd_done_sts = new("notif_cmd_done_sts");
             this.notif_cmd_done_sts.configure(this, 1, 0, "W1C", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(notif_cmd_done_sts_bit_cg[bt]) notif_cmd_done_sts_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__notif_intr_t_notif_cmd_done_sts_1c68637e
 
     // Reg - sha256_reg::error_intr_trig_t
     class sha256_reg__error_intr_trig_t extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__error_intr_trig_t_bit_cg error0_trig_bit_cg[1];
+        sha256_reg__error_intr_trig_t_bit_cg error1_trig_bit_cg[1];
+        sha256_reg__error_intr_trig_t_bit_cg error2_trig_bit_cg[1];
+        sha256_reg__error_intr_trig_t_bit_cg error3_trig_bit_cg[1];
+        sha256_reg__error_intr_trig_t_fld_cg fld_cg;
         rand uvm_reg_field error0_trig;
         rand uvm_reg_field error1_trig;
         rand uvm_reg_field error2_trig;
         rand uvm_reg_field error3_trig;
 
         function new(string name = "sha256_reg__error_intr_trig_t");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.error0_trig = new("error0_trig");
@@ -239,160 +483,344 @@ package sha256_reg_uvm;
             this.error2_trig.configure(this, 1, 2, "W1S", 0, 'h0, 1, 1, 0);
             this.error3_trig = new("error3_trig");
             this.error3_trig.configure(this, 1, 3, "W1S", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(error0_trig_bit_cg[bt]) error0_trig_bit_cg[bt] = new();
+                foreach(error1_trig_bit_cg[bt]) error1_trig_bit_cg[bt] = new();
+                foreach(error2_trig_bit_cg[bt]) error2_trig_bit_cg[bt] = new();
+                foreach(error3_trig_bit_cg[bt]) error3_trig_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__error_intr_trig_t
 
     // Reg - sha256_reg::notif_intr_trig_t
     class sha256_reg__notif_intr_trig_t extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__notif_intr_trig_t_bit_cg notif_cmd_done_trig_bit_cg[1];
+        sha256_reg__notif_intr_trig_t_fld_cg fld_cg;
         rand uvm_reg_field notif_cmd_done_trig;
 
         function new(string name = "sha256_reg__notif_intr_trig_t");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.notif_cmd_done_trig = new("notif_cmd_done_trig");
             this.notif_cmd_done_trig.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(notif_cmd_done_trig_bit_cg[bt]) notif_cmd_done_trig_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__notif_intr_trig_t
 
     // Reg - sha256_reg::intr_count_t_cnt_35ace267
     class sha256_reg__intr_count_t_cnt_35ace267 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__intr_count_t_cnt_35ace267_bit_cg cnt_bit_cg[32];
+        sha256_reg__intr_count_t_cnt_35ace267_fld_cg fld_cg;
         rand uvm_reg_field cnt;
 
         function new(string name = "sha256_reg__intr_count_t_cnt_35ace267");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__intr_count_t_cnt_35ace267
 
     // Reg - sha256_reg::intr_count_t_cnt_73c42c28
     class sha256_reg__intr_count_t_cnt_73c42c28 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__intr_count_t_cnt_73c42c28_bit_cg cnt_bit_cg[32];
+        sha256_reg__intr_count_t_cnt_73c42c28_fld_cg fld_cg;
         rand uvm_reg_field cnt;
 
         function new(string name = "sha256_reg__intr_count_t_cnt_73c42c28");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__intr_count_t_cnt_73c42c28
 
     // Reg - sha256_reg::intr_count_t_cnt_d8af96ff
     class sha256_reg__intr_count_t_cnt_d8af96ff extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__intr_count_t_cnt_d8af96ff_bit_cg cnt_bit_cg[32];
+        sha256_reg__intr_count_t_cnt_d8af96ff_fld_cg fld_cg;
         rand uvm_reg_field cnt;
 
         function new(string name = "sha256_reg__intr_count_t_cnt_d8af96ff");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__intr_count_t_cnt_d8af96ff
 
     // Reg - sha256_reg::intr_count_t_cnt_9bd7f809
     class sha256_reg__intr_count_t_cnt_9bd7f809 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__intr_count_t_cnt_9bd7f809_bit_cg cnt_bit_cg[32];
+        sha256_reg__intr_count_t_cnt_9bd7f809_fld_cg fld_cg;
         rand uvm_reg_field cnt;
 
         function new(string name = "sha256_reg__intr_count_t_cnt_9bd7f809");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__intr_count_t_cnt_9bd7f809
 
     // Reg - sha256_reg::intr_count_t_cnt_be67d6d5
     class sha256_reg__intr_count_t_cnt_be67d6d5 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__intr_count_t_cnt_be67d6d5_bit_cg cnt_bit_cg[32];
+        sha256_reg__intr_count_t_cnt_be67d6d5_fld_cg fld_cg;
         rand uvm_reg_field cnt;
 
         function new(string name = "sha256_reg__intr_count_t_cnt_be67d6d5");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__intr_count_t_cnt_be67d6d5
 
     // Reg - sha256_reg::intr_count_incr_t_pulse_37026c97
     class sha256_reg__intr_count_incr_t_pulse_37026c97 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__intr_count_incr_t_pulse_37026c97_bit_cg pulse_bit_cg[1];
+        sha256_reg__intr_count_incr_t_pulse_37026c97_fld_cg fld_cg;
         rand uvm_reg_field pulse;
 
         function new(string name = "sha256_reg__intr_count_incr_t_pulse_37026c97");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.pulse = new("pulse");
             this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__intr_count_incr_t_pulse_37026c97
 
     // Reg - sha256_reg::intr_count_incr_t_pulse_d860d977
     class sha256_reg__intr_count_incr_t_pulse_d860d977 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__intr_count_incr_t_pulse_d860d977_bit_cg pulse_bit_cg[1];
+        sha256_reg__intr_count_incr_t_pulse_d860d977_fld_cg fld_cg;
         rand uvm_reg_field pulse;
 
         function new(string name = "sha256_reg__intr_count_incr_t_pulse_d860d977");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.pulse = new("pulse");
             this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__intr_count_incr_t_pulse_d860d977
 
     // Reg - sha256_reg::intr_count_incr_t_pulse_87b45fe7
     class sha256_reg__intr_count_incr_t_pulse_87b45fe7 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__intr_count_incr_t_pulse_87b45fe7_bit_cg pulse_bit_cg[1];
+        sha256_reg__intr_count_incr_t_pulse_87b45fe7_fld_cg fld_cg;
         rand uvm_reg_field pulse;
 
         function new(string name = "sha256_reg__intr_count_incr_t_pulse_87b45fe7");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.pulse = new("pulse");
             this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__intr_count_incr_t_pulse_87b45fe7
 
     // Reg - sha256_reg::intr_count_incr_t_pulse_c1689ee6
     class sha256_reg__intr_count_incr_t_pulse_c1689ee6 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__intr_count_incr_t_pulse_c1689ee6_bit_cg pulse_bit_cg[1];
+        sha256_reg__intr_count_incr_t_pulse_c1689ee6_fld_cg fld_cg;
         rand uvm_reg_field pulse;
 
         function new(string name = "sha256_reg__intr_count_incr_t_pulse_c1689ee6");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.pulse = new("pulse");
             this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__intr_count_incr_t_pulse_c1689ee6
 
     // Reg - sha256_reg::intr_count_incr_t_pulse_6173128e
     class sha256_reg__intr_count_incr_t_pulse_6173128e extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha256_reg__intr_count_incr_t_pulse_6173128e_bit_cg pulse_bit_cg[1];
+        sha256_reg__intr_count_incr_t_pulse_6173128e_fld_cg fld_cg;
         rand uvm_reg_field pulse;
 
         function new(string name = "sha256_reg__intr_count_incr_t_pulse_6173128e");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.pulse = new("pulse");
             this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : sha256_reg__intr_count_incr_t_pulse_6173128e
 
@@ -583,4 +1011,5 @@ package sha256_reg_uvm;
         endfunction : build
     endclass : sha256_reg
 
+    `include "sha256_reg_sample.svh"
 endpackage: sha256_reg_uvm
