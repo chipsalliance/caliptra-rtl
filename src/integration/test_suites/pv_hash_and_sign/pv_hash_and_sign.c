@@ -88,31 +88,31 @@ void main() {
                        0x70cbd1e7,
                        0xfb158bab};
 
-    uint32_t exp_sign_r[] = {0x4783887c, 
-                             0xe3e20caa, 
-                             0x4a10c8ef, 
-                             0x929fdc23, 
-                             0x1c389ab7, 
-                             0x72cf8b35, 
-                             0xfc1647a5, 
-                             0xf1205a1e, 
-                             0x50d92ac9, 
-                             0x1b5a549a, 
-                             0x3944f5aa, 
-                             0x52f32b23};
+    uint32_t exp_sign_r[] = {0x871e6ea4, 
+                             0xddc5432c, 
+                             0xddaa60fd, 
+                             0x7f055472, 
+                             0xd3c4dd41, 
+                             0xa5bfb267, 
+                             0x09e88c31, 
+                             0x1a970935, 
+                             0x99a7c8f5, 
+                             0x5b3974c1, 
+                             0x9e4f5a7b, 
+                             0xfc1dd2ac};
 
-    uint32_t exp_sign_s[] = {0x44bd1e3b, 
-                             0x6cb57584, 
-                             0x304f77b9, 
-                             0xee4a6599, 
-                             0x38e3b614, 
-                             0x00db744e, 
-                             0x6227cbb3, 
-                             0x6bbfbbbd, 
-                             0xbe1d0815, 
-                             0x71fba315, 
-                             0xeb049b1e, 
-                             0x437af8aa};
+    uint32_t exp_sign_s[] = {0x3e5552de, 
+                             0x6403350e, 
+                             0xe70ad74e, 
+                             0x4b854d2d, 
+                             0xc4126bbf, 
+                             0x9c153a5d, 
+                             0x7a07bd4b, 
+                             0x85d06e45, 
+                             0xf850920e, 
+                             0x898fb7d3, 
+                             0x4f80796d, 
+                             0xae29365c};
 
     volatile uint32_t* reg_ptr;
     uint8_t offset;
@@ -275,6 +275,10 @@ void main() {
         offset++;
     }
 
+    //inject seed to kv key reg (in RTL)
+    printf("ECC: Inject PRIVKEY into KV slot 7\n");
+    printf("%c", 0x90);
+
     VPRINTF(MEDIUM,"ECC: Running PCR Sign Function\n");
     //run ECC signing on PCR
     reg = ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK) |
@@ -284,7 +288,7 @@ void main() {
 
     VPRINTF(MEDIUM,"ECC: Polling for PCR Sign to be complete\n");
     // wait for ECC SIGNING process to be done
-    while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_VALID_MASK) == 0);
+    while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
     //check expected output from sign r
     reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_0;

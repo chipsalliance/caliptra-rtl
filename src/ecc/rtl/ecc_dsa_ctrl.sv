@@ -116,6 +116,7 @@ module ecc_dsa_ctrl
     logic hw_scalar_G_we;
     logic hw_scalar_PK_we;
     logic hw_verify_r_we;
+    logic hw_pk_chk_we;
     logic scalar_G_sel;
 
     logic dsa_valid_reg;
@@ -140,6 +141,7 @@ module ecc_dsa_ctrl
     logic [REG_SIZE-1 : 0]  lambda_reg;
     logic [REG_SIZE-1 : 0]  masking_rnd;
     logic [REG_SIZE-1 : 0]  masking_rnd_reg;
+    logic [REG_SIZE-1 : 0]  pk_chk_reg;
 
     logic [REG_SIZE-1 : 0]  scalar_G_reg;
     logic [REG_SIZE-1 : 0]  scalar_PK_reg;
@@ -182,11 +184,27 @@ module ecc_dsa_ctrl
     kv_read_ctrl_reg_t kv_seed_read_ctrl_reg;
     kv_write_ctrl_reg_t kv_write_ctrl_reg;
 
-
-
     logic pcr_sign_mode;
     
     instr_struct_t prog_instr;
+    
+    // ERROR
+    logic keygen_process;
+    logic signing_process;
+    logic verifying_process;
+
+    logic privkey_input_outofrange;
+    logic r_output_outofrange;
+    logic r_input_outofrange;
+    logic s_input_outofrange;
+    logic pubkeyx_input_outofrange;
+    logic pubkeyy_input_outofrange;
+    logic pubkey_input_invalid;
+
+    logic error_flag;
+    logic error_flag_reg;
+    logic error_flag_edge;
+
     //----------------------------------------------------------------
     // Module instantiantions.
     //----------------------------------------------------------------
@@ -421,7 +439,7 @@ module ecc_dsa_ctrl
     always_comb hwif_in.ECC_CTRL.PCR_SIGN.hwclr = hwif_out.ECC_CTRL.PCR_SIGN.value;
     
     // TODO add other interrupt hwset signals (errors)
-    always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset = 1'b0;
+    always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset = error_flag_reg;
     always_comb hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = ecc_status_done_p;
 
 
@@ -497,7 +515,8 @@ module ecc_dsa_ctrl
         hw_scalar_G_we = 0;
         hw_scalar_PK_we = 0;
         hw_verify_r_we = 0;
-        if (prog_instr.opcode == DSA_UOP_RD_CORE)begin
+        hw_pk_chk_we = 0;
+        if ((prog_instr.opcode == DSA_UOP_RD_CORE) & (cycle_cnt == 0)) begin
             unique casez (prog_instr.reg_id)
                 PRIVKEY_ID      : hw_privkey_we = 1;
                 PUBKEYX_ID      : hw_pubkeyx_we = 1;
@@ -507,6 +526,7 @@ module ecc_dsa_ctrl
                 SCALAR_G_ID     : hw_scalar_G_we = 1;
                 SCALAR_PK_ID    : hw_scalar_PK_we = 1;
                 VERIFY_R_ID     : hw_verify_r_we = 1;
+                PK_VALID_ID     : hw_pk_chk_we = 1;
                 default         : 
                     begin 
                         hw_privkey_we = 0;
@@ -517,6 +537,7 @@ module ecc_dsa_ctrl
                         hw_scalar_G_we = 0;
                         hw_scalar_PK_we = 0;
                         hw_verify_r_we = 0;
+                        hw_pk_chk_we = 0;
                     end
             endcase
         end
@@ -533,6 +554,7 @@ module ecc_dsa_ctrl
                 CONST_ZERO_ID         : write_reg = {zero_pad, ZERO_CONST};
                 CONST_ONE_ID          : write_reg = {zero_pad, ONE_CONST};
                 CONST_E_a_MONT_ID     : write_reg = {zero_pad, E_a_MONT};
+                CONST_E_b_MONT_ID     : write_reg = {zero_pad, E_b_MONT};
                 CONST_E_3b_MONT_ID    : write_reg = {zero_pad, E_3b_MONT};
                 CONST_ONE_p_MONT_ID   : write_reg = {zero_pad, ONE_p_MONT};
                 CONST_R2_p_MONT_ID    : write_reg = {zero_pad, R2_p_MONT};
@@ -581,6 +603,53 @@ module ecc_dsa_ctrl
     assign hmac_busy = ~hmac_ready;
     assign subcomponent_busy = pm_busy_o | hmac_busy | scalar_sca_busy_o;
 
+
+    //----------------------------------------------------------------
+    // ERROR detection
+    //
+    // bound check for different input/output registers.
+    //----------------------------------------------------------------   
+    always_ff @(posedge clk or negedge reset_n) 
+    begin : pk_chk
+        if(!reset_n) begin
+            pk_chk_reg <= '0;
+        end
+        else if(zeroize_reg) begin
+            pk_chk_reg <= '0;
+        end
+        else begin
+            if (hw_pk_chk_we) begin
+                pk_chk_reg <= read_reg;
+            end
+        end
+    end // pk_chk
+
+    always_ff @(posedge clk or negedge reset_n) 
+    begin : error_detection
+        if(!reset_n) begin
+            error_flag_reg <= '0;
+        end
+        else if(zeroize_reg) begin
+            error_flag_reg <= '0;
+        end
+        else begin
+            error_flag_reg  <= error_flag;
+        end
+    end // error_detection
+
+    assign error_flag_edge = error_flag & (!error_flag_reg);
+    
+    assign privkey_input_outofrange = signing_process & ((privkey_reg == 0) | (privkey_reg >= GROUP_ORDER));
+    assign r_output_outofrange      = signing_process & (hw_r_we & (read_reg == 0));
+
+    assign r_input_outofrange       = verifying_process & ((r_reg == 0) | (r_reg >= GROUP_ORDER));
+    assign s_input_outofrange       = verifying_process & ((s_reg == 0) | (s_reg >= GROUP_ORDER));
+    assign pubkeyx_input_outofrange = verifying_process & (pubkeyx_reg >= PRIME);
+    assign pubkeyy_input_outofrange = verifying_process & (pubkeyy_reg >= PRIME);
+    assign pubkey_input_invalid     = verifying_process & (pk_chk_reg != 0);
+
+    assign error_flag = privkey_input_outofrange | r_output_outofrange | r_input_outofrange | s_input_outofrange | pubkeyx_input_outofrange | pubkeyy_input_outofrange | pubkey_input_invalid;
+
     //----------------------------------------------------------------
     // ECDSA_FSM_flow
     //
@@ -591,27 +660,40 @@ module ecc_dsa_ctrl
     always_ff @(posedge clk or negedge reset_n) 
     begin : ECDSA_FSM
         if(!reset_n) begin
-            prog_cntr       <= DSA_RESET;
-            cycle_cnt       <= '0;
-            pm_cmd_reg      <= '0;
-            dsa_valid_reg   <= 0;
-            scalar_G_sel    <= 0;
-            hmac_mode       <= 0;
-            hmac_init       <= 0;
-            scalar_sca_en   <= 0;
+            prog_cntr           <= DSA_RESET;
+            cycle_cnt           <= '0;
+            pm_cmd_reg          <= '0;
+            dsa_valid_reg       <= 0;
+            scalar_G_sel        <= 0;
+            hmac_mode           <= 0;
+            hmac_init           <= 0;
+            scalar_sca_en       <= 0;
+            keygen_process      <= 0;
+            signing_process     <= 0;
+            verifying_process   <= 0;
         end
         else if(zeroize_reg) begin
-            prog_cntr       <= DSA_RESET;
-            cycle_cnt       <= '0;
-            pm_cmd_reg      <= '0;
-            dsa_valid_reg   <= 0;
-            scalar_G_sel    <= 0;
-            hmac_mode       <= 0;
-            hmac_init       <= 0;
-            scalar_sca_en   <= 0;
+            prog_cntr           <= DSA_RESET;
+            cycle_cnt           <= '0;
+            pm_cmd_reg          <= '0;
+            dsa_valid_reg       <= 0;
+            scalar_G_sel        <= 0;
+            hmac_mode           <= 0;
+            hmac_init           <= 0;
+            scalar_sca_en       <= 0;
+            keygen_process      <= 0;
+            signing_process     <= 0;
+            verifying_process   <= 0;
         end
         else begin
-            if (subcomponent_busy) begin //Stalled until sub-component is done
+            if (error_flag_edge) begin
+                prog_cntr       <= DSA_NOP;
+                cycle_cnt       <= 2'd3;
+                pm_cmd_reg      <= '0;
+                scalar_sca_en   <= 0;
+                hmac_init       <= 0;
+            end
+            else if (subcomponent_busy) begin //Stalled until sub-component is done
                 prog_cntr       <= prog_cntr;
                 cycle_cnt       <= 2'd3;
                 pm_cmd_reg      <= '0;
@@ -625,6 +707,9 @@ module ecc_dsa_ctrl
                 cycle_cnt <= '0;
                 unique casez (prog_cntr)
                     DSA_NOP : begin 
+                        keygen_process      <= 0;
+                        signing_process     <= 0;
+                        verifying_process   <= 0;
                         // Waiting for new valid command 
                         unique casez (cmd_reg)
                             KEYGEN : begin  // keygen
@@ -632,6 +717,7 @@ module ecc_dsa_ctrl
                                 dsa_valid_reg <= 0;
                                 scalar_G_sel <= 0;
                                 hmac_mode <= 0;
+                                keygen_process <= 1;
                             end   
 
                             SIGN : begin  // signing
@@ -639,12 +725,14 @@ module ecc_dsa_ctrl
                                 dsa_valid_reg <= 0;
                                 scalar_G_sel <= 0;
                                 hmac_mode <= 1;
+                                signing_process <= 1;
                             end                                   
 
                             VERIFY : begin  // verifying
                                 prog_cntr <= DSA_VER_S;
                                 dsa_valid_reg <= 0;
                                 scalar_G_sel <= 1;
+                                verifying_process <= 1;
                             end
 
                             default : begin

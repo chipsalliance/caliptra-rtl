@@ -53,6 +53,7 @@ package ecc_params_pkg;
   parameter [REG_SIZE-1 : 0] ZERO_CONST  = 384'h0;
   parameter [REG_SIZE-1 : 0] ONE_CONST   = 384'h1;
   parameter [REG_SIZE-1 : 0] E_a_MONT    = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffcfffffffbffffffff00000002fffffffdffffffff;
+  parameter [REG_SIZE-1 : 0] E_b_MONT    = 384'h604fbff9b62b21f41f022094e3374bee94938ae277f2209b1920022fc431bf244754443708118870d0391c81cd08114b;
   parameter [REG_SIZE-1 : 0] E_3b_MONT   = 384'h20ef3fed228165dc5d0661bea9a5e3cbbdbaa0a767d661d14b60068f4c953d6dd5fccca61834995270ab5584671833e2;
   parameter [REG_SIZE-1 : 0] ONE_p_MONT  = 384'h100000000ffffffffffffffff0000000100000000;
   parameter [REG_SIZE-1 : 0] R2_p_MONT   = 384'h10000000200000000fffffffe000000000000000200000000fffffffe000000010000000000000000;
