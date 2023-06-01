@@ -112,24 +112,30 @@ module ecc_dsa_sequencer
                     DSA_SGN_S+ 14  : douta <= {DSA_UOP_NOP,           NOP_ID,             UOP_OPR_DONTCARE};
 
                     //VERIFY
-                    DSA_VER_S     : douta <= {DSA_UOP_WR_CORE,        MSG_ID,             UOP_OPR_HASH_MSG};
-                    DSA_VER_S+ 1  : douta <= {DSA_UOP_WR_CORE,        R_ID,               UOP_OPR_SIGN_R};
-                    DSA_VER_S+ 2  : douta <= {DSA_UOP_WR_CORE,        S_ID,               UOP_OPR_SIGN_S};
-                    DSA_VER_S+ 3  : douta <= {DSA_UOP_WR_CORE,        CONST_ONE_ID,       UOP_OPR_LAMBDA};
-                    DSA_VER_S+ 4  : douta <= {DSA_UOP_VERIFY0,        NOP_ID,             UOP_OPR_DONTCARE};
-                    DSA_VER_S+ 5  : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
-                    DSA_VER_S+ 6  : douta <= {DSA_UOP_RD_CORE,        SCALAR_G_ID,        UOP_OPR_SCALAR_G};
-                    DSA_VER_S+ 7  : douta <= {DSA_UOP_RD_CORE,        SCALAR_PK_ID,       UOP_OPR_SCALAR_PK};
-                    DSA_VER_S+ 8  : douta <= {DSA_UOP_WR_SCALAR,      SCALAR_G_ID,        UOP_OPR_DONTCARE};
-                    DSA_VER_S+ 9  : douta <= {DSA_UOP_VERIFY1,        NOP_ID,             UOP_OPR_DONTCARE};
-                    DSA_VER_S+ 10 : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
-                    DSA_VER_S+ 11 : douta <= {DSA_UOP_WR_CORE,        PUBKEYX_ID,         UOP_OPR_Qx_AFFN};
-                    DSA_VER_S+ 12 : douta <= {DSA_UOP_WR_CORE,        PUBKEYY_ID,         UOP_OPR_Qy_AFFN};
-                    DSA_VER_S+ 13 : douta <= {DSA_UOP_WR_SCALAR,      SCALAR_PK_ID,       UOP_OPR_DONTCARE};
-                    DSA_VER_S+ 14 : douta <= {DSA_UOP_VERIFY2,        NOP_ID,             UOP_OPR_DONTCARE};
-                    DSA_VER_S+ 15 : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
-                    DSA_VER_S+ 16 : douta <= {DSA_UOP_RD_CORE,        VERIFY_R_ID,        UOP_OPR_Qx_AFFN};
-                    DSA_VER_S+ 17 : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
+                    DSA_VER_S     : douta <= {DSA_UOP_WR_CORE,        CONST_E_b_MONT_ID,  UOP_OPR_CONST_E_b};
+                    DSA_VER_S+ 1  : douta <= {DSA_UOP_WR_CORE,        PUBKEYX_ID,         UOP_OPR_Qx_AFFN};
+                    DSA_VER_S+ 2  : douta <= {DSA_UOP_WR_CORE,        PUBKEYY_ID,         UOP_OPR_Qy_AFFN};
+                    DSA_VER_S+ 3  : douta <= {DSA_UOP_PK_CHK,         NOP_ID,             UOP_OPR_DONTCARE};
+                    DSA_VER_S+ 4  : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
+                    DSA_VER_S+ 5  : douta <= {DSA_UOP_RD_CORE,        PK_VALID_ID,        UOP_OPR_PK_VALID};
+                    DSA_VER_S+ 6  : douta <= {DSA_UOP_WR_CORE,        MSG_ID,             UOP_OPR_HASH_MSG};
+                    DSA_VER_S+ 7  : douta <= {DSA_UOP_WR_CORE,        R_ID,               UOP_OPR_SIGN_R};
+                    DSA_VER_S+ 8  : douta <= {DSA_UOP_WR_CORE,        S_ID,               UOP_OPR_SIGN_S};
+                    DSA_VER_S+ 9  : douta <= {DSA_UOP_WR_CORE,        CONST_ONE_ID,       UOP_OPR_LAMBDA};
+                    DSA_VER_S+ 10 : douta <= {DSA_UOP_VERIFY0,        NOP_ID,             UOP_OPR_DONTCARE};
+                    DSA_VER_S+ 11 : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
+                    DSA_VER_S+ 12 : douta <= {DSA_UOP_RD_CORE,        SCALAR_G_ID,        UOP_OPR_SCALAR_G};
+                    DSA_VER_S+ 13 : douta <= {DSA_UOP_RD_CORE,        SCALAR_PK_ID,       UOP_OPR_SCALAR_PK};
+                    DSA_VER_S+ 14 : douta <= {DSA_UOP_WR_SCALAR,      SCALAR_G_ID,        UOP_OPR_DONTCARE};
+                    DSA_VER_S+ 15 : douta <= {DSA_UOP_VERIFY1,        NOP_ID,             UOP_OPR_DONTCARE};
+                    DSA_VER_S+ 16 : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
+                    DSA_VER_S+ 17 : douta <= {DSA_UOP_WR_CORE,        PUBKEYX_ID,         UOP_OPR_Qx_AFFN};
+                    DSA_VER_S+ 18 : douta <= {DSA_UOP_WR_CORE,        PUBKEYY_ID,         UOP_OPR_Qy_AFFN};
+                    DSA_VER_S+ 19 : douta <= {DSA_UOP_WR_SCALAR,      SCALAR_PK_ID,       UOP_OPR_DONTCARE};
+                    DSA_VER_S+ 20 : douta <= {DSA_UOP_VERIFY2,        NOP_ID,             UOP_OPR_DONTCARE};
+                    DSA_VER_S+ 21 : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
+                    DSA_VER_S+ 22 : douta <= {DSA_UOP_RD_CORE,        VERIFY_R_ID,        UOP_OPR_Qx_AFFN};
+                    DSA_VER_S+ 23 : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
 
                     default :       douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
                 endcase 
