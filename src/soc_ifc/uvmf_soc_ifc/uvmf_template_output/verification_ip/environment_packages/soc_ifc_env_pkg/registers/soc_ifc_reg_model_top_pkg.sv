@@ -511,18 +511,19 @@ package soc_ifc_reg_model_top_pkg;
 // pragma uvmf custom define_register_classes end
 // pragma uvmf custom define_block_map_coverage_class begin
    //--------------------------------------------------------------------
-   // Class: soc_ifc_fixme_map_coverage
+   // Class: soc_ifc_AHB_map_coverage
    // 
-   // Coverage for the 'fixme_map' in 'soc_ifc_reg_model'
+   // Coverage for the 'AHB_map' in 'soc_ifc_reg_model'
    //--------------------------------------------------------------------
-   class soc_ifc_fixme_map_coverage extends uvm_object;
-      `uvm_object_utils(soc_ifc_fixme_map_coverage)
+   class soc_ifc_AHB_map_coverage extends uvm_object;
+      `uvm_object_utils(soc_ifc_AHB_map_coverage)
 
       covergroup ra_cov(string name) with function sample(uvm_reg_addr_t addr, bit is_read);
 
          option.per_instance = 1;
          option.name = name; 
 
+         // FIXME
          ADDR: coverpoint addr {
             bins example_reg0 = {'h0};
             bins example_reg1 = {'h1};
@@ -537,7 +538,7 @@ package soc_ifc_reg_model_top_pkg;
 
       endgroup: ra_cov
 
-      function new(string name = "soc_ifc_fixme_map_coverage");
+      function new(string name = "soc_ifc_AHB_map_coverage");
          ra_cov = new(name);
       endfunction: new
 
@@ -545,7 +546,44 @@ package soc_ifc_reg_model_top_pkg;
          ra_cov.sample(offset, is_read);
       endfunction: sample
 
-   endclass: soc_ifc_fixme_map_coverage
+   endclass: soc_ifc_AHB_map_coverage
+   //--------------------------------------------------------------------
+   // Class: soc_ifc_APB_map_coverage
+   // 
+   // Coverage for the 'APB_map' in 'soc_ifc_reg_model'
+   //--------------------------------------------------------------------
+   class soc_ifc_APB_map_coverage extends uvm_object;
+      `uvm_object_utils(soc_ifc_APB_map_coverage)
+
+      covergroup ra_cov(string name) with function sample(uvm_reg_addr_t addr, bit is_read);
+
+         option.per_instance = 1;
+         option.name = name; 
+
+         // FIXME
+         ADDR: coverpoint addr {
+            bins example_reg0 = {'h0};
+            bins example_reg1 = {'h1};
+         }
+
+         RW: coverpoint is_read {
+            bins RD = {1};
+            bins WR = {0};
+         }
+
+         ACCESS: cross ADDR, RW;
+
+      endgroup: ra_cov
+
+      function new(string name = "soc_ifc_APB_map_coverage");
+         ra_cov = new(name);
+      endfunction: new
+
+      function void sample(uvm_reg_addr_t offset, bit is_read);
+         ra_cov.sample(offset, is_read);
+      endfunction: sample
+
+   endclass: soc_ifc_APB_map_coverage
 // pragma uvmf custom define_block_map_coverage_class end
 
    //--------------------------------------------------------------------
@@ -608,7 +646,8 @@ package soc_ifc_reg_model_top_pkg;
 
 // pragma uvmf custom instantiate_registers_within_block end
 
-      soc_ifc_fixme_map_coverage fixme_map_cg;
+      soc_ifc_AHB_map_coverage AHB_map_cg;
+      soc_ifc_APB_map_coverage APB_map_cg;
 
       // Function: new
       // 
@@ -620,8 +659,10 @@ package soc_ifc_reg_model_top_pkg;
       // 
       virtual function void build();
       if(has_coverage(UVM_CVR_ADDR_MAP)) begin
-         fixme_map_cg = soc_ifc_fixme_map_coverage::type_id::create("fixme_map_cg");
-         fixme_map_cg.ra_cov.set_inst_name(this.get_full_name());
+         AHB_map_cg = soc_ifc_AHB_map_coverage::type_id::create("AHB_map_cg");
+         APB_map_cg = soc_ifc_APB_map_coverage::type_id::create("APB_map_cg");
+         AHB_map_cg.ra_cov.set_inst_name({this.get_full_name(),"_AHB_cg"});
+         APB_map_cg.ra_cov.set_inst_name({this.get_full_name(),"_APB_cg"});
          void'(set_coverage(UVM_CVR_ADDR_MAP));
       end
 
@@ -783,6 +824,7 @@ package soc_ifc_reg_model_top_pkg;
         this.soc_ifc_AHB_map.add_submap(this.sha512_acc_csr_rm.sha512_acc_csr_AHB_map, 'h2_1000);
         this.soc_ifc_AHB_map.add_submap(this.soc_ifc_reg_rm.soc_ifc_reg_AHB_map, 'h3_0000);
 
+        void'(set_coverage(get_coverage() | UVM_CVR_REG_BITS | UVM_CVR_FIELD_VALS));
 // pragma uvmf custom add_registers_to_block_map end
 
 
@@ -792,8 +834,11 @@ package soc_ifc_reg_model_top_pkg;
       //
       function void sample(uvm_reg_addr_t offset, bit is_read, uvm_reg_map  map);
          if(get_coverage(UVM_CVR_ADDR_MAP)) begin
-            if(map.get_name() == "fixme_map_cg") begin
-               fixme_map_cg.sample(offset, is_read);
+            if(map.get_name() == "soc_ifc_AHB_map") begin
+               AHB_map_cg.sample(offset, is_read);
+            end
+            if(map.get_name() == "soc_ifc_APB_map") begin
+               APB_map_cg.sample(offset, is_read);
             end
          end
       endfunction: sample

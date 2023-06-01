@@ -81,8 +81,15 @@ try:
     )
 
     # Export a UVM register model
-    exporter = UVMExporter()
+    exporter = UVMExporter(user_template_dir=os.path.join(repo_root, "tools/templates/rdl/uvm"))
     exporter.export(root, os.path.join(rtl_output_dir, os.path.splitext(os.path.basename(sys.argv[1]))[0]) + "_uvm.sv")
+    # The below lines are used to generate a baseline/starting point for the include files "<reg_name>_covergroups.svh" and "<reg_name>_sample.svh"
+    # The generated files will need to be hand-edited to provide the desired functionality.
+    # Uncomment these lines and run this script directly on the target RDL file to generate the files.
+#    exporter = UVMExporter(user_template_dir=os.path.join(repo_root, "tools/templates/rdl/cov"))
+#    exporter.export(root, os.path.join(rtl_output_dir, os.path.splitext(os.path.basename(sys.argv[1]))[0]) + "_covergroups.svh")
+#    exporter = UVMExporter(user_template_dir=os.path.join(repo_root, "tools/templates/rdl/smp"))
+#    exporter.export(root, os.path.join(rtl_output_dir, os.path.splitext(os.path.basename(sys.argv[1]))[0]) + "_sample.svh")
 
     # Traverse the register model!
     walker = RDLWalker(unroll=True)
@@ -91,6 +98,7 @@ try:
 
     # Scrub the output SystemVerilog files to modify the coding style
     #  - Change unpacked arrays to packed, unpacked structs to packed
+    # TODO just make a new exporter template instead of scrubbing?
     rdl_post_process.scrub_line_by_line(str(pkglistener.get_regfile_name() + ".sv"))
     rdl_post_process.scrub_line_by_line(str(pkglistener.get_regfile_name() + "_pkg.sv"))
 

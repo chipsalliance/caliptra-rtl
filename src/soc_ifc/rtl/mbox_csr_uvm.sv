@@ -3,107 +3,229 @@
 package mbox_csr_uvm;
     `include "uvm_macros.svh"
     import uvm_pkg::*;
-    
+    `include "mbox_csr_covergroups.svh"
     // Reg - mbox_csr::mbox_lock
     class mbox_csr__mbox_lock extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        mbox_csr__mbox_lock_bit_cg lock_bit_cg[1];
+        mbox_csr__mbox_lock_fld_cg fld_cg;
         rand uvm_reg_field lock;
 
         function new(string name = "mbox_csr__mbox_lock");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.lock = new("lock");
             this.lock.configure(this, 1, 0, "RS", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(lock_bit_cg[bt]) lock_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : mbox_csr__mbox_lock
 
     // Reg - mbox_csr::mbox_user
     class mbox_csr__mbox_user extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        mbox_csr__mbox_user_bit_cg user_bit_cg[32];
+        mbox_csr__mbox_user_fld_cg fld_cg;
         rand uvm_reg_field user;
 
         function new(string name = "mbox_csr__mbox_user");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.user = new("user");
             this.user.configure(this, 32, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(user_bit_cg[bt]) user_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : mbox_csr__mbox_user
 
     // Reg - mbox_csr::mbox_cmd
     class mbox_csr__mbox_cmd extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        mbox_csr__mbox_cmd_bit_cg command_bit_cg[32];
+        mbox_csr__mbox_cmd_fld_cg fld_cg;
         rand uvm_reg_field command;
 
         function new(string name = "mbox_csr__mbox_cmd");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.command = new("command");
             this.command.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(command_bit_cg[bt]) command_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : mbox_csr__mbox_cmd
 
     // Reg - mbox_csr::mbox_dlen
     class mbox_csr__mbox_dlen extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        mbox_csr__mbox_dlen_bit_cg length_bit_cg[32];
+        mbox_csr__mbox_dlen_fld_cg fld_cg;
         rand uvm_reg_field length;
 
         function new(string name = "mbox_csr__mbox_dlen");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.length = new("length");
             this.length.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(length_bit_cg[bt]) length_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : mbox_csr__mbox_dlen
 
     // Reg - mbox_csr::mbox_datain
     class mbox_csr__mbox_datain extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        mbox_csr__mbox_datain_bit_cg datain_bit_cg[32];
+        mbox_csr__mbox_datain_fld_cg fld_cg;
         rand uvm_reg_field datain;
 
         function new(string name = "mbox_csr__mbox_datain");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.datain = new("datain");
             this.datain.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(datain_bit_cg[bt]) datain_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : mbox_csr__mbox_datain
 
     // Reg - mbox_csr::mbox_dataout
     class mbox_csr__mbox_dataout extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        mbox_csr__mbox_dataout_bit_cg dataout_bit_cg[32];
+        mbox_csr__mbox_dataout_fld_cg fld_cg;
         rand uvm_reg_field dataout;
 
         function new(string name = "mbox_csr__mbox_dataout");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.dataout = new("dataout");
             this.dataout.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(dataout_bit_cg[bt]) dataout_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : mbox_csr__mbox_dataout
 
     // Reg - mbox_csr::mbox_execute
     class mbox_csr__mbox_execute extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        mbox_csr__mbox_execute_bit_cg execute_bit_cg[1];
+        mbox_csr__mbox_execute_fld_cg fld_cg;
         rand uvm_reg_field execute;
 
         function new(string name = "mbox_csr__mbox_execute");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.execute = new("execute");
             this.execute.configure(this, 1, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(execute_bit_cg[bt]) execute_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : mbox_csr__mbox_execute
 
     // Reg - mbox_csr::mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760
     class mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760_bit_cg status_bit_cg[4];
+        mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760_bit_cg ecc_single_error_bit_cg[1];
+        mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760_bit_cg ecc_double_error_bit_cg[1];
+        mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760_bit_cg mbox_fsm_ps_bit_cg[3];
+        mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760_bit_cg soc_has_lock_bit_cg[1];
+        mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760_fld_cg fld_cg;
         rand uvm_reg_field status;
         rand uvm_reg_field ecc_single_error;
         rand uvm_reg_field ecc_double_error;
@@ -111,8 +233,13 @@ package mbox_csr_uvm;
         rand uvm_reg_field soc_has_lock;
 
         function new(string name = "mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.status = new("status");
@@ -125,20 +252,45 @@ package mbox_csr_uvm;
             this.mbox_fsm_ps.configure(this, 3, 6, "RO", 1, 'h0, 1, 1, 0);
             this.soc_has_lock = new("soc_has_lock");
             this.soc_has_lock.configure(this, 1, 9, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(status_bit_cg[bt]) status_bit_cg[bt] = new();
+                foreach(ecc_single_error_bit_cg[bt]) ecc_single_error_bit_cg[bt] = new();
+                foreach(ecc_double_error_bit_cg[bt]) ecc_double_error_bit_cg[bt] = new();
+                foreach(mbox_fsm_ps_bit_cg[bt]) mbox_fsm_ps_bit_cg[bt] = new();
+                foreach(soc_has_lock_bit_cg[bt]) soc_has_lock_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760
 
     // Reg - mbox_csr::mbox_unlock
     class mbox_csr__mbox_unlock extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        mbox_csr__mbox_unlock_bit_cg unlock_bit_cg[1];
+        mbox_csr__mbox_unlock_fld_cg fld_cg;
         rand uvm_reg_field unlock;
 
         function new(string name = "mbox_csr__mbox_unlock");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.unlock = new("unlock");
             this.unlock.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(unlock_bit_cg[bt]) unlock_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : mbox_csr__mbox_unlock
 
@@ -208,4 +360,5 @@ package mbox_csr_uvm;
         endfunction : build
     endclass : mbox_csr
 
+    `include "mbox_csr_sample.svh"
 endpackage: mbox_csr_uvm

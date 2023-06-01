@@ -28,6 +28,11 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
+covergroup cptra_status_transaction_bit_cg with function sample(input bit val);
+  option.per_instance = 1;
+  ea_bit: coverpoint val;
+endgroup
+
 class cptra_status_transaction_coverage  extends uvm_subscriber #(.T(cptra_status_transaction ));
 
   `uvm_component_utils( cptra_status_transaction_coverage )
@@ -35,6 +40,9 @@ class cptra_status_transaction_coverage  extends uvm_subscriber #(.T(cptra_statu
   T coverage_trans;
 
   // pragma uvmf custom class_item_additional begin
+  cptra_status_transaction_bit_cg cptra_obf_key_reg_bit_cg[`CLP_OBF_KEY_DWORDS-1:0] [31:0];
+  cptra_status_transaction_bit_cg obf_field_entropy_bit_cg[`CLP_OBF_FE_DWORDS -1:0] [31:0];
+  cptra_status_transaction_bit_cg obf_uds_seed_bit_cg     [`CLP_OBF_UDS_DWORDS-1:0] [31:0];
   // pragma uvmf custom class_item_additional end
   
   // ****************************************************************************
@@ -44,18 +52,72 @@ class cptra_status_transaction_coverage  extends uvm_subscriber #(.T(cptra_statu
     option.auto_bin_max=1024;
     option.per_instance=1;
     soc_ifc_err_intr_pending: coverpoint coverage_trans.soc_ifc_err_intr_pending;
+    soc_ifc_err_intr_transition: coverpoint coverage_trans.soc_ifc_err_intr_pending {
+        bins rise = (0 => 1);
+        bins fall = (1 => 0);
+    }
     soc_ifc_notif_intr_pending: coverpoint coverage_trans.soc_ifc_notif_intr_pending;
+    soc_ifc_notif_intr_transition: coverpoint coverage_trans.soc_ifc_notif_intr_pending {
+        bins rise = (0 => 1);
+        bins fall = (1 => 0);
+    }
     sha_err_intr_pending: coverpoint coverage_trans.sha_err_intr_pending;
+    sha_err_intr_transition: coverpoint coverage_trans.sha_err_intr_pending {
+        bins rise = (0 => 1);
+        bins fall = (1 => 0);
+    }
     sha_notif_intr_pending: coverpoint coverage_trans.sha_notif_intr_pending;
+    sha_notif_intr_transition: coverpoint coverage_trans.sha_notif_intr_pending {
+        bins rise = (0 => 1);
+        bins fall = (1 => 0);
+    }
     timer_intr_pending: coverpoint coverage_trans.timer_intr_pending;
+    timer_intr_transition: coverpoint coverage_trans.timer_intr_pending {
+        bins rise = (0 => 1);
+        bins fall = (1 => 0);
+    }
     noncore_rst_asserted: coverpoint coverage_trans.noncore_rst_asserted;
+    noncore_rst_transition: coverpoint coverage_trans.noncore_rst_asserted {
+        bins rise = (0 => 1);
+        bins fall = (1 => 0);
+    }
     uc_rst_asserted: coverpoint coverage_trans.uc_rst_asserted;
-    cptra_obf_key_reg: coverpoint coverage_trans.cptra_obf_key_reg;
-    obf_field_entropy: coverpoint coverage_trans.obf_field_entropy;
-    obf_uds_seed: coverpoint coverage_trans.obf_uds_seed;
-    nmi_vector: coverpoint coverage_trans.nmi_vector;
+    uc_rst_transition: coverpoint coverage_trans.uc_rst_asserted {
+        bins rise = (0 => 1);
+        bins fall = (1 => 0);
+    }
+    cptra_obf_key_reg: coverpoint coverage_trans.cptra_obf_key_reg {
+        bins zero_key  = {0};
+        bins rand_key  = {[1:{`CLP_OBF_KEY_DWORDS{32'hFFFF_FFFF}}-1]};
+        bins ones_key  = {{`CLP_OBF_KEY_DWORDS{32'hFFFF_FFFF}}};
+    }
+    obf_field_entropy: coverpoint coverage_trans.obf_field_entropy {
+        bins zero_fe  = {0};
+        bins rand_fe  = {[1:{`CLP_OBF_FE_DWORDS{32'hFFFF_FFFF}}-1]};
+        bins ones_fe  = {{`CLP_OBF_FE_DWORDS{32'hFFFF_FFFF}}};
+    }
+    obf_uds_seed: coverpoint coverage_trans.obf_uds_seed {
+        bins zero_uds  = {0};
+        bins rand_uds  = {[1:{`CLP_OBF_UDS_DWORDS{32'hFFFF_FFFF}}-1]};
+        bins ones_uds  = {{`CLP_OBF_UDS_DWORDS{32'hFFFF_FFFF}}};
+    }
+    nmi_vector: coverpoint coverage_trans.nmi_vector {
+                 bins zero = {32'h0};
+        wildcard bins rom  = {32'h0000_????};
+        wildcard bins iccm = {32'h400?_????};
+        wildcard bins set  = (32'h0000_0000 => 32'h400?_????);
+        wildcard bins clr  = (32'h400?_???? => 32'h0000_0000);
+    }
     nmi_intr_pending: coverpoint coverage_trans.nmi_intr_pending;
+    nmi_intr_transition: coverpoint coverage_trans.nmi_intr_pending {
+        bins rise = (0 => 1);
+        bins fall = (1 => 0);
+    }
     iccm_locked: coverpoint coverage_trans.iccm_locked;
+    iccm_locked_transition: coverpoint coverage_trans.iccm_locked {
+        bins rise = (0 => 1);
+        bins fall = (1 => 0);
+    }
     // pragma uvmf custom covergroup end
   endgroup
 
@@ -66,7 +128,9 @@ class cptra_status_transaction_coverage  extends uvm_subscriber #(.T(cptra_statu
   function new(string name="", uvm_component parent=null);
     super.new(name,parent);
     cptra_status_transaction_cg=new;
-    `uvm_warning("COVERAGE_MODEL_REVIEW", "A covergroup has been constructed which may need review because of either generation or re-generation with merging.  Please note that transaction variables added as a result of re-generation and merging are not automatically added to the covergroup.  Remove this warning after the covergroup has been reviewed.")
+    foreach (coverage_trans.cptra_obf_key_reg[dw,bt]) cptra_obf_key_reg_bit_cg[dw][bt] = new;
+    foreach (coverage_trans.obf_field_entropy[dw,bt]) obf_field_entropy_bit_cg[dw][bt] = new;
+    foreach (coverage_trans.obf_uds_seed     [dw,bt]) obf_uds_seed_bit_cg     [dw][bt] = new;
   endfunction
 
   // ****************************************************************************
@@ -75,6 +139,9 @@ class cptra_status_transaction_coverage  extends uvm_subscriber #(.T(cptra_statu
   //
   function void build_phase(uvm_phase phase);
     cptra_status_transaction_cg.set_inst_name($sformatf("cptra_status_transaction_cg_%s",get_full_name()));
+    foreach (coverage_trans.cptra_obf_key_reg[dw,bt]) cptra_obf_key_reg_bit_cg[dw][bt].set_inst_name($sformatf("cptra_obf_key_reg_bit_cg_%d_%d_%s",dw, bt, get_full_name()));
+    foreach (coverage_trans.obf_field_entropy[dw,bt]) obf_field_entropy_bit_cg[dw][bt].set_inst_name($sformatf("obf_field_entropy_bit_cg_%d_%d_%s",dw, bt, get_full_name()));
+    foreach (coverage_trans.obf_uds_seed     [dw,bt]) obf_uds_seed_bit_cg     [dw][bt].set_inst_name($sformatf("obf_uds_seed_bit_cg_%d_%d_%s",dw, bt, get_full_name()));
   endfunction
 
   // ****************************************************************************
@@ -87,6 +154,9 @@ class cptra_status_transaction_coverage  extends uvm_subscriber #(.T(cptra_statu
     `uvm_info("COV","Received transaction",UVM_HIGH);
     coverage_trans = t;
     cptra_status_transaction_cg.sample();
+    foreach (coverage_trans.cptra_obf_key_reg[dw,bt]) cptra_obf_key_reg_bit_cg[dw][bt].sample(coverage_trans.cptra_obf_key_reg[dw][bt]);
+    foreach (coverage_trans.obf_field_entropy[dw,bt]) obf_field_entropy_bit_cg[dw][bt].sample(coverage_trans.obf_field_entropy[dw][bt]);
+    foreach (coverage_trans.obf_uds_seed     [dw,bt]) obf_uds_seed_bit_cg     [dw][bt].sample(coverage_trans.obf_uds_seed     [dw][bt]);
   endfunction
 
 endclass
