@@ -492,7 +492,7 @@ module spi_host_tb
   // Configures the spi_host to request data from the spi flash
   // The spiflash device will return data at the requested addresses
   //----------------------------------------------------------------
-  task run_read_test(input int host);
+  task automatic run_read_test(input int host);
     logic [31:0] rx_data;
     logic [7:0]  rx_bytes[$] = {};
     spi_host_status_t status;
