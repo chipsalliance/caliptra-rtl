@@ -292,8 +292,8 @@ module caliptra_prim_alert_sender
   ////////////////
 
 // however, since we use sequence constructs below, we need to wrap the entire block again.
-// typically, the CALIPTRA_ASSERT macros already contain this INC_ASSERT macro.
-`ifdef INC_ASSERT
+// typically, the CALIPTRA_ASSERT macros already contain this CALIPTRA_INC_ASSERT macro.
+`ifdef CALIPTRA_INC_ASSERT
   // check whether all outputs have a good known state after reset
   `CALIPTRA_ASSERT_KNOWN(AlertPKnownO_A, alert_tx_o)
 

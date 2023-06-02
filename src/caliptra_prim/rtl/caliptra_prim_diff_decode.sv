@@ -219,7 +219,7 @@ module caliptra_prim_diff_decode #(
 
   if (AsyncOn) begin : gen_async_assert
     // assertions for asynchronous case
-`ifdef INC_ASSERT
+`ifdef CALIPTRA_INC_ASSERT
   `ifndef FPV_ALERT_NO_SIGINT_ERR
     // correctly detect sigint issue (only one transition cycle of permissible due to skew)
     `CALIPTRA_ASSERT(SigintCheck0_A, gen_async.diff_pd == gen_async.diff_nd [*2] |-> sigint_o)

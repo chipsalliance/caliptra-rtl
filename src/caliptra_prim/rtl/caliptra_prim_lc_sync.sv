@@ -62,7 +62,7 @@ module caliptra_prim_lc_sync #(
 // cycle, whereas RTL will because SVAs sample values in the "preponed" region. To that end we make
 // use of an RTL helper variable to sample the lc_en_i signal, hence ensuring that there are no
 // sampling mismatches.
-`ifdef INC_ASSERT
+`ifdef CALIPTRA_INC_ASSERT
       lc_ctrl_pkg::lc_tx_t lc_en_in_sva_q;
       always_ff @(posedge clk_i) begin
         lc_en_in_sva_q <= lc_en_i;

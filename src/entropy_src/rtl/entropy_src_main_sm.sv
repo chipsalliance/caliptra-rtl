@@ -41,7 +41,7 @@ module entropy_src_main_sm
   // The definition of state_e, the sparse FSM state enum, is in entropy_src_main_sm_pkg.sv
   state_e state_d, state_q;
 
-  `PRIM_FLOP_SPARSE_FSM(u_state_regs, state_d, state_q, state_e, Idle)
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_state_regs, state_d, state_q, state_e, Idle)
 
   assign main_sm_state_o = state_q;
 

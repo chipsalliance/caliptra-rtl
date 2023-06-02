@@ -216,7 +216,7 @@ module csrng_ctr_drbg_gen import csrng_pkg::*; #(
   state_e state_d, state_q;
 
   // SEC_CM: UPDATE.FSM.SPARSE
-  `PRIM_FLOP_SPARSE_FSM(u_state_regs, state_d, state_q, state_e, ReqIdle)
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_state_regs, state_d, state_q, state_e, ReqIdle)
 
   always_ff @(posedge clk_i or negedge rst_ni)
     if (!rst_ni) begin

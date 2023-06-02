@@ -111,7 +111,7 @@ module caliptra_prim_mubi4_sync
 // cycle, whereas RTL will because SVAs sample values in the "preponed" region. To that end we make
 // use of an RTL helper variable to sample the lc_en_i signal, hence ensuring that there are no
 // sampling mismatches.
-`ifdef INC_ASSERT
+`ifdef CALIPTRA_INC_ASSERT
       mubi4_t mubi_in_sva_q;
       always_ff @(posedge clk_i) begin
         mubi_in_sva_q <= mubi_i;
@@ -122,7 +122,7 @@ module caliptra_prim_mubi4_sync
 `endif
     end else begin : gen_no_stable_chks
       assign mubi = mubi_sync;
-`ifdef INC_ASSERT
+`ifdef CALIPTRA_INC_ASSERT
       mubi4_t mubi_in_sva_q;
       always_ff @(posedge clk_i) begin
         mubi_in_sva_q <= mubi_i;

@@ -39,7 +39,7 @@ module caliptra_prim_sparse_fsm_flop #(
   );
   assign state_o = StateEnumT'(state_raw);
 
-  `ifdef INC_ASSERT
+  `ifdef CALIPTRA_INC_ASSERT
   assign unused_err_o = is_undefined_state(state_o);
 
   function automatic logic is_undefined_state(StateEnumT sig);
@@ -58,7 +58,7 @@ module caliptra_prim_sparse_fsm_flop #(
   // If CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT is declared, the unused_assert_connected signal will
   // be set to 1 and the below check will pass.
   // If the assertion is not declared however, the statement below will fail.
-  `ifdef INC_ASSERT
+  `ifdef CALIPTRA_INC_ASSERT
   logic unused_assert_connected;
 
   `CALIPTRA_ASSERT_INIT_NET(AssertConnected_A, unused_assert_connected === 1'b1 || !EnableAlertTriggerSVA)

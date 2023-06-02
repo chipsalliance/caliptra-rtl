@@ -239,7 +239,7 @@ module csrng_cmd_stage import csrng_pkg::*; #(
   } state_e;
 
   state_e state_d, state_q;
-  `PRIM_FLOP_SPARSE_FSM(u_state_regs, state_d, state_q, state_e, Idle)
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_state_regs, state_d, state_q, state_e, Idle)
 
   always_comb begin
     state_d = state_q;

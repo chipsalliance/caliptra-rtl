@@ -3,15 +3,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 `ifndef PRIM_FLOP_MACROS_SV
-`define PRIM_FLOP_MACROS_SV
+`define CALIPTRA_PRIM_FLOP_MACROS_SV
 
 /////////////////////////////////////
 // Default Values for Macros below //
 /////////////////////////////////////
 
-`define PRIM_FLOP_CLK clk_i
-`define PRIM_FLOP_RST rst_ni
-`define PRIM_FLOP_RESVAL '0
+`define CALIPTRA_PRIM_FLOP_CLK clk_i
+`define CALIPTRA_PRIM_FLOP_RST rst_ni
+`define CALIPTRA_PRIM_FLOP_RESVAL '0
 
 /////////////////////
 // Register Macros //
@@ -21,7 +21,7 @@
 // to make the code more concise.
 
 // Register with asynchronous reset.
-`define PRIM_FLOP_A(__d, __q, __resval = `PRIM_FLOP_RESVAL, __clk = `PRIM_FLOP_CLK, __rst_n = `PRIM_FLOP_RST) \
+`define CALIPTRA_PRIM_FLOP_A(__d, __q, __resval = `CALIPTRA_PRIM_FLOP_RESVAL, __clk = `CALIPTRA_PRIM_FLOP_CLK, __rst_n = `CALIPTRA_PRIM_FLOP_RST) \
   always_ff @(posedge __clk or negedge __rst_n) begin \
     if (!__rst_n) begin                               \
       __q <= __resval;                                \
@@ -41,21 +41,21 @@
 // Note that in this variant, the __q output is disconnected from caliptra_prim_sparse_fsm_flop and attached
 // to the behavioral flop. An assertion is added to ensure equivalence between the
 // caliptra_prim_sparse_fsm_flop output and the behavioral flop output in that case.
-`define PRIM_FLOP_SPARSE_FSM(__name, __d, __q, __type, __resval = `PRIM_FLOP_RESVAL, __clk = `PRIM_FLOP_CLK, __rst_n = `PRIM_FLOP_RST, __alert_trigger_sva_en = 1) \
+`define CALIPTRA_PRIM_FLOP_SPARSE_FSM(__name, __d, __q, __type, __resval = `CALIPTRA_PRIM_FLOP_RESVAL, __clk = `CALIPTRA_PRIM_FLOP_CLK, __rst_n = `CALIPTRA_PRIM_FLOP_RST, __alert_trigger_sva_en = 1) \
   `ifdef CALIPTRA_SIMULATION                                   \
     caliptra_prim_sparse_fsm_flop #(                           \
       .StateEnumT(__type),                            \
       .Width($bits(__type)),                          \
       .ResetValue($bits(__type)'(__resval)),          \
       .EnableAlertTriggerSVA(__alert_trigger_sva_en), \
-      .CustomForceName(`PRIM_STRINGIFY(__q))          \
+      .CustomForceName(`CALIPTRA_PRIM_STRINGIFY(__q))          \
     ) __name (                                        \
       .clk_i   ( __clk   ),                           \
       .rst_ni  ( __rst_n ),                           \
       .state_i ( __d     ),                           \
       .state_o (         )                            \
     );                                                \
-    `PRIM_FLOP_A(__d, __q, __resval, __clk, __rst_n)  \
+    `CALIPTRA_PRIM_FLOP_A(__d, __q, __resval, __clk, __rst_n)  \
     `CALIPTRA_ASSERT(``__name``_A, __q === ``__name``.state_o) \
   `else                                               \
     caliptra_prim_sparse_fsm_flop #(                           \

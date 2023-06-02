@@ -192,7 +192,7 @@ module sha3
   ///////////////////
 
   // State Register
-  `PRIM_FLOP_SPARSE_FSM(u_state_regs, st_d, st, sha3_st_sparse_e, StIdle_sparse)
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_state_regs, st_d, st, sha3_st_sparse_e, StIdle_sparse)
 
 
   // Next State and Output Logic

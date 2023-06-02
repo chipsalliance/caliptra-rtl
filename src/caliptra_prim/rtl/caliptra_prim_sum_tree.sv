@@ -95,7 +95,7 @@ module caliptra_prim_sum_tree #(
   // Assertions //
   ////////////////
 
-`ifdef INC_ASSERT
+`ifdef CALIPTRA_INC_ASSERT
   //VCS coverage off
   // pragma coverage off
 

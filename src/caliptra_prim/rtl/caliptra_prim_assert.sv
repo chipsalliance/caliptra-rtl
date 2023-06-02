@@ -7,7 +7,7 @@
 //  - Provides boiler plate template for common assertions
 
 `ifndef PRIM_ASSERT_SV
-`define PRIM_ASSERT_SV
+`define CALIPTRA_PRIM_ASSERT_SV
 
 ///////////////////
 // Helper macros //
@@ -21,7 +21,7 @@
 `endif
 
 // Converts an arbitrary block of code into a Verilog string
-`define PRIM_STRINGIFY(__x) `"__x`"
+`define CALIPTRA_PRIM_STRINGIFY(__x) `"__x`"
 
 // CALIPTRA_ASSERT_ERROR logs an error message with either `uvm_error or with $error.
 //
@@ -29,11 +29,11 @@
 // for redefining it here is to avoid creating a dependency.
 `define CALIPTRA_ASSERT_ERROR(__name)                                                             \
 `ifdef UVM                                                                                        \
-  uvm_pkg::uvm_report_error("CALIPTRA_ASSERT FAILED", `PRIM_STRINGIFY(__name), uvm_pkg::UVM_NONE, \
+  uvm_pkg::uvm_report_error("CALIPTRA_ASSERT FAILED", `CALIPTRA_PRIM_STRINGIFY(__name), uvm_pkg::UVM_NONE, \
                             `__FILE__, `__LINE__, "", 1);                                         \
 `else                                                                                             \
   $error("%0t: (%0s:%0d) [%m] [CALIPTRA_ASSERT FAILED] %0s", $time, `__FILE__, `__LINE__,         \
-         `PRIM_STRINGIFY(__name));                                                                \
+         `CALIPTRA_PRIM_STRINGIFY(__name));                                                                \
 `endif
 
 // This macro is suitable for conditionally triggering lint errors, e.g., if a Sec parameter takes
@@ -59,8 +59,8 @@
 // the same thing in each case (except for the dummy flavour), but in a way that the respective
 // tools support.
 //
-// If the tool supports assertions in some form, we also define INC_ASSERT (which can be used to
-// hide signal definitions that are only used for assertions).
+// If the tool supports assertions in some form, we also define CALIPTRA_INC_ASSERT (which can be 
+// used to hide signal definitions that are only used for assertions).
 //
 // The list of basic macros supported is:
 //
@@ -99,10 +99,10 @@
  `include "caliptra_prim_assert_dummy_macros.svh"
 `elsif YOSYS
  `include "caliptra_prim_assert_yosys_macros.svh"
- `define INC_ASSERT
+ `define CALIPTRA_INC_ASSERT
 `else
  `include "caliptra_prim_assert_standard_macros.svh"
- `define INC_ASSERT
+ `define CALIPTRA_INC_ASSERT
 `endif
 
 //////////////////////////////
@@ -159,7 +159,7 @@
 // Create a small "gray" window beyond the usual rst time to avoid
 // checking.
 `define CALIPTRA_ASSERT_FPV_LINEAR_FSM(__name, __state, __type, __clk = `CALIPTRA_ASSERT_DEFAULT_CLK, __rst = `CALIPTRA_ASSERT_DEFAULT_RST) \
-  `ifdef INC_ASSERT                                                                                              \
+  `ifdef CALIPTRA_INC_ASSERT                                                                                              \
      bit __name``_cond;                                                                                          \
      always_ff @(posedge __clk or posedge __rst) begin                                                           \
        if (__rst) begin                                                                                          \

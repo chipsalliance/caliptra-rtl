@@ -6,7 +6,7 @@
 // Used parser: Verible
 
 `ifndef PRIM_DEFAULT_IMPL
-  `define PRIM_DEFAULT_IMPL caliptra_prim_pkg::ImplGeneric
+  `define CALIPTRA_PRIM_DEFAULT_IMPL caliptra_prim_pkg::ImplGeneric
 `endif
 
 // This is to prevent AscentLint warnings in the generated
@@ -22,7 +22,7 @@ parameter int Width = 1
   input        [Width-1:0] in_i,
   output logic [Width-1:0] out_o
 );
-  parameter caliptra_prim_pkg::impl_e Impl = `PRIM_DEFAULT_IMPL;
+  parameter caliptra_prim_pkg::impl_e Impl = `CALIPTRA_PRIM_DEFAULT_IMPL;
 
 if (Impl == caliptra_prim_pkg::ImplXilinx) begin : gen_xilinx
     caliptra_prim_xilinx_buf #(

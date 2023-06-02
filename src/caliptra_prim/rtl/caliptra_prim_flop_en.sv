@@ -6,7 +6,7 @@
 // Used parser: Fallback (regex)
 
 `ifndef PRIM_DEFAULT_IMPL
-  `define PRIM_DEFAULT_IMPL caliptra_prim_pkg::ImplGeneric
+  `define CALIPTRA_PRIM_DEFAULT_IMPL caliptra_prim_pkg::ImplGeneric
 `endif
 
 // This is to prevent AscentLint warnings in the generated
@@ -29,7 +29,7 @@ module caliptra_prim_flop_en
   input        [Width-1:0] d_i,
   output logic [Width-1:0] q_o
 );
-  parameter caliptra_prim_pkg::impl_e Impl = `PRIM_DEFAULT_IMPL;
+  parameter caliptra_prim_pkg::impl_e Impl = `CALIPTRA_PRIM_DEFAULT_IMPL;
 
 if (Impl == caliptra_prim_pkg::ImplXilinx) begin : gen_xilinx
     caliptra_prim_xilinx_flop_en #(

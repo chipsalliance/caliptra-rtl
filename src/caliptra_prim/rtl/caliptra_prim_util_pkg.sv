@@ -86,7 +86,7 @@ package caliptra_prim_util_pkg;
 `endif
   endfunction
 
-`ifdef INC_ASSERT
+`ifdef CALIPTRA_INC_ASSERT
   // Package-scoped variable to detect the end of simulation.
   //
   // Used only in DV simulations. The bit will be used by assertions in RTL to perform end-of-test

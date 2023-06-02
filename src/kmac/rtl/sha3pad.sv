@@ -275,7 +275,7 @@ module sha3pad
   // State Register ===========================================================
   pad_st_e st, st_d;
 
-  `PRIM_FLOP_SPARSE_FSM(u_state_regs, st_d, st, pad_st_e, StPadIdle)
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_state_regs, st_d, st, pad_st_e, StPadIdle)
 
   // `end_of_block` indicates current beat is end of the block
   // It shall set when the address reaches to the end of the block. End address

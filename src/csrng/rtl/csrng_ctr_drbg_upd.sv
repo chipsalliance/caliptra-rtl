@@ -184,7 +184,7 @@ module csrng_ctr_drbg_upd #(
   blk_enc_state_e blk_enc_state_d, blk_enc_state_q;
 
   // SEC_CM: BLK_ENC.FSM.SPARSE
-  `PRIM_FLOP_SPARSE_FSM(u_blk_enc_state_regs, blk_enc_state_d,
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_blk_enc_state_regs, blk_enc_state_d,
       blk_enc_state_q, blk_enc_state_e, ReqIdle)
 
 // Encoding generated with:
@@ -218,7 +218,7 @@ module csrng_ctr_drbg_upd #(
   outblk_state_e outblk_state_d, outblk_state_q;
 
   // SEC_CM: OUTBLK.FSM.SPARSE
-  `PRIM_FLOP_SPARSE_FSM(u_outblk_state_regs, outblk_state_d,
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_outblk_state_regs, outblk_state_d,
       outblk_state_q, outblk_state_e, AckIdle)
 
   always_ff @(posedge clk_i or negedge rst_ni)

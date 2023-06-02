@@ -188,7 +188,7 @@ module keccak_round
       StTerminalError = 6'b110110
   } keccak_st_e;
   keccak_st_e keccak_st, keccak_st_d;
-  `PRIM_FLOP_SPARSE_FSM(u_state_regs, keccak_st_d, keccak_st, keccak_st_e, StIdle)
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_state_regs, keccak_st_d, keccak_st, keccak_st_e, StIdle)
 
   // Next state logic and output logic
   // SEC_CM: FSM.SPARSE

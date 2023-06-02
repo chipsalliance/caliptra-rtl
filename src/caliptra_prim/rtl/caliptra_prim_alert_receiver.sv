@@ -268,7 +268,7 @@ module caliptra_prim_alert_receiver
   // assertions //
   ////////////////
 
-`ifdef INC_ASSERT
+`ifdef CALIPTRA_INC_ASSERT
   import caliptra_prim_mubi_pkg::mubi4_test_false_loose;
 `endif
 

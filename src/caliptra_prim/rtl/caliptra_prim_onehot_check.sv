@@ -140,11 +140,11 @@ module caliptra_prim_onehot_check #(
   // This logic that will be assign to one, when user adds macro
   // CALIPTRA_ASSERT_PRIM_ONEHOT_ERROR_TRIGGER_ALERT to check the error with alert, in case that
   // caliptra_prim_onehot_check is used in design without adding this assertion check.
-  `ifdef INC_ASSERT
+  `ifdef CALIPTRA_INC_ASSERT
   `ifndef PRIM_DEFAULT_IMPL
-    `define PRIM_DEFAULT_IMPL caliptra_prim_pkg::ImplGeneric
+    `define CALIPTRA_PRIM_DEFAULT_IMPL caliptra_prim_pkg::ImplGeneric
   `endif
-  parameter caliptra_prim_pkg::impl_e Impl = `PRIM_DEFAULT_IMPL;
+  parameter caliptra_prim_pkg::impl_e Impl = `CALIPTRA_PRIM_DEFAULT_IMPL;
 
   logic unused_assert_connected;
   // TODO(#13337): only check generic for now. The path of this prim in other Impl may differ
