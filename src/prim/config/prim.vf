@@ -2,7 +2,7 @@
 +incdir+${CALIPTRA_ROOT}/src/libs/rtl
 +incdir+${CALIPTRA_ROOT}/src/prim/rtl
 +incdir+${CALIPTRA_ROOT}/src/lc_ctrl/rtl
-+incdir+${CALIPTRA_ROOT}/src/prim_generic/rtl
++incdir+${CALIPTRA_ROOT}/src/caliptra_prim_generic/rtl
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
 ${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sva.svh
@@ -25,8 +25,8 @@ ${CALIPTRA_ROOT}/src/lc_ctrl/rtl/lc_ctrl_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/lc_ctrl/rtl/lc_ctrl_state_pkg.sv
 ${CALIPTRA_ROOT}/src/lc_ctrl/rtl/lc_ctrl_pkg.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/ahb_to_reg_adapter.sv
-${CALIPTRA_ROOT}/src/prim_generic/rtl/prim_generic_flop.sv
-${CALIPTRA_ROOT}/src/prim_generic/rtl/prim_generic_buf.sv
+${CALIPTRA_ROOT}/src/caliptra_prim_generic/rtl/prim_generic_flop.sv
+${CALIPTRA_ROOT}/src/caliptra_prim_generic/rtl/prim_generic_buf.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_flop_en.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_flop_2sync.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_lfsr.sv
