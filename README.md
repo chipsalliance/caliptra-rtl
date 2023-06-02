@@ -72,6 +72,8 @@ Caliptra
 |-- src
 |   |-- aes
 |   |-- ahb_lite_bus
+|   |-- caliptra_prim
+|   |-- caliptra_prim_generic
 |   |-- csrng
 |   |-- datavault
 |   |-- doe
@@ -86,8 +88,6 @@ Caliptra
 |   |-- lc_ctrl
 |   |-- libs
 |   |-- pcrvault
-|   |-- prim
-|   |-- prim_generic
 |   |-- riscv_core
 |   |-- sha256
 |   |-- sha512

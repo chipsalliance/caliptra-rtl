@@ -34,7 +34,7 @@ module spi_host_byte_select (
     assign wdata_be[9*ii +: 9] = { word_be_i[ii], word_i[8*ii +: 8] };
   end : gen_map_data_be
 
-  prim_packer_fifo #(
+  caliptra_prim_packer_fifo #(
     .InW(36),
     .OutW(9)
   ) u_packer (

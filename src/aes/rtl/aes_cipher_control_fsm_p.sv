@@ -138,9 +138,9 @@ module aes_cipher_control_fsm_p import aes_pkg::*;
 
   // This primitive is used to place a size-only constraint on the
   // buffers to act as a synthesis optimization barrier.
-  prim_buf #(
+  caliptra_prim_buf #(
     .Width(NumInBufBits)
-  ) u_prim_buf_in (
+  ) u_caliptra_prim_buf_in (
     .in_i(in),
     .out_o(in_buf)
   );
@@ -354,9 +354,9 @@ module aes_cipher_control_fsm_p import aes_pkg::*;
 
   // This primitive is used to place a size-only constraint on the
   // buffers to act as a synthesis optimization barrier.
-  prim_buf #(
+  caliptra_prim_buf #(
     .Width(NumOutBufBits)
-  ) u_prim_buf_out (
+  ) u_caliptra_prim_buf_out (
     .in_i(out),
     .out_o(out_buf)
   );

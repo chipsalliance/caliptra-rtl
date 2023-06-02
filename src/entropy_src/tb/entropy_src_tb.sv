@@ -24,7 +24,7 @@
 module entropy_src_tb
   import entropy_src_pkg::*;
   import entropy_src_reg_pkg::*;
-  import prim_mubi_pkg::mubi8_t;
+  import caliptra_prim_mubi_pkg::mubi8_t;
 (
 `ifdef VERILATOR
   input bit clk_tb
@@ -160,8 +160,8 @@ module entropy_src_tb
     .hreadyout_o (hreadyout_o_tb),
     .hrdata_o    (hrdata_o_tb),
     // OTP Interface
-    .otp_en_entropy_src_fw_read_i (prim_mubi_pkg::MuBi8True),
-    .otp_en_entropy_src_fw_over_i (prim_mubi_pkg::MuBi8True),
+    .otp_en_entropy_src_fw_read_i (caliptra_prim_mubi_pkg::MuBi8True),
+    .otp_en_entropy_src_fw_over_i (caliptra_prim_mubi_pkg::MuBi8True),
     // RNG Interface
     .rng_fips_o          (),
     // Entropy Interface

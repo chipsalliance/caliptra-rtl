@@ -23,7 +23,7 @@
 
 module uart_tb
   import uart_reg_pkg::*;
-  import prim_mubi_pkg::mubi8_t;
+  import caliptra_prim_mubi_pkg::mubi8_t;
 (
 `ifdef VERILATOR
   input bit clk_tb
@@ -321,7 +321,7 @@ module uart_tb
   localparam logic [63:0] baud_rate = 115_200;
   logic [7:0] exp_data_q[$];  // queue of random input
 
-  task run_test;
+  task automatic run_test;
     logic [31:0] random_data;
     logic [7:0]  exp_data, act_data;
     logic [31:0] ctrl = '0;

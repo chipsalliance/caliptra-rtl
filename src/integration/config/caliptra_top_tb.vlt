@@ -1,9 +1,9 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
-${CALIPTRA_ROOT}/src/prim/lint/prim_onehot_check.vlt
-${CALIPTRA_ROOT}/src/prim/lint/prim_arbiter.vlt
+${CALIPTRA_ROOT}/src/caliptra_prim/lint/caliptra_prim_onehot_check.vlt
+${CALIPTRA_ROOT}/src/caliptra_prim/lint/caliptra_prim_arbiter.vlt
 ${CALIPTRA_ROOT}/src/csrng/lint/csrng.vlt
-${CALIPTRA_ROOT}/src/prim/lint/prim_max_tree.vlt
-${CALIPTRA_ROOT}/src/prim/lint/prim_sum_tree.vlt
-${CALIPTRA_ROOT}/src/prim/lint/prim_onehot_check.vlt
+${CALIPTRA_ROOT}/src/caliptra_prim/lint/caliptra_prim_max_tree.vlt
+${CALIPTRA_ROOT}/src/caliptra_prim/lint/caliptra_prim_sum_tree.vlt
+${CALIPTRA_ROOT}/src/caliptra_prim/lint/caliptra_prim_onehot_check.vlt

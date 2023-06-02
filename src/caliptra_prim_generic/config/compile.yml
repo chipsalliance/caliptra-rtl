@@ -1,0 +1,10 @@
+---
+provides: [caliptra_prim_generic]
+schema_version: 2.4.0
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/caliptra_prim_generic_flop_en.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_generic_flop.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_generic_buf.sv

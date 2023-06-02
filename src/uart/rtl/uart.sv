@@ -4,7 +4,7 @@
 //
 // Description: UART top level wrapper file
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
 module uart
     import uart_reg_pkg::*;
@@ -30,8 +30,8 @@ module uart
   output logic [AHBDataWidth-1:0] hrdata_o,
 
   // Alerts
-  input  prim_alert_pkg::alert_rx_t [NumAlerts-1:0] alert_rx_i,
-  output prim_alert_pkg::alert_tx_t [NumAlerts-1:0] alert_tx_o,
+  input  caliptra_prim_alert_pkg::alert_rx_t [NumAlerts-1:0] alert_rx_i,
+  output caliptra_prim_alert_pkg::alert_tx_t [NumAlerts-1:0] alert_tx_o,
 
   // Generic IO
   input           cio_rx_i,
@@ -102,10 +102,10 @@ module uart
   };
 
   for (genvar i = 0; i < NumAlerts; i++) begin : gen_alert_tx
-    prim_alert_sender #(
+    caliptra_prim_alert_sender #(
       .AsyncOn(AlertAsyncOn[i]),
       .IsFatal(1'b1)
-    ) u_prim_alert_sender (
+    ) u_caliptra_prim_alert_sender (
       .clk_i,
       .rst_ni,
       .alert_test_i  ( alert_test[i] ),

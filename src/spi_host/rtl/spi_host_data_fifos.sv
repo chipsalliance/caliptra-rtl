@@ -45,8 +45,8 @@ module spi_host_data_fifos #(
   output logic        rx_wm_o
 );
 
-  localparam int RxDepthW = prim_util_pkg::vbits(RxDepth+1);
-  localparam int TxDepthW = prim_util_pkg::vbits(TxDepth+1);
+  localparam int RxDepthW = caliptra_prim_util_pkg::vbits(RxDepth+1);
+  localparam int TxDepthW = caliptra_prim_util_pkg::vbits(TxDepth+1);
 
   logic [31:0] tx_data_ordered;
   logic [3:0]  tx_be_ordered;
@@ -72,7 +72,7 @@ module spi_host_data_fifos #(
   assign tx_data_be = { tx_data_ordered, tx_be_ordered };
   assign { core_tx_data_o, core_tx_be_o } = core_tx_data_be;
 
-  prim_fifo_sync #(
+  caliptra_prim_fifo_sync #(
     .Width(36),
     .Pass(1),
     .Depth(TxDepth)
@@ -95,7 +95,7 @@ module spi_host_data_fifos #(
 
   assign rx_qd_o = 8'(rx_depth);
 
-  prim_fifo_sync #(
+  caliptra_prim_fifo_sync #(
     .Width(32),
     .Pass(1),
     .Depth(RxDepth)

@@ -64,9 +64,9 @@ module entropy_src_repcnts_ht #(
 
   // NIST B counter
   // SEC_CM: CTR.REDUN
-  prim_count #(
+  caliptra_prim_count #(
     .Width(RegWidth)
-  ) u_prim_count_rep_cntr (
+  ) u_caliptra_prim_count_rep_cntr (
     .clk_i,
     .rst_ni,
     .clr_i(1'b0),
