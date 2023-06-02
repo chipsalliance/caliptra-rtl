@@ -4,9 +4,11 @@
 
 `include "caliptra_prim_assert.sv"
 
-module caliptra_prim_sparse_fsm_flop #(
+module caliptra_prim_sparse_fsm_flop
+  import caliptra_prim_sparse_fsm_pkg::*;
+#(
   parameter int               Width      = 1,
-  parameter type              StateEnumT = logic [Width-1:0],
+  parameter type              StateEnumT = state_t,
   parameter logic [Width-1:0] ResetValue = '0,
   // This should only be disabled in special circumstances, for example
   // in non-comportable IPs where an error does not trigger an alert.

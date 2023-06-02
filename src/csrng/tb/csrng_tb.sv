@@ -167,7 +167,7 @@ module csrng_tb
   // the dut as needed.
   //----------------------------------------------------------------
   always @(posedge clk_tb) begin : sys_monitor
-      cycle_ctr = cycle_ctr + 1;
+      cycle_ctr = (!reset_n_tb) ? 32'h0 : cycle_ctr + 1;
     end
 
 
@@ -199,7 +199,6 @@ module csrng_tb
   //----------------------------------------------------------------
   task init_sim;
     begin
-      cycle_ctr = '0;
       error_ctr = '0;
       tc_ctr    = '0;
 `ifndef VERILATOR
@@ -254,6 +253,7 @@ module csrng_tb
       $display("[%t] write_single_word(addr=0x%x, word=0x%x)", $time, address, word);
       hsel_i_tb       = 1;
       haddr_i_tb      = address;
+      hwdata_i_tb     = word;
       hwrite_i_tb     = 1;
       hready_i_tb     = 1;
       htrans_i_tb     = AHB_HTRANS_NONSEQ;
@@ -261,7 +261,6 @@ module csrng_tb
 
       @(posedge clk_tb);
       haddr_i_tb      = 'Z;
-      hwdata_i_tb     = word;
       hwrite_i_tb     = 0;
       htrans_i_tb     = AHB_HTRANS_IDLE;
       wait(hreadyout_o_tb == 1'b1);

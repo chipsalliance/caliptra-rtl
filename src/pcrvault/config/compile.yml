@@ -1,6 +1,7 @@
 provides: [pv_defines_pkg]
 schema_version: 2.4.0
-requires: []
+requires: 
+  - libs
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
