@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // The alert sender primitive module differentially encodes and transmits an
-// alert signal to the prim_alert_receiver module. An alert will be signalled
+// alert signal to the caliptra_prim_alert_receiver module. An alert will be signalled
 // by a full handshake on alert_p/n and ack_p/n. The alert_req_i signal may
 // be continuously asserted, in which case the alert signalling handshake
 // will be repeatedly initiated.
@@ -37,12 +37,12 @@
 // to the receiver by placing an inconsistent diff value on the differential
 // output (and continuously toggling it).
 //
-// See also: prim_alert_receiver, prim_diff_decode, alert_handler
+// See also: caliptra_prim_alert_receiver, caliptra_prim_diff_decode, alert_handler
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
-module prim_alert_sender
-  import prim_alert_pkg::*;
+module caliptra_prim_alert_sender
+  import caliptra_prim_alert_pkg::*;
 #(
   // enables additional synchronization logic
   parameter bit AsyncOn = 1'b1,
@@ -72,16 +72,16 @@ module prim_alert_sender
   logic ping_sigint, ping_event, ping_n, ping_p;
 
   // This prevents further tool optimizations of the differential signal.
-  prim_sec_anchor_buf #(
+  caliptra_prim_sec_anchor_buf #(
     .Width(2)
-  ) u_prim_buf_ping (
+  ) u_caliptra_prim_buf_ping (
     .in_i({alert_rx_i.ping_n,
            alert_rx_i.ping_p}),
     .out_o({ping_n,
             ping_p})
   );
 
-  prim_diff_decode #(
+  caliptra_prim_diff_decode #(
     .AsyncOn(AsyncOn)
   ) u_decode_ping (
     .clk_i,
@@ -98,16 +98,16 @@ module prim_alert_sender
   logic ack_sigint, ack_level, ack_n, ack_p;
 
   // This prevents further tool optimizations of the differential signal.
-  prim_sec_anchor_buf #(
+  caliptra_prim_sec_anchor_buf #(
     .Width(2)
-  ) u_prim_buf_ack (
+  ) u_caliptra_prim_buf_ack (
     .in_i({alert_rx_i.ack_n,
            alert_rx_i.ack_p}),
     .out_o({ack_n,
             ack_p})
   );
 
-  prim_diff_decode #(
+  caliptra_prim_diff_decode #(
     .AsyncOn(AsyncOn)
   ) u_decode_ack (
     .clk_i,
@@ -153,9 +153,9 @@ module prim_alert_sender
 
   // if handshake is ongoing, capture additional alert requests.
   logic alert_req;
-  prim_sec_anchor_buf #(
+  caliptra_prim_sec_anchor_buf #(
     .Width(1)
-  ) u_prim_buf_in_req (
+  ) u_caliptra_prim_buf_in_req (
     .in_i(alert_req_i),
     .out_o(alert_req)
   );
@@ -262,10 +262,10 @@ module prim_alert_sender
   end
 
   // This prevents further tool optimizations of the differential signal.
-  prim_sec_anchor_flop #(
+  caliptra_prim_sec_anchor_flop #(
     .Width     (2),
     .ResetValue(2'b10)
-  ) u_prim_flop_alert (
+  ) u_caliptra_prim_flop_alert (
     .clk_i,
     .rst_ni,
     .d_i({alert_nd, alert_pd}),
@@ -389,4 +389,4 @@ module prim_alert_sender
   `CALIPTRA_ASSUME_FPV(TriggerAlertInit_S, $stable(rst_ni) == 0 |=> alert_rx_i.ping_p == alert_rx_i.ping_n)
   `CALIPTRA_ASSUME_FPV(PingDiffPair_S, ##2 alert_rx_i.ping_p != alert_rx_i.ping_n)
 `endif
-endmodule : prim_alert_sender
+endmodule : caliptra_prim_alert_sender

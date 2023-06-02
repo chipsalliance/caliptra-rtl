@@ -45,13 +45,13 @@
       type:    "uni"
       name:    "otp_en_entropy_src_fw_read"
       act:     "rcv"
-      package: "prim_mubi_pkg"
+      package: "caliptra_prim_mubi_pkg"
     }
     { struct:  "mubi8"
       type:    "uni"
       name:    "otp_en_entropy_src_fw_over"
       act:     "rcv"
-      package: "prim_mubi_pkg"
+      package: "caliptra_prim_mubi_pkg"
     }
     { struct:  "logic"
       type:    "uni"

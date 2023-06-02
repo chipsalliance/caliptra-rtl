@@ -4,16 +4,16 @@
 //
 // Generic synchronous fifo for use in a variety of devices.
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
-module prim_fifo_sync #(
+module caliptra_prim_fifo_sync #(
   parameter int unsigned Width       = 16,
   parameter bit Pass                 = 1'b1, // if == 1 allow requests to pass through empty FIFO
   parameter int unsigned Depth       = 4,
   parameter bit OutputZeroIfEmpty    = 1'b1, // if == 1 always output 0 when FIFO is empty
   parameter bit Secure               = 1'b0, // use prim count for pointers
   // derived parameter
-  localparam int          DepthW     = prim_util_pkg::vbits(Depth+1)
+  localparam int          DepthW     = caliptra_prim_util_pkg::vbits(Depth+1)
 ) (
   input                   clk_i,
   input                   rst_ni,
@@ -58,7 +58,7 @@ module prim_fifo_sync #(
   // Normal FIFO construction
   end else begin : gen_normal_fifo
 
-    localparam int unsigned PTRV_W    = prim_util_pkg::vbits(Depth);
+    localparam int unsigned PTRV_W    = caliptra_prim_util_pkg::vbits(Depth);
     localparam int unsigned PTR_WIDTH = PTRV_W+1;
 
     logic [PTR_WIDTH-1:0] fifo_wptr, fifo_rptr;
@@ -99,7 +99,7 @@ module prim_fifo_sync #(
     assign full_o   = full;
     assign rvalid_o = ~empty & ~under_rst;
 
-    prim_fifo_sync_cnt #(
+    caliptra_prim_fifo_sync_cnt #(
       .Width(PTR_WIDTH),
       .Depth(Depth),
       .Secure(Secure)

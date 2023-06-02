@@ -20,9 +20,9 @@
 // Note that if both incr_en_i and decr_en_i are asserted at the same time, the counter remains
 // unchanged. The counter is also protected against under- and overflows.
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
-module prim_count #(
+module caliptra_prim_count #(
   parameter int Width = 2,
   // Can be used to reset the counter to a different value than 0, for example when
   // the counter is used as a down-counter.
@@ -101,7 +101,7 @@ module prim_count #(
                       (cnt_en) ? cnt_sat        : cnt_q[k];
 
     logic [Width-1:0] cnt_unforced_q;
-    prim_flop #(
+    caliptra_prim_flop #(
       .Width(Width),
       .ResetValue(ResetValues[k])
     ) u_cnt_flop (
@@ -251,11 +251,11 @@ module prim_count #(
       (cnt_q[1] + cnt_q[0]) != {Width{1'b1}})
 
   // This logic that will be assign to one, when user adds macro
-  // CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT to check the error with alert, in case that prim_count
+  // CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT to check the error with alert, in case that caliptra_prim_count
   // is used in design without adding this assertion check.
   logic unused_assert_connected;
 
   `CALIPTRA_ASSERT_INIT_NET(AssertConnected_A, unused_assert_connected === 1'b1 || !EnableAlertTriggerSVA)
 `endif
 
-endmodule // prim_count
+endmodule // caliptra_prim_count

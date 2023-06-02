@@ -43,7 +43,7 @@
 
 `define CALIPTRA_ASSERT_PRIM_REG_WE_ONEHOT_ERROR_TRIGGER_ALERT(NAME_, REG_TOP_HIER_, ALERT_, GATE_ = 0, MAX_CYCLES_ = `_SEC_CM_ALERT_MAX_CYC) \
   `CALIPTRA_ASSERT_PRIM_ONEHOT_ERROR_TRIGGER_ALERT(NAME_, \
-    REG_TOP_HIER_.u_prim_reg_we_check.u_prim_onehot_check, ALERT_, GATE_, MAX_CYCLES_)
+    REG_TOP_HIER_.u_caliptra_prim_reg_we_check.u_caliptra_prim_onehot_check, ALERT_, GATE_, MAX_CYCLES_)
 
 // macros for security countermeasures that will trigger other errors
 `define CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ERR(NAME_, PRIM_HIER_, ERR_, GATE_ = 0, MAX_CYCLES_ = 2, CLK_ = clk_i, RST_ = !rst_ni) \
@@ -60,6 +60,6 @@
 
 `define CALIPTRA_ASSERT_PRIM_REG_WE_ONEHOT_ERROR_TRIGGER_ERR(NAME_, REG_TOP_HIER_, ERR_, GATE_ = 0, MAX_CYCLES_ = `_SEC_CM_ALERT_MAX_CYC, CLK_ = clk_i, RST_ = !rst_ni) \
   `CALIPTRA_ASSERT_PRIM_ONEHOT_ERROR_TRIGGER_ERR(NAME_, \
-    REG_TOP_HIER_.u_prim_reg_we_check.u_prim_onehot_check, ERR_, GATE_, MAX_CYCLES_, CLK_, RST_)
+    REG_TOP_HIER_.u_caliptra_prim_reg_we_check.u_caliptra_prim_onehot_check, ERR_, GATE_, MAX_CYCLES_, CLK_, RST_)
 
 `endif // PRIM_ASSERT_SEC_CM_SVH

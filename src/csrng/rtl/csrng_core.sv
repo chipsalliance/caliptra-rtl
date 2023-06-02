@@ -19,7 +19,7 @@ module csrng_core import csrng_pkg::*; #(
   output csrng_reg_pkg::csrng_hw2reg_t            hw2reg,
 
   // Efuse Interface
-  input  prim_mubi_pkg::mubi8_t                   otp_en_csrng_sw_app_read_i,
+  input  caliptra_prim_mubi_pkg::mubi8_t                   otp_en_csrng_sw_app_read_i,
 
   // Lifecycle broadcast inputs
   input  lc_ctrl_pkg::lc_tx_t                     lc_hw_debug_en_i,
@@ -51,9 +51,9 @@ module csrng_core import csrng_pkg::*; #(
 
   import csrng_reg_pkg::*;
 
-  import prim_mubi_pkg::mubi4_t;
-  import prim_mubi_pkg::mubi4_test_true_strict;
-  import prim_mubi_pkg::mubi4_test_invalid;
+  import caliptra_prim_mubi_pkg::mubi4_t;
+  import caliptra_prim_mubi_pkg::mubi4_test_true_strict;
+  import caliptra_prim_mubi_pkg::mubi4_test_invalid;
 
   localparam int NApps = NHwApps + 1;
   localparam int AppCmdWidth = 32;
@@ -353,9 +353,9 @@ module csrng_core import csrng_pkg::*; #(
   logic                      unused_reg2hw_genbits;
   logic                      unused_int_state_val;
 
-  prim_mubi_pkg::mubi8_t [1:0] en_csrng_sw_app_read;
-  prim_mubi_pkg::mubi4_t [CsEnableCopies-1:0] mubi_cs_enable_fanout;
-  prim_mubi_pkg::mubi4_t [Flag0Copies-1:0] mubi_flag0_fanout;
+  caliptra_prim_mubi_pkg::mubi8_t [1:0] en_csrng_sw_app_read;
+  caliptra_prim_mubi_pkg::mubi4_t [CsEnableCopies-1:0] mubi_cs_enable_fanout;
+  caliptra_prim_mubi_pkg::mubi4_t [Flag0Copies-1:0] mubi_flag0_fanout;
 
   // flops
   logic [2:0]                acmd_q, acmd_d;
@@ -379,7 +379,7 @@ module csrng_core import csrng_pkg::*; #(
       acmd_q                  <= '0;
       shid_q                  <= '0;
       gen_last_q              <= '0;
-      flag0_q                 <= prim_mubi_pkg::MuBi4False;
+      flag0_q                 <= caliptra_prim_mubi_pkg::MuBi4False;
       cmd_arb_idx_q           <= '0;
       statedb_wr_select_q     <= '0;
       genbits_stage_fips_sw_q <= '0;
@@ -414,7 +414,7 @@ module csrng_core import csrng_pkg::*; #(
   //--------------------------------------------
   // All TLUL interrupts are collect in the section.
 
-  prim_intr_hw #(
+  caliptra_prim_intr_hw #(
     .Width(1)
   ) u_intr_hw_cs_cmd_req_done (
     .clk_i                  (clk_i),
@@ -429,7 +429,7 @@ module csrng_core import csrng_pkg::*; #(
     .intr_o                 (intr_cs_cmd_req_done_o)
   );
 
-  prim_intr_hw #(
+  caliptra_prim_intr_hw #(
     .Width(1)
   ) u_intr_hw_cs_entropy_req (
     .clk_i                  (clk_i),
@@ -445,7 +445,7 @@ module csrng_core import csrng_pkg::*; #(
   );
 
 
-  prim_intr_hw #(
+  caliptra_prim_intr_hw #(
     .Width(1)
   ) u_intr_hw_cs_hw_inst_exc (
     .clk_i                  (clk_i),
@@ -461,7 +461,7 @@ module csrng_core import csrng_pkg::*; #(
   );
 
 
-  prim_intr_hw #(
+  caliptra_prim_intr_hw #(
     .Width(1)
   ) u_intr_hw_cs_fatal_err (
     .clk_i                  (clk_i),
@@ -734,11 +734,11 @@ module csrng_core import csrng_pkg::*; #(
          cs_bus_cmp_alert;
 
 
-  prim_edge_detector #(
+  caliptra_prim_edge_detector #(
     .Width(1),
     .ResetValue(0),
     .EnSync(0)
-  ) u_prim_edge_detector_recov_alert (
+  ) u_caliptra_prim_edge_detector_recov_alert (
     .clk_i,
     .rst_ni,
     .d_i(recov_alert_event),
@@ -761,10 +761,10 @@ module csrng_core import csrng_pkg::*; #(
     assign cs_enable_fo[i] = mubi4_test_true_strict(mubi_cs_enable_fanout[i]);
   end : gen_mubi_en_copies
 
-  prim_mubi4_sync #(
+  caliptra_prim_mubi4_sync #(
     .NumCopies(CsEnableCopies),
     .AsyncOn(0)
-  ) u_prim_mubi4_sync_cs_enable (
+  ) u_caliptra_prim_mubi4_sync_cs_enable (
     .clk_i,
     .rst_ni,
     .mubi_i(mubi_cs_enable),
@@ -780,10 +780,10 @@ module csrng_core import csrng_pkg::*; #(
   assign hw2reg.recov_alert_sts.sw_app_enable_field_alert.de = sw_app_enable_pfa;
   assign hw2reg.recov_alert_sts.sw_app_enable_field_alert.d  = sw_app_enable_pfa;
 
-  prim_mubi4_sync #(
+  caliptra_prim_mubi4_sync #(
     .NumCopies(2),
     .AsyncOn(0)
-  ) u_prim_mubi4_sync_sw_app_enable (
+  ) u_caliptra_prim_mubi4_sync_sw_app_enable (
     .clk_i,
     .rst_ni,
     .mubi_i(mubi_sw_app_enable),
@@ -799,10 +799,10 @@ module csrng_core import csrng_pkg::*; #(
   assign hw2reg.recov_alert_sts.read_int_state_field_alert.de = read_int_state_pfa;
   assign hw2reg.recov_alert_sts.read_int_state_field_alert.d  = read_int_state_pfa;
 
-  prim_mubi4_sync #(
+  caliptra_prim_mubi4_sync #(
     .NumCopies(2),
     .AsyncOn(0)
-  ) u_prim_mubi4_sync_read_int_state (
+  ) u_caliptra_prim_mubi4_sync_read_int_state (
     .clk_i,
     .rst_ni,
     .mubi_i(mubi_read_int_state),
@@ -885,13 +885,13 @@ module csrng_core import csrng_pkg::*; #(
   assign hw2reg.genbits.d = (sw_app_enable && efuse_sw_app_enable[0]) ? genbits_stage_bus_sw : '0;
   assign genbits_stage_bus_rd_sw = reg2hw.genbits.re;
 
-  assign efuse_sw_app_enable[0] = prim_mubi_pkg::mubi8_test_true_strict(en_csrng_sw_app_read[0]);
-  assign efuse_sw_app_enable[1] = prim_mubi_pkg::mubi8_test_true_strict(en_csrng_sw_app_read[1]);
+  assign efuse_sw_app_enable[0] = caliptra_prim_mubi_pkg::mubi8_test_true_strict(en_csrng_sw_app_read[0]);
+  assign efuse_sw_app_enable[1] = caliptra_prim_mubi_pkg::mubi8_test_true_strict(en_csrng_sw_app_read[1]);
 
-  prim_mubi8_sync #(
+  caliptra_prim_mubi8_sync #(
     .NumCopies(2),
     .AsyncOn(1)
-  ) u_prim_mubi8_sync_sw_app_read (
+  ) u_caliptra_prim_mubi8_sync_sw_app_read (
     .clk_i,
     .rst_ni,
     .mubi_i(otp_en_csrng_sw_app_read_i),
@@ -900,11 +900,11 @@ module csrng_core import csrng_pkg::*; #(
 
   // pack the gen bits into a 32 bit register sized word
 
-  prim_packer_fifo #(
+  caliptra_prim_packer_fifo #(
     .InW(BlkLen),
     .OutW(32),
     .ClearOnRead(1'b0)
-  ) u_prim_packer_fifo_sw_genbits (
+  ) u_caliptra_prim_packer_fifo_sw_genbits (
     .clk_i    (clk_i),
     .rst_ni   (rst_ni),
     .clr_i    (!cs_enable_fo[29]),
@@ -1015,11 +1015,11 @@ module csrng_core import csrng_pkg::*; #(
   // Can't be fed directly to port-list per Synthesis failure
   assign cmd_arb_di = '{1'b0, 1'b0, 1'b0};
 
-  prim_arbiter_ppc #(
+  caliptra_prim_arbiter_ppc #(
     .EnDataPort(0),    // Ignore data port
     .N(NApps),  // Number of request ports
     .DW(1) // Data width
-  ) u_prim_arbiter_ppc_acmd (
+  ) u_caliptra_prim_arbiter_ppc_acmd (
     .clk_i    (clk_i),
     .rst_ni   (rst_ni),
     .req_chk_i(cs_enable_fo[1]),
@@ -1060,7 +1060,7 @@ module csrng_core import csrng_pkg::*; #(
          gen_last_q;
 
   assign flag0_d =
-         (!cs_enable_fo[35]) ? prim_mubi_pkg::MuBi4False :
+         (!cs_enable_fo[35]) ? caliptra_prim_mubi_pkg::MuBi4False :
          (acmd_sop && ((acmd_bus[2:0] == INS) || (acmd_bus[2:0] == RES))) ? flag0 :
          flag0_q;
 
@@ -1072,10 +1072,10 @@ module csrng_core import csrng_pkg::*; #(
     assign flag0_fo[i] = mubi4_test_true_strict(mubi_flag0_fanout[i]);
   end : gen_mubi_flag0_copies
 
-  prim_mubi4_sync #(
+  caliptra_prim_mubi4_sync #(
     .NumCopies(Flag0Copies),
     .AsyncOn(0)
-  ) u_prim_mubi4_sync_flag0 (
+  ) u_caliptra_prim_mubi4_sync_flag0 (
     .clk_i,
     .rst_ni,
     .mubi_i(mubi_flag0),
@@ -1131,11 +1131,11 @@ module csrng_core import csrng_pkg::*; #(
   end : gen_cmd_ack
 
 
-  prim_packer_fifo #(
+  caliptra_prim_packer_fifo #(
     .InW(32),
     .OutW(SeedLen),
     .ClearOnRead(1'b1)
-  ) u_prim_packer_fifo_adata (
+  ) u_caliptra_prim_packer_fifo_adata (
     .clk_i      (clk_i),
     .rst_ni     (rst_ni),
     .clr_i      (!cs_enable_fo[37] || packer_adata_clr),
@@ -1422,10 +1422,10 @@ module csrng_core import csrng_pkg::*; #(
 
   // update block  arbiter
 
-  prim_arbiter_ppc #(
+  caliptra_prim_arbiter_ppc #(
     .N(NUpdateArbReqs), // (cmd req and gen req)
     .DW(UpdateArbWidth) // Data width
-  ) u_prim_arbiter_ppc_updblk_arb (
+  ) u_caliptra_prim_arbiter_ppc_updblk_arb (
     .clk_i(clk_i),
     .rst_ni(rst_ni),
     .req_chk_i(cs_enable_fo[1]),
@@ -1464,9 +1464,9 @@ module csrng_core import csrng_pkg::*; #(
 
   lc_ctrl_pkg::lc_tx_t [LcHwDebugCopies-1:0] lc_hw_debug_en_out;
 
-  prim_lc_sync #(
+  caliptra_prim_lc_sync #(
     .NumCopies(LcHwDebugCopies)
-  ) u_prim_lc_sync (
+  ) u_caliptra_prim_lc_sync (
     .clk_i,
     .rst_ni,
     .lc_en_i(lc_hw_debug_en_i),
@@ -1515,10 +1515,10 @@ module csrng_core import csrng_pkg::*; #(
   );
 
 
-  prim_arbiter_ppc #(
+  caliptra_prim_arbiter_ppc #(
     .N(NBlkEncArbReqs), // (upd req and gen req)
     .DW(BlkEncArbWidth) // Data width
-  ) u_prim_arbiter_ppc_benblk_arb (
+  ) u_caliptra_prim_arbiter_ppc_benblk_arb (
     .clk_i(clk_i),
     .rst_ni(rst_ni),
     .req_chk_i(cs_enable_fo[1]),

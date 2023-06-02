@@ -20,11 +20,11 @@
 // until they have been served. This assertion can be gated by driving the req_chk_i low. This is
 // a non-functional input and does not affect the designs behavior.
 //
-// See also: prim_arbiter_tree
+// See also: caliptra_prim_arbiter_tree
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
-module prim_arbiter_ppc #(
+module caliptra_prim_arbiter_ppc #(
   parameter int unsigned N  = 8,
   parameter int unsigned DW = 32,
 
@@ -222,4 +222,4 @@ end
       req_i[k], clk_i, !rst_ni || !req_chk_i)
 `endif
 
-endmodule : prim_arbiter_ppc
+endmodule : caliptra_prim_arbiter_ppc

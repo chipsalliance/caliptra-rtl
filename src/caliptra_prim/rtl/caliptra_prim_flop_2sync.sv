@@ -3,10 +3,10 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Generic double-synchronizer flop
-// This may need to be moved to prim_generic if libraries have a specific cell
+// This may need to be moved to caliptra_prim_generic if libraries have a specific cell
 // for synchronization
 
-module prim_flop_2sync #(
+module caliptra_prim_flop_2sync #(
   parameter int               Width      = 16,
   parameter logic [Width-1:0] ResetValue = '0,
   parameter bit               EnablePrimCdcRand = 1
@@ -22,10 +22,10 @@ module prim_flop_2sync #(
 
 `ifdef SIMULATION
 
-  prim_cdc_rand_delay #(
+  caliptra_prim_cdc_rand_delay #(
     .DataWidth(Width),
     .Enable(EnablePrimCdcRand)
-  ) u_prim_cdc_rand_delay (
+  ) u_caliptra_prim_cdc_rand_delay (
     .clk_i,
     .rst_ni,
     .src_data_i(d_i),
@@ -38,7 +38,7 @@ module prim_flop_2sync #(
   always_comb d_o = d_i;
 `endif // !`ifdef SIMULATION
 
-  prim_flop #(
+  caliptra_prim_flop #(
     .Width(Width),
     .ResetValue(ResetValue)
   ) u_sync_1 (
@@ -48,7 +48,7 @@ module prim_flop_2sync #(
     .q_o(intq)
   );
 
-  prim_flop #(
+  caliptra_prim_flop #(
     .Width(Width),
     .ResetValue(ResetValue)
   ) u_sync_2 (
@@ -58,4 +58,4 @@ module prim_flop_2sync #(
     .q_o
   );
 
-endmodule : prim_flop_2sync
+endmodule : caliptra_prim_flop_2sync

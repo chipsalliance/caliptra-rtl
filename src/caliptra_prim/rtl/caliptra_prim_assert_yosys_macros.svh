@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
-// Macro bodies included by prim_assert.sv for formal verification with Yosys. See prim_assert.sv
+// Macro bodies included by caliptra_prim_assert.sv for formal verification with Yosys. See caliptra_prim_assert.sv
 // for documentation for each of the macros.
 
 `define CALIPTRA_ASSERT_I(__name, __prop)    \

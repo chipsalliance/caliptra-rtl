@@ -5,9 +5,9 @@
 // Slicer chops the incoming bitstring into OutW granularity.
 // It supports fractional InW/OutW which fills 0 at the end of message.
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
-module prim_slicer #(
+module caliptra_prim_slicer #(
   parameter int InW = 64,
   parameter int OutW = 8,
 

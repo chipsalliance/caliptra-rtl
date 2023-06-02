@@ -39,9 +39,9 @@
 // depth_o    0000000000|1111111111|00000000000000000000000000000000000000000
 
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
-module prim_packer_fifo #(
+module caliptra_prim_packer_fifo #(
   parameter int InW  = 32,
   parameter int OutW = 8,
   parameter bit ClearOnRead = 1'b1, // if == 1 always output 0 after read

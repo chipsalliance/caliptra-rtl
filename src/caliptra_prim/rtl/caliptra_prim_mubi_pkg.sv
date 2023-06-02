@@ -10,9 +10,9 @@
 // This package defines common multibit signal types, active high and active low values and
 // the corresponding functions to test whether the values are set or not.
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
-package prim_mubi_pkg;
+package caliptra_prim_mubi_pkg;
 
   //////////////////////////////////////////////
   // 4 Bit Multibit Type and Functions //
@@ -542,4 +542,4 @@ package prim_mubi_pkg;
     return mubi16_and(a, b, MuBi16False);
   endfunction : mubi16_and_lo
 
-endpackage : prim_mubi_pkg
+endpackage : caliptra_prim_mubi_pkg

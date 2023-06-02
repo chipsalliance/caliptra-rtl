@@ -9,10 +9,10 @@
 // avoids spurious UNOPTFLAT warnings caused by the fact that the
 // arrays feed into themselves (with different bits for different
 // positions in the tree).
-split_var -module "prim_max_tree" -var "max_tree"
-split_var -module "prim_max_tree" -var "vld_tree"
-split_var -module "prim_max_tree" -var "idx_tree"
+split_var -module "caliptra_prim_max_tree" -var "max_tree"
+split_var -module "caliptra_prim_max_tree" -var "vld_tree"
+split_var -module "caliptra_prim_max_tree" -var "idx_tree"
 
 // The clock and reset are only used for assertions in this module.
-lint_off -rule UNUSED -file "*/rtl/prim_max_tree.sv" -match "Signal is not used: 'clk_i'"
-lint_off -rule UNUSED -file "*/rtl/prim_max_tree.sv" -match "Signal is not used: 'rst_ni'"
+lint_off -rule UNUSED -file "*/rtl/caliptra_prim_max_tree.sv" -match "Signal is not used: 'clk_i'"
+lint_off -rule UNUSED -file "*/rtl/caliptra_prim_max_tree.sv" -match "Signal is not used: 'rst_ni'"

@@ -16,9 +16,9 @@
 // All checks make use of an explicit binary tree implementation in order to minimize the delay.
 //
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
-module prim_onehot_check #(
+module caliptra_prim_onehot_check #(
   parameter int unsigned AddrWidth   = 5,
   // The onehot width can be <= 2**AddrWidth and does not have to be a power of two.
   parameter int unsigned OneHotWidth = 2**AddrWidth,
@@ -139,17 +139,17 @@ module prim_onehot_check #(
 
   // This logic that will be assign to one, when user adds macro
   // CALIPTRA_ASSERT_PRIM_ONEHOT_ERROR_TRIGGER_ALERT to check the error with alert, in case that
-  // prim_onehot_check is used in design without adding this assertion check.
+  // caliptra_prim_onehot_check is used in design without adding this assertion check.
   `ifdef INC_ASSERT
   `ifndef PRIM_DEFAULT_IMPL
-    `define PRIM_DEFAULT_IMPL prim_pkg::ImplGeneric
+    `define PRIM_DEFAULT_IMPL caliptra_prim_pkg::ImplGeneric
   `endif
-  parameter prim_pkg::impl_e Impl = `PRIM_DEFAULT_IMPL;
+  parameter caliptra_prim_pkg::impl_e Impl = `PRIM_DEFAULT_IMPL;
 
   logic unused_assert_connected;
   // TODO(#13337): only check generic for now. The path of this prim in other Impl may differ
-  if (Impl == prim_pkg::ImplGeneric) begin : gen_generic
+  if (Impl == caliptra_prim_pkg::ImplGeneric) begin : gen_generic
     `CALIPTRA_ASSERT_INIT_NET(AssertConnected_A, unused_assert_connected === 1'b1 || !EnableAlertTriggerSVA)
   end
   `endif
-endmodule : prim_onehot_check
+endmodule : caliptra_prim_onehot_check

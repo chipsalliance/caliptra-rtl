@@ -13,11 +13,11 @@
 // the differential pair (i.e., when level changes on the diff pair are
 // sampled one cycle apart due to a timing skew between the two wires).
 //
-// See also: prim_alert_sender, prim_alert_receiver, alert_handler
+// See also: caliptra_prim_alert_sender, caliptra_prim_alert_receiver, alert_handler
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
-module prim_diff_decode #(
+module caliptra_prim_diff_decode #(
   // enables additional synchronization logic
   parameter bit AsyncOn = 1'b0
 ) (
@@ -51,7 +51,7 @@ module prim_diff_decode #(
     // 2 sync regs, one reg for edge detection
     logic diff_pq, diff_nq, diff_pd, diff_nd;
 
-    prim_flop_2sync #(
+    caliptra_prim_flop_2sync #(
       .Width(1),
       .ResetValue('0)
     ) i_sync_p (
@@ -61,7 +61,7 @@ module prim_diff_decode #(
       .q_o(diff_pd)
     );
 
-    prim_flop_2sync #(
+    caliptra_prim_flop_2sync #(
       .Width(1),
       .ResetValue(1'b1)
     ) i_sync_n (
@@ -282,4 +282,4 @@ module prim_diff_decode #(
     `CALIPTRA_ASSERT(LevelCheck_A, (diff_pi ^ diff_ni) |-> diff_pi == level_o)
   end
 
-endmodule : prim_diff_decode
+endmodule : caliptra_prim_diff_decode

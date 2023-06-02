@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
-// Based on prim_max_tree, this module implements an explicit binary tree to find the
+// Based on caliptra_prim_max_tree, this module implements an explicit binary tree to find the
 // sum of this inputs. The solution has O(N) area and O(log(N)) delay complexity, and
 // thus scales well with many input sources.
 //
@@ -10,9 +10,9 @@
 // Invalid values are treated as 0.
 //
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
-module prim_sum_tree #(
+module caliptra_prim_sum_tree #(
   parameter int NumSrc = 32,
   parameter int Width = 8
 ) (
@@ -121,4 +121,4 @@ module prim_sum_tree #(
   `CALIPTRA_ASSERT(SumComputationInvalid_A, !sum_valid_o |-> sum_value_o == '0)
 `endif
 
-endmodule : prim_sum_tree
+endmodule : caliptra_prim_sum_tree

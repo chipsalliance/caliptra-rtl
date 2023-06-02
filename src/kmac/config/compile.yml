@@ -11,7 +11,7 @@ provides: [kmac]
 schema_version: 2.4.0
 requires:
   - kmac_pkg
-  - prim_pkg
+  - caliptra_prim_pkg
   - lc_ctrl_pkg
 targets:
   rtl:

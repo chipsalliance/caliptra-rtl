@@ -6,7 +6,7 @@
 //
 // This module contains the AES cipher core control FSM.
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
 module aes_cipher_control_fsm import aes_pkg::*;
 #(

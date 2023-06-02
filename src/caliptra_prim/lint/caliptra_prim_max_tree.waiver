@@ -2,7 +2,7 @@
 # Licensed under the Apache License, Version 2.0, see LICENSE for details.
 # SPDX-License-Identifier: Apache-2.0
 #
-# waiver file for prim_arbiter
+# waiver file for caliptra_prim_arbiter
 
-waive -rules {HIER_BRANCH_NOT_READ INPUT_NOT_READ} -location {prim_max_tree.sv} -regexp {.*'(clk_i|rst_ni)' is not read from in module 'prim_max_tree'.*} \
+waive -rules {HIER_BRANCH_NOT_READ INPUT_NOT_READ} -location {caliptra_prim_max_tree.sv} -regexp {.*'(clk_i|rst_ni)' is not read from in module 'caliptra_prim_max_tree'.*} \
       -comment "clk_ and rst_ni are only used for assertions in this module."

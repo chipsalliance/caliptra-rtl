@@ -5,7 +5,7 @@
 // This package holds common constants and functions for PRESENT- and
 // PRINCE-based scrambling devices.
 //
-// See also: prim_present, prim_prince
+// See also: caliptra_prim_present, caliptra_prim_prince
 //
 // References: - https://en.wikipedia.org/wiki/PRESENT
 //             - https://en.wikipedia.org/wiki/Prince_(cipher)
@@ -14,7 +14,7 @@
 //             - https://eprint.iacr.org/2015/372.pdf
 //             - https://eprint.iacr.org/2014/656.pdf
 
-package prim_cipher_pkg;
+package caliptra_prim_cipher_pkg;
 
   ///////////////////
   // PRINCE Cipher //
@@ -394,4 +394,4 @@ package prim_cipher_pkg;
     return state_out;
   endfunction : perm_64bit
 
-endpackage : prim_cipher_pkg
+endpackage : caliptra_prim_cipher_pkg

@@ -9,7 +9,7 @@
 // 2. to check that the selector signal is valid, i.e., doesn't take on invalid values.
 // Whenever the selector signal takes on an invalid value, an error is signaled.
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
 module aes_sel_buf_chk #(
   parameter int Num      = 2,
@@ -36,16 +36,16 @@ module aes_sel_buf_chk #(
   ////////////
 
   if (EnSecBuf) begin : gen_sec_buf
-    prim_sec_anchor_buf #(
+    caliptra_prim_sec_anchor_buf #(
       .Width ( Width )
-    ) u_prim_buf_sel_i (
+    ) u_caliptra_prim_buf_sel_i (
       .in_i  ( sel_i ),
       .out_o ( sel_o )
     );
   end else begin : gen_buf
-    prim_buf  #(
+    caliptra_prim_buf  #(
       .Width ( Width )
-    ) u_prim_buf_sel_i (
+    ) u_caliptra_prim_buf_sel_i (
       .in_i  ( sel_i ),
       .out_o ( sel_o )
     );

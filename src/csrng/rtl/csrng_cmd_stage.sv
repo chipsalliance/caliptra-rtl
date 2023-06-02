@@ -116,12 +116,12 @@ module csrng_cmd_stage import csrng_pkg::*; #(
   // Capture the transfer length of data behind the command.
   //---------------------------------------------------------
 
-  prim_fifo_sync #(
+  caliptra_prim_fifo_sync #(
     .Width(CmdFifoWidth),
     .Pass(0),
     .Depth(CmdFifoDepth),
     .OutputZeroIfEmpty(1'b0)
-  ) u_prim_fifo_cmd (
+  ) u_caliptra_prim_fifo_cmd (
     .clk_i          (clk_i),
     .rst_ni         (rst_ni),
     .clr_i          (!cs_enable_i),
@@ -180,10 +180,10 @@ module csrng_cmd_stage import csrng_pkg::*; #(
          cmd_gen_cmd_q;
 
   // SEC_CM: GEN_CMD.CTR.REDUN
-  prim_count #(
+  caliptra_prim_count #(
     .Width(GenBitsCntrWidth),
     .ResetValue({GenBitsCntrWidth{1'b1}})
-  ) u_prim_count_cmd_gen_cntr (
+  ) u_caliptra_prim_count_cmd_gen_cntr (
     .clk_i,
     .rst_ni,
     .clr_i(!cs_enable_i),
@@ -367,12 +367,12 @@ module csrng_cmd_stage import csrng_pkg::*; #(
   // Genbits FIFO.
   //---------------------------------------------------------
 
-  prim_fifo_sync #(
+  caliptra_prim_fifo_sync #(
     .Width(GenBitsFifoWidth),
     .Pass(0),
     .Depth(GenBitsFifoDepth),
     .OutputZeroIfEmpty(0) // Set to 0, and let last data drive out.
-  ) u_prim_fifo_genbits (
+  ) u_caliptra_prim_fifo_genbits (
     .clk_i          (clk_i),
     .rst_ni         (rst_ni),
     .clr_i          (!cs_enable_i),

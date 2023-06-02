@@ -4,7 +4,7 @@
 //
 // AES KeyExpand
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
 module aes_key_expand import aes_pkg::*;
 #(

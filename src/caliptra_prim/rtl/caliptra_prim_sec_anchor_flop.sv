@@ -2,9 +2,9 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
-module prim_sec_anchor_flop #(
+module caliptra_prim_sec_anchor_flop #(
   parameter int               Width      = 1,
   parameter logic [Width-1:0] ResetValue = 0
 ) (
@@ -14,7 +14,7 @@ module prim_sec_anchor_flop #(
   output logic [Width-1:0] q_o
 );
 
-  prim_flop #(
+  caliptra_prim_flop #(
     .Width(Width),
     .ResetValue(ResetValue)
   ) u_secure_anchor_flop (

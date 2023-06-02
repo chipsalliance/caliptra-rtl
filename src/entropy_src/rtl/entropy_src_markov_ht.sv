@@ -70,9 +70,9 @@ module entropy_src_markov_ht #(
            (prev_sample_q[sh] == !entropy_bit_i[sh]);
 
     // pair counter
-    prim_count #(
+    caliptra_prim_count #(
       .Width(RegWidth)
-    ) u_prim_count_pair_cntr (
+    ) u_caliptra_prim_count_pair_cntr (
       .clk_i,
       .rst_ni,
       .clr_i(window_wrap_pulse_i),
@@ -94,7 +94,7 @@ module entropy_src_markov_ht #(
                     toggle_q;
 
   // determine the highest counter pair counter value
-  prim_max_tree #(
+  caliptra_prim_max_tree #(
     .NumSrc(RngBusWidth),
     .Width(RegWidth)
   ) u_max (
@@ -108,9 +108,9 @@ module entropy_src_markov_ht #(
   );
 
   // determine the lowest counter pair counter value
-  // Negate the inputs and outputs of prim_max_tree to find the minimum
+  // Negate the inputs and outputs of caliptra_prim_max_tree to find the minimum
   // For this unsigned application, one's complement negation (i.e. logical inversion) is fine.
-  prim_max_tree #(
+  caliptra_prim_max_tree #(
     .NumSrc(RngBusWidth),
     .Width(RegWidth)
   ) u_min (
@@ -126,7 +126,7 @@ module entropy_src_markov_ht #(
   // Invert the output back.
   assign pair_cntr_min = ~pair_cntr_min_tmp;
 
-  prim_sum_tree #(
+  caliptra_prim_sum_tree #(
     .NumSrc(RngBusWidth),
     .Width(RegWidth)
   ) u_sum (

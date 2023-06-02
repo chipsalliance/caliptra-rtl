@@ -7,7 +7,7 @@
 // This module can be instantiated once per interrupt field, or
 // "bussified" with all fields of the interrupt vector.
 
-module prim_intr_hw # (
+module caliptra_prim_intr_hw # (
   parameter int unsigned Width = 1,
   parameter bit FlopOutput = 1,
 

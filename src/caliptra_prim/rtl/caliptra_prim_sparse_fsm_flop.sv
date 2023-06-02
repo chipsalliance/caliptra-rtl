@@ -2,9 +2,9 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
-module prim_sparse_fsm_flop #(
+module caliptra_prim_sparse_fsm_flop #(
   parameter int               Width      = 1,
   parameter type              StateEnumT = logic [Width-1:0],
   parameter logic [Width-1:0] ResetValue = '0,
@@ -14,8 +14,8 @@ module prim_sparse_fsm_flop #(
 `ifdef SIMULATION
   ,
   // In case this parameter is set to a non-empty string, the
-  // prim_sparse_fsm_flop_if will also force the signal with this name
-  // in the parent module that instantiates prim_sparse_fsm_flop.
+  // caliptra_prim_sparse_fsm_flop_if will also force the signal with this name
+  // in the parent module that instantiates caliptra_prim_sparse_fsm_flop.
   parameter string            CustomForceName = ""
 `endif
 ) (
@@ -28,7 +28,7 @@ module prim_sparse_fsm_flop #(
   logic unused_err_o;
 
   logic [Width-1:0] state_raw;
-  prim_flop #(
+  caliptra_prim_flop #(
     .Width(Width),
     .ResetValue(ResetValue)
   ) u_state_flop (

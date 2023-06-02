@@ -94,14 +94,14 @@
 //  CALIPTRA_ASSUME_I:     Assume an immediate property
 
 `ifdef VERILATOR
- `include "prim_assert_dummy_macros.svh"
+ `include "caliptra_prim_assert_dummy_macros.svh"
 `elsif SYNTHESIS
- `include "prim_assert_dummy_macros.svh"
+ `include "caliptra_prim_assert_dummy_macros.svh"
 `elsif YOSYS
- `include "prim_assert_yosys_macros.svh"
+ `include "caliptra_prim_assert_yosys_macros.svh"
  `define INC_ASSERT
 `else
- `include "prim_assert_standard_macros.svh"
+ `include "caliptra_prim_assert_standard_macros.svh"
  `define INC_ASSERT
 `endif
 
@@ -176,7 +176,7 @@
    `CALIPTRA_ASSERT(__name, __name``_p, __clk, __rst)                                                                     \
   `endif
 
-`include "prim_assert_sec_cm.svh"
-`include "prim_flop_macros.sv"
+`include "caliptra_prim_assert_sec_cm.svh"
+`include "caliptra_prim_flop_macros.sv"
 
 `endif // PRIM_ASSERT_SV

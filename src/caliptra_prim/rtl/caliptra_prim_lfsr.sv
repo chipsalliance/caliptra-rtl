@@ -24,9 +24,9 @@
 //       [2] https://users.ece.cmu.edu/~koopman/lfsr/
 //       [3] https://www.xilinx.com/support/documentation/application_notes/xapp052.pdf
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
-module prim_lfsr #(
+module caliptra_prim_lfsr #(
   // Lfsr Type, can be FIB_XNOR or GAL_XOR
   parameter                    LfsrType     = "GAL_XOR",
   // Lfsr width
@@ -318,15 +318,15 @@ module prim_lfsr #(
 
   `else
     logic [LfsrDw-1:0] DefaultSeedLocal;
-    logic prim_lfsr_use_default_seed;
+    logic caliptra_prim_lfsr_use_default_seed;
 
     initial begin : p_randomize_default_seed
-      if (!$value$plusargs("prim_lfsr_use_default_seed=%0d", prim_lfsr_use_default_seed)) begin
+      if (!$value$plusargs("caliptra_prim_lfsr_use_default_seed=%0d", caliptra_prim_lfsr_use_default_seed)) begin
         // 30% of the time, use the DefaultSeed parameter; 70% of the time, randomize it.
-        `CALIPTRA_ASSERT_I(UseDefaultSeedRandomizeCheck_A, std::randomize(prim_lfsr_use_default_seed) with {
-                                                  prim_lfsr_use_default_seed dist {0:/7, 1:/3};})
+        `CALIPTRA_ASSERT_I(UseDefaultSeedRandomizeCheck_A, std::randomize(caliptra_prim_lfsr_use_default_seed) with {
+                                                  caliptra_prim_lfsr_use_default_seed dist {0:/7, 1:/3};})
       end
-      if (prim_lfsr_use_default_seed) begin
+      if (caliptra_prim_lfsr_use_default_seed) begin
         DefaultSeedLocal = DefaultSeed;
       end else begin
         // Randomize the DefaultSeedLocal ensuring its not all 0s or all 1s.
@@ -524,7 +524,7 @@ module prim_lfsr #(
                         lfsr_q[sbox_in_indices[k*4 + 2]],
                         lfsr_q[sbox_in_indices[k*4 + 1]],
                         lfsr_q[sbox_in_indices[k*4 + 0]]};
-      assign sbox_out[k*4 +: 4] = prim_cipher_pkg::PRINCE_SBOX4[sbox_in];
+      assign sbox_out[k*4 +: 4] = caliptra_prim_cipher_pkg::PRINCE_SBOX4[sbox_in];
     end
   end else begin : gen_out_passthru
     assign sbox_out = lfsr_q;

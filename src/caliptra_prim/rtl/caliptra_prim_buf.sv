@@ -6,7 +6,7 @@
 // Used parser: Verible
 
 `ifndef PRIM_DEFAULT_IMPL
-  `define PRIM_DEFAULT_IMPL prim_pkg::ImplGeneric
+  `define PRIM_DEFAULT_IMPL caliptra_prim_pkg::ImplGeneric
 `endif
 
 // This is to prevent AscentLint warnings in the generated
@@ -14,7 +14,7 @@
 // use. TODO: we may want to move these inline waivers
 // into a separate, generated waiver file for consistency.
 //ri lint_check_off OUTPUT_NOT_DRIVEN INPUT_NOT_READ HIER_BRANCH_NOT_READ
-module prim_buf
+module caliptra_prim_buf
 
 #(
 parameter int Width = 1
@@ -22,16 +22,16 @@ parameter int Width = 1
   input        [Width-1:0] in_i,
   output logic [Width-1:0] out_o
 );
-  parameter prim_pkg::impl_e Impl = `PRIM_DEFAULT_IMPL;
+  parameter caliptra_prim_pkg::impl_e Impl = `PRIM_DEFAULT_IMPL;
 
-if (Impl == prim_pkg::ImplXilinx) begin : gen_xilinx
-    prim_xilinx_buf #(
+if (Impl == caliptra_prim_pkg::ImplXilinx) begin : gen_xilinx
+    caliptra_prim_xilinx_buf #(
       .Width(Width)
     ) u_impl_xilinx (
       .*
     );
 end else begin : gen_generic
-    prim_generic_buf #(
+    caliptra_prim_generic_buf #(
       .Width(Width)
     ) u_impl_generic (
       .*

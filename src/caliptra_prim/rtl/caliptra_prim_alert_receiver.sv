@@ -25,13 +25,13 @@
 // Note that in case of synchronous operation, alerts on the diffpair are
 // decoded combinationally and forwarded on alert_o within the same cycle.
 //
-// See also: prim_alert_sender, prim_diff_decode, alert_handler
+// See also: caliptra_prim_alert_sender, caliptra_prim_diff_decode, alert_handler
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
-module prim_alert_receiver
-  import prim_alert_pkg::*;
-  import prim_mubi_pkg::mubi4_t;
+module caliptra_prim_alert_receiver
+  import caliptra_prim_alert_pkg::*;
+  import caliptra_prim_mubi_pkg::mubi4_t;
 #(
   // enables additional synchronization logic
   parameter bit AsyncOn = 1'b0
@@ -56,7 +56,7 @@ module prim_alert_receiver
   input alert_tx_t  alert_tx_i
 );
 
-  import prim_mubi_pkg::mubi4_test_true_strict;
+  import caliptra_prim_mubi_pkg::mubi4_test_true_strict;
 
   /////////////////////////////////
   // decode differential signals //
@@ -64,16 +64,16 @@ module prim_alert_receiver
   logic alert_level, alert_sigint, alert_p, alert_n;
 
   // This prevents further tool optimizations of the differential signal.
-  prim_sec_anchor_buf #(
+  caliptra_prim_sec_anchor_buf #(
     .Width(2)
-  ) u_prim_buf_in (
+  ) u_caliptra_prim_buf_in (
     .in_i({alert_tx_i.alert_n,
            alert_tx_i.alert_p}),
     .out_o({alert_n,
             alert_p})
   );
 
-  prim_diff_decode #(
+  caliptra_prim_diff_decode #(
     .AsyncOn(AsyncOn)
   ) u_decode_alert (
     .clk_i,
@@ -112,10 +112,10 @@ module prim_alert_receiver
   assign ping_tog_dn = ~ping_tog_pd;
 
   // This prevents further tool optimizations of the differential signal.
-  prim_sec_anchor_flop #(
+  caliptra_prim_sec_anchor_flop #(
     .Width     (2),
     .ResetValue(2'b10)
-  ) u_prim_generic_flop_ack (
+  ) u_caliptra_prim_generic_flop_ack (
     .clk_i,
     .rst_ni,
     .d_i({ack_dn,
@@ -124,10 +124,10 @@ module prim_alert_receiver
           ack_pq})
   );
 
-  prim_sec_anchor_flop #(
+  caliptra_prim_sec_anchor_flop #(
     .Width     (2),
     .ResetValue(2'b10)
-  ) u_prim_generic_flop_ping (
+  ) u_caliptra_prim_generic_flop_ping (
     .clk_i,
     .rst_ni,
     .d_i({ping_tog_dn,
@@ -269,7 +269,7 @@ module prim_alert_receiver
   ////////////////
 
 `ifdef INC_ASSERT
-  import prim_mubi_pkg::mubi4_test_false_loose;
+  import caliptra_prim_mubi_pkg::mubi4_test_false_loose;
 `endif
 
   // check whether all outputs have a good known state after reset
@@ -383,4 +383,4 @@ module prim_alert_receiver
       |->
       ping_ok_o)
 
-endmodule : prim_alert_receiver
+endmodule : caliptra_prim_alert_receiver

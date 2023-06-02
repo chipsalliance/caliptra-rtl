@@ -26,7 +26,7 @@ module spi_host_command_queue #(
   input                              sw_rst_i
 );
 
-  localparam int CmdDepthW = prim_util_pkg::vbits(CmdDepth+1);
+  localparam int CmdDepthW = caliptra_prim_util_pkg::vbits(CmdDepth+1);
 
   logic command_ready;
 
@@ -35,7 +35,7 @@ module spi_host_command_queue #(
 
   logic [CmdDepthW-1:0] cmd_depth;
 
-  prim_fifo_sync #(
+  caliptra_prim_fifo_sync #(
     .Width(spi_host_cmd_pkg::CmdSize),
     .Pass(1),
     .Depth(CmdDepth)

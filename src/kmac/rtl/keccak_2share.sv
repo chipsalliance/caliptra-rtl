@@ -5,10 +5,10 @@
 // This module is the single round keccak permutation module
 // It supports Keccak with up to 1600b of state
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
 module keccak_2share
-  import prim_mubi_pkg::*;
+  import caliptra_prim_mubi_pkg::*;
 #(
   parameter int Width = 1600, // b= {25, 50, 100, 200, 400, 800, 1600}
 
@@ -315,7 +315,7 @@ module keccak_2share
       assign in_prd[x] = in_rand_ext ? rand_i[x * WSheetHalf +: WSheetHalf] :
                                        out_prd[rot_int(x, 5)];
 
-      prim_dom_and_2share #(
+      caliptra_prim_dom_and_2share #(
         .DW (WSheetHalf), // a half sheet
         .Pipeline(1) // Process the full sheet in 3 clock cycles. This reduces
                      // SCA leakage.

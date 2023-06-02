@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
-package prim_alert_pkg;
+package caliptra_prim_alert_pkg;
 
   typedef struct packed {
     logic alert_p;
@@ -24,4 +24,4 @@ package prim_alert_pkg;
                                             ack_p: 1'b0,
                                             ack_n: 1'b1};
 
-endpackage : prim_alert_pkg
+endpackage : caliptra_prim_alert_pkg

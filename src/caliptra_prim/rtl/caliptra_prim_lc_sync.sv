@@ -8,9 +8,9 @@
 // Should be used exactly as recommended in the life cycle controller spec:
 // https://docs.opentitan.org/hw/ip/lc_ctrl/doc/index.html#control-signal-propagation
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
-module prim_lc_sync #(
+module caliptra_prim_lc_sync #(
   // Number of separately buffered output signals.
   // The buffer cells have a don't touch constraint
   // on them such that synthesis tools won't collapse
@@ -37,10 +37,10 @@ module prim_lc_sync #(
 
   logic [lc_ctrl_pkg::TxWidth-1:0] lc_en;
   if (AsyncOn) begin : gen_flops
-    prim_flop_2sync #(
+    caliptra_prim_flop_2sync #(
       .Width(lc_ctrl_pkg::TxWidth),
       .ResetValue(lc_ctrl_pkg::TxWidth'(LcResetValue))
-    ) u_prim_flop_2sync (
+    ) u_caliptra_prim_flop_2sync (
       .clk_i,
       .rst_ni,
       .d_i(lc_en_i),
@@ -99,7 +99,7 @@ module prim_lc_sync #(
   for (genvar j = 0; j < NumCopies; j++) begin : gen_buffs
     logic [lc_ctrl_pkg::TxWidth-1:0] lc_en_out;
     for (genvar k = 0; k < lc_ctrl_pkg::TxWidth; k++) begin : gen_bits
-      prim_sec_anchor_buf u_prim_buf (
+      caliptra_prim_sec_anchor_buf u_caliptra_prim_buf (
         .in_i(lc_en[k]),
         .out_o(lc_en_out[k])
       );
@@ -114,4 +114,4 @@ module prim_lc_sync #(
   // The outputs should be known at all times.
   `CALIPTRA_ASSERT_KNOWN(OutputsKnown_A, lc_en_o)
 
-endmodule : prim_lc_sync
+endmodule : caliptra_prim_lc_sync

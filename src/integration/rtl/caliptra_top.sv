@@ -954,7 +954,7 @@ csrng #(
     .hreadyout_o            (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hreadyout),
     .hrdata_o               (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hrdata),
      // OTP Interface
-    .otp_en_csrng_sw_app_read_i(prim_mubi_pkg::MuBi8True),
+    .otp_en_csrng_sw_app_read_i(caliptra_prim_mubi_pkg::MuBi8True),
     // Lifecycle broadcast inputs
     .lc_hw_debug_en_i       (lc_ctrl_pkg::On),
     // Entropy Interface
@@ -967,7 +967,7 @@ csrng #(
     .csrng_cmd_o            (),
     // Alerts
     .alert_tx_o             (),
-    .alert_rx_i             ({prim_alert_pkg::ALERT_RX_DEFAULT, prim_alert_pkg::ALERT_RX_DEFAULT}),
+    .alert_rx_i             ({caliptra_prim_alert_pkg::ALERT_RX_DEFAULT, caliptra_prim_alert_pkg::ALERT_RX_DEFAULT}),
     // Interrupt
     .intr_cs_cmd_req_done_o (),
     .intr_cs_entropy_req_o  (),
@@ -993,8 +993,8 @@ entropy_src #(
     .hreadyout_o            (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hreadyout),
     .hrdata_o               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hrdata),
     // OTP Interface
-    .otp_en_entropy_src_fw_read_i(prim_mubi_pkg::MuBi8True),
-    .otp_en_entropy_src_fw_over_i(prim_mubi_pkg::MuBi8True),
+    .otp_en_entropy_src_fw_read_i(caliptra_prim_mubi_pkg::MuBi8True),
+    .otp_en_entropy_src_fw_over_i(caliptra_prim_mubi_pkg::MuBi8True),
     // RNG Interface
     .rng_fips_o                       (),
     // Entropy Interface
@@ -1010,7 +1010,7 @@ entropy_src #(
     .entropy_src_xht_o                (),
     .entropy_src_xht_i                (entropy_src_xht_rsp_t'('0)),
     // Alerts
-    .alert_rx_i                       ({prim_alert_pkg::ALERT_RX_DEFAULT, prim_alert_pkg::ALERT_RX_DEFAULT}),
+    .alert_rx_i                       ({caliptra_prim_alert_pkg::ALERT_RX_DEFAULT, caliptra_prim_alert_pkg::ALERT_RX_DEFAULT}),
     .alert_tx_o                       (),
     // Interrupts
     .intr_es_entropy_valid_o          (),
@@ -1060,7 +1060,7 @@ spi_host #(
     .hreadyout_o            (responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hreadyout),
     .hrdata_o               (responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hrdata),
     // Alerts
-    .alert_rx_i(prim_alert_pkg::ALERT_RX_DEFAULT),
+    .alert_rx_i(caliptra_prim_alert_pkg::ALERT_RX_DEFAULT),
     .alert_tx_o(),
     // SPI Interface
     .cio_sck_o    (cio_sck_o),

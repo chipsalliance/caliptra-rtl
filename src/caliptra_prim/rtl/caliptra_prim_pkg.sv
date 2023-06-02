@@ -6,7 +6,7 @@
 
 // This file is auto-generated.
 
-package prim_pkg;
+package caliptra_prim_pkg;
 
   // Implementation target specialization
   typedef enum integer {
@@ -14,4 +14,4 @@ package prim_pkg;
     ImplXilinx,
     ImplBadbit
   } impl_e;
-endpackage : prim_pkg
+endpackage : caliptra_prim_pkg

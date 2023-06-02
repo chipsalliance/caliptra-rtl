@@ -23,9 +23,9 @@
 // Q1 = t{1,1} + sig(j>1,1)(...) + sig(j<1,1)(t{1,j} + Z{j})
 //    = a1&b1  + (0              + a1&b0 + z0)
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
-module prim_dom_and_2share #(
+module caliptra_prim_dom_and_2share #(
   parameter int DW = 64, // Input width
   parameter bit Pipeline = 1'b0 // Enable full pipelining
 ) (
@@ -66,19 +66,19 @@ module prim_dom_and_2share #(
   // Resharing of cross-domain terms
 
   // Preserve the logic sequence for XOR not to proceed cross-domain AND.
-  prim_xor2 #(
+  caliptra_prim_xor2 #(
     .Width ( DW*2 )
-  ) u_prim_xor_t01 (
+  ) u_caliptra_prim_xor_t01 (
     .in0_i ( {t_a0b1, t_a1b0} ),
     .in1_i ( {z_i,    z_i}    ),
     .out_o ( {t0_d,   t1_d}   )
   );
 
   // Register stage
-  prim_flop_en #(
+  caliptra_prim_flop_en #(
     .Width      ( DW*2 ),
     .ResetValue ( '0   )
-  ) u_prim_flop_t01 (
+  ) u_caliptra_prim_flop_t01 (
     .clk_i  ( clk_i        ),
     .rst_ni ( rst_ni       ),
     .en_i   ( z_valid_i    ),
@@ -96,10 +96,10 @@ module prim_dom_and_2share #(
     // reshared cross-domain terms with inner-domain terms derived from different input data.
 
     logic [DW-1:0] t_a0b0_q, t_a1b1_q;
-    prim_flop_en #(
+    caliptra_prim_flop_en #(
       .Width      ( DW*2 ),
       .ResetValue ( '0   )
-    ) u_prim_flop_tab01 (
+    ) u_caliptra_prim_flop_tab01 (
       .clk_i  ( clk_i                ),
       .rst_ni ( rst_ni               ),
       .en_i   ( z_valid_i            ),
@@ -125,9 +125,9 @@ module prim_dom_and_2share #(
   /////////////////
 
   // Preserve the logic sequence for XOR not to proceed the inner-domain AND.
-  prim_xor2 #(
+  caliptra_prim_xor2 #(
     .Width ( DW*2 )
-  ) u_prim_xor_q01 (
+  ) u_caliptra_prim_xor_q01 (
     .in0_i ( {t_a0b0, t_a1b1} ),
     .in1_i ( {t0_q,   t1_q}   ),
     .out_o ( {q0_o,   q1_o}   )

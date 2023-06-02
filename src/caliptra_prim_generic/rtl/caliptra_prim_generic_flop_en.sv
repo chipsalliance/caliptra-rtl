@@ -2,9 +2,9 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
-module prim_generic_flop_en #(
+module caliptra_prim_generic_flop_en #(
   parameter int               Width      = 1,
   parameter bit               EnSecBuf   = 0,
   parameter logic [Width-1:0] ResetValue = 0
@@ -18,7 +18,7 @@ module prim_generic_flop_en #(
 
   logic en;
   if (EnSecBuf) begin : gen_en_sec_buf
-    prim_sec_anchor_buf #(
+    caliptra_prim_sec_anchor_buf #(
       .Width(1)
     ) u_en_buf (
       .in_i(en_i),

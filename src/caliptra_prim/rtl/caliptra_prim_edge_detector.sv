@@ -4,7 +4,7 @@
 //
 // Edge Detector
 
-module prim_edge_detector #(
+module caliptra_prim_edge_detector #(
   parameter int unsigned Width = 1,
 
   parameter logic [Width-1:0] ResetValue = '0,
@@ -28,7 +28,7 @@ module prim_edge_detector #(
   logic [Width-1:0] q_sync_d, q_sync_q;
 
   if (EnSync) begin : g_sync
-    prim_flop_2sync #(
+    caliptra_prim_flop_2sync #(
       .Width (Width),
       .ResetValue (ResetValue)
     ) u_sync (
@@ -52,4 +52,4 @@ module prim_edge_detector #(
   assign q_posedge_pulse_o = q_sync_d & ~q_sync_q;
   assign q_negedge_pulse_o = ~q_sync_d & q_sync_q;
 
-endmodule : prim_edge_detector
+endmodule : caliptra_prim_edge_detector

@@ -4,9 +4,9 @@
 //
 // Generic synchronous fifo for use in a variety of devices.
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
-module prim_fifo_sync_cnt #(
+module caliptra_prim_fifo_sync_cnt #(
   parameter int Depth = 4,
   parameter int Width = 16,
   parameter bit Secure = 1'b0
@@ -34,7 +34,7 @@ module prim_fifo_sync_cnt #(
 
   if (Secure) begin : gen_secure_ptrs
     logic wptr_err;
-    prim_count #(
+    caliptra_prim_count #(
       .Width(Width)
     ) u_wptr (
       .clk_i,
@@ -51,7 +51,7 @@ module prim_fifo_sync_cnt #(
     );
 
     logic rptr_err;
-    prim_count #(
+    caliptra_prim_count #(
       .Width(Width)
     ) u_rptr (
       .clk_i,
@@ -99,4 +99,4 @@ module prim_fifo_sync_cnt #(
 
 
 
-endmodule // prim_fifo_sync_cnt
+endmodule // caliptra_prim_fifo_sync_cnt

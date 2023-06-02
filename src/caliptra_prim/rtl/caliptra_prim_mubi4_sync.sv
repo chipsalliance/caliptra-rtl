@@ -9,10 +9,10 @@
 //
 // Double-synchronizer flop for multibit signals with additional output buffers.
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
-module prim_mubi4_sync
-  import prim_mubi_pkg::*;
+module caliptra_prim_mubi4_sync
+  import caliptra_prim_mubi_pkg::*;
 #(
   // Number of separately buffered output signals.
   // The buffer cells have a don't touch constraint
@@ -43,10 +43,10 @@ module prim_mubi4_sync
   logic [MuBi4Width-1:0] mubi;
   if (AsyncOn) begin : gen_flops
     logic [MuBi4Width-1:0] mubi_sync;
-    prim_flop_2sync #(
+    caliptra_prim_flop_2sync #(
       .Width(MuBi4Width),
       .ResetValue(MuBi4Width'(ResetValue))
-    ) u_prim_flop_2sync (
+    ) u_caliptra_prim_flop_2sync (
       .clk_i,
       .rst_ni,
       .d_i(MuBi4Width'(mubi_i)),
@@ -55,10 +55,10 @@ module prim_mubi4_sync
 
     if (StabilityCheck) begin : gen_stable_chks
       logic [MuBi4Width-1:0] mubi_q;
-      prim_flop #(
+      caliptra_prim_flop #(
         .Width(MuBi4Width),
         .ResetValue(MuBi4Width'(ResetValue))
-      ) u_prim_flop_3rd_stage (
+      ) u_caliptra_prim_flop_3rd_stage (
         .clk_i,
         .rst_ni,
         .d_i(mubi_sync),
@@ -66,7 +66,7 @@ module prim_mubi4_sync
       );
 
       logic [MuBi4Width-1:0] sig_unstable;
-      prim_xor2 #(
+      caliptra_prim_xor2 #(
         .Width(MuBi4Width)
       ) u_mubi_xor (
         .in0_i(mubi_sync),
@@ -82,7 +82,7 @@ module prim_mubi4_sync
 
         // each mux gets its own buffered output, this ensures the OR-ing
         // cannot be defeated in one place.
-        prim_sec_anchor_buf #(
+        caliptra_prim_sec_anchor_buf #(
           .Width(MuBi4Width)
         ) u_sig_unstable_buf (
           .in_i(sig_unstable),
@@ -160,7 +160,7 @@ module prim_mubi4_sync
   for (genvar j = 0; j < NumCopies; j++) begin : gen_buffs
     logic [MuBi4Width-1:0] mubi_out;
     for (genvar k = 0; k < MuBi4Width; k++) begin : gen_bits
-      prim_buf u_prim_buf (
+      caliptra_prim_buf u_caliptra_prim_buf (
         .in_i(mubi[k]),
         .out_o(mubi_out[k])
       );
@@ -175,4 +175,4 @@ module prim_mubi4_sync
   // The outputs should be known at all times.
   `CALIPTRA_ASSERT_KNOWN(OutputsKnown_A, mubi_o)
 
-endmodule : prim_mubi4_sync
+endmodule : caliptra_prim_mubi4_sync

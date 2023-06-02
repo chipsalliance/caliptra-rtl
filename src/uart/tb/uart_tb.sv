@@ -23,7 +23,7 @@
 
 module uart_tb
   import uart_reg_pkg::*;
-  import prim_mubi_pkg::mubi8_t;
+  import caliptra_prim_mubi_pkg::mubi8_t;
 (
 `ifdef VERILATOR
   input bit clk_tb

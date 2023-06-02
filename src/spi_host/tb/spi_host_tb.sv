@@ -24,7 +24,7 @@
 module spi_host_tb
   import spi_host_reg_pkg::*;
   import spi_device_pkg::*;
-  import prim_mubi_pkg::mubi8_t;
+  import caliptra_prim_mubi_pkg::mubi8_t;
 (
 `ifdef VERILATOR
   input bit clk_tb
@@ -140,7 +140,7 @@ module spi_host_tb
     .hrdata_o    (hrdata_o_tb),
 
     // Alerts
-    .alert_rx_i(prim_alert_pkg::ALERT_RX_DEFAULT),
+    .alert_rx_i(caliptra_prim_alert_pkg::ALERT_RX_DEFAULT),
     .alert_tx_o(),
 
     // SPI Interface
