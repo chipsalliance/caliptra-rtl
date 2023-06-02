@@ -10,7 +10,7 @@
 //
 package lc_ctrl_state_pkg;
 
-  import prim_util_pkg::vbits;
+  import caliptra_prim_util_pkg::vbits;
 
   ///////////////////////////////
   // General size declarations //

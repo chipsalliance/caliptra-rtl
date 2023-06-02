@@ -88,7 +88,6 @@ logic [BLOCK_OFFSET_W-1:0] block_offset, block_offset_nxt;
 logic block_offset_en;
 logic block_done;
 
-logic incr_dest_sel;
 
 kv_doe_fsm_state_e kv_doe_fsm_ps, kv_doe_fsm_ns;
 logic arc_DOE_IDLE_DOE_INIT;
@@ -104,7 +103,6 @@ always_comb block_done = running_uds ? (block_offset == (UDS_NUM_BLOCKS-1)) :
 
 always_comb flow_in_progress = running_uds | running_fe;
 always_comb dest_write_done = (dest_write_offset[DEST_OFFSET_W-1:0] == (DEST_NUM_DWORDS-1));
-always_comb incr_dest_sel = (dest_write_offset_nxt == '0) & (dest_write_offset == '1);
 
 //assign arc equations
 //move to init state when command is set and that command isn't locked
@@ -158,7 +156,7 @@ always_comb begin : kv_doe_fsm
             dest_write_en = '1;
             //increment dest offset each clock, clear when done
             dest_write_offset_en = '1;
-            dest_write_offset_nxt = dest_write_offset + 'd1;
+            dest_write_offset_nxt = (dest_write_offset == 'hb) ? 'h0 : dest_write_offset + 'd1;
             //go back to idle if dest done, and done with blocks
             if (arc_DOE_WRITE_DOE_DONE) kv_doe_fsm_ns = DOE_DONE;
             //go back to block stage for next block if not done with blocks
@@ -175,7 +173,7 @@ always_comb begin : kv_doe_fsm
             //clear block and write offsets when we go back to idle
             block_offset_en = '1;
             block_offset_nxt = '0;
-            dest_write_offset_en = '1;
+            dest_write_offset_en = '0;
             dest_write_offset_nxt = '0;
         end
         default: begin
@@ -194,8 +192,8 @@ always_comb begin : kv_doe_fsm
 end
 
 //latch the dest addr when starting, and when we roll over dest offset
-always_comb dest_addr_en = incr_dest_sel | ((kv_doe_fsm_ps == DOE_IDLE) & arc_DOE_IDLE_DOE_INIT);
-always_comb dest_addr_nxt = incr_dest_sel ? doe_cmd_reg.dest_sel + 'd1 : doe_cmd_reg.dest_sel;
+always_comb dest_addr_en = ((kv_doe_fsm_ps == DOE_IDLE) & arc_DOE_IDLE_DOE_INIT);
+always_comb dest_addr_nxt = doe_cmd_reg.dest_sel;
 
 //drive outputs to kv
 always_comb kv_write.write_en = dest_write_en;

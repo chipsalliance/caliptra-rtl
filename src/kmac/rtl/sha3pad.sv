@@ -4,7 +4,7 @@
 //
 // SHA3 padding logic
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
 module sha3pad
   import sha3_pkg::*;
@@ -55,12 +55,12 @@ module sha3pad
   // done_i is a pulse signal to make the pad logic to clear internal variables
   // and to move back to the Idle state for next hashing process.
   // done_i may not needed if sw controls the keccak_round directly.
-  input prim_mubi_pkg::mubi4_t done_i,
+  input caliptra_prim_mubi_pkg::mubi4_t done_i,
 
   // Indication of the Keccak Sponge Absorbing is complete, it is time for SW to
   // control the Keccak-round if it needs more digest, or complete by asserting
   // `done_i`
-  output prim_mubi_pkg::mubi4_t absorbed_o,
+  output caliptra_prim_mubi_pkg::mubi4_t absorbed_o,
 
   // Life cycle
   input  lc_ctrl_pkg::lc_tx_t lc_escalate_en_i,
@@ -105,7 +105,7 @@ module sha3pad
     // (SHA3, SHAKE), sending prefix is not needed. FSM moves from Idle to
     // Message directly in that case.
     //
-    // As prim_slicer is instantiated, zerofill after the actual prefix is done
+    // As caliptra_prim_slicer is instantiated, zerofill after the actual prefix is done
     // by the module.
     StPrefix = 7'b0111100,
     StPrefixWait =7'b1001100,
@@ -188,7 +188,7 @@ module sha3pad
 
   // This primitive is used to place a hardened counter
   // SEC_CM: CTR.REDUN
-  prim_count #(
+  caliptra_prim_count #(
     .Width(KeccakCountW)
   ) u_sentmsg_count (
     .clk_i,
@@ -267,7 +267,7 @@ module sha3pad
       process_latched <= 1'b 0;
     end else if (process_i) begin
       process_latched <= 1'b 1;
-    end else if (prim_mubi_pkg::mubi4_test_true_strict(done_i)) begin
+    end else if (caliptra_prim_mubi_pkg::mubi4_test_true_strict(done_i)) begin
       process_latched <= 1'b0;
     end
   end
@@ -275,7 +275,7 @@ module sha3pad
   // State Register ===========================================================
   pad_st_e st, st_d;
 
-  `PRIM_FLOP_SPARSE_FSM(u_state_regs, st_d, st, pad_st_e, StPadIdle)
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_state_regs, st_d, st, pad_st_e, StPadIdle)
 
   // `end_of_block` indicates current beat is end of the block
   // It shall set when the address reaches to the end of the block. End address
@@ -287,9 +287,9 @@ module sha3pad
 
   // Next logic and output logic ==============================================
   // SEC_CM: ABSORBED.CTRL.MUBI
-  prim_mubi_pkg::mubi4_t absorbed_d;
+  caliptra_prim_mubi_pkg::mubi4_t absorbed_d;
   always_ff @(posedge clk_i or negedge rst_ni) begin
-    if (!rst_ni) absorbed_o <= prim_mubi_pkg::MuBi4False;
+    if (!rst_ni) absorbed_o <= caliptra_prim_mubi_pkg::MuBi4False;
     else         absorbed_o <= absorbed_d;
   end
 
@@ -308,7 +308,7 @@ module sha3pad
     en_msgbuf = 1'b 0;
     clr_msgbuf = 1'b 0;
 
-    absorbed_d = prim_mubi_pkg::MuBi4False;
+    absorbed_d = caliptra_prim_mubi_pkg::MuBi4False;
 
     sparse_fsm_error_o = 1'b 0;
 
@@ -468,7 +468,7 @@ module sha3pad
         if (keccak_complete_i) begin
           st_d = StPadIdle;
 
-          absorbed_d = prim_mubi_pkg::MuBi4True;
+          absorbed_d = caliptra_prim_mubi_pkg::MuBi4True;
         end else begin
           st_d = StPadFlush;
         end
@@ -521,7 +521,7 @@ module sha3pad
   logic [MsgWidth-1:0] prefix_sliced;
   logic [MsgWidth-1:0] prefix_data [Share];
 
-  prim_slicer #(
+  caliptra_prim_slicer #(
     .InW (PrefixSize*8),
     .IndexW(KeccakMsgAddrW),
     .OutW(MsgWidth)
@@ -622,19 +622,19 @@ module sha3pad
     endcase
   end
 
-  // prim_packer : packing to 64bit to update keccak storage
-  // two prim_packer in this module are used to pack the data received from
+  // caliptra_prim_packer : packing to 64bit to update keccak storage
+  // two caliptra_prim_packer in this module are used to pack the data received from
   // upper layer (KMAC core) and also the 5bit padding bits.
   // It is assumed that the message from upper layer could be partial at the
   // end of the message. Then the 2 or 4bit padding is required. It can be
-  // handled by some custom logic or could be done by prim_packer.
-  // If packer is used, the MSG_FIFO doesn't have to have another prim_packer
+  // handled by some custom logic or could be done by caliptra_prim_packer.
+  // If packer is used, the MSG_FIFO doesn't have to have another caliptra_prim_packer
   // in front of the FIFO. This logic can handle the partial writes from the
   // software.
   //
-  // If a custom logic is implemented here, prim_packer is necessary in front
+  // If a custom logic is implemented here, caliptra_prim_packer is necessary in front
   // of the FIFO, as this logic only appends at the end of the message when
-  // `process_i` is asserted. Also, in this case, even prim_packer is not
+  // `process_i` is asserted. Also, in this case, even caliptra_prim_packer is not
   // needed, still 64bit registers to latch the partial write is required.
   // If not, the logic has to delay the acceptance of the incoming write
   // accesses. It may trigger the back-pressuring in some case which may result
@@ -747,13 +747,13 @@ module sha3pad
   `CALIPTRA_ASSUME(StartPulse_A, start_i |=> !start_i)
   `CALIPTRA_ASSUME(ProcessPulse_A, process_i |=> !process_i)
   `CALIPTRA_ASSUME(DonePulse_A,
-    prim_mubi_pkg::mubi4_test_true_strict(done_i) |=>
-      prim_mubi_pkg::mubi4_test_false_strict(done_i))
+    caliptra_prim_mubi_pkg::mubi4_test_true_strict(done_i) |=>
+      caliptra_prim_mubi_pkg::mubi4_test_false_strict(done_i))
 
   // CALIPTRA_ASSERT output pulse signals: absorbed_o, keccak_run_o
   `CALIPTRA_ASSERT(AbsorbedPulse_A,
-    prim_mubi_pkg::mubi4_test_true_strict(absorbed_o) |=>
-      prim_mubi_pkg::mubi4_test_false_strict(absorbed_o))
+    caliptra_prim_mubi_pkg::mubi4_test_true_strict(absorbed_o) |=>
+      caliptra_prim_mubi_pkg::mubi4_test_false_strict(absorbed_o))
   `CALIPTRA_ASSERT(KeccakRunPulse_A, keccak_run_o |=> !keccak_run_o)
 
   // start_i, done_i, process_i cannot set high at the same time
@@ -761,7 +761,7 @@ module sha3pad
     $onehot0({
       start_i,
       process_i,
-      prim_mubi_pkg::mubi4_test_true_loose(done_i)
+      caliptra_prim_mubi_pkg::mubi4_test_true_loose(done_i)
     }))
 
   // Sequence, start_i --> process_i --> absorbed_o --> done_i
@@ -779,7 +779,7 @@ module sha3pad
       start_valid <= 1'b 1;
     end else if (start_i) begin
       start_valid <= 1'b 0;
-    end else if (prim_mubi_pkg::mubi4_test_true_strict(done_i)) begin
+    end else if (caliptra_prim_mubi_pkg::mubi4_test_true_strict(done_i)) begin
       start_valid <= 1'b 1;
     end
   end
@@ -796,9 +796,9 @@ module sha3pad
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
       done_valid <= 1'b 0;
-    end else if (prim_mubi_pkg::mubi4_test_true_strict(absorbed_o)) begin
+    end else if (caliptra_prim_mubi_pkg::mubi4_test_true_strict(absorbed_o)) begin
       done_valid <= 1'b 1;
-    end else if (prim_mubi_pkg::mubi4_test_true_strict(done_i)) begin
+    end else if (caliptra_prim_mubi_pkg::mubi4_test_true_strict(done_i)) begin
       done_valid <= 1'b 0;
     end
   end
@@ -812,7 +812,7 @@ module sha3pad
   `CALIPTRA_ASSUME(ProcessCondition_M, process_i |-> process_valid)
   `CALIPTRA_ASSUME(StartCondition_M, start_i |-> start_valid)
   `CALIPTRA_ASSUME(DoneCondition_M,
-    prim_mubi_pkg::mubi4_test_true_strict(done_i) |-> done_valid)
+    caliptra_prim_mubi_pkg::mubi4_test_true_strict(done_i) |-> done_valid)
 
   // Assume mode_i and strength_i are stable during the operation
   // This will be guarded at the kmac top level

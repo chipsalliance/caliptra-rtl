@@ -92,7 +92,7 @@ class soc_ifc_cmdline_test_sequence extends soc_ifc_bench_sequence_base;
     for (ii = 0; ii < seq_names.size(); ii++) begin: CMDLINE_LOOP
 
         // Create a new sequence instance of the provided type
-        obj = factory.create_object_by_name(seq_names[ii], this.get_full_name(), $sformatf("%s[%d]",seq_names[ii], ii));
+        obj = factory.create_object_by_name(seq_names[ii], this.get_full_name(), $sformatf("%s[%0d]",seq_names[ii], ii));
         if (obj == null)
             `uvm_fatal("SOC_IFC_CMDLINE_TEST", $sformatf("soc_ifc_cmdline_test_sequence::body() - factory.create_object_by_name(%s) returned null", seq_names[ii]))
 
@@ -117,10 +117,6 @@ class soc_ifc_cmdline_test_sequence extends soc_ifc_bench_sequence_base;
       cptra_status_agent_config.wait_for_num_clocks(400);
     join
 
-    if (1) // TODO -- how to properly choose which to print?
-        $display("* TESTCASE PASSED");
-    else
-        $display("* TESTCASE FAILED");
     // pragma uvmf custom body end
   endtask
 

@@ -8,7 +8,7 @@
 // values of important control signals. This is achieved by:
 // - instantiating the regular AES cipher core control FSM operating on and producing the positive
 //   values of these signals, and
-// - inverting these signals between the regular FSM and the prim_buf synthesis barriers.
+// - inverting these signals between the regular FSM and the caliptra_prim_buf synthesis barriers.
 // Synthesis tools will then push the inverters into the actual FSM.
 
 module aes_cipher_control_fsm_n import aes_pkg::*;
@@ -142,9 +142,9 @@ module aes_cipher_control_fsm_n import aes_pkg::*;
 
   // This primitive is used to place a size-only constraint on the
   // buffers to act as a synthesis optimization barrier.
-  prim_buf #(
+  caliptra_prim_buf #(
     .Width(NumInBufBits)
-  ) u_prim_buf_in (
+  ) u_caliptra_prim_buf_in (
     .in_i(in),
     .out_o(in_buf)
   );
@@ -233,7 +233,7 @@ module aes_cipher_control_fsm_n import aes_pkg::*;
 
   // The regular FSM operates on and produces the positive values of important control signals.
   // Invert *_n input signals here to get the positive values for the regular FSM. To obtain the
-  // negated outputs, important output signals are inverted further below. Thanks to the prim_buf
+  // negated outputs, important output signals are inverted further below. Thanks to the caliptra_prim_buf
   // synthesis optimization barriers, tools will push the inverters into the regular FSM.
   aes_cipher_control_fsm #(
     .SecMasking  ( SecMasking  ),
@@ -364,9 +364,9 @@ module aes_cipher_control_fsm_n import aes_pkg::*;
 
   // This primitive is used to place a size-only constraint on the
   // buffers to act as a synthesis optimization barrier.
-  prim_buf #(
+  caliptra_prim_buf #(
     .Width(NumOutBufBits)
-  ) u_prim_buf_out (
+  ) u_caliptra_prim_buf_out (
     .in_i(out),
     .out_o(out_buf)
   );

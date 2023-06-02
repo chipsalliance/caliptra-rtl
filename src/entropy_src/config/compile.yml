@@ -23,7 +23,7 @@ requires:
   - entropy_src_pkg
   - libs
   - kmac
-  - prim_generic
+  - caliptra_prim_generic
   - prim
 targets:
   rtl:

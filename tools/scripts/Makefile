@@ -14,8 +14,10 @@
 # limitations under the License.
 #
 
-TEST_CFLAGS = -g -O3
-ABI = -mabi=ilp32 -march=rv32imac
+PLAYBOOK_RANDOM_SEED ?= $(shell date +%s)
+TEST_CFLAGS = -g -O3 -DMY_RANDOM_SEED=$(PLAYBOOK_RANDOM_SEED)
+
+ABI = -mabi=ilp32 -march=rv32imc
 
 VERILATOR = verilator
 GCC_PREFIX = riscv64-unknown-elf
@@ -42,6 +44,7 @@ COMP_LIB_NAMES := aes \
 		  ecc \
 		  hmac \
 		  keyvault \
+		  datavault \
 		  sha256 \
 		  sha512 \
 		  soc_ifc
@@ -135,9 +138,9 @@ includes = -I$(BUILD_DIR)
 #               v            v                v            v               v            v
 suppress = -Wno-WIDTH -Wno-UNOPTFLAT -Wno-LITENDIAN -Wno-CMPCONST -Wno-MULTIDRIVEN -Wno-UNPACKED
 
-# CFLAGS for verilator generated Makefiles. Without -std=c++11 it
+# CFLAGS for verilator generated Makefiles. Without -std=c++17 it
 # complains for `auto` variables
-CFLAGS += "-std=c++11"
+CFLAGS += "-std=c++17"
 
 # Optimization for better performance; alternative is nothing for
 # slower runtime (faster compiles) -O2 for faster runtime (slower

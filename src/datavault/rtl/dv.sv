@@ -112,15 +112,15 @@ always_comb begin: datavault
     end
  
     //Non-Sticky Generic Lockable Registers in the Data Vault
-    for (int entry = 0; entry < NONSTICKY_LOCKQ_SCRATCH_NUM_ENTRIES; entry++) begin
+    for (int entry = 0; entry < NONSTICKY_LOCK_SCRATCH_NUM_ENTRIES; entry++) begin
        dv_reg_hwif_in.NonStickyLockableScratchRegCtrl[entry].lock_entry.swwel = dv_reg_hwif_out.NonStickyLockableScratchRegCtrl[entry].lock_entry.value;
-       dv_reg_hwif_in.NonStickyLockableScratchReg[entry].data.swwel  = dv_reg_hwif_out.NonStickyDataVaultCtrl[entry].lock_entry.value;
+       dv_reg_hwif_in.NonStickyLockableScratchReg[entry].data.swwel  = dv_reg_hwif_out.NonStickyLockableScratchRegCtrl[entry].lock_entry.value;
     end
  
     //Sticky Generic Lockable Registers in the Data Vault
-    for (int entry = 0; entry < STICKY_LOCKQ_SCRATCH_NUM_ENTRIES; entry++) begin
+    for (int entry = 0; entry < STICKY_LOCK_SCRATCH_NUM_ENTRIES; entry++) begin
        dv_reg_hwif_in.StickyLockableScratchRegCtrl[entry].lock_entry.swwel = dv_reg_hwif_out.StickyLockableScratchRegCtrl[entry].lock_entry.value;
-       dv_reg_hwif_in.StickyLockableScratchReg[entry].data.swwel  = dv_reg_hwif_out.StickyDataVaultCtrl[entry].lock_entry.value;
+       dv_reg_hwif_in.StickyLockableScratchReg[entry].data.swwel  = dv_reg_hwif_out.StickyLockableScratchRegCtrl[entry].lock_entry.value;
     end
     
 end
@@ -137,6 +137,7 @@ dv_reg dv_reg1 (
     .s_cpuif_req_is_wr(uc_req.write),
     .s_cpuif_addr(uc_req.addr[DV_REG_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data(uc_req.wdata),
+    .s_cpuif_wr_biten('1),
     .s_cpuif_req_stall_wr(),
     .s_cpuif_req_stall_rd(),
     .s_cpuif_rd_ack(),

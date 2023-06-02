@@ -6,7 +6,7 @@
 //
 // This module contains the AES cipher core control FSM.
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
 module aes_cipher_control_fsm import aes_pkg::*;
 #(
@@ -445,7 +445,7 @@ module aes_cipher_control_fsm import aes_pkg::*;
   end
 
   // SEC_CM: CIPHER.FSM.SPARSE
-  `PRIM_FLOP_SPARSE_FSM(u_state_regs, aes_cipher_ctrl_ns,
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_state_regs, aes_cipher_ctrl_ns,
       aes_cipher_ctrl_cs, aes_cipher_ctrl_e, CIPHER_CTRL_IDLE)
 
   always_ff @(posedge clk_i or negedge rst_ni) begin : reg_fsm

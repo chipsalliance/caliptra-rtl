@@ -18,7 +18,7 @@
 // for masking purposes.                                                                         //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
 module aes_prng_masking import aes_pkg::*;
 #(
@@ -96,7 +96,7 @@ module aes_prng_masking import aes_pkg::*;
   if (ChunkSize == EntropyWidth) begin : gen_counter
     // We can reseed chunk by chunk as we get fresh entropy. Need to keep track of which chunk to
     // reseed next.
-    localparam int unsigned ChunkIdxWidth = prim_util_pkg::vbits(NumChunks);
+    localparam int unsigned ChunkIdxWidth = caliptra_prim_util_pkg::vbits(NumChunks);
     logic [ChunkIdxWidth-1:0] chunk_idx_d, chunk_idx_q;
     logic                     prng_reseed_done;
 
@@ -133,11 +133,11 @@ module aes_prng_masking import aes_pkg::*;
     assign entropy_req_o = SecSkipPRNGReseeding ? 1'b0         : reseed_req_i & ~seed_valid;
     assign reseed_ack_o  = SecSkipPRNGReseeding ? reseed_req_i : seed_valid;
 
-    prim_packer_fifo #(
+    caliptra_prim_packer_fifo #(
       .InW         ( EntropyWidth ),
       .OutW        ( Width        ),
       .ClearOnRead ( 1'b0         )
-    ) u_prim_packer_fifo (
+    ) u_caliptra_prim_packer_fifo (
       .clk_i    ( clk_i         ),
       .rst_ni   ( rst_ni        ),
       .clr_i    ( 1'b0          ), // Not needed.
@@ -163,7 +163,7 @@ module aes_prng_masking import aes_pkg::*;
 
   // We use multiple LFSR instances each having a width of ChunkSize.
   for (genvar c = 0; c < NumChunks; c++) begin : gen_lfsrs
-    prim_lfsr #(
+    caliptra_prim_lfsr #(
       .LfsrType     ( "GAL_XOR"                                   ),
       .LfsrDw       ( ChunkSize                                   ),
       .StateOutDw   ( ChunkSize                                   ),

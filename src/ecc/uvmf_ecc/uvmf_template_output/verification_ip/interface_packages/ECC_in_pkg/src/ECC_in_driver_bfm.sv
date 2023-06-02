@@ -319,16 +319,14 @@ end
   parameter STATUS_READY_BIT = 0;
   parameter STATUS_VALID_BIT = 1;
 
-  parameter ADDR_SCACONFIG       = BASE_ADDR + 32'h00000020;
-
   parameter ADDR_SEED_START      = BASE_ADDR + 32'h00000080;
   parameter ADDR_SEED_END        = BASE_ADDR + 32'h000000AC;
 
   parameter ADDR_MSG_START       = BASE_ADDR + 32'h00000100;
   parameter ADDR_MSG_END         = BASE_ADDR + 32'h0000012C;
 
-  parameter ADDR_PRIVKEY_START   = BASE_ADDR + 32'h00000180;
-  parameter ADDR_PRIVKEY_END     = BASE_ADDR + 32'h000001AC;
+  localparam ADDR_PRIVKEY_OUT_START   = BASE_ADDR + 32'h00000180;
+  localparam ADDR_PRIVKEY_OUT_END     = BASE_ADDR + 32'h000001AC;
 
   parameter ADDR_PUBKEYX_START   = BASE_ADDR + 32'h00000200;
   parameter ADDR_PUBKEYX_END     = BASE_ADDR + 32'h0000022C;
@@ -350,6 +348,9 @@ end
 
   parameter ADDR_NONCE_START     = BASE_ADDR + 32'h00000500;
   parameter ADDR_NONCE_END       = BASE_ADDR + 32'h0000052C;
+
+  localparam ADDR_PRIVKEY_IN_START   = BASE_ADDR + 32'h00000580;
+  localparam ADDR_PRIVKEY_IN_END     = BASE_ADDR + 32'h000005AC;
 
   parameter REG_SIZE      = 384;
   parameter PRIME         = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff;
@@ -648,7 +649,6 @@ end
 
       
       start_time = cycle_ctr;
-      write_block(ADDR_SCACONFIG, 4'b0111); // enable hmac_drbg
       write_block(ADDR_SEED_START, test_vector.seed);
       write_block(ADDR_NONCE_START, test_vector.nonce);
       write_block(ADDR_IV_START, test_vector.IV);
@@ -671,7 +671,7 @@ end
       transaction_flag_out_monitor_o = 1'b0;
       @(posedge clk_i); 
 
-      read_block(ADDR_PRIVKEY_START);
+      read_block(ADDR_PRIVKEY_OUT_START);
       privkey = reg_read_data;
 
       read_block(ADDR_PUBKEYX_START);
@@ -723,9 +723,8 @@ end
       
       start_time = cycle_ctr;
 
-      write_block(ADDR_SCACONFIG, 4'b0111); // enable hmac_drbg
       write_block(ADDR_MSG_START, test_vector.hashed_msg);
-      write_block(ADDR_PRIVKEY_START, test_vector.privkey);
+      write_block(ADDR_PRIVKEY_IN_START, test_vector.privkey);
       write_block(ADDR_IV_START, test_vector.IV);
 
       trig_ECC(SIGN);
@@ -793,7 +792,6 @@ end
 
       start_time = cycle_ctr;
 
-      write_block(ADDR_SCACONFIG, 4'b0111); // enable hmac_drbg
       write_block(ADDR_MSG_START, test_vector.hashed_msg);
       write_block(ADDR_PUBKEYX_START, test_vector.pubkey.x);
       write_block(ADDR_PUBKEYY_START, test_vector.pubkey.y);

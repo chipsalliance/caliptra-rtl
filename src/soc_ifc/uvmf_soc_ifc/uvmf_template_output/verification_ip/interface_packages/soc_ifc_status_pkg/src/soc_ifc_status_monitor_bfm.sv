@@ -228,7 +228,11 @@ end
 
     // Wait for next transfer then gather info from intiator about the transfer.
     // Place the data into the soc_ifc_status_initiator_struct.
-    do @(posedge clk_i); while (!any_signal_changed());
+    while (!any_signal_changed()) begin
+        cptra_error_fatal_o            <= cptra_error_fatal_i   ;
+        cptra_error_non_fatal_o        <= cptra_error_non_fatal_i;
+        @(posedge clk_i);
+    end
     ready_for_fuses_o              <= ready_for_fuses_i     ;
     ready_for_fw_push_o            <= ready_for_fw_push_i   ;
     ready_for_runtime_o            <= ready_for_runtime_i   ;

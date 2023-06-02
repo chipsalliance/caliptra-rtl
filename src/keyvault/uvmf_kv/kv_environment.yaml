@@ -1,0 +1,102 @@
+uvmf:
+  environments:
+    kv:
+      imports:
+      - name: "rw_txn_pkg"
+
+      agents:
+      - name: kv_rst_agent
+        type: kv_rst
+        initiator_responder: "INITIATOR"
+      - name: kv_hmac_write_agent
+        type: kv_write
+        initiator_responder: "INITIATOR"
+      - name: kv_sha512_write_agent
+        type: kv_write
+        initiator_responder: "INITIATOR"
+      - name: kv_ecc_write_agent
+        type: kv_write
+        initiator_responder: "INITIATOR"
+      - name: kv_doe_write_agent
+        type: kv_write
+        initiator_responder: "INITIATOR"
+      - name: kv_hmac_key_read_agent
+        type: kv_read
+        initiator_responder: "INITIATOR"
+      - name: kv_hmac_block_read_agent
+        type: kv_read
+        initiator_responder: "INITIATOR"
+      - name: kv_sha512_block_read_agent
+        type: kv_read
+        initiator_responder: "INITIATOR"
+      - name: kv_ecc_privkey_read_agent
+        type: kv_read
+        initiator_responder: "INITIATOR"
+      - name: kv_ecc_seed_read_agent
+        type: kv_read
+        initiator_responder: "INITIATOR"
+
+      analysis_components:
+      - name: kv_pred
+        type: kv_predictor
+      - name: kv_sb
+        type: kv_scoreboard
+
+#      analysis_exports :
+#        - name: "ahb_master_0_export"
+#          trans_type: "rw_txn"
+#          connected_to: "kv_pred.ahb_master_0_ae"
+#        - name: "apb5_master_0_export"
+#          trans_type: "rw_txn"
+#          connected_to: "kv_pred.apb5_master_0_ae"
+
+      analysis_ports: []
+
+      config_constraints: []
+      config_vars: []
+
+      parameters: []
+
+      scoreboards: []
+      # - name: kv_sb
+      #   sb_type: uvmf_in_order_scoreboard
+      #   trans_type: kv_read_transaction
+
+      subenvs: []
+
+      qvip_subenvs :
+        - { name: "qvip_ahb_lite_slave_subenv", type: "qvip_ahb_lite_slave" }
+
+      qvip_connections :
+        - driver: "qvip_ahb_lite_slave_subenv.ahb_lite_slave_0"
+          ap_key: "burst_transfer"
+          receiver: "kv_pred.ahb_slave_0_ae"
+          validate: "false"
+
+      tlm_connections:
+      ############# Predictor connections ############
+      - driver: kv_rst_agent.monitored_ap             # KeyVault Reset
+        receiver: kv_pred.kv_rst_agent_ae             #
+      ############# Scoreboard connections ############
+      - driver: kv_pred.kv_sb_ap                          #
+        receiver: kv_sb.expected_analysis_export          #
+      - driver: kv_hmac_key_read_agent.monitored_ap       #
+        receiver: kv_sb.actual_analysis_export            #
+      - driver: kv_hmac_block_read_agent.monitored_ap     #
+        receiver: kv_sb.actual_analysis_export            #
+      - driver: kv_sha512_block_read_agent.monitored_ap   #
+        receiver: kv_sb.actual_analysis_export            #
+      - driver: kv_ecc_privkey_read_agent.monitored_ap    #
+        receiver: kv_sb.actual_analysis_export            #
+      - driver: kv_ecc_seed_read_agent.monitored_ap       #
+        receiver: kv_sb.actual_analysis_export            #
+
+      register_model:
+        use_adapter: "True"
+        use_explicit_prediction: "True"
+        reg_block_class: kv_reg_model_top
+        reg_model_package: kv_reg_model_top_pkg
+        maps:
+          - name: "ahb_map"
+            interface: "qvip_ahb_lite_slave_subenv.ahb_lite_slave_0"
+            qvip_agent: "True"

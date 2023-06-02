@@ -17,6 +17,11 @@
 #include "printf.h"
 #include "hmac.h"
 
+void hmac_zeroize(){
+    printf("HMAC zeroize flow.\n");
+    lsu_write_32(CLP_HMAC_REG_HMAC384_CTRL, (1 << HMAC_REG_HMAC384_CTRL_ZEROIZE_LOW) & HMAC_REG_HMAC384_CTRL_ZEROIZE_MASK);
+}
+
 void hmac_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag){
     uint8_t offset;
     volatile uint32_t * reg_ptr;
@@ -80,7 +85,6 @@ void hmac_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag){
                                                       HMAC_REG_HMAC384_KV_WR_CTRL_SHA_BLOCK_DEST_VALID_MASK |
                                                       HMAC_REG_HMAC384_KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK  |
                                                       HMAC_REG_HMAC384_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK  |
-                                                      HMAC_REG_HMAC384_KV_WR_CTRL_ECC_MSG_DEST_VALID_MASK   |
                                                       ((tag.kv_id << HMAC_REG_HMAC384_KV_WR_CTRL_WRITE_ENTRY_LOW) & HMAC_REG_HMAC384_KV_WR_CTRL_WRITE_ENTRY_MASK));
     }
 

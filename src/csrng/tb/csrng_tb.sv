@@ -27,7 +27,7 @@ module csrng_tb
   import entropy_src_pkg::*;
   import entropy_src_reg_pkg::*;
   import lc_ctrl_pkg::*;
-  import prim_mubi_pkg::mubi8_t;
+  import caliptra_prim_mubi_pkg::mubi8_t;
 (
 `ifdef VERILATOR
   input bit clk_tb
@@ -126,7 +126,7 @@ module csrng_tb
       .hreadyout_o (hreadyout_o_tb),
       .hrdata_o    (hrdata_o_tb),
        // OTP Interface
-      .otp_en_csrng_sw_app_read_i(prim_mubi_pkg::MuBi8True),
+      .otp_en_csrng_sw_app_read_i(caliptra_prim_mubi_pkg::MuBi8True),
       // Lifecycle broadcast inputs
       .lc_hw_debug_en_i(lc_ctrl_pkg::On),
       // Entropy Interface

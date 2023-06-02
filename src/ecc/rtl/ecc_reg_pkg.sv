@@ -68,11 +68,11 @@ package ecc_reg_pkg;
         logic [31:0] next;
         logic we;
         logic hwclr;
-    } ecc_reg__ECC_PRIVKEY__PRIVKEY__in_t;
+    } ecc_reg__ECC_PRIVKEY_OUT__PRIVKEY_OUT__in_t;
 
     typedef struct packed{
-        ecc_reg__ECC_PRIVKEY__PRIVKEY__in_t PRIVKEY;
-    } ecc_reg__ECC_PRIVKEY__in_t;
+        ecc_reg__ECC_PRIVKEY_OUT__PRIVKEY_OUT__in_t PRIVKEY_OUT;
+    } ecc_reg__ECC_PRIVKEY_OUT__in_t;
 
     typedef struct packed{
         logic [31:0] next;
@@ -141,6 +141,16 @@ package ecc_reg_pkg;
     } ecc_reg__ECC_NONCE__in_t;
 
     typedef struct packed{
+        logic [31:0] next;
+        logic we;
+        logic hwclr;
+    } ecc_reg__ECC_PRIVKEY_IN__PRIVKEY_IN__in_t;
+
+    typedef struct packed{
+        ecc_reg__ECC_PRIVKEY_IN__PRIVKEY_IN__in_t PRIVKEY_IN;
+    } ecc_reg__ECC_PRIVKEY_IN__in_t;
+
+    typedef struct packed{
         logic hwclr;
     } kv_read_ctrl_reg__read_en__in_t;
 
@@ -206,7 +216,7 @@ package ecc_reg_pkg;
         ecc_reg__ECC_STATUS__in_t ECC_STATUS;
         ecc_reg__ECC_SEED__in_t [12-1:0]ECC_SEED;
         ecc_reg__ECC_MSG__in_t [12-1:0]ECC_MSG;
-        ecc_reg__ECC_PRIVKEY__in_t [12-1:0]ECC_PRIVKEY;
+        ecc_reg__ECC_PRIVKEY_OUT__in_t [12-1:0]ECC_PRIVKEY_OUT;
         ecc_reg__ECC_PUBKEY_X__in_t [12-1:0]ECC_PUBKEY_X;
         ecc_reg__ECC_PUBKEY_Y__in_t [12-1:0]ECC_PUBKEY_Y;
         ecc_reg__ECC_SIGN_R__in_t [12-1:0]ECC_SIGN_R;
@@ -214,12 +224,11 @@ package ecc_reg_pkg;
         ecc_reg__ECC_VERIFY_R__in_t [12-1:0]ECC_VERIFY_R;
         ecc_reg__ECC_IV__in_t [12-1:0]ECC_IV;
         ecc_reg__ECC_NONCE__in_t [12-1:0]ECC_NONCE;
+        ecc_reg__ECC_PRIVKEY_IN__in_t [12-1:0]ECC_PRIVKEY_IN;
         __kv_read_ctrl_reg__in_t ecc_kv_rd_pkey_ctrl;
         __kv_status_reg__in_t ecc_kv_rd_pkey_status;
         __kv_read_ctrl_reg__in_t ecc_kv_rd_seed_ctrl;
         __kv_status_reg__in_t ecc_kv_rd_seed_status;
-        __kv_read_ctrl_reg__in_t ecc_kv_rd_msg_ctrl;
-        __kv_status_reg__in_t ecc_kv_rd_msg_status;
         __kv_write_ctrl_reg__in_t ecc_kv_wr_pkey_ctrl;
         __kv_status_reg__in_t ecc_kv_wr_pkey_status;
         ecc_reg__intr_block_t__in_t intr_block_rf;
@@ -244,24 +253,6 @@ package ecc_reg_pkg;
     } ecc_reg__ECC_CTRL__out_t;
 
     typedef struct packed{
-        logic value;
-    } ecc_reg__ECC_SCACONFIG__POINT_RND_EN__out_t;
-
-    typedef struct packed{
-        logic value;
-    } ecc_reg__ECC_SCACONFIG__MASK_SIGN_EN__out_t;
-
-    typedef struct packed{
-        logic value;
-    } ecc_reg__ECC_SCACONFIG__SCALAR_RND_EN__out_t;
-
-    typedef struct packed{
-        ecc_reg__ECC_SCACONFIG__POINT_RND_EN__out_t POINT_RND_EN;
-        ecc_reg__ECC_SCACONFIG__MASK_SIGN_EN__out_t MASK_SIGN_EN;
-        ecc_reg__ECC_SCACONFIG__SCALAR_RND_EN__out_t SCALAR_RND_EN;
-    } ecc_reg__ECC_SCACONFIG__out_t;
-
-    typedef struct packed{
         logic [31:0] value;
     } ecc_reg__ECC_SEED__SEED__out_t;
 
@@ -276,14 +267,6 @@ package ecc_reg_pkg;
     typedef struct packed{
         ecc_reg__ECC_MSG__MSG__out_t MSG;
     } ecc_reg__ECC_MSG__out_t;
-
-    typedef struct packed{
-        logic [31:0] value;
-    } ecc_reg__ECC_PRIVKEY__PRIVKEY__out_t;
-
-    typedef struct packed{
-        ecc_reg__ECC_PRIVKEY__PRIVKEY__out_t PRIVKEY;
-    } ecc_reg__ECC_PRIVKEY__out_t;
 
     typedef struct packed{
         logic [31:0] value;
@@ -342,6 +325,14 @@ package ecc_reg_pkg;
     } ecc_reg__ECC_NONCE__out_t;
 
     typedef struct packed{
+        logic [31:0] value;
+    } ecc_reg__ECC_PRIVKEY_IN__PRIVKEY_IN__out_t;
+
+    typedef struct packed{
+        ecc_reg__ECC_PRIVKEY_IN__PRIVKEY_IN__out_t PRIVKEY_IN;
+    } ecc_reg__ECC_PRIVKEY_IN__out_t;
+
+    typedef struct packed{
         logic value;
     } kv_read_ctrl_reg__read_en__out_t;
 
@@ -393,11 +384,7 @@ package ecc_reg_pkg;
     } kv_write_ctrl_reg__ecc_seed_dest_valid__out_t;
 
     typedef struct packed{
-        logic value;
-    } kv_write_ctrl_reg__ecc_msg_dest_valid__out_t;
-
-    typedef struct packed{
-        logic [19:0] value;
+        logic [20:0] value;
     } kv_write_ctrl_reg__rsvd__out_t;
 
     typedef struct packed{
@@ -408,7 +395,6 @@ package ecc_reg_pkg;
         kv_write_ctrl_reg__sha_block_dest_valid__out_t sha_block_dest_valid;
         kv_write_ctrl_reg__ecc_pkey_dest_valid__out_t ecc_pkey_dest_valid;
         kv_write_ctrl_reg__ecc_seed_dest_valid__out_t ecc_seed_dest_valid;
-        kv_write_ctrl_reg__ecc_msg_dest_valid__out_t ecc_msg_dest_valid;
         kv_write_ctrl_reg__rsvd__out_t rsvd;
     } __kv_write_ctrl_reg__out_t;
 
@@ -437,10 +423,8 @@ package ecc_reg_pkg;
 
     typedef struct packed{
         ecc_reg__ECC_CTRL__out_t ECC_CTRL;
-        ecc_reg__ECC_SCACONFIG__out_t ECC_SCACONFIG;
         ecc_reg__ECC_SEED__out_t [12-1:0]ECC_SEED;
         ecc_reg__ECC_MSG__out_t [12-1:0]ECC_MSG;
-        ecc_reg__ECC_PRIVKEY__out_t [12-1:0]ECC_PRIVKEY;
         ecc_reg__ECC_PUBKEY_X__out_t [12-1:0]ECC_PUBKEY_X;
         ecc_reg__ECC_PUBKEY_Y__out_t [12-1:0]ECC_PUBKEY_Y;
         ecc_reg__ECC_SIGN_R__out_t [12-1:0]ECC_SIGN_R;
@@ -448,9 +432,9 @@ package ecc_reg_pkg;
         ecc_reg__ECC_VERIFY_R__out_t [12-1:0]ECC_VERIFY_R;
         ecc_reg__ECC_IV__out_t [12-1:0]ECC_IV;
         ecc_reg__ECC_NONCE__out_t [12-1:0]ECC_NONCE;
+        ecc_reg__ECC_PRIVKEY_IN__out_t [12-1:0]ECC_PRIVKEY_IN;
         __kv_read_ctrl_reg__out_t ecc_kv_rd_pkey_ctrl;
         __kv_read_ctrl_reg__out_t ecc_kv_rd_seed_ctrl;
-        __kv_read_ctrl_reg__out_t ecc_kv_rd_msg_ctrl;
         __kv_write_ctrl_reg__out_t ecc_kv_wr_pkey_ctrl;
         ecc_reg__intr_block_t__out_t intr_block_rf;
     } ecc_reg__out_t;

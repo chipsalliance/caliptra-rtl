@@ -16,4 +16,16 @@
 #ifndef SHA256_H
   #define SHA256_H
 
+#include "caliptra_defines.h"
+#include "caliptra_reg.h"
+#include "riscv_hw_if.h"
+
+typedef struct {
+    uint8_t   data_size;
+    uint32_t  data[16];
+}sha256_io;
+
+void sha256_flow(sha256_io block, uint8_t mode, sha256_io digest);
+void sha256_zeroize();
+
 #endif

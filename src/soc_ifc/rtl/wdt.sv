@@ -27,9 +27,6 @@ module wdt
     //Interrupts
     input  logic wdt_timer1_timeout_serviced,
     input  logic wdt_timer2_timeout_serviced,
-    //output logic wdt_timer1_timeout,
-    //output logic wdt_error_fatal,
-    //output logic wdt_nmi,
     //WDT STATUS bits
     output logic t1_timeout,
     output logic t2_timeout

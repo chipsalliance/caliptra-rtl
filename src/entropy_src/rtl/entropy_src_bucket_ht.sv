@@ -49,9 +49,9 @@ module entropy_src_bucket_ht #(
     assign bin_incr[i] = entropy_bit_vld_i && (entropy_bit_i == i);
     // use the bin incrementer to increase the bin total count
     // SEC_CM: CTR.REDUN
-    prim_count #(
+    caliptra_prim_count #(
       .Width(RegWidth)
-    ) u_prim_count_bin_cntr (
+    ) u_caliptra_prim_count_bin_cntr (
       .clk_i,
       .rst_ni,
       .clr_i(window_wrap_pulse_i),
@@ -67,10 +67,10 @@ module entropy_src_bucket_ht #(
     assign bin_cnt_exceeds_thresh[i] = (bin_cntr[i] > thresh_i);
   end : gen_symbol_match
 
-  prim_max_tree #(
+  caliptra_prim_max_tree #(
     .NumSrc(NUM_BINS),
     .Width(RegWidth)
-  ) u_prim_max_tree_bin_cntr_max (
+  ) u_caliptra_prim_max_tree_bin_cntr_max (
     .clk_i,
     .rst_ni,
     .values_i   (bin_cntr),
