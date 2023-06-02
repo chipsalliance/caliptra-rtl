@@ -1,8 +1,8 @@
-+incdir+${CALIPTRA_ROOT}/src/caliptra_primrtl
-${CALIPTRA_ROOT}/src/caliptra_primrtl/caliptra_prim_util_pkg.sv
-${CALIPTRA_ROOT}/src/caliptra_primrtl/caliptra_prim_alert_pkg.sv
-${CALIPTRA_ROOT}/src/caliptra_primrtl/caliptra_prim_subreg_pkg.sv
-${CALIPTRA_ROOT}/src/caliptra_primrtl/caliptra_prim_mubi_pkg.sv
-${CALIPTRA_ROOT}/src/caliptra_primrtl/caliptra_prim_cipher_pkg.sv
-${CALIPTRA_ROOT}/src/caliptra_primrtl/caliptra_prim_pkg.sv
-${CALIPTRA_ROOT}/src/caliptra_primrtl/caliptra_prim_pkg.sv
++incdir+${CALIPTRA_ROOT}/src/caliptra_prim/rtl
+${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_util_pkg.sv
+${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_alert_pkg.sv
+${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_subreg_pkg.sv
+${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_mubi_pkg.sv
+${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_cipher_pkg.sv
+${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_pkg.sv
+${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_pkg.sv
