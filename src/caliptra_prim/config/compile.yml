@@ -34,6 +34,7 @@ targets:
     files:
 #      - $COMPILE_ROOT/rtl/caliptra_prim_flop_macros.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_flop_en.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_cdc_rand_delay.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_flop_2sync.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_lfsr.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_mubi4_sync.sv
