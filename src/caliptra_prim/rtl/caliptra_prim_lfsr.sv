@@ -312,7 +312,7 @@ module caliptra_prim_lfsr #(
   logic [LfsrDw-1:0] next_lfsr_state, coeffs;
 
   // Enable the randomization of DefaultSeed using DefaultSeedLocal in DV simulations.
-  `ifdef SIMULATION
+  `ifdef CALIPTRA_SIMULATION
   `ifdef VERILATOR
       localparam logic [LfsrDw-1:0] DefaultSeedLocal = DefaultSeed;
 
@@ -340,7 +340,7 @@ module caliptra_prim_lfsr #(
   `else
     localparam logic [LfsrDw-1:0] DefaultSeedLocal = DefaultSeed;
 
-  `endif  // ifdef SIMULATION
+  `endif  // ifdef CALIPTRA_SIMULATION
 
   ////////////////
   // Galois XOR //

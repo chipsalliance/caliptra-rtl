@@ -42,7 +42,7 @@
 // to the behavioral flop. An assertion is added to ensure equivalence between the
 // caliptra_prim_sparse_fsm_flop output and the behavioral flop output in that case.
 `define PRIM_FLOP_SPARSE_FSM(__name, __d, __q, __type, __resval = `PRIM_FLOP_RESVAL, __clk = `PRIM_FLOP_CLK, __rst_n = `PRIM_FLOP_RST, __alert_trigger_sva_en = 1) \
-  `ifdef SIMULATION                                   \
+  `ifdef CALIPTRA_SIMULATION                                   \
     caliptra_prim_sparse_fsm_flop #(                           \
       .StateEnumT(__type),                            \
       .Width($bits(__type)),                          \
