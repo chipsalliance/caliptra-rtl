@@ -17,6 +17,7 @@
 #include "soc_ifc.h"
 #include <stdint.h>
 #include "printf.h"
+#include "caliptra_isr.h"
 
 volatile char*    stdout           = (char *)STDOUT;
 volatile uint32_t intr_count       = 0;
@@ -27,6 +28,31 @@ volatile uint32_t intr_count       = 0;
 #endif
 
 #define MBOX_DLEN_VAL             0x00000020
+
+volatile caliptra_intr_received_s cptra_intr_rcv = {
+    .doe_error        = 0,
+    .doe_notif        = 0,
+    .ecc_error        = 0,
+    .ecc_notif        = 0,
+    .hmac_error       = 0,
+    .hmac_notif       = 0,
+    .kv_error         = 0,
+    .kv_notif         = 0,
+    .sha512_error     = 0,
+    .sha512_notif     = 0,
+    .sha256_error     = 0,
+    .sha256_notif     = 0,
+    .qspi_error       = 0,
+    .qspi_notif       = 0,
+    .uart_error       = 0,
+    .uart_notif       = 0,
+    .i3c_error        = 0,
+    .i3c_notif        = 0,
+    .soc_ifc_error    = 0,
+    .soc_ifc_notif    = 0,
+    .sha512_acc_error = 0,
+    .sha512_acc_notif = 0,
+};
 
 void main () {
 

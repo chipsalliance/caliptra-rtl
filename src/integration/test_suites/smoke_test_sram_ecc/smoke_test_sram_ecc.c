@@ -30,6 +30,31 @@ volatile uint32_t intr_count;
     enum printf_verbosity verbosity_g = LOW;
 #endif
 
+volatile caliptra_intr_received_s cptra_intr_rcv = {
+    .doe_error        = 0,
+    .doe_notif        = 0,
+    .ecc_error        = 0,
+    .ecc_notif        = 0,
+    .hmac_error       = 0,
+    .hmac_notif       = 0,
+    .kv_error         = 0,
+    .kv_notif         = 0,
+    .sha512_error     = 0,
+    .sha512_notif     = 0,
+    .sha256_error     = 0,
+    .sha256_notif     = 0,
+    .qspi_error       = 0,
+    .qspi_notif       = 0,
+    .uart_error       = 0,
+    .uart_notif       = 0,
+    .i3c_error        = 0,
+    .i3c_notif        = 0,
+    .soc_ifc_error    = 0,
+    .soc_ifc_notif    = 0,
+    .sha512_acc_error = 0,
+    .sha512_acc_notif = 0,
+};
+
 enum ecc_error_mode_type {
     NONE,
     SINGLE,

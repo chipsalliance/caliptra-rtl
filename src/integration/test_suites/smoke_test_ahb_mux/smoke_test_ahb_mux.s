@@ -195,8 +195,11 @@ my_print:
 .section .dccm
 .global stdout
 stdout: .word STDOUT
+// FW polls this variable for intr
 .global intr_count
 intr_count: .word 0
+.global cptra_intr_rcv
+cptra_intr_rcv: .word 0
 .global verbosity_g
 verbosity_g: .word 2
 print_data:
