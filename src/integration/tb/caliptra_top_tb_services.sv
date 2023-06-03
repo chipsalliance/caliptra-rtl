@@ -681,12 +681,13 @@ module caliptra_top_tb_services
         end
     `else
         always @(posedge clk) begin
-            // Corrupt 10% of the writes
-            flip_bit <= ($urandom % 100) < 10;
             if (~|inject_mbox_sram_error) begin
+                flip_bit <= 0;
                 mbox_sram_wdata_bitflip <= '0;
             end
             else if (mbox_sram_cs & mbox_sram_we) begin
+                // Corrupt 10% of the writes
+                flip_bit <= ($urandom % 100) < 10;
                 mbox_sram_wdata_bitflip <= flip_bit ? get_bitflip_mask(inject_mbox_sram_error[1]) : '0;
             end
         end

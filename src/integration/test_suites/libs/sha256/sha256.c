@@ -16,6 +16,22 @@
 #include "caliptra_defines.h"
 #include "printf.h"
 #include "sha256.h"
+#include "caliptra_isr.h"
+
+extern volatile caliptra_intr_received_s cptra_intr_rcv;
+
+void wait_for_sha256_intr(){
+    printf("SHA256 flow in progress...\n");
+    while((cptra_intr_rcv.sha256_error == 0) & (cptra_intr_rcv.sha256_notif == 0)){
+        __asm__ volatile ("wfi"); // "Wait for interrupt"
+        // Sleep during SHA256 operation to allow ISR to execute and show idle time in sims
+        for (uint16_t slp = 0; slp < 100; slp++) {
+            __asm__ volatile ("nop"); // Sleep loop as "nop"
+        }
+    };
+    //printf("Received SHA256 error intr with status = %d\n", cptra_intr_rcv.sha256_error);
+    printf("Received SHA256 notif intr with status = %d\n", cptra_intr_rcv.sha256_notif);
+}
 
 void sha256_zeroize(){
     printf("SHA256 zeroize flow.\n");
@@ -44,7 +60,7 @@ void sha256_flow(sha256_io block, uint8_t mode, sha256_io digest){
                                             (mode << SHA256_REG_SHA256_CTRL_MODE_LOW) & SHA256_REG_SHA256_CTRL_MODE_MASK);
     
     // wait for SHA to be valid
-    while((lsu_read_32(CLP_SHA256_REG_SHA256_STATUS) & SHA256_REG_SHA256_STATUS_VALID_MASK) == 0);
+    wait_for_sha256_intr();
 
     reg_ptr = (uint32_t *) CLP_SHA256_REG_SHA256_DIGEST_0;
     printf("Load DIGEST data from SHA256\n");

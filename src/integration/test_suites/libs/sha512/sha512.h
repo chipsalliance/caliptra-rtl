@@ -28,6 +28,11 @@ enum sha512_mode_e {
     SHA512_512_MODE = 0x3
 };
 
+typedef struct {
+    uint8_t   data_size;
+    uint32_t  data[32];
+}sha512_io;
+
 /* --------------- Function Prototypes --------------- */
 void sha_init(enum sha512_mode_e mode);
 void sha_next(enum sha512_mode_e mode);
@@ -36,6 +41,7 @@ void sha_next_last(enum sha512_mode_e mode);
 
 void sha384_kvflow(uint8_t sha_kv_id, uint8_t store_to_kv, uint8_t digest_kv_id, uint32_t expected_digest[12]);
 void sha512_zeroize();
+void sha512_flow(sha512_io block, uint8_t mode, sha512_io digest);
 
 //polls until sha512 is ready to be used
 inline void sha512_poll_ready() {

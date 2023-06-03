@@ -32,6 +32,33 @@
 #include <stdint.h>
 #include "printf.h"
 
+/* --------------- symbols/typedefs --------------- */
+typedef struct {
+    uint32_t doe_error;
+    uint32_t doe_notif;
+    uint32_t ecc_error;
+    uint32_t ecc_notif;
+    uint32_t hmac_error;
+    uint32_t hmac_notif;
+    uint32_t kv_error;
+    uint32_t kv_notif;
+    uint32_t sha512_error;
+    uint32_t sha512_notif;
+    uint32_t sha256_error;
+    uint32_t sha256_notif;
+    uint32_t qspi_error;
+    uint32_t qspi_notif;
+    uint32_t uart_error;
+    uint32_t uart_notif;
+    uint32_t i3c_error;
+    uint32_t i3c_notif;
+    uint32_t soc_ifc_error;
+    uint32_t soc_ifc_notif;
+    uint32_t sha512_acc_error;
+    uint32_t sha512_acc_notif;
+} caliptra_intr_received_s;
+extern volatile caliptra_intr_received_s cptra_intr_rcv;
+
 //////////////////////////////////////////////////////////////////////////////
 // Function Declarations
 //

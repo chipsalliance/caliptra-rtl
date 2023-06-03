@@ -402,6 +402,8 @@ verbosity_g: .word 2
 // FW polls this variable instead of the SHA reg....
 .global sha_intr_status
 sha_intr_status: .word 0
+.global cptra_intr_rcv
+cptra_intr_rcv: .word 0
 print_data:
 .ascii "----------------------------------------\n"
 .ascii "Running SHA Accelerator Smoke Test    !!\n"
