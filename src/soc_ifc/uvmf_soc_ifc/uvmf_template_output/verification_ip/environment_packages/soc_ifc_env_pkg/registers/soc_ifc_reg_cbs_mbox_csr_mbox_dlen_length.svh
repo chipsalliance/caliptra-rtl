@@ -26,7 +26,7 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_dlen_length extends soc_ifc_reg_delay_
         // has priority over normal flow
         if (rm.mbox_lock.lock.get_mirrored_value() && !rm.mbox_unlock.unlock.get_mirrored_value() && rm.mbox_status.mbox_fsm_ps.get_mirrored_value() == MBOX_RDY_FOR_DLEN) begin
             rm.mbox_status.mbox_fsm_ps.predict(state_nxt, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
-            `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%p] on mbox_dlen results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
+            `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("post_predict called through map [%p] on mbox_dlen results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
         end
     endtask
 endclass
@@ -52,11 +52,9 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_dlen_length extends soc_ifc_reg_cbs_mbox_csr
                                        input uvm_reg_map    map);
         mbox_csr_ext rm; /* mbox_csr_rm */
         soc_ifc_reg_delay_job_mbox_csr_mbox_dlen_length delay_job;
-        uvm_queue #(soc_ifc_reg_delay_job) delay_jobs;
+        soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error  error_job;
         uvm_reg_block blk = fld.get_parent().get_parent(); /* mbox_csr_rm */
         if (!$cast(rm,blk)) `uvm_fatal ("SOC_IFC_REG_CBS", "Failed to get valid class handle")
-        if (!uvm_config_db#(uvm_queue#(soc_ifc_reg_delay_job))::get(null, "soc_ifc_reg_model_top", "delay_jobs", delay_jobs))
-            `uvm_error("SOC_IFC_REG_CBS", "Failed to get handle for 'delay_jobs' queue from config database!")
         delay_job = soc_ifc_reg_delay_job_mbox_csr_mbox_dlen_length::type_id::create("delay_job");
         delay_job.rm = rm;
         delay_job.map = map;
@@ -86,13 +84,32 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_dlen_length extends soc_ifc_reg_cbs_mbox_csr
         else if (map.get_name() == this.APB_map_name) begin
             case (kind) inside
                 UVM_PREDICT_WRITE: begin
-                    if (rm.mbox_fn_state_sigs.soc_send_stage) begin
+                    if (rm.mbox_fn_state_sigs.soc_send_stage && (rm.mbox_status.mbox_fsm_ps.get_mirrored_value() == MBOX_RDY_FOR_DLEN)) begin
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("Predicting mbox_fsm_ps transition to [%p] on write to mbox_dlen", MBOX_RDY_FOR_DATA), UVM_HIGH)
                         delay_job.state_nxt = MBOX_RDY_FOR_DATA;
                         delay_jobs.push_back(delay_job);
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to mbox_dlen on map [%s] with value [%x] predicts a state change. Delay job is queued to update DUT model.", map.get_name(), value), UVM_HIGH)
                     end
+                    else if (rm.mbox_fn_state_sigs.mbox_idle) begin
+                        error_job = soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error::type_id::create("error_job");
+                        error_job.rm = rm;
+                        error_job.map = map;
+                        error_job.fld = fld;
+                        error_job.set_delay_cycles(0);
+                        error_job.state_nxt = MBOX_IDLE;
+                        error_job.error = '{axs_without_lock: 1'b1, default: 1'b0};
+                        delay_jobs.push_back(error_job);
+                        `uvm_warning("SOC_IFC_REG_CBS", $sformatf("DLEN written during unexpected mailbox state [%p]!", rm.mbox_fn_state_sigs))
+                    end
                     else begin
+                        error_job = soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error::type_id::create("error_job");
+                        error_job.rm = rm;
+                        error_job.map = map;
+                        error_job.fld = fld;
+                        error_job.set_delay_cycles(0);
+                        error_job.state_nxt = MBOX_ERROR;
+                        error_job.error = '{axs_incorrect_order: 1'b1, default: 1'b0};
+                        delay_jobs.push_back(error_job);
                         `uvm_warning("SOC_IFC_REG_CBS", $sformatf("DLEN written during unexpected mailbox state [%p]!", rm.mbox_fn_state_sigs))
                     end
                 end

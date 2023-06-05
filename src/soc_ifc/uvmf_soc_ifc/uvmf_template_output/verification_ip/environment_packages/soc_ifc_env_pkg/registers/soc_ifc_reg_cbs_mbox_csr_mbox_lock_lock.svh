@@ -32,7 +32,7 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_lock_lock extends soc_ifc_reg_delay_jo
                 rm.mbox_status.soc_has_lock.predict(uvm_reg_data_t'(1), .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
                 rm.mbox_fn_state_sigs = '{soc_send_stage: 1'b1, default: 1'b0};
             end
-            `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%p] on mbox_lock results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
+            `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("post_predict called through map [%p] on mbox_lock results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
         end
     endtask
 endclass
@@ -58,11 +58,9 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock extends soc_ifc_reg_cbs_mbox_csr;
                                        input uvm_reg_map    map);
         mbox_csr_ext rm; /* mbox_csr_rm */
         soc_ifc_reg_delay_job_mbox_csr_mbox_lock_lock delay_job;
-        uvm_queue #(soc_ifc_reg_delay_job) delay_jobs;
+        soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error error_job;
         uvm_reg_block blk = fld.get_parent().get_parent(); /* mbox_csr_rm */
         if (!$cast(rm,blk)) `uvm_fatal ("SOC_IFC_REG_CBS", "Failed to get valid class handle")
-        if (!uvm_config_db#(uvm_queue#(soc_ifc_reg_delay_job))::get(null, "soc_ifc_reg_model_top", "delay_jobs", delay_jobs))
-            `uvm_error("SOC_IFC_REG_CBS", "Failed to get handle for 'delay_jobs' queue from config database!")
         delay_job = soc_ifc_reg_delay_job_mbox_csr_mbox_lock_lock::type_id::create("delay_job");
         delay_job.rm = rm;
         delay_job.map = map;
@@ -70,7 +68,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock extends soc_ifc_reg_cbs_mbox_csr;
 
         // If a scheduled job wanted to predict mbox_lock to 0, but couldn't (because
         // of the active bus access that led to this callback being called), that job
-        // will trigger an event. Service that here.
+        // will trigger a 'miss' event. Service that here.
         // This happens when mbox_execute or mbox_unlock is accessed and the result
         // is a prediction for mbox_lock to be cleared, but a bus access to mbox_lock is
         // active. See the callbacks for those registers.
@@ -132,7 +130,15 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock extends soc_ifc_reg_cbs_mbox_csr;
                     end
                 end
                 default: begin
-                    `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] has no effect", kind), UVM_FULL)
+                    error_job = soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error::type_id::create("error_job");
+                    error_job.rm = rm;
+                    error_job.map = map;
+                    error_job.fld = fld;
+                    error_job.set_delay_cycles(0);
+                    error_job.state_nxt = MBOX_ERROR;
+                    error_job.error = '{axs_incorrect_order: 1'b1, default: 1'b0};
+                    delay_jobs.push_back(error_job);
+                    `uvm_warning("SOC_IFC_REG_CBS", $sformatf("Write attempt to %s is unexpected! mailbox state [%p], FSM mirror: [%p]", fld.get_name(), rm.mbox_fn_state_sigs, rm.mbox_status.mbox_fsm_ps.get_mirrored_value()))
                 end
             endcase
         end

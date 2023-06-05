@@ -181,22 +181,23 @@ always_comb arc_FORCE_MBOX_UNLOCK = hwif_out.mbox_unlock.unlock.value;
 // being silently dropped.
 // Assumption: uC (ROM, FMC, RT) will never make an invalid request.
 // NOTE: Any APB agent can trigger the error at any point during a uC->SOC flow
-//       by writing to mbox_status (since it's a valid_receiver). FIXME ???
-always_comb arc_MBOX_RDY_FOR_CMD_MBOX_ERROR  = req_dv && req_data.soc_req &&
-                                              (req_data.write ? ((valid_requester && !hwif_out.mbox_cmd.command.swmod) || (valid_receiver && hwif_out.mbox_status.status.swmod)) :
-                                                                (valid_receiver  && hwif_out.mbox_dataout.dataout.swacc));
-always_comb arc_MBOX_RDY_FOR_DLEN_MBOX_ERROR = req_dv && req_data.soc_req &&
-                                              (req_data.write ? ((valid_requester && !hwif_out.mbox_dlen.length.swmod) || (valid_receiver && hwif_out.mbox_status.status.swmod)) :
-                                                                (valid_receiver  && hwif_out.mbox_dataout.dataout.swacc));
-always_comb arc_MBOX_RDY_FOR_DATA_MBOX_ERROR = req_dv && req_data.soc_req &&
-                                              (req_data.write ? ((valid_requester && !(hwif_out.mbox_datain.datain.swmod || hwif_out.mbox_execute.execute.swmod)) || (valid_receiver && hwif_out.mbox_status.status.swmod)) :
-                                                                (valid_receiver  && hwif_out.mbox_dataout.dataout.swacc));
-always_comb arc_MBOX_EXECUTE_UC_MBOX_ERROR   = req_dv && req_data.soc_req &&
-                                              (req_data.write ? (valid_requester || (valid_receiver && hwif_out.mbox_status.status.swmod)/* any write by 'valid' soc is illegal here */) :
-                                                                (valid_receiver  && hwif_out.mbox_dataout.dataout.swacc));
+//       by writing to mbox_status (since it's a valid_receiver).
+//       FIXED! valid_receiver is restricted by FSM state now.
+always_comb arc_MBOX_RDY_FOR_CMD_MBOX_ERROR  = req_dv && req_data.soc_req && valid_requester &&
+                                              (req_data.write ? (!hwif_out.mbox_cmd.command.swmod) :
+                                                                (hwif_out.mbox_dataout.dataout.swacc));
+always_comb arc_MBOX_RDY_FOR_DLEN_MBOX_ERROR = req_dv && req_data.soc_req && valid_requester &&
+                                              (req_data.write ? (!hwif_out.mbox_dlen.length.swmod) :
+                                                                (hwif_out.mbox_dataout.dataout.swacc));
+always_comb arc_MBOX_RDY_FOR_DATA_MBOX_ERROR = req_dv && req_data.soc_req && valid_requester &&
+                                              (req_data.write ? (!(hwif_out.mbox_datain.datain.swmod || hwif_out.mbox_execute.execute.swmod)) :
+                                                                (hwif_out.mbox_dataout.dataout.swacc));
+always_comb arc_MBOX_EXECUTE_UC_MBOX_ERROR   = req_dv && req_data.soc_req && valid_requester &&
+                                              (req_data.write ? (1'b1/* any write by 'valid' soc is illegal here */) :
+                                                                (hwif_out.mbox_dataout.dataout.swacc));
 always_comb arc_MBOX_EXECUTE_SOC_MBOX_ERROR  = req_dv && req_data.soc_req &&
                                               (req_data.write ? ((valid_requester && !(hwif_out.mbox_execute.execute.swmod)) ||
-                                                                 (valid_receiver  && !(hwif_out.mbox_status.status.swmod || hwif_out.mbox_dlen.length.swmod))) :
+                                                                 (~soc_has_lock   && !(hwif_out.mbox_status.status.swmod || hwif_out.mbox_dlen.length.swmod))) :
                                                                 (1'b0 /* any read allowed by SoC during this stage; dataout consumption is expected */));
 
 logic [$clog2(DEPTH)-1:0] mbox_dlen_in_dws;

@@ -57,6 +57,7 @@ package soc_ifc_reg_model_top_pkg;
         bit soc_send_stage;
         bit soc_receive_stage;
         bit soc_done_stage;
+        bit mbox_error;
     } mbox_fn_state_s;
 
 // pragma uvmf custom additional_imports end
@@ -281,6 +282,7 @@ package soc_ifc_reg_model_top_pkg;
         uvm_reg_map mbox_csr_APB_map;
 
         uvm_event mbox_lock_clr_miss;
+        uvm_event mbox_datain_to_dataout_predict;
 
         // This tracks expected functionality of the mailbox in a way that is
         // agnostic to the internal state machine implementation and strictly
@@ -298,6 +300,7 @@ package soc_ifc_reg_model_top_pkg;
             super.new(name);
             mbox_fn_state_sigs = '{mbox_idle: 1'b1, default: 1'b0};
             mbox_lock_clr_miss = new("mbox_lock_clr_miss");
+            mbox_datain_to_dataout_predict = new("mbox_datain_to_dataout_predict");
         endfunction : new
 
         // FIXME Manually maintaining a list here of registers that are configured
@@ -341,6 +344,7 @@ package soc_ifc_reg_model_top_pkg;
         mbox_data_q.delete();
         mbox_resp_q.delete();
         mbox_lock_clr_miss.reset();
+        mbox_datain_to_dataout_predict.reset();
 
         // Mailbox State Changes
         // TODO what to do for FW update?
@@ -483,6 +487,7 @@ package soc_ifc_reg_model_top_pkg;
 
     // Scheduling helper class for delayed callback tasks
     `include "soc_ifc_reg_delay_job.svh"
+    `include "soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error.svh"
 
     // Callbacks for predicting reg-field updates
     `include "soc_ifc_reg_cbs_mbox_csr.svh"
@@ -501,6 +506,8 @@ package soc_ifc_reg_model_top_pkg;
     `include "soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base.svh"
     `include "soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_en_r_base.svh"
     `include "soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_trig_r_base.svh"
+    `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_FATAL.svh"
+    `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_DATA_DATA.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ.svh"
@@ -627,6 +634,8 @@ package soc_ifc_reg_model_top_pkg;
         soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute mbox_csr_mbox_execute_execute_cb;
         soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock   mbox_csr_mbox_unlock_unlock_cb;
 
+        soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_FATAL              soc_ifc_reg_CPTRA_HW_ERROR_FATAL_cb;
+        soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL          soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_DATA_DATA              soc_ifc_reg_CPTRA_TRNG_DATA_DATA_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK       soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ        soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ_cb;
@@ -635,6 +644,8 @@ package soc_ifc_reg_model_top_pkg;
 
         soc_ifc_reg_cbs_sha512_acc_csr_LOCK_LOCK sha512_acc_csr_LOCK_LOCK_cb;
 
+        uvm_reg_field cptra_fatal_flds[$];
+        uvm_reg_field cptra_non_fatal_flds[$];
         uvm_reg_field error_en_flds[$];
         uvm_reg_field notif_en_flds[$];
         uvm_reg_field error_sts_flds[$];
@@ -716,6 +727,8 @@ package soc_ifc_reg_model_top_pkg;
         mbox_csr_mbox_execute_execute_cb = soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute::type_id::create("mbox_csr_mbox_execute_execute_cb");
         mbox_csr_mbox_unlock_unlock_cb   = soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock  ::type_id::create("mbox_csr_mbox_unlock_unlock_cb"  );
 
+        soc_ifc_reg_CPTRA_HW_ERROR_FATAL_cb            = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_FATAL          ::type_id::create("soc_ifc_reg_CPTRA_HW_ERROR_FATAL_cb"          );
+        soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL_cb        = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL      ::type_id::create("soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL_cb"      );
         soc_ifc_reg_CPTRA_TRNG_DATA_DATA_cb            = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_DATA_DATA          ::type_id::create("soc_ifc_reg_CPTRA_TRNG_DATA_DATA_cb"          );
         soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK_cb     = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK   ::type_id::create("soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK_cb"   );
         soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ_cb      = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ    ::type_id::create("soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ_cb"    );
@@ -777,6 +790,13 @@ package soc_ifc_reg_model_top_pkg;
         uvm_reg_field_cb::add(mbox_csr_rm.mbox_unlock .unlock    , mbox_csr_mbox_unlock_unlock_cb   );
 
         /* -- soc_ifc_reg -- */
+        soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL    .get_fields(cptra_fatal_flds    );
+        soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.get_fields(cptra_non_fatal_flds);
+        foreach (cptra_fatal_flds    [ii]) if (cptra_fatal_flds    [ii].get_name() == "rsvd") cptra_fatal_flds    .delete(ii);
+        foreach (cptra_non_fatal_flds[ii]) if (cptra_non_fatal_flds[ii].get_name() == "rsvd") cptra_non_fatal_flds.delete(ii);
+
+        foreach (cptra_fatal_flds    [ii])           uvm_reg_field_cb::add(cptra_fatal_flds    [ii]               , soc_ifc_reg_CPTRA_HW_ERROR_FATAL_cb    );
+        foreach (cptra_non_fatal_flds[ii])           uvm_reg_field_cb::add(cptra_non_fatal_flds[ii]               , soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL_cb);
         foreach (soc_ifc_reg_rm.CPTRA_TRNG_DATA[ii]) uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_DATA[ii].DATA, soc_ifc_reg_CPTRA_TRNG_DATA_DATA_cb);
         uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_PAUSER_LOCK  .LOCK        , soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK_cb    );
         uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_STATUS       .DATA_REQ    , soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ_cb     );
