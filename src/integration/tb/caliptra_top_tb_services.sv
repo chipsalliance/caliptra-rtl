@@ -77,7 +77,11 @@ module caliptra_top_tb_services
     output logic assert_hard_rst_flag,
     output logic assert_rst_flag,
     output logic deassert_hard_rst_flag,
-    output logic deassert_rst_flag
+    output logic deassert_rst_flag,
+
+    output logic [0:`CLP_OBF_UDS_DWORDS-1][31:0] cptra_uds_tb,
+    output logic [0:`CLP_OBF_FE_DWORDS-1] [31:0] cptra_fe_tb,
+    output logic [0:`CLP_OBF_KEY_DWORDS-1][31:0] cptra_obf_key_tb
 
 );
 
@@ -108,6 +112,8 @@ module caliptra_top_tb_services
     parameter MEMTYPE_LMEM = 3'h1;
     parameter MEMTYPE_DCCM = 3'h2;
     parameter MEMTYPE_ICCM = 3'h3;
+    parameter DATA_WIDTH = 32;
+    localparam IV_NO = 128 / DATA_WIDTH;
 
    //=========================================================================-
    // Signals
@@ -186,6 +192,20 @@ module caliptra_top_tb_services
 
     test_vector_t test_vector;
 
+    typedef struct packed {
+          logic [0:`CLP_OBF_KEY_DWORDS-1][31:0] obf_key_uds;
+          logic [0:IV_NO-1][31:0] iv_uds;
+          logic [0:`CLP_OBF_UDS_DWORDS-1][31:0] uds_plaintext;
+          logic [0:`CLP_OBF_UDS_DWORDS-1][31:0] uds_ciphertext;
+
+          logic [0:`CLP_OBF_KEY_DWORDS-1][31:0] obf_key_fe;
+          logic [0:IV_NO-1][31:0] iv_fe;
+          logic [0:`CLP_OBF_FE_DWORDS-1] [31:0] fe_plaintext;
+          logic [0:`CLP_OBF_FE_DWORDS-1] [31:0] fe_ciphertext;
+    } doe_test_vector_t;
+
+    doe_test_vector_t doe_test_vector;
+
 // Upwards name referencing per 23.8 of IEEE 1800-2017
 `define DEC caliptra_top_dut.rvtop.veer.dec
 
@@ -216,12 +236,14 @@ module caliptra_top_tb_services
     //         8'he4        - Disable all SRAM error injection (Mailbox, ICCM, DCCM)
     //         8'he5        - Request TB to initiate Mailbox flow without lock (violation) TODO
     //         8'he6        - Request TB to initiate Mailbox flow with out-of-order accesses (violation) TODO
+    //         8'hec        - Inject randomized UDS test vector
+    //         8'hed        - Inject randomized FE test vector
     //         8'hee        - Issue random warm reset
     //         8'hef        - Enable scan mode
     //         8'hf0        - Disable scan mode
     //         8'hf1        - Release WDT timer periods so they can be set by the test
     //         8'hf2        - Force clk_gating_en (to use in smoke_test only)
-    //         8'hf3        - Make two clients write to KV
+    //         8'hf3        - Init PCR slot 31
     //         8'hf4        - Write random data to KV entry0
     //         8'hf5        - Issue cold reset
     //         8'hf6        - Issue warm reset
@@ -392,6 +414,24 @@ module caliptra_top_tb_services
             if (UVM_TB) $warning("WARNING! Detected FW write to manually clear security_state.debug_locked, but Firmware can't do this in UVM. Use a sequence in the soc_ifc_ctrl_agent to modify this field.");
         end
     end
+    
+    generate
+        for(genvar dword = 0; dword < IV_NO; dword++) begin
+    always@(negedge clk) begin
+        if ((WriteData[7:0] == 8'hec) && mailbox_write) begin
+            force caliptra_top_dut.doe.doe_inst.hwif_out.DOE_IV[dword].IV.swmod = 'b1;
+            force caliptra_top_dut.doe.doe_inst.IV_reg[dword] = doe_test_vector.iv_uds[dword];
+        end
+        else if ((WriteData[7:0] == 8'hed) && mailbox_write) begin
+            force caliptra_top_dut.doe.doe_inst.hwif_out.DOE_IV[dword].IV.swmod = 'b1;
+            force caliptra_top_dut.doe.doe_inst.IV_reg[dword] = doe_test_vector.iv_fe[dword];
+        end
+        else begin
+            release caliptra_top_dut.doe.doe_inst.hwif_out.DOE_IV[dword].IV.swmod;
+        end
+    end
+end //for
+endgenerate //IV_NO
 
     always @(negedge clk) begin
         //Enable scan mode
@@ -445,6 +485,41 @@ module caliptra_top_tb_services
             end
         end
     endgenerate
+
+    task doe_testvector_generator();
+        string file_name;
+        int fd_r;
+        string line_read;
+
+        $system("python doe_test_gen.py");
+        file_name = "doe_test_vector.txt";
+        if(!UVM_TB) begin
+            fd_r = $fopen(file_name, "r");
+            if(fd_r == 0) $error("Cannot open file %s for reading", file_name);
+
+            //Get values from file
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", doe_test_vector.obf_key_uds));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", doe_test_vector.iv_uds));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", doe_test_vector.uds_plaintext));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", doe_test_vector.uds_ciphertext));
+
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", doe_test_vector.obf_key_fe));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", doe_test_vector.iv_fe));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", doe_test_vector.fe_plaintext));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", doe_test_vector.fe_ciphertext));
+
+            $fclose(fd_r);
+        end
+
+    endtask
 
     task ecc_testvector_generator ();
         string    file_name;
@@ -907,7 +982,20 @@ module caliptra_top_tb_services
         set_wdt_timer1_period = 0;
 
         `ifndef VERILATOR
-        ecc_testvector_generator();
+            ecc_testvector_generator();
+            doe_testvector_generator();
+            
+            //Note: Both obf_key_uds and obf_key_fe are the same
+            //for(int dword = 0; dword < `CLP_OBF_KEY_DWORDS; dword++) begin
+            //    cptra_obf_key_tb[dword] = doe_test_vector.obf_key_uds[(`CLP_OBF_KEY_DWORDS-1)-dword];
+            //end
+            cptra_obf_key_tb = doe_test_vector.obf_key_uds;
+            for(int dword = 0; dword < `CLP_OBF_UDS_DWORDS; dword++) begin
+                cptra_uds_tb[dword] = doe_test_vector.uds_ciphertext[dword];
+            end
+            for(int dword = 0; dword < `CLP_OBF_FE_DWORDS; dword++) begin
+                cptra_fe_tb[dword] = doe_test_vector.fe_ciphertext[dword];
+            end
         `endif
     end
 
