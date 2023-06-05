@@ -53,11 +53,19 @@ module caliptra_top_tb (
     logic                       BootFSM_BrkPoint;
     logic                       scan_mode;
 
-    logic [7:0][31:0]           cptra_obf_key;
-    logic [0:7][31:0]           cptra_obf_key_uds, cptra_obf_key_fe;
+    logic [`CLP_OBF_KEY_DWORDS-1:0][31:0]          cptra_obf_key;
+    logic [0:`CLP_OBF_KEY_DWORDS-1][31:0]          cptra_obf_key_uds, cptra_obf_key_fe;
     
-    logic [0:11][31:0]          cptra_uds_tb;
-    logic [0:31][31:0]          cptra_fe_tb;
+    // logic [11:0][31:0]          cptra_uds_tb;
+    // logic [7:0][31:0]           cptra_fe_tb;
+    logic [0:`CLP_OBF_UDS_DWORDS-1][31:0]          cptra_uds_tb;
+    logic [0:`CLP_OBF_FE_DWORDS-1][31:0]           cptra_fe_tb;
+
+    // logic [11:0][31:0]          cptra_uds_rand;
+    // logic [7:0][31:0]           cptra_fe_rand;
+    logic [0:`CLP_OBF_UDS_DWORDS-1][31:0]          cptra_uds_rand;
+    logic [0:`CLP_OBF_FE_DWORDS-1][31:0]           cptra_fe_rand;
+    logic [0:`CLP_OBF_KEY_DWORDS-1][31:0]          cptra_obf_key_tb;
 
     logic                       start_apb_fuse_sequence;
 
@@ -309,23 +317,35 @@ module caliptra_top_tb (
         if($test$plusargs("dumpon")) $dumpvars;
 `endif
 
-        //Key for UDS 
-        cptra_obf_key_uds = 256'h54682728db5035eb04b79645c64a95606abb6ba392b6633d79173c027c5acf77;
-        cptra_uds_tb = 384'he4046d05385ab789c6a72866e08350f93f583e2a005ca0faecc32b5cfc323d461c76c107307654db5566a5bd693e227c;
+        if($test$plusargs("RAND_DOE_VALUES")) begin
+            //cptra_obf_key = cptra_obf_key_tb;
+            for (int dword = 0; dword < $bits(cptra_obf_key/32); dword++) begin
+                cptra_obf_key[dword] = cptra_obf_key_tb[dword];
+            end
 
-        //Key for FE
-        cptra_obf_key_fe = 256'h31358e8af34d6ac31c958bbd5c8fb33c334714bffb41700d28b07f11cfe891e7;
-        cptra_fe_tb = {256'hb32e2b171b63827034ebb0d1909f7ef1d51c5f82c1bb9bc26bc4ac4dccdee835,
-                       256'h7dca6154c2510ae1c87b1b422b02b621bb06cac280023894fcff3406af08ee9b,
-                       256'he1dd72419beccddff77c722d992cdcc87e9c7486f56ab406ea608d8c6aeb060c,
-                       256'h64cf2785ad1a159147567e39e303370da445247526d95942bf4d7e88057178b0};
-
-        //swizzle the key so it matches the endianness of AES block
-        //used for visual inspection of uds/fe flow, manually switching keys and checking both
-        for (int dword = 0; dword < $bits(cptra_obf_key/32); dword++) begin
-            //cptra_obf_key[dword] = cptra_obf_key_uds[dword];
-            cptra_obf_key[dword] = cptra_obf_key_fe[dword];
+            cptra_uds_tb = cptra_uds_rand;
+            cptra_fe_tb = cptra_fe_rand;
         end
+        else begin
+            //Key for UDS
+            cptra_obf_key_uds = 256'h54682728db5035eb04b79645c64a95606abb6ba392b6633d79173c027c5acf77;
+            cptra_uds_tb = 384'he4046d05385ab789c6a72866e08350f93f583e2a005ca0faecc32b5cfc323d461c76c107307654db5566a5bd693e227c;
+
+            //Key for FE
+            cptra_obf_key_fe = 256'h31358e8af34d6ac31c958bbd5c8fb33c334714bffb41700d28b07f11cfe891e7;
+            cptra_fe_tb = 256'hb32e2b171b63827034ebb0d1909f7ef1d51c5f82c1bb9bc26bc4ac4dccdee835;
+                           /*256'h7dca6154c2510ae1c87b1b422b02b621bb06cac280023894fcff3406af08ee9b,
+                           256'he1dd72419beccddff77c722d992cdcc87e9c7486f56ab406ea608d8c6aeb060c,
+                           256'h64cf2785ad1a159147567e39e303370da445247526d95942bf4d7e88057178b0};*/
+
+            //swizzle the key so it matches the endianness of AES block
+            //used for visual inspection of uds/fe flow, manually switching keys and checking both
+            for (int dword = 0; dword < $bits(cptra_obf_key/32); dword++) begin
+                //cptra_obf_key[dword] = cptra_obf_key_uds[dword];
+                cptra_obf_key[dword] = cptra_obf_key_fe[dword];
+            end
+        end
+        
     end
 
     assign assert_rst_flag   =   assert_rst_flag_from_service ||   assert_rst_flag_from_fatal;
@@ -450,7 +470,7 @@ module caliptra_top_tb (
             end
             //load fuses
             S_APB_WR_UDS: begin
-                if (apb_xfer_end && apb_wr_count == 11) begin
+                if (apb_xfer_end && apb_wr_count == (`CLP_OBF_UDS_DWORDS-1)) begin
                     n_state_apb = S_APB_WR_FE;
                     apb_wr_count_nxt = '0;
                 end
@@ -464,7 +484,7 @@ module caliptra_top_tb (
                 end
             end
             S_APB_WR_FE: begin
-                if (apb_xfer_end && apb_wr_count == 31) begin
+                if (apb_xfer_end && apb_wr_count == (`CLP_OBF_FE_DWORDS-1)) begin
                     n_state_apb = S_APB_WR_FUSE_DONE;
                     apb_wr_count_nxt = '0;
                 end
@@ -944,8 +964,13 @@ caliptra_top_tb_services #(
     //Reset flags
     .assert_hard_rst_flag(assert_hard_rst_flag),
     .deassert_hard_rst_flag(deassert_hard_rst_flag),
+
     .assert_rst_flag(assert_rst_flag_from_service),
-    .deassert_rst_flag(deassert_rst_flag_from_service)
+    .deassert_rst_flag(deassert_rst_flag_from_service),
+    
+    .cptra_uds_tb(cptra_uds_rand),
+    .cptra_fe_tb(cptra_fe_rand),
+    .cptra_obf_key_tb(cptra_obf_key_tb)
 
 );
 

@@ -36,6 +36,7 @@ contents:
         - ../test_suites/pv_hash_and_sign/pv_hash_and_sign.yml
         - ../test_suites/smoke_test_pcr_signing/smoke_test_pcr_signing.yml
         - ../test_suites/smoke_test_ahb_mux/smoke_test_ahb_mux.yml
+        - ../test_suites/smoke_test_doe_rand/smoke_test_doe_rand.yml
         # data vault tests
         - ../test_suites/smoke_test_datavault_basic/smoke_test_datavault_basic.yml
         - ../test_suites/smoke_test_datavault_reset/smoke_test_datavault_reset.yml
