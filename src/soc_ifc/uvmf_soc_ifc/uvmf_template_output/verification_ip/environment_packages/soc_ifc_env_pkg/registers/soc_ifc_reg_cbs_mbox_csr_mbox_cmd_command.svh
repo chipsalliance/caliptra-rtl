@@ -26,7 +26,7 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_cmd_command extends soc_ifc_reg_delay_
         // has priority over normal flow
         if (rm.mbox_lock.lock.get_mirrored_value() && !rm.mbox_unlock.unlock.get_mirrored_value() && rm.mbox_status.mbox_fsm_ps.get_mirrored_value() == MBOX_RDY_FOR_CMD) begin
             rm.mbox_status.mbox_fsm_ps.predict(state_nxt, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
-            `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%p] on mbox_cmd results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
+            `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("post_predict called through map [%p] on mbox_cmd results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
         end
     endtask
 endclass
@@ -52,26 +52,43 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_cmd_command extends soc_ifc_reg_cbs_mbox_csr
                                        input uvm_reg_map    map);
         mbox_csr_ext rm; /* mbox_csr_rm */
         soc_ifc_reg_delay_job_mbox_csr_mbox_cmd_command delay_job;
+        soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error  error_job;
         uvm_reg_block blk = fld.get_parent().get_parent(); /* mbox_csr_rm */
         if (!$cast(rm,blk)) `uvm_fatal ("SOC_IFC_REG_CBS", "Failed to get valid class handle")
         if (map.get_name() == this.AHB_map_name) begin
             case (kind) inside
                 UVM_PREDICT_WRITE: begin
-                    uvm_queue #(soc_ifc_reg_delay_job) delay_jobs;
                     if (rm.mbox_fn_state_sigs.uc_send_stage) begin
-                        if (!uvm_config_db#(uvm_queue#(soc_ifc_reg_delay_job))::get(null, "soc_ifc_reg_model_top", "delay_jobs", delay_jobs))
-                            `uvm_error("SOC_IFC_REG_CBS", "Failed to get handle for 'delay_jobs' queue from config database!")
                         delay_job = soc_ifc_reg_delay_job_mbox_csr_mbox_cmd_command::type_id::create("delay_job");
                         delay_job.rm = rm;
                         delay_job.map = map;
                         delay_job.set_delay_cycles(0);
                         delay_job.state_nxt = MBOX_RDY_FOR_DLEN;
                         delay_jobs.push_back(delay_job);
-                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to mbox_cmd on map [%s] with value [%x] predicts a state change. Delay job is queued to update DUT model.", map.get_name(), value), UVM_HIGH)
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to %s on map [%s] with value [%x] predicts a state change. Delay job is queued to update DUT model.", fld.get_name(), map.get_name(), value), UVM_HIGH)
                     end
-                    else begin
-                        `uvm_warning("SOC_IFC_REG_CBS", $sformatf("Command written during unexpected mailbox state [%p]!", rm.mbox_fn_state_sigs))
-                    end
+//                    else if (rm.mbox_fn_state_sigs.mbox_idle) begin
+//                        error_job = soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error::type_id::create("error_job");
+//                        error_job.rm = rm;
+//                        error_job.map = map;
+//                        error_job.fld = fld;
+//                        error_job.set_delay_cycles(0);
+//                        error_job.state_nxt = MBOX_IDLE;
+//                        error_job.error = '{axs_without_lock: 1'b1, default: 1'b0};
+//                        delay_jobs.push_back(error_job);
+//                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to %s on map [%s] with value [%x] causes a mbox no_lock protocol error. Delay job is queued to update DUT model.", fld.get_name(), map.get_name(), value), UVM_HIGH)
+//                    end
+//                    else begin
+//                        error_job = soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error::type_id::create("error_job");
+//                        error_job.rm = rm;
+//                        error_job.map = map;
+//                        error_job.fld = fld;
+//                        error_job.set_delay_cycles(0);
+//                        error_job.state_nxt = MBOX_ERROR;
+//                        error_job.error = '{axs_incorrect_order: 1'b1, default: 1'b0};
+//                        delay_jobs.push_back(error_job);
+//                        `uvm_warning("SOC_IFC_REG_CBS", $sformatf("Command written during unexpected mailbox state [%p] results in mbox ooo protocol error!", rm.mbox_fn_state_sigs))
+//                    end
                 end
                 default: begin
                     `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] has no effect", kind), UVM_FULL)
@@ -81,20 +98,36 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_cmd_command extends soc_ifc_reg_cbs_mbox_csr
         else if (map.get_name() == this.APB_map_name) begin
             case (kind) inside
                 UVM_PREDICT_WRITE: begin
-                    uvm_queue #(soc_ifc_reg_delay_job) delay_jobs;
-                    if (rm.mbox_fn_state_sigs.soc_send_stage) begin
-                        if (!uvm_config_db#(uvm_queue#(soc_ifc_reg_delay_job))::get(null, "soc_ifc_reg_model_top", "delay_jobs", delay_jobs))
-                            `uvm_error("SOC_IFC_REG_CBS", "Failed to get handle for 'delay_jobs' queue from config database!")
+                    if (rm.mbox_fn_state_sigs.soc_send_stage && (rm.mbox_status.mbox_fsm_ps.get_mirrored_value() == MBOX_RDY_FOR_CMD)) begin
                         delay_job = soc_ifc_reg_delay_job_mbox_csr_mbox_cmd_command::type_id::create("delay_job");
                         delay_job.rm = rm;
                         delay_job.map = map;
                         delay_job.set_delay_cycles(0);
                         delay_job.state_nxt = MBOX_RDY_FOR_DLEN;
                         delay_jobs.push_back(delay_job);
-                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to mbox_cmd on map [%s] with value [%x] predicts a state change. Delay job is queued to update DUT model.", map.get_name(), value), UVM_HIGH)
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to %s on map [%s] with value [%x] predicts a state change. Delay job is queued to update DUT model.", fld.get_name(), map.get_name(), value), UVM_HIGH)
+                    end
+                    else if (rm.mbox_fn_state_sigs.mbox_idle) begin
+                        error_job = soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error::type_id::create("error_job");
+                        error_job.rm = rm;
+                        error_job.map = map;
+                        error_job.fld = fld;
+                        error_job.set_delay_cycles(0);
+                        error_job.state_nxt = MBOX_IDLE;
+                        error_job.error = '{axs_without_lock: 1'b1, default: 1'b0};
+                        delay_jobs.push_back(error_job);
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to %s on map [%s] with value [%x] causes a mbox no_lock protocol error. Delay job is queued to update DUT model.", fld.get_name(), map.get_name(), value), UVM_HIGH)
                     end
                     else begin
-                        `uvm_warning("SOC_IFC_REG_CBS", $sformatf("Command written during unexpected mailbox state [%p]!", rm.mbox_fn_state_sigs))
+                        error_job = soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error::type_id::create("error_job");
+                        error_job.rm = rm;
+                        error_job.map = map;
+                        error_job.fld = fld;
+                        error_job.set_delay_cycles(0);
+                        error_job.state_nxt = MBOX_ERROR;
+                        error_job.error = '{axs_incorrect_order: 1'b1, default: 1'b0};
+                        delay_jobs.push_back(error_job);
+                        `uvm_warning("SOC_IFC_REG_CBS", $sformatf("Write to %s on map [%s] with value [%x] during unexpected mailbox state [%p] results in mbox ooo protocol error!", fld.get_name(), map.get_name(), value, rm.mbox_fn_state_sigs))
                     end
                 end
                 default: begin

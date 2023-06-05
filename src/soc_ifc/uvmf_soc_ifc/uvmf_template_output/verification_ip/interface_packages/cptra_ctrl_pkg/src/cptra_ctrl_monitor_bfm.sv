@@ -120,13 +120,17 @@ end
   // pragma uvmf custom reset_condition end
   endtask
 
-  //******************************************************************
-
-  task wait_for_num_clocks(input int unsigned count); // pragma tbx xtf
+  // pragma uvmf custom wait_for_num_clocks begin
+  //****************************************************************************                         
+  // Inject pragmas's here to throw a warning on regeneration.
+  // Task must have automatic lifetime so that it can be concurrently invoked
+  // by multiple entities with a different wait value.
+  task automatic wait_for_num_clocks(input int unsigned count); // pragma tbx xtf
     @(posedge clk_i);
 
     repeat (count-1) @(posedge clk_i);
   endtask
+  // pragma uvmf custom wait_for_num_clocks end                                                                
 
   //******************************************************************
   event go;

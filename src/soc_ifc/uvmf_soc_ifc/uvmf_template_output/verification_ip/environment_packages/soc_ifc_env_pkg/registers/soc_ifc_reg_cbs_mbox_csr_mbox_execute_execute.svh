@@ -35,7 +35,7 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_execute_execute extends soc_ifc_reg_de
                     rm.mbox_fn_state_sigs = '{mbox_idle: 1'b1, default: 1'b0};
                     rm.mbox_status.status.predict(CMD_BUSY, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
                     rm.mbox_status.soc_has_lock.predict(1'b0, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
-                    `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%p] on mbox_execute results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
+                    `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("post_predict called through map [%p] on mbox_execute results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
                     if (rm.mbox_lock.is_busy()) begin
                         `uvm_info("SOC_IFC_REG_DELAY_JOB", "Delay job for mbox_execute attempted to clear mbox_lock, but hit access collision! Flagging clear event in reg-model for mbox_lock callback to handle", UVM_LOW)
                         rm.mbox_lock_clr_miss.trigger(null);
@@ -72,7 +72,7 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_execute_execute extends soc_ifc_reg_de
                 end
                 MBOX_EXECUTE_SOC: begin
                     rm.mbox_fn_state_sigs = '{soc_receive_stage: 1'b1, default: 1'b0};
-                    `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%p] on mbox_execute results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
+                    `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("post_predict called through map [%p] on mbox_execute results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
                 end
                 MBOX_EXECUTE_UC: begin
                     rm.mbox_fn_state_sigs = '{uc_receive_stage: 1'b1, default: 1'b0};
@@ -83,16 +83,16 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_execute_execute extends soc_ifc_reg_de
                     //    "do_predict" bypasses the access-check and does not enforce W1C
                     //    behavior on this attempt to set interrupt status to 1
                     intr_fld.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, rm_top.get_map_by_name("soc_ifc_AHB_map")); /* Intr reg access expected only via AHB i/f */
-                    `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%p] on mbox_execute results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
+                    `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("post_predict called through map [%p] on mbox_execute results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
                 end
                 default: begin
-                    `uvm_warning("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%p] on mbox_execute results in unexpected state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt))
+                    `uvm_warning("SOC_IFC_REG_DELAY_JOB", $sformatf("post_predict called through map [%p] on mbox_execute results in unexpected state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt))
                 end
             endcase
-            `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%p] on mbox_execute finished processing", map.get_name()), UVM_FULL)
+            `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("post_predict called through map [%p] on mbox_execute finished processing", map.get_name()), UVM_FULL)
         end
         else begin
-            `uvm_info("SOC_IFC_REG_CBS",
+            `uvm_info("SOC_IFC_REG_DELAY_JOB",
                       $sformatf("Delay job for mbox_execute does not predict any changes due to: mbox_lock mirror [%d] mbox_unlock mirror [%d] mbox_fsm_ps [%p]",
                                 rm.mbox_lock.lock.get_mirrored_value(),
                                 rm.mbox_unlock.unlock.get_mirrored_value(),
@@ -122,7 +122,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute extends soc_ifc_reg_cbs_mbox
                                        input uvm_path_e     path,
                                        input uvm_reg_map    map);
         soc_ifc_reg_delay_job_mbox_csr_mbox_execute_execute delay_job;
-        uvm_queue #(soc_ifc_reg_delay_job) delay_jobs;
+        soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error      error_job;
         mbox_csr_ext rm; /* mbox_csr_rm */
         uvm_mem mm; /* mbox_mem_rm "mem model" */
         uvm_reg_block rm_top;
@@ -134,8 +134,6 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute extends soc_ifc_reg_cbs_mbox
         delay_job.rm = rm;
         delay_job.map = map;
         delay_job.set_delay_cycles(0);
-        if (!uvm_config_db#(uvm_queue#(soc_ifc_reg_delay_job))::get(null, "soc_ifc_reg_model_top", "delay_jobs", delay_jobs))
-            `uvm_error("SOC_IFC_REG_CBS", "Failed to get handle for 'delay_jobs' queue from config database!")
         if (map.get_name() == this.AHB_map_name) begin
             case (kind) inside
                 UVM_PREDICT_WRITE: begin
@@ -198,6 +196,28 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute extends soc_ifc_reg_cbs_mbox
         else if (map.get_name() == this.APB_map_name) begin
             case (kind) inside
                 UVM_PREDICT_WRITE: begin
+                    // Check for protocol violations
+                    error_job = soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error::type_id::create("error_job");
+                    if (rm.mbox_fn_state_sigs.mbox_idle) begin
+                        error_job.rm = rm;
+                        error_job.map = map;
+                        error_job.fld = fld;
+                        error_job.set_delay_cycles(0);
+                        error_job.state_nxt = MBOX_IDLE;
+                        error_job.error = '{axs_without_lock: 1'b1, default: 1'b0};
+                        `uvm_warning("SOC_IFC_REG_CBS", $sformatf("EXECUTE written during unexpected mailbox state [%p]!", rm.mbox_fn_state_sigs))
+                    end
+                    else if (!rm.mbox_fn_state_sigs.soc_done_stage &&
+                             !(rm.mbox_fn_state_sigs.soc_send_stage && mbox_fsm_state_e'(rm.mbox_status.mbox_fsm_ps.get_mirrored_value()) == MBOX_RDY_FOR_DATA)) begin
+                        error_job.rm = rm;
+                        error_job.map = map;
+                        error_job.fld = fld;
+                        error_job.set_delay_cycles(0);
+                        error_job.state_nxt = MBOX_ERROR;
+                        error_job.error = '{axs_incorrect_order: 1'b1, default: 1'b0};
+                        `uvm_warning("SOC_IFC_REG_CBS", $sformatf("EXECUTE written during unexpected mailbox state [%p]! FSM mirror: [%p]", rm.mbox_fn_state_sigs, rm.mbox_status.mbox_fsm_ps.get_mirrored_value()))
+                    end
+
                     // Clearing 'execute' - Expect sts pin change
                     if (~value & previous) begin
                         if (rm.mbox_data_q.size() != 0 || rm.mbox_resp_q.size() != 0) begin
@@ -248,6 +268,10 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute extends soc_ifc_reg_cbs_mbox
                     else begin
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] has no effect", kind), UVM_FULL)
                     end
+
+                    // Submit error job after delay job so that it executes later and takes precedence
+                    if (|error_job.error)
+                        delay_jobs.push_back(error_job);
                 end
                 default: begin
                     `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] has no effect", kind), UVM_FULL)
