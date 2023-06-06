@@ -13,7 +13,7 @@ variables:
   MERGE_SAMPLE_RETAIN_CNT: 30
   MERGE_PIPELINE_ID: ${SYSTEM_DEFINITIONID}
 
-project: Base_IP
+project: AHA_POC
 
 merge:
 
