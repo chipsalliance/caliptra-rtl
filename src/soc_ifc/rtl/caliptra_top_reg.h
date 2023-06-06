@@ -15,7 +15,6 @@
 #ifndef CALIPTRA_TOP_REG_HEADER
 #define CALIPTRA_TOP_REG_HEADER
 
-
 #define CALIPTRA_TOP_REG_BASE_ADDR                                                                  (0x0)
 #define CALIPTRA_TOP_REG_MBOX_CSR_BASE_ADDR                                                         (0x30020000)
 #define CALIPTRA_TOP_REG_MBOX_CSR_MBOX_LOCK                                                         (0x30020000)
@@ -477,3 +476,4 @@
 
 
 #endif
+

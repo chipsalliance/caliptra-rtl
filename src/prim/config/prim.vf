@@ -26,6 +26,7 @@ ${CALIPTRA_ROOT}/src/lc_ctrl/rtl/lc_ctrl_pkg.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/ahb_to_reg_adapter.sv
 ${CALIPTRA_ROOT}/src/prim_generic/rtl/prim_generic_flop.sv
 ${CALIPTRA_ROOT}/src/prim_generic/rtl/prim_generic_buf.sv
+${CALIPTRA_ROOT}/src/prim/rtl/prim_flop_en.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_flop_2sync.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_lfsr.sv
 ${CALIPTRA_ROOT}/src/prim/rtl/prim_mubi4_sync.sv
