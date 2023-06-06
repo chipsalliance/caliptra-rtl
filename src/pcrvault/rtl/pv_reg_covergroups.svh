@@ -38,6 +38,7 @@
         clear_cp : coverpoint clear;
         rsvd0_cp : coverpoint rsvd0;
         rsvd1_cp : coverpoint rsvd1;
+        lockXclear: cross lock_cp, clear_cp;
 
     endgroup
 

@@ -38,6 +38,7 @@
 
 import uvmf_base_pkg_hdl::*;
 import kv_read_pkg_hdl::*;
+import kv_reg_pkg::*;
 
 interface  kv_read_if #(
   string KV_READ_REQUESTOR = "HMAC_KEY"

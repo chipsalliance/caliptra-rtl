@@ -28,6 +28,17 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
+//
+
+covergroup rd_data(input logic rd_data_bit);
+  option.per_instance = 1;
+  value: coverpoint rd_data_bit;
+  transition:  coverpoint rd_data_bit {
+    bins bin01 = (0 => 1); 
+    bins bin10 = (1 => 0);
+  }
+endgroup
+
 class kv_read_transaction_coverage #(
       string KV_READ_REQUESTOR = "HMAC_KEY"
       )
@@ -44,6 +55,7 @@ class kv_read_transaction_coverage #(
   T coverage_trans;
 
   // pragma uvmf custom class_item_additional begin
+  rd_data rd_data_bus[KV_DATA_W];
   // pragma uvmf custom class_item_additional end
   
   // ****************************************************************************
@@ -58,7 +70,9 @@ class kv_read_transaction_coverage #(
     }
     error: coverpoint coverage_trans.error;
     last: coverpoint coverage_trans.last;
-    //read_data: coverpoint coverage_trans.read_data;
+    //read_data: coverpoint coverage_trans.read_data; --> tgl coverage here
+    //cross last with diff offsets
+    lastXoffset: cross last, read_offset;
     // pragma uvmf custom covergroup end
   endgroup
 
@@ -89,7 +103,12 @@ class kv_read_transaction_coverage #(
   virtual function void write (T t);
     `uvm_info("COV","Received transaction",UVM_HIGH);
     coverage_trans = t;
+
+    foreach(rd_data_bus[i]) rd_data_bus[i] = new(coverage_trans.read_data[i]);
+    foreach(rd_data_bus[i]) rd_data_bus[i].set_inst_name($sformatf("rd_data_bus[%0d]_%s",i,get_full_name()));
+
     kv_read_transaction_cg.sample();
+    foreach(rd_data_bus[i]) rd_data_bus[i].sample();
   endfunction
 
 endclass

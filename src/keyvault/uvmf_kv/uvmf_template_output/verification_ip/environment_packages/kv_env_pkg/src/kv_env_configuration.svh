@@ -224,7 +224,11 @@ extends uvmf_environment_configuration_base;
     if (register_model == null) begin
       uvm_reg::include_coverage("*", UVM_CVR_ALL); // Register coverage config with resource DB, used later by build_coverage()
       kv_rm = kv_reg_model_top::type_id::create("kv_rm");
+      //Turn on addr_map_coverage for kv_reg_model
+      kv_rm.set_coverage(UVM_CVR_ADDR_MAP);
+      uvm_reg::include_coverage("*", UVM_CVR_ALL);
       kv_rm.build();
+      kv_rm.set_coverage(UVM_CVR_ALL);
       kv_rm.lock_model();
       kv_rm.build_ext_maps();
       enable_reg_adaptation = 1;

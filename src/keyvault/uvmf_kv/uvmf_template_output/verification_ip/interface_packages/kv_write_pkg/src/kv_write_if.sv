@@ -38,6 +38,7 @@
 
 import uvmf_base_pkg_hdl::*;
 import kv_write_pkg_hdl::*;
+import kv_reg_pkg::*;
 
 interface  kv_write_if #(
   string KV_WRITE_REQUESTOR = "HMAC"

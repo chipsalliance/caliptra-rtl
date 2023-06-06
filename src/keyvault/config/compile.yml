@@ -21,6 +21,17 @@ targets:
     files:
       - $COMPILE_ROOT/rtl/kv_reg_uvm.sv
 ---
+provides: [keyvault_cov]
+schema_version: 2.4.0
+targets:
+  tb:
+    directories:
+      - $COMPILE_ROOT/coverage
+    files:
+      - $COMPILE_ROOT/coverage/keyvault_cov_if.sv
+      - $COMPILE_ROOT/coverage/keyvault_cov_props.sv
+      - $COMPILE_ROOT/coverage/keyvault_cov_bind.sv
+---
 provides: [keyvault]
 schema_version: 2.4.0
 requires: 
