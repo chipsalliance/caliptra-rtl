@@ -71,6 +71,8 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
         logic lock_use;
         logic clear;
 
+        uvm_reg rg;
+
         //Pass variables to parent
         super.reg_ap = reg_ap_local;
         super.map = map;
@@ -78,6 +80,9 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
         
         //Convert bus txn to reg model txn
         adapter.bus2reg(tr,rw);
+
+        rg = map.get_reg_by_offset(rw.addr, (rw.kind == UVM_READ));
+        rg.sample_values();
         
         //-----------------------------------------------
         //rw contains KEY entry info. Below steps are to

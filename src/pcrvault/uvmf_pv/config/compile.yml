@@ -6,6 +6,7 @@ requires:
   - pv_uvm_pkg
   - pcrvault
   - caliptra_top_defines
+  - pcrvault_cov
 targets:
   tb:
     directories:

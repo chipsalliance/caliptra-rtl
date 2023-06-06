@@ -44,6 +44,7 @@
         rsvd1_cp : coverpoint rsvd1;
         dest_valid_cp : coverpoint dest_valid;
         last_dword_cp : coverpoint last_dword;
+        wrXuseXclear: cross lock_wr_cp, lock_use_cp, clear_cp;
 
     endgroup
 
