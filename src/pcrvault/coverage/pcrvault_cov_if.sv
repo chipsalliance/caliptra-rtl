@@ -16,7 +16,6 @@
 
 interface pcrvault_cov_if     
     import pv_defines_pkg::*;
-    import pv_reg_pkg::*;
     (
     input logic clk,
     input logic rst_b,
