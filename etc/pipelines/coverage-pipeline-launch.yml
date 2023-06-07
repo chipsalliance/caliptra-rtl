@@ -14,7 +14,7 @@ pr: none
 # +--------------> Minute (0-59)
 
 schedules:
-  - cron: 0 19 * * *
+  - cron: 0 15 * * *
     displayName: CALIPTRA Coverage Merges
     branches:
       include:
