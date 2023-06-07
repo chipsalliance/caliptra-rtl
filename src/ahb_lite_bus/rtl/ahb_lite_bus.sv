@@ -105,7 +105,7 @@ module ahb_lite_bus #(
         .hsize_i            (ahb_lite_initiator.hsize),
         // Outputs
         .hresp_o            (ahb_lite_initiator.hresp),
-        .hinitiatorready_o  (ahb_lite_initiator.hready),
+        .hinitiatorready_o  (ahb_lite_initiator.hreadyout),
         .hrdata_o           (ahb_lite_initiator.hrdata),
 
         // --------------------------------------

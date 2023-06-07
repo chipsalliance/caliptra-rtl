@@ -566,7 +566,7 @@ el2_veer_wrapper rvtop (
         .hsize_o             (initiator_inst.hsize ),
         .hready_o            (initiator_inst.hready),
         .hresp_i             (initiator_inst.hresp ),
-        .hreadyout_i         (initiator_inst.hready),
+        .hreadyout_i         (initiator_inst.hreadyout),
         .hrdata_i            (initiator_inst.hrdata)
     );
 
