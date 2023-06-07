@@ -457,7 +457,12 @@ class soc_ifc_predictor #(
         end
     end
     if (t.assert_clear_secrets) begin
-        `uvm_error("PRED_CPTRA_CTRL", "Unimplemented predictor for clearing secrets")
+        foreach (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii]) p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii].key.reset();
+        foreach (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[ii]) p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[ii].seed.reset();
+        foreach (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[ii]) p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[ii].seed.reset;
+        this.cptra_obf_key_reg = '{default:32'h0};
+        send_cptra_sts_txn = 1'b1;
+        `uvm_info("PRED_CPTRA_CTRL", "Received transaction with clear secrets set! Resetting Caliptra model secrets", UVM_MEDIUM)
     end
     if (t.pulse_rv_ecc_error) begin
         `uvm_error("PRED_CPTRA_CTRL", "Unimplemented predictor for signaling RISCV SRAM ECC Errors")
@@ -817,9 +822,11 @@ class soc_ifc_predictor #(
                     // Expect a status transition on sha_notif_intr_pending
                     // whenever an AHB write changes the value of SHA Accelerator Execute
                     if (sha_notif_intr_pending ^ p_soc_ifc_rm.sha512_acc_csr_rm.EXECUTE.EXECUTE.get_mirrored_value()) begin
-                        `uvm_info("PRED_AHB", "Write to SHA512 Accel Execute triggers soc_ifc_notif_intr_pending transition", UVM_LOW)
-                        send_cptra_sts_txn = 1'b1;
                         sha_notif_intr_pending = p_soc_ifc_rm.sha512_acc_csr_rm.EXECUTE.EXECUTE.get_mirrored_value();
+                        if (sha_notif_intr_pending) begin
+                            `uvm_info("PRED_AHB", "Write to SHA512 Accel Execute triggers sha_notif_intr_pending transition", UVM_LOW)
+                            send_cptra_sts_txn = 1'b1;
+                        end
                     end
                 end
                 "STATUS",
@@ -907,6 +914,34 @@ class soc_ifc_predictor #(
                         send_soc_ifc_sts_txn = data_active != generic_output_wires[31:0];
                         generic_output_wires = {generic_output_wires[63:32],data_active}; // FIXME for data width?
                     end
+                end
+                ["fuse_uds_seed[0]" :"fuse_uds_seed[9]" ],
+                ["fuse_uds_seed[10]":"fuse_uds_seed[11]"]: begin
+                    if (fuse_update_enabled) begin
+                        send_cptra_sts_txn       = 1'b1;
+                    end
+                end
+                ["fuse_field_entropy[0]" :"fuse_field_entropy[7]" ]: begin
+                    if (fuse_update_enabled) begin
+                        send_cptra_sts_txn       = 1'b1;
+                    end
+                end
+                ["fuse_key_manifest_pk_hash[0]" :"fuse_key_manifest_pk_hash[9]"],
+                ["fuse_key_manifest_pk_hash[10]":"fuse_key_manifest_pk_hash[11]"],
+                "fuse_key_manifest_pk_hash_mask",
+                ["fuse_owner_pk_hash[0]" :"fuse_owner_pk_hash[9]"],
+                ["fuse_owner_pk_hash[10]":"fuse_owner_pk_hash[11]"],
+                "fuse_fmc_key_manifest_svn",
+                ["fuse_runtime_svn[0]":"fuse_runtime_svn[3]"],
+                "fuse_anti_rollback_disable",
+                ["fuse_idevid_cert_attr[0]" :"fuse_idevid_cert_attr[9]"],
+                ["fuse_idevid_cert_attr[10]":"fuse_idevid_cert_attr[19]"],
+                ["fuse_idevid_cert_attr[20]":"fuse_idevid_cert_attr[23]"],
+                ["fuse_idevid_manuf_hsm_id[0]":"fuse_idevid_manuf_hsm_id[3]"],
+                "fuse_life_cycle",
+                ["internal_obf_key[0]":"internal_obf_key[7]"]: begin
+                    // Handled in callbacks via reg predictor
+                    `uvm_info("PRED_AHB", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
                 end
                 "internal_iccm_lock": begin
                     if (ahb_txn.RnW == AHB_WRITE && !iccm_locked) begin
@@ -1498,20 +1533,35 @@ class soc_ifc_predictor #(
             end
             ["fuse_uds_seed[0]" :"fuse_uds_seed[9]" ],
             ["fuse_uds_seed[10]":"fuse_uds_seed[11]"]: begin
-//                // FIXME -- use reg predictor somehow?
-//                uvm_reg_data_t data = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FUSE_WR_DONE.get();
-//                if (!data[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FUSE_WR_DONE.done.get_lsb_pos()]) begin
                 if (fuse_update_enabled) begin
                     send_cptra_sts_txn       = 1'b1;
                 end
             end
             ["fuse_field_entropy[0]" :"fuse_field_entropy[7]" ]: begin
-//                // FIXME -- use reg predictor somehow?
-//                uvm_reg_data_t data = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FUSE_WR_DONE.get();
-//                if (!data[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FUSE_WR_DONE.done.get_lsb_pos()]) begin
                 if (fuse_update_enabled) begin
                     send_cptra_sts_txn       = 1'b1;
                 end
+            end
+            ["fuse_key_manifest_pk_hash[0]" :"fuse_key_manifest_pk_hash[9]"],
+            ["fuse_key_manifest_pk_hash[10]":"fuse_key_manifest_pk_hash[11]"],
+            "fuse_key_manifest_pk_hash_mask",
+            ["fuse_owner_pk_hash[0]" :"fuse_owner_pk_hash[9]"],
+            ["fuse_owner_pk_hash[10]":"fuse_owner_pk_hash[11]"],
+            "fuse_fmc_key_manifest_svn",
+            ["fuse_runtime_svn[0]":"fuse_runtime_svn[3]"],
+            "fuse_anti_rollback_disable",
+            ["fuse_idevid_cert_attr[0]" :"fuse_idevid_cert_attr[9]"],
+            ["fuse_idevid_cert_attr[10]":"fuse_idevid_cert_attr[19]"],
+            ["fuse_idevid_cert_attr[20]":"fuse_idevid_cert_attr[23]"],
+            ["fuse_idevid_manuf_hsm_id[0]":"fuse_idevid_manuf_hsm_id[3]"],
+            "fuse_life_cycle",
+            ["internal_obf_key[0]":"internal_obf_key[7]"]: begin
+                // Handled in callbacks via reg predictor
+                `uvm_info("PRED_APB", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+            end
+            "internal_iccm_lock": begin
+                // Handled in callbacks via reg predictor
+                `uvm_info("PRED_APB", $sformatf("Handling access to register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
             "global_intr_en_r",
             "error_intr_en_r",

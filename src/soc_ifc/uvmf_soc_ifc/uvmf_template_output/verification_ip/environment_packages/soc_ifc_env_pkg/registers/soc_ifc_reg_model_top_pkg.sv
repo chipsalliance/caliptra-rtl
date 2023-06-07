@@ -513,6 +513,10 @@ package soc_ifc_reg_model_top_pkg;
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER.svh"
+    `include "soc_ifc_reg_cbs_soc_ifc_reg_secret.svh"
+    `include "soc_ifc_reg_cbs_soc_ifc_reg_fuse.svh"
+    `include "soc_ifc_reg_cbs_soc_ifc_reg_key.svh"
+    `include "soc_ifc_reg_cbs_soc_ifc_reg_internal.svh"
     `include "soc_ifc_reg_cbs_sha512_acc_csr_LOCK_LOCK.svh"
 
 // pragma uvmf custom define_register_classes end
@@ -642,6 +646,11 @@ package soc_ifc_reg_model_top_pkg;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE    soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER    soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER_cb;
 
+        soc_ifc_reg_cbs_soc_ifc_reg_secret   soc_ifc_reg_secret_cb;
+        soc_ifc_reg_cbs_soc_ifc_reg_fuse     soc_ifc_reg_fuse_cb;
+        soc_ifc_reg_cbs_soc_ifc_reg_key      soc_ifc_reg_key_cb;
+        soc_ifc_reg_cbs_soc_ifc_reg_internal soc_ifc_reg_internal_cb;
+
         soc_ifc_reg_cbs_sha512_acc_csr_LOCK_LOCK sha512_acc_csr_LOCK_LOCK_cb;
 
         uvm_reg_field cptra_fatal_flds[$];
@@ -735,6 +744,11 @@ package soc_ifc_reg_model_top_pkg;
         soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE_cb  = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE::type_id::create("soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE_cb");
         soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER_cb  = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER::type_id::create("soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER_cb");
 
+        soc_ifc_reg_secret_cb   = soc_ifc_reg_cbs_soc_ifc_reg_secret  ::type_id::create("soc_ifc_reg_secret_cb");
+        soc_ifc_reg_fuse_cb     = soc_ifc_reg_cbs_soc_ifc_reg_fuse    ::type_id::create("soc_ifc_reg_fuse_cb");
+        soc_ifc_reg_key_cb      = soc_ifc_reg_cbs_soc_ifc_reg_key     ::type_id::create("soc_ifc_reg_key_cb");
+        soc_ifc_reg_internal_cb = soc_ifc_reg_cbs_soc_ifc_reg_internal::type_id::create("soc_ifc_reg_internal_cb");
+
         sha512_acc_csr_LOCK_LOCK_cb = soc_ifc_reg_cbs_sha512_acc_csr_LOCK_LOCK::type_id::create("sha512_acc_Csr_lock_lock_cb");
         // Callbacks compute side-effects to other registers in the reg-model
         // in response to 'do_predict'.
@@ -802,6 +816,20 @@ package soc_ifc_reg_model_top_pkg;
         uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_STATUS       .DATA_REQ    , soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ_cb     );
         uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_STATUS       .DATA_WR_DONE, soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE_cb );
         uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_VALID_PAUSER .PAUSER      , soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER_cb );
+
+        foreach (soc_ifc_reg_rm.fuse_uds_seed[ii])             uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_uds_seed[ii].seed             , soc_ifc_reg_secret_cb);
+        foreach (soc_ifc_reg_rm.fuse_field_entropy[ii])        uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_field_entropy[ii].seed        , soc_ifc_reg_secret_cb);
+        foreach (soc_ifc_reg_rm.fuse_key_manifest_pk_hash[ii]) uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_key_manifest_pk_hash[ii].hash , soc_ifc_reg_fuse_cb);
+                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_key_manifest_pk_hash_mask.mask, soc_ifc_reg_fuse_cb);
+        foreach (soc_ifc_reg_rm.fuse_owner_pk_hash[ii])        uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_owner_pk_hash[ii].hash        , soc_ifc_reg_fuse_cb);
+                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_fmc_key_manifest_svn.svn      , soc_ifc_reg_fuse_cb);
+        foreach (soc_ifc_reg_rm.fuse_runtime_svn[ii])          uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_runtime_svn[ii].svn           , soc_ifc_reg_fuse_cb);
+                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_anti_rollback_disable.dis     , soc_ifc_reg_fuse_cb);
+        foreach (soc_ifc_reg_rm.fuse_idevid_cert_attr[ii])     uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_idevid_cert_attr[ii].cert     , soc_ifc_reg_fuse_cb);
+        foreach (soc_ifc_reg_rm.fuse_idevid_manuf_hsm_id[ii])  uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_idevid_manuf_hsm_id[ii].hsm_id, soc_ifc_reg_fuse_cb);
+                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_life_cycle.life_cycle         , soc_ifc_reg_fuse_cb);
+        foreach (soc_ifc_reg_rm.internal_obf_key[ii])          uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_obf_key[ii].key           , soc_ifc_reg_key_cb);
+                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_iccm_lock.lock            , soc_ifc_reg_internal_cb);
 
         /* -- sha512_acc_csr -- */
         uvm_reg_field_cb::add(sha512_acc_csr_rm.LOCK.LOCK, sha512_acc_csr_LOCK_LOCK_cb);

@@ -982,6 +982,7 @@ endgenerate //IV_NO
         set_wdt_timer1_period = 0;
 
         `ifndef VERILATOR
+        if (!UVM_TB) begin
             ecc_testvector_generator();
             doe_testvector_generator();
             
@@ -996,6 +997,7 @@ endgenerate //IV_NO
             for(int dword = 0; dword < `CLP_OBF_FE_DWORDS; dword++) begin
                 cptra_fe_tb[dword] = doe_test_vector.fe_ciphertext[dword];
             end
+        end
         `endif
     end
 

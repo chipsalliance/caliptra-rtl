@@ -24,6 +24,7 @@
 #include "sha256.h"
 #include "sha512.h"
 #include "soc_ifc.h"
+#include "caliptra_isr.h"
 #include <string.h>
 #include <stdint.h>
 #include "printf.h"
@@ -37,6 +38,8 @@ volatile char* stdout = (char *)STDOUT;
 #else
     enum printf_verbosity verbosity_g = LOW;
 #endif
+volatile caliptra_intr_received_s cptra_intr_rcv;
+volatile uint32_t                 intr_count       = 0;
 
 
 /* --------------- Function Prototypes --------------- */
@@ -141,11 +144,11 @@ void main() {
 
         // Wait for FW available (FMC)
         do {
-            intr_sts = lsu_read_32( (uint32_t*) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+            intr_sts = lsu_read_32( (uintptr_t) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
             intr_sts &= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK;
         } while (!intr_sts);
         //clear the interrupt
-        lsu_write_32((uint32_t*) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK);
+        lsu_write_32((uintptr_t) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK);
 
         op = soc_ifc_read_mbox_cmd();
         if (op.cmd != MBOX_CMD_FMC_UPDATE) {
@@ -160,11 +163,11 @@ void main() {
 
         // Wait for FW available (RT)
         do {
-            intr_sts = lsu_read_32( (uint32_t*) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+            intr_sts = lsu_read_32( (uintptr_t) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
             intr_sts &= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK;
         } while (!intr_sts);
         //clear the interrupt
-        lsu_write_32((uint32_t*) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK);
+        lsu_write_32((uintptr_t) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK);
         //read the mbox command
         op = soc_ifc_read_mbox_cmd();
         if (op.cmd != MBOX_CMD_RT_UPDATE) {

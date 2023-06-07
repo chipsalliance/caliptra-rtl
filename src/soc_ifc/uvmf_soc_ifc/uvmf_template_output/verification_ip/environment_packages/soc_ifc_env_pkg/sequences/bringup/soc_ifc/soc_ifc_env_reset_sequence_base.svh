@@ -41,9 +41,11 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
 
   rand uvm_reg_data_t uds_seed_rand      [12];
   rand uvm_reg_data_t field_entropy_rand [32];
+  rand uvm_reg_data_t idevid_cert_attr_rand [24];
   rand struct packed {
     bit uds;
     bit field_entropy;
+    bit [0:23] idevid_cert_attr;
   } fuses_to_set;
 
 
@@ -116,6 +118,15 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
         for (int ii = 0; ii < $size(reg_model.soc_ifc_reg_rm.fuse_field_entropy); ii++) begin
             reg_model.soc_ifc_reg_rm.fuse_field_entropy[ii].write(sts, field_entropy_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
             if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", $sformatf("Failed when writing to field_entropy index %0d", ii))
+        end
+    end
+
+    // iDevID Cert Attr
+    foreach (this.fuses_to_set.idevid_cert_attr[ii]) begin
+        if (this.fuses_to_set.idevid_cert_attr[ii]) begin
+            `uvm_info("SOC_IFC_RST", $sformatf("Writing iDevID Certificate Attribute [%d] to fuse bank", ii), UVM_LOW)
+            reg_model.soc_ifc_reg_rm.fuse_idevid_cert_attr[ii].write(sts, idevid_cert_attr_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+            if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", $sformatf("Failed when writing to iDevID Certificate Attribute [%d]", ii))
         end
     end
 
