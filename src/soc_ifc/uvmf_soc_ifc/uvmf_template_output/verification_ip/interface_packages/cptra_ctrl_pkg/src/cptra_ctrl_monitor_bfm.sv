@@ -97,8 +97,8 @@ end
   // pragma tbx oneway proxy.notify_transaction                 
 
   // pragma uvmf custom interface_item_additional begin
-  logic clear_obf_secrets_r;
-  logic iccm_axs_blocked_r;
+  logic clear_obf_secrets_r = 1'b0;
+  logic iccm_axs_blocked_r = 1'b0;
   function bit any_signal_changed();
       return |(clear_obf_secrets_i   ^  clear_obf_secrets_r  ) ||
              |(iccm_axs_blocked_i    ^  iccm_axs_blocked_r   ) ||

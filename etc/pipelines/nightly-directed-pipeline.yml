@@ -169,3 +169,19 @@ stages:
                 - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
                 - path: '${WORKSPACE}/Caliptra/src/integration/stimulus/testsuites/caliptra_top_nightly_directed_regression.yml'
                 - timeout: 30
+
+# This runs for a veeeery long time and throws UVM failures on some mismatched transactions... need to fix before adding to pipeline
+#        - ROM_tb:
+#            - display_name: 'ROM_TB'
+#            - enabled: true
+#            - configspec_name: 'integration_lib'
+#            - dut: 'uvmf_caliptra_top'
+#            - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/integration/uvmf_caliptra_top/coverage/config/uvmf_caliptra_top_cm_hier.cfg --submit-resource-args RAM/28000'
+#            - testsuites:
+#              - l1_regress:
+#                - enabled: true
+#                - configspec_name: 'integration_lib'
+#                - dut: 'uvmf_caliptra_top'
+#                - sim_args: '+COVERAGE ${{ variables.coverage_root_args }} +CLP_REGRESSION'
+#                - path: '${WORKSPACE}/Caliptra/src/integration/stimulus/testsuites/uvmf_caliptra_top_nightly_directed_regression.yml'
+#                - timeout: 1440

@@ -46,7 +46,7 @@ function parse_sim_config {
 echo
 set -e
 full_pwd=`pwd -P`
-sim_config_file=$full_pwd/sim_config.yml
+sim_config_file=${full_pwd}/sim_config.yml
 
 if [[ -f "$sim_config_file" ]]; then
     parse_sim_config $sim_config_file
@@ -56,15 +56,32 @@ fi
 baseTestName=$(echo "$TESTNAME" | sed 's/\__.*//')
 
 echo "[$SCRIPT] Building TEST=$baseTestName from TESTNAME=$TESTNAME for CONFIG=${CONFIG}"
-TESTNAME=$baseTestName
+export TESTNAME=$baseTestName
 
 # These bash functions cause the Makefile to not work, because it resets env vars and it chokes on the bash functions
 unset -f module
 unset -f switchml
 unset -f _module_raw
 
-#cmd="make -f $COMPILE_ROOT/test_suites/$TESTNAME/Makefile program.hex"
-cmd="make -f $SCRIPTS_DIR/Makefile program.hex"
-echo "$cmd"
-$cmd
-
+# This is the UVM-based ROM test
+if [[ $TESTNAME == "caliptra_top_rom_test" ]]; then
+    cmd="make -f $SCRIPTS_DIR/Makefile TESTNAME=fw_test_rom program.hex"
+    echo "$cmd"
+    $cmd
+# This is any other UVM-based test in caliptra_top bench
+elif [[ ! -z $(echo $TESTNAME | grep -E "caliptra_top_\w*_test") ]]; then
+    cmd="make -f $SCRIPTS_DIR/Makefile TESTNAME=caliptra_top program.hex"
+    echo "$cmd"
+    $cmd
+    cmd="make -f $SCRIPTS_DIR/Makefile TESTNAME=caliptra_fmc caliptra_fmc.hex"
+    echo "$cmd"
+    $cmd
+    cmd="make -f $SCRIPTS_DIR/Makefile TESTNAME=caliptra_rt  caliptra_rt.hex"
+    echo "$cmd"
+    $cmd
+# This is any other FW-based smoke test running on the basic caliptra top SV bench
+else
+    cmd="make -f $SCRIPTS_DIR/Makefile program.hex"
+    echo "$cmd"
+    $cmd
+fi

@@ -100,6 +100,8 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_reset_sequence_base soc_ifc_env_reset_sequence_base_t;
   `include "sequences/bringup/soc_ifc/soc_ifc_env_bringup_sequence.svh"
   typedef soc_ifc_env_bringup_sequence soc_ifc_env_bringup_sequence_t;
+  `include "sequences/bringup/soc_ifc/soc_ifc_env_rom_bringup_sequence.svh"
+  typedef soc_ifc_env_rom_bringup_sequence soc_ifc_env_rom_bringup_sequence_t;
   `include "sequences/bringup/soc_ifc/soc_ifc_env_pauser_init_sequence.svh"
   typedef soc_ifc_env_pauser_init_sequence soc_ifc_env_pauser_init_sequence_t;
   `include "sequences/bringup/soc_ifc/soc_ifc_env_reset_warm_sequence.svh"
@@ -112,6 +114,8 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_mbox_rand_fw_sequence soc_ifc_env_mbox_rand_fw_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_real_fw_sequence.svh"
   typedef soc_ifc_env_mbox_real_fw_sequence soc_ifc_env_mbox_real_fw_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rom_fw_sequence.svh"
+  typedef soc_ifc_env_mbox_rom_fw_sequence soc_ifc_env_mbox_rom_fw_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_small_sequence.svh"
   typedef soc_ifc_env_mbox_rand_small_sequence soc_ifc_env_mbox_rand_small_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_medium_sequence.svh"
