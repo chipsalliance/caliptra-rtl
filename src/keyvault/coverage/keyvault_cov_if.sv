@@ -19,7 +19,6 @@
 
 interface keyvault_cov_if     
     import kv_defines_pkg::*;
-    import kv_reg_pkg::*;
     (
     //Keyvault IO
     input logic clk,
