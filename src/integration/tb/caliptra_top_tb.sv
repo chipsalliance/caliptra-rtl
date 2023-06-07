@@ -195,7 +195,7 @@ module caliptra_top_tb (
         
         else if((c_state_apb == S_APB_WR_EXEC) && apb_xfer_end && int_flag) begin
             //Wait for APB flow to be done before toggling generic_input_wires
-            generic_input_wires <= 'h4001; //Toggle wires
+            generic_input_wires <= {$urandom, $urandom}; //Toggle wires
         end
         
         else if((cycleCnt == cycleCnt_ff + 15000) && int_flag) begin

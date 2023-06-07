@@ -486,7 +486,7 @@ end
 
 
 // Generate a pulse to set the interrupt bit
-always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
+always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
     if (~cptra_noncore_rst_b) begin
         security_state_debug_locked_d <= '0;
     end
@@ -631,7 +631,7 @@ logic s_cpuif_rd_ack_nc;
 logic s_cpuif_wr_ack_nc;
 
 soc_ifc_reg i_soc_ifc_reg (
-    .clk(soc_ifc_clk_cg),
+    .clk(clk),
     .rst('0),
     //qualify request so no addresses alias
     .s_cpuif_req(soc_ifc_reg_req_dv & (soc_ifc_reg_req_data.addr[SOC_IFC_ADDR_W-1:SOC_IFC_REG_ADDR_WIDTH] == SOC_IFC_REG_START_ADDR[SOC_IFC_ADDR_W-1:SOC_IFC_REG_ADDR_WIDTH])),
@@ -674,7 +674,7 @@ assign nmi_intr = t2_timeout && !timer2_en;             //Only issue nmi if WDT 
 // sets CPTRA_FW_ERROR_FATAL or when a HW condition occurs that sets a bit
 // in CPTRA_HW_ERROR_FATAL
 // Interrupt only deasserts on reset
-always_ff@(posedge soc_ifc_clk_cg or negedge cptra_rst_b) begin
+always_ff@(posedge clk or negedge cptra_rst_b) begin
     if(~cptra_rst_b) begin
         cptra_error_fatal <= 1'b0;
     end
@@ -695,7 +695,7 @@ always_ff@(posedge soc_ifc_clk_cg or negedge cptra_rst_b) begin
         cptra_error_fatal <= cptra_error_fatal;
     end
 end
-always_ff@(posedge soc_ifc_clk_cg or negedge cptra_rst_b) begin
+always_ff@(posedge clk or negedge cptra_rst_b) begin
     if(~cptra_rst_b) begin
         cptra_error_non_fatal <= 1'b0;
     end
@@ -938,7 +938,7 @@ always_ff @(posedge clk or negedge cptra_pwrgood) begin
     end
 end
 
-`CALIPTRA_ASSERT_KNOWN(ERR_AHB_INF_X, {hreadyout_o,hresp_o}, soc_ifc_clk_cg, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(ERR_AHB_INF_X, {hreadyout_o,hresp_o}, clk, cptra_rst_b)
 //this generates an NMI in the core, but we don't have a handler so it just hangs
-`CALIPTRA_ASSERT_NEVER(ERR_SOC_IFC_AHB_ERR, hresp_o, soc_ifc_clk_cg, cptra_rst_b)
+`CALIPTRA_ASSERT_NEVER(ERR_SOC_IFC_AHB_ERR, hresp_o, clk, cptra_rst_b)
 endmodule

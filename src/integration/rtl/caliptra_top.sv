@@ -565,7 +565,9 @@ clk_gate cg (
     .cpu_halt_status(o_cpu_halt_status),
     .clk_cg (clk_cg),
     .soc_ifc_clk_cg (soc_ifc_clk_cg),
-    .generic_input_wires(generic_input_wires)
+    .generic_input_wires(generic_input_wires),
+    .cptra_error_fatal(cptra_error_fatal),
+    .cptra_in_debug_scan_mode(cptra_in_debug_scan_mode)
 );
 //=========================================================================-
 // AHB I$ instance

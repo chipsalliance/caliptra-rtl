@@ -68,11 +68,15 @@ requires:
   - el2_veer_wrapper
 targets:
   tb:
-    directories: [$COMPILE_ROOT/tb]
+    directories: #[$COMPILE_ROOT/tb]
+      - $COMPILE_ROOT/tb
+      - $COMPILE_ROOT/coverage
     files:
       - $COMPILE_ROOT/tb/caliptra_top_tb_pkg.sv
       - $COMPILE_ROOT/tb/caliptra_veer_sram_export.sv
       - $COMPILE_ROOT/tb/caliptra_top_tb_services.sv
+      - $COMPILE_ROOT/coverage/caliptra_top_cov_if.sv
+      - $COMPILE_ROOT/coverage/caliptra_top_cov_bind.sv
       - $COMPILE_ROOT/tb/caliptra_top_tb.sv
     tops: [caliptra_top_tb]
   sim:

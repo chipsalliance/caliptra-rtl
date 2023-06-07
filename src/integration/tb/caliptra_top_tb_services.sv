@@ -135,6 +135,7 @@ module caliptra_top_tb_services
     logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata_bitflip;
     int cycleCntKillReq;
 
+    int                         cycleCnt_ff;
     int                         rst_cyclecnt = 0;
     int                         wait_time_to_rst;
 
@@ -236,6 +237,7 @@ module caliptra_top_tb_services
     //         8'he4        - Disable all SRAM error injection (Mailbox, ICCM, DCCM)
     //         8'he5        - Request TB to initiate Mailbox flow without lock (violation) TODO
     //         8'he6        - Request TB to initiate Mailbox flow with out-of-order accesses (violation) TODO
+    //         8'heb        - Inject fatal error
     //         8'hec        - Inject randomized UDS test vector
     //         8'hed        - Inject randomized FE test vector
     //         8'hee        - Issue random warm reset
@@ -401,6 +403,7 @@ module caliptra_top_tb_services
     
 
     //TIE-OFF device lifecycle
+    logic assert_ss_tran;
     initial security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1};
     always @(negedge clk) begin
         //lock debug mode
@@ -410,8 +413,14 @@ module caliptra_top_tb_services
         end
         //unlock debug mode
         else if ((WriteData[7:0] == 8'hfa) && mailbox_write) begin
-            security_state.debug_locked <= 1'b0;
+            cycleCnt_ff <= cycleCnt;
+            assert_ss_tran <= 'b1;
+            //security_state.debug_locked <= 1'b0;
             if (UVM_TB) $warning("WARNING! Detected FW write to manually clear security_state.debug_locked, but Firmware can't do this in UVM. Use a sequence in the soc_ifc_ctrl_agent to modify this field.");
+        end
+        else if(assert_ss_tran && (cycleCnt == cycleCnt_ff + 'd100)) begin
+            security_state.debug_locked <= 1'b0;
+            assert_ss_tran <= 'b0;
         end
     end
     
@@ -433,10 +442,17 @@ module caliptra_top_tb_services
 end //for
 endgenerate //IV_NO
 
+    logic assert_scan_mode;
     always @(negedge clk) begin
         //Enable scan mode
         if ((WriteData[7:0] == 8'hef) && mailbox_write) begin
+            cycleCnt_ff <= cycleCnt;
+            assert_scan_mode <= 'b1;
+            //scan_mode <= 1'b1;
+        end
+        else if(assert_scan_mode && (cycleCnt == cycleCnt_ff + 'd100)) begin
             scan_mode <= 1'b1;
+            assert_scan_mode <= 'b0;
         end
         //Disable scan mode
         else if ((WriteData[7:0] == 8'hf0) && mailbox_write) begin
@@ -448,6 +464,22 @@ endgenerate //IV_NO
     always@(negedge clk) begin
         if((WriteData == 'hf2) && mailbox_write) begin
             force caliptra_top_dut.soc_ifc_top1.clk_gating_en = 1;
+        end
+    end
+
+    //Inject fatal error after a delay
+    logic inject_fatal_error;
+    always@(negedge clk) begin
+        if((WriteData == 'heb) && mailbox_write) begin
+            cycleCnt_ff <= cycleCnt;
+            inject_fatal_error <= 'b1;
+        end
+        else if(inject_fatal_error && (cycleCnt == cycleCnt_ff + 'd100)) begin
+            force caliptra_top_dut.cptra_error_fatal = 'b1;
+        end
+        else if(inject_fatal_error && (cycleCnt == cycleCnt_ff + 'd200)) begin
+            release caliptra_top_dut.cptra_error_fatal;
+            inject_fatal_error <= 'b0;
         end
     end
 
@@ -613,7 +645,7 @@ endgenerate //IV_NO
             timed_warm_rst <= 'b1;
         end
         else if((WriteData == 'hee) && mailbox_write) begin
-            wait_time_to_rst =$urandom_range(5,1000);
+            wait_time_to_rst = $urandom_range(5,100);
             prandom_warm_rst <= 'b1;
             rst_cyclecnt <= cycleCnt;
         end
@@ -980,6 +1012,7 @@ endgenerate //IV_NO
         wait_time_to_rst = 0;
 
         set_wdt_timer1_period = 0;
+        assert_ss_tran = 0;
 
         `ifndef VERILATOR
         if (!UVM_TB) begin
@@ -1481,6 +1514,7 @@ endfunction
 
 `ifndef VERILATOR
 soc_ifc_cov_bind i_soc_ifc_cov_bind();
+caliptra_top_cov_bind i_caliptra_top_cov_bind();
 `endif
 
 /* verilator lint_off CASEINCOMPLETE */
