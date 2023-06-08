@@ -180,7 +180,7 @@ always_comb hready_o_1 = initiator1_pend_addr_ph ? '0 :
 `ifndef VERILATOR
 `ifdef FCOV
 
-covergroup ahb_lite_2to1_mux_cov_grp @(posedge hclk);
+covergroup ahb_lite_2to1_mux_cov_grp @(posedge hclk iff hreset_n);
     option.per_instance = 1;
     
     init0_addr_cp: coverpoint initiator0_address_ph;

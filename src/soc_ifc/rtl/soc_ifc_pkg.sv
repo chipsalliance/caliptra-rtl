@@ -24,7 +24,8 @@ package soc_ifc_pkg;
     parameter SOC_IFC_USER_W = 32;
     
     parameter MBOX_SIZE_KB = 128;
-    parameter MBOX_SIZE_BYTES = 128 * 1024;
+    parameter MBOX_SIZE_BYTES = MBOX_SIZE_KB * 1024;
+    parameter MBOX_SIZE_DWORDS = MBOX_SIZE_BYTES/4;
     parameter MBOX_DATA_W = 32;
     parameter MBOX_ECC_DATA_W = 7;
     parameter MBOX_DATA_AND_ECC_W = MBOX_DATA_W + MBOX_ECC_DATA_W;
@@ -88,6 +89,16 @@ package soc_ifc_pkg;
         MBOX_EXECUTE_SOC  = 3'b100,
         MBOX_ERROR        = 3'b111
     } mbox_fsm_state_e;
+
+    //SHA FSM
+    typedef enum logic [2:0] {
+        SHA_IDLE    = 3'b000,
+        SHA_BLOCK_0 = 3'b001,
+        SHA_BLOCK_N = 3'b011,
+        SHA_PAD0    = 3'b010,
+        SHA_PAD1    = 3'b110,
+        SHA_DONE    = 3'b100
+      } sha_fsm_state_e;
 
     //MAILBOX Status
     typedef enum logic [3:0] {

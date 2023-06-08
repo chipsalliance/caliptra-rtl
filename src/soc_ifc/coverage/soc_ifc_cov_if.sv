@@ -36,8 +36,19 @@
 interface soc_ifc_cov_if     
     import soc_ifc_pkg::*;
     import soc_ifc_reg_pkg::*;
+    #(
+        parameter APB_ADDR_WIDTH = 18
+       ,parameter APB_DATA_WIDTH = 32
+       ,parameter APB_USER_WIDTH = 32
+       ,parameter AHB_ADDR_WIDTH = 18
+       ,parameter AHB_DATA_WIDTH = 32
+    )
     (
     input logic clk,
+    input logic clk_cg,
+    input logic soc_ifc_clk_cg,
+
+    //SoC boot signals
     input logic cptra_pwrgood,
     input logic cptra_rst_b,
     input logic uc_req_dv,
@@ -45,17 +56,84 @@ interface soc_ifc_cov_if
     input logic soc_req_dv,
     input soc_ifc_req_t soc_req,
     input soc_ifc_req_t soc_ifc_reg_req_data,
-    input logic trng_req,
+
     input logic ready_for_fuses,
     input logic ready_for_fw_push,
-    input logic ready_for_runtime
+    input logic ready_for_runtime,
+
+    input logic mailbox_data_avail,
+    input logic mailbox_flow_done,
+
+    input var security_state_t security_state,
+
+    input logic  [1:0][31:0] generic_input_wires,
+    input logic BootFSM_BrkPoint,
+    input logic [1:0][31:0] generic_output_wires,
+
+    //SoC APB Interface
+    input logic [APB_ADDR_WIDTH-1:0]     paddr_i,
+    input logic                          psel_i,
+    input logic                          penable_i,
+    input logic                          pwrite_i,
+    input logic [APB_DATA_WIDTH-1:0]     pwdata_i,
+    input logic [APB_USER_WIDTH-1:0]     pauser_i,
+    input logic                         pready_o,
+    input logic [APB_DATA_WIDTH-1:0]    prdata_o,
+    input logic                         pslverr_o,
+
+    //uC AHB Lite Interface
+    input logic [AHB_ADDR_WIDTH-1:0]  haddr_i,
+    input logic [AHB_DATA_WIDTH-1:0]  hwdata_i,
+    input logic                       hsel_i,
+    input logic                       hwrite_i,
+    input logic                       hready_i,
+    input logic [1:0]                 htrans_i,
+    input logic [2:0]                 hsize_i,
+
+    input logic                      hresp_o,
+    input logic                      hreadyout_o,
+    input logic [AHB_DATA_WIDTH-1:0] hrdata_o,
+
+    //SoC Interrupts
+    input logic             cptra_error_fatal,
+    input logic             cptra_error_non_fatal,
+    input logic             trng_req,
+
+    //uC Interrupts
+    input wire              soc_ifc_error_intr,
+    input wire              soc_ifc_notif_intr,
+    input wire              sha_error_intr,
+    input wire              sha_notif_intr,
+
+    //SRAM interface
+    input mbox_sram_req_t  mbox_sram_req,
+    input mbox_sram_resp_t mbox_sram_resp,
+
+    //Obfuscated UDS and FE
+    input logic clear_obf_secrets,
+    input logic scan_mode_f,
+    input logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key,
+    input logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg,
+    input logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy,
+    input logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed,
+
+    // NMI Vector 
+    input logic [31:0] nmi_vector,
+    input logic nmi_intr,
+
+    // ICCM Lock
+    input logic iccm_lock,
+    input logic iccm_axs_blocked,
+
+    //Other blocks reset
+    input logic cptra_noncore_rst_b,
+    //uC reset
+    input logic cptra_uc_rst_b,
+    //Clock gating
+    input logic clk_gating_en
 );
 
-  localparam APB_ADDR_WIDTH = 18;
-
   enum bit [3:0] {IDLE = '0, AHB_RD = 4'h8, AHB_WR = 4'h4,  APB_RD = 4'h2, APB_WR = 4'h1} bus_event_e;  
-
-  logic req_collision = i_soc_ifc_arb.req_collision;
 
   logic uc_rd, uc_wr, soc_rd, soc_wr;
 
@@ -64,15 +142,176 @@ interface soc_ifc_cov_if
   assign soc_rd = soc_req_dv & ~soc_req.write;
   assign soc_wr = soc_req_dv & soc_req.write;
 
-  covergroup soc_ifc_top_cg @(posedge clk);
-      trng_req_cp: coverpoint trng_req;
-      ready_for_fuses_cp: coverpoint ready_for_fuses;
-      ready_for_fw_push_cp: coverpoint ready_for_fw_push;
-      ready_for_runtime_cp: coverpoint ready_for_runtime;
-      req_collision_cp: coverpoint req_collision;
-  endgroup
+    covergroup soc_ifc_top_cov_grp @(posedge clk);
+        //IO
+        cptra_pwrgood_cp: coverpoint cptra_pwrgood;
+        cptra_rst_b_cp: coverpoint cptra_rst_b;
+        cptra_noncore_rst_b_cp: coverpoint cptra_noncore_rst_b;
+        cptra_uc_rst_b_cp: coverpoint cptra_uc_rst_b;
+        clk_gating_en_cp: coverpoint clk_gating_en;
+        security_state_cp: coverpoint security_state;
+        scan_mode_f_cp: coverpoint scan_mode_f;
+        ready_for_fuses_cp: coverpoint ready_for_fuses;
+        ready_for_fw_push_cp: coverpoint ready_for_fw_push;
+        ready_for_runtime_cp: coverpoint ready_for_runtime;
+        mailbox_data_avail_cp: coverpoint mailbox_data_avail;
+        mailbox_flow_done_cp: coverpoint mailbox_flow_done;
+        cptra_error_fatal_cp: coverpoint cptra_error_fatal;
+        cptra_error_non_fatal_cp: coverpoint cptra_error_non_fatal;
+        trng_req_cp: coverpoint trng_req;
+        BootFSM_BrkPoint_cp: coverpoint BootFSM_BrkPoint;
+        generic_input_wires_cp: coverpoint generic_input_wires;
+        generic_output_wires_cp: coverpoint generic_output_wires;
+        nmi_vector_cp: coverpoint nmi_vector;
+        nmi_intr_cp: coverpoint nmi_intr;
+        soc_ifc_error_intr_cp: coverpoint soc_ifc_error_intr;
+        soc_ifc_notif_intr_cp: coverpoint soc_ifc_notif_intr;
+        sha_error_intr_cp: coverpoint sha_error_intr;
+        sha_notif_intr_cp: coverpoint sha_notif_intr;
+        mbox_sram_req_cp: coverpoint mbox_sram_req;
+        mbox_sram_resp_cp: coverpoint mbox_sram_resp;
+        clear_obf_secrets_cp: coverpoint clear_obf_secrets;
+        cptra_obf_key_reg_cp: coverpoint cptra_obf_key_reg;
+        obf_field_entropy_cp: coverpoint obf_field_entropy;
+        obf_uds_seed_cp: coverpoint obf_uds_seed;
+        iccm_lock_cp: coverpoint iccm_lock;
+        iccm_axs_blocked_cp: coverpoint iccm_axs_blocked;
 
-  soc_ifc_top_cg soc_ifc_top_cg1 = new();
+    endgroup
+
+    logic valid_arb_cycle;
+    assign valid_arb_cycle = i_soc_ifc_arb.uc_req_dv | i_soc_ifc_arb.soc_req_dv;
+
+    covergroup soc_ifc_arb_cov_grp @(posedge clk iff (cptra_rst_b & valid_arb_cycle));
+        req_collision_cp: coverpoint i_soc_ifc_arb.req_collision;
+        soc_has_priority_cp: coverpoint i_soc_ifc_arb.soc_has_priority;
+        valid_mbox_req_cp: coverpoint i_soc_ifc_arb.valid_mbox_req;
+        soc_mbox_addr_cp: coverpoint i_soc_ifc_arb.soc_req_data.addr inside {[MBOX_REG_START_ADDR:MBOX_REG_END_ADDR]};
+
+        soc_mbox_req_ip_cp: coverpoint i_soc_ifc_arb.soc_mbox_req_ip;
+        soc_reg_req_ip_cp: coverpoint i_soc_ifc_arb.soc_reg_req_ip;
+        soc_sha_req_ip_cp: coverpoint i_soc_ifc_arb.soc_sha_req_ip;
+
+        uc_mbox_req_ip_cp: coverpoint i_soc_ifc_arb.uc_mbox_req_ip;
+        uc_reg_req_ip_cp: coverpoint i_soc_ifc_arb.uc_reg_req_ip;
+        uc_sha_req_ip_cp: coverpoint i_soc_ifc_arb.uc_sha_req_ip;
+
+        uc_mbox_reg_req_cp: coverpoint i_soc_ifc_arb.uc_mbox_reg_req;
+        uc_mbox_dir_req_cp: coverpoint i_soc_ifc_arb.uc_mbox_dir_req;
+        soc_mbox_req_cp: coverpoint i_soc_ifc_arb.soc_mbox_req;
+
+        uc_reg_req_cp: coverpoint i_soc_ifc_arb.uc_reg_req;
+        soc_reg_req_cp: coverpoint i_soc_ifc_arb.soc_reg_req;
+
+        uc_sha_req_cp: coverpoint i_soc_ifc_arb.uc_sha_req;
+        soc_sha_req_cp: coverpoint i_soc_ifc_arb.soc_sha_req;
+
+        //Cover soc req to mbox addr range with and without valid pauser.
+        soc_mbox_reqXvalid_mbox_req: cross soc_mbox_addr_cp, valid_mbox_req_cp;
+
+
+
+    endgroup
+
+    covergroup soc_ifc_boot_fsm_cov_grp @(posedge clk iff cptra_rst_b);
+        //FSM
+        boot_fsm_ps_cp: coverpoint i_soc_ifc_boot_fsm.boot_fsm_ps;
+        arc_BOOT_FUSE_BOOT_DONE_cp: coverpoint i_soc_ifc_boot_fsm.arc_BOOT_FUSE_BOOT_DONE;
+        arc_BOOT_FUSE_BOOT_WAIT_cp: coverpoint i_soc_ifc_boot_fsm.arc_BOOT_FUSE_BOOT_WAIT;
+        arc_BOOT_DONE_BOOT_IDLE_cp: coverpoint i_soc_ifc_boot_fsm.arc_BOOT_DONE_BOOT_IDLE;
+        arc_BOOT_DONE_BOOT_FWRST_cp: coverpoint i_soc_ifc_boot_fsm.arc_BOOT_DONE_BOOT_FWRST;
+        arc_BOOT_WAIT_BOOT_DONE_cp: coverpoint i_soc_ifc_boot_fsm.arc_BOOT_WAIT_BOOT_DONE;
+        fsm_iccm_unlock_cp: coverpoint i_soc_ifc_boot_fsm.fsm_iccm_unlock;
+
+
+    endgroup
+
+    sha_fsm_state_e sha_fsm_ps;
+    assign sha_fsm_ps = sha_fsm_state_e'(i_sha512_acc_top.sha_fsm_ps);
+
+    covergroup sha512_acc_cov_grp @(posedge clk iff cptra_rst_b);
+        //FSM
+        sha_fsm_ps_cp: coverpoint sha_fsm_ps;
+        arc_SHA_IDLE_SHA_BLOCK_0_cp: coverpoint i_sha512_acc_top.arc_SHA_IDLE_SHA_BLOCK_0;
+        arc_SHA_BLOCK_0_SHA_BLOCK_N_cp: coverpoint i_sha512_acc_top.arc_SHA_BLOCK_0_SHA_BLOCK_N;
+        arc_SHA_BLOCK_0_SHA_PAD0_cp: coverpoint i_sha512_acc_top.arc_SHA_BLOCK_0_SHA_PAD0;
+        arc_SHA_BLOCK_N_SHA_BLOCK_N_cp: coverpoint i_sha512_acc_top.arc_SHA_BLOCK_N_SHA_BLOCK_N;
+        arc_SHA_BLOCK_N_SHA_PAD0_cp: coverpoint i_sha512_acc_top.arc_SHA_BLOCK_N_SHA_PAD0;
+        arc_SHA_PAD0_SHA_PAD1_cp: coverpoint i_sha512_acc_top.arc_SHA_PAD0_SHA_PAD1;
+        arc_SHA_PAD0_SHA_DONE_cp: coverpoint i_sha512_acc_top.arc_SHA_PAD0_SHA_DONE;
+        arc_SHA_PAD1_SHA_DONE_cp: coverpoint i_sha512_acc_top.arc_SHA_PAD1_SHA_DONE;
+        arc_IDLE_cp: coverpoint (i_sha512_acc_top.arc_IDLE & (sha_fsm_ps != SHA_IDLE));
+
+        //controls
+        extra_pad_block_required_cp: coverpoint i_sha512_acc_top.extra_pad_block_required;
+        num_bytes_data_cp: coverpoint i_sha512_acc_top.num_bytes_data;
+        mailbox_mode_cp: coverpoint i_sha512_acc_top.mailbox_mode;
+        sha_mode_cp: coverpoint i_sha512_acc_top.sha_mode;
+
+        //crosses
+        mailbox_modeXextra_pad: cross mailbox_mode_cp, extra_pad_block_required_cp;
+        mailbox_modeXnum_bytes_data: cross mailbox_mode_cp, num_bytes_data_cp;
+        mailbox_modeXsha_mode_cpXsha_fsm_ps: cross mailbox_mode_cp, sha_mode_cp, sha_fsm_ps_cp;
+
+    endgroup
+
+    mbox_fsm_state_e mbox_fsm_ps;
+    assign mbox_fsm_ps = mbox_fsm_state_e'(i_mbox.mbox_fsm_ps);
+
+    covergroup mbox_cov_grp @(posedge clk iff cptra_rst_b);
+        //FSM
+        mbox_fsm_ps_cp: coverpoint mbox_fsm_ps;
+        arc_FORCE_MBOX_UNLOCK_cp: coverpoint i_mbox.arc_FORCE_MBOX_UNLOCK;
+        arc_MBOX_IDLE_MBOX_RDY_FOR_CMD_cp: coverpoint i_mbox.arc_MBOX_IDLE_MBOX_RDY_FOR_CMD;
+        arc_MBOX_RDY_FOR_CMD_MBOX_RDY_FOR_DLEN_cp: coverpoint i_mbox.arc_MBOX_RDY_FOR_CMD_MBOX_RDY_FOR_DLEN;
+        arc_MBOX_RDY_FOR_DLEN_MBOX_RDY_FOR_DATA_cp: coverpoint i_mbox.arc_MBOX_RDY_FOR_DLEN_MBOX_RDY_FOR_DATA;
+        arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC_cp: coverpoint i_mbox.arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC;
+        arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC_cp: coverpoint i_mbox.arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC;
+        arc_MBOX_EXECUTE_UC_MBOX_IDLE_cp: coverpoint i_mbox.arc_MBOX_EXECUTE_UC_MBOX_IDLE;
+        arc_MBOX_EXECUTE_SOC_MBOX_IDLE_cp: coverpoint i_mbox.arc_MBOX_EXECUTE_SOC_MBOX_IDLE;
+        arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_SOC_cp: coverpoint i_mbox.arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_SOC;
+        arc_MBOX_EXECUTE_SOC_MBOX_EXECUTE_UC_cp: coverpoint i_mbox.arc_MBOX_EXECUTE_SOC_MBOX_EXECUTE_UC;
+
+        //controls
+        soc_has_lock_cp: coverpoint i_mbox.soc_has_lock;
+        mask_rdata_cp: coverpoint i_mbox.mask_rdata;
+        dlen_in_dws_cp: coverpoint i_mbox.dlen_in_dws;
+        sram_single_ecc_error_cp: coverpoint i_mbox.sram_single_ecc_error;
+        sram_double_ecc_error_cp: coverpoint i_mbox.sram_double_ecc_error;
+
+        //req hold varieties
+        req_hold0_cp: coverpoint i_mbox.req_dv & (i_mbox.dir_req_dv_q & ~i_mbox.req_data.write);
+        req_hold1_cp: coverpoint i_mbox.req_dv & (i_mbox.dir_req_dv & i_mbox.sha_sram_req_dv);
+        req_hold2_cp: coverpoint i_mbox.req_dv & (i_mbox.hwif_out.mbox_dataout.dataout.swacc & i_mbox.mbox_protocol_sram_rd_f);
+        sha_sram_hold_cp: coverpoint i_mbox.sha_sram_hold;
+
+        //special scenarios - only care about bin of 1
+        dlen_gt_mbox_size_cp: coverpoint i_mbox.hwif_out.mbox_dlen.length.value > MBOX_SIZE_BYTES {
+            option.comment = "DLEN is programmed greater than mailbox size";
+            bins one = {1};}
+        req_wrptr_gt_dlen_cp: coverpoint (mbox_fsm_ps == MBOX_RDY_FOR_DATA) & (i_mbox.mbox_wrptr > i_mbox.dlen_in_dws) {
+            option.comment = "Requester caused write pointer to increment past DLEN";
+            bins one = {1};}
+        resp_wrptr_gt_dlen_cp: coverpoint (mbox_fsm_ps inside {MBOX_EXECUTE_UC,MBOX_EXECUTE_SOC}) & (i_mbox.mbox_wrptr > i_mbox.dlen_in_dws) {
+            option.comment = "Receiver caused write pointer to increment past DLEN";
+            bins one = {1};}
+        wrptr_rollover_cp: coverpoint i_mbox.inc_wrptr & ~i_mbox.wrptr_inc_valid {
+            option.comment = "Write pointer tried to increment past mailbox size";
+            bins one = {1};}
+        rdptr_gt_dlen_cp: coverpoint i_mbox.inc_rdptr & ~(i_mbox.mbox_rdptr <= i_mbox.dlen_in_dws) {
+            option.comment = "Read pointer tried to increment passed DLEN";
+            bins one = {1};}
+        rdptr_rollover_cp: coverpoint i_mbox.inc_rdptr & ~(i_mbox.mbox_rdptr < (MBOX_SIZE_DWORDS-1)) {
+            option.comment = "Read pointer tried to increment passed mailbox size";
+            bins one = {1};}
+
+    endgroup
+   
+    soc_ifc_top_cov_grp soc_ifc_top_cov_grp1 = new();
+    soc_ifc_arb_cov_grp soc_ifc_arb_cov_grp1 = new();
+    soc_ifc_boot_fsm_cov_grp soc_ifc_boot_fsm_cov_grp1 = new();
+    sha512_acc_cov_grp sha512_acc_cov_grp1 = new();
+    mbox_cov_grp mbox_cov_grp1 = new();
 
 /*  -- Working Reference -- 
     for(genvar i = 0; i < 4; i++) begin : fuse_runtime_svn_blk
@@ -82,11 +321,7 @@ interface soc_ifc_cov_if
       endgroup
       soc_ifc_fuse_runtime_svn_cg fuse_runtime_svn_cg = new();
     end 
-*/      
-
-
-
-
+*/   
 
   // ------------------------------------------------------------------- 
   // begin SCRIPT_OUTPUT
@@ -95,7 +330,7 @@ interface soc_ifc_cov_if
 
   // ------------------- COVERGROUP related signals & assigns -------------------
 
-  logic          hit_CPTRA_HW_ERROR_FATAL;
+  logic        hit_CPTRA_HW_ERROR_FATAL;
   logic [3:0]    bus_CPTRA_HW_ERROR_FATAL;
   logic [31:0]   full_addr_CPTRA_HW_ERROR_FATAL = `CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL;
 
@@ -1971,4 +2206,4 @@ interface soc_ifc_cov_if
 
 endinterface
 
-`endif  
+`endif
