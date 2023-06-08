@@ -51,15 +51,6 @@ module sha512_acc_top
   localparam BLOCK_OFFSET_W = $clog2(BLOCK_NO);
   localparam BYTE_OFFSET_W = $clog2(1024/8);
 
-  typedef enum logic [2:0] {
-    SHA_IDLE    = 3'b000,
-    SHA_BLOCK_0 = 3'b001,
-    SHA_BLOCK_N = 3'b011,
-    SHA_PAD0    = 3'b010,
-    SHA_PAD1    = 3'b110,
-    SHA_DONE    = 3'b100
-  } sha_fsm_state_e;
-
   logic lock_set;
   logic datain_write;
   logic stall_write;
@@ -102,7 +93,6 @@ module sha512_acc_top
   logic block_we;
   logic mbox_mode_last_dword_wr;
   logic block_full;
-  logic pad_last_block;
   logic [31:0] num_bytes_wr;
   logic [BLOCK_OFFSET_W:0] block_wptr;
   logic [DATA_NUM_BYTES-1:0][7:0] mbox_rdata;
@@ -199,8 +189,6 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   //Detect writes to datain register
   always_comb datain_write = hwif_in.valid_user & hwif_out.DATAIN.DATAIN.swmod;
   always_comb execute_set = hwif_out.EXECUTE.EXECUTE.value;
-  //flag to indicate that our last block will need the padding added to it
-  always_comb pad_last_block = (|hwif_out.DLEN.LENGTH.value[1:0]);
 
   //When we reach the end of a block we indicate block full
   //If this is also the end of the entire DLEN, mask block full so that we properly pad the last dword
