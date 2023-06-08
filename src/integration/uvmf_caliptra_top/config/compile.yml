@@ -31,6 +31,8 @@ targets:
       - ${COMPILE_ROOT}/../tb/caliptra_top_tb_pkg.sv
       - ${COMPILE_ROOT}/../tb/caliptra_veer_sram_export.sv
       - ${COMPILE_ROOT}/../tb/caliptra_top_tb_services.sv
+      - ${COMPILE_ROOT}/../coverage/caliptra_top_cov_if.sv
+      - ${COMPILE_ROOT}/../coverage/caliptra_top_cov_bind.sv
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/caliptra_top/tb/testbench/hdl_top.sv
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/caliptra_top/tb/testbench/hvl_top.sv
     tops:
