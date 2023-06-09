@@ -216,7 +216,7 @@ module csrng_ctr_drbg_gen import csrng_pkg::*; #(
   state_e state_d, state_q;
 
   // SEC_CM: UPDATE.FSM.SPARSE
-  `PRIM_FLOP_SPARSE_FSM(u_state_regs, state_d, state_q, state_e, ReqIdle)
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_state_regs, state_d, state_q, state_e, ReqIdle)
 
   always_ff @(posedge clk_i or negedge rst_ni)
     if (!rst_ni) begin
@@ -235,12 +235,12 @@ module csrng_ctr_drbg_gen import csrng_pkg::*; #(
   // input request fifo for staging gen request
   //--------------------------------------------
 
-  prim_fifo_sync #(
+  caliptra_prim_fifo_sync #(
     .Width(GenreqFifoWidth),
     .Pass(0),
     .Depth(GenreqFifoDepth),
     .OutputZeroIfEmpty(1'b0)
-  ) u_prim_fifo_sync_genreq (
+  ) u_caliptra_prim_fifo_sync_genreq (
     .clk_i          (clk_i),
     .rst_ni         (rst_ni),
     .clr_i          (!ctr_drbg_gen_enable_i),
@@ -289,9 +289,9 @@ module csrng_ctr_drbg_gen import csrng_pkg::*; #(
   end
 
   // SEC_CM: DRBG_GEN.CTR.REDUN
-  prim_count #(
+  caliptra_prim_count #(
     .Width(CtrLen)
-  ) u_prim_count_ctr_drbg (
+  ) u_caliptra_prim_count_ctr_drbg (
     .clk_i,
     .rst_ni,
     .clr_i(!ctr_drbg_gen_enable_i),
@@ -386,12 +386,12 @@ module csrng_ctr_drbg_gen import csrng_pkg::*; #(
   // fifo to stage key, v, rc, and adata, waiting for update block to ack
   //--------------------------------------------
 
-  prim_fifo_sync #(
+  caliptra_prim_fifo_sync #(
     .Width(AdstageFifoWidth),
     .Pass(0),
     .Depth(AdstageFifoDepth),
     .OutputZeroIfEmpty(1'b0)
-  ) u_prim_fifo_sync_adstage (
+  ) u_caliptra_prim_fifo_sync_adstage (
     .clk_i          (clk_i),
     .rst_ni         (rst_ni),
     .clr_i          (!ctr_drbg_gen_enable_i),
@@ -446,12 +446,12 @@ module csrng_ctr_drbg_gen import csrng_pkg::*; #(
   // block_encrypt response fifo from block encrypt
   //--------------------------------------------
 
-  prim_fifo_sync #(
+  caliptra_prim_fifo_sync #(
     .Width(BlkEncAckFifoWidth),
     .Pass(0),
     .Depth(BlkEncAckFifoDepth),
     .OutputZeroIfEmpty(1'b0)
-  ) u_prim_fifo_sync_bencack (
+  ) u_caliptra_prim_fifo_sync_bencack (
     .clk_i    (clk_i),
     .rst_ni   (rst_ni),
     .clr_i    (!ctr_drbg_gen_enable_i),
@@ -501,12 +501,12 @@ module csrng_ctr_drbg_gen import csrng_pkg::*; #(
   // fifo to stage rc, waiting for update block to ack
   //--------------------------------------------
 
-  prim_fifo_sync #(
+  caliptra_prim_fifo_sync #(
     .Width(RCStageFifoWidth),
     .Pass(0),
     .Depth(RCStageFifoDepth),
     .OutputZeroIfEmpty(1'b0)
-  ) u_prim_fifo_sync_rcstage (
+  ) u_caliptra_prim_fifo_sync_rcstage (
     .clk_i          (clk_i),
     .rst_ni         (rst_ni),
     .clr_i          (!ctr_drbg_gen_enable_i),
@@ -544,12 +544,12 @@ module csrng_ctr_drbg_gen import csrng_pkg::*; #(
   // final cmd block processing
   //--------------------------------------------
 
-  prim_fifo_sync #(
+  caliptra_prim_fifo_sync #(
     .Width(GenbitsFifoWidth),
     .Pass(0),
     .Depth(GenbitsFifoDepth),
     .OutputZeroIfEmpty(1'b0)
-  ) u_prim_fifo_sync_genbits (
+  ) u_caliptra_prim_fifo_sync_genbits (
     .clk_i          (clk_i),
     .rst_ni         (rst_ni),
     .clr_i          (!ctr_drbg_gen_enable_i),

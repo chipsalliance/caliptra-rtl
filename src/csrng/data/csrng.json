@@ -92,7 +92,7 @@
       "type": "uni",
       "name": "otp_en_csrng_sw_app_read",
       "act": "rcv",
-      "package": "prim_mubi_pkg"
+      "package": "caliptra_prim_mubi_pkg"
     },
     {
       "struct": "lc_tx",

@@ -32,7 +32,7 @@ Simulation:
  - Synopsys VCS with Verdi
    - `Version R-2020.12-SP2-7_Full64`
  - Verilator
-   - `Version 4.228`
+   - `Version 5.010`
  - Mentor Graphics QVIP
    - `Version 2021.2.1` of AHB/APB models
  - UVM installation
@@ -72,6 +72,8 @@ Caliptra
 |-- src
 |   |-- aes
 |   |-- ahb_lite_bus
+|   |-- caliptra_prim
+|   |-- caliptra_prim_generic
 |   |-- csrng
 |   |-- datavault
 |   |-- doe
@@ -86,8 +88,6 @@ Caliptra
 |   |-- lc_ctrl
 |   |-- libs
 |   |-- pcrvault
-|   |-- prim
-|   |-- prim_generic
 |   |-- riscv_core
 |   |-- sha256
 |   |-- sha512

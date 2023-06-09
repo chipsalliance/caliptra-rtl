@@ -28,7 +28,7 @@ module entropy_src_main_sm
   output logic                  boot_phase_done_o,
   output logic                  sha3_start_o,
   output logic                  sha3_process_o,
-  output prim_mubi_pkg::mubi4_t sha3_done_o,
+  output caliptra_prim_mubi_pkg::mubi4_t sha3_done_o,
   output logic                  cs_aes_halt_req_o,
   input logic                   cs_aes_halt_ack_i,
   input logic                   local_escalate_i,
@@ -41,7 +41,7 @@ module entropy_src_main_sm
   // The definition of state_e, the sparse FSM state enum, is in entropy_src_main_sm_pkg.sv
   state_e state_d, state_q;
 
-  `PRIM_FLOP_SPARSE_FSM(u_state_regs, state_d, state_q, state_e, Idle)
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_state_regs, state_d, state_q, state_e, Idle)
 
   assign main_sm_state_o = state_q;
 
@@ -53,7 +53,7 @@ module entropy_src_main_sm
     boot_phase_done_o = 1'b0;
     sha3_start_o = 1'b0;
     sha3_process_o = 1'b0;
-    sha3_done_o = prim_mubi_pkg::MuBi4False;
+    sha3_done_o = caliptra_prim_mubi_pkg::MuBi4False;
     cs_aes_halt_req_o = 1'b0;
     main_sm_alert_o = 1'b0;
     main_sm_idle_o = 1'b0;
@@ -240,11 +240,11 @@ module entropy_src_main_sm
       end
       Sha3Done: begin
         if (!enable_i) begin
-          sha3_done_o = prim_mubi_pkg::MuBi4True;
+          sha3_done_o = caliptra_prim_mubi_pkg::MuBi4True;
           state_d = Sha3MsgDone;
         end else begin
           if (main_stage_rdy_i) begin
-            sha3_done_o = prim_mubi_pkg::MuBi4True;
+            sha3_done_o = caliptra_prim_mubi_pkg::MuBi4True;
             main_stage_push_o = 1'b1;
             state_d = Sha3MsgDone;
           end
