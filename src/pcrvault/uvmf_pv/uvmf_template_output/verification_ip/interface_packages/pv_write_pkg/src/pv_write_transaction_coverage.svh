@@ -28,6 +28,15 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
+covergroup wr_data(input logic wr_data_bit);
+  //option.per_instance = 1;
+  value: coverpoint wr_data_bit;
+  transition:  coverpoint wr_data_bit {
+    bins bin01 = (0 => 1); 
+    bins bin10 = (1 => 0);
+  }
+endgroup
+
 class pv_write_transaction_coverage #(
       string PV_WRITE_REQUESTOR = "SHA512"
       )
@@ -44,6 +53,7 @@ class pv_write_transaction_coverage #(
   T coverage_trans;
 
   // pragma uvmf custom class_item_additional begin
+    wr_data wr_data_bus[PV_DATA_W];
   // pragma uvmf custom class_item_additional end
   
   // ****************************************************************************
@@ -57,7 +67,6 @@ class pv_write_transaction_coverage #(
     write_offset: coverpoint coverage_trans.write_offset {
       illegal_bins wr_offset_12_15 = {['d12:'d15]};
     }
-    //write_data: coverpoint coverage_trans.write_data;
     error: coverpoint coverage_trans.error {
       ignore_bins error1 = {'d1};
     }
@@ -90,7 +99,13 @@ class pv_write_transaction_coverage #(
   virtual function void write (T t);
     `uvm_info("COV","Received transaction",UVM_HIGH);
     coverage_trans = t;
+
+    foreach(wr_data_bus[i]) wr_data_bus[i] = new(coverage_trans.write_data[i]);
+    foreach(wr_data_bus[i]) wr_data_bus[i].set_inst_name($sformatf("wr_data_bus[%0d]_%s",i,get_full_name()));
+
     pv_write_transaction_cg.sample();
+    foreach(wr_data_bus[i]) wr_data_bus[i].sample();
+    
   endfunction
 
 endclass

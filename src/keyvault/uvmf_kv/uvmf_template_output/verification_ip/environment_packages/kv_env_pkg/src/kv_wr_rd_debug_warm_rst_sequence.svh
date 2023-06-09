@@ -157,6 +157,8 @@ class kv_wr_rd_debug_warm_rst_sequence #(
             
             //Issue warm reset before reading
             kv_rst_agent_warm_rst_seq.start(configuration.kv_rst_agent_config.sequencer);
+            //Wait for warm reset to finish
+            configuration.kv_rst_agent_config.wait_for_num_clocks(10);
 
             //Read all entries
             for (read_entry = 0; read_entry < KV_NUM_KEYS; read_entry++) begin

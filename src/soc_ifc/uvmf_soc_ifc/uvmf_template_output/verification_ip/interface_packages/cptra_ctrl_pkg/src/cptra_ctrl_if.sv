@@ -35,6 +35,7 @@
 //
 // .dut_signal_port(cptra_ctrl_bus.clear_obf_secrets), // Agent output 
 // .dut_signal_port(cptra_ctrl_bus.iccm_axs_blocked), // Agent output 
+// .dut_signal_port(cptra_ctrl_bus.rv_ecc_sts), // Agent output 
 
 import uvmf_base_pkg_hdl::*;
 import cptra_ctrl_pkg_hdl::*;
@@ -45,7 +46,8 @@ interface  cptra_ctrl_if
   input tri clk, 
   input tri dummy,
   inout tri  clear_obf_secrets,
-  inout tri  iccm_axs_blocked
+  inout tri  iccm_axs_blocked,
+  inout tri [3:0] rv_ecc_sts
   );
 
 modport monitor_port 
@@ -53,7 +55,8 @@ modport monitor_port
   input clk,
   input dummy,
   input clear_obf_secrets,
-  input iccm_axs_blocked
+  input iccm_axs_blocked,
+  input rv_ecc_sts
   );
 
 modport initiator_port 
@@ -61,7 +64,8 @@ modport initiator_port
   input clk,
   input dummy,
   output clear_obf_secrets,
-  output iccm_axs_blocked
+  output iccm_axs_blocked,
+  output rv_ecc_sts
   );
 
 modport responder_port 
@@ -69,7 +73,8 @@ modport responder_port
   input clk,
   input dummy,  
   input clear_obf_secrets,
-  input iccm_axs_blocked
+  input iccm_axs_blocked,
+  input rv_ecc_sts
   );
   
 

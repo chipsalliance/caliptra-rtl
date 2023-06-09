@@ -226,6 +226,9 @@ import uvmf_base_pkg_hdl::*;
       .kv_wr_resp(kv_wr_resp),
       .pcr_signing_key() //TODO
   );
+
+  keyvault_cov_bind i_keyvault_cov_bind();
+
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HBURST    = 3'b0;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HPROT     = 7'b0;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HMASTLOCK = 1'b0;
@@ -267,6 +270,8 @@ import uvmf_base_pkg_hdl::*;
     uvm_config_db #( virtual kv_read_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , kv_ecc_privkey_read_agent_BFM , kv_ecc_privkey_read_agent_drv_bfm  );
     uvm_config_db #( virtual kv_read_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , kv_ecc_seed_read_agent_BFM , kv_ecc_seed_read_agent_drv_bfm  );
   end
+
+  
 
 endmodule
 

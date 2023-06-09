@@ -28,6 +28,11 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
+covergroup soc_ifc_status_transaction_bit_cg with function sample(input bit val);
+  option.per_instance = 1;
+  ea_bit: coverpoint val;
+endgroup
+
 class soc_ifc_status_transaction_coverage  extends uvm_subscriber #(.T(soc_ifc_status_transaction ));
 
   `uvm_component_utils( soc_ifc_status_transaction_coverage )
@@ -35,6 +40,7 @@ class soc_ifc_status_transaction_coverage  extends uvm_subscriber #(.T(soc_ifc_s
   T coverage_trans;
 
   // pragma uvmf custom class_item_additional begin
+  soc_ifc_status_transaction_bit_cg  generic_output_val_bit_cg[63:0]                          ;
   // pragma uvmf custom class_item_additional end
   
   // ****************************************************************************
@@ -51,7 +57,20 @@ class soc_ifc_status_transaction_coverage  extends uvm_subscriber #(.T(soc_ifc_s
     cptra_error_fatal_intr_pending: coverpoint coverage_trans.cptra_error_fatal_intr_pending;
     cptra_error_non_fatal_intr_pending: coverpoint coverage_trans.cptra_error_non_fatal_intr_pending;
     trng_req_pending: coverpoint coverage_trans.trng_req_pending;
-    generic_output_val: coverpoint coverage_trans.generic_output_val;
+    generic_output_val: coverpoint coverage_trans.generic_output_val {
+        bins byte_none = {64'h0000_0000_0000_0000};
+        bins byte_0    = {[0:$]} with ($countones(item[ 7: 0] > 0));
+        bins byte_1    = {[0:$]} with ($countones(item[15: 8] > 0));
+        bins byte_2    = {[0:$]} with ($countones(item[23:16] > 0));
+        bins byte_3    = {[0:$]} with ($countones(item[31:24] > 0));
+        bins byte_4    = {[0:$]} with ($countones(item[39:32] > 0));
+        bins byte_5    = {[0:$]} with ($countones(item[47:40] > 0));
+        bins byte_6    = {[0:$]} with ($countones(item[55:48] > 0));
+        bins byte_7    = {[0:$]} with ($countones(item[63:56] > 0));
+    }
+
+    cross_err : cross cptra_error_fatal_intr_pending, cptra_error_non_fatal_intr_pending;
+    cross_req : cross mailbox_data_avail, trng_req_pending;
     // pragma uvmf custom covergroup end
   endgroup
 
@@ -62,7 +81,7 @@ class soc_ifc_status_transaction_coverage  extends uvm_subscriber #(.T(soc_ifc_s
   function new(string name="", uvm_component parent=null);
     super.new(name,parent);
     soc_ifc_status_transaction_cg=new;
-    `uvm_warning("COVERAGE_MODEL_REVIEW", "A covergroup has been constructed which may need review because of either generation or re-generation with merging.  Please note that transaction variables added as a result of re-generation and merging are not automatically added to the covergroup.  Remove this warning after the covergroup has been reviewed.")
+    foreach (coverage_trans.generic_output_val[bt]) generic_output_val_bit_cg[bt] = new;
   endfunction
 
   // ****************************************************************************
@@ -71,6 +90,7 @@ class soc_ifc_status_transaction_coverage  extends uvm_subscriber #(.T(soc_ifc_s
   //
   function void build_phase(uvm_phase phase);
     soc_ifc_status_transaction_cg.set_inst_name($sformatf("soc_ifc_status_transaction_cg_%s",get_full_name()));
+    foreach (coverage_trans.generic_output_val[bt]) generic_output_val_bit_cg[bt].set_inst_name($sformatf("generic_output_val_bit_cg_%d_%s", bt, get_full_name()));
   endfunction
 
   // ****************************************************************************
@@ -83,6 +103,7 @@ class soc_ifc_status_transaction_coverage  extends uvm_subscriber #(.T(soc_ifc_s
     `uvm_info("COV","Received transaction",UVM_HIGH);
     coverage_trans = t;
     soc_ifc_status_transaction_cg.sample();
+    foreach (coverage_trans.generic_output_val[bt]) generic_output_val_bit_cg[bt].sample(coverage_trans.generic_output_val[bt]);
   endfunction
 
 endclass

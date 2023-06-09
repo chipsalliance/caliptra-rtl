@@ -149,6 +149,9 @@ import uvmf_base_pkg_hdl::*;
       .pv_rd_resp    (pv_rd_resp),
       .pv_wr_resp    (pv_wr_resp)
   );
+
+  pcrvault_cov_bind i_pcrvault_cov_bind();
+
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HBURST    = 3'b0;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HPROT     = 7'b0;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HMASTLOCK = 1'b0;

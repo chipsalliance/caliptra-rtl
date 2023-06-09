@@ -185,7 +185,7 @@ class soc_ifc_environment  extends uvmf_environment_base #(
 // ****************************************************************************
 // FUNCTION: connect_phase()
 // This function makes all connections within this environment.  Connections
-// typically inclue agent to predictor, predictor to scoreboard and scoreboard
+// typically include agent to predictor, predictor to scoreboard and scoreboard
 // to agent.
 //
   virtual function void connect_phase(uvm_phase phase);

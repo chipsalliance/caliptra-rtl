@@ -46,4 +46,31 @@ function logic [soc_ifc_pkg::MBOX_DATA_AND_ECC_W-1:0] get_bitflip_mask(bit do_do
 endfunction
 `endif
 
+typedef struct packed {
+    //  [3] - Double bit, DCCM Error Injection
+    //  [2] - Single bit, DCCM Error Injection
+    //  [1] - Double bit, ICCM Error Injection
+    //  [0] - Single bit, ICCM Error Injection
+    logic dccm_double_bit_error;
+    logic dccm_single_bit_error;
+    logic iccm_double_bit_error;
+    logic iccm_single_bit_error;
+} veer_sram_error_injection_mode_t;
+
+typedef struct packed {
+    logic error_injection_seen;
+    logic reset_generic_input_wires;
+    logic do_no_lock_access; // TODO
+    logic do_ooo_access; // TODO
+} ras_test_ctrl_t;
+
+// Values to drive onto GENERIC INPUT WIRES in response to RAS testing
+localparam MBOX_NON_FATAL_OBSERVED         = 32'h600dab1e;
+localparam PROT_NO_LOCK_NON_FATAL_OBSERVED = 32'h600dbabe;
+localparam PROT_OOO_NON_FATAL_OBSERVED     = 32'h600dcafe;
+localparam ICCM_FATAL_OBSERVED             = 32'hdeadaca1;
+localparam DCCM_FATAL_OBSERVED             = 32'hdeadbeef;
+localparam NMI_FATAL_OBSERVED              = 32'hdeadc0a7;
+localparam ERROR_NONE_SET                  = 32'hba5eba11; /* default value for a test with no activity observed by TB */
+
 endpackage

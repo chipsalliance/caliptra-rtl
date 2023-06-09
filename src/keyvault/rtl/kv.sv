@@ -161,8 +161,8 @@ always_comb begin : keyvault_ctrl
             for (int client = 0; client < KV_NUM_WRITE; client++) begin
                 key_entry_we[entry][dword] |= ((((kv_write[client].write_entry == entry) & (kv_write[client].write_offset == dword) & 
                                                 kv_write[client].write_en) | flush_keyvault) & 
-                                               ~kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value &
-                                               ~kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value | debugUnlock_or_scan_mode_switch);
+                                              ((~kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value &
+                                                ~kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value) | debugUnlock_or_scan_mode_switch));
                 key_entry_next[entry][dword] |= flush_keyvault ? debug_value :
                                                 kv_write[client].write_en & (kv_write[client].write_entry == entry) ? kv_write[client].write_data : '0;
             end

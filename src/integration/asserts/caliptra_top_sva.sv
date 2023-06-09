@@ -30,6 +30,7 @@
 `define ECC_REG_PATH    caliptra_top_tb.caliptra_top_dut.ecc_top1.ecc_reg1
 `define SHA256_PATH     caliptra_top_tb.caliptra_top_dut.sha256.sha256_inst
 `define SHA512_MASKED_PATH caliptra_top_tb.caliptra_top_dut.ecc_top1.ecc_dsa_ctrl_i.ecc_hmac_drbg_interface_i.hmac_drbg_i.HMAC_K.u_sha512_core_h1
+`define SOC_IFC_TOP_PATH   caliptra_top_tb.caliptra_top_dut.soc_ifc_top1
 
 
 module caliptra_top_sva
@@ -197,10 +198,86 @@ module caliptra_top_sva
                                               )
                                   else $display("SVA ERROR: PCR SIGNING SIGN_S mismatch!, 0x%04x, 0x%04x", `SERVICES_PATH.test_vector.S[dword], `ECC_PATH.hwif_out.ECC_SIGN_S[dword].SIGN_S.value); 
       end
-
-
     end
   endgenerate
+
+  `ifndef VERILATOR
+  generate
+    begin: UDS_data_check
+    for(genvar dword = 0; dword < `CLP_OBF_UDS_DWORDS; dword++) begin
+      DOE_UDS_data_check:  assert property (
+                                            @(posedge `DOE_PATH.clk)
+                                            (`SERVICES_PATH.WriteData == 'hEC && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_uds_flow) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword] == `SERVICES_PATH.doe_test_vector.uds_plaintext[dword])
+                                
+                                          )
+                                  else $display("SVA ERROR: DOE UDS output %h does not match plaintext %h!", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword], `SERVICES_PATH.doe_test_vector.uds_plaintext[dword]);
+    end
+    end
+  endgenerate
+  generate
+    begin: FE_data_check
+    for(genvar dword = 0; dword < `CLP_OBF_FE_DWORDS; dword++) begin
+  
+      DOE_FE_data_check:   assert property (
+                                            @(posedge `DOE_PATH.clk)
+                                            (`SERVICES_PATH.WriteData == 'hED && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_fe_flow) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword] == `SERVICES_PATH.doe_test_vector.fe_plaintext[dword])
+                                          )
+                                  else $display("SVA ERROR: DOE FE output %h does not match plaintext %h!", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword], `SERVICES_PATH.doe_test_vector.fe_plaintext[dword]);
+
+    end
+    end
+  endgenerate
+  `endif
+
+  //Generate disable signal for fuse_wr_check sva when hwclr is asserted. The disable needs to be for 3 clks in order to ignore the fuses being cleared
+  logic clear_obf_secrets_f;
+  logic clear_obf_secrets_ff;
+  logic clear_obf_secrets_int;
+
+  logic cptra_in_debug_scan_mode_f;
+  logic cptra_in_debug_scan_mode_fall_trans;
+  logic cptra_in_debug_scan_mode_fall_trans_f;
+  logic cptra_in_debug_scan_mode_int;
+
+  always@(posedge `SOC_IFC_TOP_PATH.clk or negedge `CPTRA_TOP_PATH.cptra_rst_b) begin
+    if(!`CPTRA_TOP_PATH.cptra_rst_b) begin
+      clear_obf_secrets_f <= 'b0;
+      clear_obf_secrets_ff <= 'b0;
+    end
+    else begin
+      clear_obf_secrets_f <= `SOC_IFC_TOP_PATH.clear_obf_secrets;
+      clear_obf_secrets_ff <= clear_obf_secrets_f;
+    end
+  end
+
+  always@(posedge `CPTRA_TOP_PATH.clk or negedge `CPTRA_TOP_PATH.cptra_rst_b) begin
+    if(!`CPTRA_TOP_PATH.cptra_rst_b) begin
+      cptra_in_debug_scan_mode_f <= 'b0;
+      cptra_in_debug_scan_mode_fall_trans_f <= 'b0;
+    end
+    else begin
+      cptra_in_debug_scan_mode_f <= `CPTRA_TOP_PATH.cptra_in_debug_scan_mode;
+      cptra_in_debug_scan_mode_fall_trans_f <= cptra_in_debug_scan_mode_fall_trans;
+    end
+  end
+
+  assign clear_obf_secrets_int = `SOC_IFC_TOP_PATH.clear_obf_secrets | clear_obf_secrets_f | clear_obf_secrets_ff;
+  assign cptra_in_debug_scan_mode_fall_trans = !`CPTRA_TOP_PATH.cptra_in_debug_scan_mode && cptra_in_debug_scan_mode_f;
+  assign cptra_in_debug_scan_mode_int = cptra_in_debug_scan_mode_fall_trans | cptra_in_debug_scan_mode_fall_trans_f;
+
+  UDS_fuse_wr_check: assert property (
+                                  @(posedge `SOC_IFC_TOP_PATH.clk)
+                                  disable iff(`CPTRA_TOP_PATH.cptra_in_debug_scan_mode || clear_obf_secrets_int || cptra_in_debug_scan_mode_int)
+                                  (`SOC_IFC_TOP_PATH.soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value) |-> `CPTRA_TOP_PATH.obf_uds_seed_dbg == $past(`CPTRA_TOP_PATH.obf_uds_seed_dbg)
+  )
+  else $display("SVA ERROR: Unexpected write to obf uds seed!");
+
+  FE_fuse_wr_check: assert property (
+                                  @(posedge `SOC_IFC_TOP_PATH.clk)
+                                  disable iff(`CPTRA_TOP_PATH.cptra_in_debug_scan_mode || clear_obf_secrets_int || cptra_in_debug_scan_mode_int)
+                                  (`SOC_IFC_TOP_PATH.soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value) |-> `CPTRA_TOP_PATH.obf_field_entropy_dbg == $past(`CPTRA_TOP_PATH.obf_field_entropy_dbg)
+  )
+  else $display("SVA ERROR: Unexpected write to obf field entropy!");
 
   //ZEROIZE SVA
   generate

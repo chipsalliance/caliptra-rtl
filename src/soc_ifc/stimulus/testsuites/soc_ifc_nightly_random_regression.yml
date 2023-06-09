@@ -6,10 +6,10 @@ contents:
       tags: ["L1", "SOC_IFC",  "random"]
       path: ""
       weight: 100
-      generations: 100
+      generations: 500
       formats: 
         generate: "reseed {template}.yml -seed {seed}"
         path: "{template_basename}__{seed}.yml"
       templates:
-        $CALIPTRA_ROOT/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/tests/src/soc_ifc_rand_test   : { weight 75 }
-        $CALIPTRA_ROOT/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/tests/src/soc_ifc_trng_test   : { weight 25 }
+        $CALIPTRA_ROOT/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/tests/src/soc_ifc_rand_test   : { weight 95 }
+        $CALIPTRA_ROOT/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/tests/src/soc_ifc_trng_test   : { weight  5 }

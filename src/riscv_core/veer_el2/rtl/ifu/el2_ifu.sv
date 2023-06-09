@@ -150,6 +150,7 @@ import el2_pkg::*;
    input  logic [77:0]               iccm_rd_data_ecc,   // Data + ECC read from ICCM.
 
    output logic                      ifu_iccm_rd_ecc_single_err, // This fetch has a single ICCM ecc  error.
+   output logic                      cptra_iccm_rd_ecc_double_err, // Output added for Caliptra reporting
 
 // Perf counter sigs
    output logic       ifu_pmu_ic_miss, // ic miss
@@ -281,7 +282,7 @@ import el2_pkg::*;
       assign ifu_bp_inst_mask_f = 1'b1;
    end
 
-
+   assign cptra_iccm_rd_ecc_double_err = |iccm_rd_ecc_double_err;
 
    // aligner
 

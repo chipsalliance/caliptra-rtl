@@ -29,6 +29,7 @@
 #include "sha256.h"
 #include "sha512.h"
 #include "soc_ifc.h"
+#include "caliptra_isr.h"
 #include <string.h>
 #include <stdint.h>
 #include "printf.h"
@@ -37,12 +38,14 @@
 extern uintptr_t STACK;
 
 /* --------------- Global vars --------------- */
-volatile char*                    stdout           = (char *)STDOUT;
+volatile char* stdout = (char *)STDOUT;
 #ifdef CPT_VERBOSITY
-    enum printf_verbosity             verbosity_g = CPT_VERBOSITY;
+    enum printf_verbosity verbosity_g = CPT_VERBOSITY;
 #else
-    enum printf_verbosity             verbosity_g = LOW;
+    enum printf_verbosity verbosity_g = LOW;
 #endif
+volatile caliptra_intr_received_s cptra_intr_rcv;
+volatile uint32_t                 intr_count       = 0;
 
 
 /* --------------- Function Definitions --------------- */

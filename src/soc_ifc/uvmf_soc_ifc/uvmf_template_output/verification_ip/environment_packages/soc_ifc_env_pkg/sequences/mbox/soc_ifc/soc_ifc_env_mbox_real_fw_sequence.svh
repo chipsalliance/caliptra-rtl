@@ -76,7 +76,7 @@ task soc_ifc_env_mbox_real_fw_sequence::mbox_push_datain();
     `uvm_info("MBOX_SEQ", $sformatf("Starting FW push_datain, ICCM region ends at [0x%x] and DCCM region ends at [0x%x]", firmware_iccm_end, firmware_end), UVM_LOW)
     for (ii=0; ii < firmware_end_dw; ii++) begin
         data = uvm_reg_data_t'({fw_img[ii][3],fw_img[ii][2],fw_img[ii][1],fw_img[ii][0]});
-        `uvm_info("MBOX_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", ii/4, data), UVM_DEBUG)
+        `uvm_info("MBOX_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", ii, data), UVM_DEBUG)
         reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
         report_reg_sts(reg_sts, "mbox_datain");
     end

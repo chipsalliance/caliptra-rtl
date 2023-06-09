@@ -130,6 +130,7 @@ package mbox_csr_pkg;
 
     typedef struct packed{
         logic value;
+        logic swmod;
     } mbox_csr__mbox_execute__execute__out_t;
 
     typedef struct packed{
@@ -138,6 +139,7 @@ package mbox_csr_pkg;
 
     typedef struct packed{
         logic [3:0] value;
+        logic swmod;
     } mbox_csr__mbox_status__status__out_t;
 
     typedef struct packed{

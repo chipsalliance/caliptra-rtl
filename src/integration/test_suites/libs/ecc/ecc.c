@@ -14,35 +14,26 @@
 //
 
 #include "caliptra_defines.h"
-#include "riscv_hw_if.h"
-#include <string.h>
-#include <stdint.h>
+//#include "riscv_hw_if.h"
+//#include <string.h>
+//#include <stdint.h>
 #include "printf.h"
 #include "ecc.h"
+#include "caliptra_isr.h"
 
-
+extern volatile caliptra_intr_received_s cptra_intr_rcv;
 
 void wait_for_ecc_intr(){
     printf("ECC flow in progress...\n");
-    while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_VALID_MASK) == 0){
+    while((cptra_intr_rcv.ecc_error == 0) & (cptra_intr_rcv.ecc_notif == 0)){
         __asm__ volatile ("wfi"); // "Wait for interrupt"
         // Sleep during ECC operation to allow ISR to execute and show idle time in sims
         for (uint16_t slp = 0; slp < 100; slp++) {
             __asm__ volatile ("nop"); // Sleep loop as "nop"
         }
     };
-    /* TODO
-    printf("ECC flow in progress...\n");
-    while(ecc_intr_status == 0){
-        __asm__ volatile ("wfi"); // "Wait for interrupt"
-        // Sleep during ECC operation to allow ISR to execute and show idle time in sims
-        for (uint16_t slp = 0; slp < 100; slp++) {
-            __asm__ volatile ("nop"); // Sleep loop as "nop"
-        }
-    };
-    printf("Received ECC intr with status = %x\n", ecc_intr_status);
-    ecc_intr_status = 0;
-    */
+    //printf("Received ECC error intr with status = %d\n", cptra_intr_rcv.ecc_error);
+    printf("Received ECC notif intr with status = %d\n", cptra_intr_rcv.ecc_notif);
 }
 
 void ecc_zeroize(){

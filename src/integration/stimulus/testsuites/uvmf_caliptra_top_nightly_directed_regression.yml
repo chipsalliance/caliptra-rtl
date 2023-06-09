@@ -1,0 +1,14 @@
+document:
+  schema: 1.0
+
+contents:
+  - generator:
+      tags: ["L1", "CALIPTRA_TOP",  "directed", "ROM"]
+      path: ""
+      weight: 100
+      generations: 1
+      formats: 
+        generate: "reseed {template}.yml -seed {seed}"
+        path: "{template_basename}__{seed}.yml"
+      templates:
+        $CALIPTRA_ROOT/src/integration/uvmf_caliptra_top/uvmf_template_output/project_benches/caliptra_top/tb/tests/src/caliptra_top_rom_test   : { weight 100 }

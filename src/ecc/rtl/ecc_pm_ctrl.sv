@@ -189,6 +189,10 @@ module ecc_pm_ctrl
                                 prog_cntr <= VER1_ST_S;
                             end
 
+                            CHK_PK_CMD : begin
+                                prog_cntr <= CHK_PK_S;
+                            end
+
                             default : 
                                 prog_cntr <= NOP;
                         endcase
@@ -266,6 +270,10 @@ module ecc_pm_ctrl
                     end
 
                     SIGN1_E : begin // End of signing part 1 to compute s
+                        prog_cntr <= NOP;
+                    end
+
+                    CHK_PK_E: begin // End of public key validation before verifying process
                         prog_cntr <= NOP;
                     end
 

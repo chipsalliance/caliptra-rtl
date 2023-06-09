@@ -36,12 +36,14 @@ class cptra_status_transaction  extends uvmf_transaction_base;
   bit soc_ifc_notif_intr_pending ;
   bit sha_err_intr_pending ;
   bit sha_notif_intr_pending ;
+  bit timer_intr_pending ;
   bit noncore_rst_asserted ;
   bit uc_rst_asserted ;
   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg ;
   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] obf_field_entropy ;
   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] obf_uds_seed ;
   bit [31:0] nmi_vector ;
+  bit nmi_intr_pending ;
   bit iccm_locked ;
 
   //Constraints for the transaction variables:
@@ -125,7 +127,7 @@ class cptra_status_transaction  extends uvmf_transaction_base;
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("soc_ifc_err_intr_pending:0x%x soc_ifc_notif_intr_pending:0x%x sha_err_intr_pending:0x%x sha_notif_intr_pending:0x%x noncore_rst_asserted:0x%x uc_rst_asserted:0x%x cptra_obf_key_reg:0x%x obf_field_entropy:0x%x obf_uds_seed:0x%x nmi_vector:0x%x iccm_locked:0x%x ",soc_ifc_err_intr_pending,soc_ifc_notif_intr_pending,sha_err_intr_pending,sha_notif_intr_pending,noncore_rst_asserted,uc_rst_asserted,cptra_obf_key_reg,obf_field_entropy,obf_uds_seed,nmi_vector,iccm_locked);
+    return $sformatf("soc_ifc_err_intr_pending:0x%x soc_ifc_notif_intr_pending:0x%x sha_err_intr_pending:0x%x sha_notif_intr_pending:0x%x timer_intr_pending:0x%x noncore_rst_asserted:0x%x uc_rst_asserted:0x%x cptra_obf_key_reg:0x%x obf_field_entropy:0x%x obf_uds_seed:0x%x nmi_vector:0x%x nmi_intr_pending:0x%x iccm_locked:0x%x ",soc_ifc_err_intr_pending,soc_ifc_notif_intr_pending,sha_err_intr_pending,sha_notif_intr_pending,timer_intr_pending,noncore_rst_asserted,uc_rst_asserted,cptra_obf_key_reg,obf_field_entropy,obf_uds_seed,nmi_vector,nmi_intr_pending,iccm_locked);
     // pragma uvmf custom convert2string end
   endfunction
 
@@ -157,12 +159,14 @@ class cptra_status_transaction  extends uvmf_transaction_base;
             &&(this.soc_ifc_notif_intr_pending == RHS.soc_ifc_notif_intr_pending)
             &&(this.sha_err_intr_pending == RHS.sha_err_intr_pending)
             &&(this.sha_notif_intr_pending == RHS.sha_notif_intr_pending)
+            &&(this.timer_intr_pending == RHS.timer_intr_pending)
             &&(this.noncore_rst_asserted == RHS.noncore_rst_asserted)
             &&(this.uc_rst_asserted == RHS.uc_rst_asserted)
             &&(this.cptra_obf_key_reg == RHS.cptra_obf_key_reg)
             &&(this.obf_field_entropy == RHS.obf_field_entropy)
             &&(this.obf_uds_seed == RHS.obf_uds_seed)
             &&(this.nmi_vector == RHS.nmi_vector)
+            &&(this.nmi_intr_pending == RHS.nmi_intr_pending)
             &&(this.iccm_locked == RHS.iccm_locked)
             );
     // pragma uvmf custom do_compare end
@@ -182,12 +186,14 @@ class cptra_status_transaction  extends uvmf_transaction_base;
     this.soc_ifc_notif_intr_pending = RHS.soc_ifc_notif_intr_pending;
     this.sha_err_intr_pending = RHS.sha_err_intr_pending;
     this.sha_notif_intr_pending = RHS.sha_notif_intr_pending;
+    this.timer_intr_pending = RHS.timer_intr_pending;
     this.noncore_rst_asserted = RHS.noncore_rst_asserted;
     this.uc_rst_asserted = RHS.uc_rst_asserted;
     this.cptra_obf_key_reg = RHS.cptra_obf_key_reg;
     this.obf_field_entropy = RHS.obf_field_entropy;
     this.obf_uds_seed = RHS.obf_uds_seed;
     this.nmi_vector = RHS.nmi_vector;
+    this.nmi_intr_pending = RHS.nmi_intr_pending;
     this.iccm_locked = RHS.iccm_locked;
     // pragma uvmf custom do_copy end
   endfunction
@@ -216,12 +222,14 @@ class cptra_status_transaction  extends uvmf_transaction_base;
     $add_attribute(transaction_view_h,soc_ifc_notif_intr_pending,"soc_ifc_notif_intr_pending");
     $add_attribute(transaction_view_h,sha_err_intr_pending,"sha_err_intr_pending");
     $add_attribute(transaction_view_h,sha_notif_intr_pending,"sha_notif_intr_pending");
+    $add_attribute(transaction_view_h,timer_intr_pending,"timer_intr_pending");
     $add_attribute(transaction_view_h,noncore_rst_asserted,"noncore_rst_asserted");
     $add_attribute(transaction_view_h,uc_rst_asserted,"uc_rst_asserted");
     $add_attribute(transaction_view_h,cptra_obf_key_reg,"cptra_obf_key_reg");
     $add_attribute(transaction_view_h,obf_field_entropy,"obf_field_entropy");
     $add_attribute(transaction_view_h,obf_uds_seed,"obf_uds_seed");
     $add_attribute(transaction_view_h,nmi_vector,"nmi_vector");
+    $add_attribute(transaction_view_h,nmi_intr_pending,"nmi_intr_pending");
     $add_attribute(transaction_view_h,iccm_locked,"iccm_locked");
     // pragma uvmf custom add_to_wave end
     $end_transaction(transaction_view_h,end_time);

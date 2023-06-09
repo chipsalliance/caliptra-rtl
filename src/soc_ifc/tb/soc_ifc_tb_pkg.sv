@@ -88,7 +88,6 @@ package soc_ifc_tb_pkg;
   // The whole thing could probably be done slickly using enums but dictionaries 
   // are easier to use and lookup stuff. To be updated if overhead is too high. 
 
-  // TODO. This will be merged into register dict at some point as a pair 
   word_addr_t _wide_register_dict [string] = {
     "CPTRA_FW_EXTENDED_ERROR_INFO"          : 8, 
     "CPTRA_MBOX_VALID_PAUSER"               : 5,  
@@ -146,7 +145,9 @@ package soc_ifc_tb_pkg;
     "CPTRA_WDT_TIMER2_CTRL"                         : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL,                              // 0x0f4      Caliptra WDT Timer2 CTRL register 	
     "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD"               : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_0,                  // 0x0f8 [2]  Caliptra WDT Timer2 Timeout Period register 	
     "CPTRA_WDT_STATUS"                              : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_STATUS,                                   // 0x100      Caliptra WDT STATUS register
-    // 0x104..0x1fc
+    "CPTRA_FUSE_VALID_PAUSER"                       : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FUSE_VALID_PAUSER,                            // 0x104      Valid User for FUSE 
+    "CPTRA_FUSE_PAUSER_LOCK"                        : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FUSE_PAUSER_LOCK,                             // 0x108      Valid User for FUSE PAUSER Lock
+    // 0x10c..0x1fc
     "FUSE_UDS_SEED"                                 : SOCIFC_BASE + `SOC_IFC_REG_FUSE_UDS_SEED_0,                                    // 0x200 [12] Unique Device Secret 
     "FUSE_FIELD_ENTROPY"                            : SOCIFC_BASE + `SOC_IFC_REG_FUSE_FIELD_ENTROPY_0,                               // 0x230 [8]  Field Entropy 
     "FUSE_KEY_MANIFEST_PK_HASH"                     : SOCIFC_BASE + `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_0,                        // 0x250 [12] - 
@@ -207,7 +208,7 @@ package soc_ifc_tb_pkg;
 
   // These address ranges (inclusive) in each extent have no definition 
   extent_t _undefined_addr_ranges [$] = {
-    '{addr_min: SOCIFC_BASE + 16'h0104, addr_max: SOCIFC_BASE + 16'h01fc},
+    '{addr_min: SOCIFC_BASE + 16'h010c, addr_max: SOCIFC_BASE + 16'h01fc},
     '{addr_min: SOCIFC_BASE + 16'h0340, addr_max: SOCIFC_BASE + 16'h05fc},
     '{addr_min: SOCIFC_BASE + 16'h0630, addr_max: SOCIFC_BASE + 16'h07fc},
     '{addr_min: SOCIFC_BASE + 16'h0824, addr_max: SOCIFC_BASE + 16'h08fc},
@@ -223,7 +224,8 @@ package soc_ifc_tb_pkg;
     "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES" : 32'h5,
     "CPTRA_HW_REV_ID"                      : 32'h1,
     "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD"      : 32'hffff_ffff,
-    "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD"      : 32'hffff_ffff
+    "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD"      : 32'hffff_ffff,
+    "CPTRA_FUSE_VALID_PAUSER"              : 32'hffff_ffff
   };
 
 
@@ -275,6 +277,7 @@ package soc_ifc_tb_pkg;
     "CPTRA_WDT_TIMER2_CTRL"                            : `SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL_TIMER2_RESTART_MASK,
     "CPTRA_WDT_STATUS"                                 : (`SOC_IFC_REG_CPTRA_WDT_STATUS_T1_TIMEOUT_MASK | 
                                                            `SOC_IFC_REG_CPTRA_WDT_STATUS_T2_TIMEOUT_MASK),
+    "CPTRA_FUSE_PAUSER_LOCK"                           : `SOC_IFC_REG_CPTRA_FUSE_PAUSER_LOCK_LOCK_MASK, 
     "INTERNAL_ICCM_LOCK"                               : `SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK, 
     "INTERNAL_FW_UPDATE_RESET"                         : `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK ,
     "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES"             : `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES_WAIT_CYCLES_MASK,
@@ -291,6 +294,7 @@ package soc_ifc_tb_pkg;
     "INTR_BRF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R"    : `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R_PULSE_MASK, 
     "INTR_BRF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_INCR_R"       : `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_INCR_R_PULSE_MASK 
   };  
+
 
   // holds addr -> name inverse map of _soc_register_dict - populated by SocRegisters instantiation 
   string _imap_soc_register_dict [word_addr_t]; 
@@ -456,7 +460,6 @@ package soc_ifc_tb_pkg;
 
       addr = _soc_register_dict[addr_name];
       sscode = _soc_register_initval_dict["CPTRA_SECURITY_STATE"];
-      // _exp_update_time = $realtime; 
 
       if (modify == COLD_RESET) begin
         reset_exp_data();
@@ -537,12 +540,6 @@ package soc_ifc_tb_pkg;
       else if (str_startswith(addr_name, "CPTRA_HW_CONFIG"))
         exp_data = curr_data & get_mask("CPTRA_HW_CONFIG"); // all bits are RO 
 
-      else if (str_startswith(addr_name, "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD"))
-        exp_data = ahb_indata | apb_rodata; 
-
-      else if (str_startswith(addr_name, "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD"))
-        exp_data = ahb_indata | apb_rodata; 
-
       else if (str_startswith(addr_name, "INTERNAL_OBF_KEY"))            
         exp_data = '0;  // not accessible over APB or AHB 
 
@@ -552,6 +549,11 @@ package soc_ifc_tb_pkg;
       else begin    
         
         case (addr_name)
+    
+          "CPTRA_HW_ERROR_FATAL", "CPTRA_HW_ERROR_NON_FATAL": begin
+            exp_data = ahb_indata | apb_indata;  
+            exp_data = '0; // write-one to clear -- effectively always 0
+          end
 
           "CPTRA_FLOW_STATUS"                    : exp_data = ahb_indata & get_mask(addr_name) | apb_rodata; //  32'hbfff_ffff; // apb-RO 
           "CPTRA_RESET_REASON"                   : exp_data = ahb_rodata | apb_rodata; //  bit 1:0 is RO 
@@ -564,7 +566,7 @@ package soc_ifc_tb_pkg;
 
           "CPTRA_TRNG_PAUSER_LOCK": begin
             lock_mask = get_mask(addr_name); 
-            pauser_locked = curr_data & get_mask(addr_name); // FIXME. Is it?
+            pauser_locked = curr_data & get_mask(addr_name); // TODO. TRNG registers may need exclusion 
             exp_data = pauser_locked ? curr_data & lock_mask :  (ahb_indata | apb_indata) & lock_mask;  
           end
 
@@ -577,14 +579,27 @@ package soc_ifc_tb_pkg;
 
           "CPTRA_HW_REV_ID"                                 : exp_data = curr_data;  
           "CPTRA_WDT_TIMER1_EN"                             : exp_data = ahb_indata & get_mask(addr_name) | apb_rodata;
-          "CPTRA_WDT_TIMER1_CTRL"                           : exp_data = ahb_indata & get_mask(addr_name) | apb_rodata;
+          "CPTRA_WDT_TIMER1_CTRL"                           : exp_data = ((ahb_indata & get_mask(addr_name)) != 0) ? '0: apb_rodata; // TODO. Pulsed reg
+          "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD"                 : exp_data = ahb_indata | apb_rodata; 
           "CPTRA_WDT_TIMER2_EN"                             : exp_data = ahb_indata & get_mask(addr_name) | apb_rodata;
-          "CPTRA_WDT_TIMER2_CTRL"                           : exp_data = ahb_indata & get_mask(addr_name) | apb_rodata;
+          "CPTRA_WDT_TIMER2_CTRL"                           : exp_data = ((ahb_indata & get_mask(addr_name)) != 0) ? '0: apb_rodata; // TODO. Pulsed reg 
+          "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD"                 : exp_data = ahb_indata | apb_rodata; 
           "CPTRA_WDT_STATUS"                                : exp_data = curr_data; 
           "CPTRA_FUSE_WR_DONE"                              : exp_data = fuses_locked ? curr_data : (ahb_rodata | apb_indata & get_mask(addr_name)); 
           "CPTRA_BOOTFSM_GO"                                : exp_data = ahb_rodata | apb_indata & get_mask(addr_name) ; 
           "CPTRA_BOOT_STATUS"                               : exp_data = ahb_indata | apb_rodata; 
           "CPTRA_CLK_GATING_EN"                             : exp_data = ahb_rodata | apb_indata & get_mask(addr_name) ; 
+
+          "CPTRA_FUSE_VALID_PAUSER" : begin // find equivalent pauser lock & if set, apb-RO 
+            pauser_locked = _exp_register_data_dict["CPTRA_FUSE_PAUSER_LOCK"]; 
+            exp_data = pauser_locked ? curr_data : (ahb_indata | apb_indata); 
+          end
+
+          "CPTRA_FUSE_PAUSER_LOCK": begin
+            lock_mask = get_mask(addr_name); 
+            pauser_locked = curr_data & get_mask(addr_name); 
+            exp_data = pauser_locked ? curr_data & lock_mask :  (ahb_indata | apb_indata) & lock_mask;  
+          end 
 
           "INTERNAL_ICCM_LOCK"                              : begin
             iccm_locked = curr_data & get_mask(addr_name); 
@@ -595,12 +610,11 @@ package soc_ifc_tb_pkg;
             exp_data = ahb_indata & get_mask(addr_name) | apb_rodata; 
 
             $display ("TB DEBUG: ahb_indata = 0x%x and exp_data for INTERNAL_FW_UPDATE_RESET = 0x%x", ahb_indata, exp_data); 
-            //TODO. Remove hardcoded fields and use bit masks instead
-            if (exp_data[0]) begin 
+            if (exp_data[0]) begin  // write-one to clear
               _exp_register_data_dict["INTERNAL_ICCM_LOCK"] = '0;  
               $display ("TB INFO: Cross modification - Writing '1' to INTERNAL_FW_UPDATE_RESET also reset INTERNAL_ICCM_LOCK"); 
 
-              _exp_register_data_dict["CPTRA_RESET_REASON"] = 32'h1;  //FIXME. Ignoring warm reset for now 
+              _exp_register_data_dict["CPTRA_RESET_REASON"] = 32'h1;  //TODO. Ignoring warm reset for now 
               $display ("-- CPTRA_RESET_REASON is now %d", _exp_register_data_dict["CPTRA_RESET_REASON"]); 
               $display ("TB INFO: Cross modification - Writing '1' to INTERNAL_FW_UPDATE_RESET also sets CPTRA_RESET_REASON"); 
             end
@@ -795,7 +809,7 @@ package soc_ifc_tb_pkg;
   // ---------------------------------------------------------------------------
   // -- Generic Utility functions that have less to do with custom data types
   // ---------------------------------------------------------------------------
-  function int str_startswith(string s1, string s2);
+  function automatic int str_startswith(string s1, string s2);
 
     return (s2 == s1.substr(0, s2.len() - 1));
 
@@ -803,29 +817,33 @@ package soc_ifc_tb_pkg;
 
 
   function automatic dword_t mask_shifted(dword_t v, dword_t n);
-  /* 
-    Shift val by number of bits that mask n has zeros on right, eg:
-    mask_shifted(32'h1, 32'h100) -> 0x100 // 8-bit shift ;
-    mask_shifted(32'h1, 32'h8000_0000); -> 0x8000_0000 // 31-bit shift
-    mask_shifted(32'h2, 32'h0003_0000) -> 0x0002_0000 // 16 bit shift
-    mask_shifted(32'h2, 32'h0006_0000) -> 0x0004_0000 // 17 bit shift 
-  */
 
-    int k;
-    int ones = $countones(n); 
-    dword_t a = {ones{1'b1}};
+    /* Shift 'v' by number of bits that mask 'n' has zeros on right. Example:
+        v (bin):                                         1001 (0x9)       value to move 
+        n (bin):      0000_0000_0001_1110_0000_0000_0000_0000 (0x1e0000)  4-bit mask 
+        Return (bin): 0000_0000_0001_0010_0000_0000_0000_0000 (0x120000)  moved to mask position 
+    */
 
-    begin
-      for (k = 0; k < (32 - ones + 1); k++) begin
-        if ((a << k) == n) 
-          break;
+    return v << count_trailing_zeros(n);
+  endfunction
+
+
+  function automatic int count_trailing_zeros(dword_t n);
+
+    int k = 0;
+    dword_t nshift = n;
+
+      if (n == 0)  
+          return 32; 
+
+      while (k < 32) begin
+        if (n[k] == 1'b1)
+          break; 
+        k += 1;
       end
+      return k;
 
-      return (v << k);
-    end 
-
-  endfunction  
-
+  endfunction 
 
 
   // ================================================================================ 

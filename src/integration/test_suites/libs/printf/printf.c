@@ -164,6 +164,7 @@ whisperPrintfImpl(const char* format, va_list ap)
 
   for (const char* fp = format; *fp; fp++)
     {
+      char* s;
       char pad = ' ';
       int width = 0;  // Field width
 
@@ -232,7 +233,12 @@ whisperPrintfImpl(const char* format, va_list ap)
           break;
 
         case 's':
-          count += whisperPuts(va_arg(ap, char*));
+          s = va_arg(ap, char*);
+          while(*s) {
+            whisperPutc(*s++);
+            ++count;
+          }
+//          count += whisperPuts(va_arg(ap, char*));
           break;
 /*
         case 'g':
