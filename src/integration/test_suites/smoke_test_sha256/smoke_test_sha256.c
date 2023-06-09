@@ -88,7 +88,7 @@ void main() {
     VPRINTF(LOW, "----------------------------------\n");
 
     // Call interrupt init
-    //init_interrupts();
+    init_interrupts();
 
     sha256_io sha256_block;
     sha256_io sha256_digest;

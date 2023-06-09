@@ -49,9 +49,17 @@ uvmf:
         reset_value: '''bz'
         width: '1'
       - dir: output
+        name: timer_intr
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
         name: nmi_vector
         reset_value: '''bz'
         width: '32'
+      - dir: output
+        name: nmi_intr
+        reset_value: '''bz'
+        width: '1'
       - dir: output
         name: iccm_lock
         reset_value: '''bz'
@@ -82,6 +90,12 @@ uvmf:
         iscompare: 'True'
         isrand: 'False'
         name: sha_notif_intr_pending
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: timer_intr_pending
         type: bit
         unpacked_dimension: ''
       - comment: ''
@@ -119,6 +133,12 @@ uvmf:
         isrand: 'False'
         name: nmi_vector
         type: bit [31:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: nmi_intr_pending
+        type: bit
         unpacked_dimension: ''
       - comment: ''
         iscompare: 'True'

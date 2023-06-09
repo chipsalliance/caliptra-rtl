@@ -3,17 +3,31 @@
 package pv_reg_uvm;
     `include "uvm_macros.svh"
     import uvm_pkg::*;
-    
+    `include "pv_reg_covergroups.svh"
     // Reg - pv_reg::pvCtrl
     class pv_reg__pvCtrl extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        pv_reg__pvCtrl_bit_cg lock_bit_cg[1];
+        pv_reg__pvCtrl_bit_cg clear_bit_cg[1];
+        pv_reg__pvCtrl_bit_cg rsvd0_bit_cg[1];
+        pv_reg__pvCtrl_bit_cg rsvd1_bit_cg[5];
+        pv_reg__pvCtrl_fld_cg fld_cg;
         rand uvm_reg_field lock;
         rand uvm_reg_field clear;
         rand uvm_reg_field rsvd0;
         rand uvm_reg_field rsvd1;
 
         function new(string name = "pv_reg__pvCtrl");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.lock = new("lock");
@@ -24,20 +38,44 @@ package pv_reg_uvm;
             this.rsvd0.configure(this, 1, 2, "RW", 1, 'h0, 1, 1, 0);
             this.rsvd1 = new("rsvd1");
             this.rsvd1.configure(this, 5, 3, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(lock_bit_cg[bt]) lock_bit_cg[bt] = new();
+                foreach(clear_bit_cg[bt]) clear_bit_cg[bt] = new();
+                foreach(rsvd0_bit_cg[bt]) rsvd0_bit_cg[bt] = new();
+                foreach(rsvd1_bit_cg[bt]) rsvd1_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : pv_reg__pvCtrl
 
     // Reg - pv_reg::pcrReg
     class pv_reg__pcrReg extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        pv_reg__pcrReg_bit_cg data_bit_cg[32];
+        pv_reg__pcrReg_fld_cg fld_cg;
         rand uvm_reg_field data;
 
         function new(string name = "pv_reg__pcrReg");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.data = new("data");
             this.data.configure(this, 32, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(data_bit_cg[bt]) data_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : pv_reg__pcrReg
 
@@ -69,4 +107,5 @@ package pv_reg_uvm;
         endfunction : build
     endclass : pv_reg
 
+    `include "pv_reg_sample.svh"
 endpackage: pv_reg_uvm

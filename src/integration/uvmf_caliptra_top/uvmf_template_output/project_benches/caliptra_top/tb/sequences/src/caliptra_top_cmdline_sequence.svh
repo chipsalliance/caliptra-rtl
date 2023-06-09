@@ -49,21 +49,21 @@ class caliptra_top_cmdline_sequence extends caliptra_top_bench_sequence_base;
     bit ready_for_rt = 0;
     while (!ready_for_fw) begin
         while(!sts_rsp_count)soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_num_clocks(1); // Wait for new status updates
-        `uvm_info("CALIPTRA_TOP_RAND_TEST", "Observed status response, checking contents", UVM_DEBUG)
+        `uvm_info("CALIPTRA_TOP_CMDLINE_TEST", "Observed status response, checking contents", UVM_DEBUG)
         sts_rsp_count = 0; // We only care about the latest rsp, so even if count > 1, reset back to 0
         ready_for_fw = soc_ifc_subenv_soc_ifc_status_agent_responder_seq.rsp.ready_for_fw_push;
     end
     if (!fmc_seq.randomize() with { fmc_seq.mbox_op_rand.cmd == mbox_cmd_e'(MBOX_CMD_FMC_UPDATE); })
-        `uvm_fatal("CALIPTRA_TOP_RAND_TEST", "caliptra_top_rand_sequence::body() - fmc_seq randomization failed")
+        `uvm_fatal("CALIPTRA_TOP_CMDLINE_TEST", "caliptra_top_rand_sequence::body() - fmc_seq randomization failed")
     fmc_seq.start(top_configuration.soc_ifc_subenv_config.vsqr);
     if (!rt_seq.randomize() with { rt_seq.mbox_op_rand.cmd == mbox_cmd_e'(MBOX_CMD_RT_UPDATE); })
-        `uvm_fatal("CALIPTRA_TOP_RAND_TEST", "caliptra_top_rand_sequence::body() - rt_seq randomization failed")
+        `uvm_fatal("CALIPTRA_TOP_CMDLINE_TEST", "caliptra_top_rand_sequence::body() - rt_seq randomization failed")
     rt_seq.start(top_configuration.soc_ifc_subenv_config.vsqr);
 
     // Wait for RT image to set the ready_for_rt bit
     while (!ready_for_rt) begin
         while(!sts_rsp_count)soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_num_clocks(1); // Wait for new status updates
-        `uvm_info("CALIPTRA_TOP_RAND_TEST", "Observed status response, checking contents", UVM_DEBUG)
+        `uvm_info("CALIPTRA_TOP_CMDLINE_TEST", "Observed status response, checking contents", UVM_DEBUG)
         sts_rsp_count = 0; // We only care about the latest rsp, so even if count > 1, reset back to 0
         ready_for_rt = soc_ifc_subenv_soc_ifc_status_agent_responder_seq.rsp.ready_for_runtime;
     end
@@ -103,7 +103,7 @@ class caliptra_top_cmdline_sequence extends caliptra_top_bench_sequence_base;
 
     // Start INITIATOR sequences here
     if(!soc_ifc_env_bringup_seq.randomize())
-        `uvm_fatal("CALIPTRA_TOP_RAND_TEST", "caliptra_top_rand_sequence::body() - soc_ifc_env_bringup_seq randomization failed")
+        `uvm_fatal("CALIPTRA_TOP_CMDLINE_TEST", "caliptra_top_rand_sequence::body() - soc_ifc_env_bringup_seq randomization failed")
     soc_ifc_env_bringup_seq.start(top_configuration.soc_ifc_subenv_config.vsqr);
 
     `uvm_info("CALIPTRA_TOP_BRINGUP", "SoC completed poweron and observed reset deassertion to system", UVM_LOW)
@@ -113,7 +113,7 @@ class caliptra_top_cmdline_sequence extends caliptra_top_bench_sequence_base;
     // Run cmdline provided env sequences
     clp = uvm_cmdline_processor::get_inst();
     if (!clp.get_arg_values("+CLP_SEQ=", seq_names))
-        `uvm_fatal("SOC_IFC_CMDLINE_TEST", "No cmdline sequence name arguments provided to cmdline test!")
+        `uvm_fatal("CALIPTRA_TOP_CMDLINE_TEST", "No cmdline sequence name arguments provided to cmdline test!")
     else
         soc_ifc_env_seq_ii = new[seq_names.size()];
 

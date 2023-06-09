@@ -3,40 +3,84 @@
 package doe_reg_uvm;
     `include "uvm_macros.svh"
     import uvm_pkg::*;
-    
+    `include "doe_reg_covergroups.svh"
     // Reg - doe_reg::DOE_IV
     class doe_reg__DOE_IV extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        doe_reg__DOE_IV_bit_cg IV_bit_cg[32];
+        doe_reg__DOE_IV_fld_cg fld_cg;
         rand uvm_reg_field IV;
 
         function new(string name = "doe_reg__DOE_IV");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.IV = new("IV");
             this.IV.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(IV_bit_cg[bt]) IV_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : doe_reg__DOE_IV
 
     // Reg - doe_reg::DOE_CTRL
     class doe_reg__DOE_CTRL extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        doe_reg__DOE_CTRL_bit_cg CMD_bit_cg[2];
+        doe_reg__DOE_CTRL_bit_cg DEST_bit_cg[5];
+        doe_reg__DOE_CTRL_fld_cg fld_cg;
         rand uvm_reg_field CMD;
         rand uvm_reg_field DEST;
 
         function new(string name = "doe_reg__DOE_CTRL");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.CMD = new("CMD");
             this.CMD.configure(this, 2, 0, "RW", 1, 'h0, 1, 1, 0);
             this.DEST = new("DEST");
             this.DEST.configure(this, 5, 2, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(CMD_bit_cg[bt]) CMD_bit_cg[bt] = new();
+                foreach(DEST_bit_cg[bt]) DEST_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : doe_reg__DOE_CTRL
 
     // Reg - doe_reg::DOE_STATUS
     class doe_reg__DOE_STATUS extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        doe_reg__DOE_STATUS_bit_cg READY_bit_cg[1];
+        doe_reg__DOE_STATUS_bit_cg VALID_bit_cg[1];
+        doe_reg__DOE_STATUS_bit_cg UDS_FLOW_DONE_bit_cg[1];
+        doe_reg__DOE_STATUS_bit_cg FE_FLOW_DONE_bit_cg[1];
+        doe_reg__DOE_STATUS_bit_cg DEOBF_SECRETS_CLEARED_bit_cg[1];
+        doe_reg__DOE_STATUS_fld_cg fld_cg;
         rand uvm_reg_field READY;
         rand uvm_reg_field VALID;
         rand uvm_reg_field UDS_FLOW_DONE;
@@ -44,8 +88,13 @@ package doe_reg_uvm;
         rand uvm_reg_field DEOBF_SECRETS_CLEARED;
 
         function new(string name = "doe_reg__DOE_STATUS");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.READY = new("READY");
@@ -58,36 +107,77 @@ package doe_reg_uvm;
             this.FE_FLOW_DONE.configure(this, 1, 3, "RO", 1, 'h0, 1, 1, 0);
             this.DEOBF_SECRETS_CLEARED = new("DEOBF_SECRETS_CLEARED");
             this.DEOBF_SECRETS_CLEARED.configure(this, 1, 4, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(READY_bit_cg[bt]) READY_bit_cg[bt] = new();
+                foreach(VALID_bit_cg[bt]) VALID_bit_cg[bt] = new();
+                foreach(UDS_FLOW_DONE_bit_cg[bt]) UDS_FLOW_DONE_bit_cg[bt] = new();
+                foreach(FE_FLOW_DONE_bit_cg[bt]) FE_FLOW_DONE_bit_cg[bt] = new();
+                foreach(DEOBF_SECRETS_CLEARED_bit_cg[bt]) DEOBF_SECRETS_CLEARED_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : doe_reg__DOE_STATUS
 
     // Reg - doe_reg::global_intr_en_t
     class doe_reg__global_intr_en_t extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        doe_reg__global_intr_en_t_bit_cg error_en_bit_cg[1];
+        doe_reg__global_intr_en_t_bit_cg notif_en_bit_cg[1];
+        doe_reg__global_intr_en_t_fld_cg fld_cg;
         rand uvm_reg_field error_en;
         rand uvm_reg_field notif_en;
 
         function new(string name = "doe_reg__global_intr_en_t");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.error_en = new("error_en");
             this.error_en.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
             this.notif_en = new("notif_en");
             this.notif_en.configure(this, 1, 1, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(error_en_bit_cg[bt]) error_en_bit_cg[bt] = new();
+                foreach(notif_en_bit_cg[bt]) notif_en_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : doe_reg__global_intr_en_t
 
     // Reg - doe_reg::error_intr_en_t
     class doe_reg__error_intr_en_t extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        doe_reg__error_intr_en_t_bit_cg error0_en_bit_cg[1];
+        doe_reg__error_intr_en_t_bit_cg error1_en_bit_cg[1];
+        doe_reg__error_intr_en_t_bit_cg error2_en_bit_cg[1];
+        doe_reg__error_intr_en_t_bit_cg error3_en_bit_cg[1];
+        doe_reg__error_intr_en_t_fld_cg fld_cg;
         rand uvm_reg_field error0_en;
         rand uvm_reg_field error1_en;
         rand uvm_reg_field error2_en;
         rand uvm_reg_field error3_en;
 
         function new(string name = "doe_reg__error_intr_en_t");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.error0_en = new("error0_en");
@@ -98,61 +188,131 @@ package doe_reg_uvm;
             this.error2_en.configure(this, 1, 2, "RW", 0, 'h0, 1, 1, 0);
             this.error3_en = new("error3_en");
             this.error3_en.configure(this, 1, 3, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(error0_en_bit_cg[bt]) error0_en_bit_cg[bt] = new();
+                foreach(error1_en_bit_cg[bt]) error1_en_bit_cg[bt] = new();
+                foreach(error2_en_bit_cg[bt]) error2_en_bit_cg[bt] = new();
+                foreach(error3_en_bit_cg[bt]) error3_en_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : doe_reg__error_intr_en_t
 
     // Reg - doe_reg::notif_intr_en_t
     class doe_reg__notif_intr_en_t extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        doe_reg__notif_intr_en_t_bit_cg notif_cmd_done_en_bit_cg[1];
+        doe_reg__notif_intr_en_t_fld_cg fld_cg;
         rand uvm_reg_field notif_cmd_done_en;
 
         function new(string name = "doe_reg__notif_intr_en_t");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.notif_cmd_done_en = new("notif_cmd_done_en");
             this.notif_cmd_done_en.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(notif_cmd_done_en_bit_cg[bt]) notif_cmd_done_en_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : doe_reg__notif_intr_en_t
 
     // Reg - doe_reg::global_intr_t_agg_sts_dd3dcf0a
     class doe_reg__global_intr_t_agg_sts_dd3dcf0a extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        doe_reg__global_intr_t_agg_sts_dd3dcf0a_bit_cg agg_sts_bit_cg[1];
+        doe_reg__global_intr_t_agg_sts_dd3dcf0a_fld_cg fld_cg;
         rand uvm_reg_field agg_sts;
 
         function new(string name = "doe_reg__global_intr_t_agg_sts_dd3dcf0a");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.agg_sts = new("agg_sts");
             this.agg_sts.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(agg_sts_bit_cg[bt]) agg_sts_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : doe_reg__global_intr_t_agg_sts_dd3dcf0a
 
     // Reg - doe_reg::global_intr_t_agg_sts_e6399b4a
     class doe_reg__global_intr_t_agg_sts_e6399b4a extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        doe_reg__global_intr_t_agg_sts_e6399b4a_bit_cg agg_sts_bit_cg[1];
+        doe_reg__global_intr_t_agg_sts_e6399b4a_fld_cg fld_cg;
         rand uvm_reg_field agg_sts;
 
         function new(string name = "doe_reg__global_intr_t_agg_sts_e6399b4a");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.agg_sts = new("agg_sts");
             this.agg_sts.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(agg_sts_bit_cg[bt]) agg_sts_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : doe_reg__global_intr_t_agg_sts_e6399b4a
 
     // Reg - doe_reg::error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba
     class doe_reg__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        doe_reg__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba_bit_cg error0_sts_bit_cg[1];
+        doe_reg__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba_bit_cg error1_sts_bit_cg[1];
+        doe_reg__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba_bit_cg error2_sts_bit_cg[1];
+        doe_reg__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba_bit_cg error3_sts_bit_cg[1];
+        doe_reg__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba_fld_cg fld_cg;
         rand uvm_reg_field error0_sts;
         rand uvm_reg_field error1_sts;
         rand uvm_reg_field error2_sts;
         rand uvm_reg_field error3_sts;
 
         function new(string name = "doe_reg__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.error0_sts = new("error0_sts");
@@ -163,33 +323,71 @@ package doe_reg_uvm;
             this.error2_sts.configure(this, 1, 2, "W1C", 1, 'h0, 1, 1, 0);
             this.error3_sts = new("error3_sts");
             this.error3_sts.configure(this, 1, 3, "W1C", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(error0_sts_bit_cg[bt]) error0_sts_bit_cg[bt] = new();
+                foreach(error1_sts_bit_cg[bt]) error1_sts_bit_cg[bt] = new();
+                foreach(error2_sts_bit_cg[bt]) error2_sts_bit_cg[bt] = new();
+                foreach(error3_sts_bit_cg[bt]) error3_sts_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : doe_reg__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba
 
     // Reg - doe_reg::notif_intr_t_notif_cmd_done_sts_1c68637e
     class doe_reg__notif_intr_t_notif_cmd_done_sts_1c68637e extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        doe_reg__notif_intr_t_notif_cmd_done_sts_1c68637e_bit_cg notif_cmd_done_sts_bit_cg[1];
+        doe_reg__notif_intr_t_notif_cmd_done_sts_1c68637e_fld_cg fld_cg;
         rand uvm_reg_field notif_cmd_done_sts;
 
         function new(string name = "doe_reg__notif_intr_t_notif_cmd_done_sts_1c68637e");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.notif_cmd_done_sts = new("notif_cmd_done_sts");
             this.notif_cmd_done_sts.configure(this, 1, 0, "W1C", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(notif_cmd_done_sts_bit_cg[bt]) notif_cmd_done_sts_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : doe_reg__notif_intr_t_notif_cmd_done_sts_1c68637e
 
     // Reg - doe_reg::error_intr_trig_t
     class doe_reg__error_intr_trig_t extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        doe_reg__error_intr_trig_t_bit_cg error0_trig_bit_cg[1];
+        doe_reg__error_intr_trig_t_bit_cg error1_trig_bit_cg[1];
+        doe_reg__error_intr_trig_t_bit_cg error2_trig_bit_cg[1];
+        doe_reg__error_intr_trig_t_bit_cg error3_trig_bit_cg[1];
+        doe_reg__error_intr_trig_t_fld_cg fld_cg;
         rand uvm_reg_field error0_trig;
         rand uvm_reg_field error1_trig;
         rand uvm_reg_field error2_trig;
         rand uvm_reg_field error3_trig;
 
         function new(string name = "doe_reg__error_intr_trig_t");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.error0_trig = new("error0_trig");
@@ -200,160 +398,344 @@ package doe_reg_uvm;
             this.error2_trig.configure(this, 1, 2, "W1S", 0, 'h0, 1, 1, 0);
             this.error3_trig = new("error3_trig");
             this.error3_trig.configure(this, 1, 3, "W1S", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(error0_trig_bit_cg[bt]) error0_trig_bit_cg[bt] = new();
+                foreach(error1_trig_bit_cg[bt]) error1_trig_bit_cg[bt] = new();
+                foreach(error2_trig_bit_cg[bt]) error2_trig_bit_cg[bt] = new();
+                foreach(error3_trig_bit_cg[bt]) error3_trig_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : doe_reg__error_intr_trig_t
 
     // Reg - doe_reg::notif_intr_trig_t
     class doe_reg__notif_intr_trig_t extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        doe_reg__notif_intr_trig_t_bit_cg notif_cmd_done_trig_bit_cg[1];
+        doe_reg__notif_intr_trig_t_fld_cg fld_cg;
         rand uvm_reg_field notif_cmd_done_trig;
 
         function new(string name = "doe_reg__notif_intr_trig_t");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.notif_cmd_done_trig = new("notif_cmd_done_trig");
             this.notif_cmd_done_trig.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(notif_cmd_done_trig_bit_cg[bt]) notif_cmd_done_trig_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : doe_reg__notif_intr_trig_t
 
     // Reg - doe_reg::intr_count_t_cnt_130ab269
     class doe_reg__intr_count_t_cnt_130ab269 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        doe_reg__intr_count_t_cnt_130ab269_bit_cg cnt_bit_cg[32];
+        doe_reg__intr_count_t_cnt_130ab269_fld_cg fld_cg;
         rand uvm_reg_field cnt;
 
         function new(string name = "doe_reg__intr_count_t_cnt_130ab269");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : doe_reg__intr_count_t_cnt_130ab269
 
     // Reg - doe_reg::intr_count_t_cnt_324dfc53
     class doe_reg__intr_count_t_cnt_324dfc53 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        doe_reg__intr_count_t_cnt_324dfc53_bit_cg cnt_bit_cg[32];
+        doe_reg__intr_count_t_cnt_324dfc53_fld_cg fld_cg;
         rand uvm_reg_field cnt;
 
         function new(string name = "doe_reg__intr_count_t_cnt_324dfc53");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : doe_reg__intr_count_t_cnt_324dfc53
 
     // Reg - doe_reg::intr_count_t_cnt_791a4799
     class doe_reg__intr_count_t_cnt_791a4799 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        doe_reg__intr_count_t_cnt_791a4799_bit_cg cnt_bit_cg[32];
+        doe_reg__intr_count_t_cnt_791a4799_fld_cg fld_cg;
         rand uvm_reg_field cnt;
 
         function new(string name = "doe_reg__intr_count_t_cnt_791a4799");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : doe_reg__intr_count_t_cnt_791a4799
 
     // Reg - doe_reg::intr_count_t_cnt_e9de7334
     class doe_reg__intr_count_t_cnt_e9de7334 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        doe_reg__intr_count_t_cnt_e9de7334_bit_cg cnt_bit_cg[32];
+        doe_reg__intr_count_t_cnt_e9de7334_fld_cg fld_cg;
         rand uvm_reg_field cnt;
 
         function new(string name = "doe_reg__intr_count_t_cnt_e9de7334");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : doe_reg__intr_count_t_cnt_e9de7334
 
     // Reg - doe_reg::intr_count_t_cnt_be67d6d5
     class doe_reg__intr_count_t_cnt_be67d6d5 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        doe_reg__intr_count_t_cnt_be67d6d5_bit_cg cnt_bit_cg[32];
+        doe_reg__intr_count_t_cnt_be67d6d5_fld_cg fld_cg;
         rand uvm_reg_field cnt;
 
         function new(string name = "doe_reg__intr_count_t_cnt_be67d6d5");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : doe_reg__intr_count_t_cnt_be67d6d5
 
     // Reg - doe_reg::intr_count_incr_t_pulse_37026c97
     class doe_reg__intr_count_incr_t_pulse_37026c97 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        doe_reg__intr_count_incr_t_pulse_37026c97_bit_cg pulse_bit_cg[1];
+        doe_reg__intr_count_incr_t_pulse_37026c97_fld_cg fld_cg;
         rand uvm_reg_field pulse;
 
         function new(string name = "doe_reg__intr_count_incr_t_pulse_37026c97");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.pulse = new("pulse");
             this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : doe_reg__intr_count_incr_t_pulse_37026c97
 
     // Reg - doe_reg::intr_count_incr_t_pulse_d860d977
     class doe_reg__intr_count_incr_t_pulse_d860d977 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        doe_reg__intr_count_incr_t_pulse_d860d977_bit_cg pulse_bit_cg[1];
+        doe_reg__intr_count_incr_t_pulse_d860d977_fld_cg fld_cg;
         rand uvm_reg_field pulse;
 
         function new(string name = "doe_reg__intr_count_incr_t_pulse_d860d977");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.pulse = new("pulse");
             this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : doe_reg__intr_count_incr_t_pulse_d860d977
 
     // Reg - doe_reg::intr_count_incr_t_pulse_87b45fe7
     class doe_reg__intr_count_incr_t_pulse_87b45fe7 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        doe_reg__intr_count_incr_t_pulse_87b45fe7_bit_cg pulse_bit_cg[1];
+        doe_reg__intr_count_incr_t_pulse_87b45fe7_fld_cg fld_cg;
         rand uvm_reg_field pulse;
 
         function new(string name = "doe_reg__intr_count_incr_t_pulse_87b45fe7");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.pulse = new("pulse");
             this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : doe_reg__intr_count_incr_t_pulse_87b45fe7
 
     // Reg - doe_reg::intr_count_incr_t_pulse_c1689ee6
     class doe_reg__intr_count_incr_t_pulse_c1689ee6 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        doe_reg__intr_count_incr_t_pulse_c1689ee6_bit_cg pulse_bit_cg[1];
+        doe_reg__intr_count_incr_t_pulse_c1689ee6_fld_cg fld_cg;
         rand uvm_reg_field pulse;
 
         function new(string name = "doe_reg__intr_count_incr_t_pulse_c1689ee6");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.pulse = new("pulse");
             this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : doe_reg__intr_count_incr_t_pulse_c1689ee6
 
     // Reg - doe_reg::intr_count_incr_t_pulse_6173128e
     class doe_reg__intr_count_incr_t_pulse_6173128e extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        doe_reg__intr_count_incr_t_pulse_6173128e_bit_cg pulse_bit_cg[1];
+        doe_reg__intr_count_incr_t_pulse_6173128e_fld_cg fld_cg;
         rand uvm_reg_field pulse;
 
         function new(string name = "doe_reg__intr_count_incr_t_pulse_6173128e");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.pulse = new("pulse");
             this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : doe_reg__intr_count_incr_t_pulse_6173128e
 
@@ -520,4 +902,5 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg
 
+    `include "doe_reg_sample.svh"
 endpackage: doe_reg_uvm

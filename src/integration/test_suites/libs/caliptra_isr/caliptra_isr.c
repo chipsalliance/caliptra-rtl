@@ -19,9 +19,13 @@
 #include "veer-csr.h"
 #include "riscv-interrupts.h"
 #include "printf.h"
+#include "riscv_hw_if.h"
 
 
 extern volatile uint32_t intr_count;
+#ifdef RV_EXCEPTION_STRUCT
+extern volatile rv_exception_struct_s exc_flag;
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 // Function Declarations
@@ -38,14 +42,15 @@ void std_rv_mtvec_exception(void) __attribute__ ((interrupt ("machine"), aligned
 // "External Interrupts" are also included in this unimplemented list, just because the
 // std_rv_isr_vector_table should never reroute to External Interrupts -- Fast
 // Redirect takes care of that separately
-void std_rv_nop_machine(void) __attribute__ ((interrupt ("machine"), aligned(4)));
-void std_rv_mtvec_mei(void) __attribute__ ((interrupt ("machine") , aligned(4) , weak, alias("std_rv_nop_machine") ));
-void std_rv_mtvec_msi(void) __attribute__ ((interrupt ("machine") , aligned(4) , weak, alias("std_rv_nop_machine") ));
-void std_rv_mtvec_mti(void) __attribute__ ((interrupt ("machine") , aligned(4) , weak, alias("std_rv_nop_machine") ));
-void std_rv_mtvec_miti0(void) __attribute__ ((interrupt ("machine") , aligned(4) ));
-void std_rv_mtvec_sei(void) __attribute__ ((interrupt ("machine") , aligned(4) , weak, alias("std_rv_nop_machine") ));
-void std_rv_mtvec_ssi(void) __attribute__ ((interrupt ("machine") , aligned(4) , weak, alias("std_rv_nop_machine") ));
-void std_rv_mtvec_sti(void) __attribute__ ((interrupt ("machine") , aligned(4) , weak, alias("std_rv_nop_machine") ));
+void std_rv_nop_machine(void)     __attribute__ ((interrupt ("machine") , aligned(4)));
+void std_rv_mtvec_mei(void)       __attribute__ ((interrupt ("machine") , aligned(4) , weak, alias("std_rv_nop_machine") ));
+void std_rv_mtvec_msi(void)       __attribute__ ((interrupt ("machine") , aligned(4) , weak, alias("std_rv_nop_machine") ));
+void std_rv_mtvec_mti(void)       __attribute__ ((interrupt ("machine") , aligned(4) ));
+void std_rv_mtvec_sei(void)       __attribute__ ((interrupt ("machine") , aligned(4) , weak, alias("std_rv_nop_machine") ));
+void std_rv_mtvec_ssi(void)       __attribute__ ((interrupt ("machine") , aligned(4) , weak, alias("std_rv_nop_machine") ));
+void std_rv_mtvec_sti(void)       __attribute__ ((interrupt ("machine") , aligned(4) , weak, alias("std_rv_nop_machine") ));
+void nonstd_veer_mtvec_miti0(void)__attribute__ ((interrupt ("machine") , aligned(4) ));
+void nonstd_veer_mtvec_mcei(void) __attribute__ ((interrupt ("machine") , aligned(4) ));
 
 
 // VeeR Per-Source Vectored ISR functions
@@ -87,12 +92,12 @@ static void (* const nonstd_veer_isr_9 ) (void) = nonstd_veer_isr_sha512_error; 
 static void (* const nonstd_veer_isr_10) (void) = nonstd_veer_isr_sha512_notif;    // from the param'd
 static void (* const nonstd_veer_isr_11) (void) = nonstd_veer_isr_sha256_error;    // macro "nonstd_veer_isr"
 static void (* const nonstd_veer_isr_12) (void) = nonstd_veer_isr_sha256_notif;    // below
-static void (* const nonstd_veer_isr_13) (void) = nonstd_veer_isr_qspi_error  ;    //        |
-static void (* const nonstd_veer_isr_14) (void) = nonstd_veer_isr_qspi_notif  ;    //        |
-static void (* const nonstd_veer_isr_15) (void) = nonstd_veer_isr_uart_error  ;    //        |
-static void (* const nonstd_veer_isr_16) (void) = nonstd_veer_isr_uart_notif  ;    //        |
-static void (* const nonstd_veer_isr_17) (void) = nonstd_veer_isr_i3c_error   ;    //        |
-static void (* const nonstd_veer_isr_18) (void) = nonstd_veer_isr_i3c_notif   ;    //        |
+static void (* const nonstd_veer_isr_13) (void) = std_rv_nop_machine          ;    //        |    nonstd_veer_isr_qspi_error ---.
+static void (* const nonstd_veer_isr_14) (void) = std_rv_nop_machine          ;    //        |    nonstd_veer_isr_qspi_notif    |
+static void (* const nonstd_veer_isr_15) (void) = std_rv_nop_machine          ;    //        |    nonstd_veer_isr_uart_error    | Unimplemented to
+static void (* const nonstd_veer_isr_16) (void) = std_rv_nop_machine          ;    //        |    nonstd_veer_isr_uart_notif    | save code space
+static void (* const nonstd_veer_isr_17) (void) = std_rv_nop_machine          ;    //        |    nonstd_veer_isr_i3c_error     |
+static void (* const nonstd_veer_isr_18) (void) = std_rv_nop_machine          ;    //        |    nonstd_veer_isr_i3c_notif  ---'
 static void (* const nonstd_veer_isr_19) (void) = nonstd_veer_isr_soc_ifc_error;   //        |
 static void (* const nonstd_veer_isr_20) (void) = nonstd_veer_isr_soc_ifc_notif;   //        |
 static void (* const nonstd_veer_isr_21) (void) = nonstd_veer_isr_sha512_acc_error;//        |
@@ -172,6 +177,10 @@ void init_interrupts(void) {
     volatile uint32_t * const sha512_reg     = (uint32_t*) CLP_SHA512_REG_BASE_ADDR;
     volatile uint32_t * const sha256_reg     = (uint32_t*) CLP_SHA256_REG_BASE_ADDR;
     volatile uint32_t * const sha512_acc_csr = (uint32_t*) CLP_SHA512_ACC_CSR_BASE_ADDR;
+    volatile uint32_t * const mtime_l        = (uint32_t*) CLP_SOC_IFC_REG_INTERNAL_RV_MTIME_L;
+    volatile uint32_t * const mtime_h        = (uint32_t*) CLP_SOC_IFC_REG_INTERNAL_RV_MTIME_H;
+    volatile uint32_t * const mtimecmp_l     = (uint32_t*) CLP_SOC_IFC_REG_INTERNAL_RV_MTIMECMP_L;
+    volatile uint32_t * const mtimecmp_h     = (uint32_t*) CLP_SOC_IFC_REG_INTERNAL_RV_MTIMECMP_H;
     char* DCCM = (char *) RV_DCCM_SADR;
     uint32_t value;
 
@@ -311,7 +320,8 @@ void init_interrupts(void) {
     soc_ifc_reg[SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R /sizeof(uint32_t)] = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_AVAIL_EN_MASK |
                                                                                SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_MBOX_ECC_COR_EN_MASK |
                                                                                SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_DEBUG_LOCKED_EN_MASK |
-                                                                               SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_SOC_REQ_LOCK_EN_MASK;
+                                                                               SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_SOC_REQ_LOCK_EN_MASK |
+                                                                               SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_GEN_IN_TOGGLE_EN_MASK;
     soc_ifc_reg[SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
                                                                                SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
 
@@ -321,10 +331,31 @@ void init_interrupts(void) {
     sha512_acc_csr[SHA512_ACC_CSR_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = SHA512_ACC_CSR_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
                                                                                      SHA512_ACC_CSR_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
 
+    // Set mtimecmp to max value to avoid spurious timer interrupts
+    *mtimecmp_l = 0xFFFFFFFF;
+    *mtimecmp_h = 0xFFFFFFFF;
+
+    // Set threshold for Correctable Error Local Interrupts
+    value = 0xd0000000;
+    __asm__ volatile ("csrw    %0, %1"
+                      : /* output: none */
+                      : "i" (VEER_CSR_MICECT),   "r" (value) /* input : immediate, register */
+                      : /* clobbers: none */);
+    __asm__ volatile ("csrw    %0, %1"
+                      : /* output: none */
+                      : "i" (VEER_CSR_MICCMECT), "r" (value) /* input : immediate, register */
+                      : /* clobbers: none */);
+    __asm__ volatile ("csrw    %0, %1"
+                      : /* output: none */
+                      : "i" (VEER_CSR_MDCCMECT), "r" (value) /* input : immediate, register */
+                      : /* clobbers: none */);
+
     // MIE
     // Enable MIE.MEI (External Interrupts)
-    // Do not enable Timer or SW Interrupts
-    csr_set_bits_mie(MIE_MEI_BIT_MASK);
+    // Enable MIE.MTI (Timer Interrupts)
+    // Enable MIE.MCEI (Correctable Error Interrupt)
+    // Do not enable SW Interrupts
+    csr_set_bits_mie(MIE_MEI_BIT_MASK | MIE_MTI_BIT_MASK | MIE_MCEI_BIT_MASK);
 
     // Global interrupt enable
     csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
@@ -333,11 +364,22 @@ void init_interrupts(void) {
 
 void std_rv_nop_machine(void)  {
     // Nop machine mode interrupt.
-    VPRINTF(HIGH,"nop\n");
+    VPRINTF(HIGH,"mcause:%x\n", csr_read_mcause());
     return;
 }
 
-void std_rv_mtvec_miti0(void) {
+void std_rv_mtvec_mti(void) {
+    volatile uint32_t * const mtimecmp_l     = (uint32_t*) CLP_SOC_IFC_REG_INTERNAL_RV_MTIMECMP_L;
+    volatile uint32_t * const mtimecmp_h     = (uint32_t*) CLP_SOC_IFC_REG_INTERNAL_RV_MTIMECMP_H;
+
+    // Set mtimecmp to max value to avoid further timer interrupts
+    *mtimecmp_l = 0xFFFFFFFF;
+    *mtimecmp_h = 0xFFFFFFFF;
+
+    VPRINTF(MEDIUM, "Done handling machine-mode TIMER interrupt\n");
+}
+
+void nonstd_veer_mtvec_miti0(void) {
     uint_xlen_t value;
     //Disable internal timer 0 count en to service intr
     __asm__ volatile ("csrwi %0, %1" \
@@ -345,6 +387,23 @@ void std_rv_mtvec_miti0(void) {
                       : "i" (0x7d4), "i" (0x00) /* input : immediate */ \
                       : /* clobbers : none */);
 
+}
+
+void nonstd_veer_mtvec_mcei(void) {
+    uint32_t mask = 0x07FFFFFF;
+    VPRINTF(HIGH,"Cor Error Local ISR\n");
+    __asm__ volatile ("csrc    %0, %1"
+                      : /* output: none */
+                      : "i" (VEER_CSR_MICECT),   "r" (mask) /* input : immediate, register */
+                      : /* clobbers: none */);
+    __asm__ volatile ("csrc    %0, %1"
+                      : /* output: none */
+                      : "i" (VEER_CSR_MICCMECT), "r" (mask) /* input : immediate, register */
+                      : /* clobbers: none */);
+    __asm__ volatile ("csrc    %0, %1"
+                      : /* output: none */
+                      : "i" (VEER_CSR_MDCCMECT), "r" (mask) /* input : immediate, register */
+                      : /* clobbers: none */);
 }
 
 static void std_rv_isr(void) {
@@ -381,7 +440,7 @@ static void std_rv_isr(void) {
                                   : "i" (VEER_CSR_MEIHAP) /* input : immediate */
                                   : /* clobbers: none */);
                 // Call the ID-specific handler
-                isr(); // ISR here is a function pointer indexed into the mtvec table
+                isr(); // ISR here is a function pointer indexed into the meivt table
                     // For Interrupt NESTING support, the handler should:
                     //  * Save meicurpl
                     //  * Read meicidpl
@@ -400,9 +459,9 @@ static void std_rv_isr(void) {
         switch (this_cause) {
         case RISCV_EXCP_LOAD_ACCESS_FAULT :
             // mscause
-            __asm__ volatile ("csrr    %0, 0x7ff"
+            __asm__ volatile ("csrr    %0, %1"
                               : "=r" (this_cause)  /* output : register */
-                              : /* input : none */
+                              : "i" (VEER_CSR_MSCAUSE) /* input : immediate */
                               : /* clobbers: none */);
             VPRINTF(LOW,"mscause:%x\n",this_cause);
             // mepc
@@ -440,7 +499,9 @@ static void std_rv_isr_vector_table(void) {
         ".org  std_rv_isr_vector_table + 11*4;"
         "jal   zero,std_rv_mtvec_mei;"  /* 11 */
         ".org  std_rv_isr_vector_table + 29*4;"
-        "jal   zero,std_rv_mtvec_miti0;" /* 29 */
+        "jal   zero,nonstd_veer_mtvec_miti0;" /* 29 */
+        ".org  std_rv_isr_vector_table + 30*4;"
+        "jal   zero,nonstd_veer_mtvec_mcei;" /* 30 */
 //        #ifndef VECTOR_TABLE_MTVEC_PLATFORM_INTS
 //        ".org  std_rv_isr_vector_table + 16*4;"
 //        "jal   std_rv_mtvec_platform_irq0;"
@@ -473,40 +534,84 @@ void std_rv_mtvec_exception(void) {
     VPRINTF(WARNING,"In:Std Excptn\nmcause:%x\n", this_cause);
     if (this_cause &  MCAUSE_INTERRUPT_BIT_MASK) {
         VPRINTF(ERROR,"Unexpected Intr bit:%x\n", 0xFFFFFFFF);
+        SEND_STDOUT_CTRL(0x1); // KILL THE SIMULATION with "ERROR"
     } else {
+        uint_xlen_t tmp_reg;
+
+        // mscause
+        __asm__ volatile ("csrr    %0, %1"
+                          : "=r" (tmp_reg)  /* output : register */
+                          : "i" (VEER_CSR_MSCAUSE) /* input : immediate */
+                          : /* clobbers: none */);
+        VPRINTF(LOW,"mscause:%x\n",tmp_reg);
+        #ifdef RV_EXCEPTION_STRUCT
+        SEND_STDOUT_CTRL(0xe4); // Disable ECC Error injection, if enabled, to allow exc_flag writes (which may be in DCCM) without corruption
+        __asm__ volatile ("fence.i");
+        exc_flag.exception_hit = 1;
+        exc_flag.mcause = this_cause;
+        exc_flag.mscause = tmp_reg;
+        #endif
+        // mepc
+        tmp_reg = csr_read_mepc();
+        VPRINTF(LOW,"mepc:%x\n",tmp_reg);
+        // mtval
+        tmp_reg = csr_read_mtval();
+        VPRINTF(LOW,"mtval:%x\n",tmp_reg);
+
         switch (this_cause) {
         case RISCV_EXCP_LOAD_ACCESS_FAULT :
-            // mscause
-            __asm__ volatile ("csrr    %0, 0x7ff"
-                              : "=r" (this_cause)  /* output : register */
-                              : /* input : none */
-                              : /* clobbers: none */);
-            VPRINTF(LOW,"mscause:%x\n",this_cause);
-            // mepc
-            this_cause = csr_read_mepc();
-            VPRINTF(LOW,"mepc:%x\n",this_cause);
-            // mtval
-            this_cause = csr_read_mtval();
-            VPRINTF(LOW,"mtval:%x\n",this_cause);
+            #ifdef RV_EXCEPTION_STRUCT
+            if (exc_flag.mscause == RISC_EXCP_MSCAUSE_DCCM_LOAD_UNC_ECC_ERR) {
+                // Increment mepc before returning, because repeating the previously
+                // failing command will cause an infinite loop back to this ISR.
+                tmp_reg = csr_read_mepc();
+                csr_write_mepc(tmp_reg + 4); // FIXME this has no guarantee of working. E.g. Compressed instructions are 2, not 4, bytes...
+
+                // Bail immediately instead of killing the sim.
+                // Caliptra RESET is expected due to FATAL Error, but if it's
+                // masked the originating test should decide what to do.
+                SEND_STDOUT_CTRL(0xfc); //FIXME
+                return;
+            }
+            #endif
+            break;
+        case RISCV_EXCP_STORE_AMO_ACCESS_FAULT :
+            #ifdef RV_EXCEPTION_STRUCT
+            if (exc_flag.mscause == RISC_EXCP_MSCAUSE_DCCM_STOR_UNC_ECC_ERR) {
+                // Bail immediately instead of killing the sim.
+                // Caliptra RESET is expected due to FATAL Error, but if it's
+                // masked the originating test should decide what to do.
+                SEND_STDOUT_CTRL(0xfc); //FIXME
+                return;
+            }
+            #endif
+            break;
+        case RISCV_EXCP_INSTRUCTION_ACCESS_FAULT :
+            #ifdef RV_EXCEPTION_STRUCT
+            if (exc_flag.mscause == RISC_EXCP_MSCAUSE_ICCM_INST_UNC_ECC_ERR) {
+                SEND_STDOUT_CTRL(0xfc); //FIXME
+
+                // Reset uC instead of killing the sim.
+                // Caliptra RESET is expected due to FATAL Error, but if it's
+                // masked the originating test won't be able to make progress
+                // after this routine returns.
+
+                // If the FATAL Error bit for ICCM ECC Error is masked, manually trigger firmware reset
+                if (lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK) & SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_ICCM_ECC_UNC_MASK) {
+                    VPRINTF(LOW, "ICCM ECC FATAL_ERROR bit is masked, no reset expected from TB: resetting the core manually!\n");
+                    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET, SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK);
+                // Otherwise, wait for core reset
+                } else {
+                    VPRINTF(LOW, "ICCM ECC FATAL_ERROR bit is not masked, waiting for reset from TB!\n");
+                    while(1);
+                }
+
+            }
+            #endif
             break;
         case RISCV_EXCP_ILLEGAL_INSTRUCTION :
-            // mscause
-            __asm__ volatile ("csrr    %0, 0x7ff"
-                              : "=r" (this_cause)  /* output : register */
-                              : /* input : none */
-                              : /* clobbers: none */);
-            VPRINTF(LOW,"mscause:%x\n",this_cause);
-            // mepc
-            this_cause = csr_read_mepc();
-            VPRINTF(LOW,"mepc:%x\n",this_cause);
-            // mtval
-            this_cause = csr_read_mtval();
-            VPRINTF(LOW,"mtval:%x\n",this_cause);
             break;
         default :
-            // mepc
-            this_cause = csr_read_mepc();
-            VPRINTF(LOW,"mepc:%x\n",this_cause);
             break;
         }
     }
@@ -642,18 +747,20 @@ nonstd_veer_isr(sha512_notif)
 nonstd_veer_isr(sha256_error)
 // Non-Standard Vectored Interrupt Handler (SHA256 Notification = vector 12)
 nonstd_veer_isr(sha256_notif)
-// Non-Standard Vectored Interrupt Handler (QSPI Error = vector 13)
-nonstd_veer_isr(qspi_error)
-// Non-Standard Vectored Interrupt Handler (QSPI Notification = vector 14)
-nonstd_veer_isr(qspi_notif)
-// Non-Standard Vectored Interrupt Handler (UART Error = vector 15)
-nonstd_veer_isr(uart_error)
-// Non-Standard Vectored Interrupt Handler (UART Notification = vector 16)
-nonstd_veer_isr(uart_notif)
-// Non-Standard Vectored Interrupt Handler (I3C Error = vector 17)
-nonstd_veer_isr(i3c_error)
-// Non-Standard Vectored Interrupt Handler (I3C Notification = vector 18)
-nonstd_veer_isr(i3c_notif)
+/********************** Save FW image space by omitting these unused ISR ******
+ * // Non-Standard Vectored Interrupt Handler (QSPI Error = vector 13)          //
+ * nonstd_veer_isr(qspi_error)                                                  //
+ * // Non-Standard Vectored Interrupt Handler (QSPI Notification = vector 14)   //
+ * nonstd_veer_isr(qspi_notif)                                                  //
+ * // Non-Standard Vectored Interrupt Handler (UART Error = vector 15)          //
+ * nonstd_veer_isr(uart_error)                                                  //
+ * // Non-Standard Vectored Interrupt Handler (UART Notification = vector 16)   //
+ * nonstd_veer_isr(uart_notif)                                                  //
+ * // Non-Standard Vectored Interrupt Handler (I3C Error = vector 17)           //
+ * nonstd_veer_isr(i3c_error)                                                   //
+ * // Non-Standard Vectored Interrupt Handler (I3C Notification = vector 18)    //
+ * nonstd_veer_isr(i3c_notif)                                                   //
+******************************************************************************/
 // Non-Standard Vectored Interrupt Handler (SOC_IFC Error = vector 19)
 nonstd_veer_isr(soc_ifc_error)
 // Non-Standard Vectored Interrupt Handler (SOC_IFC Notification = vector 20)

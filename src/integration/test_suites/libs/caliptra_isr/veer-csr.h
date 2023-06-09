@@ -23,12 +23,27 @@
 //////////////////////////////////////////////////////////////////////////////
 // Non-Standard VeeR CSR offset macros
 //
+#define VEER_CSR_MICECT   0x7F0
+#define VEER_CSR_MICCMECT 0x7F1
+#define VEER_CSR_MDCCMECT 0x7F2
+#define VEER_CSR_MSCAUSE  0x7FF
 #define VEER_CSR_MEIVT    0xBC8
 #define VEER_CSR_MEIPT    0xBC9
 #define VEER_CSR_MEICPCT  0xBCA
 #define VEER_CSR_MEICIDPL 0xBCB
 #define VEER_CSR_MEICURPL 0xBCC
 #define VEER_CSR_MEIHAP   0xFC8
+
+
+//////////////////////////////////////////////////////////////////////////////
+// VeeR MSCAUSE encoding
+//
+// From Table 2-10, VeeR EL2 PRM, Rev 1.4
+enum {
+    RISC_EXCP_MSCAUSE_ICCM_INST_UNC_ECC_ERR = 0x1,
+    RISC_EXCP_MSCAUSE_DCCM_LOAD_UNC_ECC_ERR = 0x1,
+    RISC_EXCP_MSCAUSE_DCCM_STOR_UNC_ECC_ERR = 0x1,
+};
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -98,6 +113,17 @@ static inline uint_xlen_t csr_read_write_mdeau(uint_xlen_t new_value) {
                       : /* clobbers: none */);
     return prev_value;
 }
+
+
+//////////////////////////////////////////////////////////////////////////////
+// VeeR Core-Specific MIE/MIP values
+//
+#define MIE_MCEI_BIT_OFFSET   30
+#define MIE_MCEI_BIT_WIDTH    1
+#define MIE_MCEI_BIT_MASK     0x40000000
+#define MIP_MCEI_BIT_OFFSET   30
+#define MIP_MCEI_BIT_WIDTH    1
+#define MIP_MCEI_BIT_MASK     0x40000000
 
 
 #endif // #define VEER_CSR_H

@@ -181,6 +181,10 @@ task soc_ifc_env_sha_accel_sequence::sha_accel_acquire_lock(output op_sts_e op_s
         reg_model.sha512_acc_csr_rm.LOCK.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
         report_reg_sts(reg_sts, "LOCK");
     end
+    //Read the lock again to test predictor
+    configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200); // FIXME add more randomization on delay
+    reg_model.sha512_acc_csr_rm.LOCK.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    report_reg_sts(reg_sts, "LOCK");
     op_sts = CPTRA_SUCCESS;
 endtask
 
@@ -197,6 +201,14 @@ task soc_ifc_env_sha_accel_sequence::sha_accel_set_cmd(input sha_accel_op_s op);
 
     reg_model.sha512_acc_csr_rm.DLEN.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
     report_reg_sts(reg_sts, "DLEN");
+
+    //read back some fields to test predictor
+    reg_model.sha512_acc_csr_rm.USER.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    report_reg_sts(reg_sts, "USER");
+    reg_model.sha512_acc_csr_rm.MODE.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    report_reg_sts(reg_sts, "MODE");
+    reg_model.sha512_acc_csr_rm.DLEN.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    report_reg_sts(reg_sts, "DLEN");  
 endtask
 
 task soc_ifc_env_sha_accel_sequence::sha_accel_push_datain(reg [3199:0][31:0] sha_block_data);

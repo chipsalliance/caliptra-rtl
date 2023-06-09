@@ -14,12 +14,79 @@
 //
 
 import el2_pkg::*;
-module caliptra_veer_sram_export #(
+module caliptra_veer_sram_export import caliptra_top_tb_pkg::*; #(
     `include "el2_param.vh"
 ) (
+    // Decode:
+    //  [0] - Single bit, ICCM Error Injection
+    //  [1] - Double bit, ICCM Error Injection
+    //  [2] - Single bit, DCCM Error Injection
+    //  [3] - Double bit, DCCM Error Injection
+    input veer_sram_error_injection_mode_t sram_error_injection_mode,
     el2_mem_if.top el2_mem_export
 );
 
+//////////////////////////////////////////////////////
+// Sim-only Error Injection for ICCM/DCCM
+//
+    bit   [pt.ICCM_NUM_BANKS-1:0]          iccm_flip_bit;
+    bit   [pt.DCCM_NUM_BANKS-1:0]          dccm_flip_bit;
+    logic [pt.ICCM_NUM_BANKS-1:0] [39-1:0] iccm_sram_wdata_bitflip;
+    logic [pt.DCCM_NUM_BANKS-1:0] [39-1:0] dccm_sram_wdata_bitflip;
+    int ii,jj,kk,ll;
+
+    `ifndef VERILATOR
+        initial begin
+            bitflip_mask_generator #(39) iccm_bitflip_gen = new();
+            bitflip_mask_generator #(39) dccm_bitflip_gen = new();
+            forever begin
+                @(posedge el2_mem_export.clk)
+                if (~sram_error_injection_mode.iccm_single_bit_error && ~sram_error_injection_mode.iccm_double_bit_error) begin
+                    iccm_sram_wdata_bitflip <= '{default:0};
+                end
+                else if (el2_mem_export.iccm_clken & el2_mem_export.iccm_wren_bank) begin
+                    // Corrupt 50% of the writes
+                    for (ii = 0; ii < pt.ICCM_NUM_BANKS; ii++) begin
+                        iccm_flip_bit[ii] = 1'($urandom_range(0,99) < 50);
+                        iccm_sram_wdata_bitflip[ii] <= iccm_flip_bit[ii] ? iccm_bitflip_gen.get_mask(sram_error_injection_mode.iccm_double_bit_error) : '0;
+                    end
+                end
+                if (~sram_error_injection_mode.dccm_single_bit_error && ~sram_error_injection_mode.dccm_double_bit_error) begin
+                    dccm_sram_wdata_bitflip <= '{default:0};
+                end
+                else if (el2_mem_export.dccm_clken & el2_mem_export.dccm_wren_bank) begin
+                    // Corrupt 50% of the writes
+                    for (jj = 0; jj < pt.DCCM_NUM_BANKS; jj++) begin
+                        dccm_flip_bit[jj] = 1'($urandom_range(0,99) < 50);
+                        dccm_sram_wdata_bitflip[jj] <= dccm_flip_bit[jj] ? dccm_bitflip_gen.get_mask(sram_error_injection_mode.dccm_double_bit_error) : '0;
+                    end
+                end
+            end
+        end
+    `else
+        always @(posedge el2_mem_export.clk) begin
+            // Corrupt 50% of the writes
+            if ((~sram_error_injection_mode.iccm_single_bit_error && ~sram_error_injection_mode.iccm_double_bit_error)) begin
+                iccm_sram_wdata_bitflip <= '{default:0};
+            end
+            else if (el2_mem_export.iccm_clken & el2_mem_export.iccm_wren_bank) begin
+                for (kk = 0; kk < pt.ICCM_NUM_BANKS; kk++) begin
+                    iccm_flip_bit[kk] <= ($urandom % 100) < 50;
+                    iccm_sram_wdata_bitflip[kk] <= iccm_flip_bit[kk] ? get_bitflip_mask(sram_error_injection_mode.iccm_double_bit_error) : '0;
+                end
+            end
+            // Corrupt 50% of the writes
+            if ((~sram_error_injection_mode.dccm_single_bit_error && ~sram_error_injection_mode.dccm_double_bit_error)) begin
+                dccm_sram_wdata_bitflip <= '{default:0};
+            end
+            else if (el2_mem_export.dccm_clken & el2_mem_export.dccm_wren_bank) begin
+                for (ll = 0; ll < pt.DCCM_NUM_BANKS; ll++) begin
+                    dccm_flip_bit[ll] <= ($urandom % 100) < 50;
+                    dccm_sram_wdata_bitflip[ll] <= dccm_flip_bit[ll] ? get_bitflip_mask(sram_error_injection_mode.dccm_double_bit_error) : '0;
+                end
+            end
+        end
+    `endif
 
 //////////////////////////////////////////////////////
 // DCCM
@@ -46,7 +113,7 @@ for (genvar i=0; i<pt.DCCM_NUM_BANKS; i++) begin: dccm_loop
                                   .CLK (el2_mem_export.clk                                            ),
                                   .WE  (el2_mem_export.dccm_wren_bank[i]                              ),
                                   .ADR (el2_mem_export.dccm_addr_bank[i]                              ),
-                                  .D   (el2_mem_export.dccm_wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]  ),
+                                  .D   (el2_mem_export.dccm_wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]  ^ dccm_sram_wdata_bitflip[i]),
                                   .Q   (el2_mem_export.dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0]     ),
                                   .ROP (                                                              ),
                                   // These are used by SoC
@@ -62,7 +129,7 @@ for (genvar i=0; i<pt.DCCM_NUM_BANKS; i++) begin: dccm_loop
                                   .CLK (el2_mem_export.clk                                            ),
                                   .WE  (el2_mem_export.dccm_wren_bank[i]                              ),
                                   .ADR (el2_mem_export.dccm_addr_bank[i]                              ),
-                                  .D   (el2_mem_export.dccm_wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]  ),
+                                  .D   (el2_mem_export.dccm_wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]  ^ dccm_sram_wdata_bitflip[i]),
                                   .Q   (el2_mem_export.dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0]     ),
                                   .ROP (                                                              ),
                                   // These are used by SoC
@@ -77,7 +144,7 @@ for (genvar i=0; i<pt.DCCM_NUM_BANKS; i++) begin: dccm_loop
                                   .CLK (el2_mem_export.clk                                            ),
                                   .WE  (el2_mem_export.dccm_wren_bank[i]                              ),
                                   .ADR (el2_mem_export.dccm_addr_bank[i]                              ),
-                                  .D   (el2_mem_export.dccm_wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]  ),
+                                  .D   (el2_mem_export.dccm_wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]  ^ dccm_sram_wdata_bitflip[i]),
                                   .Q   (el2_mem_export.dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0]     ),
                                   .ROP (                                                              ),
                                   // These are used by SoC
@@ -92,7 +159,7 @@ for (genvar i=0; i<pt.DCCM_NUM_BANKS; i++) begin: dccm_loop
                                  .CLK (el2_mem_export.clk                                            ),
                                  .WE  (el2_mem_export.dccm_wren_bank[i]                              ),
                                  .ADR (el2_mem_export.dccm_addr_bank[i]                              ),
-                                 .D   (el2_mem_export.dccm_wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]  ),
+                                 .D   (el2_mem_export.dccm_wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]  ^ dccm_sram_wdata_bitflip[i]),
                                  .Q   (el2_mem_export.dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0]     ),
                                  .ROP (                                                              ),
                                  // These are used by SoC
@@ -107,7 +174,7 @@ for (genvar i=0; i<pt.DCCM_NUM_BANKS; i++) begin: dccm_loop
                                  .CLK (el2_mem_export.clk                                            ),
                                  .WE  (el2_mem_export.dccm_wren_bank[i]                              ),
                                  .ADR (el2_mem_export.dccm_addr_bank[i]                              ),
-                                 .D   (el2_mem_export.dccm_wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]  ),
+                                 .D   (el2_mem_export.dccm_wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]  ^ dccm_sram_wdata_bitflip[i]),
                                  .Q   (el2_mem_export.dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0]     ),
                                  .ROP (                                                              ),
                                  // These are used by SoC
@@ -122,7 +189,7 @@ for (genvar i=0; i<pt.DCCM_NUM_BANKS; i++) begin: dccm_loop
                                  .CLK (el2_mem_export.clk                                            ),
                                  .WE  (el2_mem_export.dccm_wren_bank[i]                              ),
                                  .ADR (el2_mem_export.dccm_addr_bank[i]                              ),
-                                 .D   (el2_mem_export.dccm_wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]  ),
+                                 .D   (el2_mem_export.dccm_wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]  ^ dccm_sram_wdata_bitflip[i]),
                                  .Q   (el2_mem_export.dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0]     ),
                                  .ROP (                                                              ),
                                  // These are used by SoC
@@ -137,7 +204,7 @@ for (genvar i=0; i<pt.DCCM_NUM_BANKS; i++) begin: dccm_loop
                                  .CLK (el2_mem_export.clk                                            ),
                                  .WE  (el2_mem_export.dccm_wren_bank[i]                              ),
                                  .ADR (el2_mem_export.dccm_addr_bank[i]                              ),
-                                 .D   (el2_mem_export.dccm_wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]  ),
+                                 .D   (el2_mem_export.dccm_wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]  ^ dccm_sram_wdata_bitflip[i]),
                                  .Q   (el2_mem_export.dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0]     ),
                                  .ROP (                                                              ),
                                  // These are used by SoC
@@ -152,7 +219,7 @@ for (genvar i=0; i<pt.DCCM_NUM_BANKS; i++) begin: dccm_loop
                                  .CLK (el2_mem_export.clk                                            ),
                                  .WE  (el2_mem_export.dccm_wren_bank[i]                              ),
                                  .ADR (el2_mem_export.dccm_addr_bank[i]                              ),
-                                 .D   (el2_mem_export.dccm_wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]  ),
+                                 .D   (el2_mem_export.dccm_wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]  ^ dccm_sram_wdata_bitflip[i]),
                                  .Q   (el2_mem_export.dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0]     ),
                                  .ROP (                                                              ),
                                  // These are used by SoC
@@ -167,7 +234,7 @@ for (genvar i=0; i<pt.DCCM_NUM_BANKS; i++) begin: dccm_loop
                                 .CLK (el2_mem_export.clk                                            ),
                                 .WE  (el2_mem_export.dccm_wren_bank[i]                              ),
                                 .ADR (el2_mem_export.dccm_addr_bank[i]                              ),
-                                .D   (el2_mem_export.dccm_wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]  ),
+                                .D   (el2_mem_export.dccm_wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]  ^ dccm_sram_wdata_bitflip[i]),
                                 .Q   (el2_mem_export.dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0]     ),
                                 .ROP (                                                              ),
                                 // These are used by SoC
@@ -182,7 +249,7 @@ for (genvar i=0; i<pt.DCCM_NUM_BANKS; i++) begin: dccm_loop
                                 .CLK (el2_mem_export.clk                                            ),
                                 .WE  (el2_mem_export.dccm_wren_bank[i]                              ),
                                 .ADR (el2_mem_export.dccm_addr_bank[i]                              ),
-                                .D   (el2_mem_export.dccm_wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]  ),
+                                .D   (el2_mem_export.dccm_wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]  ^ dccm_sram_wdata_bitflip[i]),
                                 .Q   (el2_mem_export.dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0]     ),
                                 .ROP (                                                              ),
                                 // These are used by SoC
@@ -197,7 +264,7 @@ for (genvar i=0; i<pt.DCCM_NUM_BANKS; i++) begin: dccm_loop
                                 .CLK (el2_mem_export.clk                                            ),
                                 .WE  (el2_mem_export.dccm_wren_bank[i]                              ),
                                 .ADR (el2_mem_export.dccm_addr_bank[i]                              ),
-                                .D   (el2_mem_export.dccm_wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]  ),
+                                .D   (el2_mem_export.dccm_wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:0]  ^ dccm_sram_wdata_bitflip[i]),
                                 .Q   (el2_mem_export.dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0]     ),
                                 .ROP (                                                              ),
                                 // These are used by SoC
@@ -223,7 +290,7 @@ for (genvar i=0; i<pt.ICCM_NUM_BANKS; i++) begin: iccm_loop
                                      .CLK (el2_mem_export.clk                       ),
                                      .WE  (el2_mem_export.iccm_wren_bank[i]         ),
                                      .ADR (el2_mem_export.iccm_addr_bank[i]         ),
-                                     .D   (el2_mem_export.iccm_bank_wr_data[i][38:0]),
+                                     .D   (el2_mem_export.iccm_bank_wr_data[i][38:0] ^ iccm_sram_wdata_bitflip[i]),
                                      .Q   (el2_mem_export.iccm_bank_dout[i][38:0]   ),
                                      .ROP (                                         ),
                                      // These are used by SoC
@@ -247,7 +314,7 @@ for (genvar i=0; i<pt.ICCM_NUM_BANKS; i++) begin: iccm_loop
                                      .ME  (el2_mem_export.iccm_clken[i]             ),
                                      .WE  (el2_mem_export.iccm_wren_bank[i]         ),
                                      .ADR (el2_mem_export.iccm_addr_bank[i]         ),
-                                     .D   (el2_mem_export.iccm_bank_wr_data[i][38:0]),
+                                     .D   (el2_mem_export.iccm_bank_wr_data[i][38:0] ^ iccm_sram_wdata_bitflip[i]),
                                      .Q   (el2_mem_export.iccm_bank_dout[i][38:0]   ),
                                      .ROP (                                         ),
                                      // These are used by SoC
@@ -271,7 +338,7 @@ for (genvar i=0; i<pt.ICCM_NUM_BANKS; i++) begin: iccm_loop
                                      .ME  (el2_mem_export.iccm_clken[i]             ),
                                      .WE  (el2_mem_export.iccm_wren_bank[i]         ),
                                      .ADR (el2_mem_export.iccm_addr_bank[i]         ),
-                                     .D   (el2_mem_export.iccm_bank_wr_data[i][38:0]),
+                                     .D   (el2_mem_export.iccm_bank_wr_data[i][38:0] ^ iccm_sram_wdata_bitflip[i]),
                                      .Q   (el2_mem_export.iccm_bank_dout[i][38:0]   ),
                                      .ROP (                                         ),
                                      // These are used by SoC
@@ -295,7 +362,7 @@ for (genvar i=0; i<pt.ICCM_NUM_BANKS; i++) begin: iccm_loop
                                      .ME  (el2_mem_export.iccm_clken[i]             ),
                                      .WE  (el2_mem_export.iccm_wren_bank[i]         ),
                                      .ADR (el2_mem_export.iccm_addr_bank[i]         ),
-                                     .D   (el2_mem_export.iccm_bank_wr_data[i][38:0]),
+                                     .D   (el2_mem_export.iccm_bank_wr_data[i][38:0] ^ iccm_sram_wdata_bitflip[i]),
                                      .Q   (el2_mem_export.iccm_bank_dout[i][38:0]   ),
                                      .ROP (                                         ),
                                      // These are used by SoC
@@ -318,7 +385,7 @@ for (genvar i=0; i<pt.ICCM_NUM_BANKS; i++) begin: iccm_loop
                                      .ME  (el2_mem_export.iccm_clken[i]             ),
                                      .WE  (el2_mem_export.iccm_wren_bank[i]         ),
                                      .ADR (el2_mem_export.iccm_addr_bank[i]         ),
-                                     .D   (el2_mem_export.iccm_bank_wr_data[i][38:0]),
+                                     .D   (el2_mem_export.iccm_bank_wr_data[i][38:0] ^ iccm_sram_wdata_bitflip[i]),
                                      .Q   (el2_mem_export.iccm_bank_dout[i][38:0]   ),
                                      .ROP (                                         ),
                                      // These are used by SoC
@@ -341,7 +408,7 @@ for (genvar i=0; i<pt.ICCM_NUM_BANKS; i++) begin: iccm_loop
                                      .ME  (el2_mem_export.iccm_clken[i]             ),
                                      .WE  (el2_mem_export.iccm_wren_bank[i]         ),
                                      .ADR (el2_mem_export.iccm_addr_bank[i]         ),
-                                     .D   (el2_mem_export.iccm_bank_wr_data[i][38:0]),
+                                     .D   (el2_mem_export.iccm_bank_wr_data[i][38:0] ^ iccm_sram_wdata_bitflip[i]),
                                      .Q   (el2_mem_export.iccm_bank_dout[i][38:0]   ),
                                      .ROP (                                         ),
                                      // These are used by SoC
@@ -364,7 +431,7 @@ for (genvar i=0; i<pt.ICCM_NUM_BANKS; i++) begin: iccm_loop
                                      .ME  (el2_mem_export.iccm_clken[i]             ),
                                      .WE  (el2_mem_export.iccm_wren_bank[i]         ),
                                      .ADR (el2_mem_export.iccm_addr_bank[i]         ),
-                                     .D   (el2_mem_export.iccm_bank_wr_data[i][38:0]),
+                                     .D   (el2_mem_export.iccm_bank_wr_data[i][38:0] ^ iccm_sram_wdata_bitflip[i]),
                                      .Q   (el2_mem_export.iccm_bank_dout[i][38:0]   ),
                                      .ROP (                                         ),
                                      // These are used by SoC
@@ -387,7 +454,7 @@ for (genvar i=0; i<pt.ICCM_NUM_BANKS; i++) begin: iccm_loop
                                      .ME  (el2_mem_export.iccm_clken[i]             ),
                                      .WE  (el2_mem_export.iccm_wren_bank[i]         ),
                                      .ADR (el2_mem_export.iccm_addr_bank[i]         ),
-                                     .D   (el2_mem_export.iccm_bank_wr_data[i][38:0]),
+                                     .D   (el2_mem_export.iccm_bank_wr_data[i][38:0] ^ iccm_sram_wdata_bitflip[i]),
                                      .Q   (el2_mem_export.iccm_bank_dout[i][38:0]   ),
                                      .ROP (                                         ),
                                      // These are used by SoC
@@ -410,7 +477,7 @@ for (genvar i=0; i<pt.ICCM_NUM_BANKS; i++) begin: iccm_loop
                                      .ME  (el2_mem_export.iccm_clken[i]             ),
                                      .WE  (el2_mem_export.iccm_wren_bank[i]         ),
                                      .ADR (el2_mem_export.iccm_addr_bank[i]         ),
-                                     .D   (el2_mem_export.iccm_bank_wr_data[i][38:0]),
+                                     .D   (el2_mem_export.iccm_bank_wr_data[i][38:0] ^ iccm_sram_wdata_bitflip[i]),
                                      .Q   (el2_mem_export.iccm_bank_dout[i][38:0]   ),
                                      .ROP (                                         ),
                                      // These are used by SoC
@@ -433,7 +500,7 @@ for (genvar i=0; i<pt.ICCM_NUM_BANKS; i++) begin: iccm_loop
                                      .ME  (el2_mem_export.iccm_clken[i]             ),
                                      .WE  (el2_mem_export.iccm_wren_bank[i]         ),
                                      .ADR (el2_mem_export.iccm_addr_bank[i]         ),
-                                     .D   (el2_mem_export.iccm_bank_wr_data[i][38:0]),
+                                     .D   (el2_mem_export.iccm_bank_wr_data[i][38:0] ^ iccm_sram_wdata_bitflip[i]),
                                      .Q   (el2_mem_export.iccm_bank_dout[i][38:0]   ),
                                      .ROP (                                         ),
                                      // These are used by SoC
@@ -456,7 +523,7 @@ for (genvar i=0; i<pt.ICCM_NUM_BANKS; i++) begin: iccm_loop
                                      .ME  (el2_mem_export.iccm_clken[i]             ),
                                      .WE  (el2_mem_export.iccm_wren_bank[i]         ),
                                      .ADR (el2_mem_export.iccm_addr_bank[i]         ),
-                                     .D   (el2_mem_export.iccm_bank_wr_data[i][38:0]),
+                                     .D   (el2_mem_export.iccm_bank_wr_data[i][38:0] ^ iccm_sram_wdata_bitflip[i]),
                                      .Q   (el2_mem_export.iccm_bank_dout[i][38:0]   ),
                                      .ROP (                                         ),
                                      // These are used by SoC

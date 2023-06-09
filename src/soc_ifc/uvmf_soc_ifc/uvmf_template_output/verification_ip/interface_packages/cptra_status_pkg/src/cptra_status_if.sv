@@ -42,7 +42,9 @@
 // .dut_signal_port(cptra_status_bus.soc_ifc_notif_intr), // Agent output 
 // .dut_signal_port(cptra_status_bus.sha_error_intr), // Agent output 
 // .dut_signal_port(cptra_status_bus.sha_notif_intr), // Agent output 
+// .dut_signal_port(cptra_status_bus.timer_intr), // Agent output 
 // .dut_signal_port(cptra_status_bus.nmi_vector), // Agent output 
+// .dut_signal_port(cptra_status_bus.nmi_intr), // Agent output 
 // .dut_signal_port(cptra_status_bus.iccm_lock), // Agent output 
 
 import uvmf_base_pkg_hdl::*;
@@ -62,7 +64,9 @@ interface  cptra_status_if
   inout tri  soc_ifc_notif_intr,
   inout tri  sha_error_intr,
   inout tri  sha_notif_intr,
+  inout tri  timer_intr,
   inout tri [31:0] nmi_vector,
+  inout tri  nmi_intr,
   inout tri  iccm_lock
   );
 
@@ -79,7 +83,9 @@ modport monitor_port
   input soc_ifc_notif_intr,
   input sha_error_intr,
   input sha_notif_intr,
+  input timer_intr,
   input nmi_vector,
+  input nmi_intr,
   input iccm_lock
   );
 
@@ -96,7 +102,9 @@ modport initiator_port
   output soc_ifc_notif_intr,
   output sha_error_intr,
   output sha_notif_intr,
+  output timer_intr,
   output nmi_vector,
+  output nmi_intr,
   output iccm_lock
   );
 
@@ -113,7 +121,9 @@ modport responder_port
   input soc_ifc_notif_intr,
   input sha_error_intr,
   input sha_notif_intr,
+  input timer_intr,
   input nmi_vector,
+  input nmi_intr,
   input iccm_lock
   );
   

@@ -67,12 +67,14 @@ typedef struct packed  { \
   bit soc_ifc_notif_intr_pending ; \
   bit sha_err_intr_pending ; \
   bit sha_notif_intr_pending ; \
+  bit timer_intr_pending ; \
   bit noncore_rst_asserted ; \
   bit uc_rst_asserted ; \
   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg ; \
   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] obf_field_entropy ; \
   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] obf_uds_seed ; \
   bit [31:0] nmi_vector ; \
+  bit nmi_intr_pending ; \
   bit iccm_locked ; \
      } cptra_status_monitor_s;
 
@@ -84,12 +86,14 @@ typedef struct packed  { \
             this.soc_ifc_notif_intr_pending , \
             this.sha_err_intr_pending , \
             this.sha_notif_intr_pending , \
+            this.timer_intr_pending , \
             this.noncore_rst_asserted , \
             this.uc_rst_asserted , \
             this.cptra_obf_key_reg , \
             this.obf_field_entropy , \
             this.obf_uds_seed , \
             this.nmi_vector , \
+            this.nmi_intr_pending , \
             this.iccm_locked  \
             };\
     return ( cptra_status_monitor_struct);\
@@ -102,12 +106,14 @@ typedef struct packed  { \
             this.soc_ifc_notif_intr_pending , \
             this.sha_err_intr_pending , \
             this.sha_notif_intr_pending , \
+            this.timer_intr_pending , \
             this.noncore_rst_asserted , \
             this.uc_rst_asserted , \
             this.cptra_obf_key_reg , \
             this.obf_field_entropy , \
             this.obf_uds_seed , \
             this.nmi_vector , \
+            this.nmi_intr_pending , \
             this.iccm_locked  \
             } = cptra_status_monitor_struct;\
   endfunction
@@ -122,12 +128,14 @@ typedef struct packed  { \
   bit soc_ifc_notif_intr_pending ; \
   bit sha_err_intr_pending ; \
   bit sha_notif_intr_pending ; \
+  bit timer_intr_pending ; \
   bit noncore_rst_asserted ; \
   bit uc_rst_asserted ; \
   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg ; \
   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] obf_field_entropy ; \
   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] obf_uds_seed ; \
   bit [31:0] nmi_vector ; \
+  bit nmi_intr_pending ; \
   bit iccm_locked ; \
      } cptra_status_initiator_s;
 
@@ -139,12 +147,14 @@ typedef struct packed  { \
            this.soc_ifc_notif_intr_pending , \
            this.sha_err_intr_pending , \
            this.sha_notif_intr_pending , \
+           this.timer_intr_pending , \
            this.noncore_rst_asserted , \
            this.uc_rst_asserted , \
            this.cptra_obf_key_reg , \
            this.obf_field_entropy , \
            this.obf_uds_seed , \
            this.nmi_vector , \
+           this.nmi_intr_pending , \
            this.iccm_locked  \
            };\
     return ( cptra_status_initiator_struct);\
@@ -157,12 +167,14 @@ typedef struct packed  { \
            this.soc_ifc_notif_intr_pending , \
            this.sha_err_intr_pending , \
            this.sha_notif_intr_pending , \
+           this.timer_intr_pending , \
            this.noncore_rst_asserted , \
            this.uc_rst_asserted , \
            this.cptra_obf_key_reg , \
            this.obf_field_entropy , \
            this.obf_uds_seed , \
            this.nmi_vector , \
+           this.nmi_intr_pending , \
            this.iccm_locked  \
            } = cptra_status_initiator_struct;\
   endfunction
@@ -177,12 +189,14 @@ typedef struct packed  { \
   bit soc_ifc_notif_intr_pending ; \
   bit sha_err_intr_pending ; \
   bit sha_notif_intr_pending ; \
+  bit timer_intr_pending ; \
   bit noncore_rst_asserted ; \
   bit uc_rst_asserted ; \
   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg ; \
   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] obf_field_entropy ; \
   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] obf_uds_seed ; \
   bit [31:0] nmi_vector ; \
+  bit nmi_intr_pending ; \
   bit iccm_locked ; \
      } cptra_status_responder_s;
 
@@ -194,12 +208,14 @@ typedef struct packed  { \
            this.soc_ifc_notif_intr_pending , \
            this.sha_err_intr_pending , \
            this.sha_notif_intr_pending , \
+           this.timer_intr_pending , \
            this.noncore_rst_asserted , \
            this.uc_rst_asserted , \
            this.cptra_obf_key_reg , \
            this.obf_field_entropy , \
            this.obf_uds_seed , \
            this.nmi_vector , \
+           this.nmi_intr_pending , \
            this.iccm_locked  \
            };\
     return ( cptra_status_responder_struct);\
@@ -212,12 +228,14 @@ typedef struct packed  { \
            this.soc_ifc_notif_intr_pending , \
            this.sha_err_intr_pending , \
            this.sha_notif_intr_pending , \
+           this.timer_intr_pending , \
            this.noncore_rst_asserted , \
            this.uc_rst_asserted , \
            this.cptra_obf_key_reg , \
            this.obf_field_entropy , \
            this.obf_uds_seed , \
            this.nmi_vector , \
+           this.nmi_intr_pending , \
            this.iccm_locked  \
            } = cptra_status_responder_struct;\
   endfunction

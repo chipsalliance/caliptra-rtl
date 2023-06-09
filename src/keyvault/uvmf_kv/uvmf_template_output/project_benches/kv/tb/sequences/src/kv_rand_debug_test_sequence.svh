@@ -68,6 +68,9 @@ class kv_rand_debug_test_sequence extends kv_bench_sequence_base;
     typedef kv_wr_rd_debug_lock_sequence #(.CONFIG_T(kv_env_configuration_t)) kv_wr_rd_debug_lock_sequence_t;
     rand kv_wr_rd_debug_lock_sequence_t kv_wr_rd_debug_lock_seq;
 
+    typedef kv_wr_rd_debug_lock_clear_rst_sequence #(.CONFIG_T(kv_env_configuration_t)) kv_wr_rd_debug_lock_clear_rst_sequence_t;
+    rand kv_wr_rd_debug_lock_clear_rst_sequence_t kv_wr_rd_debug_lock_clear_rst_seq;
+
     typedef kv_wr_rd_debug_warm_rst_sequence #(.CONFIG_T(kv_env_configuration_t)) kv_wr_rd_debug_warm_rst_sequence_t;
     rand kv_wr_rd_debug_warm_rst_sequence_t kv_wr_rd_debug_warm_rst_seq;
 
@@ -97,6 +100,7 @@ class kv_rand_debug_test_sequence extends kv_bench_sequence_base;
         kv_wr_rd_lock_core_rst_seq = kv_wr_rd_lock_core_rst_sequence_t::type_id::create("kv_wr_rd_lock_core_rst_seq");
         kv_wr_rd_debug_seq = kv_wr_rd_debug_sequence_t::type_id::create("kv_wr_rd_debug_seq");
         kv_wr_rd_debug_lock_seq = kv_wr_rd_debug_lock_sequence_t::type_id::create("kv_wr_rd_debug_lock_seq");
+        kv_wr_rd_debug_lock_clear_rst_seq = kv_wr_rd_debug_lock_clear_rst_sequence_t::type_id::create("kv_wr_rd_debug_lock_clear_rst_seq");
         kv_wr_rd_debug_warm_rst_seq = kv_wr_rd_debug_warm_rst_sequence_t::type_id::create("kv_wr_rd_debug_warm_rst_seq");
         kv_wr_rd_debug_cold_rst_seq = kv_wr_rd_debug_cold_rst_sequence_t::type_id::create("kv_wr_rd_debug_cold_rst_seq");
         kv_wr_rd_debug_core_rst_seq = kv_wr_rd_debug_core_rst_sequence_t::type_id::create("kv_wr_rd_debug_core_rst_seq");
@@ -124,6 +128,9 @@ class kv_rand_debug_test_sequence extends kv_bench_sequence_base;
         kv_wr_rd_debug_cold_rst_seq.start(top_configuration.vsqr);
         `uvm_info("TOP", "DEBUG core rst sequence",UVM_MEDIUM);
         kv_wr_rd_debug_core_rst_seq.start(top_configuration.vsqr);
+
+        `uvm_info("TOP", "DEBUG lock clear rst sequence",UVM_MEDIUM);
+        kv_wr_rd_debug_lock_clear_rst_seq.start(top_configuration.vsqr);
         
 
         if(1) $display("** TESTCASE PASSED");

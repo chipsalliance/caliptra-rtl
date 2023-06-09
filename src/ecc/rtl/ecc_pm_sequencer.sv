@@ -26,7 +26,8 @@
 // 3) All modular operations are performed in Montgomery domain.
 //    mod p are modular operation respect to PRIME of SECP384 curve.
 //    mod q are modular operation respect to GROUP ORDER of SECP384 curve.
-// 
+// 4) To validate the given public key, we compare YY = Y^2 with 
+//    RHS = X^3 + A X + B.
 //
 //======================================================================
 
@@ -2397,6 +2398,30 @@ module ecc_pm_sequencer
                     SIGN1_S+ 10   : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
                     SIGN1_S+ 11   : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
 
+                    // check the given public key is a valid curve point
+                    CHK_PK_S       : douta <= {UOP_DO_MUL_p,   UOP_OPR_Qy_AFFN,   UOP_OPR_CONST_R2_p};  // A = mm(Qy, R2) % q
+                    CHK_PK_S+ 1    : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,  UOP_OPR_A};
+                    CHK_PK_S+ 2    : douta <= {UOP_DO_MUL_p,   UOP_OPR_A,         UOP_OPR_A};           // A = A*A % q
+                    CHK_PK_S+ 3    : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,  UOP_OPR_A};
+                    CHK_PK_S+ 4    : douta <= {UOP_DO_MUL_p,   UOP_OPR_Qx_AFFN,   UOP_OPR_CONST_R2_p};  // B = mm(Qx, R2) % q
+                    CHK_PK_S+ 5    : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,  UOP_OPR_B};
+                    CHK_PK_S+ 6    : douta <= {UOP_DO_MUL_p,   UOP_OPR_B,         UOP_OPR_B};           // C = B*B % q
+                    CHK_PK_S+ 7    : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,  UOP_OPR_C};
+                    CHK_PK_S+ 8    : douta <= {UOP_DO_MUL_p,   UOP_OPR_C,         UOP_OPR_B};           // C = C*B % q
+                    CHK_PK_S+ 9    : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,  UOP_OPR_C};
+                    CHK_PK_S+ 10   : douta <= {UOP_DO_MUL_p,   UOP_OPR_CONST_E_a, UOP_OPR_B};           // D = ECC.a*B % q
+                    CHK_PK_S+ 11   : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,  UOP_OPR_D};
+                    CHK_PK_S+ 12   : douta <= {UOP_DO_ADD_p,   UOP_OPR_C,         UOP_OPR_D};           // C = C + D % q
+                    CHK_PK_S+ 13   : douta <= {UOP_ST_ADD_p,   UOP_OPR_C,         UOP_OPR_DONTCARE};
+                    CHK_PK_S+ 14   : douta <= {UOP_DO_ADD_p,   UOP_OPR_C,         UOP_OPR_CONST_E_b};   // C = C + ECC.b % q
+                    CHK_PK_S+ 15   : douta <= {UOP_ST_ADD_p,   UOP_OPR_C,         UOP_OPR_DONTCARE};
+                    CHK_PK_S+ 16   : douta <= {UOP_DO_SUB_p,   UOP_OPR_A,         UOP_OPR_C};           // C = C + ECC.b % q
+                    CHK_PK_S+ 17   : douta <= {UOP_ST_ADD_p,   UOP_OPR_PK_VALID,  UOP_OPR_DONTCARE};
+                    CHK_PK_S+ 18   : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,  UOP_OPR_DONTCARE};
+                    CHK_PK_S+ 19   : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,  UOP_OPR_DONTCARE};
+                    CHK_PK_S+ 20   : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,  UOP_OPR_DONTCARE};
+                    CHK_PK_S+ 21   : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,  UOP_OPR_DONTCARE};
+    
                     // VERIFY0 SCALAR part0 to convert inputs to Mont domain
                     VER0_P0_S     : douta <= {UOP_DO_MUL_q,   UOP_OPR_HASH_MSG,   UOP_OPR_CONST_R2_q};    // A = mm(h, R2) % q
                     VER0_P0_S+ 1  : douta <= {UOP_ST_MUL_q,   UOP_OPR_DONTCARE,   UOP_OPR_A};
