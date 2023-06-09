@@ -6,7 +6,7 @@
 //
 //
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
 module spi_host
   import spi_host_reg_pkg::*;
@@ -32,8 +32,8 @@ module spi_host
   output logic [AHBDataWidth-1:0] hrdata_o,
 
   // Alerts
-  input  prim_alert_pkg::alert_rx_t [NumAlerts-1:0] alert_rx_i,
-  output prim_alert_pkg::alert_tx_t [NumAlerts-1:0] alert_tx_o,
+  input  caliptra_prim_alert_pkg::alert_rx_t [NumAlerts-1:0] alert_rx_i,
+  output caliptra_prim_alert_pkg::alert_tx_t [NumAlerts-1:0] alert_tx_o,
 
   // SPI Interface
   output logic             cio_sck_o,
@@ -88,10 +88,10 @@ module spi_host
   };
 
   for (genvar i = 0; i < NumAlerts; i++) begin : gen_alert_tx
-    prim_alert_sender #(
+    caliptra_prim_alert_sender #(
       .AsyncOn(AlertAsyncOn[i]),
       .IsFatal(1'b1)
-    ) u_prim_alert_sender (
+    ) u_caliptra_prim_alert_sender (
       .clk_i,
       .rst_ni,
       .alert_test_i  (alert_test[i] ),
@@ -343,7 +343,7 @@ module spi_host
 
   // Note on ByteOrder and ByteSwapping.
   // ByteOrder == 1 is for Little-Endian transmission (i.e. LSB first), which is acheived by
-  // default with the prim_packer_fifo implementation.  Thus we have to swap if Big-Endian
+  // default with the caliptra_prim_packer_fifo implementation.  Thus we have to swap if Big-Endian
   // transmission is required (i.e. if ByteOrder == 0).
   spi_host_data_fifos #(
     .TxDepth(TxDepth),
@@ -476,7 +476,7 @@ module spi_host
   assign event_error   = |(error_vec & error_mask);
   assign enb_error     = |sw_error_status;
 
-  prim_intr_hw #(.Width(1)) intr_hw_error (
+  caliptra_prim_intr_hw #(.Width(1)) intr_hw_error (
     .clk_i,
     .rst_ni,
     .event_intr_i           (event_error),
@@ -548,7 +548,7 @@ module spi_host
     end
   end
 
-  prim_intr_hw #(.Width(1)) intr_hw_spi_event (
+  caliptra_prim_intr_hw #(.Width(1)) intr_hw_spi_event (
     .clk_i,
     .rst_ni,
     .event_intr_i           (event_spi_event),

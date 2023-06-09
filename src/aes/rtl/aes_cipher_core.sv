@@ -90,7 +90,7 @@
 // - KEY_SHARE0_6 32h'{  .    .    .    .  }
 // - KEY_SHARE0_7 32h'{ b31, b30, b29, b28 } .
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
 module aes_cipher_core import aes_pkg::*;
 #(

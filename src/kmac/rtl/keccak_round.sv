@@ -5,10 +5,10 @@
 // Keccak full round logic based on given input `Width`
 // e.g. Width 800 requires 22 rounds
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
 module keccak_round
-  import prim_mubi_pkg::*;
+  import caliptra_prim_mubi_pkg::*;
 #(
   parameter int Width = 1600, // b= {25, 50, 100, 200, 400, 800, 1600}
 
@@ -55,13 +55,13 @@ module keccak_round
   // Errors:
   //  sparse_fsm_error: Checking if FSM state falls into unknown value
   output logic             sparse_fsm_error_o,
-  //  round_count_error: prim_count checks round value consistency
+  //  round_count_error: caliptra_prim_count checks round value consistency
   output logic             round_count_error_o,
   //  rst_storage_error: check if reset signal asserted out of the
   //                     permitted window
   output logic             rst_storage_error_o,
 
-  input  prim_mubi_pkg::mubi4_t clear_i     // Clear internal state to '0
+  input  caliptra_prim_mubi_pkg::mubi4_t clear_i     // Clear internal state to '0
 );
 
   /////////////////////
@@ -188,7 +188,7 @@ module keccak_round
       StTerminalError = 6'b110110
   } keccak_st_e;
   keccak_st_e keccak_st, keccak_st_d;
-  `PRIM_FLOP_SPARSE_FSM(u_state_regs, keccak_st_d, keccak_st, keccak_st_e, StIdle)
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_state_regs, keccak_st_d, keccak_st, keccak_st_e, StIdle)
 
   // Next state logic and output logic
   // SEC_CM: FSM.SPARSE
@@ -220,7 +220,7 @@ module keccak_round
 
           xor_message    = 1'b 1;
           update_storage = 1'b 1;
-        end else if (prim_mubi_pkg::mubi4_test_true_strict(clear_i)) begin
+        end else if (caliptra_prim_mubi_pkg::mubi4_test_true_strict(clear_i)) begin
           // Opt1. State machine allows resetting the storage only in Idle
           // Opt2. storage resets regardless of states but clear_i
           // Both are added in the design at this time. Will choose the
@@ -368,9 +368,9 @@ module keccak_round
 
   // SEC_CM: LOGIC.INTEGRITY
   logic rst_n;
-  prim_sec_anchor_buf #(
+  caliptra_prim_sec_anchor_buf #(
    .Width(1)
-  ) u_prim_sec_anchor_buf (
+  ) u_caliptra_prim_sec_anchor_buf (
     .in_i(rst_ni),
     .out_o(rst_n)
   );
@@ -422,7 +422,7 @@ module keccak_round
     if (rst_storage) begin
       // FSM should be in StIdle and clear_i should be high
       if ((keccak_st != StIdle) ||
-        prim_mubi_pkg::mubi4_test_false_loose(clear_i)) begin
+        caliptra_prim_mubi_pkg::mubi4_test_false_loose(clear_i)) begin
         rst_storage_error = 1'b 1;
       end
     end
@@ -460,7 +460,7 @@ module keccak_round
   // Round number
   // This primitive is used to place a hardened counter
   // SEC_CM: CTR.REDUN
-  prim_count #(
+  caliptra_prim_count #(
     .Width(RndW)
   ) u_round_count (
     .clk_i,
@@ -503,7 +503,7 @@ module keccak_round
 
   // clear_i is assumed to be asserted in Idle state
   `CALIPTRA_ASSUME(ClearAssertStIdle_A,
-    prim_mubi_pkg::mubi4_test_true_strict(clear_i)
+    caliptra_prim_mubi_pkg::mubi4_test_true_strict(clear_i)
      |-> keccak_st == StIdle, clk_i, !rst_ni)
 
   // EnMasking controls the valid states

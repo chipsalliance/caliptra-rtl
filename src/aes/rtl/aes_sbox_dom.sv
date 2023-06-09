@@ -32,13 +32,13 @@
 // IMPORTANT NOTE:                                                                               //
 //                            DO NOT USE THIS FOR SYNTHESIS BLINDLY!                             //
 //                                                                                               //
-// This implementation relies on primitive cells like prim_buf/flop_en containing tool-specific  //
+// This implementation relies on primitive cells like caliptra_prim_buf/flop_en containing tool-specific  //
 // synthesis attributes to prevent the synthesis tool from optimizing away/re-ordering registers //
 // and to enforce the correct ordering of operations. Without the proper primitives, synthesis   //
 // tools might heavily optimize the design. The result is likely insecure. Use with care.        //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
 // Packed struct for pseudo-random data (PRD) input. Stages 1, 3 and 4 require 8 bits each. Stage 2
 // requires just 4 bits.
@@ -115,10 +115,10 @@ module aes_dom_indep_mul_gf2pn #(
   assign bq_z0_d = z_0 ^ mul_ay_bx;
 
   // Registers
-  prim_flop_en #(
+  caliptra_prim_flop_en #(
     .Width      ( 2*NPower ),
     .ResetValue ( '0       )
-  ) u_prim_flop_abq_z0 (
+  ) u_caliptra_prim_flop_abq_z0 (
     .clk_i  ( clk_i              ),
     .rst_ni ( rst_ni             ),
     .en_i   ( we_i               ),
@@ -137,10 +137,10 @@ module aes_dom_indep_mul_gf2pn #(
     // reshared cross-domain terms with inner-domain terms derived from different input data.
 
     logic [NPower-1:0] mul_ax_ay_q, mul_bx_by_q;
-    prim_flop_en #(
+    caliptra_prim_flop_en #(
       .Width      ( 2*NPower ),
       .ResetValue ( '0       )
-    ) u_prim_flop_mul_abx_aby (
+    ) u_caliptra_prim_flop_mul_abx_aby (
       .clk_i  ( clk_i                      ),
       .rst_ni ( rst_ni                     ),
       .en_i   ( we_i                       ),
@@ -159,9 +159,9 @@ module aes_dom_indep_mul_gf2pn #(
 
     // Avoid aggressive synthesis optimizations.
     logic [NPower-1:0] mul_ax_ay_buf, mul_bx_by_buf;
-    prim_buf #(
+    caliptra_prim_buf #(
       .Width  ( 2*NPower )
-    ) u_prim_buf_mul_abx_aby (
+    ) u_caliptra_prim_buf_mul_abx_aby (
       .in_i  ( {mul_ax_ay_d,   mul_bx_by_d}   ),
       .out_o ( {mul_ax_ay_buf, mul_bx_by_buf} )
     );
@@ -217,10 +217,10 @@ module aes_dom_dep_mul_gf2pn_unopt #(
   assign b_yz_d = b_y ^ b_z;
 
   // Registers
-  prim_flop_en #(
+  caliptra_prim_flop_en #(
     .Width      ( 2*NPower ),
     .ResetValue ( '0       )
-  ) u_prim_flop_ab_yz (
+  ) u_caliptra_prim_flop_ab_yz (
     .clk_i  ( clk_i            ),
     .rst_ni ( rst_ni           ),
     .en_i   ( we_i             ),
@@ -259,10 +259,10 @@ module aes_dom_dep_mul_gf2pn_unopt #(
     // different clock cycles.
 
     logic [NPower-1:0] a_x_q, b_x_q;
-    prim_flop_en #(
+    caliptra_prim_flop_en #(
       .Width      ( 2*NPower ),
       .ResetValue ( '0       )
-    ) u_prim_flop_ab_x (
+    ) u_caliptra_prim_flop_ab_x (
       .clk_i  ( clk_i          ),
       .rst_ni ( rst_ni         ),
       .en_i   ( we_i           ),
@@ -357,10 +357,10 @@ module aes_dom_dep_mul_gf2pn #(
   assign b_yz0_d = b_y ^ z_0;
 
   // Registers
-  prim_flop_en #(
+  caliptra_prim_flop_en #(
     .Width      ( 2*NPower ),
     .ResetValue ( '0       )
-  ) u_prim_flop_ab_yz0 (
+  ) u_caliptra_prim_flop_ab_yz0 (
     .clk_i  ( clk_i              ),
     .rst_ni ( rst_ni             ),
     .en_i   ( we_i               ),
@@ -389,9 +389,9 @@ module aes_dom_dep_mul_gf2pn #(
 
   // Avoid aggressive synthesis optimizations.
   logic [NPower-1:0] mul_ax_z0_buf, mul_bx_z0_buf;
-  prim_buf #(
+  caliptra_prim_buf #(
     .Width ( 2*NPower )
-  ) u_prim_buf_mul_abx_z0 (
+  ) u_caliptra_prim_buf_mul_abx_z0 (
     .in_i  ( {mul_ax_z0,     mul_bx_z0}     ),
     .out_o ( {mul_ax_z0_buf, mul_bx_z0_buf} )
   );
@@ -403,10 +403,10 @@ module aes_dom_dep_mul_gf2pn #(
   assign bxz0_z1_d = mul_bx_z0_buf ^ z_1;
 
   // Registers
-  prim_flop_en #(
+  caliptra_prim_flop_en #(
     .Width      ( 2*NPower ),
     .ResetValue ( '0       )
-  ) u_prim_flop_abxz0_z1 (
+  ) u_caliptra_prim_flop_abxz0_z1 (
     .clk_i  ( clk_i                  ),
     .rst_ni ( rst_ni                 ),
     .en_i   ( we_i                   ),
@@ -493,10 +493,10 @@ module aes_dom_dep_mul_gf2pn #(
     end
 
     // Registers
-    prim_flop_en #(
+    caliptra_prim_flop_en #(
       .Width      ( 2*NPower ),
       .ResetValue ( '0       )
-    ) u_prim_flop_mul_abx_aby (
+    ) u_caliptra_prim_flop_mul_abx_aby (
       .clk_i  ( clk_i                      ),
       .rst_ni ( rst_ni                     ),
       .en_i   ( we_i                       ),
@@ -518,9 +518,9 @@ module aes_dom_dep_mul_gf2pn #(
 
     // Avoid aggressive synthesis optimizations.
     logic [NPower-1:0] mul_ax_byz0_buf, mul_bx_ayz0_buf;
-    prim_buf #(
+    caliptra_prim_buf #(
       .Width ( 2*NPower )
-    ) u_prim_buf_mul_abx_bayz0 (
+    ) u_caliptra_prim_buf_mul_abx_bayz0 (
       .in_i  ( {mul_ax_byz0,     mul_bx_ayz0}     ),
       .out_o ( {mul_ax_byz0_buf, mul_bx_ayz0_buf} )
     );
@@ -541,9 +541,9 @@ module aes_dom_dep_mul_gf2pn #(
 
     // Avoid aggressive synthesis optimizations.
     logic [NPower-1:0] a_b_buf, b_b_buf;
-    prim_buf #(
+    caliptra_prim_buf #(
       .Width ( 2*NPower )
-    ) u_prim_buf_ab_b (
+    ) u_caliptra_prim_buf_ab_b (
       .in_i  ( {a_b,     b_b}     ),
       .out_o ( {a_b_buf, b_b_buf} )
     );
@@ -560,9 +560,9 @@ module aes_dom_dep_mul_gf2pn #(
 
     // Avoid aggressive synthesis optimizations.
     logic [NPower-1:0] a_mul_ax_b_buf, b_mul_bx_b_buf;
-    prim_buf #(
+    caliptra_prim_buf #(
       .Width ( 2*NPower )
-    ) u_prim_buf_ab_mul_abx_b (
+    ) u_caliptra_prim_buf_ab_mul_abx_b (
       .in_i  ( {a_mul_ax_b,     b_mul_bx_b}     ),
       .out_o ( {a_mul_ax_b_buf, b_mul_bx_b_buf} )
     );
@@ -612,10 +612,10 @@ module aes_dom_inverse_gf2p4 #(
   logic [1:0] a_gamma_ss_q, b_gamma_ss_q;
   assign a_gamma_ss_d = aes_scale_omega2_gf2p2(aes_square_gf2p2(a_gamma1 ^ a_gamma0));
   assign b_gamma_ss_d = aes_scale_omega2_gf2p2(aes_square_gf2p2(b_gamma1 ^ b_gamma0));
-  prim_flop_en #(
+  caliptra_prim_flop_en #(
     .Width      ( 4  ),
     .ResetValue ( '0 )
-  ) u_prim_flop_ab_gamma_ss (
+  ) u_caliptra_prim_flop_ab_gamma_ss (
     .clk_i  ( clk_i                        ),
     .rst_ni ( rst_ni                       ),
     .en_i   ( we_i[0]                      ),
@@ -624,10 +624,10 @@ module aes_dom_inverse_gf2p4 #(
   );
 
   logic [1:0] a_gamma1_q, a_gamma0_q, b_gamma1_q, b_gamma0_q;
-  prim_flop_en #(
+  caliptra_prim_flop_en #(
     .Width      ( 8  ),
     .ResetValue ( '0 )
-  ) u_prim_flop_ab_gamma10 (
+  ) u_caliptra_prim_flop_ab_gamma10 (
     .clk_i  ( clk_i                                            ),
     .rst_ni ( rst_ni                                           ),
     .en_i   ( we_i[0]                                          ),
@@ -684,23 +684,23 @@ module aes_dom_inverse_gf2p4 #(
 
   // Avoid aggressive synthesis optimizations.
   logic [1:0] a_omega_buf, b_omega_buf;
-  prim_buf #(
+  caliptra_prim_buf #(
     .Width ( 4 )
-  ) u_prim_buf_ab_omega (
+  ) u_caliptra_prim_buf_ab_omega (
     .in_i  ( {a_omega,     b_omega}     ),
     .out_o ( {a_omega_buf, b_omega_buf} )
   );
 
   // Pipeline registers
   logic [1:0] a_gamma1_qq, a_gamma0_qq, b_gamma1_qq, b_gamma0_qq, a_omega_buf_q, b_omega_buf_q;
-  if (PipelineMul == 1'b1) begin: gen_prim_flop_omega_gamma10
+  if (PipelineMul == 1'b1) begin: gen_caliptra_prim_flop_omega_gamma10
     // We instantiate the input pipeline registers for the DOM-dep multiplier outside of the
     // multiplier to enable sharing of pipeline registers where applicable.
 
-    prim_flop_en #(
+    caliptra_prim_flop_en #(
       .Width      ( 8  ),
       .ResetValue ( '0 )
-    ) u_prim_flop_ab_gamma10_q (
+    ) u_caliptra_prim_flop_ab_gamma10_q (
       .clk_i  ( clk_i                                                ),
       .rst_ni ( rst_ni                                               ),
       .en_i   ( we_i[1]                                              ),
@@ -709,10 +709,10 @@ module aes_dom_inverse_gf2p4 #(
     );
 
     // These inputs are used by both DOM-dep multipliers below.
-    prim_flop_en #(
+    caliptra_prim_flop_en #(
       .Width      ( 4  ),
       .ResetValue ( '0 )
-    ) u_prim_flop_ab_omega_buf (
+    ) u_caliptra_prim_flop_ab_omega_buf (
       .clk_i  ( clk_i                          ),
       .rst_ni ( rst_ni                         ),
       .en_i   ( we_i[1]                        ),
@@ -720,7 +720,7 @@ module aes_dom_inverse_gf2p4 #(
       .q_o    ( {a_omega_buf_q, b_omega_buf_q} )
     );
 
-  end else begin : gen_no_prim_flop_ab_y10
+  end else begin : gen_no_caliptra_prim_flop_ab_y10
     // When using un-pipelined multipliers, there is no need to insert additional registers.
     // We drive the corresponding inputs to 0 to make sure the functionality isn't correct in case
     // the pipeliend inputs are erroneously used.
@@ -823,10 +823,10 @@ module aes_dom_inverse_gf2p8 #(
   logic [3:0] a_y_ss_q, b_y_ss_q;
   assign a_y_ss_d = aes_square_scale_gf2p4_gf2p2(a_y1 ^ a_y0);
   assign b_y_ss_d = aes_square_scale_gf2p4_gf2p2(b_y1 ^ b_y0);
-  prim_flop_en #(
+  caliptra_prim_flop_en #(
     .Width      ( 8  ),
     .ResetValue ( '0 )
-  ) u_prim_flop_ab_y_ss (
+  ) u_caliptra_prim_flop_ab_y_ss (
     .clk_i  ( clk_i                ),
     .rst_ni ( rst_ni               ),
     .en_i   ( we_i[0]              ),
@@ -835,14 +835,14 @@ module aes_dom_inverse_gf2p8 #(
   );
 
   logic [3:0] a_y1_q, a_y0_q, b_y1_q, b_y0_q;
-  if (PipelineMul == 1'b1) begin: gen_prim_flop_ab_y10
+  if (PipelineMul == 1'b1) begin: gen_caliptra_prim_flop_ab_y10
     // We instantiate the input pipeline registers for the DOM-dep multiplier outside of the
     // multiplier to enable sharing of pipeline registers where applicable.
 
-    prim_flop_en #(
+    caliptra_prim_flop_en #(
       .Width      ( 16  ),
       .ResetValue ( '0  )
-    ) u_prim_flop_ab_y10 (
+    ) u_caliptra_prim_flop_ab_y10 (
       .clk_i  ( clk_i                            ),
       .rst_ni ( rst_ni                           ),
       .en_i   ( we_i[0]                          ),
@@ -850,7 +850,7 @@ module aes_dom_inverse_gf2p8 #(
       .q_o    ( {a_y1_q, a_y0_q, b_y1_q, b_y0_q} )
     );
 
-  end else begin : gen_no_prim_flop_ab_y10
+  end else begin : gen_no_caliptra_prim_flop_ab_y10
     // When using un-pipelined multipliers, there is no need to insert additional registers.
     // We drive the corresponding inputs to 0 to make sure the functionality isn't correct in case
     // the pipeliend inputs are erroneously used.
@@ -891,9 +891,9 @@ module aes_dom_inverse_gf2p8 #(
 
   // Avoid aggressive synthesis optimizations.
   logic [3:0] a_gamma_buf, b_gamma_buf;
-  prim_buf #(
+  caliptra_prim_buf #(
     .Width ( 8 )
-  ) u_prim_buf_ab_gamma (
+  ) u_caliptra_prim_buf_ab_gamma (
     .in_i  ( {a_gamma,     b_gamma}     ),
     .out_o ( {a_gamma_buf, b_gamma_buf} )
   );
@@ -935,10 +935,10 @@ module aes_dom_inverse_gf2p8 #(
   // Formulas 18 and 19 in [2].
 
   logic [3:0] a_y1_qqq, a_y0_qqq, b_y1_qqq, b_y0_qqq;
-  prim_flop_en #(
+  caliptra_prim_flop_en #(
     .Width      ( 16 ),
     .ResetValue ( '0 )
-  ) u_prim_flop_ab_y10_qqq (
+  ) u_caliptra_prim_flop_ab_y10_qqq (
     .clk_i  ( clk_i                                    ),
     .rst_ni ( rst_ni                                   ),
     .en_i   ( we_i[2]                                  ),
@@ -1070,10 +1070,10 @@ module aes_sbox_dom
   // Buffer and forward PRD for the individual stages. We get 8 bits from the PRNG for usage in the
   // first cycle. Stages 2, 3 and 4 are driven by other S-Box instances.
   assign prd1_d = we[0] ? prd_i[7:0] : prd1_q;
-  prim_flop #(
+  caliptra_prim_flop #(
     .Width      ( 8  ),
     .ResetValue ( '0 )
-  ) u_prim_flop_prd1_q (
+  ) u_caliptra_prim_flop_prd1_q (
     .clk_i  ( clk_i  ),
     .rst_ni ( rst_ni ),
     .d_i    ( prd1_d ),

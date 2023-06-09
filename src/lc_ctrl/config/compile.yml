@@ -2,7 +2,7 @@
 provides: [lc_ctrl_pkg]
 schema_version: 2.4.0
 requires:
-  - prim_pkg
+  - caliptra_prim_pkg
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]

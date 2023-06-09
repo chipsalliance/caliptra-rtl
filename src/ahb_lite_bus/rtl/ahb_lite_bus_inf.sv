@@ -43,7 +43,7 @@ interface CALIPTRA_AHB_LITE_BUS_INF
 
     modport Initiator_Interface_Ports (
         input    haddr, hwdata, hwrite, hsize, htrans, // from AHB Initiator to AHB Responder
-        output   hresp, hrdata, hready                       // from AHB Responder to AHB Initiator
+        output   hresp, hrdata, hreadyout                    // from AHB Responder to AHB Initiator
     );
 
     // -------------------------------------------

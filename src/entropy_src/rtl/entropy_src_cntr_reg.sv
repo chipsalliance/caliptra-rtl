@@ -22,9 +22,9 @@ module entropy_src_cntr_reg #(
   logic [RegWidth-1:0] counter_value;
 
   // counter will not wrap when full value is reached
-  prim_count #(
+  caliptra_prim_count #(
     .Width(RegWidth)
-  ) u_prim_count_cntr_reg (
+  ) u_caliptra_prim_count_cntr_reg (
     .clk_i,
     .rst_ni,
     .clr_i(clear_i),

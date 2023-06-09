@@ -3,11 +3,11 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
 package lc_ctrl_pkg;
 
-  import prim_util_pkg::vbits;
+  import caliptra_prim_util_pkg::vbits;
   import lc_ctrl_state_pkg::*;
 
   ///////////////////////////////////////
@@ -65,31 +65,31 @@ package lc_ctrl_pkg;
   // This is a prerequisite for the multibit functions below to work.
   `CALIPTRA_ASSERT_STATIC_IN_PACKAGE(CheckLcTxValsComplementary_A, On == ~Off)
   // Check for bit-width matching between lc_tx_t and mubi4_t
-  `CALIPTRA_ASSERT_STATIC_IN_PACKAGE(LcMuBiWidthCheck_A, $bits(TxWidth) == $bits(prim_mubi_pkg::MuBi4Width))
+  `CALIPTRA_ASSERT_STATIC_IN_PACKAGE(LcMuBiWidthCheck_A, $bits(TxWidth) == $bits(caliptra_prim_mubi_pkg::MuBi4Width))
 
   // Convert a life cycle signal to mubi4
   // If in the future other versions are desired, this should really be
-  // moved to prim_mubi_pkg
+  // moved to caliptra_prim_mubi_pkg
   //
   // The On ^ MuBi4True determines the bit differences between
-  // an lc_ctrl_pkg::On and prim_mubi_pkg::MuBi4True.
+  // an lc_ctrl_pkg::On and caliptra_prim_mubi_pkg::MuBi4True.
   // Once the required inversions are determined, it is then applied
   // to the incoming value.  If the incoming value is true, it will
   // appropriately flip to the correct MuBiValue.
   // Since the false value is always complement of the true value,
   // this mechanism will also work for the other polarity.
-  function automatic prim_mubi_pkg::mubi4_t lc_to_mubi4(lc_tx_t val);
-    return prim_mubi_pkg::mubi4_t'(val ^ (On ^ prim_mubi_pkg::MuBi4True));
+  function automatic caliptra_prim_mubi_pkg::mubi4_t lc_to_mubi4(lc_tx_t val);
+    return caliptra_prim_mubi_pkg::mubi4_t'(val ^ (On ^ caliptra_prim_mubi_pkg::MuBi4True));
   endfunction : lc_to_mubi4
 
-  function automatic lc_tx_t mubi4_to_lc(prim_mubi_pkg::mubi4_t val);
-    return lc_tx_t'(val ^ (prim_mubi_pkg::MuBi4True ^ On));
+  function automatic lc_tx_t mubi4_to_lc(caliptra_prim_mubi_pkg::mubi4_t val);
+    return lc_tx_t'(val ^ (caliptra_prim_mubi_pkg::MuBi4True ^ On));
   endfunction : mubi4_to_lc
 
   // same function as above, but for an input that is MuBi4True, return Off
   // for an input that is MuBi4False, return On
-  function automatic lc_tx_t mubi4_to_lc_inv(prim_mubi_pkg::mubi4_t val);
-    return lc_tx_t'(val ^ (prim_mubi_pkg::MuBi4True ^ Off));
+  function automatic lc_tx_t mubi4_to_lc_inv(caliptra_prim_mubi_pkg::mubi4_t val);
+    return lc_tx_t'(val ^ (caliptra_prim_mubi_pkg::MuBi4True ^ Off));
   endfunction : mubi4_to_lc_inv
 
   // Test whether the value is supplied is one of the valid enumerations
@@ -145,7 +145,7 @@ package lc_ctrl_pkg;
   // Note: due to the nature of the lc_tx_or() function, it is possible that two
   // non-strictly "act" values may produce a strictly "act" value. If this is
   // of concern, e.g. if the output is consumed with a strict check on "act",
-  // consider using the prim_lc_or_hardened primitive instead.
+  // consider using the caliptra_prim_lc_or_hardened primitive instead.
   function automatic lc_tx_t lc_tx_or(lc_tx_t a, lc_tx_t b, lc_tx_t act);
     logic [TxWidth-1:0] a_in, b_in, act_in, out;
     a_in = a;
@@ -176,7 +176,7 @@ package lc_ctrl_pkg;
   // that the lc_tx_or function above does, since only one output value in the
   // truth table is strictly "act". It can hence be used in most scenarios without issues.
   // If however the lc_tx_and() function should be strictly rectifying (i.e., only
-  // output "act" or ~"act"), the prim_lc_and_hardened can be used.
+  // output "act" or ~"act"), the caliptra_prim_lc_and_hardened can be used.
   function automatic lc_tx_t lc_tx_and(lc_tx_t a, lc_tx_t b, lc_tx_t act);
     logic [TxWidth-1:0] a_in, b_in, act_in, out;
     a_in = a;

@@ -7,7 +7,7 @@
 
 package spi_host_cmd_pkg;
 
-  parameter int CSW = prim_util_pkg::vbits(spi_host_reg_pkg::NumCS);
+  parameter int CSW = caliptra_prim_util_pkg::vbits(spi_host_reg_pkg::NumCS);
   parameter int CmdSize = CSW + 45;
 
   // For decoding the direction register
