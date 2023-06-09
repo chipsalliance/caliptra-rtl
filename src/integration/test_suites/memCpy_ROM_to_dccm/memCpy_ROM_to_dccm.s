@@ -39,6 +39,9 @@ _start:
     li x1, 0xaaaaaaaa
     csrw 0x7c0, x1
 
+    // Call interrupt init
+    call init_interrupts
+
     // Load string from hw_data
     // and write to DCCM
 
@@ -67,6 +70,11 @@ _finish:
 stdout: .word STDOUT
 .global verbosity_g
 verbosity_g: .word 2
+// FW polls this variable for intr
+.global intr_count
+intr_count: .word 0
+.global cptra_intr_rcv
+cptra_intr_rcv: .word 0
 hw_data:
 .ascii "----------------------------------\n"
 .ascii "Hello World from VeeR EL2  !!\n"

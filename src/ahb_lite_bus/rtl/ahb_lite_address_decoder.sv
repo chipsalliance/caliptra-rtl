@@ -176,4 +176,21 @@ module ahb_lite_address_decoder #(
     assign hsel_o               = hsel_o_int;
     assign hinitiatorready_o    = hinitiator_ready_int;
 
+//Coverage
+`ifndef VERILATOR
+`ifdef FCOV
+
+covergroup ahb_lite_address_decode_cov_grp @(posedge hclk iff hreset_n);
+    option.per_instance = 1;
+
+    access_blocked_cp: coverpoint |access_blocked_o {option.comment = "Received a transaction to a locked memory region";}
+    oob_access_cp: coverpoint |htrans_i && ~|hsel_o_int_pre {option.comment = "Received a transaction to an unmapped memory region";}
+    hresp_cp: coverpoint hresp_o {option.comment = "AHB Response - can be ERROR or OKAY";}
+endgroup
+
+    ahb_lite_address_decode_cov_grp ahb_lite_address_decode_cov_grp1 = new();
+
+`endif
+`endif  
+    
 endmodule

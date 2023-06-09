@@ -16,6 +16,22 @@
 #include "caliptra_defines.h"
 #include "printf.h"
 #include "hmac.h"
+#include "caliptra_isr.h"
+
+extern volatile caliptra_intr_received_s cptra_intr_rcv;
+
+void wait_for_hmac_intr(){
+    printf("HMAC flow in progress...\n");
+    while((cptra_intr_rcv.hmac_error == 0) & (cptra_intr_rcv.hmac_notif == 0)){
+        __asm__ volatile ("wfi"); // "Wait for interrupt"
+        // Sleep during HMAC operation to allow ISR to execute and show idle time in sims
+        for (uint16_t slp = 0; slp < 100; slp++) {
+            __asm__ volatile ("nop"); // Sleep loop as "nop"
+        }
+    };
+    //printf("Received HMAC error intr with status = %d\n", cptra_intr_rcv.hmac_error);
+    printf("Received HMAC notif intr with status = %d\n", cptra_intr_rcv.hmac_notif);
+}
 
 void hmac_zeroize(){
     printf("HMAC zeroize flow.\n");
@@ -92,6 +108,8 @@ void hmac_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag){
     lsu_write_32(CLP_HMAC_REG_HMAC384_CTRL, HMAC_REG_HMAC384_CTRL_INIT_MASK);
 
     // wait for HMAC process to be done
+    wait_for_hmac_intr();
+
     if (tag.kv_intf){
         // wait for HMAC process - check dest done
         printf("Load TAG data from HMAC to KV\n");

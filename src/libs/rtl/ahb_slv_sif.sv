@@ -147,6 +147,20 @@ always_comb begin : response_block
     end
 end
 
-//bypass lint err //FIXME when lint rule is removed
+//Coverage
+`ifndef VERILATOR
+`ifdef FCOV
+
+covergroup ahb_slv_sif_cov_grp @(posedge hclk);
+    option.per_instance = 1;
+
+    ahb_read_cp: coverpoint (dv & ~write) {option.comment = "AHB read transaction";}
+    ahb_write_cp: coverpoint (dv & write) {option.comment = "AHB write transaction";}
+endgroup
+
+ahb_slv_sif_cov_grp ahb_slv_sif_cov_grp1 = new();
+
+`endif
+`endif
 
 endmodule

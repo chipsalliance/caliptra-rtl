@@ -34,22 +34,26 @@ enum mbox_fsm_e {
     MBOX_RDY_FOR_DATA = 0x2,
     MBOX_RDY_FOR_DLEN = 0x3,
     MBOX_EXECUTE_UC   = 0x6,
-    MBOX_EXECUTE_SOC  = 0x4
+    MBOX_EXECUTE_SOC  = 0x4,
+    MBOX_ERROR        = 0x7
 };
 
 /**
 * Decode:
 *   [31]: Firmware command
 *   [30]: Response required (if set)
+*   [29]: uC to SOC Mailbox command
 */
 enum {
-    MBOX_CMD_FIELD_FW_LOW   = 31,
-    MBOX_CMD_FIELD_RESP_LOW = 30
+    MBOX_CMD_FIELD_FW_LOW        = 31,
+    MBOX_CMD_FIELD_RESP_LOW      = 30,
+    MBOX_CMD_FIELD_UC_TO_SOC_LOW = 29
 };
 
 enum {
-    MBOX_CMD_FIELD_FW_MASK   = 1 << MBOX_CMD_FIELD_FW_LOW  ,
-    MBOX_CMD_FIELD_RESP_MASK = 1 << MBOX_CMD_FIELD_RESP_LOW
+    MBOX_CMD_FIELD_FW_MASK        = 1 << MBOX_CMD_FIELD_FW_LOW  ,
+    MBOX_CMD_FIELD_RESP_MASK      = 1 << MBOX_CMD_FIELD_RESP_LOW,
+    MBOX_CMD_FIELD_UC_TO_SOC_MASK = 1 << MBOX_CMD_FIELD_UC_TO_SOC_LOW
 };
 
 enum mbox_cmd_e {

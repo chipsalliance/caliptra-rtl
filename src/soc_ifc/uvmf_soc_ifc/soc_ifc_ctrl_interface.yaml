@@ -109,6 +109,10 @@ uvmf:
         dir: output
         width: '1'
 
+      - name: rv_ecc_sts
+        dir: output
+        width: '4'
+
       transaction_constraints: []
 
       transaction_vars:
@@ -118,5 +122,9 @@ uvmf:
         isrand: 'False'
       - name: iccm_axs_blocked
         type: bit
+        iscompare: 'False'
+        isrand: 'False'
+      - name: pulse_rv_ecc_error
+        type: rv_ecc_sts_t
         iscompare: 'False'
         isrand: 'False'

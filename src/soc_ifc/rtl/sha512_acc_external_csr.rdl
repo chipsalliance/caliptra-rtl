@@ -95,7 +95,7 @@ reg {
           For the Mailbox SHA Function, indicates that the SHA can begin execution.
           [br]Caliptra Access: RW
           [br]SOC Access:      RW";
-    field {sw=rw; hw=r; hwclr;} EXECUTE=0;
+    field {sw=rw; hw=r; hwclr; swwe=valid_user;} EXECUTE=0;
 } EXECUTE;
 
 reg {
@@ -108,6 +108,8 @@ reg {
     default hw = rw;
     default resetsignal = cptra_rst_b;
     field {desc = "Valid bit, indicating that the digest is complete";} VALID = 1'b0;
+    field {name = "SoC Acquired the Lock";
+           desc = "Indicates that the current lock was acquired by the SoC";} SOC_HAS_LOCK=1'b0;
 
 } STATUS;
 

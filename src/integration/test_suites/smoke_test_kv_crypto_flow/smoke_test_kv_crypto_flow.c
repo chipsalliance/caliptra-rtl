@@ -269,7 +269,7 @@ void main(){
     uint8_t cdi_ldevid_id;
 
     //Call interrupt init
-    //init_interrupts();
+    init_interrupts();
 
     random_generator(&doe_fe_dest_id, &uds_key_id, &idevid_privkey_id, &cdi_ldevid_id);
     printf("%x, %x, %x, %x\n",doe_fe_dest_id, uds_key_id, idevid_privkey_id, cdi_ldevid_id);

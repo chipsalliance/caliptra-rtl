@@ -266,8 +266,8 @@ void caliptra_rt() {
                         soc_ifc_sha_accel_poll_status();
                         lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DLEN), (mode == SHA_MBOX_384) ? 48 : 64);
                         //read the digest and write it back to the mailbox
-                        reg_addr = (uint32_t *) CLP_SHA512_ACC_CSR_DIGEST_0;
-                        while (reg_addr <= (uint32_t*) ((mode == SHA_MBOX_384) ? CLP_SHA512_ACC_CSR_DIGEST_11 : CLP_SHA512_ACC_CSR_DIGEST_15)) {
+                        reg_addr = CLP_SHA512_ACC_CSR_DIGEST_0;
+                        while (reg_addr <= ((mode == SHA_MBOX_384) ? CLP_SHA512_ACC_CSR_DIGEST_11 : CLP_SHA512_ACC_CSR_DIGEST_15)) {
                             read_data = lsu_read_32(reg_addr);
                             lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DATAIN), read_data);
                             reg_addr = reg_addr + 4;
@@ -311,10 +311,14 @@ void caliptra_rt() {
             if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SOC_REQ_LOCK_STS_MASK) {
                 cptra_intr_rcv.soc_ifc_notif &= ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SOC_REQ_LOCK_STS_MASK;
             }
+            if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK) {
+                cptra_intr_rcv.soc_ifc_notif &= ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK;
+            }
             if (cptra_intr_rcv.soc_ifc_notif & (~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK &
                                                 ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_MBOX_ECC_COR_STS_MASK &
                                                 ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_DEBUG_LOCKED_STS_MASK &
-                                                ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SOC_REQ_LOCK_STS_MASK )) {
+                                                ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SOC_REQ_LOCK_STS_MASK &
+                                                ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK )) {
                 VPRINTF(FATAL, "Intr received: unsupported soc_ifc_notif (0x%x)\n", cptra_intr_rcv.soc_ifc_notif);
                 SEND_STDOUT_CTRL(0x1);
                 while(1);

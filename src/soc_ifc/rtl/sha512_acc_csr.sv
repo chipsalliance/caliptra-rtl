@@ -201,6 +201,10 @@ module sha512_acc_csr (
                 logic next;
                 logic load_next;
             } VALID;
+            struct packed{
+                logic next;
+                logic load_next;
+            } SOC_HAS_LOCK;
         } STATUS;
         struct packed{
             struct packed{
@@ -436,6 +440,9 @@ module sha512_acc_csr (
             struct packed{
                 logic value;
             } VALID;
+            struct packed{
+                logic value;
+            } SOC_HAS_LOCK;
         } STATUS;
         struct packed{
             struct packed{
@@ -719,7 +726,7 @@ module sha512_acc_csr (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.EXECUTE.EXECUTE.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.EXECUTE && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.EXECUTE && decoded_req_is_wr && hwif_in.valid_user) begin // SW write
             next_c = (field_storage.EXECUTE.EXECUTE.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end else if(hwif_in.EXECUTE.EXECUTE.hwclr) begin // HW Clear
@@ -756,6 +763,25 @@ module sha512_acc_csr (
         end
     end
     assign hwif_out.STATUS.VALID.value = field_storage.STATUS.VALID.value;
+    // Field: sha512_acc_csr.STATUS.SOC_HAS_LOCK
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.STATUS.SOC_HAS_LOCK.value;
+        automatic logic load_next_c = '0;
+        if(1) begin // HW Write
+            next_c = hwif_in.STATUS.SOC_HAS_LOCK.next;
+            load_next_c = '1;
+        end
+        field_combo.STATUS.SOC_HAS_LOCK.next = next_c;
+        field_combo.STATUS.SOC_HAS_LOCK.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.STATUS.SOC_HAS_LOCK.value <= 'h0;
+        end else if(field_combo.STATUS.SOC_HAS_LOCK.load_next) begin
+            field_storage.STATUS.SOC_HAS_LOCK.value <= field_combo.STATUS.SOC_HAS_LOCK.next;
+        end
+    end
+    assign hwif_out.STATUS.SOC_HAS_LOCK.value = field_storage.STATUS.SOC_HAS_LOCK.value;
     for(genvar i0=0; i0<16; i0++) begin
         // Field: sha512_acc_csr.DIGEST[].DIGEST
         always_comb begin
@@ -1525,7 +1551,8 @@ module sha512_acc_csr (
     assign readback_array[6][0:0] = (decoded_reg_strb.EXECUTE && !decoded_req_is_wr) ? field_storage.EXECUTE.EXECUTE.value : '0;
     assign readback_array[6][31:1] = '0;
     assign readback_array[7][0:0] = (decoded_reg_strb.STATUS && !decoded_req_is_wr) ? field_storage.STATUS.VALID.value : '0;
-    assign readback_array[7][31:1] = '0;
+    assign readback_array[7][1:1] = (decoded_reg_strb.STATUS && !decoded_req_is_wr) ? field_storage.STATUS.SOC_HAS_LOCK.value : '0;
+    assign readback_array[7][31:2] = '0;
     for(genvar i0=0; i0<16; i0++) begin
         assign readback_array[i0*1 + 8][31:0] = (decoded_reg_strb.DIGEST[i0] && !decoded_req_is_wr) ? field_storage.DIGEST[i0].DIGEST.value : '0;
     end

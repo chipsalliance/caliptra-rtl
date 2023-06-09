@@ -21,6 +21,7 @@ module soc_ifc_arb
     input  logic rst_b,
 
     input logic [4:0][APB_USER_WIDTH-1:0] valid_mbox_users,
+    input logic valid_fuse_user,
     //UC inf
     input  logic uc_req_dv,
     output logic uc_req_hold,
@@ -135,8 +136,11 @@ always_comb uc_mbox_dir_req = (uc_req_dv & (uc_req_data.addr inside {[MBOX_DIR_S
 //SoC requests to mailbox
 always_comb soc_mbox_req = (valid_mbox_req & (soc_req_data.addr inside {[MBOX_REG_START_ADDR:MBOX_REG_END_ADDR]}));
 //Requests to arch/fuse register block
+//Ensure that requests to fuse block match the appropriate user value
 always_comb uc_reg_req = (uc_req_dv & (uc_req_data.addr inside {[SOC_IFC_REG_START_ADDR:SOC_IFC_REG_END_ADDR]}));
-always_comb soc_reg_req = (soc_req_dv & (soc_req_data.addr inside {[SOC_IFC_REG_START_ADDR:SOC_IFC_REG_END_ADDR]}));
+always_comb soc_reg_req = (soc_req_dv & (soc_req_data.addr inside {[SOC_IFC_REG_START_ADDR:SOC_IFC_REG_END_ADDR]}) &
+                                        (~(soc_req_data.addr inside {[SOC_IFC_FUSE_START_ADDR:SOC_IFC_FUSE_END_ADDR]}) | valid_fuse_user));
+
 //Requests to SHA
 always_comb uc_sha_req = (uc_req_dv & (uc_req_data.addr inside {[SHA_REG_START_ADDR:SHA_REG_END_ADDR]}));
 always_comb soc_sha_req = (soc_req_dv & (soc_req_data.addr inside {[SHA_REG_START_ADDR:SHA_REG_END_ADDR]}));
@@ -153,19 +157,21 @@ always_comb begin
 end
 
 //check for collisions
-always_comb req_collision = (uc_mbox_req & soc_mbox_req) |
-                            (uc_reg_req & soc_reg_req) |
-                            (uc_sha_req & soc_sha_req);
+//don't toggle priority if the request was held
+always_comb req_collision = (uc_mbox_req & soc_mbox_req & ~mbox_req_hold) |
+                            (uc_reg_req & soc_reg_req & ~soc_ifc_reg_req_hold) |
+                            (uc_sha_req & soc_sha_req & ~sha_req_hold);
 
 //drive the dv to the appropriate destination if either client is trying to 
 always_comb mbox_req_dv = uc_mbox_reg_req | soc_mbox_req;
-always_comb mbox_dir_req_dv = uc_mbox_dir_req;
+always_comb mbox_dir_req_dv = uc_mbox_dir_req & uc_mbox_gnt;
 always_comb soc_ifc_reg_req_dv = uc_reg_req | soc_reg_req;
 always_comb sha_req_dv = uc_sha_req | soc_sha_req;
 
 //determine which requests get granted
 //if a request is colliding with another, grant the one with priority
 //ignore priority if one of the requests was already in progress
+//this prevents the "priority" request from interrupting an in progress request
 always_comb soc_mbox_gnt = soc_mbox_req & (~uc_mbox_req | soc_has_priority) & ~uc_mbox_req_ip;
 always_comb soc_reg_gnt  = soc_reg_req  & (~uc_reg_req | soc_has_priority)  & ~uc_reg_req_ip;
 always_comb soc_sha_gnt  = soc_sha_req  & (~uc_sha_req | soc_has_priority)  & ~uc_sha_req_ip;

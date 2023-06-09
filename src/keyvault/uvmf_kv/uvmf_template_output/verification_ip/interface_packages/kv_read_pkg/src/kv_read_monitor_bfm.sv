@@ -221,6 +221,7 @@ end
     kv_read_monitor_struct.error        = kv_rd_resp_i[33];
     kv_read_monitor_struct.last        = kv_rd_resp_i[32];
     kv_read_monitor_struct.read_data    = kv_rd_resp_i[31:0];
+
     // pragma uvmf custom do_monitor end
   endtask         
   

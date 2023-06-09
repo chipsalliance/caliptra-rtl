@@ -174,6 +174,10 @@ import el2_pkg::*;
    output logic [63:0]                     dccm_dma_rdata,      // lsu data for DMA dccm read
    output logic                            dccm_ready,          // lsu ready for DMA access
 
+   // Caliptra ECC status signals
+   output logic                            cptra_dccm_ecc_single_error,
+   output logic                            cptra_dccm_ecc_double_error,
+
    input logic                             scan_mode,           // scan mode
    input logic                             clk,                 // Clock only while core active.  Through one clock header.  For flops with    second clock header built in.  Connected to ACTIVE_L2CLK.
    input logic                             active_clk,          // Clock only while core active.  Through two clock headers. For flops without second clock header built in.
@@ -356,6 +360,9 @@ import el2_pkg::*;
       .end_addr_m(end_addr_m[pt.DCCM_BITS-1:0]),
       .*
    );
+
+   assign cptra_dccm_ecc_single_error = lsu_single_ecc_error_r;
+   assign cptra_dccm_ecc_double_error = lsu_double_ecc_error_r;
 
    el2_lsu_trigger #(.pt(pt)) trigger (
       .store_data_m(store_data_m[31:0]),

@@ -57,6 +57,7 @@ package soc_ifc_reg_model_top_pkg;
         bit soc_send_stage;
         bit soc_receive_stage;
         bit soc_done_stage;
+        bit mbox_error;
     } mbox_fn_state_s;
 
 // pragma uvmf custom additional_imports end
@@ -191,6 +192,8 @@ package soc_ifc_reg_model_top_pkg;
             for (ii=0; ii<$size(this.CPTRA_GENERIC_OUTPUT_WIRES); ii++) begin
                 if ( this.CPTRA_GENERIC_OUTPUT_WIRES[ii].        has_reset("HARD"   )) this.CPTRA_GENERIC_OUTPUT_WIRES[ii].        set_reset(this.CPTRA_GENERIC_OUTPUT_WIRES[ii].        get_reset("HARD"), "SOFT");
             end
+            if ( this.CPTRA_FUSE_VALID_PAUSER.              has_reset("HARD"   )) this.CPTRA_FUSE_VALID_PAUSER.              set_reset(this.CPTRA_FUSE_VALID_PAUSER.              get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_FUSE_PAUSER_LOCK.               has_reset("HARD"   )) this.CPTRA_FUSE_PAUSER_LOCK.               set_reset(this.CPTRA_FUSE_PAUSER_LOCK.               get_reset("HARD"), "SOFT");
 //            for (ii=0; ii<$size(this.fuse_uds_seed); ii++) begin
 //            if ( this.fuse_uds_seed[ii].                    has_reset("HARD"   )) this.fuse_uds_seed[ii].                    set_reset(this.fuse_uds_seed[ii].                    get_reset("HARD"), "SOFT");
 //            end
@@ -223,6 +226,14 @@ package soc_ifc_reg_model_top_pkg;
             if ( this.internal_fw_update_reset.             has_reset("HARD"   )) this.internal_fw_update_reset.             set_reset(this.internal_fw_update_reset.             get_reset("HARD"), "SOFT");
             if ( this.internal_fw_update_reset_wait_cycles. has_reset("HARD"   )) this.internal_fw_update_reset_wait_cycles. set_reset(this.internal_fw_update_reset_wait_cycles. get_reset("HARD"), "SOFT");
             if ( this.internal_nmi_vector.                  has_reset("HARD"   )) this.internal_nmi_vector.                  set_reset(this.internal_nmi_vector.                  get_reset("HARD"), "SOFT");
+            if ( this.internal_hw_error_fatal_mask.         has_reset("HARD"   )) this.internal_hw_error_fatal_mask.         set_reset(this.internal_hw_error_fatal_mask.         get_reset("HARD"), "SOFT");
+            if ( this.internal_hw_error_non_fatal_mask.     has_reset("HARD"   )) this.internal_hw_error_non_fatal_mask.     set_reset(this.internal_hw_error_non_fatal_mask.     get_reset("HARD"), "SOFT");
+            if ( this.internal_fw_error_fatal_mask.         has_reset("HARD"   )) this.internal_fw_error_fatal_mask.         set_reset(this.internal_fw_error_fatal_mask.         get_reset("HARD"), "SOFT");
+            if ( this.internal_fw_error_non_fatal_mask.     has_reset("HARD"   )) this.internal_fw_error_non_fatal_mask.     set_reset(this.internal_fw_error_non_fatal_mask.     get_reset("HARD"), "SOFT");
+//            if ( this.internal_mtime_l.                     has_reset("HARD"   )) this.internal_mtime_l.                     set_reset(this.internal_mtime_l.                     get_reset("HARD"), "SOFT");
+//            if ( this.internal_mtime_h.                     has_reset("HARD"   )) this.internal_mtime_h.                     set_reset(this.internal_mtime_h.                     get_reset("HARD"), "SOFT");
+//            if ( this.internal_mtimecmp_l.                  has_reset("HARD"   )) this.internal_mtimecmp_l.                  set_reset(this.internal_mtimecmp_l.                  get_reset("HARD"), "SOFT");
+//            if ( this.internal_mtimecmp_h.                  has_reset("HARD"   )) this.internal_mtimecmp_h.                  set_reset(this.internal_mtimecmp_h.                  get_reset("HARD"), "SOFT");
         endfunction
 
         virtual function void build();
@@ -270,6 +281,9 @@ package soc_ifc_reg_model_top_pkg;
         uvm_reg_map mbox_csr_AHB_map;
         uvm_reg_map mbox_csr_APB_map;
 
+        uvm_event mbox_lock_clr_miss;
+        uvm_event mbox_datain_to_dataout_predict;
+
         // This tracks expected functionality of the mailbox in a way that is
         // agnostic to the internal state machine implementation and strictly
         // observes the mailbox specification. This is what a more rigorous
@@ -285,6 +299,8 @@ package soc_ifc_reg_model_top_pkg;
         function new(string name = "mbox_csr_ext");
             super.new(name);
             mbox_fn_state_sigs = '{mbox_idle: 1'b1, default: 1'b0};
+            mbox_lock_clr_miss = new("mbox_lock_clr_miss");
+            mbox_datain_to_dataout_predict = new("mbox_datain_to_dataout_predict");
         endfunction : new
 
         // FIXME Manually maintaining a list here of registers that are configured
@@ -327,6 +343,8 @@ package soc_ifc_reg_model_top_pkg;
         super.reset(kind);
         mbox_data_q.delete();
         mbox_resp_q.delete();
+        mbox_lock_clr_miss.reset();
+        mbox_datain_to_dataout_predict.reset();
 
         // Mailbox State Changes
         // TODO what to do for FW update?
@@ -469,6 +487,7 @@ package soc_ifc_reg_model_top_pkg;
 
     // Scheduling helper class for delayed callback tasks
     `include "soc_ifc_reg_delay_job.svh"
+    `include "soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error.svh"
 
     // Callbacks for predicting reg-field updates
     `include "soc_ifc_reg_cbs_mbox_csr.svh"
@@ -487,27 +506,35 @@ package soc_ifc_reg_model_top_pkg;
     `include "soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base.svh"
     `include "soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_en_r_base.svh"
     `include "soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_trig_r_base.svh"
+    `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_FATAL.svh"
+    `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_DATA_DATA.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER.svh"
+    `include "soc_ifc_reg_cbs_soc_ifc_reg_secret.svh"
+    `include "soc_ifc_reg_cbs_soc_ifc_reg_fuse.svh"
+    `include "soc_ifc_reg_cbs_soc_ifc_reg_key.svh"
+    `include "soc_ifc_reg_cbs_soc_ifc_reg_internal.svh"
+    `include "soc_ifc_reg_cbs_sha512_acc_csr_LOCK_LOCK.svh"
 
 // pragma uvmf custom define_register_classes end
 // pragma uvmf custom define_block_map_coverage_class begin
    //--------------------------------------------------------------------
-   // Class: soc_ifc_fixme_map_coverage
+   // Class: soc_ifc_AHB_map_coverage
    // 
-   // Coverage for the 'fixme_map' in 'soc_ifc_reg_model'
+   // Coverage for the 'AHB_map' in 'soc_ifc_reg_model'
    //--------------------------------------------------------------------
-   class soc_ifc_fixme_map_coverage extends uvm_object;
-      `uvm_object_utils(soc_ifc_fixme_map_coverage)
+   class soc_ifc_AHB_map_coverage extends uvm_object;
+      `uvm_object_utils(soc_ifc_AHB_map_coverage)
 
       covergroup ra_cov(string name) with function sample(uvm_reg_addr_t addr, bit is_read);
 
          option.per_instance = 1;
          option.name = name; 
 
+         // FIXME
          ADDR: coverpoint addr {
             bins example_reg0 = {'h0};
             bins example_reg1 = {'h1};
@@ -522,7 +549,7 @@ package soc_ifc_reg_model_top_pkg;
 
       endgroup: ra_cov
 
-      function new(string name = "soc_ifc_fixme_map_coverage");
+      function new(string name = "soc_ifc_AHB_map_coverage");
          ra_cov = new(name);
       endfunction: new
 
@@ -530,7 +557,44 @@ package soc_ifc_reg_model_top_pkg;
          ra_cov.sample(offset, is_read);
       endfunction: sample
 
-   endclass: soc_ifc_fixme_map_coverage
+   endclass: soc_ifc_AHB_map_coverage
+   //--------------------------------------------------------------------
+   // Class: soc_ifc_APB_map_coverage
+   // 
+   // Coverage for the 'APB_map' in 'soc_ifc_reg_model'
+   //--------------------------------------------------------------------
+   class soc_ifc_APB_map_coverage extends uvm_object;
+      `uvm_object_utils(soc_ifc_APB_map_coverage)
+
+      covergroup ra_cov(string name) with function sample(uvm_reg_addr_t addr, bit is_read);
+
+         option.per_instance = 1;
+         option.name = name; 
+
+         // FIXME
+         ADDR: coverpoint addr {
+            bins example_reg0 = {'h0};
+            bins example_reg1 = {'h1};
+         }
+
+         RW: coverpoint is_read {
+            bins RD = {1};
+            bins WR = {0};
+         }
+
+         ACCESS: cross ADDR, RW;
+
+      endgroup: ra_cov
+
+      function new(string name = "soc_ifc_APB_map_coverage");
+         ra_cov = new(name);
+      endfunction: new
+
+      function void sample(uvm_reg_addr_t offset, bit is_read);
+         ra_cov.sample(offset, is_read);
+      endfunction: sample
+
+   endclass: soc_ifc_APB_map_coverage
 // pragma uvmf custom define_block_map_coverage_class end
 
    //--------------------------------------------------------------------
@@ -574,12 +638,23 @@ package soc_ifc_reg_model_top_pkg;
         soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute mbox_csr_mbox_execute_execute_cb;
         soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock   mbox_csr_mbox_unlock_unlock_cb;
 
+        soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_FATAL              soc_ifc_reg_CPTRA_HW_ERROR_FATAL_cb;
+        soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL          soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_DATA_DATA              soc_ifc_reg_CPTRA_TRNG_DATA_DATA_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK       soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ        soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE    soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER    soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER_cb;
 
+        soc_ifc_reg_cbs_soc_ifc_reg_secret   soc_ifc_reg_secret_cb;
+        soc_ifc_reg_cbs_soc_ifc_reg_fuse     soc_ifc_reg_fuse_cb;
+        soc_ifc_reg_cbs_soc_ifc_reg_key      soc_ifc_reg_key_cb;
+        soc_ifc_reg_cbs_soc_ifc_reg_internal soc_ifc_reg_internal_cb;
+
+        soc_ifc_reg_cbs_sha512_acc_csr_LOCK_LOCK sha512_acc_csr_LOCK_LOCK_cb;
+
+        uvm_reg_field cptra_fatal_flds[$];
+        uvm_reg_field cptra_non_fatal_flds[$];
         uvm_reg_field error_en_flds[$];
         uvm_reg_field notif_en_flds[$];
         uvm_reg_field error_sts_flds[$];
@@ -591,7 +666,8 @@ package soc_ifc_reg_model_top_pkg;
 
 // pragma uvmf custom instantiate_registers_within_block end
 
-      soc_ifc_fixme_map_coverage fixme_map_cg;
+      soc_ifc_AHB_map_coverage AHB_map_cg;
+      soc_ifc_APB_map_coverage APB_map_cg;
 
       // Function: new
       // 
@@ -603,8 +679,10 @@ package soc_ifc_reg_model_top_pkg;
       // 
       virtual function void build();
       if(has_coverage(UVM_CVR_ADDR_MAP)) begin
-         fixme_map_cg = soc_ifc_fixme_map_coverage::type_id::create("fixme_map_cg");
-         fixme_map_cg.ra_cov.set_inst_name(this.get_full_name());
+         AHB_map_cg = soc_ifc_AHB_map_coverage::type_id::create("AHB_map_cg");
+         APB_map_cg = soc_ifc_APB_map_coverage::type_id::create("APB_map_cg");
+         AHB_map_cg.ra_cov.set_inst_name({this.get_full_name(),"_AHB_cg"});
+         APB_map_cg.ra_cov.set_inst_name({this.get_full_name(),"_APB_cg"});
          void'(set_coverage(UVM_CVR_ADDR_MAP));
       end
 
@@ -658,12 +736,20 @@ package soc_ifc_reg_model_top_pkg;
         mbox_csr_mbox_execute_execute_cb = soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute::type_id::create("mbox_csr_mbox_execute_execute_cb");
         mbox_csr_mbox_unlock_unlock_cb   = soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock  ::type_id::create("mbox_csr_mbox_unlock_unlock_cb"  );
 
+        soc_ifc_reg_CPTRA_HW_ERROR_FATAL_cb            = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_FATAL          ::type_id::create("soc_ifc_reg_CPTRA_HW_ERROR_FATAL_cb"          );
+        soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL_cb        = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL      ::type_id::create("soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL_cb"      );
         soc_ifc_reg_CPTRA_TRNG_DATA_DATA_cb            = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_DATA_DATA          ::type_id::create("soc_ifc_reg_CPTRA_TRNG_DATA_DATA_cb"          );
         soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK_cb     = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK   ::type_id::create("soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK_cb"   );
         soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ_cb      = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ    ::type_id::create("soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ_cb"    );
         soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE_cb  = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE::type_id::create("soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE_cb");
         soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER_cb  = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER::type_id::create("soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER_cb");
 
+        soc_ifc_reg_secret_cb   = soc_ifc_reg_cbs_soc_ifc_reg_secret  ::type_id::create("soc_ifc_reg_secret_cb");
+        soc_ifc_reg_fuse_cb     = soc_ifc_reg_cbs_soc_ifc_reg_fuse    ::type_id::create("soc_ifc_reg_fuse_cb");
+        soc_ifc_reg_key_cb      = soc_ifc_reg_cbs_soc_ifc_reg_key     ::type_id::create("soc_ifc_reg_key_cb");
+        soc_ifc_reg_internal_cb = soc_ifc_reg_cbs_soc_ifc_reg_internal::type_id::create("soc_ifc_reg_internal_cb");
+
+        sha512_acc_csr_LOCK_LOCK_cb = soc_ifc_reg_cbs_sha512_acc_csr_LOCK_LOCK::type_id::create("sha512_acc_Csr_lock_lock_cb");
         // Callbacks compute side-effects to other registers in the reg-model
         // in response to 'do_predict'.
         // 'do_predict' is invoked by the reg_predictor after receiving a transaction
@@ -718,11 +804,35 @@ package soc_ifc_reg_model_top_pkg;
         uvm_reg_field_cb::add(mbox_csr_rm.mbox_unlock .unlock    , mbox_csr_mbox_unlock_unlock_cb   );
 
         /* -- soc_ifc_reg -- */
+        soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL    .get_fields(cptra_fatal_flds    );
+        soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.get_fields(cptra_non_fatal_flds);
+        foreach (cptra_fatal_flds    [ii]) if (cptra_fatal_flds    [ii].get_name() == "rsvd") cptra_fatal_flds    .delete(ii);
+        foreach (cptra_non_fatal_flds[ii]) if (cptra_non_fatal_flds[ii].get_name() == "rsvd") cptra_non_fatal_flds.delete(ii);
+
+        foreach (cptra_fatal_flds    [ii])           uvm_reg_field_cb::add(cptra_fatal_flds    [ii]               , soc_ifc_reg_CPTRA_HW_ERROR_FATAL_cb    );
+        foreach (cptra_non_fatal_flds[ii])           uvm_reg_field_cb::add(cptra_non_fatal_flds[ii]               , soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL_cb);
         foreach (soc_ifc_reg_rm.CPTRA_TRNG_DATA[ii]) uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_DATA[ii].DATA, soc_ifc_reg_CPTRA_TRNG_DATA_DATA_cb);
         uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_PAUSER_LOCK  .LOCK        , soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK_cb    );
         uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_STATUS       .DATA_REQ    , soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ_cb     );
         uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_STATUS       .DATA_WR_DONE, soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE_cb );
         uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_VALID_PAUSER .PAUSER      , soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER_cb );
+
+        foreach (soc_ifc_reg_rm.fuse_uds_seed[ii])             uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_uds_seed[ii].seed             , soc_ifc_reg_secret_cb);
+        foreach (soc_ifc_reg_rm.fuse_field_entropy[ii])        uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_field_entropy[ii].seed        , soc_ifc_reg_secret_cb);
+        foreach (soc_ifc_reg_rm.fuse_key_manifest_pk_hash[ii]) uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_key_manifest_pk_hash[ii].hash , soc_ifc_reg_fuse_cb);
+                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_key_manifest_pk_hash_mask.mask, soc_ifc_reg_fuse_cb);
+        foreach (soc_ifc_reg_rm.fuse_owner_pk_hash[ii])        uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_owner_pk_hash[ii].hash        , soc_ifc_reg_fuse_cb);
+                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_fmc_key_manifest_svn.svn      , soc_ifc_reg_fuse_cb);
+        foreach (soc_ifc_reg_rm.fuse_runtime_svn[ii])          uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_runtime_svn[ii].svn           , soc_ifc_reg_fuse_cb);
+                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_anti_rollback_disable.dis     , soc_ifc_reg_fuse_cb);
+        foreach (soc_ifc_reg_rm.fuse_idevid_cert_attr[ii])     uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_idevid_cert_attr[ii].cert     , soc_ifc_reg_fuse_cb);
+        foreach (soc_ifc_reg_rm.fuse_idevid_manuf_hsm_id[ii])  uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_idevid_manuf_hsm_id[ii].hsm_id, soc_ifc_reg_fuse_cb);
+                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_life_cycle.life_cycle         , soc_ifc_reg_fuse_cb);
+        foreach (soc_ifc_reg_rm.internal_obf_key[ii])          uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_obf_key[ii].key           , soc_ifc_reg_key_cb);
+                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_iccm_lock.lock            , soc_ifc_reg_internal_cb);
+
+        /* -- sha512_acc_csr -- */
+        uvm_reg_field_cb::add(sha512_acc_csr_rm.LOCK.LOCK, sha512_acc_csr_LOCK_LOCK_cb);
 
 // pragma uvmf custom construct_configure_build_registers_within_block end
 // pragma uvmf custom add_registers_to_block_map begin
@@ -762,6 +872,7 @@ package soc_ifc_reg_model_top_pkg;
         this.soc_ifc_AHB_map.add_submap(this.sha512_acc_csr_rm.sha512_acc_csr_AHB_map, 'h2_1000);
         this.soc_ifc_AHB_map.add_submap(this.soc_ifc_reg_rm.soc_ifc_reg_AHB_map, 'h3_0000);
 
+        void'(set_coverage(get_coverage() | UVM_CVR_REG_BITS | UVM_CVR_FIELD_VALS));
 // pragma uvmf custom add_registers_to_block_map end
 
 
@@ -771,8 +882,11 @@ package soc_ifc_reg_model_top_pkg;
       //
       function void sample(uvm_reg_addr_t offset, bit is_read, uvm_reg_map  map);
          if(get_coverage(UVM_CVR_ADDR_MAP)) begin
-            if(map.get_name() == "fixme_map_cg") begin
-               fixme_map_cg.sample(offset, is_read);
+            if(map.get_name() == "soc_ifc_AHB_map") begin
+               AHB_map_cg.sample(offset, is_read);
+            end
+            if(map.get_name() == "soc_ifc_APB_map") begin
+               APB_map_cg.sample(offset, is_read);
             end
          end
       endfunction: sample

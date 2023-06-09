@@ -147,11 +147,17 @@ uvmf:
       - name: sha_notif_intr
         dir: output
         width: '1'
+      - name: timer_intr
+        dir: output
+        width: '1'
 
       # NMI Vector
       - name: nmi_vector
         dir: output
         width: '32'
+      - name: nmi_intr
+        dir: output
+        width: '1'
 
       # ICCM Lock
       - name: iccm_lock
@@ -174,6 +180,10 @@ uvmf:
         iscompare: 'True'
         isrand: 'False'
       - name: sha_notif_intr_pending
+        type: bit
+        iscompare: 'True'
+        isrand: 'False'
+      - name: timer_intr_pending
         type: bit
         iscompare: 'True'
         isrand: 'False'
@@ -205,6 +215,10 @@ uvmf:
       # NMI Vector
       - name: nmi_vector
         type: bit [31:0]
+        iscompare: 'True'
+        isrand: 'False'
+      - name: nmi_intr_pending
+        type: bit
         iscompare: 'True'
         isrand: 'False'
 

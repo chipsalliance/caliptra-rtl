@@ -320,6 +320,12 @@ import soc_ifc_pkg::*;
    // Caliptra Memory Export Interface
    el2_mem_if                              el2_mem_export,
 
+   // Caliptra ECC status signals
+   output logic                            cptra_iccm_ecc_single_error,
+   output logic                            cptra_iccm_ecc_double_error,
+   output logic                            cptra_dccm_ecc_single_error,
+   output logic                            cptra_dccm_ecc_double_error,
+
    // external MPC halt/run interface
    input logic                             mpc_debug_halt_req, // Async halt request
    input logic                             mpc_debug_run_req,  // Async run request

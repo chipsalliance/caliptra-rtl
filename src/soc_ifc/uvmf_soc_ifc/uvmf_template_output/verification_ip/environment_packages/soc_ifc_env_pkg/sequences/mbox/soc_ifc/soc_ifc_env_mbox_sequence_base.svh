@@ -488,11 +488,28 @@ endtask
 //              0 to mbox_execute register
 //==========================================
 task soc_ifc_env_mbox_sequence_base::mbox_clr_execute();
+    uvm_reg_data_t err;
+
+    // Write 0 to mbox_execute to clear mbox_lock and end the test
     reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, uvm_reg_data_t'(0), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_EXECUTE)));
     report_reg_sts(reg_sts, "mbox_execute");
     if (!pauser_used_is_valid() && retry_failed_reg_axs) begin
         reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, uvm_reg_data_t'(0), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
         report_reg_sts(reg_sts, "mbox_execute");
+    end
+
+    // Check for any non-fatal mailbox protocol errors that occurred during the test
+    reg_model.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.read(reg_sts, err, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(500)));
+    // don't use report_reg_sts since this isn't a mbox reg and doesn't have pauser requirements
+    if (reg_sts != UVM_IS_OK) begin
+        `uvm_error("MBOX_SEQ", "Unexpected error on read from CPTRA_HW_ERROR_NON_FATAL")
+    end
+    if (|err) begin
+        `uvm_info("MBOX_SEQ", "Detected non-fatal errors at end of mailbox flow. Clearing.", UVM_LOW)
+        reg_model.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.write(reg_sts, err, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(500)));
+        if (reg_sts != UVM_IS_OK) begin
+            `uvm_error("MBOX_SEQ", "Unexpected error on write to CPTRA_HW_ERROR_NON_FATAL")
+        end
     end
 endtask
 

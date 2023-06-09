@@ -28,8 +28,8 @@ module caliptra_top_tb (
     );
 `endif
 
-    import caliptra_top_tb_pkg::*;
     import soc_ifc_pkg::*;
+    import caliptra_top_tb_pkg::*;
 
 `ifndef VERILATOR
     // Time formatting for %t in display tasks
@@ -53,11 +53,19 @@ module caliptra_top_tb (
     logic                       BootFSM_BrkPoint;
     logic                       scan_mode;
 
-    logic [7:0][31:0]           cptra_obf_key;
-    logic [0:7][31:0]           cptra_obf_key_uds, cptra_obf_key_fe;
+    logic [`CLP_OBF_KEY_DWORDS-1:0][31:0]          cptra_obf_key;
+    logic [0:`CLP_OBF_KEY_DWORDS-1][31:0]          cptra_obf_key_uds, cptra_obf_key_fe;
     
-    logic [0:11][31:0]          cptra_uds_tb;
-    logic [0:31][31:0]          cptra_fe_tb;
+    // logic [11:0][31:0]          cptra_uds_tb;
+    // logic [7:0][31:0]           cptra_fe_tb;
+    logic [0:`CLP_OBF_UDS_DWORDS-1][31:0]          cptra_uds_tb;
+    logic [0:`CLP_OBF_FE_DWORDS-1][31:0]           cptra_fe_tb;
+
+    // logic [11:0][31:0]          cptra_uds_rand;
+    // logic [7:0][31:0]           cptra_fe_rand;
+    logic [0:`CLP_OBF_UDS_DWORDS-1][31:0]          cptra_uds_rand;
+    logic [0:`CLP_OBF_FE_DWORDS-1][31:0]           cptra_fe_rand;
+    logic [0:`CLP_OBF_KEY_DWORDS-1][31:0]          cptra_obf_key_tb;
 
     logic                       start_apb_fuse_sequence;
 
@@ -67,7 +75,7 @@ module caliptra_top_tb (
         S_APB_WR_FE,
         S_APB_WR_FUSE_DONE,
         S_APB_WR_BOOT_GO,
-        S_APB_WAIT_FW_READY,
+        S_APB_WAIT_FW_TEST,
         S_APB_POLL_LOCK,
         S_APB_PRE_WR_CMD,
         S_APB_WR_CMD,
@@ -75,6 +83,11 @@ module caliptra_top_tb (
         S_APB_WR_DATAIN,
         S_APB_WR_STATUS,
         S_APB_WR_EXEC,
+        S_APB_WAIT_ERROR_AXS,
+        S_APB_RD_HW_ERROR_FATAL,
+        S_APB_WR_HW_ERROR_FATAL,
+        S_APB_RD_HW_ERROR_NON_FATAL,
+        S_APB_WR_HW_ERROR_NON_FATAL,
         S_APB_DONE,
         S_APB_ERROR
     } n_state_apb, c_state_apb;
@@ -130,10 +143,20 @@ module caliptra_top_tb (
     //device lifecycle
     security_state_t security_state;
 
+    ras_test_ctrl_t ras_test_ctrl;
     logic [63:0] generic_input_wires;
     logic        etrng_req;
     logic  [3:0] itrng_data;
     logic        itrng_valid;
+
+    logic cptra_error_fatal;
+    logic cptra_error_non_fatal;
+    logic [15:0] cptra_error_fatal_counter;
+    logic [15:0] cptra_error_non_fatal_counter;
+    logic cptra_error_fatal_dly_p;
+    logic cptra_error_non_fatal_dly_p;
+
+    logic [`CALIPTRA_APB_DATA_WIDTH-1:0] soc_ifc_hw_error_wdata;
 
     //Interrupt flags
     //logic nmi_int;
@@ -146,7 +169,12 @@ module caliptra_top_tb (
     //Reset flags
     logic assert_hard_rst_flag;
     logic deassert_hard_rst_flag;
+    logic assert_rst_flag_from_service;
+    logic assert_rst_flag_from_fatal;
     logic assert_rst_flag;
+    logic deassert_rst_flag_from_service;
+    int   count_deassert_rst_flag_from_fatal;
+    logic deassert_rst_flag_from_fatal;
     logic deassert_rst_flag;
 
     el2_mem_if el2_mem_export ();
@@ -176,18 +204,108 @@ module caliptra_top_tb (
         
         else if((c_state_apb == S_APB_WR_EXEC) && apb_xfer_end && int_flag) begin
             //Wait for APB flow to be done before toggling generic_input_wires
-            generic_input_wires <= 'h4001; //Toggle wires
+            generic_input_wires <= {$urandom, $urandom}; //Toggle wires
         end
         
         else if((cycleCnt == cycleCnt_ff + 15000) && int_flag) begin
             force caliptra_top_dut.soft_int = 'b1;
         end
         
-        else begin
+        else if (!ras_test_ctrl.error_injection_seen) begin
             release caliptra_top_dut.soft_int;
             release caliptra_top_dut.timer_int;
             generic_input_wires <= 'h0;
         end
+
+        else if (ras_test_ctrl.reset_generic_input_wires) begin
+            generic_input_wires <= {32'h0, ERROR_NONE_SET};
+        end
+
+        else if (c_state_apb == S_APB_RD_HW_ERROR_FATAL && apb_xfer_end) begin
+            if (PRDATA[`SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_ICCM_ECC_UNC_LOW]) begin
+                generic_input_wires <= {32'h0, ICCM_FATAL_OBSERVED};
+            end
+            else if (PRDATA[`SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_DCCM_ECC_UNC_LOW]) begin
+                generic_input_wires <= {32'h0, DCCM_FATAL_OBSERVED};
+            end
+            else if (PRDATA[`SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_NMI_PIN_LOW]) begin
+                generic_input_wires <= {32'h0, NMI_FATAL_OBSERVED};
+            end
+            else begin
+                generic_input_wires <= {32'h0, ERROR_NONE_SET};
+            end
+        end
+
+        else if (c_state_apb == S_APB_RD_HW_ERROR_NON_FATAL && apb_xfer_end) begin
+            if (PRDATA[`SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_MBOX_PROT_NO_LOCK_LOW]) begin
+                generic_input_wires <= {32'h0, PROT_NO_LOCK_NON_FATAL_OBSERVED};
+            end
+            else if (PRDATA[`SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_MBOX_PROT_OOO_LOW]) begin
+                generic_input_wires <= {32'h0, PROT_OOO_NON_FATAL_OBSERVED};
+            end
+            else if (PRDATA[`SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_MBOX_ECC_UNC_LOW]) begin
+                generic_input_wires <= {32'h0, MBOX_NON_FATAL_OBSERVED};
+            end
+            else begin
+                generic_input_wires <= {32'h0, ERROR_NONE_SET};
+            end
+        end
+
+    end
+
+    always@(negedge core_clk or negedge cptra_pwrgood) begin
+        // This persists across soft reset
+        if (!cptra_pwrgood) begin
+            soc_ifc_hw_error_wdata <= '0;
+        end
+        else if (c_state_apb inside {S_APB_RD_HW_ERROR_FATAL, S_APB_RD_HW_ERROR_NON_FATAL} && apb_xfer_end) begin
+            // HW ERROR registers are W1C, capture the set bits
+            soc_ifc_hw_error_wdata <= PRDATA;
+        end
+        else if (c_state_apb inside {S_APB_WR_HW_ERROR_FATAL, S_APB_WR_HW_ERROR_NON_FATAL} && apb_xfer_end) begin
+            // Clear after completing the write
+            soc_ifc_hw_error_wdata <= 0;
+        end
+    end
+
+    always@(negedge core_clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b) begin
+            cptra_error_fatal_counter     <= 16'h0;
+            cptra_error_non_fatal_counter <= 16'h0;
+        end
+        else begin
+            cptra_error_fatal_counter     <= cptra_error_fatal     ? (cptra_error_fatal_counter     + 16'h1) : 16'h0;
+            cptra_error_non_fatal_counter <= cptra_error_non_fatal ? (cptra_error_non_fatal_counter + 16'h1) : 16'h0;
+        end
+    end
+    // Pulse fires about 640ns after the original error interrupt occurs
+    always_comb cptra_error_fatal_dly_p     = cptra_error_fatal_counter     == 16'h0040;
+    always_comb cptra_error_non_fatal_dly_p = cptra_error_non_fatal_counter == 16'h0040;
+
+    always_comb assert_rst_flag_from_fatal = c_state_apb == S_APB_ERROR;
+    always@(negedge core_clk) begin
+        if (!cptra_pwrgood) begin
+            count_deassert_rst_flag_from_fatal <= 0;
+        end
+        // Start counting after the fatal flag asserts reset, and continue
+        // counting until the reset is deasserted
+        else if (assert_rst_flag_from_fatal || (!cptra_rst_b && |count_deassert_rst_flag_from_fatal)) begin
+            count_deassert_rst_flag_from_fatal <= count_deassert_rst_flag_from_fatal + 1;
+        end
+        else begin
+            count_deassert_rst_flag_from_fatal <= 0;
+        end
+    end
+    // Leave reset asserted for 32 clock cycles
+    always_comb deassert_rst_flag_from_fatal = count_deassert_rst_flag_from_fatal == 31;
+
+    assert property (@(posedge core_clk) c_state_apb == S_APB_WR_FUSE_DONE |-> !cptra_error_non_fatal) else begin
+        $error("cptra_error_non_fatal observed during boot up");
+        $finish;
+    end
+    assert property (@(posedge core_clk) c_state_apb == S_APB_WR_FUSE_DONE |-> !cptra_error_fatal) else begin
+        $error("cptra_error_fatal observed during boot up");
+        $finish;
     end
 
 
@@ -208,25 +326,39 @@ module caliptra_top_tb (
         if($test$plusargs("dumpon")) $dumpvars;
 `endif
 
-        //Key for UDS 
-        cptra_obf_key_uds = 256'h54682728db5035eb04b79645c64a95606abb6ba392b6633d79173c027c5acf77;
-        cptra_uds_tb = 384'he4046d05385ab789c6a72866e08350f93f583e2a005ca0faecc32b5cfc323d461c76c107307654db5566a5bd693e227c;
+        if($test$plusargs("RAND_DOE_VALUES")) begin
+            //cptra_obf_key = cptra_obf_key_tb;
+            for (int dword = 0; dword < $bits(cptra_obf_key/32); dword++) begin
+                cptra_obf_key[dword] = cptra_obf_key_tb[dword];
+            end
 
-        //Key for FE
-        cptra_obf_key_fe = 256'h31358e8af34d6ac31c958bbd5c8fb33c334714bffb41700d28b07f11cfe891e7;
-        cptra_fe_tb = {256'hb32e2b171b63827034ebb0d1909f7ef1d51c5f82c1bb9bc26bc4ac4dccdee835,
-                       256'h7dca6154c2510ae1c87b1b422b02b621bb06cac280023894fcff3406af08ee9b,
-                       256'he1dd72419beccddff77c722d992cdcc87e9c7486f56ab406ea608d8c6aeb060c,
-                       256'h64cf2785ad1a159147567e39e303370da445247526d95942bf4d7e88057178b0};
-
-        //swizzle the key so it matches the endianness of AES block
-        //used for visual inspection of uds/fe flow, manually switching keys and checking both
-        for (int dword = 0; dword < $bits(cptra_obf_key/32); dword++) begin
-            //cptra_obf_key[dword] = cptra_obf_key_uds[dword];
-            cptra_obf_key[dword] = cptra_obf_key_fe[dword];
+            cptra_uds_tb = cptra_uds_rand;
+            cptra_fe_tb = cptra_fe_rand;
         end
+        else begin
+            //Key for UDS
+            cptra_obf_key_uds = 256'h54682728db5035eb04b79645c64a95606abb6ba392b6633d79173c027c5acf77;
+            cptra_uds_tb = 384'he4046d05385ab789c6a72866e08350f93f583e2a005ca0faecc32b5cfc323d461c76c107307654db5566a5bd693e227c;
+
+            //Key for FE
+            cptra_obf_key_fe = 256'h31358e8af34d6ac31c958bbd5c8fb33c334714bffb41700d28b07f11cfe891e7;
+            cptra_fe_tb = 256'hb32e2b171b63827034ebb0d1909f7ef1d51c5f82c1bb9bc26bc4ac4dccdee835;
+                           /*256'h7dca6154c2510ae1c87b1b422b02b621bb06cac280023894fcff3406af08ee9b,
+                           256'he1dd72419beccddff77c722d992cdcc87e9c7486f56ab406ea608d8c6aeb060c,
+                           256'h64cf2785ad1a159147567e39e303370da445247526d95942bf4d7e88057178b0};*/
+
+            //swizzle the key so it matches the endianness of AES block
+            //used for visual inspection of uds/fe flow, manually switching keys and checking both
+            for (int dword = 0; dword < $bits(cptra_obf_key/32); dword++) begin
+                //cptra_obf_key[dword] = cptra_obf_key_uds[dword];
+                cptra_obf_key[dword] = cptra_obf_key_fe[dword];
+            end
+        end
+        
     end
 
+    assign assert_rst_flag   =   assert_rst_flag_from_service ||   assert_rst_flag_from_fatal;
+    assign deassert_rst_flag = deassert_rst_flag_from_service || deassert_rst_flag_from_fatal;
     always @(posedge core_clk) begin
         //Reset/pwrgood assertion during runtime
         if (cycleCnt == 15 || deassert_hard_rst_flag) begin
@@ -244,9 +376,11 @@ module caliptra_top_tb (
         else if (assert_hard_rst_flag) begin
             cptra_pwrgood <= 'b0;
             cptra_rst_b <= 'b0;
+            start_apb_fuse_sequence <= 1'b0;
         end
         else if (assert_rst_flag) begin
             cptra_rst_b <= 'b0;
+            start_apb_fuse_sequence <= 1'b0;
         end
         //wait for fuse indication
         else if (ready_for_fuses == 1'b0) begin
@@ -285,7 +419,7 @@ module caliptra_top_tb (
                 S_APB_WR_BOOT_GO: begin
                     $display ("SoC: Writing BootGo register\n");
                 end
-                S_APB_WAIT_FW_READY: begin
+                S_APB_WAIT_FW_TEST: begin
                     $display ("CLP: ROM Flow in progress...\n");
                 end
                 S_APB_POLL_LOCK: begin
@@ -310,6 +444,21 @@ module caliptra_top_tb (
                 S_APB_WR_STATUS: begin
                     $display ("SoC: Writing the Mbox Status Register\n");
                 end
+                S_APB_WAIT_ERROR_AXS: begin
+                    $display("SoC: Waiting to see cptra_error_fatal/non_fatal\n");
+                end
+                S_APB_RD_HW_ERROR_FATAL: begin
+                    $display("SoC: Observed cptra_error_fatal; reading Caliptra register\n");
+                end
+                S_APB_WR_HW_ERROR_FATAL: begin
+                    $display("SoC: Observed cptra_error_fatal; writing to clear Caliptra register\n");
+                end
+                S_APB_RD_HW_ERROR_NON_FATAL: begin
+                    $display("SoC: Observed cptra_error_non_fatal; reading Caliptra register\n");
+                end
+                S_APB_WR_HW_ERROR_NON_FATAL: begin
+                    $display("SoC: Observed cptra_error_non_fatal; writing to clear Caliptra register\n");
+                end
                 S_APB_DONE: begin
                 end
                 default: begin
@@ -330,7 +479,7 @@ module caliptra_top_tb (
             end
             //load fuses
             S_APB_WR_UDS: begin
-                if (apb_xfer_end && apb_wr_count == 11) begin
+                if (apb_xfer_end && apb_wr_count == (`CLP_OBF_UDS_DWORDS-1)) begin
                     n_state_apb = S_APB_WR_FE;
                     apb_wr_count_nxt = '0;
                 end
@@ -344,7 +493,7 @@ module caliptra_top_tb (
                 end
             end
             S_APB_WR_FE: begin
-                if (apb_xfer_end && apb_wr_count == 31) begin
+                if (apb_xfer_end && apb_wr_count == (`CLP_OBF_FE_DWORDS-1)) begin
                     n_state_apb = S_APB_WR_FUSE_DONE;
                     apb_wr_count_nxt = '0;
                 end
@@ -364,7 +513,7 @@ module caliptra_top_tb (
                        n_state_apb = S_APB_WR_BOOT_GO;
                     end
                     else begin
-                       n_state_apb = S_APB_WAIT_FW_READY;
+                       n_state_apb = S_APB_WAIT_FW_TEST;
                     end
                 end
                 else begin
@@ -374,7 +523,7 @@ module caliptra_top_tb (
             //Write BootGo register
             S_APB_WR_BOOT_GO: begin
                 if(apb_xfer_end) begin
-                   n_state_apb = S_APB_WAIT_FW_READY;
+                   n_state_apb = S_APB_WAIT_FW_TEST;
                 end
                 else begin
                    n_state_apb = S_APB_WR_BOOT_GO;
@@ -383,17 +532,20 @@ module caliptra_top_tb (
         
             //This is for Caliptra Demo, smoke tests will stop here since they don't set ready for fw
             //wait for fw req
-            S_APB_WAIT_FW_READY: begin
+            S_APB_WAIT_FW_TEST: begin
                 if (ready_for_fw_push & (apb_wr_count == 5)) begin
                     n_state_apb = S_APB_POLL_LOCK;
                     apb_wr_count_nxt = 0;
                 end
                 else if (ready_for_fw_push) begin
-                    n_state_apb = S_APB_WAIT_FW_READY;
+                    n_state_apb = S_APB_WAIT_FW_TEST;
                     apb_wr_count_nxt = apb_wr_count + 1;
                 end
+                else if (ras_test_ctrl.error_injection_seen) begin
+                    n_state_apb = S_APB_WAIT_ERROR_AXS;
+                end
                 else begin
-                    n_state_apb = S_APB_WAIT_FW_READY;
+                    n_state_apb = S_APB_WAIT_FW_TEST;
                     apb_wr_count_nxt = 0;
                 end
             end
@@ -458,6 +610,53 @@ module caliptra_top_tb (
                     n_state_apb = S_APB_DONE;
                 else
                     n_state_apb = S_APB_WR_STATUS;
+            end
+            S_APB_WAIT_ERROR_AXS: begin
+                if (cptra_error_fatal_dly_p) begin
+                    n_state_apb = S_APB_RD_HW_ERROR_FATAL;
+                end
+                else if (cptra_error_non_fatal_dly_p) begin
+                    n_state_apb = S_APB_RD_HW_ERROR_NON_FATAL;
+                end
+                else if (soc_ifc_hw_error_wdata) begin
+                    n_state_apb = S_APB_WR_HW_ERROR_FATAL;
+                end
+                else begin
+                    n_state_apb = S_APB_WAIT_ERROR_AXS;
+                end
+            end
+            S_APB_RD_HW_ERROR_FATAL: begin
+                // Go to ERROR state to wait for cptra_rst_b to assert
+                if (apb_xfer_end) begin
+                    n_state_apb = S_APB_ERROR;
+                end
+                else begin
+                    n_state_apb = S_APB_RD_HW_ERROR_FATAL;
+                end
+            end
+            S_APB_WR_HW_ERROR_FATAL: begin
+                if (apb_xfer_end) begin
+                    n_state_apb = S_APB_WAIT_ERROR_AXS;
+                end
+                else begin
+                    n_state_apb = S_APB_WR_HW_ERROR_FATAL;
+                end
+            end
+            S_APB_RD_HW_ERROR_NON_FATAL: begin
+                if (apb_xfer_end) begin
+                    n_state_apb = S_APB_WR_HW_ERROR_NON_FATAL;
+                end
+                else begin
+                    n_state_apb = S_APB_RD_HW_ERROR_NON_FATAL;
+                end
+            end
+            S_APB_WR_HW_ERROR_NON_FATAL: begin
+                if (apb_xfer_end) begin
+                    n_state_apb = S_APB_WAIT_ERROR_AXS;
+                end
+                else begin
+                    n_state_apb = S_APB_WR_HW_ERROR_NON_FATAL;
+                end
             end
             S_APB_DONE: begin
                 apb_wr_count_nxt = '0;
@@ -529,6 +728,22 @@ module caliptra_top_tb (
                 PADDR      = `CLP_MBOX_CSR_MBOX_STATUS;
                 PWDATA     = 32'h00000001;
             end
+            S_APB_RD_HW_ERROR_FATAL: begin
+                PADDR      = `CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL;
+                PWDATA     = soc_ifc_hw_error_wdata;
+            end
+            S_APB_WR_HW_ERROR_FATAL: begin
+                PADDR      = `CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL;
+                PWDATA     = soc_ifc_hw_error_wdata;
+            end
+            S_APB_RD_HW_ERROR_NON_FATAL: begin
+                PADDR      = `CLP_SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL;
+                PWDATA     = soc_ifc_hw_error_wdata;
+            end
+            S_APB_WR_HW_ERROR_NON_FATAL: begin
+                PADDR      = `CLP_SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL;
+                PWDATA     = soc_ifc_hw_error_wdata;
+            end
             S_APB_DONE: begin
                 PADDR      = '0;
                 PWDATA     = '0;
@@ -593,6 +808,26 @@ module caliptra_top_tb (
                 PAUSER     = '1;
             end
             S_APB_WR_STATUS: begin
+                PSEL       = 1;
+                PWRITE     = 1;
+                PAUSER     = '1;
+            end
+            S_APB_RD_HW_ERROR_FATAL: begin
+                PSEL       = 1;
+                PWRITE     = 0;
+                PAUSER     = '1;
+            end
+            S_APB_WR_HW_ERROR_FATAL: begin
+                PSEL       = 1;
+                PWRITE     = 1;
+                PAUSER     = '1;
+            end
+            S_APB_RD_HW_ERROR_NON_FATAL: begin
+                PSEL       = 1;
+                PWRITE     = 0;
+                PAUSER     = '1;
+            end
+            S_APB_WR_HW_ERROR_NON_FATAL: begin
                 PSEL       = 1;
                 PWRITE     = 1;
                 PAUSER     = '1;
@@ -668,8 +903,8 @@ caliptra_top caliptra_top_dut (
     .BootFSM_BrkPoint(BootFSM_BrkPoint),
 
     //SoC Interrupts
-    .cptra_error_fatal    (),
-    .cptra_error_non_fatal(),
+    .cptra_error_fatal    (cptra_error_fatal    ),
+    .cptra_error_non_fatal(cptra_error_non_fatal),
 
 `ifdef CALIPTRA_INTERNAL_TRNG
     .etrng_req             (etrng_req),
@@ -760,6 +995,7 @@ caliptra_top_tb_services #(
     .scan_mode(scan_mode),
 
     // TB Controls
+    .ras_test_ctrl(ras_test_ctrl),
     .cycleCnt(cycleCnt),
 
     //Interrupt flags
@@ -769,15 +1005,16 @@ caliptra_top_tb_services #(
     //Reset flags
     .assert_hard_rst_flag(assert_hard_rst_flag),
     .deassert_hard_rst_flag(deassert_hard_rst_flag),
-    .assert_rst_flag(assert_rst_flag),
-    .deassert_rst_flag(deassert_rst_flag)
+
+    .assert_rst_flag(assert_rst_flag_from_service),
+    .deassert_rst_flag(deassert_rst_flag_from_service),
+    
+    .cptra_uds_tb(cptra_uds_rand),
+    .cptra_fe_tb(cptra_fe_rand),
+    .cptra_obf_key_tb(cptra_obf_key_tb)
 
 );
 
 caliptra_top_sva sva();
-
-`ifndef VERILATOR
-soc_ifc_cov_bind i_soc_ifc_cov_bind();
-`endif
 
 endmodule
