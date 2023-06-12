@@ -5,6 +5,9 @@ contents:
   - generator:
       tags: ["L1", "CALIPTRA_TOP",  "directed", "ROM"]
       path: ""
+      config:
+        params:
+          timeout: 240
       weight: 100
       generations: 1
       formats: 

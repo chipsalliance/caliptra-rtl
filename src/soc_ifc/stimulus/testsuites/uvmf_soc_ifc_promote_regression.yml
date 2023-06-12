@@ -1,0 +1,15 @@
+document:
+  schema: 1.0
+
+contents:
+  - generator:
+      tags: ["L0", "SOC_IFC",  "directed", "smoke_test"]
+      path: ""
+      weight: 100
+      generations: 1
+      # Use seed 1 for the promote test, for consistent results
+      formats: 
+        generate: "reseed {template}.yml -seed 1"
+        path: "{template_basename}__1.yml"
+      templates:
+        $CALIPTRA_ROOT/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/tests/src/soc_ifc_cmdline_test   : { weight 100 }

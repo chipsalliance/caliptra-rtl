@@ -175,7 +175,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute extends soc_ifc_reg_cbs_mbox
                             `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to mbox_execute initiates mailbox command, but the data queue entry count [%0d dwords] does not match the value of dlen [%0d bytes]!", rm.mbox_data_q.size(), mbox_dlen_mirrored(rm)), UVM_LOW)
                         end
                         if (rm.mbox_data_q.size > dlen_cap_dw) begin
-                            `uvm_info("SOC_IFC_REG_CBS", $sformatf("Extra entries detected in mbox_data_q on control transfer - deleting %d entries", rm.mbox_data_q.size() - dlen_cap_dw), UVM_FULL)
+                            `uvm_info("SOC_IFC_REG_CBS", $sformatf("Extra entries detected in mbox_data_q on control transfer - deleting %d entries", rm.mbox_data_q.size() - dlen_cap_dw), UVM_LOW)
                             while (rm.mbox_data_q.size > dlen_cap_dw) begin
                                 // Continuously remove last entry until size is equal to dlen, since entries are added with push_back
                                 rm.mbox_data_q.delete(rm.mbox_data_q.size()-1);
@@ -183,7 +183,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute extends soc_ifc_reg_cbs_mbox
                         end
                         else if (rm.mbox_data_q.size < dlen_cap_dw) begin
                             uvm_reg_data_t zeros [$];
-                            `uvm_info("SOC_IFC_REG_CBS", $sformatf("Insufficient entries detected in mbox_data_q on control transfer - 0-filling %d entries", dlen_cap_dw - rm.mbox_data_q.size()), UVM_FULL)
+                            `uvm_info("SOC_IFC_REG_CBS", $sformatf("Insufficient entries detected in mbox_data_q on control transfer - 0-filling %d entries", dlen_cap_dw - rm.mbox_data_q.size()), UVM_LOW)
                             zeros = '{MBOX_DEPTH{32'h0}};
                             zeros = zeros[0:dlen_cap_dw - rm.mbox_data_q.size() - 1];
                             rm.mbox_data_q = {rm.mbox_data_q, zeros};
@@ -256,7 +256,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute extends soc_ifc_reg_cbs_mbox
                             `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to mbox_execute initiates mailbox command, but the data queue entry count [%0d dwords] does not match the value of dlen [%0d bytes]!", rm.mbox_data_q.size(), mbox_dlen_mirrored(rm)), UVM_LOW)
                         end
                         if (rm.mbox_data_q.size > dlen_cap_dw) begin
-                            `uvm_info("SOC_IFC_REG_CBS", $sformatf("Extra entries detected in mbox_data_q on control transfer - deleting %d entries", rm.mbox_data_q.size() - dlen_cap_dw), UVM_FULL)
+                            `uvm_info("SOC_IFC_REG_CBS", $sformatf("Extra entries detected in mbox_data_q on control transfer - deleting %d entries", rm.mbox_data_q.size() - dlen_cap_dw), UVM_LOW)
                             while (rm.mbox_data_q.size > dlen_cap_dw) begin
                                 // Continuously remove last entry until size is equal to dlen, since entries are added with push_back
                                 rm.mbox_data_q.delete(rm.mbox_data_q.size()-1);
@@ -264,7 +264,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute extends soc_ifc_reg_cbs_mbox
                         end
                         else if (rm.mbox_data_q.size < dlen_cap_dw) begin
                             uvm_reg_data_t zeros [$];
-                            `uvm_info("SOC_IFC_REG_CBS", $sformatf("Insufficient entries detected in mbox_data_q on control transfer - 0-filling %d entries", dlen_cap_dw - rm.mbox_data_q.size()), UVM_FULL)
+                            `uvm_info("SOC_IFC_REG_CBS", $sformatf("Insufficient entries detected in mbox_data_q on control transfer - 0-filling %d entries", dlen_cap_dw - rm.mbox_data_q.size()), UVM_LOW)
                             zeros = '{MBOX_DEPTH{32'h0}};
                             zeros = zeros[0:dlen_cap_dw - rm.mbox_data_q.size() - 1];
                             rm.mbox_data_q = {rm.mbox_data_q, zeros};

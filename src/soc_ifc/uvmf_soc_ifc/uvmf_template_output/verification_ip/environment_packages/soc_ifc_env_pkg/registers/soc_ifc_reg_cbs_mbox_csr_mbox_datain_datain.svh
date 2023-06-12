@@ -112,7 +112,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain extends soc_ifc_reg_cbs_mbox_c
                     if (rm.mbox_fn_state_sigs.soc_send_stage && (rm.mbox_status.mbox_fsm_ps.get_mirrored_value() == MBOX_RDY_FOR_DATA)) begin
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%s] results in data entry push to mbox_data_q", map.get_name()), UVM_FULL)
                         if (rm.mbox_data_q.size() >= dlen_cap_dw) begin
-                            `uvm_info("SOC_IFC_REG_CBS", "Push to datain observed when mbox_data_q already contains the same number of entries as indicated in mbox_dlen or the mailbox maximum capacity!", UVM_HIGH)
+                            `uvm_info("SOC_IFC_REG_CBS", "Push to datain observed when mbox_data_q already contains the same number of entries as indicated in mbox_dlen or the mailbox maximum capacity!", UVM_LOW)
                         end
                         rm.mbox_data_q.push_back(value);
                         if (rm.mbox_data_q.size() == 1) begin
@@ -126,6 +126,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain extends soc_ifc_reg_cbs_mbox_c
                             rm.mbox_dataout.dataout.predict(value, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
                             rm.mbox_datain_to_dataout_predict.reset();
                         end
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("After processing write to mbox_datain, mbox_data_q.size(): [%d]", rm.mbox_data_q.size()), UVM_DEBUG)
                     end
                     else if (rm.mbox_fn_state_sigs.mbox_idle) begin
                         error_job = soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error::type_id::create("error_job");
