@@ -519,6 +519,7 @@ package soc_ifc_reg_model_top_pkg;
     `include "soc_ifc_reg_cbs_soc_ifc_reg_key.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_internal.svh"
     `include "soc_ifc_reg_cbs_sha512_acc_csr_LOCK_LOCK.svh"
+    `include "soc_ifc_reg_cbs_sha512_acc_csr_EXECUTE_EXECUTE.svh"
 
 // pragma uvmf custom define_register_classes end
 // pragma uvmf custom define_block_map_coverage_class begin
@@ -653,7 +654,8 @@ package soc_ifc_reg_model_top_pkg;
         soc_ifc_reg_cbs_soc_ifc_reg_key      soc_ifc_reg_key_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_internal soc_ifc_reg_internal_cb;
 
-        soc_ifc_reg_cbs_sha512_acc_csr_LOCK_LOCK sha512_acc_csr_LOCK_LOCK_cb;
+        soc_ifc_reg_cbs_sha512_acc_csr_LOCK_LOCK       sha512_acc_csr_LOCK_LOCK_cb;
+        soc_ifc_reg_cbs_sha512_acc_csr_EXECUTE_EXECUTE sha512_acc_csr_EXECUTE_EXECUTE_cb;
 
         uvm_reg_field cptra_fatal_flds[$];
         uvm_reg_field cptra_non_fatal_flds[$];
@@ -752,7 +754,8 @@ package soc_ifc_reg_model_top_pkg;
         soc_ifc_reg_key_cb      = soc_ifc_reg_cbs_soc_ifc_reg_key     ::type_id::create("soc_ifc_reg_key_cb");
         soc_ifc_reg_internal_cb = soc_ifc_reg_cbs_soc_ifc_reg_internal::type_id::create("soc_ifc_reg_internal_cb");
 
-        sha512_acc_csr_LOCK_LOCK_cb = soc_ifc_reg_cbs_sha512_acc_csr_LOCK_LOCK::type_id::create("sha512_acc_Csr_lock_lock_cb");
+        sha512_acc_csr_LOCK_LOCK_cb       = soc_ifc_reg_cbs_sha512_acc_csr_LOCK_LOCK::type_id::create("sha512_acc_csr_LOCK_LOCK_cb");
+        sha512_acc_csr_EXECUTE_EXECUTE_cb = soc_ifc_reg_cbs_sha512_acc_csr_EXECUTE_EXECUTE::type_id::create("sha512_acc_csr_EXECUTE_EXECUTE_cb");
         // Callbacks compute side-effects to other registers in the reg-model
         // in response to 'do_predict'.
         // 'do_predict' is invoked by the reg_predictor after receiving a transaction
@@ -815,6 +818,7 @@ package soc_ifc_reg_model_top_pkg;
 
         foreach (cptra_fatal_flds    [ii])           uvm_reg_field_cb::add(cptra_fatal_flds    [ii]               , soc_ifc_reg_CPTRA_HW_ERROR_FATAL_cb    );
         foreach (cptra_non_fatal_flds[ii])           uvm_reg_field_cb::add(cptra_non_fatal_flds[ii]               , soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL_cb);
+        uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_BOOT_STATUS.status             , soc_ifc_reg_internal_cb                       );
         foreach (soc_ifc_reg_rm.CPTRA_TRNG_DATA[ii]) uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_DATA[ii].DATA, soc_ifc_reg_CPTRA_TRNG_DATA_DATA_cb);
         uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_PAUSER_LOCK  .LOCK        , soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK_cb    );
         uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_STATUS       .DATA_REQ    , soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ_cb     );
@@ -837,6 +841,7 @@ package soc_ifc_reg_model_top_pkg;
 
         /* -- sha512_acc_csr -- */
         uvm_reg_field_cb::add(sha512_acc_csr_rm.LOCK.LOCK, sha512_acc_csr_LOCK_LOCK_cb);
+        uvm_reg_field_cb::add(sha512_acc_csr_rm.EXECUTE.EXECUTE, sha512_acc_csr_EXECUTE_EXECUTE_cb);
 
 // pragma uvmf custom construct_configure_build_registers_within_block end
 // pragma uvmf custom add_registers_to_block_map begin

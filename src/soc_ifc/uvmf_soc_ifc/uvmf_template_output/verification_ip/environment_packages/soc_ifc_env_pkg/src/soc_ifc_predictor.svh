@@ -815,20 +815,8 @@ class soc_ifc_predictor #(
                 "MODE",
                 "START_ADDRESS",
                 "DLEN",
-                "DATAIN": begin
-                    `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_FULL)
-                end
-                "EXECUTE": begin
-                    // Expect a status transition on sha_notif_intr_pending
-                    // whenever an AHB write changes the value of SHA Accelerator Execute
-                    if (sha_notif_intr_pending ^ p_soc_ifc_rm.sha512_acc_csr_rm.EXECUTE.EXECUTE.get_mirrored_value()) begin
-                        sha_notif_intr_pending = p_soc_ifc_rm.sha512_acc_csr_rm.EXECUTE.EXECUTE.get_mirrored_value();
-                        if (sha_notif_intr_pending) begin
-                            `uvm_info("PRED_AHB", "Write to SHA512 Accel Execute triggers sha_notif_intr_pending transition", UVM_LOW)
-                            send_cptra_sts_txn = 1'b1;
-                        end
-                    end
-                end
+                "DATAIN",
+                "EXECUTE",
                 "STATUS",
                 ["DIGEST[0]":"DIGEST[9]"],
                 ["DIGEST[10]":"DIGEST[15]"],
@@ -846,6 +834,10 @@ class soc_ifc_predictor #(
                     end
                 end
                 // TODO FW ERRORs
+                "CPTRA_BOOT_STATUS": begin
+                    // Handled in callbacks via reg predictor
+                    `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                end
                 "CPTRA_FLOW_STATUS": begin
                     if (ahb_txn.RnW == AHB_WRITE &&
                         ((p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fw.get_mirrored_value()      != this.ready_for_fw_push) ||
@@ -860,7 +852,8 @@ class soc_ifc_predictor #(
                         send_soc_ifc_sts_txn = 1'b0;
                     end
                 end
-                "CPTRA_RESET_REASON": begin
+                "CPTRA_RESET_REASON",
+                "CPTRA_SECURITY_STATE": begin
                     if (ahb_txn.RnW == AHB_WRITE)
                         `uvm_info("PRED_AHB", {"Write to ", axs_reg.get_name(), " has no effect"}, UVM_DEBUG)
                 end
@@ -882,8 +875,12 @@ class soc_ifc_predictor #(
                         send_soc_ifc_sts_txn = 1'b0;
                     end
                 end
-                "CPTRA_FUSE_WR_DONE": begin
-                    `uvm_error("PRED_AHB", "Unexpected write to CPTRA_FUSE_WR_DONE register on AHB interface")
+                "CPTRA_FUSE_WR_DONE",
+                "CPTRA_BOOTFSM_GO": begin
+                    `uvm_error("PRED_AHB", $sformatf("Unexpected write to %s register on AHB interface", axs_reg.get_name()))
+                end
+                "CPTRA_DBG_MANUF_SERVICE_REG": begin
+                    `uvm_info("PRED_APB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
                 end
                 "CPTRA_GENERIC_OUTPUT_WIRES[0]": begin
                     if (ahb_txn.RnW == AHB_WRITE) begin
@@ -1446,7 +1443,8 @@ class soc_ifc_predictor #(
                     cptra_error_non_fatal = 1'b0;
                 end
             end
-            "CPTRA_RESET_REASON": begin
+            "CPTRA_RESET_REASON",
+            "CPTRA_SECURITY_STATE": begin
                 if (apb_txn.read_or_write == APB3_TRANS_WRITE)
                     `uvm_info("PRED_APB", {"Write to ", axs_reg.get_name(), " has no effect"}, UVM_DEBUG)
             end
@@ -1530,6 +1528,9 @@ class soc_ifc_predictor #(
                     end
 
                 end
+            end
+            "CPTRA_DBG_MANUF_SERVICE_REG": begin
+                `uvm_info("PRED_APB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
             ["fuse_uds_seed[0]" :"fuse_uds_seed[9]" ],
             ["fuse_uds_seed[10]":"fuse_uds_seed[11]"]: begin
@@ -1702,6 +1703,7 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
     else if (!mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_done_stage &&
         p_soc_ifc_rm.mbox_csr_rm.mbox_status.status.get_mirrored_value() != CMD_BUSY &&
         !p_soc_ifc_rm.mbox_csr_rm.mbox_unlock.unlock.get_mirrored_value() && p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_mirrored_value()) begin
+        `uvm_info("PRED_DLY", "Observed transition to soc_done_stage after delay job, triggering mailbox_data_avail transition", UVM_LOW)
         mailbox_data_avail = 1'b1;
         send_soc_ifc_sts_txn = 1'b1;
     end
@@ -1709,6 +1711,7 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
     else if (mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.uc_done_stage &&
              p_soc_ifc_rm.mbox_csr_rm.mbox_status.status.get_mirrored_value() != CMD_BUSY &&
              !p_soc_ifc_rm.mbox_csr_rm.mbox_unlock.unlock.get_mirrored_value() && p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_mirrored_value()) begin
+        `uvm_info("PRED_DLY", "Observed transition to uc_done_stage after delay job, triggering mailbox_data_avail deassertion", UVM_LOW)
         mailbox_data_avail = 1'b0;
         send_soc_ifc_sts_txn = 1'b1;
     end
@@ -1749,6 +1752,18 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
         `uvm_info("PRED_DLY", $sformatf("Detected assertion of timer interrupt"), UVM_HIGH)
         timer_intr_pending = 1;
         send_cptra_sts_txn = 1;
+    end
+
+    // SHA Accel Notification Interrupt
+    // Expect a status transition on sha_notif_intr_pending
+    // whenever a write changes the value of SHA Accelerator Execute
+    // and triggers a delayed prediction job resulting in interrupt firing
+    if (!sha_notif_intr_pending && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value()) begin
+        sha_notif_intr_pending = p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value();
+        if (sha_notif_intr_pending) begin
+            `uvm_info("PRED_AHB", "Delay job triggers sha_notif_intr_pending transition", UVM_LOW)
+            send_cptra_sts_txn = 1'b1;
+        end
     end
 
     //////////////////////////////////////////////////
@@ -1914,10 +1929,12 @@ function bit soc_ifc_predictor::cptra_status_txn_expected_after_warm_reset();
     /* FIXME calculate this from the reg-model somehow? */
     return !noncore_rst_out_asserted                                                                      ||
            !uc_rst_out_asserted                                                                           ||
-           p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value() ||
-           p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value() ||
-           sha_err_intr_pending                                                                           ||
-           sha_notif_intr_pending                                                                         ||
+//           p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value() ||
+//           p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value() ||
+//           sha_err_intr_pending                                                                           ||
+//           sha_notif_intr_pending                                                                         ||
+//           timer_intr_pending                                                                             ||
+//           nmi_intr_pending                                                                               ||
            iccm_locked                                                                                    ||
            |nmi_vector;
 endfunction
