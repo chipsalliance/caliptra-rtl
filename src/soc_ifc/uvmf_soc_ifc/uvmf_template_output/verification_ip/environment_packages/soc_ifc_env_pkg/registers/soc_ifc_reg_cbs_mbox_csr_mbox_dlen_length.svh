@@ -24,7 +24,15 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_dlen_length extends soc_ifc_reg_delay_
         `uvm_info("SOC_IFC_REG_DELAY_JOB", "Running delayed job for mbox_csr.mbox_dlen.length", UVM_HIGH)
         // Check mbox_unlock before predicting FSM change, since a force unlock
         // has priority over normal flow
-        if (rm.mbox_lock.lock.get_mirrored_value() && !rm.mbox_unlock.unlock.get_mirrored_value() && rm.mbox_status.mbox_fsm_ps.get_mirrored_value() == MBOX_RDY_FOR_DLEN) begin
+        // mbox_unlock only 'activates' on the falling edge of the pulse; if we detect
+        // that, bail out of this prediction job
+        if (rm.mbox_unlock.unlock.get_mirrored_value()) begin
+            uvm_wait_for_nba_region();
+            if (!rm.mbox_unlock.unlock.get_mirrored_value()) begin
+                return;
+            end
+        end
+        if (rm.mbox_lock.lock.get_mirrored_value() && rm.mbox_status.mbox_fsm_ps.get_mirrored_value() == MBOX_RDY_FOR_DLEN) begin
             rm.mbox_status.mbox_fsm_ps.predict(state_nxt, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
             `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("post_predict called through map [%p] on mbox_dlen results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
         end
