@@ -84,7 +84,7 @@ stages:
         - display_name: 'FILE LIST CHECK'
         - enabled: true
         - run_in_workspace: True
-        - timeout: 75
+        - timeout: 90
         - commands:
             - 'set -e'
             - 'cd \$AHA_POC_REPO'

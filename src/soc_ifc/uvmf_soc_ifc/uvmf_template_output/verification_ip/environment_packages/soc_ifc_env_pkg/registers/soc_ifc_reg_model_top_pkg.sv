@@ -497,6 +497,7 @@ package soc_ifc_reg_model_top_pkg;
     `include "soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain.svh"
     `include "soc_ifc_reg_cbs_mbox_csr_mbox_dataout_dataout.svh"
     `include "soc_ifc_reg_cbs_mbox_csr_mbox_status_status.svh"
+    `include "soc_ifc_reg_cbs_mbox_csr_mbox_status_mbox_fsm_ps.svh"
     `include "soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute.svh"
     `include "soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock.svh"
     `include "soc_ifc_reg_cbs_intr_block_rf_ext_global_intr_en_r_base.svh"
@@ -629,14 +630,15 @@ package soc_ifc_reg_model_top_pkg;
         soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_en_r_base       sha512_acc_csr_intr_block_rf_ext_notif_intr_en_r_base_cb;
         soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_trig_r_base     sha512_acc_csr_intr_block_rf_ext_notif_intr_trig_r_base_cb;
 
-        soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock       mbox_csr_mbox_lock_lock_cb;
-        soc_ifc_reg_cbs_mbox_csr_mbox_cmd_command     mbox_csr_mbox_cmd_command_cb;
-        soc_ifc_reg_cbs_mbox_csr_mbox_dlen_length     mbox_csr_mbox_dlen_length_cb;
-        soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain   mbox_csr_mbox_datain_datain_cb;
-        soc_ifc_reg_cbs_mbox_csr_mbox_dataout_dataout mbox_csr_mbox_dataout_dataout_cb;
-        soc_ifc_reg_cbs_mbox_csr_mbox_status_status   mbox_csr_mbox_status_status_cb;
-        soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute mbox_csr_mbox_execute_execute_cb;
-        soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock   mbox_csr_mbox_unlock_unlock_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock          mbox_csr_mbox_lock_lock_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_cmd_command        mbox_csr_mbox_cmd_command_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_dlen_length        mbox_csr_mbox_dlen_length_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain      mbox_csr_mbox_datain_datain_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_dataout_dataout    mbox_csr_mbox_dataout_dataout_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_status_status      mbox_csr_mbox_status_status_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_status_mbox_fsm_ps mbox_csr_mbox_status_mbox_fsm_ps_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute    mbox_csr_mbox_execute_execute_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock      mbox_csr_mbox_unlock_unlock_cb;
 
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_FATAL              soc_ifc_reg_CPTRA_HW_ERROR_FATAL_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL          soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL_cb;
@@ -727,14 +729,15 @@ package soc_ifc_reg_model_top_pkg;
         sha512_acc_csr_intr_block_rf_ext_notif_intr_en_r_base_cb       = soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_en_r_base      ::type_id::create("sha512_acc_csr_intr_block_rf_ext_notif_intr_en_r_base_cb"      );
         sha512_acc_csr_intr_block_rf_ext_notif_intr_trig_r_base_cb     = soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_trig_r_base    ::type_id::create("sha512_acc_csr_intr_block_rf_ext_notif_intr_trig_r_base_cb"    );
 
-        mbox_csr_mbox_lock_lock_cb       = soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock      ::type_id::create("mbox_csr_mbox_lock_lock_cb"      );
-        mbox_csr_mbox_cmd_command_cb     = soc_ifc_reg_cbs_mbox_csr_mbox_cmd_command    ::type_id::create("mbox_csr_mbox_cmd_command_cb"    );
-        mbox_csr_mbox_dlen_length_cb     = soc_ifc_reg_cbs_mbox_csr_mbox_dlen_length    ::type_id::create("mbox_csr_mbox_dlen_length_cb"    );
-        mbox_csr_mbox_datain_datain_cb   = soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain  ::type_id::create("mbox_csr_mbox_datain_datain_cb"  );
-        mbox_csr_mbox_dataout_dataout_cb = soc_ifc_reg_cbs_mbox_csr_mbox_dataout_dataout::type_id::create("mbox_csr_mbox_dataout_dataout_cb");
-        mbox_csr_mbox_status_status_cb   = soc_ifc_reg_cbs_mbox_csr_mbox_status_status  ::type_id::create("mbox_csr_mbox_status_status_cb"  );
-        mbox_csr_mbox_execute_execute_cb = soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute::type_id::create("mbox_csr_mbox_execute_execute_cb");
-        mbox_csr_mbox_unlock_unlock_cb   = soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock  ::type_id::create("mbox_csr_mbox_unlock_unlock_cb"  );
+        mbox_csr_mbox_lock_lock_cb          = soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock         ::type_id::create("mbox_csr_mbox_lock_lock_cb"         );
+        mbox_csr_mbox_cmd_command_cb        = soc_ifc_reg_cbs_mbox_csr_mbox_cmd_command       ::type_id::create("mbox_csr_mbox_cmd_command_cb"       );
+        mbox_csr_mbox_dlen_length_cb        = soc_ifc_reg_cbs_mbox_csr_mbox_dlen_length       ::type_id::create("mbox_csr_mbox_dlen_length_cb"       );
+        mbox_csr_mbox_datain_datain_cb      = soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain     ::type_id::create("mbox_csr_mbox_datain_datain_cb"     );
+        mbox_csr_mbox_dataout_dataout_cb    = soc_ifc_reg_cbs_mbox_csr_mbox_dataout_dataout   ::type_id::create("mbox_csr_mbox_dataout_dataout_cb"   );
+        mbox_csr_mbox_status_status_cb      = soc_ifc_reg_cbs_mbox_csr_mbox_status_status     ::type_id::create("mbox_csr_mbox_status_status_cb"     );
+        mbox_csr_mbox_status_mbox_fsm_ps_cb = soc_ifc_reg_cbs_mbox_csr_mbox_status_mbox_fsm_ps::type_id::create("mbox_csr_mbox_status_mbox_fsm_ps_cb");
+        mbox_csr_mbox_execute_execute_cb    = soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute   ::type_id::create("mbox_csr_mbox_execute_execute_cb"   );
+        mbox_csr_mbox_unlock_unlock_cb      = soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock     ::type_id::create("mbox_csr_mbox_unlock_unlock_cb"     );
 
         soc_ifc_reg_CPTRA_HW_ERROR_FATAL_cb            = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_FATAL          ::type_id::create("soc_ifc_reg_CPTRA_HW_ERROR_FATAL_cb"          );
         soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL_cb        = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL      ::type_id::create("soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL_cb"      );
@@ -794,14 +797,15 @@ package soc_ifc_reg_model_top_pkg;
         foreach (notif_trig_flds[ii]) uvm_reg_field_cb::add(notif_trig_flds[ii], sha512_acc_csr_intr_block_rf_ext_notif_intr_trig_r_base_cb    );
 
         /* -- mbox_csr -- */
-        uvm_reg_field_cb::add(mbox_csr_rm.mbox_lock   .lock      , mbox_csr_mbox_lock_lock_cb       );
-        uvm_reg_field_cb::add(mbox_csr_rm.mbox_cmd    .command   , mbox_csr_mbox_cmd_command_cb     );
-        uvm_reg_field_cb::add(mbox_csr_rm.mbox_dlen   .length    , mbox_csr_mbox_dlen_length_cb     );
-        uvm_reg_field_cb::add(mbox_csr_rm.mbox_datain .datain    , mbox_csr_mbox_datain_datain_cb   );
-        uvm_reg_field_cb::add(mbox_csr_rm.mbox_dataout.dataout   , mbox_csr_mbox_dataout_dataout_cb );
-        uvm_reg_field_cb::add(mbox_csr_rm.mbox_status .status    , mbox_csr_mbox_status_status_cb   );
-        uvm_reg_field_cb::add(mbox_csr_rm.mbox_execute.execute   , mbox_csr_mbox_execute_execute_cb );
-        uvm_reg_field_cb::add(mbox_csr_rm.mbox_unlock .unlock    , mbox_csr_mbox_unlock_unlock_cb   );
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_lock   .lock       , mbox_csr_mbox_lock_lock_cb         );
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_cmd    .command    , mbox_csr_mbox_cmd_command_cb       );
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_dlen   .length     , mbox_csr_mbox_dlen_length_cb       );
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_datain .datain     , mbox_csr_mbox_datain_datain_cb     );
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_dataout.dataout    , mbox_csr_mbox_dataout_dataout_cb   );
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_status .status     , mbox_csr_mbox_status_status_cb     );
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_status .mbox_fsm_ps, mbox_csr_mbox_status_mbox_fsm_ps_cb);
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_execute.execute    , mbox_csr_mbox_execute_execute_cb   );
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_unlock .unlock     , mbox_csr_mbox_unlock_unlock_cb     );
 
         /* -- soc_ifc_reg -- */
         soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL    .get_fields(cptra_fatal_flds    );

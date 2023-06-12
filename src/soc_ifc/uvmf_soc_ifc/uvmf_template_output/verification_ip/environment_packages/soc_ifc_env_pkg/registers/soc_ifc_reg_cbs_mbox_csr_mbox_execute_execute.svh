@@ -23,12 +23,21 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_execute_execute extends soc_ifc_reg_de
     mbox_fsm_state_e state_nxt;
     uvm_reg_map map;
     virtual task do_job();
+        bit skip = 0;
         `uvm_info("SOC_IFC_REG_DELAY_JOB", "Running delayed job for mbox_csr.mbox_execute.execute", UVM_HIGH)
         rm_top = rm.get_parent();
         intr_fld = rm_top.get_block_by_name("soc_ifc_reg_rm").get_block_by_name("intr_block_rf_ext").get_field_by_name("notif_cmd_avail_sts");
         // Check mbox_unlock before predicting FSM change, since a force unlock
         // has priority over normal flow
-        if (rm.mbox_lock.lock.get_mirrored_value() && !rm.mbox_unlock.unlock.get_mirrored_value()) begin
+        // mbox_unlock only 'activates' on the falling edge of the pulse; if we detect
+        // that, bail out of this prediction job
+        if (rm.mbox_unlock.unlock.get_mirrored_value()) begin
+            uvm_wait_for_nba_region();
+            if (!rm.mbox_unlock.unlock.get_mirrored_value()) begin
+                skip = 1;
+            end
+        end
+        if (rm.mbox_lock.lock.get_mirrored_value() && !skip) begin
             rm.mbox_status.mbox_fsm_ps.predict(state_nxt, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
             case (state_nxt) inside
                 MBOX_IDLE: begin
@@ -95,7 +104,7 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_execute_execute extends soc_ifc_reg_de
             `uvm_info("SOC_IFC_REG_DELAY_JOB",
                       $sformatf("Delay job for mbox_execute does not predict any changes due to: mbox_lock mirror [%d] mbox_unlock mirror [%d] mbox_fsm_ps [%p]",
                                 rm.mbox_lock.lock.get_mirrored_value(),
-                                rm.mbox_unlock.unlock.get_mirrored_value(),
+                                skip, /*rm.mbox_unlock.unlock.get_mirrored_value(),*/
                                 rm.mbox_status.mbox_fsm_ps.get_mirrored_value()),
                       UVM_LOW)
         end
