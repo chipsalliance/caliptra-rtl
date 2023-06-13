@@ -393,7 +393,11 @@ always_comb begin
 end
 
 el2_veer_wrapper rvtop (
+`ifdef CALIPTRA_FORCE_CPU_RESET
+    .rst_l                  ( 1'b0 ),
+`else
     .rst_l                  ( cptra_uc_rst_b),
+`endif
     .dbg_rst_l              ( cptra_pwrgood), 
     .clk                    ( clk      ),
     .rst_vec                ( reset_vector[31:1]),

@@ -182,6 +182,11 @@ ifdef DEBUG_UNLOCKED
     VERILATOR_TB_DEFS += +define+CALIPTRA_DEBUG_UNLOCKED
 endif
 
+# To enforce holding the RISC-V core in reset add "FORCE_CPU_RESET=1".
+ifdef FORCE_CPU_RESET
+    VERILATOR_TB_DEFS += +define+CALIPTRA_FORCE_CPU_RESET
+endif
+
 # Add testbench lib include paths
 CFLAGS += $(addprefix -I$(CALIPTRA_ROOT)/src/integration/test_suites/libs/,$(dir $(VERILATOR_TB_LIBS)))
 
