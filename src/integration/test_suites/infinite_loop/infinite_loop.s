@@ -55,3 +55,8 @@ inner:
 stdout: .word STDOUT
 .global verbosity_g
 verbosity_g: .word 2
+
+.global intr_count
+intr_count: .word 0
+.global cptra_intr_rcv
+cptra_intr_rcv: .word 0
