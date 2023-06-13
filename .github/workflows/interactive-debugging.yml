@@ -170,8 +170,8 @@ jobs:
           path: /opt/*.tar.gz
           retention-days: 1
 
-  build_and_test:
-    name: Run and test
+  gdb_tests:
+    name: Run GDB debugging tests
     runs-on: ubuntu-22.04
     needs: [build_verilator, build_openocd]
 
@@ -252,3 +252,66 @@ jobs:
           cd run
           ${CALIPTRA_ROOT}/.github/scripts/gdb_test.sh \
             /bin/bash -c 'cd ${CALIPTRA_ROOT}/src/integration/test_suites/infinite_loop && ./peripheral_access.sh'
+
+  openocd_tests:
+    name: Run OpenOCD debugging tests
+    runs-on: ubuntu-22.04
+    needs: [build_verilator, build_openocd]
+
+    env:
+      CARGO_INCREMENTAL: 0
+      PKG_CONFIG_PATH: /opt/verilator/share/pkgconfig
+      DEBIAN_FRONTEND: "noninteractive"
+
+    steps:
+
+      - name: Install Risc V Toolchain
+        run: |
+          # Building from source takes around 6.65 GB of disk and download size
+          wget -O toolchain.tar.gz https://github.com/stnolting/riscv-gcc-prebuilt/releases/download/rv64imc-3.0.0/riscv64-unknown-elf.gcc-12.1.0.tar.gz
+          mkdir /opt/riscv
+          tar -xzf toolchain.tar.gz -C /opt/riscv/
+
+      - name: Download Verilator binaries
+        uses: actions/download-artifact@v3
+        with:
+          name: verilator
+          path: /opt
+
+      - name: Download OpenOCD binaries
+        uses: actions/download-artifact@v3
+        with:
+          name: openocd
+          path: /opt
+
+      - name: Unpack binaries
+        run: |
+          pushd /opt
+            tar -zxvf verilator.tar.gz
+            tar -zxvf openocd.tar.gz
+          popd
+
+      - name: Setup path
+        run: |
+          echo /opt/riscv/bin:/opt/verilator/bin:/opt/openocd/bin >> $GITHUB_PATH
+
+      - name: Clone repository
+        uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+
+      - name: Build Verilated simulation
+        run: |
+          export CALIPTRA_ROOT=$(pwd)
+          mkdir run
+          make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile verilator-build TESTNAME=infinite_loop DEBUG_UNLOCKED=1 FORCE_CPU_RESET=1 \
+            OBJCACHE="" CC=gcc CXX=g++ LINK=g++
+          make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile program.hex TESTNAME=infinite_loop
+
+      - name: Test peripheral access with core in reset
+        run: |
+          export CALIPTRA_ROOT=$(pwd)
+          cd run
+          ${CALIPTRA_ROOT}/.github/scripts/openocd_test.sh \
+            -f board/caliptra-verilator-rst.cfg \
+            -f ${CALIPTRA_ROOT}/src/integration/test_suites/infinite_loop/peripheral_access.tcl
