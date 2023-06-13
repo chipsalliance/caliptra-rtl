@@ -95,7 +95,10 @@ jobs:
     env:
       CARGO_INCREMENTAL: 0
       SCCACHE_VERSION: 0.3.3
-      OPENOCD_VERSION: latest
+      # A custom fork is needed to allow bypassing core examination and accessing
+      # peripherals regardless of core state.
+      OPENOCD_REPO: https://github.com/antmicro/openocd
+      OPENOCD_VERSION: riscv-nohalt
       SCCACHE_GHA_CACHE_TO: sccache-openocd-10000
       SCCACHE_GHA_CACHE_FROM: sccache-openocd-
       # Change this to a new random value if you suspect the cache is corrupted
@@ -140,7 +143,7 @@ jobs:
         run: |
           sudo apt-get install make libtool pkg-config autoconf automake texinfo
           cd /tmp/
-          git clone -b "${OPENOCD_VERSION}" https://github.com/openocd-org/openocd
+          git clone -b "${OPENOCD_VERSION}" https://github.com/antmicro/openocd
           cd openocd
           ./bootstrap
           ./configure --prefix=/opt/openocd --enable-remote-bitbang \
