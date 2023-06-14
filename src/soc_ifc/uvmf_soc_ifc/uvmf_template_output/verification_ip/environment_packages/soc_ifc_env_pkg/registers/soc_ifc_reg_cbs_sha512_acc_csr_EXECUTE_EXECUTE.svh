@@ -106,6 +106,9 @@ class soc_ifc_reg_cbs_sha512_acc_csr_EXECUTE_EXECUTE extends uvm_reg_cbs;
                         delay_jobs.push_back(delay_job);
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] on map [%s] results in predicted interrupt. Delay job queued. value: 0x%x previous: 0x%x", kind, map.get_name(), value, previous), UVM_FULL)
                     end
+                    else begin
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] on map [%s] has no effect", kind, map.get_name()), UVM_FULL)
+                    end
                 end
                 default: begin
                     `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] on map [%s] has no effect", kind, map.get_name()), UVM_FULL)

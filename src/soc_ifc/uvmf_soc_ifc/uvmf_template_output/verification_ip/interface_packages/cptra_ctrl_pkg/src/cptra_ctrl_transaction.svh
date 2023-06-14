@@ -117,7 +117,7 @@ class cptra_ctrl_transaction  extends uvmf_transaction_base;
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("assert_clear_secrets:0x%x iccm_axs_blocked:0x%x pulse_rv_ecc_error:0x%x ",assert_clear_secrets,iccm_axs_blocked,pulse_rv_ecc_error);
+    return $sformatf("assert_clear_secrets:0x%x iccm_axs_blocked:0x%x pulse_rv_ecc_error:0x%x %s",assert_clear_secrets,iccm_axs_blocked,pulse_rv_ecc_error,super.convert2string);
     // pragma uvmf custom convert2string end
   endfunction
 

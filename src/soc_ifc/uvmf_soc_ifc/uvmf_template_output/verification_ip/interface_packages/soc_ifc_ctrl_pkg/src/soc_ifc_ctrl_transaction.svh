@@ -128,7 +128,7 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("cptra_obf_key_rand:0x%x set_pwrgood:0x%x assert_rst:0x%x wait_cycles:0x%x security_state:%p set_bootfsm_breakpoint:0x%x generic_input_val:0x%x ",cptra_obf_key_rand,set_pwrgood,assert_rst,wait_cycles,security_state,set_bootfsm_breakpoint,generic_input_val);
+    return $sformatf("cptra_obf_key_rand:0x%x set_pwrgood:0x%x assert_rst:0x%x wait_cycles:0x%x security_state:%p set_bootfsm_breakpoint:0x%x generic_input_val:0x%x %s",cptra_obf_key_rand,set_pwrgood,assert_rst,wait_cycles,security_state,set_bootfsm_breakpoint,generic_input_val,super.convert2string());
     // pragma uvmf custom convert2string end
   endfunction
 

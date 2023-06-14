@@ -617,6 +617,12 @@ endclass
       if (apb_expected_q.size() != 0)        entries_remaining |= 1;
       while (entries_remaining) begin : while_entries_remaining
           `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("Waiting for entries to drain. Remaining: soc_ifc_exp[%d] cptra_exp[%d] ahb_exp[%d] apb_exp[%d]", soc_ifc_expected_hash.size(), cptra_expected_hash.size(), ahb_expected_q.size(), apb_expected_q.size()),UVM_NONE)
+          begin: VERBOSE_TXN_DUMP
+              foreach (soc_ifc_expected_hash[ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("soc_ifc_expected[%0d]: %s",ii,soc_ifc_expected_hash[ii].convert2string()), UVM_FULL) end
+              foreach (cptra_expected_hash  [ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("cptra_expected[%0d]:   %s",ii,cptra_expected_hash  [ii].convert2string()), UVM_FULL) end
+              foreach (ahb_expected_q       [ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("ahb_expected[%0d]:     %s",ii,ahb_expected_q       [ii].convert2string()), UVM_FULL) end
+              foreach (apb_expected_q       [ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("apb_expected[%0d]:     %s",ii,apb_expected_q       [ii].convert2string()), UVM_FULL) end
+          end
           @entry_received;
           entries_remaining=0;
           if (soc_ifc_expected_hash.size() != 0) entries_remaining |= 1;

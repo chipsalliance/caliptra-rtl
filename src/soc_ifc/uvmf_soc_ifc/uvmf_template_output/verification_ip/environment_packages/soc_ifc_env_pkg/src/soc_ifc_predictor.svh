@@ -1683,7 +1683,7 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
     //
     // === mailbox_data_avail ===
     if (!mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_execute.execute.get_mirrored_value() && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_receive_stage) begin
-        `uvm_info("PRED_DLY", "Observed mbox_execute being set after delay job, triggering mailbox_data_avail transition", UVM_LOW)
+        `uvm_info("PRED_DLY", "Observed mbox_execute being set after delay job, triggering mailbox_data_avail transition", UVM_HIGH)
         send_soc_ifc_sts_txn = 1'b1;
         mailbox_data_avail = p_soc_ifc_rm.mbox_csr_rm.mbox_execute.execute.get_mirrored_value();
     end
@@ -1692,7 +1692,7 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
     // will not reset any pending interrupts to uC because those
     // are sticky
     else if (mailbox_data_avail && (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_idle || !p_soc_ifc_rm.mbox_csr_rm.mbox_execute.execute.get_mirrored_value())) begin
-        `uvm_info("PRED_DLY", $sformatf("Resetting mailbox_data_avail"), UVM_MEDIUM)
+        `uvm_info("PRED_DLY", $sformatf("Resetting mailbox_data_avail"), UVM_HIGH)
         send_soc_ifc_sts_txn = 1'b1;
         mailbox_data_avail = 1'b0;
     end
@@ -1703,7 +1703,7 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
     else if (!mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_done_stage &&
         p_soc_ifc_rm.mbox_csr_rm.mbox_status.status.get_mirrored_value() != CMD_BUSY &&
         !p_soc_ifc_rm.mbox_csr_rm.mbox_unlock.unlock.get_mirrored_value() && p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_mirrored_value()) begin
-        `uvm_info("PRED_DLY", "Observed transition to soc_done_stage after delay job, triggering mailbox_data_avail transition", UVM_LOW)
+        `uvm_info("PRED_DLY", "Observed transition to soc_done_stage after delay job, triggering mailbox_data_avail transition", UVM_HIGH)
         mailbox_data_avail = 1'b1;
         send_soc_ifc_sts_txn = 1'b1;
     end
@@ -1711,33 +1711,33 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
     else if (mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.uc_done_stage &&
              p_soc_ifc_rm.mbox_csr_rm.mbox_status.status.get_mirrored_value() != CMD_BUSY &&
              !p_soc_ifc_rm.mbox_csr_rm.mbox_unlock.unlock.get_mirrored_value() && p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_mirrored_value()) begin
-        `uvm_info("PRED_DLY", "Observed transition to uc_done_stage after delay job, triggering mailbox_data_avail deassertion", UVM_LOW)
+        `uvm_info("PRED_DLY", "Observed transition to uc_done_stage after delay job, triggering mailbox_data_avail deassertion", UVM_HIGH)
         mailbox_data_avail = 1'b0;
         send_soc_ifc_sts_txn = 1'b1;
     end
     // === soc_ifc_notif_intr_pending ===
     // Setting 'execute' - Expect a uC interrupt if enabled
     if (!soc_ifc_notif_intr_pending && p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value()) begin
-        `uvm_info("PRED_DLY", "Delay job triggers interrupt output", UVM_LOW)
+        `uvm_info("PRED_DLY", "Delay job triggers soc_ifc notification interrupt output", UVM_HIGH)
         soc_ifc_notif_intr_pending = 1'b1;
         send_cptra_sts_txn = 1'b1;
     end
 
     // mbox protocol violations TODO
     if (!cptra_error_fatal && |p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL.get_mirrored_value()) begin
-        `uvm_info("PRED_DLY", "Delay job triggers cptra_error_fatal output", UVM_LOW)
+        `uvm_info("PRED_DLY", "Delay job triggers cptra_error_fatal output", UVM_HIGH)
         cptra_error_fatal = 1;
         send_soc_ifc_sts_txn = 1'b1;
     end
     if (!cptra_error_non_fatal && |p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.get_mirrored_value()) begin
-        `uvm_info("PRED_DLY", "Delay job triggers cptra_error_non_fatal output", UVM_LOW)
+        `uvm_info("PRED_DLY", "Delay job triggers cptra_error_non_fatal output", UVM_HIGH)
         cptra_error_non_fatal = 1;
         send_soc_ifc_sts_txn = 1'b1;
     end
 
     // Check for any Error Interrupt
     if (!soc_ifc_error_intr_pending && p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value()) begin
-        `uvm_info("PRED_DLY", "Delay job triggers interrupt output", UVM_LOW)
+        `uvm_info("PRED_DLY", "Delay job triggers soc_ifc error interrupt output", UVM_HIGH)
         soc_ifc_error_intr_pending = 1'b1;
         send_cptra_sts_txn = 1'b1;
     end
@@ -1761,7 +1761,7 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
     if (!sha_notif_intr_pending && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value()) begin
         sha_notif_intr_pending = p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value();
         if (sha_notif_intr_pending) begin
-            `uvm_info("PRED_AHB", "Delay job triggers sha_notif_intr_pending transition", UVM_LOW)
+            `uvm_info("PRED_AHB", "Delay job triggers sha_notif_intr_pending transition", UVM_HIGH)
             send_cptra_sts_txn = 1'b1;
         end
     end
