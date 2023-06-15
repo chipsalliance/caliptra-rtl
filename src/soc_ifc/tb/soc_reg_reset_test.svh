@@ -14,6 +14,8 @@
 //
 //======================================================================
 
+
+
   //----------------------------------------------------------------
   // soc_reg_pwron_test()
   // 
@@ -23,12 +25,16 @@
 
     int tid = 0; // TID is to be updated ONLY if multiple writes to an address 
     strq_t soc_regnames;
+    int iq [$];
 
     logic [2:0] random_security_state; 
 
+    WordTransaction rdtrans = new();
+    string rname_dyn; 
+    word_addr_t raddr_dyn; 
+
 
     begin
-
       $display("\nExecuting task soc_reg_pwron_test"); 
       $display("---------------------------------\n");
 
@@ -47,6 +53,8 @@
       $display("Current security state = 0b%03b", security_state);
 
       soc_regnames = get_soc_regnames_minus_intr();
+      del_from_strq(soc_regnames, "INTERNAL_RV_MTIME_L"); // Exclude CPTRA_RV_MTIME_L
+
 
       $display ("0a. Checking Power-on values\n"); 
 
@@ -57,6 +65,14 @@
       sb.record_reset_values(0, COLD_RESET);
 
       read_regs(GET_APB, soc_regnames, 0, 3);
+
+      // *** begin - special register ***
+      rname_dyn = "INTERNAL_RV_MTIME_L";        // dynamic value due to auto-update
+      raddr_dyn = socregs.get_addr(rname_dyn);  
+
+      read_reg_chk_inrange(GET_APB, rname_dyn, 0, cycle_ctr_since_pwrgood - 'd1 , cycle_ctr_since_pwrgood + 'd20); 
+      repeat (3) @(posedge clk_tb);
+      // *** end - special register ***
 
       simulate_caliptra_boot();
 
@@ -76,6 +92,12 @@
       sb.record_reset_values(0, COLD_RESET);
 
       read_regs(GET_APB, soc_regnames, 0, 3);
+
+      // *** begin - special register ***
+      read_reg_chk_inrange(GET_APB, rname_dyn, 0, cycle_ctr_since_pwrgood - 'd1 , cycle_ctr_since_pwrgood + 'd20); 
+      repeat (3) @(posedge clk_tb);
+      // *** end - special register ***
+
 
       error_ctr = sb.err_count;
     end
@@ -100,6 +122,9 @@
     dword_t reset_reason; 
 
     WordTransaction transaction; 
+
+    string rname_dyn; 
+    word_addr_t raddr_dyn; 
 
     begin
       $display("\nExecuting task soc_reg_wrmrst_test"); 
@@ -127,12 +152,15 @@
 
       soc_regnames = get_soc_regnames_minus_intr();  
 
+
       foreach (soc_regnames[ix]) begin
         if ((soc_regnames[ix] == "CPTRA_FUSE_WR_DONE") || (soc_regnames[ix] == "CPTRA_TRNG_STATUS")) begin
           soc_regnames.delete(ix);  // can cause problem downstream if fuse_wr_done == True 
-          continue; // break; Missing registers? 
+          continue; 
         end
       end
+
+      del_from_strq(soc_regnames, "INTERNAL_RV_MTIME_L"); // Exclude CPTRA_RV_MTIME_L
 
       write_regs(SET_APB, soc_regnames, 0, 3);
       read_regs(GET_APB, soc_regnames, 0, 3); // just so we see what was written
@@ -169,6 +197,14 @@
       // expect old sticky values which are different from power-on values
       read_regs(GET_APB, soc_regnames, 0, 3);      
 
+      // *** begin - special register ***
+      rname_dyn = "INTERNAL_RV_MTIME_L";        // dynamic value due to auto-update
+      raddr_dyn = socregs.get_addr(rname_dyn);  
+
+      read_reg_chk_inrange(GET_APB, rname_dyn, 0, cycle_ctr_since_pwrgood - 'd1 , cycle_ctr_since_pwrgood + 'd20); 
+      repeat (3) @(posedge clk_tb);
+      // *** end - special register ***
+
       simulate_caliptra_boot();
 
       $display ("WRM_RST_TEST: After caliptra boot, Ready for fuses = %d, Flow status value is %x", ready_for_fuses, flow_status);  // DEBUG
@@ -177,6 +213,7 @@
       flow_status = update_CPTRA_FLOW_STATUS(ready_for_fuses); 
       transaction.update_byname("CPTRA_FLOW_STATUS", flow_status, 0);    
       transaction.display(); // DEBUG
+      sb.record_entry(transaction, SET_APB);
 
 
       // task above updates bootfsm_go so need to update scoreboard accordingly 
@@ -186,6 +223,11 @@
 
       read_regs(GET_AHB, soc_regnames, 0, 3);
 
+      // *** begin - special register ***
+      read_reg_chk_inrange(GET_APB, rname_dyn, 0, cycle_ctr_since_pwrgood - 'd1 , cycle_ctr_since_pwrgood + 'd20); 
+      repeat (3) @(posedge clk_tb);
+      // *** end - special register ***
+ 
       error_ctr = sb.err_count;
     end
 

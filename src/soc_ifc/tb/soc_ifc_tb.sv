@@ -154,6 +154,25 @@ module soc_ifc_tb
   //MH. Initialize to default device lifecycle later rather than TIE OFF
   security_state_t security_state, tmp_ss;  // '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED};
 
+  //MH. Tick timers
+  logic [31:0]   cycle_ctr_since_pwrgood;
+  logic [31:0]   cycle_ctr_since_rst;
+
+  always @(posedge clk_tb or negedge cptra_pwrgood_tb) begin
+    if (!cptra_pwrgood_tb)
+      cycle_ctr_since_pwrgood <= '0;
+    else
+      cycle_ctr_since_pwrgood <= cycle_ctr_since_pwrgood + 1'b1; 
+  end 
+
+  always @(posedge clk_tb or negedge cptra_rst_b_tb) begin
+    if (!cptra_rst_b_tb)
+      cycle_ctr_since_rst <= '0;
+    else
+      cycle_ctr_since_rst <= cycle_ctr_since_pwrgood + 1'b1; 
+  end
+
+
   always_comb begin
     mbox_sram_cs = mbox_sram_req.cs;
     mbox_sram_we = mbox_sram_req.we;
@@ -325,6 +344,13 @@ module soc_ifc_tb
       cycle_ctr = cycle_ctr + 1;
     end
 
+
+  //----------------------------------------------------------------
+  // tick_timer  
+  // 
+  // Counts number of clock ticks since reset
+  //----------------------------------------------------------------
+  
 
   //----------------------------------------------------------------
   // pulse_trig_handler 
@@ -1009,6 +1035,87 @@ module soc_ifc_tb
           repeat (wait_cycles) @(posedge clk_tb);
       end
     end
+  endtask // write_regs
+
+
+  //-----------------------------------------------------------------------------
+  // read_reg_chk_inrange()
+  //
+  // Utility for reading single register over APB/AHB and check if within range.
+  // NOTE. Wait times must be added explcitly outside routine
+  //-----------------------------------------------------------------------------
+  task read_reg_chk_inrange(input access_t modifier, string rname, int tid, int minval, int maxval); 
+
+    word_addr_t addr;
+    WordTransaction rdtrans;
+
+    begin
+      rdtrans = new();
+      addr = socregs.get_addr(rname);  
+
+      if (modifier == GET_AHB) begin 
+          read_single_word_ahb(addr);
+          $display("Read over AHB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, hrdata_o_tb); 
+          rdtrans.update(addr, hrdata_o_tb, tid); 
+      end else if (modifier == GET_APB) begin
+        read_single_word_apb(addr);
+        $display("Read over APB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, prdata_o_tb); 
+        rdtrans.update_byname(rname, prdata_o_tb,  tid); 
+        end else 
+          $error("TB ERROR. Unsupported access modifier %s", modifier.name()); 
+
+      sb.record_entry(rdtrans, SET_DIRECT);
+      sb.check_entry_inrange(rdtrans, minval, maxval); 
+    end
+
+  endtask // read_reg_chk_inrange
+
+
+  //-----------------------------------------------------------------------------
+  // write_reg_wsb()
+  //
+  // Utility for writing single register over APB/AHB and updating scoreboard 
+  // NOTE. Wait times must be added explcitly outside routine
+  //-----------------------------------------------------------------------------
+  task write_reg_wsb(input access_t modifier, string rname, int tid);
+
+    word_addr_t addr;
+    WordTransaction wrtrans;
+
+    begin
+      wrtrans = new();
+      addr = socregs.get_addr(rname);  
+
+      // write phase
+      wrtrans.update(addr, 0, tid); 
+      wrtrans.randomize();
+
+      if (modifier == SET_AHB) begin
+        write_single_word_ahb(addr, wrtrans.data); 
+        $display("Write over AHB: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, wrtrans.data);
+      end else if (modifier == SET_APB) begin
+        write_single_word_apb(addr, wrtrans.data); 
+        $display("Write over APB: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, wrtrans.data);
+      end else 
+        $error("TB ERROR. Unsupported access modifier %s", modifier.name()); 
+
+      // TODO. Make sure this is superfluous (implemented in package) before deleting
+      // Currently only pulsed register assumed to have cross-register modifications
+      if (is_pulsed_reg(rname)) begin
+        sb.record_entry(wrtrans, modifier);
+        pulse_trig_trans.copy_from(wrtrans);
+        pulse_trig_struct = '{
+          reg_name: rname, 
+          wr_trans: pulse_trig_trans,
+          wr_modifier: modifier
+        };
+        -> pulse_trig_event; 
+
+      end else 
+        sb.record_entry(wrtrans, modifier);
+
+    end // write_reg_wsb
+
   endtask
 
 
@@ -1059,7 +1166,7 @@ module soc_ifc_tb
 
       end
     end
-  endtask
+  endtask // read_regs
 
 
   //----------------------------------------------------------------
