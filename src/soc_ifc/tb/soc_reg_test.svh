@@ -32,9 +32,15 @@
 
     transaction_t entry;
     transq_t entries; 
-    WordTransaction wrtrans, tmptrans; 
+    WordTransaction wrtrans;
     
-    dword_t tmpval; 
+    dword_t data_dyn; 
+
+    string rname_dyn; 
+    word_addr_t raddr_dyn; 
+
+    logic [31:0] update_interval; 
+
 
     begin
       $display("Executing task soc_reg_test"); 
@@ -43,23 +49,18 @@
       // TODO. Randomize 
       set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_UNLOCKED});
 
-      // $display("Current security state = 0b%03b", security_state);
-
-
       tc_ctr = tc_ctr + 1;
 
       soc_regnames = get_soc_regnames_minus_fuse_intr();
 
-      // Exclude CPTRA_TRNG_STATUS
-      iq = soc_regnames.find_index with (item == "CPTRA_TRNG_STATUS");
-      if (iq.size() == 1)
-        soc_regnames.delete(iq[0]);
+      // Exclude CPTRA_TRNG_STATUS, INTERNAL_RV_MTIME_L
+      del_from_strq(soc_regnames, "INTERNAL_RV_MTIME_L");
+      del_from_strq(soc_regnames, "CPTRA_TRNG_STATUS");
 
       // Exclude CPTRA_TRNG_DATA*
       soc_regnames.find_index with (str_startswith(item, "CPTRA_TRNG_DATA"));
       foreach(iq[i]) 
         soc_regnames.delete(iq[i]);
-
 
       repeat (5) @(posedge clk_tb);
 
@@ -82,11 +83,40 @@
       write_read_regs(SET_AHB, GET_AHB, soc_regnames, tid, 3);
 
 
+
+      // *** begin - special register ***
+      rname_dyn = "INTERNAL_RV_MTIME_L";        // dynamic value due to auto-update
+      raddr_dyn = socregs.get_addr(rname_dyn);  
+
+      write_reg_wsb(SET_AHB, rname_dyn, tid);
+      update_interval = cycle_ctr_since_pwrgood;  //  within a few cycles
+      entries = sb.get_entries_withtid (rname_dyn, tid);
+      data_dyn = entries[0].data; 
+      repeat (3) @(posedge clk_tb);
+
+      read_reg_chk_inrange(GET_AHB, rname_dyn, tid, data_dyn + 'd3 , data_dyn + 'd23); 
+      repeat (3) @(posedge clk_tb);
+      // *** end - special register ***
+
+
+
       repeat (20) @(posedge clk_tb);
       sb.del_all();
 
       $display ("\n1b. Writing/Reading back to back using APB/APB every 3 cycles");
       write_read_regs(SET_APB, GET_APB, soc_regnames, tid, 3);
+
+      // *** begin - special register ***
+      write_reg_wsb(SET_APB, rname_dyn, tid);
+      // data_dyn from AHB write is unchanged
+      repeat (3) @(posedge clk_tb);
+
+      update_interval = cycle_ctr_since_pwrgood - update_interval;  //  within a few cycles
+      read_reg_chk_inrange(GET_APB, rname_dyn, tid, 
+        data_dyn + update_interval - 'd1 , data_dyn + update_interval + 'd20); 
+      repeat (3) @(posedge clk_tb);
+      repeat (3) @(posedge clk_tb);
+      // *** end - special register ***
 
 
       repeat (20) @(posedge clk_tb);
@@ -95,12 +125,35 @@
       $display ("\n1c. Writing/Reading back to back using APB/AHB every 3 cycles");
       write_read_regs(SET_APB, GET_AHB, soc_regnames, tid, 3);
 
+      // *** begin - special register ***
+      write_reg_wsb(SET_APB, rname_dyn, tid);
+      // data_dyn from AHB write is unchanged
+      repeat (3) @(posedge clk_tb);
+
+      update_interval = cycle_ctr_since_pwrgood - update_interval;  //  within a few cycles
+      read_reg_chk_inrange(GET_AHB, rname_dyn, tid, 
+        data_dyn + update_interval - 'd1 , data_dyn + update_interval + 'd20); 
+      repeat (3) @(posedge clk_tb);
+      // *** end - special register ***
+
 
       repeat (20) @(posedge clk_tb);
       sb.del_all();
 
       $display ("\n1d. Writing/Reading back to back using AHB/APB every 3 cycles");
       write_read_regs(SET_AHB, GET_APB, soc_regnames, tid, 3);
+
+      // *** begin - special register ***
+      write_reg_wsb(SET_AHB, rname_dyn, tid);
+      entries = sb.get_entries_withtid (rname_dyn, tid);
+      data_dyn = entries[0].data; 
+      repeat (3) @(posedge clk_tb);
+
+      read_reg_chk_inrange(GET_AHB, rname_dyn, tid, 
+        data_dyn + 'd3 , data_dyn + 'd23); 
+      repeat (3) @(posedge clk_tb);
+      // *** end - special register ***
+
 
       error_ctr = sb.err_count;
     end

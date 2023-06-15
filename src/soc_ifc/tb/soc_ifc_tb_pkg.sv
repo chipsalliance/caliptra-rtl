@@ -46,6 +46,12 @@ package soc_ifc_tb_pkg;
     int         tid;    
   } transaction_t;
 
+  // Useful struct to qualify an int "d" with a valid "v" status
+  typedef struct {
+    int d;   
+    int v;   
+  } intpair_t; 
+
   typedef transaction_t transq_t [$];  
 
   typedef string strq_t [$];  
@@ -137,13 +143,13 @@ package soc_ifc_tb_pkg;
     "CPTRA_GENERIC_OUTPUT_WIRES"                    : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_GENERIC_OUTPUT_WIRES_0,                       // 0x0c8 [2]  Generic Output Wires 
     "CPTRA_HW_REV_ID"                               : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_HW_REV_ID,                                    // 0x0d0      Caliptra HW RevID 
     "CPTRA_FW_REV_ID"                               : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FW_REV_ID_0,                                  // 0x0d4      Caliptra FW RevID
-    "CPTRA_HW_CONFIG" 	                            : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_HW_CONFIG,                                    // 0x0dc      Caliptra HW Config
-    "CPTRA_WDT_TIMER1_EN"                           : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_TIMER1_EN,                                // 0x0e0      Caliptra WDT Timer1 EN register 	
-    "CPTRA_WDT_TIMER1_CTRL"                         : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL,                              // 0x0e4      Caliptra WDT Timer1 CTRL register 	
-    "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD"               : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_0,                  // 0x0e8 [2]  Caliptra WDT Timer1 Timeout Period register 	
-    "CPTRA_WDT_TIMER2_EN"                           : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_TIMER2_EN,                                // 0x0f0      Caliptra WDT Timer2 EN register 	
-    "CPTRA_WDT_TIMER2_CTRL"                         : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL,                              // 0x0f4      Caliptra WDT Timer2 CTRL register 	
-    "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD"               : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_0,                  // 0x0f8 [2]  Caliptra WDT Timer2 Timeout Period register 	
+    "CPTRA_HW_CONFIG"                               : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_HW_CONFIG,                                    // 0x0dc      Caliptra HW Config
+    "CPTRA_WDT_TIMER1_EN"                           : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_TIMER1_EN,                                // 0x0e0      Caliptra WDT Timer1 EN register  
+    "CPTRA_WDT_TIMER1_CTRL"                         : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL,                              // 0x0e4      Caliptra WDT Timer1 CTRL register  
+    "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD"               : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_0,                  // 0x0e8 [2]  Caliptra WDT Timer1 Timeout Period register  
+    "CPTRA_WDT_TIMER2_EN"                           : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_TIMER2_EN,                                // 0x0f0      Caliptra WDT Timer2 EN register  
+    "CPTRA_WDT_TIMER2_CTRL"                         : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL,                              // 0x0f4      Caliptra WDT Timer2 CTRL register  
+    "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD"               : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_0,                  // 0x0f8 [2]  Caliptra WDT Timer2 Timeout Period register  
     "CPTRA_WDT_STATUS"                              : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_STATUS,                                   // 0x100      Caliptra WDT STATUS register
     "CPTRA_FUSE_VALID_PAUSER"                       : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FUSE_VALID_PAUSER,                            // 0x104      Valid User for FUSE 
     "CPTRA_FUSE_PAUSER_LOCK"                        : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FUSE_PAUSER_LOCK,                             // 0x108      Valid User for FUSE PAUSER Lock
@@ -165,7 +171,15 @@ package soc_ifc_tb_pkg;
     "INTERNAL_FW_UPDATE_RESET"                      : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET,                           // 0x624      FW Update Reset 
     "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES"          : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES,               // 0x628      FW Update Reset Wait Cycles 
     "INTERNAL_NMI_VECTOR"                           : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_NMI_VECTOR,                                // 0x62c      NMI Vector 
-    // 0x630..0x7fc    
+    "INTERNAL_HW_ERROR_FATAL_MASK"                  : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK,                       // 0x630      Hardware Error Fatal Mask   
+    "INTERNAL_HW_ERROR_NON_FATAL_MASK"              : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK,                   // 0x634      Hardware Error Non-Fatal Mask   
+    "INTERNAL_FW_ERROR_FATAL_MASK"                  : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_FW_ERROR_FATAL_MASK,                       // 0x638      Firmware Error Fatal Mask   
+    "INTERNAL_FW_ERROR_NON_FATAL_MASK"              : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_FW_ERROR_NON_FATAL_MASK,                   // 0x63C      Firmware Error Non-Fatal Mask 0
+    "INTERNAL_RV_MTIME_L"                           : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_RV_MTIME_L,                                // 0x640      mtime low   
+    "INTERNAL_RV_MTIME_H"                           : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_RV_MTIME_H,                                // 0x644      mtime high  
+    "INTERNAL_RV_MTIMECMP_L"                        : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_RV_MTIMECMP_L,                             // 0x648      mtimecmp low  
+    "INTERNAL_RV_MTIMECMP_H"                        : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_RV_MTIMECMP_H,                             // 0x64C      mtimecmp high
+    // 0x650..0x7fc    
     // "intr_block_rf"                         
     "INTR_BRF_GLOBAL_INTR_EN_R"                     : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R,                     // 0x800
     "INTR_BRF_ERROR_INTR_EN_R"                      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R,                      // 0x804
@@ -183,24 +197,25 @@ package soc_ifc_tb_pkg;
     "INTR_BRF_ERROR_BAD_FUSE_INTR_COUNT_R"          : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_R,          // 0x90c
     "INTR_BRF_ERROR_ICCM_BLOCKED_INTR_COUNT_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_R,      // 0x910
     "INTR_BRF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R,      // 0x914
-    "INTR_BRF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_R": SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_R,// 0x918 	
-    "INTR_BRF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_R": SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_R,// 0x91c 	
+    "INTR_BRF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_R": SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_R,// 0x918   
+    "INTR_BRF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_R": SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_R,// 0x91c   
     // 0x920..0x97c
     "INTR_BRF_NOTIF_CMD_AVAIL_INTR_COUNT_R"         : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_R,         // 0x980
     "INTR_BRF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R,      // 0x984
     "INTR_BRF_NOTIF_DEBUG_LOCKED_INTR_COUNT_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_R,      // 0x988
-	  "INTR_BRF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_R" 	    : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_R,      // 0x98c 
-    // 0x990..0x9fc 
+    "INTR_BRF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_R,      // 0x98c 
+    "INTR_BRF_NOTIF_GEN_IN_TOGGLE_INTR_COUNT_R"     : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_GEN_IN_TOGGLE_INTR_COUNT_R,     // 0x990
+    // 0x994..0x9fc 
     "INTR_BRF_ERROR_INTERNAL_INTR_COUNT_INCR_R"     : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R,     // 0xa00
     "INTR_BRF_ERROR_INV_DEV_INTR_COUNT_INCR_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_INCR_R,      // 0xa04
     "INTR_BRF_ERROR_CMD_FAIL_INTR_COUNT_INCR_R"     : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_INCR_R,     // 0xa08
     "INTR_BRF_ERROR_BAD_FUSE_INTR_COUNT_INCR_R"     : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_INCR_R,     // 0xa0c
     "INTR_BRF_ERROR_ICCM_BLOCKED_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_INCR_R, // 0xa10
     "INTR_BRF_ERROR_MBOX_ECC_UNC_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_INCR_R, // 0xa14
-    "INTR_BRF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_INCR_R,  // 0xa18 	
-    "INTR_BRF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_INCR_R,  // 0xa1c 	
+    "INTR_BRF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_INCR_R,  // 0xa18  
+    "INTR_BRF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_INCR_R,  // 0xa1c  
     "INTR_BRF_NOTIF_CMD_AVAIL_INTR_COUNT_INCR_R"    : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_INCR_R,    // 0xa20
-    "INTR_BRF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R, // 0xa24 	
+    "INTR_BRF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R, // 0xa24   
     "INTR_BRF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R, // 0xa28 
     "INTR_BRF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_INCR_R" : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_INCR_R  //  0xa2c
   };
@@ -210,10 +225,10 @@ package soc_ifc_tb_pkg;
   extent_t _undefined_addr_ranges [$] = {
     '{addr_min: SOCIFC_BASE + 16'h010c, addr_max: SOCIFC_BASE + 16'h01fc},
     '{addr_min: SOCIFC_BASE + 16'h0340, addr_max: SOCIFC_BASE + 16'h05fc},
-    '{addr_min: SOCIFC_BASE + 16'h0630, addr_max: SOCIFC_BASE + 16'h07fc},
+    '{addr_min: SOCIFC_BASE + 16'h0650, addr_max: SOCIFC_BASE + 16'h07fc},
     '{addr_min: SOCIFC_BASE + 16'h0824, addr_max: SOCIFC_BASE + 16'h08fc},
     '{addr_min: SOCIFC_BASE + 16'h0920, addr_max: SOCIFC_BASE + 16'h097c},
-    '{addr_min: SOCIFC_BASE + 16'h0990, addr_max: SOCIFC_BASE + 16'h09fc}
+    '{addr_min: SOCIFC_BASE + 16'h0994, addr_max: SOCIFC_BASE + 16'h09fc}
   };
  
 
@@ -239,6 +254,10 @@ package soc_ifc_tb_pkg;
     "CPTRA_RESET_REASON":                              32'h2,         // field WARM_RESET 
     "CPTRA_FUSE_WR_DONE":                              32'h1,         // field 0 
     "CPTRA_TIMER_CONFIG":                              32'hffff_ffff,                           
+    "INTERNAL_RV_MTIME_L":                             32'hffff_ffff,
+    "INTERNAL_RV_MTIME_H":                             32'hffff_ffff,
+    "INTERNAL_RV_MTIMECMP_L":                          32'hffff_ffff,
+    "INTERNAL_RV_MTIMECMP_H":                          32'hffff_ffff,
     "INTR_BRF_ERROR_INTERNAL_INTR_R":                  32'h3f,        // fields 5:0
     "INTR_BRF_ERROR_INTERNAL_INTR_COUNT_R":            32'hffff_ffff,          
     "INTR_BRF_ERROR_INV_DEV_INTR_COUNT_R":             32'hffff_ffff,
@@ -269,22 +288,27 @@ package soc_ifc_tb_pkg;
     "CPTRA_TRNG_STATUS.AHB"                            : `SOC_IFC_REG_CPTRA_TRNG_STATUS_DATA_REQ_MASK,     
     "CPTRA_FUSE_WR_DONE"                               : `SOC_IFC_REG_CPTRA_FUSE_WR_DONE_DONE_MASK,
     "CPTRA_BOOTFSM_GO"                                 : `SOC_IFC_REG_CPTRA_BOOTFSM_GO_GO_MASK, 
-
     "CPTRA_CLK_GATING_EN"                              : `SOC_IFC_REG_CPTRA_CLK_GATING_EN_CLK_GATING_EN_MASK ,
     "CPTRA_WDT_TIMER1_EN"                              : `SOC_IFC_REG_CPTRA_WDT_TIMER1_EN_TIMER1_EN_MASK,
     "CPTRA_WDT_TIMER1_CTRL"                            : `SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL_TIMER1_RESTART_MASK,
     "CPTRA_WDT_TIMER2_EN"                              : `SOC_IFC_REG_CPTRA_WDT_TIMER2_EN_TIMER2_EN_MASK,
     "CPTRA_WDT_TIMER2_CTRL"                            : `SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL_TIMER2_RESTART_MASK,
     "CPTRA_WDT_STATUS"                                 : (`SOC_IFC_REG_CPTRA_WDT_STATUS_T1_TIMEOUT_MASK | 
-                                                           `SOC_IFC_REG_CPTRA_WDT_STATUS_T2_TIMEOUT_MASK),
+                                                          `SOC_IFC_REG_CPTRA_WDT_STATUS_T2_TIMEOUT_MASK),
     "CPTRA_FUSE_PAUSER_LOCK"                           : `SOC_IFC_REG_CPTRA_FUSE_PAUSER_LOCK_LOCK_MASK, 
     "INTERNAL_ICCM_LOCK"                               : `SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK, 
     "INTERNAL_FW_UPDATE_RESET"                         : `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK ,
     "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES"             : `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES_WAIT_CYCLES_MASK,
-    "INTR_BRF_ERROR_INTERNAL_INTR_COUNT_INCR_R"        : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R_PULSE_MASK    ,   
-    "INTR_BRF_ERROR_INV_DEV_INTR_COUNT_INCR_R"         : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_INCR_R_PULSE_MASK     ,
-    "INTR_BRF_ERROR_CMD_FAIL_INTR_COUNT_INCR_R"        : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_INCR_R_PULSE_MASK    ,
-    "INTR_BRF_ERROR_BAD_FUSE_INTR_COUNT_INCR_R"        : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_INCR_R_PULSE_MASK    ,
+    "INTERNAL_HW_ERROR_FATAL_MASK"                     : (`SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_NMI_PIN_MASK      |                            
+                                                          `SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_DCCM_ECC_UNC_MASK |                            
+                                                          `SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_ICCM_ECC_UNC_MASK),                            
+    "INTERNAL_HW_ERROR_NON_FATAL_MASK"                 : (`SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK_MASK_MBOX_PROT_NO_LOCK_MASK | 
+                                                          `SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK_MASK_MBOX_PROT_OOO_MASK     | 
+                                                          `SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK_MASK_MBOX_ECC_UNC_MASK),      
+    "INTR_BRF_ERROR_INTERNAL_INTR_COUNT_INCR_R"        : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R_PULSE_MASK,   
+    "INTR_BRF_ERROR_INV_DEV_INTR_COUNT_INCR_R"         : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_INCR_R_PULSE_MASK,
+    "INTR_BRF_ERROR_CMD_FAIL_INTR_COUNT_INCR_R"        : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_INCR_R_PULSE_MASK,
+    "INTR_BRF_ERROR_BAD_FUSE_INTR_COUNT_INCR_R"        : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_INCR_R_PULSE_MASK,
     "INTR_BRF_ERROR_ICCM_BLOCKED_INTR_COUNT_INCR_R"    : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_INCR_R_PULSE_MASK,
     "INTR_BRF_ERROR_MBOX_ECC_UNC_INTR_COUNT_INCR_R"    : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_INCR_R_PULSE_MASK,
     "INTR_BRF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_INCR_R" : `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_INCR_R_PULSE_MASK,
@@ -316,7 +340,8 @@ package soc_ifc_tb_pkg;
     "INTR_BRF_NOTIF_CMD_AVAIL_INTR_COUNT_INCR_R"     ,
     "INTR_BRF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R"  ,
     "INTR_BRF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R"  , 
-    "INTR_BRF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_INCR_R"       
+    "INTR_BRF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_INCR_R"  ,     
+    "INTR_BRF_NOTIF_GEN_IN_TOGGLE_INTR_COUNT_R"   
   }; 
 
 
@@ -609,7 +634,7 @@ package soc_ifc_tb_pkg;
           "INTERNAL_FW_UPDATE_RESET"                        : begin
             exp_data = ahb_indata & get_mask(addr_name) | apb_rodata; 
 
-            $display ("TB DEBUG: ahb_indata = 0x%x and exp_data for INTERNAL_FW_UPDATE_RESET = 0x%x", ahb_indata, exp_data); 
+            // $display ("TB DEBUG: ahb_indata = 0x%x and exp_data for INTERNAL_FW_UPDATE_RESET = 0x%x", ahb_indata, exp_data); 
             if (exp_data[0]) begin  // write-one to clear
               _exp_register_data_dict["INTERNAL_ICCM_LOCK"] = '0;  
               $display ("TB INFO: Cross modification - Writing '1' to INTERNAL_FW_UPDATE_RESET also reset INTERNAL_ICCM_LOCK"); 
@@ -622,6 +647,14 @@ package soc_ifc_tb_pkg;
 
           "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES"            : exp_data = ahb_indata & get_mask(addr_name) | apb_rodata;  
           "INTERNAL_NMI_VECTOR"                             : exp_data = ahb_indata | apb_rodata;  
+          "INTERNAL_HW_ERROR_FATAL_MASK"                    : exp_data = ahb_indata & get_mask(addr_name) | apb_rodata;  
+          "INTERNAL_HW_ERROR_NON_FATAL_MASK"                : exp_data = ahb_indata & get_mask(addr_name) | apb_rodata;  
+          "INTERNAL_FW_ERROR_FATAL_MASK"                    : exp_data = ahb_indata | apb_rodata;  
+          "INTERNAL_FW_ERROR_NON_FATAL_MASK"                : exp_data = ahb_indata | apb_rodata;  
+          "INTERNAL_RV_MTIME_L"                             : exp_data = ahb_indata | apb_rodata;
+          "INTERNAL_RV_MTIME_H"                             : exp_data = ahb_indata | apb_rodata;
+          "INTERNAL_RV_MTIMECMP_L"                          : exp_data = ahb_indata | apb_rodata;
+          "INTERNAL_RV_MTIMECMP_H"                          : exp_data = ahb_indata | apb_rodata;
 
           default: exp_data = indata;
 
@@ -814,6 +847,17 @@ package soc_ifc_tb_pkg;
     return (s2 == s1.substr(0, s2.len() - 1));
 
   endfunction  
+
+
+  function automatic del_from_strq(inout strq_t mutable_strq, input string name);  
+
+    automatic int iq [$];
+
+    iq = mutable_strq.find_index with (item == name); 
+    foreach (iq[i]) 
+      mutable_strq.delete(iq[i]);
+
+  endfunction 
 
 
   function automatic dword_t mask_shifted(dword_t v, dword_t n);
@@ -1134,6 +1178,65 @@ package soc_ifc_tb_pkg;
     endfunction
 
 
+    function intpair_t find_matching_transaction(word_addr_t addr, int tid); 
+      // returns {data, valid} struct pair  
+      // Ideally searches through scoreboard table to fine matching transaction.  For 
+      // all practical purposes, for a register model only the most recent modication matters. 
+      // The code is kept for reference/future usage.
+
+      transaction_t temp_trans; 
+      intpair_t matched_p; 
+      transq_t qr; 
+
+      int err_found = 0;
+      int matched_d = 0; 
+
+      if (!addr_table.exists(addr)) begin
+        $display ("TB fault. Address %x does not exist", addr);
+        err_found = 1;
+      end else begin
+        qr = addr_table[addr];
+        if (qr.size() == 0) begin
+          $display ("TB fault. qr size is 0 for addr %x", addr); 
+          err_found = 1; 
+        end else if (qr.size() == 1) begin
+          // FIXME. This needs a better change. If a write to a register modified register model
+          //    (_exp_register_data_dict) and then some other reg operation modified that, this 
+          //    transaction's entry in scoreboard is no longer valid! Need TIMESTAMP!
+          //
+          // temp_trans = qr[0]; 
+          // matched_d = int'(temp_trans.data);
+
+          matched_d = int'(_exp_register_data_dict[_imap_soc_register_dict[addr]]);
+        end else begin
+          qr = addr_table[addr].find_first with(item.tid == tid); 
+          if (qr.size() == 0)  begin
+            $display ("TB fault. No transaction with id %d found for addr %x", tid, addr);
+            err_found = 1; 
+          end else if (qr.size() > 1) begin
+            $display ("TB fault. Multiple transactions with id %d found for addr %x", tid, addr);
+            err_found = 1; 
+        end else begin
+            // TODO. Same issue related to FIXME above.
+            // temp_trans = qr[0];
+            // matched_d = int'(temp_trans.data);
+
+            matched_d = int'(_exp_register_data_dict[_imap_soc_register_dict[addr]]);
+          end
+        end
+
+        if (err_found) 
+            $display("ERROR. No matching transaction with tid %d in Reg Scoreboard for addr = %s(0x%08x)",
+              tid, _imap_soc_register_dict[addr], addr);
+      end
+
+      err_count += err_found;   
+      matched_p = {d: matched_d, v: int'(err_found == 0)};
+      return matched_p; 
+
+    endfunction 
+
+
     // TODO. Consider implementing deletion along with checking
     //      returns cumulative (object.)error count
     //      don't check tid if only one transaction
@@ -1141,55 +1244,53 @@ package soc_ifc_tb_pkg;
 
 
     function int check_entry(WordTransaction transaction);
-      // returns cumulative (object.)error count
-      // don't check tid if only one transaction
+      // returns cumulative (object.)error count - ignore tid if only one transaction
 
       word_addr_t addr = transaction.addr;
       dword_t data = transaction.data;
       int tid = transaction.tid;
 
-      transaction_t temp_trans; 
+      intpair_t matched_p;
+      int err_found = 1; 
 
-      transq_t qr; 
-      int err_found = 0;
+      matched_p = find_matching_transaction(addr, tid);
 
-      if (!addr_table.exists(addr)) 
-        $display ("TB fault. Address %x does not exist", addr);
-      else begin
-        qr = addr_table[addr];
-        if (qr.size() == 0) begin
-          $display ("TB fault. qr size is 0 for addr %x", addr); 
-          err_found = 1; 
-        end else if (qr.size() == 1) begin
-          temp_trans = qr[0]; 
-          // FIXME. This needs a better change. If a write to a register modified register model
-          // (_exp_register_data_dict) and then some other reg operation modified that, this 
-          // transaction's entry in scoreboard is no longer valid!  
-          // err_found = int'(temp_trans.data != data);
-          err_found = int'(_exp_register_data_dict[_imap_soc_register_dict[addr]] != data);
-        end else begin
-          qr = addr_table[addr].find_first with(item.tid == tid); 
-          if (qr.size() == 0)  begin
-            $display ("TB fault. No transaction with id %d found for addr %x", tid, addr);
-            err_found = 1; 
-          end else if (qr.size() == 0) begin
-            $display ("TB fault. Multiple transactions with id %d found for addr %x", tid, addr);
-            err_found = 1; 
-        end else begin
-            temp_trans = qr[0];
-            // Same issue related to FIXME above.
-            // err_found = int'(temp_trans.data != data);
-            err_found = int'(_exp_register_data_dict[_imap_soc_register_dict[addr]] != data);
-          end
-        end
+      if (matched_p.v) 
+        err_found = int'(matched_p.d != data);
 
-        if (err_found) 
-            $display("ERROR from Reg Scoreboard for addr = %s(0x%08x); observed data = 0x%08x | expected data = 0x%08x",
-              _imap_soc_register_dict[addr], addr, data, qr[0].data); 
+      if (err_found) begin
+        $display("ERROR from Reg Scoreboard for addr = %s(0x%08x); observed data = 0x%08x | expected data = 0x%08x",
+          _imap_soc_register_dict[addr], addr, data, matched_p.d); 
       end
 
       err_count += err_found;   
-      return err_count;
+      return err_count; 
+
+    endfunction 
+
+
+    function check_entry_inrange(WordTransaction transaction, int minval, int maxval);
+      // Just like RegScoreboard::check_entry but has range to compare against
+
+      word_addr_t addr = transaction.addr;
+      dword_t data = transaction.data;
+      int tid = transaction.tid;
+
+      intpair_t matched_p;
+      int err_found = 1; 
+
+      matched_p = find_matching_transaction(addr, tid);
+
+      if (matched_p.v)  // NOTE. ignore matching data since range needed
+        err_found = int'((data < minval) || (data > maxval));
+
+      if (err_found) begin
+        $display("ERROR from Reg Scoreboard for addr = %s(0x%08x); observed data = 0x%08x | expected data in [0x%08x, 0x%08x]",
+          _imap_soc_register_dict[addr], addr, data, minval, maxval); 
+      end
+
+      err_count += err_found;   
+      return err_count; 
 
     endfunction 
 
