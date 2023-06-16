@@ -88,3 +88,17 @@ reg {
              [br]SOC Access:      RWL-S";
     Fuse life_cycle[2]=0;
 } fuse_life_cycle;
+reg {
+    desc = "0 - Verify Caliptra firmware images with ECDSA-only; 1 - Verify Caliptra firmware images with both ECDSA and LMS 
+             [br]Caliptra Access: RO
+             [br]SOC Access:      RWL-S";
+    Fuse lms_verify[1]=0;
+} fuse_lms_verify;
+reg {
+    desc = "Bits for revoking LMS public keys in the key manifest
+             [br]Caliptra Access: RO
+             [br]SOC Access:      RWL-S";
+    Fuse lms_revocation[32]=0;
+} fuse_lms_revocation;
+
+

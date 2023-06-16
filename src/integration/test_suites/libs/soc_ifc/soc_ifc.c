@@ -45,6 +45,29 @@ void soc_ifc_set_flow_status_field(uint32_t field) {
     lsu_write_32(CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS,reg);
 }
 
+// This function as implemented will clear all the bits in the register on writing '1; 
+// In future, if this register has additional bits that cannot be cleared on writing '1, 
+// then this function also needs an update in addition to the RTL itself
+void soc_ifc_w1clr_sha_lock_field(uint32_t field) {
+    VPRINTF(MEDIUM,"SOC_IFC: Clear SHA accelerator lock by writing '1: 0x%x\n", field);
+    uint32_t reg;
+    reg = lsu_read_32(CLP_SHA512_ACC_CSR_LOCK);
+    if (field & ~SHA512_ACC_CSR_LOCK_LOCK_MASK) {
+       VPRINTF(FATAL, "SOC_IFC: Bad field value");
+       SEND_STDOUT_CTRL(0x1); 
+    } 
+    else if (reg & ~SHA512_ACC_CSR_LOCK_LOCK_MASK) {
+       VPRINTF(FATAL, "SOC_IFC: Bad field value");
+       SEND_STDOUT_CTRL(0x1); 
+    }
+    if (field & SHA512_ACC_CSR_LOCK_LOCK_MASK) {
+        reg = (reg & ~SHA512_ACC_CSR_LOCK_LOCK_MASK) | field;
+    } else {
+        reg |= field;
+    }
+    lsu_write_32(CLP_SHA512_ACC_CSR_LOCK,reg);
+}
+
 void soc_ifc_clr_flow_status_field(uint32_t field) {
     VPRINTF(MEDIUM,"SOC_IFC: Clear flow_status field: 0x%x\n", field);
     uint32_t reg;

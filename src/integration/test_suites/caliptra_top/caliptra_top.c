@@ -75,10 +75,17 @@ void main() {
 
     //Cold Boot, run DOE flows, wait for FW image
     if (reset_reason == 0x0) {
+        VPRINTF(LOW, "Beginning Cold Boot flow\n");
         doe_init(iv_data_uds, iv_data_fe, 0x6); // TODO replace 0x6 with entry indicators
 
+        VPRINTF(LOW, "Setting Flow Status\n");
         soc_ifc_set_flow_status_field(SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK);
 
+        VPRINTF(LOW, "Unlocking SHA512-ACC\n");
+        // Clear SHA accelerator lock (FIPS requirement)
+        soc_ifc_w1clr_sha_lock_field(SHA512_ACC_CSR_LOCK_LOCK_MASK);
+
+        VPRINTF(LOW, "Waiting for FMC FW to be loaded\n");
         // Wait for FW available (FMC)
         do {
             intr_sts = lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
@@ -117,6 +124,7 @@ void main() {
         soc_ifc_clr_flow_status_field(SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK);
 
         // Jump to ICCM (this is the FMC image, a.k.a. Section 0)
+        VPRINTF(LOW, "FMC FW loaded into ICCM - jumping there \n");
         iccm_fmc();
     }  
     //FW Update Reset
@@ -141,6 +149,9 @@ void main() {
 
         // Ready for FW (need to reload the FMC)
         soc_ifc_set_flow_status_field(SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK);
+
+        // Clear SHA accelerator lock (FIPS requirement)
+        soc_ifc_w1clr_sha_lock_field(SHA512_ACC_CSR_LOCK_LOCK_MASK);
 
         // Wait for FW available (FMC)
         do {

@@ -600,7 +600,7 @@ module sha512_acc_csr (
     end
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
-            field_storage.LOCK.LOCK.value <= 'h0;
+            field_storage.LOCK.LOCK.value <= 'h1;
         end else if(field_combo.LOCK.LOCK.load_next) begin
             field_storage.LOCK.LOCK.value <= field_combo.LOCK.LOCK.next;
         end
