@@ -991,6 +991,46 @@
 
     endgroup
 
+    /*----------------------- SOC_IFC_REG__FUSE_LMS_VERIFY COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__fuse_lms_verify_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__fuse_lms_verify_fld_cg with function sample(
+    input bit [1-1:0] lms_verify
+    );
+        option.per_instance = 1;
+        lms_verify_cp : coverpoint lms_verify;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__FUSE_LMS_REVOCATION COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__fuse_lms_revocation_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__fuse_lms_revocation_fld_cg with function sample(
+    input bit [32-1:0] lms_revocation
+    );
+        option.per_instance = 1;
+        lms_revocation_cp : coverpoint lms_revocation;
+
+    endgroup
+
     /*----------------------- SOC_IFC_REG__INTERNAL_OBF_KEY COVERGROUPS -----------------------*/
     covergroup soc_ifc_reg__internal_obf_key_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;

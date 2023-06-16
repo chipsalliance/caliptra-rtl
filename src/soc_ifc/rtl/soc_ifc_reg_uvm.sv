@@ -1504,6 +1504,66 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fuse_life_cycle
 
+    // Reg - soc_ifc_reg::fuse_lms_verify
+    class soc_ifc_reg__fuse_lms_verify extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__fuse_lms_verify_bit_cg lms_verify_bit_cg[1];
+        soc_ifc_reg__fuse_lms_verify_fld_cg fld_cg;
+        rand uvm_reg_field lms_verify;
+
+        function new(string name = "soc_ifc_reg__fuse_lms_verify");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.lms_verify = new("lms_verify");
+            this.lms_verify.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(lms_verify_bit_cg[bt]) lms_verify_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__fuse_lms_verify
+
+    // Reg - soc_ifc_reg::fuse_lms_revocation
+    class soc_ifc_reg__fuse_lms_revocation extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__fuse_lms_revocation_bit_cg lms_revocation_bit_cg[32];
+        soc_ifc_reg__fuse_lms_revocation_fld_cg fld_cg;
+        rand uvm_reg_field lms_revocation;
+
+        function new(string name = "soc_ifc_reg__fuse_lms_revocation");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.lms_revocation = new("lms_revocation");
+            this.lms_revocation.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(lms_revocation_bit_cg[bt]) lms_revocation_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__fuse_lms_revocation
+
     // Reg - soc_ifc_reg::internal_obf_key
     class soc_ifc_reg__internal_obf_key extends uvm_reg;
         protected uvm_reg_data_t m_current;
@@ -3415,6 +3475,8 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__fuse_idevid_cert_attr fuse_idevid_cert_attr[24];
         rand soc_ifc_reg__fuse_idevid_manuf_hsm_id fuse_idevid_manuf_hsm_id[4];
         rand soc_ifc_reg__fuse_life_cycle fuse_life_cycle;
+        rand soc_ifc_reg__fuse_lms_verify fuse_lms_verify;
+        rand soc_ifc_reg__fuse_lms_revocation fuse_lms_revocation;
         rand soc_ifc_reg__internal_obf_key internal_obf_key[8];
         rand soc_ifc_reg__internal_iccm_lock internal_iccm_lock;
         rand soc_ifc_reg__internal_fw_update_reset internal_fw_update_reset;
@@ -3703,6 +3765,16 @@ package soc_ifc_reg_uvm;
 
             this.fuse_life_cycle.build();
             this.default_map.add_reg(this.fuse_life_cycle, 'h33c);
+            this.fuse_lms_verify = new("fuse_lms_verify");
+            this.fuse_lms_verify.configure(this);
+
+            this.fuse_lms_verify.build();
+            this.default_map.add_reg(this.fuse_lms_verify, 'h340);
+            this.fuse_lms_revocation = new("fuse_lms_revocation");
+            this.fuse_lms_revocation.configure(this);
+
+            this.fuse_lms_revocation.build();
+            this.default_map.add_reg(this.fuse_lms_revocation, 'h344);
             foreach(this.internal_obf_key[i0]) begin
                 this.internal_obf_key[i0] = new($sformatf("internal_obf_key[%0d]", i0));
                 this.internal_obf_key[i0].configure(this);

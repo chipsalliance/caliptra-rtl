@@ -275,6 +275,14 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__fuse_life_cycle__in_t;
 
     typedef struct packed{
+        soc_ifc_reg__Fuse__in_t lms_verify;
+    } soc_ifc_reg__fuse_lms_verify__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__Fuse_w32__in_t lms_revocation;
+    } soc_ifc_reg__fuse_lms_revocation__in_t;
+
+    typedef struct packed{
         logic [31:0] next;
         logic wel;
         logic swwe;
@@ -421,6 +429,8 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__fuse_idevid_cert_attr__in_t [24-1:0]fuse_idevid_cert_attr;
         soc_ifc_reg__fuse_idevid_manuf_hsm_id__in_t [4-1:0]fuse_idevid_manuf_hsm_id;
         soc_ifc_reg__fuse_life_cycle__in_t fuse_life_cycle;
+        soc_ifc_reg__fuse_lms_verify__in_t fuse_lms_verify;
+        soc_ifc_reg__fuse_lms_revocation__in_t fuse_lms_revocation;
         soc_ifc_reg__internal_obf_key__in_t [8-1:0]internal_obf_key;
         soc_ifc_reg__internal_iccm_lock__in_t internal_iccm_lock;
         soc_ifc_reg__internal_rv_mtime_l__in_t internal_rv_mtime_l;
@@ -786,6 +796,14 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__fuse_life_cycle__out_t;
 
     typedef struct packed{
+        soc_ifc_reg__Fuse__out_t lms_verify;
+    } soc_ifc_reg__fuse_lms_verify__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__Fuse_w32__out_t lms_revocation;
+    } soc_ifc_reg__fuse_lms_revocation__out_t;
+
+    typedef struct packed{
         logic [31:0] value;
     } soc_ifc_reg__key_w32__out_t;
 
@@ -962,6 +980,8 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__fuse_idevid_cert_attr__out_t [24-1:0]fuse_idevid_cert_attr;
         soc_ifc_reg__fuse_idevid_manuf_hsm_id__out_t [4-1:0]fuse_idevid_manuf_hsm_id;
         soc_ifc_reg__fuse_life_cycle__out_t fuse_life_cycle;
+        soc_ifc_reg__fuse_lms_verify__out_t fuse_lms_verify;
+        soc_ifc_reg__fuse_lms_revocation__out_t fuse_lms_revocation;
         soc_ifc_reg__internal_obf_key__out_t [8-1:0]internal_obf_key;
         soc_ifc_reg__internal_iccm_lock__out_t internal_iccm_lock;
         soc_ifc_reg__internal_fw_update_reset__out_t internal_fw_update_reset;

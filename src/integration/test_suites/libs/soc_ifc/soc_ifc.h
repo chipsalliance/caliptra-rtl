@@ -113,5 +113,6 @@ inline void soc_ifc_sha_accel_execute() {
 }
 void soc_ifc_sha_accel_poll_status();
 void soc_ifc_sha_accel_clr_lock();
+void soc_ifc_w1clr_sha_lock_field();
 
 #endif
