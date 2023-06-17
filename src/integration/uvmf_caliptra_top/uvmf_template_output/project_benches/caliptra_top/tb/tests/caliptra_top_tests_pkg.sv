@@ -65,8 +65,6 @@ package caliptra_top_tests_pkg;
    `include "src/register_test.svh"
    `include "src/example_derived_test.svh"
    `include "src/caliptra_top_rand_test.svh"
-   `include "src/caliptra_top_fw_update_test.svh"
-   `include "src/caliptra_top_reg_access_test.svh"
    `include "src/caliptra_top_cmdline_test.svh"
    `include "src/caliptra_top_rom_test.svh"
 

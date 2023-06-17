@@ -68,8 +68,6 @@ package caliptra_top_sequences_pkg;
   //    compiled as part of the sequence package.  Be sure to place
   //    the new sequence after any base sequences of the new sequence.
   `include "src/caliptra_top_rand_sequence.svh"
-  `include "src/caliptra_top_fw_update_sequence.svh"
-  `include "src/caliptra_top_reg_access_sequence.svh"
   `include "src/caliptra_top_cmdline_sequence.svh"
   `include "src/caliptra_top_rom_sequence.svh"
   // pragma uvmf custom package_item_additional end

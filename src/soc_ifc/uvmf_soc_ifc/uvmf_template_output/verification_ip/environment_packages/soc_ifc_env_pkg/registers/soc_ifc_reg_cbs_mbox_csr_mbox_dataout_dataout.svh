@@ -98,6 +98,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_dataout_dataout extends soc_ifc_reg_cbs_mbox
                         end
                         else begin
                             `uvm_info("SOC_IFC_REG_CBS", $sformatf("Read from %s gets the last available value in the mailbox", fld.get_full_name()), UVM_HIGH)
+                            value = 0;
                         end
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("After processing read from mbox_dataout, mbox_data_q.size(): [%d]", rm.mbox_data_q.size()), UVM_DEBUG)
                     end
