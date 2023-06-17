@@ -49,6 +49,8 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
       IDX_SOC_IFC_ENV_MBOX_RAND_SMALL,
       IDX_SOC_IFC_ENV_MBOX_RAND_MEDIUM,
       IDX_SOC_IFC_ENV_MBOX_RAND_LARGE,
+      IDX_SOC_IFC_ENV_MBOX_MIN,
+      IDX_SOC_IFC_ENV_MBOX_MAX,
       IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_SMALL,
       IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_MEDIUM,
       IDX_SOC_IFC_ENV_MBOX_MULTI_AGENT,
@@ -57,7 +59,9 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
       IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM,
       IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM,
       IDX_SOC_IFC_ENV_MBOX_SHA_ACCEL,
-      IDX_SOC_IFC_ENV_SHA_ACCEL
+      IDX_SOC_IFC_ENV_SHA_ACCEL,
+      IDX_SOC_IFC_ENV_FW_UPD,
+      IDX_SOC_IFC_ENV_MBOX_UC_REG_ACCESS
   } rand_seq_idx;
 
   rand int iteration_count;
@@ -70,6 +74,8 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
           IDX_SOC_IFC_ENV_MBOX_RAND_SMALL           := 125,
           IDX_SOC_IFC_ENV_MBOX_RAND_MEDIUM          := 100,
           IDX_SOC_IFC_ENV_MBOX_RAND_LARGE           := 1,
+          IDX_SOC_IFC_ENV_MBOX_MIN                  := 100,
+          IDX_SOC_IFC_ENV_MBOX_MAX                  := 10,
           IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_SMALL    := 125,
           IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_MEDIUM   := 100,
           IDX_SOC_IFC_ENV_MBOX_MULTI_AGENT          := 100,
@@ -78,7 +84,9 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
           IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM := 100,
           IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM := 100,
           IDX_SOC_IFC_ENV_MBOX_SHA_ACCEL            := 100,
-          IDX_SOC_IFC_ENV_SHA_ACCEL                 := 100
+          IDX_SOC_IFC_ENV_SHA_ACCEL                 := 100,
+          IDX_SOC_IFC_ENV_FW_UPD                    := 10,
+          IDX_SOC_IFC_ENV_MBOX_UC_REG_ACCESS        := 100
       };
   }
   constraint iter_count_c {
@@ -193,6 +201,10 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
                 obj = soc_ifc_env_mbox_rand_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_RAND_LARGE:
                 obj = soc_ifc_env_mbox_rand_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_MIN:
+                obj = soc_ifc_env_mbox_min_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_MAX:
+                obj = soc_ifc_env_mbox_max_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_SMALL: begin
                 if (!pauser_valid_initialized) begin
                     if(!soc_ifc_env_pauser_init_seq.randomize())
@@ -230,6 +242,10 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
                 obj = soc_ifc_env_mbox_sha_accel_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_SHA_ACCEL:
                 obj = soc_ifc_env_sha_accel_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_FW_UPD:
+                obj = soc_ifc_env_mbox_fw_upd_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_UC_REG_ACCESS:
+                obj = soc_ifc_env_mbox_uc_reg_access_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             default:
                 `uvm_error("CALIPTRA_TOP_RAND_TEST", $sformatf("rand_seq_idx randomized to illegal value: %p", rand_seq_idx))
         endcase

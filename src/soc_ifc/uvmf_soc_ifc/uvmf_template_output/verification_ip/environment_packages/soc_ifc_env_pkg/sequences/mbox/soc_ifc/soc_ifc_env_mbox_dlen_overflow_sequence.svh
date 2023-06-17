@@ -44,8 +44,10 @@ task soc_ifc_env_mbox_dlen_overflow_sequence::mbox_push_datain();
     uvm_reg_data_t data;
     int unsigned overflow_bytes;
 
-    // Still fits inside the mailbox
-    if (!std::randomize(overflow_bytes) with {overflow_bytes <= (reg_model.mbox_mem_rm.get_size() * reg_model.mbox_mem_rm.get_n_bytes()) - mbox_op_rand.dlen; overflow_bytes < mbox_op_rand.dlen * 4;})
+    // Overflow the programmed DLEN by at least 1 dword, up to 4x the programmed DLEN
+    // Ensure the constraint is solvable with dlen 0
+    if (!std::randomize(overflow_bytes) with {overflow_bytes >= 4; 
+                                              overflow_bytes <= (mbox_op_rand.dlen+1) * 4;})
         `uvm_error("MBOX_OVERFLOW_SEQ", "Failed to randomize overflow bytes")
     else
         `uvm_info("MBOX_OVERFLOW_SEQ", $sformatf("Randomized overflow bytes to %0d", overflow_bytes), UVM_MEDIUM)

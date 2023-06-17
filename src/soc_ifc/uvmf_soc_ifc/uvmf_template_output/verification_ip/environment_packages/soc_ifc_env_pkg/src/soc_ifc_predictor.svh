@@ -155,6 +155,7 @@ class soc_ifc_predictor #(
   bit soc_ifc_rst_in_asserted = 1'b1;
   bit noncore_rst_out_asserted = 1'b1;
   bit uc_rst_out_asserted = 1'b1;
+  bit uc_rst_out_pend_val = 1'b0;
   bit soc_ifc_error_intr_pending = 1'b0;
   bit soc_ifc_notif_intr_pending = 1'b0;
   bit sha_err_intr_pending = 1'b0; // TODO
@@ -943,10 +944,23 @@ class soc_ifc_predictor #(
                 "internal_iccm_lock": begin
                     if (ahb_txn.RnW == AHB_WRITE && !iccm_locked) begin
                         iccm_locked = 1'b1;
+                        `uvm_info("FW_RST_DEBUG", $sformatf("Write to set iccm lock, value is 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.internal_iccm_lock.lock.get_mirrored_value()), UVM_LOW)
                         send_cptra_sts_txn = 1;
                     end
                     else if (ahb_txn.RnW == AHB_WRITE) begin
                         `uvm_error("PRED_AHB", {"Unexpected write to ",axs_reg.get_name()," register on AHB interface"})
+                    end
+                end
+                "internal_fw_update_reset": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        if(data_active[p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_update_reset.core_rst.get_lsb_pos()]) begin
+                            //Send cptra status txn for uc rst asserted
+                            `uvm_info("FW_RST_DEBUG", "Sending cptra status txn for uc rst toggle due to fw upd reset", UVM_LOW)
+                            uc_rst_out_asserted = 1;
+                            populate_expected_cptra_status_txn(cptra_sb_ap_output_transaction);
+                            cptra_sb_ap.write(cptra_sb_ap_output_transaction);
+                            `uvm_info("PRED_AHB", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
+                        end
                     end
                 end
                 "internal_nmi_vector": begin
@@ -1764,6 +1778,19 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
             `uvm_info("PRED_AHB", "Delay job triggers sha_notif_intr_pending transition", UVM_HIGH)
             send_cptra_sts_txn = 1'b1;
         end
+    end
+
+    // Check for iccm unlock change
+    if (iccm_locked && ~|p_soc_ifc_rm.soc_ifc_reg_rm.internal_iccm_lock.lock.get_mirrored_value()) begin
+        `uvm_info("PRED_DLY", $sformatf("Detected de-assertion of ICCM LOCK"), UVM_LOW)
+        iccm_locked = 0;
+        uc_rst_out_pend_val = 1;
+        send_cptra_sts_txn = 1;
+    end
+    else if (uc_rst_out_pend_val) begin
+        uc_rst_out_asserted = 0;
+        uc_rst_out_pend_val = 0;
+        send_cptra_sts_txn = 1;
     end
 
     //////////////////////////////////////////////////

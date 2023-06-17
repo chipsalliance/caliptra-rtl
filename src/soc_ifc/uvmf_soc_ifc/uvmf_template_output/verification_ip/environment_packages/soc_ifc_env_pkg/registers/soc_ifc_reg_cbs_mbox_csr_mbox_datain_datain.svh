@@ -77,19 +77,6 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain extends soc_ifc_reg_cbs_mbox_c
                             `uvm_info("SOC_IFC_REG_CBS", "Push to datain observed when mbox_resp_q already contains the same number of entries as indicated in mbox_dlen or the mailbox maximum capacity!", UVM_HIGH)
                         end
                         rm.mbox_resp_q.push_back(value);
-                        if (rm.mbox_resp_q.size() == 1) begin
-                            `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%s] results in data entry updating dataout mirror", map.get_name()), UVM_FULL)
-                            // Use UVM_PREDICT_READ to workaround the warning that gets thrown (on
-                            // accesses while busy) when running UVM_PREDICT_DIRECT.
-                            // The warning is safe to ignore because the mbox_dataout
-                            // callback does post-prediction from data queue accordingly
-                            rm.mbox_data_q.push_front(value); /* Entry is used for value prediction if mbox_data_q is not empty, which might be the case depending on the test */
-                            rm.mbox_data_q.push_front(rm.mbox_dataout.dataout.get_mirrored_value()); /* Sacrificial entry will be immediately removed in mbox_dataout callback */
-                            rm.mbox_datain_to_dataout_predict.trigger();
-                            rm.mbox_dataout.dataout.predict(value, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
-                            rm.mbox_datain_to_dataout_predict.reset();
-                            rm.mbox_data_q.pop_front(); /* Remove the value we put on the queue for prediction -- receiver might continue reading from dataout even after pushing to datain ??? */
-                        end
                     end
                     else begin
                         `uvm_error("SOC_IFC_REG_CBS", $sformatf("Attempted push to mbox_datain in unexpected mbox FSM state: [%p]", rm.mbox_fn_state_sigs))

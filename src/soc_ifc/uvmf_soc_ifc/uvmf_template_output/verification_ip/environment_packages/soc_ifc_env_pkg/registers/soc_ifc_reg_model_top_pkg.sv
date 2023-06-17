@@ -518,6 +518,7 @@ package soc_ifc_reg_model_top_pkg;
     `include "soc_ifc_reg_cbs_soc_ifc_reg_fuse.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_key.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_internal.svh"
+    `include "soc_ifc_reg_cbs_soc_ifc_reg_internal_fw_update_reset.svh"
     `include "soc_ifc_reg_cbs_sha512_acc_csr_LOCK_LOCK.svh"
     `include "soc_ifc_reg_cbs_sha512_acc_csr_EXECUTE_EXECUTE.svh"
 
@@ -653,6 +654,7 @@ package soc_ifc_reg_model_top_pkg;
         soc_ifc_reg_cbs_soc_ifc_reg_fuse     soc_ifc_reg_fuse_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_key      soc_ifc_reg_key_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_internal soc_ifc_reg_internal_cb;
+        soc_ifc_reg_cbs_soc_ifc_reg_internal_fw_update_reset soc_ifc_reg_internal_fw_update_reset_cb;
 
         soc_ifc_reg_cbs_sha512_acc_csr_LOCK_LOCK       sha512_acc_csr_LOCK_LOCK_cb;
         soc_ifc_reg_cbs_sha512_acc_csr_EXECUTE_EXECUTE sha512_acc_csr_EXECUTE_EXECUTE_cb;
@@ -753,6 +755,7 @@ package soc_ifc_reg_model_top_pkg;
         soc_ifc_reg_fuse_cb     = soc_ifc_reg_cbs_soc_ifc_reg_fuse    ::type_id::create("soc_ifc_reg_fuse_cb");
         soc_ifc_reg_key_cb      = soc_ifc_reg_cbs_soc_ifc_reg_key     ::type_id::create("soc_ifc_reg_key_cb");
         soc_ifc_reg_internal_cb = soc_ifc_reg_cbs_soc_ifc_reg_internal::type_id::create("soc_ifc_reg_internal_cb");
+        soc_ifc_reg_internal_fw_update_reset_cb = soc_ifc_reg_cbs_soc_ifc_reg_internal_fw_update_reset::type_id::create("soc_ifc_reg_internal_fw_update_reset_cb");
 
         sha512_acc_csr_LOCK_LOCK_cb       = soc_ifc_reg_cbs_sha512_acc_csr_LOCK_LOCK::type_id::create("sha512_acc_csr_LOCK_LOCK_cb");
         sha512_acc_csr_EXECUTE_EXECUTE_cb = soc_ifc_reg_cbs_sha512_acc_csr_EXECUTE_EXECUTE::type_id::create("sha512_acc_csr_EXECUTE_EXECUTE_cb");
@@ -840,7 +843,7 @@ package soc_ifc_reg_model_top_pkg;
                                                                uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_lms_revocation.lms_revocation , soc_ifc_reg_fuse_cb);
         foreach (soc_ifc_reg_rm.internal_obf_key[ii])          uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_obf_key[ii].key           , soc_ifc_reg_key_cb);
                                                                uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_iccm_lock.lock            , soc_ifc_reg_internal_cb);
-
+                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_fw_update_reset.core_rst  , soc_ifc_reg_internal_fw_update_reset_cb) ;
         /* -- sha512_acc_csr -- */
         uvm_reg_field_cb::add(sha512_acc_csr_rm.LOCK.LOCK, sha512_acc_csr_LOCK_LOCK_cb);
         uvm_reg_field_cb::add(sha512_acc_csr_rm.EXECUTE.EXECUTE, sha512_acc_csr_EXECUTE_EXECUTE_cb);
