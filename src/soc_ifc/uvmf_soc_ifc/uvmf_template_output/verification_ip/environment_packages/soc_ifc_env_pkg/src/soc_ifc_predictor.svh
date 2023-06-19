@@ -99,6 +99,9 @@ class soc_ifc_predictor #(
   uvm_analysis_port #(mvc_sequence_item_base) soc_ifc_sb_ahb_ap;
   uvm_analysis_port #(mvc_sequence_item_base) soc_ifc_sb_apb_ap;
 
+  uvm_analysis_port #(soc_ifc_ctrl_transaction) soc_ifc_cov_ap;
+  uvm_analysis_port #(cptra_ctrl_transaction  ) cptra_cov_ap;
+
 
   // Transaction variable for predicted values to be sent out soc_ifc_sb_ap
   // Once a transaction is sent through an analysis_port, another transaction should
@@ -187,6 +190,10 @@ class soc_ifc_predictor #(
   bit trng_data_req = 1'b0;
   bit [apb5_master_0_params::APB3_PWDATA_BIT_WIDTH-1:0] trng_data [12]       = '{default: '0}; // FIXME what is this used for? Can we just use the reg-model mirrors instead?
 
+  // For collecting coverage
+  mbox_steps_s prev_step = '{null_action: 1'b1, default: 1'b0};
+  mbox_steps_s next_step = '{null_action: 1'b1, default: 1'b0};
+
   soc_ifc_reg_model_top  p_soc_ifc_rm;
   uvm_reg_map p_soc_ifc_APB_map; // Block map
   uvm_reg_map p_soc_ifc_AHB_map; // Block map
@@ -224,7 +231,6 @@ class soc_ifc_predictor #(
   // FUNCTION: new
   function new(string name, uvm_component parent);
      super.new(name,parent);
-    `uvm_info("PREDICTOR_REVIEW", "This predictor has been created either through generation or re-generation with merging.  Remove this message after the predictor has been reviewed. (manually downgraded to uvm_info)", UVM_LOW)
   // pragma uvmf custom new begin
   // pragma uvmf custom new end
   endfunction
@@ -243,6 +249,8 @@ class soc_ifc_predictor #(
     soc_ifc_sb_apb_ap = new("soc_ifc_sb_apb_ap", this );
     soc_ifc_ahb_reg_ap = new("soc_ifc_ahb_reg_ap", this);
     soc_ifc_apb_reg_ap = new("soc_ifc_apb_reg_ap", this);
+    soc_ifc_cov_ap = new("soc_ifc_cov_ap", this );
+    cptra_cov_ap = new("cptra_cov_ap", this );
   // pragma uvmf custom build_phase begin
     p_soc_ifc_rm = configuration.soc_ifc_rm;
     p_soc_ifc_AHB_map = p_soc_ifc_rm.get_map_by_name("soc_ifc_AHB_map");
@@ -421,6 +429,12 @@ class soc_ifc_predictor #(
         soc_ifc_sb_apb_ap.write(soc_ifc_sb_apb_ap_output_transaction);
         `uvm_error("PRED_SOC_IFC_CTRL", "NULL Transaction submitted through soc_ifc_sb_apb_ap")
     end
+
+    if (1/*FIXME*/) begin
+        // Forward the received transaction on to the coverage subscriber
+        soc_ifc_cov_ap.write(t);
+        `uvm_info("PRED_SOC_IFC_CTRL", "Transaction submitted through soc_ifc_cov_ap", UVM_MEDIUM)
+    end
     // pragma uvmf custom soc_ifc_ctrl_agent_ae_predictor end
   endfunction
 
@@ -506,6 +520,12 @@ class soc_ifc_predictor #(
     if (send_apb_txn) begin
         soc_ifc_sb_apb_ap.write(soc_ifc_sb_apb_ap_output_transaction);
         `uvm_error("PRED_CPTRA_CTRL", "NULL Transaction submitted through soc_ifc_sb_apb_ap")
+    end
+
+    if (1/*FIXME*/) begin
+        // Forward the received transaction on to the coverage subscriber
+        cptra_cov_ap.write(t);
+        `uvm_info("PRED_CPTRA_CTRL", "Transaction submitted through cptra_cov_ap", UVM_MEDIUM)
     end
     // pragma uvmf custom cptra_ctrl_agent_ae_predictor end
   endfunction
@@ -757,9 +777,15 @@ class soc_ifc_predictor #(
                         // Reset counters at beginning of command
                         datain_count = 0;
                         dataout_count = 0;
+                        // Log the step for coverage
+                        next_step = '{lock_acquire: 1'b1, default: 1'b0};
+                        `uvm_info("PRED_AHB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
                     end
                     else begin
                         `uvm_info("PRED_AHB", $sformatf("Access to mbox_lock of type %p has no effect", ahb_txn.RnW), UVM_MEDIUM)
+                        // Log the step for coverage
+                        next_step = '{null_action: 1'b1, default: 1'b0};
+                        `uvm_info("PRED_AHB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
                     end
                 end
                 "mbox_user": begin
@@ -769,22 +795,119 @@ class soc_ifc_predictor #(
                     else begin
                         `uvm_info("PRED_AHB", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
                     end
+                    // Log the step for coverage
+                    next_step = '{null_action: 1'b1, default: 1'b0};
+                    `uvm_info("PRED_AHB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
                 end
-                "mbox_cmd",
+                "mbox_cmd": begin
+                    if (ahb_txn.RnW == AHB_WRITE && do_reg_prediction) begin
+                        // Log the step for coverage
+                        next_step = '{cmd_wr: 1'b1, default: 1'b0};
+                        `uvm_info("PRED_AHB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    end
+                    else if (ahb_txn.RnW == AHB_READ && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.uc_receive_stage) begin
+                        // Log the step for coverage
+                        next_step = '{cmd_rd: 1'b1, default: 1'b0};
+                        `uvm_info("PRED_AHB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    end
+                    else begin
+                        // Log the step for coverage
+                        next_step = '{null_action: 1'b1, default: 1'b0};
+                        `uvm_info("PRED_AHB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    end
+                end
                 "mbox_dlen": begin
-                    `uvm_info("PRED_AHB", "Nothing to do", UVM_DEBUG)
+                    if (ahb_txn.RnW == AHB_WRITE && do_reg_prediction) begin
+                        // Log the step for coverage
+                        if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.uc_send_stage)
+                            next_step = '{dlen_wr: 1'b1, default: 1'b0};
+                        else if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.uc_receive_stage)
+                            next_step = '{resp_dlen_wr: 1'b1, default: 1'b0};
+                        `uvm_info("PRED_AHB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    end
+                    else if (ahb_txn.RnW == AHB_READ && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.uc_receive_stage) begin
+                        // Log the step for coverage
+                        next_step = '{dlen_rd: 1'b1, default: 1'b0};
+                        `uvm_info("PRED_AHB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    end
+                    else begin
+                        // Log the step for coverage
+                        next_step = '{null_action: 1'b1, default: 1'b0};
+                        `uvm_info("PRED_AHB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    end
                 end
                 "mbox_datain": begin
                     `uvm_info("PRED_AHB", $sformatf("Access to mailbox datain, write count: %d", datain_count), UVM_FULL)
+                    if (ahb_txn.RnW == AHB_WRITE && do_reg_prediction) begin
+                        // Log the step for coverage
+                        if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.uc_send_stage)
+                            next_step = '{datain_wr: 1'b1, default: 1'b0};
+                        else if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.uc_receive_stage)
+                            next_step = '{resp_datain_wr: 1'b1, default: 1'b0};
+                        else
+                            next_step = '{null_action: 1'b1, default: 1'b0};
+                        `uvm_info("PRED_AHB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    end
+                    else begin
+                        // Log the step for coverage
+                        next_step = '{null_action: 1'b1, default: 1'b0};
+                        `uvm_info("PRED_AHB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    end
                 end
                 "mbox_dataout": begin
                     `uvm_info("PRED_AHB", $sformatf("Access to mailbox dataout, read count: %d", dataout_count), UVM_FULL)
+                    // Log the step for coverage
+                    next_step = '{null_action: 1'b1, default: 1'b0};
+                    if (ahb_txn.RnW == AHB_READ && do_reg_prediction) begin
+                        // Log the step for coverage
+                        if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.uc_receive_stage) begin
+                            next_step = '{dataout_rd: 1'b1, default: 1'b0};
+                        end
+                    end
+                    `uvm_info("PRED_AHB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
                 end
-                "mbox_execute",
-                "mbox_status",
+                "mbox_execute": begin
+                    // Log the step for coverage
+                    next_step = '{null_action: 1'b1, default: 1'b0};
+                    if (ahb_txn.RnW == AHB_WRITE && do_reg_prediction) begin
+                        // Log the step for coverage
+                        if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.uc_send_stage && p_soc_ifc_rm.mbox_csr_rm.mbox_execute.execute.get_mirrored_value()) begin
+                            next_step = '{exec_set: 1'b1, default: 1'b0};
+                        end
+                        else if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.uc_done_stage && !p_soc_ifc_rm.mbox_csr_rm.mbox_execute.execute.get_mirrored_value()) begin
+                            next_step = '{exec_clr: 1'b1, default: 1'b0};
+                        end
+                    end
+                    `uvm_info("PRED_AHB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                end
+                "mbox_status": begin
+                    if (ahb_txn.RnW == AHB_WRITE && do_reg_prediction) begin
+                        // Log the step for coverage
+                        next_step = '{status_wr: 1'b1, default: 1'b0};
+                        `uvm_info("PRED_AHB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    end
+                    else if (ahb_txn.RnW == AHB_READ && do_reg_prediction) begin
+                        // Log the step for coverage
+                        next_step = '{status_rd: 1'b1, default: 1'b0};
+                        `uvm_info("PRED_AHB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    end
+                    else begin
+                        // Log the step for coverage
+                        next_step = '{null_action: 1'b1, default: 1'b0};
+                        `uvm_info("PRED_AHB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    end
+                end
                 "mbox_unlock": begin
-                    // Reg prediction handled in callback/Delay job
-                    `uvm_info("PRED_AHB", $sformatf("Handling access to %s.", axs_reg.get_name()), UVM_HIGH)
+                    if (ahb_txn.RnW == AHB_WRITE && do_reg_prediction && p_soc_ifc_rm.mbox_csr_rm.mbox_unlock.unlock.get_mirrored_value()) begin
+                        // Log the step for coverage
+                        next_step = '{force_unlock: 1'b1, default: 1'b0};
+                        `uvm_info("PRED_AHB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    end
+                    else begin
+                        // Log the step for coverage
+                        next_step = '{null_action: 1'b1, default: 1'b0};
+                        `uvm_info("PRED_AHB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    end
                 end
                 //SHA Accelerator Functions
                 "LOCK": begin
@@ -937,6 +1060,8 @@ class soc_ifc_predictor #(
                 ["fuse_idevid_cert_attr[20]":"fuse_idevid_cert_attr[23]"],
                 ["fuse_idevid_manuf_hsm_id[0]":"fuse_idevid_manuf_hsm_id[3]"],
                 "fuse_life_cycle",
+                "fuse_lms_verify",
+                "fuse_lms_revocation",
                 ["internal_obf_key[0]":"internal_obf_key[7]"]: begin
                     // Handled in callbacks via reg predictor
                     `uvm_info("PRED_AHB", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
@@ -1110,6 +1235,14 @@ class soc_ifc_predictor #(
             endcase
         end
     end// REG_AXS
+
+    fork
+        begin
+        // This allows coverage subscriber to observe both prev_step and next_step before the transition
+        uvm_wait_for_nba_region();
+        prev_step = next_step;
+        end
+    join_none
 
     // Code for sending output transaction out through soc_ifc_sb_ap
     // Please note that each broadcasted transaction should be a different object than previously
@@ -1378,9 +1511,15 @@ class soc_ifc_predictor #(
                     // Reset counters at beginning of command
                     datain_count = 0;
                     dataout_count = 0;
+                    // Log the step for coverage
+                    next_step = '{lock_acquire: 1'b1, default: 1'b0};
+                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
                 end
                 else begin
                     `uvm_info("PRED_APB", $sformatf("Access to mbox_lock of type %p has no effect", apb_txn.read_or_write), UVM_MEDIUM)
+                    // Log the step for coverage
+                    next_step = '{null_action: 1'b1, default: 1'b0};
+                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
                 end
                 void'(check_mbox_no_lock_error(apb_txn, axs_reg));
             end
@@ -1391,23 +1530,122 @@ class soc_ifc_predictor #(
                 else begin
                     `uvm_info("PRED_APB", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
                 end
+                // Log the step for coverage
+                next_step = '{null_action: 1'b1, default: 1'b0};
+                `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
             end
-            "mbox_execute": begin
+            "mbox_cmd": begin
                 void'(check_mbox_no_lock_error(apb_txn, axs_reg));
+                if (apb_txn.read_or_write == APB3_TRANS_WRITE && do_reg_prediction) begin
+                    // Log the step for coverage
+                    next_step = '{cmd_wr: 1'b1, default: 1'b0};
+                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                end
+                else if (apb_txn.read_or_write == APB3_TRANS_READ && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_receive_stage) begin
+                    // Log the step for coverage
+                    next_step = '{cmd_rd: 1'b1, default: 1'b0};
+                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                end
+                else begin
+                    // Log the step for coverage
+                    next_step = '{null_action: 1'b1, default: 1'b0};
+                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                end
+            end
+            "mbox_dlen": begin
+                void'(check_mbox_no_lock_error(apb_txn, axs_reg));
+                if (apb_txn.read_or_write == APB3_TRANS_WRITE && do_reg_prediction) begin
+                    // Log the step for coverage
+                    if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_send_stage)
+                        next_step = '{dlen_wr: 1'b1, default: 1'b0};
+                    else if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_receive_stage)
+                        next_step = '{resp_dlen_wr: 1'b1, default: 1'b0};
+                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                end
+                else if (apb_txn.read_or_write == APB3_TRANS_READ) begin
+                    // Log the step for coverage
+                    if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_receive_stage)
+                        next_step = '{dlen_rd: 1'b1, default: 1'b0};
+                    else if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_done_stage)
+                        next_step = '{resp_dlen_rd: 1'b1, default: 1'b0};
+                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                end
+                else begin
+                    // Log the step for coverage
+                    next_step = '{null_action: 1'b1, default: 1'b0};
+                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                end
             end
             "mbox_datain": begin
                 `uvm_info("PRED_APB", $sformatf("Access to mailbox datain, write count: %d", datain_count), UVM_FULL)
                 void'(check_mbox_no_lock_error(apb_txn, axs_reg));
+                if (apb_txn.read_or_write == APB3_TRANS_WRITE && do_reg_prediction) begin
+                    // Log the step for coverage
+                    if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_send_stage)
+                        next_step = '{datain_wr: 1'b1, default: 1'b0};
+                    else
+                        next_step = '{null_action: 1'b1, default: 1'b0};
+                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                end
+                else begin
+                    // Log the step for coverage
+                    next_step = '{null_action: 1'b1, default: 1'b0};
+                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                end
             end
             "mbox_dataout": begin
                 `uvm_info("PRED_APB", $sformatf("Access to mailbox dataout, read count: %d", dataout_count), UVM_FULL)
                 void'(check_mbox_no_lock_error(apb_txn, axs_reg));
+                // Log the step for coverage
+                next_step = '{null_action: 1'b1, default: 1'b0};
+                if (apb_txn.read_or_write == APB3_TRANS_READ && do_reg_prediction) begin
+                    if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_receive_stage) begin
+                        next_step = '{dataout_rd: 1'b1, default: 1'b0};
+                    end
+                    else if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_done_stage) begin
+                        next_step = '{resp_dataout_rd: 1'b1, default: 1'b0};
+                    end
+                end
+                `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
             end
-            "mbox_cmd",
-            "mbox_dlen",
-            "mbox_status",
+            "mbox_execute": begin
+                void'(check_mbox_no_lock_error(apb_txn, axs_reg));
+                // Log the step for coverage
+                next_step = '{null_action: 1'b1, default: 1'b0};
+                if (apb_txn.read_or_write == APB3_TRANS_WRITE && do_reg_prediction) begin
+                    // Log the step for coverage
+                    if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_send_stage && p_soc_ifc_rm.mbox_csr_rm.mbox_execute.execute.get_mirrored_value()) begin
+                        next_step = '{exec_set: 1'b1, default: 1'b0};
+                    end
+                    else if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_done_stage && !p_soc_ifc_rm.mbox_csr_rm.mbox_execute.execute.get_mirrored_value()) begin
+                        next_step = '{exec_clr: 1'b1, default: 1'b0};
+                    end
+                end
+                `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+            end
+            "mbox_status": begin
+                void'(check_mbox_no_lock_error(apb_txn, axs_reg));
+                if (apb_txn.read_or_write == APB3_TRANS_WRITE && do_reg_prediction) begin
+                    // Log the step for coverage
+                    next_step = '{status_wr: 1'b1, default: 1'b0};
+                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                end
+                else if (apb_txn.read_or_write == APB3_TRANS_READ && do_reg_prediction) begin
+                    // Log the step for coverage
+                    next_step = '{status_rd: 1'b1, default: 1'b0};
+                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                end
+                else begin
+                    // Log the step for coverage
+                    next_step = '{null_action: 1'b1, default: 1'b0};
+                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                end
+            end
             "mbox_unlock": begin
                 void'(check_mbox_no_lock_error(apb_txn, axs_reg));
+                // Log the step for coverage
+                next_step = '{null_action: 1'b1, default: 1'b0};
+                `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
             end
             //SHA Accelerator Functions
             "LOCK": begin 
@@ -1570,6 +1808,8 @@ class soc_ifc_predictor #(
             ["fuse_idevid_cert_attr[20]":"fuse_idevid_cert_attr[23]"],
             ["fuse_idevid_manuf_hsm_id[0]":"fuse_idevid_manuf_hsm_id[3]"],
             "fuse_life_cycle",
+            "fuse_lms_verify",
+            "fuse_lms_revocation",
             ["internal_obf_key[0]":"internal_obf_key[7]"]: begin
                 // Handled in callbacks via reg predictor
                 `uvm_info("PRED_APB", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
@@ -1632,6 +1872,14 @@ class soc_ifc_predictor #(
             end
         endcase
     end
+
+    fork
+        begin
+        // This allows coverage subscriber to observe both prev_step and next_step before the transition
+        uvm_wait_for_nba_region();
+        prev_step = next_step;
+        end
+    join_none
 
     // Code for sending output transaction out through soc_ifc_sb_ap
     // Please note that each broadcasted transaction should be a different object than previously
@@ -1824,6 +2072,7 @@ task soc_ifc_predictor::poll_and_run_delay_jobs();
                     if (job.get_delay_cycles()) configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(job.get_delay_cycles());
                     uvm_wait_for_nba_region();
                     job.do_job();
+//                    p_soc_ifc_rm.sample_values(); /* Sample coverage after completing any delayed prediction/mirror updates */ // NOTE: Added sample post_predict callback to reg fields instead
                     send_delayed_expected_transactions();
                 end
             join_none
@@ -2156,6 +2405,20 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
                                 p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[4].LOCK.get_reset(kind)};
 
     trng_data_req = 1'b0;
+
+    // Mailbox 'step' represents how the current transaction affects the mailbox
+    // flow, and is used for coverage.
+    if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_idle)
+        next_step = '{null_action: 1'b1, default: 1'b0};
+    else
+        next_step = '{reset: 1'b1, default: 1'b0};
+    fork
+        begin
+        // This allows coverage subscriber to observe both prev_step and next_step before the transition
+        uvm_wait_for_nba_region();
+        prev_step = next_step;
+        end
+    join_none
 
     if (kind == "HARD") begin
         cptra_pwrgood_asserted = 1'b0;

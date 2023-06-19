@@ -68,6 +68,13 @@ package soc_ifc_env_pkg;
   `uvm_analysis_imp_decl(_expected_apb_analysis_export)
   `uvm_analysis_imp_decl(_actual_ahb_analysis_export)
   `uvm_analysis_imp_decl(_actual_apb_analysis_export)
+ 
+  `uvm_analysis_imp_decl(_cov_soc_ifc_ctrl_ae)
+  `uvm_analysis_imp_decl(_cov_soc_ifc_status_ae)
+  `uvm_analysis_imp_decl(_cov_apb_ae)
+  `uvm_analysis_imp_decl(_cov_cptra_ctrl_ae)
+  `uvm_analysis_imp_decl(_cov_cptra_status_ae)
+  `uvm_analysis_imp_decl(_cov_ahb_ae)
 
   // pragma uvmf custom package_imports_additional begin
   import soc_ifc_pkg::*;
@@ -80,6 +87,8 @@ package soc_ifc_env_pkg;
   `include "src/soc_ifc_env_configuration.svh"
   `include "src/soc_ifc_predictor.svh"
   `include "src/soc_ifc_scoreboard.svh"
+  `include "src/soc_ifc_reg_cov_subscriber.svh"
+  `include "src/soc_ifc_env_cov_subscriber.svh"
   `include "src/soc_ifc_environment.svh"
   `include "src/soc_ifc_env_sequence_base.svh"
 
