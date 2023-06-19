@@ -522,6 +522,9 @@ package soc_ifc_reg_model_top_pkg;
     `include "soc_ifc_reg_cbs_sha512_acc_csr_LOCK_LOCK.svh"
     `include "soc_ifc_reg_cbs_sha512_acc_csr_EXECUTE_EXECUTE.svh"
 
+    // Callback for sampling coverage
+    `include "soc_ifc_reg_cbs_sample.svh"
+
 // pragma uvmf custom define_register_classes end
 // pragma uvmf custom define_block_map_coverage_class begin
    //--------------------------------------------------------------------
@@ -659,6 +662,8 @@ package soc_ifc_reg_model_top_pkg;
         soc_ifc_reg_cbs_sha512_acc_csr_LOCK_LOCK       sha512_acc_csr_LOCK_LOCK_cb;
         soc_ifc_reg_cbs_sha512_acc_csr_EXECUTE_EXECUTE sha512_acc_csr_EXECUTE_EXECUTE_cb;
 
+        soc_ifc_reg_cbs_sample sample_cb;
+
         uvm_reg_field cptra_fatal_flds[$];
         uvm_reg_field cptra_non_fatal_flds[$];
         uvm_reg_field error_en_flds[$];
@@ -667,6 +672,8 @@ package soc_ifc_reg_model_top_pkg;
         uvm_reg_field notif_sts_flds[$];
         uvm_reg_field error_trig_flds[$];
         uvm_reg_field notif_trig_flds[$];
+        uvm_reg_field all_fields[$];
+        uvm_reg       all_regs[$];
 
         uvm_queue #(soc_ifc_reg_delay_job) delay_jobs;
 
@@ -759,6 +766,9 @@ package soc_ifc_reg_model_top_pkg;
 
         sha512_acc_csr_LOCK_LOCK_cb       = soc_ifc_reg_cbs_sha512_acc_csr_LOCK_LOCK::type_id::create("sha512_acc_csr_LOCK_LOCK_cb");
         sha512_acc_csr_EXECUTE_EXECUTE_cb = soc_ifc_reg_cbs_sha512_acc_csr_EXECUTE_EXECUTE::type_id::create("sha512_acc_csr_EXECUTE_EXECUTE_cb");
+
+        sample_cb = soc_ifc_reg_cbs_sample::type_id::create("sample_cb");
+
         // Callbacks compute side-effects to other registers in the reg-model
         // in response to 'do_predict'.
         // 'do_predict' is invoked by the reg_predictor after receiving a transaction
@@ -847,6 +857,17 @@ package soc_ifc_reg_model_top_pkg;
         /* -- sha512_acc_csr -- */
         uvm_reg_field_cb::add(sha512_acc_csr_rm.LOCK.LOCK, sha512_acc_csr_LOCK_LOCK_cb);
         uvm_reg_field_cb::add(sha512_acc_csr_rm.EXECUTE.EXECUTE, sha512_acc_csr_EXECUTE_EXECUTE_cb);
+
+        /* -- Coverage sampling callback for all registers */
+        // Add this callback after all other callbacks so it runs AFTER the prediction is finalized
+        get_registers(all_regs, UVM_HIER);
+        foreach (all_regs[ii]) begin
+            all_fields.delete();
+            all_regs[ii].get_fields(all_fields);
+            foreach (all_fields[jj]) begin
+                uvm_reg_field_cb::add(all_fields[jj], sample_cb);
+            end
+        end
 
 // pragma uvmf custom construct_configure_build_registers_within_block end
 // pragma uvmf custom add_registers_to_block_map begin
