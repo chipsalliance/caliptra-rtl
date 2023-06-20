@@ -18,15 +18,11 @@
 class soc_ifc_reg_delay_job_mbox_csr_mbox_execute_execute extends soc_ifc_reg_delay_job;
     `uvm_object_utils( soc_ifc_reg_delay_job_mbox_csr_mbox_execute_execute )
     mbox_csr_ext rm; /* mbox_csr_rm */
-    uvm_reg_block rm_top;
-    uvm_reg_field intr_fld;
     mbox_fsm_state_e state_nxt;
     uvm_reg_map map;
     virtual task do_job();
         bit skip = 0;
         `uvm_info("SOC_IFC_REG_DELAY_JOB", "Running delayed job for mbox_csr.mbox_execute.execute", UVM_HIGH)
-        rm_top = rm.get_parent();
-        intr_fld = rm_top.get_block_by_name("soc_ifc_reg_rm").get_block_by_name("intr_block_rf_ext").get_field_by_name("notif_cmd_avail_sts");
         // Check mbox_unlock before predicting FSM change, since a force unlock
         // has priority over normal flow
         // mbox_unlock only 'activates' on the falling edge of the pulse; if we detect
@@ -85,13 +81,6 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_execute_execute extends soc_ifc_reg_de
                 end
                 MBOX_EXECUTE_UC: begin
                     rm.mbox_fn_state_sigs = '{uc_receive_stage: 1'b1, default: 1'b0};
-                    // Predict intr sts register is set
-                    //  - Use UVM_PREDICT_READ kind so that all the callbacks associated with
-                    //    notif_cmd_avail_sts are also called to detect interrupt pin assertion
-                    //  - Use UVM_PREDICT_READ instead of UVM_PREDICT_WRITE so that
-                    //    "do_predict" bypasses the access-check and does not enforce W1C
-                    //    behavior on this attempt to set interrupt status to 1
-                    intr_fld.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, rm_top.get_map_by_name("soc_ifc_AHB_map")); /* Intr reg access expected only via AHB i/f */
                     `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("post_predict called through map [%p] on mbox_execute results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
                 end
                 default: begin
@@ -166,7 +155,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute extends soc_ifc_reg_cbs_mbox
                         // Maximum allowable size for data transferred via mailbox
                         int unsigned dlen_cap_dw = (mbox_dlen_mirrored(rm) < (mm.get_size() * mm.get_n_bytes())) ? mbox_dlen_mirrored_dword_ceil(rm) :
                                                                                                                    (mm.get_size() * mm.get_n_bytes()) >> ($clog2(MBOX_DATA_W/8));
-                        if (!rm.mbox_fn_state_sigs.uc_send_stage)
+                        if (!rm.mbox_fn_state_sigs.uc_data_stage)
                             `uvm_error("SOC_IFC_REG_CBS", $sformatf("mbox_execute is set by uC when in an unexpected state [%p]!", rm.mbox_fn_state_sigs))
                         // Round dlen up to nearest dword boundary and compare with data queue size
                         // On transfer of control, remove extraneous entries from data_q since
@@ -217,7 +206,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute extends soc_ifc_reg_cbs_mbox
                         `uvm_warning("SOC_IFC_REG_CBS", $sformatf("EXECUTE written during unexpected mailbox state [%p]!", rm.mbox_fn_state_sigs))
                     end
                     else if (!rm.mbox_fn_state_sigs.soc_done_stage &&
-                             !(rm.mbox_fn_state_sigs.soc_send_stage && mbox_fsm_state_e'(rm.mbox_status.mbox_fsm_ps.get_mirrored_value()) == MBOX_RDY_FOR_DATA)) begin
+                             !(rm.mbox_fn_state_sigs.soc_data_stage /*&& mbox_fsm_state_e'(rm.mbox_status.mbox_fsm_ps.get_mirrored_value()) == MBOX_RDY_FOR_DATA*/)) begin
                         error_job.rm = rm;
                         error_job.map = map;
                         error_job.fld = fld;
@@ -247,7 +236,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute extends soc_ifc_reg_cbs_mbox
                         // Maximum allowable size for data transferred via mailbox
                         int unsigned dlen_cap_dw = (mbox_dlen_mirrored(rm) < (mm.get_size() * mm.get_n_bytes())) ? mbox_dlen_mirrored_dword_ceil(rm) :
                                                                                                                    (mm.get_size() * mm.get_n_bytes()) >> ($clog2(MBOX_DATA_W/8));
-                        if (!rm.mbox_fn_state_sigs.soc_send_stage)
+                        if (!rm.mbox_fn_state_sigs.soc_data_stage)
                             `uvm_error("SOC_IFC_REG_CBS", $sformatf("mbox_execute is set by SOC when in an unexpected state [%p]!", rm.mbox_fn_state_sigs))
                         // Round dlen up to nearest dword boundary and compare with data queue size
                         // On transfer of control, remove extraneous entries from data_q since
