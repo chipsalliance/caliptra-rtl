@@ -471,7 +471,7 @@ class soc_ifc_env_cov_subscriber #(
   virtual function void write_cov_soc_ifc_ctrl_ae(soc_ifc_ctrl_transaction txn);
     `uvm_info("SOC_IFC_COV_SOC_IFC_CTRL", {"Collecting coverage on transaction: ", txn.convert2string()}, UVM_MEDIUM)
     if (!txn.set_pwrgood || txn.assert_rst) begin
-        `uvm_info("SOC_IFC_COV_SOC_IFC_CTRL", $sformatf("Got next_step [%p]", pred.next_step), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("SOC_IFC_COV_SOC_IFC_CTRL", $sformatf("Got next_step [%p]", pred.next_step), UVM_FULL)
         soc_ifc_env_mbox_steps_cg.sample(.is_ahb(NOT_AHB_REQ), .next_step(pred.next_step));
         soc_ifc_env_mbox_scenarios_cg.sample({NOT_AHB_REQ,pred.next_step});
         prev_step_sampled = {is_ahb:NOT_AHB_REQ,step:pred.next_step};
@@ -528,7 +528,7 @@ class soc_ifc_env_cov_subscriber #(
                 "mbox_execute",
                 "mbox_status",
                 "mbox_unlock": begin
-                    `uvm_info("SOC_IFC_COV_AHB", $sformatf("Got next_step [%p]", pred.next_step), UVM_LOW/*UVM_FULL*/)
+                    `uvm_info("SOC_IFC_COV_AHB", $sformatf("Got next_step [%p]", pred.next_step), UVM_FULL)
                     // Skip coverage on repeated steps, as a memory optimization (large rep. operators are onerous)
                     if (pred.next_step inside {MBOX_STEP_DATAIN_WR,
                                                MBOX_STEP_DATAOUT_RD,
@@ -537,7 +537,7 @@ class soc_ifc_env_cov_subscriber #(
                                                MBOX_STEP_RESP_DATAOUT_RD/*shouldn't happen*/} &&
                         pred.next_step == prev_step_sampled.step &&
                         prev_step_sampled.is_ahb) begin
-                        `uvm_info("SOC_IFC_COV_AHB", "Skipping sample for step [%p] as it is a repetition", UVM_LOW/*UVM_DEBUG*/)
+                        `uvm_info("SOC_IFC_COV_AHB", "Skipping sample for step [%p] as it is a repetition", UVM_DEBUG)
                     end
                     else begin
                         soc_ifc_env_mbox_steps_cg.sample(.is_ahb(AHB_REQ), .next_step(pred.next_step));
@@ -577,7 +577,7 @@ class soc_ifc_env_cov_subscriber #(
             "mbox_execute",
             "mbox_status",
             "mbox_unlock": begin
-                `uvm_info("SOC_IFC_COV_APB", $sformatf("Got next_step [%p]", pred.next_step), UVM_LOW/*UVM_FULL*/)
+                `uvm_info("SOC_IFC_COV_APB", $sformatf("Got next_step [%p]", pred.next_step), UVM_FULL)
                 // Skip coverage on repeated steps, as a memory optimization (large rep. operators are onerous)
                 if (pred.next_step inside {MBOX_STEP_DATAIN_WR,
                                            MBOX_STEP_DATAOUT_RD,
@@ -586,7 +586,7 @@ class soc_ifc_env_cov_subscriber #(
                                            MBOX_STEP_RESP_DATAOUT_RD} &&
                     pred.next_step == prev_step_sampled.step &&
                     !prev_step_sampled.is_ahb) begin
-                    `uvm_info("SOC_IFC_COV_APB", "Skipping sample for step [%p] as it is a repetition", UVM_LOW/*UVM_DEBUG*/)
+                    `uvm_info("SOC_IFC_COV_APB", "Skipping sample for step [%p] as it is a repetition", UVM_DEBUG)
                 end
                 else begin
                     soc_ifc_env_mbox_steps_cg.sample(.is_ahb(NOT_AHB_REQ), .next_step(pred.next_step));

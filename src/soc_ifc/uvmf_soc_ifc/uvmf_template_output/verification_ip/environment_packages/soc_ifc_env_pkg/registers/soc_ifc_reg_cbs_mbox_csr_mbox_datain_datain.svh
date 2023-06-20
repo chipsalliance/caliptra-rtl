@@ -51,7 +51,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain extends soc_ifc_reg_cbs_mbox_c
                 //  - uC has lock (checked in soc_ifc_predictor)
                 //  - mbox state is in MBOX_RDY_FOR_DATA or EXECUTE_UC
                 UVM_PREDICT_WRITE: begin
-                    if (rm.mbox_fn_state_sigs.uc_send_stage && (rm.mbox_status.mbox_fsm_ps.get_mirrored_value() == MBOX_RDY_FOR_DATA)) begin
+                    if (rm.mbox_fn_state_sigs.uc_data_stage) begin
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%s] results in data entry push to mbox_data_q", map.get_name()), UVM_FULL)
                         // A potential issue because uC should have set dlen prior to pushing data
                         if (rm.mbox_data_q.size() >= dlen_cap_dw) begin
@@ -96,7 +96,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain extends soc_ifc_reg_cbs_mbox_c
                 //  - mbox state is in MBOX_RDY_FOR_DATA
                 //  - if mbox state is EXECUTE_SOC, pushes not allowed because there is never resp data SOC->uC
                 UVM_PREDICT_WRITE: begin
-                    if (rm.mbox_fn_state_sigs.soc_send_stage && (rm.mbox_status.mbox_fsm_ps.get_mirrored_value() == MBOX_RDY_FOR_DATA)) begin
+                    if (rm.mbox_fn_state_sigs.soc_data_stage) begin
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%s] results in data entry push to mbox_data_q", map.get_name()), UVM_FULL)
                         if (rm.mbox_data_q.size() >= dlen_cap_dw) begin
                             `uvm_info("SOC_IFC_REG_CBS", "Push to datain observed when mbox_data_q already contains the same number of entries as indicated in mbox_dlen or the mailbox maximum capacity!", UVM_LOW)

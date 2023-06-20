@@ -22,17 +22,26 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_lock_lock extends soc_ifc_reg_delay_jo
     uvm_reg_map map;
     virtual task do_job();
         `uvm_info("SOC_IFC_REG_DELAY_JOB", "Running delayed job for mbox_csr.mbox_lock.lock", UVM_HIGH)
-        if (rm.mbox_lock.lock.get_mirrored_value() && rm.mbox_status.mbox_fsm_ps.get_mirrored_value() == MBOX_IDLE) begin
+        if (rm.mbox_lock.lock.get_mirrored_value() && rm.mbox_fn_state_sigs.mbox_idle) begin
             rm.mbox_status.mbox_fsm_ps.predict(state_nxt, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
             if (map.get_name() == "soc_ifc_AHB_map") begin
                 rm.mbox_status.soc_has_lock.predict(uvm_reg_data_t'(0), .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
-                rm.mbox_fn_state_sigs = '{uc_send_stage: 1'b1, default: 1'b0};
+                rm.mbox_fn_state_sigs = '{uc_cmd_stage: 1'b1, default: 1'b0};
             end
             else if (map.get_name() == "soc_ifc_APB_map") begin
                 rm.mbox_status.soc_has_lock.predict(uvm_reg_data_t'(1), .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
-                rm.mbox_fn_state_sigs = '{soc_send_stage: 1'b1, default: 1'b0};
+                rm.mbox_fn_state_sigs = '{soc_cmd_stage: 1'b1, default: 1'b0};
             end
             `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("post_predict called through map [%p] on mbox_lock results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
+        end
+        else begin
+            `uvm_info("SOC_IFC_REG_DELAY_JOB",
+                      $sformatf("post_predict called through map [%p] on mbox_lock skipped due to lock mirror: [%x] mbox_fn_state_sigs [%p] mbox_fsm_ps mirror [%p]",
+                                map.get_name(),
+                                rm.mbox_lock.lock.get_mirrored_value(),
+                                rm.mbox_fn_state_sigs,
+                                rm.mbox_status.mbox_fsm_ps.get_mirrored_value()),
+                      UVM_FULL)
         end
     endtask
 endclass

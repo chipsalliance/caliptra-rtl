@@ -819,7 +819,7 @@ class soc_ifc_predictor #(
                 "mbox_dlen": begin
                     if (ahb_txn.RnW == AHB_WRITE && do_reg_prediction) begin
                         // Log the step for coverage
-                        if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.uc_send_stage)
+                        if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.uc_dlen_stage)
                             next_step = '{dlen_wr: 1'b1, default: 1'b0};
                         else if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.uc_receive_stage)
                             next_step = '{resp_dlen_wr: 1'b1, default: 1'b0};
@@ -840,7 +840,7 @@ class soc_ifc_predictor #(
                     `uvm_info("PRED_AHB", $sformatf("Access to mailbox datain, write count: %d", datain_count), UVM_FULL)
                     if (ahb_txn.RnW == AHB_WRITE && do_reg_prediction) begin
                         // Log the step for coverage
-                        if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.uc_send_stage)
+                        if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.uc_data_stage)
                             next_step = '{datain_wr: 1'b1, default: 1'b0};
                         else if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.uc_receive_stage)
                             next_step = '{resp_datain_wr: 1'b1, default: 1'b0};
@@ -871,7 +871,7 @@ class soc_ifc_predictor #(
                     next_step = '{null_action: 1'b1, default: 1'b0};
                     if (ahb_txn.RnW == AHB_WRITE && do_reg_prediction) begin
                         // Log the step for coverage
-                        if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.uc_send_stage && p_soc_ifc_rm.mbox_csr_rm.mbox_execute.execute.get_mirrored_value()) begin
+                        if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.uc_data_stage && p_soc_ifc_rm.mbox_csr_rm.mbox_execute.execute.get_mirrored_value()) begin
                             next_step = '{exec_set: 1'b1, default: 1'b0};
                         end
                         else if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.uc_done_stage && !p_soc_ifc_rm.mbox_csr_rm.mbox_execute.execute.get_mirrored_value()) begin
@@ -1570,7 +1570,7 @@ class soc_ifc_predictor #(
                 void'(check_mbox_no_lock_error(apb_txn, axs_reg));
                 if (apb_txn.read_or_write == APB3_TRANS_WRITE && do_reg_prediction) begin
                     // Log the step for coverage
-                    if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_send_stage)
+                    if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_dlen_stage)
                         next_step = '{dlen_wr: 1'b1, default: 1'b0};
                     else if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_receive_stage)
                         next_step = '{resp_dlen_wr: 1'b1, default: 1'b0};
@@ -1595,7 +1595,7 @@ class soc_ifc_predictor #(
                 void'(check_mbox_no_lock_error(apb_txn, axs_reg));
                 if (apb_txn.read_or_write == APB3_TRANS_WRITE && do_reg_prediction) begin
                     // Log the step for coverage
-                    if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_send_stage)
+                    if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_data_stage)
                         next_step = '{datain_wr: 1'b1, default: 1'b0};
                     else
                         next_step = '{null_action: 1'b1, default: 1'b0};
@@ -1628,7 +1628,7 @@ class soc_ifc_predictor #(
                 next_step = '{null_action: 1'b1, default: 1'b0};
                 if (apb_txn.read_or_write == APB3_TRANS_WRITE && do_reg_prediction) begin
                     // Log the step for coverage
-                    if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_send_stage && p_soc_ifc_rm.mbox_csr_rm.mbox_execute.execute.get_mirrored_value()) begin
+                    if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_data_stage && p_soc_ifc_rm.mbox_csr_rm.mbox_execute.execute.get_mirrored_value()) begin
                         next_step = '{exec_set: 1'b1, default: 1'b0};
                     end
                     else if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_done_stage && !p_soc_ifc_rm.mbox_csr_rm.mbox_execute.execute.get_mirrored_value()) begin
@@ -2008,6 +2008,10 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
         soc_ifc_notif_intr_pending = 1'b1;
         send_cptra_sts_txn = 1'b1;
     end
+    else if (soc_ifc_notif_intr_pending && !p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value()) begin
+        `uvm_info("PRED_DLY", "Delay job causes soc_ifc notification interrupt deassertion", UVM_HIGH)
+        soc_ifc_notif_intr_pending = 1'b0;
+    end
 
     // mbox protocol violations TODO
     if (!cptra_error_fatal && |p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL.get_mirrored_value()) begin
@@ -2026,6 +2030,10 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
         `uvm_info("PRED_DLY", "Delay job triggers soc_ifc error interrupt output", UVM_HIGH)
         soc_ifc_error_intr_pending = 1'b1;
         send_cptra_sts_txn = 1'b1;
+    end
+    else if (soc_ifc_error_intr_pending && !p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value()) begin
+        `uvm_info("PRED_DLY", "Delay job causes soc_ifc error interrupt deassertion", UVM_HIGH)
+        soc_ifc_error_intr_pending = 1'b0;
     end
 
     // Check for Timer Interrupt
@@ -2050,6 +2058,10 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
             `uvm_info("PRED_AHB", "Delay job triggers sha_notif_intr_pending transition", UVM_HIGH)
             send_cptra_sts_txn = 1'b1;
         end
+    end
+    else if (sha_notif_intr_pending && !p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value()) begin
+        `uvm_info("PRED_DLY", "Delay job causes sha512_acc notification interrupt deassertion", UVM_HIGH)
+        sha_notif_intr_pending = 1'b0;
     end
 
     // Check for iccm unlock change
@@ -2452,6 +2464,8 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
 
     datain_count = 0;
     dataout_count = 0;
+
+    // TODO clear the delay_jobs queue?
 
     // HARD reset is the default for a reg-model
     // FIXME SOFT reset is not fully defined for our reg-model yet

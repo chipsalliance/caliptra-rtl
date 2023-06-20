@@ -32,8 +32,14 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_cmd_command extends soc_ifc_reg_delay_
                 return;
             end
         end
-        if (rm.mbox_lock.lock.get_mirrored_value() && rm.mbox_status.mbox_fsm_ps.get_mirrored_value() == MBOX_RDY_FOR_CMD) begin
+        if (rm.mbox_lock.lock.get_mirrored_value() && rm.mbox_fn_state_sigs.soc_cmd_stage) begin
             rm.mbox_status.mbox_fsm_ps.predict(state_nxt, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
+            rm.mbox_fn_state_sigs = '{soc_dlen_stage: 1'b1, default: 1'b0};
+            `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("post_predict called through map [%p] on mbox_cmd results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
+        end
+        else if (rm.mbox_lock.lock.get_mirrored_value() && rm.mbox_fn_state_sigs.uc_cmd_stage) begin
+            rm.mbox_status.mbox_fsm_ps.predict(state_nxt, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
+            rm.mbox_fn_state_sigs = '{uc_dlen_stage: 1'b1, default: 1'b0};
             `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("post_predict called through map [%p] on mbox_cmd results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
         end
     endtask
@@ -66,7 +72,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_cmd_command extends soc_ifc_reg_cbs_mbox_csr
         if (map.get_name() == this.AHB_map_name) begin
             case (kind) inside
                 UVM_PREDICT_WRITE: begin
-                    if (rm.mbox_fn_state_sigs.uc_send_stage) begin
+                    if (rm.mbox_fn_state_sigs.uc_cmd_stage) begin
                         delay_job = soc_ifc_reg_delay_job_mbox_csr_mbox_cmd_command::type_id::create("delay_job");
                         delay_job.rm = rm;
                         delay_job.map = map;
@@ -106,7 +112,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_cmd_command extends soc_ifc_reg_cbs_mbox_csr
         else if (map.get_name() == this.APB_map_name) begin
             case (kind) inside
                 UVM_PREDICT_WRITE: begin
-                    if (rm.mbox_fn_state_sigs.soc_send_stage && (rm.mbox_status.mbox_fsm_ps.get_mirrored_value() == MBOX_RDY_FOR_CMD)) begin
+                    if (rm.mbox_fn_state_sigs.soc_cmd_stage/* && (rm.mbox_status.mbox_fsm_ps.get_mirrored_value() == MBOX_RDY_FOR_CMD)*/) begin
                         delay_job = soc_ifc_reg_delay_job_mbox_csr_mbox_cmd_command::type_id::create("delay_job");
                         delay_job.rm = rm;
                         delay_job.map = map;

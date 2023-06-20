@@ -51,10 +51,14 @@ package soc_ifc_reg_model_top_pkg;
 
     typedef struct packed {
         bit mbox_idle;
-        bit uc_send_stage;
+        bit uc_cmd_stage;
+        bit uc_dlen_stage;
+        bit uc_data_stage;
         bit uc_receive_stage;
         bit uc_done_stage;
-        bit soc_send_stage;
+        bit soc_cmd_stage;
+        bit soc_dlen_stage;
+        bit soc_data_stage;
         bit soc_receive_stage;
         bit soc_done_stage;
         bit mbox_error;
@@ -488,6 +492,7 @@ package soc_ifc_reg_model_top_pkg;
     // Scheduling helper class for delayed callback tasks
     `include "soc_ifc_reg_delay_job.svh"
     `include "soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error.svh"
+    `include "soc_ifc_reg_delay_job_intr_block_rf_ext.svh"
 
     // Callbacks for predicting reg-field updates
     `include "soc_ifc_reg_cbs_mbox_csr.svh"
