@@ -173,8 +173,8 @@ end
   // Task must have automatic lifetime so that it can be concurrently invoked
   // by multiple entities with a different wait value.
   task automatic wait_for_num_clocks(input int unsigned count); // pragma tbx xtf
+    if (count == 0) `uvm_fatal("CFG", "wait_for_num_clocks called with count of 0 - this will lead to a hang");
     @(posedge clk_i);
-
     repeat (count-1) @(posedge clk_i);
   endtask
   // pragma uvmf custom wait_for_num_clocks end                                                                

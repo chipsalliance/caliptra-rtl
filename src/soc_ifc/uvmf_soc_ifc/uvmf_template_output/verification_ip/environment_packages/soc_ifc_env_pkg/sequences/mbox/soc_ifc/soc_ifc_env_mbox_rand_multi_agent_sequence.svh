@@ -148,7 +148,7 @@ function soc_ifc_env_mbox_rand_multi_agent_sequence::create_seqs();
             MEDIUM:
                 obj = soc_ifc_env_mbox_rand_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
             LARGE:
-                obj = soc_ifc_env_mbox_rand_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
+                obj = soc_ifc_env_mbox_rand_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
             PAUSER_SMALL:
                 obj = soc_ifc_env_mbox_rand_pauser_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
             PAUSER_MEDIUM:
@@ -183,7 +183,7 @@ task soc_ifc_env_mbox_rand_multi_agent_sequence::start_seqs();
 
     `uvm_info("SOC_IFC_MBOX", $sformatf("Initiating [%0d] mailbox sequences in parallel", agents), UVM_LOW)
     foreach (soc_ifc_env_mbox_multi_agent_seq[ii]) begin
-        if (!std::randomize(delay_clks[ii]) with {delay_clks[ii] < 4*soc_ifc_env_mbox_multi_agent_seq[ii].mbox_op_rand.dlen;}) begin
+        if (!std::randomize(delay_clks[ii]) with {delay_clks[ii] < 4*soc_ifc_env_mbox_multi_agent_seq[ii].mbox_op_rand.dlen; delay_clks[ii] > 0;}) begin
             `uvm_fatal("SOC_IFC_MBOX", $sformatf("soc_ifc_env_mbox_rand_multi_agent_sequence::body() - %s randomization failed", "delay_clks"));
         end
         else

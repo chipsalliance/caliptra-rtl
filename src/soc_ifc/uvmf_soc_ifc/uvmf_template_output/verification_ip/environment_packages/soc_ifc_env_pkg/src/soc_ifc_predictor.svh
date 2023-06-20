@@ -957,7 +957,21 @@ class soc_ifc_predictor #(
                         cptra_error_non_fatal = 1'b0;
                     end
                 end
-                // TODO FW ERRORs
+                "CPTRA_FW_ERROR_FATAL": begin
+                    if (ahb_txn.RnW == AHB_WRITE && |(data_active && ~p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FW_ERROR_FATAL.get_mirrored_value())) begin
+                        `uvm_info("PRED_AHB", $sformatf("Write to %s set a new bit, trigger cptra_error_fatal interrupt", axs_reg.get_name()), UVM_MEDIUM)
+                        cptra_error_fatal = 1'b1;
+                        send_soc_ifc_sts_txn = 1'b1;
+                    end
+                    if (ahb_txn.RnW == AHB_WRITE && |data_active && (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FW_ERROR_FATAL.get_mirrored_value() == 0)) begin
+                        `uvm_info("PRED_AHB", $sformatf("Write to %s results in all bits cleared, but has no effect on cptra_error_fatal (requires reset)", axs_reg.get_name()), UVM_MEDIUM)
+                    end
+                end
+                "CPTRA_FW_ERROR_NON_FATAL": begin
+                    if (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FW_ERROR_NON_FATAL.get_mirrored_value() == 0) begin
+                        cptra_error_non_fatal = 1'b0;
+                    end
+                end
                 "CPTRA_BOOT_STATUS": begin
                     // Handled in callbacks via reg predictor
                     `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
@@ -1692,6 +1706,16 @@ class soc_ifc_predictor #(
             end
             "CPTRA_HW_ERROR_NON_FATAL": begin
                 if (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.get_mirrored_value() == 0) begin
+                    cptra_error_non_fatal = 1'b0;
+                end
+            end
+            "CPTRA_FW_ERROR_FATAL": begin
+                if (apb_txn.read_or_write == APB3_TRANS_WRITE && |apb_txn.wr_data && (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FW_ERROR_FATAL.get_mirrored_value() == 0)) begin
+                    `uvm_info("PRED_APB", $sformatf("Write to %s results in all bits cleared, but has no effect on cptra_error_fatal (requires reset)", axs_reg.get_name()), UVM_MEDIUM)
+                end
+            end
+            "CPTRA_FW_ERROR_NON_FATAL": begin
+                if (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FW_ERROR_NON_FATAL.get_mirrored_value() == 0) begin
                     cptra_error_non_fatal = 1'b0;
                 end
             end
