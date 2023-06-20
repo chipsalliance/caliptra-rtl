@@ -1,10 +1,13 @@
 ---
 provides: [prim_pkg]
 schema_version: 2.4.0
+requires:
+  - libs
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
+      - $COMPILE_ROOT/rtl/prim_sparse_fsm_pkg.sv
       - $COMPILE_ROOT/rtl/prim_util_pkg.sv
       - $COMPILE_ROOT/rtl/prim_alert_pkg.sv
       - $COMPILE_ROOT/rtl/prim_subreg_pkg.sv
@@ -14,6 +17,7 @@ targets:
   tb:
     directories: [$COMPILE_ROOT/rtl]
     files:
+      - $COMPILE_ROOT/rtl/prim_sparse_fsm_pkg.sv
       - $COMPILE_ROOT/rtl/prim_util_pkg.sv
       - $COMPILE_ROOT/rtl/prim_alert_pkg.sv
       - $COMPILE_ROOT/rtl/prim_subreg_pkg.sv
@@ -24,7 +28,6 @@ targets:
 provides: [prim]
 schema_version: 2.4.0
 requires:
-  - libs
   - lc_ctrl_pkg
   - prim_pkg
   - prim_generic
@@ -44,7 +47,6 @@ targets:
       - $COMPILE_ROOT/rtl/prim_count.sv
 #      - $COMPILE_ROOT/rtl/prim_assert_yosys_macros.svh
       - $COMPILE_ROOT/rtl/prim_sparse_fsm_flop.sv
-      - $COMPILE_ROOT/rtl/prim_dom_and_2share.sv
       - $COMPILE_ROOT/rtl/prim_sec_anchor_flop.sv
       - $COMPILE_ROOT/rtl/prim_reg_we_check.sv
       - $COMPILE_ROOT/rtl/prim_packer_fifo.sv
@@ -68,4 +70,4 @@ targets:
       - $COMPILE_ROOT/rtl/prim_sum_tree.sv
       - $COMPILE_ROOT/rtl/prim_subreg_ext.sv
       - $COMPILE_ROOT/rtl/prim_edge_detector.sv
-    tops: [prim]
+    tops: [prim_flop]

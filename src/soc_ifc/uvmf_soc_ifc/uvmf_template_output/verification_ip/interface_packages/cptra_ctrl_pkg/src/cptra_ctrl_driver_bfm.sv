@@ -110,6 +110,8 @@ end
   reg  clear_obf_secrets_o = 'b0;
   tri  iccm_axs_blocked_i;
   reg  iccm_axs_blocked_o = 'b0;
+  tri [3:0] rv_ecc_sts_i;
+  reg [3:0] rv_ecc_sts_o = 'b0;
 
   // Bi-directional signals
   
@@ -127,6 +129,8 @@ end
   assign clear_obf_secrets_i = bus.clear_obf_secrets;
   assign bus.iccm_axs_blocked = (initiator_responder == INITIATOR) ? iccm_axs_blocked_o : 'bz;
   assign iccm_axs_blocked_i = bus.iccm_axs_blocked;
+  assign bus.rv_ecc_sts = (initiator_responder == INITIATOR) ? rv_ecc_sts_o : 'bz;
+  assign rv_ecc_sts_i = bus.rv_ecc_sts;
 
   // Proxy handle to UVM driver
   cptra_ctrl_pkg::cptra_ctrl_driver   proxy;
@@ -160,6 +164,7 @@ end
        // INITIATOR mode output signals
        clear_obf_secrets_o <= 'b0;
        iccm_axs_blocked_o <= 'b0;
+       rv_ecc_sts_o <= 'b0;
        // Bi-directional signals
 
      end
@@ -201,9 +206,11 @@ end
        // Members within the cptra_ctrl_initiator_struct:
        //   bit assert_clear_secrets ;
        //   bit iccm_axs_blocked ;
+       //   rv_ecc_sts_t pulse_rv_ecc_error ;
        // Members within the cptra_ctrl_responder_struct:
        //   bit assert_clear_secrets ;
        //   bit iccm_axs_blocked ;
+       //   rv_ecc_sts_t pulse_rv_ecc_error ;
        initiator_struct = cptra_ctrl_initiator_struct;
        //
        // Reference code;
@@ -220,15 +227,18 @@ end
        //    Initiator output signals
        //      clear_obf_secrets_o <= cptra_ctrl_initiator_struct.xyz;  //     
        //      iccm_axs_blocked_o <= cptra_ctrl_initiator_struct.xyz;  //     
+       //      rv_ecc_sts_o <= cptra_ctrl_initiator_struct.xyz;  //    [3:0] 
        //    Initiator inout signals
     // Initiate a transfer using the data received.
     @(posedge clk_i);
     clear_obf_secrets_o <= cptra_ctrl_initiator_struct.assert_clear_secrets;
     iccm_axs_blocked_o  <= cptra_ctrl_initiator_struct.iccm_axs_blocked;
+    rv_ecc_sts_o        <= cptra_ctrl_initiator_struct.pulse_rv_ecc_error;
     // Wait for the responder to complete the transfer then place the responder data into 
     // cptra_ctrl_responder_struct.
     @(posedge clk_i);
     iccm_axs_blocked_o  <= 1'b0;
+    rv_ecc_sts_o        <= '0;
     cptra_ctrl_responder_struct.assert_clear_secrets <= clear_obf_secrets_i;
     cptra_ctrl_responder_struct.iccm_axs_blocked     <= iccm_axs_blocked_i;
     responder_struct = cptra_ctrl_responder_struct;
@@ -256,9 +266,11 @@ bit first_transfer=1;
   // Variables within the cptra_ctrl_initiator_struct:
   //   bit assert_clear_secrets ;
   //   bit iccm_axs_blocked ;
+  //   rv_ecc_sts_t pulse_rv_ecc_error ;
   // Variables within the cptra_ctrl_responder_struct:
   //   bit assert_clear_secrets ;
   //   bit iccm_axs_blocked ;
+  //   rv_ecc_sts_t pulse_rv_ecc_error ;
        // Reference code;
        //    How to wait for signal value
        //      while (control_signal == 1'b1) @(posedge clk_i);
@@ -268,6 +280,7 @@ bit first_transfer=1;
        //    Responder input signals
        //      cptra_ctrl_responder_struct.xyz = clear_obf_secrets_i;  //     
        //      cptra_ctrl_responder_struct.xyz = iccm_axs_blocked_i;  //     
+       //      cptra_ctrl_responder_struct.xyz = rv_ecc_sts_i;  //    [3:0] 
        //    Responder inout signals
        //    How to assign a signal, named xyz, from an initiator struct member.   
        //    All available responder output and inout signals listed.

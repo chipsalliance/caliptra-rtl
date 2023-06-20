@@ -23,6 +23,14 @@ VERILATOR = verilator
 GCC_PREFIX = riscv64-unknown-elf
 BUILD_DIR = $(CURDIR)
 
+rv_gcc_version = $(strip $(shell $(GCC_PREFIX)-gcc --version | head -1 | sed "s/$(GCC_PREFIX)-gcc (\w\+) //"))
+$(info rv_gcc_version is $(rv_gcc_version))
+ifeq (12.2.0, $(rv_gcc_version))
+ABI = -mabi=ilp32 -march=rv32imc_zicsr_zifencei
+else
+ABI = -mabi=ilp32 -march=rv32imc
+endif
+
 # Define test name
 TESTNAME ?= iccm_lock
 TEST_DIR = $(CALIPTRA_ROOT)/src/integration/test_suites/$(TESTNAME)
@@ -47,7 +55,8 @@ COMP_LIB_NAMES := aes \
 		  datavault \
 		  sha256 \
 		  sha512 \
-		  soc_ifc
+		  soc_ifc \
+		  clk_gate
 COMP_LIBS := $(foreach name, $(COMP_LIB_NAMES), $(CALIPTRA_ROOT)/src/integration/test_suites/libs/$(name))
 HEADER_FILES := $(INCLUDES_DIR)/caliptra_defines.h \
 		$(INCLUDES_DIR)/defines.h \
@@ -138,9 +147,9 @@ includes = -I$(BUILD_DIR)
 #               v            v                v            v               v            v
 suppress = -Wno-WIDTH -Wno-UNOPTFLAT -Wno-LITENDIAN -Wno-CMPCONST -Wno-MULTIDRIVEN -Wno-UNPACKED
 
-# CFLAGS for verilator generated Makefiles. Without -std=c++11 it
+# CFLAGS for verilator generated Makefiles. Without -std=c++17 it
 # complains for `auto` variables
-CFLAGS += "-std=c++11"
+CFLAGS += "-std=c++17"
 
 # Optimization for better performance; alternative is nothing for
 # slower runtime (faster compiles) -O2 for faster runtime (slower

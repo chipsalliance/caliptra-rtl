@@ -52,7 +52,8 @@
       MBOX_CMD_FMC_UPDATE = 32'hba5eba11,
       MBOX_CMD_RT_UPDATE  = 32'hbabecafe,
       MBOX_CMD_SHA384_REQ = 32'h40C0FFEE,
-      MBOX_CMD_SHA512_REQ = 32'h41C0FFEE
+      MBOX_CMD_SHA512_REQ = 32'h41C0FFEE,
+      MBOX_CMD_ROM_FW_UPD = 32'h46574C44
   } mbox_cmd_e;
   
   typedef union packed {

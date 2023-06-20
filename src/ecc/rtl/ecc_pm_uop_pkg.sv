@@ -75,8 +75,8 @@ localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_R2_p        = 6'd5;
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_GX_MONT     = 6'd6;
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_GY_MONT     = 6'd7;
 
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_R0_X              = 6'd8;  // 8'b0000_1000;
-localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_R0_Y              = 6'd9;  // 8'b0000_1001;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_R0_X              = 6'd8;   // 8'b0000_1000;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_R0_Y              = 6'd9;   // 8'b0000_1001;
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_R0_Z              = 6'd10;  // 8'b0000_1010;
 
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_R1_X              = 6'd12;  // 8'b0000_1100;
@@ -129,12 +129,16 @@ localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_P1_X_MONT         = 6'd53;
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_P1_Y_MONT         = 6'd54;
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_P1_Z_MONT         = 6'd55;
 
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_E_b         = 6'd56;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_PK_VALID          = 6'd57;
+
 //PM command listing
 localparam [2 : 0] KEYGEN_CMD           = 3'b001;
 localparam [2 : 0] SIGN_CMD             = 3'b010;
 localparam [2 : 0] VER_PART0_CMD        = 3'b100;    
 localparam [2 : 0] VER_PART1_CMD        = 3'b101;    
-localparam [2 : 0] VER_PART2_CMD        = 3'b110;    
+localparam [2 : 0] VER_PART2_CMD        = 3'b110;
+localparam [2 : 0] CHK_PK_CMD           = 3'b111;
 
 //PM Subroutine listing
 localparam [PROG_ADDR_W-1 : 0] NOP                  = 12'd0;
@@ -158,7 +162,9 @@ localparam [PROG_ADDR_W-1 : 0] INVq_E               = INVq_S + 1043;
 localparam [PROG_ADDR_W-1 : 0] SIGN1_S              = INVq_E + 2;     // signing proof r part1
 localparam [PROG_ADDR_W-1 : 0] SIGN1_E              = SIGN1_S + 11;
 
-localparam [PROG_ADDR_W-1 : 0] VER0_P0_S            = SIGN1_E + 2;    // verifying0 part0 to convert inputs to Mont domain
+localparam [PROG_ADDR_W-1 : 0] CHK_PK_S             = SIGN1_E + 2;    // check the given public key is a valid curve point
+localparam [PROG_ADDR_W-1 : 0] CHK_PK_E             = CHK_PK_S + 21;
+localparam [PROG_ADDR_W-1 : 0] VER0_P0_S            = CHK_PK_E + 2;   // verifying0 part0 to convert inputs to Mont domain
 localparam [PROG_ADDR_W-1 : 0] VER0_P0_E            = VER0_P0_S + 9;
 localparam [PROG_ADDR_W-1 : 0] VER0_P1_S            = VER0_P0_E + 2;  // verifying0 part1 to compute (h*s_inv) and (r*s_inv)
 localparam [PROG_ADDR_W-1 : 0] VER0_P1_E            = VER0_P1_S + 11;

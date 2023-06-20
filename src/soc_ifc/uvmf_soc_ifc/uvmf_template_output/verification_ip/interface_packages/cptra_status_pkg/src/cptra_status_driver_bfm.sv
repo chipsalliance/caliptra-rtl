@@ -124,8 +124,12 @@ end
   reg  sha_error_intr_o = 'bz;
   tri  sha_notif_intr_i;
   reg  sha_notif_intr_o = 'bz;
+  tri  timer_intr_i;
+  reg  timer_intr_o = 'bz;
   tri [31:0] nmi_vector_i;
   reg [31:0] nmi_vector_o = 'bz;
+  tri  nmi_intr_i;
+  reg  nmi_intr_o = 'bz;
   tri  iccm_lock_i;
   reg  iccm_lock_o = 'bz;
 
@@ -159,8 +163,12 @@ end
   assign sha_error_intr_i = bus.sha_error_intr;
   assign bus.sha_notif_intr = (initiator_responder == INITIATOR) ? sha_notif_intr_o : 'bz;
   assign sha_notif_intr_i = bus.sha_notif_intr;
+  assign bus.timer_intr = (initiator_responder == INITIATOR) ? timer_intr_o : 'bz;
+  assign timer_intr_i = bus.timer_intr;
   assign bus.nmi_vector = (initiator_responder == INITIATOR) ? nmi_vector_o : 'bz;
   assign nmi_vector_i = bus.nmi_vector;
+  assign bus.nmi_intr = (initiator_responder == INITIATOR) ? nmi_intr_o : 'bz;
+  assign nmi_intr_i = bus.nmi_intr;
   assign bus.iccm_lock = (initiator_responder == INITIATOR) ? iccm_lock_o : 'bz;
   assign iccm_lock_i = bus.iccm_lock;
 
@@ -203,7 +211,9 @@ end
        soc_ifc_notif_intr_o <= 'bz;
        sha_error_intr_o <= 'bz;
        sha_notif_intr_o <= 'bz;
+       timer_intr_o <= 'bz;
        nmi_vector_o <= 'bz;
+       nmi_intr_o <= 'bz;
        iccm_lock_o <= 'bz;
        // Bi-directional signals
  
@@ -227,7 +237,9 @@ end
                  |(soc_ifc_notif_intr_i   & !soc_ifc_notif_intr_o       ) ||
                  |(sha_error_intr_i       & !sha_error_intr_o           ) ||
                  |(sha_notif_intr_i       & !sha_notif_intr_o           ) ||
+                 |(timer_intr_i           & !timer_intr_o               ) ||
                  |(nmi_vector_i           ^  nmi_vector_o               ) ||
+                 |(nmi_intr_i             & !nmi_intr_o                 ) ||
                  |(iccm_lock_i            ^  iccm_lock_o                );
   endfunction
   // pragma uvmf custom interface_item_additional end
@@ -267,24 +279,28 @@ end
        //   bit soc_ifc_notif_intr_pending ;
        //   bit sha_err_intr_pending ;
        //   bit sha_notif_intr_pending ;
+       //   bit timer_intr_pending ;
        //   bit noncore_rst_asserted ;
        //   bit uc_rst_asserted ;
        //   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg ;
        //   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] obf_field_entropy ;
        //   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] obf_uds_seed ;
        //   bit [31:0] nmi_vector ;
+       //   bit nmi_intr_pending ;
        //   bit iccm_locked ;
        // Members within the cptra_status_responder_struct:
        //   bit soc_ifc_err_intr_pending ;
        //   bit soc_ifc_notif_intr_pending ;
        //   bit sha_err_intr_pending ;
        //   bit sha_notif_intr_pending ;
+       //   bit timer_intr_pending ;
        //   bit noncore_rst_asserted ;
        //   bit uc_rst_asserted ;
        //   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg ;
        //   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] obf_field_entropy ;
        //   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] obf_uds_seed ;
        //   bit [31:0] nmi_vector ;
+       //   bit nmi_intr_pending ;
        //   bit iccm_locked ;
        initiator_struct = cptra_status_initiator_struct;
        //
@@ -309,7 +325,9 @@ end
        //      soc_ifc_notif_intr_o <= cptra_status_initiator_struct.xyz;  //    
        //      sha_error_intr_o <= cptra_status_initiator_struct.xyz;  //     
        //      sha_notif_intr_o <= cptra_status_initiator_struct.xyz;  //     
+       //      timer_intr_o <= cptra_status_initiator_struct.xyz;  //     
        //      nmi_vector_o <= cptra_status_initiator_struct.xyz;  //    [31:0]
+       //      nmi_intr_o <= cptra_status_initiator_struct.xyz;  //     
        //      iccm_lock_o <= cptra_status_initiator_struct.xyz;  //     
        //    Initiator inout signals
     // Initiate a transfer using the data received.
@@ -346,24 +364,28 @@ bit first_transfer=1;
   //   bit soc_ifc_notif_intr_pending ;
   //   bit sha_err_intr_pending ;
   //   bit sha_notif_intr_pending ;
+  //   bit timer_intr_pending ;
   //   bit noncore_rst_asserted ;
   //   bit uc_rst_asserted ;
   //   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg ;
   //   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] obf_field_entropy ;
   //   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] obf_uds_seed ;
   //   bit [31:0] nmi_vector ;
+  //   bit nmi_intr_pending ;
   //   bit iccm_locked ;
   // Variables within the cptra_status_responder_struct:
   //   bit soc_ifc_err_intr_pending ;
   //   bit soc_ifc_notif_intr_pending ;
   //   bit sha_err_intr_pending ;
   //   bit sha_notif_intr_pending ;
+  //   bit timer_intr_pending ;
   //   bit noncore_rst_asserted ;
   //   bit uc_rst_asserted ;
   //   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg ;
   //   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] obf_field_entropy ;
   //   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] obf_uds_seed ;
   //   bit [31:0] nmi_vector ;
+  //   bit nmi_intr_pending ;
   //   bit iccm_locked ;
        // Reference code;
        //    How to wait for signal value
@@ -381,7 +403,9 @@ bit first_transfer=1;
        //      cptra_status_responder_struct.xyz = soc_ifc_notif_intr_i;  //   
        //      cptra_status_responder_struct.xyz = sha_error_intr_i;  //     
        //      cptra_status_responder_struct.xyz = sha_notif_intr_i;  //     
+       //      cptra_status_responder_struct.xyz = timer_intr_i;  //     
        //      cptra_status_responder_struct.xyz = nmi_vector_i;  //    [31:0] 
+       //      cptra_status_responder_struct.xyz = nmi_intr_i;  //     
        //      cptra_status_responder_struct.xyz = iccm_lock_i;  //     
        //    Responder inout signals
        //    How to assign a signal, named xyz, from an initiator struct member.   
@@ -405,6 +429,8 @@ bit first_transfer=1;
         soc_ifc_notif_intr_o           <= soc_ifc_notif_intr_i;
         sha_error_intr_o               <= sha_error_intr_i    ;
         sha_notif_intr_o               <= sha_notif_intr_i    ;
+        timer_intr_o                   <= timer_intr_i        ;
+        nmi_intr_o                     <= nmi_intr_i          ;
         @(posedge clk_i);
     end
     while (!any_signal_changed());
@@ -417,7 +443,9 @@ bit first_transfer=1;
     soc_ifc_notif_intr_o           <= soc_ifc_notif_intr_i  ;
     sha_error_intr_o               <= sha_error_intr_i      ;
     sha_notif_intr_o               <= sha_notif_intr_i      ;
+    timer_intr_o                   <= timer_intr_i          ;
     nmi_vector_o                   <= nmi_vector_i          ;
+    nmi_intr_o                     <= nmi_intr_i            ;
     iccm_lock_o                    <= iccm_lock_i           ;
 //    @(posedge clk_i);
     first_transfer = 0;
@@ -427,12 +455,14 @@ bit first_transfer=1;
          cptra_status_initiator_struct.soc_ifc_notif_intr_pending = soc_ifc_notif_intr_i;
          cptra_status_initiator_struct.sha_err_intr_pending       = sha_error_intr_i;
          cptra_status_initiator_struct.sha_notif_intr_pending     = sha_notif_intr_i;
+         cptra_status_initiator_struct.timer_intr_pending         = timer_intr_i;
          cptra_status_initiator_struct.noncore_rst_asserted       = !cptra_noncore_rst_b_i;
          cptra_status_initiator_struct.uc_rst_asserted            = !cptra_uc_rst_b_i;
          cptra_status_initiator_struct.cptra_obf_key_reg          = cptra_obf_key_reg_i;
          cptra_status_initiator_struct.obf_field_entropy          = obf_field_entropy_i;
          cptra_status_initiator_struct.obf_uds_seed               = obf_uds_seed_i;
          cptra_status_initiator_struct.nmi_vector                 = nmi_vector_i;
+         cptra_status_initiator_struct.nmi_intr_pending           = nmi_intr_i;
          cptra_status_initiator_struct.iccm_locked                = iccm_lock_i;
     end
   endtask

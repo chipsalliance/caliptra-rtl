@@ -407,6 +407,8 @@ package kv_reg_model_top_pkg;
          this.kv_ecc_privkey_read_map.add_submap   (this.kv_reg_rm.kv_reg_ecc_privkey_read_map, 'h0);
          this.kv_ecc_seed_read_map.add_submap      (this.kv_reg_rm.kv_reg_ecc_seed_read_map, 'h0);
 
+         void'(set_coverage(get_coverage() | UVM_CVR_REG_BITS | UVM_CVR_FIELD_VALS));
+
       endfunction
 
       // Function: sample

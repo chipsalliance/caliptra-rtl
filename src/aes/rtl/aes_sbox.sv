@@ -4,7 +4,7 @@
 //
 // AES SBox
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
 module aes_sbox import aes_pkg::*;
 #(

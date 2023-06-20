@@ -234,7 +234,6 @@ end
     kv_write_monitor_struct.write_dest_valid  = write_dest_valid_o; //kv_write_i[46:41];
     kv_write_monitor_struct.error             = error_o;
 
-
     // pragma uvmf custom do_monitor end
   endtask         
   

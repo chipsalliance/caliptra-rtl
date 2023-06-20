@@ -47,7 +47,7 @@ module spi_host_byte_merge (
     end
   end
 
-  prim_packer_fifo #(
+  caliptra_prim_packer_fifo #(
     .InW(8),
     .OutW(32)
   ) u_packer (

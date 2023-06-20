@@ -36,26 +36,27 @@
 module caliptra_top_tb_services 
     import soc_ifc_pkg::*; 
     import kv_defines_pkg::*;
+    import caliptra_top_tb_pkg::*;
 #(
     parameter UVM_TB = 0
 ) (
-    input logic                        clk,
+    input wire logic                   clk,
 
-    input logic                        cptra_rst_b,
+    input wire logic                   cptra_rst_b,
 
     // Caliptra Memory Export Interface
     el2_mem_if.top                     el2_mem_export,
 
     //SRAM interface for mbox
-    input  logic mbox_sram_cs,
-    input  logic mbox_sram_we,
-    input  logic [MBOX_ADDR_W-1:0] mbox_sram_addr,
-    input  logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata,
-    output logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_rdata,
+    input  wire logic mbox_sram_cs,
+    input  wire logic mbox_sram_we,
+    input  wire logic [MBOX_ADDR_W-1:0] mbox_sram_addr,
+    input  wire logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata,
+    output wire logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_rdata,
 
     //SRAM interface for imem
-    input  logic imem_cs,
-    input  logic [`CALIPTRA_IMEM_ADDR_WIDTH-1:0] imem_addr,
+    input  wire logic imem_cs,
+    input  wire logic [`CALIPTRA_IMEM_ADDR_WIDTH-1:0] imem_addr,
     output logic [`CALIPTRA_IMEM_DATA_WIDTH-1:0] imem_rdata,
 
     // Security State
@@ -65,6 +66,7 @@ module caliptra_top_tb_services
     output logic scan_mode,
 
     // TB Controls
+    output var   ras_test_ctrl_t ras_test_ctrl,
     output int   cycleCnt,
 
     //Interrupt flags
@@ -75,14 +77,17 @@ module caliptra_top_tb_services
     output logic assert_hard_rst_flag,
     output logic assert_rst_flag,
     output logic deassert_hard_rst_flag,
-    output logic deassert_rst_flag
+    output logic deassert_rst_flag,
+
+    output logic [0:`CLP_OBF_UDS_DWORDS-1][31:0] cptra_uds_tb,
+    output logic [0:`CLP_OBF_FE_DWORDS-1] [31:0] cptra_fe_tb,
+    output logic [0:`CLP_OBF_KEY_DWORDS-1][31:0] cptra_obf_key_tb
 
 );
 
    //=========================================================================-
    // Imports
    //=========================================================================-
-    import caliptra_top_tb_pkg::*;
 
    //=========================================================================-
    // Parameters
@@ -107,6 +112,8 @@ module caliptra_top_tb_services
     parameter MEMTYPE_LMEM = 3'h1;
     parameter MEMTYPE_DCCM = 3'h2;
     parameter MEMTYPE_ICCM = 3'h3;
+    parameter DATA_WIDTH = 32;
+    localparam IV_NO = 128 / DATA_WIDTH;
 
    //=========================================================================-
    // Signals
@@ -128,6 +135,7 @@ module caliptra_top_tb_services
     logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata_bitflip;
     int cycleCntKillReq;
 
+    int                         cycleCnt_ff;
     int                         rst_cyclecnt = 0;
     int                         wait_time_to_rst;
 
@@ -143,6 +151,17 @@ module caliptra_top_tb_services
     logic                       inject_sha_block;
     logic                       inject_random_data;
     logic                       check_pcr_signing;
+
+    // Decode:
+    //  [0] - Single bit, ICCM Error Injection
+    //  [1] - Double bit, ICCM Error Injection
+    //  [2] - Single bit, DCCM Error Injection
+    //  [3] - Double bit, DCCM Error Injection
+    veer_sram_error_injection_mode_t sram_error_injection_mode;
+    // Decode:
+    //  [0] - Single bit, Mailbox Error Injection
+    //  [1] - Double bit, Mailbox Error Injection
+    logic [1:0]                 inject_mbox_sram_error = 2'b0;
 
     logic                       set_wdt_timer1_period;
     logic                       set_wdt_timer2_period;
@@ -174,6 +193,20 @@ module caliptra_top_tb_services
 
     test_vector_t test_vector;
 
+    typedef struct packed {
+          logic [0:`CLP_OBF_KEY_DWORDS-1][31:0] obf_key_uds;
+          logic [0:IV_NO-1][31:0] iv_uds;
+          logic [0:`CLP_OBF_UDS_DWORDS-1][31:0] uds_plaintext;
+          logic [0:`CLP_OBF_UDS_DWORDS-1][31:0] uds_ciphertext;
+
+          logic [0:`CLP_OBF_KEY_DWORDS-1][31:0] obf_key_fe;
+          logic [0:IV_NO-1][31:0] iv_fe;
+          logic [0:`CLP_OBF_FE_DWORDS-1] [31:0] fe_plaintext;
+          logic [0:`CLP_OBF_FE_DWORDS-1] [31:0] fe_ciphertext;
+    } doe_test_vector_t;
+
+    doe_test_vector_t doe_test_vector;
+
 // Upwards name referencing per 23.8 of IEEE 1800-2017
 `define DEC caliptra_top_dut.rvtop.veer.dec
 
@@ -197,12 +230,22 @@ module caliptra_top_tb_services
     //         8'h92        - Check PCR singing with randomized vector   
     //         8'ha0: 8'ha7 - Inject HMAC_KEY to kv_key register
     //         8'hc0: 8'hc7 - Inject SHA_BLOCK to kv_key register
+    //         8'he0        - Set random ICCM SRAM single bit error injection
+    //         8'he1        - Set random ICCM SRAM double bit error injection
+    //         8'he2        - Set random DCCM SRAM single bit error injection
+    //         8'he3        - Set random DCCM SRAM double bit error injection
+    //         8'he4        - Disable all SRAM error injection (Mailbox, ICCM, DCCM)
+    //         8'he5        - Request TB to initiate Mailbox flow without lock (violation) TODO
+    //         8'he6        - Request TB to initiate Mailbox flow with out-of-order accesses (violation) TODO
+    //         8'heb        - Inject fatal error
+    //         8'hec        - Inject randomized UDS test vector
+    //         8'hed        - Inject randomized FE test vector
     //         8'hee        - Issue random warm reset
     //         8'hef        - Enable scan mode
     //         8'hf0        - Disable scan mode
     //         8'hf1        - Release WDT timer periods so they can be set by the test
     //         8'hf2        - Force clk_gating_en (to use in smoke_test only)
-    //         8'hf3        - Make two clients write to KV
+    //         8'hf3        - Init PCR slot 31
     //         8'hf4        - Write random data to KV entry0
     //         8'hf5        - Issue cold reset
     //         8'hf6        - Issue warm reset
@@ -212,8 +255,8 @@ module caliptra_top_tb_services
     //         8'hfa        - Unlock debug in security state
     //         8'hfb        - Set the isr_active bit
     //         8'hfc        - Clear the isr_active bit
-    //         8'hfd        - Toggle random SRAM single bit error injection
-    //         8'hfe        - Toggle random SRAM double bit error injection
+    //         8'hfd        - Set random Mailbox SRAM single bit error injection
+    //         8'hfe        - Set random Mailbox SRAM double bit error injection
     //         8'hff        - End the simulation with a Success status
     assign mailbox_write = caliptra_top_dut.soc_ifc_top1.i_soc_ifc_reg.field_combo.CPTRA_GENERIC_OUTPUT_WIRES[0].generic_wires.load_next;
     assign WriteData = caliptra_top_dut.soc_ifc_top1.i_soc_ifc_reg.field_combo.CPTRA_GENERIC_OUTPUT_WIRES[0].generic_wires.next;
@@ -234,14 +277,32 @@ module caliptra_top_tb_services
             isr_active++;
         end
     end
-    logic [1:0] inject_rand_sram_error = 2'b0;
+    always @(negedge clk or negedge cptra_rst_b) begin
+        if      (!cptra_rst_b)                               inject_mbox_sram_error <= 2'b00;
+        else if ((WriteData[7:0] == 8'hfd) && mailbox_write) inject_mbox_sram_error <= 2'b01;
+        else if ((WriteData[7:0] == 8'hfe) && mailbox_write) inject_mbox_sram_error <= 2'b10;
+        else if ((WriteData[7:0] == 8'he4) && mailbox_write) inject_mbox_sram_error <= 2'b00;
+    end
+    always @(negedge clk or negedge cptra_rst_b) begin
+        if      (!cptra_rst_b)                               sram_error_injection_mode                       <= '{default: 1'b0};
+        else if ((WriteData[7:0] == 8'he0) && mailbox_write) sram_error_injection_mode.iccm_single_bit_error <= 1'b1;
+        else if ((WriteData[7:0] == 8'he1) && mailbox_write) sram_error_injection_mode.iccm_double_bit_error <= 1'b1;
+        else if ((WriteData[7:0] == 8'he2) && mailbox_write) sram_error_injection_mode.dccm_single_bit_error <= 1'b1;
+        else if ((WriteData[7:0] == 8'he3) && mailbox_write) sram_error_injection_mode.dccm_double_bit_error <= 1'b1;
+        else if ((WriteData[7:0] == 8'he4) && mailbox_write) sram_error_injection_mode                       <= '{default: 1'b0};
+    end
+
+    initial ras_test_ctrl.error_injection_seen = 1'b0;
     always @(negedge clk) begin
-        if ((WriteData[7:0] == 8'hfd) && mailbox_write) begin
-            inject_rand_sram_error ^= 2'b01;
+        if (mailbox_write && WriteData[7:0] == 8'hfd) begin
+            ras_test_ctrl.error_injection_seen <= 1'b1;
         end
-        else if ((WriteData[7:0] == 8'hfe) && mailbox_write) begin
-            inject_rand_sram_error ^= 2'b10;
-        end
+    end
+    // When starting a new error injection test, reset generic_input wires to the idle value.
+    // New values will be loaded to reflect the result of the RAS test.
+    initial ras_test_ctrl.reset_generic_input_wires = 1'b0;
+    always@(negedge clk) begin
+        ras_test_ctrl.reset_generic_input_wires <= mailbox_write && (WriteData[7:0] inside {8'he0, 8'he1, 8'he2, 8'he3, 8'hfd, 8'hfe});
     end
 
     //keyvault injection hooks
@@ -342,6 +403,7 @@ module caliptra_top_tb_services
     
 
     //TIE-OFF device lifecycle
+    logic assert_ss_tran;
     initial security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1};
     always @(negedge clk) begin
         //lock debug mode
@@ -351,15 +413,46 @@ module caliptra_top_tb_services
         end
         //unlock debug mode
         else if ((WriteData[7:0] == 8'hfa) && mailbox_write) begin
-            security_state.debug_locked <= 1'b0;
+            cycleCnt_ff <= cycleCnt;
+            assert_ss_tran <= 'b1;
+            //security_state.debug_locked <= 1'b0;
             if (UVM_TB) $warning("WARNING! Detected FW write to manually clear security_state.debug_locked, but Firmware can't do this in UVM. Use a sequence in the soc_ifc_ctrl_agent to modify this field.");
         end
+        else if(assert_ss_tran && (cycleCnt == cycleCnt_ff + 'd100)) begin
+            security_state.debug_locked <= 1'b0;
+            assert_ss_tran <= 'b0;
+        end
     end
+    
+    generate
+        for(genvar dword = 0; dword < IV_NO; dword++) begin
+    always@(negedge clk) begin
+        if ((WriteData[7:0] == 8'hec) && mailbox_write) begin
+            force caliptra_top_dut.doe.doe_inst.hwif_out.DOE_IV[dword].IV.swmod = 'b1;
+            force caliptra_top_dut.doe.doe_inst.IV_reg[dword] = doe_test_vector.iv_uds[dword];
+        end
+        else if ((WriteData[7:0] == 8'hed) && mailbox_write) begin
+            force caliptra_top_dut.doe.doe_inst.hwif_out.DOE_IV[dword].IV.swmod = 'b1;
+            force caliptra_top_dut.doe.doe_inst.IV_reg[dword] = doe_test_vector.iv_fe[dword];
+        end
+        else begin
+            release caliptra_top_dut.doe.doe_inst.hwif_out.DOE_IV[dword].IV.swmod;
+        end
+    end
+end //for
+endgenerate //IV_NO
 
+    logic assert_scan_mode;
     always @(negedge clk) begin
         //Enable scan mode
         if ((WriteData[7:0] == 8'hef) && mailbox_write) begin
+            cycleCnt_ff <= cycleCnt;
+            assert_scan_mode <= 'b1;
+            //scan_mode <= 1'b1;
+        end
+        else if(assert_scan_mode && (cycleCnt == cycleCnt_ff + 'd100)) begin
             scan_mode <= 1'b1;
+            assert_scan_mode <= 'b0;
         end
         //Disable scan mode
         else if ((WriteData[7:0] == 8'hf0) && mailbox_write) begin
@@ -371,6 +464,22 @@ module caliptra_top_tb_services
     always@(negedge clk) begin
         if((WriteData == 'hf2) && mailbox_write) begin
             force caliptra_top_dut.soc_ifc_top1.clk_gating_en = 1;
+        end
+    end
+
+    //Inject fatal error after a delay
+    logic inject_fatal_error;
+    always@(negedge clk) begin
+        if((WriteData == 'heb) && mailbox_write) begin
+            cycleCnt_ff <= cycleCnt;
+            inject_fatal_error <= 'b1;
+        end
+        else if(inject_fatal_error && (cycleCnt == cycleCnt_ff + 'd100)) begin
+            force caliptra_top_dut.cptra_error_fatal = 'b1;
+        end
+        else if(inject_fatal_error && (cycleCnt == cycleCnt_ff + 'd200)) begin
+            release caliptra_top_dut.cptra_error_fatal;
+            inject_fatal_error <= 'b0;
         end
     end
 
@@ -409,6 +518,41 @@ module caliptra_top_tb_services
         end
     endgenerate
 
+    task doe_testvector_generator();
+        string file_name;
+        int fd_r;
+        string line_read;
+
+        $system("python doe_test_gen.py");
+        file_name = "doe_test_vector.txt";
+        if(!UVM_TB) begin
+            fd_r = $fopen(file_name, "r");
+            if(fd_r == 0) $error("Cannot open file %s for reading", file_name);
+
+            //Get values from file
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", doe_test_vector.obf_key_uds));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", doe_test_vector.iv_uds));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", doe_test_vector.uds_plaintext));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", doe_test_vector.uds_ciphertext));
+
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", doe_test_vector.obf_key_fe));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", doe_test_vector.iv_fe));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", doe_test_vector.fe_plaintext));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", doe_test_vector.fe_ciphertext));
+
+            $fclose(fd_r);
+        end
+
+    endtask
+
     task ecc_testvector_generator ();
         string    file_name;
         begin
@@ -420,7 +564,7 @@ module caliptra_top_tb_services
         end
     endtask // ecc_test
 
-    task ecc_read_test_vectors (input string fname);
+    task static ecc_read_test_vectors (input string fname);
         integer values_per_test_vector;
         int fd_r;
         string line_read;
@@ -501,7 +645,7 @@ module caliptra_top_tb_services
             timed_warm_rst <= 'b1;
         end
         else if((WriteData == 'hee) && mailbox_write) begin
-            wait_time_to_rst =$urandom_range(5,1000);
+            wait_time_to_rst = $urandom_range(5,100);
             prandom_warm_rst <= 'b1;
             rst_cyclecnt <= cycleCnt;
         end
@@ -627,16 +771,16 @@ module caliptra_top_tb_services
 
     `ifndef VERILATOR
         initial begin
-            bitflip_mask_generator #(MBOX_DATA_AND_ECC_W) bitflip_gen = new();
+            automatic bitflip_mask_generator #(MBOX_DATA_AND_ECC_W) bitflip_gen = new();
             forever begin
                 @(posedge clk)
-                if (~|inject_rand_sram_error) begin
+                if (~|inject_mbox_sram_error) begin
                     mbox_sram_wdata_bitflip <= '0;
                 end
                 else if (mbox_sram_cs & mbox_sram_we) begin
                     // Corrupt 10% of the writes
                     flip_bit = $urandom_range(0,99) < 10;
-                    mbox_sram_wdata_bitflip <= flip_bit ? bitflip_gen.get_mask(inject_rand_sram_error[1]) : '0;
+                    mbox_sram_wdata_bitflip <= flip_bit ? bitflip_gen.get_mask(inject_mbox_sram_error[1]) : '0;
 //                    if (flip_bit) $display("%t Injecting bit flips", $realtime);
 //                    else          $display("%t No bit flips injected", $realtime);
                 end
@@ -644,13 +788,14 @@ module caliptra_top_tb_services
         end
     `else
         always @(posedge clk) begin
-            // Corrupt 10% of the writes
-            flip_bit <= ($urandom % 100) < 10;
-            if (~|inject_rand_sram_error) begin
+            if (~|inject_mbox_sram_error) begin
+                flip_bit <= 0;
                 mbox_sram_wdata_bitflip <= '0;
             end
             else if (mbox_sram_cs & mbox_sram_we) begin
-                mbox_sram_wdata_bitflip <= flip_bit ? get_bitflip_mask(inject_rand_sram_error[1]) : '0;
+                // Corrupt 10% of the writes
+                flip_bit <= ($urandom % 100) < 10;
+                mbox_sram_wdata_bitflip <= flip_bit ? get_bitflip_mask(inject_mbox_sram_error[1]) : '0;
             end
         end
     `endif
@@ -867,9 +1012,25 @@ module caliptra_top_tb_services
         wait_time_to_rst = 0;
 
         set_wdt_timer1_period = 0;
+        assert_ss_tran = 0;
 
         `ifndef VERILATOR
-        ecc_testvector_generator();
+        if (!UVM_TB) begin
+            ecc_testvector_generator();
+            doe_testvector_generator();
+            
+            //Note: Both obf_key_uds and obf_key_fe are the same
+            //for(int dword = 0; dword < `CLP_OBF_KEY_DWORDS; dword++) begin
+            //    cptra_obf_key_tb[dword] = doe_test_vector.obf_key_uds[(`CLP_OBF_KEY_DWORDS-1)-dword];
+            //end
+            cptra_obf_key_tb = doe_test_vector.obf_key_uds;
+            for(int dword = 0; dword < `CLP_OBF_UDS_DWORDS; dword++) begin
+                cptra_uds_tb[dword] = doe_test_vector.uds_ciphertext[dword];
+            end
+            for(int dword = 0; dword < `CLP_OBF_FE_DWORDS; dword++) begin
+                cptra_fe_tb[dword] = doe_test_vector.fe_ciphertext[dword];
+            end
+        end
         `endif
     end
 
@@ -877,6 +1038,7 @@ module caliptra_top_tb_services
    // SRAM instances
    //=========================================================================-
 caliptra_veer_sram_export veer_sram_export_inst (
+    .sram_error_injection_mode(sram_error_injection_mode),
     .el2_mem_export(el2_mem_export)
 );
 
@@ -969,7 +1131,7 @@ caliptra_sram #(
    //=========================================================================-
    // SRAM preload services
    //=========================================================================-
-task preload_mbox;
+task static preload_mbox;
     // Variables
     mbox_sram_data_t      ecc_data;
     bit [MBOX_ADDR_W  :0] addr;
@@ -996,7 +1158,7 @@ task preload_mbox;
     $display("MBOX pre-load completed");
 endtask
 
-task preload_iccm;
+task static preload_iccm;
     bit[31:0] data;
     bit[31:0] addr, eaddr, saddr;
 
@@ -1028,7 +1190,7 @@ task preload_iccm;
 endtask
 
 
-task preload_dccm;
+task static preload_dccm;
     bit[31:0] data;
     bit[31:0] addr, saddr, eaddr;
 
@@ -1070,7 +1232,7 @@ endtask
 `endif
 
 
-task slam_dccm_ram(input [31:0] addr, input[38:0] data);
+task static slam_dccm_ram(input [31:0] addr, input[38:0] data);
     int bank, indx;
     bank = get_dccm_bank(addr, indx);
     `ifdef RV_DCCM_ENABLE
@@ -1095,7 +1257,7 @@ task slam_dccm_ram(input [31:0] addr, input[38:0] data);
 endtask
 
 
-task slam_iccm_ram( input[31:0] addr, input[38:0] data);
+task static slam_iccm_ram( input[31:0] addr, input[38:0] data);
     int bank, idx;
 
     bank = get_iccm_bank(addr, idx);
@@ -1136,7 +1298,7 @@ task slam_iccm_ram( input[31:0] addr, input[38:0] data);
     `endif
 endtask
 
-task init_iccm;
+task static init_iccm;
     `ifdef RV_ICCM_ENABLE
         `IRAM(0) = '{default:39'h0};
         `IRAM(1) = '{default:39'h0};
@@ -1168,7 +1330,7 @@ task init_iccm;
     `endif
 endtask
 
-task init_dccm;
+task static init_dccm;
     `ifdef RV_DCCM_ENABLE
         `DRAM(0) = '{default:39'h0};
         `DRAM(1) = '{default:39'h0};
@@ -1185,7 +1347,7 @@ task init_dccm;
     `endif
 endtask
 
-task dump_memory_contents;
+task static dump_memory_contents;
     input [2:0] mem_type;
     input [31:0] start_addr;
     input [31:0] end_addr;
@@ -1349,6 +1511,11 @@ function int get_iccm_bank(input[31:0] addr,  output int bank_idx);
         return int'( addr[5:2]);
     `endif
 endfunction
+
+`ifndef VERILATOR
+soc_ifc_cov_bind i_soc_ifc_cov_bind();
+caliptra_top_cov_bind i_caliptra_top_cov_bind();
+`endif
 
 /* verilator lint_off CASEINCOMPLETE */
 `include "dasm.svi"

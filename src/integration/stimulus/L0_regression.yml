@@ -21,6 +21,7 @@ contents:
         - ../test_suites/smoke_test_hmac/smoke_test_hmac.yml
         - ../test_suites/smoke_test_kv/smoke_test_kv.yml
         - ../test_suites/smoke_test_sram_ecc/smoke_test_sram_ecc.yml
+        - ../test_suites/smoke_test_ras/smoke_test_ras.yml
         # smoke_test_trng requires Caliptra to be built using the
         # +define+CALIPTRA_INTERNAL_TRNG argument, which is not the
         # default build config
@@ -35,6 +36,7 @@ contents:
         - ../test_suites/pv_hash_and_sign/pv_hash_and_sign.yml
         - ../test_suites/smoke_test_pcr_signing/smoke_test_pcr_signing.yml
         - ../test_suites/smoke_test_ahb_mux/smoke_test_ahb_mux.yml
+        - ../test_suites/smoke_test_doe_rand/smoke_test_doe_rand.yml
         # data vault tests
         - ../test_suites/smoke_test_datavault_basic/smoke_test_datavault_basic.yml
         - ../test_suites/smoke_test_datavault_reset/smoke_test_datavault_reset.yml
@@ -44,5 +46,8 @@ contents:
         #smoke test debug state transition
         #smoke test interrupt handling
         #smoke test wd timer expiry and nmi generation
+        - ../test_suites/smoke_test_wdt/smoke_test_wdt.yml
+        #- ../test_suites/smoke_test_cg_wdt/smoke_test_cg_wdt.yml
         #smoke test jtag
         #smoke test generic input wire to fw interrupt
+        #- ../test_suites/smoke_test_clk_gating/smoke_test_clk_gating.yml

@@ -48,15 +48,24 @@ task soc_ifc_env_cptra_mbox_interference_handler_sequence::mbox_wait_for_command
     reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
     report_reg_sts(reg_sts, "notif_internal_intr_r");
     while (!data[reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_cmd_avail_sts.get_lsb_pos()]) begin
+        uvm_reg_data_t dlen;
+        byte unsigned  mem_n_bytes;
+
+        dlen = reg_model.mbox_csr_rm.mbox_dlen.length.get_mirrored_value();
+        mem_n_bytes = reg_model.mbox_mem_rm.get_n_bytes();
+
         if(!this.randomize(xfers) with {xfers inside {[1:20]}; }) begin
             `uvm_error("CPTRA_MBOX_HANDLER", "Failed to randomize memory AHB transfer count in mbox_wait_for_command")
         end
         else begin
             for (ii=0; ii<xfers; ii++) begin: XFER_LOOP
                 // Do random access to mailbox memory to trigger arb logic as soc APB actor writes command data
+                // NOTE that RnW is forced to AHB_READ when the address falls inside the range of DLEN current value, so that
+                // data from the mailbox command is not corrupted.
                 // TODO also mix in some reg accesses?
                 if(!this.randomize(RnW, mem_offset, data, cycles) with {mem_offset inside {[0:reg_model.mbox_mem_rm.get_size()-1]};
-                                                                        cycles inside {[1:200]}; }) begin
+                                                                        cycles inside {[1:200]};
+                                                                        if(mem_offset * mem_n_bytes < dlen) RnW == AHB_READ; }) begin
                     `uvm_error("CPTRA_MBOX_HANDLER", "Failed to randomize memory AHB transfer in mbox_wait_for_command")
                 end
                 else begin

@@ -358,9 +358,7 @@ class soc_ifc_scoreboard #(
         soc_ifc_status_monitor_toggle_count = '{default:2'b00};
     end
     else begin
-        `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
-        `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_analysis_export function needs to be completed with custom scoreboard functionality",UVM_LOW)
-        `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
+        `uvm_info("FIXME_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_analysis_export function needs to be completed with custom scoreboard functionality for unexpected actual transactions",UVM_LOW)
         `uvm_error("SCBD_SOC_IFC_STS",$sformatf("NO PREDICTED ENTRY WITH KEY [%0d] TO COMPARE AGAINST:%s", t.get_key(), t.convert2string()))
         nothing_to_compare_against_count++;
     end
@@ -397,9 +395,7 @@ class soc_ifc_scoreboard #(
         cptra_expected_hash.delete(t.get_key());
     end
     else begin
-        `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
-        `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_cptra_analysis_export function needs to be completed with custom scoreboard functionality",UVM_LOW)
-        `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
+        `uvm_info("FIXME_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_cptra_analysis_export function needs to be completed with custom scoreboard functionality for unexpected actual transactions",UVM_LOW)
         `uvm_error("SCBD_CPTRA_STS",$sformatf("NO PREDICTED ENTRY WITH KEY [%0d] TO COMPARE AGAINST:%s", t.get_key(), t.convert2string()))
         nothing_to_compare_against_count++;
     end
@@ -479,9 +475,7 @@ class soc_ifc_scoreboard #(
         end
     end
     else begin
-        `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
-        `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_ahb_analysis_export function needs to be completed with custom scoreboard functionality",UVM_LOW)
-        `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
+        `uvm_info("FIXME_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_ahb_analysis_export function needs to be completed with custom scoreboard functionality for unexpected actual transactions",UVM_LOW)
         `uvm_error("SCBD_AHB",$sformatf("NO PREDICTED ENTRY TO COMPARE AGAINST:%s",t.convert2string()))
         nothing_to_compare_against_count++;
     end
@@ -518,9 +512,7 @@ class soc_ifc_scoreboard #(
         end
     end
     else begin
-        `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
-        `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_apb_analysis_export function needs to be completed with custom scoreboard functionality",UVM_LOW)
-        `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
+        `uvm_info("FIXME_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_apb_analysis_export function needs to be completed with custom scoreboard functionality for unexpected actual transactions",UVM_LOW)
         `uvm_error("SCBD_APB",$sformatf("NO PREDICTED ENTRY TO COMPARE AGAINST:%s",t.convert2string()))
         nothing_to_compare_against_count++;
     end

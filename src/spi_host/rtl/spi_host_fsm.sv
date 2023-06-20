@@ -536,7 +536,7 @@ module spi_host_fsm
 
   assign sck_o = sck_q;
 
-  prim_flop_en u_sck_flop (
+  caliptra_prim_flop_en u_sck_flop (
     .clk_i,
     .rst_ni,
     .en_i(~stall),

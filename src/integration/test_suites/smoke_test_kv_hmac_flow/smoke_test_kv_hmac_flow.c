@@ -153,7 +153,7 @@ void main() {
     for (int i = 0; i < hmac_lfsr_seed.data_size; i++)
         hmac_lfsr_seed.data[i] = lfsr_seed_data[i];
 
-    hmac_tag.kv_intf = FALSE;
+    hmac_tag.kv_intf = TRUE;
     hmac_tag.kv_id = tag_kv_id;
     hmac_tag.data_size = 12;
     for (int i = 0; i < hmac_tag.data_size; i++)

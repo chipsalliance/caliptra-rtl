@@ -14,6 +14,7 @@
 
 `include "caliptra_sva.svh"
 `include "caliptra_macros.svh"
+`include "caliptra_reg_defines.svh"
 
 module soc_ifc_top 
     import soc_ifc_pkg::*;
@@ -81,10 +82,14 @@ module soc_ifc_top
     output wire              soc_ifc_notif_intr,
     output wire              sha_error_intr,
     output wire              sha_notif_intr,
+    output wire              timer_intr,
 
     //SRAM interface
     output mbox_sram_req_t  mbox_sram_req,
     input  mbox_sram_resp_t mbox_sram_resp,
+
+    // RV ECC Status Interface
+    input rv_ecc_sts_t rv_ecc_sts,
 
     //Obfuscated UDS and FE
     input  logic clear_obf_secrets,
@@ -168,10 +173,17 @@ logic security_state_debug_locked_p;
 logic sram_single_ecc_error;
 logic sram_double_ecc_error;
 logic soc_req_mbox_lock;
+logic [1:0] generic_input_toggle;
+mbox_protocol_error_t mbox_protocol_error;
+logic mbox_inv_user_p;
 
 logic iccm_unlock;
 logic fw_upd_rst_executed;
 logic fuse_wr_done_reg_write_observed;
+
+logic unmasked_hw_error_fatal_write;
+logic unmasked_hw_error_non_fatal_write;
+logic unmasked_hw_error_non_fatal_is_set;
 
 logic pwrgood_toggle_hint;
 logic Warm_Reset_Capture_Flag;
@@ -202,9 +214,9 @@ logic t2_timeout_f; //To generate interrupt pulse
 logic t2_timeout_p;
 logic wdt_error_t1_intr_serviced;
 logic wdt_error_t2_intr_serviced;
-logic soc_ifc_error_intr_f;
 
 logic valid_trng_user;
+logic valid_fuse_user;
 
 //Boot FSM
 //This module contains the logic required to control the Caliptra Boot Flow
@@ -322,6 +334,7 @@ soc_ifc_arb #(
     .clk(soc_ifc_clk_cg),
     .rst_b(cptra_rst_b),
     .valid_mbox_users(valid_mbox_users),
+    .valid_fuse_user(valid_fuse_user),
     //UC inf
     .uc_req_dv(uc_req_dv), 
     .uc_req_hold(uc_req_hold), 
@@ -414,6 +427,12 @@ always_comb begin
     for (int i = 0; i < 2; i++) begin
         generic_output_wires[i] = soc_ifc_reg_hwif_out.CPTRA_GENERIC_OUTPUT_WIRES[i].generic_wires.value;
         soc_ifc_reg_hwif_in.CPTRA_GENERIC_INPUT_WIRES[i].generic_wires.next = generic_input_wires[i];
+        if (|(soc_ifc_reg_hwif_out.CPTRA_GENERIC_INPUT_WIRES[i].generic_wires.value ^ generic_input_wires[i])) begin
+            generic_input_toggle[i] = 1;
+        end
+        else begin
+            generic_input_toggle[i] = 0;
+        end
     end
 
 end
@@ -476,7 +495,7 @@ end
 
 
 // Generate a pulse to set the interrupt bit
-always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
+always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
     if (~cptra_noncore_rst_b) begin
         security_state_debug_locked_d <= '0;
     end
@@ -500,9 +519,14 @@ always_comb begin
                               soc_ifc_reg_hwif_out.CPTRA_MBOX_VALID_PAUSER[i].PAUSER.value[APB_USER_WIDTH-1:0] : CPTRA_DEF_MBOX_VALID_PAUSER;
     end
 end
+
 //can't write to trng valid user after it is locked
 always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_VALID_PAUSER.PAUSER.swwel = soc_ifc_reg_hwif_out.CPTRA_TRNG_PAUSER_LOCK.LOCK.value;
 always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_PAUSER_LOCK.LOCK.swwel = soc_ifc_reg_hwif_out.CPTRA_TRNG_PAUSER_LOCK.LOCK.value;
+
+//fuse register pauser fields
+always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_VALID_PAUSER.PAUSER.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_PAUSER_LOCK.LOCK.value;
+always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_PAUSER_LOCK.LOCK.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_PAUSER_LOCK.LOCK.value;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Can't write to RW-able fuses once fuse_done is set (implies the register is being locked using the fuse_wr_done)
@@ -571,6 +595,14 @@ end
 //Clear the DATA_WR_DONE when FW clears the req bit
 always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_STATUS.DATA_WR_DONE.hwclr = ~soc_ifc_reg_hwif_out.CPTRA_TRNG_STATUS.DATA_REQ.value;
 
+generate
+    if (CPTRA_SET_FUSE_PAUSER_INTEG) begin
+        always_comb valid_fuse_user = soc_req_dv & (soc_req.user == CPTRA_FUSE_VALID_PAUSER);
+    end else begin
+        always_comb valid_fuse_user = soc_req_dv & (~soc_ifc_reg_hwif_out.CPTRA_FUSE_PAUSER_LOCK.LOCK.value | 
+                                     (soc_req.user == soc_ifc_reg_hwif_out.CPTRA_FUSE_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]));
+    end
+endgenerate
 // Generate a pulse to set the interrupt bit
 always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
     if (~cptra_noncore_rst_b) begin
@@ -583,16 +615,17 @@ end
 
 always_comb uc_cmd_avail_p = uc_mbox_data_avail & !uc_mbox_data_avail_d;
 // Pulse input to soc_ifc_reg to set the interrupt status bit and generate interrupt output (if enabled)
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset     = 1'b0; // TODO
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_inv_dev_sts.hwset      = 1'b0; // TODO should decode from APB PAUSER
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_cmd_fail_sts.hwset     = 1'b0; // TODO should this be set by write of "FAIL" to mbox_csr.status if soc_req is set? (i.e. SoC cmd execution failed)
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_bad_fuse_sts.hwset     = 1'b0; // TODO
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_iccm_blocked_sts.hwset = iccm_axs_blocked;
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts.hwset = sram_double_ecc_error;
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.hwset    = uc_cmd_avail_p; // TODO confirm signal correctness
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.hwset = sram_single_ecc_error;
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_debug_locked_sts.hwset = security_state_debug_locked_p; // Any transition results in interrupt
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_soc_req_lock_sts.hwset = soc_req_mbox_lock;
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset           = 1'b0; // TODO
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_inv_dev_sts.hwset            = mbox_inv_user_p; // All invalid users, or only 'valid user but != mbox_user.user'?
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_cmd_fail_sts.hwset           = |mbox_protocol_error; // Set by any protocol error violation (mirrors the bits in CPTRA_HW_ERROR_NON_FATAL)
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_bad_fuse_sts.hwset           = 1'b0; // TODO
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_iccm_blocked_sts.hwset       = iccm_axs_blocked;
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts.hwset       = sram_double_ecc_error;
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.hwset          = uc_cmd_avail_p;
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.hwset       = sram_single_ecc_error;
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_debug_locked_sts.hwset       = security_state_debug_locked_p; // Any transition results in interrupt
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_soc_req_lock_sts.hwset       = soc_req_mbox_lock;
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_gen_in_toggle_sts.hwset      = |generic_input_toggle;
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_wdt_timer1_timeout_sts.hwset = t1_timeout_p;
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_wdt_timer2_timeout_sts.hwset = t2_timeout_p && timer2_en;
 
@@ -607,7 +640,7 @@ logic s_cpuif_rd_ack_nc;
 logic s_cpuif_wr_ack_nc;
 
 soc_ifc_reg i_soc_ifc_reg (
-    .clk(soc_ifc_clk_cg),
+    .clk(clk),
     .rst('0),
     //qualify request so no addresses alias
     .s_cpuif_req(soc_ifc_reg_req_dv & (soc_ifc_reg_req_data.addr[SOC_IFC_ADDR_W-1:SOC_IFC_REG_ADDR_WIDTH] == SOC_IFC_REG_START_ADDR[SOC_IFC_ADDR_W-1:SOC_IFC_REG_ADDR_WIDTH])),
@@ -645,11 +678,66 @@ assign nmi_vector = soc_ifc_reg_hwif_out.internal_nmi_vector.vec.value;
 assign iccm_lock  = soc_ifc_reg_hwif_out.internal_iccm_lock.lock.value;
 assign clk_gating_en = soc_ifc_reg_hwif_out.CPTRA_CLK_GATING_EN.clk_gating_en.value;
 assign nmi_intr = t2_timeout && !timer2_en;             //Only issue nmi if WDT timers are cascaded and t2 times out
-assign cptra_error_fatal = t2_timeout && !timer2_en;    //Only issue fatal error if WDT timers are cascaded and t2 times out
 
-// TODO
-assign cptra_error_non_fatal = 1'b0; // FIXME
+// Interrupt output is set, for any enabled conditions, when a new write
+// sets CPTRA_FW_ERROR_FATAL or when a HW condition occurs that sets a bit
+// in CPTRA_HW_ERROR_FATAL
+// Interrupt only deasserts on reset
+always_ff@(posedge clk or negedge cptra_rst_b) begin
+    if(~cptra_rst_b) begin
+        cptra_error_fatal <= 1'b0;
+    end
+    // FW write that SETS a new (non-masked) bit results in interrupt assertion
+    else if (soc_ifc_reg_req_dv &&
+             soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_FATAL.error_code.swmod &&
+             |(soc_ifc_reg_req_data.wdata & ~soc_ifc_reg_hwif_out.internal_fw_error_fatal_mask.mask.value & ~soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_FATAL.error_code.value)) begin
+        cptra_error_fatal <= 1'b1;
+    end
+    // HW event that SETS a new (non-masked) bit results in interrupt assertion
+    else if (unmasked_hw_error_fatal_write) begin
+        cptra_error_fatal <= 1'b1;
+    end
+    // NOTE: There is no mechanism to clear interrupt assertion by design.
+    //       Platform MUST perform cptra_rst_b in order to clear cptra_error_fatal
+    //       output signal, per the integration spec.
+    else begin
+        cptra_error_fatal <= cptra_error_fatal;
+    end
+end
+always_ff@(posedge clk or negedge cptra_rst_b) begin
+    if(~cptra_rst_b) begin
+        cptra_error_non_fatal <= 1'b0;
+    end
+    // FW write that SETS a new (non-masked) bit results in interrupt assertion
+    else if (soc_ifc_reg_req_dv &&
+             soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_NON_FATAL.error_code.swmod &&
+             |(soc_ifc_reg_req_data.wdata & ~soc_ifc_reg_hwif_out.internal_fw_error_non_fatal_mask.mask.value  & ~soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_NON_FATAL.error_code.value)) begin
+        cptra_error_non_fatal <= 1'b1;
+    end
+    // HW event that SETS a new (non-masked) bit results in interrupt assertion
+    else if (unmasked_hw_error_non_fatal_write) begin
+        cptra_error_non_fatal <= 1'b1;
+    end
+    // If FW performs a write that clears all outstanding (unmasked) ERROR_NON_FATAL events, deassert interrupt
+    else if (~unmasked_hw_error_non_fatal_is_set &&
+             ~|(~soc_ifc_reg_hwif_out.internal_fw_error_non_fatal_mask.mask.value & soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_NON_FATAL.error_code.value)) begin
+        cptra_error_non_fatal <= 1'b0;
+    end
+    else begin
+        cptra_error_non_fatal <= cptra_error_non_fatal;
+    end
+end
+
 assign trng_req = soc_ifc_reg_hwif_out.CPTRA_TRNG_STATUS.DATA_REQ.value;
+
+// mtime always increments, but if it's being written by software the write
+// value will update the register. Deasserting incr in this case prevents the
+// SW write from being dropped (due to RDL compiler failing to give SW precedence properly).
+assign soc_ifc_reg_hwif_in.internal_rv_mtime_l.count_l.incr = !(soc_ifc_reg_req_dv && soc_ifc_reg_hwif_out.internal_rv_mtime_l.count_l.swmod);
+assign soc_ifc_reg_hwif_in.internal_rv_mtime_h.count_h.incr = !(soc_ifc_reg_req_dv && soc_ifc_reg_hwif_out.internal_rv_mtime_h.count_h.swmod) && soc_ifc_reg_hwif_out.internal_rv_mtime_l.count_l.overflow;
+assign timer_intr =  {soc_ifc_reg_hwif_out.internal_rv_mtime_h.count_h.value     ,soc_ifc_reg_hwif_out.internal_rv_mtime_l.count_l.value}
+                     >=
+                     {soc_ifc_reg_hwif_out.internal_rv_mtimecmp_h.compare_h.value,soc_ifc_reg_hwif_out.internal_rv_mtimecmp_l.compare_l.value};
 
 //SHA Accelerator
 sha512_acc_top #(
@@ -704,6 +792,8 @@ i_mbox (
     .soc_mbox_data_avail(mailbox_data_avail),
     .uc_mbox_data_avail(uc_mbox_data_avail),
     .soc_req_mbox_lock(soc_req_mbox_lock),
+    .mbox_protocol_error(mbox_protocol_error),
+    .mbox_inv_pauser_axs(mbox_inv_user_p),
     .dmi_inc_rdptr(dmi_inc_rdptr),
     .dmi_reg(mbox_dmi_reg)
 );
@@ -742,30 +832,24 @@ end
 always_comb t1_timeout_p = t1_timeout & ~t1_timeout_f;
 always_comb t2_timeout_p = t2_timeout & ~t2_timeout_f;
 
-//Detect falling edge on soc_ifc_error_intr to indicate that the interrupt has been serviced
+// NOTE: Since error_internal_intr_r is Write-1-to-clear, capture writes to the
+//       WDT interrupt bits to detect the interrupt being serviced.
+//       It would be preferable to decode this from interrupt signals somehow,
+//       but that would require modifying interrupt register RDL which has been
+//       standardized.
 always_ff @(posedge clk or negedge cptra_rst_b) begin
     if(!cptra_rst_b) begin
-        soc_ifc_error_intr_f <= 'b0;
+        wdt_error_t1_intr_serviced <= 1'b0;
+        wdt_error_t2_intr_serviced <= 1'b0;
+    end
+    else if (soc_ifc_reg_req_dv && soc_ifc_reg_req_data.write && (soc_ifc_reg_req_data.addr[SOC_IFC_REG_ADDR_WIDTH-1:0] == `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R)) begin
+        wdt_error_t1_intr_serviced <= soc_ifc_reg_req_data.wdata[`SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_LOW] && t1_timeout;
+        wdt_error_t2_intr_serviced <= soc_ifc_reg_req_data.wdata[`SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_LOW] && t2_timeout && timer2_en;
     end
     else begin
-        soc_ifc_error_intr_f <= soc_ifc_error_intr;
+        wdt_error_t1_intr_serviced <= 1'b0;
+        wdt_error_t2_intr_serviced <= 1'b0;
     end
-end
-assign wdt_error_t1_intr_serviced = !soc_ifc_error_intr && soc_ifc_error_intr_f && t1_timeout;
-assign wdt_error_t2_intr_serviced = !soc_ifc_error_intr && soc_ifc_error_intr_f && t2_timeout && timer2_en;
-
-//Set HW FATAL ERROR reg when timer2 times out in cascaded mode
-always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.error_code.we = cptra_error_fatal;
-always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.error_code.next = {31'b0, cptra_error_fatal}; //bit 0 will indicate if timer2 has timed out
-
-//TIE-OFFS
-always_comb begin
-    soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.error_code.we = 'b0;
-    soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.error_code.next = 'h0;
-    soc_ifc_reg_hwif_in.CPTRA_FW_ERROR_FATAL.error_code.we = 'b0;
-    soc_ifc_reg_hwif_in.CPTRA_FW_ERROR_FATAL.error_code.next = 'h0;
-    soc_ifc_reg_hwif_in.CPTRA_FW_ERROR_NON_FATAL.error_code.we = 'b0;
-    soc_ifc_reg_hwif_in.CPTRA_FW_ERROR_NON_FATAL.error_code.next = 'h0;
 end
 
 wdt i_wdt (
@@ -782,6 +866,52 @@ wdt i_wdt (
     .t1_timeout(t1_timeout),
     .t2_timeout(t2_timeout)
 );
+
+////////////////////////////////////////////////////////
+// Write-enables for CPTRA_HW_ERROR_FATAL and CPTRA_HW_ERROR_NON_FATAL
+// Also calculate whether or not an unmasked event is being set, so we can
+// trigger the SOC interrupt signal
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.we = rv_ecc_sts.cptra_iccm_ecc_double_error;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.we = rv_ecc_sts.cptra_dccm_ecc_double_error;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.nmi_pin     .we = nmi_intr;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.rsvd        .we = 0;
+// Using we+next instead of hwset allows us to encode the reserved fields in some fashion
+// other than bit-hot in the future, if needed (e.g. we need to encode > 32 FATAL events)
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.next = 1'b1;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.next = 1'b1;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.nmi_pin     .next = 1'b1;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.rsvd        .next = 29'b0;
+// Flag the write even if the field being written to is already set to 1 - this is a new occurrence of the error and should trigger a new interrupt
+always_comb unmasked_hw_error_fatal_write = (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.we && ~soc_ifc_reg_hwif_out.internal_hw_error_fatal_mask.mask_iccm_ecc_unc.value && |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.next) ||
+                                            (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.we && ~soc_ifc_reg_hwif_out.internal_hw_error_fatal_mask.mask_dccm_ecc_unc.value && |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.next) ||
+                                            (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.nmi_pin     .we && ~soc_ifc_reg_hwif_out.internal_hw_error_fatal_mask.mask_nmi_pin     .value && |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.nmi_pin     .next);
+
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.we = mbox_protocol_error.axs_without_lock;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo    .we = mbox_protocol_error.axs_incorrect_order;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc     .we = sram_double_ecc_error;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.rsvd             .we = 1'b0;
+// Using we+next instead of hwset allows us to encode the reserved fields in some fashion
+// other than bit-hot in the future, if needed (e.g. we need to encode > 32 NON-FATAL events)
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.next = 1'b1;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo    .next = 1'b1;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc     .next = 1'b1;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.rsvd             .next = 29'b0;
+// Flag the write even if the field being written to is already set to 1 - this is a new occurrence of the error and should trigger a new interrupt
+always_comb unmasked_hw_error_non_fatal_write = (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.we && ~soc_ifc_reg_hwif_out.internal_hw_error_non_fatal_mask.mask_mbox_prot_no_lock.value && |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.next) ||
+                                                (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo    .we && ~soc_ifc_reg_hwif_out.internal_hw_error_non_fatal_mask.mask_mbox_prot_ooo    .value && |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo    .next) ||
+                                                (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc     .we && ~soc_ifc_reg_hwif_out.internal_hw_error_non_fatal_mask.mask_mbox_ecc_unc     .value && |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc     .next);
+always_comb unmasked_hw_error_non_fatal_is_set = (soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.value && ~soc_ifc_reg_hwif_out.internal_hw_error_non_fatal_mask.mask_mbox_prot_no_lock.value) ||
+                                                 (soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo    .value && ~soc_ifc_reg_hwif_out.internal_hw_error_non_fatal_mask.mask_mbox_prot_ooo    .value) ||
+                                                 (soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc     .value && ~soc_ifc_reg_hwif_out.internal_hw_error_non_fatal_mask.mask_mbox_ecc_unc     .value);
+
+//TIE-OFFS
+always_comb begin
+    soc_ifc_reg_hwif_in.CPTRA_FW_ERROR_FATAL.error_code.we = 'b0;
+    soc_ifc_reg_hwif_in.CPTRA_FW_ERROR_FATAL.error_code.next = 'h0;
+    soc_ifc_reg_hwif_in.CPTRA_FW_ERROR_NON_FATAL.error_code.we = 'b0;
+    soc_ifc_reg_hwif_in.CPTRA_FW_ERROR_NON_FATAL.error_code.next = 'h0;
+end
+
 //DMI register writes
 always_comb soc_ifc_reg_hwif_in.CPTRA_BOOTFSM_GO.GO.we = cptra_uncore_dmi_reg_wr_en & cptra_uncore_dmi_reg_en & 
                                                          (cptra_uncore_dmi_reg_addr == DMI_REG_BOOTFSM_GO);
@@ -815,7 +945,7 @@ always_ff @(posedge clk or negedge cptra_pwrgood) begin
     end
 end
 
-`CALIPTRA_ASSERT_KNOWN(ERR_AHB_INF_X, {hreadyout_o,hresp_o}, soc_ifc_clk_cg, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(ERR_AHB_INF_X, {hreadyout_o,hresp_o}, clk, cptra_rst_b)
 //this generates an NMI in the core, but we don't have a handler so it just hangs
-`CALIPTRA_ASSERT_NEVER(ERR_SOC_IFC_AHB_ERR, hresp_o, soc_ifc_clk_cg, cptra_rst_b)
+`CALIPTRA_ASSERT_NEVER(ERR_SOC_IFC_AHB_ERR, hresp_o, clk, cptra_rst_b)
 endmodule

@@ -1,6 +1,7 @@
 provides: [pv_defines_pkg]
 schema_version: 2.4.0
-requires: []
+requires: 
+  - libs
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -22,6 +23,17 @@ targets:
     directories: [$COMPILE_ROOT/rtl]
     files:
       - $COMPILE_ROOT/rtl/pv_reg_uvm.sv
+---
+provides: [pcrvault_cov]
+schema_version: 2.4.0
+targets:
+  tb:
+    directories:
+      - $COMPILE_ROOT/coverage
+    files:
+      - $COMPILE_ROOT/coverage/pcrvault_cov_if.sv
+      - $COMPILE_ROOT/coverage/pcrvault_cov_props.sv
+      - $COMPILE_ROOT/coverage/pcrvault_cov_bind.sv
 ---
 provides: [pcrvault]
 schema_version: 2.4.0

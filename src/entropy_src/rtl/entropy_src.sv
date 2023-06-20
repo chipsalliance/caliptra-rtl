@@ -4,13 +4,13 @@
 //
 // Description: entropy_src top level wrapper file
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
 
 module entropy_src
   import entropy_src_pkg::*;
   import entropy_src_reg_pkg::*;
-  import prim_mubi_pkg::mubi8_t;
+  import caliptra_prim_mubi_pkg::mubi8_t;
 #(
   parameter bit Stub = 1'b0,
   parameter logic [NumAlerts-1:0] AlertAsyncOn = {NumAlerts{1'b1}},
@@ -60,8 +60,8 @@ module entropy_src
   input  entropy_src_xht_rsp_t entropy_src_xht_i,
 
   // Alerts
-  input  prim_alert_pkg::alert_rx_t [NumAlerts-1:0] alert_rx_i,
-  output prim_alert_pkg::alert_tx_t [NumAlerts-1:0] alert_tx_o,
+  input  caliptra_prim_alert_pkg::alert_rx_t [NumAlerts-1:0] alert_rx_i,
+  output caliptra_prim_alert_pkg::alert_tx_t [NumAlerts-1:0] alert_tx_o,
 
   // Interrupts
   output logic    intr_es_entropy_valid_o,
@@ -203,18 +203,18 @@ module entropy_src
   };
   // once enabled, stub entropy is always available
 
-  import prim_mubi_pkg::mubi4_t;
-  import prim_mubi_pkg::mubi4_test_true_strict;
+  import caliptra_prim_mubi_pkg::mubi4_t;
+  import caliptra_prim_mubi_pkg::mubi4_test_true_strict;
 
   mubi4_t mubi_module_en;
   assign mubi_module_en  = mubi4_t'(reg2hw.module_enable.q);
   assign stub_es_valid = mubi4_test_true_strict(mubi_module_en);
 
   if (Stub) begin : gen_stub_entropy_src
-    prim_lfsr #(
+    caliptra_prim_lfsr #(
       .LfsrDw(StubLfsrWidth),
       .StateOutDw(StubLfsrWidth)
-    ) u_prim_lfsr (
+    ) u_caliptra_prim_lfsr (
       .clk_i          (clk_i),
       .rst_ni         (rst_ni),
       .seed_en_i      ('0),
@@ -248,10 +248,10 @@ module entropy_src
   // Alert generation
   ///////////////////////////
   for (genvar i = 0; i < NumAlerts; i++) begin : gen_alert_tx
-    prim_alert_sender #(
+    caliptra_prim_alert_sender #(
       .AsyncOn(AlertAsyncOn[i]),
       .IsFatal(i)
-    ) u_prim_alert_sender (
+    ) u_caliptra_prim_alert_sender (
       .clk_i,
       .rst_ni,
       .alert_test_i  ( alert_test[i]                 ),
@@ -292,37 +292,37 @@ module entropy_src
   `CALIPTRA_ASSERT_KNOWN(IntrEsHealthTestFailedKnownO_A, intr_es_health_test_failed_o)
   `CALIPTRA_ASSERT_KNOWN(IntrEsFifoErrKnownO_A, intr_es_fatal_err_o)
 
-  // prim_count alerts
+  // caliptra_prim_count alerts
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck0_A,
-    u_entropy_src_core.u_prim_count_window_cntr,
+    u_entropy_src_core.u_caliptra_prim_count_window_cntr,
     alert_tx_o[1])
 
   for (genvar sh = 0; sh < RngBusWidth; sh = sh+1) begin : gen_bit_cntrs
     `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck1_A,
-      u_entropy_src_core.u_entropy_src_adaptp_ht.gen_cntrs[sh].u_prim_count_test_cnt,
+      u_entropy_src_core.u_entropy_src_adaptp_ht.gen_cntrs[sh].u_caliptra_prim_count_test_cnt,
       alert_tx_o[1])
   end : gen_bit_cntrs
 
   for (genvar i = 0; i < NumBins; i = i + 1) begin : gen_symbol_match
    `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck_A,
-     u_entropy_src_core.u_entropy_src_bucket_ht.gen_symbol_match[i].u_prim_count_bin_cntr,
+     u_entropy_src_core.u_entropy_src_bucket_ht.gen_symbol_match[i].u_caliptra_prim_count_bin_cntr,
      alert_tx_o[1])
   end : gen_symbol_match
 
   for (genvar sh = 0; sh < RngBusWidth; sh = sh+1) begin : gen_pair_cntrs
    `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck_A,
-     u_entropy_src_core.u_entropy_src_markov_ht.gen_cntrs[sh].u_prim_count_pair_cntr,
+     u_entropy_src_core.u_entropy_src_markov_ht.gen_cntrs[sh].u_caliptra_prim_count_pair_cntr,
      alert_tx_o[1])
   end : gen_pair_cntrs
 
   for (genvar sh = 0; sh < RngBusWidth; sh = sh+1) begin : gen_rep_cntrs
    `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck_A,
-     u_entropy_src_core.u_entropy_src_repcnt_ht.gen_cntrs[sh].u_prim_count_rep_cntr,
+     u_entropy_src_core.u_entropy_src_repcnt_ht.gen_cntrs[sh].u_caliptra_prim_count_rep_cntr,
      alert_tx_o[1])
   end : gen_rep_cntrs
 
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck7_A,
-    u_entropy_src_core.u_entropy_src_repcnts_ht.u_prim_count_rep_cntr,
+    u_entropy_src_core.u_entropy_src_repcnts_ht.u_caliptra_prim_count_rep_cntr,
     alert_tx_o[1])
 
   `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(CtrlMainFsmCheck_A,
@@ -350,79 +350,79 @@ module entropy_src
     u_entropy_src_core.u_sha3.u_keccak.u_round_count, alert_tx_o[1])
 
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck8_A,
-    u_entropy_src_core.u_entropy_src_cntr_reg_repcnt.u_prim_count_cntr_reg,
+    u_entropy_src_core.u_entropy_src_cntr_reg_repcnt.u_caliptra_prim_count_cntr_reg,
     alert_tx_o[1])
 
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck9_A,
-    u_entropy_src_core.u_entropy_src_cntr_reg_repcnts.u_prim_count_cntr_reg,
+    u_entropy_src_core.u_entropy_src_cntr_reg_repcnts.u_caliptra_prim_count_cntr_reg,
     alert_tx_o[1])
 
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck10_A,
-    u_entropy_src_core.u_entropy_src_cntr_reg_adaptp_hi.u_prim_count_cntr_reg,
+    u_entropy_src_core.u_entropy_src_cntr_reg_adaptp_hi.u_caliptra_prim_count_cntr_reg,
     alert_tx_o[1])
 
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck11_A,
-    u_entropy_src_core.u_entropy_src_cntr_reg_adaptp_lo.u_prim_count_cntr_reg,
+    u_entropy_src_core.u_entropy_src_cntr_reg_adaptp_lo.u_caliptra_prim_count_cntr_reg,
     alert_tx_o[1])
 
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck12_A,
-    u_entropy_src_core.u_entropy_src_cntr_reg_bucket.u_prim_count_cntr_reg,
+    u_entropy_src_core.u_entropy_src_cntr_reg_bucket.u_caliptra_prim_count_cntr_reg,
     alert_tx_o[1])
 
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck13_A,
-    u_entropy_src_core.u_entropy_src_cntr_reg_markov_hi.u_prim_count_cntr_reg,
+    u_entropy_src_core.u_entropy_src_cntr_reg_markov_hi.u_caliptra_prim_count_cntr_reg,
     alert_tx_o[1])
 
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck14_A,
-    u_entropy_src_core.u_entropy_src_cntr_reg_markov_lo.u_prim_count_cntr_reg,
+    u_entropy_src_core.u_entropy_src_cntr_reg_markov_lo.u_caliptra_prim_count_cntr_reg,
     alert_tx_o[1])
 
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck15_A,
-    u_entropy_src_core.u_entropy_src_cntr_reg_extht_hi.u_prim_count_cntr_reg,
+    u_entropy_src_core.u_entropy_src_cntr_reg_extht_hi.u_caliptra_prim_count_cntr_reg,
     alert_tx_o[1])
 
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck16_A,
-    u_entropy_src_core.u_entropy_src_cntr_reg_extht_lo.u_prim_count_cntr_reg,
+    u_entropy_src_core.u_entropy_src_cntr_reg_extht_lo.u_caliptra_prim_count_cntr_reg,
     alert_tx_o[1])
 
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck17_A,
-    u_entropy_src_core.u_entropy_src_cntr_reg_any_alert_fails.u_prim_count_cntr_reg,
+    u_entropy_src_core.u_entropy_src_cntr_reg_any_alert_fails.u_caliptra_prim_count_cntr_reg,
     alert_tx_o[1])
 
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck18_A,
-    u_entropy_src_core.u_entropy_src_cntr_reg_repcnt_alert_fails.u_prim_count_cntr_reg,
+    u_entropy_src_core.u_entropy_src_cntr_reg_repcnt_alert_fails.u_caliptra_prim_count_cntr_reg,
     alert_tx_o[1])
 
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck19_A,
-    u_entropy_src_core.u_entropy_src_cntr_reg_repcnts_alert_fails.u_prim_count_cntr_reg,
+    u_entropy_src_core.u_entropy_src_cntr_reg_repcnts_alert_fails.u_caliptra_prim_count_cntr_reg,
     alert_tx_o[1])
 
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck20_A,
-    u_entropy_src_core.u_entropy_src_cntr_reg_adaptp_hi_alert_fails.u_prim_count_cntr_reg,
+    u_entropy_src_core.u_entropy_src_cntr_reg_adaptp_hi_alert_fails.u_caliptra_prim_count_cntr_reg,
     alert_tx_o[1])
 
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck21_A,
-    u_entropy_src_core.u_entropy_src_cntr_reg_adaptp_lo_alert_fails.u_prim_count_cntr_reg,
+    u_entropy_src_core.u_entropy_src_cntr_reg_adaptp_lo_alert_fails.u_caliptra_prim_count_cntr_reg,
     alert_tx_o[1])
 
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck22_A,
-    u_entropy_src_core.u_entropy_src_cntr_reg_bucket_alert_fails.u_prim_count_cntr_reg,
+    u_entropy_src_core.u_entropy_src_cntr_reg_bucket_alert_fails.u_caliptra_prim_count_cntr_reg,
     alert_tx_o[1])
 
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck23_A,
-    u_entropy_src_core.u_entropy_src_cntr_reg_markov_hi_alert_fails.u_prim_count_cntr_reg,
+    u_entropy_src_core.u_entropy_src_cntr_reg_markov_hi_alert_fails.u_caliptra_prim_count_cntr_reg,
     alert_tx_o[1])
 
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck24_A,
-    u_entropy_src_core.u_entropy_src_cntr_reg_markov_lo_alert_fails.u_prim_count_cntr_reg,
+    u_entropy_src_core.u_entropy_src_cntr_reg_markov_lo_alert_fails.u_caliptra_prim_count_cntr_reg,
     alert_tx_o[1])
 
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck25_A,
-    u_entropy_src_core.u_entropy_src_cntr_reg_extht_hi_alert_fails.u_prim_count_cntr_reg,
+    u_entropy_src_core.u_entropy_src_cntr_reg_extht_hi_alert_fails.u_caliptra_prim_count_cntr_reg,
     alert_tx_o[1])
 
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck26_A,
-    u_entropy_src_core.u_entropy_src_cntr_reg_extht_lo_alert_fails.u_prim_count_cntr_reg,
+    u_entropy_src_core.u_entropy_src_cntr_reg_extht_lo_alert_fails.u_caliptra_prim_count_cntr_reg,
     alert_tx_o[1])
 
   // Alert assertions for reg_we onehot check

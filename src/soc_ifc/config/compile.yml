@@ -40,6 +40,7 @@ requires:
   - el2_veer_pkg
   - soc_ifc_pkg
   - sha512_ctrl
+  - caliptra_top_defines 
 targets:
   rtl:
     directories:
