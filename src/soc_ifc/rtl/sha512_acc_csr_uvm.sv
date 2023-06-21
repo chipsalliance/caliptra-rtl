@@ -25,7 +25,7 @@ package sha512_acc_csr_uvm;
 
         virtual function void build();
             this.LOCK = new("LOCK");
-            this.LOCK.configure(this, 1, 0, "W1CRS", 0, 'h0, 1, 1, 0);
+            this.LOCK.configure(this, 1, 0, "W1CRS", 0, 'h1, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(LOCK_bit_cg[bt]) LOCK_bit_cg[bt] = new();
             end

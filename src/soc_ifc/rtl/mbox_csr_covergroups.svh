@@ -14,6 +14,8 @@
 
 `ifndef MBOX_CSR_COVERGROUPS
     `define MBOX_CSR_COVERGROUPS
+
+    import soc_ifc_pkg::*;
     
     /*----------------------- MBOX_CSR__MBOX_LOCK COVERGROUPS -----------------------*/
     covergroup mbox_csr__mbox_lock_bit_cg with function sample(input bit reg_bit);
@@ -32,6 +34,10 @@
     );
         option.per_instance = 1;
         lock_cp : coverpoint lock;
+        lock_edge_cp : coverpoint lock {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
 
     endgroup
 
@@ -51,7 +57,13 @@
     input bit [32-1:0] user
     );
         option.per_instance = 1;
-        user_cp : coverpoint user;
+        user_cp : coverpoint user {
+            bins zero_val = {32'h0};
+            bins rand_val[64] = {[1:32'hFFFF_FFFE]};
+            bins ones_val = {{32{1'b1}}};
+            wildcard bins set = (0 => 32'h????_????);
+            wildcard bins clr = (32'h????_???? => 0);
+        }
 
     endgroup
 
@@ -71,7 +83,13 @@
     input bit [32-1:0] command
     );
         option.per_instance = 1;
-        command_cp : coverpoint command;
+        command_cp : coverpoint command {
+            bins zero_val = {32'h0};
+            bins rand_val[64] = {[1:32'hFFFF_FFFE]};
+            bins ones_val = {{32{1'b1}}};
+            wildcard bins set = (0 => 32'h????_????);
+            wildcard bins clr = (32'h????_???? => 0);
+        }
 
     endgroup
 
@@ -91,7 +109,22 @@
     input bit [32-1:0] length
     );
         option.per_instance = 1;
-        length_cp : coverpoint length;
+        // TODO These need a cross with lock/execute/fsm state to properly get coverage...
+        length_cp : coverpoint length {
+            bins zero_val = {32'h0};
+            bins tiny_val = {[1:3]};
+            bins small_val = {[4:15]};
+            bins medium_val = {[16:4095]};
+            bins large_val = {[4096:32768]};
+            bins legal_word_aligned_val  = {[1:32'h8000]} with (~|item[0]);
+            bins legal_dword_aligned_val = {[1:32'h8000]} with (~|item[1:0]);
+            bins legal_qword_aligned_val = {[1:32'h8000]} with (~|item[2:0]);
+            bins legal_oword_aligned_val = {[1:32'h8000]} with (~|item[3:0]);
+            bins oversize_val = {[32769:32'hFFFF_FFFE]}; /* Value larger than mailbox size */
+            bins ones_val = {{32{1'b1}}};
+            wildcard bins set = (0 => 32'h????_????);
+            wildcard bins clr = (32'h????_???? => 0);
+        }
 
     endgroup
 
@@ -111,7 +144,13 @@
     input bit [32-1:0] datain
     );
         option.per_instance = 1;
-        datain_cp : coverpoint datain;
+        datain_cp : coverpoint datain {
+            bins zero_val = {32'h0};
+            bins rand_val[64] = {[1:32'hFFFF_FFFE]};
+            bins ones_val = {{32{1'b1}}};
+            wildcard bins set = (0 => 32'h????_????);
+            wildcard bins clr = (32'h????_???? => 0);
+        }
 
     endgroup
 
@@ -131,7 +170,13 @@
     input bit [32-1:0] dataout
     );
         option.per_instance = 1;
-        dataout_cp : coverpoint dataout;
+        dataout_cp : coverpoint dataout {
+            bins zero_val = {32'h0};
+            bins rand_val[64] = {[1:32'hFFFF_FFFE]};
+            bins ones_val = {{32{1'b1}}};
+            wildcard bins set = (0 => 32'h????_????);
+            wildcard bins clr = (32'h????_???? => 0);
+        }
 
     endgroup
 
@@ -152,6 +197,10 @@
     );
         option.per_instance = 1;
         execute_cp : coverpoint execute;
+        execute_edge_cp : coverpoint execute {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
 
     endgroup
 
@@ -178,8 +227,73 @@
         status_cp : coverpoint status;
         ecc_single_error_cp : coverpoint ecc_single_error;
         ecc_double_error_cp : coverpoint ecc_double_error;
-        mbox_fsm_ps_cp : coverpoint mbox_fsm_ps;
+        mbox_fsm_ps_cp : coverpoint mbox_fsm_ps {
+            bins MBOX_IDLE                                    = {mbox_fsm_state_e'(MBOX_IDLE        )};
+            bins MBOX_RDY_FOR_CMD                             = {mbox_fsm_state_e'(MBOX_RDY_FOR_CMD )};
+            bins MBOX_RDY_FOR_DLEN                            = {mbox_fsm_state_e'(MBOX_RDY_FOR_DLEN)};
+            bins MBOX_RDY_FOR_DATA                            = {mbox_fsm_state_e'(MBOX_RDY_FOR_DATA)};
+            bins MBOX_EXECUTE_UC                              = {mbox_fsm_state_e'(MBOX_EXECUTE_UC  )};
+            bins MBOX_EXECUTE_SOC                             = {mbox_fsm_state_e'(MBOX_EXECUTE_SOC )};
+            bins MBOX_ERROR                                   = {mbox_fsm_state_e'(MBOX_ERROR       )};
+        }
+        mbox_fsm_ps_edge_cp : coverpoint mbox_fsm_ps {
+            bins TRANSITION_IDLE_RDY_FOR_CMD                  = (mbox_fsm_state_e'(MBOX_IDLE)         => mbox_fsm_state_e'(MBOX_RDY_FOR_CMD));
+            bins TRANSITION_RDY_FOR_CMD_RDY_FOR_DLEN          = (mbox_fsm_state_e'(MBOX_RDY_FOR_CMD)  => mbox_fsm_state_e'(MBOX_RDY_FOR_DLEN));
+            bins TRANSITION_RDY_FOR_DLEN_RDY_FOR_DATA         = (mbox_fsm_state_e'(MBOX_RDY_FOR_DLEN) => mbox_fsm_state_e'(MBOX_RDY_FOR_DATA));
+            bins TRANSITION_RDY_FOR_DATA_EXECUTE_UC           = (mbox_fsm_state_e'(MBOX_RDY_FOR_DATA) => mbox_fsm_state_e'(MBOX_EXECUTE_UC));
+            bins TRANSITION_RDY_FOR_DATA_EXECUTE_SOC          = (mbox_fsm_state_e'(MBOX_RDY_FOR_DATA) => mbox_fsm_state_e'(MBOX_EXECUTE_SOC));
+            bins TRANSITION_EXECUTE_UC_EXECUTE_SOC            = (mbox_fsm_state_e'(MBOX_EXECUTE_UC)   => mbox_fsm_state_e'(MBOX_EXECUTE_SOC));
+            bins TRANSITION_EXECUTE_SOC_EXECUTE_UC            = (mbox_fsm_state_e'(MBOX_EXECUTE_SOC)  => mbox_fsm_state_e'(MBOX_EXECUTE_UC));
+            bins TRANSITION_EXECUTE_UC_IDLE                   = (mbox_fsm_state_e'(MBOX_EXECUTE_UC)   => mbox_fsm_state_e'(MBOX_IDLE));
+            bins TRANSITION_EXECUTE_SOC_IDLE                  = (mbox_fsm_state_e'(MBOX_EXECUTE_SOC)  => mbox_fsm_state_e'(MBOX_IDLE));
+            bins TRANSITION_RDY_FOR_CMD_ERROR                 = (mbox_fsm_state_e'(MBOX_RDY_FOR_CMD)  => mbox_fsm_state_e'(MBOX_ERROR));
+            bins TRANSITION_RDY_FOR_DLEN_ERROR                = (mbox_fsm_state_e'(MBOX_RDY_FOR_DLEN) => mbox_fsm_state_e'(MBOX_ERROR));
+            bins TRANSITION_RDY_FOR_DATA_ERROR                = (mbox_fsm_state_e'(MBOX_RDY_FOR_DATA) => mbox_fsm_state_e'(MBOX_ERROR));
+            bins TRANSITION_EXECUTE_UC_ERROR                  = (mbox_fsm_state_e'(MBOX_EXECUTE_UC)   => mbox_fsm_state_e'(MBOX_ERROR));
+            bins TRANSITION_EXECUTE_SOC_ERROR                 = (mbox_fsm_state_e'(MBOX_EXECUTE_SOC)  => mbox_fsm_state_e'(MBOX_ERROR));
+            bins TRANSITION_ERROR_IDLE                        = (mbox_fsm_state_e'(MBOX_ERROR)        => mbox_fsm_state_e'(MBOX_IDLE));
+//            illegal_bins TRANSITION_IDLE_ERROR                = (mbox_fsm_state_e'(MBOX_IDLE)         => mbox_fsm_state_e'(MBOX_ERROR));
+//            illegal_bins TRANSITION_IDLE_RDY_FOR_DLEN         = (mbox_fsm_state_e'(MBOX_IDLE)         => mbox_fsm_state_e'(MBOX_RDY_FOR_DLEN));
+//            illegal_bins TRANSITION_IDLE_RDY_FOR_DATA         = (mbox_fsm_state_e'(MBOX_IDLE)         => mbox_fsm_state_e'(MBOX_RDY_FOR_DATA));
+//            illegal_bins TRANSITION_IDLE_EXECUTE_UC           = (mbox_fsm_state_e'(MBOX_IDLE)         => mbox_fsm_state_e'(MBOX_EXECUTE_UC));
+//            illegal_bins TRANSITION_IDLE_EXECUTE_SOC          = (mbox_fsm_state_e'(MBOX_IDLE)         => mbox_fsm_state_e'(MBOX_EXECUTE_SOC));
+//            illegal_bins TRANSITION_RDY_FOR_CMD_RDY_FOR_DATA  = (mbox_fsm_state_e'(MBOX_RDY_FOR_CMD)  => mbox_fsm_state_e'(MBOX_RDY_FOR_DATA));
+//            illegal_bins TRANSITION_RDY_FOR_CMD_EXECUTE_UC    = (mbox_fsm_state_e'(MBOX_RDY_FOR_CMD)  => mbox_fsm_state_e'(MBOX_EXECUTE_UC));
+//            illegal_bins TRANSITION_RDY_FOR_CMD_EXECUTE_SOC   = (mbox_fsm_state_e'(MBOX_RDY_FOR_CMD)  => mbox_fsm_state_e'(MBOX_EXECUTE_SOC));
+//            illegal_bins TRANSITION_RDY_FOR_DLEN_RDY_FOR_CMD  = (mbox_fsm_state_e'(MBOX_RDY_FOR_DLEN) => mbox_fsm_state_e'(MBOX_RDY_FOR_CMD));
+//            illegal_bins TRANSITION_RDY_FOR_DLEN_EXECUTE_UC   = (mbox_fsm_state_e'(MBOX_RDY_FOR_DLEN) => mbox_fsm_state_e'(MBOX_EXECUTE_UC));
+//            illegal_bins TRANSITION_RDY_FOR_DLEN_EXECUTE_SOC  = (mbox_fsm_state_e'(MBOX_RDY_FOR_DLEN) => mbox_fsm_state_e'(MBOX_EXECUTE_SOC));
+//            illegal_bins TRANSITION_RDY_FOR_DATA_RDY_FOR_CMD  = (mbox_fsm_state_e'(MBOX_RDY_FOR_DATA) => mbox_fsm_state_e'(MBOX_RDY_FOR_CMD));
+//            illegal_bins TRANSITION_RDY_FOR_DATA_RDY_FOR_DLEN = (mbox_fsm_state_e'(MBOX_RDY_FOR_DATA) => mbox_fsm_state_e'(MBOX_RDY_FOR_DLEN));
+//            illegal_bins TRANSITION_EXECUTE_UC_RDY_FOR_CMD    = (mbox_fsm_state_e'(MBOX_EXECUTE_UC)   => mbox_fsm_state_e'(MBOX_RDY_FOR_CMD));
+//            illegal_bins TRANSITION_EXECUTE_UC_RDY_FOR_DLEN   = (mbox_fsm_state_e'(MBOX_EXECUTE_UC)   => mbox_fsm_state_e'(MBOX_RDY_FOR_DLEN));
+//            illegal_bins TRANSITION_EXECUTE_UC_RDY_FOR_DATA   = (mbox_fsm_state_e'(MBOX_EXECUTE_UC)   => mbox_fsm_state_e'(MBOX_RDY_FOR_DATA));
+//            illegal_bins TRANSITION_EXECUTE_SOC_RDY_FOR_CMD   = (mbox_fsm_state_e'(MBOX_EXECUTE_SOC)  => mbox_fsm_state_e'(MBOX_RDY_FOR_CMD));
+//            illegal_bins TRANSITION_EXECUTE_SOC_RDY_FOR_DLEN  = (mbox_fsm_state_e'(MBOX_EXECUTE_SOC)  => mbox_fsm_state_e'(MBOX_RDY_FOR_DLEN));
+//            illegal_bins TRANSITION_EXECUTE_SOC_RDY_FOR_DATA  = (mbox_fsm_state_e'(MBOX_EXECUTE_SOC)  => mbox_fsm_state_e'(MBOX_RDY_FOR_DATA));
+//            illegal_bins TRANSITION_ERROR_RDY_FOR_CMD         = (mbox_fsm_state_e'(MBOX_ERROR)        => mbox_fsm_state_e'(MBOX_RDY_FOR_CMD));
+//            illegal_bins TRANSITION_ERROR_RDY_FOR_DLEN        = (mbox_fsm_state_e'(MBOX_ERROR)        => mbox_fsm_state_e'(MBOX_RDY_FOR_DLEN));
+//            illegal_bins TRANSITION_ERROR_RDY_FOR_DATA        = (mbox_fsm_state_e'(MBOX_ERROR)        => mbox_fsm_state_e'(MBOX_RDY_FOR_DATA));
+//            illegal_bins TRANSITION_ERROR_EXECUTE_UC          = (mbox_fsm_state_e'(MBOX_ERROR)        => mbox_fsm_state_e'(MBOX_EXECUTE_UC));
+//            illegal_bins TRANSITION_ERROR_EXECUTE_SOC         = (mbox_fsm_state_e'(MBOX_ERROR)        => mbox_fsm_state_e'(MBOX_EXECUTE_SOC));
+        }
         soc_has_lock_cp : coverpoint soc_has_lock;
+        status_edge_cp : coverpoint status {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+        ecc_single_error_edge_cp : coverpoint ecc_single_error {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+        ecc_double_error_edge_cp : coverpoint ecc_double_error {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+        soc_has_lock_edge_cp : coverpoint soc_has_lock {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
 
     endgroup
 
@@ -200,6 +314,10 @@
     );
         option.per_instance = 1;
         unlock_cp : coverpoint unlock;
+        unlock_edge_cp : coverpoint unlock {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
 
     endgroup
 

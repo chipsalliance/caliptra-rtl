@@ -51,7 +51,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain extends soc_ifc_reg_cbs_mbox_c
                 //  - uC has lock (checked in soc_ifc_predictor)
                 //  - mbox state is in MBOX_RDY_FOR_DATA or EXECUTE_UC
                 UVM_PREDICT_WRITE: begin
-                    if (rm.mbox_fn_state_sigs.uc_send_stage && (rm.mbox_status.mbox_fsm_ps.get_mirrored_value() == MBOX_RDY_FOR_DATA)) begin
+                    if (rm.mbox_fn_state_sigs.uc_data_stage) begin
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%s] results in data entry push to mbox_data_q", map.get_name()), UVM_FULL)
                         // A potential issue because uC should have set dlen prior to pushing data
                         if (rm.mbox_data_q.size() >= dlen_cap_dw) begin
@@ -77,19 +77,6 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain extends soc_ifc_reg_cbs_mbox_c
                             `uvm_info("SOC_IFC_REG_CBS", "Push to datain observed when mbox_resp_q already contains the same number of entries as indicated in mbox_dlen or the mailbox maximum capacity!", UVM_HIGH)
                         end
                         rm.mbox_resp_q.push_back(value);
-                        if (rm.mbox_resp_q.size() == 1) begin
-                            `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%s] results in data entry updating dataout mirror", map.get_name()), UVM_FULL)
-                            // Use UVM_PREDICT_READ to workaround the warning that gets thrown (on
-                            // accesses while busy) when running UVM_PREDICT_DIRECT.
-                            // The warning is safe to ignore because the mbox_dataout
-                            // callback does post-prediction from data queue accordingly
-                            rm.mbox_data_q.push_front(value); /* Entry is used for value prediction if mbox_data_q is not empty, which might be the case depending on the test */
-                            rm.mbox_data_q.push_front(rm.mbox_dataout.dataout.get_mirrored_value()); /* Sacrificial entry will be immediately removed in mbox_dataout callback */
-                            rm.mbox_datain_to_dataout_predict.trigger();
-                            rm.mbox_dataout.dataout.predict(value, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
-                            rm.mbox_datain_to_dataout_predict.reset();
-                            rm.mbox_data_q.pop_front(); /* Remove the value we put on the queue for prediction -- receiver might continue reading from dataout even after pushing to datain ??? */
-                        end
                     end
                     else begin
                         `uvm_error("SOC_IFC_REG_CBS", $sformatf("Attempted push to mbox_datain in unexpected mbox FSM state: [%p]", rm.mbox_fn_state_sigs))
@@ -109,10 +96,10 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain extends soc_ifc_reg_cbs_mbox_c
                 //  - mbox state is in MBOX_RDY_FOR_DATA
                 //  - if mbox state is EXECUTE_SOC, pushes not allowed because there is never resp data SOC->uC
                 UVM_PREDICT_WRITE: begin
-                    if (rm.mbox_fn_state_sigs.soc_send_stage && (rm.mbox_status.mbox_fsm_ps.get_mirrored_value() == MBOX_RDY_FOR_DATA)) begin
+                    if (rm.mbox_fn_state_sigs.soc_data_stage) begin
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%s] results in data entry push to mbox_data_q", map.get_name()), UVM_FULL)
                         if (rm.mbox_data_q.size() >= dlen_cap_dw) begin
-                            `uvm_info("SOC_IFC_REG_CBS", "Push to datain observed when mbox_data_q already contains the same number of entries as indicated in mbox_dlen or the mailbox maximum capacity!", UVM_HIGH)
+                            `uvm_info("SOC_IFC_REG_CBS", "Push to datain observed when mbox_data_q already contains the same number of entries as indicated in mbox_dlen or the mailbox maximum capacity!", UVM_LOW)
                         end
                         rm.mbox_data_q.push_back(value);
                         if (rm.mbox_data_q.size() == 1) begin
@@ -126,6 +113,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain extends soc_ifc_reg_cbs_mbox_c
                             rm.mbox_dataout.dataout.predict(value, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
                             rm.mbox_datain_to_dataout_predict.reset();
                         end
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("After processing write to mbox_datain, mbox_data_q.size(): [%d]", rm.mbox_data_q.size()), UVM_DEBUG)
                     end
                     else if (rm.mbox_fn_state_sigs.mbox_idle) begin
                         error_job = soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error::type_id::create("error_job");
@@ -139,6 +127,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain extends soc_ifc_reg_cbs_mbox_c
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to [%s] on map [%s] with value [%x] causes a mbox no_lock protocol error. Delay job is queued to update DUT model.", fld.get_name(), map.get_name(), value), UVM_HIGH)
                     end
                     else begin
+                        mbox_fsm_state_e mbox_fsm_ps;
                         error_job = soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error::type_id::create("error_job");
                         error_job.rm = rm;
                         error_job.map = map;
@@ -147,7 +136,8 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain extends soc_ifc_reg_cbs_mbox_c
                         error_job.state_nxt = MBOX_ERROR;
                         error_job.error = '{axs_incorrect_order: 1'b1, default: 1'b0};
                         delay_jobs.push_back(error_job);
-                        `uvm_warning("SOC_IFC_REG_CBS", $sformatf("Write to %s on map [%s] with value [%x] during unexpected mailbox state [%p] results in mbox ooo protocol error!", fld.get_name(), map.get_name(), value, rm.mbox_fn_state_sigs))
+                        mbox_fsm_ps = mbox_fsm_state_e'(rm.mbox_status.mbox_fsm_ps.get_mirrored_value());
+                        `uvm_warning("SOC_IFC_REG_CBS", $sformatf("Write to %s on map [%s] with value [%x] during unexpected mailbox state [%p] [%p] results in mbox ooo protocol error!", fld.get_name(), map.get_name(), value, rm.mbox_fn_state_sigs, mbox_fsm_ps))
                     end
                 end
                 default: begin

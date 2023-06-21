@@ -89,13 +89,13 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
 
   // Constrain size to less than 128KiB for now (mailbox size), but we will
   // recalculate this based on the command being sent
-  constraint mbox_dlen_max_c { mbox_op_rand.dlen <= 32'h0002_0000; }
+  constraint mbox_dlen_max_c { mbox_op_rand.dlen <= MBOX_SIZE_BYTES; }
   // Minimum 2 dwords to include dlen/mbox_resp_expected_dlen at the beginning
   // IFF the response data is required
   constraint mbox_dlen_min_c { mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_op_rand.dlen >= 32'h8; }
   // Response data is only non-zero if a response is requested, and also must
   // be small enough to fit in the mailbox
-  constraint mbox_resp_dlen_c {                                      mbox_resp_expected_dlen <= 32'h0002_0000;
+  constraint mbox_resp_dlen_c {                                      mbox_resp_expected_dlen <= MBOX_SIZE_BYTES;
                                 !mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen == 0;
                                  mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen >  0; }
 
@@ -430,8 +430,14 @@ endtask
 //==========================================
 task soc_ifc_env_mbox_sequence_base::mbox_read_resp_data();
     uvm_reg_data_t data;
+    uvm_reg_data_t dlen;
     int ii;
-    for (ii=0; ii < mbox_resp_expected_dlen; ii+=4) begin
+    reg_model.mbox_csr_rm.mbox_dlen.read(reg_sts, dlen, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAOUT)));
+    report_reg_sts(reg_sts, "mbox_dlen");
+    if (dlen != mbox_resp_expected_dlen) begin
+        `uvm_error("MBOX_SEQ", $sformatf("SOC received response data with mbox_dlen [%0d] that does not match the expected data amount [%0d]!", dlen, mbox_resp_expected_dlen))
+    end
+    for (ii=0; ii < dlen; ii+=4) begin
         reg_model.mbox_csr_rm.mbox_dataout.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAOUT)));
         report_reg_sts(reg_sts, "mbox_dataout");
         if (!pauser_used_is_valid() && retry_failed_reg_axs) begin

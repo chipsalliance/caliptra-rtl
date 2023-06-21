@@ -21,6 +21,14 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base extends uvm_r
     string AHB_map_name = "soc_ifc_AHB_map";
     string APB_map_name = "soc_ifc_APB_map";
 
+    uvm_queue #(soc_ifc_reg_delay_job) delay_jobs;
+
+    function new(string name = "uvm_reg_cbs");
+        super.new(name);
+        if (!uvm_config_db#(uvm_queue#(soc_ifc_reg_delay_job))::get(null, "soc_ifc_reg_model_top", "delay_jobs", delay_jobs))
+            `uvm_error("SOC_IFC_REG_CBS", "Failed to get handle for 'delay_jobs' queue from config database!")
+    endfunction
+
     // Function: post_predict
     //
     // Called by the <uvm_reg_field::predict()> method
@@ -36,6 +44,7 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base extends uvm_r
                                        input uvm_predict_e  kind,
                                        input uvm_path_e     path,
                                        input uvm_reg_map    map);
+        soc_ifc_reg_delay_job_intr_block_rf_ext delay_job;
         uvm_reg_block rm;
         uvm_reg       sts_reg;
         string event_name    ;
@@ -45,6 +54,8 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base extends uvm_r
         uvm_reg_field sts_glb;
         uvm_reg_field cnt_fld;
 
+        delay_job = soc_ifc_reg_delay_job_intr_block_rf_ext::type_id::create("delay_job");
+        delay_job.map = map;
         sts_reg = fld.get_parent();
         rm = sts_reg.get_parent(); /* intr_block_rf_ext */
         // Get a base-name for the event by truncating the '_sts' suffix
@@ -71,27 +82,33 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base extends uvm_r
             cnt_fld.predict(cnt_fld.get_mirrored_value() + uvm_reg_data_t'(1));
         end
 
-        // On rising edge of field value, check if the interrupt output pin will
+        // On rising edge of field value, schedule a delay job to check if the
+        // interrupt output pin will
         // transition to high.
         // Global interrupt pin "agg_sts" is non-sticky
-        if ((value & ~previous) &&
-            en_glb.get_mirrored_value() &&
-            en_fld.get_mirrored_value() &&
-            ~sts_glb.get_mirrored_value())
+        if ((value & ~previous))
         begin
             `uvm_info("SOC_IFC_REG_CBS", {"Predicted update to ", fld.get_name(), " triggers interrupt output pin assertion"}, UVM_MEDIUM)
-            sts_glb.predict(1'b1);
+            delay_job.req_fld = fld;
+            delay_job.sts_reg = sts_reg;
+            delay_job.en_reg  = en_reg;
+            delay_job.sts_glb = sts_glb;
+            delay_job.en_glb  = en_glb;
+            delay_jobs.push_back(delay_job);
         end
-        // On falling edge of field value, check if the interrupt output pin will
+        // On falling edge of field value, schedule a delay job to
+        // check if the interrupt output pin will
         // transition from high to low.
         // Global interrupt pin "agg_sts" is non-sticky
-        else if ((~value & previous) &&
-                 ~|(en_reg.get_mirrored_value() &
-                    (sts_reg.get_mirrored_value() & ~(uvm_reg_data_t'(1) << fld.get_lsb_pos()))) &&
-                 sts_glb.get_mirrored_value())
+        else if ((~value & previous))
         begin
             `uvm_info("SOC_IFC_REG_CBS", {"Predicted update to ", fld.get_name(), " triggers interrupt output pin deassertion"}, UVM_MEDIUM)
-            sts_glb.predict(1'b0);
+            delay_job.req_fld = fld;
+            delay_job.sts_reg = sts_reg;
+            delay_job.en_reg  = en_reg;
+            delay_job.sts_glb = sts_glb;
+            delay_job.en_glb  = en_glb;
+            delay_jobs.push_back(delay_job);
         end
         else begin
             `uvm_info("SOC_IFC_REG_CBS",

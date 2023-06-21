@@ -184,8 +184,9 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   always_comb mode = hwif_out.MODE.MODE.value;
   //mode encoding bit 0 determines 512 or 384.
   always_comb sha_mode = mode[0] ? MODE_SHA_512 : MODE_SHA_384;
-  always_comb streaming_mode = ~mode[1];
-  always_comb mailbox_mode = mode[1];
+  //determine streaming or mailbox mode - SoC is limited to streaming mode only
+  always_comb streaming_mode = ~mode[1] | soc_has_lock;
+  always_comb mailbox_mode = mode[1] & ~soc_has_lock;
   //Detect writes to datain register
   always_comb datain_write = hwif_in.valid_user & hwif_out.DATAIN.DATAIN.swmod;
   always_comb execute_set = hwif_out.EXECUTE.EXECUTE.value;

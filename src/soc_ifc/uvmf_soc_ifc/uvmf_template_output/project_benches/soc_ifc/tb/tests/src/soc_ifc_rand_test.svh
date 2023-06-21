@@ -65,8 +65,3 @@ class soc_ifc_rand_test extends test_top;
   endfunction
 
 endclass
-
-// pragma uvmf custom external begin
-// pragma uvmf custom external end
-
-

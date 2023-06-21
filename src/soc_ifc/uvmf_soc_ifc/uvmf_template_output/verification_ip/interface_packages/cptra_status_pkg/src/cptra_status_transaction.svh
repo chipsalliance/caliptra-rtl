@@ -127,7 +127,7 @@ class cptra_status_transaction  extends uvmf_transaction_base;
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("soc_ifc_err_intr_pending:0x%x soc_ifc_notif_intr_pending:0x%x sha_err_intr_pending:0x%x sha_notif_intr_pending:0x%x timer_intr_pending:0x%x noncore_rst_asserted:0x%x uc_rst_asserted:0x%x cptra_obf_key_reg:0x%x obf_field_entropy:0x%x obf_uds_seed:0x%x nmi_vector:0x%x nmi_intr_pending:0x%x iccm_locked:0x%x ",soc_ifc_err_intr_pending,soc_ifc_notif_intr_pending,sha_err_intr_pending,sha_notif_intr_pending,timer_intr_pending,noncore_rst_asserted,uc_rst_asserted,cptra_obf_key_reg,obf_field_entropy,obf_uds_seed,nmi_vector,nmi_intr_pending,iccm_locked);
+    return $sformatf("soc_ifc_err_intr_pending:0x%x soc_ifc_notif_intr_pending:0x%x sha_err_intr_pending:0x%x sha_notif_intr_pending:0x%x timer_intr_pending:0x%x noncore_rst_asserted:0x%x uc_rst_asserted:0x%x cptra_obf_key_reg:0x%x obf_field_entropy:0x%x obf_uds_seed:0x%x nmi_vector:0x%x nmi_intr_pending:0x%x iccm_locked:0x%x %s",soc_ifc_err_intr_pending,soc_ifc_notif_intr_pending,sha_err_intr_pending,sha_notif_intr_pending,timer_intr_pending,noncore_rst_asserted,uc_rst_asserted,cptra_obf_key_reg,obf_field_entropy,obf_uds_seed,nmi_vector,nmi_intr_pending,iccm_locked,super.convert2string());
     // pragma uvmf custom convert2string end
   endfunction
 

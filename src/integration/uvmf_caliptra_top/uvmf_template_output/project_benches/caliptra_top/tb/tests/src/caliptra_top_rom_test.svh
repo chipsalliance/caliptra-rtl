@@ -53,7 +53,7 @@ class caliptra_top_rom_test extends test_top;
   virtual function void start_of_simulation_phase(uvm_phase phase);
       super.start_of_simulation_phase(phase);
       if ($test$plusargs("CLP_REGRESSION")) begin
-          uvm_top.set_report_verbosity_level_hier(UVM_NONE);
+          uvm_top.set_report_verbosity_level_hier(UVM_LOW);
 //          this.environment.soc_ifc_subenv.soc_ifc_pred.set_report_severity_action(UVM_WARNING,UVM_NO_ACTION);
 //          this.environment.soc_ifc_subenv.soc_ifc_sb.set_report_severity_action(UVM_WARNING,UVM_NO_ACTION);
           // Since en_sb is recently set to 0, this is unavailable and gives null-object
