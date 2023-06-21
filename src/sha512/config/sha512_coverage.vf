@@ -3,7 +3,6 @@
 +incdir+${CALIPTRA_ROOT}/src/keyvault/rtl
 +incdir+${CALIPTRA_ROOT}/src/pcrvault/rtl
 +incdir+${CALIPTRA_ROOT}/src/sha512/coverage
-+incdir+${CALIPTRA_ROOT}/src/sha512/tb
 +incdir+${CALIPTRA_ROOT}/src/sha512/rtl
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
 ${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_defines.svh
@@ -23,7 +22,6 @@ ${CALIPTRA_ROOT}/src/pcrvault/rtl/pv_macros.svh
 ${CALIPTRA_ROOT}/src/pcrvault/rtl/pv_gen_hash.sv
 ${CALIPTRA_ROOT}/src/sha512/coverage/sha512_ctrl_cov_if.sv
 ${CALIPTRA_ROOT}/src/sha512/coverage/sha512_ctrl_cov_bind.sv
-${CALIPTRA_ROOT}/src/sha512/tb/sha512_ctrl_32bit_tb.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/ahb_to_reg_adapter.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_reg.sv

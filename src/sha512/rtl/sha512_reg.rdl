@@ -100,7 +100,7 @@ addrmap sha512_reg {
                 This register is located at SHA512_base_address + 0x0000_0018.";
 
         default sw = r;
-        default hw = rw;
+        default hw = w;
         default resetsignal = reset_b;
         field {desc = "Status ready bit";} READY = 1'b0;
         field {desc = "Status valid bit";} VALID = 1'b0;
