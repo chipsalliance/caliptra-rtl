@@ -434,6 +434,10 @@ task soc_ifc_env_mbox_sequence_base::mbox_read_resp_data();
     int ii;
     reg_model.mbox_csr_rm.mbox_dlen.read(reg_sts, dlen, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAOUT)));
     report_reg_sts(reg_sts, "mbox_dlen");
+    if (!pauser_used_is_valid() && retry_failed_reg_axs) begin
+        reg_model.mbox_csr_rm.mbox_dlen.read(reg_sts, dlen, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
+        report_reg_sts(reg_sts, "mbox_dlen");
+    end
     if (dlen != mbox_resp_expected_dlen) begin
         `uvm_error("MBOX_SEQ", $sformatf("SOC received response data with mbox_dlen [%0d] that does not match the expected data amount [%0d]!", dlen, mbox_resp_expected_dlen))
     end
