@@ -13,7 +13,7 @@ env:
   CARGO_INCREMENTAL: 0
   SCCACHE_VERSION: 0.3.3
   RISCV_VERSION: v12.1.0
-  VERILATOR_VERSION: v5.010
+  VERILATOR_VERSION: v5.012
   PKG_CONFIG_PATH: /opt/verilator/share/pkgconfig
   SCCACHE_GHA_CACHE_TO: sccache-verilator-10000
   SCCACHE_GHA_CACHE_FROM: sccache-verilator-
