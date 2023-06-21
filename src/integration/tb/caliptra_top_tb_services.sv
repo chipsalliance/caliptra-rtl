@@ -1515,6 +1515,7 @@ endfunction
 `ifndef VERILATOR
 soc_ifc_cov_bind i_soc_ifc_cov_bind();
 caliptra_top_cov_bind i_caliptra_top_cov_bind();
+sha512_ctrl_cov_bind i_sha512_ctrl_cov_bind();
 `endif
 
 /* verilator lint_off CASEINCOMPLETE */

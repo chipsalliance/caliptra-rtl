@@ -31,13 +31,29 @@ provides: [sha512_ctrl_32bit_tb]
 schema_version: 2.4.0
 requires: 
   - sha512_ctrl
+  - sha512_coverage
 targets:
   tb:
     directories: 
       - $COMPILE_ROOT/tb
+      - $COMPILE_ROOT/coverage
     files:
       - $COMPILE_ROOT/tb/sha512_ctrl_32bit_tb.sv
+      - $COMPILE_ROOT/coverage/sha512_ctrl_cov_if.sv
+      - $COMPILE_ROOT/coverage/sha512_ctrl_cov_bind.sv
     tops: [sha512_ctrl_32bit_tb]
+---
+provides: [sha512_coverage]  
+schema_version: 2.4.0
+requires: 
+  - sha512_ctrl
+targets:
+  tb:
+    directories: 
+      - $COMPILE_ROOT/coverage
+    files:
+      - $COMPILE_ROOT/coverage/sha512_ctrl_cov_if.sv
+      - $COMPILE_ROOT/coverage/sha512_ctrl_cov_bind.sv
 global:
   tool:
     vcs:

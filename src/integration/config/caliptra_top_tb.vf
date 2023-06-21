@@ -13,6 +13,7 @@
 +incdir+${CALIPTRA_ROOT}/src/lc_ctrl/rtl
 +incdir+${CALIPTRA_ROOT}/src/entropy_src/tb
 +incdir+${CALIPTRA_ROOT}/src/csrng/rtl
++incdir+${CALIPTRA_ROOT}/src/sha512/coverage
 +incdir+${CALIPTRA_ROOT}/src/integration/tb
 +incdir+${CALIPTRA_ROOT}/src/integration/coverage
 +incdir+${CALIPTRA_ROOT}/src/ahb_lite_bus/rtl
@@ -68,6 +69,8 @@ ${CALIPTRA_ROOT}/src/lc_ctrl/rtl/lc_ctrl_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/tb/physical_rng.sv
 ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_pkg.sv
+${CALIPTRA_ROOT}/src/sha512/coverage/sha512_ctrl_cov_if.sv
+${CALIPTRA_ROOT}/src/sha512/coverage/sha512_ctrl_cov_bind.sv
 ${CALIPTRA_ROOT}/src/integration/tb/caliptra_top_tb_pkg.sv
 ${CALIPTRA_ROOT}/src/integration/tb/caliptra_veer_sram_export.sv
 ${CALIPTRA_ROOT}/src/integration/tb/caliptra_top_tb_services.sv

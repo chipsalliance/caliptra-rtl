@@ -35,6 +35,7 @@ requires:
   - soc_ifc_top
   - entropy_src
   - csrng
+  - sha512_coverage
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
