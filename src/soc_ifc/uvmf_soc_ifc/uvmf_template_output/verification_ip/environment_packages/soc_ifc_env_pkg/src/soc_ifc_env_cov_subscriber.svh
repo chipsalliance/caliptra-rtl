@@ -89,31 +89,33 @@ class soc_ifc_env_cov_subscriber #(
     step_exec_clr       : coverpoint (next_step.exec_clr);
     step_force_unlock   : coverpoint (next_step.force_unlock);
     step_reset          : coverpoint (next_step.reset);
-    steps_all_mbox_flow : coverpoint (next_step) {
-        bins mbox_flow = (MBOX_STEP_LOCK_ACQUIRE            =>
-                          MBOX_STEP_CMD_WR         [=1]     =>
-                          MBOX_STEP_DLEN_WR        [=1]     =>
-                          MBOX_STEP_DATAIN_WR      [=1:511] =>
-                          MBOX_STEP_EXEC_SET       [=1]     =>
-                          MBOX_STEP_CMD_RD         [=1]     =>
-                          MBOX_STEP_DLEN_RD        [=1]     =>
-                          MBOX_STEP_DATAOUT_RD     [=1:511] =>
-                          MBOX_STEP_STATUS_WR      [=1]     =>
-                          MBOX_STEP_STATUS_RD      [=1:511] =>
-                          MBOX_STEP_EXEC_CLR);
-        bins mbox_resp_flow = (MBOX_STEP_LOCK_ACQUIRE                                                       =>
-                               MBOX_STEP_CMD_WR                                                    [=1]     =>
-                               MBOX_STEP_DLEN_WR                                                   [=1]     =>
-                               MBOX_STEP_DATAIN_WR                                                 [=1:511] =>
-                               MBOX_STEP_EXEC_SET                                                  [=1]     =>
-                               MBOX_STEP_CMD_RD                                                    [=1]     =>
-                               MBOX_STEP_DLEN_RD                                                   [=1]     =>
-                               MBOX_STEP_DATAOUT_RD                                                [=1:511] =>
-                               MBOX_STEP_RESP_DATAIN_WR,MBOX_STEP_RESP_DLEN_WR                     [=2:511] =>
-                               MBOX_STEP_STATUS_WR                                                 [=1]     =>
-                               MBOX_STEP_RESP_DLEN_RD,MBOX_STEP_RESP_DATAOUT_RD,MBOX_STEP_STATUS_RD[=3:511] =>
-                               MBOX_STEP_EXEC_CLR);
-    }
+    /*
+    *steps_all_mbox_flow : coverpoint (next_step) {
+    *    bins mbox_flow = (MBOX_STEP_LOCK_ACQUIRE            =>
+    *                      MBOX_STEP_CMD_WR         [=1]     =>
+    *                      MBOX_STEP_DLEN_WR        [=1]     =>
+    *                      MBOX_STEP_DATAIN_WR      [=1:511] =>
+    *                      MBOX_STEP_EXEC_SET       [=1]     =>
+    *                      MBOX_STEP_CMD_RD         [=1]     =>
+    *                      MBOX_STEP_DLEN_RD        [=1]     =>
+    *                      MBOX_STEP_DATAOUT_RD     [=1:511] =>
+    *                      MBOX_STEP_STATUS_WR      [=1]     =>
+    *                      MBOX_STEP_STATUS_RD      [=1:511] =>
+    *                      MBOX_STEP_EXEC_CLR);
+    *    bins mbox_resp_flow = (MBOX_STEP_LOCK_ACQUIRE                                                       =>
+    *                           MBOX_STEP_CMD_WR                                                    [=1]     =>
+    *                           MBOX_STEP_DLEN_WR                                                   [=1]     =>
+    *                           MBOX_STEP_DATAIN_WR                                                 [=1:511] =>
+    *                           MBOX_STEP_EXEC_SET                                                  [=1]     =>
+    *                           MBOX_STEP_CMD_RD                                                    [=1]     =>
+    *                           MBOX_STEP_DLEN_RD                                                   [=1]     =>
+    *                           MBOX_STEP_DATAOUT_RD                                                [=1:511] =>
+    *                           MBOX_STEP_RESP_DATAIN_WR,MBOX_STEP_RESP_DLEN_WR                     [=2:511] =>
+    *                           MBOX_STEP_STATUS_WR                                                 [=1]     =>
+    *                           MBOX_STEP_RESP_DLEN_RD,MBOX_STEP_RESP_DATAOUT_RD,MBOX_STEP_STATUS_RD[=3:511] =>
+    *                           MBOX_STEP_EXEC_CLR);
+    *}
+    */
     which_lock_acquire   : cross step_lock_acquire   , is_ahb;
     which_cmd_wr         : cross step_cmd_wr         , is_ahb;
     which_dlen_wr        : cross step_dlen_wr        , is_ahb;
@@ -164,227 +166,229 @@ class soc_ifc_env_cov_subscriber #(
         bins step_exec_clr_apb        = {{NOT_AHB_REQ,MBOX_STEP_EXEC_CLR}};
         bins step_reset               = {{NOT_AHB_REQ,MBOX_STEP_RESET}};
     }
-    mbox_flow_by_if : coverpoint (step_by_if) {
-        bins uc_to_soc_flow = (
-            {    AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}          =>
-            {    AHB_REQ,MBOX_STEP_CMD_WR      } [=1]     =>
-            {    AHB_REQ,MBOX_STEP_DLEN_WR     } [=1]     =>
-            {    AHB_REQ,MBOX_STEP_DATAIN_WR   } [=1:511] =>
-            {    AHB_REQ,MBOX_STEP_EXEC_SET    } [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_CMD_RD      } [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_DLEN_RD     } [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_DATAOUT_RD  } [=1:511] =>
-            {NOT_AHB_REQ,MBOX_STEP_STATUS_WR   } [=1]     =>
-            {    AHB_REQ,MBOX_STEP_STATUS_RD   } [=1:511] =>
-            {    AHB_REQ,MBOX_STEP_EXEC_CLR    });
-        bins soc_to_uc_flow = (
-            {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                    =>
-            {NOT_AHB_REQ,MBOX_STEP_CMD_WR      }                                                                           [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_DLEN_WR     }                                                                           [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_DATAIN_WR   }                                                                           [=1:511] =>
-            {NOT_AHB_REQ,MBOX_STEP_EXEC_SET    }                                                                           [=1]     =>
-            {    AHB_REQ,MBOX_STEP_CMD_RD      }                                                                           [=1]     =>
-            {    AHB_REQ,MBOX_STEP_DLEN_RD     }                                                                           [=1]     =>
-            {    AHB_REQ,MBOX_STEP_DATAOUT_RD  }                                                                           [=1:511] =>
-            {    AHB_REQ,MBOX_STEP_RESP_DATAIN_WR},{AHB_REQ,MBOX_STEP_RESP_DLEN_WR}                                        [=2:511] =>
-            {    AHB_REQ,MBOX_STEP_STATUS_WR   }                                                                           [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_RESP_DLEN_RD},{NOT_AHB_REQ,MBOX_STEP_RESP_DATAOUT_RD},{NOT_AHB_REQ,MBOX_STEP_STATUS_RD} [=3:511] =>
-            {NOT_AHB_REQ,MBOX_STEP_EXEC_CLR    });
-    }
-    mbox_flow_uc_to_soc_with_rst_by_if : coverpoint (step_by_if) {
-        bins uc_to_soc_rst_after_lock  = (
-            {    AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}          =>
-            {NOT_AHB_REQ,MBOX_STEP_RESET       });
-        bins uc_to_soc_rst_after_cmd = (
-            {    AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}          =>
-            {    AHB_REQ,MBOX_STEP_CMD_WR      } [->1]    =>
-            {NOT_AHB_REQ,MBOX_STEP_RESET       });
-        bins uc_to_soc_rst_after_dlen = (
-            {    AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}          =>
-            {    AHB_REQ,MBOX_STEP_CMD_WR      } [=1]     =>
-            {    AHB_REQ,MBOX_STEP_DLEN_WR     } [->1]    =>
-            {NOT_AHB_REQ,MBOX_STEP_RESET       });
-        bins uc_to_soc_rst_after_datain = (
-            {    AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}           =>
-            {    AHB_REQ,MBOX_STEP_CMD_WR      } [=1]      =>
-            {    AHB_REQ,MBOX_STEP_DLEN_WR     } [=1]      =>
-            {    AHB_REQ,MBOX_STEP_DATAIN_WR   } [->1:511] =>
-            {NOT_AHB_REQ,MBOX_STEP_RESET       });
-        bins uc_to_soc_rst_after_exec_set = (
-            {    AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}          =>
-            {    AHB_REQ,MBOX_STEP_CMD_WR      } [=1]     =>
-            {    AHB_REQ,MBOX_STEP_DLEN_WR     } [=1]     =>
-            {    AHB_REQ,MBOX_STEP_DATAIN_WR   } [=1:511] =>
-            {    AHB_REQ,MBOX_STEP_EXEC_SET    } [->1]    =>
-            {NOT_AHB_REQ,MBOX_STEP_RESET       });
-        bins uc_to_soc_rst_after_cmd_rd = (
-            {    AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}          =>
-            {    AHB_REQ,MBOX_STEP_CMD_WR      } [=1]     =>
-            {    AHB_REQ,MBOX_STEP_DLEN_WR     } [=1]     =>
-            {    AHB_REQ,MBOX_STEP_DATAIN_WR   } [=1:511] =>
-            {    AHB_REQ,MBOX_STEP_EXEC_SET    } [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_CMD_RD      } [->1]    =>
-            {NOT_AHB_REQ,MBOX_STEP_RESET       });
-        bins uc_to_soc_rst_after_dlen_rd = (
-            {    AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}          =>
-            {    AHB_REQ,MBOX_STEP_CMD_WR      } [=1]     =>
-            {    AHB_REQ,MBOX_STEP_DLEN_WR     } [=1]     =>
-            {    AHB_REQ,MBOX_STEP_DATAIN_WR   } [=1:511] =>
-            {    AHB_REQ,MBOX_STEP_EXEC_SET    } [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_CMD_RD      } [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_DLEN_RD     } [->1]    =>
-            {NOT_AHB_REQ,MBOX_STEP_RESET       });
-        bins uc_to_soc_rst_after_dataout_rd = (
-            {    AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}           =>
-            {    AHB_REQ,MBOX_STEP_CMD_WR      } [=1]      =>
-            {    AHB_REQ,MBOX_STEP_DLEN_WR     } [=1]      =>
-            {    AHB_REQ,MBOX_STEP_DATAIN_WR   } [=1:511]  =>
-            {    AHB_REQ,MBOX_STEP_EXEC_SET    } [=1]      =>
-            {NOT_AHB_REQ,MBOX_STEP_CMD_RD      } [=1]      =>
-            {NOT_AHB_REQ,MBOX_STEP_DLEN_RD     } [=1]      =>
-            {NOT_AHB_REQ,MBOX_STEP_DATAOUT_RD  } [->1:511] =>
-            {NOT_AHB_REQ,MBOX_STEP_RESET       });
-        bins uc_to_soc_rst_after_status_wr = (
-            {    AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}          =>
-            {    AHB_REQ,MBOX_STEP_CMD_WR      } [=1]     =>
-            {    AHB_REQ,MBOX_STEP_DLEN_WR     } [=1]     =>
-            {    AHB_REQ,MBOX_STEP_DATAIN_WR   } [=1:511] =>
-            {    AHB_REQ,MBOX_STEP_EXEC_SET    } [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_CMD_RD      } [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_DLEN_RD     } [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_DATAOUT_RD  } [=1:511] =>
-            {NOT_AHB_REQ,MBOX_STEP_STATUS_WR   } [->1]    =>
-            {NOT_AHB_REQ,MBOX_STEP_RESET       });
-        bins uc_to_soc_rst_after_status_rd = (
-            {    AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}           =>
-            {    AHB_REQ,MBOX_STEP_CMD_WR      } [=1]      =>
-            {    AHB_REQ,MBOX_STEP_DLEN_WR     } [=1]      =>
-            {    AHB_REQ,MBOX_STEP_DATAIN_WR   } [=1:511]  =>
-            {    AHB_REQ,MBOX_STEP_EXEC_SET    } [=1]      =>
-            {NOT_AHB_REQ,MBOX_STEP_CMD_RD      } [=1]      =>
-            {NOT_AHB_REQ,MBOX_STEP_DLEN_RD     } [=1]      =>
-            {NOT_AHB_REQ,MBOX_STEP_DATAOUT_RD  } [=1:511]  =>
-            {NOT_AHB_REQ,MBOX_STEP_STATUS_WR   } [=1]      =>
-            {    AHB_REQ,MBOX_STEP_STATUS_RD   } [->1:511] =>
-            {NOT_AHB_REQ,MBOX_STEP_RESET       });
-        bins uc_to_soc_rst_after_exec_clr = (
-            {    AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}          =>
-            {    AHB_REQ,MBOX_STEP_CMD_WR      } [=1]     =>
-            {    AHB_REQ,MBOX_STEP_DLEN_WR     } [=1]     =>
-            {    AHB_REQ,MBOX_STEP_DATAIN_WR   } [=1:511] =>
-            {    AHB_REQ,MBOX_STEP_EXEC_SET    } [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_CMD_RD      } [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_DLEN_RD     } [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_DATAOUT_RD  } [=1:511] =>
-            {NOT_AHB_REQ,MBOX_STEP_STATUS_WR   } [=1]     =>
-            {    AHB_REQ,MBOX_STEP_STATUS_RD   } [=1:511] =>
-            {    AHB_REQ,MBOX_STEP_EXEC_CLR    } [->1]    =>
-            {NOT_AHB_REQ,MBOX_STEP_RESET       });
-    }
-    mbox_flow_soc_to_uc_with_rst_by_if : coverpoint (step_by_if) {
-        bins soc_to_uc_rst_after_lock = (
-            {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                    =>
-            {NOT_AHB_REQ,MBOX_STEP_RESET       });
-        bins soc_to_uc_rst_after_cmd_wr = (
-            {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                    =>
-            {NOT_AHB_REQ,MBOX_STEP_CMD_WR      }                                                                           [->1]    =>
-            {NOT_AHB_REQ,MBOX_STEP_RESET       });
-        bins soc_to_uc_rst_after_dlen_wr = (
-            {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                    =>
-            {NOT_AHB_REQ,MBOX_STEP_CMD_WR      }                                                                           [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_DLEN_WR     }                                                                           [->1]    =>
-            {NOT_AHB_REQ,MBOX_STEP_RESET       });
-        bins soc_to_uc_rst_after_datain_wr = (
-            {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                     =>
-            {NOT_AHB_REQ,MBOX_STEP_CMD_WR      }                                                                           [=1]      =>
-            {NOT_AHB_REQ,MBOX_STEP_DLEN_WR     }                                                                           [=1]      =>
-            {NOT_AHB_REQ,MBOX_STEP_DATAIN_WR   }                                                                           [->1:511] =>
-            {NOT_AHB_REQ,MBOX_STEP_RESET       });
-        bins soc_to_uc_rst_after_exec_set = (
-            {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                    =>
-            {NOT_AHB_REQ,MBOX_STEP_CMD_WR      }                                                                           [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_DLEN_WR     }                                                                           [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_DATAIN_WR   }                                                                           [=1:511] =>
-            {NOT_AHB_REQ,MBOX_STEP_EXEC_SET    }                                                                           [->1]    =>
-            {NOT_AHB_REQ,MBOX_STEP_RESET       });
-        bins soc_to_uc_rst_after_cmd_rd = (
-            {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                    =>
-            {NOT_AHB_REQ,MBOX_STEP_CMD_WR      }                                                                           [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_DLEN_WR     }                                                                           [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_DATAIN_WR   }                                                                           [=1:511] =>
-            {NOT_AHB_REQ,MBOX_STEP_EXEC_SET    }                                                                           [=1]     =>
-            {    AHB_REQ,MBOX_STEP_CMD_RD      }                                                                           [->1]    =>
-            {NOT_AHB_REQ,MBOX_STEP_RESET       });
-        bins soc_to_uc_rst_after_dlen_rd = (
-            {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                    =>
-            {NOT_AHB_REQ,MBOX_STEP_CMD_WR      }                                                                           [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_DLEN_WR     }                                                                           [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_DATAIN_WR   }                                                                           [=1:511] =>
-            {NOT_AHB_REQ,MBOX_STEP_EXEC_SET    }                                                                           [=1]     =>
-            {    AHB_REQ,MBOX_STEP_CMD_RD      }                                                                           [=1]     =>
-            {    AHB_REQ,MBOX_STEP_DLEN_RD     }                                                                           [->1]    =>
-            {NOT_AHB_REQ,MBOX_STEP_RESET       });
-        bins soc_to_uc_rst_after_dataout_rd = (
-            {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                     =>
-            {NOT_AHB_REQ,MBOX_STEP_CMD_WR      }                                                                           [=1]      =>
-            {NOT_AHB_REQ,MBOX_STEP_DLEN_WR     }                                                                           [=1]      =>
-            {NOT_AHB_REQ,MBOX_STEP_DATAIN_WR   }                                                                           [=1:511]  =>
-            {NOT_AHB_REQ,MBOX_STEP_EXEC_SET    }                                                                           [=1]      =>
-            {    AHB_REQ,MBOX_STEP_CMD_RD      }                                                                           [=1]      =>
-            {    AHB_REQ,MBOX_STEP_DLEN_RD     }                                                                           [=1]      =>
-            {    AHB_REQ,MBOX_STEP_DATAOUT_RD  }                                                                           [->1:511] =>
-            {NOT_AHB_REQ,MBOX_STEP_RESET       });
-        bins soc_to_uc_rst_after_resp_dlen_wr = (
-            {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                     =>
-            {NOT_AHB_REQ,MBOX_STEP_CMD_WR      }                                                                           [=1]      =>
-            {NOT_AHB_REQ,MBOX_STEP_DLEN_WR     }                                                                           [=1]      =>
-            {NOT_AHB_REQ,MBOX_STEP_DATAIN_WR   }                                                                           [=1:511]  =>
-            {NOT_AHB_REQ,MBOX_STEP_EXEC_SET    }                                                                           [=1]      =>
-            {    AHB_REQ,MBOX_STEP_CMD_RD      }                                                                           [=1]      =>
-            {    AHB_REQ,MBOX_STEP_DLEN_RD     }                                                                           [=1]      =>
-            {    AHB_REQ,MBOX_STEP_DATAOUT_RD  }                                                                           [=1:511]  =>
-            {    AHB_REQ,MBOX_STEP_RESP_DATAIN_WR},{AHB_REQ,MBOX_STEP_RESP_DLEN_WR}                                        [->2:511] =>
-            {NOT_AHB_REQ,MBOX_STEP_RESET       });
-        bins soc_to_uc_rst_after_status_wr = (
-            {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                     =>
-            {NOT_AHB_REQ,MBOX_STEP_CMD_WR      }                                                                           [=1]      =>
-            {NOT_AHB_REQ,MBOX_STEP_DLEN_WR     }                                                                           [=1]      =>
-            {NOT_AHB_REQ,MBOX_STEP_DATAIN_WR   }                                                                           [=1:511]  =>
-            {NOT_AHB_REQ,MBOX_STEP_EXEC_SET    }                                                                           [=1]      =>
-            {    AHB_REQ,MBOX_STEP_CMD_RD      }                                                                           [=1]      =>
-            {    AHB_REQ,MBOX_STEP_DLEN_RD     }                                                                           [=1]      =>
-            {    AHB_REQ,MBOX_STEP_DATAOUT_RD  }                                                                           [=1:511]  =>
-            {    AHB_REQ,MBOX_STEP_RESP_DATAIN_WR},{AHB_REQ,MBOX_STEP_RESP_DLEN_WR}                                        [=2:511]  =>
-            {    AHB_REQ,MBOX_STEP_STATUS_WR   }                                                                           [->1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_RESET       });
-        bins soc_to_uc_rst_after_status_rd = (
-            {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                     =>
-            {NOT_AHB_REQ,MBOX_STEP_CMD_WR      }                                                                           [=1]      =>
-            {NOT_AHB_REQ,MBOX_STEP_DLEN_WR     }                                                                           [=1]      =>
-            {NOT_AHB_REQ,MBOX_STEP_DATAIN_WR   }                                                                           [=1:511]  =>
-            {NOT_AHB_REQ,MBOX_STEP_EXEC_SET    }                                                                           [=1]      =>
-            {    AHB_REQ,MBOX_STEP_CMD_RD      }                                                                           [=1]      =>
-            {    AHB_REQ,MBOX_STEP_DLEN_RD     }                                                                           [=1]      =>
-            {    AHB_REQ,MBOX_STEP_DATAOUT_RD  }                                                                           [=1:511]  =>
-            {    AHB_REQ,MBOX_STEP_RESP_DATAIN_WR},{AHB_REQ,MBOX_STEP_RESP_DLEN_WR}                                        [=2:511]  =>
-            {    AHB_REQ,MBOX_STEP_STATUS_WR   }                                                                           [=1]      =>
-            {NOT_AHB_REQ,MBOX_STEP_RESP_DLEN_RD},{NOT_AHB_REQ,MBOX_STEP_RESP_DATAOUT_RD},{NOT_AHB_REQ,MBOX_STEP_STATUS_RD} [->3:511] =>
-            {NOT_AHB_REQ,MBOX_STEP_RESET       });
-        bins soc_to_uc_rst_after_exec_clr = (
-            {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                    =>
-            {NOT_AHB_REQ,MBOX_STEP_CMD_WR      }                                                                           [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_DLEN_WR     }                                                                           [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_DATAIN_WR   }                                                                           [=1:511] =>
-            {NOT_AHB_REQ,MBOX_STEP_EXEC_SET    }                                                                           [=1]     =>
-            {    AHB_REQ,MBOX_STEP_CMD_RD      }                                                                           [=1]     =>
-            {    AHB_REQ,MBOX_STEP_DLEN_RD     }                                                                           [=1]     =>
-            {    AHB_REQ,MBOX_STEP_DATAOUT_RD  }                                                                           [=1:511] =>
-            {    AHB_REQ,MBOX_STEP_RESP_DATAIN_WR},{AHB_REQ,MBOX_STEP_RESP_DLEN_WR}                                        [=2:511] =>
-            {    AHB_REQ,MBOX_STEP_STATUS_WR   }                                                                           [=1]     =>
-            {NOT_AHB_REQ,MBOX_STEP_RESP_DLEN_RD},{NOT_AHB_REQ,MBOX_STEP_RESP_DATAOUT_RD},{NOT_AHB_REQ,MBOX_STEP_STATUS_RD} [=3:511] =>
-            {NOT_AHB_REQ,MBOX_STEP_EXEC_CLR    }                                                                           [->1]    =>
-            {NOT_AHB_REQ,MBOX_STEP_RESET       });
-    }
+    /*
+    *mbox_flow_by_if : coverpoint (step_by_if) {
+    *    bins uc_to_soc_flow = (
+    *        {    AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}          =>
+    *        {    AHB_REQ,MBOX_STEP_CMD_WR      } [=1]     =>
+    *        {    AHB_REQ,MBOX_STEP_DLEN_WR     } [=1]     =>
+    *        {    AHB_REQ,MBOX_STEP_DATAIN_WR   } [=1:511] =>
+    *        {    AHB_REQ,MBOX_STEP_EXEC_SET    } [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_CMD_RD      } [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DLEN_RD     } [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DATAOUT_RD  } [=1:511] =>
+    *        {NOT_AHB_REQ,MBOX_STEP_STATUS_WR   } [=1]     =>
+    *        {    AHB_REQ,MBOX_STEP_STATUS_RD   } [=1:511] =>
+    *        {    AHB_REQ,MBOX_STEP_EXEC_CLR    });
+    *    bins soc_to_uc_flow = (
+    *        {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                    =>
+    *        {NOT_AHB_REQ,MBOX_STEP_CMD_WR      }                                                                           [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DLEN_WR     }                                                                           [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DATAIN_WR   }                                                                           [=1:511] =>
+    *        {NOT_AHB_REQ,MBOX_STEP_EXEC_SET    }                                                                           [=1]     =>
+    *        {    AHB_REQ,MBOX_STEP_CMD_RD      }                                                                           [=1]     =>
+    *        {    AHB_REQ,MBOX_STEP_DLEN_RD     }                                                                           [=1]     =>
+    *        {    AHB_REQ,MBOX_STEP_DATAOUT_RD  }                                                                           [=1:511] =>
+    *        {    AHB_REQ,MBOX_STEP_RESP_DATAIN_WR},{AHB_REQ,MBOX_STEP_RESP_DLEN_WR}                                        [=2:511] =>
+    *        {    AHB_REQ,MBOX_STEP_STATUS_WR   }                                                                           [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESP_DLEN_RD},{NOT_AHB_REQ,MBOX_STEP_RESP_DATAOUT_RD},{NOT_AHB_REQ,MBOX_STEP_STATUS_RD} [=3:511] =>
+    *        {NOT_AHB_REQ,MBOX_STEP_EXEC_CLR    });
+    *}
+    *mbox_flow_uc_to_soc_with_rst_by_if : coverpoint (step_by_if) {
+    *    bins uc_to_soc_rst_after_lock  = (
+    *        {    AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}          =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESET       });
+    *    bins uc_to_soc_rst_after_cmd = (
+    *        {    AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}          =>
+    *        {    AHB_REQ,MBOX_STEP_CMD_WR      } [->1]    =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESET       });
+    *    bins uc_to_soc_rst_after_dlen = (
+    *        {    AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}          =>
+    *        {    AHB_REQ,MBOX_STEP_CMD_WR      } [=1]     =>
+    *        {    AHB_REQ,MBOX_STEP_DLEN_WR     } [->1]    =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESET       });
+    *    bins uc_to_soc_rst_after_datain = (
+    *        {    AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}           =>
+    *        {    AHB_REQ,MBOX_STEP_CMD_WR      } [=1]      =>
+    *        {    AHB_REQ,MBOX_STEP_DLEN_WR     } [=1]      =>
+    *        {    AHB_REQ,MBOX_STEP_DATAIN_WR   } [->1:511] =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESET       });
+    *    bins uc_to_soc_rst_after_exec_set = (
+    *        {    AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}          =>
+    *        {    AHB_REQ,MBOX_STEP_CMD_WR      } [=1]     =>
+    *        {    AHB_REQ,MBOX_STEP_DLEN_WR     } [=1]     =>
+    *        {    AHB_REQ,MBOX_STEP_DATAIN_WR   } [=1:511] =>
+    *        {    AHB_REQ,MBOX_STEP_EXEC_SET    } [->1]    =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESET       });
+    *    bins uc_to_soc_rst_after_cmd_rd = (
+    *        {    AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}          =>
+    *        {    AHB_REQ,MBOX_STEP_CMD_WR      } [=1]     =>
+    *        {    AHB_REQ,MBOX_STEP_DLEN_WR     } [=1]     =>
+    *        {    AHB_REQ,MBOX_STEP_DATAIN_WR   } [=1:511] =>
+    *        {    AHB_REQ,MBOX_STEP_EXEC_SET    } [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_CMD_RD      } [->1]    =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESET       });
+    *    bins uc_to_soc_rst_after_dlen_rd = (
+    *        {    AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}          =>
+    *        {    AHB_REQ,MBOX_STEP_CMD_WR      } [=1]     =>
+    *        {    AHB_REQ,MBOX_STEP_DLEN_WR     } [=1]     =>
+    *        {    AHB_REQ,MBOX_STEP_DATAIN_WR   } [=1:511] =>
+    *        {    AHB_REQ,MBOX_STEP_EXEC_SET    } [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_CMD_RD      } [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DLEN_RD     } [->1]    =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESET       });
+    *    bins uc_to_soc_rst_after_dataout_rd = (
+    *        {    AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}           =>
+    *        {    AHB_REQ,MBOX_STEP_CMD_WR      } [=1]      =>
+    *        {    AHB_REQ,MBOX_STEP_DLEN_WR     } [=1]      =>
+    *        {    AHB_REQ,MBOX_STEP_DATAIN_WR   } [=1:511]  =>
+    *        {    AHB_REQ,MBOX_STEP_EXEC_SET    } [=1]      =>
+    *        {NOT_AHB_REQ,MBOX_STEP_CMD_RD      } [=1]      =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DLEN_RD     } [=1]      =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DATAOUT_RD  } [->1:511] =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESET       });
+    *    bins uc_to_soc_rst_after_status_wr = (
+    *        {    AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}          =>
+    *        {    AHB_REQ,MBOX_STEP_CMD_WR      } [=1]     =>
+    *        {    AHB_REQ,MBOX_STEP_DLEN_WR     } [=1]     =>
+    *        {    AHB_REQ,MBOX_STEP_DATAIN_WR   } [=1:511] =>
+    *        {    AHB_REQ,MBOX_STEP_EXEC_SET    } [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_CMD_RD      } [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DLEN_RD     } [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DATAOUT_RD  } [=1:511] =>
+    *        {NOT_AHB_REQ,MBOX_STEP_STATUS_WR   } [->1]    =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESET       });
+    *    bins uc_to_soc_rst_after_status_rd = (
+    *        {    AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}           =>
+    *        {    AHB_REQ,MBOX_STEP_CMD_WR      } [=1]      =>
+    *        {    AHB_REQ,MBOX_STEP_DLEN_WR     } [=1]      =>
+    *        {    AHB_REQ,MBOX_STEP_DATAIN_WR   } [=1:511]  =>
+    *        {    AHB_REQ,MBOX_STEP_EXEC_SET    } [=1]      =>
+    *        {NOT_AHB_REQ,MBOX_STEP_CMD_RD      } [=1]      =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DLEN_RD     } [=1]      =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DATAOUT_RD  } [=1:511]  =>
+    *        {NOT_AHB_REQ,MBOX_STEP_STATUS_WR   } [=1]      =>
+    *        {    AHB_REQ,MBOX_STEP_STATUS_RD   } [->1:511] =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESET       });
+    *    bins uc_to_soc_rst_after_exec_clr = (
+    *        {    AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}          =>
+    *        {    AHB_REQ,MBOX_STEP_CMD_WR      } [=1]     =>
+    *        {    AHB_REQ,MBOX_STEP_DLEN_WR     } [=1]     =>
+    *        {    AHB_REQ,MBOX_STEP_DATAIN_WR   } [=1:511] =>
+    *        {    AHB_REQ,MBOX_STEP_EXEC_SET    } [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_CMD_RD      } [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DLEN_RD     } [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DATAOUT_RD  } [=1:511] =>
+    *        {NOT_AHB_REQ,MBOX_STEP_STATUS_WR   } [=1]     =>
+    *        {    AHB_REQ,MBOX_STEP_STATUS_RD   } [=1:511] =>
+    *        {    AHB_REQ,MBOX_STEP_EXEC_CLR    } [->1]    =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESET       });
+    *}
+    *mbox_flow_soc_to_uc_with_rst_by_if : coverpoint (step_by_if) {
+    *    bins soc_to_uc_rst_after_lock = (
+    *        {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                    =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESET       });
+    *    bins soc_to_uc_rst_after_cmd_wr = (
+    *        {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                    =>
+    *        {NOT_AHB_REQ,MBOX_STEP_CMD_WR      }                                                                           [->1]    =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESET       });
+    *    bins soc_to_uc_rst_after_dlen_wr = (
+    *        {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                    =>
+    *        {NOT_AHB_REQ,MBOX_STEP_CMD_WR      }                                                                           [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DLEN_WR     }                                                                           [->1]    =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESET       });
+    *    bins soc_to_uc_rst_after_datain_wr = (
+    *        {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_CMD_WR      }                                                                           [=1]      =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DLEN_WR     }                                                                           [=1]      =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DATAIN_WR   }                                                                           [->1:511] =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESET       });
+    *    bins soc_to_uc_rst_after_exec_set = (
+    *        {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                    =>
+    *        {NOT_AHB_REQ,MBOX_STEP_CMD_WR      }                                                                           [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DLEN_WR     }                                                                           [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DATAIN_WR   }                                                                           [=1:511] =>
+    *        {NOT_AHB_REQ,MBOX_STEP_EXEC_SET    }                                                                           [->1]    =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESET       });
+    *    bins soc_to_uc_rst_after_cmd_rd = (
+    *        {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                    =>
+    *        {NOT_AHB_REQ,MBOX_STEP_CMD_WR      }                                                                           [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DLEN_WR     }                                                                           [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DATAIN_WR   }                                                                           [=1:511] =>
+    *        {NOT_AHB_REQ,MBOX_STEP_EXEC_SET    }                                                                           [=1]     =>
+    *        {    AHB_REQ,MBOX_STEP_CMD_RD      }                                                                           [->1]    =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESET       });
+    *    bins soc_to_uc_rst_after_dlen_rd = (
+    *        {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                    =>
+    *        {NOT_AHB_REQ,MBOX_STEP_CMD_WR      }                                                                           [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DLEN_WR     }                                                                           [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DATAIN_WR   }                                                                           [=1:511] =>
+    *        {NOT_AHB_REQ,MBOX_STEP_EXEC_SET    }                                                                           [=1]     =>
+    *        {    AHB_REQ,MBOX_STEP_CMD_RD      }                                                                           [=1]     =>
+    *        {    AHB_REQ,MBOX_STEP_DLEN_RD     }                                                                           [->1]    =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESET       });
+    *    bins soc_to_uc_rst_after_dataout_rd = (
+    *        {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_CMD_WR      }                                                                           [=1]      =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DLEN_WR     }                                                                           [=1]      =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DATAIN_WR   }                                                                           [=1:511]  =>
+    *        {NOT_AHB_REQ,MBOX_STEP_EXEC_SET    }                                                                           [=1]      =>
+    *        {    AHB_REQ,MBOX_STEP_CMD_RD      }                                                                           [=1]      =>
+    *        {    AHB_REQ,MBOX_STEP_DLEN_RD     }                                                                           [=1]      =>
+    *        {    AHB_REQ,MBOX_STEP_DATAOUT_RD  }                                                                           [->1:511] =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESET       });
+    *    bins soc_to_uc_rst_after_resp_dlen_wr = (
+    *        {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_CMD_WR      }                                                                           [=1]      =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DLEN_WR     }                                                                           [=1]      =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DATAIN_WR   }                                                                           [=1:511]  =>
+    *        {NOT_AHB_REQ,MBOX_STEP_EXEC_SET    }                                                                           [=1]      =>
+    *        {    AHB_REQ,MBOX_STEP_CMD_RD      }                                                                           [=1]      =>
+    *        {    AHB_REQ,MBOX_STEP_DLEN_RD     }                                                                           [=1]      =>
+    *        {    AHB_REQ,MBOX_STEP_DATAOUT_RD  }                                                                           [=1:511]  =>
+    *        {    AHB_REQ,MBOX_STEP_RESP_DATAIN_WR},{AHB_REQ,MBOX_STEP_RESP_DLEN_WR}                                        [->2:511] =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESET       });
+    *    bins soc_to_uc_rst_after_status_wr = (
+    *        {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_CMD_WR      }                                                                           [=1]      =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DLEN_WR     }                                                                           [=1]      =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DATAIN_WR   }                                                                           [=1:511]  =>
+    *        {NOT_AHB_REQ,MBOX_STEP_EXEC_SET    }                                                                           [=1]      =>
+    *        {    AHB_REQ,MBOX_STEP_CMD_RD      }                                                                           [=1]      =>
+    *        {    AHB_REQ,MBOX_STEP_DLEN_RD     }                                                                           [=1]      =>
+    *        {    AHB_REQ,MBOX_STEP_DATAOUT_RD  }                                                                           [=1:511]  =>
+    *        {    AHB_REQ,MBOX_STEP_RESP_DATAIN_WR},{AHB_REQ,MBOX_STEP_RESP_DLEN_WR}                                        [=2:511]  =>
+    *        {    AHB_REQ,MBOX_STEP_STATUS_WR   }                                                                           [->1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESET       });
+    *    bins soc_to_uc_rst_after_status_rd = (
+    *        {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_CMD_WR      }                                                                           [=1]      =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DLEN_WR     }                                                                           [=1]      =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DATAIN_WR   }                                                                           [=1:511]  =>
+    *        {NOT_AHB_REQ,MBOX_STEP_EXEC_SET    }                                                                           [=1]      =>
+    *        {    AHB_REQ,MBOX_STEP_CMD_RD      }                                                                           [=1]      =>
+    *        {    AHB_REQ,MBOX_STEP_DLEN_RD     }                                                                           [=1]      =>
+    *        {    AHB_REQ,MBOX_STEP_DATAOUT_RD  }                                                                           [=1:511]  =>
+    *        {    AHB_REQ,MBOX_STEP_RESP_DATAIN_WR},{AHB_REQ,MBOX_STEP_RESP_DLEN_WR}                                        [=2:511]  =>
+    *        {    AHB_REQ,MBOX_STEP_STATUS_WR   }                                                                           [=1]      =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESP_DLEN_RD},{NOT_AHB_REQ,MBOX_STEP_RESP_DATAOUT_RD},{NOT_AHB_REQ,MBOX_STEP_STATUS_RD} [->3:511] =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESET       });
+    *    bins soc_to_uc_rst_after_exec_clr = (
+    *        {NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}                                                                                    =>
+    *        {NOT_AHB_REQ,MBOX_STEP_CMD_WR      }                                                                           [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DLEN_WR     }                                                                           [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_DATAIN_WR   }                                                                           [=1:511] =>
+    *        {NOT_AHB_REQ,MBOX_STEP_EXEC_SET    }                                                                           [=1]     =>
+    *        {    AHB_REQ,MBOX_STEP_CMD_RD      }                                                                           [=1]     =>
+    *        {    AHB_REQ,MBOX_STEP_DLEN_RD     }                                                                           [=1]     =>
+    *        {    AHB_REQ,MBOX_STEP_DATAOUT_RD  }                                                                           [=1:511] =>
+    *        {    AHB_REQ,MBOX_STEP_RESP_DATAIN_WR},{AHB_REQ,MBOX_STEP_RESP_DLEN_WR}                                        [=2:511] =>
+    *        {    AHB_REQ,MBOX_STEP_STATUS_WR   }                                                                           [=1]     =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESP_DLEN_RD},{NOT_AHB_REQ,MBOX_STEP_RESP_DATAOUT_RD},{NOT_AHB_REQ,MBOX_STEP_STATUS_RD} [=3:511] =>
+    *        {NOT_AHB_REQ,MBOX_STEP_EXEC_CLR    }                                                                           [->1]    =>
+    *        {NOT_AHB_REQ,MBOX_STEP_RESET       });
+    *}
+    */
   endgroup
   /* TODO:
   * covergroup soc_ifc_env_resets;

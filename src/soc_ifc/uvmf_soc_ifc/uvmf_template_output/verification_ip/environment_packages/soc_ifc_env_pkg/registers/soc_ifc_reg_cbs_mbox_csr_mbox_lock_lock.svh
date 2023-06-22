@@ -106,6 +106,14 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock extends soc_ifc_reg_cbs_mbox_csr;
                         end
                         rm.mbox_data_q.delete();
                         rm.mbox_resp_q.delete();
+                        // Emulate the rd/wr ptr reset + mbox_dataout pre-fill
+                        // logic. Since datain writes (later in the flow) will 
+                        // trigger non-0 data to mbox_dataout (if applicable),
+                        // all we need to do here is reset mbox_dataout to account for the 
+                        // cases where no data is written or dlen == 0.
+                        rm.mbox_datain_to_dataout_predict.trigger();
+                        rm.mbox_dataout.dataout.predict(0, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
+                        rm.mbox_datain_to_dataout_predict.reset();
                     end
                     else begin
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] has no effect. value: 0x%x previous: 0x%x", kind, value, previous), UVM_FULL)
@@ -133,6 +141,14 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock extends soc_ifc_reg_cbs_mbox_csr;
                         end
                         rm.mbox_data_q.delete();
                         rm.mbox_resp_q.delete();
+                        // Emulate the rd/wr ptr reset + mbox_dataout pre-fill
+                        // logic. Since datain writes (later in the flow) will 
+                        // trigger non-0 data to mbox_dataout (if applicable),
+                        // all we need to do here is reset mbox_dataout to account for the 
+                        // cases where no data is written or dlen == 0.
+                        rm.mbox_datain_to_dataout_predict.trigger();
+                        rm.mbox_dataout.dataout.predict(0, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
+                        rm.mbox_datain_to_dataout_predict.reset();
                     end
                     else begin
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] has no effect. value: 0x%x previous: 0x%x", kind, value, previous), UVM_FULL)
