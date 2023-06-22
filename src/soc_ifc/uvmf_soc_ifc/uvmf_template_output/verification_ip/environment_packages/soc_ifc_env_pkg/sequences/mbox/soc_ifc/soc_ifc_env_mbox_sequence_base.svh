@@ -40,6 +40,18 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   uvm_status_e reg_sts;
   rand bit do_apb_lock_check;
   rand bit retry_failed_reg_axs;
+
+  typedef enum byte {
+    DLY_ZERO,
+    DLY_SMALL,
+    DLY_MEDIUM,
+    DLY_LARGE
+  } delay_scale_e;
+
+  rand delay_scale_e poll_delay, step_delay, data_delay;
+  rand bit rand_delay_en = 0;
+  rand int unsigned rand_delay = 0;
+
   // Certain random sequences force the command to be outside of the defined
   // options from mbox_cmd_e, such that truly random behavior does not violate
   // expected activity for the command opcode. To do this, we need to be able
@@ -78,6 +90,7 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   extern virtual task mbox_clr_execute();
   extern virtual task mbox_teardown();
 
+  extern virtual task                       do_rand_delay(input bit do_delay_randomize=1, input delay_scale_e scale=DLY_SMALL);
   extern virtual function void              set_pauser_prob_vals();
   extern virtual function bit               pauser_used_is_valid();
   extern virtual function caliptra_apb_user get_rand_user(int unsigned invalid_prob = FORCE_VALID_PAUSER);
@@ -106,6 +119,28 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   constraint apb_reg_check_c {do_apb_lock_check dist {0:/1, 1:/1};}
   constraint retry_failed_reg_c {retry_failed_reg_axs == 1'b1;}
 
+  // Constraint on the random delays injected between each step of the flow.
+  // By default, delays minimal to avoid protracting the test too much.
+  // Targeted sequences may override this constraint.
+  constraint delay_scale_c { poll_delay == DLY_MEDIUM;
+                             step_delay == DLY_SMALL;
+                             data_delay == DLY_ZERO; }
+  // These constraints conflict with each other - only the one that is applicable
+  // should be enabled; this is done in the definition of do_rand_delay
+  constraint zero_delay_c  { rand_delay == 0;}
+  constraint small_delay_c { rand_delay dist {   0  :/ 1000,
+                                              [1:3] :/ 100,
+                                              [4:7] :/ 25,
+                                              [8:31]:/ 1};}
+  constraint medium_delay_c { rand_delay dist {   0    :/ 10,
+                                               [1:7]   :/ 25,
+                                               [8:31]  :/ 100,
+                                               [32:255]:/ 1000};}
+  constraint large_delay_c { rand_delay dist {        15  :/ 1,
+                                              [ 16 : 255] :/ 25,
+                                              [ 256:1023] :/ 500,
+                                              [1024:8191] :/ 300};}
+
   //==========================================
   // Function:    new
   // Description: Constructor
@@ -124,6 +159,13 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
 
     // Assign probabilties of generating invalid PAUSER at different stages
     set_pauser_prob_vals();
+
+    // Default constraint mode is SMALL random delays, updated when doing
+    // the delay
+    this.zero_delay_c  .constraint_mode(0);
+    this.small_delay_c .constraint_mode(1);
+    this.medium_delay_c.constraint_mode(0);
+    this.large_delay_c .constraint_mode(0);
   endfunction
 
   //==========================================
@@ -176,13 +218,13 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
 
     `uvm_info("MBOX_SEQ", $sformatf("Initiating command sequence to mailbox with cmd: [%p] dlen: [%p] resp_dlen: [%p]", mbox_op_rand.cmd.cmd_e, mbox_op_rand.dlen, mbox_resp_expected_dlen), UVM_MEDIUM)
 
-    mbox_setup();
-    mbox_acquire_lock(op_sts);
-    mbox_set_cmd(mbox_op_rand);
-    mbox_push_datain();
-    mbox_execute();
-    mbox_poll_status();
-    mbox_clr_execute();
+    mbox_setup();               if (rand_delay_en) do_rand_delay(1, step_delay);
+    mbox_acquire_lock(op_sts);  if (rand_delay_en) do_rand_delay(1, step_delay);
+    mbox_set_cmd(mbox_op_rand); if (rand_delay_en) do_rand_delay(1, step_delay);
+    mbox_push_datain();         if (rand_delay_en) do_rand_delay(1, step_delay);
+    mbox_execute();             if (rand_delay_en) do_rand_delay(1, step_delay);
+    mbox_poll_status();         if (rand_delay_en) do_rand_delay(1, step_delay);
+    mbox_clr_execute();         if (rand_delay_en) do_rand_delay(1, step_delay);
     mbox_teardown();
 
   endtask
@@ -240,7 +282,7 @@ task soc_ifc_env_mbox_sequence_base::mbox_acquire_lock(output op_sts_e op_sts);
     report_reg_sts(reg_sts, "mbox_lock");
     // Wait for read data to return with '0', indicating no other agent has lock
     while (data[reg_model.mbox_csr_rm.mbox_lock.lock.get_lsb_pos()]) begin
-        configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200); // FIXME add more randomization on delay
+        do_rand_delay(1, poll_delay);
         reg_model.mbox_csr_rm.mbox_lock.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_LOCK)));
         report_reg_sts(reg_sts, "mbox_lock");
     end
@@ -279,7 +321,7 @@ task soc_ifc_env_mbox_sequence_base::mbox_acquire_lock(output op_sts_e op_sts);
             report_reg_sts(reg_sts, "mbox_lock");
             // Wait for read data to return with '0', indicating no other agent has lock
             while (data[reg_model.mbox_csr_rm.mbox_lock.lock.get_lsb_pos()]) begin
-                configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200);
+                do_rand_delay(1, poll_delay);
                 reg_model.mbox_csr_rm.mbox_lock.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(this.apb_user_obj));
                 report_reg_sts(reg_sts, "mbox_lock");
             end
@@ -333,6 +375,7 @@ task soc_ifc_env_mbox_sequence_base::mbox_set_cmd(input mbox_op_s op);
     reg_model.mbox_csr_rm.mbox_cmd.write(reg_sts, uvm_reg_data_t'(op.cmd), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_CMD)));
     report_reg_sts(reg_sts, "mbox_cmd");
     if (!pauser_used_is_valid()) begin
+        if (rand_delay_en) do_rand_delay(1, step_delay);
         reg_model.mbox_csr_rm.mbox_cmd.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
         report_reg_sts(reg_sts, "mbox_cmd");
         if (mbox_cmd_u'(data) == op.cmd)
@@ -343,9 +386,12 @@ task soc_ifc_env_mbox_sequence_base::mbox_set_cmd(input mbox_op_s op);
         end
     end
 
+    if (rand_delay_en) do_rand_delay(1, step_delay);
+
     reg_model.mbox_csr_rm.mbox_dlen.write(reg_sts, uvm_reg_data_t'(op.dlen), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_CMD)));
     report_reg_sts(reg_sts, "mbox_dlen");
     if (!pauser_used_is_valid()) begin
+        if (rand_delay_en) do_rand_delay(1, step_delay);
         reg_model.mbox_csr_rm.mbox_dlen.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
         report_reg_sts(reg_sts, "mbox_dlen");
         if (32'(data) == op.dlen)
@@ -379,10 +425,12 @@ task soc_ifc_env_mbox_sequence_base::mbox_push_datain();
         reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
         report_reg_sts(reg_sts, "mbox_datain");
         if (!pauser_used_is_valid() && retry_failed_reg_axs) begin
+            if (rand_delay_en) do_rand_delay(1, data_delay);
             `uvm_info("MBOX_SEQ", "Re-do datain write with valid PAUSER", UVM_HIGH)
             reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
             report_reg_sts(reg_sts, "mbox_datain");
         end
+        if (rand_delay_en) do_rand_delay(1, data_delay);
     end
 endtask
 
@@ -396,6 +444,7 @@ task soc_ifc_env_mbox_sequence_base::mbox_execute();
     reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_EXECUTE)));
     report_reg_sts(reg_sts, "mbox_execute");
     if (!pauser_used_is_valid() && retry_failed_reg_axs) begin
+        if (rand_delay_en) do_rand_delay(1, step_delay);
         reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
         report_reg_sts(reg_sts, "mbox_execute");
     end
@@ -441,14 +490,17 @@ task soc_ifc_env_mbox_sequence_base::mbox_read_resp_data();
     if (dlen != mbox_resp_expected_dlen) begin
         `uvm_error("MBOX_SEQ", $sformatf("SOC received response data with mbox_dlen [%0d] that does not match the expected data amount [%0d]!", dlen, mbox_resp_expected_dlen))
     end
+    if (rand_delay_en) do_rand_delay(1, step_delay);
     for (ii=0; ii < dlen; ii+=4) begin
         reg_model.mbox_csr_rm.mbox_dataout.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAOUT)));
         report_reg_sts(reg_sts, "mbox_dataout");
         if (!pauser_used_is_valid() && retry_failed_reg_axs) begin
+            if (rand_delay_en) do_rand_delay(1, data_delay);
             `uvm_info("MBOX_SEQ", "Re-do dataout read with valid PAUSER", UVM_HIGH)
             reg_model.mbox_csr_rm.mbox_dataout.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
             report_reg_sts(reg_sts, "mbox_dataout");
         end
+        if (rand_delay_en) do_rand_delay(1, data_delay);
     end
 endtask
 
@@ -466,7 +518,7 @@ task soc_ifc_env_mbox_sequence_base::mbox_poll_status();
 
     // A force-unlock would cause state->MBOX_IDLE, so we exit the polling loop
     do begin
-        configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200);
+        do_rand_delay(1, poll_delay);
         mbox_check_status(data, state);
     end while (data == CMD_BUSY && state != MBOX_IDLE);
 
@@ -504,9 +556,12 @@ task soc_ifc_env_mbox_sequence_base::mbox_clr_execute();
     reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, uvm_reg_data_t'(0), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_EXECUTE)));
     report_reg_sts(reg_sts, "mbox_execute");
     if (!pauser_used_is_valid() && retry_failed_reg_axs) begin
+        if (rand_delay_en) do_rand_delay(1, step_delay);
         reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, uvm_reg_data_t'(0), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
         report_reg_sts(reg_sts, "mbox_execute");
     end
+
+    if (rand_delay_en) do_rand_delay(1, step_delay);
 
     // Check for any non-fatal mailbox protocol errors that occurred during the test
     reg_model.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.read(reg_sts, err, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(500)));
@@ -532,6 +587,32 @@ endtask
 task soc_ifc_env_mbox_sequence_base::mbox_teardown();
     // Summary at sequence end
     `uvm_info("MBOX_SEQ", $sformatf("Count of mailbox accesses performed with invalid PAUSER: %0d", hit_invalid_pauser_count), UVM_MEDIUM)
+endtask
+
+//==========================================
+// Function:    do_rand_delay
+// Description: Use the class variable "rand_delay"
+//              to inject random stalls between various stages
+//              of the sequence.
+//              If do_delay_randomize is set to 1, the value
+//              of rand_delay is re-randomized (according to
+//              class constraints), otherwise the previous value
+//              is used.
+//==========================================
+task soc_ifc_env_mbox_sequence_base::do_rand_delay(input bit do_delay_randomize=1, input delay_scale_e scale=DLY_SMALL);
+    if (do_delay_randomize) begin
+        // Update delay constraint based on delay mode
+        this.zero_delay_c  .constraint_mode(scale == DLY_ZERO);
+        this.small_delay_c .constraint_mode(scale == DLY_SMALL);
+        this.medium_delay_c.constraint_mode(scale == DLY_MEDIUM);
+        this.large_delay_c .constraint_mode(scale == DLY_LARGE);
+        if (!this.randomize(rand_delay))
+            `uvm_error("MBOX_SEQ", $sformatf("Failed to randomize rand_delay with scale %p", scale))
+        else
+            `uvm_info("MBOX_SEQ", $sformatf("Generated rand delay value: [%0d] cycles from constraint scale %p", rand_delay, scale), UVM_DEBUG)
+    end
+    if (rand_delay != 0)
+        configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(rand_delay);
 endtask
 
 //==========================================

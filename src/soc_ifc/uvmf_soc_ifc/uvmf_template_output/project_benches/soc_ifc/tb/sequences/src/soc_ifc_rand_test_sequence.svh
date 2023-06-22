@@ -52,6 +52,8 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
       IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM,
       IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_SMALL_UNLOCK,
       IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM_UNLOCK,
+      IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_SMALL,
+      IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_MEDIUM,
       IDX_SOC_IFC_ENV_MBOX_TOP_DLEN_VIOLATION,
       IDX_SOC_IFC_ENV_MBOX_TOP_MULTI_AGENT,
       IDX_SOC_IFC_ENV_CPTRA_MBOX_TOP_RAND_SMALL,
@@ -77,6 +79,8 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM        := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_SMALL_UNLOCK  := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM_UNLOCK := 25,
+          IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_SMALL          := 25,
+          IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_MEDIUM         := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_DLEN_VIOLATION            := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_MULTI_AGENT               := 10,
           IDX_SOC_IFC_ENV_CPTRA_MBOX_TOP_RAND_SMALL          := 25,
@@ -198,6 +202,10 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
                 obj = soc_ifc_env_top_mbox_rand_pauser_small_unlock_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM_UNLOCK:
                 obj = soc_ifc_env_top_mbox_rand_pauser_medium_unlock_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_SMALL:
+                obj = soc_ifc_env_top_mbox_rand_delay_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_MEDIUM:
+                obj = soc_ifc_env_top_mbox_rand_delay_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_TOP_DLEN_VIOLATION:
                 obj = soc_ifc_env_top_mbox_dlen_violation_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_TOP_MULTI_AGENT:
