@@ -78,7 +78,6 @@ reg {
     rw_ro_hw mask_iccm_ecc_unc=0;     /* Uncorrectable double-bit error in ICCM */
     rw_ro_hw mask_dccm_ecc_unc=0;     /* Uncorrectable double-bit error in DCCM */
     rw_ro_hw mask_nmi_pin=0;          /* Non-Maskable Interrupt due to WDT timeout */
-    rw_ro_hw mask_rsvd[29]=0; 
 } internal_hw_error_fatal_mask;
 reg {
     name = "Hardware Error Non-Fatal Mask";
@@ -93,7 +92,6 @@ reg {
     rw_ro_hw mask_mbox_prot_no_lock=0; /* SOC access while not locked */
     rw_ro_hw mask_mbox_prot_ooo=0;     /* Register access out-of-order */
     rw_ro_hw mask_mbox_ecc_unc=0;      /* Uncorrectable double-bit error in DCCM */
-    rw_ro_hw mask_rsvd[29]=0; 
 } internal_hw_error_non_fatal_mask;
 reg {
     name = "Firmware Error Fatal Mask";

@@ -190,16 +190,6 @@ module sha512_reg (
         } SHA512_CTRL;
         struct packed{
             struct packed{
-                logic next;
-                logic load_next;
-            } READY;
-            struct packed{
-                logic next;
-                logic load_next;
-            } VALID;
-        } SHA512_STATUS;
-        struct packed{
-            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } BLOCK;
@@ -495,14 +485,6 @@ module sha512_reg (
                 logic value;
             } LAST;
         } SHA512_CTRL;
-        struct packed{
-            struct packed{
-                logic value;
-            } READY;
-            struct packed{
-                logic value;
-            } VALID;
-        } SHA512_STATUS;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -820,44 +802,6 @@ module sha512_reg (
         end
     end
     assign hwif_out.SHA512_CTRL.LAST.value = field_storage.SHA512_CTRL.LAST.value;
-    // Field: sha512_reg.SHA512_STATUS.READY
-    always_comb begin
-        automatic logic [0:0] next_c = field_storage.SHA512_STATUS.READY.value;
-        automatic logic load_next_c = '0;
-        if(1) begin // HW Write
-            next_c = hwif_in.SHA512_STATUS.READY.next;
-            load_next_c = '1;
-        end
-        field_combo.SHA512_STATUS.READY.next = next_c;
-        field_combo.SHA512_STATUS.READY.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
-            field_storage.SHA512_STATUS.READY.value <= 'h0;
-        end else if(field_combo.SHA512_STATUS.READY.load_next) begin
-            field_storage.SHA512_STATUS.READY.value <= field_combo.SHA512_STATUS.READY.next;
-        end
-    end
-    assign hwif_out.SHA512_STATUS.READY.value = field_storage.SHA512_STATUS.READY.value;
-    // Field: sha512_reg.SHA512_STATUS.VALID
-    always_comb begin
-        automatic logic [0:0] next_c = field_storage.SHA512_STATUS.VALID.value;
-        automatic logic load_next_c = '0;
-        if(1) begin // HW Write
-            next_c = hwif_in.SHA512_STATUS.VALID.next;
-            load_next_c = '1;
-        end
-        field_combo.SHA512_STATUS.VALID.next = next_c;
-        field_combo.SHA512_STATUS.VALID.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
-            field_storage.SHA512_STATUS.VALID.value <= 'h0;
-        end else if(field_combo.SHA512_STATUS.VALID.load_next) begin
-            field_storage.SHA512_STATUS.VALID.value <= field_combo.SHA512_STATUS.VALID.next;
-        end
-    end
-    assign hwif_out.SHA512_STATUS.VALID.value = field_storage.SHA512_STATUS.VALID.value;
     for(genvar i0=0; i0<32; i0++) begin
         // Field: sha512_reg.SHA512_BLOCK[].BLOCK
         always_comb begin
@@ -1987,8 +1931,8 @@ module sha512_reg (
     for(genvar i0=0; i0<2; i0++) begin
         assign readback_array[i0*1 + 2][31:0] = (decoded_reg_strb.SHA512_VERSION[i0] && !decoded_req_is_wr) ? hwif_in.SHA512_VERSION[i0].VERSION.next : '0;
     end
-    assign readback_array[4][0:0] = (decoded_reg_strb.SHA512_STATUS && !decoded_req_is_wr) ? field_storage.SHA512_STATUS.READY.value : '0;
-    assign readback_array[4][1:1] = (decoded_reg_strb.SHA512_STATUS && !decoded_req_is_wr) ? field_storage.SHA512_STATUS.VALID.value : '0;
+    assign readback_array[4][0:0] = (decoded_reg_strb.SHA512_STATUS && !decoded_req_is_wr) ? hwif_in.SHA512_STATUS.READY.next : '0;
+    assign readback_array[4][1:1] = (decoded_reg_strb.SHA512_STATUS && !decoded_req_is_wr) ? hwif_in.SHA512_STATUS.VALID.next : '0;
     assign readback_array[4][31:2] = '0;
     for(genvar i0=0; i0<16; i0++) begin
         assign readback_array[i0*1 + 5][31:0] = (decoded_reg_strb.SHA512_DIGEST[i0] && !decoded_req_is_wr) ? field_storage.SHA512_DIGEST[i0].DIGEST.value : '0;

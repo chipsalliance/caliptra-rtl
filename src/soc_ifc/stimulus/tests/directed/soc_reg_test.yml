@@ -17,7 +17,7 @@ plusargs:
   - +SOC_IFC_TEST='soc_reg_test'
 
 testname: soc_reg_test
-seed: 1680126531
-# seed: ${PLAYBOOK_RANDOM_SEED}
+seed: ${PLAYBOOK_RANDOM_SEED}
+# seed: 1680126531
 # seed: 1679445419 
 # seed: 1680126531

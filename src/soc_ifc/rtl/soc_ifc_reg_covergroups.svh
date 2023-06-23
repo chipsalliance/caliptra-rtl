@@ -30,14 +30,12 @@
     covergroup soc_ifc_reg__CPTRA_HW_ERROR_FATAL_fld_cg with function sample(
     input bit [1-1:0] iccm_ecc_unc,
     input bit [1-1:0] dccm_ecc_unc,
-    input bit [1-1:0] nmi_pin,
-    input bit [29-1:0] rsvd
+    input bit [1-1:0] nmi_pin
     );
         option.per_instance = 1;
         iccm_ecc_unc_cp : coverpoint iccm_ecc_unc;
         dccm_ecc_unc_cp : coverpoint dccm_ecc_unc;
         nmi_pin_cp : coverpoint nmi_pin;
-        rsvd_cp : coverpoint rsvd;
 
     endgroup
 
@@ -56,14 +54,12 @@
     covergroup soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL_fld_cg with function sample(
     input bit [1-1:0] mbox_prot_no_lock,
     input bit [1-1:0] mbox_prot_ooo,
-    input bit [1-1:0] mbox_ecc_unc,
-    input bit [29-1:0] rsvd
+    input bit [1-1:0] mbox_ecc_unc
     );
         option.per_instance = 1;
         mbox_prot_no_lock_cp : coverpoint mbox_prot_no_lock;
         mbox_prot_ooo_cp : coverpoint mbox_prot_ooo;
         mbox_ecc_unc_cp : coverpoint mbox_ecc_unc;
-        rsvd_cp : coverpoint rsvd;
 
     endgroup
 
@@ -1257,15 +1253,13 @@
     covergroup soc_ifc_reg__internal_hw_error_fatal_mask_fld_cg with function sample(
     input bit [1-1:0] mask_iccm_ecc_unc,
     input bit [1-1:0] mask_dccm_ecc_unc,
-    input bit [1-1:0] mask_nmi_pin,
-    input bit [29-1:0] mask_rsvd
+    input bit [1-1:0] mask_nmi_pin
     );
         option.per_instance = 1;
         option.auto_bin_max = 64;
         mask_iccm_ecc_unc_cp : coverpoint mask_iccm_ecc_unc;
         mask_dccm_ecc_unc_cp : coverpoint mask_dccm_ecc_unc;
         mask_nmi_pin_cp : coverpoint mask_nmi_pin;
-        mask_rsvd_cp : coverpoint mask_rsvd;
 
     endgroup
 
@@ -1284,15 +1278,13 @@
     covergroup soc_ifc_reg__internal_hw_error_non_fatal_mask_fld_cg with function sample(
     input bit [1-1:0] mask_mbox_prot_no_lock,
     input bit [1-1:0] mask_mbox_prot_ooo,
-    input bit [1-1:0] mask_mbox_ecc_unc,
-    input bit [29-1:0] mask_rsvd
+    input bit [1-1:0] mask_mbox_ecc_unc
     );
         option.per_instance = 1;
         option.auto_bin_max = 64;
         mask_mbox_prot_no_lock_cp : coverpoint mask_mbox_prot_no_lock;
         mask_mbox_prot_ooo_cp : coverpoint mask_mbox_prot_ooo;
         mask_mbox_ecc_unc_cp : coverpoint mask_mbox_ecc_unc;
-        mask_rsvd_cp : coverpoint mask_rsvd;
 
     endgroup
 
