@@ -51,6 +51,20 @@ GCC:
 Other:
  - Playbook (Microsoft Internal workflow management tool)
 
+### **RISCV Toolchain installation** ###
+Note that there is significant configurability when installing the RISCV toolchain.
+These instructions may be used to create a RISCV installation that will be compatible
+with the provided Makefile for compiling test C programs.
+
+1. Install from this repository:
+    - https://github.com/riscv-collab/riscv-gnu-toolchain
+    - Follow the included README in that repository for installation instructions
+1. The most recently tested toolchain build that was confirmed to work was 2023-04-29
+    - https://github.com/riscv-collab/riscv-gnu-toolchain/releases/tag/2023.04.25
+1. A compatible tool installation requires newlib cross-compiler, multilib support, and the zicsr/zifencei extensions. Use this configure command:
+    - `./configure --enable-multilib --prefix=/path/to/tools/riscv-gnu/2023.04.29 --with-multilib-generator="rv32imc-ilp32--a*zicsr*zifencei"`
+1. Use `make` instead of `make linux` to install the tool (using newlib option)
+
 ## **ENVIRONMENT VARIABLES** ##
 Required for simulation:<BR>
 `CALIPTRA_WORKSPACE`: Defines the absolute path to the directory where the Verilator "scratch" output directory will be created. Recommended to define as the absolute path to the directory that contains the Project repository root (called "Caliptra" or "caliptra-rtl")<BR>
