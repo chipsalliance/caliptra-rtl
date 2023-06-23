@@ -361,7 +361,7 @@ always_comb begin : mbox_fsm_combo
             end
         end
         MBOX_ERROR: begin
-            mbox_protocol_error_nxt = mbox_protocol_error;
+            mbox_protocol_error_nxt = '0;
             if (arc_FORCE_MBOX_UNLOCK) begin
                 mbox_fsm_ns = MBOX_IDLE;
                 rst_mbox_wrptr = 1;
