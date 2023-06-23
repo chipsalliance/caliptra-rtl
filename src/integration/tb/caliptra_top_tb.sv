@@ -121,6 +121,8 @@ module caliptra_top_tb (
     logic                                qspi_clk;
     logic [`CALIPTRA_QSPI_CS_WIDTH-1:0]  qspi_cs_n;
     wire  [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_data;
+    logic [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_data_host_to_device, qspi_data_device_to_host;
+    logic [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_data_host_to_device_en;
 
 `ifdef CALIPTRA_INTERNAL_UART
     logic uart_loopback;
@@ -873,9 +875,11 @@ caliptra_top caliptra_top_dut (
     .PWDATA(PWDATA),
     .PWRITE(PWRITE),
 
-    .qspi_clk_o(qspi_clk),
-    .qspi_cs_no(qspi_cs_n),
-    .qspi_d_io(qspi_data),
+    .qspi_clk_o (qspi_clk),
+    .qspi_cs_no (qspi_cs_n),
+    .qspi_d_i   (qspi_data_device_to_host),
+    .qspi_d_o   (qspi_data_host_to_device),
+    .qspi_d_en_o(qspi_data_host_to_device_en),
 
 `ifdef CALIPTRA_INTERNAL_UART
     .uart_tx(uart_loopback),
@@ -940,6 +944,15 @@ physical_rng physical_rng (
     //=========================================================================-
     // SPI Flash
     //=========================================================================-
+for (genvar ii = 0; ii < `CALIPTRA_QSPI_IO_WIDTH; ii += 1) begin: gen_qspi_io
+  assign qspi_data[ii] = qspi_data_host_to_device_en[ii]
+      ? qspi_data_host_to_device[ii]
+      : 1'bz;
+  assign qspi_data_device_to_host[ii] = qspi_data_host_to_device_en[ii]
+      ? 1'bz
+      : qspi_data[ii];
+end
+
 localparam logic [15:0] DeviceId0 = 16'hF10A;
 localparam logic [15:0] DeviceId1 = 16'hF10B;
 
