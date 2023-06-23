@@ -126,8 +126,6 @@
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_DCCM_ECC_UNC_MASK                                 (0x2)
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_NMI_PIN_LOW                                       (2)
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_NMI_PIN_MASK                                      (0x4)
-#define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                          (3)
-#define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                         (0xfffffff8)
 #define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL                              (0x30030004)
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL                                               (0x4)
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL_MBOX_PROT_NO_LOCK_LOW                         (0)
@@ -136,8 +134,6 @@
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL_MBOX_PROT_OOO_MASK                            (0x2)
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL_MBOX_ECC_UNC_LOW                              (2)
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL_MBOX_ECC_UNC_MASK                             (0x4)
-#define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL_RSVD_LOW                                      (3)
-#define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL_RSVD_MASK                                     (0xfffffff8)
 #define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_FW_ERROR_FATAL                                  (0x30030008)
 #define GENERIC_AND_FUSE_REG_CPTRA_FW_ERROR_FATAL                                                   (0x8)
 #define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_FW_ERROR_NON_FATAL                              (0x3003000c)
@@ -498,6 +494,12 @@
 #define GENERIC_AND_FUSE_REG_FUSE_LIFE_CYCLE                                                        (0x33c)
 #define GENERIC_AND_FUSE_REG_FUSE_LIFE_CYCLE_LIFE_CYCLE_LOW                                         (0)
 #define GENERIC_AND_FUSE_REG_FUSE_LIFE_CYCLE_LIFE_CYCLE_MASK                                        (0x3)
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_LMS_VERIFY                                       (0x30030340)
+#define GENERIC_AND_FUSE_REG_FUSE_LMS_VERIFY                                                        (0x340)
+#define GENERIC_AND_FUSE_REG_FUSE_LMS_VERIFY_LMS_VERIFY_LOW                                         (0)
+#define GENERIC_AND_FUSE_REG_FUSE_LMS_VERIFY_LMS_VERIFY_MASK                                        (0x1)
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_LMS_REVOCATION                                   (0x30030344)
+#define GENERIC_AND_FUSE_REG_FUSE_LMS_REVOCATION                                                    (0x344)
 
 
 #endif

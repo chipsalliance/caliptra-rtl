@@ -20,6 +20,52 @@ stages:
     legal_header: false
     legal_header_warning: false
 
+    # Run repo checks before invoking the actual test steps for earlier
+    # detection of basic issues
+    pre_test_steps:
+      - script: |
+          source /home/continuous_integration/release/enviro/etc/enviro_startup.bash
+          module load settings/tsd/pipelines/frontend
+          export PYREQUIREMENTS="$(workspace_root)/pipelines/require-progress.txt"
+          PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
+
+          # Run the license checker script
+          enter-workspace tmp_ws 'echo "running $AHA_POC_REPO/tools/scripts/licenseHeaderCheck.sh" && cd $AHA_POC_REPO && bash $AHA_POC_REPO/tools/scripts/licenseHeaderCheck.sh'
+
+        displayName: 'LICENSE_HEADER_CHECK'
+        enabled: true 
+        timeoutInMinutes: 5
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+      - script: |
+          source /home/continuous_integration/release/enviro/etc/enviro_startup.bash
+          module load settings/tsd/pipelines/frontend
+          module load tools/python/python3/3.9.2
+          export PYREQUIREMENTS="$(workspace_root)/pipelines/require-progress.txt"
+          PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
+
+          enter-workspace tmp_ws 'echo "running $AHA_POC_REPO/tools/scripts/promote_rdl_check.sh" && bash $AHA_POC_REPO/tools/scripts/promote_rdl_check.sh'
+
+        displayName: 'RDL GEN CHECK'
+        enabled: true
+        timeoutInMinutes: 20
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+      - script: |
+          source /home/continuous_integration/release/enviro/etc/enviro_startup.bash
+          module load settings/tsd/pipelines/frontend
+          export PYREQUIREMENTS="$(workspace_root)/pipelines/require-progress.txt"
+          PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
+
+          # Run the Filelist generator script
+          enter-workspace tmp_ws 'echo "running $AHA_POC_REPO/tools/scripts/promote_file_list_check.sh" && bash $AHA_POC_REPO/tools/scripts/promote_file_list_check.sh'
+
+        displayName: 'FILE LIST CHECK'
+        enabled: true
+        timeoutInMinutes: 90
+
     build_and_sim_map:
     - integration_top_vcs:
       - display_name: 'Build integration_lib with VCS'
@@ -110,41 +156,6 @@ stages:
     top_repo: ''
 
     additional_test_steps:
-      - file_list_check:
-        - display_name: 'FILE LIST CHECK'
-        - enabled: true
-        - run_in_workspace: True
-        - timeout: 90
-        - commands:
-            - 'set -e'
-            - 'cd \$AHA_POC_REPO'
-
-            # Run the Filelist generator script
-            - 'bash \$AHA_POC_REPO/tools/scripts/gen_pb_file_lists.sh'
-
-            # Check for any file changes
-            - 'if [[ \$(git status -s --untracked-files=all --ignored=traditional | grep \"\\.vf\" | wc -l) -gt 0 ]]; then
-                 echo \"Regenerating VF file lists produced some file changes:\";
-                 git status -s --untracked-files=all --ignored=traditional | grep \"\\.vf\";
-                 git diff;
-                 echo \"*****************************************\";
-                 echo \"Review above changes locally and resubmit pipeline\";
-                 echo \"(Hint: Check \$AHA_POC_REPO for the above changes)\";
-                 echo \"*****************************************\";
-                 exit 1;
-               fi'
-      - license_header_check:
-        - display_name: 'LICENSE_HEADER_CHECK'
-        - enabled: true 
-        - run_in_workspace: True
-        - timeout: 5
-        - commands: 
-          - 'set -e'
-          - 'cd \$AHA_POC_REPO'
-
-          # Run the license checker script
-          - 'bash \$AHA_POC_REPO/tools/scripts/licenseHeaderCheck.sh'
-
       - verilator_smoke_test:
         - display_name: 'Verilator Smoke Test'
         - enabled: true

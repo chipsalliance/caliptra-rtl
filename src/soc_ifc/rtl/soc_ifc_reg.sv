@@ -331,10 +331,6 @@ module soc_ifc_reg (
                 logic next;
                 logic load_next;
             } nmi_pin;
-            struct packed{
-                logic [28:0] next;
-                logic load_next;
-            } rsvd;
         } CPTRA_HW_ERROR_FATAL;
         struct packed{
             struct packed{
@@ -349,10 +345,6 @@ module soc_ifc_reg (
                 logic next;
                 logic load_next;
             } mbox_ecc_unc;
-            struct packed{
-                logic [28:0] next;
-                logic load_next;
-            } rsvd;
         } CPTRA_HW_ERROR_NON_FATAL;
         struct packed{
             struct packed{
@@ -689,10 +681,6 @@ module soc_ifc_reg (
                 logic next;
                 logic load_next;
             } mask_nmi_pin;
-            struct packed{
-                logic [28:0] next;
-                logic load_next;
-            } mask_rsvd;
         } internal_hw_error_fatal_mask;
         struct packed{
             struct packed{
@@ -707,10 +695,6 @@ module soc_ifc_reg (
                 logic next;
                 logic load_next;
             } mask_mbox_ecc_unc;
-            struct packed{
-                logic [28:0] next;
-                logic load_next;
-            } mask_rsvd;
         } internal_hw_error_non_fatal_mask;
         struct packed{
             struct packed{
@@ -1166,9 +1150,6 @@ module soc_ifc_reg (
             struct packed{
                 logic value;
             } nmi_pin;
-            struct packed{
-                logic [28:0] value;
-            } rsvd;
         } CPTRA_HW_ERROR_FATAL;
         struct packed{
             struct packed{
@@ -1180,9 +1161,6 @@ module soc_ifc_reg (
             struct packed{
                 logic value;
             } mbox_ecc_unc;
-            struct packed{
-                logic [28:0] value;
-            } rsvd;
         } CPTRA_HW_ERROR_NON_FATAL;
         struct packed{
             struct packed{
@@ -1460,9 +1438,6 @@ module soc_ifc_reg (
             struct packed{
                 logic value;
             } mask_nmi_pin;
-            struct packed{
-                logic [28:0] value;
-            } mask_rsvd;
         } internal_hw_error_fatal_mask;
         struct packed{
             struct packed{
@@ -1474,9 +1449,6 @@ module soc_ifc_reg (
             struct packed{
                 logic value;
             } mask_mbox_ecc_unc;
-            struct packed{
-                logic [28:0] value;
-            } mask_rsvd;
         } internal_hw_error_non_fatal_mask;
         struct packed{
             struct packed{
@@ -1856,28 +1828,6 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.CPTRA_HW_ERROR_FATAL.nmi_pin.value = field_storage.CPTRA_HW_ERROR_FATAL.nmi_pin.value;
-    // Field: soc_ifc_reg.CPTRA_HW_ERROR_FATAL.rsvd
-    always_comb begin
-        automatic logic [28:0] next_c = field_storage.CPTRA_HW_ERROR_FATAL.rsvd.value;
-        automatic logic load_next_c = '0;
-        if(decoded_reg_strb.CPTRA_HW_ERROR_FATAL && decoded_req_is_wr) begin // SW write 1 clear
-            next_c = field_storage.CPTRA_HW_ERROR_FATAL.rsvd.value & ~(decoded_wr_data[31:3] & decoded_wr_biten[31:3]);
-            load_next_c = '1;
-        end else if(hwif_in.CPTRA_HW_ERROR_FATAL.rsvd.we) begin // HW Write - we
-            next_c = hwif_in.CPTRA_HW_ERROR_FATAL.rsvd.next;
-            load_next_c = '1;
-        end
-        field_combo.CPTRA_HW_ERROR_FATAL.rsvd.next = next_c;
-        field_combo.CPTRA_HW_ERROR_FATAL.rsvd.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
-        if(~hwif_in.cptra_pwrgood) begin
-            field_storage.CPTRA_HW_ERROR_FATAL.rsvd.value <= 'h0;
-        end else if(field_combo.CPTRA_HW_ERROR_FATAL.rsvd.load_next) begin
-            field_storage.CPTRA_HW_ERROR_FATAL.rsvd.value <= field_combo.CPTRA_HW_ERROR_FATAL.rsvd.next;
-        end
-    end
-    assign hwif_out.CPTRA_HW_ERROR_FATAL.rsvd.value = field_storage.CPTRA_HW_ERROR_FATAL.rsvd.value;
     // Field: soc_ifc_reg.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock
     always_comb begin
         automatic logic [0:0] next_c = field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.value;
@@ -1944,28 +1894,6 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc.value = field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc.value;
-    // Field: soc_ifc_reg.CPTRA_HW_ERROR_NON_FATAL.rsvd
-    always_comb begin
-        automatic logic [28:0] next_c = field_storage.CPTRA_HW_ERROR_NON_FATAL.rsvd.value;
-        automatic logic load_next_c = '0;
-        if(decoded_reg_strb.CPTRA_HW_ERROR_NON_FATAL && decoded_req_is_wr) begin // SW write 1 clear
-            next_c = field_storage.CPTRA_HW_ERROR_NON_FATAL.rsvd.value & ~(decoded_wr_data[31:3] & decoded_wr_biten[31:3]);
-            load_next_c = '1;
-        end else if(hwif_in.CPTRA_HW_ERROR_NON_FATAL.rsvd.we) begin // HW Write - we
-            next_c = hwif_in.CPTRA_HW_ERROR_NON_FATAL.rsvd.next;
-            load_next_c = '1;
-        end
-        field_combo.CPTRA_HW_ERROR_NON_FATAL.rsvd.next = next_c;
-        field_combo.CPTRA_HW_ERROR_NON_FATAL.rsvd.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
-        if(~hwif_in.cptra_pwrgood) begin
-            field_storage.CPTRA_HW_ERROR_NON_FATAL.rsvd.value <= 'h0;
-        end else if(field_combo.CPTRA_HW_ERROR_NON_FATAL.rsvd.load_next) begin
-            field_storage.CPTRA_HW_ERROR_NON_FATAL.rsvd.value <= field_combo.CPTRA_HW_ERROR_NON_FATAL.rsvd.next;
-        end
-    end
-    assign hwif_out.CPTRA_HW_ERROR_NON_FATAL.rsvd.value = field_storage.CPTRA_HW_ERROR_NON_FATAL.rsvd.value;
     // Field: soc_ifc_reg.CPTRA_FW_ERROR_FATAL.error_code
     always_comb begin
         automatic logic [31:0] next_c = field_storage.CPTRA_FW_ERROR_FATAL.error_code.value;
@@ -3163,25 +3091,6 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.internal_hw_error_fatal_mask.mask_nmi_pin.value = field_storage.internal_hw_error_fatal_mask.mask_nmi_pin.value;
-    // Field: soc_ifc_reg.internal_hw_error_fatal_mask.mask_rsvd
-    always_comb begin
-        automatic logic [28:0] next_c = field_storage.internal_hw_error_fatal_mask.mask_rsvd.value;
-        automatic logic load_next_c = '0;
-        if(decoded_reg_strb.internal_hw_error_fatal_mask && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
-            next_c = (field_storage.internal_hw_error_fatal_mask.mask_rsvd.value & ~decoded_wr_biten[31:3]) | (decoded_wr_data[31:3] & decoded_wr_biten[31:3]);
-            load_next_c = '1;
-        end
-        field_combo.internal_hw_error_fatal_mask.mask_rsvd.next = next_c;
-        field_combo.internal_hw_error_fatal_mask.mask_rsvd.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
-        if(~hwif_in.cptra_rst_b) begin
-            field_storage.internal_hw_error_fatal_mask.mask_rsvd.value <= 'h0;
-        end else if(field_combo.internal_hw_error_fatal_mask.mask_rsvd.load_next) begin
-            field_storage.internal_hw_error_fatal_mask.mask_rsvd.value <= field_combo.internal_hw_error_fatal_mask.mask_rsvd.next;
-        end
-    end
-    assign hwif_out.internal_hw_error_fatal_mask.mask_rsvd.value = field_storage.internal_hw_error_fatal_mask.mask_rsvd.value;
     // Field: soc_ifc_reg.internal_hw_error_non_fatal_mask.mask_mbox_prot_no_lock
     always_comb begin
         automatic logic [0:0] next_c = field_storage.internal_hw_error_non_fatal_mask.mask_mbox_prot_no_lock.value;
@@ -3239,25 +3148,6 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.internal_hw_error_non_fatal_mask.mask_mbox_ecc_unc.value = field_storage.internal_hw_error_non_fatal_mask.mask_mbox_ecc_unc.value;
-    // Field: soc_ifc_reg.internal_hw_error_non_fatal_mask.mask_rsvd
-    always_comb begin
-        automatic logic [28:0] next_c = field_storage.internal_hw_error_non_fatal_mask.mask_rsvd.value;
-        automatic logic load_next_c = '0;
-        if(decoded_reg_strb.internal_hw_error_non_fatal_mask && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
-            next_c = (field_storage.internal_hw_error_non_fatal_mask.mask_rsvd.value & ~decoded_wr_biten[31:3]) | (decoded_wr_data[31:3] & decoded_wr_biten[31:3]);
-            load_next_c = '1;
-        end
-        field_combo.internal_hw_error_non_fatal_mask.mask_rsvd.next = next_c;
-        field_combo.internal_hw_error_non_fatal_mask.mask_rsvd.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
-        if(~hwif_in.cptra_rst_b) begin
-            field_storage.internal_hw_error_non_fatal_mask.mask_rsvd.value <= 'h0;
-        end else if(field_combo.internal_hw_error_non_fatal_mask.mask_rsvd.load_next) begin
-            field_storage.internal_hw_error_non_fatal_mask.mask_rsvd.value <= field_combo.internal_hw_error_non_fatal_mask.mask_rsvd.next;
-        end
-    end
-    assign hwif_out.internal_hw_error_non_fatal_mask.mask_rsvd.value = field_storage.internal_hw_error_non_fatal_mask.mask_rsvd.value;
     // Field: soc_ifc_reg.internal_fw_error_fatal_mask.mask
     always_comb begin
         automatic logic [31:0] next_c = field_storage.internal_fw_error_fatal_mask.mask.value;
@@ -5106,11 +4996,11 @@ module soc_ifc_reg (
     assign readback_array[0][0:0] = (decoded_reg_strb.CPTRA_HW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.value : '0;
     assign readback_array[0][1:1] = (decoded_reg_strb.CPTRA_HW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.value : '0;
     assign readback_array[0][2:2] = (decoded_reg_strb.CPTRA_HW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_FATAL.nmi_pin.value : '0;
-    assign readback_array[0][31:3] = (decoded_reg_strb.CPTRA_HW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_FATAL.rsvd.value : '0;
+    assign readback_array[0][31:3] = '0;
     assign readback_array[1][0:0] = (decoded_reg_strb.CPTRA_HW_ERROR_NON_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.value : '0;
     assign readback_array[1][1:1] = (decoded_reg_strb.CPTRA_HW_ERROR_NON_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo.value : '0;
     assign readback_array[1][2:2] = (decoded_reg_strb.CPTRA_HW_ERROR_NON_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc.value : '0;
-    assign readback_array[1][31:3] = (decoded_reg_strb.CPTRA_HW_ERROR_NON_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_NON_FATAL.rsvd.value : '0;
+    assign readback_array[1][31:3] = '0;
     assign readback_array[2][31:0] = (decoded_reg_strb.CPTRA_FW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_FW_ERROR_FATAL.error_code.value : '0;
     assign readback_array[3][31:0] = (decoded_reg_strb.CPTRA_FW_ERROR_NON_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_FW_ERROR_NON_FATAL.error_code.value : '0;
     assign readback_array[4][31:0] = (decoded_reg_strb.CPTRA_HW_ERROR_ENC && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_ENC.error_code.value : '0;
@@ -5224,11 +5114,11 @@ module soc_ifc_reg (
     assign readback_array[133][0:0] = (decoded_reg_strb.internal_hw_error_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_fatal_mask.mask_iccm_ecc_unc.value : '0;
     assign readback_array[133][1:1] = (decoded_reg_strb.internal_hw_error_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_fatal_mask.mask_dccm_ecc_unc.value : '0;
     assign readback_array[133][2:2] = (decoded_reg_strb.internal_hw_error_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_fatal_mask.mask_nmi_pin.value : '0;
-    assign readback_array[133][31:3] = (decoded_reg_strb.internal_hw_error_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_fatal_mask.mask_rsvd.value : '0;
+    assign readback_array[133][31:3] = '0;
     assign readback_array[134][0:0] = (decoded_reg_strb.internal_hw_error_non_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_non_fatal_mask.mask_mbox_prot_no_lock.value : '0;
     assign readback_array[134][1:1] = (decoded_reg_strb.internal_hw_error_non_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_non_fatal_mask.mask_mbox_prot_ooo.value : '0;
     assign readback_array[134][2:2] = (decoded_reg_strb.internal_hw_error_non_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_non_fatal_mask.mask_mbox_ecc_unc.value : '0;
-    assign readback_array[134][31:3] = (decoded_reg_strb.internal_hw_error_non_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_non_fatal_mask.mask_rsvd.value : '0;
+    assign readback_array[134][31:3] = '0;
     assign readback_array[135][31:0] = (decoded_reg_strb.internal_fw_error_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_fw_error_fatal_mask.mask.value : '0;
     assign readback_array[136][31:0] = (decoded_reg_strb.internal_fw_error_non_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_fw_error_non_fatal_mask.mask.value : '0;
     assign readback_array[137][31:0] = (decoded_reg_strb.internal_rv_mtime_l && !decoded_req_is_wr) ? field_storage.internal_rv_mtime_l.count_l.value : '0;
