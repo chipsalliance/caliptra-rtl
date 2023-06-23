@@ -134,7 +134,7 @@ jobs:
           echo "test_names=$(python3 .github/scripts/build_tests_matrix.py)" >> $GITHUB_OUTPUT
 
   build_and_test:
-    name: Verilator Smoke Test
+    name: Verilator
     runs-on: ubuntu-22.04
     needs: build_matrix
 
