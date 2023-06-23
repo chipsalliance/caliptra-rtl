@@ -34,6 +34,33 @@
 
 extern volatile uint32_t hmac_intr_status;
 
+/* --------------- symbols/typedefs --------------- */
+typedef struct {
+    uint32_t doe_error;
+    uint32_t doe_notif;
+    uint32_t ecc_error;
+    uint32_t ecc_notif;
+    uint32_t hmac_error;
+    uint32_t hmac_notif;
+    uint32_t kv_error;
+    uint32_t kv_notif;
+    uint32_t sha512_error;
+    uint32_t sha512_notif;
+    uint32_t sha256_error;
+    uint32_t sha256_notif;
+    uint32_t qspi_error;
+    uint32_t qspi_notif;
+    uint32_t uart_error;
+    uint32_t uart_notif;
+    uint32_t i3c_error;
+    uint32_t i3c_notif;
+    uint32_t soc_ifc_error;
+    uint32_t soc_ifc_notif;
+    uint32_t sha512_acc_error;
+    uint32_t sha512_acc_notif;
+} caliptra_intr_received_s;
+extern volatile caliptra_intr_received_s cptra_intr_rcv;
+
 //////////////////////////////////////////////////////////////////////////////
 // Function Declarations
 //
@@ -75,7 +102,41 @@ inline void service_uart_notif_intr  () {printf("ERROR");}
 inline void service_i3c_error_intr   () {printf("ERROR");}
 inline void service_i3c_notif_intr   () {printf("ERROR");}
 inline void service_soc_ifc_error_intr  () {printf("ERROR");}
-inline void service_soc_ifc_notif_intr  () {printf("ERROR");}
+inline void service_soc_ifc_notif_intr () {
+    uint32_t * reg = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+    uint32_t sts = *reg;
+    /* Write 1 to Clear the pending interrupt */
+    if (sts & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK) {
+        VPRINTF(HIGH, "cmd_avail\n");
+        *reg = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK;
+        cptra_intr_rcv.soc_ifc_notif |= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK;
+    }
+    if (sts & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_MBOX_ECC_COR_STS_MASK) {
+        VPRINTF(HIGH, "mbox_ecc_cor\n");
+        *reg = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_MBOX_ECC_COR_STS_MASK;
+        cptra_intr_rcv.soc_ifc_notif |= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_MBOX_ECC_COR_STS_MASK;
+    }
+    if (sts & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_DEBUG_LOCKED_STS_MASK) {
+        VPRINTF(HIGH, "debug_locked\n");
+        *reg = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_DEBUG_LOCKED_STS_MASK;
+        cptra_intr_rcv.soc_ifc_notif |= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_DEBUG_LOCKED_STS_MASK;
+    }
+    if (sts & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SOC_REQ_LOCK_STS_MASK) {
+        VPRINTF(HIGH, "soc_req_lock\n");
+        *reg = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SOC_REQ_LOCK_STS_MASK;
+        cptra_intr_rcv.soc_ifc_notif |= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SOC_REQ_LOCK_STS_MASK;
+    }
+    if (sts & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK) {
+        VPRINTF(HIGH, "gen_in_toggle\n");
+        *reg = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK;
+        cptra_intr_rcv.soc_ifc_notif |= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK;
+    }
+    if (sts == 0) {
+        VPRINTF(ERROR,"bad soc_ifc_notif_intr sts:%x\n", sts);
+        SEND_STDOUT_CTRL(0x1);
+        while(1);
+    }
+}
 inline void service_sha512_acc_error_intr() {printf("ERROR");}
 inline void service_sha512_acc_notif_intr() {printf("ERROR");}
 

@@ -20,17 +20,19 @@
 //`include "kv_defines_pkg.sv"
 //`include "doe_defines_pkg.sv"
 `define CPTRA_TOP_PATH  caliptra_top_tb.caliptra_top_dut
-`define KEYVAULT_PATH   caliptra_top_tb.caliptra_top_dut.key_vault1
-`define DOE_PATH        caliptra_top_tb.caliptra_top_dut.doe.doe_inst.doe_fsm1
-`define DOE_REG_PATH    caliptra_top_tb.caliptra_top_dut.doe.doe_inst.i_doe_reg
+`define KEYVAULT_PATH   `CPTRA_TOP_PATH.key_vault1
+`define DOE_INST_PATH   `CPTRA_TOP_PATH.doe.doe_inst
+`define DOE_PATH        `DOE_INST_PATH.doe_fsm1
+`define DOE_REG_PATH    `DOE_INST_PATH.i_doe_reg
 `define SERVICES_PATH   caliptra_top_tb.tb_services_i
-`define SHA512_PATH     caliptra_top_tb.caliptra_top_dut.sha512.sha512_inst
-`define HMAC_PATH       caliptra_top_tb.caliptra_top_dut.hmac.hmac_inst
-`define ECC_PATH        caliptra_top_tb.caliptra_top_dut.ecc_top1.ecc_dsa_ctrl_i
-`define ECC_REG_PATH    caliptra_top_tb.caliptra_top_dut.ecc_top1.ecc_reg1
-`define SHA256_PATH     caliptra_top_tb.caliptra_top_dut.sha256.sha256_inst
-`define SHA512_MASKED_PATH caliptra_top_tb.caliptra_top_dut.ecc_top1.ecc_dsa_ctrl_i.ecc_hmac_drbg_interface_i.hmac_drbg_i.HMAC_K.u_sha512_core_h1
-`define SOC_IFC_TOP_PATH   caliptra_top_tb.caliptra_top_dut.soc_ifc_top1
+`define SHA512_PATH     `CPTRA_TOP_PATH.sha512.sha512_inst
+`define HMAC_PATH       `CPTRA_TOP_PATH.hmac.hmac_inst
+`define ECC_PATH        `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i
+`define ECC_REG_PATH    `CPTRA_TOP_PATH.ecc_top1.ecc_reg1
+`define SHA256_PATH     `CPTRA_TOP_PATH.sha256.sha256_inst
+`define SHA512_MASKED_PATH `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_hmac_drbg_interface_i.hmac_drbg_i.HMAC_K.u_sha512_core_h1
+`define SOC_IFC_TOP_PATH   `CPTRA_TOP_PATH.soc_ifc_top1
+`define WDT_PATH        `SOC_IFC_TOP_PATH.i_wdt
 
 
 module caliptra_top_sva
@@ -107,14 +109,14 @@ module caliptra_top_sva
         KV_debug_value0:         assert property (
                                                   @(posedge `KEYVAULT_PATH.clk)
                                                   disable iff(!`KEYVAULT_PATH.cptra_pwrgood)
-                                                  `KEYVAULT_PATH.flush_keyvault && (`KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value == 0) && `KEYVAULT_PATH.cptra_pwrgood |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword] == CLP_DEBUG_MODE_KV_0)
+                                                  (`KEYVAULT_PATH.flush_keyvault || `SOC_IFC_TOP_PATH.cptra_error_fatal) && (`KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value == 0) && `KEYVAULT_PATH.cptra_pwrgood |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword] == CLP_DEBUG_MODE_KV_0)
                                                 )
                                   else $display("SVA ERROR: KV not flushed with correct debug values");
 
         KV_debug_value1:         assert property (
                                                   @(posedge `KEYVAULT_PATH.clk)
                                                   disable iff(!`KEYVAULT_PATH.cptra_pwrgood)
-                                                  `KEYVAULT_PATH.flush_keyvault && (`KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value == 1) && `KEYVAULT_PATH.cptra_pwrgood |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword] == CLP_DEBUG_MODE_KV_1)
+                                                  (`KEYVAULT_PATH.flush_keyvault || `SOC_IFC_TOP_PATH.cptra_error_fatal) && (`KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value == 1) && `KEYVAULT_PATH.cptra_pwrgood |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword] == CLP_DEBUG_MODE_KV_1)
                                                 )
                                   else $display("SVA ERROR: KV not flushed with correct debug values");
       end
@@ -385,6 +387,55 @@ module caliptra_top_sva
                                     else $display("SVA ERROR: KV client %0d data is unknown", client);
     end
   endgenerate
+  
+  //WDT checks:
+  cascade_wdt_t1_pet: assert property (
+    @(posedge `WDT_PATH.clk)
+    (`WDT_PATH.timer1_restart && !`WDT_PATH.timer2_en) |=> (`WDT_PATH.timer1_count == 'h0)
+  )
+  else $display("SVA ERROR: [Cascade] WDT Timer1 did not restart on pet");
+
+  cascade_wdt_t2_pet: assert property (
+    @(posedge `WDT_PATH.clk)
+    (`WDT_PATH.timer2_restart && !`WDT_PATH.timer2_en) |=> (`WDT_PATH.timer2_count == 'h0)
+  )
+  else $display("SVA ERROR: [Cascade] WDT Timer2 did not restart on pet");
+
+  cascade_wdt_t1_service: assert property (
+    @(posedge `WDT_PATH.clk)
+    (`WDT_PATH.wdt_timer1_timeout_serviced && !`WDT_PATH.timer2_en && !`WDT_PATH.t2_timeout) |=> (`WDT_PATH.timer1_count == 'h0)
+  )
+  else $display("SVA ERROR: [Cascade] WDT Timer1 did not restart after interrupt service");
+
+  cascade_wdt_t2_service: assert property (
+    @(posedge `WDT_PATH.clk)
+    (`WDT_PATH.wdt_timer2_timeout_serviced && !`WDT_PATH.timer2_en) |=> (`WDT_PATH.timer2_count == 'h0)
+  )
+  else $display("SVA ERROR: [Cascade] WDT Timer2 did not restart after interrupt service");
+
+  independent_wdt_t1_pet: assert property (
+    @(posedge `WDT_PATH.clk)
+    (`WDT_PATH.timer1_restart && `WDT_PATH.timer2_en) |=> (`WDT_PATH.timer1_count == 'h0)
+  )
+  else $display("SVA ERROR: [Independent] WDT Timer1 did not restart on pet");
+
+  independent_wdt_t2_pet: assert property (
+    @(posedge `WDT_PATH.clk)
+    (`WDT_PATH.timer2_restart && `WDT_PATH.timer2_en) |=> (`WDT_PATH.timer2_count == 'h0)
+  )
+  else $display("SVA ERROR: [Independent] WDT Timer2 did not restart on pet");
+
+  independent_wdt_t1_service: assert property (
+    @(posedge `WDT_PATH.clk)
+    (`WDT_PATH.wdt_timer1_timeout_serviced && `WDT_PATH.timer2_en && !`WDT_PATH.t2_timeout) |=> (`WDT_PATH.timer1_count == 'h0)
+  )
+  else $display("SVA ERROR: [Independent] WDT Timer1 did not restart after interrupt service");
+
+  independent_wdt_t2_service: assert property (
+    @(posedge `WDT_PATH.clk)
+    (`WDT_PATH.wdt_timer2_timeout_serviced && `WDT_PATH.timer2_en) |=> (`WDT_PATH.timer2_count == 'h0)
+  )
+  else $display("SVA ERROR: [Independent] WDT Timer2 did not restart after interrupt service");
 
 
 

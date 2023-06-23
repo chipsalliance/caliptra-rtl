@@ -29,6 +29,7 @@
 #include "caliptra_reg.h"
 #include <stdint.h>
 #include "printf.h"
+#include "riscv_hw_if.h"
 
 /* --------------- symbols/typedefs --------------- */
 typedef struct {

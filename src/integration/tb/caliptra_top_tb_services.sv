@@ -235,8 +235,9 @@ module caliptra_top_tb_services
     //         8'he2        - Set random DCCM SRAM single bit error injection
     //         8'he3        - Set random DCCM SRAM double bit error injection
     //         8'he4        - Disable all SRAM error injection (Mailbox, ICCM, DCCM)
-    //         8'he5        - Request TB to initiate Mailbox flow without lock (violation) TODO
-    //         8'he6        - Request TB to initiate Mailbox flow with out-of-order accesses (violation) TODO
+    //         8'he5        - Request TB to initiate Mailbox flow without lock (violation)
+    //         8'he6        - Request TB to initiate Mailbox flow with out-of-order accesses (violation)
+    //         8'he7        - Reset mailbox out-of-order flag when non-fatal error is masked (allows the test to continue)
     //         8'heb        - Inject fatal error
     //         8'hec        - Inject randomized UDS test vector
     //         8'hed        - Inject randomized FE test vector
@@ -290,6 +291,34 @@ module caliptra_top_tb_services
         else if ((WriteData[7:0] == 8'he2) && mailbox_write) sram_error_injection_mode.dccm_single_bit_error <= 1'b1;
         else if ((WriteData[7:0] == 8'he3) && mailbox_write) sram_error_injection_mode.dccm_double_bit_error <= 1'b1;
         else if ((WriteData[7:0] == 8'he4) && mailbox_write) sram_error_injection_mode                       <= '{default: 1'b0};
+    end
+
+    always @(negedge clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b) begin
+            ras_test_ctrl.do_no_lock_access     <= 1'b0;
+            ras_test_ctrl.do_ooo_access         <= 1'b0;
+            ras_test_ctrl.reset_ooo_done_flag   <= 1'b0;
+        end
+        else if((WriteData == 8'he5) && mailbox_write) begin
+            ras_test_ctrl.do_no_lock_access     <= 1'b1;
+            ras_test_ctrl.do_ooo_access         <= 1'b0;
+            ras_test_ctrl.reset_ooo_done_flag   <= 1'b0;
+        end
+        else if((WriteData == 8'he6) && mailbox_write) begin
+            ras_test_ctrl.do_no_lock_access     <= 1'b0;
+            ras_test_ctrl.do_ooo_access         <= 1'b1;
+            ras_test_ctrl.reset_ooo_done_flag   <= 1'b0;
+        end
+        else if ((WriteData == 8'he7) && mailbox_write) begin
+            ras_test_ctrl.do_no_lock_access     <= 1'b0;
+            ras_test_ctrl.do_ooo_access         <= 1'b0;
+            ras_test_ctrl.reset_ooo_done_flag   <= 1'b1;
+        end
+        else begin
+            ras_test_ctrl.do_no_lock_access     <= 1'b0;
+            ras_test_ctrl.do_ooo_access         <= 1'b0;
+            ras_test_ctrl.reset_ooo_done_flag   <= 1'b0;
+        end
     end
 
     initial ras_test_ctrl.error_injection_seen = 1'b0;

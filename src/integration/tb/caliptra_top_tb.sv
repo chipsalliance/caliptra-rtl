@@ -88,6 +88,7 @@ module caliptra_top_tb (
         S_APB_WR_HW_ERROR_FATAL,
         S_APB_RD_HW_ERROR_NON_FATAL,
         S_APB_WR_HW_ERROR_NON_FATAL,
+        S_APB_RD_MBOX_DATAOUT,
         S_APB_DONE,
         S_APB_ERROR
     } n_state_apb, c_state_apb;
@@ -144,6 +145,9 @@ module caliptra_top_tb (
     logic [15:0] cptra_error_non_fatal_counter;
     logic cptra_error_fatal_dly_p;
     logic cptra_error_non_fatal_dly_p;
+
+    logic mbox_apb_dataout_read_ooo;
+    logic mbox_ooo_read_done;
 
     logic [`CALIPTRA_APB_DATA_WIDTH-1:0] soc_ifc_hw_error_wdata;
 
@@ -299,6 +303,29 @@ module caliptra_top_tb (
         $finish;
     end
 
+    always@(negedge core_clk or negedge cptra_rst_b) begin
+        if(!cptra_rst_b) begin
+            mbox_apb_dataout_read_ooo <= 1'b0;
+        end
+        else if(ras_test_ctrl.do_ooo_access) begin
+            mbox_apb_dataout_read_ooo <= 1'b1;
+        end
+        else if (mbox_apb_dataout_read_ooo && (c_state_apb == S_APB_RD_MBOX_DATAOUT))
+            mbox_apb_dataout_read_ooo <= 1'b0;
+    end
+
+    always@(negedge core_clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b) begin
+            mbox_ooo_read_done <= 1'b0;
+        end
+        else if (mbox_apb_dataout_read_ooo && (c_state_apb == S_APB_RD_MBOX_DATAOUT)) begin
+            mbox_ooo_read_done <= 1'b1;
+        end
+        else if (c_state_apb == S_APB_WR_HW_ERROR_NON_FATAL)
+            mbox_ooo_read_done <= 1'b0;
+        else if (ras_test_ctrl.reset_ooo_done_flag)
+            mbox_ooo_read_done <= 1'b0;
+    end
 
     initial begin
         cptra_pwrgood = 1'b0;
@@ -450,6 +477,9 @@ module caliptra_top_tb (
                 S_APB_WR_HW_ERROR_NON_FATAL: begin
                     $display("SoC: Observed cptra_error_non_fatal; writing to clear Caliptra register\n");
                 end
+                S_APB_RD_MBOX_DATAOUT: begin
+                    $display("SoC: Reading Mbox Dataout Register\n");
+                end
                 S_APB_DONE: begin
                 end
                 default: begin
@@ -543,7 +573,7 @@ module caliptra_top_tb (
             // poll for lock register
             S_APB_POLL_LOCK: begin
                 if (apb_xfer_end && (PRDATA != 0)) begin
-                    n_state_apb = S_APB_WR_CMD;
+                    n_state_apb = mbox_apb_dataout_read_ooo ? S_APB_RD_MBOX_DATAOUT : S_APB_WR_CMD;
                 end
                 else begin
                     n_state_apb = S_APB_POLL_LOCK;
@@ -612,6 +642,12 @@ module caliptra_top_tb (
                 else if (soc_ifc_hw_error_wdata) begin
                     n_state_apb = S_APB_WR_HW_ERROR_FATAL;
                 end
+                else if (ras_test_ctrl.do_no_lock_access) begin
+                    n_state_apb = S_APB_RD_MBOX_DATAOUT;
+                end
+                else if (mbox_apb_dataout_read_ooo && !mbox_ooo_read_done) begin
+                    n_state_apb = S_APB_POLL_LOCK;
+                end
                 else begin
                     n_state_apb = S_APB_WAIT_ERROR_AXS;
                 end
@@ -647,6 +683,14 @@ module caliptra_top_tb (
                 end
                 else begin
                     n_state_apb = S_APB_WR_HW_ERROR_NON_FATAL;
+                end
+            end
+            S_APB_RD_MBOX_DATAOUT: begin
+                if (apb_xfer_end) begin
+                    n_state_apb = S_APB_WAIT_ERROR_AXS;
+                end
+                else begin
+                    n_state_apb = S_APB_RD_MBOX_DATAOUT;
                 end
             end
             S_APB_DONE: begin
@@ -735,6 +779,10 @@ module caliptra_top_tb (
                 PADDR      = `CLP_SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL;
                 PWDATA     = soc_ifc_hw_error_wdata;
             end
+            S_APB_RD_MBOX_DATAOUT: begin
+                PADDR      = `CLP_MBOX_CSR_MBOX_DATAOUT;
+                PWDATA     = 32'h0;
+            end
             S_APB_DONE: begin
                 PADDR      = '0;
                 PWDATA     = '0;
@@ -821,6 +869,11 @@ module caliptra_top_tb (
             S_APB_WR_HW_ERROR_NON_FATAL: begin
                 PSEL       = 1;
                 PWRITE     = 1;
+                PAUSER     = '1;
+            end
+            S_APB_RD_MBOX_DATAOUT: begin
+                PSEL       = 1;
+                PWRITE     = 0;
                 PAUSER     = '1;
             end
             S_APB_DONE: begin
