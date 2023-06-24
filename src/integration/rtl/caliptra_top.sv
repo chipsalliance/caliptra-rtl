@@ -56,7 +56,9 @@ module caliptra_top
     //QSPI Interface
     output logic                                qspi_clk_o,
     output logic [`CALIPTRA_QSPI_CS_WIDTH-1:0]  qspi_cs_no,
-    inout  wire  [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_d_io,
+    input  wire  [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_d_i,
+    output logic [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_d_o,
+    output logic [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_d_en_o,
 
     //UART Interface
     // TODO: Determine if this should be set behind a ifdef
@@ -1037,17 +1039,10 @@ entropy_src #(
   logic                               cio_sck_en_o;
   logic [`CALIPTRA_QSPI_CS_WIDTH-1:0] cio_csb_o;
   logic [`CALIPTRA_QSPI_CS_WIDTH-1:0] cio_csb_en_o;
-  logic [`CALIPTRA_QSPI_IO_WIDTH-1:0] cio_sd_o;
-  logic [`CALIPTRA_QSPI_IO_WIDTH-1:0] cio_sd_en_o;
-  logic [`CALIPTRA_QSPI_IO_WIDTH-1:0] cio_sd_i;
 
   assign qspi_clk_o = cio_sck_en_o ? cio_sck_o : 1'b0;
   for (genvar ii = 0; ii < `CALIPTRA_QSPI_CS_WIDTH; ii += 1) begin : gen_qspi_cs
     assign qspi_cs_no[ii] = cio_csb_en_o[ii] ? cio_csb_o[ii] : 1'b1;
-  end
-  for (genvar ii = 0; ii < `CALIPTRA_QSPI_IO_WIDTH; ii += 1) begin : gen_qspi_io
-    assign qspi_d_io[ii] = cio_sd_en_o[ii] ? cio_sd_o[ii] : 1'bz;
-    assign cio_sd_i[ii]  = cio_sd_en_o[ii] ? 1'bz : qspi_d_io[ii];
   end
 
 spi_host #(
@@ -1076,9 +1071,9 @@ spi_host #(
     .cio_sck_en_o (cio_sck_en_o),
     .cio_csb_o    (cio_csb_o),
     .cio_csb_en_o (cio_csb_en_o),
-    .cio_sd_o     (cio_sd_o),
-    .cio_sd_en_o  (cio_sd_en_o),
-    .cio_sd_i     (cio_sd_i),
+    .cio_sd_o     (qspi_d_o),
+    .cio_sd_en_o  (qspi_d_en_o),
+    .cio_sd_i     (qspi_d_i),
     .intr_error_o(),
     .intr_spi_event_o()
   );
@@ -1086,7 +1081,8 @@ spi_host #(
 //QSPI Tie Off
 assign qspi_clk_o = '0;
 assign qspi_cs_no = '0;
-assign qspi_d_io = '0;
+assign qspi_d_o = '0;
+assign qspi_d_en_o = '0;
 `endif
 
 `ifdef CALIPTRA_INTERNAL_UART
