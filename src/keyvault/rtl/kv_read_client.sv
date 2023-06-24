@@ -26,6 +26,7 @@ module kv_read_client
 (
     input logic clk,
     input logic rst_b,
+    input logic zeroize,
 
     //client control register
     input kv_read_ctrl_reg_t read_ctrl_reg,
@@ -58,6 +59,7 @@ kv_read_fsm
 (
     .clk(clk),
     .rst_b(rst_b),
+    .zeroize(zeroize),
     .start(read_ctrl_reg.read_en),
     .last (kv_resp.last),
     .pcr_hash_extend(read_ctrl_reg.pcr_hash_extend),
@@ -77,6 +79,9 @@ always_comb write_data = write_pad ? pad_data : kv_resp.read_data;
 
 always_ff @(posedge clk or negedge rst_b) begin
     if (!rst_b) begin
+        error_code <= KV_SUCCESS;
+    end
+    else if (zeroize) begin
         error_code <= KV_SUCCESS;
     end
     else begin

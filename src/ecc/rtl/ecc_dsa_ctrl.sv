@@ -804,6 +804,7 @@ module ecc_dsa_ctrl
     (
         .clk(clk),
         .rst_b(reset_n),
+        .zeroize(zeroize_reg),
 
         //client control register
         .read_ctrl_reg(kv_privkey_read_ctrl_reg),
@@ -831,6 +832,7 @@ module ecc_dsa_ctrl
     (
         .clk(clk),
         .rst_b(reset_n),
+        .zeroize(zeroize_reg),
 
         //client control register
         .read_ctrl_reg(kv_seed_read_ctrl_reg),
@@ -857,6 +859,7 @@ module ecc_dsa_ctrl
     (
         .clk(clk),
         .rst_b(reset_n),
+        .zeroize(zeroize_reg),
 
         //client control register
         .write_ctrl_reg(kv_write_ctrl_reg),

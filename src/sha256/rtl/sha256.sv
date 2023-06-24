@@ -2,7 +2,7 @@
 //
 // Updated by Caliptra team to modify data access width
 //
-// sha256.v
+// sha256.sv
 // --------
 // Top level wrapper for the SHA-256 hash function providing
 // a simple memory like interface with 32 bit data access.
@@ -41,6 +41,7 @@
 
 module sha256 
             import sha256_reg_pkg::*;
+            import sha256_params_pkg::*;
             #(
               parameter ADDR_WIDTH = 32,
               parameter DATA_WIDTH = 32
@@ -65,11 +66,6 @@ module sha256
               output wire error_intr,
               output wire notif_intr
              );
-
-  //----------------------------------------------------------------
-  // Internal constant and parameter definitions.
-  //----------------------------------------------------------------
-  `include "sha256_param.sv"
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.

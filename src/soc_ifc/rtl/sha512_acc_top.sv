@@ -14,7 +14,8 @@
 
 module sha512_acc_top
     import soc_ifc_pkg::*;
-    import sha512_acc_csr_pkg::*;   
+    import sha512_acc_csr_pkg::*;
+    import sha512_params_pkg::*; 
   #(
     parameter DATA_WIDTH = 32
     )(
@@ -44,7 +45,6 @@ module sha512_acc_top
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  `include "sha512_param.sv"
   localparam DATA_NUM_BYTES = DATA_WIDTH / 8;
   localparam BLOCK_NO = 1024 / DATA_WIDTH;
   localparam BYTE_NO = 1024 / 8;

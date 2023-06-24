@@ -39,6 +39,7 @@
 module doe_key_mem(
                    input wire            clk,
                    input wire            reset_n,
+                   input wire            zeroize,
 
                    input wire [255 : 0]  key,
                    input wire            keylen,
@@ -133,6 +134,18 @@ module doe_key_mem(
       integer ii;
 
       if (!reset_n)
+        begin
+          for (ii = 0 ; ii <= DOE_256_NUM_ROUNDS ; ii = ii + 1)
+            key_mem [ii] <= 128'h0;
+
+          ready_reg        <= 1'b0;
+          rcon_reg         <= 8'h0;
+          round_ctr_reg    <= 4'h0;
+          prev_key0_reg    <= 128'h0;
+          prev_key1_reg    <= 128'h0;
+          key_mem_ctrl_reg <= CTRL_IDLE;
+        end
+      else if (zeroize)
         begin
           for (ii = 0 ; ii <= DOE_256_NUM_ROUNDS ; ii = ii + 1)
             key_mem [ii] <= 128'h0;

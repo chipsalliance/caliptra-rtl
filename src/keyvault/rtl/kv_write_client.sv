@@ -26,6 +26,7 @@ module kv_write_client
 (
     input logic clk,
     input logic rst_b,
+    input logic zeroize,
 
     //client control register
     input kv_write_ctrl_reg_t write_ctrl_reg,
@@ -59,6 +60,7 @@ kv_dest_write_fsm
 (
     .clk(clk),
     .rst_b(rst_b),
+    .zeroize(zeroize),
     .start(dest_data_avail & write_ctrl_reg.write_en),
     .last('0),
     .pcr_hash_extend(1'b0),
@@ -82,6 +84,9 @@ always_comb kv_write.write_dest_valid = write_ctrl_reg.write_dest_vld;
 
 always_ff @(posedge clk or negedge rst_b) begin
     if (!rst_b) begin
+        error_code <= KV_SUCCESS;
+    end
+    else if (zeroize) begin
         error_code <= KV_SUCCESS;
     end
     else begin

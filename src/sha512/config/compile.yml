@@ -10,9 +10,9 @@ targets:
     directories: [$COMPILE_ROOT/rtl]
     files:
       - $COMPILE_ROOT/rtl/sha512_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/sha512_params_pkg.sv
       - $COMPILE_ROOT/rtl/sha512_ctrl.sv
       - $COMPILE_ROOT/rtl/sha512.sv
-      - $COMPILE_ROOT/rtl/sha512_param.sv
       - $COMPILE_ROOT/rtl/sha512_core.v
       - $COMPILE_ROOT/rtl/sha512_h_constants.v
       - $COMPILE_ROOT/rtl/sha512_k_constants.v
@@ -36,11 +36,8 @@ targets:
   tb:
     directories: 
       - $COMPILE_ROOT/tb
-      - $COMPILE_ROOT/coverage
     files:
       - $COMPILE_ROOT/tb/sha512_ctrl_32bit_tb.sv
-      - $COMPILE_ROOT/coverage/sha512_ctrl_cov_if.sv
-      - $COMPILE_ROOT/coverage/sha512_ctrl_cov_bind.sv
     tops: [sha512_ctrl_32bit_tb]
 ---
 provides: [sha512_coverage]  

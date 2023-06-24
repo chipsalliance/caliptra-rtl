@@ -41,6 +41,7 @@
 
 module sha512
     import sha512_reg_pkg::*;
+    import sha512_params_pkg::*;
     import kv_defines_pkg::*;  
     import pv_defines_pkg::*;    
     #(
@@ -79,11 +80,6 @@ module sha512
         output wire error_intr,
         output wire notif_intr
     );
-
-  //----------------------------------------------------------------
-  // Internal constant and parameter definitions.
-  //----------------------------------------------------------------
-  `include "sha512_param.sv"
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -269,11 +265,11 @@ module sha512
   //register hw interface
   always_comb begin
 
-    hwif_in.SHA512_NAME[0].NAME.next = CORE_NAME0;
-    hwif_in.SHA512_NAME[1].NAME.next = CORE_NAME1;
+    hwif_in.SHA512_NAME[0].NAME.next = SHA512_CORE_NAME0;
+    hwif_in.SHA512_NAME[1].NAME.next = SHA512_CORE_NAME1;
 
-    hwif_in.SHA512_VERSION[0].VERSION.next = CORE_VERSION0;
-    hwif_in.SHA512_VERSION[1].VERSION.next = CORE_VERSION1;
+    hwif_in.SHA512_VERSION[0].VERSION.next = SHA512_CORE_VERSION0;
+    hwif_in.SHA512_VERSION[1].VERSION.next = SHA512_CORE_VERSION1;
 
     init_reg = gen_hash_ip ? gen_hash_init_reg : hwif_out.SHA512_CTRL.INIT.value;
     next_reg = gen_hash_ip ? gen_hash_next_reg : hwif_out.SHA512_CTRL.NEXT.value;
@@ -400,6 +396,7 @@ sha512_block_kv_read
 (
     .clk(clk),
     .rst_b(reset_n),
+    .zeroize(zeroize_reg),
 
     //client control register
     .read_ctrl_reg(kv_read_ctrl_reg),
@@ -446,6 +443,7 @@ sha512_result_kv_write
 (
   .clk(clk),
   .rst_b(reset_n),
+  .zeroize(zeroize_reg),
 
   //client control register
   .write_ctrl_reg(kv_write_ctrl_reg_q),
