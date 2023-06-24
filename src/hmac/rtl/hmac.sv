@@ -320,6 +320,7 @@ hmac_key_kv_read
 (
     .clk(clk),
     .rst_b(reset_n),
+    .zeroize(zeroize_reg),
 
     //client control register
     .read_ctrl_reg(kv_key_read_ctrl_reg),
@@ -348,6 +349,7 @@ hmac_block_kv_read
 (
     .clk(clk),
     .rst_b(reset_n),
+    .zeroize(zeroize_reg),
 
     //client control register
     .read_ctrl_reg(kv_block_read_ctrl_reg),
@@ -374,6 +376,7 @@ hmac_result_kv_write
 (
   .clk(clk),
   .rst_b(reset_n),
+  .zeroize(zeroize_reg),
 
   //client control register
   .write_ctrl_reg(kv_write_ctrl_reg),

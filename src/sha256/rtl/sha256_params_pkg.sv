@@ -12,31 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-  //----------------------------------------------------------------
-  // Internal constant and parameter definitions.
-  //----------------------------------------------------------------
-  localparam SHA256_ADDR_NAME0       = 32'h00000000;
-  localparam SHA256_ADDR_NAME1       = 32'h00000004;
-  localparam SHA256_ADDR_VERSION0    = 32'h00000008;
-  localparam SHA256_ADDR_VERSION1    = 32'h0000000c;
+//
 
-  localparam SHA256_ADDR_CTRL        = 32'h00000010;
-  localparam SHA256_CTRL_INIT_BIT    = 0;
-  localparam SHA256_CTRL_NEXT_BIT    = 1;
-  localparam SHA256_CTRL_MODE_BIT    = 2;
-
-  localparam SHA256_ADDR_STATUS      = 32'h00000018;
-  //localparam STATUS_READY_BIT = 0;
-  //localparam STATUS_VALID_BIT = 1;
-
-  localparam SHA256_ADDR_BLOCK_START     = 32'h00000080;
-  localparam SHA256_ADDR_BLOCK_END       = 32'h000000bf;
-
-  localparam SHA256_ADDR_DIGEST_START    = 32'h00000100;
-  localparam SHA256_ADDR_DIGEST_END      = 32'h0000011f;
-
-  localparam SHA256_ADDR_INTR_START    = 32'h00000800;
-  localparam SHA256_ADDR_INTR_END      = 32'h00000BFC;
+package sha256_params_pkg;
 
   localparam SHA256_CORE_NAME0        = 32'h61327368; // "sha2"
   localparam SHA256_CORE_NAME1        = 32'h35362d32; // "-256"
@@ -46,6 +24,7 @@
   localparam SHA256_MODE_SHA_224     = 1'h0;
   localparam SHA256_MODE_SHA_256     = 1'h1;
 
+endpackage
 //======================================================================
-// EOF sha256_param.sv
+// EOF sha256_params_pkg.sv
 //======================================================================
