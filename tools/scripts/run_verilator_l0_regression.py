@@ -22,6 +22,7 @@ import re
 import subprocess
 import logging
 import datetime
+from multiprocessing import Pool
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -128,7 +129,10 @@ def getTestNames():
 
     return integrationTestSuiteList
 
-def runTest(test, scratch, verilated):
+def runTest(args):
+
+    (test, scratch, verilated) = args;
+
     testdir = os.path.join(scratch, test)
     # Reuse pristine verilator-build output for each test
     shutil.copytree(verilated, testdir)
@@ -205,20 +209,22 @@ def main():
     verilated = verilateTB(scratch)
     # Parse yaml file for test list
     testnames=getTestNames()
-    exitcode = 0
-    # Run all tests and accumulate error status codes
-    for test in testnames:
-        exitcode += runTest(test, scratch, verilated)
+    # Run all tests in parallel and accumulate error status codes to the global failcount
+    failcount=0
+    run_args = [(testname, scratch, verilated) for testname in testnames]
+    test_status_list = Pool(len(testnames)).map(runTest, run_args)
+    for sts in test_status_list:
+        failcount += sts
     # Ending summary
     infoMsg = f"############################################## SUMMARY ##############################################"
     logger.info(infoMsg)
-    if exitcode == 0:
+    if failcount == 0:
         infoMsg = f"All tests passed!"
         logger.info(infoMsg)
     else:
-        errorMsg = f"Regression failed! Total number of failing tests: {exitcode}"
+        errorMsg = f"Regression failed! Total number of failing tests: {failcount}"
         logger.error(errorMsg)
-    return exitcode
+    return failcount
 
 if __name__ == "__main__":
     sys.exit(main())
