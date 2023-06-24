@@ -45,7 +45,7 @@ stages:
           export PYREQUIREMENTS="$(workspace_root)/pipelines/require-progress.txt"
           PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
 
-          enter-workspace tmp_ws 'echo "running $AHA_POC_REPO/tools/scripts/promote_rdl_check.sh" && bash $AHA_POC_REPO/tools/scripts/promote_rdl_check.sh'
+          enter-workspace tmp_ws 'echo "running $AHA_POC_REPO/tools/scripts/promote_rdl_check.sh" && bash $AHA_POC_REPO/tools/scripts/promote_rdl_check.sh "master"'
 
         displayName: 'RDL GEN CHECK'
         enabled: true
@@ -60,7 +60,7 @@ stages:
           PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
 
           # Run the Filelist generator script
-          enter-workspace tmp_ws 'echo "running $AHA_POC_REPO/tools/scripts/promote_file_list_check.sh" && bash $AHA_POC_REPO/tools/scripts/promote_file_list_check.sh'
+          enter-workspace tmp_ws 'echo "running $AHA_POC_REPO/tools/scripts/promote_file_list_check.sh" && bash $AHA_POC_REPO/tools/scripts/promote_file_list_check.sh "master"'
 
         displayName: 'FILE LIST CHECK'
         enabled: true
