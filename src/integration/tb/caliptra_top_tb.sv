@@ -933,8 +933,8 @@ caliptra_top caliptra_top_dut (
     .generic_input_wires(generic_input_wires),
     .generic_output_wires(),
 
-    .security_state(security_state), //FIXME TIE-OFF
-    .scan_mode     (scan_mode) //FIXME TIE-OFF
+    .security_state(security_state),
+    .scan_mode     (scan_mode)
 );
 
 
