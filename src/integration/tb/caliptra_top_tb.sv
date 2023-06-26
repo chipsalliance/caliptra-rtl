@@ -144,6 +144,11 @@ module caliptra_top_tb (
 
     //device lifecycle
     security_state_t security_state;
+`ifdef CALIPTRA_DEBUG_UNLOCKED
+    assign security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b0}; // DebugUnlocked & Production
+`else
+    assign security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; // DebugLocked & Production
+`endif
 
     ras_test_ctrl_t ras_test_ctrl;
     logic [63:0] generic_input_wires;
@@ -316,11 +321,6 @@ module caliptra_top_tb (
         BootFSM_BrkPoint = 1'b1; //Set to 1 even before anything starts
         cptra_rst_b = 1'b0;
         start_apb_fuse_sequence = 1'b0;
-        //tie offs
-        jtag_tck = 1'b0;    // JTAG clk
-        jtag_tms = 1'b0;    // JTAG TMS
-        jtag_tdi = 1'b0;    // JTAG tdi
-        jtag_trst_n = 1'b0; // JTAG Reset
         //TIE-OFF
         PPROT = '0;
 
@@ -847,6 +847,20 @@ module caliptra_top_tb (
         endcase
     end
 
+// JTAG DPI
+jtagdpi #(
+    .Name           ("jtag0"),
+    .ListenPort     (5000)
+) jtagdpi (
+    .clk_i          (core_clk),
+    .rst_ni         (cptra_rst_b),
+    .jtag_tck       (jtag_tck),
+    .jtag_tms       (jtag_tms),
+    .jtag_tdi       (jtag_tdi),
+    .jtag_tdo       (jtag_tdo),
+    .jtag_trst_n    (jtag_trst_n),
+    .jtag_srst_n    ()
+);
 
    //=========================================================================-
    // DUT instance
@@ -923,8 +937,8 @@ caliptra_top caliptra_top_dut (
     .generic_input_wires(generic_input_wires),
     .generic_output_wires(),
 
-    .security_state(security_state), //FIXME TIE-OFF
-    .scan_mode     (scan_mode) //FIXME TIE-OFF
+    .security_state(security_state),
+    .scan_mode     (scan_mode)
 );
 
 
