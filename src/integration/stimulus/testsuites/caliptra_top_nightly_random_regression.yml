@@ -5,6 +5,10 @@ contents:
   - generator:
       tags: ["L1", "CALIPTRA_TOP",  "random"]
       path: ""
+      config:
+        params:
+          # 12 hours to accommodate certain longer-running tests
+          timeout: 720
       weight: 100
       generations: 500
       formats: 
