@@ -97,3 +97,22 @@ global:
       #sim:
         #- '-ucli -i dump.ucli'
 
+---
+provides: [caliptra_top_trng_tb]
+schema_version: 2.4.0
+requires:
+  - caliptra_top_tb
+targets:
+  tb:
+    tops: [caliptra_top_tb]
+  sim:
+    pre_exec: '$TOOLS/scripts/run_test_makefile && echo "[PRE-EXEC] Copying ECC vector generator to ${pwd}" && cp $COMPILE_ROOT/../ecc/tb/ecdsa_secp384r1.exe . 
+                && echo "[PRE-EXEC] Copying DOE vector generator to ${pwd}" && cp $COMPILE_ROOT/../doe/tb/doe_test_gen.py .'
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        - '-noinherit_timescale=1ns/1ps'
+        - '+define+CALIPTRA_INTERNAL_TRNG'

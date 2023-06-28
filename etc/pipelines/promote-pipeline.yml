@@ -85,18 +85,16 @@ stages:
     - integration_top_trng_vcs:
       - display_name: 'Build integration_lib with VCS and enable TRNG'
       - enabled: true
-      # Run after L0 regression finishes since we rebuild the lib
-      - depends_on: 'Regress_integration_top_vcs_l0_regress'
       - configspec_name: 'integration_lib'
-      - dut: 'caliptra_top_tb'
-      - args: '--analyze-args="+define+CALIPTRA_INTERNAL_TRNG"'
+      - dut: 'caliptra_top_trng_tb'
+      - args: ''
       - timeout: 30
       - testsuites:
         - l0_trng_regress:
           - enabled: true
           - configspec_name: 'integration_lib'
-          - dut: 'caliptra_top_tb'
-          - timeout: 60
+          - dut: 'caliptra_top_trng_tb'
+          - timeout: 45
           - path: 'Caliptra/src/integration/stimulus/L0_trng_regression.yml'
 
     - uvmf_soc_ifc:
