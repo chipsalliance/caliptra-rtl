@@ -50,6 +50,7 @@ module caliptra_top_sva
   localparam ECC_MEM_ADDR             = 2**6; //'ECC_PATH.ecc_arith_unit_i.ram_tdp_file_i.mem.ADDR_LENGTH
   localparam SHA256_DIG_NUM_DWORDS    = 8;    //`SHA256_PATH.DIG_NUM_DWORDS;
   localparam SHA256_BLOCK_NUM_DWORDS  = 16;   //`SHA256_PATH.BLOCK_NUM_DWORDS;
+  localparam DOE_256_NUM_ROUNDS       = 14;   //`DOE_INST_PATH.i_doe_core_cbc.keymem.DOE_256_NUM_ROUNDS
 
   //TODO: add disable condition based on doe cmd reg
   DOE_lock_uds_set:        assert property (
@@ -349,7 +350,7 @@ module caliptra_top_sva
                                               (`ECC_REG_PATH.decoded_reg_strb.ECC_PRIVKEY_OUT[dword] == 0)
                                               )
                                   else $display("SVA ERROR: ECC reg zeroize mismatch!"); 
-      end
+    end
     
     for(genvar addr = 0; addr < ECC_MEM_ADDR; addr++) begin
         ecc_mem_zeroize:        assert property (
@@ -357,7 +358,15 @@ module caliptra_top_sva
                                               `ECC_PATH.hwif_out.ECC_CTRL.ZEROIZE.value |=> (`ECC_PATH.ecc_arith_unit_i.ram_tdp_file_i.mem[addr] == 0)
                                               )
                                   else $display("SVA ERROR: ECC mem zeroize mismatch!"); 
-      end
+    end
+
+    for(genvar addr = 0; addr < DOE_256_NUM_ROUNDS; addr++) begin
+        doe_mem_zeroize:        assert property (
+                                              @(posedge `DOE_INST_PATH.clk)
+                                              `DOE_INST_PATH.zeroize |=> (`DOE_INST_PATH.i_doe_core_cbc.keymem.key_mem[addr] == 0)
+                                              )
+                                  else $display("SVA ERROR: DOE mem zeroize mismatch!"); 
+    end
   endgenerate
 
   sha512_masked_core_digest_zeroize:       assert property (
@@ -365,6 +374,12 @@ module caliptra_top_sva
                                       `ECC_PATH.hwif_out.ECC_CTRL.ZEROIZE.value |=> (`SHA512_MASKED_PATH.digest == 0) & (`SHA512_MASKED_PATH.a_reg == 0) & (`SHA512_MASKED_PATH.b_reg == 0) & (`SHA512_MASKED_PATH.c_reg == 0) & (`SHA512_MASKED_PATH.d_reg == 0) & (`SHA512_MASKED_PATH.e_reg == 0) & (`SHA512_MASKED_PATH.f_reg == 0) & (`SHA512_MASKED_PATH.g_reg == 0) & (`SHA512_MASKED_PATH.h_reg == 0)
                                       )
                           else $display("SVA ERROR: SHA512_masked_core digest zeroize mismatch!");  
+  
+  doe_block_zeroize:      assert property (
+                                      @(posedge `DOE_INST_PATH.clk)
+                                      `DOE_INST_PATH.zeroize |=> (`DOE_INST_PATH.i_doe_core_cbc.enc_block.new_block == 0) & (`DOE_INST_PATH.i_doe_core_cbc.dec_block.new_block == 0)
+                                      )
+                          else $display("SVA ERROR: DOE block zeroize mismatch!"); 
 
 
   genvar client;
@@ -454,7 +469,7 @@ module caliptra_top_sva
 
   HMAC_valid_flag:      assert property (
                                     @(posedge `HMAC_PATH.clk)
-                                    `HMAC_PATH.tag_valid_reg |-> `HMAC_PATH.core_ready_reg
+                                    `HMAC_PATH.tag_valid_reg |-> `HMAC_PATH.ready_reg
                                     )
                         else $display("SVA ERROR: HMAC VALID flag mismatch!"); 
 

@@ -71,6 +71,9 @@ module sha256_random_test();
   reg [255 : 0] digest_data;
   reg [255 : 0] expected;
 
+  //bind coverage file
+  sha256_ctrl_cov_bind i_sha256_ctrl_cov_bind();
+  
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------

@@ -567,7 +567,7 @@ module sha512_ctrl_32bit_tb
       end_time = cycle_ctr - start_time;
       $display("*** Single block test processing time = %01d cycles", end_time);
 
-      write_single_word(ADDR_CTRL, {28'h0, 1'b1, 4'b0}); //zeroize
+      write_single_word(ADDR_CTRL, {27'h0, 1'b1, 4'b0}); //zeroize
 
       mask = get_mask(mode);
       masked_data = digest_data & mask;
@@ -656,7 +656,7 @@ module sha512_ctrl_32bit_tb
       $display("*** Double block test processing time = %01d cycles", end_time);
       read_digest();
 
-      write_single_word(ADDR_CTRL, {28'h0, 1'b1, 4'b0}); //zeroize
+      write_single_word(ADDR_CTRL, {27'h0, 1'b1, 4'b0}); //zeroize
 
       masked_data1 = digest_data & mask;
 
@@ -824,6 +824,121 @@ module sha512_ctrl_32bit_tb
     end
   endtask // continuous_cmd_test
 
+
+  //----------------------------------------------------------------
+  // zeroize_test()
+  //
+  //----------------------------------------------------------------
+  task zeroize_test(input [7 : 0]    tc_number,
+                    input [1 : 0]    mode,
+                    input [1023 : 0] block0,
+                    input [1023 : 0] block1,
+                    input [511 : 0]  expected
+                  );
+    begin
+
+      $display("*** TC%01d - zeroize test started.", tc_ctr);
+
+      // First test: assert zeroize when engine is working 
+      write_block(block0);
+
+      write_single_word(ADDR_CTRL, {27'h0, 1'b0, mode, CTRL_INIT_VALUE});
+      #(10 * CLK_PERIOD);
+
+      write_single_word(ADDR_CTRL, {27'h0, 1'b1, 4'b0}); //zeroize
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+
+      wait_ready();
+      read_digest();
+      if (digest_data == 0)
+        begin
+          $display("TC%01d final block: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in final digest", tc_ctr);
+          $display("TC%01d: Expected: 0x%128x", tc_ctr, 0);
+          $display("TC%01d: Got:      0x%128x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+      tc_ctr = tc_ctr + 1;
+
+      // Second test: assert zeroize with INIT
+      write_block(block0);
+
+      write_single_word(ADDR_CTRL, {27'h0, 1'b1, mode, CTRL_INIT_VALUE}); //zeroize
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+
+      wait_ready();
+      read_digest();
+      if (digest_data == 0)
+        begin
+          $display("TC%01d final block: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in final digest", tc_ctr);
+          $display("TC%01d: Expected: 0x%128x", tc_ctr, 0);
+          $display("TC%01d: Got:      0x%128x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+      tc_ctr = tc_ctr + 1;
+
+      // Third test: assert zeroize with NEXT      
+      write_block(block0);
+
+      write_single_word(ADDR_CTRL, {27'h0, 1'b1, mode, CTRL_NEXT_VALUE}); //zeroize
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+
+      wait_ready();
+      read_digest();
+      if (digest_data == 0)
+        begin
+          $display("TC%01d final block: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in final digest", tc_ctr);
+          $display("TC%01d: Expected: 0x%128x", tc_ctr, 0);
+          $display("TC%01d: Got:      0x%128x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+      tc_ctr = tc_ctr + 1;
+
+      // Forth test: assert zeroize after NEXT      
+      write_block(block0);
+
+      write_single_word(ADDR_CTRL, {27'h0, 1'b0, mode, CTRL_NEXT_VALUE});
+      #(10 * CLK_PERIOD);
+
+      write_single_word(ADDR_CTRL, {27'h0, 1'b1, 4'b0}); //zeroize
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+
+      wait_ready();
+      read_digest();
+      if (digest_data == 0)
+        begin
+          $display("TC%01d final block: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in final digest", tc_ctr);
+          $display("TC%01d: Expected: 0x%128x", tc_ctr, 0);
+          $display("TC%01d: Got:      0x%128x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+
+      $display("*** TC%01d - zeroize test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask // zeroize_test
+
   //----------------------------------------------------------------
   // sha512_test
   // The main test functionality.
@@ -904,6 +1019,8 @@ module sha512_ctrl_32bit_tb
       double_block_test_pipelined(8'h09, MODE_SHA_512, double_block_one, double_block_two, tc6_expected);
 
       continuous_cmd_test(8'h0a, MODE_SHA_384, double_block_one, double_block_two, tc12_expected);
+
+      zeroize_test(8'h0b, MODE_SHA_384, double_block_one, double_block_two, tc12_expected);
 
       display_test_result();
       
