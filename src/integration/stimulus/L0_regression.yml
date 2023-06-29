@@ -22,11 +22,14 @@ contents:
         - ../test_suites/smoke_test_kv/smoke_test_kv.yml
         - ../test_suites/smoke_test_sram_ecc/smoke_test_sram_ecc.yml
         - ../test_suites/smoke_test_ras/smoke_test_ras.yml
-        # smoke_test_trng requires Caliptra to be built using the
-        # +define+CALIPTRA_INTERNAL_TRNG argument, which is not the
-        # default build config
-        # It will simply die without running in this L0 regression
+        # The following tests need defines, which are not in the default build config
+        # smoke_test_trng : +define+CALIPTRA_INTERNAL_TRNG
+        # smoke_test_qspi : +define+CALIPTRA_INTERNAL_QSPI
+        # smoke_test_uart : +define+CALIPTRA_INTERNAL_UART
+        # They will simply die without running in this L0 regression
         - ../test_suites/smoke_test_trng/smoke_test_trng.yml
+        - ../test_suites/smoke_test_qspi/smoke_test_qspi.yml
+        - ../test_suites/smoke_test_uart/smoke_test_uart.yml
         - ../test_suites/smoke_test_kv_uds_reset/smoke_test_kv_uds_reset.yml
         - ../test_suites/smoke_test_kv_securitystate/smoke_test_kv_securitystate.yml
         - ../test_suites/smoke_test_kv_ecc_flow/smoke_test_kv_ecc_flow.yml

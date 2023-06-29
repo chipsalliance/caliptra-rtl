@@ -121,6 +121,8 @@ module caliptra_top_tb (
     logic                                qspi_clk;
     logic [`CALIPTRA_QSPI_CS_WIDTH-1:0]  qspi_cs_n;
     wire  [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_data;
+    logic [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_data_host_to_device, qspi_data_device_to_host;
+    logic [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_data_host_to_device_en;
 
 `ifdef CALIPTRA_INTERNAL_UART
     logic uart_loopback;
@@ -142,6 +144,11 @@ module caliptra_top_tb (
 
     //device lifecycle
     security_state_t security_state;
+`ifdef CALIPTRA_DEBUG_UNLOCKED
+    assign security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b0}; // DebugUnlocked & Production
+`else
+    assign security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; // DebugLocked & Production
+`endif
 
     ras_test_ctrl_t ras_test_ctrl;
     logic [63:0] generic_input_wires;
@@ -314,11 +321,6 @@ module caliptra_top_tb (
         BootFSM_BrkPoint = 1'b1; //Set to 1 even before anything starts
         cptra_rst_b = 1'b0;
         start_apb_fuse_sequence = 1'b0;
-        //tie offs
-        jtag_tck = 1'b0;    // JTAG clk
-        jtag_tms = 1'b0;    // JTAG TMS
-        jtag_tdi = 1'b0;    // JTAG tdi
-        jtag_trst_n = 1'b0; // JTAG Reset
         //TIE-OFF
         PPROT = '0;
 
@@ -845,6 +847,20 @@ module caliptra_top_tb (
         endcase
     end
 
+// JTAG DPI
+jtagdpi #(
+    .Name           ("jtag0"),
+    .ListenPort     (5000)
+) jtagdpi (
+    .clk_i          (core_clk),
+    .rst_ni         (cptra_rst_b),
+    .jtag_tck       (jtag_tck),
+    .jtag_tms       (jtag_tms),
+    .jtag_tdi       (jtag_tdi),
+    .jtag_tdo       (jtag_tdo),
+    .jtag_trst_n    (jtag_trst_n),
+    .jtag_srst_n    ()
+);
 
    //=========================================================================-
    // DUT instance
@@ -873,9 +889,11 @@ caliptra_top caliptra_top_dut (
     .PWDATA(PWDATA),
     .PWRITE(PWRITE),
 
-    .qspi_clk_o(qspi_clk),
-    .qspi_cs_no(qspi_cs_n),
-    .qspi_d_io(qspi_data),
+    .qspi_clk_o (qspi_clk),
+    .qspi_cs_no (qspi_cs_n),
+    .qspi_d_i   (qspi_data_device_to_host),
+    .qspi_d_o   (qspi_data_host_to_device),
+    .qspi_d_en_o(qspi_data_host_to_device_en),
 
 `ifdef CALIPTRA_INTERNAL_UART
     .uart_tx(uart_loopback),
@@ -919,8 +937,8 @@ caliptra_top caliptra_top_dut (
     .generic_input_wires(generic_input_wires),
     .generic_output_wires(),
 
-    .security_state(security_state), //FIXME TIE-OFF
-    .scan_mode     (scan_mode) //FIXME TIE-OFF
+    .security_state(security_state),
+    .scan_mode     (scan_mode)
 );
 
 
@@ -940,6 +958,15 @@ physical_rng physical_rng (
     //=========================================================================-
     // SPI Flash
     //=========================================================================-
+for (genvar ii = 0; ii < `CALIPTRA_QSPI_IO_WIDTH; ii += 1) begin: gen_qspi_io
+  assign qspi_data[ii] = qspi_data_host_to_device_en[ii]
+      ? qspi_data_host_to_device[ii]
+      : 1'bz;
+  assign qspi_data_device_to_host[ii] = qspi_data_host_to_device_en[ii]
+      ? 1'bz
+      : qspi_data[ii];
+end
+
 localparam logic [15:0] DeviceId0 = 16'hF10A;
 localparam logic [15:0] DeviceId1 = 16'hF10B;
 
