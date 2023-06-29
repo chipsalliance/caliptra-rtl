@@ -39,9 +39,8 @@ module hmac_ctrl_tb();
   parameter ADDR_VERSION     = BASE_ADDR + 32'h00000008;
 
   parameter ADDR_CTRL        = BASE_ADDR + 32'h00000010;
-  parameter CTRL_INIT_VALUE  = 8'h01;
-  parameter CTRL_NEXT_VALUE  = 8'h02;
-  parameter CTRL_MODE_VALUE  = 8'h04;
+  parameter CTRL_INIT_VALUE  = 2'h1;
+  parameter CTRL_NEXT_VALUE  = 2'h2;
 
   parameter ADDR_STATUS      = BASE_ADDR + 32'h00000018;
   parameter STATUS_READY_BIT = 0;
@@ -145,6 +144,9 @@ module hmac_ctrl_tb();
 
   reg [63 : 0]  read_data;
   reg [383 : 0] digest_data;
+
+  //bind coverage file
+  hmac_ctrl_cov_bind i_hmac_ctrl_cov_bind();
 
   //----------------------------------------------------------------
   // Device Under Test.
@@ -537,6 +539,9 @@ module hmac_ctrl_tb();
       wait_ready();
       data_in_time = cycle_ctr;
       read_digest();
+
+      write_single_word(ADDR_CTRL, {29'h0, 1'b1, 2'b0}); //zeroize
+
       data_in_time = cycle_ctr - data_in_time;
       $display("***       DATA OUT processing time = %01d cycles", data_in_time);
       end_time = cycle_ctr - start_time;
@@ -549,8 +554,8 @@ module hmac_ctrl_tb();
       else
         begin
           $display("TC%01d: ERROR.", tc_ctr);
-          $display("TC%01d: Expected: 0x%064x", tc_ctr, expected);
-          $display("TC%01d: Got:      0x%064x", tc_ctr, digest_data);
+          $display("TC%01d: Expected: 0x%096x", tc_ctr, expected);
+          $display("TC%01d: Got:      0x%096x", tc_ctr, digest_data);
           error_ctr = error_ctr + 1;
         end
       $display("*** TC%01d - Single block test done.", tc_ctr);
@@ -604,6 +609,8 @@ module hmac_ctrl_tb();
       wait_ready();
       read_digest();
 
+      write_single_word(ADDR_CTRL, {29'h0, 1'b1, 2'b0}); //zeroize
+
       end_time = cycle_ctr - start_time;
       $display("*** Double block test processing time = %01d cycles", end_time);
 
@@ -614,8 +621,8 @@ module hmac_ctrl_tb();
       else
         begin
           $display("TC%01d: ERROR in final digest", tc_ctr);
-          $display("TC%01d: Expected: 0x%064x", tc_ctr, expected);
-          $display("TC%01d: Got:      0x%064x", tc_ctr, digest_data);
+          $display("TC%01d: Expected: 0x%096x", tc_ctr, expected);
+          $display("TC%01d: Got:      0x%096x", tc_ctr, digest_data);
           error_ctr = error_ctr + 1;
         end
 
@@ -624,6 +631,230 @@ module hmac_ctrl_tb();
     end
   endtask // double_block_test
 
+
+  //----------------------------------------------------------------
+  // continuous_cmd_test()
+  //
+  //
+  // Perform test of a double block digest.
+  //----------------------------------------------------------------
+  task continuous_cmd_test(input [383 : 0] key,
+                         input [1023: 0] block0,
+                         input [1023: 0] block1,
+                         input [159: 0]  seed,
+                         input [383 : 0] expected
+                        );
+    begin
+      reg [31  : 0] start_time;
+      reg [31 : 0] end_time;
+
+      start_time = cycle_ctr;
+      $display("*** TC%01d - continuous_cmd_test started.", tc_ctr);
+
+      write_key(key);
+
+      // First block
+      write_block(block0);
+
+      write_seed(seed);
+
+      write_single_word(ADDR_CTRL, CTRL_INIT_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+
+      #(CLK_PERIOD);
+
+      for (int i=0; i<10; i++)
+        begin
+          write_single_word(ADDR_CTRL, CTRL_INIT_VALUE);
+          #CLK_PERIOD;
+          write_single_word(ADDR_CTRL, CTRL_NEXT_VALUE);
+          #CLK_PERIOD;
+        end
+
+      #(CLK_PERIOD);
+      wait_ready();
+
+      // Final block
+      write_block(block1);
+
+      write_single_word(ADDR_CTRL, CTRL_NEXT_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+
+      #(CLK_PERIOD);
+
+      for (int i=0; i<10; i++)
+        begin
+          write_single_word(ADDR_CTRL, CTRL_INIT_VALUE);
+          #CLK_PERIOD;
+          write_single_word(ADDR_CTRL, CTRL_NEXT_VALUE);
+          #CLK_PERIOD;
+        end
+
+      #(CLK_PERIOD);
+      wait_ready();
+      read_digest();
+
+      write_single_word(ADDR_CTRL, {29'h0, 1'b1, 2'b0}); //zeroize
+
+      end_time = cycle_ctr - start_time;
+      $display("*** continuous_cmd_test processing time = %01d cycles", end_time);
+
+      if (digest_data == expected)
+        begin
+          $display("TC%01d final block: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in final digest", tc_ctr);
+          $display("TC%01d: Expected: 0x%096x", tc_ctr, expected);
+          $display("TC%01d: Got:      0x%096x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+
+      $display("*** TC%01d - continuous_cmd_test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask // continuous_cmd_test
+
+  //----------------------------------------------------------------
+  // zeroize_test()
+  //
+  //----------------------------------------------------------------
+  task zeroize_test(input [383 : 0] key,
+                    input [1023: 0] block0,
+                    input [1023: 0] block1,
+                    input [159: 0]  seed,
+                    input [383 : 0] expected
+                  );
+    begin
+
+      $display("*** TC%01d - zeroize test started.", tc_ctr);
+
+      // First test: assert zeroize when engine is working
+      write_key(key);
+      
+      write_block(block0);
+
+      write_seed(seed);
+
+      write_single_word(ADDR_CTRL, CTRL_INIT_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+
+      for (int i=0; i<10; i++)
+        begin
+          #(CLK_PERIOD);
+        end
+
+      write_single_word(ADDR_CTRL, {29'h0, 1'b1, 2'b0}); //zeroize
+
+      wait_ready();
+      read_digest();
+      if (digest_data == 0)
+        begin
+          $display("TC%01d final block: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in final digest", tc_ctr);
+          $display("TC%01d: Expected: 0x%096x", tc_ctr, 0);
+          $display("TC%01d: Got:      0x%096x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+      tc_ctr = tc_ctr + 1;
+
+      // Second test: assert zeroize with INIT
+      write_key(key);
+      
+      write_block(block0);
+
+      write_seed(seed);
+
+      write_single_word(ADDR_CTRL, {29'h0, 1'b1, CTRL_INIT_VALUE}); //zeroize
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+
+      wait_ready();
+      read_digest();
+      if (digest_data == 0)
+        begin
+          $display("TC%01d final block: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in final digest", tc_ctr);
+          $display("TC%01d: Expected: 0x%096x", tc_ctr, 0);
+          $display("TC%01d: Got:      0x%096x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+      tc_ctr = tc_ctr + 1;
+
+      // Third test: assert zeroize with NEXT
+      write_key(key);
+      
+      write_block(block0);
+
+      write_seed(seed);
+
+      write_single_word(ADDR_CTRL, {29'h0, 1'b1, CTRL_NEXT_VALUE}); //zeroize
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+
+      wait_ready();
+      read_digest();
+      if (digest_data == 0)
+        begin
+          $display("TC%01d final block: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in final digest", tc_ctr);
+          $display("TC%01d: Expected: 0x%096x", tc_ctr, 0);
+          $display("TC%01d: Got:      0x%096x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+      tc_ctr = tc_ctr + 1;
+
+      // Forth test: assert zeroize after NEXT
+      write_key(key);
+      
+      write_block(block0);
+
+      write_seed(seed);
+
+      write_single_word(ADDR_CTRL, CTRL_NEXT_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+
+      for (int i=0; i<10; i++)
+        begin
+          #(CLK_PERIOD);
+        end
+
+      write_single_word(ADDR_CTRL, {29'h0, 1'b1, 2'b0}); //zeroize
+
+      wait_ready();
+      read_digest();
+      if (digest_data == 0)
+        begin
+          $display("TC%01d final block: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in final digest", tc_ctr);
+          $display("TC%01d: Expected: 0x%096x", tc_ctr, 0);
+          $display("TC%01d: Got:      0x%096x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+
+      $display("*** TC%01d - zeroize test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask // zeroize_test
 
   //----------------------------------------------------------------
   // hmac_tests()
@@ -699,6 +930,10 @@ module hmac_ctrl_tb();
       seed4 = random_gen();
 
       double_block_test(key4, data40, data41, seed4, expected4);
+
+      continuous_cmd_test(key4, data40, data41, seed4, expected4);
+
+      zeroize_test(key4, data40, data41, seed4, expected4);
       
       $display("*** Testcases for PRF-HMAC-SHA-384 functionality completed.");
     end

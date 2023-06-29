@@ -39,9 +39,8 @@ module sha256_ctrl_tb();
   parameter ADDR_VERSION1    = 32'h0000000c;
 
   parameter ADDR_CTRL        = 32'h00000010;
-  parameter CTRL_INIT_VALUE  = 8'h01;
-  parameter CTRL_NEXT_VALUE  = 8'h02;
-  parameter CTRL_MODE_VALUE  = 8'h04;
+  parameter CTRL_INIT_VALUE  = 2'h1;
+  parameter CTRL_NEXT_VALUE  = 2'h2;
 
   parameter ADDR_STATUS      = 32'h00000018;
   parameter STATUS_READY_BIT = 0;
@@ -93,6 +92,7 @@ module sha256_ctrl_tb();
 
   reg           clk_tb;
   reg           reset_n_tb;
+  reg           cptra_pwrgood_tb;
 
   reg [AHB_ADDR_WIDTH-1:0]  haddr_i_tb;
   reg [AHB_DATA_WIDTH-1:0]  hwdata_i_tb;
@@ -109,6 +109,9 @@ module sha256_ctrl_tb();
   reg [31 : 0]  read_data;
   reg [255 : 0] digest_data;
 
+  //bind coverage file
+  sha256_ctrl_cov_bind i_sha256_ctrl_cov_bind();
+
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
@@ -119,7 +122,7 @@ module sha256_ctrl_tb();
             dut (
              .clk(clk_tb),
              .reset_n(reset_n_tb),
-             .cptra_pwrgood(reset_n_tb),
+             .cptra_pwrgood(cptra_pwrgood_tb),
 
              .haddr_i(haddr_i_tb),
              .hwdata_i(hwdata_i_tb),
@@ -171,17 +174,14 @@ module sha256_ctrl_tb();
     task reset_dut;
     begin
       $display("*** Toggle reset.");
+      cptra_pwrgood_tb = '0;
       reset_n_tb = 0;
 
       #(2 * CLK_PERIOD);
-
-      @(posedge clk_tb);
-      reset_n_tb = 1;
+      cptra_pwrgood_tb = 1;
 
       #(2 * CLK_PERIOD);
-
-      @(posedge clk_tb);
-      $display("");
+      reset_n_tb = 1;
     end
   endtask // reset_dut
 
@@ -200,6 +200,7 @@ module sha256_ctrl_tb();
 
       clk_tb        = 0;
       reset_n_tb    = 0;
+      cptra_pwrgood_tb = 0;
 
       haddr_i_tb      = 0;
       hwdata_i_tb     = 0;
@@ -246,8 +247,10 @@ module sha256_ctrl_tb();
   //----------------------------------------------------------------
   task wait_ready;
     begin
-      read_single_word(ADDR_STATUS);
-      while (hrdata_o_tb == 0)
+      read_data = 0;
+      #(CLK_PERIOD);
+
+      while (read_data == 0)
         begin
           read_single_word(ADDR_STATUS);
         end
@@ -264,22 +267,18 @@ module sha256_ctrl_tb();
   task write_single_word(input [31 : 0]  address,
                   input [31 : 0] word);
     begin
-      hsel_i_tb       <= 1;
-      haddr_i_tb      <= address;
-      hwrite_i_tb     <= 1;
-      hready_i_tb     <= 1;
-      htrans_i_tb     <= AHB_HTRANS_NONSEQ;
-      hsize_i_tb      <= 3'b010;
-      
-      @(posedge clk_tb);
-      haddr_i_tb      <= 'Z;
-      hwdata_i_tb     <= word;
-      hwrite_i_tb     <= 0;
-      htrans_i_tb     <= AHB_HTRANS_IDLE;
-      wait(hreadyout_o_tb == 1'b1);
+      hsel_i_tb       = 1;
+      haddr_i_tb      = address;
+      hwrite_i_tb     = 1;
+      hready_i_tb     = 1;
+      htrans_i_tb     = AHB_HTRANS_NONSEQ;
+      hsize_i_tb      = 3'b010;
+      #(CLK_PERIOD);
 
-      @(posedge clk_tb);
-      hsel_i_tb       <= 0;
+      haddr_i_tb      = 'Z;
+      hwdata_i_tb     = word;
+      hwrite_i_tb     = 0;
+      htrans_i_tb     = AHB_HTRANS_IDLE;
     end
   endtask // write_single_word
 
@@ -321,21 +320,18 @@ module sha256_ctrl_tb();
   //----------------------------------------------------------------
   task read_single_word(input [31 : 0]  address);
     begin
-      hsel_i_tb       <= 1;
-      haddr_i_tb      <= address;
-      hwrite_i_tb     <= 0;
-      hready_i_tb     <= 1;
-      htrans_i_tb     <= AHB_HTRANS_NONSEQ;
-      hsize_i_tb      <= 3'b010;
+      hsel_i_tb       = 1;
+      haddr_i_tb      = address;
+      hwrite_i_tb     = 0;
+      hready_i_tb     = 1;
+      htrans_i_tb     = AHB_HTRANS_NONSEQ;
+      hsize_i_tb      = 3'b010;
+      #(CLK_PERIOD);
       
-      @(posedge clk_tb);
-      hwdata_i_tb     <= 0;
-      haddr_i_tb      <= 'Z;
-      htrans_i_tb     <= AHB_HTRANS_IDLE;
-      wait(hreadyout_o_tb == 1'b1);
-
-      @(posedge clk_tb);
-      hsel_i_tb       <= 0;      
+      hwdata_i_tb     = 0;
+      haddr_i_tb     = 'Z;
+      htrans_i_tb     = AHB_HTRANS_IDLE;
+      read_data = hrdata_o_tb;    
     end
   endtask // read_word
 
@@ -421,21 +417,20 @@ module sha256_ctrl_tb();
 
       write_block(block);
 
-      if (mode)
-        write_single_word(ADDR_CTRL, (CTRL_MODE_VALUE + CTRL_INIT_VALUE));
-      else
-        write_single_word(ADDR_CTRL, CTRL_INIT_VALUE);
-
-      start_time = cycle_ctr;
-      
+      write_single_word(ADDR_CTRL, {mode, CTRL_INIT_VALUE});
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
       #(CLK_PERIOD);
+
+      start_time = cycle_ctr;
+
       wait_ready();
       end_time = cycle_ctr - start_time;
       $display("*** Single block test processing time = %01d cycles", end_time);
       read_digest();
+
+      write_single_word(ADDR_CTRL, {28'h0, 1'b1, 3'b0}); //zeroize
 
       // We need to ignore the LSW in SHA224 mode.
       if (mode == SHA224_MODE)
@@ -477,10 +472,8 @@ module sha256_ctrl_tb();
       // First block
       write_block(block0);
 
-      if (mode)
-        write_single_word(ADDR_CTRL, (CTRL_MODE_VALUE + CTRL_INIT_VALUE));
-      else
-        write_single_word(ADDR_CTRL, CTRL_INIT_VALUE);
+      write_single_word(ADDR_CTRL, {mode, CTRL_INIT_VALUE});
+      
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
@@ -507,16 +500,15 @@ module sha256_ctrl_tb();
       // Final block
       write_block(block1);
 
-      if (mode)
-        write_single_word(ADDR_CTRL, (CTRL_MODE_VALUE + CTRL_NEXT_VALUE));
-      else
-        write_single_word(ADDR_CTRL, CTRL_NEXT_VALUE);
+      write_single_word(ADDR_CTRL, {mode, CTRL_NEXT_VALUE});
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
       #(CLK_PERIOD);
       wait_ready();
       read_digest();
+
+      write_single_word(ADDR_CTRL, {28'h0, 1'b1, 3'b0}); //zeroize
 
       // We need to ignore the LSW in SHA224 mode.
       if (mode == SHA224_MODE)
@@ -539,6 +531,200 @@ module sha256_ctrl_tb();
     end
   endtask // double_block_test
 
+
+  //----------------------------------------------------------------
+  // continuous_cmd_test()
+  //
+  //
+  // Perform test of a double block digest.
+  //----------------------------------------------------------------
+  task continuous_cmd_test(input         mode,
+                         input [511 : 0] block0,
+                         input [255 : 0] expected0,
+                         input [511 : 0] block1,
+                         input [255 : 0] expected1
+                        );
+    reg [31 : 0] start_time;
+    reg [31 : 0] end_time;
+
+    begin
+      $display("*** TC%01d - continuous command test started.", tc_ctr);
+
+      start_time = cycle_ctr;
+
+      // First block
+      write_block(block0);
+
+      write_single_word(ADDR_CTRL, {mode, CTRL_INIT_VALUE});
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+
+      #(CLK_PERIOD);
+
+      for (int i=0; i<10; i++)
+        begin
+          write_single_word(ADDR_CTRL, {29'h0, mode, CTRL_INIT_VALUE});
+          #CLK_PERIOD;
+          write_single_word(ADDR_CTRL, {29'h0, mode, CTRL_NEXT_VALUE});
+          #CLK_PERIOD;
+        end
+
+      wait_ready();
+      
+      // Final block
+      write_block(block1);
+
+      write_single_word(ADDR_CTRL, {mode, CTRL_NEXT_VALUE});
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+
+      #(CLK_PERIOD);
+
+      for (int i=0; i<10; i++)
+        begin
+          write_single_word(ADDR_CTRL, {29'h0, mode, CTRL_INIT_VALUE});
+          #CLK_PERIOD;
+          write_single_word(ADDR_CTRL, {29'h0, mode, CTRL_NEXT_VALUE});
+          #CLK_PERIOD;
+        end
+
+      wait_ready();
+
+      read_digest();
+
+      end_time = cycle_ctr - start_time;
+      $display("*** processing time = %01d cycles", end_time);
+      if (digest_data == expected1)
+        begin
+          $display("TC%01d final block: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in final digest", tc_ctr);
+          $display("TC%01d: Expected: 0x%064x", tc_ctr, expected1);
+          $display("TC%01d: Got:      0x%064x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+
+      $display("*** TC%01d - Continuous command test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask // continuous_cmd_test
+
+
+  //----------------------------------------------------------------
+  // zeroize_test()
+  //
+  //----------------------------------------------------------------
+  task zeroize_test(input           mode,
+                    input [511 : 0] block0,
+                    input [255 : 0] expected0,
+                    input [511 : 0] block1,
+                    input [255 : 0] expected1
+                  );
+    begin
+
+      $display("*** TC%01d - zeroize test started.", tc_ctr);
+
+      // First test: assert zeroize when engine is working 
+      write_block(block0);
+
+      write_single_word(ADDR_CTRL, {28'h0, 1'b0, mode, CTRL_INIT_VALUE});
+      #(10 * CLK_PERIOD);
+
+      write_single_word(ADDR_CTRL, {28'h0, 1'b1, 3'b0}); //zeroize
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+
+      wait_ready();
+      read_digest();
+      if (digest_data == 0)
+        begin
+          $display("TC%01d final block: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in final digest", tc_ctr);
+          $display("TC%01d: Expected: 0x%064x", tc_ctr, 0);
+          $display("TC%01d: Got:      0x%064x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+      tc_ctr = tc_ctr + 1;
+
+      // Second test: assert zeroize with INIT
+      write_block(block0);
+
+      write_single_word(ADDR_CTRL, {28'h0, 1'b1, mode, CTRL_INIT_VALUE}); //zeroize
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+
+      wait_ready();
+      read_digest();
+      if (digest_data == 0)
+        begin
+          $display("TC%01d final block: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in final digest", tc_ctr);
+          $display("TC%01d: Expected: 0x%064x", tc_ctr, 0);
+          $display("TC%01d: Got:      0x%064x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+      tc_ctr = tc_ctr + 1;
+
+      // Third test: assert zeroize with NEXT      
+      write_block(block0);
+
+      write_single_word(ADDR_CTRL, {28'h0, 1'b1, mode, CTRL_NEXT_VALUE}); //zeroize
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+
+      wait_ready();
+      read_digest();
+      if (digest_data == 0)
+        begin
+          $display("TC%01d final block: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in final digest", tc_ctr);
+          $display("TC%01d: Expected: 0x%064x", tc_ctr, 0);
+          $display("TC%01d: Got:      0x%064x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+      tc_ctr = tc_ctr + 1;
+
+      // Forth test: assert zeroize after NEXT      
+      write_block(block0);
+
+      write_single_word(ADDR_CTRL, {mode, CTRL_NEXT_VALUE});
+      #(10 * CLK_PERIOD);
+
+      write_single_word(ADDR_CTRL, {28'h0, 1'b1, 3'b0}); //zeroize
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+
+      wait_ready();
+      read_digest();
+      if (digest_data == 0)
+        begin
+          $display("TC%01d final block: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in final digest", tc_ctr);
+          $display("TC%01d: Expected: 0x%064x", tc_ctr, 0);
+          $display("TC%01d: Got:      0x%064x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+
+      $display("*** TC%01d - zeroize test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask // zeroize_test
 
   //----------------------------------------------------------------
   // sha224_tests()
@@ -604,6 +790,10 @@ module sha256_ctrl_tb();
       res1_1 = 256'h248D6A61D20638B8E5C026930C3E6039A33CE45964FF2167F6ECEDD419DB06C1;
       double_block_test(SHA256_MODE, tc1_0, res1_0, tc1_1, res1_1);
 
+      continuous_cmd_test(SHA256_MODE, tc1_0, res1_0, tc1_1, res1_1);
+
+      zeroize_test(SHA256_MODE, tc1_0, res1_0, tc1_1, res1_1);
+
       $display("*** Testcases for sha256 functionality completed.");
     end
   endtask // sha256_tests
@@ -614,6 +804,7 @@ module sha256_ctrl_tb();
   // issue_test()
   //----------------------------------------------------------------
   task issue_test;
+    reg           mode;
     reg [511 : 0] block0;
     reg [511 : 0] block1;
     reg [511 : 0] block2;
@@ -625,6 +816,8 @@ module sha256_ctrl_tb();
     reg [511 : 0] block8;
     reg [255 : 0] expected;
     begin : issue_test;
+      mode = SHA256_MODE;
+
       block0 = 512'h6b900001_496e2074_68652061_72656120_6f662049_6f542028_496e7465_726e6574_206f6620_5468696e_6773292c_206d6f72_6520616e_64206d6f_7265626f_6f6d2c20;
       block1 = 512'h69742068_61732062_65656e20_6120756e_69766572_73616c20_636f6e73_656e7375_73207468_61742064_61746120_69732074_69732061_206e6577_20746563_686e6f6c;
       block2 = 512'h6f677920_74686174_20696e74_65677261_74657320_64656365_6e747261_6c697a61_74696f6e_2c496e20_74686520_61726561_206f6620_496f5420_28496e74_65726e65;
@@ -640,7 +833,7 @@ module sha256_ctrl_tb();
       $display("Running test for 9 block issue.");
       tc_ctr = tc_ctr + 1;
       write_block(block0);
-      write_single_word(ADDR_CTRL, (CTRL_MODE_VALUE + CTRL_INIT_VALUE));
+      write_single_word(ADDR_CTRL, {mode, CTRL_INIT_VALUE});
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
@@ -648,56 +841,56 @@ module sha256_ctrl_tb();
       wait_ready();
 
       write_block(block1);
-      write_single_word(ADDR_CTRL, (CTRL_MODE_VALUE + CTRL_NEXT_VALUE));
+      write_single_word(ADDR_CTRL, {mode, CTRL_NEXT_VALUE});
       #CLK_PERIOD;
       hsel_i_tb       = 0;      
       #(CLK_PERIOD);
       wait_ready();
 
       write_block(block2);
-      write_single_word(ADDR_CTRL, (CTRL_MODE_VALUE + CTRL_NEXT_VALUE));
+      write_single_word(ADDR_CTRL, {mode, CTRL_NEXT_VALUE});
       #CLK_PERIOD;
       hsel_i_tb       = 0;      
       #(CLK_PERIOD);
       wait_ready();
 
       write_block(block3);
-      write_single_word(ADDR_CTRL, (CTRL_MODE_VALUE + CTRL_NEXT_VALUE));
+      write_single_word(ADDR_CTRL, {mode, CTRL_NEXT_VALUE});
       #CLK_PERIOD;
       hsel_i_tb       = 0;      
       #(CLK_PERIOD);
       wait_ready();
 
       write_block(block4);
-      write_single_word(ADDR_CTRL, (CTRL_MODE_VALUE + CTRL_NEXT_VALUE));
+      write_single_word(ADDR_CTRL, {mode, CTRL_NEXT_VALUE});
       #CLK_PERIOD;
       hsel_i_tb       = 0;      
       #(CLK_PERIOD);
       wait_ready();
 
       write_block(block5);
-      write_single_word(ADDR_CTRL, (CTRL_MODE_VALUE + CTRL_NEXT_VALUE));
+      write_single_word(ADDR_CTRL, {mode, CTRL_NEXT_VALUE});
       #CLK_PERIOD;
       hsel_i_tb       = 0;      
       #(CLK_PERIOD);
       wait_ready();
 
       write_block(block6);
-      write_single_word(ADDR_CTRL, (CTRL_MODE_VALUE + CTRL_NEXT_VALUE));
+      write_single_word(ADDR_CTRL, {mode, CTRL_NEXT_VALUE});
       #CLK_PERIOD;
       hsel_i_tb       = 0;      
       #(CLK_PERIOD);
       wait_ready();
 
       write_block(block7);
-      write_single_word(ADDR_CTRL, (CTRL_MODE_VALUE + CTRL_NEXT_VALUE));
+      write_single_word(ADDR_CTRL, {mode, CTRL_NEXT_VALUE});
       #CLK_PERIOD;
       hsel_i_tb       = 0;      
       #(CLK_PERIOD);
       wait_ready();
 
       write_block(block8);
-      write_single_word(ADDR_CTRL, (CTRL_MODE_VALUE + CTRL_NEXT_VALUE));
+      write_single_word(ADDR_CTRL, {mode, CTRL_NEXT_VALUE});
       #CLK_PERIOD;
       hsel_i_tb       = 0;      
       #(CLK_PERIOD);
