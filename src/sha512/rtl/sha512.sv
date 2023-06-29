@@ -96,6 +96,7 @@ module sha512
 
   localparam BLOCK_NUM_DWORDS = BLOCK_SIZE / DATA_WIDTH;
   localparam DIG_NUM_DWORDS = DIG_SIZE / DATA_WIDTH;
+  localparam NONCE_NUM_DWORDS = PV_SIZE_OF_NONCE / DATA_WIDTH;
 
   reg [DATA_WIDTH-1 : 0][BLOCK_NUM_DWORDS-1 : 0]    block_reg ;
   reg [DIG_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0]      digest_reg;
@@ -151,6 +152,8 @@ module sha512
   logic gen_hash_block_write_en;
   logic [4:0] gen_hash_block_write_offset;
   logic [31:0] gen_hash_block_write_data;
+
+  logic [NONCE_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0] pv_nonce;
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
@@ -436,6 +439,12 @@ end
 //write out the dest data to KV or PCR on last iteration of SHA
 always_comb dest_data_avail = core_digest_valid & ~digest_valid_reg & last_reg;
 
+always_comb begin
+  for (int dword=0; dword< NONCE_NUM_DWORDS; dword++) begin
+      pv_nonce[dword] = hwif_out.SHA512_GEN_PCR_HASH_NONCE[dword].NONCE.value;
+  end
+end
+
 kv_write_client #(
   .DATA_WIDTH(384)
 )
@@ -472,7 +481,7 @@ pv_gen_hash1
   .core_digest_valid(gen_hash_ip & dest_data_avail),
 
   .start(gen_hash_start),
-  .nonce(hwif_out.SHA512_GEN_PCR_HASH_NONCE.NONCE.value),
+  .nonce(pv_nonce),
 
   .gen_hash_ip(gen_hash_ip),
   .gen_hash_init_reg(gen_hash_init_reg),

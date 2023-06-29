@@ -74,7 +74,7 @@ module sha512_reg (
         logic SHA512_VAULT_RD_STATUS;
         logic SHA512_KV_WR_CTRL;
         logic SHA512_KV_WR_STATUS;
-        logic SHA512_GEN_PCR_HASH_NONCE;
+        logic [8-1:0]SHA512_GEN_PCR_HASH_NONCE;
         logic SHA512_GEN_PCR_HASH_CTRL;
         logic SHA512_GEN_PCR_HASH_STATUS;
         logic [12-1:0]SHA512_GEN_PCR_HASH_DIGEST;
@@ -125,11 +125,13 @@ module sha512_reg (
         decoded_reg_strb.SHA512_VAULT_RD_STATUS = cpuif_req_masked & (cpuif_addr == 'h604);
         decoded_reg_strb.SHA512_KV_WR_CTRL = cpuif_req_masked & (cpuif_addr == 'h608);
         decoded_reg_strb.SHA512_KV_WR_STATUS = cpuif_req_masked & (cpuif_addr == 'h60c);
-        decoded_reg_strb.SHA512_GEN_PCR_HASH_NONCE = cpuif_req_masked & (cpuif_addr == 'h610);
-        decoded_reg_strb.SHA512_GEN_PCR_HASH_CTRL = cpuif_req_masked & (cpuif_addr == 'h614);
-        decoded_reg_strb.SHA512_GEN_PCR_HASH_STATUS = cpuif_req_masked & (cpuif_addr == 'h618);
+        for(int i0=0; i0<8; i0++) begin
+            decoded_reg_strb.SHA512_GEN_PCR_HASH_NONCE[i0] = cpuif_req_masked & (cpuif_addr == 'h610 + i0*'h4);
+        end
+        decoded_reg_strb.SHA512_GEN_PCR_HASH_CTRL = cpuif_req_masked & (cpuif_addr == 'h630);
+        decoded_reg_strb.SHA512_GEN_PCR_HASH_STATUS = cpuif_req_masked & (cpuif_addr == 'h634);
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.SHA512_GEN_PCR_HASH_DIGEST[i0] = cpuif_req_masked & (cpuif_addr == 'h61c + i0*'h4);
+            decoded_reg_strb.SHA512_GEN_PCR_HASH_DIGEST[i0] = cpuif_req_masked & (cpuif_addr == 'h638 + i0*'h4);
         end
         decoded_reg_strb.intr_block_rf.global_intr_en_r = cpuif_req_masked & (cpuif_addr == 'h800);
         decoded_reg_strb.intr_block_rf.error_intr_en_r = cpuif_req_masked & (cpuif_addr == 'h804);
@@ -269,7 +271,7 @@ module sha512_reg (
                 logic [31:0] next;
                 logic load_next;
             } NONCE;
-        } SHA512_GEN_PCR_HASH_NONCE;
+        } [8-1:0]SHA512_GEN_PCR_HASH_NONCE;
         struct packed{
             struct packed{
                 logic next;
@@ -549,7 +551,7 @@ module sha512_reg (
             struct packed{
                 logic [31:0] value;
             } NONCE;
-        } SHA512_GEN_PCR_HASH_NONCE;
+        } [8-1:0]SHA512_GEN_PCR_HASH_NONCE;
         struct packed{
             struct packed{
                 logic value;
@@ -1128,25 +1130,27 @@ module sha512_reg (
             field_storage.SHA512_KV_WR_STATUS.VALID.value <= field_combo.SHA512_KV_WR_STATUS.VALID.next;
         end
     end
-    // Field: sha512_reg.SHA512_GEN_PCR_HASH_NONCE.NONCE
-    always_comb begin
-        automatic logic [31:0] next_c = field_storage.SHA512_GEN_PCR_HASH_NONCE.NONCE.value;
-        automatic logic load_next_c = '0;
-        if(decoded_reg_strb.SHA512_GEN_PCR_HASH_NONCE && decoded_req_is_wr) begin // SW write
-            next_c = (field_storage.SHA512_GEN_PCR_HASH_NONCE.NONCE.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
-            load_next_c = '1;
+    for(genvar i0=0; i0<8; i0++) begin
+        // Field: sha512_reg.SHA512_GEN_PCR_HASH_NONCE[].NONCE
+        always_comb begin
+            automatic logic [31:0] next_c = field_storage.SHA512_GEN_PCR_HASH_NONCE[i0].NONCE.value;
+            automatic logic load_next_c = '0;
+            if(decoded_reg_strb.SHA512_GEN_PCR_HASH_NONCE[i0] && decoded_req_is_wr) begin // SW write
+                next_c = (field_storage.SHA512_GEN_PCR_HASH_NONCE[i0].NONCE.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+                load_next_c = '1;
+            end
+            field_combo.SHA512_GEN_PCR_HASH_NONCE[i0].NONCE.next = next_c;
+            field_combo.SHA512_GEN_PCR_HASH_NONCE[i0].NONCE.load_next = load_next_c;
         end
-        field_combo.SHA512_GEN_PCR_HASH_NONCE.NONCE.next = next_c;
-        field_combo.SHA512_GEN_PCR_HASH_NONCE.NONCE.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
-            field_storage.SHA512_GEN_PCR_HASH_NONCE.NONCE.value <= 'h0;
-        end else if(field_combo.SHA512_GEN_PCR_HASH_NONCE.NONCE.load_next) begin
-            field_storage.SHA512_GEN_PCR_HASH_NONCE.NONCE.value <= field_combo.SHA512_GEN_PCR_HASH_NONCE.NONCE.next;
+        always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+            if(~hwif_in.reset_b) begin
+                field_storage.SHA512_GEN_PCR_HASH_NONCE[i0].NONCE.value <= 'h0;
+            end else if(field_combo.SHA512_GEN_PCR_HASH_NONCE[i0].NONCE.load_next) begin
+                field_storage.SHA512_GEN_PCR_HASH_NONCE[i0].NONCE.value <= field_combo.SHA512_GEN_PCR_HASH_NONCE[i0].NONCE.next;
+            end
         end
+        assign hwif_out.SHA512_GEN_PCR_HASH_NONCE[i0].NONCE.value = field_storage.SHA512_GEN_PCR_HASH_NONCE[i0].NONCE.value;
     end
-    assign hwif_out.SHA512_GEN_PCR_HASH_NONCE.NONCE.value = field_storage.SHA512_GEN_PCR_HASH_NONCE.NONCE.value;
     // Field: sha512_reg.SHA512_GEN_PCR_HASH_CTRL.START
     always_comb begin
         automatic logic [0:0] next_c = field_storage.SHA512_GEN_PCR_HASH_CTRL.START.value;
