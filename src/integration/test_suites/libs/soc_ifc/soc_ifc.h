@@ -58,6 +58,7 @@ enum {
 
 enum mbox_cmd_e {
     MBOX_CMD_UC_BASIC   = 0x20000000,
+    MBOX_CMD_UC_OVERRUN = 0x20000001,
     MBOX_CMD_RESP_BASIC = 0x40000000,
     MBOX_CMD_REG_ACCESS = 0x40000001,
     MBOX_CMD_OOB_ACCESS = 0x40000002,
@@ -113,5 +114,6 @@ inline void soc_ifc_sha_accel_execute() {
 }
 void soc_ifc_sha_accel_poll_status();
 void soc_ifc_sha_accel_clr_lock();
+void soc_ifc_w1clr_sha_lock_field();
 
 #endif

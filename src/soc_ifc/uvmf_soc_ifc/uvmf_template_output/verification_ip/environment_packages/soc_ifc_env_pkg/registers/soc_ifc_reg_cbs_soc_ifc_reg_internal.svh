@@ -21,6 +21,14 @@ class soc_ifc_reg_cbs_soc_ifc_reg_internal extends uvm_reg_cbs;
 
     string AHB_map_name = "soc_ifc_AHB_map";
     string APB_map_name = "soc_ifc_APB_map";
+    
+    uvm_queue #(soc_ifc_reg_delay_job) delay_jobs;
+
+    function new(string name = "uvm_reg_cbs");
+        super.new(name);
+        if (!uvm_config_db#(uvm_queue#(soc_ifc_reg_delay_job))::get(null, "soc_ifc_reg_model_top", "delay_jobs", delay_jobs))
+            `uvm_error("SOC_IFC_REG_CBS", "Failed to get handle for 'delay_jobs' queue from config database!")
+    endfunction
 
     // Function: post_predict
     //

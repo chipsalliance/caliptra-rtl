@@ -56,13 +56,6 @@ class caliptra_top_rom_sequence extends caliptra_top_bench_sequence_base;
         `uvm_fatal("CALIPTRA_TOP_ROM_TEST", "caliptra_top_rom_sequence::body() - rom_seq randomization failed")
     rom_seq.start(top_configuration.soc_ifc_subenv_config.vsqr);
 
-    // Wait for RT image to set the ready_for_rt bit
-    while (!ready_for_rt) begin
-        while(!sts_rsp_count)soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_num_clocks(1); // Wait for new status updates
-        `uvm_info("CALIPTRA_TOP_ROM_TEST", "Observed status response, checking contents", UVM_DEBUG)
-        sts_rsp_count = 0; // We only care about the latest rsp, so even if count > 1, reset back to 0
-        ready_for_rt = soc_ifc_subenv_soc_ifc_status_agent_responder_seq.rsp.ready_for_runtime;
-    end
   endtask
 
   // ****************************************************************************

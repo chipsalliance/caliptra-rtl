@@ -68,6 +68,13 @@ package soc_ifc_env_pkg;
   `uvm_analysis_imp_decl(_expected_apb_analysis_export)
   `uvm_analysis_imp_decl(_actual_ahb_analysis_export)
   `uvm_analysis_imp_decl(_actual_apb_analysis_export)
+ 
+  `uvm_analysis_imp_decl(_cov_soc_ifc_ctrl_ae)
+  `uvm_analysis_imp_decl(_cov_soc_ifc_status_ae)
+  `uvm_analysis_imp_decl(_cov_apb_ae)
+  `uvm_analysis_imp_decl(_cov_cptra_ctrl_ae)
+  `uvm_analysis_imp_decl(_cov_cptra_status_ae)
+  `uvm_analysis_imp_decl(_cov_ahb_ae)
 
   // pragma uvmf custom package_imports_additional begin
   import soc_ifc_pkg::*;
@@ -80,6 +87,8 @@ package soc_ifc_env_pkg;
   `include "src/soc_ifc_env_configuration.svh"
   `include "src/soc_ifc_predictor.svh"
   `include "src/soc_ifc_scoreboard.svh"
+  `include "src/soc_ifc_reg_cov_subscriber.svh"
+  `include "src/soc_ifc_env_cov_subscriber.svh"
   `include "src/soc_ifc_environment.svh"
   `include "src/soc_ifc_env_sequence_base.svh"
 
@@ -114,10 +123,16 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_mbox_rand_fw_sequence soc_ifc_env_mbox_rand_fw_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_real_fw_sequence.svh"
   typedef soc_ifc_env_mbox_real_fw_sequence soc_ifc_env_mbox_real_fw_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_fw_upd_sequence.svh"
+  typedef soc_ifc_env_mbox_fw_upd_sequence soc_ifc_env_mbox_fw_upd_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rom_fw_sequence.svh"
   typedef soc_ifc_env_mbox_rom_fw_sequence soc_ifc_env_mbox_rom_fw_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_small_sequence.svh"
   typedef soc_ifc_env_mbox_rand_small_sequence soc_ifc_env_mbox_rand_small_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_min_sequence.svh"
+  typedef soc_ifc_env_mbox_min_sequence soc_ifc_env_mbox_min_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_max_sequence.svh"
+  typedef soc_ifc_env_mbox_max_sequence soc_ifc_env_mbox_max_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_medium_sequence.svh"
   typedef soc_ifc_env_mbox_rand_medium_sequence soc_ifc_env_mbox_rand_medium_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_large_sequence.svh"
@@ -191,6 +206,10 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_cptra_mbox_req_rand_small_sequence soc_ifc_env_cptra_mbox_req_rand_small_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_sequence_base.svh"
   typedef soc_ifc_env_top_mbox_sequence_base soc_ifc_env_top_mbox_sequence_base_t;
+  `include "sequences/mbox/soc_ifc_env_top_mbox_min_sequence.svh"
+  typedef soc_ifc_env_top_mbox_min_sequence soc_ifc_env_top_mbox_min_sequence_t;
+  `include "sequences/mbox/soc_ifc_env_top_mbox_max_sequence.svh"
+  typedef soc_ifc_env_top_mbox_max_sequence soc_ifc_env_top_mbox_max_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_rand_small_sequence.svh"
   typedef soc_ifc_env_top_mbox_rand_small_sequence soc_ifc_env_top_mbox_rand_small_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_rand_medium_sequence.svh"

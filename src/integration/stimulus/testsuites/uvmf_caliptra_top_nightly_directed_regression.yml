@@ -5,6 +5,10 @@ contents:
   - generator:
       tags: ["L1", "CALIPTRA_TOP",  "directed", "ROM"]
       path: ""
+      config:
+        params:
+          # 24 hours to help diagnose timeout problem for this test
+          timeout: 1440
       weight: 100
       generations: 1
       formats: 

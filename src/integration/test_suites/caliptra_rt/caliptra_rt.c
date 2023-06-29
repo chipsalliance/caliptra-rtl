@@ -298,6 +298,12 @@ void caliptra_rt() {
                 }
                 else {
                     VPRINTF(MEDIUM, "Received mailbox command (no expected RESP) from SOC! Got 0x%x\n", op.cmd);
+                    //For overrun command, read an extra dword
+                    if (op.cmd == MBOX_CMD_UC_OVERRUN) op.dlen = op.dlen + 4;
+                    // Read provided data
+                    for (loop_iter = 0; loop_iter<op.dlen; loop_iter+=4) {
+                        read_data = soc_ifc_mbox_read_dataout_single();
+                    }
                     lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DLEN), 0);
                     soc_ifc_set_mbox_status_field(CMD_COMPLETE);
                 }

@@ -51,10 +51,14 @@ package soc_ifc_reg_model_top_pkg;
 
     typedef struct packed {
         bit mbox_idle;
-        bit uc_send_stage;
+        bit uc_cmd_stage;
+        bit uc_dlen_stage;
+        bit uc_data_stage;
         bit uc_receive_stage;
         bit uc_done_stage;
-        bit soc_send_stage;
+        bit soc_cmd_stage;
+        bit soc_dlen_stage;
+        bit soc_data_stage;
         bit soc_receive_stage;
         bit soc_done_stage;
         bit mbox_error;
@@ -488,6 +492,7 @@ package soc_ifc_reg_model_top_pkg;
     // Scheduling helper class for delayed callback tasks
     `include "soc_ifc_reg_delay_job.svh"
     `include "soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error.svh"
+    `include "soc_ifc_reg_delay_job_intr_block_rf_ext.svh"
 
     // Callbacks for predicting reg-field updates
     `include "soc_ifc_reg_cbs_mbox_csr.svh"
@@ -497,6 +502,7 @@ package soc_ifc_reg_model_top_pkg;
     `include "soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain.svh"
     `include "soc_ifc_reg_cbs_mbox_csr_mbox_dataout_dataout.svh"
     `include "soc_ifc_reg_cbs_mbox_csr_mbox_status_status.svh"
+    `include "soc_ifc_reg_cbs_mbox_csr_mbox_status_mbox_fsm_ps.svh"
     `include "soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute.svh"
     `include "soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock.svh"
     `include "soc_ifc_reg_cbs_intr_block_rf_ext_global_intr_en_r_base.svh"
@@ -517,7 +523,12 @@ package soc_ifc_reg_model_top_pkg;
     `include "soc_ifc_reg_cbs_soc_ifc_reg_fuse.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_key.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_internal.svh"
+    `include "soc_ifc_reg_cbs_soc_ifc_reg_internal_fw_update_reset.svh"
     `include "soc_ifc_reg_cbs_sha512_acc_csr_LOCK_LOCK.svh"
+    `include "soc_ifc_reg_cbs_sha512_acc_csr_EXECUTE_EXECUTE.svh"
+
+    // Callback for sampling coverage
+    `include "soc_ifc_reg_cbs_sample.svh"
 
 // pragma uvmf custom define_register_classes end
 // pragma uvmf custom define_block_map_coverage_class begin
@@ -629,14 +640,15 @@ package soc_ifc_reg_model_top_pkg;
         soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_en_r_base       sha512_acc_csr_intr_block_rf_ext_notif_intr_en_r_base_cb;
         soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_trig_r_base     sha512_acc_csr_intr_block_rf_ext_notif_intr_trig_r_base_cb;
 
-        soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock       mbox_csr_mbox_lock_lock_cb;
-        soc_ifc_reg_cbs_mbox_csr_mbox_cmd_command     mbox_csr_mbox_cmd_command_cb;
-        soc_ifc_reg_cbs_mbox_csr_mbox_dlen_length     mbox_csr_mbox_dlen_length_cb;
-        soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain   mbox_csr_mbox_datain_datain_cb;
-        soc_ifc_reg_cbs_mbox_csr_mbox_dataout_dataout mbox_csr_mbox_dataout_dataout_cb;
-        soc_ifc_reg_cbs_mbox_csr_mbox_status_status   mbox_csr_mbox_status_status_cb;
-        soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute mbox_csr_mbox_execute_execute_cb;
-        soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock   mbox_csr_mbox_unlock_unlock_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock          mbox_csr_mbox_lock_lock_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_cmd_command        mbox_csr_mbox_cmd_command_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_dlen_length        mbox_csr_mbox_dlen_length_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain      mbox_csr_mbox_datain_datain_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_dataout_dataout    mbox_csr_mbox_dataout_dataout_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_status_status      mbox_csr_mbox_status_status_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_status_mbox_fsm_ps mbox_csr_mbox_status_mbox_fsm_ps_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute    mbox_csr_mbox_execute_execute_cb;
+        soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock      mbox_csr_mbox_unlock_unlock_cb;
 
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_FATAL              soc_ifc_reg_CPTRA_HW_ERROR_FATAL_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL          soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL_cb;
@@ -650,8 +662,12 @@ package soc_ifc_reg_model_top_pkg;
         soc_ifc_reg_cbs_soc_ifc_reg_fuse     soc_ifc_reg_fuse_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_key      soc_ifc_reg_key_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_internal soc_ifc_reg_internal_cb;
+        soc_ifc_reg_cbs_soc_ifc_reg_internal_fw_update_reset soc_ifc_reg_internal_fw_update_reset_cb;
 
-        soc_ifc_reg_cbs_sha512_acc_csr_LOCK_LOCK sha512_acc_csr_LOCK_LOCK_cb;
+        soc_ifc_reg_cbs_sha512_acc_csr_LOCK_LOCK       sha512_acc_csr_LOCK_LOCK_cb;
+        soc_ifc_reg_cbs_sha512_acc_csr_EXECUTE_EXECUTE sha512_acc_csr_EXECUTE_EXECUTE_cb;
+
+        soc_ifc_reg_cbs_sample sample_cb;
 
         uvm_reg_field cptra_fatal_flds[$];
         uvm_reg_field cptra_non_fatal_flds[$];
@@ -661,6 +677,8 @@ package soc_ifc_reg_model_top_pkg;
         uvm_reg_field notif_sts_flds[$];
         uvm_reg_field error_trig_flds[$];
         uvm_reg_field notif_trig_flds[$];
+        uvm_reg_field all_fields[$];
+        uvm_reg       all_regs[$];
 
         uvm_queue #(soc_ifc_reg_delay_job) delay_jobs;
 
@@ -727,14 +745,15 @@ package soc_ifc_reg_model_top_pkg;
         sha512_acc_csr_intr_block_rf_ext_notif_intr_en_r_base_cb       = soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_en_r_base      ::type_id::create("sha512_acc_csr_intr_block_rf_ext_notif_intr_en_r_base_cb"      );
         sha512_acc_csr_intr_block_rf_ext_notif_intr_trig_r_base_cb     = soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_trig_r_base    ::type_id::create("sha512_acc_csr_intr_block_rf_ext_notif_intr_trig_r_base_cb"    );
 
-        mbox_csr_mbox_lock_lock_cb       = soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock      ::type_id::create("mbox_csr_mbox_lock_lock_cb"      );
-        mbox_csr_mbox_cmd_command_cb     = soc_ifc_reg_cbs_mbox_csr_mbox_cmd_command    ::type_id::create("mbox_csr_mbox_cmd_command_cb"    );
-        mbox_csr_mbox_dlen_length_cb     = soc_ifc_reg_cbs_mbox_csr_mbox_dlen_length    ::type_id::create("mbox_csr_mbox_dlen_length_cb"    );
-        mbox_csr_mbox_datain_datain_cb   = soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain  ::type_id::create("mbox_csr_mbox_datain_datain_cb"  );
-        mbox_csr_mbox_dataout_dataout_cb = soc_ifc_reg_cbs_mbox_csr_mbox_dataout_dataout::type_id::create("mbox_csr_mbox_dataout_dataout_cb");
-        mbox_csr_mbox_status_status_cb   = soc_ifc_reg_cbs_mbox_csr_mbox_status_status  ::type_id::create("mbox_csr_mbox_status_status_cb"  );
-        mbox_csr_mbox_execute_execute_cb = soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute::type_id::create("mbox_csr_mbox_execute_execute_cb");
-        mbox_csr_mbox_unlock_unlock_cb   = soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock  ::type_id::create("mbox_csr_mbox_unlock_unlock_cb"  );
+        mbox_csr_mbox_lock_lock_cb          = soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock         ::type_id::create("mbox_csr_mbox_lock_lock_cb"         );
+        mbox_csr_mbox_cmd_command_cb        = soc_ifc_reg_cbs_mbox_csr_mbox_cmd_command       ::type_id::create("mbox_csr_mbox_cmd_command_cb"       );
+        mbox_csr_mbox_dlen_length_cb        = soc_ifc_reg_cbs_mbox_csr_mbox_dlen_length       ::type_id::create("mbox_csr_mbox_dlen_length_cb"       );
+        mbox_csr_mbox_datain_datain_cb      = soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain     ::type_id::create("mbox_csr_mbox_datain_datain_cb"     );
+        mbox_csr_mbox_dataout_dataout_cb    = soc_ifc_reg_cbs_mbox_csr_mbox_dataout_dataout   ::type_id::create("mbox_csr_mbox_dataout_dataout_cb"   );
+        mbox_csr_mbox_status_status_cb      = soc_ifc_reg_cbs_mbox_csr_mbox_status_status     ::type_id::create("mbox_csr_mbox_status_status_cb"     );
+        mbox_csr_mbox_status_mbox_fsm_ps_cb = soc_ifc_reg_cbs_mbox_csr_mbox_status_mbox_fsm_ps::type_id::create("mbox_csr_mbox_status_mbox_fsm_ps_cb");
+        mbox_csr_mbox_execute_execute_cb    = soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute   ::type_id::create("mbox_csr_mbox_execute_execute_cb"   );
+        mbox_csr_mbox_unlock_unlock_cb      = soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock     ::type_id::create("mbox_csr_mbox_unlock_unlock_cb"     );
 
         soc_ifc_reg_CPTRA_HW_ERROR_FATAL_cb            = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_FATAL          ::type_id::create("soc_ifc_reg_CPTRA_HW_ERROR_FATAL_cb"          );
         soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL_cb        = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL      ::type_id::create("soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL_cb"      );
@@ -748,8 +767,13 @@ package soc_ifc_reg_model_top_pkg;
         soc_ifc_reg_fuse_cb     = soc_ifc_reg_cbs_soc_ifc_reg_fuse    ::type_id::create("soc_ifc_reg_fuse_cb");
         soc_ifc_reg_key_cb      = soc_ifc_reg_cbs_soc_ifc_reg_key     ::type_id::create("soc_ifc_reg_key_cb");
         soc_ifc_reg_internal_cb = soc_ifc_reg_cbs_soc_ifc_reg_internal::type_id::create("soc_ifc_reg_internal_cb");
+        soc_ifc_reg_internal_fw_update_reset_cb = soc_ifc_reg_cbs_soc_ifc_reg_internal_fw_update_reset::type_id::create("soc_ifc_reg_internal_fw_update_reset_cb");
 
-        sha512_acc_csr_LOCK_LOCK_cb = soc_ifc_reg_cbs_sha512_acc_csr_LOCK_LOCK::type_id::create("sha512_acc_Csr_lock_lock_cb");
+        sha512_acc_csr_LOCK_LOCK_cb       = soc_ifc_reg_cbs_sha512_acc_csr_LOCK_LOCK::type_id::create("sha512_acc_csr_LOCK_LOCK_cb");
+        sha512_acc_csr_EXECUTE_EXECUTE_cb = soc_ifc_reg_cbs_sha512_acc_csr_EXECUTE_EXECUTE::type_id::create("sha512_acc_csr_EXECUTE_EXECUTE_cb");
+
+        sample_cb = soc_ifc_reg_cbs_sample::type_id::create("sample_cb");
+
         // Callbacks compute side-effects to other registers in the reg-model
         // in response to 'do_predict'.
         // 'do_predict' is invoked by the reg_predictor after receiving a transaction
@@ -794,14 +818,15 @@ package soc_ifc_reg_model_top_pkg;
         foreach (notif_trig_flds[ii]) uvm_reg_field_cb::add(notif_trig_flds[ii], sha512_acc_csr_intr_block_rf_ext_notif_intr_trig_r_base_cb    );
 
         /* -- mbox_csr -- */
-        uvm_reg_field_cb::add(mbox_csr_rm.mbox_lock   .lock      , mbox_csr_mbox_lock_lock_cb       );
-        uvm_reg_field_cb::add(mbox_csr_rm.mbox_cmd    .command   , mbox_csr_mbox_cmd_command_cb     );
-        uvm_reg_field_cb::add(mbox_csr_rm.mbox_dlen   .length    , mbox_csr_mbox_dlen_length_cb     );
-        uvm_reg_field_cb::add(mbox_csr_rm.mbox_datain .datain    , mbox_csr_mbox_datain_datain_cb   );
-        uvm_reg_field_cb::add(mbox_csr_rm.mbox_dataout.dataout   , mbox_csr_mbox_dataout_dataout_cb );
-        uvm_reg_field_cb::add(mbox_csr_rm.mbox_status .status    , mbox_csr_mbox_status_status_cb   );
-        uvm_reg_field_cb::add(mbox_csr_rm.mbox_execute.execute   , mbox_csr_mbox_execute_execute_cb );
-        uvm_reg_field_cb::add(mbox_csr_rm.mbox_unlock .unlock    , mbox_csr_mbox_unlock_unlock_cb   );
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_lock   .lock       , mbox_csr_mbox_lock_lock_cb         );
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_cmd    .command    , mbox_csr_mbox_cmd_command_cb       );
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_dlen   .length     , mbox_csr_mbox_dlen_length_cb       );
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_datain .datain     , mbox_csr_mbox_datain_datain_cb     );
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_dataout.dataout    , mbox_csr_mbox_dataout_dataout_cb   );
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_status .status     , mbox_csr_mbox_status_status_cb     );
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_status .mbox_fsm_ps, mbox_csr_mbox_status_mbox_fsm_ps_cb);
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_execute.execute    , mbox_csr_mbox_execute_execute_cb   );
+        uvm_reg_field_cb::add(mbox_csr_rm.mbox_unlock .unlock     , mbox_csr_mbox_unlock_unlock_cb     );
 
         /* -- soc_ifc_reg -- */
         soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL    .get_fields(cptra_fatal_flds    );
@@ -811,6 +836,7 @@ package soc_ifc_reg_model_top_pkg;
 
         foreach (cptra_fatal_flds    [ii])           uvm_reg_field_cb::add(cptra_fatal_flds    [ii]               , soc_ifc_reg_CPTRA_HW_ERROR_FATAL_cb    );
         foreach (cptra_non_fatal_flds[ii])           uvm_reg_field_cb::add(cptra_non_fatal_flds[ii]               , soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL_cb);
+        uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_BOOT_STATUS.status             , soc_ifc_reg_internal_cb                       );
         foreach (soc_ifc_reg_rm.CPTRA_TRNG_DATA[ii]) uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_DATA[ii].DATA, soc_ifc_reg_CPTRA_TRNG_DATA_DATA_cb);
         uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_PAUSER_LOCK  .LOCK        , soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK_cb    );
         uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_STATUS       .DATA_REQ    , soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ_cb     );
@@ -828,11 +854,25 @@ package soc_ifc_reg_model_top_pkg;
         foreach (soc_ifc_reg_rm.fuse_idevid_cert_attr[ii])     uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_idevid_cert_attr[ii].cert     , soc_ifc_reg_fuse_cb);
         foreach (soc_ifc_reg_rm.fuse_idevid_manuf_hsm_id[ii])  uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_idevid_manuf_hsm_id[ii].hsm_id, soc_ifc_reg_fuse_cb);
                                                                uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_life_cycle.life_cycle         , soc_ifc_reg_fuse_cb);
+                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_lms_verify.lms_verify         , soc_ifc_reg_fuse_cb);
+                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_lms_revocation.lms_revocation , soc_ifc_reg_fuse_cb);
         foreach (soc_ifc_reg_rm.internal_obf_key[ii])          uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_obf_key[ii].key           , soc_ifc_reg_key_cb);
                                                                uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_iccm_lock.lock            , soc_ifc_reg_internal_cb);
-
+                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_fw_update_reset.core_rst  , soc_ifc_reg_internal_fw_update_reset_cb) ;
         /* -- sha512_acc_csr -- */
         uvm_reg_field_cb::add(sha512_acc_csr_rm.LOCK.LOCK, sha512_acc_csr_LOCK_LOCK_cb);
+        uvm_reg_field_cb::add(sha512_acc_csr_rm.EXECUTE.EXECUTE, sha512_acc_csr_EXECUTE_EXECUTE_cb);
+
+        /* -- Coverage sampling callback for all registers */
+        // Add this callback after all other callbacks so it runs AFTER the prediction is finalized
+        get_registers(all_regs, UVM_HIER);
+        foreach (all_regs[ii]) begin
+            all_fields.delete();
+            all_regs[ii].get_fields(all_fields);
+            foreach (all_fields[jj]) begin
+                uvm_reg_field_cb::add(all_fields[jj], sample_cb);
+            end
+        end
 
 // pragma uvmf custom construct_configure_build_registers_within_block end
 // pragma uvmf custom add_registers_to_block_map begin

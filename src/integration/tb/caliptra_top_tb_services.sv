@@ -828,7 +828,7 @@ endgenerate //IV_NO
         // uvm tests/sequences
         // End Of test monitor
         if(mailbox_write && WriteData[7:0] == 8'hff) begin
-            if (UVM_TB) $warning("WARNING! Detected FW write to manually end the test with SUCCESS, but Firmware can't do this in UVM.");
+            if (UVM_TB) $info("INFO: Detected FW write to manually end the test with SUCCESS; ignoring since the UVM environment will handle this.");
             else if (|cycleCntKillReq) begin
                 $error("ERROR! FW attempted to end the simulation with SUCCESS after previously requesting to end the sim with FAILURE!");
             end
@@ -1515,6 +1515,7 @@ endfunction
 `ifndef VERILATOR
 soc_ifc_cov_bind i_soc_ifc_cov_bind();
 caliptra_top_cov_bind i_caliptra_top_cov_bind();
+sha512_ctrl_cov_bind i_sha512_ctrl_cov_bind();
 `endif
 
 /* verilator lint_off CASEINCOMPLETE */

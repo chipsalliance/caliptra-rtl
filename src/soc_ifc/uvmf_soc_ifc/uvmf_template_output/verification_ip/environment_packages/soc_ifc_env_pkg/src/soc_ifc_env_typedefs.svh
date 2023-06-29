@@ -46,6 +46,7 @@
    */
   typedef enum logic [31:0] {
       MBOX_CMD_UC_BASIC   = 32'h20000000,
+      MBOX_CMD_UC_OVERRUN = 32'h20000001,
       MBOX_CMD_RESP_BASIC = 32'h40000000,
       MBOX_CMD_REG_ACCESS = 32'h40000001,
       MBOX_CMD_OOB_ACCESS = 32'h40000002,
@@ -76,5 +77,50 @@
     logic sha512_mode;
   } sha_accel_op_s;
 
+  typedef struct packed {
+      bit null_action; /* no-effect reads or writes to mbox regs, or resets when mbox is idle */
+      bit lock_acquire;
+      bit cmd_wr;
+      bit dlen_wr;
+      bit datain_wr;
+      bit exec_set;
+      bit cmd_rd;
+      bit dlen_rd;
+      bit dataout_rd;
+      bit resp_datain_wr;
+      bit resp_dlen_wr;
+      bit resp_dlen_rd;
+      bit resp_dataout_rd;
+      bit status_wr;
+      bit status_rd;
+      bit exec_clr;
+      bit force_unlock;
+      bit reset; /* should be triggered by a soc_ifc_ctrl transaction to indicate that an _active_ mailbox flow was interrupted by reset */
+  } mbox_steps_s;
+  localparam mbox_steps_s MBOX_STEP_NULL_ACTION     = '{null_action    : 1'b1, default: 1'b0};
+  localparam mbox_steps_s MBOX_STEP_LOCK_ACQUIRE    = '{lock_acquire   : 1'b1, default: 1'b0};
+  localparam mbox_steps_s MBOX_STEP_CMD_WR          = '{cmd_wr         : 1'b1, default: 1'b0};
+  localparam mbox_steps_s MBOX_STEP_DLEN_WR         = '{dlen_wr        : 1'b1, default: 1'b0};
+  localparam mbox_steps_s MBOX_STEP_DATAIN_WR       = '{datain_wr      : 1'b1, default: 1'b0};
+  localparam mbox_steps_s MBOX_STEP_EXEC_SET        = '{exec_set       : 1'b1, default: 1'b0};
+  localparam mbox_steps_s MBOX_STEP_CMD_RD          = '{cmd_rd         : 1'b1, default: 1'b0};
+  localparam mbox_steps_s MBOX_STEP_DLEN_RD         = '{dlen_rd        : 1'b1, default: 1'b0};
+  localparam mbox_steps_s MBOX_STEP_DATAOUT_RD      = '{dataout_rd     : 1'b1, default: 1'b0};
+  localparam mbox_steps_s MBOX_STEP_RESP_DATAIN_WR  = '{resp_datain_wr : 1'b1, default: 1'b0};
+  localparam mbox_steps_s MBOX_STEP_RESP_DLEN_WR    = '{resp_dlen_wr   : 1'b1, default: 1'b0};
+  localparam mbox_steps_s MBOX_STEP_RESP_DLEN_RD    = '{resp_dlen_rd   : 1'b1, default: 1'b0};
+  localparam mbox_steps_s MBOX_STEP_RESP_DATAOUT_RD = '{resp_dataout_rd: 1'b1, default: 1'b0};
+  localparam mbox_steps_s MBOX_STEP_STATUS_WR       = '{status_wr      : 1'b1, default: 1'b0};
+  localparam mbox_steps_s MBOX_STEP_STATUS_RD       = '{status_rd      : 1'b1, default: 1'b0};
+  localparam mbox_steps_s MBOX_STEP_EXEC_CLR        = '{exec_clr       : 1'b1, default: 1'b0};
+  localparam mbox_steps_s MBOX_STEP_FORCE_UNLOCK    = '{force_unlock   : 1'b1, default: 1'b0};
+  localparam mbox_steps_s MBOX_STEP_RESET           = '{reset          : 1'b1, default: 1'b0};
+
+  localparam bit     AHB_REQ = 1'b1;
+  localparam bit NOT_AHB_REQ = 1'b0;
+  typedef struct packed {
+    bit          is_ahb;
+    mbox_steps_s step;
+  } mbox_steps_by_if_s;
   // pragma uvmf custom additional end
 

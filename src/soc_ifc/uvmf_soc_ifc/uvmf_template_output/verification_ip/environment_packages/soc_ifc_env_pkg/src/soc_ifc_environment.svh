@@ -67,6 +67,17 @@ class soc_ifc_environment  extends uvmf_environment_base #(
                 )
  soc_ifc_sb_t;
   soc_ifc_sb_t soc_ifc_sb;
+  typedef soc_ifc_env_cov_subscriber #(
+                .PRED_T(soc_ifc_pred_t),
+                .CONFIG_T(CONFIG_T)
+  )
+  soc_ifc_env_cov_sub_t;
+ soc_ifc_env_cov_sub_t soc_ifc_env_cov_sub;
+  typedef soc_ifc_reg_cov_subscriber #(
+                .CONFIG_T(CONFIG_T)
+                )
+ soc_ifc_reg_cov_sub_t;
+  soc_ifc_reg_cov_sub_t soc_ifc_reg_cov_sub;
 
 
 // UVMF_CHANGE_ME: QVIP_AGENT_USED_FOR_REG_MAP: 
@@ -166,6 +177,11 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     soc_ifc_sb = soc_ifc_sb_t::type_id::create("soc_ifc_sb",this);
     soc_ifc_sb.configuration = configuration;
     soc_ifc_sb.enable_wait_for_scoreboard_empty();
+    soc_ifc_env_cov_sub = soc_ifc_env_cov_sub_t::type_id::create("soc_ifc_env_cov_sub",this);
+    soc_ifc_env_cov_sub.configuration = configuration;
+    soc_ifc_env_cov_sub.pred = soc_ifc_pred;
+    soc_ifc_reg_cov_sub = soc_ifc_reg_cov_sub_t::type_id::create("soc_ifc_reg_cov_sub",this);
+    soc_ifc_reg_cov_sub.configuration = configuration;
 // pragma uvmf custom reg_model_build_phase begin
   // Build register model predictor if prediction is enabled
   if (configuration.enable_reg_prediction) begin
@@ -211,6 +227,14 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     if ( configuration.qvip_apb5_slave_subenv_interface_activity[0] == ACTIVE )
        uvm_config_db #(mvc_sequencer)::set(null,UVMF_SEQUENCERS,configuration.qvip_apb5_slave_subenv_interface_names[0],qvip_apb5_slave_subenv.apb5_master_0.m_sequencer  );
     // pragma uvmf custom reg_model_connect_phase begin
+    /*if (TODO) */begin:connect_coverage
+        soc_ifc_pred.soc_ifc_cov_ap      .connect                                   (soc_ifc_env_cov_sub.soc_ifc_ctrl_ae  );
+        soc_ifc_pred.cptra_cov_ap        .connect                                   (soc_ifc_env_cov_sub.cptra_ctrl_ae    );
+        soc_ifc_status_agent.monitored_ap.connect                                   (soc_ifc_env_cov_sub.soc_ifc_status_ae);
+        cptra_status_agent  .monitored_ap.connect                                   (soc_ifc_env_cov_sub.cptra_status_ae  );
+        qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer_cov"].connect(soc_ifc_env_cov_sub.ahb_ae           );
+        qvip_apb5_slave_subenv_apb5_master_0_ap       ["trans_ap_cov"]      .connect(soc_ifc_env_cov_sub.apb_ae           );
+    end:connect_coverage
     // Create register model adapter if required
     if (configuration.enable_reg_prediction ||
         configuration.enable_reg_adaptation) begin
@@ -246,6 +270,8 @@ class soc_ifc_environment  extends uvmf_environment_base #(
       // of the sub-maps must be done manually.
       soc_ifc_pred.soc_ifc_ahb_reg_ap.connect(ahb_reg_predictor.bus_item_export);
       soc_ifc_pred.soc_ifc_apb_reg_ap.connect(apb_reg_predictor.bus_item_export);
+      ahb_reg_predictor.reg_ap.connect(soc_ifc_reg_cov_sub.analysis_export);
+      apb_reg_predictor.reg_ap.connect(soc_ifc_reg_cov_sub.analysis_export);
 //      qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer"].connect(ahb_reg_predictor.bus_item_export);
 //      qvip_apb5_slave_subenv_apb5_master_0_ap["trans_ap"].connect(apb_reg_predictor.bus_item_export);
     end

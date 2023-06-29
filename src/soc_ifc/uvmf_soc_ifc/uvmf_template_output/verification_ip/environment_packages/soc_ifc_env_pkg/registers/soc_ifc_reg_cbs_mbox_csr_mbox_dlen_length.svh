@@ -24,8 +24,22 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_dlen_length extends soc_ifc_reg_delay_
         `uvm_info("SOC_IFC_REG_DELAY_JOB", "Running delayed job for mbox_csr.mbox_dlen.length", UVM_HIGH)
         // Check mbox_unlock before predicting FSM change, since a force unlock
         // has priority over normal flow
-        if (rm.mbox_lock.lock.get_mirrored_value() && !rm.mbox_unlock.unlock.get_mirrored_value() && rm.mbox_status.mbox_fsm_ps.get_mirrored_value() == MBOX_RDY_FOR_DLEN) begin
+        // mbox_unlock only 'activates' on the falling edge of the pulse; if we detect
+        // that, bail out of this prediction job
+        if (rm.mbox_unlock.unlock.get_mirrored_value()) begin
+            uvm_wait_for_nba_region();
+            if (!rm.mbox_unlock.unlock.get_mirrored_value()) begin
+                return;
+            end
+        end
+        if (rm.mbox_lock.lock.get_mirrored_value() && rm.mbox_fn_state_sigs.soc_dlen_stage) begin
             rm.mbox_status.mbox_fsm_ps.predict(state_nxt, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
+            rm.mbox_fn_state_sigs = '{soc_data_stage: 1'b1, default: 1'b0};
+            `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("post_predict called through map [%p] on mbox_dlen results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
+        end
+        else if (rm.mbox_lock.lock.get_mirrored_value() && rm.mbox_fn_state_sigs.uc_dlen_stage) begin
+            rm.mbox_status.mbox_fsm_ps.predict(state_nxt, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
+            rm.mbox_fn_state_sigs = '{uc_data_stage: 1'b1, default: 1'b0};
             `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("post_predict called through map [%p] on mbox_dlen results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
         end
     endtask
@@ -62,7 +76,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_dlen_length extends soc_ifc_reg_cbs_mbox_csr
         if (map.get_name() == this.AHB_map_name) begin
             case (kind) inside
                 UVM_PREDICT_WRITE: begin
-                    if (rm.mbox_fn_state_sigs.uc_send_stage) begin
+                    if (rm.mbox_fn_state_sigs.uc_dlen_stage) begin
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("Predicting mbox_fsm_ps transition to [%p] on write to mbox_dlen", MBOX_RDY_FOR_DATA), UVM_HIGH)
                         delay_job.state_nxt = MBOX_RDY_FOR_DATA;
                         delay_jobs.push_back(delay_job);
@@ -84,7 +98,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_dlen_length extends soc_ifc_reg_cbs_mbox_csr
         else if (map.get_name() == this.APB_map_name) begin
             case (kind) inside
                 UVM_PREDICT_WRITE: begin
-                    if (rm.mbox_fn_state_sigs.soc_send_stage && (rm.mbox_status.mbox_fsm_ps.get_mirrored_value() == MBOX_RDY_FOR_DLEN)) begin
+                    if (rm.mbox_fn_state_sigs.soc_dlen_stage) begin
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("Predicting mbox_fsm_ps transition to [%p] on write to mbox_dlen", MBOX_RDY_FOR_DATA), UVM_HIGH)
                         delay_job.state_nxt = MBOX_RDY_FOR_DATA;
                         delay_jobs.push_back(delay_job);

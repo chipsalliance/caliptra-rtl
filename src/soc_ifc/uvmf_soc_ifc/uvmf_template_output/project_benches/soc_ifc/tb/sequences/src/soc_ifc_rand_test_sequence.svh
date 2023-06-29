@@ -43,6 +43,8 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
   rand enum int {
       IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL,
       IDX_SOC_IFC_ENV_MBOX_TOP_RAND_MEDIUM,
+      IDX_SOC_IFC_ENV_MBOX_TOP_MIN,
+      IDX_SOC_IFC_ENV_MBOX_TOP_MAX,
       IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL_UNLOCK,
       IDX_SOC_IFC_ENV_MBOX_TOP_RAND_MEDIUM_UNLOCK,
       IDX_SOC_IFC_ENV_MBOX_TOP_CONTENTION,
@@ -65,6 +67,8 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
   constraint avail_env_seqs_c {
       rand_seq_idx dist {
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL                := 25,
+          IDX_SOC_IFC_ENV_MBOX_TOP_MIN                       := 25,
+          IDX_SOC_IFC_ENV_MBOX_TOP_MAX                       := 1,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_MEDIUM               := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL_UNLOCK         := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_MEDIUM_UNLOCK        := 25,
@@ -73,7 +77,7 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM        := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_SMALL_UNLOCK  := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM_UNLOCK := 25,
-          IDX_SOC_IFC_ENV_MBOX_TOP_DLEN_VIOLATION            := 0, /*FIXME re-enable this after resolving data mismatch error */
+          IDX_SOC_IFC_ENV_MBOX_TOP_DLEN_VIOLATION            := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_MULTI_AGENT               := 10,
           IDX_SOC_IFC_ENV_CPTRA_MBOX_TOP_RAND_SMALL          := 25,
           IDX_SOC_IFC_ENV_RST_WARM                           := 1,
@@ -176,6 +180,10 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
                 obj = soc_ifc_env_top_mbox_rand_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_TOP_RAND_MEDIUM:
                 obj = soc_ifc_env_top_mbox_rand_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_TOP_MIN:
+                obj = soc_ifc_env_top_mbox_min_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_TOP_MAX:
+                obj = soc_ifc_env_top_mbox_max_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL_UNLOCK:
                 obj = soc_ifc_env_top_mbox_rand_small_unlock_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_TOP_RAND_MEDIUM_UNLOCK:
