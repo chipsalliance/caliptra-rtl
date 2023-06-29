@@ -24,7 +24,15 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_status_status extends soc_ifc_reg_dela
         `uvm_info("SOC_IFC_REG_DELAY_JOB", "Running delayed job for mbox_csr.mbox_status.status", UVM_HIGH)
         // Check mbox_unlock before predicting FSM change, since a force unlock
         // has priority over normal flow
-        if (!rm.mbox_unlock.unlock.get_mirrored_value() && rm.mbox_lock.lock.get_mirrored_value()) begin
+        // mbox_unlock only 'activates' on the falling edge of the pulse; if we detect
+        // that, bail out of this prediction job
+        if (rm.mbox_unlock.unlock.get_mirrored_value()) begin
+            uvm_wait_for_nba_region();
+            if (!rm.mbox_unlock.unlock.get_mirrored_value()) begin
+                return;
+            end
+        end
+        if (rm.mbox_lock.lock.get_mirrored_value()) begin
             rm.mbox_status.mbox_fsm_ps.predict(state_nxt, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
             if (state_nxt == MBOX_EXECUTE_SOC) begin
                 rm.mbox_fn_state_sigs = '{soc_done_stage: 1'b1, default: 1'b0};
@@ -77,18 +85,25 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_status_status extends soc_ifc_reg_cbs_mbox_c
                         end
                         else begin
                             // Maximum allowable size for data transferred via mailbox
-                            int unsigned dlen_cap_dw = (mbox_dlen_mirrored(rm) < (mm.get_size() * mm.get_n_bytes())) ? mbox_dlen_mirrored_dword_ceil(rm) :
+                            int unsigned dlen_cap_dw = (mbox_status_e'(value) != DATA_READY)                         ? 0 : /* ignore DLEN if the uC is not sending response data to SOC */
+                                                       (mbox_dlen_mirrored(rm) < (mm.get_size() * mm.get_n_bytes())) ? mbox_dlen_mirrored_dword_ceil(rm) :
                                                                                                                        (mm.get_size() * mm.get_n_bytes()) >> ($clog2(MBOX_DATA_W/8));
                             if (rm.mbox_data_q.size() > 0) begin
+                                rm.mbox_data_q.delete();
                                 `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to mbox_status transfers control back to SOC, but mbox_data_q is not empty! Size: %0d", rm.mbox_data_q.size()), UVM_LOW) /* TODO: Make a warning that can be disabled for DLEN violation cases? */
                             end
+                            //Pre populated dataout with the first entry of the resp q
+                            rm.mbox_datain_to_dataout_predict.trigger();
+                            rm.mbox_dataout.dataout.predict(rm.mbox_resp_q[0], .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
+                            rm.mbox_datain_to_dataout_predict.reset();
+                            //move resp q to data q
                             rm.mbox_data_q = rm.mbox_resp_q;
                             rm.mbox_resp_q.delete();
                             // On transfer of control, remove extraneous entries from data_q since
                             // reads of these values will be gated for the receiver
                             // in the DUT
                             if (rm.mbox_data_q.size > dlen_cap_dw) begin
-                                `uvm_info("SOC_IFC_REG_CBS", $sformatf("Extra entries detected in mbox_data_q on control transfer - deleting %d entries", rm.mbox_data_q.size() - dlen_cap_dw), UVM_FULL)
+                                `uvm_info("SOC_IFC_REG_CBS", $sformatf("Extra entries detected in mbox_data_q on control transfer - deleting %d entries", rm.mbox_data_q.size() - dlen_cap_dw), UVM_LOW)
                                 while (rm.mbox_data_q.size > dlen_cap_dw) begin
                                     // Continuously remove last entry until size is equal to dlen, since entries are added with push_back
                                     rm.mbox_data_q.delete(rm.mbox_data_q.size()-1);
@@ -96,7 +111,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_status_status extends soc_ifc_reg_cbs_mbox_c
                             end
                             else if (rm.mbox_data_q.size < dlen_cap_dw) begin
                                 uvm_reg_data_t zeros [$];
-                                `uvm_info("SOC_IFC_REG_CBS", $sformatf("Insufficient entries detected in mbox_data_q on control transfer - 0-filling %d entries", dlen_cap_dw - rm.mbox_data_q.size()), UVM_FULL)
+                                `uvm_info("SOC_IFC_REG_CBS", $sformatf("Insufficient entries detected in mbox_data_q on control transfer - 0-filling %d entries", dlen_cap_dw - rm.mbox_data_q.size()), UVM_LOW)
                                 zeros = '{MBOX_DEPTH{32'h0}};
                                 zeros = zeros[0:dlen_cap_dw - rm.mbox_data_q.size() - 1];
                                 rm.mbox_data_q = {rm.mbox_data_q, zeros};

@@ -385,7 +385,34 @@ module caliptra_top_sva
                                     else $display("SVA ERROR: KV client %0d data is unknown", client);
     end
   endgenerate
-    
+
+
+
+  //VALID flag SVA
+  sha512_valid_flag:        assert property (
+                                    @(posedge `SHA512_PATH.clk)
+                                    `SHA512_PATH.digest_valid_reg |-> `SHA512_PATH.ready_reg
+                                    )
+                        else $display("SVA ERROR: SHA512 VALID flag mismatch!");
+                          
+  sha256_valid_flag:        assert property (
+                                        @(posedge `SHA256_PATH.clk)
+                                        `SHA256_PATH.digest_valid_reg |-> `SHA256_PATH.ready_reg
+                                        )
+                            else $display("SVA ERROR: SHA256 VALID flag mismatch!");
+
+  HMAC_valid_flag:      assert property (
+                                    @(posedge `HMAC_PATH.clk)
+                                    `HMAC_PATH.tag_valid_reg |-> `HMAC_PATH.core_ready_reg
+                                    )
+                        else $display("SVA ERROR: HMAC VALID flag mismatch!"); 
+
+  ECC_valid_flag:       assert property (
+                                    @(posedge `ECC_PATH.clk)
+                                    `ECC_PATH.dsa_valid_reg |-> `ECC_PATH.dsa_ready_reg 
+                                    )
+                        else $display("SVA ERROR: ECC VALID flag mismatch!");                         
+
 
 endmodule
 

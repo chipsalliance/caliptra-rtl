@@ -37,6 +37,7 @@ requires:
   - csrng
   - spi_host
   - uart
+  - sha512_coverage
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]

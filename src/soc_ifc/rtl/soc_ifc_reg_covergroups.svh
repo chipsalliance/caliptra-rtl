@@ -319,7 +319,13 @@
     input bit [32-1:0] PAUSER
     );
         option.per_instance = 1;
-        PAUSER_cp : coverpoint PAUSER;
+        PAUSER_cp : coverpoint PAUSER {
+            bins zero_val = {32'h0};
+            bins rand_val[64] = {[1:32'hFFFF_FFFE]};
+            bins ones_val = {{32{1'b1}}};
+            wildcard bins set = (0 => 32'h????_????);
+            wildcard bins clr = (32'h????_???? => 0);
+        }
 
     endgroup
 
@@ -359,7 +365,13 @@
     input bit [32-1:0] DATA
     );
         option.per_instance = 1;
-        DATA_cp : coverpoint DATA;
+        DATA_cp : coverpoint DATA {
+            bins zero_val = {32'h0};
+            bins rand_val[64] = {[1:32'hFFFF_FFFE]};
+            bins ones_val = {{32{1'b1}}};
+            wildcard bins set = (0 => 32'h????_????);
+            wildcard bins clr = (32'h????_???? => 0);
+        }
 
     endgroup
 
@@ -461,7 +473,13 @@
     input bit [32-1:0] DATA
     );
         option.per_instance = 1;
-        DATA_cp : coverpoint DATA;
+        DATA_cp : coverpoint DATA {
+            bins zero_val = {32'h0};
+            bins rand_val[64] = {[1:32'hFFFF_FFFE]};
+            bins ones_val = {{32{1'b1}}};
+            wildcard bins set = (0 => 32'h????_????);
+            wildcard bins clr = (32'h????_???? => 0);
+        }
 
     endgroup
 
@@ -501,7 +519,13 @@
     input bit [32-1:0] generic_wires
     );
         option.per_instance = 1;
-        generic_wires_cp : coverpoint generic_wires;
+        generic_wires_cp : coverpoint generic_wires {
+            bins byte_none = {64'h0000_0000_0000_0000};
+            bins byte_0    = {[0:$]} with ($countones(item[ 7: 0] > 0));
+            bins byte_1    = {[0:$]} with ($countones(item[15: 8] > 0));
+            bins byte_2    = {[0:$]} with ($countones(item[23:16] > 0));
+            bins byte_3    = {[0:$]} with ($countones(item[31:24] > 0));
+        }
 
     endgroup
 
@@ -521,7 +545,13 @@
     input bit [32-1:0] generic_wires
     );
         option.per_instance = 1;
-        generic_wires_cp : coverpoint generic_wires;
+        generic_wires_cp : coverpoint generic_wires {
+            bins byte_none = {64'h0000_0000_0000_0000};
+            bins byte_0    = {[0:$]} with ($countones(item[ 7: 0] > 0));
+            bins byte_1    = {[0:$]} with ($countones(item[15: 8] > 0));
+            bins byte_2    = {[0:$]} with ($countones(item[23:16] > 0));
+            bins byte_3    = {[0:$]} with ($countones(item[31:24] > 0));
+        }
 
     endgroup
 
@@ -541,7 +571,7 @@
     input bit [32-1:0] REV_ID
     );
         option.per_instance = 1;
-        REV_ID_cp : coverpoint REV_ID;
+        REV_ID_cp : coverpoint REV_ID; // FIXME
 
     endgroup
 
@@ -561,7 +591,7 @@
     input bit [32-1:0] REV_ID
     );
         option.per_instance = 1;
-        REV_ID_cp : coverpoint REV_ID;
+        REV_ID_cp : coverpoint REV_ID; // FIXME
 
     endgroup
 
@@ -583,6 +613,7 @@
     input bit [1-1:0] I3C_en
     );
         option.per_instance = 1;
+        // FIXME add new fields for UART after merging latest
         iTRNG_en_cp : coverpoint iTRNG_en;
         QSPI_en_cp : coverpoint QSPI_en;
         I3C_en_cp : coverpoint I3C_en;
@@ -747,7 +778,13 @@
     input bit [32-1:0] PAUSER
     );
         option.per_instance = 1;
-        PAUSER_cp : coverpoint PAUSER;
+        PAUSER_cp : coverpoint PAUSER {
+            bins zero_val = {32'h0};
+            bins rand_val[64] = {[1:32'hFFFF_FFFE]};
+            bins ones_val = {{32{1'b1}}};
+            wildcard bins set = (0 => 32'h????_????);
+            wildcard bins clr = (32'h????_???? => 0);
+        }
 
     endgroup
 
@@ -787,7 +824,13 @@
     input bit [32-1:0] seed
     );
         option.per_instance = 1;
-        seed_cp : coverpoint seed;
+        seed_cp : coverpoint seed {
+            bins zero_val = {32'h0};
+            bins rand_val[64] = {[1:32'hFFFF_FFFE]};
+            bins ones_val = {{32{1'b1}}};
+            wildcard bins set = (0 => 32'h????_????);
+            wildcard bins clr = (32'h????_???? => 0);
+        }
 
     endgroup
 
@@ -807,7 +850,13 @@
     input bit [32-1:0] seed
     );
         option.per_instance = 1;
-        seed_cp : coverpoint seed;
+        seed_cp : coverpoint seed {
+            bins zero_val = {32'h0};
+            bins rand_val[64] = {[1:32'hFFFF_FFFE]};
+            bins ones_val = {{32{1'b1}}};
+            wildcard bins set = (0 => 32'h????_????);
+            wildcard bins clr = (32'h????_???? => 0);
+        }
 
     endgroup
 
@@ -827,7 +876,13 @@
     input bit [32-1:0] hash
     );
         option.per_instance = 1;
-        hash_cp : coverpoint hash;
+        hash_cp : coverpoint hash {
+            bins zero_val = {32'h0};
+            bins rand_val[64] = {[1:32'hFFFF_FFFE]};
+            bins ones_val = {{32{1'b1}}};
+            wildcard bins set = (0 => 32'h????_????);
+            wildcard bins clr = (32'h????_???? => 0);
+        }
 
     endgroup
 
@@ -847,7 +902,13 @@
     input bit [4-1:0] mask
     );
         option.per_instance = 1;
-        mask_cp : coverpoint mask;
+        mask_cp : coverpoint mask {
+            bins zero_val = {4'h0};
+            bins rand_val[4] = {[1:4'hE]};
+            bins ones_val = {{4{1'b1}}};
+            wildcard bins set = (0 => 4'h?);
+            wildcard bins clr = (4'h? => 0);
+        }
 
     endgroup
 
@@ -867,7 +928,13 @@
     input bit [32-1:0] hash
     );
         option.per_instance = 1;
-        hash_cp : coverpoint hash;
+        hash_cp : coverpoint hash {
+            bins zero_val = {32'h0};
+            bins rand_val[64] = {[1:32'hFFFF_FFFE]};
+            bins ones_val = {{32{1'b1}}};
+            wildcard bins set = (0 => 32'h????_????);
+            wildcard bins clr = (32'h????_???? => 0);
+        }
 
     endgroup
 
@@ -887,7 +954,13 @@
     input bit [32-1:0] svn
     );
         option.per_instance = 1;
-        svn_cp : coverpoint svn;
+        svn_cp : coverpoint svn {
+            bins zero_val = {32'h0};
+            bins rand_val[64] = {[1:32'hFFFF_FFFE]};
+            bins ones_val = {{32{1'b1}}};
+            wildcard bins set = (0 => 32'h????_????);
+            wildcard bins clr = (32'h????_???? => 0);
+        }
 
     endgroup
 
@@ -907,7 +980,13 @@
     input bit [32-1:0] svn
     );
         option.per_instance = 1;
-        svn_cp : coverpoint svn;
+        svn_cp : coverpoint svn {
+            bins zero_val = {32'h0};
+            bins rand_val[64] = {[1:32'hFFFF_FFFE]};
+            bins ones_val = {{32{1'b1}}};
+            wildcard bins set = (0 => 32'h????_????);
+            wildcard bins clr = (32'h????_???? => 0);
+        }
 
     endgroup
 
@@ -947,7 +1026,13 @@
     input bit [32-1:0] cert
     );
         option.per_instance = 1;
-        cert_cp : coverpoint cert;
+        cert_cp : coverpoint cert {
+            bins zero_val = {32'h0};
+            bins rand_val[64] = {[1:32'hFFFF_FFFE]};
+            bins ones_val = {{32{1'b1}}};
+            wildcard bins set = (0 => 32'h????_????);
+            wildcard bins clr = (32'h????_???? => 0);
+        }
 
     endgroup
 
@@ -967,7 +1052,13 @@
     input bit [32-1:0] hsm_id
     );
         option.per_instance = 1;
-        hsm_id_cp : coverpoint hsm_id;
+        hsm_id_cp : coverpoint hsm_id {
+            bins zero_val = {32'h0};
+            bins rand_val[64] = {[1:32'hFFFF_FFFE]};
+            bins ones_val = {{32{1'b1}}};
+            wildcard bins set = (0 => 32'h????_????);
+            wildcard bins clr = (32'h????_???? => 0);
+        }
 
     endgroup
 
@@ -991,6 +1082,46 @@
 
     endgroup
 
+    /*----------------------- SOC_IFC_REG__FUSE_LMS_VERIFY COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__fuse_lms_verify_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__fuse_lms_verify_fld_cg with function sample(
+    input bit [1-1:0] lms_verify
+    );
+        option.per_instance = 1;
+        lms_verify_cp : coverpoint lms_verify;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__FUSE_LMS_REVOCATION COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__fuse_lms_revocation_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__fuse_lms_revocation_fld_cg with function sample(
+    input bit [32-1:0] lms_revocation
+    );
+        option.per_instance = 1;
+        lms_revocation_cp : coverpoint lms_revocation;
+
+    endgroup
+
     /*----------------------- SOC_IFC_REG__INTERNAL_OBF_KEY COVERGROUPS -----------------------*/
     covergroup soc_ifc_reg__internal_obf_key_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;
@@ -1007,7 +1138,13 @@
     input bit [32-1:0] key
     );
         option.per_instance = 1;
-        key_cp : coverpoint key;
+        key_cp : coverpoint key {
+            bins zero_val = {32'h0};
+            bins rand_val[64] = {[1:32'hFFFF_FFFE]};
+            bins ones_val = {{32{1'b1}}};
+            wildcard bins set = (0 => 32'h????_????);
+            wildcard bins clr = (32'h????_???? => 0);
+        }
 
     endgroup
 
@@ -1067,7 +1204,17 @@
     input bit [8-1:0] wait_cycles
     );
         option.per_instance = 1;
-        wait_cycles_cp : coverpoint wait_cycles;
+        wait_cycles_cp : coverpoint wait_cycles {
+            bins zero_val = {8'h0};
+            bins one_val = {1};
+            bins two_val = {2};
+            bins three_val = {3};
+            bins small_val = {[4:15]};
+            bins rand_val[16] = {[16:8'hFE]};
+            bins ones_val = {{8{1'b1}}};
+            wildcard bins set = (0 => 8'h??);
+            wildcard bins clr = (8'h?? => 0);
+        }
 
     endgroup
 
@@ -1087,7 +1234,11 @@
     input bit [32-1:0] vec
     );
         option.per_instance = 1;
-        vec_cp : coverpoint vec;
+        vec_cp : coverpoint vec {
+            wildcard bins ROM [16] = {32'h0000????};
+            wildcard bins ICCM0[16] = {32'h4000????};
+            wildcard bins ICCM1[16] = {32'h4001????};
+        }
 
     endgroup
 
@@ -1110,6 +1261,7 @@
     input bit [29-1:0] mask_rsvd
     );
         option.per_instance = 1;
+        option.auto_bin_max = 64;
         mask_iccm_ecc_unc_cp : coverpoint mask_iccm_ecc_unc;
         mask_dccm_ecc_unc_cp : coverpoint mask_dccm_ecc_unc;
         mask_nmi_pin_cp : coverpoint mask_nmi_pin;
@@ -1136,6 +1288,7 @@
     input bit [29-1:0] mask_rsvd
     );
         option.per_instance = 1;
+        option.auto_bin_max = 64;
         mask_mbox_prot_no_lock_cp : coverpoint mask_mbox_prot_no_lock;
         mask_mbox_prot_ooo_cp : coverpoint mask_mbox_prot_ooo;
         mask_mbox_ecc_unc_cp : coverpoint mask_mbox_ecc_unc;
@@ -1159,6 +1312,7 @@
     input bit [32-1:0] mask
     );
         option.per_instance = 1;
+        option.auto_bin_max = 64;
         mask_cp : coverpoint mask;
 
     endgroup
@@ -1179,6 +1333,7 @@
     input bit [32-1:0] mask
     );
         option.per_instance = 1;
+        option.auto_bin_max = 64;
         mask_cp : coverpoint mask;
 
     endgroup
@@ -1199,6 +1354,7 @@
     input bit [32-1:0] count_l
     );
         option.per_instance = 1;
+        option.auto_bin_max = 64;
         count_l_cp : coverpoint count_l;
 
     endgroup
@@ -1219,6 +1375,7 @@
     input bit [32-1:0] count_h
     );
         option.per_instance = 1;
+        option.auto_bin_max = 4; /* Will have to manually force mtime to this, since it won't be reached normally in random sims */
         count_h_cp : coverpoint count_h;
 
     endgroup
@@ -1239,6 +1396,7 @@
     input bit [32-1:0] compare_l
     );
         option.per_instance = 1;
+        option.auto_bin_max = 4;
         compare_l_cp : coverpoint compare_l;
 
     endgroup
@@ -1259,6 +1417,7 @@
     input bit [32-1:0] compare_h
     );
         option.per_instance = 1;
+        option.auto_bin_max = 4;
         compare_h_cp : coverpoint compare_h;
 
     endgroup
@@ -1527,6 +1686,7 @@
     input bit [32-1:0] cnt
     );
         option.per_instance = 1;
+        option.auto_bin_max = 64;
         cnt_cp : coverpoint cnt;
 
     endgroup
@@ -1547,6 +1707,7 @@
     input bit [32-1:0] cnt
     );
         option.per_instance = 1;
+        option.auto_bin_max = 64;
         cnt_cp : coverpoint cnt;
 
     endgroup
@@ -1567,6 +1728,7 @@
     input bit [32-1:0] cnt
     );
         option.per_instance = 1;
+        option.auto_bin_max = 64;
         cnt_cp : coverpoint cnt;
 
     endgroup
@@ -1587,6 +1749,7 @@
     input bit [32-1:0] cnt
     );
         option.per_instance = 1;
+        option.auto_bin_max = 64;
         cnt_cp : coverpoint cnt;
 
     endgroup
@@ -1607,6 +1770,7 @@
     input bit [32-1:0] cnt
     );
         option.per_instance = 1;
+        option.auto_bin_max = 64;
         cnt_cp : coverpoint cnt;
 
     endgroup
@@ -1627,6 +1791,7 @@
     input bit [32-1:0] cnt
     );
         option.per_instance = 1;
+        option.auto_bin_max = 64;
         cnt_cp : coverpoint cnt;
 
     endgroup
@@ -1647,6 +1812,7 @@
     input bit [32-1:0] cnt
     );
         option.per_instance = 1;
+        option.auto_bin_max = 64;
         cnt_cp : coverpoint cnt;
 
     endgroup
@@ -1667,6 +1833,7 @@
     input bit [32-1:0] cnt
     );
         option.per_instance = 1;
+        option.auto_bin_max = 64;
         cnt_cp : coverpoint cnt;
 
     endgroup
@@ -1687,6 +1854,7 @@
     input bit [32-1:0] cnt
     );
         option.per_instance = 1;
+        option.auto_bin_max = 64;
         cnt_cp : coverpoint cnt;
 
     endgroup
@@ -1707,6 +1875,7 @@
     input bit [32-1:0] cnt
     );
         option.per_instance = 1;
+        option.auto_bin_max = 64;
         cnt_cp : coverpoint cnt;
 
     endgroup
@@ -1727,6 +1896,7 @@
     input bit [32-1:0] cnt
     );
         option.per_instance = 1;
+        option.auto_bin_max = 64;
         cnt_cp : coverpoint cnt;
 
     endgroup
@@ -1747,6 +1917,7 @@
     input bit [32-1:0] cnt
     );
         option.per_instance = 1;
+        option.auto_bin_max = 64;
         cnt_cp : coverpoint cnt;
 
     endgroup
@@ -1767,6 +1938,7 @@
     input bit [32-1:0] cnt
     );
         option.per_instance = 1;
+        option.auto_bin_max = 64;
         cnt_cp : coverpoint cnt;
 
     endgroup

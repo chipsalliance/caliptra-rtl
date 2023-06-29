@@ -93,7 +93,14 @@
     input bit [32-1:0] ADDR
     );
         option.per_instance = 1;
-        ADDR_cp : coverpoint ADDR;
+        ADDR_cp : coverpoint ADDR {
+            bins zero_val = {32'h0};
+            bins legal_val = {[1:32'h7FFF]};
+            bins illegal_val = {[32'h8000:32'hFFFF_FFFE]};
+            bins ones_val = {{32{1'b1}}};
+            wildcard bins set = (0 => 32'h????_????);
+            wildcard bins clr = (32'h????_???? => 0);
+        }
 
     endgroup
 
@@ -113,7 +120,18 @@
     input bit [32-1:0] LENGTH
     );
         option.per_instance = 1;
-        LENGTH_cp : coverpoint LENGTH;
+        LENGTH_cp : coverpoint LENGTH {
+            bins zero_val = {32'h0};
+            bins legal_byte_aligned_val  = {[1:32'h8000]};
+            bins legal_word_aligned_val  = {[1:32'h8000]} with (~|item[0]);
+            bins legal_dword_aligned_val = {[1:32'h8000]} with (~|item[1:0]);
+            bins legal_qword_aligned_val = {[1:32'h8000]} with (~|item[2:0]);
+            bins legal_oword_aligned_val = {[1:32'h8000]} with (~|item[3:0]);
+            bins illegal_val = {[32'h8001:32'hFFFF_FFFE]};
+            bins ones_val = {{32{1'b1}}};
+            wildcard bins set = (0 => 32'h????_????);
+            wildcard bins clr = (32'h????_???? => 0);
+        }
 
     endgroup
 

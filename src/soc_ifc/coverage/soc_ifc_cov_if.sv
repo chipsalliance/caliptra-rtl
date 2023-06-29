@@ -246,7 +246,11 @@ interface soc_ifc_cov_if
         extra_pad_block_required_cp: coverpoint i_sha512_acc_top.extra_pad_block_required;
         num_bytes_data_cp: coverpoint i_sha512_acc_top.num_bytes_data;
         mailbox_mode_cp: coverpoint i_sha512_acc_top.mailbox_mode;
-        sha_mode_cp: coverpoint i_sha512_acc_top.sha_mode;
+        sha_mode_cp: coverpoint i_sha512_acc_top.sha_mode {
+          option.comment = "SHA Mode Encoding";
+          bins MODE_SHA_384 = {2'h2};
+          bins MODE_SHA_512 = {2'h3};
+        }
 
         //crosses
         mailbox_modeXextra_pad: cross mailbox_mode_cp, extra_pad_block_required_cp;
@@ -275,7 +279,13 @@ interface soc_ifc_cov_if
         //controls
         soc_has_lock_cp: coverpoint i_mbox.soc_has_lock;
         mask_rdata_cp: coverpoint i_mbox.mask_rdata;
-        dlen_in_dws_cp: coverpoint i_mbox.dlen_in_dws;
+        dlen_in_dws_cp: coverpoint i_mbox.dlen_in_dws {
+          bins zero = {0};
+          bins one = {1};
+          bins range[32] = {[2:MBOX_SIZE_DWORDS-2]};
+          bins almost_full = {MBOX_SIZE_DWORDS-1};
+          bins full = {MBOX_SIZE_DWORDS};}
+
         sram_single_ecc_error_cp: coverpoint i_mbox.sram_single_ecc_error;
         sram_double_ecc_error_cp: coverpoint i_mbox.sram_double_ecc_error;
 

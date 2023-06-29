@@ -226,6 +226,17 @@ extends uvmf_environment_configuration_base;
                                                                                                                          apb5_master_0_params::APB3_PADDR_BIT_WIDTH,
                                                                                                                          apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
                                                                                                                          apb5_master_0_params::APB3_PRDATA_BIT_WIDTH)::type_id::get() ));
+    // Add analysis ports to send Bus traffic to the coverage subscriber
+    void'(qvip_ahb_lite_slave_subenv_config.ahb_lite_slave_0_cfg.set_monitor_item( "burst_transfer_cov" , ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
+                                                                                                                                      ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,
+                                                                                                                                      ahb_lite_slave_0_params::AHB_NUM_SLAVES,
+                                                                                                                                      ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
+                                                                                                                                      ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
+                                                                                                                                      ahb_lite_slave_0_params::AHB_RDATA_WIDTH)::type_id::get() ));
+    void'(qvip_apb5_slave_subenv_config.apb5_master_0_cfg.set_monitor_item( "trans_ap_cov" , apb3_host_apb3_transaction #(apb5_master_0_params::APB3_SLAVE_COUNT,
+                                                                                                                          apb5_master_0_params::APB3_PADDR_BIT_WIDTH,
+                                                                                                                          apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
+                                                                                                                          apb5_master_0_params::APB3_PRDATA_BIT_WIDTH)::type_id::get() ));
   // pragma uvmf custom initialize end
 
   endfunction
