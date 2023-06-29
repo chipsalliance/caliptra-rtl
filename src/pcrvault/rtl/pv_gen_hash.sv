@@ -23,6 +23,8 @@ module pv_gen_hash
     ,parameter DATA_W = 32
     ,localparam BLOCK_NO = BLOCK_W/DATA_W
     ,localparam BLOCK_OFFSET_W = $clog2(BLOCK_NO)
+    ,localparam NONCE_LEN_DWORD = PV_SIZE_OF_NONCE/DATA_W
+    ,localparam NONCE_OFFSET_W = $clog2(NONCE_LEN_DWORD)
     )
     (
     input logic clk,
@@ -31,7 +33,7 @@ module pv_gen_hash
     input logic start,
     input logic core_ready,
     input logic core_digest_valid,
-    input [PV_SIZE_OF_NONCE-1:0] nonce,
+    input [NONCE_LEN_DWORD-1:0][DATA_W-1:0] nonce,
 
     output logic gen_hash_ip,
     output logic gen_hash_init_reg,
@@ -88,6 +90,8 @@ logic [PV_ENTRY_SIZE_WIDTH-1:0] read_offset, read_offset_nxt;
 logic inc_rd_ptr;
 logic rst_rd_ptr;
 
+logic [NONCE_OFFSET_W-1:0] nonce_offset_i, nonce_offset_nxt;
+
 
 assign gen_hash_ip = (gen_hash_fsm_ps != GEN_HASH_IDLE);
 assign gen_hash_init_reg = arc_GEN_HASH_BLOCK_0_GEN_HASH_BLOCK_N;
@@ -116,6 +120,10 @@ assign block_offset = block_offset_i[BLOCK_OFFSET_W-1:0];
   always_comb inc_rd_ptr = gen_hash_fsm_ps inside {GEN_HASH_BLOCK_0, GEN_HASH_BLOCK_N} & ~block_full;
   always_comb rst_rd_ptr = arc_GEN_HASH_BLOCK_0_GEN_HASH_NONCE | arc_GEN_HASH_BLOCK_N_GEN_HASH_NONCE;
 
+
+  always_comb nonce_offset_nxt = (gen_hash_fsm_ps != GEN_HASH_NONCE) ? '0 :
+                                 (block_we ? nonce_offset_i + 'd1 : nonce_offset_i);
+
   //State Machine
   //Start processing
   always_comb arc_GEN_HASH_IDLE_GEN_HASH_BLOCK_0 = (gen_hash_fsm_ps == GEN_HASH_IDLE) & start;
@@ -126,7 +134,7 @@ assign block_offset = block_offset_i[BLOCK_OFFSET_W-1:0];
   //Finished reading, start padding - wait for block to process if we need to start a new block
   always_comb arc_GEN_HASH_BLOCK_0_GEN_HASH_NONCE = (gen_hash_fsm_ps == GEN_HASH_BLOCK_0) & ~block_full & last_dword_wr;
   always_comb arc_GEN_HASH_BLOCK_N_GEN_HASH_NONCE = (gen_hash_fsm_ps == GEN_HASH_BLOCK_N) & ~block_full & last_dword_wr;
-  always_comb arc_GEN_HASH_NONCE_GEN_HASH_PAD_LD1 = (gen_hash_fsm_ps == GEN_HASH_NONCE) & ~block_full;
+  always_comb arc_GEN_HASH_NONCE_GEN_HASH_PAD_LD1 = (gen_hash_fsm_ps == GEN_HASH_NONCE) & ~block_full & (nonce_offset_i == NONCE_LEN_DWORD-1);
   always_comb arc_GEN_HASH_PAD_LD1_GEN_HASH_PAD_0S = (gen_hash_fsm_ps == GEN_HASH_PAD_LD1) & ~block_full; 
   //Switch from padding zeros to padding the length                           
   always_comb arc_GEN_HASH_PAD_0S_GEN_HASH_PAD_LEN = (gen_hash_fsm_ps == GEN_HASH_PAD_0S) & ~block_full & (block_offset_i == PAD_LEN_DWORD-1);
@@ -157,7 +165,7 @@ assign block_offset = block_offset_i[BLOCK_OFFSET_W-1:0];
       end
       GEN_HASH_NONCE: begin
         if (arc_GEN_HASH_NONCE_GEN_HASH_PAD_LD1) gen_hash_fsm_ns = GEN_HASH_PAD_LD1;
-        block_wr_data = nonce;
+        block_wr_data = nonce[NONCE_LEN_DWORD-1-nonce_offset_i];
       end
       GEN_HASH_PAD_LD1: begin
         if (arc_GEN_HASH_PAD_LD1_GEN_HASH_PAD_0S) gen_hash_fsm_ns = GEN_HASH_PAD_0S;
@@ -197,6 +205,7 @@ assign block_offset = block_offset_i[BLOCK_OFFSET_W-1:0];
     else begin
       gen_hash_fsm_ps <= gen_hash_fsm_ns;
       block_offset_i <= block_offset_nxt;
+      nonce_offset_i <= nonce_offset_nxt;
       read_entry <= read_entry_nxt;
       read_offset <= read_offset_nxt;
     end

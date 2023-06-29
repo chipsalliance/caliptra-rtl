@@ -150,7 +150,7 @@ addrmap sha512_reg {
         default hw = r;
         default resetsignal = reset_b;
         field {desc = "Nonce value for PCR Gen Hash Function";} NONCE[32] = 32'b0;
-    } SHA512_GEN_PCR_HASH_NONCE;
+    } SHA512_GEN_PCR_HASH_NONCE[8];
     reg {
         name = "SHA512 PCR Hash Control";
         desc = "Control register for PCR Gen Hash Function";

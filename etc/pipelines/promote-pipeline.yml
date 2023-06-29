@@ -49,7 +49,7 @@ stages:
 
         displayName: 'RDL GEN CHECK'
         enabled: true
-        timeoutInMinutes: 20
+        timeoutInMinutes: 30
         env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
