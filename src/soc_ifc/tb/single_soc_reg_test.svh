@@ -20,16 +20,21 @@
   //
   // Tests out write/read single soc register test using same bus protocol 
   //----------------------------------------------------------------
-  task single_socreg_test(input string meth_name);
+  task single_socreg_test(input string meth_name, int wrcount);
+    // Example 
+    //   meth_name: AHB.CPTRA_TIMER_CONFIG -- for back2back AHB write+read
+    //   wrcount:   20 --  number of times to perform write-read pairs 
 
     access_t access;
     string meth, rname;
     word_addr_t addr; 
     int tid = 0; 
 
+    strq_t reglist;
     WordTransaction wrtrans, rdtrans;
  
     begin
+
       $display("Executing single_socreg_test: %s", meth_name);
       $display("----------------------------%s\n", {meth_name.len(){"-"}});
 
@@ -38,38 +43,47 @@
       wrtrans = new();
       rdtrans = new();
 
+      meth = meth_name.substr(0, 2);
       rname = meth_name.substr(4, meth_name.len()-1);
       addr = socregs.get_addr(rname); 
- 
+
+      reglist.push_back(rname);
+
+      if (wrcount < 1) begin
+        error_ctr = 1; 
+        $display("ERROR performing %s operations on register %s %d times -- wrcount MUST be > 0", meth, rname, wrcount);
+      end else begin
+        $display("-- Performing %s operations on register %s %d times --", meth, rname, wrcount);
+      end
+
+
+      if (meth == "AHB") begin // Perform Caliptra boot  
+
+        simulate_caliptra_boot();
+        repeat (20) @(posedge clk_tb);
+        sb.del_all();
+        update_CPTRA_FLOW_STATUS(ready_for_fuses); 
+
+      end 
+
+      update_INTR_BRF_NOTIF_INTERNAL_INTR_R(gen_input_wire_toggle, security_state.debug_locked); 
+
       // Write over a method & read over same method 
 
-      wrtrans.update(addr, 0, tid); 
-      wrtrans.randomize();
+      for (int i = 0; i < wrcount; i++) begin
 
-      if (str_startswith(meth_name, "APB.")) begin
-        write_single_word_apb(addr, wrtrans.data); 
-        sb.record_entry(wrtrans, SET_APB);
+        wrtrans.update(addr, 0, tid); 
+        wrtrans.randomize();
 
-        repeat (10) @(posedge clk_tb);
-        read_single_word_apb(addr); 
-        $display("Read over APB:  addr = %30s (0x%08x), data = 0x%08x", rname, addr, prdata_o_tb);
+        if (str_startswith(meth_name, "APB.")) 
+          write_read_regs(SET_APB, GET_APB, reglist, tid, 1);
+        else if (str_startswith(meth_name, "AHB.")) 
+          write_read_regs(SET_AHB, GET_AHB, reglist, tid, 1);
 
-        rdtrans.update(addr, prdata_o_tb, tid); 
-        sb.check_entry(rdtrans);
-
-      end  else if (str_startswith(meth_name, "AHB.")) begin
-        write_single_word_ahb(addr, wrtrans.data);
-        sb.record_entry(wrtrans, SET_AHB);
-
-        repeat (10) @(posedge clk_tb);
-        read_single_word_apb(addr); 
-        $display("Read over AHB:  addr = %30s (0x%08x), data = 0x%08x", rname, addr, prdata_o_tb);
-
-        rdtrans.update(addr, hrdata_o_tb, tid); 
-        sb.check_entry(rdtrans);
       end 
-         
-      error_ctr = sb.err_count;
+
+    error_ctr = sb.err_count;
+
     end
 
   endtask // single_socreg_test
