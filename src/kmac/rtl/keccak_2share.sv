@@ -425,7 +425,8 @@ module keccak_2share
   if (EnMasking) begin : gen_selperiod_chk
     `CALIPTRA_ASSUME(SelStayTwoCycleIfTrue_A,
         ($past(phase_sel_i) == MuBi4False) && (phase_sel_i == MuBi4True)
-        |=> phase_sel_i == MuBi4True, clk_i, !rst_ni || lc_escalate_en_i != lc_ctrl_pkg::Off)
+        |=> phase_sel_i == MuBi4True, clk_i, !rst_ni ||
+            lc_ctrl_pkg::lc_tx_test_true_loose(lc_escalate_en_i))
   end
 
   ///////////////
