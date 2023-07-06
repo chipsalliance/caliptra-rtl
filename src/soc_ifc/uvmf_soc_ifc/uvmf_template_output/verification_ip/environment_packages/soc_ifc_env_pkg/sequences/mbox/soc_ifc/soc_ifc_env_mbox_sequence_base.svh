@@ -370,15 +370,16 @@ endtask
 //              mbox_cmd and mbox_dlen registers
 //==========================================
 task soc_ifc_env_mbox_sequence_base::mbox_set_cmd(input mbox_op_s op);
-    uvm_reg_data_t data;
+    uvm_reg_data_t data, prev_data;
 
+    prev_data = reg_model.mbox_csr_rm.mbox_cmd.get_mirrored_value();
     reg_model.mbox_csr_rm.mbox_cmd.write(reg_sts, uvm_reg_data_t'(op.cmd), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_CMD)));
     report_reg_sts(reg_sts, "mbox_cmd");
     if (!pauser_used_is_valid()) begin
         if (rand_delay_en) do_rand_delay(1, step_delay);
         reg_model.mbox_csr_rm.mbox_cmd.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
         report_reg_sts(reg_sts, "mbox_cmd");
-        if (mbox_cmd_u'(data) == op.cmd)
+        if (data != prev_data)
             `uvm_error("MBOX_SEQ", "Write to mbox_cmd succeeded unexpectedly with invalid PAUSER!")
         else if (retry_failed_reg_axs) begin
             reg_model.mbox_csr_rm.mbox_cmd.write(reg_sts, uvm_reg_data_t'(op.cmd), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
@@ -388,13 +389,14 @@ task soc_ifc_env_mbox_sequence_base::mbox_set_cmd(input mbox_op_s op);
 
     if (rand_delay_en) do_rand_delay(1, step_delay);
 
+    prev_data = reg_model.mbox_csr_rm.mbox_dlen.get_mirrored_value();
     reg_model.mbox_csr_rm.mbox_dlen.write(reg_sts, uvm_reg_data_t'(op.dlen), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_CMD)));
     report_reg_sts(reg_sts, "mbox_dlen");
     if (!pauser_used_is_valid()) begin
         if (rand_delay_en) do_rand_delay(1, step_delay);
         reg_model.mbox_csr_rm.mbox_dlen.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
         report_reg_sts(reg_sts, "mbox_dlen");
-        if (32'(data) == op.dlen)
+        if (32'(data) != prev_data)
             `uvm_error("MBOX_SEQ", "Write to mbox_dlen succeeded unexpectedly with invalid PAUSER!")
         else if (retry_failed_reg_axs)  begin
             reg_model.mbox_csr_rm.mbox_dlen.write(reg_sts, uvm_reg_data_t'(op.dlen), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
