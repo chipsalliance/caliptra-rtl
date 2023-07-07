@@ -972,6 +972,13 @@ class soc_ifc_predictor #(
                         cptra_error_non_fatal = 1'b0;
                     end
                 end
+                "CPTRA_HW_ERROR_ENC",
+                "CPTRA_FW_ERROR_ENC",
+                ["CPTRA_FW_EXTENDED_ERROR_INFO[0]":"CPTRA_FW_EXTENDED_ERROR_INFO[7]"]: begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_error("PRED_AHB", {"Add prediction for write to ",axs_reg.get_name()," register on AHB interface"}) // TODO
+                    end
+                end
                 "CPTRA_BOOT_STATUS": begin
                     // Handled in callbacks via reg predictor
                     `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
@@ -995,6 +1002,31 @@ class soc_ifc_predictor #(
                     if (ahb_txn.RnW == AHB_WRITE)
                         `uvm_info("PRED_AHB", {"Write to ", axs_reg.get_name(), " has no effect"}, UVM_DEBUG)
                 end
+                ["CPTRA_MBOX_VALID_PAUSER[0]":"CPTRA_MBOX_VALID_PAUSER[4]"]: begin
+                    int idx = axs_reg.get_offset(p_soc_ifc_AHB_map) - p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[0].get_offset(p_soc_ifc_AHB_map);
+                    idx /= 4;
+                    if (mbox_valid_users_locked[idx] && ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_error("PRED_AHB", {"Write attempted to locked register: ", axs_reg.get_name()})
+                    end
+                    else if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_info("PRED_AHB", {"Write to ", axs_reg.get_name(), " has no effect on system until locked"}, UVM_MEDIUM)
+                    end
+                end
+                ["CPTRA_MBOX_PAUSER_LOCK[0]":"CPTRA_MBOX_PAUSER_LOCK[4]"]: begin
+                    int idx = axs_reg.get_offset(p_soc_ifc_AHB_map) - p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[0].get_offset(p_soc_ifc_AHB_map);
+                    idx /= 4;
+                    if (mbox_valid_users_locked[idx] && ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_error("PRED_AHB", {"Write attempted to locked register: ", axs_reg.get_name()})
+                    end
+                    else if (ahb_txn.RnW == AHB_WRITE) begin
+                        mbox_valid_users[idx] = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[idx].get_mirrored_value(); // VALID_PAUSER field is only applied when locked
+                        mbox_valid_users_locked[idx] |= data_active[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[idx].LOCK.get_lsb_pos()];
+                        `uvm_info("PRED_AHB", $sformatf("mbox_valid_users_locked[%d] set to 0x%x, mbox_valid_users[%d] has value: 0x%x", idx, mbox_valid_users_locked[idx], idx, mbox_valid_users[idx]), UVM_MEDIUM)
+                    end
+                    else begin
+                        `uvm_info("PRED_AHB", $sformatf("mbox_valid_users_locked[%d] read value 0x%x, mbox_valid_users[%d] has value: 0x%x", idx, mbox_valid_users_locked[idx], idx, mbox_valid_users[idx]), UVM_HIGH)
+                    end
+                end
                 "CPTRA_TRNG_VALID_PAUSER",
                 "CPTRA_TRNG_PAUSER_LOCK",
                 ["CPTRA_TRNG_DATA[0]" : "CPTRA_TRNG_DATA[9]"],
@@ -1014,11 +1046,25 @@ class soc_ifc_predictor #(
                     end
                 end
                 "CPTRA_FUSE_WR_DONE",
+                "CPTRA_TIMER_CONFIG",
                 "CPTRA_BOOTFSM_GO": begin
-                    `uvm_error("PRED_AHB", $sformatf("Unexpected write to %s register on AHB interface", axs_reg.get_name()))
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_error("PRED_AHB", $sformatf("Unexpected write to %s register on AHB interface", axs_reg.get_name()))
+                    end
                 end
                 "CPTRA_DBG_MANUF_SERVICE_REG": begin
                     `uvm_info("PRED_APB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                end
+                "CPTRA_CLK_GATING_EN": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_error("PRED_AHB", $sformatf("Unexpected write to %s register on AHB interface", axs_reg.get_name()))
+                    end
+                end
+                "CPTRA_GENERIC_INPUT_WIRES[0]",
+                "CPTRA_GENERIC_INPUT_WIRES[1]": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_info("PRED_AHB", $sformatf("Write to %s register on AHB interface has no effect", axs_reg.get_name()), UVM_LOW)
+                    end
                 end
                 "CPTRA_GENERIC_OUTPUT_WIRES[0]": begin
                     if (ahb_txn.RnW == AHB_WRITE) begin
@@ -1048,6 +1094,51 @@ class soc_ifc_predictor #(
                         endcase
                         send_soc_ifc_sts_txn = data_active != generic_output_wires[31:0];
                         generic_output_wires = {generic_output_wires[63:32],data_active}; // FIXME for data width?
+                    end
+                end
+                "CPTRA_GENERIC_OUTPUT_WIRES[1]": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        send_soc_ifc_sts_txn = data_active != generic_output_wires[63:32];
+                        generic_output_wires = {data_active,generic_output_wires[31:0]}; // FIXME for data width?
+                    end
+                end
+                "CPTRA_HW_REV_ID": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_warning("PRED_AHB", {"Write to RO register: ", axs_reg.get_name(), " has no effect on system"})
+                    end
+                    else begin
+                        `uvm_info("PRED_AHB", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
+                    end
+                end
+                "CPTRA_FW_REV_ID[0]",
+                "CPTRA_FW_REV_ID[1]": begin
+                    `uvm_info("PRED_AHB", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
+                end
+                "CPTRA_HW_CONFIG": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_warning("PRED_AHB", {"Write to RO register: ", axs_reg.get_name(), " has no effect on system"})
+                    end
+                    else begin
+                        `uvm_info("PRED_AHB", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
+                    end
+                end
+                "CPTRA_WDT_TIMER1_EN",
+                "CPTRA_WDT_TIMER1_CTRL",
+                "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[0]",
+                "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[1]",
+                "CPTRA_WDT_TIMER2_EN",
+                "CPTRA_WDT_TIMER2_CTRL",
+                "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[0]",
+                "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[1]",
+                "CPTRA_WDT_STATUS": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_error("PRED_AHB", {"Add prediction for write to ",axs_reg.get_name()," register on AHB interface"}) // TODO
+                    end
+                end
+                "CPTRA_FUSE_VALID_PAUSER",
+                "CPTRA_FUSE_PAUSER_LOCK": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_error("PRED_AHB", {"Add prediction for write to ",axs_reg.get_name()," register on AHB interface"}) // TODO
                     end
                 end
                 ["fuse_uds_seed[0]" :"fuse_uds_seed[9]" ],
@@ -1102,12 +1193,31 @@ class soc_ifc_predictor #(
                         end
                     end
                 end
+                "internal_fw_update_reset_wait_cycles": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_error("PRED_AHB", $sformatf("FIXME - need to add logic for writes to register %s", axs_reg.get_name())) // TODO
+                    end
+                    else begin
+                        `uvm_info("PRED_AHB", {"Read from ", axs_reg.get_name(), " has no effect"}, UVM_DEBUG)
+                    end
+                end
                 "internal_nmi_vector": begin
                     if (ahb_txn.RnW == AHB_WRITE) begin
                         if (nmi_vector != data_active) begin
                             send_cptra_sts_txn = 1;
                             nmi_vector = data_active;
                         end
+                    end
+                end
+                "internal_hw_error_fatal_mask",
+                "internal_hw_error_non_fatal_mask",
+                "internal_fw_error_fatal_mask",
+                "internal_fw_error_non_fatal_mask": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_error("PRED_AHB", $sformatf("FIXME - need to add logic for error mask register %s", axs_reg.get_name())) // TODO
+                    end
+                    else begin
+                        `uvm_info("PRED_AHB", {"Read from ", axs_reg.get_name(), " has no effect"}, UVM_DEBUG)
                     end
                 end
                 "internal_rv_mtime_l",
@@ -1184,7 +1294,9 @@ class soc_ifc_predictor #(
                 "error_wdt_timer2_timeout_intr_count_r",
                 "notif_cmd_avail_intr_count_r",
                 "notif_mbox_ecc_cor_intr_count_r",
-                "notif_debug_locked_intr_count_r": begin
+                "notif_debug_locked_intr_count_r",
+                "notif_soc_req_lock_intr_count_r",
+                "notif_gen_in_toggle_intr_count_r": begin
                     if (ahb_txn.RnW == AHB_WRITE) begin
                         `uvm_info("PRED_AHB", {"Write to ", axs_reg.get_name(), " modifies interrupt statistics count"}, UVM_HIGH)
                     end
@@ -1202,7 +1314,9 @@ class soc_ifc_predictor #(
                 "error_wdt_timer2_timeout_intr_count_incr_r",
                 "notif_cmd_avail_intr_count_incr_r",
                 "notif_mbox_ecc_cor_intr_count_incr_r",
-                "notif_debug_locked_intr_count_incr_r": begin
+                "notif_debug_locked_intr_count_incr_r",
+                "notif_soc_req_lock_intr_count_incr_r",
+                "notif_gen_in_toggle_intr_count_incr_r": begin
                     `uvm_info("PRED_AHB", {"Access to register ", axs_reg.get_name(), " will have no effect on system"}, UVM_HIGH)
                 end
                 default: begin
@@ -1242,6 +1356,25 @@ class soc_ifc_predictor #(
                         this.sha_err_intr_pending   = p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value();
                         this.sha_notif_intr_pending = p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value();
                     end
+                end
+                "error0_intr_count_r",
+                "error1_intr_count_r",
+                "error2_intr_count_r",
+                "error3_intr_count_r",
+                "notif_cmd_done_intr_count_r": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_info("PRED_AHB", {"Write to ", axs_reg.get_name(), " modifies interrupt statistics count"}, UVM_HIGH)
+                    end
+                    else begin
+                        `uvm_info("PRED_AHB", {"Access to register ", axs_reg.get_name(), " will have no effect on system"}, UVM_HIGH)
+                    end
+                end
+                "error0_intr_count_incr_r",
+                "error1_intr_count_incr_r",
+                "error2_intr_count_incr_r",
+                "error3_intr_count_incr_r",
+                "notif_cmd_done_intr_count_incr_r": begin
+                    `uvm_info("PRED_AHB", {"Access to register ", axs_reg.get_name(), " will have no effect on system"}, UVM_HIGH)
                 end
                 default: begin
                     `uvm_warning("PRED_AHB", $sformatf("Prediction for accesses to register '%s' unimplemented! Fix soc_ifc_predictor", axs_reg.get_name()))

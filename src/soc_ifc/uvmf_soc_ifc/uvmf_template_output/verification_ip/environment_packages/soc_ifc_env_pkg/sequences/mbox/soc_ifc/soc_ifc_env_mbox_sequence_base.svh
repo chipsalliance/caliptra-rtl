@@ -195,8 +195,10 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
 
     // Randomization checker requires a valid handle to reg-model, which it gets
     // from the configuration object (which is not set until pre_body())
-    assert(mbox_op_rand.dlen <= (reg_model.mbox_mem_rm.get_size() * reg_model.mbox_mem_rm.get_n_bytes())) else
-        `uvm_error("MBOX_SEQ", $sformatf("Randomized SOC_IFC environment mailbox base sequence with bad dlen. Max: [0x%x] Got: [0x%x]. Cmd randomized to %p", (reg_model.mbox_mem_rm.get_size() * reg_model.mbox_mem_rm.get_n_bytes()), mbox_op_rand.dlen, mbox_op_rand.cmd.cmd_e))
+    // This is only an 'info' instead of an error because some tests do this
+    // deliberately
+    if (mbox_op_rand.dlen > (reg_model.mbox_mem_rm.get_size() * reg_model.mbox_mem_rm.get_n_bytes()))
+        `uvm_info("MBOX_SEQ", $sformatf("Randomized SOC_IFC environment mailbox base sequence with invalid dlen. Max: [0x%x] Got: [0x%x]. Cmd randomized to %p", (reg_model.mbox_mem_rm.get_size() * reg_model.mbox_mem_rm.get_n_bytes()), mbox_op_rand.dlen, mbox_op_rand.cmd.cmd_e), UVM_LOW)
   endtask
 
   //==========================================
