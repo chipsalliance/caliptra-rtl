@@ -100,6 +100,7 @@ package soc_ifc_reg_model_top_pkg;
             if ( this.notif_cmd_avail_intr_count_r          .has_reset("HARD"   )) this.notif_cmd_avail_intr_count_r          .set_reset(this.notif_cmd_avail_intr_count_r        .get_reset("HARD"), "SOFT");
             if ( this.notif_mbox_ecc_cor_intr_count_r       .has_reset("HARD"   )) this.notif_mbox_ecc_cor_intr_count_r       .set_reset(this.notif_mbox_ecc_cor_intr_count_r     .get_reset("HARD"), "SOFT");
             if ( this.notif_debug_locked_intr_count_r       .has_reset("HARD"   )) this.notif_debug_locked_intr_count_r       .set_reset(this.notif_debug_locked_intr_count_r     .get_reset("HARD"), "SOFT");
+            if ( this.notif_scan_mode_intr_count_r          .has_reset("HARD"   )) this.notif_scan_mode_intr_count_r          .set_reset(this.notif_scan_mode_intr_count_r        .get_reset("HARD"), "SOFT");
             if ( this.error_internal_intr_count_incr_r      .has_reset("HARD"   )) this.error_internal_intr_count_incr_r      .set_reset(this.error_internal_intr_count_incr_r    .get_reset("HARD"), "SOFT");
             if ( this.error_inv_dev_intr_count_incr_r       .has_reset("HARD"   )) this.error_inv_dev_intr_count_incr_r       .set_reset(this.error_inv_dev_intr_count_incr_r     .get_reset("HARD"), "SOFT");
             if ( this.error_cmd_fail_intr_count_incr_r      .has_reset("HARD"   )) this.error_cmd_fail_intr_count_incr_r      .set_reset(this.error_cmd_fail_intr_count_incr_r    .get_reset("HARD"), "SOFT");
@@ -109,6 +110,7 @@ package soc_ifc_reg_model_top_pkg;
             if ( this.notif_cmd_avail_intr_count_incr_r     .has_reset("HARD"   )) this.notif_cmd_avail_intr_count_incr_r     .set_reset(this.notif_cmd_avail_intr_count_incr_r   .get_reset("HARD"), "SOFT");
             if ( this.notif_mbox_ecc_cor_intr_count_incr_r  .has_reset("HARD"   )) this.notif_mbox_ecc_cor_intr_count_incr_r  .set_reset(this.notif_mbox_ecc_cor_intr_count_incr_r.get_reset("HARD"), "SOFT");
             if ( this.notif_debug_locked_intr_count_incr_r  .has_reset("HARD"   )) this.notif_debug_locked_intr_count_incr_r  .set_reset(this.notif_debug_locked_intr_count_incr_r.get_reset("HARD"), "SOFT");
+            if ( this.notif_scan_mode_intr_count_incr_r     .has_reset("HARD"   )) this.notif_scan_mode_intr_count_incr_r     .set_reset(this.notif_scan_mode_intr_count_incr_r   .get_reset("HARD"), "SOFT");
         endfunction
 
         virtual function void build();

@@ -77,6 +77,9 @@ class kv_rand_wr_rd_test_sequence extends kv_bench_sequence_base;
     typedef kv_wr_rd_debug_core_rst_sequence #(.CONFIG_T(kv_env_configuration_t)) kv_wr_rd_debug_core_rst_sequence_t;
     rand kv_wr_rd_debug_core_rst_sequence_t kv_wr_rd_debug_core_rst_seq;
 
+    typedef kv_ahb_sequence #(.CONFIG_T(kv_env_configuration_t)) kv_ahb_sequence_t;
+    rand kv_ahb_sequence_t kv_ahb_seq;
+
     //Responder sequences:
     typedef kv_read_responder_sequence kv_hmac_key_read_agent_responder_seq_t;
     kv_hmac_key_read_agent_responder_seq_t kv_hmac_key_read_agent_responder_seq;
@@ -100,6 +103,7 @@ class kv_rand_wr_rd_test_sequence extends kv_bench_sequence_base;
         kv_wr_rd_debug_warm_rst_seq = kv_wr_rd_debug_warm_rst_sequence_t::type_id::create("kv_wr_rd_debug_warm_rst_seq");
         kv_wr_rd_debug_cold_rst_seq = kv_wr_rd_debug_cold_rst_sequence_t::type_id::create("kv_wr_rd_debug_cold_rst_seq");
         kv_wr_rd_debug_core_rst_seq = kv_wr_rd_debug_core_rst_sequence_t::type_id::create("kv_wr_rd_debug_core_rst_seq");
+        kv_ahb_seq = kv_ahb_sequence_t::type_id::create("kv_ahb_seq");
 
         if(!kv_wr_rd_seq.randomize())
             `uvm_fatal("KV WR RD SEQ", "kv_rand_wr_rd_test_sequence::body() - kv_wr_rd_seq randomization failed");
@@ -111,6 +115,8 @@ class kv_rand_wr_rd_test_sequence extends kv_bench_sequence_base;
             `uvm_fatal("KV WR RD COLD RST SEQ", "kv_rand_wr_rd_test_sequence::body() - kv_wr_rd_cold_rst_seq randomization failed");
         if(!kv_wr_rd_lock_seq.randomize())
             `uvm_fatal("KV_WR_RD_LOCK_SEQ", "kv_rand_wr_rd_test_sequence::body() - kv_wr_rd_lock_seq randomization failed");
+        if(!kv_ahb_seq.randomize())
+            `uvm_fatal("KV_AHB_SEQ", "kv_ahb_sequence::body() - kv_ahb_seq randomization failed");
 
         reg_model.reset();
         
@@ -123,6 +129,8 @@ class kv_rand_wr_rd_test_sequence extends kv_bench_sequence_base;
         kv_wr_rd_rst_seq.start(top_configuration.vsqr);
         `uvm_info("TOP", "wr rd cold rst sequence",UVM_MEDIUM);
         kv_wr_rd_cold_rst_seq.start(top_configuration.vsqr);
+        `uvm_info("TOP", "AHB sequence", UVM_MEDIUM);
+        kv_ahb_seq.start(top_configuration.vsqr);
         
 
         if(1) $display("** TESTCASE PASSED");

@@ -1795,8 +1795,8 @@
         end
     endfunction
 
-    /*----------------------- SOC_IFC_REG__INTR_BLOCK_T__NOTIF_INTR_T_NOTIF_CMD_AVAIL_STS_1871606B_NOTIF_DEBUG_LOCKED_STS_5F024102_NOTIF_GEN_IN_TOGGLE_STS_59F84B64_NOTIF_MBOX_ECC_COR_STS_5C3D26BB_NOTIF_SOC_REQ_LOCK_STS_DEDDDE70 SAMPLE FUNCTIONS -----------------------*/
-    function void soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_gen_in_toggle_sts_59f84b64_notif_mbox_ecc_cor_sts_5c3d26bb_notif_soc_req_lock_sts_deddde70::sample(uvm_reg_data_t  data,
+    /*----------------------- soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_gen_in_toggle_sts_59f84b64_notif_mbox_ecc_cor_sts_5c3d26bb_notif_scan_mode_sts_122f6367_notif_soc_req_lock_sts_deddde70 SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_gen_in_toggle_sts_59f84b64_notif_mbox_ecc_cor_sts_5c3d26bb_notif_scan_mode_sts_122f6367_notif_soc_req_lock_sts_deddde70::sample(uvm_reg_data_t  data,
                                                    uvm_reg_data_t  byte_en,
                                                    bit             is_read,
                                                    uvm_reg_map     map);
@@ -1815,7 +1815,7 @@
         end
     endfunction
 
-    function void soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_gen_in_toggle_sts_59f84b64_notif_mbox_ecc_cor_sts_5c3d26bb_notif_soc_req_lock_sts_deddde70::sample_values();
+    function void soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_gen_in_toggle_sts_59f84b64_notif_mbox_ecc_cor_sts_5c3d26bb_notif_scan_mode_sts_122f6367_notif_soc_req_lock_sts_deddde70::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
             foreach(notif_cmd_avail_sts_bit_cg[bt]) this.notif_cmd_avail_sts_bit_cg[bt].sample(notif_cmd_avail_sts.get_mirrored_value() >> bt);
             foreach(notif_mbox_ecc_cor_sts_bit_cg[bt]) this.notif_mbox_ecc_cor_sts_bit_cg[bt].sample(notif_mbox_ecc_cor_sts.get_mirrored_value() >> bt);
@@ -1992,6 +1992,31 @@
     endfunction
 
     function void soc_ifc_reg__intr_block_t__intr_count_t_cnt_fb7d2433::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(cnt_bit_cg[bt]) this.cnt_bit_cg[bt].sample(cnt.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( cnt.get_mirrored_value()   );
+        end
+    endfunction
+
+    /*----------------------- SOC_IFC_REG__INTR_BLOCK_T__INTR_COUNT_T_CNT_fbf3c714 SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__intr_block_t__intr_count_t_cnt_fbf3c714::sample(uvm_reg_data_t  data,
+        uvm_reg_data_t  byte_en,
+        bit             is_read,
+        uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(cnt_bit_cg[bt]) this.cnt_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[31:0]/*cnt*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__intr_block_t__intr_count_t_cnt_fbf3c714::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
             foreach(cnt_bit_cg[bt]) this.cnt_bit_cg[bt].sample(cnt.get_mirrored_value() >> bt);
         end
@@ -2542,6 +2567,31 @@
     endfunction
 
     function void soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_d6ed4d1e::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(pulse_bit_cg[bt]) this.pulse_bit_cg[bt].sample(pulse.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( pulse.get_mirrored_value()   );
+        end
+    endfunction
+
+    /*----------------------- SOC_IFC_REG__INTR_BLOCK_T__INTR_COUNT_INCR_T_PULSE_f5d8afe0 SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f5d8afe0::sample(uvm_reg_data_t  data,
+        uvm_reg_data_t  byte_en,
+        bit             is_read,
+        uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(pulse_bit_cg[bt]) this.pulse_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[0:0]/*pulse*/   );
+        end
+    endfunction
+    
+    function void soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f5d8afe0::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
             foreach(pulse_bit_cg[bt]) this.pulse_bit_cg[bt].sample(pulse.get_mirrored_value() >> bt);
         end

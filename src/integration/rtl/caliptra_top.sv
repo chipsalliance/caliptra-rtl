@@ -741,7 +741,8 @@ sha512_ctrl #(
     .pcr_signing_hash(pcr_signing_data.pcr_hash),
 
     .error_intr(sha512_error_intr),
-    .notif_intr(sha512_notif_intr)
+    .notif_intr(sha512_notif_intr),
+    .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch)
 );
 
 sha256_ctrl #(
@@ -763,7 +764,8 @@ sha256_ctrl #(
     .hrdata_o       (responder_inst[`CALIPTRA_SLAVE_SEL_SHA256].hrdata),
 
     .error_intr(sha256_error_intr),
-    .notif_intr(sha256_notif_intr)
+    .notif_intr(sha256_notif_intr),
+    .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch)
 );
 
 //override device secrets with debug values in Debug or Scan Mode
@@ -797,8 +799,8 @@ doe_ctrl #(
     .notif_intr(doe_notif_intr),
     .clear_obf_secrets(clear_obf_secrets), //Output
     .kv_write (kv_write[KV_NUM_WRITE-1]),
-    .kv_wr_resp (kv_wr_resp[KV_NUM_WRITE-1])
-
+    .kv_wr_resp (kv_wr_resp[KV_NUM_WRITE-1]),
+    .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch)
     
 );
 
@@ -829,7 +831,8 @@ ecc_top1
     .pcr_signing_data(pcr_signing_data),
 
     .error_intr      (ecc_error_intr),
-    .notif_intr      (ecc_notif_intr)
+    .notif_intr      (ecc_notif_intr),
+    .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch)
 );
 
 hmac_ctrl #(
@@ -855,7 +858,8 @@ hmac_ctrl #(
      .kv_wr_resp    (kv_wr_resp[0]),
 
      .error_intr(hmac_error_intr),
-     .notif_intr(hmac_notif_intr)
+     .notif_intr(hmac_notif_intr),
+     .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch)
 
 );
 

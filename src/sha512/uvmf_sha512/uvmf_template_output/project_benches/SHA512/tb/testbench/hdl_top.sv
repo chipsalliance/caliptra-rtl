@@ -96,7 +96,19 @@ import uvmf_base_pkg_hdl::*;
 
              .hresp_o(SHA512_out_agent_bus.hresp),
              .hreadyout_o(SHA512_out_agent_bus.hreadyout),
-             .hrdata_o(SHA512_out_agent_bus.hrdata)
+             .hrdata_o(SHA512_out_agent_bus.hrdata),
+             .kv_read   (),
+             .kv_write  (),
+             .kv_rd_resp(),
+             .kv_wr_resp(),
+             .pv_read   (),
+             .pv_write  (),
+             .pv_rd_resp(),
+             .pv_wr_resp(),
+             .pcr_signing_hash(),
+             .error_intr(),
+             .notif_intr(),
+             .debugUnlock_or_scan_mode_switch()
             );
   // pragma uvmf custom dut_instantiation end
 

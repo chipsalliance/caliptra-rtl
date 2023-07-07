@@ -57,7 +57,8 @@ module ecc_top
     input pcr_signing_t pcr_signing_data,
 
     output logic error_intr,
-    output logic notif_intr
+    output logic notif_intr,
+    input  logic debugUnlock_or_scan_mode_switch
 );
 
     //gasket to assemble ecc request
@@ -148,7 +149,8 @@ module ecc_top
         .pcr_signing_data(pcr_signing_data),
         
         .error_intr(error_intr),
-        .notif_intr(notif_intr)
+        .notif_intr(notif_intr),
+        .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch)
     );
 
 endmodule

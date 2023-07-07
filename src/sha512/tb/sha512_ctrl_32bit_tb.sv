@@ -198,7 +198,8 @@ module sha512_ctrl_32bit_tb
              .pv_wr_resp(pv_wr_resp_tb),
 
              .error_intr(error_intr_tb),
-             .notif_intr(notif_intr_tb)
+             .notif_intr(notif_intr_tb),
+             .debugUnlock_or_scan_mode_switch()
             );
 
   //----------------------------------------------------------------

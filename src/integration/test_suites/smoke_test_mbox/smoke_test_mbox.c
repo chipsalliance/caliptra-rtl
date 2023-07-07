@@ -121,6 +121,10 @@ void main () {
         VPRINTF(LOW, "FW: Mailbox in expected state, MBOX_EXECUTE_SOC, ending test with success\n");
     }
 
+    //Wait for SoC to reset execute reg
+    VPRINTF(LOW, "FW: Wait for SoC to reset execute register\n");
+    while((lsu_read_32(CLP_MBOX_CSR_MBOX_EXECUTE) & MBOX_CSR_MBOX_EXECUTE_EXECUTE_MASK) == 1);
+
     //Force unlock
     lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
 

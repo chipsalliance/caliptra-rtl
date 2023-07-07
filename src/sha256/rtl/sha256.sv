@@ -64,7 +64,8 @@ module sha256
 
               // Interrupts
               output wire error_intr,
-              output wire notif_intr
+              output wire notif_intr,
+              input  logic debugUnlock_or_scan_mode_switch
              );
 
   //----------------------------------------------------------------
@@ -167,7 +168,7 @@ module sha256
     init_reg = hwif_out.SHA256_CTRL.INIT.value;
     next_reg = hwif_out.SHA256_CTRL.NEXT.value;
     mode_reg = hwif_out.SHA256_CTRL.MODE.value;
-    zeroize_reg = hwif_out.SHA256_CTRL.ZEROIZE.value;
+    zeroize_reg = hwif_out.SHA256_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
 
     hwif_in.SHA256_STATUS.READY.next = ready_reg;
     hwif_in.SHA256_STATUS.VALID.next = digest_valid_reg;

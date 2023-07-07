@@ -63,6 +63,7 @@ typedef struct packed {
     logic do_no_lock_access;
     logic do_ooo_access;
     logic reset_ooo_done_flag;
+    logic reset_no_lock_done_flag;
 } ras_test_ctrl_t;
 
 // Values to drive onto GENERIC INPUT WIRES in response to RAS testing

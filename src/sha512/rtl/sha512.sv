@@ -78,7 +78,8 @@ module sha512
 
         // Interrupts
         output wire error_intr,
-        output wire notif_intr
+        output wire notif_intr,
+        input  logic debugUnlock_or_scan_mode_switch
     );
 
   //----------------------------------------------------------------
@@ -277,7 +278,7 @@ module sha512
     init_reg = gen_hash_ip ? gen_hash_init_reg : hwif_out.SHA512_CTRL.INIT.value;
     next_reg = gen_hash_ip ? gen_hash_next_reg : hwif_out.SHA512_CTRL.NEXT.value;
     mode_reg = gen_hash_ip ? 2'b10 : hwif_out.SHA512_CTRL.MODE.value;
-    zeroize_reg = hwif_out.SHA512_CTRL.ZEROIZE.value;
+    zeroize_reg = hwif_out.SHA512_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
     last_reg = gen_hash_ip ? gen_hash_last_reg : hwif_out.SHA512_CTRL.LAST.value;
     hwif_in.SHA512_CTRL.LAST.hwclr = core_digest_valid & ~digest_valid_reg;
 
