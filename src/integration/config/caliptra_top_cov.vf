@@ -1,3 +1,0 @@
-+incdir+${CALIPTRA_ROOT}/src/integration/coverage
-${CALIPTRA_ROOT}/src/integration/coverage/caliptra_top_cov_if.sv
-${CALIPTRA_ROOT}/src/integration/coverage/caliptra_top_cov_bind.sv

@@ -11,6 +11,7 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_prim_mubi_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_cipher_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_pkg.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_sparse_fsm_pkg.sv
   tb:
     directories: [$COMPILE_ROOT/rtl]
     files:
@@ -20,8 +21,9 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_prim_mubi_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_cipher_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_pkg.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_sparse_fsm_pkg.sv
 ---
-provides: [prim]
+provides: [caliptra_prim]
 schema_version: 2.4.0
 requires:
   - libs
@@ -69,4 +71,4 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_prim_sum_tree.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_subreg_ext.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_edge_detector.sv
-    tops: [prim]
+    tops: [caliptra_prim]

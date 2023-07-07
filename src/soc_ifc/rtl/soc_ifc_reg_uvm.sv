@@ -858,6 +858,7 @@ package soc_ifc_reg_uvm;
         soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg iTRNG_en_bit_cg[1];
         soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg QSPI_en_bit_cg[1];
         soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg I3C_en_bit_cg[1];
+        soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg UART_en_bit_cg[1];
         soc_ifc_reg__CPTRA_HW_CONFIG_fld_cg fld_cg;
         rand uvm_reg_field iTRNG_en;
         rand uvm_reg_field QSPI_en;
@@ -880,10 +881,13 @@ package soc_ifc_reg_uvm;
             this.QSPI_en.configure(this, 1, 1, "RO", 1, 'h0, 0, 1, 0);
             this.I3C_en = new("I3C_en");
             this.I3C_en.configure(this, 1, 2, "RO", 1, 'h0, 0, 1, 0);
+            this.UART_en = new("UART_en");
+            this.UART_en.configure(this, 1, 3, "RO", 1, 'h0, 0, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(iTRNG_en_bit_cg[bt]) iTRNG_en_bit_cg[bt] = new();
                 foreach(QSPI_en_bit_cg[bt]) QSPI_en_bit_cg[bt] = new();
                 foreach(I3C_en_bit_cg[bt]) I3C_en_bit_cg[bt] = new();
+                foreach(UART_en_bit_cg[bt]) UART_en_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();

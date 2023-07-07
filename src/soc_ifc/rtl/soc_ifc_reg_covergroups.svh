@@ -606,13 +606,14 @@
     covergroup soc_ifc_reg__CPTRA_HW_CONFIG_fld_cg with function sample(
     input bit [1-1:0] iTRNG_en,
     input bit [1-1:0] QSPI_en,
-    input bit [1-1:0] I3C_en
+    input bit [1-1:0] I3C_en,
+    input bit [1-1:0] UART_en
     );
         option.per_instance = 1;
-        // FIXME add new fields for UART after merging latest
         iTRNG_en_cp : coverpoint iTRNG_en;
         QSPI_en_cp : coverpoint QSPI_en;
         I3C_en_cp : coverpoint I3C_en;
+        UART_en_cp : coverpoint UART_en;
 
     endgroup
 

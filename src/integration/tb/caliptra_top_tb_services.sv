@@ -433,7 +433,11 @@ module caliptra_top_tb_services
 
     //TIE-OFF device lifecycle
     logic assert_ss_tran;
-    initial security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1};
+`ifdef CALIPTRA_DEBUG_UNLOCKED
+    initial security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b0}; // DebugUnlocked & Production
+`else
+    initial security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; // DebugLocked & Production
+`endif
     always @(negedge clk) begin
         //lock debug mode
         if ((WriteData[7:0] == 8'hf9) && mailbox_write) begin
