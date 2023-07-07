@@ -33,7 +33,7 @@ module csrng_main_sm import csrng_pkg::*; #() (
 );
 
   main_sm_state_e state_d, state_q;
-  `PRIM_FLOP_SPARSE_FSM(u_state_regs, state_d, state_q, main_sm_state_e, MainSmIdle)
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_state_regs, state_d, state_q, main_sm_state_e, MainSmIdle)
 
   assign main_sm_state_o = {state_q};
 

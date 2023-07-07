@@ -3,6 +3,7 @@ provides: [aes_pkg]
 schema_version: 2.4.0
 requires:
   - edn_pkg
+  - caliptra_prim
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -15,7 +16,6 @@ provides: [aes]
 schema_version: 2.4.0
 requires:
   - aes_pkg
-  - prim
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -38,4 +38,4 @@ targets:
       - $COMPILE_ROOT/rtl/aes_cipher_control.sv
       - $COMPILE_ROOT/rtl/aes_prng_masking.sv
       - $COMPILE_ROOT/rtl/aes_key_expand.sv
-    tops: [aes_fixme]
+    tops: [aes_cipher_core]

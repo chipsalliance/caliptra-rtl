@@ -268,6 +268,7 @@ reg {
     field {sw=r; hw=w;} iTRNG_en;
     field {sw=r; hw=w;} QSPI_en;
     field {sw=r; hw=w;} I3C_en;
+    field {sw=r; hw=w;} UART_en;
 } CPTRA_HW_CONFIG;
 
 //Timer1

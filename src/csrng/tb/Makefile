@@ -44,10 +44,10 @@ verilator-build: $(TBFILES) $(VERILATOR_LINT_FILES) test_$(IPNAME)_tb.cpp
 	$(VERILATOR) --cc \
 		--timing \
 		--timescale 1ns/1ps \
-		-f $(CONFIGDIR)/$(IPNAME).vf --top-module $(IPNAME)_tb \
+		-f $(CONFIGDIR)/$(IPNAME)_tb.vf --top-module $(IPNAME)_tb \
     -f $(VERILATOR_LINT_FILES) \
 		-exe test_$(IPNAME)_tb.cpp \
-		--trace
+		--trace --trace-structs
 	cp test_$(IPNAME)_tb.cpp obj_dir/
 	$(MAKE) -j -e -C obj_dir/ -f V$(IPNAME)_tb.mk $(VERILATOR_MAKE_FLAGS) VM_PARALLEL_BUILDS=1
 	touch verilator-build

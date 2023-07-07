@@ -82,6 +82,7 @@ global:
 provides: [el2_veer_wrapper_tb]  
 schema_version: 2.4.0
 requires: 
+  - caliptra_top_defines
   - el2_veer_pkg
   - el2_veer_wrapper
 targets:
@@ -94,7 +95,7 @@ targets:
       - $COMPILE_ROOT/tb/ahb_sif.sv
     tops: [el2_veer_wrapper_tb]
   sim:
-    pre_exec: $TOOLS/scripts/run_test_makefile
+    pre_exec: $MSFT_TOOLS/scripts/run_test_makefile
 global:
   tool:
     vcs:

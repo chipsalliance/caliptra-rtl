@@ -1,6 +1,8 @@
 ---
 provides: [csrng_pkg]
 schema_version: 2.4.0
+requires:
+  - entropy_src_pkg
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -17,8 +19,8 @@ provides: [csrng]
 schema_version: 2.4.0
 requires:
   - libs
-  - prim_generic
-  - prim
+  - caliptra_prim_generic
+  - caliptra_prim
   - lc_ctrl_pkg
   - entropy_src_pkg
   - edn_pkg

@@ -292,6 +292,8 @@
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_QSPI_EN_MASK                                           (32'h2)
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_I3C_EN_LOW                                             (2)
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_I3C_EN_MASK                                            (32'h4)
+`define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_UART_EN_LOW                                            (3)
+`define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_UART_EN_MASK                                           (32'h8)
 `define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_WDT_TIMER1_EN                                   (32'h300300e0)
 `define GENERIC_AND_FUSE_REG_CPTRA_WDT_TIMER1_EN                                                    (32'he0)
 `define GENERIC_AND_FUSE_REG_CPTRA_WDT_TIMER1_EN_TIMER1_EN_LOW                                      (0)

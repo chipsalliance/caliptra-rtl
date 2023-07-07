@@ -1,3 +1,0 @@
-+incdir+${CALIPTRA_ROOT}/src/prim_generic/rtl
-${CALIPTRA_ROOT}/src/prim_generic/rtl/prim_generic_flop.sv
-${CALIPTRA_ROOT}/src/prim_generic/rtl/prim_generic_buf.sv

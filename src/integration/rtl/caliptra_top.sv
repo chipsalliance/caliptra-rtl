@@ -54,12 +54,18 @@ module caliptra_top
     output logic [`CALIPTRA_APB_DATA_WIDTH-1:0] PRDATA,
 
     //QSPI Interface
-    output logic                       qspi_clk_o,
+    output logic                                qspi_clk_o,
     output logic [`CALIPTRA_QSPI_CS_WIDTH-1:0]  qspi_cs_no,
-    inout  wire  [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_d_io,
+    input  wire  [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_d_i,
+    output logic [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_d_o,
+    output logic [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_d_en_o,
 
     //UART Interface
-    //TODO update with UART interface signals
+    // TODO: Determine if this should be set behind a ifdef
+`ifdef CALIPTRA_INTERNAL_UART
+    output logic                                uart_tx,
+    input  logic                                uart_rx,
+`endif
 
     //I3C Interface
     //TODO update with I3C interface signals
@@ -279,6 +285,17 @@ end
         .AHB_LITE_ADDR_WIDTH(`CALIPTRA_AHB_HADDR_SIZE),
         .AHB_LITE_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE)
     )
+    sb_ahb();
+    CALIPTRA_AHB_LITE_BUS_INF #(
+        .AHB_LITE_ADDR_WIDTH(`CALIPTRA_AHB_HADDR_SIZE),
+        .AHB_LITE_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE)
+    )
+    lsu_ahb();
+
+    CALIPTRA_AHB_LITE_BUS_INF #(
+        .AHB_LITE_ADDR_WIDTH(`CALIPTRA_AHB_HADDR_SIZE),
+        .AHB_LITE_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE)
+    )
     initiator_inst();
 
     //========================================================================
@@ -348,10 +365,6 @@ assign uart_error_intr = 1'b0; // TODO
 assign uart_notif_intr = 1'b0; // TODO
 assign i3c_error_intr = 1'b0; // TODO
 assign i3c_notif_intr = 1'b0; // TODO
-//QSPI Tie Off
-assign qspi_clk_o = '0;
-assign qspi_cs_no = '0;
-assign qspi_d_io = '0;
 
 // Vector 0 usage is reserved by VeeR, so bit 0 of the intr wire
 // drive Vector 1
@@ -382,7 +395,11 @@ always_comb begin
 end
 
 el2_veer_wrapper rvtop (
+`ifdef CALIPTRA_FORCE_CPU_RESET
+    .rst_l                  ( 1'b0 ),
+`else
     .rst_l                  ( cptra_uc_rst_b),
+`endif
     .dbg_rst_l              ( cptra_pwrgood), 
     .clk                    ( clk      ),
     .rst_vec                ( reset_vector[31:1]),
@@ -405,34 +422,34 @@ el2_veer_wrapper rvtop (
     //---------------------------------------------------------------
     // Debug AHB Master
     //---------------------------------------------------------------
-    .sb_haddr               (),
-    .sb_hburst              (),
-    .sb_hmastlock           (),
-    .sb_hprot               (),
-    .sb_hsize               (),
-    .sb_htrans              (),
-    .sb_hwrite              (),
-    .sb_hwdata              (),
+    .sb_haddr               ( sb_ahb.haddr   ),
+    .sb_hburst              (                ),
+    .sb_hmastlock           (                ),
+    .sb_hprot               (                ),
+    .sb_hsize               ( sb_ahb.hsize   ),
+    .sb_htrans              ( sb_ahb.htrans  ),
+    .sb_hwrite              ( sb_ahb.hwrite  ),
+    .sb_hwdata              ( sb_ahb.hwdata  ),
 
-    .sb_hrdata              ('0),
-    .sb_hready              ('0),
-    .sb_hresp               ('0),
+    .sb_hrdata              ( sb_ahb.hrdata  ),
+    .sb_hready              ( sb_ahb.hready  ),
+    .sb_hresp               ( sb_ahb.hresp   ),
 
     //---------------------------------------------------------------
     // LSU AHB Master
     //---------------------------------------------------------------
-    .lsu_haddr              ( initiator_inst.haddr       ),
-    .lsu_hburst             (                       ),
-    .lsu_hmastlock          (                       ),
-    .lsu_hprot              (                       ),
-    .lsu_hsize              ( initiator_inst.hsize       ),
-    .lsu_htrans             ( initiator_inst.htrans      ),
-    .lsu_hwrite             ( initiator_inst.hwrite      ),
-    .lsu_hwdata             ( initiator_inst.hwdata      ),
+    .lsu_haddr              ( lsu_ahb.haddr  ),
+    .lsu_hburst             (                ),
+    .lsu_hmastlock          (                ),
+    .lsu_hprot              (                ),
+    .lsu_hsize              ( lsu_ahb.hsize  ),
+    .lsu_htrans             ( lsu_ahb.htrans ),
+    .lsu_hwrite             ( lsu_ahb.hwrite ),
+    .lsu_hwdata             ( lsu_ahb.hwdata ),
 
-    .lsu_hrdata             ( initiator_inst.hrdata[63:0]),
-    .lsu_hready             ( initiator_inst.hready      ),
-    .lsu_hresp              ( initiator_inst.hresp       ),
+    .lsu_hrdata             ( lsu_ahb.hrdata ),
+    .lsu_hready             ( lsu_ahb.hready ),
+    .lsu_hresp              ( lsu_ahb.hresp  ),
 
     //---------------------------------------------------------------
     // DMA Slave
@@ -520,6 +537,52 @@ el2_veer_wrapper rvtop (
     always_comb responder_inst[`CALIPTRA_SLAVE_SEL_IDMA].hrdata    = responder_inst[`CALIPTRA_SLAVE_SEL_DDMA].hrdata;
     always_comb responder_inst[`CALIPTRA_SLAVE_SEL_IDMA].hresp     = responder_inst[`CALIPTRA_SLAVE_SEL_DDMA].hresp;
     always_comb responder_inst[`CALIPTRA_SLAVE_SEL_IDMA].hreadyout = responder_inst[`CALIPTRA_SLAVE_SEL_DDMA].hreadyout;
+
+    // SB and LSU AHB master mux
+    ahb_lite_2to1_mux #(
+        .AHB_LITE_ADDR_WIDTH (`CALIPTRA_AHB_HADDR_SIZE),
+        .AHB_LITE_DATA_WIDTH (`CALIPTRA_AHB_HDATA_SIZE),
+        .AHB_NO_OPT(1) //Prevent address and data phase overlap between initiators
+    ) u_sb_lsu_ahb_mux (
+        .hclk                (clk_cg),
+        .hreset_n            (cptra_noncore_rst_b),
+
+        // Initiator 0
+        .hsel_i_0            (1'b1          ),
+        .haddr_i_0           (lsu_ahb.haddr ),
+        .hwdata_i_0          (lsu_ahb.hwdata),
+        .hwrite_i_0          (lsu_ahb.hwrite),
+        .htrans_i_0          (lsu_ahb.htrans),
+        .hsize_i_0           (lsu_ahb.hsize ),
+        .hready_i_0          (1'b1          ),
+        .hresp_o_0           (lsu_ahb.hresp ),
+        .hready_o_0          (lsu_ahb.hready),
+        .hrdata_o_0          (lsu_ahb.hrdata),
+
+        // Initiator 1
+        .hsel_i_1            (1'b1          ),
+        .haddr_i_1           (sb_ahb.haddr  ),
+        .hwdata_i_1          (sb_ahb.hwdata ),
+        .hwrite_i_1          (sb_ahb.hwrite ),
+        .htrans_i_1          (sb_ahb.htrans ),
+        .hsize_i_1           (sb_ahb.hsize  ),
+        .hready_i_1          (1'b1          ),
+        .hresp_o_1           (sb_ahb.hresp  ),
+        .hready_o_1          (sb_ahb.hready ),
+        .hrdata_o_1          (sb_ahb.hrdata ),
+
+        // Responder
+        .hsel_o              (initiator_inst.hsel  ),
+        .haddr_o             (initiator_inst.haddr ),
+        .hwdata_o            (initiator_inst.hwdata),
+        .hwrite_o            (initiator_inst.hwrite),
+        .htrans_o            (initiator_inst.htrans),
+        .hsize_o             (initiator_inst.hsize ),
+        .hready_o            (initiator_inst.hready),
+        .hresp_i             (initiator_inst.hresp ),
+        .hreadyout_i         (initiator_inst.hreadyout),
+        .hrdata_i            (initiator_inst.hrdata)
+    );
 
     // Security State value captured on a Caliptra reset deassertion (0->1 signal transition)
     always_ff @(posedge clk or negedge cptra_rst_b) begin
@@ -907,7 +970,7 @@ csrng #(
     .hreadyout_o            (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hreadyout),
     .hrdata_o               (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hrdata),
      // OTP Interface
-    .otp_en_csrng_sw_app_read_i(prim_mubi_pkg::MuBi8True),
+    .otp_en_csrng_sw_app_read_i(caliptra_prim_mubi_pkg::MuBi8True),
     // Lifecycle broadcast inputs
     .lc_hw_debug_en_i       (lc_ctrl_pkg::On),
     // Entropy Interface
@@ -920,7 +983,7 @@ csrng #(
     .csrng_cmd_o            (),
     // Alerts
     .alert_tx_o             (),
-    .alert_rx_i             ({prim_alert_pkg::ALERT_RX_DEFAULT, prim_alert_pkg::ALERT_RX_DEFAULT}),
+    .alert_rx_i             ({caliptra_prim_alert_pkg::ALERT_RX_DEFAULT, caliptra_prim_alert_pkg::ALERT_RX_DEFAULT}),
     // Interrupt
     .intr_cs_cmd_req_done_o (),
     .intr_cs_entropy_req_o  (),
@@ -946,8 +1009,8 @@ entropy_src #(
     .hreadyout_o            (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hreadyout),
     .hrdata_o               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hrdata),
     // OTP Interface
-    .otp_en_entropy_src_fw_read_i(prim_mubi_pkg::MuBi8True),
-    .otp_en_entropy_src_fw_over_i(prim_mubi_pkg::MuBi8True),
+    .otp_en_entropy_src_fw_read_i(caliptra_prim_mubi_pkg::MuBi8True),
+    .otp_en_entropy_src_fw_over_i(caliptra_prim_mubi_pkg::MuBi8True),
     // RNG Interface
     .rng_fips_o                       (),
     // Entropy Interface
@@ -963,7 +1026,7 @@ entropy_src #(
     .entropy_src_xht_o                (),
     .entropy_src_xht_i                (entropy_src_xht_rsp_t'('0)),
     // Alerts
-    .alert_rx_i                       ({prim_alert_pkg::ALERT_RX_DEFAULT, prim_alert_pkg::ALERT_RX_DEFAULT}),
+    .alert_rx_i                       ({caliptra_prim_alert_pkg::ALERT_RX_DEFAULT, caliptra_prim_alert_pkg::ALERT_RX_DEFAULT}),
     .alert_tx_o                       (),
     // Interrupts
     .intr_es_entropy_valid_o          (),
@@ -972,6 +1035,96 @@ entropy_src #(
     .intr_es_fatal_err_o              ()
     );
 
+`endif
+
+
+`ifdef CALIPTRA_INTERNAL_QSPI
+
+  logic                               cio_sck_o;
+  logic                               cio_sck_en_o;
+  logic [`CALIPTRA_QSPI_CS_WIDTH-1:0] cio_csb_o;
+  logic [`CALIPTRA_QSPI_CS_WIDTH-1:0] cio_csb_en_o;
+
+  assign qspi_clk_o = cio_sck_en_o ? cio_sck_o : 1'b0;
+  for (genvar ii = 0; ii < `CALIPTRA_QSPI_CS_WIDTH; ii += 1) begin : gen_qspi_cs
+    assign qspi_cs_no[ii] = cio_csb_en_o[ii] ? cio_csb_o[ii] : 1'b1;
+  end
+
+spi_host #(
+    .AHBDataWidth(`CALIPTRA_AHB_HDATA_SIZE),
+    .AHBAddrWidth(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_CSRNG))
+) spi_host (
+    // Clock and reset connections
+    .clk_i                  (clk_cg),
+    .rst_ni                 (cptra_noncore_rst_b),
+    // AMBA AHB Lite Interface
+    .haddr_i                (responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_QSPI)-1:0]),
+    .hwdata_i               (responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hwdata),
+    .hsel_i                 (responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hsel),
+    .hwrite_i               (responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hwrite),
+    .hready_i               (responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hready),
+    .htrans_i               (responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].htrans),
+    .hsize_i                (responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hsize),
+    .hresp_o                (responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hresp),
+    .hreadyout_o            (responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hreadyout),
+    .hrdata_o               (responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hrdata),
+    // Alerts
+    .alert_rx_i(caliptra_prim_alert_pkg::ALERT_RX_DEFAULT),
+    .alert_tx_o(),
+    // SPI Interface
+    .cio_sck_o    (cio_sck_o),
+    .cio_sck_en_o (cio_sck_en_o),
+    .cio_csb_o    (cio_csb_o),
+    .cio_csb_en_o (cio_csb_en_o),
+    .cio_sd_o     (qspi_d_o),
+    .cio_sd_en_o  (qspi_d_en_o),
+    .cio_sd_i     (qspi_d_i),
+    .intr_error_o(),
+    .intr_spi_event_o()
+  );
+`else
+//QSPI Tie Off
+assign qspi_clk_o = '0;
+assign qspi_cs_no = '0;
+assign qspi_d_o = '0;
+assign qspi_d_en_o = '0;
+`endif
+
+`ifdef CALIPTRA_INTERNAL_UART
+uart #(
+    .AHBDataWidth(`CALIPTRA_AHB_HDATA_SIZE),
+    .AHBAddrWidth(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_UART))
+) uart (
+    .clk_i       (clk_cg),
+    .rst_ni      (cptra_noncore_rst_b),
+    // AMBA AHB Lite Interface
+    .haddr_i     (responder_inst[`CALIPTRA_SLAVE_SEL_UART].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_UART)-1:0]),
+    .hwdata_i    (responder_inst[`CALIPTRA_SLAVE_SEL_UART].hwdata),
+    .hsel_i      (responder_inst[`CALIPTRA_SLAVE_SEL_UART].hsel),
+    .hwrite_i    (responder_inst[`CALIPTRA_SLAVE_SEL_UART].hwrite),
+    .hready_i    (responder_inst[`CALIPTRA_SLAVE_SEL_UART].hready),
+    .htrans_i    (responder_inst[`CALIPTRA_SLAVE_SEL_UART].htrans),
+    .hsize_i     (responder_inst[`CALIPTRA_SLAVE_SEL_UART].hsize),
+    .hresp_o     (responder_inst[`CALIPTRA_SLAVE_SEL_UART].hresp),
+    .hreadyout_o (responder_inst[`CALIPTRA_SLAVE_SEL_UART].hreadyout),
+    .hrdata_o    (responder_inst[`CALIPTRA_SLAVE_SEL_UART].hrdata),
+    // Alerts
+    .alert_rx_i  (),
+    .alert_tx_o  (),
+    // Generic IO
+    .cio_rx_i(uart_rx),
+    .cio_tx_o(uart_tx),
+    .cio_tx_en_o(),
+    // Interrupts
+    .intr_tx_watermark_o(),
+    .intr_rx_watermark_o(),
+    .intr_tx_empty_o(),
+    .intr_rx_overflow_o(),
+    .intr_rx_frame_err_o(),
+    .intr_rx_break_err_o(),
+    .intr_rx_timeout_o(),
+    .intr_rx_parity_err_o()
+  );
 `endif
 
 soc_ifc_top #(
@@ -1072,12 +1225,16 @@ soc_ifc_top1
 
 //TIE OFF slaves
 always_comb begin: tie_off_slaves
+`ifndef CALIPTRA_INTERNAL_QSPI
     responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hresp = '0;
     responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hreadyout = '0;
     responder_inst[`CALIPTRA_SLAVE_SEL_QSPI].hrdata = '0;
+`endif
+`ifndef CALIPTRA_INTERNAL_UART
     responder_inst[`CALIPTRA_SLAVE_SEL_UART].hresp = '0;
     responder_inst[`CALIPTRA_SLAVE_SEL_UART].hreadyout = '0;
     responder_inst[`CALIPTRA_SLAVE_SEL_UART].hrdata = '0;
+`endif
     responder_inst[`CALIPTRA_SLAVE_SEL_I3C].hresp = '0;
     responder_inst[`CALIPTRA_SLAVE_SEL_I3C].hreadyout = '0;
     responder_inst[`CALIPTRA_SLAVE_SEL_I3C].hrdata = '0;

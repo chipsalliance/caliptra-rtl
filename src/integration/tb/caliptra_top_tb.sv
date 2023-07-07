@@ -93,6 +93,8 @@ module caliptra_top_tb (
         S_APB_ERROR
     } n_state_apb, c_state_apb;
 
+    parameter FW_NUM_DWORDS         = 256;
+
     logic [$clog2(FW_NUM_DWORDS)-1:0] apb_wr_count, apb_wr_count_nxt;
     logic apb_enable_ph;
     logic apb_xfer_end;
@@ -115,6 +117,17 @@ module caliptra_top_tb (
     logic                                PREADY;
     logic                                PSLVERR;
     logic [`CALIPTRA_APB_DATA_WIDTH-1:0] PRDATA;
+
+    // QSPI Interface
+    logic                                qspi_clk;
+    logic [`CALIPTRA_QSPI_CS_WIDTH-1:0]  qspi_cs_n;
+    wire  [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_data;
+    logic [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_data_host_to_device, qspi_data_device_to_host;
+    logic [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_data_host_to_device_en;
+
+`ifdef CALIPTRA_INTERNAL_UART
+    logic uart_loopback;
+`endif
 
     logic ready_for_fuses;
     logic ready_for_fw_push;
@@ -171,8 +184,6 @@ module caliptra_top_tb (
     logic deassert_rst_flag;
 
     el2_mem_if el2_mem_export ();
-
-    parameter FW_NUM_DWORDS         = 256;
 
     logic [FW_NUM_DWORDS-1:0][31:0] fw_blob;
 
@@ -332,11 +343,6 @@ module caliptra_top_tb (
         BootFSM_BrkPoint = 1'b1; //Set to 1 even before anything starts
         cptra_rst_b = 1'b0;
         start_apb_fuse_sequence = 1'b0;
-        //tie offs
-        jtag_tck = 1'b0;    // JTAG clk
-        jtag_tms = 1'b0;    // JTAG TMS
-        jtag_tdi = 1'b0;    // JTAG tdi
-        jtag_trst_n = 1'b0; // JTAG Reset
         //TIE-OFF
         PPROT = '0;
 
@@ -889,6 +895,20 @@ module caliptra_top_tb (
         endcase
     end
 
+// JTAG DPI
+jtagdpi #(
+    .Name           ("jtag0"),
+    .ListenPort     (5000)
+) jtagdpi (
+    .clk_i          (core_clk),
+    .rst_ni         (cptra_rst_b),
+    .jtag_tck       (jtag_tck),
+    .jtag_tms       (jtag_tms),
+    .jtag_tdi       (jtag_tdi),
+    .jtag_tdo       (jtag_tdo),
+    .jtag_trst_n    (jtag_trst_n),
+    .jtag_srst_n    ()
+);
 
    //=========================================================================-
    // DUT instance
@@ -917,9 +937,16 @@ caliptra_top caliptra_top_dut (
     .PWDATA(PWDATA),
     .PWRITE(PWRITE),
 
-    .qspi_clk_o(),
-    .qspi_cs_no(),
-    .qspi_d_io(),
+    .qspi_clk_o (qspi_clk),
+    .qspi_cs_no (qspi_cs_n),
+    .qspi_d_i   (qspi_data_device_to_host),
+    .qspi_d_o   (qspi_data_host_to_device),
+    .qspi_d_en_o(qspi_data_host_to_device_en),
+
+`ifdef CALIPTRA_INTERNAL_UART
+    .uart_tx(uart_loopback),
+    .uart_rx(uart_loopback),
+`endif
 
     .el2_mem_export(el2_mem_export),
 
@@ -958,8 +985,8 @@ caliptra_top caliptra_top_dut (
     .generic_input_wires(generic_input_wires),
     .generic_output_wires(),
 
-    .security_state(security_state), //FIXME TIE-OFF
-    .scan_mode     (scan_mode) //FIXME TIE-OFF
+    .security_state(security_state),
+    .scan_mode     (scan_mode)
 );
 
 
@@ -973,6 +1000,42 @@ physical_rng physical_rng (
     .data   (itrng_data),
     .valid  (itrng_valid)
 );
+`endif
+
+`ifdef CALIPTRA_INTERNAL_QSPI
+    //=========================================================================-
+    // SPI Flash
+    //=========================================================================-
+for (genvar ii = 0; ii < `CALIPTRA_QSPI_IO_WIDTH; ii += 1) begin: gen_qspi_io
+  assign qspi_data[ii] = qspi_data_host_to_device_en[ii]
+      ? qspi_data_host_to_device[ii]
+      : 1'bz;
+  assign qspi_data_device_to_host[ii] = qspi_data_host_to_device_en[ii]
+      ? 1'bz
+      : qspi_data[ii];
+end
+
+localparam logic [15:0] DeviceId0 = 16'hF10A;
+localparam logic [15:0] DeviceId1 = 16'hF10B;
+
+spiflash #(
+  .DeviceId(DeviceId0),
+  .SpiFlashRandomData(0) // fixed pattern for smoke test
+) spiflash0 (
+  .sck (qspi_clk),
+  .csb (qspi_cs_n[0]),
+  .sd  (qspi_data)
+);
+
+spiflash #(
+  .DeviceId(DeviceId1),
+  .SpiFlashRandomData(0) // fixed pattern for smoke test
+) spiflash1 (
+  .sck (qspi_clk),
+  .csb (qspi_cs_n[1]),
+  .sd  (qspi_data)
+);
+
 `endif
 
    //=========================================================================-

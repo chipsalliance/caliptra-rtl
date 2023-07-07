@@ -1,5 +1,7 @@
 ---
 provides: [edn_pkg]
+requires:
+  - entropy_src_pkg
 schema_version: 2.4.0
 targets:
   rtl:

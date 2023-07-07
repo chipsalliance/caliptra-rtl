@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Caliptra Hands-On Guide** #
-_*Last Update: 2023/03/13*_
+_*Last Update: 2023/06/08*_
 
 [[_TOC_]]
 
@@ -33,7 +33,7 @@ Simulation:
  - Synopsys VCS with Verdi
    - `Version R-2020.12-SP2-7_Full64`
  - Verilator
-   - `Version 4.228`
+   - `Version 5.012`
  - Mentor Graphics QVIP
    - `Version 2021.2.1` of AHB/APB models
  - UVM installation
@@ -54,8 +54,8 @@ Other:
 
 ## **ENVIRONMENT VARIABLES** ##
 Required for simulation:<BR>
-`CALIPTRA_WORKSPACE`: Defines the absolute path to the directory that contains the Project repository root (called "Caliptra" or "caliptra-rtl")<BR>
-`CALIPTRA_ROOT`: Defines the absolute path to the Project repository root (called "Caliptra" or "caliptra-rtl"). Equivalent to `${CALIPTRA_WORKSPACE}/Caliptra`.<BR>
+`CALIPTRA_WORKSPACE`: Defines the absolute path to the directory where the Verilator "scratch" output directory will be created. Recommended to define as the absolute path to the directory that contains the Project repository root (called "Caliptra" or "caliptra-rtl")<BR>
+`CALIPTRA_ROOT`: Defines the absolute path to the Project repository root (called "Caliptra" or "caliptra-rtl"). Recommended to define as `${CALIPTRA_WORKSPACE}/Caliptra`.<BR>
 
 Required for Firmware (i.e. Test suites) makefile:<BR>
   `TESTNAME`: Contains the name of one of the tests listed inside the `src/integration/test_suites` folder<BR>
@@ -71,20 +71,31 @@ Caliptra
 |   |-- Caliptra_Hardware_Spec.pdf
 |   |-- Caliptra_TestPlan_L1.pdf
 |-- src
+|   |-- aes
 |   |-- ahb_lite_bus
+|   |-- caliptra_prim
+|   |-- caliptra_prim_generic
+|   |-- csrng
 |   |-- datavault
 |   |-- doe
 |   |-- ecc
+|   |-- edn
+|   |-- entropy_src
 |   |-- hmac
 |   |-- hmac_drbg
 |   |-- integration
 |   |-- keyvault
+|   |-- kmac
+|   |-- lc_ctrl
 |   |-- libs
 |   |-- pcrvault
 |   |-- riscv_core
 |   |-- sha256
 |   |-- sha512
+|   |-- sha512_masked
 |   |-- soc_ifc
+|   |-- spi_host
+|   |-- uart
 `-- tools
     |-- config
     |-- README
@@ -98,19 +109,21 @@ The "Integration" sub-component contains the top-level fileset for Caliptra. `sr
 
 ## **Scripts Description** ##
 
+`demo.rdl`:Sample RDL file<BR>
 `Makefile`: Makefile to generate SRAM initialization files from test firmware and to run Verilator simulation<BR>
-`run_test_makefile`: Wrapper used in Microsoft internal build flow to invoke Makefile for mem init file generation<BR>
 `reg_gen.py`: Used to compile/export RDL files to register source code<BR>
 `reg_gen.sh`: Wrapper used to call `reg_gen.py` for all IP cores in Caliptra<BR>
 `reg_doc_gen.py`: Used to compile/export top-level RDL address map to register source code, defining complete Caliptra address space, and produces HTML documentation<BR>
 `reg_doc_gen.sh`: Wrapper to invoke `reg_doc_gen.py`<BR>
+`reg_json.py`:Used to import JSON register definition from OpenTitan and generate SystemRDL model<BR>
 `rdl_post_process.py`: Post-processing functionality to make RDL generated SystemVerilog files compatible with lint/Verilator requirements<BR>
 `run_verilator_l0_regression.py`: Wrapper to run the L0 smoke test regression suite using the Makefile flow in Verilator<BR>
 `integration_vector_gen.py`: Generates test vectors for crypto core tests<BR>
 `veer_build_command.sh`: Shell script used to generate the VeeR-EL2 repository present in `src/riscv_core/veer_el2`<BR>
 
 ## **Simulation Flow** ##
-VCS Steps:
+
+### VCS Steps: ###
 1. Setup tools, add to PATH (ensure riscv64-unknown-elf-gcc is also available)
 1. Define all environment variables above
     - For the initial test run after downloading repository, `iccm_lock` is recommended for TESTNAME
@@ -120,7 +133,7 @@ VCS Steps:
 1. Compile complete project using `src/integration/config/caliptra_top_tb.vf` as a compilation target in VCS. When running the `vcs` command to generate simv, users should ensure that `caliptra_top_tb` is explicitly specified as the top-level component in their command to ensure this is the sole "top" that gets simulated.
 1. Simulate project with `caliptra_top_tb` as the top target
 
-Verilator Steps:
+### Verilator Steps: ###
 1. Setup tools, add to PATH (ensure Verilator, GCC, and riscv64-unknown-elf-gcc are available)
 1. Define all environment variables above
     - For the initial test run after downloading repository, `iccm_lock` is recommended for TESTNAME
@@ -140,11 +153,12 @@ Verilator Steps:
     1. NOTE: The script automatically creates run output folders at `${CALIPTRA_WORKSPACE}/scratch/$USER/verilator/<timestamp>/<testname>` for each test run
     1. NOTE: The output folder is populated with a run log that reports the run results and pass/fail status
 
-UVM Testbench Steps for `caliptra_top`:<BR>
-Description:<BR>
+### UVM Testbench Steps for `caliptra_top`: <BR>
+
+**Description**:<BR>
 The UVM Framework generation tool was used to create the baseline UVM testbench for verification of the top-level Caliptra image. The top-level bench leverages the `soc_ifc_top` testbench as a subenvironment, to reuse environment level sequences, agents, register models, and predictors.
 
-Prerequisites:<BR>
+**Prerequisites**:<BR>
 - QVIP 2021.2.1 for Mentor Graphics (provides the AHB/APB VIP)
 - UVM 1.1d installation
 
@@ -159,3 +173,7 @@ Steps:<BR>
 1. Provide `+UVM_TESTNAME=<test>` argument to simulation
 
 ## **NOTES** ##
+
+* The internal registers are auto rendered at the [GitHub
+  page](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs)
+* So are the [external registers](https://chipsalliance.github.io/caliptra-rtl/main/external-regs)

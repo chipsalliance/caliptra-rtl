@@ -1,5 +1,4 @@
 # SPDX-License-Identifier: Apache-2.0
-# Copyright 2020 Western Digital Corporation or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+PLAYBOOK_RANDOM_SEED ?= $(shell date +%s)
 TEST_CFLAGS = -g -O3 -DMY_RANDOM_SEED=$(PLAYBOOK_RANDOM_SEED)
 
 VERILATOR = verilator
@@ -79,12 +80,21 @@ OFILES += printf.o
 # Always compile the lib files - for every target
 OFILES += $(foreach comp_lib_name, $(COMP_LIB_NAMES), $(comp_lib_name).o)
 
+# Verilator trace format
+VERILATOR_TRACE=vcd
+
 ifdef debug
  DEBUG_PLUS = +dumpon
  IRUN_DEBUG = -access +rc
  IRUN_DEBUG_RUN = -input $(RV_ROOT)/testbench/input.tcl
  VCS_DEBUG = -debug_access
- VERILATOR_DEBUG = --trace --trace-structs
+ ifeq ($(VERILATOR_TRACE), vcd)
+  VERILATOR_DEBUG = --trace --trace-structs
+ else ifeq ($(VERILATOR_TRACE), fst)
+  VERILATOR_DEBUG = --trace-fst --trace-structs --trace-threads 2
+ else
+  $(error Unsupported Verilator trace format '$(VERILATOR_TRACE)')
+ endif
  RIVIERA_DEBUG = +access +r
 endif
 
@@ -143,14 +153,39 @@ includes = -I$(BUILD_DIR)
 #               v            v                v            v               v            v
 suppress = -Wno-WIDTH -Wno-UNOPTFLAT -Wno-LITENDIAN -Wno-CMPCONST -Wno-MULTIDRIVEN -Wno-UNPACKED
 
-# CFLAGS for verilator generated Makefiles. Without -std=c++11 it
+# CFLAGS for verilator generated Makefiles. Without -std=c++17 it
 # complains for `auto` variables
-CFLAGS += "-std=c++11"
+CFLAGS += -std=c++17
 
 # Optimization for better performance; alternative is nothing for
 # slower runtime (faster compiles) -O2 for faster runtime (slower
 # compiles), or -O for balance.
 VERILATOR_MAKE_FLAGS = OPT_FAST="-Os"
+
+# Testbench libs
+VERILATOR_TB_LIBS = jtagdpi/jtagdpi.c \
+                    tcp_server/tcp_server.c
+
+# Testbench sources
+VERILATOR_TB_SRCS = $(TBDIR)/test_caliptra_top_tb.cpp \
+                    $(addprefix $(CALIPTRA_ROOT)/src/integration/test_suites/libs/,$(VERILATOR_TB_LIBS))
+
+# Testbench defs
+VERILATOR_TB_DEFS = +define+CALIPTRA_INTERNAL_QSPI+CALIPTRA_INTERNAL_TRNG+CALIPTRA_INTERNAL_UART
+
+# By default debugging (JTAG) is locked in Caliptra. Add "DEBUG_UNLOCKED=1" to
+# enable it.
+ifdef DEBUG_UNLOCKED
+    VERILATOR_TB_DEFS += +define+CALIPTRA_DEBUG_UNLOCKED
+endif
+
+# To enforce holding the RISC-V core in reset add "FORCE_CPU_RESET=1".
+ifdef FORCE_CPU_RESET
+    VERILATOR_TB_DEFS += +define+CALIPTRA_FORCE_CPU_RESET
+endif
+
+# Add testbench lib include paths
+CFLAGS += $(addprefix -I$(CALIPTRA_ROOT)/src/integration/test_suites/libs/,$(dir $(VERILATOR_TB_LIBS)))
 
 # Targets
 all: clean verilator
@@ -163,18 +198,18 @@ clean:
 
 ############ Model Builds ###############################
 
-verilator-build: $(TBFILES) $(INCLUDES_DIR)/defines.h test_caliptra_top_tb.cpp
-	$(VERILATOR)  --cc -CFLAGS $(CFLAGS) \
+verilator-build: $(TBFILES) $(INCLUDES_DIR)/defines.h $(VERILATOR_TB_SRCS)
+	$(VERILATOR) $(VERILATOR_TB_SRCS) --cc -CFLAGS "$(CFLAGS)" \
 	  +libext+.v+.sv +define+RV_OPENSOURCE \
 	  --timescale 1ns/1ps \
+		--timing \
 	  $(includes) \
 	  $(suppress) \
 	  -f $(TBDIR)/../config/caliptra_top_tb.vf --top-module caliptra_top_tb \
 	  -f $(TBDIR)/../config/caliptra_top_tb.vlt \
-	  -exe test_caliptra_top_tb.cpp --autoflush $(VERILATOR_DEBUG)
-	  #+define+CALIPTRA_INTERNAL_TRNG
-	cp $(TBDIR)/test_caliptra_top_tb.cpp obj_dir/
-	$(MAKE) -j -e -C obj_dir/ -f Vcaliptra_top_tb.mk $(VERILATOR_MAKE_FLAGS) VM_PARALLEL_BUILDS=1
+	  -exe test_caliptra_top_tb.cpp --autoflush $(VERILATOR_DEBUG) \
+	  $(VERILATOR_TB_DEFS)
+	$(MAKE) -j`nproc` -e -C obj_dir/ -f Vcaliptra_top_tb.mk $(VERILATOR_MAKE_FLAGS) VM_PARALLEL_BUILDS=1
 	touch verilator-build
 
 vcs-build: $(TBFILES) $(INCLUDES_DIR)/defines.h

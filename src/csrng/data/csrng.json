@@ -92,7 +92,7 @@
       "type": "uni",
       "name": "otp_en_csrng_sw_app_read",
       "act": "rcv",
-      "package": "prim_mubi_pkg"
+      "package": "caliptra_prim_mubi_pkg"
     },
     {
       "struct": "lc_tx",
@@ -245,9 +245,24 @@
       "hwqe": "true",
       "fields": [
         {
-          "bits": "31:0",
-          "name": "CMD_REQ",
-          "desc": "Writing this request with defined CSRNG commands will initiate all\npossible CSRNG actions. The application interface must wait for the\n\"ack\" to return before issuing new commands."
+          "bits": "3:0",
+          "name": "acmd",
+          "desc": "Application Command: Selects one of five operations to perform.\nThe commands supported are instantiate, reseed, generate, update,\nand uninstantiate. Each application interface port used by peripheral\nhardware commands a unique instance number in CSRNG."
+        },
+        {
+          "bits": "7:4",
+          "name": "clen",
+          "desc": "Command Length: Number of 32-bit words that can optionally be appended\nto the command. A value of zero will only transfer the command header.\nA value of 4'hc will transfer the header plus an additional twelve\n32-bit words of data."
+        },
+        {
+          "bits": "11:8",
+          "name": "flag0",
+          "desc": "Command Flag0: flag0 is associated with current command. Setting this\nfield to kMultiBitBool4True will enable flag0 to be enabled. Note that\nflag0 is used for the instantiate and reseed commands only, for all other commands its value is ignored."
+        },
+        {
+          "bits": "24:12",
+          "name": "glen",
+          "desc": "Generate Length: Only defined for the generate command, this field\nis the total number of cryptographic entropy blocks requested. Each\nunit represents 128 bits of entropy returned. The NIST reference name\nis max_number_of_bit_per_request, and this field size supports the\nmaximum size of 219 bits. For the maximum size, this field should be\nset to 4096, resulting in a max_number_of_bit_per_request value of\n4096 x 128 bits. For a smaller example, a value of 8 would return\na total of 1024 bits."
         }
       ]
     },

@@ -24,7 +24,7 @@ function gen_pb_file_list {
     cpt_vf_file=src/${cpt_dir}/config/${cpt_lib}.vf
 
     # Skip UVM file lists, which reference installed libraries external to Caliptra repo
-    if [[ $cpt_lib == "uvmf_lib" || $cpt_lib == "uvm_lib" || $cpt_lib == "mvc_lib" ]]; then return; fi
+    if [[ $cpt_lib == "uvmf_lib" || $cpt_lib == "uvm_lib" || $cpt_lib == "mvc_lib" || $cpt_lib = *"coverage" ]]; then return; fi
     echo "Generating File List for lib [${cpt_lib}] in [${cpt_vf_file}]";
     pb fe file_list --tb integration_lib::${cpt_lib} +def-target 'tb' --flat --dir-fmt=+incdir+{directory} --file ${cpt_vf_file};
     # Replace leading portion of path with ${CALIPTRA_ROOT}
@@ -37,8 +37,8 @@ if [[ $(command -v pb) = "" ]]; then
     echo "Enter Caliptra workspace (to make Playbook available) and try again"
     exit 1
 fi
-if [[ $(basename ${PWD}) != "Caliptra" ]]; then
-    echo "Must run script from root of Caliptra repository (i.e. <workspace_name>/Caliptra)"
+if [[ ${PWD} != ${CALIPTRA_ROOT} ]]; then
+    echo "Must run script from root of Caliptra repository (i.e. ${CALIPTRA_ROOT})"
     exit 1
 fi
 cpt_ymls=$(grep '^\s*\- src' ./config/compilespecs.yml | sed 's/^\s*- \(src.*\)/\1/')

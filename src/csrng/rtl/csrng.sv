@@ -4,7 +4,7 @@
 //
 // Description: csrng top level wrapper file
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
 module csrng
  import csrng_pkg::*;
@@ -38,7 +38,7 @@ module csrng
 
    // OTP Interface
   // SEC_CM: INTERSIG.MUBI
-  input  prim_mubi_pkg::mubi8_t otp_en_csrng_sw_app_read_i,
+  input  caliptra_prim_mubi_pkg::mubi8_t otp_en_csrng_sw_app_read_i,
 
   // Lifecycle broadcast inputs
   input  lc_ctrl_pkg::lc_tx_t  lc_hw_debug_en_i,
@@ -56,8 +56,8 @@ module csrng
   output csrng_rsp_t  [NHwApps-1:0] csrng_cmd_o,
 
   // Alerts
-  input  prim_alert_pkg::alert_rx_t [NumAlerts-1:0] alert_rx_i,
-  output prim_alert_pkg::alert_tx_t [NumAlerts-1:0] alert_tx_o,
+  input  caliptra_prim_alert_pkg::alert_rx_t [NumAlerts-1:0] alert_rx_i,
+  output caliptra_prim_alert_pkg::alert_tx_t [NumAlerts-1:0] alert_tx_o,
 
   // Interrupts
   output logic    intr_cs_cmd_req_done_o,
@@ -144,10 +144,10 @@ module csrng
   // Alert generation
   ///////////////////////////
   for (genvar i = 0; i < NumAlerts; i++) begin : gen_alert_tx
-    prim_alert_sender #(
+    caliptra_prim_alert_sender #(
       .AsyncOn(AlertAsyncOn[i]),
       .IsFatal(i)
-    ) u_prim_alert_sender (
+    ) u_caliptra_prim_alert_sender (
       .clk_i,
       .rst_ni,
       .alert_test_i  (alert_test[i]                 ),
@@ -185,16 +185,16 @@ module csrng
   `CALIPTRA_ASSERT_KNOWN(IntrCsFatalErrKnownO_A, intr_cs_fatal_err_o)
 
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CtrDrbgUpdAlertCheck_A,
-    u_csrng_core.u_csrng_ctr_drbg_upd.u_prim_count_ctr_drbg,
+    u_csrng_core.u_csrng_ctr_drbg_upd.u_caliptra_prim_count_ctr_drbg,
     alert_tx_o[1])
 
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CtrDrbgGenAlertCheck_A,
-    u_csrng_core.u_csrng_ctr_drbg_gen.u_prim_count_ctr_drbg,
+    u_csrng_core.u_csrng_ctr_drbg_gen.u_caliptra_prim_count_ctr_drbg,
     alert_tx_o[1])
 
   for (genvar i = 0; i < NHwApps + 1; i++) begin : gen_cnt_asserts
     `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntAlertCheck_A,
-      u_csrng_core.gen_cmd_stage[i].u_csrng_cmd_stage.u_prim_count_cmd_gen_cntr,
+      u_csrng_core.gen_cmd_stage[i].u_csrng_cmd_stage.u_caliptra_prim_count_cmd_gen_cntr,
       alert_tx_o[1])
 
     `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(DrbgCmdFsmCheck_A,

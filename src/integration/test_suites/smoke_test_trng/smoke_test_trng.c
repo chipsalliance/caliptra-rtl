@@ -79,15 +79,16 @@ void poll_reg(uint32_t addr, uint32_t expected_data) {
 }
 
 void end_sim_if_itrng_disabled() {
-    uint32_t hw_cfg;
-    hw_cfg = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG);
-    if (hw_cfg & SOC_IFC_REG_CPTRA_HW_CONFIG_ITRNG_EN_MASK) {
-        VPRINTF(LOW, "Internal TRNG is enabled, running TRNG smoke test\n");
-    } else {
-        VPRINTF(FATAL, "Internal TRNG is not enabled, skipping TRNG smoke test\n");
-        SEND_STDOUT_CTRL(0xFF);
-        while(1);
-    }
+  uint32_t hw_cfg;
+  hw_cfg = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG);
+  if (hw_cfg & SOC_IFC_REG_CPTRA_HW_CONFIG_ITRNG_EN_MASK) {
+    VPRINTF(LOW, "Internal TRNG is enabled, running TRNG smoke test\n");
+  } else {
+    VPRINTF(FATAL, "Internal TRNG is not enabled, skipping TRNG smoke test\n");
+    SEND_STDOUT_CTRL(0xFF);
+    while (1)
+      ;
+  }
 }
 
 void enable_csrng() {

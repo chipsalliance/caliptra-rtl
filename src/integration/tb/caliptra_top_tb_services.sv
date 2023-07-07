@@ -40,23 +40,23 @@ module caliptra_top_tb_services
 #(
     parameter UVM_TB = 0
 ) (
-    input logic                        clk,
+    input wire logic                   clk,
 
-    input logic                        cptra_rst_b,
+    input wire logic                   cptra_rst_b,
 
     // Caliptra Memory Export Interface
     el2_mem_if.top                     el2_mem_export,
 
     //SRAM interface for mbox
-    input  logic mbox_sram_cs,
-    input  logic mbox_sram_we,
-    input  logic [MBOX_ADDR_W-1:0] mbox_sram_addr,
-    input  logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata,
-    output logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_rdata,
+    input  wire logic mbox_sram_cs,
+    input  wire logic mbox_sram_we,
+    input  wire logic [MBOX_ADDR_W-1:0] mbox_sram_addr,
+    input  wire logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata,
+    output wire logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_rdata,
 
     //SRAM interface for imem
-    input  logic imem_cs,
-    input  logic [`CALIPTRA_IMEM_ADDR_WIDTH-1:0] imem_addr,
+    input  wire logic imem_cs,
+    input  wire logic [`CALIPTRA_IMEM_ADDR_WIDTH-1:0] imem_addr,
     output logic [`CALIPTRA_IMEM_DATA_WIDTH-1:0] imem_rdata,
 
     // Security State
@@ -433,7 +433,11 @@ module caliptra_top_tb_services
 
     //TIE-OFF device lifecycle
     logic assert_ss_tran;
-    initial security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1};
+`ifdef CALIPTRA_DEBUG_UNLOCKED
+    initial security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b0}; // DebugUnlocked & Production
+`else
+    initial security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; // DebugLocked & Production
+`endif
     always @(negedge clk) begin
         //lock debug mode
         if ((WriteData[7:0] == 8'hf9) && mailbox_write) begin
@@ -593,7 +597,7 @@ endgenerate //IV_NO
         end
     endtask // ecc_test
 
-    task ecc_read_test_vectors (input string fname);
+    task static ecc_read_test_vectors (input string fname);
         integer values_per_test_vector;
         int fd_r;
         string line_read;
@@ -800,7 +804,7 @@ endgenerate //IV_NO
 
     `ifndef VERILATOR
         initial begin
-            bitflip_mask_generator #(MBOX_DATA_AND_ECC_W) bitflip_gen = new();
+            automatic bitflip_mask_generator #(MBOX_DATA_AND_ECC_W) bitflip_gen = new();
             forever begin
                 @(posedge clk)
                 if (~|inject_mbox_sram_error) begin
@@ -835,7 +839,7 @@ endgenerate //IV_NO
         cycleCnt <= cycleCnt+1;
         // Test timeout monitor
         if(cycleCnt == MAX_CYCLES && !UVM_TB) begin
-            $display ("Hit max cycle count (%0d) .. stopping",cycleCnt);
+            $error("Hit max cycle count (%0d) .. stopping",cycleCnt);
             dump_memory_contents(MEMTYPE_LMEM, 32'h8000_0110, 32'h8000_0180);
             dump_memory_contents(MEMTYPE_DCCM, `RV_DCCM_SADR, `RV_DCCM_EADR);
             dump_memory_contents(MEMTYPE_ICCM, `RV_ICCM_SADR, `RV_ICCM_EADR);
@@ -875,12 +879,12 @@ endgenerate //IV_NO
             if (UVM_TB) $info("INFO: Detected FW write to manually end the test with FAIL; ignoring since the UVM environment will handle this.");
             else begin
                 cycleCntKillReq <= cycleCnt;
-                $display("* TESTCASE FAILED");
+                $error("* TESTCASE FAILED");
                 $display(" -- Extending simulation for 100 clock cycles to capture ending waveform");
             end
         end
         if (|cycleCntKillReq && (cycleCnt == (cycleCntKillReq + 100))) begin
-                $display("Dumping memory contents at simulation end due to FAILURE");
+                $error("Dumping memory contents at simulation end due to FAILURE");
                 dump_memory_contents(MEMTYPE_LMEM, 32'h0000_0000, 32'h001_FFFF);
                 dump_memory_contents(MEMTYPE_DCCM, `RV_DCCM_SADR, `RV_DCCM_EADR);
                 dump_memory_contents(MEMTYPE_ICCM, `RV_ICCM_SADR, `RV_ICCM_EADR);
@@ -1160,7 +1164,7 @@ caliptra_sram #(
    //=========================================================================-
    // SRAM preload services
    //=========================================================================-
-task preload_mbox;
+task static preload_mbox;
     // Variables
     mbox_sram_data_t      ecc_data;
     bit [MBOX_ADDR_W  :0] addr;
@@ -1187,7 +1191,7 @@ task preload_mbox;
     $display("MBOX pre-load completed");
 endtask
 
-task preload_iccm;
+task static preload_iccm;
     bit[31:0] data;
     bit[31:0] addr, eaddr, saddr;
 
@@ -1219,7 +1223,7 @@ task preload_iccm;
 endtask
 
 
-task preload_dccm;
+task static preload_dccm;
     bit[31:0] data;
     bit[31:0] addr, saddr, eaddr;
 
@@ -1261,7 +1265,7 @@ endtask
 `endif
 
 
-task slam_dccm_ram(input [31:0] addr, input[38:0] data);
+task static slam_dccm_ram(input [31:0] addr, input[38:0] data);
     int bank, indx;
     bank = get_dccm_bank(addr, indx);
     `ifdef RV_DCCM_ENABLE
@@ -1286,7 +1290,7 @@ task slam_dccm_ram(input [31:0] addr, input[38:0] data);
 endtask
 
 
-task slam_iccm_ram( input[31:0] addr, input[38:0] data);
+task static slam_iccm_ram( input[31:0] addr, input[38:0] data);
     int bank, idx;
 
     bank = get_iccm_bank(addr, idx);
@@ -1327,7 +1331,7 @@ task slam_iccm_ram( input[31:0] addr, input[38:0] data);
     `endif
 endtask
 
-task init_iccm;
+task static init_iccm;
     `ifdef RV_ICCM_ENABLE
         `IRAM(0) = '{default:39'h0};
         `IRAM(1) = '{default:39'h0};
@@ -1359,7 +1363,7 @@ task init_iccm;
     `endif
 endtask
 
-task init_dccm;
+task static init_dccm;
     `ifdef RV_DCCM_ENABLE
         `DRAM(0) = '{default:39'h0};
         `DRAM(1) = '{default:39'h0};
@@ -1376,7 +1380,7 @@ task init_dccm;
     `endif
 endtask
 
-task dump_memory_contents;
+task static dump_memory_contents;
     input [2:0] mem_type;
     input [31:0] start_addr;
     input [31:0] end_addr;

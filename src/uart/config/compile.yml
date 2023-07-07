@@ -2,8 +2,8 @@
 provides: [uart]
 schema_version: 2.4.0
 requires:
-  - prim_generic
-  - prim
+  - caliptra_prim_generic
+  - caliptra_prim
   - libs
 targets:
   rtl:

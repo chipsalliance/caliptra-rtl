@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-# 
+#
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+# This script generates systemverilog registers from rdl files
+# Currently, this script uses peakrdl-regblock version 0.6.0
+#
+#   pip install peakrdl-regblock==0.6.0
+# 
+# TODO: To update this script to the latest version (0.11.0)
+# 1.  Import ALL_UDPS
+#     from peakrdl_regblock.udps import ALL_UDPS
+# 2.  Register ALL_UDPS after creating instance of compiler
+#     rdlc = RDLCompiler()
+#
+#     Register all UDPs that 'regblock' requires
+#     for udp in ALL_UDPS:
+#       rdlc.register_udp(udp)
+
 from systemrdl import RDLCompiler, RDLCompileError, RDLWalker
 from systemrdl import RDLListener
 from systemrdl.node import FieldNode
@@ -64,6 +79,8 @@ for udp in ALL_UDPS:
     rdlc.register_udp(udp)
 
 try:
+    if not repo_root:
+      print("CALIPTRA_ROOT environment variable is not defined.")
     # Compile your RDL files
     #compile the kv defines so that rdl files including kv controls have the definition
     rdlc.compile_file(os.path.join(repo_root, "src/keyvault/rtl/kv_def.rdl")) 

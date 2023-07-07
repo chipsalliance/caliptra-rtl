@@ -41,7 +41,7 @@
         "url": "origin://AHA_POC/c1d93415-7025-4099-98d0-31b78ff267b0",
         "dest": "common",
         "name": "caliptra_config",
-        "version": "promote_caliptra_config_6",
+        "version": "promote_caliptra_config_8",
         "populate": "when_top"
     },
     {

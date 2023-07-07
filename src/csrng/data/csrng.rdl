@@ -101,11 +101,36 @@ addrmap csrng {
     } CTRL @ 0x14;
     reg {
         field {
-            desc = "Writing this request with defined CSRNG commands will initiate all
-            possible CSRNG actions. The application interface must wait for the
-            \"ack\" to return before issuing new commands.";
+            desc = "Application Command: Selects one of five operations to perform.
+            The commands supported are instantiate, reseed, generate, update,
+            and uninstantiate. Each application interface port used by peripheral
+            hardware commands a unique instance number in CSRNG.";
             sw = w;
-        } CMD_REQ[31:0];
+        } acmd[3:0];
+        field {
+            desc = "Command Length: Number of 32-bit words that can optionally be appended
+            to the command. A value of zero will only transfer the command header.
+            A value of 4'hc will transfer the header plus an additional twelve
+            32-bit words of data.";
+            sw = w;
+        } clen[7:4];
+        field {
+            desc = "Command Flag0: flag0 is associated with current command. Setting this
+            field to kMultiBitBool4True will enable flag0 to be enabled. Note that
+            flag0 is used for the instantiate and reseed commands only, for all other commands its value is ignored.";
+            sw = w;
+        } flag0[11:8];
+        field {
+            desc = "Generate Length: Only defined for the generate command, this field
+            is the total number of cryptographic entropy blocks requested. Each
+            unit represents 128 bits of entropy returned. The NIST reference name
+            is max_number_of_bit_per_request, and this field size supports the
+            maximum size of 219 bits. For the maximum size, this field should be
+            set to 4096, resulting in a max_number_of_bit_per_request value of
+            4096 x 128 bits. For a smaller example, a value of 8 would return
+            a total of 1024 bits.";
+            sw = w;
+        } glen[24:12];
     } CMD_REQ @ 0x18;
     reg {
         field {

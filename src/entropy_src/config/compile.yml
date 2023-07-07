@@ -23,8 +23,8 @@ requires:
   - entropy_src_pkg
   - libs
   - kmac
-  - prim_generic
-  - prim
+  - caliptra_prim_generic
+  - caliptra_prim
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -56,6 +56,7 @@ targets:
   rtl:
     directories: [$COMPILE_ROOT/tb]
     files:
+      - $COMPILE_ROOT/tb/physical_rng.sv
       - $COMPILE_ROOT/tb/entropy_src_tb.sv
     tops: [entropy_src_tb]
 global:

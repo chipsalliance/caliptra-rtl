@@ -1,0 +1,58 @@
+---
+provides: [spi_host]
+schema_version: 2.4.0
+requires:
+  - libs
+  - caliptra_prim
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/spi_host_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/spi_host_cmd_pkg.sv
+      - $COMPILE_ROOT/rtl/spi_host.sv
+      - $COMPILE_ROOT/rtl/spi_host_byte_merge.sv
+      - $COMPILE_ROOT/rtl/spi_host_byte_select.sv
+      - $COMPILE_ROOT/rtl/spi_host_command_queue.sv
+      - $COMPILE_ROOT/rtl/spi_host_core.sv
+      - $COMPILE_ROOT/rtl/spi_host_data_fifos.sv
+      - $COMPILE_ROOT/rtl/spi_host_fsm.sv
+      - $COMPILE_ROOT/rtl/spi_host_reg_top.sv
+      - $COMPILE_ROOT/rtl/spi_host_shift_register.sv
+    tops: [spi_host]
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/spi_host_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/spi_host_cmd_pkg.sv
+---
+provides: [spiflash]
+schema_version: 2.4.0
+requires:
+  - spi_host
+targets:
+  tb:
+    directories: [$COMPILE_ROOT/tb]
+    files:
+      - $COMPILE_ROOT/tb/spi_device_pkg.sv
+      - $COMPILE_ROOT/tb/spiflash.sv
+    tops: [spiflash]
+---
+provides: [spi_host_tb]
+schema_version: 2.4.0
+requires:
+  - spi_host
+  - spiflash
+targets:
+  tb:
+    directories: [$COMPILE_ROOT/tb]
+    files:
+      - $COMPILE_ROOT/tb/spi_host_tb.sv
+    tops: [spi_host_tb]
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        - '-noinherit_timescale=1ns/1ps'

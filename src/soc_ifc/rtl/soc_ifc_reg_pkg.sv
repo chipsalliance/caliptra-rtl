@@ -168,9 +168,14 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__CPTRA_HW_CONFIG__I3C_en__in_t;
 
     typedef struct packed{
+        logic next;
+    } soc_ifc_reg__CPTRA_HW_CONFIG__UART_en__in_t;
+
+    typedef struct packed{
         soc_ifc_reg__CPTRA_HW_CONFIG__iTRNG_en__in_t iTRNG_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__QSPI_en__in_t QSPI_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__I3C_en__in_t I3C_en;
+        soc_ifc_reg__CPTRA_HW_CONFIG__UART_en__in_t UART_en;
     } soc_ifc_reg__CPTRA_HW_CONFIG__in_t;
 
     typedef struct packed{

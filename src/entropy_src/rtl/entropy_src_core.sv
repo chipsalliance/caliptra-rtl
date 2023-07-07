@@ -15,8 +15,8 @@ module entropy_src_core import entropy_src_pkg::*; #(
   output entropy_src_reg_pkg::entropy_src_hw2reg_t hw2reg,
 
   // Efuse Interface
-  input prim_mubi_pkg::mubi8_t otp_en_entropy_src_fw_read_i,
-  input prim_mubi_pkg::mubi8_t otp_en_entropy_src_fw_over_i,
+  input caliptra_prim_mubi_pkg::mubi8_t otp_en_entropy_src_fw_read_i,
+  input caliptra_prim_mubi_pkg::mubi8_t otp_en_entropy_src_fw_over_i,
 
   // RNG Interface
   output logic rng_fips_o,
@@ -49,11 +49,11 @@ module entropy_src_core import entropy_src_pkg::*; #(
 );
 
   import entropy_src_reg_pkg::*;
-  import prim_mubi_pkg::mubi4_t;
-  import prim_mubi_pkg::mubi4_test_true_strict;
-  import prim_mubi_pkg::mubi4_and_hi;
-  import prim_mubi_pkg::mubi4_test_false_loose;
-  import prim_mubi_pkg::mubi4_test_invalid;
+  import caliptra_prim_mubi_pkg::mubi4_t;
+  import caliptra_prim_mubi_pkg::mubi4_test_true_strict;
+  import caliptra_prim_mubi_pkg::mubi4_and_hi;
+  import caliptra_prim_mubi_pkg::mubi4_test_false_loose;
+  import caliptra_prim_mubi_pkg::mubi4_test_invalid;
 
   localparam int Clog2EsFifoDepth = $clog2(EsFifoDepth);
   localparam int PostHTWidth = 32;
@@ -406,8 +406,8 @@ module entropy_src_core import entropy_src_pkg::*; #(
   logic                     sha3_msg_end;
   logic                     sha3_msg_rdy_mask;
   logic                     sha3_block_processed;
-  prim_mubi_pkg::mubi4_t    sha3_done;
-  prim_mubi_pkg::mubi4_t    sha3_absorbed;
+  caliptra_prim_mubi_pkg::mubi4_t    sha3_done;
+  caliptra_prim_mubi_pkg::mubi4_t    sha3_absorbed;
   logic                     sha3_squeezing;
   logic [2:0]               sha3_fsm;
   logic [32:0]              sha3_err;
@@ -448,8 +448,8 @@ module entropy_src_core import entropy_src_pkg::*; #(
   logic                    unused_entropy_data;
   logic                    unused_fw_ov_rd_data;
 
-  prim_mubi_pkg::mubi8_t en_entropy_src_fw_read;
-  prim_mubi_pkg::mubi8_t en_entropy_src_fw_over;
+  caliptra_prim_mubi_pkg::mubi8_t en_entropy_src_fw_read;
+  caliptra_prim_mubi_pkg::mubi8_t en_entropy_src_fw_over;
 
   mubi4_t mubi_es_enable;
   mubi4_t mubi_module_en_pulse;
@@ -495,7 +495,7 @@ module entropy_src_core import entropy_src_pkg::*; #(
       es_rdata_capt_vld_q    <= '0;
       fw_ov_sha3_start_pfe_q <= '0;
       sha3_msg_rdy_mask_q    <= '0;
-      mubi_mod_en_dly_q      <= prim_mubi_pkg::MuBi4False;
+      mubi_mod_en_dly_q      <= caliptra_prim_mubi_pkg::MuBi4False;
       sha3_flush_q           <= '0;
       sha3_start_mask_q      <= '0;
       fw_ov_corrupted_q      <= 2'b00;
@@ -544,10 +544,10 @@ module entropy_src_core import entropy_src_pkg::*; #(
   assign hw2reg.recov_alert_sts.module_enable_field_alert.de = es_enable_pfa;
   assign hw2reg.recov_alert_sts.module_enable_field_alert.d  = es_enable_pfa;
 
-  prim_mubi4_sync #(
+  caliptra_prim_mubi4_sync #(
     .NumCopies(3),
     .AsyncOn(0)
-  ) u_prim_mubi4_sync_entropy_module_en (
+  ) u_caliptra_prim_mubi4_sync_entropy_module_en (
     .clk_i,
     .rst_ni,
     .mubi_i(mubi_module_en_raw),
@@ -580,10 +580,10 @@ module entropy_src_core import entropy_src_pkg::*; #(
     assign es_enable_fo[i] = mubi4_test_true_strict(mubi_es_enable_fanout[i]);
   end : gen_mubi_en_copies
 
-  prim_mubi4_sync #(
+  caliptra_prim_mubi4_sync #(
     .NumCopies(EsEnableCopies),
     .AsyncOn(0)
-  ) u_prim_mubi4_sync_es_enable (
+  ) u_caliptra_prim_mubi4_sync_es_enable (
     .clk_i,
     .rst_ni,
     .mubi_i(mubi_es_enable),
@@ -594,10 +594,10 @@ module entropy_src_core import entropy_src_pkg::*; #(
     assign module_en_pulse_fo[i] = mubi4_test_true_strict(mubi_module_en_pulse_fanout[i]);
   end : gen_mubi_en_pulse_copies
 
-  prim_mubi4_sync #(
+  caliptra_prim_mubi4_sync #(
     .NumCopies(EsEnPulseCopies),
     .AsyncOn(0)
-  ) u_prim_mubi4_sync_es_enable_pulse (
+  ) u_caliptra_prim_mubi4_sync_es_enable_pulse (
     .clk_i,
     .rst_ni,
     .mubi_i(mubi_module_en_pulse),
@@ -625,10 +625,10 @@ module entropy_src_core import entropy_src_pkg::*; #(
   assign hw2reg.recov_alert_sts.fips_enable_field_alert.de = fips_enable_pfa;
   assign hw2reg.recov_alert_sts.fips_enable_field_alert.d  = fips_enable_pfa;
 
-  prim_mubi4_sync #(
+  caliptra_prim_mubi4_sync #(
     .NumCopies(2),
     .AsyncOn(0)
-  ) u_prim_mubi4_sync_entropy_fips_en (
+  ) u_caliptra_prim_mubi4_sync_entropy_fips_en (
     .clk_i,
     .rst_ni,
     .mubi_i(mubi_fips_en),
@@ -644,10 +644,10 @@ module entropy_src_core import entropy_src_pkg::*; #(
   assign hw2reg.recov_alert_sts.entropy_data_reg_en_field_alert.de = entropy_data_reg_en_pfa;
   assign hw2reg.recov_alert_sts.entropy_data_reg_en_field_alert.d =  entropy_data_reg_en_pfa;
 
-  prim_mubi4_sync #(
+  caliptra_prim_mubi4_sync #(
     .NumCopies(2),
     .AsyncOn(0)
-  ) u_prim_mubi4_sync_entropy_data_reg_en (
+  ) u_caliptra_prim_mubi4_sync_entropy_data_reg_en (
     .clk_i,
     .rst_ni,
     .mubi_i(mubi_entropy_reg_en),
@@ -665,10 +665,10 @@ module entropy_src_core import entropy_src_pkg::*; #(
   assign hw2reg.recov_alert_sts.fw_ov_mode_field_alert.de = fw_ov_mode_pfa;
   assign hw2reg.recov_alert_sts.fw_ov_mode_field_alert.d  = fw_ov_mode_pfa;
 
-  prim_mubi4_sync #(
+  caliptra_prim_mubi4_sync #(
     .NumCopies(2),
     .AsyncOn(0)
-  ) u_prim_mubi4_sync_fw_ov_mode (
+  ) u_caliptra_prim_mubi4_sync_fw_ov_mode (
     .clk_i,
     .rst_ni,
     .mubi_i(mubi_fw_ov_mode),
@@ -684,10 +684,10 @@ module entropy_src_core import entropy_src_pkg::*; #(
   assign hw2reg.recov_alert_sts.fw_ov_entropy_insert_field_alert.de = fw_ov_entropy_insert_pfa;
   assign hw2reg.recov_alert_sts.fw_ov_entropy_insert_field_alert.d  = fw_ov_entropy_insert_pfa;
 
-  prim_mubi4_sync #(
+  caliptra_prim_mubi4_sync #(
     .NumCopies(2),
     .AsyncOn(0)
-  ) u_prim_mubi4_sync_fw_ov_entropy_insert (
+  ) u_caliptra_prim_mubi4_sync_fw_ov_entropy_insert (
     .clk_i,
     .rst_ni,
     .mubi_i(mubi_fw_ov_entropy_insert),
@@ -703,10 +703,10 @@ module entropy_src_core import entropy_src_pkg::*; #(
   assign hw2reg.recov_alert_sts.fw_ov_sha3_start_field_alert.de = fw_ov_sha3_start_pfa;
   assign hw2reg.recov_alert_sts.fw_ov_sha3_start_field_alert.d  = fw_ov_sha3_start_pfa;
 
-  prim_mubi4_sync #(
+  caliptra_prim_mubi4_sync #(
     .NumCopies(2),
     .AsyncOn(0)
-  ) u_prim_mubi4_sync_fw_ov_sha3_start (
+  ) u_caliptra_prim_mubi4_sync_fw_ov_sha3_start (
     .clk_i,
     .rst_ni,
     .mubi_i(mubi_fw_ov_sha3_start),
@@ -721,12 +721,12 @@ module entropy_src_core import entropy_src_pkg::*; #(
   assign fw_ov_fifo_wr_pulse = reg2hw.fw_ov_wr_data.qe;
   assign fw_ov_wr_data = reg2hw.fw_ov_wr_data.q;
 
-  assign efuse_es_sw_ov_en = prim_mubi_pkg::mubi8_test_true_strict(en_entropy_src_fw_over);
+  assign efuse_es_sw_ov_en = caliptra_prim_mubi_pkg::mubi8_test_true_strict(en_entropy_src_fw_over);
 
-  prim_mubi8_sync #(
+  caliptra_prim_mubi8_sync #(
     .NumCopies(1),
     .AsyncOn(1) // must be set to one, see note below
-  ) u_prim_mubi8_sync_es_fw_over (
+  ) u_caliptra_prim_mubi8_sync_es_fw_over (
     .clk_i,
     .rst_ni,
     .mubi_i(otp_en_entropy_src_fw_over_i),
@@ -749,7 +749,7 @@ module entropy_src_core import entropy_src_pkg::*; #(
   // instantiate interrupt hardware primitives
   //--------------------------------------------
 
-  prim_intr_hw #(
+  caliptra_prim_intr_hw #(
     .Width(1)
   ) u_intr_hw_es_entropy_valid (
     .clk_i                  (clk_i),
@@ -764,7 +764,7 @@ module entropy_src_core import entropy_src_pkg::*; #(
     .intr_o                 (intr_es_entropy_valid_o)
   );
 
-  prim_intr_hw #(
+  caliptra_prim_intr_hw #(
     .Width(1)
   ) u_intr_hw_es_health_test_failed (
     .clk_i                  (clk_i),
@@ -780,7 +780,7 @@ module entropy_src_core import entropy_src_pkg::*; #(
   );
 
 
-  prim_intr_hw #(
+  caliptra_prim_intr_hw #(
     .Width(1)
   ) u_intr_hw_es_observe_fifo_ready (
     .clk_i                  (clk_i),
@@ -795,7 +795,7 @@ module entropy_src_core import entropy_src_pkg::*; #(
     .intr_o                 (intr_es_observe_fifo_ready_o)
   );
 
-  prim_intr_hw #(
+  caliptra_prim_intr_hw #(
     .Width(1)
   ) u_intr_hw_es_fatal_err (
     .clk_i                  (clk_i),
@@ -827,7 +827,7 @@ module entropy_src_core import entropy_src_pkg::*; #(
                                   sfifo_test_err_sum) ) ||
                               es_ack_sm_err_sum ||
                               es_main_sm_err_sum ||
-                              es_cntr_err_sum || // prim_count err is always active
+                              es_cntr_err_sum || // caliptra_prim_count err is always active
                               sha3_rst_storage_err_sum ||
                               sha3_state_error_sum;
 
@@ -935,7 +935,7 @@ module entropy_src_core import entropy_src_pkg::*; #(
   assign hw2reg.debug_status.sha3_block_pr.d = sha3_block_processed;
   assign hw2reg.debug_status.sha3_squeezing.d = sha3_squeezing;
   assign hw2reg.debug_status.sha3_absorbed.d =
-    prim_mubi_pkg::mubi4_test_true_strict(sha3_absorbed) ? 1'b 1 : 1'b 0;
+    caliptra_prim_mubi_pkg::mubi4_test_true_strict(sha3_absorbed) ? 1'b 1 : 1'b 0;
   assign hw2reg.debug_status.sha3_err.d = sha3_err_q;
 
   assign sha3_err_d =
@@ -961,11 +961,11 @@ module entropy_src_core import entropy_src_pkg::*; #(
   //--------------------------------------------
 
 
-  prim_fifo_sync #(
+  caliptra_prim_fifo_sync #(
     .Width(RngBusWidth),
     .Pass(0),
     .Depth(2)
-  ) u_prim_fifo_sync_esrng (
+  ) u_caliptra_prim_fifo_sync_esrng (
     .clk_i      (clk_i),
     .rst_ni     (rst_ni),
     .clr_i      (sfifo_esrng_clr),
@@ -989,7 +989,7 @@ module entropy_src_core import entropy_src_pkg::*; #(
                                                                    pfifo_postht_not_full );
 
   // fifo err
-  // Note: for prim_fifo_sync is not an error to push to a fifo that is full.  In fact, the
+  // Note: for caliptra_prim_fifo_sync is not an error to push to a fifo that is full.  In fact, the
   // backpressure mechanism applied to the RNG inputs counts on this.
   assign sfifo_esrng_err =
          {1'b0,
@@ -1006,10 +1006,10 @@ module entropy_src_core import entropy_src_pkg::*; #(
   assign hw2reg.recov_alert_sts.rng_bit_enable_field_alert.de = rng_bit_enable_pfa;
   assign hw2reg.recov_alert_sts.rng_bit_enable_field_alert.d  = rng_bit_enable_pfa;
 
-  prim_mubi4_sync #(
+  caliptra_prim_mubi4_sync #(
     .NumCopies(2),
     .AsyncOn(0)
-  ) u_prim_mubi4_sync_rng_bit_en (
+  ) u_caliptra_prim_mubi4_sync_rng_bit_en (
     .clk_i,
     .rst_ni,
     .mubi_i(mubi_rng_bit_en),
@@ -1020,11 +1020,11 @@ module entropy_src_core import entropy_src_pkg::*; #(
   assign rng_bit_en = rng_bit_enable_pfe;
   assign rng_bit_sel = reg2hw.conf.rng_bit_sel.q;
 
-  prim_packer_fifo #(
+  caliptra_prim_packer_fifo #(
     .InW(1),
     .OutW(RngBusWidth),
     .ClearOnRead(1'b0)
-  ) u_prim_packer_fifo_esbit (
+  ) u_caliptra_prim_packer_fifo_esbit (
     .clk_i      (clk_i),
     .rst_ni     (rst_ni),
     .clr_i      (pfifo_esbit_clr),
@@ -1422,10 +1422,10 @@ module entropy_src_core import entropy_src_pkg::*; #(
   assign hw2reg.recov_alert_sts.es_route_field_alert.de = es_route_pfa;
   assign hw2reg.recov_alert_sts.es_route_field_alert.d  = es_route_pfa;
 
-  prim_mubi4_sync #(
+  caliptra_prim_mubi4_sync #(
     .NumCopies(2),
     .AsyncOn(0)
-  ) u_prim_mubi4_sync_es_route (
+  ) u_caliptra_prim_mubi4_sync_es_route (
     .clk_i,
     .rst_ni,
     .mubi_i(mubi_es_route),
@@ -1441,10 +1441,10 @@ module entropy_src_core import entropy_src_pkg::*; #(
   assign hw2reg.recov_alert_sts.es_type_field_alert.de = es_type_pfa;
   assign hw2reg.recov_alert_sts.es_type_field_alert.d  = es_type_pfa;
 
-  prim_mubi4_sync #(
+  caliptra_prim_mubi4_sync #(
     .NumCopies(2),
     .AsyncOn(0)
-  ) u_prim_mubi4_sync_es_type (
+  ) u_caliptra_prim_mubi4_sync_es_type (
     .clk_i,
     .rst_ni,
     .mubi_i(mubi_es_type),
@@ -1474,9 +1474,9 @@ module entropy_src_core import entropy_src_pkg::*; #(
 
   // Window counter
   // SEC_CM: CTR.REDUN
-  prim_count #(
+  caliptra_prim_count #(
     .Width(HalfRegWidth)
-  ) u_prim_count_window_cntr (
+  ) u_caliptra_prim_count_window_cntr (
     .clk_i,
     .rst_ni,
     .clr_i(!es_delayed_enable),
@@ -2079,11 +2079,11 @@ module entropy_src_core import entropy_src_pkg::*; #(
          (any_fail_count >= alert_threshold) && (alert_threshold != '0);
 
 
-  prim_edge_detector #(
+  caliptra_prim_edge_detector #(
     .Width(1),
     .ResetValue(0),
     .EnSync(0)
-  ) u_prim_edge_detector_recov_alert (
+  ) u_caliptra_prim_edge_detector_recov_alert (
     .clk_i,
     .rst_ni,
     .d_i(recov_alert_state),
@@ -2262,11 +2262,11 @@ module entropy_src_core import entropy_src_pkg::*; #(
   // pack tested entropy into 32 bit packer
   //--------------------------------------------
 
-  prim_packer_fifo #(
+  caliptra_prim_packer_fifo #(
     .InW(RngBusWidth),
     .OutW(PostHTWidth),
     .ClearOnRead(1'b0)
-  ) u_prim_packer_fifo_postht (
+  ) u_caliptra_prim_packer_fifo_postht (
     .clk_i      (clk_i),
     .rst_ni     (rst_ni),
     .clr_i      (pfifo_postht_clr),
@@ -2305,11 +2305,11 @@ module entropy_src_core import entropy_src_pkg::*; #(
   // store entropy into a 64 entry deep FIFO
   //--------------------------------------------
 
-  prim_fifo_sync #(
+  caliptra_prim_fifo_sync #(
     .Width(ObserveFifoWidth),
     .Pass(0),
     .Depth(ObserveFifoDepth)
-  ) u_prim_fifo_sync_observe (
+  ) u_caliptra_prim_fifo_sync_observe (
     .clk_i      (clk_i),
     .rst_ni     (rst_ni),
     .clr_i      (sfifo_observe_clr),
@@ -2373,11 +2373,11 @@ module entropy_src_core import entropy_src_pkg::*; #(
   // pack entropy into 64 bit packer
   //--------------------------------------------
 
-  prim_packer_fifo #(
+  caliptra_prim_packer_fifo #(
     .InW(ObserveFifoWidth),
     .OutW(PreCondWidth),
     .ClearOnRead(1'b0)
-  ) u_prim_packer_fifo_precon (
+  ) u_caliptra_prim_packer_fifo_precon (
     .clk_i      (clk_i),
     .rst_ni     (rst_ni),
     .clr_i      (pfifo_precon_clr),
@@ -2512,11 +2512,11 @@ module entropy_src_core import entropy_src_pkg::*; #(
   // bypass SHA conditioner path
   //--------------------------------------------
 
-  prim_packer_fifo #(
+  caliptra_prim_packer_fifo #(
      .InW(PostHTWidth),
      .OutW(SeedLen),
      .ClearOnRead(1'b0)
-  ) u_prim_packer_fifo_bypass (
+  ) u_caliptra_prim_packer_fifo_bypass (
     .clk_i      (clk_i),
     .rst_ni     (rst_ni),
     .clr_i      (pfifo_bypass_clr),
@@ -2645,11 +2645,11 @@ module entropy_src_core import entropy_src_pkg::*; #(
   // send processed entropy to final fifo
   //--------------------------------------------
 
-  prim_fifo_sync #(
+  caliptra_prim_fifo_sync #(
     .Width(1+SeedLen),
     .Pass(0),
     .Depth(EsFifoDepth)
-  ) u_prim_fifo_sync_esfinal (
+  ) u_caliptra_prim_fifo_sync_esfinal (
     .clk_i          (clk_i),
     .rst_ni         (rst_ni),
     .clr_i          (sfifo_esfinal_clr),
@@ -2679,7 +2679,7 @@ module entropy_src_core import entropy_src_pkg::*; #(
   assign {esfinal_fips_flag,esfinal_data} = sfifo_esfinal_rdata;
 
   // fifo err
-  // Note: for prim_fifo_sync is not an error to push to a fifo that is full.  In fact, the
+  // Note: for caliptra_prim_fifo_sync is not an error to push to a fifo that is full.  In fact, the
   // backpressure mechanism applied to the previous FIFO counts on this.
   assign sfifo_esfinal_err =
          {1'b0,
@@ -2733,11 +2733,11 @@ module entropy_src_core import entropy_src_pkg::*; #(
   // software es read path
   //--------------------------------------------
 
-  prim_packer_fifo #(
+  caliptra_prim_packer_fifo #(
     .InW(SeedLen),
     .OutW(FullRegWidth),
     .ClearOnRead(1'b0)
-  ) u_prim_packer_fifo_swread (
+  ) u_caliptra_prim_packer_fifo_swread (
     .clk_i      (clk_i),
     .rst_ni     (rst_ni),
     .clr_i      (pfifo_swread_clr),
@@ -2761,12 +2761,12 @@ module entropy_src_core import entropy_src_pkg::*; #(
   assign hw2reg.entropy_data.d = es_data_reg_rd_en ? pfifo_swread_rdata : '0;
   assign sw_es_rd_pulse = es_data_reg_rd_en && reg2hw.entropy_data.re;
 
-  assign efuse_es_sw_reg_en = prim_mubi_pkg::mubi8_test_true_strict(en_entropy_src_fw_read);
+  assign efuse_es_sw_reg_en = caliptra_prim_mubi_pkg::mubi8_test_true_strict(en_entropy_src_fw_read);
 
-  prim_mubi8_sync #(
+  caliptra_prim_mubi8_sync #(
     .NumCopies(1),
     .AsyncOn(1) // must be set to one, see note below
-  ) u_prim_mubi8_sync_es_fw_read (
+  ) u_caliptra_prim_mubi8_sync_es_fw_read (
     .clk_i,
     .rst_ni,
     .mubi_i(otp_en_entropy_src_fw_read_i),

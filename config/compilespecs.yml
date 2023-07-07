@@ -17,9 +17,10 @@ files:
   - src/integration/asserts/config/compile.yml
   - src/sha512_masked/config/compile.yml
   - src/uart/config/compile.yml
+  - src/spi_host/config/compile.yml
   # -- Start RNG --
-  - src/prim_generic/config/compile.yml
-  - src/prim/config/compile.yml
+  - src/caliptra_prim_generic/config/compile.yml
+  - src/caliptra_prim/config/compile.yml
   - src/lc_ctrl/config/compile.yml
   - src/aes/config/compile.yml
   - src/edn/config/compile.yml

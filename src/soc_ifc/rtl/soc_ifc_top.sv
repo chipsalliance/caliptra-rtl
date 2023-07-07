@@ -385,8 +385,17 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.iTRNG_en.next = 1'b1;
 `else
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.iTRNG_en.next = 1'b0;
 `endif
+`ifdef CALIPTRA_INTERNAL_QSPI
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.QSPI_en.next = 1'b1;
+`else
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.QSPI_en.next = 1'b0;
+`endif
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.I3C_en.next = 1'b0;
+`ifdef CALIPTRA_INTERNAL_UART
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.UART_en.next = 1'b1;
+`else
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.UART_en.next = 1'b0;
+`endif
 
 always_comb begin
     for (int i = 0; i < `CLP_OBF_KEY_DWORDS; i++) begin
@@ -799,11 +808,9 @@ assign timer2_en = soc_ifc_reg_hwif_out.CPTRA_WDT_TIMER2_EN.timer2_en;
 assign timer1_restart = soc_ifc_reg_hwif_out.CPTRA_WDT_TIMER1_CTRL.timer1_restart;
 assign timer2_restart = soc_ifc_reg_hwif_out.CPTRA_WDT_TIMER2_CTRL.timer2_restart;
 
-always_comb begin
-    for (int i = 0; i < WDT_TIMEOUT_PERIOD_NUM_DWORDS; i++) begin
-        timer1_timeout_period[i] = soc_ifc_reg_hwif_out.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[i].timer1_timeout_period.value;
-        timer2_timeout_period[i] = soc_ifc_reg_hwif_out.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[i].timer2_timeout_period.value;
-    end
+for (genvar i = 0; i < WDT_TIMEOUT_PERIOD_NUM_DWORDS; i++) begin
+  assign timer1_timeout_period[i] = soc_ifc_reg_hwif_out.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[i].timer1_timeout_period.value;
+  assign timer2_timeout_period[i] = soc_ifc_reg_hwif_out.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[i].timer2_timeout_period.value;
 end
 
 //Set WDT status reg

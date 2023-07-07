@@ -864,6 +864,7 @@ import el2_pkg::*;
    // -----------------   DEBUG END -----------------------------
 
    assign core_rst_l = rst_l & (dbg_core_rst_l | scan_mode);
+
    // fetch
    el2_ifu #(.pt(pt)) ifu (
                             .clk(active_l2clk),
