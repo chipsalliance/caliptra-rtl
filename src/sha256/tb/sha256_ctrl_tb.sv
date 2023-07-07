@@ -137,7 +137,8 @@ module sha256_ctrl_tb();
              .hrdata_o(hrdata_o_tb),
 
              .error_intr(),
-             .notif_intr()
+             .notif_intr(),
+             .debugUnlock_or_scan_mode_switch()
             );
 
 

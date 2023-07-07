@@ -58,7 +58,8 @@ module hmac_ctrl
 
     // Interrupt
     output logic error_intr,
-    output logic notif_intr
+    output logic notif_intr,
+    input  logic debugUnlock_or_scan_mode_switch
 );
 
     //----------------------------------------------------------------
@@ -88,7 +89,8 @@ module hmac_ctrl
         .kv_rd_resp(kv_rd_resp),
         .kv_wr_resp(kv_wr_resp),
         .error_intr(error_intr),
-        .notif_intr(notif_intr)
+        .notif_intr(notif_intr),
+        .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch)
     );
 
     //instantiate ahb lite module

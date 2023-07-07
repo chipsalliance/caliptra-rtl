@@ -508,6 +508,9 @@ module doe_reg (
             if(decoded_reg_strb.DOE_IV[i0] && decoded_req_is_wr) begin // SW write
                 next_c = (field_storage.DOE_IV[i0].IV.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
+            end else if(hwif_in.DOE_IV[i0].IV.hwclr) begin // HW Clear
+                next_c = '0;
+                load_next_c = '1;
             end
             field_combo.DOE_IV[i0].IV.next = next_c;
             field_combo.DOE_IV[i0].IV.load_next = load_next_c;

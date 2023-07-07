@@ -1304,6 +1304,14 @@ class soc_ifc_predictor #(
                         `uvm_info("PRED_AHB", {"Access to register ", axs_reg.get_name(), " will have no effect on system"}, UVM_HIGH)
                     end
                 end
+                "notif_scan_mode_intr_count_r": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_info("PRED_AHB", {"Write to ", axs_reg.get_name(), " modifies interrupt statistics count"}, UVM_HIGH)
+                    end
+                    else begin
+                        `uvm_info("PRED_AHB", {"Access to register ", axs_reg.get_name(), " will have no effect on system"}, UVM_HIGH)
+                    end
+                end
                 "error_internal_intr_count_incr_r",
                 "error_inv_dev_intr_count_incr_r",
                 "error_cmd_fail_intr_count_incr_r",

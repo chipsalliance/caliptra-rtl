@@ -57,7 +57,8 @@ module doe_fsm
     output logic flow_done,
     output logic flow_in_progress,
     output logic lock_uds_flow,
-    output logic lock_fe_flow
+    output logic lock_fe_flow,
+    input  logic zeroize
 );
 localparam UDS_BLOCK_OFFSET_W = $clog2(UDS_NUM_BLOCKS);
 localparam FE_BLOCK_OFFSET_W = $clog2(FE_NUM_BLOCKS);
@@ -87,7 +88,7 @@ logic dest_write_done;
 logic [BLOCK_OFFSET_W-1:0] block_offset, block_offset_nxt;
 logic block_offset_en;
 logic block_done;
-
+logic zeroize_reg;
 
 kv_doe_fsm_state_e kv_doe_fsm_ps, kv_doe_fsm_ns;
 logic arc_DOE_IDLE_DOE_INIT;
@@ -95,6 +96,22 @@ logic arc_DOE_WAIT_DOE_BLOCK;
 logic arc_DOE_WAIT_DOE_WRITE;
 logic arc_DOE_WRITE_DOE_BLOCK;
 logic arc_DOE_WRITE_DOE_DONE;
+
+//zeroize input is a single pulse. However, when we detect zeroize, we'd like the fsm
+//to remain in IDLE until next DOE_CMD is issued. To avoid other arcs moving the fsm
+//to other states, extending zeroize to a level so we can keep the fsm in IDLE. When the
+//next command is issued, this extended signal is reset and fsm advances.
+always_ff @(posedge clk or negedge rst_b) begin
+    if (~rst_b) begin
+        zeroize_reg <= 0;
+    end
+    else if (zeroize) begin
+        zeroize_reg <= 1;
+    end
+    else if (running_uds || running_fe) begin
+        zeroize_reg <= 0;
+    end
+end
 
 always_comb running_uds = (doe_cmd_reg.cmd == DOE_UDS);
 always_comb running_fe = (doe_cmd_reg.cmd == DOE_FE);
@@ -157,6 +174,7 @@ always_comb begin : kv_doe_fsm
             //increment dest offset each clock, clear when done
             dest_write_offset_en = '1;
             dest_write_offset_nxt = (dest_write_offset == 'hb) ? 'h0 : dest_write_offset + 'd1;
+
             //go back to idle if dest done, and done with blocks
             if (arc_DOE_WRITE_DOE_DONE) kv_doe_fsm_ns = DOE_DONE;
             //go back to block stage for next block if not done with blocks
@@ -210,6 +228,12 @@ always_comb src_write_data = running_uds ? obf_uds_seed[block_offset[UDS_BLOCK_O
 //state flops
 always_ff @(posedge clk or negedge rst_b) begin
     if (~rst_b) begin
+        kv_doe_fsm_ps <= DOE_IDLE;
+        dest_write_offset <= '0;
+        block_offset <= '0;
+        dest_addr <= '0;
+    end
+    else if (zeroize_reg) begin
         kv_doe_fsm_ps <= DOE_IDLE;
         dest_write_offset <= '0;
         block_offset <= '0;

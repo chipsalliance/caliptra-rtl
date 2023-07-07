@@ -238,6 +238,7 @@ module caliptra_top_tb_services
     //         8'he5        - Request TB to initiate Mailbox flow without lock (violation)
     //         8'he6        - Request TB to initiate Mailbox flow with out-of-order accesses (violation)
     //         8'he7        - Reset mailbox out-of-order flag when non-fatal error is masked (allows the test to continue)
+    //         8'he8        - Enable scan mode when DOE fsm transitions to done state
     //         8'heb        - Inject fatal error
     //         8'hec        - Inject randomized UDS test vector
     //         8'hed        - Inject randomized FE test vector
@@ -298,26 +299,31 @@ module caliptra_top_tb_services
             ras_test_ctrl.do_no_lock_access     <= 1'b0;
             ras_test_ctrl.do_ooo_access         <= 1'b0;
             ras_test_ctrl.reset_ooo_done_flag   <= 1'b0;
+            ras_test_ctrl.reset_no_lock_done_flag   <= 1'b0;
         end
         else if((WriteData == 8'he5) && mailbox_write) begin
             ras_test_ctrl.do_no_lock_access     <= 1'b1;
             ras_test_ctrl.do_ooo_access         <= 1'b0;
             ras_test_ctrl.reset_ooo_done_flag   <= 1'b0;
+            ras_test_ctrl.reset_no_lock_done_flag   <= 1'b0;
         end
         else if((WriteData == 8'he6) && mailbox_write) begin
             ras_test_ctrl.do_no_lock_access     <= 1'b0;
             ras_test_ctrl.do_ooo_access         <= 1'b1;
             ras_test_ctrl.reset_ooo_done_flag   <= 1'b0;
+            ras_test_ctrl.reset_no_lock_done_flag   <= 1'b0;
         end
         else if ((WriteData == 8'he7) && mailbox_write) begin
             ras_test_ctrl.do_no_lock_access     <= 1'b0;
             ras_test_ctrl.do_ooo_access         <= 1'b0;
             ras_test_ctrl.reset_ooo_done_flag   <= 1'b1;
+            ras_test_ctrl.reset_no_lock_done_flag   <= 1'b1;
         end
         else begin
             ras_test_ctrl.do_no_lock_access     <= 1'b0;
             ras_test_ctrl.do_ooo_access         <= 1'b0;
             ras_test_ctrl.reset_ooo_done_flag   <= 1'b0;
+            ras_test_ctrl.reset_no_lock_done_flag   <= 1'b0;
         end
     end
 
@@ -476,6 +482,7 @@ end //for
 endgenerate //IV_NO
 
     logic assert_scan_mode;
+    logic assert_scan_mode_doe_done;
     always @(negedge clk) begin
         //Enable scan mode
         if ((WriteData[7:0] == 8'hef) && mailbox_write) begin
@@ -483,7 +490,15 @@ endgenerate //IV_NO
             assert_scan_mode <= 'b1;
             //scan_mode <= 1'b1;
         end
+        else if ((WriteData[7:0] == 8'he8) && mailbox_write) begin
+            cycleCnt_ff <= cycleCnt;
+            assert_scan_mode_doe_done <= 'b1;
+        end
         else if(assert_scan_mode && (cycleCnt == cycleCnt_ff + 'd100)) begin
+            scan_mode <= 1'b1;
+            assert_scan_mode <= 'b0;
+        end
+        else if (assert_scan_mode_doe_done && (caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_doe_fsm_ps == 'h5)) begin
             scan_mode <= 1'b1;
             assert_scan_mode <= 'b0;
         end

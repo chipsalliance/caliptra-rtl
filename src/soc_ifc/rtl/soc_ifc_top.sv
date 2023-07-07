@@ -170,6 +170,8 @@ logic uc_mbox_data_avail_d;
 logic uc_cmd_avail_p;
 logic security_state_debug_locked_d;
 logic security_state_debug_locked_p;
+logic scan_mode_d;
+logic scan_mode_p;
 logic sram_single_ecc_error;
 logic sram_double_ecc_error;
 logic soc_req_mbox_lock;
@@ -506,6 +508,18 @@ end
 
 always_comb security_state_debug_locked_p = security_state.debug_locked ^ security_state_debug_locked_d;
 
+// Generate a pulse to set the interrupt bit
+always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
+    if (~cptra_noncore_rst_b) begin
+        scan_mode_d <= '0;
+    end
+    else begin
+        scan_mode_d <= scan_mode_f;
+    end
+end
+
+always_comb scan_mode_p = scan_mode_f & ~scan_mode_d;
+
 //Filtering by PAUSER
 always_comb begin
     for (int i=0; i<5; i++) begin
@@ -626,6 +640,7 @@ always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_mbox_e
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.hwset          = uc_cmd_avail_p;
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.hwset       = sram_single_ecc_error;
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_debug_locked_sts.hwset       = security_state_debug_locked_p; // Any transition results in interrupt
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_scan_mode_sts.hwset          = scan_mode_p; // Any transition results in interrupt
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_soc_req_lock_sts.hwset       = soc_req_mbox_lock;
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_gen_in_toggle_sts.hwset      = |generic_input_toggle;
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_wdt_timer1_timeout_sts.hwset = t1_timeout_p;

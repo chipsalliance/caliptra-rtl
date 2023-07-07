@@ -33,6 +33,8 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
 
     uvm_reg_adapter adapter;
 
+    extern function logic [(KV_NUM_READ + $clog2(KV_NUM_DWORDS))-1 :0] parse_wr_transaction(uvm_sequence_item bus_item);
+
     //Create new instance of this type
     function new (string name, uvm_component parent);
         super.new(name, parent);
@@ -71,6 +73,9 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
         logic lock_use;
         logic clear;
 
+        logic [KV_NUM_READ-1:0] write_dest_valid;
+        logic [$clog2(KV_NUM_DWORDS)-1:0] last_dword;
+
         uvm_reg rg;
 
         //Pass variables to parent
@@ -81,14 +86,14 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
         //Convert bus txn to reg model txn
         adapter.bus2reg(tr,rw);
 
-        rg = map.get_reg_by_offset(rw.addr, (rw.kind == UVM_READ));
-        rg.sample_values();
-        
         //-----------------------------------------------
         //rw contains KEY entry info. Below steps are to
         //derive corresponding CTRL reg info
         //-----------------------------------------------
         if (rw.kind == UVM_WRITE) begin
+            //Get write_dest_valid and last_dword data from tx
+            {write_dest_valid, last_dword} = parse_wr_transaction(tr);
+
             //Convert reg addr to entry/offset
             entry_offset = convert_addr_to_kv(rw.addr);
 
@@ -118,7 +123,7 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
             //Read CTRL reg data
             kv_reg_ctrl_data = kv_reg_ctrl.get_mirrored_value();
             //Append dest valid to it
-            kv_reg_ctrl_data = {kv_reg_ctrl_data[31:14], 5'h1F, kv_reg_ctrl_data[8:0]};
+            kv_reg_ctrl_data = {kv_reg_ctrl_data[31:21], last_dword, kv_reg_ctrl_data[16:14], /*5'h1F*/write_dest_valid, kv_reg_ctrl_data[8:0]};
             rw_ctrl.data = kv_reg_ctrl_data;
             //-----------------------------------------------
             //Predict ctrl reg data so it gets updated in reg model
@@ -200,7 +205,28 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
             super.write(tr);
         end
 
+        rg = map.get_reg_by_offset(rw.addr, (rw.kind == UVM_READ));
+        rg.sample_values();
+        rg = map.get_reg_by_offset(rw_ctrl.addr, (rw_ctrl.kind == UVM_READ));
+        rg.sample_values();
+
     endfunction
 
     
 endclass
+
+function logic [(KV_NUM_READ + $clog2(KV_NUM_DWORDS))-1 :0] kv_reg_predictor::parse_wr_transaction(uvm_sequence_item bus_item);
+    kv_write_transaction #(
+      .KV_WRITE_REQUESTOR("HMAC")
+    )
+    trans_h;
+
+    if (!$cast(trans_h, bus_item)) begin
+      `uvm_fatal("ADAPT","Provided bus_item is not of the correct type")
+    //   return;
+    end
+    // pragma uvmf custom bus2reg begin
+    parse_wr_transaction = {trans_h.write_dest_valid, trans_h.write_offset};
+    // pragma uvmf custom bus2reg end
+
+endfunction: parse_wr_transaction

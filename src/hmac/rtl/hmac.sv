@@ -50,7 +50,8 @@ module hmac
         input kv_wr_resp_t kv_wr_resp,
 
         output wire error_intr,
-        output wire notif_intr
+        output wire notif_intr,
+        input logic debugUnlock_or_scan_mode_switch
       );
 
   //----------------------------------------------------------------
@@ -216,7 +217,7 @@ always_comb begin
   //assign hardware readable registers to drive hmac core
   init_reg = hwif_out.HMAC384_CTRL.INIT.value;
   next_reg = hwif_out.HMAC384_CTRL.NEXT.value;
-  zeroize_reg = hwif_out.HMAC384_CTRL.ZEROIZE.value;
+  zeroize_reg = hwif_out.HMAC384_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
 
   //drive hardware writeable registers from hmac core
   hwif_in.HMAC384_STATUS.READY.next = ready_reg;

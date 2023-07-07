@@ -233,6 +233,7 @@ regfile intr_block_t {
         field {desc = "Enable bit for Command Available";                         } notif_cmd_avail_en = 1'b0;
         field {desc = "Enable bit for Mailbox ECC Single-bit Error (correctable)";} notif_mbox_ecc_cor_en = 1'b0;
         field {desc = "Enable bit for Security State, Debug Locked transition";   } notif_debug_locked_en = 1'b0;
+        field {desc = "Enable bit for Scan mode";                                 } notif_scan_mode_en = 1'b0;
         field {desc = "Enable bit for SoC requested the mailbox while locked";    } notif_soc_req_lock_en = 1'b0;
         field {desc = "Enable bit for Generic Input Wires Toggle";                } notif_gen_in_toggle_en = 1'b0;
     };
@@ -276,6 +277,7 @@ regfile intr_block_t {
         field {desc = "Command Available status bit";                         } notif_cmd_avail_sts = 1'b0;
         field {desc = "Mailbox ECC Single-bit Error (correctable) status bit";} notif_mbox_ecc_cor_sts = 1'b0;
         field {desc = "Security State, Debug Locked transition status bit";   } notif_debug_locked_sts = 1'b0;
+        field {desc = "Scan mode status bit";                                 } notif_scan_mode_sts = 1'b0;
         field {desc = "SoC requested the mailbox while locked status bit";    } notif_soc_req_lock_sts = 1'b0;
         field {desc = "Generic Input Wires Toggle status bit";                } notif_gen_in_toggle_sts = 1'b0;
     };
@@ -339,6 +341,7 @@ regfile intr_block_t {
         field {desc = "Command Available trigger bit";                         } notif_cmd_avail_trig = 1'b0;
         field {desc = "Mailbox ECC Single-bit Error (correctable) trigger bit";} notif_mbox_ecc_cor_trig = 1'b0;
         field {desc = "Security State, Debug Locked transition trigger bit";   } notif_debug_locked_trig = 1'b0;
+        field {desc = "Scan mode trigger bit";                                 } notif_scan_mode_trig = 1'b0;
         field {desc = "SoC requested the mailbox while locked trigger bit";    } notif_soc_req_lock_trig = 1'b0;
         field {desc = "Generic Input Wires Toggle trigger bit";                } notif_gen_in_toggle_trig = 1'b0;
     };
@@ -405,6 +408,7 @@ regfile intr_block_t {
     intr_count_t      notif_cmd_avail_intr_count_r @0x180; /* Per notification */                                    //
     intr_count_t      notif_mbox_ecc_cor_intr_count_r;     /* Per notification */                                    //
     intr_count_t      notif_debug_locked_intr_count_r;     /* Per notification */                                    //
+    intr_count_t      notif_scan_mode_intr_count_r;        /* Per notification */                                    //
     intr_count_t      notif_soc_req_lock_intr_count_r;     /* Per notification */                                    //
     intr_count_t      notif_gen_in_toggle_intr_count_r;    /* Per notification */                                    //
                                                                                                                      //
@@ -424,6 +428,7 @@ regfile intr_block_t {
     intr_count_incr_t notif_cmd_avail_intr_count_incr_r;       /* Per notification count incrementor pulse */        //
     intr_count_incr_t notif_mbox_ecc_cor_intr_count_incr_r;    /* Per notification count incrementor pulse */        //
     intr_count_incr_t notif_debug_locked_intr_count_incr_r;    /* Per notification count incrementor pulse */        //
+    intr_count_incr_t notif_scan_mode_intr_count_incr_r;       /* Per notification count incrementor pulse */        //
     intr_count_incr_t notif_soc_req_lock_intr_count_incr_r;    /* Per notification count incrementor pulse */        //
     intr_count_incr_t notif_gen_in_toggle_intr_count_incr_r;   /* Per notification count incrementor pulse */        //
     /* ------------------------------------------------------------------------------------------------------------- */
@@ -459,6 +464,7 @@ regfile intr_block_t {
     notif_internal_intr_r.notif_cmd_avail_sts     -> enable = notif_intr_en_r.notif_cmd_avail_en;
     notif_internal_intr_r.notif_mbox_ecc_cor_sts  -> enable = notif_intr_en_r.notif_mbox_ecc_cor_en;
     notif_internal_intr_r.notif_debug_locked_sts  -> enable = notif_intr_en_r.notif_debug_locked_en;
+    notif_internal_intr_r.notif_scan_mode_sts     -> enable = notif_intr_en_r.notif_scan_mode_en;
     notif_internal_intr_r.notif_soc_req_lock_sts  -> enable = notif_intr_en_r.notif_soc_req_lock_en;
     notif_internal_intr_r.notif_gen_in_toggle_sts -> enable = notif_intr_en_r.notif_gen_in_toggle_en;
 
@@ -473,6 +479,7 @@ regfile intr_block_t {
     notif_internal_intr_r.notif_cmd_avail_sts     -> next   = notif_intr_trig_r.notif_cmd_avail_trig;
     notif_internal_intr_r.notif_mbox_ecc_cor_sts  -> next   = notif_intr_trig_r.notif_mbox_ecc_cor_trig;
     notif_internal_intr_r.notif_debug_locked_sts  -> next   = notif_intr_trig_r.notif_debug_locked_trig;
+    notif_internal_intr_r.notif_scan_mode_sts     -> next   = notif_intr_trig_r.notif_scan_mode_trig;
     notif_internal_intr_r.notif_soc_req_lock_sts  -> next   = notif_intr_trig_r.notif_soc_req_lock_trig;
     notif_internal_intr_r.notif_gen_in_toggle_sts -> next   = notif_intr_trig_r.notif_gen_in_toggle_trig;
 
@@ -556,6 +563,12 @@ regfile intr_block_t {
     notif_debug_locked_intr_count_incr_r.pulse -> we    = notif_internal_intr_r.notif_debug_locked_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
     notif_debug_locked_intr_count_incr_r.pulse -> decr  = notif_debug_locked_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
     notif_debug_locked_intr_count_r.cnt        -> incr  = notif_debug_locked_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+    notif_scan_mode_intr_count_incr_r.pulse -> hwset = notif_internal_intr_r.notif_scan_mode_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+    notif_scan_mode_intr_count_incr_r.pulse -> next  = notif_internal_intr_r.notif_scan_mode_sts -> next;  // /      as a pulse to increment the intr_count_r register
+    notif_scan_mode_intr_count_incr_r.pulse -> we    = notif_internal_intr_r.notif_scan_mode_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+    notif_scan_mode_intr_count_incr_r.pulse -> decr  = notif_scan_mode_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+    notif_scan_mode_intr_count_r.cnt        -> incr  = notif_scan_mode_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
     notif_soc_req_lock_intr_count_incr_r.pulse -> hwset = notif_internal_intr_r.notif_soc_req_lock_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
     notif_soc_req_lock_intr_count_incr_r.pulse -> next  = notif_internal_intr_r.notif_soc_req_lock_sts -> next;  // /      as a pulse to increment the intr_count_r register

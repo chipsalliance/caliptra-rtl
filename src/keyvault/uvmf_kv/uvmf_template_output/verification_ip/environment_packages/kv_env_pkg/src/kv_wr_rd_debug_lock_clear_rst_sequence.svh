@@ -40,6 +40,9 @@ class kv_wr_rd_debug_lock_clear_rst_sequence #(
     typedef kv_rst_warm_rst_sequence kv_rst_agent_warm_rst_sequence_t;
     kv_rst_agent_warm_rst_sequence_t kv_warm_rst_seq;
 
+    typedef kv_rst_cold_rst_sequence kv_rst_agent_cold_rst_sequence_t;
+    kv_rst_agent_cold_rst_sequence_t kv_cold_rst_seq;
+
     typedef kv_rst_debug_sequence kv_rst_agent_debug_sequence_t;
     kv_rst_agent_debug_sequence_t kv_rst_agent_debug_seq;
 
@@ -59,10 +62,12 @@ class kv_wr_rd_debug_lock_clear_rst_sequence #(
     rand reg [KV_ENTRY_ADDR_W-1:0] hmac_write_entry, sha512_write_entry, ecc_write_entry, doe_write_entry;    
     rand int unsigned wait_cycles_from_seq;
     rand bit debug_type;
+    rand bit reset_type;
     rand reg [1:0] clear_secrets_data;
     rand reg [2:0] lock_data;
 
     typedef enum {SECURITY_STATE, CLEAR_SECRETS} debug_inputs;
+    typedef enum {WARM_RESET, COLD_RESET} reset_inputs;
 
     function new(string name = "");
         super.new(name);
@@ -72,6 +77,8 @@ class kv_wr_rd_debug_lock_clear_rst_sequence #(
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV RST poweron seq");
         kv_warm_rst_seq = kv_rst_agent_warm_rst_sequence_t::type_id::create("kv_warm_rst_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV_RST warm rst seq");
+        kv_cold_rst_seq = kv_rst_agent_cold_rst_sequence_t::type_id::create("kv_cold_rst_seq");
+        if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV_RST cold rst seq");
 
         kv_rst_agent_debug_seq = kv_rst_agent_debug_sequence_t::type_id::create("kv_rst_agent_debug_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV RST debug seq");
@@ -136,17 +143,14 @@ class kv_wr_rd_debug_lock_clear_rst_sequence #(
         
                 //Unlock debug mode or clear secrets randomly
                 
-                    //std::randomize(debug_type); //0 - security state, 1 - clear secrets
-                    //temp
-                    debug_type = 1;
+                    std::randomize(debug_type); //0 - security state, 1 - clear secrets
                     
                     std::randomize(wait_cycles_from_seq) with {
                         wait_cycles_from_seq >= 5;
                         wait_cycles_from_seq <= 100;
                     };
 
-                    //std::randomize(clear_secrets_data); //wren, debug_value0/1
-                    clear_secrets_data = 'h3;
+                    std::randomize(clear_secrets_data); //wren, debug_value0/1
 
                     //Wait for random delay before starting debug txn
                     configuration.kv_rst_agent_config.wait_for_num_clocks(wait_cycles_from_seq);
@@ -161,18 +165,29 @@ class kv_wr_rd_debug_lock_clear_rst_sequence #(
                             assert(sts == UVM_IS_OK) else `uvm_error("AHB_CLEAR_SECRETS_SET", "Failed when writing to CLEAR_SECRETS reg!")
                         end
                     endcase
-                kv_warm_rst_seq.start(configuration.kv_rst_agent_config.sequencer); //locks cleared
+
+                    std::randomize(reset_type);
+
+                    case(reset_type)
+                        WARM_RESET: begin
+                            kv_warm_rst_seq.start(configuration.kv_rst_agent_config.sequencer); //locks cleared
+                        end
+                        COLD_RESET: begin
+                            kv_cold_rst_seq.start(configuration.kv_rst_agent_config.sequencer);
+                        end
+                    endcase
 
                 //Clear secrets again + warm rst, no locks this time
-                debug_type = 1;
+                std::randomize(debug_type);
+                //debug_type = 1;
                     
                     std::randomize(wait_cycles_from_seq) with {
                         wait_cycles_from_seq >= 5;
                         wait_cycles_from_seq <= 100;
                     };
 
-                    //std::randomize(clear_secrets_data); //wren, debug_value0/1
-                    clear_secrets_data = 'h3;
+                    std::randomize(clear_secrets_data); //wren, debug_value0/1
+                    // clear_secrets_data = 'h3;
 
                     //Wait for random delay before starting debug txn
                     configuration.kv_rst_agent_config.wait_for_num_clocks(wait_cycles_from_seq);

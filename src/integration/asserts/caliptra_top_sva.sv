@@ -110,14 +110,14 @@ module caliptra_top_sva
         KV_debug_value0:         assert property (
                                                   @(posedge `KEYVAULT_PATH.clk)
                                                   disable iff(!`KEYVAULT_PATH.cptra_pwrgood)
-                                                  (`KEYVAULT_PATH.flush_keyvault || `SOC_IFC_TOP_PATH.cptra_error_fatal) && (`KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value == 0) && `KEYVAULT_PATH.cptra_pwrgood |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword] == CLP_DEBUG_MODE_KV_0)
+                                                  (`KEYVAULT_PATH.flush_keyvault || `SOC_IFC_TOP_PATH.cptra_error_fatal || `CPTRA_TOP_PATH.scan_mode) && (`KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value == 0) && `KEYVAULT_PATH.cptra_pwrgood |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword] == CLP_DEBUG_MODE_KV_0)
                                                 )
                                   else $display("SVA ERROR: KV not flushed with correct debug values");
 
         KV_debug_value1:         assert property (
                                                   @(posedge `KEYVAULT_PATH.clk)
                                                   disable iff(!`KEYVAULT_PATH.cptra_pwrgood)
-                                                  (`KEYVAULT_PATH.flush_keyvault || `SOC_IFC_TOP_PATH.cptra_error_fatal) && (`KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value == 1) && `KEYVAULT_PATH.cptra_pwrgood |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword] == CLP_DEBUG_MODE_KV_1)
+                                                  (`KEYVAULT_PATH.flush_keyvault || `SOC_IFC_TOP_PATH.cptra_error_fatal || `CPTRA_TOP_PATH.scan_mode) && (`KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value == 1) && `KEYVAULT_PATH.cptra_pwrgood |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword] == CLP_DEBUG_MODE_KV_1)
                                                 )
                                   else $display("SVA ERROR: KV not flushed with correct debug values");
       end
@@ -210,6 +210,7 @@ module caliptra_top_sva
     for(genvar dword = 0; dword < `CLP_OBF_UDS_DWORDS; dword++) begin
       DOE_UDS_data_check:  assert property (
                                             @(posedge `DOE_PATH.clk)
+                                            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
                                             (`SERVICES_PATH.WriteData == 'hEC && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_uds_flow) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword] == `SERVICES_PATH.doe_test_vector.uds_plaintext[dword])
                                 
                                           )
@@ -223,6 +224,7 @@ module caliptra_top_sva
   
       DOE_FE_data_check:   assert property (
                                             @(posedge `DOE_PATH.clk)
+                                            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
                                             (`SERVICES_PATH.WriteData == 'hED && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_fe_flow) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword] == `SERVICES_PATH.doe_test_vector.fe_plaintext[dword])
                                           )
                                   else $display("SVA ERROR: DOE FE output %h does not match plaintext %h!", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword], `SERVICES_PATH.doe_test_vector.fe_plaintext[dword]);
