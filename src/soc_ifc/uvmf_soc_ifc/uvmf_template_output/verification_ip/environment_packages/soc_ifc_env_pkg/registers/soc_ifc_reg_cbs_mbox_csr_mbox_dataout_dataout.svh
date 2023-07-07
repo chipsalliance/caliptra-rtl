@@ -102,7 +102,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_dataout_dataout extends soc_ifc_reg_cbs_mbox
                         end
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("After processing read from mbox_dataout, mbox_data_q.size(): [%d]", rm.mbox_data_q.size()), UVM_DEBUG)
                     end
-                    else begin
+                    else if (rm.mbox_datain_to_dataout_predict.is_off()) begin
                         // TODO escalate to uvm_warning?
                         // Some tests do this deliberately, we don't want those to fail
                         `uvm_info("SOC_IFC_REG_CBS", "Attempted read from mbox_dataout when mailbox_data_q is empty!", UVM_MEDIUM)

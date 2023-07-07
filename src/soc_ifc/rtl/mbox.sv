@@ -225,7 +225,7 @@ always_comb rdptr_inc_valid = ({1'b0,mbox_rdptr} < dlen_in_dws) & (mbox_rdptr < 
 // No more valid reads if we read the last entry
 // On pre-load of entry 0, ensure that next dlen isn't 0
 // Restrict reads once read pointer has passed the dlen
-always_comb mbox_rd_valid = ~mbox_rd_full & ((rst_mbox_rdptr & (dlen_in_dws_nxt != 0)) | (~rst_mbox_rdptr & ({1'b0,mbox_rdptr} < dlen_in_dws)));
+always_comb mbox_rd_valid = (rst_mbox_rdptr & (dlen_in_dws_nxt != 0)) | (~rst_mbox_rdptr & ~mbox_rd_full & ({1'b0,mbox_rdptr} < dlen_in_dws));
 // Restrict the write pointer from rolling over
 always_comb wrptr_inc_valid = mbox_wrptr < (MBOX_SIZE_IN_DW-1);
 
@@ -386,7 +386,7 @@ assign mbox_inv_pauser_axs = req_dv && req_data.soc_req &&
 
 //increment read ptr only if its allowed
 always_comb mbox_protocol_sram_rd = inc_rdptr | rst_mbox_rdptr;
-always_comb mbox_protocol_sram_we = inc_wrptr;
+always_comb mbox_protocol_sram_we = inc_wrptr & ~mbox_wr_full;
 
 //flops
 always_ff @(posedge clk or negedge rst_b) begin
