@@ -17,12 +17,14 @@ module clk_gate (
     input logic cptra_rst_b,
     input logic psel,
     input logic clk_gate_en,
+    input logic rdc_clk_dis,
     input logic cpu_halt_status,
     input logic [63:0] generic_input_wires,
     input logic cptra_error_fatal,
     input logic cptra_in_debug_scan_mode,
     output logic clk_cg,
-    output logic soc_ifc_clk_cg
+    output logic soc_ifc_clk_cg,
+    output logic rdc_clk_cg
 );
 
 logic disable_clk;
@@ -64,17 +66,19 @@ end
 //Generate clk disable signal
 always_comb begin
     change_in_generic_wires = ((generic_input_wires ^ generic_input_wires_f) != 'h0);
-    disable_clk             = clk_gate_en && (cpu_halt_status && !change_in_generic_wires && !cptra_error_fatal && !cptra_in_debug_scan_mode);
-    disable_soc_ifc_clk     = clk_gate_en && (cpu_halt_status && !psel && !change_in_generic_wires && !cptra_error_fatal && !cptra_in_debug_scan_mode);
+    disable_clk             = (clk_gate_en && (cpu_halt_status && !change_in_generic_wires && !cptra_error_fatal && !cptra_in_debug_scan_mode)) | rdc_clk_dis;
+    disable_soc_ifc_clk     = (clk_gate_en && (cpu_halt_status && !psel && !change_in_generic_wires && !cptra_error_fatal && !cptra_in_debug_scan_mode)) | rdc_clk_dis;
 end
 
 
 `ifdef TECH_SPECIFIC_ICG
     `USER_ICG user_icg (.clk(clk), .en(!disable_clk), .clk_cg(clk_cg));
     `USER_ICG user_soc_ifc_icg (.clk(clk), .en(!disable_soc_ifc_clk), .clk_cg(soc_ifc_clk_cg));
+`USER_ICG user_rdc_icg (.clk(clk), .en(!rdc_clk_dis), .clk_cg(rdc_clk_cg));
 `else
     `CALIPTRA_ICG caliptra_icg (.clk(clk), .en(!disable_clk), .clk_cg(clk_cg));
     `CALIPTRA_ICG caliptra_soc_ifc_icg (.clk(clk), .en(!disable_soc_ifc_clk), .clk_cg(soc_ifc_clk_cg));
+`CALIPTRA_ICG caliptra_rdc_icg (.clk(clk), .en(!rdc_clk_dis), .clk_cg(rdc_clk_cg));
 `endif
 
 endmodule

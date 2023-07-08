@@ -26,9 +26,9 @@ addrmap kv_reg {
     reg kvCtrl {
        desc="Controls for each keyvault and pcr entry";
        field {desc="Lock writes to this entry. Writes will be suppressed and an error will be recorded.";
-              sw=rw; swwel=true; hw=r; resetsignal=core_only_rst_b;} lock_wr=0; //warm reset
+              sw=rw; swwel=true; hw=r; resetsignal=core_only_rst_b;} lock_wr=0; //fw upd reset
        field {desc="Lock use of this entry. Reads will be suppressed and an error will be recorded.";
-              sw=rw; swwel=true; hw=r; resetsignal=core_only_rst_b;} lock_use=0; //warm reset
+              sw=rw; swwel=true; hw=r; resetsignal=core_only_rst_b;} lock_use=0; //fw upd reset
        field {desc="Clear the data stored in this entry. Lock write will prevent this clear.";
               sw=rw; hw=r; singlepulse;} clear=0;
        field {desc="Reserved";

@@ -233,26 +233,28 @@
         m_is_read = is_read;
         if (get_coverage(UVM_CVR_REG_BITS)) begin
             foreach(status_bit_cg[bt]) this.status_bit_cg[bt].sample(data[0 + bt]);
+            foreach(boot_fsm_ps_bit_cg[bt]) this.boot_fsm_ps_bit_cg[bt].sample(data[25 + bt]);
             foreach(ready_for_fw_bit_cg[bt]) this.ready_for_fw_bit_cg[bt].sample(data[28 + bt]);
             foreach(ready_for_runtime_bit_cg[bt]) this.ready_for_runtime_bit_cg[bt].sample(data[29 + bt]);
             foreach(ready_for_fuses_bit_cg[bt]) this.ready_for_fuses_bit_cg[bt].sample(data[30 + bt]);
             foreach(mailbox_flow_done_bit_cg[bt]) this.mailbox_flow_done_bit_cg[bt].sample(data[31 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[27:0]/*status*/  ,  data[28:28]/*ready_for_fw*/  ,  data[29:29]/*ready_for_runtime*/  ,  data[30:30]/*ready_for_fuses*/  ,  data[31:31]/*mailbox_flow_done*/   );
+            this.fld_cg.sample( data[24:0]/*status*/  ,  data[27:25]/*boot_fsm_ps*/  ,  data[28:28]/*ready_for_fw*/  ,  data[29:29]/*ready_for_runtime*/  ,  data[30:30]/*ready_for_fuses*/  ,  data[31:31]/*mailbox_flow_done*/   );
         end
     endfunction
 
     function void soc_ifc_reg__CPTRA_FLOW_STATUS::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
             foreach(status_bit_cg[bt]) this.status_bit_cg[bt].sample(status.get_mirrored_value() >> bt);
+            foreach(boot_fsm_ps_bit_cg[bt]) this.boot_fsm_ps_bit_cg[bt].sample(boot_fsm_ps.get_mirrored_value() >> bt);
             foreach(ready_for_fw_bit_cg[bt]) this.ready_for_fw_bit_cg[bt].sample(ready_for_fw.get_mirrored_value() >> bt);
             foreach(ready_for_runtime_bit_cg[bt]) this.ready_for_runtime_bit_cg[bt].sample(ready_for_runtime.get_mirrored_value() >> bt);
             foreach(ready_for_fuses_bit_cg[bt]) this.ready_for_fuses_bit_cg[bt].sample(ready_for_fuses.get_mirrored_value() >> bt);
             foreach(mailbox_flow_done_bit_cg[bt]) this.mailbox_flow_done_bit_cg[bt].sample(mailbox_flow_done.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( status.get_mirrored_value()  ,  ready_for_fw.get_mirrored_value()  ,  ready_for_runtime.get_mirrored_value()  ,  ready_for_fuses.get_mirrored_value()  ,  mailbox_flow_done.get_mirrored_value()   );
+            this.fld_cg.sample( status.get_mirrored_value()  ,  boot_fsm_ps.get_mirrored_value()  ,  ready_for_fw.get_mirrored_value()  ,  ready_for_runtime.get_mirrored_value()  ,  ready_for_fuses.get_mirrored_value()  ,  mailbox_flow_done.get_mirrored_value()   );
         end
     endfunction
 

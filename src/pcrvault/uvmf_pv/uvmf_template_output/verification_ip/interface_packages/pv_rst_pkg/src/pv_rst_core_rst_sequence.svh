@@ -29,34 +29,51 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-class soc_ifc_ctrl_rom_poweron_sequence
-  extends soc_ifc_ctrl_reset_sequence_base ;
+class pv_rst_core_rst_sequence extends pv_rst_sequence_base;
 
-  `uvm_object_utils( soc_ifc_ctrl_rom_poweron_sequence )
+    `uvm_object_utils( pv_rst_core_rst_sequence )
 
-  //*****************************************************************
+    //*****************************************************************
   function new(string name = "");
     super.new(name);
   endfunction: new
 
   // ****************************************************************************
-  // TASK : assert_cold_rst()
-  // Invoked by body()
+  // TASK : body()
+  // This task is automatically executed when this sequence is started using the
+  // start(sequencerHandle) task.
   //
-  virtual task assert_cold_rst();
-      // Initialize first transaction with pwrgood = 0, cptra_rst_b = 0 (asserted)
-      req=soc_ifc_ctrl_transaction::type_id::create("pwr_req");
-      start_item(req);
-      // Randomize the transaction (must be DEVICE_UNPROVISIONED for ROM bringup)
-      if(!req.randomize() with {security_state.device_lifecycle == DEVICE_UNPROVISIONED;})
-        `uvm_fatal("SOC_IFC_CTRL_RST", "soc_ifc_ctrl_reset_sequence_base::body()-soc_ifc_ctrl_transaction randomization failed")
-      req.set_pwrgood = 1'b0;
-      req.assert_rst = 1'b1; // active-low assertion
-      // Send the transaction to the soc_ifc_ctrl_driver_bfm via the sequencer and soc_ifc_ctrl_driver.
-      finish_item(req);
-      `uvm_info("SOC_IFC_CTRL_RST", {"Response:",req.convert2string()},UVM_MEDIUM)
-      this.cptra_obf_key          = req.cptra_obf_key_rand;
-      this.set_bootfsm_breakpoint = req.set_bootfsm_breakpoint;
-  endtask
 
-endclass: soc_ifc_ctrl_rom_poweron_sequence
+  task body();
+
+    // Assert core reset
+    req=pv_rst_transaction::type_id::create("pwr_req");
+    start_item(req);
+    // Randomize the transaction
+    if(!req.randomize()) `uvm_fatal("PV_RST_CORE_RST", "pv_rst_core_rst_sequence::body()-pv_rst_transaction randomization failed")
+    `uvm_info("PV_RST_CORE_RST", "Asserting core reset", UVM_MEDIUM)
+    req.set_pwrgood = 1'b1;
+    req.assert_rst = 1'b0;
+    req.assert_core_rst = 1'b1;
+
+    finish_item(req);
+    `uvm_info("PV_RST_CORE_RST", {"Response:",req.convert2string()},UVM_MEDIUM)
+    
+    // Deassert core reset
+    req=pv_rst_transaction::type_id::create("rst_req");
+    start_item(req);
+    // Randomize the transaction
+    if(!req.randomize()) `uvm_fatal("PV_RST_CORE_RST", "pv_rst_core_rst_sequence::body()-pv_rst_transaction randomization failed")
+    `uvm_info("PV_RST_CORE_RST", "Deasserting core reset", UVM_MEDIUM)
+    req.set_pwrgood = 1'b1;
+    req.assert_rst = 1'b0;
+    req.assert_core_rst = 1'b0;
+
+    finish_item(req);
+    `uvm_info("PV_RST_CORE_RST", {"Response:",req.convert2string()},UVM_MEDIUM)
+
+    
+
+endtask
+
+endclass

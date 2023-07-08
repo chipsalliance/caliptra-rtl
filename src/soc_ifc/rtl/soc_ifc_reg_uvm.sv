@@ -270,13 +270,15 @@ package soc_ifc_reg_uvm;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        soc_ifc_reg__CPTRA_FLOW_STATUS_bit_cg status_bit_cg[28];
+        soc_ifc_reg__CPTRA_FLOW_STATUS_bit_cg status_bit_cg[25];
+        soc_ifc_reg__CPTRA_FLOW_STATUS_bit_cg boot_fsm_ps_bit_cg[3];
         soc_ifc_reg__CPTRA_FLOW_STATUS_bit_cg ready_for_fw_bit_cg[1];
         soc_ifc_reg__CPTRA_FLOW_STATUS_bit_cg ready_for_runtime_bit_cg[1];
         soc_ifc_reg__CPTRA_FLOW_STATUS_bit_cg ready_for_fuses_bit_cg[1];
         soc_ifc_reg__CPTRA_FLOW_STATUS_bit_cg mailbox_flow_done_bit_cg[1];
         soc_ifc_reg__CPTRA_FLOW_STATUS_fld_cg fld_cg;
         rand uvm_reg_field status;
+        rand uvm_reg_field boot_fsm_ps;
         rand uvm_reg_field ready_for_fw;
         rand uvm_reg_field ready_for_runtime;
         rand uvm_reg_field ready_for_fuses;
@@ -293,7 +295,9 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.status = new("status");
-            this.status.configure(this, 28, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.status.configure(this, 25, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.boot_fsm_ps = new("boot_fsm_ps");
+            this.boot_fsm_ps.configure(this, 3, 25, "RO", 1, 'h0, 0, 1, 0);
             this.ready_for_fw = new("ready_for_fw");
             this.ready_for_fw.configure(this, 1, 28, "RW", 0, 'h0, 1, 1, 0);
             this.ready_for_runtime = new("ready_for_runtime");
@@ -304,6 +308,7 @@ package soc_ifc_reg_uvm;
             this.mailbox_flow_done.configure(this, 1, 31, "RW", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(status_bit_cg[bt]) status_bit_cg[bt] = new();
+                foreach(boot_fsm_ps_bit_cg[bt]) boot_fsm_ps_bit_cg[bt] = new();
                 foreach(ready_for_fw_bit_cg[bt]) ready_for_fw_bit_cg[bt] = new();
                 foreach(ready_for_runtime_bit_cg[bt]) ready_for_runtime_bit_cg[bt] = new();
                 foreach(ready_for_fuses_bit_cg[bt]) ready_for_fuses_bit_cg[bt] = new();

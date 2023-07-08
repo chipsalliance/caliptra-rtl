@@ -166,6 +166,7 @@ package soc_ifc_reg_model_top_pkg;
 //            this.CPTRA_FW_EXTENDED_ERROR_INFO[8].      set_reset(this.CPTRA_FW_EXTENDED_ERROR_INFO[8].      get_reset("HARD"), "SOFT");
             if ( this.CPTRA_BOOT_STATUS.                    has_reset("HARD"   )) this.CPTRA_BOOT_STATUS.                    set_reset(this.CPTRA_BOOT_STATUS.                    get_reset("HARD"), "SOFT");
             if ( this.CPTRA_FLOW_STATUS.status.             has_reset("HARD"   )) this.CPTRA_FLOW_STATUS.status.             set_reset(this.CPTRA_FLOW_STATUS.status.             get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_FLOW_STATUS.boot_fsm_ps.        has_reset("HARD"   )) this.CPTRA_FLOW_STATUS.boot_fsm_ps.        set_reset(this.CPTRA_FLOW_STATUS.boot_fsm_ps.        get_reset("HARD"), "SOFT");
             if ( this.CPTRA_FLOW_STATUS.ready_for_fw.       has_reset("HARD"   )) this.CPTRA_FLOW_STATUS.ready_for_fw.       set_reset(this.CPTRA_FLOW_STATUS.ready_for_fw.       get_reset("HARD"), "SOFT");
             if ( this.CPTRA_FLOW_STATUS.ready_for_runtime.  has_reset("HARD"   )) this.CPTRA_FLOW_STATUS.ready_for_runtime.  set_reset(this.CPTRA_FLOW_STATUS.ready_for_runtime.  get_reset("HARD"), "SOFT");
             if ( this.CPTRA_FLOW_STATUS.ready_for_fuses.    has_reset("HARD"   )) this.CPTRA_FLOW_STATUS.ready_for_fuses.    set_reset(this.CPTRA_FLOW_STATUS.ready_for_fuses.    get_reset("HARD"), "SOFT");

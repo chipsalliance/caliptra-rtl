@@ -54,6 +54,7 @@ class pv_rst_poweron_sequence extends pv_rst_sequence_base;
     `uvm_info("PV_RST_POWERON", "Asserting reset, pwrgood low", UVM_MEDIUM)
     req.set_pwrgood = 1'b0;
     req.assert_rst = 1'b1;
+    req.assert_core_rst = 1'b1;
     finish_item(req);
     `uvm_info("PV_RST_POWERON", {"Response:",req.convert2string()},UVM_MEDIUM)
     
@@ -65,6 +66,7 @@ class pv_rst_poweron_sequence extends pv_rst_sequence_base;
     `uvm_info("PV_RST_POWERON", "Asserting reset, pwrgood high", UVM_MEDIUM)
     req.set_pwrgood = 1'b1;
     req.assert_rst = 1'b1;
+    req.assert_core_rst = 1'b1;
     finish_item(req);
     `uvm_info("PV_RST_POWERON", {"Response:",req.convert2string()},UVM_MEDIUM)
 
@@ -76,6 +78,7 @@ class pv_rst_poweron_sequence extends pv_rst_sequence_base;
     `uvm_info("PV_RST_POWERON", "Deasserting reset, reset phase done", UVM_MEDIUM)
     req.set_pwrgood = 1'b1;
     req.assert_rst = 1'b0;
+    req.assert_core_rst = 1'b0;
     finish_item(req);
     `uvm_info("PV_RST_POWERON", {"Response:",req.convert2string()},UVM_MEDIUM)
 

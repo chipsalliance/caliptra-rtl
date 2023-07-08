@@ -30,6 +30,7 @@ module soc_ifc_top
     input logic clk,
     input logic clk_cg,
     input logic soc_ifc_clk_cg,
+    input logic rdc_clk_cg,
 
     //SoC boot signals
     input logic cptra_pwrgood,
@@ -113,6 +114,8 @@ module soc_ifc_top
     output logic cptra_uc_rst_b,
     //Clock gating
     output logic clk_gating_en,
+    output logic rdc_clk_dis,
+    output logic fw_update_rst_window,
 
     //caliptra uncore jtag ports
     input  logic                            cptra_uncore_dmi_reg_en,
@@ -220,6 +223,8 @@ logic wdt_error_t2_intr_serviced;
 logic valid_trng_user;
 logic valid_fuse_user;
 
+boot_fsm_state_e boot_fsm_ps;
+
 //Boot FSM
 //This module contains the logic required to control the Caliptra Boot Flow
 //Once the SoC has powered on Caliptra and de-asserted RESET, we can request fuses
@@ -231,6 +236,7 @@ soc_ifc_boot_fsm i_soc_ifc_boot_fsm (
     .fw_update_rst (soc_ifc_reg_hwif_out.internal_fw_update_reset.core_rst.value),
     .fw_update_rst_wait_cycles (soc_ifc_reg_hwif_out.internal_fw_update_reset_wait_cycles.wait_cycles.value),
     .ready_for_fuses(ready_for_fuses),
+    .boot_fsm_ps(boot_fsm_ps),
 
     .fuse_done(soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value),
     .fuse_wr_done_observed(fuse_wr_done_reg_write_observed),
@@ -241,7 +247,9 @@ soc_ifc_boot_fsm i_soc_ifc_boot_fsm (
     .cptra_noncore_rst_b(cptra_noncore_rst_b), //goes to all other blocks
     .cptra_uc_rst_b(cptra_uc_rst_b), //goes to veer core
     .iccm_unlock(iccm_unlock),
-    .fw_upd_rst_executed(fw_upd_rst_executed)
+    .fw_upd_rst_executed(fw_upd_rst_executed),
+    .rdc_clk_dis(rdc_clk_dis),
+    .fw_update_rst_window(fw_update_rst_window)
 );
 
 always_comb soc_ifc_reg_hwif_in.CPTRA_RESET_REASON.FW_UPD_RESET.we = fw_upd_rst_executed;
@@ -334,7 +342,7 @@ soc_ifc_arb #(
     )
     i_soc_ifc_arb (
     .clk(soc_ifc_clk_cg),
-    .rst_b(cptra_rst_b),
+    .rst_b(cptra_noncore_rst_b),
     .valid_mbox_users(valid_mbox_users),
     .valid_fuse_user(valid_fuse_user),
     //UC inf
@@ -378,7 +386,7 @@ soc_ifc_arb #(
 //Read and Write permissions are controlled within this block
 always_comb soc_ifc_reg_error = soc_ifc_reg_read_error | soc_ifc_reg_write_error;
 
-always_comb soc_ifc_reg_hwif_in.cptra_rst_b = cptra_rst_b;
+always_comb soc_ifc_reg_hwif_in.cptra_rst_b = cptra_noncore_rst_b;
 always_comb soc_ifc_reg_hwif_in.cptra_pwrgood = cptra_pwrgood;
 always_comb soc_ifc_reg_hwif_in.soc_req = soc_ifc_reg_req_data.soc_req;
 
@@ -422,6 +430,7 @@ always_comb begin
     ready_for_fw_push = soc_ifc_reg_hwif_out.CPTRA_FLOW_STATUS.ready_for_fw.value;
     ready_for_runtime = soc_ifc_reg_hwif_out.CPTRA_FLOW_STATUS.ready_for_runtime.value;
     soc_ifc_reg_hwif_in.CPTRA_FLOW_STATUS.ready_for_fuses.next = ready_for_fuses;
+    soc_ifc_reg_hwif_in.CPTRA_FLOW_STATUS.boot_fsm_ps.next = boot_fsm_ps;
     soc_ifc_reg_hwif_in.CPTRA_SECURITY_STATE.device_lifecycle.next = security_state.device_lifecycle;
     soc_ifc_reg_hwif_in.CPTRA_SECURITY_STATE.debug_locked.next     = security_state.debug_locked;
     soc_ifc_reg_hwif_in.CPTRA_SECURITY_STATE.scan_mode.next        = scan_mode_f;
@@ -447,7 +456,7 @@ logic cptra_in_dbg_or_manuf_mode;
 assign cptra_in_dbg_or_manuf_mode = ~(security_state.debug_locked) | 
                                      ((security_state.debug_locked) & (security_state.device_lifecycle == DEVICE_MANUFACTURING));
 
-always_ff @(posedge clk or negedge cptra_rst_b) begin
+always_ff @(posedge rdc_clk_cg or negedge cptra_rst_b) begin
     if (~cptra_rst_b) begin
         BootFSM_BrkPoint_Latched <= 0;
         BootFSM_BrkPoint_Flag <= 0;
@@ -461,7 +470,7 @@ always_ff @(posedge clk or negedge cptra_rst_b) begin
 end
 
 // pwrgood_hint informs if the powergood toggled
-always_ff @(posedge clk or negedge cptra_pwrgood) begin
+always_ff @(posedge rdc_clk_cg or negedge cptra_pwrgood) begin
      if(~cptra_pwrgood) begin
         pwrgood_toggle_hint <= 1;
      end
@@ -471,7 +480,7 @@ always_ff @(posedge clk or negedge cptra_pwrgood) begin
      end
 end
 
-always_ff @(posedge clk or negedge cptra_rst_b) begin
+always_ff @(posedge rdc_clk_cg or negedge cptra_rst_b) begin
     if (~cptra_rst_b) begin
         Warm_Reset_Capture_Flag <= 0;
     end
@@ -497,7 +506,7 @@ end
 
 
 // Generate a pulse to set the interrupt bit
-always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
+always_ff @(posedge rdc_clk_cg or negedge cptra_noncore_rst_b) begin
     if (~cptra_noncore_rst_b) begin
         security_state_debug_locked_d <= '0;
     end
@@ -546,7 +555,7 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_PAUSER_LOCK.LOCK.swwel = soc_ifc_reg_
 // Can't write to RW-able fuses once fuse_done is set (implies the register is being locked using the fuse_wr_done)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-always_ff @(posedge clk or negedge cptra_rst_b) begin
+always_ff @(posedge soc_ifc_clk_cg or negedge cptra_rst_b) begin
     if(~cptra_rst_b) begin
         fuse_wr_done_reg_write_observed <= 0;
     end
@@ -657,7 +666,7 @@ logic s_cpuif_rd_ack_nc;
 logic s_cpuif_wr_ack_nc;
 
 soc_ifc_reg i_soc_ifc_reg (
-    .clk(clk),
+    .clk(rdc_clk_cg),
     .rst('0),
     //qualify request so no addresses alias
     .s_cpuif_req(soc_ifc_reg_req_dv & (soc_ifc_reg_req_data.addr[SOC_IFC_ADDR_W-1:SOC_IFC_REG_ADDR_WIDTH] == SOC_IFC_REG_START_ADDR[SOC_IFC_ADDR_W-1:SOC_IFC_REG_ADDR_WIDTH])),
@@ -700,7 +709,7 @@ assign nmi_intr = t2_timeout && !timer2_en;             //Only issue nmi if WDT 
 // sets CPTRA_FW_ERROR_FATAL or when a HW condition occurs that sets a bit
 // in CPTRA_HW_ERROR_FATAL
 // Interrupt only deasserts on reset
-always_ff@(posedge clk or negedge cptra_rst_b) begin
+always_ff@(posedge rdc_clk_cg or negedge cptra_rst_b) begin
     if(~cptra_rst_b) begin
         cptra_error_fatal <= 1'b0;
     end
@@ -721,7 +730,7 @@ always_ff@(posedge clk or negedge cptra_rst_b) begin
         cptra_error_fatal <= cptra_error_fatal;
     end
 end
-always_ff@(posedge clk or negedge cptra_rst_b) begin
+always_ff@(posedge rdc_clk_cg or negedge cptra_rst_b) begin
     if(~cptra_rst_b) begin
         cptra_error_non_fatal <= 1'b0;
     end
@@ -835,8 +844,8 @@ always_comb begin
 end
 
 //Generate t1 and t2 timeout interrupt pulse
-always_ff @(posedge clk or negedge cptra_rst_b) begin
-    if(!cptra_rst_b) begin
+always_ff @(posedge rdc_clk_cg or negedge cptra_noncore_rst_b) begin
+    if(!cptra_noncore_rst_b) begin
         t1_timeout_f <= 'b0;
         t2_timeout_f <= 'b0;
     end
@@ -854,8 +863,8 @@ always_comb t2_timeout_p = t2_timeout & ~t2_timeout_f;
 //       It would be preferable to decode this from interrupt signals somehow,
 //       but that would require modifying interrupt register RDL which has been
 //       standardized.
-always_ff @(posedge clk or negedge cptra_rst_b) begin
-    if(!cptra_rst_b) begin
+always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
+    if(!cptra_noncore_rst_b) begin
         wdt_error_t1_intr_serviced <= 1'b0;
         wdt_error_t2_intr_serviced <= 1'b0;
     end
@@ -870,7 +879,7 @@ always_ff @(posedge clk or negedge cptra_rst_b) begin
 end
 
 wdt i_wdt (
-    .clk(clk),
+    .clk(rdc_clk_cg),
     .cptra_rst_b(cptra_noncore_rst_b),
     .timer1_en(timer1_en),
     .timer2_en(timer2_en),
@@ -888,8 +897,8 @@ wdt i_wdt (
 // Write-enables for CPTRA_HW_ERROR_FATAL and CPTRA_HW_ERROR_NON_FATAL
 // Also calculate whether or not an unmasked event is being set, so we can
 // trigger the SOC interrupt signal
-always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.we = rv_ecc_sts.cptra_iccm_ecc_double_error;
-always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.we = rv_ecc_sts.cptra_dccm_ecc_double_error;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.we = rv_ecc_sts.cptra_iccm_ecc_double_error & ~fw_update_rst_window;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.we = rv_ecc_sts.cptra_dccm_ecc_double_error & ~fw_update_rst_window;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.nmi_pin     .we = nmi_intr;
 // Using we+next instead of hwset allows us to encode the reserved fields in some fashion
 // other than bit-hot in the future, if needed (e.g. we need to encode > 32 FATAL events)
@@ -947,7 +956,7 @@ always_comb cptra_uncore_dmi_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_addr == D
 //This assumes that reg_en goes low between read accesses
 always_comb dmi_inc_rdptr = cptra_uncore_dmi_reg_dout_access_f & ~cptra_uncore_dmi_reg_en;
 
-always_ff @(posedge clk or negedge cptra_pwrgood) begin
+always_ff @(posedge rdc_clk_cg or negedge cptra_pwrgood) begin
     if (~cptra_pwrgood) begin
         cptra_uncore_dmi_reg_rdata <= '0;
         cptra_uncore_dmi_reg_dout_access_f <= '0;

@@ -33,10 +33,15 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__CPTRA_FW_ERROR_NON_FATAL__in_t;
 
     typedef struct packed{
+        logic [2:0] next;
+    } soc_ifc_reg__CPTRA_FLOW_STATUS__boot_fsm_ps__in_t;
+
+    typedef struct packed{
         logic next;
     } soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_fuses__in_t;
 
     typedef struct packed{
+        soc_ifc_reg__CPTRA_FLOW_STATUS__boot_fsm_ps__in_t boot_fsm_ps;
         soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_fuses__in_t ready_for_fuses;
     } soc_ifc_reg__CPTRA_FLOW_STATUS__in_t;
 
@@ -512,16 +517,11 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic value;
-    } soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_fuses__out_t;
-
-    typedef struct packed{
-        logic value;
     } soc_ifc_reg__CPTRA_FLOW_STATUS__mailbox_flow_done__out_t;
 
     typedef struct packed{
         soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_fw__out_t ready_for_fw;
         soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_runtime__out_t ready_for_runtime;
-        soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_fuses__out_t ready_for_fuses;
         soc_ifc_reg__CPTRA_FLOW_STATUS__mailbox_flow_done__out_t mailbox_flow_done;
     } soc_ifc_reg__CPTRA_FLOW_STATUS__out_t;
 

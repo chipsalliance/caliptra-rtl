@@ -73,6 +73,7 @@ package pv_rst_pkg;
    `include "src/pv_rst_random_sequence.svh"
    `include "src/pv_rst_cold_rst_sequence.svh"
    `include "src/pv_rst_warm_rst_sequence.svh"
+   `include "src/pv_rst_core_rst_sequence.svh"
    `include "src/pv_rst_poweron_sequence.svh"
 
    `include "src/pv_rst_responder_sequence.svh"
