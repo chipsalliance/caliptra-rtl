@@ -388,7 +388,7 @@ module soc_ifc_reg (
         } CPTRA_BOOT_STATUS;
         struct packed{
             struct packed{
-                logic [27:0] next;
+                logic [24:0] next;
                 logic load_next;
             } status;
             struct packed{
@@ -399,10 +399,6 @@ module soc_ifc_reg (
                 logic next;
                 logic load_next;
             } ready_for_runtime;
-            struct packed{
-                logic next;
-                logic load_next;
-            } ready_for_fuses;
             struct packed{
                 logic next;
                 logic load_next;
@@ -1226,7 +1222,7 @@ module soc_ifc_reg (
         } CPTRA_BOOT_STATUS;
         struct packed{
             struct packed{
-                logic [27:0] value;
+                logic [24:0] value;
             } status;
             struct packed{
                 logic value;
@@ -1234,9 +1230,6 @@ module soc_ifc_reg (
             struct packed{
                 logic value;
             } ready_for_runtime;
-            struct packed{
-                logic value;
-            } ready_for_fuses;
             struct packed{
                 logic value;
             } mailbox_flow_done;
@@ -2071,10 +2064,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_BOOT_STATUS.status.value = field_storage.CPTRA_BOOT_STATUS.status.value;
     // Field: soc_ifc_reg.CPTRA_FLOW_STATUS.status
     always_comb begin
-        automatic logic [27:0] next_c = field_storage.CPTRA_FLOW_STATUS.status.value;
+        automatic logic [24:0] next_c = field_storage.CPTRA_FLOW_STATUS.status.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.CPTRA_FLOW_STATUS && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
-            next_c = (field_storage.CPTRA_FLOW_STATUS.status.value & ~decoded_wr_biten[27:0]) | (decoded_wr_data[27:0] & decoded_wr_biten[27:0]);
+            next_c = (field_storage.CPTRA_FLOW_STATUS.status.value & ~decoded_wr_biten[24:0]) | (decoded_wr_data[24:0] & decoded_wr_biten[24:0]);
             load_next_c = '1;
         end
         field_combo.CPTRA_FLOW_STATUS.status.next = next_c;
@@ -2125,23 +2118,6 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.CPTRA_FLOW_STATUS.ready_for_runtime.value = field_storage.CPTRA_FLOW_STATUS.ready_for_runtime.value;
-    // Field: soc_ifc_reg.CPTRA_FLOW_STATUS.ready_for_fuses
-    always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_FLOW_STATUS.ready_for_fuses.value;
-        automatic logic load_next_c = '0;
-        if(1) begin // HW Write
-            next_c = hwif_in.CPTRA_FLOW_STATUS.ready_for_fuses.next;
-            load_next_c = '1;
-        end
-        field_combo.CPTRA_FLOW_STATUS.ready_for_fuses.next = next_c;
-        field_combo.CPTRA_FLOW_STATUS.ready_for_fuses.load_next = load_next_c;
-    end
-    always_ff @(posedge clk) begin
-        if(field_combo.CPTRA_FLOW_STATUS.ready_for_fuses.load_next) begin
-            field_storage.CPTRA_FLOW_STATUS.ready_for_fuses.value <= field_combo.CPTRA_FLOW_STATUS.ready_for_fuses.next;
-        end
-    end
-    assign hwif_out.CPTRA_FLOW_STATUS.ready_for_fuses.value = field_storage.CPTRA_FLOW_STATUS.ready_for_fuses.value;
     // Field: soc_ifc_reg.CPTRA_FLOW_STATUS.mailbox_flow_done
     always_comb begin
         automatic logic [0:0] next_c = field_storage.CPTRA_FLOW_STATUS.mailbox_flow_done.value;
@@ -5185,10 +5161,11 @@ module soc_ifc_reg (
         assign readback_array[i0*1 + 6][31:0] = (decoded_reg_strb.CPTRA_FW_EXTENDED_ERROR_INFO[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_FW_EXTENDED_ERROR_INFO[i0].error_info.value : '0;
     end
     assign readback_array[14][31:0] = (decoded_reg_strb.CPTRA_BOOT_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_BOOT_STATUS.status.value : '0;
-    assign readback_array[15][27:0] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_FLOW_STATUS.status.value : '0;
+    assign readback_array[15][24:0] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_FLOW_STATUS.status.value : '0;
+    assign readback_array[15][27:25] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? hwif_in.CPTRA_FLOW_STATUS.boot_fsm_ps.next : '0;
     assign readback_array[15][28:28] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_FLOW_STATUS.ready_for_fw.value : '0;
     assign readback_array[15][29:29] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_FLOW_STATUS.ready_for_runtime.value : '0;
-    assign readback_array[15][30:30] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_FLOW_STATUS.ready_for_fuses.value : '0;
+    assign readback_array[15][30:30] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? hwif_in.CPTRA_FLOW_STATUS.ready_for_fuses.next : '0;
     assign readback_array[15][31:31] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_FLOW_STATUS.mailbox_flow_done.value : '0;
     assign readback_array[16][0:0] = (decoded_reg_strb.CPTRA_RESET_REASON && !decoded_req_is_wr) ? field_storage.CPTRA_RESET_REASON.FW_UPD_RESET.value : '0;
     assign readback_array[16][1:1] = (decoded_reg_strb.CPTRA_RESET_REASON && !decoded_req_is_wr) ? field_storage.CPTRA_RESET_REASON.WARM_RESET.value : '0;

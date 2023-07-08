@@ -1919,20 +1919,24 @@ class soc_ifc_predictor #(
                     `uvm_error("PRED_APB", $sformatf("APB transaction with data: 0x%x, write: %p, may not match reg model value: %x", apb_txn.wr_data, apb_txn.read_or_write, axs_reg.get()))
                 // Only expect a status transaction if this fuse download is occuring during boot sequence // FIXME
                 // Even after a warm reset, we expect a write to this register (although the write is dropped)
+                // When writing fuse done, if breakpoint is set we're going to wait state where noncore reset will be de-asserted
+                // SoC or JTAG would check for boot fsm to be in wait state before setting GO when ready to advance and bring uc out of reset
                 if (noncore_rst_out_asserted && (apb_txn.wr_data == 1/*FIXME hardcoded*/) && apb_txn.read_or_write == APB3_TRANS_WRITE) begin
-                    noncore_rst_out_asserted =  bootfsm_breakpoint;
-                    uc_rst_out_asserted      =  bootfsm_breakpoint;
-                    send_cptra_sts_txn       = !bootfsm_breakpoint;
+                    //predict ready for fuses de-assertion
                     p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fuses.predict(1'b0);
+                    noncore_rst_out_asserted =  1'b0;
+                    uc_rst_out_asserted      =  bootfsm_breakpoint;
                     send_soc_ifc_sts_txn = 1'b1;
+                    send_cptra_sts_txn       =  1'b1;
                     fuse_update_enabled = 1'b0;
                 end
             end
             "CPTRA_BOOTFSM_GO": begin
                 // FIXME -- use reg predictor somehow?
+                //When uc reset is still asserted and we're writing to bootfsm go, expect uc to be brough out of reset
                 uvm_reg_data_t fuse_wr_done = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FUSE_WR_DONE.get();
 
-                if (noncore_rst_out_asserted &&
+                if (uc_rst_out_asserted &&
                     bootfsm_breakpoint &&
                     apb_txn.read_or_write == APB3_TRANS_WRITE &&
                     (apb_txn.wr_data[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_BOOTFSM_GO.GO.get_lsb_pos()])) begin

@@ -219,7 +219,7 @@ import uvmf_base_pkg_hdl::*;
       .hresp_o    (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HRESP      ),
       .hreadyout_o(uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HREADY     ),
       .hrdata_o   (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HRDATA     ),
-
+      .fw_update_rst_window(kv_rst_agent_bus.fw_update_rst_window),
       .kv_read (kv_read ),
       .kv_write(kv_write),
       .kv_rd_resp(kv_rd_resp),

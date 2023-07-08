@@ -35,6 +35,8 @@
 //
 // .dut_signal_port(pv_rst_bus.cptra_pwrgood), // Agent output 
 // .dut_signal_port(pv_rst_bus.rst_b), // Agent output 
+// .dut_signal_port(pv_rst_bus.core_only_rst_b), // Agent output 
+// .dut_signal_port(pv_rst_bus.debug_locked), // Agent output 
 
 import uvmf_base_pkg_hdl::*;
 import pv_rst_pkg_hdl::*;
@@ -45,7 +47,9 @@ interface  pv_rst_if
   input tri clk, 
   input tri dummy,
   inout tri  cptra_pwrgood,
-  inout tri  rst_b
+  inout tri  rst_b,
+  inout tri  core_only_rst_b,
+  inout tri  fw_update_rst_window
   );
 
 modport monitor_port 
@@ -53,7 +57,9 @@ modport monitor_port
   input clk,
   input dummy,
   input cptra_pwrgood,
-  input rst_b
+  input rst_b,
+  input core_only_rst_b,
+  input fw_update_rst_window
   );
 
 modport initiator_port 
@@ -61,7 +67,9 @@ modport initiator_port
   input clk,
   input dummy,
   output cptra_pwrgood,
-  output rst_b
+  output rst_b,
+  output core_only_rst_b,
+  output fw_update_rst_window
   );
 
 modport responder_port 
@@ -69,7 +77,9 @@ modport responder_port
   input clk,
   input dummy,  
   input cptra_pwrgood,
-  input rst_b
+  input rst_b,
+  input core_only_rst_b,
+  input fw_update_rst_window
   );
   
 

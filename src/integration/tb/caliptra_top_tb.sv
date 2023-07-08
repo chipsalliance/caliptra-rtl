@@ -74,6 +74,7 @@ module caliptra_top_tb (
         S_APB_WR_UDS,
         S_APB_WR_FE,
         S_APB_WR_FUSE_DONE,
+        S_APB_POLL_FLOW_ST,
         S_APB_WR_BOOT_GO,
         S_APB_WAIT_FW_TEST,
         S_APB_POLL_LOCK,
@@ -500,6 +501,9 @@ module caliptra_top_tb (
                 S_APB_WR_FUSE_DONE: begin
                     $display ("SoC: Writing fuse done register\n");
                 end
+                S_APB_POLL_FLOW_ST: begin
+                    $display ("SoC: Polling Flow Status\n");
+                end
                 S_APB_WR_BOOT_GO: begin
                     $display ("SoC: Writing BootGo register\n");
                 end
@@ -604,7 +608,7 @@ module caliptra_top_tb (
             S_APB_WR_FUSE_DONE: begin
                 if (apb_xfer_end) begin
                     if(BootFSM_BrkPoint) begin
-                       n_state_apb = S_APB_WR_BOOT_GO;
+                       n_state_apb = S_APB_POLL_FLOW_ST;
                     end
                     else begin
                        n_state_apb = S_APB_WAIT_FW_TEST;
@@ -612,6 +616,14 @@ module caliptra_top_tb (
                 end
                 else begin
                     n_state_apb = S_APB_WR_FUSE_DONE;
+                end
+            end
+            S_APB_POLL_FLOW_ST: begin
+                if (apb_xfer_end && (PRDATA[`SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FUSES_LOW] == 0)) begin
+                    n_state_apb = S_APB_WR_BOOT_GO;
+                end
+                else begin
+                    n_state_apb = S_APB_POLL_FLOW_ST;
                 end
             end
             //Write BootGo register
@@ -830,6 +842,10 @@ module caliptra_top_tb (
                 PADDR      = `CLP_SOC_IFC_REG_CPTRA_FUSE_WR_DONE;
                 PWDATA     = 32'h00000001;
             end
+            S_APB_POLL_FLOW_ST: begin
+                PADDR      = `CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS; 
+                PWDATA     = '0;
+            end
             S_APB_WR_BOOT_GO: begin
                 PADDR      = `CLP_SOC_IFC_REG_CPTRA_BOOTFSM_GO; 
                 PWDATA     = 32'h00000001;
@@ -917,6 +933,11 @@ module caliptra_top_tb (
             S_APB_WR_FUSE_DONE: begin
                 PSEL       = 1;
                 PWRITE     = 1;
+                PAUSER     = 0;
+            end
+            S_APB_POLL_FLOW_ST: begin
+                PSEL       = 1;
+                PWRITE     = 0;
                 PAUSER     = 0;
             end
             S_APB_WR_BOOT_GO: begin

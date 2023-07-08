@@ -223,9 +223,12 @@ module soc_ifc_tb
              .clk(clk_tb),
              .clk_cg(clk_tb),
              .soc_ifc_clk_cg(clk_tb),
+             .rdc_clk_cg(clk_tb),
 
              .cptra_pwrgood(cptra_pwrgood_tb),
              .cptra_rst_b(cptra_rst_b_tb),
+             .rdc_clk_dis(),
+             .fw_update_rst_window(),
 
              .ready_for_fuses(ready_for_fuses),
              .ready_for_fw_push(ready_for_fw_push),
