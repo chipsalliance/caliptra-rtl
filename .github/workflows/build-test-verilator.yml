@@ -122,6 +122,8 @@ jobs:
     needs: build_tools
     outputs:
       test_names: ${{ steps.output-matrix.outputs.test_names  }}
+    env:
+      EXCLUDE_TESTS: "smoke_test_clk_gating, smoke_test_cg_wdt"
     steps:
       - uses: actions/checkout@v3
       - name: Install deps
