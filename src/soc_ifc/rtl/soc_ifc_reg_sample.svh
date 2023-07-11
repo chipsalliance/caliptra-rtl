@@ -1687,11 +1687,12 @@
             foreach(notif_cmd_avail_en_bit_cg[bt]) this.notif_cmd_avail_en_bit_cg[bt].sample(data[0 + bt]);
             foreach(notif_mbox_ecc_cor_en_bit_cg[bt]) this.notif_mbox_ecc_cor_en_bit_cg[bt].sample(data[1 + bt]);
             foreach(notif_debug_locked_en_bit_cg[bt]) this.notif_debug_locked_en_bit_cg[bt].sample(data[2 + bt]);
-            foreach(notif_soc_req_lock_en_bit_cg[bt]) this.notif_soc_req_lock_en_bit_cg[bt].sample(data[3 + bt]);
-            foreach(notif_gen_in_toggle_en_bit_cg[bt]) this.notif_gen_in_toggle_en_bit_cg[bt].sample(data[4 + bt]);
+            foreach(notif_scan_mode_en_bit_cg[bt]) this.notif_scan_mode_en_bit_cg[bt].sample(data[3 + bt]);
+            foreach(notif_soc_req_lock_en_bit_cg[bt]) this.notif_soc_req_lock_en_bit_cg[bt].sample(data[4 + bt]);
+            foreach(notif_gen_in_toggle_en_bit_cg[bt]) this.notif_gen_in_toggle_en_bit_cg[bt].sample(data[5 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[0:0]/*notif_cmd_avail_en*/  ,  data[1:1]/*notif_mbox_ecc_cor_en*/  ,  data[2:2]/*notif_debug_locked_en*/  ,  data[3:3]/*notif_soc_req_lock_en*/  ,  data[4:4]/*notif_gen_in_toggle_en*/   );
+            this.fld_cg.sample( data[0:0]/*notif_cmd_avail_en*/  ,  data[1:1]/*notif_mbox_ecc_cor_en*/  ,  data[2:2]/*notif_debug_locked_en*/  ,  data[3:3]/*notif_scan_mode_en*/  ,  data[4:4]/*notif_soc_req_lock_en*/  ,  data[5:5]/*notif_gen_in_toggle_en*/   );
         end
     endfunction
 
@@ -1700,11 +1701,12 @@
             foreach(notif_cmd_avail_en_bit_cg[bt]) this.notif_cmd_avail_en_bit_cg[bt].sample(notif_cmd_avail_en.get_mirrored_value() >> bt);
             foreach(notif_mbox_ecc_cor_en_bit_cg[bt]) this.notif_mbox_ecc_cor_en_bit_cg[bt].sample(notif_mbox_ecc_cor_en.get_mirrored_value() >> bt);
             foreach(notif_debug_locked_en_bit_cg[bt]) this.notif_debug_locked_en_bit_cg[bt].sample(notif_debug_locked_en.get_mirrored_value() >> bt);
+            foreach(notif_scan_mode_en_bit_cg[bt]) this.notif_scan_mode_en_bit_cg[bt].sample(notif_scan_mode_en.get_mirrored_value() >> bt);
             foreach(notif_soc_req_lock_en_bit_cg[bt]) this.notif_soc_req_lock_en_bit_cg[bt].sample(notif_soc_req_lock_en.get_mirrored_value() >> bt);
             foreach(notif_gen_in_toggle_en_bit_cg[bt]) this.notif_gen_in_toggle_en_bit_cg[bt].sample(notif_gen_in_toggle_en.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( notif_cmd_avail_en.get_mirrored_value()  ,  notif_mbox_ecc_cor_en.get_mirrored_value()  ,  notif_debug_locked_en.get_mirrored_value()  ,  notif_soc_req_lock_en.get_mirrored_value()  ,  notif_gen_in_toggle_en.get_mirrored_value()   );
+            this.fld_cg.sample( notif_cmd_avail_en.get_mirrored_value()  ,  notif_mbox_ecc_cor_en.get_mirrored_value()  ,  notif_debug_locked_en.get_mirrored_value()  ,  notif_scan_mode_en.get_mirrored_value()  ,  notif_soc_req_lock_en.get_mirrored_value()  ,  notif_gen_in_toggle_en.get_mirrored_value()   );
         end
     endfunction
 
@@ -1797,7 +1799,7 @@
         end
     endfunction
 
-    /*----------------------- soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_gen_in_toggle_sts_59f84b64_notif_mbox_ecc_cor_sts_5c3d26bb_notif_scan_mode_sts_122f6367_notif_soc_req_lock_sts_deddde70 SAMPLE FUNCTIONS -----------------------*/
+    /*----------------------- SOC_IFC_REG__INTR_BLOCK_T__NOTIF_INTR_T_NOTIF_CMD_AVAIL_STS_1871606B_NOTIF_DEBUG_LOCKED_STS_5F024102_NOTIF_GEN_IN_TOGGLE_STS_59F84B64_NOTIF_MBOX_ECC_COR_STS_5C3D26BB_NOTIF_SCAN_MODE_STS_122F6367_NOTIF_SOC_REQ_LOCK_STS_DEDDDE70 SAMPLE FUNCTIONS -----------------------*/
     function void soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_gen_in_toggle_sts_59f84b64_notif_mbox_ecc_cor_sts_5c3d26bb_notif_scan_mode_sts_122f6367_notif_soc_req_lock_sts_deddde70::sample(uvm_reg_data_t  data,
                                                    uvm_reg_data_t  byte_en,
                                                    bit             is_read,
@@ -1809,11 +1811,12 @@
             foreach(notif_cmd_avail_sts_bit_cg[bt]) this.notif_cmd_avail_sts_bit_cg[bt].sample(data[0 + bt]);
             foreach(notif_mbox_ecc_cor_sts_bit_cg[bt]) this.notif_mbox_ecc_cor_sts_bit_cg[bt].sample(data[1 + bt]);
             foreach(notif_debug_locked_sts_bit_cg[bt]) this.notif_debug_locked_sts_bit_cg[bt].sample(data[2 + bt]);
-            foreach(notif_soc_req_lock_sts_bit_cg[bt]) this.notif_soc_req_lock_sts_bit_cg[bt].sample(data[3 + bt]);
-            foreach(notif_gen_in_toggle_sts_bit_cg[bt]) this.notif_gen_in_toggle_sts_bit_cg[bt].sample(data[4 + bt]);
+            foreach(notif_scan_mode_sts_bit_cg[bt]) this.notif_scan_mode_sts_bit_cg[bt].sample(data[3 + bt]);
+            foreach(notif_soc_req_lock_sts_bit_cg[bt]) this.notif_soc_req_lock_sts_bit_cg[bt].sample(data[4 + bt]);
+            foreach(notif_gen_in_toggle_sts_bit_cg[bt]) this.notif_gen_in_toggle_sts_bit_cg[bt].sample(data[5 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[0:0]/*notif_cmd_avail_sts*/  ,  data[1:1]/*notif_mbox_ecc_cor_sts*/  ,  data[2:2]/*notif_debug_locked_sts*/  ,  data[3:3]/*notif_soc_req_lock_sts*/  ,  data[4:4]/*notif_gen_in_toggle_sts*/   );
+            this.fld_cg.sample( data[0:0]/*notif_cmd_avail_sts*/  ,  data[1:1]/*notif_mbox_ecc_cor_sts*/  ,  data[2:2]/*notif_debug_locked_sts*/  ,  data[3:3]/*notif_scan_mode_sts*/  ,  data[4:4]/*notif_soc_req_lock_sts*/  ,  data[5:5]/*notif_gen_in_toggle_sts*/   );
         end
     endfunction
 
@@ -1822,11 +1825,12 @@
             foreach(notif_cmd_avail_sts_bit_cg[bt]) this.notif_cmd_avail_sts_bit_cg[bt].sample(notif_cmd_avail_sts.get_mirrored_value() >> bt);
             foreach(notif_mbox_ecc_cor_sts_bit_cg[bt]) this.notif_mbox_ecc_cor_sts_bit_cg[bt].sample(notif_mbox_ecc_cor_sts.get_mirrored_value() >> bt);
             foreach(notif_debug_locked_sts_bit_cg[bt]) this.notif_debug_locked_sts_bit_cg[bt].sample(notif_debug_locked_sts.get_mirrored_value() >> bt);
+            foreach(notif_scan_mode_sts_bit_cg[bt]) this.notif_scan_mode_sts_bit_cg[bt].sample(notif_scan_mode_sts.get_mirrored_value() >> bt);
             foreach(notif_soc_req_lock_sts_bit_cg[bt]) this.notif_soc_req_lock_sts_bit_cg[bt].sample(notif_soc_req_lock_sts.get_mirrored_value() >> bt);
             foreach(notif_gen_in_toggle_sts_bit_cg[bt]) this.notif_gen_in_toggle_sts_bit_cg[bt].sample(notif_gen_in_toggle_sts.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( notif_cmd_avail_sts.get_mirrored_value()  ,  notif_mbox_ecc_cor_sts.get_mirrored_value()  ,  notif_debug_locked_sts.get_mirrored_value()  ,  notif_soc_req_lock_sts.get_mirrored_value()  ,  notif_gen_in_toggle_sts.get_mirrored_value()   );
+            this.fld_cg.sample( notif_cmd_avail_sts.get_mirrored_value()  ,  notif_mbox_ecc_cor_sts.get_mirrored_value()  ,  notif_debug_locked_sts.get_mirrored_value()  ,  notif_scan_mode_sts.get_mirrored_value()  ,  notif_soc_req_lock_sts.get_mirrored_value()  ,  notif_gen_in_toggle_sts.get_mirrored_value()   );
         end
     endfunction
 
@@ -1881,11 +1885,12 @@
             foreach(notif_cmd_avail_trig_bit_cg[bt]) this.notif_cmd_avail_trig_bit_cg[bt].sample(data[0 + bt]);
             foreach(notif_mbox_ecc_cor_trig_bit_cg[bt]) this.notif_mbox_ecc_cor_trig_bit_cg[bt].sample(data[1 + bt]);
             foreach(notif_debug_locked_trig_bit_cg[bt]) this.notif_debug_locked_trig_bit_cg[bt].sample(data[2 + bt]);
-            foreach(notif_soc_req_lock_trig_bit_cg[bt]) this.notif_soc_req_lock_trig_bit_cg[bt].sample(data[3 + bt]);
-            foreach(notif_gen_in_toggle_trig_bit_cg[bt]) this.notif_gen_in_toggle_trig_bit_cg[bt].sample(data[4 + bt]);
+            foreach(notif_scan_mode_trig_bit_cg[bt]) this.notif_scan_mode_trig_bit_cg[bt].sample(data[3 + bt]);
+            foreach(notif_soc_req_lock_trig_bit_cg[bt]) this.notif_soc_req_lock_trig_bit_cg[bt].sample(data[4 + bt]);
+            foreach(notif_gen_in_toggle_trig_bit_cg[bt]) this.notif_gen_in_toggle_trig_bit_cg[bt].sample(data[5 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[0:0]/*notif_cmd_avail_trig*/  ,  data[1:1]/*notif_mbox_ecc_cor_trig*/  ,  data[2:2]/*notif_debug_locked_trig*/  ,  data[3:3]/*notif_soc_req_lock_trig*/  ,  data[4:4]/*notif_gen_in_toggle_trig*/   );
+            this.fld_cg.sample( data[0:0]/*notif_cmd_avail_trig*/  ,  data[1:1]/*notif_mbox_ecc_cor_trig*/  ,  data[2:2]/*notif_debug_locked_trig*/  ,  data[3:3]/*notif_scan_mode_trig*/  ,  data[4:4]/*notif_soc_req_lock_trig*/  ,  data[5:5]/*notif_gen_in_toggle_trig*/   );
         end
     endfunction
 
@@ -1894,11 +1899,12 @@
             foreach(notif_cmd_avail_trig_bit_cg[bt]) this.notif_cmd_avail_trig_bit_cg[bt].sample(notif_cmd_avail_trig.get_mirrored_value() >> bt);
             foreach(notif_mbox_ecc_cor_trig_bit_cg[bt]) this.notif_mbox_ecc_cor_trig_bit_cg[bt].sample(notif_mbox_ecc_cor_trig.get_mirrored_value() >> bt);
             foreach(notif_debug_locked_trig_bit_cg[bt]) this.notif_debug_locked_trig_bit_cg[bt].sample(notif_debug_locked_trig.get_mirrored_value() >> bt);
+            foreach(notif_scan_mode_trig_bit_cg[bt]) this.notif_scan_mode_trig_bit_cg[bt].sample(notif_scan_mode_trig.get_mirrored_value() >> bt);
             foreach(notif_soc_req_lock_trig_bit_cg[bt]) this.notif_soc_req_lock_trig_bit_cg[bt].sample(notif_soc_req_lock_trig.get_mirrored_value() >> bt);
             foreach(notif_gen_in_toggle_trig_bit_cg[bt]) this.notif_gen_in_toggle_trig_bit_cg[bt].sample(notif_gen_in_toggle_trig.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( notif_cmd_avail_trig.get_mirrored_value()  ,  notif_mbox_ecc_cor_trig.get_mirrored_value()  ,  notif_debug_locked_trig.get_mirrored_value()  ,  notif_soc_req_lock_trig.get_mirrored_value()  ,  notif_gen_in_toggle_trig.get_mirrored_value()   );
+            this.fld_cg.sample( notif_cmd_avail_trig.get_mirrored_value()  ,  notif_mbox_ecc_cor_trig.get_mirrored_value()  ,  notif_debug_locked_trig.get_mirrored_value()  ,  notif_scan_mode_trig.get_mirrored_value()  ,  notif_soc_req_lock_trig.get_mirrored_value()  ,  notif_gen_in_toggle_trig.get_mirrored_value()   );
         end
     endfunction
 
@@ -1994,31 +2000,6 @@
     endfunction
 
     function void soc_ifc_reg__intr_block_t__intr_count_t_cnt_fb7d2433::sample_values();
-        if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(cnt_bit_cg[bt]) this.cnt_bit_cg[bt].sample(cnt.get_mirrored_value() >> bt);
-        end
-        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( cnt.get_mirrored_value()   );
-        end
-    endfunction
-
-    /*----------------------- SOC_IFC_REG__INTR_BLOCK_T__INTR_COUNT_T_CNT_fbf3c714 SAMPLE FUNCTIONS -----------------------*/
-    function void soc_ifc_reg__intr_block_t__intr_count_t_cnt_fbf3c714::sample(uvm_reg_data_t  data,
-        uvm_reg_data_t  byte_en,
-        bit             is_read,
-        uvm_reg_map     map);
-        m_current = get();
-        m_data    = data;
-        m_is_read = is_read;
-        if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(cnt_bit_cg[bt]) this.cnt_bit_cg[bt].sample(data[0 + bt]);
-        end
-        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[31:0]/*cnt*/   );
-        end
-    endfunction
-
-    function void soc_ifc_reg__intr_block_t__intr_count_t_cnt_fbf3c714::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
             foreach(cnt_bit_cg[bt]) this.cnt_bit_cg[bt].sample(cnt.get_mirrored_value() >> bt);
         end
@@ -2194,6 +2175,31 @@
     endfunction
 
     function void soc_ifc_reg__intr_block_t__intr_count_t_cnt_ee53ded8::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(cnt_bit_cg[bt]) this.cnt_bit_cg[bt].sample(cnt.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( cnt.get_mirrored_value()   );
+        end
+    endfunction
+
+    /*----------------------- SOC_IFC_REG__INTR_BLOCK_T__INTR_COUNT_T_CNT_FBF3C714 SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__intr_block_t__intr_count_t_cnt_fbf3c714::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(cnt_bit_cg[bt]) this.cnt_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[31:0]/*cnt*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__intr_block_t__intr_count_t_cnt_fbf3c714::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
             foreach(cnt_bit_cg[bt]) this.cnt_bit_cg[bt].sample(cnt.get_mirrored_value() >> bt);
         end
@@ -2527,6 +2533,31 @@
         end
     endfunction
 
+    /*----------------------- SOC_IFC_REG__INTR_BLOCK_T__INTR_COUNT_INCR_T_PULSE_F5D8AFE0 SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f5d8afe0::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(pulse_bit_cg[bt]) this.pulse_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[0:0]/*pulse*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f5d8afe0::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(pulse_bit_cg[bt]) this.pulse_bit_cg[bt].sample(pulse.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( pulse.get_mirrored_value()   );
+        end
+    endfunction
+
     /*----------------------- SOC_IFC_REG__INTR_BLOCK_T__INTR_COUNT_INCR_T_PULSE_246489BD SAMPLE FUNCTIONS -----------------------*/
     function void soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_246489bd::sample(uvm_reg_data_t  data,
                                                    uvm_reg_data_t  byte_en,
@@ -2569,31 +2600,6 @@
     endfunction
 
     function void soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_d6ed4d1e::sample_values();
-        if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(pulse_bit_cg[bt]) this.pulse_bit_cg[bt].sample(pulse.get_mirrored_value() >> bt);
-        end
-        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( pulse.get_mirrored_value()   );
-        end
-    endfunction
-
-    /*----------------------- SOC_IFC_REG__INTR_BLOCK_T__INTR_COUNT_INCR_T_PULSE_f5d8afe0 SAMPLE FUNCTIONS -----------------------*/
-    function void soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f5d8afe0::sample(uvm_reg_data_t  data,
-        uvm_reg_data_t  byte_en,
-        bit             is_read,
-        uvm_reg_map     map);
-        m_current = get();
-        m_data    = data;
-        m_is_read = is_read;
-        if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(pulse_bit_cg[bt]) this.pulse_bit_cg[bt].sample(data[0 + bt]);
-        end
-        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[0:0]/*pulse*/   );
-        end
-    endfunction
-    
-    function void soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f5d8afe0::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
             foreach(pulse_bit_cg[bt]) this.pulse_bit_cg[bt].sample(pulse.get_mirrored_value() >> bt);
         end

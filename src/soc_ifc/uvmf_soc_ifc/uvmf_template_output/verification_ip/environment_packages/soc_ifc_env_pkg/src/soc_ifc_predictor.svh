@@ -1295,16 +1295,9 @@ class soc_ifc_predictor #(
                 "notif_cmd_avail_intr_count_r",
                 "notif_mbox_ecc_cor_intr_count_r",
                 "notif_debug_locked_intr_count_r",
+                "notif_scan_mode_intr_count_r",
                 "notif_soc_req_lock_intr_count_r",
                 "notif_gen_in_toggle_intr_count_r": begin
-                    if (ahb_txn.RnW == AHB_WRITE) begin
-                        `uvm_info("PRED_AHB", {"Write to ", axs_reg.get_name(), " modifies interrupt statistics count"}, UVM_HIGH)
-                    end
-                    else begin
-                        `uvm_info("PRED_AHB", {"Access to register ", axs_reg.get_name(), " will have no effect on system"}, UVM_HIGH)
-                    end
-                end
-                "notif_scan_mode_intr_count_r": begin
                     if (ahb_txn.RnW == AHB_WRITE) begin
                         `uvm_info("PRED_AHB", {"Write to ", axs_reg.get_name(), " modifies interrupt statistics count"}, UVM_HIGH)
                     end
@@ -1323,6 +1316,7 @@ class soc_ifc_predictor #(
                 "notif_cmd_avail_intr_count_incr_r",
                 "notif_mbox_ecc_cor_intr_count_incr_r",
                 "notif_debug_locked_intr_count_incr_r",
+                "notif_scan_mode_intr_count_incr_r",
                 "notif_soc_req_lock_intr_count_incr_r",
                 "notif_gen_in_toggle_intr_count_incr_r": begin
                     `uvm_info("PRED_AHB", {"Access to register ", axs_reg.get_name(), " will have no effect on system"}, UVM_HIGH)
@@ -2002,18 +1996,28 @@ class soc_ifc_predictor #(
             "error_bad_fuse_intr_count_r",
             "error_iccm_blocked_intr_count_r",
             "error_mbox_ecc_unc_intr_count_r",
+            "error_wdt_timer1_timeout_intr_count_r",
+            "error_wdt_timer2_timeout_intr_count_r",
             "notif_cmd_avail_intr_count_r",
             "notif_mbox_ecc_cor_intr_count_r",
             "notif_debug_locked_intr_count_r",
+            "notif_scan_mode_intr_count_r",
+            "notif_soc_req_lock_intr_count_r",
+            "notif_gen_in_toggle_intr_count_r",
             "error_internal_intr_count_incr_r",
             "error_inv_dev_intr_count_incr_r",
             "error_cmd_fail_intr_count_incr_r",
             "error_bad_fuse_intr_count_incr_r",
             "error_iccm_blocked_intr_count_incr_r",
             "error_mbox_ecc_unc_intr_count_incr_r",
+            "error_wdt_timer1_timeout_intr_count_incr_r",
+            "error_wdt_timer2_timeout_intr_count_incr_r",
             "notif_cmd_avail_intr_count_incr_r",
             "notif_mbox_ecc_cor_intr_count_incr_r",
             "notif_debug_locked_intr_count_incr_r",
+            "notif_scan_mode_intr_count_incr_r",
+            "notif_soc_req_lock_intr_count_incr_r",
+            "notif_gen_in_toggle_intr_count_incr_r",
             "error0_intr_count_r",
             "error1_intr_count_r",
             "error2_intr_count_r",
