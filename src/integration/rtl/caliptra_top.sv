@@ -546,12 +546,8 @@ el2_veer_wrapper rvtop (
     // SB and LSU AHB master mux
     ahb_lite_2to1_mux #(
         .AHB_LITE_ADDR_WIDTH (`CALIPTRA_AHB_HADDR_SIZE),
-<<<<<<< HEAD
-        .AHB_LITE_DATA_WIDTH (`CALIPTRA_AHB_HDATA_SIZE)
-=======
         .AHB_LITE_DATA_WIDTH (`CALIPTRA_AHB_HDATA_SIZE),
         .AHB_NO_OPT(1) //Prevent address and data phase overlap between initiators
->>>>>>> 29ab510e (Merged PR 114429: Merge dev-msft into MSFT internal repo)
     ) u_sb_lsu_ahb_mux (
         .hclk                (clk_cg),
         .hreset_n            (cptra_noncore_rst_b),
