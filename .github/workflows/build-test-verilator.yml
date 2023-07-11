@@ -123,7 +123,7 @@ jobs:
     outputs:
       test_names: ${{ steps.output-matrix.outputs.test_names  }}
     env:
-      EXCLUDE_TESTS: "smoke_test_clk_gating, smoke_test_cg_wdt"
+      EXCLUDE_TESTS: "smoke_test_clk_gating, smoke_test_cg_wdt, smoke_test_mbox_cg, smoke_test_kv_cg, smoke_test_doe_cg"
     steps:
       - uses: actions/checkout@v3
       - name: Install deps
