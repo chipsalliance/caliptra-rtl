@@ -86,12 +86,14 @@ end
   tri  cptra_pwrgood_i;
   tri  rst_b_i;
   tri  core_only_rst_b_i;
+  tri  fw_update_rst_window_i;
   tri  debug_locked_i;
   assign clk_i = bus.clk;
   assign dummy_i = bus.dummy;
   assign cptra_pwrgood_i = bus.cptra_pwrgood;
   assign rst_b_i = bus.rst_b;
   assign core_only_rst_b_i = bus.core_only_rst_b;
+  assign fw_update_rst_window_i = bus.fw_update_rst_window;
   assign debug_locked_i = bus.debug_locked;
 
   // Proxy handle to UVM monitor
@@ -102,6 +104,7 @@ end
     reg cptra_pwrgood_o = 'b0;
     reg rst_b_o = 'b0;
     reg core_only_rst_b_o = 'b0;
+    reg fw_update_rst_window_o = 'b0;
     reg debug_locked_o = 'b0;
 
     function bit any_signal_changed();
@@ -109,6 +112,7 @@ end
       return  |(cptra_pwrgood_i ^ cptra_pwrgood_o) ||
               |(rst_b_i ^ rst_b_o) ||
               |(core_only_rst_b_i ^ core_only_rst_b_o) ||
+              |(fw_update_rst_window_i ^ fw_update_rst_window_o) ||
               |(debug_locked_i ^ debug_locked_o);
   
     endfunction
@@ -202,10 +206,11 @@ end
     // the next transfer. One clock cycle is consumed between calls to do_monitor.
     while (!any_signal_changed()) @(posedge clk_i);
 
-    cptra_pwrgood_o <= cptra_pwrgood_i;
-    rst_b_o         <= rst_b_i;
-    core_only_rst_b_o         <= core_only_rst_b_i;
-    debug_locked_o  <= debug_locked_i;
+    cptra_pwrgood_o        <= cptra_pwrgood_i;
+    rst_b_o                <= rst_b_i;
+    core_only_rst_b_o      <= core_only_rst_b_i;
+    fw_update_rst_window_o <= fw_update_rst_window_i;
+    debug_locked_o         <= debug_locked_i;
 
     kv_rst_monitor_struct.set_pwrgood = cptra_pwrgood_i;
     kv_rst_monitor_struct.assert_rst = !rst_b_i;

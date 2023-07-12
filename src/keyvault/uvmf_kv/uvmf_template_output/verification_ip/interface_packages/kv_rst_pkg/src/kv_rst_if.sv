@@ -49,6 +49,7 @@ interface  kv_rst_if
   inout tri  cptra_pwrgood,
   inout tri  rst_b,
   inout tri  core_only_rst_b,
+  inout tri  fw_update_rst_window,
   inout tri  debug_locked
   );
 
@@ -59,6 +60,7 @@ modport monitor_port
   input cptra_pwrgood,
   input rst_b,
   input core_only_rst_b,
+  input fw_update_rst_window,
   input debug_locked
   );
 
@@ -69,6 +71,7 @@ modport initiator_port
   output cptra_pwrgood,
   output rst_b,
   output core_only_rst_b,
+  output fw_update_rst_window,
   output debug_locked
   );
 
@@ -79,6 +82,7 @@ modport responder_port
   input cptra_pwrgood,
   input rst_b,
   input core_only_rst_b,
+  input fw_update_rst_window,
   input debug_locked
   );
   

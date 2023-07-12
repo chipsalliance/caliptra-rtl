@@ -39,27 +39,38 @@ function soc_ifc_env_top_mbox_dlen_violation_sequence::create_seqs();
     uvm_object obj;
 
     enum {
+        MBOX_MIN,
+        MBOX_MAX,
         MBOX_UNDERFLOW_SMALL,
         MBOX_UNDERFLOW_MEDIUM,
         MBOX_UNDERFLOW_LARGE,
         MBOX_OVERFLOW_SMALL,
         MBOX_OVERFLOW_MEDIUM,
-        MBOX_OVERFLOW_LARGE
+        MBOX_OVERFLOW_LARGE,
+        MBOX_INVALID
     } mbox_sel;
     enum {
+        CPTRA_STANDARD,
         CPTRA_UNDERREAD,
         CPTRA_OVERREAD
     } cptra_sel;
 
-    if (!std::randomize(mbox_sel,cptra_sel) with {mbox_sel dist {MBOX_UNDERFLOW_SMALL  :/ 100,
+    if (!std::randomize(mbox_sel,cptra_sel) with {mbox_sel dist {MBOX_MIN              :/ 100,
+                                                                 MBOX_MAX              :/ 100,
+                                                                 MBOX_UNDERFLOW_SMALL  :/ 100,
                                                                  MBOX_UNDERFLOW_MEDIUM :/ 100,
-                                                                 MBOX_UNDERFLOW_LARGE  :/ 1,
+                                                                 MBOX_UNDERFLOW_LARGE  :/ 10,
                                                                  MBOX_OVERFLOW_SMALL   :/ 100,
                                                                  MBOX_OVERFLOW_MEDIUM  :/ 100,
-                                                                 MBOX_OVERFLOW_LARGE   :/ 1};})
+                                                                 MBOX_OVERFLOW_LARGE   :/ 10,
+                                                                 MBOX_INVALID          :/ 10};})
         `uvm_fatal("SOC_IFC_MBOX_TOP", "Failed to randomize sub-sequence types")
 
     case (mbox_sel) inside
+        MBOX_MIN:
+            obj = soc_ifc_env_mbox_min_sequence_t::get_type().create_object("soc_ifc_env_mbox_seq");
+        MBOX_MAX:
+            obj = soc_ifc_env_mbox_max_sequence_t::get_type().create_object("soc_ifc_env_mbox_seq");
         MBOX_UNDERFLOW_SMALL:
             obj = soc_ifc_env_mbox_dlen_underflow_small_sequence_t::get_type().create_object("soc_ifc_env_mbox_seq");
         MBOX_UNDERFLOW_MEDIUM:
@@ -72,11 +83,15 @@ function soc_ifc_env_top_mbox_dlen_violation_sequence::create_seqs();
             obj = soc_ifc_env_mbox_dlen_overflow_medium_sequence_t::get_type().create_object("soc_ifc_env_mbox_seq");
         MBOX_OVERFLOW_LARGE:
             obj = soc_ifc_env_mbox_dlen_overflow_large_sequence_t::get_type().create_object("soc_ifc_env_mbox_seq");
+        MBOX_INVALID:
+            obj = soc_ifc_env_mbox_dlen_invalid_sequence_t::get_type().create_object("soc_ifc_env_mbox_seq");
         default: `uvm_fatal("SOC_IFC_MBOX_TOP","Bad mbox_sel")
     endcase
     if(!$cast(soc_ifc_env_mbox_seq,obj)) `uvm_fatal("SOC_IFC_TOP_MBOX", "soc_ifc_env_top_mbox_dlen_violation::create_seqs() - <seq_type>.create_object() failed")
 
     case (cptra_sel) inside
+        CPTRA_STANDARD:
+            obj = soc_ifc_env_cptra_mbox_handler_sequence_t::get_type().create_object("soc_ifc_env_cptra_handler_seq");
         CPTRA_UNDERREAD:
             obj = soc_ifc_env_cptra_mbox_dlen_underread_handler_sequence_t::get_type().create_object("soc_ifc_env_cptra_handler_seq");
         CPTRA_OVERREAD:

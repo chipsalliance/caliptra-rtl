@@ -36,9 +36,9 @@ ${CALIPTRA_ROOT}/src/pcrvault/rtl/pv_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/pcrvault/rtl/pv_reg.sv
 ${CALIPTRA_ROOT}/src/pcrvault/rtl/pv.sv
 ${CALIPTRA_ROOT}/src/sha512/rtl/sha512_reg_pkg.sv
+${CALIPTRA_ROOT}/src/sha512/rtl/sha512_params_pkg.sv
 ${CALIPTRA_ROOT}/src/sha512/rtl/sha512_ctrl.sv
 ${CALIPTRA_ROOT}/src/sha512/rtl/sha512.sv
-${CALIPTRA_ROOT}/src/sha512/rtl/sha512_param.sv
 ${CALIPTRA_ROOT}/src/sha512/rtl/sha512_core.v
 ${CALIPTRA_ROOT}/src/sha512/rtl/sha512_h_constants.v
 ${CALIPTRA_ROOT}/src/sha512/rtl/sha512_k_constants.v

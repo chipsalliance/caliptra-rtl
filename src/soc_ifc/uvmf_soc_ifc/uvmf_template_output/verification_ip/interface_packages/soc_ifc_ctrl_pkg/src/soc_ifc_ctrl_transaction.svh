@@ -43,8 +43,15 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
   //Constraints for the transaction variables:
   constraint wait_cycles_c { wait_cycles dist {[1:25] := 80, [25:100] := 15, [100:500] := 5}; }
   constraint generic_tie_zero_c { generic_input_val == 64'h0; }
+  constraint debug_locked_c {security_state.debug_locked == 1'b1;} //reset sequence tied this off, doing it here instead
   constraint device_lifecycle_const_c { if (device_lifecycle_set_static) {security_state.device_lifecycle == device_lifecycle_static; } }
   
+  //Match RTL constraint for latching bootfsm breakpoint
+  //we'll never set bootfsm breakpoint unless we are in the appropriate debug/device lifecycle state to latch it in RTL
+  constraint set_bootfsm_breakpoint_c { if ((security_state.debug_locked) & 
+                                            ~((security_state.debug_locked) & (security_state.device_lifecycle == DEVICE_MANUFACTURING)))
+                                            {set_bootfsm_breakpoint == 0;} 
+                                          solve security_state before set_bootfsm_breakpoint; }
 
   // pragma uvmf custom class_item_additional begin
   static device_lifecycle_e device_lifecycle_static = 'X;
@@ -219,6 +226,7 @@ endclass
 // pragma uvmf custom external begin
 function void soc_ifc_ctrl_transaction::post_randomize();
     super.post_randomize();
+
     if (!device_lifecycle_set_static || (device_lifecycle_static == 'hX)) begin
         device_lifecycle_static = this.security_state.device_lifecycle;
         device_lifecycle_set_static = 1'b1;

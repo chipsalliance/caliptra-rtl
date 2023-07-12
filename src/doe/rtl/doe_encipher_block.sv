@@ -41,6 +41,7 @@
 module doe_encipher_block(
                           input wire            clk,
                           input wire            reset_n,
+                          input wire            zeroize,
 
                           input wire            next_cmd,
 
@@ -214,6 +215,17 @@ module doe_encipher_block(
   always @ (posedge clk or negedge reset_n)
     begin: reg_update
       if (!reset_n)
+        begin
+          block_w0_reg  <= 32'h0;
+          block_w1_reg  <= 32'h0;
+          block_w2_reg  <= 32'h0;
+          block_w3_reg  <= 32'h0;
+          sword_ctr_reg <= 2'h0;
+          round_ctr_reg <= 4'h0;
+          ready_reg     <= 1'b1;
+          enc_ctrl_reg  <= CTRL_IDLE;
+        end
+      else if (zeroize)
         begin
           block_w0_reg  <= 32'h0;
           block_w1_reg  <= 32'h0;

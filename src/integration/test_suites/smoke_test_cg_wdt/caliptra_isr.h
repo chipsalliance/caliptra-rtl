@@ -34,6 +34,33 @@
 
 extern volatile uint32_t hmac_intr_status;
 
+/* --------------- symbols/typedefs --------------- */
+typedef struct {
+    uint32_t doe_error;
+    uint32_t doe_notif;
+    uint32_t ecc_error;
+    uint32_t ecc_notif;
+    uint32_t hmac_error;
+    uint32_t hmac_notif;
+    uint32_t kv_error;
+    uint32_t kv_notif;
+    uint32_t sha512_error;
+    uint32_t sha512_notif;
+    uint32_t sha256_error;
+    uint32_t sha256_notif;
+    uint32_t qspi_error;
+    uint32_t qspi_notif;
+    uint32_t uart_error;
+    uint32_t uart_notif;
+    uint32_t i3c_error;
+    uint32_t i3c_notif;
+    uint32_t soc_ifc_error;
+    uint32_t soc_ifc_notif;
+    uint32_t sha512_acc_error;
+    uint32_t sha512_acc_notif;
+} caliptra_intr_received_s;
+extern volatile caliptra_intr_received_s cptra_intr_rcv;
+
 //////////////////////////////////////////////////////////////////////////////
 // Function Declarations
 //
@@ -92,6 +119,10 @@ inline void service_soc_ifc_notif_intr  () {
 
     if(sts & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_DEBUG_LOCKED_STS_MASK) {
         *reg = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_DEBUG_LOCKED_STS_MASK;
+    }
+
+    if(sts & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SCAN_MODE_STS_MASK) {
+        *reg = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SCAN_MODE_STS_MASK;
     }
 }
 inline void service_sha512_acc_error_intr() {printf("ERROR");}

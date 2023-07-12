@@ -40,21 +40,21 @@ interface caliptra_top_cov_if
     assign nmi_int = caliptra_top.nmi_int;
     
 
-    covergroup WDT_cov_grp @(posedge clk);
+    covergroup caliptra_top_cov_grp @(posedge clk);
         option.per_instance = 1;
+
+        //-----------------------------------------
+        //WDT coverpoints
+        //-----------------------------------------
         wdt_t1: coverpoint wdt_timer1_en;
         wdt_t2: coverpoint wdt_timer2_en;
         wdt_t1Xt2: cross wdt_t1, wdt_t2;
         wdt_t1t2Xwarmrst: cross wdt_t1Xt2, cptra_rst_b;
         wdt_t1t2Xcoldrst: cross wdt_t1Xt2, cptra_pwrgood;
-    endgroup
 
-    covergroup CLK_GATING_cov_grp @(posedge clk);
-        option.per_instance = 1;
-
-        //----------------------------------------
-        //Coverpoints
-        //----------------------------------------
+        //-----------------------------------------
+        //CLK GATING coverpoints
+        //-----------------------------------------
         apb_txn:            coverpoint PSEL {
             bins single_apb_txn = (0 => 1 => 0);
             bins b2b_apb_txn = (1 [*5]); //5 txns in a row
@@ -66,8 +66,6 @@ interface caliptra_top_cov_if
             bins bin10 = (1 => 0);
         }
         warm_rst:           coverpoint cptra_rst_b;
-        wdt_t1:             coverpoint wdt_timer1_en;
-        wdt_t2:             coverpoint wdt_timer2_en;
 
         scan:               coverpoint scan_mode;
         debug:              coverpoint security_state.debug_locked;
@@ -75,9 +73,6 @@ interface caliptra_top_cov_if
         nmi:                coverpoint nmi_int;
         generic:            coverpoint generic_input_wires;
 
-        //-----------------------------------------
-        //Cross coverage
-        //-----------------------------------------
         enXcore_asleep:             cross cg_en, core_asleep_value {
             ignore_bins b0 = enXcore_asleep with ((cg_en == 0) && (core_asleep_value == 1));
         }
@@ -95,8 +90,6 @@ interface caliptra_top_cov_if
         enXcore_asleepXnmi:         cross enXcore_asleep, nmi;
         enXcore_asleepXapb:         cross enXcore_asleep, apb_txn;
         enXcore_asleepXgeneric:     cross enXcore_asleep, generic;
-        
-        
     endgroup
 
     covergroup generic_input_wires_cg(input logic generic_bit) @(posedge clk);
@@ -108,8 +101,9 @@ interface caliptra_top_cov_if
         }
     endgroup
 
-    CLK_GATING_cov_grp CLK_GATING_cov_grp1 = new();
-    WDT_cov_grp WDT_cov_grp1 = new();
+    // CLK_GATING_cov_grp CLK_GATING_cov_grp1 = new();
+    // WDT_cov_grp WDT_cov_grp1 = new();
+    caliptra_top_cov_grp caliptra_top_cov_grp1 = new();
     
     generic_input_wires_cg giw_cg[64];
     //foreach(giw_cg[i]) giw_cg[i] = new(generic_input_wires[i]);

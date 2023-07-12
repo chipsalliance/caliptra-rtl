@@ -25,6 +25,7 @@ module kv_fsm
 (
     input logic clk,
     input logic rst_b,
+    input logic zeroize,
 
     input logic start,
     input logic last,
@@ -150,6 +151,11 @@ end
 
 always_ff @(posedge clk or negedge rst_b) begin
     if (!rst_b) begin
+        kv_fsm_ps <= KV_IDLE;
+        offset <= '0;
+        num_dwords_data <= '0;
+    end
+    else if (zeroize) begin
         kv_fsm_ps <= KV_IDLE;
         offset <= '0;
         num_dwords_data <= '0;

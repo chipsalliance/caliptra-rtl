@@ -64,7 +64,8 @@ module sha512_ctrl
 
     // Interrupt
     output logic error_intr,
-    output logic notif_intr
+    output logic notif_intr,
+    input  logic debugUnlock_or_scan_mode_switch
 );
 
     //----------------------------------------------------------------
@@ -101,7 +102,8 @@ module sha512_ctrl
         .pv_wr_resp(pv_wr_resp),
         .pcr_signing_hash(pcr_signing_hash),
         .error_intr(error_intr),
-        .notif_intr(notif_intr)
+        .notif_intr(notif_intr),
+        .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch)
     );
 
     //instantiate ahb lite module

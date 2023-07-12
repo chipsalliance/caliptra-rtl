@@ -47,6 +47,7 @@ module doe_core_cbc(
                 // Clock and reset.
                 input wire            clk,
                 input wire            reset_n,
+                input wire            zeroize,
 
                 // Control.
                 input wire            encdec,
@@ -143,6 +144,7 @@ module doe_core_cbc(
   doe_encipher_block enc_block(
                                .clk(clk),
                                .reset_n(reset_n),
+                               .zeroize(zeroize),
 
                                .next_cmd(enc_next),
 
@@ -162,6 +164,7 @@ module doe_core_cbc(
   doe_decipher_block dec_block(
                                .clk(clk),
                                .reset_n(reset_n),
+                               .zeroize(zeroize),
 
                                .next_cmd(dec_next),
 
@@ -178,6 +181,7 @@ module doe_core_cbc(
   doe_key_mem keymem(
                      .clk(clk),
                      .reset_n(reset_n),
+                     .zeroize(zeroize),
 
                      .key(key),
                      .keylen(keylen),
@@ -207,6 +211,15 @@ module doe_core_cbc(
   always @ (posedge clk or negedge reset_n)
   begin:IV_storage_management
       if (!reset_n)
+        begin
+          IV_encry            <= 128'h0;
+          IV_decry            <= 128'h0;
+          IV_decry_next       <= 128'h0;
+          IV_enc_state        <= st_IV_engine_idle;
+          IV_dec_state        <= st_IV_engine_idle;
+          IV_updated_delayed  <= 1'b0;
+        end
+      else if (zeroize)
         begin
           IV_encry            <= 128'h0;
           IV_decry            <= 128'h0;
@@ -320,6 +333,12 @@ module doe_core_cbc(
   always @ (posedge clk or negedge reset_n)
     begin: reg_update
       if (!reset_n)
+        begin
+          result_valid_reg  <= 1'b0;
+          ready_reg         <= 1'b1;
+          doe_core_ctrl_reg <= CTRL_IDLE;
+        end
+      else if (zeroize)
         begin
           result_valid_reg  <= 1'b0;
           ready_reg         <= 1'b1;

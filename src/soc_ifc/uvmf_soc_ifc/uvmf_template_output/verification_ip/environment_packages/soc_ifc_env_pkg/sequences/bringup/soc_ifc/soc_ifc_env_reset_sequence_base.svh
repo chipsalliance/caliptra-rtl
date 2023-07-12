@@ -73,6 +73,7 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     else
         `uvm_error("SOC_IFC_RST", "soc_ifc_ctrl_agent_config.sequencer is null!")
     ctx.set_bootfsm_breakpoint = soc_ifc_ctrl_seq.set_bootfsm_breakpoint;
+
   endtask
 
 
@@ -143,11 +144,26 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
   //==========================================
   virtual task configure_breakpoint(input ctrl_reset_seq_context_t ctrl_rst_ctx);
     uvm_status_e sts;
+    uvm_reg_data_t data;
+    uvm_reg_data_t data_mask;
+    uvm_reg_data_t data_check;
+
+    //create a mask for the read data, just for boot_fsm_ps
+    data_mask = (1 << reg_model.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.boot_fsm_ps.get_n_bits()) - 1;
+    data_mask <<= reg_model.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.boot_fsm_ps.get_lsb_pos();
+    //create a valid data for checking that matches masked read data
+    data_check = BOOT_WAIT << reg_model.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.boot_fsm_ps.get_lsb_pos();
+
     // If set_bootfsm_breakpoint is randomized to 1, we need to release bootfsm by writing GO
     if (ctrl_rst_ctx.set_bootfsm_breakpoint) begin
-        `uvm_info("SOC_IFC_RST", "BootFSM Breakpoint is set, writing GO", UVM_MEDIUM)
-        reg_model.soc_ifc_reg_rm.CPTRA_BOOTFSM_GO.write(sts, `UVM_REG_DATA_WIDTH'(1), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
-        `uvm_info("SOC_IFC_RST", $sformatf("Write to BootFSM GO completed, status: %p", sts), UVM_MEDIUM)
+      //Poll boot status until we are in FSM state BOOT_WAIT
+      reg_model.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.read(sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+      while ((data & data_mask) != data_check) begin
+        reg_model.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.read(sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+      end
+      `uvm_info("SOC_IFC_RST", "BootFSM Breakpoint is set, writing GO", UVM_MEDIUM)
+      reg_model.soc_ifc_reg_rm.CPTRA_BOOTFSM_GO.write(sts, `UVM_REG_DATA_WIDTH'(1), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+      `uvm_info("SOC_IFC_RST", $sformatf("Write to BootFSM GO completed, status: %p", sts), UVM_MEDIUM)
     end
     else begin
         `uvm_info("SOC_IFC_RST", "BootFSM Breakpoint not set, reset sequence complete", UVM_MEDIUM)

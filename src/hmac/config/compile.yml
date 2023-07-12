@@ -27,6 +27,7 @@ provides: [hmac_ctrl_tb]
 schema_version: 2.4.0
 requires: 
   - hmac_ctrl
+  - hmac_coverage
 targets:
   tb:
     directories: 
@@ -34,6 +35,18 @@ targets:
     files:
       - $COMPILE_ROOT/tb/hmac_ctrl_tb.sv
     tops: [hmac_ctrl_tb]
+---
+provides: [hmac_coverage]  
+schema_version: 2.4.0
+requires: 
+  - hmac_ctrl
+targets:
+  tb:
+    directories: 
+      - $COMPILE_ROOT/coverage
+    files:
+      - $COMPILE_ROOT/coverage/hmac_ctrl_cov_if.sv
+      - $COMPILE_ROOT/coverage/hmac_ctrl_cov_bind.sv
 global:
   tool:
     vcs:

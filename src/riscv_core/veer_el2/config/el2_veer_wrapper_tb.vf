@@ -1,11 +1,11 @@
++incdir+${CALIPTRA_ROOT}/src/integration/rtl
 +incdir+${CALIPTRA_ROOT}/src/soc_ifc/rtl
-+incdir+${CALIPTRA_ROOT}/src/soc_ifc/coverage
 +incdir+${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl
 +incdir+${CALIPTRA_ROOT}/src/riscv_core/veer_el2/tb
+${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/soc_ifc_pkg.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/soc_ifc_reg_pkg.sv
-${CALIPTRA_ROOT}/src/soc_ifc/coverage/soc_ifc_cov_if.sv
-${CALIPTRA_ROOT}/src/soc_ifc/coverage/soc_ifc_cov_bind.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_pdef.vh
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/include/el2_def.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/common_defines.sv

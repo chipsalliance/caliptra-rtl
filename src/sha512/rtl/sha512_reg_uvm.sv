@@ -1242,7 +1242,7 @@ package sha512_reg_uvm;
         rand kv_status_reg SHA512_VAULT_RD_STATUS;
         rand kv_write_ctrl_reg SHA512_KV_WR_CTRL;
         rand kv_status_reg SHA512_KV_WR_STATUS;
-        rand sha512_reg__SHA512_GEN_PCR_HASH_NONCE SHA512_GEN_PCR_HASH_NONCE;
+        rand sha512_reg__SHA512_GEN_PCR_HASH_NONCE SHA512_GEN_PCR_HASH_NONCE[8];
         rand sha512_reg__SHA512_GEN_PCR_HASH_CTRL SHA512_GEN_PCR_HASH_CTRL;
         rand sha512_reg__SHA512_GEN_PCR_HASH_STATUS SHA512_GEN_PCR_HASH_STATUS;
         rand sha512_reg__SHA512_GEN_PCR_HASH_DIGEST SHA512_GEN_PCR_HASH_DIGEST[12];
@@ -1312,27 +1312,29 @@ package sha512_reg_uvm;
 
             this.SHA512_KV_WR_STATUS.build();
             this.default_map.add_reg(this.SHA512_KV_WR_STATUS, 'h60c);
-            this.SHA512_GEN_PCR_HASH_NONCE = new("SHA512_GEN_PCR_HASH_NONCE");
-            this.SHA512_GEN_PCR_HASH_NONCE.configure(this);
-
-            this.SHA512_GEN_PCR_HASH_NONCE.build();
-            this.default_map.add_reg(this.SHA512_GEN_PCR_HASH_NONCE, 'h610);
+            foreach(this.SHA512_GEN_PCR_HASH_NONCE[i0]) begin
+                this.SHA512_GEN_PCR_HASH_NONCE[i0] = new($sformatf("SHA512_GEN_PCR_HASH_NONCE[%0d]", i0));
+                this.SHA512_GEN_PCR_HASH_NONCE[i0].configure(this);
+                
+                this.SHA512_GEN_PCR_HASH_NONCE[i0].build();
+                this.default_map.add_reg(this.SHA512_GEN_PCR_HASH_NONCE[i0], 'h610 + i0*'h4);
+            end
             this.SHA512_GEN_PCR_HASH_CTRL = new("SHA512_GEN_PCR_HASH_CTRL");
             this.SHA512_GEN_PCR_HASH_CTRL.configure(this);
 
             this.SHA512_GEN_PCR_HASH_CTRL.build();
-            this.default_map.add_reg(this.SHA512_GEN_PCR_HASH_CTRL, 'h614);
+            this.default_map.add_reg(this.SHA512_GEN_PCR_HASH_CTRL, 'h630);
             this.SHA512_GEN_PCR_HASH_STATUS = new("SHA512_GEN_PCR_HASH_STATUS");
             this.SHA512_GEN_PCR_HASH_STATUS.configure(this);
 
             this.SHA512_GEN_PCR_HASH_STATUS.build();
-            this.default_map.add_reg(this.SHA512_GEN_PCR_HASH_STATUS, 'h618);
+            this.default_map.add_reg(this.SHA512_GEN_PCR_HASH_STATUS, 'h634);
             foreach(this.SHA512_GEN_PCR_HASH_DIGEST[i0]) begin
                 this.SHA512_GEN_PCR_HASH_DIGEST[i0] = new($sformatf("SHA512_GEN_PCR_HASH_DIGEST[%0d]", i0));
                 this.SHA512_GEN_PCR_HASH_DIGEST[i0].configure(this);
                 
                 this.SHA512_GEN_PCR_HASH_DIGEST[i0].build();
-                this.default_map.add_reg(this.SHA512_GEN_PCR_HASH_DIGEST[i0], 'h61c + i0*'h4);
+                this.default_map.add_reg(this.SHA512_GEN_PCR_HASH_DIGEST[i0], 'h638 + i0*'h4);
             end
             this.intr_block_rf = new("intr_block_rf");
             this.intr_block_rf.configure(this);

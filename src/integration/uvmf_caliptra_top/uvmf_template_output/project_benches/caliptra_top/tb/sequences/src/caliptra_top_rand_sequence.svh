@@ -53,6 +53,8 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
       IDX_SOC_IFC_ENV_MBOX_MAX,
       IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_SMALL,
       IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_MEDIUM,
+      IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_SMALL,
+      IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_MEDIUM,
       IDX_SOC_IFC_ENV_MBOX_MULTI_AGENT,
       IDX_SOC_IFC_ENV_RST_WARM,
       IDX_SOC_IFC_ENV_RST_COLD,
@@ -78,6 +80,8 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
           IDX_SOC_IFC_ENV_MBOX_MAX                  := 10,
           IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_SMALL    := 125,
           IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_MEDIUM   := 100,
+          IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_SMALL     := 100,
+          IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_MEDIUM    := 100,
           IDX_SOC_IFC_ENV_MBOX_MULTI_AGENT          := 100,
           IDX_SOC_IFC_ENV_RST_WARM                  := 100,
           IDX_SOC_IFC_ENV_RST_COLD                  := 100,
@@ -226,6 +230,12 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
                     pauser_valid_initialized = 1'b1;
                 end
                 obj = soc_ifc_env_mbox_rand_pauser_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            end
+            IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_SMALL: begin
+                obj = soc_ifc_env_mbox_rand_delay_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            end
+            IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_MEDIUM: begin
+                obj = soc_ifc_env_mbox_rand_delay_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             end
             IDX_SOC_IFC_ENV_MBOX_MULTI_AGENT:
                 // TODO PAUSER init first?

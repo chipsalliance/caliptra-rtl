@@ -100,18 +100,18 @@ void main() {
                        0xa0b43fbf,
                        0x49897978};
 
-    uint32_t exp3[] = {0x9bad51d7,
-                       0x287c2244,
-                       0x154b6f2d,
-                       0x77bd52ea,
-                       0x0213d314,
-                       0x6f4cb39f,
-                       0xe27a6d42,
-                       0x8886bf0e,
-                       0xaab4310a,
-                       0x53946e9b,
-                       0x70cbd1e7,
-                       0xfb158bab};
+    uint32_t exp3[] = {0x2ab50775,
+                       0xdab80928,
+                       0xb8de848c,
+                       0xabbdfa56,
+                       0x897ed7b1,
+                       0x45be930e,
+                       0x1e340ce0,
+                       0x8c5bfc73,
+                       0x1d997144,
+                       0x0c43f5a5,
+                       0xaa48ac99,
+                       0x8dbe6bb9};
 
     uint32_t exp_sign_r[] = {0x871e6ea4, 
                              0xddc5432c, 
@@ -138,6 +138,15 @@ void main() {
                              0x898fb7d3, 
                              0x4f80796d, 
                              0xae29365c};
+
+    uint32_t nonce[] = {0x01234567,
+                        0x11111111,
+                        0x22222222,
+                        0x33333333,
+                        0x44444444,
+                        0x55555555,
+                        0x66666666,
+                        0x77777777};
 
     volatile uint32_t* reg_ptr;
     uint8_t offset;
@@ -284,7 +293,11 @@ void main() {
     }
 
     sha_poll_gen_hash_ready();
-    lsu_write_32(CLP_SHA512_REG_SHA512_GEN_PCR_HASH_NONCE,0x12345678);
+    reg_ptr = (uint32_t*) CLP_SHA512_REG_SHA512_GEN_PCR_HASH_NONCE_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_SHA512_REG_SHA512_GEN_PCR_HASH_NONCE_7) {
+        *reg_ptr++ = nonce[offset++];
+    }
     sha_gen_hash_start();
     sha_poll_gen_hash_valid();
 
@@ -302,6 +315,7 @@ void main() {
 
     //inject seed to kv key reg (in RTL)
     printf("ECC: Inject PRIVKEY into KV slot 7\n");
+    printf("ECC: Inject MSG into msg_reg\n");
     printf("%c", 0x90);
 
     VPRINTF(MEDIUM,"ECC: Running PCR Sign Function\n");

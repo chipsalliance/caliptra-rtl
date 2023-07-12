@@ -18,7 +18,7 @@ jobs:
       CARGO_INCREMENTAL: 0
       SCCACHE_VERSION: 0.3.3
       # TODO: To update to 5.006, clean up lint errors
-      VERILATOR_VERSION: v5.002
+      VERILATOR_VERSION: v5.012
       SCCACHE_GHA_CACHE_TO: sccache-verilator-10000
       SCCACHE_GHA_CACHE_FROM: sccache-verilator-
       # Change this to a new random value if you suspect the cache is corrupted
