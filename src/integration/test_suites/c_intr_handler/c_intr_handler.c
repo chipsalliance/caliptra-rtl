@@ -89,6 +89,7 @@ void main(void) {
         volatile uint32_t * soc_ifc_notif_cmd_avail_ctr     = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_R);
         volatile uint32_t * soc_ifc_notif_mbox_ecc_cor_ctr  = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R);
         volatile uint32_t * soc_ifc_notif_debug_locked_ctr  = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_R);
+        volatile uint32_t * soc_ifc_notif_scan_mode_ctr     = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_SCAN_MODE_INTR_COUNT_R);
         volatile uint32_t * soc_ifc_notif_soc_req_lock_ctr  = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_R);
         volatile uint32_t * soc_ifc_notif_gen_in_toggle_ctr = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_GEN_IN_TOGGLE_INTR_COUNT_R);
 
@@ -220,6 +221,7 @@ void main(void) {
         soc_ifc_notif_intr_count_hw =  *soc_ifc_notif_cmd_avail_ctr +
                                        *soc_ifc_notif_mbox_ecc_cor_ctr +
                                        *soc_ifc_notif_debug_locked_ctr +
+                                       *soc_ifc_notif_scan_mode_ctr +
                                        *soc_ifc_notif_soc_req_lock_ctr +
                                        *soc_ifc_notif_gen_in_toggle_ctr;
         VPRINTF(MEDIUM, "SOC_IFC Notif hw count: %x\n", soc_ifc_notif_intr_count_hw);

@@ -45,10 +45,15 @@ module ahb_lite_bus #(
     output logic [NUM_RESPONDERS-1:0]                         ahb_lite_resp_access_blocked_o,
 
     // ----------------------------------------------
-    // Respnder Address Map (Start and End addresses)
+    // Responder Address Map (Start and End addresses)
     // ----------------------------------------------
     input logic [NUM_RESPONDERS-1:0][AHB_LITE_ADDR_WIDTH-1:0] ahb_lite_start_addr_i,
-    input logic [NUM_RESPONDERS-1:0][AHB_LITE_ADDR_WIDTH-1:0] ahb_lite_end_addr_i
+    input logic [NUM_RESPONDERS-1:0][AHB_LITE_ADDR_WIDTH-1:0] ahb_lite_end_addr_i,
+
+    // ----------------------------------------------
+    // Force bus idle during uc reset to prevent RDC violations
+    // ----------------------------------------------
+    input logic force_bus_idle
 );
 
     logic   [NUM_RESPONDERS-1:0][AHB_LITE_ADDR_WIDTH-1:0]   haddr;
@@ -125,8 +130,10 @@ module ahb_lite_bus #(
         .htrans_o           (htrans),
         .hsize_o            (hsize),
 
+        .force_bus_idle     (force_bus_idle),
+
         // ----------------------------------------------
-        // Respnder Disable
+        // Responder Disable
         // ----------------------------------------------
         .responder_disable_i          (ahb_lite_resp_disable_i),
         .access_blocked_o             (ahb_lite_resp_access_blocked_o),

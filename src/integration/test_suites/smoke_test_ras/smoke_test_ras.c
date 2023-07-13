@@ -80,6 +80,11 @@ enum mask_config {
     NO_MASK
 };
 
+enum recovery_config {
+    WARM_RESET,
+    FORCE_UNLOCK
+};
+
 enum test_status {
     SUCCESS          =       0,
     INTR_COUNT_0     = 1 <<  0,
@@ -128,6 +133,8 @@ enum boot_count_list {
     BEFORE_FIRST_NMI_FAILURE      ,
     BEFORE_SECOND_NMI_FAILURE     ,
     AFTER_SECOND_NMI_FAILURE      ,
+    AFTER_FIRST_MBOX_OOO_FAILURE  ,
+    AFTER_SECOND_MBOX_OOO_FAILURE
 };
 //enum boot_count_list {
 //    RUN_MBOX_AND_FIRST_ICCM_SRAM_ECC  = 1,
@@ -176,6 +183,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
 };
 volatile rv_exception_struct_s exc_flag __attribute__((section(".dccm.persistent"))); // WARNING: if DCCM ERROR injection is enabled, writes to this may be corrupted
 volatile uint32_t boot_count __attribute__((section(".dccm.persistent"))) = 0;
+volatile uint32_t generic_input_wires_0_before_rst __attribute__((section(".dccm.persistent")));
 // Track test progress across resets by allocating the variable in DCCM, which
 // is initialized only once at time 0
 enum test_progress test_progress_g[TEST_COUNT] __attribute__((section(".dccm.persistent"))) = {
@@ -707,27 +715,76 @@ uint32_t check_dccm_sram_ecc (enum mask_config test_mask) {
 void run_nmi_test (enum mask_config test_mask) {
     enum test_list cur_test;
     VPRINTF(MEDIUM, "\n*** Run Non-Maskable Intr ***\n  Masked: %d\n\n", test_mask == WITH_MASK);
-    // TODO -----------------------------------------------------------
+    
     // Get test ID
     if (test_mask == WITH_MASK) { cur_test = NMI_MASKED;   }
     else                        { cur_test = NMI_UNMASKED; }
+
+    //Enable WDT so that both timers time out and NMI is issued
+    lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_0, 0x00000040);
+    lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_1, 0x00000000);
+    lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_0, 0x00000040);
+    lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_1, 0x00000000);
+    lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_EN, SOC_IFC_REG_CPTRA_WDT_TIMER1_EN_TIMER1_EN_MASK);
+
+    //Set mask
+    if (test_mask == WITH_MASK) {
+        lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK, SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_NMI_PIN_MASK);
+    }
+    // Wait for interrupt
+    while(1) {
+        __asm__ volatile ("wfi"); // "Wait for interrupt"
+        // Continuously loop to allow the ICCM ECC ERROR to trigger system reset
+        for (uint16_t slp = 0; slp < 1000; slp++) {
+            __asm__ volatile ("nop"); // Sleep loop as "nop"
+        }
+        putchar('.');
+    }
+
     test_progress_g[cur_test] = RUN_NOT_CHECKED;
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET, SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK);
-    // END TODO -----------------------------------------------------------
 
     return;
 }
 
 uint32_t check_nmi_test (enum mask_config test_mask) {
+    uint32_t sts = 0;
     enum test_list cur_test;
     VPRINTF(MEDIUM, "\n*** Check Non-Maskable Intr ***\n  Masked: %d\n\n", test_mask == WITH_MASK);
-    // TODO
     // Get test ID
     if (test_mask == WITH_MASK) { cur_test = NMI_MASKED;   }
     else                        { cur_test = NMI_UNMASKED; }
-    test_progress_g[cur_test] = RUN_AND_PASSED;
+    //test_progress_g[cur_test] = RUN_AND_PASSED;
 
-    return 1;
+    if (test_mask == WITH_MASK) {
+        // No generic input toggle expected out of reset
+        if ((cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_GEN_IN_TOGGLE_EN_MASK) && (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0) != generic_input_wires_0_before_rst)) {
+            VPRINTF(ERROR, "ERROR: Gen-in tgl with bad val\n");
+            sts |= BAD_CPTRA_SIG;
+            test_progress_g[cur_test] = RUN_AND_FAILED;
+        } else {
+            sts |= SUCCESS;
+            test_progress_g[cur_test] = RUN_AND_PASSED;
+        }
+
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL, SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_NMI_PIN_MASK);
+    } else {
+        // Check for generic_input_wires activity
+        if (!(cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_GEN_IN_TOGGLE_EN_MASK)) {
+            VPRINTF(ERROR, "ERROR: Gen-in did not tgl\n");
+            sts |= BAD_CPTRA_SIG;
+            test_progress_g[cur_test] = RUN_AND_FAILED;
+        } else if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0) != NMI_FATAL_OBSERVED) {
+            VPRINTF(ERROR, "ERROR: Gen-in bad val\n");
+            sts |= BAD_CPTRA_SIG;
+            test_progress_g[cur_test] = RUN_AND_FAILED;
+        } else {
+            sts |= SUCCESS;
+            test_progress_g[cur_test] = RUN_AND_PASSED;
+        }
+    }
+
+
+    return sts;
 }
 
 void run_mbox_no_lock_error(enum mask_config test_mask) {
@@ -744,12 +801,18 @@ void run_mbox_no_lock_error(enum mask_config test_mask) {
     // Also clear the mbox cmd fail flag
     cptra_intr_rcv.soc_ifc_error = 0;
 
+    //Set the mask
+    if (test_mask == WITH_MASK)
+        lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK, SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK_MASK_MBOX_PROT_NO_LOCK_MASK);
+
     // run test (try to read dataout without having lock)
     lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK,MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK); // Be sure it's unlocked
-    // TODO instruct TB to do bad mailbox flow
+    // Instruct TB to do bad mailbox flow
+    SEND_STDOUT_CTRL(0xe5);
 
     // Flag test as having run
     test_progress_g[cur_test] = RUN_NOT_CHECKED;
+
 }
 
 void run_mbox_ooo_error(enum mask_config test_mask) {
@@ -766,16 +829,24 @@ void run_mbox_ooo_error(enum mask_config test_mask) {
     // Also clear the mbox cmd fail flag
     cptra_intr_rcv.soc_ifc_error = 0;
 
-    // run test (try to read dataout without having lock)
-    lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK,MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK); // Be sure it's unlocked
-    // TODO instruct TB to do bad mailbox flow
+    //Set the mask
+    if (test_mask == WITH_MASK)
+        lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK, SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK_MASK_MBOX_PROT_OOO_MASK);
 
     // Flag test as having run
     test_progress_g[cur_test] = RUN_NOT_CHECKED;
+
+    // run test (try to read dataout without having lock)
+    // Instruct TB to do bad mailbox flow
+    SEND_STDOUT_CTRL(0xe6); //Mailbox unlocked through ISR
+
+    //return;
+
 }
 
 uint32_t check_mbox_no_lock_error(enum mask_config test_mask) {
     enum test_list cur_test;
+    uint32_t sts = 0;
     VPRINTF(MEDIUM, "\n*** Check Mbox No Lock ***\n  Masked: %d\n\n", test_mask == WITH_MASK);
 
     // Get test ID
@@ -783,41 +854,46 @@ uint32_t check_mbox_no_lock_error(enum mask_config test_mask) {
     else if (test_mask == NO_MASK)   { cur_test = PROT_NO_LOCK_UNMASKED; }
     else                             { cur_test = TEST_COUNT;            }
 
-    // FIXME remove this cheat -----------------------
-    if (1) {
-        test_progress_g[cur_test] = RUN_AND_PASSED;
-    } else
-    // END FIXME -------------------------------------
-    if (!cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK) {
+    if (!(cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK)) {
         VPRINTF(ERROR, "ERROR: No cmd fail intr\n");
+        sts |= INTR_COUNT_0;
         test_progress_g[cur_test] = RUN_AND_FAILED;
     } else if (test_mask == WITH_MASK) {
         // Check for generic_input_wires activity
         if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_GEN_IN_TOGGLE_EN_MASK) {
             VPRINTF(ERROR, "ERROR: Gen-in tgl\n");
+            sts |= BAD_CPTRA_SIG;
             test_progress_g[cur_test] = RUN_AND_FAILED;
         } else {
+            sts |= SUCCESS;
             test_progress_g[cur_test] = RUN_AND_PASSED;
         }
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL, SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_MBOX_PROT_NO_LOCK_MASK);
     } else {
         // Check for generic_input_wires activity
-        if (!cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_GEN_IN_TOGGLE_EN_MASK) {
+        if (!(cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_GEN_IN_TOGGLE_EN_MASK)) {
             VPRINTF(ERROR, "ERROR: Gen-in did not tgl\n");
+            sts |= BAD_CPTRA_SIG;
             test_progress_g[cur_test] = RUN_AND_FAILED;
         } else if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0) != PROT_NO_LOCK_NON_FATAL_OBSERVED) {
             VPRINTF(ERROR, "ERROR: Gen-in bad val\n");
+            sts |= BAD_CPTRA_SIG;
             test_progress_g[cur_test] = RUN_AND_FAILED;
         } else {
+            sts |= SUCCESS;
             test_progress_g[cur_test] = RUN_AND_PASSED;
         }
     }
 
-    return SUCCESS; // FIXME
+    //Unlock mailbox
+    lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK,MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+
+    return sts;
 }
 
 uint32_t check_mbox_ooo_error(enum mask_config test_mask) {
     enum test_list cur_test;
+    uint32_t sts = 0;
     VPRINTF(MEDIUM, "\n*** Check Mbox Out-of-order ***\n  Masked: %d\n\n", test_mask == WITH_MASK);
 
     // Get test ID
@@ -825,12 +901,41 @@ uint32_t check_mbox_ooo_error(enum mask_config test_mask) {
     else if (test_mask == NO_MASK)   { cur_test = PROT_OOO_UNMASKED; }
     else                             { cur_test = TEST_COUNT;        }
 
-    // TODO check
+    if (!(cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK)) {
+        VPRINTF(ERROR, "ERROR: No cmd fail intr\n");
+        sts |= INTR_COUNT_0;
+        test_progress_g[cur_test] = RUN_AND_FAILED;
+    } else if (test_mask == WITH_MASK) {
+        // Check for generic_input_wires activity
+        if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_GEN_IN_TOGGLE_EN_MASK) {
+            VPRINTF(ERROR, "ERROR: Gen-in tgl\n");
+            sts |= BAD_CPTRA_SIG;
+            test_progress_g[cur_test] = RUN_AND_FAILED;
+        } else {
+            sts |= SUCCESS;
+            test_progress_g[cur_test] = RUN_AND_PASSED;
+        }
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL, SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_MBOX_PROT_OOO_MASK);
 
-    // Flag test as checked
-    test_progress_g[cur_test] = RUN_AND_PASSED;
+        //Reset out-of-order access flag
+        SEND_STDOUT_CTRL(0xe7);
+    } else {
+        // Check for generic_input_wires activity
+        if (!(cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_GEN_IN_TOGGLE_EN_MASK)) {
+            VPRINTF(ERROR, "ERROR: Gen-in did not tgl\n");
+            sts |= BAD_CPTRA_SIG;
+            test_progress_g[cur_test] = RUN_AND_FAILED;
+        } else if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0) != PROT_OOO_NON_FATAL_OBSERVED) {
+            VPRINTF(ERROR, "ERROR: Gen-in bad val\n");
+            sts |= BAD_CPTRA_SIG;
+            test_progress_g[cur_test] = RUN_AND_FAILED;
+        } else {
+            sts |= SUCCESS;
+            test_progress_g[cur_test] = RUN_AND_PASSED;
+        }
+    }
 
-    return 1;
+    return sts;
 }
 
 void execute_from_iccm (void) {
@@ -894,14 +999,18 @@ void nmi_handler (void) {
         VPRINTF(ERROR, "       mepc [0x%x]\n", csr_read_mepc());
         SEND_STDOUT_CTRL(0x1);
         while(1);
+    }
     // NMI occurred, but was caused by pin-assertion due to Watchdog Timer
-    } else if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL) & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_NMI_PIN_MASK) {
+    else if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL) & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_NMI_PIN_MASK) {
+        //Save generic_input_wires value before reset to compare later. This is to avoid flagging the toggle during reset as an error
+        generic_input_wires_0_before_rst = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0);
         VPRINTF(MEDIUM, "NMI w/ mcause [0x%x] during NMI test\n", csr_read_mcause());
         VPRINTF(MEDIUM, "mepc [0x%x]\n", csr_read_mepc());
         // If the FATAL Error bit for NMI is masked, manually trigger firmware reset
         if (lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK) & SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_NMI_PIN_MASK) {
             VPRINTF(LOW, "NMI bit masked, no rst exp from TB: rst core manually!\n");
-            lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET, SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK);
+            //lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET, SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK);
+            SEND_STDOUT_CTRL(0xf6);
         // Otherwise, wait for core reset
         } else {
             VPRINTF(LOW, "NMI bit unmasked, wait for TB rst!\n");
@@ -954,7 +1063,7 @@ void main(void) {
 
         // Test Mailbox Protocol Violations (no reset expected)
         if      (boot_count == AFTER_SECOND_NMI_FAILURE) {   run_mbox_no_lock_error  (  NO_MASK);
-                                                           check_mbox_no_lock_error  (  NO_MASK);
+                                                           check_mbox_no_lock_error  (  NO_MASK); 
                                                              run_mbox_ooo_error      (  NO_MASK);
                                                            check_mbox_ooo_error      (  NO_MASK);
                                                              run_mbox_no_lock_error  (WITH_MASK);

@@ -143,9 +143,10 @@ class soc_ifc_scoreboard #(
   bit [1:0] soc_ifc_status_monitor_toggle_count [$bits(soc_ifc_status_monitor_s)-1:0] = '{default: 0};
 
   // Variables used to report transaction matches and mismatches
-  int match_count; // FIXME report this
-  int mismatch_count; // FIXME report this
-  int nothing_to_compare_against_count; // FIXME check this and report
+  int match_count = 0;
+  int mismatch_count = 0;
+  int nothing_to_compare_against_count = 0;
+  int multiple_missed_txn_count = 0;
   bit testcase_passed = 1'b0;
 
   // Variables used for report_phase summary output formatting using report_message()
@@ -154,7 +155,7 @@ class soc_ifc_scoreboard #(
 
   // Variable used to enable end of test scoreboard empty check
   bit end_of_test_empty_check=1; // FIXME
-  int transaction_count; // FIXME check this
+  int transaction_count = 0;
 
   // Variable used to delay run phase completion until scoreboard empty
   bit wait_for_scoreboard_empty; // FIXME
@@ -223,8 +224,10 @@ class soc_ifc_scoreboard #(
             soc_ifc_status_monitor_struct_rpt[sts_bit] = 1'b1;
         end
     end
-    if (multiple_missed_txn_error)
+    if (multiple_missed_txn_error) begin
+        multiple_missed_txn_count++;
         `uvm_error("SCBD_SOC_IFC_STS",$sformatf("Received multiple expected transactions without corresponding actual transaction. Problem fields: %p", soc_ifc_status_monitor_struct_rpt))
+    end
     transaction_count++;
     -> entry_received;
  
@@ -526,7 +529,7 @@ class soc_ifc_scoreboard #(
   virtual function void extract_phase(uvm_phase phase);
 // pragma uvmf custom extract_phase begin
      super.extract_phase(phase);
-     report_variables = {transaction_count, match_count, mismatch_count, nothing_to_compare_against_count};
+     report_variables = {transaction_count, match_count, mismatch_count, nothing_to_compare_against_count, multiple_missed_txn_count};
 // pragma uvmf custom extract_phase end
   endfunction
 
@@ -535,7 +538,7 @@ class soc_ifc_scoreboard #(
 // pragma uvmf custom check_phase begin
      super.check_phase(phase);
      if (transaction_count == 0) `uvm_error("SCBD","No Transactions Scoreboarded")
-     if ((match_count > 0) && (mismatch_count == 0) && (nothing_to_compare_against_count == 0))
+     if ((match_count > 0) && (mismatch_count == 0) && (nothing_to_compare_against_count == 0) && (multiple_missed_txn_count == 0))
         testcase_passed = 1'b1;
 // pragma uvmf custom check_phase end
   endfunction
@@ -544,7 +547,7 @@ class soc_ifc_scoreboard #(
   // Builds the report_phase message printed for scoreboards derived from this base 
   // Provides for customization of output formatting
   virtual function string report_message(string header, int variables [] );
-        return {$sformatf("%s PREDICTED_TRANSACTIONS=%0d MATCHES=%0d MISMATCHES=%0d NO_COMPARISON_TXN=%0d", header, variables[0], variables[1], variables[2], variables[3])}; 
+        return {$sformatf("%s PREDICTED_TRANSACTIONS=%0d MATCHES=%0d MISMATCHES=%0d NO_COMPARISON_TXN=%0d MULTIPLE_MISSED_TXN=%0d", header, variables[0], variables[1], variables[2], variables[3], variables[4])}; 
   endfunction
 
   // FUNCTION: report_phase

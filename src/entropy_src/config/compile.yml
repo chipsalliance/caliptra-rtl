@@ -24,7 +24,7 @@ requires:
   - libs
   - kmac
   - caliptra_prim_generic
-  - prim
+  - caliptra_prim
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]

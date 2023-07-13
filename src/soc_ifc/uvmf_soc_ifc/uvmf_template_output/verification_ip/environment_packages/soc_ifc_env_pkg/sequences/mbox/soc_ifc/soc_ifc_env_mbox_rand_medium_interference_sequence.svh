@@ -73,6 +73,7 @@ task soc_ifc_env_mbox_rand_medium_interference_sequence::mbox_poll_status();
                     `uvm_error("MBOX_SEQ", "Failed to randomize memory APB transfer in mbox_wait_for_command")
                 end
                 else begin
+                    `uvm_info("MBOX_SEQ", $sformatf("Doing random APB access of type %p to %s, which has is_busy(): %d", RnW, regs[reg_select].get_name(), regs[reg_select].is_busy()), UVM_DEBUG)
                     if (RnW == APB3_TRANS_READ) regs[reg_select].read (reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_STATUS)));
                     else                        regs[reg_select].write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_STATUS)));
                 end

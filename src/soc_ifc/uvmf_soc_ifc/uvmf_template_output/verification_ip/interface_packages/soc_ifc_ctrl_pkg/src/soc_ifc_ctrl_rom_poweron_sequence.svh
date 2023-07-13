@@ -52,7 +52,6 @@ class soc_ifc_ctrl_rom_poweron_sequence
         `uvm_fatal("SOC_IFC_CTRL_RST", "soc_ifc_ctrl_reset_sequence_base::body()-soc_ifc_ctrl_transaction randomization failed")
       req.set_pwrgood = 1'b0;
       req.assert_rst = 1'b1; // active-low assertion
-      req.security_state.debug_locked = this.debug_locked;
       // Send the transaction to the soc_ifc_ctrl_driver_bfm via the sequencer and soc_ifc_ctrl_driver.
       finish_item(req);
       `uvm_info("SOC_IFC_CTRL_RST", {"Response:",req.convert2string()},UVM_MEDIUM)

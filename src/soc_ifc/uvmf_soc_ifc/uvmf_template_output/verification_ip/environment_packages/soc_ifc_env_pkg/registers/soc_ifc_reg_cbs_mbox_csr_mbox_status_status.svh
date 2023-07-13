@@ -89,8 +89,8 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_status_status extends soc_ifc_reg_cbs_mbox_c
                                                        (mbox_dlen_mirrored(rm) < (mm.get_size() * mm.get_n_bytes())) ? mbox_dlen_mirrored_dword_ceil(rm) :
                                                                                                                        (mm.get_size() * mm.get_n_bytes()) >> ($clog2(MBOX_DATA_W/8));
                             if (rm.mbox_data_q.size() > 0) begin
-                                rm.mbox_data_q.delete();
                                 `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to mbox_status transfers control back to SOC, but mbox_data_q is not empty! Size: %0d", rm.mbox_data_q.size()), UVM_LOW) /* TODO: Make a warning that can be disabled for DLEN violation cases? */
+                                rm.mbox_data_q.delete();
                             end
                             //Pre populated dataout with the first entry of the resp q
                             rm.mbox_datain_to_dataout_predict.trigger();

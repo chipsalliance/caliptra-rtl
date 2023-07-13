@@ -29,7 +29,7 @@ module kv
     input logic rst_b,
     input logic core_only_rst_b,
     input logic cptra_pwrgood,
-
+    input logic fw_update_rst_window, 
     input logic debugUnlock_or_scan_mode_switch,
     
     //uC AHB Lite Interface
@@ -72,7 +72,8 @@ logic [KV_NUM_KEYS-1:0] key_entry_ctrl_we;
 logic [KV_NUM_KEYS-1:0][KV_NUM_DWORDS-1:0][31:0] key_entry_next;
 logic [KV_NUM_KEYS-1:0][KV_NUM_READ-1:0] key_entry_dest_valid_next;
 logic [KV_NUM_KEYS-1:0][KV_ENTRY_SIZE_W-1:0] key_entry_last_dword_next;
-
+logic [KV_NUM_KEYS-1:0] lock_wr_q;
+logic [KV_NUM_KEYS-1:0] lock_use_q;
 kv_reg__in_t kv_reg_hwif_in;
 kv_reg__out_t kv_reg_hwif_out;
 
@@ -127,12 +128,15 @@ end
 always_comb begin : keyvault_ctrl
     //keyvault control registers
     for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
+        //Qualify lock signals as they are on fw upd reset and create RDC violations if allowed to reset asynchronously
+        lock_wr_q[entry] = kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value & ~fw_update_rst_window;
+        lock_use_q[entry] = kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value & ~fw_update_rst_window;
         //once lock is set, only reset can unset it
-        kv_reg_hwif_in.KEY_CTRL[entry].lock_wr.swwel = kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value;
-        kv_reg_hwif_in.KEY_CTRL[entry].lock_use.swwel = kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value;
+        kv_reg_hwif_in.KEY_CTRL[entry].lock_wr.swwel = lock_wr_q[entry];
+        kv_reg_hwif_in.KEY_CTRL[entry].lock_use.swwel = lock_use_q[entry];
         //clear dest valid and last dword
-        kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value & ~kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value & ~kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value;
-        kv_reg_hwif_in.KEY_CTRL[entry].last_dword.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value & ~kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value & ~kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value;
+        kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value & ~lock_wr_q[entry] & ~lock_use_q[entry];
+        kv_reg_hwif_in.KEY_CTRL[entry].last_dword.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value & ~lock_wr_q[entry] & ~lock_use_q[entry];
         //init for AND-OR
         key_entry_ctrl_we[entry] = '0;
         key_entry_dest_valid_next[entry] = '0; 
@@ -161,15 +165,14 @@ always_comb begin : keyvault_ctrl
             for (int client = 0; client < KV_NUM_WRITE; client++) begin
                 key_entry_we[entry][dword] |= ((((kv_write[client].write_entry == entry) & (kv_write[client].write_offset == dword) & 
                                                 kv_write[client].write_en) | flush_keyvault) & 
-                                              ((~kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value &
-                                                ~kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value) | debugUnlock_or_scan_mode_switch));
+                                              ((~lock_wr_q[entry] & ~lock_use_q[entry]) | debugUnlock_or_scan_mode_switch));
                 key_entry_next[entry][dword] |= flush_keyvault ? debug_value :
                                                 kv_write[client].write_en & (kv_write[client].write_entry == entry) ? kv_write[client].write_data : '0;
             end
             kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.we = key_entry_we[entry][dword];
             kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.next = key_entry_next[entry][dword];
             //don't clear when writes are locked
-            kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value & ~kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value & ~kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value;
+            kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value & ~lock_wr_q[entry] & ~lock_use_q[entry];
         end
     end
 end
@@ -186,13 +189,13 @@ always_comb begin : keyvault_readmux
         for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
             for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
                 kv_rd_resp[client].read_data |= (kv_read[client].read_entry == entry) & (kv_read[client].read_offset == dword) &
-                                                ~kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value & kv_reg_hwif_out.KEY_CTRL[entry].dest_valid.value[client] ? 
+                                                ~lock_use_q[entry] & kv_reg_hwif_out.KEY_CTRL[entry].dest_valid.value[client] ? 
                                                  kv_reg_hwif_out.KEY_ENTRY[entry][dword].data.value : '0;
             end
         //signal last when reading the last dword
         kv_rd_resp[client].last |= (kv_read[client].read_entry == entry) & (kv_read[client].read_offset == kv_reg_hwif_out.KEY_CTRL[entry].last_dword);
         kv_rd_resp[client].error |= (kv_read[client].read_entry == entry) & 
-                                    (kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value | ~kv_reg_hwif_out.KEY_CTRL[entry].dest_valid.value[client]);
+                                    (lock_use_q[entry] | ~kv_reg_hwif_out.KEY_CTRL[entry].dest_valid.value[client]);
         end
     end
 end
@@ -203,8 +206,8 @@ always_comb begin : keyvault_write_resp
         kv_wr_resp[client].error = '0;
         for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
             kv_wr_resp[client].error |= (kv_write[client].write_entry == entry) & kv_write[client].write_en &
-                                        kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value &
-                                        kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value;
+                                        lock_wr_q[entry] &
+                                        lock_use_q[entry];
         end
     end
 end

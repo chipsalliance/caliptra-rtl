@@ -37,7 +37,6 @@ requires:
   - csrng
   - spi_host
   - uart
-  - sha512_coverage
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -66,10 +65,32 @@ schema_version: 2.4.0
 requires:
   - asserts
   - libs
+  - spiflash
   - caliptra_top
   - el2_veer_pkg
   - el2_veer_wrapper
+  - sha512_coverage
+  - sha256_coverage
+  - hmac_coverage
+  - soc_ifc_coverage
 targets:
+  dpi_compile:
+    directories:
+      - $COMPILE_ROOT/test_suites/libs/tcp_server
+      - $COMPILE_ROOT/test_suites/libs/jtagdpi
+    files:
+      - $COMPILE_ROOT/test_suites/libs/tcp_server/tcp_server.h
+      - $COMPILE_ROOT/test_suites/libs/tcp_server/tcp_server.c
+      - $COMPILE_ROOT/test_suites/libs/jtagdpi/jtagdpi.h
+      - $COMPILE_ROOT/test_suites/libs/jtagdpi/jtagdpi.c
+    options:
+      - '-Wno-unused-variable'
+      - '-Wno-unused-function'
+      - tool:
+          vcs:
+            - '-DVCS'
+          ius:
+            - '-DXCELIUM'
   tb:
     directories: #[$COMPILE_ROOT/tb]
       - $COMPILE_ROOT/tb
@@ -80,10 +101,11 @@ targets:
       - $COMPILE_ROOT/tb/caliptra_top_tb_services.sv
       - $COMPILE_ROOT/coverage/caliptra_top_cov_if.sv
       - $COMPILE_ROOT/coverage/caliptra_top_cov_bind.sv
+      - $COMPILE_ROOT/test_suites/libs/jtagdpi/jtagdpi.sv
       - $COMPILE_ROOT/tb/caliptra_top_tb.sv
     tops: [caliptra_top_tb]
   sim:
-    pre_exec: '$TOOLS/scripts/run_test_makefile && echo "[PRE-EXEC] Copying ECC vector generator to ${pwd}" && cp $COMPILE_ROOT/../ecc/tb/ecdsa_secp384r1.exe . 
+    pre_exec: '$MSFT_TOOLS/scripts/run_test_makefile && echo "[PRE-EXEC] Copying ECC vector generator to ${pwd}" && cp $COMPILE_ROOT/../ecc/tb/ecdsa_secp384r1.exe . 
                 && echo "[PRE-EXEC] Copying DOE vector generator to ${pwd}" && cp $COMPILE_ROOT/../doe/tb/doe_test_gen.py .'
 global:
   tool:
@@ -99,3 +121,22 @@ global:
       #sim:
         #- '-ucli -i dump.ucli'
 
+---
+provides: [caliptra_top_trng_tb]
+schema_version: 2.4.0
+requires:
+  - caliptra_top_tb
+targets:
+  tb:
+    tops: [caliptra_top_tb]
+  sim:
+    pre_exec: '$MSFT_TOOLS/scripts/run_test_makefile && echo "[PRE-EXEC] Copying ECC vector generator to ${pwd}" && cp $COMPILE_ROOT/../ecc/tb/ecdsa_secp384r1.exe . 
+                && echo "[PRE-EXEC] Copying DOE vector generator to ${pwd}" && cp $COMPILE_ROOT/../doe/tb/doe_test_gen.py .'
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        - '-noinherit_timescale=1ns/1ps'
+        - '+define+CALIPTRA_INTERNAL_TRNG'

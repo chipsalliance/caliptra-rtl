@@ -61,7 +61,8 @@ module doe_ctrl
 
     // Interrupt
     output logic error_intr,
-    output logic notif_intr
+    output logic notif_intr,
+    input  logic debugUnlock_or_scan_mode_switch
 );
 
     //----------------------------------------------------------------
@@ -91,7 +92,8 @@ module doe_ctrl
         .error_intr(error_intr),
         .notif_intr(notif_intr),
         .clear_obf_secrets(clear_obf_secrets),
-        .kv_write(kv_write)
+        .kv_write(kv_write),
+        .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch)
     );
 
 

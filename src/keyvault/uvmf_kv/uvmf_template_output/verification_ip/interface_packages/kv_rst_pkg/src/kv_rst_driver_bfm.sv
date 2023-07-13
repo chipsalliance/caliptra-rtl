@@ -112,6 +112,8 @@ end
   reg  rst_b_o = 'bz;
   tri  core_only_rst_b_i;
   reg  core_only_rst_b_o = 'bz;
+  tri  fw_update_rst_window_i;
+  reg  fw_update_rst_window_o = 'bz;
   tri  debug_locked_i;
   reg  debug_locked_o = 'bz;
 
@@ -133,6 +135,8 @@ end
   assign rst_b_i = bus.rst_b;
   assign bus.core_only_rst_b = (initiator_responder == INITIATOR) ? core_only_rst_b_o : 'bz;
   assign core_only_rst_b_i = bus.core_only_rst_b;
+  assign bus.fw_update_rst_window = (initiator_responder == INITIATOR) ? fw_update_rst_window_o : 'bz;
+  assign fw_update_rst_window_i = bus.fw_update_rst_window;
   assign bus.debug_locked = (initiator_responder == INITIATOR) ? debug_locked_o : 'bz;
   assign debug_locked_i = bus.debug_locked;
 
@@ -169,6 +173,7 @@ end
        cptra_pwrgood_o <= 'bz;
        rst_b_o <= 'bz;
        core_only_rst_b_o <= 'bz;
+       fw_update_rst_window_o <= 'bz;
        debug_locked_o <= 'b1;
        // Bi-directional signals
  
@@ -245,6 +250,8 @@ end
     if (initiator_struct.assert_rst)
       rst_b_o <= 1'b0;
     if (initiator_struct.assert_core_rst)
+      fw_update_rst_window_o <= 1'b1;
+    if (initiator_struct.assert_core_rst)
       core_only_rst_b_o <= 1'b0;
     if (!initiator_struct.set_pwrgood)
       cptra_pwrgood_o <= 1'b0;
@@ -257,6 +264,8 @@ end
     @(posedge clk_i);
     if (!initiator_struct.assert_rst)
       rst_b_o <= 1'b1;
+    if (!initiator_struct.assert_core_rst)
+      fw_update_rst_window_o <= 1'b0;
     if (!initiator_struct.assert_core_rst)
       core_only_rst_b_o <= 1'b1;
     if (initiator_struct.set_pwrgood)

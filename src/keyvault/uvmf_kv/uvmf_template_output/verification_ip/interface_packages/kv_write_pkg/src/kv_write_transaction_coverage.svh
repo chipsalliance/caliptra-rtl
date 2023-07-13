@@ -29,14 +29,14 @@
 //----------------------------------------------------------------------
 //
 
-covergroup data_bit_cg(input logic data_bit);
-  option.per_instance = 1;
-  value: coverpoint data_bit;
-  transition:  coverpoint data_bit {
-    bins bin01 = (0 => 1); 
-    bins bin10 = (1 => 0);
-  }
-endgroup
+// covergroup data_bit_cg(input logic data_bit);
+//   option.per_instance = 1;
+//   value: coverpoint data_bit;
+//   transition:  coverpoint data_bit {
+//     bins bin01 = (0 => 1); 
+//     bins bin10 = (1 => 0);
+//   }
+// endgroup
 
 class kv_write_transaction_coverage #(
       string KV_WRITE_REQUESTOR = "HMAC"
@@ -55,10 +55,8 @@ class kv_write_transaction_coverage #(
   
 
   // pragma uvmf custom class_item_additional begin
-  // wr_data_bit1 wr_data_bits1[32];
-  // wr_data_bit0 wr_data_bits0[32];
-  data_bit_cg wr_data_bus[KV_DATA_W];
-  data_bit_cg dest_valid_bus[KV_NUM_READ];
+  // data_bit_cg wr_data_bus[KV_DATA_W];
+  // data_bit_cg dest_valid_bus[KV_NUM_READ];
     
   // pragma uvmf custom class_item_additional end
   
@@ -99,24 +97,17 @@ class kv_write_transaction_coverage #(
   virtual function void write (T t);
     `uvm_info("COV","Received transaction",UVM_HIGH);
     coverage_trans = t;
-    // foreach (wr_data_bits1[i]) wr_data_bits1[i] = new(1'b1 << i, coverage_trans.write_data);
-    // foreach(wr_data_bits1[i]) wr_data_bits1[i].set_inst_name($sformatf("wr_data_bits1[%0d]_%s",i,get_full_name()));
 
-    // foreach (wr_data_bits0[i]) wr_data_bits0[i] = new(1'b1 << i, coverage_trans.write_data);
-    // foreach(wr_data_bits0[i]) wr_data_bits0[i].set_inst_name($sformatf("wr_data_bits0[%0d]_%s",i,get_full_name()));
+    // foreach(wr_data_bus[i]) wr_data_bus[i] = new(coverage_trans.write_data[i]);
+    // foreach(wr_data_bus[i]) wr_data_bus[i].set_inst_name($sformatf("wr_data_bus[%0d]_%s",i,get_full_name()));
 
-    foreach(wr_data_bus[i]) wr_data_bus[i] = new(coverage_trans.write_data[i]);
-    foreach(wr_data_bus[i]) wr_data_bus[i].set_inst_name($sformatf("wr_data_bus[%0d]_%s",i,get_full_name()));
-
-    foreach(dest_valid_bus[i]) dest_valid_bus[i] = new(coverage_trans.write_dest_valid[i]);
-    foreach(dest_valid_bus[i]) dest_valid_bus[i].set_inst_name($sformatf("dest_valid_bus[%0d]_%s",i,get_full_name()));
+    // foreach(dest_valid_bus[i]) dest_valid_bus[i] = new(coverage_trans.write_dest_valid[i]);
+    // foreach(dest_valid_bus[i]) dest_valid_bus[i].set_inst_name($sformatf("dest_valid_bus[%0d]_%s",i,get_full_name()));
 
     kv_write_transaction_cg.sample();
-    //foreach(wr_data_bits1[i]) wr_data_bits1[i].sample();
-    //foreach(wr_data_bits0[i]) wr_data_bits0[i].sample();
-    foreach(wr_data_bus[i]) wr_data_bus[i].sample();
-    foreach(dest_valid_bus[i]) dest_valid_bus[i].sample();
-    // key_ctrl_cg.sample();
+    // foreach(wr_data_bus[i]) wr_data_bus[i].sample();
+    // foreach(dest_valid_bus[i]) dest_valid_bus[i].sample();
+
   endfunction
 
   // ****************************************************************************
@@ -125,7 +116,6 @@ class kv_write_transaction_coverage #(
   //
   function void build_phase(uvm_phase phase);
     kv_write_transaction_cg.set_inst_name($sformatf("kv_write_transaction_cg_%s",get_full_name()));
-    // key_ctrl_cg.set_inst_name($sformatf("key_ctrl_cg_%s", get_full_name()));
   endfunction
 
 endclass

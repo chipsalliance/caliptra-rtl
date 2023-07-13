@@ -1,3 +1,0 @@
-+incdir+${CALIPTRA_ROOT}/src/soc_ifc/coverage
-${CALIPTRA_ROOT}/src/soc_ifc/coverage/soc_ifc_cov_if.sv
-${CALIPTRA_ROOT}/src/soc_ifc/coverage/soc_ifc_cov_bind.sv

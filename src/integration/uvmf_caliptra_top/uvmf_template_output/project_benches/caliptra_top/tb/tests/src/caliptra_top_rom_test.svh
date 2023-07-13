@@ -61,4 +61,22 @@ class caliptra_top_rom_test extends test_top;
       end
   endfunction
 
+// FUNCTION: run_phase
+// This task manages the test objection and starts the top level sequence.
+  virtual task run_phase( uvm_phase phase );
+    int fd;
+    string system_time;
+    fork
+        forever begin
+            configuration.soc_ifc_subenv_config.soc_ifc_ctrl_agent_config.wait_for_num_clocks(10000); // Report time every 100us
+            $system("date | tr -d '\\n' > curdate");
+            fd = $fopen("curdate", "r");
+            assert($fgets(system_time, fd) != 0);
+            $fclose(fd);
+            `uvm_info("ROM_TEST_HEARTBEAT",$sformatf("system time is [%s]", system_time),UVM_LOW);
+        end
+    join_none
+    super.run_phase(phase);
+  endtask
+
 endclass

@@ -100,6 +100,7 @@ package soc_ifc_reg_model_top_pkg;
             if ( this.notif_cmd_avail_intr_count_r          .has_reset("HARD"   )) this.notif_cmd_avail_intr_count_r          .set_reset(this.notif_cmd_avail_intr_count_r        .get_reset("HARD"), "SOFT");
             if ( this.notif_mbox_ecc_cor_intr_count_r       .has_reset("HARD"   )) this.notif_mbox_ecc_cor_intr_count_r       .set_reset(this.notif_mbox_ecc_cor_intr_count_r     .get_reset("HARD"), "SOFT");
             if ( this.notif_debug_locked_intr_count_r       .has_reset("HARD"   )) this.notif_debug_locked_intr_count_r       .set_reset(this.notif_debug_locked_intr_count_r     .get_reset("HARD"), "SOFT");
+            if ( this.notif_scan_mode_intr_count_r          .has_reset("HARD"   )) this.notif_scan_mode_intr_count_r          .set_reset(this.notif_scan_mode_intr_count_r        .get_reset("HARD"), "SOFT");
             if ( this.error_internal_intr_count_incr_r      .has_reset("HARD"   )) this.error_internal_intr_count_incr_r      .set_reset(this.error_internal_intr_count_incr_r    .get_reset("HARD"), "SOFT");
             if ( this.error_inv_dev_intr_count_incr_r       .has_reset("HARD"   )) this.error_inv_dev_intr_count_incr_r       .set_reset(this.error_inv_dev_intr_count_incr_r     .get_reset("HARD"), "SOFT");
             if ( this.error_cmd_fail_intr_count_incr_r      .has_reset("HARD"   )) this.error_cmd_fail_intr_count_incr_r      .set_reset(this.error_cmd_fail_intr_count_incr_r    .get_reset("HARD"), "SOFT");
@@ -109,6 +110,7 @@ package soc_ifc_reg_model_top_pkg;
             if ( this.notif_cmd_avail_intr_count_incr_r     .has_reset("HARD"   )) this.notif_cmd_avail_intr_count_incr_r     .set_reset(this.notif_cmd_avail_intr_count_incr_r   .get_reset("HARD"), "SOFT");
             if ( this.notif_mbox_ecc_cor_intr_count_incr_r  .has_reset("HARD"   )) this.notif_mbox_ecc_cor_intr_count_incr_r  .set_reset(this.notif_mbox_ecc_cor_intr_count_incr_r.get_reset("HARD"), "SOFT");
             if ( this.notif_debug_locked_intr_count_incr_r  .has_reset("HARD"   )) this.notif_debug_locked_intr_count_incr_r  .set_reset(this.notif_debug_locked_intr_count_incr_r.get_reset("HARD"), "SOFT");
+            if ( this.notif_scan_mode_intr_count_incr_r     .has_reset("HARD"   )) this.notif_scan_mode_intr_count_incr_r     .set_reset(this.notif_scan_mode_intr_count_incr_r   .get_reset("HARD"), "SOFT");
         endfunction
 
         virtual function void build();
@@ -164,6 +166,7 @@ package soc_ifc_reg_model_top_pkg;
 //            this.CPTRA_FW_EXTENDED_ERROR_INFO[8].      set_reset(this.CPTRA_FW_EXTENDED_ERROR_INFO[8].      get_reset("HARD"), "SOFT");
             if ( this.CPTRA_BOOT_STATUS.                    has_reset("HARD"   )) this.CPTRA_BOOT_STATUS.                    set_reset(this.CPTRA_BOOT_STATUS.                    get_reset("HARD"), "SOFT");
             if ( this.CPTRA_FLOW_STATUS.status.             has_reset("HARD"   )) this.CPTRA_FLOW_STATUS.status.             set_reset(this.CPTRA_FLOW_STATUS.status.             get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_FLOW_STATUS.boot_fsm_ps.        has_reset("HARD"   )) this.CPTRA_FLOW_STATUS.boot_fsm_ps.        set_reset(this.CPTRA_FLOW_STATUS.boot_fsm_ps.        get_reset("HARD"), "SOFT");
             if ( this.CPTRA_FLOW_STATUS.ready_for_fw.       has_reset("HARD"   )) this.CPTRA_FLOW_STATUS.ready_for_fw.       set_reset(this.CPTRA_FLOW_STATUS.ready_for_fw.       get_reset("HARD"), "SOFT");
             if ( this.CPTRA_FLOW_STATUS.ready_for_runtime.  has_reset("HARD"   )) this.CPTRA_FLOW_STATUS.ready_for_runtime.  set_reset(this.CPTRA_FLOW_STATUS.ready_for_runtime.  get_reset("HARD"), "SOFT");
             if ( this.CPTRA_FLOW_STATUS.ready_for_fuses.    has_reset("HARD"   )) this.CPTRA_FLOW_STATUS.ready_for_fuses.    set_reset(this.CPTRA_FLOW_STATUS.ready_for_fuses.    get_reset("HARD"), "SOFT");

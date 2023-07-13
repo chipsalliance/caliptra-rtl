@@ -46,7 +46,8 @@ module sha256_ctrl #(
 
     // Interrupt
     output logic error_intr,
-    output logic notif_intr
+    output logic notif_intr,
+    input  logic debugUnlock_or_scan_mode_switch
 );
 
     //----------------------------------------------------------------
@@ -73,7 +74,8 @@ module sha256_ctrl #(
         .read_data(sha256_read_data),
         .err(sha256_err),
         .error_intr(error_intr),
-        .notif_intr(notif_intr)
+        .notif_intr(notif_intr),
+        .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch)
     );
 
 

@@ -105,6 +105,7 @@ module sha256_tb();
   sha256 dut(
              .clk(tb_clk),
              .reset_n(tb_reset_n),
+             .cptra_pwrgood(),
 
              .cs(tb_cs),
              .we(tb_we),
@@ -113,7 +114,11 @@ module sha256_tb();
              .address(tb_address),
              .write_data(tb_write_data),
              .read_data(tb_read_data),
-             .error(tb_error)
+             .err(tb_error)
+
+             .error_intr(),
+             .notif_intr(),
+             .debugUnlock_or_scan_mode_switch()
             );
 
 

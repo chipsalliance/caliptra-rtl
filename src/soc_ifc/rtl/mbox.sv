@@ -60,8 +60,9 @@ module mbox
 
 );
 
-localparam DEPTH = (SIZE_KB * 1024 * 8) / DATA_W;
-localparam MBOX_SIZE_IN_DW = (SIZE_KB*1024)/4;
+localparam MBOX_SIZE_IN_BYTES = SIZE_KB*1024;
+localparam MBOX_SIZE_IN_DW = (MBOX_SIZE_IN_BYTES)/4;
+localparam DEPTH = (MBOX_SIZE_IN_DW * 32) / DATA_W;
 
 //this module is used to instantiate a single mailbox instance
 //requests within the address space of this mailbox are routed here from the top level
@@ -213,7 +214,7 @@ always_comb arc_MBOX_EXECUTE_SOC_MBOX_ERROR  = req_dv && req_data.soc_req &&
 //by the client filling the mailbox is used for masking the data
 //Store the dlen as a ptr to the last entry
 always_comb latch_dlen_in_dws = arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC | arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC | arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_SOC;
-always_comb mbox_dlen_in_dws = (hwif_out.mbox_dlen.length.value >= MBOX_SIZE_IN_DW) ? MBOX_SIZE_IN_DW :
+always_comb mbox_dlen_in_dws = (hwif_out.mbox_dlen.length.value >= MBOX_SIZE_IN_BYTES) ? MBOX_SIZE_IN_DW :
                                (hwif_out.mbox_dlen.length.value >> 2) + (hwif_out.mbox_dlen.length.value[0] | hwif_out.mbox_dlen.length.value[1]);
 //latched dlen is the smaller of the programmed dlen or the current wrptr
 //this avoids a case where a sender writes less than programmed and the receiver can read beyond that
@@ -225,7 +226,7 @@ always_comb rdptr_inc_valid = ({1'b0,mbox_rdptr} < dlen_in_dws) & (mbox_rdptr < 
 // No more valid reads if we read the last entry
 // On pre-load of entry 0, ensure that next dlen isn't 0
 // Restrict reads once read pointer has passed the dlen
-always_comb mbox_rd_valid = ~mbox_rd_full & ((rst_mbox_rdptr & (dlen_in_dws_nxt != 0)) | (~rst_mbox_rdptr & ({1'b0,mbox_rdptr} < dlen_in_dws)));
+always_comb mbox_rd_valid = (rst_mbox_rdptr & (dlen_in_dws_nxt != 0)) | (~rst_mbox_rdptr & ~mbox_rd_full & ({1'b0,mbox_rdptr} < dlen_in_dws));
 // Restrict the write pointer from rolling over
 always_comb wrptr_inc_valid = mbox_wrptr < (MBOX_SIZE_IN_DW-1);
 
@@ -361,7 +362,7 @@ always_comb begin : mbox_fsm_combo
             end
         end
         MBOX_ERROR: begin
-            mbox_protocol_error_nxt = mbox_protocol_error;
+            mbox_protocol_error_nxt = '0;
             if (arc_FORCE_MBOX_UNLOCK) begin
                 mbox_fsm_ns = MBOX_IDLE;
                 rst_mbox_wrptr = 1;
@@ -386,7 +387,7 @@ assign mbox_inv_pauser_axs = req_dv && req_data.soc_req &&
 
 //increment read ptr only if its allowed
 always_comb mbox_protocol_sram_rd = inc_rdptr | rst_mbox_rdptr;
-always_comb mbox_protocol_sram_we = inc_wrptr;
+always_comb mbox_protocol_sram_we = inc_wrptr & ~mbox_wr_full;
 
 //flops
 always_ff @(posedge clk or negedge rst_b) begin
