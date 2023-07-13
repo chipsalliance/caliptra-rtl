@@ -1489,6 +1489,7 @@
     input bit [1-1:0] notif_cmd_avail_en,
     input bit [1-1:0] notif_mbox_ecc_cor_en,
     input bit [1-1:0] notif_debug_locked_en,
+    input bit [1-1:0] notif_scan_mode_en,
     input bit [1-1:0] notif_soc_req_lock_en,
     input bit [1-1:0] notif_gen_in_toggle_en
     );
@@ -1496,6 +1497,7 @@
         notif_cmd_avail_en_cp : coverpoint notif_cmd_avail_en;
         notif_mbox_ecc_cor_en_cp : coverpoint notif_mbox_ecc_cor_en;
         notif_debug_locked_en_cp : coverpoint notif_debug_locked_en;
+        notif_scan_mode_en_cp : coverpoint notif_scan_mode_en;
         notif_soc_req_lock_en_cp : coverpoint notif_soc_req_lock_en;
         notif_gen_in_toggle_en_cp : coverpoint notif_gen_in_toggle_en;
 
@@ -1575,7 +1577,7 @@
 
     endgroup
 
-    /*----------------------- SOC_IFC_REG__INTR_BLOCK_T__NOTIF_INTR_T_NOTIF_CMD_AVAIL_STS_1871606B_NOTIF_DEBUG_LOCKED_STS_5F024102_NOTIF_GEN_IN_TOGGLE_STS_59F84B64_NOTIF_MBOX_ECC_COR_STS_5C3D26BB_NOTIF_SOC_REQ_LOCK_STS_DEDDDE70 COVERGROUPS -----------------------*/
+    /*----------------------- SOC_IFC_REG__INTR_BLOCK_T__NOTIF_INTR_T_NOTIF_CMD_AVAIL_STS_1871606B_NOTIF_DEBUG_LOCKED_STS_5F024102_NOTIF_GEN_IN_TOGGLE_STS_59F84B64_NOTIF_MBOX_ECC_COR_STS_5C3D26BB_NOTIF_SCAN_MODE_STS_122F6367_NOTIF_SOC_REQ_LOCK_STS_DEDDDE70 COVERGROUPS -----------------------*/
     covergroup soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_gen_in_toggle_sts_59f84b64_notif_mbox_ecc_cor_sts_5c3d26bb_notif_scan_mode_sts_122f6367_notif_soc_req_lock_sts_deddde70_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;
         reg_bit_cp : coverpoint reg_bit {
@@ -1591,6 +1593,7 @@
     input bit [1-1:0] notif_cmd_avail_sts,
     input bit [1-1:0] notif_mbox_ecc_cor_sts,
     input bit [1-1:0] notif_debug_locked_sts,
+    input bit [1-1:0] notif_scan_mode_sts,
     input bit [1-1:0] notif_soc_req_lock_sts,
     input bit [1-1:0] notif_gen_in_toggle_sts
     );
@@ -1598,6 +1601,7 @@
         notif_cmd_avail_sts_cp : coverpoint notif_cmd_avail_sts;
         notif_mbox_ecc_cor_sts_cp : coverpoint notif_mbox_ecc_cor_sts;
         notif_debug_locked_sts_cp : coverpoint notif_debug_locked_sts;
+        notif_scan_mode_sts_cp : coverpoint notif_scan_mode_sts;
         notif_soc_req_lock_sts_cp : coverpoint notif_soc_req_lock_sts;
         notif_gen_in_toggle_sts_cp : coverpoint notif_gen_in_toggle_sts;
 
@@ -1653,6 +1657,7 @@
     input bit [1-1:0] notif_cmd_avail_trig,
     input bit [1-1:0] notif_mbox_ecc_cor_trig,
     input bit [1-1:0] notif_debug_locked_trig,
+    input bit [1-1:0] notif_scan_mode_trig,
     input bit [1-1:0] notif_soc_req_lock_trig,
     input bit [1-1:0] notif_gen_in_toggle_trig
     );
@@ -1660,6 +1665,7 @@
         notif_cmd_avail_trig_cp : coverpoint notif_cmd_avail_trig;
         notif_mbox_ecc_cor_trig_cp : coverpoint notif_mbox_ecc_cor_trig;
         notif_debug_locked_trig_cp : coverpoint notif_debug_locked_trig;
+        notif_scan_mode_trig_cp : coverpoint notif_scan_mode_trig;
         notif_soc_req_lock_trig_cp : coverpoint notif_soc_req_lock_trig;
         notif_gen_in_toggle_trig_cp : coverpoint notif_gen_in_toggle_trig;
 
@@ -1741,27 +1747,6 @@
 
     endgroup
     covergroup soc_ifc_reg__intr_block_t__intr_count_t_cnt_fb7d2433_fld_cg with function sample(
-    input bit [32-1:0] cnt
-    );
-        option.per_instance = 1;
-        option.auto_bin_max = 64;
-        cnt_cp : coverpoint cnt;
-
-    endgroup
-
-    /*----------------------- SOC_IFC_REG__INTR_BLOCK_T__INTR_COUNT_T_CNT_FBF3C714 COVERGROUPS -----------------------*/
-    covergroup soc_ifc_reg__intr_block_t__intr_count_t_cnt_fbf3c714_bit_cg with function sample(input bit reg_bit);
-        option.per_instance = 1;
-        reg_bit_cp : coverpoint reg_bit {
-            bins value[2] = {0,1};
-        }
-        reg_bit_edge_cp : coverpoint reg_bit {
-            bins rise = (0 => 1);
-            bins fall = (1 => 0);
-        }
-
-    endgroup
-    covergroup soc_ifc_reg__intr_block_t__intr_count_t_cnt_fbf3c714_fld_cg with function sample(
     input bit [32-1:0] cnt
     );
         option.per_instance = 1;
@@ -1909,6 +1894,27 @@
 
     endgroup
     covergroup soc_ifc_reg__intr_block_t__intr_count_t_cnt_ee53ded8_fld_cg with function sample(
+    input bit [32-1:0] cnt
+    );
+        option.per_instance = 1;
+        option.auto_bin_max = 64;
+        cnt_cp : coverpoint cnt;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__INTR_BLOCK_T__INTR_COUNT_T_CNT_FBF3C714 COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__intr_block_t__intr_count_t_cnt_fbf3c714_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__intr_block_t__intr_count_t_cnt_fbf3c714_fld_cg with function sample(
     input bit [32-1:0] cnt
     );
         option.per_instance = 1;
@@ -2179,6 +2185,26 @@
 
     endgroup
 
+    /*----------------------- SOC_IFC_REG__INTR_BLOCK_T__INTR_COUNT_INCR_T_PULSE_F5D8AFE0 COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f5d8afe0_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f5d8afe0_fld_cg with function sample(
+    input bit [1-1:0] pulse
+    );
+        option.per_instance = 1;
+        pulse_cp : coverpoint pulse;
+
+    endgroup
+
     /*----------------------- SOC_IFC_REG__INTR_BLOCK_T__INTR_COUNT_INCR_T_PULSE_246489BD COVERGROUPS -----------------------*/
     covergroup soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_246489bd_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;
@@ -2212,26 +2238,6 @@
 
     endgroup
     covergroup soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_d6ed4d1e_fld_cg with function sample(
-    input bit [1-1:0] pulse
-    );
-        option.per_instance = 1;
-        pulse_cp : coverpoint pulse;
-
-    endgroup
-
-    /*----------------------- SOC_IFC_REG__INTR_BLOCK_T__INTR_COUNT_INCR_T_PULSE_F5D8AFE0 COVERGROUPS -----------------------*/
-    covergroup soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f5d8afe0_bit_cg with function sample(input bit reg_bit);
-        option.per_instance = 1;
-        reg_bit_cp : coverpoint reg_bit {
-            bins value[2] = {0,1};
-        }
-        reg_bit_edge_cp : coverpoint reg_bit {
-            bins rise = (0 => 1);
-            bins fall = (1 => 0);
-        }
-
-    endgroup
-    covergroup soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f5d8afe0_fld_cg with function sample(
     input bit [1-1:0] pulse
     );
         option.per_instance = 1;

@@ -60,8 +60,9 @@ module mbox
 
 );
 
-localparam DEPTH = (SIZE_KB * 1024 * 8) / DATA_W;
-localparam MBOX_SIZE_IN_DW = (SIZE_KB*1024)/4;
+localparam MBOX_SIZE_IN_BYTES = SIZE_KB*1024;
+localparam MBOX_SIZE_IN_DW = (MBOX_SIZE_IN_BYTES)/4;
+localparam DEPTH = (MBOX_SIZE_IN_DW * 32) / DATA_W;
 
 //this module is used to instantiate a single mailbox instance
 //requests within the address space of this mailbox are routed here from the top level
@@ -213,7 +214,7 @@ always_comb arc_MBOX_EXECUTE_SOC_MBOX_ERROR  = req_dv && req_data.soc_req &&
 //by the client filling the mailbox is used for masking the data
 //Store the dlen as a ptr to the last entry
 always_comb latch_dlen_in_dws = arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC | arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC | arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_SOC;
-always_comb mbox_dlen_in_dws = (hwif_out.mbox_dlen.length.value >= MBOX_SIZE_IN_DW) ? MBOX_SIZE_IN_DW :
+always_comb mbox_dlen_in_dws = (hwif_out.mbox_dlen.length.value >= MBOX_SIZE_IN_BYTES) ? MBOX_SIZE_IN_DW :
                                (hwif_out.mbox_dlen.length.value >> 2) + (hwif_out.mbox_dlen.length.value[0] | hwif_out.mbox_dlen.length.value[1]);
 //latched dlen is the smaller of the programmed dlen or the current wrptr
 //this avoids a case where a sender writes less than programmed and the receiver can read beyond that
