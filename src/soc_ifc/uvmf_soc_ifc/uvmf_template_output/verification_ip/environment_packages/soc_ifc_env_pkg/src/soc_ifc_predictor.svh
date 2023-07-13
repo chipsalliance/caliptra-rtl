@@ -2126,7 +2126,7 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
     // Force unlock will also reset mailbox_data_avail, if set, but
     // will not reset any pending interrupts to uC because those
     // are sticky
-    else if (mailbox_data_avail && (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_idle || !p_soc_ifc_rm.mbox_csr_rm.mbox_execute.execute.get_mirrored_value())) begin
+    else if (mailbox_data_avail && !p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_receive_stage && !p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_done_stage) begin
         `uvm_info("PRED_DLY", $sformatf("Resetting mailbox_data_avail"), UVM_HIGH)
         send_soc_ifc_sts_txn = 1'b1;
         mailbox_data_avail = 1'b0;
