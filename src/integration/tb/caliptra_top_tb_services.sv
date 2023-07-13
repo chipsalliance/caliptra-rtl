@@ -167,6 +167,9 @@ module caliptra_top_tb_services
     logic                       set_wdt_timer2_period;
     logic                       reset_wdt_timer_period;
 
+    logic                       inject_zero_sign_r;
+    logic                       inject_zero_sign_r_needs_release;
+
     typedef bit  [0:11][31:0]   operand_t;
 
     typedef struct packed {
@@ -228,6 +231,7 @@ module caliptra_top_tb_services
     //         8'h90        - Issue PCR singing with fixed vector   
     //         8'h91        - Issue PCR singing with randomized vector
     //         8'h92        - Check PCR singing with randomized vector   
+    //         8'h98        - Inject invalid zero sign_r into ECC 
     //         8'ha0: 8'ha7 - Inject HMAC_KEY to kv_key register
     //         8'hc0: 8'hc7 - Inject SHA_BLOCK to kv_key register
     //         8'he0        - Set random ICCM SRAM single bit error injection
@@ -437,6 +441,28 @@ module caliptra_top_tb_services
     endgenerate
     
 
+    always@(posedge clk or negedge cptra_rst_b) begin
+        if (~cptra_rst_b) begin
+            inject_zero_sign_r <= 1'b0;
+            inject_zero_sign_r_needs_release <= 1'b0;
+        end
+        else if((WriteData[7:0] == 8'h98) && mailbox_write) begin
+            inject_zero_sign_r <= 1'b1;
+        end
+        else if(inject_zero_sign_r) begin
+            if (caliptra_top_dut.ecc_top1.ecc_dsa_ctrl_i.prog_instr.reg_id == 6'd21) begin //R_ID
+                force caliptra_top_dut.ecc_top1.ecc_dsa_ctrl_i.ecc_arith_unit_i.d_o = '0;
+                inject_zero_sign_r_needs_release <= 1'b1;
+            end
+            else if (inject_zero_sign_r_needs_release) begin
+                inject_zero_sign_r <= 1'b0;
+            end
+        end
+        else begin
+            release caliptra_top_dut.ecc_top1.ecc_dsa_ctrl_i.ecc_arith_unit_i.d_o;
+        end
+    end
+
     //TIE-OFF device lifecycle
     logic assert_ss_tran;
 `ifdef CALIPTRA_DEBUG_UNLOCKED
@@ -468,14 +494,15 @@ module caliptra_top_tb_services
     always@(negedge clk) begin
         if ((WriteData[7:0] == 8'hec) && mailbox_write) begin
             force caliptra_top_dut.doe.doe_inst.hwif_out.DOE_IV[dword].IV.swmod = 'b1;
-            force caliptra_top_dut.doe.doe_inst.IV_reg[dword] = doe_test_vector.iv_uds[dword];
+            force caliptra_top_dut.doe.doe_inst.i_doe_reg.field_storage.DOE_IV[dword].IV.value = doe_test_vector.iv_uds[dword];
         end
         else if ((WriteData[7:0] == 8'hed) && mailbox_write) begin
             force caliptra_top_dut.doe.doe_inst.hwif_out.DOE_IV[dword].IV.swmod = 'b1;
-            force caliptra_top_dut.doe.doe_inst.IV_reg[dword] = doe_test_vector.iv_fe[dword];
+            force caliptra_top_dut.doe.doe_inst.i_doe_reg.field_storage.DOE_IV[dword].IV.value = doe_test_vector.iv_fe[dword];
         end
         else begin
             release caliptra_top_dut.doe.doe_inst.hwif_out.DOE_IV[dword].IV.swmod;
+            release caliptra_top_dut.doe.doe_inst.i_doe_reg.field_storage.DOE_IV[dword].IV.value;
         end
     end
 end //for
@@ -1566,6 +1593,7 @@ caliptra_top_cov_bind i_caliptra_top_cov_bind();
 sha512_ctrl_cov_bind i_sha512_ctrl_cov_bind();
 sha256_ctrl_cov_bind i_sha256_ctrl_cov_bind();
 hmac_ctrl_cov_bind i_hmac_ctrl_cov_bind();
+ecc_top_cov_bind i_ecc_top_cov_bind();
 `endif
 
 /* verilator lint_off CASEINCOMPLETE */
