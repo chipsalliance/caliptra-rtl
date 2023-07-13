@@ -5,15 +5,16 @@ contents:
   - generator:
       tags: ["L0", "directed", "nightly", "SOC_IFC"]
       path: ""
-      weight: 99 
-      generations: 96 
+      weight: 100 
+      generations: 100 
       formats: 
         generate: "reseed {template}.yml -seed {seed}"
         path: "{template_basename}__{seed}.yml"
       templates:        
         ${CALIPTRA_ROOT}/src/soc_ifc/stimulus/tests/directed/soc_ifc_test : {weight 12}
+        ${CALIPTRA_ROOT}/src/soc_ifc/stimulus/tests/directed/fuse_reg_pauser_test : {weight 3}
         ${CALIPTRA_ROOT}/src/soc_ifc/stimulus/tests/directed/fuse_reg_prod_test : {weight 12}
-        ${CALIPTRA_ROOT}/src/soc_ifc/stimulus/tests/directed/fuse_reg_perm_test: {weight 14}
+        ${CALIPTRA_ROOT}/src/soc_ifc/stimulus/tests/directed/fuse_reg_perm_test: {weight 12}
         ${CALIPTRA_ROOT}/src/soc_ifc/stimulus/tests/directed/fuse_reg_lifecycle_test: {weight 6}
         ${CALIPTRA_ROOT}/src/soc_ifc/stimulus/tests/directed/soc_reg_test: {weight 16}
         ${CALIPTRA_ROOT}/src/soc_ifc/stimulus/tests/directed/soc_reg_pwron_test: {weight 12}

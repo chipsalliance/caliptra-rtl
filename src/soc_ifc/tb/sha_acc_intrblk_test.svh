@@ -29,7 +29,7 @@
     automatic strq_t sha_acc_intrblk_regnames;
     automatic strq_t nonmatching_regnames;
     automatic dword_t rddata; 
-    automatic dword_q nonmatching_rddata;
+    automatic dwordq_t nonmatching_rddata;
     automatic string rname;
     automatic dword_t ahb_wrdata, exp_regval; 
     automatic dword_t apb_wrdata, apb_rddata; 

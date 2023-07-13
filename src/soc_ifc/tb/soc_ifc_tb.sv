@@ -22,14 +22,6 @@
 // Probably should be deprecated and utilize UVMF environment only
 //======================================================================
 
-/*
-`define PRINT_TESTNAME(_SOC_IFC_TESTNAME) \ 
-    string tmpstr = `"_SOC_IFC_TESTNAME`";
-    $display(`"Executing test: _SOC_IFC_TESTNAME`"); 
-    $display({{tmpstr.len(){`"-`"}});
-//----------------------------------------------------------------
-*/
-
 
 import "DPI-C" function string getenv(input string env_name);
 
@@ -41,11 +33,13 @@ module soc_ifc_tb
 
   enum logic {DEBUG_UNLOCKED = 1'b0, DEBUG_LOCKED = 1'b1} debug_state_e;
 
-  // Strings for plusargs
+  // plusargs and other test related
   string soc_ifc_testname; 
   string socreg_method_name = ""; 
   string security_state_testname; 
   int socreg_wrcount = 1;
+
+  string tphase;
 
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
@@ -73,16 +67,19 @@ module soc_ifc_tb
   parameter MBOX_FE_ADDR          = 32'h3003_0230;
   parameter MBOX_FUSE_DONE_ADDR   = 32'h3003_00ac;
 
-  parameter AHB_ADDR_WIDTH = 18;
-  parameter AHB_DATA_WIDTH = 32;
-  parameter APB_ADDR_WIDTH = 18;
-  parameter APB_DATA_WIDTH = 32;
-  parameter APB_USER_WIDTH = 32;
+  parameter AHB_ADDR_WIDTH = 18; // `CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC); // 18 
+  parameter AHB_DATA_WIDTH = 32; // `CALIPTRA_AHB_HDATA_SIZE; // 32 
+  parameter APB_ADDR_WIDTH = 18; // `CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC); // 18 
+  parameter APB_DATA_WIDTH = 32; // `CALIPTRA_APB_DATA_WIDTH; // 32 
+  parameter APB_USER_WIDTH = 32; // `CALIPTRA_APB_USER_WIDTH; // 32 
+
 
   parameter AHB_HTRANS_IDLE     = 0;
   parameter AHB_HTRANS_BUSY     = 1;
   parameter AHB_HTRANS_NONSEQ   = 2;
   parameter AHB_HTRANS_SEQ      = 3;
+
+  localparam PAUSER_DEFAULT = 32'hffff_ffff;
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
@@ -166,36 +163,8 @@ module soc_ifc_tb
 
 
 
-  always @(posedge clk_tb or negedge cptra_pwrgood_tb) begin
-    if (!cptra_pwrgood_tb)
-      cycle_ctr_since_pwrgood <= '0;
-    else
-      cycle_ctr_since_pwrgood <= cycle_ctr_since_pwrgood + 1'b1; 
-  end 
-
-  always @(posedge clk_tb or negedge cptra_rst_b_tb) begin
-    if (!cptra_rst_b_tb)
-      cycle_ctr_since_rst <= '0;
-    else
-      cycle_ctr_since_rst <= cycle_ctr_since_pwrgood + 1'b1; 
-  end
-
-  always @(posedge clk_tb or negedge cptra_rst_b_tb) begin
-    if (!cptra_rst_b_tb) begin
-      // gen_input_wire_toggle  <= 1'b1;
-      generic_input_wires0_q <= 32'b0; 
-      generic_input_wires0_q <= 32'b0;
-    end else begin
-      // gen_input_wire_toggle  <= 1'b1;
-      generic_input_wires0_q <= generic_input_wires0;
-      generic_input_wires1_q <= generic_input_wires1;
-    end
-  end
-
-  assign gen_input_wire_toggle = (generic_input_wires0 != generic_input_wires0_q) | 
-                                 (generic_input_wires1 != generic_input_wires1_q);
-
-
+  
+  
   always_comb begin
     mbox_sram_cs = mbox_sram_req.cs;
     mbox_sram_we = mbox_sram_req.we;
@@ -213,11 +182,11 @@ module soc_ifc_tb
   // Device Under Test.
   //----------------------------------------------------------------
   soc_ifc_top #(
-             .AHB_DATA_WIDTH(32),
-             .AHB_ADDR_WIDTH(18),
-             .APB_USER_WIDTH(32),
-             .APB_ADDR_WIDTH(18),
-             .APB_DATA_WIDTH(32)
+             .AHB_DATA_WIDTH(AHB_DATA_WIDTH), // .AHB_DATA_WIDTH(32),
+             .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH), // .AHB_ADDR_WIDTH(18),
+             .APB_USER_WIDTH(APB_USER_WIDTH), // .APB_USER_WIDTH(32),
+             .APB_ADDR_WIDTH(APB_ADDR_WIDTH), // .APB_ADDR_WIDTH(18),
+             .APB_DATA_WIDTH(APB_DATA_WIDTH)  // .APB_DATA_WIDTH(32)
             )
             dut (
              .clk(clk_tb),
@@ -372,11 +341,45 @@ module soc_ifc_tb
 
 
   //----------------------------------------------------------------
-  // tick_timer  
+  // tick_timer 
   // 
-  // Counts number of clock ticks since reset
+  // Counts number of clock ticks since power good and reset
   //----------------------------------------------------------------
-  
+  always @(posedge clk_tb or negedge cptra_pwrgood_tb) begin : tick_timer_pwrgood
+    if (!cptra_pwrgood_tb)
+      cycle_ctr_since_pwrgood <= '0;
+    else
+      cycle_ctr_since_pwrgood <= cycle_ctr_since_pwrgood + 1'b1; 
+  end 
+
+  always @(posedge clk_tb or negedge cptra_rst_b_tb) begin : tick_timer_outofrst
+    if (!cptra_rst_b_tb)
+      cycle_ctr_since_rst <= '0;
+    else
+      cycle_ctr_since_rst <= cycle_ctr_since_pwrgood + 1'b1; 
+  end
+
+
+  //----------------------------------------------------------------
+  // generic_input_detetor 
+  //
+  // pulses high when generic input wires change  
+  //----------------------------------------------------------------
+  always @(posedge clk_tb or negedge cptra_rst_b_tb) begin  : generic_input_detector
+    if (!cptra_rst_b_tb) begin
+      // gen_input_wire_toggle  <= 1'b1;
+      generic_input_wires0_q <= 32'b0; 
+      generic_input_wires0_q <= 32'b0;
+    end else begin
+      // gen_input_wire_toggle  <= 1'b1;
+      generic_input_wires0_q <= generic_input_wires0;
+      generic_input_wires1_q <= generic_input_wires1;
+    end
+  end
+
+  assign gen_input_wire_toggle = (generic_input_wires0 != generic_input_wires0_q) | 
+                                 (generic_input_wires1 != generic_input_wires1_q);
+
 
   //----------------------------------------------------------------
   // pulse_trig_handler 
@@ -612,6 +615,33 @@ module soc_ifc_tb
   endtask // write_single_word_apb
 
 
+  //----------------------------------------------------------------
+  // write_single_word_apb_wpauser()
+  //
+  // Write the given word to the DUT using the APB interface setting pauser.
+  //----------------------------------------------------------------
+  task write_single_word_apb_wpauser(input [31 : 0] address,
+                                     input [31 : 0] word,
+                                     input [31 : 0] pauser);
+    begin
+      paddr_i_tb      <= address;
+      psel_i_tb       <= 1;
+      penable_i_tb    <= 0;
+      pwrite_i_tb     <= 1;
+      pwdata_i_tb     <= word;
+      pauser_i_tb     <= pauser; 
+      wait(pready_o_tb == 1'b1);
+      
+      @(posedge clk_tb);
+      penable_i_tb    <= 1;
+      wait(pready_o_tb == 1'b1);
+
+      @(posedge clk_tb);
+      psel_i_tb       <= 0;
+      penable_i_tb    <= 0;
+    end
+  endtask // write_single_word_apb_wpauser
+
 
   //----------------------------------------------------------------
   // write_block_ahb()
@@ -687,7 +717,34 @@ module soc_ifc_tb
       psel_i_tb       <= 0;
       penable_i_tb    <= 0;
     end
-  endtask // read_single_word_ahb
+  endtask // read_single_word_apb
+
+  //----------------------------------------------------------------
+  // read_single_word_apb_wpauser()
+  //
+  // Read the given word to the DUT using the APB interface setting pauser.
+  //----------------------------------------------------------------
+  task read_single_word_apb_wpauser(input [31 : 0] address,
+                                     input [31 : 0] word,
+                                     input [31 : 0] pauser);
+    begin
+      paddr_i_tb      <= address;
+      psel_i_tb       <= 1;
+      penable_i_tb    <= 0;
+      pwrite_i_tb     <= 0;
+      pwdata_i_tb     <= 0;
+      pauser_i_tb     <= pauser; 
+      wait(pready_o_tb == 1'b1);
+
+      @(posedge clk_tb);
+      penable_i_tb    <= 1;
+      wait(pready_o_tb == 1'b1);
+
+      @(posedge clk_tb);
+      psel_i_tb       <= 0;
+      penable_i_tb    <= 0;
+    end
+  endtask // read_single_word_apb_wpauser
 
   //----------------------------------------------------------------
   // read_result_ahb()
@@ -780,8 +837,21 @@ module soc_ifc_tb
           set_initval("INTR_BRF_NOTIF_INTERNAL_INTR_R", intr_notif_val); 
           update_exp_regval("INTR_BRF_NOTIF_INTERNAL_INTR_R", intr_notif_val, SET_DIRECT);  
       end
-  endtask
+  endtask  // set_security_state
 
+
+  //----------------------------------------------------------------
+  // set_security_state_random()
+  //
+  // convenience function to set the security state to random 
+  //----------------------------------------------------------------
+  task set_security_state_random;
+
+      automatic int ss_code = $urandom_range(0, 7); 
+      ss_code = $urandom_range(0, 7); 
+      set_security_state(security_state_t'(ss_code));
+
+  endtask  // set_security_state_random
 
 
   //----------------------------------------------------------------
@@ -1083,11 +1153,11 @@ module soc_ifc_tb
 
       if (modifier == GET_AHB) begin 
           read_single_word_ahb(addr);
-          $display("Read over AHB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, hrdata_o_tb); 
+          $display(" Read over AHB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, hrdata_o_tb); 
           rdtrans.update(addr, hrdata_o_tb, tid); 
       end else if (modifier == GET_APB) begin
         read_single_word_apb(addr);
-        $display("Read over APB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, prdata_o_tb); 
+        $display(" Read over APB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, prdata_o_tb); 
         rdtrans.update_byname(rname, prdata_o_tb,  tid); 
         end else 
           $error("TB ERROR. Unsupported access modifier %s", modifier.name()); 
@@ -1099,13 +1169,13 @@ module soc_ifc_tb
   endtask // read_reg_chk_inrange
 
 
- //----------------------------------------------------------------
+  //----------------------------------------------------------------
   // write_reg_trans()
   //
   // Utility for tracking/writing transaction to a register over APB/AHB
   // NOTE. Wait times must be added explcitly outside routine
   //----------------------------------------------------------------
-  task write_reg_trans(input access_t modifier, WordTransaction wrtrans); 
+  task write_reg_trans(access_t modifier, WordTransaction wrtrans, logic [31:0] pauser=PAUSER_DEFAULT);
     string rname;
     word_addr_t addr;
 
@@ -1117,24 +1187,32 @@ module soc_ifc_tb
           write_single_word_ahb(addr, wrtrans.data); 
           $display("Write over AHB: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, wrtrans.data);
         end else if (modifier == SET_APB) begin
-          write_single_word_apb(addr, wrtrans.data); 
-          $display("Write over APB: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, wrtrans.data);
+          if (pauser != PAUSER_DEFAULT) begin
+            write_single_word_apb_wpauser(addr, wrtrans.data, pauser); 
+            $display("Write over APB with non-default pauser: addr = %-40s (0x%08x), data = 0x%08x", 
+              rname, addr, wrtrans.data);
+          end else begin
+            write_single_word_apb(addr, wrtrans.data); 
+            $display("Write over APB: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, wrtrans.data);
+          end
         end else 
           $error("TB ERROR. Unsupported access modifier %s", modifier.name()); 
 
         sb.record_entry(wrtrans, modifier);
-    end
-  endtask // write_reg_trans
+      end
+    endtask // write_reg_trans
 
 
  //----------------------------------------------------------------
   // read_reg_trans()
   //
   // Utility for reading transaction to a register over APB/AHB
-  // NOTES. 1. No scoreboard tracking 
+  // NOTES. 1. No scoreboard checking 
   //        2. Wait times must be added explcitly outside routine
   //----------------------------------------------------------------
-  task read_reg_trans(input access_t modifier, inout WordTransaction rdtrans); 
+  task read_reg_trans(input access_t modifier, 
+                      inout WordTransaction rdtrans, 
+                      input logic [31:0] pauser=PAUSER_DEFAULT); 
     string rname;
     word_addr_t addr;
 
@@ -1145,18 +1223,24 @@ module soc_ifc_tb
         if (modifier == GET_AHB) begin
           read_single_word_ahb(addr); 
           rdtrans.data = hrdata_o_tb; 
-          $display("Read  over AHB: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, rdtrans.data);
+          $display(" Read over AHB: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, rdtrans.data);
         end else if (modifier == GET_APB) begin
-          read_single_word_apb(addr); 
-          rdtrans.data = prdata_o_tb;
-          $display("Read  over APB: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, rdtrans.data);
+          if (pauser != PAUSER_DEFAULT) begin
+            read_single_word_apb_wpauser(addr, rdtrans.data, pauser); 
+            rdtrans.data = prdata_o_tb;
+            $display(" Read over APB with explicit pauser: addr = %-40s (0x%08x), data = 0x%08x", 
+              rname, addr, rdtrans.data);
+          end else begin
+            read_single_word_apb(addr); 
+            rdtrans.data = prdata_o_tb;
+            $display(" Read over APB: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, rdtrans.data);
+          end
         end else 
           $error("TB ERROR. Unsupported access modifier %s", modifier.name()); 
 
         // sb.check_entry(rdtrans)
     end
   endtask // read_reg_trans
-
 
 
   //----------------------------------------------------------------
@@ -1189,11 +1273,11 @@ module soc_ifc_tb
 
         if (modifier == GET_AHB) begin
           read_single_word_ahb(addr);
-          $display("Read over AHB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, hrdata_o_tb); 
+          $display(" Read over AHB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, hrdata_o_tb); 
           rdtrans.update(addr, hrdata_o_tb, tid); 
         end else if (modifier == GET_APB) begin
           read_single_word_apb(addr);
-          $display("Read over APB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, prdata_o_tb); 
+          $display(" Read over APB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, prdata_o_tb); 
           rdtrans.update(addr, prdata_o_tb, tid); 
         end else 
           $error("TB ERROR. Unsupported access modifier %s", modifier.name()); 
@@ -1272,11 +1356,11 @@ module soc_ifc_tb
         // read phase
         if (rd_modifier == GET_AHB) begin
           read_single_word_ahb(addr);
-          $display("Read over AHB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, hrdata_o_tb); 
+          $display(" Read over AHB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, hrdata_o_tb); 
           rdtrans.update(addr, hrdata_o_tb, tid); 
         end else if (rd_modifier == GET_APB) begin
           read_single_word_apb(addr);
-          $display("Read over APB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, prdata_o_tb); 
+          $display(" Read over APB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, prdata_o_tb); 
           rdtrans.update(addr, prdata_o_tb, tid); 
         end else 
           $error("TB ERROR. Unsupported access rd_modifier %s", rd_modifier.name()); 
@@ -1302,6 +1386,7 @@ module soc_ifc_tb
 //----------------------------------------------------------------
   `include "fuse_reg_lifecycle_test.svh"   
   `include "fuse_reg_perm_test.svh"     
+  `include "fuse_reg_pauser_test.svh"     
   `include "fuse_reg_test.svh"     
   `include "single_soc_reg_test.svh"   
   `include "soc_reg_reset_test.svh"     
@@ -1361,7 +1446,7 @@ module soc_ifc_tb
           if ($value$plusargs("SECURITY_STATE=%s", security_state_testname)) 
             fuse_reg_lifecycle_test(security_state_testname);
           else
-            fuse_reg_lifecycle_test("RANDOM"); // 'ALL' is the other option that isn't working fully 
+            fuse_reg_lifecycle_test("RANDOM"); 
  
         end else if (soc_ifc_testname == "soc_reg_test") begin 
           set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
@@ -1402,6 +1487,11 @@ module soc_ifc_tb
           set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
           sim_dut_init();
           fuse_reg_perm_test();
+
+        end else if (soc_ifc_testname == "fuse_reg_pauser_test") begin 
+          set_security_state_random;
+          sim_dut_init();
+          fuse_reg_pauser_test();
 
         end 
    
