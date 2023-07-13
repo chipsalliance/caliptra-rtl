@@ -14,10 +14,12 @@
 # Directories to ignore
 __pycache__/
 .dvt/
-verdiLog/*
+verdiLog/
 *.vdb/
 vnc_logs/
 .vs/
+.vscode/
+vdCovLog/
 
 # VCS compiled library output
 */AN.DB/

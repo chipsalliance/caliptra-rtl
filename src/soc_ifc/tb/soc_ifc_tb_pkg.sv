@@ -56,7 +56,7 @@ package soc_ifc_tb_pkg;
   typedef transaction_t transq_t [$];  
 
   typedef string strq_t [$];  
-  typedef dword_t dword_q [$];  
+  typedef dword_t dwordq_t [$];  
 
   typedef enum {
     COLD_RESET, WARM_RESET,
@@ -207,9 +207,10 @@ package soc_ifc_tb_pkg;
     "INTR_BRF_NOTIF_CMD_AVAIL_INTR_COUNT_R"         : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_R,         // 0x980
     "INTR_BRF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R,      // 0x984
     "INTR_BRF_NOTIF_DEBUG_LOCKED_INTR_COUNT_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_R,      // 0x988
-    "INTR_BRF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_R,      // 0x98c 
-    "INTR_BRF_NOTIF_GEN_IN_TOGGLE_INTR_COUNT_R"     : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_GEN_IN_TOGGLE_INTR_COUNT_R,     // 0x990
-    // 0x994..0x9fc 
+    "INTR_BRF_NOTIF_SCAN_MODE_INTR_COUNT_R"         : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_SCAN_MODE_INTR_COUNT_R,         // 0x98c 
+    "INTR_BRF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_R,      // 0x990 
+    "INTR_BRF_NOTIF_GEN_IN_TOGGLE_INTR_COUNT_R"     : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_GEN_IN_TOGGLE_INTR_COUNT_R,     // 0x994
+    // 0x998..0x9fc 
     "INTR_BRF_ERROR_INTERNAL_INTR_COUNT_INCR_R"     : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R,     // 0xa00
     "INTR_BRF_ERROR_INV_DEV_INTR_COUNT_INCR_R"      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_INCR_R,      // 0xa04
     "INTR_BRF_ERROR_CMD_FAIL_INTR_COUNT_INCR_R"     : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_INCR_R,     // 0xa08
@@ -256,7 +257,7 @@ package soc_ifc_tb_pkg;
     '{addr_min: SOCIFC_BASE + 16'h0650, addr_max: SOCIFC_BASE + 16'h07fc},
     '{addr_min: SOCIFC_BASE + 16'h0824, addr_max: SOCIFC_BASE + 16'h08fc},
     '{addr_min: SOCIFC_BASE + 16'h0920, addr_max: SOCIFC_BASE + 16'h097c},
-    '{addr_min: SOCIFC_BASE + 16'h0994, addr_max: SOCIFC_BASE + 16'h09fc}
+    '{addr_min: SOCIFC_BASE + 16'h0998, addr_max: SOCIFC_BASE + 16'h09fc}
   };
  
 
@@ -1063,6 +1064,15 @@ package soc_ifc_tb_pkg;
 
   endfunction // count_trailing_zeros
 
+
+  function automatic void print_banner(string txtstr, string s = "-");
+
+      int L = txtstr.len(); 
+      $display({L{s}}); 
+      $display(txtstr); 
+      $display({L{s}});
+
+  endfunction // print_banner
 
   // ================================================================================ 
   // Class definitions 

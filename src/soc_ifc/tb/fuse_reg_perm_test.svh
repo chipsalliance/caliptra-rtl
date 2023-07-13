@@ -17,6 +17,8 @@
 
 //----------------------------------------------------------------
 // fuse_reg_perm_test()
+// 
+// Checks fuse permission tests depending on lock status from FUSE_WR_DONE
 //----------------------------------------------------------------
 task fuse_reg_perm_test;
   // Fuse Register Test 
