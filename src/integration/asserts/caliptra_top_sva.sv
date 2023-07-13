@@ -34,6 +34,7 @@
 `define SOC_IFC_TOP_PATH   `CPTRA_TOP_PATH.soc_ifc_top1
 `define WDT_PATH        `SOC_IFC_TOP_PATH.i_wdt
 
+`define SVA_RDC_CLK `CPTRA_TOP_PATH.rdc_clk_cg
 `define SVA_CLK caliptra_top_tb.core_clk
 `define SVA_RST caliptra_top_tb.cptra_rst_b
 
@@ -56,12 +57,15 @@ module caliptra_top_sva
 
   //TODO: add disable condition based on doe cmd reg
   DOE_lock_uds_set:        assert property (
-                                            @(posedge `SVA_CLK)
+                                            @(posedge `SVA_RDC_CLK)
                                             disable iff (~`SVA_RST)
                                             $rose(`DOE_PATH.flow_done) && $past(doe_cmd_reg_t'(`DOE_PATH.doe_cmd_reg.cmd) == DOE_UDS) |=> `DOE_PATH.lock_uds_flow
                                           )
                             else $display("SVA ERROR: lock_uds_flow was not set after UDS flow");
 
+  //Note: lock + reset checks will use ungated clock. Using RDC clk throws the SVA off in the very first cycle where lock was 0
+  //but there's no $past value to compare against. This problem doesn't exist when using ungated clk because in the first cycle,
+  //pwrgood is also 0, so SVA is disabled.
   DOE_lock_uds_cold_reset: assert property (
                                             @(posedge `SVA_CLK)
                                             ~`DOE_PATH.hard_rst_b |-> (`DOE_PATH.lock_uds_flow == 0)
@@ -75,7 +79,7 @@ module caliptra_top_sva
                                           )
                             else $display("SVA ERROR: lock_uds_flow toggled after warm reset");
   DOE_lock_fe_set:         assert property (
-                                            @(posedge `SVA_CLK)
+                                            @(posedge `SVA_RDC_CLK)
                                             disable iff (~`SVA_RST)
                                             $rose(`DOE_PATH.flow_done) && $past(doe_cmd_reg_t'(`DOE_PATH.doe_cmd_reg.cmd) == DOE_FE) |=> `DOE_PATH.lock_fe_flow
                                           )
@@ -94,14 +98,18 @@ module caliptra_top_sva
                                           )
                             else $display("SVA ERROR: lock_fe_flow toggled after warm reset");
 
+  //Corner case: when clear_obf_secrets and reset events happen in the same cycle, reset deassertion will cause SVA to start checking
+  //But if clear_obf_secrets was already 1 (not a pulse), it expects to see status valid in the next clk, but in design, it takes an extra
+  //cycle to update status. Adding a 1 cycle delay to avoid this case by starting the check when reset is deasserted
   DOE_clear_obf_status_valid: assert property (
-                                            @(posedge `SVA_CLK)
-                                            `CPTRA_TOP_PATH.clear_obf_secrets |=> (`DOE_REG_PATH.field_storage.DOE_STATUS.VALID.value && `DOE_REG_PATH.field_storage.DOE_STATUS.DEOBF_SECRETS_CLEARED.value)
+                                            @(posedge `SVA_RDC_CLK)
+                                            disable iff (~`DOE_PATH.rst_b)
+                                            `CPTRA_TOP_PATH.clear_obf_secrets && `DOE_PATH.rst_b |=> (`DOE_REG_PATH.field_storage.DOE_STATUS.VALID.value && `DOE_REG_PATH.field_storage.DOE_STATUS.DEOBF_SECRETS_CLEARED.value)
                                           )
                             else $display("SVA ERROR: DOE STATUS valid bit not set after clear obf secrets cmd");
 
   KV_haddr_valid:          assert property (
-                                            @(posedge `SVA_CLK)
+                                            @(posedge `SVA_RDC_CLK)
                                             disable iff (~`KEYVAULT_PATH.hsel_i)
                                             `KEYVAULT_PATH.hsel_i |-> !$isunknown(`KEYVAULT_PATH.haddr_i)
                                           )
@@ -111,14 +119,14 @@ module caliptra_top_sva
     for(genvar entry=0; entry < KV_NUM_KEYS; entry++) begin
       for(genvar dword = 0; dword < KV_NUM_DWORDS; dword++) begin
         KV_debug_value0:         assert property (
-                                                  @(posedge `SVA_CLK)
+                                                  @(posedge `SVA_RDC_CLK)
                                                   disable iff(!`KEYVAULT_PATH.cptra_pwrgood)
                                                   (`KEYVAULT_PATH.flush_keyvault || `SOC_IFC_TOP_PATH.cptra_error_fatal || `CPTRA_TOP_PATH.scan_mode) && (`KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value == 0) && `KEYVAULT_PATH.cptra_pwrgood |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword] == CLP_DEBUG_MODE_KV_0)
                                                 )
                                   else $display("SVA ERROR: KV not flushed with correct debug values");
 
         KV_debug_value1:         assert property (
-                                                  @(posedge `SVA_CLK)
+                                                  @(posedge `SVA_RDC_CLK)
                                                   disable iff(!`KEYVAULT_PATH.cptra_pwrgood)
                                                   (`KEYVAULT_PATH.flush_keyvault || `SOC_IFC_TOP_PATH.cptra_error_fatal || `CPTRA_TOP_PATH.scan_mode) && (`KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value == 1) && `KEYVAULT_PATH.cptra_pwrgood |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword] == CLP_DEBUG_MODE_KV_1)
                                                 )
@@ -131,7 +139,7 @@ module caliptra_top_sva
     for(genvar dword = 0; dword < KV_NUM_DWORDS; dword++) begin
       //sha512 block read
       kv_sha512_block_r_flow:   assert property (
-                                            @(posedge `SVA_CLK)
+                                            @(posedge `SVA_RDC_CLK)
                                             $rose(`SHA512_PATH.kv_src_done & ~`SHA512_PATH.pcr_hash_extend_ip) && (dword < (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`SHA512_PATH.kv_read.read_entry].last_dword + 1)) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`SHA512_PATH.kv_read.read_entry][dword] == `SHA512_PATH.block_reg[dword])
                                             )
                                 else $display("SVA ERROR: SHA384 block mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`SHA512_PATH.kv_read.read_entry][dword], `SHA512_PATH.block_reg[dword]);
@@ -139,7 +147,7 @@ module caliptra_top_sva
       //sha512 digest write
       if (dword < SHA512_DIG_NUM_DWORDS) begin
         kv_sha512_digest_w_flow:  assert property (
-                                              @(posedge `SVA_CLK)
+                                              @(posedge `SVA_RDC_CLK)
                                               `SHA512_PATH.kv_dest_done & ~`SHA512_PATH.pcr_hash_extend_ip |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`SHA512_PATH.kv_write_ctrl_reg.write_entry][dword] == `SHA512_PATH.kv_reg[(KV_NUM_DWORDS-1) - dword])
                                               )
                                   else $display("SVA ERROR: SHA384 digest mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`SHA512_PATH.kv_write_ctrl_reg.write_entry][dword], `SHA512_PATH.kv_reg[(KV_NUM_DWORDS-1) - dword]);
@@ -147,7 +155,7 @@ module caliptra_top_sva
 
       //hmac block read
       kv_hmac_block_r_flow:     assert property (
-                                            @(posedge `SVA_CLK)
+                                            @(posedge `SVA_RDC_CLK)
                                             $rose(`HMAC_PATH.kv_block_done) && (dword < (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`HMAC_PATH.kv_read[1].read_entry].last_dword + 1)) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[1].read_entry][dword] == `HMAC_PATH.block_reg[dword])
                                             )
                                 else $display("SVA ERROR: HMAC384 block mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[1].read_entry][dword], `HMAC_PATH.block_reg[dword]);
@@ -155,7 +163,7 @@ module caliptra_top_sva
       //hmac key read
       if (dword < HMAC_KEY_NUM_DWORDS) begin
         kv_hmac_key_r_flow:       assert property (
-                                              @(posedge `SVA_CLK)
+                                              @(posedge `SVA_RDC_CLK)
                                               $fell(`HMAC_PATH.kv_key_write_en) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[0].read_entry][dword] == `HMAC_PATH.key_reg[dword])
                                               )
                                   else $display("SVA ERROR: HMAC384 key mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[0].read_entry][dword], `HMAC_PATH.key_reg[dword]);
@@ -164,7 +172,7 @@ module caliptra_top_sva
       //hmac tag write
       if (dword < HMAC_TAG_NUM_DWORDS) begin
         kv_hmac_tag_w_flow:       assert property (
-                                              @(posedge `SVA_CLK)
+                                              @(posedge `SVA_RDC_CLK)
                                               `HMAC_PATH.kv_write_done |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword] == `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword])
                                               )
                                   else $display("SVA ERROR: HMAC384 tag mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword], `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword]);                    
@@ -174,32 +182,32 @@ module caliptra_top_sva
       if (dword < ECC_REG_NUM_DWORDS) begin
         //ecc privkey read
         kv_ecc_privkey_r_flow:    assert property (
-                                              @(posedge `SVA_CLK)
+                                              @(posedge `SVA_RDC_CLK)
                                               $fell(`ECC_PATH.kv_privkey_write_en) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[0].read_entry][dword] == `ECC_PATH.privkey_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
                                               )
                                   else $display("SVA ERROR: ECC privkey read mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[0].read_entry][dword], `ECC_PATH.privkey_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
         kv_ecc_seed_r_flow:       assert property (
-                                              @(posedge `SVA_CLK)
+                                              @(posedge `SVA_RDC_CLK)
                                               $fell(`ECC_PATH.kv_seed_write_en) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[1].read_entry][dword] == `ECC_PATH.seed_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
                                               )
                                   else $display("SVA ERROR: ECC seed mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[1].read_entry][dword], `ECC_PATH.seed_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
         //ecc privkey write
         kv_ecc_privkey_w_flow:    assert property (
-                                              @(posedge `SVA_CLK)
+                                              @(posedge `SVA_RDC_CLK)
                                               `ECC_PATH.kv_write_done |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword] == `ECC_PATH.kv_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
                                               )
                                   else $display("SVA ERROR: ECC privkey write mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword], `ECC_PATH.kv_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
 
         //ecc sign r
         pcr_ecc_sign_r:    assert property (
-                                              @(posedge `SVA_CLK)
+                                              @(posedge `SVA_RDC_CLK)
                                               `SERVICES_PATH.check_pcr_signing |-> (`SERVICES_PATH.test_vector.R[dword] == `ECC_PATH.hwif_out.ECC_SIGN_R[dword].SIGN_R.value)
                                               )
                                   else $display("SVA ERROR: PCR SIGNING SIGN_R mismatch!, 0x%04x, 0x%04x", `SERVICES_PATH.test_vector.R[dword], `ECC_PATH.hwif_out.ECC_SIGN_R[dword].SIGN_R.value);                     
         
         //ecc sign s
         pcr_ecc_sign_s:    assert property (
-                                              @(posedge `SVA_CLK)
+                                              @(posedge `SVA_RDC_CLK)
                                               `SERVICES_PATH.check_pcr_signing |-> (`SERVICES_PATH.test_vector.S[dword] == `ECC_PATH.hwif_out.ECC_SIGN_S[dword].SIGN_S.value)
                                               )
                                   else $display("SVA ERROR: PCR SIGNING SIGN_S mismatch!, 0x%04x, 0x%04x", `SERVICES_PATH.test_vector.S[dword], `ECC_PATH.hwif_out.ECC_SIGN_S[dword].SIGN_S.value); 
@@ -212,7 +220,7 @@ module caliptra_top_sva
     begin: UDS_data_check
     for(genvar dword = 0; dword < `CLP_OBF_UDS_DWORDS; dword++) begin
       DOE_UDS_data_check:  assert property (
-                                            @(posedge `SVA_CLK)
+                                            @(posedge `SVA_RDC_CLK)
                                             disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
                                             (`SERVICES_PATH.WriteData == 'hEC && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_uds_flow) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword] == `SERVICES_PATH.doe_test_vector.uds_plaintext[dword])
                                 
@@ -226,7 +234,7 @@ module caliptra_top_sva
     for(genvar dword = 0; dword < `CLP_OBF_FE_DWORDS; dword++) begin
   
       DOE_FE_data_check:   assert property (
-                                            @(posedge `SVA_CLK)
+                                            @(posedge `SVA_RDC_CLK)
                                             disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
                                             (`SERVICES_PATH.WriteData == 'hED && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_fe_flow) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword] == `SERVICES_PATH.doe_test_vector.fe_plaintext[dword])
                                           )
@@ -247,7 +255,7 @@ module caliptra_top_sva
   logic cptra_in_debug_scan_mode_fall_trans_f;
   logic cptra_in_debug_scan_mode_int;
 
-  always@(posedge `SVA_CLK or negedge `CPTRA_TOP_PATH.cptra_rst_b) begin
+  always@(posedge `SVA_RDC_CLK or negedge `CPTRA_TOP_PATH.cptra_rst_b) begin
     if(!`CPTRA_TOP_PATH.cptra_rst_b) begin
       clear_obf_secrets_f <= 'b0;
       clear_obf_secrets_ff <= 'b0;
@@ -258,7 +266,7 @@ module caliptra_top_sva
     end
   end
 
-  always@(posedge `SVA_CLK or negedge `CPTRA_TOP_PATH.cptra_rst_b) begin
+  always@(posedge `SVA_RDC_CLK or negedge `CPTRA_TOP_PATH.cptra_rst_b) begin
     if(!`CPTRA_TOP_PATH.cptra_rst_b) begin
       cptra_in_debug_scan_mode_f <= 'b0;
       cptra_in_debug_scan_mode_fall_trans_f <= 'b0;
@@ -274,14 +282,14 @@ module caliptra_top_sva
   assign cptra_in_debug_scan_mode_int = cptra_in_debug_scan_mode_fall_trans | cptra_in_debug_scan_mode_fall_trans_f;
 
   UDS_fuse_wr_check: assert property (
-                                  @(posedge `SVA_CLK)
+                                  @(posedge `SVA_RDC_CLK)
                                   disable iff(`CPTRA_TOP_PATH.cptra_in_debug_scan_mode || clear_obf_secrets_int || cptra_in_debug_scan_mode_int)
                                   (`SOC_IFC_TOP_PATH.soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value) |-> `CPTRA_TOP_PATH.obf_uds_seed_dbg == $past(`CPTRA_TOP_PATH.obf_uds_seed_dbg)
   )
   else $display("SVA ERROR: Unexpected write to obf uds seed!");
 
   FE_fuse_wr_check: assert property (
-                                  @(posedge `SVA_CLK)
+                                  @(posedge `SVA_RDC_CLK)
                                   disable iff(`CPTRA_TOP_PATH.cptra_in_debug_scan_mode || clear_obf_secrets_int || cptra_in_debug_scan_mode_int)
                                   (`SOC_IFC_TOP_PATH.soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value) |-> `CPTRA_TOP_PATH.obf_field_entropy_dbg == $past(`CPTRA_TOP_PATH.obf_field_entropy_dbg)
   )
@@ -291,7 +299,7 @@ module caliptra_top_sva
   generate
     for(genvar dword = 0; dword < SHA256_BLOCK_NUM_DWORDS; dword++) begin
         sha256_block_zeroize:       assert property (
-                                              @(posedge `SVA_CLK)
+                                              @(posedge `SVA_RDC_CLK)
                                               `SHA256_PATH.hwif_out.SHA256_CTRL.ZEROIZE.value |=> (`SHA256_PATH.hwif_out.SHA256_BLOCK[dword].BLOCK.value == 0)
                                               )
                                   else $display("SVA ERROR: SHA256 block zeroize mismatch!");
@@ -299,7 +307,7 @@ module caliptra_top_sva
 
     for(genvar dword = 0; dword < SHA256_DIG_NUM_DWORDS; dword++) begin
         sha256_digest_zeroize:       assert property (
-                                              @(posedge `SVA_CLK)
+                                              @(posedge `SVA_RDC_CLK)
                                               `SHA256_PATH.hwif_out.SHA256_CTRL.ZEROIZE.value |=> (`SHA256_PATH.digest_reg[dword] == 0) & (`SHA256_PATH.i_sha256_reg.decoded_reg_strb.SHA256_DIGEST[dword] == 0)
                                               )
                                   else $display("SVA ERROR: SHA256 digest zeroize mismatch!");                                
@@ -307,7 +315,7 @@ module caliptra_top_sva
 
     for(genvar dword = 0; dword < SHA512_BLOCK_NUM_DWORDS; dword++) begin
         sha512_block_zeroize:       assert property (
-                                              @(posedge `SVA_CLK)
+                                              @(posedge `SVA_RDC_CLK)
                                               `SHA512_PATH.hwif_out.SHA512_CTRL.ZEROIZE.value |=> (`SHA512_PATH.hwif_out.SHA512_BLOCK[dword].BLOCK.value == 0)
                                               )
                                   else $display("SVA ERROR: SHA512 block zeroize mismatch!");
@@ -315,7 +323,7 @@ module caliptra_top_sva
 
     for(genvar dword = 0; dword < SHA512_DIG_NUM_DWORDS; dword++) begin
         sha512_digest_zeroize:       assert property (
-                                              @(posedge `SVA_CLK)
+                                              @(posedge `SVA_RDC_CLK)
                                               `SHA512_PATH.hwif_out.SHA512_CTRL.ZEROIZE.value |=> (`SHA512_PATH.digest_reg[dword] == 0) & (`SHA512_PATH.i_sha512_reg.decoded_reg_strb.SHA512_DIGEST[dword] == 0)
                                               )
                                   else $display("SVA ERROR: SHA512 digest zeroize mismatch!");                                
@@ -323,7 +331,7 @@ module caliptra_top_sva
 
     for(genvar dword = 0; dword < HMAC_KEY_NUM_DWORDS; dword++) begin
         hmac_key_zeroize:       assert property (
-                                              @(posedge `SVA_CLK)
+                                              @(posedge `SVA_RDC_CLK)
                                               `HMAC_PATH.hwif_out.HMAC384_CTRL.ZEROIZE.value |=> (`HMAC_PATH.hwif_out.HMAC384_KEY[dword].KEY.value == 0)
                                               )
                                   else $display("SVA ERROR: HMAC384 key zeroize mismatch!");
@@ -331,7 +339,7 @@ module caliptra_top_sva
     
     for(genvar dword = 0; dword < HMAC_BLOCK_NUM_DWORDS; dword++) begin
         hmac_block_zeroize:       assert property (
-                                              @(posedge `SVA_CLK)
+                                              @(posedge `SVA_RDC_CLK)
                                               `HMAC_PATH.hwif_out.HMAC384_CTRL.ZEROIZE.value |=> (`HMAC_PATH.hwif_out.HMAC384_BLOCK[dword].BLOCK.value == 0)
                                               )
                                   else $display("SVA ERROR: HMAC384 block zeroize mismatch!");
@@ -339,7 +347,7 @@ module caliptra_top_sva
 
     for(genvar dword = 0; dword < HMAC_TAG_NUM_DWORDS; dword++) begin
         hmac_tag_zeroize:       assert property (
-                                              @(posedge `SVA_CLK)
+                                              @(posedge `SVA_RDC_CLK)
                                               `HMAC_PATH.hwif_out.HMAC384_CTRL.ZEROIZE.value |=> (`HMAC_PATH.tag_reg[dword] == 0) & (`HMAC_PATH.i_hmac_reg.decoded_reg_strb.HMAC384_TAG[dword] == 0)
                                               )
                                   else $display("SVA ERROR: HMAC384 tag zeroize mismatch!");                      
@@ -348,7 +356,7 @@ module caliptra_top_sva
 
     for(genvar dword = 0; dword < ECC_REG_NUM_DWORDS; dword++) begin
         ecc_reg_zeroize:        assert property (
-                                              @(posedge `SVA_CLK)
+                                              @(posedge `SVA_RDC_CLK)
                                               `ECC_PATH.hwif_out.ECC_CTRL.ZEROIZE.value |=> (`ECC_PATH.hwif_out.ECC_SEED[dword].SEED.value == 0) & (`ECC_PATH.hwif_out.ECC_NONCE[dword].NONCE.value == 0) & (`ECC_PATH.hwif_out.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.value == 0) &
                                               (`ECC_PATH.hwif_out.ECC_MSG[dword].MSG.value == 0) & (`ECC_PATH.hwif_out.ECC_PUBKEY_X[dword].PUBKEY_X.value == 0) & (`ECC_PATH.hwif_out.ECC_PUBKEY_Y[dword].PUBKEY_Y.value == 0) &
                                               (`ECC_PATH.hwif_out.ECC_SIGN_R[dword].SIGN_R.value == 0) & (`ECC_PATH.hwif_out.ECC_SIGN_S[dword].SIGN_S.value == 0) & (`ECC_PATH.hwif_out.ECC_VERIFY_R[dword].VERIFY_R.value == 0) & (`ECC_PATH.hwif_out.ECC_IV[dword].IV.value == 0) &
@@ -359,7 +367,7 @@ module caliptra_top_sva
     
     for(genvar addr = 0; addr < ECC_MEM_ADDR; addr++) begin
         ecc_mem_zeroize:        assert property (
-                                              @(posedge `SVA_CLK)
+                                              @(posedge `SVA_RDC_CLK)
                                               `ECC_PATH.hwif_out.ECC_CTRL.ZEROIZE.value |=> (`ECC_PATH.ecc_arith_unit_i.ram_tdp_file_i.mem[addr] == 0)
                                               )
                                   else $display("SVA ERROR: ECC mem zeroize mismatch!"); 
@@ -375,7 +383,7 @@ module caliptra_top_sva
   endgenerate
 
   sha512_masked_core_digest_zeroize:       assert property (
-                                      @(posedge `SVA_CLK)
+                                      @(posedge `SVA_RDC_CLK)
                                       `ECC_PATH.hwif_out.ECC_CTRL.ZEROIZE.value |=> (`SHA512_MASKED_PATH.digest == 0) & (`SHA512_MASKED_PATH.a_reg == 0) & (`SHA512_MASKED_PATH.b_reg == 0) & (`SHA512_MASKED_PATH.c_reg == 0) & (`SHA512_MASKED_PATH.d_reg == 0) & (`SHA512_MASKED_PATH.e_reg == 0) & (`SHA512_MASKED_PATH.f_reg == 0) & (`SHA512_MASKED_PATH.g_reg == 0) & (`SHA512_MASKED_PATH.h_reg == 0)
                                       )
                           else $display("SVA ERROR: SHA512_masked_core digest zeroize mismatch!");  
@@ -391,7 +399,7 @@ module caliptra_top_sva
   generate
     for(client = 0; client < KV_NUM_WRITE; client++) begin
       KV_client_wrdata_not_unknown: assert property (
-                                                    @(posedge `SVA_CLK)
+                                                    @(posedge `SVA_RDC_CLK)
                                                     disable iff (!`KEYVAULT_PATH.kv_write[client].write_en || !`KEYVAULT_PATH.rst_b)
                                                     `KEYVAULT_PATH.kv_write[client].write_en |-> !$isunknown(`KEYVAULT_PATH.kv_write[client].write_data)
                                                   )
@@ -400,7 +408,7 @@ module caliptra_top_sva
 
     for(client = 0; client < KV_NUM_READ; client++) begin
       KV_client_rddata_not_unknown: assert property (
-                                                    @(posedge `SVA_CLK)
+                                                    @(posedge `SVA_RDC_CLK)
                                                     disable iff (!`KEYVAULT_PATH.rst_b)
                                                     !$isunknown(`KEYVAULT_PATH.kv_rd_resp[client].read_data)
                                                   )
@@ -461,25 +469,25 @@ module caliptra_top_sva
 
   //VALID flag SVA
   sha512_valid_flag:        assert property (
-                                    @(posedge `SVA_CLK)
+                                    @(posedge `SVA_RDC_CLK)
                                     `SHA512_PATH.digest_valid_reg |-> `SHA512_PATH.ready_reg
                                     )
                         else $display("SVA ERROR: SHA512 VALID flag mismatch!");
                           
   sha256_valid_flag:        assert property (
-                                        @(posedge `SVA_CLK)
+                                        @(posedge `SVA_RDC_CLK)
                                         `SHA256_PATH.digest_valid_reg |-> `SHA256_PATH.ready_reg
                                         )
                             else $display("SVA ERROR: SHA256 VALID flag mismatch!");
 
   HMAC_valid_flag:      assert property (
-                                    @(posedge `SVA_CLK)
+                                    @(posedge `SVA_RDC_CLK)
                                     `HMAC_PATH.tag_valid_reg |-> `HMAC_PATH.ready_reg
                                     )
                         else $display("SVA ERROR: HMAC VALID flag mismatch!"); 
 
   ECC_valid_flag:       assert property (
-                                    @(posedge `SVA_CLK)
+                                    @(posedge `SVA_RDC_CLK)
                                     `ECC_PATH.dsa_valid_reg |-> `ECC_PATH.dsa_ready_reg 
                                     )
                         else $display("SVA ERROR: ECC VALID flag mismatch!");                         
