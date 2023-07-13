@@ -228,12 +228,12 @@ always_comb begin
   end
   //drive hardware writable registers from key vault
   for (int dword=0; dword < BLOCK_NUM_DWORDS; dword++)begin
-    hwif_in.HMAC384_BLOCK[dword].BLOCK.we = kv_block_write_en & (kv_block_write_offset == dword);
+    hwif_in.HMAC384_BLOCK[dword].BLOCK.we = (kv_block_write_en & (kv_block_write_offset == dword)) & !(zeroize_reg | kv_read_data_present_reset);
     hwif_in.HMAC384_BLOCK[dword].BLOCK.next = kv_block_write_data;
     hwif_in.HMAC384_BLOCK[dword].BLOCK.hwclr = zeroize_reg | kv_read_data_present_reset;
   end
   for (int dword=0; dword < KEY_NUM_DWORDS; dword++)begin
-    hwif_in.HMAC384_KEY[dword].KEY.we = kv_key_write_en & (kv_key_write_offset == dword);
+    hwif_in.HMAC384_KEY[dword].KEY.we = (kv_key_write_en & (kv_key_write_offset == dword)) & !(zeroize_reg | kv_read_data_present_reset);
     hwif_in.HMAC384_KEY[dword].KEY.next = kv_key_write_data;
     hwif_in.HMAC384_KEY[dword].KEY.hwclr = zeroize_reg | kv_read_data_present_reset;
   end

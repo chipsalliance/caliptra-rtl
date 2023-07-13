@@ -682,7 +682,7 @@ module ecc_reg (
     always_comb begin
         automatic logic [0:0] next_c = field_storage.ECC_CTRL.ZEROIZE.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.ECC_CTRL && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
+        if(decoded_reg_strb.ECC_CTRL && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.ECC_CTRL.ZEROIZE.value & ~decoded_wr_biten[2:2]) | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
         end else if(1) begin // singlepulse clears back to 0
