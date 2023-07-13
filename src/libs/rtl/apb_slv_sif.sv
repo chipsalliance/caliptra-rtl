@@ -77,12 +77,11 @@ end
 always_comb access_phase = PSEL & PENABLE;
 
 //drive ready if no hold from component
-always_comb PREADY = (dv & access_phase) ? ~req_hold : '1;
+always_comb PREADY = dv ? ~req_hold : '1;
 //drive read data from component
-always_comb PRDATA = (dv & access_phase) ? rdata : '0;
+always_comb PRDATA = rdata;
 //drive error from component for valid access, drive error for invalid access phase
-always_comb PSLVERR = (dv & access_phase) ? slverr : 
-                             access_phase ? '1 : '0;
+always_comb PSLVERR = slverr;
 
 
 
