@@ -173,7 +173,7 @@ module ecc_top_tb
 
              .error_intr(error_intr_tb),
              .notif_intr(notif_intr_tb),
-             .debugUnlock_or_scan_mode_switch()
+             .debugUnlock_or_scan_mode_switch('0)
             );
 
 

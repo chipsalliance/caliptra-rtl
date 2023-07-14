@@ -100,7 +100,7 @@ module sha256_random_test();
 
              .error_intr(),
              .notif_intr(),
-             .debugUnlock_or_scan_mode_switch()
+             .debugUnlock_or_scan_mode_switch('0)
             );
 
 
