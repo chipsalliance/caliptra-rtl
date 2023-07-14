@@ -4,6 +4,14 @@
 package doe_reg_pkg;
     typedef struct packed{
         logic hwclr;
+    } doe_reg__DOE_IV__IV__in_t;
+
+    typedef struct packed{
+        doe_reg__DOE_IV__IV__in_t IV;
+    } doe_reg__DOE_IV__in_t;
+
+    typedef struct packed{
+        logic hwclr;
     } doe_reg__DOE_CTRL__CMD__in_t;
 
     typedef struct packed{
@@ -79,6 +87,7 @@ package doe_reg_pkg;
     typedef struct packed{
         logic reset_b;
         logic cptra_pwrgood;
+        doe_reg__DOE_IV__in_t [4-1:0]DOE_IV;
         doe_reg__DOE_CTRL__in_t DOE_CTRL;
         doe_reg__DOE_STATUS__in_t DOE_STATUS;
         doe_reg__intr_block_t__in_t intr_block_rf;

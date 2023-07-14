@@ -116,7 +116,8 @@ import uvmf_base_pkg_hdl::*;
       .hrdata_o         (ECC_out_agent_bus.hrdata), 
 
       .error_intr       (),
-      .notif_intr       ()
+      .notif_intr       (),
+      .debugUnlock_or_scan_mode_switch()
   );
 
   // pragma uvmf custom dut_instantiation end

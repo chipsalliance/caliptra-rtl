@@ -81,7 +81,8 @@ module ecc_dsa_ctrl
 
     // Interrupts (from ecc_reg)
     output logic error_intr,
-    output logic notif_intr
+    output logic notif_intr,
+    input  logic debugUnlock_or_scan_mode_switch
     );
 
     //----------------------------------------------------------------
@@ -306,7 +307,7 @@ module ecc_dsa_ctrl
     // read the registers written by sw
     always_comb begin
         cmd_reg = hwif_out.ECC_CTRL.CTRL.value;
-        zeroize_reg = hwif_out.ECC_CTRL.ZEROIZE.value;
+        zeroize_reg = hwif_out.ECC_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
         
         sca_point_rnd_en  = 1'b1;
         sca_mask_sign_en  = 1'b1;
@@ -804,6 +805,7 @@ module ecc_dsa_ctrl
     (
         .clk(clk),
         .rst_b(reset_n),
+        .zeroize(zeroize_reg),
 
         //client control register
         .read_ctrl_reg(kv_privkey_read_ctrl_reg),
@@ -831,6 +833,7 @@ module ecc_dsa_ctrl
     (
         .clk(clk),
         .rst_b(reset_n),
+        .zeroize(zeroize_reg),
 
         //client control register
         .read_ctrl_reg(kv_seed_read_ctrl_reg),
@@ -857,6 +860,7 @@ module ecc_dsa_ctrl
     (
         .clk(clk),
         .rst_b(reset_n),
+        .zeroize(zeroize_reg),
 
         //client control register
         .write_ctrl_reg(kv_write_ctrl_reg),

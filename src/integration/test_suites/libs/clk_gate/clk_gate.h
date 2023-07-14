@@ -24,5 +24,7 @@
 
 /* --------------- Function Prototypes --------------- */
 void set_mit0_and_halt_core(uint32_t mitb0, uint32_t mie_en);
+void set_mit0(uint32_t mitb0, uint32_t mie_en);
+void halt_core();
 
 #endif

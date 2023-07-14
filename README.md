@@ -51,6 +51,20 @@ GCC:
 Other:
  - Playbook (Microsoft Internal workflow management tool)
 
+### **RISCV Toolchain installation** ###
+Note that there is significant configurability when installing the RISCV toolchain.
+These instructions may be used to create a RISCV installation that will be compatible
+with the provided Makefile for compiling test C programs.
+
+1. Install from this repository:
+    - https://github.com/riscv-collab/riscv-gnu-toolchain
+    - Follow the included README in that repository for installation instructions
+1. The most recently tested toolchain build that was confirmed to work was 2023-04-29
+    - https://github.com/riscv-collab/riscv-gnu-toolchain/releases/tag/2023.04.29
+1. A compatible tool installation requires newlib cross-compiler, multilib support, and the zicsr/zifencei extensions. Use this configure command:
+    - `./configure --enable-multilib --prefix=/path/to/tools/riscv-gnu/2023.04.29 --with-multilib-generator="rv32imc-ilp32--a*zicsr*zifencei"`
+1. Use `make` instead of `make linux` to install the tool (using newlib option)
+
 ## **ENVIRONMENT VARIABLES** ##
 Required for simulation:<BR>
 `CALIPTRA_WORKSPACE`: Defines the absolute path to the directory where the Verilator "scratch" output directory will be created. Recommended to define as the absolute path to the directory that contains the Project repository root (called "Caliptra" or "caliptra-rtl")<BR>
@@ -127,6 +141,7 @@ The "Integration" sub-component contains the top-level fileset for Caliptra. `sr
 1. Define all environment variables above
     - For the initial test run after downloading repository, `iccm_lock` is recommended for TESTNAME
 1. Create a run folder for build outputs (and cd to it)
+1. [OPTIONAL] By default, this run flow will use the riscv64 toolchain to compile test firmware (according to TESTNAME) into program.hex, iccm.hex, dccm.hex, and mailbox.hex. As a first pass, integrators may alternatively use the pre-built hexfiles for convenience (available for `iccm_lock` test). To do this, copy `iccm_lock.hex` to the run directory and rename to `program.hex`. `dccm.hex` should also be copied to the run directory, as-is. Use `touch iccm.hex mailbox.hex` to create empty hex files, as these are unnecessary for `iccm_lock` test.
 1. Invoke `${CALIPTRA_ROOT}/tools/scripts/Makefile` with target 'program.hex' to produce SRAM initialization files from the firmware found in `src/integration/test_suites/${TESTNAME}`
     - E.g.: `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile program.hex`
 1. Compile complete project using `src/integration/config/caliptra_top_tb.vf` as a compilation target in VCS. When running the `vcs` command to generate simv, users should ensure that `caliptra_top_tb` is explicitly specified as the top-level component in their command to ensure this is the sole "top" that gets simulated.
@@ -138,6 +153,7 @@ The "Integration" sub-component contains the top-level fileset for Caliptra. `sr
     - For the initial test run after downloading repository, `iccm_lock` is recommended for TESTNAME
 1. Create a run folder for build outputs
     - Recommended to place run folder under `${CALIPTRA_WORKSPACE}/scratch/$USER/verilator/<date>`
+1. [OPTIONAL] By default, this run flow will use the riscv64 toolchain to compile test firmware (according to TESTNAME) into program.hex, iccm.hex, dccm.hex, and mailbox.hex. As a first pass, integrators may alternatively use the pre-built hexfiles for convenience (available for `iccm_lock` test). To do this, copy `iccm_lock.hex` to the run directory and rename to `program.hex`. `dccm.hex` should also be copied to the run directory, as-is. Use `touch iccm.hex mailbox.hex` to create empty hex files, as these are unnecessary for `iccm_lock` test.
 1. Run Caliptra/tools/scripts/Makefile, which provides steps to run a top-level simulation in Verilator
     - Example command:
         `make -C <path/to/run/folder> -f ${CALIPTRA_ROOT}/tools/scripts/Makefile TESTNAME=${TESTNAME} debug=1 verilator`

@@ -40,10 +40,14 @@
         lock_wr_cp : coverpoint lock_wr;
         lock_use_cp : coverpoint lock_use;
         clear_cp : coverpoint clear;
-        rsvd0_cp : coverpoint rsvd0;
-        rsvd1_cp : coverpoint rsvd1;
-        dest_valid_cp : coverpoint dest_valid;
-        last_dword_cp : coverpoint last_dword;
+        // rsvd0_cp : coverpoint rsvd0;
+        // rsvd1_cp : coverpoint rsvd1;
+        dest_valid_cp : coverpoint dest_valid {
+            illegal_bins dest_valid_bit5to7 = {['d32:'d255]};
+        }
+        last_dword_cp : coverpoint last_dword {
+            illegal_bins last_dword_12to15 = {['d12:'d15]};
+        }
         wrXuseXclear: cross lock_wr_cp, lock_use_cp, clear_cp;
 
     endgroup

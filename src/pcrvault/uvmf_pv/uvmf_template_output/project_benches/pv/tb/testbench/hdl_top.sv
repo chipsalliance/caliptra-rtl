@@ -133,6 +133,8 @@ import uvmf_base_pkg_hdl::*;
       .clk           (clk),
       .rst_b         (pv_rst_agent_bus.rst_b),
       .cptra_pwrgood (pv_rst_agent_bus.cptra_pwrgood),
+      .core_only_rst_b(pv_rst_agent_bus.core_only_rst_b),
+      .fw_update_rst_window(pv_rst_agent_bus.fw_update_rst_window),
       .haddr_i       (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HADDR[14:0]),
       .hwdata_i      (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HWDATA     ),
       .hsel_i        (1'b1),

@@ -1,4 +1,0 @@
-+incdir+${CALIPTRA_ROOT}/src/ahb_lite_bus/rtl
-${CALIPTRA_ROOT}/src/ahb_lite_bus/rtl/ahb_bus.sv
-${CALIPTRA_ROOT}/src/ahb_lite_bus/rtl/ahb_node.sv
-${CALIPTRA_ROOT}/src/ahb_lite_bus/rtl/ahb_node_wrap.sv

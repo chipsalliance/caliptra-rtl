@@ -16,6 +16,10 @@ schema_version: 2.4.0
 requires:
   - uvmf_caliptra_top_vip
   - caliptra_top
+  - sha512_coverage
+  - sha256_coverage
+  - hmac_coverage
+  - soc_ifc_coverage
 targets:
   tb:
     directories:

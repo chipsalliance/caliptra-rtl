@@ -29,6 +29,7 @@
 #include "caliptra_reg.h"
 #include <stdint.h>
 #include "printf.h"
+#include "riscv_hw_if.h"
 
 /* --------------- symbols/typedefs --------------- */
 typedef struct {
@@ -155,6 +156,11 @@ inline void service_soc_ifc_notif_intr () {
         VPRINTF(HIGH, "debug_locked\n");
         *reg = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_DEBUG_LOCKED_STS_MASK;
         cptra_intr_rcv.soc_ifc_notif |= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_DEBUG_LOCKED_STS_MASK;
+    }
+    if (sts & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SCAN_MODE_STS_MASK) {
+        VPRINTF(HIGH, "SCAN_MODE\n");
+        *reg = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SCAN_MODE_STS_MASK;
+        cptra_intr_rcv.soc_ifc_notif |= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SCAN_MODE_STS_MASK;
     }
     if (sts & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SOC_REQ_LOCK_STS_MASK) {
         VPRINTF(HIGH, "soc_req_lock\n");

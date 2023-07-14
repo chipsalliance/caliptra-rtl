@@ -27,6 +27,7 @@ module soc_ifc_boot_fsm
     input logic BootFSM_Continue,
 
     output logic ready_for_fuses,
+    output boot_fsm_state_e boot_fsm_ps,
 
     input logic fuse_done,
     input logic fuse_wr_done_observed,
@@ -34,25 +35,28 @@ module soc_ifc_boot_fsm
     output logic cptra_noncore_rst_b, //Global rst that goes to all other blocks
     output logic cptra_uc_rst_b, //Global + fw update rst that goes to VeeR core only,
     output logic iccm_unlock,
-    output logic fw_upd_rst_executed
+    output logic fw_upd_rst_executed,
+    output logic rdc_clk_dis,
+    output logic fw_update_rst_window
 );
 
 `include "caliptra_sva.svh"
 
 //present and next state
 boot_fsm_state_e boot_fsm_ns;
-boot_fsm_state_e boot_fsm_ps;
 //arcs between states - global rst
+logic arc_BOOT_IDLE_BOOT_FUSE;
 logic arc_BOOT_FUSE_BOOT_DONE;
 logic arc_BOOT_FUSE_BOOT_WAIT;
 logic arc_BOOT_DONE_BOOT_IDLE;
 //arcs for fw update rst
 logic arc_BOOT_DONE_BOOT_FWRST;
+logic arc_BOOT_FWRST_BOOT_WAIT;
 logic arc_BOOT_WAIT_BOOT_DONE;
+logic arc_IDLE;
 //reset generation
-logic propagate_reset_en;
-logic propagate_uc_reset_en;
 logic fsm_synch_noncore_rst_b;
+logic synch_noncore_rst_b;
 logic fsm_synch_uc_rst_b;
 logic synch_uc_rst_b;
 
@@ -61,8 +65,10 @@ logic [7:0] wait_count;
 logic wait_count_rst;
 logic wait_count_decr;
 
-//move to fuse state when SoC de-asserts reset
+logic cptra_rst_window,cptra_rst_window_f,cptra_rst_window_ff;
 
+//move to fuse state when SoC de-asserts reset
+always_comb arc_BOOT_IDLE_BOOT_FUSE = (boot_fsm_ps == BOOT_IDLE) & ~cptra_rst_window;
 //move from fuse state to done when fuse done register is set OR
 //if it was already set (since its locked across warm reset), that the write was observed from SOC
 always_comb arc_BOOT_FUSE_BOOT_DONE = fuse_done & fuse_wr_done_observed;
@@ -73,59 +79,73 @@ always_comb arc_BOOT_FUSE_BOOT_WAIT = BootFSM_BrkPoint;
 //dummy arc for terminal state lint check
 always_comb arc_BOOT_DONE_BOOT_IDLE = '0;
 
+always_comb arc_IDLE = cptra_rst_window;
 
-always_comb begin
-    //move to rst state when reg bit is set to 1. This state will assert fw_rst to uc
-    arc_BOOT_DONE_BOOT_FWRST = fw_update_rst;
+//Masks combo paths from uc reset flops into other reset domains
+always_comb fw_update_rst_window = boot_fsm_ps inside {BOOT_FW_RST,BOOT_WAIT};
+//clock gate all flops on warm reset to prevent RDC metastability issues
+always_comb rdc_clk_dis = cptra_rst_window | cptra_rst_window_f | cptra_rst_window_ff;
 
-    // TODO: Capture BootFSM_BrkPoint only at the point of cold or warm reset exit
-    // Move to BOOT_DONE state when
-          // a fixed time is met AND
-          // if the BootFSM breakpoint is asserted and the BootFSM continue is not set, stay put in WAIT state
-    arc_BOOT_WAIT_BOOT_DONE = (wait_count == '0) & ~(BootFSM_BrkPoint & ~BootFSM_Continue);
-end
+//move to rst state when reg bit is set to 1. This state will assert fw_rst to uc
+always_comb arc_BOOT_DONE_BOOT_FWRST = (boot_fsm_ps == BOOT_DONE) & fw_update_rst;
+//advance to boot wait when reset starts to propagate
+always_comb arc_BOOT_FWRST_BOOT_WAIT = ~synch_uc_rst_b;
+
+// TODO: Capture BootFSM_BrkPoint only at the point of cold or warm reset exit
+// Move to BOOT_DONE state when
+// a fixed time is met AND
+// if the BootFSM breakpoint is asserted and the BootFSM continue is not set, stay put in WAIT state
+always_comb arc_BOOT_WAIT_BOOT_DONE = (wait_count == '0) & ~(BootFSM_BrkPoint & ~BootFSM_Continue);
+
 
 always_comb begin
     boot_fsm_ns = boot_fsm_ps;
     ready_for_fuses = '0;
-    propagate_reset_en = '0;
-    propagate_uc_reset_en = '0;
-    fw_upd_rst_executed = 0;
+    fw_upd_rst_executed = '0;
+    fsm_synch_noncore_rst_b = '0;
+    fsm_iccm_unlock = '0;
+    fsm_synch_uc_rst_b = '0;
+    wait_count_decr = 0;
+    wait_count_rst = 0;
 
     unique casez (boot_fsm_ps)
         BOOT_IDLE: begin
-            boot_fsm_ns = BOOT_FUSE;
-
+            if (arc_BOOT_IDLE_BOOT_FUSE) begin
+                boot_fsm_ns = BOOT_FUSE;
+            end
             //reset flags in IDLE
             // NOTE: FSM is only in BOOT_IDLE when system reset is asserted, so
             //       also assert the internal core/noncore resets
             fsm_synch_uc_rst_b = '0;
+            fsm_synch_noncore_rst_b = '0;
             fsm_iccm_unlock = '0;
             wait_count_decr = 0;
             wait_count_rst = 0;
         end
         BOOT_FUSE: begin
             if (arc_BOOT_FUSE_BOOT_DONE) begin
-               if (arc_BOOT_FUSE_BOOT_WAIT) begin
-                  boot_fsm_ns = BOOT_WAIT;
-               end
-               else begin
-                   boot_fsm_ns = BOOT_DONE;
-               end
+                if (arc_BOOT_FUSE_BOOT_WAIT) begin
+                    boot_fsm_ns = BOOT_WAIT;
+                end
+                else begin
+                    boot_fsm_ns = BOOT_DONE;
+                end
             end
             ready_for_fuses = 1'b1;
 
             //reset flags
             fsm_synch_uc_rst_b = '0;
+            fsm_synch_noncore_rst_b = '0;
             fsm_iccm_unlock = '0;
             wait_count_decr = 0;
             wait_count_rst = 0;
         end
         BOOT_FW_RST: begin
-            boot_fsm_ns = BOOT_WAIT;
+            if (arc_BOOT_FWRST_BOOT_WAIT) boot_fsm_ns = BOOT_WAIT;
 
             //Assert core reset
             fsm_synch_uc_rst_b = '0;
+            fsm_synch_noncore_rst_b = '1;
             //Keep ICCM locked until end of fw rst
             fsm_iccm_unlock = '0;
             //Start timer
@@ -143,6 +163,7 @@ always_comb begin
                 fsm_iccm_unlock = '0;
             end
             fsm_synch_uc_rst_b = '0;
+            fsm_synch_noncore_rst_b = '1;
             wait_count_decr = 1;
             wait_count_rst = 0;
         end
@@ -159,60 +180,65 @@ always_comb begin
                 fw_upd_rst_executed = 1;
             end
 
-            //propagate reset de-assertion from synchronizer when boot fsm is in BOOT_DONE state
-            propagate_reset_en = 1'b1;
-            propagate_uc_reset_en = 1'b1;
-            //Deassert core reset
+            //Deassert reset
             fsm_synch_uc_rst_b = '1;
+            fsm_synch_noncore_rst_b = '1;
             fsm_iccm_unlock = '0;
             //Timer re-init
             wait_count_rst = 0;
             wait_count_decr = 0;
         end
-        default: begin
-            boot_fsm_ns = boot_fsm_ps;
-            fsm_synch_uc_rst_b = '1;
-            fsm_iccm_unlock = '0;
-            wait_count_decr = 0;
-            wait_count_rst = 0;
-        end
     endcase
 end
 
-//uC reset generation
-
 //next state -> present state
-//reset boot fsm to idle on cptra_rst_b
-always_ff @(posedge clk or negedge cptra_rst_b) begin
-    if (~cptra_rst_b) begin
+//reset boot fsm to idle on cptra_pwrgood
+always_ff @(posedge clk or negedge cptra_pwrgood) begin
+    if (~cptra_pwrgood) begin
         boot_fsm_ps <= BOOT_IDLE;
-        fsm_synch_noncore_rst_b <= '0;
+        synch_noncore_rst_b <= '0;
+        synch_uc_rst_b <= 0;
         cptra_noncore_rst_b <= '0;
         cptra_uc_rst_b <= '0;
+    end
+    else begin
+        boot_fsm_ps <= arc_IDLE ? BOOT_IDLE : boot_fsm_ns;
+        synch_noncore_rst_b <= fsm_synch_noncore_rst_b;
+        synch_uc_rst_b <= fsm_synch_uc_rst_b;
+        cptra_noncore_rst_b <= synch_noncore_rst_b;
+        cptra_uc_rst_b <= synch_noncore_rst_b && synch_uc_rst_b; //uc comes out of rst only when both global and fw rsts are deasserted (through 2FF sync)
+    end
+end
+
+//uC reset generation
+always_ff @(posedge clk or negedge cptra_rst_b) begin
+    if (~cptra_rst_b) begin
+        cptra_rst_window <= '1;
+        cptra_rst_window_f <= '1;
+        cptra_rst_window_ff <= '1;
         wait_count <= '0;
-        synch_uc_rst_b <= 0;
         iccm_unlock <= 0;
     end
     else begin
-        boot_fsm_ps <= boot_fsm_ns;
-        fsm_synch_noncore_rst_b <= propagate_reset_en ? '1 : fsm_synch_noncore_rst_b;
-        synch_uc_rst_b <= propagate_uc_reset_en ? '1 : fsm_synch_uc_rst_b;
-        cptra_noncore_rst_b <= fsm_synch_noncore_rst_b;
-        cptra_uc_rst_b <= fsm_synch_noncore_rst_b && fsm_synch_uc_rst_b && synch_uc_rst_b; //uc comes out of rst only when both global and fw rsts are deasserted (through 2FF sync)
+        cptra_rst_window <= 0;
+        cptra_rst_window_f <= cptra_rst_window;
+        cptra_rst_window_ff <= cptra_rst_window_f;
 
-        wait_count <= (wait_count_decr && (wait_count != '0)) ? wait_count - 1
-                                      : wait_count_rst ? fw_update_rst_wait_cycles
-                                                        : wait_count ;
+        wait_count <= (wait_count_decr && (wait_count != '0)) ? wait_count - 1 :
+                                               wait_count_rst ? fw_update_rst_wait_cycles :
+                                                                wait_count ;
         iccm_unlock <= fsm_iccm_unlock;
     end
 end
 
+//Check for x prop
 `CALIPTRA_ASSERT_KNOWN(ERR_FSM_ARC_X, {arc_BOOT_FUSE_BOOT_DONE, arc_BOOT_DONE_BOOT_FWRST, arc_BOOT_WAIT_BOOT_DONE}, clk, cptra_rst_b)
 `CALIPTRA_ASSERT_KNOWN(ERR_FSM_STATE_X, boot_fsm_ps, clk, cptra_rst_b)
 `CALIPTRA_ASSERT_KNOWN(ERR_UC_RST_X, cptra_noncore_rst_b, clk, cptra_rst_b)
 `CALIPTRA_ASSERT_KNOWN(ERR_UC_FWRST_X, cptra_uc_rst_b, clk, cptra_rst_b)
-`CALIPTRA_ASSERT_NEVER(ERR_UC_RST_ASSERT_AND_BOOT_NOT_DONE, cptra_noncore_rst_b && ((boot_fsm_ps == BOOT_IDLE) || (boot_fsm_ps == BOOT_FUSE)), clk, cptra_rst_b)
-`CALIPTRA_ASSERT(ERR_UC_RST_ASSERT_AND_BOOT_NOT_DONE2, ~cptra_noncore_rst_b || (boot_fsm_ps == BOOT_DONE) || (boot_fsm_ps == BOOT_FW_RST) || (boot_fsm_ps == BOOT_WAIT), clk, cptra_rst_b)
-`CALIPTRA_ASSERT_NEVER(ERR_UC_FWRST_ASSERT_AND_BOOT_NOT_DONE, cptra_uc_rst_b && (boot_fsm_ps == BOOT_WAIT), clk, cptra_rst_b)
+
+//Reset got asserted, but cptra rst window wasn't asserted to protect RDC
+`CALIPTRA_ASSERT_NEVER(ERR_RST_ASSERT_NO_WINDOW, $fell(cptra_noncore_rst_b) && ~rdc_clk_dis, clk, cptra_pwrgood)
+`CALIPTRA_ASSERT_NEVER(ERR_UC_RST_ASSERT_NO_WINDOW, $fell(cptra_uc_rst_b) && ~(fw_update_rst_window || rdc_clk_dis), clk, cptra_pwrgood)
 
 endmodule

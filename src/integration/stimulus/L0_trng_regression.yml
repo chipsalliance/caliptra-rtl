@@ -6,32 +6,15 @@ contents:
       tags: ["L0_trng", "Lop_trng_regression", "top_trng_regression"]
       paths:
         - ../test_suites/smoke_test_veer/smoke_test_veer.yml
-        #add back for aes
-        #- ../test_suites/smoke_test_aes/smoke_test_aes.yml
         - ../test_suites/smoke_test_mbox/smoke_test_mbox.yml
-        - ../test_suites/smoke_test_sha512/smoke_test_sha512.yml
-        - ../test_suites/smoke_test_sha256/smoke_test_sha256.yml
         - ../test_suites/smoke_test_sha_accel/smoke_test_sha_accel.yml
-        - ../test_suites/memCpy_ROM_to_dccm/memCpy_ROM_to_dccm.yml
         - ../test_suites/memCpy_dccm_to_iccm/memCpy_dccm_to_iccm.yml
         - ../test_suites/hello_world_iccm/hello_world_iccm.yml
         - ../test_suites/iccm_lock/iccm_lock.yml
         - ../test_suites/c_intr_handler/c_intr_handler.yml
-        #- ../test_suites/smoke_test_ecc/smoke_test_ecc.yml
-        - ../test_suites/smoke_test_hmac/smoke_test_hmac.yml
-        - ../test_suites/smoke_test_kv/smoke_test_kv.yml
         - ../test_suites/smoke_test_sram_ecc/smoke_test_sram_ecc.yml
         - ../test_suites/smoke_test_trng/smoke_test_trng.yml
         - ../test_suites/smoke_test_kv_uds_reset/smoke_test_kv_uds_reset.yml
-        - ../test_suites/smoke_test_kv_securitystate/smoke_test_kv_securitystate.yml
-        - ../test_suites/smoke_test_kv_ecc_flow/smoke_test_kv_ecc_flow.yml
-        - ../test_suites/smoke_test_kv_hmac_flow/smoke_test_kv_hmac_flow.yml
-        - ../test_suites/smoke_test_kv_sha512_flow/smoke_test_kv_sha512_flow.yml
-        - ../test_suites/pv_hash_and_sign/pv_hash_and_sign.yml
-        #smoke test icc locking
-        #smoke test impactles reset
-        #smoke test debug state transition
-        #smoke test interrupt handling
-        #smoke test wd timer expiry and nmi generation
-        #smoke test jtag
-        #smoke test generic input wire to fw interrupt
+        - ../test_suites/smoke_test_wdt/smoke_test_wdt.yml
+        - ../test_suites/smoke_test_cg_wdt/smoke_test_cg_wdt.yml
+        - ../test_suites/smoke_test_clk_gating/smoke_test_clk_gating.yml

@@ -13,12 +13,9 @@ targets:
   tb:
     directories: 
       - $COMPILE_ROOT/rtl
-      - $COMPILE_ROOT/coverage
     files:
       - $COMPILE_ROOT/rtl/soc_ifc_pkg.sv
       - $COMPILE_ROOT/rtl/soc_ifc_reg_pkg.sv
-      - $COMPILE_ROOT/coverage/soc_ifc_cov_if.sv
-      - $COMPILE_ROOT/coverage/soc_ifc_cov_bind.sv
 ---
 provides: [soc_ifc_uvm_pkg]
 schema_version: 2.4.0
@@ -31,6 +28,19 @@ targets:
       - $COMPILE_ROOT/rtl/mbox_csr_uvm.sv
       - $COMPILE_ROOT/rtl/sha512_acc_csr_uvm.sv
       - $COMPILE_ROOT/rtl/soc_ifc_reg_uvm.sv
+---
+provides: [soc_ifc_coverage]
+schema_version: 2.4.0
+requires:
+  - libs
+  - soc_ifc_pkg
+targets:
+  tb:
+    directories: 
+      - $COMPILE_ROOT/coverage
+    files:
+      - $COMPILE_ROOT/coverage/soc_ifc_cov_if.sv
+      - $COMPILE_ROOT/coverage/soc_ifc_cov_bind.sv
 ---
 provides: [soc_ifc_top]
 schema_version: 2.4.0
@@ -74,6 +84,7 @@ targets:
 provides: [soc_ifc_tb]
 schema_version: 2.4.0
 requires:
+  - soc_ifc_coverage
   - soc_ifc_top
   - caliptra_top_defines
 targets:

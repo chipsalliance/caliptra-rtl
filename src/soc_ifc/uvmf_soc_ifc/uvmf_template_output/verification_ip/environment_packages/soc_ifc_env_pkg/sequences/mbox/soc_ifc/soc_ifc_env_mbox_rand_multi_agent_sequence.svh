@@ -126,6 +126,17 @@ function soc_ifc_env_mbox_rand_multi_agent_sequence::create_seqs();
         SMALL,
         MEDIUM,
         LARGE,
+        OVERFLOW_SMALL,
+        OVERFLOW_MEDIUM,
+        OVERFLOW_LARGE,
+        UNDERFLOW_SMALL,
+        UNDERFLOW_MEDIUM,
+        UNDERFLOW_LARGE,
+        MIN,
+        MAX,
+        DELAY_SMALL,
+        DELAY_MEDIUM,
+        DELAY_LARGE,
         PAUSER_SMALL,
         PAUSER_MEDIUM,
         PAUSER_LARGE,
@@ -138,7 +149,18 @@ function soc_ifc_env_mbox_rand_multi_agent_sequence::create_seqs();
         void'(std::randomize(seq_type) with { seq_type dist { SMALL                 := 100,
                                                               MEDIUM                := 50,
                                                               LARGE                 := 1,
-                                                              PAUSER_SMALL          := 20,
+                                                              OVERFLOW_SMALL        := 50,
+                                                              OVERFLOW_MEDIUM       := 30,
+                                                              OVERFLOW_LARGE        := 1,
+                                                              UNDERFLOW_SMALL       := 50,
+                                                              UNDERFLOW_MEDIUM      := 30,
+                                                              UNDERFLOW_LARGE       := 1,
+                                                              MIN                   := 50,
+                                                              MAX                   := 50,
+                                                              DELAY_SMALL           := 100,
+                                                              DELAY_MEDIUM          := 50,
+                                                              DELAY_LARGE           := 1,
+                                                              PAUSER_SMALL          := 50,
                                                               PAUSER_MEDIUM         := 20,
                                                               PAUSER_LARGE          := 1,
                                                               INTERFERENCE_MEDIUM   := 10   }; });
@@ -149,6 +171,28 @@ function soc_ifc_env_mbox_rand_multi_agent_sequence::create_seqs();
                 obj = soc_ifc_env_mbox_rand_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
             LARGE:
                 obj = soc_ifc_env_mbox_rand_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
+            OVERFLOW_SMALL:
+                obj = soc_ifc_env_mbox_dlen_overflow_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
+            OVERFLOW_MEDIUM:
+                obj = soc_ifc_env_mbox_dlen_overflow_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
+            OVERFLOW_LARGE:
+                obj = soc_ifc_env_mbox_dlen_overflow_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
+            UNDERFLOW_SMALL:
+                obj = soc_ifc_env_mbox_dlen_underflow_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
+            UNDERFLOW_MEDIUM:
+                obj = soc_ifc_env_mbox_dlen_underflow_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
+            UNDERFLOW_LARGE:
+                obj = soc_ifc_env_mbox_dlen_underflow_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
+            MIN:
+                obj = soc_ifc_env_mbox_min_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
+            MAX:
+                obj = soc_ifc_env_mbox_max_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
+            DELAY_SMALL:
+                obj = soc_ifc_env_mbox_rand_delay_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
+            DELAY_MEDIUM:
+                obj = soc_ifc_env_mbox_rand_delay_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
+            DELAY_LARGE:
+                obj = soc_ifc_env_mbox_rand_delay_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
             PAUSER_SMALL:
                 obj = soc_ifc_env_mbox_rand_pauser_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
             PAUSER_MEDIUM:
@@ -183,7 +227,7 @@ task soc_ifc_env_mbox_rand_multi_agent_sequence::start_seqs();
 
     `uvm_info("SOC_IFC_MBOX", $sformatf("Initiating [%0d] mailbox sequences in parallel", agents), UVM_LOW)
     foreach (soc_ifc_env_mbox_multi_agent_seq[ii]) begin
-        if (!std::randomize(delay_clks[ii]) with {delay_clks[ii] < 4*soc_ifc_env_mbox_multi_agent_seq[ii].mbox_op_rand.dlen; delay_clks[ii] > 0;}) begin
+        if (!std::randomize(delay_clks[ii]) with {delay_clks[ii] < 4*(soc_ifc_env_mbox_multi_agent_seq[ii].mbox_op_rand.dlen+20); delay_clks[ii] > 0;}) begin
             `uvm_fatal("SOC_IFC_MBOX", $sformatf("soc_ifc_env_mbox_rand_multi_agent_sequence::body() - %s randomization failed", "delay_clks"));
         end
         else

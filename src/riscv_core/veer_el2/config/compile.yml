@@ -84,6 +84,7 @@ global:
 provides: [el2_veer_wrapper_tb]  
 schema_version: 2.4.0
 requires: 
+  - caliptra_top_defines
   - el2_veer_pkg
   - el2_veer_wrapper
 targets:

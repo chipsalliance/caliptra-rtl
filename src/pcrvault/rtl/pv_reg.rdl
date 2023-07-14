@@ -15,6 +15,7 @@
 addrmap pv_reg {
     desc="address map for pcrvault";
     signal {activelow; async; cpuif_reset; field_reset;} reset_b;
+    signal {activelow; async;} core_only_rst_b;
     signal {activelow; async;} hard_reset_b;
 
     //PCR are sw read only
@@ -26,7 +27,7 @@ addrmap pv_reg {
     reg pvCtrl {
         desc="Controls for each pcr entry";
         field {desc="Lock the PCR from being cleared";
-               sw=rw; swwel=true; hw=r; resetsignal = hard_reset_b;} lock=0; 
+               sw=rw; swwel=true; hw=r; resetsignal = core_only_rst_b;} lock=0; 
         field {desc="Clear the data stored in this entry. Lock will prevent this clear.";
                sw=rw; swwel=true; hw=r; singlepulse;} clear=0;
         field {desc="Reserved";

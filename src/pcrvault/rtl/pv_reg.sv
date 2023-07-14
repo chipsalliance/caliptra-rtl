@@ -160,8 +160,8 @@ module pv_reg (
             field_combo.PCR_CTRL[i0].lock.next = next_c;
             field_combo.PCR_CTRL[i0].lock.load_next = load_next_c;
         end
-        always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
-            if(~hwif_in.hard_reset_b) begin
+        always_ff @(posedge clk or negedge hwif_in.core_only_rst_b) begin
+            if(~hwif_in.core_only_rst_b) begin
                 field_storage.PCR_CTRL[i0].lock.value <= 'h0;
             end else if(field_combo.PCR_CTRL[i0].lock.load_next) begin
                 field_storage.PCR_CTRL[i0].lock.value <= field_combo.PCR_CTRL[i0].lock.next;

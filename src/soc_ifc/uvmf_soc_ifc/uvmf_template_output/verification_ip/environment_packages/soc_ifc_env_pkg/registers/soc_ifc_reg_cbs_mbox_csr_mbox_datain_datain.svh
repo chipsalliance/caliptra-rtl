@@ -55,7 +55,8 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain extends soc_ifc_reg_cbs_mbox_c
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%s] results in data entry push to mbox_data_q", map.get_name()), UVM_FULL)
                         // A potential issue because uC should have set dlen prior to pushing data
                         if (rm.mbox_data_q.size() >= dlen_cap_dw) begin
-                            `uvm_warning("SOC_IFC_REG_CBS", "Push to datain observed when mbox_data_q already contains the same number of entries as indicated in mbox_dlen or the mailbox maximum capacity!")
+//                            `uvm_warning("SOC_IFC_REG_CBS", "Push to datain observed when mbox_data_q already contains the same number of entries as indicated in mbox_dlen or the mailbox maximum capacity!")
+                            `uvm_info("SOC_IFC_REG_CBS", $sformatf("Push to datain observed when mbox_data_q already contains the same number of entries [%d] as indicated in mbox_dlen [%d bytes] or the mailbox maximum capacity!", rm.mbox_data_q.size(), mbox_dlen_mirrored(rm)), UVM_LOW)
                         end
                         rm.mbox_data_q.push_back(value);
                         if (rm.mbox_data_q.size() == 1) begin
@@ -99,7 +100,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain extends soc_ifc_reg_cbs_mbox_c
                     if (rm.mbox_fn_state_sigs.soc_data_stage) begin
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called through map [%s] results in data entry push to mbox_data_q", map.get_name()), UVM_FULL)
                         if (rm.mbox_data_q.size() >= dlen_cap_dw) begin
-                            `uvm_info("SOC_IFC_REG_CBS", "Push to datain observed when mbox_data_q already contains the same number of entries as indicated in mbox_dlen or the mailbox maximum capacity!", UVM_LOW)
+                            `uvm_info("SOC_IFC_REG_CBS", $sformatf("Push to datain observed when mbox_data_q already contains the same number of entries [%d] as indicated in mbox_dlen [%d bytes] or the mailbox maximum capacity!", rm.mbox_data_q.size(), mbox_dlen_mirrored(rm)), UVM_LOW)
                         end
                         rm.mbox_data_q.push_back(value);
                         if (rm.mbox_data_q.size() == 1) begin

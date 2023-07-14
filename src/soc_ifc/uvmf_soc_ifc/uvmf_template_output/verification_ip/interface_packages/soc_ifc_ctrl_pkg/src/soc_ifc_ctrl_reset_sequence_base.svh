@@ -37,7 +37,6 @@ class soc_ifc_ctrl_reset_sequence_base
   // pragma uvmf custom class_item_additional begin
   bit warm_reset_only = 1'b0;
   bit set_bootfsm_breakpoint;
-  bit debug_locked = 1'b1; // Can randomize this with another sequence...
   bit [7:0] [31:0] cptra_obf_key ;
   // pragma uvmf custom class_item_additional end
 
@@ -58,7 +57,6 @@ class soc_ifc_ctrl_reset_sequence_base
       if(!req.randomize()) `uvm_fatal("SOC_IFC_CTRL_RST", "soc_ifc_ctrl_reset_sequence_base::body()-soc_ifc_ctrl_transaction randomization failed")
       req.set_pwrgood = 1'b0;
       req.assert_rst = 1'b1; // active-low assertion
-      req.security_state.debug_locked = this.debug_locked;
       // Send the transaction to the soc_ifc_ctrl_driver_bfm via the sequencer and soc_ifc_ctrl_driver.
       finish_item(req);
       `uvm_info("SOC_IFC_CTRL_RST", {"Response:",req.convert2string()},UVM_MEDIUM)
@@ -78,7 +76,6 @@ class soc_ifc_ctrl_reset_sequence_base
       if(!req.randomize()) `uvm_fatal("SOC_IFC_CTRL_RST", "soc_ifc_ctrl_reset_sequence_base::body()-soc_ifc_ctrl_transaction randomization failed")
       req.set_pwrgood = 1'b1;
       req.assert_rst = 1'b1; // active-low assertion
-      req.security_state.debug_locked = this.debug_locked;
       if (warm_reset_only) begin
           this.cptra_obf_key     = req.cptra_obf_key_rand;
           this.set_bootfsm_breakpoint = req.set_bootfsm_breakpoint;
@@ -104,7 +101,6 @@ class soc_ifc_ctrl_reset_sequence_base
       if(!req.randomize()) `uvm_fatal("SOC_IFC_CTRL_RST", "soc_ifc_ctrl_reset_sequence_base::body()-soc_ifc_ctrl_transaction randomization failed")
       req.set_pwrgood = 1'b1;
       req.assert_rst = 1'b0;
-      req.security_state.debug_locked = this.debug_locked;
       req.cptra_obf_key_rand          = this.cptra_obf_key;
       req.set_bootfsm_breakpoint      = this.set_bootfsm_breakpoint;
       req.wait_cycles = 0;

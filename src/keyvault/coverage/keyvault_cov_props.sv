@@ -26,7 +26,7 @@ module keyvault_cov_props
     //Expectation: Keys cleared before warm reset
     property cover_prop_clear_secr_warm_rst;
         @(posedge dut.clk)
-        (dut.kv_reg_hwif_out.CLEAR_SECRETS.wr_debug_values |=> !dut.rst_b);
+        (dut.kv_reg_hwif_out.CLEAR_SECRETS.wr_debug_values |-> ##[1:$] !dut.rst_b);
     endproperty
     covprop_clear_secr_warmrst: cover property(cover_prop_clear_secr_warm_rst);
 
@@ -37,7 +37,7 @@ module keyvault_cov_props
             //Expectation: Keys will be flushed since reset is not seen until next clk, locks are reset    
             property cover_prop_locks_clear_secr_warm_rst;
                 @(posedge dut.clk)
-                (dut.kv_reg_hwif_out.KEY_CTRL[i].lock_wr |=> dut.kv_reg_hwif_out.CLEAR_SECRETS.wr_debug_values |=> !dut.rst_b);
+                (dut.kv_reg_hwif_out.KEY_CTRL[i].lock_wr && dut.kv_reg_hwif_out.CLEAR_SECRETS.wr_debug_values |-> ##[1:$] !dut.rst_b);
             endproperty
             covprop_lock_clear_secr_warmrst: cover property(cover_prop_locks_clear_secr_warm_rst);
 
@@ -45,7 +45,7 @@ module keyvault_cov_props
             //Expectation: Keys will be flushed since reset is not seen until next clk, locks and keys are reset once cold reset happens
             property cover_prop_locks_clear_secr_cold_rst;
                 @(posedge dut.clk)
-                (dut.kv_reg_hwif_out.KEY_CTRL[i].lock_wr |=> dut.kv_reg_hwif_out.CLEAR_SECRETS.wr_debug_values |=> !dut.cptra_pwrgood);
+                (dut.kv_reg_hwif_out.KEY_CTRL[i].lock_wr && dut.kv_reg_hwif_out.CLEAR_SECRETS.wr_debug_values |-> ##[1:$] !dut.cptra_pwrgood);
             endproperty
             covprop_lock_clear_secr_coldrst: cover property(cover_prop_locks_clear_secr_cold_rst);
         end
