@@ -22,6 +22,7 @@ stages:
 
     # Run repo checks before invoking the actual test steps for earlier
     # detection of basic issues
+    pre_test_timeout: 120
     pre_test_steps:
       - script: |
           source /home/continuous_integration/release/enviro/etc/enviro_startup.bash
