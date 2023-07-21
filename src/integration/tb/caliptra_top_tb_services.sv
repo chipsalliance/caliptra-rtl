@@ -1041,7 +1041,7 @@ endgenerate //IV_NO
         dummy_dccm_preloader.ram = '{default:8'h0};
         `endif
         hex_file_is_empty = $system("test -s program.hex");
-        if (!hex_file_is_empty) $readmemh("program.hex",  imem_inst1.ram,0,32'h00007FFF);
+        if (!hex_file_is_empty) $readmemh("program.hex",  imem_inst1.ram,0,`CALIPTRA_IMEM_BYTE_SIZE-1);
         hex_file_is_empty = $system("test -s mailbox.hex");
         if (!hex_file_is_empty) $readmemh("mailbox.hex",  dummy_mbox_preloader.ram,0,32'h0001_FFFF);
         hex_file_is_empty = $system("test -s dccm.hex");
