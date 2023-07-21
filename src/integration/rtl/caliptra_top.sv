@@ -1066,7 +1066,7 @@ entropy_src #(
 
 spi_host #(
     .AHBDataWidth(`CALIPTRA_AHB_HDATA_SIZE),
-    .AHBAddrWidth(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_CSRNG))
+    .AHBAddrWidth(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_QSPI))
 ) spi_host (
     // Clock and reset connections
     .clk_i                  (clk_cg),
