@@ -62,6 +62,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
 extern uintptr_t iccm_code0_start, iccm_code0_end;
 extern uintptr_t iccm_code1_start, iccm_code1_end;
 extern uintptr_t iccm_code2_start, iccm_code2_end;
+extern uintptr_t STACK;
 static uint32_t persistent_exec_cnt __attribute__ ((section(".dccm.persistent"))) = 0; // Allocate in .dccm
 static uint8_t  persistent_is_second_pass __attribute__ ((section(".dccm.persistent"))) = 0; // Allocate in .dccm
 static uint8_t  persistent_nmi_expected __attribute__ ((section(".dccm.persistent"))) = 0; // Allocate in .dccm
@@ -146,8 +147,33 @@ void main(void) {
             SEND_STDOUT_CTRL(0x1);
         }
 
+        // Try to unlock ICCM Writes (should fail)
+        *soc_ifc_iccm_lock = *soc_ifc_iccm_lock & ~SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK;
+        if (*soc_ifc_iccm_lock & SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK != SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK) {
+            VPRINTF(ERROR, "ERROR: Attempt to clear ICCM_LOCK via reg write succeeded!\n");
+            SEND_STDOUT_CTRL(0x1);
+        }
 
-         // Read ICCM here to see if there is any error when its being read while ICCM is being locked and that reads are getting expected data
+        // Check that DCCM can still be written/read
+        if ((uint32_t)(&STACK) + 4 <= RV_DCCM_EADR) {
+            uint32_t dccm_test_val = lsu_read_32((uintptr_t)(&STACK)+4);
+            VPRINTF(LOW, "Test DCCM at addr: 0x%x\n", (uintptr_t)(&STACK)+4);
+            dccm_test_val ^= 0xAAAAAAAA;
+            lsu_write_32((uintptr_t)(&STACK)+4, dccm_test_val);
+            if (lsu_read_32((uintptr_t)(&STACK)+4) != dccm_test_val) {
+                VPRINTF(ERROR, "ERROR: Rd data (0x%x) after wr to DCCM does not match exp (0x%x)!\n", lsu_read_32((uintptr_t)(&STACK)+4), dccm_test_val);
+                SEND_STDOUT_CTRL(0x1);
+            } else {
+                VPRINTF(LOW, "Rd data (0x%x) after DCCM wr matches exp (0x%x)!\n", lsu_read_32((uintptr_t)(&STACK)+4), dccm_test_val);
+            }
+        } else {
+            VPRINTF(FATAL, "FATAL: Unable to test DCCM access because there is no unused space in DCCM (above STACK)!\n");
+            SEND_STDOUT_CTRL(0x1);
+        }
+
+        // Read ICCM here to check that:
+        //   - reads are getting expected data
+        //   - no error occurs when reading while ICCM is locked
         iccm_dest = ICCM;
         if (persistent_is_second_pass) {
             code_word = (uint32_t *) &iccm_code1_start;
