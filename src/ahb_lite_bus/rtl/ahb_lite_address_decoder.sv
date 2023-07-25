@@ -27,7 +27,7 @@ module ahb_lite_address_decoder #(
     // ---------------------------------------
     input logic     hclk,
     input logic     hreset_n,
-
+    input logic     force_bus_idle,
     // ---------------------------------------
     // From Initiator Interface Port
     // ---------------------------------------
@@ -55,8 +55,6 @@ module ahb_lite_address_decoder #(
     output logic    [NUM_RESPONDERS-1:0]                            hresponderready_o,
     output logic    [NUM_RESPONDERS-1:0][1:0]                       htrans_o,
     output logic    [NUM_RESPONDERS-1:0][2:0]                       hsize_o,
-
-    input logic     force_bus_idle,
 
     // ----------------------------------------------
     // Responder Disable

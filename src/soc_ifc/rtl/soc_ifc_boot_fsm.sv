@@ -108,7 +108,7 @@ always_comb begin
     wait_count_decr = 0;
     wait_count_rst = 0;
 
-    unique casez (boot_fsm_ps)
+    unique case (boot_fsm_ps) inside
         BOOT_IDLE: begin
             if (arc_BOOT_IDLE_BOOT_FUSE) begin
                 boot_fsm_ns = BOOT_FUSE;
@@ -187,6 +187,16 @@ always_comb begin
             //Timer re-init
             wait_count_rst = 0;
             wait_count_decr = 0;
+        end
+        default: begin
+            boot_fsm_ns = boot_fsm_ps;
+            ready_for_fuses = '0;
+            fw_upd_rst_executed = '0;
+            fsm_synch_noncore_rst_b = '0;
+            fsm_iccm_unlock = '0;
+            fsm_synch_uc_rst_b = '0;
+            wait_count_decr = 0;
+            wait_count_rst = 0;
         end
     endcase
 end
