@@ -1,0 +1,8 @@
+document:
+  schema: 1.0
+
+contents:
+  - tests:
+      tags: ["L0", "directed", "nightly", "DOE"]
+      paths:
+        - ${CALIPTRA_ROOT}/src/doe/stimulus/tests/directed/doe_cbc_nist_test.yml
