@@ -50,7 +50,7 @@ module ecc_add_sub_mod_alter #(
     logic [REG_SIZE-1 : 0] r0_reg;
     logic                  carry0_reg;
 
-    logic                   carry_garbage_bit;
+    logic                  carry1;
 
     ecc_adder #(
         .RADIX(REG_SIZE)
@@ -71,7 +71,7 @@ module ecc_add_sub_mod_alter #(
         .b_i(opb1),
         .cin_i(sub_n),
         .s_o(r1),
-        .cout_o(carry_garbage_bit)
+        .cout_o(carry1)
     );
 
 
@@ -100,6 +100,6 @@ module ecc_add_sub_mod_alter #(
             ready_o <= 1'b1;
     end
 
-    assign res_o = (sub_n ^ carry0_reg)? r0 : r1;
+    assign res_o = sub_n ? (carry0_reg ^ carry1)? r1 : r0 : (carry0_reg) ? r0 : r1;
     
 endmodule
