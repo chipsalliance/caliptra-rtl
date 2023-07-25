@@ -1030,7 +1030,8 @@ class soc_ifc_predictor #(
                 "CPTRA_TRNG_VALID_PAUSER",
                 "CPTRA_TRNG_PAUSER_LOCK",
                 ["CPTRA_TRNG_DATA[0]" : "CPTRA_TRNG_DATA[9]"],
-                ["CPTRA_TRNG_DATA[10]" : "CPTRA_TRNG_DATA[11]"]: begin
+                ["CPTRA_TRNG_DATA[10]" : "CPTRA_TRNG_DATA[11]"],
+		        "CPTRA_TRNG_CTRL": begin
                     // Handled in callbacks via reg predictor
                     `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
                 end
@@ -1167,6 +1168,7 @@ class soc_ifc_predictor #(
                 "fuse_life_cycle",
                 "fuse_lms_verify",
                 "fuse_lms_revocation",
+                "fuse_soc_stepping_id",
                 ["internal_obf_key[0]":"internal_obf_key[7]"]: begin
                     // Handled in callbacks via reg predictor
                     `uvm_info("PRED_AHB", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
@@ -1898,6 +1900,7 @@ class soc_ifc_predictor #(
             end
             "CPTRA_TRNG_VALID_PAUSER",
             "CPTRA_TRNG_PAUSER_LOCK",
+            "CPTRA_TRNG_CTRL",
             "CPTRA_TRNG_STATUS": begin
                 // Handled in callbacks via reg predictor
                 `uvm_info("PRED_APB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
@@ -1973,6 +1976,7 @@ class soc_ifc_predictor #(
             "fuse_life_cycle",
             "fuse_lms_verify",
             "fuse_lms_revocation",
+            "fuse_soc_stepping_id",
             ["internal_obf_key[0]":"internal_obf_key[7]"]: begin
                 // Handled in callbacks via reg predictor
                 `uvm_info("PRED_APB", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)

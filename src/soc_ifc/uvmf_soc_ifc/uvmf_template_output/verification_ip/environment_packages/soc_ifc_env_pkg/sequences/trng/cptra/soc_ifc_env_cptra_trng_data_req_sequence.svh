@@ -114,4 +114,11 @@ task soc_ifc_env_cptra_trng_data_req_sequence::soc_ifc_ext_trng_clear_req();
     reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
     if (reg_sts != UVM_IS_OK)
         `uvm_error("TRNG_REQ_SEQ", "Register access failed to write TRNG_STATUS register")
+
+    //Set TRNG CTRL clear bit to clear data regs
+    reg_model.soc_ifc_reg_rm.CPTRA_TRNG_CTRL.write(reg_sts, uvm_reg_data_t'(1), UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+    
+    if (reg_sts != UVM_IS_OK)
+        `uvm_error("TRNG_REQ_SEQ", "Register access failed to write TRNG_CTRL register")
+    
 endtask

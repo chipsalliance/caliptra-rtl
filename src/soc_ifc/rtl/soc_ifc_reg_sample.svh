@@ -443,6 +443,31 @@
         end
     endfunction
 
+    /*----------------------- SOC_IFC_REG__CPTRA_TRNG_CTRL SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__CPTRA_TRNG_CTRL::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(clear_bit_cg[bt]) this.clear_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[0:0]/*clear*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__CPTRA_TRNG_CTRL::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(clear_bit_cg[bt]) this.clear_bit_cg[bt].sample(clear.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( clear.get_mirrored_value()   );
+        end
+    endfunction
+
     /*----------------------- SOC_IFC_REG__CPTRA_TRNG_STATUS SAMPLE FUNCTIONS -----------------------*/
     function void soc_ifc_reg__CPTRA_TRNG_STATUS::sample(uvm_reg_data_t  data,
                                                    uvm_reg_data_t  byte_en,
@@ -654,19 +679,21 @@
         m_data    = data;
         m_is_read = is_read;
         if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(REV_ID_bit_cg[bt]) this.REV_ID_bit_cg[bt].sample(data[0 + bt]);
+            foreach(CPTRA_GENERATION_bit_cg[bt]) this.CPTRA_GENERATION_bit_cg[bt].sample(data[0 + bt]);
+            foreach(SOC_STEPPING_ID_bit_cg[bt]) this.SOC_STEPPING_ID_bit_cg[bt].sample(data[16 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[31:0]/*REV_ID*/   );
+            this.fld_cg.sample( data[15:0]/*CPTRA_GENERATION*/  ,  data[31:16]/*SOC_STEPPING_ID*/   );
         end
     endfunction
 
     function void soc_ifc_reg__CPTRA_HW_REV_ID::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(REV_ID_bit_cg[bt]) this.REV_ID_bit_cg[bt].sample(REV_ID.get_mirrored_value() >> bt);
+            foreach(CPTRA_GENERATION_bit_cg[bt]) this.CPTRA_GENERATION_bit_cg[bt].sample(CPTRA_GENERATION.get_mirrored_value() >> bt);
+            foreach(SOC_STEPPING_ID_bit_cg[bt]) this.SOC_STEPPING_ID_bit_cg[bt].sample(SOC_STEPPING_ID.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( REV_ID.get_mirrored_value()   );
+            this.fld_cg.sample( CPTRA_GENERATION.get_mirrored_value()  ,  SOC_STEPPING_ID.get_mirrored_value()   );
         end
     endfunction
 
@@ -1275,6 +1302,31 @@
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
             this.fld_cg.sample( lms_revocation.get_mirrored_value()   );
+        end
+    endfunction
+
+    /*----------------------- SOC_IFC_REG__FUSE_SOC_STEPPING_ID SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__fuse_soc_stepping_id::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(soc_stepping_id_bit_cg[bt]) this.soc_stepping_id_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[15:0]/*soc_stepping_id*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__fuse_soc_stepping_id::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(soc_stepping_id_bit_cg[bt]) this.soc_stepping_id_bit_cg[bt].sample(soc_stepping_id.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( soc_stepping_id.get_mirrored_value()   );
         end
     endfunction
 

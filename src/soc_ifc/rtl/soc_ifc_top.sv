@@ -407,6 +407,11 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.UART_en.next = 1'b1;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.UART_en.next = 1'b0;
 `endif
 
+//SOC Stepping ID update
+always_comb begin
+    soc_ifc_reg_hwif_in.CPTRA_HW_REV_ID.SOC_STEPPING_ID.next = soc_ifc_reg_hwif_out.fuse_soc_stepping_id.soc_stepping_id.value[15:0];
+end
+
 always_comb begin
     for (int i = 0; i < `CLP_OBF_KEY_DWORDS; i++) begin
         soc_ifc_reg_hwif_in.internal_obf_key[i].key.swwe = '0; //sw can't write to obf key
@@ -599,6 +604,7 @@ always_comb soc_ifc_reg_hwif_in.fuse_anti_rollback_disable.dis.swwel       = soc
 always_comb soc_ifc_reg_hwif_in.fuse_life_cycle.life_cycle.swwel           = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.fuse_lms_verify.lms_verify.swwel           = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.fuse_lms_revocation.lms_revocation.swwel   = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.fuse_soc_stepping_id.soc_stepping_id.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 
 // Fuse write done can be written by SOC if it is already NOT '1. uController can only read this bit. The bit gets reset on cold reset
 always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_WR_DONE.done.swwe = soc_ifc_reg_req_data.soc_req & ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
@@ -614,6 +620,7 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_STATUS.DATA_WR_DONE.swwe = valid_trng
 always_comb begin 
     for (int i = 0; i < 12; i++) begin
         soc_ifc_reg_hwif_in.CPTRA_TRNG_DATA[i].DATA.swwe = valid_trng_user;
+        soc_ifc_reg_hwif_in.CPTRA_TRNG_DATA[i].DATA.hwclr = soc_ifc_reg_hwif_out.CPTRA_TRNG_CTRL.clear.value;
     end
 end
 
