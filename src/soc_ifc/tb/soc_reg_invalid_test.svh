@@ -35,6 +35,7 @@
     strq_t soc_regnames;
     word_addrq_t undef_regs; 
 
+    automatic dword_t valid_hrdata; 
 
     begin
       $display("Executing task soc_reg_invalid_test"); 
@@ -109,8 +110,9 @@
       write_single_word_ahb(addr, wdata);
       read_single_word_ahb(addr);
 
+      valid_hrdata =  addr[2] ?  hrdata_o_tb[`AHB64_HI] : hrdata_o_tb[`AHB64_LO]; 
       $display("Control condtion; test over AHB to aligned address (expect read to mirro write value) : addr = 0x%08x, wdata = 0x%08x, rdata = 0x%x", 
-        addr, wdata, hrdata_o_tb); 
+        addr, wdata, valid_hrdata); 
 
 
       foreach (undef_regs[i]) begin
@@ -120,10 +122,11 @@
         write_single_word_ahb(undef_addr, wdata);
         read_single_word_ahb(undef_addr);
 
-        $display("Write & read over AHB : undefined addr = 0x%08x, wdata = 0x%08x, rdata = 0x%x", undef_addr, wdata, hrdata_o_tb); 
+        valid_hrdata =  addr[2] ?  hrdata_o_tb[`AHB64_HI] : hrdata_o_tb[`AHB64_LO]; 
+        $display("Write & read over AHB : undefined addr = 0x%08x, wdata = 0x%08x, rdata = 0x%x", undef_addr, wdata, valid_hrdata); 
 
-        if (hrdata_o_tb != 0) begin 
-          $display("ERROR. undefined addr = 0x%08x, returns non-zero value 0x%08x over AHB!", undef_addr, hrdata_o_tb); 
+        if (valid_hrdata != 0) begin 
+          $display("ERROR. undefined addr = 0x%08x, returns non-zero value 0x%08x over AHB!", undef_addr, valid_hrdata); 
           error_ctr += 1;
         end
       end
@@ -143,10 +146,11 @@
         write_single_word_ahb(unaligned_addr, wdata);
         read_single_word_ahb(unaligned_addr);
 
-        $display("Write & read over AHB : unaligned addr = 0x%08x, wdata = 0x%08x, rdata = %x", unaligned_addr, wdata, hrdata_o_tb); 
+        valid_hrdata =  addr[2] ?  hrdata_o_tb[`AHB64_HI] : hrdata_o_tb[`AHB64_LO]; 
+        $display("Write & read over AHB : unaligned addr = 0x%08x, wdata = 0x%08x, rdata = %x", unaligned_addr, wdata, valid_hrdata); 
 
-        if (hrdata_o_tb != 0) begin 
-          $display("ERROR. unaligned addr = 0x%08x, returns non-zero value 0x%08x over AHB!", unaligned_addr, hrdata_o_tb); 
+        if (valid_hrdata != 0) begin 
+          $display("ERROR. unaligned addr = 0x%08x, returns non-zero value 0x%08x over AHB!", unaligned_addr, valid_hrdata); 
           error_ctr += 1;
         end
 

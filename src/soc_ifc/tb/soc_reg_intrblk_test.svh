@@ -141,7 +141,7 @@
       $display("Executing task soc_reg_intrblk_test"); 
       $display("-----------------------------------\n");
 
-      // set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_UNLOCKED});
+      // set_security_state_byname("DEBUG_UNLOCKED_PRODCUTION"); 
 
       tc_ctr = tc_ctr + 1;
 
@@ -168,7 +168,7 @@
       // are written using APB as part of Caliptra boot.  Scoreboard update not 
       // needed for readonly fields which are set directly by wires.
       simulate_caliptra_boot();
-      update_CPTRA_FLOW_STATUS(ready_for_fuses); 
+      update_CPTRA_FLOW_STATUS(ready_for_fuses, `REG_HIER_BOOT_FSM_PS);
 
       repeat (20) @(posedge clk_tb);
       sb.del_all();
