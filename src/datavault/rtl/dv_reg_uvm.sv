@@ -64,17 +64,17 @@ package dv_reg_uvm;
         endfunction : build
     endclass : dv_reg__StickyDataVaultReg
 
-    // Reg - dv_reg::NonStickyDataVaultCtrl
-    class dv_reg__NonStickyDataVaultCtrl extends uvm_reg;
+    // Reg - dv_reg::DataVaultCtrl
+    class dv_reg__DataVaultCtrl extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        dv_reg__NonStickyDataVaultCtrl_bit_cg lock_entry_bit_cg[1];
-        dv_reg__NonStickyDataVaultCtrl_fld_cg fld_cg;
+        dv_reg__DataVaultCtrl_bit_cg lock_entry_bit_cg[1];
+        dv_reg__DataVaultCtrl_fld_cg fld_cg;
         rand uvm_reg_field lock_entry;
 
-        function new(string name = "dv_reg__NonStickyDataVaultCtrl");
+        function new(string name = "dv_reg__DataVaultCtrl");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -92,19 +92,19 @@ package dv_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : dv_reg__NonStickyDataVaultCtrl
+    endclass : dv_reg__DataVaultCtrl
 
-    // Reg - dv_reg::NonStickyDataVaultReg
-    class dv_reg__NonStickyDataVaultReg extends uvm_reg;
+    // Reg - dv_reg::DataVaultReg
+    class dv_reg__DataVaultReg extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        dv_reg__NonStickyDataVaultReg_bit_cg data_bit_cg[32];
-        dv_reg__NonStickyDataVaultReg_fld_cg fld_cg;
+        dv_reg__DataVaultReg_bit_cg data_bit_cg[32];
+        dv_reg__DataVaultReg_fld_cg fld_cg;
         rand uvm_reg_field data;
 
-        function new(string name = "dv_reg__NonStickyDataVaultReg");
+        function new(string name = "dv_reg__DataVaultReg");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -122,19 +122,19 @@ package dv_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : dv_reg__NonStickyDataVaultReg
+    endclass : dv_reg__DataVaultReg
 
-    // Reg - dv_reg::NonStickyLockableScratchRegCtrl
-    class dv_reg__NonStickyLockableScratchRegCtrl extends uvm_reg;
+    // Reg - dv_reg::LockableScratchRegCtrl
+    class dv_reg__LockableScratchRegCtrl extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        dv_reg__NonStickyLockableScratchRegCtrl_bit_cg lock_entry_bit_cg[1];
-        dv_reg__NonStickyLockableScratchRegCtrl_fld_cg fld_cg;
+        dv_reg__LockableScratchRegCtrl_bit_cg lock_entry_bit_cg[1];
+        dv_reg__LockableScratchRegCtrl_fld_cg fld_cg;
         rand uvm_reg_field lock_entry;
 
-        function new(string name = "dv_reg__NonStickyLockableScratchRegCtrl");
+        function new(string name = "dv_reg__LockableScratchRegCtrl");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -152,19 +152,19 @@ package dv_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : dv_reg__NonStickyLockableScratchRegCtrl
+    endclass : dv_reg__LockableScratchRegCtrl
 
-    // Reg - dv_reg::NonStickyLockableScratchReg
-    class dv_reg__NonStickyLockableScratchReg extends uvm_reg;
+    // Reg - dv_reg::LockableScratchReg
+    class dv_reg__LockableScratchReg extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        dv_reg__NonStickyLockableScratchReg_bit_cg data_bit_cg[32];
-        dv_reg__NonStickyLockableScratchReg_fld_cg fld_cg;
+        dv_reg__LockableScratchReg_bit_cg data_bit_cg[32];
+        dv_reg__LockableScratchReg_fld_cg fld_cg;
         rand uvm_reg_field data;
 
-        function new(string name = "dv_reg__NonStickyLockableScratchReg");
+        function new(string name = "dv_reg__LockableScratchReg");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -182,7 +182,7 @@ package dv_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : dv_reg__NonStickyLockableScratchReg
+    endclass : dv_reg__LockableScratchReg
 
     // Reg - dv_reg::NonStickyGenericScratchReg
     class dv_reg__NonStickyGenericScratchReg extends uvm_reg;
@@ -278,10 +278,10 @@ package dv_reg_uvm;
     class dv_reg extends uvm_reg_block;
         rand dv_reg__StickyDataVaultCtrl StickyDataVaultCtrl[10];
         rand dv_reg__StickyDataVaultReg STICKY_DATA_VAULT_ENTRY[10][12];
-        rand dv_reg__NonStickyDataVaultCtrl NonStickyDataVaultCtrl[10];
-        rand dv_reg__NonStickyDataVaultReg NONSTICKY_DATA_VAULT_ENTRY[10][12];
-        rand dv_reg__NonStickyLockableScratchRegCtrl NonStickyLockableScratchRegCtrl[10];
-        rand dv_reg__NonStickyLockableScratchReg NonStickyLockableScratchReg[10];
+        rand dv_reg__DataVaultCtrl DataVaultCtrl[10];
+        rand dv_reg__DataVaultReg DATA_VAULT_ENTRY[10][12];
+        rand dv_reg__LockableScratchRegCtrl LockableScratchRegCtrl[10];
+        rand dv_reg__LockableScratchReg LockableScratchReg[10];
         rand dv_reg__NonStickyGenericScratchReg NonStickyGenericScratchReg[8];
         rand dv_reg__StickyLockableScratchRegCtrl StickyLockableScratchRegCtrl[8];
         rand dv_reg__StickyLockableScratchReg StickyLockableScratchReg[8];
@@ -306,33 +306,33 @@ package dv_reg_uvm;
                 this.STICKY_DATA_VAULT_ENTRY[i0][i1].build();
                 this.default_map.add_reg(this.STICKY_DATA_VAULT_ENTRY[i0][i1], 'h28 + i0*'h30 + i1*'h4);
             end
-            foreach(this.NonStickyDataVaultCtrl[i0]) begin
-                this.NonStickyDataVaultCtrl[i0] = new($sformatf("NonStickyDataVaultCtrl[%0d]", i0));
-                this.NonStickyDataVaultCtrl[i0].configure(this);
+            foreach(this.DataVaultCtrl[i0]) begin
+                this.DataVaultCtrl[i0] = new($sformatf("DataVaultCtrl[%0d]", i0));
+                this.DataVaultCtrl[i0].configure(this);
                 
-                this.NonStickyDataVaultCtrl[i0].build();
-                this.default_map.add_reg(this.NonStickyDataVaultCtrl[i0], 'h208 + i0*'h4);
+                this.DataVaultCtrl[i0].build();
+                this.default_map.add_reg(this.DataVaultCtrl[i0], 'h208 + i0*'h4);
             end
-            foreach(this.NONSTICKY_DATA_VAULT_ENTRY[i0, i1]) begin
-                this.NONSTICKY_DATA_VAULT_ENTRY[i0][i1] = new($sformatf("NONSTICKY_DATA_VAULT_ENTRY[%0d][%0d]", i0, i1));
-                this.NONSTICKY_DATA_VAULT_ENTRY[i0][i1].configure(this);
+            foreach(this.DATA_VAULT_ENTRY[i0, i1]) begin
+                this.DATA_VAULT_ENTRY[i0][i1] = new($sformatf("DATA_VAULT_ENTRY[%0d][%0d]", i0, i1));
+                this.DATA_VAULT_ENTRY[i0][i1].configure(this);
                 
-                this.NONSTICKY_DATA_VAULT_ENTRY[i0][i1].build();
-                this.default_map.add_reg(this.NONSTICKY_DATA_VAULT_ENTRY[i0][i1], 'h230 + i0*'h30 + i1*'h4);
+                this.DATA_VAULT_ENTRY[i0][i1].build();
+                this.default_map.add_reg(this.DATA_VAULT_ENTRY[i0][i1], 'h230 + i0*'h30 + i1*'h4);
             end
-            foreach(this.NonStickyLockableScratchRegCtrl[i0]) begin
-                this.NonStickyLockableScratchRegCtrl[i0] = new($sformatf("NonStickyLockableScratchRegCtrl[%0d]", i0));
-                this.NonStickyLockableScratchRegCtrl[i0].configure(this);
+            foreach(this.LockableScratchRegCtrl[i0]) begin
+                this.LockableScratchRegCtrl[i0] = new($sformatf("LockableScratchRegCtrl[%0d]", i0));
+                this.LockableScratchRegCtrl[i0].configure(this);
                 
-                this.NonStickyLockableScratchRegCtrl[i0].build();
-                this.default_map.add_reg(this.NonStickyLockableScratchRegCtrl[i0], 'h410 + i0*'h4);
+                this.LockableScratchRegCtrl[i0].build();
+                this.default_map.add_reg(this.LockableScratchRegCtrl[i0], 'h410 + i0*'h4);
             end
-            foreach(this.NonStickyLockableScratchReg[i0]) begin
-                this.NonStickyLockableScratchReg[i0] = new($sformatf("NonStickyLockableScratchReg[%0d]", i0));
-                this.NonStickyLockableScratchReg[i0].configure(this);
+            foreach(this.LockableScratchReg[i0]) begin
+                this.LockableScratchReg[i0] = new($sformatf("LockableScratchReg[%0d]", i0));
+                this.LockableScratchReg[i0].configure(this);
                 
-                this.NonStickyLockableScratchReg[i0].build();
-                this.default_map.add_reg(this.NonStickyLockableScratchReg[i0], 'h438 + i0*'h4);
+                this.LockableScratchReg[i0].build();
+                this.default_map.add_reg(this.LockableScratchReg[i0], 'h438 + i0*'h4);
             end
             foreach(this.NonStickyGenericScratchReg[i0]) begin
                 this.NonStickyGenericScratchReg[i0] = new($sformatf("NonStickyGenericScratchReg[%0d]", i0));

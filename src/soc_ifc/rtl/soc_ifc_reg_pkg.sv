@@ -509,6 +509,10 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic value;
+    } soc_ifc_reg__CPTRA_FLOW_STATUS__idevid_csr_ready__out_t;
+
+    typedef struct packed{
+        logic value;
     } soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_fw__out_t;
 
     typedef struct packed{
@@ -520,6 +524,7 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__CPTRA_FLOW_STATUS__mailbox_flow_done__out_t;
 
     typedef struct packed{
+        soc_ifc_reg__CPTRA_FLOW_STATUS__idevid_csr_ready__out_t idevid_csr_ready;
         soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_fw__out_t ready_for_fw;
         soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_runtime__out_t ready_for_runtime;
         soc_ifc_reg__CPTRA_FLOW_STATUS__mailbox_flow_done__out_t mailbox_flow_done;

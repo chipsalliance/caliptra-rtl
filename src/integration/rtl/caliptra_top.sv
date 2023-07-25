@@ -188,6 +188,7 @@ module caliptra_top
     logic [6:0]                 cptra_uncore_dmi_reg_addr;
     logic [31:0]                cptra_uncore_dmi_reg_wdata;
     security_state_t            cptra_security_state_Latched;
+    logic                       cptra_dmi_reg_en_preQ;
     
     logic                       fw_update_rst_window;
 
@@ -503,6 +504,7 @@ el2_veer_wrapper rvtop (
    .cptra_uncore_dmi_reg_addr    ( cptra_uncore_dmi_reg_addr ),
    .cptra_uncore_dmi_reg_wdata   ( cptra_uncore_dmi_reg_wdata ),
    .cptra_security_state_Latched ( cptra_security_state_Latched),
+   .cptra_dmi_reg_en_preQ        ( cptra_dmi_reg_en_preQ ),
 
     .mpc_debug_halt_ack     ( mpc_debug_halt_ack),
     .mpc_debug_halt_req     ( 1'b0),
@@ -637,7 +639,8 @@ clk_gate cg (
     .rdc_clk_cg (rdc_clk_cg),
     .generic_input_wires(generic_input_wires),
     .cptra_error_fatal(cptra_error_fatal),
-    .cptra_in_debug_scan_mode(cptra_in_debug_scan_mode)
+    .cptra_in_debug_scan_mode(cptra_in_debug_scan_mode),
+    .cptra_dmi_reg_en_preQ(cptra_dmi_reg_en_preQ)
 );
 //=========================================================================-
 // AHB I$ instance
