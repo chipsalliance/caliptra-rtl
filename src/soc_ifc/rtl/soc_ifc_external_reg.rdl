@@ -172,8 +172,16 @@ reg {
     desc = "Storage for the requested TRNG Data.
             [br]Caliptra Access: RO
             [br]SOC Access:      RW";
-    field {sw=rw; hw=na; swwe; swacc; resetsignal=cptra_rst_b;} DATA[32]=0;
+    field {sw=rw; hw=na; swwe; swacc; hwclr; resetsignal=cptra_rst_b;} DATA[32]=0;
  } CPTRA_TRNG_DATA[12];
+
+ reg {
+    name = "TRNG Ctrl";
+    desc = "TRNG Control register to clear data registers";
+    field {desc = "Indicates that TRNG Data can be cleared
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";  sw=rw; hw=r; singlepulse; swwel=soc_req; resetsignal=cptra_rst_b;} clear=0;
+} CPTRA_TRNG_CTRL;
 
 reg {
     name = "TRNG Status";
@@ -251,7 +259,8 @@ reg {
     desc = "Caliptra HW revision ID that matches the official final release milestone
             [br]Caliptra Access: RO
             [br]SOC Access:      RO";
-    field {sw=r; hw=r; resetsignal = cptra_rst_b;} REV_ID[32]=1;
+    field {sw=r; resetsignal = cptra_rst_b;} CPTRA_GENERATION[16]=1;
+    field {sw=r; hw=w; resetsignal = cptra_rst_b;} SOC_STEPPING_ID[16]=0;
 } CPTRA_HW_REV_ID;
 reg {
     name = "Caliptra FW RevID";
