@@ -170,6 +170,8 @@ module caliptra_top_tb_services
     logic                       inject_zero_sign_r;
     logic                       inject_zero_sign_r_needs_release;
 
+    logic                       en_jtag_access;
+
     typedef bit  [0:11][31:0]   operand_t;
 
     typedef struct packed {
@@ -243,6 +245,7 @@ module caliptra_top_tb_services
     //         8'he6        - Request TB to initiate Mailbox flow with out-of-order accesses (violation)
     //         8'he7        - Reset mailbox out-of-order flag when non-fatal error is masked (allows the test to continue)
     //         8'he8        - Enable scan mode when DOE fsm transitions to done state
+    //         8'he9        - Force dmi_reg_en input to clk gate to emulate JTAG accesses
     //         8'heb        - Inject fatal error
     //         8'hec        - Inject randomized UDS test vector
     //         8'hed        - Inject randomized FE test vector
@@ -539,6 +542,20 @@ endgenerate //IV_NO
     always@(negedge clk) begin
         if((WriteData == 'hf2) && mailbox_write) begin
             force caliptra_top_dut.soc_ifc_top1.clk_gating_en = 1;
+        end
+    end
+
+    always@(negedge clk) begin
+        if ((WriteData == 'he9) && mailbox_write) begin
+            cycleCnt_ff <= cycleCnt;
+            en_jtag_access <= 'b1;
+        end
+        else if(en_jtag_access && (cycleCnt == (cycleCnt_ff + 'd100))) begin
+            force caliptra_top_dut.cptra_dmi_reg_en_preQ = 1;
+        end
+        else if(en_jtag_access && (cycleCnt == (cycleCnt_ff + 'd150))) begin
+            release caliptra_top_dut.cptra_dmi_reg_en_preQ;
+            en_jtag_access <= 'b0;
         end
     end
 
@@ -1088,6 +1105,7 @@ endgenerate //IV_NO
 
         set_wdt_timer1_period = 0;
         assert_ss_tran = 0;
+        en_jtag_access = 0;
 
         `ifndef VERILATOR
         if (!UVM_TB) begin

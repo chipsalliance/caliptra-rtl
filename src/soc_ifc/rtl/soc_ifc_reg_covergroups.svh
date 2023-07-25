@@ -196,7 +196,8 @@
 
     endgroup
     covergroup soc_ifc_reg__CPTRA_FLOW_STATUS_fld_cg with function sample(
-    input bit [25-1:0] status,
+    input bit [24-1:0] status,
+    input bit [1-1:0] idevid_csr_ready,
     input bit [3-1:0] boot_fsm_ps,
     input bit [1-1:0] ready_for_fw,
     input bit [1-1:0] ready_for_runtime,
@@ -205,6 +206,7 @@
     );
         option.per_instance = 1;
         status_cp : coverpoint status;
+        idevid_csr_ready_cp : coverpoint idevid_csr_ready;
         boot_fsm_ps_cp : coverpoint boot_fsm_ps;
         ready_for_fw_cp : coverpoint ready_for_fw;
         ready_for_runtime_cp : coverpoint ready_for_runtime;

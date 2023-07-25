@@ -388,9 +388,13 @@ module soc_ifc_reg (
         } CPTRA_BOOT_STATUS;
         struct packed{
             struct packed{
-                logic [24:0] next;
+                logic [23:0] next;
                 logic load_next;
             } status;
+            struct packed{
+                logic next;
+                logic load_next;
+            } idevid_csr_ready;
             struct packed{
                 logic next;
                 logic load_next;
@@ -1222,8 +1226,11 @@ module soc_ifc_reg (
         } CPTRA_BOOT_STATUS;
         struct packed{
             struct packed{
-                logic [24:0] value;
+                logic [23:0] value;
             } status;
+            struct packed{
+                logic value;
+            } idevid_csr_ready;
             struct packed{
                 logic value;
             } ready_for_fw;
@@ -2064,10 +2071,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_BOOT_STATUS.status.value = field_storage.CPTRA_BOOT_STATUS.status.value;
     // Field: soc_ifc_reg.CPTRA_FLOW_STATUS.status
     always_comb begin
-        automatic logic [24:0] next_c = field_storage.CPTRA_FLOW_STATUS.status.value;
+        automatic logic [23:0] next_c = field_storage.CPTRA_FLOW_STATUS.status.value;
         automatic logic load_next_c = '0;
         if(decoded_reg_strb.CPTRA_FLOW_STATUS && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
-            next_c = (field_storage.CPTRA_FLOW_STATUS.status.value & ~decoded_wr_biten[24:0]) | (decoded_wr_data[24:0] & decoded_wr_biten[24:0]);
+            next_c = (field_storage.CPTRA_FLOW_STATUS.status.value & ~decoded_wr_biten[23:0]) | (decoded_wr_data[23:0] & decoded_wr_biten[23:0]);
             load_next_c = '1;
         end
         field_combo.CPTRA_FLOW_STATUS.status.next = next_c;
@@ -2080,6 +2087,25 @@ module soc_ifc_reg (
             field_storage.CPTRA_FLOW_STATUS.status.value <= field_combo.CPTRA_FLOW_STATUS.status.next;
         end
     end
+    // Field: soc_ifc_reg.CPTRA_FLOW_STATUS.idevid_csr_ready
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.CPTRA_FLOW_STATUS.idevid_csr_ready.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.CPTRA_FLOW_STATUS && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
+            next_c = (field_storage.CPTRA_FLOW_STATUS.idevid_csr_ready.value & ~decoded_wr_biten[24:24]) | (decoded_wr_data[24:24] & decoded_wr_biten[24:24]);
+            load_next_c = '1;
+        end
+        field_combo.CPTRA_FLOW_STATUS.idevid_csr_ready.next = next_c;
+        field_combo.CPTRA_FLOW_STATUS.idevid_csr_ready.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.CPTRA_FLOW_STATUS.idevid_csr_ready.value <= 'h0;
+        end else if(field_combo.CPTRA_FLOW_STATUS.idevid_csr_ready.load_next) begin
+            field_storage.CPTRA_FLOW_STATUS.idevid_csr_ready.value <= field_combo.CPTRA_FLOW_STATUS.idevid_csr_ready.next;
+        end
+    end
+    assign hwif_out.CPTRA_FLOW_STATUS.idevid_csr_ready.value = field_storage.CPTRA_FLOW_STATUS.idevid_csr_ready.value;
     // Field: soc_ifc_reg.CPTRA_FLOW_STATUS.ready_for_fw
     always_comb begin
         automatic logic [0:0] next_c = field_storage.CPTRA_FLOW_STATUS.ready_for_fw.value;
@@ -5161,7 +5187,8 @@ module soc_ifc_reg (
         assign readback_array[i0*1 + 6][31:0] = (decoded_reg_strb.CPTRA_FW_EXTENDED_ERROR_INFO[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_FW_EXTENDED_ERROR_INFO[i0].error_info.value : '0;
     end
     assign readback_array[14][31:0] = (decoded_reg_strb.CPTRA_BOOT_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_BOOT_STATUS.status.value : '0;
-    assign readback_array[15][24:0] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_FLOW_STATUS.status.value : '0;
+    assign readback_array[15][23:0] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_FLOW_STATUS.status.value : '0;
+    assign readback_array[15][24:24] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_FLOW_STATUS.idevid_csr_ready.value : '0;
     assign readback_array[15][27:25] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? hwif_in.CPTRA_FLOW_STATUS.boot_fsm_ps.next : '0;
     assign readback_array[15][28:28] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_FLOW_STATUS.ready_for_fw.value : '0;
     assign readback_array[15][29:29] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_FLOW_STATUS.ready_for_runtime.value : '0;

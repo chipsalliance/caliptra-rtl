@@ -22,11 +22,11 @@ widereg_t dv_regs [DV_PFX_COUNT] = {
     { "STICKYDATAVAULTCTRL",                 (uint32_t *) CLP_DV_REG_STICKYDATAVAULTCTRL_0,             2,  0x1,     0x0 }, //  0. (0x1001c000) 
     { "STICKY_DATA_VAULT_ENTRY_0",           (uint32_t *) CLP_DV_REG_STICKY_DATA_VAULT_ENTRY_0_0,       3,  DV_ONES, 0x0 }, //  1. (0x1001c028) 
     { "STICKY_DATA_VAULT_ENTRY_1",           (uint32_t *) CLP_DV_REG_STICKY_DATA_VAULT_ENTRY_1_0,       3,  DV_ONES, 0x0 }, //  2. (0x1001c058) 
-    { "NONSTICKYDATAVAULTCTRL",              (uint32_t *) CLP_DV_REG_NONSTICKYDATAVAULTCTRL_0,          2,  0x0,     0x0 }, //  3. (0x1001c208) 
-    { "NONSTICKY_DATA_VAULT_ENTRY_0",        (uint32_t *) CLP_DV_REG_NONSTICKY_DATA_VAULT_ENTRY_0_0,    3,  0x0,     0x0 }, //  4. (0x1001c230) 
-    { "NONSTICKY_DATA_VAULT_ENTRY_1",        (uint32_t *) CLP_DV_REG_NONSTICKY_DATA_VAULT_ENTRY_1_0,    3,  0x0,     0x0 }, //  5. (0x1001c260) 
-    { "NONSTICKY_LOCKABLE_SCRATCHREG_CTRL",  (uint32_t *) CLP_DV_REG_NONSTICKYLOCKABLESCRATCHREGCTRL_0, 2,  0x0,     0x0 }, //  6. (0x1001c410)
-    { "NONSTICKY_LOCKABLE_SCRATCHREG",       (uint32_t *) CLP_DV_REG_NONSTICKYLOCKABLESCRATCHREG_0,     2,  0x0,     0x0 }, //  7. (0x1001c438) 
+    { "DATAVAULTCTRL",                       (uint32_t *) CLP_DV_REG_DATAVAULTCTRL_0,                   2,  0x0,     0x0 }, //  3. (0x1001c208) 
+    { "DATA_VAULT_ENTRY_0",                  (uint32_t *) CLP_DV_REG_DATA_VAULT_ENTRY_0_0,              3,  DV_ONES, 0x0 }, //  4. (0x1001c230) 
+    { "DATA_VAULT_ENTRY_1",                  (uint32_t *) CLP_DV_REG_DATA_VAULT_ENTRY_1_0,              3,  DV_ONES, 0x0 }, //  5. (0x1001c260) 
+    { "LOCKABLE_SCRATCHREG_CTRL",            (uint32_t *) CLP_DV_REG_LOCKABLESCRATCHREGCTRL_0,          2,  0x0,     0x0 }, //  6. (0x1001c410)
+    { "LOCKABLE_SCRATCHREG",                 (uint32_t *) CLP_DV_REG_LOCKABLESCRATCHREG_0,              2,  DV_ONES, 0x0 }, //  7. (0x1001c438) 
     { "STICKY_LOCKABLE_SCRATCHREGCTRL",      (uint32_t *) CLP_DV_REG_STICKYLOCKABLESCRATCHREGCTRL_0,    2,  0x1,     0x0 }, //  8. (0x1001c480) 
     { "STICKY_LOCKABLE_SCRATCHREG",          (uint32_t *) CLP_DV_REG_STICKYLOCKABLESCRATCHREG_0,        2,  DV_ONES, 0x0 }  //  9. (0x1001c4a0) 
 };
@@ -61,21 +61,21 @@ int lock_status_bitmap [DV_PFX_COUNT] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };  // ea
         STICKY_DATA_VAULT_ENTRY_1[1]
         STICKY_DATA_VAULT_ENTRY_1[2]
     --------------------------------------------------------------
-    NONSTICKYDATAVAULTCTRL[0] locks:       
-        NONSTICKY_DATA_VAULT_ENTRY_0[0]
-        NONSTICKY_DATA_VAULT_ENTRY_0[1]
-        NONSTICKY_DATA_VAULT_ENTRY_0[2]
+    DATAVAULTCTRL[0] locks:       
+        DATA_VAULT_ENTRY_0[0]
+        DATA_VAULT_ENTRY_0[1]
+        DATA_VAULT_ENTRY_0[2]
 
-    NONSTICKYDATAVAULTCTRL[1] locks:       
-        NONSTICKY_DATA_VAULT_ENTRY_1[0]
-        NONSTICKY_DATA_VAULT_ENTRY_1[1]
-        NONSTICKY_DATA_VAULT_ENTRY_1[2]
+    DATAVAULTCTRL[1] locks:       
+        DATA_VAULT_ENTRY_1[0]
+        DATA_VAULT_ENTRY_1[1]
+        DATA_VAULT_ENTRY_1[2]
     --------------------------------------------------------------
-    NONSTICKY_LOCKABLE_SCRATCHREG_CTRL[0] locks:  
-        NONSTICKY_LOCKABLE_SCRATCHREG[0]
+    LOCKABLE_SCRATCHREG_CTRL[0] locks:  
+        LOCKABLE_SCRATCHREG[0]
 
-    NONSTICKY_LOCKABLE_SCRATCHREG_CTRL[1] locks:  
-        NONSTICKY_LOCKABLE_SCRATCHREG[1]
+    LOCKABLE_SCRATCHREG_CTRL[1] locks:  
+        LOCKABLE_SCRATCHREG[1]
     --------------------------------------------------------------
     STICKY_LOCKABLE_SCRATCHREG_CTRL[0] locks:
         STICKY_LOCKABLE_SCRATCHREG[0]
@@ -99,19 +99,19 @@ widereg_t dv_regs [DV_PFX_COUNT] = {
     { "STICKY_DATA_VAULT_ENTRY_7",           (uint32_t *) CLP_DV_REG_STICKY_DATA_VAULT_ENTRY_7_0,       12,  DV_ONES, 0x0 }, //  8. (0x1001c178) 
     { "STICKY_DATA_VAULT_ENTRY_8",           (uint32_t *) CLP_DV_REG_STICKY_DATA_VAULT_ENTRY_8_0,       12,  DV_ONES, 0x0 }, //  9. (0x1001c1a8) 
     { "STICKY_DATA_VAULT_ENTRY_9",           (uint32_t *) CLP_DV_REG_STICKY_DATA_VAULT_ENTRY_9_0,       12,  DV_ONES, 0x0 }, // 10. (0x1001c1d8) 
-    { "NONSTICKYDATAVAULTCTRL",              (uint32_t *) CLP_DV_REG_NONSTICKYDATAVAULTCTRL_0,          10,  0x0,     0x0 }, // 11. (0x1001c208) 
-    { "NONSTICKY_DATA_VAULT_ENTRY_0",        (uint32_t *) CLP_DV_REG_NONSTICKY_DATA_VAULT_ENTRY_0_0,    12,  0x0,     0x0 }, // 12. (0x1001c230) 
-    { "NONSTICKY_DATA_VAULT_ENTRY_1",        (uint32_t *) CLP_DV_REG_NONSTICKY_DATA_VAULT_ENTRY_1_0,    12,  0x0,     0x0 }, // 13. (0x1001c260) 
-    { "NONSTICKY_DATA_VAULT_ENTRY_2",        (uint32_t *) CLP_DV_REG_NONSTICKY_DATA_VAULT_ENTRY_2_0,    12,  0x0,     0x0 }, // 14. (0x1001c290) 
-    { "NONSTICKY_DATA_VAULT_ENTRY_3",        (uint32_t *) CLP_DV_REG_NONSTICKY_DATA_VAULT_ENTRY_3_0,    12,  0x0,     0x0 }, // 15. (0x1001c2c0) 
-    { "NONSTICKY_DATA_VAULT_ENTRY_4",        (uint32_t *) CLP_DV_REG_NONSTICKY_DATA_VAULT_ENTRY_4_0,    12,  0x0,     0x0 }, // 16. (0x1001c2f0) 
-    { "NONSTICKY_DATA_VAULT_ENTRY_5",        (uint32_t *) CLP_DV_REG_NONSTICKY_DATA_VAULT_ENTRY_5_0,    12,  0x0,     0x0 }, // 17. (0x1001c320) 
-    { "NONSTICKY_DATA_VAULT_ENTRY_6",        (uint32_t *) CLP_DV_REG_NONSTICKY_DATA_VAULT_ENTRY_6_0,    12,  0x0,     0x0 }, // 18. (0x1001c350) 
-    { "NONSTICKY_DATA_VAULT_ENTRY_7",        (uint32_t *) CLP_DV_REG_NONSTICKY_DATA_VAULT_ENTRY_7_0,    12,  0x0,     0x0 }, // 19. (0x1001c380) 
-    { "NONSTICKY_DATA_VAULT_ENTRY_8",        (uint32_t *) CLP_DV_REG_NONSTICKY_DATA_VAULT_ENTRY_8_0,    12,  0x0,     0x0 }, // 20. (0x1001c3b0) 
-    { "NONSTICKY_DATA_VAULT_ENTRY_9",        (uint32_t *) CLP_DV_REG_NONSTICKY_DATA_VAULT_ENTRY_9_0,    12,  0x0,     0x0 }, // 21. (0x1001c3e0) 
-    { "NONSTICKY_LOCKABLE_SCRATCHREG_CTRL",  (uint32_t *) CLP_DV_REG_NONSTICKYLOCKABLESCRATCHREGCTRL_0, 10,  0x0,     0x0 }, // 22. (0x1001c410)
-    { "NONSTICKY_LOCKABLE_SCRATCHREG",       (uint32_t *) CLP_DV_REG_NONSTICKYLOCKABLESCRATCHREG_0,     10,  0x0,     0x0 }, // 23. (0x1001c438) 
+    { "DATAVAULTCTRL",                       (uint32_t *) CLP_DV_REG_DATAVAULTCTRL_0,                   10,  0x0,     0x0 }, // 11. (0x1001c208) 
+    { "DATA_VAULT_ENTRY_0",                  (uint32_t *) CLP_DV_REG_DATA_VAULT_ENTRY_0_0,              12,  DV_ONES, 0x0 }, // 12. (0x1001c230) 
+    { "DATA_VAULT_ENTRY_1",                  (uint32_t *) CLP_DV_REG_DATA_VAULT_ENTRY_1_0,              12,  DV_ONES, 0x0 }, // 13. (0x1001c260) 
+    { "DATA_VAULT_ENTRY_2",                  (uint32_t *) CLP_DV_REG_DATA_VAULT_ENTRY_2_0,              12,  DV_ONES, 0x0 }, // 14. (0x1001c290) 
+    { "DATA_VAULT_ENTRY_3",                  (uint32_t *) CLP_DV_REG_DATA_VAULT_ENTRY_3_0,              12,  DV_ONES, 0x0 }, // 15. (0x1001c2c0) 
+    { "DATA_VAULT_ENTRY_4",                  (uint32_t *) CLP_DV_REG_DATA_VAULT_ENTRY_4_0,              12,  DV_ONES, 0x0 }, // 16. (0x1001c2f0) 
+    { "DATA_VAULT_ENTRY_5",                  (uint32_t *) CLP_DV_REG_DATA_VAULT_ENTRY_5_0,              12,  DV_ONES, 0x0 }, // 17. (0x1001c320) 
+    { "DATA_VAULT_ENTRY_6",                  (uint32_t *) CLP_DV_REG_DATA_VAULT_ENTRY_6_0,              12,  DV_ONES, 0x0 }, // 18. (0x1001c350) 
+    { "DATA_VAULT_ENTRY_7",                  (uint32_t *) CLP_DV_REG_DATA_VAULT_ENTRY_7_0,              12,  DV_ONES, 0x0 }, // 19. (0x1001c380) 
+    { "DATA_VAULT_ENTRY_8",                  (uint32_t *) CLP_DV_REG_DATA_VAULT_ENTRY_8_0,              12,  DV_ONES, 0x0 }, // 20. (0x1001c3b0) 
+    { "DATA_VAULT_ENTRY_9",                  (uint32_t *) CLP_DV_REG_DATA_VAULT_ENTRY_9_0,              12,  DV_ONES, 0x0 }, // 21. (0x1001c3e0) 
+    { "LOCKABLE_SCRATCHREG_CTRL",            (uint32_t *) CLP_DV_REG_LOCKABLESCRATCHREGCTRL_0,          10,  0x0,     0x0 }, // 22. (0x1001c410)
+    { "LOCKABLE_SCRATCHREG",                 (uint32_t *) CLP_DV_REG_LOCKABLESCRATCHREG_0,              10,  DV_ONES, 0x0 }, // 23. (0x1001c438) 
     { "NONSTICKY_GENERIC_SCRATCHREG",        (uint32_t *) CLP_DV_REG_NONSTICKYGENERICSCRATCHREG_0,      8 ,  0x0,     0x0 }, // 24. (0x1001c460) 
     { "STICKY_LOCKABLE_SCRATCHREG_CTRL",     (uint32_t *) CLP_DV_REG_STICKYLOCKABLESCRATCHREGCTRL_0,    8 ,  0x1,     0x0 }, // 25. (0x1001c480) 
     { "STICKY_LOCKABLE_SCRATCHREG",          (uint32_t *) CLP_DV_REG_STICKYLOCKABLESCRATCHREG_0,        8 ,  DV_ONES, 0x0 }  // 26. (0x1001c4a0) 

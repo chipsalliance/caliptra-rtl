@@ -19,51 +19,53 @@ addrmap dv_reg {
     signal {activelow; async;} hard_reset_b;
 
     // Sticky DataVault registers
-    field StickyDataVaultEntry    {desc="DataVault Entry"; sw=rw; hw=na; swwel=true; resetsignal = hard_reset_b;};
+    field StickyDataVaultEntry    {desc="DataVault Entry (cleared on hard reset)"; sw=rw; hw=na; swwel=true; resetsignal = hard_reset_b;};
     reg StickyDataVaultReg    {StickyDataVaultEntry data[32]=0;}; //generic reg for DataVault
 
-    // NonSticky DataVault registers (reset on warm reset)
-    field NonStickyDataVaultEntry {desc="DataVault Entry"; sw=rw; hw=na; swwel=true; resetsignal = reset_b;};
-    reg NonStickyDataVaultReg {NonStickyDataVaultEntry data[32]=0;}; //generic reg for DataVault
+    // Sticky DataVault registers (reset on hard reset)
+    field DataVaultEntry {desc="DataVault Entry (cleared on hard reset)"; sw=rw; hw=na; swwel=true; resetsignal = hard_reset_b;};
+    reg DataVaultReg {DataVaultEntry data[32]=0;}; //generic reg for DataVault
 
     // ============== Data Vault Registers ===========================
     reg {
-        desc="Controls for the Sticky Data Vault Entries";
+        desc="Controls for the Sticky Data Vault Entries (cleared on hard reset)";
         field {desc="Lock writes to this entry. Writes will be suppressed when locked.";
-               sw=rw; swwel=true; hw=r; resetsignal=hard_reset_b;} lock_entry=0; //Shoud reflect NONSTICKY_DV_NUM_ENTRIES from kv_defines_pkg.sv
+               sw=rw; swwel=true; hw=r; resetsignal=hard_reset_b;} lock_entry=0; //Shoud reflect STICKY_DV_NUM_ENTRIES from dv_defines_pkg.sv
     } StickyDataVaultCtrl[10];
 
-    StickyDataVaultReg     STICKY_DATA_VAULT_ENTRY[10][12];//Shoud reflect STICKY_DV_NUM_ENTRIES and DV_NUM_DWORDS from kv_defines_pkg.sv
+    StickyDataVaultReg     STICKY_DATA_VAULT_ENTRY[10][12];//Shoud reflect STICKY_DV_NUM_ENTRIES and DV_NUM_DWORDS from dv_defines_pkg.sv
 
     reg {
-        desc="Controls for the Non-Sticky Data Vault Entries";
+        desc="Controls for the Data Vault Entries (cleared on warm reset)";
         field {desc="Lock writes to this entry. Writes will be suppressed when locked.";
-               sw=rw; swwel=true; hw=r; resetsignal=core_only_rst_b;} lock_entry=0; //Shoud reflect STICKY_DV_NUM_ENTRIES and DV_NUM_DWORDS from kv_defines_pkg.sv
-    } NonStickyDataVaultCtrl[10];// CAREFUL with the address extensions
+               sw=rw; swwel=true; hw=r; resetsignal=core_only_rst_b;} lock_entry=0; //Shoud reflect DV_NUM_ENTRIES and DV_NUM_DWORDS from dv_defines_pkg.sv
+    } DataVaultCtrl[10];// CAREFUL with the address extensions
 
-    NonStickyDataVaultReg  NONSTICKY_DATA_VAULT_ENTRY[10][12];//Shoud reflect NONSTICKY_DV_NUM_ENTRIES and DV_NUM_DWORDS from kv_defines_pkg.sv
+    DataVaultReg  DATA_VAULT_ENTRY[10][12];//Shoud reflect DV_NUM_ENTRIES and DV_NUM_DWORDS from dv_defines_pkg.sv
 
     reg {
-        desc="Non-Sticky Scratch Register Controls";
+        desc="Scratch Register Controls (cleared on warm reset)";
         field {desc="Lock writes to the Scratch registers. Writes will be suppressed when locked.";
                sw=rw; swwel=true; hw=r; resetsignal=core_only_rst_b;} lock_entry=0;
-    } NonStickyLockableScratchRegCtrl[10]; //Shoud reflect NONSTICKY_SCRATCH_NUM_ENTRIES from kv_defines_pkg.sv & CAREFUL with the address extensions
+    } LockableScratchRegCtrl[10]; //Shoud reflect LOCK_SCRATCH_NUM_ENTRIES from dv_defines_pkg.sv & CAREFUL with the address extensions
 
     reg {
-       field {sw=rw; swwel=true; hw=na; resetsignal=reset_b;} data[32]=0;
-    } NonStickyLockableScratchReg[10]; //Shoud reflect NONSTICKY_LOCKQ_SCRATCH_NUM_ENTRIES from kv_defines_pkg.sv
+       desc="Scratch Register Entrie (cleared on hard reset)";
+       field {sw=rw; swwel=true; hw=na; resetsignal=hard_reset_b;} data[32]=0;
+    } LockableScratchReg[10]; //Shoud reflect LOCK_SCRATCH_NUM_ENTRIES from dv_defines_pkg.sv
 
     reg {
        field {sw=rw; hw=na; resetsignal=reset_b;} data[32]=0;
-    } NonStickyGenericScratchReg[8]; //Shoud reflect NONSTICKY_SCRATCH_NUM_ENTRIES from kv_defines_pkg.sv & CAREFUL with the address extensions
+    } NonStickyGenericScratchReg[8]; //Shoud reflect NONSTICKY_SCRATCH_NUM_ENTRIES from dv_defines_pkg.sv & CAREFUL with the address extensions
 
     reg {
-        desc="Sticky Scratch Register Controls";
+        desc="Sticky Scratch Register Controls (cleared on hard reset)";
         field {desc="Lock writes to the Scratch registers. Writes will be suppressed when locked.";
                sw=rw; swwel=true; hw=r; resetsignal=hard_reset_b;} lock_entry=0;
     } StickyLockableScratchRegCtrl[8]; //should reflect STICKY_LOCKQ_SCRATCH_NUM_ENTRIES
 
     reg {
+       desc="Sticky Scratch Register Entries (cleared on hard reset)";
        field {sw=rw; swwel=true; hw=na; resetsignal=hard_reset_b;} data[32]=0;
     } StickyLockableScratchReg[8]; //should reflect STICKY_LOCKQ_SCRATCH_NUM_ENTRIES
 
