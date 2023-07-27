@@ -10,6 +10,8 @@ uvmf:
         value: ACTIVE
       - bfm_name: cptra_status_agent
         value: ACTIVE
+      - bfm_name: mbox_sram_agent
+        value: ACTIVE
       active_passive_default: ACTIVE
       clock_half_period: 5ns
       clock_phase_offset: 0ns

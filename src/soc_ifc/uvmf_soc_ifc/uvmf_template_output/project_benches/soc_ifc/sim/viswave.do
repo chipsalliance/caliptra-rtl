@@ -28,6 +28,12 @@ wave group cptra_status_agent_bus
 wave add -group cptra_status_agent_bus hdl_top.cptra_status_agent_bus.* -radix hexadecimal -tag F0
 wave group cptra_status_agent_bus -collapse
 wave insertion [expr [wave index insertpoint] +1]
+wave spacer -backgroundcolor Salmon { mbox_sram_agent }
+wave add uvm_test_top.environment.mbox_sram_agent.mbox_sram_agent_monitor.txn_stream -radix string -tag F0
+wave group mbox_sram_agent_bus
+wave add -group mbox_sram_agent_bus hdl_top.mbox_sram_agent_bus.* -radix hexadecimal -tag F0
+wave group mbox_sram_agent_bus -collapse
+wave insertion [expr [wave index insertpoint] +1]
 
 wave update on
 WaveSetStreamView

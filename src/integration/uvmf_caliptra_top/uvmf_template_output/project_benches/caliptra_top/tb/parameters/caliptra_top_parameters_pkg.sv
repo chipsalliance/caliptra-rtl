@@ -45,6 +45,7 @@ package caliptra_top_parameters_pkg;
   parameter string soc_ifc_subenv_cptra_ctrl_agent_BFM  = "soc_ifc_subenv_cptra_ctrl_agent_BFM"; /* [3] */
   parameter string soc_ifc_subenv_soc_ifc_status_agent_BFM  = "soc_ifc_subenv_soc_ifc_status_agent_BFM"; /* [4] */
   parameter string soc_ifc_subenv_cptra_status_agent_BFM  = "soc_ifc_subenv_cptra_status_agent_BFM"; /* [5] */
+  parameter string soc_ifc_subenv_mbox_sram_agent_BFM  = "soc_ifc_subenv_mbox_sram_agent_BFM"; /* [6] */
 
   // pragma uvmf custom package_item_additional begin
   // pragma uvmf custom package_item_additional end

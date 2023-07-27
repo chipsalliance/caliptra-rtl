@@ -47,6 +47,8 @@ package caliptra_top_sequences_pkg;
   import soc_ifc_status_pkg_hdl::*;
   import cptra_status_pkg::*;
   import cptra_status_pkg_hdl::*;
+  import mbox_sram_pkg::*;
+  import mbox_sram_pkg_hdl::*;
   import caliptra_top_parameters_pkg::*;
   import caliptra_top_env_pkg::*;
   import qvip_ahb_lite_slave_params_pkg::*;

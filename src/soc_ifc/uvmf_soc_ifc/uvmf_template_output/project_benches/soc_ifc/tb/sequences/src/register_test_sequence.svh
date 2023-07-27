@@ -55,6 +55,7 @@ class register_test_sequence extends soc_ifc_bench_sequence_base;
       cptra_ctrl_agent_config.wait_for_reset();
       soc_ifc_status_agent_config.wait_for_reset();
       cptra_status_agent_config.wait_for_reset();
+      mbox_sram_agent_config.wait_for_reset();
       // pragma uvmf custom register_test_reset end
     join
 

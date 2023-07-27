@@ -50,6 +50,8 @@ package soc_ifc_env_pkg;
   import soc_ifc_status_pkg_hdl::*;
   import cptra_status_pkg::*;
   import cptra_status_pkg_hdl::*;
+  import mbox_sram_pkg::*;
+  import mbox_sram_pkg_hdl::*;
   import soc_ifc_reg_model_top_pkg::*;
   import qvip_ahb_lite_slave_pkg::*;
   import qvip_ahb_lite_slave_params_pkg::*;
@@ -58,6 +60,7 @@ package soc_ifc_env_pkg;
  
   `uvm_analysis_imp_decl(_soc_ifc_ctrl_agent_ae)
   `uvm_analysis_imp_decl(_cptra_ctrl_agent_ae)
+  `uvm_analysis_imp_decl(_mbox_sram_agent_ae)
   `uvm_analysis_imp_decl(_ahb_slave_0_ae)
   `uvm_analysis_imp_decl(_apb5_slave_0_ae)
   `uvm_analysis_imp_decl(_expected_analysis_export)
@@ -75,6 +78,7 @@ package soc_ifc_env_pkg;
   `uvm_analysis_imp_decl(_cov_cptra_ctrl_ae)
   `uvm_analysis_imp_decl(_cov_cptra_status_ae)
   `uvm_analysis_imp_decl(_cov_ahb_ae)
+  `uvm_analysis_imp_decl(_cov_mbox_sram_ae)
 
   // pragma uvmf custom package_imports_additional begin
   import soc_ifc_pkg::*;

@@ -17,6 +17,9 @@ uvmf:
       - name: cptra_status_agent
         type: cptra_status
         initiator_responder: "RESPONDER"
+      - name: mbox_sram_agent
+        type: mbox_sram
+        initiator_responder: "RESPONDER"
 
       analysis_components:
       - name: soc_ifc_pred
@@ -66,6 +69,8 @@ uvmf:
         receiver: soc_ifc_pred.soc_ifc_ctrl_agent_ae               #
       - driver: cptra_ctrl_agent.monitored_ap                      # Caliptra Control
         receiver: soc_ifc_pred.cptra_ctrl_agent_ae                 #
+      - driver: mbox_sram_agent.monitored_ap                       # Mailbox SRAM i/f
+        receiver: soc_ifc_pred.mbox_sram_agent_ae                  #
 #      - driver: qvip_ahb_lite_master_subenv.ahb_master_0.export_rw # AHB
 #        receiver: soc_ifc_pred.ahb_master_0_ae                     #
 #      - driver: qvip_apb5_master_subenv.apb5_master_0.export_rw    # APB

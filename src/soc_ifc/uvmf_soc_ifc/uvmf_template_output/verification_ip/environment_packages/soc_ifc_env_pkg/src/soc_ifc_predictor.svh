@@ -29,6 +29,7 @@
 //
 //   soc_ifc_ctrl_agent_ae receives transactions of type  soc_ifc_ctrl_transaction
 //   cptra_ctrl_agent_ae receives transactions of type  cptra_ctrl_transaction
+//   mbox_sram_agent_ae receives transactions of type  mbox_sram_transaction
 //   ahb_slave_0_ae receives transactions of type  mvc_sequence_item_base
 //   apb5_slave_0_ae receives transactions of type  mvc_sequence_item_base
 //
@@ -81,6 +82,11 @@ class soc_ifc_predictor #(
                               .BASE_T(BASE_T)
                               )
 ) cptra_ctrl_agent_ae;
+  uvm_analysis_imp_mbox_sram_agent_ae #(mbox_sram_transaction, soc_ifc_predictor #(
+                              .CONFIG_T(CONFIG_T),
+                              .BASE_T(BASE_T)
+                              )
+) mbox_sram_agent_ae;
   uvm_analysis_imp_ahb_slave_0_ae #(mvc_sequence_item_base, soc_ifc_predictor #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
@@ -146,6 +152,7 @@ class soc_ifc_predictor #(
   // Define transaction handles for debug visibility
   soc_ifc_ctrl_transaction soc_ifc_ctrl_agent_ae_debug;
   cptra_ctrl_transaction cptra_ctrl_agent_ae_debug;
+  mbox_sram_transaction mbox_sram_agent_ae_debug;
   mvc_sequence_item_base ahb_slave_0_ae_debug;
   mvc_sequence_item_base apb5_slave_0_ae_debug;
 
@@ -241,6 +248,7 @@ class soc_ifc_predictor #(
 
     soc_ifc_ctrl_agent_ae = new("soc_ifc_ctrl_agent_ae", this);
     cptra_ctrl_agent_ae = new("cptra_ctrl_agent_ae", this);
+    mbox_sram_agent_ae = new("mbox_sram_agent_ae", this);
     ahb_slave_0_ae = new("ahb_slave_0_ae", this);
     apb5_slave_0_ae = new("apb5_slave_0_ae", this);
     soc_ifc_sb_ap = new("soc_ifc_sb_ap", this );
@@ -400,7 +408,6 @@ class soc_ifc_predictor #(
         soc_ifc_sb_ap.write(soc_ifc_sb_ap_output_transaction);
         `uvm_info("PRED_SOC_IFC_CTRL", "Transaction submitted through soc_ifc_sb_ap", UVM_MEDIUM)
     end
-    // TODO
     // Code for sending output transaction out through cptra_sb_ap
     // Please note that each broadcasted transaction should be a different object than previously 
     // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
@@ -528,6 +535,80 @@ class soc_ifc_predictor #(
         `uvm_info("PRED_CPTRA_CTRL", "Transaction submitted through cptra_cov_ap", UVM_MEDIUM)
     end
     // pragma uvmf custom cptra_ctrl_agent_ae_predictor end
+  endfunction
+
+  // FUNCTION: write_mbox_sram_agent_ae
+  // Transactions received through mbox_sram_agent_ae initiate the execution of this function.
+  // This function performs prediction of DUT output values based on DUT input, configuration and state
+  virtual function void write_mbox_sram_agent_ae(mbox_sram_transaction t);
+    // pragma uvmf custom mbox_sram_agent_ae_predictor begin
+    // Flags control whether each transaction is sent to scoreboard
+    bit send_soc_ifc_sts_txn = 0;
+    bit send_cptra_sts_txn = 0;
+    bit send_ahb_txn = 0;
+    bit send_apb_txn = 0;
+
+    mbox_sram_agent_ae_debug = t;
+    `uvm_info("PRED_MBOX_SRAM", "Transaction Received through mbox_sram_agent_ae", UVM_MEDIUM)
+    `uvm_info("PRED_MBOX_SRAM", {"            Data: ",t.convert2string()}, UVM_FULL)
+    // Construct one of each output transaction type.
+    soc_ifc_sb_ap_output_transaction = soc_ifc_sb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ap_output_transaction");
+    cptra_sb_ap_output_transaction = cptra_sb_ap_output_transaction_t::type_id::create("cptra_sb_ap_output_transaction");
+    soc_ifc_sb_ahb_ap_output_transaction = soc_ifc_sb_ahb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ahb_ap_output_transaction");
+    soc_ifc_sb_apb_ap_output_transaction = soc_ifc_sb_apb_ap_output_transaction_t::type_id::create("soc_ifc_sb_apb_ap_output_transaction");
+
+    if (t.is_read && t.ecc_double_bit_error) begin
+        p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.error_mbox_ecc_unc_sts.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, p_soc_ifc_AHB_map); /* AHB-access only, use AHB map*/
+        `uvm_info("PRED_MBOX_SRAM", "Received read transaction with Double bit ECC corruption, triggering the err interrupt", UVM_MEDIUM)
+    end
+    else if (t.is_read && t.ecc_single_bit_error) begin
+        p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_mbox_ecc_cor_sts.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, p_soc_ifc_AHB_map); /* AHB-access only, use AHB map*/
+        `uvm_info("PRED_MBOX_SRAM", "Received read transaction with Single bit ECC corruption, triggering the notification interrupt", UVM_MEDIUM)
+    end
+    else begin
+        `uvm_info("PRED_MBOX_SRAM", "Received mailbox SRAM transaction does not cause a system state change prediction", UVM_FULL)
+    end
+    // TODO HW_ERROR_NON_FATAL activity?
+
+    // Code for sending output transaction out through soc_ifc_sb_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    if (send_soc_ifc_sts_txn) begin
+        populate_expected_soc_ifc_status_txn(soc_ifc_sb_ap_output_transaction);
+        soc_ifc_sb_ap.write(soc_ifc_sb_ap_output_transaction);
+        `uvm_error("PRED_MBOX_SRAM", "NULL Transaction submitted through soc_ifc_sb_ap")
+    end
+    // Code for sending output transaction out through cptra_sb_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    if (send_cptra_sts_txn) begin
+        populate_expected_cptra_status_txn(cptra_sb_ap_output_transaction);
+        cptra_sb_ap.write(cptra_sb_ap_output_transaction);
+        `uvm_error("PRED_MBOX_SRAM", "NULL Transaction submitted through cptra_sb_ap")
+    end
+    // Code for sending output transaction out through soc_ifc_sb_ahb_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    if (send_ahb_txn) begin
+        soc_ifc_sb_ahb_ap.write(soc_ifc_sb_ahb_ap_output_transaction);
+        `uvm_error("PRED_MBOX_SRAM", "NULL Transaction submitted through soc_ifc_sb_ahb_ap")
+    end
+    // Code for sending output transaction out through soc_ifc_sb_apb_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    if (send_apb_txn) begin
+        soc_ifc_sb_apb_ap.write(soc_ifc_sb_apb_ap_output_transaction);
+        `uvm_error("PRED_MBOX_SRAM", "NULL Transaction submitted through soc_ifc_sb_apb_ap")
+    end
+    // pragma uvmf custom mbox_sram_agent_ae_predictor end
   endfunction
 
   // FUNCTION: write_ahb_slave_0_ae
@@ -1054,7 +1135,7 @@ class soc_ifc_predictor #(
                     end
                 end
                 "CPTRA_DBG_MANUF_SERVICE_REG": begin
-                    `uvm_info("PRED_APB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                    `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
                 end
                 "CPTRA_CLK_GATING_EN": begin
                     if (ahb_txn.RnW == AHB_WRITE) begin
@@ -1087,9 +1168,9 @@ class soc_ifc_predictor #(
                             32'hfc:
                                 `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Clear the isr_active bit]", UVM_MEDIUM)
                             32'hfd:
-                                `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Toggle random SRAM single bit error injection]", UVM_MEDIUM)
+                                `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Toggle random SRAM single bit flip injection]", UVM_MEDIUM)
                             32'hfe:
-                                `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Toggle random SRAM double bit error injection]", UVM_MEDIUM)
+                                `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Toggle random SRAM double bit flip injection]", UVM_MEDIUM)
                             32'hff:
                                 `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES to End the simulation with a Success status", UVM_LOW)
                         endcase
@@ -1263,6 +1344,7 @@ class soc_ifc_predictor #(
                 "error_intr_trig_r",
                 "notif_intr_trig_r": begin
                     if (ahb_txn.RnW == AHB_WRITE) begin
+                        // FIXME --- I think this is broken, since this logic predates the callback/delay_job paradigm
                         send_cptra_sts_txn = (!this.soc_ifc_error_intr_pending && p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value()) ||
                                              (!this.soc_ifc_notif_intr_pending && p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value());
                         this.soc_ifc_error_intr_pending = p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value();
@@ -1282,8 +1364,6 @@ class soc_ifc_predictor #(
                         // but this does not result in a cptra status transaction because we only
                         // capture rising edges as a transaction
                         `uvm_info("PRED_AHB", {"Write to ", axs_reg.get_name(), " attempts to clear an interrupt"}, UVM_HIGH)
-                        this.soc_ifc_error_intr_pending = p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value();
-                        this.soc_ifc_notif_intr_pending = p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value();
                     end
                 end
                 "error_internal_intr_count_r",
@@ -1357,8 +1437,6 @@ class soc_ifc_predictor #(
                         // but this does not result in a cptra status transaction because we only
                         // capture rising edges as a transaction
                         `uvm_info("PRED_AHB", {"Write to ", axs_reg.get_name(), " attempts to clear an interrupt"}, UVM_HIGH)
-                        this.sha_err_intr_pending   = p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value();
-                        this.sha_notif_intr_pending = p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value();
                     end
                 end
                 "error0_intr_count_r",
@@ -2208,7 +2286,7 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
     if (!sha_notif_intr_pending && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value()) begin
         sha_notif_intr_pending = p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value();
         if (sha_notif_intr_pending) begin
-            `uvm_info("PRED_AHB", "Delay job triggers sha_notif_intr_pending transition", UVM_HIGH)
+            `uvm_info("PRED_DLY", "Delay job triggers sha_notif_intr_pending transition", UVM_HIGH)
             send_cptra_sts_txn = 1'b1;
         end
     end

@@ -1,0 +1,6 @@
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.vinfo
+@use mbox_sram_pkg_hdl.vinfo
++incdir+@vinfodir
+src/mbox_sram_if.sv
+src/mbox_sram_driver_bfm.sv
+src/mbox_sram_monitor_bfm.sv
