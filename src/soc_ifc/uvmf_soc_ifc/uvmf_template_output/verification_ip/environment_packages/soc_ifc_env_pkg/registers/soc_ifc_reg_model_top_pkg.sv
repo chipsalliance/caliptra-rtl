@@ -74,6 +74,11 @@ package soc_ifc_reg_model_top_pkg;
         uvm_reg_map soc_ifc_reg_intr_AHB_map;
         uvm_reg_map soc_ifc_reg_intr_APB_map;
 
+        // HWSET has precedence over SW W1C, so use these variables to track
+        // active hwset activity in case contention must be resolved
+        bit [31:0] notif_internal_intr_r_hwset_active = 0;
+        bit [31:0] error_internal_intr_r_hwset_active = 0;
+
         function new(string name = "soc_ifc_reg__intr_block_t_ext");
             super.new(name);
         endfunction : new
@@ -380,6 +385,11 @@ package soc_ifc_reg_model_top_pkg;
     class sha512_acc_csr__intr_block_t_ext extends sha512_acc_csr__intr_block_t;
         uvm_reg_map sha512_acc_csr_intr_AHB_map;
         uvm_reg_map sha512_acc_csr_intr_APB_map;
+
+        // HWSET has precedence over SW W1C, so use these variables to track
+        // active hwset activity in case contention must be resolved
+        bit [31:0] notif_internal_intr_r_hwset_active = 0;
+        bit [31:0] error_internal_intr_r_hwset_active = 0;
 
         function new(string name = "sha512_acc_csr__intr_block_t_ext");
             super.new(name);

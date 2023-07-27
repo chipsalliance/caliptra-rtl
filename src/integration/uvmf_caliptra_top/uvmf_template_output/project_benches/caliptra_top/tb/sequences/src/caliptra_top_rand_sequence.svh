@@ -167,6 +167,8 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
     bit pauser_valid_initialized = 1'b0;
     uvm_object obj;
     int ii;
+    int unsigned mbox_ecc_single_error_burst;
+    int unsigned mbox_ecc_single_error_delay_clocks;
 
     caliptra_top_env_seq = caliptra_top_env_sequence_base_t::type_id::create("caliptra_top_env_seq");
     soc_ifc_env_bringup_seq = soc_ifc_env_bringup_sequence_t::type_id::create("soc_ifc_env_bringup_seq");
@@ -176,6 +178,7 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
 
     soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq     = soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq_t::type_id::create("soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq");
     soc_ifc_subenv_soc_ifc_status_agent_responder_seq  = soc_ifc_subenv_soc_ifc_status_agent_responder_seq_t::type_id::create("soc_ifc_subenv_soc_ifc_status_agent_responder_seq");
+    soc_ifc_subenv_mbox_sram_agent_responder_seq      = soc_ifc_subenv_mbox_sram_agent_responder_seq_t::type_id::create("soc_ifc_subenv_mbox_sram_agent_responder_seq");
 
     // Handle to the responder sequence for getting response transactions
     soc_ifc_env_bringup_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
@@ -193,11 +196,27 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
     // Start RESPONDER sequences here
     fork
         soc_ifc_subenv_soc_ifc_status_agent_responder_seq.start(soc_ifc_subenv_soc_ifc_status_agent_sequencer);
+        soc_ifc_subenv_mbox_sram_agent_responder_seq.start(soc_ifc_subenv_mbox_sram_agent_sequencer);
     join_none
 //    // Start INITIATOR sequences here
 //    fork
 //      repeat (25) soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq.start(soc_ifc_subenv_soc_ifc_ctrl_agent_sequencer);
 //    join
+    fork
+        forever begin
+            if (!std::randomize(mbox_ecc_single_error_burst,mbox_ecc_single_error_delay_clocks) with {mbox_ecc_single_error_burst        dist {1 :/ 1000, [2:5] :/ 100, [6:31] :/ 20, [32:131071] :/ 1, [131072:524288] :/ 1};
+                                                                                                      mbox_ecc_single_error_delay_clocks dist {1 :/ 1, [2:31] :/ 3, [32:127] :/ 5, [128:1023] :/ 3, [1024:131072] :/ 1};    })
+                `uvm_fatal("CALIPTRA_TOP_RAND_TEST", "Failed to randomize mbox ecc bit flip injection parameters")
+            else
+                `uvm_info("CALIPTRA_TOP_RAND_TEST", $sformatf("Randomized mbox ecc bit flip injection parameters: burst [%0d] delay [%0d clocks]", mbox_ecc_single_error_burst, mbox_ecc_single_error_delay_clocks), UVM_DEBUG)
+            soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_num_clocks(mbox_ecc_single_error_delay_clocks);
+            `uvm_info("CALIPTRA_TOP_RAND_TEST", $sformatf("Injecting mbox ecc error with burst [%0d]", mbox_ecc_single_error_burst), UVM_DEBUG)
+            repeat(mbox_ecc_single_error_burst) begin
+                soc_ifc_subenv_mbox_sram_agent_config.inject_ecc_error |= 2'b01;
+                @soc_ifc_subenv_mbox_sram_agent_responder_seq.new_rsp;
+            end
+        end
+    join_none
     fork
         forever @(soc_ifc_subenv_soc_ifc_status_agent_responder_seq.new_rsp) sts_rsp_count++;
     join_none
@@ -347,6 +366,7 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
       soc_ifc_subenv_cptra_ctrl_agent_config.wait_for_num_clocks(400);
       soc_ifc_subenv_soc_ifc_status_agent_config.wait_for_num_clocks(400);
       soc_ifc_subenv_cptra_status_agent_config.wait_for_num_clocks(400);
+      soc_ifc_subenv_mbox_sram_agent_config.wait_for_num_clocks(400);
     join
 
     // pragma uvmf custom body end

@@ -7,6 +7,8 @@ uvmf:
         type: 'soc_ifc_ctrl_transaction'
       - name: cptra_ctrl_agent_ae
         type: 'cptra_ctrl_transaction'
+      - name: mbox_sram_agent_ae
+        type: 'mbox_sram_transaction'
       - name: ahb_slave_0_ae
         type: 'mvc_sequence_item_base'
 #        type: 'ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,

@@ -70,6 +70,7 @@ class caliptra_top_rom_sequence extends caliptra_top_bench_sequence_base;
 
     soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq     = soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq_t::type_id::create("soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq");
     soc_ifc_subenv_soc_ifc_status_agent_responder_seq  = soc_ifc_subenv_soc_ifc_status_agent_responder_seq_t::type_id::create("soc_ifc_subenv_soc_ifc_status_agent_responder_seq");
+    soc_ifc_subenv_mbox_sram_agent_responder_seq      = soc_ifc_subenv_mbox_sram_agent_responder_seq_t::type_id::create("soc_ifc_subenv_mbox_sram_agent_responder_seq");
 
     // Handle to the responder sequence for getting response transactions
     soc_ifc_env_bringup_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
@@ -79,6 +80,7 @@ class caliptra_top_rom_sequence extends caliptra_top_bench_sequence_base;
     // Start RESPONDER sequences here
     fork
         soc_ifc_subenv_soc_ifc_status_agent_responder_seq.start(soc_ifc_subenv_soc_ifc_status_agent_sequencer);
+        soc_ifc_subenv_mbox_sram_agent_responder_seq.start(soc_ifc_subenv_mbox_sram_agent_sequencer);
     join_none
 
     fork
@@ -108,6 +110,7 @@ class caliptra_top_rom_sequence extends caliptra_top_bench_sequence_base;
       soc_ifc_subenv_cptra_ctrl_agent_config.wait_for_num_clocks(400);
       soc_ifc_subenv_soc_ifc_status_agent_config.wait_for_num_clocks(400);
       soc_ifc_subenv_cptra_status_agent_config.wait_for_num_clocks(400);
+      soc_ifc_subenv_mbox_sram_agent_config.wait_for_num_clocks(400);
     join
 
     // pragma uvmf custom body end

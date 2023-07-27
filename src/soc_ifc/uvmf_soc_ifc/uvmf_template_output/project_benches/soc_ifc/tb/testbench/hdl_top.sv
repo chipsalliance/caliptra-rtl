@@ -82,28 +82,6 @@ import uvmf_base_pkg_hdl::*;
 // pragma uvmf custom reset_generator end
 
   // pragma uvmf custom module_item_additional begin
-import soc_ifc_pkg::*;
-    mbox_sram_req_t  mbox_sram_req;
-    mbox_sram_resp_t mbox_sram_resp;
-
-    //SRAM for mbox
-    caliptra_sram 
-    #(
-        .DATA_WIDTH(MBOX_DATA_AND_ECC_W),
-        .DEPTH(MBOX_DEPTH)
-    )
-    i_mbox_ram
-    (
-        .clk_i(clk),
-        
-        .cs_i   (mbox_sram_req.cs   ),
-        .we_i   (mbox_sram_req.we   ),
-        .addr_i (mbox_sram_req.addr ),
-        .wdata_i(mbox_sram_req.wdata),
-        
-        .rdata_o(mbox_sram_resp.rdata)
-    );
-    initial i_mbox_ram.ram = '{default:8'h0};
   // pragma uvmf custom module_item_additional end
 
   // Instantiate the signal bundle, monitor bfm and driver bfm for each interface.
@@ -130,14 +108,21 @@ import soc_ifc_pkg::*;
      .clk(clk), .dummy(1'b1)
      // pragma uvmf custom cptra_status_agent_bus_connections end
      );
+  mbox_sram_if  mbox_sram_agent_bus(
+     // pragma uvmf custom mbox_sram_agent_bus_connections begin
+     .clk(clk), .dummy(1'b1)
+     // pragma uvmf custom mbox_sram_agent_bus_connections end
+     );
   soc_ifc_ctrl_monitor_bfm  soc_ifc_ctrl_agent_mon_bfm(soc_ifc_ctrl_agent_bus.monitor_port);
   cptra_ctrl_monitor_bfm  cptra_ctrl_agent_mon_bfm(cptra_ctrl_agent_bus.monitor_port);
   soc_ifc_status_monitor_bfm  soc_ifc_status_agent_mon_bfm(soc_ifc_status_agent_bus.monitor_port);
   cptra_status_monitor_bfm  cptra_status_agent_mon_bfm(cptra_status_agent_bus.monitor_port);
+  mbox_sram_monitor_bfm  mbox_sram_agent_mon_bfm(mbox_sram_agent_bus.monitor_port);
   soc_ifc_ctrl_driver_bfm  soc_ifc_ctrl_agent_drv_bfm(soc_ifc_ctrl_agent_bus.initiator_port);
   cptra_ctrl_driver_bfm  cptra_ctrl_agent_drv_bfm(cptra_ctrl_agent_bus.initiator_port);
   soc_ifc_status_driver_bfm  soc_ifc_status_agent_drv_bfm(soc_ifc_status_agent_bus.responder_port);
   cptra_status_driver_bfm  cptra_status_agent_drv_bfm(cptra_status_agent_bus.responder_port);
+  mbox_sram_driver_bfm  mbox_sram_agent_drv_bfm(mbox_sram_agent_bus.responder_port);
 
   // pragma uvmf custom dut_instantiation begin
   // AHB Clock/reset
@@ -177,8 +162,8 @@ import soc_ifc_pkg::*;
         .generic_output_wires(soc_ifc_status_agent_bus.generic_output_wires),
 
         //SRAM interface
-        .mbox_sram_req(mbox_sram_req),
-        .mbox_sram_resp(mbox_sram_resp),
+        .mbox_sram_req(mbox_sram_agent_bus.mbox_sram_req),
+        .mbox_sram_resp(mbox_sram_agent_bus.mbox_sram_resp),
 
         //APB Interface with SoC
         .paddr_i  (uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PADDR[17:0]),
@@ -280,10 +265,12 @@ import soc_ifc_pkg::*;
     uvm_config_db #( virtual cptra_ctrl_monitor_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , cptra_ctrl_agent_BFM , cptra_ctrl_agent_mon_bfm ); 
     uvm_config_db #( virtual soc_ifc_status_monitor_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , soc_ifc_status_agent_BFM , soc_ifc_status_agent_mon_bfm ); 
     uvm_config_db #( virtual cptra_status_monitor_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , cptra_status_agent_BFM , cptra_status_agent_mon_bfm ); 
+    uvm_config_db #( virtual mbox_sram_monitor_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , mbox_sram_agent_BFM , mbox_sram_agent_mon_bfm ); 
     uvm_config_db #( virtual soc_ifc_ctrl_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , soc_ifc_ctrl_agent_BFM , soc_ifc_ctrl_agent_drv_bfm  );
     uvm_config_db #( virtual cptra_ctrl_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , cptra_ctrl_agent_BFM , cptra_ctrl_agent_drv_bfm  );
     uvm_config_db #( virtual soc_ifc_status_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , soc_ifc_status_agent_BFM , soc_ifc_status_agent_drv_bfm  );
     uvm_config_db #( virtual cptra_status_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , cptra_status_agent_BFM , cptra_status_agent_drv_bfm  );
+    uvm_config_db #( virtual mbox_sram_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , mbox_sram_agent_BFM , mbox_sram_agent_drv_bfm  );
   end
 
 endmodule

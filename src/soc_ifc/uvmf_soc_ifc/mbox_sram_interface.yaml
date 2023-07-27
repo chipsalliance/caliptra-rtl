@@ -1,0 +1,67 @@
+uvmf:
+  interfaces:
+    mbox_sram:
+      clock: clk
+      reset: dummy
+      reset_assertion_level: 'False'
+
+      config_constraints: []
+      config_vars:
+      - name: "inject_ecc_error"
+        type: "bit [1:0]"
+        isrand: "False"
+        value: "2'b00"
+        comment: "Controls injection of ECC errors for write transactions. Bit[0]: Single Bit Error. Bit[1]: Double Bit Error"
+      - name: "auto_clear_ecc_error_injection"
+        type: "bit"
+        isrand: "False"
+        value: "1'b1"
+        comment: "When set, causes the mbox_sram_responder_sequence to clear the variable 'inject_ecc_error' after a single ECC error is injected"
+
+      hdl_typedefs: []
+      hvl_typedefs: []
+
+      # NOTE: This agent will be in RESPONDER mode, which inverts
+      #       all port's polarities
+      ports:
+      - name: mbox_sram_req
+        dir: output
+        width: '$bits(mbox_sram_req_t)'
+        # cs (1) + we (1) + addr (15) + data (32) + ecc (7) = 56
+      - name: mbox_sram_resp
+        dir: input
+        width: '$bits(mbox_sram_resp_t)'
+        # data (32) + ecc (7) = 39
+
+      transaction_constraints: []
+#      - name: wait_cycles_c
+#        value: '{ wait_cycles dist {[1:25] := 80, [25:100] := 15, [100:500] := 5}; }'
+
+      transaction_vars:
+      - name: is_read
+        type: bit
+        iscompare: 'True'
+        isrand: 'True'
+      - name: address
+        type: bit [MBOX_ADDR_W-1:0]
+        iscompare: 'True'
+        isrand: 'True'
+      - name: data
+        type: bit [MBOX_DATA_W-1:0]
+        iscompare: 'True'
+        isrand: 'True'
+        # ECC would be generated based on data, post_randomize, in the case where
+        # this transaction is generated as stimulus.
+        # We mostly expect to use this i/f as an observer though.
+      - name: data_ecc
+        type: bit [MBOX_ECC_DATA_W-1:0]
+        iscompare: 'True'
+        isrand: 'False'
+      - name: ecc_single_bit_error
+        type: bit
+        iscompare: 'True'
+        isrand: 'True'
+      - name: ecc_double_bit_error
+        type: bit
+        iscompare: 'True'
+        isrand: 'True'
