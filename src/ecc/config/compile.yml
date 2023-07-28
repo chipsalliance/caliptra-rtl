@@ -50,14 +50,26 @@ requires:
   - ecc_top
   - keyvault
   - caliptra_top_defines
+  - ecc_coverage
 targets:
   tb:
     directories: 
       - $COMPILE_ROOT/tb
     files:
       - $COMPILE_ROOT/tb/ecc_top_tb.sv
-
     tops: [ecc_top_tb]
+---
+provides: [ecc_coverage]  
+schema_version: 2.4.0
+requires: 
+  - ecc_top
+targets:
+  tb:
+    directories: 
+      - $COMPILE_ROOT/coverage
+    files:
+      - $COMPILE_ROOT/coverage/ecc_top_cov_if.sv
+      - $COMPILE_ROOT/coverage/ecc_top_cov_bind.sv
 global:
   tool:
     vcs:

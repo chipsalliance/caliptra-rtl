@@ -299,6 +299,7 @@ package soc_ifc_tb_pkg;
   };
 
 
+
   // mask bits that reflect which fields can be modified  
   dword_t _soc_register_mask_dict [string] = {
     "CPTRA_HW_CONFIG"                                  : (`SOC_IFC_REG_CPTRA_HW_CONFIG_ITRNG_EN_MASK |
@@ -308,10 +309,12 @@ package soc_ifc_tb_pkg;
     "FUSE_KEY_MANIFEST_PK_HASH_MASK"                   : `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_MASK_MASK,
     "FUSE_LIFE_CYCLE"                                  : `SOC_IFC_REG_FUSE_LIFE_CYCLE_LIFE_CYCLE_MASK, 
     "FUSE_LMS_VERIFY"                                  : `SOC_IFC_REG_FUSE_LMS_VERIFY_LMS_VERIFY_MASK,
-    "CPTRA_FLOW_STATUS"                                : (`SOC_IFC_REG_CPTRA_FLOW_STATUS_STATUS_MASK              |
-                                                           `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK       |
-                                                           `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_RUNTIME_MASK  |
-                                                           `SOC_IFC_REG_CPTRA_FLOW_STATUS_MAILBOX_FLOW_DONE_MASK), 
+    "CPTRA_FLOW_STATUS"                                : (`SOC_IFC_REG_CPTRA_FLOW_STATUS_STATUS_MASK             |
+                                                          `SOC_IFC_REG_CPTRA_FLOW_STATUS_BOOT_FSM_PS_MASK        |
+                                                          `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK       |
+                                                          `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_RUNTIME_MASK  |
+                                                          `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FUSES_MASK    |
+                                                          `SOC_IFC_REG_CPTRA_FLOW_STATUS_MAILBOX_FLOW_DONE_MASK),
     "CPTRA_MBOX_PAUSER_LOCK"                           : `SOC_IFC_REG_CPTRA_MBOX_PAUSER_LOCK_0_LOCK_MASK,   // same for all 5 pausers
     "CPTRA_TRNG_PAUSER_LOCK"                           : `SOC_IFC_REG_CPTRA_TRNG_PAUSER_LOCK_LOCK_MASK,
     "CPTRA_TRNG_STATUS.APB"                            : `SOC_IFC_REG_CPTRA_TRNG_STATUS_DATA_WR_DONE_MASK, 
@@ -496,7 +499,7 @@ package soc_ifc_tb_pkg;
 
 
   // Needs RMW of register without APB or AHB writes 
-  function dword_t update_CPTRA_SECURITY_STATE(logic scan_mode, logic debug_state, logic [1:0] lifecycle); 
+  function automatic dword_t update_CPTRA_SECURITY_STATE(logic scan_mode, logic debug_state, logic [1:0] lifecycle); 
 
     begin
       update_exp_regval("CPTRA_SECURITY_STATE", 
@@ -512,23 +515,26 @@ package soc_ifc_tb_pkg;
   endfunction // update_CPTRA_SECURITY_STATE
 
 
-  // Needs RMW of register without APB or AHB writes 
-  function logic [63:0] update_CPTRA_GENERIC_INPUT_WIRES(logic [31:0] wires1, logic [31:0] wires0);
+  // Can update only 1 GENERIC_INPUT_WIRE bus at a time 
+  function automatic dword_t update_CPTRA_GENERIC_INPUT_WIRES(logic [31:0] generic_wires, bit upper);
 
     begin
-      update_exp_regval("CPTRA_GENERIC_INPUT_WIRES0", wires0, SET_DIRECT);
-      update_exp_regval("CPTRA_GENERIC_INPUT_WIRES1", wires1, SET_DIRECT);
-
-      $display ("TB INFO. Fields for CPTRA_GENERIC_INPUT_WIRES0 changed to 0x%08x", _exp_register_data_dict["CPTRA_GENERIC_INPUT_WIRES0"]); 
-      $display ("TB INFO. Fields for CPTRA_GENERIC_INPUT_WIRES1 changed to 0x%08x", _exp_register_data_dict["CPTRA_GENERIC_INPUT_WIRES1"]); 
-      return {_exp_register_data_dict["CPTRA_GENERIC_INPUT_WIRES1"], _exp_register_data_dict["CPTRA_GENERIC_INPUT_WIRES0"]};
+      if (upper) begin
+        update_exp_regval("CPTRA_GENERIC_INPUT_WIRES1", generic_wires, SET_DIRECT);
+        $display ("TB INFO. CPTRA_GENERIC_INPUT_WIRES1 changed to 0x%08x", _exp_register_data_dict["CPTRA_GENERIC_INPUT_WIRES1"]); 
+        return _exp_register_data_dict["CPTRA_GENERIC_INPUT_WIRES1"];
+      end else begin
+        update_exp_regval("CPTRA_GENERIC_INPUT_WIRES0", generic_wires, SET_DIRECT);
+        $display ("TB INFO. CPTRA_GENERIC_INPUT_WIRES0 changed to 0x%08x", _exp_register_data_dict["CPTRA_GENERIC_INPUT_WIRES0"]); 
+        return _exp_register_data_dict["CPTRA_GENERIC_INPUT_WIRES0"];
+      end
     end
 
   endfunction // update_CPTRA_GENERIC_INPUT_WIRES
 
 
   // Needs RMW of register without APB or AHB writes 
-  function logic [31:0] update_INTR_BRF_NOTIF_INTERNAL_INTR_R(logic gen_input_wire_toggle, logic debug_locked); 
+  function automatic logic [31:0] update_INTR_BRF_NOTIF_INTERNAL_INTR_R(logic gen_input_wire_toggle, logic debug_locked); 
 
     dword_t tmp_data;
 
@@ -549,15 +555,18 @@ package soc_ifc_tb_pkg;
 
 
   // Needs RMW of register without APB or AHB writes 
-  function dword_t update_CPTRA_FLOW_STATUS(int fuse_ready_val);
+  function automatic dword_t update_CPTRA_FLOW_STATUS(int fuse_ready_val, logic [2:0] boot_fsm_ps);
 
     dword_t tmp_data;
 
     begin
-      tmp_data = _exp_register_data_dict["CPTRA_FLOW_STATUS"];
+
+      tmp_data = _exp_register_data_dict["CPTRA_FLOW_STATUS"]; // then preserve read-only bit fields per masks 
       tmp_data = tmp_data & (32'hffff_ffff ^ `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FUSES_MASK);
       tmp_data = tmp_data | mask_shifted(fuse_ready_val, `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FUSES_MASK);
-      // $display( "TB INFO. update_CPTRA_FLOW_STATUS(%d) at time %t. new tmp_data = 0x%08x", fuse_ready_val, $realtime, tmp_data); 
+      tmp_data = tmp_data & (32'hffff_ffff ^ `SOC_IFC_REG_CPTRA_FLOW_STATUS_BOOT_FSM_PS_MASK);
+      tmp_data = tmp_data | mask_shifted(boot_fsm_ps, `SOC_IFC_REG_CPTRA_FLOW_STATUS_BOOT_FSM_PS_MASK);
+      $display( "TB DEBUG. update_CPTRA_FLOW_STATUS(%x, %x) at time %t. new tmp_data = 0x%08x", fuse_ready_val, boot_fsm_ps, $realtime, tmp_data); 
 
       update_exp_regval("CPTRA_FLOW_STATUS", tmp_data, SET_DIRECT); 
 
@@ -569,7 +578,7 @@ package soc_ifc_tb_pkg;
 
 
   // Needs RMW of register without APB or AHB writes 
-  function dword_t update_CPTRA_RESET_REASON(int wrm_rst, int fw_upd);
+  function automatic dword_t update_CPTRA_RESET_REASON(int wrm_rst, int fw_upd);
 
     begin
       update_exp_regval("CPTRA_RESET_REASON", 

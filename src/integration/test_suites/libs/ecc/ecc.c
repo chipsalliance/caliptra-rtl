@@ -33,7 +33,7 @@ void wait_for_ecc_intr(){
         }
     };
     //printf("Received ECC error intr with status = %d\n", cptra_intr_rcv.ecc_error);
-    printf("Received ECC notif intr with status = %d\n", cptra_intr_rcv.ecc_notif);
+    printf("Received ECC notif/ err intr with status = %d/ %d\n", cptra_intr_rcv.ecc_notif, cptra_intr_rcv.ecc_error);
 }
 
 void ecc_zeroize(){

@@ -67,7 +67,7 @@
       sb.del_all();
       error_ctr = 0;
 
-      update_CPTRA_FLOW_STATUS(ready_for_fuses); 
+      update_CPTRA_FLOW_STATUS(ready_for_fuses, `REG_HIER_BOOT_FSM_PS);
 
 
       $display ("\n-------------------------------------------------------------");
@@ -203,7 +203,7 @@
       wait (ready_for_fuses == 1'b1);
 
       // Some registers need update for specific fields
-      flow_status = update_CPTRA_FLOW_STATUS(ready_for_fuses); 
+      flow_status = update_CPTRA_FLOW_STATUS(ready_for_fuses, `REG_HIER_BOOT_FSM_PS); 
       reset_reason = update_CPTRA_RESET_REASON(1, 0);
 
       // expect old sticky values which are different from power-on values
@@ -228,7 +228,7 @@
       wait (ready_for_fuses == 1'b1);
 
       // Some registers need update for specific fields
-      flow_status = update_CPTRA_FLOW_STATUS(ready_for_fuses); 
+      flow_status =  update_CPTRA_FLOW_STATUS(ready_for_fuses, `REG_HIER_BOOT_FSM_PS);
       reset_reason = update_CPTRA_RESET_REASON(1, 0);
 
       // expect old sticky values which are different from power-on values
