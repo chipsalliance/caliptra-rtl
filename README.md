@@ -189,7 +189,7 @@ Steps:<BR>
 
 ## **Regression Tests** ##
 
-Only tests from teh L0 Regression List should be run. 
+Only tests from the L0 Regression List should be run. 
 ## **NOTES** ##
 
 * The internal registers are auto rendered at the [GitHub page](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs)
