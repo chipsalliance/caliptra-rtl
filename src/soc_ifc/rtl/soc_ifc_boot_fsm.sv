@@ -68,7 +68,7 @@ logic wait_count_decr;
 logic cptra_rst_window,cptra_rst_window_f,cptra_rst_window_ff;
 
 //move to fuse state when SoC de-asserts reset
-always_comb arc_BOOT_IDLE_BOOT_FUSE = (boot_fsm_ps == BOOT_IDLE) & ~cptra_rst_window;
+always_comb arc_BOOT_IDLE_BOOT_FUSE = (boot_fsm_ps == BOOT_IDLE) & ~cptra_rst_window_f;
 //move from fuse state to done when fuse done register is set OR
 //if it was already set (since its locked across warm reset), that the write was observed from SOC
 always_comb arc_BOOT_FUSE_BOOT_DONE = fuse_done & fuse_wr_done_observed;
@@ -79,12 +79,12 @@ always_comb arc_BOOT_FUSE_BOOT_WAIT = BootFSM_BrkPoint;
 //dummy arc for terminal state lint check
 always_comb arc_BOOT_DONE_BOOT_IDLE = '0;
 
-always_comb arc_IDLE = cptra_rst_window;
+always_comb arc_IDLE = cptra_rst_window_f;
 
 //Masks combo paths from uc reset flops into other reset domains
 always_comb fw_update_rst_window = boot_fsm_ps inside {BOOT_FW_RST,BOOT_WAIT};
 //clock gate all flops on warm reset to prevent RDC metastability issues
-always_comb rdc_clk_dis = cptra_rst_window | cptra_rst_window_f | cptra_rst_window_ff;
+always_comb rdc_clk_dis = cptra_rst_window_f | cptra_rst_window_ff;
 
 //move to rst state when reg bit is set to 1. This state will assert fw_rst to uc
 always_comb arc_BOOT_DONE_BOOT_FWRST = (boot_fsm_ps == BOOT_DONE) & fw_update_rst;
@@ -210,6 +210,8 @@ always_ff @(posedge clk or negedge cptra_pwrgood) begin
         synch_uc_rst_b <= 0;
         cptra_noncore_rst_b <= '0;
         cptra_uc_rst_b <= '0;
+        cptra_rst_window_f <= '1;
+        cptra_rst_window_ff <= '1;
     end
     else begin
         boot_fsm_ps <= arc_IDLE ? BOOT_IDLE : boot_fsm_ns;
@@ -217,6 +219,9 @@ always_ff @(posedge clk or negedge cptra_pwrgood) begin
         synch_uc_rst_b <= fsm_synch_uc_rst_b;
         cptra_noncore_rst_b <= synch_noncore_rst_b;
         cptra_uc_rst_b <= synch_noncore_rst_b && synch_uc_rst_b; //uc comes out of rst only when both global and fw rsts are deasserted (through 2FF sync)
+
+        cptra_rst_window_f <= cptra_rst_window;
+        cptra_rst_window_ff <= cptra_rst_window_f;
     end
 end
 
@@ -224,15 +229,11 @@ end
 always_ff @(posedge clk or negedge cptra_rst_b) begin
     if (~cptra_rst_b) begin
         cptra_rst_window <= '1;
-        cptra_rst_window_f <= '1;
-        cptra_rst_window_ff <= '1;
         wait_count <= '0;
         iccm_unlock <= 0;
     end
     else begin
         cptra_rst_window <= 0;
-        cptra_rst_window_f <= cptra_rst_window;
-        cptra_rst_window_ff <= cptra_rst_window_f;
 
         wait_count <= (wait_count_decr && (wait_count != '0)) ? wait_count - 1 :
                                                wait_count_rst ? fw_update_rst_wait_cycles :
