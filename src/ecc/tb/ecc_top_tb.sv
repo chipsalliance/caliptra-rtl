@@ -138,6 +138,9 @@ module ecc_top_tb
     end
   end
 
+  //bind coverage file
+  ecc_top_cov_bind i_ecc_top_cov_bind();
+
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
@@ -170,7 +173,7 @@ module ecc_top_tb
 
              .error_intr(error_intr_tb),
              .notif_intr(notif_intr_tb),
-             .debugUnlock_or_scan_mode_switch()
+             .debugUnlock_or_scan_mode_switch('0)
             );
 
 
@@ -207,18 +210,15 @@ module ecc_top_tb
   task reset_dut;
     begin
       $display("*** Toggle reset.");
+      cptra_pwrgood_tb = '0;
       reset_n_tb = 0;
-      cptra_pwrgood_tb = 0;
 
       #(2 * CLK_PERIOD);
-
-      @(posedge clk_tb);
-      reset_n_tb = 1;
       cptra_pwrgood_tb = 1;
 
       #(2 * CLK_PERIOD);
+      reset_n_tb = 1;
 
-      @(posedge clk_tb);
       $display("");
     end
   endtask // reset_dut
@@ -308,22 +308,18 @@ module ecc_top_tb
   task write_single_word(input [31 : 0]  address,
                   input [31 : 0] word);
     begin
-      hsel_i_tb       <= 1;
-      haddr_i_tb      <= address;
-      hwrite_i_tb     <= 1;
-      hready_i_tb     <= 1;
-      htrans_i_tb     <= AHB_HTRANS_NONSEQ;
-      hsize_i_tb      <= 3'b010;
-      
-      @(posedge clk_tb);
-      haddr_i_tb      <= 'Z;
-      hwdata_i_tb     <= word;
-      hwrite_i_tb     <= 0;
-      htrans_i_tb     <= AHB_HTRANS_IDLE;
-      wait(hreadyout_o_tb == 1'b1);
+      hsel_i_tb       = 1;
+      haddr_i_tb      = address;
+      hwrite_i_tb     = 1;
+      hready_i_tb     = 1;
+      htrans_i_tb     = AHB_HTRANS_NONSEQ;
+      hsize_i_tb      = 3'b010;
+      #(CLK_PERIOD);
 
-      @(posedge clk_tb);
-      hsel_i_tb       <= 0;
+      haddr_i_tb      = 'Z;
+      hwdata_i_tb     = word;
+      hwrite_i_tb     = 0;
+      htrans_i_tb     = AHB_HTRANS_IDLE;
     end
   endtask // write_single_word
 
@@ -360,21 +356,17 @@ module ecc_top_tb
   //----------------------------------------------------------------
   task read_single_word(input [31 : 0]  address);
     begin
-      hsel_i_tb       <= 1;
-      haddr_i_tb      <= address;
-      hwrite_i_tb     <= 0;
-      hready_i_tb     <= 1;
-      htrans_i_tb     <= AHB_HTRANS_NONSEQ;
-      hsize_i_tb      <= 3'b010;
+      hsel_i_tb       = 1;
+      haddr_i_tb      = address;
+      hwrite_i_tb     = 0;
+      hready_i_tb     = 1;
+      htrans_i_tb     = AHB_HTRANS_NONSEQ;
+      hsize_i_tb      = 3'b010;
+      #(CLK_PERIOD);
       
-      @(posedge clk_tb);
-      hwdata_i_tb     <= 0;
-      haddr_i_tb      <= 'Z;
-      htrans_i_tb     <= AHB_HTRANS_IDLE;
-      wait(hreadyout_o_tb == 1'b1);
-
-      @(posedge clk_tb);
-      hsel_i_tb       <= 0;      
+      hwdata_i_tb     = 0;
+      haddr_i_tb      = 'Z;
+      htrans_i_tb     = AHB_HTRANS_IDLE;
     end
   endtask // read_word
 
@@ -456,7 +448,10 @@ module ecc_top_tb
   //----------------------------------------------------------------
   task trig_ECC(input [2 : 0] cmd);
     begin
-      write_single_word(`ECC_REG_ECC_CTRL  , cmd);
+      write_single_word(`ECC_REG_ECC_CTRL, cmd);
+      #(CLK_PERIOD);
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
     end
   endtask // trig_ECC
 
@@ -470,7 +465,7 @@ module ecc_top_tb
                        input test_vector_t test_vector);
     reg [31  : 0]   start_time;
     reg [31  : 0]   end_time;
-    reg [383 : 0]   privkey;
+    operand_t       privkey;
     affn_point_t    pubkey;
     begin
       wait_ready();
@@ -489,7 +484,6 @@ module ecc_top_tb
 
       $display("*** TC %0d starting ECC keygen flow", tc_number);
       trig_ECC(ECC_CMD_KEYGEN);
-      #(CLK_PERIOD);
       
       wait_ready();
 
@@ -505,6 +499,8 @@ module ecc_top_tb
       read_block(`ECC_REG_ECC_PUBKEY_Y_0);
       pubkey.y = reg_read_data;
       
+      trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK); //zeroize
+
       end_time = cycle_ctr - start_time;
       $display("*** keygen test processing time = %01d cycles.", end_time);
       $display("privkey    : 0x%96x", privkey);
@@ -540,8 +536,8 @@ module ecc_top_tb
                         input test_vector_t test_vector);
     reg [31  : 0]   start_time;
     reg [31  : 0]   end_time;
-    reg [383 : 0]   R;
-    reg [383 : 0]   S;
+    operand_t       R;
+    operand_t       S;
     
     begin
       wait_ready();
@@ -560,7 +556,6 @@ module ecc_top_tb
 
       $display("*** TC %0d starting ECC signing flow", tc_number);
       trig_ECC(ECC_CMD_SIGNING);
-      #(CLK_PERIOD);
 
       wait_ready();
 
@@ -572,6 +567,8 @@ module ecc_top_tb
       read_block(`ECC_REG_ECC_SIGN_S_0);
       S = reg_read_data;
       
+      trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK); //zeroize
+
       end_time = cycle_ctr - start_time;
       $display("*** signing test processing time = %01d cycles.", end_time);
       $display("privkey    : 0x%96x", test_vector.privkey);
@@ -605,7 +602,7 @@ module ecc_top_tb
                         input test_vector_t test_vector);
     reg [31  : 0]   start_time;
     reg [31  : 0]   end_time;
-    reg [383 : 0]   verify_r;
+    operand_t       verify_r;
     
     begin
       wait_ready();
@@ -628,7 +625,6 @@ module ecc_top_tb
 
       $display("*** TC %0d starting ECC verify flow", tc_number);
       trig_ECC(ECC_CMD_VERIFYING);
-      #(CLK_PERIOD);
 
       wait_ready();
 
@@ -636,6 +632,8 @@ module ecc_top_tb
       read_block(`ECC_REG_ECC_VERIFY_R_0);
       verify_r = reg_read_data;
       
+      trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK); //zeroize
+
       end_time = cycle_ctr - start_time;
       $display("*** verifying test processing time = %01d cycles.", end_time);
       $display("privkey    : 0x%96x", test_vector.privkey);
@@ -657,6 +655,304 @@ module ecc_top_tb
     end
   endtask // ecc_verifying_test
 
+
+
+  //----------------------------------------------------------------
+  // continuous_cmd_test()
+  //
+  //
+  // Perform test of chaning the command during the process.
+  //----------------------------------------------------------------
+  task continuous_cmd_test(input test_vector_t test_vector);
+    operand_t     privkey;
+    affn_point_t  pubkey;
+    operand_t     R;
+    operand_t     S;
+    operand_t     verify_r;
+
+    begin
+
+      $display("*** continuous_cmd_test started.");
+
+      $display("*** starting ECC keygen flow");
+      wait_ready();
+      tc_ctr = tc_ctr + 1;
+    
+      write_block(`ECC_REG_ECC_SEED_0, test_vector.seed);
+      write_block(`ECC_REG_ECC_NONCE_0, test_vector.nonce);
+      write_block(`ECC_REG_ECC_IV_0, test_vector.IV);
+
+      trig_ECC(ECC_CMD_KEYGEN);
+      
+      for (int i=0; i<10; i++)
+        begin
+          trig_ECC(ECC_CMD_SIGNING);
+          #(10*CLK_PERIOD);
+          trig_ECC(ECC_CMD_KEYGEN);
+          #(10*CLK_PERIOD);
+          trig_ECC(ECC_CMD_VERIFYING);
+          #(10*CLK_PERIOD);
+        end
+
+      wait_ready();
+
+      read_block(`ECC_REG_ECC_PRIVKEY_OUT_0);
+      privkey = reg_read_data;
+      read_block(`ECC_REG_ECC_PUBKEY_X_0);
+      pubkey.x = reg_read_data;
+      read_block(`ECC_REG_ECC_PUBKEY_Y_0);
+      pubkey.y = reg_read_data;
+      
+      trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK); //zeroize
+
+      if ((privkey == test_vector.privkey) & (pubkey == test_vector.pubkey))
+        begin
+          $display("*** TC %0d keygen successful.", tc_ctr);
+          $display("");
+        end
+      else
+        begin
+          $display("*** ERROR: TC %0d keygen NOT successful.", tc_ctr);
+          $display("Expected_x: 0x%96x", test_vector.pubkey.x);
+          $display("Got:        0x%96x", pubkey.x);
+          $display("Expected_y: 0x%96x", test_vector.pubkey.y);
+          $display("Got:        0x%96x", pubkey.y);
+          $display("");
+
+          error_ctr = error_ctr + 1;
+        end
+
+
+      $display("*** signing test started.");
+      wait_ready();
+      tc_ctr = tc_ctr + 1;
+
+      write_block(`ECC_REG_ECC_MSG_0, test_vector.hashed_msg);
+      write_block(`ECC_REG_ECC_PRIVKEY_IN_0, test_vector.privkey);
+      write_block(`ECC_REG_ECC_IV_0, test_vector.IV);
+
+      trig_ECC(ECC_CMD_SIGNING);
+
+      for (int i=0; i<10; i++)
+        begin
+          trig_ECC(ECC_CMD_SIGNING);
+          #(10*CLK_PERIOD);
+          trig_ECC(ECC_CMD_KEYGEN);
+          #(10*CLK_PERIOD);
+          trig_ECC(ECC_CMD_VERIFYING);
+          #(10*CLK_PERIOD);
+        end
+
+      wait_ready();
+
+      read_block(`ECC_REG_ECC_SIGN_R_0);
+      R = reg_read_data;
+      read_block(`ECC_REG_ECC_SIGN_S_0);
+      S = reg_read_data;
+      
+      trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK); //zeroize
+
+      if (R == test_vector.R & S == test_vector.S)
+        begin
+          $display("*** TC %0d signing successful.", tc_ctr);
+          $display("");
+        end
+      else
+        begin
+          $display("*** ERROR: TC %0d signing NOT successful.", tc_ctr);
+          $display("Expected_R: 0x%96x", test_vector.R);
+          $display("Got:        0x%96x", R);
+          $display("Expected_S: 0x%96x", test_vector.S);
+          $display("Got:        0x%96x", S);
+          $display("");
+
+          error_ctr = error_ctr + 1;
+        end
+
+      
+      $display("*** verifying test started.");
+      wait_ready();
+      tc_ctr = tc_ctr + 1;
+
+      write_block(`ECC_REG_ECC_MSG_0, test_vector.hashed_msg);
+      write_block(`ECC_REG_ECC_PUBKEY_X_0, test_vector.pubkey.x);
+      write_block(`ECC_REG_ECC_PUBKEY_Y_0, test_vector.pubkey.y);
+      write_block(`ECC_REG_ECC_SIGN_R_0, test_vector.R);
+      write_block(`ECC_REG_ECC_SIGN_S_0, test_vector.S);
+
+      trig_ECC(ECC_CMD_VERIFYING);
+
+      for (int i=0; i<10; i++)
+        begin
+          trig_ECC(ECC_CMD_SIGNING);
+          #(10*CLK_PERIOD);
+          trig_ECC(ECC_CMD_KEYGEN);
+          #(10*CLK_PERIOD);
+          trig_ECC(ECC_CMD_VERIFYING);
+          #(10*CLK_PERIOD);
+        end
+
+      wait_ready();
+
+      read_block(`ECC_REG_ECC_VERIFY_R_0);
+      verify_r = reg_read_data;
+      
+      trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK); //zeroize
+
+      if (verify_r == test_vector.R)
+        begin
+          $display("*** TC %0d verifying successful.", tc_ctr);
+          $display("");
+        end
+      else
+        begin
+          $display("*** ERROR: TC %0d verifying NOT successful.", tc_ctr);
+          $display("Expected_R: 0x%96x", test_vector.R);
+          $display("Got:        0x%96x", verify_r);
+          $display("");
+
+          error_ctr = error_ctr + 1;
+        end
+    end
+  endtask // continuous_cmd_test
+
+
+  //----------------------------------------------------------------
+  // zeroize_test()
+  //
+  //----------------------------------------------------------------
+  task zeroize_test(input test_vector_t test_vector);
+    operand_t     privkey;
+    affn_point_t  pubkey;
+    operand_t     R;
+    operand_t     S;
+    operand_t     verify_r;
+
+    begin
+
+      $display("*** zeroize test started.");
+      
+      for (int i=0; i<2; i++) begin
+        // First test: assert zeroize with KEYGEN
+        wait_ready();
+        write_block(`ECC_REG_ECC_SEED_0, test_vector.seed);
+        write_block(`ECC_REG_ECC_NONCE_0, test_vector.nonce);
+        write_block(`ECC_REG_ECC_IV_0, test_vector.IV);
+
+        if (i==0) begin
+          trig_ECC(ECC_CMD_KEYGEN);
+          #(100 * CLK_PERIOD);
+          trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK); //zeroize
+          #(CLK_PERIOD);
+        end
+        else begin
+          trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK | ECC_CMD_KEYGEN); //zeroize
+        end
+
+        wait_ready();
+
+        read_block(`ECC_REG_ECC_PRIVKEY_OUT_0);
+        privkey = reg_read_data;
+        read_block(`ECC_REG_ECC_PUBKEY_X_0);
+        pubkey.x = reg_read_data;
+        read_block(`ECC_REG_ECC_PUBKEY_Y_0);
+        pubkey.y = reg_read_data;
+        
+        if ((privkey == 0) & (pubkey == 0))
+          begin
+            $display("*** TC %0d keygen successful.", tc_ctr);
+            $display("");
+          end
+        else
+          begin
+            $display("*** ERROR: TC %0d keygen NOT successful.", tc_ctr);
+            $display("Got:        0x%96x", pubkey.x);
+            $display("Got:        0x%96x", pubkey.y);
+            $display("");
+
+            error_ctr = error_ctr + 1;
+          end
+        tc_ctr = tc_ctr + 1;
+
+        // Second test: assert zeroize with Signing
+        wait_ready();
+        write_block(`ECC_REG_ECC_MSG_0, test_vector.hashed_msg);
+        write_block(`ECC_REG_ECC_PRIVKEY_IN_0, test_vector.privkey);
+        write_block(`ECC_REG_ECC_IV_0, test_vector.IV);
+
+        if (i==0) begin
+          trig_ECC(ECC_CMD_SIGNING);
+          #(100 * CLK_PERIOD);
+          trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK); //zeroize
+        end
+        else begin
+          trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK | ECC_CMD_SIGNING); //zeroize
+        end
+
+        wait_ready();
+
+        read_block(`ECC_REG_ECC_SIGN_R_0);
+        R = reg_read_data;
+        read_block(`ECC_REG_ECC_SIGN_S_0);
+        S = reg_read_data;
+        
+        if (R == 0 & S == 0)
+          begin
+            $display("*** TC %0d signing successful.", tc_ctr);
+            $display("");
+          end
+        else
+          begin
+            $display("*** ERROR: TC %0d signing NOT successful.", tc_ctr);
+            $display("Got:        0x%96x", R);
+            $display("Got:        0x%96x", S);
+            $display("");
+
+            error_ctr = error_ctr + 1;
+          end
+        tc_ctr = tc_ctr + 1;
+
+        // Third test: assert zeroize when Verifying is working
+        wait_ready();
+        write_block(`ECC_REG_ECC_MSG_0, test_vector.hashed_msg);
+        write_block(`ECC_REG_ECC_PUBKEY_X_0, test_vector.pubkey.x);
+        write_block(`ECC_REG_ECC_PUBKEY_Y_0, test_vector.pubkey.y);
+        write_block(`ECC_REG_ECC_SIGN_R_0, test_vector.R);
+        write_block(`ECC_REG_ECC_SIGN_S_0, test_vector.S);
+
+        if (i==0) begin
+          trig_ECC(ECC_CMD_VERIFYING);
+          #(100 * CLK_PERIOD);
+          trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK); //zeroize
+        end
+        else begin
+          trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK | ECC_CMD_VERIFYING); //zeroize
+        end
+
+        wait_ready();
+
+        read_block(`ECC_REG_ECC_VERIFY_R_0);
+        verify_r = reg_read_data;
+        
+        if (verify_r == 0)
+          begin
+            $display("*** TC %0d verifying successful.", tc_ctr);
+            $display("");
+          end
+        else
+          begin
+            $display("*** ERROR: TC %0d verifying NOT successful.", tc_ctr);
+            $display("Got:        0x%96x", verify_r);
+            $display("");
+
+            error_ctr = error_ctr + 1;
+          end
+        tc_ctr = tc_ctr + 1;
+      end
+
+      $display("*** TC%01d - zeroize test done.", tc_ctr);
+    end
+  endtask // zeroize_test
 
   //----------------------------------------------------------------
   // ecc_openssl_keygen_test()
@@ -733,6 +1029,9 @@ module ecc_top_tb
           ecc_onthefly_reset_test(i, test_vectors[i]);
         end
       end
+      
+      continuous_cmd_test(test_vectors[0]);
+      zeroize_test(test_vectors[1]);
     end
   endtask // ecc_test
 

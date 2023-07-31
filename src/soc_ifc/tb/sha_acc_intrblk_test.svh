@@ -75,7 +75,7 @@
       $display("Executing task sha_acc_intrblk_test"); 
       $display("---------------------------------\n");
 
-      set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_UNLOCKED});
+      // set_security_state_byname("DEBUG_UNLOCKED_PRODCUTION"); 
 
       tc_ctr = tc_ctr + 1;
       wrtrans = new();
@@ -95,7 +95,7 @@
       repeat (20) @(posedge clk_tb);
       sb.del_all();
 
-      update_CPTRA_FLOW_STATUS(ready_for_fuses); 
+      update_CPTRA_FLOW_STATUS(ready_for_fuses, `REG_HIER_BOOT_FSM_PS);
 
       $display ("\n1a. Writing over AHB, APB then reading back over APB"); 
 

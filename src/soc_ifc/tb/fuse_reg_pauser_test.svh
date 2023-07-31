@@ -16,7 +16,6 @@
 
 
 `define FORLOOP_COMB(x) always_comb for (int j = 0; j < x; j++) 
-`define REG_HIER_PFX dut.i_soc_ifc_reg.field_storage
 `define STR_RMPFX(astr, bstr) astr.substr(bstr.len(), astr.len() - 1).atoi()
 
 
@@ -88,13 +87,17 @@ task fuse_reg_pauser_test;
     print_banner("1a. Default pauser and unlocked. APB write to registers, check values");
     tphase = "1a";
 
-    write_regs(SET_APB, fuse_regnames, tid, 3);  // effect changes & expec same values on read
+    write_regs(SET_APB, fuse_regnames, tid, 3);  // effect changes & 
     repeat (5) @(posedge clk_tb);
-    read_regs(GET_APB, fuse_regnames, tid, 3);  
+    read_regs(GET_APB, fuse_regnames, tid, 3);  // expect same values on read
 
     //------------------------------------------------------------------------------------------- 
     print_banner("1b. With unlocked non-default pauser, repeat 1a");
     tphase = "1b";
+
+    // NOTE. simulate_caliptra_boot() is necessary for noncore_rst_b to be deasserted
+    simulate_caliptra_boot();
+    wait (cptra_noncore_rst_b_tb == 1'b1);
 
     // Set pauser valid to non-default
     wrtrans.update_byname("CPTRA_FUSE_VALID_PAUSER", 0, tid); 
@@ -110,9 +113,9 @@ task fuse_reg_pauser_test;
       error_ctr += 1;
     end 
 
-    write_regs(SET_APB, fuse_regnames, tid, 3);  // effect changes
+    write_regs(SET_APB, fuse_regnames, tid, 3);  // effect changes & 
     repeat (5) @(posedge clk_tb);
-    read_regs(GET_APB, fuse_regnames, tid, 3);  
+    read_regs(GET_APB, fuse_regnames, tid, 3);  // expect same values on read
 
     //------------------------------------------------------------------------------------------- 
     print_banner("1c. Lock pauser with non-default value. repeat 1a but read with and w/o valid pauser"); 
@@ -142,7 +145,7 @@ task fuse_reg_pauser_test;
       fuse_regval_actual = get_fuse_regval(rname);
       read_reg_chk_inrange(GET_APB, rname, tid, '0, '0);  // get 0's on default pauser
       repeat (3) @(posedge clk_tb);
-      read_reg_trans(GET_APB, rdtrans, valid_pauser); 
+      read_reg_trans(GET_APB, rdtrans, valid_pauser); // expect older (stored) values
       repeat (3) @(posedge clk_tb);
 
       if (str_startswith(rname, "FUSE_UDS_SEED") || str_startswith(rname, "FUSE_FIELD_ENTROPY")) 
@@ -162,7 +165,17 @@ task fuse_reg_pauser_test;
     print_banner("1d. With matching locked non-default pauser, repeat 1a"); 
     tphase = "1d";
 
-    sb.del_all();  // Fresh scoreboard start (except for errors)
+    // Programming a non-default valid_pauser and locking it requires waiting for cptra_noncore_rst_b 
+    // to be deasserted after a reset, ie, Caliptra boot. 
+    //  
+    // At the same time ready_for_fuses drops low followed by cptra_noncore_rst_b goingh high, ergo 
+    // writes to fuse regs no longer work (for any pauser value) until a warm reset occurs. 
+    // HOWEVER, a warm reset also resets the valid_pauser register. 
+    // 
+    // The net result (a bug) is that fuse registers can ONLY be written using a default pauser value; 
+    // fuse registers can be read out though using any programmed and locked valid_pauser.  
+   
+    sb.del_all();  
 
     foreach (fuse_regnames[i]) begin
       rname = fuse_regnames[i];
@@ -179,8 +192,8 @@ task fuse_reg_pauser_test;
         continue;
 
       if (rdtrans.data != (get_mask(rname) & wrtrans.data)) begin
-        $display("TB ERROR. Mismatch on APB write and read w/valid pauser for reg %-30s (0x%08x). Masked Write value = 0x%08x | expected Read value = 0x%08x", 
-          rname, rdtrans.addr, get_mask(rname) & wrtrans.data, rdtrans.data); 
+        $display("TB ERROR. Mismatch on APB write and read w/valid pauser for reg %-30s (0x%08x). Read value = 0x%08x | expected value = 0x%08x", 
+          rname, rdtrans.addr, rdtrans.data, get_mask(rname) & wrtrans.data); 
         error_ctr += 1;
       end
 
@@ -207,6 +220,15 @@ task fuse_reg_pauser_test;
     reset_exp_data();
     sb.del_all();
 
+    simulate_caliptra_boot();
+    wait (cptra_noncore_rst_b_tb == 1'b1);
+
+    // if (cptra_noncore_rst_b_tb == 1'b0) begin
+    //   $display("TB. WARNING Non core reset is not deasserted. Waiting 1000 cycles");
+    //   repeat (1000) @(posedge clk_tb);
+    //   $display("TB. DEBUG if status of cptra_noncore_rst_b_tb = 1'b%b", cptra_noncore_rst_b_tb); 
+    // end
+
     read_reg_chk_inrange(GET_APB, "CPTRA_FUSE_PAUSER_LOCK", tid, '0, '0); 
     @(posedge clk_tb);
 
@@ -219,6 +241,15 @@ task fuse_reg_pauser_test;
     reset_exp_data();
     // simulate_caliptra_boot();
     sb.del_all();
+
+    simulate_caliptra_boot();
+    wait (cptra_noncore_rst_b_tb == 1'b1);
+
+    // if (cptra_noncore_rst_b_tb == 1'b0) begin
+    //   $display("TB. WARNING Non core reset is not deasserted. Waiting 1000 cycles");
+    //   repeat (1000) @(posedge clk_tb);
+    //   $display("TB. DEBUG if status of cptra_noncore_rst_b_tb = 1'b%b", cptra_noncore_rst_b_tb); 
+    // end
 
     read_reg_chk_inrange(GET_APB, "CPTRA_FUSE_PAUSER_LOCK", tid, '0, '0); 
     @(posedge clk_tb);

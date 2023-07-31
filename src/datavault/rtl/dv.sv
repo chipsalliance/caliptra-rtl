@@ -104,17 +104,17 @@ always_comb begin: datavault
     end
  
     //Non-Sticky Data Vault Regs & Controls
-    for (int entry = 0; entry < NONSTICKY_DV_NUM_ENTRIES; entry++) begin
-       dv_reg_hwif_in.NonStickyDataVaultCtrl[entry].lock_entry.swwel = dv_reg_hwif_out.NonStickyDataVaultCtrl[entry].lock_entry.value;
+    for (int entry = 0; entry < DV_NUM_ENTRIES; entry++) begin
+       dv_reg_hwif_in.DataVaultCtrl[entry].lock_entry.swwel = dv_reg_hwif_out.DataVaultCtrl[entry].lock_entry.value;
        for (int dword = 0; dword < DV_NUM_DWORDS; dword++) begin
-           dv_reg_hwif_in.NONSTICKY_DATA_VAULT_ENTRY[entry][dword].data.swwel = dv_reg_hwif_out.NonStickyDataVaultCtrl[entry].lock_entry.value;
+           dv_reg_hwif_in.DATA_VAULT_ENTRY[entry][dword].data.swwel = dv_reg_hwif_out.DataVaultCtrl[entry].lock_entry.value;
        end
     end
  
     //Non-Sticky Generic Lockable Registers in the Data Vault
-    for (int entry = 0; entry < NONSTICKY_LOCK_SCRATCH_NUM_ENTRIES; entry++) begin
-       dv_reg_hwif_in.NonStickyLockableScratchRegCtrl[entry].lock_entry.swwel = dv_reg_hwif_out.NonStickyLockableScratchRegCtrl[entry].lock_entry.value;
-       dv_reg_hwif_in.NonStickyLockableScratchReg[entry].data.swwel  = dv_reg_hwif_out.NonStickyLockableScratchRegCtrl[entry].lock_entry.value;
+    for (int entry = 0; entry < LOCK_SCRATCH_NUM_ENTRIES; entry++) begin
+       dv_reg_hwif_in.LockableScratchRegCtrl[entry].lock_entry.swwel = dv_reg_hwif_out.LockableScratchRegCtrl[entry].lock_entry.value;
+       dv_reg_hwif_in.LockableScratchReg[entry].data.swwel  = dv_reg_hwif_out.LockableScratchRegCtrl[entry].lock_entry.value;
     end
  
     //Sticky Generic Lockable Registers in the Data Vault

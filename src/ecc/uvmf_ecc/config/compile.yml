@@ -4,6 +4,7 @@ schema_version: 2.4.0
 requires:
   - uvmf_lib
   - ecc_top
+  - ecc_coverage
 targets:
   tb:
     directories:

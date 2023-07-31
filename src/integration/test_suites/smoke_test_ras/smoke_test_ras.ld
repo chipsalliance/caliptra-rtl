@@ -39,7 +39,7 @@ SECTIONS {
   _bss_vma_end = _bss_vma_start + SIZEOF(.bss);
 
   _end = _bss_lma_end;
-  ASSERT( _end < 0x00008000, "ERROR: ROM size exceeds 32KiB")
+  ASSERT( _end < 0x0000C000, "ERROR: ROM size exceeds 48KiB")
 
   /* DCCM as VMA and LMA */
   . = _bss_vma_end;

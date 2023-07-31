@@ -72,6 +72,7 @@ requires:
   - sha512_coverage
   - sha256_coverage
   - hmac_coverage
+  - ecc_coverage
   - soc_ifc_coverage
 targets:
   dpi_compile:
