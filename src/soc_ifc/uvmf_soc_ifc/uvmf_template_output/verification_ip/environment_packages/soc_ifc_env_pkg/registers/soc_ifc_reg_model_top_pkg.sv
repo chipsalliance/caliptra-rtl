@@ -166,6 +166,7 @@ package soc_ifc_reg_model_top_pkg;
 //            this.CPTRA_FW_EXTENDED_ERROR_INFO[8].      set_reset(this.CPTRA_FW_EXTENDED_ERROR_INFO[8].      get_reset("HARD"), "SOFT");
             if ( this.CPTRA_BOOT_STATUS.                    has_reset("HARD"   )) this.CPTRA_BOOT_STATUS.                    set_reset(this.CPTRA_BOOT_STATUS.                    get_reset("HARD"), "SOFT");
             if ( this.CPTRA_FLOW_STATUS.status.             has_reset("HARD"   )) this.CPTRA_FLOW_STATUS.status.             set_reset(this.CPTRA_FLOW_STATUS.status.             get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_FLOW_STATUS.idevid_csr_ready.   has_reset("HARD"   )) this.CPTRA_FLOW_STATUS.idevid_csr_ready.   set_reset(this.CPTRA_FLOW_STATUS.idevid_csr_ready.   get_reset("HARD"), "SOFT");
             if ( this.CPTRA_FLOW_STATUS.boot_fsm_ps.        has_reset("HARD"   )) this.CPTRA_FLOW_STATUS.boot_fsm_ps.        set_reset(this.CPTRA_FLOW_STATUS.boot_fsm_ps.        get_reset("HARD"), "SOFT");
             if ( this.CPTRA_FLOW_STATUS.ready_for_fw.       has_reset("HARD"   )) this.CPTRA_FLOW_STATUS.ready_for_fw.       set_reset(this.CPTRA_FLOW_STATUS.ready_for_fw.       get_reset("HARD"), "SOFT");
             if ( this.CPTRA_FLOW_STATUS.ready_for_runtime.  has_reset("HARD"   )) this.CPTRA_FLOW_STATUS.ready_for_runtime.  set_reset(this.CPTRA_FLOW_STATUS.ready_for_runtime.  get_reset("HARD"), "SOFT");
@@ -186,6 +187,7 @@ package soc_ifc_reg_model_top_pkg;
             for (ii=0; ii<$size(this.CPTRA_TRNG_DATA); ii++) begin
                 if ( this.CPTRA_TRNG_DATA[ii].                  has_reset("HARD"   )) this.CPTRA_TRNG_DATA[ii].                  set_reset(this.CPTRA_TRNG_DATA[ii].                  get_reset("HARD"), "SOFT");
             end
+            if ( this.CPTRA_TRNG_CTRL.clear.                has_reset("HARD"   )) this.CPTRA_TRNG_CTRL.clear.                set_reset(this.CPTRA_TRNG_CTRL.clear.                get_reset("HARD"), "SOFT");
             if ( this.CPTRA_TRNG_STATUS.DATA_REQ.           has_reset("HARD"   )) this.CPTRA_TRNG_STATUS.DATA_REQ.           set_reset(this.CPTRA_TRNG_STATUS.DATA_REQ.           get_reset("HARD"), "SOFT");
             if ( this.CPTRA_TRNG_STATUS.DATA_WR_DONE.       has_reset("HARD"   )) this.CPTRA_TRNG_STATUS.DATA_WR_DONE.       set_reset(this.CPTRA_TRNG_STATUS.DATA_WR_DONE.       get_reset("HARD"), "SOFT");
 //            this.CPTRA_FUSE_WR_DONE.                   set_reset(this.CPTRA_FUSE_WR_DONE.                   get_reset("HARD"), "SOFT");
@@ -201,6 +203,22 @@ package soc_ifc_reg_model_top_pkg;
             end
             if ( this.CPTRA_FUSE_VALID_PAUSER.              has_reset("HARD"   )) this.CPTRA_FUSE_VALID_PAUSER.              set_reset(this.CPTRA_FUSE_VALID_PAUSER.              get_reset("HARD"), "SOFT");
             if ( this.CPTRA_FUSE_PAUSER_LOCK.               has_reset("HARD"   )) this.CPTRA_FUSE_PAUSER_LOCK.               set_reset(this.CPTRA_FUSE_PAUSER_LOCK.               get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_HW_REV_ID.CPTRA_GENERATION.     has_reset("HARD"   )) this.CPTRA_HW_REV_ID.CPTRA_GENERATION.     set_reset(this.CPTRA_HW_REV_ID.CPTRA_GENERATION.     get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_HW_REV_ID.SOC_STEPPING_ID.      has_reset("HARD"   )) this.CPTRA_HW_REV_ID.SOC_STEPPING_ID.      set_reset(this.CPTRA_HW_REV_ID.SOC_STEPPING_ID.      get_reset("HARD"), "SOFT");
+            for (ii=0; ii<$size(this.CPTRA_FW_REV_ID); ii++) begin
+                if ( this.CPTRA_FW_REV_ID[ii].              has_reset("HARD"   )) this.CPTRA_FW_REV_ID[ii].                  set_reset(this.CPTRA_FW_REV_ID[ii].                  get_reset("HARD"), "SOFT");
+            end
+            if ( this.CPTRA_WDT_TIMER1_EN.                  has_reset("HARD"   )) this.CPTRA_WDT_TIMER1_EN.                  set_reset(this.CPTRA_WDT_TIMER1_EN.                  get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_WDT_TIMER1_CTRL.                has_reset("HARD"   )) this.CPTRA_WDT_TIMER1_CTRL.                set_reset(this.CPTRA_WDT_TIMER1_CTRL.                get_reset("HARD"), "SOFT");
+            for (ii=0; ii<$size(this.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD); ii++) begin
+                if ( this.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[ii].has_reset("HARD"   )) this.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[ii].set_reset(this.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[ii].  get_reset("HARD"), "SOFT");
+            end
+            if ( this.CPTRA_WDT_TIMER2_EN.                  has_reset("HARD"   )) this.CPTRA_WDT_TIMER2_EN.                  set_reset(this.CPTRA_WDT_TIMER2_EN.                  get_reset("HARD"), "SOFT");
+            if ( this.CPTRA_WDT_TIMER2_CTRL.                has_reset("HARD"   )) this.CPTRA_WDT_TIMER2_CTRL.                set_reset(this.CPTRA_WDT_TIMER2_CTRL.                get_reset("HARD"), "SOFT");
+            for (ii=0; ii<$size(this.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD); ii++) begin
+                if ( this.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[ii].has_reset("HARD"   )) this.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[ii].set_reset(this.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[ii].  get_reset("HARD"), "SOFT");
+            end
+            if ( this.CPTRA_WDT_STATUS.                     has_reset("HARD"   )) this.CPTRA_WDT_STATUS.                     set_reset(this.CPTRA_WDT_STATUS.                     get_reset("HARD"), "SOFT");
 //            for (ii=0; ii<$size(this.fuse_uds_seed); ii++) begin
 //            if ( this.fuse_uds_seed[ii].                    has_reset("HARD"   )) this.fuse_uds_seed[ii].                    set_reset(this.fuse_uds_seed[ii].                    get_reset("HARD"), "SOFT");
 //            end
@@ -519,6 +537,7 @@ package soc_ifc_reg_model_top_pkg;
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_DATA_DATA.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK.svh"
+    `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_CTRL_CLEAR.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER.svh"
@@ -657,6 +676,7 @@ package soc_ifc_reg_model_top_pkg;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL          soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_DATA_DATA              soc_ifc_reg_CPTRA_TRNG_DATA_DATA_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK       soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK_cb;
+        soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_CTRL_CLEAR             soc_ifc_reg_CPTRA_TRNG_CTRL_CLEAR_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ        soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE    soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER    soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER_cb;
@@ -762,6 +782,7 @@ package soc_ifc_reg_model_top_pkg;
         soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL_cb        = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL      ::type_id::create("soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL_cb"      );
         soc_ifc_reg_CPTRA_TRNG_DATA_DATA_cb            = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_DATA_DATA          ::type_id::create("soc_ifc_reg_CPTRA_TRNG_DATA_DATA_cb"          );
         soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK_cb     = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK   ::type_id::create("soc_ifc_reg_CPTRA_TRNG_PAUSER_LOCK_LOCK_cb"   );
+        soc_ifc_reg_CPTRA_TRNG_CTRL_CLEAR_cb           = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_CTRL_CLEAR         ::type_id::create("soc_ifc_reg_CPTRA_TRNG_CTRL_CLEAR_cb"         );
         soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ_cb      = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ    ::type_id::create("soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ_cb"    );
         soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE_cb  = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE::type_id::create("soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE_cb");
         soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER_cb  = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER::type_id::create("soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER_cb");
@@ -845,6 +866,7 @@ package soc_ifc_reg_model_top_pkg;
         uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_STATUS       .DATA_REQ    , soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ_cb     );
         uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_STATUS       .DATA_WR_DONE, soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE_cb );
         uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_VALID_PAUSER .PAUSER      , soc_ifc_reg_CPTRA_TRNG_VALID_PAUSER_PAUSER_cb );
+        uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_TRNG_CTRL         .clear       , soc_ifc_reg_CPTRA_TRNG_CTRL_CLEAR_cb );
 
         foreach (soc_ifc_reg_rm.fuse_uds_seed[ii])             uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_uds_seed[ii].seed             , soc_ifc_reg_secret_cb);
         foreach (soc_ifc_reg_rm.fuse_field_entropy[ii])        uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_field_entropy[ii].seed        , soc_ifc_reg_secret_cb);
@@ -859,6 +881,7 @@ package soc_ifc_reg_model_top_pkg;
                                                                uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_life_cycle.life_cycle         , soc_ifc_reg_fuse_cb);
                                                                uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_lms_verify.lms_verify         , soc_ifc_reg_fuse_cb);
                                                                uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_lms_revocation.lms_revocation , soc_ifc_reg_fuse_cb);
+                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_soc_stepping_id.soc_stepping_id, soc_ifc_reg_fuse_cb);
         foreach (soc_ifc_reg_rm.internal_obf_key[ii])          uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_obf_key[ii].key           , soc_ifc_reg_key_cb);
                                                                uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_iccm_lock.lock            , soc_ifc_reg_internal_cb);
                                                                uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_fw_update_reset.core_rst  , soc_ifc_reg_internal_fw_update_reset_cb) ;

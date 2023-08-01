@@ -42,9 +42,11 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
   rand uvm_reg_data_t uds_seed_rand      [12];
   rand uvm_reg_data_t field_entropy_rand [32];
   rand uvm_reg_data_t idevid_cert_attr_rand [24];
+  rand uvm_reg_data_t soc_stepping_id_rand;
   rand struct packed {
     bit uds;
     bit field_entropy;
+    bit soc_stepping_id;
     bit [0:23] idevid_cert_attr;
   } fuses_to_set;
 
@@ -120,6 +122,13 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
             reg_model.soc_ifc_reg_rm.fuse_field_entropy[ii].write(sts, field_entropy_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
             if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", $sformatf("Failed when writing to field_entropy index %0d", ii))
         end
+    end
+
+    // Write SoC Stepping ID
+    if (this.fuses_to_set.soc_stepping_id) begin
+      `uvm_info("SOC_IFC_RST", "Writing SOC Stepping ID to fuse bank", UVM_LOW)
+      reg_model.soc_ifc_reg_rm.fuse_soc_stepping_id.write(sts, {16'h0, soc_stepping_id_rand[15:0]}, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+      if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", "Failed when writing to soc_stepping_id")
     end
 
     // iDevID Cert Attr

@@ -81,7 +81,7 @@ addrmap ecc_reg {
         default hw = r;
         default resetsignal = reset_b;
         field {desc = "Control command field"; swwe = ecc_ready; hwclr;} CTRL[2] = 2'b0;
-        field {desc = "Zeroize all internal registers"; swwe = ecc_ready; singlepulse;} ZEROIZE = 1'b0;
+        field {desc = "Zeroize all internal registers"; singlepulse;} ZEROIZE = 1'b0;
         field {desc = "Run PCR Signing flow"; swwe = ecc_ready; hwclr;} PCR_SIGN = 1'b0;
     
     } ECC_CTRL @0x00000010;

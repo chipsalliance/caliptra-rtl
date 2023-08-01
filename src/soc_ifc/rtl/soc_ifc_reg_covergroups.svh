@@ -196,7 +196,8 @@
 
     endgroup
     covergroup soc_ifc_reg__CPTRA_FLOW_STATUS_fld_cg with function sample(
-    input bit [25-1:0] status,
+    input bit [24-1:0] status,
+    input bit [1-1:0] idevid_csr_ready,
     input bit [3-1:0] boot_fsm_ps,
     input bit [1-1:0] ready_for_fw,
     input bit [1-1:0] ready_for_runtime,
@@ -205,6 +206,7 @@
     );
         option.per_instance = 1;
         status_cp : coverpoint status;
+        idevid_csr_ready_cp : coverpoint idevid_csr_ready;
         boot_fsm_ps_cp : coverpoint boot_fsm_ps;
         ready_for_fw_cp : coverpoint ready_for_fw;
         ready_for_runtime_cp : coverpoint ready_for_runtime;
@@ -370,6 +372,26 @@
             wildcard bins set = (0 => 32'h????_????);
             wildcard bins clr = (32'h????_???? => 0);
         }
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__CPTRA_TRNG_CTRL COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__CPTRA_TRNG_CTRL_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__CPTRA_TRNG_CTRL_fld_cg with function sample(
+    input bit [1-1:0] clear
+    );
+        option.per_instance = 1;
+        clear_cp : coverpoint clear;
 
     endgroup
 
@@ -566,10 +588,12 @@
 
     endgroup
     covergroup soc_ifc_reg__CPTRA_HW_REV_ID_fld_cg with function sample(
-    input bit [32-1:0] REV_ID
+    input bit [16-1:0] CPTRA_GENERATION,
+    input bit [16-1:0] SOC_STEPPING_ID
     );
         option.per_instance = 1;
-        REV_ID_cp : coverpoint REV_ID; // FIXME
+        CPTRA_GENERATION_cp : coverpoint CPTRA_GENERATION; // FIXME
+        SOC_STEPPING_ID_cp : coverpoint SOC_STEPPING_ID; // FIXME
 
     endgroup
 
@@ -1118,6 +1142,26 @@
     );
         option.per_instance = 1;
         lms_revocation_cp : coverpoint lms_revocation;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__FUSE_SOC_STEPPING_ID COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__fuse_soc_stepping_id_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__fuse_soc_stepping_id_fld_cg with function sample(
+    input bit [16-1:0] soc_stepping_id
+    );
+        option.per_instance = 1;
+        soc_stepping_id_cp : coverpoint soc_stepping_id;
 
     endgroup
 

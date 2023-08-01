@@ -111,6 +111,7 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic swwe;
+        logic hwclr;
     } soc_ifc_reg__CPTRA_TRNG_DATA__DATA__in_t;
 
     typedef struct packed{
@@ -159,6 +160,14 @@ package soc_ifc_reg_pkg;
     typedef struct packed{
         soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES__generic_wires__in_t generic_wires;
     } soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES__in_t;
+
+    typedef struct packed{
+        logic [15:0] next;
+    } soc_ifc_reg__CPTRA_HW_REV_ID__SOC_STEPPING_ID__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_HW_REV_ID__SOC_STEPPING_ID__in_t SOC_STEPPING_ID;
+    } soc_ifc_reg__CPTRA_HW_REV_ID__in_t;
 
     typedef struct packed{
         logic next;
@@ -284,6 +293,14 @@ package soc_ifc_reg_pkg;
     typedef struct packed{
         soc_ifc_reg__Fuse_w32__in_t lms_revocation;
     } soc_ifc_reg__fuse_lms_revocation__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__Fuse_w16__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__Fuse_w16__in_t soc_stepping_id;
+    } soc_ifc_reg__fuse_soc_stepping_id__in_t;
 
     typedef struct packed{
         logic [31:0] next;
@@ -422,6 +439,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_BOOTFSM_GO__in_t CPTRA_BOOTFSM_GO;
         soc_ifc_reg__CPTRA_DBG_MANUF_SERVICE_REG__in_t CPTRA_DBG_MANUF_SERVICE_REG;
         soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES__in_t [2-1:0]CPTRA_GENERIC_INPUT_WIRES;
+        soc_ifc_reg__CPTRA_HW_REV_ID__in_t CPTRA_HW_REV_ID;
         soc_ifc_reg__CPTRA_HW_CONFIG__in_t CPTRA_HW_CONFIG;
         soc_ifc_reg__CPTRA_WDT_STATUS__in_t CPTRA_WDT_STATUS;
         soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER__in_t CPTRA_FUSE_VALID_PAUSER;
@@ -439,6 +457,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__fuse_life_cycle__in_t fuse_life_cycle;
         soc_ifc_reg__fuse_lms_verify__in_t fuse_lms_verify;
         soc_ifc_reg__fuse_lms_revocation__in_t fuse_lms_revocation;
+        soc_ifc_reg__fuse_soc_stepping_id__in_t fuse_soc_stepping_id;
         soc_ifc_reg__internal_obf_key__in_t [8-1:0]internal_obf_key;
         soc_ifc_reg__internal_iccm_lock__in_t internal_iccm_lock;
         soc_ifc_reg__internal_rv_mtime_l__in_t internal_rv_mtime_l;
@@ -509,6 +528,10 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic value;
+    } soc_ifc_reg__CPTRA_FLOW_STATUS__idevid_csr_ready__out_t;
+
+    typedef struct packed{
+        logic value;
     } soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_fw__out_t;
 
     typedef struct packed{
@@ -520,6 +543,7 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__CPTRA_FLOW_STATUS__mailbox_flow_done__out_t;
 
     typedef struct packed{
+        soc_ifc_reg__CPTRA_FLOW_STATUS__idevid_csr_ready__out_t idevid_csr_ready;
         soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_fw__out_t ready_for_fw;
         soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_runtime__out_t ready_for_runtime;
         soc_ifc_reg__CPTRA_FLOW_STATUS__mailbox_flow_done__out_t mailbox_flow_done;
@@ -580,6 +604,14 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic value;
+    } soc_ifc_reg__CPTRA_TRNG_CTRL__clear__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_TRNG_CTRL__clear__out_t clear;
+    } soc_ifc_reg__CPTRA_TRNG_CTRL__out_t;
+
+    typedef struct packed{
+        logic value;
     } soc_ifc_reg__CPTRA_TRNG_STATUS__DATA_REQ__out_t;
 
     typedef struct packed{
@@ -634,14 +666,6 @@ package soc_ifc_reg_pkg;
     typedef struct packed{
         soc_ifc_reg__CPTRA_GENERIC_OUTPUT_WIRES__generic_wires__out_t generic_wires;
     } soc_ifc_reg__CPTRA_GENERIC_OUTPUT_WIRES__out_t;
-
-    typedef struct packed{
-        logic [31:0] value;
-    } soc_ifc_reg__CPTRA_HW_REV_ID__REV_ID__out_t;
-
-    typedef struct packed{
-        soc_ifc_reg__CPTRA_HW_REV_ID__REV_ID__out_t REV_ID;
-    } soc_ifc_reg__CPTRA_HW_REV_ID__out_t;
 
     typedef struct packed{
         logic [31:0] value;
@@ -801,6 +825,14 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__fuse_lms_revocation__out_t;
 
     typedef struct packed{
+        logic [15:0] value;
+    } soc_ifc_reg__Fuse_w16__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__Fuse_w16__out_t soc_stepping_id;
+    } soc_ifc_reg__fuse_soc_stepping_id__out_t;
+
+    typedef struct packed{
         logic [31:0] value;
     } soc_ifc_reg__key_w32__out_t;
 
@@ -942,6 +974,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER__out_t CPTRA_TRNG_VALID_PAUSER;
         soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK__out_t CPTRA_TRNG_PAUSER_LOCK;
         soc_ifc_reg__CPTRA_TRNG_DATA__out_t [12-1:0]CPTRA_TRNG_DATA;
+        soc_ifc_reg__CPTRA_TRNG_CTRL__out_t CPTRA_TRNG_CTRL;
         soc_ifc_reg__CPTRA_TRNG_STATUS__out_t CPTRA_TRNG_STATUS;
         soc_ifc_reg__CPTRA_FUSE_WR_DONE__out_t CPTRA_FUSE_WR_DONE;
         soc_ifc_reg__CPTRA_BOOTFSM_GO__out_t CPTRA_BOOTFSM_GO;
@@ -949,7 +982,6 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_CLK_GATING_EN__out_t CPTRA_CLK_GATING_EN;
         soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES__out_t [2-1:0]CPTRA_GENERIC_INPUT_WIRES;
         soc_ifc_reg__CPTRA_GENERIC_OUTPUT_WIRES__out_t [2-1:0]CPTRA_GENERIC_OUTPUT_WIRES;
-        soc_ifc_reg__CPTRA_HW_REV_ID__out_t CPTRA_HW_REV_ID;
         soc_ifc_reg__CPTRA_FW_REV_ID__out_t [2-1:0]CPTRA_FW_REV_ID;
         soc_ifc_reg__CPTRA_WDT_TIMER1_EN__out_t CPTRA_WDT_TIMER1_EN;
         soc_ifc_reg__CPTRA_WDT_TIMER1_CTRL__out_t CPTRA_WDT_TIMER1_CTRL;
@@ -973,6 +1005,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__fuse_life_cycle__out_t fuse_life_cycle;
         soc_ifc_reg__fuse_lms_verify__out_t fuse_lms_verify;
         soc_ifc_reg__fuse_lms_revocation__out_t fuse_lms_revocation;
+        soc_ifc_reg__fuse_soc_stepping_id__out_t fuse_soc_stepping_id;
         soc_ifc_reg__internal_obf_key__out_t [8-1:0]internal_obf_key;
         soc_ifc_reg__internal_iccm_lock__out_t internal_iccm_lock;
         soc_ifc_reg__internal_fw_update_reset__out_t internal_fw_update_reset;

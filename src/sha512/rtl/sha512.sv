@@ -298,7 +298,8 @@ module sha512
 
     for (int dword=0; dword< BLOCK_NUM_DWORDS; dword++) begin
       block_reg[dword] = hwif_out.SHA512_BLOCK[dword].BLOCK.value;
-      hwif_in.SHA512_BLOCK[dword].BLOCK.we = gen_hash_ip ? gen_hash_block_write_en & (gen_hash_block_write_offset == dword) :
+      hwif_in.SHA512_BLOCK[dword].BLOCK.we = zeroize_reg? 0 : 
+                                             gen_hash_ip ? gen_hash_block_write_en & (gen_hash_block_write_offset == dword) :
                                              (kv_src_write_en & (kv_src_write_offset == dword));
       hwif_in.SHA512_BLOCK[dword].BLOCK.next = gen_hash_ip ? gen_hash_block_write_data : kv_src_write_data;
       hwif_in.SHA512_BLOCK[dword].BLOCK.hwclr = (zeroize_reg & ~block_reg_lock[dword]) | kv_read_data_present_reset;

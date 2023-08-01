@@ -364,21 +364,21 @@ module ecc_dsa_ctrl
             //Key Vault has priority if enabled to drive these registers
             //don't store the private key generated in sw accessible register if it's going to keyvault
             privkey_reg[dword] = hwif_out.ECC_PRIVKEY_IN[11-dword].PRIVKEY_IN.value;
-            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.we = pcr_sign_mode | (kv_privkey_write_en & (kv_privkey_write_offset == dword));
+            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.we = (pcr_sign_mode | (kv_privkey_write_en & (kv_privkey_write_offset == dword))) & !zeroize_reg;
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.next = pcr_sign_mode ? pcr_signing_data.pcr_signing_privkey[dword] : kv_privkey_write_en? kv_privkey_write_data : read_reg[11-dword];
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.hwclr = zeroize_reg;
         end 
 
         for (int dword=0; dword < 12; dword++)begin
             //If keyvault is not enabled, grab the sw value as usual
-            hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.we = privkey_out_we & ~(dest_keyvault | kv_read_data_present);
+            hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.we = (privkey_out_we & ~(dest_keyvault | kv_read_data_present)) & !zeroize_reg;
             hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.next = read_reg[11-dword];
             hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < 12; dword++)begin
             seed_reg[dword] = hwif_out.ECC_SEED[11-dword].SEED.value;
-            hwif_in.ECC_SEED[dword].SEED.we = kv_seed_write_en & (kv_seed_write_offset == dword);
+            hwif_in.ECC_SEED[dword].SEED.we = (kv_seed_write_en & (kv_seed_write_offset == dword)) & !zeroize_reg;
             hwif_in.ECC_SEED[dword].SEED.next = kv_seed_write_data;
             hwif_in.ECC_SEED[dword].SEED.hwclr = zeroize_reg | kv_read_data_present_reset;
         end
@@ -390,41 +390,41 @@ module ecc_dsa_ctrl
 
         for (int dword=0; dword < 12; dword++)begin
             msg_reg[dword] = hwif_out.ECC_MSG[11-dword].MSG.value;
-            hwif_in.ECC_MSG[dword].MSG.we = pcr_sign_mode;
+            hwif_in.ECC_MSG[dword].MSG.we = pcr_sign_mode & !zeroize_reg;
             hwif_in.ECC_MSG[dword].MSG.next = pcr_signing_data.pcr_hash[dword];
             hwif_in.ECC_MSG[dword].MSG.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < 12; dword++)begin
             pubkeyx_reg[dword] = hwif_out.ECC_PUBKEY_X[11-dword].PUBKEY_X.value;
-            hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.we = hw_pubkeyx_we;
+            hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.we = hw_pubkeyx_we & !zeroize_reg;
             hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.next = read_reg[11-dword];  
             hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < 12; dword++)begin
             pubkeyy_reg[dword] = hwif_out.ECC_PUBKEY_Y[11-dword].PUBKEY_Y.value;
-            hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.we = hw_pubkeyy_we;
+            hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.we = hw_pubkeyy_we & !zeroize_reg;
             hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.next = read_reg[11-dword];
             hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < 12; dword++)begin
             r_reg[dword] = hwif_out.ECC_SIGN_R[11-dword].SIGN_R.value;
-            hwif_in.ECC_SIGN_R[dword].SIGN_R.we = hw_r_we;
+            hwif_in.ECC_SIGN_R[dword].SIGN_R.we = hw_r_we & !zeroize_reg;
             hwif_in.ECC_SIGN_R[dword].SIGN_R.next = read_reg[11-dword];
             hwif_in.ECC_SIGN_R[dword].SIGN_R.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < 12; dword++)begin
             s_reg[dword] = hwif_out.ECC_SIGN_S[11-dword].SIGN_S.value;
-            hwif_in.ECC_SIGN_S[dword].SIGN_S.we = hw_s_we;
+            hwif_in.ECC_SIGN_S[dword].SIGN_S.we = hw_s_we & !zeroize_reg;
             hwif_in.ECC_SIGN_S[dword].SIGN_S.next = read_reg[11-dword];
             hwif_in.ECC_SIGN_S[dword].SIGN_S.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < 12; dword++)begin 
-            hwif_in.ECC_VERIFY_R[dword].VERIFY_R.we = hw_verify_r_we;       
+            hwif_in.ECC_VERIFY_R[dword].VERIFY_R.we = hw_verify_r_we & !zeroize_reg;       
             hwif_in.ECC_VERIFY_R[dword].VERIFY_R.next = read_reg[11-dword];
             hwif_in.ECC_VERIFY_R[dword].VERIFY_R.hwclr = zeroize_reg;
         end

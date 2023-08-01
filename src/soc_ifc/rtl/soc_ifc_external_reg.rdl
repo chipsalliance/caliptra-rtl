@@ -82,10 +82,11 @@ reg {
     desc = "Reports the status of the firmware flows.
             [br]Caliptra Access: RW
             [br]SOC Access:      RO";
-    rw_ro status[25]=0;
+    rw_ro status[24]=0;
+    field {desc="DEV ID CSR ready";                                          sw=rw; swwel = soc_req; hw=r ; resetsignal = cptra_rst_b;} idevid_csr_ready[1]=0;
     field {desc="Boot FSM State";                                            sw=r;                   hw=w ; resetsignal = cptra_rst_b;} boot_fsm_ps[3];
     field {desc="Indicates Caliptra is ready for Firmware Download";         sw=rw; swwel = soc_req; hw=r ; resetsignal = cptra_rst_b;} ready_for_fw[1]=0;
-    field {desc="Indicates Caliptra is ready for Runtime Firmware Download"; sw=rw; swwel = soc_req; hw=r ; resetsignal = cptra_rst_b;} ready_for_runtime[1]=0;
+    field {desc="Indicates Caliptra is ready for RT flows";                  sw=rw; swwel = soc_req; hw=r ; resetsignal = cptra_rst_b;} ready_for_runtime[1]=0;
     field {desc="Indicates Caliptra is ready for Fuses to be programmed.
                  Read-only to both Caliptra and SOC.";                       sw=r;                   hw=w ; resetsignal = cptra_rst_b;} ready_for_fuses[1];
     field {desc="Indicates Caliptra is has completed Mailbox Flow.";         sw=rw; swwel = soc_req; hw=r ; resetsignal = cptra_rst_b;} mailbox_flow_done[1]=0;
@@ -171,8 +172,16 @@ reg {
     desc = "Storage for the requested TRNG Data.
             [br]Caliptra Access: RO
             [br]SOC Access:      RW";
-    field {sw=rw; hw=na; swwe; swacc; resetsignal=cptra_rst_b;} DATA[32]=0;
+    field {sw=rw; hw=na; swwe; swacc; hwclr; resetsignal=cptra_rst_b;} DATA[32]=0;
  } CPTRA_TRNG_DATA[12];
+
+ reg {
+    name = "TRNG Ctrl";
+    desc = "TRNG Control register to clear data registers";
+    field {desc = "Indicates that TRNG Data can be cleared
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";  sw=rw; hw=r; singlepulse; swwel=soc_req; resetsignal=cptra_rst_b;} clear=0;
+} CPTRA_TRNG_CTRL;
 
 reg {
     name = "TRNG Status";
@@ -250,7 +259,8 @@ reg {
     desc = "Caliptra HW revision ID that matches the official final release milestone
             [br]Caliptra Access: RO
             [br]SOC Access:      RO";
-    field {sw=r; hw=r; resetsignal = cptra_rst_b;} REV_ID[32]=1;
+    field {sw=r; resetsignal = cptra_rst_b;} CPTRA_GENERATION[16]=1;
+    field {sw=r; hw=w; resetsignal = cptra_rst_b;} SOC_STEPPING_ID[16]=0;
 } CPTRA_HW_REV_ID;
 reg {
     name = "Caliptra FW RevID";

@@ -314,6 +314,7 @@ import soc_ifc_pkg::*;
    output logic [6:0]                      cptra_uncore_dmi_reg_addr,
    output logic [31:0]                     cptra_uncore_dmi_reg_wdata,
    input  security_state_t                 cptra_security_state_Latched,
+   output logic                            cptra_dmi_reg_en_preQ,
 
    input logic [31:4] core_id,
 
@@ -747,6 +748,7 @@ import soc_ifc_pkg::*;
 
    assign cptra_dmi_reg_en_jtag_acccess_allowed    = dmi_reg_en_preQ & cptra_jtag_access_allowed;
    assign cptra_dmi_reg_wr_en_jtag_acccess_allowed = dmi_reg_wr_en_preQ & cptra_jtag_access_allowed;
+   assign cptra_dmi_reg_en_preQ                    = dmi_reg_en_preQ;
 
    // Driving core vs uncore enables based on the right aperture
    assign dmi_reg_en                 = cptra_uncore_tap_aperture ? '0                                       : cptra_dmi_reg_en_jtag_acccess_allowed;

@@ -100,5 +100,10 @@ reg {
              [br]SOC Access:      RWL-S";
     Fuse lms_revocation[32]=0;
 } fuse_lms_revocation;
-
+reg {
+    desc = "SOC stepping ID
+             [br]Caliptra Access: RO
+             [br]SOC Access:      RWL-S";
+    Fuse soc_stepping_id[16]=0;
+} fuse_soc_stepping_id;
 

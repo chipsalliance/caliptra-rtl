@@ -64,7 +64,7 @@
       sb.del_all();
       error_ctr = 0;
 
-      update_CPTRA_FLOW_STATUS(ready_for_fuses); 
+      update_CPTRA_FLOW_STATUS(ready_for_fuses, `REG_HIER_BOOT_FSM_PS); 
 
 
       $display ("\n-------------------------------------------------------------");

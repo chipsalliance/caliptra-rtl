@@ -108,7 +108,7 @@ import uvmf_base_pkg_hdl::*;
              .pcr_signing_hash(),
              .error_intr(),
              .notif_intr(),
-             .debugUnlock_or_scan_mode_switch()
+             .debugUnlock_or_scan_mode_switch('0)
             );
   // pragma uvmf custom dut_instantiation end
 
