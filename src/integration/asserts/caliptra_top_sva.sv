@@ -501,8 +501,31 @@ module caliptra_top_sva
                                     @(posedge `SVA_RDC_CLK)
                                     `ECC_PATH.dsa_valid_reg |-> `ECC_PATH.dsa_ready_reg 
                                     )
-                        else $display("SVA ERROR: ECC VALID flag mismatch!");                         
+                        else $display("SVA ERROR: ECC VALID flag mismatch!");      
 
+  //SVA for modular operations
+  ecc_opa_input:        assert property (
+                                      @(posedge `SVA_RDC_CLK)
+                                      (`ECC_PATH.ecc_arith_unit_i.ecc_fau_i.add_en_i | `ECC_PATH.ecc_arith_unit_i.ecc_fau_i.mult_en_i) |-> (`ECC_PATH.ecc_arith_unit_i.ecc_fau_i.opa_i < `ECC_PATH.ecc_arith_unit_i.ecc_fau_i.prime_i)
+                                      )
+                          else $display("SVA ERROR: ECC opa input is not valid!"); 
 
+  ecc_opb_input:        assert property (
+                                      @(posedge `SVA_RDC_CLK)
+                                      (`ECC_PATH.ecc_arith_unit_i.ecc_fau_i.add_en_i | `ECC_PATH.ecc_arith_unit_i.ecc_fau_i.mult_en_i) |-> (`ECC_PATH.ecc_arith_unit_i.ecc_fau_i.opb_i < `ECC_PATH.ecc_arith_unit_i.ecc_fau_i.prime_i)
+                                      )
+                          else $display("SVA ERROR: ECC opb input is not valid!"); 
+
+  ecc_add_result:       assert property (
+                                      @(posedge `SVA_RDC_CLK)
+                                      `ECC_PATH.ecc_arith_unit_i.ecc_instr_s.opcode.add_we |-> (`ECC_PATH.ecc_arith_unit_i.add_res_s < `ECC_PATH.ecc_arith_unit_i.adder_prime)
+                                      )
+                          else $display("SVA ERROR: ECC adder result is not valid!"); 
+
+  ecc_mult_result:       assert property (
+                                      @(posedge `SVA_RDC_CLK)
+                                      `ECC_PATH.ecc_arith_unit_i.ecc_instr_s.opcode.mult_we |-> (`ECC_PATH.ecc_arith_unit_i.mult_res_s < `ECC_PATH.ecc_arith_unit_i.adder_prime)
+                                      )
+                          else $display("SVA ERROR: ECC multiplier result is not valid!"); 
 endmodule
 

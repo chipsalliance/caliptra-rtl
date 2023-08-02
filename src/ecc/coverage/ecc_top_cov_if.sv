@@ -41,6 +41,42 @@ interface ecc_top_cov_if
     logic pubkey_input_invalid;
     logic signing_process;
     logic verifying_process;
+
+
+    logic mod_p_q;
+    logic add_en;
+    logic add_sub_i;
+    logic [383 : 0] add_res0;
+    logic add_cout0;
+    logic add_cout1;
+    logic add_res_less_than_prime;
+    logic add_res_greater_than_prime;
+    logic add_res_greater_than_384_bit;
+
+    logic PE_UNITS;
+    logic mult_final_subtraction;
+
+    assign mod_p_q = ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.mod_p_q;
+    assign add_en = ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.add_en_i;
+    assign add_sub_i = ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.sub_i;
+    assign add_res0 = ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.i_ADDER_SUBTRACTOR.r0_reg;
+    assign add_cout0 = ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.i_ADDER_SUBTRACTOR.carry0_reg;
+    assign add_cout1 = ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.i_ADDER_SUBTRACTOR.carry1;
+    assign add_res_less_than_prime = ((add_cout0 == 1'b0) & (add_res0 < ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.prime_i));
+    assign add_res_greater_than_prime = ((add_cout0 == 1'b0) & (add_res0 >= ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.prime_i));
+    assign add_res_greater_than_384_bit = (add_cout0 == 1'b1);
+    
+    assign PE_UNITS = ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.i_MULTIPLIER.PE_UNITS;
+    always_ff @(posedge clk) begin
+        if (!reset_n) begin
+            mult_final_subtraction <= '0;
+        end
+        else if (ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.i_MULTIPLIER.ready_o) begin
+            mult_final_subtraction <= ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.i_MULTIPLIER.sub_b_o[2*(PE_UNITS+1)];
+        end
+    end
+
+
     
     assign ecc_cmd = ecc_top.ecc_dsa_ctrl_i.cmd_reg;
     assign pcr_sign_mode = ecc_top.ecc_dsa_ctrl_i.pcr_sign_mode;
@@ -101,6 +137,14 @@ interface ecc_top_cov_if
         zeroize_ready_cp: cross ready, zeroize;
         error_signing_cp: cross error_flag, signing_process;
         error_verifying_cp: cross error_flag, verifying_process;
+
+        // modular operation
+        mult_final_subtraction_cp: coverpoint mult_final_subtraction;
+        add_carry_cp: cross mod_p_q, add_sub_i, add_cout0, add_cout1;
+        add_result_less_than_prime_cp: cross mod_p_q, add_sub_i, add_res_less_than_prime;
+        add_result_greater_than_prime_cp: cross mod_p_q, add_sub_i, add_res_greater_than_prime;
+        add_result_greater_than_384_bit_cp: cross mod_p_q, add_sub_i, add_res_greater_than_384_bit;
+        
 
     endgroup
 
