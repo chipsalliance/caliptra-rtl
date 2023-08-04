@@ -2736,8 +2736,8 @@ module soc_ifc_reg (
         field_combo.CPTRA_FUSE_VALID_PAUSER.PAUSER.next = next_c;
         field_combo.CPTRA_FUSE_VALID_PAUSER.PAUSER.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
-        if(~hwif_in.cptra_rst_b) begin
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
             field_storage.CPTRA_FUSE_VALID_PAUSER.PAUSER.value <= 'hffffffff;
         end else if(field_combo.CPTRA_FUSE_VALID_PAUSER.PAUSER.load_next) begin
             field_storage.CPTRA_FUSE_VALID_PAUSER.PAUSER.value <= field_combo.CPTRA_FUSE_VALID_PAUSER.PAUSER.next;
@@ -2755,8 +2755,8 @@ module soc_ifc_reg (
         field_combo.CPTRA_FUSE_PAUSER_LOCK.LOCK.next = next_c;
         field_combo.CPTRA_FUSE_PAUSER_LOCK.LOCK.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
-        if(~hwif_in.cptra_rst_b) begin
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
             field_storage.CPTRA_FUSE_PAUSER_LOCK.LOCK.value <= 'h0;
         end else if(field_combo.CPTRA_FUSE_PAUSER_LOCK.LOCK.load_next) begin
             field_storage.CPTRA_FUSE_PAUSER_LOCK.LOCK.value <= field_combo.CPTRA_FUSE_PAUSER_LOCK.LOCK.next;

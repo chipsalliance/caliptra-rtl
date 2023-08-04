@@ -407,7 +407,7 @@ el2_veer_wrapper rvtop (
     .rst_l                  ( cptra_uc_rst_b),
 `endif
     .dbg_rst_l              ( cptra_pwrgood), 
-    .clk                    ( clk      ),
+    .clk                    ( rdc_clk_cg   ),
     .rst_vec                ( reset_vector[31:1]),
     .nmi_int                ( nmi_int       ),
     .nmi_vec                ( nmi_vector[31:1]),
@@ -553,9 +553,9 @@ el2_veer_wrapper rvtop (
     ) u_sb_lsu_ahb_mux (
         .hclk                (clk_cg),
         .hreset_n            (cptra_noncore_rst_b),
-
+        .force_bus_idle      (fw_update_rst_window),
         // Initiator 0
-        .hsel_i_0            (~fw_update_rst_window),
+        .hsel_i_0            (1'b1          ),
         .haddr_i_0           (lsu_ahb.haddr ),
         .hwdata_i_0          (lsu_ahb.hwdata),
         .hwrite_i_0          (lsu_ahb.hwrite),
@@ -567,7 +567,7 @@ el2_veer_wrapper rvtop (
         .hrdata_o_0          (lsu_ahb.hrdata),
 
         // Initiator 1
-        .hsel_i_1            (~fw_update_rst_window),
+        .hsel_i_1            (1'b1          ),
         .haddr_i_1           (sb_ahb.haddr  ),
         .hwdata_i_1          (sb_ahb.hwdata ),
         .hwrite_i_1          (sb_ahb.hwrite ),
@@ -653,6 +653,7 @@ ahb_lite_2to1_mux #(
 ) u_ahb_lite_2to1_mux (
     .hclk           (clk_cg),
     .hreset_n       (cptra_uc_rst_b),
+    .force_bus_idle (fw_update_rst_window),
     // From Initiator 0
     // Inputs
     .hsel_i_0             (responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hsel),
