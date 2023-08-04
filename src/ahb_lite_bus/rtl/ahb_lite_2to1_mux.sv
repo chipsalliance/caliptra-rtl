@@ -29,6 +29,7 @@ module ahb_lite_2to1_mux #(
     // ---------------------------------------
     input logic     hclk,
     input logic     hreset_n,
+    input logic     force_bus_idle,
 
     // ---------------------------------------
     // From Initiator 0
@@ -81,7 +82,9 @@ module ahb_lite_2to1_mux #(
 //Initiator 0 always takes priority
 
 logic initiator0_address_ph, initiator1_address_ph;
+logic initiator0_data_ph_nq, initiator1_data_ph_nq;
 logic initiator0_data_ph, initiator1_data_ph;
+logic initiator0_pend_addr_ph_nq, initiator1_pend_addr_ph_nq;
 logic initiator0_pend_addr_ph, initiator1_pend_addr_ph;
 logic initiator0_gnt, initiator1_gnt;
 logic [AHB_LITE_ADDR_WIDTH-1:0] initiator0_pend_haddr, initiator1_pend_haddr;
@@ -94,8 +97,8 @@ logic initiator0_pend_hwrite, initiator1_pend_hwrite;
 logic initiator0_hwrite, initiator1_hwrite;
 
 //Detect address phase
-always_comb initiator0_address_ph = hsel_i_0 & hready_i_0 & htrans_i_0 inside {2'b10, 2'b11};
-always_comb initiator1_address_ph = hsel_i_1 & hready_i_1 & htrans_i_1 inside {2'b10, 2'b11};
+always_comb initiator0_address_ph = hsel_i_0 & hready_i_0 & htrans_i_0 inside {2'b10, 2'b11} & ~force_bus_idle;
+always_comb initiator1_address_ph = hsel_i_1 & hready_i_1 & htrans_i_1 inside {2'b10, 2'b11} & ~force_bus_idle;
 
 always_ff @(posedge hclk or negedge hreset_n) begin
     if (~hreset_n) begin
@@ -107,10 +110,10 @@ always_ff @(posedge hclk or negedge hreset_n) begin
         initiator1_pend_hsize <= '0;
         initiator0_pend_hwrite <= '0;
         initiator1_pend_hwrite <= '0;
-        initiator0_pend_addr_ph <= '0;
-        initiator1_pend_addr_ph <= '0;
-        initiator0_data_ph <= '0;
-        initiator1_data_ph <= '0;
+        initiator0_pend_addr_ph_nq <= '0;
+        initiator1_pend_addr_ph_nq <= '0;
+        initiator0_data_ph_nq <= '0;
+        initiator1_data_ph_nq <= '0;
     end
     else begin
         //Capture the address during the address phase for each initiator
@@ -124,14 +127,19 @@ always_ff @(posedge hclk or negedge hreset_n) begin
         initiator1_pend_hwrite <= initiator1_address_ph & ~initiator1_pend_addr_ph ? hwrite_i_1 : initiator1_pend_hwrite;
 
         //Capture pending address phase when initiators collide
-        initiator0_pend_addr_ph <= (initiator0_address_ph | initiator0_pend_addr_ph) & ~(hreadyout_i & initiator0_gnt);
-        initiator1_pend_addr_ph <= (initiator1_address_ph | initiator1_pend_addr_ph) & ~(hreadyout_i & initiator1_gnt); 
+        initiator0_pend_addr_ph_nq <= (initiator0_address_ph | initiator0_pend_addr_ph) & ~(hreadyout_i & initiator0_gnt);
+        initiator1_pend_addr_ph_nq <= (initiator1_address_ph | initiator1_pend_addr_ph) & ~(hreadyout_i & initiator1_gnt); 
 
         //Transition to data phase when endpoint accepts address phase, hold when not ready
-        initiator0_data_ph <= (initiator0_gnt) | (initiator0_data_ph & ~hreadyout_i);
-        initiator1_data_ph <= (initiator1_gnt) | (initiator1_data_ph & ~hreadyout_i);
+        initiator0_data_ph_nq <= (initiator0_gnt) | (initiator0_data_ph & ~hreadyout_i);
+        initiator1_data_ph_nq <= (initiator1_gnt) | (initiator1_data_ph & ~hreadyout_i);
     end
 end
+
+always_comb initiator0_data_ph = initiator0_data_ph_nq & ~force_bus_idle;
+always_comb initiator1_data_ph = initiator1_data_ph_nq & ~force_bus_idle;
+always_comb initiator0_pend_addr_ph = initiator0_pend_addr_ph_nq & ~force_bus_idle;
+always_comb initiator1_pend_addr_ph = initiator1_pend_addr_ph_nq & ~force_bus_idle;
 
 always_comb initiator0_haddr = initiator0_pend_addr_ph ? initiator0_pend_haddr : haddr_i_0;
 always_comb initiator0_htrans = initiator0_pend_addr_ph ? initiator0_pend_htrans : htrans_i_0;

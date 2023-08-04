@@ -348,7 +348,7 @@ reg {
             [br]Caliptra Access: RW
             [br]SOC Access:      RW
             [br]Read-Only once locked by FUSE_PAUSER_LOCK.";
-    field {sw=rw; hw=r; swwel; resetsignal = cptra_rst_b;} PAUSER[32]=0xFFFF_FFFF;
+    field {sw=rw; hw=r; swwel; resetsignal = cptra_pwrgood;} PAUSER[32]=0xFFFF_FFFF;
  } CPTRA_FUSE_VALID_PAUSER;
 
 reg {
@@ -360,5 +360,5 @@ reg {
             [br]Caliptra Access: RW
             [br]SOC Access:      RW
             [br]Read-Only once locked.";
-    field {sw=rw; hw=r; swwel; resetsignal=cptra_rst_b;} LOCK=0;
+    field {sw=rw; hw=r; swwel; resetsignal=cptra_pwrgood;} LOCK=0;
  } CPTRA_FUSE_PAUSER_LOCK;

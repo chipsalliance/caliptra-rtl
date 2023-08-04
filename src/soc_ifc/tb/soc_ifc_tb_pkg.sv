@@ -282,6 +282,8 @@ package soc_ifc_tb_pkg;
     "CPTRA_FW_EXTENDED_ERROR_INFO":                    32'hffff_ffff,
     "CPTRA_RESET_REASON":                              32'h2,         // field WARM_RESET 
     "CPTRA_FUSE_WR_DONE":                              32'h1,         // field 0 
+    "CPTRA_FUSE_VALID_PAUSER":                         32'hffff_ffff,
+    "CPTRA_FUSE_PAUSER_LOCK":                          32'h1,
     "CPTRA_TIMER_CONFIG":                              32'hffff_ffff,                           
     "INTERNAL_RV_MTIME_L":                             32'hffff_ffff,
     "INTERNAL_RV_MTIME_H":                             32'hffff_ffff,
