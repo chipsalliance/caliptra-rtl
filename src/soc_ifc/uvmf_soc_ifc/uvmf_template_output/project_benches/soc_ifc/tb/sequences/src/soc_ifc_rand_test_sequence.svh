@@ -34,6 +34,7 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
 
   rand soc_ifc_env_bringup_sequence_t soc_ifc_env_bringup_seq;
   rand soc_ifc_env_cptra_rst_wait_sequence_t soc_ifc_env_cptra_rst_wait_seq;
+  rand soc_ifc_env_cptra_init_interrupts_sequence_t soc_ifc_env_cptra_init_interrupts_seq;
   rand soc_ifc_env_pauser_init_sequence_t soc_ifc_env_pauser_init_seq;
   rand soc_ifc_env_sequence_base_t soc_ifc_env_seq_ii[];
   // TODO: To add new sequences to the randomized portion of this test:
@@ -43,20 +44,29 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
   rand enum int {
       IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL,
       IDX_SOC_IFC_ENV_MBOX_TOP_RAND_MEDIUM,
+      IDX_SOC_IFC_ENV_MBOX_TOP_RAND_LARGE,
       IDX_SOC_IFC_ENV_MBOX_TOP_MIN,
       IDX_SOC_IFC_ENV_MBOX_TOP_MAX,
       IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL_UNLOCK,
       IDX_SOC_IFC_ENV_MBOX_TOP_RAND_MEDIUM_UNLOCK,
+      IDX_SOC_IFC_ENV_MBOX_TOP_RAND_LARGE_UNLOCK,
       IDX_SOC_IFC_ENV_MBOX_TOP_CONTENTION,
       IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_SMALL,
       IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM,
+      IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_LARGE,
       IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_SMALL_UNLOCK,
       IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM_UNLOCK,
+      IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_LARGE_UNLOCK,
       IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_SMALL,
       IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_MEDIUM,
+      IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_LARGE,
+      IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_SMALL,
+      IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_MEDIUM,
+      IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_LARGE,
       IDX_SOC_IFC_ENV_MBOX_TOP_DLEN_VIOLATION,
       IDX_SOC_IFC_ENV_MBOX_TOP_MULTI_AGENT,
       IDX_SOC_IFC_ENV_CPTRA_MBOX_TOP_RAND_SMALL,
+      IDX_SOC_IFC_ENV_CPTRA_MBOX_TOP_REG_AXS_INV_SMALL,
       IDX_SOC_IFC_ENV_RST_WARM,
       IDX_SOC_IFC_ENV_RST_COLD,
       IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM,
@@ -69,21 +79,30 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
   constraint avail_env_seqs_c {
       rand_seq_idx dist {
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL                := 25,
+          IDX_SOC_IFC_ENV_MBOX_TOP_RAND_MEDIUM               := 25,
+          IDX_SOC_IFC_ENV_MBOX_TOP_RAND_LARGE                := 1,
           IDX_SOC_IFC_ENV_MBOX_TOP_MIN                       := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_MAX                       := 1,
-          IDX_SOC_IFC_ENV_MBOX_TOP_RAND_MEDIUM               := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL_UNLOCK         := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_MEDIUM_UNLOCK        := 25,
+          IDX_SOC_IFC_ENV_MBOX_TOP_RAND_LARGE_UNLOCK         := 1,
           IDX_SOC_IFC_ENV_MBOX_TOP_CONTENTION                := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_SMALL         := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM        := 25,
+          IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_LARGE         := 1,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_SMALL_UNLOCK  := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM_UNLOCK := 25,
+          IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_LARGE_UNLOCK  := 1,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_SMALL          := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_MEDIUM         := 25,
+          IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_LARGE          := 1,
+          IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_SMALL         := 25,
+          IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_MEDIUM        := 25,
+          IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_LARGE         := 1,
           IDX_SOC_IFC_ENV_MBOX_TOP_DLEN_VIOLATION            := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_MULTI_AGENT               := 10,
           IDX_SOC_IFC_ENV_CPTRA_MBOX_TOP_RAND_SMALL          := 25,
+          IDX_SOC_IFC_ENV_CPTRA_MBOX_TOP_REG_AXS_INV_SMALL   := 25,
           IDX_SOC_IFC_ENV_RST_WARM                           := 1,
           IDX_SOC_IFC_ENV_RST_COLD                           := 1,
           IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM          := 10,
@@ -125,7 +144,8 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
     soc_ifc_env_bringup_seq        = soc_ifc_env_bringup_sequence_t::type_id::create("soc_ifc_env_bringup_seq");
     soc_ifc_env_cptra_rst_wait_seq = soc_ifc_env_cptra_rst_wait_sequence_t::type_id::create("soc_ifc_env_cptra_rst_wait_seq");
 
-    soc_ifc_env_pauser_init_seq        = soc_ifc_env_pauser_init_sequence_t::type_id::create("soc_ifc_env_pauser_init_seq");
+    soc_ifc_env_cptra_init_interrupts_seq = soc_ifc_env_cptra_init_interrupts_sequence_t::type_id::create("soc_ifc_env_cptra_init_interrupts_seq");
+    soc_ifc_env_pauser_init_seq           = soc_ifc_env_pauser_init_sequence_t::type_id::create("soc_ifc_env_pauser_init_seq");
 
     soc_ifc_ctrl_agent_random_seq      = soc_ifc_ctrl_agent_random_seq_t::type_id::create("soc_ifc_ctrl_agent_random_seq");
     cptra_ctrl_agent_random_seq        = cptra_ctrl_agent_random_seq_t::type_id::create("cptra_ctrl_agent_random_seq");
@@ -136,6 +156,7 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
     // Handle to the responder sequence for getting response transactions
     soc_ifc_env_bringup_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_status_agent_responder_seq;
     soc_ifc_env_cptra_rst_wait_seq.cptra_status_agent_rsp_seq = cptra_status_agent_responder_seq;
+    soc_ifc_env_cptra_init_interrupts_seq.cptra_status_agent_rsp_seq = cptra_status_agent_responder_seq;
     soc_ifc_env_pauser_init_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_status_agent_responder_seq;
 
 //    fork
@@ -182,17 +203,26 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
     end
     join
 
-    // Choose whether or not to initialize/lock PAUSER valid values at random
-    if (!std::randomize(do_pauser_init) with { do_pauser_init dist {0:/25, 1:/75}; })
-        `uvm_error("SOC_IFC_RAND_TEST", "Failed to randomize do_pauser_init")
-    else if (do_pauser_init) begin
-        if(!soc_ifc_env_pauser_init_seq.randomize())
-            `uvm_fatal("SOC_IFC_RAND_TEST", "soc_ifc_rand_test_sequence::body() - soc_ifc_env_pauser_init_seq randomization failed");
-        soc_ifc_env_pauser_init_seq.start(top_configuration.vsqr);
-    end
-    else begin
-        `uvm_info("SOC_IFC_RAND_TEST", "Skipping PAUSER init", UVM_MEDIUM)
-    end
+    fork
+        // Choose whether or not to initialize/lock PAUSER valid values at random
+        if (!std::randomize(do_pauser_init) with { do_pauser_init dist {0:/25, 1:/75}; })
+            `uvm_error("SOC_IFC_RAND_TEST", "Failed to randomize do_pauser_init")
+        else if (do_pauser_init) begin
+            if(!soc_ifc_env_pauser_init_seq.randomize())
+                `uvm_fatal("SOC_IFC_RAND_TEST", "soc_ifc_rand_test_sequence::body() - soc_ifc_env_pauser_init_seq randomization failed");
+            soc_ifc_env_pauser_init_seq.start(top_configuration.vsqr);
+        end
+        else begin
+            `uvm_info("SOC_IFC_RAND_TEST", "Skipping PAUSER init", UVM_MEDIUM)
+        end
+        // Always initialize interrupts
+        // TODO - if we make this random, we can test both interrupt-driven and
+        // polling behavior
+        begin
+            soc_ifc_env_cptra_init_interrupts_seq.start(top_configuration.vsqr);
+            `uvm_info("SOC_IFC_RAND_TEST", "Completed interrupt init", UVM_MEDIUM)
+        end
+    join
 
     for (ii = 0; ii < iteration_count; ii++) begin: RAND_LOOP
         if(!this.randomize(rand_seq_idx)) `uvm_fatal("SOC_IFC_RAND_TEST", "Failed to randomize rand_seq_idx");
@@ -203,6 +233,8 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
                 obj = soc_ifc_env_top_mbox_rand_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_TOP_RAND_MEDIUM:
                 obj = soc_ifc_env_top_mbox_rand_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_TOP_RAND_LARGE:
+                obj = soc_ifc_env_top_mbox_rand_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_TOP_MIN:
                 obj = soc_ifc_env_top_mbox_min_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_TOP_MAX:
@@ -211,26 +243,42 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
                 obj = soc_ifc_env_top_mbox_rand_small_unlock_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_TOP_RAND_MEDIUM_UNLOCK:
                 obj = soc_ifc_env_top_mbox_rand_medium_unlock_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_TOP_RAND_LARGE_UNLOCK:
+                obj = soc_ifc_env_top_mbox_rand_large_unlock_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_TOP_CONTENTION:
                 obj = soc_ifc_env_top_mbox_contention_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_SMALL:
                 obj = soc_ifc_env_top_mbox_rand_pauser_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM:
                 obj = soc_ifc_env_top_mbox_rand_pauser_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_LARGE:
+                obj = soc_ifc_env_top_mbox_rand_pauser_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_SMALL_UNLOCK:
                 obj = soc_ifc_env_top_mbox_rand_pauser_small_unlock_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM_UNLOCK:
                 obj = soc_ifc_env_top_mbox_rand_pauser_medium_unlock_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_LARGE_UNLOCK:
+                obj = soc_ifc_env_top_mbox_rand_pauser_large_unlock_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_SMALL:
                 obj = soc_ifc_env_top_mbox_rand_delay_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_MEDIUM:
                 obj = soc_ifc_env_top_mbox_rand_delay_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_LARGE:
+                obj = soc_ifc_env_top_mbox_rand_delay_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_SMALL:
+                obj = soc_ifc_env_top_mbox_reg_axs_invalid_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_MEDIUM:
+                obj = soc_ifc_env_top_mbox_reg_axs_invalid_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_LARGE:
+                obj = soc_ifc_env_top_mbox_reg_axs_invalid_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_TOP_DLEN_VIOLATION:
                 obj = soc_ifc_env_top_mbox_dlen_violation_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_TOP_MULTI_AGENT:
                 obj = soc_ifc_env_top_mbox_multi_agent_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_CPTRA_MBOX_TOP_RAND_SMALL:
                 obj = soc_ifc_env_top_cptra_mbox_rand_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_CPTRA_MBOX_TOP_REG_AXS_INV_SMALL:
+                obj = soc_ifc_env_top_cptra_mbox_reg_axs_invalid_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_RST_WARM:
                 obj = soc_ifc_env_top_reset_warm_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_RST_COLD:
@@ -252,6 +300,20 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
         soc_ifc_env_seq_ii[ii].soc_ifc_status_agent_rsp_seq = soc_ifc_status_agent_responder_seq;
         soc_ifc_env_seq_ii[ii].cptra_status_agent_rsp_seq   = cptra_status_agent_responder_seq;
         soc_ifc_env_seq_ii[ii].start(top_configuration.vsqr);
+
+        // If the last run sequence triggered a reset, rerun interrupt initialization
+        case (rand_seq_idx) inside
+            IDX_SOC_IFC_ENV_RST_WARM,
+            IDX_SOC_IFC_ENV_RST_COLD,
+            IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM,
+            IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM: begin
+                `uvm_info("SOC_IFC_RAND_TEST", "Rerunning interrupt init after reset", UVM_MEDIUM)
+                soc_ifc_env_cptra_init_interrupts_seq = soc_ifc_env_cptra_init_interrupts_sequence_t::type_id::create($sformatf("soc_ifc_env_cptra_init_interrupts_seq[%0d]",ii));
+                soc_ifc_env_cptra_init_interrupts_seq.cptra_status_agent_rsp_seq = cptra_status_agent_responder_seq;
+                soc_ifc_env_cptra_init_interrupts_seq.start(top_configuration.vsqr);
+                `uvm_info("SOC_IFC_RAND_TEST", "Completed interrupt init", UVM_MEDIUM)
+            end
+        endcase
     end
 
     // UVMF_CHANGE_ME : Extend the simulation XXX number of clocks after 

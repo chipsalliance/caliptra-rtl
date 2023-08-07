@@ -217,6 +217,8 @@ class soc_ifc_predictor #(
   extern task          poll_and_run_delay_jobs();
   extern function void send_delayed_expected_transactions();
   extern function bit  check_mbox_no_lock_error(soc_ifc_sb_apb_ap_output_transaction_t txn, uvm_reg axs_reg);
+  extern function bit  check_mbox_ooo_error(soc_ifc_sb_apb_ap_output_transaction_t txn, uvm_reg axs_reg);
+  extern function bit  check_mbox_inv_user_error(soc_ifc_sb_apb_ap_output_transaction_t txn, uvm_reg axs_reg);
   extern task          update_mtime_mirrors();
   extern task          mtime_counter_task();
   extern function bit  mtime_lt_mtimecmp();
@@ -1751,21 +1753,40 @@ class soc_ifc_predictor #(
                     `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
                 end
                 void'(check_mbox_no_lock_error(apb_txn, axs_reg));
+                void'(check_mbox_ooo_error(apb_txn, axs_reg));
+                void'(check_mbox_inv_user_error(apb_txn, axs_reg));
+                if (mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error) begin
+                    mailbox_data_avail = 1'b0;
+                    send_soc_ifc_sts_txn = 1'b1;
+                end
             end
             "mbox_user": begin
-                if (check_mbox_no_lock_error(apb_txn, axs_reg)) begin
+                if (check_mbox_no_lock_error(apb_txn, axs_reg) || check_mbox_ooo_error(apb_txn, axs_reg)) begin
                     `uvm_warning("PRED_APB", {"Access to RO register: ", axs_reg.get_name(), " triggers mailbox protocol violation"})
+                end
+                else if (mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error) begin
+                    mailbox_data_avail = 1'b0;
+                    send_soc_ifc_sts_txn = 1'b1;
                 end
                 else begin
                     `uvm_info("PRED_APB", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
                 end
+                void'(check_mbox_inv_user_error(apb_txn, axs_reg));
                 // Log the step for coverage
                 next_step = '{null_action: 1'b1, default: 1'b0};
                 `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
             end
             "mbox_cmd": begin
                 void'(check_mbox_no_lock_error(apb_txn, axs_reg));
-                if (apb_txn.read_or_write == APB3_TRANS_WRITE && do_reg_prediction) begin
+                void'(check_mbox_ooo_error(apb_txn, axs_reg));
+                void'(check_mbox_inv_user_error(apb_txn, axs_reg));
+                if (mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error) begin
+                    mailbox_data_avail = 1'b0;
+                    send_soc_ifc_sts_txn = 1'b1;
+                end
+                if (apb_txn.read_or_write == APB3_TRANS_WRITE &&
+                    do_reg_prediction &&
+                    p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_cmd_stage) begin
                     // Log the step for coverage
                     next_step = '{cmd_wr: 1'b1, default: 1'b0};
                     `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
@@ -1783,6 +1804,12 @@ class soc_ifc_predictor #(
             end
             "mbox_dlen": begin
                 void'(check_mbox_no_lock_error(apb_txn, axs_reg));
+                void'(check_mbox_ooo_error(apb_txn, axs_reg));
+                void'(check_mbox_inv_user_error(apb_txn, axs_reg));
+                if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error && mailbox_data_avail) begin
+                    mailbox_data_avail = 1'b0;
+                    send_soc_ifc_sts_txn = 1'b1;
+                end
                 if (apb_txn.read_or_write == APB3_TRANS_WRITE && do_reg_prediction) begin
                     // Log the step for coverage
                     if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_dlen_stage)
@@ -1808,6 +1835,12 @@ class soc_ifc_predictor #(
             "mbox_datain": begin
                 `uvm_info("PRED_APB", $sformatf("Access to mailbox datain, write count: %d", datain_count), UVM_FULL)
                 void'(check_mbox_no_lock_error(apb_txn, axs_reg));
+                void'(check_mbox_ooo_error(apb_txn, axs_reg));
+                void'(check_mbox_inv_user_error(apb_txn, axs_reg));
+                if (mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error) begin
+                    mailbox_data_avail = 1'b0;
+                    send_soc_ifc_sts_txn = 1'b1;
+                end
                 if (apb_txn.read_or_write == APB3_TRANS_WRITE && do_reg_prediction) begin
                     // Log the step for coverage
                     if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_data_stage)
@@ -1825,6 +1858,12 @@ class soc_ifc_predictor #(
             "mbox_dataout": begin
                 `uvm_info("PRED_APB", $sformatf("Access to mailbox dataout, read count: %d", dataout_count), UVM_FULL)
                 void'(check_mbox_no_lock_error(apb_txn, axs_reg));
+                void'(check_mbox_ooo_error(apb_txn, axs_reg));
+                void'(check_mbox_inv_user_error(apb_txn, axs_reg));
+                if (mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error) begin
+                    mailbox_data_avail = 1'b0;
+                    send_soc_ifc_sts_txn = 1'b1;
+                end
                 // Log the step for coverage
                 next_step = '{null_action: 1'b1, default: 1'b0};
                 if (apb_txn.read_or_write == APB3_TRANS_READ && do_reg_prediction) begin
@@ -1839,6 +1878,12 @@ class soc_ifc_predictor #(
             end
             "mbox_execute": begin
                 void'(check_mbox_no_lock_error(apb_txn, axs_reg));
+                void'(check_mbox_ooo_error(apb_txn, axs_reg));
+                void'(check_mbox_inv_user_error(apb_txn, axs_reg));
+                if (mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error) begin
+                    mailbox_data_avail = 1'b0;
+                    send_soc_ifc_sts_txn = 1'b1;
+                end
                 // Log the step for coverage
                 next_step = '{null_action: 1'b1, default: 1'b0};
                 if (apb_txn.read_or_write == APB3_TRANS_WRITE && do_reg_prediction) begin
@@ -1854,6 +1899,12 @@ class soc_ifc_predictor #(
             end
             "mbox_status": begin
                 void'(check_mbox_no_lock_error(apb_txn, axs_reg));
+                void'(check_mbox_ooo_error(apb_txn, axs_reg));
+                void'(check_mbox_inv_user_error(apb_txn, axs_reg));
+                if (mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error) begin
+                    mailbox_data_avail = 1'b0;
+                    send_soc_ifc_sts_txn = 1'b1;
+                end
                 if (apb_txn.read_or_write == APB3_TRANS_WRITE && do_reg_prediction) begin
                     // Log the step for coverage
                     next_step = '{status_wr: 1'b1, default: 1'b0};
@@ -1872,6 +1923,8 @@ class soc_ifc_predictor #(
             end
             "mbox_unlock": begin
                 void'(check_mbox_no_lock_error(apb_txn, axs_reg));
+                void'(check_mbox_ooo_error(apb_txn, axs_reg));
+                void'(check_mbox_inv_user_error(apb_txn, axs_reg));
                 // Log the step for coverage
                 next_step = '{null_action: 1'b1, default: 1'b0};
                 `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
@@ -2258,12 +2311,12 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
 
     // Check for any Error Interrupt
     if (!soc_ifc_error_intr_pending && p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value()) begin
-        `uvm_info("PRED_DLY", "Delay job triggers soc_ifc error interrupt output", UVM_HIGH)
+        `uvm_info("PRED_DLY", "Delay job triggers soc_ifc error_intr output", UVM_HIGH)
         soc_ifc_error_intr_pending = 1'b1;
         send_cptra_sts_txn = 1'b1;
     end
     else if (soc_ifc_error_intr_pending && !p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value()) begin
-        `uvm_info("PRED_DLY", "Delay job causes soc_ifc error interrupt deassertion", UVM_HIGH)
+        `uvm_info("PRED_DLY", "Delay job causes soc_ifc error_intr deassertion", UVM_HIGH)
         soc_ifc_error_intr_pending = 1'b0;
     end
 
@@ -2404,8 +2457,107 @@ function bit soc_ifc_predictor::check_mbox_no_lock_error(soc_ifc_sb_apb_ap_outpu
         error_job.state_nxt = MBOX_IDLE;
         error_job.error = '{axs_without_lock: 1'b1, default: 1'b0};
         p_soc_ifc_rm.delay_jobs.push_back(error_job);
-        `uvm_info("SOC_IFC_REG_CBS", $sformatf("%s to %s on map [%s] with value [%x] causes a mbox no_lock protocol violation. Delay job is queued to update DUT model.", txn.read_or_write.name(), fld.get_name(), p_soc_ifc_APB_map.get_name(), txn.read_or_write == APB3_TRANS_WRITE ? txn.wr_data : txn.rd_data), UVM_HIGH)
+        `uvm_info("MBOX_NO_LOCK_CHK", $sformatf("%s to %s on map [%s] with value [%x] causes a mbox no_lock protocol violation. Delay job is queued to update DUT model.", txn.read_or_write.name(), fld.get_name(), p_soc_ifc_APB_map.get_name(), txn.read_or_write == APB3_TRANS_WRITE ? txn.wr_data : txn.rd_data), UVM_HIGH)
     end
+    return is_error;
+endfunction
+
+function bit soc_ifc_predictor::check_mbox_ooo_error(soc_ifc_sb_apb_ap_output_transaction_t txn, uvm_reg axs_reg);
+    soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error error_job;
+    uvm_reg_field fld;
+    bit is_error = 0;
+    // Only check for access-out-of-order errors here that will not be caught
+    // by reg prediction callbacks.
+    // That means that register accesses where valid_requester/valid_receiver is false
+    // (as applicable to the register in question) might trigger an error if the inverse
+    // is true (valid_receiver/valid_requester).
+    // When !soc_has_lock, valid_receiver must be true for any writes made,
+    // but not necessarily valid_requester.
+    // Since valid_requester may be false, the reg_prediction is not done, and
+    // thus the callback can't catch this scenario).
+    if (txn.addr_user inside mbox_valid_users) begin
+        case (axs_reg.get_name()) inside
+            "mbox_lock": begin
+                fld = axs_reg.get_field_by_name("lock");
+                is_error = txn.read_or_write == APB3_TRANS_WRITE && !p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_idle;
+            end
+            "mbox_user": begin
+                fld = axs_reg.get_field_by_name("user");
+                is_error = txn.read_or_write == APB3_TRANS_WRITE && !p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_idle;
+            end
+            "mbox_cmd": begin
+                fld = axs_reg.get_field_by_name("command");
+                is_error = txn.read_or_write == APB3_TRANS_WRITE &&  valid_receiver(txn) && !valid_requester(txn);
+            end
+            "mbox_dlen": begin
+                fld = axs_reg.get_field_by_name("length");
+                is_error = txn.read_or_write == APB3_TRANS_WRITE &&  valid_receiver(txn) && !valid_requester(txn);
+            end
+            "mbox_datain": begin
+                fld = axs_reg.get_field_by_name("datain");
+                is_error = txn.read_or_write == APB3_TRANS_WRITE &&  valid_receiver(txn) && !valid_requester(txn);
+            end
+            "mbox_dataout": begin
+                fld = axs_reg.get_field_by_name("dataout");
+                is_error =                                          !valid_receiver(txn) &&  valid_requester(txn);
+            end
+            "mbox_execute": begin
+                fld = axs_reg.get_field_by_name("execute");
+                is_error = txn.read_or_write == APB3_TRANS_WRITE &&  valid_receiver(txn) && !valid_requester(txn);
+            end
+            "mbox_status": begin
+                fld = axs_reg.get_field_by_name("status");
+                is_error = txn.read_or_write == APB3_TRANS_WRITE && !valid_receiver(txn) &&  valid_requester(txn);
+            end
+            "mbox_unlock": begin
+                fld = axs_reg.get_field_by_name("unlock");
+                is_error = txn.read_or_write == APB3_TRANS_WRITE && !p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_idle;
+            end
+            default: begin
+                `uvm_error("MBOX_OOO_CHK", "This function should not be called for access to non-mailbox regs")
+            end
+        endcase
+    end
+    if (is_error) begin
+        error_job = soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error::type_id::create("error_job");
+        error_job.rm = p_soc_ifc_rm.mbox_csr_rm;
+        error_job.map = p_soc_ifc_APB_map;
+        error_job.fld = fld;
+        error_job.set_delay_cycles(0);
+        error_job.state_nxt = MBOX_ERROR;
+        error_job.error = '{axs_incorrect_order: 1'b1, default: 1'b0};
+        p_soc_ifc_rm.delay_jobs.push_back(error_job);
+        `uvm_info("MBOX_OOO_CHK", $sformatf("%s to %s on map [%s] with value [%x] causes a mbox out_of_order protocol violation. Delay job is queued to update DUT model.", txn.read_or_write.name(), fld.get_name(), p_soc_ifc_APB_map.get_name(), txn.read_or_write == APB3_TRANS_WRITE ? txn.wr_data : txn.rd_data), UVM_HIGH)
+        p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs = '{mbox_error: 1'b1, default: 1'b0};
+    end
+    return is_error;
+endfunction
+
+function bit soc_ifc_predictor::check_mbox_inv_user_error(soc_ifc_sb_apb_ap_output_transaction_t txn, uvm_reg axs_reg);
+    bit is_error = 0;
+    // The invalid PAUSER error is only flagged for write attempts by an agent
+    // that is considered 'valid', but which currently doesn't have lock
+    // (exception: reads to mbox_dataout while not holding lock also flagged)
+    if (txn.addr_user inside mbox_valid_users) begin
+        case (axs_reg.get_name()) inside
+            "mbox_lock":    is_error = txn.read_or_write == APB3_TRANS_WRITE && !(valid_requester(txn)                       );
+            "mbox_user":    is_error = txn.read_or_write == APB3_TRANS_WRITE && !(valid_requester(txn)                       );
+            "mbox_cmd":     is_error = txn.read_or_write == APB3_TRANS_WRITE && !(valid_requester(txn)                       );
+            "mbox_dlen":    is_error = txn.read_or_write == APB3_TRANS_WRITE && !(valid_requester(txn) || valid_receiver(txn));
+            "mbox_datain":  is_error = txn.read_or_write == APB3_TRANS_WRITE && !(valid_requester(txn)                       );
+            "mbox_dataout": is_error =                                          !(valid_requester(txn) || valid_receiver(txn));
+            "mbox_execute": is_error = txn.read_or_write == APB3_TRANS_WRITE && !(valid_requester(txn)                       );
+            "mbox_status":  is_error = txn.read_or_write == APB3_TRANS_WRITE && !(valid_requester(txn) || valid_receiver(txn));
+            // Unwriteable via APB, but writes still don't flag a PAUSER invalid error
+            "mbox_unlock":  is_error = txn.read_or_write == APB3_TRANS_WRITE && !(valid_requester(txn)                       );
+            default: `uvm_error("MBOX_INV_USER_CHK", "This function should not be called for access to non-mailbox regs")
+        endcase
+    end
+    if (is_error) begin
+        p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.error_inv_dev_sts.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, p_soc_ifc_AHB_map); /* AHB-access only, use AHB map*/
+        `uvm_info("MBOX_INV_USER_CHK", $sformatf("%s to %s on map [%s] with user [0x%x] causes a mbox invalid PAUSER detection.", txn.read_or_write.name(), axs_reg.get_name(), p_soc_ifc_APB_map.get_name(), txn.addr_user), UVM_LOW)
+    end
+    return is_error;
 endfunction
 
 task soc_ifc_predictor::update_mtime_mirrors();
@@ -2417,26 +2569,35 @@ task soc_ifc_predictor::update_mtime_mirrors();
             p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_h.count_h.get_mirrored_value() << 32;
     new_mtime = mtime + 1; // In clock cycles
 
-    if (p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_l.is_busy()) begin
-        uvm_wait_for_nba_region();
+    fork
         if (p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_l.is_busy()) begin
-            p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_l.count_l.predict(new_mtime[31:00], .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(p_soc_ifc_AHB_map));
+            uvm_wait_for_nba_region();
+            // If mtime_l transitions from busy to not busy on the current clock edge, leave the mirror at the value it just acquired instead of overwriting
+            // (unless the value was not updated by the recent transfer, e.g. because it was an APB transfer)
+            // Else, predict a new value (which will be overwritten later when the active transfer completes)
+            if (p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_l.is_busy() || (mtime[31:00] == p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_l.count_l.get_mirrored_value())) begin
+                p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_l.count_l.predict(new_mtime[31:00], .kind(UVM_PREDICT_WRITE), .path(UVM_PREDICT), .map(p_soc_ifc_AHB_map));
+            end
+            new_mtime[31:00] = p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_l.count_l.get_mirrored_value();
         end
-        new_mtime[31:00] = p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_l.count_l.get_mirrored_value();
-        p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_h.count_h.predict(new_mtime[63:32]);
-    end
-    else if (p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_h.is_busy()) begin
-        p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_l.count_l.predict(new_mtime[31:00]);
-        uvm_wait_for_nba_region();
+        else begin
+            p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_l.count_l.predict(new_mtime[31:00]);
+        end
         if (p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_h.is_busy()) begin
-            p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_h.count_h.predict(new_mtime[63:32], .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(p_soc_ifc_AHB_map));
+            uvm_wait_for_nba_region();
+            // If mtime_h transitions from busy to not busy on the current clock edge, leave the mirror at the value it just acquired instead of overwriting
+            // (unless the value was not updated by the recent transfer, e.g. because it was an APB transfer)
+            // Else, predict a new value (which will be overwritten later when the active transfer completes)
+            if (p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_h.is_busy() || (mtime[63:32] == p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_h.count_h.get_mirrored_value())) begin
+                p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_h.count_h.predict(new_mtime[63:32], .kind(UVM_PREDICT_WRITE), .path(UVM_PREDICT), .map(p_soc_ifc_AHB_map));
+            end
+            new_mtime[63:32] = p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_h.count_h.get_mirrored_value();
         end
-        new_mtime[63:32] = p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_h.count_h.get_mirrored_value();
-    end
-    else begin
-        p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_h.count_h.predict(new_mtime[63:32]);
-        p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_l.count_l.predict(new_mtime[31:00]);
-    end
+        else begin
+            p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_h.count_h.predict(new_mtime[63:32]);
+        end
+    join
+
     `uvm_info("PRED", $sformatf("Updated mtime register mirrors to 0x%x", new_mtime), UVM_DEBUG)
 endtask
 

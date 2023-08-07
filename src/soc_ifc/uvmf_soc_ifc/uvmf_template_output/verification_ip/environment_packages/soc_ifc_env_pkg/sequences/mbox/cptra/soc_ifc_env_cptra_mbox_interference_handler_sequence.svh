@@ -53,10 +53,11 @@ endclass
 task soc_ifc_env_cptra_mbox_interference_handler_sequence::mbox_wait_for_command(output op_sts_e op_sts);
     byte ii;
 
+    uvm_reg_data_t data;
     op_sts = CPTRA_TIMEOUT;
-    reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
-    report_reg_sts(reg_sts, "notif_internal_intr_r");
-    while (!data[reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_cmd_avail_sts.get_lsb_pos()]) begin
+    op_started = 1;
+    // Wait for notification interrupt indicating command is available
+    while (ntf_rsp_count == 0) begin
         uvm_reg_data_t dlen;
         byte unsigned  mem_n_bytes;
 
@@ -90,8 +91,16 @@ task soc_ifc_env_cptra_mbox_interference_handler_sequence::mbox_wait_for_command
             end
         end
         configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(cycles);
-        reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
-        report_reg_sts(reg_sts, "notif_internal_intr_r");
+        if (ntf_rsp_count != 0 && !cptra_status_agent_rsp_seq.rsp.soc_ifc_notif_intr_pending) begin
+            ntf_rsp_count = 0;
+        end
+    end
+    ntf_rsp_count = 0;
+    // Clear interrupt
+    reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+    report_reg_sts(reg_sts, "notif_internal_intr_r");
+    if (!data[reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_cmd_avail_sts.get_lsb_pos()]) begin
+        `uvm_error("CPTRA_MBOX_HANDLER", "After receiving notification interrupt, notif_cmd_avail_sts is not set!")
     end
     data &= uvm_reg_data_t'(1) << reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_cmd_avail_sts.get_lsb_pos();
     reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
@@ -110,6 +119,7 @@ endtask
 //==========================================
 task soc_ifc_env_cptra_mbox_interference_handler_sequence::mbox_wait_and_force_unlock();
     uvm_reg_data_t data;
+    mbox_fsm_state_e state;
     uvm_event force_unlock_delay_complete = new("force_unlock_delay_complete");
 
     // Start the unlock proc prior to burst accesses so that the parent
@@ -118,17 +128,50 @@ task soc_ifc_env_cptra_mbox_interference_handler_sequence::mbox_wait_and_force_u
     unlock_proc_active = 1'b1;
 
     // Wait...
-    // This task never exits if force unlock is disabled
-    do begin
-        force_unlock_delay_complete.reset();
-        fork
-            begin
+    // If force unlock is disabled, this task will only exit upon detecting
+    // an ERROR that requires servicing, whereupon force_unlock will still
+    // be set to recover. In either case, only an event resulting in force
+    // unlock causes this routine to break
+    force_unlock_delay_complete.reset();
+    fork
+        begin
+            if (inject_force_unlock) begin
                 configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(force_unlock_delay_cycles);
-                force_unlock_delay_complete.trigger();
             end
-            burst_random_reg_accesses(force_unlock_delay_complete);
-        join
-    end while (!inject_force_unlock);
+            else begin
+                `uvm_info("CPTRA_MBOX_HANDLER", "Not injecting force unlock - burst random reg accesses until any err interrupt is observed", UVM_HIGH)
+                forever begin
+                    if (err_rsp_count > 0 && cptra_status_agent_rsp_seq.rsp.soc_ifc_err_intr_pending) begin
+                        `uvm_info("CPTRA_MBOX_HANDLER", "Received soc_ifc_err_intr, clearing and (if needed) proceeding to mbox_unlock", UVM_MEDIUM)
+                        // Read and clear any error interrupts
+                        reg_model.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+                        report_reg_sts(reg_sts, "error_internal_intr_r");
+                        configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(10/*TODO rand delays*/);
+                        reg_model.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+                        report_reg_sts(reg_sts, "error_internal_intr_r");
+                        err_rsp_count = 0;
+                        // Next, check if we need to proceed to mbox_unlock step
+                        if (!data[reg_model.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.error_cmd_fail_sts.get_lsb_pos()]) begin
+                            continue;
+                        end
+                        reg_model.mbox_csr_rm.mbox_status.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+                        report_reg_sts(reg_sts, "mbox_status");
+                        state = mbox_fsm_state_e'(data >> reg_model.mbox_csr_rm.mbox_status.mbox_fsm_ps.get_lsb_pos());
+                        // If we're in the error state, the only recovery is by mbox_unlock - proceed to that step
+                        if (state == MBOX_ERROR) begin
+                            `uvm_info("CPTRA_MBOX_HANDLER", "After servicing soc_ifc_err_intr, proceeding with mbox_unlock", UVM_MEDIUM)
+                            break;
+                        end
+                    end
+                    else begin
+                        configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(10/*TODO rand delays*/);
+                    end
+                end
+            end
+            force_unlock_delay_complete.trigger();
+        end
+        burst_random_reg_accesses(force_unlock_delay_complete);
+    join
 
     // After waiting the requisite number of cycles, check mbox_status.
     // If SOC doesn't currently have the lock, doing a force-unlock has no

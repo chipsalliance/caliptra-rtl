@@ -113,7 +113,10 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_dlen_length extends soc_ifc_reg_cbs_mbox_csr
                         error_job.state_nxt = MBOX_IDLE;
                         error_job.error = '{axs_without_lock: 1'b1, default: 1'b0};
                         delay_jobs.push_back(error_job);
-                        `uvm_warning("SOC_IFC_REG_CBS", $sformatf("DLEN written during unexpected mailbox state [%p]!", rm.mbox_fn_state_sigs))
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("DLEN written during unexpected mailbox state [%p]!", rm.mbox_fn_state_sigs), UVM_LOW)
+                    end
+                    else if (rm.mbox_fn_state_sigs.mbox_error) begin
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to %s on map [%s] with value [%x] during mailbox state [%p] has no additional side effects!", fld.get_name(), map.get_name(), value, rm.mbox_fn_state_sigs), UVM_LOW)
                     end
                     else begin
                         error_job = soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error::type_id::create("error_job");
@@ -124,7 +127,8 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_dlen_length extends soc_ifc_reg_cbs_mbox_csr
                         error_job.state_nxt = MBOX_ERROR;
                         error_job.error = '{axs_incorrect_order: 1'b1, default: 1'b0};
                         delay_jobs.push_back(error_job);
-                        `uvm_warning("SOC_IFC_REG_CBS", $sformatf("DLEN written during unexpected mailbox state [%p]!", rm.mbox_fn_state_sigs))
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("DLEN written during unexpected mailbox state [%p]!", rm.mbox_fn_state_sigs), UVM_LOW)
+                        rm.mbox_fn_state_sigs = '{mbox_error: 1'b1, default: 1'b0};
                     end
                 end
                 default: begin

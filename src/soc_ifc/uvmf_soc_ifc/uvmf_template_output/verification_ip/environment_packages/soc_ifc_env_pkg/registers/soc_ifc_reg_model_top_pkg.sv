@@ -543,6 +543,7 @@ package soc_ifc_reg_model_top_pkg;
     `include "soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base.svh"
     `include "soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_en_r_base.svh"
     `include "soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_trig_r_base.svh"
+    `include "soc_ifc_reg_cbs_intr_block_rf_ext_internal.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_FATAL.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_DATA_DATA.svh"
@@ -663,6 +664,7 @@ package soc_ifc_reg_model_top_pkg;
         soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base soc_ifc_reg_intr_block_rf_ext_notif_internal_intr_r_base_cb;
         soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_en_r_base       soc_ifc_reg_intr_block_rf_ext_notif_intr_en_r_base_cb;
         soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_trig_r_base     soc_ifc_reg_intr_block_rf_ext_notif_intr_trig_r_base_cb;
+        soc_ifc_reg_cbs_intr_block_rf_ext_internal                   soc_ifc_reg_intr_block_rf_ext_internal_cb;
 
         soc_ifc_reg_cbs_intr_block_rf_ext_global_intr_en_r_base      sha512_acc_csr_intr_block_rf_ext_global_intr_en_r_base_cb;
         soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base sha512_acc_csr_intr_block_rf_ext_error_internal_intr_r_base_cb;
@@ -671,6 +673,8 @@ package soc_ifc_reg_model_top_pkg;
         soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base sha512_acc_csr_intr_block_rf_ext_notif_internal_intr_r_base_cb;
         soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_en_r_base       sha512_acc_csr_intr_block_rf_ext_notif_intr_en_r_base_cb;
         soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_trig_r_base     sha512_acc_csr_intr_block_rf_ext_notif_intr_trig_r_base_cb;
+        soc_ifc_reg_cbs_intr_block_rf_ext_internal                   sha512_acc_csr_intr_block_rf_ext_internal_cb;
+
 
         soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock          mbox_csr_mbox_lock_lock_cb;
         soc_ifc_reg_cbs_mbox_csr_mbox_cmd_command        mbox_csr_mbox_cmd_command_cb;
@@ -769,6 +773,7 @@ package soc_ifc_reg_model_top_pkg;
         soc_ifc_reg_intr_block_rf_ext_notif_internal_intr_r_base_cb = soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base::type_id::create("soc_ifc_reg_intr_block_rf_ext_notif_internal_intr_r_base_cb");
         soc_ifc_reg_intr_block_rf_ext_notif_intr_en_r_base_cb       = soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_en_r_base      ::type_id::create("soc_ifc_reg_intr_block_rf_ext_notif_intr_en_r_base_cb"      );
         soc_ifc_reg_intr_block_rf_ext_notif_intr_trig_r_base_cb     = soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_trig_r_base    ::type_id::create("soc_ifc_reg_intr_block_rf_ext_notif_intr_trig_r_base_cb"    );
+        soc_ifc_reg_intr_block_rf_ext_internal_cb                   = soc_ifc_reg_cbs_intr_block_rf_ext_internal                  ::type_id::create("soc_ifc_reg_intr_block_rf_ext_internal_cb"                  );
 
         sha512_acc_csr_intr_block_rf_ext_global_intr_en_r_base_cb      = soc_ifc_reg_cbs_intr_block_rf_ext_global_intr_en_r_base     ::type_id::create("sha512_acc_csr_intr_block_rf_ext_global_intr_en_r_base_cb"     );
         sha512_acc_csr_intr_block_rf_ext_error_internal_intr_r_base_cb = soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base::type_id::create("sha512_acc_csr_intr_block_rf_ext_error_internal_intr_r_base_cb");
@@ -777,6 +782,7 @@ package soc_ifc_reg_model_top_pkg;
         sha512_acc_csr_intr_block_rf_ext_notif_internal_intr_r_base_cb = soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base::type_id::create("sha512_acc_csr_intr_block_rf_ext_notif_internal_intr_r_base_cb");
         sha512_acc_csr_intr_block_rf_ext_notif_intr_en_r_base_cb       = soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_en_r_base      ::type_id::create("sha512_acc_csr_intr_block_rf_ext_notif_intr_en_r_base_cb"      );
         sha512_acc_csr_intr_block_rf_ext_notif_intr_trig_r_base_cb     = soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_trig_r_base    ::type_id::create("sha512_acc_csr_intr_block_rf_ext_notif_intr_trig_r_base_cb"    );
+        sha512_acc_csr_intr_block_rf_ext_internal_cb                   = soc_ifc_reg_cbs_intr_block_rf_ext_internal                  ::type_id::create("sha512_acc_csr_intr_block_rf_ext_internal_cb"                  );
 
         mbox_csr_mbox_lock_lock_cb          = soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock         ::type_id::create("mbox_csr_mbox_lock_lock_cb"         );
         mbox_csr_mbox_cmd_command_cb        = soc_ifc_reg_cbs_mbox_csr_mbox_cmd_command       ::type_id::create("mbox_csr_mbox_cmd_command_cb"       );
@@ -828,6 +834,34 @@ package soc_ifc_reg_model_top_pkg;
         foreach (notif_sts_flds [ii]) uvm_reg_field_cb::add(notif_sts_flds [ii], soc_ifc_reg_intr_block_rf_ext_notif_internal_intr_r_base_cb);
         foreach (error_trig_flds[ii]) uvm_reg_field_cb::add(error_trig_flds[ii], soc_ifc_reg_intr_block_rf_ext_error_intr_trig_r_base_cb    );
         foreach (notif_trig_flds[ii]) uvm_reg_field_cb::add(notif_trig_flds[ii], soc_ifc_reg_intr_block_rf_ext_notif_intr_trig_r_base_cb    );
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_count_r                 .cnt, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.error_inv_dev_intr_count_r                  .cnt, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.error_cmd_fail_intr_count_r                 .cnt, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.error_bad_fuse_intr_count_r                 .cnt, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.error_iccm_blocked_intr_count_r             .cnt, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.error_mbox_ecc_unc_intr_count_r             .cnt, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.error_wdt_timer1_timeout_intr_count_r       .cnt, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.error_wdt_timer2_timeout_intr_count_r       .cnt, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.notif_cmd_avail_intr_count_r                .cnt, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.notif_mbox_ecc_cor_intr_count_r             .cnt, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.notif_debug_locked_intr_count_r             .cnt, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.notif_scan_mode_intr_count_r                .cnt, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.notif_soc_req_lock_intr_count_r             .cnt, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.notif_gen_in_toggle_intr_count_r            .cnt, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_count_incr_r          .pulse, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.error_inv_dev_intr_count_incr_r           .pulse, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.error_cmd_fail_intr_count_incr_r          .pulse, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.error_bad_fuse_intr_count_incr_r          .pulse, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.error_iccm_blocked_intr_count_incr_r      .pulse, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.error_mbox_ecc_unc_intr_count_incr_r      .pulse, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.error_wdt_timer1_timeout_intr_count_incr_r.pulse, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.error_wdt_timer2_timeout_intr_count_incr_r.pulse, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.notif_cmd_avail_intr_count_incr_r         .pulse, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.notif_mbox_ecc_cor_intr_count_incr_r      .pulse, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.notif_debug_locked_intr_count_incr_r      .pulse, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.notif_scan_mode_intr_count_incr_r         .pulse, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.notif_soc_req_lock_intr_count_incr_r      .pulse, soc_ifc_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.soc_ifc_reg_rm.intr_block_rf_ext.notif_gen_in_toggle_intr_count_incr_r     .pulse, soc_ifc_reg_intr_block_rf_ext_internal_cb);
 
         /* -- sha512_acc_csr interrupts -- */
         uvm_reg_field_cb::add(sha512_acc_csr_rm.intr_block_rf_ext.global_intr_en_r.error_en, sha512_acc_csr_intr_block_rf_ext_global_intr_en_r_base_cb     );
@@ -850,6 +884,16 @@ package soc_ifc_reg_model_top_pkg;
         foreach (notif_sts_flds [ii]) uvm_reg_field_cb::add(notif_sts_flds [ii], sha512_acc_csr_intr_block_rf_ext_notif_internal_intr_r_base_cb);
         foreach (error_trig_flds[ii]) uvm_reg_field_cb::add(error_trig_flds[ii], sha512_acc_csr_intr_block_rf_ext_error_intr_trig_r_base_cb    );
         foreach (notif_trig_flds[ii]) uvm_reg_field_cb::add(notif_trig_flds[ii], sha512_acc_csr_intr_block_rf_ext_notif_intr_trig_r_base_cb    );
+        uvm_reg_field_cb::add(this.sha512_acc_csr_rm.intr_block_rf_ext.error0_intr_count_r                .cnt, sha512_acc_csr_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.sha512_acc_csr_rm.intr_block_rf_ext.error1_intr_count_r                .cnt, sha512_acc_csr_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.sha512_acc_csr_rm.intr_block_rf_ext.error2_intr_count_r                .cnt, sha512_acc_csr_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.sha512_acc_csr_rm.intr_block_rf_ext.error3_intr_count_r                .cnt, sha512_acc_csr_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.sha512_acc_csr_rm.intr_block_rf_ext.notif_cmd_done_intr_count_r        .cnt, sha512_acc_csr_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.sha512_acc_csr_rm.intr_block_rf_ext.error0_intr_count_incr_r         .pulse, sha512_acc_csr_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.sha512_acc_csr_rm.intr_block_rf_ext.error1_intr_count_incr_r         .pulse, sha512_acc_csr_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.sha512_acc_csr_rm.intr_block_rf_ext.error2_intr_count_incr_r         .pulse, sha512_acc_csr_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.sha512_acc_csr_rm.intr_block_rf_ext.error3_intr_count_incr_r         .pulse, sha512_acc_csr_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.sha512_acc_csr_rm.intr_block_rf_ext.notif_cmd_done_intr_count_incr_r .pulse, sha512_acc_csr_intr_block_rf_ext_internal_cb);
 
         /* -- mbox_csr -- */
         uvm_reg_field_cb::add(mbox_csr_rm.mbox_lock   .lock       , mbox_csr_mbox_lock_lock_cb         );
@@ -895,6 +939,10 @@ package soc_ifc_reg_model_top_pkg;
         foreach (soc_ifc_reg_rm.internal_obf_key[ii])          uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_obf_key[ii].key           , soc_ifc_reg_key_cb);
                                                                uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_iccm_lock.lock            , soc_ifc_reg_internal_cb);
                                                                uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_fw_update_reset.core_rst  , soc_ifc_reg_internal_fw_update_reset_cb) ;
+                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_rv_mtime_l.count_l        , soc_ifc_reg_internal_cb);
+                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_rv_mtime_h.count_h        , soc_ifc_reg_internal_cb);
+                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_rv_mtimecmp_l.compare_l   , soc_ifc_reg_internal_cb);
+                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_rv_mtimecmp_h.compare_h   , soc_ifc_reg_internal_cb);
         /* -- sha512_acc_csr -- */
         uvm_reg_field_cb::add(sha512_acc_csr_rm.LOCK.LOCK, sha512_acc_csr_LOCK_LOCK_cb);
         uvm_reg_field_cb::add(sha512_acc_csr_rm.EXECUTE.EXECUTE, sha512_acc_csr_EXECUTE_EXECUTE_cb);
