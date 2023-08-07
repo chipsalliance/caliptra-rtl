@@ -270,7 +270,8 @@ package soc_ifc_reg_uvm;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        soc_ifc_reg__CPTRA_FLOW_STATUS_bit_cg status_bit_cg[25];
+        soc_ifc_reg__CPTRA_FLOW_STATUS_bit_cg status_bit_cg[24];
+        soc_ifc_reg__CPTRA_FLOW_STATUS_bit_cg idevid_csr_ready_bit_cg[1];
         soc_ifc_reg__CPTRA_FLOW_STATUS_bit_cg boot_fsm_ps_bit_cg[3];
         soc_ifc_reg__CPTRA_FLOW_STATUS_bit_cg ready_for_fw_bit_cg[1];
         soc_ifc_reg__CPTRA_FLOW_STATUS_bit_cg ready_for_runtime_bit_cg[1];
@@ -278,6 +279,7 @@ package soc_ifc_reg_uvm;
         soc_ifc_reg__CPTRA_FLOW_STATUS_bit_cg mailbox_flow_done_bit_cg[1];
         soc_ifc_reg__CPTRA_FLOW_STATUS_fld_cg fld_cg;
         rand uvm_reg_field status;
+        rand uvm_reg_field idevid_csr_ready;
         rand uvm_reg_field boot_fsm_ps;
         rand uvm_reg_field ready_for_fw;
         rand uvm_reg_field ready_for_runtime;
@@ -295,7 +297,9 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.status = new("status");
-            this.status.configure(this, 25, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.status.configure(this, 24, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.idevid_csr_ready = new("idevid_csr_ready");
+            this.idevid_csr_ready.configure(this, 1, 24, "RW", 0, 'h0, 1, 1, 0);
             this.boot_fsm_ps = new("boot_fsm_ps");
             this.boot_fsm_ps.configure(this, 3, 25, "RO", 1, 'h0, 0, 1, 0);
             this.ready_for_fw = new("ready_for_fw");
@@ -308,6 +312,7 @@ package soc_ifc_reg_uvm;
             this.mailbox_flow_done.configure(this, 1, 31, "RW", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(status_bit_cg[bt]) status_bit_cg[bt] = new();
+                foreach(idevid_csr_ready_bit_cg[bt]) idevid_csr_ready_bit_cg[bt] = new();
                 foreach(boot_fsm_ps_bit_cg[bt]) boot_fsm_ps_bit_cg[bt] = new();
                 foreach(ready_for_fw_bit_cg[bt]) ready_for_fw_bit_cg[bt] = new();
                 foreach(ready_for_runtime_bit_cg[bt]) ready_for_runtime_bit_cg[bt] = new();
@@ -540,7 +545,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.DATA = new("DATA");
-            this.DATA.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.DATA.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(DATA_bit_cg[bt]) DATA_bit_cg[bt] = new();
             end
@@ -548,6 +553,36 @@ package soc_ifc_reg_uvm;
                 fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_TRNG_DATA
+
+    // Reg - soc_ifc_reg::CPTRA_TRNG_CTRL
+    class soc_ifc_reg__CPTRA_TRNG_CTRL extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_TRNG_CTRL_bit_cg clear_bit_cg[1];
+        soc_ifc_reg__CPTRA_TRNG_CTRL_fld_cg fld_cg;
+        rand uvm_reg_field clear;
+
+        function new(string name = "soc_ifc_reg__CPTRA_TRNG_CTRL");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.clear = new("clear");
+            this.clear.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(clear_bit_cg[bt]) clear_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__CPTRA_TRNG_CTRL
 
     // Reg - soc_ifc_reg::CPTRA_TRNG_STATUS
     class soc_ifc_reg__CPTRA_TRNG_STATUS extends uvm_reg;
@@ -800,9 +835,11 @@ package soc_ifc_reg_uvm;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        soc_ifc_reg__CPTRA_HW_REV_ID_bit_cg REV_ID_bit_cg[32];
+        soc_ifc_reg__CPTRA_HW_REV_ID_bit_cg CPTRA_GENERATION_bit_cg[16];
+        soc_ifc_reg__CPTRA_HW_REV_ID_bit_cg SOC_STEPPING_ID_bit_cg[16];
         soc_ifc_reg__CPTRA_HW_REV_ID_fld_cg fld_cg;
-        rand uvm_reg_field REV_ID;
+        rand uvm_reg_field CPTRA_GENERATION;
+        rand uvm_reg_field SOC_STEPPING_ID;
 
         function new(string name = "soc_ifc_reg__CPTRA_HW_REV_ID");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
@@ -814,10 +851,13 @@ package soc_ifc_reg_uvm;
                                                       uvm_reg_map     map);
 
         virtual function void build();
-            this.REV_ID = new("REV_ID");
-            this.REV_ID.configure(this, 32, 0, "RO", 0, 'h1, 1, 1, 0);
+            this.CPTRA_GENERATION = new("CPTRA_GENERATION");
+            this.CPTRA_GENERATION.configure(this, 16, 0, "RO", 0, 'h1, 1, 1, 0);
+            this.SOC_STEPPING_ID = new("SOC_STEPPING_ID");
+            this.SOC_STEPPING_ID.configure(this, 16, 16, "RO", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
-                foreach(REV_ID_bit_cg[bt]) REV_ID_bit_cg[bt] = new();
+                foreach(CPTRA_GENERATION_bit_cg[bt]) CPTRA_GENERATION_bit_cg[bt] = new();
+                foreach(SOC_STEPPING_ID_bit_cg[bt]) SOC_STEPPING_ID_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
@@ -1563,6 +1603,36 @@ package soc_ifc_reg_uvm;
                 fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__fuse_lms_revocation
+
+    // Reg - soc_ifc_reg::fuse_soc_stepping_id
+    class soc_ifc_reg__fuse_soc_stepping_id extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__fuse_soc_stepping_id_bit_cg soc_stepping_id_bit_cg[16];
+        soc_ifc_reg__fuse_soc_stepping_id_fld_cg fld_cg;
+        rand uvm_reg_field soc_stepping_id;
+
+        function new(string name = "soc_ifc_reg__fuse_soc_stepping_id");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.soc_stepping_id = new("soc_stepping_id");
+            this.soc_stepping_id.configure(this, 16, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(soc_stepping_id_bit_cg[bt]) soc_stepping_id_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__fuse_soc_stepping_id
 
     // Reg - soc_ifc_reg::internal_obf_key
     class soc_ifc_reg__internal_obf_key extends uvm_reg;
@@ -3521,6 +3591,7 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER CPTRA_TRNG_VALID_PAUSER;
         rand soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK CPTRA_TRNG_PAUSER_LOCK;
         rand soc_ifc_reg__CPTRA_TRNG_DATA CPTRA_TRNG_DATA[12];
+        rand soc_ifc_reg__CPTRA_TRNG_CTRL CPTRA_TRNG_CTRL;
         rand soc_ifc_reg__CPTRA_TRNG_STATUS CPTRA_TRNG_STATUS;
         rand soc_ifc_reg__CPTRA_FUSE_WR_DONE CPTRA_FUSE_WR_DONE;
         rand soc_ifc_reg__CPTRA_TIMER_CONFIG CPTRA_TIMER_CONFIG;
@@ -3554,6 +3625,7 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__fuse_life_cycle fuse_life_cycle;
         rand soc_ifc_reg__fuse_lms_verify fuse_lms_verify;
         rand soc_ifc_reg__fuse_lms_revocation fuse_lms_revocation;
+        rand soc_ifc_reg__fuse_soc_stepping_id fuse_soc_stepping_id;
         rand soc_ifc_reg__internal_obf_key internal_obf_key[8];
         rand soc_ifc_reg__internal_iccm_lock internal_iccm_lock;
         rand soc_ifc_reg__internal_fw_update_reset internal_fw_update_reset;
@@ -3663,116 +3735,121 @@ package soc_ifc_reg_uvm;
                 this.CPTRA_TRNG_DATA[i0].build();
                 this.default_map.add_reg(this.CPTRA_TRNG_DATA[i0], 'h78 + i0*'h4);
             end
+            this.CPTRA_TRNG_CTRL = new("CPTRA_TRNG_CTRL");
+            this.CPTRA_TRNG_CTRL.configure(this);
+
+            this.CPTRA_TRNG_CTRL.build();
+            this.default_map.add_reg(this.CPTRA_TRNG_CTRL, 'ha8);
             this.CPTRA_TRNG_STATUS = new("CPTRA_TRNG_STATUS");
             this.CPTRA_TRNG_STATUS.configure(this);
 
             this.CPTRA_TRNG_STATUS.build();
-            this.default_map.add_reg(this.CPTRA_TRNG_STATUS, 'ha8);
+            this.default_map.add_reg(this.CPTRA_TRNG_STATUS, 'hac);
             this.CPTRA_FUSE_WR_DONE = new("CPTRA_FUSE_WR_DONE");
             this.CPTRA_FUSE_WR_DONE.configure(this);
 
             this.CPTRA_FUSE_WR_DONE.build();
-            this.default_map.add_reg(this.CPTRA_FUSE_WR_DONE, 'hac);
+            this.default_map.add_reg(this.CPTRA_FUSE_WR_DONE, 'hb0);
             this.CPTRA_TIMER_CONFIG = new("CPTRA_TIMER_CONFIG");
             this.CPTRA_TIMER_CONFIG.configure(this);
 
             this.CPTRA_TIMER_CONFIG.build();
-            this.default_map.add_reg(this.CPTRA_TIMER_CONFIG, 'hb0);
+            this.default_map.add_reg(this.CPTRA_TIMER_CONFIG, 'hb4);
             this.CPTRA_BOOTFSM_GO = new("CPTRA_BOOTFSM_GO");
             this.CPTRA_BOOTFSM_GO.configure(this);
 
             this.CPTRA_BOOTFSM_GO.build();
-            this.default_map.add_reg(this.CPTRA_BOOTFSM_GO, 'hb4);
+            this.default_map.add_reg(this.CPTRA_BOOTFSM_GO, 'hb8);
             this.CPTRA_DBG_MANUF_SERVICE_REG = new("CPTRA_DBG_MANUF_SERVICE_REG");
             this.CPTRA_DBG_MANUF_SERVICE_REG.configure(this);
 
             this.CPTRA_DBG_MANUF_SERVICE_REG.build();
-            this.default_map.add_reg(this.CPTRA_DBG_MANUF_SERVICE_REG, 'hb8);
+            this.default_map.add_reg(this.CPTRA_DBG_MANUF_SERVICE_REG, 'hbc);
             this.CPTRA_CLK_GATING_EN = new("CPTRA_CLK_GATING_EN");
             this.CPTRA_CLK_GATING_EN.configure(this);
 
             this.CPTRA_CLK_GATING_EN.build();
-            this.default_map.add_reg(this.CPTRA_CLK_GATING_EN, 'hbc);
+            this.default_map.add_reg(this.CPTRA_CLK_GATING_EN, 'hc0);
             foreach(this.CPTRA_GENERIC_INPUT_WIRES[i0]) begin
                 this.CPTRA_GENERIC_INPUT_WIRES[i0] = new($sformatf("CPTRA_GENERIC_INPUT_WIRES[%0d]", i0));
                 this.CPTRA_GENERIC_INPUT_WIRES[i0].configure(this);
                 
                 this.CPTRA_GENERIC_INPUT_WIRES[i0].build();
-                this.default_map.add_reg(this.CPTRA_GENERIC_INPUT_WIRES[i0], 'hc0 + i0*'h4);
+                this.default_map.add_reg(this.CPTRA_GENERIC_INPUT_WIRES[i0], 'hc4 + i0*'h4);
             end
             foreach(this.CPTRA_GENERIC_OUTPUT_WIRES[i0]) begin
                 this.CPTRA_GENERIC_OUTPUT_WIRES[i0] = new($sformatf("CPTRA_GENERIC_OUTPUT_WIRES[%0d]", i0));
                 this.CPTRA_GENERIC_OUTPUT_WIRES[i0].configure(this);
                 
                 this.CPTRA_GENERIC_OUTPUT_WIRES[i0].build();
-                this.default_map.add_reg(this.CPTRA_GENERIC_OUTPUT_WIRES[i0], 'hc8 + i0*'h4);
+                this.default_map.add_reg(this.CPTRA_GENERIC_OUTPUT_WIRES[i0], 'hcc + i0*'h4);
             end
             this.CPTRA_HW_REV_ID = new("CPTRA_HW_REV_ID");
             this.CPTRA_HW_REV_ID.configure(this);
 
             this.CPTRA_HW_REV_ID.build();
-            this.default_map.add_reg(this.CPTRA_HW_REV_ID, 'hd0);
+            this.default_map.add_reg(this.CPTRA_HW_REV_ID, 'hd4);
             foreach(this.CPTRA_FW_REV_ID[i0]) begin
                 this.CPTRA_FW_REV_ID[i0] = new($sformatf("CPTRA_FW_REV_ID[%0d]", i0));
                 this.CPTRA_FW_REV_ID[i0].configure(this);
                 
                 this.CPTRA_FW_REV_ID[i0].build();
-                this.default_map.add_reg(this.CPTRA_FW_REV_ID[i0], 'hd4 + i0*'h4);
+                this.default_map.add_reg(this.CPTRA_FW_REV_ID[i0], 'hd8 + i0*'h4);
             end
             this.CPTRA_HW_CONFIG = new("CPTRA_HW_CONFIG");
             this.CPTRA_HW_CONFIG.configure(this);
 
             this.CPTRA_HW_CONFIG.build();
-            this.default_map.add_reg(this.CPTRA_HW_CONFIG, 'hdc);
+            this.default_map.add_reg(this.CPTRA_HW_CONFIG, 'he0);
             this.CPTRA_WDT_TIMER1_EN = new("CPTRA_WDT_TIMER1_EN");
             this.CPTRA_WDT_TIMER1_EN.configure(this);
 
             this.CPTRA_WDT_TIMER1_EN.build();
-            this.default_map.add_reg(this.CPTRA_WDT_TIMER1_EN, 'he0);
+            this.default_map.add_reg(this.CPTRA_WDT_TIMER1_EN, 'he4);
             this.CPTRA_WDT_TIMER1_CTRL = new("CPTRA_WDT_TIMER1_CTRL");
             this.CPTRA_WDT_TIMER1_CTRL.configure(this);
 
             this.CPTRA_WDT_TIMER1_CTRL.build();
-            this.default_map.add_reg(this.CPTRA_WDT_TIMER1_CTRL, 'he4);
+            this.default_map.add_reg(this.CPTRA_WDT_TIMER1_CTRL, 'he8);
             foreach(this.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[i0]) begin
                 this.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[i0] = new($sformatf("CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[%0d]", i0));
                 this.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[i0].configure(this);
                 
                 this.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[i0].build();
-                this.default_map.add_reg(this.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[i0], 'he8 + i0*'h4);
+                this.default_map.add_reg(this.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[i0], 'hec + i0*'h4);
             end
             this.CPTRA_WDT_TIMER2_EN = new("CPTRA_WDT_TIMER2_EN");
             this.CPTRA_WDT_TIMER2_EN.configure(this);
 
             this.CPTRA_WDT_TIMER2_EN.build();
-            this.default_map.add_reg(this.CPTRA_WDT_TIMER2_EN, 'hf0);
+            this.default_map.add_reg(this.CPTRA_WDT_TIMER2_EN, 'hf4);
             this.CPTRA_WDT_TIMER2_CTRL = new("CPTRA_WDT_TIMER2_CTRL");
             this.CPTRA_WDT_TIMER2_CTRL.configure(this);
 
             this.CPTRA_WDT_TIMER2_CTRL.build();
-            this.default_map.add_reg(this.CPTRA_WDT_TIMER2_CTRL, 'hf4);
+            this.default_map.add_reg(this.CPTRA_WDT_TIMER2_CTRL, 'hf8);
             foreach(this.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[i0]) begin
                 this.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[i0] = new($sformatf("CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[%0d]", i0));
                 this.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[i0].configure(this);
                 
                 this.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[i0].build();
-                this.default_map.add_reg(this.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[i0], 'hf8 + i0*'h4);
+                this.default_map.add_reg(this.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[i0], 'hfc + i0*'h4);
             end
             this.CPTRA_WDT_STATUS = new("CPTRA_WDT_STATUS");
             this.CPTRA_WDT_STATUS.configure(this);
 
             this.CPTRA_WDT_STATUS.build();
-            this.default_map.add_reg(this.CPTRA_WDT_STATUS, 'h100);
+            this.default_map.add_reg(this.CPTRA_WDT_STATUS, 'h104);
             this.CPTRA_FUSE_VALID_PAUSER = new("CPTRA_FUSE_VALID_PAUSER");
             this.CPTRA_FUSE_VALID_PAUSER.configure(this);
 
             this.CPTRA_FUSE_VALID_PAUSER.build();
-            this.default_map.add_reg(this.CPTRA_FUSE_VALID_PAUSER, 'h104);
+            this.default_map.add_reg(this.CPTRA_FUSE_VALID_PAUSER, 'h108);
             this.CPTRA_FUSE_PAUSER_LOCK = new("CPTRA_FUSE_PAUSER_LOCK");
             this.CPTRA_FUSE_PAUSER_LOCK.configure(this);
 
             this.CPTRA_FUSE_PAUSER_LOCK.build();
-            this.default_map.add_reg(this.CPTRA_FUSE_PAUSER_LOCK, 'h108);
+            this.default_map.add_reg(this.CPTRA_FUSE_PAUSER_LOCK, 'h10c);
             foreach(this.fuse_uds_seed[i0]) begin
                 this.fuse_uds_seed[i0] = new($sformatf("fuse_uds_seed[%0d]", i0));
                 this.fuse_uds_seed[i0].configure(this);
@@ -3852,6 +3929,11 @@ package soc_ifc_reg_uvm;
 
             this.fuse_lms_revocation.build();
             this.default_map.add_reg(this.fuse_lms_revocation, 'h344);
+            this.fuse_soc_stepping_id = new("fuse_soc_stepping_id");
+            this.fuse_soc_stepping_id.configure(this);
+
+            this.fuse_soc_stepping_id.build();
+            this.default_map.add_reg(this.fuse_soc_stepping_id, 'h348);
             foreach(this.internal_obf_key[i0]) begin
                 this.internal_obf_key[i0] = new($sformatf("internal_obf_key[%0d]", i0));
                 this.internal_obf_key[i0].configure(this);

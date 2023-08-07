@@ -62,7 +62,8 @@
         simulate_caliptra_boot();
         repeat (20) @(posedge clk_tb);
         sb.del_all();
-        update_CPTRA_FLOW_STATUS(ready_for_fuses); 
+        update_CPTRA_FLOW_STATUS(ready_for_fuses, `REG_HIER_BOOT_FSM_PS);
+
 
       end 
 

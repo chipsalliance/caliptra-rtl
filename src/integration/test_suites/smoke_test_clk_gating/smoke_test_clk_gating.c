@@ -18,6 +18,7 @@
 #include <string.h>
 #include <stdint.h>
 #include "printf.h"
+#include "clk_gate.h"
 
 volatile char*    stdout           = (char *)STDOUT;
 volatile uint32_t intr_count       = 0;
@@ -59,9 +60,11 @@ void main() {
     volatile uint32_t * soc_ifc_flow_status = (uint32_t *) CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS;
     volatile uint32_t * soc_ifc_clk_gating_en = (uint32_t *) CLP_SOC_IFC_REG_CPTRA_CLK_GATING_EN;
     uint32_t mitb0 = 0x00000020;
+    uint32_t mitb0_1 = 0x00000500;
     uint32_t mie_timer0_en = 0x20000000;
     uint32_t mie_machinetimer_en = 0x00000080;
     uint32_t mie_external_int_en = 0x00000800;
+    uint32_t mie_timer0_ext_int_en = 0x20000800;
 
     printf("----------------------------------\n");
     printf(" CLK GATING smoke test !!\n"         );
@@ -166,6 +169,14 @@ void main() {
                       : /* output: none */        \
                       : "i" (0x7c6), "i" (0x03)  /* input : immediate  */ \
                       : /* clobbers: none */);
+
+    //------------------------------------------------------
+    //Wake up using JTAG accesses and then mit0 timer intr
+    //------------------------------------------------------
+        printf("Wake up clks on JTAG accesses and later wake up core on t0 timer intr\n");
+        set_mit0(mitb0_1, mie_timer0_en);
+        SEND_STDOUT_CTRL(0xe9); //Force dmi_reg_en input to clk_gate after a delay
+        halt_core();
 
 }
 

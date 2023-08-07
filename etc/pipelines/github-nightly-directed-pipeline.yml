@@ -138,6 +138,21 @@ stages:
               - path: '${WORKSPACE}/Caliptra/src/sha256/stimulus/testsuites/sha256_nightly_directed_regression.yml'
               - timeout: 60 
 
+        - doe_core_cbc_tb:
+          - display_name: 'DOE_CORE_CBC_TB'
+          - enabled: true
+          - configspec_name: 'integration_lib'
+          - dut: 'doe_core_cbc_tb'
+          - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/doe/coverage/config/doe_cm_hier.cfg --submit-resource-args RAM/28000'
+          - testsuites:
+            - nightly_directed:
+              - enabled: true
+              - configspec_name: 'integration_lib'
+              - dut: 'doe_core_cbc_tb'
+              - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
+              - path: '${WORKSPACE}/Caliptra/src/doe/stimulus/testsuites/doe_nightly_directed_regression.yml'
+              - timeout: 60 
+
         - soc_ifc_tb:
             - display_name: 'SOC_IFC_TB'
             - enabled: true

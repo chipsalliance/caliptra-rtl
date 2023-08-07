@@ -24,13 +24,15 @@ module clk_gate (
     input logic cptra_in_debug_scan_mode,
     output logic clk_cg,
     output logic soc_ifc_clk_cg,
-    output logic rdc_clk_cg
+    output logic rdc_clk_cg,
+    input  logic cptra_dmi_reg_en_preQ //JTAG access
 );
 
 logic disable_clk;
 logic disable_soc_ifc_clk;
 logic [63:0] generic_input_wires_f;
 logic change_in_generic_wires;
+logic sleep_condition;
 
 
 /**********************************************************************
@@ -66,8 +68,9 @@ end
 //Generate clk disable signal
 always_comb begin
     change_in_generic_wires = ((generic_input_wires ^ generic_input_wires_f) != 'h0);
-    disable_clk             = (clk_gate_en && (cpu_halt_status && !change_in_generic_wires && !cptra_error_fatal && !cptra_in_debug_scan_mode)) | rdc_clk_dis;
-    disable_soc_ifc_clk     = (clk_gate_en && (cpu_halt_status && !psel && !change_in_generic_wires && !cptra_error_fatal && !cptra_in_debug_scan_mode)) | rdc_clk_dis;
+    sleep_condition         = (cpu_halt_status && !change_in_generic_wires && !cptra_error_fatal && !cptra_in_debug_scan_mode && !cptra_dmi_reg_en_preQ);
+    disable_clk             = (clk_gate_en && sleep_condition) | rdc_clk_dis;
+    disable_soc_ifc_clk     = (clk_gate_en && (sleep_condition && !psel)) | rdc_clk_dis;
 end
 
 

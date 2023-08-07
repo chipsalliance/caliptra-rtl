@@ -73,6 +73,7 @@ module caliptra_top_tb (
         S_APB_IDLE,
         S_APB_WR_UDS,
         S_APB_WR_FE,
+        S_APB_WR_SOC_STEPPING_ID,
         S_APB_WR_FUSE_DONE,
         S_APB_POLL_FLOW_ST,
         S_APB_WR_BOOT_GO,
@@ -493,6 +494,9 @@ module caliptra_top_tb (
                 S_APB_WR_FE: begin
                     $display ("SoC: Writing obfuscated Field Entropy to fuse bank\n");
                 end
+                S_APB_WR_SOC_STEPPING_ID: begin
+                    $display ("SoC: Writing SOC Stepping ID to fuse bank\n");
+                end
                 S_APB_WR_FUSE_DONE: begin
                     $display ("SoC: Writing fuse done register\n");
                 end
@@ -587,7 +591,7 @@ module caliptra_top_tb (
             end
             S_APB_WR_FE: begin
                 if (apb_xfer_end && apb_wr_count == (`CLP_OBF_FE_DWORDS-1)) begin
-                    n_state_apb = S_APB_WR_FUSE_DONE;
+                    n_state_apb = S_APB_WR_SOC_STEPPING_ID;
                     apb_wr_count_nxt = '0;
                 end
                 else if (apb_xfer_end) begin
@@ -597,6 +601,14 @@ module caliptra_top_tb (
                 else begin
                     n_state_apb = S_APB_WR_FE;
                     apb_wr_count_nxt = apb_wr_count;
+                end
+            end
+            S_APB_WR_SOC_STEPPING_ID: begin
+                if (apb_xfer_end) begin
+                    n_state_apb = S_APB_WR_FUSE_DONE;
+                end
+                else begin
+                    n_state_apb = S_APB_WR_SOC_STEPPING_ID;
                 end
             end
             //set fuse done
@@ -833,6 +845,10 @@ module caliptra_top_tb (
                 PADDR      = `CLP_SOC_IFC_REG_FUSE_FIELD_ENTROPY_0 + 4 * apb_wr_count;
                 PWDATA     = cptra_fe_tb[apb_wr_count];
             end
+            S_APB_WR_SOC_STEPPING_ID: begin
+                PADDR      = `CLP_SOC_IFC_REG_FUSE_SOC_STEPPING_ID;
+                PWDATA     = {16'h0, 16'h1357};
+            end
             S_APB_WR_FUSE_DONE: begin
                 PADDR      = `CLP_SOC_IFC_REG_CPTRA_FUSE_WR_DONE;
                 PWDATA     = 32'h00000001;
@@ -921,6 +937,11 @@ module caliptra_top_tb (
                 PAUSER     = 0;
             end
             S_APB_WR_FE: begin
+                PSEL       = 1;
+                PWRITE     = 1;
+                PAUSER     = 0;
+            end
+            S_APB_WR_SOC_STEPPING_ID: begin
                 PSEL       = 1;
                 PWRITE     = 1;
                 PAUSER     = 0;
