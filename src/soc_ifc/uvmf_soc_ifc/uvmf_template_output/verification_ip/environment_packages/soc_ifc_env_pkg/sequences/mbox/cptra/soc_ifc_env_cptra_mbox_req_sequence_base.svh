@@ -39,6 +39,7 @@ class soc_ifc_env_cptra_mbox_req_sequence_base extends soc_ifc_env_sequence_base
   rand mbox_op_s mbox_op_rand;
   int sts_rsp_count;
   uvm_status_e reg_sts;
+  bit mbox_sts_is_error = 0;
   rand bit do_ahb_lock_check;
   rand bit retry_failed_reg_axs;
   // Certain random sequences force the command to be outside of the defined
@@ -58,7 +59,7 @@ class soc_ifc_env_cptra_mbox_req_sequence_base extends soc_ifc_env_sequence_base
   extern virtual task mbox_set_cmd(input mbox_op_s op);
   extern virtual task mbox_push_datain();
   extern virtual task mbox_execute();
-  extern virtual task mbox_check_status(output mbox_status_e data);
+  extern virtual task mbox_check_status(output mbox_status_e data, output mbox_fsm_state_e state);
   extern virtual task mbox_poll_status();
   extern virtual task mbox_clr_execute();
   extern virtual task mbox_teardown();
@@ -313,7 +314,7 @@ endtask
 // Task:        mbox_check_status
 // Description: Read mbox_status
 //==========================================
-task soc_ifc_env_cptra_mbox_req_sequence_base::mbox_check_status(output mbox_status_e data);
+task soc_ifc_env_cptra_mbox_req_sequence_base::mbox_check_status(output mbox_status_e data, output mbox_fsm_state_e state);
     uvm_reg_data_t reg_data;
     reg_model.mbox_csr_rm.mbox_status.read(reg_sts, reg_data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
     report_reg_sts(reg_sts, "mbox_status");
@@ -323,6 +324,7 @@ task soc_ifc_env_cptra_mbox_req_sequence_base::mbox_check_status(output mbox_sta
     end
     else begin
         data = mbox_status_e'(reg_data >> reg_model.mbox_csr_rm.mbox_status.status.get_lsb_pos());
+        state = mbox_fsm_state_e'(reg_data >> reg_model.mbox_csr_rm.mbox_status.mbox_fsm_ps.get_lsb_pos());
     end
 endtask
 
@@ -334,13 +336,22 @@ endtask
 //==========================================
 task soc_ifc_env_cptra_mbox_req_sequence_base::mbox_poll_status();
     mbox_status_e data;
+    mbox_fsm_state_e state;
     uvm_reg_data_t mask;
 
     // Poll mbox_status register
     do begin
         configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200);
-        mbox_check_status(data);
-    end while (data == CMD_BUSY);
+        mbox_check_status(data, state);
+    end while (data == CMD_BUSY && !(state inside {MBOX_IDLE, MBOX_ERROR}));
+
+    // We should have an error interrupt, which will be serviced at a later step.
+    // We do not expect the cmd_avail_sts interrupt, and there is no point in
+    // reporting on the status field when we've hit a protocol error.
+    if (state == MBOX_ERROR) begin
+        mbox_sts_is_error = 1;
+        return;
+    end
 
     // Clear Interrupt Status, which is set on transfer SOC->uC
     mask = uvm_reg_data_t'(1) << reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_cmd_avail_sts.get_lsb_pos();
@@ -351,25 +362,45 @@ task soc_ifc_env_cptra_mbox_req_sequence_base::mbox_poll_status();
 
     // Evaluate status field
     if (data == DATA_READY) begin
-        `uvm_error("CPTRA_MBOX_SEQ", $sformatf("Received status %p when not expecting any bytes of response data!", data))
+        `uvm_info("CPTRA_MBOX_SEQ", $sformatf("Received status %p when not expecting any bytes of response data!", data), UVM_LOW)
     end
     else if (data == CMD_FAILURE) begin
-        `uvm_error("CPTRA_MBOX_SEQ", $sformatf("Received unexpected mailbox status %p", data))
+        `uvm_info("CPTRA_MBOX_SEQ", $sformatf("Received unexpected mailbox status %p", data), UVM_LOW)
     end
     else if (data == CMD_COMPLETE) begin
         `uvm_info("CPTRA_MBOX_SEQ", $sformatf("Received status %p from SOC in response to command", data), UVM_FULL)
     end
     else begin
-        `uvm_error("CPTRA_MBOX_SEQ", $sformatf("Received unexpected mailbox status %p", data))
+        `uvm_info("CPTRA_MBOX_SEQ", $sformatf("Received unexpected mailbox status %p", data), UVM_LOW)
     end
 endtask
 
 //==========================================
 // Task:        mbox_clr_execute
 // Description: End the mailbox flow by writing
-//              0 to mbox_execute register
+//              0 to mbox_execute register (or
+//              by force-unlock if necessary)
 //==========================================
 task soc_ifc_env_cptra_mbox_req_sequence_base::mbox_clr_execute();
+    uvm_reg_data_t data;
+    if (sts_rsp_count > 0 && cptra_status_agent_rsp_seq.rsp.soc_ifc_err_intr_pending) begin
+        reg_model.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+        report_reg_sts(reg_sts, "error_internal_intr_r");
+        reg_model.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+        report_reg_sts(reg_sts, "error_internal_intr_r");
+        if (data[reg_model.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.error_cmd_fail_sts.get_lsb_pos()]) begin
+            // Force unlock to recover from error and reset mailbox to IDLE state
+            reg_model.mbox_csr_rm.mbox_unlock.write(reg_sts, uvm_reg_data_t'(1 << reg_model.mbox_csr_rm.mbox_unlock.unlock.get_lsb_pos()), UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+            report_reg_sts(reg_sts, "mbox_unlock");
+            return; /* force unlock trumps the write to mbox_execute, so we're done at this point */
+        end
+        else if (mbox_sts_is_error) begin
+            `uvm_error("CPTRA_MBOX_SEQ", "Error interrupt following cmd failure does not have cmd_fail bit set!")
+        end
+    end
+    else if (mbox_sts_is_error) begin
+        `uvm_error("CPTRA_MBOX_SEQ", "Error encountered but no interrupt received")
+    end
     reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, uvm_reg_data_t'(0), UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
     report_reg_sts(reg_sts, "mbox_execute");
 endtask
@@ -381,6 +412,7 @@ endtask
 //==========================================
 task soc_ifc_env_cptra_mbox_req_sequence_base::mbox_teardown();
     // Summary at sequence end
+    `uvm_info("CPTRA_MBOX_SEQ", $sformatf("uC initiated mailbox flow is completed. Ending status: %s", mbox_sts_is_error ? "hit protocol violation" : "no protocol violation"), UVM_LOW)
 endtask
 
 //==========================================

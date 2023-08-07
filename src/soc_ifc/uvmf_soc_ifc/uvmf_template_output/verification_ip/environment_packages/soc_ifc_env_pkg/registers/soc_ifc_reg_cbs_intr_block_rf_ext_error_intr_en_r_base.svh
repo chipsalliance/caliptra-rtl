@@ -65,8 +65,11 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_error_intr_en_r_base extends uvm_reg_cbs
         sts_glb = rm.get_reg_by_name("error_global_intr_r").get_field_by_name("agg_sts");
 
         if (map.get_name() == this.APB_map_name) begin
-            if (kind == UVM_PREDICT_WRITE)
-                `uvm_warning("SOC_IFC_REG_CBS", "Unexpected write to interrupt register through APB interface!")
+            if (kind == UVM_PREDICT_WRITE) begin
+                `uvm_warning("SOC_IFC_REG_CBS", {"Unexpected write to interrupt register ", fld.get_full_name(), " through APB interface is blocked!"})
+                value = previous;
+                return;
+            end
             else
                 `uvm_info("SOC_IFC_REG_CBS", "Unexpected read to interrupt register through APB interface!", UVM_LOW)
         end

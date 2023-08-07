@@ -78,7 +78,8 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_status_status extends soc_ifc_reg_cbs_mbox_c
         if (map.get_name() == this.AHB_map_name) begin
             case (kind) inside
                 UVM_PREDICT_WRITE: begin
-                    if (mbox_status_e'(value) != mbox_status_e'(previous) &&
+                    if (rm.mbox_fn_state_sigs.uc_receive_stage &&
+                        mbox_status_e'(value) != mbox_status_e'(previous) &&
                         mbox_status_e'(value) != CMD_BUSY) begin
                         if (!rm.mbox_status.soc_has_lock.get_mirrored_value()) begin
                             `uvm_warning("SOC_IFC_REG_CBS", $sformatf("Write to mbox_status in state [%p] on map [%s] is unexpected!", rm.mbox_fn_state_sigs, map.get_name()))
@@ -122,7 +123,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_status_status extends soc_ifc_reg_cbs_mbox_c
                         end
                     end
                     else begin
-                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to mbox_status on map [%s] with value [%x] does not update the status field (previous value [%x]), so no state change is predicted", map.get_name(), mbox_status_e'(value), mbox_status_e'(previous)), UVM_MEDIUM)
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to mbox_status on map [%s] with value [%x] during state [%p] does not update the status field (previous value [%x]), so no state change is predicted", map.get_name(), mbox_status_e'(value), rm.mbox_fn_state_sigs, mbox_status_e'(previous)), UVM_MEDIUM)
                     end
                 end
                 default: begin
@@ -133,10 +134,11 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_status_status extends soc_ifc_reg_cbs_mbox_c
         else if (map.get_name() == this.APB_map_name) begin
             case (kind) inside
                 UVM_PREDICT_WRITE: begin
-                    if (mbox_status_e'(value) != mbox_status_e'(previous) &&
+                    if (rm.mbox_fn_state_sigs.soc_receive_stage &&
+                        mbox_status_e'(value) != mbox_status_e'(previous) &&
                         mbox_status_e'(value) != CMD_BUSY) begin
                         if (rm.mbox_status.soc_has_lock.get_mirrored_value()) begin
-                            `uvm_warning("SOC_IFC_REG_CBS", $sformatf("Write to mbox_status in state [%p] on map [%s] is unexpected!", rm.mbox_fn_state_sigs, map.get_name()))
+                            `uvm_warning("SOC_IFC_REG_CBS", $sformatf("Write to mbox_status in state [%p] on map [%s] is unexpected! soc_has_lock is %x", rm.mbox_fn_state_sigs, map.get_name(), rm.mbox_status.soc_has_lock.get_mirrored_value()))
                         end
                         else begin
                             if (rm.mbox_data_q.size() > 0) begin
@@ -161,7 +163,11 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_status_status extends soc_ifc_reg_cbs_mbox_c
                         error_job.set_delay_cycles(0);
                         error_job.state_nxt = MBOX_IDLE;
                         error_job.error = '{axs_without_lock: 1'b1, default: 1'b0};
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to %s on map [%s] with value [%x] causes a mbox no_lock protocol violation. Delay job is queued to update DUT model.", fld.get_name(), map.get_name(), value), UVM_HIGH)
                         delay_jobs.push_back(error_job);
+                    end
+                    else if (rm.mbox_fn_state_sigs.mbox_error) begin
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to %s on map [%s] with value [%x] during mailbox state [%p] has no additional side effects!", fld.get_name(), map.get_name(), value, rm.mbox_fn_state_sigs), UVM_LOW)
                     end
                     else if (!rm.mbox_fn_state_sigs.soc_receive_stage) begin
                         error_job = soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error::type_id::create("error_job");
@@ -172,6 +178,8 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_status_status extends soc_ifc_reg_cbs_mbox_c
                         error_job.state_nxt = MBOX_ERROR;
                         error_job.error = '{axs_incorrect_order: 1'b1, default: 1'b0};
                         delay_jobs.push_back(error_job);
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to %s on map [%s] with value [%x] during unexpected mailbox state [%p] results in mbox ooo protocol violation!", fld.get_name(), map.get_name(), value, rm.mbox_fn_state_sigs), UVM_LOW)
+                        rm.mbox_fn_state_sigs = '{mbox_error: 1'b1, default: 1'b0};
                     end
                 end
                 default: begin

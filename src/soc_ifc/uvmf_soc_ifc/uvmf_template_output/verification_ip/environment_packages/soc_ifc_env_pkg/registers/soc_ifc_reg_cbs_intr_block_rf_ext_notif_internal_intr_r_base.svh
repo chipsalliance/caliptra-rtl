@@ -81,8 +81,11 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base extends uvm_r
         cnt_fld    = rm.get_reg_by_name({event_name, "_intr_count_r"}).get_field_by_name("cnt");
 
         if (map.get_name() == this.APB_map_name) begin
-            if (kind == UVM_PREDICT_WRITE)
-                `uvm_warning("SOC_IFC_REG_CBS", "Unexpected write to interrupt register through APB interface!")
+            if (kind == UVM_PREDICT_WRITE) begin
+                `uvm_warning("SOC_IFC_REG_CBS", {"Unexpected write to interrupt register ", fld.get_full_name(), " through APB interface is blocked!"})
+                value = previous;
+                return;
+            end
             else
                 `uvm_info("SOC_IFC_REG_CBS", "Unexpected read to interrupt register through APB interface!", UVM_LOW)
         end
@@ -95,7 +98,7 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base extends uvm_r
         // this won't increment the counter, even though it should.
         if (value & ~previous) begin
             `uvm_info("SOC_IFC_REG_CBS", $sformatf("hwset to %s triggers increment on %s from %d to %d", fld.get_name(), cnt_fld.get_name(), cnt_fld.get_mirrored_value(), cnt_fld.get_mirrored_value() + uvm_reg_data_t'(1)), UVM_HIGH)
-            cnt_fld.predict(cnt_fld.get_mirrored_value() + uvm_reg_data_t'(1));
+            cnt_fld.predict(cnt_fld.get_mirrored_value() + uvm_reg_data_t'(1), .kind(UVM_PREDICT_WRITE), .path(UVM_PREDICT), .map(map));
         end
 
         // Anytime an access intr sts register predicts a value of 1, we can treat

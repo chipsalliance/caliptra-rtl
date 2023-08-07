@@ -370,12 +370,12 @@ bit first_transfer=1;
 //  end
     // Wait for next transfer then gather info from intiator about the transfer.
     // Place the data into the soc_ifc_status_initiator_struct.
-    do begin
+    @(posedge clk_i);
+    while (!any_signal_changed()) begin
         cptra_error_fatal_o            <= cptra_error_fatal_i    ;
         cptra_error_non_fatal_o        <= cptra_error_non_fatal_i;
         @(posedge clk_i);
     end
-    while (!any_signal_changed());
     ready_for_fuses_o              <= ready_for_fuses_i      ;
     ready_for_fw_push_o            <= ready_for_fw_push_i    ;
     ready_for_runtime_o            <= ready_for_runtime_i    ;
@@ -394,9 +394,9 @@ bit first_transfer=1;
          soc_ifc_status_initiator_struct.ready_for_runtime                  = ready_for_runtime_i;
          soc_ifc_status_initiator_struct.mailbox_data_avail                 = mailbox_data_avail_i;
          soc_ifc_status_initiator_struct.mailbox_flow_done                  = mailbox_flow_done_i;
-         soc_ifc_status_responder_struct.cptra_error_fatal_intr_pending     = cptra_error_fatal_i;  //     
-         soc_ifc_status_responder_struct.cptra_error_non_fatal_intr_pending = cptra_error_non_fatal_i;  //     
-         soc_ifc_status_responder_struct.trng_req_pending                   = trng_req_i;  //     
+         soc_ifc_status_initiator_struct.cptra_error_fatal_intr_pending     = cptra_error_fatal_i;
+         soc_ifc_status_initiator_struct.cptra_error_non_fatal_intr_pending = cptra_error_non_fatal_i;
+         soc_ifc_status_initiator_struct.trng_req_pending                   = trng_req_i;
          soc_ifc_status_initiator_struct.generic_output_val                 = generic_output_wires_i;
     end
   endtask

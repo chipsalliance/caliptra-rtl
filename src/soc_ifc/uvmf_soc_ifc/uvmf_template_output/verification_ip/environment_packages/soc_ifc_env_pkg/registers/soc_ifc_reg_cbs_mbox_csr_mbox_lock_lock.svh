@@ -127,10 +127,20 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock extends soc_ifc_reg_cbs_mbox_csr;
         else if (map.get_name() == this.APB_map_name) begin
             case (kind) inside
                 UVM_PREDICT_READ: begin
+                    // Reading mbox_lock when it is already locked triggers a notification
+                    // interrupt to the uC in Caliptra
+                    if (value & previous) begin
+                        if (rm.mbox_fn_state_sigs.mbox_idle) begin
+                            `uvm_error("SOC_IFC_REG_CBS", $sformatf("Read from mbox_lock on map [%s] with value [%x] and previous [%x] is unexpected in state [%p]!", map.get_name(), value, previous, rm.mbox_fn_state_sigs))
+                        end
+                        else begin
+                            `uvm_info("SOC_IFC_REG_CBS", $sformatf("Read from mbox_lock on map [%s] with value [%x] and previous [%x] in state [%p] triggers a notification interrupt for soc_req_lock!", map.get_name(), value, previous, rm.mbox_fn_state_sigs), UVM_HIGH)
+                            rm.get_parent().get_block_by_name("soc_ifc_reg_rm").get_block_by_name("intr_block_rf_ext").get_field_by_name("notif_soc_req_lock_sts").predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, rm.get_parent().get_map_by_name(this.AHB_map_name)); /* AHB-access only, use AHB map*/
+                        end
+                    end
                     // Rising edge on RS
-                    // Reading mbox_lock when it is already locked has no effect, so
-                    // only calculate predictions on acquiring lock
-                    if (value & ~previous) begin
+                    // Calculate predictions on acquiring lock
+                    else if (value & ~previous) begin
                         if (rm.mbox_fn_state_sigs.mbox_idle) begin
                             delay_job.state_nxt = MBOX_RDY_FOR_CMD;
                             delay_jobs.push_back(delay_job);
@@ -155,6 +165,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock extends soc_ifc_reg_cbs_mbox_csr;
                     end
                 end
                 default: begin
+                    // FIXME only do an error job if not idle?
                     error_job = soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error::type_id::create("error_job");
                     error_job.rm = rm;
                     error_job.map = map;
@@ -163,7 +174,8 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock extends soc_ifc_reg_cbs_mbox_csr;
                     error_job.state_nxt = MBOX_ERROR;
                     error_job.error = '{axs_incorrect_order: 1'b1, default: 1'b0};
                     delay_jobs.push_back(error_job);
-                    `uvm_warning("SOC_IFC_REG_CBS", $sformatf("Write attempt to %s is unexpected! mailbox state [%p], FSM mirror: [%p]", fld.get_name(), rm.mbox_fn_state_sigs, rm.mbox_status.mbox_fsm_ps.get_mirrored_value()))
+                    `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write attempt to %s is unexpected! mailbox state [%p], FSM mirror: [%p]", fld.get_name(), rm.mbox_fn_state_sigs, rm.mbox_status.mbox_fsm_ps.get_mirrored_value()), UVM_LOW)
+                    rm.mbox_fn_state_sigs = '{mbox_error: 1'b1, default: 1'b0};
                 end
             endcase
         end

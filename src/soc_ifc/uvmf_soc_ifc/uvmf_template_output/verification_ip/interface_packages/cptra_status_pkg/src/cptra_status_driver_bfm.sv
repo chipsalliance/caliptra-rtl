@@ -424,7 +424,8 @@ bit first_transfer=1;
 //  end
     // Wait for next transfer then gather info from intiator about the transfer.
     // Place the data into the cptra_status_initiator_struct.
-    do begin
+    @(posedge clk_i);
+    while (!any_signal_changed()) begin
         soc_ifc_error_intr_o           <= soc_ifc_error_intr_i;
         soc_ifc_notif_intr_o           <= soc_ifc_notif_intr_i;
         sha_error_intr_o               <= sha_error_intr_i    ;
@@ -433,7 +434,6 @@ bit first_transfer=1;
         nmi_intr_o                     <= nmi_intr_i          ;
         @(posedge clk_i);
     end
-    while (!any_signal_changed());
     cptra_noncore_rst_b_o          <= cptra_noncore_rst_b_i ;
     cptra_uc_rst_b_o               <= cptra_uc_rst_b_i      ;
     cptra_obf_key_reg_o            <= cptra_obf_key_reg_i   ;
