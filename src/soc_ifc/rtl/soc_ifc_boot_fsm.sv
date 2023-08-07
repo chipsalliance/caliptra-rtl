@@ -19,6 +19,7 @@ module soc_ifc_boot_fsm
     input logic clk,
     input logic cptra_pwrgood,
     input logic cptra_rst_b,
+    input logic scan_mode,
     input logic fw_update_rst,
     input logic [7:0] fw_update_rst_wait_cycles,
 
@@ -41,6 +42,9 @@ module soc_ifc_boot_fsm
 );
 
 `include "caliptra_sva.svh"
+
+logic cptra_uc_rst_b_nq;
+logic cptra_noncore_rst_b_nq;
 
 //present and next state
 boot_fsm_state_e boot_fsm_ns;
@@ -65,7 +69,8 @@ logic [7:0] wait_count;
 logic wait_count_rst;
 logic wait_count_decr;
 
-logic cptra_rst_window,cptra_rst_window_f,cptra_rst_window_ff;
+logic cptra_rst_window,cptra_rst_window_f;
+logic cptra_rst_window_2f, cptra_rst_window_3f, cptra_rst_window_4f;
 
 //move to fuse state when SoC de-asserts reset
 always_comb arc_BOOT_IDLE_BOOT_FUSE = (boot_fsm_ps == BOOT_IDLE) & ~cptra_rst_window_f;
@@ -79,12 +84,13 @@ always_comb arc_BOOT_FUSE_BOOT_WAIT = BootFSM_BrkPoint;
 //dummy arc for terminal state lint check
 always_comb arc_BOOT_DONE_BOOT_IDLE = '0;
 
-always_comb arc_IDLE = cptra_rst_window_f;
+always_comb arc_IDLE = cptra_rst_window_2f;
 
 //Masks combo paths from uc reset flops into other reset domains
 always_comb fw_update_rst_window = boot_fsm_ps inside {BOOT_FW_RST,BOOT_WAIT};
 //clock gate all flops on warm reset to prevent RDC metastability issues
-always_comb rdc_clk_dis = cptra_rst_window_f | cptra_rst_window_ff;
+//cover 2 clocks after synchronized reset assertion (cptra_rst_window_2f) to handle bootfsm transitions
+always_comb rdc_clk_dis = cptra_rst_window_2f | cptra_rst_window_3f | cptra_rst_window_4f;
 
 //move to rst state when reg bit is set to 1. This state will assert fw_rst to uc
 always_comb arc_BOOT_DONE_BOOT_FWRST = (boot_fsm_ps == BOOT_DONE) & fw_update_rst;
@@ -208,22 +214,31 @@ always_ff @(posedge clk or negedge cptra_pwrgood) begin
         boot_fsm_ps <= BOOT_IDLE;
         synch_noncore_rst_b <= '0;
         synch_uc_rst_b <= 0;
-        cptra_noncore_rst_b <= '0;
-        cptra_uc_rst_b <= '0;
+        cptra_noncore_rst_b_nq <= '0;
+        cptra_uc_rst_b_nq <= '0;
         cptra_rst_window_f <= '1;
-        cptra_rst_window_ff <= '1;
+        cptra_rst_window_2f <= '1;
+        cptra_rst_window_3f <= '1;
+        cptra_rst_window_4f <= '1;
     end
     else begin
         boot_fsm_ps <= arc_IDLE ? BOOT_IDLE : boot_fsm_ns;
         synch_noncore_rst_b <= fsm_synch_noncore_rst_b;
         synch_uc_rst_b <= fsm_synch_uc_rst_b;
-        cptra_noncore_rst_b <= synch_noncore_rst_b;
-        cptra_uc_rst_b <= synch_noncore_rst_b && synch_uc_rst_b; //uc comes out of rst only when both global and fw rsts are deasserted (through 2FF sync)
+        cptra_noncore_rst_b_nq <= synch_noncore_rst_b;
+        cptra_uc_rst_b_nq <= synch_noncore_rst_b && synch_uc_rst_b; //uc comes out of rst only when both global and fw rsts are deasserted (through 2FF sync)
 
         cptra_rst_window_f <= cptra_rst_window;
-        cptra_rst_window_ff <= cptra_rst_window_f;
+        cptra_rst_window_2f <= cptra_rst_window_f;
+        cptra_rst_window_3f <= cptra_rst_window_2f;
+        cptra_rst_window_4f <= cptra_rst_window_3f;
     end
 end
+
+//protect resets during scan mode
+//TODO dft override for reset?
+assign cptra_noncore_rst_b = cptra_noncore_rst_b_nq | scan_mode;
+assign cptra_uc_rst_b = cptra_uc_rst_b_nq | scan_mode;
 
 //uC reset generation
 always_ff @(posedge clk or negedge cptra_rst_b) begin

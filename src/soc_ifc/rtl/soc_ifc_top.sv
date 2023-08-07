@@ -233,6 +233,7 @@ soc_ifc_boot_fsm i_soc_ifc_boot_fsm (
     .clk(clk),
     .cptra_pwrgood(cptra_pwrgood),
     .cptra_rst_b (cptra_rst_b),
+    .scan_mode(scan_mode_f),
     .fw_update_rst (soc_ifc_reg_hwif_out.internal_fw_update_reset.core_rst.value),
     .fw_update_rst_wait_cycles (soc_ifc_reg_hwif_out.internal_fw_update_reset_wait_cycles.wait_cycles.value),
     .ready_for_fuses(ready_for_fuses),
