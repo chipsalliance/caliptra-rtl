@@ -191,13 +191,13 @@ always_comb hready_o = initiator1_gnt | (initiator1_data_ph & ~initiator0_gnt) ?
 //Send the data coming from responder when selected
 always_comb hresp_o_0  = initiator0_data_ph ? hresp_i : '0;
 always_comb hrdata_o_0 = initiator0_data_ph ? hrdata_i : '0;
-always_comb hready_o_0 = initiator0_pend_addr_ph ? '0 : 
-                         initiator0_data_ph ? hreadyout_i : '1;
+always_comb hready_o_0 = initiator0_data_ph ? hreadyout_i :
+                         initiator0_pend_addr_ph ? '0 : '1;
 
 always_comb hresp_o_1  = initiator1_data_ph? hresp_i: '0;
 always_comb hrdata_o_1 = initiator1_data_ph ? hrdata_i: '0;
-always_comb hready_o_1 = initiator1_pend_addr_ph ? '0 : 
-                         initiator1_data_ph ? hreadyout_i : '1;
+always_comb hready_o_1 = initiator1_data_ph ? hreadyout_i :
+                         initiator1_pend_addr_ph ? '0 :  '1;
 
 `CALIPTRA_ASSERT_MUTEX(ERR_2TO1MUX_MUTEX_DATA_PH, {initiator0_data_ph,initiator1_data_ph}, hclk, hreset_n)
 `CALIPTRA_ASSERT_NEVER(ERR_2TO1MUX_BAD_HTRANS, (htrans_o == 2'b01), hclk, hreset_n)

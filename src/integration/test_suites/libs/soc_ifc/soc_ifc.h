@@ -57,6 +57,7 @@ enum {
 };
 
 enum mbox_cmd_e {
+    MBOX_CMD_DIR_RD     = 0x01000000,
     MBOX_CMD_UC_BASIC   = 0x20000000,
     MBOX_CMD_UC_OVERRUN = 0x20000001,
     MBOX_CMD_RESP_BASIC = 0x40000000,
@@ -92,6 +93,9 @@ enum sha_accel_mode_e {
 // Simple reg accesses
 inline uint32_t soc_ifc_mbox_read_dataout_single() {
     return lsu_read_32(CLP_MBOX_CSR_MBOX_DATAOUT);
+}
+inline uint32_t soc_ifc_mbox_dir_read_dataout_single(uint32_t rdptr) {
+    return lsu_read_32(0x30000000 + rdptr);
 }
 void soc_ifc_clear_execute_reg();
 void soc_ifc_set_mbox_status_field(enum mbox_status_e field);

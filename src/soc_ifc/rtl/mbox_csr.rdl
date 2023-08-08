@@ -177,6 +177,13 @@ addrmap mbox_csr {
                     [br]SOC Access:      RO
                     [br]TAP Access [in debug/manuf mode]: RO";
             sw=r; hw=rw;} soc_has_lock=1'b0;
+        field {
+            name = "Current Mailbox Read Pointer";
+            desc = "Returns the current read pointer for the mailbox
+                    [br]Caliptra Access: RO
+                    [br]SOC Access:      RO
+                    [br]TAP Access [in debug/manuf mode]: RO";
+            sw=r; hw=rw;} mbox_rdptr[15] = 0;
     } mbox_status;
 
     reg {

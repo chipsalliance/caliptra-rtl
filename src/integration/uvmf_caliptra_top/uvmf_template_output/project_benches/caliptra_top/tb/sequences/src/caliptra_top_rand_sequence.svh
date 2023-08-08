@@ -76,7 +76,8 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
       IDX_SOC_IFC_ENV_MBOX_SHA_ACCEL,
       IDX_SOC_IFC_ENV_SHA_ACCEL,
       IDX_SOC_IFC_ENV_FW_UPD,
-      IDX_SOC_IFC_ENV_MBOX_UC_REG_ACCESS
+      IDX_SOC_IFC_ENV_MBOX_UC_REG_ACCESS,
+      IDX_SOC_IFC_ENV_MBOX_DIR_READ
   } rand_seq_idx;
 
   rand int iteration_count;
@@ -116,7 +117,8 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
           IDX_SOC_IFC_ENV_MBOX_SHA_ACCEL                := 100,
           IDX_SOC_IFC_ENV_SHA_ACCEL                     := 100,
           IDX_SOC_IFC_ENV_FW_UPD                        := 10,
-          IDX_SOC_IFC_ENV_MBOX_UC_REG_ACCESS            := 100
+          IDX_SOC_IFC_ENV_MBOX_UC_REG_ACCESS            := 100,
+          IDX_SOC_IFC_ENV_MBOX_DIR_READ                 := 100
       };
   }
   constraint iter_count_c {
@@ -337,6 +339,8 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
                 obj = soc_ifc_env_mbox_fw_upd_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_UC_REG_ACCESS:
                 obj = soc_ifc_env_mbox_uc_reg_access_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_DIR_READ:
+                obj = soc_ifc_env_mbox_dir_read_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             default:
                 `uvm_error("CALIPTRA_TOP_RAND_TEST", $sformatf("rand_seq_idx randomized to illegal value: %p", rand_seq_idx))
         endcase

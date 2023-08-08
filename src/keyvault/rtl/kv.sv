@@ -128,15 +128,6 @@ end
 always_comb begin : keyvault_ctrl
     //keyvault control registers
     for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
-        //Qualify lock signals as they are on fw upd reset and create RDC violations if allowed to reset asynchronously
-        lock_wr_q[entry] = kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value & ~fw_update_rst_window;
-        lock_use_q[entry] = kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value & ~fw_update_rst_window;
-        //once lock is set, only reset can unset it
-        kv_reg_hwif_in.KEY_CTRL[entry].lock_wr.swwel = lock_wr_q[entry];
-        kv_reg_hwif_in.KEY_CTRL[entry].lock_use.swwel = lock_use_q[entry];
-        //clear dest valid and last dword
-        kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value & ~lock_wr_q[entry] & ~lock_use_q[entry];
-        kv_reg_hwif_in.KEY_CTRL[entry].last_dword.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value & ~lock_wr_q[entry] & ~lock_use_q[entry];
         //init for AND-OR
         key_entry_ctrl_we[entry] = '0;
         key_entry_dest_valid_next[entry] = '0; 
@@ -147,6 +138,16 @@ always_comb begin : keyvault_ctrl
             //store the final offset on the last write cycle, we'll use that to signal last dword on reads
             key_entry_last_dword_next[entry] |= kv_write[client].write_en & (kv_write[client].write_entry == entry) ? kv_write[client].write_offset : '0;
         end 
+        //Qualify lock signals as they are on fw upd reset and create RDC violations if allowed to reset asynchronously
+        lock_wr_q[entry] = kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value & ~fw_update_rst_window;
+        lock_use_q[entry] = kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value & ~fw_update_rst_window;
+        //once lock is set, only reset can unset it
+        kv_reg_hwif_in.KEY_CTRL[entry].lock_wr.swwel = lock_wr_q[entry];
+        kv_reg_hwif_in.KEY_CTRL[entry].lock_use.swwel = lock_use_q[entry];
+        //clear dest valid and last dword
+        kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value & ~key_entry_ctrl_we[entry] & ~lock_wr_q[entry] & ~lock_use_q[entry];
+        kv_reg_hwif_in.KEY_CTRL[entry].last_dword.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value & ~key_entry_ctrl_we[entry] & ~lock_wr_q[entry] & ~lock_use_q[entry];
+
         kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.we = key_entry_ctrl_we[entry];
         kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.next = key_entry_dest_valid_next[entry];
         kv_reg_hwif_in.KEY_CTRL[entry].last_dword.we = key_entry_ctrl_we[entry];
@@ -172,7 +173,10 @@ always_comb begin : keyvault_ctrl
             kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.we = key_entry_we[entry][dword];
             kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.next = key_entry_next[entry][dword];
             //don't clear when writes are locked
-            kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value & ~lock_wr_q[entry] & ~lock_use_q[entry];
+            //don't clear when write is in progress, this could lead to partial key generation
+            kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value & 
+                                                                ~key_entry_ctrl_we[entry] &
+                                                                ~lock_wr_q[entry] & ~lock_use_q[entry];
         end
     end
 end
