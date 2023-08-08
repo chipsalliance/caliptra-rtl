@@ -59,6 +59,20 @@ targets:
       - $COMPILE_ROOT/tb/ecc_top_tb.sv
     tops: [ecc_top_tb]
 ---
+provides: [ecc_montgomerymultiplier_tb]  
+schema_version: 2.4.0
+requires: 
+  - ecc_top
+targets:
+  tb:
+    directories: 
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/tb/ecc_montgomerymultiplier_tb.sv
+    tops: [ecc_montgomerymultiplier_tb]
+  sim:
+    pre_exec: 'echo "[PRE-EXEC] Copying Mont multiplication test vector to $PWD" && cp $COMPILE_ROOT/tb/test_vectors/mm_test_vectors*.hex .'
+---
 provides: [ecc_coverage]  
 schema_version: 2.4.0
 requires: 

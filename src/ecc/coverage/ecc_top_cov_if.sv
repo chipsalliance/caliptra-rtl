@@ -53,7 +53,8 @@ interface ecc_top_cov_if
     logic add_res_greater_than_prime;
     logic add_res_greater_than_384_bit;
 
-    logic PE_UNITS;
+    logic mult_ready;
+    logic mult_last_reduction;
     logic mult_final_subtraction;
 
     assign mod_p_q = ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.mod_p_q;
@@ -66,17 +67,9 @@ interface ecc_top_cov_if
     assign add_res_greater_than_prime = ((add_cout0 == 1'b0) & (add_res0 >= ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.prime_i));
     assign add_res_greater_than_384_bit = (add_cout0 == 1'b1);
     
-    assign PE_UNITS = ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.i_MULTIPLIER.PE_UNITS;
-    always_ff @(posedge clk) begin
-        if (!reset_n) begin
-            mult_final_subtraction <= '0;
-        end
-        else if (ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.i_MULTIPLIER.ready_o) begin
-            mult_final_subtraction <= ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.i_MULTIPLIER.sub_b_o[2*(PE_UNITS+1)];
-        end
-    end
-
-
+    assign mult_ready = ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.i_MULTIPLIER.ready_o;
+    assign mult_last_reduction = ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.i_MULTIPLIER.last_reduction;
+    assign mult_final_subtraction = mult_ready & mult_last_reduction;
     
     assign ecc_cmd = ecc_top.ecc_dsa_ctrl_i.cmd_reg;
     assign pcr_sign_mode = ecc_top.ecc_dsa_ctrl_i.pcr_sign_mode;
