@@ -169,6 +169,8 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_mbox_reg_axs_invalid_large_sequence soc_ifc_env_mbox_reg_axs_invalid_large_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_dlen_invalid_sequence.svh"
   typedef soc_ifc_env_mbox_dlen_invalid_sequence soc_ifc_env_mbox_dlen_invalid_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_dir_read_sequence.svh"
+  typedef soc_ifc_env_mbox_dir_read_sequence soc_ifc_env_mbox_dir_read_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_dlen_overflow_sequence.svh"
   typedef soc_ifc_env_mbox_dlen_overflow_sequence soc_ifc_env_mbox_dlen_overflow_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_dlen_overflow_small_sequence.svh"

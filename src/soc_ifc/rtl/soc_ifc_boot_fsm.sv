@@ -19,6 +19,7 @@ module soc_ifc_boot_fsm
     input logic clk,
     input logic cptra_pwrgood,
     input logic cptra_rst_b,
+    input logic scan_mode,
     input logic fw_update_rst,
     input logic [7:0] fw_update_rst_wait_cycles,
 
@@ -41,6 +42,9 @@ module soc_ifc_boot_fsm
 );
 
 `include "caliptra_sva.svh"
+
+logic cptra_uc_rst_b_nq;
+logic cptra_noncore_rst_b_nq;
 
 //present and next state
 boot_fsm_state_e boot_fsm_ns;
@@ -210,8 +214,8 @@ always_ff @(posedge clk or negedge cptra_pwrgood) begin
         boot_fsm_ps <= BOOT_IDLE;
         synch_noncore_rst_b <= '0;
         synch_uc_rst_b <= 0;
-        cptra_noncore_rst_b <= '0;
-        cptra_uc_rst_b <= '0;
+        cptra_noncore_rst_b_nq <= '0;
+        cptra_uc_rst_b_nq <= '0;
         cptra_rst_window_f <= '1;
         cptra_rst_window_2f <= '1;
         cptra_rst_window_3f <= '1;
@@ -221,8 +225,8 @@ always_ff @(posedge clk or negedge cptra_pwrgood) begin
         boot_fsm_ps <= arc_IDLE ? BOOT_IDLE : boot_fsm_ns;
         synch_noncore_rst_b <= fsm_synch_noncore_rst_b;
         synch_uc_rst_b <= fsm_synch_uc_rst_b;
-        cptra_noncore_rst_b <= synch_noncore_rst_b;
-        cptra_uc_rst_b <= synch_noncore_rst_b && synch_uc_rst_b; //uc comes out of rst only when both global and fw rsts are deasserted (through 2FF sync)
+        cptra_noncore_rst_b_nq <= synch_noncore_rst_b;
+        cptra_uc_rst_b_nq <= synch_noncore_rst_b && synch_uc_rst_b; //uc comes out of rst only when both global and fw rsts are deasserted (through 2FF sync)
 
         cptra_rst_window_f <= cptra_rst_window;
         cptra_rst_window_2f <= cptra_rst_window_f;
@@ -230,6 +234,11 @@ always_ff @(posedge clk or negedge cptra_pwrgood) begin
         cptra_rst_window_4f <= cptra_rst_window_3f;
     end
 end
+
+//protect resets during scan mode
+//TODO dft override for reset?
+assign cptra_noncore_rst_b = cptra_noncore_rst_b_nq | scan_mode;
+assign cptra_uc_rst_b = cptra_uc_rst_b_nq | scan_mode;
 
 //uC reset generation
 always_ff @(posedge clk or negedge cptra_rst_b) begin

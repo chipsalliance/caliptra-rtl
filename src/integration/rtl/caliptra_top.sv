@@ -597,7 +597,6 @@ el2_veer_wrapper rvtop (
             cptra_security_state_Latched <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; //Setting the default value to be debug locked and in production mode
             security_state_f <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; //Setting the default value to be debug locked and in production mode
             cptra_security_state_captured <= 0;
-            scan_mode_f <= 0;
         end
         else if(!cptra_security_state_captured) begin
             cptra_security_state_Latched <= security_state;
@@ -611,9 +610,19 @@ el2_veer_wrapper rvtop (
             // Asset flushing happens 'anytime' switch happens for safe side
             //security_state_f  <= security_state;
             security_state_f  <= security_state;
+        end
+    end
+
+    always_ff @(posedge clk or negedge cptra_pwrgood) begin
+        if (~cptra_pwrgood) begin
+            scan_mode_f <= '0;
+        end
+        else begin
             scan_mode_f  <= scan_mode;
         end
     end
+
+        
 
     // When scan mode goes from 0->1, generate a pulse to clear the assets
     // Note that when scan goes to '1, Caliptra state as well as SOC state
