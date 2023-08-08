@@ -100,6 +100,7 @@ module ecc_montgomerymultiplier #(
     logic   [RADIX-1 : 0]             last_s_reg;
     logic   [FULL_REG_SIZE-1:0]       p_internal;
     logic   [FULL_REG_SIZE-1:0]       p_subtracted_internal;
+    logic                             last_reduction;
 
     //----------------------------------------------------------------
     // Processing elements (PEs)
@@ -291,8 +292,15 @@ module ecc_montgomerymultiplier #(
                 always_comb sub_b_i[t1] = 1;
             else
                 always_comb sub_b_i[t1] = sub_b_o[t1 - 1];
-                
-            always_comb sub_b_o[t1] = sub_res[t1][RADIX];
+            
+            always_ff @(posedge clk or negedge reset_n) begin
+                if (~reset_n)
+                    sub_b_o[t1] <= '0;
+                else if (zeroize)
+                    sub_b_o[t1] <= '0;
+                else
+                    sub_b_o[t1] <= sub_res[t1][RADIX];
+            end
         end
     endgenerate
 
@@ -337,7 +345,8 @@ module ecc_montgomerymultiplier #(
         end
     endgenerate
 
-    assign p_o = (sub_b_o[2*(PE_UNITS+1)])? p_subtracted_internal[REG_SIZE-1:0] : p_internal[REG_SIZE-1:0];
+    always_comb last_reduction = (sub_b_o[2*(PE_UNITS+1)]);
+    assign p_o = (last_reduction)? p_subtracted_internal[REG_SIZE-1:0] : p_internal[REG_SIZE-1:0];
 
     // Determines when results are ready based on S_NUM
     always_ff @(posedge clk or negedge reset_n) begin

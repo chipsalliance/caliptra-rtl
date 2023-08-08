@@ -65,7 +65,7 @@ module ecc_pm_ctrl
     //----------------------------------------------------------------
     // Internal constant and parameter definitions.
     //----------------------------------------------------------------
-    localparam [7 : 0] MULT_DELAY          = 8'd38; //39 -1;
+    localparam [7 : 0] MULT_DELAY          = 8'd39; //40 -1;
     localparam [7 : 0] ADD_DELAY           = 8'd1;  // 2 -1;
     
     localparam [9 : 0] Secp384_SCA_MONT_COUNT   = REG_SIZE[9 : 0] + RND_SIZE[9 : 0];

@@ -22,9 +22,9 @@
 //======================================================================
 
 module ecc_montgomerymultiplier_tb #(
-    parameter   OPERAND_WIDTH = 384,
-    parameter   WORD_WIDTH = 32,
-    parameter   TEST_VECTOR_NUM = 102
+    parameter   OPERAND_WIDTH = 16,
+    parameter   WORD_WIDTH = 4,
+    parameter   TEST_VECTOR_NUM = 5
   )
   ();
 
@@ -91,6 +91,7 @@ module ecc_montgomerymultiplier_tb #(
   mm_dut (
       .clk        (clk_tb),
       .reset_n    (reset_n_tb),
+      .zeroize    (1'b0),
 
       .start_i    (start_i_tb),
       .opa_i      (opa_i_tb),
@@ -317,7 +318,8 @@ module ecc_montgomerymultiplier_tb #(
       $display("   -= Testbench for mm started =-");
       $display("    ==============================\n");
 
-      fname = $sformatf("/home/mojtabab/workspace_aha_poc/ws1/Caliptra/src/ecc/tb/test_vectors/mm_test_vectors_%0d_key_%0d_word_%0d.hex", TEST_VECTOR_NUM, OPERAND_WIDTH, WORD_WIDTH);
+      fname = $sformatf("mm_test_vectors_%0d_key_%0d_word_%0d.hex", TEST_VECTOR_NUM, OPERAND_WIDTH, WORD_WIDTH);
+
       read_test_vectors(fname);
 
       init_sim();
