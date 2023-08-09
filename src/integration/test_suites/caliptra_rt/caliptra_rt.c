@@ -92,6 +92,12 @@ void nmi_handler() {
             SEND_STDOUT_CTRL(0x1);
         }
     }
+    else {
+        VPRINTF(LOW, "In NMI handler\n");
+        if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL) & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_NMI_PIN_MASK)
+            VPRINTF(LOW, "Saw hw_error_fatal.nmi_pin assertion\n");
+        while(1);
+    }
 }
 
 void caliptra_rt() {
@@ -107,6 +113,12 @@ void caliptra_rt() {
     uint32_t loop_iter;
     uint32_t temp; // multi-purpose variable
 
+    //WDT vars
+    int i;
+    int wdt_rand_t1_val;
+    int wdt_rand_t2_val;
+    int mode;
+
     VPRINTF(MEDIUM, "----------------------------------\n");
     VPRINTF(LOW,    "- Caliptra Validation RT!!\n"        );
     VPRINTF(MEDIUM, "----------------------------------\n");
@@ -117,6 +129,43 @@ void caliptra_rt() {
     // Runtime flow -- set ready for RT
     soc_ifc_set_flow_status_field(SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_RUNTIME_MASK);
 
+    VPRINTF(LOW, "Enabling WDT intr\n");
+    lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R, SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_WDT_TIMER1_TIMEOUT_EN_MASK | SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_WDT_TIMER2_TIMEOUT_EN_MASK);
+    
+    wdt_rand_t1_val = rand() % 0xfff;
+    wdt_rand_t2_val = rand() % 0xfff;
+    mode = rand() % 2; //0 - independent mode, 1 - cascade mode
+    if (mode){
+        VPRINTF(LOW, "Restarting WDT in cascade mode (only t1 timeout)\n");
+        //TODO also add t2 timeout (NMI event)
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_EN, SOC_IFC_REG_CPTRA_WDT_TIMER1_EN_TIMER1_EN_MASK);
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_0, wdt_rand_t1_val);
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_1, 0x00000000);
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL, SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL_TIMER1_RESTART_MASK);
+    }
+    else {
+        VPRINTF(LOW, "Restarting WDT in independent mode\n");
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_EN, SOC_IFC_REG_CPTRA_WDT_TIMER1_EN_TIMER1_EN_MASK);
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_0, wdt_rand_t1_val);
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_1, 0x00000000);
+
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_EN, SOC_IFC_REG_CPTRA_WDT_TIMER2_EN_TIMER2_EN_MASK);
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_0, wdt_rand_t2_val);
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_1, 0x00000000);
+
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL, SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL_TIMER1_RESTART_MASK);
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL, SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL_TIMER2_RESTART_MASK);
+
+        while (!(lsu_read_32(CLP_SOC_IFC_REG_CPTRA_WDT_STATUS) & SOC_IFC_REG_CPTRA_WDT_STATUS_T1_TIMEOUT_MASK));
+        //Reset timer period to avoid hangs in test
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_0, 0xffffffff);
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_1, 0xffffffff);
+
+        while (!(lsu_read_32(CLP_SOC_IFC_REG_CPTRA_WDT_STATUS) & SOC_IFC_REG_CPTRA_WDT_STATUS_T2_TIMEOUT_MASK));
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_0, 0xffffffff);
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_1, 0xffffffff);
+
+    }
     // Initialization
     init_interrupts();
 

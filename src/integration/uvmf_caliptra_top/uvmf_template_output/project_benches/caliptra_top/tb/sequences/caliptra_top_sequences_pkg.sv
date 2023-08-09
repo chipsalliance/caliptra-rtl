@@ -72,6 +72,7 @@ package caliptra_top_sequences_pkg;
   `include "src/caliptra_top_rand_sequence.svh"
   `include "src/caliptra_top_cmdline_sequence.svh"
   `include "src/caliptra_top_rom_sequence.svh"
+  `include "src/caliptra_top_wdt_sequence.svh"
   // pragma uvmf custom package_item_additional end
 
 endpackage
