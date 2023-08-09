@@ -171,6 +171,7 @@ class soc_ifc_predictor #(
   bit sha_err_intr_pending = 1'b0; // TODO
   bit sha_notif_intr_pending = 1'b0; // TODO
   bit timer_intr_pending = 1'b1;
+  bit nmi_intr_pending = 1'b0;
   bit cptra_error_fatal = 1'b0;
   bit cptra_error_non_fatal = 1'b0;
   bit fuse_update_enabled = 1'b1;
@@ -214,6 +215,15 @@ class soc_ifc_predictor #(
   reset_flag hard_reset_flag;
   reset_flag soft_reset_flag;
 
+  //WDT vars:
+  bit [63:0] t1_count, t2_count;
+  bit wdt_error_intr_sent;
+  bit wdt_t2_error_intr_sent;
+  bit wdt_nmi_intr_sent;
+  bit reset_wdt_count;
+  bit wdt_t1_restart;
+  bit wdt_t2_restart;
+
   extern task          poll_and_run_delay_jobs();
   extern function void send_delayed_expected_transactions();
   extern function bit  check_mbox_no_lock_error(soc_ifc_sb_apb_ap_output_transaction_t txn, uvm_reg axs_reg);
@@ -222,6 +232,8 @@ class soc_ifc_predictor #(
   extern task          update_mtime_mirrors();
   extern task          mtime_counter_task();
   extern function bit  mtime_lt_mtimecmp();
+  extern task          wdt_counter_task();
+  extern task          wdt_counter_trial();
   extern function bit  valid_requester(input uvm_transaction txn);
   extern function bit  valid_receiver(input uvm_transaction txn);
   extern function bit  sha_valid_user(input uvm_transaction txn);
@@ -276,6 +288,7 @@ class soc_ifc_predictor #(
     fork
         poll_and_run_delay_jobs();
         mtime_counter_task();
+        wdt_counter_task();
     join_none
     super.run_phase(phase);
   endtask
@@ -390,6 +403,7 @@ class soc_ifc_predictor #(
             bootfsm_breakpoint = t.set_bootfsm_breakpoint;
             send_soc_ifc_sts_txn = 1;
             send_cptra_sts_txn = 0; // cptra sts transaction not expected until after CPTRA_FUSE_WR_DONE
+            reset_wdt_count = 1'b0;
         end
         // Normal operation
         else begin
@@ -629,6 +643,10 @@ class soc_ifc_predictor #(
     bit send_cptra_sts_txn = 0;
     bit send_ahb_txn = 1;
     bit send_apb_txn = 0;
+    bit wdt_cascade = 0;
+    bit wdt_independent = 0;
+    bit wdt_t1_timeout = 0;
+    bit wdt_t2_timeout = 0;
     ahb_slave_0_ae_debug = t;
 
     `uvm_info("PRED_AHB", "Transaction Received through ahb_slave_0_ae", UVM_MEDIUM)
@@ -1206,18 +1224,46 @@ class soc_ifc_predictor #(
                         `uvm_info("PRED_AHB", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
                     end
                 end
-                "CPTRA_WDT_TIMER1_EN",
-                "CPTRA_WDT_TIMER1_CTRL",
-                "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[0]",
-                "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[1]",
-                "CPTRA_WDT_TIMER2_EN",
-                "CPTRA_WDT_TIMER2_CTRL",
-                "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[0]",
-                "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[1]",
-                "CPTRA_WDT_STATUS": begin
+                "CPTRA_WDT_TIMER1_EN": begin
                     if (ahb_txn.RnW == AHB_WRITE) begin
-                        `uvm_error("PRED_AHB", {"Add prediction for write to ",axs_reg.get_name()," register on AHB interface"}) // TODO
+                        `uvm_info("PRED_AHB", {"Detected write to ", axs_reg.get_name()," register on AHB interface, starting WDT timer1"}, UVM_MEDIUM);
                     end
+                end
+                "CPTRA_WDT_TIMER1_CTRL": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        // Handled in callbacks via reg predictor
+                        `uvm_info("PRED_AHB", $sformatf("Handling access to %s. This will restart WDT timer1", axs_reg.get_name()), UVM_MEDIUM);
+                        //Capture restart bit so the counters can be updated
+                        wdt_t1_restart = ahb_txn.data[0];
+                    end
+                end
+                "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[0]",
+                "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[1]": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_info("PRED_AHB", {"Detected write to ", axs_reg.get_name()," register on AHB interface"}, UVM_MEDIUM);
+                    end
+                end
+                "CPTRA_WDT_TIMER2_EN": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_info("PRED_AHB", {"Detected write to ", axs_reg.get_name(), " register on AHB interface, starting WDT timer2"}, UVM_MEDIUM);
+                    end
+                end
+                "CPTRA_WDT_TIMER2_CTRL": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        // Handled in callbacks via reg predictor
+                        `uvm_info("PRED_AHB", $sformatf("Handling access to %s. This will restart WDT timer2", axs_reg.get_name()), UVM_MEDIUM);
+                        //Capture restart bit so the counters can be updated
+                        wdt_t2_restart = ahb_txn.data[0];
+                    end
+                end
+                "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[0]",
+                "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[1]": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_info("PRED_AHB", {"Detected write to ",axs_reg.get_name()," register on AHB interface"}, UVM_LOW) // TODO
+                    end
+                end
+                "CPTRA_WDT_STATUS": begin
+                    `uvm_info("PRED_AHB", "AHB access of WDT status\n", UVM_MEDIUM);
                 end
                 "CPTRA_FUSE_VALID_PAUSER",
                 "CPTRA_FUSE_PAUSER_LOCK": begin
@@ -1366,6 +1412,30 @@ class soc_ifc_predictor #(
                         // but this does not result in a cptra status transaction because we only
                         // capture rising edges as a transaction
                         `uvm_info("PRED_AHB", {"Write to ", axs_reg.get_name(), " attempts to clear an interrupt"}, UVM_HIGH)
+                        
+                        //If the WDT timeout interrupt bits are being cleared, also reset the t1/t2 count values and the corresponding
+                        //interrupt flags (used in wdt_counter_task)
+                        wdt_cascade = (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER1_EN.timer1_en.get_mirrored_value() && !(p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER2_EN.timer2_en.get_mirrored_value()));
+                        wdt_independent = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER2_EN.timer2_en.get_mirrored_value();
+                        wdt_t1_timeout = (this.t1_count == {p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[1].timer1_timeout_period.get_mirrored_value(), p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[0].timer1_timeout_period.get_mirrored_value()});
+                        wdt_t2_timeout = (this.t2_count == {p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[1].timer2_timeout_period.get_mirrored_value(), p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[0].timer2_timeout_period.get_mirrored_value()});
+
+                        if (wdt_cascade && wdt_t1_timeout && data_active[`SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_LOW]) begin
+                            this.t1_count = 'h0;
+                            this.t2_count = 'h0;
+                            this.wdt_error_intr_sent = 1'b0;
+                        end
+                        else if (wdt_independent) begin
+                            if (wdt_t1_timeout && data_active[`SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_LOW]) begin
+                                this.t1_count = 'h0;
+                                this.wdt_error_intr_sent = 1'b0;
+                            end
+                            if (wdt_t2_timeout && data_active[`SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_LOW]) begin
+                                this.t2_count = 'h0;
+                                this.wdt_t2_error_intr_sent = 1'b0;
+                            end
+                        end
+
                     end
                 end
                 "error_internal_intr_count_r",
@@ -2332,6 +2402,13 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
         send_cptra_sts_txn = 1;
     end
 
+    // // Check for NMI Interrupt
+    // if (!nmi_intr_pending && p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL.nmi_pin.get_mirrored_value()) begin
+    //     `uvm_info("PRED_DLY", "Delay job triggers nmi interrupt output", UVM_MEDIUM)
+    //     nmi_intr_pending = 1'b1;
+    //     send_cptra_sts_txn = 1'b1;
+    // end
+
     // SHA Accel Notification Interrupt
     // Expect a status transition on sha_notif_intr_pending
     // whenever a write changes the value of SHA Accelerator Execute
@@ -2624,6 +2701,143 @@ function bit soc_ifc_predictor::mtime_lt_mtimecmp();
     return mtime < mtimecmp;
 endfunction
 
+//If WDT is enabled via reg write, emulate behavior here
+task soc_ifc_predictor::wdt_counter_task();
+    forever begin
+        uvm_reg_data_t wdt_reg_data;
+        logic wdt_t1_en;
+        logic wdt_t2_en;
+        logic cascade, independent;
+        logic [63:0] wdt_t1_period, wdt_t2_period;
+        bit wdt_t1_restart_temp;
+
+        cptra_sb_ap_output_transaction = cptra_sb_ap_output_transaction_t::type_id::create("cptra_sb_ap_output_transaction");
+
+        //Poll for WDT enable bits
+        wdt_reg_data = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER1_EN.timer1_en.get(); //_mirrored_value();
+        wdt_t1_en = wdt_reg_data[0];
+
+        wdt_reg_data = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER2_EN.timer2_en.get(); //_mirrored_value();
+        wdt_t2_en = wdt_reg_data[0];
+    
+        cascade = (wdt_t1_en && !wdt_t2_en);
+        independent = wdt_t2_en;
+
+        wdt_reg_data = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[0].timer1_timeout_period.get();
+        wdt_t1_period[31:0] = wdt_reg_data[31:0];
+        wdt_reg_data = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[1].timer1_timeout_period.get();
+        wdt_t1_period[63:32] = wdt_reg_data[31:0];
+
+        wdt_reg_data = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[0].timer2_timeout_period.get();
+        wdt_t2_period[31:0] = wdt_reg_data[31:0];
+        wdt_reg_data = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[1].timer2_timeout_period.get();
+        wdt_t2_period[63:32] = wdt_reg_data[31:0];
+
+        //Reset event
+        if (this.reset_wdt_count) begin
+            `uvm_info("PRED", "Resetting WDT t1 and t2 counts due to a reset event", UVM_MEDIUM)
+            this.t1_count = 'h0;
+            this.t2_count = 'h0;
+            this.wdt_error_intr_sent = 1'b0;
+            this.wdt_t2_error_intr_sent = 1'b0;
+            this.wdt_nmi_intr_sent = 1'b0;
+        end
+
+        //Cascade mode
+        if (cascade) begin
+            if (this.wdt_t1_restart) begin
+                this.t1_count = 'h0;
+                `uvm_info("PRED", "Cascade mode, received t1 pet - restarting t1 count", UVM_MEDIUM)
+                this.wdt_t1_restart = 1'b0; //Reset flag so we can capture another restart event
+            end
+            else if (this.t1_count != wdt_t1_period) begin
+                this.t1_count++;
+            end
+            else begin
+                //T1 expired, so send out soc error intr, and start t2 counter
+                if (!this.wdt_error_intr_sent) begin
+                    `uvm_info("PRED", "Timer1 expired in cascade mode. Starting timer2", UVM_MEDIUM)
+                    p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.error_wdt_timer1_timeout_sts.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, p_soc_ifc_AHB_map);
+                    
+                    //Set a flag so we don't keep sending transactions while the timer holds value until interrupt
+                    //is serviced or reset
+                    this.wdt_error_intr_sent = 1'b1;
+                end
+
+                if (this.wdt_t2_restart) begin
+                    `uvm_error("PRED", "Cascade mode, received t2 pet - unexpected t2 pet!")
+                end
+                else if (this.t2_count != wdt_t2_period) begin
+                    this.t2_count++;
+                end
+                else begin
+                    if (!this.wdt_nmi_intr_sent) begin
+                        `uvm_info("PRED", "Timer2 expired in cascade mode. Expecting NMI to be handled", UVM_MEDIUM);
+                        p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL.nmi_pin.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, p_soc_ifc_AHB_map); //TODO: use default map?
+                        
+                        //Sending cptra_status_txn in the same clock as NMI
+                        nmi_intr_pending = 1'b1;
+                        populate_expected_cptra_status_txn(cptra_sb_ap_output_transaction);
+                        cptra_sb_ap.write(cptra_sb_ap_output_transaction);
+
+                        //Set a flag so we don't keep sending transactions while the timer holds value until interrupt
+                        //is serviced or reset
+                        this.wdt_nmi_intr_sent = 1'b1;
+                    end
+                end
+            end
+        end //Cascade mode
+        else if (independent) begin
+            if (this.wdt_t1_restart) begin
+                this.t1_count = 'h0;
+                `uvm_info("PRED", "Independent mode, received t1 pet - restarting t1 count", UVM_MEDIUM)
+                this.wdt_t1_restart = 1'b0; //Reset flag so we can capture another restart event
+            end
+            else if (this.t1_count != wdt_t1_period) begin
+                this.t1_count++;
+            end
+            else begin
+                //T1 expired, so send out soc error intr, and start t2 counter
+                if (!this.wdt_error_intr_sent) begin
+                    `uvm_info("PRED", "Independent mode, T1 expired", UVM_MEDIUM)
+                    p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.error_wdt_timer1_timeout_sts.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, p_soc_ifc_AHB_map);
+                    
+                    //Set a flag so we don't keep sending transactions while the timer holds value until interrupt
+                    //is serviced or reset
+                    this.wdt_error_intr_sent = 1'b1;
+                end
+            end
+            //-------------------------------------------------
+            //Timer 2
+            //-------------------------------------------------
+            if (this.wdt_t2_restart) begin
+                this.t2_count = 'h0;
+                `uvm_info("PRED", "Independent mode, received t2 pet - restarting t2 count", UVM_MEDIUM)
+                this.wdt_t2_restart = 1'b0; //Reset flag so we can capture another restart event
+            end
+            else if (this.t2_count != wdt_t2_period) begin
+                this.t2_count++;
+            end
+            else begin
+                //T1 expired, so send out soc error intr, and start t2 counter
+                if (!this.wdt_t2_error_intr_sent) begin
+                    `uvm_info("PRED", "Independent mode, T2 expired", UVM_MEDIUM)
+                    p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.error_wdt_timer2_timeout_sts.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, p_soc_ifc_AHB_map);
+                    
+                    //Set a flag so we don't keep sending transactions while the timer holds value until interrupt
+                    //is serviced or reset
+                    this.wdt_t2_error_intr_sent = 1'b1;
+                end
+            end
+
+        end //Independent mode
+
+        configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
+
+    end //forever
+endtask
+
+
 function bit soc_ifc_predictor::soc_ifc_status_txn_expected_after_warm_reset();
     /* FIXME calculate this from the reg-model somehow? */
     return p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fuses.get_mirrored_value() || ready_for_fw_push || ready_for_runtime || mailbox_data_avail || |generic_output_wires /*|| trng_req_pending*/; /* only expect a soc_ifc_status_transaction if some signal will transition */
@@ -2819,6 +3033,10 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
 
     generic_output_wires = '0;
 
+    //WDT
+    nmi_intr_pending = 1'b0; //Reset nmi_intr on reset assertion
+    reset_wdt_count = 1'b1;
+
     // FIXME get rid of this variable?
     mbox_valid_users        = '{p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[0].PAUSER.get_reset(kind),
                                 p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[1].PAUSER.get_reset(kind),
@@ -2930,7 +3148,7 @@ function void soc_ifc_predictor::populate_expected_cptra_status_txn(ref cptra_sb
     txn.obf_field_entropy          = this.get_expected_obf_field_entropy();
     txn.obf_uds_seed               = this.get_expected_obf_uds_seed();
     txn.nmi_vector                 = this.nmi_vector;
-    txn.nmi_intr_pending           = 1'b0/*FIXME*/;
+    txn.nmi_intr_pending           = this.nmi_intr_pending;
     txn.iccm_locked                = this.iccm_locked;
     txn.set_key(cptra_status_txn_key++);
 endfunction

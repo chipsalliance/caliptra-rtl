@@ -258,6 +258,7 @@ end
          soc_ifc_status_monitor_struct.trng_req_pending                   = trng_req_i;
          soc_ifc_status_monitor_struct.generic_output_val                 =  generic_output_wires_i;
     end
+
     // pragma uvmf custom do_monitor end
   endtask
 
