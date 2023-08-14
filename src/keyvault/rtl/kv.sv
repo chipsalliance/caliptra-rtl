@@ -29,7 +29,8 @@ module kv
     input logic rst_b,
     input logic core_only_rst_b,
     input logic cptra_pwrgood,
-    input logic fw_update_rst_window, 
+    input logic fw_update_rst_window,
+    input logic cptra_in_debug_scan_mode,
     input logic debugUnlock_or_scan_mode_switch,
     
     //uC AHB Lite Interface
@@ -61,8 +62,6 @@ logic kv_reg_read_error, kv_reg_write_error;
 logic [AHB_ADDR_WIDTH-1:0] uc_req_addr;
 kv_uc_req_t uc_req;
 
-logic debug_locked_f;
-logic debug_unlocked;
 logic flush_keyvault;
 logic [31:0] debug_value;
 
@@ -76,6 +75,8 @@ logic [KV_NUM_KEYS-1:0] lock_wr_q;
 logic [KV_NUM_KEYS-1:0] lock_use_q;
 kv_reg__in_t kv_reg_hwif_in;
 kv_reg__out_t kv_reg_hwif_out;
+
+logic [KV_NUM_KEYS-1:0] key_entry_clear;
 
 ahb_slv_sif #(
     .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH),
@@ -115,7 +116,8 @@ always_comb uc_req_error = kv_reg_read_error | kv_reg_write_error;
 always_comb uc_req_hold = '0;
 
 //Flush the keyvault with the debug value when FW pokes the register or we detect debug mode unlocking
-always_comb flush_keyvault = debugUnlock_or_scan_mode_switch | kv_reg_hwif_out.CLEAR_SECRETS.wr_debug_values.value;
+always_comb flush_keyvault = debugUnlock_or_scan_mode_switch | 
+                             (cptra_in_debug_scan_mode & kv_reg_hwif_out.CLEAR_SECRETS.wr_debug_values.value);
 //Pick between keyvault debug mode 0 or 1
 always_comb debug_value = kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value ? CLP_DEBUG_MODE_KV_1 : CLP_DEBUG_MODE_KV_0;
 
@@ -124,6 +126,23 @@ always_comb begin : keyvault_pcr_signing
         pcr_signing_key[dword] = kv_reg_hwif_out.KEY_ENTRY[KV_ENTRY_FOR_SIGNING][dword].data.value;
     end 
 end
+
+//Generate clear signal for each key entry 
+//don't clear when writes are locked
+//hold the clear when writes are in progress
+generate
+    for (genvar g_entry = 0; g_entry < KV_NUM_KEYS; g_entry++) begin
+        always_ff@(posedge clk or negedge rst_b) begin
+            if(~rst_b) begin
+                key_entry_clear[g_entry] <= '0;
+            end
+            else begin
+                key_entry_clear[g_entry] <= (kv_reg_hwif_out.KEY_CTRL[g_entry].clear.value & ~lock_wr_q[g_entry] & ~lock_use_q[g_entry]) |
+                                            (key_entry_clear[g_entry] & key_entry_ctrl_we[g_entry]);
+            end
+        end
+    end
+endgenerate
 
 always_comb begin : keyvault_ctrl
     //keyvault control registers
@@ -145,8 +164,8 @@ always_comb begin : keyvault_ctrl
         kv_reg_hwif_in.KEY_CTRL[entry].lock_wr.swwel = lock_wr_q[entry];
         kv_reg_hwif_in.KEY_CTRL[entry].lock_use.swwel = lock_use_q[entry];
         //clear dest valid and last dword
-        kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value & ~key_entry_ctrl_we[entry] & ~lock_wr_q[entry] & ~lock_use_q[entry];
-        kv_reg_hwif_in.KEY_CTRL[entry].last_dword.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value & ~key_entry_ctrl_we[entry] & ~lock_wr_q[entry] & ~lock_use_q[entry];
+        kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.hwclr = key_entry_clear[entry];
+        kv_reg_hwif_in.KEY_CTRL[entry].last_dword.hwclr = key_entry_clear[entry];
 
         kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.we = key_entry_ctrl_we[entry];
         kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.next = key_entry_dest_valid_next[entry];
@@ -172,11 +191,7 @@ always_comb begin : keyvault_ctrl
             end
             kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.we = key_entry_we[entry][dword];
             kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.next = key_entry_next[entry][dword];
-            //don't clear when writes are locked
-            //don't clear when write is in progress, this could lead to partial key generation
-            kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.hwclr = kv_reg_hwif_out.KEY_CTRL[entry].clear.value & 
-                                                                ~key_entry_ctrl_we[entry] &
-                                                                ~lock_wr_q[entry] & ~lock_use_q[entry];
+            kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.hwclr = key_entry_clear[entry];
         end
     end
 end
@@ -204,14 +219,13 @@ always_comb begin : keyvault_readmux
     end
 end
 
-//Write error when attempting to write to entry that is locked for writes
+//Write error when attempting to write to entry that is locked for writes, use, or is being cleared
 always_comb begin : keyvault_write_resp
     for (int client = 0 ; client < KV_NUM_WRITE; client++) begin
         kv_wr_resp[client].error = '0;
         for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
             kv_wr_resp[client].error |= (kv_write[client].write_entry == entry) & kv_write[client].write_en &
-                                        lock_wr_q[entry] &
-                                        lock_use_q[entry];
+                                        (key_entry_clear[entry] | lock_wr_q[entry] | lock_use_q[entry]);
         end
     end
 end

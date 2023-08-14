@@ -252,8 +252,8 @@ package soc_ifc_tb_pkg;
   
   // These address ranges (inclusive) in each extent have no definition 
   extent_t _undefined_addr_ranges [$] = {
-    '{addr_min: SOCIFC_BASE + 16'h010c, addr_max: SOCIFC_BASE + 16'h01fc},
-    '{addr_min: SOCIFC_BASE + 16'h0348, addr_max: SOCIFC_BASE + 16'h05fc},
+    '{addr_min: SOCIFC_BASE + 16'h0128, addr_max: SOCIFC_BASE + 16'h01fc},
+    '{addr_min: SOCIFC_BASE + 16'h034c, addr_max: SOCIFC_BASE + 16'h05fc},
     '{addr_min: SOCIFC_BASE + 16'h0650, addr_max: SOCIFC_BASE + 16'h07fc},
     '{addr_min: SOCIFC_BASE + 16'h0824, addr_max: SOCIFC_BASE + 16'h08fc},
     '{addr_min: SOCIFC_BASE + 16'h0920, addr_max: SOCIFC_BASE + 16'h097c},
@@ -312,10 +312,11 @@ package soc_ifc_tb_pkg;
     "FUSE_LIFE_CYCLE"                                  : `SOC_IFC_REG_FUSE_LIFE_CYCLE_LIFE_CYCLE_MASK, 
     "FUSE_LMS_VERIFY"                                  : `SOC_IFC_REG_FUSE_LMS_VERIFY_LMS_VERIFY_MASK,
     "CPTRA_FLOW_STATUS"                                : (`SOC_IFC_REG_CPTRA_FLOW_STATUS_STATUS_MASK             |
-                                                          `SOC_IFC_REG_CPTRA_FLOW_STATUS_BOOT_FSM_PS_MASK        |
+                                                          `SOC_IFC_REG_CPTRA_FLOW_STATUS_IDEVID_CSR_READY_MASK   |
+                                                          //`SOC_IFC_REG_CPTRA_FLOW_STATUS_BOOT_FSM_PS_MASK        |
                                                           `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK       |
                                                           `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_RUNTIME_MASK  |
-                                                          `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FUSES_MASK    |
+                                                          //`SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FUSES_MASK    |
                                                           `SOC_IFC_REG_CPTRA_FLOW_STATUS_MAILBOX_FLOW_DONE_MASK),
     "CPTRA_MBOX_PAUSER_LOCK"                           : `SOC_IFC_REG_CPTRA_MBOX_PAUSER_LOCK_0_LOCK_MASK,   // same for all 5 pausers
     "CPTRA_TRNG_PAUSER_LOCK"                           : `SOC_IFC_REG_CPTRA_TRNG_PAUSER_LOCK_LOCK_MASK,
@@ -733,7 +734,8 @@ package soc_ifc_tb_pkg;
             exp_data = '0; // write-one to clear -- effectively always 0
           end
 
-          "CPTRA_FLOW_STATUS"                    : exp_data = ahb_indata & get_mask(addr_name) | apb_rodata; //  32'hbfff_ffff; // apb-RO 
+          "CPTRA_FLOW_STATUS"                    : exp_data = curr_data & ~get_mask(addr_name) |
+                                                              ahb_indata & get_mask(addr_name) | apb_rodata; //  32'hb1ff_ffff; // apb-RO 
           "CPTRA_RESET_REASON"                   : exp_data = ahb_rodata | apb_rodata; //  bit 1:0 is RO 
           "CPTRA_SECURITY_STATE"                 : exp_data = curr_data & get_mask(addr_name); // & sscode;  //  bit 3:0 is RO 
 

@@ -362,3 +362,15 @@ reg {
             [br]Read-Only once locked.";
     field {sw=rw; hw=r; swwel; resetsignal=cptra_pwrgood;} LOCK=0;
  } CPTRA_FUSE_PAUSER_LOCK;
+
+reg {
+    name = "Caliptra WDT1 Config";
+    desc = "SOC provided count in cycles for WDT1 timeout.";
+    field {sw=rw; hw=na; resetsignal = cptra_pwrgood;} TIMEOUT[32]=0;
+ } CPTRA_WDT_CFG[2];
+
+reg {
+    name = "Caliptra Reserved Registers";
+    desc = "Set of reserved registers for survivability";
+    field {sw=rw; resetsignal=cptra_rst_b;} RSVD[32]=0;
+ } CPTRA_RSVD_REG[4];

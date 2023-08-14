@@ -40,6 +40,7 @@ module soc_ifc_arb
     input  logic mbox_req_hold,
     output soc_ifc_req_t mbox_req_data,
     input  logic [SOC_IFC_DATA_W-1:0] mbox_rdata,
+    input  logic [SOC_IFC_DATA_W-1:0] mbox_dir_rdata,
     input  logic mbox_error,
     //SHA inf
     output logic sha_req_dv,
@@ -192,7 +193,8 @@ always_comb sha_req_data = ({$bits(soc_ifc_req_t){soc_sha_gnt}} & soc_req_data) 
 
 //drive the appropriate read data back to uc or soc
 //AND/OR mux here, assert that requests are always mutex
-always_comb uc_rdata = ({MBOX_DATA_W{uc_mbox_req}} & mbox_rdata) | 
+always_comb uc_rdata = ({MBOX_DATA_W{uc_mbox_reg_req}} & mbox_rdata) |
+                       ({MBOX_DATA_W{uc_mbox_dir_req}} & mbox_dir_rdata) |
                        ({MBOX_DATA_W{uc_reg_req}} & soc_ifc_reg_rdata) | 
                        ({MBOX_DATA_W{uc_sha_req}} & sha_rdata);
 

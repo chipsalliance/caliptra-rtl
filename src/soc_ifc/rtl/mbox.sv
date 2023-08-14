@@ -33,6 +33,7 @@ module mbox
     output logic        mbox_error,
 
     output logic [DATA_W-1:0] rdata,
+    output logic [DATA_W-1:0] dir_rdata,
 
     input logic sha_sram_req_dv,
     input logic [MBOX_ADDR_W-1:0] sha_sram_req_addr,
@@ -456,7 +457,8 @@ always_comb sram_waddr = sram_ecc_cor_we ? sram_ecc_cor_waddr :
                          dir_req_dv_q    ? dir_req_addr : mbox_wrptr;
 //data phase after request for direct access
 //We want to mask the read data for certain accesses
-always_comb rdata = dir_req_rd_phase ? sram_rdata_cor : ({DATA_W{~mask_rdata}} & csr_rdata);
+always_comb rdata = ({DATA_W{~mask_rdata}} & csr_rdata);
+always_comb dir_rdata = dir_req_rd_phase ? sram_rdata_cor : '0;
 
 always_comb begin: mbox_sram_inf
     //read live on direct access, or when pointer has been incremented, for pre-load on read pointer reset, or ecc correction
