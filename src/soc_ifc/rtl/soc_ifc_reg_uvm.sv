@@ -1214,6 +1214,66 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK
 
+    // Reg - soc_ifc_reg::CPTRA_WDT_CFG
+    class soc_ifc_reg__CPTRA_WDT_CFG extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_WDT_CFG_bit_cg TIMEOUT_bit_cg[32];
+        soc_ifc_reg__CPTRA_WDT_CFG_fld_cg fld_cg;
+        rand uvm_reg_field TIMEOUT;
+
+        function new(string name = "soc_ifc_reg__CPTRA_WDT_CFG");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.TIMEOUT = new("TIMEOUT");
+            this.TIMEOUT.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(TIMEOUT_bit_cg[bt]) TIMEOUT_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__CPTRA_WDT_CFG
+
+    // Reg - soc_ifc_reg::CPTRA_RSVD_REG
+    class soc_ifc_reg__CPTRA_RSVD_REG extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_RSVD_REG_bit_cg RSVD_bit_cg[32];
+        soc_ifc_reg__CPTRA_RSVD_REG_fld_cg fld_cg;
+        rand uvm_reg_field RSVD;
+
+        function new(string name = "soc_ifc_reg__CPTRA_RSVD_REG");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.RSVD = new("RSVD");
+            this.RSVD.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(RSVD_bit_cg[bt]) RSVD_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__CPTRA_RSVD_REG
+
     // Reg - soc_ifc_reg::fuse_uds_seed
     class soc_ifc_reg__fuse_uds_seed extends uvm_reg;
         protected uvm_reg_data_t m_current;
@@ -3612,6 +3672,8 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__CPTRA_WDT_STATUS CPTRA_WDT_STATUS;
         rand soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER CPTRA_FUSE_VALID_PAUSER;
         rand soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK CPTRA_FUSE_PAUSER_LOCK;
+        rand soc_ifc_reg__CPTRA_WDT_CFG CPTRA_WDT_CFG[2];
+        rand soc_ifc_reg__CPTRA_RSVD_REG CPTRA_RSVD_REG[4];
         rand soc_ifc_reg__fuse_uds_seed fuse_uds_seed[12];
         rand soc_ifc_reg__fuse_field_entropy fuse_field_entropy[8];
         rand soc_ifc_reg__fuse_key_manifest_pk_hash fuse_key_manifest_pk_hash[12];
@@ -3850,6 +3912,20 @@ package soc_ifc_reg_uvm;
 
             this.CPTRA_FUSE_PAUSER_LOCK.build();
             this.default_map.add_reg(this.CPTRA_FUSE_PAUSER_LOCK, 'h10c);
+            foreach(this.CPTRA_WDT_CFG[i0]) begin
+                this.CPTRA_WDT_CFG[i0] = new($sformatf("CPTRA_WDT_CFG[%0d]", i0));
+                this.CPTRA_WDT_CFG[i0].configure(this);
+                
+                this.CPTRA_WDT_CFG[i0].build();
+                this.default_map.add_reg(this.CPTRA_WDT_CFG[i0], 'h110 + i0*'h4);
+            end
+            foreach(this.CPTRA_RSVD_REG[i0]) begin
+                this.CPTRA_RSVD_REG[i0] = new($sformatf("CPTRA_RSVD_REG[%0d]", i0));
+                this.CPTRA_RSVD_REG[i0].configure(this);
+                
+                this.CPTRA_RSVD_REG[i0].build();
+                this.default_map.add_reg(this.CPTRA_RSVD_REG[i0], 'h118 + i0*'h4);
+            end
             foreach(this.fuse_uds_seed[i0]) begin
                 this.fuse_uds_seed[i0] = new($sformatf("fuse_uds_seed[%0d]", i0));
                 this.fuse_uds_seed[i0].configure(this);

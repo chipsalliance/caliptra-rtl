@@ -143,6 +143,7 @@ logic mbox_dir_req_dv;
 logic mbox_req_hold;
 soc_ifc_req_t mbox_req_data;
 logic [SOC_IFC_DATA_W-1:0] mbox_rdata;
+logic [SOC_IFC_DATA_W-1:0] mbox_dir_rdata;
 logic mbox_error;
 
 //sha req inf
@@ -364,6 +365,7 @@ soc_ifc_arb #(
     .mbox_req_hold(mbox_req_hold),
     .mbox_req_data(mbox_req_data),
     .mbox_rdata(mbox_rdata),
+    .mbox_dir_rdata(mbox_dir_rdata),
     .mbox_error(mbox_error),
     //SHA inf
     .sha_req_dv(sha_req_dv),
@@ -717,8 +719,8 @@ assign nmi_intr = t2_timeout && !timer2_en;             //Only issue nmi if WDT 
 // sets CPTRA_FW_ERROR_FATAL or when a HW condition occurs that sets a bit
 // in CPTRA_HW_ERROR_FATAL
 // Interrupt only deasserts on reset
-always_ff@(posedge rdc_clk_cg or negedge cptra_rst_b) begin
-    if(~cptra_rst_b) begin
+always_ff@(posedge rdc_clk_cg or negedge cptra_noncore_rst_b) begin
+    if(~cptra_noncore_rst_b) begin
         cptra_error_fatal <= 1'b0;
     end
     // FW write that SETS a new (non-masked) bit results in interrupt assertion
@@ -738,8 +740,8 @@ always_ff@(posedge rdc_clk_cg or negedge cptra_rst_b) begin
         cptra_error_fatal <= cptra_error_fatal;
     end
 end
-always_ff@(posedge rdc_clk_cg or negedge cptra_rst_b) begin
-    if(~cptra_rst_b) begin
+always_ff@(posedge rdc_clk_cg or negedge cptra_noncore_rst_b) begin
+    if(~cptra_noncore_rst_b) begin
         cptra_error_non_fatal <= 1'b0;
     end
     // FW write that SETS a new (non-masked) bit results in interrupt assertion
@@ -815,6 +817,7 @@ i_mbox (
     .req_data(mbox_req_data),
     .mbox_error(mbox_error),
     .rdata(mbox_rdata),
+    .dir_rdata(mbox_dir_rdata),
     .sha_sram_req_dv(sha_sram_req_dv),
     .sha_sram_req_addr(sha_sram_req_addr),
     .sha_sram_resp(sha_sram_resp),
