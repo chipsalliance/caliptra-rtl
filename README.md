@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Caliptra Hands-On Guide** #
-_*Last Update: 2023/07/28*_
+_*Last Update: 2023/08/13*_
 
 
 ## **Tools Used** ##
