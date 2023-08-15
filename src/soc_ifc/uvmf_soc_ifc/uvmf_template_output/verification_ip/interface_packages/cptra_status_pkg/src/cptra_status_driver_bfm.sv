@@ -110,6 +110,8 @@ end
   reg  cptra_noncore_rst_b_o = 'b0;
   tri  cptra_uc_rst_b_i;
   reg  cptra_uc_rst_b_o = 'b0;
+  tri  fw_update_rst_window_i;
+  reg  fw_update_rst_window_o = 'bz;
   tri [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg_i;
   reg [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg_o = 'bz;
   tri [`CLP_OBF_FE_DWORDS-1:0][31:0] obf_field_entropy_i;
@@ -149,6 +151,8 @@ end
   assign cptra_noncore_rst_b_i = bus.cptra_noncore_rst_b;
   assign bus.cptra_uc_rst_b = (initiator_responder == INITIATOR) ? cptra_uc_rst_b_o : 'bz;
   assign cptra_uc_rst_b_i = bus.cptra_uc_rst_b;
+  assign bus.fw_update_rst_window = (initiator_responder == INITIATOR) ? fw_update_rst_window_o : 'bz;
+  assign fw_update_rst_window_i = bus.fw_update_rst_window;
   assign bus.cptra_obf_key_reg = (initiator_responder == INITIATOR) ? cptra_obf_key_reg_o : 'bz;
   assign cptra_obf_key_reg_i = bus.cptra_obf_key_reg;
   assign bus.obf_field_entropy = (initiator_responder == INITIATOR) ? obf_field_entropy_o : 'bz;
@@ -204,6 +208,7 @@ end
        // INITIATOR mode output signals
        cptra_noncore_rst_b_o <= 'b0;
        cptra_uc_rst_b_o <= 'b0;
+       fw_update_rst_window_o <= 'bz;
        cptra_obf_key_reg_o <= 'bz;
        obf_field_entropy_o <= 'bz;
        obf_uds_seed_o <= 'bz;
@@ -230,6 +235,7 @@ end
       else
           return |(cptra_noncore_rst_b_i  ^  cptra_noncore_rst_b_o      ) ||
                  |(cptra_uc_rst_b_i       ^  cptra_uc_rst_b_o           ) ||
+                 |(fw_update_rst_window_i ^  fw_update_rst_window_o     ) ||
                  |(cptra_obf_key_reg_i    ^  cptra_obf_key_reg_o        ) ||
                  |(obf_field_entropy_i    ^  obf_field_entropy_o        ) ||
                  |(obf_uds_seed_i         ^  obf_uds_seed_o             ) ||
@@ -282,6 +288,7 @@ end
        //   bit timer_intr_pending ;
        //   bit noncore_rst_asserted ;
        //   bit uc_rst_asserted ;
+       //   bit fw_update_rst_window ;
        //   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg ;
        //   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] obf_field_entropy ;
        //   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] obf_uds_seed ;
@@ -296,6 +303,7 @@ end
        //   bit timer_intr_pending ;
        //   bit noncore_rst_asserted ;
        //   bit uc_rst_asserted ;
+       //   bit fw_update_rst_window ;
        //   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg ;
        //   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] obf_field_entropy ;
        //   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] obf_uds_seed ;
@@ -318,6 +326,7 @@ end
        //    Initiator output signals
        //      cptra_noncore_rst_b_o <= cptra_status_initiator_struct.xyz;  //     
        //      cptra_uc_rst_b_o <= cptra_status_initiator_struct.xyz;  //
+       //      fw_update_rst_window_o <= cptra_status_initiator_struct.xyz;  //
        //      cptra_obf_key_reg_o <= cptra_status_initiator_struct.xyz;  //    [`CLP_OBF_KEY_DWORDS-1:0][31:0] 
        //      obf_field_entropy_o <= cptra_status_initiator_struct.xyz;  //    [`CLP_OBF_FE_DWORDS-1:0][31:0] 
        //      obf_uds_seed_o <= cptra_status_initiator_struct.xyz;  //    [`CLP_OBF_UDS_DWORDS-1:0][31:0] 
@@ -367,6 +376,7 @@ bit first_transfer=1;
   //   bit timer_intr_pending ;
   //   bit noncore_rst_asserted ;
   //   bit uc_rst_asserted ;
+  //   bit fw_update_rst_window ;
   //   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg ;
   //   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] obf_field_entropy ;
   //   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] obf_uds_seed ;
@@ -381,6 +391,7 @@ bit first_transfer=1;
   //   bit timer_intr_pending ;
   //   bit noncore_rst_asserted ;
   //   bit uc_rst_asserted ;
+  //   bit fw_update_rst_window ;
   //   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg ;
   //   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] obf_field_entropy ;
   //   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] obf_uds_seed ;
@@ -396,6 +407,7 @@ bit first_transfer=1;
        //    Responder input signals
        //      cptra_status_responder_struct.xyz = cptra_noncore_rst_b_i;  //     
        //      cptra_status_responder_struct.xyz = cptra_uc_rst_b_i;  //     
+       //      cptra_status_responder_struct.xyz = fw_update_rst_window_i;  //     
        //      cptra_status_responder_struct.xyz = cptra_obf_key_reg_i;  //    [`CLP_OBF_KEY_DWORDS-1:0][31:0] 
        //      cptra_status_responder_struct.xyz = obf_field_entropy_i;  //    [`CLP_OBF_FE_DWORDS-1:0][31:0] 
        //      cptra_status_responder_struct.xyz = obf_uds_seed_i;  //    [`CLP_OBF_UDS_DWORDS-1:0][31:0] 
@@ -436,6 +448,7 @@ bit first_transfer=1;
     end
     cptra_noncore_rst_b_o          <= cptra_noncore_rst_b_i ;
     cptra_uc_rst_b_o               <= cptra_uc_rst_b_i      ;
+    fw_update_rst_window_o         <= fw_update_rst_window_i;
     cptra_obf_key_reg_o            <= cptra_obf_key_reg_i   ;
     obf_field_entropy_o            <= obf_field_entropy_i   ;
     obf_uds_seed_o                 <= obf_uds_seed_i        ;
@@ -458,6 +471,7 @@ bit first_transfer=1;
          cptra_status_initiator_struct.timer_intr_pending         = timer_intr_i;
          cptra_status_initiator_struct.noncore_rst_asserted       = !cptra_noncore_rst_b_i;
          cptra_status_initiator_struct.uc_rst_asserted            = !cptra_uc_rst_b_i;
+         cptra_status_initiator_struct.fw_update_rst_window       = fw_update_rst_window_i;
          cptra_status_initiator_struct.cptra_obf_key_reg          = cptra_obf_key_reg_i;
          cptra_status_initiator_struct.obf_field_entropy          = obf_field_entropy_i;
          cptra_status_initiator_struct.obf_uds_seed               = obf_uds_seed_i;

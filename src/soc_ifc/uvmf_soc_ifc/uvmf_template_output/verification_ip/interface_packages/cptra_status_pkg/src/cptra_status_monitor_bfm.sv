@@ -85,6 +85,7 @@ end
   tri dummy_i;
   tri  cptra_noncore_rst_b_i;
   tri  cptra_uc_rst_b_i;
+  tri  fw_update_rst_window_i;
   tri [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg_i;
   tri [`CLP_OBF_FE_DWORDS-1:0][31:0] obf_field_entropy_i;
   tri [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed_i;
@@ -100,6 +101,7 @@ end
   assign dummy_i = bus.dummy;
   assign cptra_noncore_rst_b_i = bus.cptra_noncore_rst_b;
   assign cptra_uc_rst_b_i = bus.cptra_uc_rst_b;
+  assign fw_update_rst_window_i = bus.fw_update_rst_window;
   assign cptra_obf_key_reg_i = bus.cptra_obf_key_reg;
   assign obf_field_entropy_i = bus.obf_field_entropy;
   assign obf_uds_seed_i = bus.obf_uds_seed;
@@ -119,6 +121,7 @@ end
   // pragma uvmf custom interface_item_additional begin
   reg  cptra_noncore_rst_b_o = 'b0;
   reg  cptra_uc_rst_b_o = 'b0;
+  reg  fw_update_rst_window_o = 'b0;
   reg [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg_o = 'b0;
   reg [`CLP_OBF_FE_DWORDS-1:0][31:0] obf_field_entropy_o = 'b0;
   reg [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed_o = 'b0;
@@ -139,6 +142,7 @@ end
       else
           return |(cptra_noncore_rst_b_i  ^  cptra_noncore_rst_b_o      ) ||
                  |(cptra_uc_rst_b_i       ^  cptra_uc_rst_b_o           ) ||
+                 |(fw_update_rst_window_i ^  fw_update_rst_window_o     ) ||
                  |(cptra_obf_key_reg_i    ^  cptra_obf_key_reg_o        ) ||
                  |(obf_field_entropy_i    ^  obf_field_entropy_o        ) ||
                  |(obf_uds_seed_i         ^  obf_uds_seed_o             ) ||
@@ -225,6 +229,7 @@ end
     //     //    cptra_status_monitor_struct.timer_intr_pending
     //     //    cptra_status_monitor_struct.noncore_rst_asserted
     //     //    cptra_status_monitor_struct.uc_rst_asserted
+    //     //    cptra_status_monitor_struct.fw_update_rst_window
     //     //    cptra_status_monitor_struct.cptra_obf_key_reg
     //     //    cptra_status_monitor_struct.obf_field_entropy
     //     //    cptra_status_monitor_struct.obf_uds_seed
@@ -240,6 +245,7 @@ end
     //    All available input signals listed.
     //      cptra_status_monitor_struct.xyz = cptra_noncore_rst_b_i;  //     
     //      cptra_status_monitor_struct.xyz = cptra_uc_rst_b_i;  //     
+    //      cptra_status_monitor_struct.xyz = fw_update_rst_window_i;  //     
     //      cptra_status_monitor_struct.xyz = cptra_obf_key_reg_i;  //    [`CLP_OBF_KEY_DWORDS-1:0][31:0] 
     //      cptra_status_monitor_struct.xyz = obf_field_entropy_i;  //    [`CLP_OBF_FE_DWORDS-1:0][31:0] 
     //      cptra_status_monitor_struct.xyz = obf_uds_seed_i;  //    [`CLP_OBF_UDS_DWORDS-1:0][31:0] 
@@ -275,6 +281,7 @@ end
     end
     cptra_noncore_rst_b_o          <= cptra_noncore_rst_b_i ;
     cptra_uc_rst_b_o               <= cptra_uc_rst_b_i      ;
+    fw_update_rst_window_o         <= fw_update_rst_window_i;
     cptra_obf_key_reg_o            <= cptra_obf_key_reg_i   ;
     obf_field_entropy_o            <= obf_field_entropy_i   ;
     obf_uds_seed_o                 <= obf_uds_seed_i        ;
@@ -291,6 +298,7 @@ end
   // Variables within the cptra_status_initiator_struct:
          cptra_status_monitor_struct.noncore_rst_asserted       = !cptra_noncore_rst_b_i;
          cptra_status_monitor_struct.uc_rst_asserted            = !cptra_uc_rst_b_i;
+         cptra_status_monitor_struct.fw_update_rst_window       =  fw_update_rst_window_i;
          cptra_status_monitor_struct.soc_ifc_err_intr_pending   =  soc_ifc_error_intr_i;
          cptra_status_monitor_struct.soc_ifc_notif_intr_pending =  soc_ifc_notif_intr_i;
          cptra_status_monitor_struct.sha_err_intr_pending       =  sha_error_intr_i;

@@ -127,15 +127,18 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock extends soc_ifc_reg_cbs_mbox_csr;
         else if (map.get_name() == this.APB_map_name) begin
             case (kind) inside
                 UVM_PREDICT_READ: begin
-                    // Reading mbox_lock when it is already locked triggers a notification
-                    // interrupt to the uC in Caliptra
+                    // Reading mbox_lock when it is already locked (by uC)
+                    // triggers a notification interrupt to the uC in Caliptra
                     if (value & previous) begin
                         if (rm.mbox_fn_state_sigs.mbox_idle) begin
                             `uvm_error("SOC_IFC_REG_CBS", $sformatf("Read from mbox_lock on map [%s] with value [%x] and previous [%x] is unexpected in state [%p]!", map.get_name(), value, previous, rm.mbox_fn_state_sigs))
                         end
-                        else begin
+                        else if (!rm.mbox_status.soc_has_lock.get_mirrored_value()) begin
                             `uvm_info("SOC_IFC_REG_CBS", $sformatf("Read from mbox_lock on map [%s] with value [%x] and previous [%x] in state [%p] triggers a notification interrupt for soc_req_lock!", map.get_name(), value, previous, rm.mbox_fn_state_sigs), UVM_HIGH)
                             rm.get_parent().get_block_by_name("soc_ifc_reg_rm").get_block_by_name("intr_block_rf_ext").get_field_by_name("notif_soc_req_lock_sts").predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, rm.get_parent().get_map_by_name(this.AHB_map_name)); /* AHB-access only, use AHB map*/
+                        end
+                        else begin
+                            `uvm_info("SOC_IFC_REG_CBS", $sformatf("Read from mbox_lock on map [%s] with value [%x] and previous [%x] in state [%p] has no effect due to soc_has_lock: [%0d]", map.get_name(), value, previous, rm.mbox_fn_state_sigs, rm.mbox_status.soc_has_lock.get_mirrored_value()), UVM_FULL)
                         end
                     end
                     // Rising edge on RS

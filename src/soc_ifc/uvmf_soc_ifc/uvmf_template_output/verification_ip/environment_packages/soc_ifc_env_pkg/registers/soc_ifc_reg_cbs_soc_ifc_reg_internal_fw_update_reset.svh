@@ -20,14 +20,26 @@ class soc_ifc_reg_delay_job_soc_ifc_reg_internal_fw_update_reset_core_rst extend
     soc_ifc_reg_ext rm; /* soc_ifc_reg_rm */
     uvm_reg_block rm_top;
     uvm_reg_map map;
-    bit iccm_unlock;
+    bit iccm_unlock = 1'b0;
+    bit fsm_rst_to_wait = 1'b0;
 
     virtual task do_job();
         `uvm_info("SOC_IFC_REG_DELAY_JOB", "Running delayed job for soc_ifc_reg.internal_fw_update_reset.core_rst", UVM_LOW)
         rm_top = rm.get_parent();
-        `uvm_info("SOC_IFC_REG_CBS", $sformatf("iccm_lock value 0x%x", rm.internal_iccm_lock.lock.get_mirrored_value()), UVM_LOW)
-        if (iccm_unlock) rm.internal_iccm_lock.lock.predict(uvm_reg_data_t'(0));
-        `uvm_info("SOC_IFC_REG_CBS", $sformatf("iccm_lock value 0x%x", rm.internal_iccm_lock.lock.get_mirrored_value()), UVM_LOW)
+        `uvm_info("SOC_IFC_REG_CBS", $sformatf("iccm_lock value 0x%x, boot FSM tracker: [%p]", rm.internal_iccm_lock.lock.get_mirrored_value(), rm.boot_fn_state_sigs), UVM_LOW)
+        if (fsm_rst_to_wait) begin
+            rm.boot_fn_state_sigs = '{boot_wait: 1'b1, default: 1'b0};
+            `uvm_info("SOC_IFC_REG_CBS", $sformatf("iccm_lock value 0x%x, boot FSM tracker: [%p]", rm.internal_iccm_lock.lock.get_mirrored_value(), rm.boot_fn_state_sigs), UVM_LOW)
+            // This delay job should also trigger the assertion of uC reset in the predictor
+        end
+        else if (iccm_unlock) begin
+            rm.internal_iccm_lock.lock.predict(uvm_reg_data_t'(0));
+            `uvm_info("SOC_IFC_REG_CBS", $sformatf("iccm_lock value 0x%x, boot FSM tracker: [%p]", rm.internal_iccm_lock.lock.get_mirrored_value(), rm.boot_fn_state_sigs), UVM_LOW)
+        end
+        else begin
+            rm.boot_fn_state_sigs = '{boot_done: 1'b1, default: 1'b0};
+            `uvm_info("SOC_IFC_REG_CBS", $sformatf("Delay job should trigger uC reset deassertion. iccm_lock value 0x%x, boot FSM tracker: [%p]", rm.internal_iccm_lock.lock.get_mirrored_value(), rm.boot_fn_state_sigs), UVM_LOW)
+        end
     endtask
 endclass
 
@@ -55,32 +67,45 @@ class soc_ifc_reg_cbs_soc_ifc_reg_internal_fw_update_reset extends soc_ifc_reg_c
                                        input uvm_path_e     path,
                                        input uvm_reg_map    map);
 
+        soc_ifc_reg_delay_job_soc_ifc_reg_internal_fw_update_reset_core_rst delay_job_boot_fsm_upd;
         soc_ifc_reg_delay_job_soc_ifc_reg_internal_fw_update_reset_core_rst delay_job_iccm_unlock;
         soc_ifc_reg_delay_job_soc_ifc_reg_internal_fw_update_reset_core_rst delay_job_uc_rst;
         soc_ifc_reg_ext rm; /* soc_ifc_reg_rm */
         uvm_reg_block blk = fld.get_parent().get_parent(); /* soc_ifc_reg_rm */
         if (!$cast(rm,blk)) `uvm_fatal ("SOC_IFC_REG_CBS", "Failed to get valid class handle")
+        delay_job_boot_fsm_upd = soc_ifc_reg_delay_job_soc_ifc_reg_internal_fw_update_reset_core_rst::type_id::create("delay_job_boot_fsm_upd");
+        delay_job_boot_fsm_upd.rm = rm;
+        delay_job_boot_fsm_upd.map = map;
+        delay_job_boot_fsm_upd.iccm_unlock = 0;
+        delay_job_boot_fsm_upd.fsm_rst_to_wait = 1;
+        //uC reset assertion occurs 1 clock after the reg write
+        delay_job_boot_fsm_upd.set_delay_cycles(1);
         delay_job_iccm_unlock = soc_ifc_reg_delay_job_soc_ifc_reg_internal_fw_update_reset_core_rst::type_id::create("delay_job_iccm_unlock");
         delay_job_iccm_unlock.rm = rm;
         delay_job_iccm_unlock.map = map;
         delay_job_iccm_unlock.iccm_unlock = 1;
+        delay_job_iccm_unlock.fsm_rst_to_wait = 0;
         //account for state transitions + variable wait cycle time
         delay_job_iccm_unlock.set_delay_cycles(3+rm.internal_fw_update_reset_wait_cycles.wait_cycles.get_mirrored_value());
         delay_job_uc_rst = soc_ifc_reg_delay_job_soc_ifc_reg_internal_fw_update_reset_core_rst::type_id::create("delay_job_uc_rst");
         delay_job_uc_rst.rm = rm;
         delay_job_uc_rst.map = map;
         delay_job_uc_rst.iccm_unlock = 0;
+        delay_job_uc_rst.fsm_rst_to_wait = 0;
         //this reset de-assertion comes 1 clock after iccm unlocks
         delay_job_uc_rst.set_delay_cycles(delay_job_iccm_unlock.get_delay_cycles()+1);
         if (map.get_name() == this.AHB_map_name) begin
             case (kind) inside
                 UVM_PREDICT_WRITE: begin
                     if (value & !previous) begin
+                        rm.boot_fn_state_sigs = '{boot_fw_rst: 1'b1, default: 1'b0};
+                        //push a job to catch assertion of reset 1 clock later
+                        delay_jobs.push_back(delay_job_boot_fsm_upd);
                         //push a delayed job for de-assertion of iccm lock
-                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("Sending delay job for internal register field %s with %d clk delay", fld.get_full_name(), delay_job_iccm_unlock.get_delay_cycles()), UVM_LOW)
                         delay_jobs.push_back(delay_job_iccm_unlock);
                         //push another job to catch de-assertion of reset 1 clock later
                         delay_jobs.push_back(delay_job_uc_rst);
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("Sending 3 delay jobs for internal register field %s with clk delays: [%0d] [%0d] [%0d]", fld.get_full_name(), delay_job_boot_fsm_upd.get_delay_cycles(), delay_job_iccm_unlock.get_delay_cycles(), delay_job_uc_rst.get_delay_cycles()), UVM_LOW)
                     end else begin
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] on map [%s] has no effect on internal register field %s", kind, map.get_name(), fld.get_full_name()), UVM_FULL)
                     end

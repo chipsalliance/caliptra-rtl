@@ -49,15 +49,29 @@ class soc_ifc_reg_delay_job_intr_block_rf_ext extends soc_ifc_reg_delay_job;
         `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("Running delayed job for %s", req_fld.get_full_name()), UVM_MEDIUM)
         if (!/*val_sts_glb*/sts_glb.get_mirrored_value() && |(val_sts_reg/*sts_reg.get_mirrored_value()*/ & val_en_reg/*en_reg.get_mirrored_value()*/) && val_en_glb/*en_glb.get_mirrored_value()*/) begin
             sts_glb.predict(1'b1);
-            `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("post_predict called through map [%p] on %s results in interrupt status bit being set to 0x%0x.", map.get_name(), req_fld.get_full_name(), sts_glb.get_mirrored_value()), UVM_HIGH)
+            `uvm_info("SOC_IFC_REG_DELAY_JOB",
+                      $sformatf("post_predict called through map [%p] on %s results in interrupt status bit being set to 0x%0x. Values: en_reg(latched) [0x%0x(0x%0x)] sts_reg [0x%0x(0x%0x)] en_glb [0x%0x(0x%0x)] sts_glb [0x%0x(0x%0x)]",
+                                map.get_name(), req_fld.get_full_name(), sts_glb.get_mirrored_value(),
+                                en_reg.get_mirrored_value(),  val_en_reg ,
+                                sts_reg.get_mirrored_value(), val_sts_reg,
+                                en_glb.get_mirrored_value(),  val_en_glb ,
+                                sts_glb.get_mirrored_value(), val_sts_glb),
+                      UVM_HIGH)
         end
         else if (/*val_sts_glb*/sts_glb.get_mirrored_value() && !(|(val_sts_reg/*sts_reg.get_mirrored_value()*/ & val_en_reg/*en_reg.get_mirrored_value()*/) && val_en_glb/*en_glb.get_mirrored_value()*/)) begin
             sts_glb.predict(1'b0);
-            `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("post_predict called through map [%p] on %s results in interrupt status bit being cleared to 0x%0x.", map.get_name(), req_fld.get_full_name(), sts_glb.get_mirrored_value()), UVM_HIGH)
+            `uvm_info("SOC_IFC_REG_DELAY_JOB",
+                      $sformatf("post_predict called through map [%p] on %s results in interrupt status bit being cleared to 0x%0x. Values: en_reg(latched) [0x%0x(0x%0x)] sts_reg [0x%0x(0x%0x)] en_glb [0x%0x(0x%0x)] sts_glb [0x%0x(0x%0x)]",
+                                map.get_name(), req_fld.get_full_name(), sts_glb.get_mirrored_value(),
+                                en_reg.get_mirrored_value(),  val_en_reg ,
+                                sts_reg.get_mirrored_value(), val_sts_reg,
+                                en_glb.get_mirrored_value(),  val_en_glb ,
+                                sts_glb.get_mirrored_value(), val_sts_glb),
+                      UVM_HIGH)
         end
         else begin
             `uvm_info("SOC_IFC_REG_DELAY_JOB",
-                      $sformatf("Delay job for %s does not predict any changes due to: en_reg(latched) [0x%x(0x%x)] sts_reg [0x%x(0x%x)] en_glb [0x%x(0x%x)] sts_glb [0x%x(0x%x)]",
+                      $sformatf("Delay job for %s does not predict any changes due to: en_reg(latched) [0x%0x(0x%0x)] sts_reg [0x%0x(0x%0x)] en_glb [0x%0x(0x%0x)] sts_glb [0x%0x(0x%0x)]",
                                 req_fld.get_full_name(),
                                 en_reg.get_mirrored_value(),  val_en_reg ,
                                 sts_reg.get_mirrored_value(), val_sts_reg,

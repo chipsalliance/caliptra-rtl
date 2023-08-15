@@ -39,6 +39,7 @@ class cptra_status_transaction  extends uvmf_transaction_base;
   bit timer_intr_pending ;
   bit noncore_rst_asserted ;
   bit uc_rst_asserted ;
+  bit fw_update_rst_window ;
   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg ;
   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] obf_field_entropy ;
   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] obf_uds_seed ;
@@ -127,7 +128,7 @@ class cptra_status_transaction  extends uvmf_transaction_base;
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("soc_ifc_err_intr_pending:0x%x soc_ifc_notif_intr_pending:0x%x sha_err_intr_pending:0x%x sha_notif_intr_pending:0x%x timer_intr_pending:0x%x noncore_rst_asserted:0x%x uc_rst_asserted:0x%x cptra_obf_key_reg:0x%x obf_field_entropy:0x%x obf_uds_seed:0x%x nmi_vector:0x%x nmi_intr_pending:0x%x iccm_locked:0x%x %s",soc_ifc_err_intr_pending,soc_ifc_notif_intr_pending,sha_err_intr_pending,sha_notif_intr_pending,timer_intr_pending,noncore_rst_asserted,uc_rst_asserted,cptra_obf_key_reg,obf_field_entropy,obf_uds_seed,nmi_vector,nmi_intr_pending,iccm_locked,super.convert2string());
+    return $sformatf("soc_ifc_err_intr_pending:0x%x soc_ifc_notif_intr_pending:0x%x sha_err_intr_pending:0x%x sha_notif_intr_pending:0x%x timer_intr_pending:0x%x noncore_rst_asserted:0x%x uc_rst_asserted:0x%x fw_update_rst_window:0x%x cptra_obf_key_reg:0x%x obf_field_entropy:0x%x obf_uds_seed:0x%x nmi_vector:0x%x nmi_intr_pending:0x%x iccm_locked:0x%x %s",soc_ifc_err_intr_pending,soc_ifc_notif_intr_pending,sha_err_intr_pending,sha_notif_intr_pending,timer_intr_pending,noncore_rst_asserted,uc_rst_asserted,fw_update_rst_window,cptra_obf_key_reg,obf_field_entropy,obf_uds_seed,nmi_vector,nmi_intr_pending,iccm_locked,super.convert2string());
     // pragma uvmf custom convert2string end
   endfunction
 
@@ -162,6 +163,7 @@ class cptra_status_transaction  extends uvmf_transaction_base;
             &&(this.timer_intr_pending == RHS.timer_intr_pending)
             &&(this.noncore_rst_asserted == RHS.noncore_rst_asserted)
             &&(this.uc_rst_asserted == RHS.uc_rst_asserted)
+            &&(this.fw_update_rst_window == RHS.fw_update_rst_window)
             &&(this.cptra_obf_key_reg == RHS.cptra_obf_key_reg)
             &&(this.obf_field_entropy == RHS.obf_field_entropy)
             &&(this.obf_uds_seed == RHS.obf_uds_seed)
@@ -189,6 +191,7 @@ class cptra_status_transaction  extends uvmf_transaction_base;
     this.timer_intr_pending = RHS.timer_intr_pending;
     this.noncore_rst_asserted = RHS.noncore_rst_asserted;
     this.uc_rst_asserted = RHS.uc_rst_asserted;
+    this.fw_update_rst_window = RHS.fw_update_rst_window;
     this.cptra_obf_key_reg = RHS.cptra_obf_key_reg;
     this.obf_field_entropy = RHS.obf_field_entropy;
     this.obf_uds_seed = RHS.obf_uds_seed;
@@ -225,6 +228,7 @@ class cptra_status_transaction  extends uvmf_transaction_base;
     $add_attribute(transaction_view_h,timer_intr_pending,"timer_intr_pending");
     $add_attribute(transaction_view_h,noncore_rst_asserted,"noncore_rst_asserted");
     $add_attribute(transaction_view_h,uc_rst_asserted,"uc_rst_asserted");
+    $add_attribute(transaction_view_h,fw_update_rst_window,"fw_update_rst_window");
     $add_attribute(transaction_view_h,cptra_obf_key_reg,"cptra_obf_key_reg");
     $add_attribute(transaction_view_h,obf_field_entropy,"obf_field_entropy");
     $add_attribute(transaction_view_h,obf_uds_seed,"obf_uds_seed");
