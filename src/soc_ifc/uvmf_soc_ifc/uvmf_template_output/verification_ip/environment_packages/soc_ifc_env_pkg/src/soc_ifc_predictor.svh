@@ -165,7 +165,6 @@ class soc_ifc_predictor #(
   bit soc_ifc_rst_in_asserted = 1'b1;
   bit noncore_rst_out_asserted = 1'b1;
   bit uc_rst_out_asserted = 1'b1;
-  bit uc_rst_out_pend_val = 1'b0;
   bit soc_ifc_error_intr_pending = 1'b0;
   bit soc_ifc_notif_intr_pending = 1'b0;
   bit sha_err_intr_pending = 1'b0; // TODO
@@ -178,6 +177,9 @@ class soc_ifc_predictor #(
   bit ready_for_fw_push = 1'b0; // TODO
   bit ready_for_runtime = 1'b0; // TODO
   bit mailbox_flow_done = 1'b0;
+  bit clk_gate_active         = 1'b1; // TODO
+  bit rdc_clk_gate_active     = 1'b1;
+  bit soc_ifc_clk_gate_active = 1'b1; // TODO
 
   bit mailbox_data_avail = 1'b0;
 
@@ -189,6 +191,7 @@ class soc_ifc_predictor #(
   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg = '{default:32'h0}; // FIXME use reg-model value?
   security_state_t security_state = '{debug_locked: 1'b1, device_lifecycle: DEVICE_UNPROVISIONED};
   bit bootfsm_breakpoint = 1'b0;
+  int unsigned fw_update_wait_count = 0;
 
   bit [63:0] generic_output_wires = 64'h0;
 
@@ -237,8 +240,11 @@ class soc_ifc_predictor #(
   extern function bit  valid_requester(input uvm_transaction txn);
   extern function bit  valid_receiver(input uvm_transaction txn);
   extern function bit  sha_valid_user(input uvm_transaction txn);
+  extern function void predict_boot_wait_boot_done();
   extern task          handle_reset(input string kind = "HARD");
   extern function void predict_reset(input string kind = "HARD");
+  extern function bit  soc_ifc_status_txn_expected_after_noncore_reset();
+  extern function bit  cptra_status_txn_expected_after_noncore_reset();
   extern function bit  soc_ifc_status_txn_expected_after_warm_reset();
   extern function bit  cptra_status_txn_expected_after_warm_reset();
   extern function bit  soc_ifc_status_txn_expected_after_cold_reset();
@@ -327,11 +333,14 @@ class soc_ifc_predictor #(
         end
         if (!t.assert_rst)
             `uvm_fatal("PRED_SOC_IFC_CTRL", "Bad initial boot with cptra_rst_b deasserted")
+        if (!p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs.boot_idle)
+            `uvm_fatal("PRED_SOC_IFC_CTRL", $sformatf("Bad initial boot FSM prediction: %p", p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs))
         if (reset_handled.is_on()) begin
             `uvm_error("PRED_SOC_IFC_CTRL", "reset_handled event unexpectedly set on receiving soc_ifc_ctrl_transaction for initial boot reset")
             reset_handled.reset();
         end
         predict_reset("HARD");
+        reset_predicted.trigger(hard_reset_flag/*"HARD"*/);
     end
     // Cold reset assertion
     else if (!t.set_pwrgood) begin
@@ -378,6 +387,12 @@ class soc_ifc_predictor #(
             send_cptra_sts_txn |= (t.cptra_obf_key_rand[ii] != cptra_obf_key_reg[ii]);
         end
         cptra_obf_key_reg = t.cptra_obf_key_rand;
+        reset_predicted.reset();
+        // No new signal predictions since it was all done on Cold reset assertion.
+        // But trigger the soft reset event to indicate to the predict_reset delay spinoff task
+        // that the soft reset is done (once cptra_rst_b deasserts)
+        reset_predicted.trigger(soft_reset_flag/*"SOFT"*/);
+        `uvm_info("PRED_SOC_IFC_CTRL", $sformatf("In response to cold_reset deassertion, send_cptra_sts_txn: %d", send_cptra_sts_txn), UVM_NONE)
     end
     // Warm reset assertion
     else if (t.assert_rst && !soc_ifc_rst_in_asserted) begin
@@ -398,19 +413,20 @@ class soc_ifc_predictor #(
             // Todo check for breakpoint assertion and flag an expected AHB write to clear it
             soc_ifc_rst_in_asserted = 1'b0;
             p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fuses.predict(1'b1);
-            noncore_rst_out_asserted = 1'b1;
-            uc_rst_out_asserted = 1'b1;
             bootfsm_breakpoint = t.set_bootfsm_breakpoint;
+            reset_predicted.reset();
             send_soc_ifc_sts_txn = 1;
             send_cptra_sts_txn = 0; // cptra sts transaction not expected until after CPTRA_FUSE_WR_DONE
             reset_wdt_count = 1'b0;
+            fork
+                configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(6); // FIXME, correct delay value?
+                rdc_clk_gate_active = 1'b0;
+            join_none
+            `uvm_info("PRED_SOC_IFC_CTRL", $sformatf("In response to warm_reset deassertion, send_soc_ifc_sts_txn: %d", send_soc_ifc_sts_txn), UVM_NONE)
         end
         // Normal operation
         else begin
-            //TODO beyond detecting uc_rst_asserted, this block needs more logic
-            noncore_rst_out_asserted = 1'b0; // <-- all status transactions after the first one should reflect Caliptra reset deasserted
-            uc_rst_out_asserted = 1'b1; // FIXME
-            send_cptra_sts_txn = 1;
+            //TODO this block needs more logic
         end
     end
 
@@ -683,6 +699,11 @@ class soc_ifc_predictor #(
     if (!configuration.enable_reg_prediction) begin
         do_reg_prediction = 1'b0;
     end
+    else if (rdc_clk_gate_active || noncore_rst_out_asserted) begin
+        do_reg_prediction = 1'b0;
+        if (ahb_txn.RnW == AHB_READ)
+            soc_ifc_sb_ahb_ap_output_transaction.data[0] = 0;
+    end
     else if (axs_mem != null) begin
         do_reg_prediction = 1'b0;
     end
@@ -854,7 +875,10 @@ class soc_ifc_predictor #(
     end
 
     // Calculate any other system effects from the register access
-    if (axs_mem != null) begin: MEM_AXS
+    if (rdc_clk_gate_active || noncore_rst_out_asserted) begin
+        `uvm_info("PRED_AHB", {"On access to register: ", axs_reg.get_full_name(), " reset is asserted, skipping system prediction"}, UVM_MEDIUM)
+    end
+    else if (axs_mem != null) begin: MEM_AXS
         `uvm_info("PRED_AHB", $sformatf("Not performing any system prediction for access to mailbox at address: 0x%x", ahb_txn.address), UVM_FULL)
     end// MEM_AXS
     else if (axs_reg != null) begin: REG_AXS
@@ -1234,7 +1258,7 @@ class soc_ifc_predictor #(
                         // Handled in callbacks via reg predictor
                         `uvm_info("PRED_AHB", $sformatf("Handling access to %s. This will restart WDT timer1", axs_reg.get_name()), UVM_MEDIUM);
                         //Capture restart bit so the counters can be updated
-                        wdt_t1_restart = ahb_txn.data[0];
+                        wdt_t1_restart = data_active[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER1_CTRL.timer1_restart.get_lsb_pos()];
                     end
                 end
                 "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[0]",
@@ -1253,7 +1277,7 @@ class soc_ifc_predictor #(
                         // Handled in callbacks via reg predictor
                         `uvm_info("PRED_AHB", $sformatf("Handling access to %s. This will restart WDT timer2", axs_reg.get_name()), UVM_MEDIUM);
                         //Capture restart bit so the counters can be updated
-                        wdt_t2_restart = ahb_txn.data[0];
+                        wdt_t2_restart = data_active[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER2_CTRL.timer2_restart.get_lsb_pos()];
                     end
                 end
                 "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[0]",
@@ -1263,7 +1287,7 @@ class soc_ifc_predictor #(
                     end
                 end
                 "CPTRA_WDT_STATUS": begin
-                    `uvm_info("PRED_AHB", "AHB access of WDT status\n", UVM_MEDIUM);
+                    `uvm_info("PRED_AHB", "AHB access of WDT status", UVM_MEDIUM);
                 end
                 "CPTRA_FUSE_VALID_PAUSER",
                 "CPTRA_FUSE_PAUSER_LOCK": begin
@@ -1271,14 +1295,20 @@ class soc_ifc_predictor #(
                         `uvm_error("PRED_AHB", {"Add prediction for write to ",axs_reg.get_name()," register on AHB interface"}) // TODO
                     end
                 end
+                ["CPTRA_WDT_CFG[0]":"CPTRA_WDT_CFG[1]"],
+                ["CPTRA_RSVD_REG[0]":"CPTRA_RSVD_REG[3]"]: begin
+                    `uvm_info("PRED_AHB", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
+                end
                 ["fuse_uds_seed[0]" :"fuse_uds_seed[9]" ],
                 ["fuse_uds_seed[10]":"fuse_uds_seed[11]"]: begin
                     if (fuse_update_enabled) begin
+                        `uvm_error("PRED_AHB", {"Unexpected write to ", axs_reg.get_name(), " should not occur when fuse_update_enabled == 1!"})
                         send_cptra_sts_txn       = 1'b1;
                     end
                 end
                 ["fuse_field_entropy[0]" :"fuse_field_entropy[7]" ]: begin
                     if (fuse_update_enabled) begin
+                        `uvm_error("PRED_AHB", {"Unexpected write to ", axs_reg.get_name(), " should not occur when fuse_update_enabled == 1!"})
                         send_cptra_sts_txn       = 1'b1;
                     end
                 end
@@ -1313,16 +1343,8 @@ class soc_ifc_predictor #(
                     end
                 end
                 "internal_fw_update_reset": begin
-                    if (ahb_txn.RnW == AHB_WRITE) begin
-                        if(data_active[p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_update_reset.core_rst.get_lsb_pos()]) begin
-                            //Send cptra status txn for uc rst asserted
-                            `uvm_info("FW_RST_DEBUG", "Sending cptra status txn for uc rst toggle due to fw upd reset", UVM_LOW)
-                            uc_rst_out_asserted = 1;
-                            populate_expected_cptra_status_txn(cptra_sb_ap_output_transaction);
-                            cptra_sb_ap.write(cptra_sb_ap_output_transaction);
-                            `uvm_info("PRED_AHB", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
-                        end
-                    end
+                    // Handled in callbacks via reg predictor
+                    `uvm_info("PRED_AHB", $sformatf("Handling access to register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
                 end
                 "internal_fw_update_reset_wait_cycles": begin
                     if (ahb_txn.RnW == AHB_WRITE) begin
@@ -1426,12 +1448,14 @@ class soc_ifc_predictor #(
                             this.wdt_error_intr_sent = 1'b0;
                         end
                         else if (wdt_independent) begin
-                            if (wdt_t1_timeout && data_active[`SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_LOW]) begin
-                                this.t1_count = 'h0;
+                            if (data_active[`SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_LOW]) begin
+                                if (wdt_t1_timeout)
+                                    this.t1_count = 'h0;
                                 this.wdt_error_intr_sent = 1'b0;
                             end
-                            if (wdt_t2_timeout && data_active[`SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_LOW]) begin
-                                this.t2_count = 'h0;
+                            if (data_active[`SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_LOW]) begin
+                                if (wdt_t2_timeout)
+                                    this.t2_count = 'h0;
                                 this.wdt_t2_error_intr_sent = 1'b0;
                             end
                         end
@@ -1621,6 +1645,11 @@ class soc_ifc_predictor #(
     if (!configuration.enable_reg_prediction) begin
         do_reg_prediction = 1'b0;
     end
+    // This is because of the RDC CLK GATE disablement...
+    else if (soc_ifc_rst_in_asserted) begin
+        do_reg_prediction = 1'b0;
+        soc_ifc_sb_apb_ap_output_transaction.rd_data = 0;
+    end
     else begin
         // Mailbox accesses are discarded based on valid_requester/valid_receiver
         // (i.e. PAUSER + state info)
@@ -1725,7 +1754,7 @@ class soc_ifc_predictor #(
                 if (apb_txn.read_or_write == APB3_TRANS_READ && apb_txn.slave_err) begin
                     do_reg_prediction = 1'b0;
                     // "Expected" read data is 0
-                    soc_ifc_sb_ahb_ap_output_transaction.data[0] = 0;
+                    soc_ifc_sb_apb_ap_output_transaction.rd_data = 0;
                 end
             end
             "MODE",
@@ -1738,7 +1767,7 @@ class soc_ifc_predictor #(
                     if (apb_txn.slave_err) begin
                         do_reg_prediction = 1'b0;
                         // "Expected" read data is 0
-                        soc_ifc_sb_ahb_ap_output_transaction.data[0] = 0;
+                        soc_ifc_sb_apb_ap_output_transaction.rd_data = 0;
                     end
                 end
             end
@@ -1746,7 +1775,7 @@ class soc_ifc_predictor #(
                 if (apb_txn.slave_err) begin
                     do_reg_prediction = 1'b0;
                     // "Expected" read data is 0
-                    soc_ifc_sb_ahb_ap_output_transaction.data[0] = 0;
+                    soc_ifc_sb_apb_ap_output_transaction.rd_data = 0;
                 end
             end
             "EXECUTE": begin
@@ -1757,7 +1786,7 @@ class soc_ifc_predictor #(
                     if (apb_txn.slave_err) begin
                         do_reg_prediction = 1'b0;
                         // "Expected" read data is 0
-                        soc_ifc_sb_ahb_ap_output_transaction.data[0] = 0;
+                        soc_ifc_sb_apb_ap_output_transaction.rd_data = 0;
                     end
                 end
             end
@@ -1767,7 +1796,7 @@ class soc_ifc_predictor #(
                 if (apb_txn.slave_err) begin
                     do_reg_prediction = 1'b0;
                     // "Expected" read data is 0
-                    soc_ifc_sb_ahb_ap_output_transaction.data[0] = 0;
+                    soc_ifc_sb_apb_ap_output_transaction.rd_data = 0;
                 end
             end
             "CONTROL": begin
@@ -1790,7 +1819,10 @@ class soc_ifc_predictor #(
     end
 
     // Calculate any other system effects from the register access
-    if (axs_reg == null) begin
+    if (soc_ifc_rst_in_asserted) begin
+        `uvm_info("PRED_APB", {"On access to register: ", axs_reg.get_full_name(), " reset is asserted, skipping system prediction"}, UVM_MEDIUM)
+    end
+    else if (axs_reg == null) begin
         `uvm_error("PRED_APB", $sformatf("APB transaction to address: 0x%x decodes to null from soc_ifc_APB_map", apb_txn.addr))
     end
     else begin
@@ -2113,43 +2145,91 @@ class soc_ifc_predictor #(
 //                end
             end
             "CPTRA_FUSE_WR_DONE": begin
-                if (apb_txn.wr_data != axs_reg.get() && apb_txn.read_or_write == APB3_TRANS_WRITE)
-                    `uvm_error("PRED_APB", $sformatf("APB transaction with data: 0x%x, write: %p, may not match reg model value: %x", apb_txn.wr_data, apb_txn.read_or_write, axs_reg.get()))
                 // Only expect a status transaction if this fuse download is occuring during boot sequence // FIXME
                 // Even after a warm reset, we expect a write to this register (although the write is dropped)
                 // When writing fuse done, if breakpoint is set we're going to wait state where noncore reset will be de-asserted
                 // SoC or JTAG would check for boot fsm to be in wait state before setting GO when ready to advance and bring uc out of reset
-                if (noncore_rst_out_asserted && (apb_txn.wr_data == 1/*FIXME hardcoded*/) && apb_txn.read_or_write == APB3_TRANS_WRITE) begin
+                if (p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs.boot_fuse &&
+                    apb_txn.wr_data[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FUSE_WR_DONE.done.get_lsb_pos()] &&
+                    apb_txn.read_or_write == APB3_TRANS_WRITE)
+                begin
                     //predict ready for fuses de-assertion
                     p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fuses.predict(1'b0);
-                    noncore_rst_out_asserted =  1'b0;
-                    uc_rst_out_asserted      =  bootfsm_breakpoint;
-                    send_soc_ifc_sts_txn = 1'b1;
-                    send_cptra_sts_txn       =  1'b1;
-                    fuse_update_enabled = 1'b0;
+                    if (bootfsm_breakpoint) begin
+                        // Similar logic should be tied to the fw_update_reset reg callback
+                        p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs = '{boot_wait: 1'b1, default: 1'b0};
+                        uc_rst_out_asserted = 1;
+                        `uvm_info("PRED_APB", $sformatf("Write to %s results in uc reset assertion and boot FSM state transition to %p", axs_reg.get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs), UVM_HIGH)
+                        fork
+                            begin
+                                fw_update_wait_count = p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_update_reset_wait_cycles.wait_cycles.get_mirrored_value();
+                                repeat(32'(p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_update_reset_wait_cycles.wait_cycles.get_mirrored_value())) begin
+                                    configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
+                                    if (fw_update_wait_count == 0)
+                                        `uvm_fatal("PRED_APB", "Decrement will underflow!")
+                                    fw_update_wait_count--;
+                                end
+                                if (!bootfsm_breakpoint) begin
+                                    cptra_sb_ap_output_transaction_t local_cptra_sb_ap_txn;
+                                    `uvm_info("PRED_APB", $sformatf("After expiration of fw_update reset counter, bootfsm_breakpoint is already cleared. Submitting transaction prediction immediately for state change."), UVM_HIGH)
+                                    predict_boot_wait_boot_done();
+                                    local_cptra_sb_ap_txn = cptra_sb_ap_output_transaction_t::type_id::create("local_cptra_sb_ap_txn");
+                                    populate_expected_cptra_status_txn(local_cptra_sb_ap_txn);
+                                    cptra_sb_ap.write(local_cptra_sb_ap_txn);
+                                    `uvm_info("PRED_APB", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
+                                end
+                                else begin
+                                    `uvm_info("PRED_APB", $sformatf("After expiration of fw_update reset counter, bootfsm_breakpoint is still set. Predicted state change and reset signal updates will be handled on BOOTFSM_GO."), UVM_HIGH)
+                                end
+                            end
+                        join_none
+                    end
+                    else begin
+                        p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs = '{boot_done: 1'b1, default: 1'b0};
+                        uc_rst_out_asserted = 0;
+                        `uvm_info("PRED_APB", $sformatf("Write to %s results in uc reset deassertion and boot FSM state transition to %p", axs_reg.get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs), UVM_HIGH)
+                    end
+                    noncore_rst_out_asserted = 1'b0;
+                    fuse_update_enabled      = 1'b0;
+                    send_soc_ifc_sts_txn     = 1'b1; // for ready_for_fuses
+                    send_cptra_sts_txn       = 1'b1; // for noncore rst
+                end
+                else begin
+                    `uvm_info("PRED_APB", $sformatf("Write to %s has no effect on boot FSM due to state [%p] breakpoint [%d] and txn type [%p]", axs_reg.get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs, bootfsm_breakpoint, apb_txn.read_or_write), UVM_FULL)
                 end
             end
             "CPTRA_BOOTFSM_GO": begin
                 // FIXME -- use reg predictor somehow?
                 //When uc reset is still asserted and we're writing to bootfsm go, expect uc to be brough out of reset
-                uvm_reg_data_t fuse_wr_done = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FUSE_WR_DONE.get();
+                bit setting_go = apb_txn.read_or_write == APB3_TRANS_WRITE &&
+                                 apb_txn.wr_data[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_BOOTFSM_GO.GO.get_lsb_pos()];
 
-                if (uc_rst_out_asserted &&
+                if (p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs.boot_wait &&
                     bootfsm_breakpoint &&
-                    apb_txn.read_or_write == APB3_TRANS_WRITE &&
-                    (apb_txn.wr_data[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_BOOTFSM_GO.GO.get_lsb_pos()])) begin
+                    setting_go) begin
 
-                    bootfsm_breakpoint = 1'b0;
-                    if (fuse_wr_done[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FUSE_WR_DONE.done.get_lsb_pos()]) begin
-                        noncore_rst_out_asserted = 1'b0;
-                        uc_rst_out_asserted      = 1'b0;
-                        send_cptra_sts_txn       = 1'b1;
+                    if (fw_update_wait_count == 0) begin
+                        `uvm_info("PRED_APB", $sformatf("Write to %s results in boot FSM state transition and uC reset deassertion", axs_reg.get_name()), UVM_MEDIUM)
+                        predict_boot_wait_boot_done();
+                        send_cptra_sts_txn = 1'b1;
+                    end
+                    else begin
+                        // State transition will be triggered in the thread spawned by CPTRA_FUSE_WR_DONE write instead
+                        `uvm_info("PRED_APB", $sformatf("Write to %s clears bootfsm_breakpoint, but state transition is delayed by %d cycles", axs_reg.get_name(), fw_update_wait_count), UVM_HIGH)
                     end
 
                 end
+                else begin
+                    `uvm_info("PRED_APB", $sformatf("Write to %s has no effect on boot FSM due to state [%p] breakpoint [%d] and 'setting_go' [%d]", axs_reg.get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs, bootfsm_breakpoint, setting_go), UVM_DEBUG)
+                end
+                bootfsm_breakpoint &= ~setting_go;
             end
             "CPTRA_DBG_MANUF_SERVICE_REG": begin
                 `uvm_info("PRED_APB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+            end
+            ["CPTRA_WDT_CFG[0]":"CPTRA_WDT_CFG[1]"],
+            ["CPTRA_RSVD_REG[0]":"CPTRA_RSVD_REG[3]"]: begin
+                `uvm_info("PRED_APB", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
             end
             ["fuse_uds_seed[0]" :"fuse_uds_seed[9]" ],
             ["fuse_uds_seed[10]":"fuse_uds_seed[11]"]: begin
@@ -2425,16 +2505,21 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
         sha_notif_intr_pending = 1'b0;
     end
 
+    // Check for uC reset changes (both transitions due to delay job
+    // scheduled from internal_fw_update_reset callback)
+    if (p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs.boot_wait && !uc_rst_out_asserted) begin
+        uc_rst_out_asserted = 1;
+        send_cptra_sts_txn = 1;
+    end
+    else if (p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs.boot_done && uc_rst_out_asserted) begin
+        uc_rst_out_asserted = 0;
+        send_cptra_sts_txn = 1;
+    end
+
     // Check for iccm unlock change
     if (iccm_locked && ~|p_soc_ifc_rm.soc_ifc_reg_rm.internal_iccm_lock.lock.get_mirrored_value()) begin
         `uvm_info("PRED_DLY", $sformatf("Detected de-assertion of ICCM LOCK"), UVM_LOW)
         iccm_locked = 0;
-        uc_rst_out_pend_val = 1;
-        send_cptra_sts_txn = 1;
-    end
-    else if (uc_rst_out_pend_val) begin
-        uc_rst_out_asserted = 0;
-        uc_rst_out_pend_val = 0;
         send_cptra_sts_txn = 1;
     end
 
@@ -2703,6 +2788,7 @@ endfunction
 
 //If WDT is enabled via reg write, emulate behavior here
 task soc_ifc_predictor::wdt_counter_task();
+    bit timer1_debug_flag, timer2_debug_flag;
     forever begin
         uvm_reg_data_t wdt_reg_data;
         logic wdt_t1_en;
@@ -2711,7 +2797,8 @@ task soc_ifc_predictor::wdt_counter_task();
         logic [63:0] wdt_t1_period, wdt_t2_period;
         bit wdt_t1_restart_temp;
 
-        cptra_sb_ap_output_transaction = cptra_sb_ap_output_transaction_t::type_id::create("cptra_sb_ap_output_transaction");
+        cptra_sb_ap_output_transaction_t local_cptra_sb_ap_txn;
+        local_cptra_sb_ap_txn = cptra_sb_ap_output_transaction_t::type_id::create("local_cptra_sb_ap_txn");
 
         //Poll for WDT enable bits
         wdt_reg_data = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER1_EN.timer1_en.get(); //_mirrored_value();
@@ -2735,7 +2822,7 @@ task soc_ifc_predictor::wdt_counter_task();
 
         //Reset event
         if (this.reset_wdt_count) begin
-            `uvm_info("PRED", "Resetting WDT t1 and t2 counts due to a reset event", UVM_MEDIUM)
+            `uvm_info("PRED_WDT", "Resetting WDT t1 and t2 counts due to a reset event", UVM_MEDIUM)
             this.t1_count = 'h0;
             this.t2_count = 'h0;
             this.wdt_error_intr_sent = 1'b0;
@@ -2747,16 +2834,18 @@ task soc_ifc_predictor::wdt_counter_task();
         if (cascade) begin
             if (this.wdt_t1_restart) begin
                 this.t1_count = 'h0;
-                `uvm_info("PRED", "Cascade mode, received t1 pet - restarting t1 count", UVM_MEDIUM)
+                `uvm_info("PRED_WDT", "Cascade mode, received t1 pet - restarting t1 count", UVM_MEDIUM)
                 this.wdt_t1_restart = 1'b0; //Reset flag so we can capture another restart event
             end
             else if (this.t1_count != wdt_t1_period) begin
                 this.t1_count++;
+                if (!($time % 500))
+                    `uvm_info("PRED_WDT", $sformatf("In cascade mode. t1_count increments to 0x%x, wdt_to_period is 0x%x", this.t1_count, wdt_t1_period), UVM_DEBUG)
             end
             else begin
                 //T1 expired, so send out soc error intr, and start t2 counter
                 if (!this.wdt_error_intr_sent) begin
-                    `uvm_info("PRED", "Timer1 expired in cascade mode. Starting timer2", UVM_MEDIUM)
+                    `uvm_info("PRED_WDT", "Timer1 expired in cascade mode. Starting timer2", UVM_MEDIUM)
                     p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.error_wdt_timer1_timeout_sts.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, p_soc_ifc_AHB_map);
                     
                     //Set a flag so we don't keep sending transactions while the timer holds value until interrupt
@@ -2765,20 +2854,22 @@ task soc_ifc_predictor::wdt_counter_task();
                 end
 
                 if (this.wdt_t2_restart) begin
-                    `uvm_error("PRED", "Cascade mode, received t2 pet - unexpected t2 pet!")
+                    `uvm_error("PRED_WDT", "Cascade mode, received t2 pet - unexpected t2 pet!")
                 end
                 else if (this.t2_count != wdt_t2_period) begin
                     this.t2_count++;
+                    if (!($time % 500))
+                        `uvm_info("PRED_WDT", $sformatf("In cascade mode. t2_count increments to 0x%x, wdt_to_period is 0x%x", this.t2_count, wdt_t2_period), UVM_DEBUG)
                 end
                 else begin
                     if (!this.wdt_nmi_intr_sent) begin
-                        `uvm_info("PRED", "Timer2 expired in cascade mode. Expecting NMI to be handled", UVM_MEDIUM);
+                        `uvm_info("PRED_WDT", "Timer2 expired in cascade mode. Expecting NMI to be handled", UVM_MEDIUM);
                         p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL.nmi_pin.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, p_soc_ifc_AHB_map); //TODO: use default map?
                         
                         //Sending cptra_status_txn in the same clock as NMI
                         nmi_intr_pending = 1'b1;
-                        populate_expected_cptra_status_txn(cptra_sb_ap_output_transaction);
-                        cptra_sb_ap.write(cptra_sb_ap_output_transaction);
+                        populate_expected_cptra_status_txn(local_cptra_sb_ap_txn);
+                        cptra_sb_ap.write(local_cptra_sb_ap_txn);
 
                         //Set a flag so we don't keep sending transactions while the timer holds value until interrupt
                         //is serviced or reset
@@ -2790,21 +2881,28 @@ task soc_ifc_predictor::wdt_counter_task();
         else if (independent) begin
             if (this.wdt_t1_restart) begin
                 this.t1_count = 'h0;
-                `uvm_info("PRED", "Independent mode, received t1 pet - restarting t1 count", UVM_MEDIUM)
+                `uvm_info("PRED_WDT", "Independent mode, received t1 pet - restarting t1 count", UVM_MEDIUM)
                 this.wdt_t1_restart = 1'b0; //Reset flag so we can capture another restart event
             end
             else if (this.t1_count != wdt_t1_period) begin
                 this.t1_count++;
+                if (!($time % 500))
+                    `uvm_info("PRED_WDT", $sformatf("In independent mode. t1_count increments to 0x%x, wdt_to_period is 0x%x", this.t1_count, wdt_t1_period), UVM_DEBUG)
             end
             else begin
-                //T1 expired, so send out soc error intr, and start t2 counter
+                //T1 expired, so send out soc error intr
                 if (!this.wdt_error_intr_sent) begin
-                    `uvm_info("PRED", "Independent mode, T1 expired", UVM_MEDIUM)
+                    `uvm_info("PRED_WDT", "Independent mode, T1 expired", UVM_MEDIUM)
                     p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.error_wdt_timer1_timeout_sts.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, p_soc_ifc_AHB_map);
                     
                     //Set a flag so we don't keep sending transactions while the timer holds value until interrupt
                     //is serviced or reset
                     this.wdt_error_intr_sent = 1'b1;
+                    timer1_debug_flag = 0;
+                end
+                else if (!timer1_debug_flag) begin
+                    `uvm_info("PRED_WDT", "Independent mode, T1 expired, but wdt_error_intr_sent is already set!", UVM_DEBUG)
+                    timer1_debug_flag = 1;
                 end
             end
             //-------------------------------------------------
@@ -2812,49 +2910,76 @@ task soc_ifc_predictor::wdt_counter_task();
             //-------------------------------------------------
             if (this.wdt_t2_restart) begin
                 this.t2_count = 'h0;
-                `uvm_info("PRED", "Independent mode, received t2 pet - restarting t2 count", UVM_MEDIUM)
+                `uvm_info("PRED_WDT", "Independent mode, received t2 pet - restarting t2 count", UVM_MEDIUM)
                 this.wdt_t2_restart = 1'b0; //Reset flag so we can capture another restart event
             end
             else if (this.t2_count != wdt_t2_period) begin
                 this.t2_count++;
+                if (!($time % 500))
+                    `uvm_info("PRED_WDT", $sformatf("In independent mode. t2_count increments to 0x%x, wdt_to_period is 0x%x", this.t2_count, wdt_t2_period), UVM_DEBUG)
             end
             else begin
-                //T1 expired, so send out soc error intr, and start t2 counter
+                //T2 expired, so send out soc error intr
                 if (!this.wdt_t2_error_intr_sent) begin
-                    `uvm_info("PRED", "Independent mode, T2 expired", UVM_MEDIUM)
+                    `uvm_info("PRED_WDT", "Independent mode, T2 expired", UVM_MEDIUM)
                     p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.error_wdt_timer2_timeout_sts.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, p_soc_ifc_AHB_map);
                     
                     //Set a flag so we don't keep sending transactions while the timer holds value until interrupt
                     //is serviced or reset
                     this.wdt_t2_error_intr_sent = 1'b1;
+                    timer2_debug_flag = 0;
+                end
+                else if (!timer2_debug_flag) begin
+                    `uvm_info("PRED_WDT", "Independent mode, T2 expired, but wdt_t2_error_intr_sent is already set!", UVM_DEBUG)
+                    timer2_debug_flag = 1;
                 end
             end
 
         end //Independent mode
 
         configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
+        // Hit an issue where this task would make predictions and schedule delay jobs before poll_and_run_delay_jobs() had
+        // kicked off the current cycle's jobs - so delay jobs (to intr pins) were not being delayed.
+        // Stall until after the task poll_and_run_delay_jobs has already forked delay jobs before reentering wdt loop and predicting new updates
+        uvm_wait_for_nba_region();
 
     end //forever
 endtask
 
 
-function bit soc_ifc_predictor::soc_ifc_status_txn_expected_after_warm_reset();
+function bit soc_ifc_predictor::soc_ifc_status_txn_expected_after_noncore_reset();
+    /* FIXME calculate all of these from the reg-model somehow? */
+    return ready_for_fw_push || ready_for_runtime || mailbox_data_avail || |generic_output_wires /*|| trng_req_pending*/; /* only expect a soc_ifc_status_transaction if some signal will transition */
+endfunction
+
+function bit soc_ifc_predictor::cptra_status_txn_expected_after_noncore_reset();
     /* FIXME calculate this from the reg-model somehow? */
-    return p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fuses.get_mirrored_value() || ready_for_fw_push || ready_for_runtime || mailbox_data_avail || |generic_output_wires /*|| trng_req_pending*/; /* only expect a soc_ifc_status_transaction if some signal will transition */
+    // NOTE: Interrupt signals deasserting (due to reset) will not result in a
+    //       status transaction, because only interrupt rising edges are detected
+    return !noncore_rst_out_asserted ||
+           !uc_rst_out_asserted      ||
+           iccm_locked               ||
+           |nmi_vector;
+endfunction
+
+function bit soc_ifc_predictor::soc_ifc_status_txn_expected_after_warm_reset();
+    // Most soc_ifc_status signals are actually reset by the noncore reset assertion (later)
+    // instead of the cptra_rst_b
+    return p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fuses.get_mirrored_value();
 endfunction
 
 function bit soc_ifc_predictor::cptra_status_txn_expected_after_warm_reset();
-    /* FIXME calculate this from the reg-model somehow? */
-    return !noncore_rst_out_asserted                                                                      ||
-           !uc_rst_out_asserted                                                                           ||
-//           p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value() ||
-//           p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value() ||
-//           sha_err_intr_pending                                                                           ||
-//           sha_notif_intr_pending                                                                         ||
-//           timer_intr_pending                                                                             ||
-//           nmi_intr_pending                                                                               ||
-           iccm_locked                                                                                    ||
-           |nmi_vector;
+    // NOTE: Almost all (maybe all?) cptra_status signals persists across warm reset
+    //       until it cascades into the assertion of noncore reset.
+    return 0;
+endfunction
+
+function bit soc_ifc_predictor::soc_ifc_status_txn_expected_after_cold_reset();
+    return soc_ifc_status_txn_expected_after_warm_reset() || soc_ifc_status_txn_expected_after_noncore_reset(); /* all resets are expected in conjunction with cold */
+endfunction
+
+function bit soc_ifc_predictor::cptra_status_txn_expected_after_cold_reset();
+    return cptra_status_txn_expected_after_warm_reset() || cptra_status_txn_expected_after_noncore_reset(); /* all resets are expected in conjunction with cold */
 endfunction
 
 function bit soc_ifc_predictor::valid_requester(input uvm_transaction txn);
@@ -2894,7 +3019,7 @@ function bit soc_ifc_predictor::valid_requester(input uvm_transaction txn);
         return valid_requester;
     end
     else begin
-        `uvm_error("PRED", "valid_requester received invalid transaction - cannot cast as AHB or APB!")
+        `uvm_error("PRED_VALID_REQ", "valid_requester received invalid transaction - cannot cast as AHB or APB!")
         valid_requester = 0;
         return valid_requester;
     end
@@ -2943,7 +3068,7 @@ function bit soc_ifc_predictor::valid_receiver(input uvm_transaction txn);
         return valid_receiver;
     end
     else begin
-        `uvm_error("PRED", "valid_receiver received invalid transaction - cannot cast as AHB or APB!")
+        `uvm_error("PRED_VALID_RCV", "valid_receiver received invalid transaction - cannot cast as AHB or APB!")
         valid_receiver = 0;
         return valid_receiver;
     end
@@ -2984,10 +3109,16 @@ function bit soc_ifc_predictor::sha_valid_user(input uvm_transaction txn);
         return sha_valid_user;
     end
     else begin
-        `uvm_error("PRED", "sha_valid_user received invalid transaction - cannot cast as AHB or APB!")
+        `uvm_error("PRED_VALID_SHA", "sha_valid_user received invalid transaction - cannot cast as AHB or APB!")
         sha_valid_user = 0;
         return sha_valid_user;
     end
+endfunction
+
+function void soc_ifc_predictor::predict_boot_wait_boot_done();
+    p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs = '{boot_done: 1'b1, default: 1'b0};
+    noncore_rst_out_asserted = 1'b0;
+    uc_rst_out_asserted      = 1'b0;
 endfunction
 
 task soc_ifc_predictor::handle_reset(input string kind = "HARD");
@@ -3004,76 +3135,150 @@ task soc_ifc_predictor::handle_reset(input string kind = "HARD");
         `uvm_fatal("SOC_IFC_PRED", "Failed to retrieve triggered reset_flag")
     if (kind_handled != kind_predicted)
         `uvm_error("SOC_IFC_PRED", $sformatf("handle_reset called with different reset type [%s] than was processed in predictor [%s]!", kind_handled.get_name(), kind_predicted.get_name()))
-    reset_predicted.reset();
 endtask
 
 function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
     uvm_reg all_regs[$];
+    reset_flag last_predicted_kind = null;
 
-    `uvm_info("SOC_IFC_PRED", $sformatf("Predicting reset of kind: %p", kind), UVM_LOW)
+    `uvm_info("PRED_RESET", $sformatf("Predicting reset of kind: %p", kind), UVM_LOW)
+
+    // Monitor the assertion of internal resets, which assert instantly for HARD reset
+    // but are delayed slightly from SOFT resets
+    if (kind == "HARD") begin: IMMEDIATE_INTERNAL_RESET_ASSERTION
+        `uvm_info("PRED_RESET", $sformatf("Reset prediction of kind: %p results in immediate assertion of internal resets", kind), UVM_MEDIUM)
+        noncore_rst_out_asserted = 1'b1;
+        uc_rst_out_asserted = 1'b1;
+        rdc_clk_gate_active = 1'b1;
+    end
+    else if (kind == "SOFT") begin
+        fork
+            begin: DELAY_INTERNAL_RESET_ASSERTION
+            cptra_sb_ap_output_transaction_t local_cptra_sb_ap_txn;
+            soc_ifc_sb_ap_output_transaction_t local_soc_ifc_sb_ap_txn;
+            bit send_soc_ifc_sts_txn = soc_ifc_status_txn_expected_after_noncore_reset();
+
+            // Do the noncore reset
+            `uvm_info("PRED_RESET", $sformatf("Reset prediction of kind: %p results in assertion of internal resets after a delay", kind), UVM_MEDIUM)
+            configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(3); // FIXME, correct delay value?
+            predict_reset("NONCORE");
+
+            // Send predicted transactions
+            if (1) begin
+                local_cptra_sb_ap_txn = cptra_sb_ap_output_transaction_t::type_id::create("local_cptra_sb_ap_txn");
+                populate_expected_cptra_status_txn(local_cptra_sb_ap_txn);
+                cptra_sb_ap.write(local_cptra_sb_ap_txn);
+                `uvm_info("PRED_RESET", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
+            end
+            if (send_soc_ifc_sts_txn) begin
+                local_soc_ifc_sb_ap_txn = soc_ifc_sb_ap_output_transaction_t::type_id::create("local_soc_ifc_sb_ap_txn");
+                populate_expected_soc_ifc_status_txn(local_soc_ifc_sb_ap_txn);
+                soc_ifc_sb_ap.write(local_soc_ifc_sb_ap_txn);
+                `uvm_info("PRED_RESET", "Transaction submitted through soc_ifc_sb_ap", UVM_MEDIUM)
+            end
+            end: DELAY_INTERNAL_RESET_ASSERTION
+        join_none
+    end
+    else if (kind == "NONCORE") begin: IMMEDIATE_INTERNAL_RESET_DEASSERTION
+        `uvm_info("PRED_RESET", $sformatf("Reset prediction of kind: %p results in assertion of internal resets", kind), UVM_MEDIUM)
+        noncore_rst_out_asserted = 1'b1;
+        uc_rst_out_asserted = 1'b1;
+        rdc_clk_gate_active = 1'b1;
+    end
+
+    // Track the BOOT FSM internally
+    if (kind inside {"HARD", "SOFT"}) begin: BOOT_FSM_THREAD
+        p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs = '{boot_idle: 1'b1, default: 1'b0};
+        // schedule the delayed transition to next state
+        // Wait for the reset deassertion transactions to be detected, indicating
+        // BOOT FSM can progress and subsequent
+        fork
+            begin
+                `uvm_info("PRED_RESET", $sformatf("Reset prediction of kind: %p will result in state change after reset deasserts. Wait for cptra_rst_b==1...", kind), UVM_MEDIUM)
+                while (last_predicted_kind != soft_reset_flag) begin
+                    uvm_object obj_predicted;
+                    reset_predicted.wait_ptrigger_data(obj_predicted);
+                    reset_predicted.wait_off();
+                    $cast(last_predicted_kind,obj_predicted);
+                    `uvm_info("PRED_RESET", $sformatf("After reset_predicted was cleared, last predicted kind was: %s", last_predicted_kind.get_name()), UVM_MEDIUM)
+                end
+                p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs = '{boot_fuse: 1'b1, default: 1'b0};
+                `uvm_info("PRED_RESET", $sformatf("After detecting warm reset deassertion, boot FSM state change predicted: [%p]", p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs), UVM_MEDIUM)
+                // NOTE: Next progression is triggered by write to CPTRA_FUSE_WR_DONE
+            end
+        join_none
+    end
 
     // Predict value changes due to reset
-    soc_ifc_rst_in_asserted = 1'b1;
-    noncore_rst_out_asserted = 1'b1;
-    uc_rst_out_asserted = 1'b1;
-    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fuses.predict(1'b0);
+    fw_update_wait_count = 0;
+
+    if (kind inside {"HARD", "SOFT"}) begin: RESET_VAL_CHANGES_HARD_SOFT
+        soc_ifc_rst_in_asserted = 1'b1;
+        p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fuses.predict(1'b0);
+
+        cptra_error_fatal = 1'b0;
+        cptra_error_non_fatal = 1'b0;
+    end: RESET_VAL_CHANGES_HARD_SOFT
+
+    // Signals that are tied to reg values are not reset by warm reset until it
+    // propagates to the internal resets
     // FIXME: Do a reg-model reset and then extract these from the reg_model???
-    ready_for_fw_push = 1'b0;
-    ready_for_runtime = 1'b0;
-    nmi_vector = '0;
-    iccm_locked = 1'b0;
-    mailbox_data_avail = 1'b0;
-    soc_ifc_error_intr_pending = 1'b0;
-    soc_ifc_notif_intr_pending = 1'b0;
-    sha_err_intr_pending = 1'b0;
-    sha_notif_intr_pending = 1'b0;
+    if (kind inside {"HARD", "NONCORE"}) begin: RESET_VAL_CHANGES_HARD_NONCORE
+        ready_for_fw_push = 1'b0;
+        ready_for_runtime = 1'b0;
+        nmi_vector = '0;
+        iccm_locked = 1'b0;
+        mailbox_data_avail = 1'b0;
+        soc_ifc_error_intr_pending = 1'b0;
+        soc_ifc_notif_intr_pending = 1'b0;
+        sha_err_intr_pending = 1'b0;
+        sha_notif_intr_pending = 1'b0;
 
-    cptra_error_fatal = 1'b0;
-    cptra_error_non_fatal = 1'b0;
+        generic_output_wires = '0;
 
-    generic_output_wires = '0;
+        //WDT
+        nmi_intr_pending = 1'b0; //Reset nmi_intr on reset assertion
+        reset_wdt_count = 1'b1;
 
-    //WDT
-    nmi_intr_pending = 1'b0; //Reset nmi_intr on reset assertion
-    reset_wdt_count = 1'b1;
+        // FIXME get rid of this variable?
+        mbox_valid_users        = '{p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[0].PAUSER.get_reset(kind),
+                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[1].PAUSER.get_reset(kind),
+                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[2].PAUSER.get_reset(kind),
+                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[3].PAUSER.get_reset(kind),
+                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[4].PAUSER.get_reset(kind),
+                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[0].PAUSER.get_reset(kind)/*This entry is for the non-programmable default value */};
+        mbox_valid_users_locked =  {p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[0].LOCK.get_reset(kind),
+                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[1].LOCK.get_reset(kind),
+                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[2].LOCK.get_reset(kind),
+                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[3].LOCK.get_reset(kind),
+                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[4].LOCK.get_reset(kind)};
 
-    // FIXME get rid of this variable?
-    mbox_valid_users        = '{p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[0].PAUSER.get_reset(kind),
-                                p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[1].PAUSER.get_reset(kind),
-                                p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[2].PAUSER.get_reset(kind),
-                                p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[3].PAUSER.get_reset(kind),
-                                p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[4].PAUSER.get_reset(kind),
-                                p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[0].PAUSER.get_reset(kind)/*This entry is for the non-programmable default value */};
-    mbox_valid_users_locked =  {p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[0].LOCK.get_reset(kind),
-                                p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[1].LOCK.get_reset(kind),
-                                p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[2].LOCK.get_reset(kind),
-                                p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[3].LOCK.get_reset(kind),
-                                p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[4].LOCK.get_reset(kind)};
+        trng_data_req = 1'b0;
 
-    trng_data_req = 1'b0;
+        // Mailbox 'step' represents how the current transaction affects the mailbox
+        // flow, and is used for coverage.
+        if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_idle)
+            next_step = '{null_action: 1'b1, default: 1'b0};
+        else
+            next_step = '{reset: 1'b1, default: 1'b0};
+        fork
+            begin
+            // This allows coverage subscriber to observe both prev_step and next_step before the transition
+            uvm_wait_for_nba_region();
+            prev_step = next_step;
+            end
+        join_none
 
-    // Mailbox 'step' represents how the current transaction affects the mailbox
-    // flow, and is used for coverage.
-    if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_idle)
-        next_step = '{null_action: 1'b1, default: 1'b0};
-    else
-        next_step = '{reset: 1'b1, default: 1'b0};
-    fork
-        begin
-        // This allows coverage subscriber to observe both prev_step and next_step before the transition
-        uvm_wait_for_nba_region();
-        prev_step = next_step;
-        end
-    join_none
+        datain_count = 0;
+        dataout_count = 0;
 
-    if (kind == "HARD") begin
+    end: RESET_VAL_CHANGES_HARD_NONCORE
+
+    if (kind == "HARD") begin: RESET_VAL_CHANGES_HARD
         cptra_pwrgood_asserted = 1'b0;
         timer_intr_pending = 1'b1;
         fuse_update_enabled = 1'b1; // Fuses only latch new values from APB write after a cold-reset (which clears CPTRA_FUSE_WR_DONE)
-    end
-
-    datain_count = 0;
-    dataout_count = 0;
+    end: RESET_VAL_CHANGES_HARD
 
     // TODO clear the delay_jobs queue?
 
@@ -3081,28 +3286,26 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
     // FIXME SOFT reset is not fully defined for our reg-model yet
     // FIXME move this to env?
     p_soc_ifc_rm.reset(kind);
-    // If any reg access was in progress when reset occurred, clear the busy
-    // flag (since the APB/AHB sequencers and any mailbox sequences were killed)
-    p_soc_ifc_rm.get_registers(all_regs, UVM_HIER);
-    foreach (all_regs[ii]) begin
-        if (all_regs[ii].is_busy()) begin
-            `uvm_info("SOC_IFC_PRED", $sformatf("After resetting the reg-model, found a busy reg: [%s]. Resetting the busy bit.", all_regs[ii].get_full_name()), UVM_FULL)
-            // TODO: This is not in the official API, and the 'reset' function doesn't
-            //       automatically clear busy. Not sure how to do this properly
-            all_regs[ii].Xset_busyX(0);
-        end
-    end
 
+    if (kind inside {"HARD","NONCORE"}) begin: RESET_REG_BUSY_NONCORE_HARD
+        // If any reg access was in progress when reset occurred, clear the busy
+        // flag (since the APB/AHB sequencers and any mailbox sequences were killed).
+        // We don't run this for warm/soft resets because cptra_rst_b doesn't immediately
+        // reset the AHB interface, so pending transactions might still complete.
+        p_soc_ifc_rm.get_registers(all_regs, UVM_HIER);
+        foreach (all_regs[ii]) begin
+            if (all_regs[ii].is_busy()) begin
+                `uvm_info("PRED_RESET", $sformatf("After resetting the reg-model, found a busy reg: [%s]. Resetting the busy bit.", all_regs[ii].get_full_name()), UVM_FULL)
+                // TODO: This is not in the official API, and the 'reset' function doesn't
+                //       automatically clear busy. Not sure how to do this properly
+                all_regs[ii].Xset_busyX(0);
+            end
+        end
+    end: RESET_REG_BUSY_NONCORE_HARD
+
+    // TODO skip key reset for SOFT reset type?
     soc_ifc_status_txn_key = 0;
     cptra_status_txn_key = 0;
-endfunction
-
-function bit soc_ifc_predictor::soc_ifc_status_txn_expected_after_cold_reset();
-    return soc_ifc_status_txn_expected_after_warm_reset(); /* warm reset is expected in conjunction with cold */
-endfunction
-
-function bit soc_ifc_predictor::cptra_status_txn_expected_after_cold_reset();
-    return cptra_status_txn_expected_after_warm_reset(); /* warm reset is expected in conjunction with cold */
 endfunction
 
 function bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] soc_ifc_predictor::get_expected_obf_field_entropy();
@@ -3139,6 +3342,7 @@ endfunction
 function void soc_ifc_predictor::populate_expected_cptra_status_txn(ref cptra_sb_ap_output_transaction_t txn);
     txn.noncore_rst_asserted       = this.noncore_rst_out_asserted;
     txn.uc_rst_asserted            = this.uc_rst_out_asserted;
+    txn.fw_update_rst_window       = 1'b0; /* FIXME*/
     txn.soc_ifc_err_intr_pending   = this.soc_ifc_error_intr_pending;
     txn.soc_ifc_notif_intr_pending = this.soc_ifc_notif_intr_pending;
     txn.sha_err_intr_pending       = this.sha_err_intr_pending;

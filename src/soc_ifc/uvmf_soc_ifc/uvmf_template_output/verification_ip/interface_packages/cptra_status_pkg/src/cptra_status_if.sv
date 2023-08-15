@@ -35,6 +35,7 @@
 //
 // .dut_signal_port(cptra_status_bus.cptra_noncore_rst_b), // Agent output 
 // .dut_signal_port(cptra_status_bus.cptra_uc_rst_b), // Agent output 
+// .dut_signal_port(cptra_status_bus.fw_update_rst_window), // Agent output 
 // .dut_signal_port(cptra_status_bus.cptra_obf_key_reg), // Agent output 
 // .dut_signal_port(cptra_status_bus.obf_field_entropy), // Agent output 
 // .dut_signal_port(cptra_status_bus.obf_uds_seed), // Agent output 
@@ -57,6 +58,7 @@ interface  cptra_status_if
   input tri dummy,
   inout tri  cptra_noncore_rst_b,
   inout tri  cptra_uc_rst_b,
+  inout tri  fw_update_rst_window,
   inout tri [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg,
   inout tri [`CLP_OBF_FE_DWORDS-1:0][31:0] obf_field_entropy,
   inout tri [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed,
@@ -76,6 +78,7 @@ modport monitor_port
   input dummy,
   input cptra_noncore_rst_b,
   input cptra_uc_rst_b,
+  input fw_update_rst_window,
   input cptra_obf_key_reg,
   input obf_field_entropy,
   input obf_uds_seed,
@@ -95,6 +98,7 @@ modport initiator_port
   input dummy,
   output cptra_noncore_rst_b,
   output cptra_uc_rst_b,
+  output fw_update_rst_window,
   output cptra_obf_key_reg,
   output obf_field_entropy,
   output obf_uds_seed,
@@ -114,6 +118,7 @@ modport responder_port
   input dummy,  
   input cptra_noncore_rst_b,
   input cptra_uc_rst_b,
+  input fw_update_rst_window,
   input cptra_obf_key_reg,
   input obf_field_entropy,
   input obf_uds_seed,

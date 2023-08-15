@@ -70,6 +70,7 @@ typedef struct packed  { \
   bit timer_intr_pending ; \
   bit noncore_rst_asserted ; \
   bit uc_rst_asserted ; \
+  bit fw_update_rst_window ; \
   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg ; \
   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] obf_field_entropy ; \
   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] obf_uds_seed ; \
@@ -89,6 +90,7 @@ typedef struct packed  { \
             this.timer_intr_pending , \
             this.noncore_rst_asserted , \
             this.uc_rst_asserted , \
+            this.fw_update_rst_window , \
             this.cptra_obf_key_reg , \
             this.obf_field_entropy , \
             this.obf_uds_seed , \
@@ -109,6 +111,7 @@ typedef struct packed  { \
             this.timer_intr_pending , \
             this.noncore_rst_asserted , \
             this.uc_rst_asserted , \
+            this.fw_update_rst_window , \
             this.cptra_obf_key_reg , \
             this.obf_field_entropy , \
             this.obf_uds_seed , \
@@ -131,6 +134,7 @@ typedef struct packed  { \
   bit timer_intr_pending ; \
   bit noncore_rst_asserted ; \
   bit uc_rst_asserted ; \
+  bit fw_update_rst_window ; \
   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg ; \
   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] obf_field_entropy ; \
   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] obf_uds_seed ; \
@@ -150,6 +154,7 @@ typedef struct packed  { \
            this.timer_intr_pending , \
            this.noncore_rst_asserted , \
            this.uc_rst_asserted , \
+           this.fw_update_rst_window , \
            this.cptra_obf_key_reg , \
            this.obf_field_entropy , \
            this.obf_uds_seed , \
@@ -170,6 +175,7 @@ typedef struct packed  { \
            this.timer_intr_pending , \
            this.noncore_rst_asserted , \
            this.uc_rst_asserted , \
+           this.fw_update_rst_window , \
            this.cptra_obf_key_reg , \
            this.obf_field_entropy , \
            this.obf_uds_seed , \
@@ -192,6 +198,7 @@ typedef struct packed  { \
   bit timer_intr_pending ; \
   bit noncore_rst_asserted ; \
   bit uc_rst_asserted ; \
+  bit fw_update_rst_window ; \
   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg ; \
   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] obf_field_entropy ; \
   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] obf_uds_seed ; \
@@ -211,6 +218,7 @@ typedef struct packed  { \
            this.timer_intr_pending , \
            this.noncore_rst_asserted , \
            this.uc_rst_asserted , \
+           this.fw_update_rst_window , \
            this.cptra_obf_key_reg , \
            this.obf_field_entropy , \
            this.obf_uds_seed , \
@@ -231,6 +239,7 @@ typedef struct packed  { \
            this.timer_intr_pending , \
            this.noncore_rst_asserted , \
            this.uc_rst_asserted , \
+           this.fw_update_rst_window , \
            this.cptra_obf_key_reg , \
            this.obf_field_entropy , \
            this.obf_uds_seed , \

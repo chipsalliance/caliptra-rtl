@@ -86,6 +86,7 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_en_r_base extends uvm_reg_cbs
             delay_job.en_reg  = en_reg;
             delay_job.sts_glb = sts_glb;
             delay_job.en_glb  = en_glb;
+            delay_job.grab_values();
             delay_jobs.push_back(delay_job);
         end
         // On falling edge of field value, check if the interrupt output pin will
@@ -99,6 +100,7 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_en_r_base extends uvm_reg_cbs
             delay_job.en_reg  = en_reg;
             delay_job.sts_glb = sts_glb;
             delay_job.en_glb  = en_glb;
+            delay_job.grab_values();
             delay_jobs.push_back(delay_job);
         end
         else begin
