@@ -141,7 +141,7 @@ always_comb begin
 
             //reset flags
             fsm_synch_uc_rst_b = '0;
-            fsm_synch_noncore_rst_b = '0;
+            fsm_synch_noncore_rst_b = '1;
             fsm_iccm_unlock = '0;
             wait_count_decr = 0;
             wait_count_rst = 0;

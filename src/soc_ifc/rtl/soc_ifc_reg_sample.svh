@@ -980,6 +980,56 @@
         end
     endfunction
 
+    /*----------------------- SOC_IFC_REG__CPTRA_WDT_CFG SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__CPTRA_WDT_CFG::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(TIMEOUT_bit_cg[bt]) this.TIMEOUT_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[31:0]/*TIMEOUT*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__CPTRA_WDT_CFG::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(TIMEOUT_bit_cg[bt]) this.TIMEOUT_bit_cg[bt].sample(TIMEOUT.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( TIMEOUT.get_mirrored_value()   );
+        end
+    endfunction
+
+    /*----------------------- SOC_IFC_REG__CPTRA_RSVD_REG SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__CPTRA_RSVD_REG::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(RSVD_bit_cg[bt]) this.RSVD_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[31:0]/*RSVD*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__CPTRA_RSVD_REG::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(RSVD_bit_cg[bt]) this.RSVD_bit_cg[bt].sample(RSVD.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( RSVD.get_mirrored_value()   );
+        end
+    endfunction
+
     /*----------------------- SOC_IFC_REG__FUSE_UDS_SEED SAMPLE FUNCTIONS -----------------------*/
     function void soc_ifc_reg__fuse_uds_seed::sample(uvm_reg_data_t  data,
                                                    uvm_reg_data_t  byte_en,

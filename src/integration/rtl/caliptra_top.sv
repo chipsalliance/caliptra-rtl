@@ -188,6 +188,8 @@ module caliptra_top
     logic [6:0]                 cptra_uncore_dmi_reg_addr;
     logic [31:0]                cptra_uncore_dmi_reg_wdata;
     security_state_t            cptra_security_state_Latched;
+    security_state_t            cptra_security_state_Latched_d;
+    security_state_t            cptra_security_state_Latched_f;
     logic                       cptra_dmi_reg_en_preQ;
     
     logic                       fw_update_rst_window;
@@ -243,10 +245,11 @@ module caliptra_top
     logic clear_obf_secrets;
     logic clear_secrets;
     
-    logic cptra_security_state_captured, scan_mode_f, scan_mode_switch;
-    logic debugUnlock_or_scan_mode_switch, clear_obf_secrets_debugScanQ, cptra_scan_mode_Latched, debug_lock_to_unlock_switch;
-    var security_state_t security_state_f;
-    
+    logic cptra_security_state_captured;
+    logic scan_mode_switch;
+    logic debug_lock_or_scan_mode_switch, clear_obf_secrets_debugScanQ, debug_lock_switch;
+    logic cptra_scan_mode_Latched, cptra_scan_mode_Latched_d, cptra_scan_mode_Latched_f;
+
     logic [TOTAL_OBF_KEY_BITS-1:0]        cptra_obf_key_dbg;
     logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy_dbg;
     logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed_dbg;
@@ -594,44 +597,47 @@ el2_veer_wrapper rvtop (
     // Security State value captured on a Caliptra reset deassertion (0->1 signal transition)
     always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
         if (~cptra_noncore_rst_b) begin
-            cptra_security_state_Latched <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; //Setting the default value to be debug locked and in production mode
-            security_state_f <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; //Setting the default value to be debug locked and in production mode
+            cptra_security_state_Latched_d <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; //Setting the default value to be debug locked and in production mode
+            cptra_security_state_Latched_f <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1};
+
             cptra_security_state_captured <= 0;
         end
         else if(!cptra_security_state_captured) begin
-            cptra_security_state_Latched <= security_state;
-            cptra_scan_mode_Latched <= scan_mode;
+            cptra_security_state_Latched_d <= security_state;
             cptra_security_state_captured <= 1;
         end
         else begin
-            // Latched State is different than flopped value of security state
-            // Latched State is used if we want to open the JTAG and is
-            // determined to do so only at reset exit time
-            // Asset flushing happens 'anytime' switch happens for safe side
-            //security_state_f  <= security_state;
-            security_state_f  <= security_state;
+            cptra_security_state_Latched_f <= cptra_security_state_Latched_d;
         end
     end
 
     always_ff @(posedge clk or negedge cptra_pwrgood) begin
         if (~cptra_pwrgood) begin
-            scan_mode_f <= '0;
+            cptra_scan_mode_Latched_d <= '0;
+            cptra_scan_mode_Latched_f <= '0;
         end
         else begin
-            scan_mode_f  <= scan_mode;
+            cptra_scan_mode_Latched_d <= scan_mode;
+            cptra_scan_mode_Latched_f <= cptra_scan_mode_Latched_d;
         end
     end
 
-        
-
+    //Lock debug unless both flops are unlocked
+    assign cptra_security_state_Latched.debug_locked = cptra_security_state_Latched_d.debug_locked | cptra_security_state_Latched_f.debug_locked;
+    //Pass on the latched value of device lifecycle
+    assign cptra_security_state_Latched.device_lifecycle = cptra_security_state_Latched_d.device_lifecycle;
+    //Only assert scan mode once both flops have set
+    assign cptra_scan_mode_Latched = cptra_scan_mode_Latched_d & cptra_scan_mode_Latched_f;
+    
     // When scan mode goes from 0->1, generate a pulse to clear the assets
     // Note that when scan goes to '1, Caliptra state as well as SOC state
     // gets messed up. So switch to scan is destructive (obvious! Duh!)
-    assign scan_mode_switch = ~scan_mode_f & scan_mode;
-    // 1->0 transition (Debug locked to unlocked)
-    assign debug_lock_to_unlock_switch = security_state_f.debug_locked & ~security_state.debug_locked;
-    assign debugUnlock_or_scan_mode_switch = debug_lock_to_unlock_switch | scan_mode_switch;
-    assign clear_obf_secrets_debugScanQ = clear_obf_secrets | debugUnlock_or_scan_mode_switch | cptra_error_fatal;
+    assign scan_mode_switch = cptra_scan_mode_Latched_d & ~cptra_scan_mode_Latched_f;
+    // Detect transition of debug mode
+    assign debug_lock_switch = cptra_security_state_Latched_d.debug_locked ^ cptra_security_state_Latched_f.debug_locked;
+    assign debug_lock_or_scan_mode_switch = debug_lock_switch | scan_mode_switch | cptra_error_fatal;
+
+    assign clear_obf_secrets_debugScanQ = clear_obf_secrets | cptra_in_debug_scan_mode | cptra_error_fatal;
 
 //=========================================================================-
 // Clock gating instance
@@ -762,7 +768,7 @@ sha512_ctrl #(
 
     .error_intr(sha512_error_intr),
     .notif_intr(sha512_notif_intr),
-    .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch)
+    .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
 );
 
 sha256_ctrl #(
@@ -785,11 +791,11 @@ sha256_ctrl #(
 
     .error_intr(sha256_error_intr),
     .notif_intr(sha256_notif_intr),
-    .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch)
+    .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
 );
 
 //override device secrets with debug values in Debug or Scan Mode
-always_comb cptra_in_debug_scan_mode = ~security_state.debug_locked | scan_mode;
+always_comb cptra_in_debug_scan_mode = ~cptra_security_state_Latched.debug_locked | cptra_scan_mode_Latched;
 always_comb cptra_obf_key_dbg     = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_OBF_KEY : cptra_obf_key_reg;
 always_comb obf_uds_seed_dbg      = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_UDS_SEED : obf_uds_seed;
 always_comb obf_field_entropy_dbg = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_FIELD_ENTROPY : obf_field_entropy;
@@ -820,7 +826,7 @@ doe_ctrl #(
     .clear_obf_secrets(clear_obf_secrets), //Output
     .kv_write (kv_write[KV_NUM_WRITE-1]),
     .kv_wr_resp (kv_wr_resp[KV_NUM_WRITE-1]),
-    .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch)
+    .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
     
 );
 
@@ -852,7 +858,7 @@ ecc_top1
 
     .error_intr      (ecc_error_intr),
     .notif_intr      (ecc_notif_intr),
-    .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch)
+    .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
 );
 
 hmac_ctrl #(
@@ -879,7 +885,7 @@ hmac_ctrl #(
 
      .error_intr(hmac_error_intr),
      .notif_intr(hmac_notif_intr),
-     .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch)
+     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
 
 );
 
@@ -905,7 +911,8 @@ key_vault1
     .hreadyout_o          (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hreadyout),
     .hrdata_o             (responder_inst[`CALIPTRA_SLAVE_SEL_KV].hrdata),
 
-    .debugUnlock_or_scan_mode_switch (debugUnlock_or_scan_mode_switch | cptra_error_fatal),
+    .cptra_in_debug_scan_mode(cptra_in_debug_scan_mode),
+    .debugUnlock_or_scan_mode_switch (debug_lock_or_scan_mode_switch),
 
     .kv_read              (kv_read),
     .kv_write             (kv_write),
@@ -1175,7 +1182,7 @@ soc_ifc_top1
     .mailbox_data_avail(mailbox_data_avail),
     .mailbox_flow_done(mailbox_flow_done),
 
-    .security_state(security_state),
+    .security_state(cptra_security_state_Latched),
     
     .BootFSM_BrkPoint (BootFSM_BrkPoint),
     
@@ -1226,7 +1233,7 @@ soc_ifc_top1
     .timer_intr(timer_int),
     //Obfuscated UDS and FE
     .clear_obf_secrets(clear_obf_secrets_debugScanQ), //input - includes debug & scan modes to do the register clearing
-    .scan_mode_f(scan_mode_f),
+    .scan_mode_f(cptra_scan_mode_Latched),
     .cptra_obf_key(cptra_obf_key),
     .cptra_obf_key_reg(cptra_obf_key_reg),
     .obf_field_entropy(obf_field_entropy),
