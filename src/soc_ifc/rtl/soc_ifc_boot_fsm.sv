@@ -73,7 +73,7 @@ logic cptra_rst_window,cptra_rst_window_f;
 logic cptra_rst_window_2f, cptra_rst_window_3f, cptra_rst_window_4f;
 
 //move to fuse state when SoC de-asserts reset
-always_comb arc_BOOT_IDLE_BOOT_FUSE = (boot_fsm_ps == BOOT_IDLE) & ~cptra_rst_window_f;
+always_comb arc_BOOT_IDLE_BOOT_FUSE = (boot_fsm_ps == BOOT_IDLE) & ~cptra_rst_window_2f;
 //move from fuse state to done when fuse done register is set OR
 //if it was already set (since its locked across warm reset), that the write was observed from SOC
 always_comb arc_BOOT_FUSE_BOOT_DONE = fuse_done & fuse_wr_done_observed;
