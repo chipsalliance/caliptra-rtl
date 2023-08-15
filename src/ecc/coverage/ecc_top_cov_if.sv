@@ -39,6 +39,8 @@ interface ecc_top_cov_if
     logic pubkeyx_input_outofrange;
     logic pubkeyy_input_outofrange;
     logic pubkey_input_invalid;
+    logic pcr_sign_input_invalid;
+    logic keygen_process;
     logic signing_process;
     logic verifying_process;
 
@@ -96,6 +98,8 @@ interface ecc_top_cov_if
     assign pubkeyx_input_outofrange = ecc_top.ecc_dsa_ctrl_i.pubkeyx_input_outofrange;
     assign pubkeyy_input_outofrange = ecc_top.ecc_dsa_ctrl_i.pubkeyy_input_outofrange;
     assign pubkey_input_invalid = ecc_top.ecc_dsa_ctrl_i.pubkey_input_invalid;
+    assign pcr_sign_input_invalid = ecc_top.ecc_dsa_ctrl_i.pcr_sign_input_invalid;
+    assign keygen_process = ecc_top.ecc_dsa_ctrl_i.keygen_process;
     assign signing_process = ecc_top.ecc_dsa_ctrl_i.signing_process;
     assign verifying_process = ecc_top.ecc_dsa_ctrl_i.verifying_process;
 
@@ -119,6 +123,7 @@ interface ecc_top_cov_if
         pubkeyx_input_outofrange_cp: coverpoint pubkeyx_input_outofrange;
         pubkeyy_input_outofrange_cp: coverpoint pubkeyy_input_outofrange;
         pubkey_input_invalid_cp: coverpoint pubkey_input_invalid;
+        pcr_sign_input_invalid_cp: coverpoint pcr_sign_input_invalid;
 
         cmd_ready_cp: cross ecc_sw_cmd, ready;
         cmd_kv_cp: cross ecc_cmd, dest_keyvault;
@@ -128,6 +133,8 @@ interface ecc_top_cov_if
         zeroize_cmd_cp: cross zeroize, ecc_cmd;
         zeroize_error_cp: cross zeroize, error_flag;
         zeroize_ready_cp: cross ready, zeroize;
+        pcr_sign_input_invalid_cmd_cp: cross error_flag, ecc_cmd;
+        error_keygen_cp: cross error_flag, keygen_process;
         error_signing_cp: cross error_flag, signing_process;
         error_verifying_cp: cross error_flag, verifying_process;
 

@@ -51,6 +51,7 @@ module ecc_add_sub_mod_alter #(
     logic                  carry0_reg;
 
     logic                  carry1;
+    logic [1 : 0]          push_result_reg;
 
     ecc_adder #(
         .RADIX(REG_SIZE)
@@ -84,21 +85,30 @@ module ecc_add_sub_mod_alter #(
         if(!reset_n) begin
             r0_reg <= '0;
             carry0_reg <= '0;
-            ready_o <= 1'b0;
         end
         else if (zeroize) begin
             r0_reg <= '0;
             carry0_reg <= '0;
-            ready_o <= 1'b0;
         end
         else if (add_en_i) begin 
             r0_reg <= r0;
             carry0_reg <= carry0;
-            ready_o <= 1'b0;
         end
-        else
-            ready_o <= 1'b1;
     end
+
+    // Determines when results are ready
+    always_ff @(posedge clk or negedge reset_n) begin
+        if (!reset_n)
+            push_result_reg <= 2'b0;
+        else if (zeroize)
+            push_result_reg <= 2'b0;
+        else if (add_en_i)
+            push_result_reg <= 2'b10;
+        else // one shift to right
+            push_result_reg <= (push_result_reg >> 1);
+    end
+
+    assign ready_o = push_result_reg[0];
 
     assign res_o = sub_n ? (carry0_reg ^ carry1)? r1 : r0 : (carry0_reg) ? r0 : r1;
     
