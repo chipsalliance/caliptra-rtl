@@ -106,7 +106,6 @@ always_comb arc_BOOT_WAIT_BOOT_DONE = (wait_count == '0) & ~(BootFSM_BrkPoint & 
 
 always_comb begin
     boot_fsm_ns = boot_fsm_ps;
-    ready_for_fuses = '0;
     fw_upd_rst_executed = '0;
     fsm_synch_noncore_rst_b = '0;
     fsm_iccm_unlock = '0;
@@ -137,7 +136,6 @@ always_comb begin
                     boot_fsm_ns = BOOT_DONE;
                 end
             end
-            ready_for_fuses = 1'b1;
 
             //reset flags
             fsm_synch_uc_rst_b = '0;
@@ -196,7 +194,6 @@ always_comb begin
         end
         default: begin
             boot_fsm_ns = boot_fsm_ps;
-            ready_for_fuses = '0;
             fw_upd_rst_executed = '0;
             fsm_synch_noncore_rst_b = '0;
             fsm_iccm_unlock = '0;
@@ -244,18 +241,27 @@ assign cptra_uc_rst_b = cptra_uc_rst_b_nq | scan_mode;
 always_ff @(posedge clk or negedge cptra_rst_b) begin
     if (~cptra_rst_b) begin
         cptra_rst_window <= '1;
-        wait_count <= '0;
         iccm_unlock <= 0;
     end
     else begin
         cptra_rst_window <= 0;
-
-        wait_count <= (wait_count_decr && (wait_count != '0)) ? wait_count - 1 :
-                                               wait_count_rst ? fw_update_rst_wait_cycles :
-                                                                wait_count ;
         iccm_unlock <= fsm_iccm_unlock;
     end
 end
+
+always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
+    if (~cptra_noncore_rst_b) begin
+        ready_for_fuses <= '0;
+        wait_count <= '0;
+    end
+    else begin
+        ready_for_fuses <= (boot_fsm_ps == BOOT_FUSE);
+        wait_count <= (wait_count_decr && (wait_count != '0)) ? wait_count - 1 :
+                                               wait_count_rst ? fw_update_rst_wait_cycles :
+                                                                wait_count ;
+    end
+end
+
 
 //Check for x prop
 `CALIPTRA_ASSERT_KNOWN(ERR_FSM_ARC_X, {arc_BOOT_FUSE_BOOT_DONE, arc_BOOT_DONE_BOOT_FWRST, arc_BOOT_WAIT_BOOT_DONE}, clk, cptra_rst_b)
