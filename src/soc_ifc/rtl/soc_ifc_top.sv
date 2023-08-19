@@ -195,6 +195,7 @@ logic pwrgood_toggle_hint;
 logic Warm_Reset_Capture_Flag;
 
 logic BootFSM_BrkPoint_Latched;
+logic BootFSM_BrkPoint_valid;
 logic BootFSM_BrkPoint_Flag;
 
 logic dmi_inc_rdptr;
@@ -243,7 +244,7 @@ soc_ifc_boot_fsm i_soc_ifc_boot_fsm (
     .fuse_done(soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value),
     .fuse_wr_done_observed(fuse_wr_done_reg_write_observed),
 
-    .BootFSM_BrkPoint(BootFSM_BrkPoint_Latched),
+    .BootFSM_BrkPoint(BootFSM_BrkPoint_valid),
     .BootFSM_Continue(soc_ifc_reg_hwif_out.CPTRA_BOOTFSM_GO.GO.value),
 
     .cptra_noncore_rst_b(cptra_noncore_rst_b), //goes to all other blocks
@@ -269,7 +270,7 @@ apb_slv_sif #(
 i_apb_slv_sif_soc_ifc (
     //AMBA APB INF
     .PCLK(soc_ifc_clk_cg),
-    .PRESETn(cptra_rst_b),
+    .PRESETn(cptra_noncore_rst_b),
     .PADDR(paddr_i),
     .PPROT('0),
     .PSEL(psel_i),
@@ -464,18 +465,20 @@ logic cptra_in_dbg_or_manuf_mode;
 assign cptra_in_dbg_or_manuf_mode = ~(security_state.debug_locked) | 
                                      ((security_state.debug_locked) & (security_state.device_lifecycle == DEVICE_MANUFACTURING));
 
-always_ff @(posedge rdc_clk_cg or negedge cptra_rst_b) begin
-    if (~cptra_rst_b) begin
+always_ff @(posedge rdc_clk_cg or negedge cptra_noncore_rst_b) begin
+    if (~cptra_noncore_rst_b) begin
         BootFSM_BrkPoint_Latched <= 0;
         BootFSM_BrkPoint_Flag <= 0;
     end
     // Breakpoint value captured on a Caliptra reset deassertion (0->1 signal transition) and is reset on BootFSM_Continue is set
     // BootFSM_Continue's reset value is zero
     else if(!BootFSM_BrkPoint_Flag) begin
-        BootFSM_BrkPoint_Latched <= BootFSM_BrkPoint & cptra_in_dbg_or_manuf_mode;
+        BootFSM_BrkPoint_Latched <= BootFSM_BrkPoint;
         BootFSM_BrkPoint_Flag <= 1;
     end
 end
+
+assign BootFSM_BrkPoint_valid = BootFSM_BrkPoint_Latched & cptra_in_dbg_or_manuf_mode;
 
 // pwrgood_hint informs if the powergood toggled
 always_ff @(posedge rdc_clk_cg or negedge cptra_pwrgood) begin
@@ -488,8 +491,8 @@ always_ff @(posedge rdc_clk_cg or negedge cptra_pwrgood) begin
      end
 end
 
-always_ff @(posedge rdc_clk_cg or negedge cptra_rst_b) begin
-    if (~cptra_rst_b) begin
+always_ff @(posedge rdc_clk_cg or negedge cptra_noncore_rst_b) begin
+    if (~cptra_noncore_rst_b) begin
         Warm_Reset_Capture_Flag <= 0;
     end
     else if(!Warm_Reset_Capture_Flag) begin
@@ -563,8 +566,8 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_PAUSER_LOCK.LOCK.swwel = soc_ifc_reg_
 // Can't write to RW-able fuses once fuse_done is set (implies the register is being locked using the fuse_wr_done)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-always_ff @(posedge soc_ifc_clk_cg or negedge cptra_rst_b) begin
-    if(~cptra_rst_b) begin
+always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
+    if(~cptra_noncore_rst_b) begin
         fuse_wr_done_reg_write_observed <= 0;
     end
     else begin
@@ -978,7 +981,7 @@ always_ff @(posedge rdc_clk_cg or negedge cptra_pwrgood) begin
     end
 end
 
-`CALIPTRA_ASSERT_KNOWN(ERR_AHB_INF_X, {hreadyout_o,hresp_o}, clk, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(ERR_AHB_INF_X, {hreadyout_o,hresp_o}, clk, cptra_noncore_rst_b)
 //this generates an NMI in the core, but we don't have a handler so it just hangs
-`CALIPTRA_ASSERT_NEVER(ERR_SOC_IFC_AHB_ERR, hresp_o, clk, cptra_rst_b)
+`CALIPTRA_ASSERT_NEVER(ERR_SOC_IFC_AHB_ERR, hresp_o, clk, cptra_noncore_rst_b)
 endmodule

@@ -151,15 +151,18 @@ always_comb begin : keyvault_ctrl
         key_entry_ctrl_we[entry] = '0;
         key_entry_dest_valid_next[entry] = '0; 
         key_entry_last_dword_next[entry] = '0;
-        for (int client = 0; client < KV_NUM_WRITE; client++) begin
-            key_entry_ctrl_we[entry] |= (kv_write[client].write_entry == entry) & kv_write[client].write_en; 
-            key_entry_dest_valid_next[entry] |= kv_write[client].write_en & (kv_write[client].write_entry == entry) ? kv_write[client].write_dest_valid : '0;
-            //store the final offset on the last write cycle, we'll use that to signal last dword on reads
-            key_entry_last_dword_next[entry] |= kv_write[client].write_en & (kv_write[client].write_entry == entry) ? kv_write[client].write_offset : '0;
-        end 
+
         //Qualify lock signals as they are on fw upd reset and create RDC violations if allowed to reset asynchronously
         lock_wr_q[entry] = kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value & ~fw_update_rst_window;
         lock_use_q[entry] = kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value & ~fw_update_rst_window;
+        
+        for (int client = 0; client < KV_NUM_WRITE; client++) begin
+            key_entry_ctrl_we[entry] |= (kv_write[client].write_entry == entry) & kv_write[client].write_en & 
+                                        ~lock_wr_q[entry] & ~lock_use_q[entry]; 
+            key_entry_dest_valid_next[entry] |= (kv_write[client].write_entry == entry) & kv_write[client].write_en ? kv_write[client].write_dest_valid : '0;
+            //store the final offset on the last write cycle, we'll use that to signal last dword on reads
+            key_entry_last_dword_next[entry] |= (kv_write[client].write_entry == entry) & kv_write[client].write_en ? kv_write[client].write_offset : '0;
+        end 
         //once lock is set, only reset can unset it
         kv_reg_hwif_in.KEY_CTRL[entry].lock_wr.swwel = lock_wr_q[entry];
         kv_reg_hwif_in.KEY_CTRL[entry].lock_use.swwel = lock_use_q[entry];
@@ -167,9 +170,9 @@ always_comb begin : keyvault_ctrl
         kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.hwclr = key_entry_clear[entry];
         kv_reg_hwif_in.KEY_CTRL[entry].last_dword.hwclr = key_entry_clear[entry];
 
-        kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.we = key_entry_ctrl_we[entry];
+        kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.we = key_entry_ctrl_we[entry] & ~key_entry_clear[entry];
         kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.next = key_entry_dest_valid_next[entry];
-        kv_reg_hwif_in.KEY_CTRL[entry].last_dword.we = key_entry_ctrl_we[entry];
+        kv_reg_hwif_in.KEY_CTRL[entry].last_dword.we = key_entry_ctrl_we[entry] & ~key_entry_clear[entry];
         kv_reg_hwif_in.KEY_CTRL[entry].last_dword.next = key_entry_last_dword_next[entry];
     end
 
@@ -189,7 +192,7 @@ always_comb begin : keyvault_ctrl
                 key_entry_next[entry][dword] |= flush_keyvault ? debug_value :
                                                 kv_write[client].write_en & (kv_write[client].write_entry == entry) ? kv_write[client].write_data : '0;
             end
-            kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.we = key_entry_we[entry][dword];
+            kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.we = key_entry_we[entry][dword] & ~key_entry_clear[entry];
             kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.next = key_entry_next[entry][dword];
             kv_reg_hwif_in.KEY_ENTRY[entry][dword].data.hwclr = key_entry_clear[entry];
         end

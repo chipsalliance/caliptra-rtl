@@ -121,17 +121,43 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
           IDX_SOC_IFC_ENV_MBOX_DIR_READ                 := 100
       };
   }
+  constraint disable_long_env_seqs_c {
+      !(rand_seq_idx inside {IDX_SOC_IFC_ENV_MBOX_RAND_LARGE,
+                             IDX_SOC_IFC_ENV_MBOX_MAX,
+                             IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_LARGE,
+                             IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_MEDIUM,
+                             IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_LARGE,
+                             IDX_SOC_IFC_ENV_MBOX_DLEN_INVALID,
+                             IDX_SOC_IFC_ENV_MBOX_DLEN_OVERFLOW_LARGE,
+                             IDX_SOC_IFC_ENV_MBOX_DLEN_UNDERFLOW_LARGE,
+                             IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_LARGE,
+                             IDX_SOC_IFC_ENV_MBOX_MULTI_AGENT});
+  }
   constraint iter_count_c {
       iteration_count inside {[1:10]};
+  }
+  constraint iter_count_short_c {
+      iteration_count < 5;
   }
 
   function new(string name = "" );
     super.new(name);
     reg_model = top_configuration.soc_ifc_subenv_config.soc_ifc_rm;
+    // The short test suite is used in promote pipeline to quickly check for UVM issues
+    if ($test$plusargs("CLP_SHORT_SUITE")) begin
+        this.disable_long_env_seqs_c.constraint_mode(1);
+        this.iter_count_short_c.constraint_mode(1);
+    end
+    else begin
+        this.disable_long_env_seqs_c.constraint_mode(0);
+        this.iter_count_short_c.constraint_mode(0);
+    end
+    // Users can manually override the number of random iterations to any desired value
     if ($value$plusargs("CALIPTRA_TOP_RAND_ITER=%0d", iteration_count)) begin
         `uvm_info("CALIPTRA_TOP_RAND_TEST", $sformatf("Received Command Line Iteration Count Argument of %0d", iteration_count), UVM_LOW);
         iteration_count.rand_mode(0);
         this.iter_count_c.constraint_mode(0);
+        this.iter_count_short_c.constraint_mode(0);
     end
     else begin
         if (!this.randomize(iteration_count))

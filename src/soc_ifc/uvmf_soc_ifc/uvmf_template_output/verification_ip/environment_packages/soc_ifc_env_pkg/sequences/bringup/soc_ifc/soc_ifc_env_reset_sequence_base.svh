@@ -36,7 +36,8 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
   caliptra_apb_user apb_user_obj;
 
   typedef struct packed {
-      bit set_bootfsm_breakpoint;
+      bit              set_bootfsm_breakpoint;
+      security_state_t security_state;
   } ctrl_reset_seq_context_t;
 
   rand uvm_reg_data_t uds_seed_rand      [12];
@@ -75,6 +76,7 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     else
         `uvm_error("SOC_IFC_RST", "soc_ifc_ctrl_agent_config.sequencer is null!")
     ctx.set_bootfsm_breakpoint = soc_ifc_ctrl_seq.set_bootfsm_breakpoint;
+    ctx.security_state         = soc_ifc_ctrl_seq.security_state;
 
   endtask
 
@@ -95,16 +97,18 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
         end
     join_none
 
-    wait(sts_rsp_count > 0);
-    `uvm_info("SOC_IFC_RST", "Received response from status agent", UVM_MEDIUM)
-    if (sts_rsp_count > 1)
-        `uvm_error("SOC_IFC_RST", "Missed response activity during reset sequence")
-    fuse_ready = soc_ifc_status_agent_rsp_seq.rsp.ready_for_fuses;
-    sts_rsp_count--;
-    if (!fuse_ready)
-        `uvm_error("SOC_IFC_RST", "Unexpected status transition while waiting for Mailbox readiness for fuses")
-    else
-        `uvm_info("SOC_IFC_RST", "Fuse ready, initiating fuse download", UVM_LOW)
+    while (!fuse_ready) begin
+        wait(sts_rsp_count > 0);
+        `uvm_info("SOC_IFC_RST", "Received response from status agent", UVM_MEDIUM)
+        if (sts_rsp_count > 1)
+            `uvm_error("SOC_IFC_RST", "Missed response activity during reset sequence")
+        fuse_ready = soc_ifc_status_agent_rsp_seq.rsp.ready_for_fuses;
+        sts_rsp_count--;
+        if (!fuse_ready)
+            `uvm_info("SOC_IFC_RST", "Received status transition while waiting for Mailbox ready_for_fuses, ready_for_fuses still not set", UVM_MEDIUM)
+        else
+            `uvm_info("SOC_IFC_RST", "Fuse ready, initiating fuse download", UVM_LOW)
+    end
 
     // Write UDS
     if (this.fuses_to_set.uds) begin
@@ -164,10 +168,12 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     data_check = BOOT_WAIT << reg_model.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.boot_fsm_ps.get_lsb_pos();
 
     // If set_bootfsm_breakpoint is randomized to 1, we need to release bootfsm by writing GO
-    if (ctrl_rst_ctx.set_bootfsm_breakpoint) begin
+    // bootfsm_breakpoint is qualified by debug mode and device_lifecycle, so incorporate that here
+    if (ctrl_rst_ctx.set_bootfsm_breakpoint && (!ctrl_rst_ctx.security_state.debug_locked || (ctrl_rst_ctx.security_state.debug_locked && ctrl_rst_ctx.security_state.device_lifecycle == DEVICE_MANUFACTURING))) begin
       //Poll boot status until we are in FSM state BOOT_WAIT
       reg_model.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.read(sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
       while ((data & data_mask) != data_check) begin
+        configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(20);
         reg_model.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.read(sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
       end
       `uvm_info("SOC_IFC_RST", "BootFSM Breakpoint is set, writing GO", UVM_MEDIUM)
@@ -175,7 +181,7 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
       `uvm_info("SOC_IFC_RST", $sformatf("Write to BootFSM GO completed, status: %p", sts), UVM_MEDIUM)
     end
     else begin
-        `uvm_info("SOC_IFC_RST", "BootFSM Breakpoint not set, reset sequence complete", UVM_MEDIUM)
+        `uvm_info("SOC_IFC_RST", "BootFSM Breakpoint not set (or disabled based on security_state), reset sequence complete", UVM_MEDIUM)
     end
 
   endtask

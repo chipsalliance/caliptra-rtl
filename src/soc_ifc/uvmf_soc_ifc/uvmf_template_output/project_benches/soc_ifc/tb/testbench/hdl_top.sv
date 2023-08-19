@@ -146,7 +146,7 @@ import uvmf_base_pkg_hdl::*;
         .soc_ifc_clk_cg    (clk               ),
         .rdc_clk_cg        (clk               ),
         .rdc_clk_dis (),
-        .fw_update_rst_window (),
+        .fw_update_rst_window (cptra_status_agent_bus.fw_update_rst_window),
         .cptra_pwrgood     (soc_ifc_ctrl_agent_bus.cptra_pwrgood     ),
         .cptra_rst_b       (soc_ifc_ctrl_agent_bus.cptra_rst_b       ),
         .ready_for_fuses   (soc_ifc_status_agent_bus.ready_for_fuses   ),

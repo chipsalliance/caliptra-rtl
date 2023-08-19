@@ -61,39 +61,39 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_global_intr_en_r_base extends uvm_reg_cb
         end
         `uvm_info("SOC_IFC_REG_CBS", $sformatf("Access to %s with path %p", fld.get_full_name(), path), UVM_FULL)
 
-        // On rising edge of field value, check if the interrupt output pin will
-        // transition to high.
-        // Global interrupt pin "agg_sts" is non-sticky
-        if ((value & ~previous) &&
-            |( en_reg.get_mirrored_value() &
-              sts_reg.get_mirrored_value()) &&
-            ~sts_glb.get_mirrored_value())
-        begin
-            `uvm_info("SOC_IFC_REG_CBS", {"Predicted update to ", fld.get_name(), " triggers interrupt output pin assertion"}, UVM_MEDIUM)
-            sts_glb.predict(1'b1);
-        end
-        // On falling edge of field value, check if the interrupt output pin will
-        // transition from high to low.
-        // Global interrupt pin "agg_sts" is non-sticky
-        else if ((~value & previous) &&
-                 sts_glb.get_mirrored_value())
-        begin
-            `uvm_info("SOC_IFC_REG_CBS", {"Predicted update to ", fld.get_name(), " triggers interrupt output pin deassertion"}, UVM_MEDIUM)
-            sts_glb.predict(1'b0);
-        end
-        else begin
-            `uvm_info("SOC_IFC_REG_CBS",
-                      $sformatf("Write to %s with value %0d does not trigger interrupt output transition due to %s: [0x%x], %s: [0x%x], and %s: [%x]",
-                                fld.get_name(),
-                                value,
-                                en_reg.get_name(),
-                                en_reg.get_mirrored_value(),
-                                sts_reg.get_name(),
-                                sts_reg.get_mirrored_value(),
-                                sts_glb.get_name(),
-                                sts_glb.get_mirrored_value()),
-                      UVM_HIGH)
-        end
+//        // On rising edge of field value, check if the interrupt output pin will
+//        // transition to high.
+//        // Global interrupt pin "agg_sts" is non-sticky
+//        if ((value & ~previous) &&
+//            |( en_reg.get_mirrored_value() &
+//              sts_reg.get_mirrored_value()) &&
+//            ~sts_glb.get_mirrored_value())
+//        begin
+//            `uvm_info("SOC_IFC_REG_CBS", {"Predicted update to ", fld.get_name(), " triggers interrupt output pin assertion"}, UVM_MEDIUM)
+//            sts_glb.predict(1'b1);
+//        end
+//        // On falling edge of field value, check if the interrupt output pin will
+//        // transition from high to low.
+//        // Global interrupt pin "agg_sts" is non-sticky
+//        else if ((~value & previous) &&
+//                 sts_glb.get_mirrored_value())
+//        begin
+//            `uvm_info("SOC_IFC_REG_CBS", {"Predicted update to ", fld.get_name(), " triggers interrupt output pin deassertion"}, UVM_MEDIUM)
+//            sts_glb.predict(1'b0);
+//        end
+//        else begin
+//            `uvm_info("SOC_IFC_REG_CBS",
+//                      $sformatf("Write to %s with value %0d does not trigger interrupt output transition due to %s: [0x%x], %s: [0x%x], and %s: [%x]",
+//                                fld.get_name(),
+//                                value,
+//                                en_reg.get_name(),
+//                                en_reg.get_mirrored_value(),
+//                                sts_reg.get_name(),
+//                                sts_reg.get_mirrored_value(),
+//                                sts_glb.get_name(),
+//                                sts_glb.get_mirrored_value()),
+//                      UVM_HIGH)
+//        end
     endfunction
 
 endclass

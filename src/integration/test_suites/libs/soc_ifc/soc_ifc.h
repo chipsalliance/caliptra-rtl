@@ -98,6 +98,7 @@ inline uint32_t soc_ifc_mbox_dir_read_dataout_single(uint32_t rdptr) {
     return lsu_read_32(0x30000000 + rdptr);
 }
 void soc_ifc_clear_execute_reg();
+uint8_t soc_ifc_chk_execute_uc();
 void soc_ifc_set_mbox_status_field(enum mbox_status_e field);
 void soc_ifc_set_flow_status_field(uint32_t field);
 void soc_ifc_clr_flow_status_field(uint32_t field);

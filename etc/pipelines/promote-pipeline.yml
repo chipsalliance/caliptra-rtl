@@ -109,7 +109,7 @@ stages:
             - enabled: true
             - configspec_name: 'integration_lib'
             - dut: 'uvmf_soc_ifc'
-            - sim_args: '+CLP_REGRESSION +CLP_SEQ=soc_ifc_env_top_mbox_rand_small_sequence'
+            - sim_args: '+CLP_REGRESSION +CLP_SHORT_SUITE +CLP_SEQ=soc_ifc_env_top_mbox_rand_small_sequence +CLP_SEQ=soc_ifc_env_top_mbox_rst_warm_rand_medium_sequence +CLP_SEQ=soc_ifc_env_cptra_init_interrupts_sequence +CLP_SEQ=soc_ifc_env_top_mbox_reg_axs_invalid_medium_sequence'
             - path: '${WORKSPACE}/Caliptra/src/soc_ifc/stimulus/testsuites/uvmf_soc_ifc_promote_regression.yml'
             - timeout: 1440
 
@@ -124,7 +124,7 @@ stages:
             - enabled: true
             - configspec_name: 'integration_lib'
             - dut: 'uvmf_caliptra_top'
-            - sim_args: '+CLP_REGRESSION +CLP_SEQ=soc_ifc_env_mbox_rand_small_sequence'
+            - sim_args: '+CLP_REGRESSION +CLP_SHORT_SUITE +CLP_SEQ=soc_ifc_env_mbox_rand_small_sequence +CLP_SEQ=soc_ifc_env_mbox_rst_warm_rand_medium_sequence +CLP_SEQ=CLP_RERUN_FW_INIT +CLP_SEQ=soc_ifc_env_mbox_rand_medium_interference_sequence +CLP_SEQ=soc_ifc_env_mbox_fw_upd_sequence'
             - path: '${WORKSPACE}/Caliptra/src/integration/stimulus/testsuites/uvmf_caliptra_top_promote_regression.yml'
             - timeout: 1440
 
