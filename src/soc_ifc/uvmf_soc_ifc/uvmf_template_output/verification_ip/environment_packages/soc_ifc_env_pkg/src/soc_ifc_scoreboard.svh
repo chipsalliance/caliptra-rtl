@@ -208,7 +208,7 @@ class soc_ifc_scoreboard #(
     soc_ifc_status_monitor_s soc_ifc_status_monitor_struct_rpt = '{default:0};
 
     `uvm_info("SCBD_SOC_IFC_STS", $sformatf("Transaction Received through expected_analysis_export with key: [%0d]", t.get_key()), UVM_MEDIUM)
-    `uvm_info("SCBD_SOC_IFC_STS", {"            Data: ",t.convert2string()}, UVM_FULL)
+    `uvm_info("SCBD_SOC_IFC_STS", {"            Data: ",t.convert2string()}, UVM_HIGH)
 
     soc_ifc_expected_hash[t.get_key()] = t;
     soc_ifc_status_monitor_struct_prev = soc_ifc_status_monitor_struct;
@@ -240,7 +240,7 @@ class soc_ifc_scoreboard #(
   virtual function void write_expected_cptra_analysis_export(cptra_status_transaction t);
     // pragma uvmf custom expected_cptra_analysis_export_scoreboard begin
     `uvm_info("SCBD_CPTRA_STS", $sformatf("Transaction Received through expected_cptra_analysis_export with key: [%0d]", t.get_key()), UVM_MEDIUM)
-    `uvm_info("SCBD_CPTRA_STS", {"            Data: ",t.convert2string()}, UVM_FULL)
+    `uvm_info("SCBD_CPTRA_STS", {"            Data: ",t.convert2string()}, UVM_HIGH)
 
     cptra_expected_hash[t.get_key()] = t;
     if (reset_handled.is_on()) begin
@@ -263,7 +263,7 @@ class soc_ifc_scoreboard #(
     bit txn_eq;
 
     `uvm_info("SCBD_SOC_IFC_STS", $sformatf("Transaction Received through actual_analysis_export with key: [%0d]", t.get_key()), UVM_MEDIUM)
-    `uvm_info("SCBD_SOC_IFC_STS", {"            Data: ",t.convert2string()}, UVM_FULL)
+    `uvm_info("SCBD_SOC_IFC_STS", {"            Data: ",t.convert2string()}, UVM_HIGH)
 
     // Check for expected analysis port to receive first transaction after a reset before proceeding with the actual check
     // This indicates the environment level reset is finished and the predictor had time to forward an expected
@@ -379,7 +379,7 @@ class soc_ifc_scoreboard #(
     bit txn_eq;
 
     `uvm_info("SCBD_CPTRA_STS", $sformatf("Transaction Received through actual_cptra_analysis_export with key: [%0d]", t.get_key()), UVM_MEDIUM)
-    `uvm_info("SCBD_CPTRA_STS", {"            Data: ",t.convert2string()}, UVM_FULL)
+    `uvm_info("SCBD_CPTRA_STS", {"            Data: ",t.convert2string()}, UVM_HIGH)
 
     // Check for expected analysis port to receive first transaction after a reset before proceeding with the actual check
     if (reset_handled.is_on())
@@ -419,7 +419,7 @@ class soc_ifc_scoreboard #(
       `uvm_fatal("SCBD_AHB","Cast from mvc_sequence_item_base to ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) in write_expected_ahb_analysis_export failed!")
     end
     `uvm_info("SCBD_AHB", "Transaction Received through expected_ahb_analysis_export", UVM_MEDIUM)
-    `uvm_info("SCBD_AHB",{"            Data: ",t.convert2string()}, UVM_FULL)
+    `uvm_info("SCBD_AHB",{"            Data: ",t.convert2string()}, UVM_HIGH)
 
     ahb_expected_q.push_back(t);
 
@@ -440,7 +440,7 @@ class soc_ifc_scoreboard #(
       `uvm_fatal("SCBD_APB","Cast from mvc_sequence_item_base to apb3_host_apb3_transaction #(apb5_master_0_params::APB3_SLAVE_COUNT, apb5_master_0_params::APB3_PADDR_BIT_WIDTH, apb5_master_0_params::APB3_PWDATA_BIT_WIDTH, apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) in write_expected_apb_analysis_export failed!")
     end
     `uvm_info("SCBD_APB", "Transaction Received through expected_apb_analysis_export", UVM_MEDIUM)
-    `uvm_info("SCBD_APB",{"            Data: ",t.convert2string()}, UVM_FULL)
+    `uvm_info("SCBD_APB",{"            Data: ",t.convert2string()}, UVM_HIGH)
 
     apb_expected_q.push_back(t);
 
@@ -463,7 +463,7 @@ class soc_ifc_scoreboard #(
       `uvm_fatal("SCBD_AHB","Cast from mvc_sequence_item_base to ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) in write_actual_ahb_analysis_export failed!")
     end
     `uvm_info("SCBD_AHB", "Transaction Received through actual_ahb_analysis_export", UVM_MEDIUM)
-    `uvm_info("SCBD_AHB",{"            Data: ",t.convert2string()}, UVM_FULL)
+    `uvm_info("SCBD_AHB",{"            Data: ",t.convert2string()}, UVM_HIGH)
 
     if (ahb_expected_q.size() > 0) begin
         t_exp = ahb_expected_q.pop_front();
@@ -500,7 +500,7 @@ class soc_ifc_scoreboard #(
       `uvm_fatal("SCBD_APB","Cast from mvc_sequence_item_base to apb3_host_apb3_transaction #(apb5_master_0_params::APB3_SLAVE_COUNT, apb5_master_0_params::APB3_PADDR_BIT_WIDTH, apb5_master_0_params::APB3_PWDATA_BIT_WIDTH, apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) in write_actual_apb_analysis_export failed!")
     end
     `uvm_info("SCBD_APB", "Transaction Received through actual_apb_analysis_export", UVM_MEDIUM)
-    `uvm_info("SCBD_APB",{"            Data: ",t.convert2string()}, UVM_FULL)
+    `uvm_info("SCBD_APB",{"            Data: ",t.convert2string()}, UVM_HIGH)
 
     if (apb_expected_q.size() > 0) begin
         t_exp = apb_expected_q.pop_front();

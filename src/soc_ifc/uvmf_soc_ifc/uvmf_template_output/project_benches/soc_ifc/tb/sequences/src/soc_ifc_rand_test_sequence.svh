@@ -109,18 +109,44 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
           IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM          := 10
       };
   }
+  constraint disable_long_env_seqs_c {
+      !(rand_seq_idx inside {IDX_SOC_IFC_ENV_MBOX_TOP_RAND_LARGE,
+                             IDX_SOC_IFC_ENV_MBOX_TOP_MAX,
+                             IDX_SOC_IFC_ENV_MBOX_TOP_RAND_LARGE_UNLOCK,
+                             IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_LARGE,
+                             IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_LARGE_UNLOCK,
+                             IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_MEDIUM,
+                             IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_LARGE,
+                             IDX_SOC_IFC_ENV_MBOX_TOP_DLEN_VIOLATION,
+                             IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_LARGE,
+                             IDX_SOC_IFC_ENV_MBOX_TOP_MULTI_AGENT});
+  }
   // FIXME we're also running multiple iterations of this testcase in the regression.
   //       What is the criteria for iteration count WITHIN the sequence?
   constraint iter_count_c {
       iteration_count inside {[1:10]};
   }
+  constraint iter_count_short_c {
+      iteration_count < 5;
+  }
 
   function new(string name = "" );
     super.new(name);
+    // The short test suite is used in promote pipeline to quickly check for UVM issues
+    if ($test$plusargs("CLP_SHORT_SUITE")) begin
+        this.disable_long_env_seqs_c.constraint_mode(1);
+        this.iter_count_short_c.constraint_mode(1);
+    end
+    else begin
+        this.disable_long_env_seqs_c.constraint_mode(0);
+        this.iter_count_short_c.constraint_mode(0);
+    end
+    // Users can manually override the number of random iterations to any desired value
     if ($value$plusargs("SOC_IFC_RAND_ITER=%0d", iteration_count)) begin
         `uvm_info("SOC_IFC_RAND_TEST", $sformatf("Received Command Line Iteration Count Argument of %0d", iteration_count), UVM_LOW);
         iteration_count.rand_mode(0);
         this.iter_count_c.constraint_mode(0);
+        this.iter_count_short_c.constraint_mode(0);
     end
     else begin
         if (!this.randomize(iteration_count))

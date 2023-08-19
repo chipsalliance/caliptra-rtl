@@ -165,6 +165,7 @@ class soc_ifc_predictor #(
   bit soc_ifc_rst_in_asserted = 1'b1;
   bit noncore_rst_out_asserted = 1'b1;
   bit uc_rst_out_asserted = 1'b1;
+  bit fw_update_rst_window = 1'b0;
   bit soc_ifc_error_intr_pending = 1'b0;
   bit soc_ifc_notif_intr_pending = 1'b0;
   bit sha_err_intr_pending = 1'b0; // TODO
@@ -175,7 +176,7 @@ class soc_ifc_predictor #(
   bit cptra_error_non_fatal = 1'b0;
   bit fuse_update_enabled = 1'b1;
   bit ready_for_fw_push = 1'b0; // TODO
-  bit ready_for_runtime = 1'b0; // TODO
+  bit ready_for_runtime = 1'b0;
   bit mailbox_flow_done = 1'b0;
   bit clk_gate_active         = 1'b1; // TODO
   bit rdc_clk_gate_active     = 1'b1;
@@ -187,10 +188,11 @@ class soc_ifc_predictor #(
   int dataout_count = 0;
 
   bit [31:0] nmi_vector = 32'h0;
-  bit iccm_locked = 1'b0; // TODO
+  bit iccm_locked = 1'b0;
   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg = '{default:32'h0}; // FIXME use reg-model value?
   security_state_t security_state = '{debug_locked: 1'b1, device_lifecycle: DEVICE_UNPROVISIONED};
   bit bootfsm_breakpoint = 1'b0;
+  bit cptra_in_dbg_or_manuf_mode = 1'b0;
   int unsigned fw_update_wait_count = 0;
 
   bit [63:0] generic_output_wires = 64'h0;
@@ -312,7 +314,7 @@ class soc_ifc_predictor #(
 
     soc_ifc_ctrl_agent_ae_debug = t;
     `uvm_info("PRED_SOC_IFC_CTRL", "Transaction Received through soc_ifc_ctrl_agent_ae", UVM_MEDIUM)
-    `uvm_info("PRED_SOC_IFC_CTRL", {"            Data: ",t.convert2string()}, UVM_FULL)
+    `uvm_info("PRED_SOC_IFC_CTRL", {"            Data: ",t.convert2string()}, UVM_HIGH)
     // Construct one of each output transaction type.
     soc_ifc_sb_ap_output_transaction = soc_ifc_sb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ap_output_transaction");
     cptra_sb_ap_output_transaction = cptra_sb_ap_output_transaction_t::type_id::create("cptra_sb_ap_output_transaction");
@@ -413,7 +415,8 @@ class soc_ifc_predictor #(
             // Todo check for breakpoint assertion and flag an expected AHB write to clear it
             soc_ifc_rst_in_asserted = 1'b0;
             p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fuses.predict(1'b1);
-            bootfsm_breakpoint = t.set_bootfsm_breakpoint;
+            cptra_in_dbg_or_manuf_mode = ~t.security_state.debug_locked || t.security_state.device_lifecycle == DEVICE_MANUFACTURING;
+            bootfsm_breakpoint = t.set_bootfsm_breakpoint && cptra_in_dbg_or_manuf_mode;
             reset_predicted.reset();
             send_soc_ifc_sts_txn = 1;
             send_cptra_sts_txn = 0; // cptra sts transaction not expected until after CPTRA_FUSE_WR_DONE
@@ -490,7 +493,7 @@ class soc_ifc_predictor #(
 
     cptra_ctrl_agent_ae_debug = t;
     `uvm_info("PRED_CPTRA_CTRL", "Transaction Received through cptra_ctrl_agent_ae", UVM_MEDIUM)
-    `uvm_info("PRED_CPTRA_CTRL", {"            Data: ",t.convert2string()}, UVM_FULL)
+    `uvm_info("PRED_CPTRA_CTRL", {"            Data: ",t.convert2string()}, UVM_HIGH)
     // Construct one of each output transaction type.
     soc_ifc_sb_ap_output_transaction = soc_ifc_sb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ap_output_transaction");
     cptra_sb_ap_output_transaction = cptra_sb_ap_output_transaction_t::type_id::create("cptra_sb_ap_output_transaction");
@@ -505,10 +508,6 @@ class soc_ifc_predictor #(
         //    "do_predict" bypasses the access-check and does not enforce W1C
         //    behavior on this attempt to set interrupt status to 1
         p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.error_iccm_blocked_sts.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, p_soc_ifc_AHB_map); /* AHB-access only, use AHB map*/
-        if (!soc_ifc_error_intr_pending && p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value()) begin
-            soc_ifc_error_intr_pending = 1'b1;
-            send_cptra_sts_txn = 1'b1;
-        end
     end
     if (t.assert_clear_secrets) begin
         foreach (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii]) p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii].key.reset();
@@ -582,7 +581,7 @@ class soc_ifc_predictor #(
 
     mbox_sram_agent_ae_debug = t;
     `uvm_info("PRED_MBOX_SRAM", "Transaction Received through mbox_sram_agent_ae", UVM_MEDIUM)
-    `uvm_info("PRED_MBOX_SRAM", {"            Data: ",t.convert2string()}, UVM_FULL)
+    `uvm_info("PRED_MBOX_SRAM", {"            Data: ",t.convert2string()}, UVM_HIGH)
     // Construct one of each output transaction type.
     soc_ifc_sb_ap_output_transaction = soc_ifc_sb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ap_output_transaction");
     cptra_sb_ap_output_transaction = cptra_sb_ap_output_transaction_t::type_id::create("cptra_sb_ap_output_transaction");
@@ -666,7 +665,7 @@ class soc_ifc_predictor #(
     ahb_slave_0_ae_debug = t;
 
     `uvm_info("PRED_AHB", "Transaction Received through ahb_slave_0_ae", UVM_MEDIUM)
-    `uvm_info("PRED_AHB", {"            Data: ",t.convert2string()}, UVM_FULL)
+    `uvm_info("PRED_AHB", {"            Data: ",t.convert2string()}, UVM_HIGH)
 
     // Construct one of each output transaction type.
     soc_ifc_sb_ap_output_transaction = soc_ifc_sb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ap_output_transaction");
@@ -1408,18 +1407,19 @@ class soc_ifc_predictor #(
         //                          2-levels of ancestry back to unique parent
         else if (axs_reg.get_parent().get_parent().get_name() == "soc_ifc_reg_rm") begin
             case (axs_reg.get_name()) inside
-                "global_intr_en_r",
+                "global_intr_en_r": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        send_cptra_sts_txn = (!this.soc_ifc_error_intr_pending && p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value() && p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.global_intr_en_r.error_en.get_mirrored_value()) ||
+                                             (!this.soc_ifc_notif_intr_pending && p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value() && p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.global_intr_en_r.notif_en.get_mirrored_value());
+                        this.soc_ifc_error_intr_pending = p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value() && p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.global_intr_en_r.error_en.get_mirrored_value();
+                        this.soc_ifc_notif_intr_pending = p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value() && p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.global_intr_en_r.notif_en.get_mirrored_value();
+                    end
+                end
                 "error_intr_en_r",
                 "notif_intr_en_r",
                 "error_intr_trig_r",
                 "notif_intr_trig_r": begin
-                    if (ahb_txn.RnW == AHB_WRITE) begin
-                        // FIXME --- I think this is broken, since this logic predates the callback/delay_job paradigm
-                        send_cptra_sts_txn = (!this.soc_ifc_error_intr_pending && p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value()) ||
-                                             (!this.soc_ifc_notif_intr_pending && p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value());
-                        this.soc_ifc_error_intr_pending = p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value();
-                        this.soc_ifc_notif_intr_pending = p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value();
-                    end
+                    `uvm_info("PRED_AHB", $sformatf("Write to %s handled in callback", axs_reg.get_name()), UVM_DEBUG)
                 end
                 "error_global_intr_r",
                 "notif_global_intr_r": begin
@@ -1508,17 +1508,19 @@ class soc_ifc_predictor #(
         //                          2-levels of ancestry back to unique parent
         else if (axs_reg.get_parent().get_parent().get_name() == "sha512_acc_csr_rm") begin
             case (axs_reg.get_name()) inside
-                "global_intr_en_r",
+                "global_intr_en_r": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        send_cptra_sts_txn = (!this.sha_err_intr_pending   && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value() && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.global_intr_en_r.error_en.get_mirrored_value()) ||
+                                             (!this.sha_notif_intr_pending && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value() && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.global_intr_en_r.notif_en.get_mirrored_value());
+                        this.sha_err_intr_pending   = p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value() && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.global_intr_en_r.error_en.get_mirrored_value();
+                        this.sha_notif_intr_pending = p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value() && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.global_intr_en_r.notif_en.get_mirrored_value();
+                    end
+                end
                 "error_intr_en_r",
                 "notif_intr_en_r",
                 "error_intr_trig_r",
                 "notif_intr_trig_r": begin
-                    if (ahb_txn.RnW == AHB_WRITE) begin
-                        send_cptra_sts_txn = (!this.sha_err_intr_pending   && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value()) ||
-                                             (!this.sha_notif_intr_pending && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value());
-                        this.sha_err_intr_pending   = p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value();
-                        this.sha_notif_intr_pending = p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value();
-                    end
+                    `uvm_info("PRED_AHB", $sformatf("Write to %s handled in callback", axs_reg.get_name()), UVM_DEBUG)
                 end
                 "error_global_intr_r",
                 "notif_global_intr_r": begin
@@ -1628,7 +1630,7 @@ class soc_ifc_predictor #(
     apb5_slave_0_ae_debug = t;
 
     `uvm_info("PRED_APB", "Transaction Received through apb5_slave_0_ae", UVM_MEDIUM)
-    `uvm_info("PRED_APB", {"            Data: ",t.convert2string()}, UVM_FULL)
+    `uvm_info("PRED_APB", {"            Data: ",t.convert2string()}, UVM_HIGH)
 
     // Construct one of each output transaction type.
     soc_ifc_sb_ap_output_transaction = soc_ifc_sb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ap_output_transaction");
@@ -1646,7 +1648,7 @@ class soc_ifc_predictor #(
         do_reg_prediction = 1'b0;
     end
     // This is because of the RDC CLK GATE disablement...
-    else if (soc_ifc_rst_in_asserted) begin
+    else if (rdc_clk_gate_active || noncore_rst_out_asserted) begin
         do_reg_prediction = 1'b0;
         soc_ifc_sb_apb_ap_output_transaction.rd_data = 0;
     end
@@ -1819,7 +1821,7 @@ class soc_ifc_predictor #(
     end
 
     // Calculate any other system effects from the register access
-    if (soc_ifc_rst_in_asserted) begin
+    if (rdc_clk_gate_active || noncore_rst_out_asserted) begin
         `uvm_info("PRED_APB", {"On access to register: ", axs_reg.get_full_name(), " reset is asserted, skipping system prediction"}, UVM_MEDIUM)
     end
     else if (axs_reg == null) begin
@@ -2089,6 +2091,8 @@ class soc_ifc_predictor #(
                     cptra_error_non_fatal = 1'b0;
                 end
             end
+            "CPTRA_BOOT_STATUS",
+            "CPTRA_FLOW_STATUS",
             "CPTRA_RESET_REASON",
             "CPTRA_SECURITY_STATE": begin
                 if (apb_txn.read_or_write == APB3_TRANS_WRITE)
@@ -2158,7 +2162,9 @@ class soc_ifc_predictor #(
                     if (bootfsm_breakpoint) begin
                         // Similar logic should be tied to the fw_update_reset reg callback
                         p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs = '{boot_wait: 1'b1, default: 1'b0};
-                        uc_rst_out_asserted = 1;
+//                        uc_rst_out_asserted = 1; // No transition - this is already asserted on entry to boot_wait by merit of predict_reset("NONCORE")
+                        fw_update_rst_window = 1'b1;
+                        send_cptra_sts_txn = 1'b1;
                         `uvm_info("PRED_APB", $sformatf("Write to %s results in uc reset assertion and boot FSM state transition to %p", axs_reg.get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs), UVM_HIGH)
                         fork
                             begin
@@ -2174,7 +2180,7 @@ class soc_ifc_predictor #(
                                     `uvm_info("PRED_APB", $sformatf("After expiration of fw_update reset counter, bootfsm_breakpoint is already cleared. Submitting transaction prediction immediately for state change."), UVM_HIGH)
                                     predict_boot_wait_boot_done();
                                     local_cptra_sb_ap_txn = cptra_sb_ap_output_transaction_t::type_id::create("local_cptra_sb_ap_txn");
-                                    populate_expected_cptra_status_txn(local_cptra_sb_ap_txn);
+                                    populate_expected_cptra_status_txn(local_cptra_sb_ap_txn); // fw_update_rst_window
                                     cptra_sb_ap.write(local_cptra_sb_ap_txn);
                                     `uvm_info("PRED_APB", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
                                 end
@@ -2185,14 +2191,12 @@ class soc_ifc_predictor #(
                         join_none
                     end
                     else begin
-                        p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs = '{boot_done: 1'b1, default: 1'b0};
-                        uc_rst_out_asserted = 0;
+                        predict_boot_wait_boot_done();
+//                        send_cptra_sts_txn = 1'b1; // fw_update_rst_window was never asserted
                         `uvm_info("PRED_APB", $sformatf("Write to %s results in uc reset deassertion and boot FSM state transition to %p", axs_reg.get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs), UVM_HIGH)
                     end
-                    noncore_rst_out_asserted = 1'b0;
                     fuse_update_enabled      = 1'b0;
                     send_soc_ifc_sts_txn     = 1'b1; // for ready_for_fuses
-                    send_cptra_sts_txn       = 1'b1; // for noncore rst
                 end
                 else begin
                     `uvm_info("PRED_APB", $sformatf("Write to %s has no effect on boot FSM due to state [%p] breakpoint [%d] and txn type [%p]", axs_reg.get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs, bootfsm_breakpoint, apb_txn.read_or_write), UVM_FULL)
@@ -2211,7 +2215,7 @@ class soc_ifc_predictor #(
                     if (fw_update_wait_count == 0) begin
                         `uvm_info("PRED_APB", $sformatf("Write to %s results in boot FSM state transition and uC reset deassertion", axs_reg.get_name()), UVM_MEDIUM)
                         predict_boot_wait_boot_done();
-                        send_cptra_sts_txn = 1'b1;
+                        send_cptra_sts_txn = 1'b1; // fw_update_rst_window
                     end
                     else begin
                         // State transition will be triggered in the thread spawned by CPTRA_FUSE_WR_DONE write instead
@@ -2437,12 +2441,12 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
     end
     // === soc_ifc_notif_intr_pending ===
     // Setting 'execute' - Expect a uC interrupt if enabled
-    if (!soc_ifc_notif_intr_pending && p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value()) begin
+    if (!soc_ifc_notif_intr_pending && p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value() && p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.global_intr_en_r.notif_en.get_mirrored_value()) begin
         `uvm_info("PRED_DLY", "Delay job triggers soc_ifc notification interrupt output", UVM_HIGH)
         soc_ifc_notif_intr_pending = 1'b1;
         send_cptra_sts_txn = 1'b1;
     end
-    else if (soc_ifc_notif_intr_pending && !p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value()) begin
+    else if (soc_ifc_notif_intr_pending && !(p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value() && p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.global_intr_en_r.notif_en.get_mirrored_value())) begin
         `uvm_info("PRED_DLY", "Delay job causes soc_ifc notification interrupt deassertion", UVM_HIGH)
         soc_ifc_notif_intr_pending = 1'b0;
     end
@@ -2460,12 +2464,12 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
     end
 
     // Check for any Error Interrupt
-    if (!soc_ifc_error_intr_pending && p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value()) begin
+    if (!soc_ifc_error_intr_pending && p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value() && p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.global_intr_en_r.error_en.get_mirrored_value()) begin
         `uvm_info("PRED_DLY", "Delay job triggers soc_ifc error_intr output", UVM_HIGH)
         soc_ifc_error_intr_pending = 1'b1;
         send_cptra_sts_txn = 1'b1;
     end
-    else if (soc_ifc_error_intr_pending && !p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value()) begin
+    else if (soc_ifc_error_intr_pending && !(p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value() && p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.global_intr_en_r.error_en.get_mirrored_value())) begin
         `uvm_info("PRED_DLY", "Delay job causes soc_ifc error_intr deassertion", UVM_HIGH)
         soc_ifc_error_intr_pending = 1'b0;
     end
@@ -2493,26 +2497,37 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
     // Expect a status transition on sha_notif_intr_pending
     // whenever a write changes the value of SHA Accelerator Execute
     // and triggers a delayed prediction job resulting in interrupt firing
-    if (!sha_notif_intr_pending && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value()) begin
-        sha_notif_intr_pending = p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value();
+    if (!sha_notif_intr_pending && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value() && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.global_intr_en_r.notif_en.get_mirrored_value()) begin
+        sha_notif_intr_pending = 1;
         if (sha_notif_intr_pending) begin
             `uvm_info("PRED_DLY", "Delay job triggers sha_notif_intr_pending transition", UVM_HIGH)
             send_cptra_sts_txn = 1'b1;
         end
     end
-    else if (sha_notif_intr_pending && !p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value()) begin
+    else if (sha_notif_intr_pending && !(p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value() && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.global_intr_en_r.notif_en.get_mirrored_value())) begin
         `uvm_info("PRED_DLY", "Delay job causes sha512_acc notification interrupt deassertion", UVM_HIGH)
         sha_notif_intr_pending = 1'b0;
     end
 
+    ///////////////// ORDERING MUST BE PRESERVED FOR THESE ASSIGNMENTS /////////////////
     // Check for uC reset changes (both transitions due to delay job
     // scheduled from internal_fw_update_reset callback)
     if (p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs.boot_wait && !uc_rst_out_asserted) begin
         uc_rst_out_asserted = 1;
         send_cptra_sts_txn = 1;
     end
-    else if (p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs.boot_done && uc_rst_out_asserted) begin
+    // uC reset deassertion is delayed from iccm_lock and fw_update_rst_window transitions
+    else if (p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs.boot_done && !iccm_locked && !fw_update_rst_window && uc_rst_out_asserted) begin
         uc_rst_out_asserted = 0;
+        send_cptra_sts_txn = 1;
+    end
+
+    if ((p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs.boot_fw_rst || p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs.boot_wait) && !fw_update_rst_window) begin
+        fw_update_rst_window = 1;
+        send_cptra_sts_txn = 1;
+    end
+    else if (p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs.boot_done && fw_update_rst_window) begin
+        fw_update_rst_window = 0;
         send_cptra_sts_txn = 1;
     end
 
@@ -2522,6 +2537,7 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
         iccm_locked = 0;
         send_cptra_sts_txn = 1;
     end
+    /////////////////            END ORDERED ASSIGNMENTS            /////////////////
 
     //////////////////////////////////////////////////
     // Send expected transactions to Scoreboard
@@ -2822,7 +2838,7 @@ task soc_ifc_predictor::wdt_counter_task();
 
         //Reset event
         if (this.reset_wdt_count) begin
-            `uvm_info("PRED_WDT", "Resetting WDT t1 and t2 counts due to a reset event", UVM_MEDIUM)
+            `uvm_info("PRED_WDT", "Resetting WDT t1 and t2 counts due to a reset event", UVM_HIGH)
             this.t1_count = 'h0;
             this.t2_count = 'h0;
             this.wdt_error_intr_sent = 1'b0;
@@ -3116,9 +3132,24 @@ function bit soc_ifc_predictor::sha_valid_user(input uvm_transaction txn);
 endfunction
 
 function void soc_ifc_predictor::predict_boot_wait_boot_done();
+    cptra_sb_ap_output_transaction_t local_cptra_sb_ap_txn;
+
     p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs = '{boot_done: 1'b1, default: 1'b0};
-    noncore_rst_out_asserted = 1'b0;
-    uc_rst_out_asserted      = 1'b0;
+    fw_update_rst_window                           = 1'b0;
+
+    fork
+        begin
+            configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
+            if (uc_rst_out_asserted) begin
+                uc_rst_out_asserted   = 1'b0;
+                local_cptra_sb_ap_txn = cptra_sb_ap_output_transaction_t::type_id::create("local_cptra_sb_ap_txn");
+                populate_expected_cptra_status_txn(local_cptra_sb_ap_txn);
+                cptra_sb_ap.write(local_cptra_sb_ap_txn);
+                `uvm_info("PRED_BOOT", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
+            end
+        end
+    join_none
+
 endfunction
 
 task soc_ifc_predictor::handle_reset(input string kind = "HARD");
@@ -3132,9 +3163,9 @@ task soc_ifc_predictor::handle_reset(input string kind = "HARD");
     reset_handled.trigger(kind_handled);
     reset_predicted.wait_trigger_data(obj_triggered);
     if (!$cast(kind_predicted, obj_triggered))
-        `uvm_fatal("SOC_IFC_PRED", "Failed to retrieve triggered reset_flag")
+        `uvm_fatal("PRED_HANDLE_RESET", "Failed to retrieve triggered reset_flag")
     if (kind_handled != kind_predicted)
-        `uvm_error("SOC_IFC_PRED", $sformatf("handle_reset called with different reset type [%s] than was processed in predictor [%s]!", kind_handled.get_name(), kind_predicted.get_name()))
+        `uvm_error("PRED_HANDLE_RESET", $sformatf("handle_reset called with different reset type [%s] than was processed in predictor [%s]!", kind_handled.get_name(), kind_predicted.get_name()))
 endtask
 
 function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
@@ -3194,6 +3225,7 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
         // BOOT FSM can progress and subsequent
         fork
             begin
+                cptra_sb_ap_output_transaction_t local_cptra_sb_ap_txn;
                 `uvm_info("PRED_RESET", $sformatf("Reset prediction of kind: %p will result in state change after reset deasserts. Wait for cptra_rst_b==1...", kind), UVM_MEDIUM)
                 while (last_predicted_kind != soft_reset_flag) begin
                     uvm_object obj_predicted;
@@ -3204,7 +3236,19 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
                 end
                 p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs = '{boot_fuse: 1'b1, default: 1'b0};
                 `uvm_info("PRED_RESET", $sformatf("After detecting warm reset deassertion, boot FSM state change predicted: [%p]", p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs), UVM_MEDIUM)
-                // NOTE: Next progression is triggered by write to CPTRA_FUSE_WR_DONE
+                // NOTE: Next state progression is triggered by write to CPTRA_FUSE_WR_DONE
+
+                // Now, deassertion of noncore reset is delayed from state transition by 2 cycles
+                configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(2); // FIXME, correct delay value?
+                noncore_rst_out_asserted = 1'b0;
+
+                // Send predicted transactions
+                if (1) begin
+                    local_cptra_sb_ap_txn = cptra_sb_ap_output_transaction_t::type_id::create("local_cptra_sb_ap_txn");
+                    populate_expected_cptra_status_txn(local_cptra_sb_ap_txn);
+                    cptra_sb_ap.write(local_cptra_sb_ap_txn);
+                    `uvm_info("PRED_RESET", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
+                end
             end
         join_none
     end
@@ -3342,7 +3386,7 @@ endfunction
 function void soc_ifc_predictor::populate_expected_cptra_status_txn(ref cptra_sb_ap_output_transaction_t txn);
     txn.noncore_rst_asserted       = this.noncore_rst_out_asserted;
     txn.uc_rst_asserted            = this.uc_rst_out_asserted;
-    txn.fw_update_rst_window       = 1'b0; /* FIXME*/
+    txn.fw_update_rst_window       = this.fw_update_rst_window;
     txn.soc_ifc_err_intr_pending   = this.soc_ifc_error_intr_pending;
     txn.soc_ifc_notif_intr_pending = this.soc_ifc_notif_intr_pending;
     txn.sha_err_intr_pending       = this.sha_err_intr_pending;

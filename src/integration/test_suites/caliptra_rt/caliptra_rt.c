@@ -131,6 +131,7 @@ void caliptra_rt() {
 
     VPRINTF(LOW, "Enabling WDT intr\n");
     lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R, SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_WDT_TIMER1_TIMEOUT_EN_MASK | SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_WDT_TIMER2_TIMEOUT_EN_MASK);
+    lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R, SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK);
     
     wdt_rand_t1_val = rand() % 0xfff;
     wdt_rand_t2_val = rand() % 0xfff;
@@ -181,16 +182,16 @@ void caliptra_rt() {
                 cptra_intr_rcv.soc_ifc_error &= ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INV_DEV_STS_MASK;
             }
             if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK) {
-                cptra_intr_rcv.soc_ifc_error &= ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK;
-            }
-            if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_BAD_FUSE_STS_MASK) {
                 enum mbox_fsm_e state;
-                cptra_intr_rcv.soc_ifc_error &= ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_BAD_FUSE_STS_MASK;
+                cptra_intr_rcv.soc_ifc_error &= ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK;
                 // If we entered the error state, we must use force-unlock to reset the mailbox state
                 state = (lsu_read_32(CLP_MBOX_CSR_MBOX_STATUS) & MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_MASK) >> MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_LOW;
                 if (state == MBOX_ERROR) {
                     lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
                 }
+            }
+            if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_BAD_FUSE_STS_MASK) {
+                cptra_intr_rcv.soc_ifc_error &= ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_BAD_FUSE_STS_MASK;
             }
             if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_ICCM_BLOCKED_STS_MASK) {
                 cptra_intr_rcv.soc_ifc_error &= ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_ICCM_BLOCKED_STS_MASK;
@@ -267,9 +268,24 @@ void caliptra_rt() {
         }
 
         if (cptra_intr_rcv.soc_ifc_notif   ) {
+            uint8_t fsm_chk;
             VPRINTF(LOW, "Intr received: soc_ifc_notif\n");
             if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK) {
                 cptra_intr_rcv.soc_ifc_notif &= ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK;
+                fsm_chk = soc_ifc_chk_execute_uc();
+                if (fsm_chk != 0) {
+                    if (fsm_chk == 0xF) {
+                        if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK) {
+                            cptra_intr_rcv.soc_ifc_error &= ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK;
+                            VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit after servicing\n");
+                        } else {
+                            VPRINTF(ERROR, "After finding an error and resetting the mailbox with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
+                            SEND_STDOUT_CTRL(0x1);
+                            while(1);
+                        }
+                    }
+                    continue;
+                }
                 //read the mbox command
                 op = soc_ifc_read_mbox_cmd();
                 if (op.cmd & MBOX_CMD_FIELD_FW_MASK) {
@@ -349,6 +365,20 @@ void caliptra_rt() {
 
                     }
 
+                    fsm_chk = soc_ifc_chk_execute_uc();
+                    if (fsm_chk != 0) {
+                        if (fsm_chk == 0xF) {
+                            if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK) {
+                                cptra_intr_rcv.soc_ifc_error &= ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK;
+                                VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit after servicing\n");
+                            } else {
+                                VPRINTF(ERROR, "After finding an error and resetting the mailbox with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
+                                SEND_STDOUT_CTRL(0x1);
+                                while(1);
+                            }
+                        }
+                        continue;
+                    }
                     soc_ifc_set_mbox_status_field(DATA_READY);
                 }
                 else {
@@ -370,6 +400,21 @@ void caliptra_rt() {
                         }
                     }
                     lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DLEN), 0);
+                    // Check for an error
+                    fsm_chk = soc_ifc_chk_execute_uc();
+                    if (fsm_chk != 0) {
+                        if (fsm_chk == 0xF) {
+                            if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK) {
+                                cptra_intr_rcv.soc_ifc_error &= ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK;
+                                VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit after servicing\n");
+                            } else {
+                                VPRINTF(ERROR, "After finding an error and resetting the mailbox with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
+                                SEND_STDOUT_CTRL(0x1);
+                                while(1);
+                            }
+                        }
+                        continue;
+                    }
                     //Mark the command complete
                     soc_ifc_set_mbox_status_field(CMD_COMPLETE);
                 }

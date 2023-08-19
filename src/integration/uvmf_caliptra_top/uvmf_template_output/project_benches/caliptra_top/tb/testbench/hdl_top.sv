@@ -291,6 +291,7 @@ import uvmf_base_pkg_hdl::*;
     assign soc_ifc_subenv_cptra_status_agent_bus.cptra_noncore_rst_b = caliptra_top_dut.cptra_noncore_rst_b;
     assign soc_ifc_subenv_cptra_status_agent_bus.cptra_obf_key_reg = caliptra_top_dut.cptra_obf_key_reg;
     assign soc_ifc_subenv_cptra_status_agent_bus.cptra_uc_rst_b = caliptra_top_dut.cptra_uc_rst_b;
+    assign soc_ifc_subenv_cptra_status_agent_bus.fw_update_rst_window = caliptra_top_dut.fw_update_rst_window;
     assign soc_ifc_subenv_cptra_status_agent_bus.iccm_lock = caliptra_top_dut.iccm_lock;
     assign soc_ifc_subenv_cptra_status_agent_bus.nmi_vector = caliptra_top_dut.nmi_vector;
     assign soc_ifc_subenv_cptra_status_agent_bus.nmi_intr = caliptra_top_dut.nmi_int;
