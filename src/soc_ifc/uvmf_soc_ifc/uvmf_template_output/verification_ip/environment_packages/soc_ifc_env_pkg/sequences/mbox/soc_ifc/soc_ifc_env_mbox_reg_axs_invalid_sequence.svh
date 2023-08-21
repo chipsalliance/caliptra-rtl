@@ -134,17 +134,18 @@ task soc_ifc_env_mbox_reg_axs_invalid_sequence::mbox_do_random_reg_write(process
     else begin
         `uvm_info("MBOX_SEQ", $sformatf("Main mailbox flow is in state [%s], so it will not be suspended for random reg access injection", mainline.status().name()), UVM_HIGH)
     end
-    `uvm_info("MBOX_SEQ", {"Performing random register access to ", mbox_regs[rand_idx].get_name()}, UVM_LOW)
     if (mbox_regs[rand_idx].get_name() == "mbox_dataout") begin
+        `uvm_info("MBOX_SEQ", {"Performing random register access to ", mbox_regs[rand_idx].get_name()}, UVM_LOW)
         mbox_regs[rand_idx].read(local_reg_sts, rand_wr_data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(local_apb_user_obj));
         report_reg_sts(local_reg_sts, mbox_regs[rand_idx].get_name(), local_apb_user_obj);
     end
     else if (mbox_regs[rand_idx].get_name() == "mbox_datain") begin
-        wait(reg_model.mbox_csr_rm.mbox_fn_state_sigs.uc_receive_stage == 1'b0);
+        `uvm_info("MBOX_SEQ", {"Performing random register access to ", mbox_regs[rand_idx].get_name()}, UVM_LOW)
         mbox_regs[rand_idx].write(local_reg_sts, rand_wr_data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(local_apb_user_obj));
         report_reg_sts(local_reg_sts, mbox_regs[rand_idx].get_name(), local_apb_user_obj);
     end
     else begin
+        `uvm_info("MBOX_SEQ", {"Performing random register access to ", mbox_regs[rand_idx].get_name()}, UVM_LOW)
         mbox_regs[rand_idx].write(local_reg_sts, rand_wr_data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(local_apb_user_obj));
         report_reg_sts(local_reg_sts, mbox_regs[rand_idx].get_name(), local_apb_user_obj);
     end

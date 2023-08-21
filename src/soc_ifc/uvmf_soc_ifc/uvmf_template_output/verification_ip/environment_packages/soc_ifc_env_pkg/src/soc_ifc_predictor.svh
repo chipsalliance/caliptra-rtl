@@ -2635,7 +2635,13 @@ function bit soc_ifc_predictor::check_mbox_no_lock_error(soc_ifc_sb_apb_ap_outpu
         error_job.state_nxt = MBOX_IDLE;
         error_job.error = '{axs_without_lock: 1'b1, default: 1'b0};
         p_soc_ifc_rm.delay_jobs.push_back(error_job);
-        `uvm_info("MBOX_NO_LOCK_CHK", $sformatf("%s to %s on map [%s] with value [%x] causes a mbox no_lock protocol violation. Delay job is queued to update DUT model.", txn.read_or_write.name(), fld.get_name(), p_soc_ifc_APB_map.get_name(), txn.read_or_write == APB3_TRANS_WRITE ? txn.wr_data : txn.rd_data), UVM_HIGH)
+        `uvm_info("MBOX_NO_LOCK_CHK",
+                  $sformatf("%s to %s on map [%s] with value [%x] causes a mbox no_lock protocol violation. Delay job is queued to update DUT model.",
+                            txn.read_or_write.name(),
+                            fld.get_name(),
+                            p_soc_ifc_APB_map.get_name(),
+                            txn.read_or_write == APB3_TRANS_WRITE ? txn.wr_data : txn.rd_data),
+                  UVM_LOW)
     end
     return is_error;
 endfunction
@@ -2652,7 +2658,7 @@ function bit soc_ifc_predictor::check_mbox_ooo_error(soc_ifc_sb_apb_ap_output_tr
     // When !soc_has_lock, valid_receiver must be true for any writes made,
     // but not necessarily valid_requester.
     // Since valid_requester may be false, the reg_prediction is not done, and
-    // thus the callback can't catch this scenario).
+    // thus the callback can't catch this scenario.
     if (txn.addr_user inside mbox_valid_users) begin
         case (axs_reg.get_name()) inside
             "mbox_lock": begin
@@ -2696,7 +2702,17 @@ function bit soc_ifc_predictor::check_mbox_ooo_error(soc_ifc_sb_apb_ap_output_tr
             end
         endcase
     end
-    if (is_error) begin
+    if (is_error && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error) begin
+        `uvm_info("MBOX_OOO_CHK",
+                  $sformatf("%s to %s on map [%s] with value [%x] calculates as a mbox out_of_order protocol violation, but no delay job is scheduled since predictor is already in state [%p].",
+                            txn.read_or_write.name(),
+                            fld.get_name(),
+                            p_soc_ifc_APB_map.get_name(),
+                            txn.read_or_write == APB3_TRANS_WRITE ? txn.wr_data : txn.rd_data,
+                            p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs),
+                  UVM_LOW)
+    end
+    else if (is_error) begin
         error_job = soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error::type_id::create("error_job");
         error_job.rm = p_soc_ifc_rm.mbox_csr_rm;
         error_job.map = p_soc_ifc_APB_map;
@@ -2705,7 +2721,7 @@ function bit soc_ifc_predictor::check_mbox_ooo_error(soc_ifc_sb_apb_ap_output_tr
         error_job.state_nxt = MBOX_ERROR;
         error_job.error = '{axs_incorrect_order: 1'b1, default: 1'b0};
         p_soc_ifc_rm.delay_jobs.push_back(error_job);
-        `uvm_info("MBOX_OOO_CHK", $sformatf("%s to %s on map [%s] with value [%x] causes a mbox out_of_order protocol violation. Delay job is queued to update DUT model.", txn.read_or_write.name(), fld.get_name(), p_soc_ifc_APB_map.get_name(), txn.read_or_write == APB3_TRANS_WRITE ? txn.wr_data : txn.rd_data), UVM_HIGH)
+        `uvm_info("MBOX_OOO_CHK", $sformatf("%s to %s on map [%s] with value [%x] causes a mbox out_of_order protocol violation. Delay job is queued to update DUT model.", txn.read_or_write.name(), fld.get_name(), p_soc_ifc_APB_map.get_name(), txn.read_or_write == APB3_TRANS_WRITE ? txn.wr_data : txn.rd_data), UVM_LOW)
         p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs = '{mbox_error: 1'b1, default: 1'b0};
     end
     return is_error;
