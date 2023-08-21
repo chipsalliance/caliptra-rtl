@@ -185,7 +185,7 @@ stages:
                 - path: '${WORKSPACE}/Caliptra/src/integration/stimulus/testsuites/caliptra_top_nightly_directed_regression.yml'
                 - timeout: 30
 
-        # This runs for a veeeery long time (~3hours)
+        # This runs for a veeeery long time (~8hours)
         - ROM_tb:
             - display_name: 'ROM_TB'
             - enabled: true
@@ -197,6 +197,22 @@ stages:
                 - enabled: true
                 - configspec_name: 'integration_lib'
                 - dut: 'uvmf_caliptra_top'
+                - sim_args: '+COVERAGE ${{ variables.coverage_root_args }} +CLP_REGRESSION'
+                - path: '${WORKSPACE}/Caliptra/src/integration/stimulus/testsuites/uvmf_caliptra_top_nightly_directed_regression.yml'
+                - timeout: 1440
+
+        # This runs for a veeeery long time (~8hours)
+        - ROM_iTRNG_tb:
+            - display_name: 'ROM_ITRNG_TB'
+            - enabled: true
+            - configspec_name: 'integration_lib'
+            - dut: 'uvmf_caliptra_top_itrng'
+            - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/integration/uvmf_caliptra_top/coverage/config/uvmf_caliptra_top_cm_hier.cfg --submit-resource-args RAM/28000'
+            - testsuites:
+              - nightly_directed:
+                - enabled: true
+                - configspec_name: 'integration_lib'
+                - dut: 'uvmf_caliptra_top_itrng'
                 - sim_args: '+COVERAGE ${{ variables.coverage_root_args }} +CLP_REGRESSION'
                 - path: '${WORKSPACE}/Caliptra/src/integration/stimulus/testsuites/uvmf_caliptra_top_nightly_directed_regression.yml'
                 - timeout: 1440

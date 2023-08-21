@@ -7,8 +7,8 @@ contents:
       path: ""
       config:
         params:
-          # 24 hours to help diagnose timeout problem for this test
-          timeout: 1440
+          # 12 hours
+          timeout: 720
       weight: 100
       generations: 1
       formats: 

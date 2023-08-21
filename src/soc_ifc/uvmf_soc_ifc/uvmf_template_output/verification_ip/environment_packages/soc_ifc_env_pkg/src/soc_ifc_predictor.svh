@@ -1263,7 +1263,7 @@ class soc_ifc_predictor #(
                 "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[0]",
                 "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[1]": begin
                     if (ahb_txn.RnW == AHB_WRITE) begin
-                        `uvm_info("PRED_AHB", {"Detected write to ", axs_reg.get_name()," register on AHB interface"}, UVM_MEDIUM);
+                        `uvm_info("PRED_AHB", {"Write to ",axs_reg.get_name()," register on AHB interface has no side-effect"}, UVM_HIGH) // TODO
                     end
                 end
                 "CPTRA_WDT_TIMER2_EN": begin
@@ -1282,7 +1282,7 @@ class soc_ifc_predictor #(
                 "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[0]",
                 "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[1]": begin
                     if (ahb_txn.RnW == AHB_WRITE) begin
-                        `uvm_info("PRED_AHB", {"Detected write to ",axs_reg.get_name()," register on AHB interface"}, UVM_LOW) // TODO
+                        `uvm_info("PRED_AHB", {"Write to ",axs_reg.get_name()," register on AHB interface has no side-effect"}, UVM_HIGH) // TODO
                     end
                 end
                 "CPTRA_WDT_STATUS": begin

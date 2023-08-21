@@ -121,6 +121,10 @@ import uvmf_base_pkg_hdl::*;
     logic [`CALIPTRA_IMEM_ADDR_WIDTH-1:0] imem_addr;
     logic [`CALIPTRA_IMEM_DATA_WIDTH-1:0] imem_rdata;
 
+    logic        etrng_req;
+    logic  [3:0] itrng_data;
+    logic        itrng_valid;
+
     //device lifecycle
     security_state_t security_state_stub_inactive;
 
@@ -234,10 +238,17 @@ import uvmf_base_pkg_hdl::*;
         .cptra_error_fatal    (soc_ifc_subenv_soc_ifc_status_agent_bus.cptra_error_fatal),
         .cptra_error_non_fatal(soc_ifc_subenv_soc_ifc_status_agent_bus.cptra_error_non_fatal),
         // External TRNG
+`ifdef CALIPTRA_INTERNAL_TRNG
+        .etrng_req             (etrng_req),
+        // Internal TRNG
+        .itrng_data            (itrng_data ),
+        .itrng_valid           (itrng_valid),
+`else
         .etrng_req             (soc_ifc_subenv_soc_ifc_status_agent_bus.trng_req),
         // Internal TRNG
-        .itrng_data            (4'h0),  // TODO
-        .itrng_valid           (1'b0),  // TODO
+        .itrng_data            (4'h0),
+        .itrng_valid           (1'b0),
+`endif
 
         .generic_input_wires (soc_ifc_subenv_soc_ifc_ctrl_agent_bus.generic_input_wires),
         .generic_output_wires(soc_ifc_subenv_soc_ifc_status_agent_bus.generic_output_wires),
@@ -309,6 +320,20 @@ import uvmf_base_pkg_hdl::*;
 
     assign soc_ifc_subenv_mbox_sram_agent_bus.mbox_sram_req = mbox_sram_req;
     assign mbox_sram_resp = soc_ifc_subenv_mbox_sram_agent_bus.mbox_sram_resp;
+
+`ifdef CALIPTRA_INTERNAL_TRNG
+    //=========================================================================-
+    // Physical RNG used for Internal TRNG
+    //=========================================================================-
+    physical_rng physical_rng_i (
+        .clk    (clk),
+        .enable (etrng_req),
+        .data   (itrng_data),
+        .valid  (itrng_valid)
+    );
+
+    assign soc_ifc_subenv_soc_ifc_status_agent_bus.trng_req = 1'b0;
+`endif
 
     //=========================================================================-
     // Services for SRAM exports, STDOUT, etc

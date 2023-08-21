@@ -31,6 +31,7 @@ class soc_ifc_env_trng_write_data_sequence extends soc_ifc_env_sequence_base #(.
   rand bit trng_write_done;
   rand bit [3:0] trng_num_dwords;
 
+  int sts_rsp_count;
   bit trng_data_req;
 
   bit [apb5_master_0_params::PAUSER_WIDTH-1:0] trng_valid_user;
@@ -69,15 +70,24 @@ class soc_ifc_env_trng_write_data_sequence extends soc_ifc_env_sequence_base #(.
 
   virtual task body();
 
+    sts_rsp_count = 0;
+
+    fork
+        forever begin
+            @(soc_ifc_status_agent_rsp_seq.new_rsp) sts_rsp_count++;
+        end
+    join_none
+
     soc_ifc_env_trng_setup();
-    `uvm_info("TRNG_REQ_SEQ", $sformatf("Responding to TRNG_DATA_REQ with %0d dwords", trng_num_dwords), UVM_DEBUG)
     if (this.trng_data_req == 1'b0) 
       soc_ifc_env_trng_poll_data_req();
     if (this.trng_data_req) begin
+      `uvm_info("TRNG_REQ_SEQ", $sformatf("Responding to TRNG_DATA_REQ with %0d dwords", trng_num_dwords), UVM_FULL)
       soc_ifc_env_trng_write_data();
       soc_ifc_env_trng_write_done();
       soc_ifc_env_trng_wait_idle();
     end
+    `uvm_info("TRNG_REQ_SEQ", "TRNG write data sequence completed", UVM_HIGH)
 
   endtask
 
@@ -108,6 +118,7 @@ task soc_ifc_env_trng_write_data_sequence::soc_ifc_env_trng_setup();
 
     // Assign user and use throughout sequence
     apb_user_obj.set_addr_user(trng_valid_user);
+    `uvm_info("TRNG_REQ_SEQ", $sformatf("trng_valid_user initialized to value 0x%x", trng_valid_user), UVM_HIGH)
 
 endtask
 
@@ -120,10 +131,15 @@ task soc_ifc_env_trng_write_data_sequence::soc_ifc_env_trng_poll_data_req();
 
   soc_ifc_env_trng_check_data_req(data_req);
   while (data_req == 1'b0) begin
-    configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200);
-    soc_ifc_env_trng_check_data_req(data_req);
+    wait (sts_rsp_count != 0);
+    data_req = soc_ifc_status_agent_rsp_seq.rsp.trng_req_pending;
+    sts_rsp_count = 0;
   end
+  soc_ifc_env_trng_check_data_req(data_req);
+  if (!data_req)
+    `uvm_error("TRNG_REQ_SEQ", "Got status transaction with trng_req_pending, but read from CPTRA_TRNG_STATUS.DATA_REQ returned 0!")
   this.trng_data_req = data_req;
+  `uvm_info("TRNG_REQ_SEQ", $sformatf("Got status transaction with trng_req_pending, read from CPTRA_TRNG_STATUS.DATA_REQ returned %d", data_req), UVM_MEDIUM)
 endtask
 
 //==========================================
@@ -152,7 +168,7 @@ task soc_ifc_env_trng_write_data_sequence::soc_ifc_env_trng_write_data();
   uvm_reg_data_t data;
   for (ii = 0; ii < this.trng_num_dwords; ii++) begin
     if (!std::randomize(data)) `uvm_error("TRNG_REQ_SEQ", "Failed to randomize data")
-    `uvm_info("TRNG_REQ_SEQ", $sformatf("Sending TRNG_DATA[%0d]: 0x%0x", ii, data), UVM_DEBUG)
+    `uvm_info("TRNG_REQ_SEQ", $sformatf("Sending TRNG_DATA[%0d]: 0x%0x", ii, data), UVM_HIGH)
     reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[ii].write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
     if (reg_sts != UVM_IS_OK) 
       `uvm_error("TRNG_REQ_SEQ", "Register access failed (TRNG_DATA)")
@@ -165,7 +181,7 @@ endtask
 //==========================================
 task soc_ifc_env_trng_write_data_sequence::soc_ifc_env_trng_write_done();
   uvm_status_e reg_sts;
-  `uvm_info("TRNG_REQ_SEQ", "Sending TRNG_DONE", UVM_DEBUG)
+  `uvm_info("TRNG_REQ_SEQ", "Sending TRNG_DONE", UVM_MEDIUM)
   reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.write(reg_sts, uvm_reg_data_t'(trng_write_done) << reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.DATA_WR_DONE.get_lsb_pos(), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
   if (reg_sts != UVM_IS_OK) 
     `uvm_error("TRNG_REQ_SEQ", "Register access failed (TRNG_DONE)")
@@ -191,4 +207,5 @@ task soc_ifc_env_trng_write_data_sequence::soc_ifc_env_trng_wait_idle();
       if (reg_sts != UVM_IS_OK) 
         `uvm_error("TRNG_REQ_SEQ", "Register access failed (CPTRA_TRNG_STATUS)")
   end
+  `uvm_info("TRNG_REQ_SEQ", "Observed TRNG_DONE cleared to 0", UVM_HIGH)
 endtask
