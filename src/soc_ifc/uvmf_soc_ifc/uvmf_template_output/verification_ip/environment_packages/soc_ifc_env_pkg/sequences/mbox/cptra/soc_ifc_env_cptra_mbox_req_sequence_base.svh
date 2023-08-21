@@ -332,7 +332,7 @@ endtask
 // Task:        mbox_poll_status
 // Description: Issue calls to mbox_check_status
 //              until status change indicates control is
-//              returned to SOC.
+//              returned to uC.
 //==========================================
 task soc_ifc_env_cptra_mbox_req_sequence_base::mbox_poll_status();
     mbox_status_e data;
@@ -345,9 +345,11 @@ task soc_ifc_env_cptra_mbox_req_sequence_base::mbox_poll_status();
         mbox_check_status(data, state);
     end while (data == CMD_BUSY && !(state inside {MBOX_IDLE, MBOX_ERROR}));
 
-    // We should have an error interrupt, which will be serviced at a later step.
+    // We should have an error interrupt in response to the ERROR state, which
+    // will be serviced at a later step.
     // We do not expect the cmd_avail_sts interrupt, and there is no point in
-    // reporting on the status field when we've hit a protocol error.
+    // continuing this task (to report on the mbox_status field) when we've hit
+    // a protocol error.
     if (state == MBOX_ERROR) begin
         mbox_sts_is_error = 1;
         return;
@@ -383,6 +385,11 @@ endtask
 //==========================================
 task soc_ifc_env_cptra_mbox_req_sequence_base::mbox_clr_execute();
     uvm_reg_data_t data;
+    // We have to stall a couple clocks to allow interrupts to assert in case
+    // we read the MBOX_ERROR status, since there is a small delay as the signal
+    // propagates through registers.
+    configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(2);
+    // Now, check for the expected error interrupt
     if (sts_rsp_count > 0 && cptra_status_agent_rsp_seq.rsp.soc_ifc_err_intr_pending) begin
         reg_model.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
         report_reg_sts(reg_sts, "error_internal_intr_r");
@@ -411,6 +418,24 @@ endtask
 //              to add any end-of-sequence functionality.
 //==========================================
 task soc_ifc_env_cptra_mbox_req_sequence_base::mbox_teardown();
+    uvm_reg_data_t data, mask;
+
+    // Clear any pending notification interrupts that made it through to the end of the sequence
+    reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+    report_reg_sts(reg_sts, "notif_internal_intr_r");
+    // Any unexpected interrupts should trigger a tb error
+    mask = ~((1 << reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_mbox_ecc_cor_sts.get_lsb_pos()) |
+             (1 << reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_debug_locked_sts.get_lsb_pos()) |
+             (1 << reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_soc_req_lock_sts.get_lsb_pos()));
+    if (data & mask) begin
+        `uvm_error("CPTRA_MBOX_SEQ", $sformatf("Received notification interrupt for unexpected event: 0x%0x", data))
+    end
+    else begin
+        reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+        report_reg_sts(reg_sts, "notif_internal_intr_r");
+        `uvm_info("CPTRA_MBOX_SEQ", $sformatf("Received and cleared notification interrupt for events: 0x%0x", data), UVM_HIGH)
+    end
+
     // Summary at sequence end
     `uvm_info("CPTRA_MBOX_SEQ", $sformatf("uC initiated mailbox flow is completed. Ending status: %s", mbox_sts_is_error ? "hit protocol violation" : "no protocol violation"), UVM_LOW)
 endtask

@@ -86,6 +86,9 @@ package soc_ifc_reg_model_top_pkg;
     // This macro removes from that queue the uvm_reg_field that was provided as an arguement.
     // This allows the calling context to check that the queue of blk_flds is empty at the end,
     // and thus enforce that a custom reset configuration is defined for all register fields.
+    // The "NO_CP" macros do not create a "NONCORE" reset type (e.g for regs on pwrgood domain)
+    // but they still remove the field from the check to confirm that a reset
+    // configuration has been assigned.
     `define FLD_DO_CP_NONCORE_RST(fld_h) begin                   \
         if (fld_h.has_reset("HARD"))                             \
             fld_h.set_reset(fld_h.get_reset("HARD"), "NONCORE"); \
