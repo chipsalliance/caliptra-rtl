@@ -30,6 +30,7 @@ class caliptra_top_rom_sequence extends caliptra_top_bench_sequence_base;
   `uvm_object_utils( caliptra_top_rom_sequence );
 
   rand soc_ifc_env_rom_bringup_sequence_t soc_ifc_env_bringup_seq;
+  rand soc_ifc_env_trng_write_data_sequence_t soc_ifc_env_trng_write_data_seq;
   rand soc_ifc_env_mbox_rom_fw_sequence_t soc_ifc_env_mbox_rom_seq;
   rand soc_ifc_env_sequence_base_t soc_ifc_env_seq_ii[];
   // Local handle to register model for convenience
@@ -93,6 +94,21 @@ class caliptra_top_rom_sequence extends caliptra_top_bench_sequence_base;
     soc_ifc_env_bringup_seq.start(top_configuration.soc_ifc_subenv_config.vsqr);
 
     `uvm_info("CALIPTRA_TOP_BRINGUP", "SoC completed poweron and observed reset deassertion to system", UVM_LOW)
+
+`ifndef CALIPTRA_INTERNAL_TRNG
+    `uvm_info("CALIPTRA_TOP_ROM_TEST", "Initiating TRNG responder sequence in an infinite loop to handle ROM TRNG requests", UVM_LOW)
+    fork
+        forever begin
+            soc_ifc_env_trng_write_data_seq = soc_ifc_env_trng_write_data_sequence_t::type_id::create("soc_ifc_env_trng_write_data_seq");
+            soc_ifc_env_trng_write_data_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
+            if (!soc_ifc_env_trng_write_data_seq.randomize())
+              `uvm_fatal("CALIPTRA_TOP_ROM_TEST", $sformatf("caliptra_top_rom_sequence::body() - %s randomization failed", soc_ifc_env_trng_write_data_seq.get_type_name()));
+            soc_ifc_env_trng_write_data_seq.start(top_configuration.soc_ifc_subenv_config.vsqr);
+        end
+    join_none
+`else
+    `uvm_info("CALIPTRA_TOP_ROM_TEST", "Not initiating TRNG responder sequence to handle ROM TRNG requests because INTERNAL TRNG is enabled", UVM_LOW)
+`endif
 
     run_firmware_init(soc_ifc_env_mbox_rom_seq);
 
