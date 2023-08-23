@@ -107,6 +107,7 @@ logic mbox_rd_full, mbox_rd_full_nxt;
 logic inc_rdptr;
 logic rst_mbox_rdptr;
 logic rst_mbox_wrptr;
+logic sram_rd_ecc_en;
 logic [DATA_W-1:0] sram_rdata;
 logic [MBOX_ECC_DATA_W-1:0] sram_rdata_ecc;
 logic [DATA_W-1:0] sram_rdata_cor;
@@ -409,6 +410,7 @@ always_ff @(posedge clk or negedge rst_b) begin
         sram_ecc_cor_waddr <= '0;
         dlen_in_dws <= '0;
         mbox_protocol_error <= '0;
+        sram_rd_ecc_en <= '0;
     end
     else begin
         mbox_fsm_ps <= mbox_fsm_ns;
@@ -426,6 +428,8 @@ always_ff @(posedge clk or negedge rst_b) begin
                              
         dlen_in_dws <= latch_dlen_in_dws ? dlen_in_dws_nxt : dlen_in_dws;                    
         mbox_protocol_error <= mbox_protocol_error_nxt;
+        //enable ecc for mbox protocol, direct reads, or SHA direct reads
+        sram_rd_ecc_en <= mbox_protocol_sram_rd | (dir_req_dv_q & ~sha_sram_req_dv & ~req_data.write) | sha_sram_req_dv;
     end
 end
 
@@ -485,7 +489,7 @@ initial assert(DATA_W == 32) else
     $error("%m::rvecc_encode supports 32-bit data width; must change SRAM ECC implementation to support DATA_W = %d", DATA_W);
 // synthesis translate_on
 rvecc_decode ecc_decode (
-    .en              (dir_req_rd_phase | mbox_protocol_sram_rd_f),
+    .en              (sram_rd_ecc_en       ),
     .sed_ded         ( 1'b0                ),    // 1 : means only detection
     .din             (sram_rdata           ),
     .ecc_in          (sram_rdata_ecc       ),

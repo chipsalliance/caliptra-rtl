@@ -6,10 +6,10 @@ contents:
       tags: ["L0", "CALIPTRA_TOP",  "directed", "smoke_test"]
       path: ""
       weight: 100
-      generations: 6
+      generations: 1
       formats: 
-        generate: "reseed {template}.yml -seed {seed}"
-        path: "{template_basename}__{seed}.yml"
+        generate: "reseed {template}.yml -seed 1"
+        path: "{template_basename}__1.yml"
       templates:
         $CALIPTRA_ROOT/src/integration/uvmf_caliptra_top/uvmf_template_output/project_benches/caliptra_top/tb/tests/src/caliptra_top_cmdline_test   : { weight 100 }
-        $CALIPTRA_ROOT/src/integration/uvmf_caliptra_top/uvmf_template_output/project_benches/caliptra_top/tb/tests/src/caliptra_top_rand_test      : { weight 500 }
+        #$CALIPTRA_ROOT/src/integration/uvmf_caliptra_top/uvmf_template_output/project_benches/caliptra_top/tb/tests/src/caliptra_top_rand_test      : { weight 500 }

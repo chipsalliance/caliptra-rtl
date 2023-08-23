@@ -169,6 +169,7 @@ void caliptra_rt() {
     }
     // Initialization
     init_interrupts();
+    lsu_write_32(CLP_SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_INTR_EN_R, 0); // FIXME tmp workaround to UVM issue with predicting SHA accelerator interrupts
 
     while(1) {
         // Service received interrupts

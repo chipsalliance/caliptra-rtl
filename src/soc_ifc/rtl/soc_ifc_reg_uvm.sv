@@ -1244,6 +1244,76 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_WDT_CFG
 
+    // Reg - soc_ifc_reg::CPTRA_iTRNG_ENTROPY_CONFIG_0
+    class soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0_bit_cg low_threshold_bit_cg[16];
+        soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0_bit_cg high_threshold_bit_cg[16];
+        soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0_fld_cg fld_cg;
+        rand uvm_reg_field low_threshold;
+        rand uvm_reg_field high_threshold;
+
+        function new(string name = "soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.low_threshold = new("low_threshold");
+            this.low_threshold.configure(this, 16, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.high_threshold = new("high_threshold");
+            this.high_threshold.configure(this, 16, 16, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(low_threshold_bit_cg[bt]) low_threshold_bit_cg[bt] = new();
+                foreach(high_threshold_bit_cg[bt]) high_threshold_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0
+
+    // Reg - soc_ifc_reg::CPTRA_iTRNG_ENTROPY_CONFIG_1
+    class soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1_bit_cg repetition_count_bit_cg[16];
+        soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1_bit_cg RSVD_bit_cg[16];
+        soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1_fld_cg fld_cg;
+        rand uvm_reg_field repetition_count;
+        rand uvm_reg_field RSVD;
+
+        function new(string name = "soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.repetition_count = new("repetition_count");
+            this.repetition_count.configure(this, 16, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.RSVD = new("RSVD");
+            this.RSVD.configure(this, 16, 16, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(repetition_count_bit_cg[bt]) repetition_count_bit_cg[bt] = new();
+                foreach(RSVD_bit_cg[bt]) RSVD_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1
+
     // Reg - soc_ifc_reg::CPTRA_RSVD_REG
     class soc_ifc_reg__CPTRA_RSVD_REG extends uvm_reg;
         protected uvm_reg_data_t m_current;
@@ -3673,7 +3743,9 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER CPTRA_FUSE_VALID_PAUSER;
         rand soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK CPTRA_FUSE_PAUSER_LOCK;
         rand soc_ifc_reg__CPTRA_WDT_CFG CPTRA_WDT_CFG[2];
-        rand soc_ifc_reg__CPTRA_RSVD_REG CPTRA_RSVD_REG[4];
+        rand soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0 CPTRA_iTRNG_ENTROPY_CONFIG_0;
+        rand soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1 CPTRA_iTRNG_ENTROPY_CONFIG_1;
+        rand soc_ifc_reg__CPTRA_RSVD_REG CPTRA_RSVD_REG[2];
         rand soc_ifc_reg__fuse_uds_seed fuse_uds_seed[12];
         rand soc_ifc_reg__fuse_field_entropy fuse_field_entropy[8];
         rand soc_ifc_reg__fuse_key_manifest_pk_hash fuse_key_manifest_pk_hash[12];
@@ -3919,12 +3991,22 @@ package soc_ifc_reg_uvm;
                 this.CPTRA_WDT_CFG[i0].build();
                 this.default_map.add_reg(this.CPTRA_WDT_CFG[i0], 'h110 + i0*'h4);
             end
+            this.CPTRA_iTRNG_ENTROPY_CONFIG_0 = new("CPTRA_iTRNG_ENTROPY_CONFIG_0");
+            this.CPTRA_iTRNG_ENTROPY_CONFIG_0.configure(this);
+
+            this.CPTRA_iTRNG_ENTROPY_CONFIG_0.build();
+            this.default_map.add_reg(this.CPTRA_iTRNG_ENTROPY_CONFIG_0, 'h118);
+            this.CPTRA_iTRNG_ENTROPY_CONFIG_1 = new("CPTRA_iTRNG_ENTROPY_CONFIG_1");
+            this.CPTRA_iTRNG_ENTROPY_CONFIG_1.configure(this);
+
+            this.CPTRA_iTRNG_ENTROPY_CONFIG_1.build();
+            this.default_map.add_reg(this.CPTRA_iTRNG_ENTROPY_CONFIG_1, 'h11c);
             foreach(this.CPTRA_RSVD_REG[i0]) begin
                 this.CPTRA_RSVD_REG[i0] = new($sformatf("CPTRA_RSVD_REG[%0d]", i0));
                 this.CPTRA_RSVD_REG[i0].configure(this);
                 
                 this.CPTRA_RSVD_REG[i0].build();
-                this.default_map.add_reg(this.CPTRA_RSVD_REG[i0], 'h118 + i0*'h4);
+                this.default_map.add_reg(this.CPTRA_RSVD_REG[i0], 'h120 + i0*'h4);
             end
             foreach(this.fuse_uds_seed[i0]) begin
                 this.fuse_uds_seed[i0] = new($sformatf("fuse_uds_seed[%0d]", i0));

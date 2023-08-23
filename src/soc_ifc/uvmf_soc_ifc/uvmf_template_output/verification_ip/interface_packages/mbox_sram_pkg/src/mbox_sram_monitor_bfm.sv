@@ -154,11 +154,11 @@ end
   initial begin
     @go;
     forever begin
-      @(posedge clk_i);
       do_monitor( mbox_sram_monitor_struct );
-
-
       proxy.notify_transaction( mbox_sram_monitor_struct );
+      // Back-to-back writes require a clock in between to avoid a 0-time forever loop.
+      // Reads already inject the extra clock cycle, so we can check cs again immediately.
+      if (!mbox_sram_monitor_struct.is_read) @(posedge clk_i);
 
     end
   end
