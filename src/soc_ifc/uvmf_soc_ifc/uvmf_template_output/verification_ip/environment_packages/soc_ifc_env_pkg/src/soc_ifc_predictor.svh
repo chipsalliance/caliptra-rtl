@@ -1295,7 +1295,9 @@ class soc_ifc_predictor #(
                     end
                 end
                 ["CPTRA_WDT_CFG[0]":"CPTRA_WDT_CFG[1]"],
-                ["CPTRA_RSVD_REG[0]":"CPTRA_RSVD_REG[3]"]: begin
+                "CPTRA_iTRNG_ENTROPY_CONFIG_0",
+                "CPTRA_iTRNG_ENTROPY_CONFIG_1",
+                ["CPTRA_RSVD_REG[0]":"CPTRA_RSVD_REG[1]"]: begin
                     `uvm_info("PRED_AHB", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
                 end
                 ["fuse_uds_seed[0]" :"fuse_uds_seed[9]" ],
@@ -2232,7 +2234,9 @@ class soc_ifc_predictor #(
                 `uvm_info("PRED_APB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
             ["CPTRA_WDT_CFG[0]":"CPTRA_WDT_CFG[1]"],
-            ["CPTRA_RSVD_REG[0]":"CPTRA_RSVD_REG[3]"]: begin
+            "CPTRA_iTRNG_ENTROPY_CONFIG_0",
+            "CPTRA_iTRNG_ENTROPY_CONFIG_1",
+            ["CPTRA_RSVD_REG[0]":"CPTRA_RSVD_REG[1]"]: begin
                 `uvm_info("PRED_APB", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
             end
             ["fuse_uds_seed[0]" :"fuse_uds_seed[9]" ],

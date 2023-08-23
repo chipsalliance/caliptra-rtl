@@ -102,7 +102,9 @@ module soc_ifc_reg (
         logic CPTRA_FUSE_VALID_PAUSER;
         logic CPTRA_FUSE_PAUSER_LOCK;
         logic [2-1:0]CPTRA_WDT_CFG;
-        logic [4-1:0]CPTRA_RSVD_REG;
+        logic CPTRA_iTRNG_ENTROPY_CONFIG_0;
+        logic CPTRA_iTRNG_ENTROPY_CONFIG_1;
+        logic [2-1:0]CPTRA_RSVD_REG;
         logic [12-1:0]fuse_uds_seed;
         logic [8-1:0]fuse_field_entropy;
         logic [12-1:0]fuse_key_manifest_pk_hash;
@@ -235,8 +237,10 @@ module soc_ifc_reg (
         for(int i0=0; i0<2; i0++) begin
             decoded_reg_strb.CPTRA_WDT_CFG[i0] = cpuif_req_masked & (cpuif_addr == 'h110 + i0*'h4);
         end
-        for(int i0=0; i0<4; i0++) begin
-            decoded_reg_strb.CPTRA_RSVD_REG[i0] = cpuif_req_masked & (cpuif_addr == 'h118 + i0*'h4);
+        decoded_reg_strb.CPTRA_iTRNG_ENTROPY_CONFIG_0 = cpuif_req_masked & (cpuif_addr == 'h118);
+        decoded_reg_strb.CPTRA_iTRNG_ENTROPY_CONFIG_1 = cpuif_req_masked & (cpuif_addr == 'h11c);
+        for(int i0=0; i0<2; i0++) begin
+            decoded_reg_strb.CPTRA_RSVD_REG[i0] = cpuif_req_masked & (cpuif_addr == 'h120 + i0*'h4);
         end
         for(int i0=0; i0<12; i0++) begin
             decoded_reg_strb.fuse_uds_seed[i0] = cpuif_req_masked & (cpuif_addr == 'h200 + i0*'h4);
@@ -590,10 +594,30 @@ module soc_ifc_reg (
         } [2-1:0]CPTRA_WDT_CFG;
         struct packed{
             struct packed{
+                logic [15:0] next;
+                logic load_next;
+            } low_threshold;
+            struct packed{
+                logic [15:0] next;
+                logic load_next;
+            } high_threshold;
+        } CPTRA_iTRNG_ENTROPY_CONFIG_0;
+        struct packed{
+            struct packed{
+                logic [15:0] next;
+                logic load_next;
+            } repetition_count;
+            struct packed{
+                logic [15:0] next;
+                logic load_next;
+            } RSVD;
+        } CPTRA_iTRNG_ENTROPY_CONFIG_1;
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } RSVD;
-        } [4-1:0]CPTRA_RSVD_REG;
+        } [2-1:0]CPTRA_RSVD_REG;
         struct packed{
             struct packed{
                 logic [31:0] next;
@@ -1418,9 +1442,25 @@ module soc_ifc_reg (
         } [2-1:0]CPTRA_WDT_CFG;
         struct packed{
             struct packed{
+                logic [15:0] value;
+            } low_threshold;
+            struct packed{
+                logic [15:0] value;
+            } high_threshold;
+        } CPTRA_iTRNG_ENTROPY_CONFIG_0;
+        struct packed{
+            struct packed{
+                logic [15:0] value;
+            } repetition_count;
+            struct packed{
+                logic [15:0] value;
+            } RSVD;
+        } CPTRA_iTRNG_ENTROPY_CONFIG_1;
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } RSVD;
-        } [4-1:0]CPTRA_RSVD_REG;
+        } [2-1:0]CPTRA_RSVD_REG;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -2813,7 +2853,79 @@ module soc_ifc_reg (
             end
         end
     end
-    for(genvar i0=0; i0<4; i0++) begin
+    // Field: soc_ifc_reg.CPTRA_iTRNG_ENTROPY_CONFIG_0.low_threshold
+    always_comb begin
+        automatic logic [15:0] next_c = field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_0.low_threshold.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.CPTRA_iTRNG_ENTROPY_CONFIG_0 && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_0.low_threshold.value & ~decoded_wr_biten[15:0]) | (decoded_wr_data[15:0] & decoded_wr_biten[15:0]);
+            load_next_c = '1;
+        end
+        field_combo.CPTRA_iTRNG_ENTROPY_CONFIG_0.low_threshold.next = next_c;
+        field_combo.CPTRA_iTRNG_ENTROPY_CONFIG_0.low_threshold.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_0.low_threshold.value <= 'h0;
+        end else if(field_combo.CPTRA_iTRNG_ENTROPY_CONFIG_0.low_threshold.load_next) begin
+            field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_0.low_threshold.value <= field_combo.CPTRA_iTRNG_ENTROPY_CONFIG_0.low_threshold.next;
+        end
+    end
+    // Field: soc_ifc_reg.CPTRA_iTRNG_ENTROPY_CONFIG_0.high_threshold
+    always_comb begin
+        automatic logic [15:0] next_c = field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_0.high_threshold.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.CPTRA_iTRNG_ENTROPY_CONFIG_0 && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_0.high_threshold.value & ~decoded_wr_biten[31:16]) | (decoded_wr_data[31:16] & decoded_wr_biten[31:16]);
+            load_next_c = '1;
+        end
+        field_combo.CPTRA_iTRNG_ENTROPY_CONFIG_0.high_threshold.next = next_c;
+        field_combo.CPTRA_iTRNG_ENTROPY_CONFIG_0.high_threshold.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_0.high_threshold.value <= 'h0;
+        end else if(field_combo.CPTRA_iTRNG_ENTROPY_CONFIG_0.high_threshold.load_next) begin
+            field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_0.high_threshold.value <= field_combo.CPTRA_iTRNG_ENTROPY_CONFIG_0.high_threshold.next;
+        end
+    end
+    // Field: soc_ifc_reg.CPTRA_iTRNG_ENTROPY_CONFIG_1.repetition_count
+    always_comb begin
+        automatic logic [15:0] next_c = field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_1.repetition_count.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.CPTRA_iTRNG_ENTROPY_CONFIG_1 && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_1.repetition_count.value & ~decoded_wr_biten[15:0]) | (decoded_wr_data[15:0] & decoded_wr_biten[15:0]);
+            load_next_c = '1;
+        end
+        field_combo.CPTRA_iTRNG_ENTROPY_CONFIG_1.repetition_count.next = next_c;
+        field_combo.CPTRA_iTRNG_ENTROPY_CONFIG_1.repetition_count.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_1.repetition_count.value <= 'h0;
+        end else if(field_combo.CPTRA_iTRNG_ENTROPY_CONFIG_1.repetition_count.load_next) begin
+            field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_1.repetition_count.value <= field_combo.CPTRA_iTRNG_ENTROPY_CONFIG_1.repetition_count.next;
+        end
+    end
+    // Field: soc_ifc_reg.CPTRA_iTRNG_ENTROPY_CONFIG_1.RSVD
+    always_comb begin
+        automatic logic [15:0] next_c = field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_1.RSVD.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.CPTRA_iTRNG_ENTROPY_CONFIG_1 && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_1.RSVD.value & ~decoded_wr_biten[31:16]) | (decoded_wr_data[31:16] & decoded_wr_biten[31:16]);
+            load_next_c = '1;
+        end
+        field_combo.CPTRA_iTRNG_ENTROPY_CONFIG_1.RSVD.next = next_c;
+        field_combo.CPTRA_iTRNG_ENTROPY_CONFIG_1.RSVD.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_1.RSVD.value <= 'h0;
+        end else if(field_combo.CPTRA_iTRNG_ENTROPY_CONFIG_1.RSVD.load_next) begin
+            field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_1.RSVD.value <= field_combo.CPTRA_iTRNG_ENTROPY_CONFIG_1.RSVD.next;
+        end
+    end
+    for(genvar i0=0; i0<2; i0++) begin
         // Field: soc_ifc_reg.CPTRA_RSVD_REG[].RSVD
         always_comb begin
             automatic logic [31:0] next_c = field_storage.CPTRA_RSVD_REG[i0].RSVD.value;
@@ -5405,8 +5517,12 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<2; i0++) begin
         assign readback_array[i0*1 + 68][31:0] = (decoded_reg_strb.CPTRA_WDT_CFG[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_WDT_CFG[i0].TIMEOUT.value : '0;
     end
-    for(genvar i0=0; i0<4; i0++) begin
-        assign readback_array[i0*1 + 70][31:0] = (decoded_reg_strb.CPTRA_RSVD_REG[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_RSVD_REG[i0].RSVD.value : '0;
+    assign readback_array[70][15:0] = (decoded_reg_strb.CPTRA_iTRNG_ENTROPY_CONFIG_0 && !decoded_req_is_wr) ? field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_0.low_threshold.value : '0;
+    assign readback_array[70][31:16] = (decoded_reg_strb.CPTRA_iTRNG_ENTROPY_CONFIG_0 && !decoded_req_is_wr) ? field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_0.high_threshold.value : '0;
+    assign readback_array[71][15:0] = (decoded_reg_strb.CPTRA_iTRNG_ENTROPY_CONFIG_1 && !decoded_req_is_wr) ? field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_1.repetition_count.value : '0;
+    assign readback_array[71][31:16] = (decoded_reg_strb.CPTRA_iTRNG_ENTROPY_CONFIG_1 && !decoded_req_is_wr) ? field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_1.RSVD.value : '0;
+    for(genvar i0=0; i0<2; i0++) begin
+        assign readback_array[i0*1 + 72][31:0] = (decoded_reg_strb.CPTRA_RSVD_REG[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_RSVD_REG[i0].RSVD.value : '0;
     end
     for(genvar i0=0; i0<12; i0++) begin
         assign readback_array[i0*1 + 74][31:0] = (decoded_reg_strb.fuse_key_manifest_pk_hash[i0] && !decoded_req_is_wr) ? field_storage.fuse_key_manifest_pk_hash[i0].hash.value : '0;

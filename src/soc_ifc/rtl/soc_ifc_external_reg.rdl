@@ -371,7 +371,21 @@ reg {
  } CPTRA_WDT_CFG[2];
 
 reg {
+    name = "Caliptra iTRNG Entropy Configuration 0";
+    desc = "Adaptive threshold values for entropy source health tests.";
+    field {sw=rw; resetsignal=cptra_rst_b;} low_threshold[16]=0;
+    field {sw=rw; resetsignal=cptra_rst_b;} high_threshold[16]=0;
+ } CPTRA_iTRNG_ENTROPY_CONFIG_0;
+
+reg {
+    name = "Caliptra iTRNG Entropy Configuration 1";
+    desc = "Repetition count value for entropy source health tests.";
+    field {sw=rw; resetsignal=cptra_rst_b;} repetition_count[16]=0;
+    field {sw=rw; resetsignal=cptra_rst_b;} RSVD[16]=0;
+ } CPTRA_iTRNG_ENTROPY_CONFIG_1;
+
+reg {
     name = "Caliptra Reserved Registers";
     desc = "Set of reserved registers for survivability";
     field {sw=rw; resetsignal=cptra_rst_b;} RSVD[32]=0;
- } CPTRA_RSVD_REG[4];
+ } CPTRA_RSVD_REG[2];
