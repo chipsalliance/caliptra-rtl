@@ -257,6 +257,7 @@ reg {
 reg {
     name = "Caliptra HW RevID";
     desc = "Caliptra HW revision ID that matches the official final release milestone
+            SoC stepping ID is repopulated with the value in the fuse register on every warm reset
             [br]Caliptra Access: RO
             [br]SOC Access:      RO";
     field {sw=r; resetsignal = cptra_rst_b;} CPTRA_GENERATION[16]=1;

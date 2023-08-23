@@ -116,6 +116,8 @@ end
   reg  fw_update_rst_window_o = 'bz;
   tri  debug_locked_i;
   reg  debug_locked_o = 'bz;
+  tri  cptra_in_debug_scan_mode_i;
+  reg  cptra_in_debug_scan_mode_o = 'bz;
 
   // Bi-directional signals
   
@@ -139,6 +141,8 @@ end
   assign fw_update_rst_window_i = bus.fw_update_rst_window;
   assign bus.debug_locked = (initiator_responder == INITIATOR) ? debug_locked_o : 'bz;
   assign debug_locked_i = bus.debug_locked;
+  assign bus.cptra_in_debug_scan_mode = (initiator_responder == INITIATOR) ? cptra_in_debug_scan_mode_o : 'bz;
+  assign cptra_in_debug_scan_mode_i = bus.cptra_in_debug_scan_mode;
 
   // Proxy handle to UVM driver
   kv_rst_pkg::kv_rst_driver   proxy;
@@ -175,6 +179,7 @@ end
        core_only_rst_b_o <= 'bz;
        fw_update_rst_window_o <= 'bz;
        debug_locked_o <= 'b1;
+       cptra_in_debug_scan_mode_o <= 'b0;
        // Bi-directional signals
  
      end    
@@ -257,6 +262,11 @@ end
       cptra_pwrgood_o <= 1'b0;
     if (initiator_struct.debug_mode)
       debug_locked_o <= 1'b1;
+    if (initiator_struct.debug_mode | initiator_struct.scan_mode)
+      cptra_in_debug_scan_mode_o <= 1'b1;
+    else
+      cptra_in_debug_scan_mode_o <= 1'b0;
+    
     
     // Wait for the responder to complete the transfer then place the responder data into 
     // kv_rst_responder_struct.
@@ -279,6 +289,7 @@ end
     kv_rst_responder_struct.assert_rst = !rst_b_i;
     kv_rst_responder_struct.assert_core_rst = !core_only_rst_b_i;
     kv_rst_responder_struct.debug_mode = debug_locked_i;
+    kv_rst_responder_struct.scan_mode = cptra_in_debug_scan_mode_i & !debug_locked_i;
     responder_struct = kv_rst_responder_struct;
   endtask        
 // pragma uvmf custom initiate_and_get_response end

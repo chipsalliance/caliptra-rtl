@@ -847,7 +847,7 @@ module caliptra_top_tb (
             end
             S_APB_WR_SOC_STEPPING_ID: begin
                 PADDR      = `CLP_SOC_IFC_REG_FUSE_SOC_STEPPING_ID;
-                PWDATA     = {16'h0, 16'h1357};
+                PWDATA     = $urandom();
             end
             S_APB_WR_FUSE_DONE: begin
                 PADDR      = `CLP_SOC_IFC_REG_CPTRA_FUSE_WR_DONE;

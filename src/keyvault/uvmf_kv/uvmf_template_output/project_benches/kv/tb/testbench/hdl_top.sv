@@ -203,7 +203,7 @@ import uvmf_base_pkg_hdl::*;
       .rst_b            (kv_rst_agent_bus.rst_b        ),
       .core_only_rst_b  (kv_rst_agent_bus.core_only_rst_b),
       .cptra_pwrgood    (kv_rst_agent_bus.cptra_pwrgood),
-      .cptra_in_debug_scan_mode(),
+      .cptra_in_debug_scan_mode        (kv_rst_agent_bus.cptra_in_debug_scan_mode),
       .debugUnlock_or_scan_mode_switch (kv_rst_agent_bus.debug_locked),
 
       //uC AHB Lite Interface
