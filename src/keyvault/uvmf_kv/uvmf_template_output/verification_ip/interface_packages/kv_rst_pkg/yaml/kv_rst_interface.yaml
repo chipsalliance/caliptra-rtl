@@ -28,6 +28,10 @@ uvmf:
         name: debug_locked
         reset_value: '''bz'
         width: '1'
+      - dir: output
+        name: cptra_in_debug_scan_mode
+        reset_value: '''bz'
+        width: '1'
       reset: dummy
       reset_assertion_level: 'False'
       transaction_constraints:
@@ -63,6 +67,12 @@ uvmf:
         iscompare: 'False'
         isrand: 'False'
         name: debug_mode
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: scan_mode
         type: bit
         unpacked_dimension: ''
       use_dpi_link: 'False'

@@ -28,6 +28,9 @@ uvmf:
       - name: debug_locked
         dir: output
         width: '1'
+      - name: cptra_in_debug_scan_mode
+        dir: output
+        width: '1'
 
       transaction_constraints:
       - name: wait_cycles_c
@@ -51,6 +54,10 @@ uvmf:
         iscompare: 'False'
         isrand: 'True'
       - name: debug_mode
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+      - name: scan_mode
         type: bit
         iscompare: 'False'
         isrand: 'False'

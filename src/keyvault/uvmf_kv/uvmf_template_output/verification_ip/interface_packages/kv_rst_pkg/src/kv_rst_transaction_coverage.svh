@@ -48,10 +48,15 @@ class kv_rst_transaction_coverage  extends uvm_subscriber #(.T(kv_rst_transactio
     assert_core_rst: coverpoint coverage_trans.assert_core_rst;
     //wait_cycles: coverpoint coverage_trans.wait_cycles;
     debug_mode: coverpoint coverage_trans.debug_mode;
+    // scan_mode: coverpoint coverage_trans.scan_mode;
 
     warm_rstXdbg: cross assert_rst, debug_mode;
     cold_rstXdbg: cross set_pwrgood, debug_mode;
     core_rstXdbg: cross assert_core_rst, debug_mode;
+
+    // warm_rstXscan: cross assert_rst, scan_mode;
+    // cold_rstXscan: cross set_pwrgood, scan_mode;
+    // core_rstXscan: cross assert_core_rst, scan_mode;
     // pragma uvmf custom covergroup end
   endgroup
 

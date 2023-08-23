@@ -37,6 +37,7 @@ class kv_rst_transaction  extends uvmf_transaction_base;
   bit assert_core_rst ;
   rand int unsigned wait_cycles ;
   rand bit debug_mode ;
+  rand bit scan_mode ;
 
   //Constraints for the transaction variables:
   constraint wait_cycles_c { wait_cycles dist {[1:25] := 80, [25:100] := 15, [100:500] := 5}; }
@@ -120,7 +121,7 @@ class kv_rst_transaction  extends uvmf_transaction_base;
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("set_pwrgood:0x%x assert_rst:0x%x assert_core_rst:0x%x wait_cycles:0x%x debug_mode:0x%x",set_pwrgood,assert_rst,assert_core_rst,wait_cycles,debug_mode);
+    return $sformatf("set_pwrgood:0x%x assert_rst:0x%x assert_core_rst:0x%x wait_cycles:0x%x debug_mode:0x%x scan_mode: 0x%x",set_pwrgood,assert_rst,assert_core_rst,wait_cycles,debug_mode,scan_mode);
     // pragma uvmf custom convert2string end
   endfunction
 
@@ -167,6 +168,7 @@ class kv_rst_transaction  extends uvmf_transaction_base;
     this.assert_core_rst = RHS.assert_core_rst;
     this.wait_cycles = RHS.wait_cycles;
     this.debug_mode = RHS.debug_mode;
+    this.scan_mode = RHS.scan_mode;
     // pragma uvmf custom do_copy end
   endfunction
 

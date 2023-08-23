@@ -169,11 +169,12 @@ package kv_reg_model_top_pkg;
 
       rand uvm_reg_field debug_mode_unlocked;
       rand uvm_reg_field clear_secrets_bit;
+      rand uvm_reg_field cptra_in_debug_scan_mode;
 
       // Function: new
       // 
       function new(string name = "kv_val_reg");
-         super.new(name, 2, UVM_NO_COVERAGE);
+         super.new(name, 3, UVM_NO_COVERAGE);
       endfunction
 
 
@@ -185,6 +186,10 @@ package kv_reg_model_top_pkg;
 
          clear_secrets_bit = uvm_reg_field::type_id::create("clear_secrets_bit");
          clear_secrets_bit.configure(this, 1, 1, "RW", 0, 1'b0, 1, 1, 1);
+
+         cptra_in_debug_scan_mode = uvm_reg_field::type_id::create("cptra_in_debug_scan_mode");
+         cptra_in_debug_scan_mode.configure(this, 1, 2, "RW", 0, 1'b0, 1, 1, 1);
+
       endfunction
    endclass
 
@@ -213,6 +218,26 @@ package kv_reg_model_top_pkg;
          clear.configure(this, 32, 0, "RW", 0, 32'b0, 1, 1, 1);
       endfunction
    endclass
+
+   class kv_val_ctrl_derived extends uvm_reg;
+      `uvm_object_utils(kv_val_ctrl_derived)
+
+      rand uvm_reg_field clear_derived; //32 bits, one for each KEY_CTRL
+
+      // Function: new
+      // 
+      function new(string name = "kv_val_ctrl_derived");
+         super.new(name, 32, UVM_NO_COVERAGE);
+      endfunction
+
+
+      // Function: build
+      // 
+      virtual function void build();
+         clear_derived = uvm_reg_field::type_id::create("clear_derived");
+         clear_derived.configure(this, 32, 0, "RW", 0, 32'b0, 1, 1, 1);
+      endfunction
+   endclass
 // pragma uvmf custom define_register_classes end
 
 // pragma uvmf custom define_block_map_coverage_class begin
@@ -221,37 +246,37 @@ package kv_reg_model_top_pkg;
    // 
    // Coverage for the 'ahb_map' in 'kv_reg_model'
    //--------------------------------------------------------------------
-   class kv_ahb_map_coverage extends uvm_object;
-      `uvm_object_utils(kv_ahb_map_coverage)
+   // class kv_ahb_map_coverage extends uvm_object;
+   //    `uvm_object_utils(kv_ahb_map_coverage)
 
-      covergroup ra_cov(string name) with function sample(uvm_reg_addr_t addr, bit is_read);
+   //    covergroup ra_cov(string name) with function sample(uvm_reg_addr_t addr, bit is_read);
 
-         option.per_instance = 1;
-         option.name = name; 
+   //       option.per_instance = 1;
+   //       option.name = name; 
 
-         ADDR: coverpoint addr {
-            bins example_reg0 = {'h0};
-            bins example_reg1 = {'h1};
-         }
+   //       ADDR: coverpoint addr {
+   //          bins example_reg0 = {'h0};
+   //          bins example_reg1 = {'h1};
+   //       }
 
-         RW: coverpoint is_read {
-            bins RD = {1};
-            bins WR = {0};
-         }
+   //       RW: coverpoint is_read {
+   //          bins RD = {1};
+   //          bins WR = {0};
+   //       }
 
-         ACCESS: cross ADDR, RW;
+   //       ACCESS: cross ADDR, RW;
 
-      endgroup: ra_cov
+   //    endgroup: ra_cov
 
-      function new(string name = "kv_ahb_map_coverage");
-         ra_cov = new(name);
-      endfunction: new
+   //    function new(string name = "kv_ahb_map_coverage");
+   //       ra_cov = new(name);
+   //    endfunction: new
 
-      function void sample(uvm_reg_addr_t offset, bit is_read);
-         ra_cov.sample(offset, is_read);
-      endfunction: sample
+   //    function void sample(uvm_reg_addr_t offset, bit is_read);
+   //       ra_cov.sample(offset, is_read);
+   //    endfunction: sample
 
-   endclass: kv_ahb_map_coverage
+   // endclass: kv_ahb_map_coverage
 // pragma uvmf custom define_block_map_coverage_class end
 
    //TODO: Add coverage classes for each of the maps
@@ -270,6 +295,7 @@ package kv_reg_model_top_pkg;
 
       rand kv_val_reg val_reg;
       rand kv_val_ctrl val_ctrl;
+      rand kv_val_ctrl_derived val_ctrl_derived;
 // pragma uvmf custom instantiate_registers_within_block end
       uvm_reg_map default_map;
 
@@ -291,7 +317,7 @@ package kv_reg_model_top_pkg;
       uvm_reg_map kv_ecc_seed_read_map;
 
       //TODO add coverage for the other maps
-      kv_ahb_map_coverage ahb_map_cg;
+      // kv_ahb_map_coverage ahb_map_cg;
 
       // Function: new
       // 
@@ -303,20 +329,20 @@ package kv_reg_model_top_pkg;
       // 
       virtual function void build();
       ahb_map = create_map("ahb_map", 0, 4, UVM_LITTLE_ENDIAN);
-      if(has_coverage(UVM_CVR_ADDR_MAP)) begin
-         ahb_map_cg = kv_ahb_map_coverage::type_id::create("ahb_map_cg");
-         ahb_map_cg.ra_cov.set_inst_name(this.get_full_name());
-         void'(set_coverage(UVM_CVR_ADDR_MAP));
-      end
+      // if(has_coverage(UVM_CVR_ADDR_MAP)) begin
+      //    ahb_map_cg = kv_ahb_map_coverage::type_id::create("ahb_map_cg");
+      //    ahb_map_cg.ra_cov.set_inst_name(this.get_full_name());
+      //    void'(set_coverage(UVM_CVR_ADDR_MAP));
+      // end
 
 
 // pragma uvmf custom construct_configure_build_registers_within_block begin
-      example_reg0 = kv_example_reg0::type_id::create("example_reg0");
-      example_reg0.configure(this, null, "example_reg0");
-      example_reg0.build();
-      example_reg1 = kv_example_reg1::type_id::create("example_reg1");
-      example_reg1.configure(this, null, "example_reg1");
-      example_reg1.build();
+      // example_reg0 = kv_example_reg0::type_id::create("example_reg0");
+      // example_reg0.configure(this, null, "example_reg0");
+      // example_reg0.build();
+      // example_reg1 = kv_example_reg1::type_id::create("example_reg1");
+      // example_reg1.configure(this, null, "example_reg1");
+      // example_reg1.build();
 
       val_reg = kv_val_reg::type_id::create("val_reg");
       val_reg.configure(this,null,"val_reg");
@@ -325,6 +351,10 @@ package kv_reg_model_top_pkg;
       val_ctrl = kv_val_ctrl::type_id::create("val_ctrl");
       val_ctrl.configure(this,null,"val_ctrl");
       val_ctrl.build();
+
+      val_ctrl_derived = kv_val_ctrl_derived::type_id::create("val_ctrl_derived");
+      val_ctrl_derived.configure(this,null,"val_ctrl_derived");
+      val_ctrl_derived.build();
 // pragma uvmf custom construct_configure_build_registers_within_block end
 // pragma uvmf custom add_registers_to_block_map begin
       //ahb_map.add_reg(example_reg0, 'h0, "RW");
@@ -358,6 +388,7 @@ package kv_reg_model_top_pkg;
       //Add debug_mode reg to all maps (only for TB purposes)
       default_map.add_reg(val_reg, 'h1_0000, "RW");
       default_map.add_reg(val_ctrl, 'h1_0004, "RW");
+      default_map.add_reg(val_ctrl_derived, 'h1_0008, "RW");
 
       kv_hmac_write_map.add_reg(val_reg, 'h1_0000, "RW");
       kv_sha512_write_map.add_reg(val_reg, 'h1_0000, "RW");
@@ -369,8 +400,14 @@ package kv_reg_model_top_pkg;
       kv_ecc_write_map.add_reg   (val_ctrl, 'h1_0004, "RW");
       kv_doe_write_map.add_reg   (val_ctrl, 'h1_0004, "RW");
 
+      kv_hmac_write_map.add_reg  (val_ctrl_derived, 'h1_0008, "RW");
+      kv_sha512_write_map.add_reg(val_ctrl_derived, 'h1_0008, "RW");
+      kv_ecc_write_map.add_reg   (val_ctrl_derived, 'h1_0008, "RW");
+      kv_doe_write_map.add_reg   (val_ctrl_derived, 'h1_0008, "RW");
+
       kv_AHB_map.add_reg(val_reg, 'h1_0000, "RW");
       kv_AHB_map.add_reg(val_ctrl, 'h1_0004, "RW");
+      kv_AHB_map.add_reg(val_ctrl_derived, 'h1_0008, "RW");
       
       kv_hmac_key_read_map.add_reg(val_reg, 'h1_0000, "RW");
       kv_hmac_block_read_map.add_reg(val_reg, 'h1_0000, "RW");
@@ -383,6 +420,12 @@ package kv_reg_model_top_pkg;
       kv_sha512_block_read_map.add_reg(val_ctrl, 'h1_0004, "RW");
       kv_ecc_privkey_read_map.add_reg (val_ctrl, 'h1_0004, "RW");
       kv_ecc_seed_read_map.add_reg    (val_ctrl, 'h1_0004, "RW");
+
+      kv_hmac_key_read_map.add_reg    (val_ctrl_derived, 'h1_0008, "RW");
+      kv_hmac_block_read_map.add_reg  (val_ctrl_derived, 'h1_0008, "RW");
+      kv_sha512_block_read_map.add_reg(val_ctrl_derived, 'h1_0008, "RW");
+      kv_ecc_privkey_read_map.add_reg (val_ctrl_derived, 'h1_0008, "RW");
+      kv_ecc_seed_read_map.add_reg    (val_ctrl_derived, 'h1_0008, "RW");
  
       endfunction
 
@@ -413,13 +456,13 @@ package kv_reg_model_top_pkg;
 
       // Function: sample
       // 
-      function void sample(uvm_reg_addr_t offset, bit is_read, uvm_reg_map  map);
-         if(get_coverage(UVM_CVR_ADDR_MAP)) begin
-            if(map.get_name() == "ahb_map_cg") begin
-               ahb_map_cg.sample(offset, is_read);
-            end
-         end
-      endfunction: sample
+      // function void sample(uvm_reg_addr_t offset, bit is_read, uvm_reg_map  map);
+      //    if(get_coverage(UVM_CVR_ADDR_MAP)) begin
+      //       if(map.get_name() == "ahb_map_cg") begin
+      //          ahb_map_cg.sample(offset, is_read);
+      //       end
+      //    end
+      // endfunction: sample
 
    endclass
 
