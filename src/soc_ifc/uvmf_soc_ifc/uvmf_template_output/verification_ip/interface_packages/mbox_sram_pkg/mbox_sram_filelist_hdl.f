@@ -1,0 +1,1 @@
+$UVMF_VIP_LIBRARY_HOME/interface_packages/mbox_sram_pkg/mbox_sram_pkg_hdl.sv

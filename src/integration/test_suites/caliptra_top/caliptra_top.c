@@ -69,6 +69,8 @@ void main() {
     VPRINTF(MEDIUM, "----------------------------------\n");
 
     // TODO other init tasks? (interrupts later)
+    VPRINTF(LOW, "Starting WDT in cascade mode\n");
+    lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_EN, SOC_IFC_REG_CPTRA_WDT_TIMER1_EN_TIMER1_EN_MASK);
 
     //Check the reset reason FIXME (as soc_ifc fn)
     reset_reason = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_RESET_REASON);

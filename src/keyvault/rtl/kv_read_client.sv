@@ -67,6 +67,7 @@ kv_read_fsm
     .write_en(write_en),
     .write_offset(write_offset),
     .write_pad(write_pad),
+    .write_last(),
     .pad_data(pad_data),
     .ready(kv_ready),
     .done(read_done)

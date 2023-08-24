@@ -96,8 +96,8 @@ task fuse_reg_pauser_test;
     tphase = "1b";
 
     // NOTE. simulate_caliptra_boot() is necessary for noncore_rst_b to be deasserted
-    simulate_caliptra_boot();
-    wait (cptra_noncore_rst_b_tb == 1'b1);
+    //simulate_caliptra_boot();
+    //wait (cptra_noncore_rst_b_tb == 1'b1);
 
     // Set pauser valid to non-default
     wrtrans.update_byname("CPTRA_FUSE_VALID_PAUSER", 0, tid); 
@@ -217,7 +217,7 @@ task fuse_reg_pauser_test;
     tphase = "2b";
 
     warm_reset_dut(); 
-    reset_exp_data();
+    warm_reset_exp_data();
     sb.del_all();
 
     simulate_caliptra_boot();
@@ -229,7 +229,7 @@ task fuse_reg_pauser_test;
     //   $display("TB. DEBUG if status of cptra_noncore_rst_b_tb = 1'b%b", cptra_noncore_rst_b_tb); 
     // end
 
-    read_reg_chk_inrange(GET_APB, "CPTRA_FUSE_PAUSER_LOCK", tid, '0, '0); 
+    read_reg_chk_inrange(GET_APB, "CPTRA_FUSE_PAUSER_LOCK", tid, 'd1, 'd1); 
     @(posedge clk_tb);
 
 

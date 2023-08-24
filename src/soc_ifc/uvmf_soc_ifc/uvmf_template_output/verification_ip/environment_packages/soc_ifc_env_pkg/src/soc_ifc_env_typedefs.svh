@@ -45,6 +45,7 @@
    *   [29]: uC->SoC command
    */
   typedef enum logic [31:0] {
+      MBOX_CMD_DIR_RD     = 32'h01000000,
       MBOX_CMD_UC_BASIC   = 32'h20000000,
       MBOX_CMD_UC_OVERRUN = 32'h20000001,
       MBOX_CMD_RESP_BASIC = 32'h40000000,

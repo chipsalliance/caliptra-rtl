@@ -36,6 +36,7 @@ class soc_ifc_env_soc_mbox_handler_sequence extends soc_ifc_env_sequence_base #(
   mbox_op_s op;
   uvm_status_e reg_sts;
   int sts_rsp_count = 0;
+  uvm_event in_report_reg_sts;
 
   // PAUSER tracking/override
   bit [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users [6];
@@ -48,9 +49,10 @@ class soc_ifc_env_soc_mbox_handler_sequence extends soc_ifc_env_sequence_base #(
   extern virtual task mbox_pop_dataout();
   extern virtual task mbox_set_status();
   extern virtual task mbox_check_fsm();
+  extern virtual task mbox_wait_done();
   extern virtual task mbox_teardown();
 
-  extern virtual function void report_reg_sts(uvm_status_e sts, string name);
+  extern virtual task report_reg_sts(uvm_status_e sts, string name, caliptra_apb_user user_handle = null);
 
 
   //==========================================
@@ -62,6 +64,9 @@ class soc_ifc_env_soc_mbox_handler_sequence extends soc_ifc_env_sequence_base #(
 
     // Setup a User object to override PAUSER
     apb_user_obj = new();
+
+    // Event
+    in_report_reg_sts = new();
 
   endfunction
 
@@ -106,16 +111,13 @@ class soc_ifc_env_soc_mbox_handler_sequence extends soc_ifc_env_sequence_base #(
 
     // Get COMMAND
     mbox_get_command();
-
-    // Get DATAOUT
     mbox_pop_dataout();
 
-    // Set STATUS
+    // Return control to uC
     mbox_set_status();
-
-    // Check FSM status
     configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(2); // Takes a few cycles for FSM update to propagate into register
     mbox_check_fsm();
+    mbox_wait_done();
 
     // End of Sequence
     mbox_teardown();
@@ -272,8 +274,45 @@ task soc_ifc_env_soc_mbox_handler_sequence::mbox_check_fsm();
     report_reg_sts(reg_sts,"mbox_status");
 
     fsm_state = mbox_fsm_state_e'(data >> reg_model.mbox_csr_rm.mbox_status.mbox_fsm_ps.get_lsb_pos());
-    if (fsm_state != MBOX_EXECUTE_UC) begin
+    if (fsm_state inside {MBOX_IDLE, MBOX_ERROR} && (sts_rsp_count > 0) && soc_ifc_status_agent_rsp_seq.rsp.cptra_error_non_fatal_intr_pending) begin
+        `uvm_info("SOC_MBOX_HANDLER", $sformatf("Observed mailbox FSM state: %p, which is not a failure since it corresponds with non_fatal HW interrupt", fsm_state), UVM_MEDIUM)
+    end
+    else if (fsm_state != MBOX_EXECUTE_UC) begin
         `uvm_error("SOC_MBOX_HANDLER", $sformatf("Unexpected mailbox FSM state: %p", fsm_state))
+    end
+endtask
+
+//==========================================
+// Task:        mbox_wait_done
+// Description: Wait for uC to end the mailbox flow as indicated
+//              by mbox_lock being relinquished.
+//              If necessary, service any cptra HW error (fatal or
+//              non_fatal) that occurred.
+//==========================================
+task soc_ifc_env_soc_mbox_handler_sequence::mbox_wait_done();
+    uvm_reg_data_t non_fatal, fatal;
+
+    // Wait for lock to clear
+    while(reg_model.mbox_csr_rm.mbox_lock.get_mirrored_value())
+        configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
+
+    // Check for interrupts
+    if (sts_rsp_count && (soc_ifc_status_agent_rsp_seq.rsp.cptra_error_non_fatal_intr_pending ||
+                          soc_ifc_status_agent_rsp_seq.rsp.cptra_error_fatal_intr_pending)) begin
+        // Read status
+        reg_model.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.read(reg_sts, non_fatal, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+        report_reg_sts(reg_sts, "CPTRA_HW_ERROR_NON_FATAL");
+        reg_model.soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL.read(reg_sts, fatal, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+        report_reg_sts(reg_sts, "CPTRA_HW_ERROR_FATAL");
+
+        if (~|fatal && ~|non_fatal)
+            `uvm_error("SOC_MBOX_HANDLER", $sformatf("Received status response transaction with cptra error asserted [%s] but both fatal and non_fatal registers are 0!", soc_ifc_status_agent_rsp_seq.rsp.convert2string()))
+
+        // Write 1 to clear
+        reg_model.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.write(reg_sts, non_fatal, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+        report_reg_sts(reg_sts, "CPTRA_HW_ERROR_NON_FATAL");
+        reg_model.soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL.write(reg_sts, fatal, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+        report_reg_sts(reg_sts, "CPTRA_HW_ERROR_FATAL");
     end
 endtask
 
@@ -293,20 +332,29 @@ endtask
 //              of the most recent APB transfer, accounting for
 //              the PAUSER value that was used.
 //==========================================
-function void soc_ifc_env_soc_mbox_handler_sequence::report_reg_sts(uvm_status_e sts, string name);
+task soc_ifc_env_soc_mbox_handler_sequence::report_reg_sts(uvm_status_e sts, string name, caliptra_apb_user user_handle = null);
+    caliptra_apb_user user;
+    int waiters = in_report_reg_sts.get_num_waiters();
+    in_report_reg_sts.trigger();
+    if (user_handle == null) user = this.apb_user_obj;
+    else                     user = user_handle;
     // APB error is flagged only for PAUSER that doesn't match the registered
     // values, it does not check that PAUSER matches the exact value in
     // mbox_user that was stored when lock was acquired (this results in a
     // silent error but a successful reg read).
     // Ergo, check against mbox_valid_users instead of pauser_locked.
-    if (sts != UVM_IS_OK && this.apb_user_obj.get_addr_user() inside mbox_valid_users)
+    if (sts != UVM_IS_OK && user.get_addr_user() inside mbox_valid_users)
         `uvm_error("SOC_MBOX_HANDLER",
-                   $sformatf("Register access failed unexpectedly with valid PAUSER! 0x%x (%s)", this.apb_user_obj.get_addr_user(), name))
-    else if (sts == UVM_IS_OK && !(this.apb_user_obj.get_addr_user() inside mbox_valid_users))
+                   $sformatf("Register access failed unexpectedly with valid PAUSER! 0x%x (%s)", user.get_addr_user(), name))
+    else if (sts == UVM_IS_OK && !(user.get_addr_user() inside mbox_valid_users))
         `uvm_error("SOC_MBOX_HANDLER",
-                   $sformatf("Register access passed unexpectedly with invalid PAUSER! 0x%x (%s)", this.apb_user_obj.get_addr_user(), name))
+                   $sformatf("Register access passed unexpectedly with invalid PAUSER! 0x%x (%s)", user.get_addr_user(), name))
     else
         `uvm_info("SOC_MBOX_HANDLER",
                   $sformatf("Register access to (%s) with pauser_used_is_valid: %b and sts: %p", name, 1/* this.pauser_used_is_valid()*/, sts),
                   UVM_HIGH)
-endfunction
+    if (waiters)
+        in_report_reg_sts.wait_off();
+    else
+        in_report_reg_sts.reset();
+endtask

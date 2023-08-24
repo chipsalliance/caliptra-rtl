@@ -57,7 +57,6 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error extends soc_ifc_reg_delay_j
             non_fatal_fld.predict(1'b1, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
 
             rm.mbox_status.mbox_fsm_ps.predict(state_nxt, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
-            rm.mbox_fn_state_sigs = '{mbox_error: 1'b1, default: 1'b0};
             `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("delay_job scheduled for access through map [%p] on [%s] results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), fld.get_full_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
         end
     endtask

@@ -37,6 +37,7 @@ class soc_ifc_ctrl_reset_sequence_base
   // pragma uvmf custom class_item_additional begin
   bit warm_reset_only = 1'b0;
   bit set_bootfsm_breakpoint;
+  security_state_t security_state;
   bit [7:0] [31:0] cptra_obf_key ;
   // pragma uvmf custom class_item_additional end
 
@@ -106,6 +107,7 @@ class soc_ifc_ctrl_reset_sequence_base
       req.wait_cycles = 0;
       // Send the transaction to the soc_ifc_ctrl_driver_bfm via the sequencer and soc_ifc_ctrl_driver.
       finish_item(req);
+      this.security_state = req.security_state;
       `uvm_info("SOC_IFC_CTRL_RST", {"Response:",req.convert2string()},UVM_MEDIUM)
 
   endtask

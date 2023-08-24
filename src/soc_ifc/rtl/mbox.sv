@@ -33,6 +33,7 @@ module mbox
     output logic        mbox_error,
 
     output logic [DATA_W-1:0] rdata,
+    output logic [DATA_W-1:0] dir_rdata,
 
     input logic sha_sram_req_dv,
     input logic [MBOX_ADDR_W-1:0] sha_sram_req_addr,
@@ -106,6 +107,7 @@ logic mbox_rd_full, mbox_rd_full_nxt;
 logic inc_rdptr;
 logic rst_mbox_rdptr;
 logic rst_mbox_wrptr;
+logic sram_rd_ecc_en;
 logic [DATA_W-1:0] sram_rdata;
 logic [MBOX_ECC_DATA_W-1:0] sram_rdata_ecc;
 logic [DATA_W-1:0] sram_rdata_cor;
@@ -193,21 +195,26 @@ always_comb arc_FORCE_MBOX_UNLOCK = hwif_out.mbox_unlock.unlock.value;
 // NOTE: Any APB agent can trigger the error at any point during a uC->SOC flow
 //       by writing to mbox_status (since it's a valid_receiver).
 //       FIXED! valid_receiver is restricted by FSM state now.
-always_comb arc_MBOX_RDY_FOR_CMD_MBOX_ERROR  = req_dv && req_data.soc_req && valid_requester &&
+always_comb arc_MBOX_RDY_FOR_CMD_MBOX_ERROR  = (mbox_fsm_ps == MBOX_RDY_FOR_CMD) &&
+                                               req_dv && req_data.soc_req && ~req_hold && valid_requester &&
                                               (req_data.write ? (!hwif_out.mbox_cmd.command.swmod) :
                                                                 (hwif_out.mbox_dataout.dataout.swacc));
-always_comb arc_MBOX_RDY_FOR_DLEN_MBOX_ERROR = req_dv && req_data.soc_req && valid_requester &&
+always_comb arc_MBOX_RDY_FOR_DLEN_MBOX_ERROR = (mbox_fsm_ps == MBOX_RDY_FOR_DLEN) &&
+                                               req_dv && req_data.soc_req && ~req_hold && valid_requester &&
                                               (req_data.write ? (!hwif_out.mbox_dlen.length.swmod) :
                                                                 (hwif_out.mbox_dataout.dataout.swacc));
-always_comb arc_MBOX_RDY_FOR_DATA_MBOX_ERROR = req_dv && req_data.soc_req && valid_requester &&
+always_comb arc_MBOX_RDY_FOR_DATA_MBOX_ERROR = (mbox_fsm_ps == MBOX_RDY_FOR_DATA) &&
+                                               req_dv && req_data.soc_req && ~req_hold && valid_requester &&
                                               (req_data.write ? (!(hwif_out.mbox_datain.datain.swmod || hwif_out.mbox_execute.execute.swmod)) :
                                                                 (hwif_out.mbox_dataout.dataout.swacc));
-always_comb arc_MBOX_EXECUTE_UC_MBOX_ERROR   = req_dv && req_data.soc_req && valid_requester &&
+always_comb arc_MBOX_EXECUTE_UC_MBOX_ERROR   = (mbox_fsm_ps == MBOX_EXECUTE_UC) &&
+                                               req_dv && req_data.soc_req && ~req_hold && valid_requester &&
                                               (req_data.write ? (1'b1/* any write by 'valid' soc is illegal here */) :
                                                                 (hwif_out.mbox_dataout.dataout.swacc));
-always_comb arc_MBOX_EXECUTE_SOC_MBOX_ERROR  = req_dv && req_data.soc_req &&
+always_comb arc_MBOX_EXECUTE_SOC_MBOX_ERROR  = (mbox_fsm_ps == MBOX_EXECUTE_SOC) &&
+                                               req_dv && req_data.soc_req && ~req_hold &&
                                               (req_data.write ? ((valid_requester && !(hwif_out.mbox_execute.execute.swmod)) ||
-                                                                 (~soc_has_lock   && !(hwif_out.mbox_status.status.swmod || hwif_out.mbox_dlen.length.swmod))) :
+                                                                 (~soc_has_lock   && !(hwif_out.mbox_status.status.swmod))) :
                                                                 (1'b0 /* any read allowed by SoC during this stage; dataout consumption is expected */));
 
 //capture the dlen when we change to execute states, this ensures that only the dlen programmed
@@ -250,7 +257,7 @@ always_comb begin : mbox_fsm_combo
             end
             // Flag a non-fatal error, but don't change states, if mbox is already IDLE
             // when an unexpected SOC access happens
-            if (req_dv && req_data.soc_req && (req_data.write || hwif_out.mbox_dataout.dataout.swacc)) begin
+            if (req_dv && req_data.soc_req && !req_hold && (req_data.write || hwif_out.mbox_dataout.dataout.swacc)) begin
                 mbox_protocol_error_nxt.axs_without_lock = 1'b1;
             end
         end
@@ -380,7 +387,7 @@ end
 // Any ol' PAUSER is fine for reg-reads (except dataout)
 // NOTE: This only captures accesses by APB agents that are valid, but do not
 //       have lock. Invalid agent accesses are blocked by arbiter.
-assign mbox_inv_pauser_axs = req_dv && req_data.soc_req &&
+assign mbox_inv_pauser_axs = req_dv && req_data.soc_req && !req_hold &&
                              !valid_requester && !valid_receiver &&
                              (req_data.write || hwif_out.mbox_dataout.dataout.swacc);
 
@@ -403,6 +410,7 @@ always_ff @(posedge clk or negedge rst_b) begin
         sram_ecc_cor_waddr <= '0;
         dlen_in_dws <= '0;
         mbox_protocol_error <= '0;
+        sram_rd_ecc_en <= '0;
     end
     else begin
         mbox_fsm_ps <= mbox_fsm_ns;
@@ -420,6 +428,8 @@ always_ff @(posedge clk or negedge rst_b) begin
                              
         dlen_in_dws <= latch_dlen_in_dws ? dlen_in_dws_nxt : dlen_in_dws;                    
         mbox_protocol_error <= mbox_protocol_error_nxt;
+        //enable ecc for mbox protocol, direct reads, or SHA direct reads
+        sram_rd_ecc_en <= mbox_protocol_sram_rd | (dir_req_dv_q & ~sha_sram_req_dv & ~req_data.write) | sha_sram_req_dv;
     end
 end
 
@@ -451,7 +461,8 @@ always_comb sram_waddr = sram_ecc_cor_we ? sram_ecc_cor_waddr :
                          dir_req_dv_q    ? dir_req_addr : mbox_wrptr;
 //data phase after request for direct access
 //We want to mask the read data for certain accesses
-always_comb rdata = dir_req_rd_phase ? sram_rdata_cor : ({DATA_W{~mask_rdata}} & csr_rdata);
+always_comb rdata = ({DATA_W{~mask_rdata}} & csr_rdata);
+always_comb dir_rdata = dir_req_rd_phase ? sram_rdata_cor : '0;
 
 always_comb begin: mbox_sram_inf
     //read live on direct access, or when pointer has been incremented, for pre-load on read pointer reset, or ecc correction
@@ -478,7 +489,7 @@ initial assert(DATA_W == 32) else
     $error("%m::rvecc_encode supports 32-bit data width; must change SRAM ECC implementation to support DATA_W = %d", DATA_W);
 // synthesis translate_on
 rvecc_decode ecc_decode (
-    .en              (dir_req_rd_phase | mbox_protocol_sram_rd_f),
+    .en              (sram_rd_ecc_en       ),
     .sed_ded         ( 1'b0                ),    // 1 : means only detection
     .din             (sram_rdata           ),
     .ecc_in          (sram_rdata_ecc       ),
@@ -542,10 +553,12 @@ always_comb hwif_in.mbox_execute.execute.hwclr = arc_FORCE_MBOX_UNLOCK;
 always_comb hwif_in.mbox_status.ecc_single_error.hwset = sram_single_ecc_error;
 always_comb hwif_in.mbox_status.ecc_double_error.hwset = sram_double_ecc_error;
 always_comb hwif_in.mbox_status.soc_has_lock.next = soc_has_lock;
+always_comb hwif_in.mbox_status.mbox_rdptr.next = mbox_rdptr;
 
 always_comb dmi_reg.MBOX_DLEN = hwif_out.mbox_dlen.length.value;
 always_comb dmi_reg.MBOX_DOUT = hwif_out.mbox_dataout.dataout.value;
-always_comb dmi_reg.MBOX_STATUS = {22'd0,                                       /* [31:10] */
+always_comb dmi_reg.MBOX_STATUS = {7'd0,                                        /* [31:25] */
+                                   hwif_out.mbox_status.mbox_rdptr.value,       /* [24:10]*/
                                    hwif_out.mbox_status.soc_has_lock.value,     /* [9] */
                                    hwif_out.mbox_status.mbox_fsm_ps.value,      /* [8:6] */
                                    hwif_out.mbox_status.ecc_double_error.value, /* [5] */

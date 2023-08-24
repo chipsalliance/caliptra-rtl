@@ -16,6 +16,7 @@ targets:
       - $COMPILE_ROOT/rtl/ahb_slv_sif.sv
       - $COMPILE_ROOT/rtl/caliptra_icg.sv
       - $COMPILE_ROOT/rtl/clk_gate.sv
+      - $COMPILE_ROOT/rtl/caliptra_2ff_sync.sv
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
@@ -28,6 +29,7 @@ targets:
       - $COMPILE_ROOT/rtl/ahb_slv_sif.sv
       - $COMPILE_ROOT/rtl/caliptra_icg.sv
       - $COMPILE_ROOT/rtl/clk_gate.sv
+      - $COMPILE_ROOT/rtl/caliptra_2ff_sync.sv
       - $COMPILE_ROOT/rtl/ahb_to_reg_adapter.sv
 ---
 provides: [uvm_lib]

@@ -130,11 +130,11 @@ rand soc_ifc_subenv_config_t soc_ifc_subenv_config;
     super.initialize(sim_level, environment_path, interface_names, register_model, interface_activity);
 
   // Interface initialization for sub-environments
-    soc_ifc_subenv_interface_names    = new[6];
-    soc_ifc_subenv_interface_activity = new[6];
+    soc_ifc_subenv_interface_names    = new[7];
+    soc_ifc_subenv_interface_activity = new[7];
 
-    soc_ifc_subenv_interface_names     = interface_names[0:5];
-    soc_ifc_subenv_interface_activity  = interface_activity[0:5];
+    soc_ifc_subenv_interface_names     = interface_names[0:6];
+    soc_ifc_subenv_interface_activity  = interface_activity[0:6];
 
 
 

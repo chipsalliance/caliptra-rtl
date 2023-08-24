@@ -47,6 +47,8 @@ package soc_ifc_tests_pkg;
    import soc_ifc_status_pkg_hdl::*;
    import cptra_status_pkg::*;
    import cptra_status_pkg_hdl::*;
+   import mbox_sram_pkg::*;
+   import mbox_sram_pkg_hdl::*;
    import qvip_ahb_lite_slave_pkg::*;
    import qvip_apb5_slave_pkg::*;
    import QUESTA_MVC::*;

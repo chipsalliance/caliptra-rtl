@@ -14,6 +14,9 @@ uvmf:
       - initiator_responder: RESPONDER
         name: cptra_status_agent
         type: cptra_status
+      - initiator_responder: RESPONDER
+        name: mbox_sram_agent
+        type: mbox_sram
       analysis_components:
       - name: soc_ifc_pred
         parameters: []
@@ -66,6 +69,9 @@ uvmf:
         validate: 'True'
       - driver: cptra_ctrl_agent.monitored_ap
         receiver: soc_ifc_pred.cptra_ctrl_agent_ae
+        validate: 'True'
+      - driver: mbox_sram_agent.monitored_ap
+        receiver: soc_ifc_pred.mbox_sram_agent_ae
         validate: 'True'
       - driver: soc_ifc_pred.soc_ifc_sb_ap
         receiver: soc_ifc_sb.expected_analysis_export

@@ -61,3 +61,4 @@ contents:
         #smoke test jtag
         #smoke test generic input wire to fw interrupt
         - ../test_suites/smoke_test_clk_gating/smoke_test_clk_gating.yml
+        - ../test_suites/smoke_test_iccm_reset/smoke_test_iccm_reset.yml

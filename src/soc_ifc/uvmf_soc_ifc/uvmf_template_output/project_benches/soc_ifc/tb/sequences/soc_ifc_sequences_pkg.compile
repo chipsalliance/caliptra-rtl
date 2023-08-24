@@ -4,6 +4,7 @@ needs:
   - ../../../../verification_ip/interface_packages/cptra_ctrl_pkg/cptra_ctrl.compile
   - ../../../../verification_ip/interface_packages/soc_ifc_status_pkg/soc_ifc_status.compile
   - ../../../../verification_ip/interface_packages/cptra_status_pkg/cptra_status.compile
+  - ../../../../verification_ip/interface_packages/mbox_sram_pkg/mbox_sram.compile
   - ../../../../verification_ip/environment_packages/soc_ifc_env_pkg/soc_ifc_env_pkg.compile
   - ../parameters/soc_ifc_parameters_pkg.compile
 src:

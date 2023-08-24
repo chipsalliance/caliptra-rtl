@@ -301,11 +301,12 @@ class kv_predictor #(
         last_dword_written[entry] = 'h0; //Clear last dword on hard rst
       end
     end
-    else if (t.debug_mode) begin
+    else if (t.debug_mode | t.scan_mode) begin
       //Set val_reg to 1 for use in reg predictor
       p_kv_rm.val_reg.debug_mode_unlocked.set(1'b1);
+      p_kv_rm.val_reg.cptra_in_debug_scan_mode.set(1'b1);
       
-      if (clear_secrets_data[1] == 'h1) begin
+      if (clear_secrets_data[p_kv_rm.kv_reg_rm.CLEAR_SECRETS.sel_debug_value.get_lsb_pos()] == 'h1) begin
         for(entry = 0; entry < KV_NUM_KEYS; entry++) begin
           //Debug mode should flush all regs inspite of locks
           for(offset = 0; offset < KV_NUM_DWORDS; offset++) begin
@@ -351,8 +352,13 @@ class kv_predictor #(
     end
 
     //If debug mode was unlocked, set a val register to let reg predictor know
-    if (!t.debug_mode)
+    if (!t.debug_mode) begin
       p_kv_rm.val_reg.debug_mode_unlocked.set(1'b0);
+      //TODO: resetting debug_scan_mode needed?
+      if (!t.scan_mode) begin
+        p_kv_rm.val_reg.cptra_in_debug_scan_mode.set(1'b0);
+      end
+    end
  
     // Code for sending output transaction out through kv_sb_ap
     // Please note that each broadcasted transaction should be a different object than previously 
@@ -586,8 +592,8 @@ class kv_predictor #(
     string reg_name;
     reg [KV_DATA_W-1:0] data_active;
     reg [ahb_lite_slave_0_params::AHB_WDATA_WIDTH-1:0] address_aligned;
-    uvm_reg val_ctrl;
-    uvm_reg_data_t val_ctrl_data;
+    uvm_reg val_ctrl, val_reg, val_ctrl_derived;
+    uvm_reg_data_t val_ctrl_data, val_reg_data, val_ctrl_derived_data;
 
     ahb_slave_0_ae_debug = t;
     `uvm_info("PRED", "Transaction Received through ahb_slave_0_ae", UVM_MEDIUM)
@@ -604,30 +610,40 @@ class kv_predictor #(
       //Copy txn and modify required fields later
       kv_sb_ahb_ap_output_transaction.copy(ahb_txn);
 
-      if (ahb_txn.address == `KV_REG_CLEAR_SECRETS) begin
-        p_kv_rm.val_reg.clear_secrets_bit.set(1'b1);
-        if (data_active[1:0] == 'h1) begin
-          for(entry = 0; entry < KV_NUM_KEYS; entry++) begin
-            //Read locks before clearing - do not clear if locked
-            kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_CTRL[%0d]",entry));
-            kv_reg_data = kv_reg.get_mirrored_value();
-            if(kv_reg_data[1:0] == 2'b00) begin
-              for(offset = 0; offset < KV_NUM_DWORDS; offset++) begin              
-                p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].predict(CLP_DEBUG_MODE_KV_0);
-                p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].set(CLP_DEBUG_MODE_KV_0);
+      //Read val reg to determine if we're in debug mode
+      val_reg = p_kv_rm.get_reg_by_name("val_reg");
+      val_reg_data = val_reg.get();
+
+      //Only allow clear_secrets during debug mode
+      if ((ahb_txn.address == `KV_REG_CLEAR_SECRETS) ) begin
+        //Update val register with CLEAR_SECRETS wr_debug_values field
+        p_kv_rm.val_reg.clear_secrets_bit.set(data_active[p_kv_rm.kv_reg_rm.CLEAR_SECRETS.wr_debug_values.get_lsb_pos()]);
+
+        if (val_reg_data[p_kv_rm.val_reg.cptra_in_debug_scan_mode.get_lsb_pos()]) begin //[2]) begin
+          //Only allow clear operation if in debug mode
+          if (data_active[1:0] == 'h1) begin
+            for(entry = 0; entry < KV_NUM_KEYS; entry++) begin
+              //Read locks before clearing - do not clear if locked
+              kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_CTRL[%0d]",entry));
+              kv_reg_data = kv_reg.get_mirrored_value();
+              if(kv_reg_data[1:0] == 2'b00) begin
+                for(offset = 0; offset < KV_NUM_DWORDS; offset++) begin              
+                  p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].predict(CLP_DEBUG_MODE_KV_0);
+                  p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].set(CLP_DEBUG_MODE_KV_0);
+                end
               end
             end
           end
-        end
-        else if(data_active[1:0] == 'h3) begin
-          for(entry = 0; entry < KV_NUM_KEYS; entry++) begin
-            //Read locks before clearing
-            kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_CTRL[%0d]",entry));
-            kv_reg_data = kv_reg.get_mirrored_value();
-            if(kv_reg_data[1:0] == 2'b00) begin
-              for(offset = 0; offset < KV_NUM_DWORDS; offset++) begin
-                p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].predict(CLP_DEBUG_MODE_KV_1);
-                p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].set(CLP_DEBUG_MODE_KV_1);
+          else if(data_active[1:0] == 'h3) begin
+            for(entry = 0; entry < KV_NUM_KEYS; entry++) begin
+              //Read locks before clearing
+              kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_CTRL[%0d]",entry));
+              kv_reg_data = kv_reg.get_mirrored_value();
+              if(kv_reg_data[1:0] == 2'b00) begin
+                for(offset = 0; offset < KV_NUM_DWORDS; offset++) begin
+                  p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].predict(CLP_DEBUG_MODE_KV_1);
+                  p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].set(CLP_DEBUG_MODE_KV_1);
+                end
               end
             end
           end
@@ -646,8 +662,13 @@ class kv_predictor #(
 
         if(data_active[2] && !kv_reg_data[0] && !kv_reg_data[1]) begin
           val_ctrl_data[entry] = 'b1; //In design, clear is a single pulse reg. This val_ctrl[*] will be reset in kv_reg_predictor
+          val_ctrl_derived_data[entry] = 'b1;
           //p_kv_rm.kv_reg_rm.kv_val_ctrl.predict(val_ctrl_data);
+          `uvm_info("PRED", "Setting clear field of val_ctrl register", UVM_MEDIUM)
           p_kv_rm.val_ctrl.set(val_ctrl_data);
+
+          `uvm_info("PRED", "Setting clear field of val_ctrl_derived register", UVM_MEDIUM)
+          p_kv_rm.val_ctrl_derived.set(val_ctrl_derived_data);
           //Clear the entry that is being accessed
           for(offset = 0; offset < KV_NUM_DWORDS; offset++) begin
             p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].predict('h0);
@@ -733,8 +754,9 @@ endclass
       t_expected.error = 'b0;
     end
 
-    if (val_ctrl_data[t_received.read_entry])
+    if (val_ctrl_data[t_received.read_entry]) begin
       last_dword_written[t_received.read_entry] = 'h0;
+    end
 
     t_expected.last = (last_dword_written[t_received.read_entry] == t_received.read_offset); 
     t_expected.read_entry = t_received.read_entry;
@@ -742,10 +764,11 @@ endclass
   endfunction
 
   function void kv_predictor::populate_expected_kv_write_txn (ref kv_sb_ap_output_transaction_write_t t_expected, kv_write_transaction t_received);
-    uvm_reg kv_reg;
-    uvm_reg_data_t kv_reg_data;
+    uvm_reg kv_reg, val_ctrl_derived;
+    uvm_reg_data_t kv_reg_data, val_ctrl_derived_data;
     logic lock_use;
     logic lock_wr;
+    logic clear;
 
     //TODO: This logic takes advantage of the fact that reg model writes happen without a 1 clk delay.
     //So when predictor reads the CTRL reg, the lock info is already up to date
@@ -756,16 +779,38 @@ endclass
     lock_wr = kv_reg_data[0];
     lock_use = kv_reg_data[1];
 
+    val_ctrl_derived = p_kv_rm.get_reg_by_name("val_ctrl_derived");
+    val_ctrl_derived_data = val_ctrl_derived.get();
+
     //Copy received txn
-    t_expected = t_received;
+    // t_expected = t_received;
+    t_expected.write_en         = t_received.write_en;
+    t_expected.write_entry      = t_received.write_entry;
+    t_expected.write_offset     = t_received.write_offset;
+    t_expected.write_data       = t_received.write_data;
+    t_expected.write_dest_valid = t_received.write_dest_valid;
 
-    //Error should be set when writing to locked regs
-    if(lock_wr || lock_use)
-      t_expected.error = 'b1;
+    //Error should be set when writing to locked regs //TODO: error when entry is being cleared during write
+    if (t_received.write_en) begin
+      if(lock_wr || lock_use) begin
+        t_expected.error = 1'b1;
+        `uvm_info("PRED", "Trying to write to a locked reg", UVM_MEDIUM)
+      end
+      else if (/*this.write_in_progress[t_received.write_entry] &&*/ val_ctrl_derived_data[t_received.write_entry]) begin
+        t_expected.error = 1'b1;
+        `uvm_info("PRED","Attempts to clear a reg while write is in progress results in an error", UVM_MEDIUM)
+        `uvm_info("PRED", $sformatf("Write entry = %0d, val_ctrl_derived_data = %b", t_received.write_entry, val_ctrl_derived_data), UVM_MEDIUM)
+      end
+      else begin
+        t_expected.error = 1'b0;
+        //Keep track of last dword written
+        last_dword_written[t_received.write_entry] = t_received.write_offset;
+      end
+    end
+    else begin
+      t_expected.error = 1'b0;
+    end
 
-    //Keep track of last dword written
-    last_dword_written[t_received.write_entry] = t_received.write_offset;
-    
       
   endfunction
 // pragma uvmf custom external end
