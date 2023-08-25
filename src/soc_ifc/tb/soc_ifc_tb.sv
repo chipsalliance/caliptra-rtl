@@ -169,10 +169,13 @@ module soc_ifc_tb
 
   bit            reg_sva_off = 1'b1;  // Enable only during register assertion checks
 
+  logic [APB_DATA_WIDTH-1:0]    prdata_o_latched;
 
 
-  
-  
+  always @(negedge clk_tb) begin
+    prdata_o_latched <= prdata_o_tb;
+  end
+
   always_comb begin
     mbox_sram_cs = mbox_sram_req.cs;
     mbox_sram_we = mbox_sram_req.we;
@@ -446,6 +449,7 @@ module soc_ifc_tb
       repeat (5) @(posedge clk_tb);
       
       cptra_rst_b_tb = 1;
+      repeat (5) @(posedge clk_tb);
       $display("");
     end
   endtask // reset_dut
@@ -468,6 +472,7 @@ module soc_ifc_tb
       repeat (5) @(posedge clk_tb);
 
       cptra_rst_b_tb = 1;
+      repeat (5) @(posedge clk_tb);
       $display("");
     end
   endtask // reset_dut
@@ -1262,12 +1267,14 @@ module soc_ifc_tb
         if (modifier == GET_AHB) begin
           read_single_word_ahb(addr);
           valid_hrdata =  addr[2] ?  hrdata_o_tb[`AHB64_HI] :hrdata_o_tb[`AHB64_LO]; 
-          $display(" Read over AHB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, valid_hrdata); 
+          $display(" Read over AHB: addr =  %-40s (0x%08x), data = 0x%08x on cycle %08d", rname, addr, valid_hrdata, cycle_ctr); 
           rdtrans.update(addr, valid_hrdata, tid); 
         end else if (modifier == GET_APB) begin
           read_single_word_apb(addr);
-          $display(" Read over APB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, prdata_o_tb); 
-          rdtrans.update(addr, prdata_o_tb, tid); 
+          // $display(" Read over APB: addr =  %-40s (0x%08x), data = 0x%08x at time %12t (cycle %08d)", rname, addr, prdata_o_latched, $realtime, cycle_ctr); // used to be   prdata_o_tb
+          $display(" Read over APB: addr =  %-40s (0x%08x), data = 0x%08x on cycle %08d", rname, addr, prdata_o_tb, cycle_ctr); // used to be   prdata_o_tb
+          // rdtrans.update(addr, prdata_o_latched, tid);  // used to be prdata_o_tb
+          rdtrans.update(addr, prdata_o_tb, tid);  
         end else 
           $error("TB ERROR. Unsupported access modifier %s", modifier.name()); 
 

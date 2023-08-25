@@ -333,6 +333,9 @@ interface soc_ifc_cov_if
     end 
 */   
 
+
+
+
   // ------------------------------------------------------------------- 
   // begin SCRIPT_OUTPUT
   // ------------------------------------------------------------------- 
@@ -340,7 +343,7 @@ interface soc_ifc_cov_if
 
   // ------------------- COVERGROUP related signals & assigns -------------------
 
-  logic        hit_CPTRA_HW_ERROR_FATAL;
+  logic          hit_CPTRA_HW_ERROR_FATAL;
   logic [3:0]    bus_CPTRA_HW_ERROR_FATAL;
   logic [31:0]   full_addr_CPTRA_HW_ERROR_FATAL = `CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL;
 
@@ -434,6 +437,10 @@ interface soc_ifc_cov_if
   assign         full_addr_CPTRA_TRNG_DATA[10] = `CLP_SOC_IFC_REG_CPTRA_TRNG_DATA_10;
   assign         full_addr_CPTRA_TRNG_DATA[11] = `CLP_SOC_IFC_REG_CPTRA_TRNG_DATA_11;
 
+  logic          hit_CPTRA_TRNG_CTRL;
+  logic [3:0]    bus_CPTRA_TRNG_CTRL;
+  logic [31:0]   full_addr_CPTRA_TRNG_CTRL = `CLP_SOC_IFC_REG_CPTRA_TRNG_CTRL;
+
   logic          hit_CPTRA_TRNG_STATUS;
   logic [3:0]    bus_CPTRA_TRNG_STATUS;
   logic [31:0]   full_addr_CPTRA_TRNG_STATUS = `CLP_SOC_IFC_REG_CPTRA_TRNG_STATUS;
@@ -523,6 +530,26 @@ interface soc_ifc_cov_if
   logic          hit_CPTRA_FUSE_PAUSER_LOCK;
   logic [3:0]    bus_CPTRA_FUSE_PAUSER_LOCK;
   logic [31:0]   full_addr_CPTRA_FUSE_PAUSER_LOCK = `CLP_SOC_IFC_REG_CPTRA_FUSE_PAUSER_LOCK;
+
+  logic          hit_CPTRA_WDT_CFG[0:1];
+  logic [3:0]    bus_CPTRA_WDT_CFG[0:1];
+  logic [31:0]   full_addr_CPTRA_WDT_CFG[0:1];
+  assign         full_addr_CPTRA_WDT_CFG[0] = `CLP_SOC_IFC_REG_CPTRA_WDT_CFG_0;
+  assign         full_addr_CPTRA_WDT_CFG[1] = `CLP_SOC_IFC_REG_CPTRA_WDT_CFG_1;
+
+  logic          hit_CPTRA_iTRNG_ENTROPY_CONFIG_0;
+  logic [3:0]    bus_CPTRA_iTRNG_ENTROPY_CONFIG_0;
+  logic [31:0]   full_addr_CPTRA_iTRNG_ENTROPY_CONFIG_0 = `CLP_SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0;
+
+  logic          hit_CPTRA_iTRNG_ENTROPY_CONFIG_1;
+  logic [3:0]    bus_CPTRA_iTRNG_ENTROPY_CONFIG_1;
+  logic [31:0]   full_addr_CPTRA_iTRNG_ENTROPY_CONFIG_1 = `CLP_SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1;
+
+  logic          hit_CPTRA_RSVD_REG[0:1];
+  logic [3:0]    bus_CPTRA_RSVD_REG[0:1];
+  logic [31:0]   full_addr_CPTRA_RSVD_REG[0:1];
+  assign         full_addr_CPTRA_RSVD_REG[0] = `CLP_SOC_IFC_REG_CPTRA_RSVD_REG_0;
+  assign         full_addr_CPTRA_RSVD_REG[1] = `CLP_SOC_IFC_REG_CPTRA_RSVD_REG_1;
 
   logic          hit_fuse_uds_seed[0:11];
   logic [3:0]    bus_fuse_uds_seed[0:11];
@@ -644,6 +671,18 @@ interface soc_ifc_cov_if
   logic [3:0]    bus_fuse_life_cycle;
   logic [31:0]   full_addr_fuse_life_cycle = `CLP_SOC_IFC_REG_FUSE_LIFE_CYCLE;
 
+  logic          hit_fuse_lms_verify;
+  logic [3:0]    bus_fuse_lms_verify;
+  logic [31:0]   full_addr_fuse_lms_verify = `CLP_SOC_IFC_REG_FUSE_LMS_VERIFY;
+
+  logic          hit_fuse_lms_revocation;
+  logic [3:0]    bus_fuse_lms_revocation;
+  logic [31:0]   full_addr_fuse_lms_revocation = `CLP_SOC_IFC_REG_FUSE_LMS_REVOCATION;
+
+  logic          hit_fuse_soc_stepping_id;
+  logic [3:0]    bus_fuse_soc_stepping_id;
+  logic [31:0]   full_addr_fuse_soc_stepping_id = `CLP_SOC_IFC_REG_FUSE_SOC_STEPPING_ID;
+
   logic          hit_internal_obf_key[0:7];
   logic [3:0]    bus_internal_obf_key[0:7];
   logic [31:0]   full_addr_internal_obf_key[0:7];
@@ -671,6 +710,178 @@ interface soc_ifc_cov_if
   logic          hit_internal_nmi_vector;
   logic [3:0]    bus_internal_nmi_vector;
   logic [31:0]   full_addr_internal_nmi_vector = `CLP_SOC_IFC_REG_INTERNAL_NMI_VECTOR;
+
+  logic          hit_internal_hw_error_fatal_mask;
+  logic [3:0]    bus_internal_hw_error_fatal_mask;
+  logic [31:0]   full_addr_internal_hw_error_fatal_mask = `CLP_SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK;
+
+  logic          hit_internal_hw_error_non_fatal_mask;
+  logic [3:0]    bus_internal_hw_error_non_fatal_mask;
+  logic [31:0]   full_addr_internal_hw_error_non_fatal_mask = `CLP_SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK;
+
+  logic          hit_internal_fw_error_fatal_mask;
+  logic [3:0]    bus_internal_fw_error_fatal_mask;
+  logic [31:0]   full_addr_internal_fw_error_fatal_mask = `CLP_SOC_IFC_REG_INTERNAL_FW_ERROR_FATAL_MASK;
+
+  logic          hit_internal_fw_error_non_fatal_mask;
+  logic [3:0]    bus_internal_fw_error_non_fatal_mask;
+  logic [31:0]   full_addr_internal_fw_error_non_fatal_mask = `CLP_SOC_IFC_REG_INTERNAL_FW_ERROR_NON_FATAL_MASK;
+
+  logic          hit_internal_rv_mtime_l;
+  logic [3:0]    bus_internal_rv_mtime_l;
+  logic [31:0]   full_addr_internal_rv_mtime_l = `CLP_SOC_IFC_REG_INTERNAL_RV_MTIME_L;
+
+  logic          hit_internal_rv_mtime_h;
+  logic [3:0]    bus_internal_rv_mtime_h;
+  logic [31:0]   full_addr_internal_rv_mtime_h = `CLP_SOC_IFC_REG_INTERNAL_RV_MTIME_H;
+
+  logic          hit_internal_rv_mtimecmp_l;
+  logic [3:0]    bus_internal_rv_mtimecmp_l;
+  logic [31:0]   full_addr_internal_rv_mtimecmp_l = `CLP_SOC_IFC_REG_INTERNAL_RV_MTIMECMP_L;
+
+  logic          hit_internal_rv_mtimecmp_h;
+  logic [3:0]    bus_internal_rv_mtimecmp_h;
+  logic [31:0]   full_addr_internal_rv_mtimecmp_h = `CLP_SOC_IFC_REG_INTERNAL_RV_MTIMECMP_H;
+
+  logic          hit_intr_brf_global_intr_en_r;
+  logic [3:0]    bus_intr_brf_global_intr_en_r;
+  logic [31:0]   full_addr_intr_brf_global_intr_en_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R;
+
+  logic          hit_intr_brf_error_intr_en_r;
+  logic [3:0]    bus_intr_brf_error_intr_en_r;
+  logic [31:0]   full_addr_intr_brf_error_intr_en_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R;
+
+  logic          hit_intr_brf_notif_intr_en_r;
+  logic [3:0]    bus_intr_brf_notif_intr_en_r;
+  logic [31:0]   full_addr_intr_brf_notif_intr_en_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R;
+
+  logic          hit_intr_brf_error_global_intr_r;
+  logic [3:0]    bus_intr_brf_error_global_intr_r;
+  logic [31:0]   full_addr_intr_brf_error_global_intr_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R;
+
+  logic          hit_intr_brf_notif_global_intr_r;
+  logic [3:0]    bus_intr_brf_notif_global_intr_r;
+  logic [31:0]   full_addr_intr_brf_notif_global_intr_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R;
+
+  logic          hit_intr_brf_error_internal_intr_r;
+  logic [3:0]    bus_intr_brf_error_internal_intr_r;
+  logic [31:0]   full_addr_intr_brf_error_internal_intr_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R;
+
+  logic          hit_intr_brf_notif_internal_intr_r;
+  logic [3:0]    bus_intr_brf_notif_internal_intr_r;
+  logic [31:0]   full_addr_intr_brf_notif_internal_intr_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R;
+
+  logic          hit_intr_brf_error_intr_trig_r;
+  logic [3:0]    bus_intr_brf_error_intr_trig_r;
+  logic [31:0]   full_addr_intr_brf_error_intr_trig_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R;
+
+  logic          hit_intr_brf_notif_intr_trig_r;
+  logic [3:0]    bus_intr_brf_notif_intr_trig_r;
+  logic [31:0]   full_addr_intr_brf_notif_intr_trig_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R;
+
+  logic          hit_intr_brf_error_internal_intr_count_r;
+  logic [3:0]    bus_intr_brf_error_internal_intr_count_r;
+  logic [31:0]   full_addr_intr_brf_error_internal_intr_count_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R;
+
+  logic          hit_intr_brf_error_inv_dev_intr_count_r;
+  logic [3:0]    bus_intr_brf_error_inv_dev_intr_count_r;
+  logic [31:0]   full_addr_intr_brf_error_inv_dev_intr_count_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_R;
+
+  logic          hit_intr_brf_error_cmd_fail_intr_count_r;
+  logic [3:0]    bus_intr_brf_error_cmd_fail_intr_count_r;
+  logic [31:0]   full_addr_intr_brf_error_cmd_fail_intr_count_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_R;
+
+  logic          hit_intr_brf_error_bad_fuse_intr_count_r;
+  logic [3:0]    bus_intr_brf_error_bad_fuse_intr_count_r;
+  logic [31:0]   full_addr_intr_brf_error_bad_fuse_intr_count_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_R;
+
+  logic          hit_intr_brf_error_iccm_blocked_intr_count_r;
+  logic [3:0]    bus_intr_brf_error_iccm_blocked_intr_count_r;
+  logic [31:0]   full_addr_intr_brf_error_iccm_blocked_intr_count_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_R;
+
+  logic          hit_intr_brf_error_mbox_ecc_unc_intr_count_r;
+  logic [3:0]    bus_intr_brf_error_mbox_ecc_unc_intr_count_r;
+  logic [31:0]   full_addr_intr_brf_error_mbox_ecc_unc_intr_count_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R;
+
+  logic          hit_intr_brf_error_wdt_timer1_timeout_intr_count_r;
+  logic [3:0]    bus_intr_brf_error_wdt_timer1_timeout_intr_count_r;
+  logic [31:0]   full_addr_intr_brf_error_wdt_timer1_timeout_intr_count_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_R;
+
+  logic          hit_intr_brf_error_wdt_timer2_timeout_intr_count_r;
+  logic [3:0]    bus_intr_brf_error_wdt_timer2_timeout_intr_count_r;
+  logic [31:0]   full_addr_intr_brf_error_wdt_timer2_timeout_intr_count_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_R;
+
+  logic          hit_intr_brf_notif_cmd_avail_intr_count_r;
+  logic [3:0]    bus_intr_brf_notif_cmd_avail_intr_count_r;
+  logic [31:0]   full_addr_intr_brf_notif_cmd_avail_intr_count_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_R;
+
+  logic          hit_intr_brf_notif_mbox_ecc_cor_intr_count_r;
+  logic [3:0]    bus_intr_brf_notif_mbox_ecc_cor_intr_count_r;
+  logic [31:0]   full_addr_intr_brf_notif_mbox_ecc_cor_intr_count_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_R;
+
+  logic          hit_intr_brf_notif_debug_locked_intr_count_r;
+  logic [3:0]    bus_intr_brf_notif_debug_locked_intr_count_r;
+  logic [31:0]   full_addr_intr_brf_notif_debug_locked_intr_count_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_R;
+
+  logic          hit_intr_brf_notif_scan_mode_intr_count_r;
+  logic [3:0]    bus_intr_brf_notif_scan_mode_intr_count_r;
+  logic [31:0]   full_addr_intr_brf_notif_scan_mode_intr_count_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_SCAN_MODE_INTR_COUNT_R;
+
+  logic          hit_intr_brf_notif_soc_req_lock_intr_count_r;
+  logic [3:0]    bus_intr_brf_notif_soc_req_lock_intr_count_r;
+  logic [31:0]   full_addr_intr_brf_notif_soc_req_lock_intr_count_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_R;
+
+  logic          hit_intr_brf_notif_gen_in_toggle_intr_count_r;
+  logic [3:0]    bus_intr_brf_notif_gen_in_toggle_intr_count_r;
+  logic [31:0]   full_addr_intr_brf_notif_gen_in_toggle_intr_count_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_GEN_IN_TOGGLE_INTR_COUNT_R;
+
+  logic          hit_intr_brf_error_internal_intr_count_incr_r;
+  logic [3:0]    bus_intr_brf_error_internal_intr_count_incr_r;
+  logic [31:0]   full_addr_intr_brf_error_internal_intr_count_incr_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R;
+
+  logic          hit_intr_brf_error_inv_dev_intr_count_incr_r;
+  logic [3:0]    bus_intr_brf_error_inv_dev_intr_count_incr_r;
+  logic [31:0]   full_addr_intr_brf_error_inv_dev_intr_count_incr_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INV_DEV_INTR_COUNT_INCR_R;
+
+  logic          hit_intr_brf_error_cmd_fail_intr_count_incr_r;
+  logic [3:0]    bus_intr_brf_error_cmd_fail_intr_count_incr_r;
+  logic [31:0]   full_addr_intr_brf_error_cmd_fail_intr_count_incr_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_CMD_FAIL_INTR_COUNT_INCR_R;
+
+  logic          hit_intr_brf_error_bad_fuse_intr_count_incr_r;
+  logic [3:0]    bus_intr_brf_error_bad_fuse_intr_count_incr_r;
+  logic [31:0]   full_addr_intr_brf_error_bad_fuse_intr_count_incr_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_BAD_FUSE_INTR_COUNT_INCR_R;
+
+  logic          hit_intr_brf_error_iccm_blocked_intr_count_incr_r;
+  logic [3:0]    bus_intr_brf_error_iccm_blocked_intr_count_incr_r;
+  logic [31:0]   full_addr_intr_brf_error_iccm_blocked_intr_count_incr_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_ICCM_BLOCKED_INTR_COUNT_INCR_R;
+
+  logic          hit_intr_brf_error_mbox_ecc_unc_intr_count_incr_r;
+  logic [3:0]    bus_intr_brf_error_mbox_ecc_unc_intr_count_incr_r;
+  logic [31:0]   full_addr_intr_brf_error_mbox_ecc_unc_intr_count_incr_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_MBOX_ECC_UNC_INTR_COUNT_INCR_R;
+
+  logic          hit_intr_brf_error_wdt_timer1_timeout_intr_count_incr_r;
+  logic [3:0]    bus_intr_brf_error_wdt_timer1_timeout_intr_count_incr_r;
+  logic [31:0]   full_addr_intr_brf_error_wdt_timer1_timeout_intr_count_incr_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_INCR_R;
+
+  logic          hit_intr_brf_error_wdt_timer2_timeout_intr_count_incr_r;
+  logic [3:0]    bus_intr_brf_error_wdt_timer2_timeout_intr_count_incr_r;
+  logic [31:0]   full_addr_intr_brf_error_wdt_timer2_timeout_intr_count_incr_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_INCR_R;
+
+  logic          hit_intr_brf_notif_cmd_avail_intr_count_incr_r;
+  logic [3:0]    bus_intr_brf_notif_cmd_avail_intr_count_incr_r;
+  logic [31:0]   full_addr_intr_brf_notif_cmd_avail_intr_count_incr_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_CMD_AVAIL_INTR_COUNT_INCR_R;
+
+  logic          hit_intr_brf_notif_mbox_ecc_cor_intr_count_incr_r;
+  logic [3:0]    bus_intr_brf_notif_mbox_ecc_cor_intr_count_incr_r;
+  logic [31:0]   full_addr_intr_brf_notif_mbox_ecc_cor_intr_count_incr_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R;
+
+  logic          hit_intr_brf_notif_debug_locked_intr_count_incr_r;
+  logic [3:0]    bus_intr_brf_notif_debug_locked_intr_count_incr_r;
+  logic [31:0]   full_addr_intr_brf_notif_debug_locked_intr_count_incr_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R;
+
+  logic          hit_intr_brf_notif_soc_req_lock_intr_count_incr_r;
+  logic [3:0]    bus_intr_brf_notif_soc_req_lock_intr_count_incr_r;
+  logic [31:0]   full_addr_intr_brf_notif_soc_req_lock_intr_count_incr_r = `CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_INCR_R;
 
 
   assign hit_CPTRA_HW_ERROR_FATAL = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_HW_ERROR_FATAL[APB_ADDR_WIDTH-1:0]);
@@ -799,6 +1010,9 @@ interface soc_ifc_cov_if
   assign hit_CPTRA_TRNG_DATA[11] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_TRNG_DATA[11][18-1:0]);
   assign bus_CPTRA_TRNG_DATA[11] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_TRNG_DATA[11]}};
 
+  assign hit_CPTRA_TRNG_CTRL = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_TRNG_CTRL[APB_ADDR_WIDTH-1:0]);
+  assign bus_CPTRA_TRNG_CTRL = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_TRNG_CTRL}};
+
   assign hit_CPTRA_TRNG_STATUS = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_TRNG_STATUS[APB_ADDR_WIDTH-1:0]);
   assign bus_CPTRA_TRNG_STATUS = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_TRNG_STATUS}};
 
@@ -873,6 +1087,24 @@ interface soc_ifc_cov_if
 
   assign hit_CPTRA_FUSE_PAUSER_LOCK = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_FUSE_PAUSER_LOCK[APB_ADDR_WIDTH-1:0]);
   assign bus_CPTRA_FUSE_PAUSER_LOCK = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_FUSE_PAUSER_LOCK}};
+
+  assign hit_CPTRA_WDT_CFG[0] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_WDT_CFG[0][18-1:0]);
+  assign bus_CPTRA_WDT_CFG[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_WDT_CFG[0]}};
+
+  assign hit_CPTRA_WDT_CFG[1] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_WDT_CFG[1][18-1:0]);
+  assign bus_CPTRA_WDT_CFG[1] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_WDT_CFG[1]}};
+
+  assign hit_CPTRA_iTRNG_ENTROPY_CONFIG_0 = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_iTRNG_ENTROPY_CONFIG_0[APB_ADDR_WIDTH-1:0]);
+  assign bus_CPTRA_iTRNG_ENTROPY_CONFIG_0 = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_iTRNG_ENTROPY_CONFIG_0}};
+
+  assign hit_CPTRA_iTRNG_ENTROPY_CONFIG_1 = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_iTRNG_ENTROPY_CONFIG_1[APB_ADDR_WIDTH-1:0]);
+  assign bus_CPTRA_iTRNG_ENTROPY_CONFIG_1 = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_iTRNG_ENTROPY_CONFIG_1}};
+
+  assign hit_CPTRA_RSVD_REG[0] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_RSVD_REG[0][18-1:0]);
+  assign bus_CPTRA_RSVD_REG[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_RSVD_REG[0]}};
+
+  assign hit_CPTRA_RSVD_REG[1] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_RSVD_REG[1][18-1:0]);
+  assign bus_CPTRA_RSVD_REG[1] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_RSVD_REG[1]}};
 
   assign hit_fuse_uds_seed[0] = (soc_ifc_reg_req_data.addr == full_addr_fuse_uds_seed[0][18-1:0]);
   assign bus_fuse_uds_seed[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_uds_seed[0]}};
@@ -1114,6 +1346,15 @@ interface soc_ifc_cov_if
   assign hit_fuse_life_cycle = (soc_ifc_reg_req_data.addr == full_addr_fuse_life_cycle[APB_ADDR_WIDTH-1:0]);
   assign bus_fuse_life_cycle = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_life_cycle}};
 
+  assign hit_fuse_lms_verify = (soc_ifc_reg_req_data.addr == full_addr_fuse_lms_verify[APB_ADDR_WIDTH-1:0]);
+  assign bus_fuse_lms_verify = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_lms_verify}};
+
+  assign hit_fuse_lms_revocation = (soc_ifc_reg_req_data.addr == full_addr_fuse_lms_revocation[APB_ADDR_WIDTH-1:0]);
+  assign bus_fuse_lms_revocation = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_lms_revocation}};
+
+  assign hit_fuse_soc_stepping_id = (soc_ifc_reg_req_data.addr == full_addr_fuse_soc_stepping_id[APB_ADDR_WIDTH-1:0]);
+  assign bus_fuse_soc_stepping_id = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_soc_stepping_id}};
+
   assign hit_internal_obf_key[0] = (soc_ifc_reg_req_data.addr == full_addr_internal_obf_key[0][18-1:0]);
   assign bus_internal_obf_key[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_internal_obf_key[0]}};
 
@@ -1149,6 +1390,135 @@ interface soc_ifc_cov_if
 
   assign hit_internal_nmi_vector = (soc_ifc_reg_req_data.addr == full_addr_internal_nmi_vector[APB_ADDR_WIDTH-1:0]);
   assign bus_internal_nmi_vector = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_internal_nmi_vector}};
+
+  assign hit_internal_hw_error_fatal_mask = (soc_ifc_reg_req_data.addr == full_addr_internal_hw_error_fatal_mask[APB_ADDR_WIDTH-1:0]);
+  assign bus_internal_hw_error_fatal_mask = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_internal_hw_error_fatal_mask}};
+
+  assign hit_internal_hw_error_non_fatal_mask = (soc_ifc_reg_req_data.addr == full_addr_internal_hw_error_non_fatal_mask[APB_ADDR_WIDTH-1:0]);
+  assign bus_internal_hw_error_non_fatal_mask = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_internal_hw_error_non_fatal_mask}};
+
+  assign hit_internal_fw_error_fatal_mask = (soc_ifc_reg_req_data.addr == full_addr_internal_fw_error_fatal_mask[APB_ADDR_WIDTH-1:0]);
+  assign bus_internal_fw_error_fatal_mask = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_internal_fw_error_fatal_mask}};
+
+  assign hit_internal_fw_error_non_fatal_mask = (soc_ifc_reg_req_data.addr == full_addr_internal_fw_error_non_fatal_mask[APB_ADDR_WIDTH-1:0]);
+  assign bus_internal_fw_error_non_fatal_mask = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_internal_fw_error_non_fatal_mask}};
+
+  assign hit_internal_rv_mtime_l = (soc_ifc_reg_req_data.addr == full_addr_internal_rv_mtime_l[APB_ADDR_WIDTH-1:0]);
+  assign bus_internal_rv_mtime_l = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_internal_rv_mtime_l}};
+
+  assign hit_internal_rv_mtime_h = (soc_ifc_reg_req_data.addr == full_addr_internal_rv_mtime_h[APB_ADDR_WIDTH-1:0]);
+  assign bus_internal_rv_mtime_h = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_internal_rv_mtime_h}};
+
+  assign hit_internal_rv_mtimecmp_l = (soc_ifc_reg_req_data.addr == full_addr_internal_rv_mtimecmp_l[APB_ADDR_WIDTH-1:0]);
+  assign bus_internal_rv_mtimecmp_l = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_internal_rv_mtimecmp_l}};
+
+  assign hit_internal_rv_mtimecmp_h = (soc_ifc_reg_req_data.addr == full_addr_internal_rv_mtimecmp_h[APB_ADDR_WIDTH-1:0]);
+  assign bus_internal_rv_mtimecmp_h = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_internal_rv_mtimecmp_h}};
+
+  assign hit_intr_brf_global_intr_en_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_global_intr_en_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_global_intr_en_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_global_intr_en_r}};
+
+  assign hit_intr_brf_error_intr_en_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_error_intr_en_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_error_intr_en_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_error_intr_en_r}};
+
+  assign hit_intr_brf_notif_intr_en_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_notif_intr_en_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_notif_intr_en_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_notif_intr_en_r}};
+
+  assign hit_intr_brf_error_global_intr_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_error_global_intr_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_error_global_intr_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_error_global_intr_r}};
+
+  assign hit_intr_brf_notif_global_intr_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_notif_global_intr_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_notif_global_intr_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_notif_global_intr_r}};
+
+  assign hit_intr_brf_error_internal_intr_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_error_internal_intr_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_error_internal_intr_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_error_internal_intr_r}};
+
+  assign hit_intr_brf_notif_internal_intr_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_notif_internal_intr_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_notif_internal_intr_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_notif_internal_intr_r}};
+
+  assign hit_intr_brf_error_intr_trig_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_error_intr_trig_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_error_intr_trig_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_error_intr_trig_r}};
+
+  assign hit_intr_brf_notif_intr_trig_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_notif_intr_trig_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_notif_intr_trig_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_notif_intr_trig_r}};
+
+  assign hit_intr_brf_error_internal_intr_count_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_error_internal_intr_count_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_error_internal_intr_count_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_error_internal_intr_count_r}};
+
+  assign hit_intr_brf_error_inv_dev_intr_count_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_error_inv_dev_intr_count_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_error_inv_dev_intr_count_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_error_inv_dev_intr_count_r}};
+
+  assign hit_intr_brf_error_cmd_fail_intr_count_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_error_cmd_fail_intr_count_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_error_cmd_fail_intr_count_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_error_cmd_fail_intr_count_r}};
+
+  assign hit_intr_brf_error_bad_fuse_intr_count_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_error_bad_fuse_intr_count_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_error_bad_fuse_intr_count_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_error_bad_fuse_intr_count_r}};
+
+  assign hit_intr_brf_error_iccm_blocked_intr_count_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_error_iccm_blocked_intr_count_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_error_iccm_blocked_intr_count_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_error_iccm_blocked_intr_count_r}};
+
+  assign hit_intr_brf_error_mbox_ecc_unc_intr_count_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_error_mbox_ecc_unc_intr_count_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_error_mbox_ecc_unc_intr_count_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_error_mbox_ecc_unc_intr_count_r}};
+
+  assign hit_intr_brf_error_wdt_timer1_timeout_intr_count_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_error_wdt_timer1_timeout_intr_count_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_error_wdt_timer1_timeout_intr_count_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_error_wdt_timer1_timeout_intr_count_r}};
+
+  assign hit_intr_brf_error_wdt_timer2_timeout_intr_count_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_error_wdt_timer2_timeout_intr_count_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_error_wdt_timer2_timeout_intr_count_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_error_wdt_timer2_timeout_intr_count_r}};
+
+  assign hit_intr_brf_notif_cmd_avail_intr_count_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_notif_cmd_avail_intr_count_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_notif_cmd_avail_intr_count_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_notif_cmd_avail_intr_count_r}};
+
+  assign hit_intr_brf_notif_mbox_ecc_cor_intr_count_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_notif_mbox_ecc_cor_intr_count_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_notif_mbox_ecc_cor_intr_count_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_notif_mbox_ecc_cor_intr_count_r}};
+
+  assign hit_intr_brf_notif_debug_locked_intr_count_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_notif_debug_locked_intr_count_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_notif_debug_locked_intr_count_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_notif_debug_locked_intr_count_r}};
+
+  assign hit_intr_brf_notif_scan_mode_intr_count_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_notif_scan_mode_intr_count_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_notif_scan_mode_intr_count_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_notif_scan_mode_intr_count_r}};
+
+  assign hit_intr_brf_notif_soc_req_lock_intr_count_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_notif_soc_req_lock_intr_count_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_notif_soc_req_lock_intr_count_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_notif_soc_req_lock_intr_count_r}};
+
+  assign hit_intr_brf_notif_gen_in_toggle_intr_count_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_notif_gen_in_toggle_intr_count_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_notif_gen_in_toggle_intr_count_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_notif_gen_in_toggle_intr_count_r}};
+
+  assign hit_intr_brf_error_internal_intr_count_incr_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_error_internal_intr_count_incr_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_error_internal_intr_count_incr_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_error_internal_intr_count_incr_r}};
+
+  assign hit_intr_brf_error_inv_dev_intr_count_incr_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_error_inv_dev_intr_count_incr_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_error_inv_dev_intr_count_incr_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_error_inv_dev_intr_count_incr_r}};
+
+  assign hit_intr_brf_error_cmd_fail_intr_count_incr_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_error_cmd_fail_intr_count_incr_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_error_cmd_fail_intr_count_incr_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_error_cmd_fail_intr_count_incr_r}};
+
+  assign hit_intr_brf_error_bad_fuse_intr_count_incr_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_error_bad_fuse_intr_count_incr_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_error_bad_fuse_intr_count_incr_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_error_bad_fuse_intr_count_incr_r}};
+
+  assign hit_intr_brf_error_iccm_blocked_intr_count_incr_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_error_iccm_blocked_intr_count_incr_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_error_iccm_blocked_intr_count_incr_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_error_iccm_blocked_intr_count_incr_r}};
+
+  assign hit_intr_brf_error_mbox_ecc_unc_intr_count_incr_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_error_mbox_ecc_unc_intr_count_incr_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_error_mbox_ecc_unc_intr_count_incr_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_error_mbox_ecc_unc_intr_count_incr_r}};
+
+  assign hit_intr_brf_error_wdt_timer1_timeout_intr_count_incr_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_error_wdt_timer1_timeout_intr_count_incr_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_error_wdt_timer1_timeout_intr_count_incr_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_error_wdt_timer1_timeout_intr_count_incr_r}};
+
+  assign hit_intr_brf_error_wdt_timer2_timeout_intr_count_incr_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_error_wdt_timer2_timeout_intr_count_incr_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_error_wdt_timer2_timeout_intr_count_incr_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_error_wdt_timer2_timeout_intr_count_incr_r}};
+
+  assign hit_intr_brf_notif_cmd_avail_intr_count_incr_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_notif_cmd_avail_intr_count_incr_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_notif_cmd_avail_intr_count_incr_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_notif_cmd_avail_intr_count_incr_r}};
+
+  assign hit_intr_brf_notif_mbox_ecc_cor_intr_count_incr_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_notif_mbox_ecc_cor_intr_count_incr_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_notif_mbox_ecc_cor_intr_count_incr_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_notif_mbox_ecc_cor_intr_count_incr_r}};
+
+  assign hit_intr_brf_notif_debug_locked_intr_count_incr_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_notif_debug_locked_intr_count_incr_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_notif_debug_locked_intr_count_incr_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_notif_debug_locked_intr_count_incr_r}};
+
+  assign hit_intr_brf_notif_soc_req_lock_intr_count_incr_r = (soc_ifc_reg_req_data.addr == full_addr_intr_brf_notif_soc_req_lock_intr_count_incr_r[APB_ADDR_WIDTH-1:0]);
+  assign bus_intr_brf_notif_soc_req_lock_intr_count_incr_r = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_intr_brf_notif_soc_req_lock_intr_count_incr_r}};
 
   // ----------------------- COVERGROUP CPTRA_HW_ERROR_FATAL -----------------------
   covergroup soc_ifc_CPTRA_HW_ERROR_FATAL_cg (ref logic [3:0] bus_event) @(posedge clk);
@@ -1424,6 +1794,15 @@ interface soc_ifc_cov_if
     }
   endgroup
 
+  // ----------------------- COVERGROUP CPTRA_TRNG_CTRL -----------------------
+  covergroup soc_ifc_CPTRA_TRNG_CTRL_cg (ref logic [3:0] bus_event) @(posedge clk);
+    CPTRA_TRNG_CTRL_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_TRNG_CTRL;
+    bus_CPTRA_TRNG_CTRL_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
   // ----------------------- COVERGROUP CPTRA_TRNG_STATUS -----------------------
   covergroup soc_ifc_CPTRA_TRNG_STATUS_cg (ref logic [3:0] bus_event) @(posedge clk);
     CPTRA_TRNG_STATUS_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_TRNG_STATUS;
@@ -1624,6 +2003,52 @@ interface soc_ifc_cov_if
   covergroup soc_ifc_CPTRA_FUSE_PAUSER_LOCK_cg (ref logic [3:0] bus_event) @(posedge clk);
     CPTRA_FUSE_PAUSER_LOCK_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_FUSE_PAUSER_LOCK;
     bus_CPTRA_FUSE_PAUSER_LOCK_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP CPTRA_WDT_CFG [0:1] -----------------------
+  covergroup soc_ifc_CPTRA_WDT_CFG_cg (ref logic [3:0] bus_event[0:1]) @(posedge clk);
+    CPTRA_WDT_CFG0_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_WDT_CFG[0];
+    bus_CPTRA_WDT_CFG0_cp : coverpoint bus_event[0] {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_WDT_CFG1_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_WDT_CFG[1];
+    bus_CPTRA_WDT_CFG1_cp : coverpoint bus_event[1] {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP CPTRA_iTRNG_ENTROPY_CONFIG_0 -----------------------
+  covergroup soc_ifc_CPTRA_iTRNG_ENTROPY_CONFIG_0_cg (ref logic [3:0] bus_event) @(posedge clk);
+    CPTRA_iTRNG_ENTROPY_CONFIG_0_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_0;
+    bus_CPTRA_iTRNG_ENTROPY_CONFIG_0_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP CPTRA_iTRNG_ENTROPY_CONFIG_1 -----------------------
+  covergroup soc_ifc_CPTRA_iTRNG_ENTROPY_CONFIG_1_cg (ref logic [3:0] bus_event) @(posedge clk);
+    CPTRA_iTRNG_ENTROPY_CONFIG_1_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_1;
+    bus_CPTRA_iTRNG_ENTROPY_CONFIG_1_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP CPTRA_RSVD_REG [0:1] -----------------------
+  covergroup soc_ifc_CPTRA_RSVD_REG_cg (ref logic [3:0] bus_event[0:1]) @(posedge clk);
+    CPTRA_RSVD_REG0_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_RSVD_REG[0];
+    bus_CPTRA_RSVD_REG0_cp : coverpoint bus_event[0] {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_RSVD_REG1_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_RSVD_REG[1];
+    bus_CPTRA_RSVD_REG1_cp : coverpoint bus_event[1] {
       bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
     }
@@ -2073,6 +2498,33 @@ interface soc_ifc_cov_if
     }
   endgroup
 
+  // ----------------------- COVERGROUP fuse_lms_verify -----------------------
+  covergroup soc_ifc_fuse_lms_verify_cg (ref logic [3:0] bus_event) @(posedge clk);
+    fuse_lms_verify_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_lms_verify;
+    bus_fuse_lms_verify_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP fuse_lms_revocation -----------------------
+  covergroup soc_ifc_fuse_lms_revocation_cg (ref logic [3:0] bus_event) @(posedge clk);
+    fuse_lms_revocation_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_lms_revocation;
+    bus_fuse_lms_revocation_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP fuse_soc_stepping_id -----------------------
+  covergroup soc_ifc_fuse_soc_stepping_id_cg (ref logic [3:0] bus_event) @(posedge clk);
+    fuse_soc_stepping_id_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_soc_stepping_id;
+    bus_fuse_soc_stepping_id_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
   // ----------------------- COVERGROUP internal_obf_key [0:7] -----------------------
   covergroup soc_ifc_internal_obf_key_cg (ref logic [3:0] bus_event[0:7]) @(posedge clk);
     internal_obf_key0_cp : coverpoint i_soc_ifc_reg.field_storage.internal_obf_key[0];
@@ -2153,6 +2605,393 @@ interface soc_ifc_cov_if
     }
   endgroup
 
+  // ----------------------- COVERGROUP internal_hw_error_fatal_mask -----------------------
+  covergroup soc_ifc_internal_hw_error_fatal_mask_cg (ref logic [3:0] bus_event) @(posedge clk);
+    internal_hw_error_fatal_mask_cp : coverpoint i_soc_ifc_reg.field_storage.internal_hw_error_fatal_mask;
+    bus_internal_hw_error_fatal_mask_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP internal_hw_error_non_fatal_mask -----------------------
+  covergroup soc_ifc_internal_hw_error_non_fatal_mask_cg (ref logic [3:0] bus_event) @(posedge clk);
+    internal_hw_error_non_fatal_mask_cp : coverpoint i_soc_ifc_reg.field_storage.internal_hw_error_non_fatal_mask;
+    bus_internal_hw_error_non_fatal_mask_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP internal_fw_error_fatal_mask -----------------------
+  covergroup soc_ifc_internal_fw_error_fatal_mask_cg (ref logic [3:0] bus_event) @(posedge clk);
+    internal_fw_error_fatal_mask_cp : coverpoint i_soc_ifc_reg.field_storage.internal_fw_error_fatal_mask;
+    bus_internal_fw_error_fatal_mask_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP internal_fw_error_non_fatal_mask -----------------------
+  covergroup soc_ifc_internal_fw_error_non_fatal_mask_cg (ref logic [3:0] bus_event) @(posedge clk);
+    internal_fw_error_non_fatal_mask_cp : coverpoint i_soc_ifc_reg.field_storage.internal_fw_error_non_fatal_mask;
+    bus_internal_fw_error_non_fatal_mask_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP internal_rv_mtime_l -----------------------
+  covergroup soc_ifc_internal_rv_mtime_l_cg (ref logic [3:0] bus_event) @(posedge clk);
+    internal_rv_mtime_l_cp : coverpoint i_soc_ifc_reg.field_storage.internal_rv_mtime_l;
+    bus_internal_rv_mtime_l_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP internal_rv_mtime_h -----------------------
+  covergroup soc_ifc_internal_rv_mtime_h_cg (ref logic [3:0] bus_event) @(posedge clk);
+    internal_rv_mtime_h_cp : coverpoint i_soc_ifc_reg.field_storage.internal_rv_mtime_h;
+    bus_internal_rv_mtime_h_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP internal_rv_mtimecmp_l -----------------------
+  covergroup soc_ifc_internal_rv_mtimecmp_l_cg (ref logic [3:0] bus_event) @(posedge clk);
+    internal_rv_mtimecmp_l_cp : coverpoint i_soc_ifc_reg.field_storage.internal_rv_mtimecmp_l;
+    bus_internal_rv_mtimecmp_l_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP internal_rv_mtimecmp_h -----------------------
+  covergroup soc_ifc_internal_rv_mtimecmp_h_cg (ref logic [3:0] bus_event) @(posedge clk);
+    internal_rv_mtimecmp_h_cp : coverpoint i_soc_ifc_reg.field_storage.internal_rv_mtimecmp_h;
+    bus_internal_rv_mtimecmp_h_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_global_intr_en_r -----------------------
+  covergroup soc_ifc_intr_brf_global_intr_en_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_global_intr_en_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.global_intr_en_r;
+    bus_intr_brf_global_intr_en_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_error_intr_en_r -----------------------
+  covergroup soc_ifc_intr_brf_error_intr_en_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_error_intr_en_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_intr_en_r;
+    bus_intr_brf_error_intr_en_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_notif_intr_en_r -----------------------
+  covergroup soc_ifc_intr_brf_notif_intr_en_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_notif_intr_en_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_intr_en_r;
+    bus_intr_brf_notif_intr_en_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_error_global_intr_r -----------------------
+  covergroup soc_ifc_intr_brf_error_global_intr_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_error_global_intr_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_global_intr_r;
+    bus_intr_brf_error_global_intr_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_notif_global_intr_r -----------------------
+  covergroup soc_ifc_intr_brf_notif_global_intr_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_notif_global_intr_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_global_intr_r;
+    bus_intr_brf_notif_global_intr_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_error_internal_intr_r -----------------------
+  covergroup soc_ifc_intr_brf_error_internal_intr_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_error_internal_intr_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_internal_intr_r;
+    bus_intr_brf_error_internal_intr_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_notif_internal_intr_r -----------------------
+  covergroup soc_ifc_intr_brf_notif_internal_intr_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_notif_internal_intr_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_internal_intr_r;
+    bus_intr_brf_notif_internal_intr_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_error_intr_trig_r -----------------------
+  covergroup soc_ifc_intr_brf_error_intr_trig_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_error_intr_trig_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_intr_trig_r;
+    bus_intr_brf_error_intr_trig_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_notif_intr_trig_r -----------------------
+  covergroup soc_ifc_intr_brf_notif_intr_trig_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_notif_intr_trig_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_intr_trig_r;
+    bus_intr_brf_notif_intr_trig_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_error_internal_intr_count_r -----------------------
+  covergroup soc_ifc_intr_brf_error_internal_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_error_internal_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_internal_intr_count_r;
+    bus_intr_brf_error_internal_intr_count_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_error_inv_dev_intr_count_r -----------------------
+  covergroup soc_ifc_intr_brf_error_inv_dev_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_error_inv_dev_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_inv_dev_intr_count_r;
+    bus_intr_brf_error_inv_dev_intr_count_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_error_cmd_fail_intr_count_r -----------------------
+  covergroup soc_ifc_intr_brf_error_cmd_fail_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_error_cmd_fail_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_cmd_fail_intr_count_r;
+    bus_intr_brf_error_cmd_fail_intr_count_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_error_bad_fuse_intr_count_r -----------------------
+  covergroup soc_ifc_intr_brf_error_bad_fuse_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_error_bad_fuse_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_bad_fuse_intr_count_r;
+    bus_intr_brf_error_bad_fuse_intr_count_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_error_iccm_blocked_intr_count_r -----------------------
+  covergroup soc_ifc_intr_brf_error_iccm_blocked_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_error_iccm_blocked_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_iccm_blocked_intr_count_r;
+    bus_intr_brf_error_iccm_blocked_intr_count_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_error_mbox_ecc_unc_intr_count_r -----------------------
+  covergroup soc_ifc_intr_brf_error_mbox_ecc_unc_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_error_mbox_ecc_unc_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_r;
+    bus_intr_brf_error_mbox_ecc_unc_intr_count_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_error_wdt_timer1_timeout_intr_count_r -----------------------
+  covergroup soc_ifc_intr_brf_error_wdt_timer1_timeout_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_error_wdt_timer1_timeout_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_wdt_timer1_timeout_intr_count_r;
+    bus_intr_brf_error_wdt_timer1_timeout_intr_count_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_error_wdt_timer2_timeout_intr_count_r -----------------------
+  covergroup soc_ifc_intr_brf_error_wdt_timer2_timeout_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_error_wdt_timer2_timeout_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_wdt_timer2_timeout_intr_count_r;
+    bus_intr_brf_error_wdt_timer2_timeout_intr_count_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_notif_cmd_avail_intr_count_r -----------------------
+  covergroup soc_ifc_intr_brf_notif_cmd_avail_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_notif_cmd_avail_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_cmd_avail_intr_count_r;
+    bus_intr_brf_notif_cmd_avail_intr_count_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_notif_mbox_ecc_cor_intr_count_r -----------------------
+  covergroup soc_ifc_intr_brf_notif_mbox_ecc_cor_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_notif_mbox_ecc_cor_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_r;
+    bus_intr_brf_notif_mbox_ecc_cor_intr_count_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_notif_debug_locked_intr_count_r -----------------------
+  covergroup soc_ifc_intr_brf_notif_debug_locked_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_notif_debug_locked_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_debug_locked_intr_count_r;
+    bus_intr_brf_notif_debug_locked_intr_count_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_notif_scan_mode_intr_count_r -----------------------
+  covergroup soc_ifc_intr_brf_notif_scan_mode_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_notif_scan_mode_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_scan_mode_intr_count_r;
+    bus_intr_brf_notif_scan_mode_intr_count_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_notif_soc_req_lock_intr_count_r -----------------------
+  covergroup soc_ifc_intr_brf_notif_soc_req_lock_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_notif_soc_req_lock_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_soc_req_lock_intr_count_r;
+    bus_intr_brf_notif_soc_req_lock_intr_count_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_notif_gen_in_toggle_intr_count_r -----------------------
+  covergroup soc_ifc_intr_brf_notif_gen_in_toggle_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_notif_gen_in_toggle_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_gen_in_toggle_intr_count_r;
+    bus_intr_brf_notif_gen_in_toggle_intr_count_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_error_internal_intr_count_incr_r -----------------------
+  covergroup soc_ifc_intr_brf_error_internal_intr_count_incr_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_error_internal_intr_count_incr_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_internal_intr_count_incr_r;
+    bus_intr_brf_error_internal_intr_count_incr_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_error_inv_dev_intr_count_incr_r -----------------------
+  covergroup soc_ifc_intr_brf_error_inv_dev_intr_count_incr_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_error_inv_dev_intr_count_incr_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_inv_dev_intr_count_incr_r;
+    bus_intr_brf_error_inv_dev_intr_count_incr_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_error_cmd_fail_intr_count_incr_r -----------------------
+  covergroup soc_ifc_intr_brf_error_cmd_fail_intr_count_incr_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_error_cmd_fail_intr_count_incr_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_cmd_fail_intr_count_incr_r;
+    bus_intr_brf_error_cmd_fail_intr_count_incr_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_error_bad_fuse_intr_count_incr_r -----------------------
+  covergroup soc_ifc_intr_brf_error_bad_fuse_intr_count_incr_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_error_bad_fuse_intr_count_incr_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_bad_fuse_intr_count_incr_r;
+    bus_intr_brf_error_bad_fuse_intr_count_incr_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_error_iccm_blocked_intr_count_incr_r -----------------------
+  covergroup soc_ifc_intr_brf_error_iccm_blocked_intr_count_incr_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_error_iccm_blocked_intr_count_incr_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_iccm_blocked_intr_count_incr_r;
+    bus_intr_brf_error_iccm_blocked_intr_count_incr_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_error_mbox_ecc_unc_intr_count_incr_r -----------------------
+  covergroup soc_ifc_intr_brf_error_mbox_ecc_unc_intr_count_incr_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_error_mbox_ecc_unc_intr_count_incr_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r;
+    bus_intr_brf_error_mbox_ecc_unc_intr_count_incr_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_error_wdt_timer1_timeout_intr_count_incr_r -----------------------
+  covergroup soc_ifc_intr_brf_error_wdt_timer1_timeout_intr_count_incr_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_error_wdt_timer1_timeout_intr_count_incr_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_wdt_timer1_timeout_intr_count_incr_r;
+    bus_intr_brf_error_wdt_timer1_timeout_intr_count_incr_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_error_wdt_timer2_timeout_intr_count_incr_r -----------------------
+  covergroup soc_ifc_intr_brf_error_wdt_timer2_timeout_intr_count_incr_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_error_wdt_timer2_timeout_intr_count_incr_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_wdt_timer2_timeout_intr_count_incr_r;
+    bus_intr_brf_error_wdt_timer2_timeout_intr_count_incr_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_notif_cmd_avail_intr_count_incr_r -----------------------
+  covergroup soc_ifc_intr_brf_notif_cmd_avail_intr_count_incr_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_notif_cmd_avail_intr_count_incr_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_cmd_avail_intr_count_incr_r;
+    bus_intr_brf_notif_cmd_avail_intr_count_incr_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_notif_mbox_ecc_cor_intr_count_incr_r -----------------------
+  covergroup soc_ifc_intr_brf_notif_mbox_ecc_cor_intr_count_incr_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_notif_mbox_ecc_cor_intr_count_incr_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r;
+    bus_intr_brf_notif_mbox_ecc_cor_intr_count_incr_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_notif_debug_locked_intr_count_incr_r -----------------------
+  covergroup soc_ifc_intr_brf_notif_debug_locked_intr_count_incr_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_notif_debug_locked_intr_count_incr_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_debug_locked_intr_count_incr_r;
+    bus_intr_brf_notif_debug_locked_intr_count_incr_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP intr_brf_notif_soc_req_lock_intr_count_incr_r -----------------------
+  covergroup soc_ifc_intr_brf_notif_soc_req_lock_intr_count_incr_r_cg (ref logic [3:0] bus_event) @(posedge clk);
+    intr_brf_notif_soc_req_lock_intr_count_incr_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_soc_req_lock_intr_count_incr_r;
+    bus_intr_brf_notif_soc_req_lock_intr_count_incr_r_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, APB_WR => IDLE [*1:1000] => AHB_RD, APB_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (APB_RD | APB_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
 
   // ----------------------- COVERGROUP Instantiations -----------------------
 
@@ -2172,6 +3011,7 @@ interface soc_ifc_cov_if
   soc_ifc_CPTRA_TRNG_VALID_PAUSER_cg CPTRA_TRNG_VALID_PAUSER_cg = new(bus_CPTRA_TRNG_VALID_PAUSER);
   soc_ifc_CPTRA_TRNG_PAUSER_LOCK_cg CPTRA_TRNG_PAUSER_LOCK_cg = new(bus_CPTRA_TRNG_PAUSER_LOCK);
   soc_ifc_CPTRA_TRNG_DATA_cg CPTRA_TRNG_DATA_cg = new(bus_CPTRA_TRNG_DATA);
+  soc_ifc_CPTRA_TRNG_CTRL_cg CPTRA_TRNG_CTRL_cg = new(bus_CPTRA_TRNG_CTRL);
   soc_ifc_CPTRA_TRNG_STATUS_cg CPTRA_TRNG_STATUS_cg = new(bus_CPTRA_TRNG_STATUS);
   soc_ifc_CPTRA_FUSE_WR_DONE_cg CPTRA_FUSE_WR_DONE_cg = new(bus_CPTRA_FUSE_WR_DONE);
   soc_ifc_CPTRA_TIMER_CONFIG_cg CPTRA_TIMER_CONFIG_cg = new(bus_CPTRA_TIMER_CONFIG);
@@ -2192,6 +3032,10 @@ interface soc_ifc_cov_if
   soc_ifc_CPTRA_WDT_STATUS_cg CPTRA_WDT_STATUS_cg = new(bus_CPTRA_WDT_STATUS);
   soc_ifc_CPTRA_FUSE_VALID_PAUSER_cg CPTRA_FUSE_VALID_PAUSER_cg = new(bus_CPTRA_FUSE_VALID_PAUSER);
   soc_ifc_CPTRA_FUSE_PAUSER_LOCK_cg CPTRA_FUSE_PAUSER_LOCK_cg = new(bus_CPTRA_FUSE_PAUSER_LOCK);
+  soc_ifc_CPTRA_WDT_CFG_cg CPTRA_WDT_CFG_cg = new(bus_CPTRA_WDT_CFG);
+  soc_ifc_CPTRA_iTRNG_ENTROPY_CONFIG_0_cg CPTRA_iTRNG_ENTROPY_CONFIG_0_cg = new(bus_CPTRA_iTRNG_ENTROPY_CONFIG_0);
+  soc_ifc_CPTRA_iTRNG_ENTROPY_CONFIG_1_cg CPTRA_iTRNG_ENTROPY_CONFIG_1_cg = new(bus_CPTRA_iTRNG_ENTROPY_CONFIG_1);
+  soc_ifc_CPTRA_RSVD_REG_cg CPTRA_RSVD_REG_cg = new(bus_CPTRA_RSVD_REG);
   soc_ifc_fuse_uds_seed_cg fuse_uds_seed_cg = new(bus_fuse_uds_seed);
   soc_ifc_fuse_field_entropy_cg fuse_field_entropy_cg = new(bus_fuse_field_entropy);
   soc_ifc_fuse_key_manifest_pk_hash_cg fuse_key_manifest_pk_hash_cg = new(bus_fuse_key_manifest_pk_hash);
@@ -2203,17 +3047,64 @@ interface soc_ifc_cov_if
   soc_ifc_fuse_idevid_cert_attr_cg fuse_idevid_cert_attr_cg = new(bus_fuse_idevid_cert_attr);
   soc_ifc_fuse_idevid_manuf_hsm_id_cg fuse_idevid_manuf_hsm_id_cg = new(bus_fuse_idevid_manuf_hsm_id);
   soc_ifc_fuse_life_cycle_cg fuse_life_cycle_cg = new(bus_fuse_life_cycle);
+  soc_ifc_fuse_lms_verify_cg fuse_lms_verify_cg = new(bus_fuse_lms_verify);
+  soc_ifc_fuse_lms_revocation_cg fuse_lms_revocation_cg = new(bus_fuse_lms_revocation);
+  soc_ifc_fuse_soc_stepping_id_cg fuse_soc_stepping_id_cg = new(bus_fuse_soc_stepping_id);
   soc_ifc_internal_obf_key_cg internal_obf_key_cg = new(bus_internal_obf_key);
   soc_ifc_internal_iccm_lock_cg internal_iccm_lock_cg = new(bus_internal_iccm_lock);
   soc_ifc_internal_fw_update_reset_cg internal_fw_update_reset_cg = new(bus_internal_fw_update_reset);
   soc_ifc_internal_fw_update_reset_wait_cycles_cg internal_fw_update_reset_wait_cycles_cg = new(bus_internal_fw_update_reset_wait_cycles);
   soc_ifc_internal_nmi_vector_cg internal_nmi_vector_cg = new(bus_internal_nmi_vector);
+  soc_ifc_internal_hw_error_fatal_mask_cg internal_hw_error_fatal_mask_cg = new(bus_internal_hw_error_fatal_mask);
+  soc_ifc_internal_hw_error_non_fatal_mask_cg internal_hw_error_non_fatal_mask_cg = new(bus_internal_hw_error_non_fatal_mask);
+  soc_ifc_internal_fw_error_fatal_mask_cg internal_fw_error_fatal_mask_cg = new(bus_internal_fw_error_fatal_mask);
+  soc_ifc_internal_fw_error_non_fatal_mask_cg internal_fw_error_non_fatal_mask_cg = new(bus_internal_fw_error_non_fatal_mask);
+  soc_ifc_internal_rv_mtime_l_cg internal_rv_mtime_l_cg = new(bus_internal_rv_mtime_l);
+  soc_ifc_internal_rv_mtime_h_cg internal_rv_mtime_h_cg = new(bus_internal_rv_mtime_h);
+  soc_ifc_internal_rv_mtimecmp_l_cg internal_rv_mtimecmp_l_cg = new(bus_internal_rv_mtimecmp_l);
+  soc_ifc_internal_rv_mtimecmp_h_cg internal_rv_mtimecmp_h_cg = new(bus_internal_rv_mtimecmp_h);
+  soc_ifc_intr_brf_global_intr_en_r_cg intr_brf_global_intr_en_r_cg = new(bus_intr_brf_global_intr_en_r);
+  soc_ifc_intr_brf_error_intr_en_r_cg intr_brf_error_intr_en_r_cg = new(bus_intr_brf_error_intr_en_r);
+  soc_ifc_intr_brf_notif_intr_en_r_cg intr_brf_notif_intr_en_r_cg = new(bus_intr_brf_notif_intr_en_r);
+  soc_ifc_intr_brf_error_global_intr_r_cg intr_brf_error_global_intr_r_cg = new(bus_intr_brf_error_global_intr_r);
+  soc_ifc_intr_brf_notif_global_intr_r_cg intr_brf_notif_global_intr_r_cg = new(bus_intr_brf_notif_global_intr_r);
+  soc_ifc_intr_brf_error_internal_intr_r_cg intr_brf_error_internal_intr_r_cg = new(bus_intr_brf_error_internal_intr_r);
+  soc_ifc_intr_brf_notif_internal_intr_r_cg intr_brf_notif_internal_intr_r_cg = new(bus_intr_brf_notif_internal_intr_r);
+  soc_ifc_intr_brf_error_intr_trig_r_cg intr_brf_error_intr_trig_r_cg = new(bus_intr_brf_error_intr_trig_r);
+  soc_ifc_intr_brf_notif_intr_trig_r_cg intr_brf_notif_intr_trig_r_cg = new(bus_intr_brf_notif_intr_trig_r);
+  soc_ifc_intr_brf_error_internal_intr_count_r_cg intr_brf_error_internal_intr_count_r_cg = new(bus_intr_brf_error_internal_intr_count_r);
+  soc_ifc_intr_brf_error_inv_dev_intr_count_r_cg intr_brf_error_inv_dev_intr_count_r_cg = new(bus_intr_brf_error_inv_dev_intr_count_r);
+  soc_ifc_intr_brf_error_cmd_fail_intr_count_r_cg intr_brf_error_cmd_fail_intr_count_r_cg = new(bus_intr_brf_error_cmd_fail_intr_count_r);
+  soc_ifc_intr_brf_error_bad_fuse_intr_count_r_cg intr_brf_error_bad_fuse_intr_count_r_cg = new(bus_intr_brf_error_bad_fuse_intr_count_r);
+  soc_ifc_intr_brf_error_iccm_blocked_intr_count_r_cg intr_brf_error_iccm_blocked_intr_count_r_cg = new(bus_intr_brf_error_iccm_blocked_intr_count_r);
+  soc_ifc_intr_brf_error_mbox_ecc_unc_intr_count_r_cg intr_brf_error_mbox_ecc_unc_intr_count_r_cg = new(bus_intr_brf_error_mbox_ecc_unc_intr_count_r);
+  soc_ifc_intr_brf_error_wdt_timer1_timeout_intr_count_r_cg intr_brf_error_wdt_timer1_timeout_intr_count_r_cg = new(bus_intr_brf_error_wdt_timer1_timeout_intr_count_r);
+  soc_ifc_intr_brf_error_wdt_timer2_timeout_intr_count_r_cg intr_brf_error_wdt_timer2_timeout_intr_count_r_cg = new(bus_intr_brf_error_wdt_timer2_timeout_intr_count_r);
+  soc_ifc_intr_brf_notif_cmd_avail_intr_count_r_cg intr_brf_notif_cmd_avail_intr_count_r_cg = new(bus_intr_brf_notif_cmd_avail_intr_count_r);
+  soc_ifc_intr_brf_notif_mbox_ecc_cor_intr_count_r_cg intr_brf_notif_mbox_ecc_cor_intr_count_r_cg = new(bus_intr_brf_notif_mbox_ecc_cor_intr_count_r);
+  soc_ifc_intr_brf_notif_debug_locked_intr_count_r_cg intr_brf_notif_debug_locked_intr_count_r_cg = new(bus_intr_brf_notif_debug_locked_intr_count_r);
+  soc_ifc_intr_brf_notif_scan_mode_intr_count_r_cg intr_brf_notif_scan_mode_intr_count_r_cg = new(bus_intr_brf_notif_scan_mode_intr_count_r);
+  soc_ifc_intr_brf_notif_soc_req_lock_intr_count_r_cg intr_brf_notif_soc_req_lock_intr_count_r_cg = new(bus_intr_brf_notif_soc_req_lock_intr_count_r);
+  soc_ifc_intr_brf_notif_gen_in_toggle_intr_count_r_cg intr_brf_notif_gen_in_toggle_intr_count_r_cg = new(bus_intr_brf_notif_gen_in_toggle_intr_count_r);
+  soc_ifc_intr_brf_error_internal_intr_count_incr_r_cg intr_brf_error_internal_intr_count_incr_r_cg = new(bus_intr_brf_error_internal_intr_count_incr_r);
+  soc_ifc_intr_brf_error_inv_dev_intr_count_incr_r_cg intr_brf_error_inv_dev_intr_count_incr_r_cg = new(bus_intr_brf_error_inv_dev_intr_count_incr_r);
+  soc_ifc_intr_brf_error_cmd_fail_intr_count_incr_r_cg intr_brf_error_cmd_fail_intr_count_incr_r_cg = new(bus_intr_brf_error_cmd_fail_intr_count_incr_r);
+  soc_ifc_intr_brf_error_bad_fuse_intr_count_incr_r_cg intr_brf_error_bad_fuse_intr_count_incr_r_cg = new(bus_intr_brf_error_bad_fuse_intr_count_incr_r);
+  soc_ifc_intr_brf_error_iccm_blocked_intr_count_incr_r_cg intr_brf_error_iccm_blocked_intr_count_incr_r_cg = new(bus_intr_brf_error_iccm_blocked_intr_count_incr_r);
+  soc_ifc_intr_brf_error_mbox_ecc_unc_intr_count_incr_r_cg intr_brf_error_mbox_ecc_unc_intr_count_incr_r_cg = new(bus_intr_brf_error_mbox_ecc_unc_intr_count_incr_r);
+  soc_ifc_intr_brf_error_wdt_timer1_timeout_intr_count_incr_r_cg intr_brf_error_wdt_timer1_timeout_intr_count_incr_r_cg = new(bus_intr_brf_error_wdt_timer1_timeout_intr_count_incr_r);
+  soc_ifc_intr_brf_error_wdt_timer2_timeout_intr_count_incr_r_cg intr_brf_error_wdt_timer2_timeout_intr_count_incr_r_cg = new(bus_intr_brf_error_wdt_timer2_timeout_intr_count_incr_r);
+  soc_ifc_intr_brf_notif_cmd_avail_intr_count_incr_r_cg intr_brf_notif_cmd_avail_intr_count_incr_r_cg = new(bus_intr_brf_notif_cmd_avail_intr_count_incr_r);
+  soc_ifc_intr_brf_notif_mbox_ecc_cor_intr_count_incr_r_cg intr_brf_notif_mbox_ecc_cor_intr_count_incr_r_cg = new(bus_intr_brf_notif_mbox_ecc_cor_intr_count_incr_r);
+  soc_ifc_intr_brf_notif_debug_locked_intr_count_incr_r_cg intr_brf_notif_debug_locked_intr_count_incr_r_cg = new(bus_intr_brf_notif_debug_locked_intr_count_incr_r);
+  soc_ifc_intr_brf_notif_soc_req_lock_intr_count_incr_r_cg intr_brf_notif_soc_req_lock_intr_count_incr_r_cg = new(bus_intr_brf_notif_soc_req_lock_intr_count_incr_r);
 
   // ------------------------------------------------------------------- 
   // end SCRIPT_OUTPUT
   // ------------------------------------------------------------------- 
 
-
 endinterface
 
+
 `endif
+
