@@ -319,6 +319,10 @@ function void soc_ifc_environment::set_can_handle_reset(bit en = 1'b1);
 endfunction
 
 task soc_ifc_environment::handle_reset(string kind = "HARD");
+    uvm_object obj;
+    uvm_event reset_synchro;
+    reset_flag rst_sync_flag;
+
     // Reset status agents (needed to reset monitor transaction keys)
     this.cptra_status_agent.handle_reset(kind);
     this.soc_ifc_status_agent.handle_reset(kind);
@@ -330,7 +334,32 @@ task soc_ifc_environment::handle_reset(string kind = "HARD");
     this.soc_ifc_sb.handle_reset(kind);
 
     // Reset predictor according to kind
-    this.soc_ifc_pred.handle_reset(kind);
+    this.soc_ifc_pred.handle_reset(kind, reset_synchro);
+
+    // A "SOFT" reset (cptra_rst_b) is followed by noncore reset assertion; we
+    // need to time the assertion of the reset to all the soc_ifc_env components
+    // based on the predictor
+    if (kind == "SOFT") begin
+        `uvm_info("SOC_IFC_ENV_HANDLE_RESET", "After receiving SOFT reset, waiting for predictor to signal the NONCORE reset so environment can be reset", UVM_LOW)
+
+        reset_synchro.wait_trigger_data(obj);
+        $cast(rst_sync_flag, obj);
+        if (rst_sync_flag.get_name() != "noncore_reset_flag")
+            `uvm_error("SOC_IFC_ENV_HANDLE_RESET", {"Reset synchronization event returned a reset event of unexpected type! ", rst_sync_flag.get_name()})
+
+        // Reset status agents (needed to reset monitor transaction keys)
+        this.cptra_status_agent.handle_reset("NONCORE");
+        this.soc_ifc_status_agent.handle_reset("NONCORE");
+
+        // Reset mbox_sram agent (needed to reset the ECC error injection)
+        this.mbox_sram_agent.handle_reset("NONCORE");
+
+        // Reset scoreboard according to kind
+        this.soc_ifc_sb.handle_reset("NONCORE");
+
+        `uvm_info("SOC_IFC_ENV_HANDLE_RESET", "After receiving NONCORE reset signal from soc_ifc_predictor, completed environment-level NONCORE reset prerequisites and continuing with reset prediction", UVM_LOW)
+        reset_synchro.reset();
+    end
 
     // TODO does this happen naturally from hdl_top driving reset?
     // Reset APB

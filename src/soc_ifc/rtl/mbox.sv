@@ -115,8 +115,6 @@ logic [MBOX_ECC_DATA_W-1:0] sram_rdata_cor_ecc;
 logic sram_we;
 logic mbox_protocol_sram_we;
 logic mbox_protocol_sram_rd, mbox_protocol_sram_rd_f;
-logic sram_ecc_cor_we;
-logic [$clog2(DEPTH)-1:0] sram_ecc_cor_waddr;
 logic dir_req_dv_q, dir_req_rd_phase;
 logic dir_req_wr_ph;
 logic mask_rdata;
@@ -273,6 +271,7 @@ always_comb begin : mbox_fsm_combo
                 mbox_fsm_ns = MBOX_IDLE;
                 rst_mbox_wrptr = 1;
                 rst_mbox_rdptr = 1;
+                mbox_protocol_error_nxt = '{default: 0};
             end
         end
         MBOX_RDY_FOR_DLEN: begin
@@ -287,6 +286,7 @@ always_comb begin : mbox_fsm_combo
                 mbox_fsm_ns = MBOX_IDLE;
                 rst_mbox_wrptr = 1;
                 rst_mbox_rdptr = 1;
+                mbox_protocol_error_nxt = '{default: 0};
             end
         end
         MBOX_RDY_FOR_DATA: begin
@@ -310,8 +310,11 @@ always_comb begin : mbox_fsm_combo
             end
             if (arc_FORCE_MBOX_UNLOCK) begin
                 mbox_fsm_ns = MBOX_IDLE;
+                inc_wrptr = 0;
+                inc_rdptr = 0;
                 rst_mbox_wrptr = 1;
                 rst_mbox_rdptr = 1;
+                mbox_protocol_error_nxt = '{default: 0};
             end
         end
         //SoC set execute, data is for the uC
@@ -337,8 +340,11 @@ always_comb begin : mbox_fsm_combo
             end
             if (arc_FORCE_MBOX_UNLOCK) begin
                 mbox_fsm_ns = MBOX_IDLE;
+                inc_wrptr = 0;
+                inc_rdptr = 0;
                 rst_mbox_wrptr = 1;
                 rst_mbox_rdptr = 1;
+                mbox_protocol_error_nxt = '{default: 0};
             end
         end
         //uC set execute, data is for the SoC
@@ -364,12 +370,15 @@ always_comb begin : mbox_fsm_combo
             end
             if (arc_FORCE_MBOX_UNLOCK) begin
                 mbox_fsm_ns = MBOX_IDLE;
+                inc_wrptr = 0;
+                inc_rdptr = 0;
                 rst_mbox_wrptr = 1;
                 rst_mbox_rdptr = 1;
+                mbox_protocol_error_nxt = '{default: 0};
             end
         end
         MBOX_ERROR: begin
-            mbox_protocol_error_nxt = '0;
+            mbox_protocol_error_nxt = '{default: 0};
             if (arc_FORCE_MBOX_UNLOCK) begin
                 mbox_fsm_ns = MBOX_IDLE;
                 rst_mbox_wrptr = 1;
@@ -407,7 +416,6 @@ always_ff @(posedge clk or negedge rst_b) begin
         mbox_rdptr <= '0;
         mbox_rd_full <= '0;
         mbox_protocol_sram_rd_f <= '0;
-        sram_ecc_cor_waddr <= '0;
         dlen_in_dws <= '0;
         mbox_protocol_error <= '0;
         sram_rd_ecc_en <= '0;
@@ -423,8 +431,6 @@ always_ff @(posedge clk or negedge rst_b) begin
         mbox_protocol_sram_rd_f <= (mbox_protocol_sram_rd | mbox_protocol_sram_rd_f) ? mbox_protocol_sram_rd : mbox_protocol_sram_rd_f;
         mbox_rd_full <= (inc_rdptr | rst_mbox_rdptr) ? mbox_rd_full_nxt : mbox_rd_full;
         mbox_rd_valid_f <= (mbox_rd_valid | mbox_rd_valid_f) ? mbox_rd_valid : mbox_rd_valid_f;
-        sram_ecc_cor_waddr <= /*dir_req_rd_phase ? sram_ecc_cor_waddr :*/
-                                                 sram_rdaddr;
                              
         dlen_in_dws <= latch_dlen_in_dws ? dlen_in_dws_nxt : dlen_in_dws;                    
         mbox_protocol_error <= mbox_protocol_error_nxt;
@@ -449,16 +455,14 @@ always_comb req_hold = (dir_req_dv_q & ~req_data.write) |
                        (dir_req_dv & sha_sram_req_dv) |
                        (hwif_out.mbox_dataout.dataout.swacc & mbox_protocol_sram_rd_f);
 
-always_comb sha_sram_hold = sram_single_ecc_error/* || sram_ecc_cor_we*/;
+always_comb sha_sram_hold = 1'b0;
 
 //SRAM interface
-always_comb sram_ecc_cor_we = sram_single_ecc_error; // TODO we probably want this to be a reg-stage to reduce combo logic SRAM -> rdata -> wdata -> SRAM
-always_comb sram_we = dir_req_wr_ph | mbox_protocol_sram_we | sram_ecc_cor_we;
+always_comb sram_we = dir_req_wr_ph | mbox_protocol_sram_we;
 //align the direct address to a word
 always_comb sram_rdaddr = dir_req_dv_q ? dir_req_addr : 
                           rst_mbox_rdptr ? 'd0 : mbox_rdptr;
-always_comb sram_waddr = sram_ecc_cor_we ? sram_ecc_cor_waddr :
-                         dir_req_dv_q    ? dir_req_addr : mbox_wrptr;
+always_comb sram_waddr = dir_req_dv_q    ? dir_req_addr : mbox_wrptr;
 //data phase after request for direct access
 //We want to mask the read data for certain accesses
 always_comb rdata = ({DATA_W{~mask_rdata}} & csr_rdata);
@@ -466,11 +470,11 @@ always_comb dir_rdata = dir_req_rd_phase ? sram_rdata_cor : '0;
 
 always_comb begin: mbox_sram_inf
     //read live on direct access, or when pointer has been incremented, for pre-load on read pointer reset, or ecc correction
-    mbox_sram_req.cs = dir_req_dv_q | mbox_protocol_sram_we | mbox_protocol_sram_rd | sram_ecc_cor_we;
+    mbox_sram_req.cs = dir_req_dv_q | mbox_protocol_sram_we | mbox_protocol_sram_rd;
     mbox_sram_req.we = sram_we;
     mbox_sram_req.addr = sram_we ? sram_waddr : sram_rdaddr;
-    mbox_sram_req.wdata.data = sram_ecc_cor_we ? sram_rdata_cor     : sram_wdata;
-    mbox_sram_req.wdata.ecc  = sram_ecc_cor_we ? sram_rdata_cor_ecc : sram_wdata_ecc;
+    mbox_sram_req.wdata.data = sram_wdata;
+    mbox_sram_req.wdata.ecc  = sram_wdata_ecc;
 
     sram_rdata     = mbox_sram_resp.rdata.data;
     sram_rdata_ecc = mbox_sram_resp.rdata.ecc;
@@ -593,7 +597,7 @@ mbox_csr1(
     .hwif_out(hwif_out)
 );
 
-`CALIPTRA_ASSERT_MUTEX(ERR_MBOX_ACCESS_MUTEX, {dir_req_dv_q | mbox_protocol_sram_we | mbox_protocol_sram_rd | sram_ecc_cor_we}, clk, rst_b)
+`CALIPTRA_ASSERT_MUTEX(ERR_MBOX_ACCESS_MUTEX, {dir_req_dv_q , mbox_protocol_sram_we , mbox_protocol_sram_rd }, clk, rst_b)
 `CALIPTRA_ASSERT_MUTEX(ERR_MBOX_DIR_SHA_COLLISION, {dir_req_dv, sha_sram_req_dv}, clk, rst_b)
 `CALIPTRA_ASSERT_NEVER(ERR_MBOX_DIR_REQ_FROM_SOC, (dir_req_dv & req_data.soc_req), clk, rst_b)
 

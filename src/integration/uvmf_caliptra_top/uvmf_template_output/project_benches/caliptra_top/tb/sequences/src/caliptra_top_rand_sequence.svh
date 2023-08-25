@@ -238,11 +238,11 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
 //    join
     fork
         forever begin
-            if (!std::randomize(mbox_ecc_single_error_burst,mbox_ecc_single_error_delay_clocks) with {mbox_ecc_single_error_burst        dist {1 :/ 1000, [2:5] :/ 100, [6:31] :/ 20, [32:131071] :/ 1, [131072:524288] :/ 1};
+            if (!std::randomize(mbox_ecc_single_error_burst,mbox_ecc_single_error_delay_clocks) with {mbox_ecc_single_error_burst        dist {1 :/ 10000, [2:5] :/ 2000, [6:31] :/ 200, [32:1023] :/ 10, [1024:131071] :/ 2, [131072:524288] :/ 1};
                                                                                                       mbox_ecc_single_error_delay_clocks dist {1 :/ 1, [2:31] :/ 3, [32:127] :/ 5, [128:1023] :/ 3, [1024:131072] :/ 1};    })
                 `uvm_fatal("CALIPTRA_TOP_RAND_TEST", "Failed to randomize mbox ecc bit flip injection parameters")
             else
-                `uvm_info("CALIPTRA_TOP_RAND_TEST", $sformatf("Randomized mbox ecc bit flip injection parameters: burst [%0d] delay [%0d clocks]", mbox_ecc_single_error_burst, mbox_ecc_single_error_delay_clocks), UVM_DEBUG)
+                `uvm_info("CALIPTRA_TOP_RAND_TEST", $sformatf("Randomized mbox ecc bit flip injection parameters: burst [%0d] delay [%0d clocks]", mbox_ecc_single_error_burst, mbox_ecc_single_error_delay_clocks), UVM_FULL)
             soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_num_clocks(mbox_ecc_single_error_delay_clocks);
             `uvm_info("CALIPTRA_TOP_RAND_TEST", $sformatf("Injecting mbox ecc error with burst [%0d]", mbox_ecc_single_error_burst), UVM_DEBUG)
             repeat(mbox_ecc_single_error_burst) begin

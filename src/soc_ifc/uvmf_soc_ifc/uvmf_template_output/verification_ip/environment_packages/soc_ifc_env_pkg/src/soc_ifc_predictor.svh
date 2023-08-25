@@ -161,6 +161,7 @@ class soc_ifc_predictor #(
   uvm_analysis_port #(mvc_sequence_item_base) soc_ifc_ahb_reg_ap;
   uvm_analysis_port #(mvc_sequence_item_base) soc_ifc_apb_reg_ap;
 
+  process running_dly_jobs[$];
   bit cptra_pwrgood_asserted = 1'b0;
   bit soc_ifc_rst_in_asserted = 1'b1;
   bit noncore_rst_out_asserted = 1'b1;
@@ -190,7 +191,7 @@ class soc_ifc_predictor #(
   bit [31:0] nmi_vector = 32'h0;
   bit iccm_locked = 1'b0;
   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg = '{default:32'h0}; // FIXME use reg-model value?
-  security_state_t security_state = '{debug_locked: 1'b1, device_lifecycle: DEVICE_UNPROVISIONED};
+  security_state_t security_state = '{debug_locked: 1'b1, device_lifecycle: DEVICE_UNPROVISIONED}; // FIXME unused
   bit bootfsm_breakpoint = 1'b0;
   bit cptra_in_dbg_or_manuf_mode = 1'b0;
   int unsigned fw_update_wait_count = 0;
@@ -219,6 +220,7 @@ class soc_ifc_predictor #(
 
   reset_flag hard_reset_flag;
   reset_flag soft_reset_flag;
+  reset_flag noncore_reset_flag;
 
   //WDT vars:
   bit [63:0] t1_count, t2_count;
@@ -243,7 +245,7 @@ class soc_ifc_predictor #(
   extern function bit  valid_receiver(input uvm_transaction txn);
   extern function bit  sha_valid_user(input uvm_transaction txn);
   extern function void predict_boot_wait_boot_done();
-  extern task          handle_reset(input string kind = "HARD");
+  extern task          handle_reset(input string kind = "HARD", output uvm_event reset_synchro);
   extern function void predict_reset(input string kind = "HARD");
   extern function bit  soc_ifc_status_txn_expected_after_noncore_reset();
   extern function bit  cptra_status_txn_expected_after_noncore_reset();
@@ -289,6 +291,7 @@ class soc_ifc_predictor #(
     reset_handled = new("reset_handled");
     hard_reset_flag = new("hard_reset_flag"); // Used as trigger data for reset events. In UVM 1.2, data changes from a uvm_object to a string
     soft_reset_flag = new("soft_reset_flag"); // Used as trigger data for reset events. In UVM 1.2, data changes from a uvm_object to a string
+    noncore_reset_flag = new("noncore_reset_flag"); // Used as trigger data for reset events. In UVM 1.2, data changes from a uvm_object to a string
   // pragma uvmf custom build_phase end
   endfunction
 
@@ -414,17 +417,12 @@ class soc_ifc_predictor #(
         if (soc_ifc_rst_in_asserted) begin
             // Todo check for breakpoint assertion and flag an expected AHB write to clear it
             soc_ifc_rst_in_asserted = 1'b0;
-            p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fuses.predict(1'b1);
             cptra_in_dbg_or_manuf_mode = ~t.security_state.debug_locked || t.security_state.device_lifecycle == DEVICE_MANUFACTURING;
             bootfsm_breakpoint = t.set_bootfsm_breakpoint && cptra_in_dbg_or_manuf_mode;
             reset_predicted.reset();
-            send_soc_ifc_sts_txn = 1;
+            send_soc_ifc_sts_txn = 0; // prediction for ready_for_fuses done in predict_reset after noncore reset deassertion
             send_cptra_sts_txn = 0; // cptra sts transaction not expected until after CPTRA_FUSE_WR_DONE
             reset_wdt_count = 1'b0;
-            fork
-                configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(6); // FIXME, correct delay value?
-                rdc_clk_gate_active = 1'b0;
-            join_none
             `uvm_info("PRED_SOC_IFC_CTRL", $sformatf("In response to warm_reset deassertion, send_soc_ifc_sts_txn: %d", send_soc_ifc_sts_txn), UVM_NONE)
         end
         // Normal operation
@@ -588,7 +586,10 @@ class soc_ifc_predictor #(
     soc_ifc_sb_ahb_ap_output_transaction = soc_ifc_sb_ahb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ahb_ap_output_transaction");
     soc_ifc_sb_apb_ap_output_transaction = soc_ifc_sb_apb_ap_output_transaction_t::type_id::create("soc_ifc_sb_apb_ap_output_transaction");
 
-    if (t.is_read && t.ecc_double_bit_error) begin
+    if (rdc_clk_gate_active) begin
+        `uvm_info("PRED_MBOX_SRAM", "Received transaction while RDC clock gate is active, no system prediction to do since interrupt bits cannot be set", UVM_MEDIUM)
+    end
+    else if (t.is_read && t.ecc_double_bit_error) begin
         p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.error_mbox_ecc_unc_sts.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, p_soc_ifc_AHB_map); /* AHB-access only, use AHB map*/
         `uvm_info("PRED_MBOX_SRAM", "Received read transaction with Double bit ECC corruption, triggering the err interrupt", UVM_MEDIUM)
     end
@@ -2563,16 +2564,20 @@ endfunction
 // This task detects those scheduled jobs and runs them after waiting for
 // the specified delay.
 task soc_ifc_predictor::poll_and_run_delay_jobs();
-    // FIXME reset!
     forever begin
         while (p_soc_ifc_rm.delay_jobs.size() > 0) begin
             fork
                 soc_ifc_reg_delay_job job = p_soc_ifc_rm.delay_jobs.pop_front();
-                begin
+                if (!noncore_rst_out_asserted) begin
+                    int idx[$];
+                    running_dly_jobs.push_back(process::self()); // This tracks all the delay_jobs that are pending so they can be clobbered on rst
+                    `uvm_info("PRED_DLY", $sformatf("Doing delay of %0d cycles before running delay job with signature: %s", job.get_delay_cycles(), job.get_name()), UVM_HIGH/*UVM_FULL*/)
                     // delay cycles reported as 0's based value, since 1-cycle delay
                     // is inherent to this forever loop
                     if (job.get_delay_cycles()) configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(job.get_delay_cycles());
                     uvm_wait_for_nba_region();
+                    idx = running_dly_jobs.find_first_index(pr) with (pr == process::self());
+                    running_dly_jobs.delete(idx.pop_front());
                     job.do_job();
 //                    p_soc_ifc_rm.sample_values(); /* Sample coverage after completing any delayed prediction/mirror updates */ // NOTE: Added sample post_predict callback to reg fields instead
                     send_delayed_expected_transactions();
@@ -3172,7 +3177,7 @@ function void soc_ifc_predictor::predict_boot_wait_boot_done();
 
 endfunction
 
-task soc_ifc_predictor::handle_reset(input string kind = "HARD");
+task soc_ifc_predictor::handle_reset(input string kind = "HARD", output uvm_event reset_synchro);
     uvm_object obj_triggered;
     reset_flag kind_predicted;
     reset_flag kind_handled;
@@ -3181,11 +3186,16 @@ task soc_ifc_predictor::handle_reset(input string kind = "HARD");
                    kind == "SOFT" ? soft_reset_flag :
                                     null;
     reset_handled.trigger(kind_handled);
+    `uvm_info("PRED_HANDLE_RESET", "On call to handle_reset, waiting to receive the ctrl reset transaction", UVM_HIGH)
     reset_predicted.wait_trigger_data(obj_triggered);
+    `uvm_info("PRED_HANDLE_RESET", "In call to handle_reset, received the ctrl reset transaction", UVM_HIGH)
     if (!$cast(kind_predicted, obj_triggered))
         `uvm_fatal("PRED_HANDLE_RESET", "Failed to retrieve triggered reset_flag")
     if (kind_handled != kind_predicted)
         `uvm_error("PRED_HANDLE_RESET", $sformatf("handle_reset called with different reset type [%s] than was processed in predictor [%s]!", kind_handled.get_name(), kind_predicted.get_name()))
+    // Used to synchronize the noncore reset in the reset of the environment with
+    // the predictor (all other components must be reset before predictor)
+    reset_synchro = reset_handled;
 endtask
 
 function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
@@ -3211,7 +3221,21 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
 
             // Do the noncore reset
             `uvm_info("PRED_RESET", $sformatf("Reset prediction of kind: %p results in assertion of internal resets after a delay", kind), UVM_MEDIUM)
-            configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(3); // FIXME, correct delay value?
+            fork
+                begin
+                    if (configuration.cptra_ctrl_agent_config.active_passive == PASSIVE) begin
+                        configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(2);
+                        uvm_wait_for_nba_region();
+                        rdc_clk_gate_active = 1'b1;
+                        `uvm_info("PRED_RESET", $sformatf("Reset prediction of kind: %p results in assertion of RDC clk gate", kind), UVM_MEDIUM)
+                    end
+                end
+                configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(SOC_IFC_CPTRA_RST_NONCORE_RST_DELAY);
+            join
+            // Synchronize the noncore reset with the reset of the environment and allow other
+            // components to reset before proceeding with predicted activity
+            reset_handled.trigger(noncore_reset_flag);
+            reset_handled.wait_off();
             predict_reset("NONCORE");
 
             // Send predicted transactions
@@ -3230,11 +3254,10 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
             end: DELAY_INTERNAL_RESET_ASSERTION
         join_none
     end
-    else if (kind == "NONCORE") begin: IMMEDIATE_INTERNAL_RESET_DEASSERTION
+    else if (kind == "NONCORE") begin: NONCORE_INTERNAL_RESET_ASSERTION
         `uvm_info("PRED_RESET", $sformatf("Reset prediction of kind: %p results in assertion of internal resets", kind), UVM_MEDIUM)
         noncore_rst_out_asserted = 1'b1;
         uc_rst_out_asserted = 1'b1;
-        rdc_clk_gate_active = 1'b1;
     end
 
     // Track the BOOT FSM internally
@@ -3246,6 +3269,9 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
         fork
             begin
                 cptra_sb_ap_output_transaction_t local_cptra_sb_ap_txn;
+                soc_ifc_sb_ap_output_transaction_t local_soc_ifc_sb_ap_txn;
+
+                // Wait for cptra_rst_b deassertion
                 `uvm_info("PRED_RESET", $sformatf("Reset prediction of kind: %p will result in state change after reset deasserts. Wait for cptra_rst_b==1...", kind), UVM_MEDIUM)
                 while (last_predicted_kind != soft_reset_flag) begin
                     uvm_object obj_predicted;
@@ -3254,6 +3280,13 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
                     $cast(last_predicted_kind,obj_predicted);
                     `uvm_info("PRED_RESET", $sformatf("After reset_predicted was cleared, last predicted kind was: %s", last_predicted_kind.get_name()), UVM_MEDIUM)
                 end
+
+                // Additional delay until RDC clock comes back alive
+                // NOTE: Not implemented in uvmf_soc_ifc, only occurs in caliptra_top. TODO
+                if (configuration.cptra_ctrl_agent_config.active_passive == PASSIVE)
+                    configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(4); // FIXME, correct delay value?
+                rdc_clk_gate_active = 1'b0;
+
                 p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs = '{boot_fuse: 1'b1, default: 1'b0};
                 `uvm_info("PRED_RESET", $sformatf("After detecting warm reset deassertion, boot FSM state change predicted: [%p]", p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs), UVM_MEDIUM)
                 // NOTE: Next state progression is triggered by write to CPTRA_FUSE_WR_DONE
@@ -3261,13 +3294,22 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
                 // Now, deassertion of noncore reset is delayed from state transition by 2 cycles
                 configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(2); // FIXME, correct delay value?
                 noncore_rst_out_asserted = 1'b0;
+                p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fuses.predict(1'b1);
 
                 // Send predicted transactions
                 if (1) begin
+                    // cptra status is for noncore reset deassertion
                     local_cptra_sb_ap_txn = cptra_sb_ap_output_transaction_t::type_id::create("local_cptra_sb_ap_txn");
                     populate_expected_cptra_status_txn(local_cptra_sb_ap_txn);
                     cptra_sb_ap.write(local_cptra_sb_ap_txn);
                     `uvm_info("PRED_RESET", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
+                end
+                if (1) begin
+                    // soc_ifc status is for ready_for_fuses
+                    local_soc_ifc_sb_ap_txn = soc_ifc_sb_ap_output_transaction_t::type_id::create("local_soc_ifc_sb_ap_txn");
+                    populate_expected_soc_ifc_status_txn(local_soc_ifc_sb_ap_txn);
+                    soc_ifc_sb_ap.write(local_soc_ifc_sb_ap_txn);
+                    `uvm_info("PRED_RESET", "Transaction submitted through soc_ifc_sb_ap", UVM_MEDIUM)
                 end
             end
         join_none
@@ -3279,9 +3321,6 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
     if (kind inside {"HARD", "SOFT"}) begin: RESET_VAL_CHANGES_HARD_SOFT
         soc_ifc_rst_in_asserted = 1'b1;
         p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fuses.predict(1'b0);
-
-        cptra_error_fatal = 1'b0;
-        cptra_error_non_fatal = 1'b0;
     end: RESET_VAL_CHANGES_HARD_SOFT
 
     // Signals that are tied to reg values are not reset by warm reset until it
@@ -3299,6 +3338,9 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
         sha_notif_intr_pending = 1'b0;
 
         generic_output_wires = '0;
+
+        cptra_error_fatal = 1'b0;
+        cptra_error_non_fatal = 1'b0;
 
         //WDT
         nmi_intr_pending = 1'b0; //Reset nmi_intr on reset assertion
@@ -3344,14 +3386,25 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
         fuse_update_enabled = 1'b1; // Fuses only latch new values from APB write after a cold-reset (which clears CPTRA_FUSE_WR_DONE)
     end: RESET_VAL_CHANGES_HARD
 
-    // TODO clear the delay_jobs queue?
-
     // HARD reset is the default for a reg-model
-    // FIXME SOFT reset is not fully defined for our reg-model yet
     // FIXME move this to env?
     p_soc_ifc_rm.reset(kind);
+    // Kill any delay_jobs that have been initiated but not completed yet
+    if (kind inside {"HARD","NONCORE"}) begin: KILL_DLY_JOBS_HARD_NONCORE
+        if (running_dly_jobs.size() > 0)
+            `uvm_info("PRED_RESET", $sformatf("Terminating %0d active delayed jobs.", running_dly_jobs.size()), UVM_HIGH)
+        while (running_dly_jobs.size() > 0) begin
+            process job_to_kill = running_dly_jobs.pop_front();
+            if (job_to_kill.status() inside {process::KILLED,process::SUSPENDED,process::FINISHED}) begin
+                `uvm_fatal("PRED_RESET", $sformatf("Found delay job in the running jobs queue with unexpected status %s", job_to_kill.status().name()))
+            end
+            else begin
+                job_to_kill.kill();
+            end
+        end
+    end
 
-    if (kind inside {"HARD","NONCORE"}) begin: RESET_REG_BUSY_NONCORE_HARD
+    if (kind inside {"HARD","NONCORE"}) begin: RESET_REG_BUSY_HARD_NONCORE
         // If any reg access was in progress when reset occurred, clear the busy
         // flag (since the APB/AHB sequencers and any mailbox sequences were killed).
         // We don't run this for warm/soft resets because cptra_rst_b doesn't immediately
@@ -3365,11 +3418,13 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
                 all_regs[ii].Xset_busyX(0);
             end
         end
-    end: RESET_REG_BUSY_NONCORE_HARD
+    end: RESET_REG_BUSY_HARD_NONCORE
 
-    // TODO skip key reset for SOFT reset type?
-    soc_ifc_status_txn_key = 0;
-    cptra_status_txn_key = 0;
+    // Key keeps on rolling after a SOFT reset because activity continues until NONCORE reset asserts
+    if (kind inside {"HARD","NONCORE"}) begin: RESET_TXN_KEY_HARD_NONCORE
+        soc_ifc_status_txn_key = 0;
+        cptra_status_txn_key = 0;
+    end: RESET_TXN_KEY_HARD_NONCORE
 endfunction
 
 function bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] soc_ifc_predictor::get_expected_obf_field_entropy();
