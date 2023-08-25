@@ -37,6 +37,7 @@
 // .dut_signal_port(kv_rst_bus.rst_b), // Agent output 
 // .dut_signal_port(kv_rst_bus.core_only_rst_b), // Agent output 
 // .dut_signal_port(kv_rst_bus.debug_locked), // Agent output 
+// .dut_signal_port(kv_rst_bus.cptra_in_debug_scan_mode), // Agent output 
 
 import uvmf_base_pkg_hdl::*;
 import kv_rst_pkg_hdl::*;
@@ -50,7 +51,8 @@ interface  kv_rst_if
   inout tri  rst_b,
   inout tri  core_only_rst_b,
   inout tri  fw_update_rst_window,
-  inout tri  debug_locked
+  inout tri  debug_locked,
+  inout tri  cptra_in_debug_scan_mode
   );
 
 modport monitor_port 
@@ -61,7 +63,8 @@ modport monitor_port
   input rst_b,
   input core_only_rst_b,
   input fw_update_rst_window,
-  input debug_locked
+  input debug_locked,
+  input cptra_in_debug_scan_mode
   );
 
 modport initiator_port 
@@ -72,7 +75,8 @@ modport initiator_port
   output rst_b,
   output core_only_rst_b,
   output fw_update_rst_window,
-  output debug_locked
+  output debug_locked,
+  output cptra_in_debug_scan_mode
   );
 
 modport responder_port 
@@ -83,7 +87,8 @@ modport responder_port
   input rst_b,
   input core_only_rst_b,
   input fw_update_rst_window,
-  input debug_locked
+  input debug_locked, 
+  input cptra_in_debug_scan_mode
   );
   
 

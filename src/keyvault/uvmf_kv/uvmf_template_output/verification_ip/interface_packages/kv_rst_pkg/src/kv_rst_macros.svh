@@ -68,6 +68,7 @@ typedef struct packed  { \
   bit assert_core_rst ; \
   int unsigned wait_cycles ; \
   bit debug_mode ; \
+  bit scan_mode ; \
      } kv_rst_monitor_s;
 
   `define kv_rst_TO_MONITOR_STRUCT_FUNCTION \
@@ -78,7 +79,8 @@ typedef struct packed  { \
             this.assert_rst , \
             this.assert_core_rst , \
             this.wait_cycles , \
-            this.debug_mode  \
+            this.debug_mode , \
+            this.scan_mode  \
             };\
     return ( kv_rst_monitor_struct);\
   endfunction\
@@ -90,7 +92,8 @@ typedef struct packed  { \
             this.assert_rst , \
             this.assert_core_rst , \
             this.wait_cycles , \
-            this.debug_mode  \
+            this.debug_mode , \
+            this.scan_mode  \
             } = kv_rst_monitor_struct;\
   endfunction
 
@@ -105,6 +108,7 @@ typedef struct packed  { \
   bit assert_core_rst ; \
   int unsigned wait_cycles ; \
   bit debug_mode ; \
+  bit scan_mode ; \
      } kv_rst_initiator_s;
 
   `define kv_rst_TO_INITIATOR_STRUCT_FUNCTION \
@@ -115,7 +119,8 @@ typedef struct packed  { \
            this.assert_rst , \
            this.assert_core_rst , \
            this.wait_cycles , \
-           this.debug_mode  \
+           this.debug_mode , \
+           this.scan_mode  \
            };\
     return ( kv_rst_initiator_struct);\
   endfunction
@@ -127,7 +132,8 @@ typedef struct packed  { \
            this.assert_rst , \
            this.assert_core_rst , \
            this.wait_cycles , \
-           this.debug_mode  \
+           this.debug_mode , \
+           this.scan_mode  \
            } = kv_rst_initiator_struct;\
   endfunction
 
@@ -142,6 +148,7 @@ typedef struct packed  { \
   bit assert_core_rst ; \
   int unsigned wait_cycles ; \
   bit debug_mode ; \
+  bit scan_mode ; \
      } kv_rst_responder_s;
 
   `define kv_rst_TO_RESPONDER_STRUCT_FUNCTION \
@@ -152,7 +159,8 @@ typedef struct packed  { \
            this.assert_rst , \
            this.assert_core_rst , \
            this.wait_cycles , \
-           this.debug_mode  \
+           this.debug_mode , \
+           this.scan_mode  \
            };\
     return ( kv_rst_responder_struct);\
   endfunction
@@ -164,7 +172,8 @@ typedef struct packed  { \
            this.assert_rst , \
            this.assert_core_rst , \
            this.wait_cycles , \
-           this.debug_mode  \
+           this.debug_mode , \
+           this.scan_mode  \
            } = kv_rst_responder_struct;\
   endfunction
 // pragma uvmf custom additional begin

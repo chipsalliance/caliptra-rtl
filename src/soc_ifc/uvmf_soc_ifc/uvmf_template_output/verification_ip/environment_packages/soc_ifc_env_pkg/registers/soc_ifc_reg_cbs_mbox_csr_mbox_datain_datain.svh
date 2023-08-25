@@ -125,7 +125,10 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain extends soc_ifc_reg_cbs_mbox_c
                         error_job.state_nxt = MBOX_IDLE;
                         error_job.error = '{axs_without_lock: 1'b1, default: 1'b0};
                         delay_jobs.push_back(error_job);
-                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to [%s] on map [%s] with value [%x] causes a mbox no_lock protocol error. Delay job is queued to update DUT model.", fld.get_name(), map.get_name(), value), UVM_HIGH)
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to [%s] on map [%s] with value [%x] causes a mbox no_lock protocol violation. Delay job is queued to update DUT model.", fld.get_name(), map.get_name(), value), UVM_HIGH)
+                    end
+                    else if (rm.mbox_fn_state_sigs.mbox_error) begin
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to %s on map [%s] with value [%x] during mailbox state [%p] has no additional side effects!", fld.get_name(), map.get_name(), value, rm.mbox_fn_state_sigs), UVM_LOW)
                     end
                     else begin
                         mbox_fsm_state_e mbox_fsm_ps;
@@ -138,7 +141,8 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain extends soc_ifc_reg_cbs_mbox_c
                         error_job.error = '{axs_incorrect_order: 1'b1, default: 1'b0};
                         delay_jobs.push_back(error_job);
                         mbox_fsm_ps = mbox_fsm_state_e'(rm.mbox_status.mbox_fsm_ps.get_mirrored_value());
-                        `uvm_warning("SOC_IFC_REG_CBS", $sformatf("Write to %s on map [%s] with value [%x] during unexpected mailbox state [%p] [%p] results in mbox ooo protocol error!", fld.get_name(), map.get_name(), value, rm.mbox_fn_state_sigs, mbox_fsm_ps))
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to %s on map [%s] with value [%x] during unexpected mailbox state [%p] [%p] results in mbox ooo protocol violation!", fld.get_name(), map.get_name(), value, rm.mbox_fn_state_sigs, mbox_fsm_ps), UVM_LOW)
+                        rm.mbox_fn_state_sigs = '{mbox_error: 1'b1, default: 1'b0};
                     end
                 end
                 default: begin

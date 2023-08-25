@@ -36,18 +36,24 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
   caliptra_apb_user apb_user_obj;
 
   typedef struct packed {
-      bit set_bootfsm_breakpoint;
+      bit              set_bootfsm_breakpoint;
+      security_state_t security_state;
   } ctrl_reset_seq_context_t;
 
   rand uvm_reg_data_t uds_seed_rand      [12];
   rand uvm_reg_data_t field_entropy_rand [32];
+  rand uvm_reg_data_t owner_pk_hash_rand [12];
+  rand uvm_reg_data_t key_manifest_pk_hash_rand [12];
   rand uvm_reg_data_t idevid_cert_attr_rand [24];
   rand uvm_reg_data_t soc_stepping_id_rand;
   rand struct packed {
     bit uds;
     bit field_entropy;
+    bit [0:11] key_manifest_pk_hash;
+    bit [0:11] owner_pk_hash;
     bit soc_stepping_id;
     bit [0:23] idevid_cert_attr;
+    bit lms_verify;
   } fuses_to_set;
 
 
@@ -75,6 +81,7 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     else
         `uvm_error("SOC_IFC_RST", "soc_ifc_ctrl_agent_config.sequencer is null!")
     ctx.set_bootfsm_breakpoint = soc_ifc_ctrl_seq.set_bootfsm_breakpoint;
+    ctx.security_state         = soc_ifc_ctrl_seq.security_state;
 
   endtask
 
@@ -95,16 +102,18 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
         end
     join_none
 
-    wait(sts_rsp_count > 0);
-    `uvm_info("SOC_IFC_RST", "Received response from status agent", UVM_MEDIUM)
-    if (sts_rsp_count > 1)
-        `uvm_error("SOC_IFC_RST", "Missed response activity during reset sequence")
-    fuse_ready = soc_ifc_status_agent_rsp_seq.rsp.ready_for_fuses;
-    sts_rsp_count--;
-    if (!fuse_ready)
-        `uvm_error("SOC_IFC_RST", "Unexpected status transition while waiting for Mailbox readiness for fuses")
-    else
-        `uvm_info("SOC_IFC_RST", "Fuse ready, initiating fuse download", UVM_LOW)
+    while (!fuse_ready) begin
+        wait(sts_rsp_count > 0);
+        `uvm_info("SOC_IFC_RST", "Received response from status agent", UVM_MEDIUM)
+        if (sts_rsp_count > 1)
+            `uvm_error("SOC_IFC_RST", "Missed response activity during reset sequence")
+        fuse_ready = soc_ifc_status_agent_rsp_seq.rsp.ready_for_fuses;
+        sts_rsp_count--;
+        if (!fuse_ready)
+            `uvm_info("SOC_IFC_RST", "Received status transition while waiting for Mailbox ready_for_fuses, ready_for_fuses still not set", UVM_MEDIUM)
+        else
+            `uvm_info("SOC_IFC_RST", $sformatf("Fuse ready, initiating fuse download with fuses_to_set: [%p]", this.fuses_to_set), UVM_LOW)
+    end
 
     // Write UDS
     if (this.fuses_to_set.uds) begin
@@ -124,6 +133,24 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
         end
     end
 
+    // Key Manifest PK Hash (Vendor)
+    foreach (this.fuses_to_set.key_manifest_pk_hash[ii]) begin
+        if (this.fuses_to_set.key_manifest_pk_hash[ii]) begin
+            `uvm_info("SOC_IFC_RST", $sformatf("Writing Key Manifest PK Hash [%d] to fuse bank with value 0x%0x", ii, key_manifest_pk_hash_rand[ii]), UVM_LOW)
+            reg_model.soc_ifc_reg_rm.fuse_key_manifest_pk_hash[ii].write(sts, key_manifest_pk_hash_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+            if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", $sformatf("Failed when writing to Key Manifest PK Hash [%d]", ii))
+        end
+    end
+
+    // Owner PK Hash
+    foreach (this.fuses_to_set.owner_pk_hash[ii]) begin
+        if (this.fuses_to_set.owner_pk_hash[ii]) begin
+            `uvm_info("SOC_IFC_RST", $sformatf("Writing Owner PK Hash [%d] to fuse bank with value 0x%0x", ii, owner_pk_hash_rand[ii]), UVM_LOW)
+            reg_model.soc_ifc_reg_rm.fuse_owner_pk_hash[ii].write(sts, owner_pk_hash_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+            if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", $sformatf("Failed when writing to Owner PK Hash [%d]", ii))
+        end
+    end
+
     // Write SoC Stepping ID
     if (this.fuses_to_set.soc_stepping_id) begin
       `uvm_info("SOC_IFC_RST", "Writing SOC Stepping ID to fuse bank", UVM_LOW)
@@ -138,6 +165,14 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
             reg_model.soc_ifc_reg_rm.fuse_idevid_cert_attr[ii].write(sts, idevid_cert_attr_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
             if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", $sformatf("Failed when writing to iDevID Certificate Attribute [%d]", ii))
         end
+    end
+
+    // Write LMS Verify Bit
+    if (this.fuses_to_set.lms_verify) begin
+      uvm_reg_data_t lms_verify_data = 1 << reg_model.soc_ifc_reg_rm.fuse_lms_verify.lms_verify.get_lsb_pos();
+      `uvm_info("SOC_IFC_RST", "Writing LMS Verify=1 to fuse bank", UVM_LOW)
+      reg_model.soc_ifc_reg_rm.fuse_lms_verify.write(sts, lms_verify_data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+      if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", "Failed when writing to lms_verify")
     end
 
     // Set Fuse Done
@@ -164,10 +199,12 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     data_check = BOOT_WAIT << reg_model.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.boot_fsm_ps.get_lsb_pos();
 
     // If set_bootfsm_breakpoint is randomized to 1, we need to release bootfsm by writing GO
-    if (ctrl_rst_ctx.set_bootfsm_breakpoint) begin
+    // bootfsm_breakpoint is qualified by debug mode and device_lifecycle, so incorporate that here
+    if (ctrl_rst_ctx.set_bootfsm_breakpoint && (!ctrl_rst_ctx.security_state.debug_locked || (ctrl_rst_ctx.security_state.debug_locked && ctrl_rst_ctx.security_state.device_lifecycle == DEVICE_MANUFACTURING))) begin
       //Poll boot status until we are in FSM state BOOT_WAIT
       reg_model.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.read(sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
       while ((data & data_mask) != data_check) begin
+        configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(20);
         reg_model.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.read(sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
       end
       `uvm_info("SOC_IFC_RST", "BootFSM Breakpoint is set, writing GO", UVM_MEDIUM)
@@ -175,7 +212,7 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
       `uvm_info("SOC_IFC_RST", $sformatf("Write to BootFSM GO completed, status: %p", sts), UVM_MEDIUM)
     end
     else begin
-        `uvm_info("SOC_IFC_RST", "BootFSM Breakpoint not set, reset sequence complete", UVM_MEDIUM)
+        `uvm_info("SOC_IFC_RST", "BootFSM Breakpoint not set (or disabled based on security_state), reset sequence complete", UVM_MEDIUM)
     end
 
   endtask

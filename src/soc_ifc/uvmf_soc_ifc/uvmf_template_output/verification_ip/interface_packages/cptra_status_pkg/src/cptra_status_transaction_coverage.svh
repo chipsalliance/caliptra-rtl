@@ -86,6 +86,11 @@ class cptra_status_transaction_coverage  extends uvm_subscriber #(.T(cptra_statu
         bins rise = (0 => 1);
         bins fall = (1 => 0);
     }
+    fw_update_rst_window: coverpoint coverage_trans.fw_update_rst_window;
+    fw_update_rst_window_transition: coverpoint coverage_trans.fw_update_rst_window {
+        bins rise = (0 => 1);
+        bins fall = (1 => 0);
+    }
     cptra_obf_key_reg: coverpoint coverage_trans.cptra_obf_key_reg {
         bins zero_key  = {0};
         bins rand_key  = {[1:{`CLP_OBF_KEY_DWORDS{32'hFFFF_FFFF}}-1]};

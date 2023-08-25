@@ -429,6 +429,7 @@ class soc_ifc_env_cov_subscriber #(
   uvm_analysis_imp_cov_cptra_ctrl_ae     #(cptra_ctrl_transaction,     this_type) cptra_ctrl_ae;
   uvm_analysis_imp_cov_cptra_status_ae   #(cptra_status_transaction,   this_type) cptra_status_ae;
   uvm_analysis_imp_cov_ahb_ae            #(mvc_sequence_item_base,     this_type) ahb_ae;
+  uvm_analysis_imp_cov_mbox_sram_ae      #(mbox_sram_transaction,      this_type) mbox_sram_ae;
 
   //------------------------------------------------------------------------------------------
   //                                   Constructor
@@ -449,6 +450,7 @@ class soc_ifc_env_cov_subscriber #(
     cptra_ctrl_ae     = new("cptra_ctrl_ae"    , this);
     cptra_status_ae   = new("cptra_status_ae"  , this);
     ahb_ae            = new("ahb_ae"           , this);
+    mbox_sram_ae      = new("mbox_sram_ae"     , this);
 
     c_soc_ifc_rm = configuration.soc_ifc_rm;
     soc_ifc_env_mbox_steps_cg.set_inst_name($sformatf("soc_ifc_env_mbox_steps_cg_%s",get_full_name()));
@@ -473,7 +475,7 @@ class soc_ifc_env_cov_subscriber #(
   //                                   SOC_IFC CTRL - write
   //------------------------------------------------------------------------------------------
   virtual function void write_cov_soc_ifc_ctrl_ae(soc_ifc_ctrl_transaction txn);
-    `uvm_info("SOC_IFC_COV_SOC_IFC_CTRL", {"Collecting coverage on transaction: ", txn.convert2string()}, UVM_MEDIUM)
+    `uvm_info("SOC_IFC_COV_SOC_IFC_CTRL", {"Collecting coverage on transaction: ", txn.convert2string()}, UVM_HIGH)
     if (!txn.set_pwrgood || txn.assert_rst) begin
         `uvm_info("SOC_IFC_COV_SOC_IFC_CTRL", $sformatf("Got next_step [%p]", pred.next_step), UVM_FULL)
         soc_ifc_env_mbox_steps_cg.sample(.is_ahb(NOT_AHB_REQ), .next_step(pred.next_step));
@@ -490,6 +492,13 @@ class soc_ifc_env_cov_subscriber #(
   endfunction
 
   //------------------------------------------------------------------------------------------
+  //                                   MBOX SRAM - write
+  //------------------------------------------------------------------------------------------
+  virtual function void write_cov_mbox_sram_ae(mbox_sram_transaction txn);
+//    `uvm_fatal("FIXME", "FIXME")
+  endfunction
+
+  //------------------------------------------------------------------------------------------
   //                                   AHB - write
   //------------------------------------------------------------------------------------------
   virtual function void write_cov_ahb_ae(mvc_sequence_item_base txn);
@@ -501,7 +510,7 @@ class soc_ifc_env_cov_subscriber #(
     if (!$cast(ahb_txn,txn))
         `uvm_fatal("SOC_IFC_ENV_COV", "AHB coverage analysis import received invalid transaction")
     if (c_soc_ifc_rm.soc_ifc_AHB_map.get_mem_by_offset(ahb_txn.address) != null) begin: MEM_HANDLE
-        `uvm_info("SOC_IFC_COV_AHB", $sformatf("Detected access to mailbox at address: 0x%x", ahb_txn.address), UVM_MEDIUM)
+        `uvm_info("SOC_IFC_COV_AHB", $sformatf("Detected access to mailbox at address: 0x%x", ahb_txn.address), UVM_HIGH)
         axs_mem = c_soc_ifc_rm.soc_ifc_AHB_map.get_mem_by_offset(ahb_txn.address);
     end: MEM_HANDLE
     else begin: REG_HANDLE
@@ -519,7 +528,7 @@ class soc_ifc_env_cov_subscriber #(
         `uvm_error("SOC_IFC_COV_AHB", $sformatf("AHB transaction to address: 0x%x decodes to null from soc_ifc_AHB_map", ahb_txn.address))
     end
     else begin: REG_AXS
-        `uvm_info("SOC_IFC_COV_AHB", {"Collecting coverage on access to register: ", axs_reg.get_full_name()}, UVM_MEDIUM)
+        `uvm_info("SOC_IFC_COV_AHB", {"Collecting coverage on access to register: ", axs_reg.get_full_name()}, UVM_HIGH)
         // Non-interrupt registers have 2-levels of ancestry back to reg_model top
         if (axs_reg.get_parent().get_parent().get_name() == "soc_ifc_rm") begin
             case (axs_reg.get_name()) inside
@@ -570,7 +579,7 @@ class soc_ifc_env_cov_subscriber #(
         `uvm_error("SOC_IFC_COV_APB", $sformatf("APB transaction to address: 0x%x decodes to null from soc_ifc_APB_map", apb_txn.addr))
     end
     else begin: REG_AXS
-        `uvm_info("SOC_IFC_COV_APB", {"Collecting coverage on access to register: ", axs_reg.get_full_name()}, UVM_MEDIUM)
+        `uvm_info("SOC_IFC_COV_APB", {"Collecting coverage on access to register: ", axs_reg.get_full_name()}, UVM_HIGH)
         case (axs_reg.get_name()) inside
             "mbox_lock",
             "mbox_user",

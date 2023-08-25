@@ -57,6 +57,9 @@ extends uvmf_environment_configuration_base;
     typedef cptra_status_configuration cptra_status_agent_config_t;
     rand cptra_status_agent_config_t cptra_status_agent_config;
 
+    typedef mbox_sram_configuration mbox_sram_agent_config_t;
+    rand mbox_sram_agent_config_t mbox_sram_agent_config;
+
 
 
     qvip_ahb_lite_slave_env_configuration     qvip_ahb_lite_slave_subenv_config;
@@ -90,6 +93,7 @@ extends uvmf_environment_configuration_base;
     cptra_ctrl_agent_config = cptra_ctrl_agent_config_t::type_id::create("cptra_ctrl_agent_config");
     soc_ifc_status_agent_config = soc_ifc_status_agent_config_t::type_id::create("soc_ifc_status_agent_config");
     cptra_status_agent_config = cptra_status_agent_config_t::type_id::create("cptra_status_agent_config");
+    mbox_sram_agent_config = mbox_sram_agent_config_t::type_id::create("mbox_sram_agent_config");
 
     qvip_ahb_lite_slave_subenv_config = qvip_ahb_lite_slave_env_configuration::type_id::create("qvip_ahb_lite_slave_subenv_config");
     qvip_apb5_slave_subenv_config = qvip_apb5_slave_env_configuration::type_id::create("qvip_apb5_slave_subenv_config");
@@ -133,6 +137,7 @@ extends uvmf_environment_configuration_base;
      "\n", cptra_ctrl_agent_config.convert2string,
      "\n", soc_ifc_status_agent_config.convert2string,
      "\n", cptra_status_agent_config.convert2string,
+     "\n", mbox_sram_agent_config.convert2string,
 
      "\n", qvip_ahb_lite_slave_subenv_config.convert2string,
      "\n", qvip_apb5_slave_subenv_config.convert2string
@@ -186,6 +191,9 @@ extends uvmf_environment_configuration_base;
      cptra_status_agent_config.initialize( interface_activity[5], {environment_path,".cptra_status_agent"}, interface_names[5]);
      cptra_status_agent_config.initiator_responder = RESPONDER;
      cptra_status_agent_config.has_coverage = 1;
+     mbox_sram_agent_config.initialize( interface_activity[6], {environment_path,".mbox_sram_agent"}, interface_names[6]);
+     mbox_sram_agent_config.initiator_responder = RESPONDER;
+     mbox_sram_agent_config.has_coverage = 1;
 
     // pragma uvmf custom reg_model_config_initialize begin
     // Register model creation and configuation

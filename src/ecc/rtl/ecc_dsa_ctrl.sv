@@ -201,6 +201,7 @@ module ecc_dsa_ctrl
     logic pubkeyx_input_outofrange;
     logic pubkeyy_input_outofrange;
     logic pubkey_input_invalid;
+    logic pcr_sign_input_invalid;
 
     logic error_flag;
     logic error_flag_reg;
@@ -649,7 +650,9 @@ module ecc_dsa_ctrl
     assign pubkeyy_input_outofrange = verifying_process & (pubkeyy_reg >= PRIME);
     assign pubkey_input_invalid     = verifying_process & (pk_chk_reg != 0);
 
-    assign error_flag = privkey_input_outofrange | r_output_outofrange | r_input_outofrange | s_input_outofrange | pubkeyx_input_outofrange | pubkeyy_input_outofrange | pubkey_input_invalid;
+    assign pcr_sign_input_invalid   = ((cmd_reg == KEYGEN) | (cmd_reg == VERIFY)) & pcr_sign_mode;
+
+    assign error_flag = privkey_input_outofrange | r_output_outofrange | r_input_outofrange | s_input_outofrange | pubkeyx_input_outofrange | pubkeyy_input_outofrange | pubkey_input_invalid | pcr_sign_input_invalid;
 
     //----------------------------------------------------------------
     // ECDSA_FSM_flow

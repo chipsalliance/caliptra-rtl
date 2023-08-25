@@ -70,9 +70,9 @@ module soc_ifc_tb
 
   parameter MBOX_DLEN_VAL         = 32'h0000001C;
 
-  parameter MBOX_UDS_ADDR         = 32'h3003_0200;
-  parameter MBOX_FE_ADDR          = 32'h3003_0230;
-  parameter MBOX_FUSE_DONE_ADDR   = 32'h3003_00ac;
+  parameter MBOX_UDS_ADDR         = SOCIFC_BASE + `SOC_IFC_REG_FUSE_UDS_SEED_0;
+  parameter MBOX_FE_ADDR          = SOCIFC_BASE + `SOC_IFC_REG_FUSE_FIELD_ENTROPY_0;
+  parameter MBOX_FUSE_DONE_ADDR   = SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FUSE_WR_DONE;
 
   parameter AHB_ADDR_WIDTH = `CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC); // 18 
   parameter AHB_DATA_WIDTH = `CALIPTRA_AHB_HDATA_SIZE; // 32 

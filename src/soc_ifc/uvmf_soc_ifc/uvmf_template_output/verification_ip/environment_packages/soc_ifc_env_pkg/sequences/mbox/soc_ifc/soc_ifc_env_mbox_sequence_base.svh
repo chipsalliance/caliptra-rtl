@@ -38,6 +38,7 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   rand int mbox_resp_expected_dlen; // Number of response data bytes to expect
   int sts_rsp_count;
   uvm_status_e reg_sts;
+  uvm_event in_report_reg_sts;
   rand bit do_apb_lock_check;
   rand bit retry_failed_reg_axs;
 
@@ -45,7 +46,8 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
     DLY_ZERO,
     DLY_SMALL,
     DLY_MEDIUM,
-    DLY_LARGE
+    DLY_LARGE,
+    DLY_CUSTOM
   } delay_scale_e;
 
   rand delay_scale_e poll_delay, step_delay, data_delay;
@@ -92,9 +94,9 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
 
   extern virtual task                       do_rand_delay(input bit do_delay_randomize=1, input delay_scale_e scale=DLY_SMALL);
   extern virtual function void              set_pauser_prob_vals();
-  extern virtual function bit               pauser_used_is_valid();
+  extern virtual function bit               pauser_used_is_valid(caliptra_apb_user user_handle = null);
   extern virtual function caliptra_apb_user get_rand_user(int unsigned invalid_prob = FORCE_VALID_PAUSER);
-  extern virtual function void              report_reg_sts(uvm_status_e reg_sts, string name);
+  extern virtual task                       report_reg_sts(uvm_status_e reg_sts, string name, caliptra_apb_user user_handle = null);
 
   // Constrain command to not be firmware or uC-initiated
   constraint mbox_cmd_c { mbox_op_rand.cmd.cmd_s.fw        == 1'b0;
@@ -125,6 +127,10 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   constraint delay_scale_c { poll_delay == DLY_MEDIUM;
                              step_delay == DLY_SMALL;
                              data_delay == DLY_ZERO; }
+  // Should not be overridden
+  constraint delay_scale_valid_c { poll_delay != DLY_CUSTOM;
+                                   step_delay != DLY_CUSTOM;
+                                   data_delay != DLY_CUSTOM; }
   // These constraints conflict with each other - only the one that is applicable
   // should be enabled; this is done in the definition of do_rand_delay
   constraint zero_delay_c  { rand_delay == 0;}
@@ -140,6 +146,10 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
                                               [ 16 : 255] :/ 25,
                                               [ 256:1023] :/ 500,
                                               [1024:8191] :/ 300};}
+  // This deliberately intractable constraint must be overridden
+  // by a child sequence if random delays are expected to be driven
+  // by some custom rule set.
+  constraint custom_delay_c { rand_delay == 0; rand_delay == 1; }
 
   //==========================================
   // Function:    new
@@ -166,6 +176,9 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
     this.small_delay_c .constraint_mode(1);
     this.medium_delay_c.constraint_mode(0);
     this.large_delay_c .constraint_mode(0);
+    this.custom_delay_c.constraint_mode(0);
+
+    in_report_reg_sts = new("in_report_reg_sts");
   endfunction
 
   //==========================================
@@ -530,21 +543,34 @@ task soc_ifc_env_mbox_sequence_base::mbox_poll_status();
         `uvm_info("MBOX_SEQ", "Detected mailbox state transition to IDLE - was mbox_unlock expected?", UVM_HIGH)
     end
     else if (data == DATA_READY) begin
-        if (mbox_resp_expected_dlen == 0)
+        if (mbox_resp_expected_dlen == 0 && sts_rsp_count > 0 && soc_ifc_status_agent_rsp_seq.rsp.cptra_error_non_fatal_intr_pending) begin
+            `uvm_info("MBOX_SEQ", $sformatf("Unexpected status [%p] likely is the result of a spurious reg access injection specifically intended to cause a protocol violation", data), UVM_HIGH)
+        end
+        else if (mbox_resp_expected_dlen == 0)
             `uvm_error("MBOX_SEQ", $sformatf("Received status %p when not expecting any bytes of response data!", data))
         else begin
             mbox_read_resp_data();
         end
     end
     else if (data == CMD_FAILURE) begin
-        `uvm_error("MBOX_SEQ", $sformatf("Received unexpected mailbox status %p", data))
+        if (sts_rsp_count > 0 && soc_ifc_status_agent_rsp_seq.rsp.cptra_error_non_fatal_intr_pending) begin
+            `uvm_info("MBOX_SEQ", $sformatf("Unexpected mailbox status [%p] likely is the result of a spurious reg access injection specifically intended to cause a protocol violation", data), UVM_HIGH)
+        end
+        else begin
+            `uvm_error("MBOX_SEQ", $sformatf("Received mailbox status %p unexpectedly, since there is no pending non_fatal error interrupt", data))
+        end
     end
     else if (data == CMD_COMPLETE) begin
-        if (mbox_resp_expected_dlen != 0)
+        if (mbox_resp_expected_dlen != 0 && sts_rsp_count > 0 && soc_ifc_status_agent_rsp_seq.rsp.cptra_error_non_fatal_intr_pending)
+            `uvm_info("MBOX_SEQ", $sformatf("Unexpected status [%p] when expecting 0x%x bytes of response data likely is the result of a spurious reg access injection specifically intended to cause a protocol violation", data, mbox_resp_expected_dlen), UVM_HIGH)
+        else if (mbox_resp_expected_dlen != 0)
             `uvm_error("MBOX_SEQ", $sformatf("Received status %p when expecting 0x%x bytes of response data!", data, mbox_resp_expected_dlen))
     end
     else begin
-        `uvm_error("MBOX_SEQ", $sformatf("Received unexpected mailbox status %p", data))
+        if (sts_rsp_count > 0 && soc_ifc_status_agent_rsp_seq.rsp.cptra_error_non_fatal_intr_pending)
+            `uvm_info("MBOX_SEQ", $sformatf("Unexpected mailbox status [%p] likely is the result of a spurious reg access injection specifically intended to cause a protocol violation", data), UVM_HIGH)
+        else
+            `uvm_error("MBOX_SEQ", $sformatf("Received unexpected mailbox status [%p]", data))
     end
 endtask
 
@@ -610,6 +636,7 @@ task soc_ifc_env_mbox_sequence_base::do_rand_delay(input bit do_delay_randomize=
         this.small_delay_c .constraint_mode(scale == DLY_SMALL);
         this.medium_delay_c.constraint_mode(scale == DLY_MEDIUM);
         this.large_delay_c .constraint_mode(scale == DLY_LARGE);
+        this.custom_delay_c.constraint_mode(scale == DLY_CUSTOM);
         if (!this.randomize(rand_delay))
             `uvm_error("MBOX_SEQ", $sformatf("Failed to randomize rand_delay with scale %p", scale))
         else
@@ -675,11 +702,14 @@ endfunction
 // Description: Assess whether the most recent APB
 //              transfer used a valid PAUSER or not
 //==========================================
-function bit soc_ifc_env_mbox_sequence_base::pauser_used_is_valid();
+function bit soc_ifc_env_mbox_sequence_base::pauser_used_is_valid(caliptra_apb_user user_handle = null);
+    caliptra_apb_user user;
+    if (user_handle == null) user = this.apb_user_obj;
+    else                     user = user_handle;
     if (this.pauser_locked.locked)
-        return this.apb_user_obj.get_addr_user() == this.pauser_locked.pauser;
+        return user.get_addr_user() == this.pauser_locked.pauser;
     else 
-        return this.apb_user_obj.get_addr_user() inside mbox_valid_users;
+        return user.get_addr_user() inside mbox_valid_users;
 endfunction
 
 //==========================================
@@ -688,20 +718,29 @@ endfunction
 //              of the most recent APB transfer, accounting for
 //              the PAUSER value that was used.
 //==========================================
-function void soc_ifc_env_mbox_sequence_base::report_reg_sts(uvm_status_e reg_sts, string name);
+task soc_ifc_env_mbox_sequence_base::report_reg_sts(uvm_status_e reg_sts, string name, caliptra_apb_user user_handle = null);
+    caliptra_apb_user user;
+    int waiters = in_report_reg_sts.get_num_waiters();
+    in_report_reg_sts.trigger();
+    if (user_handle == null) user = this.apb_user_obj;
+    else                     user = user_handle;
     // APB error is flagged only for PAUSER that doesn't match the registered
     // values, it does not check that PAUSER matches the exact value in
     // mbox_user that was stored when lock was acquired (this results in a
     // silent error but a successful reg read).
     // Ergo, check against mbox_valid_users instead of pauser_locked.
-    if (reg_sts != UVM_IS_OK && this.apb_user_obj.get_addr_user() inside mbox_valid_users)
+    if (reg_sts != UVM_IS_OK && user.get_addr_user() inside mbox_valid_users)
         `uvm_error("MBOX_SEQ",
-                   $sformatf("Register access failed unexpectedly with valid PAUSER! 0x%x (%s)", this.apb_user_obj.get_addr_user(), name))
-    else if (reg_sts == UVM_IS_OK && !(this.apb_user_obj.get_addr_user() inside mbox_valid_users))
+                   $sformatf("Register access failed unexpectedly with valid PAUSER! 0x%x (%s)", user.get_addr_user(), name))
+    else if (reg_sts == UVM_IS_OK && !(user.get_addr_user() inside mbox_valid_users))
         `uvm_error("MBOX_SEQ",
-                   $sformatf("Register access passed unexpectedly with invalid PAUSER! 0x%x (%s)", this.apb_user_obj.get_addr_user(), name))
+                   $sformatf("Register access passed unexpectedly with invalid PAUSER! 0x%x (%s)", user.get_addr_user(), name))
     else
         `uvm_info("MBOX_SEQ",
-                  $sformatf("Register access to (%s) with pauser_used_is_valid: %b and reg_sts: %p", name, this.pauser_used_is_valid(), reg_sts),
+                  $sformatf("Register access to (%s) with pauser_used_is_valid: %b and reg_sts: %p", name, this.pauser_used_is_valid(user), reg_sts),
                   UVM_HIGH)
-endfunction
+    if (waiters)
+        in_report_reg_sts.wait_off();
+    else
+        in_report_reg_sts.reset();
+endtask
