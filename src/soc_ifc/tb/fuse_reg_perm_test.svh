@@ -52,11 +52,13 @@ any subsequent writes to a fuse register will be dropped unless
 
     init_sim();
     reset_dut();
+    wait(ready_for_fuses);
 
     // -----------------------------------------------------------------
     // PHASE 1. Normal sequence 
     // -----------------------------------------------------------------
     $display ("1a. APB write twice to registers, lock fuses and attempt to modify\n");
+    tphase = "1a";
 
     write_regs(SET_APB, fuse_regnames, 0, 3);  // effect changes
     repeat (5) @(posedge clk_tb);
@@ -74,6 +76,7 @@ any subsequent writes to a fuse register will be dropped unless
     repeat (5) @(posedge clk_tb);
 
     $display ("\n1b. Following writes should have no effect on locked state -- which is still set!\n");
+    tphase = "1b";
 
     sb.del_all();
 
@@ -88,11 +91,14 @@ any subsequent writes to a fuse register will be dropped unless
     // -----------------------------------------------------------------
     // PHASE 2. Perform Cold Reset and Repeat APB Write & Read from 1a  
     // -----------------------------------------------------------------
+    $display ("\n2a. Write to registers after cold boot and check back writes");
+    tphase = "2a";
+
     reset_dut(); // expect to be clearing CPTRA_FUSE_WR_DONE effect 
     reset_exp_data();
     sb.del_all();
-
-    $display ("\n2a. Write to registers after cold boot and check back writes");
+    wait(ready_for_fuses);
+    @(posedge clk_tb);
 
     write_regs(SET_APB, fuse_regnames, 0, 3);
     read_regs(GET_APB, fuse_regnames, 0, 3);
@@ -107,9 +113,12 @@ any subsequent writes to a fuse register will be dropped unless
     // PHASE 3. Perform Warm Reset, read values & Repeat APB Write & Read from 1a  
     // -----------------------------------------------------------------
     $display ("\n3a. Perform a warm reset then repeat steps 1a (just APB)"); 
+    tphase = "3a";
 
     warm_reset_dut(); 
     warm_reset_exp_data();
+    wait(ready_for_fuses);
+    @(posedge clk_tb);
 
     read_regs(GET_APB, fuse_regnames, 0, 3);      // should be old sticky values
     sb.del_all();
