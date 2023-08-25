@@ -52,7 +52,8 @@ qvip_memory_message_handler message_handler;
     soc_ifc_subenv_soc_ifc_ctrl_agent_BFM /* soc_ifc_subenv_soc_ifc_ctrl_agent     [2] */ , 
     soc_ifc_subenv_cptra_ctrl_agent_BFM /* soc_ifc_subenv_cptra_ctrl_agent     [3] */ , 
     soc_ifc_subenv_soc_ifc_status_agent_BFM /* soc_ifc_subenv_soc_ifc_status_agent     [4] */ , 
-    soc_ifc_subenv_cptra_status_agent_BFM /* soc_ifc_subenv_cptra_status_agent     [5] */ 
+    soc_ifc_subenv_cptra_status_agent_BFM /* soc_ifc_subenv_cptra_status_agent     [5] */ , 
+    soc_ifc_subenv_mbox_sram_agent_BFM /* soc_ifc_subenv_mbox_sram_agent     [6] */ 
 };
 
 uvmf_active_passive_t interface_activities[] = { 
@@ -61,7 +62,8 @@ uvmf_active_passive_t interface_activities[] = {
     ACTIVE /* soc_ifc_subenv_soc_ifc_ctrl_agent     [2] */ , 
     PASSIVE /* soc_ifc_subenv_cptra_ctrl_agent     [3] */ , 
     ACTIVE /* soc_ifc_subenv_soc_ifc_status_agent     [4] */ , 
-    PASSIVE /* soc_ifc_subenv_cptra_status_agent     [5] */   };
+    PASSIVE /* soc_ifc_subenv_cptra_status_agent     [5] */ ,
+    ACTIVE /* soc_ifc_subenv_mbox_sram_agent     [6] */   };
 
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end

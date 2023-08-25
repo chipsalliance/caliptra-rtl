@@ -55,6 +55,7 @@ class soc_ifc_env_sequence_base #(
   // Responder agent sequencers in soc_ifc_environment:
     // configuration.soc_ifc_status_agent_config.sequencer
     // configuration.cptra_status_agent_config.sequencer
+    // configuration.mbox_sram_agent_config.sequencer
 
 
     typedef soc_ifc_ctrl_random_sequence soc_ifc_ctrl_agent_random_sequence_t;
@@ -76,6 +77,18 @@ class soc_ifc_env_sequence_base #(
     `uvm_info(this.get_type_name(), "In: pre_start() for sequence", UVM_NONE)
   endtask
 
+  virtual function get_mbox_sram_ecc_error_injection();
+    return this.configuration.mbox_sram_agent_config.inject_ecc_error;
+  endfunction
+  virtual function set_mbox_sram_ecc_single_error_injection();
+    this.configuration.mbox_sram_agent_config.inject_ecc_error |= 2'b01;
+  endfunction
+  virtual function set_mbox_sram_ecc_double_error_injection();
+    this.configuration.mbox_sram_agent_config.inject_ecc_error |= 2'b10;
+  endfunction
+  virtual function clr_mbox_sram_ecc_error_injection();
+    this.configuration.mbox_sram_agent_config.inject_ecc_error = 2'b00;
+  endfunction
   // pragma uvmf custom class_item_additional end
   
   function new(string name = "" );

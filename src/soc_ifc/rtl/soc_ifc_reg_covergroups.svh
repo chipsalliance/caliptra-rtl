@@ -831,6 +831,90 @@
 
     endgroup
 
+    /*----------------------- SOC_IFC_REG__CPTRA_WDT_CFG COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__CPTRA_WDT_CFG_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__CPTRA_WDT_CFG_fld_cg with function sample(
+    input bit [32-1:0] TIMEOUT
+    );
+        option.per_instance = 1;
+        TIMEOUT_cp : coverpoint TIMEOUT;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__CPTRA_ITRNG_ENTROPY_CONFIG_0 COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0_fld_cg with function sample(
+    input bit [16-1:0] low_threshold,
+    input bit [16-1:0] high_threshold
+    );
+        option.per_instance = 1;
+        low_threshold_cp : coverpoint low_threshold;
+        high_threshold_cp : coverpoint high_threshold;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__CPTRA_ITRNG_ENTROPY_CONFIG_1 COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1_fld_cg with function sample(
+    input bit [16-1:0] repetition_count,
+    input bit [16-1:0] RSVD
+    );
+        option.per_instance = 1;
+        repetition_count_cp : coverpoint repetition_count;
+        RSVD_cp : coverpoint RSVD;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__CPTRA_RSVD_REG COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__CPTRA_RSVD_REG_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__CPTRA_RSVD_REG_fld_cg with function sample(
+    input bit [32-1:0] RSVD
+    );
+        option.per_instance = 1;
+        RSVD_cp : coverpoint RSVD;
+
+    endgroup
+
     /*----------------------- SOC_IFC_REG__FUSE_UDS_SEED COVERGROUPS -----------------------*/
     covergroup soc_ifc_reg__fuse_uds_seed_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;

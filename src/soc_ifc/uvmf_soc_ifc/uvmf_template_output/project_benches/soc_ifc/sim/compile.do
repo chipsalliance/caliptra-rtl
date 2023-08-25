@@ -58,6 +58,7 @@ do $env(UVMF_VIP_LIBRARY_HOME)/interface_packages/soc_ifc_ctrl_pkg/compile.do
 do $env(UVMF_VIP_LIBRARY_HOME)/interface_packages/cptra_ctrl_pkg/compile.do
 do $env(UVMF_VIP_LIBRARY_HOME)/interface_packages/soc_ifc_status_pkg/compile.do
 do $env(UVMF_VIP_LIBRARY_HOME)/interface_packages/cptra_status_pkg/compile.do
+do $env(UVMF_VIP_LIBRARY_HOME)/interface_packages/mbox_sram_pkg/compile.do
 
 ###################################################################
 ## UVMF ENVIRONMENT COMPILATION

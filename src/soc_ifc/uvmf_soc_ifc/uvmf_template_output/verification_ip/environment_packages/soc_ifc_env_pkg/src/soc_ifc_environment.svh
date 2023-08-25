@@ -54,6 +54,9 @@ class soc_ifc_environment  extends uvmf_environment_base #(
   typedef cptra_status_agent  cptra_status_agent_t;
   cptra_status_agent_t cptra_status_agent;
 
+  typedef mbox_sram_agent  mbox_sram_agent_t;
+  mbox_sram_agent_t mbox_sram_agent;
+
 
 
 
@@ -172,6 +175,8 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     soc_ifc_status_agent.set_config(configuration.soc_ifc_status_agent_config);
     cptra_status_agent = cptra_status_agent_t::type_id::create("cptra_status_agent",this);
     cptra_status_agent.set_config(configuration.cptra_status_agent_config);
+    mbox_sram_agent = mbox_sram_agent_t::type_id::create("mbox_sram_agent",this);
+    mbox_sram_agent.set_config(configuration.mbox_sram_agent_config);
     soc_ifc_pred = soc_ifc_pred_t::type_id::create("soc_ifc_pred",this);
     soc_ifc_pred.configuration = configuration;
     soc_ifc_sb = soc_ifc_sb_t::type_id::create("soc_ifc_sb",this);
@@ -210,6 +215,7 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     super.connect_phase(phase);
     soc_ifc_ctrl_agent.monitored_ap.connect(soc_ifc_pred.soc_ifc_ctrl_agent_ae);
     cptra_ctrl_agent.monitored_ap.connect(soc_ifc_pred.cptra_ctrl_agent_ae);
+    mbox_sram_agent.monitored_ap.connect(soc_ifc_pred.mbox_sram_agent_ae);
     soc_ifc_pred.soc_ifc_sb_ap.connect(soc_ifc_sb.expected_analysis_export);
     soc_ifc_pred.cptra_sb_ap.connect(soc_ifc_sb.expected_cptra_analysis_export);
     soc_ifc_pred.soc_ifc_sb_ahb_ap.connect(soc_ifc_sb.expected_ahb_analysis_export);
@@ -232,6 +238,7 @@ class soc_ifc_environment  extends uvmf_environment_base #(
         soc_ifc_pred.cptra_cov_ap        .connect                                   (soc_ifc_env_cov_sub.cptra_ctrl_ae    );
         soc_ifc_status_agent.monitored_ap.connect                                   (soc_ifc_env_cov_sub.soc_ifc_status_ae);
         cptra_status_agent  .monitored_ap.connect                                   (soc_ifc_env_cov_sub.cptra_status_ae  );
+        mbox_sram_agent     .monitored_ap.connect                                   (soc_ifc_env_cov_sub.mbox_sram_ae     );
         qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer_cov"].connect(soc_ifc_env_cov_sub.ahb_ae           );
         qvip_apb5_slave_subenv_apb5_master_0_ap       ["trans_ap_cov"]      .connect(soc_ifc_env_cov_sub.apb_ae           );
     end:connect_coverage
@@ -315,6 +322,9 @@ task soc_ifc_environment::handle_reset(string kind = "HARD");
     // Reset status agents (needed to reset monitor transaction keys)
     this.cptra_status_agent.handle_reset(kind);
     this.soc_ifc_status_agent.handle_reset(kind);
+
+    // Reset mbox_sram agent (needed to reset the ECC error injection)
+    this.mbox_sram_agent.handle_reset(kind);
 
     // Reset scoreboard according to kind
     this.soc_ifc_sb.handle_reset(kind);

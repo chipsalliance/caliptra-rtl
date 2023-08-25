@@ -25,6 +25,30 @@ void soc_ifc_clear_execute_reg() {
     lsu_write_32(CLP_MBOX_CSR_MBOX_EXECUTE,reg);
 }
 
+// Return 0 if the MBOX_FSM_PS field reports MBOX_EXECUTE_UC, as expected
+// Return 1 if the MBOX_FSM_PS field reports MBOX_IDLE, indicating mailbox was already force-unlocked (after receiving a cmd_avail interrupt)
+// Return F if the MBOX_FSM_PS field reports MBOX_ERROR (to which this routine responds with a force-unlock)
+// Return FF if the MBOX_FSM_PS field reports any other state, which should never happen when this is called
+uint8_t soc_ifc_chk_execute_uc() {
+    enum mbox_fsm_e state;
+    VPRINTF(HIGH,"SOC_IFC: Check mbox_status.mbox_fsm_ps\n");
+    state = (lsu_read_32(CLP_MBOX_CSR_MBOX_STATUS) & MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_MASK) >> MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_LOW;
+    if (state == MBOX_EXECUTE_UC) {
+        VPRINTF(HIGH,"SOC_IFC: Check mbox_status.mbox_fsm_ps found MBOX_EXECUTE_UC\n");
+        return 0;
+    } else if (state == MBOX_IDLE) {
+        VPRINTF(WARNING,"SOC_IFC: Check mbox_status.mbox_fsm_ps found MBOX_IDLE\n");
+        return 1;
+    } else if (state == MBOX_ERROR) {
+        VPRINTF(ERROR,"SOC_IFC: Check mbox_status.mbox_fsm_ps found MBOX_ERROR, executing mailbox force-unlock\n");
+        lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+        return 0xF;
+    } else {
+        VPRINTF(FATAL,"SOC_IFC: Check mbox_status.mbox_fsm_ps found unexpected state 0x%x\n", state);
+        return 0xFF;
+    }
+}
+
 void soc_ifc_set_mbox_status_field(enum mbox_status_e field) {
     VPRINTF(MEDIUM,"SOC_IFC: Set mbox_status field: 0x%x\n", field);
     uint32_t reg;

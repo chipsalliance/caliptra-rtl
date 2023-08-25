@@ -33,6 +33,9 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_execute_execute extends soc_ifc_reg_de
                 skip = 1;
             end
         end
+        if (rm.mbox_fn_state_sigs.mbox_error) begin
+            skip = 1;
+        end
         if (rm.mbox_lock.lock.get_mirrored_value() && !skip) begin
             rm.mbox_status.mbox_fsm_ps.predict(state_nxt, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
             case (state_nxt) inside
@@ -91,10 +94,11 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_execute_execute extends soc_ifc_reg_de
         end
         else begin
             `uvm_info("SOC_IFC_REG_DELAY_JOB",
-                      $sformatf("Delay job for mbox_execute does not predict any changes due to: mbox_lock mirror [%d] mbox_unlock mirror [%d] mbox_fsm_ps [%p]",
+                      $sformatf("Delay job for mbox_execute does not predict any changes due to: mbox_lock mirror [%d] skip [%d] mbox_fsm_ps [%p] mbox_fn_state_sigs [%p]",
                                 rm.mbox_lock.lock.get_mirrored_value(),
                                 skip, /*rm.mbox_unlock.unlock.get_mirrored_value(),*/
-                                rm.mbox_status.mbox_fsm_ps.get_mirrored_value()),
+                                rm.mbox_status.mbox_fsm_ps.get_mirrored_value(),
+                                rm.mbox_fn_state_sigs),
                       UVM_LOW)
         end
     endtask
@@ -203,7 +207,10 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute extends soc_ifc_reg_cbs_mbox
                         error_job.set_delay_cycles(0);
                         error_job.state_nxt = MBOX_IDLE;
                         error_job.error = '{axs_without_lock: 1'b1, default: 1'b0};
-                        `uvm_warning("SOC_IFC_REG_CBS", $sformatf("EXECUTE written during unexpected mailbox state [%p]!", rm.mbox_fn_state_sigs))
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("EXECUTE written during unexpected mailbox state [%p]!", rm.mbox_fn_state_sigs), UVM_LOW)
+                    end
+                    else if (rm.mbox_fn_state_sigs.mbox_error) begin
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to %s on map [%s] with value [%x] during mailbox state [%p] has no additional side effects!", fld.get_name(), map.get_name(), value, rm.mbox_fn_state_sigs), UVM_LOW)
                     end
                     else if (!rm.mbox_fn_state_sigs.soc_done_stage &&
                              !(rm.mbox_fn_state_sigs.soc_data_stage /*&& mbox_fsm_state_e'(rm.mbox_status.mbox_fsm_ps.get_mirrored_value()) == MBOX_RDY_FOR_DATA*/)) begin
@@ -213,16 +220,17 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute extends soc_ifc_reg_cbs_mbox
                         error_job.set_delay_cycles(0);
                         error_job.state_nxt = MBOX_ERROR;
                         error_job.error = '{axs_incorrect_order: 1'b1, default: 1'b0};
-                        `uvm_warning("SOC_IFC_REG_CBS", $sformatf("EXECUTE written during unexpected mailbox state [%p]! FSM mirror: [%p]", rm.mbox_fn_state_sigs, rm.mbox_status.mbox_fsm_ps.get_mirrored_value()))
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("EXECUTE written during unexpected mailbox state [%p]! FSM mirror: [%p]", rm.mbox_fn_state_sigs, rm.mbox_status.mbox_fsm_ps.get_mirrored_value()), UVM_LOW)
+                        rm.mbox_fn_state_sigs = '{mbox_error: 1'b1, default: 1'b0};
                     end
 
                     // Clearing 'execute' - Expect sts pin change
                     if (~value & previous) begin
                         if (rm.mbox_data_q.size() != 0 || rm.mbox_resp_q.size() != 0) begin
-                            `uvm_warning("SOC_IFC_REG_CBS", $sformatf("Clearing mbox_execute when data queues are not empty! Did the receiver fetch the amount of data it expected to? mbox_data_q.size() [%0d] mbox_resp_q.size() [%0d]", rm.mbox_data_q.size(), rm.mbox_resp_q.size()))
+                            `uvm_info("SOC_IFC_REG_CBS", $sformatf("Clearing mbox_execute when data queues are not empty! Did the receiver fetch the amount of data it expected to? mbox_data_q.size() [%0d] mbox_resp_q.size() [%0d]", rm.mbox_data_q.size(), rm.mbox_resp_q.size()), UVM_LOW)
                         end
                         if (!rm.mbox_fn_state_sigs.soc_done_stage) begin
-                            `uvm_error("SOC_IFC_REG_CBS", $sformatf("SOC is clearing mbox_execute in unexpected mbox FSM state: [%p]", rm.mbox_fn_state_sigs))
+                            `uvm_info("SOC_IFC_REG_CBS", $sformatf("mbox_execute is cleared by SOC in unexpected mbox FSM state: [%p]", rm.mbox_fn_state_sigs), UVM_LOW)
                         end
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to mbox_execute clears the field and ends a command"), UVM_HIGH)
                         rm.mbox_data_q.delete();
@@ -237,7 +245,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute extends soc_ifc_reg_cbs_mbox
                         int unsigned dlen_cap_dw = (mbox_dlen_mirrored(rm) < (mm.get_size() * mm.get_n_bytes())) ? mbox_dlen_mirrored_dword_ceil(rm) :
                                                                                                                    (mm.get_size() * mm.get_n_bytes()) >> ($clog2(MBOX_DATA_W/8));
                         if (!rm.mbox_fn_state_sigs.soc_data_stage)
-                            `uvm_error("SOC_IFC_REG_CBS", $sformatf("mbox_execute is set by SOC when in an unexpected state [%p]!", rm.mbox_fn_state_sigs))
+                            `uvm_info("SOC_IFC_REG_CBS", $sformatf("mbox_execute is set by SOC when in an unexpected state [%p]!", rm.mbox_fn_state_sigs), UVM_LOW)
                         // Round dlen up to nearest dword boundary and compare with data queue size
                         // On transfer of control, remove extraneous entries from data_q since
                         // reads of these values will be gated for the receiver in DUT

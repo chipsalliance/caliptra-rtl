@@ -246,6 +246,7 @@ module caliptra_top_tb_services
     //         8'he7        - Reset mailbox out-of-order flag when non-fatal error is masked (allows the test to continue)
     //         8'he8        - Enable scan mode when DOE fsm transitions to done state
     //         8'he9        - Force dmi_reg_en input to clk gate to emulate JTAG accesses
+    //         8'hea        - Set random values to WDT timer1 and timer2
     //         8'heb        - Inject fatal error
     //         8'hec        - Inject randomized UDS test vector
     //         8'hed        - Inject randomized FE test vector
@@ -832,11 +833,13 @@ endgenerate //IV_NO
             set_wdt_timer2_period <= 'b0;
         end
         else begin
-            if(caliptra_top_dut.soc_ifc_top1.i_wdt.wdt_timer1_timeout_serviced) begin
-                set_wdt_timer1_period <= 'b1;
-            end
-            if(caliptra_top_dut.soc_ifc_top1.i_wdt.wdt_timer2_timeout_serviced) begin
-                set_wdt_timer2_period <= 'b1;
+            if (!UVM_TB) begin
+                if(caliptra_top_dut.soc_ifc_top1.i_wdt.wdt_timer1_timeout_serviced) begin
+                    set_wdt_timer1_period <= 'b1;
+                end
+                if(caliptra_top_dut.soc_ifc_top1.i_wdt.wdt_timer2_timeout_serviced) begin
+                    set_wdt_timer2_period <= 'b1;
+                end
             end
             if(reset_wdt_timer_period) begin
                 set_wdt_timer1_period <= 'b0;
@@ -849,15 +852,25 @@ endgenerate //IV_NO
         if(set_wdt_timer1_period) begin
             force caliptra_top_dut.soc_ifc_top1.timer1_timeout_period = 64'hFFFFFFFF_FFFFFFFF;
         end
-        else begin
+        else if(reset_wdt_timer_period) begin
             release caliptra_top_dut.soc_ifc_top1.timer1_timeout_period;
         end
+
         if(set_wdt_timer2_period) begin
             force caliptra_top_dut.soc_ifc_top1.timer2_timeout_period = 64'hFFFFFFFF_FFFFFFFF;
         end
-        else begin
+        else if(reset_wdt_timer_period) begin
             release caliptra_top_dut.soc_ifc_top1.timer2_timeout_period;
         end
+
+    end
+
+    always @(negedge clk) begin
+        if((WriteData[7:0] == 8'hea) && mailbox_write) begin
+            force caliptra_top_dut.soc_ifc_top1.timer1_timeout_period = {32'h0000_0000, $urandom_range(32'h0000_0001,32'h0000_0FFF)};
+            force caliptra_top_dut.soc_ifc_top1.timer2_timeout_period = {32'h0000_0000, $urandom_range(32'h0000_0001,32'h0000_0FFF)};
+        end
+        //Use 'hF1 code to reset these values in the test
     end
 
 

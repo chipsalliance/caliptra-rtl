@@ -1,0 +1,7 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.compile
+  - ./mbox_sram_common.compile
+incdir:
+  - .
+src:
+  - mbox_sram_pkg.sv

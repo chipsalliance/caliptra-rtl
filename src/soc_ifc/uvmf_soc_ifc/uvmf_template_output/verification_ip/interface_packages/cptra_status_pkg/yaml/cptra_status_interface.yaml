@@ -21,6 +21,10 @@ uvmf:
         reset_value: '''bz'
         width: '1'
       - dir: output
+        name: fw_update_rst_window
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
         name: cptra_obf_key_reg
         reset_value: '''bz'
         width: '[''`CLP_OBF_KEY_DWORDS'', ''32'']'
@@ -108,6 +112,12 @@ uvmf:
         iscompare: 'True'
         isrand: 'False'
         name: uc_rst_asserted
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: fw_update_rst_window
         type: bit
         unpacked_dimension: ''
       - comment: ''

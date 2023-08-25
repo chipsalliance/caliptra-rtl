@@ -77,11 +77,11 @@ end
 `ifdef TECH_SPECIFIC_ICG
     `USER_ICG user_icg (.clk(clk), .en(!disable_clk), .clk_cg(clk_cg));
     `USER_ICG user_soc_ifc_icg (.clk(clk), .en(!disable_soc_ifc_clk), .clk_cg(soc_ifc_clk_cg));
-`USER_ICG user_rdc_icg (.clk(clk), .en(!rdc_clk_dis), .clk_cg(rdc_clk_cg));
+    `USER_ICG user_rdc_icg (.clk(clk), .en(!rdc_clk_dis), .clk_cg(rdc_clk_cg));
 `else
     `CALIPTRA_ICG caliptra_icg (.clk(clk), .en(!disable_clk), .clk_cg(clk_cg));
     `CALIPTRA_ICG caliptra_soc_ifc_icg (.clk(clk), .en(!disable_soc_ifc_clk), .clk_cg(soc_ifc_clk_cg));
-`CALIPTRA_ICG caliptra_rdc_icg (.clk(clk), .en(!rdc_clk_dis), .clk_cg(rdc_clk_cg));
+    `CALIPTRA_ICG caliptra_rdc_icg (.clk(clk), .en(!rdc_clk_dis), .clk_cg(rdc_clk_cg));
 `endif
 
 endmodule

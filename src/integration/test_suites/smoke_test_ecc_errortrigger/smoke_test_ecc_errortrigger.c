@@ -219,6 +219,7 @@ void main() {
 
     uint8_t offset;
     volatile uint32_t * reg_ptr;
+    uint8_t privkey_inject_cmd;
    
 
     if(rst_count == 0) {
@@ -461,7 +462,7 @@ void main() {
 
         //inject seed to kv key reg (in RTL)
         printf("Inject PRIVKEY into KV slot 7\n");
-        uint8_t privkey_inject_cmd = 0x88 + 0x7;
+        privkey_inject_cmd = 0x88 + 0x7;
         printf("%c", privkey_inject_cmd);
 
         printf("Inject MSG into SHA512 digest\n");
@@ -482,8 +483,87 @@ void main() {
         }
 
         ecc_zeroize();
+        //Issue warm reset
+        rst_count++;
+        printf("%c",0xf6);
     }  
+    else if(rst_count == 7) {
+        // wait for ECC to be ready
+        while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
+
+        printf("\n TEST PCR WITH INVALID INPUT COMMAND\n");
+        
+        // Program ECC IV
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_IV_11) {
+            *reg_ptr++ = ecc_iv[offset++];
+        }
+
+        //inject seed to kv key reg (in RTL)
+        printf("Inject PRIVKEY into KV slot 7\n");
+        privkey_inject_cmd = 0x88 + 0x7;
+        printf("%c", privkey_inject_cmd);
+
+        printf("Inject MSG into SHA512 digest\n");
+        printf("%c", 0x90);
+
+        // Enable ECC PCR KEYGEN core
+        printf("\nECC PCR KEYGEN\n");
+        lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_KEYGEN | 
+                ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
     
+        
+        // wait for ECC KEYGEN process to be done
+        wait_for_ecc_intr();
+        if ((cptra_intr_rcv.ecc_error == 0)){
+            printf("\nECC PCR invalid command error is not detected.\n");
+            printf("%c", 0x1);
+            while(1);
+        }
+
+        ecc_zeroize();
+        //Issue warm reset
+        rst_count++;
+        printf("%c",0xf6);
+    }
+    else if(rst_count == 8) {
+        // wait for ECC to be ready
+        while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
+
+        printf("\n TEST PCR WITH INVALID INPUT COMMAND\n");
+        
+        // Program ECC IV
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_IV_11) {
+            *reg_ptr++ = ecc_iv[offset++];
+        }
+
+        //inject seed to kv key reg (in RTL)
+        printf("Inject PRIVKEY into KV slot 7\n");
+        privkey_inject_cmd = 0x88 + 0x7;
+        printf("%c", privkey_inject_cmd);
+
+        printf("Inject MSG into SHA512 digest\n");
+        printf("%c", 0x90);
+
+        // Enable ECC PCR VERIFYING core
+        printf("\nECC PCR VERIFYING\n");
+        lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_VERIFYING | 
+                ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
+    
+        
+        // wait for ECC VERIFYING process to be done
+        wait_for_ecc_intr();
+        if ((cptra_intr_rcv.ecc_error == 0)){
+            printf("\nECC PCR invalid command error is not detected.\n");
+            printf("%c", 0x1);
+            while(1);
+        }
+
+        ecc_zeroize();
+    }        
     
     printf("%c",0xff); //End the test
     

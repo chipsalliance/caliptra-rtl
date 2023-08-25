@@ -51,7 +51,9 @@ module ecc_fau #(
     reg                     mult_start;
     reg                     mult_start_dly;
     wire                    mult_start_edge;
-    reg                     add_en;   
+    logic                   add_start;
+    logic                   add_start_dly;
+    logic                   add_start_edge;   
     reg                     sub;
 
     logic                   add_ready_o;
@@ -97,7 +99,7 @@ module ecc_fau #(
         .reset_n(reset_n),
         .zeroize(zeroize),
 
-        .add_en_i(add_en),
+        .add_en_i(add_start_edge),
         .sub_i(sub),
         .opa_i(opa_i),
         .opb_i(opb_i),
@@ -114,34 +116,41 @@ module ecc_fau #(
     begin
         if (!reset_n) begin
             mult_start <= '0;
-            add_en <= '0;
+            add_start <= '0;
             sub <= '0;
         end
         else if (zeroize) begin
             mult_start <= '0;
-            add_en <= '0;
+            add_start <= '0;
             sub <= '0;
         end
         else begin
             mult_start <= mult_en_i;
-            add_en <= add_en_i;
+            add_start <= add_en_i;
             sub <= sub_i;
         end
     end
 
     always_ff @(posedge clk or negedge reset_n) begin
-        if (!reset_n)
+        if (!reset_n) begin
             mult_start_dly <= '0;
-        else if (zeroize)
+            add_start_dly  <= '0;
+        end
+        else if (zeroize) begin
             mult_start_dly <= '0;
-        else
+            add_start_dly  <= '0;
+        end
+        else begin
             mult_start_dly <= mult_start;
+            add_start_dly  <= add_start;
+        end
     end
     
     assign ready_garbage_bit = add_ready_o & mult_ready_o;
     
     // generate a pulse enable for mult
     assign mult_start_edge = mult_start & ~mult_start_dly;
+    assign add_start_edge  = add_start  & ~add_start_dly;
 
     //----------------------------------------------------------------
     // Concurrent connectivity for ports etc.

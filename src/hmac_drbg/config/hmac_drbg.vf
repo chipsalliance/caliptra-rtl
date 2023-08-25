@@ -17,6 +17,7 @@ ${CALIPTRA_ROOT}/src/libs/rtl/apb_slv_sif.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/ahb_slv_sif.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_icg.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/clk_gate.sv
+${CALIPTRA_ROOT}/src/libs/rtl/caliptra_2ff_sync.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_defines_pkg.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_macros.svh
 ${CALIPTRA_ROOT}/src/pcrvault/rtl/pv_defines_pkg.sv

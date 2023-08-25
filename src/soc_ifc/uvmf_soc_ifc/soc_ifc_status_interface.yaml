@@ -122,6 +122,9 @@ uvmf:
       - name: cptra_uc_rst_b
         dir: output
         width: '1'
+      - name: fw_update_rst_window
+        dir: output
+        width: '1'
 
       #Obfuscated UDS and FE
       - name: cptra_obf_key_reg
@@ -194,6 +197,10 @@ uvmf:
         iscompare: 'True'
         isrand: 'False'
       - name: uc_rst_asserted
+        type: bit
+        iscompare: 'True'
+        isrand: 'False'
+      - name: fw_update_rst_window
         type: bit
         iscompare: 'True'
         isrand: 'False'

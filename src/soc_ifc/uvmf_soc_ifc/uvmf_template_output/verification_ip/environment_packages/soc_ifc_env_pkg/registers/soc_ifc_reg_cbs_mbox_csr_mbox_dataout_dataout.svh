@@ -56,6 +56,10 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_dataout_dataout extends soc_ifc_reg_cbs_mbox
                     error_job.error = '{axs_without_lock: 1'b1, default: 1'b0};
                     delay_jobs.push_back(error_job);
                 end
+                else if (rm.mbox_fn_state_sigs.mbox_error) begin
+                    `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to %s on map [%s] with value [%x] during mailbox state [%p] has no additional side effects!", fld.get_name(), map.get_name(), value, rm.mbox_fn_state_sigs), UVM_LOW)
+                end
+                // FIXME should we treat all writes to mbox_dataout as protocol error?
                 else if ((kind == UVM_PREDICT_WRITE) ||
                          ((!rm.mbox_fn_state_sigs.soc_receive_stage && !rm.mbox_fn_state_sigs.soc_done_stage) &&
                           rm.mbox_datain_to_dataout_predict.is_off())) begin
@@ -68,6 +72,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_dataout_dataout extends soc_ifc_reg_cbs_mbox
                     error_job.error = '{axs_incorrect_order: 1'b1, default: 1'b0};
                     delay_jobs.push_back(error_job);
                     `uvm_error("SOC_IFC_REG_CBS", $sformatf("Access to dataout of kind [%p] is unexpected on map [%s]! Flagging mailbox protocol violation. Mailbox state tracker: %p", kind, map.get_name(), rm.mbox_fn_state_sigs))
+                    rm.mbox_fn_state_sigs = '{mbox_error: 1'b1, default: 1'b0};
                 end
             end
         endcase

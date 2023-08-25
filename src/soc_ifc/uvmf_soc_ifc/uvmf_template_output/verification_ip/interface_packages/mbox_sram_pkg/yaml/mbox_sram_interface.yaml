@@ -1,0 +1,73 @@
+uvmf:
+  interfaces:
+    mbox_sram:
+      clock: clk
+      config_constraints: []
+      config_vars:
+      - comment: 'Controls injection of ECC errors for write transactions. Bit[0]: Single Bit Error. Bit[1]: Double Bit Error'
+        isrand: 'False'
+        name: inject_ecc_error
+        type: bit [1:0]
+        value: 1'b0
+      - comment: When set, causes the mbox_sram_responder_sequence to clear the variable 'inject_ecc_error' after a single ECC error is injected
+        isrand: 'False'
+        name: auto_clear_ecc_error_injection
+        type: bit
+        value: 1'b1
+      existing_library_component: 'True'
+      gen_inbound_streaming_driver: 'False'
+      hdl_pkg_parameters: []
+      hdl_typedefs: []
+      hvl_pkg_parameters: []
+      hvl_typedefs: []
+      parameters: []
+      ports:
+      - dir: output
+        name: mbox_sram_req
+        reset_value: '''bz'
+        width: $bits(mbox_sram_req_t)
+      - dir: input
+        name: mbox_sram_resp
+        reset_value: '''bz'
+        width: $bits(mbox_sram_resp_t)
+      reset: dummy
+      reset_assertion_level: 'False'
+      transaction_constraints: []
+      transaction_vars:
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'True'
+        name: is_read
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'True'
+        name: address
+        type: bit [MBOX_ADDR_W-1:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'True'
+        name: data
+        type: bit [MBOX_DATA_W-1:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: data_ecc
+        type: bit [MBOX_ECC_DATA_W-1:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'True'
+        name: ecc_single_bit_error
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'True'
+        name: ecc_double_bit_error
+        type: bit
+        unpacked_dimension: ''
+      use_dpi_link: 'False'
