@@ -138,7 +138,6 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base extends uvm_r
         // Global interrupt pin "agg_sts" is non-sticky
         if ((value & ~previous))
         begin
-            `uvm_info("SOC_IFC_REG_CBS", {"Predicted update to ", fld.get_name(), " triggers interrupt output pin check delay job"}, UVM_MEDIUM)
             delay_job.req_fld = fld;
             delay_job.sts_reg = sts_reg;
             delay_job.en_reg  = en_reg;
@@ -146,14 +145,15 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base extends uvm_r
             delay_job.en_glb  = en_glb;
             delay_job.grab_values();
             delay_jobs.push_back(delay_job);
+            `uvm_info("SOC_IFC_REG_CBS", {"Predicted update to ", fld.get_name(), " triggers interrupt output pin check delay job"}, UVM_MEDIUM)
         end
         // On falling edge of field value, caused by W1C, check if another thread
         // is already attempting to perform hwset to this interrupt field (hwset is
         // higher priority than W1C).
         else if ((~value & previous) && fld_hwset_active)
         begin
-            `uvm_info("SOC_IFC_REG_CBS", {"Predicted update to ", fld.get_name(), " attempts to clear the interrupt bit but is preempted by an active hwset"}, UVM_MEDIUM)
             value = previous;
+            `uvm_info("SOC_IFC_REG_CBS", {"Predicted update to ", fld.get_name(), " attempts to clear the interrupt bit but is preempted by an active hwset"}, UVM_MEDIUM)
             // NOTE: No delay job is scheduled because no changes are predicted to
             //       other interrupt register fields based on this activity
         end
@@ -163,7 +163,6 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base extends uvm_r
         // Global interrupt pin "agg_sts" is non-sticky
         else if ((~value & previous))
         begin
-            `uvm_info("SOC_IFC_REG_CBS", {"Predicted update to ", fld.get_name(), " triggers interrupt output pin check delay job"}, UVM_MEDIUM)
             delay_job.req_fld = fld;
             delay_job.sts_reg = sts_reg;
             delay_job.en_reg  = en_reg;
@@ -171,6 +170,7 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base extends uvm_r
             delay_job.en_glb  = en_glb;
             delay_job.grab_values();
             delay_jobs.push_back(delay_job);
+            `uvm_info("SOC_IFC_REG_CBS", {"Predicted update to ", fld.get_name(), " triggers interrupt output pin check delay job"}, UVM_MEDIUM)
         end
         else begin
             `uvm_info("SOC_IFC_REG_CBS",

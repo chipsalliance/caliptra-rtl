@@ -56,7 +56,7 @@ class soc_ifc_reg_delay_job_intr_block_rf_ext extends soc_ifc_reg_delay_job;
                                 sts_reg.get_mirrored_value(), val_sts_reg,
                                 en_glb.get_mirrored_value(),  val_en_glb ,
                                 sts_glb.get_mirrored_value(), val_sts_glb),
-                      UVM_HIGH)
+                      UVM_MEDIUM)
         end
         else if (/*val_sts_glb*/sts_glb.get_mirrored_value() && !(|(val_sts_reg/*sts_reg.get_mirrored_value()*/ & val_en_reg/*en_reg.get_mirrored_value()*/) /*&& val_en_glb / * en_glb.get_mirrored_value()*/)) begin
             sts_glb.predict(1'b0);
@@ -67,7 +67,7 @@ class soc_ifc_reg_delay_job_intr_block_rf_ext extends soc_ifc_reg_delay_job;
                                 sts_reg.get_mirrored_value(), val_sts_reg,
                                 en_glb.get_mirrored_value(),  val_en_glb ,
                                 sts_glb.get_mirrored_value(), val_sts_glb),
-                      UVM_HIGH)
+                      UVM_MEDIUM)
         end
         else begin
             `uvm_info("SOC_IFC_REG_DELAY_JOB",
@@ -77,7 +77,7 @@ class soc_ifc_reg_delay_job_intr_block_rf_ext extends soc_ifc_reg_delay_job;
                                 sts_reg.get_mirrored_value(), val_sts_reg,
                                 en_glb.get_mirrored_value(),  val_en_glb ,
                                 sts_glb.get_mirrored_value(), val_sts_glb),
-                      UVM_MEDIUM)
+                      UVM_HIGH)
         end
     endtask
 endclass

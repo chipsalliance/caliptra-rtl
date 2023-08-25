@@ -832,6 +832,17 @@ package soc_ifc_reg_model_top_pkg;
          super.new(name, build_coverage(UVM_CVR_ALL));
       endfunction
 
+      // Function: reset
+      // 
+      function void reset(string kind = "HARD");
+          super.reset(kind);
+          if (kind inside {"HARD", "NONCORE"}) begin
+              // Purge all pending jobs to update the register model
+              `uvm_info("SOC_IFC_REG_MODEL_TOP", {"Reset of kind ", kind, " results in delay_jobs being cleared"}, UVM_HIGH)
+              delay_jobs.delete();
+          end
+      endfunction
+
       // Function: build
       // 
       virtual function void build();

@@ -70,6 +70,14 @@ package soc_ifc_pkg;
     parameter DMI_REG_CPTRA_DBG_MANUF_SERVICE_REG = 7'h60;
     parameter DMI_REG_BOOTFSM_GO = 7'h61;
     
+    // This parameter describes the hard-coded implementation in the BOOT FSM
+    // that results in noncore reset assertion being delayed from the soft reset
+    // (cptra_rst_b) by some integer number of clock cycles, due to synchronization
+    // stages and the rst window signaling.
+    // This is useful in validation environments for controlling the predicted
+    // timing in a reset event.
+    parameter SOC_IFC_CPTRA_RST_NONCORE_RST_DELAY = 4;
+
     //BOOT FSM
     typedef enum logic [2:0] {
         BOOT_IDLE   = 3'b000,

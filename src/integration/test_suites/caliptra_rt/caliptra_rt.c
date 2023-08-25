@@ -188,6 +188,10 @@ void caliptra_rt() {
                 // If we entered the error state, we must use force-unlock to reset the mailbox state
                 state = (lsu_read_32(CLP_MBOX_CSR_MBOX_STATUS) & MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_MASK) >> MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_LOW;
                 if (state == MBOX_ERROR) {
+                    // clr command interrupt to avoid attempted re-processing after force-unlock
+                    if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK) {
+                        cptra_intr_rcv.soc_ifc_notif &= ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK;
+                    }
                     lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
                 }
             }
@@ -348,11 +352,10 @@ void caliptra_rt() {
                     }
                     else {
                         // Read provided data
-                        for (loop_iter = 0; loop_iter<op.dlen; loop_iter+=4) {
+                        read_data = soc_ifc_mbox_read_dataout_single();
+                        temp      = soc_ifc_mbox_read_dataout_single(); // Capture resp dlen
+                        for (loop_iter = 8; loop_iter<op.dlen; loop_iter+=4) {
                             read_data = soc_ifc_mbox_read_dataout_single();
-                            if (loop_iter == 4) {
-                                temp = read_data; // Capture resp dlen
-                            }
                         }
 
                         // Set resp dlen

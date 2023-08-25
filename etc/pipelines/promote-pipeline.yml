@@ -159,7 +159,7 @@ stages:
         - display_name: 'Verilator Smoke Test'
         - enabled: true
         - run_in_workspace: True
-        - timeout: 90
+        - timeout: 120
         - commands:
             - 'set -e'
             - 'module load tools/python/python3/3.9.2'

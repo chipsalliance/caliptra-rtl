@@ -111,7 +111,7 @@ function void soc_ifc_status_monitor::force_advance_txn_key(int unsigned incr);
 endfunction
 
 task soc_ifc_status_monitor::handle_reset(string kind = "HARD");
-    txn_key = 0;
+    if (kind inside {"HARD","NONCORE"})
+        txn_key = 0;
 endtask
 // pragma uvmf custom external end
-
