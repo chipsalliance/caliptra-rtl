@@ -162,6 +162,7 @@ class soc_ifc_predictor #(
   uvm_analysis_port #(mvc_sequence_item_base) soc_ifc_apb_reg_ap;
 
   process running_dly_jobs[$];
+  int unsigned job_end_count[time];
   bit cptra_pwrgood_asserted = 1'b0;
   bit soc_ifc_rst_in_asserted = 1'b1;
   bit noncore_rst_out_asserted = 1'b1;
@@ -586,7 +587,7 @@ class soc_ifc_predictor #(
     soc_ifc_sb_ahb_ap_output_transaction = soc_ifc_sb_ahb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ahb_ap_output_transaction");
     soc_ifc_sb_apb_ap_output_transaction = soc_ifc_sb_apb_ap_output_transaction_t::type_id::create("soc_ifc_sb_apb_ap_output_transaction");
 
-    if (rdc_clk_gate_active) begin
+    if (rdc_clk_gate_active || noncore_rst_out_asserted) begin
         `uvm_info("PRED_MBOX_SRAM", "Received transaction while RDC clock gate is active, no system prediction to do since interrupt bits cannot be set", UVM_MEDIUM)
     end
     else if (t.is_read && t.ecc_double_bit_error) begin
@@ -2570,8 +2571,11 @@ task soc_ifc_predictor::poll_and_run_delay_jobs();
                 soc_ifc_reg_delay_job job = p_soc_ifc_rm.delay_jobs.pop_front();
                 if (!noncore_rst_out_asserted) begin
                     int idx[$];
+                    time end_time;
                     running_dly_jobs.push_back(process::self()); // This tracks all the delay_jobs that are pending so they can be clobbered on rst
                     `uvm_info("PRED_DLY", $sformatf("Doing delay of %0d cycles before running delay job with signature: %s", job.get_delay_cycles(), job.get_name()), UVM_HIGH/*UVM_FULL*/)
+                    end_time = $time + 10*job.get_delay_cycles();
+                    job_end_count[end_time] += 1;
                     // delay cycles reported as 0's based value, since 1-cycle delay
                     // is inherent to this forever loop
                     if (job.get_delay_cycles()) configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(job.get_delay_cycles());
@@ -2579,8 +2583,14 @@ task soc_ifc_predictor::poll_and_run_delay_jobs();
                     idx = running_dly_jobs.find_first_index(pr) with (pr == process::self());
                     running_dly_jobs.delete(idx.pop_front());
                     job.do_job();
+                    job_end_count[end_time] -= 1;
 //                    p_soc_ifc_rm.sample_values(); /* Sample coverage after completing any delayed prediction/mirror updates */ // NOTE: Added sample post_predict callback to reg fields instead
-                    send_delayed_expected_transactions();
+                    // Aggregate the results of all delay jobs that end on the same clock cycle into a
+                    // single method call that sends all the predited transactions
+                    if (job_end_count[end_time] == 0) begin
+                        job_end_count.delete(end_time);
+                        send_delayed_expected_transactions();
+                    end
                 end
             join_none
         end
@@ -2851,14 +2861,14 @@ task soc_ifc_predictor::wdt_counter_task();
         cascade = (wdt_t1_en && !wdt_t2_en);
         independent = wdt_t2_en;
 
-        wdt_reg_data = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[0].timer1_timeout_period.get();
+        wdt_reg_data = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[0].timer1_timeout_period.get_mirrored_value();
         wdt_t1_period[31:0] = wdt_reg_data[31:0];
-        wdt_reg_data = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[1].timer1_timeout_period.get();
+        wdt_reg_data = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[1].timer1_timeout_period.get_mirrored_value();
         wdt_t1_period[63:32] = wdt_reg_data[31:0];
 
-        wdt_reg_data = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[0].timer2_timeout_period.get();
+        wdt_reg_data = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[0].timer2_timeout_period.get_mirrored_value();
         wdt_t2_period[31:0] = wdt_reg_data[31:0];
-        wdt_reg_data = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[1].timer2_timeout_period.get();
+        wdt_reg_data = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[1].timer2_timeout_period.get_mirrored_value();
         wdt_t2_period[63:32] = wdt_reg_data[31:0];
 
         //Reset event
@@ -3223,6 +3233,7 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
             `uvm_info("PRED_RESET", $sformatf("Reset prediction of kind: %p results in assertion of internal resets after a delay", kind), UVM_MEDIUM)
             fork
                 begin
+                    // FIXME need to implement clk gating features in uvmf_soc_ifc
                     if (configuration.cptra_ctrl_agent_config.active_passive == PASSIVE) begin
                         configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(2);
                         uvm_wait_for_nba_region();
@@ -3294,6 +3305,7 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
                 // Now, deassertion of noncore reset is delayed from state transition by 2 cycles
                 configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(2); // FIXME, correct delay value?
                 noncore_rst_out_asserted = 1'b0;
+                reset_wdt_count = 1'b0;
                 p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fuses.predict(1'b1);
 
                 // Send predicted transactions
@@ -3402,6 +3414,7 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
                 job_to_kill.kill();
             end
         end
+        job_end_count.delete();
     end
 
     if (kind inside {"HARD","NONCORE"}) begin: RESET_REG_BUSY_HARD_NONCORE

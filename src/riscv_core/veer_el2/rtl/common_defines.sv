@@ -157,8 +157,10 @@
 `define RV_LDERR_ROLLBACK 1
 `define CPU_TOP `RV_TOP.veer
 `define RV_EXT_DATAWIDTH 64
+`ifndef SYNTHESIS
 `ifndef VERILATOR
     `define RV_ASSERT_ON 
+`endif
 `endif
 `define RV_EXT_ADDRWIDTH 32
 `define RV_BTB_ENABLE 1
