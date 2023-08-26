@@ -55,7 +55,7 @@ task soc_ifc_env_cptra_mbox_interference_handler_sequence::mbox_wait_for_command
 
     uvm_reg_data_t data;
     op_sts = CPTRA_TIMEOUT;
-    op_started = 1;
+    op_active = 1;
     // Wait for notification interrupt indicating command is available
     while (ntf_rsp_count == 0) begin
         uvm_reg_data_t dlen;

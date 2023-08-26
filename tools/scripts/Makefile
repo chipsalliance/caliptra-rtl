@@ -186,6 +186,9 @@ ifdef FORCE_CPU_RESET
     VERILATOR_TB_DEFS += +define+CALIPTRA_FORCE_CPU_RESET
 endif
 
+# Run time arguments from command line
+VERILATOR_RUN_ARGS ?= ""
+
 # Add testbench lib include paths
 CFLAGS += $(addprefix -I$(CALIPTRA_ROOT)/src/integration/test_suites/libs/,$(dir $(VERILATOR_TB_LIBS)))
 
@@ -224,7 +227,7 @@ vcs-build: $(TBFILES) $(INCLUDES_DIR)/defines.h
 ############ TEST Simulation ###############################
 
 verilator: program.hex verilator-build
-	./obj_dir/Vcaliptra_top_tb
+	./obj_dir/Vcaliptra_top_tb $(VERILATOR_RUN_ARGS)
 
 vcs: program.hex vcs-build
 	./simv.caliptra_top_tb
