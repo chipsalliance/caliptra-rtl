@@ -127,6 +127,7 @@ module caliptra_top
     logic                       clk_cg          ;
     logic                       soc_ifc_clk_cg  ;
     logic                       rdc_clk_cg      ;
+    logic                       uc_clk_cg       ;
 
     logic        [31:0]         ic_haddr        ;
     logic        [2:0]          ic_hburst       ;
@@ -410,7 +411,7 @@ el2_veer_wrapper rvtop (
     .rst_l                  ( cptra_uc_rst_b),
 `endif
     .dbg_rst_l              ( cptra_pwrgood), 
-    .clk                    ( rdc_clk_cg   ),
+    .clk                    ( uc_clk_cg    ),
     .rst_vec                ( reset_vector[31:1]),
     .nmi_int                ( nmi_int       ),
     .nmi_vec                ( nmi_vector[31:1]),
@@ -649,9 +650,11 @@ clk_gate cg (
     .clk_gate_en(clk_gating_en),
     .cpu_halt_status(o_cpu_halt_status),
     .rdc_clk_dis(rdc_clk_dis),
+    .rdc_clk_dis_uc (fw_update_rst_window),
     .clk_cg (clk_cg),
     .soc_ifc_clk_cg (soc_ifc_clk_cg),
     .rdc_clk_cg (rdc_clk_cg),
+    .uc_clk_cg (uc_clk_cg),
     .generic_input_wires(generic_input_wires),
     .cptra_error_fatal(cptra_error_fatal),
     .cptra_in_debug_scan_mode(cptra_in_debug_scan_mode),
