@@ -134,8 +134,8 @@ task soc_ifc_env_mbox_sha_accel_sequence::mbox_setup();
         //round it down to match the alignment of the data
         this.start_addr[1:0] = '0;
     end
-    // Override dlen to reflect the size of the SHA data
-    this.mbox_op_rand.dlen = this.start_addr + this.dlen;
+    // Override dlen to reflect the size of the SHA data + the start address dword
+    this.mbox_op_rand.dlen = 4 + this.dlen;
 endtask
 
 // This should be overridden with real data to write
@@ -143,20 +143,20 @@ task soc_ifc_env_mbox_sha_accel_sequence::mbox_push_datain();
     int ii;
     reg [31:0] data;
     int most_sig_dword;
-    int sha_block_start_dw;
+    //int sha_block_start_dw;
 
     //write 0's until the start address
-    sha_block_start_dw = this.start_addr >> 2;
+    //sha_block_start_dw = this.start_addr >> 2;
 
     //write the start address into the first dword
     reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(this.start_addr), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
     report_reg_sts(reg_sts, "mbox_datain");
 
     //pad the data until start address
-    for (ii=1; ii < sha_block_start_dw; ii++) begin
-        reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'('0), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
-        report_reg_sts(reg_sts, "mbox_datain");
-    end
+    //for (ii=1; ii < sha_block_start_dw; ii++) begin
+    //    reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'('0), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
+    //    report_reg_sts(reg_sts, "mbox_datain");
+    //end
 
     //write the sha block
     most_sig_dword = (this.dlen[1:0] == 2'b00) ? (this.dlen >> 2) - 1 : (this.dlen >> 2);

@@ -116,6 +116,7 @@ void caliptra_rt() {
     uint32_t reg_addr;
     uint32_t read_data;
     uint32_t loop_iter;
+    uint32_t loop_iter2;
     uint32_t temp; // multi-purpose variable
 
     //WDT vars
@@ -333,16 +334,20 @@ void caliptra_rt() {
                         mode = (op.cmd == MBOX_CMD_SHA384_REQ) ? SHA_MBOX_384 : SHA_MBOX_512;
                         //First dword contains the start address
                         temp = soc_ifc_mbox_read_dataout_single();
-                        //dlen in bytes
-                        read_data = lsu_read_32(CLP_MBOX_CSR_MBOX_DLEN);
-                        read_data = read_data - temp;
+                        //ignore the bytes used for start address
+                        op.dlen = op.dlen - 4;
+                        //Copy the KAT to the start address using direct access
+                        for (loop_iter = 0; loop_iter<op.dlen; loop_iter+=4) {
+                            read_data = soc_ifc_mbox_read_dataout_single();
+                            soc_ifc_mbox_dir_write_single(temp+loop_iter, read_data);
+                        }
                         //Acquire SHA Accel lock
                         soc_ifc_sha_accel_acquire_lock();
                         soc_ifc_sha_accel_wr_mode(mode);
                         //write start addr in bytes
                         lsu_write_32((uintptr_t) (CLP_SHA512_ACC_CSR_START_ADDRESS), temp);
                         //write dlen in bytes
-                        lsu_write_32((uintptr_t) (CLP_SHA512_ACC_CSR_DLEN), read_data);
+                        lsu_write_32((uintptr_t) (CLP_SHA512_ACC_CSR_DLEN), op.dlen);
                         soc_ifc_sha_accel_execute();
                         soc_ifc_sha_accel_poll_status();
                         lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DLEN), (mode == SHA_MBOX_384) ? 48 : 64);
@@ -397,7 +402,7 @@ void caliptra_rt() {
                     if (op.cmd == MBOX_CMD_DIR_RD) {
                         // Read provided data through direct path
                         for (loop_iter = 0; loop_iter<op.dlen; loop_iter+=4) {
-                            read_data = soc_ifc_mbox_dir_read_dataout_single(loop_iter);
+                            read_data = soc_ifc_mbox_dir_read_single(loop_iter);
                         }
                     }
                     //For overrun command, read an extra dword
