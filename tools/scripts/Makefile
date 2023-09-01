@@ -199,6 +199,9 @@ clean:
 	dataset.asdb  library.cfg vsimsa.cfg  riviera-build wave.asdb sim.vcd \
 	*.h
 
+clean_fw:
+	rm -rf *.o *.h
+
 ############ Model Builds ###############################
 
 verilator-build: $(TBFILES) $(INCLUDES_DIR)/defines.h $(VERILATOR_TB_SRCS)
@@ -304,5 +307,5 @@ help:
 	@echo Make sure the environment variable RV_ROOT is set.
 	@echo Possible targets: verilator vcs irun vlog riviera help clean all verilator-build irun-build vcs-build riviera-build program.hex
 
-.PHONY: help clean verilator vcs irun vlog riviera
+.PHONY: help clean clean_fw verilator vcs irun vlog riviera
 

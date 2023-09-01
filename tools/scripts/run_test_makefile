@@ -70,14 +70,19 @@ if [[ $TESTNAME == "caliptra_top_rom_test" ]]; then
     $cmd
 # This is any other UVM-based test in caliptra_top bench
 elif [[ ! -z $(echo $TESTNAME | grep -E "caliptra_top_\w*_test") ]]; then
+    clean="make -f $SCRIPTS_DIR/Makefile clean_fw"
+    echo "$clean"
     cmd="make -f $SCRIPTS_DIR/Makefile TESTNAME=caliptra_top program.hex"
     echo "$cmd"
+    $clean
     $cmd
     cmd="make -f $SCRIPTS_DIR/Makefile TESTNAME=caliptra_fmc caliptra_fmc.hex"
     echo "$cmd"
+    $clean
     $cmd
     cmd="make -f $SCRIPTS_DIR/Makefile TESTNAME=caliptra_rt  caliptra_rt.hex"
     echo "$cmd"
+    $clean
     $cmd
 # This is any other FW-based smoke test running on the basic caliptra top SV bench
 else

@@ -139,13 +139,13 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
                                               [4:7] :/ 25,
                                               [8:31]:/ 1};}
   constraint medium_delay_c { rand_delay dist {   0    :/ 10,
-                                               [1:7]   :/ 25,
+                                               [1:7]   :/ 50,
                                                [8:31]  :/ 100,
-                                               [32:255]:/ 1000};}
+                                               [32:255]:/ 50};}
   constraint large_delay_c { rand_delay dist {        15  :/ 1,
-                                              [ 16 : 255] :/ 25,
-                                              [ 256:1023] :/ 500,
-                                              [1024:8191] :/ 300};}
+                                              [ 16 : 255] :/ 50,
+                                              [ 256:1023] :/ 100,
+                                              [1024:8191] :/ 25};}
   // This deliberately intractable constraint must be overridden
   // by a child sequence if random delays are expected to be driven
   // by some custom rule set.
