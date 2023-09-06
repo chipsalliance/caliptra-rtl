@@ -67,6 +67,15 @@ class soc_ifc_env_mbox_sha_accel_sequence extends soc_ifc_env_mbox_sequence_base
     constraint start_addr_c {start_addr inside { [4:131068] }; 
                              start_addr[1:0] == '0; }
 
+    //==========================================
+    // Function:    new
+    // Description: Constructor
+    //==========================================
+    function new(string name = "" );
+        super.new(name);
+        this.mbox_dlen_min_c.constraint_mode(0);
+    endfunction                          
+
 endclass
 
 task soc_ifc_env_mbox_sha_accel_sequence::mbox_setup();
@@ -127,6 +136,14 @@ task soc_ifc_env_mbox_sha_accel_sequence::mbox_setup();
     byte_shift = 'd4 - this.dlen[1:0];
     sha_block_data = sha_block_data << (byte_shift * 8);
 
+    // Override dlen to reflect the size of the SHA data + the start address dword
+    this.mbox_op_rand.dlen = 4 + this.dlen;
+
+    // Ensure that the start address is after the data
+    if ( (this.start_addr < this.mbox_op_rand.dlen)) begin
+        //Move start address to one dword after dlen so it's after the valid data
+        this.start_addr = this.mbox_op_rand.dlen + 4;
+    end
     // Restrict the start addr so that we don't overflow the mailbox
     if ( (this.start_addr + this.dlen) > MBOX_SIZE_BYTES ) begin
         //if we would have overflowed, just lower start address so the data fits in the mailbox at the end
@@ -134,8 +151,11 @@ task soc_ifc_env_mbox_sha_accel_sequence::mbox_setup();
         //round it down to match the alignment of the data
         this.start_addr[1:0] = '0;
     end
-    // Override dlen to reflect the size of the SHA data + the start address dword
-    this.mbox_op_rand.dlen = 4 + this.dlen;
+    // This shouldn't happen - if it does we bail out
+    // Check that moving down for overlow didn't cause us to overlap. Key would have to be like half the mailbox in length which is impossible
+    if ( (this.start_addr < this.mbox_op_rand.dlen)) begin
+        `uvm_error("SHA_ACCEL_SEQ",$sformatf("Can't place the key in the mailbox properly Start_Addr: %x Dlen: %x", this.start_addr, this.mbox_op_rand.dlen))
+    end
 endtask
 
 // This should be overridden with real data to write
