@@ -46,6 +46,7 @@ contents:
         - ../test_suites/smoke_test_ahb_mux/smoke_test_ahb_mux.yml
         - ../test_suites/smoke_test_doe_rand/smoke_test_doe_rand.yml
         - ../test_suites/smoke_test_doe_scan/smoke_test_doe_scan.yml
+        - ../test_suites/smoke_test_zeroize_crypto/smoke_test_zeroize_crypto.yml
         #- ../test_suites/smoke_test_doe_cg/smoke_test_doe_cg.yml
         # data vault tests
         - ../test_suites/smoke_test_datavault_basic/smoke_test_datavault_basic.yml

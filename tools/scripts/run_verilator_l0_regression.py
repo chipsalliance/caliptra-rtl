@@ -155,7 +155,7 @@ def runTest(args):
     # Invoke makefile for the current test
     mfile = os.path.join(os.environ.get('CALIPTRA_ROOT'),"tools/scripts/Makefile")
     testname = "TESTNAME=" + test
-    cmd = " ".join(["make", "-C", testdir, "-f", mfile, testname, "verilator"])
+    cmd = " ".join(["make", "-C", testdir, "-f", mfile, testname, "verilator", "VERILATOR_RUN_ARGS=+CLP_REGRESSION"])
     exitcode, resultout, resulterr = runBashScript(cmd)
 
     # Parse and log the results
