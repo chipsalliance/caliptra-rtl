@@ -1255,11 +1255,16 @@ class soc_ifc_predictor #(
                     end
                 end
                 "CPTRA_WDT_TIMER1_CTRL": begin
-                    if (ahb_txn.RnW == AHB_WRITE) begin
-                        // Handled in callbacks via reg predictor
-                        `uvm_info("PRED_AHB", $sformatf("Handling access to %s. This will restart WDT timer1", axs_reg.get_name()), UVM_MEDIUM);
-                        //Capture restart bit so the counters can be updated
-                        wdt_t1_restart = data_active[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER1_CTRL.timer1_restart.get_lsb_pos()];
+                    if (ahb_txn.RnW == AHB_WRITE && data_active[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER1_CTRL.timer1_restart.get_lsb_pos()]) begin
+                        `uvm_info("PRED_AHB", $sformatf("Handling access to %s. This will restart WDT timer1 after 1 clock cycle", axs_reg.get_name()), UVM_MEDIUM);
+                        fork
+                            begin
+                            configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
+                            //Capture restart bit so the counters can be updated
+                            wdt_t1_restart = 1;
+                            `uvm_info("PRED_AHB", $sformatf("After delay from access to %s - restart WDT timer1", axs_reg.get_name()), UVM_MEDIUM);
+                            end
+                        join_none
                     end
                 end
                 "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[0]",
@@ -1274,11 +1279,16 @@ class soc_ifc_predictor #(
                     end
                 end
                 "CPTRA_WDT_TIMER2_CTRL": begin
-                    if (ahb_txn.RnW == AHB_WRITE) begin
-                        // Handled in callbacks via reg predictor
-                        `uvm_info("PRED_AHB", $sformatf("Handling access to %s. This will restart WDT timer2", axs_reg.get_name()), UVM_MEDIUM);
-                        //Capture restart bit so the counters can be updated
-                        wdt_t2_restart = data_active[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER2_CTRL.timer2_restart.get_lsb_pos()];
+                    if (ahb_txn.RnW == AHB_WRITE && data_active[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER2_CTRL.timer2_restart.get_lsb_pos()]) begin
+                        `uvm_info("PRED_AHB", $sformatf("Handling access to %s. This will restart WDT timer2 after 1 clock cycle", axs_reg.get_name()), UVM_MEDIUM);
+                        fork
+                            begin
+                            configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
+                            //Capture restart bit so the counters can be updated
+                            wdt_t2_restart = 1;
+                            `uvm_info("PRED_AHB", $sformatf("After delay from access to %s - restart WDT timer2", axs_reg.get_name()), UVM_MEDIUM);
+                            end
+                        join_none
                     end
                 end
                 "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[0]",
