@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Caliptra Hands-On Guide** #
-_*Last Update: 2023/08/25*_
+_*Last Update: 2023/09/06*_
 
 
 ## **Tools Used** ##
@@ -44,9 +44,10 @@ Synthesis:
 
 GCC:
  - RISCV Toolchain for generating memory initialization files
-   - `riscv64-unknown-elf-gcc-8.2.0-2019.02.0-x86_64-linux-centos6`
- - G++ Used to compile Verilator objects
-   - `g++ (GCC) 8.2.0`
+   - `Version 2023.04.29`
+   - `riscv64-unknown-elf-gcc (g) 12.2.0`
+ - G++ Used to compile Verilator objects and test firmware
+   - `g++ (GCC) 11.2.0`
 
 Other:
  - Playbook (Microsoft Internal workflow management tool)
@@ -78,11 +79,11 @@ Required for Firmware (i.e. Test suites) makefile:<BR>
 Caliptra
 |-- LICENSE
 |-- README.md
-|-- Release_notes.txt
+|-- Release_Notes.md
 |-- docs
 |   |-- Caliptra_Integration_Specification.pdf
-|   |-- Caliptra_Hardware_Spec.pdf
-|   |-- Caliptra_TestPlan_L1.pdf
+|   |-- Caliptra_Hardware_Specification.pdf
+|   `-- Caliptra_TestPlan.xlsx
 |-- src
 |   |-- aes
 |   |-- ahb_lite_bus
@@ -108,11 +109,11 @@ Caliptra
 |   |-- sha512_masked
 |   |-- soc_ifc
 |   |-- spi_host
-|   |-- uart
+|   `-- uart
 `-- tools
-    |-- config
     |-- README
-    `-- scripts
+    |-- scripts
+    `-- templates
 ```
 The root of the repository is structured as shown above, to a depth of 2 layers.<BR>
 Each sub-component is accompanied by a file list summary (located in src/<component>/config/<name>.vf) that comprises all the filenames required to compile the component, and an optional testbench filelist for unit-level simulation. <BR>
@@ -133,6 +134,7 @@ The "Integration" sub-component contains the top-level fileset for Caliptra. `sr
 `run_verilator_l0_regression.py`: Wrapper to run the L0 smoke test regression suite using the Makefile flow in Verilator<BR>
 `integration_vector_gen.py`: Generates test vectors for crypto core tests<BR>
 `veer_build_command.sh`: Shell script used to generate the VeeR-EL2 repository present in `src/riscv_core/veer_el2`<BR>
+`openocd`: Open-Source FW debug utility used for JTAG testing in automated workflows
 
 ## **Simulation Flow** ##
 
