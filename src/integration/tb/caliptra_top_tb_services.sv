@@ -234,6 +234,7 @@ module caliptra_top_tb_services
     //         8'h91        - Issue PCR singing with randomized vector
     //         8'h92        - Check PCR singing with randomized vector   
     //         8'h98        - Inject invalid zero sign_r into ECC 
+    //         8'h99        - Inject zeroize into HMAC
     //         8'ha0: 8'ha7 - Inject HMAC_KEY to kv_key register
     //         8'hc0: 8'hc7 - Inject SHA_BLOCK to kv_key register
     //         8'he0        - Set random ICCM SRAM single bit error injection
@@ -557,6 +558,40 @@ endgenerate //IV_NO
         else if(en_jtag_access && (cycleCnt == (cycleCnt_ff + 'd150))) begin
             release caliptra_top_dut.cptra_dmi_reg_en_preQ;
             en_jtag_access <= 'b0;
+        end
+    end
+    
+    logic inject_zeroize_to_hmac;
+    logic inject_zeroize_to_hmac_cmd;
+    logic [3 : 0] inject_zeroize_to_hmac_cnt;
+    always@(posedge clk or negedge cptra_rst_b) begin
+        if (~cptra_rst_b) begin
+            inject_zeroize_to_hmac_cmd <= 1'b0;
+            inject_zeroize_to_hmac <= 1'b0;
+            inject_zeroize_to_hmac_cnt <= '0;
+        end
+        else if((WriteData == 'h99) && mailbox_write) begin
+            inject_zeroize_to_hmac_cmd <= 1'b1;
+        end
+        else if (inject_zeroize_to_hmac_cmd) begin
+            if (caliptra_top_dut.hmac.hmac_inst.core_tag_we) begin
+                inject_zeroize_to_hmac <= 1'b1;
+            end
+            if (inject_zeroize_to_hmac) begin
+                if (inject_zeroize_to_hmac_cnt < 4'hf) begin
+                    inject_zeroize_to_hmac_cnt <= inject_zeroize_to_hmac_cnt + 1'b1;
+                end
+            end
+        end
+    end
+    always@(negedge clk) begin
+        if (inject_zeroize_to_hmac) begin
+            if (inject_zeroize_to_hmac_cnt == 4'h5) begin
+                force caliptra_top_dut.hmac.hmac_inst.i_hmac_reg.field_storage.HMAC384_CTRL.ZEROIZE.value = 1'b1;
+            end
+            else begin
+                release caliptra_top_dut.hmac.hmac_inst.i_hmac_reg.field_storage.HMAC384_CTRL.ZEROIZE.value;
+            end
         end
     end
 

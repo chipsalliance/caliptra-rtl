@@ -94,8 +94,11 @@ enum sha_accel_mode_e {
 inline uint32_t soc_ifc_mbox_read_dataout_single() {
     return lsu_read_32(CLP_MBOX_CSR_MBOX_DATAOUT);
 }
-inline uint32_t soc_ifc_mbox_dir_read_dataout_single(uint32_t rdptr) {
+inline uint32_t soc_ifc_mbox_dir_read_single(uint32_t rdptr) {
     return lsu_read_32(0x30000000 + rdptr);
+}
+inline uint32_t soc_ifc_mbox_dir_write_single(uint32_t wrptr, uint32_t wrdata) {
+    lsu_write_32(0x30000000 + wrptr, wrdata);
 }
 void soc_ifc_clear_execute_reg();
 uint8_t soc_ifc_chk_execute_uc();

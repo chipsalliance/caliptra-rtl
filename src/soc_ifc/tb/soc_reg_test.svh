@@ -45,9 +45,7 @@
       del_from_strq(soc_regnames, "CPTRA_TRNG_STATUS");
 
       // -- Exclude CPTRA_TRNG_DATA*
-      iq = soc_regnames.find_index with (str_startswith(item, "CPTRA_TRNG_DATA"));
-      foreach(iq[i]) 
-        soc_regnames.delete(iq[i]);
+      delm_from_strq(soc_regnames, "CPTRA_TRNG_DATA");
 
       repeat (5) @(posedge clk_tb);
 
@@ -72,6 +70,9 @@
       $display ("-------------------------------------------------------------");
 
       write_read_regs(SET_AHB, GET_AHB, soc_regnames, tid, 3);
+
+      //FIXME. Need to add test for delayed cross modification of INTERNAL_ICCM_LOCK  
+      //        if ((addr_name == "INTERNAL_FW_UPDATE_RESET") &  (indata[0] == 1'b1)) begin
 
       repeat (20) @(posedge clk_tb);
       sb.del_all();
@@ -100,6 +101,9 @@
       $display ("-------------------------------------------------------------");
 
       write_read_regs(SET_AHB, GET_APB, soc_regnames, tid, 3);
+      
+      //FIXME. Need to add test for delayed cross modification of INTERNAL_ICCM_LOCK  
+      //        if ((addr_name == "INTERNAL_FW_UPDATE_RESET") &  (indata[0] == 1'b1)) begin
 
       error_ctr += sb.err_count;
 

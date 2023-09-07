@@ -13,9 +13,5 @@
 # limitations under the License.
 #
 ---
-plusargs:
-  - +SOC_IFC_TEST='fuse_reg_perm_test'
-
-testname: fuse_reg_perm_test 
-# seed: ${PLAYBOOK_RANDOM_SEED}
-seed: 1692834441
+seed: 1
+testname: smoke_test_zeroize_crypto

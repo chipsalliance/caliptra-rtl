@@ -18,3 +18,4 @@ plusargs:
 
 testname: soc_reg_intrblk_test
 seed: ${PLAYBOOK_RANDOM_SEED}
+# seed: 1692153169 

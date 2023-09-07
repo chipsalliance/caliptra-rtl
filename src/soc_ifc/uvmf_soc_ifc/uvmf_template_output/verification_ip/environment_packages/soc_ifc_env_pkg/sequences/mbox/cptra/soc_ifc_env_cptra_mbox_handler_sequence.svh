@@ -41,7 +41,7 @@ class soc_ifc_env_cptra_mbox_handler_sequence extends soc_ifc_env_sequence_base 
   rand longint unsigned force_unlock_delay_cycles;
 
   bit unlock_proc_active = 1'b0;
-  bit op_started = 1'b0;
+  bit op_active = 1'b0;
   bit seq_done = 1'b0;
   uvm_event in_report_reg_sts;
 
@@ -158,7 +158,7 @@ class soc_ifc_env_cptra_mbox_handler_sequence extends soc_ifc_env_sequence_base 
             // After forcibly unlocking mailbox, kill any remaining activity.
             // If force unlock is randomized to "off" for this run
             // of the sequence, this won't ever run.
-            if (op_started)
+            if (op_active)
                 in_report_reg_sts.wait_on(); /* Wait for pending bus transfers (in ALL_TIME_CONSUMING_TASKS) to finish to avoid deadlock */
             disable ALL_TIME_CONSUMING_TASKS;
             `uvm_info("CPTRA_MBOX_HANDLER", "Disabled ALL_TIME_CONSUMING_TASKS", UVM_HIGH)
@@ -238,7 +238,7 @@ task soc_ifc_env_cptra_mbox_handler_sequence::mbox_wait_for_command(output op_st
         end
     end
     ntf_rsp_count = 0;
-    op_started = 1;
+    op_active = 1;
     // Clear interrupt
     reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
     report_reg_sts(reg_sts, "notif_internal_intr_r");
@@ -334,7 +334,13 @@ task soc_ifc_env_cptra_mbox_handler_sequence::mbox_check_fsm();
     report_reg_sts(reg_sts, "mbox_status");
 
     fsm_state = mbox_fsm_state_e'(data >> reg_model.mbox_csr_rm.mbox_status.mbox_fsm_ps.get_lsb_pos());
-    if (op.cmd.cmd_s.resp_reqd && fsm_state != MBOX_EXECUTE_SOC) begin
+    // In the error state, simply wait for the force-unlock to reset the mailbox and end the sequence (killing this routine in the process)
+    if (fsm_state == MBOX_ERROR) begin
+        `uvm_info("CPTRA_MBOX_HANDLER", $sformatf("On detecting mailbox FSM state: %p, wait for force_unlock to end the sequence", fsm_state), UVM_MEDIUM)
+        op_active = 1'b0; // So the force-unlock branch knows it's safe to terminate this task
+        forever configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(10000);
+    end
+    else if (op.cmd.cmd_s.resp_reqd && fsm_state != MBOX_EXECUTE_SOC) begin
         `uvm_error("CPTRA_MBOX_HANDLER", $sformatf("Unexpected mailbox FSM state: %p", fsm_state))
     end
 endtask

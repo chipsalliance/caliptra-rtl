@@ -139,13 +139,13 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
                                               [4:7] :/ 25,
                                               [8:31]:/ 1};}
   constraint medium_delay_c { rand_delay dist {   0    :/ 10,
-                                               [1:7]   :/ 25,
+                                               [1:7]   :/ 50,
                                                [8:31]  :/ 100,
-                                               [32:255]:/ 1000};}
+                                               [32:255]:/ 50};}
   constraint large_delay_c { rand_delay dist {        15  :/ 1,
-                                              [ 16 : 255] :/ 25,
-                                              [ 256:1023] :/ 500,
-                                              [1024:8191] :/ 300};}
+                                              [ 16 : 255] :/ 50,
+                                              [ 256:1023] :/ 100,
+                                              [1024:8191] :/ 25};}
   // This deliberately intractable constraint must be overridden
   // by a child sequence if random delays are expected to be driven
   // by some custom rule set.
@@ -505,7 +505,13 @@ task soc_ifc_env_mbox_sequence_base::mbox_read_resp_data();
         report_reg_sts(reg_sts, "mbox_dlen");
     end
     if (dlen != mbox_resp_expected_dlen) begin
-        `uvm_error("MBOX_SEQ", $sformatf("SOC received response data with mbox_dlen [%0d] that does not match the expected data amount [%0d]!", dlen, mbox_resp_expected_dlen))
+        if (this.get_type_name() inside {"soc_ifc_env_mbox_reg_axs_invalid_sequence",
+                                         "soc_ifc_env_mbox_reg_axs_invalid_small_sequence",
+                                         "soc_ifc_env_mbox_reg_axs_invalid_medium_sequence",
+                                         "soc_ifc_env_mbox_reg_axs_invalid_large_sequence"})
+            `uvm_info("MBOX_SEQ", $sformatf("SOC received response data with mbox_dlen [%0d] that does not match the expected data amount [%0d]! Not flagging err since this is an invalid reg-access sequence [%s]", dlen, mbox_resp_expected_dlen, this.get_type_name()), UVM_LOW)
+        else
+            `uvm_error("MBOX_SEQ", $sformatf("SOC received response data with mbox_dlen [%0d] that does not match the expected data amount [%0d]!", dlen, mbox_resp_expected_dlen))
     end
     if (rand_delay_en) do_rand_delay(1, step_delay);
     for (ii=0; ii < dlen; ii+=4) begin

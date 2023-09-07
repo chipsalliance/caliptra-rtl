@@ -172,7 +172,32 @@ endclass
 //               - Any functionality implemented in derived classes
 //==========================================
 task soc_ifc_env_cptra_mbox_req_sequence_base::mbox_setup();
-    // TODO nothing to do yet
+    uvm_reg_data_t data;
+    uvm_reg_field  flds[$];
+
+    // Clear any interrupts already asserted at sequence start
+    // Notifications
+    reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+    report_reg_sts(reg_sts, "notif_internal_intr_r");
+    reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+    report_reg_sts(reg_sts, "notif_internal_intr_r");
+    reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.get_fields(flds);
+    foreach (flds[ii]) begin
+        if (data[flds[ii].get_lsb_pos()])
+            `uvm_info("CPTRA_MBOX_SEQ", {"At sequence start, observed notification_interrupt for bit: ", flds[ii].get_name()}, UVM_HIGH)
+    end
+
+    // Errors
+    reg_model.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+    report_reg_sts(reg_sts, "error_internal_intr_r");
+    reg_model.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+    report_reg_sts(reg_sts, "error_internal_intr_r");
+    flds.delete();
+    reg_model.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.get_fields(flds);
+    foreach (flds[ii]) begin
+        if (data[flds[ii].get_lsb_pos()])
+            `uvm_info("CPTRA_MBOX_SEQ", {"At sequence start, observed error_interrupt for bit: ", flds[ii].get_name()}, UVM_HIGH)
+    end
 endtask
 
 //==========================================

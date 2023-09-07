@@ -67,6 +67,15 @@ class soc_ifc_env_mbox_sha_accel_sequence extends soc_ifc_env_mbox_sequence_base
     constraint start_addr_c {start_addr inside { [4:131068] }; 
                              start_addr[1:0] == '0; }
 
+    //==========================================
+    // Function:    new
+    // Description: Constructor
+    //==========================================
+    function new(string name = "" );
+        super.new(name);
+        this.mbox_dlen_min_c.constraint_mode(0);
+    endfunction
+
 endclass
 
 task soc_ifc_env_mbox_sha_accel_sequence::mbox_setup();
@@ -127,15 +136,24 @@ task soc_ifc_env_mbox_sha_accel_sequence::mbox_setup();
     byte_shift = 'd4 - this.dlen[1:0];
     sha_block_data = sha_block_data << (byte_shift * 8);
 
-    // Restrict the start addr so that we don't overflow the mailbox
-    if ( (this.start_addr + this.dlen) > MBOX_SIZE_BYTES ) begin
-        //if we would have overflowed, just lower start address so the data fits in the mailbox at the end
-        this.start_addr = MBOX_SIZE_BYTES - (this.dlen);
-        //round it down to match the alignment of the data
-        this.start_addr[1:0] = '0;
+    // Override dlen to reflect the size of the SHA data + the start address dword
+    this.mbox_op_rand.dlen = 4 + this.dlen;
+
+    // Ensure that the start address is after the data
+    if ( (this.start_addr <= this.mbox_op_rand.dlen) || ( (this.start_addr + this.dlen) > MBOX_SIZE_BYTES )) begin
+        // Re-randomize start address to ensure it is after the valid data
+        // and still meets alignment requirements.
+        // Restrict the start addr so that we don't overflow the mailbox
+        this.randomize(this.start_addr) with { this.start_addr >= this.mbox_op_rand.dlen + 4;
+                                               this.start_addr + this.dlen <= MBOX_SIZE_BYTES;
+                                               this.start_addr[1:0] == 2'b00; };
     end
-    // Override dlen to reflect the size of the SHA data
-    this.mbox_op_rand.dlen = this.start_addr + this.dlen;
+    // This shouldn't happen - if it does we bail out
+    // Check that re-randomizing start_addr for overlow didn't cause us to
+    // overlap. Key would have to be like half the mailbox in length which is impossible
+    if ( (this.start_addr < this.mbox_op_rand.dlen)) begin
+        `uvm_error("SHA_ACCEL_SEQ",$sformatf("Can't place the key in the mailbox properly Start_Addr: %x Dlen: %x", this.start_addr, this.mbox_op_rand.dlen))
+    end
 endtask
 
 // This should be overridden with real data to write
@@ -143,20 +161,20 @@ task soc_ifc_env_mbox_sha_accel_sequence::mbox_push_datain();
     int ii;
     reg [31:0] data;
     int most_sig_dword;
-    int sha_block_start_dw;
+    //int sha_block_start_dw;
 
     //write 0's until the start address
-    sha_block_start_dw = this.start_addr >> 2;
+    //sha_block_start_dw = this.start_addr >> 2;
 
     //write the start address into the first dword
     reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(this.start_addr), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
     report_reg_sts(reg_sts, "mbox_datain");
 
     //pad the data until start address
-    for (ii=1; ii < sha_block_start_dw; ii++) begin
-        reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'('0), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
-        report_reg_sts(reg_sts, "mbox_datain");
-    end
+    //for (ii=1; ii < sha_block_start_dw; ii++) begin
+    //    reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'('0), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
+    //    report_reg_sts(reg_sts, "mbox_datain");
+    //end
 
     //write the sha block
     most_sig_dword = (this.dlen[1:0] == 2'b00) ? (this.dlen >> 2) - 1 : (this.dlen >> 2);

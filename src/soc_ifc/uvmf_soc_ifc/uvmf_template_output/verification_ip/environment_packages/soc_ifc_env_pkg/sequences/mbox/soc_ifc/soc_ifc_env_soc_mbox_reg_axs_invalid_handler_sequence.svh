@@ -45,6 +45,7 @@ class soc_ifc_env_soc_mbox_reg_axs_invalid_handler_sequence extends soc_ifc_env_
   virtual task body();
 
     op_sts_e op_sts;
+    bit do_fsm_chk = 1;
     process mbox_flow_proc;
     reg_model = configuration.soc_ifc_rm;
 
@@ -73,9 +74,14 @@ class soc_ifc_env_soc_mbox_reg_axs_invalid_handler_sequence extends soc_ifc_env_
             mbox_pop_dataout();
 
             // Return control to uC
+            if (sts_rsp_count && !soc_ifc_status_agent_rsp_seq.rsp.mailbox_data_avail) begin
+                // Our random_reg_write may write to mbox_status and cause us to exit EXECUTE_SOC early...
+                do_fsm_chk = 0;
+            end
             mbox_set_status();
             configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(2); // Takes a few cycles for FSM update to propagate into register
-            mbox_check_fsm();
+            if (do_fsm_chk)
+                mbox_check_fsm();
         end
         begin: ERR_INJECT_FLOW
             wait(mbox_flow_proc != null);
