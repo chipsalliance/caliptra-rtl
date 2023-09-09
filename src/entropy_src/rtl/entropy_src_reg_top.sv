@@ -3587,7 +3587,6 @@ module entropy_src_reg_top #(
 
   // Read data return
   always_comb begin
-    reg_rdata_next = '0;
     unique case (1'b1)
       addr_hit[0]: begin
         reg_rdata_next[0] = intr_state_es_entropy_valid_qs;
@@ -3891,10 +3890,6 @@ module entropy_src_reg_top #(
 
       addr_hit[56]: begin
         reg_rdata_next[8:0] = main_sm_state_qs;
-      end
-
-      default: begin
-        reg_rdata_next = '1;
       end
     endcase
   end
