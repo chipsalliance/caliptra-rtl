@@ -1946,6 +1946,7 @@ module csrng_reg_top #(
 
   // Read data return
   always_comb begin
+    reg_rdata_next = '0;
     unique case (1'b1)
       addr_hit[0]: begin
         reg_rdata_next[0] = intr_state_cs_cmd_req_done_qs;
