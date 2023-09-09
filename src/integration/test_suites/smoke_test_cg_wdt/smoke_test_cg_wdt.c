@@ -156,6 +156,19 @@ void main() {
         VPRINTF(LOW, "Debug mode unlocked\n====================\n");
         SEND_STDOUT_CTRL(0xfa);
 
+        for (int i = 0; i < 1000; i++); //sleep
+
+        //Issue warm reset to capture debug mode
+        rst_count++;
+        SEND_STDOUT_CTRL(0xf6);
+    }
+    else if (rst_count == 1) {
+
+        rst_count++;
+        SEND_STDOUT_CTRL(0xf6);
+    }
+    else if (rst_count == 2) {
+
         set_mit0_and_halt_core(mitb0, mie_timer0_ext_int_en);
 
         //Disable ss tran
@@ -168,7 +181,7 @@ void main() {
         rst_count++;
         SEND_STDOUT_CTRL(0xf6);
     }
-    else if(rst_count == 1) {
+    else if(rst_count == 3) {
         //Enable internal timer0
         __asm__ volatile ("csrwi    %0, %1" \
                         : /* output: none */        \
