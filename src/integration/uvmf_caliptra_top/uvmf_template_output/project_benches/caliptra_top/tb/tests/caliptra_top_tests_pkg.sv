@@ -66,6 +66,7 @@ package caliptra_top_tests_pkg;
    `include "src/example_derived_test.svh"
    `include "src/caliptra_top_rand_test.svh"
    `include "src/caliptra_top_wdt_test.svh"
+   `include "src/caliptra_top_wdt_independent_test.svh"
    `include "src/caliptra_top_cmdline_test.svh"
    `include "src/caliptra_top_rom_test.svh"
 
