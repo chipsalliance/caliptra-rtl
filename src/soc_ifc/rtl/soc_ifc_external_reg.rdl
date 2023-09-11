@@ -229,7 +229,14 @@ reg {
             [br]Caliptra Access: RW
             [br]SOC Access:      RW
             [br]TAP Access [in debug/manuf mode]: RW";
-    field {sw=rw; hw=rw; we=true;resetsignal = cptra_rst_b;} DATA[32] = 32'h0;
+    field {
+        desc = "Enable bit for Caliptra to generate an IDEV CSR";
+        sw=rw; hw=rw; we=true;resetsignal = cptra_rst_b;} MFG_FLAG_GEN_IDEV_CSR[1] = 0;
+    field {sw=rw; hw=rw; we=true;resetsignal = cptra_rst_b;} MFG_FLAG_RSVD[15] = 0;
+    field {sw=rw; hw=rw; we=true;resetsignal = cptra_rst_b;} FAKE_ROM_RSVD[15] = 0;
+    field {
+        desc = "Enable bit to perform image verification within the fake-rom feature";
+        sw=rw; hw=rw; we=true;resetsignal = cptra_rst_b;} FAKE_ROM_IMAGE_VERIFY_EN[1] = 0;
 } CPTRA_DBG_MANUF_SERVICE_REG;
 
 reg {
