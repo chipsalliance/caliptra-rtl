@@ -55,7 +55,7 @@ The Assertion IP signals are bound with the respective signals in the dut, where
 The AIP has been tested with two major FV tools. For both tools proves pass in less then 2 hour and coverage is at 100%. 
 
 For reproducing the results:
-Load the AIP, sha512_core and fv_constraints together in your formal tool. 
+Load the AIP, sha256_core and fv_constraints together in your formal tool. 
 
 Feel free to reach out to contact@lubis-eda.com to request the loadscripts. 
 
