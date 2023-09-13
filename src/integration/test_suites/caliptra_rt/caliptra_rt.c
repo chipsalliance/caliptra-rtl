@@ -77,6 +77,10 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     flag &= mask; \
     csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
 
+#ifndef MY_RANDOM_SEED
+#define MY_RANDOM_SEED 17
+#endif // MY_RANDOM_SEED
+
 
 enum gen_in_value {
     WDT_CASCADE     = 0x0000abab,
@@ -136,6 +140,10 @@ void caliptra_rt() {
 
     //set NMI vector
     lsu_write_32((uintptr_t) (CLP_SOC_IFC_REG_INTERNAL_NMI_VECTOR), (uint32_t) (nmi_handler));
+
+    // Initialize rand num generator
+    VPRINTF(LOW,"\nUsing random seed = %d\n\n", MY_RANDOM_SEED);
+    srand((uint32_t) MY_RANDOM_SEED);
 
     // Runtime flow -- set ready for RT
     soc_ifc_set_flow_status_field(SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_RUNTIME_MASK);
@@ -328,7 +336,7 @@ void caliptra_rt() {
                     if (fsm_chk == 0xF) {
                         if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK) {
                             CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK)
-                            VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit after servicing\n");
+                            VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (cmd fail) after servicing\n");
                         } else {
                             VPRINTF(ERROR, "After finding an error and resetting the mailbox with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
                             SEND_STDOUT_CTRL(0x1);
@@ -346,7 +354,7 @@ void caliptra_rt() {
                     }
                     VPRINTF(MEDIUM, "Triggering FW update reset\n");
                     //Trigger firmware update reset, new fw will get copied over from ROM
-                    soc_ifc_set_fw_update_reset();
+                    soc_ifc_set_fw_update_reset((uint8_t) (rand() & 0xFF));
                 }
                 else if (op.cmd & MBOX_CMD_FIELD_RESP_MASK) {
                     VPRINTF(MEDIUM, "Received mailbox command (expecting RESP) from SOC! Got 0x%x\n", op.cmd);
@@ -412,7 +420,6 @@ void caliptra_rt() {
                         lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DLEN), temp);
 
                         // Write response data
-                        srand((uint32_t) (op.cmd ^ read_data)); // Initialize rand num generator
                         for (loop_iter = 0; loop_iter<temp; loop_iter+=4) {
                             lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DATAIN), rand());
                         }
@@ -424,7 +431,7 @@ void caliptra_rt() {
                         if (fsm_chk == 0xF) {
                             if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK) {
                                 CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK)
-                                VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit after servicing\n");
+                                VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (cmd fail) after servicing\n");
                             } else {
                                 VPRINTF(ERROR, "After finding an error and resetting the mailbox with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
                                 SEND_STDOUT_CTRL(0x1);
@@ -433,7 +440,13 @@ void caliptra_rt() {
                         }
                         continue;
                     }
-                    soc_ifc_set_mbox_status_field(DATA_READY);
+                    if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK) {
+                        CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK)
+                        VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (ECC unc) after servicing\n");
+                        soc_ifc_set_mbox_status_field(CMD_FAILURE);
+                    } else {
+                        soc_ifc_set_mbox_status_field(DATA_READY);
+                    }
                 }
                 else {
                     VPRINTF(MEDIUM, "Received mailbox command (no expected RESP) from SOC! Got 0x%x\n", op.cmd);
@@ -460,7 +473,7 @@ void caliptra_rt() {
                         if (fsm_chk == 0xF) {
                             if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK) {
                                 CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK)
-                                VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit after servicing\n");
+                                VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (cmd fail) after servicing\n");
                             } else {
                                 VPRINTF(ERROR, "After finding an error and resetting the mailbox with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
                                 SEND_STDOUT_CTRL(0x1);
@@ -470,7 +483,13 @@ void caliptra_rt() {
                         continue;
                     }
                     //Mark the command complete
-                    soc_ifc_set_mbox_status_field(CMD_COMPLETE);
+                    if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK) {
+                        CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK)
+                        VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (ECC unc) after servicing\n");
+                        soc_ifc_set_mbox_status_field(CMD_FAILURE);
+                    } else {
+                        soc_ifc_set_mbox_status_field(CMD_COMPLETE);
+                    }
                 }
             }
             if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_MBOX_ECC_COR_STS_MASK) {

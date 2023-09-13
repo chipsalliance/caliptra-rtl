@@ -560,7 +560,7 @@ task soc_ifc_env_mbox_sequence_base::mbox_poll_status();
     end
     else if (data == CMD_FAILURE) begin
         if (sts_rsp_count > 0 && soc_ifc_status_agent_rsp_seq.rsp.cptra_error_non_fatal_intr_pending) begin
-            `uvm_info("MBOX_SEQ", $sformatf("Unexpected mailbox status [%p] likely is the result of a spurious reg access injection specifically intended to cause a protocol violation", data), UVM_HIGH)
+            `uvm_info("MBOX_SEQ", $sformatf("Unexpected mailbox status [%p] likely is the result of a spurious reg access injection specifically intended to cause a protocol violation or a mailbox SRAM double bit flip", data), UVM_HIGH)
         end
         else begin
             `uvm_error("MBOX_SEQ", $sformatf("Received mailbox status %p unexpectedly, since there is no pending non_fatal error interrupt", data))
@@ -599,7 +599,7 @@ task soc_ifc_env_mbox_sequence_base::mbox_clr_execute();
 
     if (rand_delay_en) do_rand_delay(1, step_delay);
 
-    // Check for any non-fatal mailbox protocol errors that occurred during the test
+    // Check for any non-fatal mailbox protocol or sram errors that occurred during the test
     reg_model.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.read(reg_sts, err, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(500)));
     // don't use report_reg_sts since this isn't a mbox reg and doesn't have pauser requirements
     if (reg_sts != UVM_IS_OK) begin

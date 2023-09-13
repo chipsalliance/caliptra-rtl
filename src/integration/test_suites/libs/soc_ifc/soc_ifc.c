@@ -227,9 +227,18 @@ void soc_ifc_fw_update(mbox_op_s op) {
         }
 }
 
-void soc_ifc_set_fw_update_reset() {
-    VPRINTF(MEDIUM,"SOC_IFC: Set fw update reset\n");
+void soc_ifc_set_fw_update_reset(uint8_t wait_cycles) {
     uint32_t reg;
+    VPRINTF(MEDIUM,"SOC_IFC: Set fw update reset with wait_cycles [%d] (%s)\n", wait_cycles, wait_cycles > 5 ? "will override" : wait_cycles > 0 ? "will use default 5" : "won't override");
+    // A 0-value argument means don't override the current value
+    if (wait_cycles) {
+        // Enforce minimum wait_cycles of 5
+        if (wait_cycles > 5) {
+            lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES, wait_cycles);
+        } else {
+            lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES, 5);
+        }
+    }
     reg = lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET);
     reg = (reg | SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK);
     lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET,reg);

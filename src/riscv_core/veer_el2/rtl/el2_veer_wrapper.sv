@@ -319,7 +319,7 @@ import soc_ifc_pkg::*;
    input logic [31:4] core_id,
 
    // Caliptra Memory Export Interface
-   el2_mem_if                              el2_mem_export,
+   el2_mem_if.veer_sram_src                el2_mem_export,
 
    // Caliptra ECC status signals
    output logic                            cptra_iccm_ecc_single_error,
@@ -710,7 +710,6 @@ import soc_ifc_pkg::*;
                              .mem_export(el2_mem_export),
                              .*
                              );
-   assign el2_mem_export.clk = active_l2clk;
 
 
    //  JTAG/DMI instance

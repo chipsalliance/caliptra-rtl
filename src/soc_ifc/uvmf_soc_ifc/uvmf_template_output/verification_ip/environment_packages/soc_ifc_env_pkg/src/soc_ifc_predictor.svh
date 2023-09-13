@@ -189,6 +189,8 @@ class soc_ifc_predictor #(
   int datain_count = 0;
   int dataout_count = 0;
 
+  bit dataout_mismatch_expected = 1'b0;
+
   bit [31:0] nmi_vector = 32'h0;
   bit iccm_locked = 1'b0;
   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg = '{default:32'h0}; // FIXME use reg-model value?
@@ -598,6 +600,10 @@ class soc_ifc_predictor #(
     end
     else if (t.is_read && t.ecc_double_bit_error) begin
         p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.error_mbox_ecc_unc_sts.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, p_soc_ifc_AHB_map); /* AHB-access only, use AHB map*/
+        p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, p_soc_ifc_AHB_map);
+        dataout_mismatch_expected = 1'b1;
+        cptra_error_non_fatal = 1'b1;
+        send_soc_ifc_sts_txn = 1'b1;
         `uvm_info("PRED_MBOX_SRAM", "Received read transaction with Double bit ECC corruption, triggering the err interrupt", UVM_MEDIUM)
     end
     else if (t.is_read && t.ecc_single_bit_error) begin
@@ -607,7 +613,6 @@ class soc_ifc_predictor #(
     else begin
         `uvm_info("PRED_MBOX_SRAM", "Received mailbox SRAM transaction does not cause a system state change prediction", UVM_FULL)
     end
-    // TODO HW_ERROR_NON_FATAL activity?
 
     // Code for sending output transaction out through soc_ifc_sb_ap
     // Please note that each broadcasted transaction should be a different object than previously 
@@ -617,7 +622,7 @@ class soc_ifc_predictor #(
     if (send_soc_ifc_sts_txn) begin
         populate_expected_soc_ifc_status_txn(soc_ifc_sb_ap_output_transaction);
         soc_ifc_sb_ap.write(soc_ifc_sb_ap_output_transaction);
-        `uvm_error("PRED_MBOX_SRAM", "NULL Transaction submitted through soc_ifc_sb_ap")
+        `uvm_info("PRED_MBOX_SRAM", "Transaction submitted through soc_ifc_sb_ap", UVM_MEDIUM)
     end
     // Code for sending output transaction out through cptra_sb_ap
     // Please note that each broadcasted transaction should be a different object than previously 
@@ -783,6 +788,14 @@ class soc_ifc_predictor #(
                         // "Expected" read data for scoreboard is current
                         // mirrored value prior to running do_predict
                         soc_ifc_sb_ahb_ap_output_transaction.data[0] = axs_reg.get_mirrored_value() << 8*(address_aligned % (ahb_lite_slave_0_params::AHB_WDATA_WIDTH/8));
+                        // ... unless it's an ECC double bit error, just use the
+                        // observed data to avoid a scoreboard error (since the
+                        // mismatch is anticipated)
+                        if (dataout_mismatch_expected) begin
+                            `uvm_info("PRED_AHB", "Ignoring mbox_dataout predicted contents and using observed AHB data due to prior ECC double bit flip", UVM_HIGH)
+                            dataout_mismatch_expected = 1'b0;
+                            soc_ifc_sb_ahb_ap_output_transaction.data[0] = ahb_txn.data[0];
+                        end
                         dataout_count++;
                     end
                     else begin
@@ -1361,17 +1374,10 @@ class soc_ifc_predictor #(
                         `uvm_error("PRED_AHB", {"Unexpected write to ",axs_reg.get_name()," register on AHB interface"})
                     end
                 end
-                "internal_fw_update_reset": begin
+                "internal_fw_update_reset",
+                "internal_fw_update_reset_wait_cycles": begin
                     // Handled in callbacks via reg predictor
                     `uvm_info("PRED_AHB", $sformatf("Handling access to register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
-                end
-                "internal_fw_update_reset_wait_cycles": begin
-                    if (ahb_txn.RnW == AHB_WRITE) begin
-                        `uvm_error("PRED_AHB", $sformatf("FIXME - need to add logic for writes to register %s", axs_reg.get_name())) // TODO
-                    end
-                    else begin
-                        `uvm_info("PRED_AHB", {"Read from ", axs_reg.get_name(), " has no effect"}, UVM_DEBUG)
-                    end
                 end
                 "internal_nmi_vector": begin
                     if (ahb_txn.RnW == AHB_WRITE) begin
@@ -1748,6 +1754,14 @@ class soc_ifc_predictor #(
                         // "Expected" read data for scoreboard is current
                         // mirrored value prior to running do_predict
                         soc_ifc_sb_apb_ap_output_transaction.rd_data = axs_reg.get_mirrored_value();
+                        // ... unless it's an ECC double bit error, just use the
+                        // observed data to avoid a scoreboard error (since the
+                        // mismatch is anticipated)
+                        if (dataout_mismatch_expected) begin
+                            `uvm_info("PRED_APB", "Ignoring mbox_dataout predicted contents and using observed APB data due to prior ECC double bit flip", UVM_HIGH)
+                            dataout_mismatch_expected = 1'b0;
+                            soc_ifc_sb_apb_ap_output_transaction.rd_data = apb_txn.rd_data;
+                        end
                         dataout_count++;
                     end
                     else begin
@@ -3431,6 +3445,8 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
 
         datain_count = 0;
         dataout_count = 0;
+
+        dataout_mismatch_expected = 1'b0;
 
     end: RESET_VAL_CHANGES_HARD_NONCORE
 

@@ -130,7 +130,15 @@ class soc_ifc_env_cptra_mbox_handler_sequence extends soc_ifc_env_sequence_base 
 
             // If resp data is required, set DATAIN
             if (op.cmd.cmd_s.resp_reqd) begin
-                mbox_push_datain();
+                if (mbox_resp_expected_dlen == 0) begin
+                    // We should only have 'resp_reqd' and 'exp_dlen == 0' if
+                    // a spurious write triggered MBOX_ERROR and caused us to fail
+                    // on reading back the dataout
+                    mbox_check_fsm();
+                end
+                else begin
+                    mbox_push_datain();
+                end
             end
 
             // Set STATUS
