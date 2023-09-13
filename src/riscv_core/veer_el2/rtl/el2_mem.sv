@@ -79,7 +79,7 @@ import el2_pkg::*;
    output logic [pt.ICACHE_NUM_WAYS-1:0]   ic_rd_hit,
    output logic         ic_tag_perr,        // Icache Tag parity error
 
-   el2_mem_if           mem_export,
+   el2_mem_if.veer_sram_src mem_export,
 
 
    input  logic         scan_mode
@@ -87,13 +87,29 @@ import el2_pkg::*;
 );
 
    logic active_clk;
+   el2_mem_if mem_export_local ();
    rvoclkhdr active_cg   ( .en(1'b1),         .l1clk(active_clk), .* );
+
+   assign mem_export      .clk = clk;
+   assign mem_export_local.clk = clk;
+
+   assign mem_export      .iccm_clken         = mem_export_local.iccm_clken;
+   assign mem_export      .iccm_wren_bank     = mem_export_local.iccm_wren_bank;
+   assign mem_export      .iccm_addr_bank     = mem_export_local.iccm_addr_bank;
+   assign mem_export      .iccm_bank_wr_data  = mem_export_local.iccm_bank_wr_data;
+   assign mem_export_local.iccm_bank_dout     = mem_export.      iccm_bank_dout;
+
+   assign mem_export      .dccm_clken         = mem_export_local.dccm_clken;
+   assign mem_export      .dccm_wren_bank     = mem_export_local.dccm_wren_bank;
+   assign mem_export      .dccm_addr_bank     = mem_export_local.dccm_addr_bank;
+   assign mem_export      .dccm_wr_data_bank  = mem_export_local.dccm_wr_data_bank;
+   assign mem_export_local.dccm_bank_dout     = mem_export      .dccm_bank_dout;
 
    // DCCM Instantiation
    if (pt.DCCM_ENABLE == 1) begin: Gen_dccm_enable
       el2_lsu_dccm_mem #(.pt(pt)) dccm (
          .clk_override(dccm_clk_override),
-         .dccm_mem_export(mem_export.veer_dccm),
+         .dccm_mem_export(mem_export_local.veer_dccm),
          .*
       );
    end else begin: Gen_dccm_disable
@@ -121,7 +137,7 @@ if (pt.ICCM_ENABLE) begin : iccm
                   .clk_override(icm_clk_override),
                   .iccm_rw_addr(iccm_rw_addr[pt.ICCM_BITS-1:1]),
                   .iccm_rd_data(iccm_rd_data[63:0]),
-                  .iccm_mem_export(mem_export.veer_iccm)
+                  .iccm_mem_export(mem_export_local.veer_iccm)
                    );
 end
 else  begin

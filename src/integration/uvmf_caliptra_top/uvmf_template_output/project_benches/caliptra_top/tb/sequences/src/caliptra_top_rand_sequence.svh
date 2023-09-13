@@ -68,6 +68,9 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
       IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_SMALL,
       IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_MEDIUM,
       IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_LARGE,
+      IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_SMALL,
+      IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_MEDIUM,
+      IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_LARGE,
       IDX_SOC_IFC_ENV_MBOX_MULTI_AGENT,
       IDX_SOC_IFC_ENV_RST_WARM,
       IDX_SOC_IFC_ENV_RST_COLD,
@@ -109,6 +112,9 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
           IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_SMALL        := 200,
           IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_MEDIUM       := 200,
           IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_LARGE        := 20,
+          IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_SMALL          := 200,
+          IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_MEDIUM         := 200,
+          IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_LARGE          := 10,
           IDX_SOC_IFC_ENV_MBOX_MULTI_AGENT              := 200,
           IDX_SOC_IFC_ENV_RST_WARM                      := 100,
           IDX_SOC_IFC_ENV_RST_COLD                      := 100,
@@ -131,6 +137,7 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
                              IDX_SOC_IFC_ENV_MBOX_DLEN_OVERFLOW_LARGE,
                              IDX_SOC_IFC_ENV_MBOX_DLEN_UNDERFLOW_LARGE,
                              IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_LARGE,
+                             IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_LARGE,
                              IDX_SOC_IFC_ENV_MBOX_MULTI_AGENT});
   }
   constraint iter_count_c {
@@ -346,6 +353,12 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
                 obj = soc_ifc_env_mbox_reg_axs_invalid_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_LARGE:
                 obj = soc_ifc_env_mbox_reg_axs_invalid_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_SMALL:
+                obj = soc_ifc_env_mbox_sram_double_bit_flip_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_MEDIUM:
+                obj = soc_ifc_env_mbox_sram_double_bit_flip_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_LARGE:
+                obj = soc_ifc_env_mbox_sram_double_bit_flip_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_MULTI_AGENT:
                 // TODO PAUSER init first?
                 obj = soc_ifc_env_mbox_rand_multi_agent_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
