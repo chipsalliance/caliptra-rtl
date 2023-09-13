@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2023/09/11*_
+_*Last Update: 2023/09/13*_
 
 ## Rev 1p0 ##
 
@@ -112,6 +112,7 @@ _*Last Update: 2023/09/11*_
 [WDT] WDT registers need to be on ungated clk<br>
 [AHB] AHB 2:1 Mux hangs with back to back transactions after a stall<br>
 [RST] scan_mode should not corrupt resets<br>
+[TOP] EL2 Mem interface is not instantiated with a modport at all levels
 
 ## Previous Releases ##
 
