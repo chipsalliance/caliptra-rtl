@@ -71,7 +71,7 @@ module caliptra_top
     //TODO update with I3C interface signals
 
     // Caliptra Memory Export Interface
-    el2_mem_if                         el2_mem_export,
+    el2_mem_if.veer_sram_src           el2_mem_export,
 
     //SRAM interface for mbox
     output logic mbox_sram_cs,

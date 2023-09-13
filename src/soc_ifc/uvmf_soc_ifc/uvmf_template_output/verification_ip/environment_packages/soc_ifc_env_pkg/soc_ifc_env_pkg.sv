@@ -187,6 +187,14 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_mbox_dlen_underflow_medium_sequence soc_ifc_env_mbox_dlen_underflow_medium_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_dlen_underflow_large_sequence.svh"
   typedef soc_ifc_env_mbox_dlen_underflow_large_sequence soc_ifc_env_mbox_dlen_underflow_large_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_sram_double_bit_flip_sequence.svh"
+  typedef soc_ifc_env_mbox_sram_double_bit_flip_sequence soc_ifc_env_mbox_sram_double_bit_flip_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_sram_double_bit_flip_small_sequence.svh"
+  typedef soc_ifc_env_mbox_sram_double_bit_flip_small_sequence soc_ifc_env_mbox_sram_double_bit_flip_small_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_sram_double_bit_flip_medium_sequence.svh"
+  typedef soc_ifc_env_mbox_sram_double_bit_flip_medium_sequence soc_ifc_env_mbox_sram_double_bit_flip_medium_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_sram_double_bit_flip_large_sequence.svh"
+  typedef soc_ifc_env_mbox_sram_double_bit_flip_large_sequence soc_ifc_env_mbox_sram_double_bit_flip_large_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_multi_agent_sequence.svh"
   typedef soc_ifc_env_mbox_rand_multi_agent_sequence soc_ifc_env_mbox_rand_multi_agent_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rst_sequence.svh"

@@ -23,7 +23,7 @@ module caliptra_veer_sram_export import caliptra_top_tb_pkg::*; #(
     //  [2] - Single bit, DCCM Error Injection
     //  [3] - Double bit, DCCM Error Injection
     input veer_sram_error_injection_mode_t sram_error_injection_mode,
-    el2_mem_if.top el2_mem_export
+    el2_mem_if.veer_sram_sink el2_mem_export
 );
 
 //////////////////////////////////////////////////////

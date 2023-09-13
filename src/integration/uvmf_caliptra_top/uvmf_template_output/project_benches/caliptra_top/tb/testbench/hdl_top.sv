@@ -214,7 +214,7 @@ import uvmf_base_pkg_hdl::*;
         .qspi_d_o    (/*TODO*/),
         .qspi_d_en_o (/*TODO*/),
 
-        .el2_mem_export(el2_mem_export),
+        .el2_mem_export(el2_mem_export.veer_sram_src),
 
         .ready_for_fuses  (soc_ifc_subenv_soc_ifc_status_agent_bus.ready_for_fuses   ),
         .ready_for_fw_push(soc_ifc_subenv_soc_ifc_status_agent_bus.ready_for_fw_push ),
@@ -346,7 +346,7 @@ import uvmf_base_pkg_hdl::*;
         .cptra_rst_b(soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_rst_b  ),
 
         // Caliptra Memory Export Interface
-        .el2_mem_export (el2_mem_export),
+        .el2_mem_export (el2_mem_export.veer_sram_sink),
 
         //SRAM interface for mbox
         .mbox_sram_cs   (mbox_sram_cs_stub_inactive   ),

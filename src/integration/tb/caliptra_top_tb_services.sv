@@ -45,7 +45,7 @@ module caliptra_top_tb_services
     input wire logic                   cptra_rst_b,
 
     // Caliptra Memory Export Interface
-    el2_mem_if.top                     el2_mem_export,
+    el2_mem_if.veer_sram_sink          el2_mem_export,
 
     //SRAM interface for mbox
     input  wire logic mbox_sram_cs,
