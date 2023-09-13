@@ -2059,10 +2059,6 @@ module csrng_reg_top #(
       addr_hit[16]: begin
         reg_rdata_next[7:0] = main_sm_state_qs;
       end
-
-      default: begin
-        reg_rdata_next = '1;
-      end
     endcase
   end
 

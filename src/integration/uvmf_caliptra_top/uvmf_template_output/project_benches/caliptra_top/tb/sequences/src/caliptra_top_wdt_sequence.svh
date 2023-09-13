@@ -37,6 +37,8 @@ class caliptra_top_wdt_sequence extends caliptra_top_bench_sequence_base;
   rand soc_ifc_env_mbox_real_fw_sequence_t soc_ifc_env_mbox_rt_seq;
   rand soc_ifc_env_reset_warm_sequence_t soc_ifc_env_reset_warm_seq;
   rand soc_ifc_env_reset_cold_sequence_t soc_ifc_env_reset_cold_seq;
+  rand soc_ifc_env_cptra_wdt_independent_sequence_t soc_ifc_env_wdt_indep_seq;
+  rand soc_ifc_env_cptra_wdt_cascade_sequence_t soc_ifc_env_wdt_cascade_seq;
   // Local handle to register model for convenience
   soc_ifc_reg_model_top reg_model;
 
@@ -96,6 +98,8 @@ class caliptra_top_wdt_sequence extends caliptra_top_bench_sequence_base;
     soc_ifc_env_mbox_rt_seq = soc_ifc_env_mbox_real_fw_sequence_t::type_id::create("soc_ifc_env_mbox_rt_seq");
     soc_ifc_env_reset_warm_seq = soc_ifc_env_reset_warm_sequence_t::type_id::create("soc_ifc_env_reset_warm_seq");
     soc_ifc_env_reset_cold_seq = soc_ifc_env_reset_cold_sequence_t::type_id::create("soc_ifc_env_reset_cold_seq");
+    soc_ifc_env_wdt_indep_seq = soc_ifc_env_cptra_wdt_independent_sequence_t::type_id::create("soc_ifc_env_wdt_indep_seq");
+    soc_ifc_env_wdt_cascade_seq = soc_ifc_env_cptra_wdt_cascade_sequence_t::type_id::create("soc_ifc_env_wdt_cascade_seq");
 
     soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq     = soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq_t::type_id::create("soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq");
     soc_ifc_subenv_soc_ifc_status_agent_responder_seq  = soc_ifc_subenv_soc_ifc_status_agent_responder_seq_t::type_id::create("soc_ifc_subenv_soc_ifc_status_agent_responder_seq");
@@ -108,6 +112,8 @@ class caliptra_top_wdt_sequence extends caliptra_top_bench_sequence_base;
     soc_ifc_env_mbox_rt_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
     soc_ifc_env_reset_warm_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
     soc_ifc_env_reset_cold_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
+    soc_ifc_env_wdt_indep_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
+    soc_ifc_env_wdt_cascade_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
 
     reg_model.reset();
     // Start RESPONDER sequences here
@@ -131,33 +137,32 @@ class caliptra_top_wdt_sequence extends caliptra_top_bench_sequence_base;
 
     run_firmware_init(soc_ifc_env_mbox_fmc_seq,soc_ifc_env_mbox_rt_seq);
 
-    // //--------------------------------
-    // //Wait for NMI to occur - TODO
-    // `uvm_info("KNU", $sformatf("FW init done, hw_error_fatal = %0d", hw_error_fatal),UVM_MEDIUM);
-    // while (!hw_error_fatal) begin
-    //   `uvm_info("KNU", "Inside while loop",UVM_MEDIUM);
-    //   while(!rsp_count)soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_num_clocks(1); // Wait for new status updates
-    //   `uvm_info("CALIPTRA_TOP_WDT_TEST", "Observed status response, checking contents", UVM_MEDIUM)
-    //   `uvm_info("CALIPTRA_TOP_WDT_TEST", soc_ifc_subenv_soc_ifc_status_agent_responder_seq.rsp.convert2string(), UVM_MEDIUM)
-    //   // `uvm_info("CALIPTRA_TOP_WDT_TEST",  $sformatf("response error fatal = %0d",soc_ifc_subenv_soc_ifc_status_agent_responder_seq.rsp.cptra_error_fatal_intr_pending), UVM_MEDIUM)
-    //   rsp_count = 0; // We only care about the latest rsp, so even if count > 1, reset back to 0
-    //   hw_error_fatal = soc_ifc_subenv_soc_ifc_status_agent_responder_seq.rsp.cptra_error_fatal_intr_pending;
-    // end
-    // `uvm_info("KNU", $sformatf("Outside while loop, hw_error_fatal = %h", hw_error_fatal),UVM_MEDIUM);
-      
-    // // //TODO: add APB seq to read hw_error_fatal reg to see if it's NMI or not
-    // `uvm_info("CALIPTRA_TOP_WDT_TEST", "Encountered NMI, issuing reset", UVM_MEDIUM);
-    // //soc_ifc_env_bringup_seq.start(top_configuration.soc_ifc_subenv_config.vsqr);
-    // reg_model.reset(); //TODO needed?
-    // // if (!soc_ifc_env_reset_cold_seq.randomize())
-    // //   `uvm_fatal("CALIPTRA_TOP_WDT_TEST", "caliptra_top_wdt_sequence::body() - soc_ifc_env_bringup_seq randomization failed")
-    // // soc_ifc_env_reset_cold_seq.start(top_configuration.soc_ifc_subenv_config.vsqr);
-    // // reg_model.reset(); //TODO needed?
-    // if(!soc_ifc_env_bringup_seq.randomize())
-    //     `uvm_fatal("CALIPTRA_TOP_WDT_TEST", "caliptra_top_wdt_sequence::body() - soc_ifc_env_bringup_seq randomization failed")
-    // soc_ifc_env_bringup_seq.start(top_configuration.soc_ifc_subenv_config.vsqr);
+    soc_ifc_env_wdt_cascade_seq.start(top_configuration.soc_ifc_subenv_config.vsqr);
+
     //--------------------------------
-    
+    //Wait for NMI to occur
+    while (!hw_error_fatal) begin
+      while(!rsp_count)soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_num_clocks(1); // Wait for new status updates
+      `uvm_info("CALIPTRA_TOP_WDT_TEST", "Observed status response, checking contents", UVM_MEDIUM)
+      `uvm_info("CALIPTRA_TOP_WDT_TEST", soc_ifc_subenv_soc_ifc_status_agent_responder_seq.rsp.convert2string(), UVM_MEDIUM)
+      rsp_count = 0; // We only care about the latest rsp, so even if count > 1, reset back to 0
+      hw_error_fatal = soc_ifc_subenv_soc_ifc_status_agent_responder_seq.rsp.cptra_error_fatal_intr_pending;
+    end
+      
+    //Check that NMI bit was set in the fatal error reg
+    if (reg_model.soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL.nmi_pin.get_mirrored_value()) begin
+      `uvm_info("CALIPTRA_TOP_WDT_TEST", "Encountered NMI, issuing reset", UVM_MEDIUM);
+      
+      //Issue warm reset
+      if(!soc_ifc_env_reset_warm_seq.randomize())
+          `uvm_fatal("CALIPTRA_TOP_WDT_TEST", "caliptra_top_wdt_sequence::body() - soc_ifc_env_reset_warm_seq randomization failed")
+      soc_ifc_env_reset_warm_seq.start(top_configuration.soc_ifc_subenv_config.vsqr);
+      // //--------------------------------
+    end
+    else begin
+      `uvm_error("CALIPTRA_TOP_WDT_TEST", "Did not see expected NMI interrupt")
+    end
+
     // UVMF_CHANGE_ME : Extend the simulation XXX number of clocks after 
     // the last sequence to allow for the last sequence item to flow 
     // through the design.

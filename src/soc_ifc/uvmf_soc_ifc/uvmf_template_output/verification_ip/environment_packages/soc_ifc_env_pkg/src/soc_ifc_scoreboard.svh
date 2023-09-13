@@ -165,6 +165,7 @@ class soc_ifc_scoreboard #(
   uvm_event reset_handled;
   reset_flag hard_reset_flag;
   reset_flag soft_reset_flag;
+  reset_flag noncore_reset_flag;
 
   extern function void handle_reset(string kind = "HARD");
   extern function void disable_wait_for_scoreboard_empty();
@@ -196,6 +197,7 @@ class soc_ifc_scoreboard #(
     reset_handled = new("reset_handled");
     hard_reset_flag = new("hard_reset_flag"); // Used as trigger data for reset events. In UVM 1.2, data changes from a uvm_object to a string
     soft_reset_flag = new("soft_reset_flag"); // Used as trigger data for reset events. In UVM 1.2, data changes from a uvm_object to a string
+    noncore_reset_flag = new("noncore_reset_flag"); // Used as trigger data for reset events. In UVM 1.2, data changes from a uvm_object to a string
   // pragma uvmf custom build_phase end
   endfunction
 
@@ -570,30 +572,39 @@ endclass
   // Used to facilitate reset handling for different kinds of reset
   // that may occur in soc_ifc environment.
   // "SOFT" reset (aka cptra_rst_b=0)
-  //   * Causes flush of all expected and actual transactions
+  //   * Causes flush of all expected and actual transactions after a delay
+  //     representing the eventual assertion of noncore reset
   //   * Initiates an event trigger to indicate reset was called
   // "HARD" reset (aka cptra_pwrgood=0)
   //   * Causes flush of all expected and actual transactions
   //   * Initiates an event trigger to indicate reset was called
+  // This function is called in the soc_ifc_environment prior to handle_reset
+  // in the soc_ifc_predictor.
   function void soc_ifc_scoreboard::handle_reset(string kind = "HARD");
       reset_flag kind_handled;
-      kind_handled = kind == "HARD" ? hard_reset_flag :
-                     kind == "SOFT" ? soft_reset_flag :
-                                      null;
+      kind_handled = kind == "HARD"    ? hard_reset_flag :
+                     kind == "SOFT"    ? soft_reset_flag :
+                     kind == "NONCORE" ? noncore_reset_flag :
+                                         null;
 
-      // Flush transactions
-      soc_ifc_expected_hash.delete();
-      cptra_expected_hash  .delete();
-      ahb_expected_q.delete();
-      apb_expected_q.delete();
+      if (kind inside {"HARD","NONCORE"}) begin
+          `uvm_info("SCBD_HANDLE_RESET", {"On call to handle_reset of kind [", kind , "] executing scoreboard reset"}, UVM_HIGH)
 
-      // Clear toggle counter
-      soc_ifc_status_monitor_struct      = '{default:0};
-      soc_ifc_status_monitor_struct_prev = '{default:0};
-      soc_ifc_status_monitor_toggle_count = '{default:2'b00};
+          // Flush transactions
+          soc_ifc_expected_hash.delete();
+          cptra_expected_hash  .delete();
+          ahb_expected_q.delete();
+          apb_expected_q.delete();
 
-      // Event trigger
-      reset_handled.trigger(kind_handled);
+          // Clear toggle counter
+          soc_ifc_status_monitor_struct      = '{default:0};
+          soc_ifc_status_monitor_struct_prev = '{default:0};
+          soc_ifc_status_monitor_toggle_count = '{default:2'b00};
+
+          // Event trigger
+          reset_handled.trigger(kind_handled);
+          `uvm_info("SCBD_HANDLE_RESET", "On call to handle_reset, triggered the event indicating an expected status transaction for internal resets", UVM_HIGH)
+      end
   endfunction
 
   // FUNCTION: disable_wait_for_scoreboard_empty

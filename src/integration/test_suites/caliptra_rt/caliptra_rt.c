@@ -72,6 +72,20 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     .sha512_acc_error = 0,
     .sha512_acc_notif = 0,
 };
+#define CLEAR_INTR_FLAG_SAFELY(flag, mask) \
+    csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK); \
+    flag &= mask; \
+    csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
+
+#ifndef MY_RANDOM_SEED
+#define MY_RANDOM_SEED 17
+#endif // MY_RANDOM_SEED
+
+
+enum gen_in_value {
+    WDT_CASCADE     = 0x0000abab,
+    WDT_INDEPENDENT = 0x0000efef
+};
 
 /* --------------- Function Definitions --------------- */
 void nmi_handler() {
@@ -111,13 +125,14 @@ void caliptra_rt() {
     uint32_t reg_addr;
     uint32_t read_data;
     uint32_t loop_iter;
+    uint32_t loop_iter2;
     uint32_t temp; // multi-purpose variable
 
     //WDT vars
     int i;
     int wdt_rand_t1_val;
     int wdt_rand_t2_val;
-    int mode;
+    int mode = 0;
 
     VPRINTF(MEDIUM, "----------------------------------\n");
     VPRINTF(LOW,    "- Caliptra Validation RT!!\n"        );
@@ -126,25 +141,52 @@ void caliptra_rt() {
     //set NMI vector
     lsu_write_32((uintptr_t) (CLP_SOC_IFC_REG_INTERNAL_NMI_VECTOR), (uint32_t) (nmi_handler));
 
+    // Initialize rand num generator
+    VPRINTF(LOW,"\nUsing random seed = %d\n\n", MY_RANDOM_SEED);
+    srand((uint32_t) MY_RANDOM_SEED);
+
     // Runtime flow -- set ready for RT
     soc_ifc_set_flow_status_field(SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_RUNTIME_MASK);
 
+#ifdef WDT_TEST
     VPRINTF(LOW, "Enabling WDT intr\n");
     lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R, SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_WDT_TIMER1_TIMEOUT_EN_MASK | SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_WDT_TIMER2_TIMEOUT_EN_MASK);
     lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R, SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK);
     
+    //Generate constrained random WDT timer periods
     wdt_rand_t1_val = rand() % 0xfff;
     wdt_rand_t2_val = rand() % 0xfff;
-    mode = rand() % 2; //0 - independent mode, 1 - cascade mode
-    if (mode){
-        VPRINTF(LOW, "Restarting WDT in cascade mode (only t1 timeout)\n");
-        //TODO also add t2 timeout (NMI event)
+    
+    while (!(lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R) & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK));
+    if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0) == WDT_CASCADE) { //rand() % 2; //0 - independent mode, 1 - cascade mode
+        VPRINTF(LOW, "Restarting WDT in cascade mode\n");
+        //Enable timer1 to start cascade mode
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_EN, SOC_IFC_REG_CPTRA_WDT_TIMER1_EN_TIMER1_EN_MASK);
+        //Set timer1 period to a small random value, so core can see timer1 timing out
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_0, wdt_rand_t1_val);
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_1, 0x00000000);
+        //Restart timer1
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL, SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL_TIMER1_RESTART_MASK);
+
+        while (!(lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R) & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK));
+        //Clear timer1 intr
+        lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK);
+
+        //Program timer1 and 2 periods to <= 0x100 to test NMI generation
+        wdt_rand_t1_val = rand() % 0x100;
+        wdt_rand_t2_val = rand() % 0x100;
+        //WDT cascade mode with t2 timeout
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_EN, !SOC_IFC_REG_CPTRA_WDT_TIMER2_EN_TIMER2_EN_MASK);
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_0, wdt_rand_t1_val);
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_1, 0x00000000);
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_0, wdt_rand_t2_val);
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_1, 0x00000000);
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL, SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL_TIMER1_RESTART_MASK);
+        // lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL, SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL_TIMER2_RESTART_MASK);
+    
+        //Don't service interrupts so it can timeout and cause NMI
     }
-    else {
+    else if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0) == WDT_INDEPENDENT){
         VPRINTF(LOW, "Restarting WDT in independent mode\n");
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_EN, SOC_IFC_REG_CPTRA_WDT_TIMER1_EN_TIMER1_EN_MASK);
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_0, wdt_rand_t1_val);
@@ -158,15 +200,27 @@ void caliptra_rt() {
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL, SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL_TIMER2_RESTART_MASK);
 
         while (!(lsu_read_32(CLP_SOC_IFC_REG_CPTRA_WDT_STATUS) & SOC_IFC_REG_CPTRA_WDT_STATUS_T1_TIMEOUT_MASK));
-        //Reset timer period to avoid hangs in test
+        //Reset timer1 period to avoid hangs in test
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_0, 0xffffffff);
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_1, 0xffffffff);
 
+        while (!(lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R) & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK));
+        //Clear timer1 intr
+        lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK);
+        cptra_intr_rcv.soc_ifc_error |= SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK;
+
+        //Reset timer2 period to avoid hangs in test
         while (!(lsu_read_32(CLP_SOC_IFC_REG_CPTRA_WDT_STATUS) & SOC_IFC_REG_CPTRA_WDT_STATUS_T2_TIMEOUT_MASK));
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_0, 0xffffffff);
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_1, 0xffffffff);
 
+        while (!(lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R) & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_MASK));
+        //Clear timer2 intr
+        lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_MASK);
+        cptra_intr_rcv.soc_ifc_error |= SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_MASK;
+
     }
+#endif
     // Initialization
     init_interrupts();
     lsu_write_32(CLP_SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_INTR_EN_R, 0); // FIXME tmp workaround to UVM issue with predicting SHA accelerator interrupts
@@ -177,34 +231,38 @@ void caliptra_rt() {
         if (cptra_intr_rcv.soc_ifc_error   ) {
             VPRINTF(ERROR, "Intr received: soc_ifc_error\n");
             if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK) {
-                cptra_intr_rcv.soc_ifc_error &= ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK;
+                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK)
             }
             if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INV_DEV_STS_MASK) {
-                cptra_intr_rcv.soc_ifc_error &= ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INV_DEV_STS_MASK;
+                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INV_DEV_STS_MASK)
             }
             if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK) {
                 enum mbox_fsm_e state;
-                cptra_intr_rcv.soc_ifc_error &= ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK;
+                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK)
                 // If we entered the error state, we must use force-unlock to reset the mailbox state
                 state = (lsu_read_32(CLP_MBOX_CSR_MBOX_STATUS) & MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_MASK) >> MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_LOW;
                 if (state == MBOX_ERROR) {
+                    // clr command interrupt to avoid attempted re-processing after force-unlock
+                    if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK) {
+                        CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_notif, ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK)
+                    }
                     lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
                 }
             }
             if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_BAD_FUSE_STS_MASK) {
-                cptra_intr_rcv.soc_ifc_error &= ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_BAD_FUSE_STS_MASK;
+                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_BAD_FUSE_STS_MASK)
             }
             if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_ICCM_BLOCKED_STS_MASK) {
-                cptra_intr_rcv.soc_ifc_error &= ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_ICCM_BLOCKED_STS_MASK;
+                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_ICCM_BLOCKED_STS_MASK)
             }
             if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK) {
-                cptra_intr_rcv.soc_ifc_error &= ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK;
+                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK)
             }
             if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK) {
-                cptra_intr_rcv.soc_ifc_error &= ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK;
+                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK)
             }
             if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_MASK) {
-                cptra_intr_rcv.soc_ifc_error &= ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_MASK;
+                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_MASK)
             }
             if (cptra_intr_rcv.soc_ifc_error & (~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK &
                                                 ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INV_DEV_STS_MASK &
@@ -227,7 +285,7 @@ void caliptra_rt() {
         if (cptra_intr_rcv.ecc_error       ) {
             VPRINTF(ERROR, "Intr received: ecc_error\n");
             if (cptra_intr_rcv.ecc_error & ECC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK) {
-                cptra_intr_rcv.ecc_error &= ~ECC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK;
+                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.ecc_error, ~ECC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK)
             }
             if (cptra_intr_rcv.ecc_error & ~ECC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK) {
                 VPRINTF(FATAL, "Intr received: unsupported ecc_error (0x%x)\n", cptra_intr_rcv.ecc_error);
@@ -272,13 +330,13 @@ void caliptra_rt() {
             uint8_t fsm_chk;
             VPRINTF(LOW, "Intr received: soc_ifc_notif\n");
             if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK) {
-                cptra_intr_rcv.soc_ifc_notif &= ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK;
+                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_notif, ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK)
                 fsm_chk = soc_ifc_chk_execute_uc();
                 if (fsm_chk != 0) {
                     if (fsm_chk == 0xF) {
                         if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK) {
-                            cptra_intr_rcv.soc_ifc_error &= ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK;
-                            VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit after servicing\n");
+                            CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK)
+                            VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (cmd fail) after servicing\n");
                         } else {
                             VPRINTF(ERROR, "After finding an error and resetting the mailbox with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
                             SEND_STDOUT_CTRL(0x1);
@@ -296,7 +354,7 @@ void caliptra_rt() {
                     }
                     VPRINTF(MEDIUM, "Triggering FW update reset\n");
                     //Trigger firmware update reset, new fw will get copied over from ROM
-                    soc_ifc_set_fw_update_reset();
+                    soc_ifc_set_fw_update_reset((uint8_t) (rand() & 0xFF));
                 }
                 else if (op.cmd & MBOX_CMD_FIELD_RESP_MASK) {
                     VPRINTF(MEDIUM, "Received mailbox command (expecting RESP) from SOC! Got 0x%x\n", op.cmd);
@@ -324,16 +382,20 @@ void caliptra_rt() {
                         mode = (op.cmd == MBOX_CMD_SHA384_REQ) ? SHA_MBOX_384 : SHA_MBOX_512;
                         //First dword contains the start address
                         temp = soc_ifc_mbox_read_dataout_single();
-                        //dlen in bytes
-                        read_data = lsu_read_32(CLP_MBOX_CSR_MBOX_DLEN);
-                        read_data = read_data - temp;
+                        //ignore the bytes used for start address
+                        op.dlen = op.dlen - 4;
+                        //Copy the KAT to the start address using direct access
+                        for (loop_iter = 0; loop_iter<op.dlen; loop_iter+=4) {
+                            read_data = soc_ifc_mbox_read_dataout_single();
+                            soc_ifc_mbox_dir_write_single(temp+loop_iter, read_data);
+                        }
                         //Acquire SHA Accel lock
                         soc_ifc_sha_accel_acquire_lock();
                         soc_ifc_sha_accel_wr_mode(mode);
                         //write start addr in bytes
                         lsu_write_32((uintptr_t) (CLP_SHA512_ACC_CSR_START_ADDRESS), temp);
                         //write dlen in bytes
-                        lsu_write_32((uintptr_t) (CLP_SHA512_ACC_CSR_DLEN), read_data);
+                        lsu_write_32((uintptr_t) (CLP_SHA512_ACC_CSR_DLEN), op.dlen);
                         soc_ifc_sha_accel_execute();
                         soc_ifc_sha_accel_poll_status();
                         lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DLEN), (mode == SHA_MBOX_384) ? 48 : 64);
@@ -348,18 +410,16 @@ void caliptra_rt() {
                     }
                     else {
                         // Read provided data
-                        for (loop_iter = 0; loop_iter<op.dlen; loop_iter+=4) {
+                        read_data = soc_ifc_mbox_read_dataout_single();
+                        temp      = soc_ifc_mbox_read_dataout_single(); // Capture resp dlen
+                        for (loop_iter = 8; loop_iter<op.dlen; loop_iter+=4) {
                             read_data = soc_ifc_mbox_read_dataout_single();
-                            if (loop_iter == 4) {
-                                temp = read_data; // Capture resp dlen
-                            }
                         }
 
                         // Set resp dlen
                         lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DLEN), temp);
 
                         // Write response data
-                        srand((uint32_t) (op.cmd ^ read_data)); // Initialize rand num generator
                         for (loop_iter = 0; loop_iter<temp; loop_iter+=4) {
                             lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DATAIN), rand());
                         }
@@ -370,8 +430,8 @@ void caliptra_rt() {
                     if (fsm_chk != 0) {
                         if (fsm_chk == 0xF) {
                             if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK) {
-                                cptra_intr_rcv.soc_ifc_error &= ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK;
-                                VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit after servicing\n");
+                                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK)
+                                VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (cmd fail) after servicing\n");
                             } else {
                                 VPRINTF(ERROR, "After finding an error and resetting the mailbox with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
                                 SEND_STDOUT_CTRL(0x1);
@@ -380,7 +440,13 @@ void caliptra_rt() {
                         }
                         continue;
                     }
-                    soc_ifc_set_mbox_status_field(DATA_READY);
+                    if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK) {
+                        CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK)
+                        VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (ECC unc) after servicing\n");
+                        soc_ifc_set_mbox_status_field(CMD_FAILURE);
+                    } else {
+                        soc_ifc_set_mbox_status_field(DATA_READY);
+                    }
                 }
                 else {
                     VPRINTF(MEDIUM, "Received mailbox command (no expected RESP) from SOC! Got 0x%x\n", op.cmd);
@@ -389,7 +455,7 @@ void caliptra_rt() {
                     if (op.cmd == MBOX_CMD_DIR_RD) {
                         // Read provided data through direct path
                         for (loop_iter = 0; loop_iter<op.dlen; loop_iter+=4) {
-                            read_data = soc_ifc_mbox_dir_read_dataout_single(loop_iter);
+                            read_data = soc_ifc_mbox_dir_read_single(loop_iter);
                         }
                     }
                     //For overrun command, read an extra dword
@@ -406,8 +472,8 @@ void caliptra_rt() {
                     if (fsm_chk != 0) {
                         if (fsm_chk == 0xF) {
                             if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK) {
-                                cptra_intr_rcv.soc_ifc_error &= ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK;
-                                VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit after servicing\n");
+                                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK)
+                                VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (cmd fail) after servicing\n");
                             } else {
                                 VPRINTF(ERROR, "After finding an error and resetting the mailbox with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
                                 SEND_STDOUT_CTRL(0x1);
@@ -417,23 +483,29 @@ void caliptra_rt() {
                         continue;
                     }
                     //Mark the command complete
-                    soc_ifc_set_mbox_status_field(CMD_COMPLETE);
+                    if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK) {
+                        CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK)
+                        VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (ECC unc) after servicing\n");
+                        soc_ifc_set_mbox_status_field(CMD_FAILURE);
+                    } else {
+                        soc_ifc_set_mbox_status_field(CMD_COMPLETE);
+                    }
                 }
             }
             if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_MBOX_ECC_COR_STS_MASK) {
-                cptra_intr_rcv.soc_ifc_notif &= ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_MBOX_ECC_COR_STS_MASK;
+                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_notif, ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_MBOX_ECC_COR_STS_MASK)
             }
             if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_DEBUG_LOCKED_STS_MASK) {
-                cptra_intr_rcv.soc_ifc_notif &= ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_DEBUG_LOCKED_STS_MASK;
+                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_notif, ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_DEBUG_LOCKED_STS_MASK)
             }
             if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SCAN_MODE_STS_MASK) {
-                cptra_intr_rcv.soc_ifc_notif &= ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SCAN_MODE_STS_MASK;
+                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_notif, ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SCAN_MODE_STS_MASK)
             }
             if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SOC_REQ_LOCK_STS_MASK) {
-                cptra_intr_rcv.soc_ifc_notif &= ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SOC_REQ_LOCK_STS_MASK;
+                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_notif, ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SOC_REQ_LOCK_STS_MASK)
             }
             if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK) {
-                cptra_intr_rcv.soc_ifc_notif &= ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK;
+                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_notif, ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK)
             }
             if (cptra_intr_rcv.soc_ifc_notif & (~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK &
                                                 ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_MBOX_ECC_COR_STS_MASK &
@@ -450,7 +522,7 @@ void caliptra_rt() {
         if (cptra_intr_rcv.doe_notif       ) {
             VPRINTF(LOW, "Intr received: doe_notif\n");
             if (cptra_intr_rcv.doe_notif & DOE_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
-                cptra_intr_rcv.doe_notif &= ~DOE_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
+                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.doe_notif, ~DOE_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK)
             }
             if (cptra_intr_rcv.doe_notif & (~DOE_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK)) {
                 VPRINTF(FATAL, "Intr received: unsupported doe_notif (0x%x)\n", cptra_intr_rcv.doe_notif);
@@ -462,7 +534,7 @@ void caliptra_rt() {
         if (cptra_intr_rcv.ecc_notif       ) {
             VPRINTF(LOW, "Intr received: ecc_notif\n");
             if (cptra_intr_rcv.ecc_notif & ECC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
-                cptra_intr_rcv.ecc_notif &= ~ECC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
+                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.ecc_notif, ~ECC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK)
             }
             if (cptra_intr_rcv.ecc_notif & (~ECC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK)) {
                 VPRINTF(FATAL, "Intr received: unsupported ecc_notif (0x%x)\n", cptra_intr_rcv.ecc_notif);
@@ -474,7 +546,7 @@ void caliptra_rt() {
         if (cptra_intr_rcv.hmac_notif      ) {
             VPRINTF(LOW, "Intr received: hmac_notif\n");
             if (cptra_intr_rcv.hmac_notif & HMAC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
-                cptra_intr_rcv.hmac_notif &= ~HMAC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
+                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.hmac_notif, ~HMAC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK)
             }
             if (cptra_intr_rcv.hmac_notif & (~HMAC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK)) {
                 VPRINTF(FATAL, "Intr received: unsupported hmac_notif (0x%x)\n", cptra_intr_rcv.hmac_notif);
@@ -490,7 +562,7 @@ void caliptra_rt() {
         if (cptra_intr_rcv.sha512_notif    ) {
             VPRINTF(LOW, "Intr received: sha512_notif\n");
             if (cptra_intr_rcv.sha512_notif & SHA512_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
-                cptra_intr_rcv.sha512_notif &= ~SHA512_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
+                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.sha512_notif, ~SHA512_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK)
             }
             if (cptra_intr_rcv.sha512_notif & (~SHA512_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK)) {
                 VPRINTF(FATAL, "Intr received: unsupported sha512_notif (0x%x)\n", cptra_intr_rcv.sha512_notif);
@@ -502,7 +574,7 @@ void caliptra_rt() {
         if (cptra_intr_rcv.sha256_notif    ) {
             VPRINTF(LOW, "Intr received: sha256_notif\n");
             if (cptra_intr_rcv.sha256_notif & SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
-                cptra_intr_rcv.sha256_notif &= ~SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
+                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.sha256_notif, ~SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK)
             }
             if (cptra_intr_rcv.sha256_notif & (~SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK)) {
                 VPRINTF(FATAL, "Intr received: unsupported sha256_notif (0x%x)\n", cptra_intr_rcv.sha256_notif);
@@ -514,7 +586,7 @@ void caliptra_rt() {
         if (cptra_intr_rcv.sha512_acc_notif) {
             VPRINTF(LOW, "Intr received: sha512_acc_notif");
             if (cptra_intr_rcv.sha512_acc_notif & SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
-                cptra_intr_rcv.sha512_acc_notif &= ~SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
+                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.sha512_acc_notif, ~SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK)
             }
             if (cptra_intr_rcv.sha512_acc_notif & (~SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK)) {
                 VPRINTF(FATAL, "Intr received: unsupported sha512_acc_notif (0x%x)\n", cptra_intr_rcv.sha512_acc_notif);

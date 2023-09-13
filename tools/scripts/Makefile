@@ -14,7 +14,8 @@
 #
 
 PLAYBOOK_RANDOM_SEED ?= $(shell date +%s)
-TEST_CFLAGS = -g -O3 -DMY_RANDOM_SEED=$(PLAYBOOK_RANDOM_SEED)
+BUILD_CFLAGS ?= 
+TEST_CFLAGS = -g -O3 -DMY_RANDOM_SEED=$(PLAYBOOK_RANDOM_SEED) $(BUILD_CFLAGS)
 
 ABI = -mabi=ilp32 -march=rv32imc
 
@@ -186,6 +187,9 @@ ifdef FORCE_CPU_RESET
     VERILATOR_TB_DEFS += +define+CALIPTRA_FORCE_CPU_RESET
 endif
 
+# Run time arguments from command line
+VERILATOR_RUN_ARGS ?= ""
+
 # Add testbench lib include paths
 CFLAGS += $(addprefix -I$(CALIPTRA_ROOT)/src/integration/test_suites/libs/,$(dir $(VERILATOR_TB_LIBS)))
 
@@ -197,6 +201,9 @@ clean:
 	verilator* *.exe obj* *.o ucli.key vc_hdrs.h csrc *.csv work \
 	dataset.asdb  library.cfg vsimsa.cfg  riviera-build wave.asdb sim.vcd \
 	*.h
+
+clean_fw:
+	rm -rf *.o *.h
 
 ############ Model Builds ###############################
 
@@ -224,7 +231,7 @@ vcs-build: $(TBFILES) $(INCLUDES_DIR)/defines.h
 ############ TEST Simulation ###############################
 
 verilator: program.hex verilator-build
-	./obj_dir/Vcaliptra_top_tb
+	./obj_dir/Vcaliptra_top_tb $(VERILATOR_RUN_ARGS)
 
 vcs: program.hex vcs-build
 	./simv.caliptra_top_tb
@@ -303,5 +310,5 @@ help:
 	@echo Make sure the environment variable RV_ROOT is set.
 	@echo Possible targets: verilator vcs irun vlog riviera help clean all verilator-build irun-build vcs-build riviera-build program.hex
 
-.PHONY: help clean verilator vcs irun vlog riviera
+.PHONY: help clean clean_fw verilator vcs irun vlog riviera
 

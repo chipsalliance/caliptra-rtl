@@ -31,6 +31,10 @@ import "DPI-C" function string getenv(input string env_name);
 `define REG_HIER_BOOT_FSM_PS dut.boot_fsm_ps
 `define REG_HIER_PFX dut.i_soc_ifc_reg.field_storage
 
+`define FORLOOP_COMB(x) always_comb for (int j = 0; j < x; j++) 
+`define STR_RMPFX(astr, bstr) astr.substr(bstr.len(), astr.len() - 1).atoi()
+
+
 module soc_ifc_tb
   import soc_ifc_pkg::*;
   import soc_ifc_tb_pkg::*;
@@ -169,10 +173,13 @@ module soc_ifc_tb
 
   bit            reg_sva_off = 1'b1;  // Enable only during register assertion checks
 
+  logic [APB_DATA_WIDTH-1:0]    prdata_o_latched;
 
 
-  
-  
+  always @(negedge clk_tb) begin
+    prdata_o_latched <= prdata_o_tb;
+  end
+
   always_comb begin
     mbox_sram_cs = mbox_sram_req.cs;
     mbox_sram_we = mbox_sram_req.we;
@@ -432,10 +439,13 @@ module soc_ifc_tb
     begin
       $display("*** Toggle reset.");
 
-      reset_generic_input_wires(-1, -1);
+      set_generic_input_wires(-1, -1);
 
       cptra_pwrgood_tb = '0;
       cptra_rst_b_tb = 0;
+
+      set_initval("CPTRA_GENERIC_INPUT_WIRES0", generic_input_wires0);  // The init val will take effect 
+      set_initval("CPTRA_GENERIC_INPUT_WIRES1", generic_input_wires1);  // after reset deassertion 
 
       repeat (5) @(posedge clk_tb);
 
@@ -446,6 +456,7 @@ module soc_ifc_tb
       repeat (5) @(posedge clk_tb);
       
       cptra_rst_b_tb = 1;
+      repeat (5) @(posedge clk_tb);
       $display("");
     end
   endtask // reset_dut
@@ -460,7 +471,7 @@ module soc_ifc_tb
     begin
       $display("*** Perform warm reset. ***");
 
-      reset_generic_input_wires(-1, -1);
+      set_generic_input_wires(-1, -1);
       reset_flow_status();
 
       cptra_rst_b_tb = 0;
@@ -468,6 +479,7 @@ module soc_ifc_tb
       repeat (5) @(posedge clk_tb);
 
       cptra_rst_b_tb = 1;
+      repeat (5) @(posedge clk_tb);
       $display("");
     end
   endtask // reset_dut
@@ -831,25 +843,21 @@ module soc_ifc_tb
 
 
   //----------------------------------------------------------------
-  // reset_generic_input_wires()
+  // set_generic_input_wires()
   //
   // sets the generic_input_wires to a predetermined or random value
   //----------------------------------------------------------------
-  task reset_generic_input_wires(input int v0, int v1);
+  task set_generic_input_wires(input int v0, int v1);
 
     begin
       generic_input_wires0 = (v0 < 0) ? $urandom() : v0;
       generic_input_wires1 = (v1 < 0) ? $urandom() : v1;
       repeat (2) @(posedge clk_tb);
-      set_initval("CPTRA_GENERIC_INPUT_WIRES0", generic_input_wires0_q); 
-      set_initval("CPTRA_GENERIC_INPUT_WIRES1", generic_input_wires1_q); 
       update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires0_q, 1'b0); 
       update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires1_q, 1'b1); 
-
-      @(posedge clk_tb);
     end
 
-  endtask
+  endtask // set_generic_input_wires
 
 
   //----------------------------------------------------------------
@@ -1262,12 +1270,14 @@ module soc_ifc_tb
         if (modifier == GET_AHB) begin
           read_single_word_ahb(addr);
           valid_hrdata =  addr[2] ?  hrdata_o_tb[`AHB64_HI] :hrdata_o_tb[`AHB64_LO]; 
-          $display(" Read over AHB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, valid_hrdata); 
+          $display(" Read over AHB: addr =  %-40s (0x%08x), data = 0x%08x on cycle %08d", rname, addr, valid_hrdata, cycle_ctr); 
           rdtrans.update(addr, valid_hrdata, tid); 
         end else if (modifier == GET_APB) begin
           read_single_word_apb(addr);
-          $display(" Read over APB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, prdata_o_tb); 
-          rdtrans.update(addr, prdata_o_tb, tid); 
+          // $display(" Read over APB: addr =  %-40s (0x%08x), data = 0x%08x at time %12t (cycle %08d)", rname, addr, prdata_o_latched, $realtime, cycle_ctr); // used to be   prdata_o_tb
+          $display(" Read over APB: addr =  %-40s (0x%08x), data = 0x%08x on cycle %08d", rname, addr, prdata_o_tb, cycle_ctr); // used to be   prdata_o_tb
+          // rdtrans.update(addr, prdata_o_latched, tid);  // used to be prdata_o_tb
+          rdtrans.update(addr, prdata_o_tb, tid);  
         end else 
           $error("TB ERROR. Unsupported access modifier %s", modifier.name()); 
 

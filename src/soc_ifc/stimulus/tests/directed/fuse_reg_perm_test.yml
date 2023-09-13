@@ -17,4 +17,5 @@ plusargs:
   - +SOC_IFC_TEST='fuse_reg_perm_test'
 
 testname: fuse_reg_perm_test 
-seed: ${PLAYBOOK_RANDOM_SEED}
+# seed: ${PLAYBOOK_RANDOM_SEED}
+seed: 1692834441
