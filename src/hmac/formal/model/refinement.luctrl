@@ -1,9 +1,0 @@
-{
-    "version": 13,
-    "modules": [
-        {
-            "name": "HMAC",
-            "path": "HMAC.luref"
-        }
-    ]
-}
