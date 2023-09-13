@@ -96,7 +96,6 @@
       sb.del_all();
 
       sb.record_reset_values(0, COLD_RESET);
-      reset_generic_input_wires(0, 0); 
 
       read_regs(GET_APB, soc_regnames, 0, 3);
       _read_special_register(GET_APB, "INTERNAL_RV_MTIME_L", 0); // *** special register ***

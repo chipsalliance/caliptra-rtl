@@ -187,6 +187,14 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_mbox_dlen_underflow_medium_sequence soc_ifc_env_mbox_dlen_underflow_medium_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_dlen_underflow_large_sequence.svh"
   typedef soc_ifc_env_mbox_dlen_underflow_large_sequence soc_ifc_env_mbox_dlen_underflow_large_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_sram_double_bit_flip_sequence.svh"
+  typedef soc_ifc_env_mbox_sram_double_bit_flip_sequence soc_ifc_env_mbox_sram_double_bit_flip_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_sram_double_bit_flip_small_sequence.svh"
+  typedef soc_ifc_env_mbox_sram_double_bit_flip_small_sequence soc_ifc_env_mbox_sram_double_bit_flip_small_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_sram_double_bit_flip_medium_sequence.svh"
+  typedef soc_ifc_env_mbox_sram_double_bit_flip_medium_sequence soc_ifc_env_mbox_sram_double_bit_flip_medium_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_sram_double_bit_flip_large_sequence.svh"
+  typedef soc_ifc_env_mbox_sram_double_bit_flip_large_sequence soc_ifc_env_mbox_sram_double_bit_flip_large_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_multi_agent_sequence.svh"
   typedef soc_ifc_env_mbox_rand_multi_agent_sequence soc_ifc_env_mbox_rand_multi_agent_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rst_sequence.svh"
@@ -207,6 +215,12 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_soc_mbox_handler_sequence soc_ifc_env_soc_mbox_handler_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_soc_mbox_reg_axs_invalid_handler_sequence.svh"
   typedef soc_ifc_env_soc_mbox_reg_axs_invalid_handler_sequence soc_ifc_env_soc_mbox_reg_axs_invalid_handler_sequence_t;
+  `include "sequences/wdt/cptra/soc_ifc_env_wdt_sequence_base.svh"
+  typedef soc_ifc_env_wdt_sequence_base soc_ifc_env_wdt_sequence_base_t;
+  `include "sequences/wdt/cptra/soc_ifc_env_cptra_wdt_independent_sequence.svh"
+  typedef soc_ifc_env_cptra_wdt_independent_sequence soc_ifc_env_cptra_wdt_independent_sequence_t;
+  `include "sequences/wdt/cptra/soc_ifc_env_cptra_wdt_cascade_sequence.svh"
+  typedef soc_ifc_env_cptra_wdt_cascade_sequence soc_ifc_env_cptra_wdt_cascade_sequence_t;
 
   ///////////////////// Sequences usable from soc_ifc bench only /////////////////////
   // These sequences include stimulus for the internal/caliptra-side of the

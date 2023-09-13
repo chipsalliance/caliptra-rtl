@@ -84,19 +84,21 @@
                                     dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_internal_intr_r.notif_scan_mode_sts.value,
                                     dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_internal_intr_r.notif_soc_req_lock_sts.value,
                                     dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_internal_intr_r.notif_gen_in_toggle_sts.value};            
-  assign error_intr_trig_r =       {dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value,
-                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_intr_trig_r.error_inv_dev_trig.value,
-                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_intr_trig_r.error_cmd_fail_trig.value,
-                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_intr_trig_r.error_bad_fuse_trig.value,
-                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_intr_trig_r.error_iccm_blocked_trig.value,
-                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.value,
+  assign error_intr_trig_r =       {dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_intr_trig_r.error_wdt_timer2_timeout_trig.value,
                                     dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_intr_trig_r.error_wdt_timer1_timeout_trig.value,
-                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_intr_trig_r.error_wdt_timer2_timeout_trig.value};
-    assign notif_intr_trig_r =     {dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_avail_trig.value,
-                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig.value,
-                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_intr_trig_r.notif_debug_locked_trig.value,
+                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.value,
+                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_intr_trig_r.error_iccm_blocked_trig.value,
+                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_intr_trig_r.error_bad_fuse_trig.value,
+                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_intr_trig_r.error_cmd_fail_trig.value,
+                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_intr_trig_r.error_inv_dev_trig.value,
+                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value};
+    assign notif_intr_trig_r =     {dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_intr_trig_r.notif_gen_in_toggle_trig.value,
                                     dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_intr_trig_r.notif_soc_req_lock_trig.value,
-                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_intr_trig_r.notif_gen_in_toggle_trig.value};
+                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_intr_trig_r.notif_scan_mode_trig.value,
+                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_intr_trig_r.notif_debug_locked_trig.value,
+                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig.value,
+                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_avail_trig.value};
+
   assign error_internal_intr_count_r =            dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_internal_intr_count_r.cnt.value;
   assign error_inv_dev_intr_count_r =             dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_inv_dev_intr_count_r.cnt.value;
   assign error_cmd_fail_intr_count_r =            dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_cmd_fail_intr_count_r.cnt.value;
@@ -123,23 +125,21 @@
     word_addr_t addr; 
     int tid = 0; // TID is to be updated ONLY if multiple writes to an address 
     strq_t intrblk_regnames;
-    string rname;
-    // int iq [$]; 
+    string rname, associated_rname;
 
-    // transaction_t entry;
-    // transq_t entries; 
     WordTransaction wrtrans, rdtrans;
-    strq_t ro_regnames, wo_regnames, special_regnames;
+    strq_t ro_regnames, wo_regnames, wo_associated_regnames;
 
     logic [31:0] nonzero_cyc = '0; 
     dword_t ahb_wrdata; 
 
-    int changeup = 0;
-    int changedn = 0;
+    int changeup; 
+    int changedn;
     int changeup_cyc = 0;
     int changedn_cyc = 0;
-    dword_t regval_q = 32'hbaad_face; 
-    dword_t regval = 32'hbaad_face; 
+    dword_t nonzero_regval;
+    dword_t final_regval; 
+    dword_t associated_regval; 
 
 
     begin
@@ -160,11 +160,8 @@
       update_exp_regval("INTR_BRF_NOTIF_GLOBAL_INTR_R", error_global_intr_r, SET_DIRECT); 
 
       // Write-one to clear regs need special handling
-      wo_regnames = { "INTR_BRF_ERROR_INTERNAL_INTR_R",  
-                      "INTR_BRF_NOTIF_INTERNAL_INTR_R",
-                      "INTR_BRF_ERROR_INTR_TRIG_R",     
-                      "INTR_BRF_NOTIF_INTR_TRIG_R" 
-                    };
+      wo_regnames = { "INTR_BRF_ERROR_INTR_TRIG_R", "INTR_BRF_NOTIF_INTR_TRIG_R" };
+      wo_associated_regnames  = { "INTR_BRF_ERROR_INTERNAL_INTR_R",  "INTR_BRF_NOTIF_INTERNAL_INTR_R" };
 
       repeat (5) @(posedge clk_tb);
 
@@ -243,12 +240,13 @@
       $display ("------------------------------------------------------------------------------");
       tphase = "2a";
 
+      // For WO_ASSOCIATED_REGNAMES. 
       // First expect to clear all write-to-clear data (check it too) 
       // Then randomly set bits and ensure only those bits are cleared.
-      foreach (wo_regnames[i]) begin
-        rname = wo_regnames[i];
+      foreach (wo_associated_regnames[i]) begin
+        rname = wo_associated_regnames[i];
         addr = socregs.get_addr(rname);
-        $display ("\n-- Handling WO register 0x%08x (%s) --\n", addr, rname);
+        $display ("\n-- Handling WO register 0x%08x (%s) --", addr, rname);
 
         $display ("\n  -- First clear register and check --"); 
         wrtrans.update_byname(rname, 32'hffff_ffff, tid); 
@@ -263,13 +261,40 @@
           error_ctr += 1; 
           continue; 
         end
+      end
 
-        $display ("\n  -- Now randomly set bits after reg is all clear --");
+      // Repeat. Longer squence for WO_REGNAMES.
+      // First expect to clear all write-to-clear data (check it too) 
+      // Then randomly set bits and ensure only those bits are cleared.
+      foreach (wo_regnames[i]) begin
+        rname = wo_regnames[i];
+        addr = socregs.get_addr(rname);
+        $display ("\n-- Handling WO register 0x%08x (%s) --", addr, rname);
+
+        $display ("\n  -- First clear register and check --"); 
+        wrtrans.update_byname(rname, 32'hffff_ffff, tid); 
+        write_reg_trans(SET_AHB, wrtrans);
+        repeat (5) @(posedge clk_tb);
+
+        rdtrans.update_byname(rname, 0, tid); 
+        read_reg_trans(GET_AHB, rdtrans); 
+        if (rdtrans.data != '0)  begin
+          $display("TB ERROR. Expected a write ones to clear register for addr 0x%08x (%s). Instead received 0x%08x", 
+            addr, rname, rdtrans.data); 
+          error_ctr += 1; 
+          continue; 
+        end
+        
+        // Now randomly set bits after reg is all clear 
         wrtrans.update_byname(rname, 0, tid); 
         wrtrans.randomize();
         ahb_wrdata = wrtrans.data & get_mask(rname);
+        // $display ("TB DEBUG. Now randomly set bits to write 0x%08x; w/masking expect to write 0x%08x",
+        //   wrtrans.data, ahb_wrdata); 
 
         $display ("\n  -- Finally check for non-zero value and then transition to 0 --"); 
+
+
         fork
           begin : writing_over_ahb
             write_reg_trans(SET_AHB, wrtrans);
@@ -277,51 +302,87 @@
           end
 
           begin : checking_for_transition 
-            repeat (10) begin              
-
-              if (changeup && changedn)
-                break;
-
-              regval =  (rname == "INTR_BRF_ERROR_INTERNAL_INTR_R") ?  error_internal_intr_r :
-                        (rname == "INTR_BRF_NOTIF_INTERNAL_INTR_R") ?  notif_internal_intr_r :
-                        (rname == "INTR_BRF_ERROR_INTR_TRIG_R") ?  error_intr_trig_r :
-                        (rname == "INTR_BRF_NOTIF_INTR_TRIG_R") ?  notif_intr_trig_r :  32'hbaad_face; 
-              $display("TB DEBUG. For register %s Checking past initated ahb_write_trans. Probed regval = 0x%08x", rname, regval);
-
-              if ((regval != '0) && (regval != ahb_wrdata)) begin
-                $display ("TB ERROR from addr 0x%08x (%s). Directly probed reg val = 0x%08x | expected 0x%08x or '0", addr, rname, regval, ahb_wrdata);
-                error_ctr += 1;
-              end
-
-              changeup = changeup | ((regval != regval_q)  &&  (regval_q == '0));  // Sticky transition up
-              changedn = changedn | ((regval == '0) &&  (regval_q != '0));  // Sticky transition down 
-
-              @(posedge clk_tb);
-              regval_q = regval;
-            end
+            monitor_pulsed_reg(rname, 10, nonzero_regval, final_regval, changeup, changedn);
           end
         join
 
-        regval =  (rname == "INTR_BRF_ERROR_INTERNAL_INTR_R") ?  error_internal_intr_r :
-                  (rname == "INTR_BRF_NOTIF_INTERNAL_INTR_R") ?  notif_internal_intr_r :
-                  (rname == "INTR_BRF_ERROR_INTR_TRIG_R") ?  error_intr_trig_r :
-                  (rname == "INTR_BRF_NOTIF_INTR_TRIG_R") ?  notif_intr_trig_r :  32'hbaad_face; 
-
         $display("Inspecting rname %s = addr 0x%08x", rname, addr);
-         // Either a transition from 0 or a transition back to 0 did not happen
-        if (!changeup) begin 
-          $display("TB ERROR did not see a transition to non-zero value for addr 0x%08x (%s)", addr, rname); 
-          error_ctr += 1; 
-        end else if (!changedn) begin 
-          $display("TB ERROR did not see a transition back to a zero value for addr 0x%08x (%s) and stayed at 0x%08x", addr, rname, regval); 
-          error_ctr += 1; 
-        end
+        $display ("TB DEBUG. All said and done; from addr 0x%08x (%s). Directly probed non-zero val = 0x%08x and final val = 0x%08x| expected non-zero = 0x%08x", 
+          addr, rname, nonzero_regval, final_regval, ahb_wrdata);
 
+        associated_rname = "INTR_BRF_ERROR_INTR_TRIG_R" ? "INTR_BRF_ERROR_INTERNAL_INTR_R" :
+                           "INTR_BRF_NOTIF_INTR_TRIG_R" ? "INTR_BRF_NOTIF_INTERNAL_INTR_R" : 
+                           "UNDEFINED";
+
+        associated_regval = probe_reg(associated_rname);
+        $display ("TB INFO. Checking associated address %s related to trigger %s; associaated value = 0x%08x, trigger value %08x", 
+          associated_rname, rname, associated_regval, nonzero_regval);
+
+
+        if (changeup && changedn && (nonzero_regval == ahb_wrdata) && (final_regval == '0)) 
+          $display ("TB INFO. Both up and down transitions noted correctly; all good with addr 0x%08x (%s)!", addr, rname);
+        else begin
+          error_ctr += 1; 
+          if (!changeup) 
+            $display("TB ERROR did not see a transition to non-zero value for addr 0x%08x (%s)", addr, rname); 
+          else if (!changedn) 
+            $display("TB ERROR did not see a transition back to a zero value for addr 0x%08x (%s) and stayed at 0x%08x", addr, rname, final_regval); 
+          if (nonzero_regval != ahb_wrdata)  
+            $display("TB ERROR Nonzero value noted for addr 0x%08x (%s) is 0x%08x | expected 0x%08x", addr, rname, nonzero_regval, ahb_wrdata); 
+        end
       end
 
     end
 
   endtask // soc_reg_intrblk_test;
+
+
+
+  task automatic monitor_pulsed_reg(input string regname, input int num_cycles, 
+                                    inout dword_t nonzero_val, inout dword_t final_val, inout up, inout dn);
+
+    dword_t probed_val = 32'hbead_face;
+    dword_t latched_val = 32'hbead_face;
+
+    begin
+
+      up = 0;
+      dn = 0;
+
+      repeat (num_cycles) begin                    
+        probed_val =  probe_reg(regname); 
+
+        if (up && dn) begin
+          $display("TB INFO. Saw both up and dn for register %s", regname);
+          break;
+        end
+
+        up = up | ((probed_val != latched_val)  &&  (latched_val == '0));  // Sticky transition up
+        dn = dn | ((probed_val == '0) &&  (latched_val != '0));  // Sticky transition down 
+      
+        if (probed_val != '0) 
+          nonzero_val = probed_val; 
+
+        @(posedge clk_tb);
+        latched_val = probed_val;
+      end
+
+      final_val = probe_reg(regname); 
+
+      // $display("TB DEBUG. For register %s Checking past initated ahb_write_trans. Probed regval = 0x%08x", rname, probed_val);
+    end
+
+  endtask // monitor_pulsed_reg
+
+
+  function automatic dword_t probe_reg(string regname);
+
+    return (regname == "INTR_BRF_ERROR_INTERNAL_INTR_R") ?  error_internal_intr_r :
+            (regname == "INTR_BRF_NOTIF_INTERNAL_INTR_R") ?  notif_internal_intr_r :
+            (regname == "INTR_BRF_ERROR_INTR_TRIG_R") ?  error_intr_trig_r :
+            (regname == "INTR_BRF_NOTIF_INTR_TRIG_R") ?  notif_intr_trig_r :  32'hdead_face; 
+
+  endfunction
 
 
 /* 

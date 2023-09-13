@@ -85,7 +85,17 @@ modport veer_dccm (
     input  dccm_bank_dout
 );
 
-modport top (
+modport veer_sram_src (
+    output clk,
+    // ICCM
+    output iccm_clken, iccm_wren_bank, iccm_addr_bank, iccm_bank_wr_data,
+    input  iccm_bank_dout,
+    // DCCM
+    output dccm_clken, dccm_wren_bank, dccm_addr_bank, dccm_wr_data_bank,
+    input  dccm_bank_dout
+);
+
+modport veer_sram_sink (
     input clk,
     // ICCM
     input  iccm_clken, iccm_wren_bank, iccm_addr_bank, iccm_bank_wr_data,

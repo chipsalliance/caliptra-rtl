@@ -284,14 +284,14 @@ module caliptra_top_sva
   UDS_fuse_wr_check: assert property (
                                   @(posedge `SVA_RDC_CLK)
                                   disable iff(`CPTRA_TOP_PATH.cptra_in_debug_scan_mode || clear_obf_secrets_int || cptra_in_debug_scan_mode_int)
-                                  (`SOC_IFC_TOP_PATH.soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value) |-> `CPTRA_TOP_PATH.obf_uds_seed_dbg == $past(`CPTRA_TOP_PATH.obf_uds_seed_dbg)
+                                  (`SOC_IFC_TOP_PATH.soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value) |-> `CPTRA_TOP_PATH.obf_uds_seed == $past(`CPTRA_TOP_PATH.obf_uds_seed)
   )
   else $display("SVA ERROR: Unexpected write to obf uds seed!");
 
   FE_fuse_wr_check: assert property (
                                   @(posedge `SVA_RDC_CLK)
                                   disable iff(`CPTRA_TOP_PATH.cptra_in_debug_scan_mode || clear_obf_secrets_int || cptra_in_debug_scan_mode_int)
-                                  (`SOC_IFC_TOP_PATH.soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value) |-> `CPTRA_TOP_PATH.obf_field_entropy_dbg == $past(`CPTRA_TOP_PATH.obf_field_entropy_dbg)
+                                  (`SOC_IFC_TOP_PATH.soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value) |-> `CPTRA_TOP_PATH.obf_field_entropy == $past(`CPTRA_TOP_PATH.obf_field_entropy)
   )
   else $display("SVA ERROR: Unexpected write to obf field entropy!");
 

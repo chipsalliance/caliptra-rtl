@@ -1092,7 +1092,7 @@ caliptra_top caliptra_top_dut (
     .uart_rx(uart_loopback),
 `endif
 
-    .el2_mem_export(el2_mem_export),
+    .el2_mem_export(el2_mem_export.veer_sram_src),
 
     .ready_for_fuses(ready_for_fuses),
     .ready_for_fw_push(ready_for_fw_push),
@@ -1193,7 +1193,7 @@ caliptra_top_tb_services #(
     .cptra_rst_b(cptra_rst_b),
 
     // Caliptra Memory Export Interface
-    .el2_mem_export (el2_mem_export),
+    .el2_mem_export (el2_mem_export.veer_sram_sink),
 
     //SRAM interface for mbox
     .mbox_sram_cs   (mbox_sram_cs   ),

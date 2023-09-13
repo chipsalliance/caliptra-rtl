@@ -15,9 +15,6 @@
 //======================================================================
 
 
-`define FORLOOP_COMB(x) always_comb for (int j = 0; j < x; j++) 
-`define STR_RMPFX(astr, bstr) astr.substr(bstr.len(), astr.len() - 1).atoi()
-
 
 // Declarations for internal signal probing  
 logic [31:0] fuse_uds_seed [0:11]; 
@@ -82,6 +79,8 @@ task fuse_reg_pauser_test;
 
     init_sim();
     reset_dut();
+
+    wait (ready_for_fuses); 
 
     //------------------------------------------------------------------------------------------- 
     print_banner("1a. Default pauser and unlocked. APB write to registers, check values");

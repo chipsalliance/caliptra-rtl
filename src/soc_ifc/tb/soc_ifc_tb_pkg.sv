@@ -379,6 +379,7 @@ package soc_ifc_tb_pkg;
     "INTR_BRF_NOTIF_INTR_EN_R" :                        (`SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_AVAIL_EN_MASK     |
                                                          `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_MBOX_ECC_COR_EN_MASK  |
                                                          `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_DEBUG_LOCKED_EN_MASK  |
+                                                         `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_SCAN_MODE_EN_MASK     |                     
                                                          `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_SOC_REQ_LOCK_EN_MASK  |
                                                          `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_GEN_IN_TOGGLE_EN_MASK ),
     "INTR_BRF_ERROR_GLOBAL_INTR_R" :                     `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R_AGG_STS_MASK,
@@ -571,8 +572,8 @@ package soc_ifc_tb_pkg;
     begin
 
       tmp_data = _exp_register_data_dict["INTR_BRF_NOTIF_INTERNAL_INTR_R"];
-      tmp_data = tmp_data & (32'hffff_ffff ^ `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_DEBUG_LOCKED_STS_MASK)    
-                          & (32'hffff_ffff ^ `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK); 
+      // tmp_data = tmp_data & (32'hffff_ffff ^ `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_DEBUG_LOCKED_STS_MASK)    
+      //                     & (32'hffff_ffff ^ `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK); 
       tmp_data = tmp_data | mask_shifted(debug_locked, `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_DEBUG_LOCKED_STS_MASK)
                           | mask_shifted(gen_input_wire_toggle, `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK);
       update_exp_regval("INTR_BRF_NOTIF_INTERNAL_INTR_R", tmp_data, SET_DIRECT);
@@ -596,7 +597,7 @@ package soc_ifc_tb_pkg;
       tmp_data = tmp_data | mask_shifted(fuse_ready_val, `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FUSES_MASK);
       tmp_data = tmp_data & (32'hffff_ffff ^ `SOC_IFC_REG_CPTRA_FLOW_STATUS_BOOT_FSM_PS_MASK);
       tmp_data = tmp_data | mask_shifted(boot_fsm_ps, `SOC_IFC_REG_CPTRA_FLOW_STATUS_BOOT_FSM_PS_MASK);
-      $display( "TB DEBUG. update_CPTRA_FLOW_STATUS(%x, %x) at time %t. new tmp_data = 0x%08x", fuse_ready_val, boot_fsm_ps, $realtime, tmp_data); 
+      // $display( "TB DEBUG. update_CPTRA_FLOW_STATUS(%x, %x) at time %t. new tmp_data = 0x%08x", fuse_ready_val, boot_fsm_ps, $realtime, tmp_data); 
 
       update_exp_regval("CPTRA_FLOW_STATUS", tmp_data, SET_DIRECT); 
 
