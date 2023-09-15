@@ -9,6 +9,9 @@
 
 module keccak_round
   import caliptra_prim_mubi_pkg::*;
+  import lc_ctrl_state_pkg::*;
+  import lc_ctrl_reg_pkg::*;
+  import lc_ctrl_pkg::*;
 #(
   parameter int Width = 1600, // b= {25, 50, 100, 200, 400, 800, 1600}
 

@@ -8,7 +8,9 @@
 
 `include "caliptra_prim_assert.sv"
 
-module aes_cipher_control import aes_pkg::*;
+module aes_cipher_control 
+  import aes_reg_pkg::*;
+  import aes_pkg::*;
 #(
   parameter bit         SecMasking  = 0,
   parameter sbox_impl_e SecSBoxImpl = SBoxImplDom

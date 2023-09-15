@@ -8,6 +8,9 @@
 
 module sha3pad
   import sha3_pkg::*;
+  import lc_ctrl_state_pkg::*;
+  import lc_ctrl_reg_pkg::*;
+  import lc_ctrl_pkg::*;
 #(
   parameter  bit EnMasking = 0,
   localparam int Share = (EnMasking) ? 2 : 1

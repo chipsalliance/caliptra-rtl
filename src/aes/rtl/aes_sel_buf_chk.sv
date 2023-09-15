@@ -23,6 +23,7 @@ module aes_sel_buf_chk #(
   output logic             err_o
 );
 
+  import aes_reg_pkg::*;
   import aes_pkg::*;
 
   // Tie off unused inputs.

@@ -6,7 +6,12 @@
 //
 
 
-module csrng_core import csrng_pkg::*; #(
+module csrng_core 
+ import csrng_pkg::*; 
+ import lc_ctrl_state_pkg::*;
+ import lc_ctrl_reg_pkg::*;
+ import lc_ctrl_pkg::*;
+#(
   parameter aes_pkg::sbox_impl_e SBoxImpl = aes_pkg::SBoxImplLut,
   parameter int NHwApps = 2,
   parameter cs_keymgr_div_t RndCnstCsKeymgrDivNonProduction = CsKeymgrDivWidth'(0),
