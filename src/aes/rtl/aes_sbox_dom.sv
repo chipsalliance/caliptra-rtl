@@ -1000,6 +1000,7 @@ module aes_sbox_dom
   output logic       [19:0] prd_o   // PRD for usage in Stages 2 - 4 of other S-Box instances
 );
 
+  import aes_reg_pkg::*;
   import aes_pkg::*;
   import aes_sbox_canright_pkg::*;
 

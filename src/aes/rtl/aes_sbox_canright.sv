@@ -13,6 +13,7 @@ module aes_sbox_canright (
   output logic [7:0]        data_o
 );
 
+  import aes_reg_pkg::*;
   import aes_pkg::*;
   import aes_sbox_canright_pkg::*;
 

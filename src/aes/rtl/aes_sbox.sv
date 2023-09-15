@@ -6,7 +6,9 @@
 
 `include "caliptra_prim_assert.sv"
 
-module aes_sbox import aes_pkg::*;
+module aes_sbox 
+  import aes_reg_pkg::*;
+  import aes_pkg::*;
 #(
   parameter sbox_impl_e SecSBoxImpl = SBoxImplLut
 ) (
