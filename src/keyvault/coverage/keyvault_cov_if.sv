@@ -101,21 +101,22 @@ interface keyvault_cov_if
         debugXclear:                    cross debug, clear;
         debugXlock_wrXlock_useXclear:   cross debug, lock_wr, lock_use, clear;
         debugXclear_secrets:            cross debug, cp_clear_secrets_wr, cp_clear_secrets_sel;
+        debugXkv_write:                 cross debug, kv_write_en;
 
         //Cover warm reset assertion while regs are locked/cleared
-        lock_wrXwarm_rst:   cross lock_wr, rst_b;
-        lock_useXwarm_rst:  cross lock_use, rst_b;
-        clearXwarm_rst:     cross clear, rst_b;
+        // lock_wrXwarm_rst:   cross lock_wr, rst_b;
+        // lock_useXwarm_rst:  cross lock_use, rst_b;
+        // clearXwarm_rst:     cross clear, rst_b;
 
         //Cover cold reset while regs are locked/cleared
-        lock_wrXcold_rst:   cross lock_wr, cptra_pwrgood;
-        lock_useXcold_rst:  cross lock_use, cptra_pwrgood;
-        clearXcold_rst:     cross clear, cptra_pwrgood;
+        // lock_wrXcold_rst:   cross lock_wr, cptra_pwrgood;
+        // lock_useXcold_rst:  cross lock_use, cptra_pwrgood;
+        // clearXcold_rst:     cross clear, cptra_pwrgood;
 
         //Cover core reset while regs are locked/cleared
-        lock_wrXcore_rst:   cross lock_wr, core_only_rst_b;
-        lock_useXcore_rst:  cross lock_use, core_only_rst_b;
-        clearXcore_rst:     cross clear, core_only_rst_b;
+        // lock_wrXcore_rst:   cross lock_wr, core_only_rst_b;
+        // lock_useXcore_rst:  cross lock_use, core_only_rst_b;
+        // clearXcore_rst:     cross clear, core_only_rst_b;
 
         //Cover simultaneous locks/clear settings
         lock_wrXlock_useXclearXclear_secrets: cross lock_wr, lock_use, clear, cp_clear_secrets_wr, cp_clear_secrets_sel;

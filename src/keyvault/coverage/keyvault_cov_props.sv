@@ -33,21 +33,88 @@ module keyvault_cov_props
     generate
         for(genvar i = 0; i < KV_NUM_KEYS; i++) begin
 
+            //------------------------------------------------------------------------------
             //lock write => clear secrets => warm reset in next clk
             //Expectation: Keys will be flushed since reset is not seen until next clk, locks are reset    
+            //------------------------------------------------------------------------------
             property cover_prop_locks_clear_secr_warm_rst;
                 @(posedge dut.clk)
                 (dut.kv_reg_hwif_out.KEY_CTRL[i].lock_wr && dut.kv_reg_hwif_out.CLEAR_SECRETS.wr_debug_values |-> ##[1:$] !dut.rst_b);
             endproperty
             covprop_lock_clear_secr_warmrst: cover property(cover_prop_locks_clear_secr_warm_rst);
 
+            //------------------------------------------------------------------------------
             //lock write => clear secrets => cold reset in next clk
             //Expectation: Keys will be flushed since reset is not seen until next clk, locks and keys are reset once cold reset happens
+            //------------------------------------------------------------------------------
             property cover_prop_locks_clear_secr_cold_rst;
                 @(posedge dut.clk)
                 (dut.kv_reg_hwif_out.KEY_CTRL[i].lock_wr && dut.kv_reg_hwif_out.CLEAR_SECRETS.wr_debug_values |-> ##[1:$] !dut.cptra_pwrgood);
             endproperty
             covprop_lock_clear_secr_coldrst: cover property(cover_prop_locks_clear_secr_cold_rst);
+
+            //------------------------------------------------------------------------------
+            //Check that locks/clear were set before issuing warm reset
+            //------------------------------------------------------------------------------
+            property cover_prop_lock_wr_warmrst;
+                @(posedge dut.clk)
+                (dut.kv_reg_hwif_out.KEY_CTRL[i].lock_wr |-> ##[0:$] !dut.rst_b);
+            endproperty
+            covprop_lock_wr_warmrst: cover property(cover_prop_lock_wr_warmrst);
+
+            property cover_prop_lock_use_warmrst;
+                @(posedge dut.clk)
+                (dut.kv_reg_hwif_out.KEY_CTRL[i].lock_use |-> ##[0:$] !dut.rst_b);
+            endproperty
+            covprop_lock_use_warmrst: cover property(cover_prop_lock_use_warmrst);
+
+            property cover_prop_clear_warmrst;
+                @(posedge dut.clk)
+                (dut.kv_reg_hwif_out.KEY_CTRL[i].clear |-> ##[0:$] !dut.rst_b);
+            endproperty
+            covprop_clear_warmrst: cover property(cover_prop_clear_warmrst);
+
+            //------------------------------------------------------------------------------
+            //Check that locks/clear were set before issuing cold reset
+            //------------------------------------------------------------------------------
+            property cover_prop_lock_wr_coldrst;
+                @(posedge dut.clk)
+                (dut.kv_reg_hwif_out.KEY_CTRL[i].lock_wr |-> ##[0:$] !dut.cptra_pwrgood);
+            endproperty
+            covprop_lock_wr_coldrst: cover property(cover_prop_lock_wr_coldrst);
+
+            property cover_prop_lock_use_coldrst;
+                @(posedge dut.clk)
+                (dut.kv_reg_hwif_out.KEY_CTRL[i].lock_use |-> ##[0:$] !dut.cptra_pwrgood);
+            endproperty
+            covprop_lock_use_coldrst: cover property(cover_prop_lock_use_coldrst);
+
+            property cover_prop_clear_coldrst;
+                @(posedge dut.clk)
+                (dut.kv_reg_hwif_out.KEY_CTRL[i].clear |-> ##[0:$] !dut.cptra_pwrgood);
+            endproperty
+            covprop_clear_coldrst: cover property(cover_prop_clear_coldrst);
+
+            //------------------------------------------------------------------------------
+            //Check that locks/clear were set before issuing core reset
+            //------------------------------------------------------------------------------
+            property cover_prop_lock_wr_corerst;
+                @(posedge dut.clk)
+                (dut.kv_reg_hwif_out.KEY_CTRL[i].lock_wr |-> ##[0:$] !dut.core_only_rst_b);
+            endproperty
+            covprop_lock_wr_corerst: cover property(cover_prop_lock_wr_corerst);
+
+            property cover_prop_lock_use_corerst;
+                @(posedge dut.clk)
+                (dut.kv_reg_hwif_out.KEY_CTRL[i].lock_use |-> ##[0:$] !dut.core_only_rst_b);
+            endproperty
+            covprop_lock_use_corerst: cover property(cover_prop_lock_use_corerst);
+
+            property cover_prop_clear_corerst;
+                @(posedge dut.clk)
+                (dut.kv_reg_hwif_out.KEY_CTRL[i].clear |-> ##[0:$] !dut.core_only_rst_b);
+            endproperty
+            covprop_clear_corerst: cover property(cover_prop_clear_corerst);
         end
     endgenerate
 

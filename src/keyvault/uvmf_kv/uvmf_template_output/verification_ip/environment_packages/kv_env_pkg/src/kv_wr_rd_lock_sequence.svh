@@ -198,46 +198,30 @@ class kv_wr_rd_lock_sequence #(
             end
         end
 
-        //TODO: this needs env clean up! (Emulate 1 clk delay between key_entry_clear and wr_resp_error)
-        // //clear x write
-        // // fork
+        
+        //clear x write
+        // fork
 
-        // //Issue and wait for reset
-        // if(configuration.kv_rst_agent_config.sequencer != null)
-        //     kv_rst_agent_poweron_seq.start(configuration.kv_rst_agent_config.sequencer);
-        // else
-        //     `uvm_error("KV_WR_RD_LOCK", "kv_rst_agent_config.sequencer is null!")
+        //Issue and wait for reset
+        if(configuration.kv_rst_agent_config.sequencer != null)
+            kv_rst_agent_poweron_seq.start(configuration.kv_rst_agent_config.sequencer);
+        else
+            `uvm_error("KV_WR_RD_LOCK", "kv_rst_agent_config.sequencer is null!")
             
-        // // begin
-        //     //Set each CTRL reg with random lock data
-        //     for(int write_entry_temp = 0; write_entry_temp < KV_NUM_KEYS; write_entry_temp++) begin
-        //         // if (write_entry_temp < KV_NUM_KEYS-1) begin
-        //             // lock_data = $urandom_range(1,7); //Can set one of lock_wr, lock_use, clear or all together
-        //             reg_model.kv_reg_rm.KEY_CTRL[write_entry_temp].write(sts, 'h4, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
-        //             `uvm_info("KNU_LOCK", $sformatf("Setting KEY CTRL: %d", write_entry_temp), UVM_MEDIUM)
-        //             assert(sts == UVM_IS_OK) else `uvm_error("AHB_LOCK_SET", $sformatf("Failed when writing to KEY_CTRL[%d]",write_entry_temp))
-        //         // end
+        //Set each CTRL reg with random lock data
+        for(int write_entry_temp = 0; write_entry_temp < KV_NUM_KEYS; write_entry_temp++) begin
+                lock_data = $urandom_range(1,7); //Can set one of lock_wr, lock_use, clear or all together
+                reg_model.kv_reg_rm.KEY_CTRL[write_entry_temp].write(sts, lock_data, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
+                assert(sts == UVM_IS_OK) else `uvm_error("AHB_LOCK_SET", $sformatf("Failed when writing to KEY_CTRL[%d]",write_entry_temp))
 
-        //         for (int write_offset_temp = 0; write_offset_temp < KV_NUM_DWORDS; write_offset_temp++) begin
-        //             // Construct the transaction
-        //             uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_hmac_write_agent.sequencer.hmac_write_seq", "local_write_entry",write_entry_temp);
-        //             uvm_config_db#(reg [KV_ENTRY_SIZE_W-1:0])::set(null, "uvm_test_top.environment.kv_hmac_write_agent.sequencer.hmac_write_seq", "local_write_offset",write_offset_temp);
-        //             `uvm_info("KNU_WRITE", $sformatf("Writing to entry: %0d, offset: %0d", write_entry_temp, write_offset_temp), UVM_MEDIUM)
-        //             hmac_write_seq.start(configuration.kv_hmac_write_agent_config.sequencer);
-        //         end
-
-                
-        //     end
-        // // end
-
-        // // begin
-        //     //Write to all entries, random offsets
-        //     // for (int write_entry_temp = 0; write_entry_temp < KV_NUM_KEYS; write_entry_temp++) begin
-                
-        //     // end
-
-        // // end
-        // // join
+            for (int write_offset_temp = 0; write_offset_temp < KV_NUM_DWORDS; write_offset_temp++) begin
+                // Construct the transaction
+                uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_hmac_write_agent.sequencer.hmac_write_seq", "local_write_entry",write_entry_temp);
+                uvm_config_db#(reg [KV_ENTRY_SIZE_W-1:0])::set(null, "uvm_test_top.environment.kv_hmac_write_agent.sequencer.hmac_write_seq", "local_write_offset",write_offset_temp);
+                hmac_write_seq.start(configuration.kv_hmac_write_agent_config.sequencer);
+            end
+            
+        end
 
     endtask
 
