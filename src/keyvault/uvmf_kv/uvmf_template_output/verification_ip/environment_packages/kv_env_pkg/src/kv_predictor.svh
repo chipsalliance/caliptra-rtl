@@ -206,8 +206,20 @@ class kv_predictor #(
   string client;
   logic [KV_ENTRY_SIZE_W-1:0]last_dword_written[0:KV_NUM_KEYS-1];
 
+  // process running_dly_jobs[$];
+  // int unsigned job_end_count[time];
+  // bit write_entry_pending = 0;
+  // bit send_hmac_write_txn = 0;
+  bit set_val_ctrl_derived = 0;
+  logic [KV_NUM_KEYS-1:0] val_ctrl_derived_data = 0;
+
   extern function void populate_expected_kv_read_txn(ref kv_sb_ap_output_transaction_t t_expected, kv_read_transaction t_received, string client);
   extern function void populate_expected_kv_write_txn(ref kv_sb_ap_output_transaction_write_t t_expected, kv_write_transaction t_received);
+  extern task          poll_and_run_delay_jobs();
+  // extern function      send_delayed_expected_transactions_hmac_write(kv_write_transaction t);
+  // extern function      send_delayed_expected_transactions_sha512_write(kv_write_transaction t);
+  // extern function      send_delayed_expected_transactions_ecc_write(kv_write_transaction t);
+  // extern function      send_delayed_expected_transactions_doe_write(kv_write_transaction t);
   // pragma uvmf custom class_item_additional end
 
   // FUNCTION: new
@@ -271,6 +283,13 @@ class kv_predictor #(
 
   // pragma uvmf custom build_phase end
   endfunction
+
+  task run_phase (uvm_phase phase);
+    fork
+      poll_and_run_delay_jobs();
+    join_none
+    super.run_phase(phase);
+  endtask
 
   // FUNCTION: write_kv_rst_agent_ae
   // Transactions received through kv_rst_agent_ae initiate the execution of this function.
@@ -382,6 +401,8 @@ class kv_predictor #(
     // Construct one of each output transaction type.
     kv_sb_ap_output_transaction_write = kv_sb_ap_output_transaction_write_t::type_id::create("kv_sb_ap_output_transaction_write");
     populate_expected_kv_write_txn(kv_sb_ap_output_transaction_write, t);
+    // this.write_entry_pending = 1'b1;
+    // send_hmac_write_txn = 1'b1;
 
     // Code for sending output transaction out through kv_sb_ap
     // Please note that each broadcasted transaction should be a different object than previously 
@@ -593,8 +614,9 @@ class kv_predictor #(
     reg [KV_DATA_W-1:0] data_active;
     reg [ahb_lite_slave_0_params::AHB_WDATA_WIDTH-1:0] address_aligned;
     uvm_reg val_ctrl, val_reg, val_ctrl_derived;
-    uvm_reg_data_t val_ctrl_data, val_reg_data, val_ctrl_derived_data;
+    uvm_reg_data_t val_ctrl_data, val_reg_data;
 
+    this.set_val_ctrl_derived = 'b0;
     ahb_slave_0_ae_debug = t;
     `uvm_info("PRED", "Transaction Received through ahb_slave_0_ae", UVM_MEDIUM)
     `uvm_info("PRED", {"            Data: ",t.convert2string()}, UVM_FULL)
@@ -605,14 +627,14 @@ class kv_predictor #(
     //Convert data from AHB to txn
     address_aligned = ahb_txn.address & ~(KV_DATA_W/8 - 1);
     data_active = KV_DATA_W'(ahb_txn.data[0] >> (8*(address_aligned % (ahb_lite_slave_0_params::AHB_WDATA_WIDTH/8))));
+
+    //Read val reg to determine if we're in debug mode
+    val_reg = p_kv_rm.get_reg_by_name("val_reg");
+    val_reg_data = val_reg.get();
     
     if(ahb_txn.RnW == AHB_WRITE) begin
       //Copy txn and modify required fields later
       kv_sb_ahb_ap_output_transaction.copy(ahb_txn);
-
-      //Read val reg to determine if we're in debug mode
-      val_reg = p_kv_rm.get_reg_by_name("val_reg");
-      val_reg_data = val_reg.get();
 
       //Only allow clear_secrets during debug mode
       if ((ahb_txn.address == `KV_REG_CLEAR_SECRETS) ) begin
@@ -621,7 +643,8 @@ class kv_predictor #(
 
         if (val_reg_data[p_kv_rm.val_reg.cptra_in_debug_scan_mode.get_lsb_pos()]) begin //[2]) begin
           //Only allow clear operation if in debug mode
-          if (data_active[1:0] == 'h1) begin
+          //if (data_active[1:0] == 'h1) begin
+          if (data_active [p_kv_rm.kv_reg_rm.CLEAR_SECRETS.wr_debug_values.get_lsb_pos()] && !data_active[p_kv_rm.kv_reg_rm.CLEAR_SECRETS.sel_debug_value.get_lsb_pos()]) begin
             for(entry = 0; entry < KV_NUM_KEYS; entry++) begin
               //Read locks before clearing - do not clear if locked
               kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_CTRL[%0d]",entry));
@@ -634,7 +657,8 @@ class kv_predictor #(
               end
             end
           end
-          else if(data_active[1:0] == 'h3) begin
+          //else if(data_active[1:0] == 'h3) begin
+          else if (data_active [p_kv_rm.kv_reg_rm.CLEAR_SECRETS.wr_debug_values.get_lsb_pos()] && data_active[p_kv_rm.kv_reg_rm.CLEAR_SECRETS.sel_debug_value.get_lsb_pos()]) begin
             for(entry = 0; entry < KV_NUM_KEYS; entry++) begin
               //Read locks before clearing
               kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_CTRL[%0d]",entry));
@@ -660,20 +684,31 @@ class kv_predictor #(
         val_ctrl = p_kv_rm.get_reg_by_name("val_ctrl");
         val_ctrl_data = val_ctrl.get();
 
-        if(data_active[2] && !kv_reg_data[0] && !kv_reg_data[1]) begin
+        if(data_active[p_kv_rm.kv_reg_rm.KEY_CTRL[entry].clear.get_lsb_pos()] && !kv_reg_data[p_kv_rm.kv_reg_rm.KEY_CTRL[entry].lock_wr.get_lsb_pos()] && !kv_reg_data[p_kv_rm.kv_reg_rm.KEY_CTRL[entry].lock_use.get_lsb_pos()] && !val_reg_data[p_kv_rm.val_reg.cptra_in_debug_scan_mode.get_lsb_pos()]) begin
           val_ctrl_data[entry] = 'b1; //In design, clear is a single pulse reg. This val_ctrl[*] will be reset in kv_reg_predictor
-          val_ctrl_derived_data[entry] = 'b1;
+          // for (int i = 0; i < KV_NUM_KEYS; i++) begin
+            this.val_ctrl_derived_data[entry] = 'b1;
+            // this.val_ctrl_derived_data[i] = (i == entry);
+          // end
+          // this.set_val_ctrl_derived = 'b1;
           //p_kv_rm.kv_reg_rm.kv_val_ctrl.predict(val_ctrl_data);
           `uvm_info("PRED", "Setting clear field of val_ctrl register", UVM_MEDIUM)
           p_kv_rm.val_ctrl.set(val_ctrl_data);
 
-          `uvm_info("PRED", "Setting clear field of val_ctrl_derived register", UVM_MEDIUM)
-          p_kv_rm.val_ctrl_derived.set(val_ctrl_derived_data);
+          //`uvm_info("PRED", "Setting clear field of val_ctrl_derived register", UVM_MEDIUM)
+          // //configuration.kv_hmac_write_agent_config.wait_for_num_clocks(1);
+          //p_kv_rm.val_ctrl_derived.set(val_ctrl_derived_data);
           //Clear the entry that is being accessed
           for(offset = 0; offset < KV_NUM_DWORDS; offset++) begin
             p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].predict('h0);
             p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].set('h0);
           end
+        end
+        //Reset all bits of val_ctrl_derived except current entry irrespective of locks
+        this.set_val_ctrl_derived = 'b1;
+        for (int i = 0; i < KV_NUM_KEYS; i++) begin
+          if (i != entry)
+            this.val_ctrl_derived_data[i] = 0;
         end
       end
     end
@@ -708,8 +743,8 @@ endclass
 
     uvm_reg kv_reg;
     uvm_reg_data_t kv_reg_data;
-    uvm_reg val_ctrl;
-    uvm_reg_data_t val_ctrl_data;
+    uvm_reg val_ctrl, val_ctrl_derived;
+    uvm_reg_data_t val_ctrl_data, val_ctrl_derived_data;
     logic lock_use;
     logic [KV_NUM_READ-1:0] dest_valid;
     logic client_dest_valid;
@@ -717,12 +752,16 @@ endclass
     val_ctrl = p_kv_rm.get_reg_by_name("val_ctrl");
     val_ctrl_data = val_ctrl.get();
 
+    val_ctrl_derived = p_kv_rm.get_reg_by_name("val_ctrl_derived");
+    val_ctrl_derived_data = val_ctrl_derived.get();
+
     kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_CTRL[%0d]",t_received.read_entry));
     kv_reg_data = kv_reg.get_mirrored_value();
     kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_ENTRY[%0d][%0d]",t_received.read_entry,t_received.read_offset));
 
-    lock_use = kv_reg_data[1];
+    lock_use = kv_reg_data[p_kv_rm.kv_reg_rm.KEY_CTRL[t_received.read_entry].lock_use.get_lsb_pos()];
     dest_valid = kv_reg_data[13:9]; //[16:14] are rsvd
+    // dest_valid = kv_reg_data[p_kv_rm.kv_reg_rm.KEY_CTRL[entry].dest_valid.get_lsb_pos()];
     
     case(client) inside
 
@@ -744,13 +783,13 @@ endclass
     //kv_predictor takes care of #1. #2 and #3 should be done is custom AHB reg predictor which we don't have
     //As a workaround, setting a val_ctrl reg when clear happens. Until a write occurs on that entry, this bit will remain set
     //During every read, we check val_ctrl[entry] bit. If 1, return 0s, resp.err = 1 and last dword = 0 to mimic design
-    if (lock_use || !client_dest_valid || val_ctrl_data[t_received.read_entry]) begin
+    if (lock_use || !client_dest_valid || val_ctrl_data[t_received.read_entry] || val_ctrl_derived_data[t_received.read_entry]) begin
       t_expected.read_data = 'h0;
       t_expected.error = 'b1;
     end
     else begin
       kv_reg_data = kv_reg.get_mirrored_value();
-      t_expected.read_data = kv_reg_data[31:0]; //Data from KEY entry
+      t_expected.read_data = KV_DATA_W'(kv_reg_data); //kv_reg_data[31:0]; //Data from KEY entry
       t_expected.error = 'b0;
     end
 
@@ -776,8 +815,8 @@ endclass
     kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_CTRL[%0d]",t_received.write_entry));
     kv_reg_data = kv_reg.get_mirrored_value();    
 
-    lock_wr = kv_reg_data[0];
-    lock_use = kv_reg_data[1];
+    lock_wr = kv_reg_data[p_kv_rm.kv_reg_rm.KEY_CTRL[t_received.write_entry].lock_wr.get_lsb_pos()];
+    lock_use = kv_reg_data[p_kv_rm.kv_reg_rm.KEY_CTRL[t_received.write_entry].lock_use.get_lsb_pos()];
 
     val_ctrl_derived = p_kv_rm.get_reg_by_name("val_ctrl_derived");
     val_ctrl_derived_data = val_ctrl_derived.get();
@@ -798,7 +837,7 @@ endclass
       end
       else if (/*this.write_in_progress[t_received.write_entry] &&*/ val_ctrl_derived_data[t_received.write_entry]) begin
         t_expected.error = 1'b1;
-        `uvm_info("PRED","Attempts to clear a reg while write is in progress results in an error", UVM_MEDIUM)
+        `uvm_info("PRED","Attempts to clear a reg while write is in progress results in an err", UVM_MEDIUM)
         `uvm_info("PRED", $sformatf("Write entry = %0d, val_ctrl_derived_data = %b", t_received.write_entry, val_ctrl_derived_data), UVM_MEDIUM)
       end
       else begin
@@ -813,5 +852,72 @@ endclass
 
       
   endfunction
+
+  // function void kv_predictor::send_delayed_expected_transactions_hmac_write(kv_write_transaction t);
+  //   bit send_hmac_write_txn = 0;
+
+  //   kv_sb_ap_output_transaction_write = kv_sb_ap_output_transaction_write_t::type_id::create("kv_sb_ap_output_transaction_write");
+
+  //   if (this.write_entry_pending) begin
+  //     `uvm_info("PRED_DLY", "Delay job to update KEY_ENTRY value", UVM_HIGH)
+  //     this.write_entry_pending = 1'b0;
+  //   end
+
+  //   //-------------------------------------
+  //   //Send expected txns to SCBD
+  //   //-------------------------------------
+  //   if (send_hmac_write_txn) begin
+  //     populate_expected_kv_write_txn(kv_sb_ap_output_transaction_write, t);
+  //     kv_hmac_write_sb_ap.write(kv_sb_ap_output_transaction_write);
+  //     `uvm_info("PRED_DLY", "Transaction submitted through kv_hmac_write_sb_ap", UVM_MEDIUM)
+  //     send_hmac_write_txn = 1'b0;
+  //   end
+
+  // endfunction
+
+  // task kv_predictor::poll_and_run_delay_jobs();
+  //   forever begin
+  //     while (p_kv_rm.delay_jobs.size() > 0) begin
+  //       fork
+  //         kv_reg_delay_job job = p_kv_rm.delay_jobs.pop_front();
+  //         //TODO: add reset check
+  //         int idx[$];
+  //         time end_time;
+  //         this.running_dly_jobs.push_back(process::self()); // This tracks all the delay_jobs that are pending so they can be clobbered on rst
+  //         `uvm_info("PRED_DLY", $sformatf("Doing delay of %0d cycles before running delay job with signature: %s", job.get_delay_cycles(), job.get_name()), UVM_HIGH)
+  //         end_time = $time + 10*job.get_delay_cycles();
+  //         job_end_count[end_time] += 1;
+  //         //Delay jobs have 1 cycle inherent delay
+  //         if (job.get_delay_cycles()) configuration.kv_hmac_write_agent_config.wait_for_num_clocks(job.get_delay_cycles());
+  //         uvm_wait_for_nba_region();
+  //         idx = this.running_dly_jobs.find_first_index(pr) with (pr == process::self());
+  //         this.running_dly_jobs.delete(idx.pop_front());
+  //         job.do_job();
+  //         job_end_count[end_time] -= 1;
+
+  //         if (job_end_count[end_time] == 0) begin
+  //           job_end_count.delete(end_time);
+  //           // send_delayed_expected_transactions_hmac_write(t);
+  //         end
+  //         //end TODO: add reset check
+  //       join_none
+  //     end
+  //     configuration.kv_hmac_write_agent_config.wait_for_num_clocks(1);
+  //   end
+  // endtask
+
+  task kv_predictor::poll_and_run_delay_jobs();
+    forever begin
+      while (this.set_val_ctrl_derived) begin
+        // fork
+          configuration.kv_hmac_write_agent_config.wait_for_num_clocks(2);
+          `uvm_info("PRED", "Setting clear field of val_ctrl_derived register", UVM_MEDIUM)
+          p_kv_rm.val_ctrl_derived.set(this.val_ctrl_derived_data);
+          this.set_val_ctrl_derived = 'b0;
+        // join_none
+      end
+      configuration.kv_hmac_write_agent_config.wait_for_num_clocks(1);
+    end
+  endtask
 // pragma uvmf custom external end
 

@@ -110,6 +110,11 @@ package kv_reg_model_top_pkg;
 
    endclass : kv_reg_ext
 
+   // //Callbacks
+   // `include "kv_reg_delay_job.svh"
+   // `include "kv_reg_cbs_kv_reg_KEY_ENTRY_data.svh"
+   
+
    //--------------------------------------------------------------------
    // Class: kv_example_reg0
    // 
@@ -316,6 +321,11 @@ package kv_reg_model_top_pkg;
       uvm_reg_map kv_ecc_privkey_read_map;
       uvm_reg_map kv_ecc_seed_read_map;
 
+      int ii, jj;
+
+      // //Callbacks
+      // kv_reg_cbs_kv_reg_KEY_ENTRY_data KEY_ENTRY_data_cb;
+      // uvm_queue #(kv_reg_delay_job) delay_jobs;
       //TODO add coverage for the other maps
       // kv_ahb_map_coverage ahb_map_cg;
 
@@ -324,6 +334,16 @@ package kv_reg_model_top_pkg;
       function new(string name = "kv_reg_model_top");
          super.new(name, build_coverage(UVM_CVR_ALL));
       endfunction
+
+      // Function: reset
+      //
+      // function void reset(string kind = "HARD");
+      //    super.reset(kind);
+      //    if (kind == "HARD") begin
+      //       `uvm_info("KV_REG_MODEL_TOP", {"Reset of kind ", kind, " results in delay_jobs being cleared"}, UVM_HIGH)
+      //       delay_jobs.delete();
+      //    end
+      // endfunction
 
       // Function: build
       // 
@@ -343,6 +363,9 @@ package kv_reg_model_top_pkg;
       // example_reg1 = kv_example_reg1::type_id::create("example_reg1");
       // example_reg1.configure(this, null, "example_reg1");
       // example_reg1.build();
+
+      // delay_jobs = new("delay_jobs");
+      // uvm_config_db#(uvm_queue#(kv_reg_delay_job))::set(null, "kv_reg_model_top", "delay_jobs", delay_jobs);
 
       val_reg = kv_val_reg::type_id::create("val_reg");
       val_reg.configure(this,null,"val_reg");
@@ -365,6 +388,11 @@ package kv_reg_model_top_pkg;
       this.kv_reg_rm = new("kv_reg_rm");
       this.kv_reg_rm.configure(this);
       this.kv_reg_rm.build();
+
+      // //Add callbacks
+      // KEY_ENTRY_data_cb = kv_reg_cbs_kv_reg_KEY_ENTRY_data::type_id::create("KEY_ENTRY_data_cb");
+
+      // foreach (kv_reg_rm.KEY_ENTRY[ii][jj]) uvm_reg_field_cb::add(kv_reg_rm.KEY_ENTRY[ii][jj].data, KEY_ENTRY_data_cb);
 
       this.default_map = create_map("kv_default_map", 0, 4, UVM_LITTLE_ENDIAN);
       this.default_map.add_submap(this.kv_reg_rm.default_map, 0);
