@@ -172,9 +172,13 @@ void caliptra_rt() {
         //Clear timer1 intr
         lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK);
 
-        //Program timer1 and 2 periods to <= 0x100 to test NMI generation
+        //Program timer1 and 2 periods to <= 0x100 to test NMI generation. First check if there is any pending timer1 interrupt. In a corner case scenario, timer1 can timeout a second time (if the period is small enough)
+        //before its timeout value is changed in prep for NMI testing. In that case, the subsequent timer1 interrupt will not be serviced resulting in a hang
         wdt_rand_t1_val = (rand() % 0x100) + 0x5;
         wdt_rand_t2_val = (rand() % 0x100) + 0x5;
+
+        if (lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R) & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK)
+            lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK);
 
         //WDT cascade mode with t2 timeout
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_EN, !SOC_IFC_REG_CPTRA_WDT_TIMER2_EN_TIMER2_EN_MASK);
