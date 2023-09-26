@@ -197,6 +197,7 @@ module ecc_dsa_ctrl
 
     logic privkey_input_outofrange;
     logic r_output_outofrange;
+    logic s_output_outofrange;
     logic r_input_outofrange;
     logic s_input_outofrange;
     logic pubkeyx_input_outofrange;
@@ -659,6 +660,7 @@ module ecc_dsa_ctrl
     
     assign privkey_input_outofrange = signing_process & ((privkey_reg == 0) | (privkey_reg >= GROUP_ORDER));
     assign r_output_outofrange      = signing_process & (hw_r_we & (read_reg == 0));
+    assign s_output_outofrange      = signing_process & (hw_s_we & (read_reg == 0));
 
     assign r_input_outofrange       = verifying_process & ((r_reg == 0) | (r_reg >= GROUP_ORDER));
     assign s_input_outofrange       = verifying_process & ((s_reg == 0) | (s_reg >= GROUP_ORDER));
@@ -668,7 +670,7 @@ module ecc_dsa_ctrl
 
     assign pcr_sign_input_invalid   = ((cmd_reg == KEYGEN) | (cmd_reg == VERIFY)) & pcr_sign_mode;
 
-    assign error_flag = privkey_input_outofrange | r_output_outofrange | r_input_outofrange | s_input_outofrange | pubkeyx_input_outofrange | pubkeyy_input_outofrange | pubkey_input_invalid | pcr_sign_input_invalid;
+    assign error_flag = privkey_input_outofrange | r_output_outofrange | s_output_outofrange | r_input_outofrange | s_input_outofrange | pubkeyx_input_outofrange | pubkeyy_input_outofrange | pubkey_input_invalid | pcr_sign_input_invalid;
 
     //----------------------------------------------------------------
     // ECDSA_FSM_flow
