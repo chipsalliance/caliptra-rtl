@@ -230,9 +230,9 @@ always_ff @(posedge clk or negedge cptra_pwrgood) begin
 end
 
 //protect resets during scan mode
-//TODO dft override for reset?
-assign cptra_noncore_rst_b = cptra_noncore_rst_b_nq | scan_mode;
-assign cptra_uc_rst_b = cptra_uc_rst_b_nq | scan_mode;
+//utilize warm reset pin to drive reset during scan mode
+assign cptra_noncore_rst_b = scan_mode ? cptra_rst_b : cptra_noncore_rst_b_nq;
+assign cptra_uc_rst_b = scan_mode ? cptra_rst_b : cptra_uc_rst_b_nq;
 
 //uC reset generation
 always_ff @(posedge clk or negedge cptra_rst_b) begin
