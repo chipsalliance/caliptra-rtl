@@ -253,6 +253,9 @@ import uvmf_base_pkg_hdl::*;
     assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PSLVERRCHK       = 0;
     assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PRUSERCHK        = 0;
     assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PBUSERCHK        = 0;
+
+
+  soc_ifc_cov_bind i_soc_ifc_cov_bind();  
   // pragma uvmf custom dut_instantiation end
 
   initial begin      // tbx vif_binding_block 
