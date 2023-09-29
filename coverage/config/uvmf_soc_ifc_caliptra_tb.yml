@@ -8,7 +8,6 @@
 #
 
 variables:
-  BENCH_CONFIG: soc_ifc_tb
-  PIPELINE_ID: 3194
+  BENCH_CONFIG: uvmf_soc_ifc
 
 template: caliptra_cov_cfg.yml

@@ -53,6 +53,7 @@ parameters:
       - sha512_caliptra_tb
       # - sha512_masked_caliptra_tb
       - soc_ifc_caliptra_tb
+      - uvmf_soc_ifc_caliptra_tb
       # - uart_caliptra_tb
       - uvmf_caliptra_top_tb
 
@@ -63,6 +64,7 @@ stages:
     repo_url: 'git@ssh.dev.azure.com:v3/ms-tsd/AHA_POC/Caliptra'
     target_branch: 'master'
     top_repo: ''
+    post_test_on_fail: true
 
     additional_test_steps:
     - ${{ each cov_dut in parameters.cov_dut_list }}:
@@ -71,7 +73,25 @@ stages:
         - display_name: Coverage merge for ${{ cov_dut }}
         - commands:
           - $(SUBMIT_SMALL_NC_JOBS) python3w -r requirements.txt \${VERIF_TOOLS}/coverage_merge/coverage_merge.py -f \${CALIPTRA_ROOT}/coverage/config/${{ cov_dut }}.yml $(skip_db_upload_arg)
-        - timeout: 60
+        - timeout: 5
         - run_in_workspace: true
+
+    post_test_steps:
+      - script: |
+          source /home/continuous_integration/release/enviro/etc/enviro_startup.bash
+          module load settings/tsd/pipelines/frontend
+          module load tools/python/python3/3.9.2
+          export PYREQUIREMENTS="$(workspace_root)/pipelines/require-progress.txt"
+          PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
+
+          enter-workspace tmp_ws "$(SUBMIT_SMALL_NC_JOBS) python3w -r requirements.txt \${VERIF_TOOLS}/coverage_merge/coverage_merge.py -f \${CALIPTRA_ROOT}/coverage/config/caliptra_merge_bench_cov_cfg.yml $(skip_db_upload_arg)"
+
+        displayName: Coverage merge for all duts
+        timeoutInMinutes: 10
+        enabled: true
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+
 
     

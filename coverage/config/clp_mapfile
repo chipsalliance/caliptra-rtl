@@ -1,0 +1,36 @@
+MODULE: caliptra_top
+INSTANCE:
+SRC: caliptra_top_tb.caliptra_top_dut
+DST: hdl_top.caliptra_top_dut
+
+MODULE: soc_ifc_top
+INSTANCE:
+SRC: hdl_top.dut
+DST: hdl_top.caliptra_top_dut.soc_ifc_top1
+SRC: soc_ifc_tb.dut
+DST: hdl_top.caliptra_top_dut.soc_ifc_top1
+
+MODULE: ecc_top
+INSTANCE:
+SRC: hdl_top.dut
+DST: hdl_top.caliptra_top_dut.ecc_top1
+
+MODULE: hmac_ctrl
+INSTANCE:
+SRC: hdl_top.dut
+DST: hdl_top.caliptra_top_dut.hmac
+
+MODULE: kv
+INSTANCE:
+SRC: hdl_top.dut
+DST: hdl_top.caliptra_top_dut.key_vault1
+
+MODULE: pv
+INSTANCE:
+SRC: hdl_top.pv
+DST: hdl_top.caliptra_top_dut.pcr_vault1
+
+MODULE: sha512_ctrl
+INSTANCE:
+SRC: hdl_top.dut
+DST: hdl_top.caliptra_top_dut.sha512

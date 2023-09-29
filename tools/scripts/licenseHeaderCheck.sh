@@ -76,7 +76,7 @@ if [[ $(basename ${PWD}) != "Caliptra" ]]; then
     exit 1
 fi
 
-files_missing_header=$(grep -r -L -i  --exclude-dir={uvmf*,.git,cmark,caliptra_reg_html,caliptra_top_reg_html,sha256,sha512,sha512_masked,doe,aes_secworks,fw_test_*,__pycache__,templates} --exclude=*.{tcl,txt,js,htm,html,json,vf,yml,woff,rsp,rdl,bashrc,waiver,cfg,hex,rc,exe,pdf,hvp,svg,log} --exclude=*_reg*.{sv,rdl} --exclude=*_csr*.* --exclude={sglint_waivers,.git-comodules,.gitignore,spyglass_lint.policy,ascent.ctl} --exclude=c_sample.c Apache)
+files_missing_header=$(grep -r -L -i  --exclude-dir={uvmf*,.git,cmark,caliptra_reg_html,caliptra_top_reg_html,sha256,sha512,sha512_masked,doe,aes_secworks,fw_test_*,__pycache__,templates} --exclude=*.{tcl,txt,js,htm,html,json,vf,yml,woff,rsp,rdl,bashrc,waiver,cfg,hex,rc,exe,pdf,hvp,svg,log} --exclude=*_reg*.{sv,rdl} --exclude=*_csr*.* --exclude={sglint_waivers,.git-comodules,.gitignore,spyglass_lint.policy,ascent.ctl,clp_mapfile} --exclude=c_sample.c Apache)
 
 if [[ $files_missing_header != "" ]]; then
     echo -e "\n\n\tPlease add Apache license header to the following files and try again. \n"
