@@ -26,24 +26,24 @@ module pcrvault_cov_props
             //clear followed by warm reset in the next clk
             //Expectation: PCRs cleared before warm reset
             property cover_prop_clear_warm_rst;
-                @(posedge dut.clk)
-                (dut.pv_reg_hwif_out.PCR_CTRL[i].clear |-> ##[1:$] !dut.rst_b);
+                @(posedge pv.clk)
+                (pv.pv_reg_hwif_out.PCR_CTRL[i].clear |-> ##[1:$] !pv.rst_b);
             endproperty
             covprop_clear_warmrst: cover property(cover_prop_clear_warm_rst);
         
             //locks, followed by clear, followed by warm reset in the next clk
             //Expectation: Unlocked PCRs cleared before warm reset, locks cleared on warm reset
             property cover_prop_lock_clear_warm_rst;
-                @(posedge dut.clk)
-                (dut.pv_reg_hwif_out.PCR_CTRL[i].lock |-> ##[0:$] dut.pv_reg_hwif_out.PCR_CTRL[i].clear |-> ##[1:$] !dut.rst_b);
+                @(posedge pv.clk)
+                (pv.pv_reg_hwif_out.PCR_CTRL[i].lock |-> ##[0:$] pv.pv_reg_hwif_out.PCR_CTRL[i].clear |-> ##[1:$] !pv.rst_b);
             endproperty
             covprop_lock_clear_warmrst: cover property(cover_prop_lock_clear_warm_rst);
         
             //locks, followed by clear, followed by cold reset in the next clk
             //Expectation: Unlocked PCRs cleared before cold reset, everything cleared on cold reset
             property cover_prop_lock_clear_cold_rst;
-                @(posedge dut.clk)
-                (dut.pv_reg_hwif_out.PCR_CTRL[i].lock |-> ##[0:$] dut.pv_reg_hwif_out.PCR_CTRL[i].clear |-> ##[1:$] !dut.cptra_pwrgood);
+                @(posedge pv.clk)
+                (pv.pv_reg_hwif_out.PCR_CTRL[i].lock |-> ##[0:$] pv.pv_reg_hwif_out.PCR_CTRL[i].clear |-> ##[1:$] !pv.cptra_pwrgood);
             endproperty
             covprop_lock_clear_coldrst: cover property(cover_prop_lock_clear_cold_rst);
         end
