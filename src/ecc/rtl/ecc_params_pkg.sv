@@ -52,19 +52,19 @@ package ecc_params_pkg;
   // prime parameters in Montgomery domain
   parameter [REG_SIZE-1 : 0] ZERO_CONST  = 384'h0;
   parameter [REG_SIZE-1 : 0] ONE_CONST   = 384'h1;
-  parameter [REG_SIZE-1 : 0] E_a_MONT    = 384'hfffffffffffffffffffffffffffffffffffffffffffffffcfffffffcffffffff00000001fffffffd00000000ffffffff;
-  parameter [REG_SIZE-1 : 0] E_b_MONT    = 384'hb62b21f41f022094e3374bee94938ae277f2209b1920022fc431bf24a7a4043068614869d0391c816cb85152604fbff9;
-  parameter [REG_SIZE-1 : 0] E_3b_MONT   = 384'h228165dc5d0661bea9a5e3cbbdbaa0a767d661d14b60068f4c953d6df6ec0c933923d93f70ab55844628f3f520ef3fed;
-  parameter [REG_SIZE-1 : 0] ONE_p_MONT  = 384'h100000000ffffffffffffffff000000010000000000000000;
-  parameter [REG_SIZE-1 : 0] R2_p_MONT   = 384'h200000000fffffffe000000000000000200000000fffffffe0000000200000000ffffffffffffffff00000001;
-  parameter [REG_SIZE-1 : 0] G_X_MONT    = 384'h812ff723614ede2b6454868459a30eff879c3afc541b4d6e6e1e26a517af910d676e8a78fc860766239c98af299e1513;
-  parameter [REG_SIZE-1 : 0] G_Y_MONT    = 384'hdd8002263969a840c6c3521968f4ffd98bade7562e83b050cd38548201431b577d1a03961f8af93bd162e5d95a15c5e9;
+  parameter [REG_SIZE-1 : 0] E_a_MONT    = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffcfffffffcfffeffffffff0002fffffffd0000ffffffff;
+  parameter [REG_SIZE-1 : 0] E_b_MONT    = 384'hbff9b62b21f41f022094e3374bee94938ae277f2209b1920022fc431bf24a7a3443768608870d0391c816cb9114b604f;
+  parameter [REG_SIZE-1 : 0] E_3b_MONT   = 384'h3fed228165dc5d0661bea9a5e3cbbdbaa0a767d661d14b60068f4c953d6df6ebcca63923995270ab5584462933e220ef;
+  parameter [REG_SIZE-1 : 0] ONE_p_MONT  = 384'h100000000ffffffffffffffff00000001000000000000;
+  parameter [REG_SIZE-1 : 0] R2_p_MONT   = 384'h10000000200000000fffffffe000000000000000200000000fffffffe00000001000000000000000000000000;
+  parameter [REG_SIZE-1 : 0] G_X_MONT    = 384'h1513812ff723614ede2b6454868459a30eff879c3afc541b4d6e6e1e26a517af7bfa676e7565fc860766239cadc2299e;
+  parameter [REG_SIZE-1 : 0] G_Y_MONT    = 384'hc5e9dd8002263969a840c6c3521968f4ffd98bade7562e83b050cd3854820142556e7d193dad1f8af93bd163abc25a15;
   parameter [RADIX-1 : 0]    PRIME_mu    = 64'h100000001;
 
   // group order parameters in Montgomery domain
-  parameter [REG_SIZE-1 : 0] R2_q_MONT   = 384'hd40d49174aab1cc5bf030606de609f43cc9601f9f4a0e7920c42c98aa72d2d8e43bcf715399000ed42a6fc1a99562811;
-  parameter [REG_SIZE-1 : 0] ONE_q_MONT  = 384'h389cb27e0bc8d220a7e5f24db74f58851313e695333ad68d0000000000000000;
-  parameter [RADIX-1 : 0] GROUP_ORDER_mu = 64'h6ed46089e88fdc45;
+  parameter [REG_SIZE-1 : 0] R2_q_MONT   = 384'h28266895d40d49174aab1cc5bf030606de609f43cc9601f9ebbfed4b3ffe90bfead8c2590449c1c55daf7abd883e5e32;
+  parameter [REG_SIZE-1 : 0] ONE_q_MONT  = 384'h389cb27e0bc8d220a7e5f24db74f58851313e695333ad68d000000000000;
+  parameter [RADIX-1 : 0] GROUP_ORDER_mu = 64'h6089e88fdc45;
 
 endpackage
 
