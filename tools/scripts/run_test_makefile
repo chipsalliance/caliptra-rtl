@@ -27,6 +27,7 @@ SCRIPT=${SCRIPT^^}
 SCRIPT_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
 
 CONFIG=""
+TESTFILE=""
 
 function parse_sim_config {
   echo "** IN parse_sim_config **"
@@ -41,6 +42,11 @@ function parse_sim_config {
     export TESTNAME=${other[testname]}
     echo "TESTNAME=$TESTNAME"
   fi
+  # Get testfile from sim_config
+  if [[ ! -z "${files[test-file]}" ]]; then
+    TESTFILE=${files[test-file]}
+    echo "TESTFILE=$TESTFILE"
+  fi
 }
 
 echo
@@ -54,7 +60,8 @@ fi
 
 #remove random SEED from TESTNAME after "__" characters
 baseTestName=$(echo "$TESTNAME" | sed 's/\__.*//')
-seed=$( echo "$TESTNAME" | sed 's/.*__//')
+#seed=$( echo "$TESTNAME" | sed 's/.*__//')
+seed=$(eval echo $(grep -E '^seed:' ${TESTFILE} | sed 's,^seed: \([^# ]*\),\1,'))
 if [[ ( -z ${seed:+"empty"} ) || ( ${seed} == ${TESTNAME} ) ]]; then
     seed=${PLAYBOOK_RANDOM_SEED}
 fi

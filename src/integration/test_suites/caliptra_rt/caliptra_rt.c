@@ -350,6 +350,20 @@ void caliptra_rt() {
                     }
                     continue;
                 }
+                // Clear any uncorrectable ECC error interrupts that may have held over from the previous operation
+                // This can happen after the command flow is transferred back to SOC
+                // if the ECC error occurred at address 0, since ending the flow triggers
+                // rst_mbox_rdptr and a final read from 0. This might be missed by the above
+                // soc_ifc_error handler.
+                if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK) {
+                    CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK)
+                }
+                // Any other errors that are flagged at this point are unexpected and should cause a test failure
+                if (cptra_intr_rcv.soc_ifc_error) {
+                    VPRINTF(ERROR, "Unexpected err intr 0x%x\n", cptra_intr_rcv.soc_ifc_error);
+                    SEND_STDOUT_CTRL(0x1);
+                    while(1);
+                }
                 //read the mbox command
                 op = soc_ifc_read_mbox_cmd();
                 if (op.cmd & MBOX_CMD_FIELD_FW_MASK) {
