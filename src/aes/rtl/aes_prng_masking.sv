@@ -20,7 +20,9 @@
 
 `include "caliptra_prim_assert.sv"
 
-module aes_prng_masking import aes_pkg::*;
+module aes_prng_masking 
+  import aes_reg_pkg::*;
+  import aes_pkg::*;
 #(
   parameter  int unsigned Width        = WidthPRDMasking,     // Must be divisble by ChunkSize and 8
   parameter  int unsigned ChunkSize    = ChunkSizePRDMasking, // Width of the LFSR primitives

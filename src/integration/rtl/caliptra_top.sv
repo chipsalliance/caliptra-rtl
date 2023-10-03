@@ -21,6 +21,9 @@ module caliptra_top
     import kv_defines_pkg::*;
     import pv_defines_pkg::*;
     import soc_ifc_pkg::*;
+    import lc_ctrl_state_pkg::*;
+    import lc_ctrl_reg_pkg::*;
+    import lc_ctrl_pkg::*;
 `ifdef CALIPTRA_INTERNAL_TRNG
     import entropy_src_pkg::*;
     import csrng_pkg::*;
