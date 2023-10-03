@@ -45,8 +45,9 @@ task soc_ifc_env_cptra_mbox_dlen_overread_handler_sequence::mbox_pop_dataout();
     int unsigned overrun_bytes;
     uvm_reg_data_t data;
 
-    if (!std::randomize(overrun_bytes) with {overrun_bytes + op.dlen <= (reg_model.mbox_mem_rm.get_size() * reg_model.mbox_mem_rm.get_n_bytes()); overrun_bytes < op.dlen * 4;})
-        `uvm_error("CPTRA_MBOX_HANDLER", "Failed to randomize overrun bytes")
+    if (!std::randomize(overrun_bytes) with {overrun_bytes >= 4; //always overrun by at least 1 dword
+                                             overrun_bytes <= (op.dlen+1)*4;}) //overrun small dlens by smaller amounts
+            `uvm_error("CPTRA_MBOX_HANDLER", "Failed to randomize overrun bytes")
     else
         `uvm_info("CPTRA_MBOX_HANDLER", $sformatf("Randomized overrun bytes to %d", overrun_bytes), UVM_MEDIUM)
 

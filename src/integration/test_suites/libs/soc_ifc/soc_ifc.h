@@ -34,26 +34,32 @@ enum mbox_fsm_e {
     MBOX_RDY_FOR_DATA = 0x2,
     MBOX_RDY_FOR_DLEN = 0x3,
     MBOX_EXECUTE_UC   = 0x6,
-    MBOX_EXECUTE_SOC  = 0x4
+    MBOX_EXECUTE_SOC  = 0x4,
+    MBOX_ERROR        = 0x7
 };
 
 /**
 * Decode:
 *   [31]: Firmware command
 *   [30]: Response required (if set)
+*   [29]: uC to SOC Mailbox command
 */
 enum {
-    MBOX_CMD_FIELD_FW_LOW   = 31,
-    MBOX_CMD_FIELD_RESP_LOW = 30
+    MBOX_CMD_FIELD_FW_LOW        = 31,
+    MBOX_CMD_FIELD_RESP_LOW      = 30,
+    MBOX_CMD_FIELD_UC_TO_SOC_LOW = 29
 };
 
 enum {
-    MBOX_CMD_FIELD_FW_MASK   = 1 << MBOX_CMD_FIELD_FW_LOW  ,
-    MBOX_CMD_FIELD_RESP_MASK = 1 << MBOX_CMD_FIELD_RESP_LOW
+    MBOX_CMD_FIELD_FW_MASK        = 1 << MBOX_CMD_FIELD_FW_LOW  ,
+    MBOX_CMD_FIELD_RESP_MASK      = 1 << MBOX_CMD_FIELD_RESP_LOW,
+    MBOX_CMD_FIELD_UC_TO_SOC_MASK = 1 << MBOX_CMD_FIELD_UC_TO_SOC_LOW
 };
 
 enum mbox_cmd_e {
+    MBOX_CMD_DIR_RD     = 0x01000000,
     MBOX_CMD_UC_BASIC   = 0x20000000,
+    MBOX_CMD_UC_OVERRUN = 0x20000001,
     MBOX_CMD_RESP_BASIC = 0x40000000,
     MBOX_CMD_REG_ACCESS = 0x40000001,
     MBOX_CMD_OOB_ACCESS = 0x40000002,
@@ -88,11 +94,18 @@ enum sha_accel_mode_e {
 inline uint32_t soc_ifc_mbox_read_dataout_single() {
     return lsu_read_32(CLP_MBOX_CSR_MBOX_DATAOUT);
 }
+inline uint32_t soc_ifc_mbox_dir_read_single(uint32_t rdptr) {
+    return lsu_read_32(0x30000000 + rdptr);
+}
+inline uint32_t soc_ifc_mbox_dir_write_single(uint32_t wrptr, uint32_t wrdata) {
+    lsu_write_32(0x30000000 + wrptr, wrdata);
+}
 void soc_ifc_clear_execute_reg();
+uint8_t soc_ifc_chk_execute_uc();
 void soc_ifc_set_mbox_status_field(enum mbox_status_e field);
 void soc_ifc_set_flow_status_field(uint32_t field);
 void soc_ifc_clr_flow_status_field(uint32_t field);
-void soc_ifc_set_fw_update_reset();
+void soc_ifc_set_fw_update_reset(uint8_t wait_cycles);
 inline void soc_ifc_set_iccm_lock() {
     lsu_write_32((CLP_SOC_IFC_REG_INTERNAL_ICCM_LOCK), SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK);
 }
@@ -109,5 +122,6 @@ inline void soc_ifc_sha_accel_execute() {
 }
 void soc_ifc_sha_accel_poll_status();
 void soc_ifc_sha_accel_clr_lock();
+void soc_ifc_w1clr_sha_lock_field();
 
 #endif

@@ -50,7 +50,8 @@ module hmac
         input kv_wr_resp_t kv_wr_resp,
 
         output wire error_intr,
-        output wire notif_intr
+        output wire notif_intr,
+        input logic debugUnlock_or_scan_mode_switch
       );
 
   //----------------------------------------------------------------
@@ -102,6 +103,9 @@ module hmac
   logic kv_block_write_en;
   logic [4:0] kv_block_write_offset;
   logic [31:0] kv_block_write_data;
+  //KV Read Data Present
+  logic kv_read_data_present;
+  logic kv_read_data_present_set, kv_read_data_present_reset;
 
   logic dest_keyvault;
   kv_error_code_e kv_key_error, kv_block_error, kv_write_error;
@@ -113,7 +117,6 @@ module hmac
   kv_read_ctrl_reg_t kv_block_read_ctrl_reg;
   kv_write_ctrl_reg_t kv_write_ctrl_reg;
   logic core_tag_we;
-  logic core_ready_reg;
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
@@ -173,26 +176,30 @@ module hmac
           kv_reg          <= '0;
           tag_reg         <= '0;
           tag_valid_reg   <= '0;
-          core_ready_reg  <= '0;
+          ready_reg       <= '0;
+          kv_read_data_present <= '0;
         end
       else if (zeroize_reg)
         begin
           kv_reg          <= '0;
           tag_reg         <= '0;
           tag_valid_reg   <= '0;
-          core_ready_reg  <= '0;
+          ready_reg       <= '0;
+          kv_read_data_present <= '0;
         end
       else
         begin
           tag_valid_reg <= core_tag_valid;
-          core_ready_reg <= core_ready; 
+          ready_reg     <= core_ready; 
 
           //write to sw register
-          if (core_tag_we & ~dest_keyvault)
+          if (core_tag_we & ~(dest_keyvault | kv_read_data_present))
             tag_reg <= core_tag;
-          if (core_tag_we & dest_keyvault)
+          if (core_tag_we & (dest_keyvault | kv_read_data_present))
             kv_reg <= core_tag;
 
+          kv_read_data_present <= kv_read_data_present_set ? '1 :
+                                  kv_read_data_present_reset ? '0 : kv_read_data_present;
         end
     end // reg_update
 
@@ -210,10 +217,10 @@ always_comb begin
   //assign hardware readable registers to drive hmac core
   init_reg = hwif_out.HMAC384_CTRL.INIT.value;
   next_reg = hwif_out.HMAC384_CTRL.NEXT.value;
-  zeroize_reg = hwif_out.HMAC384_CTRL.ZEROIZE.value;
+  zeroize_reg = hwif_out.HMAC384_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
 
   //drive hardware writeable registers from hmac core
-  hwif_in.HMAC384_STATUS.READY.next = core_ready_reg;
+  hwif_in.HMAC384_STATUS.READY.next = ready_reg;
   hwif_in.HMAC384_STATUS.VALID.next = tag_valid_reg;
   for (int dword=0; dword < TAG_NUM_DWORDS; dword++) begin
     hwif_in.HMAC384_TAG[dword].TAG.next = tag_reg[(TAG_NUM_DWORDS - 1)-dword];
@@ -221,14 +228,14 @@ always_comb begin
   end
   //drive hardware writable registers from key vault
   for (int dword=0; dword < BLOCK_NUM_DWORDS; dword++)begin
-    hwif_in.HMAC384_BLOCK[dword].BLOCK.we = kv_block_write_en & (kv_block_write_offset == dword);
+    hwif_in.HMAC384_BLOCK[dword].BLOCK.we = (kv_block_write_en & (kv_block_write_offset == dword)) & !(zeroize_reg | kv_read_data_present_reset);
     hwif_in.HMAC384_BLOCK[dword].BLOCK.next = kv_block_write_data;
-    hwif_in.HMAC384_BLOCK[dword].BLOCK.hwclr = zeroize_reg;
+    hwif_in.HMAC384_BLOCK[dword].BLOCK.hwclr = zeroize_reg | kv_read_data_present_reset;
   end
   for (int dword=0; dword < KEY_NUM_DWORDS; dword++)begin
-    hwif_in.HMAC384_KEY[dword].KEY.we = kv_key_write_en & (kv_key_write_offset == dword);
+    hwif_in.HMAC384_KEY[dword].KEY.we = (kv_key_write_en & (kv_key_write_offset == dword)) & !(zeroize_reg | kv_read_data_present_reset);
     hwif_in.HMAC384_KEY[dword].KEY.next = kv_key_write_data;
-    hwif_in.HMAC384_KEY[dword].KEY.hwclr = zeroize_reg;
+    hwif_in.HMAC384_KEY[dword].KEY.hwclr = zeroize_reg | kv_read_data_present_reset;
   end
   //set ready when keyvault isn't busy
   hwif_in.HMAC384_KV_RD_KEY_STATUS.READY.next = kv_key_ready;
@@ -267,6 +274,10 @@ end
 `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_key_read_ctrl_reg, HMAC384_KV_RD_KEY_CTRL)
 `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_block_read_ctrl_reg, HMAC384_KV_RD_BLOCK_CTRL)
 `CALIPTRA_KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, HMAC384_KV_WR_CTRL)
+
+//Force result into KV reg whenever source came from KV
+always_comb kv_read_data_present_set = kv_key_read_ctrl_reg.read_en | kv_block_read_ctrl_reg.read_en;
+always_comb kv_read_data_present_reset = kv_read_data_present & core_tag_we;
 
 // Register block
 hmac_reg i_hmac_reg (
@@ -309,6 +320,7 @@ hmac_key_kv_read
 (
     .clk(clk),
     .rst_b(reset_n),
+    .zeroize(zeroize_reg),
 
     //client control register
     .read_ctrl_reg(kv_key_read_ctrl_reg),
@@ -337,6 +349,7 @@ hmac_block_kv_read
 (
     .clk(clk),
     .rst_b(reset_n),
+    .zeroize(zeroize_reg),
 
     //client control register
     .read_ctrl_reg(kv_block_read_ctrl_reg),
@@ -363,6 +376,7 @@ hmac_result_kv_write
 (
   .clk(clk),
   .rst_b(reset_n),
+  .zeroize(zeroize_reg),
 
   //client control register
   .write_ctrl_reg(kv_write_ctrl_reg),

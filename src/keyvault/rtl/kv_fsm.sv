@@ -25,6 +25,7 @@ module kv_fsm
 (
     input logic clk,
     input logic rst_b,
+    input logic zeroize,
 
     input logic start,
     input logic last,
@@ -37,6 +38,7 @@ module kv_fsm
     output logic [OFFSET_W-1:0] write_offset,
     output logic write_pad,
     output logic [31:0] pad_data,
+    output logic write_last,
 
     output logic ready,
 
@@ -95,6 +97,7 @@ always_comb arc_KV_LENGTH_KV_DONE = kv_fsm_ps == KV_LENGTH;
 always_comb arc_KV_DONE_KV_IDLE = '1;
 
 always_comb offset_rst = arc_KV_RW_KV_DONE | arc_KV_LENGTH_KV_DONE;
+always_comb write_last = arc_KV_RW_KV_DONE | arc_KV_LENGTH_KV_DONE;
 
 always_comb begin : kv_fsm_comb
     kv_fsm_ns = kv_fsm_ps;
@@ -150,6 +153,11 @@ end
 
 always_ff @(posedge clk or negedge rst_b) begin
     if (!rst_b) begin
+        kv_fsm_ps <= KV_IDLE;
+        offset <= '0;
+        num_dwords_data <= '0;
+    end
+    else if (zeroize) begin
         kv_fsm_ps <= KV_IDLE;
         offset <= '0;
         num_dwords_data <= '0;

@@ -26,6 +26,7 @@ module kv_write_client
 (
     input logic clk,
     input logic rst_b,
+    input logic zeroize,
 
     //client control register
     input kv_write_ctrl_reg_t write_ctrl_reg,
@@ -49,6 +50,7 @@ logic [DATA_OFFSET_W-1:0] dest_write_offset;
 logic dest_write_en;
 logic [31:0] pad_data;
 logic write_pad;
+logic write_last;
 
 //dest write block
 kv_fsm #(
@@ -59,6 +61,7 @@ kv_dest_write_fsm
 (
     .clk(clk),
     .rst_b(rst_b),
+    .zeroize(zeroize),
     .start(dest_data_avail & write_ctrl_reg.write_en),
     .last('0),
     .pcr_hash_extend(1'b0),
@@ -66,6 +69,7 @@ kv_dest_write_fsm
     .write_en(dest_write_en),
     .write_offset(dest_write_offset),
     .write_pad(write_pad),
+    .write_last(write_last),
     .pad_data(pad_data),
     .ready(kv_ready),
     .done(dest_done)
@@ -77,11 +81,14 @@ always_comb kv_write.write_entry = write_ctrl_reg.write_entry;
 always_comb kv_write.write_offset = dest_write_offset;
 always_comb kv_write.write_en = dest_write_en;
 always_comb kv_write.write_data = dest_data[(DATA_NUM_DWORDS-1) - dest_read_offset];
-
-always_comb kv_write.write_dest_valid = write_ctrl_reg.write_dest_vld;
+//write zeroes here until last cycle
+always_comb kv_write.write_dest_valid = write_last ? write_ctrl_reg.write_dest_vld : '0;
 
 always_ff @(posedge clk or negedge rst_b) begin
     if (!rst_b) begin
+        error_code <= KV_SUCCESS;
+    end
+    else if (zeroize) begin
         error_code <= KV_SUCCESS;
     end
     else begin

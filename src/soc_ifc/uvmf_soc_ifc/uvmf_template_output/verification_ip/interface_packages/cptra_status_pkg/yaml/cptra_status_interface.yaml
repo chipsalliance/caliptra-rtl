@@ -21,6 +21,10 @@ uvmf:
         reset_value: '''bz'
         width: '1'
       - dir: output
+        name: fw_update_rst_window
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
         name: cptra_obf_key_reg
         reset_value: '''bz'
         width: '[''`CLP_OBF_KEY_DWORDS'', ''32'']'
@@ -49,9 +53,17 @@ uvmf:
         reset_value: '''bz'
         width: '1'
       - dir: output
+        name: timer_intr
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
         name: nmi_vector
         reset_value: '''bz'
         width: '32'
+      - dir: output
+        name: nmi_intr
+        reset_value: '''bz'
+        width: '1'
       - dir: output
         name: iccm_lock
         reset_value: '''bz'
@@ -87,6 +99,12 @@ uvmf:
       - comment: ''
         iscompare: 'True'
         isrand: 'False'
+        name: timer_intr_pending
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
         name: noncore_rst_asserted
         type: bit
         unpacked_dimension: ''
@@ -94,6 +112,12 @@ uvmf:
         iscompare: 'True'
         isrand: 'False'
         name: uc_rst_asserted
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: fw_update_rst_window
         type: bit
         unpacked_dimension: ''
       - comment: ''
@@ -119,6 +143,12 @@ uvmf:
         isrand: 'False'
         name: nmi_vector
         type: bit [31:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: nmi_intr_pending
+        type: bit
         unpacked_dimension: ''
       - comment: ''
         iscompare: 'True'

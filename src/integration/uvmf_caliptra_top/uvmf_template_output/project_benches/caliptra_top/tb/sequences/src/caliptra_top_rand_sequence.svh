@@ -49,15 +49,38 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
       IDX_SOC_IFC_ENV_MBOX_RAND_SMALL,
       IDX_SOC_IFC_ENV_MBOX_RAND_MEDIUM,
       IDX_SOC_IFC_ENV_MBOX_RAND_LARGE,
+      IDX_SOC_IFC_ENV_MBOX_MIN,
+      IDX_SOC_IFC_ENV_MBOX_MAX,
       IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_SMALL,
       IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_MEDIUM,
+      IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_LARGE,
+      IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_SMALL,
+      IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_MEDIUM,
+      IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_LARGE,
+      IDX_SOC_IFC_ENV_MBOX_RAND_MEDIUM_INTERFERENCE,
+      IDX_SOC_IFC_ENV_MBOX_DLEN_INVALID,
+      IDX_SOC_IFC_ENV_MBOX_DLEN_OVERFLOW_SMALL,
+      IDX_SOC_IFC_ENV_MBOX_DLEN_OVERFLOW_MEDIUM,
+      IDX_SOC_IFC_ENV_MBOX_DLEN_OVERFLOW_LARGE,
+      IDX_SOC_IFC_ENV_MBOX_DLEN_UNDERFLOW_SMALL,
+      IDX_SOC_IFC_ENV_MBOX_DLEN_UNDERFLOW_MEDIUM,
+      IDX_SOC_IFC_ENV_MBOX_DLEN_UNDERFLOW_LARGE,
+      IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_SMALL,
+      IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_MEDIUM,
+      IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_LARGE,
+      IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_SMALL,
+      IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_MEDIUM,
+      IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_LARGE,
       IDX_SOC_IFC_ENV_MBOX_MULTI_AGENT,
       IDX_SOC_IFC_ENV_RST_WARM,
       IDX_SOC_IFC_ENV_RST_COLD,
       IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM,
       IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM,
       IDX_SOC_IFC_ENV_MBOX_SHA_ACCEL,
-      IDX_SOC_IFC_ENV_SHA_ACCEL
+      IDX_SOC_IFC_ENV_SHA_ACCEL,
+      IDX_SOC_IFC_ENV_FW_UPD,
+      IDX_SOC_IFC_ENV_MBOX_UC_REG_ACCESS,
+      IDX_SOC_IFC_ENV_MBOX_DIR_READ
   } rand_seq_idx;
 
   rand int iteration_count;
@@ -66,32 +89,82 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
   // Choose rand weights for each sequence to determine run frequency
   constraint avail_env_seqs_c {
       rand_seq_idx dist {
-          //IDX_SOC_IFC_ENV_MBOX_RAND_FW            := 0,
-          IDX_SOC_IFC_ENV_MBOX_RAND_SMALL           := 125,
-          IDX_SOC_IFC_ENV_MBOX_RAND_MEDIUM          := 100,
-          IDX_SOC_IFC_ENV_MBOX_RAND_LARGE           := 1,
-          IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_SMALL    := 125,
-          IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_MEDIUM   := 100,
-          IDX_SOC_IFC_ENV_MBOX_MULTI_AGENT          := 100,
-          IDX_SOC_IFC_ENV_RST_WARM                  := 100,
-          IDX_SOC_IFC_ENV_RST_COLD                  := 100,
-          IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM := 100,
-          IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM := 100,
-          IDX_SOC_IFC_ENV_MBOX_SHA_ACCEL            := 100,
-          IDX_SOC_IFC_ENV_SHA_ACCEL                 := 100
+          //IDX_SOC_IFC_ENV_MBOX_RAND_FW                := 0,
+          IDX_SOC_IFC_ENV_MBOX_RAND_SMALL               := 20,
+          IDX_SOC_IFC_ENV_MBOX_RAND_MEDIUM              := 20,
+          IDX_SOC_IFC_ENV_MBOX_RAND_LARGE               := 2,
+          IDX_SOC_IFC_ENV_MBOX_MIN                      := 100,
+          IDX_SOC_IFC_ENV_MBOX_MAX                      := 10,
+          IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_SMALL        := 100,
+          IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_MEDIUM       := 100,
+          IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_LARGE        := 10,
+          IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_SMALL         := 100,
+          IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_MEDIUM        := 100,
+          IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_LARGE         := 5,
+          IDX_SOC_IFC_ENV_MBOX_RAND_MEDIUM_INTERFERENCE := 100,
+          IDX_SOC_IFC_ENV_MBOX_DLEN_INVALID             := 10,
+          IDX_SOC_IFC_ENV_MBOX_DLEN_OVERFLOW_SMALL      := 100,
+          IDX_SOC_IFC_ENV_MBOX_DLEN_OVERFLOW_MEDIUM     := 100,
+          IDX_SOC_IFC_ENV_MBOX_DLEN_OVERFLOW_LARGE      := 10,
+          IDX_SOC_IFC_ENV_MBOX_DLEN_UNDERFLOW_SMALL     := 100,
+          IDX_SOC_IFC_ENV_MBOX_DLEN_UNDERFLOW_MEDIUM    := 100,
+          IDX_SOC_IFC_ENV_MBOX_DLEN_UNDERFLOW_LARGE     := 10,
+          IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_SMALL        := 200,
+          IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_MEDIUM       := 200,
+          IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_LARGE        := 20,
+          IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_SMALL          := 200,
+          IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_MEDIUM         := 200,
+          IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_LARGE          := 10,
+          IDX_SOC_IFC_ENV_MBOX_MULTI_AGENT              := 200,
+          IDX_SOC_IFC_ENV_RST_WARM                      := 100,
+          IDX_SOC_IFC_ENV_RST_COLD                      := 100,
+          IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM     := 100,
+          IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM     := 100,
+          IDX_SOC_IFC_ENV_MBOX_SHA_ACCEL                := 100,
+          IDX_SOC_IFC_ENV_SHA_ACCEL                     := 100,
+          IDX_SOC_IFC_ENV_FW_UPD                        := 10,
+          IDX_SOC_IFC_ENV_MBOX_UC_REG_ACCESS            := 100,
+          IDX_SOC_IFC_ENV_MBOX_DIR_READ                 := 100
       };
+  }
+  constraint disable_long_env_seqs_c {
+      !(rand_seq_idx inside {IDX_SOC_IFC_ENV_MBOX_RAND_LARGE,
+                             IDX_SOC_IFC_ENV_MBOX_MAX,
+                             IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_LARGE,
+                             IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_MEDIUM,
+                             IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_LARGE,
+                             IDX_SOC_IFC_ENV_MBOX_DLEN_INVALID,
+                             IDX_SOC_IFC_ENV_MBOX_DLEN_OVERFLOW_LARGE,
+                             IDX_SOC_IFC_ENV_MBOX_DLEN_UNDERFLOW_LARGE,
+                             IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_LARGE,
+                             IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_LARGE,
+                             IDX_SOC_IFC_ENV_MBOX_MULTI_AGENT});
   }
   constraint iter_count_c {
       iteration_count inside {[1:10]};
+  }
+  constraint iter_count_short_c {
+      iteration_count < 5;
   }
 
   function new(string name = "" );
     super.new(name);
     reg_model = top_configuration.soc_ifc_subenv_config.soc_ifc_rm;
+    // The short test suite is used in promote pipeline to quickly check for UVM issues
+    if ($test$plusargs("CLP_SHORT_SUITE")) begin
+        this.disable_long_env_seqs_c.constraint_mode(1);
+        this.iter_count_short_c.constraint_mode(1);
+    end
+    else begin
+        this.disable_long_env_seqs_c.constraint_mode(0);
+        this.iter_count_short_c.constraint_mode(0);
+    end
+    // Users can manually override the number of random iterations to any desired value
     if ($value$plusargs("CALIPTRA_TOP_RAND_ITER=%0d", iteration_count)) begin
         `uvm_info("CALIPTRA_TOP_RAND_TEST", $sformatf("Received Command Line Iteration Count Argument of %0d", iteration_count), UVM_LOW);
         iteration_count.rand_mode(0);
         this.iter_count_c.constraint_mode(0);
+        this.iter_count_short_c.constraint_mode(0);
     end
     else begin
         if (!this.randomize(iteration_count))
@@ -135,6 +208,8 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
     bit pauser_valid_initialized = 1'b0;
     uvm_object obj;
     int ii;
+    int unsigned mbox_ecc_single_error_burst;
+    int unsigned mbox_ecc_single_error_delay_clocks;
 
     caliptra_top_env_seq = caliptra_top_env_sequence_base_t::type_id::create("caliptra_top_env_seq");
     soc_ifc_env_bringup_seq = soc_ifc_env_bringup_sequence_t::type_id::create("soc_ifc_env_bringup_seq");
@@ -144,6 +219,7 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
 
     soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq     = soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq_t::type_id::create("soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq");
     soc_ifc_subenv_soc_ifc_status_agent_responder_seq  = soc_ifc_subenv_soc_ifc_status_agent_responder_seq_t::type_id::create("soc_ifc_subenv_soc_ifc_status_agent_responder_seq");
+    soc_ifc_subenv_mbox_sram_agent_responder_seq      = soc_ifc_subenv_mbox_sram_agent_responder_seq_t::type_id::create("soc_ifc_subenv_mbox_sram_agent_responder_seq");
 
     // Handle to the responder sequence for getting response transactions
     soc_ifc_env_bringup_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
@@ -161,11 +237,27 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
     // Start RESPONDER sequences here
     fork
         soc_ifc_subenv_soc_ifc_status_agent_responder_seq.start(soc_ifc_subenv_soc_ifc_status_agent_sequencer);
+        soc_ifc_subenv_mbox_sram_agent_responder_seq.start(soc_ifc_subenv_mbox_sram_agent_sequencer);
     join_none
 //    // Start INITIATOR sequences here
 //    fork
 //      repeat (25) soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq.start(soc_ifc_subenv_soc_ifc_ctrl_agent_sequencer);
 //    join
+    fork
+        forever begin
+            if (!std::randomize(mbox_ecc_single_error_burst,mbox_ecc_single_error_delay_clocks) with {mbox_ecc_single_error_burst        dist {1 :/ 10000, [2:5] :/ 2000, [6:31] :/ 200, [32:1023] :/ 10, [1024:131071] :/ 2, [131072:524288] :/ 1};
+                                                                                                      mbox_ecc_single_error_delay_clocks dist {1 :/ 1, [2:31] :/ 3, [32:127] :/ 5, [128:1023] :/ 3, [1024:131072] :/ 1};    })
+                `uvm_fatal("CALIPTRA_TOP_RAND_TEST", "Failed to randomize mbox ecc bit flip injection parameters")
+            else
+                `uvm_info("CALIPTRA_TOP_RAND_TEST", $sformatf("Randomized mbox ecc bit flip injection parameters: burst [%0d] delay [%0d clocks]", mbox_ecc_single_error_burst, mbox_ecc_single_error_delay_clocks), UVM_FULL)
+            soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_num_clocks(mbox_ecc_single_error_delay_clocks);
+            `uvm_info("CALIPTRA_TOP_RAND_TEST", $sformatf("Injecting mbox ecc error with burst [%0d]", mbox_ecc_single_error_burst), UVM_DEBUG)
+            repeat(mbox_ecc_single_error_burst) begin
+                soc_ifc_subenv_mbox_sram_agent_config.inject_ecc_error |= 2'b01;
+                @soc_ifc_subenv_mbox_sram_agent_responder_seq.new_rsp;
+            end
+        end
+    join_none
     fork
         forever @(soc_ifc_subenv_soc_ifc_status_agent_responder_seq.new_rsp) sts_rsp_count++;
     join_none
@@ -193,6 +285,10 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
                 obj = soc_ifc_env_mbox_rand_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_RAND_LARGE:
                 obj = soc_ifc_env_mbox_rand_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_MIN:
+                obj = soc_ifc_env_mbox_min_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_MAX:
+                obj = soc_ifc_env_mbox_max_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_SMALL: begin
                 if (!pauser_valid_initialized) begin
                     if(!soc_ifc_env_pauser_init_seq.randomize())
@@ -215,6 +311,54 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
                 end
                 obj = soc_ifc_env_mbox_rand_pauser_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             end
+            IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_LARGE: begin
+                if (!pauser_valid_initialized) begin
+                    if(!soc_ifc_env_pauser_init_seq.randomize())
+                        `uvm_fatal("CALIPTRA_TOP_RAND_TEST", "caliptra_top_rand_sequence::body() - soc_ifc_env_pauser_init_seq randomization failed")
+                    soc_ifc_env_pauser_init_seq.start(top_configuration.soc_ifc_subenv_config.vsqr);
+
+                    `uvm_info("CALIPTRA_TOP_RAND_TEST", "SoC completed PAUSER VALID initialization", UVM_LOW)
+                    pauser_valid_initialized = 1'b1;
+                end
+                obj = soc_ifc_env_mbox_rand_pauser_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            end
+            IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_SMALL: begin
+                obj = soc_ifc_env_mbox_rand_delay_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            end
+            IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_MEDIUM: begin
+                obj = soc_ifc_env_mbox_rand_delay_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            end
+            IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_LARGE: begin
+                obj = soc_ifc_env_mbox_rand_delay_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            end
+            IDX_SOC_IFC_ENV_MBOX_RAND_MEDIUM_INTERFERENCE:
+                obj = soc_ifc_env_mbox_rand_medium_interference_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_DLEN_INVALID:
+                obj = soc_ifc_env_mbox_dlen_invalid_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_DLEN_OVERFLOW_SMALL:
+                obj = soc_ifc_env_mbox_dlen_overflow_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_DLEN_OVERFLOW_MEDIUM:
+                obj = soc_ifc_env_mbox_dlen_overflow_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_DLEN_OVERFLOW_LARGE:
+                obj = soc_ifc_env_mbox_dlen_overflow_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_DLEN_UNDERFLOW_SMALL:
+                obj = soc_ifc_env_mbox_dlen_underflow_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_DLEN_UNDERFLOW_MEDIUM:
+                obj = soc_ifc_env_mbox_dlen_underflow_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_DLEN_UNDERFLOW_LARGE:
+                obj = soc_ifc_env_mbox_dlen_underflow_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_SMALL:
+                obj = soc_ifc_env_mbox_reg_axs_invalid_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_MEDIUM:
+                obj = soc_ifc_env_mbox_reg_axs_invalid_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_LARGE:
+                obj = soc_ifc_env_mbox_reg_axs_invalid_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_SMALL:
+                obj = soc_ifc_env_mbox_sram_double_bit_flip_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_MEDIUM:
+                obj = soc_ifc_env_mbox_sram_double_bit_flip_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_LARGE:
+                obj = soc_ifc_env_mbox_sram_double_bit_flip_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_MULTI_AGENT:
                 // TODO PAUSER init first?
                 obj = soc_ifc_env_mbox_rand_multi_agent_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
@@ -230,6 +374,12 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
                 obj = soc_ifc_env_mbox_sha_accel_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_SHA_ACCEL:
                 obj = soc_ifc_env_sha_accel_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_FW_UPD:
+                obj = soc_ifc_env_mbox_fw_upd_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_UC_REG_ACCESS:
+                obj = soc_ifc_env_mbox_uc_reg_access_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_DIR_READ:
+                obj = soc_ifc_env_mbox_dir_read_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             default:
                 `uvm_error("CALIPTRA_TOP_RAND_TEST", $sformatf("rand_seq_idx randomized to illegal value: %p", rand_seq_idx))
         endcase
@@ -267,10 +417,11 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
     // the last sequence to allow for the last sequence item to flow 
     // through the design.
     fork
-      soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_num_clocks(400);
-      soc_ifc_subenv_cptra_ctrl_agent_config.wait_for_num_clocks(400);
-      soc_ifc_subenv_soc_ifc_status_agent_config.wait_for_num_clocks(400);
-      soc_ifc_subenv_cptra_status_agent_config.wait_for_num_clocks(400);
+      soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_num_clocks(4000);
+      soc_ifc_subenv_cptra_ctrl_agent_config.wait_for_num_clocks(4000);
+      soc_ifc_subenv_soc_ifc_status_agent_config.wait_for_num_clocks(4000);
+      soc_ifc_subenv_cptra_status_agent_config.wait_for_num_clocks(4000);
+      soc_ifc_subenv_mbox_sram_agent_config.wait_for_num_clocks(4000);
     join
 
     // pragma uvmf custom body end

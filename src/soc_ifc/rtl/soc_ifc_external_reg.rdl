@@ -17,16 +17,20 @@
 reg {
     name = "Hardware Error Fatal";
     desc = "Indicates fatal hardware error.
-            [br]Caliptra Access: RW
-            [br]SOC Access:      RW";
-    rw_rw_sticky_hw error_code[32]=0; 
+            [br]Caliptra Access: RW1C
+            [br]SOC Access:      RW1C";
+    rw_rw_sticky_hw iccm_ecc_unc=0;     /* Uncorrectable double-bit error in ICCM */
+    rw_rw_sticky_hw dccm_ecc_unc=0;     /* Uncorrectable double-bit error in DCCM */
+    rw_rw_sticky_hw nmi_pin=0;          /* Non-Maskable Interrupt due to WDT timeout */
 } CPTRA_HW_ERROR_FATAL;
 reg {
     name = "Hardware Error Non-Fatal";
     desc = "Indicates non-fatal hardware error.
-            [br]Caliptra Access: RW
-            [br]SOC Access:      RW";
-    rw_rw_sticky_hw error_code[32]=0; 
+            [br]Caliptra Access: RW1C
+            [br]SOC Access:      RW1C";
+    rw_rw_sticky_hw mbox_prot_no_lock=0; /* SOC access while not locked */
+    rw_rw_sticky_hw mbox_prot_ooo=0;     /* Register access out-of-order */
+    rw_rw_sticky_hw mbox_ecc_unc=0;      /* Uncorrectable double-bit error in DCCM */
 } CPTRA_HW_ERROR_NON_FATAL;
 reg {
     name = "Firmware Error Fatal";
@@ -78,13 +82,14 @@ reg {
     desc = "Reports the status of the firmware flows.
             [br]Caliptra Access: RW
             [br]SOC Access:      RO";
-    rw_ro status[28]=0;
-    //TRNG request bit
-     field {desc="Indicates Caliptra is ready for Firmware Download";         sw=rw; swwel = soc_req; hw=r ; resetsignal = cptra_rst_b;} ready_for_fw[1]=0;
-     field {desc="Indicates Caliptra is ready for Runtime Firmware Download"; sw=rw; swwel = soc_req; hw=r ; resetsignal = cptra_rst_b;} ready_for_runtime[1]=0;
-     field {desc="Indicates Caliptra is ready for Fuses to be programmed.
-                  Read-only to both Caliptra and SOC.";                       sw=r;                   hw=rw; resetsignal = cptra_rst_b;} ready_for_fuses[1];
-     field {desc="Indicates Caliptra is has completed Mailbox Flow.";         sw=rw; swwel = soc_req; hw=r ; resetsignal = cptra_rst_b;} mailbox_flow_done[1]=0;
+    rw_ro status[24]=0;
+    field {desc="DEV ID CSR ready";                                          sw=rw; swwel = soc_req; hw=r ; resetsignal = cptra_rst_b;} idevid_csr_ready[1]=0;
+    field {desc="Boot FSM State";                                            sw=r;                   hw=w ; /* no storage, no reset */} boot_fsm_ps[3];
+    field {desc="Indicates Caliptra is ready for Firmware Download";         sw=rw; swwel = soc_req; hw=r ; resetsignal = cptra_rst_b;} ready_for_fw[1]=0;
+    field {desc="Indicates Caliptra is ready for RT flows";                  sw=rw; swwel = soc_req; hw=r ; resetsignal = cptra_rst_b;} ready_for_runtime[1]=0;
+    field {desc="Indicates Caliptra is ready for Fuses to be programmed.
+                 Read-only to both Caliptra and SOC.";                       sw=r;                   hw=w ; /* no storage, no reset */} ready_for_fuses[1];
+    field {desc="Indicates Caliptra is has completed Mailbox Flow.";         sw=rw; swwel = soc_req; hw=r ; resetsignal = cptra_rst_b;} mailbox_flow_done[1]=0;
 } CPTRA_FLOW_STATUS;
 reg {
     name = "Reset Reason";
@@ -167,8 +172,16 @@ reg {
     desc = "Storage for the requested TRNG Data.
             [br]Caliptra Access: RO
             [br]SOC Access:      RW";
-    field {sw=rw; hw=na; swwe; swacc; resetsignal=cptra_rst_b;} DATA[32]=0;
+    field {sw=rw; hw=na; swwe; swacc; hwclr; resetsignal=cptra_rst_b;} DATA[32]=0;
  } CPTRA_TRNG_DATA[12];
+
+ reg {
+    name = "TRNG Ctrl";
+    desc = "TRNG Control register to clear data registers";
+    field {desc = "Indicates that TRNG Data can be cleared
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";  sw=rw; hw=r; singlepulse; swwel=soc_req; resetsignal=cptra_rst_b;} clear=0;
+} CPTRA_TRNG_CTRL;
 
 reg {
     name = "TRNG Status";
@@ -244,9 +257,11 @@ reg {
 reg {
     name = "Caliptra HW RevID";
     desc = "Caliptra HW revision ID that matches the official final release milestone
+            SoC stepping ID is repopulated with the value in the fuse register on every warm reset
             [br]Caliptra Access: RO
             [br]SOC Access:      RO";
-    field {sw=r; hw=r; resetsignal = cptra_rst_b;} REV_ID[32]=1;
+    field {sw=r; resetsignal = cptra_rst_b;} CPTRA_GENERATION[16]=1;
+    field {sw=r; hw=w; resetsignal = cptra_rst_b;} SOC_STEPPING_ID[16]=0;
 } CPTRA_HW_REV_ID;
 reg {
     name = "Caliptra FW RevID";
@@ -322,8 +337,55 @@ reg {
 reg {
     name = "Caliptra WDT STATUS register";
     desc = "Caliptra watchdog timer status register
-            [br]Caliptra Access: RO
+            [br]Caliptra Access: RW
             [br]SOC Access:      RO";
     field {desc = "Timer1 timed out, timer2 enabled"; hw = rw; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;} t1_timeout = 1'b0;
     field {desc = "Timer2 timed out"; hw = rw; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;} t2_timeout = 1'b0;
 } CPTRA_WDT_STATUS;
+
+reg {
+    name = "Valid User for FUSE";
+    desc = "Valid PAUSER attributes for FUSE on SoC APB Interface. Only valid once LOCK is set.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RW
+            [br]Read-Only once locked by FUSE_PAUSER_LOCK.";
+    field {sw=rw; hw=r; swwel; resetsignal = cptra_pwrgood;} PAUSER[32]=0xFFFF_FFFF;
+ } CPTRA_FUSE_VALID_PAUSER;
+
+reg {
+    name = "Valid User for FUSE PAUSER Lock";
+    desc = "Valid PAUSER attributes for requests from SoC APB Interface.
+            [br]Each bit corresponds to locking the associated FUSE_VALID_PAUSER register.
+            [br]Associated FUSE_VALID_PAUSER register is only valid once locked by this bit.
+            [br]Caliptra FW RW access for survivability but cannot unlock once locked
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RW
+            [br]Read-Only once locked.";
+    field {sw=rw; hw=r; swwel; resetsignal=cptra_pwrgood;} LOCK=0;
+ } CPTRA_FUSE_PAUSER_LOCK;
+
+reg {
+    name = "Caliptra WDT1 Config";
+    desc = "SOC provided count in cycles for WDT1 timeout.";
+    field {sw=rw; hw=na; resetsignal = cptra_pwrgood;} TIMEOUT[32]=0;
+ } CPTRA_WDT_CFG[2];
+
+reg {
+    name = "Caliptra iTRNG Entropy Configuration 0";
+    desc = "Adaptive threshold values for entropy source health tests.";
+    field {sw=rw; resetsignal=cptra_rst_b;} low_threshold[16]=0;
+    field {sw=rw; resetsignal=cptra_rst_b;} high_threshold[16]=0;
+ } CPTRA_iTRNG_ENTROPY_CONFIG_0;
+
+reg {
+    name = "Caliptra iTRNG Entropy Configuration 1";
+    desc = "Repetition count value for entropy source health tests.";
+    field {sw=rw; resetsignal=cptra_rst_b;} repetition_count[16]=0;
+    field {sw=rw; resetsignal=cptra_rst_b;} RSVD[16]=0;
+ } CPTRA_iTRNG_ENTROPY_CONFIG_1;
+
+reg {
+    name = "Caliptra Reserved Registers";
+    desc = "Set of reserved registers for survivability";
+    field {sw=rw; resetsignal=cptra_rst_b;} RSVD[32]=0;
+ } CPTRA_RSVD_REG[2];

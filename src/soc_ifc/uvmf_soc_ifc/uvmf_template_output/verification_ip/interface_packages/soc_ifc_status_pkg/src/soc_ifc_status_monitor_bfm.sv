@@ -145,13 +145,17 @@ end
   // pragma uvmf custom reset_condition end
   endtask
 
-  //******************************************************************
-
-  task wait_for_num_clocks(input int unsigned count); // pragma tbx xtf
+  // pragma uvmf custom wait_for_num_clocks begin
+  //****************************************************************************                         
+  // Inject pragmas's here to throw a warning on regeneration.
+  // Task must have automatic lifetime so that it can be concurrently invoked
+  // by multiple entities with a different wait value.
+  task automatic wait_for_num_clocks(input int unsigned count); // pragma tbx xtf
+    if (count == 0) `uvm_fatal("CFG", "wait_for_num_clocks called with count of 0 - this will lead to a hang");
     @(posedge clk_i);
-
     repeat (count-1) @(posedge clk_i);
   endtask
+  // pragma uvmf custom wait_for_num_clocks end                                                                
 
   //******************************************************************
   event go;
@@ -254,6 +258,7 @@ end
          soc_ifc_status_monitor_struct.trng_req_pending                   = trng_req_i;
          soc_ifc_status_monitor_struct.generic_output_val                 =  generic_output_wires_i;
     end
+
     // pragma uvmf custom do_monitor end
   endtask
 

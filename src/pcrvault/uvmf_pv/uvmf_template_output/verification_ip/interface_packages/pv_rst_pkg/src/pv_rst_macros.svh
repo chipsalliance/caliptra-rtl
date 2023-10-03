@@ -65,6 +65,7 @@ typedef struct packed  { \
   `define pv_rst_MONITOR_STRUCT typedef struct packed  { \
   bit set_pwrgood ; \
   bit assert_rst ; \
+  bit assert_core_rst ; \
   int unsigned wait_cycles ; \
      } pv_rst_monitor_s;
 
@@ -74,6 +75,7 @@ typedef struct packed  { \
             { \
             this.set_pwrgood , \
             this.assert_rst , \
+            this.assert_core_rst , \
             this.wait_cycles  \
             };\
     return ( pv_rst_monitor_struct);\
@@ -84,6 +86,7 @@ typedef struct packed  { \
             {\
             this.set_pwrgood , \
             this.assert_rst , \
+            this.assert_core_rst , \
             this.wait_cycles  \
             } = pv_rst_monitor_struct;\
   endfunction
@@ -96,6 +99,7 @@ typedef struct packed  { \
   `define pv_rst_INITIATOR_STRUCT typedef struct packed  { \
   bit set_pwrgood ; \
   bit assert_rst ; \
+  bit assert_core_rst ; \
   int unsigned wait_cycles ; \
      } pv_rst_initiator_s;
 
@@ -105,6 +109,7 @@ typedef struct packed  { \
            {\
            this.set_pwrgood , \
            this.assert_rst , \
+           this.assert_core_rst , \
            this.wait_cycles  \
            };\
     return ( pv_rst_initiator_struct);\
@@ -115,6 +120,7 @@ typedef struct packed  { \
            {\
            this.set_pwrgood , \
            this.assert_rst , \
+           this.assert_core_rst , \
            this.wait_cycles  \
            } = pv_rst_initiator_struct;\
   endfunction
@@ -127,6 +133,7 @@ typedef struct packed  { \
   `define pv_rst_RESPONDER_STRUCT typedef struct packed  { \
   bit set_pwrgood ; \
   bit assert_rst ; \
+  bit assert_core_rst ; \
   int unsigned wait_cycles ; \
      } pv_rst_responder_s;
 
@@ -136,6 +143,7 @@ typedef struct packed  { \
            {\
            this.set_pwrgood , \
            this.assert_rst , \
+           this.assert_core_rst , \
            this.wait_cycles  \
            };\
     return ( pv_rst_responder_struct);\
@@ -146,6 +154,7 @@ typedef struct packed  { \
            {\
            this.set_pwrgood , \
            this.assert_rst , \
+           this.assert_core_rst , \
            this.wait_cycles  \
            } = pv_rst_responder_struct;\
   endfunction

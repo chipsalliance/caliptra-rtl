@@ -184,7 +184,7 @@ module csrng_ctr_drbg_upd #(
   blk_enc_state_e blk_enc_state_d, blk_enc_state_q;
 
   // SEC_CM: BLK_ENC.FSM.SPARSE
-  `PRIM_FLOP_SPARSE_FSM(u_blk_enc_state_regs, blk_enc_state_d,
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_blk_enc_state_regs, blk_enc_state_d,
       blk_enc_state_q, blk_enc_state_e, ReqIdle)
 
 // Encoding generated with:
@@ -218,7 +218,7 @@ module csrng_ctr_drbg_upd #(
   outblk_state_e outblk_state_d, outblk_state_q;
 
   // SEC_CM: OUTBLK.FSM.SPARSE
-  `PRIM_FLOP_SPARSE_FSM(u_outblk_state_regs, outblk_state_d,
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_outblk_state_regs, outblk_state_d,
       outblk_state_q, outblk_state_e, AckIdle)
 
   always_ff @(posedge clk_i or negedge rst_ni)
@@ -241,12 +241,12 @@ module csrng_ctr_drbg_upd #(
   // input request fifo for staging update requests
   //--------------------------------------------
 
-  prim_fifo_sync #(
+  caliptra_prim_fifo_sync #(
     .Width(UpdReqFifoWidth),
     .Pass(0),
     .Depth(UpdReqFifoDepth),
     .OutputZeroIfEmpty(1'b0)
-  ) u_prim_fifo_sync_updreq (
+  ) u_caliptra_prim_fifo_sync_updreq (
     .clk_i    (clk_i),
     .rst_ni   (rst_ni),
     .clr_i    (!ctr_drbg_upd_enable_i),
@@ -287,9 +287,9 @@ module csrng_ctr_drbg_upd #(
   end
 
   // SEC_CM: DRBG_UPD.CTR.REDUN
-  prim_count #(
+  caliptra_prim_count #(
     .Width(CtrLen)
-  ) u_prim_count_ctr_drbg (
+  ) u_caliptra_prim_count_ctr_drbg (
     .clk_i,
     .rst_ni,
     .clr_i(!ctr_drbg_upd_enable_i),
@@ -377,12 +377,12 @@ module csrng_ctr_drbg_upd #(
   // block_encrypt request fifo for staging aes requests
   //--------------------------------------------
 
-  prim_fifo_sync #(
+  caliptra_prim_fifo_sync #(
     .Width(BlkEncReqFifoWidth),
     .Pass(0),
     .Depth(BlkEncReqFifoDepth),
     .OutputZeroIfEmpty(1'b0)
-  ) u_prim_fifo_sync_bencreq (
+  ) u_caliptra_prim_fifo_sync_bencreq (
     .clk_i    (clk_i),
     .rst_ni   (rst_ni),
     .clr_i    (!ctr_drbg_upd_enable_i),
@@ -420,12 +420,12 @@ module csrng_ctr_drbg_upd #(
   // block_encrypt response fifo from block encrypt
   //--------------------------------------------
 
-  prim_fifo_sync #(
+  caliptra_prim_fifo_sync #(
     .Width(BlkEncAckFifoWidth),
     .Pass(0),
     .Depth(BlkEncAckFifoDepth),
     .OutputZeroIfEmpty(1'b0)
-  ) u_prim_fifo_sync_bencack (
+  ) u_caliptra_prim_fifo_sync_bencack (
     .clk_i    (clk_i),
     .rst_ni   (rst_ni),
     .clr_i    (!ctr_drbg_upd_enable_i),
@@ -455,12 +455,12 @@ module csrng_ctr_drbg_upd #(
   // fifo to stage provided_data, waiting for blk_encrypt to ack
   //--------------------------------------------
 
-  prim_fifo_sync #(
+  caliptra_prim_fifo_sync #(
     .Width(PDataFifoWidth),
     .Pass(0),
     .Depth(PDataFifoDepth),
     .OutputZeroIfEmpty(1'b0)
-  ) u_prim_fifo_sync_pdata (
+  ) u_caliptra_prim_fifo_sync_pdata (
     .clk_i    (clk_i),
     .rst_ni   (rst_ni),
     .clr_i    (!ctr_drbg_upd_enable_i),
@@ -579,12 +579,12 @@ module csrng_ctr_drbg_upd #(
   // XOR the additional data with the new key and value from block encryption
   assign updated_key_and_v = concat_outblk_q ^ sfifo_pdata_v;
 
-  prim_fifo_sync #(
+  caliptra_prim_fifo_sync #(
     .Width(FinalFifoWidth),
     .Pass(0),
     .Depth(FinalFifoDepth),
     .OutputZeroIfEmpty(1'b0)
-  ) u_prim_fifo_sync_final (
+  ) u_caliptra_prim_fifo_sync_final (
     .clk_i    (clk_i),
     .rst_ni   (rst_ni),
     .clr_i    (!ctr_drbg_upd_enable_i),

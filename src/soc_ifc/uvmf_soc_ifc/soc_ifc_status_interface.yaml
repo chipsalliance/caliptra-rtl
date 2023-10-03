@@ -122,6 +122,9 @@ uvmf:
       - name: cptra_uc_rst_b
         dir: output
         width: '1'
+      - name: fw_update_rst_window
+        dir: output
+        width: '1'
 
       #Obfuscated UDS and FE
       - name: cptra_obf_key_reg
@@ -147,11 +150,17 @@ uvmf:
       - name: sha_notif_intr
         dir: output
         width: '1'
+      - name: timer_intr
+        dir: output
+        width: '1'
 
       # NMI Vector
       - name: nmi_vector
         dir: output
         width: '32'
+      - name: nmi_intr
+        dir: output
+        width: '1'
 
       # ICCM Lock
       - name: iccm_lock
@@ -177,6 +186,10 @@ uvmf:
         type: bit
         iscompare: 'True'
         isrand: 'False'
+      - name: timer_intr_pending
+        type: bit
+        iscompare: 'True'
+        isrand: 'False'
 
       # Subsystem reset
       - name: noncore_rst_asserted
@@ -184,6 +197,10 @@ uvmf:
         iscompare: 'True'
         isrand: 'False'
       - name: uc_rst_asserted
+        type: bit
+        iscompare: 'True'
+        isrand: 'False'
+      - name: fw_update_rst_window
         type: bit
         iscompare: 'True'
         isrand: 'False'
@@ -205,6 +222,10 @@ uvmf:
       # NMI Vector
       - name: nmi_vector
         type: bit [31:0]
+        iscompare: 'True'
+        isrand: 'False'
+      - name: nmi_intr_pending
+        type: bit
         iscompare: 'True'
         isrand: 'False'
 

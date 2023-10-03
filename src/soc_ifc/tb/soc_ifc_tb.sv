@@ -22,16 +22,18 @@
 // Probably should be deprecated and utilize UVMF environment only
 //======================================================================
 
-/*
-`define PRINT_TESTNAME(_SOC_IFC_TESTNAME) \ 
-    string tmpstr = `"_SOC_IFC_TESTNAME`";
-    $display(`"Executing test: _SOC_IFC_TESTNAME`"); 
-    $display({{tmpstr.len(){`"-`"}});
-//----------------------------------------------------------------
-*/
-
 
 import "DPI-C" function string getenv(input string env_name);
+
+`define AHB64_HI 63:32
+`define AHB64_LO 31:0 
+
+`define REG_HIER_BOOT_FSM_PS dut.boot_fsm_ps
+`define REG_HIER_PFX dut.i_soc_ifc_reg.field_storage
+
+`define FORLOOP_COMB(x) always_comb for (int j = 0; j < x; j++) 
+`define STR_RMPFX(astr, bstr) astr.substr(bstr.len(), astr.len() - 1).atoi()
+
 
 module soc_ifc_tb
   import soc_ifc_pkg::*;
@@ -41,10 +43,13 @@ module soc_ifc_tb
 
   enum logic {DEBUG_UNLOCKED = 1'b0, DEBUG_LOCKED = 1'b1} debug_state_e;
 
-  // Strings for plusargs
+  // plusargs and other test related
   string soc_ifc_testname; 
   string socreg_method_name = ""; 
   string security_state_testname; 
+  int socreg_wrcount = 1;
+
+  string tphase;
 
 
   //----------------------------------------------------------------
@@ -69,20 +74,24 @@ module soc_ifc_tb
 
   parameter MBOX_DLEN_VAL         = 32'h0000001C;
 
-  parameter MBOX_UDS_ADDR         = 32'h3003_0200;
-  parameter MBOX_FE_ADDR          = 32'h3003_0230;
-  parameter MBOX_FUSE_DONE_ADDR   = 32'h3003_00ac;
+  parameter MBOX_UDS_ADDR         = SOCIFC_BASE + `SOC_IFC_REG_FUSE_UDS_SEED_0;
+  parameter MBOX_FE_ADDR          = SOCIFC_BASE + `SOC_IFC_REG_FUSE_FIELD_ENTROPY_0;
+  parameter MBOX_FUSE_DONE_ADDR   = SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FUSE_WR_DONE;
 
-  parameter AHB_ADDR_WIDTH = 18;
-  parameter AHB_DATA_WIDTH = 32;
-  parameter APB_ADDR_WIDTH = 18;
-  parameter APB_DATA_WIDTH = 32;
-  parameter APB_USER_WIDTH = 32;
+  parameter AHB_ADDR_WIDTH = `CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC); // 18 
+  parameter AHB_DATA_WIDTH = `CALIPTRA_AHB_HDATA_SIZE; // 32 
+  parameter APB_ADDR_WIDTH = `CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC); // 18 
+  parameter APB_DATA_WIDTH = `CALIPTRA_APB_DATA_WIDTH; // 32 
+  parameter APB_USER_WIDTH = `CALIPTRA_APB_USER_WIDTH; // 32 
+
 
   parameter AHB_HTRANS_IDLE     = 0;
   parameter AHB_HTRANS_BUSY     = 1;
   parameter AHB_HTRANS_NONSEQ   = 2;
   parameter AHB_HTRANS_SEQ      = 3;
+
+  localparam PAUSER_DEFAULT = 32'hffff_ffff;
+
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
@@ -153,6 +162,23 @@ module soc_ifc_tb
 
   //MH. Initialize to default device lifecycle later rather than TIE OFF
   security_state_t security_state, tmp_ss;  // '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED};
+  logic            gen_input_wire_toggle;  
+
+  logic [31:0]     generic_input_wires0_q; 
+  logic [31:0]     generic_input_wires1_q; 
+
+  //MH. Tick timers
+  logic [31:0]   cycle_ctr_since_pwrgood;
+  logic [31:0]   cycle_ctr_since_rst;
+
+  bit            reg_sva_off = 1'b1;  // Enable only during register assertion checks
+
+  logic [APB_DATA_WIDTH-1:0]    prdata_o_latched;
+
+
+  always @(negedge clk_tb) begin
+    prdata_o_latched <= prdata_o_tb;
+  end
 
   always_comb begin
     mbox_sram_cs = mbox_sram_req.cs;
@@ -171,19 +197,22 @@ module soc_ifc_tb
   // Device Under Test.
   //----------------------------------------------------------------
   soc_ifc_top #(
-             .AHB_DATA_WIDTH(32),
-             .AHB_ADDR_WIDTH(18),
-             .APB_USER_WIDTH(32),
-             .APB_ADDR_WIDTH(18),
-             .APB_DATA_WIDTH(32)
+             .AHB_DATA_WIDTH(AHB_DATA_WIDTH), 
+             .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH), 
+             .APB_USER_WIDTH(APB_USER_WIDTH), 
+             .APB_ADDR_WIDTH(APB_ADDR_WIDTH), 
+             .APB_DATA_WIDTH(APB_DATA_WIDTH)  
             )
             dut (
              .clk(clk_tb),
              .clk_cg(clk_tb),
              .soc_ifc_clk_cg(clk_tb),
+             .rdc_clk_cg(clk_tb),
 
              .cptra_pwrgood(cptra_pwrgood_tb),
              .cptra_rst_b(cptra_rst_b_tb),
+             .rdc_clk_dis(),
+             .fw_update_rst_window(),
 
              .ready_for_fuses(ready_for_fuses),
              .ready_for_fw_push(ready_for_fw_push),
@@ -228,9 +257,12 @@ module soc_ifc_tb
              .soc_ifc_notif_intr(),
              .sha_error_intr(),
              .sha_notif_intr(),
+             .timer_intr(),
 
              .mbox_sram_req(mbox_sram_req),
              .mbox_sram_resp(mbox_sram_resp),
+
+             .rv_ecc_sts(rv_ecc_sts_t'{default:1'b0}),
 
              .clear_obf_secrets(clear_obf_secrets), 
              .scan_mode_f(scan_mode_f), 
@@ -278,6 +310,7 @@ module soc_ifc_tb
   );
 
 
+  // Other special and aggregate data type instantiations 
   struct {
     string reg_name;
     WordTransaction wr_trans;
@@ -324,6 +357,45 @@ module soc_ifc_tb
 
 
   //----------------------------------------------------------------
+  // tick_timer 
+  // 
+  // Counts number of clock ticks since power good and reset
+  //----------------------------------------------------------------
+  always @(posedge clk_tb or negedge cptra_pwrgood_tb) begin : tick_timer_pwrgood
+    if (!cptra_pwrgood_tb)
+      cycle_ctr_since_pwrgood <= '0;
+    else
+      cycle_ctr_since_pwrgood <= cycle_ctr_since_pwrgood + 1'b1; 
+  end 
+
+  always @(posedge clk_tb or negedge cptra_rst_b_tb) begin : tick_timer_outofrst
+    if (!cptra_rst_b_tb)
+      cycle_ctr_since_rst <= '0;
+    else
+      cycle_ctr_since_rst <= cycle_ctr_since_pwrgood + 1'b1; 
+  end
+
+
+  //----------------------------------------------------------------
+  // generic_input_detetor 
+  //
+  // pulses high when generic input wires change  
+  //----------------------------------------------------------------
+  always @(posedge clk_tb or negedge cptra_rst_b_tb) begin  : generic_input_detector
+    if (!cptra_rst_b_tb) begin
+      generic_input_wires0_q <= '0; 
+      generic_input_wires1_q <= '0;
+    end else begin 
+      generic_input_wires0_q <= cptra_noncore_rst_b_tb ? generic_input_wires0 : generic_input_wires0_q; 
+      generic_input_wires1_q <= cptra_noncore_rst_b_tb ? generic_input_wires1 : generic_input_wires1_q; 
+    end
+  end
+
+  assign gen_input_wire_toggle = (generic_input_wires0 != generic_input_wires0_q) | 
+                                 (generic_input_wires1 != generic_input_wires1_q);
+
+
+  //----------------------------------------------------------------
   // pulse_trig_handler 
   //
   // Handles events that relate to pulse triggered action, usually
@@ -350,11 +422,13 @@ module soc_ifc_tb
   // CPTRA SECUIRTY_STATE, FLOW_STATUS, GENERIC_INPUT_WIRES
   //----------------------------------------------------------------
 
-  always_comb begin 
-    update_CPTRA_SECURITY_STATE(scan_mode_f, security_state.debug_locked, security_state.device_lifecycle);
-    update_CPTRA_FLOW_STATUS(ready_for_fuses);
-    update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires1, generic_input_wires0);
-  end 
+  always_comb update_CPTRA_SECURITY_STATE(scan_mode_f, security_state.debug_locked, security_state.device_lifecycle);
+  always_comb update_CPTRA_FLOW_STATUS(ready_for_fuses, `REG_HIER_BOOT_FSM_PS);
+  always_comb update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires1_q, 1'b1); 
+  always_comb update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires0_q, 1'b0);
+  always_comb update_INTR_BRF_NOTIF_INTERNAL_INTR_R(gen_input_wire_toggle, security_state.debug_locked); 
+
+
 
   //----------------------------------------------------------------
   // reset_dut()
@@ -365,10 +439,13 @@ module soc_ifc_tb
     begin
       $display("*** Toggle reset.");
 
-      reset_generic_input_wires(-1, -1);
+      set_generic_input_wires(-1, -1);
 
       cptra_pwrgood_tb = '0;
       cptra_rst_b_tb = 0;
+
+      set_initval("CPTRA_GENERIC_INPUT_WIRES0", generic_input_wires0);  // The init val will take effect 
+      set_initval("CPTRA_GENERIC_INPUT_WIRES1", generic_input_wires1);  // after reset deassertion 
 
       repeat (5) @(posedge clk_tb);
 
@@ -379,6 +456,7 @@ module soc_ifc_tb
       repeat (5) @(posedge clk_tb);
       
       cptra_rst_b_tb = 1;
+      repeat (5) @(posedge clk_tb);
       $display("");
     end
   endtask // reset_dut
@@ -393,7 +471,7 @@ module soc_ifc_tb
     begin
       $display("*** Perform warm reset. ***");
 
-      reset_generic_input_wires(-1, -1);
+      set_generic_input_wires(-1, -1);
       reset_flow_status();
 
       cptra_rst_b_tb = 0;
@@ -401,6 +479,7 @@ module soc_ifc_tb
       repeat (5) @(posedge clk_tb);
 
       cptra_rst_b_tb = 1;
+      repeat (5) @(posedge clk_tb);
       $display("");
     end
   endtask // reset_dut
@@ -508,6 +587,7 @@ module soc_ifc_tb
   //----------------------------------------------------------------
   task write_single_word_ahb(input [31 : 0]  address,
                              input [31 : 0] word);
+
     begin
       hsel_i_tb       <= 1;
       haddr_i_tb      <= address;
@@ -517,7 +597,7 @@ module soc_ifc_tb
 
       @(posedge clk_tb);
       haddr_i_tb      <= 'Z;
-      hwdata_i_tb     <= word;
+      hwdata_i_tb     <= address[2] ? {word, 32'h0}: {32'h0, word}; 
       hwrite_i_tb     <= 0;
       htrans_i_tb     <= AHB_HTRANS_IDLE;
       wait(hreadyout_o_tb == 1'b1);
@@ -554,6 +634,33 @@ module soc_ifc_tb
     end
   endtask // write_single_word_apb
 
+
+  //----------------------------------------------------------------
+  // write_single_word_apb_wpauser()
+  //
+  // Write the given word to the DUT using the APB interface setting pauser.
+  //----------------------------------------------------------------
+  task write_single_word_apb_wpauser(input [31 : 0] address,
+                                     input [31 : 0] word,
+                                     input [31 : 0] pauser);
+    begin
+      paddr_i_tb      <= address;
+      psel_i_tb       <= 1;
+      penable_i_tb    <= 0;
+      pwrite_i_tb     <= 1;
+      pwdata_i_tb     <= word;
+      pauser_i_tb     <= pauser; 
+      wait(pready_o_tb == 1'b1);
+      
+      @(posedge clk_tb);
+      penable_i_tb    <= 1;
+      wait(pready_o_tb == 1'b1);
+
+      @(posedge clk_tb);
+      psel_i_tb       <= 0;
+      penable_i_tb    <= 0;
+    end
+  endtask // write_single_word_apb_wpauser
 
 
   //----------------------------------------------------------------
@@ -630,7 +737,34 @@ module soc_ifc_tb
       psel_i_tb       <= 0;
       penable_i_tb    <= 0;
     end
-  endtask // read_single_word_ahb
+  endtask // read_single_word_apb
+
+  //----------------------------------------------------------------
+  // read_single_word_apb_wpauser()
+  //
+  // Read the given word to the DUT using the APB interface setting pauser.
+  //----------------------------------------------------------------
+  task read_single_word_apb_wpauser(input [31 : 0] address,
+                                     input [31 : 0] word,
+                                     input [31 : 0] pauser);
+    begin
+      paddr_i_tb      <= address;
+      psel_i_tb       <= 1;
+      penable_i_tb    <= 0;
+      pwrite_i_tb     <= 0;
+      pwdata_i_tb     <= 0;
+      pauser_i_tb     <= pauser; 
+      wait(pready_o_tb == 1'b1);
+
+      @(posedge clk_tb);
+      penable_i_tb    <= 1;
+      wait(pready_o_tb == 1'b1);
+
+      @(posedge clk_tb);
+      psel_i_tb       <= 0;
+      penable_i_tb    <= 0;
+    end
+  endtask // read_single_word_apb_wpauser
 
   //----------------------------------------------------------------
   // read_result_ahb()
@@ -641,13 +775,13 @@ module soc_ifc_tb
     begin
       
       read_single_word_ahb(MBOX_ADDR_DATAOUT);
-      r_data[127 : 96] = hrdata_o_tb;
+      r_data[127 : 96] = MBOX_ADDR_DATAOUT[2] ? hrdata_o_tb[`AHB64_HI] : hrdata_o_tb[`AHB64_LO]; 
       read_single_word_ahb(MBOX_ADDR_DATAOUT);
-      r_data[95  : 64] = hrdata_o_tb;
+      r_data[95  : 64] = MBOX_ADDR_DATAOUT[2] ? hrdata_o_tb[`AHB64_HI] : hrdata_o_tb[`AHB64_LO]; 
       read_single_word_ahb(MBOX_ADDR_DATAOUT);
-      r_data[63  : 32] = hrdata_o_tb;
+      r_data[63  : 32] = MBOX_ADDR_DATAOUT[2] ? hrdata_o_tb[`AHB64_HI] : hrdata_o_tb[`AHB64_LO]; 
       read_single_word_ahb(MBOX_ADDR_DATAOUT);
-      r_data[31  :  0] = hrdata_o_tb;
+      r_data[31  :  0] = MBOX_ADDR_DATAOUT[2] ? hrdata_o_tb[`AHB64_HI] : hrdata_o_tb[`AHB64_LO]; 
     end
   endtask // read_result_ahb
 
@@ -677,11 +811,16 @@ module soc_ifc_tb
   // wait for the mailbox to unlock before send in anything
   //----------------------------------------------------------------
   task wait_unlock_ahb;
+      
+    automatic logic [31:0] valid_hrdata;
+
     begin
       read_single_word_ahb(MBOX_ADDR_LOCK);
-      while (hrdata_o_tb != 0)
+      valid_hrdata =  MBOX_ADDR_LOCK[2] ?  hrdata_o_tb[`AHB64_HI] :hrdata_o_tb[`AHB64_LO]; 
+      while (valid_hrdata != 0) 
         begin
           read_single_word_ahb(MBOX_ADDR_LOCK);
+          valid_hrdata =  MBOX_ADDR_LOCK[2] ?  hrdata_o_tb[`AHB64_HI] :hrdata_o_tb[`AHB64_LO]; 
         end
     end
   endtask // wait_unlock_ahb
@@ -702,50 +841,23 @@ module soc_ifc_tb
   endtask // wait_unlock_apb
 
 
-  //----------------------------------------------------------------
-  // set_security_state()
-  //
-  // sets the security state explicily to any valid value 
-  //----------------------------------------------------------------
-  task set_security_state(input security_state_t ss);
-  // TODO. Has hardwired mask bit positions in here. Ideally they should be pulled from tb package. 
-
-      dword_t intr_notif_val; 
-
-      begin
-          security_state = '{device_lifecycle: ss.device_lifecycle, debug_locked: ss.debug_locked};
-
-          set_initval("CPTRA_SECURITY_STATE", ss & 32'h7);  
-          update_exp_regval("CPTRA_SECURITY_STATE", ss & 32'h7, SET_DIRECT); 
-
-
-          intr_notif_val = get_initval("INTR_BRF_NOTIF_INTERNAL_INTR_R") & 32'hffff_fffb | ss.debug_locked & 32'h4;
-          set_initval("INTR_BRF_NOTIF_INTERNAL_INTR_R", intr_notif_val); 
-          update_exp_regval("INTR_BRF_NOTIF_INTERNAL_INTR_R", intr_notif_val, SET_DIRECT);  
-      end
-  endtask
-
-
 
   //----------------------------------------------------------------
-  // reset_generic_input_wires()
+  // set_generic_input_wires()
   //
   // sets the generic_input_wires to a predetermined or random value
   //----------------------------------------------------------------
-  task reset_generic_input_wires(input int v0, int v1);
+  task set_generic_input_wires(input int v0, int v1);
 
     begin
       generic_input_wires0 = (v0 < 0) ? $urandom() : v0;
       generic_input_wires1 = (v1 < 0) ? $urandom() : v1;
-      set_initval("CPTRA_GENERIC_INPUT_WIRES0", generic_input_wires0); 
-      set_initval("CPTRA_GENERIC_INPUT_WIRES1", generic_input_wires1); 
-      update_exp_regval("CPTRA_GENERIC_INPUT_WIRES0", generic_input_wires0, SET_DIRECT); 
-      update_exp_regval("CPTRA_GENERIC_INPUT_WIRES1", generic_input_wires1, SET_DIRECT); 
-
-      @(posedge clk_tb);
+      repeat (2) @(posedge clk_tb);
+      update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires0_q, 1'b0); 
+      update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires1_q, 1'b1); 
     end
 
-  endtask
+  endtask // set_generic_input_wires
 
 
   //----------------------------------------------------------------
@@ -757,7 +869,7 @@ module soc_ifc_tb
 
     begin
       set_initval("CPTRA_FLOW_STATUS", '0); 
-      update_CPTRA_FLOW_STATUS('0);
+      update_CPTRA_FLOW_STATUS('0, `REG_HIER_BOOT_FSM_PS);
     end
 
   endtask
@@ -918,11 +1030,16 @@ module soc_ifc_tb
   //----------------------------------------------------------------
   task sim_dut_init;
 
-    int sscode = -1;
+    // int sscode = -1;
+    string ssname = "UNSET"; 
 
     begin
-      sscode = int'(security_state);
-      if (!((sscode >= 0)  || (sscode <= 7))) 
+      // sscode = int'(security_state);
+      // if (!((sscode >= 0)  || (sscode <= 7))) 
+      //   $error("Have to explictily set security_state for soc_ifc_top for test to run!");
+
+      ssname = get_ss_name(int'(security_state)); 
+      if ((ssname == "") || (ssname == "UNSET"))
         $error("Have to explictily set security_state for soc_ifc_top for test to run!");
 
       else begin
@@ -930,8 +1047,9 @@ module soc_ifc_tb
         reset_dut();
 
         wait (ready_for_fuses == 1'b1);
-        set_initval("CPTRA_FLOW_STATUS", 32'h4000_0000); 
-        update_exp_regval("CPTRA_FLOW_STATUS", 32'h4000_0000, SET_DIRECT); 
+        update_CPTRA_FLOW_STATUS(ready_for_fuses, `REG_HIER_BOOT_FSM_PS);
+        // set_initval("CPTRA_FLOW_STATUS", 32'h4000_0000); 
+        // update_exp_regval("CPTRA_FLOW_STATUS", 32'h4000_0000, SET_DIRECT); 
 
         repeat (5) @(posedge clk_tb);
       end
@@ -1006,7 +1124,118 @@ module soc_ifc_tb
           repeat (wait_cycles) @(posedge clk_tb);
       end
     end
-  endtask
+  endtask // write_regs
+
+
+  //-----------------------------------------------------------------------------
+  // read_reg_chk_inrange()
+  //
+  // Utility for reading single register over APB/AHB and check if within range.
+  // NOTE. Wait times must be added explcitly outside routine
+  //-----------------------------------------------------------------------------
+  task read_reg_chk_inrange(input access_t modifier, string rname, int tid, int minval, int maxval); 
+
+    word_addr_t addr;
+    WordTransaction rdtrans;
+    automatic logic [31:0] valid_hrdata; 
+
+    begin
+      rdtrans = new();
+      addr = socregs.get_addr(rname);  
+
+      if (modifier == GET_AHB) begin 
+          read_single_word_ahb(addr);
+          valid_hrdata =  addr[2] ?  hrdata_o_tb[`AHB64_HI] :hrdata_o_tb[`AHB64_LO]; 
+          $display(" Read over AHB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, valid_hrdata); 
+          rdtrans.update(addr, valid_hrdata, tid); 
+      end else if (modifier == GET_APB) begin
+        read_single_word_apb(addr);
+        $display(" Read over APB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, prdata_o_tb); 
+        rdtrans.update_byname(rname, prdata_o_tb,  tid); 
+        end else 
+          $error("TB ERROR. Unsupported access modifier %s", modifier.name()); 
+
+      sb.record_entry(rdtrans, SET_DIRECT);
+      sb.check_entry_inrange(rdtrans, minval, maxval); 
+    end
+
+  endtask // read_reg_chk_inrange
+
+
+  //----------------------------------------------------------------
+  // write_reg_trans()
+  //
+  // Utility for tracking/writing transaction to a register over APB/AHB
+  // NOTE. Wait times must be added explcitly outside routine
+  //----------------------------------------------------------------
+  task write_reg_trans(access_t modifier, WordTransaction wrtrans, logic [31:0] pauser=PAUSER_DEFAULT);
+    string rname;
+    word_addr_t addr;
+
+    begin
+        addr = wrtrans.addr;
+        rname = socregs.get_name(addr); 
+
+        if (modifier == SET_AHB) begin
+          write_single_word_ahb(addr, wrtrans.data); 
+          $display("Write over AHB: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, wrtrans.data);
+        end else if (modifier == SET_APB) begin
+          if (pauser != PAUSER_DEFAULT) begin
+            write_single_word_apb_wpauser(addr, wrtrans.data, pauser); 
+            $display("Write over APB with non-default pauser: addr = %-40s (0x%08x), data = 0x%08x", 
+              rname, addr, wrtrans.data);
+          end else begin
+            write_single_word_apb(addr, wrtrans.data); 
+            $display("Write over APB: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, wrtrans.data);
+          end
+        end else 
+          $error("TB ERROR. Unsupported access modifier %s", modifier.name()); 
+
+        sb.record_entry(wrtrans, modifier);
+      end
+    endtask // write_reg_trans
+
+
+ //----------------------------------------------------------------
+  // read_reg_trans()
+  //
+  // Utility for reading transaction to a register over APB/AHB
+  // NOTES. 1. No scoreboard checking 
+  //        2. Wait times must be added explcitly outside routine
+  //----------------------------------------------------------------
+  task read_reg_trans(input access_t modifier, 
+                      inout WordTransaction rdtrans, 
+                      input logic [31:0] pauser=PAUSER_DEFAULT); 
+    string rname;
+    word_addr_t addr;
+    automatic logic [31:0] valid_hrdata; 
+
+    begin
+        addr = rdtrans.addr;
+        rname = socregs.get_name(addr); 
+
+        if (modifier == GET_AHB) begin
+          read_single_word_ahb(addr); 
+          valid_hrdata =  addr[2] ?  hrdata_o_tb[`AHB64_HI] :hrdata_o_tb[`AHB64_LO]; 
+          rdtrans.data = valid_hrdata; 
+          $display(" Read over AHB: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, rdtrans.data);
+        end else if (modifier == GET_APB) begin
+          if (pauser != PAUSER_DEFAULT) begin
+            read_single_word_apb_wpauser(addr, rdtrans.data, pauser); 
+            rdtrans.data = prdata_o_tb;
+            $display(" Read over APB with explicit pauser: addr = %-40s (0x%08x), data = 0x%08x", 
+              rname, addr, rdtrans.data);
+          end else begin
+            read_single_word_apb(addr); 
+            rdtrans.data = prdata_o_tb;
+            $display(" Read over APB: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, rdtrans.data);
+          end
+        end else 
+          $error("TB ERROR. Unsupported access modifier %s", modifier.name()); 
+
+        // sb.check_entry(rdtrans)
+    end
+  endtask // read_reg_trans
 
 
   //----------------------------------------------------------------
@@ -1020,6 +1249,7 @@ module soc_ifc_tb
     WordTransaction rdtrans;
 
     int tid_autoinc; 
+    automatic logic [31:0] valid_hrdata; 
 
     begin
       rdtrans = new();
@@ -1039,12 +1269,15 @@ module soc_ifc_tb
 
         if (modifier == GET_AHB) begin
           read_single_word_ahb(addr);
-          $display("Read over AHB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, hrdata_o_tb); 
-          rdtrans.update(addr, hrdata_o_tb, tid); 
+          valid_hrdata =  addr[2] ?  hrdata_o_tb[`AHB64_HI] :hrdata_o_tb[`AHB64_LO]; 
+          $display(" Read over AHB: addr =  %-40s (0x%08x), data = 0x%08x on cycle %08d", rname, addr, valid_hrdata, cycle_ctr); 
+          rdtrans.update(addr, valid_hrdata, tid); 
         end else if (modifier == GET_APB) begin
           read_single_word_apb(addr);
-          $display("Read over APB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, prdata_o_tb); 
-          rdtrans.update(addr, prdata_o_tb, tid); 
+          // $display(" Read over APB: addr =  %-40s (0x%08x), data = 0x%08x at time %12t (cycle %08d)", rname, addr, prdata_o_latched, $realtime, cycle_ctr); // used to be   prdata_o_tb
+          $display(" Read over APB: addr =  %-40s (0x%08x), data = 0x%08x on cycle %08d", rname, addr, prdata_o_tb, cycle_ctr); // used to be   prdata_o_tb
+          // rdtrans.update(addr, prdata_o_latched, tid);  // used to be prdata_o_tb
+          rdtrans.update(addr, prdata_o_tb, tid);  
         end else 
           $error("TB ERROR. Unsupported access modifier %s", modifier.name()); 
 
@@ -1056,7 +1289,7 @@ module soc_ifc_tb
 
       end
     end
-  endtask
+  endtask // read_regs
 
 
   //----------------------------------------------------------------
@@ -1072,6 +1305,7 @@ module soc_ifc_tb
     WordTransaction wrtrans;
 
     int tid_autoinc; 
+    automatic logic [31:0] valid_hrdata; 
 
     begin
       wrtrans = new();
@@ -1122,11 +1356,12 @@ module soc_ifc_tb
         // read phase
         if (rd_modifier == GET_AHB) begin
           read_single_word_ahb(addr);
-          $display("Read over AHB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, hrdata_o_tb); 
-          rdtrans.update(addr, hrdata_o_tb, tid); 
+          valid_hrdata = addr[2] ? hrdata_o_tb[`AHB64_HI] : hrdata_o_tb[`AHB64_LO]; 
+          $display(" Read over AHB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, valid_hrdata); 
+          rdtrans.update(addr, valid_hrdata, tid); 
         end else if (rd_modifier == GET_APB) begin
           read_single_word_apb(addr);
-          $display("Read over APB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, prdata_o_tb); 
+          $display(" Read over APB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, prdata_o_tb); 
           rdtrans.update(addr, prdata_o_tb, tid); 
         end else 
           $error("TB ERROR. Unsupported access rd_modifier %s", rd_modifier.name()); 
@@ -1143,6 +1378,50 @@ module soc_ifc_tb
 
   endtask // write_read_regs
 
+  //================================================================
+  // Function Definitions
+  //================================================================
+
+
+  //----------------------------------------------------------------
+  // set_security_state()
+  //
+  // sets the security state explicily to any value between 0..7
+  //----------------------------------------------------------------
+  function automatic void set_security_state(input security_state_t ss);
+
+      dword_t intr_notif_val; 
+
+      begin
+          security_state = '{device_lifecycle: ss.device_lifecycle, debug_locked: ss.debug_locked};
+
+          // TODO. Has hardwired mask bit positions in here. Ideally they should be pulled from tb package. 
+          //       Eg: in update_CPTRA_SECURITY_STATE(...)
+          set_initval("CPTRA_SECURITY_STATE", ss & 32'h7);  
+          update_exp_regval("CPTRA_SECURITY_STATE", ss & 32'h7, SET_DIRECT); 
+
+          intr_notif_val = get_initval("INTR_BRF_NOTIF_INTERNAL_INTR_R") & 32'hffff_fffb | ss.debug_locked & 32'h4;
+          set_initval("INTR_BRF_NOTIF_INTERNAL_INTR_R", intr_notif_val); 
+          update_exp_regval("INTR_BRF_NOTIF_INTERNAL_INTR_R", intr_notif_val, SET_DIRECT);  
+      end
+  endfunction // set_security_state
+
+
+  //----------------------------------------------------------------
+  // set_security_state_byname()
+  //
+  // sets security state by name, eg: "DEBUG_LOCKED_PRODUCTION", "RANDOM" 
+  //----------------------------------------------------------------
+  function automatic security_state_t set_security_state_byname(input string ss_name="RANDOM");         
+
+    bit [2:0] ss_code;
+
+    begin
+      ss_code = (ss_name == "RANDOM") ? $urandom_range(0, 7) : get_ss_code(ss_name);
+      set_security_state(security_state_t'(ss_code)); 
+      return security_state_t'(ss_code); 
+    end
+  endfunction // set_security_state_byname 
 
 
 //----------------------------------------------------------------
@@ -1150,14 +1429,17 @@ module soc_ifc_tb
 // or as programs. For now, this is the only modularization for 
 // directed tests planned.
 //----------------------------------------------------------------
-//
   `include "fuse_reg_lifecycle_test.svh"   
   `include "fuse_reg_perm_test.svh"     
+  `include "fuse_reg_pauser_test.svh"     
   `include "fuse_reg_test.svh"     
   `include "single_soc_reg_test.svh"   
   `include "soc_reg_reset_test.svh"     
   `include "soc_reg_test.svh"     
+  `include "rvtime_reg_test.svh"     
   `include "soc_reg_invalid_test.svh"     
+  `include "soc_reg_intrblk_test.svh" 
+  `include "sha_acc_intrblk_test.svh"
 //----------------------------------------------------------------
 
 
@@ -1172,8 +1454,8 @@ module soc_ifc_tb
 
     // common initialization steps for all tests 
 
-    // set_security_state(DEVICE_PRODUCTION, DEBUG_LOCKED);
-    // update_exp_regval(socregs.get_addr("CPTRA_SECURITY_STATE"), dword_t'(security_state), SET_DIRECT);
+    generic_input_wires0 = 32'h0; 
+    generic_input_wires1 = 32'h0; 
 
     $write("PLAYBOOK_RANDOM_SEED = %s\n", getenv("PLAYBOOK_RANDOM_SEED"));
 
@@ -1182,10 +1464,6 @@ module soc_ifc_tb
         $display("    =================================================================");
         $display("    Running SOC_IFC_TEST = %s", soc_ifc_testname);
         $display("    =================================================================");
-
-        //if (!($value$plusargs("SECURITY_STATE=%s", security_state_testname)))
-        //  security_state_testname = "RANDOM";
-        // soc_reg_pwron_test(security_state_testname);
 
         if (soc_ifc_testname == "soc_reg_pwron_test") begin 
           if (!($value$plusargs("SECURITY_STATE=%s", security_state_testname)))
@@ -1206,31 +1484,52 @@ module soc_ifc_tb
           if ($value$plusargs("SECURITY_STATE=%s", security_state_testname)) 
             fuse_reg_lifecycle_test(security_state_testname);
           else
-            fuse_reg_lifecycle_test("RANDOM"); // 'ALL' is the other option that isn't working fully 
+            fuse_reg_lifecycle_test("RANDOM"); 
  
         end else if (soc_ifc_testname == "soc_reg_test") begin 
           set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
           sim_dut_init();
           soc_reg_test();
 
+        end else if (soc_ifc_testname == "rvtime_reg_test") begin 
+          set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
+          sim_dut_init();
+          rvtime_reg_test();
+
         end else if (soc_ifc_testname == "soc_reg_invalid_test") begin 
           set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
           sim_dut_init();
           soc_reg_invalid_test();
 
+        end else if (soc_ifc_testname == "soc_reg_intrblk_test") begin 
+          set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
+          sim_dut_init();
+          soc_reg_intrblk_test();
+
+        end else if (soc_ifc_testname == "sha_acc_intrblk_test") begin 
+          set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
+          sim_dut_init();
+          sha_acc_intrblk_test();
+
         end else if (soc_ifc_testname == "single_socreg_test") begin 
           if (!($value$plusargs("SOCREG_METHOD_NAME=%s", socreg_method_name))) 
             $display("ERROR with testing one soc_register; must provide method & name for +scoreg_method_name,eg. APB.CPTRA_TIMER_CONFIG");
           else begin
+            $value$plusargs("SOCREG_WRCOUNT=%d", socreg_wrcount);
             set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
             sim_dut_init();
-            single_socreg_test(socreg_method_name);
+            single_socreg_test(socreg_method_name, socreg_wrcount);
           end
 
         end else if (soc_ifc_testname == "fuse_reg_perm_test") begin 
           set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
           sim_dut_init();
           fuse_reg_perm_test();
+
+        end else if (soc_ifc_testname == "fuse_reg_pauser_test") begin 
+          set_security_state_byname("RANDOM");
+          sim_dut_init();
+          fuse_reg_pauser_test();
 
         end 
    
@@ -1243,7 +1542,8 @@ module soc_ifc_tb
 
     else 
       begin : default_test  // Keeping original default test structure 
-        $display("    ==============================");
+
+        $display("    ==============================");  
         $display("   -= Testbench for MBOX started =-");
         $display("    ==============================");
         $display("");

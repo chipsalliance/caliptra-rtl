@@ -85,6 +85,7 @@ end
   tri dummy_i;
   tri  cptra_noncore_rst_b_i;
   tri  cptra_uc_rst_b_i;
+  tri  fw_update_rst_window_i;
   tri [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg_i;
   tri [`CLP_OBF_FE_DWORDS-1:0][31:0] obf_field_entropy_i;
   tri [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed_i;
@@ -92,12 +93,15 @@ end
   tri  soc_ifc_notif_intr_i;
   tri  sha_error_intr_i;
   tri  sha_notif_intr_i;
+  tri  timer_intr_i;
   tri [31:0] nmi_vector_i;
+  tri  nmi_intr_i;
   tri  iccm_lock_i;
   assign clk_i = bus.clk;
   assign dummy_i = bus.dummy;
   assign cptra_noncore_rst_b_i = bus.cptra_noncore_rst_b;
   assign cptra_uc_rst_b_i = bus.cptra_uc_rst_b;
+  assign fw_update_rst_window_i = bus.fw_update_rst_window;
   assign cptra_obf_key_reg_i = bus.cptra_obf_key_reg;
   assign obf_field_entropy_i = bus.obf_field_entropy;
   assign obf_uds_seed_i = bus.obf_uds_seed;
@@ -105,7 +109,9 @@ end
   assign soc_ifc_notif_intr_i = bus.soc_ifc_notif_intr;
   assign sha_error_intr_i = bus.sha_error_intr;
   assign sha_notif_intr_i = bus.sha_notif_intr;
+  assign timer_intr_i = bus.timer_intr;
   assign nmi_vector_i = bus.nmi_vector;
+  assign nmi_intr_i = bus.nmi_intr;
   assign iccm_lock_i = bus.iccm_lock;
 
   // Proxy handle to UVM monitor
@@ -115,6 +121,7 @@ end
   // pragma uvmf custom interface_item_additional begin
   reg  cptra_noncore_rst_b_o = 'b0;
   reg  cptra_uc_rst_b_o = 'b0;
+  reg  fw_update_rst_window_o = 'b0;
   reg [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg_o = 'b0;
   reg [`CLP_OBF_FE_DWORDS-1:0][31:0] obf_field_entropy_o = 'b0;
   reg [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed_o = 'b0;
@@ -122,7 +129,9 @@ end
   reg  soc_ifc_notif_intr_o = 'b0;
   reg  sha_error_intr_o = 'b0;
   reg  sha_notif_intr_o = 'b0;
+  reg  timer_intr_o = 'b0;
   reg [31:0] nmi_vector_o = 'b0;
+  reg  nmi_intr_o = 'b0;
   reg  iccm_lock_o = 'b0;
   function bit any_signal_changed();
       if (!cptra_noncore_rst_b_o)
@@ -133,6 +142,7 @@ end
       else
           return |(cptra_noncore_rst_b_i  ^  cptra_noncore_rst_b_o      ) ||
                  |(cptra_uc_rst_b_i       ^  cptra_uc_rst_b_o           ) ||
+                 |(fw_update_rst_window_i ^  fw_update_rst_window_o     ) ||
                  |(cptra_obf_key_reg_i    ^  cptra_obf_key_reg_o        ) ||
                  |(obf_field_entropy_i    ^  obf_field_entropy_o        ) ||
                  |(obf_uds_seed_i         ^  obf_uds_seed_o             ) ||
@@ -140,7 +150,9 @@ end
                  |(soc_ifc_notif_intr_i   & !soc_ifc_notif_intr_o       ) ||
                  |(sha_error_intr_i       & !sha_error_intr_o           ) ||
                  |(sha_notif_intr_i       & !sha_notif_intr_o           ) ||
+                 |(timer_intr_i           & !timer_intr_o               ) ||
                  |(nmi_vector_i           ^  nmi_vector_o               ) ||
+                 |(nmi_intr_i             & !nmi_intr_o                 ) ||
                  |(iccm_lock_i            ^  iccm_lock_o                );
   endfunction
   // pragma uvmf custom interface_item_additional end
@@ -159,13 +171,17 @@ end
   // pragma uvmf custom reset_condition end
   endtask
 
-  //******************************************************************
-
-  task wait_for_num_clocks(input int unsigned count); // pragma tbx xtf
+  // pragma uvmf custom wait_for_num_clocks begin
+  //****************************************************************************                         
+  // Inject pragmas's here to throw a warning on regeneration.
+  // Task must have automatic lifetime so that it can be concurrently invoked
+  // by multiple entities with a different wait value.
+  task automatic wait_for_num_clocks(input int unsigned count); // pragma tbx xtf
+    if (count == 0) `uvm_fatal("CFG", "wait_for_num_clocks called with count of 0 - this will lead to a hang");
     @(posedge clk_i);
-
     repeat (count-1) @(posedge clk_i);
   endtask
+  // pragma uvmf custom wait_for_num_clocks end                                                                
 
   //******************************************************************
   event go;
@@ -210,12 +226,15 @@ end
     //     //    cptra_status_monitor_struct.soc_ifc_notif_intr_pending
     //     //    cptra_status_monitor_struct.sha_err_intr_pending
     //     //    cptra_status_monitor_struct.sha_notif_intr_pending
+    //     //    cptra_status_monitor_struct.timer_intr_pending
     //     //    cptra_status_monitor_struct.noncore_rst_asserted
     //     //    cptra_status_monitor_struct.uc_rst_asserted
+    //     //    cptra_status_monitor_struct.fw_update_rst_window
     //     //    cptra_status_monitor_struct.cptra_obf_key_reg
     //     //    cptra_status_monitor_struct.obf_field_entropy
     //     //    cptra_status_monitor_struct.obf_uds_seed
     //     //    cptra_status_monitor_struct.nmi_vector
+    //     //    cptra_status_monitor_struct.nmi_intr_pending
     //     //    cptra_status_monitor_struct.iccm_locked
     //     //
     // Reference code;
@@ -226,6 +245,7 @@ end
     //    All available input signals listed.
     //      cptra_status_monitor_struct.xyz = cptra_noncore_rst_b_i;  //     
     //      cptra_status_monitor_struct.xyz = cptra_uc_rst_b_i;  //     
+    //      cptra_status_monitor_struct.xyz = fw_update_rst_window_i;  //     
     //      cptra_status_monitor_struct.xyz = cptra_obf_key_reg_i;  //    [`CLP_OBF_KEY_DWORDS-1:0][31:0] 
     //      cptra_status_monitor_struct.xyz = obf_field_entropy_i;  //    [`CLP_OBF_FE_DWORDS-1:0][31:0] 
     //      cptra_status_monitor_struct.xyz = obf_uds_seed_i;  //    [`CLP_OBF_UDS_DWORDS-1:0][31:0] 
@@ -233,7 +253,9 @@ end
     //      cptra_status_monitor_struct.xyz = soc_ifc_notif_intr_i;  //     
     //      cptra_status_monitor_struct.xyz = sha_error_intr_i;  //     
     //      cptra_status_monitor_struct.xyz = sha_notif_intr_i;  //     
+    //      cptra_status_monitor_struct.xyz = timer_intr_i;  //     
     //      cptra_status_monitor_struct.xyz = nmi_vector_i;  //    [31:0] 
+    //      cptra_status_monitor_struct.xyz = nmi_intr_i;  //     
     //      cptra_status_monitor_struct.xyz = iccm_lock_i;  //     
     // pragma uvmf custom do_monitor begin
     // UVMF_CHANGE_ME : Implement protocol monitoring.  The commented reference code
@@ -253,10 +275,13 @@ end
         soc_ifc_notif_intr_o           <= soc_ifc_notif_intr_i  ;
         sha_error_intr_o               <= sha_error_intr_i      ;
         sha_notif_intr_o               <= sha_notif_intr_i      ;
+        timer_intr_o                   <= timer_intr_i          ;
+        nmi_intr_o                     <= nmi_intr_i            ;
         @(posedge clk_i);
     end
     cptra_noncore_rst_b_o          <= cptra_noncore_rst_b_i ;
     cptra_uc_rst_b_o               <= cptra_uc_rst_b_i      ;
+    fw_update_rst_window_o         <= fw_update_rst_window_i;
     cptra_obf_key_reg_o            <= cptra_obf_key_reg_i   ;
     obf_field_entropy_o            <= obf_field_entropy_i   ;
     obf_uds_seed_o                 <= obf_uds_seed_i        ;
@@ -264,21 +289,26 @@ end
     soc_ifc_notif_intr_o           <= soc_ifc_notif_intr_i  ;
     sha_error_intr_o               <= sha_error_intr_i      ;
     sha_notif_intr_o               <= sha_notif_intr_i      ;
+    timer_intr_o                   <= timer_intr_i          ;
     nmi_vector_o                   <= nmi_vector_i          ;
+    nmi_intr_o                     <= nmi_intr_i            ;
     iccm_lock_o                    <= iccm_lock_i           ;
 //    @(posedge clk_i);
     begin: build_return_struct
   // Variables within the cptra_status_initiator_struct:
          cptra_status_monitor_struct.noncore_rst_asserted       = !cptra_noncore_rst_b_i;
          cptra_status_monitor_struct.uc_rst_asserted            = !cptra_uc_rst_b_i;
+         cptra_status_monitor_struct.fw_update_rst_window       =  fw_update_rst_window_i;
          cptra_status_monitor_struct.soc_ifc_err_intr_pending   =  soc_ifc_error_intr_i;
          cptra_status_monitor_struct.soc_ifc_notif_intr_pending =  soc_ifc_notif_intr_i;
          cptra_status_monitor_struct.sha_err_intr_pending       =  sha_error_intr_i;
          cptra_status_monitor_struct.sha_notif_intr_pending     =  sha_notif_intr_i;
+         cptra_status_monitor_struct.timer_intr_pending         =  timer_intr_i;
          cptra_status_monitor_struct.cptra_obf_key_reg          =  cptra_obf_key_reg_i;
          cptra_status_monitor_struct.obf_field_entropy          =  obf_field_entropy_i;
          cptra_status_monitor_struct.obf_uds_seed               =  obf_uds_seed_i;
          cptra_status_monitor_struct.nmi_vector                 =  nmi_vector_i;
+         cptra_status_monitor_struct.nmi_intr_pending           =  nmi_intr_i;
          cptra_status_monitor_struct.iccm_locked                =  iccm_lock_i;
     end
     // pragma uvmf custom do_monitor end

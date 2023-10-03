@@ -1,0 +1,9 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.compile
+  - ./mbox_sram_common.compile
+incdir:
+  - .
+src:
+  - src/mbox_sram_if.sv
+  - src/mbox_sram_monitor_bfm.sv
+  - src/mbox_sram_driver_bfm.sv

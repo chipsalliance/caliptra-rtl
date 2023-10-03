@@ -82,28 +82,6 @@ import uvmf_base_pkg_hdl::*;
 // pragma uvmf custom reset_generator end
 
   // pragma uvmf custom module_item_additional begin
-import soc_ifc_pkg::*;
-    mbox_sram_req_t  mbox_sram_req;
-    mbox_sram_resp_t mbox_sram_resp;
-
-    //SRAM for mbox
-    caliptra_sram 
-    #(
-        .DATA_WIDTH(MBOX_DATA_AND_ECC_W),
-        .DEPTH(MBOX_DEPTH)
-    )
-    i_mbox_ram
-    (
-        .clk_i(clk),
-        
-        .cs_i   (mbox_sram_req.cs   ),
-        .we_i   (mbox_sram_req.we   ),
-        .addr_i (mbox_sram_req.addr ),
-        .wdata_i(mbox_sram_req.wdata),
-        
-        .rdata_o(mbox_sram_resp.rdata)
-    );
-    initial i_mbox_ram.ram = '{default:8'h0};
   // pragma uvmf custom module_item_additional end
 
   // Instantiate the signal bundle, monitor bfm and driver bfm for each interface.
@@ -130,21 +108,28 @@ import soc_ifc_pkg::*;
      .clk(clk), .dummy(1'b1)
      // pragma uvmf custom cptra_status_agent_bus_connections end
      );
+  mbox_sram_if  mbox_sram_agent_bus(
+     // pragma uvmf custom mbox_sram_agent_bus_connections begin
+     .clk(clk), .dummy(1'b1)
+     // pragma uvmf custom mbox_sram_agent_bus_connections end
+     );
   soc_ifc_ctrl_monitor_bfm  soc_ifc_ctrl_agent_mon_bfm(soc_ifc_ctrl_agent_bus.monitor_port);
   cptra_ctrl_monitor_bfm  cptra_ctrl_agent_mon_bfm(cptra_ctrl_agent_bus.monitor_port);
   soc_ifc_status_monitor_bfm  soc_ifc_status_agent_mon_bfm(soc_ifc_status_agent_bus.monitor_port);
   cptra_status_monitor_bfm  cptra_status_agent_mon_bfm(cptra_status_agent_bus.monitor_port);
+  mbox_sram_monitor_bfm  mbox_sram_agent_mon_bfm(mbox_sram_agent_bus.monitor_port);
   soc_ifc_ctrl_driver_bfm  soc_ifc_ctrl_agent_drv_bfm(soc_ifc_ctrl_agent_bus.initiator_port);
   cptra_ctrl_driver_bfm  cptra_ctrl_agent_drv_bfm(cptra_ctrl_agent_bus.initiator_port);
   soc_ifc_status_driver_bfm  soc_ifc_status_agent_drv_bfm(soc_ifc_status_agent_bus.responder_port);
   cptra_status_driver_bfm  cptra_status_agent_drv_bfm(cptra_status_agent_bus.responder_port);
+  mbox_sram_driver_bfm  mbox_sram_agent_drv_bfm(mbox_sram_agent_bus.responder_port);
 
   // pragma uvmf custom dut_instantiation begin
   // AHB Clock/reset
   assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.default_clk_gen_CLK     = clk;
   assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.default_reset_gen_RESET = cptra_status_agent_bus.cptra_noncore_rst_b;
   assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.default_clk_gen_CLK         = clk;
-  assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.default_reset_gen_RESET     = soc_ifc_ctrl_agent_bus.cptra_rst_b;
+  assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.default_reset_gen_RESET     = cptra_status_agent_bus.cptra_noncore_rst_b;
 
   // DUT
     soc_ifc_top #(
@@ -159,6 +144,9 @@ import soc_ifc_pkg::*;
         .clk               (clk               ),
         .clk_cg            (clk               ),
         .soc_ifc_clk_cg    (clk               ),
+        .rdc_clk_cg        (clk               ),
+        .rdc_clk_dis (),
+        .fw_update_rst_window (cptra_status_agent_bus.fw_update_rst_window),
         .cptra_pwrgood     (soc_ifc_ctrl_agent_bus.cptra_pwrgood     ),
         .cptra_rst_b       (soc_ifc_ctrl_agent_bus.cptra_rst_b       ),
         .ready_for_fuses   (soc_ifc_status_agent_bus.ready_for_fuses   ),
@@ -168,15 +156,14 @@ import soc_ifc_pkg::*;
         .mailbox_flow_done (soc_ifc_status_agent_bus.mailbox_flow_done ),
 
         .security_state    (soc_ifc_ctrl_agent_bus.security_state),
-        .scan_mode_f       (1'b0),
 
         .generic_input_wires (soc_ifc_ctrl_agent_bus.generic_input_wires ),
         .BootFSM_BrkPoint    (soc_ifc_ctrl_agent_bus.BootFSM_BrkPoint),
         .generic_output_wires(soc_ifc_status_agent_bus.generic_output_wires),
 
         //SRAM interface
-        .mbox_sram_req(mbox_sram_req),
-        .mbox_sram_resp(mbox_sram_resp),
+        .mbox_sram_req(mbox_sram_agent_bus.mbox_sram_req),
+        .mbox_sram_resp(mbox_sram_agent_bus.mbox_sram_resp),
 
         //APB Interface with SoC
         .paddr_i  (uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PADDR[17:0]),
@@ -209,14 +196,19 @@ import soc_ifc_pkg::*;
         .soc_ifc_notif_intr(cptra_status_agent_bus.soc_ifc_notif_intr),
         .sha_error_intr(cptra_status_agent_bus.sha_error_intr),
         .sha_notif_intr(cptra_status_agent_bus.sha_notif_intr),
+        .timer_intr(cptra_status_agent_bus.timer_intr),
+        // RV ECC Status Interface
+        .rv_ecc_sts(cptra_ctrl_agent_bus.rv_ecc_sts),
         //Obfuscated UDS and FE
+        .clear_obf_secrets(cptra_ctrl_agent_bus.clear_obf_secrets),
+        .scan_mode_f       (1'b0),
         .cptra_obf_key(soc_ifc_ctrl_agent_bus.cptra_obf_key),
         .cptra_obf_key_reg(cptra_status_agent_bus.cptra_obf_key_reg),
         .obf_field_entropy(cptra_status_agent_bus.obf_field_entropy),
         .obf_uds_seed(cptra_status_agent_bus.obf_uds_seed),
-        .clear_obf_secrets(cptra_ctrl_agent_bus.clear_obf_secrets),
         // NMI Vector 
         .nmi_vector(cptra_status_agent_bus.nmi_vector),
+        .nmi_intr(cptra_status_agent_bus.nmi_intr),
         // ICCM Lock
         .iccm_lock(cptra_status_agent_bus.iccm_lock),
         .iccm_axs_blocked(cptra_ctrl_agent_bus.iccm_axs_blocked),
@@ -273,10 +265,12 @@ import soc_ifc_pkg::*;
     uvm_config_db #( virtual cptra_ctrl_monitor_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , cptra_ctrl_agent_BFM , cptra_ctrl_agent_mon_bfm ); 
     uvm_config_db #( virtual soc_ifc_status_monitor_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , soc_ifc_status_agent_BFM , soc_ifc_status_agent_mon_bfm ); 
     uvm_config_db #( virtual cptra_status_monitor_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , cptra_status_agent_BFM , cptra_status_agent_mon_bfm ); 
+    uvm_config_db #( virtual mbox_sram_monitor_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , mbox_sram_agent_BFM , mbox_sram_agent_mon_bfm ); 
     uvm_config_db #( virtual soc_ifc_ctrl_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , soc_ifc_ctrl_agent_BFM , soc_ifc_ctrl_agent_drv_bfm  );
     uvm_config_db #( virtual cptra_ctrl_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , cptra_ctrl_agent_BFM , cptra_ctrl_agent_drv_bfm  );
     uvm_config_db #( virtual soc_ifc_status_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , soc_ifc_status_agent_BFM , soc_ifc_status_agent_drv_bfm  );
     uvm_config_db #( virtual cptra_status_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , cptra_status_agent_BFM , cptra_status_agent_drv_bfm  );
+    uvm_config_db #( virtual mbox_sram_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , mbox_sram_agent_BFM , mbox_sram_agent_drv_bfm  );
   end
 
 endmodule

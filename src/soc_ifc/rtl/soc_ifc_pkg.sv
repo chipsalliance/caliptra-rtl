@@ -15,6 +15,8 @@
 `ifndef SOC_IFC_PKG
 `define SOC_IFC_PKG
 
+`include "caliptra_top_reg_defines.svh"
+
 package soc_ifc_pkg;
     
     parameter SOC_IFC_ADDR_W = 18;
@@ -22,7 +24,8 @@ package soc_ifc_pkg;
     parameter SOC_IFC_USER_W = 32;
     
     parameter MBOX_SIZE_KB = 128;
-    parameter MBOX_SIZE_BYTES = 128 * 1024;
+    parameter MBOX_SIZE_BYTES = MBOX_SIZE_KB * 1024;
+    parameter MBOX_SIZE_DWORDS = MBOX_SIZE_BYTES/4;
     parameter MBOX_DATA_W = 32;
     parameter MBOX_ECC_DATA_W = 7;
     parameter MBOX_DATA_AND_ECC_W = MBOX_DATA_W + MBOX_ECC_DATA_W;
@@ -32,21 +35,28 @@ package soc_ifc_pkg;
     parameter WDT_TIMEOUT_PERIOD_NUM_DWORDS = 2;
     parameter WDT_TIMEOUT_PERIOD_W = WDT_TIMEOUT_PERIOD_NUM_DWORDS * 32;
 
+    parameter SOC_IFC_REG_OFFSET = 32'h3000_0000;
+
     //memory map
-    parameter MBOX_DIR_START_ADDR    = 18'h0_0000;
-    parameter MBOX_DIR_END_ADDR      = 18'h1_FFFF;
-    parameter MBOX_REG_START_ADDR    = 18'h2_0000;
-    parameter MBOX_REG_END_ADDR      = 18'h2_0FFF;
-    parameter SHA_REG_START_ADDR     = 18'h2_1000;
-    parameter SHA_REG_END_ADDR       = 18'h2_1FFF;
-    parameter SOC_IFC_REG_START_ADDR = 18'h3_0000;
-    parameter SOC_IFC_REG_END_ADDR   = 18'h3_FFFF;
+    parameter MBOX_DIR_START_ADDR     = 32'h0000_0000;
+    parameter MBOX_DIR_END_ADDR       = 32'h0001_FFFF;
+    parameter MBOX_REG_START_ADDR     = `CALIPTRA_TOP_REG_MBOX_CSR_BASE_ADDR - SOC_IFC_REG_OFFSET;
+    parameter MBOX_REG_END_ADDR       = MBOX_REG_START_ADDR + 32'h0000_0FFF;
+    parameter SHA_REG_START_ADDR      = `CALIPTRA_TOP_REG_SHA512_ACC_CSR_BASE_ADDR - SOC_IFC_REG_OFFSET;
+    parameter SHA_REG_END_ADDR        = SHA_REG_START_ADDR + 32'h0000_0FFF;
+    parameter SOC_IFC_REG_START_ADDR  = `CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_BASE_ADDR - SOC_IFC_REG_OFFSET;
+    parameter SOC_IFC_REG_END_ADDR    = SOC_IFC_REG_START_ADDR + 32'h0000_FFFF;
+    parameter SOC_IFC_FUSE_START_ADDR = SOC_IFC_REG_START_ADDR + 32'h0000_0200;
+    parameter SOC_IFC_FUSE_END_ADDR   = SOC_IFC_REG_START_ADDR + 32'h0000_05FF;
 
     //Valid PAUSER
     //Lock the PAUSER values from integration time
     parameter [4:0] CPTRA_SET_MBOX_PAUSER_INTEG   = { 1'b0,          1'b0,          1'b0,          1'b0,          1'b0};
     parameter [4:0][31:0] CPTRA_MBOX_VALID_PAUSER = {32'h4444_4444, 32'h3333_3333, 32'h2222_2222, 32'h1111_1111, 32'h0000_0000};
     parameter [31:0] CPTRA_DEF_MBOX_VALID_PAUSER  = 32'hFFFF_FFFF;
+
+    parameter CPTRA_SET_FUSE_PAUSER_INTEG = 1'b0;
+    parameter [31:0] CPTRA_FUSE_VALID_PAUSER = 32'h0000_0000;
 
     //DMI Register encodings
     //Read only registers
@@ -60,6 +70,14 @@ package soc_ifc_pkg;
     parameter DMI_REG_CPTRA_DBG_MANUF_SERVICE_REG = 7'h60;
     parameter DMI_REG_BOOTFSM_GO = 7'h61;
     
+    // This parameter describes the hard-coded implementation in the BOOT FSM
+    // that results in noncore reset assertion being delayed from the soft reset
+    // (cptra_rst_b) by some integer number of clock cycles, due to synchronization
+    // stages and the rst window signaling.
+    // This is useful in validation environments for controlling the predicted
+    // timing in a reset event.
+    parameter SOC_IFC_CPTRA_RST_NONCORE_RST_DELAY = 4;
+
     //BOOT FSM
     typedef enum logic [2:0] {
         BOOT_IDLE   = 3'b000,
@@ -76,8 +94,19 @@ package soc_ifc_pkg;
         MBOX_RDY_FOR_DLEN = 3'b011,
         MBOX_RDY_FOR_DATA = 3'b010,
         MBOX_EXECUTE_UC   = 3'b110,
-        MBOX_EXECUTE_SOC  = 3'b100
+        MBOX_EXECUTE_SOC  = 3'b100,
+        MBOX_ERROR        = 3'b111
     } mbox_fsm_state_e;
+
+    //SHA FSM
+    typedef enum logic [2:0] {
+        SHA_IDLE    = 3'b000,
+        SHA_BLOCK_0 = 3'b001,
+        SHA_BLOCK_N = 3'b011,
+        SHA_PAD0    = 3'b010,
+        SHA_PAD1    = 3'b110,
+        SHA_DONE    = 3'b100
+      } sha_fsm_state_e;
 
     //MAILBOX Status
     typedef enum logic [3:0] {
@@ -111,6 +140,18 @@ package soc_ifc_pkg;
     typedef struct packed {
         mbox_sram_data_t rdata;
     } mbox_sram_resp_t;
+
+    typedef struct packed {
+        logic cptra_iccm_ecc_single_error;
+        logic cptra_iccm_ecc_double_error;
+        logic cptra_dccm_ecc_single_error;
+        logic cptra_dccm_ecc_double_error;
+    } rv_ecc_sts_t;
+
+    typedef struct packed {
+        logic axs_without_lock;
+        logic axs_incorrect_order;
+    } mbox_protocol_error_t;
 
     typedef enum logic [1:0] {
         DEVICE_UNPROVISIONED = 2'b00,

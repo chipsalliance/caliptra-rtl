@@ -24,6 +24,7 @@
 #include "sha256.h"
 #include "sha512.h"
 #include "soc_ifc.h"
+#include "caliptra_isr.h"
 #include <string.h>
 #include <stdint.h>
 #include "printf.h"
@@ -37,6 +38,8 @@ volatile char* stdout = (char *)STDOUT;
 #else
     enum printf_verbosity verbosity_g = LOW;
 #endif
+volatile caliptra_intr_received_s cptra_intr_rcv;
+volatile uint32_t                 intr_count       = 0;
 
 
 /* --------------- Function Prototypes --------------- */
@@ -66,16 +69,25 @@ void main() {
     VPRINTF(MEDIUM, "----------------------------------\n");
 
     // TODO other init tasks? (interrupts later)
+    VPRINTF(LOW, "Starting WDT in cascade mode\n");
+    lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_EN, SOC_IFC_REG_CPTRA_WDT_TIMER1_EN_TIMER1_EN_MASK);
 
     //Check the reset reason FIXME (as soc_ifc fn)
     reset_reason = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_RESET_REASON);
 
     //Cold Boot, run DOE flows, wait for FW image
     if (reset_reason == 0x0) {
+        VPRINTF(LOW, "Beginning Cold Boot flow\n");
         doe_init(iv_data_uds, iv_data_fe, 0x6); // TODO replace 0x6 with entry indicators
 
+        VPRINTF(LOW, "Setting Flow Status\n");
         soc_ifc_set_flow_status_field(SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK);
 
+        VPRINTF(LOW, "Unlocking SHA512-ACC\n");
+        // Clear SHA accelerator lock (FIPS requirement)
+        soc_ifc_w1clr_sha_lock_field(SHA512_ACC_CSR_LOCK_LOCK_MASK);
+
+        VPRINTF(LOW, "Waiting for FMC FW to be loaded\n");
         // Wait for FW available (FMC)
         do {
             intr_sts = lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
@@ -114,6 +126,7 @@ void main() {
         soc_ifc_clr_flow_status_field(SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK);
 
         // Jump to ICCM (this is the FMC image, a.k.a. Section 0)
+        VPRINTF(LOW, "FMC FW loaded into ICCM - jumping there \n");
         iccm_fmc();
     }  
     //FW Update Reset
@@ -139,13 +152,16 @@ void main() {
         // Ready for FW (need to reload the FMC)
         soc_ifc_set_flow_status_field(SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK);
 
+        // Clear SHA accelerator lock (FIPS requirement)
+        soc_ifc_w1clr_sha_lock_field(SHA512_ACC_CSR_LOCK_LOCK_MASK);
+
         // Wait for FW available (FMC)
         do {
-            intr_sts = lsu_read_32( (uint32_t*) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+            intr_sts = lsu_read_32( (uintptr_t) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
             intr_sts &= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK;
         } while (!intr_sts);
         //clear the interrupt
-        lsu_write_32((uint32_t*) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK);
+        lsu_write_32((uintptr_t) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK);
 
         op = soc_ifc_read_mbox_cmd();
         if (op.cmd != MBOX_CMD_FMC_UPDATE) {
@@ -160,11 +176,11 @@ void main() {
 
         // Wait for FW available (RT)
         do {
-            intr_sts = lsu_read_32( (uint32_t*) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+            intr_sts = lsu_read_32( (uintptr_t) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
             intr_sts &= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK;
         } while (!intr_sts);
         //clear the interrupt
-        lsu_write_32((uint32_t*) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK);
+        lsu_write_32((uintptr_t) CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK);
         //read the mbox command
         op = soc_ifc_read_mbox_cmd();
         if (op.cmd != MBOX_CMD_RT_UPDATE) {

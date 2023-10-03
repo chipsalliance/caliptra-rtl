@@ -50,6 +50,8 @@ package soc_ifc_env_pkg;
   import soc_ifc_status_pkg_hdl::*;
   import cptra_status_pkg::*;
   import cptra_status_pkg_hdl::*;
+  import mbox_sram_pkg::*;
+  import mbox_sram_pkg_hdl::*;
   import soc_ifc_reg_model_top_pkg::*;
   import qvip_ahb_lite_slave_pkg::*;
   import qvip_ahb_lite_slave_params_pkg::*;
@@ -58,6 +60,7 @@ package soc_ifc_env_pkg;
  
   `uvm_analysis_imp_decl(_soc_ifc_ctrl_agent_ae)
   `uvm_analysis_imp_decl(_cptra_ctrl_agent_ae)
+  `uvm_analysis_imp_decl(_mbox_sram_agent_ae)
   `uvm_analysis_imp_decl(_ahb_slave_0_ae)
   `uvm_analysis_imp_decl(_apb5_slave_0_ae)
   `uvm_analysis_imp_decl(_expected_analysis_export)
@@ -68,6 +71,14 @@ package soc_ifc_env_pkg;
   `uvm_analysis_imp_decl(_expected_apb_analysis_export)
   `uvm_analysis_imp_decl(_actual_ahb_analysis_export)
   `uvm_analysis_imp_decl(_actual_apb_analysis_export)
+ 
+  `uvm_analysis_imp_decl(_cov_soc_ifc_ctrl_ae)
+  `uvm_analysis_imp_decl(_cov_soc_ifc_status_ae)
+  `uvm_analysis_imp_decl(_cov_apb_ae)
+  `uvm_analysis_imp_decl(_cov_cptra_ctrl_ae)
+  `uvm_analysis_imp_decl(_cov_cptra_status_ae)
+  `uvm_analysis_imp_decl(_cov_ahb_ae)
+  `uvm_analysis_imp_decl(_cov_mbox_sram_ae)
 
   // pragma uvmf custom package_imports_additional begin
   import soc_ifc_pkg::*;
@@ -80,6 +91,8 @@ package soc_ifc_env_pkg;
   `include "src/soc_ifc_env_configuration.svh"
   `include "src/soc_ifc_predictor.svh"
   `include "src/soc_ifc_scoreboard.svh"
+  `include "src/soc_ifc_reg_cov_subscriber.svh"
+  `include "src/soc_ifc_env_cov_subscriber.svh"
   `include "src/soc_ifc_environment.svh"
   `include "src/soc_ifc_env_sequence_base.svh"
 
@@ -100,6 +113,8 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_reset_sequence_base soc_ifc_env_reset_sequence_base_t;
   `include "sequences/bringup/soc_ifc/soc_ifc_env_bringup_sequence.svh"
   typedef soc_ifc_env_bringup_sequence soc_ifc_env_bringup_sequence_t;
+  `include "sequences/bringup/soc_ifc/soc_ifc_env_rom_bringup_sequence.svh"
+  typedef soc_ifc_env_rom_bringup_sequence soc_ifc_env_rom_bringup_sequence_t;
   `include "sequences/bringup/soc_ifc/soc_ifc_env_pauser_init_sequence.svh"
   typedef soc_ifc_env_pauser_init_sequence soc_ifc_env_pauser_init_sequence_t;
   `include "sequences/bringup/soc_ifc/soc_ifc_env_reset_warm_sequence.svh"
@@ -112,8 +127,16 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_mbox_rand_fw_sequence soc_ifc_env_mbox_rand_fw_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_real_fw_sequence.svh"
   typedef soc_ifc_env_mbox_real_fw_sequence soc_ifc_env_mbox_real_fw_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_fw_upd_sequence.svh"
+  typedef soc_ifc_env_mbox_fw_upd_sequence soc_ifc_env_mbox_fw_upd_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rom_fw_sequence.svh"
+  typedef soc_ifc_env_mbox_rom_fw_sequence soc_ifc_env_mbox_rom_fw_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_small_sequence.svh"
   typedef soc_ifc_env_mbox_rand_small_sequence soc_ifc_env_mbox_rand_small_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_min_sequence.svh"
+  typedef soc_ifc_env_mbox_min_sequence soc_ifc_env_mbox_min_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_max_sequence.svh"
+  typedef soc_ifc_env_mbox_max_sequence soc_ifc_env_mbox_max_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_medium_sequence.svh"
   typedef soc_ifc_env_mbox_rand_medium_sequence soc_ifc_env_mbox_rand_medium_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_large_sequence.svh"
@@ -128,8 +151,26 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_mbox_rand_pauser_medium_sequence soc_ifc_env_mbox_rand_pauser_medium_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_pauser_large_sequence.svh"
   typedef soc_ifc_env_mbox_rand_pauser_large_sequence soc_ifc_env_mbox_rand_pauser_large_sequence_t;
-  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_multi_agent_sequence.svh"
-  typedef soc_ifc_env_mbox_rand_multi_agent_sequence soc_ifc_env_mbox_rand_multi_agent_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_delay_sequence.svh"
+  typedef soc_ifc_env_mbox_rand_delay_sequence soc_ifc_env_mbox_rand_delay_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_delay_small_sequence.svh"
+  typedef soc_ifc_env_mbox_rand_delay_small_sequence soc_ifc_env_mbox_rand_delay_small_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_delay_medium_sequence.svh"
+  typedef soc_ifc_env_mbox_rand_delay_medium_sequence soc_ifc_env_mbox_rand_delay_medium_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_delay_large_sequence.svh"
+  typedef soc_ifc_env_mbox_rand_delay_large_sequence soc_ifc_env_mbox_rand_delay_large_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_reg_axs_invalid_sequence.svh"
+  typedef soc_ifc_env_mbox_reg_axs_invalid_sequence soc_ifc_env_mbox_reg_axs_invalid_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_reg_axs_invalid_small_sequence.svh"
+  typedef soc_ifc_env_mbox_reg_axs_invalid_small_sequence soc_ifc_env_mbox_reg_axs_invalid_small_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_reg_axs_invalid_medium_sequence.svh"
+  typedef soc_ifc_env_mbox_reg_axs_invalid_medium_sequence soc_ifc_env_mbox_reg_axs_invalid_medium_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_reg_axs_invalid_large_sequence.svh"
+  typedef soc_ifc_env_mbox_reg_axs_invalid_large_sequence soc_ifc_env_mbox_reg_axs_invalid_large_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_dlen_invalid_sequence.svh"
+  typedef soc_ifc_env_mbox_dlen_invalid_sequence soc_ifc_env_mbox_dlen_invalid_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_dir_read_sequence.svh"
+  typedef soc_ifc_env_mbox_dir_read_sequence soc_ifc_env_mbox_dir_read_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_dlen_overflow_sequence.svh"
   typedef soc_ifc_env_mbox_dlen_overflow_sequence soc_ifc_env_mbox_dlen_overflow_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_dlen_overflow_small_sequence.svh"
@@ -146,6 +187,16 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_mbox_dlen_underflow_medium_sequence soc_ifc_env_mbox_dlen_underflow_medium_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_dlen_underflow_large_sequence.svh"
   typedef soc_ifc_env_mbox_dlen_underflow_large_sequence soc_ifc_env_mbox_dlen_underflow_large_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_sram_double_bit_flip_sequence.svh"
+  typedef soc_ifc_env_mbox_sram_double_bit_flip_sequence soc_ifc_env_mbox_sram_double_bit_flip_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_sram_double_bit_flip_small_sequence.svh"
+  typedef soc_ifc_env_mbox_sram_double_bit_flip_small_sequence soc_ifc_env_mbox_sram_double_bit_flip_small_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_sram_double_bit_flip_medium_sequence.svh"
+  typedef soc_ifc_env_mbox_sram_double_bit_flip_medium_sequence soc_ifc_env_mbox_sram_double_bit_flip_medium_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_sram_double_bit_flip_large_sequence.svh"
+  typedef soc_ifc_env_mbox_sram_double_bit_flip_large_sequence soc_ifc_env_mbox_sram_double_bit_flip_large_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_multi_agent_sequence.svh"
+  typedef soc_ifc_env_mbox_rand_multi_agent_sequence soc_ifc_env_mbox_rand_multi_agent_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rst_sequence.svh"
   typedef soc_ifc_env_mbox_rst_sequence soc_ifc_env_mbox_rst_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rst_warm_rand_medium_sequence.svh"
@@ -162,6 +213,14 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_trng_write_data_sequence soc_ifc_env_trng_write_data_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_soc_mbox_handler_sequence.svh"
   typedef soc_ifc_env_soc_mbox_handler_sequence soc_ifc_env_soc_mbox_handler_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_soc_mbox_reg_axs_invalid_handler_sequence.svh"
+  typedef soc_ifc_env_soc_mbox_reg_axs_invalid_handler_sequence soc_ifc_env_soc_mbox_reg_axs_invalid_handler_sequence_t;
+  `include "sequences/wdt/cptra/soc_ifc_env_wdt_sequence_base.svh"
+  typedef soc_ifc_env_wdt_sequence_base soc_ifc_env_wdt_sequence_base_t;
+  `include "sequences/wdt/cptra/soc_ifc_env_cptra_wdt_independent_sequence.svh"
+  typedef soc_ifc_env_cptra_wdt_independent_sequence soc_ifc_env_cptra_wdt_independent_sequence_t;
+  `include "sequences/wdt/cptra/soc_ifc_env_cptra_wdt_cascade_sequence.svh"
+  typedef soc_ifc_env_cptra_wdt_cascade_sequence soc_ifc_env_cptra_wdt_cascade_sequence_t;
 
   ///////////////////// Sequences usable from soc_ifc bench only /////////////////////
   // These sequences include stimulus for the internal/caliptra-side of the
@@ -169,6 +228,8 @@ package soc_ifc_env_pkg;
   /* TODO: If desired in top-level rand sequence, add this to the rand_seq_idx enum/avail_env_seqs_c constraint */
   `include "sequences/bringup/cptra/soc_ifc_env_cptra_rst_wait_sequence.svh"
   typedef soc_ifc_env_cptra_rst_wait_sequence soc_ifc_env_cptra_rst_wait_sequence_t;
+  `include "sequences/bringup/cptra/soc_ifc_env_cptra_init_interrupts_sequence.svh"
+  typedef soc_ifc_env_cptra_init_interrupts_sequence soc_ifc_env_cptra_init_interrupts_sequence_t;
   `include "sequences/bringup/soc_ifc_env_top_reset_warm_sequence.svh"
   typedef soc_ifc_env_top_reset_warm_sequence soc_ifc_env_top_reset_warm_sequence_t;
   `include "sequences/bringup/soc_ifc_env_top_reset_cold_sequence.svh"
@@ -187,14 +248,22 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_cptra_mbox_req_rand_small_sequence soc_ifc_env_cptra_mbox_req_rand_small_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_sequence_base.svh"
   typedef soc_ifc_env_top_mbox_sequence_base soc_ifc_env_top_mbox_sequence_base_t;
+  `include "sequences/mbox/soc_ifc_env_top_mbox_min_sequence.svh"
+  typedef soc_ifc_env_top_mbox_min_sequence soc_ifc_env_top_mbox_min_sequence_t;
+  `include "sequences/mbox/soc_ifc_env_top_mbox_max_sequence.svh"
+  typedef soc_ifc_env_top_mbox_max_sequence soc_ifc_env_top_mbox_max_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_rand_small_sequence.svh"
   typedef soc_ifc_env_top_mbox_rand_small_sequence soc_ifc_env_top_mbox_rand_small_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_rand_medium_sequence.svh"
   typedef soc_ifc_env_top_mbox_rand_medium_sequence soc_ifc_env_top_mbox_rand_medium_sequence_t;
+  `include "sequences/mbox/soc_ifc_env_top_mbox_rand_large_sequence.svh"
+  typedef soc_ifc_env_top_mbox_rand_large_sequence soc_ifc_env_top_mbox_rand_large_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_rand_small_unlock_sequence.svh"
   typedef soc_ifc_env_top_mbox_rand_small_unlock_sequence soc_ifc_env_top_mbox_rand_small_unlock_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_rand_medium_unlock_sequence.svh"
   typedef soc_ifc_env_top_mbox_rand_medium_unlock_sequence soc_ifc_env_top_mbox_rand_medium_unlock_sequence_t;
+  `include "sequences/mbox/soc_ifc_env_top_mbox_rand_large_unlock_sequence.svh"
+  typedef soc_ifc_env_top_mbox_rand_large_unlock_sequence soc_ifc_env_top_mbox_rand_large_unlock_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_contention_sequence.svh"
   typedef soc_ifc_env_top_mbox_contention_sequence soc_ifc_env_top_mbox_contention_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_rand_pauser_sequence.svh"
@@ -217,6 +286,18 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_top_mbox_rand_pauser_medium_unlock_sequence soc_ifc_env_top_mbox_rand_pauser_medium_unlock_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_rand_pauser_large_unlock_sequence.svh"
   typedef soc_ifc_env_top_mbox_rand_pauser_large_unlock_sequence soc_ifc_env_top_mbox_rand_pauser_large_unlock_sequence_t;
+  `include "sequences/mbox/soc_ifc_env_top_mbox_rand_delay_small_sequence.svh"
+  typedef soc_ifc_env_top_mbox_rand_delay_small_sequence soc_ifc_env_top_mbox_rand_delay_small_sequence_t;
+  `include "sequences/mbox/soc_ifc_env_top_mbox_rand_delay_medium_sequence.svh"
+  typedef soc_ifc_env_top_mbox_rand_delay_medium_sequence soc_ifc_env_top_mbox_rand_delay_medium_sequence_t;
+  `include "sequences/mbox/soc_ifc_env_top_mbox_rand_delay_large_sequence.svh"
+  typedef soc_ifc_env_top_mbox_rand_delay_large_sequence soc_ifc_env_top_mbox_rand_delay_large_sequence_t;
+  `include "sequences/mbox/soc_ifc_env_top_mbox_reg_axs_invalid_small_sequence.svh"
+  typedef soc_ifc_env_top_mbox_reg_axs_invalid_small_sequence soc_ifc_env_top_mbox_reg_axs_invalid_small_sequence_t;
+  `include "sequences/mbox/soc_ifc_env_top_mbox_reg_axs_invalid_medium_sequence.svh"
+  typedef soc_ifc_env_top_mbox_reg_axs_invalid_medium_sequence soc_ifc_env_top_mbox_reg_axs_invalid_medium_sequence_t;
+  `include "sequences/mbox/soc_ifc_env_top_mbox_reg_axs_invalid_large_sequence.svh"
+  typedef soc_ifc_env_top_mbox_reg_axs_invalid_large_sequence soc_ifc_env_top_mbox_reg_axs_invalid_large_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_multi_agent_sequence.svh"
   typedef soc_ifc_env_top_mbox_multi_agent_sequence soc_ifc_env_top_mbox_multi_agent_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_dlen_violation_sequence.svh"
@@ -231,6 +312,8 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_top_cptra_mbox_sequence_base soc_ifc_env_top_cptra_mbox_sequence_base_t;
   `include "sequences/mbox/soc_ifc_env_top_cptra_mbox_rand_small_sequence.svh"
   typedef soc_ifc_env_top_cptra_mbox_rand_small_sequence soc_ifc_env_top_cptra_mbox_rand_small_sequence_t;
+  `include "sequences/mbox/soc_ifc_env_top_cptra_mbox_reg_axs_invalid_small_sequence.svh"
+  typedef soc_ifc_env_top_cptra_mbox_reg_axs_invalid_small_sequence soc_ifc_env_top_cptra_mbox_reg_axs_invalid_small_sequence_t;
 
   // pragma uvmf custom package_item_additional end
 endpackage

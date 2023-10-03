@@ -50,7 +50,7 @@ addrmap doe_reg {
         default sw = rw;
         default hw = r;
         default resetsignal = reset_b;
-        field {desc = "IV input field"; swmod;} IV[32] = 32'b0;
+        field {desc = "IV input field"; swmod; hwclr;} IV[32] = 32'b0;
     
     } DOE_IV[4];
 

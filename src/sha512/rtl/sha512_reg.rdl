@@ -84,8 +84,8 @@ addrmap sha512_reg {
         field {desc = "Control next command bit"; singlepulse;} NEXT = 1'b0;
         field {desc = "Control mode command bits";} MODE[2] = 2'b10;
         field {desc = "Zeroize all internal registers"; singlepulse;} ZEROIZE = 1'b0;
-        field {desc = "Indicates last iteration for hash extend function. 
-                       Result of this INIT or NEXT cycle will be written back to PCR"; hwclr;} LAST = 1'b0;
+        field {desc = "Indicates last iteration for keyvault or hash extend function. 
+                       Result of this INIT or NEXT cycle will be written back to the appropriate vault"; hwclr;} LAST = 1'b0;
     
     } SHA512_CTRL @0x00000010;
 
@@ -100,7 +100,7 @@ addrmap sha512_reg {
                 This register is located at SHA512_base_address + 0x0000_0018.";
 
         default sw = r;
-        default hw = rw;
+        default hw = w;
         default resetsignal = reset_b;
         field {desc = "Status ready bit";} READY = 1'b0;
         field {desc = "Status valid bit";} VALID = 1'b0;
@@ -150,7 +150,7 @@ addrmap sha512_reg {
         default hw = r;
         default resetsignal = reset_b;
         field {desc = "Nonce value for PCR Gen Hash Function";} NONCE[32] = 32'b0;
-    } SHA512_GEN_PCR_HASH_NONCE;
+    } SHA512_GEN_PCR_HASH_NONCE[8];
     reg {
         name = "SHA512 PCR Hash Control";
         desc = "Control register for PCR Gen Hash Function";

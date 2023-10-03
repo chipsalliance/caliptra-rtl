@@ -57,6 +57,9 @@ extends uvmf_environment_configuration_base;
     typedef cptra_status_configuration cptra_status_agent_config_t;
     rand cptra_status_agent_config_t cptra_status_agent_config;
 
+    typedef mbox_sram_configuration mbox_sram_agent_config_t;
+    rand mbox_sram_agent_config_t mbox_sram_agent_config;
+
 
 
     qvip_ahb_lite_slave_env_configuration     qvip_ahb_lite_slave_subenv_config;
@@ -90,6 +93,7 @@ extends uvmf_environment_configuration_base;
     cptra_ctrl_agent_config = cptra_ctrl_agent_config_t::type_id::create("cptra_ctrl_agent_config");
     soc_ifc_status_agent_config = soc_ifc_status_agent_config_t::type_id::create("soc_ifc_status_agent_config");
     cptra_status_agent_config = cptra_status_agent_config_t::type_id::create("cptra_status_agent_config");
+    mbox_sram_agent_config = mbox_sram_agent_config_t::type_id::create("mbox_sram_agent_config");
 
     qvip_ahb_lite_slave_subenv_config = qvip_ahb_lite_slave_env_configuration::type_id::create("qvip_ahb_lite_slave_subenv_config");
     qvip_apb5_slave_subenv_config = qvip_apb5_slave_env_configuration::type_id::create("qvip_apb5_slave_subenv_config");
@@ -133,6 +137,7 @@ extends uvmf_environment_configuration_base;
      "\n", cptra_ctrl_agent_config.convert2string,
      "\n", soc_ifc_status_agent_config.convert2string,
      "\n", cptra_status_agent_config.convert2string,
+     "\n", mbox_sram_agent_config.convert2string,
 
      "\n", qvip_ahb_lite_slave_subenv_config.convert2string,
      "\n", qvip_apb5_slave_subenv_config.convert2string
@@ -176,20 +181,24 @@ extends uvmf_environment_configuration_base;
   // Interface initialization for local agents
      soc_ifc_ctrl_agent_config.initialize( interface_activity[2], {environment_path,".soc_ifc_ctrl_agent"}, interface_names[2]);
      soc_ifc_ctrl_agent_config.initiator_responder = INITIATOR;
-     // soc_ifc_ctrl_agent_config.has_coverage = 1;
+     soc_ifc_ctrl_agent_config.has_coverage = 1;
      cptra_ctrl_agent_config.initialize( interface_activity[3], {environment_path,".cptra_ctrl_agent"}, interface_names[3]);
      cptra_ctrl_agent_config.initiator_responder = INITIATOR;
-     // cptra_ctrl_agent_config.has_coverage = 1;
+     cptra_ctrl_agent_config.has_coverage = 1;
      soc_ifc_status_agent_config.initialize( interface_activity[4], {environment_path,".soc_ifc_status_agent"}, interface_names[4]);
      soc_ifc_status_agent_config.initiator_responder = RESPONDER;
-     // soc_ifc_status_agent_config.has_coverage = 1;
+     soc_ifc_status_agent_config.has_coverage = 1;
      cptra_status_agent_config.initialize( interface_activity[5], {environment_path,".cptra_status_agent"}, interface_names[5]);
      cptra_status_agent_config.initiator_responder = RESPONDER;
-     // cptra_status_agent_config.has_coverage = 1;
+     cptra_status_agent_config.has_coverage = 1;
+     mbox_sram_agent_config.initialize( interface_activity[6], {environment_path,".mbox_sram_agent"}, interface_names[6]);
+     mbox_sram_agent_config.initiator_responder = RESPONDER;
+     mbox_sram_agent_config.has_coverage = 1;
 
     // pragma uvmf custom reg_model_config_initialize begin
     // Register model creation and configuation
     if (register_model == null) begin
+      uvm_reg::include_coverage("*", UVM_CVR_ALL); // Register coverage config with resource DB, used later by build_coverage()
       soc_ifc_rm = soc_ifc_reg_model_top::type_id::create("soc_ifc_rm");
       soc_ifc_rm.build();
       soc_ifc_rm.lock_model();
@@ -208,7 +217,12 @@ extends uvmf_environment_configuration_base;
 
 
   // pragma uvmf custom initialize begin
+     qvip_ahb_lite_slave_subenv_config.ahb_lite_slave_0_cfg.agent_cfg.en_cvg.slave = 1'b1;
+     qvip_ahb_lite_slave_subenv_config.ahb_lite_slave_0_cfg.agent_cfg.en_cvg.master = 1'b1;
+     qvip_ahb_lite_slave_subenv_config.ahb_lite_slave_0_cfg.agent_cfg.en_cvg.response = 1'b1;
+
      qvip_apb5_slave_subenv_config.apb5_master_0_cfg.agent_cfg.en_sb = 1'b0; /* FIXME -- apb scoreboard flags ERRORs when read_data != write_data to a given address, which happens frequently (non-erroneously) in this environment */
+     qvip_apb5_slave_subenv_config.apb5_master_0_cfg.agent_cfg.en_cvg = 1'b1;
     // Add analysis ports to send Bus traffic to the scoreboard, so that the predictor/scoreboard can check read transfer data
     void'(qvip_ahb_lite_slave_subenv_config.ahb_lite_slave_0_cfg.set_monitor_item( "burst_transfer_sb" , ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
                                                                                                                                      ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,
@@ -220,6 +234,17 @@ extends uvmf_environment_configuration_base;
                                                                                                                          apb5_master_0_params::APB3_PADDR_BIT_WIDTH,
                                                                                                                          apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
                                                                                                                          apb5_master_0_params::APB3_PRDATA_BIT_WIDTH)::type_id::get() ));
+    // Add analysis ports to send Bus traffic to the coverage subscriber
+    void'(qvip_ahb_lite_slave_subenv_config.ahb_lite_slave_0_cfg.set_monitor_item( "burst_transfer_cov" , ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
+                                                                                                                                      ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,
+                                                                                                                                      ahb_lite_slave_0_params::AHB_NUM_SLAVES,
+                                                                                                                                      ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
+                                                                                                                                      ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
+                                                                                                                                      ahb_lite_slave_0_params::AHB_RDATA_WIDTH)::type_id::get() ));
+    void'(qvip_apb5_slave_subenv_config.apb5_master_0_cfg.set_monitor_item( "trans_ap_cov" , apb3_host_apb3_transaction #(apb5_master_0_params::APB3_SLAVE_COUNT,
+                                                                                                                          apb5_master_0_params::APB3_PADDR_BIT_WIDTH,
+                                                                                                                          apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
+                                                                                                                          apb5_master_0_params::APB3_PRDATA_BIT_WIDTH)::type_id::get() ));
   // pragma uvmf custom initialize end
 
   endfunction

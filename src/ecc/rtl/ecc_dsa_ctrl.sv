@@ -81,7 +81,8 @@ module ecc_dsa_ctrl
 
     // Interrupts (from ecc_reg)
     output logic error_intr,
-    output logic notif_intr
+    output logic notif_intr,
+    input  logic debugUnlock_or_scan_mode_switch
     );
 
     //----------------------------------------------------------------
@@ -116,6 +117,7 @@ module ecc_dsa_ctrl
     logic hw_scalar_G_we;
     logic hw_scalar_PK_we;
     logic hw_verify_r_we;
+    logic hw_pk_chk_we;
     logic scalar_G_sel;
 
     logic dsa_valid_reg;
@@ -140,6 +142,7 @@ module ecc_dsa_ctrl
     logic [REG_SIZE-1 : 0]  lambda_reg;
     logic [REG_SIZE-1 : 0]  masking_rnd;
     logic [REG_SIZE-1 : 0]  masking_rnd_reg;
+    logic [REG_SIZE-1 : 0]  pk_chk_reg;
 
     logic [REG_SIZE-1 : 0]  scalar_G_reg;
     logic [REG_SIZE-1 : 0]  scalar_PK_reg;
@@ -174,7 +177,10 @@ module ecc_dsa_ctrl
     logic kv_privkey_ready, kv_privkey_done;
     logic kv_seed_ready, kv_seed_done ;
     logic kv_write_ready, kv_write_done;
-  
+    //KV Read Data Present
+    logic kv_read_data_present;
+    logic kv_read_data_present_set, kv_read_data_present_reset;
+    
     kv_read_ctrl_reg_t kv_privkey_read_ctrl_reg;
     kv_read_ctrl_reg_t kv_seed_read_ctrl_reg;
     kv_write_ctrl_reg_t kv_write_ctrl_reg;
@@ -182,6 +188,25 @@ module ecc_dsa_ctrl
     logic pcr_sign_mode;
     
     instr_struct_t prog_instr;
+    
+    // ERROR
+    logic keygen_process;
+    logic signing_process;
+    logic verifying_process;
+
+    logic privkey_input_outofrange;
+    logic r_output_outofrange;
+    logic r_input_outofrange;
+    logic s_input_outofrange;
+    logic pubkeyx_input_outofrange;
+    logic pubkeyy_input_outofrange;
+    logic pubkey_input_invalid;
+    logic pcr_sign_input_invalid;
+
+    logic error_flag;
+    logic error_flag_reg;
+    logic error_flag_edge;
+
     //----------------------------------------------------------------
     // Module instantiantions.
     //----------------------------------------------------------------
@@ -283,7 +308,7 @@ module ecc_dsa_ctrl
     // read the registers written by sw
     always_comb begin
         cmd_reg = hwif_out.ECC_CTRL.CTRL.value;
-        zeroize_reg = hwif_out.ECC_CTRL.ZEROIZE.value;
+        zeroize_reg = hwif_out.ECC_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
         
         sca_point_rnd_en  = 1'b1;
         sca_mask_sign_en  = 1'b1;
@@ -297,18 +322,23 @@ module ecc_dsa_ctrl
             privkey_we_reg      <= '0;
             privkey_we_reg_ff   <= '0;
             kv_reg    <= '0;
+            kv_read_data_present <= '0;
         end
         else if (zeroize_reg) begin
             privkey_we_reg      <= '0;
             privkey_we_reg_ff   <= '0;
             kv_reg    <= '0;
+            kv_read_data_present <= '0;
         end
         //Store private key here before pushing to keyvault
         else begin
             privkey_we_reg <= hw_privkey_we;
             privkey_we_reg_ff <= privkey_we_reg;
-            if (privkey_out_we & dest_keyvault)
+            if (privkey_out_we & (dest_keyvault | kv_read_data_present))
                 kv_reg <= read_reg;
+
+            kv_read_data_present <= kv_read_data_present_set ? '1 :
+                                    kv_read_data_present_reset ? '0 : kv_read_data_present;
         end
     end
 
@@ -335,23 +365,23 @@ module ecc_dsa_ctrl
             //Key Vault has priority if enabled to drive these registers
             //don't store the private key generated in sw accessible register if it's going to keyvault
             privkey_reg[dword] = hwif_out.ECC_PRIVKEY_IN[11-dword].PRIVKEY_IN.value;
-            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.we = pcr_sign_mode | (kv_privkey_write_en & (kv_privkey_write_offset == dword));
+            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.we = (pcr_sign_mode | (kv_privkey_write_en & (kv_privkey_write_offset == dword))) & !zeroize_reg;
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.next = pcr_sign_mode ? pcr_signing_data.pcr_signing_privkey[dword] : kv_privkey_write_en? kv_privkey_write_data : read_reg[11-dword];
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.hwclr = zeroize_reg;
         end 
 
         for (int dword=0; dword < 12; dword++)begin
             //If keyvault is not enabled, grab the sw value as usual
-            hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.we = privkey_out_we & ~dest_keyvault;
+            hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.we = (privkey_out_we & ~(dest_keyvault | kv_read_data_present)) & !zeroize_reg;
             hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.next = read_reg[11-dword];
             hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < 12; dword++)begin
             seed_reg[dword] = hwif_out.ECC_SEED[11-dword].SEED.value;
-            hwif_in.ECC_SEED[dword].SEED.we = kv_seed_write_en & (kv_seed_write_offset == dword);
+            hwif_in.ECC_SEED[dword].SEED.we = (kv_seed_write_en & (kv_seed_write_offset == dword)) & !zeroize_reg;
             hwif_in.ECC_SEED[dword].SEED.next = kv_seed_write_data;
-            hwif_in.ECC_SEED[dword].SEED.hwclr = zeroize_reg;
+            hwif_in.ECC_SEED[dword].SEED.hwclr = zeroize_reg | kv_read_data_present_reset;
         end
 
         for (int dword=0; dword < 12; dword++)begin
@@ -361,41 +391,41 @@ module ecc_dsa_ctrl
 
         for (int dword=0; dword < 12; dword++)begin
             msg_reg[dword] = hwif_out.ECC_MSG[11-dword].MSG.value;
-            hwif_in.ECC_MSG[dword].MSG.we = pcr_sign_mode;
+            hwif_in.ECC_MSG[dword].MSG.we = pcr_sign_mode & !zeroize_reg;
             hwif_in.ECC_MSG[dword].MSG.next = pcr_signing_data.pcr_hash[dword];
             hwif_in.ECC_MSG[dword].MSG.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < 12; dword++)begin
             pubkeyx_reg[dword] = hwif_out.ECC_PUBKEY_X[11-dword].PUBKEY_X.value;
-            hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.we = hw_pubkeyx_we;
+            hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.we = hw_pubkeyx_we & !zeroize_reg;
             hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.next = read_reg[11-dword];  
             hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < 12; dword++)begin
             pubkeyy_reg[dword] = hwif_out.ECC_PUBKEY_Y[11-dword].PUBKEY_Y.value;
-            hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.we = hw_pubkeyy_we;
+            hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.we = hw_pubkeyy_we & !zeroize_reg;
             hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.next = read_reg[11-dword];
             hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < 12; dword++)begin
             r_reg[dword] = hwif_out.ECC_SIGN_R[11-dword].SIGN_R.value;
-            hwif_in.ECC_SIGN_R[dword].SIGN_R.we = hw_r_we;
+            hwif_in.ECC_SIGN_R[dword].SIGN_R.we = hw_r_we & !zeroize_reg;
             hwif_in.ECC_SIGN_R[dword].SIGN_R.next = read_reg[11-dword];
             hwif_in.ECC_SIGN_R[dword].SIGN_R.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < 12; dword++)begin
             s_reg[dword] = hwif_out.ECC_SIGN_S[11-dword].SIGN_S.value;
-            hwif_in.ECC_SIGN_S[dword].SIGN_S.we = hw_s_we;
+            hwif_in.ECC_SIGN_S[dword].SIGN_S.we = hw_s_we & !zeroize_reg;
             hwif_in.ECC_SIGN_S[dword].SIGN_S.next = read_reg[11-dword];
             hwif_in.ECC_SIGN_S[dword].SIGN_S.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < 12; dword++)begin 
-            hwif_in.ECC_VERIFY_R[dword].VERIFY_R.we = hw_verify_r_we;       
+            hwif_in.ECC_VERIFY_R[dword].VERIFY_R.we = hw_verify_r_we & !zeroize_reg;       
             hwif_in.ECC_VERIFY_R[dword].VERIFY_R.next = read_reg[11-dword];
             hwif_in.ECC_VERIFY_R[dword].VERIFY_R.hwclr = zeroize_reg;
         end
@@ -411,7 +441,7 @@ module ecc_dsa_ctrl
     always_comb hwif_in.ECC_CTRL.PCR_SIGN.hwclr = hwif_out.ECC_CTRL.PCR_SIGN.value;
     
     // TODO add other interrupt hwset signals (errors)
-    always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset = 1'b0;
+    always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset = error_flag_reg;
     always_comb hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = ecc_status_done_p;
 
 
@@ -442,6 +472,10 @@ module ecc_dsa_ctrl
     `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_privkey_read_ctrl_reg, ecc_kv_rd_pkey_ctrl)
     `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_seed_read_ctrl_reg, ecc_kv_rd_seed_ctrl)
     `CALIPTRA_KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, ecc_kv_wr_pkey_ctrl)
+
+    //Force result into KV reg whenever source came from KV
+    always_comb kv_read_data_present_set = kv_seed_read_ctrl_reg.read_en;
+    always_comb kv_read_data_present_reset = kv_read_data_present & privkey_out_we;
 
     always_comb pcr_sign_mode = hwif_out.ECC_CTRL.PCR_SIGN.value;
 
@@ -483,7 +517,8 @@ module ecc_dsa_ctrl
         hw_scalar_G_we = 0;
         hw_scalar_PK_we = 0;
         hw_verify_r_we = 0;
-        if (prog_instr.opcode == DSA_UOP_RD_CORE)begin
+        hw_pk_chk_we = 0;
+        if ((prog_instr.opcode == DSA_UOP_RD_CORE) & (cycle_cnt == 0)) begin
             unique casez (prog_instr.reg_id)
                 PRIVKEY_ID      : hw_privkey_we = 1;
                 PUBKEYX_ID      : hw_pubkeyx_we = 1;
@@ -493,6 +528,7 @@ module ecc_dsa_ctrl
                 SCALAR_G_ID     : hw_scalar_G_we = 1;
                 SCALAR_PK_ID    : hw_scalar_PK_we = 1;
                 VERIFY_R_ID     : hw_verify_r_we = 1;
+                PK_VALID_ID     : hw_pk_chk_we = 1;
                 default         : 
                     begin 
                         hw_privkey_we = 0;
@@ -503,6 +539,7 @@ module ecc_dsa_ctrl
                         hw_scalar_G_we = 0;
                         hw_scalar_PK_we = 0;
                         hw_verify_r_we = 0;
+                        hw_pk_chk_we = 0;
                     end
             endcase
         end
@@ -519,6 +556,7 @@ module ecc_dsa_ctrl
                 CONST_ZERO_ID         : write_reg = {zero_pad, ZERO_CONST};
                 CONST_ONE_ID          : write_reg = {zero_pad, ONE_CONST};
                 CONST_E_a_MONT_ID     : write_reg = {zero_pad, E_a_MONT};
+                CONST_E_b_MONT_ID     : write_reg = {zero_pad, E_b_MONT};
                 CONST_E_3b_MONT_ID    : write_reg = {zero_pad, E_3b_MONT};
                 CONST_ONE_p_MONT_ID   : write_reg = {zero_pad, ONE_p_MONT};
                 CONST_R2_p_MONT_ID    : write_reg = {zero_pad, R2_p_MONT};
@@ -567,6 +605,55 @@ module ecc_dsa_ctrl
     assign hmac_busy = ~hmac_ready;
     assign subcomponent_busy = pm_busy_o | hmac_busy | scalar_sca_busy_o;
 
+
+    //----------------------------------------------------------------
+    // ERROR detection
+    //
+    // bound check for different input/output registers.
+    //----------------------------------------------------------------   
+    always_ff @(posedge clk or negedge reset_n) 
+    begin : pk_chk
+        if(!reset_n) begin
+            pk_chk_reg <= '0;
+        end
+        else if(zeroize_reg) begin
+            pk_chk_reg <= '0;
+        end
+        else begin
+            if (hw_pk_chk_we) begin
+                pk_chk_reg <= read_reg;
+            end
+        end
+    end // pk_chk
+
+    always_ff @(posedge clk or negedge reset_n) 
+    begin : error_detection
+        if(!reset_n) begin
+            error_flag_reg <= '0;
+        end
+        else if(zeroize_reg) begin
+            error_flag_reg <= '0;
+        end
+        else begin
+            error_flag_reg  <= error_flag;
+        end
+    end // error_detection
+
+    assign error_flag_edge = error_flag & (!error_flag_reg);
+    
+    assign privkey_input_outofrange = signing_process & ((privkey_reg == 0) | (privkey_reg >= GROUP_ORDER));
+    assign r_output_outofrange      = signing_process & (hw_r_we & (read_reg == 0));
+
+    assign r_input_outofrange       = verifying_process & ((r_reg == 0) | (r_reg >= GROUP_ORDER));
+    assign s_input_outofrange       = verifying_process & ((s_reg == 0) | (s_reg >= GROUP_ORDER));
+    assign pubkeyx_input_outofrange = verifying_process & (pubkeyx_reg >= PRIME);
+    assign pubkeyy_input_outofrange = verifying_process & (pubkeyy_reg >= PRIME);
+    assign pubkey_input_invalid     = verifying_process & (pk_chk_reg != 0);
+
+    assign pcr_sign_input_invalid   = ((cmd_reg == KEYGEN) | (cmd_reg == VERIFY)) & pcr_sign_mode;
+
+    assign error_flag = privkey_input_outofrange | r_output_outofrange | r_input_outofrange | s_input_outofrange | pubkeyx_input_outofrange | pubkeyy_input_outofrange | pubkey_input_invalid | pcr_sign_input_invalid;
+
     //----------------------------------------------------------------
     // ECDSA_FSM_flow
     //
@@ -577,27 +664,40 @@ module ecc_dsa_ctrl
     always_ff @(posedge clk or negedge reset_n) 
     begin : ECDSA_FSM
         if(!reset_n) begin
-            prog_cntr       <= DSA_RESET;
-            cycle_cnt       <= '0;
-            pm_cmd_reg      <= '0;
-            dsa_valid_reg   <= 0;
-            scalar_G_sel    <= 0;
-            hmac_mode       <= 0;
-            hmac_init       <= 0;
-            scalar_sca_en   <= 0;
+            prog_cntr           <= DSA_RESET;
+            cycle_cnt           <= '0;
+            pm_cmd_reg          <= '0;
+            dsa_valid_reg       <= 0;
+            scalar_G_sel        <= 0;
+            hmac_mode           <= 0;
+            hmac_init           <= 0;
+            scalar_sca_en       <= 0;
+            keygen_process      <= 0;
+            signing_process     <= 0;
+            verifying_process   <= 0;
         end
         else if(zeroize_reg) begin
-            prog_cntr       <= DSA_RESET;
-            cycle_cnt       <= '0;
-            pm_cmd_reg      <= '0;
-            dsa_valid_reg   <= 0;
-            scalar_G_sel    <= 0;
-            hmac_mode       <= 0;
-            hmac_init       <= 0;
-            scalar_sca_en   <= 0;
+            prog_cntr           <= DSA_RESET;
+            cycle_cnt           <= '0;
+            pm_cmd_reg          <= '0;
+            dsa_valid_reg       <= 0;
+            scalar_G_sel        <= 0;
+            hmac_mode           <= 0;
+            hmac_init           <= 0;
+            scalar_sca_en       <= 0;
+            keygen_process      <= 0;
+            signing_process     <= 0;
+            verifying_process   <= 0;
         end
         else begin
-            if (subcomponent_busy) begin //Stalled until sub-component is done
+            if (error_flag_edge) begin
+                prog_cntr       <= DSA_NOP;
+                cycle_cnt       <= 2'd3;
+                pm_cmd_reg      <= '0;
+                scalar_sca_en   <= 0;
+                hmac_init       <= 0;
+            end
+            else if (subcomponent_busy) begin //Stalled until sub-component is done
                 prog_cntr       <= prog_cntr;
                 cycle_cnt       <= 2'd3;
                 pm_cmd_reg      <= '0;
@@ -611,6 +711,9 @@ module ecc_dsa_ctrl
                 cycle_cnt <= '0;
                 unique casez (prog_cntr)
                     DSA_NOP : begin 
+                        keygen_process      <= 0;
+                        signing_process     <= 0;
+                        verifying_process   <= 0;
                         // Waiting for new valid command 
                         unique casez (cmd_reg)
                             KEYGEN : begin  // keygen
@@ -618,6 +721,7 @@ module ecc_dsa_ctrl
                                 dsa_valid_reg <= 0;
                                 scalar_G_sel <= 0;
                                 hmac_mode <= 0;
+                                keygen_process <= 1;
                             end   
 
                             SIGN : begin  // signing
@@ -625,12 +729,14 @@ module ecc_dsa_ctrl
                                 dsa_valid_reg <= 0;
                                 scalar_G_sel <= 0;
                                 hmac_mode <= 1;
+                                signing_process <= 1;
                             end                                   
 
                             VERIFY : begin  // verifying
                                 prog_cntr <= DSA_VER_S;
                                 dsa_valid_reg <= 0;
                                 scalar_G_sel <= 1;
+                                verifying_process <= 1;
                             end
 
                             default : begin
@@ -702,6 +808,7 @@ module ecc_dsa_ctrl
     (
         .clk(clk),
         .rst_b(reset_n),
+        .zeroize(zeroize_reg),
 
         //client control register
         .read_ctrl_reg(kv_privkey_read_ctrl_reg),
@@ -729,6 +836,7 @@ module ecc_dsa_ctrl
     (
         .clk(clk),
         .rst_b(reset_n),
+        .zeroize(zeroize_reg),
 
         //client control register
         .read_ctrl_reg(kv_seed_read_ctrl_reg),
@@ -755,6 +863,7 @@ module ecc_dsa_ctrl
     (
         .clk(clk),
         .rst_b(reset_n),
+        .zeroize(zeroize_reg),
 
         //client control register
         .write_ctrl_reg(kv_write_ctrl_reg),

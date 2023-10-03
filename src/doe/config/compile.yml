@@ -53,6 +53,18 @@ targets:
     files:
       - $COMPILE_ROOT/tb/doe_cbc_tb.sv
     tops: [doe_cbc_tb]
+---
+provides: [doe_core_cbc_tb]  
+schema_version: 2.4.0
+requires: 
+  - doe_ctrl
+targets:
+  tb:
+    directories: 
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/tb/doe_core_cbc_tb.sv
+    tops: [doe_core_cbc_tb]    
 global:
   tool:
     vcs:

@@ -314,11 +314,18 @@ import soc_ifc_pkg::*;
    output logic [6:0]                      cptra_uncore_dmi_reg_addr,
    output logic [31:0]                     cptra_uncore_dmi_reg_wdata,
    input  security_state_t                 cptra_security_state_Latched,
+   output logic                            cptra_dmi_reg_en_preQ,
 
    input logic [31:4] core_id,
 
    // Caliptra Memory Export Interface
-   el2_mem_if                              el2_mem_export,
+   el2_mem_if.veer_sram_src                el2_mem_export,
+
+   // Caliptra ECC status signals
+   output logic                            cptra_iccm_ecc_single_error,
+   output logic                            cptra_iccm_ecc_double_error,
+   output logic                            cptra_dccm_ecc_single_error,
+   output logic                            cptra_dccm_ecc_double_error,
 
    // external MPC halt/run interface
    input logic                             mpc_debug_halt_req, // Async halt request
@@ -703,7 +710,6 @@ import soc_ifc_pkg::*;
                              .mem_export(el2_mem_export),
                              .*
                              );
-   assign el2_mem_export.clk = active_l2clk;
 
 
    //  JTAG/DMI instance
@@ -741,6 +747,7 @@ import soc_ifc_pkg::*;
 
    assign cptra_dmi_reg_en_jtag_acccess_allowed    = dmi_reg_en_preQ & cptra_jtag_access_allowed;
    assign cptra_dmi_reg_wr_en_jtag_acccess_allowed = dmi_reg_wr_en_preQ & cptra_jtag_access_allowed;
+   assign cptra_dmi_reg_en_preQ                    = dmi_reg_en_preQ;
 
    // Driving core vs uncore enables based on the right aperture
    assign dmi_reg_en                 = cptra_uncore_tap_aperture ? '0                                       : cptra_dmi_reg_en_jtag_acccess_allowed;

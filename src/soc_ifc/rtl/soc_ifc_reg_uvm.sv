@@ -3,134 +3,305 @@
 package soc_ifc_reg_uvm;
     `include "uvm_macros.svh"
     import uvm_pkg::*;
-    
+    `include "soc_ifc_reg_covergroups.svh"
     // Reg - soc_ifc_reg::CPTRA_HW_ERROR_FATAL
     class soc_ifc_reg__CPTRA_HW_ERROR_FATAL extends uvm_reg;
-        rand uvm_reg_field error_code;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg iccm_ecc_unc_bit_cg[1];
+        soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg dccm_ecc_unc_bit_cg[1];
+        soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg nmi_pin_bit_cg[1];
+        soc_ifc_reg__CPTRA_HW_ERROR_FATAL_fld_cg fld_cg;
+        rand uvm_reg_field iccm_ecc_unc;
+        rand uvm_reg_field dccm_ecc_unc;
+        rand uvm_reg_field nmi_pin;
 
         function new(string name = "soc_ifc_reg__CPTRA_HW_ERROR_FATAL");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
-            this.error_code = new("error_code");
-            this.error_code.configure(this, 32, 0, "W1C", 1, 'h0, 1, 1, 0);
+            this.iccm_ecc_unc = new("iccm_ecc_unc");
+            this.iccm_ecc_unc.configure(this, 1, 0, "W1C", 1, 'h0, 1, 1, 0);
+            this.dccm_ecc_unc = new("dccm_ecc_unc");
+            this.dccm_ecc_unc.configure(this, 1, 1, "W1C", 1, 'h0, 1, 1, 0);
+            this.nmi_pin = new("nmi_pin");
+            this.nmi_pin.configure(this, 1, 2, "W1C", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(iccm_ecc_unc_bit_cg[bt]) iccm_ecc_unc_bit_cg[bt] = new();
+                foreach(dccm_ecc_unc_bit_cg[bt]) dccm_ecc_unc_bit_cg[bt] = new();
+                foreach(nmi_pin_bit_cg[bt]) nmi_pin_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_HW_ERROR_FATAL
 
     // Reg - soc_ifc_reg::CPTRA_HW_ERROR_NON_FATAL
     class soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL extends uvm_reg;
-        rand uvm_reg_field error_code;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL_bit_cg mbox_prot_no_lock_bit_cg[1];
+        soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL_bit_cg mbox_prot_ooo_bit_cg[1];
+        soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL_bit_cg mbox_ecc_unc_bit_cg[1];
+        soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL_fld_cg fld_cg;
+        rand uvm_reg_field mbox_prot_no_lock;
+        rand uvm_reg_field mbox_prot_ooo;
+        rand uvm_reg_field mbox_ecc_unc;
 
         function new(string name = "soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
-            this.error_code = new("error_code");
-            this.error_code.configure(this, 32, 0, "W1C", 1, 'h0, 1, 1, 0);
+            this.mbox_prot_no_lock = new("mbox_prot_no_lock");
+            this.mbox_prot_no_lock.configure(this, 1, 0, "W1C", 1, 'h0, 1, 1, 0);
+            this.mbox_prot_ooo = new("mbox_prot_ooo");
+            this.mbox_prot_ooo.configure(this, 1, 1, "W1C", 1, 'h0, 1, 1, 0);
+            this.mbox_ecc_unc = new("mbox_ecc_unc");
+            this.mbox_ecc_unc.configure(this, 1, 2, "W1C", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(mbox_prot_no_lock_bit_cg[bt]) mbox_prot_no_lock_bit_cg[bt] = new();
+                foreach(mbox_prot_ooo_bit_cg[bt]) mbox_prot_ooo_bit_cg[bt] = new();
+                foreach(mbox_ecc_unc_bit_cg[bt]) mbox_ecc_unc_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL
 
     // Reg - soc_ifc_reg::CPTRA_FW_ERROR_FATAL
     class soc_ifc_reg__CPTRA_FW_ERROR_FATAL extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_FW_ERROR_FATAL_bit_cg error_code_bit_cg[32];
+        soc_ifc_reg__CPTRA_FW_ERROR_FATAL_fld_cg fld_cg;
         rand uvm_reg_field error_code;
 
         function new(string name = "soc_ifc_reg__CPTRA_FW_ERROR_FATAL");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.error_code = new("error_code");
             this.error_code.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(error_code_bit_cg[bt]) error_code_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_FW_ERROR_FATAL
 
     // Reg - soc_ifc_reg::CPTRA_FW_ERROR_NON_FATAL
     class soc_ifc_reg__CPTRA_FW_ERROR_NON_FATAL extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_FW_ERROR_NON_FATAL_bit_cg error_code_bit_cg[32];
+        soc_ifc_reg__CPTRA_FW_ERROR_NON_FATAL_fld_cg fld_cg;
         rand uvm_reg_field error_code;
 
         function new(string name = "soc_ifc_reg__CPTRA_FW_ERROR_NON_FATAL");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.error_code = new("error_code");
             this.error_code.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(error_code_bit_cg[bt]) error_code_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_FW_ERROR_NON_FATAL
 
     // Reg - soc_ifc_reg::CPTRA_HW_ERROR_ENC
     class soc_ifc_reg__CPTRA_HW_ERROR_ENC extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_HW_ERROR_ENC_bit_cg error_code_bit_cg[32];
+        soc_ifc_reg__CPTRA_HW_ERROR_ENC_fld_cg fld_cg;
         rand uvm_reg_field error_code;
 
         function new(string name = "soc_ifc_reg__CPTRA_HW_ERROR_ENC");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.error_code = new("error_code");
             this.error_code.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(error_code_bit_cg[bt]) error_code_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_HW_ERROR_ENC
 
     // Reg - soc_ifc_reg::CPTRA_FW_ERROR_ENC
     class soc_ifc_reg__CPTRA_FW_ERROR_ENC extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_FW_ERROR_ENC_bit_cg error_code_bit_cg[32];
+        soc_ifc_reg__CPTRA_FW_ERROR_ENC_fld_cg fld_cg;
         rand uvm_reg_field error_code;
 
         function new(string name = "soc_ifc_reg__CPTRA_FW_ERROR_ENC");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.error_code = new("error_code");
             this.error_code.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(error_code_bit_cg[bt]) error_code_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_FW_ERROR_ENC
 
     // Reg - soc_ifc_reg::CPTRA_FW_EXTENDED_ERROR_INFO
     class soc_ifc_reg__CPTRA_FW_EXTENDED_ERROR_INFO extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_FW_EXTENDED_ERROR_INFO_bit_cg error_info_bit_cg[32];
+        soc_ifc_reg__CPTRA_FW_EXTENDED_ERROR_INFO_fld_cg fld_cg;
         rand uvm_reg_field error_info;
 
         function new(string name = "soc_ifc_reg__CPTRA_FW_EXTENDED_ERROR_INFO");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.error_info = new("error_info");
             this.error_info.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(error_info_bit_cg[bt]) error_info_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_FW_EXTENDED_ERROR_INFO
 
     // Reg - soc_ifc_reg::CPTRA_BOOT_STATUS
     class soc_ifc_reg__CPTRA_BOOT_STATUS extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_BOOT_STATUS_bit_cg status_bit_cg[32];
+        soc_ifc_reg__CPTRA_BOOT_STATUS_fld_cg fld_cg;
         rand uvm_reg_field status;
 
         function new(string name = "soc_ifc_reg__CPTRA_BOOT_STATUS");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.status = new("status");
             this.status.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(status_bit_cg[bt]) status_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_BOOT_STATUS
 
     // Reg - soc_ifc_reg::CPTRA_FLOW_STATUS
     class soc_ifc_reg__CPTRA_FLOW_STATUS extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_FLOW_STATUS_bit_cg status_bit_cg[24];
+        soc_ifc_reg__CPTRA_FLOW_STATUS_bit_cg idevid_csr_ready_bit_cg[1];
+        soc_ifc_reg__CPTRA_FLOW_STATUS_bit_cg boot_fsm_ps_bit_cg[3];
+        soc_ifc_reg__CPTRA_FLOW_STATUS_bit_cg ready_for_fw_bit_cg[1];
+        soc_ifc_reg__CPTRA_FLOW_STATUS_bit_cg ready_for_runtime_bit_cg[1];
+        soc_ifc_reg__CPTRA_FLOW_STATUS_bit_cg ready_for_fuses_bit_cg[1];
+        soc_ifc_reg__CPTRA_FLOW_STATUS_bit_cg mailbox_flow_done_bit_cg[1];
+        soc_ifc_reg__CPTRA_FLOW_STATUS_fld_cg fld_cg;
         rand uvm_reg_field status;
+        rand uvm_reg_field idevid_csr_ready;
+        rand uvm_reg_field boot_fsm_ps;
         rand uvm_reg_field ready_for_fw;
         rand uvm_reg_field ready_for_runtime;
         rand uvm_reg_field ready_for_fuses;
         rand uvm_reg_field mailbox_flow_done;
 
         function new(string name = "soc_ifc_reg__CPTRA_FLOW_STATUS");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.status = new("status");
-            this.status.configure(this, 28, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.status.configure(this, 24, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.idevid_csr_ready = new("idevid_csr_ready");
+            this.idevid_csr_ready.configure(this, 1, 24, "RW", 0, 'h0, 1, 1, 0);
+            this.boot_fsm_ps = new("boot_fsm_ps");
+            this.boot_fsm_ps.configure(this, 3, 25, "RO", 1, 'h0, 0, 1, 0);
             this.ready_for_fw = new("ready_for_fw");
             this.ready_for_fw.configure(this, 1, 28, "RW", 0, 'h0, 1, 1, 0);
             this.ready_for_runtime = new("ready_for_runtime");
@@ -139,36 +310,79 @@ package soc_ifc_reg_uvm;
             this.ready_for_fuses.configure(this, 1, 30, "RO", 1, 'h0, 0, 1, 0);
             this.mailbox_flow_done = new("mailbox_flow_done");
             this.mailbox_flow_done.configure(this, 1, 31, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(status_bit_cg[bt]) status_bit_cg[bt] = new();
+                foreach(idevid_csr_ready_bit_cg[bt]) idevid_csr_ready_bit_cg[bt] = new();
+                foreach(boot_fsm_ps_bit_cg[bt]) boot_fsm_ps_bit_cg[bt] = new();
+                foreach(ready_for_fw_bit_cg[bt]) ready_for_fw_bit_cg[bt] = new();
+                foreach(ready_for_runtime_bit_cg[bt]) ready_for_runtime_bit_cg[bt] = new();
+                foreach(ready_for_fuses_bit_cg[bt]) ready_for_fuses_bit_cg[bt] = new();
+                foreach(mailbox_flow_done_bit_cg[bt]) mailbox_flow_done_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_FLOW_STATUS
 
     // Reg - soc_ifc_reg::CPTRA_RESET_REASON
     class soc_ifc_reg__CPTRA_RESET_REASON extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_RESET_REASON_bit_cg FW_UPD_RESET_bit_cg[1];
+        soc_ifc_reg__CPTRA_RESET_REASON_bit_cg WARM_RESET_bit_cg[1];
+        soc_ifc_reg__CPTRA_RESET_REASON_fld_cg fld_cg;
         rand uvm_reg_field FW_UPD_RESET;
         rand uvm_reg_field WARM_RESET;
 
         function new(string name = "soc_ifc_reg__CPTRA_RESET_REASON");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.FW_UPD_RESET = new("FW_UPD_RESET");
             this.FW_UPD_RESET.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
             this.WARM_RESET = new("WARM_RESET");
             this.WARM_RESET.configure(this, 1, 1, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(FW_UPD_RESET_bit_cg[bt]) FW_UPD_RESET_bit_cg[bt] = new();
+                foreach(WARM_RESET_bit_cg[bt]) WARM_RESET_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_RESET_REASON
 
     // Reg - soc_ifc_reg::CPTRA_SECURITY_STATE
     class soc_ifc_reg__CPTRA_SECURITY_STATE extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_SECURITY_STATE_bit_cg device_lifecycle_bit_cg[2];
+        soc_ifc_reg__CPTRA_SECURITY_STATE_bit_cg debug_locked_bit_cg[1];
+        soc_ifc_reg__CPTRA_SECURITY_STATE_bit_cg scan_mode_bit_cg[1];
+        soc_ifc_reg__CPTRA_SECURITY_STATE_bit_cg rsvd_bit_cg[28];
+        soc_ifc_reg__CPTRA_SECURITY_STATE_fld_cg fld_cg;
         rand uvm_reg_field device_lifecycle;
         rand uvm_reg_field debug_locked;
         rand uvm_reg_field scan_mode;
         rand uvm_reg_field rsvd;
 
         function new(string name = "soc_ifc_reg__CPTRA_SECURITY_STATE");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.device_lifecycle = new("device_lifecycle");
@@ -179,232 +393,531 @@ package soc_ifc_reg_uvm;
             this.scan_mode.configure(this, 1, 3, "RO", 1, 'h0, 1, 1, 0);
             this.rsvd = new("rsvd");
             this.rsvd.configure(this, 28, 4, "RO", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(device_lifecycle_bit_cg[bt]) device_lifecycle_bit_cg[bt] = new();
+                foreach(debug_locked_bit_cg[bt]) debug_locked_bit_cg[bt] = new();
+                foreach(scan_mode_bit_cg[bt]) scan_mode_bit_cg[bt] = new();
+                foreach(rsvd_bit_cg[bt]) rsvd_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_SECURITY_STATE
 
     // Reg - soc_ifc_reg::CPTRA_MBOX_VALID_PAUSER
     class soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER_bit_cg PAUSER_bit_cg[32];
+        soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER_fld_cg fld_cg;
         rand uvm_reg_field PAUSER;
 
         function new(string name = "soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.PAUSER = new("PAUSER");
             this.PAUSER.configure(this, 32, 0, "RW", 0, 'hffffffff, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(PAUSER_bit_cg[bt]) PAUSER_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER
 
     // Reg - soc_ifc_reg::CPTRA_MBOX_PAUSER_LOCK
     class soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK_bit_cg LOCK_bit_cg[1];
+        soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK_fld_cg fld_cg;
         rand uvm_reg_field LOCK;
 
         function new(string name = "soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.LOCK = new("LOCK");
             this.LOCK.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(LOCK_bit_cg[bt]) LOCK_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK
 
     // Reg - soc_ifc_reg::CPTRA_TRNG_VALID_PAUSER
     class soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER_bit_cg PAUSER_bit_cg[32];
+        soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER_fld_cg fld_cg;
         rand uvm_reg_field PAUSER;
 
         function new(string name = "soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.PAUSER = new("PAUSER");
             this.PAUSER.configure(this, 32, 0, "RW", 0, 'hffffffff, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(PAUSER_bit_cg[bt]) PAUSER_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER
 
     // Reg - soc_ifc_reg::CPTRA_TRNG_PAUSER_LOCK
     class soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK_bit_cg LOCK_bit_cg[1];
+        soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK_fld_cg fld_cg;
         rand uvm_reg_field LOCK;
 
         function new(string name = "soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.LOCK = new("LOCK");
             this.LOCK.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(LOCK_bit_cg[bt]) LOCK_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK
 
     // Reg - soc_ifc_reg::CPTRA_TRNG_DATA
     class soc_ifc_reg__CPTRA_TRNG_DATA extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_TRNG_DATA_bit_cg DATA_bit_cg[32];
+        soc_ifc_reg__CPTRA_TRNG_DATA_fld_cg fld_cg;
         rand uvm_reg_field DATA;
 
         function new(string name = "soc_ifc_reg__CPTRA_TRNG_DATA");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.DATA = new("DATA");
-            this.DATA.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.DATA.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(DATA_bit_cg[bt]) DATA_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_TRNG_DATA
 
+    // Reg - soc_ifc_reg::CPTRA_TRNG_CTRL
+    class soc_ifc_reg__CPTRA_TRNG_CTRL extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_TRNG_CTRL_bit_cg clear_bit_cg[1];
+        soc_ifc_reg__CPTRA_TRNG_CTRL_fld_cg fld_cg;
+        rand uvm_reg_field clear;
+
+        function new(string name = "soc_ifc_reg__CPTRA_TRNG_CTRL");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.clear = new("clear");
+            this.clear.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(clear_bit_cg[bt]) clear_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__CPTRA_TRNG_CTRL
+
     // Reg - soc_ifc_reg::CPTRA_TRNG_STATUS
     class soc_ifc_reg__CPTRA_TRNG_STATUS extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_TRNG_STATUS_bit_cg DATA_REQ_bit_cg[1];
+        soc_ifc_reg__CPTRA_TRNG_STATUS_bit_cg DATA_WR_DONE_bit_cg[1];
+        soc_ifc_reg__CPTRA_TRNG_STATUS_fld_cg fld_cg;
         rand uvm_reg_field DATA_REQ;
         rand uvm_reg_field DATA_WR_DONE;
 
         function new(string name = "soc_ifc_reg__CPTRA_TRNG_STATUS");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.DATA_REQ = new("DATA_REQ");
             this.DATA_REQ.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
             this.DATA_WR_DONE = new("DATA_WR_DONE");
             this.DATA_WR_DONE.configure(this, 1, 1, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(DATA_REQ_bit_cg[bt]) DATA_REQ_bit_cg[bt] = new();
+                foreach(DATA_WR_DONE_bit_cg[bt]) DATA_WR_DONE_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_TRNG_STATUS
 
     // Reg - soc_ifc_reg::CPTRA_FUSE_WR_DONE
     class soc_ifc_reg__CPTRA_FUSE_WR_DONE extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_FUSE_WR_DONE_bit_cg done_bit_cg[1];
+        soc_ifc_reg__CPTRA_FUSE_WR_DONE_fld_cg fld_cg;
         rand uvm_reg_field done;
 
         function new(string name = "soc_ifc_reg__CPTRA_FUSE_WR_DONE");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.done = new("done");
             this.done.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(done_bit_cg[bt]) done_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_FUSE_WR_DONE
 
     // Reg - soc_ifc_reg::CPTRA_TIMER_CONFIG
     class soc_ifc_reg__CPTRA_TIMER_CONFIG extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_TIMER_CONFIG_bit_cg clk_period_bit_cg[32];
+        soc_ifc_reg__CPTRA_TIMER_CONFIG_fld_cg fld_cg;
         rand uvm_reg_field clk_period;
 
         function new(string name = "soc_ifc_reg__CPTRA_TIMER_CONFIG");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.clk_period = new("clk_period");
             this.clk_period.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(clk_period_bit_cg[bt]) clk_period_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_TIMER_CONFIG
 
     // Reg - soc_ifc_reg::CPTRA_BOOTFSM_GO
     class soc_ifc_reg__CPTRA_BOOTFSM_GO extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_BOOTFSM_GO_bit_cg GO_bit_cg[1];
+        soc_ifc_reg__CPTRA_BOOTFSM_GO_fld_cg fld_cg;
         rand uvm_reg_field GO;
 
         function new(string name = "soc_ifc_reg__CPTRA_BOOTFSM_GO");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.GO = new("GO");
             this.GO.configure(this, 1, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(GO_bit_cg[bt]) GO_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_BOOTFSM_GO
 
     // Reg - soc_ifc_reg::CPTRA_DBG_MANUF_SERVICE_REG
     class soc_ifc_reg__CPTRA_DBG_MANUF_SERVICE_REG extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_DBG_MANUF_SERVICE_REG_bit_cg DATA_bit_cg[32];
+        soc_ifc_reg__CPTRA_DBG_MANUF_SERVICE_REG_fld_cg fld_cg;
         rand uvm_reg_field DATA;
 
         function new(string name = "soc_ifc_reg__CPTRA_DBG_MANUF_SERVICE_REG");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.DATA = new("DATA");
             this.DATA.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(DATA_bit_cg[bt]) DATA_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_DBG_MANUF_SERVICE_REG
 
     // Reg - soc_ifc_reg::CPTRA_CLK_GATING_EN
     class soc_ifc_reg__CPTRA_CLK_GATING_EN extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_CLK_GATING_EN_bit_cg clk_gating_en_bit_cg[1];
+        soc_ifc_reg__CPTRA_CLK_GATING_EN_fld_cg fld_cg;
         rand uvm_reg_field clk_gating_en;
 
         function new(string name = "soc_ifc_reg__CPTRA_CLK_GATING_EN");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.clk_gating_en = new("clk_gating_en");
             this.clk_gating_en.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(clk_gating_en_bit_cg[bt]) clk_gating_en_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_CLK_GATING_EN
 
     // Reg - soc_ifc_reg::CPTRA_GENERIC_INPUT_WIRES
     class soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES_bit_cg generic_wires_bit_cg[32];
+        soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES_fld_cg fld_cg;
         rand uvm_reg_field generic_wires;
 
         function new(string name = "soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.generic_wires = new("generic_wires");
             this.generic_wires.configure(this, 32, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(generic_wires_bit_cg[bt]) generic_wires_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES
 
     // Reg - soc_ifc_reg::CPTRA_GENERIC_OUTPUT_WIRES
     class soc_ifc_reg__CPTRA_GENERIC_OUTPUT_WIRES extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_GENERIC_OUTPUT_WIRES_bit_cg generic_wires_bit_cg[32];
+        soc_ifc_reg__CPTRA_GENERIC_OUTPUT_WIRES_fld_cg fld_cg;
         rand uvm_reg_field generic_wires;
 
         function new(string name = "soc_ifc_reg__CPTRA_GENERIC_OUTPUT_WIRES");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.generic_wires = new("generic_wires");
             this.generic_wires.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(generic_wires_bit_cg[bt]) generic_wires_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_GENERIC_OUTPUT_WIRES
 
     // Reg - soc_ifc_reg::CPTRA_HW_REV_ID
     class soc_ifc_reg__CPTRA_HW_REV_ID extends uvm_reg;
-        rand uvm_reg_field REV_ID;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_HW_REV_ID_bit_cg CPTRA_GENERATION_bit_cg[16];
+        soc_ifc_reg__CPTRA_HW_REV_ID_bit_cg SOC_STEPPING_ID_bit_cg[16];
+        soc_ifc_reg__CPTRA_HW_REV_ID_fld_cg fld_cg;
+        rand uvm_reg_field CPTRA_GENERATION;
+        rand uvm_reg_field SOC_STEPPING_ID;
 
         function new(string name = "soc_ifc_reg__CPTRA_HW_REV_ID");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
-            this.REV_ID = new("REV_ID");
-            this.REV_ID.configure(this, 32, 0, "RO", 0, 'h1, 1, 1, 0);
+            this.CPTRA_GENERATION = new("CPTRA_GENERATION");
+            this.CPTRA_GENERATION.configure(this, 16, 0, "RO", 0, 'h1, 1, 1, 0);
+            this.SOC_STEPPING_ID = new("SOC_STEPPING_ID");
+            this.SOC_STEPPING_ID.configure(this, 16, 16, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(CPTRA_GENERATION_bit_cg[bt]) CPTRA_GENERATION_bit_cg[bt] = new();
+                foreach(SOC_STEPPING_ID_bit_cg[bt]) SOC_STEPPING_ID_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_HW_REV_ID
 
     // Reg - soc_ifc_reg::CPTRA_FW_REV_ID
     class soc_ifc_reg__CPTRA_FW_REV_ID extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_FW_REV_ID_bit_cg REV_ID_bit_cg[32];
+        soc_ifc_reg__CPTRA_FW_REV_ID_fld_cg fld_cg;
         rand uvm_reg_field REV_ID;
 
         function new(string name = "soc_ifc_reg__CPTRA_FW_REV_ID");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.REV_ID = new("REV_ID");
             this.REV_ID.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(REV_ID_bit_cg[bt]) REV_ID_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_FW_REV_ID
 
     // Reg - soc_ifc_reg::CPTRA_HW_CONFIG
     class soc_ifc_reg__CPTRA_HW_CONFIG extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg iTRNG_en_bit_cg[1];
+        soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg QSPI_en_bit_cg[1];
+        soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg I3C_en_bit_cg[1];
+        soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg UART_en_bit_cg[1];
+        soc_ifc_reg__CPTRA_HW_CONFIG_fld_cg fld_cg;
         rand uvm_reg_field iTRNG_en;
         rand uvm_reg_field QSPI_en;
         rand uvm_reg_field I3C_en;
         rand uvm_reg_field UART_en;
 
         function new(string name = "soc_ifc_reg__CPTRA_HW_CONFIG");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.iTRNG_en = new("iTRNG_en");
@@ -415,353 +928,1302 @@ package soc_ifc_reg_uvm;
             this.I3C_en.configure(this, 1, 2, "RO", 1, 'h0, 0, 1, 0);
             this.UART_en = new("UART_en");
             this.UART_en.configure(this, 1, 3, "RO", 1, 'h0, 0, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(iTRNG_en_bit_cg[bt]) iTRNG_en_bit_cg[bt] = new();
+                foreach(QSPI_en_bit_cg[bt]) QSPI_en_bit_cg[bt] = new();
+                foreach(I3C_en_bit_cg[bt]) I3C_en_bit_cg[bt] = new();
+                foreach(UART_en_bit_cg[bt]) UART_en_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_HW_CONFIG
 
     // Reg - soc_ifc_reg::CPTRA_WDT_TIMER1_EN
     class soc_ifc_reg__CPTRA_WDT_TIMER1_EN extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_WDT_TIMER1_EN_bit_cg timer1_en_bit_cg[1];
+        soc_ifc_reg__CPTRA_WDT_TIMER1_EN_fld_cg fld_cg;
         rand uvm_reg_field timer1_en;
 
         function new(string name = "soc_ifc_reg__CPTRA_WDT_TIMER1_EN");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.timer1_en = new("timer1_en");
             this.timer1_en.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(timer1_en_bit_cg[bt]) timer1_en_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_WDT_TIMER1_EN
 
     // Reg - soc_ifc_reg::CPTRA_WDT_TIMER1_CTRL
     class soc_ifc_reg__CPTRA_WDT_TIMER1_CTRL extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_WDT_TIMER1_CTRL_bit_cg timer1_restart_bit_cg[1];
+        soc_ifc_reg__CPTRA_WDT_TIMER1_CTRL_fld_cg fld_cg;
         rand uvm_reg_field timer1_restart;
 
         function new(string name = "soc_ifc_reg__CPTRA_WDT_TIMER1_CTRL");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.timer1_restart = new("timer1_restart");
             this.timer1_restart.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(timer1_restart_bit_cg[bt]) timer1_restart_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_WDT_TIMER1_CTRL
 
     // Reg - soc_ifc_reg::CPTRA_WDT_TIMER1_TIMEOUT_PERIOD
     class soc_ifc_reg__CPTRA_WDT_TIMER1_TIMEOUT_PERIOD extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_bit_cg timer1_timeout_period_bit_cg[32];
+        soc_ifc_reg__CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_fld_cg fld_cg;
         rand uvm_reg_field timer1_timeout_period;
 
         function new(string name = "soc_ifc_reg__CPTRA_WDT_TIMER1_TIMEOUT_PERIOD");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.timer1_timeout_period = new("timer1_timeout_period");
             this.timer1_timeout_period.configure(this, 32, 0, "RW", 0, 'hffffffff, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(timer1_timeout_period_bit_cg[bt]) timer1_timeout_period_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_WDT_TIMER1_TIMEOUT_PERIOD
 
     // Reg - soc_ifc_reg::CPTRA_WDT_TIMER2_EN
     class soc_ifc_reg__CPTRA_WDT_TIMER2_EN extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_WDT_TIMER2_EN_bit_cg timer2_en_bit_cg[1];
+        soc_ifc_reg__CPTRA_WDT_TIMER2_EN_fld_cg fld_cg;
         rand uvm_reg_field timer2_en;
 
         function new(string name = "soc_ifc_reg__CPTRA_WDT_TIMER2_EN");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.timer2_en = new("timer2_en");
             this.timer2_en.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(timer2_en_bit_cg[bt]) timer2_en_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_WDT_TIMER2_EN
 
     // Reg - soc_ifc_reg::CPTRA_WDT_TIMER2_CTRL
     class soc_ifc_reg__CPTRA_WDT_TIMER2_CTRL extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_WDT_TIMER2_CTRL_bit_cg timer2_restart_bit_cg[1];
+        soc_ifc_reg__CPTRA_WDT_TIMER2_CTRL_fld_cg fld_cg;
         rand uvm_reg_field timer2_restart;
 
         function new(string name = "soc_ifc_reg__CPTRA_WDT_TIMER2_CTRL");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.timer2_restart = new("timer2_restart");
             this.timer2_restart.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(timer2_restart_bit_cg[bt]) timer2_restart_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_WDT_TIMER2_CTRL
 
     // Reg - soc_ifc_reg::CPTRA_WDT_TIMER2_TIMEOUT_PERIOD
     class soc_ifc_reg__CPTRA_WDT_TIMER2_TIMEOUT_PERIOD extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_bit_cg timer2_timeout_period_bit_cg[32];
+        soc_ifc_reg__CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_fld_cg fld_cg;
         rand uvm_reg_field timer2_timeout_period;
 
         function new(string name = "soc_ifc_reg__CPTRA_WDT_TIMER2_TIMEOUT_PERIOD");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.timer2_timeout_period = new("timer2_timeout_period");
             this.timer2_timeout_period.configure(this, 32, 0, "RW", 0, 'hffffffff, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(timer2_timeout_period_bit_cg[bt]) timer2_timeout_period_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_WDT_TIMER2_TIMEOUT_PERIOD
 
     // Reg - soc_ifc_reg::CPTRA_WDT_STATUS
     class soc_ifc_reg__CPTRA_WDT_STATUS extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_WDT_STATUS_bit_cg t1_timeout_bit_cg[1];
+        soc_ifc_reg__CPTRA_WDT_STATUS_bit_cg t2_timeout_bit_cg[1];
+        soc_ifc_reg__CPTRA_WDT_STATUS_fld_cg fld_cg;
         rand uvm_reg_field t1_timeout;
         rand uvm_reg_field t2_timeout;
 
         function new(string name = "soc_ifc_reg__CPTRA_WDT_STATUS");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.t1_timeout = new("t1_timeout");
             this.t1_timeout.configure(this, 1, 0, "RW", 1, 'h0, 1, 1, 0);
             this.t2_timeout = new("t2_timeout");
             this.t2_timeout.configure(this, 1, 1, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(t1_timeout_bit_cg[bt]) t1_timeout_bit_cg[bt] = new();
+                foreach(t2_timeout_bit_cg[bt]) t2_timeout_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_WDT_STATUS
 
+    // Reg - soc_ifc_reg::CPTRA_FUSE_VALID_PAUSER
+    class soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER_bit_cg PAUSER_bit_cg[32];
+        soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER_fld_cg fld_cg;
+        rand uvm_reg_field PAUSER;
+
+        function new(string name = "soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.PAUSER = new("PAUSER");
+            this.PAUSER.configure(this, 32, 0, "RW", 0, 'hffffffff, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(PAUSER_bit_cg[bt]) PAUSER_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER
+
+    // Reg - soc_ifc_reg::CPTRA_FUSE_PAUSER_LOCK
+    class soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK_bit_cg LOCK_bit_cg[1];
+        soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK_fld_cg fld_cg;
+        rand uvm_reg_field LOCK;
+
+        function new(string name = "soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.LOCK = new("LOCK");
+            this.LOCK.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(LOCK_bit_cg[bt]) LOCK_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK
+
+    // Reg - soc_ifc_reg::CPTRA_WDT_CFG
+    class soc_ifc_reg__CPTRA_WDT_CFG extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_WDT_CFG_bit_cg TIMEOUT_bit_cg[32];
+        soc_ifc_reg__CPTRA_WDT_CFG_fld_cg fld_cg;
+        rand uvm_reg_field TIMEOUT;
+
+        function new(string name = "soc_ifc_reg__CPTRA_WDT_CFG");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.TIMEOUT = new("TIMEOUT");
+            this.TIMEOUT.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(TIMEOUT_bit_cg[bt]) TIMEOUT_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__CPTRA_WDT_CFG
+
+    // Reg - soc_ifc_reg::CPTRA_iTRNG_ENTROPY_CONFIG_0
+    class soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0_bit_cg low_threshold_bit_cg[16];
+        soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0_bit_cg high_threshold_bit_cg[16];
+        soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0_fld_cg fld_cg;
+        rand uvm_reg_field low_threshold;
+        rand uvm_reg_field high_threshold;
+
+        function new(string name = "soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.low_threshold = new("low_threshold");
+            this.low_threshold.configure(this, 16, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.high_threshold = new("high_threshold");
+            this.high_threshold.configure(this, 16, 16, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(low_threshold_bit_cg[bt]) low_threshold_bit_cg[bt] = new();
+                foreach(high_threshold_bit_cg[bt]) high_threshold_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0
+
+    // Reg - soc_ifc_reg::CPTRA_iTRNG_ENTROPY_CONFIG_1
+    class soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1_bit_cg repetition_count_bit_cg[16];
+        soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1_bit_cg RSVD_bit_cg[16];
+        soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1_fld_cg fld_cg;
+        rand uvm_reg_field repetition_count;
+        rand uvm_reg_field RSVD;
+
+        function new(string name = "soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.repetition_count = new("repetition_count");
+            this.repetition_count.configure(this, 16, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.RSVD = new("RSVD");
+            this.RSVD.configure(this, 16, 16, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(repetition_count_bit_cg[bt]) repetition_count_bit_cg[bt] = new();
+                foreach(RSVD_bit_cg[bt]) RSVD_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1
+
+    // Reg - soc_ifc_reg::CPTRA_RSVD_REG
+    class soc_ifc_reg__CPTRA_RSVD_REG extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_RSVD_REG_bit_cg RSVD_bit_cg[32];
+        soc_ifc_reg__CPTRA_RSVD_REG_fld_cg fld_cg;
+        rand uvm_reg_field RSVD;
+
+        function new(string name = "soc_ifc_reg__CPTRA_RSVD_REG");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.RSVD = new("RSVD");
+            this.RSVD.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(RSVD_bit_cg[bt]) RSVD_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__CPTRA_RSVD_REG
+
     // Reg - soc_ifc_reg::fuse_uds_seed
     class soc_ifc_reg__fuse_uds_seed extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__fuse_uds_seed_bit_cg seed_bit_cg[32];
+        soc_ifc_reg__fuse_uds_seed_fld_cg fld_cg;
         rand uvm_reg_field seed;
 
         function new(string name = "soc_ifc_reg__fuse_uds_seed");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.seed = new("seed");
             this.seed.configure(this, 32, 0, "WO1", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(seed_bit_cg[bt]) seed_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__fuse_uds_seed
 
     // Reg - soc_ifc_reg::fuse_field_entropy
     class soc_ifc_reg__fuse_field_entropy extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__fuse_field_entropy_bit_cg seed_bit_cg[32];
+        soc_ifc_reg__fuse_field_entropy_fld_cg fld_cg;
         rand uvm_reg_field seed;
 
         function new(string name = "soc_ifc_reg__fuse_field_entropy");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.seed = new("seed");
             this.seed.configure(this, 32, 0, "WO1", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(seed_bit_cg[bt]) seed_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__fuse_field_entropy
 
     // Reg - soc_ifc_reg::fuse_key_manifest_pk_hash
     class soc_ifc_reg__fuse_key_manifest_pk_hash extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__fuse_key_manifest_pk_hash_bit_cg hash_bit_cg[32];
+        soc_ifc_reg__fuse_key_manifest_pk_hash_fld_cg fld_cg;
         rand uvm_reg_field hash;
 
         function new(string name = "soc_ifc_reg__fuse_key_manifest_pk_hash");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.hash = new("hash");
             this.hash.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(hash_bit_cg[bt]) hash_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__fuse_key_manifest_pk_hash
 
     // Reg - soc_ifc_reg::fuse_key_manifest_pk_hash_mask
     class soc_ifc_reg__fuse_key_manifest_pk_hash_mask extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__fuse_key_manifest_pk_hash_mask_bit_cg mask_bit_cg[4];
+        soc_ifc_reg__fuse_key_manifest_pk_hash_mask_fld_cg fld_cg;
         rand uvm_reg_field mask;
 
         function new(string name = "soc_ifc_reg__fuse_key_manifest_pk_hash_mask");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.mask = new("mask");
             this.mask.configure(this, 4, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(mask_bit_cg[bt]) mask_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__fuse_key_manifest_pk_hash_mask
 
     // Reg - soc_ifc_reg::fuse_owner_pk_hash
     class soc_ifc_reg__fuse_owner_pk_hash extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__fuse_owner_pk_hash_bit_cg hash_bit_cg[32];
+        soc_ifc_reg__fuse_owner_pk_hash_fld_cg fld_cg;
         rand uvm_reg_field hash;
 
         function new(string name = "soc_ifc_reg__fuse_owner_pk_hash");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.hash = new("hash");
             this.hash.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(hash_bit_cg[bt]) hash_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__fuse_owner_pk_hash
 
     // Reg - soc_ifc_reg::fuse_fmc_key_manifest_svn
     class soc_ifc_reg__fuse_fmc_key_manifest_svn extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__fuse_fmc_key_manifest_svn_bit_cg svn_bit_cg[32];
+        soc_ifc_reg__fuse_fmc_key_manifest_svn_fld_cg fld_cg;
         rand uvm_reg_field svn;
 
         function new(string name = "soc_ifc_reg__fuse_fmc_key_manifest_svn");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.svn = new("svn");
             this.svn.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(svn_bit_cg[bt]) svn_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__fuse_fmc_key_manifest_svn
 
     // Reg - soc_ifc_reg::fuse_runtime_svn
     class soc_ifc_reg__fuse_runtime_svn extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__fuse_runtime_svn_bit_cg svn_bit_cg[32];
+        soc_ifc_reg__fuse_runtime_svn_fld_cg fld_cg;
         rand uvm_reg_field svn;
 
         function new(string name = "soc_ifc_reg__fuse_runtime_svn");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.svn = new("svn");
             this.svn.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(svn_bit_cg[bt]) svn_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__fuse_runtime_svn
 
     // Reg - soc_ifc_reg::fuse_anti_rollback_disable
     class soc_ifc_reg__fuse_anti_rollback_disable extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__fuse_anti_rollback_disable_bit_cg dis_bit_cg[1];
+        soc_ifc_reg__fuse_anti_rollback_disable_fld_cg fld_cg;
         rand uvm_reg_field dis;
 
         function new(string name = "soc_ifc_reg__fuse_anti_rollback_disable");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.dis = new("dis");
             this.dis.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(dis_bit_cg[bt]) dis_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__fuse_anti_rollback_disable
 
     // Reg - soc_ifc_reg::fuse_idevid_cert_attr
     class soc_ifc_reg__fuse_idevid_cert_attr extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__fuse_idevid_cert_attr_bit_cg cert_bit_cg[32];
+        soc_ifc_reg__fuse_idevid_cert_attr_fld_cg fld_cg;
         rand uvm_reg_field cert;
 
         function new(string name = "soc_ifc_reg__fuse_idevid_cert_attr");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.cert = new("cert");
             this.cert.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cert_bit_cg[bt]) cert_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__fuse_idevid_cert_attr
 
     // Reg - soc_ifc_reg::fuse_idevid_manuf_hsm_id
     class soc_ifc_reg__fuse_idevid_manuf_hsm_id extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__fuse_idevid_manuf_hsm_id_bit_cg hsm_id_bit_cg[32];
+        soc_ifc_reg__fuse_idevid_manuf_hsm_id_fld_cg fld_cg;
         rand uvm_reg_field hsm_id;
 
         function new(string name = "soc_ifc_reg__fuse_idevid_manuf_hsm_id");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.hsm_id = new("hsm_id");
             this.hsm_id.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(hsm_id_bit_cg[bt]) hsm_id_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__fuse_idevid_manuf_hsm_id
 
     // Reg - soc_ifc_reg::fuse_life_cycle
     class soc_ifc_reg__fuse_life_cycle extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__fuse_life_cycle_bit_cg life_cycle_bit_cg[2];
+        soc_ifc_reg__fuse_life_cycle_fld_cg fld_cg;
         rand uvm_reg_field life_cycle;
 
         function new(string name = "soc_ifc_reg__fuse_life_cycle");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.life_cycle = new("life_cycle");
             this.life_cycle.configure(this, 2, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(life_cycle_bit_cg[bt]) life_cycle_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__fuse_life_cycle
 
+    // Reg - soc_ifc_reg::fuse_lms_verify
+    class soc_ifc_reg__fuse_lms_verify extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__fuse_lms_verify_bit_cg lms_verify_bit_cg[1];
+        soc_ifc_reg__fuse_lms_verify_fld_cg fld_cg;
+        rand uvm_reg_field lms_verify;
+
+        function new(string name = "soc_ifc_reg__fuse_lms_verify");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.lms_verify = new("lms_verify");
+            this.lms_verify.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(lms_verify_bit_cg[bt]) lms_verify_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__fuse_lms_verify
+
+    // Reg - soc_ifc_reg::fuse_lms_revocation
+    class soc_ifc_reg__fuse_lms_revocation extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__fuse_lms_revocation_bit_cg lms_revocation_bit_cg[32];
+        soc_ifc_reg__fuse_lms_revocation_fld_cg fld_cg;
+        rand uvm_reg_field lms_revocation;
+
+        function new(string name = "soc_ifc_reg__fuse_lms_revocation");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.lms_revocation = new("lms_revocation");
+            this.lms_revocation.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(lms_revocation_bit_cg[bt]) lms_revocation_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__fuse_lms_revocation
+
+    // Reg - soc_ifc_reg::fuse_soc_stepping_id
+    class soc_ifc_reg__fuse_soc_stepping_id extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__fuse_soc_stepping_id_bit_cg soc_stepping_id_bit_cg[16];
+        soc_ifc_reg__fuse_soc_stepping_id_fld_cg fld_cg;
+        rand uvm_reg_field soc_stepping_id;
+
+        function new(string name = "soc_ifc_reg__fuse_soc_stepping_id");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.soc_stepping_id = new("soc_stepping_id");
+            this.soc_stepping_id.configure(this, 16, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(soc_stepping_id_bit_cg[bt]) soc_stepping_id_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__fuse_soc_stepping_id
+
     // Reg - soc_ifc_reg::internal_obf_key
     class soc_ifc_reg__internal_obf_key extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__internal_obf_key_bit_cg key_bit_cg[32];
+        soc_ifc_reg__internal_obf_key_fld_cg fld_cg;
         rand uvm_reg_field key;
 
         function new(string name = "soc_ifc_reg__internal_obf_key");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.key = new("key");
             this.key.configure(this, 32, 0, "WO", 1, 'h0, 0, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(key_bit_cg[bt]) key_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__internal_obf_key
 
     // Reg - soc_ifc_reg::internal_iccm_lock
     class soc_ifc_reg__internal_iccm_lock extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__internal_iccm_lock_bit_cg lock_bit_cg[1];
+        soc_ifc_reg__internal_iccm_lock_fld_cg fld_cg;
         rand uvm_reg_field lock;
 
         function new(string name = "soc_ifc_reg__internal_iccm_lock");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.lock = new("lock");
             this.lock.configure(this, 1, 0, "W1S", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(lock_bit_cg[bt]) lock_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__internal_iccm_lock
 
     // Reg - soc_ifc_reg::internal_fw_update_reset
     class soc_ifc_reg__internal_fw_update_reset extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__internal_fw_update_reset_bit_cg core_rst_bit_cg[1];
+        soc_ifc_reg__internal_fw_update_reset_fld_cg fld_cg;
         rand uvm_reg_field core_rst;
 
         function new(string name = "soc_ifc_reg__internal_fw_update_reset");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.core_rst = new("core_rst");
             this.core_rst.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(core_rst_bit_cg[bt]) core_rst_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__internal_fw_update_reset
 
     // Reg - soc_ifc_reg::internal_fw_update_reset_wait_cycles
     class soc_ifc_reg__internal_fw_update_reset_wait_cycles extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__internal_fw_update_reset_wait_cycles_bit_cg wait_cycles_bit_cg[8];
+        soc_ifc_reg__internal_fw_update_reset_wait_cycles_fld_cg fld_cg;
         rand uvm_reg_field wait_cycles;
 
         function new(string name = "soc_ifc_reg__internal_fw_update_reset_wait_cycles");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.wait_cycles = new("wait_cycles");
             this.wait_cycles.configure(this, 8, 0, "RW", 0, 'h5, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(wait_cycles_bit_cg[bt]) wait_cycles_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__internal_fw_update_reset_wait_cycles
 
     // Reg - soc_ifc_reg::internal_nmi_vector
     class soc_ifc_reg__internal_nmi_vector extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__internal_nmi_vector_bit_cg vec_bit_cg[32];
+        soc_ifc_reg__internal_nmi_vector_fld_cg fld_cg;
         rand uvm_reg_field vec;
 
         function new(string name = "soc_ifc_reg__internal_nmi_vector");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.vec = new("vec");
             this.vec.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(vec_bit_cg[bt]) vec_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__internal_nmi_vector
 
+    // Reg - soc_ifc_reg::internal_hw_error_fatal_mask
+    class soc_ifc_reg__internal_hw_error_fatal_mask extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__internal_hw_error_fatal_mask_bit_cg mask_iccm_ecc_unc_bit_cg[1];
+        soc_ifc_reg__internal_hw_error_fatal_mask_bit_cg mask_dccm_ecc_unc_bit_cg[1];
+        soc_ifc_reg__internal_hw_error_fatal_mask_bit_cg mask_nmi_pin_bit_cg[1];
+        soc_ifc_reg__internal_hw_error_fatal_mask_fld_cg fld_cg;
+        rand uvm_reg_field mask_iccm_ecc_unc;
+        rand uvm_reg_field mask_dccm_ecc_unc;
+        rand uvm_reg_field mask_nmi_pin;
+
+        function new(string name = "soc_ifc_reg__internal_hw_error_fatal_mask");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.mask_iccm_ecc_unc = new("mask_iccm_ecc_unc");
+            this.mask_iccm_ecc_unc.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.mask_dccm_ecc_unc = new("mask_dccm_ecc_unc");
+            this.mask_dccm_ecc_unc.configure(this, 1, 1, "RW", 0, 'h0, 1, 1, 0);
+            this.mask_nmi_pin = new("mask_nmi_pin");
+            this.mask_nmi_pin.configure(this, 1, 2, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(mask_iccm_ecc_unc_bit_cg[bt]) mask_iccm_ecc_unc_bit_cg[bt] = new();
+                foreach(mask_dccm_ecc_unc_bit_cg[bt]) mask_dccm_ecc_unc_bit_cg[bt] = new();
+                foreach(mask_nmi_pin_bit_cg[bt]) mask_nmi_pin_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__internal_hw_error_fatal_mask
+
+    // Reg - soc_ifc_reg::internal_hw_error_non_fatal_mask
+    class soc_ifc_reg__internal_hw_error_non_fatal_mask extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__internal_hw_error_non_fatal_mask_bit_cg mask_mbox_prot_no_lock_bit_cg[1];
+        soc_ifc_reg__internal_hw_error_non_fatal_mask_bit_cg mask_mbox_prot_ooo_bit_cg[1];
+        soc_ifc_reg__internal_hw_error_non_fatal_mask_bit_cg mask_mbox_ecc_unc_bit_cg[1];
+        soc_ifc_reg__internal_hw_error_non_fatal_mask_fld_cg fld_cg;
+        rand uvm_reg_field mask_mbox_prot_no_lock;
+        rand uvm_reg_field mask_mbox_prot_ooo;
+        rand uvm_reg_field mask_mbox_ecc_unc;
+
+        function new(string name = "soc_ifc_reg__internal_hw_error_non_fatal_mask");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.mask_mbox_prot_no_lock = new("mask_mbox_prot_no_lock");
+            this.mask_mbox_prot_no_lock.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.mask_mbox_prot_ooo = new("mask_mbox_prot_ooo");
+            this.mask_mbox_prot_ooo.configure(this, 1, 1, "RW", 0, 'h0, 1, 1, 0);
+            this.mask_mbox_ecc_unc = new("mask_mbox_ecc_unc");
+            this.mask_mbox_ecc_unc.configure(this, 1, 2, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(mask_mbox_prot_no_lock_bit_cg[bt]) mask_mbox_prot_no_lock_bit_cg[bt] = new();
+                foreach(mask_mbox_prot_ooo_bit_cg[bt]) mask_mbox_prot_ooo_bit_cg[bt] = new();
+                foreach(mask_mbox_ecc_unc_bit_cg[bt]) mask_mbox_ecc_unc_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__internal_hw_error_non_fatal_mask
+
+    // Reg - soc_ifc_reg::internal_fw_error_fatal_mask
+    class soc_ifc_reg__internal_fw_error_fatal_mask extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__internal_fw_error_fatal_mask_bit_cg mask_bit_cg[32];
+        soc_ifc_reg__internal_fw_error_fatal_mask_fld_cg fld_cg;
+        rand uvm_reg_field mask;
+
+        function new(string name = "soc_ifc_reg__internal_fw_error_fatal_mask");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.mask = new("mask");
+            this.mask.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(mask_bit_cg[bt]) mask_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__internal_fw_error_fatal_mask
+
+    // Reg - soc_ifc_reg::internal_fw_error_non_fatal_mask
+    class soc_ifc_reg__internal_fw_error_non_fatal_mask extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__internal_fw_error_non_fatal_mask_bit_cg mask_bit_cg[32];
+        soc_ifc_reg__internal_fw_error_non_fatal_mask_fld_cg fld_cg;
+        rand uvm_reg_field mask;
+
+        function new(string name = "soc_ifc_reg__internal_fw_error_non_fatal_mask");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.mask = new("mask");
+            this.mask.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(mask_bit_cg[bt]) mask_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__internal_fw_error_non_fatal_mask
+
+    // Reg - soc_ifc_reg::internal_rv_mtime_l
+    class soc_ifc_reg__internal_rv_mtime_l extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__internal_rv_mtime_l_bit_cg count_l_bit_cg[32];
+        soc_ifc_reg__internal_rv_mtime_l_fld_cg fld_cg;
+        rand uvm_reg_field count_l;
+
+        function new(string name = "soc_ifc_reg__internal_rv_mtime_l");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.count_l = new("count_l");
+            this.count_l.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(count_l_bit_cg[bt]) count_l_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__internal_rv_mtime_l
+
+    // Reg - soc_ifc_reg::internal_rv_mtime_h
+    class soc_ifc_reg__internal_rv_mtime_h extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__internal_rv_mtime_h_bit_cg count_h_bit_cg[32];
+        soc_ifc_reg__internal_rv_mtime_h_fld_cg fld_cg;
+        rand uvm_reg_field count_h;
+
+        function new(string name = "soc_ifc_reg__internal_rv_mtime_h");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.count_h = new("count_h");
+            this.count_h.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(count_h_bit_cg[bt]) count_h_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__internal_rv_mtime_h
+
+    // Reg - soc_ifc_reg::internal_rv_mtimecmp_l
+    class soc_ifc_reg__internal_rv_mtimecmp_l extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__internal_rv_mtimecmp_l_bit_cg compare_l_bit_cg[32];
+        soc_ifc_reg__internal_rv_mtimecmp_l_fld_cg fld_cg;
+        rand uvm_reg_field compare_l;
+
+        function new(string name = "soc_ifc_reg__internal_rv_mtimecmp_l");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.compare_l = new("compare_l");
+            this.compare_l.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(compare_l_bit_cg[bt]) compare_l_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__internal_rv_mtimecmp_l
+
+    // Reg - soc_ifc_reg::internal_rv_mtimecmp_h
+    class soc_ifc_reg__internal_rv_mtimecmp_h extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__internal_rv_mtimecmp_h_bit_cg compare_h_bit_cg[32];
+        soc_ifc_reg__internal_rv_mtimecmp_h_fld_cg fld_cg;
+        rand uvm_reg_field compare_h;
+
+        function new(string name = "soc_ifc_reg__internal_rv_mtimecmp_h");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.compare_h = new("compare_h");
+            this.compare_h.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(compare_h_bit_cg[bt]) compare_h_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__internal_rv_mtimecmp_h
+
     // Reg - soc_ifc_reg::intr_block_t::global_intr_en_t
     class soc_ifc_reg__intr_block_t__global_intr_en_t extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__global_intr_en_t_bit_cg error_en_bit_cg[1];
+        soc_ifc_reg__intr_block_t__global_intr_en_t_bit_cg notif_en_bit_cg[1];
+        soc_ifc_reg__intr_block_t__global_intr_en_t_fld_cg fld_cg;
         rand uvm_reg_field error_en;
         rand uvm_reg_field notif_en;
 
         function new(string name = "soc_ifc_reg__intr_block_t__global_intr_en_t");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.error_en = new("error_en");
             this.error_en.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
             this.notif_en = new("notif_en");
             this.notif_en.configure(this, 1, 1, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(error_en_bit_cg[bt]) error_en_bit_cg[bt] = new();
+                foreach(notif_en_bit_cg[bt]) notif_en_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__global_intr_en_t
 
     // Reg - soc_ifc_reg::intr_block_t::error_intr_en_t
     class soc_ifc_reg__intr_block_t__error_intr_en_t extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__error_intr_en_t_bit_cg error_internal_en_bit_cg[1];
+        soc_ifc_reg__intr_block_t__error_intr_en_t_bit_cg error_inv_dev_en_bit_cg[1];
+        soc_ifc_reg__intr_block_t__error_intr_en_t_bit_cg error_cmd_fail_en_bit_cg[1];
+        soc_ifc_reg__intr_block_t__error_intr_en_t_bit_cg error_bad_fuse_en_bit_cg[1];
+        soc_ifc_reg__intr_block_t__error_intr_en_t_bit_cg error_iccm_blocked_en_bit_cg[1];
+        soc_ifc_reg__intr_block_t__error_intr_en_t_bit_cg error_mbox_ecc_unc_en_bit_cg[1];
+        soc_ifc_reg__intr_block_t__error_intr_en_t_bit_cg error_wdt_timer1_timeout_en_bit_cg[1];
+        soc_ifc_reg__intr_block_t__error_intr_en_t_bit_cg error_wdt_timer2_timeout_en_bit_cg[1];
+        soc_ifc_reg__intr_block_t__error_intr_en_t_fld_cg fld_cg;
         rand uvm_reg_field error_internal_en;
         rand uvm_reg_field error_inv_dev_en;
         rand uvm_reg_field error_cmd_fail_en;
@@ -772,8 +2234,13 @@ package soc_ifc_reg_uvm;
         rand uvm_reg_field error_wdt_timer2_timeout_en;
 
         function new(string name = "soc_ifc_reg__intr_block_t__error_intr_en_t");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.error_internal_en = new("error_internal_en");
@@ -792,19 +2259,49 @@ package soc_ifc_reg_uvm;
             this.error_wdt_timer1_timeout_en.configure(this, 1, 6, "RW", 0, 'h0, 1, 1, 0);
             this.error_wdt_timer2_timeout_en = new("error_wdt_timer2_timeout_en");
             this.error_wdt_timer2_timeout_en.configure(this, 1, 7, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(error_internal_en_bit_cg[bt]) error_internal_en_bit_cg[bt] = new();
+                foreach(error_inv_dev_en_bit_cg[bt]) error_inv_dev_en_bit_cg[bt] = new();
+                foreach(error_cmd_fail_en_bit_cg[bt]) error_cmd_fail_en_bit_cg[bt] = new();
+                foreach(error_bad_fuse_en_bit_cg[bt]) error_bad_fuse_en_bit_cg[bt] = new();
+                foreach(error_iccm_blocked_en_bit_cg[bt]) error_iccm_blocked_en_bit_cg[bt] = new();
+                foreach(error_mbox_ecc_unc_en_bit_cg[bt]) error_mbox_ecc_unc_en_bit_cg[bt] = new();
+                foreach(error_wdt_timer1_timeout_en_bit_cg[bt]) error_wdt_timer1_timeout_en_bit_cg[bt] = new();
+                foreach(error_wdt_timer2_timeout_en_bit_cg[bt]) error_wdt_timer2_timeout_en_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__error_intr_en_t
 
     // Reg - soc_ifc_reg::intr_block_t::notif_intr_en_t
     class soc_ifc_reg__intr_block_t__notif_intr_en_t extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__notif_intr_en_t_bit_cg notif_cmd_avail_en_bit_cg[1];
+        soc_ifc_reg__intr_block_t__notif_intr_en_t_bit_cg notif_mbox_ecc_cor_en_bit_cg[1];
+        soc_ifc_reg__intr_block_t__notif_intr_en_t_bit_cg notif_debug_locked_en_bit_cg[1];
+        soc_ifc_reg__intr_block_t__notif_intr_en_t_bit_cg notif_scan_mode_en_bit_cg[1];
+        soc_ifc_reg__intr_block_t__notif_intr_en_t_bit_cg notif_soc_req_lock_en_bit_cg[1];
+        soc_ifc_reg__intr_block_t__notif_intr_en_t_bit_cg notif_gen_in_toggle_en_bit_cg[1];
+        soc_ifc_reg__intr_block_t__notif_intr_en_t_fld_cg fld_cg;
         rand uvm_reg_field notif_cmd_avail_en;
         rand uvm_reg_field notif_mbox_ecc_cor_en;
         rand uvm_reg_field notif_debug_locked_en;
+        rand uvm_reg_field notif_scan_mode_en;
         rand uvm_reg_field notif_soc_req_lock_en;
+        rand uvm_reg_field notif_gen_in_toggle_en;
 
         function new(string name = "soc_ifc_reg__intr_block_t__notif_intr_en_t");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.notif_cmd_avail_en = new("notif_cmd_avail_en");
@@ -813,41 +2310,100 @@ package soc_ifc_reg_uvm;
             this.notif_mbox_ecc_cor_en.configure(this, 1, 1, "RW", 0, 'h0, 1, 1, 0);
             this.notif_debug_locked_en = new("notif_debug_locked_en");
             this.notif_debug_locked_en.configure(this, 1, 2, "RW", 0, 'h0, 1, 1, 0);
+            this.notif_scan_mode_en = new("notif_scan_mode_en");
+            this.notif_scan_mode_en.configure(this, 1, 3, "RW", 0, 'h0, 1, 1, 0);
             this.notif_soc_req_lock_en = new("notif_soc_req_lock_en");
-            this.notif_soc_req_lock_en.configure(this, 1, 3, "RW", 0, 'h0, 1, 1, 0);
+            this.notif_soc_req_lock_en.configure(this, 1, 4, "RW", 0, 'h0, 1, 1, 0);
+            this.notif_gen_in_toggle_en = new("notif_gen_in_toggle_en");
+            this.notif_gen_in_toggle_en.configure(this, 1, 5, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(notif_cmd_avail_en_bit_cg[bt]) notif_cmd_avail_en_bit_cg[bt] = new();
+                foreach(notif_mbox_ecc_cor_en_bit_cg[bt]) notif_mbox_ecc_cor_en_bit_cg[bt] = new();
+                foreach(notif_debug_locked_en_bit_cg[bt]) notif_debug_locked_en_bit_cg[bt] = new();
+                foreach(notif_scan_mode_en_bit_cg[bt]) notif_scan_mode_en_bit_cg[bt] = new();
+                foreach(notif_soc_req_lock_en_bit_cg[bt]) notif_soc_req_lock_en_bit_cg[bt] = new();
+                foreach(notif_gen_in_toggle_en_bit_cg[bt]) notif_gen_in_toggle_en_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__notif_intr_en_t
 
     // Reg - soc_ifc_reg::intr_block_t::global_intr_t_agg_sts_dd3dcf0a
     class soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a_bit_cg agg_sts_bit_cg[1];
+        soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a_fld_cg fld_cg;
         rand uvm_reg_field agg_sts;
 
         function new(string name = "soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.agg_sts = new("agg_sts");
             this.agg_sts.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(agg_sts_bit_cg[bt]) agg_sts_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a
 
     // Reg - soc_ifc_reg::intr_block_t::global_intr_t_agg_sts_e6399b4a
     class soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a_bit_cg agg_sts_bit_cg[1];
+        soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a_fld_cg fld_cg;
         rand uvm_reg_field agg_sts;
 
         function new(string name = "soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.agg_sts = new("agg_sts");
             this.agg_sts.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(agg_sts_bit_cg[bt]) agg_sts_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a
 
     // Reg - soc_ifc_reg::intr_block_t::error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f
     class soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f_bit_cg error_internal_sts_bit_cg[1];
+        soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f_bit_cg error_inv_dev_sts_bit_cg[1];
+        soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f_bit_cg error_cmd_fail_sts_bit_cg[1];
+        soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f_bit_cg error_bad_fuse_sts_bit_cg[1];
+        soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f_bit_cg error_iccm_blocked_sts_bit_cg[1];
+        soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f_bit_cg error_mbox_ecc_unc_sts_bit_cg[1];
+        soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f_bit_cg error_wdt_timer1_timeout_sts_bit_cg[1];
+        soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f_bit_cg error_wdt_timer2_timeout_sts_bit_cg[1];
+        soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f_fld_cg fld_cg;
         rand uvm_reg_field error_internal_sts;
         rand uvm_reg_field error_inv_dev_sts;
         rand uvm_reg_field error_cmd_fail_sts;
@@ -858,8 +2414,13 @@ package soc_ifc_reg_uvm;
         rand uvm_reg_field error_wdt_timer2_timeout_sts;
 
         function new(string name = "soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.error_internal_sts = new("error_internal_sts");
@@ -878,19 +2439,49 @@ package soc_ifc_reg_uvm;
             this.error_wdt_timer1_timeout_sts.configure(this, 1, 6, "W1C", 1, 'h0, 1, 1, 0);
             this.error_wdt_timer2_timeout_sts = new("error_wdt_timer2_timeout_sts");
             this.error_wdt_timer2_timeout_sts.configure(this, 1, 7, "W1C", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(error_internal_sts_bit_cg[bt]) error_internal_sts_bit_cg[bt] = new();
+                foreach(error_inv_dev_sts_bit_cg[bt]) error_inv_dev_sts_bit_cg[bt] = new();
+                foreach(error_cmd_fail_sts_bit_cg[bt]) error_cmd_fail_sts_bit_cg[bt] = new();
+                foreach(error_bad_fuse_sts_bit_cg[bt]) error_bad_fuse_sts_bit_cg[bt] = new();
+                foreach(error_iccm_blocked_sts_bit_cg[bt]) error_iccm_blocked_sts_bit_cg[bt] = new();
+                foreach(error_mbox_ecc_unc_sts_bit_cg[bt]) error_mbox_ecc_unc_sts_bit_cg[bt] = new();
+                foreach(error_wdt_timer1_timeout_sts_bit_cg[bt]) error_wdt_timer1_timeout_sts_bit_cg[bt] = new();
+                foreach(error_wdt_timer2_timeout_sts_bit_cg[bt]) error_wdt_timer2_timeout_sts_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f
 
-    // Reg - soc_ifc_reg::intr_block_t::notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_mbox_ecc_cor_sts_5c3d26bb_notif_soc_req_lock_sts_deddde70
-    class soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_mbox_ecc_cor_sts_5c3d26bb_notif_soc_req_lock_sts_deddde70 extends uvm_reg;
+    // Reg - soc_ifc_reg::intr_block_t::notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_gen_in_toggle_sts_59f84b64_notif_mbox_ecc_cor_sts_5c3d26bb_notif_scan_mode_sts_122f6367_notif_soc_req_lock_sts_deddde70
+    class soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_gen_in_toggle_sts_59f84b64_notif_mbox_ecc_cor_sts_5c3d26bb_notif_scan_mode_sts_122f6367_notif_soc_req_lock_sts_deddde70 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_gen_in_toggle_sts_59f84b64_notif_mbox_ecc_cor_sts_5c3d26bb_notif_scan_mode_sts_122f6367_notif_soc_req_lock_sts_deddde70_bit_cg notif_cmd_avail_sts_bit_cg[1];
+        soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_gen_in_toggle_sts_59f84b64_notif_mbox_ecc_cor_sts_5c3d26bb_notif_scan_mode_sts_122f6367_notif_soc_req_lock_sts_deddde70_bit_cg notif_mbox_ecc_cor_sts_bit_cg[1];
+        soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_gen_in_toggle_sts_59f84b64_notif_mbox_ecc_cor_sts_5c3d26bb_notif_scan_mode_sts_122f6367_notif_soc_req_lock_sts_deddde70_bit_cg notif_debug_locked_sts_bit_cg[1];
+        soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_gen_in_toggle_sts_59f84b64_notif_mbox_ecc_cor_sts_5c3d26bb_notif_scan_mode_sts_122f6367_notif_soc_req_lock_sts_deddde70_bit_cg notif_scan_mode_sts_bit_cg[1];
+        soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_gen_in_toggle_sts_59f84b64_notif_mbox_ecc_cor_sts_5c3d26bb_notif_scan_mode_sts_122f6367_notif_soc_req_lock_sts_deddde70_bit_cg notif_soc_req_lock_sts_bit_cg[1];
+        soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_gen_in_toggle_sts_59f84b64_notif_mbox_ecc_cor_sts_5c3d26bb_notif_scan_mode_sts_122f6367_notif_soc_req_lock_sts_deddde70_bit_cg notif_gen_in_toggle_sts_bit_cg[1];
+        soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_gen_in_toggle_sts_59f84b64_notif_mbox_ecc_cor_sts_5c3d26bb_notif_scan_mode_sts_122f6367_notif_soc_req_lock_sts_deddde70_fld_cg fld_cg;
         rand uvm_reg_field notif_cmd_avail_sts;
         rand uvm_reg_field notif_mbox_ecc_cor_sts;
         rand uvm_reg_field notif_debug_locked_sts;
+        rand uvm_reg_field notif_scan_mode_sts;
         rand uvm_reg_field notif_soc_req_lock_sts;
+        rand uvm_reg_field notif_gen_in_toggle_sts;
 
-        function new(string name = "soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_mbox_ecc_cor_sts_5c3d26bb_notif_soc_req_lock_sts_deddde70");
-            super.new(name, 32, UVM_NO_COVERAGE);
+        function new(string name = "soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_gen_in_toggle_sts_59f84b64_notif_mbox_ecc_cor_sts_5c3d26bb_notif_scan_mode_sts_122f6367_notif_soc_req_lock_sts_deddde70");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.notif_cmd_avail_sts = new("notif_cmd_avail_sts");
@@ -899,13 +2490,40 @@ package soc_ifc_reg_uvm;
             this.notif_mbox_ecc_cor_sts.configure(this, 1, 1, "W1C", 1, 'h0, 1, 1, 0);
             this.notif_debug_locked_sts = new("notif_debug_locked_sts");
             this.notif_debug_locked_sts.configure(this, 1, 2, "W1C", 1, 'h0, 1, 1, 0);
+            this.notif_scan_mode_sts = new("notif_scan_mode_sts");
+            this.notif_scan_mode_sts.configure(this, 1, 3, "W1C", 1, 'h0, 1, 1, 0);
             this.notif_soc_req_lock_sts = new("notif_soc_req_lock_sts");
-            this.notif_soc_req_lock_sts.configure(this, 1, 3, "W1C", 1, 'h0, 1, 1, 0);
+            this.notif_soc_req_lock_sts.configure(this, 1, 4, "W1C", 1, 'h0, 1, 1, 0);
+            this.notif_gen_in_toggle_sts = new("notif_gen_in_toggle_sts");
+            this.notif_gen_in_toggle_sts.configure(this, 1, 5, "W1C", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(notif_cmd_avail_sts_bit_cg[bt]) notif_cmd_avail_sts_bit_cg[bt] = new();
+                foreach(notif_mbox_ecc_cor_sts_bit_cg[bt]) notif_mbox_ecc_cor_sts_bit_cg[bt] = new();
+                foreach(notif_debug_locked_sts_bit_cg[bt]) notif_debug_locked_sts_bit_cg[bt] = new();
+                foreach(notif_scan_mode_sts_bit_cg[bt]) notif_scan_mode_sts_bit_cg[bt] = new();
+                foreach(notif_soc_req_lock_sts_bit_cg[bt]) notif_soc_req_lock_sts_bit_cg[bt] = new();
+                foreach(notif_gen_in_toggle_sts_bit_cg[bt]) notif_gen_in_toggle_sts_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
-    endclass : soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_mbox_ecc_cor_sts_5c3d26bb_notif_soc_req_lock_sts_deddde70
+    endclass : soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_gen_in_toggle_sts_59f84b64_notif_mbox_ecc_cor_sts_5c3d26bb_notif_scan_mode_sts_122f6367_notif_soc_req_lock_sts_deddde70
 
     // Reg - soc_ifc_reg::intr_block_t::error_intr_trig_t
     class soc_ifc_reg__intr_block_t__error_intr_trig_t extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__error_intr_trig_t_bit_cg error_internal_trig_bit_cg[1];
+        soc_ifc_reg__intr_block_t__error_intr_trig_t_bit_cg error_inv_dev_trig_bit_cg[1];
+        soc_ifc_reg__intr_block_t__error_intr_trig_t_bit_cg error_cmd_fail_trig_bit_cg[1];
+        soc_ifc_reg__intr_block_t__error_intr_trig_t_bit_cg error_bad_fuse_trig_bit_cg[1];
+        soc_ifc_reg__intr_block_t__error_intr_trig_t_bit_cg error_iccm_blocked_trig_bit_cg[1];
+        soc_ifc_reg__intr_block_t__error_intr_trig_t_bit_cg error_mbox_ecc_unc_trig_bit_cg[1];
+        soc_ifc_reg__intr_block_t__error_intr_trig_t_bit_cg error_wdt_timer1_timeout_trig_bit_cg[1];
+        soc_ifc_reg__intr_block_t__error_intr_trig_t_bit_cg error_wdt_timer2_timeout_trig_bit_cg[1];
+        soc_ifc_reg__intr_block_t__error_intr_trig_t_fld_cg fld_cg;
         rand uvm_reg_field error_internal_trig;
         rand uvm_reg_field error_inv_dev_trig;
         rand uvm_reg_field error_cmd_fail_trig;
@@ -916,8 +2534,13 @@ package soc_ifc_reg_uvm;
         rand uvm_reg_field error_wdt_timer2_timeout_trig;
 
         function new(string name = "soc_ifc_reg__intr_block_t__error_intr_trig_t");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.error_internal_trig = new("error_internal_trig");
@@ -936,19 +2559,49 @@ package soc_ifc_reg_uvm;
             this.error_wdt_timer1_timeout_trig.configure(this, 1, 6, "W1S", 0, 'h0, 1, 1, 0);
             this.error_wdt_timer2_timeout_trig = new("error_wdt_timer2_timeout_trig");
             this.error_wdt_timer2_timeout_trig.configure(this, 1, 7, "W1S", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(error_internal_trig_bit_cg[bt]) error_internal_trig_bit_cg[bt] = new();
+                foreach(error_inv_dev_trig_bit_cg[bt]) error_inv_dev_trig_bit_cg[bt] = new();
+                foreach(error_cmd_fail_trig_bit_cg[bt]) error_cmd_fail_trig_bit_cg[bt] = new();
+                foreach(error_bad_fuse_trig_bit_cg[bt]) error_bad_fuse_trig_bit_cg[bt] = new();
+                foreach(error_iccm_blocked_trig_bit_cg[bt]) error_iccm_blocked_trig_bit_cg[bt] = new();
+                foreach(error_mbox_ecc_unc_trig_bit_cg[bt]) error_mbox_ecc_unc_trig_bit_cg[bt] = new();
+                foreach(error_wdt_timer1_timeout_trig_bit_cg[bt]) error_wdt_timer1_timeout_trig_bit_cg[bt] = new();
+                foreach(error_wdt_timer2_timeout_trig_bit_cg[bt]) error_wdt_timer2_timeout_trig_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__error_intr_trig_t
 
     // Reg - soc_ifc_reg::intr_block_t::notif_intr_trig_t
     class soc_ifc_reg__intr_block_t__notif_intr_trig_t extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__notif_intr_trig_t_bit_cg notif_cmd_avail_trig_bit_cg[1];
+        soc_ifc_reg__intr_block_t__notif_intr_trig_t_bit_cg notif_mbox_ecc_cor_trig_bit_cg[1];
+        soc_ifc_reg__intr_block_t__notif_intr_trig_t_bit_cg notif_debug_locked_trig_bit_cg[1];
+        soc_ifc_reg__intr_block_t__notif_intr_trig_t_bit_cg notif_scan_mode_trig_bit_cg[1];
+        soc_ifc_reg__intr_block_t__notif_intr_trig_t_bit_cg notif_soc_req_lock_trig_bit_cg[1];
+        soc_ifc_reg__intr_block_t__notif_intr_trig_t_bit_cg notif_gen_in_toggle_trig_bit_cg[1];
+        soc_ifc_reg__intr_block_t__notif_intr_trig_t_fld_cg fld_cg;
         rand uvm_reg_field notif_cmd_avail_trig;
         rand uvm_reg_field notif_mbox_ecc_cor_trig;
         rand uvm_reg_field notif_debug_locked_trig;
+        rand uvm_reg_field notif_scan_mode_trig;
         rand uvm_reg_field notif_soc_req_lock_trig;
+        rand uvm_reg_field notif_gen_in_toggle_trig;
 
         function new(string name = "soc_ifc_reg__intr_block_t__notif_intr_trig_t");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.notif_cmd_avail_trig = new("notif_cmd_avail_trig");
@@ -957,346 +2610,864 @@ package soc_ifc_reg_uvm;
             this.notif_mbox_ecc_cor_trig.configure(this, 1, 1, "W1S", 0, 'h0, 1, 1, 0);
             this.notif_debug_locked_trig = new("notif_debug_locked_trig");
             this.notif_debug_locked_trig.configure(this, 1, 2, "W1S", 0, 'h0, 1, 1, 0);
+            this.notif_scan_mode_trig = new("notif_scan_mode_trig");
+            this.notif_scan_mode_trig.configure(this, 1, 3, "W1S", 0, 'h0, 1, 1, 0);
             this.notif_soc_req_lock_trig = new("notif_soc_req_lock_trig");
-            this.notif_soc_req_lock_trig.configure(this, 1, 3, "W1S", 0, 'h0, 1, 1, 0);
+            this.notif_soc_req_lock_trig.configure(this, 1, 4, "W1S", 0, 'h0, 1, 1, 0);
+            this.notif_gen_in_toggle_trig = new("notif_gen_in_toggle_trig");
+            this.notif_gen_in_toggle_trig.configure(this, 1, 5, "W1S", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(notif_cmd_avail_trig_bit_cg[bt]) notif_cmd_avail_trig_bit_cg[bt] = new();
+                foreach(notif_mbox_ecc_cor_trig_bit_cg[bt]) notif_mbox_ecc_cor_trig_bit_cg[bt] = new();
+                foreach(notif_debug_locked_trig_bit_cg[bt]) notif_debug_locked_trig_bit_cg[bt] = new();
+                foreach(notif_scan_mode_trig_bit_cg[bt]) notif_scan_mode_trig_bit_cg[bt] = new();
+                foreach(notif_soc_req_lock_trig_bit_cg[bt]) notif_soc_req_lock_trig_bit_cg[bt] = new();
+                foreach(notif_gen_in_toggle_trig_bit_cg[bt]) notif_gen_in_toggle_trig_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__notif_intr_trig_t
 
     // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_608f1141
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_608f1141 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_608f1141_bit_cg cnt_bit_cg[32];
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_608f1141_fld_cg fld_cg;
         rand uvm_reg_field cnt;
 
         function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_608f1141");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_608f1141
 
     // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_916ab5df
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_916ab5df extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_916ab5df_bit_cg cnt_bit_cg[32];
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_916ab5df_fld_cg fld_cg;
         rand uvm_reg_field cnt;
 
         function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_916ab5df");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_916ab5df
 
     // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_b2a56031
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_b2a56031 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_b2a56031_bit_cg cnt_bit_cg[32];
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_b2a56031_fld_cg fld_cg;
         rand uvm_reg_field cnt;
 
         function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_b2a56031");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_b2a56031
 
     // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_fb7d2433
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_fb7d2433 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_fb7d2433_bit_cg cnt_bit_cg[32];
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_fb7d2433_fld_cg fld_cg;
         rand uvm_reg_field cnt;
 
         function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_fb7d2433");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_fb7d2433
 
     // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_25e76b6f
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_25e76b6f extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_25e76b6f_bit_cg cnt_bit_cg[32];
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_25e76b6f_fld_cg fld_cg;
         rand uvm_reg_field cnt;
 
         function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_25e76b6f");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_25e76b6f
 
     // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_26b97e39
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_26b97e39 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_26b97e39_bit_cg cnt_bit_cg[32];
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_26b97e39_fld_cg fld_cg;
         rand uvm_reg_field cnt;
 
         function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_26b97e39");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_26b97e39
 
     // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_a2f61f82
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_a2f61f82 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_a2f61f82_bit_cg cnt_bit_cg[32];
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_a2f61f82_fld_cg fld_cg;
         rand uvm_reg_field cnt;
 
         function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_a2f61f82");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_a2f61f82
 
     // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_d46457cd
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_d46457cd extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_d46457cd_bit_cg cnt_bit_cg[32];
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_d46457cd_fld_cg fld_cg;
         rand uvm_reg_field cnt;
 
         function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_d46457cd");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_d46457cd
 
     // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_a06f0954
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_a06f0954 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_a06f0954_bit_cg cnt_bit_cg[32];
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_a06f0954_fld_cg fld_cg;
         rand uvm_reg_field cnt;
 
         function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_a06f0954");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_a06f0954
 
     // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_00e49272
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_00e49272 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_00e49272_bit_cg cnt_bit_cg[32];
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_00e49272_fld_cg fld_cg;
         rand uvm_reg_field cnt;
 
         function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_00e49272");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_00e49272
 
     // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_ee53ded8
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_ee53ded8 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_ee53ded8_bit_cg cnt_bit_cg[32];
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_ee53ded8_fld_cg fld_cg;
         rand uvm_reg_field cnt;
 
         function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_ee53ded8");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_ee53ded8
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_b9bddabe
-    class soc_ifc_reg__intr_block_t__intr_count_t_cnt_b9bddabe extends uvm_reg;
+    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_fbf3c714
+    class soc_ifc_reg__intr_block_t__intr_count_t_cnt_fbf3c714 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_fbf3c714_bit_cg cnt_bit_cg[32];
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_fbf3c714_fld_cg fld_cg;
         rand uvm_reg_field cnt;
 
-        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_b9bddabe");
-            super.new(name, 32, UVM_NO_COVERAGE);
+        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_fbf3c714");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.cnt = new("cnt");
             this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_fbf3c714
+
+    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_b9bddabe
+    class soc_ifc_reg__intr_block_t__intr_count_t_cnt_b9bddabe extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_b9bddabe_bit_cg cnt_bit_cg[32];
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_b9bddabe_fld_cg fld_cg;
+        rand uvm_reg_field cnt;
+
+        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_b9bddabe");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.cnt = new("cnt");
+            this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_b9bddabe
 
+    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_57528cc1
+    class soc_ifc_reg__intr_block_t__intr_count_t_cnt_57528cc1 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_57528cc1_bit_cg cnt_bit_cg[32];
+        soc_ifc_reg__intr_block_t__intr_count_t_cnt_57528cc1_fld_cg fld_cg;
+        rand uvm_reg_field cnt;
+
+        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_t_cnt_57528cc1");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.cnt = new("cnt");
+            this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_57528cc1
+
     // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_15e6ed7e
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_15e6ed7e extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_15e6ed7e_bit_cg pulse_bit_cg[1];
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_15e6ed7e_fld_cg fld_cg;
         rand uvm_reg_field pulse;
 
         function new(string name = "soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_15e6ed7e");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.pulse = new("pulse");
             this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_15e6ed7e
 
     // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_f762ea9c
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f762ea9c extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f762ea9c_bit_cg pulse_bit_cg[1];
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f762ea9c_fld_cg fld_cg;
         rand uvm_reg_field pulse;
 
         function new(string name = "soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f762ea9c");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.pulse = new("pulse");
             this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f762ea9c
 
     // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_aa8718c6
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_aa8718c6 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_aa8718c6_bit_cg pulse_bit_cg[1];
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_aa8718c6_fld_cg fld_cg;
         rand uvm_reg_field pulse;
 
         function new(string name = "soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_aa8718c6");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.pulse = new("pulse");
             this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_aa8718c6
 
     // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_26fa5955
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_26fa5955 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_26fa5955_bit_cg pulse_bit_cg[1];
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_26fa5955_fld_cg fld_cg;
         rand uvm_reg_field pulse;
 
         function new(string name = "soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_26fa5955");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.pulse = new("pulse");
             this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_26fa5955
 
     // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_3e43d258
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_3e43d258 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_3e43d258_bit_cg pulse_bit_cg[1];
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_3e43d258_fld_cg fld_cg;
         rand uvm_reg_field pulse;
 
         function new(string name = "soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_3e43d258");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.pulse = new("pulse");
             this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_3e43d258
 
     // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_9f1632fd
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_9f1632fd extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_9f1632fd_bit_cg pulse_bit_cg[1];
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_9f1632fd_fld_cg fld_cg;
         rand uvm_reg_field pulse;
 
         function new(string name = "soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_9f1632fd");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.pulse = new("pulse");
             this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_9f1632fd
 
     // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_aa999fdc
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_aa999fdc extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_aa999fdc_bit_cg pulse_bit_cg[1];
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_aa999fdc_fld_cg fld_cg;
         rand uvm_reg_field pulse;
 
         function new(string name = "soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_aa999fdc");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.pulse = new("pulse");
             this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_aa999fdc
 
     // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_404e12db
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_404e12db extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_404e12db_bit_cg pulse_bit_cg[1];
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_404e12db_fld_cg fld_cg;
         rand uvm_reg_field pulse;
 
         function new(string name = "soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_404e12db");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.pulse = new("pulse");
             this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_404e12db
 
     // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_90d52137
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_90d52137 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_90d52137_bit_cg pulse_bit_cg[1];
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_90d52137_fld_cg fld_cg;
         rand uvm_reg_field pulse;
 
         function new(string name = "soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_90d52137");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.pulse = new("pulse");
             this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_90d52137
 
     // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_a6db6fff
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_a6db6fff extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_a6db6fff_bit_cg pulse_bit_cg[1];
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_a6db6fff_fld_cg fld_cg;
         rand uvm_reg_field pulse;
 
         function new(string name = "soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_a6db6fff");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.pulse = new("pulse");
             this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_a6db6fff
 
     // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_51891fb1
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_51891fb1 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_51891fb1_bit_cg pulse_bit_cg[1];
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_51891fb1_fld_cg fld_cg;
         rand uvm_reg_field pulse;
 
         function new(string name = "soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_51891fb1");
-            super.new(name, 32, UVM_NO_COVERAGE);
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.pulse = new("pulse");
             this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_51891fb1
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_246489bd
-    class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_246489bd extends uvm_reg;
+    // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_f5d8afe0
+    class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f5d8afe0 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f5d8afe0_bit_cg pulse_bit_cg[1];
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f5d8afe0_fld_cg fld_cg;
         rand uvm_reg_field pulse;
 
-        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_246489bd");
-            super.new(name, 32, UVM_NO_COVERAGE);
+        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f5d8afe0");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
 
         virtual function void build();
             this.pulse = new("pulse");
             this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f5d8afe0
+
+    // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_246489bd
+    class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_246489bd extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_246489bd_bit_cg pulse_bit_cg[1];
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_246489bd_fld_cg fld_cg;
+        rand uvm_reg_field pulse;
+
+        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_246489bd");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.pulse = new("pulse");
+            this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_246489bd
+
+    // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_d6ed4d1e
+    class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_d6ed4d1e extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_d6ed4d1e_bit_cg pulse_bit_cg[1];
+        soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_d6ed4d1e_fld_cg fld_cg;
+        rand uvm_reg_field pulse;
+
+        function new(string name = "soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_d6ed4d1e");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.pulse = new("pulse");
+            this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_d6ed4d1e
 
     // Regfile - soc_ifc_reg::intr_block_t
     class soc_ifc_reg__intr_block_t extends uvm_reg_block;
@@ -1306,7 +3477,7 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a error_global_intr_r;
         rand soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a notif_global_intr_r;
         rand soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f error_internal_intr_r;
-        rand soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_mbox_ecc_cor_sts_5c3d26bb_notif_soc_req_lock_sts_deddde70 notif_internal_intr_r;
+        rand soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_gen_in_toggle_sts_59f84b64_notif_mbox_ecc_cor_sts_5c3d26bb_notif_scan_mode_sts_122f6367_notif_soc_req_lock_sts_deddde70 notif_internal_intr_r;
         rand soc_ifc_reg__intr_block_t__error_intr_trig_t error_intr_trig_r;
         rand soc_ifc_reg__intr_block_t__notif_intr_trig_t notif_intr_trig_r;
         rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_608f1141 error_internal_intr_count_r;
@@ -1320,7 +3491,9 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_a06f0954 notif_cmd_avail_intr_count_r;
         rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_00e49272 notif_mbox_ecc_cor_intr_count_r;
         rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_ee53ded8 notif_debug_locked_intr_count_r;
+        rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_fbf3c714 notif_scan_mode_intr_count_r;
         rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_b9bddabe notif_soc_req_lock_intr_count_r;
+        rand soc_ifc_reg__intr_block_t__intr_count_t_cnt_57528cc1 notif_gen_in_toggle_intr_count_r;
         rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_15e6ed7e error_internal_intr_count_incr_r;
         rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f762ea9c error_inv_dev_intr_count_incr_r;
         rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_aa8718c6 error_cmd_fail_intr_count_incr_r;
@@ -1332,7 +3505,9 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_90d52137 notif_cmd_avail_intr_count_incr_r;
         rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_a6db6fff notif_mbox_ecc_cor_intr_count_incr_r;
         rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_51891fb1 notif_debug_locked_intr_count_incr_r;
+        rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f5d8afe0 notif_scan_mode_intr_count_incr_r;
         rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_246489bd notif_soc_req_lock_intr_count_incr_r;
+        rand soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_d6ed4d1e notif_gen_in_toggle_intr_count_incr_r;
 
         function new(string name = "soc_ifc_reg__intr_block_t");
             super.new(name);
@@ -1440,11 +3615,21 @@ package soc_ifc_reg_uvm;
 
             this.notif_debug_locked_intr_count_r.build();
             this.default_map.add_reg(this.notif_debug_locked_intr_count_r, 'h188);
+            this.notif_scan_mode_intr_count_r = new("notif_scan_mode_intr_count_r");
+            this.notif_scan_mode_intr_count_r.configure(this);
+
+            this.notif_scan_mode_intr_count_r.build();
+            this.default_map.add_reg(this.notif_scan_mode_intr_count_r, 'h18c);
             this.notif_soc_req_lock_intr_count_r = new("notif_soc_req_lock_intr_count_r");
             this.notif_soc_req_lock_intr_count_r.configure(this);
 
             this.notif_soc_req_lock_intr_count_r.build();
-            this.default_map.add_reg(this.notif_soc_req_lock_intr_count_r, 'h18c);
+            this.default_map.add_reg(this.notif_soc_req_lock_intr_count_r, 'h190);
+            this.notif_gen_in_toggle_intr_count_r = new("notif_gen_in_toggle_intr_count_r");
+            this.notif_gen_in_toggle_intr_count_r.configure(this);
+
+            this.notif_gen_in_toggle_intr_count_r.build();
+            this.default_map.add_reg(this.notif_gen_in_toggle_intr_count_r, 'h194);
             this.error_internal_intr_count_incr_r = new("error_internal_intr_count_incr_r");
             this.error_internal_intr_count_incr_r.configure(this);
 
@@ -1500,11 +3685,21 @@ package soc_ifc_reg_uvm;
 
             this.notif_debug_locked_intr_count_incr_r.build();
             this.default_map.add_reg(this.notif_debug_locked_intr_count_incr_r, 'h228);
+            this.notif_scan_mode_intr_count_incr_r = new("notif_scan_mode_intr_count_incr_r");
+            this.notif_scan_mode_intr_count_incr_r.configure(this);
+
+            this.notif_scan_mode_intr_count_incr_r.build();
+            this.default_map.add_reg(this.notif_scan_mode_intr_count_incr_r, 'h22c);
             this.notif_soc_req_lock_intr_count_incr_r = new("notif_soc_req_lock_intr_count_incr_r");
             this.notif_soc_req_lock_intr_count_incr_r.configure(this);
 
             this.notif_soc_req_lock_intr_count_incr_r.build();
-            this.default_map.add_reg(this.notif_soc_req_lock_intr_count_incr_r, 'h22c);
+            this.default_map.add_reg(this.notif_soc_req_lock_intr_count_incr_r, 'h230);
+            this.notif_gen_in_toggle_intr_count_incr_r = new("notif_gen_in_toggle_intr_count_incr_r");
+            this.notif_gen_in_toggle_intr_count_incr_r.configure(this);
+
+            this.notif_gen_in_toggle_intr_count_incr_r.build();
+            this.default_map.add_reg(this.notif_gen_in_toggle_intr_count_incr_r, 'h234);
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t
 
@@ -1526,6 +3721,7 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER CPTRA_TRNG_VALID_PAUSER;
         rand soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK CPTRA_TRNG_PAUSER_LOCK;
         rand soc_ifc_reg__CPTRA_TRNG_DATA CPTRA_TRNG_DATA[12];
+        rand soc_ifc_reg__CPTRA_TRNG_CTRL CPTRA_TRNG_CTRL;
         rand soc_ifc_reg__CPTRA_TRNG_STATUS CPTRA_TRNG_STATUS;
         rand soc_ifc_reg__CPTRA_FUSE_WR_DONE CPTRA_FUSE_WR_DONE;
         rand soc_ifc_reg__CPTRA_TIMER_CONFIG CPTRA_TIMER_CONFIG;
@@ -1544,6 +3740,12 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__CPTRA_WDT_TIMER2_CTRL CPTRA_WDT_TIMER2_CTRL;
         rand soc_ifc_reg__CPTRA_WDT_TIMER2_TIMEOUT_PERIOD CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[2];
         rand soc_ifc_reg__CPTRA_WDT_STATUS CPTRA_WDT_STATUS;
+        rand soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER CPTRA_FUSE_VALID_PAUSER;
+        rand soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK CPTRA_FUSE_PAUSER_LOCK;
+        rand soc_ifc_reg__CPTRA_WDT_CFG CPTRA_WDT_CFG[2];
+        rand soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0 CPTRA_iTRNG_ENTROPY_CONFIG_0;
+        rand soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1 CPTRA_iTRNG_ENTROPY_CONFIG_1;
+        rand soc_ifc_reg__CPTRA_RSVD_REG CPTRA_RSVD_REG[2];
         rand soc_ifc_reg__fuse_uds_seed fuse_uds_seed[12];
         rand soc_ifc_reg__fuse_field_entropy fuse_field_entropy[8];
         rand soc_ifc_reg__fuse_key_manifest_pk_hash fuse_key_manifest_pk_hash[12];
@@ -1555,11 +3757,22 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__fuse_idevid_cert_attr fuse_idevid_cert_attr[24];
         rand soc_ifc_reg__fuse_idevid_manuf_hsm_id fuse_idevid_manuf_hsm_id[4];
         rand soc_ifc_reg__fuse_life_cycle fuse_life_cycle;
+        rand soc_ifc_reg__fuse_lms_verify fuse_lms_verify;
+        rand soc_ifc_reg__fuse_lms_revocation fuse_lms_revocation;
+        rand soc_ifc_reg__fuse_soc_stepping_id fuse_soc_stepping_id;
         rand soc_ifc_reg__internal_obf_key internal_obf_key[8];
         rand soc_ifc_reg__internal_iccm_lock internal_iccm_lock;
         rand soc_ifc_reg__internal_fw_update_reset internal_fw_update_reset;
         rand soc_ifc_reg__internal_fw_update_reset_wait_cycles internal_fw_update_reset_wait_cycles;
         rand soc_ifc_reg__internal_nmi_vector internal_nmi_vector;
+        rand soc_ifc_reg__internal_hw_error_fatal_mask internal_hw_error_fatal_mask;
+        rand soc_ifc_reg__internal_hw_error_non_fatal_mask internal_hw_error_non_fatal_mask;
+        rand soc_ifc_reg__internal_fw_error_fatal_mask internal_fw_error_fatal_mask;
+        rand soc_ifc_reg__internal_fw_error_non_fatal_mask internal_fw_error_non_fatal_mask;
+        rand soc_ifc_reg__internal_rv_mtime_l internal_rv_mtime_l;
+        rand soc_ifc_reg__internal_rv_mtime_h internal_rv_mtime_h;
+        rand soc_ifc_reg__internal_rv_mtimecmp_l internal_rv_mtimecmp_l;
+        rand soc_ifc_reg__internal_rv_mtimecmp_h internal_rv_mtimecmp_h;
         rand soc_ifc_reg__intr_block_t intr_block_rf;
 
         function new(string name = "soc_ifc_reg");
@@ -1656,106 +3869,145 @@ package soc_ifc_reg_uvm;
                 this.CPTRA_TRNG_DATA[i0].build();
                 this.default_map.add_reg(this.CPTRA_TRNG_DATA[i0], 'h78 + i0*'h4);
             end
+            this.CPTRA_TRNG_CTRL = new("CPTRA_TRNG_CTRL");
+            this.CPTRA_TRNG_CTRL.configure(this);
+
+            this.CPTRA_TRNG_CTRL.build();
+            this.default_map.add_reg(this.CPTRA_TRNG_CTRL, 'ha8);
             this.CPTRA_TRNG_STATUS = new("CPTRA_TRNG_STATUS");
             this.CPTRA_TRNG_STATUS.configure(this);
 
             this.CPTRA_TRNG_STATUS.build();
-            this.default_map.add_reg(this.CPTRA_TRNG_STATUS, 'ha8);
+            this.default_map.add_reg(this.CPTRA_TRNG_STATUS, 'hac);
             this.CPTRA_FUSE_WR_DONE = new("CPTRA_FUSE_WR_DONE");
             this.CPTRA_FUSE_WR_DONE.configure(this);
 
             this.CPTRA_FUSE_WR_DONE.build();
-            this.default_map.add_reg(this.CPTRA_FUSE_WR_DONE, 'hac);
+            this.default_map.add_reg(this.CPTRA_FUSE_WR_DONE, 'hb0);
             this.CPTRA_TIMER_CONFIG = new("CPTRA_TIMER_CONFIG");
             this.CPTRA_TIMER_CONFIG.configure(this);
 
             this.CPTRA_TIMER_CONFIG.build();
-            this.default_map.add_reg(this.CPTRA_TIMER_CONFIG, 'hb0);
+            this.default_map.add_reg(this.CPTRA_TIMER_CONFIG, 'hb4);
             this.CPTRA_BOOTFSM_GO = new("CPTRA_BOOTFSM_GO");
             this.CPTRA_BOOTFSM_GO.configure(this);
 
             this.CPTRA_BOOTFSM_GO.build();
-            this.default_map.add_reg(this.CPTRA_BOOTFSM_GO, 'hb4);
+            this.default_map.add_reg(this.CPTRA_BOOTFSM_GO, 'hb8);
             this.CPTRA_DBG_MANUF_SERVICE_REG = new("CPTRA_DBG_MANUF_SERVICE_REG");
             this.CPTRA_DBG_MANUF_SERVICE_REG.configure(this);
 
             this.CPTRA_DBG_MANUF_SERVICE_REG.build();
-            this.default_map.add_reg(this.CPTRA_DBG_MANUF_SERVICE_REG, 'hb8);
+            this.default_map.add_reg(this.CPTRA_DBG_MANUF_SERVICE_REG, 'hbc);
             this.CPTRA_CLK_GATING_EN = new("CPTRA_CLK_GATING_EN");
             this.CPTRA_CLK_GATING_EN.configure(this);
 
             this.CPTRA_CLK_GATING_EN.build();
-            this.default_map.add_reg(this.CPTRA_CLK_GATING_EN, 'hbc);
+            this.default_map.add_reg(this.CPTRA_CLK_GATING_EN, 'hc0);
             foreach(this.CPTRA_GENERIC_INPUT_WIRES[i0]) begin
                 this.CPTRA_GENERIC_INPUT_WIRES[i0] = new($sformatf("CPTRA_GENERIC_INPUT_WIRES[%0d]", i0));
                 this.CPTRA_GENERIC_INPUT_WIRES[i0].configure(this);
                 
                 this.CPTRA_GENERIC_INPUT_WIRES[i0].build();
-                this.default_map.add_reg(this.CPTRA_GENERIC_INPUT_WIRES[i0], 'hc0 + i0*'h4);
+                this.default_map.add_reg(this.CPTRA_GENERIC_INPUT_WIRES[i0], 'hc4 + i0*'h4);
             end
             foreach(this.CPTRA_GENERIC_OUTPUT_WIRES[i0]) begin
                 this.CPTRA_GENERIC_OUTPUT_WIRES[i0] = new($sformatf("CPTRA_GENERIC_OUTPUT_WIRES[%0d]", i0));
                 this.CPTRA_GENERIC_OUTPUT_WIRES[i0].configure(this);
                 
                 this.CPTRA_GENERIC_OUTPUT_WIRES[i0].build();
-                this.default_map.add_reg(this.CPTRA_GENERIC_OUTPUT_WIRES[i0], 'hc8 + i0*'h4);
+                this.default_map.add_reg(this.CPTRA_GENERIC_OUTPUT_WIRES[i0], 'hcc + i0*'h4);
             end
             this.CPTRA_HW_REV_ID = new("CPTRA_HW_REV_ID");
             this.CPTRA_HW_REV_ID.configure(this);
 
             this.CPTRA_HW_REV_ID.build();
-            this.default_map.add_reg(this.CPTRA_HW_REV_ID, 'hd0);
+            this.default_map.add_reg(this.CPTRA_HW_REV_ID, 'hd4);
             foreach(this.CPTRA_FW_REV_ID[i0]) begin
                 this.CPTRA_FW_REV_ID[i0] = new($sformatf("CPTRA_FW_REV_ID[%0d]", i0));
                 this.CPTRA_FW_REV_ID[i0].configure(this);
                 
                 this.CPTRA_FW_REV_ID[i0].build();
-                this.default_map.add_reg(this.CPTRA_FW_REV_ID[i0], 'hd4 + i0*'h4);
+                this.default_map.add_reg(this.CPTRA_FW_REV_ID[i0], 'hd8 + i0*'h4);
             end
             this.CPTRA_HW_CONFIG = new("CPTRA_HW_CONFIG");
             this.CPTRA_HW_CONFIG.configure(this);
 
             this.CPTRA_HW_CONFIG.build();
-            this.default_map.add_reg(this.CPTRA_HW_CONFIG, 'hdc);
+            this.default_map.add_reg(this.CPTRA_HW_CONFIG, 'he0);
             this.CPTRA_WDT_TIMER1_EN = new("CPTRA_WDT_TIMER1_EN");
             this.CPTRA_WDT_TIMER1_EN.configure(this);
 
             this.CPTRA_WDT_TIMER1_EN.build();
-            this.default_map.add_reg(this.CPTRA_WDT_TIMER1_EN, 'he0);
+            this.default_map.add_reg(this.CPTRA_WDT_TIMER1_EN, 'he4);
             this.CPTRA_WDT_TIMER1_CTRL = new("CPTRA_WDT_TIMER1_CTRL");
             this.CPTRA_WDT_TIMER1_CTRL.configure(this);
 
             this.CPTRA_WDT_TIMER1_CTRL.build();
-            this.default_map.add_reg(this.CPTRA_WDT_TIMER1_CTRL, 'he4);
+            this.default_map.add_reg(this.CPTRA_WDT_TIMER1_CTRL, 'he8);
             foreach(this.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[i0]) begin
                 this.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[i0] = new($sformatf("CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[%0d]", i0));
                 this.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[i0].configure(this);
                 
                 this.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[i0].build();
-                this.default_map.add_reg(this.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[i0], 'he8 + i0*'h4);
+                this.default_map.add_reg(this.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[i0], 'hec + i0*'h4);
             end
             this.CPTRA_WDT_TIMER2_EN = new("CPTRA_WDT_TIMER2_EN");
             this.CPTRA_WDT_TIMER2_EN.configure(this);
 
             this.CPTRA_WDT_TIMER2_EN.build();
-            this.default_map.add_reg(this.CPTRA_WDT_TIMER2_EN, 'hf0);
+            this.default_map.add_reg(this.CPTRA_WDT_TIMER2_EN, 'hf4);
             this.CPTRA_WDT_TIMER2_CTRL = new("CPTRA_WDT_TIMER2_CTRL");
             this.CPTRA_WDT_TIMER2_CTRL.configure(this);
 
             this.CPTRA_WDT_TIMER2_CTRL.build();
-            this.default_map.add_reg(this.CPTRA_WDT_TIMER2_CTRL, 'hf4);
+            this.default_map.add_reg(this.CPTRA_WDT_TIMER2_CTRL, 'hf8);
             foreach(this.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[i0]) begin
                 this.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[i0] = new($sformatf("CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[%0d]", i0));
                 this.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[i0].configure(this);
                 
                 this.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[i0].build();
-                this.default_map.add_reg(this.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[i0], 'hf8 + i0*'h4);
+                this.default_map.add_reg(this.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[i0], 'hfc + i0*'h4);
             end
             this.CPTRA_WDT_STATUS = new("CPTRA_WDT_STATUS");
             this.CPTRA_WDT_STATUS.configure(this);
 
             this.CPTRA_WDT_STATUS.build();
-            this.default_map.add_reg(this.CPTRA_WDT_STATUS, 'h100);
+            this.default_map.add_reg(this.CPTRA_WDT_STATUS, 'h104);
+            this.CPTRA_FUSE_VALID_PAUSER = new("CPTRA_FUSE_VALID_PAUSER");
+            this.CPTRA_FUSE_VALID_PAUSER.configure(this);
+
+            this.CPTRA_FUSE_VALID_PAUSER.build();
+            this.default_map.add_reg(this.CPTRA_FUSE_VALID_PAUSER, 'h108);
+            this.CPTRA_FUSE_PAUSER_LOCK = new("CPTRA_FUSE_PAUSER_LOCK");
+            this.CPTRA_FUSE_PAUSER_LOCK.configure(this);
+
+            this.CPTRA_FUSE_PAUSER_LOCK.build();
+            this.default_map.add_reg(this.CPTRA_FUSE_PAUSER_LOCK, 'h10c);
+            foreach(this.CPTRA_WDT_CFG[i0]) begin
+                this.CPTRA_WDT_CFG[i0] = new($sformatf("CPTRA_WDT_CFG[%0d]", i0));
+                this.CPTRA_WDT_CFG[i0].configure(this);
+                
+                this.CPTRA_WDT_CFG[i0].build();
+                this.default_map.add_reg(this.CPTRA_WDT_CFG[i0], 'h110 + i0*'h4);
+            end
+            this.CPTRA_iTRNG_ENTROPY_CONFIG_0 = new("CPTRA_iTRNG_ENTROPY_CONFIG_0");
+            this.CPTRA_iTRNG_ENTROPY_CONFIG_0.configure(this);
+
+            this.CPTRA_iTRNG_ENTROPY_CONFIG_0.build();
+            this.default_map.add_reg(this.CPTRA_iTRNG_ENTROPY_CONFIG_0, 'h118);
+            this.CPTRA_iTRNG_ENTROPY_CONFIG_1 = new("CPTRA_iTRNG_ENTROPY_CONFIG_1");
+            this.CPTRA_iTRNG_ENTROPY_CONFIG_1.configure(this);
+
+            this.CPTRA_iTRNG_ENTROPY_CONFIG_1.build();
+            this.default_map.add_reg(this.CPTRA_iTRNG_ENTROPY_CONFIG_1, 'h11c);
+            foreach(this.CPTRA_RSVD_REG[i0]) begin
+                this.CPTRA_RSVD_REG[i0] = new($sformatf("CPTRA_RSVD_REG[%0d]", i0));
+                this.CPTRA_RSVD_REG[i0].configure(this);
+                
+                this.CPTRA_RSVD_REG[i0].build();
+                this.default_map.add_reg(this.CPTRA_RSVD_REG[i0], 'h120 + i0*'h4);
+            end
             foreach(this.fuse_uds_seed[i0]) begin
                 this.fuse_uds_seed[i0] = new($sformatf("fuse_uds_seed[%0d]", i0));
                 this.fuse_uds_seed[i0].configure(this);
@@ -1825,6 +4077,21 @@ package soc_ifc_reg_uvm;
 
             this.fuse_life_cycle.build();
             this.default_map.add_reg(this.fuse_life_cycle, 'h33c);
+            this.fuse_lms_verify = new("fuse_lms_verify");
+            this.fuse_lms_verify.configure(this);
+
+            this.fuse_lms_verify.build();
+            this.default_map.add_reg(this.fuse_lms_verify, 'h340);
+            this.fuse_lms_revocation = new("fuse_lms_revocation");
+            this.fuse_lms_revocation.configure(this);
+
+            this.fuse_lms_revocation.build();
+            this.default_map.add_reg(this.fuse_lms_revocation, 'h344);
+            this.fuse_soc_stepping_id = new("fuse_soc_stepping_id");
+            this.fuse_soc_stepping_id.configure(this);
+
+            this.fuse_soc_stepping_id.build();
+            this.default_map.add_reg(this.fuse_soc_stepping_id, 'h348);
             foreach(this.internal_obf_key[i0]) begin
                 this.internal_obf_key[i0] = new($sformatf("internal_obf_key[%0d]", i0));
                 this.internal_obf_key[i0].configure(this);
@@ -1852,6 +4119,46 @@ package soc_ifc_reg_uvm;
 
             this.internal_nmi_vector.build();
             this.default_map.add_reg(this.internal_nmi_vector, 'h62c);
+            this.internal_hw_error_fatal_mask = new("internal_hw_error_fatal_mask");
+            this.internal_hw_error_fatal_mask.configure(this);
+
+            this.internal_hw_error_fatal_mask.build();
+            this.default_map.add_reg(this.internal_hw_error_fatal_mask, 'h630);
+            this.internal_hw_error_non_fatal_mask = new("internal_hw_error_non_fatal_mask");
+            this.internal_hw_error_non_fatal_mask.configure(this);
+
+            this.internal_hw_error_non_fatal_mask.build();
+            this.default_map.add_reg(this.internal_hw_error_non_fatal_mask, 'h634);
+            this.internal_fw_error_fatal_mask = new("internal_fw_error_fatal_mask");
+            this.internal_fw_error_fatal_mask.configure(this);
+
+            this.internal_fw_error_fatal_mask.build();
+            this.default_map.add_reg(this.internal_fw_error_fatal_mask, 'h638);
+            this.internal_fw_error_non_fatal_mask = new("internal_fw_error_non_fatal_mask");
+            this.internal_fw_error_non_fatal_mask.configure(this);
+
+            this.internal_fw_error_non_fatal_mask.build();
+            this.default_map.add_reg(this.internal_fw_error_non_fatal_mask, 'h63c);
+            this.internal_rv_mtime_l = new("internal_rv_mtime_l");
+            this.internal_rv_mtime_l.configure(this);
+
+            this.internal_rv_mtime_l.build();
+            this.default_map.add_reg(this.internal_rv_mtime_l, 'h640);
+            this.internal_rv_mtime_h = new("internal_rv_mtime_h");
+            this.internal_rv_mtime_h.configure(this);
+
+            this.internal_rv_mtime_h.build();
+            this.default_map.add_reg(this.internal_rv_mtime_h, 'h644);
+            this.internal_rv_mtimecmp_l = new("internal_rv_mtimecmp_l");
+            this.internal_rv_mtimecmp_l.configure(this);
+
+            this.internal_rv_mtimecmp_l.build();
+            this.default_map.add_reg(this.internal_rv_mtimecmp_l, 'h648);
+            this.internal_rv_mtimecmp_h = new("internal_rv_mtimecmp_h");
+            this.internal_rv_mtimecmp_h.configure(this);
+
+            this.internal_rv_mtimecmp_h.build();
+            this.default_map.add_reg(this.internal_rv_mtimecmp_h, 'h64c);
             this.intr_block_rf = new("intr_block_rf");
             this.intr_block_rf.configure(this);
             this.intr_block_rf.build();
@@ -1859,4 +4166,5 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg
 
+    `include "soc_ifc_reg_sample.svh"
 endpackage: soc_ifc_reg_uvm

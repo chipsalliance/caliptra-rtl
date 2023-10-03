@@ -44,7 +44,7 @@ class kv_write_transaction #(
   logic error;
 
   //Constraints for the transaction variables:
-  constraint dest_valid_c { if (KV_WRITE_REQUESTOR inside {"ECC", "HMAC", "DOE", "SHA512"}) write_dest_valid == 31; }
+  constraint dest_valid_c {0 <= write_dest_valid <= 31;} //{ if (KV_WRITE_REQUESTOR inside {"ECC", "HMAC", "DOE", "SHA512"}) write_dest_valid == 31; }
   constraint write_en_c {write_en == 1'b1;}
   constraint write_offset_c {write_offset >= 0; write_offset < 12;}
   // pragma uvmf custom class_item_additional begin
@@ -126,7 +126,7 @@ class kv_write_transaction #(
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("write_en:0x%x write_entry:0x%x write_offset: 0x%x write_data:0x%x write_dest_valid:0x%x error:0x%x",write_en,write_entry,write_offset,write_data,write_dest_valid,error);
+    return $sformatf("write_en:0x%x write_entry:0x%x write_offset: 0x%x write_data:0x%x write_dest_valid:0x%x write_resp_err:0x%x",write_en,write_entry,write_offset,write_data,write_dest_valid,error);
     // pragma uvmf custom convert2string end
   endfunction
 

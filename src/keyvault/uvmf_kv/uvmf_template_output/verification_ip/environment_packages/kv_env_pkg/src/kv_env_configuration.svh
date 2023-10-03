@@ -110,7 +110,7 @@ extends uvmf_environment_configuration_base;
     qvip_ahb_lite_slave_subenv_config = qvip_ahb_lite_slave_env_configuration::type_id::create("qvip_ahb_lite_slave_subenv_config");
 
     kv_configuration_cg=new;
-    `uvm_warning("COVERAGE_MODEL_REVIEW", "A covergroup has been constructed which may need review because of either generation or re-generation with merging.  Please note that configuration variables added as a result of re-generation and merging are not automatically added to the covergroup.  Remove this warning after the covergroup has been reviewed.")
+    `uvm_info("COVERAGE_MODEL_REVIEW", "TODO: A covergroup has been constructed which may need review because of either generation or re-generation with merging.  Please note that configuration variables added as a result of re-generation and merging are not automatically added to the covergroup.  Remove this warning after the covergroup has been reviewed.", UVM_MEDIUM)
 
   // pragma uvmf custom new begin
   // pragma uvmf custom new end
@@ -222,8 +222,13 @@ extends uvmf_environment_configuration_base;
     // pragma uvmf custom reg_model_config_initialize begin
     // Register model creation and configuation
     if (register_model == null) begin
+      uvm_reg::include_coverage("*", UVM_CVR_ALL); // Register coverage config with resource DB, used later by build_coverage()
       kv_rm = kv_reg_model_top::type_id::create("kv_rm");
+      //Turn on addr_map_coverage for kv_reg_model
+      kv_rm.set_coverage(UVM_CVR_ADDR_MAP);
+      uvm_reg::include_coverage("*", UVM_CVR_ALL);
       kv_rm.build();
+      kv_rm.set_coverage(UVM_CVR_ALL);
       kv_rm.lock_model();
       kv_rm.build_ext_maps();
       enable_reg_adaptation = 1;

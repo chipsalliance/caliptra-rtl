@@ -3,6 +3,7 @@
 @use $UVMF_VIP_LIBRARY_HOME/interface_packages/cptra_ctrl_pkg/cptra_ctrl_pkg.vinfo
 @use $UVMF_VIP_LIBRARY_HOME/interface_packages/soc_ifc_status_pkg/soc_ifc_status_pkg.vinfo
 @use $UVMF_VIP_LIBRARY_HOME/interface_packages/cptra_status_pkg/cptra_status_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/mbox_sram_pkg/mbox_sram_pkg.vinfo
 @use $UVMF_VIP_LIBRARY_HOME/environment_packages/soc_ifc_env_pkg/soc_ifc_env_pkg.vinfo
 @use $UVMF_PROJECT_DIR/tb/parameters/soc_ifc_parameters_pkg.vinfo
 @use $UVMF_PROJECT_DIR/tb/sequences/soc_ifc_sequences_pkg.vinfo

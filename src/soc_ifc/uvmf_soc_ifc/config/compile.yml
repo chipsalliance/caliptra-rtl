@@ -16,6 +16,8 @@ targets:
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_status_pkg/src
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_status_pkg
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_status_pkg/src
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/mbox_sram_pkg
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/mbox_sram_pkg/src
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/registers
     files:
@@ -39,6 +41,11 @@ targets:
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_status_pkg/src/cptra_status_driver_bfm.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_status_pkg/src/cptra_status_if.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_status_pkg/src/cptra_status_monitor_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/mbox_sram_pkg/mbox_sram_pkg_hdl.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/mbox_sram_pkg/mbox_sram_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/mbox_sram_pkg/src/mbox_sram_driver_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/mbox_sram_pkg/src/mbox_sram_if.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/mbox_sram_pkg/src/mbox_sram_monitor_bfm.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/registers/soc_ifc_reg_model_top_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/soc_ifc_env_pkg.sv
 ---

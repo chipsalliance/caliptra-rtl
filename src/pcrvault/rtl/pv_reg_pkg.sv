@@ -32,6 +32,7 @@ package pv_reg_pkg;
 
     typedef struct packed{
         logic reset_b;
+        logic core_only_rst_b;
         logic hard_reset_b;
         pv_reg__pvCtrl__in_t [32-1:0]PCR_CTRL;
         pv_reg__pcrReg__in_t [32-1:0][12-1:0]PCR_ENTRY;

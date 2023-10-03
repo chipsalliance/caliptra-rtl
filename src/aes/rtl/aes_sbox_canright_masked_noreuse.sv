@@ -23,7 +23,7 @@
 // IMPORTANT NOTE:                                                                               //
 //                            DO NOT USE THIS FOR SYNTHESIS BLINDLY!                             //
 //                                                                                               //
-// This implementation relies on primitive cells like prim_buf containing tool-specific          //
+// This implementation relies on primitive cells like caliptra_prim_buf containing tool-specific          //
 // synthesis attributes to enforce the correct ordering of operations and avoid aggressive       //
 // optimization. Without the proper primitives, synthesis tools might heavily optimize the       //
 // design. The result is likely insecure. Use with care.                                         //
@@ -72,16 +72,16 @@ module aes_masked_inverse_gf2p4_noreuse (
   // These terms are added to other terms that depend on the same inputs.
   // Avoid aggressive synthesis optimizations.
   logic [1:0] scale_omega2_b_buf, scale_omega2_q_buf;
-  prim_buf #(
+  caliptra_prim_buf #(
     .Width ( 4 )
-  ) u_prim_buf_scale_omega2_bq (
+  ) u_caliptra_prim_buf_scale_omega2_bq (
     .in_i  ( {scale_omega2_b,     scale_omega2_q}     ),
     .out_o ( {scale_omega2_b_buf, scale_omega2_q_buf} )
   );
   logic [1:0] mul_b1_b0_buf, mul_b1_q0_buf, mul_b0_q1_buf, mul_q1_q0_buf;
-  prim_buf #(
+  caliptra_prim_buf #(
     .Width ( 8 )
-  ) u_prim_buf_mul_bq01 (
+  ) u_caliptra_prim_buf_mul_bq01 (
     .in_i  ( {mul_b1_b0,     mul_b1_q0,     mul_b0_q1,     mul_q1_q0}     ),
     .out_o ( {mul_b1_b0_buf, mul_b1_q0_buf, mul_b0_q1_buf, mul_q1_q0_buf} )
   );
@@ -98,9 +98,9 @@ module aes_masked_inverse_gf2p4_noreuse (
 
   // Avoid aggressive synthesis optimizations.
   for (genvar i = 0; i < 6; i++) begin : gen_c_buf
-    prim_buf #(
+    caliptra_prim_buf #(
       .Width ( 2 )
-    ) u_prim_buf_c_i (
+    ) u_caliptra_prim_buf_c_i (
       .in_i  ( c[i]     ),
       .out_o ( c_buf[i] )
     );
@@ -136,16 +136,16 @@ module aes_masked_inverse_gf2p4_noreuse (
   // The multiplier outputs are added to terms that depend on the same inputs.
   // Avoid aggressive synthesis optimizations.
   logic [1:0] mul_b0_r_sq_buf, mul_q0_c_inv_buf, mul_q0_r_sq_buf;
-  prim_buf #(
+  caliptra_prim_buf #(
     .Width ( 6 )
-  ) u_prim_buf_mul_bq0 (
+  ) u_caliptra_prim_buf_mul_bq0 (
     .in_i  ( {mul_b0_r_sq,     mul_q0_c_inv,     mul_q0_r_sq}     ),
     .out_o ( {mul_b0_r_sq_buf, mul_q0_c_inv_buf, mul_q0_r_sq_buf} )
   );
   logic [1:0] mul_b1_r_sq_buf, mul_q1_c_inv_buf, mul_q1_r_sq_buf;
-  prim_buf #(
+  caliptra_prim_buf #(
     .Width ( 6 )
-  ) u_prim_buf_mul_bq1 (
+  ) u_caliptra_prim_buf_mul_bq1 (
     .in_i  ( {mul_b1_r_sq,     mul_q1_c_inv,     mul_q1_r_sq}     ),
     .out_o ( {mul_b1_r_sq_buf, mul_q1_c_inv_buf, mul_q1_r_sq_buf} )
   );
@@ -166,15 +166,15 @@ module aes_masked_inverse_gf2p4_noreuse (
 
   // Avoid aggressive synthesis optimizations.
   for (genvar i = 0; i < 4; i++) begin : gen_a01_inv_buf
-    prim_buf #(
+    caliptra_prim_buf #(
       .Width ( 2 )
-    ) u_prim_buf_b1_inv_i (
+    ) u_caliptra_prim_buf_b1_inv_i (
       .in_i  ( b1_inv[i]     ),
       .out_o ( b1_inv_buf[i] )
     );
-    prim_buf #(
+    caliptra_prim_buf #(
       .Width ( 2 )
-    ) u_prim_buf_b0_inv_i (
+    ) u_caliptra_prim_buf_b0_inv_i (
       .in_i  ( b0_inv[i]     ),
       .out_o ( b0_inv_buf[i] )
     );
@@ -264,9 +264,9 @@ module aes_masked_inverse_gf2p8_noreuse (
   // The multiplier outputs are added to terms that depend on the same inputs.
   // Avoid aggressive synthesis optimizations.
   logic [3:0] mul_a1_a0_buf, mul_a1_m0_buf, mul_a0_m1_buf, mul_m0_m1_buf;
-  prim_buf #(
+  caliptra_prim_buf #(
     .Width ( 16 )
-  ) u_prim_buf_mul_am01 (
+  ) u_caliptra_prim_buf_mul_am01 (
     .in_i  ( {mul_a1_a0,     mul_a1_m0,     mul_a0_m1,     mul_m0_m1}     ),
     .out_o ( {mul_a1_a0_buf, mul_a1_m0_buf, mul_a0_m1_buf, mul_m0_m1_buf} )
   );
@@ -283,9 +283,9 @@ module aes_masked_inverse_gf2p8_noreuse (
 
   // Avoid aggressive synthesis optimizations.
   for (genvar i = 0; i < 6; i++) begin : gen_b_buf
-    prim_buf #(
+    caliptra_prim_buf #(
       .Width ( 4 )
-    ) u_prim_buf_b_i (
+    ) u_caliptra_prim_buf_b_i (
       .in_i  ( b[i]     ),
       .out_o ( b_buf[i] )
     );
@@ -308,9 +308,9 @@ module aes_masked_inverse_gf2p8_noreuse (
   // with inputs to the GF(2^4) inverter. Aggressive synthesis optimizations across the GF(2^4)
   // inverter may result in SCA leakage and should be avoided.
   logic [3:0] b_inv_buf;
-  prim_buf #(
+  caliptra_prim_buf #(
     .Width ( 4 )
-  ) u_prim_buf_b_inv (
+  ) u_caliptra_prim_buf_b_inv (
     .in_i  ( b_inv     ),
     .out_o ( b_inv_buf )
   );
@@ -339,16 +339,16 @@ module aes_masked_inverse_gf2p8_noreuse (
   // The multiplier outputs are added to terms that depend on the same inputs.
   // Avoid aggressive synthesis optimizations.
   logic [3:0] mul_a0_b_inv_buf, mul_a0_t_buf, mul_m0_b_inv_buf, mul_m0_t_buf;
-  prim_buf #(
+  caliptra_prim_buf #(
     .Width ( 16 )
-  ) u_prim_buf_mul_am0 (
+  ) u_caliptra_prim_buf_mul_am0 (
     .in_i  ( {mul_a0_b_inv,     mul_a0_t,     mul_m0_b_inv,     mul_m0_t}     ),
     .out_o ( {mul_a0_b_inv_buf, mul_a0_t_buf, mul_m0_b_inv_buf, mul_m0_t_buf} )
   );
   logic [3:0] mul_a1_b_inv_buf, mul_a1_t_buf, mul_m1_b_inv_buf, mul_m1_t_buf;
-  prim_buf #(
+  caliptra_prim_buf #(
     .Width ( 16 )
-  ) u_prim_buf_mul_am1 (
+  ) u_caliptra_prim_buf_mul_am1 (
     .in_i  ( {mul_a1_b_inv,     mul_a1_t,     mul_m1_b_inv,     mul_m1_t}     ),
     .out_o ( {mul_a1_b_inv_buf, mul_a1_t_buf, mul_m1_b_inv_buf, mul_m1_t_buf} )
   );
@@ -369,15 +369,15 @@ module aes_masked_inverse_gf2p8_noreuse (
 
   // Avoid aggressive synthesis optimizations.
   for (genvar i = 0; i < 4; i++) begin : gen_a01_inv_buf
-    prim_buf #(
+    caliptra_prim_buf #(
       .Width ( 4 )
-    ) u_prim_buf_a1_inv_i (
+    ) u_caliptra_prim_buf_a1_inv_i (
       .in_i  ( a1_inv[i]     ),
       .out_o ( a1_inv_buf[i] )
     );
-    prim_buf #(
+    caliptra_prim_buf #(
       .Width ( 4 )
-    ) u_prim_buf_a0_inv_i (
+    ) u_caliptra_prim_buf_a0_inv_i (
       .in_i  ( a0_inv[i]     ),
       .out_o ( a0_inv_buf[i] )
     );

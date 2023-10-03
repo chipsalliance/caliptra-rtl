@@ -42,6 +42,32 @@ volatile uint32_t err_count __attribute__((section(".dccm.persistent"))) = 0;
     enum printf_verbosity verbosity_g = LOW;
 #endif
 
+volatile caliptra_intr_received_s cptra_intr_rcv = {
+    .doe_error        = 0,
+    .doe_notif        = 0,
+    .ecc_error        = 0,
+    .ecc_notif        = 0,
+    .hmac_error       = 0,
+    .hmac_notif       = 0,
+    .kv_error         = 0,
+    .kv_notif         = 0,
+    .sha512_error     = 0,
+    .sha512_notif     = 0,
+    .sha256_error     = 0,
+    .sha256_notif     = 0,
+    .qspi_error       = 0,
+    .qspi_notif       = 0,
+    .uart_error       = 0,
+    .uart_notif       = 0,
+    .i3c_error        = 0,
+    .i3c_notif        = 0,
+    .soc_ifc_error    = 0,
+    .soc_ifc_notif    = 0,
+    .sha512_acc_error = 0,
+    .sha512_acc_notif = 0,
+};
+
+
 #ifndef MY_RANDOM_SEED
 #define MY_RANDOM_SEED 17
 #endif // MY_RANDOM_SEED
@@ -63,11 +89,11 @@ widereg_t sm_dv_regs [SM_DV_PFX_COUNT] = {
     { "STICKYDATAVAULTCTRL",                 (uint32_t *) CLP_DV_REG_STICKYDATAVAULTCTRL_0,             2,  0x1,     0x0 }, //  0. (0x1001c000) 
     { "STICKY_DATA_VAULT_ENTRY_0",           (uint32_t *) CLP_DV_REG_STICKY_DATA_VAULT_ENTRY_0_0,       3,  DV_ONES, 0x0 }, //  1. (0x1001c028) 
     { "STICKY_DATA_VAULT_ENTRY_1",           (uint32_t *) CLP_DV_REG_STICKY_DATA_VAULT_ENTRY_1_0,       3,  DV_ONES, 0x0 }, //  2. (0x1001c058) 
-    { "NONSTICKYDATAVAULTCTRL",              (uint32_t *) CLP_DV_REG_NONSTICKYDATAVAULTCTRL_0,          2,  0x0,     0x0 }, //  3. (0x1001c208) 
-    { "NONSTICKY_DATA_VAULT_ENTRY_0",        (uint32_t *) CLP_DV_REG_NONSTICKY_DATA_VAULT_ENTRY_0_0,    3,  0x0,     0x0 }, //  4. (0x1001c230) 
-    { "NONSTICKY_DATA_VAULT_ENTRY_1",        (uint32_t *) CLP_DV_REG_NONSTICKY_DATA_VAULT_ENTRY_1_0,    3,  0x0,     0x0 }, //  5. (0x1001c260) 
-    { "NONSTICKY_LOCKABLE_SCRATCHREG_CTRL",  (uint32_t *) CLP_DV_REG_NONSTICKYLOCKABLESCRATCHREGCTRL_0, 2,  0x0,     0x0 }, //  6. (0x1001c410)
-    { "NONSTICKY_LOCKABLE_SCRATCHREG",       (uint32_t *) CLP_DV_REG_NONSTICKYLOCKABLESCRATCHREG_0,     2,  0x0,     0x0 }, //  7. (0x1001c438) 
+    { "DATAVAULTCTRL",                       (uint32_t *) CLP_DV_REG_DATAVAULTCTRL_0,                   2,  0x0,     0x0 }, //  3. (0x1001c208) 
+    { "DATA_VAULT_ENTRY_0",                  (uint32_t *) CLP_DV_REG_DATA_VAULT_ENTRY_0_0,              3,  DV_ONES, 0x0 }, //  4. (0x1001c230) 
+    { "DATA_VAULT_ENTRY_1",                  (uint32_t *) CLP_DV_REG_DATA_VAULT_ENTRY_1_0,              3,  DV_ONES, 0x0 }, //  5. (0x1001c260) 
+    { "LOCKABLE_SCRATCHREG_CTRL",            (uint32_t *) CLP_DV_REG_LOCKABLESCRATCHREGCTRL_0,          2,  0x0,     0x0 }, //  6. (0x1001c410)
+    { "LOCKABLE_SCRATCHREG",                 (uint32_t *) CLP_DV_REG_LOCKABLESCRATCHREG_0,              2,  DV_ONES, 0x0 }, //  7. (0x1001c438) 
     { "STICKY_LOCKABLE_SCRATCHREGCTRL",      (uint32_t *) CLP_DV_REG_STICKYLOCKABLESCRATCHREGCTRL_0,    2,  0x1,     0x0 }, //  8. (0x1001c480) 
     { "STICKY_LOCKABLE_SCRATCHREG",          (uint32_t *) CLP_DV_REG_STICKYLOCKABLESCRATCHREG_0,        2,  DV_ONES, 0x0 }  //  9. (0x1001c4a0) 
 };

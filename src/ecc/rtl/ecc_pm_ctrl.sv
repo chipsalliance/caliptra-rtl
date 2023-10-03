@@ -65,7 +65,7 @@ module ecc_pm_ctrl
     //----------------------------------------------------------------
     // Internal constant and parameter definitions.
     //----------------------------------------------------------------
-    localparam [7 : 0] MULT_DELAY          = 8'd38; //39 -1;
+    localparam [7 : 0] MULT_DELAY          = 8'd39; //40 -1;
     localparam [7 : 0] ADD_DELAY           = 8'd1;  // 2 -1;
     
     localparam [9 : 0] Secp384_SCA_MONT_COUNT   = REG_SIZE[9 : 0] + RND_SIZE[9 : 0];
@@ -189,6 +189,10 @@ module ecc_pm_ctrl
                                 prog_cntr <= VER1_ST_S;
                             end
 
+                            CHK_PK_CMD : begin
+                                prog_cntr <= CHK_PK_S;
+                            end
+
                             default : 
                                 prog_cntr <= NOP;
                         endcase
@@ -266,6 +270,10 @@ module ecc_pm_ctrl
                     end
 
                     SIGN1_E : begin // End of signing part 1 to compute s
+                        prog_cntr <= NOP;
+                    end
+
+                    CHK_PK_E: begin // End of public key validation before verifying process
                         prog_cntr <= NOP;
                     end
 

@@ -25,6 +25,30 @@ void soc_ifc_clear_execute_reg() {
     lsu_write_32(CLP_MBOX_CSR_MBOX_EXECUTE,reg);
 }
 
+// Return 0 if the MBOX_FSM_PS field reports MBOX_EXECUTE_UC, as expected
+// Return 1 if the MBOX_FSM_PS field reports MBOX_IDLE, indicating mailbox was already force-unlocked (after receiving a cmd_avail interrupt)
+// Return F if the MBOX_FSM_PS field reports MBOX_ERROR (to which this routine responds with a force-unlock)
+// Return FF if the MBOX_FSM_PS field reports any other state, which should never happen when this is called
+uint8_t soc_ifc_chk_execute_uc() {
+    enum mbox_fsm_e state;
+    VPRINTF(HIGH,"SOC_IFC: Check mbox_status.mbox_fsm_ps\n");
+    state = (lsu_read_32(CLP_MBOX_CSR_MBOX_STATUS) & MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_MASK) >> MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_LOW;
+    if (state == MBOX_EXECUTE_UC) {
+        VPRINTF(HIGH,"SOC_IFC: Check mbox_status.mbox_fsm_ps found MBOX_EXECUTE_UC\n");
+        return 0;
+    } else if (state == MBOX_IDLE) {
+        VPRINTF(WARNING,"SOC_IFC: Check mbox_status.mbox_fsm_ps found MBOX_IDLE\n");
+        return 1;
+    } else if (state == MBOX_ERROR) {
+        VPRINTF(ERROR,"SOC_IFC: Check mbox_status.mbox_fsm_ps found MBOX_ERROR, executing mailbox force-unlock\n");
+        lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+        return 0xF;
+    } else {
+        VPRINTF(FATAL,"SOC_IFC: Check mbox_status.mbox_fsm_ps found unexpected state 0x%x\n", state);
+        return 0xFF;
+    }
+}
+
 void soc_ifc_set_mbox_status_field(enum mbox_status_e field) {
     VPRINTF(MEDIUM,"SOC_IFC: Set mbox_status field: 0x%x\n", field);
     uint32_t reg;
@@ -43,6 +67,29 @@ void soc_ifc_set_flow_status_field(uint32_t field) {
         reg |= field;
     }
     lsu_write_32(CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS,reg);
+}
+
+// This function as implemented will clear all the bits in the register on writing '1; 
+// In future, if this register has additional bits that cannot be cleared on writing '1, 
+// then this function also needs an update in addition to the RTL itself
+void soc_ifc_w1clr_sha_lock_field(uint32_t field) {
+    VPRINTF(MEDIUM,"SOC_IFC: Clear SHA accelerator lock by writing '1: 0x%x\n", field);
+    uint32_t reg;
+    reg = lsu_read_32(CLP_SHA512_ACC_CSR_LOCK);
+    if (field & ~SHA512_ACC_CSR_LOCK_LOCK_MASK) {
+       VPRINTF(FATAL, "SOC_IFC: Bad field value");
+       SEND_STDOUT_CTRL(0x1); 
+    } 
+    else if (reg & ~SHA512_ACC_CSR_LOCK_LOCK_MASK) {
+       VPRINTF(FATAL, "SOC_IFC: Bad field value");
+       SEND_STDOUT_CTRL(0x1); 
+    }
+    if (field & SHA512_ACC_CSR_LOCK_LOCK_MASK) {
+        reg = (reg & ~SHA512_ACC_CSR_LOCK_LOCK_MASK) | field;
+    } else {
+        reg |= field;
+    }
+    lsu_write_32(CLP_SHA512_ACC_CSR_LOCK,reg);
 }
 
 void soc_ifc_clr_flow_status_field(uint32_t field) {
@@ -180,9 +227,18 @@ void soc_ifc_fw_update(mbox_op_s op) {
         }
 }
 
-void soc_ifc_set_fw_update_reset() {
-    VPRINTF(MEDIUM,"SOC_IFC: Set fw update reset\n");
+void soc_ifc_set_fw_update_reset(uint8_t wait_cycles) {
     uint32_t reg;
+    VPRINTF(MEDIUM,"SOC_IFC: Set fw update reset with wait_cycles [%d] (%s)\n", wait_cycles, wait_cycles > 5 ? "will override" : wait_cycles > 0 ? "will use default 5" : "won't override");
+    // A 0-value argument means don't override the current value
+    if (wait_cycles) {
+        // Enforce minimum wait_cycles of 5
+        if (wait_cycles > 5) {
+            lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES, wait_cycles);
+        } else {
+            lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES, 5);
+        }
+    }
     reg = lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET);
     reg = (reg | SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK);
     lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET,reg);

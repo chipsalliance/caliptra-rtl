@@ -63,6 +63,9 @@ class soc_ifc_env_mbox_uc_reg_access_sequence extends soc_ifc_env_mbox_sequence_
                            out_of_bounds == 1 -> mbox_op_rand.dlen == 32'h8; //min dlen for "resp req" command
                            solve out_of_bounds before mbox_op_rand;
                            solve num_reg before mbox_op_rand; }
+                           
+  // Response dlen should be the same as the dlen since we read once for each reg access
+  constraint mbox_resp_dlen_c {mbox_resp_expected_dlen == mbox_op_rand.dlen;}
 
   // pick a slave to select an address in a valid range
   constraint slave_sel_c { slave_sel.size() == num_reg;

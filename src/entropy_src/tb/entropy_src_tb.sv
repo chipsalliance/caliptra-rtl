@@ -24,7 +24,7 @@
 module entropy_src_tb
   import entropy_src_pkg::*;
   import entropy_src_reg_pkg::*;
-  import prim_mubi_pkg::mubi8_t;
+  import caliptra_prim_mubi_pkg::mubi8_t;
 (
 `ifdef VERILATOR
   input bit clk_tb
@@ -160,8 +160,8 @@ module entropy_src_tb
     .hreadyout_o (hreadyout_o_tb),
     .hrdata_o    (hrdata_o_tb),
     // OTP Interface
-    .otp_en_entropy_src_fw_read_i (prim_mubi_pkg::MuBi8True),
-    .otp_en_entropy_src_fw_over_i (prim_mubi_pkg::MuBi8True),
+    .otp_en_entropy_src_fw_read_i (caliptra_prim_mubi_pkg::MuBi8True),
+    .otp_en_entropy_src_fw_over_i (caliptra_prim_mubi_pkg::MuBi8True),
     // RNG Interface
     .rng_fips_o          (),
     // Entropy Interface
@@ -213,7 +213,7 @@ module entropy_src_tb
   // the dut as needed.
   //----------------------------------------------------------------
   always @(posedge clk_tb) begin : sys_monitor
-      cycle_ctr = cycle_ctr + 1;
+      cycle_ctr = (!reset_n_tb) ? 32'h0 : cycle_ctr + 1;
     end
 
 
@@ -246,7 +246,6 @@ module entropy_src_tb
   task init_sim;
     begin
       generate_rng = '0;
-      cycle_ctr    = '0;
       error_ctr    = '0;
       tc_ctr       = '0;
 `ifndef VERILATOR
@@ -297,6 +296,7 @@ module entropy_src_tb
       $display("[%t] write_single_word(addr=0x%x, word=0x%x)", $time, address, word);
       hsel_i_tb       = 1;
       haddr_i_tb      = address;
+      hwdata_i_tb     = word;
       hwrite_i_tb     = 1;
       hready_i_tb     = 1;
       htrans_i_tb     = AHB_HTRANS_NONSEQ;
@@ -304,7 +304,6 @@ module entropy_src_tb
 
       @(posedge clk_tb);
       haddr_i_tb      = 'Z;
-      hwdata_i_tb     = word;
       hwrite_i_tb     = 0;
       htrans_i_tb     = AHB_HTRANS_IDLE;
       wait(hreadyout_o_tb == 1'b1);

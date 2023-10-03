@@ -203,7 +203,7 @@ import uvmf_base_pkg_hdl::*;
       .rst_b            (kv_rst_agent_bus.rst_b        ),
       .core_only_rst_b  (kv_rst_agent_bus.core_only_rst_b),
       .cptra_pwrgood    (kv_rst_agent_bus.cptra_pwrgood),
-
+      .cptra_in_debug_scan_mode        (kv_rst_agent_bus.cptra_in_debug_scan_mode),
       .debugUnlock_or_scan_mode_switch (kv_rst_agent_bus.debug_locked),
 
       //uC AHB Lite Interface
@@ -219,13 +219,16 @@ import uvmf_base_pkg_hdl::*;
       .hresp_o    (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HRESP      ),
       .hreadyout_o(uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HREADY     ),
       .hrdata_o   (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HRDATA     ),
-
+      .fw_update_rst_window(kv_rst_agent_bus.fw_update_rst_window),
       .kv_read (kv_read ),
       .kv_write(kv_write),
       .kv_rd_resp(kv_rd_resp),
       .kv_wr_resp(kv_wr_resp),
       .pcr_signing_key() //TODO
   );
+
+  keyvault_cov_bind i_keyvault_cov_bind();
+
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HBURST    = 3'b0;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HPROT     = 7'b0;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HMASTLOCK = 1'b0;
@@ -267,6 +270,8 @@ import uvmf_base_pkg_hdl::*;
     uvm_config_db #( virtual kv_read_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , kv_ecc_privkey_read_agent_BFM , kv_ecc_privkey_read_agent_drv_bfm  );
     uvm_config_db #( virtual kv_read_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , kv_ecc_seed_read_agent_BFM , kv_ecc_seed_read_agent_drv_bfm  );
   end
+
+  
 
 endmodule
 

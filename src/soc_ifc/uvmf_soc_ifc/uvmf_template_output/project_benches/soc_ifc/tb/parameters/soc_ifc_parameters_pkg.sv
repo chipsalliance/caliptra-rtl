@@ -45,6 +45,7 @@ package soc_ifc_parameters_pkg;
   parameter string cptra_ctrl_agent_BFM  = "cptra_ctrl_agent_BFM"; /* [3] */
   parameter string soc_ifc_status_agent_BFM  = "soc_ifc_status_agent_BFM"; /* [4] */
   parameter string cptra_status_agent_BFM  = "cptra_status_agent_BFM"; /* [5] */
+  parameter string mbox_sram_agent_BFM  = "mbox_sram_agent_BFM"; /* [6] */
 
   // pragma uvmf custom package_item_additional begin
   // pragma uvmf custom package_item_additional end

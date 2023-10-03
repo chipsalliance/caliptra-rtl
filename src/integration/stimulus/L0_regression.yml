@@ -9,6 +9,7 @@ contents:
         #add back for aes
         #- ../test_suites/smoke_test_aes/smoke_test_aes.yml
         - ../test_suites/smoke_test_mbox/smoke_test_mbox.yml
+        #- ../test_suites/smoke_test_mbox_cg/smoke_test_mbox_cg.yml
         - ../test_suites/smoke_test_sha512/smoke_test_sha512.yml
         - ../test_suites/smoke_test_sha256/smoke_test_sha256.yml
         - ../test_suites/smoke_test_sha_accel/smoke_test_sha_accel.yml
@@ -21,20 +22,32 @@ contents:
         - ../test_suites/smoke_test_hmac/smoke_test_hmac.yml
         - ../test_suites/smoke_test_kv/smoke_test_kv.yml
         - ../test_suites/smoke_test_sram_ecc/smoke_test_sram_ecc.yml
-        # smoke_test_trng requires Caliptra to be built using the
-        # +define+CALIPTRA_INTERNAL_TRNG argument, which is not the
-        # default build config
-        # It will simply die without running in this L0 regression
+        - ../test_suites/smoke_test_ras/smoke_test_ras.yml
+        # The following tests need defines, which are not in the default build config
+        # smoke_test_trng : +define+CALIPTRA_INTERNAL_TRNG
+        # smoke_test_qspi : +define+CALIPTRA_INTERNAL_QSPI
+        # smoke_test_uart : +define+CALIPTRA_INTERNAL_UART
+        # They will simply die without running in this L0 regression
         - ../test_suites/smoke_test_trng/smoke_test_trng.yml
+        - ../test_suites/smoke_test_qspi/smoke_test_qspi.yml
+        - ../test_suites/smoke_test_uart/smoke_test_uart.yml
         - ../test_suites/smoke_test_kv_uds_reset/smoke_test_kv_uds_reset.yml
         - ../test_suites/smoke_test_kv_securitystate/smoke_test_kv_securitystate.yml
         - ../test_suites/smoke_test_kv_ecc_flow/smoke_test_kv_ecc_flow.yml
         - ../test_suites/smoke_test_kv_hmac_flow/smoke_test_kv_hmac_flow.yml
         - ../test_suites/smoke_test_kv_sha512_flow/smoke_test_kv_sha512_flow.yml
         - ../test_suites/smoke_test_kv_crypto_flow/smoke_test_kv_crypto_flow.yml
+        #- ../test_suites/smoke_test_kv_cg/smoke_test_kv_cg.yml
         - ../test_suites/pv_hash_and_sign/pv_hash_and_sign.yml
         - ../test_suites/smoke_test_pcr_signing/smoke_test_pcr_signing.yml
+        - ../test_suites/smoke_test_fw_kv_backtoback_hmac/smoke_test_fw_kv_backtoback_hmac.yml
+        - ../test_suites/smoke_test_ecc_errortrigger/smoke_test_ecc_errortrigger.yml
+        - ../test_suites/smoke_test_pcr_zeroize/smoke_test_pcr_zeroize.yml
         - ../test_suites/smoke_test_ahb_mux/smoke_test_ahb_mux.yml
+        - ../test_suites/smoke_test_doe_rand/smoke_test_doe_rand.yml
+        - ../test_suites/smoke_test_doe_scan/smoke_test_doe_scan.yml
+        - ../test_suites/smoke_test_zeroize_crypto/smoke_test_zeroize_crypto.yml
+        #- ../test_suites/smoke_test_doe_cg/smoke_test_doe_cg.yml
         # data vault tests
         - ../test_suites/smoke_test_datavault_basic/smoke_test_datavault_basic.yml
         - ../test_suites/smoke_test_datavault_reset/smoke_test_datavault_reset.yml
@@ -44,5 +57,9 @@ contents:
         #smoke test debug state transition
         #smoke test interrupt handling
         #smoke test wd timer expiry and nmi generation
+        - ../test_suites/smoke_test_wdt/smoke_test_wdt.yml
+        - ../test_suites/smoke_test_cg_wdt/smoke_test_cg_wdt.yml
         #smoke test jtag
         #smoke test generic input wire to fw interrupt
+        - ../test_suites/smoke_test_clk_gating/smoke_test_clk_gating.yml
+        - ../test_suites/smoke_test_iccm_reset/smoke_test_iccm_reset.yml

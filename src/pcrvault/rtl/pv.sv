@@ -27,7 +27,9 @@ module pv
     (
     input logic clk,
     input logic rst_b,
+    input logic core_only_rst_b,
     input logic cptra_pwrgood,
+    input logic fw_update_rst_window, 
     
     //uC AHB Lite Interface
     //from SLAVES PORT
@@ -103,9 +105,10 @@ always_comb uc_req_hold = '0;
 
 always_comb begin : keyvault_ctrl
     for (int entry = 0; entry < PV_NUM_PCR; entry++) begin
-        //once lock is set, only hard reset can unset it
-        pv_reg_hwif_in.PCR_CTRL[entry].lock.swwel = pv_reg_hwif_out.PCR_CTRL[entry].lock.value;
-        pv_reg_hwif_in.PCR_CTRL[entry].clear.swwel = pv_reg_hwif_out.PCR_CTRL[entry].lock.value;
+        //once lock is set, any reset can unset it
+        //During a fw update reset we'll be de-asserting locks - avoid RDC violation by synchronously de-asserting
+        pv_reg_hwif_in.PCR_CTRL[entry].lock.swwel = pv_reg_hwif_out.PCR_CTRL[entry].lock.value & ~fw_update_rst_window;
+        pv_reg_hwif_in.PCR_CTRL[entry].clear.swwel = pv_reg_hwif_out.PCR_CTRL[entry].lock.value & ~fw_update_rst_window;
     end
 
     //pcrvault storage
@@ -167,6 +170,7 @@ end
 
 always_comb pv_reg_hwif_in.hard_reset_b = cptra_pwrgood;
 always_comb pv_reg_hwif_in.reset_b = rst_b;
+always_comb pv_reg_hwif_in.core_only_rst_b = core_only_rst_b; //Note that this signal will also reset when rst_b is asserted
 
 pv_reg pv_reg1 (
     .clk(clk),

@@ -1,5 +1,4 @@
 # SPDX-License-Identifier: Apache-2.0
-# Copyright 2020 Western Digital Corporation or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,13 +14,22 @@
 #
 
 PLAYBOOK_RANDOM_SEED ?= $(shell date +%s)
-TEST_CFLAGS = -g -O3 -DMY_RANDOM_SEED=$(PLAYBOOK_RANDOM_SEED)
+BUILD_CFLAGS ?= 
+TEST_CFLAGS = -g -O3 -DMY_RANDOM_SEED=$(PLAYBOOK_RANDOM_SEED) $(BUILD_CFLAGS)
 
 ABI = -mabi=ilp32 -march=rv32imc
 
 VERILATOR = verilator
 GCC_PREFIX = riscv64-unknown-elf
 BUILD_DIR = $(CURDIR)
+
+rv_gcc_version = $(strip $(shell $(GCC_PREFIX)-gcc --version | head -1 | sed "s/$(GCC_PREFIX)-gcc (\w\+) //"))
+$(info rv_gcc_version is $(rv_gcc_version))
+ifeq (12.2.0, $(rv_gcc_version))
+ABI = -mabi=ilp32 -march=rv32imc_zicsr_zifencei
+else
+ABI = -mabi=ilp32 -march=rv32imc
+endif
 
 # Define test name
 TESTNAME ?= iccm_lock
@@ -47,7 +55,8 @@ COMP_LIB_NAMES := aes \
 		  datavault \
 		  sha256 \
 		  sha512 \
-		  soc_ifc
+		  soc_ifc \
+		  clk_gate
 COMP_LIBS := $(foreach name, $(COMP_LIB_NAMES), $(CALIPTRA_ROOT)/src/integration/test_suites/libs/$(name))
 HEADER_FILES := $(INCLUDES_DIR)/caliptra_defines.h \
 		$(INCLUDES_DIR)/defines.h \
@@ -74,12 +83,21 @@ OFILES += printf.o
 # Always compile the lib files - for every target
 OFILES += $(foreach comp_lib_name, $(COMP_LIB_NAMES), $(comp_lib_name).o)
 
+# Verilator trace format
+VERILATOR_TRACE=vcd
+
 ifdef debug
  DEBUG_PLUS = +dumpon
  IRUN_DEBUG = -access +rc
  IRUN_DEBUG_RUN = -input $(RV_ROOT)/testbench/input.tcl
  VCS_DEBUG = -debug_access
- VERILATOR_DEBUG = --trace --trace-structs
+ ifeq ($(VERILATOR_TRACE), vcd)
+  VERILATOR_DEBUG = --trace --trace-structs
+ else ifeq ($(VERILATOR_TRACE), fst)
+  VERILATOR_DEBUG = --trace-fst --trace-structs --trace-threads 2
+ else
+  $(error Unsupported Verilator trace format '$(VERILATOR_TRACE)')
+ endif
  RIVIERA_DEBUG = +access +r
 endif
 
@@ -138,14 +156,42 @@ includes = -I$(BUILD_DIR)
 #               v            v                v            v               v            v
 suppress = -Wno-WIDTH -Wno-UNOPTFLAT -Wno-LITENDIAN -Wno-CMPCONST -Wno-MULTIDRIVEN -Wno-UNPACKED
 
-# CFLAGS for verilator generated Makefiles. Without -std=c++11 it
+# CFLAGS for verilator generated Makefiles. Without -std=c++17 it
 # complains for `auto` variables
-CFLAGS += "-std=c++11"
+CFLAGS += -std=c++17
 
 # Optimization for better performance; alternative is nothing for
 # slower runtime (faster compiles) -O2 for faster runtime (slower
 # compiles), or -O for balance.
 VERILATOR_MAKE_FLAGS = OPT_FAST="-Os"
+
+# Testbench libs
+VERILATOR_TB_LIBS = jtagdpi/jtagdpi.c \
+                    tcp_server/tcp_server.c
+
+# Testbench sources
+VERILATOR_TB_SRCS = $(TBDIR)/test_caliptra_top_tb.cpp \
+                    $(addprefix $(CALIPTRA_ROOT)/src/integration/test_suites/libs/,$(VERILATOR_TB_LIBS))
+
+# Testbench defs
+VERILATOR_TB_DEFS = +define+CALIPTRA_INTERNAL_QSPI+CALIPTRA_INTERNAL_TRNG+CALIPTRA_INTERNAL_UART
+
+# By default debugging (JTAG) is locked in Caliptra. Add "DEBUG_UNLOCKED=1" to
+# enable it.
+ifdef DEBUG_UNLOCKED
+    VERILATOR_TB_DEFS += +define+CALIPTRA_DEBUG_UNLOCKED
+endif
+
+# To enforce holding the RISC-V core in reset add "FORCE_CPU_RESET=1".
+ifdef FORCE_CPU_RESET
+    VERILATOR_TB_DEFS += +define+CALIPTRA_FORCE_CPU_RESET
+endif
+
+# Run time arguments from command line
+VERILATOR_RUN_ARGS ?= ""
+
+# Add testbench lib include paths
+CFLAGS += $(addprefix -I$(CALIPTRA_ROOT)/src/integration/test_suites/libs/,$(dir $(VERILATOR_TB_LIBS)))
 
 # Targets
 all: clean verilator
@@ -156,10 +202,13 @@ clean:
 	dataset.asdb  library.cfg vsimsa.cfg  riviera-build wave.asdb sim.vcd \
 	*.h
 
+clean_fw:
+	rm -rf *.o *.h
+
 ############ Model Builds ###############################
 
-verilator-build: $(TBFILES) $(INCLUDES_DIR)/defines.h test_caliptra_top_tb.cpp
-	$(VERILATOR)  --cc -CFLAGS $(CFLAGS) \
+verilator-build: $(TBFILES) $(INCLUDES_DIR)/defines.h $(VERILATOR_TB_SRCS)
+	$(VERILATOR) $(VERILATOR_TB_SRCS) --cc -CFLAGS "$(CFLAGS)" \
 	  +libext+.v+.sv +define+RV_OPENSOURCE \
 	  --timescale 1ns/1ps \
 		--timing \
@@ -168,9 +217,8 @@ verilator-build: $(TBFILES) $(INCLUDES_DIR)/defines.h test_caliptra_top_tb.cpp
 	  -f $(TBDIR)/../config/caliptra_top_tb.vf --top-module caliptra_top_tb \
 	  -f $(TBDIR)/../config/caliptra_top_tb.vlt \
 	  -exe test_caliptra_top_tb.cpp --autoflush $(VERILATOR_DEBUG) \
-		+define+CALIPTRA_INTERNAL_QSPI+CALIPTRA_INTERNAL_TRNG+CALIPTRA_INTERNAL_UART
-	cp $(TBDIR)/test_caliptra_top_tb.cpp obj_dir/
-	$(MAKE) -j -e -C obj_dir/ -f Vcaliptra_top_tb.mk $(VERILATOR_MAKE_FLAGS) VM_PARALLEL_BUILDS=1
+	  $(VERILATOR_TB_DEFS)
+	$(MAKE) -j`nproc` -e -C obj_dir/ -f Vcaliptra_top_tb.mk $(VERILATOR_MAKE_FLAGS) VM_PARALLEL_BUILDS=1
 	touch verilator-build
 
 vcs-build: $(TBFILES) $(INCLUDES_DIR)/defines.h
@@ -183,7 +231,7 @@ vcs-build: $(TBFILES) $(INCLUDES_DIR)/defines.h
 ############ TEST Simulation ###############################
 
 verilator: program.hex verilator-build
-	./obj_dir/Vcaliptra_top_tb
+	./obj_dir/Vcaliptra_top_tb $(VERILATOR_RUN_ARGS)
 
 vcs: program.hex vcs-build
 	./simv.caliptra_top_tb
@@ -202,7 +250,7 @@ else ifneq (,$(wildcard $(TEST_DIR)/$(TESTNAME)))
 # Build program.hex from RUST executable
 program.hex:
 	@echo "Building program.hex from $(TESTNAME) using Crypto Test rules for pre-compiled RUST executables"
-	-$(GCC_PREFIX)-objcopy -O verilog -R .data -R .rodata -R .bss -R .sbss -R .iccm -R .dccm -R .eh_frame --pad-to 0x8000 --gap-fill 0xFF --no-change-warnings $(TEST_DIR)/$(TESTNAME) program.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -R .data -R .rodata -R .bss -R .sbss -R .iccm -R .dccm -R .eh_frame --pad-to 0xC000 --gap-fill 0xFF --no-change-warnings $(TEST_DIR)/$(TESTNAME) program.hex
 	-$(GCC_PREFIX)-objcopy -O verilog -j .data -j .rodata -j .bss -j .sbss -j .dccm \
 			      --change-section-lma       .data-0x50000000 \
 			      --change-section-lma     .rodata-0x50000000 \
@@ -222,7 +270,7 @@ else
 program.hex: $(OFILE_CRT) $(OFILES) $(LINK)
 	@echo Building $(TESTNAME)
 	$(GCC_PREFIX)-gcc $(ABI) -Wl,-Map=$(TESTNAME).map -lgcc -T$(LINK) -o $(TESTNAME).exe $(OFILE_CRT) $(OFILES) -nostartfiles  $(TEST_LIBS)
-	-$(GCC_PREFIX)-objcopy -O verilog -R .data_iccm0 -R .data_iccm1 -R .data_iccm2 -R .iccm -R .dccm -R .eh_frame --pad-to 0x8000 --no-change-warnings $(TESTNAME).exe program.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -R .data_iccm0 -R .data_iccm1 -R .data_iccm2 -R .iccm -R .dccm -R .eh_frame --pad-to 0xC000 --no-change-warnings $(TESTNAME).exe program.hex
 	-$(GCC_PREFIX)-objcopy -O verilog -j .data_iccm0 -j .data_iccm1 -j .data_iccm2 -j .dccm \
 			      --change-section-lma .data_iccm0-0x50000000 \
 			      --change-section-lma .data_iccm1-0x50000000 \
@@ -262,5 +310,5 @@ help:
 	@echo Make sure the environment variable RV_ROOT is set.
 	@echo Possible targets: verilator vcs irun vlog riviera help clean all verilator-build irun-build vcs-build riviera-build program.hex
 
-.PHONY: help clean verilator vcs irun vlog riviera
+.PHONY: help clean clean_fw verilator vcs irun vlog riviera
 

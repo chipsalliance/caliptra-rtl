@@ -30,7 +30,7 @@ package ecc_dsa_uop_pkg;
 localparam integer DSA_UOP_ADDR_WIDTH       = 8;
 localparam integer DSA_OPR_ADDR_WIDTH       = 6;
 
-localparam DSA_PROG_ADDR_W                  = 6; //$clog2(DSA_VER_E+2);
+localparam DSA_PROG_ADDR_W                  = 7; //$clog2(DSA_VER_E+2);
 localparam DSA_INSTRUCTION_LENGTH           = DSA_UOP_ADDR_WIDTH + (2*DSA_OPR_ADDR_WIDTH);    // opcode + 2 * operand
 
 typedef enum logic[2 : 0]
@@ -40,7 +40,8 @@ typedef enum logic[2 : 0]
     sign_cmd    = 3'b010,
     verify0_cmd = 3'b100,
     verify1_cmd = 3'b101,
-    verify2_cmd = 3'b110
+    verify2_cmd = 3'b110,
+    pk_chk_cmd  = 3'b111
 } cmd_t;
 
 typedef struct packed
@@ -70,6 +71,7 @@ localparam opcode_t DSA_UOP_SIGN          = '{op_sel:1'b0,   wr_en:1'b0, rd_en:1
 localparam opcode_t DSA_UOP_VERIFY0       = '{op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:verify0_cmd, hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0010_0000;
 localparam opcode_t DSA_UOP_VERIFY1       = '{op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:verify1_cmd, hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0010_1000;
 localparam opcode_t DSA_UOP_VERIFY2       = '{op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:verify2_cmd, hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0011_0000;
+localparam opcode_t DSA_UOP_PK_CHK        = '{op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:pk_chk_cmd,  hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0011_1000;
 localparam opcode_t DSA_UOP_HMAC_DRBG     = '{op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:no_cmd,      hmac_drbg_en:1'b1, sca_en:1'b0}; // = 8'b0100_0000;
 localparam opcode_t DSA_UOP_SCALAR_SCA    = '{op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:no_cmd,      hmac_drbg_en:1'b0, sca_en:1'b1}; // = 8'b1000_0000;
 
@@ -85,6 +87,7 @@ localparam [DSA_OPR_ADDR_WIDTH-1 : 0] CONST_G_X_MONT_ID        = 6'd7;
 localparam [DSA_OPR_ADDR_WIDTH-1 : 0] CONST_G_Y_MONT_ID        = 6'd8;
 localparam [DSA_OPR_ADDR_WIDTH-1 : 0] CONST_R2_q_MONT_ID       = 6'd9;
 localparam [DSA_OPR_ADDR_WIDTH-1 : 0] CONST_ONE_q_MONT_ID      = 6'd10;
+localparam [DSA_OPR_ADDR_WIDTH-1 : 0] CONST_E_b_MONT_ID        = 6'd11;
 
 localparam [DSA_OPR_ADDR_WIDTH-1 : 0] SEED_ID                  = 6'd16;
 localparam [DSA_OPR_ADDR_WIDTH-1 : 0] MSG_ID                   = 6'd17;
@@ -99,6 +102,7 @@ localparam [DSA_OPR_ADDR_WIDTH-1 : 0] SCALAR_PK_ID             = 6'd25;
 localparam [DSA_OPR_ADDR_WIDTH-1 : 0] VERIFY_R_ID              = 6'd26;
 localparam [DSA_OPR_ADDR_WIDTH-1 : 0] LAMBDA_ID                = 6'd27;
 localparam [DSA_OPR_ADDR_WIDTH-1 : 0] MASKING_ID               = 6'd28;
+localparam [DSA_OPR_ADDR_WIDTH-1 : 0] PK_VALID_ID              = 6'd29;
 
 // DSA Subroutine listing
 localparam [DSA_PROG_ADDR_W-1 : 0] DSA_RESET                    = 6'd0;
@@ -108,7 +112,7 @@ localparam [DSA_PROG_ADDR_W-1 : 0] DSA_KG_E                     = DSA_KG_S + 12;
 localparam [DSA_PROG_ADDR_W-1 : 0] DSA_SGN_S                    = DSA_KG_E + 2; 
 localparam [DSA_PROG_ADDR_W-1 : 0] DSA_SGN_E                    = DSA_SGN_S + 14; 
 localparam [DSA_PROG_ADDR_W-1 : 0] DSA_VER_S                    = DSA_SGN_E + 2; 
-localparam [DSA_PROG_ADDR_W-1 : 0] DSA_VER_E                    = DSA_VER_S + 17;
+localparam [DSA_PROG_ADDR_W-1 : 0] DSA_VER_E                    = DSA_VER_S + 23;
 
 
 endpackage

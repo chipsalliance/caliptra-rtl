@@ -23,18 +23,9 @@
   task soc_reg_test;    
     // SoC Register Test excluding FUSE*, TRNG_DATA* and TRNG_STATUS registers 
 
-    word_addr_t addr; 
     int tid = 0; // TID is to be updated ONLY if multiple writes to an address 
     strq_t soc_regnames;
-    string rname;
-    logic [31:0] tmpdata;
     int iq [$]; 
-
-    transaction_t entry;
-    transq_t entries; 
-    WordTransaction wrtrans, tmptrans; 
-    
-    dword_t tmpval; 
 
     begin
       $display("Executing task soc_reg_test"); 
@@ -43,23 +34,18 @@
       // TODO. Randomize 
       set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_UNLOCKED});
 
-      // $display("Current security state = 0b%03b", security_state);
-
-
       tc_ctr = tc_ctr + 1;
 
       soc_regnames = get_soc_regnames_minus_fuse_intr();
 
-      // Exclude CPTRA_TRNG_STATUS
-      iq = soc_regnames.find_index with (item == "CPTRA_TRNG_STATUS");
-      if (iq.size() == 1)
-        soc_regnames.delete(iq[0]);
+      // Exclude registers that are covered in separate tasks - fuse and intrblk regs
+      // -- Exclude CPTRA_TRNG_STATUS, INTERNAL_RV_MTIME_L/H
+      del_from_strq(soc_regnames, "INTERNAL_RV_MTIME_L");
+      del_from_strq(soc_regnames, "INTERNAL_RV_MTIME_H");
+      del_from_strq(soc_regnames, "CPTRA_TRNG_STATUS");
 
-      // Exclude CPTRA_TRNG_DATA*
-      soc_regnames.find_index with (str_startswith(item, "CPTRA_TRNG_DATA"));
-      foreach(iq[i]) 
-        soc_regnames.delete(iq[i]);
-
+      // -- Exclude CPTRA_TRNG_DATA*
+      delm_from_strq(soc_regnames, "CPTRA_TRNG_DATA");
 
       repeat (5) @(posedge clk_tb);
 
@@ -72,37 +58,55 @@
       // PHASE I. 1a-d Write-Read register back2back 
       // ------------------------------------------------------------
 
-
       repeat (20) @(posedge clk_tb);
       sb.del_all();
+      error_ctr = 0;
 
-      update_CPTRA_FLOW_STATUS(ready_for_fuses); 
+      update_CPTRA_FLOW_STATUS(ready_for_fuses, `REG_HIER_BOOT_FSM_PS); 
 
-      $display ("\n1a. Writing/Reading back to back using AHB/AHB every 3 cycles");
+
+      $display ("\n-------------------------------------------------------------");
+      $display ("1a. Writing/Reading back to back using AHB/AHB every 3 cycles");
+      $display ("-------------------------------------------------------------");
+
       write_read_regs(SET_AHB, GET_AHB, soc_regnames, tid, 3);
 
+      //FIXME. Need to add test for delayed cross modification of INTERNAL_ICCM_LOCK  
+      //        if ((addr_name == "INTERNAL_FW_UPDATE_RESET") &  (indata[0] == 1'b1)) begin
 
       repeat (20) @(posedge clk_tb);
       sb.del_all();
 
-      $display ("\n1b. Writing/Reading back to back using APB/APB every 3 cycles");
+      $display ("\n-------------------------------------------------------------");
+      $display ("1b. Writing/Reading back to back using APB/APB every 3 cycles");
+      $display ("-------------------------------------------------------------");
+
       write_read_regs(SET_APB, GET_APB, soc_regnames, tid, 3);
 
-
       repeat (20) @(posedge clk_tb);
       sb.del_all();
 
-      $display ("\n1c. Writing/Reading back to back using APB/AHB every 3 cycles");
+
+      $display ("\n-------------------------------------------------------------");
+      $display ("1c. Writing/Reading back to back using APB/AHB every 3 cycles");
+      $display ("-------------------------------------------------------------");
+
       write_read_regs(SET_APB, GET_AHB, soc_regnames, tid, 3);
 
-
       repeat (20) @(posedge clk_tb);
       sb.del_all();
 
-      $display ("\n1d. Writing/Reading back to back using AHB/APB every 3 cycles");
-      write_read_regs(SET_AHB, GET_APB, soc_regnames, tid, 3);
+      $display ("\n-------------------------------------------------------------");
+      $display ("1d. Writing/Reading back to back using AHB/APB every 3 cycles");
+      $display ("-------------------------------------------------------------");
 
-      error_ctr = sb.err_count;
+      write_read_regs(SET_AHB, GET_APB, soc_regnames, tid, 3);
+      
+      //FIXME. Need to add test for delayed cross modification of INTERNAL_ICCM_LOCK  
+      //        if ((addr_name == "INTERNAL_FW_UPDATE_RESET") &  (indata[0] == 1'b1)) begin
+
+      error_ctr += sb.err_count;
+
     end
   endtask // soc_reg_test
 

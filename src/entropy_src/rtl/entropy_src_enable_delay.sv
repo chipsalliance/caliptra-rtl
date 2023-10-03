@@ -30,7 +30,7 @@
 //    2b. One clock after the SHA engine completes,
 //    Whichever comes later.
 
-module entropy_src_enable_delay import prim_mubi_pkg::*; (
+module entropy_src_enable_delay import caliptra_prim_mubi_pkg::*; (
   input logic  clk_i,
   input logic  rst_ni,
 
@@ -70,7 +70,7 @@ module entropy_src_enable_delay import prim_mubi_pkg::*; (
     if (!rst_ni) begin
       sha3_active_post_en_q   <= 1'b0;
       fifo_timer_q            <= '0;
-      sha3_done_q             <= prim_mubi_pkg::MuBi4False;
+      sha3_done_q             <= caliptra_prim_mubi_pkg::MuBi4False;
       extend_enable_q         <= 1'b0;
     end else begin
       sha3_active_post_en_q   <= sha3_active_post_en_d;

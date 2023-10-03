@@ -1,0 +1,6 @@
+---
+# Random seed desired...
+seed: ${PLAYBOOK_RANDOM_SEED}
+plusargs:
+- '+UVM_TESTNAME=caliptra_top_wdt_test'
+testname: caliptra_top_wdt_test

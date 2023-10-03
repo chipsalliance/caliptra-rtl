@@ -6,7 +6,7 @@
 //
 // This module controls the AES cipher core including the key expand module.
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
 module aes_cipher_control import aes_pkg::*;
 #(
@@ -400,7 +400,7 @@ module aes_cipher_control import aes_pkg::*;
   // The following primitives are used to place a size-only constraint on the
   // flops in order to prevent optimizations on these status signals.
   logic [Sp2VWidth-1:0] crypt_q_raw;
-  prim_flop #(
+  caliptra_prim_flop #(
     .Width      ( Sp2VWidth            ),
     .ResetValue ( Sp2VWidth'(SP2V_LOW) )
   ) u_crypt_regs (
@@ -411,7 +411,7 @@ module aes_cipher_control import aes_pkg::*;
   );
 
   logic [Sp2VWidth-1:0] dec_key_gen_q_raw;
-  prim_flop #(
+  caliptra_prim_flop #(
     .Width      ( Sp2VWidth            ),
     .ResetValue ( Sp2VWidth'(SP2V_LOW) )
   ) u_dec_key_gen_regs (

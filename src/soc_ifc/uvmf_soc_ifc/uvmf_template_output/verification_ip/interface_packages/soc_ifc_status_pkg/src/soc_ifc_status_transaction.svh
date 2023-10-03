@@ -123,7 +123,7 @@ class soc_ifc_status_transaction  extends uvmf_transaction_base;
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("ready_for_fuses:0x%x ready_for_fw_push:0x%x ready_for_runtime:0x%x mailbox_data_avail:0x%x mailbox_flow_done:0x%x cptra_error_fatal_intr_pending:0x%x cptra_error_non_fatal_intr_pending:0x%x trng_req_pending:0x%x generic_output_val:0x%x ",ready_for_fuses,ready_for_fw_push,ready_for_runtime,mailbox_data_avail,mailbox_flow_done,cptra_error_fatal_intr_pending,cptra_error_non_fatal_intr_pending,trng_req_pending,generic_output_val);
+    return $sformatf("ready_for_fuses:0x%x ready_for_fw_push:0x%x ready_for_runtime:0x%x mailbox_data_avail:0x%x mailbox_flow_done:0x%x cptra_error_fatal_intr_pending:0x%x cptra_error_non_fatal_intr_pending:0x%x trng_req_pending:0x%x generic_output_val:0x%x %s",ready_for_fuses,ready_for_fw_push,ready_for_runtime,mailbox_data_avail,mailbox_flow_done,cptra_error_fatal_intr_pending,cptra_error_non_fatal_intr_pending,trng_req_pending,generic_output_val,super.convert2string());
     // pragma uvmf custom convert2string end
   endfunction
 

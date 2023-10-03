@@ -67,7 +67,8 @@ module doe_cbc
    output logic clear_obf_secrets,
 
    //interface with kv
-   output kv_write_t kv_write
+   output kv_write_t kv_write,
+   input  logic debugUnlock_or_scan_mode_switch
   );
 
   //----------------------------------------------------------------
@@ -106,6 +107,7 @@ module doe_cbc
 
   logic doe_init;
   logic doe_next;
+  logic zeroize;
 
   logic flow_done;
   logic flow_in_progress, lock_fe_flow, lock_uds_flow;
@@ -133,6 +135,7 @@ module doe_cbc
   doe_core_cbc i_doe_core_cbc(
                 .clk(clk),
                 .reset_n(reset_n),
+                .zeroize(zeroize),
 
                 .encdec(core_encdec),
                 .init_cmd(core_init),
@@ -159,6 +162,11 @@ module doe_cbc
   //----------------------------------------------------------------
   always @ (posedge clk or negedge reset_n) begin : reg_update
       if (!reset_n) begin
+          block_reg <= '0;
+          ready_reg <= '0;
+          kv_result_reg <= '0;
+      end
+      else if (zeroize) begin
           block_reg <= '0;
           ready_reg <= '0;
           kv_result_reg <= '0;
@@ -191,13 +199,21 @@ assign doe_cmd_reg.dest_sel = hwif_out.DOE_CTRL.DEST.value;
 
 //FW can do this to clear the obfuscation related secrets
 //the Obfuscated UDS, FE, and OBF KEY
-always_comb clear_obf_secrets = (doe_cmd_reg.cmd == DOE_CLEAR);
+always_comb clear_obf_secrets = (doe_cmd_reg.cmd == DOE_CLEAR) || debugUnlock_or_scan_mode_switch;
+always_comb zeroize = clear_obf_secrets;
 
 always_comb begin
   IV_updated = '0;
   for (int dword = 0; dword < IV_NO; dword++) begin
     IV_reg[dword] = hwif_out.DOE_IV[dword].IV.value;
     IV_updated |= hwif_out.DOE_IV[dword].IV.swmod;
+  end
+end
+
+//TODO: flow_done also?
+always_comb begin
+  for (int dword = 0; dword < IV_NO; dword++) begin
+    hwif_in.DOE_IV[dword].IV.hwclr = zeroize;
   end
 end
 
@@ -231,7 +247,8 @@ doe_fsm1
   .flow_done(flow_done),
   .flow_in_progress(flow_in_progress),
   .lock_uds_flow(lock_uds_flow),
-  .lock_fe_flow(lock_fe_flow)
+  .lock_fe_flow(lock_fe_flow),
+  .zeroize(zeroize)
 
 );
 

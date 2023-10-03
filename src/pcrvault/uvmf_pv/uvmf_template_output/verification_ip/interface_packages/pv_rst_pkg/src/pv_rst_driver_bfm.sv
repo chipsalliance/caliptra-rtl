@@ -110,6 +110,10 @@ end
   reg  cptra_pwrgood_o = 'bz;
   tri  rst_b_i;
   reg  rst_b_o = 'bz;
+  tri  core_only_rst_b_i;
+  reg  core_only_rst_b_o = 'bz;
+  tri  fw_update_rst_window_i;
+  reg  fw_update_rst_window_o = 'bz;
 
   // Bi-directional signals
   
@@ -127,6 +131,10 @@ end
   assign cptra_pwrgood_i = bus.cptra_pwrgood;
   assign bus.rst_b = (initiator_responder == INITIATOR) ? rst_b_o : 'bz;
   assign rst_b_i = bus.rst_b;
+  assign bus.core_only_rst_b = (initiator_responder == INITIATOR) ? core_only_rst_b_o : 'bz;
+  assign core_only_rst_b_i = bus.core_only_rst_b;
+  assign bus.fw_update_rst_window = (initiator_responder == INITIATOR) ? fw_update_rst_window_o : 'bz;
+  assign fw_update_rst_window_i = bus.fw_update_rst_window;
 
   // Proxy handle to UVM driver
   pv_rst_pkg::pv_rst_driver   proxy;
@@ -160,6 +168,8 @@ end
        // INITIATOR mode output signals
        cptra_pwrgood_o <= 'bz;
        rst_b_o <= 'bz;
+       core_only_rst_b_o <= 'bz;
+       fw_update_rst_window_o <= 'bz;
        // Bi-directional signals
  
      end    
@@ -201,10 +211,12 @@ end
        // Members within the pv_rst_initiator_struct:
        //   bit set_pwrgood ;
        //   bit assert_rst ;
+       //   bit assert_core_rst ;
        //   int unsigned wait_cycles ;
        // Members within the pv_rst_responder_struct:
        //   bit set_pwrgood ;
        //   bit assert_rst ;
+       //   bit assert_core_rst ;
        //   int unsigned wait_cycles ;
        initiator_struct = pv_rst_initiator_struct;
        //
@@ -222,6 +234,7 @@ end
        //    Initiator output signals
        //      cptra_pwrgood_o <= pv_rst_initiator_struct.xyz;  //     
        //      rst_b_o <= pv_rst_initiator_struct.xyz;  //     
+       //      core_rst_b_o <= pv_rst_initiator_struct.xyz;  //     
        //    Initiator inout signals
     // Initiate a transfer using the data received.
     @(posedge clk_i);
@@ -229,8 +242,13 @@ end
 
     if (initiator_struct.assert_rst)
       rst_b_o <= 1'b0;
+    if (initiator_struct.assert_core_rst)
+      fw_update_rst_window_o <= 1'b1;
+    if (initiator_struct.assert_core_rst)
+      core_only_rst_b_o <= 1'b0;
     if (!initiator_struct.set_pwrgood)
       cptra_pwrgood_o <= 1'b0;
+    
     // Wait for the responder to complete the transfer then place the responder data into 
     // pv_rst_responder_struct.
     @(posedge clk_i);
@@ -238,14 +256,18 @@ end
 
     if (!initiator_struct.assert_rst)
       rst_b_o <= 1'b1;
+    if (!initiator_struct.assert_core_rst)
+      fw_update_rst_window_o <= 1'b0;
+    if (!initiator_struct.assert_core_rst)
+      core_only_rst_b_o <= 1'b1;
     if (initiator_struct.set_pwrgood)
       cptra_pwrgood_o <= 1'b1;
 
     repeat(initiator_struct.wait_cycles)
       @(posedge clk_i);
-      
     pv_rst_responder_struct.set_pwrgood = cptra_pwrgood_i;
     pv_rst_responder_struct.assert_rst = !rst_b_i;
+    pv_rst_responder_struct.assert_core_rst = !core_only_rst_b_i;
     responder_struct = pv_rst_responder_struct;
   endtask        
 // pragma uvmf custom initiate_and_get_response end
@@ -285,6 +307,7 @@ bit first_transfer=1;
        //    Responder input signals
        //      pv_rst_responder_struct.xyz = cptra_pwrgood_i;  //     
        //      pv_rst_responder_struct.xyz = rst_b_i;  //     
+       //      pv_rst_responder_struct.xyz = core_rst_b_i;  //     
        //    Responder inout signals
        //    How to assign a signal, named xyz, from an initiator struct member.   
        //    All available responder output and inout signals listed.

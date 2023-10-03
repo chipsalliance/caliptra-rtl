@@ -85,21 +85,24 @@ end
   tri dummy_i;
   tri  clear_obf_secrets_i;
   tri  iccm_axs_blocked_i;
+  tri [3:0] rv_ecc_sts_i;
   assign clk_i = bus.clk;
   assign dummy_i = bus.dummy;
   assign clear_obf_secrets_i = bus.clear_obf_secrets;
   assign iccm_axs_blocked_i = bus.iccm_axs_blocked;
+  assign rv_ecc_sts_i = bus.rv_ecc_sts;
 
   // Proxy handle to UVM monitor
   cptra_ctrl_pkg::cptra_ctrl_monitor  proxy;
   // pragma tbx oneway proxy.notify_transaction                 
 
   // pragma uvmf custom interface_item_additional begin
-  logic clear_obf_secrets_r;
-  logic iccm_axs_blocked_r;
+  logic clear_obf_secrets_r = 1'b0;
+  logic iccm_axs_blocked_r = 1'b0;
   function bit any_signal_changed();
       return |(clear_obf_secrets_i   ^  clear_obf_secrets_r  ) ||
-             |(iccm_axs_blocked_i    ^  iccm_axs_blocked_r   );
+             |(iccm_axs_blocked_i    ^  iccm_axs_blocked_r   ) ||
+             |(rv_ecc_sts_i          /* pulse no reg-stage */);
   endfunction
   // pragma uvmf custom interface_item_additional end
 
@@ -117,13 +120,17 @@ end
   // pragma uvmf custom reset_condition end
   endtask
 
-  //******************************************************************
-
-  task wait_for_num_clocks(input int unsigned count); // pragma tbx xtf
+  // pragma uvmf custom wait_for_num_clocks begin
+  //****************************************************************************                         
+  // Inject pragmas's here to throw a warning on regeneration.
+  // Task must have automatic lifetime so that it can be concurrently invoked
+  // by multiple entities with a different wait value.
+  task automatic wait_for_num_clocks(input int unsigned count); // pragma tbx xtf
+    if (count == 0) `uvm_fatal("CFG", "wait_for_num_clocks called with count of 0 - this will lead to a hang");
     @(posedge clk_i);
-
     repeat (count-1) @(posedge clk_i);
   endtask
+  // pragma uvmf custom wait_for_num_clocks end                                                                
 
   //******************************************************************
   event go;
@@ -166,6 +173,7 @@ end
     // Available struct members:
     //     //    cptra_ctrl_monitor_struct.assert_clear_secrets
     //     //    cptra_ctrl_monitor_struct.iccm_axs_blocked
+    //     //    cptra_ctrl_monitor_struct.pulse_rv_ecc_error
     //     //
     // Reference code;
     //    How to wait for signal value
@@ -175,6 +183,7 @@ end
     //    All available input signals listed.
     //      cptra_ctrl_monitor_struct.xyz = clear_obf_secrets_i;  //     
     //      cptra_ctrl_monitor_struct.xyz = iccm_axs_blocked_i;  //
+    //      cptra_ctrl_monitor_struct.xyz = rv_ecc_sts_i;  //    [3:0]
     // pragma uvmf custom do_monitor begin
     // UVMF_CHANGE_ME : Implement protocol monitoring.  The commented reference code
     // below are examples of how to capture signal values and assign them to
@@ -193,6 +202,7 @@ end
   // Variables within the cptra_ctrl_monitor_struct:
          cptra_ctrl_monitor_struct.iccm_axs_blocked     = iccm_axs_blocked_i;
          cptra_ctrl_monitor_struct.assert_clear_secrets = clear_obf_secrets_i;
+         cptra_ctrl_monitor_struct.pulse_rv_ecc_error   = rv_ecc_sts_i;
     end
     // pragma uvmf custom do_monitor end
   endtask

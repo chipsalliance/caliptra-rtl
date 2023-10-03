@@ -21,13 +21,15 @@
 
 module ahb_lite_2to1_mux #(
     parameter AHB_LITE_ADDR_WIDTH   = 32,
-    parameter AHB_LITE_DATA_WIDTH   = 32
+    parameter AHB_LITE_DATA_WIDTH   = 32,
+    parameter AHB_NO_OPT = 0
 ) (
     // ---------------------------------------
     // Global clock/reset
     // ---------------------------------------
     input logic     hclk,
     input logic     hreset_n,
+    input logic     force_bus_idle,
 
     // ---------------------------------------
     // From Initiator 0
@@ -80,7 +82,9 @@ module ahb_lite_2to1_mux #(
 //Initiator 0 always takes priority
 
 logic initiator0_address_ph, initiator1_address_ph;
+logic initiator0_data_ph_nq, initiator1_data_ph_nq;
 logic initiator0_data_ph, initiator1_data_ph;
+logic initiator0_pend_addr_ph_nq, initiator1_pend_addr_ph_nq;
 logic initiator0_pend_addr_ph, initiator1_pend_addr_ph;
 logic initiator0_gnt, initiator1_gnt;
 logic [AHB_LITE_ADDR_WIDTH-1:0] initiator0_pend_haddr, initiator1_pend_haddr;
@@ -93,8 +97,8 @@ logic initiator0_pend_hwrite, initiator1_pend_hwrite;
 logic initiator0_hwrite, initiator1_hwrite;
 
 //Detect address phase
-always_comb initiator0_address_ph = hsel_i_0 & hready_i_0 & htrans_i_0 inside {2'b10, 2'b11};
-always_comb initiator1_address_ph = hsel_i_1 & hready_i_1 & htrans_i_1 inside {2'b10, 2'b11};
+always_comb initiator0_address_ph = hsel_i_0 & hready_i_0 & htrans_i_0 inside {2'b10, 2'b11} & ~force_bus_idle;
+always_comb initiator1_address_ph = hsel_i_1 & hready_i_1 & htrans_i_1 inside {2'b10, 2'b11} & ~force_bus_idle;
 
 always_ff @(posedge hclk or negedge hreset_n) begin
     if (~hreset_n) begin
@@ -106,10 +110,10 @@ always_ff @(posedge hclk or negedge hreset_n) begin
         initiator1_pend_hsize <= '0;
         initiator0_pend_hwrite <= '0;
         initiator1_pend_hwrite <= '0;
-        initiator0_pend_addr_ph <= '0;
-        initiator1_pend_addr_ph <= '0;
-        initiator0_data_ph <= '0;
-        initiator1_data_ph <= '0;
+        initiator0_pend_addr_ph_nq <= '0;
+        initiator1_pend_addr_ph_nq <= '0;
+        initiator0_data_ph_nq <= '0;
+        initiator1_data_ph_nq <= '0;
     end
     else begin
         //Capture the address during the address phase for each initiator
@@ -123,14 +127,19 @@ always_ff @(posedge hclk or negedge hreset_n) begin
         initiator1_pend_hwrite <= initiator1_address_ph & ~initiator1_pend_addr_ph ? hwrite_i_1 : initiator1_pend_hwrite;
 
         //Capture pending address phase when initiators collide
-        initiator0_pend_addr_ph <= (initiator0_address_ph | initiator0_pend_addr_ph) & ~initiator0_gnt;
-        initiator1_pend_addr_ph <= (initiator1_address_ph | initiator1_pend_addr_ph) & ~initiator1_gnt; 
+        initiator0_pend_addr_ph_nq <= (initiator0_address_ph | initiator0_pend_addr_ph) & ~(hreadyout_i & initiator0_gnt);
+        initiator1_pend_addr_ph_nq <= (initiator1_address_ph | initiator1_pend_addr_ph) & ~(hreadyout_i & initiator1_gnt); 
 
         //Transition to data phase when endpoint accepts address phase, hold when not ready
-        initiator0_data_ph <= (initiator0_gnt) | (initiator0_data_ph & ~hreadyout_i);
-        initiator1_data_ph <= (initiator1_gnt) | (initiator1_data_ph & ~hreadyout_i);
+        initiator0_data_ph_nq <= (initiator0_gnt) | (initiator0_data_ph & ~hreadyout_i);
+        initiator1_data_ph_nq <= (initiator1_gnt) | (initiator1_data_ph & ~hreadyout_i);
     end
 end
+
+always_comb initiator0_data_ph = initiator0_data_ph_nq & ~force_bus_idle;
+always_comb initiator1_data_ph = initiator1_data_ph_nq & ~force_bus_idle;
+always_comb initiator0_pend_addr_ph = initiator0_pend_addr_ph_nq & ~force_bus_idle;
+always_comb initiator1_pend_addr_ph = initiator1_pend_addr_ph_nq & ~force_bus_idle;
 
 always_comb initiator0_haddr = initiator0_pend_addr_ph ? initiator0_pend_haddr : haddr_i_0;
 always_comb initiator0_htrans = initiator0_pend_addr_ph ? initiator0_pend_htrans : htrans_i_0;
@@ -143,12 +152,29 @@ always_comb initiator1_hsize = initiator1_pend_addr_ph ? initiator1_pend_hsize :
 always_comb initiator1_hwrite = initiator1_pend_addr_ph ? initiator1_pend_hwrite : hwrite_i_1;
 
 //Select the appropriate initiator
-//Initiator 0 gets priority
-//Stall the grant if initiator 1 is processing a data phase and address phase b2b
-always_comb initiator0_gnt = (initiator0_address_ph | initiator0_pend_addr_ph) & hreadyout_i;
+generate
+    if (AHB_NO_OPT) begin
+        //no optimization, data phase must complete before driving new address phase
+        //Initiator 0 gets priority
+        //Stall the grant only if initiator 1 is on its data phase
+        always_comb initiator0_gnt = (initiator0_address_ph | initiator0_pend_addr_ph) & ~initiator1_data_ph;
 
-//Initiator 1 gets through only if initiator 0 isn't getting granted
-always_comb initiator1_gnt = (initiator1_address_ph | initiator1_pend_addr_ph) & hreadyout_i & ~initiator0_gnt;
+        //Initiator 1 gets through only if initiator 0 address phase isn't getting gnt, or in data phase
+        always_comb initiator1_gnt = (initiator1_address_ph | initiator1_pend_addr_ph) & ~initiator0_data_ph & ~initiator0_gnt;
+    end else begin
+        //optimized to allow addr phase to overlap data phase, assumes no stalls
+        //Initiator 0 gets priority
+        //Stall the grant if initiator 1 is processing a data phase and address phase b2b
+        always_comb initiator0_gnt = (initiator0_address_ph | initiator0_pend_addr_ph);
+
+        //Initiator 1 gets through only if initiator 0 isn't getting granted
+        always_comb initiator1_gnt = (initiator1_address_ph | initiator1_pend_addr_ph) & ~initiator0_gnt;
+
+        //optimized path doesn't look at stall
+        //only time this stalls is on error condition
+        `CALIPTRA_ASSERT_NEVER(ERR_2TO1MUX_STALL, ~hreadyout_i & (hresp_i == 1'b0), hclk, hreset_n)
+    end
+endgenerate
 
 //Mux the appropriate initiator and send out
 //Keep driving initiator 1 controls on data phase if init0 isn't getting a grant in that cycle
@@ -165,14 +191,52 @@ always_comb hready_o = initiator1_gnt | (initiator1_data_ph & ~initiator0_gnt) ?
 //Send the data coming from responder when selected
 always_comb hresp_o_0  = initiator0_data_ph ? hresp_i : '0;
 always_comb hrdata_o_0 = initiator0_data_ph ? hrdata_i : '0;
-always_comb hready_o_0 = initiator0_pend_addr_ph ? '0 : 
-                         initiator0_data_ph ? hreadyout_i : '1;
+always_comb hready_o_0 = initiator0_data_ph ? hreadyout_i :
+                         initiator0_pend_addr_ph ? '0 : '1;
 
 always_comb hresp_o_1  = initiator1_data_ph? hresp_i: '0;
 always_comb hrdata_o_1 = initiator1_data_ph ? hrdata_i: '0;
-always_comb hready_o_1 = initiator1_pend_addr_ph ? '0 : 
-                         initiator1_data_ph ? hreadyout_i : '1;
+always_comb hready_o_1 = initiator1_data_ph ? hreadyout_i :
+                         initiator1_pend_addr_ph ? '0 :  '1;
 
 `CALIPTRA_ASSERT_MUTEX(ERR_2TO1MUX_MUTEX_DATA_PH, {initiator0_data_ph,initiator1_data_ph}, hclk, hreset_n)
 `CALIPTRA_ASSERT_NEVER(ERR_2TO1MUX_BAD_HTRANS, (htrans_o == 2'b01), hclk, hreset_n)
+
+//Coverage
+`ifndef VERILATOR
+`ifdef FCOV
+
+covergroup ahb_lite_2to1_mux_cov_grp @(posedge hclk iff hreset_n);
+    option.per_instance = 1;
+    
+    init0_addr_cp: coverpoint initiator0_address_ph;
+    init0_pend_addr_cp: coverpoint initiator0_pend_addr_ph;
+    init0_data_cp: coverpoint initiator0_data_ph;
+    init0_gnt_cp : coverpoint initiator0_gnt;
+
+    init1_addr_cp: coverpoint initiator1_address_ph;
+    init1_pend_addr_cp: coverpoint initiator1_pend_addr_ph;
+    init1_data_cp: coverpoint initiator1_data_ph;
+    init1_gnt_cp : coverpoint initiator1_gnt;
+
+    init0_pend_addr_not_ready: coverpoint initiator0_pend_addr_ph & ~hreadyout_i;
+    init1_pend_addr_not_ready: coverpoint initiator1_pend_addr_ph & ~hreadyout_i;
+
+    init0_data_not_ready: coverpoint initiator0_data_ph & ~hreadyout_i;
+    init1_data_not_ready: coverpoint initiator1_data_ph & ~hreadyout_i;
+
+    init0_dataXinit1_gnt: cross  init0_data_cp, init1_gnt_cp;
+    init1_dataXinit0_gnt: cross  init1_data_cp, init0_gnt_cp;
+
+    init0_addrXpend: cross init0_addr_cp, init0_pend_addr_cp;
+    init1_addrXpend: cross init1_addr_cp, init1_pend_addr_cp;
+    init0Xinit1_addr: cross init0_addr_cp, init1_addr_cp;
+    init0Xinit1_pend_addr: cross init0_pend_addr_cp, init1_pend_addr_cp;
+
+endgroup
+
+    ahb_lite_2to1_mux_cov_grp ahb_lite_2to1_mux_cov_grp1 = new();
+
+`endif
+`endif              
 endmodule

@@ -48,12 +48,20 @@ _start:
     // Call interrupt init
     call init_interrupts
 
-    //Acquire SHA lock
-    li x3, CLP_SHA512_ACC_CSR_LOCK
-    lock_poll_loop0:
-        lw x5, 0(x3)
-        andi x5, x5, SHA512_ACC_CSR_LOCK_LOCK_MASK
-        bne x5, x0, lock_poll_loop0
+    
+   //For FIPS, SHA starts of in a locked mode for uController
+   //Release SHA lock - although this step is NOT explicitly required if uC wants to just go ahead and use it directly
+   // Note that this case was also tested by commenting out the unlocking & relocking code below as a directed test case during the design
+   li x3, CLP_SHA512_ACC_CSR_LOCK
+   li x1, SHA512_ACC_CSR_LOCK_LOCK_MASK
+   sw x1, 0(x3)
+
+   //Acquire SHA lock
+   li x3, CLP_SHA512_ACC_CSR_LOCK
+   lock_poll_loop0:
+       lw x5, 0(x3)
+       andi x5, x5, SHA512_ACC_CSR_LOCK_LOCK_MASK
+       bne x5, x0, lock_poll_loop0
 
     //Set to Streaming SHA512 Mode
     li x3, CLP_SHA512_ACC_CSR_MODE
@@ -402,6 +410,8 @@ verbosity_g: .word 2
 // FW polls this variable instead of the SHA reg....
 .global sha_intr_status
 sha_intr_status: .word 0
+.global cptra_intr_rcv
+cptra_intr_rcv: .word 0
 print_data:
 .ascii "----------------------------------------\n"
 .ascii "Running SHA Accelerator Smoke Test    !!\n"

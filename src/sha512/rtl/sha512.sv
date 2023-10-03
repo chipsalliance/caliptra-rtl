@@ -41,6 +41,7 @@
 
 module sha512
     import sha512_reg_pkg::*;
+    import sha512_params_pkg::*;
     import kv_defines_pkg::*;  
     import pv_defines_pkg::*;    
     #(
@@ -77,13 +78,9 @@ module sha512
 
         // Interrupts
         output wire error_intr,
-        output wire notif_intr
+        output wire notif_intr,
+        input  logic debugUnlock_or_scan_mode_switch
     );
-
-  //----------------------------------------------------------------
-  // Internal constant and parameter definitions.
-  //----------------------------------------------------------------
-  `include "sha512_param.sv"
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -100,6 +97,7 @@ module sha512
 
   localparam BLOCK_NUM_DWORDS = BLOCK_SIZE / DATA_WIDTH;
   localparam DIG_NUM_DWORDS = DIG_SIZE / DATA_WIDTH;
+  localparam NONCE_NUM_DWORDS = PV_SIZE_OF_NONCE / DATA_WIDTH;
 
   reg [DATA_WIDTH-1 : 0][BLOCK_NUM_DWORDS-1 : 0]    block_reg ;
   reg [DIG_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0]      digest_reg;
@@ -137,6 +135,9 @@ module sha512
   kv_write_ctrl_reg_t kv_write_ctrl_reg_q;
   kv_read_ctrl_reg_t kv_read_ctrl_reg;
 
+  //KV Read Data Present 
+  logic kv_read_data_present;
+  logic kv_read_data_present_set, kv_read_data_present_reset;
   //PCR Hash Extend Function
   logic pcr_hash_extend_ip;
   logic pcr_hash_extend_set, pcr_hash_extend_reset;
@@ -152,6 +153,8 @@ module sha512
   logic gen_hash_block_write_en;
   logic [4:0] gen_hash_block_write_offset;
   logic [31:0] gen_hash_block_write_data;
+
+  logic [NONCE_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0] pv_nonce;
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
@@ -210,29 +213,31 @@ module sha512
   //----------------------------------------------------------------
   always @ (posedge clk or negedge reset_n) begin : reg_update
     if (!reset_n) begin
-      ready_reg           <= '0;
-      digest_reg          <= '0;
-      digest_valid_reg    <= '0;
-      kv_reg              <= '0;
-      pcr_sign_reg        <= '0;
-      block_reg_lock      <= '0;
-      pcr_hash_extend_ip  <= '0;
-      hash_extend_entry   <= '0;
+      ready_reg            <= '0;
+      digest_reg           <= '0;
+      digest_valid_reg     <= '0;
+      kv_reg               <= '0;
+      pcr_sign_reg         <= '0;
+      block_reg_lock       <= '0;
+      pcr_hash_extend_ip   <= '0;
+      hash_extend_entry    <= '0;
+      kv_read_data_present <= '0;
     end
     else if (zeroize_reg) begin
-      ready_reg           <= '0;
-      digest_reg          <= '0;
-      digest_valid_reg    <= '0;
-      kv_reg              <= '0;
-      pcr_sign_reg        <= '0;
+      ready_reg            <= '0;
+      digest_reg           <= '0;
+      digest_valid_reg     <= '0;
+      kv_reg               <= '0;
+      pcr_sign_reg         <= '0;
+      kv_read_data_present <= '0;
     end
     else begin
       ready_reg        <= core_ready;
       digest_valid_reg <= core_digest_valid;
 
-      if (core_digest_valid & ~digest_valid_reg & ~dest_keyvault)
+      if (core_digest_valid & ~digest_valid_reg & ~(dest_keyvault | kv_read_data_present))
         digest_reg <= core_digest & get_mask;
-      if (core_digest_valid & ~digest_valid_reg & dest_keyvault)
+      if (core_digest_valid & ~digest_valid_reg & (dest_keyvault | kv_read_data_present))
         kv_reg <= core_digest[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-KV_NUM_DWORDS] & get_mask[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-KV_NUM_DWORDS];
       if (pcr_sign_we)
         pcr_sign_reg <= pcr_sign;
@@ -241,6 +246,8 @@ module sha512
       pcr_hash_extend_ip <= pcr_hash_extend_set ? '1 :
                             pcr_hash_extend_reset ? '0 : pcr_hash_extend_ip;
       hash_extend_entry <= pcr_hash_extend_set ? kv_read_ctrl_reg.read_entry : hash_extend_entry;
+      kv_read_data_present <= kv_read_data_present_set ? '1 :
+                              kv_read_data_present_reset ? '0 : kv_read_data_present;
     end
   end // reg_update
 
@@ -262,16 +269,16 @@ module sha512
   //register hw interface
   always_comb begin
 
-    hwif_in.SHA512_NAME[0].NAME.next = CORE_NAME0;
-    hwif_in.SHA512_NAME[1].NAME.next = CORE_NAME1;
+    hwif_in.SHA512_NAME[0].NAME.next = SHA512_CORE_NAME0;
+    hwif_in.SHA512_NAME[1].NAME.next = SHA512_CORE_NAME1;
 
-    hwif_in.SHA512_VERSION[0].VERSION.next = CORE_VERSION0;
-    hwif_in.SHA512_VERSION[1].VERSION.next = CORE_VERSION1;
+    hwif_in.SHA512_VERSION[0].VERSION.next = SHA512_CORE_VERSION0;
+    hwif_in.SHA512_VERSION[1].VERSION.next = SHA512_CORE_VERSION1;
 
     init_reg = gen_hash_ip ? gen_hash_init_reg : hwif_out.SHA512_CTRL.INIT.value;
     next_reg = gen_hash_ip ? gen_hash_next_reg : hwif_out.SHA512_CTRL.NEXT.value;
     mode_reg = gen_hash_ip ? 2'b10 : hwif_out.SHA512_CTRL.MODE.value;
-    zeroize_reg = hwif_out.SHA512_CTRL.ZEROIZE.value;
+    zeroize_reg = hwif_out.SHA512_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
     last_reg = gen_hash_ip ? gen_hash_last_reg : hwif_out.SHA512_CTRL.LAST.value;
     hwif_in.SHA512_CTRL.LAST.hwclr = core_digest_valid & ~digest_valid_reg;
 
@@ -291,10 +298,11 @@ module sha512
 
     for (int dword=0; dword< BLOCK_NUM_DWORDS; dword++) begin
       block_reg[dword] = hwif_out.SHA512_BLOCK[dword].BLOCK.value;
-      hwif_in.SHA512_BLOCK[dword].BLOCK.we = gen_hash_ip ? gen_hash_block_write_en & (gen_hash_block_write_offset == dword) :
+      hwif_in.SHA512_BLOCK[dword].BLOCK.we = zeroize_reg? 0 : 
+                                             gen_hash_ip ? gen_hash_block_write_en & (gen_hash_block_write_offset == dword) :
                                              (kv_src_write_en & (kv_src_write_offset == dword));
       hwif_in.SHA512_BLOCK[dword].BLOCK.next = gen_hash_ip ? gen_hash_block_write_data : kv_src_write_data;
-      hwif_in.SHA512_BLOCK[dword].BLOCK.hwclr = zeroize_reg & ~block_reg_lock[dword];
+      hwif_in.SHA512_BLOCK[dword].BLOCK.hwclr = (zeroize_reg & ~block_reg_lock[dword]) | kv_read_data_present_reset;
       hwif_in.SHA512_BLOCK[dword].BLOCK.swwel = block_reg_lock[dword];
     end
     //Set valid when fsm is done
@@ -322,6 +330,10 @@ module sha512
 
   `CALIPTRA_KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, SHA512_KV_WR_CTRL)
   `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_read_ctrl_reg, SHA512_VAULT_RD_CTRL)
+
+//Force result into KV reg whenever source came from KV
+  always_comb kv_read_data_present_set = kv_read_ctrl_reg.read_en & ~kv_read_ctrl_reg.pcr_hash_extend;
+  always_comb kv_read_data_present_reset = kv_read_data_present & dest_data_avail;
 
 //Hash extend logic
   always_comb pcr_hash_extend_set = kv_read_ctrl_reg.read_en & kv_read_ctrl_reg.pcr_hash_extend;
@@ -389,6 +401,7 @@ sha512_block_kv_read
 (
     .clk(clk),
     .rst_b(reset_n),
+    .zeroize(zeroize_reg),
 
     //client control register
     .read_ctrl_reg(kv_read_ctrl_reg),
@@ -428,6 +441,12 @@ end
 //write out the dest data to KV or PCR on last iteration of SHA
 always_comb dest_data_avail = core_digest_valid & ~digest_valid_reg & last_reg;
 
+always_comb begin
+  for (int dword=0; dword< NONCE_NUM_DWORDS; dword++) begin
+      pv_nonce[dword] = hwif_out.SHA512_GEN_PCR_HASH_NONCE[dword].NONCE.value;
+  end
+end
+
 kv_write_client #(
   .DATA_WIDTH(384)
 )
@@ -435,6 +454,7 @@ sha512_result_kv_write
 (
   .clk(clk),
   .rst_b(reset_n),
+  .zeroize(zeroize_reg),
 
   //client control register
   .write_ctrl_reg(kv_write_ctrl_reg_q),
@@ -463,7 +483,7 @@ pv_gen_hash1
   .core_digest_valid(gen_hash_ip & dest_data_avail),
 
   .start(gen_hash_start),
-  .nonce(hwif_out.SHA512_GEN_PCR_HASH_NONCE.NONCE.value),
+  .nonce(pv_nonce),
 
   .gen_hash_ip(gen_hash_ip),
   .gen_hash_init_reg(gen_hash_init_reg),

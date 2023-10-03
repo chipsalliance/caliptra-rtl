@@ -14,7 +14,8 @@
 
 module sha512_acc_top
     import soc_ifc_pkg::*;
-    import sha512_acc_csr_pkg::*;   
+    import sha512_acc_csr_pkg::*;
+    import sha512_params_pkg::*; 
   #(
     parameter DATA_WIDTH = 32
     )(
@@ -44,21 +45,11 @@ module sha512_acc_top
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  `include "sha512_param.sv"
   localparam DATA_NUM_BYTES = DATA_WIDTH / 8;
   localparam BLOCK_NO = 1024 / DATA_WIDTH;
   localparam BYTE_NO = 1024 / 8;
   localparam BLOCK_OFFSET_W = $clog2(BLOCK_NO);
   localparam BYTE_OFFSET_W = $clog2(1024/8);
-
-  typedef enum logic [2:0] {
-    SHA_IDLE    = 3'b000,
-    SHA_BLOCK_0 = 3'b001,
-    SHA_BLOCK_N = 3'b011,
-    SHA_PAD0    = 3'b010,
-    SHA_PAD1    = 3'b110,
-    SHA_DONE    = 3'b100
-  } sha_fsm_state_e;
 
   logic lock_set;
   logic datain_write;
@@ -102,7 +93,6 @@ module sha512_acc_top
   logic block_we;
   logic mbox_mode_last_dword_wr;
   logic block_full;
-  logic pad_last_block;
   logic [31:0] num_bytes_wr;
   logic [BLOCK_OFFSET_W:0] block_wptr;
   logic [DATA_NUM_BYTES-1:0][7:0] mbox_rdata;
@@ -189,17 +179,17 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   always_comb hwif_in.valid_user = hwif_out.LOCK.LOCK.value & ((~soc_has_lock & ~req_data.soc_req) |
                                                                 (soc_has_lock & req_data.soc_req & (req_data.user == hwif_out.USER.USER.value)));
   always_comb hwif_in.soc_req = req_data.soc_req;
-
+  always_comb hwif_in.STATUS.SOC_HAS_LOCK.next = soc_has_lock;
+  
   always_comb mode = hwif_out.MODE.MODE.value;
   //mode encoding bit 0 determines 512 or 384.
   always_comb sha_mode = mode[0] ? MODE_SHA_512 : MODE_SHA_384;
-  always_comb streaming_mode = ~mode[1];
-  always_comb mailbox_mode = mode[1];
+  //determine streaming or mailbox mode - SoC is limited to streaming mode only
+  always_comb streaming_mode = ~mode[1] | soc_has_lock;
+  always_comb mailbox_mode = mode[1] & ~soc_has_lock;
   //Detect writes to datain register
   always_comb datain_write = hwif_in.valid_user & hwif_out.DATAIN.DATAIN.swmod;
   always_comb execute_set = hwif_out.EXECUTE.EXECUTE.value;
-  //flag to indicate that our last block will need the padding added to it
-  always_comb pad_last_block = (|hwif_out.DLEN.LENGTH.value[1:0]);
 
   //When we reach the end of a block we indicate block full
   //If this is also the end of the entire DLEN, mask block full so that we properly pad the last dword

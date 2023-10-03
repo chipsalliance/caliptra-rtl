@@ -54,6 +54,9 @@ class soc_ifc_environment  extends uvmf_environment_base #(
   typedef cptra_status_agent  cptra_status_agent_t;
   cptra_status_agent_t cptra_status_agent;
 
+  typedef mbox_sram_agent  mbox_sram_agent_t;
+  mbox_sram_agent_t mbox_sram_agent;
+
 
 
 
@@ -67,6 +70,17 @@ class soc_ifc_environment  extends uvmf_environment_base #(
                 )
  soc_ifc_sb_t;
   soc_ifc_sb_t soc_ifc_sb;
+  typedef soc_ifc_env_cov_subscriber #(
+                .PRED_T(soc_ifc_pred_t),
+                .CONFIG_T(CONFIG_T)
+  )
+  soc_ifc_env_cov_sub_t;
+ soc_ifc_env_cov_sub_t soc_ifc_env_cov_sub;
+  typedef soc_ifc_reg_cov_subscriber #(
+                .CONFIG_T(CONFIG_T)
+                )
+ soc_ifc_reg_cov_sub_t;
+  soc_ifc_reg_cov_sub_t soc_ifc_reg_cov_sub;
 
 
 // UVMF_CHANGE_ME: QVIP_AGENT_USED_FOR_REG_MAP: 
@@ -161,11 +175,18 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     soc_ifc_status_agent.set_config(configuration.soc_ifc_status_agent_config);
     cptra_status_agent = cptra_status_agent_t::type_id::create("cptra_status_agent",this);
     cptra_status_agent.set_config(configuration.cptra_status_agent_config);
+    mbox_sram_agent = mbox_sram_agent_t::type_id::create("mbox_sram_agent",this);
+    mbox_sram_agent.set_config(configuration.mbox_sram_agent_config);
     soc_ifc_pred = soc_ifc_pred_t::type_id::create("soc_ifc_pred",this);
     soc_ifc_pred.configuration = configuration;
     soc_ifc_sb = soc_ifc_sb_t::type_id::create("soc_ifc_sb",this);
     soc_ifc_sb.configuration = configuration;
     soc_ifc_sb.enable_wait_for_scoreboard_empty();
+    soc_ifc_env_cov_sub = soc_ifc_env_cov_sub_t::type_id::create("soc_ifc_env_cov_sub",this);
+    soc_ifc_env_cov_sub.configuration = configuration;
+    soc_ifc_env_cov_sub.pred = soc_ifc_pred;
+    soc_ifc_reg_cov_sub = soc_ifc_reg_cov_sub_t::type_id::create("soc_ifc_reg_cov_sub",this);
+    soc_ifc_reg_cov_sub.configuration = configuration;
 // pragma uvmf custom reg_model_build_phase begin
   // Build register model predictor if prediction is enabled
   if (configuration.enable_reg_prediction) begin
@@ -185,7 +206,7 @@ class soc_ifc_environment  extends uvmf_environment_base #(
 // ****************************************************************************
 // FUNCTION: connect_phase()
 // This function makes all connections within this environment.  Connections
-// typically inclue agent to predictor, predictor to scoreboard and scoreboard
+// typically include agent to predictor, predictor to scoreboard and scoreboard
 // to agent.
 //
   virtual function void connect_phase(uvm_phase phase);
@@ -194,6 +215,7 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     super.connect_phase(phase);
     soc_ifc_ctrl_agent.monitored_ap.connect(soc_ifc_pred.soc_ifc_ctrl_agent_ae);
     cptra_ctrl_agent.monitored_ap.connect(soc_ifc_pred.cptra_ctrl_agent_ae);
+    mbox_sram_agent.monitored_ap.connect(soc_ifc_pred.mbox_sram_agent_ae);
     soc_ifc_pred.soc_ifc_sb_ap.connect(soc_ifc_sb.expected_analysis_export);
     soc_ifc_pred.cptra_sb_ap.connect(soc_ifc_sb.expected_cptra_analysis_export);
     soc_ifc_pred.soc_ifc_sb_ahb_ap.connect(soc_ifc_sb.expected_ahb_analysis_export);
@@ -211,6 +233,15 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     if ( configuration.qvip_apb5_slave_subenv_interface_activity[0] == ACTIVE )
        uvm_config_db #(mvc_sequencer)::set(null,UVMF_SEQUENCERS,configuration.qvip_apb5_slave_subenv_interface_names[0],qvip_apb5_slave_subenv.apb5_master_0.m_sequencer  );
     // pragma uvmf custom reg_model_connect_phase begin
+    /*if (TODO) */begin:connect_coverage
+        soc_ifc_pred.soc_ifc_cov_ap      .connect                                   (soc_ifc_env_cov_sub.soc_ifc_ctrl_ae  );
+        soc_ifc_pred.cptra_cov_ap        .connect                                   (soc_ifc_env_cov_sub.cptra_ctrl_ae    );
+        soc_ifc_status_agent.monitored_ap.connect                                   (soc_ifc_env_cov_sub.soc_ifc_status_ae);
+        cptra_status_agent  .monitored_ap.connect                                   (soc_ifc_env_cov_sub.cptra_status_ae  );
+        mbox_sram_agent     .monitored_ap.connect                                   (soc_ifc_env_cov_sub.mbox_sram_ae     );
+        qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer_cov"].connect(soc_ifc_env_cov_sub.ahb_ae           );
+        qvip_apb5_slave_subenv_apb5_master_0_ap       ["trans_ap_cov"]      .connect(soc_ifc_env_cov_sub.apb_ae           );
+    end:connect_coverage
     // Create register model adapter if required
     if (configuration.enable_reg_prediction ||
         configuration.enable_reg_adaptation) begin
@@ -246,6 +277,8 @@ class soc_ifc_environment  extends uvmf_environment_base #(
       // of the sub-maps must be done manually.
       soc_ifc_pred.soc_ifc_ahb_reg_ap.connect(ahb_reg_predictor.bus_item_export);
       soc_ifc_pred.soc_ifc_apb_reg_ap.connect(apb_reg_predictor.bus_item_export);
+      ahb_reg_predictor.reg_ap.connect(soc_ifc_reg_cov_sub.analysis_export);
+      apb_reg_predictor.reg_ap.connect(soc_ifc_reg_cov_sub.analysis_export);
 //      qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer"].connect(ahb_reg_predictor.bus_item_export);
 //      qvip_apb5_slave_subenv_apb5_master_0_ap["trans_ap"].connect(apb_reg_predictor.bus_item_export);
     end
@@ -286,15 +319,47 @@ function void soc_ifc_environment::set_can_handle_reset(bit en = 1'b1);
 endfunction
 
 task soc_ifc_environment::handle_reset(string kind = "HARD");
+    uvm_object obj;
+    uvm_event reset_synchro;
+    reset_flag rst_sync_flag;
+
     // Reset status agents (needed to reset monitor transaction keys)
     this.cptra_status_agent.handle_reset(kind);
     this.soc_ifc_status_agent.handle_reset(kind);
+
+    // Reset mbox_sram agent (needed to reset the ECC error injection)
+    this.mbox_sram_agent.handle_reset(kind);
 
     // Reset scoreboard according to kind
     this.soc_ifc_sb.handle_reset(kind);
 
     // Reset predictor according to kind
-    this.soc_ifc_pred.handle_reset(kind);
+    this.soc_ifc_pred.handle_reset(kind, reset_synchro);
+
+    // A "SOFT" reset (cptra_rst_b) is followed by noncore reset assertion; we
+    // need to time the assertion of the reset to all the soc_ifc_env components
+    // based on the predictor
+    if (kind == "SOFT") begin
+        `uvm_info("SOC_IFC_ENV_HANDLE_RESET", "After receiving SOFT reset, waiting for predictor to signal the NONCORE reset so environment can be reset", UVM_LOW)
+
+        reset_synchro.wait_trigger_data(obj);
+        $cast(rst_sync_flag, obj);
+        if (rst_sync_flag.get_name() != "noncore_reset_flag")
+            `uvm_error("SOC_IFC_ENV_HANDLE_RESET", {"Reset synchronization event returned a reset event of unexpected type! ", rst_sync_flag.get_name()})
+
+        // Reset status agents (needed to reset monitor transaction keys)
+        this.cptra_status_agent.handle_reset("NONCORE");
+        this.soc_ifc_status_agent.handle_reset("NONCORE");
+
+        // Reset mbox_sram agent (needed to reset the ECC error injection)
+        this.mbox_sram_agent.handle_reset("NONCORE");
+
+        // Reset scoreboard according to kind
+        this.soc_ifc_sb.handle_reset("NONCORE");
+
+        `uvm_info("SOC_IFC_ENV_HANDLE_RESET", "After receiving NONCORE reset signal from soc_ifc_predictor, completed environment-level NONCORE reset prerequisites and continuing with reset prediction", UVM_LOW)
+        reset_synchro.reset();
+    end
 
     // TODO does this happen naturally from hdl_top driving reset?
     // Reset APB

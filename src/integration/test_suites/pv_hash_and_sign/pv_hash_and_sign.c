@@ -31,6 +31,31 @@ volatile uint32_t intr_count = 0;
     enum printf_verbosity verbosity_g = MEDIUM;
 #endif
 
+volatile caliptra_intr_received_s cptra_intr_rcv = {
+    .doe_error        = 0,
+    .doe_notif        = 0,
+    .ecc_error        = 0,
+    .ecc_notif        = 0,
+    .hmac_error       = 0,
+    .hmac_notif       = 0,
+    .kv_error         = 0,
+    .kv_notif         = 0,
+    .sha512_error     = 0,
+    .sha512_notif     = 0,
+    .sha256_error     = 0,
+    .sha256_notif     = 0,
+    .qspi_error       = 0,
+    .qspi_notif       = 0,
+    .uart_error       = 0,
+    .uart_notif       = 0,
+    .i3c_error        = 0,
+    .i3c_notif        = 0,
+    .soc_ifc_error    = 0,
+    .soc_ifc_notif    = 0,
+    .sha512_acc_error = 0,
+    .sha512_acc_notif = 0,
+};
+
 void main() {
     VPRINTF(LOW,"---------------------------\n");
     VPRINTF(LOW," KV PCR Hash Extend Test !!\n");
@@ -75,44 +100,53 @@ void main() {
                        0xa0b43fbf,
                        0x49897978};
 
-    uint32_t exp3[] = {0x9bad51d7,
-                       0x287c2244,
-                       0x154b6f2d,
-                       0x77bd52ea,
-                       0x0213d314,
-                       0x6f4cb39f,
-                       0xe27a6d42,
-                       0x8886bf0e,
-                       0xaab4310a,
-                       0x53946e9b,
-                       0x70cbd1e7,
-                       0xfb158bab};
+    uint32_t exp3[] = {0x2ab50775,
+                       0xdab80928,
+                       0xb8de848c,
+                       0xabbdfa56,
+                       0x897ed7b1,
+                       0x45be930e,
+                       0x1e340ce0,
+                       0x8c5bfc73,
+                       0x1d997144,
+                       0x0c43f5a5,
+                       0xaa48ac99,
+                       0x8dbe6bb9};
 
-    uint32_t exp_sign_r[] = {0x4783887c, 
-                             0xe3e20caa, 
-                             0x4a10c8ef, 
-                             0x929fdc23, 
-                             0x1c389ab7, 
-                             0x72cf8b35, 
-                             0xfc1647a5, 
-                             0xf1205a1e, 
-                             0x50d92ac9, 
-                             0x1b5a549a, 
-                             0x3944f5aa, 
-                             0x52f32b23};
+    uint32_t exp_sign_r[] = {0x871e6ea4, 
+                             0xddc5432c, 
+                             0xddaa60fd, 
+                             0x7f055472, 
+                             0xd3c4dd41, 
+                             0xa5bfb267, 
+                             0x09e88c31, 
+                             0x1a970935, 
+                             0x99a7c8f5, 
+                             0x5b3974c1, 
+                             0x9e4f5a7b, 
+                             0xfc1dd2ac};
 
-    uint32_t exp_sign_s[] = {0x44bd1e3b, 
-                             0x6cb57584, 
-                             0x304f77b9, 
-                             0xee4a6599, 
-                             0x38e3b614, 
-                             0x00db744e, 
-                             0x6227cbb3, 
-                             0x6bbfbbbd, 
-                             0xbe1d0815, 
-                             0x71fba315, 
-                             0xeb049b1e, 
-                             0x437af8aa};
+    uint32_t exp_sign_s[] = {0x3e5552de, 
+                             0x6403350e, 
+                             0xe70ad74e, 
+                             0x4b854d2d, 
+                             0xc4126bbf, 
+                             0x9c153a5d, 
+                             0x7a07bd4b, 
+                             0x85d06e45, 
+                             0xf850920e, 
+                             0x898fb7d3, 
+                             0x4f80796d, 
+                             0xae29365c};
+
+    uint32_t nonce[] = {0x01234567,
+                        0x11111111,
+                        0x22222222,
+                        0x33333333,
+                        0x44444444,
+                        0x55555555,
+                        0x66666666,
+                        0x77777777};
 
     volatile uint32_t* reg_ptr;
     uint8_t offset;
@@ -259,7 +293,11 @@ void main() {
     }
 
     sha_poll_gen_hash_ready();
-    lsu_write_32(CLP_SHA512_REG_SHA512_GEN_PCR_HASH_NONCE,0x12345678);
+    reg_ptr = (uint32_t*) CLP_SHA512_REG_SHA512_GEN_PCR_HASH_NONCE_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_SHA512_REG_SHA512_GEN_PCR_HASH_NONCE_7) {
+        *reg_ptr++ = nonce[offset++];
+    }
     sha_gen_hash_start();
     sha_poll_gen_hash_valid();
 
@@ -275,6 +313,11 @@ void main() {
         offset++;
     }
 
+    //inject seed to kv key reg (in RTL)
+    printf("ECC: Inject PRIVKEY into KV slot 7\n");
+    printf("ECC: Inject MSG into msg_reg\n");
+    printf("%c", 0x90);
+
     VPRINTF(MEDIUM,"ECC: Running PCR Sign Function\n");
     //run ECC signing on PCR
     reg = ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK) |
@@ -284,7 +327,7 @@ void main() {
 
     VPRINTF(MEDIUM,"ECC: Polling for PCR Sign to be complete\n");
     // wait for ECC SIGNING process to be done
-    while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_VALID_MASK) == 0);
+    while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
     //check expected output from sign r
     reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_0;

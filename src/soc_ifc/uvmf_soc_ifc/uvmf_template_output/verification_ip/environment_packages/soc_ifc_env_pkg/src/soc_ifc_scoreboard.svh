@@ -143,9 +143,10 @@ class soc_ifc_scoreboard #(
   bit [1:0] soc_ifc_status_monitor_toggle_count [$bits(soc_ifc_status_monitor_s)-1:0] = '{default: 0};
 
   // Variables used to report transaction matches and mismatches
-  int match_count; // FIXME report this
-  int mismatch_count; // FIXME report this
-  int nothing_to_compare_against_count; // FIXME check this and report
+  int match_count = 0;
+  int mismatch_count = 0;
+  int nothing_to_compare_against_count = 0;
+  int multiple_missed_txn_count = 0;
   bit testcase_passed = 1'b0;
 
   // Variables used for report_phase summary output formatting using report_message()
@@ -154,7 +155,7 @@ class soc_ifc_scoreboard #(
 
   // Variable used to enable end of test scoreboard empty check
   bit end_of_test_empty_check=1; // FIXME
-  int transaction_count; // FIXME check this
+  int transaction_count = 0;
 
   // Variable used to delay run phase completion until scoreboard empty
   bit wait_for_scoreboard_empty; // FIXME
@@ -164,6 +165,7 @@ class soc_ifc_scoreboard #(
   uvm_event reset_handled;
   reset_flag hard_reset_flag;
   reset_flag soft_reset_flag;
+  reset_flag noncore_reset_flag;
 
   extern function void handle_reset(string kind = "HARD");
   extern function void disable_wait_for_scoreboard_empty();
@@ -195,6 +197,7 @@ class soc_ifc_scoreboard #(
     reset_handled = new("reset_handled");
     hard_reset_flag = new("hard_reset_flag"); // Used as trigger data for reset events. In UVM 1.2, data changes from a uvm_object to a string
     soft_reset_flag = new("soft_reset_flag"); // Used as trigger data for reset events. In UVM 1.2, data changes from a uvm_object to a string
+    noncore_reset_flag = new("noncore_reset_flag"); // Used as trigger data for reset events. In UVM 1.2, data changes from a uvm_object to a string
   // pragma uvmf custom build_phase end
   endfunction
 
@@ -207,7 +210,7 @@ class soc_ifc_scoreboard #(
     soc_ifc_status_monitor_s soc_ifc_status_monitor_struct_rpt = '{default:0};
 
     `uvm_info("SCBD_SOC_IFC_STS", $sformatf("Transaction Received through expected_analysis_export with key: [%0d]", t.get_key()), UVM_MEDIUM)
-    `uvm_info("SCBD_SOC_IFC_STS", {"            Data: ",t.convert2string()}, UVM_FULL)
+    `uvm_info("SCBD_SOC_IFC_STS", {"            Data: ",t.convert2string()}, UVM_HIGH)
 
     soc_ifc_expected_hash[t.get_key()] = t;
     soc_ifc_status_monitor_struct_prev = soc_ifc_status_monitor_struct;
@@ -223,8 +226,10 @@ class soc_ifc_scoreboard #(
             soc_ifc_status_monitor_struct_rpt[sts_bit] = 1'b1;
         end
     end
-    if (multiple_missed_txn_error)
+    if (multiple_missed_txn_error) begin
+        multiple_missed_txn_count++;
         `uvm_error("SCBD_SOC_IFC_STS",$sformatf("Received multiple expected transactions without corresponding actual transaction. Problem fields: %p", soc_ifc_status_monitor_struct_rpt))
+    end
     transaction_count++;
     -> entry_received;
  
@@ -237,7 +242,7 @@ class soc_ifc_scoreboard #(
   virtual function void write_expected_cptra_analysis_export(cptra_status_transaction t);
     // pragma uvmf custom expected_cptra_analysis_export_scoreboard begin
     `uvm_info("SCBD_CPTRA_STS", $sformatf("Transaction Received through expected_cptra_analysis_export with key: [%0d]", t.get_key()), UVM_MEDIUM)
-    `uvm_info("SCBD_CPTRA_STS", {"            Data: ",t.convert2string()}, UVM_FULL)
+    `uvm_info("SCBD_CPTRA_STS", {"            Data: ",t.convert2string()}, UVM_HIGH)
 
     cptra_expected_hash[t.get_key()] = t;
     if (reset_handled.is_on()) begin
@@ -260,7 +265,7 @@ class soc_ifc_scoreboard #(
     bit txn_eq;
 
     `uvm_info("SCBD_SOC_IFC_STS", $sformatf("Transaction Received through actual_analysis_export with key: [%0d]", t.get_key()), UVM_MEDIUM)
-    `uvm_info("SCBD_SOC_IFC_STS", {"            Data: ",t.convert2string()}, UVM_FULL)
+    `uvm_info("SCBD_SOC_IFC_STS", {"            Data: ",t.convert2string()}, UVM_HIGH)
 
     // Check for expected analysis port to receive first transaction after a reset before proceeding with the actual check
     // This indicates the environment level reset is finished and the predictor had time to forward an expected
@@ -358,9 +363,7 @@ class soc_ifc_scoreboard #(
         soc_ifc_status_monitor_toggle_count = '{default:2'b00};
     end
     else begin
-        `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
-        `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_analysis_export function needs to be completed with custom scoreboard functionality",UVM_LOW)
-        `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
+        `uvm_info("FIXME_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_analysis_export function needs to be completed with custom scoreboard functionality for unexpected actual transactions",UVM_LOW)
         `uvm_error("SCBD_SOC_IFC_STS",$sformatf("NO PREDICTED ENTRY WITH KEY [%0d] TO COMPARE AGAINST:%s", t.get_key(), t.convert2string()))
         nothing_to_compare_against_count++;
     end
@@ -378,7 +381,7 @@ class soc_ifc_scoreboard #(
     bit txn_eq;
 
     `uvm_info("SCBD_CPTRA_STS", $sformatf("Transaction Received through actual_cptra_analysis_export with key: [%0d]", t.get_key()), UVM_MEDIUM)
-    `uvm_info("SCBD_CPTRA_STS", {"            Data: ",t.convert2string()}, UVM_FULL)
+    `uvm_info("SCBD_CPTRA_STS", {"            Data: ",t.convert2string()}, UVM_HIGH)
 
     // Check for expected analysis port to receive first transaction after a reset before proceeding with the actual check
     if (reset_handled.is_on())
@@ -397,9 +400,7 @@ class soc_ifc_scoreboard #(
         cptra_expected_hash.delete(t.get_key());
     end
     else begin
-        `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
-        `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_cptra_analysis_export function needs to be completed with custom scoreboard functionality",UVM_LOW)
-        `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
+        `uvm_info("FIXME_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_cptra_analysis_export function needs to be completed with custom scoreboard functionality for unexpected actual transactions",UVM_LOW)
         `uvm_error("SCBD_CPTRA_STS",$sformatf("NO PREDICTED ENTRY WITH KEY [%0d] TO COMPARE AGAINST:%s", t.get_key(), t.convert2string()))
         nothing_to_compare_against_count++;
     end
@@ -420,7 +421,7 @@ class soc_ifc_scoreboard #(
       `uvm_fatal("SCBD_AHB","Cast from mvc_sequence_item_base to ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) in write_expected_ahb_analysis_export failed!")
     end
     `uvm_info("SCBD_AHB", "Transaction Received through expected_ahb_analysis_export", UVM_MEDIUM)
-    `uvm_info("SCBD_AHB",{"            Data: ",t.convert2string()}, UVM_FULL)
+    `uvm_info("SCBD_AHB",{"            Data: ",t.convert2string()}, UVM_HIGH)
 
     ahb_expected_q.push_back(t);
 
@@ -441,7 +442,7 @@ class soc_ifc_scoreboard #(
       `uvm_fatal("SCBD_APB","Cast from mvc_sequence_item_base to apb3_host_apb3_transaction #(apb5_master_0_params::APB3_SLAVE_COUNT, apb5_master_0_params::APB3_PADDR_BIT_WIDTH, apb5_master_0_params::APB3_PWDATA_BIT_WIDTH, apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) in write_expected_apb_analysis_export failed!")
     end
     `uvm_info("SCBD_APB", "Transaction Received through expected_apb_analysis_export", UVM_MEDIUM)
-    `uvm_info("SCBD_APB",{"            Data: ",t.convert2string()}, UVM_FULL)
+    `uvm_info("SCBD_APB",{"            Data: ",t.convert2string()}, UVM_HIGH)
 
     apb_expected_q.push_back(t);
 
@@ -464,7 +465,7 @@ class soc_ifc_scoreboard #(
       `uvm_fatal("SCBD_AHB","Cast from mvc_sequence_item_base to ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) in write_actual_ahb_analysis_export failed!")
     end
     `uvm_info("SCBD_AHB", "Transaction Received through actual_ahb_analysis_export", UVM_MEDIUM)
-    `uvm_info("SCBD_AHB",{"            Data: ",t.convert2string()}, UVM_FULL)
+    `uvm_info("SCBD_AHB",{"            Data: ",t.convert2string()}, UVM_HIGH)
 
     if (ahb_expected_q.size() > 0) begin
         t_exp = ahb_expected_q.pop_front();
@@ -479,9 +480,7 @@ class soc_ifc_scoreboard #(
         end
     end
     else begin
-        `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
-        `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_ahb_analysis_export function needs to be completed with custom scoreboard functionality",UVM_LOW)
-        `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
+        `uvm_info("FIXME_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_ahb_analysis_export function needs to be completed with custom scoreboard functionality for unexpected actual transactions",UVM_LOW)
         `uvm_error("SCBD_AHB",$sformatf("NO PREDICTED ENTRY TO COMPARE AGAINST:%s",t.convert2string()))
         nothing_to_compare_against_count++;
     end
@@ -503,7 +502,7 @@ class soc_ifc_scoreboard #(
       `uvm_fatal("SCBD_APB","Cast from mvc_sequence_item_base to apb3_host_apb3_transaction #(apb5_master_0_params::APB3_SLAVE_COUNT, apb5_master_0_params::APB3_PADDR_BIT_WIDTH, apb5_master_0_params::APB3_PWDATA_BIT_WIDTH, apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) in write_actual_apb_analysis_export failed!")
     end
     `uvm_info("SCBD_APB", "Transaction Received through actual_apb_analysis_export", UVM_MEDIUM)
-    `uvm_info("SCBD_APB",{"            Data: ",t.convert2string()}, UVM_FULL)
+    `uvm_info("SCBD_APB",{"            Data: ",t.convert2string()}, UVM_HIGH)
 
     if (apb_expected_q.size() > 0) begin
         t_exp = apb_expected_q.pop_front();
@@ -518,9 +517,7 @@ class soc_ifc_scoreboard #(
         end
     end
     else begin
-        `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
-        `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_apb_analysis_export function needs to be completed with custom scoreboard functionality",UVM_LOW)
-        `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_LOW)
+        `uvm_info("FIXME_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_apb_analysis_export function needs to be completed with custom scoreboard functionality for unexpected actual transactions",UVM_LOW)
         `uvm_error("SCBD_APB",$sformatf("NO PREDICTED ENTRY TO COMPARE AGAINST:%s",t.convert2string()))
         nothing_to_compare_against_count++;
     end
@@ -534,7 +531,7 @@ class soc_ifc_scoreboard #(
   virtual function void extract_phase(uvm_phase phase);
 // pragma uvmf custom extract_phase begin
      super.extract_phase(phase);
-     report_variables = {transaction_count, match_count, mismatch_count, nothing_to_compare_against_count};
+     report_variables = {transaction_count, match_count, mismatch_count, nothing_to_compare_against_count, multiple_missed_txn_count};
 // pragma uvmf custom extract_phase end
   endfunction
 
@@ -543,7 +540,7 @@ class soc_ifc_scoreboard #(
 // pragma uvmf custom check_phase begin
      super.check_phase(phase);
      if (transaction_count == 0) `uvm_error("SCBD","No Transactions Scoreboarded")
-     if ((match_count > 0) && (mismatch_count == 0) && (nothing_to_compare_against_count == 0))
+     if ((match_count > 0) && (mismatch_count == 0) && (nothing_to_compare_against_count == 0) && (multiple_missed_txn_count == 0))
         testcase_passed = 1'b1;
 // pragma uvmf custom check_phase end
   endfunction
@@ -552,7 +549,7 @@ class soc_ifc_scoreboard #(
   // Builds the report_phase message printed for scoreboards derived from this base 
   // Provides for customization of output formatting
   virtual function string report_message(string header, int variables [] );
-        return {$sformatf("%s PREDICTED_TRANSACTIONS=%0d MATCHES=%0d MISMATCHES=%0d NO_COMPARISON_TXN=%0d", header, variables[0], variables[1], variables[2], variables[3])}; 
+        return {$sformatf("%s PREDICTED_TRANSACTIONS=%0d MATCHES=%0d MISMATCHES=%0d NO_COMPARISON_TXN=%0d MULTIPLE_MISSED_TXN=%0d", header, variables[0], variables[1], variables[2], variables[3], variables[4])}; 
   endfunction
 
   // FUNCTION: report_phase
@@ -575,30 +572,39 @@ endclass
   // Used to facilitate reset handling for different kinds of reset
   // that may occur in soc_ifc environment.
   // "SOFT" reset (aka cptra_rst_b=0)
-  //   * Causes flush of all expected and actual transactions
+  //   * Causes flush of all expected and actual transactions after a delay
+  //     representing the eventual assertion of noncore reset
   //   * Initiates an event trigger to indicate reset was called
   // "HARD" reset (aka cptra_pwrgood=0)
   //   * Causes flush of all expected and actual transactions
   //   * Initiates an event trigger to indicate reset was called
+  // This function is called in the soc_ifc_environment prior to handle_reset
+  // in the soc_ifc_predictor.
   function void soc_ifc_scoreboard::handle_reset(string kind = "HARD");
       reset_flag kind_handled;
-      kind_handled = kind == "HARD" ? hard_reset_flag :
-                     kind == "SOFT" ? soft_reset_flag :
-                                      null;
+      kind_handled = kind == "HARD"    ? hard_reset_flag :
+                     kind == "SOFT"    ? soft_reset_flag :
+                     kind == "NONCORE" ? noncore_reset_flag :
+                                         null;
 
-      // Flush transactions
-      soc_ifc_expected_hash.delete();
-      cptra_expected_hash  .delete();
-      ahb_expected_q.delete();
-      apb_expected_q.delete();
+      if (kind inside {"HARD","NONCORE"}) begin
+          `uvm_info("SCBD_HANDLE_RESET", {"On call to handle_reset of kind [", kind , "] executing scoreboard reset"}, UVM_HIGH)
 
-      // Clear toggle counter
-      soc_ifc_status_monitor_struct      = '{default:0};
-      soc_ifc_status_monitor_struct_prev = '{default:0};
-      soc_ifc_status_monitor_toggle_count = '{default:2'b00};
+          // Flush transactions
+          soc_ifc_expected_hash.delete();
+          cptra_expected_hash  .delete();
+          ahb_expected_q.delete();
+          apb_expected_q.delete();
 
-      // Event trigger
-      reset_handled.trigger(kind_handled);
+          // Clear toggle counter
+          soc_ifc_status_monitor_struct      = '{default:0};
+          soc_ifc_status_monitor_struct_prev = '{default:0};
+          soc_ifc_status_monitor_toggle_count = '{default:2'b00};
+
+          // Event trigger
+          reset_handled.trigger(kind_handled);
+          `uvm_info("SCBD_HANDLE_RESET", "On call to handle_reset, triggered the event indicating an expected status transaction for internal resets", UVM_HIGH)
+      end
   endfunction
 
   // FUNCTION: disable_wait_for_scoreboard_empty
@@ -625,6 +631,12 @@ endclass
       if (apb_expected_q.size() != 0)        entries_remaining |= 1;
       while (entries_remaining) begin : while_entries_remaining
           `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("Waiting for entries to drain. Remaining: soc_ifc_exp[%d] cptra_exp[%d] ahb_exp[%d] apb_exp[%d]", soc_ifc_expected_hash.size(), cptra_expected_hash.size(), ahb_expected_q.size(), apb_expected_q.size()),UVM_NONE)
+          begin: VERBOSE_TXN_DUMP
+              foreach (soc_ifc_expected_hash[ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("soc_ifc_expected[%0d]: %s",ii,soc_ifc_expected_hash[ii].convert2string()), UVM_FULL) end
+              foreach (cptra_expected_hash  [ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("cptra_expected[%0d]:   %s",ii,cptra_expected_hash  [ii].convert2string()), UVM_FULL) end
+              foreach (ahb_expected_q       [ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("ahb_expected[%0d]:     %s",ii,ahb_expected_q       [ii].convert2string()), UVM_FULL) end
+              foreach (apb_expected_q       [ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("apb_expected[%0d]:     %s",ii,apb_expected_q       [ii].convert2string()), UVM_FULL) end
+          end
           @entry_received;
           entries_remaining=0;
           if (soc_ifc_expected_hash.size() != 0) entries_remaining |= 1;

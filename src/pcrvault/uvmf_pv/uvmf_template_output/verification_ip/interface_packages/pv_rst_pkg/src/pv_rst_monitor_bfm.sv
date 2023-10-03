@@ -85,23 +85,31 @@ end
   tri dummy_i;
   tri  cptra_pwrgood_i;
   tri  rst_b_i;
+  tri  core_only_rst_b_i;
+  tri  fw_update_rst_window_i;
   assign clk_i = bus.clk;
   assign dummy_i = bus.dummy;
   assign cptra_pwrgood_i = bus.cptra_pwrgood;
   assign rst_b_i = bus.rst_b;
+  assign core_only_rst_b_i = bus.core_only_rst_b;
+  assign fw_update_rst_window_i = bus.fw_update_rst_window;
 
   // Proxy handle to UVM monitor
   pv_rst_pkg::pv_rst_monitor  proxy;
   // pragma tbx oneway proxy.notify_transaction                 
 
   // pragma uvmf custom interface_item_additional begin
-  reg cptra_pwrgood_o = 'b0;
-  reg rst_b_o = 'b0;
+    reg cptra_pwrgood_o = 'b0;
+    reg rst_b_o = 'b0;
+    reg core_only_rst_b_o = 'b0;
+    reg fw_update_rst_window_o = 'b0;
 
   function bit any_signal_changed();
 
-    return  |(cptra_pwrgood_i ^ cptra_pwrgood_o) ||
-            |(rst_b_i ^ rst_b_o);
+      return  |(cptra_pwrgood_i ^ cptra_pwrgood_o) ||
+              |(rst_b_i ^ rst_b_o) ||
+              |(core_only_rst_b_i ^ core_only_rst_b_o) ||
+              |(fw_update_rst_window_i ^ fw_update_rst_window_o);
   
   endfunction
   // pragma uvmf custom interface_item_additional end
