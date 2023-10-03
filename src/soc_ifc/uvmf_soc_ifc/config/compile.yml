@@ -53,6 +53,7 @@ provides: [uvmf_soc_ifc]
 schema_version: 2.4.0
 requires:
   - uvmf_soc_ifc_vip
+  - soc_ifc_coverage
 targets:
   tb:
     directories:

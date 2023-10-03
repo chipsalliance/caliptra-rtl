@@ -120,6 +120,7 @@ import uvmf_base_pkg_hdl::*;
       .debugUnlock_or_scan_mode_switch('0)
   );
 
+  ecc_top_cov_bind i_ecc_top_cov_bind();
   // pragma uvmf custom dut_instantiation end
 
   initial begin      // tbx vif_binding_block 

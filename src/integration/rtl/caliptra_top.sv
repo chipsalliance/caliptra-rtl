@@ -285,7 +285,7 @@ end
         .AHB_LITE_ADDR_WIDTH(`CALIPTRA_AHB_HADDR_SIZE),
         .AHB_LITE_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE)
     )
-    responder_inst[`CALIPTRA_AHB_SLAVES_NUM-1:0]();
+    responder_inst[0:`CALIPTRA_AHB_SLAVES_NUM-1]();
 
     //========================================================================
     // AHB Master ports
@@ -540,7 +540,7 @@ el2_veer_wrapper rvtop (
 
     .soft_int               (soft_int),
     .core_id                ('0),
-    .scan_mode              ( cptra_scan_mode_Latched ), // To enable scan mode
+    .scan_mode              ( scan_mode ), // To enable scan mode
     .mbist_mode             ( 1'b0 )        // to enable mbist
 
 );
@@ -1236,7 +1236,7 @@ soc_ifc_top1
     .timer_intr(timer_int),
     //Obfuscated UDS and FE
     .clear_obf_secrets(clear_obf_secrets_debugScanQ), //input - includes debug & scan modes to do the register clearing
-    .scan_mode_f(cptra_scan_mode_Latched),
+    .scan_mode(scan_mode),
     .cptra_obf_key(cptra_obf_key),
     .cptra_obf_key_reg(cptra_obf_key_reg),
     .obf_field_entropy(obf_field_entropy),
