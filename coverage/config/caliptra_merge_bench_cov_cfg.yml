@@ -17,13 +17,12 @@ project: AHA_POC
 
 merge:
 
-  merge_opts: -flex_merge reference -flex_merge tgl -merge_across_libs -mapfile ${CALIPTRA_ROOT}/coverage/config/clp_mapfile
+  merge_opts: -flex_merge reference -flex_merge tgl -diag tglmerge -merge_across_libs -group merge_across_scopes -mapfile ${CALIPTRA_ROOT}/coverage/config/clp_mapfile
 
   search_dir:
     ${COV_DISK}/${SYSTEM_DEFINITIONID}/uvmf_caliptra_top: ${MERGE_SAMPLE_CNT}
     ${COV_DISK}/${SYSTEM_DEFINITIONID}/caliptra_top_tb: ${MERGE_SAMPLE_CNT}
-    ${COV_DISK}/${SYSTEM_DEFINITIONID}/sha512_caliptra_tb: ${MERGE_SAMPLE_CNT}
-    ${COV_DISK}/${SYSTEM_DEFINITIONID}/soc_ifc_caliptra_tb: ${MERGE_SAMPLE_CNT}
+    ${COV_DISK}/${SYSTEM_DEFINITIONID}/soc_ifc_tb: ${MERGE_SAMPLE_CNT}
     ${COV_DISK}/${SYSTEM_DEFINITIONID}/uvmf_2022: ${MERGE_SAMPLE_CNT}
     ${COV_DISK}/${SYSTEM_DEFINITIONID}/uvmf_ecc: ${MERGE_SAMPLE_CNT}
     ${COV_DISK}/${SYSTEM_DEFINITIONID}/uvmf_hmac: ${MERGE_SAMPLE_CNT}

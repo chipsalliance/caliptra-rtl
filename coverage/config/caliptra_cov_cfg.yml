@@ -20,7 +20,7 @@ project: AHA_POC
 
 merge:
 
-  merge_opts: -flex_merge reference -flex_merge tgl
+  merge_opts: -flex_merge union -flex_merge tgl -diag tglmerge
 
   search_dir:
     ${COV_DISK}/${PIPELINE_ID}/${BENCH_CONFIG}: ${NIGHTLY_SAMPLE_CNT}

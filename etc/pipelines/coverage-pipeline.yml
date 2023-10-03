@@ -73,7 +73,7 @@ stages:
         - display_name: Coverage merge for ${{ cov_dut }}
         - commands:
           - $(SUBMIT_SMALL_NC_JOBS) python3w -r requirements.txt \${VERIF_TOOLS}/coverage_merge/coverage_merge.py -f \${CALIPTRA_ROOT}/coverage/config/${{ cov_dut }}.yml $(skip_db_upload_arg)
-        - timeout: 5
+        - timeout: 30
         - run_in_workspace: true
 
     post_test_steps:
@@ -87,7 +87,7 @@ stages:
           enter-workspace tmp_ws "$(SUBMIT_SMALL_NC_JOBS) python3w -r requirements.txt \${VERIF_TOOLS}/coverage_merge/coverage_merge.py -f \${CALIPTRA_ROOT}/coverage/config/caliptra_merge_bench_cov_cfg.yml $(skip_db_upload_arg)"
 
         displayName: Coverage merge for all duts
-        timeoutInMinutes: 10
+        timeoutInMinutes: 60
         enabled: true
         env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
