@@ -129,6 +129,7 @@ module ecc_dsa_ctrl
     logic [1  : 0]          cmd_reg;
     logic [2  : 0]          pm_cmd_reg;
     logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  msg_reg;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  msg_reduced_reg;
     logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  privkey_reg;
     logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  kv_reg;
     logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  pubkeyx_reg;
@@ -196,6 +197,7 @@ module ecc_dsa_ctrl
 
     logic privkey_input_outofrange;
     logic r_output_outofrange;
+    logic s_output_outofrange;
     logic r_input_outofrange;
     logic s_input_outofrange;
     logic pubkeyx_input_outofrange;
@@ -263,7 +265,7 @@ module ecc_dsa_ctrl
         .keygen_seed(seed_reg),
         .keygen_nonce(nonce_reg),
         .privKey(privkey_reg),
-        .hashed_msg(msg_reg),
+        .hashed_msg(msg_reduced_reg),
         .IV(IV_reg),
         .lambda(lambda),
         .scalar_rnd(scalar_rnd_reg),
@@ -435,6 +437,21 @@ module ecc_dsa_ctrl
             hwif_in.ECC_IV[dword].IV.hwclr = zeroize_reg;
         end
     end
+
+    //transformed msg into modulo q 
+    always_ff @(posedge clk or negedge reset_n) 
+    begin : reduced_msg
+        if (!reset_n)
+            msg_reduced_reg <= '0;
+        else if (zeroize_reg)
+            msg_reduced_reg <= '0;
+        else begin
+            if (msg_reg >= GROUP_ORDER)
+                msg_reduced_reg <= msg_reg - GROUP_ORDER;
+            else
+                msg_reduced_reg <= msg_reg;
+        end
+    end
     
 
     always_comb hwif_in.ECC_CTRL.CTRL.hwclr = |hwif_out.ECC_CTRL.CTRL.value;
@@ -564,7 +581,7 @@ module ecc_dsa_ctrl
                 CONST_G_Y_MONT_ID     : write_reg = {zero_pad, G_Y_MONT};
                 CONST_R2_q_MONT_ID    : write_reg = {zero_pad, R2_q_MONT};
                 CONST_ONE_q_MONT_ID   : write_reg = {zero_pad, ONE_q_MONT};
-                MSG_ID                : write_reg = {zero_pad, msg_reg};
+                MSG_ID                : write_reg = {zero_pad, msg_reduced_reg};
                 PRIVKEY_ID            : write_reg = {zero_pad, privkey_reg};
                 PUBKEYX_ID            : write_reg = {zero_pad, pubkeyx_reg};
                 PUBKEYY_ID            : write_reg = {zero_pad, pubkeyy_reg};
@@ -643,6 +660,7 @@ module ecc_dsa_ctrl
     
     assign privkey_input_outofrange = signing_process & ((privkey_reg == 0) | (privkey_reg >= GROUP_ORDER));
     assign r_output_outofrange      = signing_process & (hw_r_we & (read_reg == 0));
+    assign s_output_outofrange      = signing_process & (hw_s_we & (read_reg == 0));
 
     assign r_input_outofrange       = verifying_process & ((r_reg == 0) | (r_reg >= GROUP_ORDER));
     assign s_input_outofrange       = verifying_process & ((s_reg == 0) | (s_reg >= GROUP_ORDER));
@@ -652,7 +670,7 @@ module ecc_dsa_ctrl
 
     assign pcr_sign_input_invalid   = ((cmd_reg == KEYGEN) | (cmd_reg == VERIFY)) & pcr_sign_mode;
 
-    assign error_flag = privkey_input_outofrange | r_output_outofrange | r_input_outofrange | s_input_outofrange | pubkeyx_input_outofrange | pubkeyy_input_outofrange | pubkey_input_invalid | pcr_sign_input_invalid;
+    assign error_flag = privkey_input_outofrange | r_output_outofrange | s_output_outofrange | r_input_outofrange | s_input_outofrange | pubkeyx_input_outofrange | pubkeyy_input_outofrange | pubkey_input_invalid | pcr_sign_input_invalid;
 
     //----------------------------------------------------------------
     // ECDSA_FSM_flow

@@ -137,7 +137,7 @@ module soc_ifc_tb
   logic [31:0]  generic_input_wires1; 
 
   logic clear_obf_secrets;
-  logic scan_mode_f; 
+  logic scan_mode; 
 
   // obfuscation, uds and field entropy for observation
   logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg;
@@ -265,7 +265,7 @@ module soc_ifc_tb
              .rv_ecc_sts(rv_ecc_sts_t'{default:1'b0}),
 
              .clear_obf_secrets(clear_obf_secrets), 
-             .scan_mode_f(scan_mode_f), 
+             .scan_mode(scan_mode), 
              .cptra_obf_key('0),
              .cptra_obf_key_reg(cptra_obf_key_reg),
              .obf_field_entropy(obf_field_entropy),
@@ -327,7 +327,7 @@ module soc_ifc_tb
 
 
   // Tie-offs
-  assign scan_mode_f = 1'b0; 
+  assign scan_mode = 1'b0; 
   assign clear_obf_secrets = 1'b0;
 
 
@@ -422,7 +422,7 @@ module soc_ifc_tb
   // CPTRA SECUIRTY_STATE, FLOW_STATUS, GENERIC_INPUT_WIRES
   //----------------------------------------------------------------
 
-  always_comb update_CPTRA_SECURITY_STATE(scan_mode_f, security_state.debug_locked, security_state.device_lifecycle);
+  always_comb update_CPTRA_SECURITY_STATE(scan_mode, security_state.debug_locked, security_state.device_lifecycle);
   always_comb update_CPTRA_FLOW_STATUS(ready_for_fuses, `REG_HIER_BOOT_FSM_PS);
   always_comb update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires1_q, 1'b1); 
   always_comb update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires0_q, 1'b0);

@@ -107,6 +107,7 @@ package kv_env_pkg;
   `include "src/kv_scoreboard.svh"
   `include "src/kv_environment.svh"
   `include "src/kv_env_sequence_base.svh"
+  `include "src/kv_ahb_sequence.svh"
   `include "src/kv_wr_rd_sequence.svh"
   `include "src/kv_wr_rd_rst_sequence.svh"
   `include "src/kv_wr_rd_cold_rst_sequence.svh"
@@ -116,12 +117,12 @@ package kv_env_pkg;
   `include "src/kv_wr_rd_lock_cold_rst_sequence.svh"
   `include "src/kv_wr_rd_lock_core_rst_sequence.svh"
   `include "src/kv_wr_rd_debug_sequence.svh"
+  `include "src/kv_env_debug_on_sequence.svh"
   `include "src/kv_wr_rd_debug_lock_sequence.svh"
   `include "src/kv_wr_rd_debug_lock_clear_rst_sequence.svh"
   `include "src/kv_wr_rd_debug_warm_rst_sequence.svh"
   `include "src/kv_wr_rd_debug_cold_rst_sequence.svh"
   `include "src/kv_wr_rd_debug_core_rst_sequence.svh"
-  `include "src/kv_ahb_sequence.svh"
 
   // pragma uvmf custom package_item_additional begin
   // UVMF_CHANGE_ME : When adding new environment level sequences to the src directory

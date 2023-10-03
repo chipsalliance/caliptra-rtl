@@ -108,6 +108,7 @@ hmac_ctrl #(
      .debugUnlock_or_scan_mode_switch('0)
 );
  
+hmac_ctrl_cov_bind i_hmac_ctrl_cov_bind();
   // pragma uvmf custom dut_instantiation end
 
   initial begin      // tbx vif_binding_block 

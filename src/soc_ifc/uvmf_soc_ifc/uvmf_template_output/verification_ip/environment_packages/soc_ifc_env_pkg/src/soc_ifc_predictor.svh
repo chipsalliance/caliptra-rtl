@@ -2951,34 +2951,36 @@ task soc_ifc_predictor::wdt_counter_task();
                     this.t2_count++;
                     if (!($time % 500))
                         `uvm_info("PRED_WDT", $sformatf("In cascade mode. t2_count increments to 0x%x, wdt_to_period is 0x%x", this.t2_count, wdt_t2_period), UVM_DEBUG)
-                end
-                else begin
-                    if (!this.wdt_nmi_intr_sent) begin
-                        `uvm_info("PRED_WDT", "Timer2 expired in cascade mode. Expecting NMI to be handled", UVM_MEDIUM);
-                        p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL.nmi_pin.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, p_soc_ifc_AHB_map); //TODO: use default map?
-                        p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_STATUS.t2_timeout.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, p_soc_ifc_AHB_map);
-                        
-                        //Sending cptra_status_txn in the same clock as NMI
-                        nmi_intr_pending = 1'b1;
-                        populate_expected_cptra_status_txn(local_cptra_sb_ap_txn);
-                        cptra_sb_ap.write(local_cptra_sb_ap_txn);
-                        `uvm_info("PRED_WDT", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
 
-                        // Fatal error interrupt is delayed by 1 cycle due to reg state
-                        fork
-                            configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
-                            if (!noncore_rst_out_asserted) begin
-                                `uvm_info("PRED_WDT", "Watchdog timeout triggers cptra_error_fatal output", UVM_HIGH)
-                                cptra_error_fatal = 1;
-                                populate_expected_soc_ifc_status_txn(local_soc_ifc_sb_ap_txn);
-                                soc_ifc_sb_ap.write(local_soc_ifc_sb_ap_txn);
-                                `uvm_info("PRED_WDT", "Transaction submitted through soc_ifc_sb_ap", UVM_MEDIUM)
-                            end
-                        join_none
-
-                        //Set a flag so we don't keep sending transactions while the timer holds value until interrupt
-                        //is serviced or reset
-                        this.wdt_nmi_intr_sent = 1'b1;
+                    //If t2 count expires, send cptra_status_txn in the same clk
+                    if (this.t2_count == wdt_t2_period) begin
+                        if (!this.wdt_nmi_intr_sent) begin
+                            `uvm_info("PRED_WDT", "Timer2 expired in cascade mode. Expecting NMI to be handled", UVM_MEDIUM);
+                            p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL.nmi_pin.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, p_soc_ifc_AHB_map); //TODO: use default map?
+                            p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_STATUS.t2_timeout.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, p_soc_ifc_AHB_map);
+                            
+                            //Sending cptra_status_txn in the same clock as NMI
+                            nmi_intr_pending = 1'b1;
+                            populate_expected_cptra_status_txn(local_cptra_sb_ap_txn);
+                            cptra_sb_ap.write(local_cptra_sb_ap_txn);
+                            `uvm_info("PRED_WDT", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
+    
+                            // Fatal error interrupt is delayed by 1 cycle due to reg state
+                            fork
+                                configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
+                                if (!noncore_rst_out_asserted) begin
+                                    `uvm_info("PRED_WDT", "Watchdog timeout triggers cptra_error_fatal output", UVM_HIGH)
+                                    cptra_error_fatal = 1;
+                                    populate_expected_soc_ifc_status_txn(local_soc_ifc_sb_ap_txn);
+                                    soc_ifc_sb_ap.write(local_soc_ifc_sb_ap_txn);
+                                    `uvm_info("PRED_WDT", "Transaction submitted through soc_ifc_sb_ap", UVM_MEDIUM)
+                                end
+                            join_none
+    
+                            //Set a flag so we don't keep sending transactions while the timer holds value until interrupt
+                            //is serviced or reset
+                            this.wdt_nmi_intr_sent = 1'b1;
+                        end
                     end
                 end
             end

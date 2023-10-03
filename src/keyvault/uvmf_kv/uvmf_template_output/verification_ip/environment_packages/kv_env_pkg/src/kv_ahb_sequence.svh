@@ -52,20 +52,15 @@ class kv_ahb_sequence #(
         //    1 <= iter <= 5; 
         // };
         iter = 1;
-        //Issue reset
-        if(configuration.kv_rst_agent_config.sequencer != null)
-            kv_rst_agent_poweron_seq.start(configuration.kv_rst_agent_config.sequencer);
-        else
-            `uvm_error("KV AHB", "kv_rst_agent_config.sequencer is null!")
         
         //KEY ENTRY reg writes
         for (i = 0; i < iter; i++) begin
             for(entry = 0; entry < KV_NUM_KEYS; entry++) begin
-                for (offset = 0; offset < KV_NUM_DWORDS; offset++) begin
-                    std::randomize(wr_data);
-                    reg_model.kv_reg_rm.KEY_ENTRY[entry][offset].write(sts, wr_data, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
-                    assert(sts == UVM_IS_OK) else `uvm_error("KV AHB", $sformatf("Failed when writing to KEY[%d][%d] entry",entry, offset))
-                end
+                // for (offset = 0; offset < KV_NUM_DWORDS; offset++) begin
+                    std::randomize(wr_data) with {wr_data <= 'h7;};
+                    reg_model.kv_reg_rm.KEY_CTRL[entry].write(sts, wr_data, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
+                    assert(sts == UVM_IS_OK) else `uvm_error("KV AHB", $sformatf("Failed when writing to KEY[%d] entry",entry))
+                // end
             end
         end
         

@@ -44,6 +44,9 @@ class kv_rand_wr_rd_test_sequence extends kv_bench_sequence_base;
     typedef kv_key_wr_rd_basic_sequence #(.CONFIG_T(kv_env_configuration_t))kv_key_wr_rd_basic_sequence_t;
     rand kv_key_wr_rd_basic_sequence_t kv_key_wr_rd_basic_seq;
 
+    // typedef kv_key_wr_rd_single_sequence #(.CONFIG_T(kv_env_configuration_t))kv_key_wr_rd_single_sequence_t;
+    // rand kv_key_wr_rd_single_sequence_t kv_key_wr_rd_single_seq;
+
     typedef kv_wr_rd_rst_sequence #(.CONFIG_T(kv_env_configuration_t))kv_wr_rd_rst_sequence_t;
     rand kv_wr_rd_rst_sequence_t kv_wr_rd_rst_seq;
 

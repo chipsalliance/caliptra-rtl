@@ -563,7 +563,96 @@ void main() {
         }
 
         ecc_zeroize();
-    }        
+        //Issue warm reset
+        rst_count++;
+        printf("%c",0xf6);
+    }
+    else if(rst_count == 9) {
+        // wait for ECC to be ready
+        while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
+
+        printf("\n TEST INVALID OUTPUT SIGN_S\n");
+        // Program ECC PRIVKEY
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_11) {
+            *reg_ptr++ = ecc_privkey[offset++];
+        }
+
+        // Program ECC MSG
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_MSG_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_MSG_11) {
+            *reg_ptr++ = ecc_msg[offset++];
+        }
+
+        // Program ECC IV
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_IV_11) {
+            *reg_ptr++ = ecc_iv[offset++];
+        }
+
+        //Inject invalid zero sign_s
+        printf("%c",0x9a);
+
+        // Enable ECC SIGNING core
+        printf("\nECC SIGNING\n");
+        lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING);
+        
+        // wait for ECC SIGNING process to be done
+        wait_for_ecc_intr();
+        if ((cptra_intr_rcv.ecc_error == 0)){
+            printf("\nECC s_output_outofrange error is not detected.\n");
+            printf("%c", 0x1);
+            while(1);
+        }
+
+        ecc_zeroize();
+        //Issue warm reset
+        rst_count++;
+        printf("%c",0xf6);
+    }
+    else if(rst_count == 10) {
+        // wait for ECC to be ready
+        while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
+
+        printf("\n TEST PCR WITH INVALID OUTPUT SIGN_S\n");
+        
+        // Program ECC IV
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_IV_11) {
+            *reg_ptr++ = ecc_iv[offset++];
+        }
+
+        //Inject invalid zero sign_s
+        printf("%c",0x9a);
+
+        //inject seed to kv key reg (in RTL)
+        printf("Inject PRIVKEY into KV slot 7\n");
+        privkey_inject_cmd = 0x88 + 0x7;
+        printf("%c", privkey_inject_cmd);
+
+        printf("Inject MSG into SHA512 digest\n");
+        printf("%c", 0x90);
+
+        // Enable ECC PCR SIGNING core
+        printf("\nECC PCR SIGNING\n");
+        lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
+                ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
+    
+        
+        // wait for ECC PCR SIGNING process to be done
+        wait_for_ecc_intr();
+        if ((cptra_intr_rcv.ecc_error == 0)){
+            printf("\nECC PCR s_output_outofrange error is not detected.\n");
+            printf("%c", 0x1);
+            while(1);
+        }
+
+        ecc_zeroize();
+    }  
     
     printf("%c",0xff); //End the test
     

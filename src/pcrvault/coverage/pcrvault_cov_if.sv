@@ -31,19 +31,19 @@ interface pcrvault_cov_if
     //Assign clear and locks of each PCR_CTRL reg to corresponding bit in the intermediate bus
     generate
         for(genvar i = 0; i < PV_NUM_PCR; i++) begin
-            assign pcr_ctrl_lock[i] = dut.pv_reg_hwif_out.PCR_CTRL[i].lock;
+            assign pcr_ctrl_lock[i] = pv.pv_reg_hwif_out.PCR_CTRL[i].lock;
         end
     endgenerate
 
     generate
         for(genvar client = 0; client < PV_NUM_WRITE; client++) begin
-            assign pv_write_en[client] = dut.pv_write[client].write_en;
+            assign pv_write_en[client] = pv.pv_write[client].write_en;
         end
     endgenerate
 
     //AHB signals
-    assign ahb_write = dut.pv_ahb_slv1.dv & dut.pv_ahb_slv1.write;
-    assign ahb_read  = dut.pv_ahb_slv1.dv & ~dut.pv_ahb_slv1.write;
+    assign ahb_write = pv.pv_ahb_slv1.dv & pv.pv_ahb_slv1.write;
+    assign ahb_read  = pv.pv_ahb_slv1.dv & ~pv.pv_ahb_slv1.write;
 
     covergroup pcrvault_top_cov_grp @(posedge clk);
         option.per_instance = 1;
