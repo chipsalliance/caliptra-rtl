@@ -201,7 +201,7 @@ import uvmf_base_pkg_hdl::*;
         .rv_ecc_sts(cptra_ctrl_agent_bus.rv_ecc_sts),
         //Obfuscated UDS and FE
         .clear_obf_secrets(cptra_ctrl_agent_bus.clear_obf_secrets),
-        .scan_mode_f       (1'b0),
+        .scan_mode       (1'b0),
         .cptra_obf_key(soc_ifc_ctrl_agent_bus.cptra_obf_key),
         .cptra_obf_key_reg(cptra_status_agent_bus.cptra_obf_key_reg),
         .obf_field_entropy(cptra_status_agent_bus.obf_field_entropy),
@@ -253,6 +253,9 @@ import uvmf_base_pkg_hdl::*;
     assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PSLVERRCHK       = 0;
     assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PRUSERCHK        = 0;
     assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PBUSERCHK        = 0;
+
+
+  soc_ifc_cov_bind i_soc_ifc_cov_bind();  
   // pragma uvmf custom dut_instantiation end
 
   initial begin      // tbx vif_binding_block 

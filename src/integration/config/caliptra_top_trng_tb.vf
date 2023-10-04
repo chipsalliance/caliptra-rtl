@@ -1,3 +1,4 @@
+
 +incdir+${CALIPTRA_ROOT}/src/keyvault/rtl
 +incdir+${CALIPTRA_ROOT}/src/doe/rtl
 +incdir+${CALIPTRA_ROOT}/src/integration/asserts
@@ -20,6 +21,8 @@
 +incdir+${CALIPTRA_ROOT}/src/hmac/coverage
 +incdir+${CALIPTRA_ROOT}/src/ecc/coverage
 +incdir+${CALIPTRA_ROOT}/src/soc_ifc/coverage
++incdir+${CALIPTRA_ROOT}/src/pcrvault/coverage
++incdir+${CALIPTRA_ROOT}/src/keyvault/coverage
 +incdir+${CALIPTRA_ROOT}/src/integration/tb
 +incdir+${CALIPTRA_ROOT}/src/integration/coverage
 +incdir+${CALIPTRA_ROOT}/src/caliptra_prim_generic/rtl
@@ -90,6 +93,12 @@ ${CALIPTRA_ROOT}/src/ecc/coverage/ecc_top_cov_if.sv
 ${CALIPTRA_ROOT}/src/ecc/coverage/ecc_top_cov_bind.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/coverage/soc_ifc_cov_if.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/coverage/soc_ifc_cov_bind.sv
+${CALIPTRA_ROOT}/src/pcrvault/coverage/pcrvault_cov_if.sv
+${CALIPTRA_ROOT}/src/pcrvault/coverage/pcrvault_cov_props.sv
+${CALIPTRA_ROOT}/src/pcrvault/coverage/pcrvault_cov_bind.sv
+${CALIPTRA_ROOT}/src/keyvault/coverage/keyvault_cov_if.sv
+${CALIPTRA_ROOT}/src/keyvault/coverage/keyvault_cov_props.sv
+${CALIPTRA_ROOT}/src/keyvault/coverage/keyvault_cov_bind.sv
 ${CALIPTRA_ROOT}/src/integration/tb/caliptra_top_tb_pkg.sv
 ${CALIPTRA_ROOT}/src/integration/tb/caliptra_veer_sram_export.sv
 ${CALIPTRA_ROOT}/src/integration/tb/caliptra_top_tb_services.sv

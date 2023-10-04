@@ -21,6 +21,8 @@ requires:
   - hmac_coverage
   - ecc_coverage
   - soc_ifc_coverage
+  - pcrvault_cov
+  - keyvault_cov
 targets:
   tb:
     directories:

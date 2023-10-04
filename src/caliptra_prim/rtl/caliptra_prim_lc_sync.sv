@@ -10,7 +10,11 @@
 
 `include "caliptra_prim_assert.sv"
 
-module caliptra_prim_lc_sync #(
+module caliptra_prim_lc_sync 
+  import lc_ctrl_state_pkg::*;
+  import lc_ctrl_reg_pkg::*;
+  import lc_ctrl_pkg::*;
+#(
   // Number of separately buffered output signals.
   // The buffer cells have a don't touch constraint
   // on them such that synthesis tools won't collapse

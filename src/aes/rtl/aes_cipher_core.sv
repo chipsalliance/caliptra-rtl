@@ -92,7 +92,9 @@
 
 `include "caliptra_prim_assert.sv"
 
-module aes_cipher_core import aes_pkg::*;
+module aes_cipher_core 
+  import aes_reg_pkg::*;
+  import aes_pkg::*;
 #(
   parameter bit          AES192Enable         = 1,
   parameter bit          SecMasking           = 1,

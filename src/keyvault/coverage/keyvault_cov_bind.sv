@@ -14,8 +14,8 @@
 
 
 module keyvault_cov_bind;
-    //`ifdef FCOV
-    bind dut keyvault_cov_if i_keyvault_cov_if(.*);
-    bind dut keyvault_cov_props i_keyvault_cov_props(.*);
-    //`endif
+    `ifdef FCOV
+    bind kv keyvault_cov_if i_keyvault_cov_if(.*);
+    bind kv keyvault_cov_props i_keyvault_cov_props(.*);
+    `endif
 endmodule
