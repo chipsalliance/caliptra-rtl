@@ -1,3 +1,0 @@
-waive_lint -tag W415a -add waive_ahb_lite_bus_W415a
-waive_lint -tag RegInputOutput-ML -add waive_ahb_lite_bus_RegInputOutput-ML
-waive_lint -tag RegOutputs -add waive_ahb_lite_bus_RegOutputs
