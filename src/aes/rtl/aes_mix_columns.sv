@@ -10,6 +10,7 @@ module aes_mix_columns (
   output logic [3:0][3:0][7:0] data_o
 );
 
+  import aes_reg_pkg::*;
   import aes_pkg::*;
 
   // Transpose to operate on columns

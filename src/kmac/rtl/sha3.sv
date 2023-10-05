@@ -10,6 +10,9 @@
 
 module sha3
   import sha3_pkg::*;
+  import lc_ctrl_state_pkg::*;
+  import lc_ctrl_reg_pkg::*;
+  import lc_ctrl_pkg::*;
 #(
   // Enable Masked Keccak if 1
   parameter  bit EnMasking = 0,

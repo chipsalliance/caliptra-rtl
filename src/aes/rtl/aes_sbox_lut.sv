@@ -10,6 +10,7 @@ module aes_sbox_lut (
   output logic [7:0]        data_o
 );
 
+  import aes_reg_pkg::*;
   import aes_pkg::*;
 
   // Define the LUTs

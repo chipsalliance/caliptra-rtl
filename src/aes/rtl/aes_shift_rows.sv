@@ -10,6 +10,7 @@ module aes_shift_rows (
   output logic [3:0][3:0][7:0] data_o
 );
 
+  import aes_reg_pkg::*;
   import aes_pkg::*;
 
   // Row 0 is left untouched
