@@ -5,7 +5,12 @@
 // Description: entropy_src core module
 //
 
-module entropy_src_core import entropy_src_pkg::*; #(
+module entropy_src_core 
+  import entropy_src_pkg::*; 
+  import lc_ctrl_state_pkg::*;
+  import lc_ctrl_reg_pkg::*;
+  import lc_ctrl_pkg::*;
+#(
   parameter int EsFifoDepth = 4
 ) (
   input logic clk_i,

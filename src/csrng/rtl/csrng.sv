@@ -9,9 +9,12 @@
 module csrng
  import csrng_pkg::*;
  import csrng_reg_pkg::*;
+ import lc_ctrl_state_pkg::*;
+ import lc_ctrl_reg_pkg::*;
+ import lc_ctrl_pkg::*;
 #(
   parameter aes_pkg::sbox_impl_e SBoxImpl = aes_pkg::SBoxImplCanright,
-  parameter logic [NumAlerts-1:0] AlertAsyncOn = {NumAlerts{1'b1}},
+  parameter logic [csrng_reg_pkg::NumAlerts-1:0] AlertAsyncOn = {csrng_reg_pkg::NumAlerts{1'b1}},
   parameter int NHwApps = 2,
   parameter cs_keymgr_div_t RndCnstCsKeymgrDivNonProduction = CsKeymgrDivWidth'(0),
   parameter cs_keymgr_div_t RndCnstCsKeymgrDivProduction = CsKeymgrDivWidth'(0),
@@ -56,8 +59,8 @@ module csrng
   output csrng_rsp_t  [NHwApps-1:0] csrng_cmd_o,
 
   // Alerts
-  input  caliptra_prim_alert_pkg::alert_rx_t [NumAlerts-1:0] alert_rx_i,
-  output caliptra_prim_alert_pkg::alert_tx_t [NumAlerts-1:0] alert_tx_o,
+  input  caliptra_prim_alert_pkg::alert_rx_t [csrng_reg_pkg::NumAlerts-1:0] alert_rx_i,
+  output caliptra_prim_alert_pkg::alert_tx_t [csrng_reg_pkg::NumAlerts-1:0] alert_tx_o,
 
   // Interrupts
   output logic    intr_cs_cmd_req_done_o,
@@ -69,10 +72,10 @@ module csrng
   csrng_reg2hw_t reg2hw;
   csrng_hw2reg_t hw2reg;
 
-  logic [NumAlerts-1:0] alert_test;
-  logic [NumAlerts-1:0] alert;
+  logic [csrng_reg_pkg::NumAlerts-1:0] alert_test;
+  logic [csrng_reg_pkg::NumAlerts-1:0] alert;
 
-  logic [NumAlerts-1:0] intg_err_alert;
+  logic [csrng_reg_pkg::NumAlerts-1:0] intg_err_alert;
   assign intg_err_alert[0] = 1'b0;
 
   // SEC_CM: CONFIG.REGWEN
@@ -143,7 +146,7 @@ module csrng
   ///////////////////////////
   // Alert generation
   ///////////////////////////
-  for (genvar i = 0; i < NumAlerts; i++) begin : gen_alert_tx
+  for (genvar i = 0; i < csrng_reg_pkg::NumAlerts; i++) begin : gen_alert_tx
     caliptra_prim_alert_sender #(
       .AsyncOn(AlertAsyncOn[i]),
       .IsFatal(i)
