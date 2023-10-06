@@ -269,14 +269,13 @@ always_comb begin : mbox_fsm_combo
             end
             if (arc_FORCE_MBOX_UNLOCK) begin
                 mbox_fsm_ns = MBOX_IDLE;
-                rst_mbox_wrptr = 1;
-                rst_mbox_rdptr = 1;
                 mbox_protocol_error_nxt = '{default: 0};
             end
         end
         MBOX_RDY_FOR_DLEN: begin
             if (arc_MBOX_RDY_FOR_DLEN_MBOX_RDY_FOR_DATA) begin
                 mbox_fsm_ns = MBOX_RDY_FOR_DATA;
+                rst_mbox_wrptr = 1;
             end
             else if (arc_MBOX_RDY_FOR_DLEN_MBOX_ERROR) begin
                 mbox_fsm_ns = MBOX_ERROR;
@@ -284,8 +283,6 @@ always_comb begin : mbox_fsm_combo
             end
             if (arc_FORCE_MBOX_UNLOCK) begin
                 mbox_fsm_ns = MBOX_IDLE;
-                rst_mbox_wrptr = 1;
-                rst_mbox_rdptr = 1;
                 mbox_protocol_error_nxt = '{default: 0};
             end
         end
@@ -312,8 +309,6 @@ always_comb begin : mbox_fsm_combo
                 mbox_fsm_ns = MBOX_IDLE;
                 inc_wrptr = 0;
                 inc_rdptr = 0;
-                rst_mbox_wrptr = 1;
-                rst_mbox_rdptr = 1;
                 mbox_protocol_error_nxt = '{default: 0};
             end
         end
@@ -326,8 +321,6 @@ always_comb begin : mbox_fsm_combo
             inc_wrptr = hwif_out.mbox_datain.datain.swmod & ~req_data.soc_req;
             if (arc_MBOX_EXECUTE_UC_MBOX_IDLE) begin
                 mbox_fsm_ns = MBOX_IDLE;
-                rst_mbox_wrptr = 1;
-                rst_mbox_rdptr = 1;
             end
             else if (arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_SOC) begin
                 mbox_fsm_ns = MBOX_EXECUTE_SOC;
@@ -342,8 +335,6 @@ always_comb begin : mbox_fsm_combo
                 mbox_fsm_ns = MBOX_IDLE;
                 inc_wrptr = 0;
                 inc_rdptr = 0;
-                rst_mbox_wrptr = 1;
-                rst_mbox_rdptr = 1;
                 mbox_protocol_error_nxt = '{default: 0};
             end
         end
@@ -356,8 +347,6 @@ always_comb begin : mbox_fsm_combo
             inc_rdptr = (dmi_inc_rdptr | (hwif_out.mbox_dataout.dataout.swacc & req_data.soc_req & valid_receiver));
             if (arc_MBOX_EXECUTE_SOC_MBOX_IDLE) begin
                 mbox_fsm_ns = MBOX_IDLE;
-                rst_mbox_wrptr = 1;
-                rst_mbox_rdptr = 1;
             end
             else if (arc_MBOX_EXECUTE_SOC_MBOX_EXECUTE_UC) begin
                 mbox_fsm_ns = MBOX_EXECUTE_UC;
@@ -372,8 +361,6 @@ always_comb begin : mbox_fsm_combo
                 mbox_fsm_ns = MBOX_IDLE;
                 inc_wrptr = 0;
                 inc_rdptr = 0;
-                rst_mbox_wrptr = 1;
-                rst_mbox_rdptr = 1;
                 mbox_protocol_error_nxt = '{default: 0};
             end
         end
@@ -381,8 +368,6 @@ always_comb begin : mbox_fsm_combo
             mbox_protocol_error_nxt = '{default: 0};
             if (arc_FORCE_MBOX_UNLOCK) begin
                 mbox_fsm_ns = MBOX_IDLE;
-                rst_mbox_wrptr = 1;
-                rst_mbox_rdptr = 1;
                 mbox_protocol_error_nxt = '{default: 0};
             end
         end
