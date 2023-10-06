@@ -10,4 +10,4 @@
 variables:
   BENCH_CONFIG: caliptra_top_tb
 
-template: caliptra_cov_cfg.yml
+template: caliptra_cov_cfg_both.yml

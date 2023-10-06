@@ -34,27 +34,27 @@ parameters:
     type: object
     default:
       # - aes_caliptra_tb
-      - caliptra_top_tb
       # - csrng_caliptra_tb
       # - datavault_caliptra_tb
       # - doe_caliptra_tb
-      - ecc_caliptra_tb
       # - edn_caliptra_tb
       # - entropy_src_caliptra_tb
-      - hmac_caliptra_tb
       # - hmac_drbg_caliptra_tb
-      - keyvault_caliptra_tb
       # - kmac_caliptra_tb
       # - lc_ctrl_caliptra_tb
-      - pcrvault_caliptra_tb
       # - prim_caliptra_tb
       # - prim_generic_caliptra_tb
       # - sha256_caliptra_tb
-      - sha512_caliptra_tb
       # - sha512_masked_caliptra_tb
+      # - uart_caliptra_tb
+      - caliptra_top_tb
+      - ecc_caliptra_tb
+      - hmac_caliptra_tb
+      - keyvault_caliptra_tb
+      - pcrvault_caliptra_tb
+      - sha512_caliptra_tb
       - soc_ifc_caliptra_tb
       - uvmf_soc_ifc_caliptra_tb
-      # - uart_caliptra_tb
       - uvmf_caliptra_top_tb
 
 stages:
@@ -85,6 +85,8 @@ stages:
           PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
 
           enter-workspace tmp_ws "$(SUBMIT_SMALL_NC_JOBS) python3w -r requirements.txt \${VERIF_TOOLS}/coverage_merge/coverage_merge.py -f \${CALIPTRA_ROOT}/coverage/config/caliptra_merge_bench_cov_cfg.yml $(skip_db_upload_arg)"
+          cd /home/pure_scratch/caliptra/coverage/integration_lib/3949/caliptra_merge_bench_cov_cfg/
+          ln -s `ls -rt | tail -n1` latest
 
         displayName: Coverage merge for all duts
         timeoutInMinutes: 60

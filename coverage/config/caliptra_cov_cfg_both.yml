@@ -1,0 +1,43 @@
+# Copyright (C) Microsoft Corporation. All rights reserved.
+
+# Repo/Bench config specific settings
+# For repo-specific file, common settings like retention policy, additional merge options etc can be specified
+#
+# https://dev.azure.com/ms-tsd/Base_Verification/_wiki/wikis/Base_Verification.wiki/34333/Coverage-merge-YAML
+#
+
+variables:
+  COV_DISK: ${PRJ_COV_DISK}/integration_lib
+  NIGHTLY_SAMPLE_CNT: 14
+  #24x7_SAMPLE_CNT: 14
+  NIGHTLY_SAMPLE_RETAIN_CNT: 30
+  #24x7_SAMPLE_RETAIN_CNT: 30
+  PIPELINE_ID: 3195 #nightly random regression
+  PIPELINE_ID2: 3194 #nightly directed regression
+
+project: AHA_POC
+
+merge:
+
+  merge_opts: -flex_merge union -flex_merge tgl -diag tglmerge
+
+  search_dir:
+    ${COV_DISK}/${PIPELINE_ID}/${BENCH_CONFIG}: ${NIGHTLY_SAMPLE_CNT}
+    ${COV_DISK}/${PIPELINE_ID2}/${BENCH_CONFIG}: ${NIGHTLY_SAMPLE_CNT}
+
+  target_dir: ${COV_DISK}/${SYSTEM_DEFINITIONID}/${BENCH_CONFIG}/nightly_merge_${BUILD_BUILDID}_${PIPELINE_START_TIME}
+
+publish:
+  name_scope:
+  - ${BENCH_CONFIG}
+  - caliptra_top
+
+report:
+  #ellist:
+  #- ${CALIPTRA_ROOT}/coverage/exclusions/caliptra_top.ellist
+  #- ${CALIPTRA_ROOT}/coverage/exclusions/code/${BENCH_CONFIG}_stub.el
+
+  hvp: ${CALIPTRA_ROOT}/src/integration/testplan/caliptra_top.hvp
+
+retention:
+  ${COV_DISK}/${PIPELINE_ID}/${BENCH_CONFIG}: ${NIGHTLY_SAMPLE_RETAIN_CNT}
