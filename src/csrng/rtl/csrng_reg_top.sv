@@ -1947,74 +1947,74 @@ module csrng_reg_top #(
   // Read data return
   always_comb begin
     reg_rdata_next = '0;
-    unique case (1'b1)
-      addr_hit[0]: begin
+    unique case (addr_hit)
+      17'h00001: begin
         reg_rdata_next[0] = intr_state_cs_cmd_req_done_qs;
         reg_rdata_next[1] = intr_state_cs_entropy_req_qs;
         reg_rdata_next[2] = intr_state_cs_hw_inst_exc_qs;
         reg_rdata_next[3] = intr_state_cs_fatal_err_qs;
       end
 
-      addr_hit[1]: begin
+      17'h00002: begin
         reg_rdata_next[0] = intr_enable_cs_cmd_req_done_qs;
         reg_rdata_next[1] = intr_enable_cs_entropy_req_qs;
         reg_rdata_next[2] = intr_enable_cs_hw_inst_exc_qs;
         reg_rdata_next[3] = intr_enable_cs_fatal_err_qs;
       end
 
-      addr_hit[2]: begin
+      17'h00004: begin
         reg_rdata_next[0] = '0;
         reg_rdata_next[1] = '0;
         reg_rdata_next[2] = '0;
         reg_rdata_next[3] = '0;
       end
 
-      addr_hit[3]: begin
+      17'h00008: begin
         reg_rdata_next[0] = '0;
         reg_rdata_next[1] = '0;
       end
 
-      addr_hit[4]: begin
+      17'h00010: begin
         reg_rdata_next[0] = regwen_qs;
       end
 
-      addr_hit[5]: begin
+      17'h00020: begin
         reg_rdata_next[3:0] = ctrl_enable_qs;
         reg_rdata_next[7:4] = ctrl_sw_app_enable_qs;
         reg_rdata_next[11:8] = ctrl_read_int_state_qs;
       end
 
-      addr_hit[6]: begin
+      17'h00040: begin
         reg_rdata_next[31:0] = '0;
       end
 
-      addr_hit[7]: begin
+      17'h00080: begin
         reg_rdata_next[0] = sw_cmd_sts_cmd_rdy_qs;
         reg_rdata_next[1] = sw_cmd_sts_cmd_sts_qs;
       end
 
-      addr_hit[8]: begin
+      17'h00100: begin
         reg_rdata_next[0] = genbits_vld_genbits_vld_qs;
         reg_rdata_next[1] = genbits_vld_genbits_fips_qs;
       end
 
-      addr_hit[9]: begin
+      17'h00200: begin
         reg_rdata_next[31:0] = genbits_qs;
       end
 
-      addr_hit[10]: begin
+      17'h00400: begin
         reg_rdata_next[3:0] = int_state_num_qs;
       end
 
-      addr_hit[11]: begin
+      17'h00800: begin
         reg_rdata_next[31:0] = int_state_val_qs;
       end
 
-      addr_hit[12]: begin
+      17'h01000: begin
         reg_rdata_next[15:0] = hw_exc_sts_qs;
       end
 
-      addr_hit[13]: begin
+      17'h02000: begin
         reg_rdata_next[0] = recov_alert_sts_enable_field_alert_qs;
         reg_rdata_next[1] = recov_alert_sts_sw_app_enable_field_alert_qs;
         reg_rdata_next[2] = recov_alert_sts_read_int_state_field_alert_qs;
@@ -2023,7 +2023,7 @@ module csrng_reg_top #(
         reg_rdata_next[13] = recov_alert_sts_cs_main_sm_alert_qs;
       end
 
-      addr_hit[14]: begin
+      17'h04000: begin
         reg_rdata_next[0] = err_code_sfifo_cmd_err_qs;
         reg_rdata_next[1] = err_code_sfifo_genbits_err_qs;
         reg_rdata_next[2] = err_code_sfifo_cmdreq_err_qs;
@@ -2052,11 +2052,11 @@ module csrng_reg_top #(
         reg_rdata_next[30] = err_code_fifo_state_err_qs;
       end
 
-      addr_hit[15]: begin
+      17'h08000: begin
         reg_rdata_next[4:0] = err_code_test_qs;
       end
 
-      addr_hit[16]: begin
+      17'h10000: begin
         reg_rdata_next[7:0] = main_sm_state_qs;
       end
     endcase
