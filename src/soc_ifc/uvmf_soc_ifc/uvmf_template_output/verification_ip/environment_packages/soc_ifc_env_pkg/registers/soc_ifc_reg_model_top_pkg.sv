@@ -386,6 +386,13 @@ package soc_ifc_reg_model_top_pkg;
         uvm_event mbox_lock_clr_miss;
         uvm_event mbox_datain_to_dataout_predict;
 
+        // This semaphore is a necessary workaround for a known bug in the UVM
+        // library uvm_reg class, as described here:
+        // https://forums.accellera.org/topic/7037-register-write-clobbers-simultaneous-access-in-multi-threaded-testbench/
+        // Essentially, the uvm_reg native atomic fails to correctly arbitrate
+        // between multiple contending accessors in separate threads.
+        semaphore mbox_datain_sem;
+
         // This tracks expected functionality of the mailbox in a way that is
         // agnostic to the internal state machine implementation and strictly
         // observes the mailbox specification. This is what a more rigorous
@@ -403,6 +410,7 @@ package soc_ifc_reg_model_top_pkg;
             mbox_fn_state_sigs = '{mbox_idle: 1'b1, default: 1'b0};
             mbox_lock_clr_miss = new("mbox_lock_clr_miss");
             mbox_datain_to_dataout_predict = new("mbox_datain_to_dataout_predict");
+            mbox_datain_sem = new(1);
         endfunction : new
 
         // FIXME Manually maintaining a list here of registers that are configured
@@ -459,6 +467,9 @@ package soc_ifc_reg_model_top_pkg;
             mbox_resp_q.delete();
             mbox_lock_clr_miss.reset();
             mbox_datain_to_dataout_predict.reset();
+            // In case any active sequences claimed the semaphore but didn't relinquish it.
+            void'(mbox_datain_sem.try_get());
+            mbox_datain_sem.put();
 
             // Mailbox State Changes
             // TODO what to do for FW update?

@@ -109,7 +109,9 @@ task soc_ifc_env_mbox_uc_reg_access_sequence::mbox_push_datain();
     uvm_reg_data_t data;
     for (int i = 0; i < num_reg; i++) begin
       data = uvm_reg_data_t'(reg_addr[i]);
+      reg_model.mbox_csr_rm.mbox_datain_sem.get();
       reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
+      reg_model.mbox_csr_rm.mbox_datain_sem.put();
       report_reg_sts(reg_sts, "mbox_datain");
     end
 

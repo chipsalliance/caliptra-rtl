@@ -33,7 +33,7 @@ class soc_ifc_env_cptra_mbox_interference_handler_sequence extends soc_ifc_env_c
 
   extern virtual task mbox_wait_for_command(output op_sts_e op_sts);
   extern virtual task mbox_wait_and_force_unlock();
-  extern virtual task burst_random_reg_accesses(uvm_event stop, output process this_proc);
+  extern virtual task burst_random_reg_accesses(uvm_event stop, ref process this_proc);
 
   rand uvm_reg_data_t data;
   rand uvm_reg_addr_t mem_offset;
@@ -127,6 +127,7 @@ task soc_ifc_env_cptra_mbox_interference_handler_sequence::mbox_wait_and_force_u
     // sequence knows to wait for AHB traffic to complete before ending the
     // sequence
     unlock_proc_active = 1'b1;
+    `uvm_info("CPTRA_MBOX_HANDLER", $sformatf("Starting mbox_wait_and_force_unlock with inject_force_unlock [%d] force_unlock_delay_cycles [%0d]", inject_force_unlock, force_unlock_delay_cycles), UVM_MEDIUM)
 
     // Wait...
     // If force unlock is disabled, this task will only exit upon detecting
@@ -221,7 +222,7 @@ endtask
 //              intermixed with random delays, until the input event
 //              is triggered.
 //==========================================
-task soc_ifc_env_cptra_mbox_interference_handler_sequence::burst_random_reg_accesses(uvm_event stop, output process this_proc);
+task soc_ifc_env_cptra_mbox_interference_handler_sequence::burst_random_reg_accesses(uvm_event stop, ref process this_proc);
     int unsigned burst_length;
     int unsigned delay_cycles;
 
@@ -260,6 +261,7 @@ task soc_ifc_env_cptra_mbox_interference_handler_sequence::burst_random_reg_acce
                                                               delay_cycles inside {[1:500]};})
             `uvm_error("CPTRA_MBOX_HANDLER", "Failed to randomize burst_length and delay_cycles")
         else begin
+            `uvm_info("CPTRA_MBOX_HANDLER", $sformatf("Beginning random AHB burst with delay_cycles [%d] burst_length [%d]", delay_cycles, burst_length), UVM_HIGH)
             for (ii=0; ii<burst_length; ii++) begin: XFER_LOOP
                 // Do random access to soc_ifc to trigger arb logic as cptra sequence processes
                 // incoming mailbox command
