@@ -157,7 +157,7 @@ class kv_wr_rd_debug_lock_sequence #(
                     endcase
                 
             
-            fork
+        // fork
             // begin
                 // //Write to all entries
                 // for (write_entry = 0; write_entry < KV_NUM_KEYS; write_entry++) begin
@@ -168,7 +168,7 @@ class kv_wr_rd_debug_lock_sequence #(
                 //     end
                 // end
             // end             
-            begin
+            // begin
                 //Read all entries
                 for (read_entry = 0; read_entry < KV_NUM_KEYS; read_entry++) begin
                     for (read_offset = 0; read_offset < KV_NUM_DWORDS; read_offset++) begin
@@ -177,7 +177,7 @@ class kv_wr_rd_debug_lock_sequence #(
                         sha512_block_read_seq.start(configuration.kv_sha512_block_read_agent_config.sequencer);
                     end
                 end
-            end
-        join
+            // end
+        // join
     endtask
 endclass

@@ -36,6 +36,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "printf.h"
+#include "wdt.h"
 
 /* --------------- Global symbols/typedefs --------------- */
 extern uintptr_t STACK;
@@ -160,17 +161,13 @@ void caliptra_rt() {
     while (!(lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R) & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK));
     if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0) == WDT_CASCADE) { //rand() % 2; //0 - independent mode, 1 - cascade mode
         VPRINTF(LOW, "Restarting WDT in cascade mode\n");
-        //Enable timer1 to start cascade mode
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_EN, SOC_IFC_REG_CPTRA_WDT_TIMER1_EN_TIMER1_EN_MASK);
-        //Set timer1 period to a small random value, so core can see timer1 timing out
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_0, wdt_rand_t1_val);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_1, 0x00000000);
-        //Restart timer1
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL, SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL_TIMER1_RESTART_MASK);
+        // //Enable timer1 to start cascade mode
+        configure_wdt_cascade(wdt_rand_t1_val, 0x00000000, 0xffffffff, 0xffffffff);
+        service_t1_intr();
 
-        while (!(lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R) & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK));
-        //Clear timer1 intr
-        lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK);
+        //Disable timers before next testing
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_EN, 0);
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_EN, 0);
 
         //Program timer1 and 2 periods to <= 0x100 to test NMI generation. First check if there is any pending timer1 interrupt. In a corner case scenario, timer1 can timeout a second time (if the period is small enough)
         //before its timeout value is changed in prep for NMI testing. In that case, the subsequent timer1 interrupt will not be serviced resulting in a hang
@@ -180,50 +177,42 @@ void caliptra_rt() {
         if (lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R) & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK)
             lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK);
 
-        //WDT cascade mode with t2 timeout
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_EN, !SOC_IFC_REG_CPTRA_WDT_TIMER2_EN_TIMER2_EN_MASK);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_0, wdt_rand_t1_val);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_1, 0x00000000);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_0, wdt_rand_t2_val);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_1, 0x00000000);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL, SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL_TIMER1_RESTART_MASK);
-        // lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL, SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL_TIMER2_RESTART_MASK);
-    
+        // //WDT cascade mode with t2 timeout
+        configure_wdt_cascade(wdt_rand_t1_val, 0x00000000, wdt_rand_t2_val, 0x00000000);
         //Don't service interrupts so it can timeout and cause NMI
     }
     else if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0) == WDT_INDEPENDENT){
-        VPRINTF(LOW, "Restarting WDT in independent mode\n");
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_EN, SOC_IFC_REG_CPTRA_WDT_TIMER1_EN_TIMER1_EN_MASK);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_0, wdt_rand_t1_val);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_1, 0x00000000);
-
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_EN, SOC_IFC_REG_CPTRA_WDT_TIMER2_EN_TIMER2_EN_MASK);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_0, wdt_rand_t2_val);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_1, 0x00000000);
-
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL, SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL_TIMER1_RESTART_MASK);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL, SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL_TIMER2_RESTART_MASK);
+        
+        //-------------------------------------------
+        //Test independent mode - both timers enabled
+        //-------------------------------------------
+        configure_wdt_independent(BOTH_TIMERS_EN, wdt_rand_t1_val, 0x00000000, wdt_rand_t2_val, 0x00000000);
 
         while (!(lsu_read_32(CLP_SOC_IFC_REG_CPTRA_WDT_STATUS) & SOC_IFC_REG_CPTRA_WDT_STATUS_T1_TIMEOUT_MASK));
         //Reset timer1 period to avoid hangs in test
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_0, 0xffffffff);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_1, 0xffffffff);
+        set_default_t1_period();
 
-        while (!(lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R) & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK));
-        //Clear timer1 intr
-        lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK);
+        service_t1_intr();
         cptra_intr_rcv.soc_ifc_error |= SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK;
 
         //Reset timer2 period to avoid hangs in test
         while (!(lsu_read_32(CLP_SOC_IFC_REG_CPTRA_WDT_STATUS) & SOC_IFC_REG_CPTRA_WDT_STATUS_T2_TIMEOUT_MASK));
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_0, 0xffffffff);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_1, 0xffffffff);
+        set_default_t2_period();
 
-        while (!(lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R) & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_MASK));
-        //Clear timer2 intr
-        lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_MASK);
+        service_t2_intr();
         cptra_intr_rcv.soc_ifc_error |= SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_MASK;
 
+        //-------------------------------------------
+        //Test independent mode - only timer2 enabled
+        //-------------------------------------------
+        configure_wdt_independent(T1_DIS_T2_EN, wdt_rand_t1_val, 0x00000000, wdt_rand_t2_val, 0x00000000);
+        
+        //Reset timer2 period to avoid hangs in test
+        while (!(lsu_read_32(CLP_SOC_IFC_REG_CPTRA_WDT_STATUS) & SOC_IFC_REG_CPTRA_WDT_STATUS_T2_TIMEOUT_MASK));
+        set_default_t2_period();
+
+        service_t2_intr();
+        cptra_intr_rcv.soc_ifc_error |= SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_MASK;
     }
 #endif
     // Initialization
