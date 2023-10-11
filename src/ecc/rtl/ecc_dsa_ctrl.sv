@@ -228,12 +228,12 @@ module ecc_dsa_ctrl
     ecc_arith_unit #(
         .REG_SIZE(REG_SIZE),
         .RND_SIZE(RND_SIZE),
-        .RADIX(RADIX),
+        .RADIX(64),
         .ADDR_WIDTH(DSA_OPR_ADDR_WIDTH),
         .p_prime(PRIME),
-        .p_mu(PRIME_mu),
+        .p_mu(64'h100000001),
         .q_grouporder(GROUP_ORDER),
-        .q_mu(GROUP_ORDER_mu)
+        .q_mu(64'h6ed46089e88fdc45)
         )
         ecc_arith_unit_i (
         .clk(clk),
