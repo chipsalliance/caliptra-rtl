@@ -143,7 +143,7 @@ void caliptra_rt() {
     lsu_write_32((uintptr_t) (CLP_SOC_IFC_REG_INTERNAL_NMI_VECTOR), (uint32_t) (nmi_handler));
 
     // Initialize rand num generator
-    VPRINTF(LOW,"\nUsing random seed = %d\n\n", MY_RANDOM_SEED);
+    VPRINTF(LOW,"\nUsing random seed = %u\n\n", (uint32_t) MY_RANDOM_SEED);
     srand((uint32_t) MY_RANDOM_SEED);
 
     // Runtime flow -- set ready for RT
@@ -428,8 +428,15 @@ void caliptra_rt() {
                         lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DLEN), temp);
 
                         // Write response data
-                        for (loop_iter = 0; loop_iter<temp; loop_iter+=4) {
-                            lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DATAIN), rand());
+                        // If we hit a double-bit ECC error already, skip this step
+                        // (we might have gotten a huge resp dlen from the corrupted read)
+                        // and fail the command
+                        if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK) {
+                            VPRINTF(ERROR, "Skipping resp data wr on UNC ECC err\n");
+                        } else {
+                            for (loop_iter = 0; loop_iter<temp; loop_iter+=4) {
+                                lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DATAIN), rand());
+                            }
                         }
 
                     }

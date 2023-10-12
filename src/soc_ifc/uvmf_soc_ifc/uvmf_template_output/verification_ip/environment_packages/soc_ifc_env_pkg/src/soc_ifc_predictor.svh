@@ -1954,6 +1954,10 @@ class soc_ifc_predictor #(
                         next_step = '{dlen_wr: 1'b1, default: 1'b0};
                     else if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_receive_stage)
                         next_step = '{resp_dlen_wr: 1'b1, default: 1'b0};
+                    else begin
+                        next_step = '{null_action: 1'b1, default: 1'b0};
+                        `uvm_info("PRED_APB", $sformatf("Logging unexpected step %p; access to %s while in state %p", next_step, axs_reg.get_name(), p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs), UVM_LOW)
+                    end
                     `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
                 end
                 else if (apb_txn.read_or_write == APB3_TRANS_READ) begin
@@ -2609,7 +2613,7 @@ task soc_ifc_predictor::poll_and_run_delay_jobs();
                     int idx[$];
                     time end_time;
                     running_dly_jobs.push_back(process::self()); // This tracks all the delay_jobs that are pending so they can be clobbered on rst
-                    `uvm_info("PRED_DLY", $sformatf("Doing delay of %0d cycles before running delay job with signature: %s", job.get_delay_cycles(), job.get_name()), UVM_HIGH/*UVM_FULL*/)
+                    `uvm_info("PRED_DLY", $sformatf("Doing delay of %0d cycles before running delay job with signature: %s", job.get_delay_cycles(), job.get_type_name()), UVM_HIGH/*UVM_FULL*/)
                     end_time = $time + 10*job.get_delay_cycles();
                     job_end_count[end_time] += 1;
                     // delay cycles reported as 0's based value, since 1-cycle delay
