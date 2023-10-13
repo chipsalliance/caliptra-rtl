@@ -400,6 +400,7 @@ always_ff @(posedge clk or negedge rst_b) begin
         mbox_wr_full <= '0;
         mbox_rdptr <= '0;
         mbox_rd_full <= '0;
+        mbox_rd_valid_f <= '0;
         mbox_protocol_sram_rd_f <= '0;
         dlen_in_dws <= '0;
         mbox_protocol_error <= '0;

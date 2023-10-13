@@ -60,11 +60,19 @@ fi
 
 #remove random SEED from TESTNAME after "__" characters
 baseTestName=$(echo "$TESTNAME" | sed 's/\__.*//')
-#seed=$( echo "$TESTNAME" | sed 's/.*__//')
-seed=$(eval echo $(grep -E '^seed:' ${TESTFILE} | sed 's,^seed: \([^# ]*\),\1,'))
+# First, try to extract the regression generated seed from the testname
+seed=$( echo "$TESTNAME" | sed 's/.*__//')
+# Second, if that fails, extract the run seed from the testfile pointed
+# to by sim_config.yml
+if [[ ( -z ${seed:+"empty"} ) || ( ${seed} == ${TESTNAME} ) ]]; then
+    seed=$(eval echo $(grep -E '^seed:' ${TESTFILE} | sed 's,^seed: \([^# ]*\),\1,'))
+fi
+# Third, if seed is still empty, use the environment variable (which,
+# in the default case, drives the VCS ntb_random_seed) as the FW seed too
 if [[ ( -z ${seed:+"empty"} ) || ( ${seed} == ${TESTNAME} ) ]]; then
     seed=${PLAYBOOK_RANDOM_SEED}
 fi
+# Finally -sigh- print an error if we can't get a seed by now
 if [[ -z ${seed:+"empty"} ]]; then
     echo "Failed to populate the randomization seed during FW build!"
     exit 1

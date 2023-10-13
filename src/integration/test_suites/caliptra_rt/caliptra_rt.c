@@ -336,6 +336,11 @@ void caliptra_rt() {
                             SEND_STDOUT_CTRL(0x1);
                             while(1);
                         }
+                        // This oftens occurs alongside the cmd_fail bit in error injection tests...
+                        if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INV_DEV_STS_MASK) {
+                            CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INV_DEV_STS_MASK)
+                            VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (inv dev) after servicing\n");
+                        }
                     }
                     continue;
                 }
@@ -344,8 +349,14 @@ void caliptra_rt() {
                 // if the ECC error occurred at address 0, since ending the flow triggers
                 // rst_mbox_rdptr and a final read from 0. This might be missed by the above
                 // soc_ifc_error handler.
-                if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK) {
-                    CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK)
+                // There might also be vestigial cmd_fail/inv_dev failures held over from a previous
+                // invalid reg_axs sequence... clear those too
+                if (cptra_intr_rcv.soc_ifc_error & (SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK |
+                                                    SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK |
+                                                    SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INV_DEV_STS_MASK )) {
+                    CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK &
+                                                                         ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK &
+                                                                         ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INV_DEV_STS_MASK)
                 }
                 // Any other errors that are flagged at this point are unexpected and should cause a test failure
                 if (cptra_intr_rcv.soc_ifc_error) {
