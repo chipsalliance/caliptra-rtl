@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Caliptra Hands-On Guide** #
-_*Last Update: 2023/09/06*_
+_*Last Update: 2023/10/17*_
 
 
 ## **Tools Used** ##
@@ -121,6 +121,9 @@ VF files provide absolute filepaths (prefixed by the `CALIPTRA_ROOT` environment
 The "Integration" sub-component contains the top-level fileset for Caliptra. `src/integration/config/compile.yml` defines the required filesets and sub-component dependencies for this build target. All of the files/dependencies are explicitly listed in `src/integration/config/caliptra_top_tb.vf`. Users may compile the entire design using only this VF filelist.<BR>
 
 
+## **Verilog File Lists** ##
+Verilog file lists are generated via VCS and included in the config directory for each unit. New files added to the design should be included in the vf list. They can be included manually or by using VCS to regenerate the vf file. File lists define the compilation sources (including all dependencies) required to build and simulate a given module or testbench, and should be used for simulation, lint, and synthesis.
+
 ## **Scripts Description** ##
 
 `demo.rdl`:Sample RDL file<BR>
@@ -142,10 +145,12 @@ The "Integration" sub-component contains the top-level fileset for Caliptra. `sr
 1. Setup tools, add to PATH (ensure riscv64-unknown-elf-gcc is also available)
 2. Define all environment variables above
     - For the initial test run after downloading repository, `iccm_lock` is recommended for TESTNAME
+    - See [AUTOTITLE](#Regression Tests) for information about available tests.
 3. Create a run folder for build outputs (and cd to it)
 4. [OPTIONAL] By default, this run flow will use the riscv64 toolchain to compile test firmware (according to TESTNAME) into program.hex, iccm.hex, dccm.hex, and mailbox.hex. As a first pass, integrators may alternatively use the pre-built hexfiles for convenience (available for `iccm_lock` test). To do this, copy `iccm_lock.hex` to the run directory and rename to `program.hex`. `dccm.hex` should also be copied to the run directory, as-is. Use `touch iccm.hex mailbox.hex` to create empty hex files, as these are unnecessary for `iccm_lock` test.
 5. Invoke `${CALIPTRA_ROOT}/tools/scripts/Makefile` with target 'program.hex' to produce SRAM initialization files from the firmware found in `src/integration/test_suites/${TESTNAME}`
     - E.g.: `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile program.hex`
+    - NOTE: TESTNAME may also be overridden in the makefile command line invocation, e.g. `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile TESTNAME=iccm_lock program.hex`
 6. Compile complete project using `src/integration/config/caliptra_top_tb.vf` as a compilation target in VCS. When running the `vcs` command to generate simv, users should ensure that `caliptra_top_tb` is explicitly specified as the top-level component in their command to ensure this is the sole "top" that gets simulated.
 7. Simulate project with `caliptra_top_tb` as the top target
 
@@ -153,6 +158,7 @@ The "Integration" sub-component contains the top-level fileset for Caliptra. `sr
 1. Setup tools, add to PATH (ensure Verilator, GCC, and riscv64-unknown-elf-gcc are available)
 2. Define all environment variables above
     - For the initial test run after downloading repository, `iccm_lock` is recommended for TESTNAME
+    - See [AUTOTITLE](#Regression Tests) for information about available tests.
 3. Create a run folder for build outputs
     - Recommended to place run folder under `${CALIPTRA_WORKSPACE}/scratch/$USER/verilator/<date>`
 4. [OPTIONAL] By default, this run flow will use the riscv64 toolchain to compile test firmware (according to TESTNAME) into program.hex, iccm.hex, dccm.hex, and mailbox.hex. As a first pass, integrators may alternatively use the pre-built hexfiles for convenience (available for `iccm_lock` test). To do this, copy `iccm_lock.hex` to the run directory and rename to `program.hex`. `dccm.hex` should also be copied to the run directory, as-is. Use `touch iccm.hex mailbox.hex` to create empty hex files, as these are unnecessary for `iccm_lock` test.
@@ -178,20 +184,35 @@ The UVM Framework generation tool was used to create the baseline UVM testbench 
 **Prerequisites**:<BR>
 - QVIP 2021.2.1 for Mentor Graphics (provides the AHB/APB VIP)
 - UVM 1.1d installation
+- Mentor Graphics UVM-Framework installation
 
 Steps:<BR>
 1. Compile UVM 1.1d library
-2. Compile the AHB/APB QVIP source
-3. Compile the UVMF wrapper for APB/AHB in Caliptra/src/libs/uvmf
-4. Compile the `verification_ip` provided for `soc_ifc` found in `Caliptra/src/soc_ifc/uvmf_soc_ifc`
-5. Compile the `caliptra_top` testbench found in `Caliptra/src/integration/uvmf_caliptra_top`
-6. `Caliptra/src/integration/uvmf_caliptra_top/uvmf_template_output/project_benches/caliptra_top/tb/testbench/hdl_top.sv` is the top-level TB wrapper for the system
-7. Select a test to run from the set of tests in `Caliptra/src/integration/uvmf_caliptra_top/uvmf_template_output/project_benches/caliptra_top/tb/tests/src`
-8. Provide `+UVM_TESTNAME=<test>` argument to simulation
+1. Compile the AHB/APB QVIP source
+1. Compile the Mentor Graphics UVM-Frameworks base library
+1. Compile the UVMF wrapper for APB/AHB in Caliptra/src/libs/uvmf
+1. Compile the `verification_ip` provided for `soc_ifc` found in `Caliptra/src/soc_ifc/uvmf_soc_ifc`
+1. Compile the `caliptra_top` testbench found in `Caliptra/src/integration/uvmf_caliptra_top`
+1. `Caliptra/src/integration/uvmf_caliptra_top/uvmf_template_output/project_benches/caliptra_top/tb/testbench/hdl_top.sv` is the top-level TB wrapper for the system
+1. Compile the validation firmware (as described in [AUTOTITLE](#Regression Tests)) that will run on Caliptra's embedded RISC-V core
+    - The expected output products are `program.hex`, `caliptra_fmc.hex`, `caliptra_rt.hex` and must be placed in the simulation run directory
+    - `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile TESTNAME=caliptra_top program.hex`
+    - `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile TESTNAME=caliptra_fmc caliptra_fmc.hex`
+    - `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile TESTNAME=caliptra_rt  caliptra_rt.hex`
+1. Select a test to run from the set of tests in `Caliptra/src/integration/uvmf_caliptra_top/uvmf_template_output/project_benches/caliptra_top/tb/tests/src`
+1. Provide `+UVM_TESTNAME=<test>` argument to simulation
 
 ## **Regression Tests** ##
 
-Only tests from the L0 Regression List should be run. 
+Only tests from the L0 Regression List should be run.
+The list is defined in the file [L0_regression.yml](https://github.com/chipsalliance/caliptra-rtl/blob/main/src/integration/stimulus/L0_regression.yml)
+
+The UVM simulation environment for `caliptra_top` uses a special set of validation firmware to generate stimulus as required for the test plan. This firmware suite is found in `src/integration/test_suites` and includes:
+ - `caliptra_top`: A C-based program that emulates a minimal set of bringup functions similar to the function of the ROM. This C file transitions very early to either a the FMC image or Runtime image based on bringup (reset reason) conditions.
+ - `caliptra_fmc`: A C-based program that emulates the functionality of the First Mutable Code. In this reduced-functionality validation implementation, the FMC code is a simple intermediary that runs from ICCM and serves to boot the Runtime Firmware.
+ - `caliptra_rt`: A C-based program that emulates the functionality of the production Runtime code. This program receives and services interrupts, defines a minimal Non-Maskable Interrupt handler, generates FW resets as needed, processes mailbox commands (generated through the UVM validation test plan), and runs some baseline Watchdog Timer testing.
+All of these programs are designed to be run within the context of a UVM simulation, and will fail to generate meaningful stimulus in the standalone `caliptra_top_tb` test.
+
 ## **NOTES** ##
 
 * The internal registers are auto rendered at the [GitHub page](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs)
