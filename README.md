@@ -204,14 +204,17 @@ Steps:<BR>
 
 ## **Regression Tests** ##
 
+### Standalone SystemVerilog Testbench Regression ###
 Only tests from the L0 Regression List should be run.
 The list is defined in the file [L0_regression.yml](https://github.com/chipsalliance/caliptra-rtl/blob/main/src/integration/stimulus/L0_regression.yml)
 
+### UVM Regression ###
 The UVM simulation environment for `caliptra_top` uses a special set of validation firmware to generate stimulus as required for the test plan. This firmware suite is found in `src/integration/test_suites` and includes:
  - `caliptra_top`: A C-based program that emulates a minimal set of bringup functions similar to the function of the ROM. This C file transitions very early to either a the FMC image or Runtime image based on bringup (reset reason) conditions.
  - `caliptra_fmc`: A C-based program that emulates the functionality of the First Mutable Code. In this reduced-functionality validation implementation, the FMC code is a simple intermediary that runs from ICCM and serves to boot the Runtime Firmware.
  - `caliptra_rt`: A C-based program that emulates the functionality of the production Runtime code. This program receives and services interrupts, defines a minimal Non-Maskable Interrupt handler, generates FW resets as needed, processes mailbox commands (generated through the UVM validation test plan), and runs some baseline Watchdog Timer testing.
-All of these programs are designed to be run within the context of a UVM simulation, and will fail to generate meaningful stimulus in the standalone `caliptra_top_tb` test.
+
+These three programs are designed to be run within the context of a UVM simulation, and will fail to generate meaningful stimulus in the standalone `caliptra_top_tb` test.
 
 ## **NOTES** ##
 
