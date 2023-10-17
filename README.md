@@ -37,6 +37,8 @@ Simulation:
    - `Version 2021.2.1` of AHB/APB models
  - UVM installation
    - `Version 1.1d`
+ - Mentor Graphics UVM-Frameworks
+   - `2022.3`
 
 Synthesis:
  - Synopsys DC
