@@ -145,7 +145,7 @@ Verilog file lists are generated via VCS and included in the config directory fo
 1. Setup tools, add to PATH (ensure riscv64-unknown-elf-gcc is also available)
 2. Define all environment variables above
     - For the initial test run after downloading repository, `iccm_lock` is recommended for TESTNAME
-    - See [AUTOTITLE](Regression-Tests) for information about available tests.
+    - See [Regression Tests](Regression-Tests) for information about available tests.
 3. Create a run folder for build outputs (and cd to it)
 4. [OPTIONAL] By default, this run flow will use the riscv64 toolchain to compile test firmware (according to TESTNAME) into program.hex, iccm.hex, dccm.hex, and mailbox.hex. As a first pass, integrators may alternatively use the pre-built hexfiles for convenience (available for `iccm_lock` test). To do this, copy `iccm_lock.hex` to the run directory and rename to `program.hex`. `dccm.hex` should also be copied to the run directory, as-is. Use `touch iccm.hex mailbox.hex` to create empty hex files, as these are unnecessary for `iccm_lock` test.
 5. Invoke `${CALIPTRA_ROOT}/tools/scripts/Makefile` with target 'program.hex' to produce SRAM initialization files from the firmware found in `src/integration/test_suites/${TESTNAME}`
@@ -158,7 +158,7 @@ Verilog file lists are generated via VCS and included in the config directory fo
 1. Setup tools, add to PATH (ensure Verilator, GCC, and riscv64-unknown-elf-gcc are available)
 2. Define all environment variables above
     - For the initial test run after downloading repository, `iccm_lock` is recommended for TESTNAME
-    - See [AUTOTITLE](#Regression Tests) for information about available tests.
+    - See [Regression Tests](Regression-Tests) for information about available tests.
 3. Create a run folder for build outputs
     - Recommended to place run folder under `${CALIPTRA_WORKSPACE}/scratch/$USER/verilator/<date>`
 4. [OPTIONAL] By default, this run flow will use the riscv64 toolchain to compile test firmware (according to TESTNAME) into program.hex, iccm.hex, dccm.hex, and mailbox.hex. As a first pass, integrators may alternatively use the pre-built hexfiles for convenience (available for `iccm_lock` test). To do this, copy `iccm_lock.hex` to the run directory and rename to `program.hex`. `dccm.hex` should also be copied to the run directory, as-is. Use `touch iccm.hex mailbox.hex` to create empty hex files, as these are unnecessary for `iccm_lock` test.
@@ -194,7 +194,7 @@ Steps:<BR>
 1. Compile the `verification_ip` provided for `soc_ifc` found in `Caliptra/src/soc_ifc/uvmf_soc_ifc`
 1. Compile the `caliptra_top` testbench found in `Caliptra/src/integration/uvmf_caliptra_top`
 1. `Caliptra/src/integration/uvmf_caliptra_top/uvmf_template_output/project_benches/caliptra_top/tb/testbench/hdl_top.sv` is the top-level TB wrapper for the system
-1. Compile the validation firmware (as described in [AUTOTITLE](#Regression Tests)) that will run on Caliptra's embedded RISC-V core
+1. Compile the validation firmware (as described in [Regression Tests](Regression-Tests)) that will run on Caliptra's embedded RISC-V core
     - The expected output products are `program.hex`, `caliptra_fmc.hex`, `caliptra_rt.hex` and must be placed in the simulation run directory
     - `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile TESTNAME=caliptra_top program.hex`
     - `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile TESTNAME=caliptra_fmc caliptra_fmc.hex`
