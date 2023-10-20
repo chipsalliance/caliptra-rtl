@@ -11,3 +11,43 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_sha256/fw_test_sha256.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_sha384/fw_test_sha384.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_datavault_mini/smoke_test_datavault_mini.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_veer/smoke_test_veer.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mbox/smoke_test_mbox.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha512/smoke_test_sha512.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha256/smoke_test_sha256.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha_accel/smoke_test_sha_accel.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/memCpy_ROM_to_dccm/memCpy_ROM_to_dccm.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/memCpy_dccm_to_iccm/memCpy_dccm_to_iccm.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/hello_world_iccm/hello_world_iccm.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/iccm_lock/iccm_lock.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/c_intr_handler/c_intr_handler.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc/smoke_test_ecc.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac/smoke_test_hmac.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv/smoke_test_kv.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sram_ecc/smoke_test_sram_ecc.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ras/smoke_test_ras.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_trng/smoke_test_trng.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_qspi/smoke_test_qspi.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_uart/smoke_test_uart.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_uds_reset/smoke_test_kv_uds_reset.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_securitystate/smoke_test_kv_securitystate.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_ecc_flow/smoke_test_kv_ecc_flow.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_hmac_flow/smoke_test_kv_hmac_flow.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_sha512_flow/smoke_test_kv_sha512_flow.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_crypto_flow/smoke_test_kv_crypto_flow.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/pv_hash_and_sign/pv_hash_and_sign.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_pcr_signing/smoke_test_pcr_signing.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_fw_kv_backtoback_hmac/smoke_test_fw_kv_backtoback_hmac.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_errortrigger/smoke_test_ecc_errortrigger.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_pcr_zeroize/smoke_test_pcr_zeroize.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ahb_mux/smoke_test_ahb_mux.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_doe_rand/smoke_test_doe_rand.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_doe_scan/smoke_test_doe_scan.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_zeroize_crypto/smoke_test_zeroize_crypto.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_datavault_basic/smoke_test_datavault_basic.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_datavault_reset/smoke_test_datavault_reset.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_datavault_lock/smoke_test_datavault_lock.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_wdt/smoke_test_wdt.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_cg_wdt/smoke_test_cg_wdt.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_clk_gating/smoke_test_clk_gating.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_iccm_reset/smoke_test_iccm_reset.yml

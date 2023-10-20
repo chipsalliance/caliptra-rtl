@@ -19,6 +19,8 @@
 #include <string.h>
 #include <stdint.h>
 #include "printf.h"
+#include "riscv_hw_if.h"
+#include "wdt.h"
 
 volatile char*    stdout           = (char *)STDOUT;
 volatile uint32_t intr_count = 0;
@@ -83,21 +85,21 @@ void main() {
         VPRINTF(LOW, "Cascaded mode\n");
         //Enable WDT timer1
         *wdt_timer1_en = SOC_IFC_REG_CPTRA_WDT_TIMER1_EN_TIMER1_EN_MASK;
-        *wdt_timer1_period_0 = 0x00000040;
-        *wdt_timer1_period_1 = 0x00000000;
+        set_t1_period(0x00000040, 0x00000000);
+        
         VPRINTF(LOW, "Stall until timer1 times out\n");
+        while (!(lsu_read_32(SOC_IFC_REG_CPTRA_WDT_STATUS_T1_TIMEOUT_MASK)));
+        VPRINTF(LOW, "WDT T1 timed out as expected\n");
         *wdt_timer1_ctrl = SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL_TIMER1_RESTART_MASK;
 
-        //Set timer1 period to something else to avoid immediate time out
-        *wdt_timer1_period_0 = 0x0000FFFF;
-        *wdt_timer1_period_1 = 0x00000000;
+        //Set timer1 period to default to avoid immediate time out
+        set_default_t1_period();
         
     
-        VPRINTF(LOW, "Independent mode\n");
+        VPRINTF(LOW, "Independent mode - both timers enabled\n");
         //Enable WDT timer1
         *wdt_timer2_en = SOC_IFC_REG_CPTRA_WDT_TIMER2_EN_TIMER2_EN_MASK;
-        *wdt_timer2_period_0 = 0x00000040;
-        *wdt_timer2_period_1 = 0x00000000;
+        set_t2_period(0x00000040, 0x00000000);
         
         VPRINTF(LOW, "Stall until timer2 times out\n");
         //Release forced timer periods from tb so test can set them
@@ -108,21 +110,31 @@ void main() {
         *wdt_timer1_ctrl = 0x1; //restart counter so timer1 can start counting
         
         rst_count++; //Increment count so when NMI is processed we advance in the test
-        *wdt_timer1_period_0 = 0x00000040;
-        *wdt_timer1_period_1 = 0x00000000;
+        set_t1_period(0x00000040, 0x00000000);
         
 
-        VPRINTF(LOW, "Stall until timer1 times out");
-        VPRINTF(LOW, "Stall until timer2 times out");
+        VPRINTF(LOW, "Stall until timer1 times out\n");
+        VPRINTF(LOW, "Stall until timer2 times out\n");
 
         
     }
     else if(rst_count == 1) {
         //Issue warm reset after NMI as per spec
+        VPRINTF(LOW, "Issuing reset in response to NMI (t2 timeout)\n");
         rst_count++;
         SEND_STDOUT_CTRL(0xf6);
     }
     else {
+        VPRINTF(LOW, "Independent mode - timer2 enabled, timer1 disabled\n");
+        *wdt_timer2_en = SOC_IFC_REG_CPTRA_WDT_TIMER2_EN_TIMER2_EN_MASK;
+        set_t2_period(0x00000040, 0x00000000);
+        
+        VPRINTF(LOW, "Stall until timer2 times out\n");
+        while (!(lsu_read_32(SOC_IFC_REG_CPTRA_WDT_STATUS_T2_TIMEOUT_MASK)));
+        VPRINTF(LOW, "WDT T2 timed out as expected\n")
+        //Release forced timer periods from tb so test can set them
+        // SEND_STDOUT_CTRL(0xf1);
+
         //Write 1 to clear HW fatal error register
         if ((*hw_error_fatal && SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_NMI_PIN_MASK) == 1) {
             *hw_error_fatal = SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_NMI_PIN_MASK;
