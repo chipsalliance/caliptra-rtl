@@ -86,7 +86,7 @@ stages:
 
           enter-workspace tmp_ws "$(SUBMIT_SMALL_NC_JOBS) python3w -r requirements.txt \${VERIF_TOOLS}/coverage_merge/coverage_merge.py -f \${CALIPTRA_ROOT}/coverage/config/caliptra_merge_bench_cov_cfg.yml $(skip_db_upload_arg)"
           cd /home/pure_scratch/caliptra/coverage/integration_lib/3949/caliptra_merge_bench_cov_cfg/
-          ln -s `ls -rt | tail -n1` latest
+          ln -sfT `ls -rt | tail -n1` latest
 
         displayName: Coverage merge for all duts
         timeoutInMinutes: 60
