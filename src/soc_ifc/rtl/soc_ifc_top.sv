@@ -376,12 +376,14 @@ soc_ifc_arb #(
     .sha_error(sha_error),
     //FUNC reg inf
     .soc_ifc_reg_req_dv(soc_ifc_reg_req_dv), 
-    .soc_ifc_reg_req_hold(1'b0),
+    .soc_ifc_reg_req_hold(soc_ifc_reg_req_hold),
     .soc_ifc_reg_req_data(soc_ifc_reg_req_data),
     .soc_ifc_reg_rdata(soc_ifc_reg_rdata),
     .soc_ifc_reg_error(soc_ifc_reg_error)
 
 );
+
+always_comb soc_ifc_reg_req_hold = 1'b0;
 
 
 //Functional Registers and Fuses
