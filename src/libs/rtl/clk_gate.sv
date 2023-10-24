@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-`include "common_defines.sv"
-
 module clk_gate (
     input logic clk,
     input logic cptra_rst_b,
