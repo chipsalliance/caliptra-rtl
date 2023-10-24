@@ -325,6 +325,9 @@ void caliptra_rt() {
             VPRINTF(LOW, "Intr received: soc_ifc_notif\n");
             if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK) {
                 CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_notif, ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK)
+                // Always check mbox FSM state at new command entry to detect
+                // previously-handled error scenarios (FSM is IDLE) or new error
+                // injection (FSM is in ERROR)
                 fsm_chk = soc_ifc_chk_execute_uc();
                 if (fsm_chk != 0) {
                     if (fsm_chk == 0xF) {
@@ -357,6 +360,11 @@ void caliptra_rt() {
                     CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK &
                                                                          ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK &
                                                                          ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INV_DEV_STS_MASK)
+                    // Run the FSM check once more for late-arrival of errors
+                    // that may correlate with the observed error interrupt
+                    if (soc_ifc_chk_execute_uc()) {
+                        continue;
+                    }
                 }
                 // Any other errors that are flagged at this point are unexpected and should cause a test failure
                 if (cptra_intr_rcv.soc_ifc_error) {
