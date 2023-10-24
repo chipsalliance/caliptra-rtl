@@ -427,6 +427,35 @@ void caliptra_rt() {
                         }
                         soc_ifc_sha_accel_clr_lock();
                     }
+                    else if ((op.cmd == MBOX_CMD_SHA384_STREAM_REQ) | (op.cmd == MBOX_CMD_SHA512_STREAM_REQ)) {
+                        enum sha_accel_mode_e mode;
+                        mode = (op.cmd == MBOX_CMD_SHA384_STREAM_REQ) ? SHA_STREAM_384 : SHA_STREAM_512;
+                        //First dword contains the start address
+                        temp = soc_ifc_mbox_read_dataout_single();
+                        //ignore the bytes used for start address
+                        op.dlen = op.dlen - 4;
+                        //Acquire SHA Accel lock
+                        soc_ifc_sha_accel_acquire_lock();
+                        soc_ifc_sha_accel_wr_mode(mode);
+                        //write dlen in bytes
+                        lsu_write_32((uintptr_t) (CLP_SHA512_ACC_CSR_DLEN), op.dlen);
+                        //Stream the KAT to the sha accelerator
+                        for (loop_iter = 0; loop_iter<op.dlen; loop_iter+=4) {
+                            read_data = soc_ifc_mbox_read_dataout_single();
+                            lsu_write_32((uintptr_t) (CLP_SHA512_ACC_CSR_DATAIN), read_data);
+                        }
+                        soc_ifc_sha_accel_execute();
+                        soc_ifc_sha_accel_poll_status();
+                        lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DLEN), (mode == SHA_MBOX_384) ? 48 : 64);
+                        //read the digest and write it back to the mailbox
+                        reg_addr = CLP_SHA512_ACC_CSR_DIGEST_0;
+                        while (reg_addr <= ((mode == SHA_MBOX_384) ? CLP_SHA512_ACC_CSR_DIGEST_11 : CLP_SHA512_ACC_CSR_DIGEST_15)) {
+                            read_data = lsu_read_32(reg_addr);
+                            lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DATAIN), read_data);
+                            reg_addr = reg_addr + 4;
+                        }
+                        soc_ifc_sha_accel_clr_lock();
+                    }
                     else {
                         // Read provided data
                         read_data = soc_ifc_mbox_read_dataout_single();

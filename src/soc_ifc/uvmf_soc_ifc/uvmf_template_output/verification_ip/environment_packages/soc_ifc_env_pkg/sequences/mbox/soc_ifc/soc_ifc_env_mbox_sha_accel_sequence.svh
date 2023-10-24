@@ -53,9 +53,14 @@ class soc_ifc_env_mbox_sha_accel_sequence extends soc_ifc_env_mbox_sequence_base
     extern virtual task mbox_push_datain();
     extern virtual task mbox_read_resp_data();
 
-    constraint sha_accel_op_c { sha_accel_op_rand.mailbox_mode == 1'b1; }
-    constraint mbox_cmd_c { sha_accel_op_rand.sha512_mode == 1'b0 -> mbox_op_rand.cmd.cmd_e == MBOX_CMD_SHA384_REQ;
-                            sha_accel_op_rand.sha512_mode == 1'b1 -> mbox_op_rand.cmd.cmd_e == MBOX_CMD_SHA512_REQ; 
+    constraint sha_accel_op_c { sha_accel_op_rand.mailbox_mode dist {1 := 10,
+                                                                     0 := 1}; }
+
+    constraint mbox_cmd_c { (sha_accel_op_rand.sha512_mode == 1'b0 & sha_accel_op_rand.mailbox_mode == 1'b1) -> mbox_op_rand.cmd.cmd_e == MBOX_CMD_SHA384_REQ;
+                            (sha_accel_op_rand.sha512_mode == 1'b1 & sha_accel_op_rand.mailbox_mode == 1'b1) -> mbox_op_rand.cmd.cmd_e == MBOX_CMD_SHA512_REQ; 
+                            (sha_accel_op_rand.sha512_mode == 1'b0 & sha_accel_op_rand.mailbox_mode == 1'b0) -> mbox_op_rand.cmd.cmd_e == MBOX_CMD_SHA384_STREAM_REQ;
+                            (sha_accel_op_rand.sha512_mode == 1'b1 & sha_accel_op_rand.mailbox_mode == 1'b0) -> mbox_op_rand.cmd.cmd_e == MBOX_CMD_SHA512_STREAM_REQ; 
+                            
                             solve sha_accel_op_rand before mbox_op_rand; }
     constraint mbox_resp_dlen_c {sha_accel_op_rand.sha512_mode == 1'b0 -> mbox_resp_expected_dlen == 32'd48;
                                  sha_accel_op_rand.sha512_mode == 1'b1 -> mbox_resp_expected_dlen == 32'd64; 
