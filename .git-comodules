@@ -11,7 +11,7 @@
         "url": "origin://Ether/d261839b-fbfb-4c03-8bc2-8c8215f98b06",
         "dest": "common/infra",
         "name": "sim_tools",
-        "version": "v2.5.11"
+        "version": "v2.5.15"
     },
     {
         "description": "Verification Tools",
