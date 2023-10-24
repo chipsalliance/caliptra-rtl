@@ -155,8 +155,8 @@ void caliptra_rt() {
     lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R, SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK);
     
     //Generate constrained random WDT timer periods
-    wdt_rand_t1_val = rand() % 0xfff;
-    wdt_rand_t2_val = rand() % 0xfff;
+    wdt_rand_t1_val = rand() % 0xfff + 0x5;
+    wdt_rand_t2_val = rand() % 0xfff + 0x5;
     
     while (!(lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R) & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK));
     if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0) == WDT_CASCADE) { //rand() % 2; //0 - independent mode, 1 - cascade mode

@@ -103,6 +103,7 @@ ${CALIPTRA_ROOT}/src/integration/tb/caliptra_top_tb_pkg.sv
 ${CALIPTRA_ROOT}/src/integration/tb/caliptra_veer_sram_export.sv
 ${CALIPTRA_ROOT}/src/integration/tb/caliptra_top_tb_services.sv
 ${CALIPTRA_ROOT}/src/integration/coverage/caliptra_top_cov_if.sv
+${CALIPTRA_ROOT}/src/integration/coverage/caliptra_top_cov_props.sv
 ${CALIPTRA_ROOT}/src/integration/coverage/caliptra_top_cov_bind.sv
 ${CALIPTRA_ROOT}/src/integration/test_suites/libs/jtagdpi/jtagdpi.sv
 ${CALIPTRA_ROOT}/src/integration/tb/caliptra_top_tb.sv
