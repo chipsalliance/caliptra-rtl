@@ -14,10 +14,14 @@ MODULE: ecc_top
 INSTANCE:
 SRC: hdl_top.dut
 DST: hdl_top.caliptra_top_dut.ecc_top1
+SRC: ecc_top_tb.dut
+DST: hdl_top.caliptra_top_dut.ecc_top1
 
 MODULE: hmac_ctrl
 INSTANCE:
 SRC: hdl_top.dut
+DST: hdl_top.caliptra_top_dut.hmac
+SRC: hmac_ctrl_tb.dut
 DST: hdl_top.caliptra_top_dut.hmac
 
 MODULE: kv
@@ -34,3 +38,15 @@ MODULE: sha512_ctrl
 INSTANCE:
 SRC: hdl_top.dut
 DST: hdl_top.caliptra_top_dut.sha512
+SRC: sha512_ctrl_32bit_tb.dut
+DST: hdl_top.caliptra_top_dut.sha512
+
+MODULE: sha256_ctrl
+INSTANCE:
+SRC: sha256_ctrl_tb.dut
+DST: hdl_top.caliptra_top_dut.sha256
+
+MODULE: doe_core_cbc
+INSTANCE:
+SRC: doe_core_cbc_tb.dut
+DST: hdl_top.caliptra_top_dut.doe.doe_inst.i_doe_core_cbc

@@ -8,6 +8,7 @@
 #
 
 variables:
-  BENCH_CONFIG: entropy_src_caliptra_tb
+  BENCH_CONFIG: sha512_ctrl_32bit_tb
+  PIPELINE_ID: 3194
 
 template: caliptra_cov_cfg.yml

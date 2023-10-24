@@ -8,6 +8,7 @@
 #
 
 variables:
-  BENCH_CONFIG: uvmf_caliptra_top
+  BENCH_CONFIG: ecc_top_tb
+  PIPELINE_ID: 3194
 
 template: caliptra_cov_cfg.yml
