@@ -16,5 +16,6 @@
 module caliptra_top_cov_bind;
     `ifdef FCOV
     bind caliptra_top caliptra_top_cov_if i_caliptra_top_cov_if(.*);
+    bind caliptra_top caliptra_top_cov_props i_caliptra_top_cov_props(.*);
     `endif
 endmodule

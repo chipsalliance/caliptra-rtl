@@ -14,7 +14,7 @@
 //
 
 #ifndef WDT_H
-    #define WDT_H_H
+    #define WDT_H
 
 #include "caliptra_defines.h"
 #include "caliptra_reg.h"

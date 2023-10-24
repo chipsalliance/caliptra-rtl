@@ -57,21 +57,36 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
 
 volatile uint32_t * clear_secrets = (uint32_t *) CLP_KV_REG_CLEAR_SECRETS;
 volatile uint32_t * reset_reason  = (uint32_t *) CLP_SOC_IFC_REG_CPTRA_RESET_REASON;
+volatile uint16_t i = 0;
 
 void main() {
     printf("---------------------------\n");
     printf(" KV Smoke Test for Security States !!\n");
     printf("---------------------------\n");
 
+    rst_count++;
+
     //Call interrupt init
     //init_interrupts();
-    if(rst_count == 0) {
+    if(rst_count == 1) {
         //Enable prandom reset trigger in the bg
-        rst_count++;
-        printf("%c", 0xee);
+        // SEND_STDOUT_CTRL( 0xee);
 
+        //Unlock debug mode - expecting ?
+        printf("Unlock debug mode\n");
+        SEND_STDOUT_CTRL(0xfa);
+        //Add reset
+        // for(int i=0; i<100;i++) {
+        //     printf("%d\n",i);
+        // }
+        for(i=0;i<100;i++);
+        SEND_STDOUT_CTRL(0xf6);
+    }
+    else if (rst_count == 2) {
         //Write random value to KV00 and KV54
-        printf("%c",0xf4);
+        // SEND_STDOUT_CTRL(0xf4);
+
+        printf("Clear secrets during debug mode\n");
 
         //Flush KV with debug value 0 - expecting AAs
         *clear_secrets = 0x00000001; 
@@ -84,36 +99,85 @@ void main() {
         *clear_secrets = 0x00000002;
 
         //Write random value to KV00 and KV54
-        printf("%c",0xf4);
-
-        //Unlock debug mode - expecting 55s
-        printf("%c",0xfa);
+        // SEND_STDOUT_CTRL(0xf4);
 
         //Lock debug mode
-        printf("%c", 0xf9);
+        printf("Lock debug mode\n");
+        SEND_STDOUT_CTRL(0xf9);
+        //Add reset
+        // for(int i=0; i<100;i++){
+        //     printf("%d\n",i);
+        // }
+        for(i=0;i<100;i++);
+        SEND_STDOUT_CTRL(0xf6);
 
+    }
+    else if (rst_count == 3) {
+
+        printf("Unlock debug mode - 2\n");
+        //Unlock and lock debug mode - expecting AAs
+        SEND_STDOUT_CTRL(0xfa);
+        //Add reset
+        // for(int i=0; i<100;i++){
+        //     printf("%d\n",i);
+        // }
+        for(i=0;i<100;i++);
+        SEND_STDOUT_CTRL(0xf6);
+    }
+    else if (rst_count == 4) {
+        printf("Clear secrets again\n");
         //Debug value 0
         *clear_secrets = 0x00000000;
-
-        //Unlock and lock debug mode - expecting AAs
-        printf("%c", 0xfa);
-        printf("%c", 0xf9);
 
         //Debug value 1
         *clear_secrets = 0x00000002;
 
-        //Enable and disable scan mode - expecting 55s
-        printf("%c", 0xef);
-        printf("%c", 0xf0);
-
-        //Wait for reset to be asserted before advancing
-        while(*reset_reason & SOC_IFC_REG_CPTRA_RESET_REASON_WARM_RESET_MASK != SOC_IFC_REG_CPTRA_RESET_REASON_WARM_RESET_MASK);
+        printf("Lock debug mode - 2\n");
+        SEND_STDOUT_CTRL(0xf9);
+        //Add reset
+        // for(int i=0; i<100;i++) {
+        //     printf("%d\n",i);
+        // }
+        for(i=0;i<100;i++);
+        SEND_STDOUT_CTRL(0xf6);
     }
-    else if(rst_count == 1) {
+    else if (rst_count == 5) {
+        printf("Enable scan mode\n");
+        //Enable and disable scan mode - expecting 55s
+        SEND_STDOUT_CTRL(0xef);
+        //Add reset
+        // for(int i=0; i<100;i++) {
+        //     printf("%d\n",i);
+        // }
+        for(i=0;i<100;i++);
+        SEND_STDOUT_CTRL(0xf6);
+
+    }
+    else if (rst_count == 6) {
+        // printf("Waiting for reason\n");
+        // //Wait for reset to be asserted before advancing
+        // while(*reset_reason & SOC_IFC_REG_CPTRA_RESET_REASON_WARM_RESET_MASK != SOC_IFC_REG_CPTRA_RESET_REASON_WARM_RESET_MASK);
+
+        printf("Disable scan mode\n");
+        //Disable scan mode
+        SEND_STDOUT_CTRL(0xf0);
+        //Add reset
+        // for(int i=0; i<100;i++){
+        //     printf("%d\n",i);
+        // }
+        for(i=0;i<100;i++);
+        SEND_STDOUT_CTRL(0xf6);
+
+    }
+    else if(rst_count == 7) {
+        // printf("Waiting for reason - 2\n");
+        // //Wait for reset to be asserted before advancing
+        // while(*reset_reason & SOC_IFC_REG_CPTRA_RESET_REASON_WARM_RESET_MASK != SOC_IFC_REG_CPTRA_RESET_REASON_WARM_RESET_MASK);
+
         //-------------------------------------------------
         //Cold reset - all 0s
         //-------------------------------------------------
-        rst_count++;
-        printf("%c", 0xf5);
+        printf("Cold rst\n");
+        SEND_STDOUT_CTRL(0xf5);
     }
 }
