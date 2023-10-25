@@ -20,11 +20,12 @@
 #ifndef SHA
 #define SHA
 
-
 #include <array>
 #include "systemc.h"
 #include "string.h"
 #include "Interfaces.h" 
+#include "../hmac_core.h"
+
 using    namespace std;
 #define  NUM_ROUNDS  80
 
@@ -197,13 +198,17 @@ sc_biguint<512> compute_dig (sc_biguint<512> dig,sc_biguint<64> h7, sc_biguint<6
             return(dig);
         
 }
-struct SHA_Args{
-    sc_biguint<1024> in;
-    int SHA_Mode;
+// struct SHA_Args{
+//     sc_biguint<1024> in;
+//     bool init;
+//     bool next; 
+// };
+
+/*struct sha_block{
+    sc_biguint<MSG_WIDTH> block_msg;
     bool init;
     bool next;
-    bool zeroize; 
-};
+};*/
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
    const array   <sc_biguint<64>, 80> K =
@@ -235,11 +240,10 @@ struct SHA_Args{
       sc_biguint<64>(0x431d67c49c100d4c), sc_biguint<64>(0x4cc5d4becb3e42b6), sc_biguint<64>(0x597f299cfc657e2a),\
       sc_biguint<64>(0x5fcb6fab3ad6faec), sc_biguint<64>(0x6c44198c4a475817)};;
 
-
 SC_MODULE(SHA512) {
    
-    blocking_in <SHA_Args> SHA_Input;
-    master_out <sc_biguint<512>> out; 
+    blocking_in <sha_block> SHA_Input;
+    blocking_out <sc_biguint<512>> out; 
 
     array   <sc_biguint<64>, 16> W;
     array   <sc_biguint<64>, 8>  H;
@@ -256,7 +260,7 @@ SC_MODULE(SHA512) {
     sc_biguint<1024> block_copy; 
     sc_biguint<512> MSG_digest;
 
-    SHA_Args SHA_in;
+    sha_block SHA_in;
     int SHA_Mode_in;
     bool init, next, success, zeroize;
 
@@ -274,13 +278,13 @@ void SHA512::fsm(){
 while(true){
     
         SHA_Input->read(SHA_in, "IDLE");
-
-        block_in = SHA_in.in;
-        SHA_Mode_in = SHA_in.SHA_Mode;
+    
+        block_in = SHA_in.block_msg;
+        SHA_Mode_in = 384;
         init = SHA_in.init;
         next = SHA_in.next;
-        zeroize = SHA_in.zeroize; 
-    
+        //zeroize = SHA_in.zeroize; 
+        cout<<"sha_called"<<endl;
         if (init){
             switch (SHA_Mode_in){
                 case 224:
@@ -295,12 +299,12 @@ while(true){
                         sc_biguint<64>(0x96283ee2a88effe3), sc_biguint<64>(0xbe5e1e2553863992),\
                         sc_biguint<64>(0x2b0199fc2c85b8aa), sc_biguint<64>(0x0eb72ddc81c52ca2)};
                     break;
-                /*case 384:
+                case 384:
                     H ={sc_biguint<64>(0xcbbb9d5dc1059ed8), sc_biguint<64>(0x629a292a367cd507),\
                         sc_biguint<64>(0x9159015a3070dd17), sc_biguint<64>(0x152fecd8f70e5939),\
                         sc_biguint<64>(0x67332667ffc00b31), sc_biguint<64>(0x8eb44a8768581511),\
                         sc_biguint<64>(0xdb0c2e0d64f98fa7), sc_biguint<64>(0x47b5481dbefa4fa4)};
-                    break;*/
+                    break;
                 case 512:
                     H ={sc_biguint<64>(0x6a09e667f3bcc908), sc_biguint<64>(0xbb67ae8584caa73b),\
                         sc_biguint<64>(0x3c6ef372fe94f82b), sc_biguint<64>(0xa54ff53a5f1d36f1),\
@@ -324,23 +328,40 @@ while(true){
             w  = sc_biguint<64> (0); k  = sc_biguint<64> (0);
             W  = {sc_biguint<64>(0)};
         }
-
+            
+            std::cout << "*****************"<< std::endl;
+            std::cout << "H[0] registers: "<< std::hex<<H[0] << std::endl;
+            std::cout << "H[1] registers: "<< H[1] << std::endl;
+            std::cout << "H[2] registers: "<< H[2] << std::endl;
+            std::cout << "H[3] registers: "<< H[3] << std::endl;
+            std::cout << "H[4] registers: "<< H[4] << std::endl;
+            std::cout << "H[5] registers: "<< H[5] << std::endl;
+            std::cout << "H[6] registers: "<< H[6] << std::endl;
+            std::cout << "H[7] registers: "<< H[7] << std::endl;
+        //next(block_in);
+        //W_schedule(block_in);
         block_copy = block_in;  
 
         for (j=0; j<16; ++j) {    
             W[15-j] = slicer(block_copy, j);
         };
-        
+
+        //copy_digest();           
         a = H[0]; b = H[1];c = H[2]; d = H[3]; 
         e = H[4]; f = H[5];g = H[6]; h = H[7];
         
         for (i=0; i<NUM_ROUNDS; ++i) { 
             insert_state("SHA_Rounds");
+            //sha512_round(i);
             k = K[i];
+            //w = next_w(i);
+        
             if (i < 16){
                 w = W[i];   
+                  
             }   
             else {   
+                //tmp_w = delta1(W[14]) + W[9] + delta0(W[1]) + W[0];
                 tmp_w = compute_w(W[14],W[9],W[1],W[0]);
                 for (j=0; j<15; ++j) { 
                     W[j] = W[(j+1)];
@@ -355,13 +376,15 @@ while(true){
             g = f;
             f = e;
             e = (d + t1);
+            //e = compute_e(d,e, f, g, h, K[i],W[15]);
             d = c; 
             c = b;
             b = a;
+            //a = compute_a(e,f,g,h,K[i],W[15],a,b,c);
             a = (t1 + t2);        
         } 
-        insert_state("DONE"); 
-
+        //insert_state("DONE"); 
+        //update_digest(); 
         H[0] = (H[0] + a) ;
         H[1] = (H[1] + b) ;
         H[2] = (H[2] + c) ;
@@ -376,9 +399,30 @@ while(true){
             MSG_digest = static_cast<sc_biguint<512>> (MSG_digest >> sc_biguint<512>(64));
             MSG_digest += static_cast<sc_biguint<512>> (H[j] << sc_biguint<64>(448));
         }
+        //MSG_digest = compute_dig(static_cast<sc_biguint<512>>(0),H[7],H[6],H[5],H[4],H[3],H[2],H[1],H[0]);
+        //MSG_digest = concati(MSG_digest, H, j); 
+        /*   BYME: to comply with rtl
+        switch (SHA_Mode_in){
+            case 224:
+                MSG_digest = static_cast<sc_biguint<512>> (MSG_digest >> sc_biguint<512>(288)); 
+                break;
+            case 256:
+                MSG_digest = static_cast<sc_biguint<512>> (MSG_digest >> sc_biguint<512>(256)); 
+                break;
+            case 384:
+                MSG_digest = static_cast<sc_biguint<512>> (MSG_digest >> sc_biguint<512>(128)); 
+                break;
+            default:
+                MSG_digest = static_cast<sc_biguint<512>> (MSG_digest); 
+                break;
+        }*/
         
-        out->master_write(static_cast<sc_biguint<512>> (MSG_digest)); 
+        out->write(static_cast<sc_biguint<512>> (MSG_digest)); 
+        
+        
+    //}; 
+    
+    //out->write(static_cast<sc_biguint<512>> (MSG_digest >> static_cast<sc_biguint<512>>(512-SHA_Mode_in))); 
     }
-
 };
 #endif
