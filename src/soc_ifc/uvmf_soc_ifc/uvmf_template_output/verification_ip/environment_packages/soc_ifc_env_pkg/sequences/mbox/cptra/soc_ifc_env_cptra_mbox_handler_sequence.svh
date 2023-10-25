@@ -219,7 +219,7 @@ task soc_ifc_env_cptra_mbox_handler_sequence::handler_setup();
     report_reg_sts(reg_sts, "notif_internal_intr_r");
     // Clear errors
     if (err_rsp_count) begin
-        `uvm_warning("CPTRA_MBOX_HANDLER", "Did not expect to receive any new cptra_status err interrupt transactions at sequence entry!")
+        `uvm_info("CPTRA_MBOX_HANDLER", "Received new cptra_status err interrupt transactions at sequence entry! Is this run in a multi-agent context?", UVM_LOW)
         err_rsp_count = 0;
     end
     reg_model.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);

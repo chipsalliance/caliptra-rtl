@@ -77,7 +77,9 @@ task soc_ifc_env_mbox_real_fw_sequence::mbox_push_datain();
     for (ii=0; ii < firmware_end_dw; ii++) begin
         data = uvm_reg_data_t'({fw_img[ii][3],fw_img[ii][2],fw_img[ii][1],fw_img[ii][0]});
         `uvm_info("MBOX_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", ii, data), UVM_DEBUG)
+        reg_model.mbox_csr_rm.mbox_datain_sem.get();
         reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
+        reg_model.mbox_csr_rm.mbox_datain_sem.put();
         report_reg_sts(reg_sts, "mbox_datain");
     end
 endtask
