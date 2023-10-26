@@ -3588,56 +3588,56 @@ module entropy_src_reg_top #(
   // Read data return
   always_comb begin
     reg_rdata_next = '0;
-    unique case (1'b1)
-      addr_hit[0]: begin
+    unique case (addr_hit)
+      57'h000000000000001: begin
         reg_rdata_next[0] = intr_state_es_entropy_valid_qs;
         reg_rdata_next[1] = intr_state_es_health_test_failed_qs;
         reg_rdata_next[2] = intr_state_es_observe_fifo_ready_qs;
         reg_rdata_next[3] = intr_state_es_fatal_err_qs;
       end
 
-      addr_hit[1]: begin
+      57'h000000000000002: begin
         reg_rdata_next[0] = intr_enable_es_entropy_valid_qs;
         reg_rdata_next[1] = intr_enable_es_health_test_failed_qs;
         reg_rdata_next[2] = intr_enable_es_observe_fifo_ready_qs;
         reg_rdata_next[3] = intr_enable_es_fatal_err_qs;
       end
 
-      addr_hit[2]: begin
+      57'h000000000000004: begin
         reg_rdata_next[0] = '0;
         reg_rdata_next[1] = '0;
         reg_rdata_next[2] = '0;
         reg_rdata_next[3] = '0;
       end
 
-      addr_hit[3]: begin
+      57'h000000000000008: begin
         reg_rdata_next[0] = '0;
         reg_rdata_next[1] = '0;
       end
 
-      addr_hit[4]: begin
+      57'h000000000000010: begin
         reg_rdata_next[0] = me_regwen_qs;
       end
 
-      addr_hit[5]: begin
+      57'h000000000000020: begin
         reg_rdata_next[0] = sw_regupd_qs;
       end
 
-      addr_hit[6]: begin
+      57'h000000000000040: begin
         reg_rdata_next[0] = regwen_qs;
       end
 
-      addr_hit[7]: begin
+      57'h000000000000080: begin
         reg_rdata_next[7:0] = rev_abi_revision_qs;
         reg_rdata_next[15:8] = rev_hw_revision_qs;
         reg_rdata_next[23:16] = rev_chip_type_qs;
       end
 
-      addr_hit[8]: begin
+      57'h000000000000100: begin
         reg_rdata_next[3:0] = module_enable_qs;
       end
 
-      addr_hit[9]: begin
+      57'h000000000000200: begin
         reg_rdata_next[3:0] = conf_fips_enable_qs;
         reg_rdata_next[7:4] = conf_entropy_data_reg_enable_qs;
         reg_rdata_next[15:12] = conf_threshold_scope_qs;
@@ -3645,156 +3645,156 @@ module entropy_src_reg_top #(
         reg_rdata_next[25:24] = conf_rng_bit_sel_qs;
       end
 
-      addr_hit[10]: begin
+      57'h000000000000400: begin
         reg_rdata_next[3:0] = entropy_control_es_route_qs;
         reg_rdata_next[7:4] = entropy_control_es_type_qs;
       end
 
-      addr_hit[11]: begin
+      57'h000000000000800: begin
         reg_rdata_next[31:0] = entropy_data_qs;
       end
 
-      addr_hit[12]: begin
+      57'h000000000001000: begin
         reg_rdata_next[15:0] = health_test_windows_fips_window_qs;
         reg_rdata_next[31:16] = health_test_windows_bypass_window_qs;
       end
 
-      addr_hit[13]: begin
+      57'h000000000002000: begin
         reg_rdata_next[15:0] = repcnt_thresholds_fips_thresh_qs;
         reg_rdata_next[31:16] = repcnt_thresholds_bypass_thresh_qs;
       end
 
-      addr_hit[14]: begin
+      57'h000000000004000: begin
         reg_rdata_next[15:0] = repcnts_thresholds_fips_thresh_qs;
         reg_rdata_next[31:16] = repcnts_thresholds_bypass_thresh_qs;
       end
 
-      addr_hit[15]: begin
+      57'h000000000008000: begin
         reg_rdata_next[15:0] = adaptp_hi_thresholds_fips_thresh_qs;
         reg_rdata_next[31:16] = adaptp_hi_thresholds_bypass_thresh_qs;
       end
 
-      addr_hit[16]: begin
+      57'h000000000010000: begin
         reg_rdata_next[15:0] = adaptp_lo_thresholds_fips_thresh_qs;
         reg_rdata_next[31:16] = adaptp_lo_thresholds_bypass_thresh_qs;
       end
 
-      addr_hit[17]: begin
+      57'h000000000020000: begin
         reg_rdata_next[15:0] = bucket_thresholds_fips_thresh_qs;
         reg_rdata_next[31:16] = bucket_thresholds_bypass_thresh_qs;
       end
 
-      addr_hit[18]: begin
+      57'h000000000040000: begin
         reg_rdata_next[15:0] = markov_hi_thresholds_fips_thresh_qs;
         reg_rdata_next[31:16] = markov_hi_thresholds_bypass_thresh_qs;
       end
 
-      addr_hit[19]: begin
+      57'h000000000080000: begin
         reg_rdata_next[15:0] = markov_lo_thresholds_fips_thresh_qs;
         reg_rdata_next[31:16] = markov_lo_thresholds_bypass_thresh_qs;
       end
 
-      addr_hit[20]: begin
+      57'h000000000100000: begin
         reg_rdata_next[15:0] = extht_hi_thresholds_fips_thresh_qs;
         reg_rdata_next[31:16] = extht_hi_thresholds_bypass_thresh_qs;
       end
 
-      addr_hit[21]: begin
+      57'h000000000200000: begin
         reg_rdata_next[15:0] = extht_lo_thresholds_fips_thresh_qs;
         reg_rdata_next[31:16] = extht_lo_thresholds_bypass_thresh_qs;
       end
 
-      addr_hit[22]: begin
+      57'h000000000400000: begin
         reg_rdata_next[15:0] = repcnt_hi_watermarks_fips_watermark_qs;
         reg_rdata_next[31:16] = repcnt_hi_watermarks_bypass_watermark_qs;
       end
 
-      addr_hit[23]: begin
+      57'h000000000800000: begin
         reg_rdata_next[15:0] = repcnts_hi_watermarks_fips_watermark_qs;
         reg_rdata_next[31:16] = repcnts_hi_watermarks_bypass_watermark_qs;
       end
 
-      addr_hit[24]: begin
+      57'h000000001000000: begin
         reg_rdata_next[15:0] = adaptp_hi_watermarks_fips_watermark_qs;
         reg_rdata_next[31:16] = adaptp_hi_watermarks_bypass_watermark_qs;
       end
 
-      addr_hit[25]: begin
+      57'h000000002000000: begin
         reg_rdata_next[15:0] = adaptp_lo_watermarks_fips_watermark_qs;
         reg_rdata_next[31:16] = adaptp_lo_watermarks_bypass_watermark_qs;
       end
 
-      addr_hit[26]: begin
+      57'h000000004000000: begin
         reg_rdata_next[15:0] = extht_hi_watermarks_fips_watermark_qs;
         reg_rdata_next[31:16] = extht_hi_watermarks_bypass_watermark_qs;
       end
 
-      addr_hit[27]: begin
+      57'h000000008000000: begin
         reg_rdata_next[15:0] = extht_lo_watermarks_fips_watermark_qs;
         reg_rdata_next[31:16] = extht_lo_watermarks_bypass_watermark_qs;
       end
 
-      addr_hit[28]: begin
+      57'h000000010000000: begin
         reg_rdata_next[15:0] = bucket_hi_watermarks_fips_watermark_qs;
         reg_rdata_next[31:16] = bucket_hi_watermarks_bypass_watermark_qs;
       end
 
-      addr_hit[29]: begin
+      57'h000000020000000: begin
         reg_rdata_next[15:0] = markov_hi_watermarks_fips_watermark_qs;
         reg_rdata_next[31:16] = markov_hi_watermarks_bypass_watermark_qs;
       end
 
-      addr_hit[30]: begin
+      57'h000000040000000: begin
         reg_rdata_next[15:0] = markov_lo_watermarks_fips_watermark_qs;
         reg_rdata_next[31:16] = markov_lo_watermarks_bypass_watermark_qs;
       end
 
-      addr_hit[31]: begin
+      57'h000000080000000: begin
         reg_rdata_next[31:0] = repcnt_total_fails_qs;
       end
 
-      addr_hit[32]: begin
+      57'h000000100000000: begin
         reg_rdata_next[31:0] = repcnts_total_fails_qs;
       end
 
-      addr_hit[33]: begin
+      57'h000000200000000: begin
         reg_rdata_next[31:0] = adaptp_hi_total_fails_qs;
       end
 
-      addr_hit[34]: begin
+      57'h000000400000000: begin
         reg_rdata_next[31:0] = adaptp_lo_total_fails_qs;
       end
 
-      addr_hit[35]: begin
+      57'h000000800000000: begin
         reg_rdata_next[31:0] = bucket_total_fails_qs;
       end
 
-      addr_hit[36]: begin
+      57'h000001000000000: begin
         reg_rdata_next[31:0] = markov_hi_total_fails_qs;
       end
 
-      addr_hit[37]: begin
+      57'h000002000000000: begin
         reg_rdata_next[31:0] = markov_lo_total_fails_qs;
       end
 
-      addr_hit[38]: begin
+      57'h000004000000000: begin
         reg_rdata_next[31:0] = extht_hi_total_fails_qs;
       end
 
-      addr_hit[39]: begin
+      57'h000008000000000: begin
         reg_rdata_next[31:0] = extht_lo_total_fails_qs;
       end
 
-      addr_hit[40]: begin
+      57'h000010000000000: begin
         reg_rdata_next[15:0] = alert_threshold_alert_threshold_qs;
         reg_rdata_next[31:16] = alert_threshold_alert_threshold_inv_qs;
       end
 
-      addr_hit[41]: begin
+      57'h000020000000000: begin
         reg_rdata_next[15:0] = alert_summary_fail_counts_qs;
       end
 
-      addr_hit[42]: begin
+      57'h000040000000000: begin
         reg_rdata_next[7:4] = alert_fail_counts_repcnt_fail_count_qs;
         reg_rdata_next[11:8] = alert_fail_counts_adaptp_hi_fail_count_qs;
         reg_rdata_next[15:12] = alert_fail_counts_adaptp_lo_fail_count_qs;
@@ -3804,45 +3804,45 @@ module entropy_src_reg_top #(
         reg_rdata_next[31:28] = alert_fail_counts_repcnts_fail_count_qs;
       end
 
-      addr_hit[43]: begin
+      57'h000080000000000: begin
         reg_rdata_next[3:0] = extht_fail_counts_extht_hi_fail_count_qs;
         reg_rdata_next[7:4] = extht_fail_counts_extht_lo_fail_count_qs;
       end
 
-      addr_hit[44]: begin
+      57'h000100000000000: begin
         reg_rdata_next[3:0] = fw_ov_control_fw_ov_mode_qs;
         reg_rdata_next[7:4] = fw_ov_control_fw_ov_entropy_insert_qs;
       end
 
-      addr_hit[45]: begin
+      57'h000200000000000: begin
         reg_rdata_next[3:0] = fw_ov_sha3_start_qs;
       end
 
-      addr_hit[46]: begin
+      57'h000400000000000: begin
         reg_rdata_next[0] = fw_ov_wr_fifo_full_qs;
       end
 
-      addr_hit[47]: begin
+      57'h000800000000000: begin
         reg_rdata_next[0] = fw_ov_rd_fifo_overflow_qs;
       end
 
-      addr_hit[48]: begin
+      57'h001000000000000: begin
         reg_rdata_next[31:0] = fw_ov_rd_data_qs;
       end
 
-      addr_hit[49]: begin
+      57'h002000000000000: begin
         reg_rdata_next[31:0] = '0;
       end
 
-      addr_hit[50]: begin
+      57'h004000000000000: begin
         reg_rdata_next[6:0] = observe_fifo_thresh_qs;
       end
 
-      addr_hit[51]: begin
+      57'h008000000000000: begin
         reg_rdata_next[6:0] = observe_fifo_depth_qs;
       end
 
-      addr_hit[52]: begin
+      57'h010000000000000: begin
         reg_rdata_next[2:0] = debug_status_entropy_fifo_depth_qs;
         reg_rdata_next[5:3] = debug_status_sha3_fsm_qs;
         reg_rdata_next[6] = debug_status_sha3_block_pr_qs;
@@ -3853,7 +3853,7 @@ module entropy_src_reg_top #(
         reg_rdata_next[17] = debug_status_main_sm_boot_done_qs;
       end
 
-      addr_hit[53]: begin
+      57'h020000000000000: begin
         reg_rdata_next[0] = recov_alert_sts_fips_enable_field_alert_qs;
         reg_rdata_next[1] = recov_alert_sts_entropy_data_reg_en_field_alert_qs;
         reg_rdata_next[2] = recov_alert_sts_module_enable_field_alert_qs;
@@ -3871,7 +3871,7 @@ module entropy_src_reg_top #(
         reg_rdata_next[16] = recov_alert_sts_es_fw_ov_disable_alert_qs;
       end
 
-      addr_hit[54]: begin
+      57'h040000000000000: begin
         reg_rdata_next[0] = err_code_sfifo_esrng_err_qs;
         reg_rdata_next[1] = err_code_sfifo_observe_err_qs;
         reg_rdata_next[2] = err_code_sfifo_esfinal_err_qs;
@@ -3885,11 +3885,11 @@ module entropy_src_reg_top #(
         reg_rdata_next[30] = err_code_fifo_state_err_qs;
       end
 
-      addr_hit[55]: begin
+      57'h080000000000000: begin
         reg_rdata_next[4:0] = err_code_test_qs;
       end
 
-      addr_hit[56]: begin
+      57'h100000000000000: begin
         reg_rdata_next[8:0] = main_sm_state_qs;
       end
     endcase

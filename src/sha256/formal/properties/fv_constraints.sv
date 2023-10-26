@@ -1,3 +1,4 @@
+
 // -------------------------------------------------
 // Contact: contact@lubis-eda.com
 // Author: Tobias Ludwig, Michael Schwarz
@@ -17,40 +18,37 @@
 // limitations under the License.
 //
 
-module fv_constraints_m(init_cmd, next_cmd, reset_n, clk);
-    input bit init_cmd, next_cmd, reset_n, clk;
+module fv_constraints( init, next, reset_n, clk, mode);
+    input bit  init, next, reset_n, clk, mode;
     reg init_reg;
-default clocking default_clk @(posedge clk); endclocking
 
-    remove_init_next_together_a: assume property (remove_init_next_together);
-    property remove_init_next_together;
-        !(init_cmd && next_cmd);
+    default clocking default_clk @(posedge clk); endclocking
+    remove_int_next_together_a: assume property (remove_int_next_together);
+    property remove_int_next_together;
+        !(init && next);
     endproperty
 
-    init_next_order_a: assume property (init_next_order);
-    property init_next_order;
-        !init_reg |-> !next_cmd;
+    int_next_order_a: assume property (int_next_order);
+    property int_next_order;
+        !init_reg |-> !next;
     endproperty
 
-    
-    property next_only_if_digest_valid;
-         next_cmd |-> sha512_core.digest_valid ;
-    endproperty
-    next_only_if_digtest_valid_a: assume property (next_only_if_digest_valid);
+
 
     always @ (posedge clk or negedge reset_n)
         begin : init_reg_order
             if (!reset_n)
                 init_reg <= 1'b0;
-            else if (init_cmd)
+            else if (init)
                 init_reg <= 1'b1;
         end
 
 endmodule
 
-bind sha512_core fv_constraints_m fv_constraints(
-  .init_cmd(init_cmd),
-  .next_cmd(next_cmd),
+bind sha256_core fv_constraints inst2(
+  .init(init_cmd),
+  .next(next_cmd),
   .reset_n(reset_n),
-  .clk(clk)
+  .clk(clk),
+  .mode(mode)
 );
