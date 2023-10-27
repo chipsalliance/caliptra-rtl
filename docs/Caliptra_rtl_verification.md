@@ -1,0 +1,82 @@
+![OCP Logo](./images/OCP_logo.png)
+
+<p style="text-align: center;">Caliptra Hardware Verification Architecture and Methodology</p>
+
+<p style="text-align: center;">Version 0.8</p>
+
+<div style="page-break-after: always"></div>
+
+# Scope
+
+This document describes the Caliptra hardware verification methodology and testbench architecture. This document is intended to explain how the testbenches are conceptually designed, what scenarios are covered, and how the testplan maps to actual code implementation.
+
+This document is intended to enable users to reproduce and extend the Caliptra testplan, but does not provide comprehensive explanation for the Testplan itself, nor does it provided tool-specific instructions or scripting guidelines for integrating the code base into a user environment.
+
+# Overview
+
+Caliptra is validated using a collection of different testbenches, each with a different purpose and scope of operation. Individual blocks are validated using standalone unit testbenches, and caliptra_top is validated using a combination of standalone testbench with firmware smoke tests and randomized UVM regression testing. Each of these testbenches is meant to provide coverage over a different domain from the testplan, and work together in stages to provide early proof of Pull Request integrity, and extended coverage for test plan sign off and design confidence. Functional and code coverage are captured and aggregated for each testbench.
+
+This document does not comprehensively discuss environment configuration or tool chains used. However, it is useful to note that some simple directed tests are able to be run in the open-source domain entirely using Verilator and other Open Source Software (OSS), while more complex scenarios (built in UVM) and code coverage require proprietary tools, licenses, and verification IP. Reproducing the testplan for these regression suites is left as an exercise for individual integrators.
+
+# Unit testbenches
+For cryptographic modules, unit tests may iterate through a suite of known answer tests, NIST test vectors, or other directed scenarios. The SOC_IFC unit testbench provides basic coverage for a mailbox operation, extended directed testing for the complete register set, and some randomized testing. Key Vault, Data Vault, and PCR Vault unit testbenches...<TODO>
+
+# Standalone testbench
+The Caliptra Top standalone testbench facilitates some basic bringup activities, and enables firmware to be run on the embedded RISC-V processor for directed testing. The testbench implements an assortment of reset activities, basic mailbox command operation, fuse programming, clock gating, cryptography operations, and other necessary stimulus in a basic and restricted fashion to enable "smoke tests" and other directed scenarios to run.
+
+## Testbench design
+The testbench design has four major components:
+- clock and reset generation
+- SRAM implementation, including ROM, ICCM, DCCM, and Mailbox SRAM models
+- APB state machine for rudimentary traffic generation
+- Modular testing "services"
+
+## Modular testbench "services"
+
+Although production designs of Caliptra must adhere to the predefined functionality for generic input and output wires (which are used to implement standardized late-binding features), the standalone testbench heavily relies upon these signals to enable validation firmware and the testbench to easily communicate testing intent to each other.
+
+## Firmware operation
+
+## Regression suite
+
+# UVM testbench
+
+## UVM-Framework
+
+## IP block level testbench approach
+
+## SOC Interface testbench design
+
+### Interface design and breakdown
+
+### QVIP usage
+
+### Predictor and scoreboard design
+
+### Register model
+
+### Register field callbacks
+
+### Delay jobs
+
+### Environment level sequences
+
+### Test sequences
+- Rand
+- Command line
+
+## Caliptra top testbench design
+
+### Reuse of testbench "services"
+
+### Validation firmware
+
+### Top level test sequences
+- Rand
+- Command line
+- ROM
+
+## Future work
+- Pivot QVIP AHB/APB to open-source agents
+- Clock gating model
+- JTAG/QSPI/I3C/UART
