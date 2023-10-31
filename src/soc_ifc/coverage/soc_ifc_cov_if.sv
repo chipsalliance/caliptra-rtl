@@ -293,8 +293,8 @@ interface soc_ifc_cov_if
         sram_double_ecc_error_cp: coverpoint i_mbox.sram_double_ecc_error;
 
         //req hold varieties
-        req_hold0_cp: coverpoint i_mbox.req_dv & (i_mbox.dir_req_dv_q & ~i_mbox.req_data.write);
-        req_hold1_cp: coverpoint i_mbox.req_dv & (i_mbox.dir_req_dv & i_mbox.sha_sram_req_dv);
+        req_hold0_cp: coverpoint i_mbox.req_dv & (i_mbox.dir_req_dv_q & ~i_mbox.sha_sram_req_dv & ~i_mbox.req_data.write);
+        req_hold1_cp: coverpoint i_mbox.req_dv & (i_mbox.dir_req_dv & ~i_mbox.dir_req_rd_phase & i_mbox.sha_sram_req_dv);
         req_hold2_cp: coverpoint i_mbox.req_dv & (i_mbox.hwif_out.mbox_dataout.dataout.swacc & i_mbox.mbox_protocol_sram_rd_f);
         sha_sram_hold_cp: coverpoint i_mbox.sha_sram_hold;
 
