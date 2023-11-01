@@ -228,10 +228,17 @@ package soc_ifc_reg_model_top_pkg;
         // the value read from CPTRA_FLOW_STATUS
         boot_fn_state_s boot_fn_state_sigs;
 
+        // Tracks when a register field is being actively updated by hardware, so
+        // prediction and scoreboard logic can detect transitions
+        struct {
+            uvm_reg_data_t cptra_hw_error_non_fatal;
+        } hwset_active;
+
         extern virtual function void reset(string kind = "HARD");
         function new(string name = "soc_ifc_reg_ext");
             super.new(name);
             boot_fn_state_sigs = '{boot_idle: 1'b1, default: 1'b0};
+            hwset_active = '{default: '0};
         endfunction : new
 
         // FIXME Manually maintaining a list here of registers that are configured
@@ -376,6 +383,11 @@ package soc_ifc_reg_model_top_pkg;
         // TODO what to do for FW update?
         if (kind inside {"HARD", "SOFT"}) begin
             boot_fn_state_sigs = '{boot_idle: 1'b1, default: 1'b0};
+        end
+        if (kind inside {"HARD"}) begin
+            // Some signals may also be reset by a noncore reset, but all of the
+            // initial hwset_active members may be driven during warm resets
+            hwset_active = '{default: '0};
         end
     endfunction
 
