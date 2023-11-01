@@ -167,15 +167,15 @@ stages:
             # Run the Verilator test regression and dump logfiles to scratch
             - 'submit -i python3 \$AHA_POC_REPO/tools/scripts/run_verilator_l0_regression.py'
 
-#      - synthesis_elab_check:
-#        - display_name: 'Synthesis Elab Check'
-#        - enabled: true
-#        - run_in_workspace: True
-#        - timeout: 10
-#        - commands:
-#          - 'set -e'
-#          - 'module load tools/python/python3/3.9.2'
-#          - 'module load tools/synopsys/dc/2020.09-SP1'
-#
+      - synthesis_elab_check:
+        - display_name: 'Synthesis Elab Check'
+        - enabled: true
+        - run_in_workspace: True
+        - timeout: 10
+        - commands:
+          - 'set -e'
+          - 'module load tools/python/python3/3.9.2'
+          - 'module load tools/synopsys/dc/2020.09-SP1'
+
 #          # Run synthesis on top level and exit after elaborate stage
-#          - 'submit -i python3 \$AHA_POC_REPO/tools/scripts/syn/run_syn.py caliptra_top 1'
+          - 'submit -i python3 \$AHA_POC_REPO/tools/scripts/syn/run_syn.py caliptra_top 1'
