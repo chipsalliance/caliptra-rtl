@@ -437,8 +437,11 @@ always_comb dir_req_dv_q = (dir_req_dv & ~dir_req_rd_phase & hwif_out.mbox_lock.
 always_comb dir_req_wr_ph = dir_req_dv_q & ~sha_sram_req_dv & req_data.write;
 always_comb dir_req_addr = sha_sram_req_dv ? sha_sram_req_addr : req_data.addr[$clog2(DEPTH)+1:2];
 
-always_comb req_hold = (dir_req_dv_q & ~req_data.write) | 
-                       (dir_req_dv & sha_sram_req_dv) |
+                       //Direct read from uC, stall 1 clock dv_q will be de-asserted second clock
+always_comb req_hold = (dir_req_dv_q & ~sha_sram_req_dv & ~req_data.write) |
+                       //Direct access from uC while sha accelerator is reading
+                       (dir_req_dv & ~dir_req_rd_phase & sha_sram_req_dv) |
+                       //in an update cycle for dataout register
                        (hwif_out.mbox_dataout.dataout.swacc & mbox_protocol_sram_rd_f);
 
 always_comb sha_sram_hold = 1'b0;
@@ -584,7 +587,7 @@ mbox_csr1(
 );
 
 `CALIPTRA_ASSERT_MUTEX(ERR_MBOX_ACCESS_MUTEX, {dir_req_dv_q , mbox_protocol_sram_we , mbox_protocol_sram_rd }, clk, rst_b)
-`CALIPTRA_ASSERT_MUTEX(ERR_MBOX_DIR_SHA_COLLISION, {dir_req_dv, sha_sram_req_dv}, clk, rst_b)
+//`CALIPTRA_ASSERT_MUTEX(ERR_MBOX_DIR_SHA_COLLISION, {dir_req_dv, sha_sram_req_dv}, clk, rst_b)
 `CALIPTRA_ASSERT_NEVER(ERR_MBOX_DIR_REQ_FROM_SOC, (dir_req_dv & req_data.soc_req), clk, rst_b)
 
 endmodule

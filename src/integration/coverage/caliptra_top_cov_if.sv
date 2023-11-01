@@ -49,8 +49,8 @@ interface caliptra_top_cov_if
         wdt_t1: coverpoint wdt_timer1_en;
         wdt_t2: coverpoint wdt_timer2_en;
         wdt_t1Xt2: cross wdt_t1, wdt_t2;
-        wdt_t1t2Xwarmrst: cross wdt_t1Xt2, cptra_rst_b;
-        wdt_t1t2Xcoldrst: cross wdt_t1Xt2, cptra_pwrgood;
+        // wdt_t1t2Xwarmrst: cross wdt_t1Xt2, cptra_rst_b;
+        // wdt_t1t2Xcoldrst: cross wdt_t1Xt2, cptra_pwrgood;
 
         //-----------------------------------------
         //CLK GATING coverpoints

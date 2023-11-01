@@ -103,6 +103,7 @@ targets:
       - $COMPILE_ROOT/tb/caliptra_veer_sram_export.sv
       - $COMPILE_ROOT/tb/caliptra_top_tb_services.sv
       - $COMPILE_ROOT/coverage/caliptra_top_cov_if.sv
+      - $COMPILE_ROOT/coverage/caliptra_top_cov_props.sv
       - $COMPILE_ROOT/coverage/caliptra_top_cov_bind.sv
       - $COMPILE_ROOT/test_suites/libs/jtagdpi/jtagdpi.sv
       - $COMPILE_ROOT/tb/caliptra_top_tb.sv

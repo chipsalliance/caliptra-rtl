@@ -257,7 +257,10 @@ void soc_ifc_sha_accel_wr_mode(enum sha_accel_mode_e mode) {
 }
 
 void soc_ifc_sha_accel_poll_status() {
-    while((lsu_read_32(CLP_SHA512_ACC_CSR_STATUS) & SHA512_ACC_CSR_STATUS_VALID_MASK) == 0);
+    while((lsu_read_32(CLP_SHA512_ACC_CSR_STATUS) & SHA512_ACC_CSR_STATUS_VALID_MASK) == 0) {
+        //poke at the mailbox direct read path to create stall scenario
+        lsu_read_32(0x30000000);
+    };
 }
 
 void soc_ifc_sha_accel_clr_lock() {
