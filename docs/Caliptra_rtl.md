@@ -38,6 +38,8 @@ The following figure shows the Caliptra Core.
 
 *Figure 1: Caliptra block diagram*
 
+![](./images/Caliptra_HW_diagram.png)
+
 ## Boot Media Dependent (passive) vs Boot Media Integrated (active) profile
 
 In the BMD profile, QSPI and I3C IO peripherals are disabled using integration-time defines passed to the hardware, which are also exposed to ROM. Peripheral IOs can be tied off appropriately for the BMD profile at SoC integration time. For more information on the BMD vs. BMI profile differences, see the boot flows in [Caliptra profiles](https://chipsalliance.github.io/Caliptra/doc/Caliptra.html#caliptra-profiles). Only the BMD profile is supported for the first generation release of Caliptra.
@@ -47,6 +49,8 @@ In the BMD profile, QSPI and I3C IO peripherals are disabled using integration-t
 The following figure shows the SoC interface definition.
 
 *Figure 2: SoC Interface Block Diagram*
+
+![](./images/Caliptra_soc_interface_block.png)
 
 ## Integration parameters
 
@@ -197,6 +201,8 @@ The following figure shows the reset rules and timing.
 
 *Figure 3: Reset rules and timing diagram*
 
+![](./images/Caliptra_reset_timing.png)
+
 Deassertion of cptra\_pwrgood indicates a power cycle that results in returning Caliptra to its default state. All resettable flops are reset.
 
 De-assertion of cptra\_rst\_b indicates a warm reset cycle that resets all but the “sticky” registers (fuses, error logging, etc.).
@@ -268,6 +274,8 @@ The Boot FSM detects that the SoC is bringing Caliptra out of reset. Part of thi
 
 *Figure 4: Mailbox Boot FSM state diagram*
 
+![](./images/Caliptra_mbox_boot_FSM.png)
+
 The boot FSM first waits for the SoC to assert cptra\_pwrgood and de-assert cptra\_rst\_b. In the BOOT\_FUSE state, Caliptra signals to the SoC that it is ready for fuses. After the SoC is done writing fuses, it sets the fuse done register and the FSM advances to BOOT\_DONE.
 
 BOOT\_DONE enables Caliptra reset deassertion through a two flip-flop synchronizer.
@@ -313,6 +321,8 @@ Once LOCK is granted, the mailbox is locked until that device has concluded its 
 
 *Figure 5: Sender protocol flow chart*
 
+![](./images/Caliptra_mbox-sender.png)
+
 ## Receiver Protocol
 
 Upon receiving indication that mailbox has been populated, the appropriate device can read the mailbox. This is indicated by a dedicated wire that is asserted when Caliptra populates the mailbox for SoC consumption.
@@ -333,6 +343,8 @@ Caliptra will not initiate any mailbox commands that require a response from the
 The following figure shows the receiver protocol flow.
 
 *Figure 6: Receiver protocol flowchart*
+
+![](./images/Caliptra_mbox_receiver.png)
 
 ## Mailbox arbitration
 
@@ -499,6 +511,8 @@ The following figure shows the SRAM interface timing.
 
 *Figure 7: SRAM interface timing*
 
+![](./images/Caliptra_SRAM_interface_timing.png)
+
 ## SRAM parameterization
 
 Parameterization for ICCM/DCCM memories is derived from the configuration of the VeeR RISC-V core that has been selected for Caliptra integration. Parameters defined in the VeeR core determine signal dimensions at the Caliptra top-level interface and drive requirements for SRAM layout. For details about interface parameterization, see the [Interface](#interface) section. The following configuration options from the RISC-V Core dictate this behavior:
@@ -525,6 +539,8 @@ This example is applicable to scenarios where an integrator may need control of 
 Note that the example assumes that data and ECC codes are in non-deterministic bit-position in the exposed SRAM interface bus. Accordingly, redundant correction coding is shown in the integrator level logic (i.e., integrator\_ecc(calitpra\_data, caliptra\_ecc)). If the Caliptra data and ECC are deterministically separable at the Caliptra interface, the integrator would have discretion to store the ECC codes directly and calculate integrator ECC codes for the data alone.
 
 *Figure 8: Example machine check reliability implementation*
+
+![](./images/Caliptra_machine_reliability.png)
 
 ### Error detection and logging
 
@@ -643,7 +659,11 @@ In an unconstrained environment, several CDC violations are anticipated. CDC ana
 
 The following code snippet and schematic diagram illustrate JTAG originating CDC violations.
 
-*Figure 9: Schematic diagram showing JTAG-originating CDC violations*
+*Figure 9: Schematic diagram and code snippet showing JTAG-originating CDC violations*
+
+![](./images/Caliptra_CDC_JTAG_code_snippet.png)
+
+![](./images/Caliptra_schematic_jtag.png)
 
 ## CDC analysis conclusions
 * Missing synchronizers appear to be the result of “inferred” and/or only 2-FF instantiated synchronizers.
