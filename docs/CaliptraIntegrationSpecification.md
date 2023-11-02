@@ -471,6 +471,11 @@ See the Hardware specification for additional details.
 
 For SoCs that choose to not instantiate Caliptra’s embedded TRNG, we provide a TRNQ REQ HW API.
 
+**While the use of this API is convenient for early enablement, the current
+Caliptra hardware is unable to provide the same security guarantees with an
+external RNG. In particular, it is highly advisable to instantiate an internal
+RNG if ROM glitch protection is of importance.**
+
 1. Caliptra asserts TRNG\_REQ wire (this may be because Caliptra’s internal hardware or firmware made the request for a TRNG).
 2. SoC writes the TRNG architectural registers.
 3. SoC write a done bit in the TRNG architectural registers.
