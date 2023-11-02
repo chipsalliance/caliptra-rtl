@@ -41,9 +41,26 @@ Although production designs of Caliptra must adhere to the predefined functional
 
 # UVM testbench
 
+The Universal Verification Methodology (UVM) is used to enable extended randomized regression testing for individual blocks of Caliptra and for the full Caliptra subsystem. Baseline UVM testbenches were originally created using the Mentor Graphics UVM-Framework generation tool, and extended to furnish the necessary stimulus and analysis logic.
+
 ## UVM-Framework
 
+The UVM Framework is a tool that uses scripted generation to create a fully operable UVM testbench from a minimal description of desired agents, interface signals, and transaction members. The tool is also useful for incorporating functional block environments into larger systems as sub-environments, which enabled substantial design reuse in the Caliptra testbench.
+
 ## IP block level testbench approach
+
+Many individual IP blocks in the Caliptra system are validated using dedicated block testbenches. This enables quick iteration over cryptographic test vectors, register modeling, and reset or clocking scenarios with many possible permutations, but relatively short stimulus and response times (and low bringup delay).
+
+The following blocks have dedicated UVM testbenches:
+- Cryptographic IP
+    - HMAC
+    - SHA256
+    - SHA512 (with SHA384)
+    - ECC
+- Volatile secret management IP
+    - KeyVault
+    - PCRVault
+- SOC_IFC
 
 ## SOC Interface testbench design
 
@@ -58,6 +75,8 @@ Although production designs of Caliptra must adhere to the predefined functional
 ### Register field callbacks
 
 ### Delay jobs
+
+### Continuous timer tasks
 
 ### Environment level sequences
 
