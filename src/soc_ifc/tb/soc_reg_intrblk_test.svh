@@ -70,20 +70,20 @@
                                     dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_intr_en_r.notif_gen_in_toggle_en.value};
   assign error_global_intr_r =      dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_global_intr_r.agg_sts.value; // *RO*
   assign notif_global_intr_r =      dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value; // *RO*
-  assign error_internal_intr_r =   {dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_internal_intr_r.error_internal_sts.value,
-                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_internal_intr_r.error_inv_dev_sts.value,
-                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_internal_intr_r.error_cmd_fail_sts.value,
-                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_internal_intr_r.error_bad_fuse_sts.value,
-                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_internal_intr_r.error_iccm_blocked_sts.value,
-                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts.value,
+  assign error_internal_intr_r =   {dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_internal_intr_r.error_wdt_timer2_timeout_sts.value,
                                     dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_internal_intr_r.error_wdt_timer1_timeout_sts.value,
-                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_internal_intr_r.error_wdt_timer2_timeout_sts.value};
-  assign notif_internal_intr_r =   {dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.value,
-                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.value,
-                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_internal_intr_r.notif_debug_locked_sts.value,
-                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_internal_intr_r.notif_scan_mode_sts.value,
+                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts.value,
+                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_internal_intr_r.error_iccm_blocked_sts.value,
+                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_internal_intr_r.error_bad_fuse_sts.value,
+                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_internal_intr_r.error_cmd_fail_sts.value,
+                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_internal_intr_r.error_inv_dev_sts.value,
+                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_internal_intr_r.error_internal_sts.value};
+  assign notif_internal_intr_r =   {dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_internal_intr_r.notif_gen_in_toggle_sts.value,
                                     dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_internal_intr_r.notif_soc_req_lock_sts.value,
-                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_internal_intr_r.notif_gen_in_toggle_sts.value};            
+                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_internal_intr_r.notif_scan_mode_sts.value,
+                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_internal_intr_r.notif_debug_locked_sts.value,
+                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.value,
+                                    dut.i_soc_ifc_reg.field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.value};            
   assign error_intr_trig_r =       {dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_intr_trig_r.error_wdt_timer2_timeout_trig.value,
                                     dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_intr_trig_r.error_wdt_timer1_timeout_trig.value,
                                     dut.i_soc_ifc_reg.field_storage.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.value,
@@ -246,7 +246,7 @@
       foreach (wo_associated_regnames[i]) begin
         rname = wo_associated_regnames[i];
         addr = socregs.get_addr(rname);
-        $display ("\n-- Handling WO register 0x%08x (%s) --", addr, rname);
+        $display ("\n-- Handling WO associated register 0x%08x (%s) --", addr, rname);
 
         $display ("\n  -- First clear register and check --"); 
         wrtrans.update_byname(rname, 32'hffff_ffff, tid); 
@@ -263,38 +263,32 @@
         end
       end
 
-      // Repeat. Longer squence for WO_REGNAMES.
+      // Repeat. Longer squence for WO_REGNAMES (Trigger registers).
       // First expect to clear all write-to-clear data (check it too) 
-      // Then randomly set bits and ensure only those bits are cleared.
+      // Then randomly set bits and ensure only those bits are 1.
       foreach (wo_regnames[i]) begin
+        word_addr_t associated_addr; 
+
         rname = wo_regnames[i];
+        associated_rname = rname == "INTR_BRF_ERROR_INTR_TRIG_R" ? "INTR_BRF_ERROR_INTERNAL_INTR_R" :
+                           rname == "INTR_BRF_NOTIF_INTR_TRIG_R" ? "INTR_BRF_NOTIF_INTERNAL_INTR_R" : 
+                                                                   "UNDEFINED";
         addr = socregs.get_addr(rname);
-        $display ("\n-- Handling WO register 0x%08x (%s) --", addr, rname);
+        associated_addr = socregs.get_addr(associated_rname);
 
-        $display ("\n  -- First clear register and check --"); 
-        wrtrans.update_byname(rname, 32'hffff_ffff, tid); 
-        write_reg_trans(SET_AHB, wrtrans);
-        repeat (5) @(posedge clk_tb);
+        $display ("\n-- Handling WO register 0x%08x (%s) --", socregs.get_addr(rname), rname);
 
-        rdtrans.update_byname(rname, 0, tid); 
-        read_reg_trans(GET_AHB, rdtrans); 
-        if (rdtrans.data != '0)  begin
-          $display("TB ERROR. Expected a write ones to clear register for addr 0x%08x (%s). Instead received 0x%08x", 
-            addr, rname, rdtrans.data); 
-          error_ctr += 1; 
-          continue; 
-        end
-        
         // Now randomly set bits after reg is all clear 
         wrtrans.update_byname(rname, 0, tid); 
-        wrtrans.randomize();
+        wrtrans.randomize() with {wrtrans.data & get_mask(rname) != 0;}; // Require some nonzero value after masking
         ahb_wrdata = wrtrans.data & get_mask(rname);
         // $display ("TB DEBUG. Now randomly set bits to write 0x%08x; w/masking expect to write 0x%08x",
         //   wrtrans.data, ahb_wrdata); 
 
-        $display ("\n  -- Finally check for non-zero value and then transition to 0 --"); 
+        $display ("\n  -- Write random trigger data and check for non-zero value, then transition to 0 --"); 
 
 
+        nonzero_regval = 0;
         fork
           begin : writing_over_ahb
             write_reg_trans(SET_AHB, wrtrans);
@@ -310,13 +304,11 @@
         $display ("TB DEBUG. All said and done; from addr 0x%08x (%s). Directly probed non-zero val = 0x%08x and final val = 0x%08x| expected non-zero = 0x%08x", 
           addr, rname, nonzero_regval, final_regval, ahb_wrdata);
 
-        associated_rname = "INTR_BRF_ERROR_INTR_TRIG_R" ? "INTR_BRF_ERROR_INTERNAL_INTR_R" :
-                           "INTR_BRF_NOTIF_INTR_TRIG_R" ? "INTR_BRF_NOTIF_INTERNAL_INTR_R" : 
-                           "UNDEFINED";
-
         associated_regval = probe_reg(associated_rname);
-        $display ("TB INFO. Checking associated address %s related to trigger %s; associaated value = 0x%08x, trigger value %08x", 
+        $display ("TB INFO. Checking associated address %s related to trigger %s; associated value = 0x%08x, trigger value %08x", 
           associated_rname, rname, associated_regval, nonzero_regval);
+        if (associated_regval != ahb_wrdata)
+          $display("TB ERROR value 0x%08x in associated register 0x%08x (%s) does not match trigger value 0x%08x", associated_regval, socregs.get_addr(associated_rname), associated_rname, ahb_wrdata);
 
 
         if (changeup && changedn && (nonzero_regval == ahb_wrdata) && (final_regval == '0)) 
@@ -330,6 +322,21 @@
           if (nonzero_regval != ahb_wrdata)  
             $display("TB ERROR Nonzero value noted for addr 0x%08x (%s) is 0x%08x | expected 0x%08x", addr, rname, nonzero_regval, ahb_wrdata); 
         end
+
+        $display ("\n  -- Finally clear associated register 0x%08x (%s) and check --", associated_addr, associated_rname); 
+        wrtrans.update_byname(associated_rname, ahb_wrdata, tid); 
+        write_reg_trans(SET_AHB, wrtrans);
+        repeat (5) @(posedge clk_tb);
+
+        rdtrans.update_byname(associated_rname, 0, tid); 
+        read_reg_trans(GET_AHB, rdtrans); 
+        if (rdtrans.data != '0)  begin
+          $display("TB ERROR. Expected a write value of 0x%08x to clear register for addr 0x%08x (%s). Instead received 0x%08x", 
+            ahb_wrdata, associated_addr, associated_rname, rdtrans.data); 
+          error_ctr += 1; 
+          continue; 
+        end
+
       end
 
     end
@@ -378,9 +385,9 @@
   function automatic dword_t probe_reg(string regname);
 
     return (regname == "INTR_BRF_ERROR_INTERNAL_INTR_R") ?  error_internal_intr_r :
-            (regname == "INTR_BRF_NOTIF_INTERNAL_INTR_R") ?  notif_internal_intr_r :
-            (regname == "INTR_BRF_ERROR_INTR_TRIG_R") ?  error_intr_trig_r :
-            (regname == "INTR_BRF_NOTIF_INTR_TRIG_R") ?  notif_intr_trig_r :  32'hdead_face; 
+           (regname == "INTR_BRF_NOTIF_INTERNAL_INTR_R") ?  notif_internal_intr_r :
+           (regname == "INTR_BRF_ERROR_INTR_TRIG_R")     ?  error_intr_trig_r     :
+           (regname == "INTR_BRF_NOTIF_INTR_TRIG_R")     ?  notif_intr_trig_r     :  32'hdead_face;
 
   endfunction
 
