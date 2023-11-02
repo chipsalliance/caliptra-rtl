@@ -16,7 +16,12 @@
 // SOC-Facing Registers
 reg {
     name = "Hardware Error Fatal";
-    desc = "Indicates fatal hardware error.
+    desc = "Indicates fatal hardware error. Assertion of any bit in this
+            register results in the assertion of the SoC interrupt pin,
+            cptra_error_fatal, unless that bit is masked using the internal
+            mask register. After the output interrupt is asserted, clearing
+            the bit in this register will not cause the interrupt to deassert.
+            Only a Caliptra reset will clear the fatal error interrupt.
             [br]Caliptra Access: RW1C
             [br]SOC Access:      RW1C";
     rw_rw_sticky_hw iccm_ecc_unc=0;     /* Uncorrectable double-bit error in ICCM */
@@ -25,7 +30,21 @@ reg {
 } CPTRA_HW_ERROR_FATAL;
 reg {
     name = "Hardware Error Non-Fatal";
-    desc = "Indicates non-fatal hardware error.
+    desc = "Indicates non-fatal hardware error. Assertion of any bit in this
+            register results in the assertion of the SoC interrupt pin,
+            cptra_error_non_fatal, unless that bit is masked using the internal
+            mask register. After the output interrupt is asserted, any
+            change by firmware that results in all set non-fatal errors
+            being masked will immediately deassert the interrupt output. This means
+            that firmware may cause the cptra_error_non_fatal signal to deassert by
+            writing to any of these registers, if the write results in all error
+            bits being cleared or masked:
+            [br][list]
+            [br] [*] CPTRA_HW_ERROR_NON_FATAL
+            [br] [*] CPTRA_FW_ERROR_NON_FATAL
+            [br] [*] internal_hw_error_non_fatal_mask
+            [br] [*] internal_fw_error_non_fatal_mask 
+            [/list]
             [br]Caliptra Access: RW1C
             [br]SOC Access:      RW1C";
     rw_rw_sticky_hw mbox_prot_no_lock=0; /* SOC access while not locked */
@@ -34,14 +53,33 @@ reg {
 } CPTRA_HW_ERROR_NON_FATAL;
 reg {
     name = "Firmware Error Fatal";
-    desc = "Indicates fatal firmware error.
+    desc = "Indicates fatal firmware error. Assertion of any bit in this
+            register results in the assertion of the SoC interrupt pin,
+            cptra_error_fatal, unless that bit is masked using the internal
+            mask register. After the output interrupt is asserted, clearing
+            the bit in this register will not cause the interrupt to deassert.
+            Only a Caliptra reset will clear the fatal error interrupt.
             [br]Caliptra Access: RW
             [br]SOC Access:      RW";
     rw_rw_sticky error_code[32]=0; 
 } CPTRA_FW_ERROR_FATAL;
 reg {
     name = "Firmware Error Non-Fatal";
-    desc = "Indicates non-fatal firmware error.
+    desc = "Indicates non-fatal firmware error. Assertion of any bit in this
+            register results in the assertion of the SoC interrupt pin,
+            cptra_error_non_fatal, unless that bit is masked using the internal
+            mask register. After the output interrupt is asserted, any
+            change by firmware that results in all set non-fatal errors
+            being masked will immediately deassert the interrupt output. This means
+            that firmware may cause the cptra_error_non_fatal signal to deassert by
+            writing to any of these registers, if the write results in all error
+            bits being cleared or masked:
+            [br][list]
+            [br] [*] CPTRA_HW_ERROR_NON_FATAL
+            [br] [*] CPTRA_FW_ERROR_NON_FATAL
+            [br] [*] internal_hw_error_non_fatal_mask
+            [br] [*] internal_fw_error_non_fatal_mask
+            [/list]
             [br]Caliptra Access: RW
             [br]SOC Access:      RW";
     rw_rw_sticky error_code[32]=0; 
@@ -226,6 +264,12 @@ reg {
 reg {
     name = "DEBUG & MANUF SERVICE REG";
     desc = "JTAG in debug/manuf mode or SOC can write to this register for ROM/FW defined skips or services; ROM/FW maintains the defintion of these bits.
+            [br]Field decode:
+            [br] [0]     MFG_FLAG_GEN_IDEV_CSR: Enable bit for Caliptra to generate an IDEV CSR
+            [br] [15:1]  MFG_FLAG_RSVD
+            [br] [30:16] FAKE_ROM_RSVD
+            [br] [31]    FAKE_ROM_IMAGE_VERIFY_EN: Enable bit to perform image verification within the fake-rom feature
+            [br]
             [br]Caliptra Access: RW
             [br]SOC Access:      RW
             [br]TAP Access [in debug/manuf mode]: RW";

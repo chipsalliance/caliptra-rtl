@@ -1,9 +1,0 @@
-{
-    "version": 13,
-    "modules": [
-        {
-            "name": "SHA512",
-            "path": "SHA512.luref"
-        }
-    ]
-}

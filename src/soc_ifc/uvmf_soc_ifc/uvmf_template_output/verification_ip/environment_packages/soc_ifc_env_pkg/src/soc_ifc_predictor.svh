@@ -663,6 +663,7 @@ class soc_ifc_predictor #(
     ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) ahb_txn;
     uvm_reg axs_reg;
     uvm_mem axs_mem;
+    uvm_reg_data_t previous_mirror;
     bit do_reg_prediction = 1;
     bit [SOC_IFC_DATA_W-1:0] data_active;
     bit [ahb_lite_slave_0_params::AHB_WDATA_WIDTH-1:0] address_aligned;
@@ -720,8 +721,14 @@ class soc_ifc_predictor #(
         do_reg_prediction = 1'b0;
     end
     else if (axs_reg != null) begin
-        // Mailbox accesses are discarded based on valid_requester/valid_receiver
         case (axs_reg.get_name()) inside
+            // CPTRA_FW_ERROR_<NON>_FATAL writes only trigger interrupt when
+            // setting a new bit, so we need the previous value to catch the edges
+            "CPTRA_FW_ERROR_FATAL",
+            "CPTRA_FW_ERROR_NON_FATAL": begin
+                previous_mirror = axs_reg.get_mirrored_value();
+            end
+            // Mailbox accesses are discarded based on valid_requester/valid_receiver
             "mbox_lock": begin
                 if (ahb_txn.RnW == AHB_READ && ahb_txn.resp[0] != AHB_OKAY) begin
                     do_reg_prediction = 1'b0;
@@ -1093,27 +1100,34 @@ class soc_ifc_predictor #(
                     `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_FULL)
                 end
                 "CPTRA_HW_ERROR_FATAL": begin
-                    if (ahb_txn.RnW == AHB_WRITE && |data_active && (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL.get_mirrored_value() == 0)) begin
+                    if (ahb_txn.RnW == AHB_WRITE && |data_active && ((p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_hw_error_fatal_mask.get_mirrored_value()) == 0)) begin
                         `uvm_info("PRED_AHB", $sformatf("Write to %s results in all bits cleared, but has no effect on cptra_error_fatal (requires reset)", axs_reg.get_name()), UVM_MEDIUM)
                     end
                 end
                 "CPTRA_HW_ERROR_NON_FATAL": begin
-                    if (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.get_mirrored_value() == 0) begin
+                    if ((p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_hw_error_non_fatal_mask.get_mirrored_value()) == 0 &&
+                        (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FW_ERROR_NON_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_error_non_fatal_mask.get_mirrored_value()) == 0) begin
                         cptra_error_non_fatal = 1'b0;
                     end
                 end
                 "CPTRA_FW_ERROR_FATAL": begin
-                    if (ahb_txn.RnW == AHB_WRITE && |(data_active && ~p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FW_ERROR_FATAL.get_mirrored_value())) begin
+                    if (ahb_txn.RnW == AHB_WRITE && |(~previous_mirror & data_active & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_error_fatal_mask.get_mirrored_value())) begin
                         `uvm_info("PRED_AHB", $sformatf("Write to %s set a new bit, trigger cptra_error_fatal interrupt", axs_reg.get_name()), UVM_MEDIUM)
                         cptra_error_fatal = 1'b1;
                         send_soc_ifc_sts_txn = 1'b1;
                     end
-                    if (ahb_txn.RnW == AHB_WRITE && |data_active && (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FW_ERROR_FATAL.get_mirrored_value() == 0)) begin
+                    else if (ahb_txn.RnW == AHB_WRITE && ((p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FW_ERROR_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_error_fatal_mask.get_mirrored_value()) == 0)) begin
                         `uvm_info("PRED_AHB", $sformatf("Write to %s results in all bits cleared, but has no effect on cptra_error_fatal (requires reset)", axs_reg.get_name()), UVM_MEDIUM)
                     end
                 end
                 "CPTRA_FW_ERROR_NON_FATAL": begin
-                    if (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FW_ERROR_NON_FATAL.get_mirrored_value() == 0) begin
+                    if (ahb_txn.RnW == AHB_WRITE && |(~previous_mirror & data_active & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_error_non_fatal_mask.get_mirrored_value())) begin
+                        `uvm_info("PRED_AHB", $sformatf("Write to %s set a new bit, trigger cptra_error_non_fatal interrupt", axs_reg.get_name()), UVM_MEDIUM)
+                        cptra_error_non_fatal = 1'b1;
+                        send_soc_ifc_sts_txn = 1'b1;
+                    end
+                    else if ((p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_hw_error_non_fatal_mask.get_mirrored_value()) == 0 &&
+                             (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FW_ERROR_NON_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_error_non_fatal_mask.get_mirrored_value()) == 0) begin
                         cptra_error_non_fatal = 1'b0;
                     end
                 end
@@ -1388,14 +1402,34 @@ class soc_ifc_predictor #(
                     end
                 end
                 "internal_hw_error_fatal_mask",
-                "internal_hw_error_non_fatal_mask",
-                "internal_fw_error_fatal_mask",
-                "internal_fw_error_non_fatal_mask": begin
+                "internal_fw_error_fatal_mask": begin
                     if (ahb_txn.RnW == AHB_WRITE) begin
                         `uvm_error("PRED_AHB", $sformatf("FIXME - need to add logic for error mask register %s", axs_reg.get_name())) // TODO
                     end
                     else begin
                         `uvm_info("PRED_AHB", {"Read from ", axs_reg.get_name(), " has no effect"}, UVM_DEBUG)
+                    end
+                end
+                "internal_hw_error_non_fatal_mask": begin
+                    if (ahb_txn.RnW == AHB_WRITE &&
+                        (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_hw_error_non_fatal_mask.get_mirrored_value()) == 0 &&
+                        (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FW_ERROR_NON_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_error_non_fatal_mask.get_mirrored_value()) == 0) begin
+                        `uvm_info("PRED_AHB", $sformatf("Write to %s results in deassertion of cptra_error_non_fatal", axs_reg.get_name()), UVM_HIGH)
+                        cptra_error_non_fatal = 1'b0;
+                    end
+                    else begin
+                        `uvm_info("PRED_AHB", {"Access to ", axs_reg.get_name(), " of type ", ahb_txn.RnW.name(), " has no effect"}, UVM_DEBUG)
+                    end
+                end
+                "internal_fw_error_non_fatal_mask": begin
+                    if (ahb_txn.RnW == AHB_WRITE &&
+                        (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_hw_error_non_fatal_mask.get_mirrored_value()) == 0 &&
+                        (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FW_ERROR_NON_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_error_non_fatal_mask.get_mirrored_value()) == 0) begin
+                        `uvm_info("PRED_AHB", $sformatf("Write to %s results in deassertion of cptra_error_non_fatal", axs_reg.get_name()), UVM_HIGH)
+                        cptra_error_non_fatal = 1'b0;
+                    end
+                    else begin
+                        `uvm_info("PRED_AHB", {"Access to ", axs_reg.get_name(), " of type ", ahb_txn.RnW.name(), " has no effect"}, UVM_DEBUG)
                     end
                 end
                 "internal_rv_mtime_l",
@@ -1646,6 +1680,7 @@ class soc_ifc_predictor #(
     // pragma uvmf custom apb5_slave_0_ae_predictor begin
     apb3_host_apb3_transaction #(apb5_master_0_params::APB3_SLAVE_COUNT, apb5_master_0_params::APB3_PADDR_BIT_WIDTH, apb5_master_0_params::APB3_PWDATA_BIT_WIDTH, apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) apb_txn;
     uvm_reg            axs_reg;
+    uvm_reg_data_t previous_mirror;
     bit do_reg_prediction = 1;
 
     // Flags control whether each transaction is sent to scoreboard
@@ -1679,10 +1714,15 @@ class soc_ifc_predictor #(
         soc_ifc_sb_apb_ap_output_transaction.rd_data = 0;
     end
     else begin
-        // Mailbox accesses are discarded based on valid_requester/valid_receiver
-        // (i.e. PAUSER + state info)
-        // SHA Accelerator Functions also screened based on PAUSER
         case (axs_reg.get_name()) inside
+            // CPTRA_FW_ERROR_<NON>_FATAL writes only trigger interrupt when
+            // setting a new bit, so we need the previous value to catch the edges
+            "CPTRA_FW_ERROR_FATAL",
+            "CPTRA_FW_ERROR_NON_FATAL": begin
+                previous_mirror = axs_reg.get_mirrored_value();
+            end
+            // Mailbox accesses are discarded based on valid_requester/valid_receiver
+            // (i.e. PAUSER + state info)
             "mbox_lock": begin
                 // RS access policy wants to update lock to 1 on a read, but if the PAUSER value is invalid
                 // lock will not be set. It will hold the previous value.
@@ -1784,7 +1824,7 @@ class soc_ifc_predictor #(
                     end
                 end
             end
-            //SHA Accelerator Functions
+            // SHA Accelerator Functions are screened based on PAUSER
             "LOCK",
             "USER": begin
                 if (apb_txn.read_or_write == APB3_TRANS_READ && apb_txn.slave_err) begin
@@ -2110,22 +2150,36 @@ class soc_ifc_predictor #(
                 `uvm_info("PRED_APB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_FULL)
             end
             "CPTRA_HW_ERROR_FATAL": begin
-                if (apb_txn.read_or_write == APB3_TRANS_WRITE && |apb_txn.wr_data && (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL.get_mirrored_value() == 0)) begin
-                    `uvm_info("PRED_APB", $sformatf("Write to %s results in all bits cleared, but has no effect on cptra_error_fatal (requires reset)", axs_reg.get_name()), UVM_MEDIUM)
+                if (apb_txn.read_or_write == APB3_TRANS_WRITE && |apb_txn.wr_data && ((p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_hw_error_fatal_mask.get_mirrored_value()) == 0)) begin
+                    `uvm_info("PRED_APB", $sformatf("Write to %s results in all unmasked bits cleared, but has no effect on cptra_error_fatal (requires reset)", axs_reg.get_name()), UVM_MEDIUM)
                 end
             end
             "CPTRA_HW_ERROR_NON_FATAL": begin
-                if (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.get_mirrored_value() == 0) begin
+                if ((p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_hw_error_non_fatal_mask.get_mirrored_value()) == 0 &&
+                    (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FW_ERROR_NON_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_error_non_fatal_mask.get_mirrored_value()) == 0) begin
+                    `uvm_info("PRED_APB", $sformatf("Access to %s results in all unmasked bits cleared, which causes deassertion of cptra_error_non_fatal", axs_reg.get_name()), UVM_MEDIUM)
                     cptra_error_non_fatal = 1'b0;
                 end
             end
             "CPTRA_FW_ERROR_FATAL": begin
-                if (apb_txn.read_or_write == APB3_TRANS_WRITE && |apb_txn.wr_data && (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FW_ERROR_FATAL.get_mirrored_value() == 0)) begin
-                    `uvm_info("PRED_APB", $sformatf("Write to %s results in all bits cleared, but has no effect on cptra_error_fatal (requires reset)", axs_reg.get_name()), UVM_MEDIUM)
+                if (apb_txn.read_or_write == APB3_TRANS_WRITE && |(~previous_mirror & apb_txn.wr_data & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_error_fatal_mask.get_mirrored_value())) begin
+                    `uvm_info("PRED_APB", $sformatf("Write to %s set a new bit, trigger cptra_error_fatal interrupt", axs_reg.get_name()), UVM_MEDIUM)
+                    cptra_error_fatal = 1'b1;
+                    send_soc_ifc_sts_txn = 1'b1;
+                end
+                else if (apb_txn.read_or_write == APB3_TRANS_WRITE && ((p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FW_ERROR_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_error_fatal_mask.get_mirrored_value()) == 0)) begin
+                    `uvm_info("PRED_APB", $sformatf("Write to %s results in all unmasked bits cleared, but has no effect on cptra_error_fatal (requires reset)", axs_reg.get_name()), UVM_MEDIUM)
                 end
             end
             "CPTRA_FW_ERROR_NON_FATAL": begin
-                if (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FW_ERROR_NON_FATAL.get_mirrored_value() == 0) begin
+                if (apb_txn.read_or_write == APB3_TRANS_WRITE && |(~previous_mirror & apb_txn.wr_data & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_error_non_fatal_mask.get_mirrored_value())) begin
+                    `uvm_info("PRED_APB", $sformatf("Write to %s set a new bit, trigger cptra_error_non_fatal interrupt", axs_reg.get_name()), UVM_MEDIUM)
+                    cptra_error_non_fatal = 1'b1;
+                    send_soc_ifc_sts_txn = 1'b1;
+                end
+                else if ((p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_hw_error_non_fatal_mask.get_mirrored_value()) == 0 &&
+                         (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FW_ERROR_NON_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_error_non_fatal_mask.get_mirrored_value()) == 0) begin
+                    `uvm_info("PRED_APB", $sformatf("Access to %s results in all unmasked bits cleared, which causes deassertion of cptra_error_non_fatal", axs_reg.get_name()), UVM_MEDIUM)
                     cptra_error_non_fatal = 1'b0;
                 end
             end
@@ -2497,9 +2551,11 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
 //        send_soc_ifc_sts_txn = 1'b1;
 //    end
     // mbox protocol violations
-    // TODO The interrupt is cleared by warm reset even though reg values are not - the assertion
-    // should be tied directly to the event detection instead of comparing the interrupt value with the reg mirror value
-    if (!cptra_error_non_fatal && |p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.get_mirrored_value()) begin
+    // The interrupt is cleared by warm reset even though reg values are not - the assertion
+    // should be tied directly to the event detection instead of comparing the interrupt value with the reg mirror value.
+    // The difficulty with doing this is that the mbox protocol error delay job doesn't have access to this
+    // cptra_error_non_fatal signal... solution is to use the hwset_active signal
+    if (!cptra_error_non_fatal && |(p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.get_mirrored_value() & p_soc_ifc_rm.soc_ifc_reg_rm.hwset_active.cptra_hw_error_non_fatal & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_hw_error_non_fatal_mask.get_mirrored_value())) begin
         `uvm_info("PRED_DLY", "Delay job triggers cptra_error_non_fatal output", UVM_HIGH)
         cptra_error_non_fatal = 1;
         send_soc_ifc_sts_txn = 1'b1;
@@ -2614,7 +2670,7 @@ task soc_ifc_predictor::poll_and_run_delay_jobs();
                     time end_time;
                     running_dly_jobs.push_back(process::self()); // This tracks all the delay_jobs that are pending so they can be clobbered on rst
                     `uvm_info("PRED_DLY", $sformatf("Doing delay of %0d cycles before running delay job with signature: %s", job.get_delay_cycles(), job.get_type_name()), UVM_HIGH/*UVM_FULL*/)
-                    end_time = $time + 10*job.get_delay_cycles();
+                    end_time = $time + 10*job.get_delay_cycles(); // FIXME 100MHz implicit clock frequency
                     job_end_count[end_time] += 1;
                     // delay cycles reported as 0's based value, since 1-cycle delay
                     // is inherent to this forever loop
