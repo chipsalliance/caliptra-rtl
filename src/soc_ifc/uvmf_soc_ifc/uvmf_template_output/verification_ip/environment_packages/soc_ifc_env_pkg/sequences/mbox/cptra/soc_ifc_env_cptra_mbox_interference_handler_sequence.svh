@@ -141,7 +141,7 @@ task soc_ifc_env_cptra_mbox_interference_handler_sequence::mbox_wait_and_force_u
             if (inject_force_unlock) begin
                 configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(force_unlock_delay_cycles);
                 halt_rand_reg_accesses.trigger();
-                while(rand_reg_axs_proc.status() != process::WAITING)
+                while(halt_rand_reg_accesses.get_num_waiters() == 0)
                     configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
             end
             else begin
@@ -151,7 +151,7 @@ task soc_ifc_env_cptra_mbox_interference_handler_sequence::mbox_wait_and_force_u
                         `uvm_info("CPTRA_MBOX_HANDLER", "Received soc_ifc_err_intr, clearing and (if needed) proceeding to mbox_unlock", UVM_MEDIUM)
                         // Pause rand reg accesses while servicing interrupt
                         halt_rand_reg_accesses.trigger();
-                        while(rand_reg_axs_proc.status() != process::WAITING)
+                        while(halt_rand_reg_accesses.get_num_waiters() == 0)
                             configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
                         // Read and clear any error interrupts
                         reg_model.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
@@ -271,7 +271,7 @@ task soc_ifc_env_cptra_mbox_interference_handler_sequence::burst_random_reg_acce
                     `uvm_error("CPTRA_MBOX_HANDLER", "Failed to randomize reg AHB transfer in burst_random_reg_accesses")
                 end
                 else begin
-                    `uvm_info("CPTRA_MBOX_HANDLER", $sformatf("Doing random AHB access of type %p to %s, which has is_busy(): %d", rand_RnW, regs[reg_select].get_name(), regs[reg_select].is_busy()), UVM_DEBUG)
+                    `uvm_info("CPTRA_MBOX_HANDLER", $sformatf("Doing random AHB access of type %p to %s, which has is_busy(): %d", rand_RnW, regs[reg_select].get_name(), regs[reg_select].is_busy()), UVM_FULL)
                     if (rand_RnW == AHB_READ) regs[reg_select].read (rand_sts, rand_data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
                     else                      regs[reg_select].write(rand_sts, rand_data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
                     report_reg_sts(rand_sts, regs[reg_select].get_name());
