@@ -16,10 +16,9 @@ limitations under the License.*_<BR>
 # **Release Notes** #
 _*Last Update: 2023/11/02*_
 
-## Rev 0p9 ##
+## Rev 1p0-rc1 ##
 
-### Rev 0p9 release date: 2023/11/03 ###
-- 1p0 version pending ROM release for official declaration
+### Rev 1p0-rc1 release date: 2023/11/03 (1p0 version pending ROM release for official declaration) ###
 - Caliptra IP Specification: see docs/ folder
 - Caliptra Integration Specification: see docs/ folder
 - Caliptra testplan: see docs/ folder
