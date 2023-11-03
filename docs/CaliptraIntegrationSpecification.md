@@ -58,24 +58,24 @@ The following table describes integration parameters.
 
 *Table 2: Integration parameters*
 
-| **Parameter name** | **Width** | **Defines File** | **Description** |
+| **Parameter name** | **Width** | **Defines file** | **Description** |
 | :--------- | :--------- | :--------- | :--------- |
-| CALIPTRA_APB_ADDR_WIDTH | 32 | config_defines.svh | Width of the APB Address field. Default to 32. |
-| CALIPTRA_APB_DATA_WIDTH | 32 | config_defines.svh | Width of the APB Data field. Default to 32. |
-| CALIPTRA_APB_USER_WIDTH | 32 | config_defines.svh | Width of the APB PAUSER field. |
-| CPTRA_SET_MBOX_PAUSER_INTEG | 5 | soc_ifc_pkg.sv | Each bit hardcodes the valid PAUSER for mailbox at integration time. |
-| CPTRA_MBOX_VALID_PAUSER | \[4:0\]\[31:0\] | soc_ifc_pkg.sv | Each parameter corresponds to a hardcoded valid PAUSER value for mailbox, set at integration time. Must set corresponding bit in the CPTRA_SET_MBOX_PAUSER_INTEG parameter for this valid pauser override to be used. |
-| CPTRA_DEF_MBOX_VALID_PAUSER | 32 | soc_ifc_pkg.sv | Sets the default valid PAUSER for mailbox accesses. This PAUSER is valid when any VALID_PAUSER is unlocked or not set by INTEG parameter. |
-| CPTRA_SET_FUSE_PAUSER_INTEG | 1 | soc_ifc_pkg.sv | Sets the valid PAUSER for fuse accesses at integration time. |
-| CPTRA_FUSE_VALID_PAUSER | 32 | soc_ifc_pkg.sv | Overrides the programmable valid PAUSER for fuse accesses when CPTRA_SET_FUSE_PAUSER_INTEG is set to 1. |
+| CPTRA_SET_MBOX_PAUSER_INTEG | 5               | soc_ifc_pkg.sv | Each bit hardcodes the valid PAUSER for mailbox at integration time. |
+| CPTRA_MBOX_VALID_PAUSER     | \[4:0\]\[31:0\] | soc_ifc_pkg.sv | Each parameter corresponds to a hardcoded valid PAUSER value for mailbox, set at integration time. Must set corresponding bit in the CPTRA_SET_MBOX_PAUSER_INTEG parameter for this valid pauser override to be used. |
+| CPTRA_DEF_MBOX_VALID_PAUSER | 32              | soc_ifc_pkg.sv | Sets the default valid PAUSER for mailbox accesses. This PAUSER is valid when any VALID_PAUSER is unlocked or not set by INTEG parameter. |
+| CPTRA_SET_FUSE_PAUSER_INTEG | 1               | soc_ifc_pkg.sv | Sets the valid PAUSER for fuse accesses at integration time. |
+| CPTRA_FUSE_VALID_PAUSER     | 32              | soc_ifc_pkg.sv | Overrides the programmable valid PAUSER for fuse accesses when CPTRA_SET_FUSE_PAUSER_INTEG is set to 1. |
 
 *Table 3: Integration Defines*
 
-| **Defines** | **Description** |
-| :--------- | :--------- |
-| CALIPTRA_INTERNAL_TRNG  | Defining this enables the internal TRNG source. |
-| CALIPTRA_INTERNAL_UART  | Defining this enables the internal UART.        |
-| CALIPTRA_INTERNAL_QSPI  | Defining this enables the internal QSPI.        |
+| **Defines** | **Defines file** | **Description** |
+| :--------- | :--------- | :--------- |
+| CALIPTRA_APB_ADDR_WIDTH | config_defines.svh | Width of the APB Address field. Default to 32. |
+| CALIPTRA_APB_DATA_WIDTH | config_defines.svh | Width of the APB Data field. Default to 32. |
+| CALIPTRA_APB_USER_WIDTH | config_defines.svh | Width of the APB PAUSER field. |
+| CALIPTRA_INTERNAL_TRNG  | config_defines.svh | Defining this enables the internal TRNG source. |
+| CALIPTRA_INTERNAL_UART  | config_defines.svh | Defining this enables the internal UART.        |
+| CALIPTRA_INTERNAL_QSPI  | config_defines.svh | Defining this enables the internal QSPI.        |
 
 ## Interface
 
