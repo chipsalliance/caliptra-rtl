@@ -48,6 +48,7 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_datavault_reset/smoke_test_datavault_reset.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_datavault_lock/smoke_test_datavault_lock.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_wdt/smoke_test_wdt.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_wdt_rst/smoke_test_wdt_rst.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_cg_wdt/smoke_test_cg_wdt.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_clk_gating/smoke_test_clk_gating.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_iccm_reset/smoke_test_iccm_reset.yml

@@ -189,12 +189,14 @@ interface soc_ifc_cov_if
         soc_mbox_addr_cp: coverpoint i_soc_ifc_arb.soc_req_data.addr inside {[MBOX_REG_START_ADDR:MBOX_REG_END_ADDR]};
 
         soc_mbox_req_ip_cp: coverpoint i_soc_ifc_arb.soc_mbox_req_ip;
-        soc_reg_req_ip_cp: coverpoint i_soc_ifc_arb.soc_reg_req_ip;
         soc_sha_req_ip_cp: coverpoint i_soc_ifc_arb.soc_sha_req_ip;
+        //No stall here, so arbiter never hits these. We can put these back if we ever introduce a stall 
+        //soc_reg_req_ip_cp: coverpoint i_soc_ifc_arb.soc_reg_req_ip;
 
         uc_mbox_req_ip_cp: coverpoint i_soc_ifc_arb.uc_mbox_req_ip;
-        uc_reg_req_ip_cp: coverpoint i_soc_ifc_arb.uc_reg_req_ip;
         uc_sha_req_ip_cp: coverpoint i_soc_ifc_arb.uc_sha_req_ip;
+        //No stall here, so arbiter never hits these. We can put these back if we ever introduce a stall 
+        //uc_reg_req_ip_cp: coverpoint i_soc_ifc_arb.uc_reg_req_ip;
 
         uc_mbox_reg_req_cp: coverpoint i_soc_ifc_arb.uc_mbox_reg_req;
         uc_mbox_dir_req_cp: coverpoint i_soc_ifc_arb.uc_mbox_dir_req;
@@ -218,7 +220,8 @@ interface soc_ifc_cov_if
         boot_fsm_ps_cp: coverpoint i_soc_ifc_boot_fsm.boot_fsm_ps;
         arc_BOOT_FUSE_BOOT_DONE_cp: coverpoint i_soc_ifc_boot_fsm.arc_BOOT_FUSE_BOOT_DONE;
         arc_BOOT_FUSE_BOOT_WAIT_cp: coverpoint i_soc_ifc_boot_fsm.arc_BOOT_FUSE_BOOT_WAIT;
-        arc_BOOT_DONE_BOOT_IDLE_cp: coverpoint i_soc_ifc_boot_fsm.arc_BOOT_DONE_BOOT_IDLE;
+        //Not a real arc - tied off to zero
+        //arc_BOOT_DONE_BOOT_IDLE_cp: coverpoint i_soc_ifc_boot_fsm.arc_BOOT_DONE_BOOT_IDLE;
         arc_BOOT_DONE_BOOT_FWRST_cp: coverpoint i_soc_ifc_boot_fsm.arc_BOOT_DONE_BOOT_FWRST;
         arc_BOOT_WAIT_BOOT_DONE_cp: coverpoint i_soc_ifc_boot_fsm.arc_BOOT_WAIT_BOOT_DONE;
         fsm_iccm_unlock_cp: coverpoint i_soc_ifc_boot_fsm.fsm_iccm_unlock;
@@ -290,8 +293,8 @@ interface soc_ifc_cov_if
         sram_double_ecc_error_cp: coverpoint i_mbox.sram_double_ecc_error;
 
         //req hold varieties
-        req_hold0_cp: coverpoint i_mbox.req_dv & (i_mbox.dir_req_dv_q & ~i_mbox.req_data.write);
-        req_hold1_cp: coverpoint i_mbox.req_dv & (i_mbox.dir_req_dv & i_mbox.sha_sram_req_dv);
+        req_hold0_cp: coverpoint i_mbox.req_dv & (i_mbox.dir_req_dv_q & ~i_mbox.sha_sram_req_dv & ~i_mbox.req_data.write);
+        req_hold1_cp: coverpoint i_mbox.req_dv & (i_mbox.dir_req_dv & ~i_mbox.dir_req_rd_phase & i_mbox.sha_sram_req_dv);
         req_hold2_cp: coverpoint i_mbox.req_dv & (i_mbox.hwif_out.mbox_dataout.dataout.swacc & i_mbox.mbox_protocol_sram_rd_f);
         sha_sram_hold_cp: coverpoint i_mbox.sha_sram_hold;
 

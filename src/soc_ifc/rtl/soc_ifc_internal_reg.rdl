@@ -70,9 +70,16 @@ reg {
     desc = "Bit mask for the register CPTRA_HW_ERROR_FATAL to determine
             which bits are disabled for interrupt generation on the
             cptra_error_fatal output signal.
-            A value of 1 in a field of this register means the corresponding bit
+            [br]A value of 1 in a field of this register means the corresponding bit
             position in CPTRA_HW_ERROR_FATAL will not produce an interrupt
-            output assertion.
+            output assertion. If a hardware error bit is set and was previously
+            masked, and firmware performs a write to clear the corresponding mask
+            bit in this register, the interrupt output will not be asserted. Only
+            the same error condition reoccurring while it is unmasked will cause
+            a new assertion of the interrupt output.
+            [br]Firmware can not cause the interrupt output to deassert by setting
+            mask bits for fatal error conditions that have already triggered the 
+            interrupt.
             [br]Caliptra Access: RW
             [br]SOC Access:      RO";
     rw_ro_hw mask_iccm_ecc_unc=0;     /* Uncorrectable double-bit error in ICCM */
@@ -84,9 +91,24 @@ reg {
     desc = "Bit mask for the register CPTRA_HW_ERROR_NON_FATAL to determine
             which bits are disabled for interrupt generation on the
             cptra_error_non_fatal output signal.
-            A value of 1 in a field of this register means the corresponding bit
+            [br]A value of 1 in a field of this register means the corresponding bit
             position in CPTRA_HW_ERROR_NON_FATAL will not produce an interrupt
-            output assertion.
+            output assertion. If a hardware error bit is set that was previously
+            masked, and firmware performs a write to clear the corresponding mask
+            bit in this register, the interrupt output will not be asserted. Only
+            the same error condition reoccurring while it is unmasked will cause
+            a new assertion of the interrupt output.
+            [br]Any change by firmware that results in all set non-fatal errors
+            being masked will immediately deassert the interrupt output. This means
+            that firmware may cause the cptra_error_non_fatal signal to deassert by
+            writing to any of these registers, if the write results in all error
+            bits being cleared or masked:
+            [br][list]
+            [br] [*] CPTRA_HW_ERROR_NON_FATAL
+            [br] [*] CPTRA_FW_ERROR_NON_FATAL
+            [br] [*] internal_hw_error_non_fatal_mask
+            [br] [*] internal_fw_error_non_fatal_mask
+            [/list]
             [br]Caliptra Access: RW
             [br]SOC Access:      RO";
     rw_ro_hw mask_mbox_prot_no_lock=0; /* SOC access while not locked */
@@ -98,9 +120,16 @@ reg {
     desc = "Bit mask for the register CPTRA_FW_ERROR_FATAL to determine
             which bits are disabled for interrupt generation on the
             cptra_error_fatal output signal.
-            A value of 1 in a field of this register means the corresponding bit
+            [br]A value of 1 in a field of this register means the corresponding bit
             position in CPTRA_FW_ERROR_FATAL will not produce an interrupt
-            output assertion.
+            output assertion. If a firmware error bit is set and was previously
+            masked, and firmware performs a write to clear the corresponding mask
+            bit in this register, the interrupt output will not be asserted. Only
+            the same error bit being cleared then set again while it is unmasked will cause
+            a new assertion of the interrupt output.
+            [br]Firmware can not cause the interrupt output to deassert by setting
+            mask bits for fatal error conditions that have already triggered the 
+            interrupt.
             [br]Caliptra Access: RW
             [br]SOC Access:      RO";
     rw_ro_hw mask[32]=0; 
@@ -110,9 +139,24 @@ reg {
     desc = "Bit mask for the register CPTRA_FW_ERROR_NON_FATAL to determine
             which bits are disabled for interrupt generation on the
             cptra_error_non_fatal output signal.
-            A value of 1 in a field of this register means the corresponding bit
+            [br]A value of 1 in a field of this register means the corresponding bit
             position in CPTRA_FW_ERROR_NON_FATAL will not produce an interrupt
-            output assertion.
+            output assertion. If a firmware error bit is set that was previously
+            masked, and firmware performs a write to clear the corresponding mask
+            bit in this register, the interrupt output will not be asserted. Only
+            the same error bit being cleared then set again while it is unmasked will cause
+            a new assertion of the interrupt output.
+            [br]Any change by firmware that results in all set non-fatal errors
+            being masked will immediately deassert the interrupt output. This means
+            that firmware may cause the cptra_error_non_fatal signal to deassert by
+            writing to any of these registers, if the write results in all error
+            bits being cleared or masked:
+            [br][list]
+            [br] [*] CPTRA_HW_ERROR_NON_FATAL
+            [br] [*] CPTRA_FW_ERROR_NON_FATAL
+            [br] [*] internal_hw_error_non_fatal_mask
+            [br] [*] internal_fw_error_non_fatal_mask
+            [/list]
             [br]Caliptra Access: RW
             [br]SOC Access:      RO";
     rw_ro_hw mask[32]=0; 
@@ -306,8 +350,10 @@ regfile intr_block_t {
     reg error_intr_trig_t {
         name = "Interrupt Trigger Register type definition";
         desc = "Single bit for each interrupt event allows SW to manually
-                trigger occurrence of that event. Upon SW write, the bit
-                will pulse for 1 cycle then clear to 0.";
+                trigger occurrence of that event. Upon SW write, the trigger bit
+                will pulse for 1 cycle then clear to 0. The pulse on the
+                trigger register bit results in the corresponding interrupt
+                status bit being set to 1.";
 
         default hw = na;
         default sw = rw;
@@ -329,8 +375,10 @@ regfile intr_block_t {
     reg notif_intr_trig_t {
         name = "Interrupt Trigger Register type definition";
         desc = "Single bit for each interrupt event allows SW to manually
-                trigger occurrence of that event. Upon SW write, the bit
-                will pulse for 1 cycle then clear to 0.";
+                trigger occurrence of that event. Upon SW write, the trigger bit
+                will pulse for 1 cycle then clear to 0. The pulse on the
+                trigger register bit results in the corresponding interrupt
+                status bit being set to 1.";
 
         default hw = na;
         default sw = rw;
