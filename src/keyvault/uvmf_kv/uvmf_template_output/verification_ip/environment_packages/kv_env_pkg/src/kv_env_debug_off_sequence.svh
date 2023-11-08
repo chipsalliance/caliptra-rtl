@@ -27,11 +27,11 @@
 //----------------------------------------------------------------------
 //
 
-class kv_env_debug_on_sequence #(
+class kv_env_debug_off_sequence #(
     type CONFIG_T
 ) extends kv_env_sequence_base #(.CONFIG_T(CONFIG_T));
 
-    `uvm_object_param_utils(kv_env_debug_on_sequence #(CONFIG_T));
+    `uvm_object_param_utils(kv_env_debug_off_sequence #(CONFIG_T));
 
     typedef kv_rst_poweron_sequence kv_rst_agent_poweron_sequence_t;
     kv_rst_agent_poweron_sequence_t kv_rst_agent_poweron_seq;
@@ -67,36 +67,36 @@ class kv_env_debug_on_sequence #(
     function new(string name = "");
         super.new(name);
         kv_rst_agent_poweron_seq = kv_rst_agent_poweron_sequence_t::type_id::create("kv_rst_agent_poweron_seq");
-        if(!this.randomize()) `uvm_error("KV_ENV_DEBUG_ON", "Failed to randomize KV RST poweron seq");
+        if(!this.randomize()) `uvm_error("KV_ENV_debug_off", "Failed to randomize KV RST poweron seq");
         kv_rst_agent_poweron_seq_2 = kv_rst_agent_poweron_sequence_t::type_id::create("kv_rst_agent_poweron_seq_2");
-        if(!this.randomize()) `uvm_error("KV_ENV_DEBUG_ON", "Failed to randomize KV RST poweron seq");
+        if(!this.randomize()) `uvm_error("KV_ENV_debug_off", "Failed to randomize KV RST poweron seq");
 
         kv_rst_agent_debug_seq = kv_rst_agent_debug_sequence_t::type_id::create("kv_rst_agent_debug_seq");
-        if(!this.randomize()) `uvm_error("KV_ENV_DEBUG_ON", "Failed to randomize KV RST debug seq");
+        if(!this.randomize()) `uvm_error("KV_ENV_debug_off", "Failed to randomize KV RST debug seq");
         kv_rst_agent_debug_on_seq = kv_rst_agent_debug_on_sequence_t::type_id::create("kv_rst_agent_debug_on_seq");
-        if(!this.randomize()) `uvm_error("KV_ENV_DEBUG_ON", "Failed to randomize KV RST debug on seq");
+        if(!this.randomize()) `uvm_error("KV_ENV_debug_off", "Failed to randomize KV RST debug on seq");
         kv_rst_agent_debug_off_seq = kv_rst_agent_debug_off_sequence_t::type_id::create("kv_rst_agent_debug_off_seq");
-        if(!this.randomize()) `uvm_error("KV_ENV_DEBUG_ON", "Failed to randomize KV RST debug off seq");
+        if(!this.randomize()) `uvm_error("KV_ENV_debug_off", "Failed to randomize KV RST debug off seq");
         
         hmac_write_seq = kv_write_agent_key_entry_sequence_t::type_id::create("hmac_write_seq");
-        if(!this.randomize()) `uvm_error("KV_ENV_DEBUG_ON", "Failed to randomize KV WRITE seq");
+        if(!this.randomize()) `uvm_error("KV_ENV_debug_off", "Failed to randomize KV WRITE seq");
         sha512_write_seq = kv_write_agent_key_entry_sequence_t::type_id::create("sha512_write_seq");
-        if(!this.randomize()) `uvm_error("KV_ENV_DEBUG_ON", "Failed to randomize KV WRITE seq");
+        if(!this.randomize()) `uvm_error("KV_ENV_debug_off", "Failed to randomize KV WRITE seq");
         ecc_write_seq = kv_write_agent_key_entry_sequence_t::type_id::create("ecc_write_seq");
-        if(!this.randomize()) `uvm_error("KV_ENV_DEBUG_ON", "Failed to randomize KV WRITE seq");
+        if(!this.randomize()) `uvm_error("KV_ENV_debug_off", "Failed to randomize KV WRITE seq");
         doe_write_seq = kv_write_agent_key_entry_sequence_t::type_id::create("doe_write_seq");
-        if(!this.randomize()) `uvm_error("KV_ENV_DEBUG_ON", "Failed to randomize KV WRITE seq");
+        if(!this.randomize()) `uvm_error("KV_ENV_debug_off", "Failed to randomize KV WRITE seq");
         
         hmac_key_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("hmac_key_read_seq");
-        if(!this.randomize()) `uvm_error("KV_ENV_DEBUG_ON", "Failed to randomize KV READ seq");
+        if(!this.randomize()) `uvm_error("KV_ENV_debug_off", "Failed to randomize KV READ seq");
         hmac_block_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("hmac_block_read_seq");
-        if(!this.randomize()) `uvm_error("KV_ENV_DEBUG_ON", "Failed to randomize KV READ seq");
+        if(!this.randomize()) `uvm_error("KV_ENV_debug_off", "Failed to randomize KV READ seq");
         sha512_block_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("sha512_block_read_seq");
-        if(!this.randomize()) `uvm_error("KV_ENV_DEBUG_ON", "Failed to randomize KV READ seq");
+        if(!this.randomize()) `uvm_error("KV_ENV_debug_off", "Failed to randomize KV READ seq");
         ecc_privkey_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("ecc_privkey_read_seq");
-        if(!this.randomize()) `uvm_error("KV_ENV_DEBUG_ON", "Failed to randomize KV READ seq");
+        if(!this.randomize()) `uvm_error("KV_ENV_debug_off", "Failed to randomize KV READ seq");
         ecc_seed_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("ecc_seed_read_seq");
-        if(!this.randomize()) `uvm_error("KV_ENV_DEBUG_ON", "Failed to randomize KV READ seq");
+        if(!this.randomize()) `uvm_error("KV_ENV_debug_off", "Failed to randomize KV READ seq");
         //kv_rst_agent_poweron_seq_2 = kv_rst_agent_poweron_sequence_t::type_id::create("kv_rst_agent_poweron_seq_2");
     endfunction
 
@@ -111,7 +111,7 @@ class kv_env_debug_on_sequence #(
         reg_model = configuration.kv_rm;
 
 
-        kv_rst_agent_debug_on_seq.start(configuration.kv_rst_agent_config.sequencer);
+        kv_rst_agent_debug_off_seq.start(configuration.kv_rst_agent_config.sequencer);
                         
     endtask
 endclass

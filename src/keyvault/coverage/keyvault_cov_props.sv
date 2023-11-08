@@ -58,13 +58,13 @@ module keyvault_cov_props
             //------------------------------------------------------------------------------
             property cover_prop_lock_wr_warmrst;
                 @(posedge kv.clk)
-                (kv.kv_reg_hwif_out.KEY_CTRL[i].lock_wr |-> ##[0:$] !kv.rst_b);
+                ($rose(kv.kv_reg_hwif_out.KEY_CTRL[i].lock_wr) |-> ##[0:$] !kv.rst_b);
             endproperty
             covprop_lock_wr_warmrst: cover property(cover_prop_lock_wr_warmrst);
 
             property cover_prop_lock_use_warmrst;
                 @(posedge kv.clk)
-                (kv.kv_reg_hwif_out.KEY_CTRL[i].lock_use |-> ##[0:$] !kv.rst_b);
+                ($rose(kv.kv_reg_hwif_out.KEY_CTRL[i].lock_use) |-> ##[0:$] !kv.rst_b);
             endproperty
             covprop_lock_use_warmrst: cover property(cover_prop_lock_use_warmrst);
 
@@ -79,13 +79,13 @@ module keyvault_cov_props
             //------------------------------------------------------------------------------
             property cover_prop_lock_wr_coldrst;
                 @(posedge kv.clk)
-                (kv.kv_reg_hwif_out.KEY_CTRL[i].lock_wr |-> ##[0:$] !kv.cptra_pwrgood);
+                ($rose(kv.kv_reg_hwif_out.KEY_CTRL[i].lock_wr) |-> ##[0:$] !kv.cptra_pwrgood);
             endproperty
             covprop_lock_wr_coldrst: cover property(cover_prop_lock_wr_coldrst);
 
             property cover_prop_lock_use_coldrst;
                 @(posedge kv.clk)
-                (kv.kv_reg_hwif_out.KEY_CTRL[i].lock_use |-> ##[0:$] !kv.cptra_pwrgood);
+                ($rose(kv.kv_reg_hwif_out.KEY_CTRL[i].lock_use) |-> ##[0:$] !kv.cptra_pwrgood);
             endproperty
             covprop_lock_use_coldrst: cover property(cover_prop_lock_use_coldrst);
 
@@ -100,13 +100,13 @@ module keyvault_cov_props
             //------------------------------------------------------------------------------
             property cover_prop_lock_wr_corerst;
                 @(posedge kv.clk)
-                (kv.kv_reg_hwif_out.KEY_CTRL[i].lock_wr |-> ##[0:$] !kv.core_only_rst_b);
+                ($rose(kv.kv_reg_hwif_out.KEY_CTRL[i].lock_wr) |-> ##[0:$] !kv.core_only_rst_b);
             endproperty
             covprop_lock_wr_corerst: cover property(cover_prop_lock_wr_corerst);
 
             property cover_prop_lock_use_corerst;
                 @(posedge kv.clk)
-                (kv.kv_reg_hwif_out.KEY_CTRL[i].lock_use |-> ##[0:$] !kv.core_only_rst_b);
+                ($rose(kv.kv_reg_hwif_out.KEY_CTRL[i].lock_use) |-> ##[0:$] !kv.core_only_rst_b);
             endproperty
             covprop_lock_use_corerst: cover property(cover_prop_lock_use_corerst);
 

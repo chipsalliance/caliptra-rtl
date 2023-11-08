@@ -49,13 +49,14 @@ class kv_wr_rd_lock_sequence #(
     kv_read_agent_key_entry_sequence_t ecc_privkey_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_seed_read_seq;
 
-    rand reg [KV_ENTRY_ADDR_W-1:0] hmac_write_entry, sha512_write_entry, ecc_write_entry, doe_write_entry;    
-    rand reg[2:0] lock_data;
+    rand reg[2:0] lock_data;            
+    rand reg [1:0] clear_secrets_data;
 
     rand reg [1:0] write_id;
     rand reg [2:0] read_id;
     typedef enum {HMAC, SHA512, ECC, DOE} write_agents;
     typedef enum {HMAC_KEY, HMAC_BLOCK, SHA512_BLOCK, ECC_PRIVKEY, ECC_SEED} read_agents;
+    // rand reg [KV_NUM_WRITE-1:0] wr_clients;
 
 
     function new(string name = "");
@@ -95,29 +96,7 @@ class kv_wr_rd_lock_sequence #(
         reg [31:0] wr_data, rd_data;
         reg_model = configuration.kv_rm;
 
-        std::randomize(hmac_write_entry) with {
-            hmac_write_entry != sha512_write_entry;
-            hmac_write_entry != ecc_write_entry;
-            hmac_write_entry != doe_write_entry;
-        };
-
-        std::randomize(sha512_write_entry) with {
-            sha512_write_entry != hmac_write_entry;
-            sha512_write_entry != ecc_write_entry;
-            sha512_write_entry != doe_write_entry;
-        };
-
-        std::randomize(ecc_write_entry) with {
-            ecc_write_entry != hmac_write_entry;
-            ecc_write_entry != sha512_write_entry;
-            ecc_write_entry != doe_write_entry;
-        };
-
-        std::randomize(doe_write_entry) with {
-            doe_write_entry != hmac_write_entry;
-            doe_write_entry != sha512_write_entry;
-            doe_write_entry != ecc_write_entry;
-        };
+        gen_rand_entries();
 
         //Issue and wait for reset
         if(configuration.kv_rst_agent_config.sequencer != null)
@@ -207,22 +186,74 @@ class kv_wr_rd_lock_sequence #(
             kv_rst_agent_poweron_seq.start(configuration.kv_rst_agent_config.sequencer);
         else
             `uvm_error("KV_WR_RD_LOCK", "kv_rst_agent_config.sequencer is null!")
-            
-        //Set each CTRL reg with random lock data
-        for(int write_entry_temp = 0; write_entry_temp < KV_NUM_KEYS; write_entry_temp++) begin
-                lock_data = $urandom_range(1,7); //Can set one of lock_wr, lock_use, clear or all together
-                reg_model.kv_reg_rm.KEY_CTRL[write_entry_temp].write(sts, lock_data, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
-                assert(sts == UVM_IS_OK) else `uvm_error("AHB_LOCK_SET", $sformatf("Failed when writing to KEY_CTRL[%d]",write_entry_temp))
+        fork
+        begin
+            repeat(20) begin
+            //Set each CTRL reg with random lock data
+            for(int write_entry_temp = 0; write_entry_temp < KV_NUM_KEYS; write_entry_temp++) begin
+                    lock_data = $urandom_range(1,7); //Can set one of lock_wr, lock_use, clear or all together
+                    reg_model.kv_reg_rm.KEY_CTRL[write_entry_temp].write(sts, lock_data, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
+                    assert(sts == UVM_IS_OK) else `uvm_error("AHB_LOCK_SET", $sformatf("Failed when writing to KEY_CTRL[%d]",write_entry_temp))
 
-            for (int write_offset_temp = 0; write_offset_temp < KV_NUM_DWORDS; write_offset_temp++) begin
-                // Construct the transaction
-                uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_hmac_write_agent.sequencer.hmac_write_seq", "local_write_entry",write_entry_temp);
-                uvm_config_db#(reg [KV_ENTRY_SIZE_W-1:0])::set(null, "uvm_test_top.environment.kv_hmac_write_agent.sequencer.hmac_write_seq", "local_write_offset",write_offset_temp);
-                hmac_write_seq.start(configuration.kv_hmac_write_agent_config.sequencer);
+                    //Wait for lock settings to go through - design is updated after 1 clk, predictor receives txn after 2 additional clks and flags are updated accordingly
+                    configuration.kv_hmac_write_agent_config.wait_for_num_clocks(100);//(3);
+                    configuration.kv_sha512_write_agent_config.wait_for_num_clocks(100);//(3);
+                    configuration.kv_ecc_write_agent_config.wait_for_num_clocks(100);//(3);
+                    configuration.kv_doe_write_agent_config.wait_for_num_clocks(100);//(3);
             end
-            
+            end //repeat
         end
+        begin
+            queue_writes();
+            //Wait for these writes to finish before setting next CTRL reg to avoid collision (test trying to write to CTRL and predictor trying to read from CTRL)
+            configuration.kv_hmac_write_agent_config.wait_for_num_clocks(100);
+            configuration.kv_sha512_write_agent_config.wait_for_num_clocks(100);
+            configuration.kv_ecc_write_agent_config.wait_for_num_clocks(100);
+            configuration.kv_doe_write_agent_config.wait_for_num_clocks(100);
 
+        end
+        join
+
+        fork
+            begin
+                repeat(20) begin
+                //Set each CTRL reg with random lock data
+                for(int write_entry_temp = 0; write_entry_temp < KV_NUM_KEYS; write_entry_temp++) begin
+                        lock_data = $urandom_range(1,7); //Can set one of lock_wr, lock_use, clear or all together
+                        reg_model.kv_reg_rm.KEY_CTRL[write_entry_temp].write(sts, lock_data, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
+                        assert(sts == UVM_IS_OK) else `uvm_error("AHB_LOCK_SET", $sformatf("Failed when writing to KEY_CTRL[%d]",write_entry_temp))
+    
+                        //Wait for lock settings to go through - design is updated after 1 clk, predictor receives txn after 2 additional clks and flags are updated accordingly
+                        configuration.kv_hmac_write_agent_config.wait_for_num_clocks(3);
+                        configuration.kv_sha512_write_agent_config.wait_for_num_clocks(3);
+                        configuration.kv_ecc_write_agent_config.wait_for_num_clocks(3);
+                        configuration.kv_doe_write_agent_config.wait_for_num_clocks(3);
+                end
+                end //repeat
+            end
+            begin
+                repeat(20) begin
+                    std::randomize(clear_secrets_data); //wren, debug_value0/1
+
+                    reg_model.kv_reg_rm.CLEAR_SECRETS.write(sts, clear_secrets_data, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
+                    assert(sts == UVM_IS_OK) else `uvm_error("AHB_CLEAR_SECRETS_SET", "Failed when writing to CLEAR_SECRETS reg!")
+
+                    configuration.kv_hmac_write_agent_config.wait_for_num_clocks(2);
+                    configuration.kv_sha512_write_agent_config.wait_for_num_clocks(2);
+                    configuration.kv_ecc_write_agent_config.wait_for_num_clocks(2);
+                    configuration.kv_doe_write_agent_config.wait_for_num_clocks(2);
+                end //repeat
+            end
+            begin
+                queue_writes();
+                //Wait for these writes to finish before setting next CTRL reg to avoid collision (test trying to write to CTRL and predictor trying to read from CTRL)
+                configuration.kv_hmac_write_agent_config.wait_for_num_clocks(100);
+                configuration.kv_sha512_write_agent_config.wait_for_num_clocks(100);
+                configuration.kv_ecc_write_agent_config.wait_for_num_clocks(100);
+                configuration.kv_doe_write_agent_config.wait_for_num_clocks(100);
+    
+            end
+        join
     endtask
 
 endclass
