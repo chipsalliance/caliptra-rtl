@@ -83,7 +83,7 @@ stages:
           - enabled: true
           - configspec_name: 'integration_lib'
           - dut: 'ecc_top_tb'
-          - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/ecc/coverage/config/ecc_cm_hier.cfg'
+          - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/ecc/coverage/config/ecc_cm_hier.cfg --submit-resource-args RAM/2000'
           - testsuites:
             - nightly_directed:
               - enabled: true
@@ -98,7 +98,7 @@ stages:
           - enabled: true
           - configspec_name: 'integration_lib'
           - dut: 'hmac_ctrl_tb'
-          - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/hmac/coverage/config/hmac_cm_hier.cfg'
+          - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/hmac/coverage/config/hmac_cm_hier.cfg --submit-resource-args RAM/2000'
           - testsuites:
             - nightly_directed:
               - enabled: true
@@ -113,7 +113,7 @@ stages:
           - enabled: true
           - configspec_name: 'integration_lib'
           - dut: 'sha512_ctrl_32bit_tb'
-          - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/sha512/coverage/config/sha512_cm_hier.cfg'
+          - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/sha512/coverage/config/sha512_cm_hier.cfg --submit-resource-args RAM/2000'
           - testsuites:
             - nightly_directed:
               - enabled: true
@@ -128,7 +128,7 @@ stages:
           - enabled: true
           - configspec_name: 'integration_lib'
           - dut: 'sha256_ctrl_tb'
-          - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/sha256/coverage/config/sha256_cm_hier.cfg'
+          - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/sha256/coverage/config/sha256_cm_hier.cfg --submit-resource-args RAM/2000'
           - testsuites:
             - nightly_directed:
               - enabled: true
@@ -143,7 +143,7 @@ stages:
           - enabled: true
           - configspec_name: 'integration_lib'
           - dut: 'doe_core_cbc_tb'
-          - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/doe/coverage/config/doe_cm_hier.cfg'
+          - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/doe/coverage/config/doe_cm_hier.cfg --submit-resource-args RAM/2000'
           - testsuites:
             - nightly_directed:
               - enabled: true
@@ -158,7 +158,7 @@ stages:
             - enabled: true
             - configspec_name: 'integration_lib'
             - dut: 'soc_ifc_tb'
-            - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/soc_ifc/coverage/config/soc_ifc_cm_hier.cfg'
+            - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/soc_ifc/coverage/config/soc_ifc_cm_hier.cfg --submit-resource-args RAM/2000'
             - timeout: 10
             - testsuites:
               - nightly_directed:
@@ -174,7 +174,7 @@ stages:
             - enabled: true
             - configspec_name: 'integration_lib'
             - dut: 'caliptra_top_tb'
-            - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/integration/coverage/config/caliptra_top_tb_cm_hier.cfg'
+            - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/integration/coverage/config/caliptra_top_tb_cm_hier.cfg --submit-resource-args RAM/2000'
             - timeout: 10
             - testsuites:
               - nightly_directed:
@@ -191,7 +191,7 @@ stages:
             - enabled: true
             - configspec_name: 'integration_lib'
             - dut: 'uvmf_caliptra_top'
-            - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/integration/uvmf_caliptra_top/coverage/config/uvmf_caliptra_top_cm_hier.cfg'
+            - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/integration/uvmf_caliptra_top/coverage/config/uvmf_caliptra_top_cm_hier.cfg --submit-resource-args RAM/2000'
             - testsuites:
               - nightly_directed:
                 - enabled: true
@@ -207,7 +207,7 @@ stages:
             - enabled: true
             - configspec_name: 'integration_lib'
             - dut: 'uvmf_caliptra_top_itrng'
-            - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/integration/uvmf_caliptra_top/coverage/config/uvmf_caliptra_top_cm_hier.cfg'
+            - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/integration/uvmf_caliptra_top/coverage/config/uvmf_caliptra_top_cm_hier.cfg --submit-resource-args RAM/2000'
             - testsuites:
               - nightly_directed:
                 - enabled: true
