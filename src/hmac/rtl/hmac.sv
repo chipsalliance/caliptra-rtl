@@ -69,15 +69,15 @@ module hmac
   localparam BLOCK_SIZE       = 1024;
   localparam KEY_SIZE         = 384;
   localparam TAG_SIZE         = KEY_SIZE;
-  localparam LFSR_SEED_SIZE   = 148;  // 2 * 74_bit lfsr_seed for each SHA512 core
+  localparam LFSR_SEED_SIZE   = 384;
   localparam BLOCK_NUM_DWORDS = BLOCK_SIZE / DATA_WIDTH;
   localparam KEY_NUM_DWORDS   = KEY_SIZE / DATA_WIDTH;
   localparam TAG_NUM_DWORDS   = TAG_SIZE / DATA_WIDTH;
   localparam SEED_NUM_DWORDS  = ((LFSR_SEED_SIZE - 1) / DATA_WIDTH) + 1; 
 
-  reg [KEY_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0]    key_reg;
-  reg [BLOCK_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0]  block_reg;
-  reg [SEED_NUM_DWORDS- 1 : 0][DATA_WIDTH - 1 : 0]    lfsr_seed_reg;
+  reg [KEY_NUM_DWORDS - 1   : 0][DATA_WIDTH - 1 : 0]    key_reg;
+  reg [BLOCK_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0]    block_reg;
+  reg [SEED_NUM_DWORDS- 1   : 0][DATA_WIDTH - 1 : 0]    lfsr_seed_reg;
 
   logic zeroize_reg;
 
@@ -132,7 +132,8 @@ module hmac
   assign core_key = {key_reg[00], key_reg[01], key_reg[02], key_reg[03], key_reg[04], key_reg[05],
                      key_reg[06], key_reg[07], key_reg[08], key_reg[09], key_reg[10], key_reg[11]};
 
-  assign core_lfsr_seed = {lfsr_seed_reg[00][19 : 0], lfsr_seed_reg[01], lfsr_seed_reg[02], lfsr_seed_reg[03], lfsr_seed_reg[04]};
+  assign core_lfsr_seed = {lfsr_seed_reg[00], lfsr_seed_reg[01], lfsr_seed_reg[02], lfsr_seed_reg[03], lfsr_seed_reg[04], lfsr_seed_reg[05],
+                           lfsr_seed_reg[06], lfsr_seed_reg[07], lfsr_seed_reg[08], lfsr_seed_reg[09], lfsr_seed_reg[10], lfsr_seed_reg[11]};
   
   //rising edge detect on core tag valid
   assign core_tag_we = core_tag_valid & ~tag_valid_reg;
