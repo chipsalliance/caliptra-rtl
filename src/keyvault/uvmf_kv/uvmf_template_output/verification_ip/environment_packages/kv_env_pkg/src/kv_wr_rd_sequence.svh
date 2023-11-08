@@ -49,12 +49,6 @@ class kv_wr_rd_sequence #(
     kv_read_agent_key_entry_sequence_t ecc_privkey_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_seed_read_seq;
 
-    rand reg [KV_ENTRY_ADDR_W-1:0] hmac_write_entry, sha512_write_entry, ecc_write_entry, doe_write_entry;    
-    //constraint valid_entry {hmac_write_entry != sha512_write_entry != ecc_write_entry != doe_write_entry;}
-    
-    
-    
-    
 
     function new(string name = "");
         super.new(name);
@@ -93,29 +87,7 @@ class kv_wr_rd_sequence #(
         int offset = 0;
         reg [31:0] wr_data, rd_data;
 
-        std::randomize(hmac_write_entry) with {
-            hmac_write_entry != sha512_write_entry;
-            hmac_write_entry != ecc_write_entry;
-            hmac_write_entry != doe_write_entry;
-        };
-
-        std::randomize(sha512_write_entry) with {
-            sha512_write_entry != hmac_write_entry;
-            sha512_write_entry != ecc_write_entry;
-            sha512_write_entry != doe_write_entry;
-        };
-
-        std::randomize(ecc_write_entry) with {
-            ecc_write_entry != hmac_write_entry;
-            ecc_write_entry != sha512_write_entry;
-            ecc_write_entry != doe_write_entry;
-        };
-
-        std::randomize(doe_write_entry) with {
-            doe_write_entry != hmac_write_entry;
-            doe_write_entry != sha512_write_entry;
-            doe_write_entry != ecc_write_entry;
-        };
+        gen_rand_entries();
 
         //Issue and wait for reset
         if(configuration.kv_rst_agent_config.sequencer != null)
@@ -193,6 +165,8 @@ class kv_wr_rd_sequence #(
             end
 
         join
+        
+        queue_writes();
     endtask
 
 endclass
