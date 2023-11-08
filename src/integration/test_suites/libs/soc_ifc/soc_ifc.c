@@ -40,8 +40,7 @@ uint8_t soc_ifc_chk_execute_uc() {
         VPRINTF(WARNING,"SOC_IFC: Check mbox_status.mbox_fsm_ps found MBOX_IDLE\n");
         return 1;
     } else if (state == MBOX_ERROR) {
-        VPRINTF(ERROR,"SOC_IFC: Check mbox_status.mbox_fsm_ps found MBOX_ERROR, executing mailbox force-unlock\n");
-        lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+        VPRINTF(ERROR,"SOC_IFC: Check mbox_status.mbox_fsm_ps found MBOX_ERROR, mailbox force-unlock needed\n");
         return 0xF;
     } else {
         VPRINTF(FATAL,"SOC_IFC: Check mbox_status.mbox_fsm_ps found unexpected state 0x%x\n", state);
