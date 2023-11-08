@@ -103,7 +103,7 @@ stages:
         - enabled: true
         - configspec_name: 'integration_lib'
         - dut: 'uvmf_soc_ifc'
-        - args: '--submit-resource-args RAM/28000'
+        #- args: '--submit-resource-args RAM/28000'
         - testsuites:
           - l0_regress:
             - enabled: true
@@ -118,7 +118,7 @@ stages:
         - enabled: true
         - configspec_name: 'integration_lib'
         - dut: 'uvmf_caliptra_top'
-        - args: '--submit-resource-args RAM/28000'
+        #- args: '--submit-resource-args RAM/28000'
         - testsuites:
           - l0_regress:
             - enabled: true

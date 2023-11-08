@@ -479,12 +479,14 @@ module caliptra_top_sva
 
   wdt_status_t1_check: assert property (
     @(posedge `SVA_RDC_CLK)
+    disable iff (~`SVA_RST)
     $rose(`WDT_PATH.t1_timeout) |=> $rose(`SOC_IFC_TOP_PATH.soc_ifc_reg_hwif_out.CPTRA_WDT_STATUS.t1_timeout.value)
   )
   else $display("SVA ERROR: WDT Status bit not set on t1 expiry!");
 
   wdt_status_t2_check: assert property (
     @(posedge `SVA_RDC_CLK)
+    disable iff (~`SVA_RST)
     $rose(`WDT_PATH.t2_timeout) |=> $rose(`SOC_IFC_TOP_PATH.soc_ifc_reg_hwif_out.CPTRA_WDT_STATUS.t2_timeout.value)
   )
   else $display("SVA ERROR: WDT Status bit not set on t2 expiry!");
