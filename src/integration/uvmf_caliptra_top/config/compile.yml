@@ -15,6 +15,7 @@ provides: [uvmf_caliptra_top]
 schema_version: 2.4.0
 requires:
   - uvmf_caliptra_top_vip
+  - asserts
   - caliptra_top
   - sha512_coverage
   - sha256_coverage
@@ -57,6 +58,7 @@ global:
       default:
         - '-assert svaext'
         - +define+CLP_ASSERT_ON
+        - +define+UVMF_CALIPTRA_TOP
         #- '-v2k_generate'
         #- '-timescale=1ns/1ps'
         - '-noinherit_timescale=1ns/1ps'
