@@ -1,4 +1,3 @@
-
 +incdir+${CALIPTRA_ROOT}/src/keyvault/rtl
 +incdir+${CALIPTRA_ROOT}/src/doe/rtl
 +incdir+${CALIPTRA_ROOT}/src/integration/asserts

@@ -1,4 +1,3 @@
-
 +incdir+${CALIPTRA_ROOT}/src/integration/rtl
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
 ${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_defines.svh

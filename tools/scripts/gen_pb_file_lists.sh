@@ -24,13 +24,17 @@ function gen_pb_file_list {
     cpt_vf_file=src/${cpt_dir}/config/${cpt_lib}.vf
 
     # Skip UVM file lists, which reference installed libraries external to Caliptra repo
-    if [[ $cpt_lib == "uvmf_lib" || $cpt_lib == "uvm_lib" || $cpt_lib == "mvc_lib" || $cpt_lib = *"coverage" ]]; then return; fi
+    if [[ $cpt_lib = *"coverage" ]]; then return; fi
     echo "Generating File List for lib [${cpt_lib}] in [${cpt_vf_file}]";
     pb fe file_list --tb integration_lib::${cpt_lib} +def-target 'tb' --flat --dir-fmt=+incdir+{directory} --file ${cpt_vf_file};
-    # Replace leading portion of path with ${CALIPTRA_ROOT}
-    sed 's/\/home.*Caliptra\/src/\${CALIPTRA_ROOT}\/src/' -i ${cpt_vf_file}
-    # Remove duplicate entries from the file
-    perl -i -ne 'print if ! $a{$_}++' ${cpt_vf_file}
+    # Replace leading portion of Caliptra source paths with ${CALIPTRA_ROOT}
+    sed 's,/home.*Caliptra/src,\${CALIPTRA_ROOT}/src,' -i ${cpt_vf_file}
+    # Replace leading portion of UVM/installed library paths with appropriate ENV VAR
+    sed 's,/home/cad/tools/mentor/questa/[0-9\._]*/questasim/verilog_src/uvm-[^/]\+,\${UVM_HOME},' -i ${cpt_vf_file}
+    sed 's,/home/cad/tools/mentor/uvmf/UVMF_[0-9\.]*,\${UVMF_HOME},' -i ${cpt_vf_file}
+    sed 's,/home/cad/tools/mentor/questa_vip/[0-9\.]*,\${QUESTA_MVC_HOME},' -i ${cpt_vf_file}
+    # Remove duplicate entries and empty lines from the file
+    perl -i -ne 'print if ! $a{$_}++ and /\S/' ${cpt_vf_file}
 }
 
 if [[ $(command -v pb) = "" ]]; then
@@ -44,8 +48,7 @@ fi
 cpt_ymls=$(grep '^\s*\- src' ./config/compilespecs.yml | sed 's/^\s*- \(src.*\)/\1/')
 declare -A procs;
 for i in ${cpt_ymls}; do
-    cpt_dir=$(sed 's/src\/\(.\+\)\/config\/.*/\1/' <<< ${i})
-    if [[ $i = *"uvmf"* ]]; then continue; fi
+    cpt_dir=$(sed 's,src/\(.\+\)/config/.*,\1,' <<< ${i})
     cpt_libs=$(grep '^\s*provides' ${i} | sed 's/.*\[\(\w\+\)\].*/\1/')
     for j in ${cpt_libs}; do
         gen_pb_file_list ${cpt_dir} ${j} &

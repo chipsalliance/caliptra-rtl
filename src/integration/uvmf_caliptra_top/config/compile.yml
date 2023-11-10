@@ -104,6 +104,7 @@ global:
       default:
         - '-assert svaext'
         - +define+CLP_ASSERT_ON
+        - +define+UVMF_CALIPTRA_TOP
         - '-noinherit_timescale=1ns/1ps'
         - '+define+CALIPTRA_INTERNAL_TRNG'
         # Suppress a warning due to calling $fgets as task instead of function

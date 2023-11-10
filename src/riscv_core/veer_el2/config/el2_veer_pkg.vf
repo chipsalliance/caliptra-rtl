@@ -1,4 +1,3 @@
-
 +incdir+${CALIPTRA_ROOT}/src/soc_ifc/rtl
 +incdir+${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/soc_ifc_pkg.sv

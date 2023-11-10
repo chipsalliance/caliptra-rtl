@@ -29,7 +29,7 @@ files:
   - src/csrng/config/compile.yml
   # -- End RNG --
   # UVMF TBs
-  - src/aes_secworks/uvmf_cbc_AllKAT/config/compile.yml
+#  - src/aes_secworks/uvmf_cbc_AllKAT/config/compile.yml
   - src/ecc/uvmf_ecc/config/compile.yml
   - src/hmac/uvmf_2022/config/compile.yml
   - src/keyvault/uvmf_kv/config/compile.yml
