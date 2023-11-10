@@ -649,6 +649,17 @@ The following table describes SoC integration requirements.
 | FUSE PAUSER programming rules    | 1 PAUSER attribute register is implemented at SoC interface: CPTRA_FUSE_VALID_PAUSER.                                                                                                                                                     |                          |                                                   |
 | FUSE PAUSER programming rules    | CPTRA_FUSE_PAUSER_LOCK locks the programmable valid pauser register, and marks the programmed value as valid.                                                                                                                             |                          |                                                   |
 | FUSE PAUSER programming rules    | Integrators can choose to harden the valid pauser for fuse access by setting the integration parameter, CPTRA_FUSE_VALID_PAUSER, to the desired value in RTL, and by setting CPTRA_SET_FUSE_PAUSER_INTEG to 1.                            |                          |                                                   |
+| GLS FEV                          | GLS FEV must be run to make sure netlist and RTL match and none of the countermeasures are optimized away. Check table 18 for example warnings from synthesis runs to resolve through FEV                            | GLS simulations pass                 | Functional requirement                 |
+
+*Table 18: Caliptra synthesis warnings for FEV evaluation*
+
+| Module                    | Warning | Line No. |
+| :--------- | :--------- | :--------- |
+| sha512_acc_top            | Empty netlist for always_comb                                                             | 417      |
+| ecc_scalar_blinding       | Netlist for always_ff block does not contain flip flop                                    | 301      |
+| sha512_masked_core        | "masked_carry" is read before being assigned. Synthesized result may not match simulation | 295, 312 |
+| ecc_montgomerymultiplier  | Netlist for always_ff block does not contain flip flop                                    | 274, 326 |
+| Multiple modules          | Signed to unsigned conversion occurs                                                      |          |
 
 # CDC analysis and constraints
 
@@ -679,6 +690,7 @@ The following code snippet and schematic diagram illustrate JTAG originating CDC
     * Pseudo-static: wr\_data, wr\_addr
         * cdc signal reg\_wr\_data  -module dmi\_wrapper -stable
         * cdc signal reg\_wr\_addr  -module dmi\_wrapper -stable
+* The core clock frequency must be at least twice the TCK clock frequency for the JTAG data to pass correctly through the synchronizers. 
 
 ## CDC constraints
 * cdc report scheme two\_dff -severity violation
@@ -701,7 +713,7 @@ The area is expressed in units of square microns.
 
 The target foundry technology node is an industry standard, moderately advanced technology node as of 2023 September.
 
-*Table 18: Netlist synthesis data*
+*Table 19: Netlist synthesis data*
 
 | **IP Name**      | **Date**  | **Path Group**       | **Target Freq** | **QoR WNS** | **QoR Achieveable Freq** |
 | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- |
@@ -868,7 +880,7 @@ Fatal: The 'default' or 'others' must be last case in a case statement
 
 The following terminology is used in this document.
 
-*Table 19: Terminology*
+*Table 20: Terminology*
 
 
 | Abbreviation | Description                                                                                      |
