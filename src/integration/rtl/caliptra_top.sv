@@ -40,7 +40,7 @@ module caliptra_top
     input logic                        jtag_tck,    // JTAG clk
     input logic                        jtag_tms,    // JTAG TMS
     input logic                        jtag_tdi,    // JTAG tdi
-    input logic                        jtag_trst_n, // JTAG Reset //TODO optional needs review
+    input logic                        jtag_trst_n, // JTAG Reset
     output logic                       jtag_tdo,    // JTAG TDO
 
     //APB Interface
@@ -64,14 +64,12 @@ module caliptra_top
     output logic [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_d_en_o,
 
     //UART Interface
-    // TODO: Determine if this should be set behind a ifdef
 `ifdef CALIPTRA_INTERNAL_UART
     output logic                                uart_tx,
     input  logic                                uart_rx,
 `endif
 
     //I3C Interface
-    //TODO update with I3C interface signals
 
     // Caliptra Memory Export Interface
     el2_mem_if.veer_sram_src           el2_mem_export,

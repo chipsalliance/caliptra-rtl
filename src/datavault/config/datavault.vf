@@ -1,4 +1,3 @@
-
 +incdir+${CALIPTRA_ROOT}/src/integration/rtl
 +incdir+${CALIPTRA_ROOT}/src/libs/rtl
 +incdir+${CALIPTRA_ROOT}/src/datavault/rtl

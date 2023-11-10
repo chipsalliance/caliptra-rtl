@@ -1,0 +1,3 @@
++incdir+${UVM_HOME}/src
++incdir+${UVM_HOME}/src/dpi
+${UVM_HOME}/src/uvm_pkg.sv
