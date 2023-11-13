@@ -68,6 +68,9 @@ class kv_rand_debug_test_sequence extends kv_bench_sequence_base;
     typedef kv_env_debug_on_sequence #(.CONFIG_T(kv_env_configuration_t)) kv_env_debug_on_sequence_t;
     rand kv_env_debug_on_sequence_t kv_env_debug_on_seq;
 
+    typedef kv_env_debug_off_sequence #(.CONFIG_T(kv_env_configuration_t)) kv_env_debug_off_sequence_t;
+    rand kv_env_debug_off_sequence_t kv_env_debug_off_seq;
+
     typedef kv_wr_rd_debug_lock_sequence #(.CONFIG_T(kv_env_configuration_t)) kv_wr_rd_debug_lock_sequence_t;
     rand kv_wr_rd_debug_lock_sequence_t kv_wr_rd_debug_lock_seq;
 
@@ -107,6 +110,7 @@ class kv_rand_debug_test_sequence extends kv_bench_sequence_base;
         kv_wr_rd_lock_core_rst_seq = kv_wr_rd_lock_core_rst_sequence_t::type_id::create("kv_wr_rd_lock_core_rst_seq");
         kv_wr_rd_debug_seq = kv_wr_rd_debug_sequence_t::type_id::create("kv_wr_rd_debug_seq");
         kv_env_debug_on_seq = kv_env_debug_on_sequence_t::type_id::create("kv_env_debug_on_seq");
+        kv_env_debug_off_seq = kv_env_debug_off_sequence_t::type_id::create("kv_env_debug_off_seq");
         kv_wr_rd_debug_lock_seq = kv_wr_rd_debug_lock_sequence_t::type_id::create("kv_wr_rd_debug_lock_seq");
         kv_wr_rd_debug_lock_clear_rst_seq = kv_wr_rd_debug_lock_clear_rst_sequence_t::type_id::create("kv_wr_rd_debug_lock_clear_rst_seq");
         kv_wr_rd_debug_warm_rst_seq = kv_wr_rd_debug_warm_rst_sequence_t::type_id::create("kv_wr_rd_debug_warm_rst_seq");
@@ -130,6 +134,8 @@ class kv_rand_debug_test_sequence extends kv_bench_sequence_base;
             `uvm_fatal("KV_AHB_SEQ", "kv_ahb_sequence::body() - kv_ahb_seq randomization failed");
         if(!kv_env_debug_on_seq.randomize())
             `uvm_fatal("KV_ENV_DEBUG_ON SEQ", "kv_rand_debug_test_sequence::body() - kv_env_debug_on_seq randomization failed");
+        if(!kv_env_debug_off_seq.randomize())
+            `uvm_fatal("KV_ENV_DEBUG_OFF SEQ", "kv_rand_debug_test_sequence::body() - kv_env_debug_off_seq randomization failed");
 
         reg_model.reset();
         `uvm_info("TOP", "AHB stop sequences", UVM_MEDIUM)
@@ -144,6 +150,12 @@ class kv_rand_debug_test_sequence extends kv_bench_sequence_base;
         kv_env_debug_on_seq.start(top_configuration.vsqr);
         `uvm_info("TOP", "AHB sequence", UVM_MEDIUM)
         kv_ahb_seq.start(top_configuration.vsqr);
+        `uvm_info("TOP", "DEBUG OFF sequence", UVM_MEDIUM)
+        kv_env_debug_off_seq.start(top_configuration.vsqr);
+        `uvm_info("TOP", "DEBUG + WR/RD sequence",UVM_MEDIUM);
+        kv_wr_rd_debug_seq.start(top_configuration.vsqr); //has internal scan mode controls
+        `uvm_info("TOP", "DEBUG on sequence", UVM_MEDIUM)
+        kv_env_debug_on_seq.start(top_configuration.vsqr);
         `uvm_info("TOP", "DEBUG lock sequence",UVM_MEDIUM);
         kv_wr_rd_debug_lock_seq.start(top_configuration.vsqr);
         `uvm_info("TOP", "DEBUG warm rst sequence",UVM_MEDIUM);

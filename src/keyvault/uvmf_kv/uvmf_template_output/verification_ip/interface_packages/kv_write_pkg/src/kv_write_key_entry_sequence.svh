@@ -69,6 +69,7 @@ task body();
 
       if((local_write_entry !== 'x) && (local_write_offset !== 'x)) begin
         //Use write_entry and write_offset passed in from top level sequence
+        `uvm_info("KV_WRITE_KEY_ENTRY_SEQ", "Write entry and write offset were set by top level seq", UVM_HIGH)
         `uvm_do_with(req, {
           req.write_entry == local_write_entry;
           req.write_offset == local_write_offset;
@@ -76,18 +77,21 @@ task body();
       end
       else if((local_write_entry !== 'x)) begin
         //Use write entry passed in from top level sequence
+        `uvm_info("KV_WRITE_KEY_ENTRY_SEQ", "Write entry was set by top level seq", UVM_HIGH)
         `uvm_do_with(req, {
         req.write_entry == local_write_entry;
       })
       end
       else if ((local_write_offset !== 'x)) begin
         //Use write offset passed in from top level sequence
+        `uvm_info("KV_WRITE_KEY_ENTRY_SEQ", "Write offset was set by top level seq", UVM_HIGH)
         `uvm_do_with(req, {
         req.write_offset == local_write_offset;
         })
       end
       else begin
         //Use randomized transaction write entry
+        `uvm_info("KV_WRITE_KEY_ENTRY_SEQ", "Write entry and write offset were not set by top level seq, randomizing in kv_write_key_entry_seq", UVM_HIGH)
         `uvm_do(req);
       end
 

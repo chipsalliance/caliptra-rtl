@@ -1,3 +1,2 @@
-
 +incdir+${CALIPTRA_ROOT}/src/pcrvault/rtl
 ${CALIPTRA_ROOT}/src/pcrvault/rtl/pv_reg_uvm.sv

@@ -111,38 +111,7 @@ class kv_env_debug_on_sequence #(
         reg_model = configuration.kv_rm;
 
 
-        //Issue and wait for reset
-        // if(configuration.kv_rst_agent_config.sequencer != null)
-        //     kv_rst_agent_poweron_seq.start(configuration.kv_rst_agent_config.sequencer);
-        // else
-        //     `uvm_error("KV_ENV_DEBUG_ON", "kv_rst_agent_config.sequencer is null!")
-        
-        
-                //Unlock debug mode or clear secrets randomly
-                
-                    // std::randomize(debug_type); //0 - security state, 1 - clear secrets
-        debug_type = 0;
-                    
-                    std::randomize(wait_cycles_from_seq) with {
-                        wait_cycles_from_seq >= 5;
-                        wait_cycles_from_seq <= 100;
-                    };
-
-                    std::randomize(clear_secrets_data); //wren, debug_value0/1
-
-                    //Wait for random delay before starting debug txn
-                    configuration.kv_rst_agent_config.wait_for_num_clocks(wait_cycles_from_seq);
-
-                    case(debug_type)
-                        SECURITY_STATE: begin
-                            //start debug seq on rst agent
-                            // kv_rst_agent_debug_seq.start(configuration.kv_rst_agent_config.sequencer);
-                            kv_rst_agent_debug_on_seq.start(configuration.kv_rst_agent_config.sequencer);
-                        end
-                        CLEAR_SECRETS: begin
-                            reg_model.kv_reg_rm.CLEAR_SECRETS.write(sts, clear_secrets_data, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
-                            assert(sts == UVM_IS_OK) else `uvm_error("AHB_CLEAR_SECRETS_SET", "Failed when writing to CLEAR_SECRETS reg!")
-                        end
-                    endcase
+        kv_rst_agent_debug_on_seq.start(configuration.kv_rst_agent_config.sequencer);
+                        
     endtask
 endclass
