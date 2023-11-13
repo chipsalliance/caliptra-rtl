@@ -608,9 +608,6 @@ The following table describes SoC integration requirements.
 | Deobfuscation Key                | Rotation of the deobfuscation key (if not driven through PUF) between silicon steppings of a given product (for example, A0 vs. B0 vs. PRQ stepping) is dependent on company-specific policies.                                           | Statement of conformance | Required by UDS and Field Entropy threat model    |
 | Deobfuscation Key                | SoC backend flows should not insert deobfuscation key flops into the scan chain.                                                                                                                                                          | Synthesis report         | Required by UDS and Field Entropy threat model    |
 | Deobfuscation Key                | For defense in depth, it is strongly recommended that debofuscation key flops are not on the scan chain. <br> Remove the following signals from the scan chain: <br> cptra_scan_mode_Latched_d <br> cptra_scan_mode_Latched_f <br> field_storage.internal_obf_key | Statement of conformance | Caliptra HW threat model |
-| CSR Signing Key                  | SoC backend flows shall generate CSR signing key with appropriate NIST compliance as dictated in the Caliptra RoT specification.                                                                                                          | Statement of conformance | Required by IDevID threat model                   |
-| CSR Signing Key                  | Rotation of the CSR private key between silicon steppings of a given product (for example, A0 vs. B0 vs. PRQ stepping) is dependent on company-specific policies.                                                                         | Statement of conformance |                                                   |
-| CSR Signing Key                  | SoC backend flows should not insert CSR signing key flops into the scan chain.                                                                                                                                                            | Synthesis report         | Required by IDevID threat model                   |
 | DFT                              | Before scan is enabled (separate signal that SoC implements on scan insertion), SoC shall set Caliptra's scan_mode indication to '1 to allow secrets/assets to be flushed.                                                                | Statement of conformance | Required by Caliptra threat model                 |
 | DFT                              | Caliptra’s TAP should be a TAP endpoint.                                                                                                                                                                                                  | Statement of conformance | Functional requirement                            |
 | Mailbox                          | SoC shall provide an access path between the mailbox and the application CPU complex on SoCs with such complexes (for example, Host CPUs and Smart NICs). See the [Sender Protocol](#sender-protocol) section for details about error conditions.             | Statement of conformance | Required for Project Kirkland and TDISP TSM       |
@@ -653,13 +650,13 @@ The following table describes SoC integration requirements.
 
 *Table 18: Caliptra synthesis warnings for FEV evaluation*
 
-| Module                    | Warning | Line No. |
-| :--------- | :--------- | :--------- |
-| sha512_acc_top            | Empty netlist for always_comb                                                             | 417      |
-| ecc_scalar_blinding       | Netlist for always_ff block does not contain flip flop                                    | 301      |
-| sha512_masked_core        | "masked_carry" is read before being assigned. Synthesized result may not match simulation | 295, 312 |
-| ecc_montgomerymultiplier  | Netlist for always_ff block does not contain flip flop                                    | 274, 326 |
-| Multiple modules          | Signed to unsigned conversion occurs                                                      |          |
+| Module                    | Warning | Line No. | Description |
+| :--------- | :--------- | :--------- | :--------- |
+| sha512_acc_top            | Empty netlist for always_comb                                                             | 417      |Unused logic (no load)| 
+| ecc_scalar_blinding       | Netlist for always_ff block does not contain flip flop                                    | 301      |Output width is smaller than internal signals, synthesis optimizes away the extra internal flops with no loads|
+| sha512_masked_core        | "masked_carry" is read before being assigned. Synthesized result may not match simulation | 295, 312 ||
+| ecc_montgomerymultiplier  | Netlist for always_ff block does not contain flip flop                                    | 274, 326 |Output width is smaller than internal signals, synthesis optimizes away the extra internal flops with no loads|
+| Multiple modules          | Signed to unsigned conversion occurs                                                      |          ||
 
 # CDC analysis and constraints
 
@@ -702,6 +699,8 @@ The following code snippet and schematic diagram illustrate JTAG originating CDC
 Synthesis experiments have so far found the following:
 * Design converges at 400MHz 0.72V using a cutting edge TSMC process.
 * Design converges at 100MHz using TSMC 40nm process.
+
+Note: Any synthesis warnings of logic optimization must be reviewed and accounted for.
 
 # Netlist synthesis data
 
