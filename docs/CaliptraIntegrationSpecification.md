@@ -646,7 +646,7 @@ The following table describes SoC integration requirements.
 | FUSE PAUSER programming rules    | 1 PAUSER attribute register is implemented at SoC interface: CPTRA_FUSE_VALID_PAUSER.                                                                                                                                                     |                          |                                                   |
 | FUSE PAUSER programming rules    | CPTRA_FUSE_PAUSER_LOCK locks the programmable valid pauser register, and marks the programmed value as valid.                                                                                                                             |                          |                                                   |
 | FUSE PAUSER programming rules    | Integrators can choose to harden the valid pauser for fuse access by setting the integration parameter, CPTRA_FUSE_VALID_PAUSER, to the desired value in RTL, and by setting CPTRA_SET_FUSE_PAUSER_INTEG to 1.                            |                          |                                                   |
-| GLS FEV                          | GLS FEV must be run to make sure netlist and RTL match and none of the countermeasures are optimized away. Check table 18 for example warnings from synthesis runs to resolve through FEV                            | GLS simulations pass                 | Functional requirement                 |
+| GLS FEV                          | GLS FEV must be run to make sure netlist and RTL match and none of the countermeasures are optimized away. See the following table for example warnings from synthesis runs to resolve through FEV                            | GLS simulations pass                 | Functional requirement                 |
 
 *Table 18: Caliptra synthesis warnings for FEV evaluation*
 
@@ -654,7 +654,7 @@ The following table describes SoC integration requirements.
 | :--------- | :--------- | :--------- | :--------- |
 | sha512_acc_top            | Empty netlist for always_comb                                                             | 417      |Unused logic (no load)| 
 | ecc_scalar_blinding       | Netlist for always_ff block does not contain flip flop                                    | 301      |Output width is smaller than internal signals, synthesis optimizes away the extra internal flops with no loads|
-| sha512_masked_core        | "masked_carry" is read before being assigned. Synthesized result may not match simulation | 295, 312 ||
+| sha512_masked_core        | "masked_carry" is read before being assigned. Synthesized result may not match simulation | 295, 312 |Output width is smaller than internal signals, synthesis optimizes away the extra internal flops with no loads|
 | ecc_montgomerymultiplier  | Netlist for always_ff block does not contain flip flop                                    | 274, 326 |Output width is smaller than internal signals, synthesis optimizes away the extra internal flops with no loads|
 | Multiple modules          | Signed to unsigned conversion occurs                                                      |          ||
 
