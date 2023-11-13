@@ -654,7 +654,7 @@ The following table describes SoC integration requirements.
 | :--------- | :--------- | :--------- | :--------- |
 | sha512_acc_top            | Empty netlist for always_comb                                                             | 417      |Unused logic (no load)| 
 | ecc_scalar_blinding       | Netlist for always_ff block does not contain flip flop                                    | 301      |Output width is smaller than internal signals, synthesis optimizes away the extra internal flops with no loads|
-| sha512_masked_core        | "masked_carry" is read before being assigned. Synthesized result may not match simulation | 295, 312 |Output width is smaller than internal signals, synthesis optimizes away the extra internal flops with no loads|
+| sha512_masked_core        | "masked_carry" is read before being assigned. Synthesized result may not match simulation | 295, 312 ||
 | ecc_montgomerymultiplier  | Netlist for always_ff block does not contain flip flop                                    | 274, 326 |Output width is smaller than internal signals, synthesis optimizes away the extra internal flops with no loads|
 | Multiple modules          | Signed to unsigned conversion occurs                                                      |          ||
 
