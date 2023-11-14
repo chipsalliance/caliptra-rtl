@@ -264,11 +264,13 @@ reg {
 reg {
     name = "DEBUG & MANUF SERVICE REG";
     desc = "JTAG in debug/manuf mode or SOC can write to this register for ROM/FW defined skips or services; ROM/FW maintains the defintion of these bits.
+            [br]
             [br]Field decode:
-            [br] [0]     MFG_FLAG_GEN_IDEV_CSR: Enable bit for Caliptra to generate an IDEV CSR
-            [br] [15:1]  MFG_FLAG_RSVD
-            [br] [30:16] FAKE_ROM_RSVD
-            [br] [31]    FAKE_ROM_IMAGE_VERIFY_EN: Enable bit to perform image verification within the fake-rom feature
+            [br] [lb]0[rb]     MFG_FLAG_GEN_IDEV_CSR: Enable bit for Caliptra to generate an IDEV CSR
+            [br] [lb]1[rb]     MFG_FLAG_RNG_UNAVAIL: Random Number Generator Unavailable
+            [br] [lb]15:2[rb]  MFG_FLAG_RSVD
+            [br] [lb]30:16[rb] FAKE_ROM_RSVD
+            [br] [lb]31[rb]    FAKE_ROM_IMAGE_VERIFY_EN: Enable bit to perform image verification within the fake-rom feature
             [br]
             [br]Caliptra Access: RW
             [br]SOC Access:      RW
