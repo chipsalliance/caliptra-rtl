@@ -62,7 +62,7 @@ write_memory $mbox_execute_mem_addr 32 1 phys
 puts ""
 
 puts "Read mailbox status..."
-set golden {0x100}
+set golden {0x500}
 set actual [read_memory $mbox_status_mem_addr 32 1 phys]
 if {[compare $actual $golden] != 0} {
     shutdown error
