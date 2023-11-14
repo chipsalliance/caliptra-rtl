@@ -454,6 +454,7 @@ task soc_ifc_env_cptra_mbox_handler_sequence::report_reg_sts(uvm_status_e reg_st
         // This prevents further bus transfers from being initiated, so the AHB
         // sequencer is in a clean state when we kill the ALL_TIME_CONSUMING_TASKS
         // process.
+        `uvm_info("CPTRA_MBOX_HANDLER", "in report_reg_sts: waiting due to seq_done = 1", UVM_DEBUG)
         in_report_reg_sts.wait_off();
     end
 endtask
