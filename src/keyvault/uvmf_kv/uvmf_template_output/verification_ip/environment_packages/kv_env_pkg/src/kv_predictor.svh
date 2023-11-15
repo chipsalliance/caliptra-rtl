@@ -703,15 +703,16 @@ class kv_predictor #(
           key_ctrl_lock_use[entry] = 'b1;
         end
 
-        if(data_active[p_kv_rm.kv_reg_rm.KEY_CTRL[entry].clear.get_lsb_pos()] && !kv_reg_data[p_kv_rm.kv_reg_rm.KEY_CTRL[entry].lock_wr.get_lsb_pos()] && !kv_reg_data[p_kv_rm.kv_reg_rm.KEY_CTRL[entry].lock_use.get_lsb_pos()] && !val_reg_data[p_kv_rm.val_reg.cptra_in_debug_scan_mode.get_lsb_pos()]) begin
+        // if(data_active[p_kv_rm.kv_reg_rm.KEY_CTRL[entry].clear.get_lsb_pos()] && !kv_reg_data[p_kv_rm.kv_reg_rm.KEY_CTRL[entry].lock_wr.get_lsb_pos()] && !kv_reg_data[p_kv_rm.kv_reg_rm.KEY_CTRL[entry].lock_use.get_lsb_pos()] && !val_reg_data[p_kv_rm.val_reg.cptra_in_debug_scan_mode.get_lsb_pos()]) begin
+        if (data_active[p_kv_rm.kv_reg_rm.KEY_CTRL[entry].clear.get_lsb_pos()] && !key_ctrl_lock_wr[entry] && !key_ctrl_lock_use[entry] && !val_reg_data[p_kv_rm.val_reg.cptra_in_debug_scan_mode.get_lsb_pos()]) begin
           val_ctrl_data[entry] = 'b1; //In design, clear is a single pulse reg. This val_ctrl[*] will be reset in kv_reg_predictor
           // for (int i = 0; i < KV_NUM_KEYS; i++) begin
             this.val_ctrl_derived_data[entry] = 'b1;
+            last_dword_written[entry] = 'h0; //clear last dword of that entry
             // this.val_ctrl_derived_data[i] = (i == entry);
           // end
           // this.set_val_ctrl_derived = 'b1;
           //p_kv_rm.kv_reg_rm.kv_val_ctrl.predict(val_ctrl_data);
-          `uvm_info("PRED", "Setting clear field of val_ctrl register", UVM_MEDIUM)
           p_kv_rm.val_ctrl.set(val_ctrl_data);
 
           //`uvm_info("PRED", "Setting clear field of val_ctrl_derived register", UVM_MEDIUM)
@@ -812,9 +813,11 @@ endclass
       t_expected.error = 'b0;
     end
 
-    if (val_ctrl_data[t_received.read_entry]) begin
-      last_dword_written[t_received.read_entry] = 'h0;
-    end
+    // if (val_ctrl_data[t_received.read_entry]) begin
+    // if (val_ctrl_derived_data[t_received.read_entry]) begin
+    //   `uvm_info("KNU_DBG","Resetting last_dword because val_ctrl_data is set!", UVM_FULL)
+    //   last_dword_written[t_received.read_entry] = 'h0;
+    // end
 
     t_expected.last = (last_dword_written[t_received.read_entry] == t_received.read_offset); 
     t_expected.read_entry = t_received.read_entry;
