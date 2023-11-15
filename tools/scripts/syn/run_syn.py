@@ -38,12 +38,12 @@ timestr = time.strftime("%Y%m%d.%H%M%S")
 unit = sys.argv[1];
 if len(sys.argv) == 3:
     elab_flag = sys.argv[2]
-else: #set default to 0 so full dc flow is run when elab_flag is not specified
-    elab_flag = 0
+else: #set default to 1 so fc elab flow is run when elab_flag is not specified, until full flow setup is ready
+    elab_flag = 1
 workspace = os.environ.get('WORKSPACE')
 user = os.environ.get('USER')
 output_dir = f"{workspace}/scratch/{user}/syn/{unit}/{timestr}"
-dc_cmds = f"-x 'set design {unit}; set workspace {workspace}; set user {user}; set elab {elab_flag}'"
+fc_cmds = f"-x 'set design {unit}; set workspace {workspace}; set user {user}; set elab {elab_flag}'"
 
 # checking if the out directory exists or not.
 if not os.path.exists(output_dir):  
@@ -52,10 +52,10 @@ if not os.path.exists(output_dir):
 
 os.chdir(output_dir)
 os.system(f"ln -snf {output_dir} ../latest")
-os.system(f"cp {workspace}/Caliptra/tools/scripts/syn/dc.tcl .")
+os.system(f"cp {workspace}/Caliptra/tools/scripts/syn/fc.tcl .")
 gen_file_list_cmd = f"pb fe file_list --tb integration_lib::{unit} --flat --dir-fmt=+incdir+{{directory}} --file {unit}.vf"
 exec_print(gen_file_list_cmd)
-run_syn_cmd = f"dc_shell -output_log_file {unit}.cmd -f dc.tcl {dc_cmds}"
+run_syn_cmd = f"fc_shell -output_log_file {unit}.cmd -f fc.tcl {fc_cmds}"
 exec_print(run_syn_cmd)
 
 

@@ -175,7 +175,8 @@ stages:
         - commands:
           - 'set -e'
           - 'module load tools/python/python3/3.9.2'
-          - 'module load tools/synopsys/dc/2020.09-SP1'
+          #- 'module load tools/synopsys/dc/2020.09-SP1'
+          - 'module load tools/synopsys/fusion_compiler/2022.12-SP3'
 
 #          # Run synthesis on top level and exit after elaborate stage
           - 'submit -i python3 \$AHA_POC_REPO/tools/scripts/syn/run_syn.py caliptra_top 1'

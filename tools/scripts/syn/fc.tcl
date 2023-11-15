@@ -52,7 +52,7 @@ analyze -format sverilog -vcs "-f $design.vf"
 #----------------------------
 #Elaborate, link and uniquify
 #----------------------------
-set command_status [elaborate $DESIGN_NAME -architecture verilog -library WORK -update]
+set command_status [elaborate $DESIGN_NAME -architecture verilog -library WORK]
 #----------------------------
 #If elab flag is set to 1, exit after elaborate command. Return 1 if there's an error and 0 if not
 #----------------------------
@@ -61,10 +61,16 @@ if { $command_status==0 } {
 } elseif { $command_status==1 && $ELAB==1 } {
 	exit 0
 }
-set command_status [link]
+set command_status [set_top_module $DESIGN_NAME]
 if ($command_status==0) {exit 1}
+get_blocks
+get_modules
+#set command_status [link]
+#if ($command_status==0) {exit 1}
 set command_status [uniquify]
 if ($command_status==0) {exit 1}
+
+#Note: FC needs appropriate tech files + possible script updates for the rest of synthesis to work. Only use this script to run elab stage until these two are resolved
 
 #----------------------------
 #Set operating conditions
@@ -76,7 +82,7 @@ if ($command_status==0) {exit 1}
 #Specify clock attributes
 #----------------------------
 set command_status [create_clock -name "clk" -period $MY_CLOCK_PERIOD -waveform {0 1} {clk}]
-if ($command_status==0) {exit 1}
+#if ($command_status==0) {exit 1}
 set command_status [set_clock_uncertainty 0.1 [get_clocks clk]]
 set command_status [set_clock_latency 0.2 [get_clocks clk]]
 set command_status [set_input_transition -max 0.01 [all_inputs]]
@@ -84,22 +90,22 @@ set command_status [set_input_transition -max 0.01 [all_inputs]]
 #----------------------------
 #Specify wire load model and max fanout
 #----------------------------
-set command_status [set_wire_load_mode top]
+#set command_status [set_wire_load_mode top]
 #set command_status [set_wire_load_model -name 90x90]
 #if ($command_status==0) {exit}
-set command_status [set_max_fanout 5000 [get_designs $DESIGN_NAME]]
+#set command_status [set_max_fanout 5000 [get_designs $DESIGN_NAME]]
 #this isn't working
 #set_app_var compile_enable_report_transformed_registers true
 
 set_input_delay $MY_IO_DLY_MAX -clock [get_clocks clk] [get_ports * -filter {pin_direction == in && name != "clk"}]
 set_output_delay $MY_IO_DLY_MAX -clock [get_clocks clk] [get_ports * -filter {pin_direction == out}]
 
-write -format ddc  -hierarchy -output ${DESIGN_NAME}.pre_compile.ddc
+#write -format ddc  -hierarchy -output ${DESIGN_NAME}.pre_compile.ddc
 
 #----------------------------
 #Compile design
 #----------------------------
-set command_status [compile -exact_map -map_effort medium -area_effort medium -power_effort medium -boundary_optimization]
+set command_status [compile -exact_map -map_effort medium -area_effort medium -power_effort medium]
 if ($command_status==0) {exit 1}
 
 #----------------------------

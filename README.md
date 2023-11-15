@@ -42,8 +42,8 @@ Simulation:
    - `2022.3`
 
 Synthesis:
- - Synopsys DC
-   - `Version 2020.09-SP1`
+ - Synopsys Fusion Compiler
+   - `Version 2022.12-SP3`
 
 GCC:
  - RISCV Toolchain for generating memory initialization files
