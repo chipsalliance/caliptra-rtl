@@ -69,8 +69,6 @@ module caliptra_top
     input  logic                                uart_rx,
 `endif
 
-    //I3C Interface
-
     // Caliptra Memory Export Interface
     el2_mem_if.veer_sram_src           el2_mem_export,
 
