@@ -70,7 +70,7 @@ class soc_ifc_env_mbox_reg_axs_invalid_sequence extends soc_ifc_env_mbox_sequenc
             mbox_set_cmd(mbox_op_rand); if (rand_delay_en) do_rand_delay(1, step_delay);
             mbox_push_datain();         if (rand_delay_en) do_rand_delay(1, step_delay);
             mbox_execute();             if (rand_delay_en) do_rand_delay(1, step_delay);
-            mbox_poll_status();         if (rand_delay_en) do_rand_delay(1, step_delay);
+            mbox_poll_status();
         end
         begin: ERR_INJECT_FLOW
             wait(mbox_flow_proc != null);

@@ -40,6 +40,7 @@ class soc_ifc_env_cptra_mbox_req_sequence_base extends soc_ifc_env_sequence_base
   int sts_rsp_count;
   uvm_status_e reg_sts;
   bit mbox_sts_is_error = 0;
+  bit mbox_sts_exp_error = 0; // Indicates the SoC handler sequence will inject an error, which this sequence should expect to observe
   rand bit do_ahb_lock_check;
   rand bit retry_failed_reg_axs;
   // Certain random sequences force the command to be outside of the defined
@@ -391,6 +392,9 @@ task soc_ifc_env_cptra_mbox_req_sequence_base::mbox_poll_status();
     if (data == DATA_READY) begin
         `uvm_info("CPTRA_MBOX_SEQ", $sformatf("Received status %p when not expecting any bytes of response data!", data), UVM_LOW)
     end
+    else if (data == CMD_FAILURE && !mbox_sts_exp_error) begin
+        `uvm_error("CPTRA_MBOX_SEQ", $sformatf("Received unexpected mailbox status %p", data))
+    end
     else if (data == CMD_FAILURE) begin
         `uvm_info("CPTRA_MBOX_SEQ", $sformatf("Received unexpected mailbox status %p", data), UVM_LOW)
     end
@@ -410,31 +414,79 @@ endtask
 //==========================================
 task soc_ifc_env_cptra_mbox_req_sequence_base::mbox_clr_execute();
     uvm_reg_data_t data;
+    bit error_intr_cmd_fail = 0;
     // We have to stall a couple clocks to allow interrupts to assert in case
     // we read the MBOX_ERROR status, since there is a small delay as the signal
     // propagates through registers.
     configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(2);
-    // Now, check for the expected error interrupt
+
+    // Catch the possibility that MBOX_ERROR was not yet observed by waiting for
+    // the associated interrupt to arrive (the SoC sequence may have a delay
+    // before injecting the error)
+    // If Caliptra already detected a MBOX_ERROR state, but did not see an
+    // error interrupt, that's an error condition that will be reported
+    // later on in the sequence with uvm_error
+    if (mbox_sts_exp_error && !mbox_sts_is_error) begin
+        fork
+            begin: WAIT_ERR_INTR
+                wait(sts_rsp_count > 0 && cptra_status_agent_rsp_seq.rsp.soc_ifc_err_intr_pending);
+                disable WAIT_ERR_INTR_TIMEOUT;
+            end
+            begin: WAIT_ERR_INTR_TIMEOUT
+                configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(131072);
+                disable WAIT_ERR_INTR;
+            end
+        join
+    end
+
+    // Now, do some error checking and handling
     if (sts_rsp_count > 0 && cptra_status_agent_rsp_seq.rsp.soc_ifc_err_intr_pending) begin
         reg_model.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
         report_reg_sts(reg_sts, "error_internal_intr_r");
         reg_model.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
         report_reg_sts(reg_sts, "error_internal_intr_r");
-        if (data[reg_model.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.error_cmd_fail_sts.get_lsb_pos()]) begin
-            // Force unlock to recover from error and reset mailbox to IDLE state
-            reg_model.mbox_csr_rm.mbox_unlock.write(reg_sts, uvm_reg_data_t'(1 << reg_model.mbox_csr_rm.mbox_unlock.unlock.get_lsb_pos()), UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
-            report_reg_sts(reg_sts, "mbox_unlock");
-            return; /* force unlock trumps the write to mbox_execute, so we're done at this point */
+        error_intr_cmd_fail = data[reg_model.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.error_cmd_fail_sts.get_lsb_pos()];
+        if (error_intr_cmd_fail) begin
+            if (!mbox_sts_is_error) begin
+                mbox_status_e data;
+                mbox_fsm_state_e state;
+                // Re-check mbox_status to see if FSM has changed to MBOX_ERROR since last check
+                mbox_check_status(data, state);
+                if (state == MBOX_ERROR)
+                    mbox_sts_is_error = 1;
+            end
         end
         else if (mbox_sts_is_error) begin
             `uvm_error("CPTRA_MBOX_SEQ", "Error interrupt following cmd failure does not have cmd_fail bit set!")
         end
     end
-    else if (mbox_sts_is_error) begin
-        `uvm_error("CPTRA_MBOX_SEQ", "Error encountered but no interrupt received")
+
+    // Error reporting based on sequence configuration and outcome
+    case ({mbox_sts_is_error,mbox_sts_exp_error,error_intr_cmd_fail}) inside
+        3'b111: `uvm_info("CPTRA_MBOX_SEQ", "MBOX_ERROR state encountered as expected, along with the required error_interrupt", UVM_MEDIUM)
+        3'b110: `uvm_error("CPTRA_MBOX_SEQ", "Mailbox error state encountered but no interrupt received")
+        3'b10?: `uvm_error("CPTRA_MBOX_SEQ", "Mailbox error state encountered unexpectedly (the test case should not have an error injection)")
+        3'b011: `uvm_error("CPTRA_MBOX_SEQ", "Invalid register access injection was expected for the test case, and error_interrupt was received, but MBOX_ERROR state was not observed")
+        // This case is acceptable, as the 'expected error' (such as invalid register accesses in the
+        // soc_ifc_env_soc_mbox_reg_axs_invalid_handler_sequence) might either be clobbered in
+        // arb, or be an actual legal access (like a duplicate dataout read),
+        // neither of which will actually cause the MBOX_ERROR transition/error_interrupt combo.
+        3'b010: `uvm_info("CPTRA_MBOX_SEQ", "Invalid register access injection was expected for the test case but MBOX_ERROR state was not observed - this might be OK", UVM_LOW)
+        3'b001: `uvm_error("CPTRA_MBOX_SEQ", "Test case did not expect any error injection, but observed a command failure interrupt")
+        3'b000: `uvm_info("CPTRA_MBOX_SEQ", "Test case completed normally as expected, with no observed failures or error_interrupt", UVM_MEDIUM)
+    endcase
+
+    // Cmd failure interrupt triggers the force unlock, and
+    // force unlock trumps the write to mbox_execute
+    if (error_intr_cmd_fail && mbox_sts_is_error) begin
+        // Force unlock to recover from error and reset mailbox to IDLE state
+        reg_model.mbox_csr_rm.mbox_unlock.write(reg_sts, uvm_reg_data_t'(1 << reg_model.mbox_csr_rm.mbox_unlock.unlock.get_lsb_pos()), UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+        report_reg_sts(reg_sts, "mbox_unlock");
     end
-    reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, uvm_reg_data_t'(0), UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
-    report_reg_sts(reg_sts, "mbox_execute");
+    else begin
+        reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, uvm_reg_data_t'(0), UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+        report_reg_sts(reg_sts, "mbox_execute");
+    end
 endtask
 
 //==========================================
