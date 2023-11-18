@@ -46,12 +46,27 @@ class kv_rst_scan_on_sequence extends kv_rst_sequence_base;
 
   task body();
 
-    // Assert debug mode
-    req=kv_rst_transaction::type_id::create("pwr_req");
+    // Assert scan mode, debugUnlock_or_scan_mode_switch
+    req=kv_rst_transaction::type_id::create("dbg_on_req");
     start_item(req);
     // Randomize the transaction
     if(!req.randomize()) `uvm_fatal("KV_RST_SCAN_ON", "kv_rst_scan_on_sequence::body()-kv_rst_transaction randomization failed")
-    `uvm_info("KV_RST_SCAN_ON", "Enabling scan mode", UVM_MEDIUM)
+    `uvm_info("KV_RST_SCAN_ON", "Enabling scan mode, emulate pulse on debug_mode input", UVM_MEDIUM)
+    req.set_pwrgood = 1'b1;
+    req.assert_rst = 1'b0;
+    req.assert_core_rst = 1'b0;
+    req.debug_mode = 1'b1;
+    req.scan_mode = 1'b1;
+    
+    finish_item(req);
+    `uvm_info("KV_RST_SCAN_ON", {"Response:",req.convert2string()},UVM_MEDIUM)
+
+    // Assert scan mode, deassert debugUnlock_or_scan_mode_switch
+    req=kv_rst_transaction::type_id::create("dbg_off_req");
+    start_item(req);
+    // Randomize the transaction
+    if(!req.randomize()) `uvm_fatal("KV_RST_SCAN_ON", "kv_rst_scan_on_sequence::body()-kv_rst_transaction randomization failed")
+    `uvm_info("KV_RST_SCAN_ON", "Reset debug_mode input", UVM_MEDIUM)
     req.set_pwrgood = 1'b1;
     req.assert_rst = 1'b0;
     req.assert_core_rst = 1'b0;

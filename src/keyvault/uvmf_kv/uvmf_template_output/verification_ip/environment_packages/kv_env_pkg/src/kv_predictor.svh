@@ -332,6 +332,7 @@ class kv_predictor #(
       p_kv_rm.val_reg.debug_mode_unlocked.set(1'b1);
       p_kv_rm.val_reg.cptra_in_debug_scan_mode.set(1'b1);
       
+      `uvm_info("PRED", "Clear_secrets reg is set in debug/scan mode. Flushing KV", UVM_MEDIUM)
       if (clear_secrets_data[p_kv_rm.kv_reg_rm.CLEAR_SECRETS.sel_debug_value.get_lsb_pos()] == 'h1) begin
         for(entry = 0; entry < KV_NUM_KEYS; entry++) begin
           //Debug mode should flush all regs inspite of locks
@@ -654,6 +655,7 @@ class kv_predictor #(
           //Only allow clear operation if in debug mode
           //if (data_active[1:0] == 'h1) begin
           if (data_active [p_kv_rm.kv_reg_rm.CLEAR_SECRETS.wr_debug_values.get_lsb_pos()] && !data_active[p_kv_rm.kv_reg_rm.CLEAR_SECRETS.sel_debug_value.get_lsb_pos()]) begin
+            `uvm_info("PRED", "Clear_secrets reg is set in debug/scan mode. Flushing KV with DEBUG0 values", UVM_MEDIUM)
             for(entry = 0; entry < KV_NUM_KEYS; entry++) begin
               //Read locks before clearing - do not clear if locked
               kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_CTRL[%0d]",entry));
@@ -668,6 +670,7 @@ class kv_predictor #(
           end
           //else if(data_active[1:0] == 'h3) begin
           else if (data_active [p_kv_rm.kv_reg_rm.CLEAR_SECRETS.wr_debug_values.get_lsb_pos()] && data_active[p_kv_rm.kv_reg_rm.CLEAR_SECRETS.sel_debug_value.get_lsb_pos()]) begin
+            `uvm_info("PRED", "Clear_secrets reg is set in debug/scan mode. Flushing KV with DEBUG1 values", UVM_MEDIUM)
             for(entry = 0; entry < KV_NUM_KEYS; entry++) begin
               //Read locks before clearing
               kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_CTRL[%0d]",entry));
