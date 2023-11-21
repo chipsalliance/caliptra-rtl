@@ -34,7 +34,6 @@ module dmi_wrapper(
   // Processor Signals
   input              core_rst_n,          // Core reset                  
   input              core_clk,            // Core clock                  
-  input [31:1]       jtag_id,             // JTAG ID
   input [31:0]       rd_data,             // 32 bit Read data from  Processor                       
   output [31:0]      reg_wr_data,         // 32 bit Write data to Processor                      
   output [6:0]       reg_wr_addr,         // 7 bit reg address to Processor                   
@@ -70,7 +69,6 @@ module dmi_wrapper(
    .idle(3'h0),                         // no need to wait to sample data
    .dmi_stat(2'b0),                     // no need to wait or error possible
    .version(4'h1),                      // debug spec 0.13 compliant
-   .jtag_id(jtag_id),
    .dmi_hard_reset(dmi_hard_reset),
    .dmi_reset(dmireset)
 );
