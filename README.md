@@ -149,12 +149,15 @@ Verilog file lists are generated via VCS and included in the config directory fo
     - For the initial test run after downloading repository, `iccm_lock` is recommended for TESTNAME
     - See [Regression Tests](#Regression-Tests) for information about available tests.
 3. Create a run folder for build outputs (and cd to it)
-4. [OPTIONAL] By default, this run flow will use the riscv64 toolchain to compile test firmware (according to TESTNAME) into program.hex, iccm.hex, dccm.hex, and mailbox.hex. As a first pass, integrators may alternatively use the pre-built hexfiles for convenience (available for `iccm_lock` test). To do this, copy `iccm_lock.hex` to the run directory and rename to `program.hex`. `dccm.hex` should also be copied to the run directory, as-is. Use `touch iccm.hex mailbox.hex` to create empty hex files, as these are unnecessary for `iccm_lock` test.
+4. [OPTIONAL] By default, this run flow will use the riscv64 toolchain to compile test firmware (according to TESTNAME) into program.hex, iccm.hex, dccm.hex, and mailbox.hex. As a first pass, integrators may alternatively use the pre-built hexfiles for convenience (available for [iccm_lock](src/integration/test_suites/iccm_lock) test). To do this, copy [iccm_lock.hex](src/integration/test_suites/iccm_lock/iccm_lock.hex) to the run directory and rename to `program.hex`. [dccm.hex](src/integration/test_suites/iccm_lock/iccm_lock.hex) should also be copied to the run directory, as-is. Use `touch iccm.hex mailbox.hex` to create empty hex files, as these are unnecessary for `iccm_lock` test.
 5. Invoke `${CALIPTRA_ROOT}/tools/scripts/Makefile` with target 'program.hex' to produce SRAM initialization files from the firmware found in `src/integration/test_suites/${TESTNAME}`
     - E.g.: `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile program.hex`
     - NOTE: TESTNAME may also be overridden in the makefile command line invocation, e.g. `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile TESTNAME=iccm_lock program.hex`
 6. Compile complete project using `src/integration/config/caliptra_top_tb.vf` as a compilation target in VCS. When running the `vcs` command to generate simv, users should ensure that `caliptra_top_tb` is explicitly specified as the top-level component in their command to ensure this is the sole "top" that gets simulated.
-7. Simulate project with `caliptra_top_tb` as the top target
+7. Copy the test generator scripts to the run output directory:
+    - [src/ecc/tb/ecdsa_secp384r1.exe](src/ecc/tb/ecdsa_secp384r1.exe)
+    - [src/doe/tb/doe_test_gen.py](src/doe/tb/doe_test_gen.py)
+8. Simulate project with `caliptra_top_tb` as the top target
 
 ### Verilator Steps: ###
 1. Setup tools, add to PATH (ensure Verilator, GCC, and riscv64-unknown-elf-gcc are available)
