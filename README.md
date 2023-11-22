@@ -55,7 +55,7 @@ Other:
  - Playbook (Microsoft Internal workflow management tool)
 
 ### **RISCV Toolchain installation** ###
-Note that there is significant configurability when installing the RISCV toolchain.
+There is significant configurability when installing the RISCV toolchain.
 These instructions may be used to create a RISCV installation that will be compatible
 with the provided Makefile for compiling test C programs.
 
@@ -156,7 +156,12 @@ Verilog file lists are generated via VCS and included in the config directory fo
 6. Compile complete project using `src/integration/config/caliptra_top_tb.vf` as a compilation target in VCS. When running the `vcs` command to generate simv, users should ensure that `caliptra_top_tb` is explicitly specified as the top-level component in their command to ensure this is the sole "top" that gets simulated.
 7. Copy the test generator scripts to the run output directory:
     - [src/ecc/tb/ecdsa_secp384r1.exe](src/ecc/tb/ecdsa_secp384r1.exe)
+        * Necessary for [randomized_pcr_signing](src/integration/test_suites/randomized_pcr_signing)
+        * OPTIONAL otherwise
     - [src/doe/tb/doe_test_gen.py](src/doe/tb/doe_test_gen.py)
+        * Allows use of randomized secret field inputs during testing.
+        * Required when using the `+RAND_DOE_VALUES` plusarg during simulation
+        * Also required for several smoke tests that require randomized DOE IV, such as smoke_test_doe_scan, smoke_test_doe_rand, smoke_test_doe_cg
 8. Simulate project with `caliptra_top_tb` as the top target
 
 ### Verilator Steps: ###
