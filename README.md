@@ -196,7 +196,7 @@ Verilog file lists are generated via VCS and included in the config directory fo
         * Necessary for [ecc_montgomerymultiplier_tb](src/ecc/tb/ecc_montgomerymultiplier_tb.sv)
     - [src/sha256/tb/sha256_test_gen.py](src/sha256/tb/sha256_test_gen.py)
         * Necessary for [sha256_random_test](src/sha256/tb/sha256_random_test.sv)
-1. Simulate project with `caliptra_top_tb` as the top target
+1. Simulate project with `<name>_tb` as the top target
 
 ### UVM Testbench Steps for `caliptra_top`: <BR>
 
