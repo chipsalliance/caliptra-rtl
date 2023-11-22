@@ -203,14 +203,53 @@ Steps:<BR>
 1. Compile the UVMF wrapper for APB/AHB in Caliptra/src/libs/uvmf
 1. Compile the `verification_ip` provided for `soc_ifc` found in `Caliptra/src/soc_ifc/uvmf_soc_ifc`
 1. Compile the `caliptra_top` testbench found in `Caliptra/src/integration/uvmf_caliptra_top`
-1. `Caliptra/src/integration/uvmf_caliptra_top/uvmf_template_output/project_benches/caliptra_top/tb/testbench/hdl_top.sv` is the top-level TB wrapper for the system
+1. ALL compilation steps may be completed by using the file-list found at `src/integration/uvmf_caliptra_top/config/uvmf_caliptra_top.vf`
+1. NOTE: `Caliptra/src/integration/uvmf_caliptra_top/uvmf_template_output/project_benches/caliptra_top/tb/testbench/hdl_top.sv` is the top-level TB wrapper for the system
 1. Compile the validation firmware (as described in [Regression Tests](#Regression-Tests)) that will run on Caliptra's embedded RISC-V core
     - The expected output products are `program.hex`, `caliptra_fmc.hex`, `caliptra_rt.hex` and must be placed in the simulation run directory
     - `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile TESTNAME=caliptra_top program.hex`
     - `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile TESTNAME=caliptra_fmc caliptra_fmc.hex`
     - `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile TESTNAME=caliptra_rt  caliptra_rt.hex`
+1. Copy the test vectors to the run output directory:
+    - [src/sha512/tb/vectors/SHA\*.rsp](src/sha512/tb/vectors/)
+        * Required for SHA512 UVM unittest
 1. Select a test to run from the set of tests in `Caliptra/src/integration/uvmf_caliptra_top/uvmf_template_output/project_benches/caliptra_top/tb/tests/src`
 1. Provide `+UVM_TESTNAME=<test>` argument to simulation
+
+### UVM Unit Test Steps: <BR>
+
+**Description**:<BR>
+The UVM Framework generation tool was used to create the baseline UVM testbench for verification of each IP component inside Caliptra. The following IP blocks have supported UVM testbenches:
+- [ECC](src/ecc/uvmf_ecc)
+- [HMAC](src/hmac/uvmf_2022)
+- [SHA512](src/sha512/uvmf_sha512)
+- [KeyVault](src/keyvault/uvmf_kv)
+- [PCRVault](src/pcrvault/uvmf_pv)
+- [SOC_IFC](src/soc_ifc/uvmf_soc_ifc)
+
+**Prerequisites**:<BR>
+- QVIP 2021.2.1 for Mentor Graphics (provides the AHB/APB VIP)
+- UVM 1.1d installation
+- Mentor Graphics UVM-Framework installation
+
+Steps:<BR>
+1. Compile UVM 1.1d library
+1. Compile the AHB/APB QVIP source
+1. Compile the Mentor Graphics UVM-Frameworks base library
+1. Compile the UVMF wrapper for APB/AHB in Caliptra/src/libs/uvmf
+1. Compile the `verification_ip` provided for the target testbench
+1. ALL compilation steps may be completed by using the file-list found at `src/<block>/uvmf_<name>/config/<name>.vf`
+1. NOTE: `Caliptra/src/<block>/uvmf_<name>/uvmf_template_output/project_benches/<block>/tb/testbench/hdl_top.sv` is the top-level TB wrapper for the system
+1. Copy the test generator scripts to the run output directory:
+    - [src/ecc/tb/ecdsa_secp384r1.exe](src/ecc/tb/ecdsa_secp384r1.exe)
+        * Necessary for ECC unittest
+    - [src/hmac/tb/test_gen.py](src/hmac/tb/test_gen.py)
+        * Required for uvmf_hmac unittest
+    - [src/sha512/tb/vectors/SHA\*.rsp](src/sha512/tb/vectors/)
+        * Required for SHA512 UVM unittest
+1. Select a test to run from the set of tests in `Caliptra/src/<block>/uvmf_<name>/uvmf_template_output/project_benches/<block>/tb/tests/src`
+1. Provide `+UVM_TESTNAME=<test>` argument to simulation
+
 
 ## **Regression Tests** ##
 
