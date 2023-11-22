@@ -74,7 +74,7 @@ Required for simulation:<BR>
 `CALIPTRA_ROOT`: Defines the absolute path to the Project repository root (called "Caliptra" or "caliptra-rtl"). Recommended to define as `${CALIPTRA_WORKSPACE}/Caliptra`.<BR>
 
 Required for Firmware (i.e. Test suites) makefile:<BR>
-  `TESTNAME`: Contains the name of one of the tests listed inside the `src/integration/test_suites` folder<BR>
+  `TESTNAME`: Contains the name of one of the tests listed inside the `src/integration/test_suites` folder; only used for `caliptra_top_tb` tests<BR>
 
 ## **Repository Overview** ##
 ```
@@ -143,7 +143,7 @@ Verilog file lists are generated via VCS and included in the config directory fo
 
 ## **Simulation Flow** ##
 
-### VCS Steps: ###
+### Caliptra Top VCS Steps: ###
 1. Setup tools, add to PATH (ensure riscv64-unknown-elf-gcc is also available)
 2. Define all environment variables above
     - For the initial test run after downloading repository, `iccm_lock` is recommended for TESTNAME
@@ -164,7 +164,7 @@ Verilog file lists are generated via VCS and included in the config directory fo
         * Also required for several smoke tests that require randomized DOE IV, such as smoke_test_doe_scan, smoke_test_doe_rand, smoke_test_doe_cg
 8. Simulate project with `caliptra_top_tb` as the top target
 
-### Verilator Steps: ###
+### Caliptra Top Verilator Steps: ###
 1. Setup tools, add to PATH (ensure Verilator, GCC, and riscv64-unknown-elf-gcc are available)
 2. Define all environment variables above
     - For the initial test run after downloading repository, `iccm_lock` is recommended for TESTNAME
@@ -185,6 +185,18 @@ Verilog file lists are generated via VCS and included in the config directory fo
         `python3 run_verilator_l0_regression.py`
     3. NOTE: The script automatically creates run output folders at `${CALIPTRA_WORKSPACE}/scratch/$USER/verilator/<timestamp>/<testname>` for each test run
     4. NOTE: The output folder is populated with a run log that reports the run results and pass/fail status
+
+### Unit Test VCS Steps: ###
+1. Setup tools, add to PATH
+1. Define all environment variables above
+1. Create a run folder for build outputs (and cd to it)
+1. Compile complete project using `src/<block>/config/<name>_tb.vf` as a compilation target in VCS. When running the `vcs` command to generate simv, users should ensure that `<name>_tb` is explicitly specified as the top-level component in their command to ensure this is the sole "top" that gets simulated.
+1. Copy the test generator scripts or test vectors to the run output directory:
+    - [src/ecc/tb/test_vectors/mm_test_vectors\*.hex](src/ecc/tb/test_vectors)
+        * Necessary for [ecc_montgomerymultiplier_tb](src/ecc/tb/ecc_montgomerymultiplier_tb.sv)
+    - [src/sha256/tb/sha256_test_gen.py](src/sha256/tb/sha256_test_gen.py)
+        * Necessary for [sha256_random_test](src/sha256/tb/sha256_random_test.sv)
+1. Simulate project with `caliptra_top_tb` as the top target
 
 ### UVM Testbench Steps for `caliptra_top`: <BR>
 
