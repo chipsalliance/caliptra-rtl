@@ -70,6 +70,9 @@ HEADER_FILES := $(INCLUDES_DIR)/caliptra_defines.h \
 		$(ISR_DIR)/veer-csr.h \
 		$(foreach comp_lib, $(COMP_LIBS), $(wildcard $(comp_lib)/*.h))
 
+TEST_GEN_FILES := $(CALIPTRA_ROOT)/src/ecc/tb/ecdsa_secp384r1.exe \
+	          $(CALIPTRA_ROOT)/src/doe/tb/doe_test_gen.py
+
 # Separate OFILE variable since this is not used to build remote images
 # (i.e. FMC or RunTime)
 ifeq (0,$(shell test -e $(TEST_DIR)/$(TESTNAME).c && echo $$?))
@@ -235,6 +238,7 @@ verilator: program.hex verilator-build
 	./obj_dir/Vcaliptra_top_tb $(VERILATOR_RUN_ARGS)
 
 vcs: program.hex vcs-build
+	cp $(TEST_GEN_FILES) $(BUILD_DIR)
 	./simv.caliptra_top_tb
 
 ############ TEST build ###############################
