@@ -59,8 +59,6 @@ The Assertion IP signals are bound with the respective signals in the dut, where
 
 
 ## Reproduce results
-For reproducing the results: Load the AIP, sha512_masked_core and fv_constraints together in your formal tool. To ensure converging proves cut the following signals:
-
-- cut the respective signal **lfsr_inst.rnd** in formal tool.  By cutting the signal model complexity is drastically reduced.
+For reproducing the results: Load the AIP, sha512_masked_core and fv_constraints together in your formal tool.
 
 Feel free to reach out to contact@lubis-eda.com to request the loadscripts.
