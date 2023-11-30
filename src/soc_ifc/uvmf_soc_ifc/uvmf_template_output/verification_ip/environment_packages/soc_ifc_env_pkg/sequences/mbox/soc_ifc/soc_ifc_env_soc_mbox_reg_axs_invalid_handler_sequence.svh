@@ -130,7 +130,7 @@ task soc_ifc_env_soc_mbox_reg_axs_invalid_handler_sequence::mbox_do_random_reg_w
         end
         begin
             mainline.await();
-            configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(dly % 25);
+            configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks((dly % 25)+1);
         end
     join_any
  
