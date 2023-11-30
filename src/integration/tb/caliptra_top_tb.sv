@@ -165,6 +165,8 @@ module caliptra_top_tb (
     logic cptra_error_fatal_dly_p;
     logic cptra_error_non_fatal_dly_p;
 
+    logic rv_dma_resp_error;
+
     logic mbox_apb_dataout_read_ooo;
     logic mbox_ooo_read_done;
     logic mbox_apb_dataout_read_no_lock;
@@ -232,7 +234,15 @@ module caliptra_top_tb (
         end
 
         else if (ras_test_ctrl.reset_generic_input_wires) begin
+            `ifdef VERILATOR
+            generic_input_wires <= {32'h72746C76, ERROR_NONE_SET}; /* 32'h72746c76 is the big-endian ASCII representation of 'vltr' (r t l v) */
+            `else
             generic_input_wires <= {32'h0, ERROR_NONE_SET};
+            `endif
+        end
+
+        else if (c_state_apb == S_APB_WAIT_ERROR_AXS && rv_dma_resp_error) begin
+                generic_input_wires <= {32'h0, DMA_ERROR_OBSERVED};
         end
 
         else if (c_state_apb == S_APB_RD_HW_ERROR_FATAL && apb_xfer_end) begin
@@ -1233,6 +1243,69 @@ caliptra_top_tb_services #(
     .cptra_obf_key_tb(cptra_obf_key_tb)
 
 );
+
+`define RV_INST caliptra_top_dut.rvtop
+`define RV_IDMA_RESP_INST caliptra_top_dut.responder_inst[`CALIPTRA_SLAVE_SEL_IDMA]
+`define RV_DDMA_RESP_INST caliptra_top_dut.responder_inst[`CALIPTRA_SLAVE_SEL_DDMA]
+task force_ahb_dma_read(input logic [31:0] address);
+    while(`RV_INST.dma_hsel) @(posedge core_clk);
+    force `RV_IDMA_RESP_INST.hreadyout = 1'b0;
+    force `RV_DDMA_RESP_INST.hreadyout = 1'b0;
+
+    force `RV_INST.dma_haddr = address;
+    force `RV_INST.dma_hsize = 3'b010; // 4-bytes
+    force `RV_INST.dma_hwrite = 1'b0;
+    force `RV_INST.dma_hwdata = '0;
+    force `RV_INST.dma_hreadyin = 1'b1;
+    force `RV_INST.dma_hsel = 1'b1;
+    force `RV_INST.dma_htrans = 2'b10;
+
+    // Wait for command to be accepted
+    do @(posedge core_clk); while(!`RV_INST.dma_hreadyout);
+    force   `RV_INST.dma_htrans = 2'b00;
+    // Wait for response to be provided
+    do @(posedge core_clk); while(!`RV_INST.dma_hreadyout);
+    $display("[%t] AHB DMA FORCE READ: Address 0x%x Data 0x%x Resp 0x%x", $time, address, `RV_INST.dma_hrdata, `RV_INST.dma_hresp);
+    if (`RV_INST.dma_hresp) 
+        rv_dma_resp_error = 1'b1;
+    release `RV_IDMA_RESP_INST.hreadyout;
+    release `RV_DDMA_RESP_INST.hreadyout;
+
+    release `RV_INST.dma_htrans;
+    release `RV_INST.dma_haddr;
+    release `RV_INST.dma_hsize;
+    release `RV_INST.dma_hwrite;
+    release `RV_INST.dma_hwdata;
+    release `RV_INST.dma_hsel;
+    release `RV_INST.dma_hreadyin;
+endtask
+
+task force_ahb_dma_loop_read(input logic [31:0] start_addr, input logic [19:0] count);
+    automatic logic [31:0] addr;
+    addr = start_addr;
+    $display("[%t] AHB DMA FORCE LOOP READ: Start Address 0x%x Count 0x%x", $time, addr, count);
+    if ($isunknown(start_addr) || $isunknown(addr))
+        $error("[%t] Unknown signal found: start_addr 0x%x addr 0x%x", $time, start_addr, addr);
+    repeat(count) begin
+        force_ahb_dma_read(addr);
+        addr += 4;
+    end
+endtask
+
+initial begin
+    fork
+    forever @(posedge core_clk) begin
+        if (ras_test_ctrl.dccm_read_burst.start)
+            force_ahb_dma_loop_read(ras_test_ctrl.dccm_read_burst.addr, ras_test_ctrl.dccm_read_burst.count);
+        if (ras_test_ctrl.iccm_read_burst.start)
+            force_ahb_dma_loop_read(ras_test_ctrl.iccm_read_burst.addr, ras_test_ctrl.iccm_read_burst.count);
+    end
+    forever @(posedge core_clk) begin
+        if (c_state_apb != S_APB_WAIT_ERROR_AXS)
+            rv_dma_resp_error = 1'b0;
+    end
+    join
+end
 
 caliptra_top_sva sva();
 
