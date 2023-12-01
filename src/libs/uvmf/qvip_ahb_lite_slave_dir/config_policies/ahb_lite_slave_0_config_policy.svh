@@ -121,7 +121,7 @@ class ahb_lite_slave_0_config_policy;
         //    // If true, drives previous address when bus is IDLE
         //    cfg.m_bfm.config_address_on_idle = 1'b0;
         //    // Maximum number of successive wait states
-              cfg.m_bfm.config_max_wait_states_count = 33;
+              cfg.m_bfm.config_max_wait_states_count = 34;
         //    // Data endianness
         //    cfg.m_bfm.config_endianness = AHB_LITTLE_ENDIAN;
         //    // Sets the domain

@@ -81,6 +81,8 @@ package kv_rst_pkg;
    `include "src/kv_rst_debug_sequence.svh"
    `include "src/kv_rst_debug_on_sequence.svh"
    `include "src/kv_rst_debug_off_sequence.svh"
+   `include "src/kv_rst_scan_on_sequence.svh"
+   `include "src/kv_rst_scan_off_sequence.svh"
 
    `include "src/kv_rst_agent.svh"
 

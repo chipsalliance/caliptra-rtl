@@ -1,6 +1,6 @@
 ---
 # Random seed desired...
-seed: ${PLAYBOOK_RANDOM_SEED}
+seed:  ${PLAYBOOK_RANDOM_SEED}
 plusargs:
 - '+UVM_TESTNAME=kv_rand_debug_test'
 testname: kv_rand_debug_test

@@ -17,6 +17,13 @@
 #include "caliptra_defines.h"
 
 .set    mfdc, 0x7f9
+.set    mfdht, 0x7ce
+.set    mstatus, 0x300
+.set    mitcnt0, 0x7d2
+.set    mitb0, 0x7d3
+.set    mitctl0, 0x7d4
+.set    mie, 0x304
+.set    mpmc, 0x7c6
 
 // Code to execute
 .section .text
@@ -39,6 +46,7 @@ _start:
     li      x6,  0xA0A0A0A0
     li      x7,  0x00FF00FF
     li      x8,  0xCC00CC00
+    li      s1,  0xFEEDABED // Writing 0 to this register initiates CPU halt
 
     // Simple infinite loop program with inner and outer loop
     li      t3,  0
@@ -46,9 +54,23 @@ outer:
     addi    t3, t3, 1
     li      t4, 123
 inner:
+    beq     s1, zero, halt_cpu
     addi    t4, t4, -1
     bne     t4, zero, inner
-    jal     x0, outer
+    j       outer
+
+halt_cpu:
+    // Set mit0 and halt core
+    li      t5, 0xf0
+    li      t6, 0x20000800
+    csrwi   mitcnt0, 0x00   // Internal timer 0 counter
+    csrw    mitb0, t5       // Internal timer 0 boundary
+    csrwi   mitctl0, 0x01   // Internal timer 0 enable
+    csrw    mie, t6         // Internal timer 0 local interrupt enable
+    csrwi   mstatus, 0x08   // Internal timer 0 global interrupt enable
+    csrwi   mpmc, 0x03      // Initiate core halt with disable on mit0 interrupt
+    li      s1, 0xFEEDABED  // Indicate halt init
+    j       outer           // Return to infinite loop
 
 .section .dccm
 .global stdout
