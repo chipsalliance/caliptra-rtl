@@ -156,8 +156,10 @@ task soc_ifc_env_soc_mbox_handler_sequence::mbox_setup();
     end
 
     // Pick a user and use throughout sequence
-    // FIXME randomize?
-    apb_user_obj.set_addr_user(mbox_valid_users[0]);
+    if (!apb_user_obj.randomize() with {addr_user inside {mbox_valid_users};})
+        `uvm_error("SOC_MBOX_HANDLER", "Failed to randomize APB PAUSER override value")
+    else
+        `uvm_info("SOC_MBOX_HANDLER", $sformatf("Randomized APB PAUSER override value to 0x%x", apb_user_obj.addr_user), UVM_HIGH)
 
 endtask
 
@@ -251,9 +253,6 @@ endtask
 task soc_ifc_env_soc_mbox_handler_sequence::mbox_set_status();
     mbox_status_e status;
     uvm_reg_data_t data;
-    // Set mbox_dlen to resp size of 0
-    reg_model.mbox_csr_rm.mbox_dlen.write(reg_sts, uvm_reg_data_t'(0), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
-    report_reg_sts(reg_sts,"mbox_dlen");
     // Determine which status to set and perform the write
     status = CMD_COMPLETE;
     data = uvm_reg_data_t'(status) << reg_model.mbox_csr_rm.mbox_status.status.get_lsb_pos();

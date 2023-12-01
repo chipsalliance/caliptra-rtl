@@ -240,6 +240,8 @@ module caliptra_top_tb_services
     //         8'h9a        - Inject invalid zero sign_s into ECC 
     //         8'ha0: 8'ha7 - Inject HMAC_KEY to kv_key register
     //         8'hc0: 8'hc7 - Inject SHA_BLOCK to kv_key register
+    //         8'hde        - ICCM SRAM force loop read (requires read params written to other bytes of generic wires)
+    //         8'hdf        - DCCM SRAM force loop read (requires read params written to other bytes of generic wires)
     //         8'he0        - Set random ICCM SRAM single bit error injection
     //         8'he1        - Set random ICCM SRAM double bit error injection
     //         8'he2        - Set random DCCM SRAM single bit error injection
@@ -336,6 +338,41 @@ module caliptra_top_tb_services
             ras_test_ctrl.do_ooo_access         <= 1'b0;
             ras_test_ctrl.reset_ooo_done_flag   <= 1'b0;
             ras_test_ctrl.reset_no_lock_done_flag   <= 1'b0;
+        end
+    end
+
+    always @(negedge clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b) begin
+            ras_test_ctrl.iccm_read_burst.start <= 1'b0;
+            ras_test_ctrl.iccm_read_burst.count <=   '0;
+            ras_test_ctrl.iccm_read_burst.addr  <=   '0;
+            ras_test_ctrl.dccm_read_burst.start <= 1'b0;
+            ras_test_ctrl.dccm_read_burst.count <=   '0;
+            ras_test_ctrl.dccm_read_burst.addr  <=   '0;
+        end
+        else if((WriteData[7:0] == 8'hde) && mailbox_write) begin
+            ras_test_ctrl.iccm_read_burst.start <= 1'b1;
+            ras_test_ctrl.iccm_read_burst.count <= WriteData[31:12];
+            ras_test_ctrl.iccm_read_burst.addr  <= caliptra_top_dut.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1].generic_wires.value;
+            ras_test_ctrl.dccm_read_burst.start <= 1'b0;
+            ras_test_ctrl.dccm_read_burst.count <=   '0;
+            ras_test_ctrl.dccm_read_burst.addr  <=   '0;
+        end
+        else if((WriteData[7:0] == 8'hdf) && mailbox_write) begin
+            ras_test_ctrl.iccm_read_burst.start <= 1'b0;
+            ras_test_ctrl.iccm_read_burst.count <=   '0;
+            ras_test_ctrl.iccm_read_burst.addr  <=   '0;
+            ras_test_ctrl.dccm_read_burst.start <= 1'b1;
+            ras_test_ctrl.dccm_read_burst.count <= WriteData[31:12];
+            ras_test_ctrl.dccm_read_burst.addr  <= caliptra_top_dut.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1].generic_wires.value;
+        end
+        else begin
+            ras_test_ctrl.iccm_read_burst.start <= 1'b0;
+            ras_test_ctrl.iccm_read_burst.count <=   '0;
+            ras_test_ctrl.iccm_read_burst.addr  <=   '0;
+            ras_test_ctrl.dccm_read_burst.start <= 1'b0;
+            ras_test_ctrl.dccm_read_burst.count <=   '0;
+            ras_test_ctrl.dccm_read_burst.addr  <=   '0;
         end
     end
 

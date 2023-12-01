@@ -58,6 +58,13 @@ typedef struct packed {
 } veer_sram_error_injection_mode_t;
 
 typedef struct packed {
+    logic [31:0] addr;
+    logic [19:0] count;
+    logic        start;
+} rv_ccm_read_burst_pkt;
+typedef struct packed {
+    rv_ccm_read_burst_pkt dccm_read_burst;
+    rv_ccm_read_burst_pkt iccm_read_burst;
     logic error_injection_seen;
     logic reset_generic_input_wires;
     logic do_no_lock_access;
@@ -73,6 +80,7 @@ localparam PROT_OOO_NON_FATAL_OBSERVED     = 32'h600dcafe;
 localparam ICCM_FATAL_OBSERVED             = 32'hdeadaca1;
 localparam DCCM_FATAL_OBSERVED             = 32'hdeadbeef;
 localparam NMI_FATAL_OBSERVED              = 32'hdeadc0a7;
+localparam DMA_ERROR_OBSERVED              = 32'hfadebadd;
 localparam ERROR_NONE_SET                  = 32'hba5eba11; /* default value for a test with no activity observed by TB */
 
 endpackage

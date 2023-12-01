@@ -72,12 +72,22 @@ enum tb_resp_value {
     ICCM_FATAL_OBSERVED             = 0xdeadaca1,
     DCCM_FATAL_OBSERVED             = 0xdeadbeef,
     NMI_FATAL_OBSERVED              = 0xdeadc0a7,
+    DMA_ERROR_OBSERVED              = 0xfadebadd,
     ERROR_NONE_SET                  = 0xba5eba11, /* default value for a test with no activity observed by TB */
 };
 
 enum mask_config {
     WITH_MASK,
     NO_MASK
+};
+
+enum read_config {
+    FROM_IFU,
+    FROM_LSU,
+};
+enum dccm_read_config {
+    DATA_LOAD,
+    FORCE_DMA
 };
 
 enum recovery_config {
@@ -98,6 +108,7 @@ enum test_status {
 
 enum test_progress {
     NOT_STARTED,
+    SKIPPED,
     RUN_NOT_CHECKED,
     RUN_AND_FAILED,
     RUN_AND_PASSED
@@ -106,33 +117,44 @@ enum test_progress {
 // Used to index into the global array of test progress
 // TODO Test the FW FATAL/NON_FATAL regs
 enum test_list {
-    MBOX_SRAM_ECC_SINGLE_UNMASKED,
-    MBOX_SRAM_ECC_DOUBLE_UNMASKED,
-    MBOX_SRAM_ECC_SINGLE_MASKED  ,
-    MBOX_SRAM_ECC_DOUBLE_MASKED  ,
-    ICCM_SRAM_ECC_SINGLE_UNMASKED,
-    ICCM_SRAM_ECC_DOUBLE_UNMASKED,
-    ICCM_SRAM_ECC_SINGLE_MASKED  ,
-    ICCM_SRAM_ECC_DOUBLE_MASKED  ,
-    DCCM_SRAM_ECC_SINGLE_UNMASKED,
-    DCCM_SRAM_ECC_DOUBLE_UNMASKED,
-    DCCM_SRAM_ECC_SINGLE_MASKED  ,
-    DCCM_SRAM_ECC_DOUBLE_MASKED  ,
-    NMI_UNMASKED                 ,
-    NMI_MASKED                   ,
-    PROT_NO_LOCK_UNMASKED        ,
-    PROT_NO_LOCK_MASKED          ,
-    PROT_OOO_UNMASKED            ,
-    PROT_OOO_MASKED              ,
-    TEST_COUNT                   ,
+    MBOX_SRAM_ECC_SINGLE_UNMASKED     ,
+    MBOX_SRAM_ECC_DOUBLE_UNMASKED     ,
+    MBOX_SRAM_ECC_SINGLE_MASKED       ,
+    MBOX_SRAM_ECC_DOUBLE_MASKED       ,
+    ICCM_SRAM_ECC_SINGLE_IFU_UNMASKED ,
+    ICCM_SRAM_ECC_DOUBLE_IFU_UNMASKED ,
+    ICCM_SRAM_ECC_SINGLE_IFU_MASKED   ,
+    ICCM_SRAM_ECC_DOUBLE_IFU_MASKED   ,
+    ICCM_SRAM_ECC_SINGLE_LSU_UNMASKED ,
+    ICCM_SRAM_ECC_DOUBLE_LSU_UNMASKED ,
+    ICCM_SRAM_ECC_SINGLE_LSU_MASKED   ,
+    ICCM_SRAM_ECC_DOUBLE_LSU_MASKED   ,
+    DCCM_SRAM_ECC_SINGLE_LOAD_UNMASKED,
+    DCCM_SRAM_ECC_DOUBLE_LOAD_UNMASKED,
+    DCCM_SRAM_ECC_SINGLE_LOAD_MASKED  ,
+    DCCM_SRAM_ECC_DOUBLE_LOAD_MASKED  ,
+    DCCM_SRAM_ECC_SINGLE_DMA_UNMASKED ,
+    DCCM_SRAM_ECC_DOUBLE_DMA_UNMASKED ,
+    DCCM_SRAM_ECC_SINGLE_DMA_MASKED   ,
+    DCCM_SRAM_ECC_DOUBLE_DMA_MASKED   ,
+    NMI_UNMASKED                      ,
+    NMI_MASKED                        ,
+    PROT_NO_LOCK_UNMASKED             ,
+    PROT_NO_LOCK_MASKED               ,
+    PROT_OOO_UNMASKED                 ,
+    PROT_OOO_MASKED                   ,
+    TEST_COUNT                        ,
 };
 enum boot_count_list {
     BEFORE_FIRST_ICCM_FAILURE  = 1,
     BEFORE_SECOND_ICCM_FAILURE    ,
+    BEFORE_THIRD_ICCM_FAILURE     ,
     BEFORE_FIRST_DCCM_FAILURE     ,
+    BEFORE_SECOND_DCCM_FAILURE    ,
     BEFORE_FIRST_NMI_FAILURE      ,
     BEFORE_SECOND_NMI_FAILURE     ,
-    AFTER_SECOND_NMI_FAILURE      ,
+    BEFORE_THIRD_NMI_FAILURE      ,
+    AFTER_THIRD_NMI_FAILURE       ,
     AFTER_FIRST_MBOX_OOO_FAILURE  ,
     AFTER_SECOND_MBOX_OOO_FAILURE
 };
@@ -200,6 +222,18 @@ enum test_progress test_progress_g[TEST_COUNT] __attribute__((section(".dccm.per
     NOT_STARTED,
     NOT_STARTED,
     NOT_STARTED,
+    NOT_STARTED,
+    NOT_STARTED,
+    NOT_STARTED,
+    NOT_STARTED,
+    NOT_STARTED,
+    NOT_STARTED,
+    NOT_STARTED,
+    NOT_STARTED,
+    NOT_STARTED,
+    NOT_STARTED,
+    NOT_STARTED,
+    NOT_STARTED,
     NOT_STARTED
 };
 
@@ -213,12 +247,12 @@ uint32_t check_mbox_sram_ecc(enum ecc_error_mode_type type, enum mask_config tes
 uint32_t test_mbox_sram_ecc       (enum mask_config test_mask);
 
 /* ICCM ECC */
-uint32_t run_iccm_sram_ecc        (enum mask_config test_mask);
-uint32_t check_iccm_sram_ecc      (enum mask_config test_mask);
+uint32_t run_iccm_sram_ecc        (enum mask_config test_mask, enum read_config read_mask);
+uint32_t check_iccm_sram_ecc      (enum mask_config test_mask, enum read_config read_mask);
 
 /* DCCM ECC */
-uint32_t run_dccm_sram_ecc        (enum mask_config test_mask);
-uint32_t check_dccm_sram_ecc      (enum mask_config test_mask);
+uint32_t run_dccm_sram_ecc        (enum mask_config test_mask, enum dccm_read_config read_path);
+uint32_t check_dccm_sram_ecc      (enum mask_config test_mask, enum dccm_read_config read_path);
 
 /* MBOX PROT */
 void     run_mbox_no_lock_error  (enum mask_config test_mask);
@@ -296,7 +330,7 @@ uint32_t check_mbox_sram_ecc(enum ecc_error_mode_type type, enum mask_config tes
                                                               sts     |= UNEXP_ARG;                     }
 
     if (test_progress_g[cur_test] != RUN_NOT_CHECKED) {
-        VPRINTF(ERROR, "Mbox chkr hit unexpected state. Idx: %d Prog: %d", cur_test, test_progress_g[cur_test]);
+        VPRINTF(ERROR, "Mbox chkr hit unexpected state. Idx: %d Prog: %d\n", cur_test, test_progress_g[cur_test]);
         sts |= INV_STATE;
     }
 
@@ -385,22 +419,26 @@ uint32_t test_mbox_sram_ecc (enum mask_config test_mask) {
     check_mbox_sram_ecc(MBOX_DOUBLE, test_mask);
 }
 
-uint32_t run_iccm_sram_ecc (enum mask_config test_mask) {
+uint32_t run_iccm_sram_ecc (enum mask_config test_mask, enum read_config read_mask) {
     enum test_list cur_test;
 
     uint32_t * ICCM = (uint32_t *) RV_ICCM_SADR;
     uint32_t * code_word = 0;
     uint32_t * iccm_dest = ICCM;
     void (* iccm_fn) (void) = (void*) ICCM;
+    uint32_t * actual_iccm_code_end = 0;
 
     uint32_t resp;
+    uint32_t tmp_reg;
 
-    VPRINTF(MEDIUM, "\n*** Run ICCM SRAM ECC Err ***\n  Masked: %d\n\n", test_mask == WITH_MASK);
+    VPRINTF(MEDIUM, "\n*** Run ICCM SRAM ECC Err ***\n  Masked: %d\n  IFU:    %d\n\n", test_mask == WITH_MASK, read_mask == FROM_IFU);
 
     // Grab test enum
-    if      (test_mask == WITH_MASK) { cur_test = ICCM_SRAM_ECC_SINGLE_MASKED;   }
-    else if (test_mask == NO_MASK)   { cur_test = ICCM_SRAM_ECC_SINGLE_UNMASKED; }
-    else                             { cur_test = TEST_COUNT;                    }
+    if      (test_mask == WITH_MASK && read_mask == FROM_IFU) { cur_test = ICCM_SRAM_ECC_SINGLE_IFU_MASKED;   }
+    else if (test_mask == NO_MASK && read_mask == FROM_IFU)   { cur_test = ICCM_SRAM_ECC_SINGLE_IFU_UNMASKED; }
+    else if (test_mask == WITH_MASK && read_mask == FROM_LSU) { cur_test = ICCM_SRAM_ECC_SINGLE_LSU_MASKED;   }
+    else if (test_mask == NO_MASK && read_mask == FROM_LSU)   { cur_test = ICCM_SRAM_ECC_SINGLE_LSU_UNMASKED; }
+    else                                                      { cur_test = TEST_COUNT;                        }
 
     // Request that TB inject ICCM SRAM single-bit errors
     // This should not result in any reset or reporting activity
@@ -413,6 +451,7 @@ uint32_t run_iccm_sram_ecc (enum mask_config test_mask) {
         VPRINTF(ALL, "at %x: %x\n", (uintptr_t) code_word, *code_word);
         *iccm_dest++ = *code_word++;
     }
+    actual_iccm_code_end = iccm_dest;
 
     // Reset the Error Injection Function
     SEND_STDOUT_CTRL((uint32_t) ERROR_NONE);
@@ -421,7 +460,18 @@ uint32_t run_iccm_sram_ecc (enum mask_config test_mask) {
     test_progress_g[cur_test] = RUN_NOT_CHECKED;
 
     // Run ICCM routine
-    iccm_fn();
+    VPRINTF(MEDIUM, "Single-bit:\n");
+    if (read_mask == FROM_IFU) {
+        iccm_fn();
+    // Read from ICCM instead
+    } else if (read_mask == FROM_LSU) {
+        code_word = (uint32_t *) ICCM;
+        VPRINTF(LOW, "Read code from %x [through %x]\n", (uintptr_t) code_word, (uintptr_t) actual_iccm_code_end);
+        while (code_word < actual_iccm_code_end) {
+            tmp_reg ^= *code_word++;
+        }
+        VPRINTF(LOW, "Data in ICCM: 0x%x\n", tmp_reg);
+    }
 
     // Confirm TB reports no observed activity
     resp = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0);
@@ -444,9 +494,11 @@ uint32_t run_iccm_sram_ecc (enum mask_config test_mask) {
     // Should return here after encountering single-bit (correctable) ECC errors
     // while running ICCM routine
     // Set new test enum
-    if      (test_mask == WITH_MASK) { cur_test = ICCM_SRAM_ECC_DOUBLE_MASKED;   }
-    else if (test_mask == NO_MASK)   { cur_test = ICCM_SRAM_ECC_DOUBLE_UNMASKED; }
-    else                             { cur_test = TEST_COUNT;                    }
+    if      (test_mask == WITH_MASK && read_mask == FROM_IFU) { cur_test = ICCM_SRAM_ECC_DOUBLE_IFU_MASKED;   }
+    else if (test_mask == NO_MASK && read_mask == FROM_IFU)   { cur_test = ICCM_SRAM_ECC_DOUBLE_IFU_UNMASKED; }
+    else if (test_mask == WITH_MASK && read_mask == FROM_LSU) { cur_test = ICCM_SRAM_ECC_DOUBLE_LSU_MASKED;   }
+    else if (test_mask == NO_MASK && read_mask == FROM_LSU)   { cur_test = ICCM_SRAM_ECC_DOUBLE_LSU_UNMASKED; }
+    else                                                      { cur_test = TEST_COUNT;                        }
 
     // Now, set the MASK (per arg)
     if (test_mask == WITH_MASK) {
@@ -484,27 +536,53 @@ uint32_t run_iccm_sram_ecc (enum mask_config test_mask) {
     // Run ICCM routine
     // If FATAL error unmasked, this will trigger a reset.
     // Else, we'll observe a precise exception, which should do a firmware reset
-    iccm_fn();
+    VPRINTF(MEDIUM, "Double-bit:\n");
+    if (read_mask == FROM_IFU) {
+        iccm_fn();
+    // Read from ICCM instead
+    } else if (read_mask == FROM_LSU) {
+        code_word = (uint32_t *) ICCM;
+        VPRINTF(LOW, "Read code from %x [through %x]\n", (uintptr_t) code_word, (uintptr_t) actual_iccm_code_end);
+        while (code_word < actual_iccm_code_end) {
+            tmp_reg = *code_word++;
+            VPRINTF(LOW, "Data in ICCM: 0x%x\n", tmp_reg);
+        }
+    }
 
     // Wait for the reset to occur
     if (test_mask == NO_MASK) { VPRINTF(HIGH, "...\n"); while(1); }
 
 }
 
-uint32_t check_iccm_sram_ecc (enum mask_config test_mask) {
+uint32_t check_iccm_sram_ecc (enum mask_config test_mask, enum read_config read_mask) {
     enum test_list cur_test;
     uint32_t resp;
     uint32_t sts = SUCCESS;
 
-    VPRINTF(MEDIUM, "\n*** Check ICCM SRAM ECC Err ***\n  Masked: %d\n\n", test_mask == WITH_MASK);
+    VPRINTF(MEDIUM, "\n*** Check ICCM SRAM ECC Err ***\n  Masked: %d\n  IFU:    %d\n\n", test_mask == WITH_MASK, read_mask == FROM_IFU);
 
     // Get test ID
-    if (test_mask == WITH_MASK) { cur_test = ICCM_SRAM_ECC_DOUBLE_MASKED;   }
-    else                        { cur_test = ICCM_SRAM_ECC_DOUBLE_UNMASKED; }
-
+    if      (test_mask == WITH_MASK && read_mask == FROM_IFU) { cur_test = ICCM_SRAM_ECC_DOUBLE_IFU_MASKED;   }
+    else if (test_mask == NO_MASK && read_mask == FROM_IFU  ) { cur_test = ICCM_SRAM_ECC_DOUBLE_IFU_UNMASKED; }
+    else if (test_mask == WITH_MASK && read_mask == FROM_LSU) { cur_test = ICCM_SRAM_ECC_DOUBLE_LSU_MASKED;   }
+    else if (test_mask == NO_MASK && read_mask == FROM_LSU  ) { cur_test = ICCM_SRAM_ECC_DOUBLE_LSU_UNMASKED; }
+    else                                                      { cur_test = TEST_COUNT;}
     // Verify correct response path was taken
     resp = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0);
-    if (test_mask == WITH_MASK) {
+
+    if (test_mask == WITH_MASK && read_mask == FROM_LSU) {
+        // No generic input toggle expected out of reset
+        if ((cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK) && (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0) != generic_input_wires_0_before_rst)) {
+            VPRINTF(ERROR, "ERROR: Gen-in tgl with bad val\n");
+            sts |= BAD_CPTRA_SIG;
+            test_progress_g[cur_test] = RUN_AND_FAILED;
+        } else {
+            sts |= SUCCESS;
+            test_progress_g[cur_test] = RUN_AND_PASSED;
+        }
+
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL, SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_ICCM_ECC_UNC_MASK);
+    } else if (test_mask == WITH_MASK && read_mask == FROM_IFU) {
         // For a MASKED error, we only expect the exception path and no response from TB
         if (exc_flag.exception_hit == 0) {
             test_progress_g[cur_test] = RUN_AND_FAILED;
@@ -534,7 +612,7 @@ uint32_t check_iccm_sram_ecc (enum mask_config test_mask) {
 }
 
 // TODO should test both DMA slave and internal DCCM accesses?
-uint32_t run_dccm_sram_ecc (enum mask_config test_mask) {
+uint32_t run_dccm_sram_ecc (enum mask_config test_mask, enum dccm_read_config read_path) {
     enum test_list cur_test;
 
     uint32_t array_in_dccm [10]; // stack is in DCCM, so this automatically goes there
@@ -542,12 +620,27 @@ uint32_t run_dccm_sram_ecc (enum mask_config test_mask) {
 
     uint32_t resp = lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_RV_MTIME_L);
 
-    VPRINTF(MEDIUM, "\n*** Run DCCM SRAM ECC Err ***\n  Masked: %d\n\n", test_mask == WITH_MASK);
+    VPRINTF(MEDIUM, "\n*** Run DCCM SRAM ECC Err ***\n  Masked: %d\n  Path:   %s\n\n", test_mask == WITH_MASK, read_path == DATA_LOAD ? "LOAD" : "DMA");
 
     // Grab test enum
-    if      (test_mask == WITH_MASK) { cur_test = DCCM_SRAM_ECC_SINGLE_MASKED;   }
-    else if (test_mask == NO_MASK)   { cur_test = DCCM_SRAM_ECC_SINGLE_UNMASKED; }
-    else                             { cur_test = TEST_COUNT;                    }
+    if      (test_mask == WITH_MASK && read_path == DATA_LOAD) { cur_test = DCCM_SRAM_ECC_SINGLE_LOAD_MASKED;   }
+    else if (test_mask == NO_MASK   && read_path == DATA_LOAD) { cur_test = DCCM_SRAM_ECC_SINGLE_LOAD_UNMASKED; }
+    else if (test_mask == WITH_MASK && read_path == FORCE_DMA) { cur_test = DCCM_SRAM_ECC_SINGLE_DMA_MASKED;   }
+    else if (test_mask == NO_MASK   && read_path == FORCE_DMA) { cur_test = DCCM_SRAM_ECC_SINGLE_DMA_UNMASKED; }
+    else                                                       { cur_test = TEST_COUNT;                    }
+
+    // Skip the FORCE_DMA test if running in Verilator - it's bugged FIXME
+    if (read_path == FORCE_DMA) {
+        SEND_STDOUT_CTRL((uint32_t) ERROR_NONE);
+        if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_1) == ('v' | 'l' << 8 | 't' << 16 | 'r' << 24)) {
+            VPRINTF(LOW, "Skipping DMA path in Verilator\n");
+            test_progress_g[cur_test] = SKIPPED;
+            if (test_mask == NO_MASK) {
+                SEND_STDOUT_CTRL(0xf6); // Warm reset
+            }
+            return 0;
+        }
+    }
 
     // Acquire the mailbox lock (to allow direct-mode use of safe_iter)
     while((lsu_read_32(CLP_MBOX_CSR_MBOX_LOCK) & MBOX_CSR_MBOX_LOCK_LOCK_MASK) != 0) {
@@ -560,7 +653,7 @@ uint32_t run_dccm_sram_ecc (enum mask_config test_mask) {
 
     // Populate array in DCCM (should be corrupted)
     *safe_iter = 0;
-    while(*safe_iter < 10) { 
+    while(*safe_iter < 10) {
         resp = (resp << 1) ^ lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_RV_MTIME_L);
         array_in_dccm[*safe_iter] = resp;
         *safe_iter = (*safe_iter) + 1;
@@ -574,10 +667,17 @@ uint32_t run_dccm_sram_ecc (enum mask_config test_mask) {
     test_progress_g[cur_test] = RUN_NOT_CHECKED;
 
     // Read-back the array in DCCM
+    VPRINTF(MEDIUM, "Single-bit:\n");
     *safe_iter = 0;
-    while(*safe_iter < 10) { 
-        printf("[%d]:%x\n", *safe_iter, array_in_dccm[*safe_iter]); // no verbosity control -- dereferencing the array IS the test
-        *safe_iter = (*safe_iter) + 1;
+    if (read_path == DATA_LOAD) {
+        while(*safe_iter < 10) {
+            printf("[%d]:%x\n", *safe_iter, array_in_dccm[*safe_iter]); // no verbosity control -- dereferencing the array IS the test
+            *safe_iter = (*safe_iter) + 1;
+        }
+    } else if (read_path == FORCE_DMA) {
+        VPRINTF(LOW, "Trigger TB to force DMA burst\n");
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_OUTPUT_WIRES_1, (uint32_t) &array_in_dccm);
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_OUTPUT_WIRES_0, (10 << 12) | 0xdf);
     }
 
     // Unlock Mailbox
@@ -604,9 +704,11 @@ uint32_t run_dccm_sram_ecc (enum mask_config test_mask) {
     // Should return here after encountering single-bit (correctable) ECC errors
     // while running DCCM routine
     // Set new test enum
-    if      (test_mask == WITH_MASK) { cur_test = DCCM_SRAM_ECC_DOUBLE_MASKED;   }
-    else if (test_mask == NO_MASK)   { cur_test = DCCM_SRAM_ECC_DOUBLE_UNMASKED; }
-    else                             { cur_test = TEST_COUNT;                    }
+    if      (test_mask == WITH_MASK && read_path == DATA_LOAD) { cur_test = DCCM_SRAM_ECC_DOUBLE_LOAD_MASKED;   }
+    else if (test_mask == NO_MASK   && read_path == DATA_LOAD) { cur_test = DCCM_SRAM_ECC_DOUBLE_LOAD_UNMASKED; }
+    else if (test_mask == WITH_MASK && read_path == FORCE_DMA) { cur_test = DCCM_SRAM_ECC_DOUBLE_DMA_MASKED;    }
+    else if (test_mask == NO_MASK   && read_path == FORCE_DMA) { cur_test = DCCM_SRAM_ECC_DOUBLE_DMA_UNMASKED;  }
+    else                                                       { cur_test = TEST_COUNT;                         }
 
     // Now, set the MASK (per arg)
     if (test_mask == WITH_MASK) {
@@ -629,7 +731,7 @@ uint32_t run_dccm_sram_ecc (enum mask_config test_mask) {
 
     // Populate array in DCCM (should be corrupted)
     *safe_iter = 0;
-    while(*safe_iter < 10) { 
+    while(*safe_iter < 10) {
         resp = (resp << 1) ^ lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_RV_MTIME_L);
         array_in_dccm[*safe_iter] = resp;
         *safe_iter = (*safe_iter) + 1;
@@ -651,11 +753,19 @@ uint32_t run_dccm_sram_ecc (enum mask_config test_mask) {
 
     // Read-back the array in DCCM
     // If FATAL error unmasked, this will trigger a reset.
+    // If FATAL error masked, but using DMA path, this only results in generic input wire value
     // Else, we'll observe a precise exception
+    VPRINTF(MEDIUM, "Double-bit:\n");
     *safe_iter = 0;
-    while(*safe_iter < 10) { 
-        printf("[%d]:%x\n", *safe_iter, array_in_dccm[*safe_iter]); // no verbosity control -- dereferencing the array IS the test
-        *safe_iter = (*safe_iter) + 1;
+    if (read_path == DATA_LOAD) {
+        while(*safe_iter < 10) {
+            printf("[%d]:%x\n", *safe_iter, array_in_dccm[*safe_iter]); // no verbosity control -- dereferencing the array IS the test
+            *safe_iter = (*safe_iter) + 1;
+        }
+    } else if (read_path == FORCE_DMA) {
+        VPRINTF(LOW, "Trigger TB to force DMA burst\n");
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_OUTPUT_WIRES_1, (uint32_t) &array_in_dccm);
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_OUTPUT_WIRES_0, (10 << 12) | 0xdf);
     }
 
     // Unlock Mailbox
@@ -666,20 +776,32 @@ uint32_t run_dccm_sram_ecc (enum mask_config test_mask) {
 
 }
 
-uint32_t check_dccm_sram_ecc (enum mask_config test_mask) {
+uint32_t check_dccm_sram_ecc (enum mask_config test_mask, enum dccm_read_config read_path) {
     enum test_list cur_test;
     uint32_t resp;
     uint32_t sts = SUCCESS;
 
-    VPRINTF(MEDIUM, "\n*** Check DCCM SRAM ECC Err ***\n  Masked: %d\n\n", test_mask == WITH_MASK);
+    VPRINTF(MEDIUM, "\n*** Check DCCM SRAM ECC Err ***\n  Masked: %d\n  Path:   %s\n\n", test_mask == WITH_MASK, read_path == DATA_LOAD ? "LOAD" : "DMA");
 
     // Get test ID
-    if (test_mask == WITH_MASK) { cur_test = DCCM_SRAM_ECC_DOUBLE_MASKED;   }
-    else                        { cur_test = DCCM_SRAM_ECC_DOUBLE_UNMASKED; }
+    if      (test_mask == WITH_MASK && read_path == DATA_LOAD) { cur_test = DCCM_SRAM_ECC_DOUBLE_LOAD_MASKED;   }
+    else if (test_mask == NO_MASK   && read_path == DATA_LOAD) { cur_test = DCCM_SRAM_ECC_DOUBLE_LOAD_UNMASKED; }
+    else if (test_mask == WITH_MASK && read_path == FORCE_DMA) { cur_test = DCCM_SRAM_ECC_DOUBLE_DMA_MASKED;    }
+    else if (test_mask == NO_MASK   && read_path == FORCE_DMA) { cur_test = DCCM_SRAM_ECC_DOUBLE_DMA_UNMASKED;  }
+    else                                                       { cur_test = TEST_COUNT;                         }
+
+    // Skip the FORCE_DMA test if running in Verilator - it's bugged FIXME
+    if (read_path == FORCE_DMA) {
+        if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_1) == ('v' | 'l' << 8 | 't' << 16 | 'r' << 24)) {
+            VPRINTF(LOW, "Skipping DMA path in Verilator\n");
+            test_progress_g[cur_test] = SKIPPED;
+            return sts;
+        }
+    }
 
     // Verify correct response path was taken
     resp = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0);
-    if (test_mask == WITH_MASK) {
+    if (test_mask == WITH_MASK && read_path == DATA_LOAD) {
         // For a MASKED error, we only expect the exception path and no response from TB
         if (exc_flag.exception_hit == 0) {
             test_progress_g[cur_test] = RUN_AND_FAILED;
@@ -694,6 +816,25 @@ uint32_t check_dccm_sram_ecc (enum mask_config test_mask) {
             test_progress_g[cur_test] = RUN_AND_FAILED;
             sts |= BAD_CPTRA_SIG;
             VPRINTF(ERROR, "ERROR: Wrong TB resp\n");
+        } else {
+            test_progress_g[cur_test] = RUN_AND_PASSED;
+        }
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL, SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_DCCM_ECC_UNC_MASK);
+    } else if (test_mask == WITH_MASK && read_path == FORCE_DMA) {
+        // For a MASKED error through the DMA force-access path, expect a TB response
+        // but no reset, no exceptions, and the FATAL error bit should be set
+        if (exc_flag.exception_hit == 1) {
+            test_progress_g[cur_test] = RUN_AND_FAILED;
+            sts |= BAD_EXCP_CODE;
+            VPRINTF(ERROR, "ERROR: Unexpected excpn\n");
+        } else if (resp != DMA_ERROR_OBSERVED) {
+            test_progress_g[cur_test] = RUN_AND_FAILED;
+            sts |= BAD_CPTRA_SIG;
+            VPRINTF(ERROR, "ERROR: Wrong TB resp. Got 0x%x, exp 0x%x\n", resp, DMA_ERROR_OBSERVED);
+        } else if (!(lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL) & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_DCCM_ECC_UNC_MASK)) {
+            test_progress_g[cur_test] = RUN_AND_FAILED;
+            sts |= INV_STATE;
+            VPRINTF(ERROR, "ERROR: DCCM ECC UNC FATAL not set by TB\n");
         } else {
             test_progress_g[cur_test] = RUN_AND_PASSED;
         }
@@ -715,7 +856,7 @@ uint32_t check_dccm_sram_ecc (enum mask_config test_mask) {
 void run_nmi_test (enum mask_config test_mask) {
     enum test_list cur_test;
     VPRINTF(MEDIUM, "\n*** Run Non-Maskable Intr ***\n  Masked: %d\n\n", test_mask == WITH_MASK);
-    
+
     // Get test ID
     if (test_mask == WITH_MASK) { cur_test = NMI_MASKED;   }
     else                        { cur_test = NMI_UNMASKED; }
@@ -757,7 +898,7 @@ uint32_t check_nmi_test (enum mask_config test_mask) {
 
     if (test_mask == WITH_MASK) {
         // No generic input toggle expected out of reset
-        if ((cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_GEN_IN_TOGGLE_EN_MASK) && (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0) != generic_input_wires_0_before_rst)) {
+        if ((cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK) && (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0) != generic_input_wires_0_before_rst)) {
             VPRINTF(ERROR, "ERROR: Gen-in tgl with bad val\n");
             sts |= BAD_CPTRA_SIG;
             test_progress_g[cur_test] = RUN_AND_FAILED;
@@ -769,7 +910,7 @@ uint32_t check_nmi_test (enum mask_config test_mask) {
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL, SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_NMI_PIN_MASK);
     } else {
         // Check for generic_input_wires activity
-        if (!(cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_GEN_IN_TOGGLE_EN_MASK)) {
+        if (!(cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK)) {
             VPRINTF(ERROR, "ERROR: Gen-in did not tgl\n");
             sts |= BAD_CPTRA_SIG;
             test_progress_g[cur_test] = RUN_AND_FAILED;
@@ -860,7 +1001,7 @@ uint32_t check_mbox_no_lock_error(enum mask_config test_mask) {
         test_progress_g[cur_test] = RUN_AND_FAILED;
     } else if (test_mask == WITH_MASK) {
         // Check for generic_input_wires activity
-        if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_GEN_IN_TOGGLE_EN_MASK) {
+        if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK) {
             VPRINTF(ERROR, "ERROR: Gen-in tgl\n");
             sts |= BAD_CPTRA_SIG;
             test_progress_g[cur_test] = RUN_AND_FAILED;
@@ -871,7 +1012,7 @@ uint32_t check_mbox_no_lock_error(enum mask_config test_mask) {
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL, SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_MBOX_PROT_NO_LOCK_MASK);
     } else {
         // Check for generic_input_wires activity
-        if (!(cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_GEN_IN_TOGGLE_EN_MASK)) {
+        if (!(cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK)) {
             VPRINTF(ERROR, "ERROR: Gen-in did not tgl\n");
             sts |= BAD_CPTRA_SIG;
             test_progress_g[cur_test] = RUN_AND_FAILED;
@@ -907,7 +1048,7 @@ uint32_t check_mbox_ooo_error(enum mask_config test_mask) {
         test_progress_g[cur_test] = RUN_AND_FAILED;
     } else if (test_mask == WITH_MASK) {
         // Check for generic_input_wires activity
-        if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_GEN_IN_TOGGLE_EN_MASK) {
+        if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK) {
             VPRINTF(ERROR, "ERROR: Gen-in tgl\n");
             sts |= BAD_CPTRA_SIG;
             test_progress_g[cur_test] = RUN_AND_FAILED;
@@ -921,7 +1062,7 @@ uint32_t check_mbox_ooo_error(enum mask_config test_mask) {
         SEND_STDOUT_CTRL(0xe7);
     } else {
         // Check for generic_input_wires activity
-        if (!(cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_GEN_IN_TOGGLE_EN_MASK)) {
+        if (!(cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK)) {
             VPRINTF(ERROR, "ERROR: Gen-in did not tgl\n");
             sts |= BAD_CPTRA_SIG;
             test_progress_g[cur_test] = RUN_AND_FAILED;
@@ -969,8 +1110,8 @@ void execute_from_iccm (void) {
     // ERROR_FATAL interrupt will only go to TB if running the unmasked
     // double-bit error test, so we expect to get here successfully and return
     // in other test cases
-    if (test_progress_g[ICCM_SRAM_ECC_DOUBLE_UNMASKED] == RUN_NOT_CHECKED &&
-        test_progress_g[ICCM_SRAM_ECC_SINGLE_MASKED  ] == NOT_STARTED) {
+    if (test_progress_g[ICCM_SRAM_ECC_DOUBLE_IFU_UNMASKED] == RUN_NOT_CHECKED &&
+        test_progress_g[ICCM_SRAM_ECC_SINGLE_IFU_MASKED  ] == NOT_STARTED) {
         while(1) {
             __asm__ volatile ("wfi"); // "Wait for interrupt"
             // Continuously loop to allow the ICCM ECC ERROR to trigger system reset
@@ -987,28 +1128,30 @@ void execute_from_iccm (void) {
 // In the ROM .text section
 void nmi_handler (void) {
     VPRINTF(LOW, "**** NMI ****\n");
-    if (boot_count != BEFORE_FIRST_NMI_FAILURE && boot_count != BEFORE_SECOND_NMI_FAILURE) {
+    if (boot_count != BEFORE_FIRST_NMI_FAILURE && boot_count != BEFORE_SECOND_NMI_FAILURE && boot_count != BEFORE_THIRD_NMI_FAILURE) {
         VPRINTF(ERROR, "ERROR: NMI unexpected. mcause [0x%x]!\n", csr_read_mcause()); // did not expect NMI
         VPRINTF(ERROR, "       mepc [0x%x]\n", csr_read_mepc());
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
     // If we got here via internal NMI, it's an error - kill the sim
-    if ((csr_read_mcause() & MCAUSE_NMI_BIT_MASK) == MCAUSE_NMI_BIT_MASK) {
+    if ((boot_count != BEFORE_THIRD_NMI_FAILURE) && ((csr_read_mcause() & MCAUSE_NMI_BIT_MASK) == MCAUSE_NMI_BIT_MASK)) {
         VPRINTF(ERROR, "ERROR: NMI w/ mcause [0x%x]!\n", csr_read_mcause());
         VPRINTF(ERROR, "       mepc [0x%x]\n", csr_read_mepc());
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
-    // NMI occurred, but was caused by pin-assertion due to Watchdog Timer
-    else if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL) & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_NMI_PIN_MASK) {
+    // NMI occurred, check if we had a fatal error
+    if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL) & (SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_ICCM_ECC_UNC_MASK |
+                                                             SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_NMI_PIN_MASK)) {
         //Save generic_input_wires value before reset to compare later. This is to avoid flagging the toggle during reset as an error
         generic_input_wires_0_before_rst = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0);
         VPRINTF(MEDIUM, "NMI w/ mcause [0x%x] during NMI test\n", csr_read_mcause());
         VPRINTF(MEDIUM, "mepc [0x%x]\n", csr_read_mepc());
-        // If the FATAL Error bit for NMI is masked, manually trigger firmware reset
-        if (lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK) & SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_NMI_PIN_MASK) {
-            VPRINTF(LOW, "NMI bit masked, no rst exp from TB: rst core manually!\n");
+        // If the FATAL Error bit for ECC UNC or NMI is masked, manually trigger firmware reset
+        if (lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK) & (SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_NMI_PIN_MASK |
+                                                                         SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_ICCM_ECC_UNC_MASK)) {
+            VPRINTF(LOW, "FATAL_ERROR bit is masked, no rst exp from TB: rst core manually!\n");
             //lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET, SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK);
             SEND_STDOUT_CTRL(0xf6);
         // Otherwise, wait for core reset
@@ -1044,26 +1187,35 @@ void main(void) {
         // No reset expected following MBOX SRAM ECC Error injection
 
         // Test ICCM SRAM ECC
-        if      (boot_count == BEFORE_FIRST_ICCM_FAILURE)  {   run_iccm_sram_ecc(NO_MASK  ); }
-        else if (boot_count == BEFORE_SECOND_ICCM_FAILURE) { check_iccm_sram_ecc(NO_MASK  );
-                                                               run_iccm_sram_ecc(WITH_MASK); }
-        else if (boot_count == BEFORE_FIRST_DCCM_FAILURE)  { check_iccm_sram_ecc(WITH_MASK); }
+        if      (boot_count == BEFORE_FIRST_ICCM_FAILURE)  {   run_iccm_sram_ecc(NO_MASK,   FROM_IFU); }
+        else if (boot_count == BEFORE_SECOND_ICCM_FAILURE) { check_iccm_sram_ecc(NO_MASK,   FROM_IFU);
+                                                               run_iccm_sram_ecc(WITH_MASK, FROM_IFU); }
+        else if (boot_count == BEFORE_THIRD_ICCM_FAILURE)  { check_iccm_sram_ecc(WITH_MASK, FROM_IFU);
+                                                               run_iccm_sram_ecc(NO_MASK,   FROM_LSU); }
+        else if (boot_count == BEFORE_FIRST_DCCM_FAILURE)  { check_iccm_sram_ecc(NO_MASK,   FROM_LSU); }
 
         // Test DCCM SRAM ECC
-        if      (boot_count == BEFORE_FIRST_DCCM_FAILURE){   run_dccm_sram_ecc(NO_MASK  ); }
-        else if (boot_count == BEFORE_FIRST_NMI_FAILURE) { check_dccm_sram_ecc(NO_MASK  );
-                                                             run_dccm_sram_ecc(WITH_MASK);
-                                                           check_dccm_sram_ecc(WITH_MASK); }
+        if      (boot_count == BEFORE_FIRST_DCCM_FAILURE) {   run_dccm_sram_ecc(NO_MASK  , DATA_LOAD); }
+        else if (boot_count == BEFORE_SECOND_DCCM_FAILURE){ check_dccm_sram_ecc(NO_MASK  , DATA_LOAD);
+                                                              run_dccm_sram_ecc(WITH_MASK, DATA_LOAD);
+                                                            check_dccm_sram_ecc(WITH_MASK, DATA_LOAD);
+                                                              run_dccm_sram_ecc(NO_MASK  , FORCE_DMA); }
+        else if (boot_count == BEFORE_FIRST_NMI_FAILURE)  { check_dccm_sram_ecc(NO_MASK  , FORCE_DMA);
+                                                              run_dccm_sram_ecc(WITH_MASK, FORCE_DMA);
+                                                            check_dccm_sram_ecc(WITH_MASK, FORCE_DMA); }
 
         // Test WDT Expiration
-        if      (boot_count == BEFORE_FIRST_NMI_FAILURE) {   run_nmi_test(NO_MASK  ); }
-        else if (boot_count == BEFORE_SECOND_NMI_FAILURE){ check_nmi_test(NO_MASK  );
-                                                             run_nmi_test(WITH_MASK); }
-        else if (boot_count == AFTER_SECOND_NMI_FAILURE) { check_nmi_test(WITH_MASK); }
+        if      (boot_count == BEFORE_FIRST_NMI_FAILURE) {                 run_nmi_test(NO_MASK  ); }
+        else if (boot_count == BEFORE_SECOND_NMI_FAILURE){               check_nmi_test(NO_MASK  );
+                                                                           run_nmi_test(WITH_MASK); }
+        else if (boot_count == BEFORE_THIRD_NMI_FAILURE) {               check_nmi_test(WITH_MASK);
+        // Test NMI from Masked ICCM ECC through LSU
+                                                            run_iccm_sram_ecc(WITH_MASK, FROM_LSU); }
+        else if (boot_count == AFTER_THIRD_NMI_FAILURE) { check_iccm_sram_ecc(WITH_MASK, FROM_LSU); }
 
         // Test Mailbox Protocol Violations (no reset expected)
-        if      (boot_count == AFTER_SECOND_NMI_FAILURE) {   run_mbox_no_lock_error  (  NO_MASK);
-                                                           check_mbox_no_lock_error  (  NO_MASK); 
+        if      (boot_count == AFTER_THIRD_NMI_FAILURE) {    run_mbox_no_lock_error  (  NO_MASK);
+                                                           check_mbox_no_lock_error  (  NO_MASK);
                                                              run_mbox_ooo_error      (  NO_MASK);
                                                            check_mbox_ooo_error      (  NO_MASK);
                                                              run_mbox_no_lock_error  (WITH_MASK);
@@ -1074,7 +1226,9 @@ void main(void) {
         // Final Report
         VPRINTF(MEDIUM, "Eval test progress...\n");
         for (enum test_list tests = 0; tests < TEST_COUNT; tests++) {
-            if (test_progress_g[tests] != RUN_AND_PASSED) {
+            if (test_progress_g[tests] == SKIPPED) {
+                VPRINTF(WARNING, "Test [%d] skipped!\n", tests);
+            } else if (test_progress_g[tests] != RUN_AND_PASSED) {
                 VPRINTF(ERROR, "Test [%d] failed! Progress: %d\n", tests, test_progress_g[tests]);
                 test_fail = 1;
             }
