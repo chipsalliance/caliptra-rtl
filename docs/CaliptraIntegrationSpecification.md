@@ -608,9 +608,6 @@ The following table describes SoC integration requirements.
 | Deobfuscation Key                | Rotation of the deobfuscation key (if not driven through PUF) between silicon steppings of a given product (for example, A0 vs. B0 vs. PRQ stepping) is dependent on company-specific policies.                                           | Statement of conformance | Required by UDS and Field Entropy threat model    |
 | Deobfuscation Key                | SoC backend flows should not insert deobfuscation key flops into the scan chain.                                                                                                                                                          | Synthesis report         | Required by UDS and Field Entropy threat model    |
 | Deobfuscation Key                | For defense in depth, it is strongly recommended that debofuscation key flops are not on the scan chain. <br> Remove the following signals from the scan chain: <br> cptra_scan_mode_Latched_d <br> cptra_scan_mode_Latched_f <br> field_storage.internal_obf_key | Statement of conformance | Caliptra HW threat model |
-| CSR Signing Key                  | SoC backend flows shall generate CSR signing key with appropriate NIST compliance as dictated in the Caliptra RoT specification.                                                                                                          | Statement of conformance | Required by IDevID threat model                   |
-| CSR Signing Key                  | Rotation of the CSR private key between silicon steppings of a given product (for example, A0 vs. B0 vs. PRQ stepping) is dependent on company-specific policies.                                                                         | Statement of conformance |                                                   |
-| CSR Signing Key                  | SoC backend flows should not insert CSR signing key flops into the scan chain.                                                                                                                                                            | Synthesis report         | Required by IDevID threat model                   |
 | DFT                              | Before scan is enabled (separate signal that SoC implements on scan insertion), SoC shall set Caliptra's scan_mode indication to '1 to allow secrets/assets to be flushed.                                                                | Statement of conformance | Required by Caliptra threat model                 |
 | DFT                              | Caliptra’s TAP should be a TAP endpoint.                                                                                                                                                                                                  | Statement of conformance | Functional requirement                            |
 | Mailbox                          | SoC shall provide an access path between the mailbox and the application CPU complex on SoCs with such complexes (for example, Host CPUs and Smart NICs). See the [Sender Protocol](#sender-protocol) section for details about error conditions.             | Statement of conformance | Required for Project Kirkland and TDISP TSM       |
@@ -649,6 +646,17 @@ The following table describes SoC integration requirements.
 | FUSE PAUSER programming rules    | 1 PAUSER attribute register is implemented at SoC interface: CPTRA_FUSE_VALID_PAUSER.                                                                                                                                                     |                          |                                                   |
 | FUSE PAUSER programming rules    | CPTRA_FUSE_PAUSER_LOCK locks the programmable valid pauser register, and marks the programmed value as valid.                                                                                                                             |                          |                                                   |
 | FUSE PAUSER programming rules    | Integrators can choose to harden the valid pauser for fuse access by setting the integration parameter, CPTRA_FUSE_VALID_PAUSER, to the desired value in RTL, and by setting CPTRA_SET_FUSE_PAUSER_INTEG to 1.                            |                          |                                                   |
+| GLS FEV                          | GLS FEV must be run to make sure netlist and RTL match and none of the countermeasures are optimized away. See the following table for example warnings from synthesis runs to resolve through FEV                            | GLS simulations pass                 | Functional requirement                 |
+
+*Table 18: Caliptra synthesis warnings for FEV evaluation*
+
+| Module                    | Warning | Line No. | Description |
+| :--------- | :--------- | :--------- | :--------- |
+| sha512_acc_top            | Empty netlist for always_comb                                                             | 417      |Unused logic (no load)| 
+| ecc_scalar_blinding       | Netlist for always_ff block does not contain flip flop                                    | 301      |Output width is smaller than internal signals, synthesis optimizes away the extra internal flops with no loads|
+| sha512_masked_core        | "masked_carry" is read before being assigned. Synthesized result may not match simulation | 295, 312 ||
+| ecc_montgomerymultiplier  | Netlist for always_ff block does not contain flip flop                                    | 274, 326 |Output width is smaller than internal signals, synthesis optimizes away the extra internal flops with no loads|
+| Multiple modules          | Signed to unsigned conversion occurs                                                      |          ||
 
 # CDC analysis and constraints
 
@@ -679,6 +687,7 @@ The following code snippet and schematic diagram illustrate JTAG originating CDC
     * Pseudo-static: wr\_data, wr\_addr
         * cdc signal reg\_wr\_data  -module dmi\_wrapper -stable
         * cdc signal reg\_wr\_addr  -module dmi\_wrapper -stable
+* The core clock frequency must be at least twice the TCK clock frequency for the JTAG data to pass correctly through the synchronizers. 
 
 ## CDC constraints
 * cdc report scheme two\_dff -severity violation
@@ -691,6 +700,8 @@ Synthesis experiments have so far found the following:
 * Design converges at 400MHz 0.72V using a cutting edge TSMC process.
 * Design converges at 100MHz using TSMC 40nm process.
 
+Note: Any synthesis warnings of logic optimization must be reviewed and accounted for.
+
 # Netlist synthesis data
 
 The following table illustrates representative netlist synthesis results using industry standard EDA synthesis tools and tool configurations.
@@ -701,7 +712,7 @@ The area is expressed in units of square microns.
 
 The target foundry technology node is an industry standard, moderately advanced technology node as of 2023 September.
 
-*Table 18: Netlist synthesis data*
+*Table 19: Netlist synthesis data*
 
 | **IP Name**      | **Date**  | **Path Group**       | **Target Freq** | **QoR WNS** | **QoR Achieveable Freq** |
 | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- |
@@ -868,7 +879,7 @@ Fatal: The 'default' or 'others' must be last case in a case statement
 
 The following terminology is used in this document.
 
-*Table 19: Terminology*
+*Table 20: Terminology*
 
 
 | Abbreviation | Description                                                                                      |
