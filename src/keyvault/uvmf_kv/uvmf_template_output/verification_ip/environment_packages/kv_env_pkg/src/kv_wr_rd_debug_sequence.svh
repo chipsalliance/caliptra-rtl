@@ -121,7 +121,6 @@ class kv_wr_rd_debug_sequence #(
         reg_model = configuration.kv_rm;
 
         //Unlock debug mode or clear secrets randomly
-        
             std::randomize(debug_type); //0 - security state, 1 - clear secrets
             // debug_type = 0;
             
@@ -144,7 +143,7 @@ class kv_wr_rd_debug_sequence #(
                     assert(sts == UVM_IS_OK) else `uvm_error("AHB_CLEAR_SECRETS_SET", "Failed when writing to CLEAR_SECRETS reg!")
                 end
             endcase
-                
+
             fork
             begin
                 //Write to all entries
@@ -166,7 +165,9 @@ class kv_wr_rd_debug_sequence #(
                     end
                 end
             end
-        join
+            join
+        
+            `uvm_info("DEBUG_WR_RD", "Waiting for sha512 write/read to finish", UVM_FULL)
         configuration.kv_rst_agent_config.wait_for_num_clocks(1000);
         configuration.kv_hmac_write_agent_config.wait_for_num_clocks(1000);
         configuration.kv_sha512_write_agent_config.wait_for_num_clocks(1000);
@@ -178,6 +179,7 @@ class kv_wr_rd_debug_sequence #(
         configuration.kv_ecc_privkey_read_agent_config.wait_for_num_clocks(1000);
         configuration.kv_ecc_seed_read_agent_config.wait_for_num_clocks(1000);
 
+        `uvm_info("DEBUG_WR_RD", "Scan mode and queue writes", UVM_FULL)
         fork //debug mode
             begin
                 kv_rst_agent_scan_on_seq.start(configuration.kv_rst_agent_config.sequencer);
@@ -192,6 +194,7 @@ class kv_wr_rd_debug_sequence #(
             end
         join
 
+        `uvm_info("DEBUG_WR_RD", "clear_secrets and queue writes", UVM_FULL)
         fork //clear secrets
             begin
                 repeat(20) begin

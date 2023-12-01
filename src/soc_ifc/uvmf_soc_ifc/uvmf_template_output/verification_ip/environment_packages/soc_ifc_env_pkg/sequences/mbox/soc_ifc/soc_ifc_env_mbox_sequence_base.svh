@@ -527,7 +527,7 @@ task soc_ifc_env_mbox_sequence_base::mbox_read_resp_data();
             reg_model.mbox_csr_rm.mbox_dataout.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
             report_reg_sts(reg_sts, "mbox_dataout");
         end
-        if (rand_delay_en) do_rand_delay(1, data_delay);
+        if (rand_delay_en && (ii+4) < dlen) do_rand_delay(1, data_delay);
     end
 endtask
 

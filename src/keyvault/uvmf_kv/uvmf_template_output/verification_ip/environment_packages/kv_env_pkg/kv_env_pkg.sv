@@ -119,6 +119,8 @@ package kv_env_pkg;
   `include "src/kv_wr_rd_debug_sequence.svh"
   `include "src/kv_env_debug_on_sequence.svh"
   `include "src/kv_env_debug_off_sequence.svh"
+  `include "src/kv_env_scan_on_sequence.svh"
+  `include "src/kv_env_scan_off_sequence.svh"
   `include "src/kv_wr_rd_debug_lock_sequence.svh"
   `include "src/kv_wr_rd_debug_lock_clear_rst_sequence.svh"
   `include "src/kv_wr_rd_debug_warm_rst_sequence.svh"
