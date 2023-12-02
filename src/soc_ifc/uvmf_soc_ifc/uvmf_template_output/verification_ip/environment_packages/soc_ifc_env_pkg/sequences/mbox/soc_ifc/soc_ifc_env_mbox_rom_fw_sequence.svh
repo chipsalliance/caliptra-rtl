@@ -36,7 +36,7 @@ class soc_ifc_env_mbox_rom_fw_sequence extends soc_ifc_env_mbox_sequence_base;
 
   // This shouldn't be randomized, specify it
   constraint mbox_cmd_c { mbox_op_rand.cmd == mbox_cmd_e'(MBOX_CMD_ROM_FW_UPD); }
-  constraint mbox_dlen_c { mbox_op_rand.dlen == 13708; }
+  constraint mbox_dlen_c { mbox_op_rand.dlen == 17772; }
   // Response data is only non-zero if a response is requested, and also must
   // be small enough to fit in the mailbox
   // Firmware team encodes commands differently from this environment; response

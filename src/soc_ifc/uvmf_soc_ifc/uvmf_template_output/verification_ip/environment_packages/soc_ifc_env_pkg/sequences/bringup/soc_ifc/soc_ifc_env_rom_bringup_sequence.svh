@@ -37,7 +37,7 @@ class soc_ifc_env_rom_bringup_sequence extends soc_ifc_env_reset_sequence_base;
   constraint always_set_uds_c { this.fuses_to_set.uds == 1'b1; }
   constraint always_set_fe_c  { this.fuses_to_set.field_entropy == 1'b1; }
   // Roughly once per week, assuming the nightly Directed regression isn't running every day (since it is triggered by a PR)
-  constraint infrequently_set_lms_verify_c { this.fuses_to_set.lms_verify dist {0 :/ 4, 1 :/ 1}; }
+  constraint infrequently_set_lms_verify_c { this.fuses_to_set.lms_verify dist {0 :/ 0, 1 :/ 1}; }
   constraint always_set_key_manifest_pk_hash_c { this.fuses_to_set.key_manifest_pk_hash == {12{1'b1}}; }
   constraint always_set_owner_pk_hash_c { this.fuses_to_set.owner_pk_hash == {12{1'b1}}; }
   constraint always_set_idevid_c  { this.fuses_to_set.idevid_cert_attr[0] == 1'b1;
