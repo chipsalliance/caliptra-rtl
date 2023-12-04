@@ -299,6 +299,7 @@ void init_interrupts(void) {
 
     // SHA256
     // TODO error interrupt enables
+    sha256_reg[SHA256_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R /sizeof(uint32_t)] = SHA256_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR0_EN_MASK;
     sha256_reg[SHA256_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R /sizeof(uint32_t)] = SHA256_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK;
     sha256_reg[SHA256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = SHA256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
                                                                              SHA256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;

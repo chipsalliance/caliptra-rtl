@@ -1,0 +1,78 @@
+---
+provides: [sha256_ctrl]
+schema_version: 2.4.0
+requires:
+  - libs
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/sha256_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/sha256_params_pkg.sv
+      - $COMPILE_ROOT/rtl/sha256_ctrl.sv
+      - $COMPILE_ROOT/rtl/sha256.sv
+      - $COMPILE_ROOT/rtl/sha256_core.v
+      - $COMPILE_ROOT/rtl/sha256_k_constants.v
+      - $COMPILE_ROOT/rtl/sha256_w_mem.v
+      - $COMPILE_ROOT/rtl/sha256_reg.sv
+    tops: [sha256_ctrl]
+  rtl_lint:
+    directories: []
+    waiver_files: 
+      #- $COMPILE_ROOT/config/rtl_lint/sha256.waiver
+      - $COMPILE_ROOT/config/design_lint/sha256_ctrl/sglint_waivers
+    black_box:
+      - sha256_reg
+---
+provides: [sha256_ctrl_tb]  
+schema_version: 2.4.0
+requires: 
+  - sha256_ctrl
+  - sha256_coverage
+targets:
+  tb:
+    directories: 
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/tb/sha256_ctrl_tb.sv
+    tops: [sha256_ctrl_tb]
+---
+provides: [sha256_coverage]  
+schema_version: 2.4.0
+requires: 
+  - sha256_ctrl
+targets:
+  tb:
+    directories: 
+      - $COMPILE_ROOT/coverage
+    files:
+      - $COMPILE_ROOT/coverage/sha256_ctrl_cov_if.sv
+      - $COMPILE_ROOT/coverage/sha256_ctrl_cov_bind.sv
+---
+provides: [sha256_random_test]  
+schema_version: 2.4.0
+requires: 
+  - sha256_ctrl
+  - caliptra_top_defines
+  - sha256_coverage
+targets:
+  tb:
+    directories: 
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/tb/sha256_random_test.sv
+    tops: [sha256_random_test]
+  sim:
+    pre_exec: 'echo "[PRE-EXEC] Copying SHA256 test vector gen script to $PWD" && cp $COMPILE_ROOT/tb/sha256_test_gen.py .'
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        #- '-v2k_generate'
+        #- '-timescale=1ns/1ps'
+        - '-noinherit_timescale=1ns/1ps'
+        #- '-ucli -i dump.ucli'
+      #sim:
+        #- '-ucli -i dump.ucli'

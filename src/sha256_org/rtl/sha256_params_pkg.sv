@@ -12,20 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+//
 
-#ifndef SHA256_H
-  #define SHA256_H
+package sha256_params_pkg;
 
-#include "caliptra_defines.h"
-#include "caliptra_reg.h"
-#include "riscv_hw_if.h"
+  localparam SHA256_CORE_NAME0        = 32'h61327368; // "sha2"
+  localparam SHA256_CORE_NAME1        = 32'h35362d32; // "-256"
+  localparam SHA256_CORE_VERSION0     = 32'h3830312e; // "1.80"
+  localparam SHA256_CORE_VERSION1     = 32'h00000000; // "0"
 
-typedef struct {
-    uint8_t   data_size;
-    uint32_t  data[16];
-}sha256_io;
+  localparam SHA256_MODE_SHA_224     = 1'h0;
+  localparam SHA256_MODE_SHA_256     = 1'h1;
 
-void sha256_flow(sha256_io block, uint8_t mode, uint8_t wntz_w, uint8_t wntz_n, sha256_io digest);
-void sha256_zeroize();
-
-#endif
+endpackage
+//======================================================================
+// EOF sha256_params_pkg.sv
+//======================================================================
