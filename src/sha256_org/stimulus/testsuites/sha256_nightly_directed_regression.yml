@@ -1,0 +1,8 @@
+document:
+  schema: 1.0
+
+contents:
+  - tests:
+      tags: ["L0", "directed", "nightly", "SHA256"]
+      paths:
+        - ${CALIPTRA_ROOT}/src/sha256/stimulus/tests/directed/sha256_normal_test.yml

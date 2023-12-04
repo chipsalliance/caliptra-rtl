@@ -11,21 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
 
-#ifndef SHA256_H
-  #define SHA256_H
 
-#include "caliptra_defines.h"
-#include "caliptra_reg.h"
-#include "riscv_hw_if.h"
-
-typedef struct {
-    uint8_t   data_size;
-    uint32_t  data[16];
-}sha256_io;
-
-void sha256_flow(sha256_io block, uint8_t mode, uint8_t wntz_w, uint8_t wntz_n, sha256_io digest);
-void sha256_zeroize();
-
-#endif
+module sha256_ctrl_cov_bind;
+    `ifdef FCOV
+    bind sha256_ctrl sha256_ctrl_cov_if i_sha256_ctrl_cov_if(.*);
+    `endif
+endmodule
