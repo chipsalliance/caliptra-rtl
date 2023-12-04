@@ -112,12 +112,19 @@ void main() {
                                 0x5b3297b4,
                                 0xfb68dab9,
                                 0xf1b582c2};
-    //this is a random lfsr_seed 160-bit
-    uint32_t lfsr_seed_data[] = {0xC8F518D4,
-                                 0xF3AA1BD4,
-                                 0x6ED56C1C,
-                                 0x3C9E16FB,
-                                 0x800AF504};                               
+    //this is a random lfsr_seed
+    uint32_t lfsr_seed_data[12] =  {0xC8F518D4,
+                                    0xF3AA1BD4,
+                                    0x6ED56C1C,
+                                    0x3C9E16FB,
+                                    0x800AF504,
+                                    0xC8F518D4,
+                                    0xF3AA1BD4,
+                                    0x6ED56C1C,
+                                    0x3C9E16FB,
+                                    0x800AF504,
+                                    0xC8F518D4,
+                                    0xF3AA1BD4};                              
 
 
     // Entry message
@@ -144,7 +151,7 @@ void main() {
         hmac_block.data[i] = block_data[i];
 
     hmac_lfsr_seed.kv_intf = FALSE;
-    hmac_lfsr_seed.data_size = 5;
+    hmac_lfsr_seed.data_size = 12;
     for (int i = 0; i < hmac_lfsr_seed.data_size; i++)
         hmac_lfsr_seed.data[i] = lfsr_seed_data[i];
 

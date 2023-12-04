@@ -14,16 +14,16 @@
 //
 //======================================================================
 //
-// sha512_masked_lfsr.sv
+// hmac_lfsr.sv
 // ------
-// 74-bit LFSR
+// 32-bit LFSR
 // 
 //======================================================================
 
-module sha512_masked_lfsr
+module hmac_lfsr
 #(
-   parameter                     REG_SIZE  = 74,
-   parameter [REG_SIZE-1 : 0]    INIT_SEED = 74'h23A_A79D_0EC1_1E38_9277 // a random value
+   parameter                    REG_SIZE  = 32,
+   parameter [REG_SIZE-1 : 0]   INIT_SEED = 32'h3CAB_FFB0 // a random value
 )
 (
   // Clock and reset.
@@ -52,10 +52,10 @@ module sha512_masked_lfsr
   // Update functionality for all registers in the core.
   //----------------------------------------------------------------
    
-   // TAPs are: 74,73,59,58 based on Xilinx doc: https://docs.xilinx.com/v/u/en-US/xapp052
-   always_comb feedback = rnd_reg[73] ^ rnd_reg[72] ^ rnd_reg[58] ^ rnd_reg[57];
+   // TAPs are: 32,22,2,1 based on Xilinx doc: https://docs.xilinx.com/v/u/en-US/xapp052
+   always_comb feedback = rnd_reg[31] ^ rnd_reg[21] ^ rnd_reg[1] ^ rnd_reg[0];
 
-   always_comb rnd_next = {rnd_reg[REG_SIZE-2 : 0], feedback};
+   always_comb rnd_next = {rnd_reg[REG_SIZE-2 : 0], !feedback};
 
    always_ff @ (posedge clk or negedge reset_n) 
    begin
