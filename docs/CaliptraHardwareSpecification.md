@@ -20,7 +20,7 @@ The following figure shows the Caliptra Core.
 
 *Figure 1: Caliptra Block Diagram*
 
-TODO: add figures
+![](./images/Caliptra_HW_diagram.png)
 
 ## Boot FSM
 
@@ -29,6 +29,8 @@ The Boot FSM detects that the SoC is bringing Caliptra out of reset. Part of thi
 The following figure shows the initial power-on arc of the Mailbox Boot FSM.
 
 *Figure 2: Mailbox Boot FSM state diagram*
+
+![](./images/HW_mbox_boot_fsm.png)
 
 The Boot FSM first waits for the SoC to assert cptra\_pwrgood and de-assert cptra\_rst\_b. In the BOOT\_FUSE state, Caliptra signals to the SoC that it is ready for fuses. After the SoC is done writing fuses, it sets the fuse done register and the FSM advances to BOOT\_DONE.
 
@@ -39,6 +41,8 @@ BOOT\_DONE enables Caliptra reset de-assertion through a two flip-flop synchroni
 Runtime FW updates write to fw\_update\_reset register to trigger the FW update reset. When this register is written, only the RISC-V core is reset using cptra\_uc\_fw\_rst\_b pin and all AHB slaves are still active. All registers within the slaves and ICCM/DCCM memories are intact after the reset. Since ICCM is locked during runtime, it must be unlocked after the RISC-V reset is asserted. Reset is deasserted synchronously after a programmable number of cycles (currently set to 5 clocks) and normal boot flow updates the ICCM with the new FW from the mailbox SRAM. Reset de-assertion is done through a two flip-flop synchronizer. The boot flow is modified as shown in the following figure.
 
 *Figure 3: Mailbox Boot FSM state diagram for FW update reset*
+
+![](./images/mbox_boot_fsm_FW_update_reset.png)
 
 After Caliptra comes out of global reset and enters the BOOT\_DONE state, a write to the fw\_update\_reset register triggers the FW update reset flow. In the BOOT\_FWRST state, only the reset to the VeeR core is asserted, ICCM is unlocked and the timer is initialized. After the timer expires, the FSM advances from the BOOT\_WAIT to BOOT\_DONE state where the reset is deasserted.
 
@@ -194,6 +198,8 @@ The following figure shows the two timers.
 
 *Figure 4: Caliptra Watchdog Timer*
 
+![](./images/WDT.png)
+
 ### Prescale settings
 
 Assuming a clock source of 500 MHz, a timeout value of 32’hFFFF\_FFFF results in a timeout period of ~8.5 seconds. Two 32-bit registers are provided for each timer, allowing a 64-bit timeout period to be programmed for each timer. This accommodates a maximum timeout value of over 1000 years for the same 500 Mhz clock source.
@@ -236,6 +242,8 @@ The QSPI block is composed of the spi\_host implementation. For information, see
 
 *Figure 5: QSPI flash controller*
 
+![](./images/QSPI_flash.png)
+
 #### Operation
 
 Transactions flow through the QSPI block starting with AHB-lite writes to the TXDATA FIFO. Commands are then written and processed by the control FSM, orchestrating transmissions from the TXDATA FIFO and receiving data into the RXDATA FIFO.
@@ -245,6 +253,8 @@ The structure of a command depends on the device and the command itself. In the 
 A typical SPI command consists of different segments that are combined as shown in the following example. Each segment can configure the length, speed, and direction. As an example, the following SPI read transaction consists of 2 segments.
 
 *Figure 6: SPI read transaction segments*
+
+![](./images/SPI_read.png)
 
 | Segment \# | Length (Bytes) | Speed    | Direction         | TXDATA FIFO  | RXDATA FIFO        |
 | :--------- | :------------- | :------- | :---------------- | :----------- | :----------------- |
@@ -263,6 +273,8 @@ QSPI consists of up to four command segments in which the host:
 The following example shows the QSPI segments.
 
 *Figure 7: QSPI segments*
+
+![](./images/QSPI_segments.png)
 
 | Segment \# | Length (Bytes) | Speed    | Direction           | TXDATA FIFO  | RXDATA FIFO       |
 | :--------- | :------------- | :------- | :------------------ | :----------- | :---------------- |
@@ -296,6 +308,8 @@ CONFIGOPTS.CLKDIV = (400/(2\*100)) -1 = 1
 The following figure shows CONFIGOPTS.
 
 *Figure 8: CONFIGOPTS*
+
+![](./images/CONFIGOPTS.png)
 
 #### Signal descriptions
 
@@ -343,6 +357,8 @@ The UART block is composed of the uart implementation. For information, see the 
 
 *Figure 9: UART block*
 
+![](./images/UART_block.png)
+
 #### Operation
 
 Transactions flow through the UART block starting with an AHB-lite write to WDATA, which triggers the transmit module to start a UART TX serial data transfer. The TX module dequeues the byte from the internal FIFO and shifts it out bit by bit at the baud rate. If TX is not enabled, the output is set high and WDATA in the FIFO is queued up.
@@ -350,6 +366,8 @@ Transactions flow through the UART block starting with an AHB-lite write to WDAT
 The following figure shows the transmit data on the serial lane, starting with the START bit, which is indicated by a high to low transition, followed by the 8 bits of data.
 
 *Figure 10: Serial transmission frame*
+
+![](./images/serial_transmission.png)
 
 On the receive side, after the START bit is detected, the data is sampled at the center of each data bit and stored into a FIFO. A user can monitor the FIFO status and read the data out of RDATA.
 
@@ -500,6 +518,8 @@ The following figure shows the timing information for clock gating.
 
 *Figure 11: Clock gating timing*
 
+![](./images/clock_gating_timing.png)
+
 ## Integrated TRNG
 
 Caliptra implements a true random number generator (TRNG) block for local use models. Firmware is able to read a random number from the TRNG core by accessing its register block over the AHB-lite interface. This is a configuration that SoC integrators enable by defining CALIPTRA\_INTERNAL\_TRNG.
@@ -512,13 +532,19 @@ The following figure shows the integrated TRNG block.
 
 *Figure 12: Integrated TRNG block*
 
+![](./images/integrated_TRNG.png)
+
 The following figure shows the CSRNG block.
 
 *Figure 13: CSRNG block*
 
+![](./images/CSRNG_block.png)
+
 The following figure shows the entropy source block.
 
 *Figure 14: Entropy source block*
+
+![](./images/entropy_source_block.png)
 
 ### Operation
 
@@ -582,6 +608,8 @@ The following figure shows the top level signals defined in caliptra\_top.
 
 *Figure 15: caliptra\_top signals*
 
+![](./images/caliptra_top_signals.png)
+
 ### Entropy source signal descriptions
 
 The following table provides descriptions of the entropy source signals.
@@ -600,6 +628,8 @@ The following table provides descriptions of the entropy source signals.
 The following figure shows the entropy source signals.
 
 *Figure 16: Entropy source signals*
+
+![](./images/entropy_source_signals.png)
 
 ### CSRNG signal descriptions
 
@@ -657,6 +687,8 @@ Note: If the debug security state switches to debug mode anytime, the security a
 
 *Figure 17: JTAG implementation*
 
+![](./images/JTAG_implementation.png)
+
 # Cryptographic subsystem architecture
 
 The architecture of Caliptra cryptographic subsystem includes the following components:
@@ -675,6 +707,8 @@ The architecture of Caliptra cryptographic subsystem includes the following comp
 The high-level architecture of Caliptra cryptographic subsystem is shown in the following figure.
 
 *Figure 18: Caliptra cryptographic subsystem TODO: fix this image*
+
+![](./images/crypto_subsystem.png)
 
 ## SHA512/SHA384
 
@@ -699,6 +733,8 @@ The total size should be equal to 128 bits short of a multiple of 1024 since the
 
 *Figure 19: SHA512 input formatting*
 
+![](./images/SHA512_input.png)
+
 #### Hashing
 
 The SHA512 core performs 80 iterative operations to process the hash value of the given message. The algorithm processes each block of 1024 bits from the message using the result from the previous block. For the first block, the initial vectors (IV) are used for starting the chain processing of each 1024-bit block.
@@ -708,6 +744,8 @@ The SHA512 core performs 80 iterative operations to process the hash value of th
 The SHA512 architecture has the finite-state machine as shown in the following figure.
 
 *Figure 20: SHA512 FSM*
+
+![](./images/SHA512_fsm.png)
 
 ### Signal descriptions
 
@@ -735,6 +773,8 @@ The SHA512 address map is shown here: [sha512\_reg — clp Reference (chipsallia
 The following pseudocode demonstrates how the SHA512 interface can be implemented.
 
 *Figure 21: SHA512 pseudocode*
+
+![](./images/SHA512_pseudo.png)
 
 ### SCA countermeasure
 
@@ -812,6 +852,8 @@ The following figure shows SHA256 input formatting.
 
 *Figure 22: SHA256 input formatting*
 
+![](./images/SHA256_input.png)
+
 #### Hashing
 
 The SHA256 core performs 64 iterative operations to process the hash value of the given message. The algorithm processes each block of 512 bits from the message using the result from the previous block. For the first block, the initial vectors (IV) are used to start the chain processing of each 512-bit block.
@@ -821,6 +863,8 @@ The SHA256 core performs 64 iterative operations to process the hash value of th
 The SHA256 architecture has the finite-state machine as shown in the following figure.
 
 *Figure 23: SHA256 FSM*
+
+![](./images/SHA256_fsm.png)
 
 ### Signal descriptions
 
@@ -848,6 +892,8 @@ The SHA256 address map is shown here: [sha256\_reg — clp Reference (chipsallia
 The following pseudocode demonstrates how the SHA256 interface can be implemented.
 
 *Figure 24: SHA256 pseudocode*
+
+![](./images/SHA256_pseudo.png)
 
 ### SCA countermeasure
 
@@ -911,17 +957,25 @@ The total size should be equal to 128 bits, short of a multiple of 1024 because 
 
 *Figure 25: HMAC input formatting*
 
+![](./images/HMAC_input.png)
+
 The following figures show examples of input formatting for different message lengths.
 
 *Figure 26: Message length of 1023 bits*
+
+![](./images/msg_1023.png)
 
 When the message is 1023 bits long, padding is given in the next block along with message size.
 
 *Figure 27: 1 bit padding*
 
+![](./images/1_bit.png)
+
 When the message size is 895 bits, a padding of ‘1’ is also considered valid, followed by the message size.
 
 *Figure 28: Multi block message*
+
+![](./images/msg_multi_block.png)
 
 Messages with a length greater than 1024 bits are broken down into N 1024-bit blocks. The last block contains padding and the size of the message.
 
@@ -932,11 +986,15 @@ The HMAC core performs the sha2-384 function to process the hash value of the gi
 
 *Figure 29: HMAC-SHA-384-192 data flow*
 
+![](./images/HMAC_SHA_384_192.png)
+
 ### FSM
 
 The HMAC architecture has the finite-state machine as shown in the following figure.
 
 *Figure 30: HMAC FSM*
+
+![](./images/HMAC_FSM.png)
 
 ### Signal descriptions
 
@@ -965,6 +1023,8 @@ The HMAC address map is shown here: [hmac\_reg — clp Reference (chipsalliance.
 The following pseudocode demonstrates how the HMAC interface can be implemented.
 
 *Figure 31: HMAC pseudocode*
+
+![](./images/HMAC_pseudo.png)
 
 ### SCA countermeasure
 
@@ -1084,11 +1144,15 @@ Secp384r1 parameters are shown in the following figure.
 
 *Figure 32: Secp384r1 parameters*
 
+![](./images/secp384r1_params.png)
+
 ### Operation
 
 The ECDSA consists of three operations, shown in the following figure.
 
 *Figure 33: ECDSA operations*
+
+![](./images/ECDSA_ops.png)
 
 #### KeyGen
 
@@ -1122,6 +1186,8 @@ The signature (r, s) can be verified by Verify(pubKey ,h ,r, s) considering the 
 The ECC top-level architecture is shown in the following figure.
 
 *Figure 34: ECDSA architecture*
+
+![](./images/ECDSA_arch.png)
 
 ### Signal descriptions
 
@@ -1159,13 +1225,19 @@ The following pseudocode blocks demonstrate example implementations for KeyGen, 
 
 *Figure 35: KeyGen pseudocode*
 
+![](./images/keygen_pseudo.png)
+
 #### Signing
 
 *Figure 36: Signing pseudocode*
 
+![](./images/signing_pseudo.png)
+
 #### Verifying
 
 *Figure 37: Verifying pseudocode*
+
+![](./images/verify_pseudo.png)
 
 ### SCA countermeasure
 
@@ -1231,6 +1303,8 @@ The state machine of HMAC\_DRBG utilization is shown in the following figure, in
 
 *Figure 38: HMAC\_DRBG utilization*
 
+![](./images/HMAC_DRBG_util.png)
+
 In SCA random generator state:
 
 * This state (in KeyGen operation mode) generates 3 384-bit random vectors for the following: LFSR, base point randomization, and scalar blinding randomization.
@@ -1245,6 +1319,8 @@ The data flow of the HMAC\_DRBG operation in keygen operation mode is shown in t
 
 *Figure 39: HMAC\_DRBG data flow*
 
+![](./images/HMAC_DRBG_data.png)
+
 #### TVLA results
 
 Test vector leakage assessment (TVLA) provides a robust test using a 𝑡-test. This test evaluates the differences between sets of acquisitions to determine if one set of measurement can be distinguished from the other. This technique can detect different types of leakages, providing a clear indication of leakage or lack thereof.
@@ -1252,6 +1328,8 @@ Test vector leakage assessment (TVLA) provides a robust test using a 𝑡-test. 
 In practice, observing a t-value greater than a specific threshold (mainly 4.5) indicates the presence of leakage. However, in ECC, due to its latency, around 5 million samples are required to be captured. This latency leads to many false positives and the TVLA threshold can be considered a higher value than 4.5. Based on the following figure from “Side-Channel Analysis and Countermeasure Design for Implementation of Curve448 on Cortex-M4” by Bisheh-Niasar et. al., the threshold can be considered equal to 7 in our case.
 
 *Figure 40: TVLA threshold as a function of the number of samples per trace*
+
+![](./images/TVLA_threshold.png)
 
 ##### Keygen TVLA
 
@@ -1264,9 +1342,13 @@ The TVLA results for performing privkey-dependent leakage detection using 20,000
 
 *Figure 41: privkey-dependent leakage detection using TVLA for ECC signing after 20,000 traces*
 
+![](./images/TVLA_privekey.png)
+
 The TVLA results for performing message-dependent leakage detection using 64,000 traces is shown in the following figure. Based on this figure, there is no leakage in ECC signing by changing the message after 64,000 operations.
 
 *Figure 42: Message-dependent leakage detection using TVLA for ECC signing after 64,000 traces*
+
+![](./images/TVLA_msg_dependent.png)
 
 The point with t-value equal to -40 is mapped to the Montgomery conversion of the message that is a publicly known value (no secret is there). By ignoring those corresponding samples, there are some sparse samples with a t-value greater than 7, as shown in the following table.
 
