@@ -1,25 +1,5 @@
-// -------------------------------------------------
-// Contact: contact@lubis-eda.com
-// Author: Tobias Ludwig, Michael Schwarz
-// -------------------------------------------------
-// SPDX-License-Identifier: Apache-2.0
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
-
 #ifndef SHA
 #define SHA
-
 
 #include <array>
 #include "systemc.h"
@@ -235,7 +215,6 @@ struct SHA_Args{
       sc_biguint<64>(0x431d67c49c100d4c), sc_biguint<64>(0x4cc5d4becb3e42b6), sc_biguint<64>(0x597f299cfc657e2a),\
       sc_biguint<64>(0x5fcb6fab3ad6faec), sc_biguint<64>(0x6c44198c4a475817)};;
 
-
 SC_MODULE(SHA512) {
    
     blocking_in <SHA_Args> SHA_Input;
@@ -325,22 +304,30 @@ while(true){
             W  = {sc_biguint<64>(0)};
         }
 
+        //next(block_in);
+        //W_schedule(block_in);
         block_copy = block_in;  
 
         for (j=0; j<16; ++j) {    
             W[15-j] = slicer(block_copy, j);
         };
-        
+
+        //copy_digest();           
         a = H[0]; b = H[1];c = H[2]; d = H[3]; 
         e = H[4]; f = H[5];g = H[6]; h = H[7];
         
         for (i=0; i<NUM_ROUNDS; ++i) { 
             insert_state("SHA_Rounds");
+            //sha512_round(i);
             k = K[i];
+            //w = next_w(i);
+        
             if (i < 16){
                 w = W[i];   
+                  
             }   
             else {   
+                //tmp_w = delta1(W[14]) + W[9] + delta0(W[1]) + W[0];
                 tmp_w = compute_w(W[14],W[9],W[1],W[0]);
                 for (j=0; j<15; ++j) { 
                     W[j] = W[(j+1)];
@@ -355,13 +342,15 @@ while(true){
             g = f;
             f = e;
             e = (d + t1);
+            //e = compute_e(d,e, f, g, h, K[i],W[15]);
             d = c; 
             c = b;
             b = a;
+            //a = compute_a(e,f,g,h,K[i],W[15],a,b,c);
             a = (t1 + t2);        
         } 
         insert_state("DONE"); 
-
+        //update_digest(); 
         H[0] = (H[0] + a) ;
         H[1] = (H[1] + b) ;
         H[2] = (H[2] + c) ;
@@ -376,9 +365,29 @@ while(true){
             MSG_digest = static_cast<sc_biguint<512>> (MSG_digest >> sc_biguint<512>(64));
             MSG_digest += static_cast<sc_biguint<512>> (H[j] << sc_biguint<64>(448));
         }
+        //MSG_digest = compute_dig(static_cast<sc_biguint<512>>(0),H[7],H[6],H[5],H[4],H[3],H[2],H[1],H[0]);
+        //MSG_digest = concati(MSG_digest, H, j); 
+        /*   BYME: to comply with rtl
+        switch (SHA_Mode_in){
+            case 224:
+                MSG_digest = static_cast<sc_biguint<512>> (MSG_digest >> sc_biguint<512>(288)); 
+                break;
+            case 256:
+                MSG_digest = static_cast<sc_biguint<512>> (MSG_digest >> sc_biguint<512>(256)); 
+                break;
+            case 384:
+                MSG_digest = static_cast<sc_biguint<512>> (MSG_digest >> sc_biguint<512>(128)); 
+                break;
+            default:
+                MSG_digest = static_cast<sc_biguint<512>> (MSG_digest); 
+                break;
+        }*/
         
         out->master_write(static_cast<sc_biguint<512>> (MSG_digest)); 
+        
+    //}; 
+    
+    //out->write(static_cast<sc_biguint<512>> (MSG_digest >> static_cast<sc_biguint<512>>(512-SHA_Mode_in))); 
     }
-
 };
 #endif

@@ -120,19 +120,9 @@ task soc_ifc_env_soc_mbox_reg_axs_invalid_handler_sequence::mbox_do_random_reg_w
     if (!std::randomize(rand_idx) with {rand_idx < mbox_regs.size(); })
         `uvm_fatal("SOC_MBOX_HANDLER", "Failed to randomize reg idx")
 
-    // Wait to do the reg write at some random point in the sequence, or do it
-    // very soon after the normal operation ends
+    // Wait to do the reg write at some random point in the sequence
     std::randomize(rand_delay) with {rand_delay dist {[1:255] :/ 5, [256:1023] :/ 3, [1024:65535] :/ 1};};
-    fork
-        automatic int unsigned dly = rand_delay;
-        begin
-            configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(dly);
-        end
-        begin
-            mainline.await();
-            configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks((dly % 25)+1);
-        end
-    join_any
+    configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(rand_delay);
  
     // Data used depends on which reg is being accessed to force invalid contents
     rand_wr_data = get_rand_wr_data(mbox_regs[rand_idx]);

@@ -14,13 +14,28 @@
 #
 init
 
-set script_dir [file dirname [info script]]
-source [file join $script_dir common.tcl]
+proc compare {x y} {
+    puts "'$x' vs. '$y'"
+
+    if {[llength $y] != [llength $y]} {
+        puts "length mismatch!"
+        return -1
+    }
+
+    for {set i 0} {$i < [llength $x]} {incr i} {
+        if {[lindex $x $i] != [lindex $y $i]} {
+            puts "item $i mismatch!"
+            return -1
+        }
+    }
+
+    return 0
+}
 
 # Manually read dmstatus and check if the core is actually held in external
 # reset. In the expected state bits anyunavail allrunning anyrunning allhalted 
 # and anyhalted should be cleared.
-set val [riscv dmi_read $dmstatus_addr]
+set val [riscv dmi_read 0x11]
 puts "dmstatus: $val"
 
 if { ($val & 0x00000F00) != 0 } {
